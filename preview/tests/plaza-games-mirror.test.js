@@ -207,3 +207,143 @@ test('mancala: the grove table holds the opening, and a game’s seeds in their 
   mirror.show(null);
   assert.equal(mirror.count(), 48);
 });
+
+test('go: the grove table swaps the mancala board for a goban, and the stones sit on their points', async () => {
+  const { goSpot } = await import('../src/plaza-salon-plan.js');
+  const { play, pointOf, startGame } = await import('../src/go-rules.js');
+  const go = group.userData.go, mancala = group.userData.mancala, mesh = group.children.find(child => child.name === 'Goban').children.find(child => child.name === 'Go stones');
+  assert.equal(go.visible(), false, 'the table starts as mancala'); assert.equal(mancala.visible(), true);
+  mancala.setVisible(false); go.setVisible(true);
+  assert.equal(go.visible(), true); assert.equal(mancala.visible(), false);
+  const state = play(play(startGame(), pointOf('e5')), pointOf('c3'));
+  for (const chair of [0, 1]) {
+    go.show(state, chair);
+    assert.equal(go.count(), 2);
+    const centres = Array.from({ length: mesh.count }, (_, i) => { const matrix = new THREE.Matrix4(); mesh.getMatrixAt(i, matrix); return new THREE.Vector3().setFromMatrixPosition(matrix); });
+    for (const name of ['e5', 'c3']) { const [east, north] = goSpot(plan.grove, pointOf(name), chair); assert.ok(centres.some(p => Math.hypot(p.x - east, p.z + north) < 0.001), `${name} from chair ${chair}`); }
+  }
+  // Seen from the other chair, the board turns round: c3 moves to the far side of the centre.
+  assert.notDeepEqual(goSpot(plan.grove, pointOf('c3'), 0), goSpot(plan.grove, pointOf('c3'), 1));
+  go.show(null); assert.equal(go.count(), 0);
+  go.setVisible(false); mancala.setVisible(true);
+});
+
+test('cribbage: the walnut table swaps the checkers for a pegging board, and the pegs follow the scores', () => {
+  const cribbage = group.userData.cribbage, backgammon = group.userData.backgammon;
+  const board = group.children.find(child => child.name === 'Cribbage board'), pegs = board.children.find(child => child.isInstancedMesh && child.count <= 2 && child.geometry.type === 'CylinderGeometry');
+  assert.equal(cribbage.visible(), false, 'the table starts as backgammon'); assert.equal(backgammon.visible(), true);
+  backgammon.setVisible(false); cribbage.setVisible(true);
+  assert.equal(cribbage.visible(), true); assert.equal(backgammon.visible(), false);
+  const at = () => Array.from({ length: pegs.count }, (_, i) => { const matrix = new THREE.Matrix4(); pegs.getMatrixAt(i, matrix); return new THREE.Vector3().setFromMatrixPosition(matrix); });
+  cribbage.show([10, 70], 0);
+  assert.equal(cribbage.pegs(), 2);
+  const [mine, theirs] = at();
+  assert.ok(mine.x > plan.backgammon.x && theirs.x < plan.backgammon.x, 'from chair 0 (east), your lane is the east one');
+  cribbage.show([10, 70], 1);
+  const [mine1] = at();
+  assert.ok(mine1.x < plan.backgammon.x, 'from chair 1 (west), your lane is the west one');
+  const early = at()[0].z; cribbage.show([40, 70], 1); assert.notEqual(at()[0].z, early, 'a higher score moves the peg along');
+  cribbage.show(null); assert.equal(cribbage.pegs(), 0);
+  cribbage.setVisible(false); backgammon.setVisible(true);
+});
+test('darts: the board on its post faces the throwing line, and the turn’s darts stand where they landed', async () => {
+  const { DARTS, atDartsLine, dartSpot, dartsStand } = await import('../src/plaza-salon-plan.js');
+  const { targetPoint } = await import('../src/darts-rules.js');
+  const board = plan.darts, mirror = group.userData.darts, mesh = group.children.find(child => child.name === 'Darts in the board');
+  const stand = dartsStand(board);
+  assert.ok(Math.abs(Math.hypot(stand[0] - board.x, stand[1] - board.north) - DARTS.line) < 1e-9, 'the line is 2.37 m from the board');
+  assert.ok(atDartsLine(board, stand) && !atDartsLine(board, [board.x, board.north]));
+  mirror.show([targetPoint(20, 'treble'), [0, 0], targetPoint(6, 'double')]);
+  assert.equal(mirror.count(), 3);
+  const at = i => { const matrix = new THREE.Matrix4(); mesh.getMatrixAt(i, matrix); return new THREE.Vector3().setFromMatrixPosition(matrix); };
+  const ground = at(1).y - DARTS.bull;
+  assert.ok(at(0).y - ground > DARTS.bull + 0.09, 'the treble 20 is high on the board');
+  // From the line the thrower faces south, so the 6 (on their right) is to the west of the bull.
+  assert.ok(at(2).x < at(1).x, 'the double 6 lies on the thrower’s right, west');
+  assert.deepEqual(dartSpot(board, [0, 0]).slice(0, 2).map(v => Math.round(v * 100)), [Math.round(board.x * 100), Math.round((board.north + 0.035) * 100)]);
+  mirror.show([]); assert.equal(mirror.count(), 0);
+});
+test('liar’s dice: cups before each player still in, lifted on a call to show dice with their value up', () => {
+  const mirror = group.userData.dice, mesh = group.children.find(child => child.name === 'Liar’s dice');
+  mirror.show({ cups: [{ chair: 0, dice: [1, 2, 3, 4, 5], open: false }, { chair: 1, dice: [6, 6], open: false }, { chair: 2, dice: [], open: false }, { chair: 3, dice: [3], open: false }] });
+  assert.deepEqual(mirror.count(), { cups: 3, dice: 0 }, 'a player out of dice has no cup');
+  mirror.show({ cups: [{ chair: 0, dice: [1, 2, 3, 4, 5, 6].slice(0, 5), open: true }, { chair: 1, dice: [6], open: true }] });
+  assert.deepEqual(mirror.count(), { cups: 0, dice: 6 });
+  // Each die's top face (+y after its rotation) shows its value: check via the face's local normal.
+  const values = [1, 2, 3, 4, 5, 6], faceOf = { 1: [0, 1, 0], 6: [0, -1, 0], 2: [0, 0, 1], 5: [0, 0, -1], 3: [1, 0, 0], 4: [-1, 0, 0] };
+  for (let i = 0; i < mesh.count; i++) {
+    const matrix = new THREE.Matrix4(), rotation = new THREE.Quaternion(); mesh.getMatrixAt(i, matrix); matrix.decompose(new THREE.Vector3(), rotation, new THREE.Vector3());
+    const value = values[i === 5 ? 5 : i], normal = new THREE.Vector3(...faceOf[value]).applyQuaternion(rotation);
+    assert.ok(normal.y > 0.99, `die ${i} shows ${value} on top`);
+  }
+  mirror.show(null); assert.deepEqual(mirror.count(), { cups: 0, dice: 0 });
+});
+
+test('shuffleboard: the long table swaps the glasses for pucks, placed from the throwing end', async () => {
+  const { winePongPoint } = await import('../src/plaza-salon-plan.js');
+  const pong = group.userData.winePong, board = group.userData.shuffleboard, mesh = group.children.find(child => child.name === 'Shuffleboard pucks');
+  assert.equal(board.visible(), false); assert.equal(pong.visible(), true, 'the table starts as wine pong');
+  pong.setVisible(false); board.setVisible(true);
+  board.show([{ owner: 0, u: 2.3, v: 0.05, out: false }, { owner: 1, u: 1.8, v: -0.1, out: false }, { owner: 1, u: 2.0, v: 0, out: true }], 0);
+  assert.equal(board.count(), 2, 'pucks that went off are not shown');
+  const at = i => { const matrix = new THREE.Matrix4(); mesh.getMatrixAt(i, matrix); return new THREE.Vector3().setFromMatrixPosition(matrix); };
+  const [east, north] = winePongPoint(plan.winePong, [-1.2 + 2.3, 0.05]);
+  assert.ok(Math.hypot(at(0).x - east, at(0).z + north) < 0.001, 'thrown from the west end, 2.3 m along');
+  board.show([{ owner: 0, u: 2.3, v: 0.05, out: false }], 1);
+  const [eastFromEast] = winePongPoint(plan.winePong, [1.2 - 2.3, -0.05]);
+  assert.ok(Math.abs(at(0).x - eastFromEast) < 0.001, 'from the east end, it runs the other way');
+  board.show([]); board.setVisible(false); pong.setVisible(true);
+});
+test('yacht: the drum swaps the tower for five dice, each showing its value face up, kept ones lined up', async () => {
+  const { JENGA } = await import('../src/plaza-salon-plan.js');
+  const yacht = group.userData.yacht, jenga = group.userData.jenga, mesh = group.children.find(child => child.name === 'Yacht dice');
+  assert.equal(yacht.visible(), false, 'idle, the drum shows the tower');
+  jenga.setVisible(false); yacht.setVisible(true);
+  assert.equal(jenga.visible(), false); assert.equal(mesh.visible, true);
+  // Faces in BoxGeometry order (+x, −x, +y, −y, +z, −z) show 3, 4, 1, 6, 2, 5: read the one turned up.
+  const faces = [[1, 0, 0, 3], [-1, 0, 0, 4], [0, 1, 0, 1], [0, -1, 0, 6], [0, 0, 1, 2], [0, 0, -1, 5]];
+  const dice = () => Array.from({ length: mesh.count }, (_, i) => {
+    const matrix = new THREE.Matrix4(), position = new THREE.Vector3(), rotation = new THREE.Quaternion();
+    mesh.getMatrixAt(i, matrix); matrix.decompose(position, rotation, new THREE.Vector3());
+    const up = faces.find(([x, y, z]) => new THREE.Vector3(x, y, z).applyQuaternion(rotation).y > 0.99);
+    return { position, value: up?.[3] };
+  });
+  const values = [6, 2, 5, 3, 4];
+  yacht.show(values, [true, false, true, false, false]);
+  const shown = dice();
+  assert.deepEqual(shown.map(die => die.value), values, 'every die shows its value face up');
+  const ground = plan.bench, [kept, rolled] = [shown.filter((_, i) => [0, 2].includes(i)), shown.filter((_, i) => ![0, 2].includes(i))];
+  assert.ok(Math.abs(kept[0].position.z - kept[1].position.z) < 1e-9, 'the kept dice stand in a line');
+  assert.ok(kept.every(die => rolled.every(other => die.position.z < other.position.z)), 'kept dice sit nearer the bench');
+  for (const die of shown) assert.ok(Math.hypot(die.position.x - ground.x, -die.position.z - ground.north) < JENGA.drumRadius - 0.05, 'on the drum');
+  for (const die of shown) for (const [east, north, radius] of [[-0.16, -0.08, 0.07], [0.15, 0.1, 0.07], [0.05, 0.16, 0.08]])
+    assert.ok(Math.hypot(die.position.x - (ground.x + east), -die.position.z - (ground.north + north)) > radius + 0.015, `clear of the drum's ornament at ${east}, ${north}`);
+  yacht.show(values, [true, false, true, false, false]);
+  assert.deepEqual(dice().map(die => die.position.toArray()), shown.map(die => die.position.toArray()), 'the same roll lies the same way');
+  yacht.show(null);
+  assert.equal(yacht.dice(), 5, 'before the first roll, five dice wait in a row');
+  yacht.setVisible(false); jenga.setVisible(true);
+});
+test('chinese checkers: the grove table swaps in a star board, each player’s marbles in the point toward their chair', async () => {
+  const { STAR, starSpot } = await import('../src/plaza-salon-plan.js');
+  const { HOLES, HOME, play, startGame } = await import('../src/chinese-checkers-rules.js');
+  const star = group.userData.chineseCheckers, mancala = group.userData.mancala, mesh = group.children.find(child => child.name === 'Chinese checkers board').children.find(child => child.name === 'Chinese checkers marbles');
+  assert.equal(star.visible(), false, 'idle, the table keeps the mancala board');
+  mancala.setVisible(false); star.setVisible(true);
+  assert.equal(star.count(), 20, 'both points are full');
+  const marbles = () => Array.from({ length: mesh.count }, (_, i) => { const matrix = new THREE.Matrix4(), colour = new THREE.Color(); mesh.getMatrixAt(i, matrix); mesh.getColorAt(i, colour); const p = new THREE.Vector3().setFromMatrixPosition(matrix); return { east: p.x, north: -p.z, first: colour.r > colour.b }; });
+  const table = plan.grove;
+  // Chair 0 is east of the table: the first player's marbles lie east of centre, the second's west.
+  assert.ok(marbles().every(m => (m.first ? m.east > table.x + 0.1 : m.east < table.x - 0.1)), 'each point faces its player');
+  star.show(null, 1);
+  assert.ok(marbles().every(m => (m.first ? m.east < table.x - 0.1 : m.east > table.x + 0.1)), 'with the first player in chair 1, the board turns');
+  // A move: the marble leaves its hole and stands on the new one.
+  let state = startGame();
+  const from = HOME[0].find(hole => HOLES[hole][0] === -1 && HOLES[hole][1] === 5), to = HOLES.findIndex(([q, r]) => q === -1 && r === 4);
+  state = play(state, `${from}-${to}`);
+  star.show(state.board, 0);
+  const near = hole => { const [east, north] = starSpot(table, HOLES[hole], 0); return marbles().some(m => Math.hypot(m.east - east, m.north - north) < 0.002); };
+  assert.ok(near(to) && !near(from), 'the moved marble stands on its new hole');
+  for (const [q, r] of HOLES) { const [east, north] = starSpot(table, [q, r]); assert.ok(Math.hypot(east - table.x, north - table.north) < STAR.board - 0.015, 'every hole is on the board'); }
+  star.show(null); star.setVisible(false); mancala.setVisible(true);
+});

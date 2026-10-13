@@ -3,7 +3,7 @@
 // guides a player has read. Pure, so node tests check it against the rules modules;
 // salon-guide.js puts it on screen.
 const SALON_SEAT = 'Two chess tables stand in the plaza salon, one by Dior and one by Toulouse. Walk to a chair and press Z to sit, then X (Play a table game) to open the board beside you.';
-const SALON_SHEET = 'Play the plaza regular and choose your side, or Pass and play to share the board with a friend. Take back returns you to your own turn; New game starts afresh. Each table keeps one game of each kind, so you can switch and come back.';
+const SALON_SHEET = 'Play the plaza regular, choosing your side, or Pass and play with a friend. With someone in the other chair, Play them instead: the town keeps that game, and the whole plaza sees it. Each table keeps one practice game of each kind. New to a game? Lesson walks you through a short one, a marked move at a time.';
 const BOARD_KEYS = [[['Z'], 'Sit down or stand up'], [['X'], 'Open the board, or put it away'], [['←', '↑', '→', '↓'], 'Move across the board'], [['Enter'], 'Choose the square'], [['Esc'], 'Put the board away; your game waits']];
 const CAFE_KEYS = [[['Z'], 'Sit down or stand up'], [['X'], 'Open the table, or put it away'], [['←', '→'], 'Move along your hand'], [['Enter'], 'Choose the tile or card'], [['Esc'], 'Put the table away']];
 
@@ -27,6 +27,20 @@ export const GUIDE = [
     { title: 'The aim', text: ['Line up four of your discs before your opponent does: across, up, or along either diagonal. The winning four are lit.', 'A full board without four in a row is a draw.'], figure: { kind: 'four-win' } },
     { title: 'A turn', text: ['Red moves first. Choose a column, anywhere in it, and your disc falls to the lowest open slot. While it is your turn, each column\'s landing slot is marked.', 'The centre column joins the most lines, so it is worth claiming early.'], figure: { kind: 'four-drop' } },
     { title: 'At the table', text: ['The table\'s frame follows every disc, with the columns running from the first player\'s left.'], figure: { kind: 'keys', keys: BOARD_KEYS } },
+  ] },
+  { id: 'reversi', name: 'Reversi', place: 'The salon chess tables', pages: [
+    { title: 'Taking a seat', text: [SALON_SEAT, `Choose Reversi at the top of the sheet, and the table's discs come out on the board. ${SALON_SHEET}`], figure: { kind: 'emblem' } },
+    { title: 'The aim', text: ['Finish with more discs of your colour than your opponent. Black moves first, from the four discs in the centre.', 'The game ends when neither side can move, usually when the board is full. The status keeps the count as you play.'], figure: { kind: 'reversi-start' } },
+    { title: 'A turn', text: ['Place a disc so that it outflanks: a straight line of your opponent\'s discs, across, up or along a diagonal, closed at the far end by one of yours.', 'Every outflanked line turns to your colour at once. Only squares that outflank are marked, and one click places the disc.'], figure: { kind: 'reversi-flip' } },
+    { title: 'Passing and corners', text: ['With no square that outflanks, you pass and your opponent moves again.', 'A corner can never be turned back, so corners are worth a great deal, and the squares beside an empty corner tend to give it away.'], figure: { kind: 'reversi-corner' } },
+    { title: 'At the table', text: ['The table\'s own discs follow every move, and Take back returns you to your own turn, past any pass.'], figure: { kind: 'keys', keys: BOARD_KEYS } },
+  ] },
+  { id: 'morris', name: "Nine men's morris", place: 'The salon chess tables', pages: [
+    { title: 'Taking a seat', text: [SALON_SEAT, `Choose Morris at the top of the sheet, and a walnut morris board is laid over the chess squares. ${SALON_SHEET}`], figure: { kind: 'emblem' } },
+    { title: 'The aim', text: ['Three of your pieces in a row along a line is a mill, and every mill you make takes one of your opponent\'s pieces.', 'Leave your opponent with two pieces, or with no move at all, to win. White begins.'], figure: { kind: 'morris-mill' } },
+    { title: 'Placing, then moving', text: ['Each side has nine pieces. In turn, place one on any empty point with a single click, until all eighteen are down.', 'Then choose a piece and move it along a line to the next point, if it is empty.'], figure: { kind: 'morris-move' } },
+    { title: 'Taking and flying', text: ['When you make a mill, the pieces you may take are marked: never one standing in a mill, unless every piece does.', 'A side down to three pieces may fly: move a piece to any empty point. Fifty moves each without a mill, or one position three times, is a draw.'], figure: { kind: 'morris-take' } },
+    { title: 'At the table', text: ['The arrow keys step only between points. The table\'s morris board follows every move.'], figure: { kind: 'keys', keys: BOARD_KEYS } },
   ] },
   { id: 'dominoes', name: 'Dominoes', place: 'The round café table', pages: [
     { title: 'Taking a seat', text: ['The round café table stands in the plaza. Press Z to sit, then X (Play dominoes) to open the table. The sheet switches between Dominoes, Hearts and Spades, and X reopens whichever you played last.', 'You play the plaza regulars: choose 2 players or 4.'], figure: { kind: 'emblem' } },
@@ -69,6 +83,13 @@ export const GUIDE = [
     { title: 'What brings it down', text: ['Never the top level, nor the one under it until the top is finished, nor a level\'s last block.', 'A level left on a single edge block cannot carry the tower: pulling its neighbour brings it down, however steady the hand.'], figure: { kind: 'jenga-edge' } },
     { title: 'At the table', text: ['The drum\'s tower follows the game, and scatters over the drum and the paving when it falls.'], figure: { kind: 'keys', keys: [[['Z'], 'Sit down or stand up'], [['X'], 'Open the tower, or put it away'], [['↑', '↓', '←', '→'], 'Move between blocks'], [['Enter'], 'Choose a block'], [['Space'], 'Pull: stop the meter'], [['Esc'], 'Put the tower away']] } },
   ] },
+  { id: 'yacht', name: 'Yacht', place: 'The curved bench\'s drum', pages: [
+    { title: 'Taking a seat', text: ['Sit on the curved bench (Z), press X, and choose Yacht at the top of the sheet: the Jenga tower is put away and five dice come out on the drum.', 'Play two plaza regulars, or Pass and play with a friend.'], figure: { kind: 'emblem' } },
+    { title: 'A turn', text: ['Roll all five dice, then roll again up to twice. Before each roll, choose any dice to keep: kept dice are lifted and stay as they are.', 'You can stop and score after any roll.'], figure: { kind: 'yacht-keep' } },
+    { title: 'The boxes', text: ['Every turn ends by scoring the dice in one box you have not used, even for nothing. Ones to sixes count only that face. Full house (three and two) and choice count all five; four of a kind counts the four.', 'A little straight (1 to 5) or a big straight (2 to 6) scores 30, and a yacht, five alike, 50.'], figure: { kind: 'yacht-score' } },
+    { title: 'The end', text: ['When everyone has filled all twelve boxes, the highest total wins. Spend a weak roll on a box that costs little, like ones, and keep the yacht box for a real chance.'], figure: { kind: 'yacht-card' } },
+    { title: 'At the table', text: ['The drum\'s dice follow the game: rolled ones tumble where the tower stood, kept ones line up toward the bench.'], figure: { kind: 'keys', keys: [[['Z'], 'Sit down or stand up'], [['X'], 'Open the dice, or put them away'], [['Tab'], 'Move between the dice, Roll and the boxes'], [['Enter', 'Space'], 'Keep a die, roll, or score'], [['Esc'], 'Put the dice away']] } },
+  ] },
   { id: 'winePong', name: 'Wine pong', place: 'The long table by the café', pages: [
     { title: 'Taking a seat', text: ['A long linen-topped table stands between the café and the planters. Walk up to either end and press X (Play wine pong); there is no chair, you play standing.', 'Play a plaza regular at the far end, or Pass and play with a friend.'], figure: { kind: 'emblem' } },
     { title: 'The aim', text: ['Each side has six wine glasses racked three, two, one at its own end. Sink all six of the far glasses to win.', 'Each turn is two throws, then the far end throws.'], figure: { kind: 'pong-racks' } },
@@ -76,11 +97,51 @@ export const GUIDE = [
     { title: 'In, rim and bounce', text: ['A ball can drop straight in, catch a rim and rattle in or spin out, or land on the table and bounce into a glass. Anything else is a miss.', 'A sunk glass leaves the table.'], figure: { kind: 'pong-outcomes' } },
     { title: 'At the table', text: ['The real table\'s glasses follow the game, and the ball flies over it.'], figure: { kind: 'keys', keys: [[['X'], 'Open the table, or put it away'], [['Space', 'Enter'], 'Stop the reticle: aim, then throw'], [['Tab'], 'Move between the buttons'], [['Esc'], 'Put the table away']] } },
   ] },
+  { id: 'shuffleboard', name: 'Shuffleboard', place: 'The long table by the café', pages: [
+    { title: 'Taking a seat', text: ['Shuffleboard is played on the long table by the café, where wine pong is. Stand at either end, press X, and choose Shuffleboard at the top of the sheet; you play standing.', 'Play a plaza regular, or Pass and play with a friend. Both of you throw from your end.'], figure: { kind: 'emblem' } },
+    { title: 'The aim', text: ['Each round, the two of you slide four weighted pucks each, in turn, toward the far end. A puck that stops short of the dashed foul line is taken off, and one that goes over a side or off the end is gone.', 'The far end is marked in zones worth 1, 2 and 3, and a puck left hanging over the end scores 4. First to 15 wins.'], figure: { kind: 'shuffle-zones' } },
+    { title: 'A throw', text: ['A line sweeps across the table: stop it for the aim. A target then rides along that line: stop it for the power, and the puck slides.', 'Pucks knock each other: the one you strike carries on, and yours slows.'], figure: { kind: 'shuffle-throw' } },
+    { title: 'Scoring a round', text: ['When all eight are down, only the player whose puck lies furthest scores: each of their pucks beyond the other\'s best counts its zone. So knocking a rival\'s leader off the end can be worth more than a careful slide.', 'The two of you take turns to throw first, round by round.'], figure: { kind: 'shuffle-score' } },
+    { title: 'At the table', text: ['The real table\'s pucks follow every slide, and the wine glasses are put away while you play.'], figure: { kind: 'keys', keys: [[['X'], 'Open the table, or put it away'], [['Space', 'Enter'], 'Stop the line: aim, then slide'], [['Tab'], 'Move between the buttons'], [['Esc'], 'Put the table away']] } },
+  ] },
+  { id: 'go', name: 'Go', place: 'The small grove table', pages: [
+    { title: 'Taking a seat', text: ['At the small grove table, press Z to sit and X to open the board, then choose Go at the top of the sheet.', 'Play the plaza regular as black or white, or Pass and play with a friend. Black moves first.'], figure: { kind: 'emblem' } },
+    { title: 'The aim', text: ['Take turns placing a stone on an empty point. Surround more of the board than your opponent: at the end, your stones and the empty points only you surround both count.', 'White gets 7.5 points of komi for moving second, so there are no ties.'], figure: { kind: 'go-territory' } },
+    { title: 'Capturing', text: ['The empty points beside a group are its liberties. Fill a group\'s last liberty and it is captured: its stones leave the board.', 'You may not play where your own stones would have no liberty, unless that move captures.'], figure: { kind: 'go-capture' } },
+    { title: 'Ko and passing', text: ['A move may not repeat an earlier position, so a single stone taken in a ko cannot be retaken at once: play elsewhere first.', 'Two passes in a row end the game. Stones left on the board count as alive, so capture dead groups before you pass.'], figure: { kind: 'go-ko' } },
+    { title: 'At the table', text: ['The table\'s goban follows the game; switching back to mancala puts it away.'], figure: { kind: 'keys', keys: [[['Z'], 'Sit down or stand up'], [['X'], 'Open the board, or put it away'], [['↑', '↓', '←', '→'], 'Move between points'], [['Enter'], 'Place a stone'], [['Esc'], 'Put the board away']] } },
+  ] },
+  { id: 'chineseCheckers', name: 'Chinese checkers', place: 'The small grove table', pages: [
+    { title: 'Taking a seat', text: ['At the small grove table, press Z to sit and X to open the board, then choose Chinese checkers at the top of the sheet: a round star board takes the table.', 'Play the plaza regular, or Pass and play with a friend. Red, nearest you, moves first.'], figure: { kind: 'emblem' } },
+    { title: 'The aim', text: ['Each of you starts with ten marbles filling the point of the star nearest you. Race them all across into the point opposite.', 'The first to fill it wins. If the other player leaves marbles there, they count toward filling it, as long as one of yours is among them.'], figure: { kind: 'cc-star' } },
+    { title: 'Steps and hops', text: ['A move is a step to a neighbouring empty hole, or a hop over one neighbouring marble, yours or theirs, to the empty hole straight beyond.', 'Hops chain: keep hopping from where you land, and stop wherever you like. Nothing is captured. Choose a marble, and every hole it can reach is marked.'], figure: { kind: 'cc-hop' } },
+    { title: 'At the table', text: ['The table\'s star board follows every move; switching back to mancala or Go puts it away.'], figure: { kind: 'keys', keys: [[['Z'], 'Sit down or stand up'], [['X'], 'Open the board, or put it away'], [['↑', '↓', '←', '→'], 'Move between holes'], [['Enter'], 'Choose a marble, then where it goes'], [['Esc'], 'Put the board away']] } },
+  ] },
+  { id: 'cribbage', name: 'Cribbage', place: 'The grove\'s walnut table', pages: [
+    { title: 'Taking a seat', text: ['At the walnut backgammon table, press Z to sit and X to open the table, then choose Cribbage at the top of the sheet.', 'You play a plaza regular, first to 121. The deal alternates every hand.'], figure: { kind: 'emblem' } },
+    { title: 'The deal and the crib', text: ['Each of you gets six cards and lays two away, face down, in the dealer\'s crib. A card is cut for the starter; a jack there scores the dealer 2.'], figure: { kind: 'cribbage-crib' } },
+    { title: 'The play', text: ['Lay cards in turn, keeping a running count no higher than 31. Fifteen or thirty-one scores 2, a pair 2, three alike 6, and a run of three or more its length.', 'If you cannot play, it is a go: the other plays on, and the last card under 31 scores 1.'], figure: { kind: 'cribbage-play' } },
+    { title: 'The show', text: ['Each hand then counts with the starter: 2 for every combination making 15, 2 for every pair, each run its length, a flush 4 (5 with the starter), and the jack of the starter\'s suit 1. The dealer counts the crib last.'], figure: { kind: 'cribbage-show' } },
+    { title: 'At the table', text: ['A pegging board replaces the checkers while you play, and its pegs follow the scores.'], figure: { kind: 'keys', keys: CAFE_KEYS } },
+] },
+  { id: 'darts', name: 'Darts', place: 'The board on the south wall', pages: [
+    { title: 'Taking a seat', text: ['A dartboard hangs on a post against the plaza\'s south wall. There is no chair: walk up to the throwing line in front of it and press X (Play darts).', 'Play a plaza regular, or Pass and play with a friend.'], figure: { kind: 'emblem' } },
+    { title: 'The board', text: ['Each sector scores its number. The thin outer ring doubles it and the inner ring trebles it; the outer bull scores 25 and the bull 50.', 'The treble 20 is worth 60, the most on the board.'], figure: { kind: 'darts-board' } },
+    { title: 'A throw', text: ['A line sweeps across the board: stop it to set where you aim across. A second line sweeps up and down: stop it, and the dart lands where they cross.'], figure: { kind: 'darts-throw' } },
+    { title: '501, double out', text: ['Both start on 501 and take each turn\'s three darts off. The last dart must land in a double (or the bull) and bring you to exactly 0.', 'A dart that leaves you on 1, below 0, or on 0 without a double is a bust: the turn\'s darts don\'t count. On 170 or less the sheet suggests a checkout.'], figure: { kind: 'darts-checkout' } },
+    { title: 'At the table', text: ['The real board shows the turn\'s darts where they landed.'], figure: { kind: 'keys', keys: [[['X'], 'Open the board, or put it away'], [['Space', 'Enter'], 'Stop the line: across, then up'], [['Tab'], 'Move between the buttons'], [['Esc'], 'Put the board away']] } },
+] },
+  { id: 'dice', name: 'Liar’s dice', place: 'The round café table', pages: [
+    { title: 'Taking a seat', text: ['At the round café table, press Z to sit and X to open the table, then choose Liar’s dice at the top of the sheet.', 'You and three plaza regulars each hold five dice under a cup.'], figure: { kind: 'emblem' } },
+    { title: 'Bidding', text: ['Everyone rolls in secret. In turn, bid how many dice of one face lie on the whole table, counting everyone’s: “four fives”. Ones are wild and count as any face.', 'Each bid must raise the last: more dice, or the same number of a higher face.'], figure: { kind: 'dice-bid' } },
+    { title: 'Calling liar', text: ['Instead of raising, call liar on the last bid. Every cup is lifted and the dice counted, ones included.', 'If there are at least as many as bid, the caller loses a die; if not, the bidder does. The loser opens the next round, and the last player with dice wins.'], figure: { kind: 'dice-call' } },
+    { title: 'At the table', text: ['The café table shows each player’s cup, lifted to show the dice when someone calls.'], figure: { kind: 'keys', keys: [[['Z'], 'Sit down or stand up'], [['X'], 'Open the table, or put it away'], [['Tab'], 'Move between count, faces and buttons'], [['Enter'], 'Bid, or call liar'], [['Esc'], 'Put the table away']] } },
+  ] },
 ];
 
 export const guideGame = id => GUIDE.find(game => game.id === id) ?? null;
 // Pictures much wider than tall span the page above the text instead of beside it.
-export const WIDE_FIGURES = new Set(['mancala-board', 'mancala-sow', 'mancala-capture', 'spades-bids', 'spades-trump', 'spades-score', 'dominoes-line', 'dominoes-modes', 'hearts-points', 'hearts-pass', 'hearts-trick', 'backgammon-opening', 'backgammon-hit', 'jenga-meter', 'jenga-edge', 'pong-racks', 'pong-outcomes']);
+export const WIDE_FIGURES = new Set(['dice-bid', 'dice-call', 'darts-checkout', 'cribbage-crib', 'cribbage-play', 'cribbage-show', 'mancala-board', 'mancala-sow', 'mancala-capture', 'spades-bids', 'spades-trump', 'spades-score', 'dominoes-line', 'dominoes-modes', 'hearts-points', 'hearts-pass', 'hearts-trick', 'backgammon-opening', 'backgammon-hit', 'jenga-meter', 'jenga-edge', 'pong-racks', 'pong-outcomes']);
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
 export const chapterOf = index => ROMAN[index] ?? String(index + 1);
 
@@ -110,6 +171,12 @@ export function createGuideMemory(storage = globalThis.localStorage, key = 'rive
 // The positions the pictures show, as data: preview/tests/salon-guide.test.js plays
 // each one on the real rules, so a picture cannot show an illegal move or a false mate.
 export const DIAGRAMS = {
+  morrisMill: { rows: ['b.....b', '.......', '.......', 'b......', '.......', '.......', 'w..w..w'], mill: ['a1', 'd1', 'g1'] },
+  morrisMove: { rows: ['w..b...', '.b...w.', '.......', 'w.....b', '.......', '.w...b.', 'b..w..w'], from: 'd1', to: 'd2' },
+  morrisTake: { rows: ['...b...', '...b...', '...b...', 'wb.....', '.......', '.......', 'w..w...'], place: 'g1', takeable: ['b4'] },
+  reversiStart: { marks: ['c4', 'd3', 'e6', 'f5'] },
+  reversiFlip: { rows: ['........', '........', '...d....', '...l....', '.dll.ld.', '...l....', '........', '........'], place: 'e4', flips: ['c4', 'd4', 'f4'] },
+  reversiCorner: { rows: ['........', '........', '........', '........', '...d....', '..l.....', '.l......', '........'], place: 'a1', flips: ['b2', 'c3'] },
   chessMate: { pieces: { g8: 'k', f7: 'p', g7: 'p', h7: 'p', e8: 'R', g1: 'K' }, toMove: 'b' },
   chessKnight: { from: 'd4', targets: ['b3', 'b5', 'c2', 'c6', 'e2', 'e6', 'f3', 'f5'] },
   checkersJump: { dark: ['c3', 'a1', 'e1'], light: ['d4', 'f6', 'b6', 'h8'], path: ['c3', 'e5', 'g7'] },
@@ -119,8 +186,24 @@ export const DIAGRAMS = {
   dominoesLine: { line: [[2, 6], [6, 6], [6, 4]], hand: [4, 1] },
   heartsTrick: { cards: ['9D', 'QD', 'KD', '4S'], winner: 'KD' },
   heartsPoints: ['5H', '9H', 'AH', 'QS'],
+  // Cribbage: two cards laid away, a play to fifteen, and a hand's show with its starter.
+  cribbageCrib: { hand: ['5H', '6C', '7D', '9S', 'KH', 'QC'], laid: ['KH', 'QC'], starter: 'JS' },
+  cribbagePlay: { pile: ['7H', '8C'] },
+  cribbageShow: { hand: ['5H', '5D', 'TS', 'JC'], starter: '5C' },
+  // Darts: the checkout the sheet suggests from 81.
+  dartsCheckout: { score: 81, plan: ['T19', 'D12'] },
+  // Liar's dice: your cup and a bid, then all four cups lifted for "four fives".
+  diceBid: { cup: [1, 5, 5, 2, 6], bid: [4, 5] },
+  diceCall: { cups: [[1, 5, 5, 2, 6], [3, 3, 4, 6, 2], [5, 1, 2, 4, 4], [6, 6, 3, 2, 3]], bid: [4, 5], actual: 5 },
   // Mancala: the opening, pit 3 sown into the store, and a capture (side 0's pit 2 sown into its empty pit 3 opposite seven seeds).
   mancalaSow: { pit: 3 },
+  // Go on a small corner of the board (5×5, rows from the bottom): territory, a capture and a ko.
+  goTerritory: { rows: ['..bw.', '.bbw.', 'bbww.', 'bw...', '.bw..'] },
+  goCapture: { rows: ['.....', '..b..', '.bw..', '..b..', '.....'], play: [2, 3] },
+  goKo: { rows: ['.....', '.bw..', 'b.bw.', '.bw..', '.....'], play: [2, 1], take: [2, 2] },
+  // Chinese checkers: in the middle of the star, red hops twice, over a blue marble and
+  // then its own ([q, r] holes; r grows toward red).
+  ccHop: { red: [[0, 2], [1, -1]], blue: [[0, 1], [-1, 1]], path: [[0, 2], [0, 0], [2, -2]] },
   mancalaCapture: { board: [0, 2, 0, 0, 0, 0, 0, 1, 1, 7, 1, 1, 1, 0], pit: 2 },
   // Spades: bids round the table (you, left, across, right), a heart trumped, and a hand's score.
   spadesBids: { bids: [3, 2, 4, 0], taken: [4, 2, 4, 0] },
@@ -132,6 +215,14 @@ export const DIAGRAMS = {
   jengaMeter: { lo: 0.38, hi: 0.62, marker: 0.5 },
   // Wine pong: the apex glass of the far rack, sunk by a dead-centre throw.
   pongThrow: { glass: 5 },
+  // Yacht: three fives kept for a second roll; a full house and what it scores in a few
+  // boxes; and the twelve boxes' best scores.
+  yachtKeep: { dice: [5, 5, 2, 5, 6], keep: [true, true, false, true, false] },
+  yachtScore: { dice: [3, 3, 5, 3, 5], boxes: { fullHouse: 19, threes: 9, fives: 10, fourKind: 0 } },
+  // Shuffleboard: a round's last pucks as [owner, u, v] (red 0, blue 1): red lies furthest,
+  // and only its puck beyond blue's best scores, 3 in the far zone. And a hanger, worth 4.
+  shuffleScore: { pucks: [[0, 2.3, 0.05], [0, 2.0, -0.12], [1, 2.1, 0.1], [0, 1.75, 0.15], [1, 1.85, -0.06]], scored: [0, 3] },
+  shuffleHanger: { u: 2.41 },
   backgammonOpening: { layout: { 24: 2, 13: 5, 8: 3, 6: 5, 1: -2, 12: -5, 17: -3, 19: -5 }, dice: [3, 1], moves: [[8, 5], [6, 5]] },
   backgammonHit: { layout: { 24: 2, 13: 5, 8: 2, 6: 4, 5: -1, 4: -2, 12: -4 }, dice: [3, 2], move: [8, 5], closed: 4 },
 };
@@ -147,12 +238,27 @@ const arrowHead = id => `<defs><marker id="sg-head-${id}" viewBox="0 0 10 10" re
 // An 8×8 board from white's side, a1 at the bottom left; squares are named.
 const CELL = 30, file = name => name.charCodeAt(0) - 97, rank = name => Number(name[1]) - 1;
 const at = name => [file(name) * CELL + CELL / 2, (7 - rank(name)) * CELL + CELL / 2];
-function board8(body, { marks = [], glow = [] } = {}) {
+function board8(body, { marks = [], glow = [], felt = false } = {}) {
   let squares = '';
-  for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++) squares += `<rect class="${(r + f) % 2 ? 'sg-light' : 'sg-dark'}" x="${f * CELL}" y="${(7 - r) * CELL}" width="${CELL}" height="${CELL}"/>`;
+  for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++) squares += `<rect class="${felt ? 'sg-baize' : (r + f) % 2 ? 'sg-light' : 'sg-dark'}" x="${f * CELL}" y="${(7 - r) * CELL}" width="${CELL}" height="${CELL}"/>`;
   const glows = glow.map(name => `<rect class="sg-glow" x="${file(name) * CELL}" y="${(7 - rank(name)) * CELL}" width="${CELL}" height="${CELL}"/>`).join('');
   const dots = marks.map(name => `<circle class="sg-mark" cx="${at(name)[0]}" cy="${at(name)[1]}" r="5"/>`).join('');
   return `<rect class="sg-rim" x="-6" y="-6" width="252" height="252" rx="6"/>${squares}${glows}${dots}${body}`;
+}
+// Reversi discs from a diagram (rows from rank 8 down, 'd' / 'l' / '.'): black and white.
+const reversiDiscs = (rows, { ring = [] } = {}) => rows.flatMap((row, index) => [...row].map((disc, f) => [disc, `${'abcdefgh'[f]}${8 - index}`]))
+  .filter(([disc]) => disc !== '.').map(([disc, name]) => `<circle class="sg-disc sg-${disc === 'd' ? 'b' : 'w'}" cx="${at(name)[0]}" cy="${at(name)[1]}" r="11.5"/>${ring.includes(name) ? `<circle class="sg-turn" cx="${at(name)[0]}" cy="${at(name)[1]}" r="14"/>` : ''}`).join('');
+// A morris board: the 24 points on three squares joined at their midpoints, from a
+// diagram (rows from rank 7 down, 'w' / 'b' / '.'), with marks drawn on it.
+const MORRIS_STEP = 34, morrisAt = name => [16 + ('abcdefg'.indexOf(name[0])) * MORRIS_STEP, 16 + (7 - Number(name[1])) * MORRIS_STEP];
+const MORRIS_LINES = [['a7', 'g7'], ['g7', 'g1'], ['g1', 'a1'], ['a1', 'a7'], ['b6', 'f6'], ['f6', 'f2'], ['f2', 'b2'], ['b2', 'b6'], ['c5', 'e5'], ['e5', 'e3'], ['e3', 'c3'], ['c3', 'c5'], ['d7', 'd5'], ['d3', 'd1'], ['a4', 'c4'], ['e4', 'g4']];
+const MORRIS_POINT_NAMES = ['a1', 'd1', 'g1', 'b2', 'd2', 'f2', 'c3', 'd3', 'e3', 'a4', 'b4', 'c4', 'e4', 'f4', 'g4', 'c5', 'd5', 'e5', 'b6', 'd6', 'f6', 'a7', 'd7', 'g7'];
+function morrisBoard(rows, { glow = [], ring = [], body = '' } = {}) {
+  const lines = MORRIS_LINES.map(([a, b]) => `<line class="sg-morris-line" x1="${morrisAt(a)[0]}" y1="${morrisAt(a)[1]}" x2="${morrisAt(b)[0]}" y2="${morrisAt(b)[1]}"/>`).join('');
+  const points = MORRIS_POINT_NAMES.map(name => `<circle class="sg-morris-point" cx="${morrisAt(name)[0]}" cy="${morrisAt(name)[1]}" r="3.4"/>`).join('');
+  const pieces = rows.flatMap((row, index) => [...row].map((piece, f) => [piece, `${'abcdefg'[f]}${7 - index}`])).filter(([piece]) => piece !== '.')
+    .map(([piece, name]) => `${glow.includes(name) ? `<circle class="sg-morris-glow" cx="${morrisAt(name)[0]}" cy="${morrisAt(name)[1]}" r="15"/>` : ''}<circle class="sg-disc sg-${piece}" cx="${morrisAt(name)[0]}" cy="${morrisAt(name)[1]}" r="11"/>${ring.includes(name) ? `<circle class="sg-turn" cx="${morrisAt(name)[0]}" cy="${morrisAt(name)[1]}" r="14.5"/>` : ''}`).join('');
+  return `<rect class="sg-morris-board" x="0" y="0" width="236" height="236" rx="10"/>${lines}${points}${pieces}${body}`;
 }
 const chessPiece = (glyph, name, side) => `<text class="sg-piece sg-${side}" x="${at(name)[0]}" y="${at(name)[1] + 10}" text-anchor="middle" font-size="27" ${SYMBOL}>${glyph}</text>`;
 const man = (name, side, { king = false, taken = false, faded = false } = {}) => {
@@ -232,11 +338,20 @@ export function iconMarkup(id) {
     checkers: '<ellipse class="sg-icon-fill" cx="20" cy="25" rx="11" ry="5"/><ellipse class="sg-icon-fill" cx="20" cy="19" rx="11" ry="5"/><ellipse class="sg-icon-line" cx="20" cy="19" rx="6" ry="2.5"/>',
     connectFour: '<rect class="sg-icon-line" x="9" y="9" width="22" height="22" rx="4"/><circle class="sg-icon-fill" cx="15.5" cy="15.5" r="3.6"/><circle class="sg-icon-line" cx="24.5" cy="15.5" r="3.6"/><circle class="sg-icon-line" cx="15.5" cy="24.5" r="3.6"/><circle class="sg-icon-fill" cx="24.5" cy="24.5" r="3.6"/>',
     dominoes: '<rect class="sg-icon-line" x="13" y="7" width="14" height="26" rx="3"/><line class="sg-icon-line" x1="15" y1="20" x2="25" y2="20"/><circle class="sg-icon-fill" cx="20" cy="13.5" r="1.8"/><circle class="sg-icon-fill" cx="17" cy="24" r="1.8"/><circle class="sg-icon-fill" cx="23" cy="29" r="1.8"/>',
+    go: '<rect class="sg-icon-line" x="8" y="8" width="24" height="24" rx="2"/><line class="sg-icon-line" x1="20" y1="8" x2="20" y2="32"/><line class="sg-icon-line" x1="8" y1="20" x2="32" y2="20"/><circle class="sg-icon-fill" cx="14" cy="14" r="4"/><circle class="sg-icon-line" cx="26" cy="26" r="4"/>',
+    chineseCheckers: '<path class="sg-icon-line" d="M20 6l4 7h8l-4 7 4 7h-8l-4 7-4-7H8l4-7-4-7h8z"/><circle class="sg-icon-fill" cx="20" cy="12" r="2.2"/><circle class="sg-icon-fill" cx="20" cy="28" r="2.2"/>',
     mancala: '<rect class="sg-icon-line" x="6" y="13" width="28" height="14" rx="7"/><circle class="sg-icon-fill" cx="14" cy="20" r="2.4"/><circle class="sg-icon-fill" cx="20" cy="20" r="2.4"/><circle class="sg-icon-fill" cx="26" cy="20" r="2.4"/>',
+    reversi: '<circle class="sg-icon-line" cx="20" cy="20" r="11"/><path class="sg-icon-fill" d="M20 9a11 11 0 0 0 0 22z"/>',
+    morris: '<rect class="sg-icon-line" x="9" y="9" width="22" height="22"/><rect class="sg-icon-line" x="15" y="15" width="10" height="10"/><path class="sg-icon-line" d="M20 9v6M20 25v6M9 20h6M25 20h6"/><circle class="sg-icon-fill" cx="9" cy="9" r="2.6"/><circle class="sg-icon-fill" cx="31" cy="31" r="2.6"/>',
+    cribbage: '<rect class="sg-icon-line" x="8" y="10" width="24" height="20" rx="4"/><circle class="sg-icon-fill" cx="14" cy="16" r="1.6"/><circle class="sg-icon-fill" cx="20" cy="16" r="1.6"/><circle class="sg-icon-fill" cx="26" cy="16" r="1.6"/><circle class="sg-icon-line" cx="14" cy="24" r="1.6"/><circle class="sg-icon-line" cx="20" cy="24" r="1.6"/><circle class="sg-icon-line" cx="26" cy="24" r="1.6"/>',
+    darts: '<circle class="sg-icon-line" cx="20" cy="20" r="12"/><circle class="sg-icon-line" cx="20" cy="20" r="6.5"/><circle class="sg-icon-fill" cx="20" cy="20" r="2.2"/><path class="sg-icon-line" d="M27 13l7-7M30 6h4v4"/>',
+    dice: '<rect class="sg-icon-line" x="7" y="11" width="15" height="15" rx="3"/><rect class="sg-icon-fill" x="18" y="14" width="15" height="15" rx="3"/><circle class="sg-icon-fill" cx="11" cy="15" r="1.4"/><circle class="sg-icon-fill" cx="18" cy="22" r="1.4"/>',
     hearts: '<path class="sg-icon-fill" d="M20 31C11 24 8 19.5 8 15.5A5.5 5.5 0 0 1 20 13a5.5 5.5 0 0 1 12 2.5C32 19.5 29 24 20 31z"/>',
     spades: '<path class="sg-icon-fill" d="M20 8C12 16 8 19.5 8 23.5a5.5 5.5 0 0 0 10 3.2L16.5 32h7L22 26.7a5.5 5.5 0 0 0 10-3.2C32 19.5 28 16 20 8z"/>',
     backgammon: '<path class="sg-icon-line" d="M9 31L13 12L17 31M17 31L21 12L25 31"/><circle class="sg-icon-fill" cx="29" cy="25" r="4.5"/>',
     jenga: '<rect class="sg-icon-fill" x="11" y="26" width="18" height="5" rx="1"/><rect class="sg-icon-line" x="11" y="19.5" width="18" height="5" rx="1"/><rect class="sg-icon-fill" x="11" y="13" width="5" height="5" rx="1"/><rect class="sg-icon-fill" x="24" y="13" width="5" height="5" rx="1"/><rect class="sg-icon-line" x="11" y="6.5" width="18" height="5" rx="1"/>',
+    yacht: '<rect class="sg-icon-line" x="7" y="13" width="15" height="15" rx="3"/><rect class="sg-icon-fill" x="19" y="8" width="14" height="14" rx="3" transform="rotate(12 26 15)"/><circle class="sg-icon-fill" cx="11.5" cy="17.5" r="1.4"/><circle class="sg-icon-fill" cx="17.5" cy="23.5" r="1.4"/>',
+    shuffleboard: '<rect class="sg-icon-line" x="14" y="5" width="12" height="30" rx="2"/><path class="sg-icon-line" d="M14 11h12M14 16h12"/><circle class="sg-icon-fill" cx="20" cy="27" r="3.5"/>',
     winePong: '<path class="sg-icon-line" d="M13 8h14c0 8-3 12-7 12s-7-4-7-12zM20 20v9M14 31h12"/><path class="sg-icon-fill" d="M13.6 12h12.8c-.6 4.5-3 7-6.4 7s-5.8-2.5-6.4-7z"/>',
   }[id] ?? '';
   return `<svg class="salon-icon" viewBox="0 0 40 40" aria-hidden="true">${icon}</svg>`;
@@ -255,6 +370,22 @@ export function figureMarkup(figure, game) {
     case 'checkers-jump': return svg(240, 240, 'A dark man on c3 jumps the light men on d4 and f6, landing on g7: a double jump.',
       board8((({ dark, light, path }) => arrowHead('j') + arrow([...path.slice(0, -1).map(at), [at(path.at(-1))[0] - 7, at(path.at(-1))[1] + 7]], 'j')
         + dark.map(name => man(name, 'b')).join('') + light.map(name => man(name, 'w', { taken: ['d4', 'f6'].includes(name) })).join(''))(DIAGRAMS.checkersJump)));
+    case 'reversi-start': return svg(240, 240, 'The opening: two black and two white discs in the centre, and black\'s four first moves marked.',
+      board8(reversiDiscs(['........', '........', '........', '...ld...', '...dl...', '........', '........', '........']), { felt: true, marks: DIAGRAMS.reversiStart.marks }));
+    case 'reversi-flip': { const { rows, place, flips } = DIAGRAMS.reversiFlip, placed = [...rows];
+      return svg(240, 240, `Black places on ${place}; the white discs on ${flips.join(', ')} are outflanked and turn black. The white discs on d5 and d3 stay, their lines left open.`,
+        board8(reversiDiscs(placed, { ring: flips }) + `<circle class="sg-disc sg-b sg-placed" cx="${at(place)[0]}" cy="${at(place)[1]}" r="11.5"/>` + arrowHead('r') + arrow([[at(place)[0] - 12, at(place)[1]], [at('c4')[0] - 4, at('c4')[1]]], 'r') + arrow([[at(place)[0] + 12, at(place)[1]], [at('f4')[0] + 4, at('f4')[1]]], 'r'), { felt: true, glow: [place] })); }
+    case 'reversi-corner': { const { rows, place, flips } = DIAGRAMS.reversiCorner;
+      return svg(240, 240, `Black takes the a1 corner, outflanking ${flips.join(' and ')} along the diagonal; a corner can never be turned back.`,
+        board8(reversiDiscs(rows, { ring: flips }) + `<circle class="sg-disc sg-b sg-placed" cx="${at(place)[0]}" cy="${at(place)[1]}" r="11.5"/>` + arrowHead('k') + arrow([[at(place)[0] + 9, at(place)[1] - 9], [at('c3')[0] + 8, at('c3')[1] - 8]], 'k'), { felt: true, glow: [place] })); }
+    case 'morris-mill': { const { rows, mill } = DIAGRAMS.morrisMill;
+      return svg(236, 236, `White's pieces on ${mill.join(', ')} stand in a row along the bottom line: a mill.`, morrisBoard(rows, { glow: mill })); }
+    case 'morris-move': { const { rows, from, to } = DIAGRAMS.morrisMove;
+      return svg(236, 236, `With every piece placed, white moves the piece on ${from} along its line to the empty ${to}.`,
+        morrisBoard(rows, { body: arrowHead('n') + arrow([[morrisAt(from)[0], morrisAt(from)[1] - 13], [morrisAt(to)[0], morrisAt(to)[1] + 12]], 'n') })); }
+    case 'morris-take': { const { rows, place, takeable } = DIAGRAMS.morrisTake;
+      return svg(236, 236, `White places on ${place} and closes a mill. Black's d5, d6 and d7 stand in a mill, so only ${takeable.join(' and ')} may be taken.`,
+        morrisBoard(rows, { ring: takeable, body: `<circle class="sg-disc sg-w sg-placed" cx="${morrisAt(place)[0]}" cy="${morrisAt(place)[1]}" r="11"/>` })); }
     case 'checkers-crown': return svg(240, 240, 'A dark man steps from c7 to the far row and is crowned a king on d8.',
       board8((({ dark, light, from, to }) => arrowHead('c') + arrow([at(from), [at(to)[0] - 8, at(to)[1] + 8]], 'c')
         + dark.map(name => man(name, 'b', { faded: name === from })).join('') + man(to, 'b', { king: true }) + light.map(name => man(name, 'w')).join(''))(DIAGRAMS.checkersCrown), { glow: [DIAGRAMS.checkersCrown.to] }));
@@ -269,6 +400,41 @@ export function figureMarkup(figure, game) {
       `<text class="sg-label" x="75" y="22" text-anchor="middle" font-size="12">2 players · draw</text><text class="sg-label" x="225" y="22" text-anchor="middle" font-size="12">4 players · block</text><line class="sg-divider" x1="150" y1="14" x2="150" y2="150"/>`
       + [0, 1, 2, 3].map(i => `<rect class="sg-tile-back" x="${28 + (i % 2) * 48}" y="${40 + Math.floor(i / 2) * 32}" width="42" height="24" rx="4"/>`).join('') + `<text class="sg-label sg-quiet" x="75" y="132" text-anchor="middle" font-size="11">the boneyard</text>`
       + [0, 1, 2, 3, 4, 5, 6].map(i => `<rect class="sg-tile-back" x="${172 + i * 15}" y="${52 + Math.abs(i - 3) * 3}" width="12" height="40" rx="3"/>`).join('') + `<text class="sg-label sg-quiet" x="225" y="132" text-anchor="middle" font-size="11">seven each, then pass</text>`);
+    case 'cribbage-crib': { const { hand, laid, starter } = DIAGRAMS.cribbageCrib;
+      return svg(300, 150, 'Six cards: the king and queen are laid away to the crib, four are kept, and the jack cut as the starter scores the dealer two.',
+        hand.filter(code => !laid.includes(code)).map((code, i) => card(14 + i * 34, 52, code)).join('') + laid.map((code, i) => card(170 + i * 16, 52, code, { cls: 'sg-faded', rotate: 6 })).join('')
+        + card(236, 40, starter, { cls: 'sg-card-win' }) + '<text class="sg-label sg-quiet" x="76" y="142" text-anchor="middle" font-size="11">kept</text><text class="sg-label sg-quiet" x="196" y="142" text-anchor="middle" font-size="11">to the crib</text><text class="sg-label sg-quiet" x="262" y="28" text-anchor="middle" font-size="11">starter</text>'); }
+    case 'cribbage-play': { const { pile } = DIAGRAMS.cribbagePlay;
+      return svg(300, 130, 'A seven and an eight in the play: the count reaches fifteen, and the eight scores two.',
+        pile.map((code, i) => card(70 + i * 40, 26, code, { cls: i === pile.length - 1 ? 'sg-card-win' : '' })).join('') + '<text class="sg-label" x="226" y="70" font-size="15">15 · 2</text>'); }
+    case 'cribbage-show': { const { hand, starter } = DIAGRAMS.cribbageShow;
+      return svg(300, 140, 'A hand of 5, 5, 10 and the jack of clubs with the 5 of clubs cut: fifteens 14, a pair royal 6, and nobs 1, for 21.',
+        hand.map((code, i) => card(10 + i * 46, 30, code)).join('') + card(222, 22, starter, { cls: 'sg-card-win' }) + '<text class="sg-label" x="150" y="128" text-anchor="middle" font-size="13">fifteens 14 · pairs 6 · nobs 1 = 21</text>'); }
+    case 'darts-board': case 'darts-throw': {
+      const c = 110, k = 0.55, ring = (r, cls) => `<circle cx="${c}" cy="${c}" r="${r * k}" class="${cls}"/>`;
+      let body = ring(205, 'sg-rim') + ring(170, 'sg-tile-face') + `<circle cx="${c}" cy="${c}" r="${166 * k}" style="fill:none;stroke:#b0262c;stroke-width:${8 * k}"/>`
+        + `<circle cx="${c}" cy="${c}" r="${103 * k}" style="fill:none;stroke:#237a45;stroke-width:${8 * k}"/>` + ring(15.9, 'sg-red') + ring(6.35, 'sg-rim');
+      for (let i = 0; i < 20; i++) { const a = (i * 18 - 9) * Math.PI / 180; body += `<line x1="${c + Math.sin(a) * 15.9 * k}" y1="${c - Math.cos(a) * 15.9 * k}" x2="${c + Math.sin(a) * 170 * k}" y2="${c - Math.cos(a) * 170 * k}" style="stroke:#3a2c1a;stroke-width:.8"/>`; }
+      body += `<text class="sg-label" x="${c}" y="${c - 186 * k}" text-anchor="middle" font-size="12" style="fill:#f3ead8">20</text>`;
+      if (figure.kind === 'darts-board') {
+        body += `<circle class="sg-glow" cx="${c}" cy="${c - 103 * k}" r="8"/><text class="sg-label" x="${c + 40}" y="${c - 103 * k + 4}" font-size="11">T20 · 60</text><text class="sg-label" x="${c + 26}" y="${c + 4}" font-size="11">Bull · 50</text>`;
+        return svg(220, 220, 'A dartboard: twenty sectors, the double ring at the edge, the treble ring halfway in, the outer bull and the bull at the centre; the treble 20 at the top is worth 60.', body);
+      }
+      body += `<line x1="${c - 20}" y1="10" x2="${c - 20}" y2="210" style="stroke:#fff;stroke-width:2;stroke-dasharray:5 4"/><line x1="10" y1="${c - 40}" x2="210" y2="${c - 40}" style="stroke:#fff;stroke-width:2"/><circle cx="${c - 20}" cy="${c - 40}" r="7" style="fill:none;stroke:#fff;stroke-width:2"/>`;
+      return svg(220, 220, 'The aiming lines: the dashed one, set across the board; the solid one, sweeping up and down; the dart lands where they cross.', body); }
+    case 'darts-checkout': { const { score, plan } = DIAGRAMS.dartsCheckout;
+      return svg(300, 110, `A checkout from ${score}: ${plan.join(', then ')}, finishing exactly on a double.`,
+        `<text class="sg-label" x="30" y="62" font-size="26">${score}</text>` + plan.map((bed, i) => `<rect class="sg-tile-face" x="${110 + i * 90}" y="34" width="70" height="40" rx="8"/><text class="sg-label" x="${145 + i * 90}" y="60" text-anchor="middle" font-size="16">${bed}</text>`).join('')
+        + arrow([[80, 54], [104, 54]], 'd') + arrowHead('d') + '<text class="sg-label sg-quiet" x="235" y="96" text-anchor="middle" font-size="11">the double ends it</text>'); }
+    case 'dice-bid': case 'dice-call': {
+      const pips = { 1: [[0.5, 0.5]], 2: [[0.28, 0.28], [0.72, 0.72]], 3: [[0.25, 0.25], [0.5, 0.5], [0.75, 0.75]], 4: [[0.28, 0.28], [0.72, 0.28], [0.28, 0.72], [0.72, 0.72]], 5: [[0.25, 0.25], [0.75, 0.25], [0.5, 0.5], [0.25, 0.75], [0.75, 0.75]], 6: [[0.28, 0.22], [0.72, 0.22], [0.28, 0.5], [0.72, 0.5], [0.28, 0.78], [0.72, 0.78]] };
+      const die = (x, y, value, size, lit) => `<rect x="${x}" y="${y}" width="${size}" height="${size}" rx="${size / 6}" class="sg-tile-face"${lit ? ' style="stroke:#e2b23a;stroke-width:2.5"' : ''}/>` + pips[value].map(([u, v]) => `<circle cx="${x + u * size}" cy="${y + v * size}" r="${size / 11}" class="sg-rim"/>`).join('');
+      if (figure.kind === 'dice-bid') { const { cup, bid } = DIAGRAMS.diceBid;
+        return svg(300, 120, `Your cup: a one, two fives, a two and a six. With the one wild you hold three fives, so a bid of four fives across the table is a fair one.`,
+          cup.map((value, i) => die(18 + i * 40, 30, value, 32, value === bid[1] || value === 1)).join('') + `<text class="sg-label" x="230" y="54" font-size="15">“four fives”</text><text class="sg-label sg-quiet" x="230" y="74" font-size="11">ones are wild</text>`); }
+      const { cups, bid, actual } = DIAGRAMS.diceCall;
+      return svg(300, 150, `Four cups lifted for a bid of four fives: counting the ones as wild, there are ${actual}, so the bid stands and the caller loses a die.`,
+        cups.map((cup, row) => cup.map((value, i) => die(14 + i * 26, 8 + row * 30, value, 22, value === bid[1] || value === 1)).join('')).join('') + `<text class="sg-label" x="160" y="70" font-size="15">${actual} fives</text><text class="sg-label sg-quiet" x="160" y="90" font-size="11">the bid stands</text>`); }
     case 'hearts-points': return svg(300, 130, 'Each heart scores one point; the queen of spades scores thirteen.',
       DIAGRAMS.heartsPoints.map((code, index) => code === 'QS' ? card(210, 22, code, { badge: 13, cls: 'sg-card-queen' }) : card(18 + index * 52, index === 0 ? 30 : 26, code, { badge: 1, rotate: [-8, -3, 3][index] })).join(''));
     case 'hearts-pass': return svg(300, 160, 'Three cards pass to the left, then the right, then across; every fourth hand nobody passes.',
@@ -290,6 +456,18 @@ export function figureMarkup(figure, game) {
         `<text class="sg-label" x="20" y="40" font-size="13">You &amp; Across: bid ${contract}, took ${made}</text><text class="sg-label" x="280" y="40" text-anchor="end" font-size="13">${10 * contract} + ${made - contract} bag = ${10 * contract + made - contract}</text>`
         + `<text class="sg-label" x="20" y="84" font-size="13">Right: nil, took none</text><text class="sg-label" x="280" y="84" text-anchor="end" font-size="13">+100</text>`
         + '<text class="sg-label sg-quiet" x="150" y="118" text-anchor="middle" font-size="11">every tenth bag: −100</text>'); }
+    case 'go-territory': case 'go-capture': case 'go-ko': {
+      const data = { 'go-territory': DIAGRAMS.goTerritory, 'go-capture': DIAGRAMS.goCapture, 'go-ko': DIAGRAMS.goKo }[figure.kind], n = 5, step = 34, edge = 24;
+      const label = { 'go-territory': 'A corner of the board: black has walled off the empty points on the left, white those on the right.',
+        'go-capture': 'The white stone has one liberty left; a black stone there captures it.',
+        'go-ko': 'A ko: white plays the marked point and takes the black stone beside it; black may not retake at once, and must play elsewhere first.' }[figure.kind];
+      const at = (row, column) => [edge + column * step, edge + (n - 1 - row) * step];
+      let body = '<rect class="sg-felt" x="4" y="4" width="' + (edge * 2 + step * (n - 1) - 8) + '" height="' + (edge * 2 + step * (n - 1) - 8) + '" rx="6" style="fill:#dcb46e"/>';
+      for (let i = 0; i < n; i++) { const a = edge + i * step, far = edge + (n - 1) * step; body += `<line x1="${edge}" y1="${a}" x2="${far}" y2="${a}" style="stroke:#3a2c1a"/><line x1="${a}" y1="${edge}" x2="${a}" y2="${far}" style="stroke:#3a2c1a"/>`; }
+      data.rows.forEach((line, r) => [...line].forEach((cell, column) => { const row = n - 1 - r, [x, y] = at(row, column); if (cell !== '.') body += `<circle cx="${x}" cy="${y}" r="14" style="fill:${cell === 'b' ? '#1b1b1d' : '#f4f1e8'};stroke:#00000066"/>`; }));
+      if (data.play) { const [x, y] = at(...data.play), ring = figure.kind === 'go-ko' ? '#f4f1e8' : '#1b1b1d'; body += `<circle class="sg-glow" cx="${x}" cy="${y}" r="15"/><circle cx="${x}" cy="${y}" r="13" style="fill:none;stroke:${ring};stroke-width:2;stroke-dasharray:4 3"/>`; }
+      if (data.take) { const [x, y] = at(...data.take); body += `<text class="sg-label" x="${x}" y="${y + 5}" text-anchor="middle" font-size="14" style="fill:#b3262e">×</text>`; }
+      return svg(edge * 2 + step * (n - 1), edge * 2 + step * (n - 1), label, body); }
     case 'mancala-board': case 'mancala-sow': case 'mancala-capture': {
       // Side 0 along the bottom (pits left to right, its store on the right), side 1 along the top.
       const kind = figure.kind, board = kind === 'mancala-capture' ? DIAGRAMS.mancalaCapture.board : [4, 4, 4, 4, 4, 4, 0, 4, 4, 4, 4, 4, 4, 0];
@@ -334,6 +512,59 @@ export function figureMarkup(figure, game) {
         glass(55, true) + '<circle class="sg-mark" cx="55" cy="62" r="5"/>' + glass(150, true) + '<circle class="sg-mark" cx="164" cy="50" r="5"/>' + glass(245, true) + '<circle class="sg-mark" cx="245" cy="62" r="5"/>'
         + arrow([[150, 112], [205, 104], [236, 70]], 'o') + arrowHead('o')
         + '<text class="sg-label" x="55" y="104" text-anchor="middle" font-size="12">in</text><text class="sg-label" x="150" y="104" text-anchor="middle" font-size="12">rim, then in</text><text class="sg-label" x="252" y="124" text-anchor="middle" font-size="12">bounce, then in</text>'); }
+    case 'cc-star': case 'cc-hop': {
+      // Holes [q, r] on the star (r toward red, at the bottom); a centre patch for the hop.
+      const star = figure.kind === 'cc-star', k = star ? 11 : 26, cx = star ? 110 : 120, cy = star ? 96 : 92;
+      const at = ([q, r]) => [cx + (q + r / 2) * k, cy + r * k * 0.866];
+      const holes = [];
+      for (let r = -8; r <= 8; r++) for (let q = -8; q <= 8; q++) {
+        const s = -q - r, onStar = (q >= -4 && r >= -4 && s >= -4) || (q <= 4 && r <= 4 && s <= 4);
+        if (onStar && (star || Math.max(Math.abs(q), Math.abs(r), Math.abs(s)) <= 3)) holes.push([q, r]);
+      }
+      const owner = ([q, r]) => star ? (r > 4 ? 'red' : r < -4 ? 'blue' : null) : DIAGRAMS.ccHop.red.some(([a, b]) => a === q && b === r) ? 'red' : DIAGRAMS.ccHop.blue.some(([a, b]) => a === q && b === r) ? 'blue' : null;
+      const marbles = holes.map(hole => { const [x, y] = at(hole), who = owner(hole); return `<circle class="sg-pip" opacity=".35" cx="${x}" cy="${y}" r="${star ? 1.6 : 3}"/>${who ? `<circle class="${who === 'red' ? 'sg-red' : 'sg-blue'}" cx="${x}" cy="${y}" r="${star ? 4.4 : 10}"/>` : ''}`; }).join('');
+      if (star) return svg(220, 200, 'The star board: ten red marbles in the point nearest you, ten blue in the point opposite; each player races into the other\'s point.',
+        marbles + arrow([at([-4, 6]), at([4, -6])], 'c') + arrowHead('c'));
+      const path = DIAGRAMS.ccHop.path.map(at);
+      return svg(240, 184, 'A red marble hops over a blue one, then over a red one, two hops in one move.', marbles + arrow(path, 'h') + arrowHead('h') + `<circle class="sg-win" cx="${path.at(-1)[0]}" cy="${path.at(-1)[1]}" r="12"/>`); }
+    case 'yacht-keep': case 'yacht-score': {
+      const die = (x, y, value, { kept = false, ghost = false } = {}) => {
+        const pips = { 1: [[1, 1]], 2: [[0, 0], [2, 2]], 3: [[0, 0], [1, 1], [2, 2]], 4: [[0, 0], [2, 0], [0, 2], [2, 2]], 5: [[0, 0], [2, 0], [1, 1], [0, 2], [2, 2]], 6: [[0, 0], [2, 0], [0, 1], [2, 1], [0, 2], [2, 2]] }[value];
+        return `<rect class="${ghost ? 'sg-ghost' : 'sg-tile-face'}" x="${x}" y="${y}" width="40" height="40" rx="7"/>${kept ? `<rect class="sg-win" fill="none" x="${x - 3}" y="${y - 3}" width="46" height="46" rx="9"/>` : ''}${ghost ? '' : pips.map(([px, py]) => `<circle class="sg-pip" cx="${x + 10 + px * 10}" cy="${y + 10 + py * 10}" r="3.4"/>`).join('')}`;
+      };
+      if (figure.kind === 'yacht-keep') { const { dice, keep } = DIAGRAMS.yachtKeep;
+        return svg(300, 130, `Three fives kept, lifted and ringed; the ${dice.filter((_, i) => !keep[i]).join(' and ')} roll again.`,
+          dice.map((value, i) => die(18 + i * 56, keep[i] ? 26 : 40, value, { kept: keep[i] })).join('')
+          + '<text class="sg-label" x="150" y="112" text-anchor="middle" font-size="12">keep the fives, roll the rest</text>'); }
+      const { dice, boxes } = DIAGRAMS.yachtScore, names = { fullHouse: 'Full house', threes: 'Threes', fives: 'Fives', fourKind: 'Four of a kind' };
+      return svg(300, 170, `Three threes and two fives: ${Object.entries(boxes).map(([box, points]) => `${names[box].toLowerCase()} ${points}`).join(', ')}.`,
+        dice.map((value, i) => die(18 + i * 56, 12, value)).join('')
+        + Object.entries(boxes).map(([box, points], i) => `<text class="sg-label${points ? '' : ' sg-quiet'}" x="${i % 2 ? 160 : 24}" y="${84 + Math.floor(i / 2) * 34}" font-size="13">${names[box]}</text><text class="sg-label${points ? '' : ' sg-quiet'}" x="${i % 2 ? 282 : 140}" y="${84 + Math.floor(i / 2) * 34}" text-anchor="end" font-size="13">${points}</text>`).join('')); }
+    case 'yacht-card': { const rows = [['Ones … sixes', 'that face'], ['Full house', 'all five'], ['Four of a kind', 'the four'], ['Little straight', '30'], ['Big straight', '30'], ['Choice', 'all five'], ['Yacht', '50']];
+      return svg(300, 210, 'The score card: ones to sixes count that face; full house and choice all five dice; four of a kind the four; each straight 30; a yacht 50.',
+        '<rect class="sg-tile-face" x="14" y="8" width="272" height="194" rx="8"/>'
+        + rows.map(([name, points], i) => `<text class="sg-label" x="30" y="${36 + i * 25}" font-size="13">${name}</text><text class="sg-label sg-quiet" x="270" y="${36 + i * 25}" text-anchor="end" font-size="13">${points}</text>`).join('')); }
+    case 'shuffle-zones': case 'shuffle-score': {
+      // The table from above, your end at the left: 105 px a metre, pucks drawn larger than life.
+      const x = u => 20 + u * 105, y = v => 61 - v * 105, zones = [[1.65, 1.95, 1], [1.95, 2.2, 2], [2.2, 2.4, 3]];
+      const table = '<rect class="sg-tile-face" x="20" y="30" width="252" height="63" rx="4"/>'
+        + zones.map(([from, to, points]) => `<rect class="sg-tile-back" opacity="${0.12 + points * 0.1}" x="${x(from)}" y="30" width="${x(to) - x(from)}" height="63"/><text class="sg-label" x="${(x(from) + x(to)) / 2}" y="24" text-anchor="middle" font-size="12">${points}</text>`).join('')
+        + `<line class="sg-path" stroke-dasharray="4 3" x1="${x(1.65)}" y1="30" x2="${x(1.65)}" y2="93"/>`;
+      const puck = ([owner, u, v], ring = false) => `${ring ? `<circle class="sg-win" cx="${x(u)}" cy="${y(v)}" r="9"/>` : ''}<circle class="${owner ? 'sg-blue' : 'sg-red'}" cx="${x(u)}" cy="${y(v)}" r="6"/>`;
+      if (figure.kind === 'shuffle-zones') return svg(300, 124, 'The table from above: you throw from the left; a dashed foul line, then zones worth 1, 2 and 3 toward the far end, and a puck hanging over the end worth 4.',
+        table + puck([0, DIAGRAMS.shuffleHanger.u, 0.02]) + `<text class="sg-label" x="${x(DIAGRAMS.shuffleHanger.u)}" y="24" text-anchor="middle" font-size="12">4</text>`
+        + '<circle class="sg-mark" cx="33" cy="61" r="5"/><text class="sg-label sg-quiet" x="22" y="112" font-size="11">you throw from here</text>'
+        + `<text class="sg-label sg-quiet" x="${x(1.65)}" y="112" text-anchor="middle" font-size="11">foul line</text>`);
+      const { pucks, scored } = DIAGRAMS.shuffleScore, rival = Math.max(...pucks.filter(([owner]) => owner !== scored[0]).map(([, u]) => u));
+      return svg(300, 124, `A round's end: red's furthest puck lies beyond every blue one, so red scores, but only its puck past blue's best: ${scored[1]} in the far zone.`,
+        table + pucks.map(item => puck(item, item[0] === scored[0] && item[1] > rival)).join('')
+        + `<text class="sg-label" x="150" y="112" text-anchor="middle" font-size="12">red scores ${scored[1]}</text>`); }
+    case 'shuffle-throw': return svg(170, 260, 'From your end: the dotted aim line runs up the table, and the power target rides along it into the far zone.',
+      '<rect class="sg-tile-face" x="55" y="20" width="60" height="220" rx="5"/>'
+      + [[20, 46, 3], [46, 73, 2], [73, 105, 1]].map(([top, bottom, points]) => `<rect class="sg-tile-back" opacity="${0.12 + points * 0.1}" x="55" y="${top}" width="60" height="${bottom - top}"/>`).join('')
+      + '<line class="sg-path" stroke-dasharray="4 3" x1="55" y1="105" x2="115" y2="105"/>'
+      + arrow([[85, 246], [92, 40]], 't') + arrowHead('t') + '<circle class="sg-win" cx="92" cy="34" r="8"/><circle class="sg-red" cx="85" cy="246" r="6"/>'
+      + '<text class="sg-label sg-quiet" x="85" y="14" text-anchor="middle" font-size="11">aim, then power</text>');
     case 'backgammon-opening': { const { layout, dice, moves } = DIAGRAMS.backgammonOpening, near = nearPoints(layout), top = point => 10 + near[point][0] * 21 - 21 + 1;
       const strip = backgammonStrip(near, { dice, moves: moves.map(([from, to]) => [from, to, top(from)]) });
       return svg(strip.width, 222, 'The opening three-one: one checker from the eight-point and one from the six-point land together on the five-point.', strip.body); }

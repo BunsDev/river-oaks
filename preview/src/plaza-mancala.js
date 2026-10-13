@@ -12,7 +12,7 @@ import { chooseMove } from './mancala-opponent.js';
 const SVG = 'http://www.w3.org/2000/svg', W = 600, H = 230, PIT = 72, FIRST = 120, R = 26;
 const NAMES = ['You', 'The plaza regular'];
 
-export function createPlazaMancala({ host = document.querySelector('#viewport'), getMirror = () => null, getSeat = () => null, focusWorld = () => {}, replyDelay = 700 } = {}) {
+export function createPlazaMancala({ host = document.querySelector('#viewport'), getMirror = () => null, getSeat = () => null, focusWorld = () => {}, replyDelay = 700, onSwitch = null } = {}) {
   let game = null, generation = 0, thinking = false;
 
   const panel = document.createElement('dialog');
@@ -21,6 +21,7 @@ export function createPlazaMancala({ host = document.querySelector('#viewport'),
   panel.innerHTML = `<header class="table-game-header"><div><p class="table-game-eyebrow">Plaza games · practice game</p><h2 id="mancala-title">Mancala in the grove</h2></div>
     <button type="button" class="table-game-close" aria-label="Close the mancala board">×</button></header>
     <div class="table-game-body mancala-body">
+      ${onSwitch ? '<div class="table-game-choice" role="group" aria-label="Game"><button type="button" data-grove-game="mancala" aria-pressed="true">Mancala</button><button type="button" data-grove-game="go" aria-pressed="false">Go</button><button type="button" data-grove-game="chineseCheckers" aria-pressed="false">Chinese checkers</button></div>' : ''}
       <p class="table-game-status" role="status" aria-live="polite"></p>
       <ul class="mancala-scores" aria-label="Stores"></ul>
       <svg class="mancala-board" viewBox="0 0 ${W} ${H}" role="group" aria-label="Mancala board"></svg>
@@ -148,8 +149,9 @@ export function createPlazaMancala({ host = document.querySelector('#viewport'),
     if (game.you === you) return;
     generation++; thinking = false; newGame({ you, wins: [0, 0] }); mirror(); render(); void regular();
   });
-  const close = () => { if (!panel.open) return; panel.close(); focusWorld(); };
-  $('.table-game-close').addEventListener('click', close);
+  for (const button of panel.querySelectorAll('[data-grove-game]')) button.addEventListener('click', () => { if (button.dataset.groveGame !== 'mancala') onSwitch?.(button.dataset.groveGame); });
+  const close = ({ toWorld = true } = {}) => { if (!panel.open) return; panel.close(); if (toWorld) focusWorld(); };
+  $('.table-game-close').addEventListener('click', () => close());
   panel.addEventListener('keydown', event => {
     if (event.key === 'Escape' || (event.code === 'KeyX' && !event.repeat && !event.metaKey && !event.ctrlKey && !event.altKey)) { event.preventDefault(); event.stopPropagation(); close(); }
   });

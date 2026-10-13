@@ -26,7 +26,7 @@ export function createPlazaSpades({ host = document.querySelector('#viewport'), 
   panel.innerHTML = `<header class="table-game-header"><div><p class="table-game-eyebrow">Plaza games · practice game</p><h2 id="spades-title">Spades at the café</h2></div>
     <button type="button" class="table-game-close" aria-label="Close the card table">×</button></header>
     <div class="table-game-body spades-body">
-      ${onSwitch ? '<div class="table-game-choice" role="group" aria-label="Game"><button type="button" data-cafe-game="dominoes" aria-pressed="false">Dominoes</button><button type="button" data-cafe-game="hearts" aria-pressed="false">Hearts</button><button type="button" data-cafe-game="spades" aria-pressed="true">Spades</button></div>' : ''}
+      ${onSwitch ? '<div class="table-game-choice" role="group" aria-label="Game"><button type="button" data-cafe-game="dominoes" aria-pressed="false">Dominoes</button><button type="button" data-cafe-game="hearts" aria-pressed="false">Hearts</button><button type="button" data-cafe-game="spades" aria-pressed="true">Spades</button><button type="button" data-cafe-game="dice" aria-pressed="false">Liar’s dice</button></div>' : ''}
       <p class="table-game-status" role="status" aria-live="polite"></p>
       <ul class="spades-teams" aria-label="Partnership scores, the game ends at ${GAME_POINTS}"></ul>
       <ul class="hearts-scores spades-seats" aria-label="Bids and tricks"></ul>
