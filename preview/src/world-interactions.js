@@ -2,6 +2,8 @@ import { winstonBed } from './reference-planting.js';
 import { storefrontBenchSpots, laneFixtures } from './street-fixtures.js';
 import { plazaSalonSeats } from './plaza-salon-plan.js';
 import { SEAT_REACH, resolveSeat, seatSlots } from './shared-seating.js';
+import { storeRoomsFor } from './store-rooms.js';
+import { ipicSeatSites } from './ipic-plan.js';
 
 // Places a character can sit and planters they can water, shared by the
 // browser, the townspeople and the authoritative town. Positions are world
@@ -37,7 +39,7 @@ export function benchSeats(world) {
     });
   }
   // The plaza salon's bench and café chairs are bench places too.
-  return seats.concat(plazaSalonSeats(world));
+  return seats.concat(plazaSalonSeats(world), ipicSeatSites(storeRoomsFor(world)));
 }
 
 // Jevica's garden seats hold two, her lounge chairs one, placed exactly as

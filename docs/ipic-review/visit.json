@@ -1,0 +1,13 @@
+{
+  "status": "passed",
+  "browser": "134.0.6998.35",
+  "checks": [
+    "walked from reception up both escalator runs into auditorium",
+    "selected recliner through UI and received authoritative seated pose",
+    "stood with keyboard interaction",
+    "walked downstairs and exited onto street"
+  ],
+  "errors": [],
+  "upperGround": 24.490281879609554,
+  "rendering": "Software fixture; material review is the separate IPIC model review"
+}
