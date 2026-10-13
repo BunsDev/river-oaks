@@ -295,6 +295,7 @@ function startMultiplayer() {
   multiplayer = createMultiplayer({
     creationToolsEnabled,
     getWalking: () => walking,
+    onVoiceChange: state => remotePlayers?.setSpeaking(state.speaking),
     getPose: () => walking?.getPose(),
     getEnvironment: () => walking?.environment,
     getMeetingPlaces: () => world ? placesOf(world) : [],
