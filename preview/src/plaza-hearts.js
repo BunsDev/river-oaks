@@ -29,7 +29,7 @@ export function createPlazaHearts({ host = document.querySelector('#viewport'), 
   panel.innerHTML = `<header class="table-game-header"><div><p class="table-game-eyebrow">Plaza games · practice game</p><h2 id="hearts-title">Hearts at the café</h2></div>
     <button type="button" class="table-game-close" aria-label="Close the card table">×</button></header>
     <div class="table-game-body hearts-body">
-      ${onSwitch ? '<div class="table-game-choice" role="group" aria-label="Game"><button type="button" data-cafe-game="dominoes" aria-pressed="false">Dominoes</button><button type="button" data-cafe-game="hearts" aria-pressed="true">Hearts</button><button type="button" data-cafe-game="spades" aria-pressed="false">Spades</button></div>' : ''}
+      ${onSwitch ? '<div class="table-game-choice" role="group" aria-label="Game"><button type="button" data-cafe-game="dominoes" aria-pressed="false">Dominoes</button><button type="button" data-cafe-game="hearts" aria-pressed="true">Hearts</button><button type="button" data-cafe-game="spades" aria-pressed="false">Spades</button><button type="button" data-cafe-game="dice" aria-pressed="false">Liar’s dice</button></div>' : ''}
       <p class="table-game-status" role="status" aria-live="polite"></p>
       <ul class="hearts-scores" aria-label="Scores, the game ends at ${GAME_POINTS}"></ul>
       <section class="hearts-trick" aria-label="The trick"></section>

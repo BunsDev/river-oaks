@@ -263,6 +263,37 @@ test('darts: the board on its post faces the throwing line, and the turn’s dar
   assert.deepEqual(dartSpot(board, [0, 0]).slice(0, 2).map(v => Math.round(v * 100)), [Math.round(board.x * 100), Math.round((board.north + 0.035) * 100)]);
   mirror.show([]); assert.equal(mirror.count(), 0);
 });
+test('liar’s dice: cups before each player still in, lifted on a call to show dice with their value up', () => {
+  const mirror = group.userData.dice, mesh = group.children.find(child => child.name === 'Liar’s dice');
+  mirror.show({ cups: [{ chair: 0, dice: [1, 2, 3, 4, 5], open: false }, { chair: 1, dice: [6, 6], open: false }, { chair: 2, dice: [], open: false }, { chair: 3, dice: [3], open: false }] });
+  assert.deepEqual(mirror.count(), { cups: 3, dice: 0 }, 'a player out of dice has no cup');
+  mirror.show({ cups: [{ chair: 0, dice: [1, 2, 3, 4, 5, 6].slice(0, 5), open: true }, { chair: 1, dice: [6], open: true }] });
+  assert.deepEqual(mirror.count(), { cups: 0, dice: 6 });
+  // Each die's top face (+y after its rotation) shows its value: check via the face's local normal.
+  const values = [1, 2, 3, 4, 5, 6], faceOf = { 1: [0, 1, 0], 6: [0, -1, 0], 2: [0, 0, 1], 5: [0, 0, -1], 3: [1, 0, 0], 4: [-1, 0, 0] };
+  for (let i = 0; i < mesh.count; i++) {
+    const matrix = new THREE.Matrix4(), rotation = new THREE.Quaternion(); mesh.getMatrixAt(i, matrix); matrix.decompose(new THREE.Vector3(), rotation, new THREE.Vector3());
+    const value = values[i === 5 ? 5 : i], normal = new THREE.Vector3(...faceOf[value]).applyQuaternion(rotation);
+    assert.ok(normal.y > 0.99, `die ${i} shows ${value} on top`);
+  }
+  mirror.show(null); assert.deepEqual(mirror.count(), { cups: 0, dice: 0 });
+});
+
+test('shuffleboard: the long table swaps the glasses for pucks, placed from the throwing end', async () => {
+  const { winePongPoint } = await import('../src/plaza-salon-plan.js');
+  const pong = group.userData.winePong, board = group.userData.shuffleboard, mesh = group.children.find(child => child.name === 'Shuffleboard pucks');
+  assert.equal(board.visible(), false); assert.equal(pong.visible(), true, 'the table starts as wine pong');
+  pong.setVisible(false); board.setVisible(true);
+  board.show([{ owner: 0, u: 2.3, v: 0.05, out: false }, { owner: 1, u: 1.8, v: -0.1, out: false }, { owner: 1, u: 2.0, v: 0, out: true }], 0);
+  assert.equal(board.count(), 2, 'pucks that went off are not shown');
+  const at = i => { const matrix = new THREE.Matrix4(); mesh.getMatrixAt(i, matrix); return new THREE.Vector3().setFromMatrixPosition(matrix); };
+  const [east, north] = winePongPoint(plan.winePong, [-1.2 + 2.3, 0.05]);
+  assert.ok(Math.hypot(at(0).x - east, at(0).z + north) < 0.001, 'thrown from the west end, 2.3 m along');
+  board.show([{ owner: 0, u: 2.3, v: 0.05, out: false }], 1);
+  const [eastFromEast] = winePongPoint(plan.winePong, [1.2 - 2.3, -0.05]);
+  assert.ok(Math.abs(at(0).x - eastFromEast) < 0.001, 'from the east end, it runs the other way');
+  board.show([]); board.setVisible(false); pong.setVisible(true);
+});
 
 test('xiangqi: the grove table swaps in a xiangqi board, red’s pieces toward red’s chair, and moves follow', async () => {
   const { XIANGQI, xiangqiSpot } = await import('../src/plaza-salon-plan.js');
