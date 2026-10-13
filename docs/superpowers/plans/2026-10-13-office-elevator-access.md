@@ -94,3 +94,11 @@ Reverify the implementation, integrate current main and land through the protect
 - Replaced synthetic elevator-button clicks with Playwright clicks that wait for visible, enabled controls. This removes the test's opportunity to silently click a still-disabled control while leave acknowledgement/render state settles. Product code and permissions are unchanged by this test adjustment.
 
 - Final readiness-aware browser run passed all nine checks: `RIVER_OAKS_E2E_REPORT=office-cycling-integration-retry.json pnpm run test:experience office-visit`. Receipt `data/reports/office-cycling-integration-retry.json`. Integrated source and focused browser changes verified before signing the merge commit. Hosted CI and protected merge remain pending.
+
+## Studio and cycling menu integration
+
+- Integrated main `ca7c6f7` (Studio spaces and cycling leaderboard). The only source conflict was the Play menu initialization; retained both the cycling leaderboard panel and office UI. Independent read-only integration review approved without blockers.
+- `RIVER_OAKS_E2E_REPORT=office-menu-integration-experience.json pnpm run test:experience office-visit` passed all nine checks in 67.989 seconds. Receipt `data/reports/office-menu-integration-experience.json`.
+- First core run passed agent 76/76 and preview 2841 with one existing skip, then the isolated Homebrew Redis 8.10.2 process crashed with SIGSEGV in `dictSdsKeyCompare` at 15:35 UTC. Interrupted the waiting server suite; no core pass claimed. Preserved `data/reports/office-menu-integration-core-redis-crash.json` and local Redis crash log. Started fresh no-persistence Redis and reran core verification.
+
+- Fresh core retry passed: `REDIS_URL=redis://127.0.0.1:16391 pnpm run verify`, **3747 passed, one existing geometry skip, zero failures** (agent 76, preview 2841, server 635, desktop 54, Python 141). All Redis server tests ran without skips; build, lint, format, synthetic pipeline and secret scan passed. Receipt `data/reports/office-menu-integration-core.json`; log `/tmp/river-oaks-office-menu-integration-core-retry.log`.

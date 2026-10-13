@@ -1,0 +1,178 @@
+{
+  "schemaVersion": 1,
+  "profile": "core",
+  "startedAt": "2026-10-13T15:39:00.807Z",
+  "status": "passed",
+  "revision": "26d9857df1e5e51491a59c102fa7929b9c0ec9fd",
+  "dirty": true,
+  "scope": "Selected repository checks only; not production, live auth, native Unreal, human accessibility, or target GPU acceptance.",
+  "results": [
+    {
+      "id": "agent-tests",
+      "command": [
+        "pnpm",
+        "run",
+        "test:agent"
+      ],
+      "status": "passed",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "signal": null,
+      "durationMs": 20855
+    },
+    {
+      "id": "preview-tests",
+      "command": [
+        "pnpm",
+        "test"
+      ],
+      "status": "passed",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "signal": null,
+      "durationMs": 92114
+    },
+    {
+      "id": "server-tests",
+      "command": [
+        "pnpm",
+        "run",
+        "test:server"
+      ],
+      "status": "passed",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "signal": null,
+      "durationMs": 36531
+    },
+    {
+      "id": "desktop-tests",
+      "command": [
+        "pnpm",
+        "run",
+        "test:desktop"
+      ],
+      "status": "passed",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "signal": null,
+      "durationMs": 12927
+    },
+    {
+      "id": "build",
+      "command": [
+        "pnpm",
+        "run",
+        "build"
+      ],
+      "status": "passed",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "signal": null,
+      "durationMs": 3636
+    },
+    {
+      "id": "python-lint",
+      "command": [
+        "uv",
+        "run",
+        "--locked",
+        "ruff",
+        "check",
+        "."
+      ],
+      "status": "passed",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "signal": null,
+      "durationMs": 1030
+    },
+    {
+      "id": "python-format",
+      "command": [
+        "uv",
+        "run",
+        "--locked",
+        "ruff",
+        "format",
+        "--check",
+        "."
+      ],
+      "status": "passed",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "signal": null,
+      "durationMs": 190
+    },
+    {
+      "id": "python-tests",
+      "command": [
+        "uv",
+        "run",
+        "--locked",
+        "pytest",
+        "-q"
+      ],
+      "status": "passed",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "signal": null,
+      "durationMs": 14265
+    },
+    {
+      "id": "demo",
+      "command": [
+        "uv",
+        "run",
+        "--locked",
+        "river-oaks",
+        "demo"
+      ],
+      "status": "passed",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "signal": null,
+      "durationMs": 2025
+    },
+    {
+      "id": "demo-verify",
+      "command": [
+        "uv",
+        "run",
+        "--locked",
+        "river-oaks",
+        "verify",
+        "--config",
+        "data/generated/demo/config.json",
+        "--raw",
+        "data/generated/demo",
+        "--world",
+        "data/generated/demo/world.json",
+        "--output",
+        "data/generated/demo/report.json"
+      ],
+      "status": "passed",
+      "exitCode": 2,
+      "expectedExit": 2,
+      "signal": null,
+      "durationMs": 475
+    },
+    {
+      "id": "secrets",
+      "command": [
+        "uv",
+        "run",
+        "--locked",
+        "python",
+        "scripts/check_secrets.py",
+        "--all"
+      ],
+      "status": "passed",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "signal": null,
+      "durationMs": 18791
+    }
+  ],
+  "finishedAt": "2026-10-13T15:42:23.716Z"
+}

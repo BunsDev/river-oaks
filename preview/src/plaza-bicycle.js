@@ -44,7 +44,7 @@ export function nearestFreeSlot(slots, [x, north], taken) {
   return best?.slot ?? null;
 }
 
-export function createPlazaBicycle({ scene, host, walking, getMultiplayer, getLocals = () => [], reducedMotion = false }) {
+export function createPlazaBicycle({ scene, host, walking, getMultiplayer, getLocals = () => [], getMiles = () => null, reducedMotion = false }) {
   const model = createRoadVehicle('bicycle'); model.object.visible = false; scene.add(model.object);
   let slots = [], placement = null, mounted = false, busy = false, slotId = null, lastRide = 0;
   const env = () => walking.environment ?? null;
@@ -150,7 +150,9 @@ export function createPlazaBicycle({ scene, host, walking, getMultiplayer, getLo
       const here = me();
       if (!slots.some(slot => Math.hypot(slot.approach[0] - here[0], slot.approach[1] - here[1]) <= SEAT_REACH)) return null;
       const slot = nearestFreeSlot(slots, here, taken());
-      return { kind: 'take-bike', targetId: slot?.id ?? null, label: slot ? 'Take a bike' : 'All bikes are out', run: take, disabled: busy || !slot };
+      const miles = getMiles();
+      const label = slot ? (miles === null || miles === undefined ? 'Take a bike' : `Take a bike · ${(Math.round(miles * 10) / 10).toFixed(1)} mi so far`) : 'All bikes are out';
+      return { kind: 'take-bike', targetId: slot?.id ?? null, label, run: take, disabled: busy || !slot };
     },
     update(now = performance.now()) { if (placement && mounted) { apply(); model.animate(now, placement.speed, reducedMotion); } },
     // When the town corrects a pose the walking controls drop the transport

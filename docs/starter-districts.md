@@ -1,21 +1,20 @@
-# Starter districts
+# Legacy starter districts
 
-Five original synthetic layouts for World Studio. These are editable blockouts,
+Five original synthetic layouts retained for JSON import in World Studio. The primary **Space templates** picker now offers a house, office, boutique and café; see [furnished spaces](world-studio.md#furnished-spaces). These are editable blockouts,
 not replicas of Houston districts or finished environments. All dimensions are
 proposed metres. No downloaded assets or external artwork are included.
 
 ## Start in two minutes
 
 1. In World Studio, export any current work you want to retain.
-2. Choose **District templates**, compare the plans, then select **Use …**.
-   On an older editor, use **Open JSON** and select one of the files in
-   `preview/public/data/starter-districts/` instead.
+2. Use **Open JSON** and select one of the files in
+   `preview/public/data/starter-districts/`.
 3. Select a building in Scene objects and use **Frame selection**. Change one
    dimension or move it with the handles. **Undo** restores an ordinary edit.
 4. Use **Walk through** to inspect the district from arrival. Return with Escape.
 5. **Save on device** keeps one local draft; **Export JSON** keeps a separate file.
 
-Opening a template replaces the working document and resets its undo history,
+Opening a template replaces the working document as an undoable edit,
 just like Open JSON. Unsaved changes require confirmation. It never saves over
 the device draft automatically or publishes a shared world. A canceled chooser
 leaves the document unchanged. Export before replacing a draft you want to keep.
@@ -56,7 +55,7 @@ through the actual editor and server compiler, checks independent copies and
 edit/undo/export roundtrips, then checks route graph connectivity, destination
 placement, building separation and sampled full-width path clearance.
 
-The World Studio browser journey covers all five choices, rendered views,
-Escape/focus recovery, unsaved-change cancellation, narrow layout and preservation
-of the saved device draft. These checks do not establish human accessibility,
+The World Studio browser journey now covers the four furnished spaces, rendered
+views, Escape/focus recovery, unsaved-change cancellation, narrow layout and
+preservation of the saved device draft. The legacy packages retain unit coverage. These checks do not establish human accessibility,
 production publishing, provider authentication or native Unreal acceptance.

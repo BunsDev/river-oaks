@@ -4474,8 +4474,8 @@
       "branches": [
         "feat/office-elevator-access-20261013"
       ],
-      "updatedAt": "2026-10-13T15:13:17.380559+00:00",
-      "nextAction": "Cycling main2642eda integrated and verified: core3719 pass/1 skip, office9checks pass. Push signed merge and land PR317 through protected queue; record final head/merge/check proof.",
+      "updatedAt": "2026-10-13T15:43:20.245205+00:00",
+      "nextAction": "PR #317: current-main menu integration verified and reviewed. Sign and push merge commit, rejoin protected landing queue, wait for current-head hosted Verify, then record delivery proof.",
       "ledger": "docs/superpowers/plans/2026-10-13-office-elevator-access.md",
       "filesOwned": [
         "server/offices.js",
@@ -4511,14 +4511,68 @@
       "latestEvidence": {
         "focused": "Memory/Redis ticket+WebSocket permission and movement tests passed with zero skips; office geometry/lifecycle/spatial voice tests passed.",
         "baseline": "60/60 existing world and workplace geometry tests passed.",
-        "core": "Latest core: 3719 passed, 1 existing geometry skip, zero failures; all631 server tests with isolated Redis. data/reports/office-cycling-integration-core.json",
-        "browser": "Final integrated office journey9/9 passed with readiness-aware clicks; initial reentry timeout and passing diagnostic retained separately. data/reports/office-cycling-integration-retry.json",
-        "delivery": "PR317 open; current-main integration verified, signed merge/push and protected landing pending.",
-        "review": "Independent integrated office/stage review approved; 37 focused tests passed, zero skips."
+        "core": "Latest core: 3747 passed, 1 existing geometry skip, zero failures; all 635 server tests with isolated Redis. data/reports/office-menu-integration-core.json. Earlier Redis-native-crash receipt retained separately.",
+        "browser": "Latest office journey 9/9 passed after Studio and cycling Play menu integration: data/reports/office-menu-integration-experience.json.",
+        "delivery": "PR https://github.com/BunsDev/river-oaks/pull/317 open at26d9857df1e5e51491a59c102fa7929b9c0ec9fd; signed and pushed, CI running, queued behind316/318/314.",
+        "review": "Independent office/stage review: 37 focused tests passed. Cycling integration probe and combined Studio/cycling/office Play menu review approved without blockers."
       },
       "owner": "codex:office-elevator-access-20261013",
       "leaseUntil": "2026-10-13T16:49:29.390145+00:00",
       "pr": 317
+    },
+    {
+      "id": "studio-furnished-spaces",
+      "title": "Four furnished building templates and agentic space editing",
+      "status": "active",
+      "branches": [
+        "feat/studio-spaces-20261013"
+      ],
+      "owner": "codex:01a1351b-787e-7443-ab4c-0759b9fbecb8",
+      "updatedAt": "2026-10-13T15:03:53.897330+00:00",
+      "nextAction": "PR #316: current main 2642eda integrated without source conflicts; combined core passed 3543 tests, 137 existing skips. Push signed integration, wait for exact-head CI and queued Studio browser/native reruns, then land and deliver realism goal prompt.",
+      "ledger": "docs/superpowers/plans/2026-10-13-studio-spaces.md",
+      "filesOwned": [
+        ".agents/skills/studio-world-design/SKILL.md",
+        "desktop/agent-e2e.js",
+        "desktop/main.js (space export title only)",
+        "desktop/package-files.js",
+        "desktop/package.js",
+        "desktop/studio-agent-guide.js",
+        "desktop/studio-designer-host.js",
+        "desktop/studio-download.js",
+        "desktop/studio-scene-context.js",
+        "desktop/tests/fixtures/studio-agent-cli.mjs",
+        "desktop/tests/package-files.test.js",
+        "desktop/tests/studio-agent-host.test.js",
+        "desktop/tests/studio-designer-host.test.js",
+        "desktop/tests/studio-download.test.js",
+        "docs/starter-districts.md",
+        "docs/world-studio-agent.md",
+        "docs/world-studio.md",
+        "preview/e2e/world-studio.js",
+        "preview/src/studio/",
+        "preview/tests/studio-*.test.js",
+        "shared/studio-space-catalog.js",
+        "preview/src/studio/studio.css"
+      ],
+      "requiredChecks": [
+        "focused document, proposal, renderer and template regressions",
+        "pnpm run verify",
+        "pnpm run test:experience world-studio",
+        "pnpm run test:desktop:agent",
+        "rendered review of all four spaces"
+      ],
+      "verification": {
+        "focused": "87 Studio/desktop/package tests passed; later 17 renderer/template checks passed including red-green office glazing regression.",
+        "specReview": "Independent spec review passed after cabinet sink, chair orientation, guide and packaged dependency fixes.",
+        "pending": "PR #316 hosted CI and guarded landing pending. The separate requested realism prompt follows the merge; packaged release/live-provider/production/human accessibility/target GPU remain unverified.",
+        "core": "After integrating main 2642eda: all 11 core tasks passed; 3543 passing tests and 137 existing skips, zero failures. Local node --test concurrency=4; .runtime/studio-pr316-integrated-core.log and .runtime/agent/core.json.",
+        "qualityReview": "Independent quality review passed after local Stop cancellation fence and bounded observed-position traversal test.",
+        "browser": "Fresh world-studio journey passed in 28.663s through the repository browser queue; data/reports/studio-spaces-delivery-browser.json. All four scene captures previously inspected, including corrected office glazing.",
+        "native": "Fresh development Electron fixture passed all 13 checks with clean exit 0 after main integration; .runtime/studio-delivery-native.log and .runtime/agent/studio-agent-native.json. Synthetic providers only."
+      },
+      "leaseUntil": "2026-10-13T16:42:00.588982+00:00",
+      "pr": 316
     }
   ]
 }
