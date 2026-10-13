@@ -1,3 +1,11 @@
+// The one device permission the game may hold: the microphone, for shared
+// voice, asked by the exact game origin from the main frame. Video, audio
+// together with video, other origins, frames and every other permission stay denied.
+export function mediaPermissionAllowed({ permission, origin, mediaTypes, mainFrame = true } = {}, gameOrigin) {
+  return permission === 'media' && mainFrame === true && typeof origin === 'string' && typeof gameOrigin === 'string' && origin === gameOrigin
+    && Array.isArray(mediaTypes) && mediaTypes.length === 1 && mediaTypes[0] === 'audio';
+}
+
 export function navigationAllowed(input, entry) {
   try {
     const url = new URL(input), base = new URL(entry);
