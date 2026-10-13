@@ -23,10 +23,11 @@
 .game-hud .hud-space-body > .section-label:first-of-type { display: none; }
 /* The map sheet fits instead of scrolling: the map is as wide as the sheet when there is
    room, and shrinks (never below 150px) when the window is short. Only an opened
-   Storefront access scrolls, inside itself. Very short windows fall back to a scrolling body. */
+   Storefront access scrolls, inside itself. If the card still cannot fit (a very short
+   window, larger fonts) the body scrolls rather than clipping a control. */
 @media (min-height:560px) {
   .game-hud #explore-section { container-type: inline-size; }
-  .game-hud #explore-section > .hud-space-body { display: flex; flex-direction: column; overflow: visible; }
+  .game-hud #explore-section > .hud-space-body { display: flex; flex-direction: column; }
   .game-hud #explore-section #places { display: contents; }
   .game-hud #control-panel #explore-section #places-here { flex: none; align-self: flex-start; }
   .game-hud #control-panel #explore-section .places-launcher, .game-hud #control-panel #explore-section .storefront-access { flex: none; }
@@ -172,7 +173,7 @@
   .game-hud:has(.town-chat-dock .multiplayer-chat-message) { --map-sheet-reserve: calc(229px + min(180px, 24dvh)); }
   .game-hud:has(.town-chat-dock:not([open])) { --map-sheet-reserve: 165px; }
   .game-hud:has(#explore-section .storefront-access[open]) { --map-sheet-reserve: 100px; }
-  :root[data-theme] .game-hud #control-panel #explore-section { max-height: max(calc(100dvh - var(--map-sheet-reserve)), min(420px, calc(100dvh - 100px))); }
+  :root[data-theme] .game-hud #control-panel #explore-section { max-height: max(calc(100dvh - var(--map-sheet-reserve)), min(440px, calc(100dvh - 100px))); }
 }
 @media (prefers-reduced-motion:reduce) {
   .game-hud :is(.hud-space, .town-chat-dock, .hud-launcher, #settings-dialog) { transition: none; animation: none; }

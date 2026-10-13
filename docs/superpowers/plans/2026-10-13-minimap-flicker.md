@@ -93,6 +93,29 @@ ANGLE. The scripts are in the session scratchpad.
 | Experience journeys: the hosted places shard (`contextual-first-visit store-intro photo-mode rail-navigation places-guide destination-minimap spatial-circulation`) plus `game-hud sidebar hardware-acceleration ui-polish hud-and-quality` | All pass except `spatial-circulation`, which timed out waiting for `.store-intro[open]`. That is the known flake #296 fixes; run alone, it passes. |
 | Build | `dist/preview/play/index.html` loads `/assets/boot/first-paint.js` before the module bundle, and the file ships at that path. |
 
+## First hosted run (`bdc4599` merged with main, run 38377505104)
+
+Four shared journeys failed: `world-map`, `world-publish`, `multiplayer-dev` and
+`shared-seating`. Each timed out clicking `.storefront-access > summary`, with
+"element is outside of the viewport". At the shared runner's 1280×720, with town
+chat history, the sheet sits at its floor height, and Linux fonts make the card
+slightly taller than that. With the sheet at `overflow: clip`, the summary was cut
+off where no scroll could reach it.
+
+**Fix:**
+- The map sheet's body keeps the shared body's `overflow-y: auto`, so a card that
+  cannot fit scrolls instead of clipping a control. At normal sizes nothing
+  overflows and nothing scrolls.
+- The floor is 440 px instead of 420.
+- `destination-minimap` now counts a map ancestor only if it actually scrolls.
+
+**Local check** at 1280×720 with chat history: the card fits (map 174 px, nothing
+scrolls). With the card padded 40 px taller to stand in for larger fonts, the body
+scrolls and the summary still opens.
+
+`contextual-first-visit` failed in the places shard with a `travel_cooldown`
+refusal from the town. That is a known rerun flake and touches nothing here.
+
 ## Gaps
 
 - The panel flicker was captured once (one frame in about 424 map-open frames in

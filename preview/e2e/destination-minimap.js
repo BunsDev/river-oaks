@@ -16,11 +16,12 @@ async page => {
     await page.setViewportSize({ width, height });
     const fit = await page.locator('#places .world-map-surface').evaluate(map => {
       const sheet = map.closest('.hud-space'), scrollers = [];
-      for (let node = map.parentElement; node && node !== document.body; node = node.parentElement) if (/(auto|scroll)/.test(getComputedStyle(node).overflowY)) scrollers.push(node.id || node.className);
+      for (let node = map.parentElement; node && node !== document.body; node = node.parentElement)
+        if (/(auto|scroll)/.test(getComputedStyle(node).overflowY) && node.scrollHeight > node.clientHeight + 1) scrollers.push(node.id || node.className);
       const bottom = Math.max(...[...sheet.querySelectorAll('.hud-space-body *')].filter(node => node.checkVisibility()).map(node => node.getBoundingClientRect().bottom));
       return { scrollers, fits: bottom <= sheet.getBoundingClientRect().bottom + 0.5, size: map.clientWidth, square: map.clientWidth === map.clientHeight };
     });
-    check(fit.scrollers.length === 0, `The compact map is not inside a scrolling container at ${width}x${height} (${fit.scrollers.join(', ')})`);
+    check(fit.scrollers.length === 0, `The compact map does not scroll at ${width}x${height} (${fit.scrollers.join(', ')})`);
     check(fit.fits && fit.size >= 150 && fit.square, `The map card shows the whole map and its controls at ${width}x${height}`);
   }
   await page.setViewportSize({ width: 1440, height: 1000 });
