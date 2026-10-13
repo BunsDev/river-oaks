@@ -84,7 +84,7 @@ function validOperation(operation) {
 }
 
 /** Private room coordinator. Authentication and connection IDs come from the server. */
-export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID,now=Date.now,authorize,isAdmin=isJevicaAdmin,regionCatalog=null,regionSha256=null,avatarPreferences=null,voice=null}) {
+export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID,now=Date.now,authorize,isAdmin=isJevicaAdmin,regionCatalog=null,regionSha256=null,avatarPreferences=null,voice=null,cyclingMiles=null}) {
   if(!redis || typeof authorize!=='function' || typeof prefix!=='string' || !prefix || prefix.length>180) throw new Error('Invalid room configuration');
   validateWorldId(worldId);
   const tag=prefix.includes('{')?prefix:`{${prefix}}`;
@@ -165,6 +165,9 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
     }
     // Real clocks govern cooldowns/presence; simulation never catches up offline.
     if(connections.size)world.step(previous?Math.min(0.25,Math.max(0,(time-previous.lastTick)/1000)):0);
+    // Bank accepted bicycle metres on every tick; the store is cross-world.
+    if(cyclingMiles)for(const {userId,meters,name} of world.drainRides())
+      try{await cyclingMiles.add(userId,meters,name);}catch{console.warn(JSON.stringify({event:'cycling_flush_failed',worldId}));}
     let revisionUpdate=null;
     const syncAccount=async userId=>{
       if(!avatarPreferences)return;
