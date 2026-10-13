@@ -1,0 +1,145 @@
+/* Settings dialog panes (sidebar.js). Each pane says what it is for, related rows sit
+   in titled groups, every single choice uses one segmented control, and a row keeps
+   its label beside its control. Scoped to the dialog: the same controls elsewhere keep
+   their own look. Loaded after game-hud.css (main.js). */
+
+:root[data-theme] .game-hud #settings-dialog #settings-section { padding: 26px 30px 32px; }
+:root[data-theme] .game-hud #settings-dialog [role=tabpanel] > h3 { margin: 0; font-size: 20px; letter-spacing: -.3px; }
+:root[data-theme] .game-hud #settings-dialog .settings-pane-intro { margin: 4px 0 24px; color: var(--hud-muted); font-size: 13px; line-height: 1.45; }
+:root[data-theme] .game-hud #settings-dialog .settings-group { margin: 0 0 24px; }
+:root[data-theme] .game-hud #settings-dialog .settings-group > h4 {
+  margin: 0 0 8px; color: var(--hud-muted); font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+}
+
+/* One segmented control for every single choice: theme, graphics quality, light. */
+:root[data-theme] .game-hud #settings-dialog :is(.theme-switch, .atmosphere-presets) {
+  display: flex; flex-flow: row nowrap; gap: 3px; margin: 0; padding: 3px; border: 0; border-radius: 12px;
+  background: var(--hud-tile); box-shadow: inset 0 0 0 1px var(--hud-hairline);
+}
+:root[data-theme] .game-hud #settings-dialog :is(.theme-switch, .atmosphere-presets) > button {
+  flex: 1 1 0; min-width: 0; min-height: 36px; margin: 0; padding: 0 10px; border: 0; border-radius: 9px;
+  background: transparent; box-shadow: none; color: var(--hud-muted); font-size: 13px; font-weight: 500; line-height: 1.2;
+}
+:root[data-theme] .game-hud #settings-dialog :is(.theme-switch, .atmosphere-presets) > button:hover { background: var(--hud-tile-hover); color: var(--ink); }
+:root[data-theme] .game-hud #settings-dialog :is(.theme-switch, .atmosphere-presets) > button[aria-pressed=true] {
+  background: var(--hud-raised); color: var(--ink); font-weight: 600;
+  box-shadow: 0 1px 2px rgb(0 0 0 / .12), inset 0 0 0 1px var(--hud-hairline);
+}
+
+/* Appearance and Graphics: the pane title already names the control. */
+:root[data-theme] .game-hud #settings-dialog #appearance-label {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+:root[data-theme] .game-hud #settings-dialog .graphics-control { display: flex; flex-direction: column; }
+/* The live readout follows the choice and its note, as a small chip. */
+:root[data-theme] .game-hud #settings-dialog .graphics-control .section-label { order: 3; display: flex; justify-content: flex-start; margin: 12px 0 0; font-size: 0; }
+:root[data-theme] .game-hud #settings-dialog .graphics-control #quality-readout { margin: 0; }
+:root[data-theme] .game-hud #settings-dialog #quality-readout {
+  padding: 3px 8px; border-radius: 999px; background: var(--hud-tile); color: var(--hud-muted); font: 500 11px/1.4 var(--font-mono, ui-monospace, monospace);
+}
+:root[data-theme] .game-hud #settings-dialog .quality-note { margin: 10px 2px 0; color: var(--hud-muted); font-size: 12.5px; line-height: 1.45; }
+
+/* Selects and the label above them. */
+:root[data-theme] .game-hud #settings-dialog :is(.community-label, .voice-settings label[for]) { display: block; margin: 0 0 6px; font-size: 13px; font-weight: 600; color: var(--ink); }
+:root[data-theme] .game-hud #settings-dialog :is(#community-voice, #voice-input-device) { width: 100%; min-height: 40px; margin: 0; border-radius: 10px; }
+:root[data-theme] .game-hud #settings-dialog .community-voice-status { margin: 6px 2px 0; color: var(--hud-muted); font-size: 12px; }
+
+/* Audio: radio and checkbox rows keep the control beside its label. */
+:root[data-theme] .game-hud #settings-dialog #voice-input-device { margin-bottom: 18px; }
+:root[data-theme] .game-hud #settings-dialog .voice-settings legend { margin: 0 0 4px; font-size: 13px; font-weight: 600; color: var(--ink); }
+:root[data-theme] .game-hud #settings-dialog .voice-settings .layer-row {
+  display: flex; justify-content: flex-start; align-items: center; gap: 10px; min-height: 40px; padding: 0; text-align: left; font-size: 13px; color: var(--ink);
+}
+:root[data-theme] .game-hud #settings-dialog .voice-settings .layer-row > span { flex: 1; }
+:root[data-theme] .game-hud #settings-dialog .voice-settings .layer-row input { flex: none; width: 17px; height: 17px; margin: 0; accent-color: var(--hud-action); }
+
+/* World: light, then what the district shows, then building your own. */
+:root[data-theme] .game-hud #settings-dialog .settings-group .atmosphere-presets { margin-bottom: 16px; }
+:root[data-theme] .game-hud #settings-dialog .range-label { display: flex; justify-content: space-between; align-items: baseline; margin: 0 0 4px; font-size: 13px; font-weight: 600; }
+:root[data-theme] .game-hud #settings-dialog .range-label output { color: var(--hud-muted); font: 500 12px var(--font-mono, ui-monospace, monospace); }
+:root[data-theme] .game-hud #settings-dialog #sun-hour { width: 100%; margin: 6px 0 14px; accent-color: var(--hud-action); }
+:root[data-theme] .game-hud #settings-dialog .select-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 44px; font-size: 13px; font-weight: 600; }
+:root[data-theme] .game-hud #settings-dialog .select-row select { min-width: 140px; min-height: 36px; border-radius: 10px; }
+:root[data-theme] .game-hud #settings-dialog .settings-group > .layer-row {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 44px; margin: 0; padding: 0 2px;
+  border-top: 1px solid var(--hud-hairline); font-size: 13px; color: var(--ink);
+}
+:root[data-theme] .game-hud #settings-dialog .settings-group > h4 + .layer-row { border-top: 0; }
+:root[data-theme] .game-hud #settings-dialog .settings-group > .layer-row input { width: 18px; height: 18px; margin: 0; accent-color: var(--hud-action); }
+:root[data-theme] .game-hud #settings-dialog .settings-group > p:has(> a[href="/studio.html"]) { margin: 0; }
+:root[data-theme] .game-hud #settings-dialog a[href="/studio.html"] {
+  display: flex; justify-content: space-between; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 12px;
+  background: var(--hud-tile); color: var(--ink); font-size: 13px; font-weight: 600; text-decoration: none;
+}
+:root[data-theme] .game-hud #settings-dialog a[href="/studio.html"]:hover { background: var(--hud-tile-hover); }
+
+/* Account: actions read as a list; signing out stands apart. */
+:root[data-theme] .game-hud #settings-dialog .access-tools {
+  display: flex; flex-direction: column; gap: 0; margin: 0 0 24px; padding: 0; border-radius: 12px; overflow: hidden; background: var(--hud-tile);
+}
+:root[data-theme] .game-hud #settings-dialog .access-tools button {
+  display: flex; justify-content: space-between; align-items: center; width: 100%; min-height: 44px; margin: 0; padding: 0 14px;
+  border: 0; border-top: 1px solid var(--hud-hairline); border-radius: 0; background: transparent; box-shadow: none;
+  color: var(--ink); font-size: 13px; font-weight: 500; text-align: left;
+}
+/* No divider above the first visible action (admin-only actions are hidden). */
+:root[data-theme] .game-hud #settings-dialog .access-tools button:not([hidden]):not(button:not([hidden]) ~ button) { border-top: 0; }
+:root[data-theme] .game-hud #settings-dialog .access-tools button:not(#access-signout)::after {
+  content: ""; width: 7px; height: 7px; margin-left: 12px; border: solid var(--hud-muted); border-width: 1.5px 1.5px 0 0; rotate: 45deg;
+}
+:root[data-theme] .game-hud #settings-dialog .access-tools button:hover { background: var(--hud-tile-hover); }
+:root[data-theme] .game-hud #settings-dialog #access-signout { color: #a33a32; }
+:root[data-theme=dark] .game-hud #settings-dialog #access-signout { color: #ff9f94; }
+:root[data-theme] .game-hud #settings-dialog .panel-footer {
+  display: flex; align-items: center; gap: 10px; min-height: 44px; margin: 0; padding: 0 6px 0 14px; border: 0; border-radius: 12px;
+  background: var(--hud-tile); color: var(--ink); font-size: 13px;
+}
+:root[data-theme] .game-hud #settings-dialog .panel-footer #connection { flex: 1; }
+:root[data-theme] .game-hud #settings-dialog #reload {
+  display: grid; place-items: center; width: 32px; height: 32px; min-height: 0; padding: 0; border: 0; border-radius: 999px; background: transparent; color: var(--hud-muted); font-size: 16px;
+}
+:root[data-theme] .game-hud #settings-dialog #reload:hover { background: var(--hud-tile-hover); color: var(--ink); }
+
+/* Disclosures (API keys, voice chat, map sources) share one row style. */
+:root[data-theme] .game-hud #settings-dialog [role=tabpanel] details > summary { min-height: 44px; font-size: 13.5px; font-weight: 600; }
+:root[data-theme] .game-hud #settings-dialog [role=tabpanel] > details.rail-disclosure { margin-bottom: 24px; }
+:root[data-theme] .game-hud #settings-dialog [role=tabpanel] > details:not(.rail-disclosure) > summary {
+  display: flex; justify-content: space-between; align-items: center; list-style: none; color: var(--ink); cursor: pointer;
+}
+:root[data-theme] .game-hud #settings-dialog [role=tabpanel] > details:not(.rail-disclosure) > summary::-webkit-details-marker { display: none; }
+:root[data-theme] .game-hud #settings-dialog [role=tabpanel] > details:not(.rail-disclosure) > summary::after {
+  content: ""; width: 7px; height: 7px; margin: 0 6px 3px 12px; border: solid var(--hud-muted); border-width: 0 1.5px 1.5px 0; rotate: 45deg;
+}
+:root[data-theme] .game-hud #settings-dialog [role=tabpanel] > details[open]:not(.rail-disclosure) > summary::after { rotate: 225deg; margin-bottom: -3px; }
+
+/* About: the claim, then the facts as label and value rows. */
+:root[data-theme] .game-hud #settings-dialog .evidence-line strong { font-size: 14px; }
+:root[data-theme] .game-hud #settings-dialog [role=tabpanel] > .quiet-note { margin: 6px 0 16px; color: var(--hud-muted); font-size: 13px; line-height: 1.5; }
+:root[data-theme] .game-hud #settings-dialog .data-note {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 40px; border-top: 1px solid var(--hud-hairline); font-size: 13px;
+}
+:root[data-theme] .game-hud #settings-dialog .data-note span { color: var(--hud-muted); }
+:root[data-theme] .game-hud #settings-dialog .data-note + .quiet-note { border-top: 1px solid var(--hud-hairline); padding-top: 12px; }
+:root[data-theme] .game-hud #settings-dialog #limitations { margin: 4px 0 0; padding-left: 18px; color: var(--hud-muted); font-size: 12.5px; line-height: 1.5; }
+
+/* Touch: 44px targets. */
+@media (pointer: coarse) {
+  :root[data-theme] .game-hud #settings-dialog :is(.theme-switch, .atmosphere-presets) > button { min-height: 44px; }
+  :root[data-theme] .game-hud #settings-dialog .settings-header kbd { display: none; }
+}
+
+/* Phones: the categories become a scrolling row above a full-width pane. */
+@media (max-width: 640px) {
+  :root[data-theme] .game-hud #settings-dialog .settings-layout { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+  :root[data-theme] .game-hud #settings-dialog .settings-layout nav {
+    flex-direction: row; gap: 4px; padding: 8px 12px; overflow: auto hidden; border-right: 0; border-bottom: 1px solid var(--line); scrollbar-width: none;
+  }
+  :root[data-theme] .game-hud #settings-dialog .settings-layout [role=tab] {
+    flex: 0 0 auto; min-height: 36px; padding: 0 14px; border-radius: 999px; text-align: center; box-shadow: none;
+  }
+  :root[data-theme] .game-hud #settings-dialog #settings-section { padding: 20px 16px 28px; }
+  :root[data-theme] .game-hud #settings-dialog .settings-pane-intro { margin-bottom: 20px; }
+}
+@media (max-width: 640px) and (pointer: coarse) {
+  :root[data-theme] .game-hud #settings-dialog .settings-layout [role=tab] { min-height: 44px; }
+}

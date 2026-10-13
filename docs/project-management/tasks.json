@@ -4126,15 +4126,14 @@
     {
       "id": "plaza-hearts",
       "title": "Hearts at the plaza café table: four players (you and three plaza regulars), passing, tricks, shooting the moon, game to 100; cards mirrored on the round table",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "feat/plaza-hearts-20261013"
       ],
-      "owner": "claude:river-oaks-c2",
-      "leaseUntil": "2026-10-13T21:17:10.000Z",
-      "updatedAt": "2026-10-13T11:17:10.000Z",
+      "owner": null,
+      "updatedAt": "2026-10-13T13:31:53.390Z",
       "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-plaza-hearts-20261013",
-      "nextAction": "Val chose cards at the café (Hearts) as the next table game (2026-10-13). Stacked on feat/plaza-dominoes-20261013: merge main once dominoes lands. hearts-rules.js (seeded deal, passing, tricks, scoring), a fair-view opponent, a café game switch (Dominoes / Hearts), cards on the round table, journey; then PR (land only when Val says).",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "filesOwned": [
         "preview/src/hearts-rules.js",
         "preview/src/hearts-opponent.js",
@@ -4151,7 +4150,34 @@
         "Hosted CI"
       ],
       "ledger": "docs/superpowers/plans/2026-10-13-plaza-hearts.md",
-      "issues": []
+      "issues": [],
+      "pr": 310,
+      "evidence": [
+        {
+          "pr": 310,
+          "reviewedHead": "d69c8d0474a62e7e80dddf83eecf928be3a74751",
+          "merge": "2ecbf566aecc237b1e5bd7be3bb8af732660c91d",
+          "tree": "3e3889aeae28157896c19a76efb781b51c309693",
+          "checks": "All 16 hosted check runs succeeded on d69c8d0 (guard: mergeState CLEAN, 17 checks); landed by pnpm run land through gh-merge-when-green.sh (Val authorized). Local: verify core passed (preview 2760 pass/1 skip; server 421 pass/134 skips); unit 2764 pass/0 fail after the #307 and #306/#308 merges; plaza-hearts journey passed after the #307 merge, plaza-dominoes passed on the #304 merge. Earlier journey failures were environment only (Playwright browser deleted by disk cleanup; ENOSPC on the lock)."
+        }
+      ],
+      "retirement": {
+        "head": "d69c8d0474a62e7e80dddf83eecf928be3a74751",
+        "releasedAt": "2026-10-13T13:31:12+00:00",
+        "sessionsReviewedAt": "2026-10-13T13:31:12+00:00"
+      },
+      "retiredBranches": [
+        "feat/plaza-hearts-20261013"
+      ],
+      "archive": {
+        "feat/plaza-hearts-20261013": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-SQIunt/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-SQIunt/history.bundle",
+          "sha256": "df2b8527f77a95c1481c2c62d4c09685f6f485f2c54cd653834b5cc4f9114d62",
+          "tag": "refs/tags/archive/worktree-prune/007eb995-690f-4470-835f-6ef2ac7d0dc3",
+          "head": "d69c8d0474a62e7e80dddf83eecf928be3a74751"
+        }
+      }
     },
     {
       "id": "shared-voice-livekit",
@@ -4288,14 +4314,12 @@
     {
       "id": "shared-voice-client",
       "title": "Shared voice, PR 3: browser controller, Y/M keys, chat-dock and roster controls, voice settings",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "feat/voice-client-20261013"
       ],
-      "owner": "claude:river-oaks-f1 (46fc41e0)",
-      "updatedAt": "2026-10-13T11:06:11.978Z",
-      "leaseUntil": "2026-10-13T13:06:11.978Z",
-      "nextAction": "#303 open and queued in pnpm run land behind #302 (verify core passed). PR 4 (spatial audio graph, speaking rings, two-browser journey) starts on feat/voice-spatial-20261013 from #303's head; its browser run waits for Val's decision on the machine's disk and swap.",
+      "updatedAt": "2026-10-13T11:36:53.546Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "filesOwned": [
         "preview/src/voice-chat.js",
         "preview/src/voice-spatial.js",
@@ -4322,7 +4346,36 @@
       ],
       "ledger": "docs/superpowers/plans/2026-10-13-shared-voice.md",
       "plan": "docs/superpowers/plans/2026-10-05-spatial-voice.md",
-      "pr": 303
+      "pr": 303,
+      "deliveryPr": 303,
+      "evidence": [
+        {
+          "pr": 303,
+          "reviewedHead": "20ccd75771ae75c197bb2cbfe13709bc4ae0037f",
+          "merge": "c62b960665ca6b0f56a9c8ce3915d948a7274ab2",
+          "tree": "73ce3be6ecb93d52c92fd152e2eae5b77c895ab4",
+          "checks": "pnpm run land: Verify passed on the updated head; local: 27 voice unit tests, preview 2722/2723, build chunk check, verify core passed"
+        }
+      ],
+      "retirement": {
+        "head": "20ccd75771ae75c197bb2cbfe13709bc4ae0037f",
+        "sessionsReviewedAt": "2026-10-13T11:36:01.651Z",
+        "releasedAt": "2026-10-13T11:36:01.651Z",
+        "releasedBy": "claude:river-oaks-f1 (46fc41e0)",
+        "note": "Only this session worked the branch; #303 merged as c62b960; evidence archived; worktree clean."
+      },
+      "retiredBranches": [
+        "feat/voice-client-20261013"
+      ],
+      "archive": {
+        "feat/voice-client-20261013": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-7TvyiM/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-7TvyiM/history.bundle",
+          "sha256": "7f7ef2060c9e0f56b67760b5603a0af20657be6dcbd1270429b32ad0f3369e14",
+          "tag": "refs/tags/archive/worktree-prune/f6bdde2a-56ac-43ce-a4ee-0b34b58ab106",
+          "head": "20ccd75771ae75c197bb2cbfe13709bc4ae0037f"
+        }
+      }
     },
     {
       "id": "shared-voice-spatial",
@@ -4334,7 +4387,7 @@
       "owner": "claude:river-oaks-f1 (46fc41e0)",
       "updatedAt": "2026-10-13T11:28:17.175Z",
       "leaseUntil": "2026-10-13T13:28:17.175Z",
-      "nextAction": "Journey passed (14 checks), verify core passed. PR open; land after #303.",
+      "nextAction": "voice-shared journey passed (14 checks) after merging main (#302's reconciler). pnpm run verify running; then push, PR, land after #303.",
       "filesOwned": [
         "preview/src/voice-spatial.js",
         "preview/src/voice-chat.js",
@@ -4368,7 +4421,7 @@
       "owner": "claude:river-oaks-f1 (46fc41e0)",
       "updatedAt": "2026-10-13T11:17:18.342Z",
       "leaseUntil": "2026-10-13T13:17:18.342Z",
-      "nextAction": "Policy, handlers, packaging, docs and unit test written (desktop suite 51/51). The Electron e2e (pnpm run test:desktop:e2e --dev) has not run: it waits for Val's decision on the machine. Then verify, commit, PR, land.",
+      "nextAction": "Electron e2e passed (13 checks; fake UI flag dropped), verify core passed. PR open; land after #305.",
       "filesOwned": [
         "desktop/runtime.js",
         "desktop/main.js",
@@ -4384,6 +4437,35 @@
       ],
       "ledger": "docs/superpowers/plans/2026-10-13-shared-voice.md",
       "plan": "docs/superpowers/plans/2026-10-05-spatial-voice.md"
+    },
+    {
+      "id": "plaza-backgammon",
+      "title": "A backgammon table for the plaza (Val's 'more game tables'): new table and chairs in the plan, backgammon rules and a plaza regular, board and checkers mirrored in 3D",
+      "status": "active",
+      "branches": [
+        "feat/plaza-backgammon-20261013"
+      ],
+      "owner": "claude:river-oaks-c2",
+      "leaseUntil": "2026-10-13T23:48:35.000Z",
+      "updatedAt": "2026-10-13T11:48:46.000Z",
+      "nextAction": "Stacked on feat/plaza-hearts-20261013: merge main once Hearts lands. Rules first (pure), then the table in the plan, board mirror, sheet, journey; land when green (Val authorized).",
+      "filesOwned": [
+        "preview/src/backgammon-rules.js",
+        "preview/src/backgammon-opponent.js",
+        "preview/src/plaza-backgammon.js",
+        "preview/src/plaza-salon-plan.js (new table)",
+        "preview/src/plaza-salon.js (board)",
+        "preview/e2e/plaza-backgammon.js"
+      ],
+      "requiredChecks": [
+        "pnpm test (rules, opponent, plaza placement/clearance, mirror)",
+        "plaza-backgammon and plaza-salon journeys",
+        "pnpm run verify",
+        "Hosted CI"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-13-plaza-backgammon.md",
+      "issues": [],
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-plaza-backgammon-20261013"
     }
   ]
 }

@@ -37,7 +37,10 @@ const started = performance.now();
 // A packaged build has the Node inspector fuse turned off (desktop/fuses.js),
 // so Playwright cannot attach to it. This mode only works on an unfused build.
 const executablePath = process.env.RIVER_OAKS_DESKTOP_EXECUTABLE;
-const app = await electron.launch({ executablePath, args: [...(executablePath ? [] : [root]), `--user-data-dir=${profile}`], env, timeout: 30000 });
+// A fake device lets the microphone check run without hardware. Electron shows
+// no prompt of its own: the permission handler in main.js decides. Chromium's
+// fake-UI flag must stay off, because it approves before that handler is asked.
+const app = await electron.launch({ executablePath, args: [...(executablePath ? [] : [root]), `--user-data-dir=${profile}`, '--use-fake-device-for-media-stream'], env, timeout: 30000 });
 const errors = [], failedAssets = [], tempFiles = [];
 const report = { mode: executablePath ? 'packaged' : env.RIVER_OAKS_DEV_URL ? 'development' : 'hosted', checks: [] };
 function check(name) { report.checks.push(name); console.log(`✓ ${name}`); }
@@ -93,6 +96,18 @@ try {
   assert.deepEqual(security, { sandbox: true, contextIsolation: true, nodeIntegration: false });
   assert.equal(await page.evaluate(() => typeof window.require), 'undefined');
   check('sandbox and renderer isolation');
+  // Shared voice: the microphone alone, from the game origin; nothing else.
+  report.media = await page.evaluate(async () => {
+    const attempt = async constraints => {
+      try { const stream = await navigator.mediaDevices.getUserMedia(constraints); const kinds = stream.getTracks().map(track => track.kind); for (const track of stream.getTracks()) track.stop(); return { ok: true, kinds }; }
+      catch (error) { return { ok: false, name: error.name }; }
+    };
+    return { audio: await attempt({ audio: true }), video: await attempt({ video: true }), both: await attempt({ audio: true, video: true }) };
+  });
+  assert.deepEqual(report.media.audio, { ok: true, kinds: ['audio'] });
+  assert.equal(report.media.video.ok, false);
+  assert.equal(report.media.both.ok, false);
+  check('microphone permission is granted only for audio on the game origin');
   const panel = page.locator('#panel-toggle');
   if (await panel.getAttribute('aria-expanded') === 'true') await panel.click();
   await page.locator('#canvas-host').focus();
