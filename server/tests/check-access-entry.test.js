@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
@@ -16,7 +16,7 @@ async function site(t, html, files) {
   t.after(() => rm(root, { recursive: true, force: true }));
   await mkdir(join(root, 'play'), { recursive: true }); await mkdir(join(root, 'assets'), { recursive: true });
   await writeFile(join(root, 'play/index.html'), html);
-  for (const [name, code] of Object.entries(files)) await writeFile(join(root, 'assets', name), code);
+  for (const [name, code] of Object.entries(files)) { await mkdir(dirname(join(root, 'assets', name)), { recursive: true }); await writeFile(join(root, 'assets', name), code); }
   return spawnSync(process.execPath, [script, root], { encoding: 'utf8' });
 }
 
@@ -37,4 +37,18 @@ test('the sign-in page check passes when everything it loads is served before si
   });
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /Sign-in page: 3 files, all served before sign-in/);
+});
+
+// The first-paint boot script is a classic <script src> in <head> (#297): it runs on the
+// sign-in page, so the check follows classic scripts too, and the gate must serve it.
+test('the sign-in page check covers classic scripts: the first-paint boot script passes, another refuses', async t => {
+  const page = boot => `<script src="${boot}"></script><script type="module" src="/assets/index-abc.js"></script>`;
+  const passing = await site(t, page('/assets/boot/first-paint.js'), { 'boot/first-paint.js': '(()=>{})();', 'index-abc.js': '' });
+  assert.equal(passing.status, 0, passing.stderr);
+  assert.match(passing.stdout, /Sign-in page: 2 files, all served before sign-in/);
+  const refused = await site(t, page('/assets/boot/other.js'), { 'boot/other.js': '', 'index-abc.js': '' });
+  assert.equal(refused.status, 1, refused.stdout);
+  assert.match(refused.stderr, /\/assets\/boot\/other\.js/);
+  // A page with only a classic script still has no access entry.
+  assert.equal((await site(t, '<script src="/assets/boot/first-paint.js"></script>', { 'boot/first-paint.js': '' })).status, 1);
 });
