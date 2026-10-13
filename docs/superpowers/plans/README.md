@@ -69,10 +69,11 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-11-delivered-source-retirement](2026-10-11-delivered-source-retirement.md)<br>Delivered source reconciliation | `reconcile-delivered-sources` | retired | — | 2026-10-11 |
 | [2026-10-11-ci-parallel-preview](2026-10-11-ci-parallel-preview.md)<br>Parallel preview check | `ci-parallel-preview` | retired | #252 | 2026-10-11 |
 
-## Historical, not in the register (72)
+## Historical, not in the register (73)
 
 | Plan | PRs mentioned |
 | --- | --- |
+| [2026-10-13-store-intro-cut-timing](2026-10-13-store-intro-cut-timing.md)<br>Sample the store intro's camera cut instead of timing it — 2026-10-13 | #281 |
 | [2026-10-13-store-intro-claim-race](2026-10-13-store-intro-claim-race.md)<br>Wait for the store intro before the walking HUD in spatial-circulation — 2026-10-13 | #265, #295 |
 | [2026-10-12-world-map-paint-cost](2026-10-12-world-map-paint-cost.md)<br>Stop the district map repainting while it is open — 2026-10-12 | #274, #281 |
 | [2026-10-12-town-ticket-ttl](2026-10-12-town-ticket-ttl.md)<br>Town join tickets that outlast a slow page — 2026-10-12 | #260, #253, #273 |
