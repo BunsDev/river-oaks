@@ -74,6 +74,8 @@ import { DEFAULT_WORLD_ID, worldIdFromSearch } from './world-contract.js';
 import './hud-glass.css';
 import './game-hud.css';
 import './settings-dialog.css';
+import { createPlazaBicycle } from './plaza-bicycle.js';
+import { plazaSalonRack } from './plaza-salon-plan.js';
 import { describeRenderer, describeScene, noteFrame, registerDiagnosticSource, setScreenshotCapture } from './debug-report.js';
 
 // Every stylesheet above is applied by now, so the sign-in gate can lift.
@@ -103,7 +105,7 @@ let worldRegionSha256 = null;
 let landmarkAccountId = null;
 let playerAvatar;
 let multiplayer, remotePlayers, buildLayer, buildControls, seatingControls, seatAndWater;
-let plazaSalon = null, plazaGames = null, plazaDominoes = null;
+let plazaSalon = null, plazaGames = null, plazaDominoes = null, plazaBicycle = null;
 let birdCams = null, birdCamsUI = null;
 let debugTools = null, debugLoading = null;
 const worldMapEnabled = import.meta.env.VITE_WORLD_MAP === 'true';
@@ -198,12 +200,14 @@ function initializeRenderer() {
     void worldPortal.load();
   }
   sidebarSections = setupSidebarSections({ graphics: quality.element, sidebar });
-  walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore, canEnterStore, getInteraction: () => seatAndWater?.interaction() ?? null, getPlay: () => plazaGames?.interaction() ?? plazaDominoes?.interaction() ?? null, getVoice: () => multiplayer?.voice ?? null });
+  walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore, canEnterStore, getInteraction: () => seatAndWater?.interaction() ?? plazaBicycle?.prompt() ?? null, getPlay: () => plazaGames?.interaction() ?? plazaDominoes?.interaction() ?? null, getVoice: () => multiplayer?.voice ?? null });
   storeIntros = createStoreIntros({ camera, host,
     claim: storeId => multiplayer.claimStoreIntro(storeId),
     onHalt: () => walking.halt(), onResume: () => walking.update(0, performance.now()),
   });
   walking.addObstacle({contains:(...args)=>buildLayer?.colliders.some(collider=>collider.contains(...args))??false});
+  // Before the player panel, so G reaches the rack first and the owner's ride button only when no bike is in play.
+  plazaBicycle = createPlazaBicycle({ scene, host, walking, getMultiplayer: () => multiplayer, getLocals: () => community.state?.locals, reducedMotion });
   playerAvatar = createPlayerAvatar({ scene, host, walking, reducedMotion, userId: document.body.dataset.accountId, getLocals: () => community.state?.locals, getConversation: () => community.state?.locals.find(local=>local.id===community.state.selectedId), getWorld: () => world,
     requestAppearance: appearance => multiplayer?.command({type:'appearance',appearance}),
     requestMovement: movement => multiplayer?.command({type:'movement',movement}),
@@ -303,8 +307,8 @@ function startMultiplayer() {
     getOwnerHomes: () => world?.stores.filter(store => store.category === 'home' && store.access === 'owner') ?? [],
     getRegionSha256: () => worldRegionSha256,
     onHomeAccess: () => districtUI?.refreshAccess(),
-    onSnapshot: snapshot => { if (world) community.applyRemote(snapshot);buildLayer?.sync(snapshot.builds??[]); },
-    onCorrection: player => { if (world && player) walking.applyServerPose(player); },
+    onSnapshot: snapshot => { if (world) community.applyRemote(snapshot);buildLayer?.sync(snapshot.builds??[]);plazaSalon?.userData.rack?.setTaken(snapshot.cycling?.taken ?? []); },
+    onCorrection: player => { if (world && player) { walking.applyServerPose(player); plazaBicycle?.sync(); } },
     onPlayers: (players, selfId) => {
       host.dataset.multiplayer = players.length ? 'joined' : 'disconnected';
       remotePlayers.sync(players, selfId);
@@ -448,6 +452,7 @@ function populateWorld(data) {
   registerGroundSurfaces(data,supports);
   const furniture=buildStreetFurniture(data,streetSpace);
   seatAndWater?.load(data,streetSpace);
+  plazaBicycle?.load(data);
   community.setWorld(data, buildingMesh.userData.rooms ?? []);
   storePeople = buildStorePeople(buildingMesh.userData.rooms ?? [], { reducedMotion, sharedPopulation: true });
   interiorsLayer = new THREE.Group(); interiorsLayer.name = 'Boutique interiors layer';
@@ -709,6 +714,7 @@ function render(now) {
   buildLayer?.update(camera.position);
   updateBuilder();
   playerAvatar?.update(now, camera, renderer.getSize(viewportSize).y, Boolean(multiplayer?.connected));
+  plazaBicycle?.update(now);
   followSunShadow();
   treeShadows?.hide(); // Shadow proxies show only while the sun draws its map.
   if (!softwareAcceptance && storefrontReflections && environmentAssets) {
@@ -915,6 +921,15 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
   };
   window.__riverPlazaDominoes = () => plazaDominoes ? { ...plazaDominoes.debug(), table: plazaSalon?.userData.dominoes?.count() ?? null,
     deal: (seed, players) => plazaDominoes.deal(seed, players) } : null;
+  window.__riverCycling = () => plazaBicycle ? { riding: plazaBicycle.riding, slotId: plazaBicycle.slotId, rideMeters: plazaBicycle.rideMeters, lastRideMeters: plazaBicycle.lastRideMeters, prompt: plazaBicycle.prompt()?.kind ?? null,
+    taken: multiplayer?.snapshot?.cycling?.taken ?? [], parked: plazaSalon?.userData.rack?.parked() ?? null,
+    // Arrive at a slot's approach by the normal travel path.
+    async goNear(slotId) {
+      const slot = world ? plazaSalonRack(world).find(item => item.id === slotId) : null;
+      if (!slot) return { ok: false };
+      const result = await goToPlace({ kind: 'landmark', name: 'Bike rack', position: slot.approach });
+      return { ok: Boolean(result?.ok) };
+    } } : null;
   window.__riverSeatAndWater = () => seatAndWater ? {
     seated: walking?.getPose()?.sitting ? `${walking.getPose().sitting.buildId}:${walking.getPose().sitting.slot}` : null, interaction: seatAndWater.interaction()?.kind ?? null, offered: seatAndWater.interaction()?.targetId ?? null, ...seatAndWater.sites(),
     // Arrive on open pavement beside a seat or planter, by the normal travel path.

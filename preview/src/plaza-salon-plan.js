@@ -69,8 +69,10 @@ export function plazaSalonPlan(world) {
   // The bike rack: a bronze bar along the north footway, east of the Dior
   // entrance (east ≈ -2784.7 stays open), with four bikes parked on its south
   // side so riders roll out onto the plaza paving.
-  // `setback` is the bike centre south of the bar; `approach` the walk-up south of the bike.
-  const rack = { id: 'plaza-salon-rack', x: -2781.0, north: -1294.0, heading: 0, slots: 4, pitch: 0.9, length: 3.2, setback: 0.9, approach: 0.9 };
+  // `setback` is the bike centre south of the bar (the walking model pads the
+  // bar's discs, so a frame-length of clearance keeps a parked bike rideable);
+  // `approach` is the walk-up south of the bike.
+  const rack = { id: 'plaza-salon-rack', x: -2781.0, north: -1294.0, heading: 0, slots: 4, pitch: 0.9, length: 3.2, setback: 1.1, approach: 0.9 };
   const lanterns = [[-2805.9, -1294.2], [-2778.7, -1295.8], [-2797.4, -1303.0], [-2786.6, -1303.4]]
     .map(([x, north], index) => ({ id: `lantern:${index}`, x, north, heading: heading([x, north], [-2792.5, -1298.5]), height: POST_HEIGHT }));
   const trees = treeSupports(world).filter(({ position: [x, north] }) => x > PLAZA.west && x < PLAZA.east && north > PLAZA.south && north < PLAZA.north)
