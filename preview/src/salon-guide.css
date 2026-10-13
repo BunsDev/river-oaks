@@ -112,6 +112,10 @@
 .salon-figure .sg-piece { paint-order: stroke; stroke-width: 2.2px; stroke-linejoin: round; }
 .salon-figure .sg-piece.sg-w { fill: var(--salon-ivory); stroke: #2a2119; }
 .salon-figure .sg-piece.sg-b { fill: #241c16; stroke: #f5ecd8; stroke-width: 1.2px; }
+.salon-figure .sg-morris-board { fill: #dcc093; stroke: #8c6b46; stroke-width: 1.2; }
+.salon-figure .sg-morris-line { stroke: #5a3a22; stroke-width: 2; }
+.salon-figure .sg-morris-point { fill: #5a3a22; }
+.salon-figure .sg-morris-glow { fill: rgb(240 205 120 / .55); }
 .salon-figure .sg-baize { fill: #2c6a4e; stroke: rgb(8 24 17 / .55); stroke-width: .6; }
 .salon-figure .sg-disc { stroke-width: 1.2; }
 .salon-figure .sg-disc.sg-b { fill: #1a1716; stroke: #4a4644; }

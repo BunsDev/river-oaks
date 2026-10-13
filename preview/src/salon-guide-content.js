@@ -35,6 +35,13 @@ export const GUIDE = [
     { title: 'Passing and corners', text: ['With no square that outflanks, you pass and your opponent moves again.', 'A corner can never be turned back, so corners are worth a great deal, and the squares beside an empty corner tend to give it away.'], figure: { kind: 'reversi-corner' } },
     { title: 'At the table', text: ['The table\'s own discs follow every move, and Take back returns you to your own turn, past any pass.'], figure: { kind: 'keys', keys: BOARD_KEYS } },
   ] },
+  { id: 'morris', name: "Nine men's morris", place: 'The salon chess tables', pages: [
+    { title: 'Taking a seat', text: [SALON_SEAT, `Choose Morris at the top of the sheet, and a walnut morris board is laid over the chess squares. ${SALON_SHEET}`], figure: { kind: 'emblem' } },
+    { title: 'The aim', text: ['Three of your pieces in a row along a line is a mill, and every mill you make takes one of your opponent\'s pieces.', 'Leave your opponent with two pieces, or with no move at all, to win. White begins.'], figure: { kind: 'morris-mill' } },
+    { title: 'Placing, then moving', text: ['Each side has nine pieces. In turn, place one on any empty point with a single click, until all eighteen are down.', 'Then choose a piece and move it along a line to the next point, if it is empty.'], figure: { kind: 'morris-move' } },
+    { title: 'Taking and flying', text: ['When you make a mill, the pieces you may take are marked: never one standing in a mill, unless every piece does.', 'A side down to three pieces may fly: move a piece to any empty point. Fifty moves each without a mill, or one position three times, is a draw.'], figure: { kind: 'morris-take' } },
+    { title: 'At the table', text: ['The arrow keys step only between points. The table\'s morris board follows every move.'], figure: { kind: 'keys', keys: BOARD_KEYS } },
+  ] },
   { id: 'dominoes', name: 'Dominoes', place: 'The round café table', pages: [
     { title: 'Taking a seat', text: ['The round café table stands in the plaza. Press Z to sit, then X (Play dominoes) to open the table. The sheet switches between Dominoes, Hearts and Spades, and X reopens whichever you played last.', 'You play the plaza regulars: choose 2 players or 4.'], figure: { kind: 'emblem' } },
     { title: 'The aim', text: ['A match to 100 points, with a double-six set of 28 tiles. Win a round by playing your last tile, and score the pips left in every other hand.', 'The holder of the highest double leads it. Then each play matches a tile\'s end to an open end of the line.'], figure: { kind: 'dominoes-line' } },
@@ -103,6 +110,9 @@ export function createGuideMemory(storage = globalThis.localStorage, key = 'rive
 // The positions the pictures show, as data: preview/tests/salon-guide.test.js plays
 // each one on the real rules, so a picture cannot show an illegal move or a false mate.
 export const DIAGRAMS = {
+  morrisMill: { rows: ['b.....b', '.......', '.......', 'b......', '.......', '.......', 'w..w..w'], mill: ['a1', 'd1', 'g1'] },
+  morrisMove: { rows: ['w..b...', '.b...w.', '.......', 'w.....b', '.......', '.w...b.', 'b..w..w'], from: 'd1', to: 'd2' },
+  morrisTake: { rows: ['...b...', '...b...', '...b...', 'wb.....', '.......', '.......', 'w..w...'], place: 'g1', takeable: ['b4'] },
   reversiStart: { marks: ['c4', 'd3', 'e6', 'f5'] },
   reversiFlip: { rows: ['........', '........', '...d....', '...l....', '.dll.ld.', '...l....', '........', '........'], place: 'e4', flips: ['c4', 'd4', 'f4'] },
   reversiCorner: { rows: ['........', '........', '........', '........', '...d....', '..l.....', '.l......', '........'], place: 'a1', flips: ['b2', 'c3'] },
@@ -146,6 +156,18 @@ function board8(body, { marks = [], glow = [], felt = false } = {}) {
 // Reversi discs from a diagram (rows from rank 8 down, 'd' / 'l' / '.'): black and white.
 const reversiDiscs = (rows, { ring = [] } = {}) => rows.flatMap((row, index) => [...row].map((disc, f) => [disc, `${'abcdefgh'[f]}${8 - index}`]))
   .filter(([disc]) => disc !== '.').map(([disc, name]) => `<circle class="sg-disc sg-${disc === 'd' ? 'b' : 'w'}" cx="${at(name)[0]}" cy="${at(name)[1]}" r="11.5"/>${ring.includes(name) ? `<circle class="sg-turn" cx="${at(name)[0]}" cy="${at(name)[1]}" r="14"/>` : ''}`).join('');
+// A morris board: the 24 points on three squares joined at their midpoints, from a
+// diagram (rows from rank 7 down, 'w' / 'b' / '.'), with marks drawn on it.
+const MORRIS_STEP = 34, morrisAt = name => [16 + ('abcdefg'.indexOf(name[0])) * MORRIS_STEP, 16 + (7 - Number(name[1])) * MORRIS_STEP];
+const MORRIS_LINES = [['a7', 'g7'], ['g7', 'g1'], ['g1', 'a1'], ['a1', 'a7'], ['b6', 'f6'], ['f6', 'f2'], ['f2', 'b2'], ['b2', 'b6'], ['c5', 'e5'], ['e5', 'e3'], ['e3', 'c3'], ['c3', 'c5'], ['d7', 'd5'], ['d3', 'd1'], ['a4', 'c4'], ['e4', 'g4']];
+const MORRIS_POINT_NAMES = ['a1', 'd1', 'g1', 'b2', 'd2', 'f2', 'c3', 'd3', 'e3', 'a4', 'b4', 'c4', 'e4', 'f4', 'g4', 'c5', 'd5', 'e5', 'b6', 'd6', 'f6', 'a7', 'd7', 'g7'];
+function morrisBoard(rows, { glow = [], ring = [], body = '' } = {}) {
+  const lines = MORRIS_LINES.map(([a, b]) => `<line class="sg-morris-line" x1="${morrisAt(a)[0]}" y1="${morrisAt(a)[1]}" x2="${morrisAt(b)[0]}" y2="${morrisAt(b)[1]}"/>`).join('');
+  const points = MORRIS_POINT_NAMES.map(name => `<circle class="sg-morris-point" cx="${morrisAt(name)[0]}" cy="${morrisAt(name)[1]}" r="3.4"/>`).join('');
+  const pieces = rows.flatMap((row, index) => [...row].map((piece, f) => [piece, `${'abcdefg'[f]}${7 - index}`])).filter(([piece]) => piece !== '.')
+    .map(([piece, name]) => `${glow.includes(name) ? `<circle class="sg-morris-glow" cx="${morrisAt(name)[0]}" cy="${morrisAt(name)[1]}" r="15"/>` : ''}<circle class="sg-disc sg-${piece}" cx="${morrisAt(name)[0]}" cy="${morrisAt(name)[1]}" r="11"/>${ring.includes(name) ? `<circle class="sg-turn" cx="${morrisAt(name)[0]}" cy="${morrisAt(name)[1]}" r="14.5"/>` : ''}`).join('');
+  return `<rect class="sg-morris-board" x="0" y="0" width="236" height="236" rx="10"/>${lines}${points}${pieces}${body}`;
+}
 const chessPiece = (glyph, name, side) => `<text class="sg-piece sg-${side}" x="${at(name)[0]}" y="${at(name)[1] + 10}" text-anchor="middle" font-size="27" ${SYMBOL}>${glyph}</text>`;
 const man = (name, side, { king = false, taken = false, faded = false } = {}) => {
   const [x, y] = at(name), cls = `sg-man sg-${side}${taken ? ' sg-taken' : ''}${faded ? ' sg-faded' : ''}`;
@@ -226,6 +248,7 @@ export function iconMarkup(id) {
     dominoes: '<rect class="sg-icon-line" x="13" y="7" width="14" height="26" rx="3"/><line class="sg-icon-line" x1="15" y1="20" x2="25" y2="20"/><circle class="sg-icon-fill" cx="20" cy="13.5" r="1.8"/><circle class="sg-icon-fill" cx="17" cy="24" r="1.8"/><circle class="sg-icon-fill" cx="23" cy="29" r="1.8"/>',
     mancala: '<rect class="sg-icon-line" x="6" y="13" width="28" height="14" rx="7"/><circle class="sg-icon-fill" cx="14" cy="20" r="2.4"/><circle class="sg-icon-fill" cx="20" cy="20" r="2.4"/><circle class="sg-icon-fill" cx="26" cy="20" r="2.4"/>',
     reversi: '<circle class="sg-icon-line" cx="20" cy="20" r="11"/><path class="sg-icon-fill" d="M20 9a11 11 0 0 0 0 22z"/>',
+    morris: '<rect class="sg-icon-line" x="9" y="9" width="22" height="22"/><rect class="sg-icon-line" x="15" y="15" width="10" height="10"/><path class="sg-icon-line" d="M20 9v6M20 25v6M9 20h6M25 20h6"/><circle class="sg-icon-fill" cx="9" cy="9" r="2.6"/><circle class="sg-icon-fill" cx="31" cy="31" r="2.6"/>',
     hearts: '<path class="sg-icon-fill" d="M20 31C11 24 8 19.5 8 15.5A5.5 5.5 0 0 1 20 13a5.5 5.5 0 0 1 12 2.5C32 19.5 29 24 20 31z"/>',
     spades: '<path class="sg-icon-fill" d="M20 8C12 16 8 19.5 8 23.5a5.5 5.5 0 0 0 10 3.2L16.5 32h7L22 26.7a5.5 5.5 0 0 0 10-3.2C32 19.5 28 16 20 8z"/>',
     backgammon: '<path class="sg-icon-line" d="M9 31L13 12L17 31M17 31L21 12L25 31"/><circle class="sg-icon-fill" cx="29" cy="25" r="4.5"/>',
@@ -254,6 +277,14 @@ export function figureMarkup(figure, game) {
     case 'reversi-corner': { const { rows, place, flips } = DIAGRAMS.reversiCorner;
       return svg(240, 240, `Black takes the a1 corner, outflanking ${flips.join(' and ')} along the diagonal; a corner can never be turned back.`,
         board8(reversiDiscs(rows, { ring: flips }) + `<circle class="sg-disc sg-b sg-placed" cx="${at(place)[0]}" cy="${at(place)[1]}" r="11.5"/>` + arrowHead('k') + arrow([[at(place)[0] + 9, at(place)[1] - 9], [at('c3')[0] + 8, at('c3')[1] - 8]], 'k'), { felt: true, glow: [place] })); }
+    case 'morris-mill': { const { rows, mill } = DIAGRAMS.morrisMill;
+      return svg(236, 236, `White's pieces on ${mill.join(', ')} stand in a row along the bottom line: a mill.`, morrisBoard(rows, { glow: mill })); }
+    case 'morris-move': { const { rows, from, to } = DIAGRAMS.morrisMove;
+      return svg(236, 236, `With every piece placed, white moves the piece on ${from} along its line to the empty ${to}.`,
+        morrisBoard(rows, { body: arrowHead('n') + arrow([[morrisAt(from)[0], morrisAt(from)[1] - 13], [morrisAt(to)[0], morrisAt(to)[1] + 12]], 'n') })); }
+    case 'morris-take': { const { rows, place, takeable } = DIAGRAMS.morrisTake;
+      return svg(236, 236, `White places on ${place} and closes a mill. Black's d5, d6 and d7 stand in a mill, so only ${takeable.join(' and ')} may be taken.`,
+        morrisBoard(rows, { ring: takeable, body: `<circle class="sg-disc sg-w sg-placed" cx="${morrisAt(place)[0]}" cy="${morrisAt(place)[1]}" r="11"/>` })); }
     case 'checkers-crown': return svg(240, 240, 'A dark man steps from c7 to the far row and is crowned a king on d8.',
       board8((({ dark, light, from, to }) => arrowHead('c') + arrow([at(from), [at(to)[0] - 8, at(to)[1] + 8]], 'c')
         + dark.map(name => man(name, 'b', { faded: name === from })).join('') + man(to, 'b', { king: true }) + light.map(name => man(name, 'w')).join(''))(DIAGRAMS.checkersCrown), { glow: [DIAGRAMS.checkersCrown.to] }));
