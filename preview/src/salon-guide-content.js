@@ -111,12 +111,18 @@ export const GUIDE = [
     { title: 'Ko and passing', text: ['A move may not repeat an earlier position, so a single stone taken in a ko cannot be retaken at once: play elsewhere first.', 'Two passes in a row end the game. Stones left on the board count as alive, so capture dead groups before you pass.'], figure: { kind: 'go-ko' } },
     { title: 'At the table', text: ['The table\'s goban follows the game; switching back to mancala puts it away.'], figure: { kind: 'keys', keys: [[['Z'], 'Sit down or stand up'], [['X'], 'Open the board, or put it away'], [['↑', '↓', '←', '→'], 'Move between points'], [['Enter'], 'Place a stone'], [['Esc'], 'Put the board away']] } },
   ] },
+  { id: 'chineseCheckers', name: 'Chinese checkers', place: 'The small grove table', pages: [
+    { title: 'Taking a seat', text: ['At the small grove table, press Z to sit and X to open the board, then choose Chinese checkers at the top of the sheet: a round star board takes the table.', 'Play the plaza regular, or Pass and play with a friend. Red, nearest you, moves first.'], figure: { kind: 'emblem' } },
+    { title: 'The aim', text: ['Each of you starts with ten marbles filling the point of the star nearest you. Race them all across into the point opposite.', 'The first to fill it wins. If the other player leaves marbles there, they count toward filling it, as long as one of yours is among them.'], figure: { kind: 'cc-star' } },
+    { title: 'Steps and hops', text: ['A move is a step to a neighbouring empty hole, or a hop over one neighbouring marble, yours or theirs, to the empty hole straight beyond.', 'Hops chain: keep hopping from where you land, and stop wherever you like. Nothing is captured. Choose a marble, and every hole it can reach is marked.'], figure: { kind: 'cc-hop' } },
+    { title: 'At the table', text: ['The table\'s star board follows every move; switching to another grove game puts it away.'], figure: { kind: 'keys', keys: [[['Z'], 'Sit down or stand up'], [['X'], 'Open the board, or put it away'], [['↑', '↓', '←', '→'], 'Move between holes'], [['Enter'], 'Choose a marble, then where it goes'], [['Esc'], 'Put the board away']] } },
+  ] },
   { id: 'xiangqi', name: 'Xiangqi', place: 'The small grove table', pages: [
     { title: 'Taking a seat', text: ['At the small grove table, press Z to sit and X to open the board, then choose Xiangqi at the top of the sheet: Chinese chess, played on the points where the lines cross.', 'Play the plaza regular as red or black, or Pass and play with a friend. Red moves first.'], figure: { kind: 'emblem' } },
     { title: 'The pieces', text: ['Each side has a general (帥 or 將), two advisors (仕 士), two elephants (相 象), two horses (傌 馬), two chariots (俥 車), two cannons (炮 砲) and five soldiers (兵 卒).', 'The general and advisors keep to the palace, the nine points marked with a cross. The general steps along a line; the advisors step diagonally. Elephants move two points diagonally and never cross the river.'], figure: { kind: 'xq-pieces' } },
     { title: 'Horses and cannons', text: ['A chariot moves any distance along a line. A horse steps one point along a line and then one diagonally outward, but a piece on that first point stops it.', 'A cannon moves like a chariot, but captures only by jumping exactly one piece, of either side, on the way.'], figure: { kind: 'xq-horse' } },
     { title: 'Check and the generals', text: ['Soldiers step forward; across the river they may also step sideways. No move may leave your own general attacked, and the two generals may never face each other on a file with nothing between.', 'Checkmate the other general, or leave the other side no move at all, to win. The same position three times, or sixty moves each without a capture, is a draw.'], figure: { kind: 'xq-cannon' } },
-    { title: 'At the table', text: ['The table\'s board follows every move; switching back to mancala or Go puts it away.'], figure: { kind: 'keys', keys: BOARD_KEYS } },
+    { title: 'At the table', text: ['The table\'s board follows every move; switching to another grove game puts it away.'], figure: { kind: 'keys', keys: BOARD_KEYS } },
   ] },
   { id: 'cribbage', name: 'Cribbage', place: 'The grove\'s walnut table', pages: [
     { title: 'Taking a seat', text: ['At the walnut backgammon table, press Z to sit and X to open the table, then choose Cribbage at the top of the sheet.', 'You play a plaza regular, first to 121. The deal alternates every hand.'], figure: { kind: 'emblem' } },
@@ -202,6 +208,9 @@ export const DIAGRAMS = {
   goTerritory: { rows: ['..bw.', '.bbw.', 'bbww.', 'bw...', '.bw..'] },
   goCapture: { rows: ['.....', '..b..', '.bw..', '..b..', '.....'], play: [2, 3] },
   goKo: { rows: ['.....', '.bw..', 'b.bw.', '.bw..', '.....'], play: [2, 1], take: [2, 2] },
+  // Chinese checkers: in the middle of the star, red hops twice, over a blue marble and
+  // then its own ([q, r] holes; r grows toward red).
+  ccHop: { red: [[0, 2], [1, -1]], blue: [[0, 1], [-1, 1]], path: [[0, 2], [0, 0], [2, -2]] },
   // Xiangqi: a red horse on c2 hobbled toward e1 and e3 by the advisor on d2; a red
   // cannon on a0 that may take the black horse on a6 over the screen on a3.
   xqHorse: { pieces: { c2: 'H', d2: 'A' }, reach: ['a1', 'a3', 'b0', 'b4', 'd0', 'd4'], blocked: ['e1', 'e3'] },
@@ -341,6 +350,7 @@ export function iconMarkup(id) {
     connectFour: '<rect class="sg-icon-line" x="9" y="9" width="22" height="22" rx="4"/><circle class="sg-icon-fill" cx="15.5" cy="15.5" r="3.6"/><circle class="sg-icon-line" cx="24.5" cy="15.5" r="3.6"/><circle class="sg-icon-line" cx="15.5" cy="24.5" r="3.6"/><circle class="sg-icon-fill" cx="24.5" cy="24.5" r="3.6"/>',
     dominoes: '<rect class="sg-icon-line" x="13" y="7" width="14" height="26" rx="3"/><line class="sg-icon-line" x1="15" y1="20" x2="25" y2="20"/><circle class="sg-icon-fill" cx="20" cy="13.5" r="1.8"/><circle class="sg-icon-fill" cx="17" cy="24" r="1.8"/><circle class="sg-icon-fill" cx="23" cy="29" r="1.8"/>',
     go: '<rect class="sg-icon-line" x="8" y="8" width="24" height="24" rx="2"/><line class="sg-icon-line" x1="20" y1="8" x2="20" y2="32"/><line class="sg-icon-line" x1="8" y1="20" x2="32" y2="20"/><circle class="sg-icon-fill" cx="14" cy="14" r="4"/><circle class="sg-icon-line" cx="26" cy="26" r="4"/>',
+    chineseCheckers: '<path class="sg-icon-line" d="M20 6l4 7h8l-4 7 4 7h-8l-4 7-4-7H8l4-7-4-7h8z"/><circle class="sg-icon-fill" cx="20" cy="12" r="2.2"/><circle class="sg-icon-fill" cx="20" cy="28" r="2.2"/>',
     xiangqi: '<circle class="sg-icon-line" cx="20" cy="20" r="12"/><circle class="sg-icon-line" cx="20" cy="20" r="9"/><path class="sg-icon-fill" d="M15 15h10v2.4h-3.8v7.2H25V27H15v-2.4h3.8v-7.2H15z"/>',
     mancala: '<rect class="sg-icon-line" x="6" y="13" width="28" height="14" rx="7"/><circle class="sg-icon-fill" cx="14" cy="20" r="2.4"/><circle class="sg-icon-fill" cx="20" cy="20" r="2.4"/><circle class="sg-icon-fill" cx="26" cy="20" r="2.4"/>',
     reversi: '<circle class="sg-icon-line" cx="20" cy="20" r="11"/><path class="sg-icon-fill" d="M20 9a11 11 0 0 0 0 22z"/>',
@@ -514,6 +524,21 @@ export function figureMarkup(figure, game) {
         glass(55, true) + '<circle class="sg-mark" cx="55" cy="62" r="5"/>' + glass(150, true) + '<circle class="sg-mark" cx="164" cy="50" r="5"/>' + glass(245, true) + '<circle class="sg-mark" cx="245" cy="62" r="5"/>'
         + arrow([[150, 112], [205, 104], [236, 70]], 'o') + arrowHead('o')
         + '<text class="sg-label" x="55" y="104" text-anchor="middle" font-size="12">in</text><text class="sg-label" x="150" y="104" text-anchor="middle" font-size="12">rim, then in</text><text class="sg-label" x="252" y="124" text-anchor="middle" font-size="12">bounce, then in</text>'); }
+    case 'cc-star': case 'cc-hop': {
+      // Holes [q, r] on the star (r toward red, at the bottom); a centre patch for the hop.
+      const star = figure.kind === 'cc-star', k = star ? 11 : 26, cx = star ? 110 : 120, cy = star ? 96 : 92;
+      const at = ([q, r]) => [cx + (q + r / 2) * k, cy + r * k * 0.866];
+      const holes = [];
+      for (let r = -8; r <= 8; r++) for (let q = -8; q <= 8; q++) {
+        const s = -q - r, onStar = (q >= -4 && r >= -4 && s >= -4) || (q <= 4 && r <= 4 && s <= 4);
+        if (onStar && (star || Math.max(Math.abs(q), Math.abs(r), Math.abs(s)) <= 3)) holes.push([q, r]);
+      }
+      const owner = ([q, r]) => star ? (r > 4 ? 'red' : r < -4 ? 'blue' : null) : DIAGRAMS.ccHop.red.some(([a, b]) => a === q && b === r) ? 'red' : DIAGRAMS.ccHop.blue.some(([a, b]) => a === q && b === r) ? 'blue' : null;
+      const marbles = holes.map(hole => { const [x, y] = at(hole), who = owner(hole); return `<circle class="sg-pip" opacity=".35" cx="${x}" cy="${y}" r="${star ? 1.6 : 3}"/>${who ? `<circle class="${who === 'red' ? 'sg-red' : 'sg-blue'}" cx="${x}" cy="${y}" r="${star ? 4.4 : 10}"/>` : ''}`; }).join('');
+      if (star) return svg(220, 200, 'The star board: ten red marbles in the point nearest you, ten blue in the point opposite; each player races into the other\'s point.',
+        marbles + arrow([at([-4, 6]), at([4, -6])], 'c') + arrowHead('c'));
+      const path = DIAGRAMS.ccHop.path.map(at);
+      return svg(240, 184, 'A red marble hops over a blue one, then over a red one, two hops in one move.', marbles + arrow(path, 'h') + arrowHead('h') + `<circle class="sg-win" cx="${path.at(-1)[0]}" cy="${path.at(-1)[1]}" r="12"/>`); }
     case 'xq-pieces': {
       const row = (pieces, y, red) => pieces.map(([glyph, name], i) => `<circle class="sg-tile-face" cx="${26 + i * 41}" cy="${y}" r="16"/><circle cx="${26 + i * 41}" cy="${y}" r="13" style="fill:none;stroke:${red ? '#b3262e' : '#1d1b1f'};stroke-width:1.5"/><text x="${26 + i * 41}" y="${y + 1}" text-anchor="middle" dominant-baseline="central" font-size="15" font-weight="700" style="fill:${red ? '#b3262e' : '#1d1b1f'}">${glyph}</text>${red ? '' : `<text class="sg-label sg-quiet" x="${26 + i * 41}" y="${y + 32}" text-anchor="middle" font-size="9.5">${name}</text>`}`).join('');
       return svg(300, 128, 'The seven pieces, red above and black below: general, advisor, elephant, horse, chariot, cannon and soldier.',

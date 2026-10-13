@@ -24,7 +24,7 @@ export function createPlazaXiangqi({ host = document.querySelector('#viewport'),
   panel.innerHTML = `<header class="table-game-header"><div><p class="table-game-eyebrow">Plaza games · practice game</p><h2 id="xiangqi-title">Xiangqi in the grove</h2></div>
     <button type="button" class="table-game-close" aria-label="Close the xiangqi board">×</button></header>
     <div class="table-game-body xiangqi-body">
-      ${onSwitch ? '<div class="table-game-choice" role="group" aria-label="Game"><button type="button" data-grove-game="mancala" aria-pressed="false">Mancala</button><button type="button" data-grove-game="go" aria-pressed="false">Go</button><button type="button" data-grove-game="xiangqi" aria-pressed="true">Xiangqi</button></div>' : ''}
+      ${onSwitch ? '<div class="table-game-choice" role="group" aria-label="Game"><button type="button" data-grove-game="mancala" aria-pressed="false">Mancala</button><button type="button" data-grove-game="go" aria-pressed="false">Go</button><button type="button" data-grove-game="chineseCheckers" aria-pressed="false">Chinese checkers</button><button type="button" data-grove-game="xiangqi" aria-pressed="true">Xiangqi</button></div>' : ''}
       <p class="table-game-status" role="status" aria-live="polite"></p>
       <svg class="xq-board" viewBox="0 0 ${WIDTH} ${HEIGHT}" role="grid" aria-label="Xiangqi board, nine files by ten ranks"></svg>
       <div class="table-game-actions">

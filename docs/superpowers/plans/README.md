@@ -80,7 +80,7 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-11-delivered-source-retirement](2026-10-11-delivered-source-retirement.md)<br>Delivered source reconciliation | `reconcile-delivered-sources` | retired | — | 2026-10-11 |
 | [2026-10-11-ci-parallel-preview](2026-10-11-ci-parallel-preview.md)<br>Parallel preview check | `ci-parallel-preview` | retired | #252 | 2026-10-11 |
 
-## Historical, not in the register (95)
+## Historical, not in the register (96)
 
 | Plan | PRs mentioned |
 | --- | --- |
@@ -105,6 +105,7 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-13-plaza-darts](2026-10-13-plaza-darts.md)<br>Plaza games: darts on the south wall — 2026-10-13 | — |
 | [2026-10-13-plaza-cribbage](2026-10-13-plaza-cribbage.md)<br>Plaza games: cribbage at the walnut table — 2026-10-13 | — |
 | [2026-10-13-plaza-connect-four](2026-10-13-plaza-connect-four.md)<br>Connect Four at the plaza chess tables — 2026-10-13 | — |
+| [2026-10-13-plaza-chinese-checkers](2026-10-13-plaza-chinese-checkers.md)<br>Plaza games: Chinese checkers in the grove — 2026-10-13 | #337, #336 |
 | [2026-10-13-modal-outside-dismiss](2026-10-13-modal-outside-dismiss.md)<br>Outside-click modal dismissal | #316, #314, #321 |
 | [2026-10-13-email-access-join-recurrence](2026-10-13-email-access-join-recurrence.md)<br>Email access: give CI's cold first render its own join allowance — 2026-10-13 | #281, #297 |
 | [2026-10-13-cycling-rack](2026-10-13-cycling-rack.md)<br>Cycling Rack Implementation Plan (PR 1 of 2) | #318 |

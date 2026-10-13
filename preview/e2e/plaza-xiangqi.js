@@ -26,7 +26,7 @@ async page => {
   await page.locator('#xiangqi-panel[open]').waitFor();
   let state = await game();
   check(!await page.locator('#mancala-panel').evaluate(panel => panel.open) && state.groveGame === 'xiangqi', 'The switch puts mancala away and opens xiangqi');
-  check(state.boardShown === true && state.mancalaShown === false && state.gobanShown === false && state.table === 32, `The table sets out the xiangqi board and its 32 pieces (${state.table})`);
+  check(state.boardShown === true && state.mancalaShown === false && state.gobanShown === false && state.starShown === false && state.table === 32, `The table sets out the xiangqi board and its 32 pieces (${state.table})`);
   check(await page.locator('#xiangqi-panel').evaluate(panel => !/(auto|scroll)/.test(getComputedStyle(panel).overflowY)), 'The sheet is a frame, never its own scroll container');
   await named('Waiting for X to relabel', page.waitForFunction(() => /Hide the xiangqi board/.test(document.querySelector('#walking-play')?.textContent ?? ''), null, { timeout: 5000 }));
 
@@ -65,7 +65,12 @@ async page => {
   await page.keyboard.press('KeyX');
   await page.locator('#xiangqi-panel[open]').waitFor();
   check((await game()).plies === 2, 'X reopens xiangqi, the game where it was');
-  await page.locator('#xiangqi-panel [data-grove-game=mancala]').click();
+  // Straight across to Chinese checkers: the star board replaces the xiangqi board.
+  await page.locator('#xiangqi-panel [data-grove-game=chineseCheckers]').click();
+  await page.locator('#chinese-checkers-panel[open]').waitFor();
+  state = await game();
+  check(state.groveGame === 'chineseCheckers' && state.starShown === true && state.boardShown === false && !state.open, 'The switch goes straight to Chinese checkers, putting the xiangqi board away');
+  await page.locator('#chinese-checkers-panel [data-grove-game=mancala]').click();
   await page.locator('#mancala-panel[open]').waitFor();
   state = await game();
   check(state.boardShown === false && state.mancalaShown === true && state.groveGame === 'mancala', 'Switching back sets the mancala board out again');

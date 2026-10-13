@@ -23,7 +23,7 @@ export function createPlazaGo({ host = document.querySelector('#viewport'), getM
   panel.innerHTML = `<header class="table-game-header"><div><p class="table-game-eyebrow">Plaza games · practice game</p><h2 id="go-title">Go in the grove</h2></div>
     <button type="button" class="table-game-close" aria-label="Close the Go board">×</button></header>
     <div class="table-game-body go-body">
-      ${onSwitch ? '<div class="table-game-choice" role="group" aria-label="Game"><button type="button" data-grove-game="mancala" aria-pressed="false">Mancala</button><button type="button" data-grove-game="go" aria-pressed="true">Go</button><button type="button" data-grove-game="xiangqi" aria-pressed="false">Xiangqi</button></div>' : ''}
+      ${onSwitch ? '<div class="table-game-choice" role="group" aria-label="Game"><button type="button" data-grove-game="mancala" aria-pressed="false">Mancala</button><button type="button" data-grove-game="go" aria-pressed="true">Go</button><button type="button" data-grove-game="chineseCheckers" aria-pressed="false">Chinese checkers</button><button type="button" data-grove-game="xiangqi" aria-pressed="false">Xiangqi</button></div>' : ''}
       <p class="table-game-status" role="status" aria-live="polite"></p>
       <ul class="go-scores" aria-label="Captures and score"></ul>
       <svg class="go-board" viewBox="0 0 ${VIEW} ${VIEW}" role="grid" aria-label="Go board, nine by nine"></svg>

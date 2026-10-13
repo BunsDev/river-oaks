@@ -17,7 +17,7 @@ import { chooseMove as reversiMove } from '../src/reversi-opponent.js';
 const text = id => guideGame(id).pages.flatMap(page => [page.title, ...page.text]).join(' ');
 
 test('every plaza table game has a guide of illustrated pages', () => {
-  assert.deepEqual(GUIDE.map(game => game.id), ['chess', 'checkers', 'connectFour', 'reversi', 'morris', 'dominoes', 'hearts', 'spades', 'backgammon', 'mancala', 'jenga', 'yacht', 'winePong', 'shuffleboard', 'go', 'xiangqi', 'cribbage', 'darts', 'dice']);
+  assert.deepEqual(GUIDE.map(game => game.id), ['chess', 'checkers', 'connectFour', 'reversi', 'morris', 'dominoes', 'hearts', 'spades', 'backgammon', 'mancala', 'jenga', 'yacht', 'winePong', 'shuffleboard', 'go', 'chineseCheckers', 'xiangqi', 'cribbage', 'darts', 'dice']);
   for (const game of GUIDE) {
     assert.ok(game.pages.length >= 4, game.id);
     assert.equal(game.pages[0].title, 'Taking a seat', `${game.id} starts at the table`);
@@ -243,6 +243,15 @@ test('the Yacht pictures follow the rules', async () => {
   const next = yacht.play(state, `roll:${keep.keep.map(k => (k ? 1 : 0)).join('')}`);
   assert.deepEqual(next.dice.filter((_, i) => keep.keep[i]), kept);
   assert.equal(yacht.BOXES.length, 12, 'twelve boxes on the card');
+});
+test('the Chinese checkers picture is a real chain of hops', async () => {
+  const cc = await import('../src/chinese-checkers-rules.js');
+  const { red, blue, path } = DIAGRAMS.ccHop, board = Array(cc.HOLES.length).fill(null), hole = ([q, r]) => cc.holeAt(q, r);
+  red.forEach(spot => { board[hole(spot)] = 0; }); blue.forEach(spot => { board[hole(spot)] = 1; });
+  const move = cc.movesFrom(board, hole(path[0])).find(option => option.to === hole(path.at(-1)));
+  assert.deepEqual(move?.path, path.map(hole), 'the pictured hops are the shortest chain there');
+  assert.equal(board[hole(path[1].map((v, i) => (v + path[0][i]) / 2))], 1, 'the first hop is over blue');
+  assert.equal(board[hole(path[2].map((v, i) => (v + path[1][i]) / 2))], 0, 'the second over red');
 });
 
 test('the xiangqi pictures follow the rules', async () => {

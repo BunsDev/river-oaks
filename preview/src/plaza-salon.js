@@ -1,10 +1,11 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { BACKGAMMON, CHESS_CELL_M, DARTS, DOMINO, GO, JENGA, MANCALA, XIANGQI, xiangqiSpot, WINE_PONG_STAND, backgammonSpot, cafeChairAngle, chessCell, chessCellIsDark, chessCellPosition, dominoLine, dartSpot, goSpot, jengaBlock, mancalaSpot, plazaSalonPlan, winePongPoint, plazaSalonRack } from './plaza-salon-plan.js';
+import { BACKGAMMON, CHESS_CELL_M, DARTS, DOMINO, GO, JENGA, MANCALA, STAR, starSpot, XIANGQI, xiangqiSpot, WINE_PONG_STAND, backgammonSpot, cafeChairAngle, chessCell, chessCellIsDark, chessCellPosition, dominoLine, dartSpot, goSpot, jengaBlock, mancalaSpot, plazaSalonPlan, winePongPoint, plazaSalonRack } from './plaza-salon-plan.js';
 import { startGame as backgammonStart } from './backgammon-rules.js';
 import { startTower } from './jenga-rules.js';
 import { startGame as startXiangqi } from './xiangqi-rules.js';
 import { scoreAt } from './darts-rules.js';
+import { HOLES, MARBLES, startGame as startStar } from './chinese-checkers-rules.js';
 import { startGame as mancalaStart } from './mancala-rules.js';
 import { GLASS_HEIGHT, TABLE as PONG_TABLE, glassAt } from './wine-pong-rules.js';
 import { seededRandom } from './seeded-random.js';
@@ -1027,6 +1028,40 @@ export function buildPlazaSalon(world) {
         for (const mesh of [dice, cups]) { mesh.instanceMatrix.needsUpdate = true; mesh.computeBoundingSphere(); }
       },
       count: () => ({ cups: cups.count, dice: dice.count }),
+    };
+  }
+  // Chinese checkers on the grove table: a round maple board with its star of 121 holes,
+  // and twenty glass marbles (red for the first player, blue for the second), shown only
+  // while it is the table's game. Idle, both points are full.
+  {
+    const table = plan.grove, [, y] = base(table), top = y + MANCALA.top - 0.012 + STAR.thick;
+    const star = new THREE.Group(); star.name = 'Chinese checkers board'; star.visible = false; group.add(star);
+    const [bx, , bz] = base(table);
+    const wood = new THREE.Mesh(new THREE.CylinderGeometry(STAR.board, STAR.board, STAR.thick, 48), new THREE.MeshStandardMaterial({ color: '#d8b98a', roughness: 0.55 }));
+    wood.position.set(bx, top - STAR.thick / 2, bz); wood.castShadow = wood.receiveShadow = true;
+    const holes = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.0075, 0.0075, 0.001, 12), new THREE.MeshStandardMaterial({ color: '#5a4126', roughness: 0.9 }), HOLES.length);
+    HOLES.forEach((hole, index) => { const [east, north] = starSpot(table, hole), [x, , z] = base({ x: east, north }); dummy.position.set(x, top + 0.0003, z); dummy.rotation.set(0, 0, 0); dummy.scale.set(1, 1, 1); dummy.updateMatrix(); holes.setMatrixAt(index, dummy.matrix); });
+    const marbles = new THREE.InstancedMesh(new THREE.SphereGeometry(0.0095, 16, 12), new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.12, metalness: 0.05 }), 2 * MARBLES);
+    Object.assign(marbles, { name: 'Chinese checkers marbles', castShadow: true, count: 0 });
+    star.add(wood, holes, marbles);
+    const tint = [new THREE.Color('#c0342b'), new THREE.Color('#2f62b3')];
+    const show = (board = null, firstChair = 0) => {
+      marbles.count = 0;
+      (board ?? startStar().board).forEach((owner, index) => {
+        if (owner === null) return;
+        const [east, north] = starSpot(table, HOLES[index], firstChair), [x, , z] = base({ x: east, north });
+        dummy.position.set(x, top + 0.006, z); dummy.rotation.set(0, 0, 0); dummy.scale.set(1, 1, 1); dummy.updateMatrix();
+        marbles.setColorAt(marbles.count, tint[owner]); marbles.setMatrixAt(marbles.count++, dummy.matrix);
+      });
+      marbles.instanceMatrix.needsUpdate = true; if (marbles.instanceColor) marbles.instanceColor.needsUpdate = true; marbles.computeBoundingSphere();
+    };
+    show();
+    group.userData.chineseCheckers = {
+      // A board (owners by hole, from chinese-checkers-rules.js) and the chair the first player sits in; null shows the start.
+      show,
+      count: () => marbles.count,
+      setVisible(visible) { star.visible = visible; },
+      visible: () => star.visible,
     };
   }
   // Hearts at the café table: the trick lies face up, each card in front of the player

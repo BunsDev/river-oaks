@@ -645,6 +645,16 @@ play-outs, thought out in a worker) as black or white, or pass and play. Capture
 no suicide, positional superko; two passes end the game, scored by area with 7.5
 komi. Rules: `preview/src/go-rules.js`.
 
+The grove table's switch also offers **Chinese checkers** on a round star board of 121
+holes, which replaces the mancala board or goban. You play the plaza regular or pass
+and play, red (nearest you) first. Each side starts with ten marbles in the point
+nearest it and races them into the point opposite. A move is a step to a neighbouring
+empty hole, or a chain of hops over any marble to the empty hole beyond; nothing is
+captured. Choose a marble and the holes it can reach are marked; a hop chain plays leg
+by leg on the sheet and the table. The first to fill the far point wins (the other
+side's stragglers there count, if one of yours is among them). Rules:
+`preview/src/chinese-checkers-rules.js`.
+
 The grove table's switch also offers **Xiangqi** (Chinese chess), whose board and 32
 disc pieces replace the other boards. Play the plaza regular (a searching player,
 thinking in a worker) as red or black, or pass and play; red moves first. Every rule
@@ -656,7 +666,7 @@ a third repetition, or sixty moves each without a capture, is a draw. Rules:
 
 The chess-table, café, backgammon, mancala, Go, Jenga and wine pong sheets have **How to play** in their
 header. It opens the Salon Guide on that game (chess, checkers, Connect Four,
-Reversi, nine men's morris, dominoes, Hearts, Spades, backgammon, cribbage, mancala, Go, xiangqi, Jenga, Yacht, wine pong, shuffleboard, darts or liar's dice), and **Play & rides → Game guide** opens it too. The guide is an
+Reversi, nine men's morris, dominoes, Hearts, Spades, backgammon, cribbage, mancala, Go, Chinese checkers, xiangqi, Jenga, Yacht, wine pong, shuffleboard, darts or liar's dice), and **Play & rides → Game guide** opens it too. The guide is an
 illustrated book with a few pages per game: taking a seat, the aim, a turn, and
 the keys. Its pictures are positions played on the real rules
 (`preview/tests/salon-guide.test.js`). A game you have not read yet shows a gold

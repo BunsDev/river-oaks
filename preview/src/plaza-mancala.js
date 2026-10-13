@@ -21,7 +21,7 @@ export function createPlazaMancala({ host = document.querySelector('#viewport'),
   panel.innerHTML = `<header class="table-game-header"><div><p class="table-game-eyebrow">Plaza games · practice game</p><h2 id="mancala-title">Mancala in the grove</h2></div>
     <button type="button" class="table-game-close" aria-label="Close the mancala board">×</button></header>
     <div class="table-game-body mancala-body">
-      ${onSwitch ? '<div class="table-game-choice" role="group" aria-label="Game"><button type="button" data-grove-game="mancala" aria-pressed="true">Mancala</button><button type="button" data-grove-game="go" aria-pressed="false">Go</button><button type="button" data-grove-game="xiangqi" aria-pressed="false">Xiangqi</button></div>' : ''}
+      ${onSwitch ? '<div class="table-game-choice" role="group" aria-label="Game"><button type="button" data-grove-game="mancala" aria-pressed="true">Mancala</button><button type="button" data-grove-game="go" aria-pressed="false">Go</button><button type="button" data-grove-game="chineseCheckers" aria-pressed="false">Chinese checkers</button><button type="button" data-grove-game="xiangqi" aria-pressed="false">Xiangqi</button></div>' : ''}
       <p class="table-game-status" role="status" aria-live="polite"></p>
       <ul class="mancala-scores" aria-label="Stores"></ul>
       <svg class="mancala-board" viewBox="0 0 ${W} ${H}" role="group" aria-label="Mancala board"></svg>
