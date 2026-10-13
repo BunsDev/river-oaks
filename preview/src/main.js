@@ -54,6 +54,7 @@ import { createPlazaShuffleboard } from './plaza-shuffleboard.js';
 import { createPlazaDarts } from './plaza-darts.js';
 import { createPlazaMancala, seatAtGrove } from './plaza-mancala.js';
 import { createPlazaGo } from './plaza-go.js';
+import { createPlazaChineseCheckers } from './plaza-chinese-checkers.js';
 import { atmosphereFor } from './atmosphere.js';
 import { createWalkingEnvironment } from './walking.js';
 import { createQualityControl } from './render-quality.js';
@@ -131,7 +132,7 @@ let plazaDarts = null;
 let plazaSpades = null;
 let plazaLiarsDice = null;
 let plazaMancala = null;
-let plazaGo = null, groveGame = 'mancala';
+let plazaGo = null, plazaChineseCheckers = null, groveGame = 'mancala';
 // What X does while seated: the first provider (a game table, the stage…) offering a play.
 // Each feature adds its own line to the list, so they never edit the same one.
 const playProviders = [];
@@ -329,20 +330,22 @@ function initializeRenderer() {
   plazaDarts = createPlazaDarts({ getMirror: () => plazaSalon?.userData.darts ?? null, getBoard: () => (world && plazaSalonPlan(world)?.darts) ?? null,
     getPose: () => walking?.getPose(), focusWorld: () => host.focus({ preventScroll: true }), reducedMotion });
   playProviders.push(() => plazaDarts);
-  // Seated at the grove table, X plays mancala or Go (the last one played); switching puts
-  // the other game's board away and sets out this one's.
-  const groveGames = () => ({ mancala: plazaMancala, go: plazaGo });
+  // Seated at the grove table, X plays mancala, Go or Chinese checkers (the last one
+  // played); switching puts the other games' boards away and sets out this one's.
+  const groveGames = () => ({ mancala: plazaMancala, go: plazaGo, chineseCheckers: plazaChineseCheckers });
   const switchGrove = kind => {
     const leaving = groveGames()[groveGame], joining = groveGames()[kind];
     if (!joining || joining === leaving) return;
     groveGame = kind; leaving?.close({ toWorld: false });
-    plazaSalon?.userData.mancala?.setVisible(kind === 'mancala'); plazaSalon?.userData.go?.setVisible(kind === 'go');
+    plazaSalon?.userData.mancala?.setVisible(kind === 'mancala'); plazaSalon?.userData.go?.setVisible(kind === 'go'); plazaSalon?.userData.chineseCheckers?.setVisible(kind === 'chineseCheckers');
     joining.open();
   };
   plazaMancala = createPlazaMancala({ getMirror: () => plazaSalon?.userData.mancala ?? null, getSeat: () => seatAtGrove(walking?.getPose()),
     focusWorld: () => host.focus({ preventScroll: true }), onSwitch: switchGrove });
   plazaGo = createPlazaGo({ getMirror: () => plazaSalon?.userData.go ?? null, getSeat: () => seatAtGrove(walking?.getPose()),
     focusWorld: () => host.focus({ preventScroll: true }), onSwitch: switchGrove });
+  plazaChineseCheckers = createPlazaChineseCheckers({ getMirror: () => plazaSalon?.userData.chineseCheckers ?? null, getSeat: () => seatAtGrove(walking?.getPose()),
+    focusWorld: () => host.focus({ preventScroll: true }), reducedMotion, onSwitch: switchGrove });
   playProviders.push(() => groveGames()[groveGame]);
   playProviders.push(() => cafeGames()[cafeGame]);
   playProviders.push(() => plazaStage);
@@ -829,7 +832,7 @@ function render(now) {
   if (officeUI?.active || officeUI?.entering || storeIntros?.active || photoMode?.active || birdCams?.riding) walking?.halt();
   else if (multiplayer?.connected && !multiplayer.traveling) walking?.update(delta, now);
   else walking?.halt();
-  plazaGames?.update(); plazaDominoes?.update(); plazaHearts?.update(); plazaSpades?.update(); plazaLiarsDice?.update(); plazaBackgammon?.update(); plazaCribbage?.update(); plazaJenga?.update(); plazaYacht?.update(); plazaWinePong?.update(); plazaShuffleboard?.update(); plazaDarts?.update(); plazaMancala?.update(); plazaGo?.update(); plazaStage?.update();
+  plazaGames?.update(); plazaDominoes?.update(); plazaHearts?.update(); plazaSpades?.update(); plazaLiarsDice?.update(); plazaBackgammon?.update(); plazaCribbage?.update(); plazaJenga?.update(); plazaYacht?.update(); plazaWinePong?.update(); plazaShuffleboard?.update(); plazaDarts?.update(); plazaMancala?.update(); plazaGo?.update(); plazaChineseCheckers?.update(); plazaStage?.update();
   if (multiplayer?.connected) birdCams?.update(delta);
   multiplayer?.update(now);
   seatingControls?.update(now);
@@ -1063,6 +1066,9 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
     } });
   window.__riverPlazaDominoes = () => plazaDominoes ? { ...plazaDominoes.debug(), table: plazaSalon?.userData.dominoes?.count() ?? null,
     deal: (seed, players) => plazaDominoes.deal(seed, players) } : null;
+  window.__riverPlazaChineseCheckers = () => plazaChineseCheckers ? { ...plazaChineseCheckers.debug(), groveGame, table: plazaSalon?.userData.chineseCheckers?.count() ?? null,
+    starShown: plazaSalon?.userData.chineseCheckers?.visible() ?? null, mancalaShown: plazaSalon?.userData.mancala?.visible() ?? null, gobanShown: plazaSalon?.userData.go?.visible() ?? null,
+    reset: () => plazaChineseCheckers.reset() } : null;
   window.__riverPlazaGo = () => plazaGo ? { ...plazaGo.debug(), groveGame, table: plazaSalon?.userData.go?.count() ?? null, goban: plazaSalon?.userData.go?.visible() ?? null,
     mancalaBoard: plazaSalon?.userData.mancala?.visible() ?? null, reset: () => plazaGo.reset() } : null;
   window.__riverPlazaMancala = () => plazaMancala ? { ...plazaMancala.debug(), table: plazaSalon?.userData.mancala?.count() ?? null, reset: () => plazaMancala.reset() } : null;

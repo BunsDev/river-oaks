@@ -324,3 +324,26 @@ test('yacht: the drum swaps the tower for five dice, each showing its value face
   assert.equal(yacht.dice(), 5, 'before the first roll, five dice wait in a row');
   yacht.setVisible(false); jenga.setVisible(true);
 });
+test('chinese checkers: the grove table swaps in a star board, each player’s marbles in the point toward their chair', async () => {
+  const { STAR, starSpot } = await import('../src/plaza-salon-plan.js');
+  const { HOLES, HOME, play, startGame } = await import('../src/chinese-checkers-rules.js');
+  const star = group.userData.chineseCheckers, mancala = group.userData.mancala, mesh = group.children.find(child => child.name === 'Chinese checkers board').children.find(child => child.name === 'Chinese checkers marbles');
+  assert.equal(star.visible(), false, 'idle, the table keeps the mancala board');
+  mancala.setVisible(false); star.setVisible(true);
+  assert.equal(star.count(), 20, 'both points are full');
+  const marbles = () => Array.from({ length: mesh.count }, (_, i) => { const matrix = new THREE.Matrix4(), colour = new THREE.Color(); mesh.getMatrixAt(i, matrix); mesh.getColorAt(i, colour); const p = new THREE.Vector3().setFromMatrixPosition(matrix); return { east: p.x, north: -p.z, first: colour.r > colour.b }; });
+  const table = plan.grove;
+  // Chair 0 is east of the table: the first player's marbles lie east of centre, the second's west.
+  assert.ok(marbles().every(m => (m.first ? m.east > table.x + 0.1 : m.east < table.x - 0.1)), 'each point faces its player');
+  star.show(null, 1);
+  assert.ok(marbles().every(m => (m.first ? m.east < table.x - 0.1 : m.east > table.x + 0.1)), 'with the first player in chair 1, the board turns');
+  // A move: the marble leaves its hole and stands on the new one.
+  let state = startGame();
+  const from = HOME[0].find(hole => HOLES[hole][0] === -1 && HOLES[hole][1] === 5), to = HOLES.findIndex(([q, r]) => q === -1 && r === 4);
+  state = play(state, `${from}-${to}`);
+  star.show(state.board, 0);
+  const near = hole => { const [east, north] = starSpot(table, HOLES[hole], 0); return marbles().some(m => Math.hypot(m.east - east, m.north - north) < 0.002); };
+  assert.ok(near(to) && !near(from), 'the moved marble stands on its new hole');
+  for (const [q, r] of HOLES) { const [east, north] = starSpot(table, [q, r]); assert.ok(Math.hypot(east - table.x, north - table.north) < STAR.board - 0.015, 'every hole is on the board'); }
+  star.show(null); star.setVisible(false); mancala.setVisible(true);
+});
