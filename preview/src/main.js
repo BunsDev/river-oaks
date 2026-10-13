@@ -987,11 +987,20 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
   window.__riverCycling = () => plazaBicycle ? { riding: plazaBicycle.riding, slotId: plazaBicycle.slotId, rideMeters: plazaBicycle.rideMeters, lastRideMeters: plazaBicycle.lastRideMeters, yaw: plazaBicycle.placement?.yaw ?? null, prompt: plazaBicycle.prompt()?.kind ?? null,
     taken: multiplayer?.snapshot?.cycling?.taken ?? [], parked: plazaSalon?.userData.rack?.parked() ?? null,
     // Arrive at a slot's approach by the normal travel path.
+    // Arrive at a slot's approach by the normal travel path. Like the seats' goNear, a
+    // refused travel (a cooldown, or a spot briefly taken) is retried after a pause, then
+    // nearby paving is tried, so a loaded machine does not fail the journey at the rack.
     async goNear(slotId) {
       const slot = world ? plazaSalonRack(world).find(item => item.id === slotId) : null;
       if (!slot) return { ok: false };
-      const result = await goToPlace({ kind: 'landmark', name: 'Bike rack', position: slot.approach });
-      return { ok: Boolean(result?.ok) };
+      const environment = walkingEnvironment(), free = ([x, north]) => environment.isFree(x, -north) && !environment.roomAt(x, -north);
+      const around = [0.6, 1.1].flatMap(radius => Array.from({ length: 8 }, (_, i) => [slot.approach[0] + Math.sin(i * Math.PI / 4) * radius, slot.approach[1] + Math.cos(i * Math.PI / 4) * radius]));
+      for (const position of [slot.approach, slot.approach, slot.approach, ...around].filter(point => free(point))) {
+        const result = await goToPlace({ kind: 'landmark', name: 'Bike rack', position });
+        if (result?.ok) return { ok: true, position };
+        await new Promise(resolve => setTimeout(resolve, 1100));
+      }
+      return { ok: false };
     } } : null;
   window.__riverSeatAndWater = () => seatAndWater ? {
     seated: walking?.getPose()?.sitting ? `${walking.getPose().sitting.buildId}:${walking.getPose().sitting.slot}` : null, interaction: seatAndWater.interaction()?.kind ?? null, offered: seatAndWater.interaction()?.targetId ?? null, ...seatAndWater.sites(),

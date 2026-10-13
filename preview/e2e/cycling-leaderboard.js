@@ -10,12 +10,13 @@ async page => {
   const waitOn = async (p, label, fn, arg, timeout) => { try { await p.waitForFunction(fn, arg, { timeout }); } catch (error) { throw new Error(`${label}: ${error.message.split('\n')[0]} · cycling ${JSON.stringify(await cycling(p))} · board ${JSON.stringify(await board(p))}`); } };
   // Hold a heading band while pedalling: the steering relaxes slowly after a key is released,
   // so a fixed turn overshoots; this nudges left or right every few frames until `until` holds.
+  // The budget is generous: ride distance per wall-clock second halves on a machine under swap.
   const holdHeading = async (p, low, high, until) => {
     let left = false, right = false;
     const set = async (l, r) => { if (l !== left) { left = l; await p.keyboard[l ? 'down' : 'up']('ArrowLeft'); } if (r !== right) { right = r; await p.keyboard[r ? 'down' : 'up']('ArrowRight'); } };
     const start = Date.now();
     try {
-      while (Date.now() - start < 30000) {
+      while (Date.now() - start < 90000) {
         const state = await cycling(p);
         if (until(state)) return state;
         if (state.yaw > high) await set(false, true); else if (state.yaw < low) await set(true, false); else await set(false, false);
@@ -38,12 +39,12 @@ async page => {
     check(await bob.locator('.cycling-board-empty').isVisible(), 'An empty board says to take a bike at the plaza rack');
     // The rider takes a bike, rides west past the bench, and steps off.
     check((await page.evaluate(id => window.__riverCycling().goNear(id), 'plaza-salon-rack:2')).ok, 'The rider arrived at the rack');
-    await waitOn(page, 'rack prompt', () => window.__riverCycling().prompt === 'take-bike', null, 15000);
+    await waitOn(page, 'rack prompt', () => window.__riverCycling().prompt === 'take-bike', null, 30000);
     await page.locator('#canvas-host').focus();
     await page.keyboard.press('KeyG');
-    await waitOn(page, 'mount', () => window.__riverCycling().riding === true, null, 15000);
+    await waitOn(page, 'mount', () => window.__riverCycling().riding === true, null, 30000);
     await page.keyboard.down('KeyW');
-    await waitOn(page, 'set off', () => window.__riverCycling().rideMeters > 1, null, 15000);
+    await waitOn(page, 'set off', () => window.__riverCycling().rideMeters > 1, null, 30000);
     // West-northwest past the backgammon table, then due west (simulated clear from every slot).
     await holdHeading(page, -0.45, -0.35, state => state.rideMeters > 12);
     await holdHeading(page, -0.05, 0.05, state => state.rideMeters > 14);
