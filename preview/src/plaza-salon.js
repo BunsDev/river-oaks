@@ -373,9 +373,10 @@ export function buildPlazaSalon(world) {
       mesh.name = `Chess ${type}`; mesh.castShadow = mesh.receiveShadow = true; mesh.count = 0;
       meshes[type] = mesh; group.add(mesh);
     }
-    // A checkers disc with a turned rim; a king is two stacked. Twelve a side per table.
+    // A checkers disc with a turned rim; a king is two stacked. Twelve a side per table,
+    // and up to all 64 squares for Reversi, whose black and white discs are the same disc.
     const disc = new THREE.CylinderGeometry(0.026, 0.0275, 0.009, 28).translate(0, 0.0045, 0);
-    meshes.disc = new THREE.InstancedMesh(disc, piece, 48 * plan.chess.length);
+    meshes.disc = new THREE.InstancedMesh(disc, piece, 64 * plan.chess.length);
     Object.assign(meshes.disc, { name: 'Checkers disc', castShadow: true, receiveShadow: true, count: 0 }); group.add(meshes.disc);
     const opening = fromFEN(START_FEN).board, boards = new Map(plan.chess.map(table => [table.id, { board: opening, whiteChair: 0 }]));
     const draw = () => {

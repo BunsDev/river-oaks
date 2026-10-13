@@ -56,8 +56,10 @@
 .checkers-piece[data-king]::after { content: '\265B\FE0E'; font: 400 clamp(13px, 2.4vmin, 22px)/1 "Apple Symbols", "Segoe UI Symbol", "DejaVu Sans", serif; }
 .checkers-piece[data-side=d][data-king]::after { color: #e8c877; }
 .checkers-piece[data-side=l][data-king]::after { color: #9a7432; }
-.table-game-choice { display: flex; padding: 3px; border-radius: 10px; background: var(--hud-tile); }
-.table-game-choice button { flex: 1; min-height: 36px; border: 0; border-radius: 8px; background: transparent; color: var(--ink); font: inherit; font-size: 13px; font-weight: 650; cursor: pointer; }
+/* As many games a row as fit, so a fourth (and fifth) game wraps instead of spilling
+   out of the narrow side column. */
+.table-game-choice { display: grid; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); gap: 2px; padding: 3px; border-radius: 10px; background: var(--hud-tile); }
+.table-game-choice button { min-width: 0; min-height: 36px; border: 0; border-radius: 8px; background: transparent; color: var(--ink); font: inherit; font-size: 13px; font-weight: 650; cursor: pointer; }
 .table-game-choice button[aria-pressed=true] { background: var(--hud-raised); box-shadow: 0 1px 2px rgb(0 0 0 / .12); }
 /* Connect Four: a blue frame of round slots, seven across and six high, holding red and
    yellow discs. Each column's landing slot is marked; the winning four glow. */
@@ -72,3 +74,13 @@
 .table-game-board[data-game=connectFour] .table-square[data-last] { background-image: none; }
 .table-game-board[data-game=connectFour] .table-square[data-last] .connectFour-piece { outline: 3px solid rgb(255 255 255 / .55); outline-offset: -1px; }
 .table-game-board[data-game=connectFour] .table-square[data-win] .connectFour-piece { outline: 3px solid #fff; box-shadow: 0 0 14px 3px rgb(255 255 255 / .75); }
+
+/* Reversi: a green baize board with fine lines, flat black and white discs, and a gold
+   mark on each square where your disc would outflank a line. */
+.table-game-board[data-game=reversi] { background: #1d4a37; gap: 0; }
+.table-game-board[data-game=reversi] .table-square { background: #2c6a4e; box-shadow: inset 0 0 0 .5px rgb(8 24 17 / .55); }
+.table-game-board[data-game=reversi] .table-square[data-target=move]::after { width: 22%; height: 22%; background: rgb(240 205 120 / .8); }
+.table-game-board[data-game=reversi] .table-square[data-last] { background-image: linear-gradient(rgb(240 205 120 / .22), rgb(240 205 120 / .22)); }
+.reversi-piece { width: 78%; aspect-ratio: 1; border-radius: 50%; pointer-events: none; }
+.reversi-piece[data-side=d] { background: radial-gradient(circle at 42% 36%, #4a4644, #141213 62%); box-shadow: 0 2px 3px rgb(0 0 0 / .5); }
+.reversi-piece[data-side=l] { background: radial-gradient(circle at 42% 36%, #ffffff, #d9d4c8 64%); box-shadow: 0 2px 3px rgb(0 0 0 / .4), inset 0 0 0 1px rgb(0 0 0 / .08); }

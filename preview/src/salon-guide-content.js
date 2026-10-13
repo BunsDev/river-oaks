@@ -28,6 +28,13 @@ export const GUIDE = [
     { title: 'A turn', text: ['Red moves first. Choose a column, anywhere in it, and your disc falls to the lowest open slot. While it is your turn, each column\'s landing slot is marked.', 'The centre column joins the most lines, so it is worth claiming early.'], figure: { kind: 'four-drop' } },
     { title: 'At the table', text: ['The table\'s frame follows every disc, with the columns running from the first player\'s left.'], figure: { kind: 'keys', keys: BOARD_KEYS } },
   ] },
+  { id: 'reversi', name: 'Reversi', place: 'The salon chess tables', pages: [
+    { title: 'Taking a seat', text: [SALON_SEAT, `Choose Reversi at the top of the sheet, and the table's discs come out on the board. ${SALON_SHEET}`], figure: { kind: 'emblem' } },
+    { title: 'The aim', text: ['Finish with more discs of your colour than your opponent. Black moves first, from the four discs in the centre.', 'The game ends when neither side can move, usually when the board is full. The status keeps the count as you play.'], figure: { kind: 'reversi-start' } },
+    { title: 'A turn', text: ['Place a disc so that it outflanks: a straight line of your opponent\'s discs, across, up or along a diagonal, closed at the far end by one of yours.', 'Every outflanked line turns to your colour at once. Only squares that outflank are marked, and one click places the disc.'], figure: { kind: 'reversi-flip' } },
+    { title: 'Passing and corners', text: ['With no square that outflanks, you pass and your opponent moves again.', 'A corner can never be turned back, so corners are worth a great deal, and the squares beside an empty corner tend to give it away.'], figure: { kind: 'reversi-corner' } },
+    { title: 'At the table', text: ['The table\'s own discs follow every move, and Take back returns you to your own turn, past any pass.'], figure: { kind: 'keys', keys: BOARD_KEYS } },
+  ] },
   { id: 'dominoes', name: 'Dominoes', place: 'The round café table', pages: [
     { title: 'Taking a seat', text: ['The round café table stands in the plaza. Press Z to sit, then X (Play dominoes) to open the table. The sheet switches between Dominoes, Hearts and Spades, and X reopens whichever you played last.', 'You play the plaza regulars: choose 2 players or 4.'], figure: { kind: 'emblem' } },
     { title: 'The aim', text: ['A match to 100 points, with a double-six set of 28 tiles. Win a round by playing your last tile, and score the pips left in every other hand.', 'The holder of the highest double leads it. Then each play matches a tile\'s end to an open end of the line.'], figure: { kind: 'dominoes-line' } },
@@ -96,6 +103,9 @@ export function createGuideMemory(storage = globalThis.localStorage, key = 'rive
 // The positions the pictures show, as data: preview/tests/salon-guide.test.js plays
 // each one on the real rules, so a picture cannot show an illegal move or a false mate.
 export const DIAGRAMS = {
+  reversiStart: { marks: ['c4', 'd3', 'e6', 'f5'] },
+  reversiFlip: { rows: ['........', '........', '...d....', '...l....', '.dll.ld.', '...l....', '........', '........'], place: 'e4', flips: ['c4', 'd4', 'f4'] },
+  reversiCorner: { rows: ['........', '........', '........', '........', '...d....', '..l.....', '.l......', '........'], place: 'a1', flips: ['b2', 'c3'] },
   chessMate: { pieces: { g8: 'k', f7: 'p', g7: 'p', h7: 'p', e8: 'R', g1: 'K' }, toMove: 'b' },
   chessKnight: { from: 'd4', targets: ['b3', 'b5', 'c2', 'c6', 'e2', 'e6', 'f3', 'f5'] },
   checkersJump: { dark: ['c3', 'a1', 'e1'], light: ['d4', 'f6', 'b6', 'h8'], path: ['c3', 'e5', 'g7'] },
@@ -126,13 +136,16 @@ const arrowHead = id => `<defs><marker id="sg-head-${id}" viewBox="0 0 10 10" re
 // An 8×8 board from white's side, a1 at the bottom left; squares are named.
 const CELL = 30, file = name => name.charCodeAt(0) - 97, rank = name => Number(name[1]) - 1;
 const at = name => [file(name) * CELL + CELL / 2, (7 - rank(name)) * CELL + CELL / 2];
-function board8(body, { marks = [], glow = [] } = {}) {
+function board8(body, { marks = [], glow = [], felt = false } = {}) {
   let squares = '';
-  for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++) squares += `<rect class="${(r + f) % 2 ? 'sg-light' : 'sg-dark'}" x="${f * CELL}" y="${(7 - r) * CELL}" width="${CELL}" height="${CELL}"/>`;
+  for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++) squares += `<rect class="${felt ? 'sg-baize' : (r + f) % 2 ? 'sg-light' : 'sg-dark'}" x="${f * CELL}" y="${(7 - r) * CELL}" width="${CELL}" height="${CELL}"/>`;
   const glows = glow.map(name => `<rect class="sg-glow" x="${file(name) * CELL}" y="${(7 - rank(name)) * CELL}" width="${CELL}" height="${CELL}"/>`).join('');
   const dots = marks.map(name => `<circle class="sg-mark" cx="${at(name)[0]}" cy="${at(name)[1]}" r="5"/>`).join('');
   return `<rect class="sg-rim" x="-6" y="-6" width="252" height="252" rx="6"/>${squares}${glows}${dots}${body}`;
 }
+// Reversi discs from a diagram (rows from rank 8 down, 'd' / 'l' / '.'): black and white.
+const reversiDiscs = (rows, { ring = [] } = {}) => rows.flatMap((row, index) => [...row].map((disc, f) => [disc, `${'abcdefgh'[f]}${8 - index}`]))
+  .filter(([disc]) => disc !== '.').map(([disc, name]) => `<circle class="sg-disc sg-${disc === 'd' ? 'b' : 'w'}" cx="${at(name)[0]}" cy="${at(name)[1]}" r="11.5"/>${ring.includes(name) ? `<circle class="sg-turn" cx="${at(name)[0]}" cy="${at(name)[1]}" r="14"/>` : ''}`).join('');
 const chessPiece = (glyph, name, side) => `<text class="sg-piece sg-${side}" x="${at(name)[0]}" y="${at(name)[1] + 10}" text-anchor="middle" font-size="27" ${SYMBOL}>${glyph}</text>`;
 const man = (name, side, { king = false, taken = false, faded = false } = {}) => {
   const [x, y] = at(name), cls = `sg-man sg-${side}${taken ? ' sg-taken' : ''}${faded ? ' sg-faded' : ''}`;
@@ -212,6 +225,7 @@ export function iconMarkup(id) {
     connectFour: '<rect class="sg-icon-line" x="9" y="9" width="22" height="22" rx="4"/><circle class="sg-icon-fill" cx="15.5" cy="15.5" r="3.6"/><circle class="sg-icon-line" cx="24.5" cy="15.5" r="3.6"/><circle class="sg-icon-line" cx="15.5" cy="24.5" r="3.6"/><circle class="sg-icon-fill" cx="24.5" cy="24.5" r="3.6"/>',
     dominoes: '<rect class="sg-icon-line" x="13" y="7" width="14" height="26" rx="3"/><line class="sg-icon-line" x1="15" y1="20" x2="25" y2="20"/><circle class="sg-icon-fill" cx="20" cy="13.5" r="1.8"/><circle class="sg-icon-fill" cx="17" cy="24" r="1.8"/><circle class="sg-icon-fill" cx="23" cy="29" r="1.8"/>',
     mancala: '<rect class="sg-icon-line" x="6" y="13" width="28" height="14" rx="7"/><circle class="sg-icon-fill" cx="14" cy="20" r="2.4"/><circle class="sg-icon-fill" cx="20" cy="20" r="2.4"/><circle class="sg-icon-fill" cx="26" cy="20" r="2.4"/>',
+    reversi: '<circle class="sg-icon-line" cx="20" cy="20" r="11"/><path class="sg-icon-fill" d="M20 9a11 11 0 0 0 0 22z"/>',
     hearts: '<path class="sg-icon-fill" d="M20 31C11 24 8 19.5 8 15.5A5.5 5.5 0 0 1 20 13a5.5 5.5 0 0 1 12 2.5C32 19.5 29 24 20 31z"/>',
     spades: '<path class="sg-icon-fill" d="M20 8C12 16 8 19.5 8 23.5a5.5 5.5 0 0 0 10 3.2L16.5 32h7L22 26.7a5.5 5.5 0 0 0 10-3.2C32 19.5 28 16 20 8z"/>',
     backgammon: '<path class="sg-icon-line" d="M9 31L13 12L17 31M17 31L21 12L25 31"/><circle class="sg-icon-fill" cx="29" cy="25" r="4.5"/>',
@@ -232,6 +246,14 @@ export function figureMarkup(figure, game) {
     case 'checkers-jump': return svg(240, 240, 'A dark man on c3 jumps the light men on d4 and f6, landing on g7: a double jump.',
       board8((({ dark, light, path }) => arrowHead('j') + arrow([...path.slice(0, -1).map(at), [at(path.at(-1))[0] - 7, at(path.at(-1))[1] + 7]], 'j')
         + dark.map(name => man(name, 'b')).join('') + light.map(name => man(name, 'w', { taken: ['d4', 'f6'].includes(name) })).join(''))(DIAGRAMS.checkersJump)));
+    case 'reversi-start': return svg(240, 240, 'The opening: two black and two white discs in the centre, and black\'s four first moves marked.',
+      board8(reversiDiscs(['........', '........', '........', '...ld...', '...dl...', '........', '........', '........']), { felt: true, marks: DIAGRAMS.reversiStart.marks }));
+    case 'reversi-flip': { const { rows, place, flips } = DIAGRAMS.reversiFlip, placed = [...rows];
+      return svg(240, 240, `Black places on ${place}; the white discs on ${flips.join(', ')} are outflanked and turn black. The white discs on d5 and d3 stay, their lines left open.`,
+        board8(reversiDiscs(placed, { ring: flips }) + `<circle class="sg-disc sg-b sg-placed" cx="${at(place)[0]}" cy="${at(place)[1]}" r="11.5"/>` + arrowHead('r') + arrow([[at(place)[0] - 12, at(place)[1]], [at('c4')[0] - 4, at('c4')[1]]], 'r') + arrow([[at(place)[0] + 12, at(place)[1]], [at('f4')[0] + 4, at('f4')[1]]], 'r'), { felt: true, glow: [place] })); }
+    case 'reversi-corner': { const { rows, place, flips } = DIAGRAMS.reversiCorner;
+      return svg(240, 240, `Black takes the a1 corner, outflanking ${flips.join(' and ')} along the diagonal; a corner can never be turned back.`,
+        board8(reversiDiscs(rows, { ring: flips }) + `<circle class="sg-disc sg-b sg-placed" cx="${at(place)[0]}" cy="${at(place)[1]}" r="11.5"/>` + arrowHead('k') + arrow([[at(place)[0] + 9, at(place)[1] - 9], [at('c3')[0] + 8, at('c3')[1] - 8]], 'k'), { felt: true, glow: [place] })); }
     case 'checkers-crown': return svg(240, 240, 'A dark man steps from c7 to the far row and is crowned a king on d8.',
       board8((({ dark, light, from, to }) => arrowHead('c') + arrow([at(from), [at(to)[0] - 8, at(to)[1] + 8]], 'c')
         + dark.map(name => man(name, 'b', { faded: name === from })).join('') + man(to, 'b', { king: true }) + light.map(name => man(name, 'w')).join(''))(DIAGRAMS.checkersCrown), { glow: [DIAGRAMS.checkersCrown.to] }));
