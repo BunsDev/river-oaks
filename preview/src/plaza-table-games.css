@@ -58,6 +58,14 @@
 .table-game-invite button[data-invite=accept] { border-color: transparent; background: var(--hud-action); color: var(--hud-on-action); }
 .table-game-invite button[hidden] { display: none; }
 .table-game-panel .table-game-actions :is([data-action=resign], [data-action=undo], [data-action=new])[hidden] { display: none; }
+/* Lessons: the Lesson mode has its own row under the practice modes. A step's move is
+   ringed in gold: the piece to move and, glowing, where it goes. The piece a mill takes is
+   ringed in red. The marks are static, so a software-rendered page never animates them. */
+.table-game-panel { --lesson-mark: rgb(222 176 78); --lesson-glow: rgb(222 176 78 / .7); --lesson-take: rgb(214 82 72); }
+.table-game-mode button[data-mode=lesson] { flex: 1 1 100%; }
+.table-game-board .table-square[data-lesson-hint]:not([data-selected]) { box-shadow: inset 0 0 0 3px var(--lesson-mark); }
+.table-game-board .table-square[data-lesson-hint=to] { box-shadow: inset 0 0 0 3px var(--lesson-mark), inset 0 0 22px 4px var(--lesson-glow); }
+.table-game-board .table-square[data-lesson-hint=take] { box-shadow: inset 0 0 0 3px var(--lesson-take), inset 0 0 18px 2px rgb(214 82 72 / .45); }
 @media (max-width: 760px) {
   .table-game-panel { --board-size: max(240px, min(calc(100vw - 66px), calc(100dvh - 300px))); inset: 64px 12px auto 12px; width: auto; max-height: calc(100dvh - 76px); }
   .table-game-body { grid-template-columns: minmax(0, 1fr); }

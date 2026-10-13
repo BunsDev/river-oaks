@@ -294,3 +294,56 @@ test('shuffleboard: the long table swaps the glasses for pucks, placed from the 
   assert.ok(Math.abs(at(0).x - eastFromEast) < 0.001, 'from the east end, it runs the other way');
   board.show([]); board.setVisible(false); pong.setVisible(true);
 });
+test('yacht: the drum swaps the tower for five dice, each showing its value face up, kept ones lined up', async () => {
+  const { JENGA } = await import('../src/plaza-salon-plan.js');
+  const yacht = group.userData.yacht, jenga = group.userData.jenga, mesh = group.children.find(child => child.name === 'Yacht dice');
+  assert.equal(yacht.visible(), false, 'idle, the drum shows the tower');
+  jenga.setVisible(false); yacht.setVisible(true);
+  assert.equal(jenga.visible(), false); assert.equal(mesh.visible, true);
+  // Faces in BoxGeometry order (+x, −x, +y, −y, +z, −z) show 3, 4, 1, 6, 2, 5: read the one turned up.
+  const faces = [[1, 0, 0, 3], [-1, 0, 0, 4], [0, 1, 0, 1], [0, -1, 0, 6], [0, 0, 1, 2], [0, 0, -1, 5]];
+  const dice = () => Array.from({ length: mesh.count }, (_, i) => {
+    const matrix = new THREE.Matrix4(), position = new THREE.Vector3(), rotation = new THREE.Quaternion();
+    mesh.getMatrixAt(i, matrix); matrix.decompose(position, rotation, new THREE.Vector3());
+    const up = faces.find(([x, y, z]) => new THREE.Vector3(x, y, z).applyQuaternion(rotation).y > 0.99);
+    return { position, value: up?.[3] };
+  });
+  const values = [6, 2, 5, 3, 4];
+  yacht.show(values, [true, false, true, false, false]);
+  const shown = dice();
+  assert.deepEqual(shown.map(die => die.value), values, 'every die shows its value face up');
+  const ground = plan.bench, [kept, rolled] = [shown.filter((_, i) => [0, 2].includes(i)), shown.filter((_, i) => ![0, 2].includes(i))];
+  assert.ok(Math.abs(kept[0].position.z - kept[1].position.z) < 1e-9, 'the kept dice stand in a line');
+  assert.ok(kept.every(die => rolled.every(other => die.position.z < other.position.z)), 'kept dice sit nearer the bench');
+  for (const die of shown) assert.ok(Math.hypot(die.position.x - ground.x, -die.position.z - ground.north) < JENGA.drumRadius - 0.05, 'on the drum');
+  for (const die of shown) for (const [east, north, radius] of [[-0.16, -0.08, 0.07], [0.15, 0.1, 0.07], [0.05, 0.16, 0.08]])
+    assert.ok(Math.hypot(die.position.x - (ground.x + east), -die.position.z - (ground.north + north)) > radius + 0.015, `clear of the drum's ornament at ${east}, ${north}`);
+  yacht.show(values, [true, false, true, false, false]);
+  assert.deepEqual(dice().map(die => die.position.toArray()), shown.map(die => die.position.toArray()), 'the same roll lies the same way');
+  yacht.show(null);
+  assert.equal(yacht.dice(), 5, 'before the first roll, five dice wait in a row');
+  yacht.setVisible(false); jenga.setVisible(true);
+});
+test('chinese checkers: the grove table swaps in a star board, each player’s marbles in the point toward their chair', async () => {
+  const { STAR, starSpot } = await import('../src/plaza-salon-plan.js');
+  const { HOLES, HOME, play, startGame } = await import('../src/chinese-checkers-rules.js');
+  const star = group.userData.chineseCheckers, mancala = group.userData.mancala, mesh = group.children.find(child => child.name === 'Chinese checkers board').children.find(child => child.name === 'Chinese checkers marbles');
+  assert.equal(star.visible(), false, 'idle, the table keeps the mancala board');
+  mancala.setVisible(false); star.setVisible(true);
+  assert.equal(star.count(), 20, 'both points are full');
+  const marbles = () => Array.from({ length: mesh.count }, (_, i) => { const matrix = new THREE.Matrix4(), colour = new THREE.Color(); mesh.getMatrixAt(i, matrix); mesh.getColorAt(i, colour); const p = new THREE.Vector3().setFromMatrixPosition(matrix); return { east: p.x, north: -p.z, first: colour.r > colour.b }; });
+  const table = plan.grove;
+  // Chair 0 is east of the table: the first player's marbles lie east of centre, the second's west.
+  assert.ok(marbles().every(m => (m.first ? m.east > table.x + 0.1 : m.east < table.x - 0.1)), 'each point faces its player');
+  star.show(null, 1);
+  assert.ok(marbles().every(m => (m.first ? m.east < table.x - 0.1 : m.east > table.x + 0.1)), 'with the first player in chair 1, the board turns');
+  // A move: the marble leaves its hole and stands on the new one.
+  let state = startGame();
+  const from = HOME[0].find(hole => HOLES[hole][0] === -1 && HOLES[hole][1] === 5), to = HOLES.findIndex(([q, r]) => q === -1 && r === 4);
+  state = play(state, `${from}-${to}`);
+  star.show(state.board, 0);
+  const near = hole => { const [east, north] = starSpot(table, HOLES[hole], 0); return marbles().some(m => Math.hypot(m.east - east, m.north - north) < 0.002); };
+  assert.ok(near(to) && !near(from), 'the moved marble stands on its new hole');
+  for (const [q, r] of HOLES) { const [east, north] = starSpot(table, [q, r]); assert.ok(Math.hypot(east - table.x, north - table.north) < STAR.board - 0.015, 'every hole is on the board'); }
+  star.show(null); star.setVisible(false); mancala.setVisible(true);
+});
