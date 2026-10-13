@@ -51,7 +51,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     // automatic context change must not swap the target beneath the user's finger.
     // Mouse and touch presses also leave focus behind, so they never pin.
     const keyboard = document.documentElement.dataset.uiInput === 'keyboard';
-    const selected = primaryAction(buttons, { seated: Boolean(sitting), focused: focused?.[0], inPrimary: focused?.[1].parentElement === primary, keyboard });
+    const selected = primaryAction(buttons, { seated: Boolean(sitting || performing), focused: focused?.[0], inPrimary: focused?.[1].parentElement === primary, keyboard });
     for (const [id, button] of Object.entries(actionButtons)) {
       const target = id === selected ? primary : secondary;
       if (button.parentElement !== target) {

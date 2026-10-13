@@ -39,6 +39,7 @@ import { buildStreetFurniture } from './street-furniture.js';
 import { buildPlazaSalon } from './plaza-salon.js';
 import { createPlazaTableGames, seatAtTable } from './plaza-table-games.js';
 import { createPlazaStage } from './plaza-stage.js';
+import { plazaSalonPlan } from './plaza-salon-plan.js';
 import { createPlazaDominoes, seatAtCafe } from './plaza-dominoes.js';
 import { atmosphereFor } from './atmosphere.js';
 import { createWalkingEnvironment } from './walking.js';
@@ -915,7 +916,20 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
     const state = plazaGames.debug();
     return { ...state, mirror: state.tableId ? plazaSalon?.userData.chess?.board(state.tableId) ?? null : null };
   };
-  window.__riverPlazaStage = () => ({ live: plazaSalon?.userData.stage?.live ?? null, action: plazaStage?.interaction()?.label ?? null });
+  window.__riverPlazaStage = () => ({ live: plazaSalon?.userData.stage?.live ?? null, action: plazaStage?.interaction()?.label ?? null,
+    // Travel to open pavement in front of the stage, toward the salon.
+    async goNear() {
+      const stage = world && plazaSalonPlan(world)?.stage;
+      if (!stage) return { ok: false };
+      const environment = walkingEnvironment(), free = ([x, north]) => environment.isFree(x, -north) && !environment.roomAt(x, -north);
+      for (const angle of [0, 0.5, -0.5, 1, -1]) {
+        const position = [stage.x + Math.sin(stage.heading + angle) * (stage.radius + 0.8), stage.north - Math.cos(stage.heading + angle) * (stage.radius + 0.8)];
+        if (!free(position)) continue;
+        const result = await goToPlace({ kind: 'landmark', name: 'Nearby', position });
+        if (result?.ok) return { ok: true, position };
+      }
+      return { ok: false };
+    } });
   window.__riverPlazaDominoes = () => plazaDominoes ? { ...plazaDominoes.debug(), table: plazaSalon?.userData.dominoes?.count() ?? null,
     deal: (seed, players) => plazaDominoes.deal(seed, players) } : null;
   window.__riverSeatAndWater = () => seatAndWater ? {
