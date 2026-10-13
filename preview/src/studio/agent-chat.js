@@ -1,3 +1,4 @@
+import { isSpaceDocument } from './space-document.js';
 import { createDesignerSession, DESIGNER_CAPABILITIES } from './designer-protocol.js';
 import { createStudioDocument } from './document.js';
 
@@ -62,6 +63,7 @@ export function describeChange(change) {
 }
 
 export function starterPrompts(doc) {
+  if(isSpaceDocument(doc.value))return ['Make the lighting warmer','Refine the furniture layout and keep doorways clear','Give the selected furnishing a walnut finish'];
   const items = doc.items, count = type => items.filter(item => item.type === type).length;
   return [
     count('building') ? 'Review building scale and spacing' : 'Add a landmark building near the arrival',
@@ -101,7 +103,7 @@ export function mountAgentChat(host, { doc, selected, apply, canEdit = () => tru
         <textarea data-agent-input rows="1" maxlength="${MAX_MESSAGE}" placeholder="Ask Agent" aria-label="Message the World Studio agent"></textarea>
         <div class="studio-agent-row">
           <div class="studio-agent-menu-wrap"><button type="button" class="studio-agent-icon" data-agent-plus aria-label="Scene context" aria-expanded="false" title="Scene context">${ICONS.plus}</button>
-            <div class="studio-agent-menu" data-agent-menu role="menu" hidden><p>Share with the agent</p><label><input type="radio" name="studio-agent-scope" value="region" checked> Whole region</label><label><input type="radio" name="studio-agent-scope" value="selection"> Selected object only</label><p data-agent-context-note></p></div></div>
+            <div class="studio-agent-menu" data-agent-menu role="menu" hidden><p>Share with the agent</p><label><input type="radio" name="studio-agent-scope" value="region" checked> Whole scene</label><label><input type="radio" name="studio-agent-scope" value="selection"> Selected object only</label><p data-agent-context-note></p></div></div>
           <label class="studio-agent-select"><span class="studio-agent-model-icon">${ICONS.model}</span><select data-agent-model aria-label="Agent model"></select>${ICONS.chevron}</label>
           <label class="studio-agent-select studio-agent-mode"><select data-agent-edit-mode aria-label="Edit mode"><option value="ask">Ask mode</option><option value="allow">Allow mode</option></select>${ICONS.chevron}</label>
           <button class="studio-agent-send" data-agent-send aria-label="Send">${ICONS.send}</button>
@@ -121,10 +123,10 @@ export function mountAgentChat(host, { doc, selected, apply, canEdit = () => tru
   function scope() { return root.querySelector('input[name=studio-agent-scope]:checked').value; }
   function context() {
     const id = selected(), region = doc.value;
-    if (scope() === 'selection' && id) return { units: 'metres', revision: doc.revision, bounds_m: region.bounds_m, selectedId: id, objects: doc.items.filter(item => item.id === id) };
+    if (scope() === 'selection' && id) return { documentType: isSpaceDocument(region)?'studio-space':'region', units: 'metres', revision: doc.revision, bounds_m: region.bounds_m, selectedId: id, objects: doc.items.filter(item => item.id === id) };
     // Editable objects plus read-only roads; terrain heights and parcels stay out of the prompt.
-    return { units: 'metres', revision: doc.revision, bounds_m: region.bounds_m, selectedId: id ?? null, objects: doc.items,
-      roads: region.roads.map(({ id: roadId, name, kind, width_m, points }) => ({ id: roadId, name, kind, width_m, points })) };
+    return { documentType: isSpaceDocument(region)?'studio-space':'region', units: 'metres', revision: doc.revision, bounds_m: region.bounds_m, selectedId: id ?? null, objects: doc.items,
+      roads: (region.roads??[]).map(({ id: roadId, name, kind, width_m, points }) => ({ id: roadId, name, kind, width_m, points })) };
   }
   function render() {
     const choice = $('[data-agent-model]').value, [providerId] = choice.split(':'), provider = catalog?.providers.find(p => p.id === providerId);
@@ -133,7 +135,7 @@ export function mountAgentChat(host, { doc, selected, apply, canEdit = () => tru
     $('[data-agent-send]').setAttribute('aria-label', running ? 'Stop the reply' : 'Send');
     $('[data-agent-send]').disabled = !running && (!ready || !input.value.trim());
     $('[data-agent-model]').disabled = Boolean(running) || !catalog; $('[data-agent-edit-mode]').disabled = Boolean(running);
-    $('[data-agent-context-note]').textContent = scope() === 'selection' ? (selected() ? `Sharing ${selected()} only.` : 'Nothing selected; the whole region is shared.') : `Sharing ${doc.items.length} objects at revision ${doc.revision}.`;
+    $('[data-agent-context-note]').textContent = scope() === 'selection' ? (selected() ? `Sharing ${selected()} only.` : 'Select an object before sending.') : `Sharing ${doc.items.length} objects at revision ${doc.revision}.`;
     const items = suggestions ?? starterPrompts(doc);
     $('[data-agent-suggest]').hidden = Boolean(running) || !items.length;
     $('[data-agent-suggestions]').replaceChildren(...items.map(text => {
@@ -194,9 +196,11 @@ export function mountAgentChat(host, { doc, selected, apply, canEdit = () => tru
     const reply = bubble('agent'); reply.classList.add('studio-agent-streaming');
     const session = createDesignerSession(doc);
     session.connect({ id: chatId, projectId: 'studio-agent', packVersion: 'agent-chat-1', capabilities: DESIGNER_CAPABILITIES });
-    const request = session.begin({ brief: text, scope: 'region' });
+    let request;
+    try { request = session.begin({ brief: text.slice(0,1000), scope: scope()==='selection'?'selection':'region', selectedIds: selected()?[selected()]:[] }); }
+    catch(error){reply.remove();note(error.message);render();return;}
     const requestId = crypto.randomUUID();
-    running = { requestId, text: '', draw() { renderProse(reply, parseAgentReply(this.text, { streaming: true }).body || '…'); log.scrollTop = log.scrollHeight; } };
+    running = { requestId, cancel:()=>session.cancel(), reply, text: '', draw() { renderProse(reply, parseAgentReply(this.text, { streaming: true }).body || '…'); log.scrollTop = log.scrollHeight; } };
     running.draw(); render();
     try {
       const result = await bridge.send({ chatId, requestId, providerId, modelId, mode: $('[data-agent-edit-mode]').value, message: text, context: context() });
@@ -241,14 +245,19 @@ export function mountAgentChat(host, { doc, selected, apply, canEdit = () => tru
   $('[data-agent-pill]').addEventListener('submit', event => { event.preventDefault(); const text = $('[data-agent-pill-input]').value.trim(); $('[data-agent-pill-input]').value = ''; open(); if (text) void send(text); });
   $('[data-agent-composer]').addEventListener('submit', event => {
     event.preventDefault();
-    if (running) { const { requestId } = running; void bridge.cancel({ chatId, requestId }).catch(() => {}); return; }
+    if (running) {
+      const stopped=running;stopped.cancel();running=null;suggestions=null;
+      stopped.reply.classList.remove('studio-agent-streaming');
+      renderProse(stopped.reply,parseAgentReply(stopped.text,{streaming:true}).body || 'Reply stopped.');
+      render();void bridge.cancel({chatId,requestId:stopped.requestId}).catch(()=>{});return;
+    }
     void send();
   });
   input.addEventListener('input', () => { autosize(); render(); });
   input.addEventListener('keydown', event => { if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) { event.preventDefault(); $('[data-agent-composer]').requestSubmit(); } });
   $('[data-agent-collapse]').addEventListener('click', collapse);
   $('[data-agent-fresh]').addEventListener('click', () => {
-    if (running) void bridge?.cancel({ chatId, requestId: running.requestId }).catch(() => {});
+    if (running) {running.cancel();void bridge?.cancel({ chatId, requestId: running.requestId }).catch(() => {});}
     void bridge?.reset({ chatId }).catch(() => {});
     chatId = crypto.randomUUID(); running = null; pending = []; suggestions = null; log.replaceChildren(); render(); input.focus();
   });
@@ -267,7 +276,7 @@ export function mountAgentChat(host, { doc, selected, apply, canEdit = () => tru
     refresh: render,
     dispose() {
       disposed = true; unsubscribe?.();
-      if (running) void bridge?.cancel({ chatId, requestId: running.requestId }).catch(() => {});
+      if (running) {running.cancel();void bridge?.cancel({ chatId, requestId: running.requestId }).catch(() => {});}
       void bridge?.reset({ chatId }).catch(() => {}); root.remove();
     },
   };
