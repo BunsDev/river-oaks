@@ -24,6 +24,7 @@ import { workplaceAction } from './workplace-api.js';
 import { securityHeaders } from './security-headers.js';
 import { createVoiceRoutes } from './voice-routes.js';
 import { createRideFlush } from './ride-flush.js';
+import { createCyclingLeaderboard } from './cycling-api.js';
 
 const types = { '.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.glb':'model/gltf-binary','.hdr':'application/octet-stream','.svg':'image/svg+xml','.woff2':'font/woff2' };
 const equal = (a,b) => typeof a==='string' && typeof b==='string' && Buffer.byteLength(a)===Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a),Buffer.from(b));
@@ -41,6 +42,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
   // Cycling: bank accepted bicycle metres into the account store. The world
   // keeps them until drained and the flush holds them until the store accepts
   // them (ride-flush.js), so a crash loses at most one flush interval.
+  const leaderboard=createCyclingLeaderboard({store:cyclingMiles,now});
   const rides=cyclingMiles?createRideFlush({world:()=>world,store:cyclingMiles,warn:detail=>console.warn(JSON.stringify({...detail,worldId}))}):null;
   const flushRides=()=>rides?rides.flush():Promise.resolve();
   const send = (ws,value,options) => sendFrame(ws,value,options);
@@ -213,6 +215,11 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
         if(!matchesWorld(new URL(req.url,'http://localhost')))return json(res,404,{error:'World not found.'});
         const result=await workplaceAction({action:pathname.slice('/api/workplace/'.length),identity,workplace,worldId,readBody:()=>body(req),
           listPlaces:async()=>world.listPlaces?.()??[],allowWrite:id=>workplaceWrites(id),allowRead:id=>workplaceReads(id),now});
+        return json(res,result.status,result.value);
+      }
+      if (pathname==='/api/cycling/leaderboard' && req.method==='GET') {
+        const identity=await approvedIdentity(req,res);if(!identity)return;
+        const result=await leaderboard.read(identity);
         return json(res,result.status,result.value);
       }
       if (pathname.startsWith('/api/profile/') && req.method==='POST') {
