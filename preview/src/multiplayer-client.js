@@ -12,6 +12,7 @@ import { watchConnection } from './connection-deadline.js';
 import { createVoiceChat } from './voice-chat.js';
 import { createVoiceUI } from './voice-ui.js';
 import { sharedVoicePreferences } from './voice-preferences.js';
+import { listenerFromPose } from './voice-spatial.js';
 
 const element = (tag,text,className) => { const node=document.createElement(tag);if(text)node.textContent=text;if(className)node.className=className;return node; };
 export function createMultiplayer({ getPose, getEnvironment = () => null, getRegionSha256 = () => null, getMeetingPlaces = () => [], getOwnerHomes = () => [], onSnapshot, onCorrection, onPlayers, onHomeAccess = () => {}, creationToolsEnabled = false, getWalking = () => null, onVoiceChange = () => {} }) {
@@ -123,7 +124,7 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
   };
   // Development only: a browser journey may hand in a fake transport (as VITE_WORKPLACE gates the workplace panel).
   const voiceTransport=import.meta.env.DEV&&window.__riverVoiceTransport?{loadTransport:async()=>window.__riverVoiceTransport}:{};
-  const voice=createVoiceChat({request:voiceRequest,preferences:sharedVoicePreferences(),onChange:state=>{voiceUI.render(state);onVoiceChange(state);},...voiceTransport});
+  const voice=createVoiceChat({request:voiceRequest,preferences:sharedVoicePreferences(),getListener:()=>listenerFromPose(getPose()),onChange:state=>{voiceUI.render(state);onVoiceChange(state);},...voiceTransport});
   const voiceUI=createVoiceUI({voice,chatSection,chatDock,walking:getWalking(),players:()=>latestPlayers});
   const displayPlayers=players=>{
     latestPlayers.clear();for(const player of players)latestPlayers.set(player.id,player);

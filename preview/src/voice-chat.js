@@ -13,15 +13,20 @@ const MESSAGES = {
 // A snapshot stamps a joined player's identity on the next room tick; before
 // that, an unstamped entry is not yet a revocation.
 const STAMP_GRACE_MS = 2500, RENEW_RETRY_MS = 10_000, STATUSES = ['unavailable', 'idle', 'joining', 'joined', 'rejoining', 'error'];
+import { createPeerGraph, listenerFromPose, speakerFromPlayer, spatialDistance, spatialGain, spatialPan, subscriptionDecision } from './voice-spatial.js';
 
 export function createVoiceChat({ request, preferences, loadTransport = () => import('livekit-client'), createAudioContext = () => new AudioContext(),
+  getListener = () => null, buildGraph = createPeerGraph,
   now = () => Date.now(), schedule = (fn, ms) => setTimeout(fn, ms), cancel = id => clearTimeout(id),
   document: doc = globalThis.document, window: win = globalThis.window, onChange = () => {} } = {}) {
   if (typeof request !== 'function' || !preferences) throw new Error('Voice needs a request function and preferences');
   const state = { status: 'unavailable', mic: 'off', deafened: false, playbackBlocked: false, space: null, participantIdentity: null, expiresAt: 0, message: MESSAGES.unavailable, peers: new Map() };
   let generation = 0, room = null, sdk = null, audioContext = null, renewTimer = null, renewRetried = false, joinedAt = 0;
   let available = false, authorizedSpace = null, wanted = false, micGranted = false, disposed = false, token = null;
-  const identityToPlayer = new Map(), playerToIdentity = new Map();
+  const identityToPlayer = new Map(), playerToIdentity = new Map(), lastPlayers = new Map();
+  // One audio graph per subscribed remote track, keyed by participant identity
+  // (a track can arrive before the snapshot names its player; it stays silent until then).
+  const graphs = new Map();
   const listeners = [];
   const set = patch => { Object.assign(state, patch); onChange(snapshot()); };
   const stale = gen => disposed || gen !== generation;
@@ -43,24 +48,48 @@ export function createVoiceChat({ request, preferences, loadTransport = () => im
     if (!state.peers.has(playerId)) state.peers.set(playerId, { identity, speaking: false, muted: preferences.isMuted(playerId), subscribed: true, gain: 1, pan: 0 });
     return state.peers.get(playerId);
   };
-  const applySubscriptions = () => {
+  // Presentation only: who is audible, how loud and from where. The server
+  // already decided who shares this room.
+  const placePeers = () => {
     if (!room) return;
+    const listener = getListener();
     for (const participant of room.remoteParticipants.values()) {
-      const playerId = identityToPlayer.get(participant.identity), peer = playerId && state.peers.get(playerId);
-      const subscribe = !state.deafened && !(peer?.muted);
+      const playerId = identityToPlayer.get(participant.identity), peer = playerId && state.peers.get(playerId), player = playerId && lastPlayers.get(playerId);
+      const entry = graphs.get(participant.identity);
+      let distance = NaN, gain = 0, pan = 0;
+      if (listener && player) { const speaker = speakerFromPlayer(player); distance = spatialDistance(listener, speaker); gain = spatialGain(distance); pan = spatialPan(listener, speaker); }
+      else if (player) gain = 1;
+      const silenced = state.deafened || Boolean(peer?.muted);
+      // Distance hysteresis applies only when the distance is known; otherwise anyone unmuted is heard.
+      const subscribe = !silenced && (Number.isFinite(distance) ? subscriptionDecision(distance, peer ? peer.subscribed : true) : true);
       for (const publication of participant.trackPublications?.values?.() ?? []) if (publication.isSubscribed !== subscribe) publication.setSubscribed?.(subscribe);
-      if (peer) peer.subscribed = subscribe;
+      const level = silenced || !subscribe ? 0 : gain;
+      entry?.graph.update(level, pan);
+      if (peer) Object.assign(peer, { subscribed: subscribe, gain: level, pan, distance });
     }
   };
+  const applySubscriptions = placePeers;
+  const dropGraph = identity => { const entry = graphs.get(identity); if (!entry) return; graphs.delete(identity); entry.graph.dispose(); };
   function bindRoom(target, gen) {
     const events = sdk.RoomEvent;
     target.on(events.ParticipantConnected, participant => { if (stale(gen)) return; peerFor(participant.identity); applySubscriptions(); set({}); });
     target.on(events.ParticipantDisconnected, participant => {
       if (stale(gen)) return;
+      dropGraph(participant.identity);
       const playerId = identityToPlayer.get(participant.identity);
       if (playerId) state.peers.delete(playerId);
       set({});
     });
+    target.on(events.TrackSubscribed, (track, publication, participant) => {
+      if (stale(gen) || track?.kind !== 'audio') return;
+      dropGraph(participant.identity);
+      const context = ensureAudio();
+      if (!context) return;
+      try { graphs.set(participant.identity, { graph: buildGraph(context, track), publication }); } catch { return; }
+      peerFor(participant.identity);
+      placePeers(); set({});
+    });
+    target.on(events.TrackUnsubscribed, (track, publication, participant) => { if (!stale(gen)) { dropGraph(participant.identity); set({}); } });
     target.on(events.ActiveSpeakersChanged, speakers => {
       if (stale(gen)) return;
       const active = new Set(speakers.map(speaker => speaker.identity));
@@ -77,7 +106,7 @@ export function createVoiceChat({ request, preferences, loadTransport = () => im
     });
   }
   const micState = error => error?.name === 'NotAllowedError' || error?.name === 'SecurityError' ? 'denied' : error?.name === 'NotFoundError' || error?.name === 'OverconstrainedError' ? 'none' : 'off';
-  function disposePeers() { state.peers.clear(); }
+  function disposePeers() { for (const identity of [...graphs.keys()]) dropGraph(identity); state.peers.clear(); }
   function stopRenew() { if (renewTimer !== null) cancel(renewTimer); renewTimer = null; }
   function scheduleRenew(ms) { stopRenew(); renewTimer = schedule(() => { renewTimer = null; void renew(); }, Math.max(1000, ms)); }
   // Tears down the LiveKit room and capture; the lease on the server is told
@@ -195,14 +224,16 @@ export function createVoiceChat({ request, preferences, loadTransport = () => im
   // Snapshot cadence: map identities to players, notice our own revocation or
   // space change, and come back after a dropped town connection.
   function sync(players, selfId) {
-    identityToPlayer.clear(); playerToIdentity.clear();
+    identityToPlayer.clear(); playerToIdentity.clear(); lastPlayers.clear();
     let self = null;
     for (const player of players ?? []) {
       if (player.id === selfId) { self = player; continue; }
+      lastPlayers.set(player.id, player);
       const identity = player.voice?.id;
       if (identity) { identityToPlayer.set(identity, player.id); playerToIdentity.set(player.id, identity); }
     }
     for (const [playerId, peer] of state.peers) if (playerToIdentity.get(playerId) !== peer.identity) state.peers.delete(playerId);
+    if (room) { for (const identity of graphs.keys()) peerFor(identity); placePeers(); }
     if (state.status === 'joined' && self) {
       const stamped = self.voice?.id ?? null, space = self.voice?.space ?? null;
       if (space !== state.space) { void rejoin(); return; }
@@ -249,7 +280,7 @@ export function createVoiceChat({ request, preferences, loadTransport = () => im
     setTransmit, setDeafened, setPeerMuted, unlockAudio, setAvailable, sync,
     onConnectionLost(terminal) { if (['joined', 'joining', 'rejoining'].includes(state.status)) leave('connection', { rejoinWanted: !terminal }); },
     playerFor: identity => identityToPlayer.get(identity) ?? null,
-    debug() { return { ...snapshot(), peers: Object.fromEntries(snapshot().peers), speaking: [...speakingIds()], wanted, micGranted, hasRoom: Boolean(room), hasAudioContext: Boolean(audioContext), renewScheduled: renewTimer !== null, statuses: STATUSES }; },
+    debug() { return { ...snapshot(), peers: Object.fromEntries(snapshot().peers), speaking: [...speakingIds()], wanted, micGranted, hasRoom: Boolean(room), hasAudioContext: Boolean(audioContext), graphs: [...graphs.keys()], renewScheduled: renewTimer !== null, statuses: STATUSES }; },
     dispose() {
       if (disposed) return;
       leave('dispose');
