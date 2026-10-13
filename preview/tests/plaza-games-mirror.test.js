@@ -246,3 +246,20 @@ test('cribbage: the walnut table swaps the checkers for a pegging board, and the
   cribbage.show(null); assert.equal(cribbage.pegs(), 0);
   cribbage.setVisible(false); backgammon.setVisible(true);
 });
+test('darts: the board on its post faces the throwing line, and the turn’s darts stand where they landed', async () => {
+  const { DARTS, atDartsLine, dartSpot, dartsStand } = await import('../src/plaza-salon-plan.js');
+  const { targetPoint } = await import('../src/darts-rules.js');
+  const board = plan.darts, mirror = group.userData.darts, mesh = group.children.find(child => child.name === 'Darts in the board');
+  const stand = dartsStand(board);
+  assert.ok(Math.abs(Math.hypot(stand[0] - board.x, stand[1] - board.north) - DARTS.line) < 1e-9, 'the line is 2.37 m from the board');
+  assert.ok(atDartsLine(board, stand) && !atDartsLine(board, [board.x, board.north]));
+  mirror.show([targetPoint(20, 'treble'), [0, 0], targetPoint(6, 'double')]);
+  assert.equal(mirror.count(), 3);
+  const at = i => { const matrix = new THREE.Matrix4(); mesh.getMatrixAt(i, matrix); return new THREE.Vector3().setFromMatrixPosition(matrix); };
+  const ground = at(1).y - DARTS.bull;
+  assert.ok(at(0).y - ground > DARTS.bull + 0.09, 'the treble 20 is high on the board');
+  // From the line the thrower faces south, so the 6 (on their right) is to the west of the bull.
+  assert.ok(at(2).x < at(1).x, 'the double 6 lies on the thrower’s right, west');
+  assert.deepEqual(dartSpot(board, [0, 0]).slice(0, 2).map(v => Math.round(v * 100)), [Math.round(board.x * 100), Math.round((board.north + 0.035) * 100)]);
+  mirror.show([]); assert.equal(mirror.count(), 0);
+});
