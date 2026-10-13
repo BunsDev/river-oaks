@@ -80,3 +80,95 @@ Same corrected dirty Release binary (source5f75a43; binary SHA in `.runtime/ios-
 Verification: `swift test --package-path experiments/ios-probe`17passed, including actual WebKit compilation; `node --test scripts/tests/ios-probe.test.js`13passed; Release simulator/device builds and strict codesignpassed. `pnpm run verify`passed: tooling89, preview2750pass/1skip, server421pass/134skip, desktop51, Python141. Core receipt `.runtime/agent/core.json`, log `core-rigs.log`; native logs `rigs-webkit-green.log`, `rigs-build.log`, `rigs-simulator-final.log`. Independent technical review confirmed exact rules and Stop/navigation/termination fences. Project check still reports unrelated lifecycle/ownership gaps. Full browser/Redis, hosted exact-head CI, stable physical performance and auth/distribution acceptance remain separate.
 
 Next: investigate standard avatar template decoding and resident instantiation with bounded full-fidelity loading locally, then obtain physical same-workload proof before selecting any production host. No production scene edits, deployment, merge or gate closure. Keep this worktree active.
+
+## Decoder comparison (continuation)
+The preceding turn made progress: diagnostic controls and correlated allocation
+records were verified, signed and pushed as25509d6 to draft PR309. This turn
+preserves the full rollout objective; no gate is closed.
+
+- Serialized `createImageBitmap` first failed after6seconds (F05634EA). Review
+  narrowed the wrapper to immutable Blob inputs, captured plain option values at
+  invocation, and passed mutable sources/cropped/exotic calls directly through.
+  Corrected run161BA935 observed support and one active decode with20queued, then
+  WebContent terminated at13:43:19UTC, four seconds after launch. Serializing
+  this API is not sufficient; fetch, GLTF parsing and other allocations remain
+  concurrent. Cumulative decoded pixel counters are not footprint measurements.
+- HTML-image fallback B847F58B loaded the player and88/88residents by20seconds
+  and survived until the next control launch about5minutes later. No asset URLs,
+  geometry, resident count or rendering settings were removed by this treatment.
+  It makes `createImageBitmap` unavailable only in the probe's main document,
+  selecting GLTFLoader's existing TextureLoader path. This remains an experiment;
+  color/alpha equivalence and other-library compatibility are unverified.
+- The45second steady-state trace `.runtime/ios-probe/html-images-memory.trace`
+  has45samples for launch-correlated host65522/WebContent65523/GPU65524.
+  Maximum sampled footprints:11.69/1557.27/379.66MiB. It started after loading;
+  comparing this directly with the original startup peak is not a matched peak
+  comparison. Default-decoder same-binary control6EF987D7 again terminated four
+  seconds after launch (13:55:03UTC).
+- Added observed decoder-state and asset-progress snapshots after review noted
+  that readiness alone can conceal GLTF texture failures. Browser verification
+  now also counts console errors and requires settled asset loading with zero
+  failures. Initial local browser runs waited behind active shared jobs, then
+  failed because the expected WebKit2370 executable was absent. Installed the
+  matching browser in an isolated `.runtime/ios-probe/browsers` cache and queued
+  the fresh HTML-mode verification; never bypassed the browser lock.
+- Sustained full-content runCEE3B6B7 began13:58:11UTC with RAF sampling enabled.
+  At21.7seconds it observed HTML mode, imageBitmapAvailablefalse,100/100assets,
+  zero failures,199trees,2beds and88/88residents. At90seconds it remained alive
+  but only about12fps (RAF median80ms/p9584ms in that drain), Auto scale0.6/AOoff,
+  thermal state0. Startup stability improved; sustained30fps is not established.
+  A separate startup Activity Monitor capture is finalizing; preserve its handle
+  and raw trace rather than restarting on a timeout.
+
+Related upstream context: Three.js issue30416 reports Safari memory growth when
+GLTFLoader moved to ImageBitmapLoader. This is consistent with the observed
+branch difference, not proof of an identical WebKit defect or termination reason:
+https://github.com/mrdoob/three.js/issues/30416
+
+Next: complete the active sustained run and startup trace, verify textures and
+render equivalence, then profile the remaining frame-time failure before any
+production-host decision. No production global API override is proposed here.
+
+
+### Decoder validation and interrupted sustained trial
+
+- Val reports the world responds to movement/look with the fallback. This is
+  manual interaction evidence, not an interior, multiplayer or performance pass.
+- Startup trace `html-images-startup.trace` completed; selected process rows are
+  in `html-images-startup-selected.json`. Host65575, WebContent65576, GPU65577 each
+  have28samples, maxima13.00/1707.60/444.64MiB. WebContent starts116.86MiB;
+  CPU samples exceed100% during startup and later sit around27–36%. These are
+  separate sampled process footprints, not a deduplicated total or exact peak.
+  Instruments export emitted dylib-overlap warnings; numeric table export completed.
+- CEE3B6B7 entered background at14:01:13UTC/182.3seconds, then exited without a
+  final recording event. Current process inventory confirmed its host was absent.
+  Do not count subsequent wall time as foreground stability or infer exit cause.
+- Fresh run409F0F62 began14:18:14UTC with the same dirty Release binary and
+  HTML+snapshot flags. At120seconds it was visible, nominal thermal, contextLost0,
+  about15fps, Auto0.6/AOoff,619calls/2.594million triangles. The operator was asked
+  to keep the probe foreground; a full20–30minute foreground record is pending.
+- Local WebKit HTML test passed with100/100assets,failed0,88/88residents,
+  observed fallback,35RAF intervals and no page errors. Two HTTP503 console errors
+  match exact URLs explicitly refused by the existing offline provider fixture;
+  unexpected console errors remain fatal. Earlier failed attempts are retained.
+- `image-parity.json` compares38embedded images from the six standard rigs.
+  All raw WebGL2 RGBA8 uploads are byte-identical across the two decoders;12
+  Canvas2D comparisons differ. Preserve `image-parity-canvas-first.json` as the
+  initial result. Raw upload equality is not full shader/scene or iPhone evidence.
+- Independent review accepted the missing-texture checks and diagnostic boundary,
+  requested a bounded parity deadline and explicit GPU-only success naming; both
+  were addressed. Final parity rerun passed with explicit GPU-only success.
+  Serialized-mode local WebKit also passed (82RAF intervals, all assets/residents,
+  queue maxActive1), while the physical serial-mode termination remains a failure.
+  Core passed:95tooling,2750preview/1skip,421server/134skips,51desktop,141Python.
+  The fresh focused suite passed19Node tests and
+  17Swift tests passed; Release simulator/device builds and codesign passed.
+  New local verification harness changes receive fresh focused checks before commit.
+
+Next: finish409F0F62 foreground measurement, retain exact recording limits, and
+profile the remaining frame-time failure. No production API override, architecture
+acceptance, merge, deployment or issue closure. Keep this worktree active.
+
+Coordination check uses the primary live task register and remains nonzero for
+unrelated expired leases, unregistered branches and pending retirements. The iOS
+claim is valid; preserve those unrelated tasks and branches.

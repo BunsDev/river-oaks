@@ -27,6 +27,8 @@ targets:
       - Sources/ProbeCore
       - path: Web/probe.js
         buildPhase: resources
+      - path: Web/decode-queue.js
+        buildPhase: resources
     settings:
       base:
         PRODUCT_NAME: TypeSafeProbe

@@ -19,6 +19,8 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
 final class ProbeController: UIViewController, WKNavigationDelegate, WKUIDelegate, ASWebAuthenticationPresentationContextProviding {
     private var web: WKWebView!
     private let measurementsEnabled = !ProcessInfo.processInfo.arguments.contains("--probe-native-only")
+    private let htmlImages = ProcessInfo.processInfo.arguments.contains("--probe-html-images")
+    private let serializedDecodes = ProcessInfo.processInfo.arguments.contains("--probe-serialize-decodes")
     private let sceneSnapshotEnabled = ProcessInfo.processInfo.arguments.contains("--probe-scene-snapshot")
     private var snapshotScript = ""
     private var documentTerminated = false
@@ -51,12 +53,19 @@ final class ProbeController: UIViewController, WKNavigationDelegate, WKUIDelegat
             guard let url = URL(string: entry) else { throw URLError(.badURL) }
             policy = try ProbePolicy(entry: url)
             isolation = try ProbeIsolation(arguments: ProcessInfo.processInfo.arguments)
+            guard !(serializedDecodes && htmlImages) else { throw URLError(.badURL) }
             guard let scriptURL = Bundle.main.url(forResource: "probe", withExtension: "js") else { throw CocoaError(.fileNoSuchFile) }
             let source = try String(contentsOf: scriptURL, encoding: .utf8)
             snapshotScript = source + "\nIOSProbe.sceneSnapshot();"
             let script = source + "\nIOSProbe.install();"
             let configuration = WKWebViewConfiguration()
             configuration.websiteDataStore = .default()
+            if serializedDecodes || htmlImages {
+                guard let decodeURL = Bundle.main.url(forResource: "decode-queue", withExtension: "js") else { throw CocoaError(.fileNoSuchFile) }
+                let action = htmlImages ? "useHTMLImages" : "install"
+                let decodeScript = try String(contentsOf: decodeURL, encoding: .utf8) + "\nIOSProbeDecodes.\(action)();"
+                configuration.userContentController.addUserScript(WKUserScript(source: decodeScript, injectionTime: .atDocumentStart, forMainFrameOnly: true, in: .page))
+            }
             if measurementsEnabled {
                 configuration.userContentController.addUserScript(WKUserScript(source: script, injectionTime: .atDocumentStart, forMainFrameOnly: true, in: world))
             }
@@ -120,8 +129,11 @@ final class ProbeController: UIViewController, WKNavigationDelegate, WKUIDelegat
                 "measurementMode": measurementsEnabled ? "raf-and-native" : "native-only",
                 "blockedAssetGroups": isolation.groups,
                 "sceneSnapshotEnabled": sceneSnapshotEnabled,
+                "serializedDecodes": serializedDecodes,
+                "htmlImages": htmlImages,
                 "memoryScope": "WebContent/GPU memory unavailable here; collect with Instruments separately"])
         guard output != nil else { return }
+        if serializedDecodes || htmlImages { status.text = "DIAGNOSTIC · " + (htmlImages ? "HTML image decoder" : "serial Blob decoder") }
         UIApplication.shared.isIdleTimerDisabled = true
         if measurementsEnabled { timer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in self?.sample() } }
         deadline = Timer.scheduledTimer(withTimeInterval: 1800, repeats: false) { [weak self] _ in self?.finish(reason: "deadline") }
@@ -268,14 +280,16 @@ final class ProbeController: UIViewController, WKNavigationDelegate, WKUIDelegat
         append(["event": "navigation-finish"]); sample()
         guard sceneSnapshotEnabled else { return }
         let sampledNavigation = navigationID
-        DispatchQueue.main.asyncAfter(deadline: .now() + 20) { [weak self] in
-            guard let self, !self.stopping, !self.documentTerminated, self.output != nil, self.navigationID == sampledNavigation,
-                  let url = self.web.url, self.policy.allows(url) else { return }
-            self.web.evaluateJavaScript(self.snapshotScript, in: nil, in: self.world) { [weak self] result in
-                guard let self, !self.stopping, !self.documentTerminated, self.output != nil, self.navigationID == sampledNavigation else { return }
-                if case .success(let value) = result, let data = value as? [String: Any] {
-                    self.append(["event": "scene-snapshot", "page": data])
-                } else { self.append(["event": "scene-snapshot-unavailable"]) }
+        for delay in (serializedDecodes || htmlImages) ? [2.0, 20.0] : [20.0] {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+                guard let self, !self.stopping, !self.documentTerminated, self.output != nil, self.navigationID == sampledNavigation,
+                      let url = self.web.url, self.policy.allows(url) else { return }
+                self.web.evaluateJavaScript(self.snapshotScript, in: nil, in: self.world) { [weak self] result in
+                    guard let self, !self.stopping, !self.documentTerminated, self.output != nil, self.navigationID == sampledNavigation else { return }
+                    if case .success(let value) = result, let data = value as? [String: Any] {
+                        self.append(["event": "scene-snapshot", "snapshotDelaySeconds": delay, "page": data])
+                    } else { self.append(["event": "scene-snapshot-unavailable"]) }
+                }
             }
         }
     }

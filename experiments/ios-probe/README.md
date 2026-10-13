@@ -163,3 +163,46 @@ and `--probe-block-special-rigs` (`jevica.glb` / `prince-jev.glb`). These leave
 portraits, reference images and other models untouched. They are asset groups,
 not an NPC/player split: player appearances can use either group. Camera and
 automatic render scale may diverge after a failed player load; record that limit.
+
+## Decoder controls
+
+Two explicit, mutually exclusive experiments keep all asset URLs and render
+settings unchanged:
+
+- `--probe-serialize-decodes` queues the main page's immutable Blob
+  `createImageBitmap` calls one at a time. Plain option values are captured at
+  invocation; mutable sources, cropped overloads and exotic options use the
+  original API immediately. This is a scheduling hypothesis, not a production fix.
+- `--probe-html-images` makes `createImageBitmap` unavailable in the main page
+  before modules load, selecting Three's existing `TextureLoader`/HTML image
+  fallback. The feature override is document-local, not a changed User Agent.
+  Color/alpha equivalence, other library compatibility and memory benefit require
+  separate validation before any production proposal.
+
+Both flags appear in start metadata and invalidate unchanged-baseline acceptance.
+With `--probe-scene-snapshot`, decoder experiments read numeric scene telemetry at
+2 and20seconds after navigation, with Stop/navigation/termination fences. Serialized
+decode counters identify support, queue activity and cumulative RGBA output-size
+estimates. Those estimates are not measured memory or retained allocations.
+`--probe-native-only` suppresses the RAF collector, but these explicit decoder
+flags still inject their treatment in the main page. Default launches inject none
+of these decoder changes.
+
+Local full-scene checks use the existing loopback fixture and browser queue:
+`node experiments/ios-probe/verify-webkit.mjs --serialize-decodes` or
+`--html-images`. They require all store residents and the player to load without
+page errors. macOS WebKit success is not physical iPhone acceptance.
+
+The local `verify-webkit.mjs --html-images` check requires all residents and assets,
+zero asset failures, observed decoder state, and no unexpected console/page errors.
+Only HTTP 503 console errors whose exact URL was explicitly refused by this
+harness's optional `/v1` route count as expected fixture errors; URLs are not saved.
+
+`node experiments/ios-probe/verify-image-parity.mjs` compares the six shipped
+standard rigs' embedded images using both Canvas2D and raw WebGL2 RGBA8 uploads.
+It uses original authenticated fixture bytes, no resize, and a 60-second deadline
+per rig. The receipt distinguishes GPU equality from Canvas equality; neither is
+full material/shader or physical-device visual acceptance. Each image releases its
+bitmap, object URL and canvas; each rig releases its GPU resources. Use
+`PLAYWRIGHT_BROWSERS_PATH=.runtime/ios-probe/browsers` if browsers were installed
+in the probe's isolated cache. Both harnesses honor the shared browser lock.

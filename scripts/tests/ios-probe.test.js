@@ -90,3 +90,60 @@ test('one-shot scene snapshot whitelists bounded numeric diagnostics without ins
  const invalid=plain(sandbox.IOSProbe.sceneSnapshot());
  assert.deepEqual(invalid.renderCounts,{});assert.equal('matureTrees' in invalid,false);assert.equal('plantedBeds' in invalid,false);
 });
+test('decode experiment preserves inputs/results while allowing only one active operation and recovering after rejection', async () => {
+ const decodeSource=readFileSync(new URL('../../experiments/ios-probe/Web/decode-queue.js',import.meta.url),'utf8');
+ const sandbox=vm.createContext({});vm.runInContext(decodeSource,sandbox);
+ const calls=[],releases=[];let active=0,peak=0;
+ const receiver={};const inputs=[{name:'one'},{name:'two'},{name:'three'}];const options={imageOrientation:'flipY'};
+ const decode=function(...args){assert.equal(this,receiver);calls.push(args);active++;peak=Math.max(peak,active);return new Promise((resolve,reject)=>releases.push({resolve:value=>{active--;resolve(value);},reject:error=>{active--;reject(error);}}));};
+ const queue=sandbox.IOSProbeDecodes.createQueue(decode);
+ const first=queue.run.call(receiver,inputs[0],options),second=queue.run.call(receiver,inputs[1]),third=queue.run.call(receiver,inputs[2]);
+ const secondRejected=assert.rejects(second,/decode failed/);
+ await new Promise(resolve=>setImmediate(resolve));assert.equal(calls.length,1);assert.equal(calls[0][0],inputs[0]);assert.equal(calls[0][1],options);
+ const bitmap={width:10,height:20};releases[0].resolve(bitmap);assert.equal(await first,bitmap);
+ await new Promise(resolve=>setImmediate(resolve));assert.equal(calls.length,2);releases[1].reject(new Error('decode failed'));await secondRejected;
+ await new Promise(resolve=>setImmediate(resolve));assert.equal(calls.length,3);releases[2].resolve({width:2,height:3});await third;
+ assert.equal(peak,1);assert.deepEqual(plain(queue.snapshot()),{enqueued:3,completed:2,failed:1,active:0,maxActive:1,queued:0,decodedRGBABytes:824});
+});
+test('decode installation is idempotent, handles missing support, and emits only numeric counters', async () => {
+ const decodeSource=readFileSync(new URL('../../experiments/ios-probe/Web/decode-queue.js',import.meta.url),'utf8');
+ const dataset={},document={documentElement:{dataset}};
+ const sandbox=vm.createContext({document,Blob,createImageBitmap:async()=>({width:3,height:4,secret:'not exported'})});vm.runInContext(decodeSource,sandbox);
+ sandbox.IOSProbeDecodes.install();const installed=sandbox.createImageBitmap;sandbox.IOSProbeDecodes.install();assert.equal(sandbox.createImageBitmap,installed);
+ await sandbox.createImageBitmap(new Blob(['not exported']));
+ const report=JSON.parse(dataset.iosProbeDecodes);assert.equal(report.completed,1);assert.equal(report.decodedRGBABytes,48);assert.equal(JSON.stringify(report).includes('not exported'),false);
+ const missing=vm.createContext({document:{documentElement:{dataset:{}}}});vm.runInContext(decodeSource,missing);missing.IOSProbeDecodes.install();assert.equal(missing.createImageBitmap,undefined);
+});
+test('summary marks serialized decoding as an experiment, not unchanged acceptance',()=>{
+ const report=summarizeProbe([{...start,serializedDecodes:true},sample([20]),{event:'stop',finalDrainComplete:true}]);
+ assert.equal(report.valid,false);assert.ok(report.gaps.includes('serialized image decoding experiment; inspect separate control'));
+});
+
+test('decode experiment leaves mutable sources immediate and snapshots plain Blob options', async()=>{
+ const decodeSource=readFileSync(new URL('../../experiments/ios-probe/Web/decode-queue.js',import.meta.url),'utf8');
+ const calls=[],releases=[];
+ const sandbox=vm.createContext({Blob,createImageBitmap:(...args)=>{calls.push(args);return new Promise(resolve=>releases.push(resolve));}});
+ vm.runInContext(decodeSource,sandbox);sandbox.IOSProbeDecodes.install();
+ const first=sandbox.createImageBitmap(new Blob(['first']));
+ await new Promise(resolve=>setImmediate(resolve));
+ sandbox.input=new Blob(['second']);
+ vm.runInContext("globalThis.options={imageOrientation:'flipY'};globalThis.second=createImageBitmap(input,options);options.imageOrientation='none'",sandbox);
+ const mutable={width:5,height:6};const immediate=sandbox.createImageBitmap(mutable);
+ assert.equal(calls.length,2);assert.equal(calls[1][0],mutable);releases[1]({width:5,height:6});await immediate;
+ releases[0]({width:1,height:1});await first;
+ await new Promise(resolve=>setImmediate(resolve));assert.equal(calls[2][1].imageOrientation,'flipY');releases[2]({width:2,height:2});await sandbox.second;
+});
+
+test('summary keeps HTML image decoding distinct from baseline acceptance',()=>{
+ const report=summarizeProbe([{...start,htmlImages:true},sample([20]),{event:'stop',finalDrainComplete:true}]);
+ assert.equal(report.valid,false);assert.ok(report.gaps.includes('HTML image decoder experiment; inspect separate control'));
+});
+
+test('HTML decoder control records observed feature state without changing assets',()=>{
+ const decodeSource=readFileSync(new URL('../../experiments/ios-probe/Web/decode-queue.js',import.meta.url),'utf8');
+ const dataset={};const sandbox=vm.createContext({createImageBitmap(){},document:{documentElement:{dataset},querySelector:()=>null}});
+ vm.runInContext(decodeSource,sandbox);sandbox.IOSProbeDecodes.useHTMLImages();
+ assert.equal(sandbox.createImageBitmap,undefined);
+ vm.runInContext(source,sandbox);const snapshot=plain(sandbox.IOSProbe.sceneSnapshot());
+ assert.equal(snapshot.decoderMode,'html-images');assert.equal(snapshot.imageBitmapAvailable,false);
+});

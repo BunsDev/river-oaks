@@ -234,3 +234,29 @@ scale0.6/AOoff and has different camera/resident workload. This narrows the next
 investigation to standard template loading and resident instantiation without
 proving a particular allocation cause or accepting reduced fidelity. Exact run
 IDs and verification are in the task ledger.
+
+### Decoder-path result
+
+The probe's explicit HTML-image fallback loaded the player and all88residents;
+the same binary with the original decoder terminated again after4seconds.
+Serial Blob decoding also terminated, despite an observed single active decode.
+The HTML fallback's later45second steady-state trace peaked at1557.27MiB
+WebContent and379.66MiB GPU; these are sampled footprints, not a matched startup
+peak comparison. A repeated instrumented run observed100/100assets with zero
+failures and the fallback actually applied.
+
+This improves startup stability without excluding scene content. It does not yet
+pass the architecture gate: early full-content RAF sampling is about12fps at
+Auto scale0.6/AOoff, below the provisional30fps floor. A local WebKit check found identical raw WebGL2 RGBA8 uploads for all 38
+embedded standard-rig images across decoders; 12 Canvas2D comparisons differed.
+This does not establish full material/shader or physical-device visual equality.
+Interiors/recovery and sustained thermal/render timing remain open. Treat the
+probe's document-local API override as a diagnostic; any shared-client solution
+must use a reviewed loader boundary and preserve other APIs.
+
+Val confirmed movement/look works on the paired iPhone with the fallback. A
+separate startup trace sampled WebContent up to 1707.60 MiB, GPU 444.64 MiB and
+host 13.00 MiB (28 samples per process). These are separate process footprints,
+not a deduplicated total or an exact peak. The first timed run backgrounded after
+182 seconds and subsequently exited, so it cannot support sustained acceptance.
+The replacement foreground run and performance investigation remain active.

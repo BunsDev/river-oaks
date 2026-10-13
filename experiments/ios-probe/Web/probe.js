@@ -33,6 +33,21 @@
     for (const key of ['matureTrees','plantedBeds','storePeopleReady','storePeopleTotal']) {
       if (typeof data[key] === 'string' && data[key].trim() && Number.isFinite(Number(data[key]))) result[key] = Number(data[key]);
     }
+    const progressRaw = document.querySelector('#viewport')?.dataset?.assetProgress;
+    if (progressRaw) {
+      result.assets = numeric(progressRaw, ['loaded','total','failed']);
+      try { const value = JSON.parse(progressRaw); if (typeof value?.done === 'boolean') result.assets.done = value.done; } catch { /* Unavailable. */ }
+    }
+    const diagnostic = document.documentElement?.dataset;
+    if (diagnostic?.iosProbeDecoderMode === 'html-images') {
+      result.decoderMode = 'html-images';
+      if (['true','false'].includes(diagnostic.iosProbeImageBitmapAvailable)) result.imageBitmapAvailable = diagnostic.iosProbeImageBitmapAvailable === 'true';
+    }
+    const decodeRaw = diagnostic?.iosProbeDecodes;
+    if (decodeRaw) {
+      result.decodes = numeric(decodeRaw, ['enqueued','completed','failed','active','maxActive','queued','decodedRGBABytes']);
+      try { const value = JSON.parse(decodeRaw); if (typeof value?.supported === 'boolean') result.decodes.supported = value.supported; } catch { /* Unavailable. */ }
+    }
     return result;
   }
   function install() {

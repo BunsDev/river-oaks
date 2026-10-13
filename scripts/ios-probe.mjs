@@ -26,6 +26,8 @@ export function summarizeProbe(records) {
   const blockedAssetGroups = start.blockedAssetGroups ?? [];
   if (!Array.isArray(blockedAssetGroups) || blockedAssetGroups.some(group => !['characters', 'landscape', 'materials', 'standard-rigs', 'special-rigs'].includes(group))) throw new Error('Invalid isolation metadata');
   if (blockedAssetGroups.length) { valid = false; gaps.add('asset-isolation trial; reduced content is not representative'); }
+  if (start.serializedDecodes) { valid = false; gaps.add('serialized image decoding experiment; inspect separate control'); }
+  if (start.htmlImages) { valid = false; gaps.add('HTML image decoder experiment; inspect separate control'); }
   const stop = records.at(-1);
   const recordingFinalized = stop.event === 'stop' && stop.finalDrainComplete === true;
   if (!recordingFinalized) gaps.add('recording not cleanly finalized');
