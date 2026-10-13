@@ -2,10 +2,10 @@ import './plaza-table-games.css';
 import { chessSeat } from './plaza-salon-plan.js';
 import * as chess from './chess-rules.js';
 import * as checkers from './checkers-rules.js';
-import { CONNECT_FOUR } from './connect-four-adapter.js';
-import { REVERSI } from './reversi-adapter.js';
-import { MORRIS } from './morris-adapter.js';
+import { TABLE_GAMES } from './table-game-adapters.js';
 import { attachGuide } from './salon-guide.js';
+
+export { TABLE_GAMES };
 
 // Games at the plaza chess tables, for whoever sits down: chess, checkers or Connect Four,
 // against the plaza regular (a small engine in a worker) or pass-and-play. A game
@@ -14,64 +14,6 @@ import { attachGuide } from './salon-guide.js';
 // Chess and checkers move a piece from one square to another on an 8×8 board; a
 // drop game (Connect Four) has its own board size and plays a column in one click.
 
-const GLYPH = { k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' };
-const NAME = { k: 'king', q: 'queen', r: 'rook', b: 'bishop', n: 'knight', p: 'pawn' };
-
-const CHESS = {
-  id: 'chess', name: 'Chess', sides: ['w', 'b'], sideName: { w: 'White', b: 'Black' }, opening: { w: 'e2', b: 'e7' },
-  replay(moves) {
-    let state = chess.fromFEN(chess.START_FEN);
-    const keys = [chess.positionKey(state)], played = [];
-    for (const text of moves) {
-      const move = chess.findMove(state, text);
-      if (!move) break;
-      played.push({ from: move.from, to: move.to, text: chess.san(state, move) });
-      state = chess.makeMove(state, move); keys.push(chess.positionKey(state));
-    }
-    const ended = chess.outcome(state, keys);
-    return { state, keys, played, result: ended && { winner: ended.result === '1-0' ? 'w' : ended.result === '0-1' ? 'b' : null, reason: ended.reason } };
-  },
-  turn: state => state.turn,
-  piece(state, square) {
-    const letter = state.board[square];
-    if (!letter) return null;
-    const side = letter === letter.toUpperCase() ? 'w' : 'b', type = letter.toLowerCase();
-    return { side, label: `${side === 'w' ? 'white' : 'black'} ${NAME[type]}`, glyph: GLYPH[type] };
-  },
-  moves: state => chess.legalMoves(state).map(move => ({ from: move.from, to: move.to, key: chess.uci(move), capture: Boolean(move.captured), choice: move.promotion ?? null })),
-  alert: state => chess.inCheck(state) ? { square: chess.kingSquare(state, state.turn), text: 'Check! ' } : null,
-  ending: () => 'Checkmate.',
-  position: state => chess.toFEN(state),
-};
-
-const CHECKERS = {
-  id: 'checkers', name: 'Checkers', sides: ['d', 'l'], sideName: { d: 'Dark', l: 'Light' }, opening: { d: 'c3', l: 'f6' },
-  replay(moves) {
-    let state = checkers.startPosition();
-    const keys = [checkers.positionKey(state)], played = [];
-    for (const text of moves) {
-      const move = checkers.findMove(state, text);
-      if (!move) break;
-      played.push({ from: move.from, to: move.path.at(-1), text });
-      state = checkers.makeMove(state, move); keys.push(checkers.positionKey(state));
-    }
-    return { state, keys, played, result: checkers.outcome(state, keys) };
-  },
-  turn: state => state.turn,
-  piece(state, square) {
-    const letter = state.board[square];
-    if (!letter) return null;
-    const side = letter.toLowerCase(), king = letter !== side;
-    return { side, king, label: `${side === 'd' ? 'dark' : 'light'} ${king ? 'king' : 'man'}` };
-  },
-  // Two sequences can end on one square; the one that takes more is offered.
-  moves: state => checkers.legalMoves(state).map(move => ({ from: move.from, to: move.path.at(-1), key: checkers.notation(move), capture: move.captures.length > 0, weight: move.captures.length }))
-    .sort((a, b) => b.weight - a.weight),
-  alert: state => checkers.legalMoves(state)[0]?.captures.length ? { square: -1, text: 'A capture is compulsory. ' } : null,
-  ending: reason => reason === 'no pieces left' ? 'Every piece taken.' : 'No moves left.',
-  position: state => state,
-};
-export const TABLE_GAMES = { chess: CHESS, checkers: CHECKERS, connectFour: CONNECT_FOUR, reversi: REVERSI, morris: MORRIS };
 // A drop game places with one click; morris does while pieces remain in hand.
 const dropping = (adapter, state) => typeof adapter.drop === 'function' ? adapter.drop(state) : Boolean(adapter.drop);
 const EMPTY_CHESS_BOARD = Array(64).fill('');
