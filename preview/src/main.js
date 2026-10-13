@@ -37,6 +37,7 @@ import { createStorefrontReflections } from './reflections.js';
 import { registerGroundSurfaces, groundSurfaceHeight } from './world-surface.js';
 import { buildStreetFurniture } from './street-furniture.js';
 import { buildPlazaSalon } from './plaza-salon.js';
+import { createPlazaChess, seatAtChess } from './plaza-chess.js';
 import { atmosphereFor } from './atmosphere.js';
 import { createWalkingEnvironment } from './walking.js';
 import { createQualityControl } from './render-quality.js';
@@ -100,6 +101,7 @@ let worldRegionSha256 = null;
 let landmarkAccountId = null;
 let playerAvatar;
 let multiplayer, remotePlayers, buildLayer, buildControls, seatingControls, seatAndWater;
+let plazaSalon = null, plazaChess = null;
 let birdCams = null, birdCamsUI = null;
 let debugTools = null, debugLoading = null;
 const worldMapEnabled = import.meta.env.VITE_WORLD_MAP === 'true';
@@ -194,7 +196,7 @@ function initializeRenderer() {
     void worldPortal.load();
   }
   sidebarSections = setupSidebarSections({ graphics: quality.element, sidebar });
-  walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore, canEnterStore, getInteraction: () => seatAndWater?.interaction() ?? null });
+  walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore, canEnterStore, getInteraction: () => seatAndWater?.interaction() ?? null, getPlay: () => plazaChess?.interaction() ?? null });
   storeIntros = createStoreIntros({ camera, host,
     claim: storeId => multiplayer.claimStoreIntro(storeId),
     onHalt: () => walking.halt(), onResume: () => walking.update(0, performance.now()),
@@ -211,6 +213,9 @@ function initializeRenderer() {
     requestVehicleExit: position => multiplayer.travel({position:[position[0],-position[2]]}),
     getPortrait: id => portraits.portrait(id) });
   seatAndWater = createSeatAndWater({ walking, playerAvatar, getLocals: () => community.state?.locals, getMultiplayer: () => multiplayer, isBusy: () => seatingControls?.busy() ?? false });
+  // Seated at a plaza chess table, X plays; the table's pieces mirror the game.
+  plazaChess = createPlazaChess({ getMirror: () => plazaSalon?.userData.chess ?? null, getSeat: () => seatAtChess(walking?.getPose()),
+    focusWorld: () => host.focus({ preventScroll: true }) });
   playDock = createPlayDock({creationToolsEnabled}); const visitTools = playDock.content;
   if (creationToolsEnabled) buildControls=createSharedBuildControls({getPose:()=>walking?.getPose(),isBuildableRoom:id=>world?.stores.some(store=>store.id===id && store.category==='home'),onBuilderChange:builder=>{builderAim='';if(!builder.active)buildLayer?.setGhost(null);},request:message=>multiplayer?.command(message)??Promise.resolve({ok:false,message:'Join the town before building.'})});
   visitTools.append($('.player-controls'), ...(buildControls ? [buildControls.panel] : []));
@@ -445,7 +450,8 @@ function populateWorld(data) {
   worldGroup.add(sidewalks);
   worldGroup.add(furniture);
   // The Dior-Toulouse plaza furnished as an open-air salon (plaza-salon-plan.js).
-  worldGroup.add(buildPlazaSalon(data));
+  plazaSalon = buildPlazaSalon(data);
+  worldGroup.add(plazaSalon);
   buildingMesh.add(seeThroughNearCameraIn(buildDistrictFantasy(data)));
   document.querySelectorAll('[data-layer]').forEach((input) => { layers[input.dataset.layer].visible = input.checked; });
   scene.add(worldGroup);
@@ -684,6 +690,7 @@ function render(now) {
   if (storeIntros?.active || photoMode?.active || birdCams?.riding) walking?.halt();
   else if (multiplayer?.connected && !multiplayer.traveling) walking?.update(delta, now);
   else walking?.halt();
+  plazaChess?.update();
   if (multiplayer?.connected) birdCams?.update(delta);
   multiplayer?.update(now);
   seatingControls?.update(now);
@@ -893,6 +900,11 @@ if (import.meta.env.DEV && renderAudit) {
 
 // Read-only diagnostics for browser acceptance runs; absent from production.
 if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debug') === '1') {
+  window.__riverPlazaChess = () => {
+    if (!plazaChess) return null;
+    const state = plazaChess.debug();
+    return { ...state, mirror: state.tableId ? plazaSalon?.userData.chess?.board(state.tableId) ?? null : null };
+  };
   window.__riverSeatAndWater = () => seatAndWater ? {
     seated: walking?.getPose()?.sitting ? `${walking.getPose().sitting.buildId}:${walking.getPose().sitting.slot}` : null, interaction: seatAndWater.interaction()?.kind ?? null, offered: seatAndWater.interaction()?.targetId ?? null, ...seatAndWater.sites(),
     // Arrive on open pavement beside a seat or planter, by the normal travel path.
