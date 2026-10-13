@@ -134,3 +134,34 @@ test('backgammon: the table shows the opening, and a game’s points, bar and tr
   mirror.show(null);
   assert.equal(mirror.count(), 30, 'cleared, the table is set up again');
 });
+
+test('jenga: the drum shows the game’s tower, and the blocks scattered once it falls', async () => {
+  const { JENGA, jengaBlock } = await import('../src/plaza-salon-plan.js');
+  const { pull, startTower } = await import('../src/jenga-rules.js');
+  const mirror = group.userData.jenga, mesh = group.children.find(child => child.name === 'Jenga blocks');
+  const blocks = () => Array.from({ length: mesh.count }, (_, i) => { const matrix = new THREE.Matrix4(); mesh.getMatrixAt(i, matrix); return new THREE.Vector3().setFromMatrixPosition(matrix); });
+  const ground = blocks()[0].y - jengaBlock(plan.bench, 0, 0).height;
+  assert.equal(mirror.count(), 54, 'idle, the full tower stands');
+  const near = (level, slot) => { const spot = jengaBlock(plan.bench, level, slot); return blocks().some(p => Math.hypot(p.x - spot.position[0], p.z + spot.position[1]) < 0.001 && Math.abs(p.y - ground - spot.height) < 0.001); };
+  assert.ok(near(0, 0) && near(17, 2), 'bottom and top levels in place');
+  let state = pull(startTower(), { level: 4, slot: 1 });
+  mirror.show(state);
+  assert.equal(mirror.count(), 54);
+  assert.ok(!near(4, 1) && near(18, 1), 'the pulled block now lies on top');
+  // The drum's lanterns and bowl stay clear of the tower's footprint.
+  const centre = jengaBlock(plan.bench, 0, 1).position, reach = Math.hypot(JENGA.length, JENGA.length) / 2;
+  for (const [east, north, radius] of [[-0.16, -0.08, 0.07], [0.15, 0.1, 0.07], [0.05, 0.16, 0.08]])
+    assert.ok(Math.hypot(centre[0] - (plan.bench.x + east), centre[1] - (plan.bench.north + north)) > reach + radius, `clear of the drum's ornament at ${east}, ${north}`);
+  assert.ok(Math.hypot(centre[0] - plan.bench.x, centre[1] - plan.bench.north) + reach < JENGA.drumRadius, 'the tower stands on the drum');
+  state = pull(state, { level: 7, slot: 0, steady: false });
+  mirror.show(state);
+  assert.equal(mirror.count(), 54, 'every block is somewhere after the fall');
+  assert.equal(mirror.fallen(), true);
+  const scattered = blocks();
+  assert.ok(scattered.every(p => p.y - ground < JENGA.drumTop + 0.1), 'nothing is left standing tall');
+  assert.ok(scattered.filter(p => p.y - ground < 0.05).length > 10, 'many land on the paving');
+  mirror.show(state);
+  assert.deepEqual(blocks().map(p => p.toArray()), scattered.map(p => p.toArray()), 'the same fall lands the same way');
+  mirror.show(null);
+  assert.equal(mirror.fallen(), false);
+});
