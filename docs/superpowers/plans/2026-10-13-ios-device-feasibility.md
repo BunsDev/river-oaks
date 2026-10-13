@@ -42,4 +42,11 @@ Focused behavioral tests; native build/tests; actual phone measurements with raw
 Private `.runtime/ios-probe/`: core.log, auth-green.log, js-green.log, webkit.json, device-build.log, simulator-build.log, install-device.json, launch-device.json and auth-success-records/. Copy only app Documents, never login storage. Original recording 087AB2FD uses the pre-monotonic-clock build. The later C5E6607B control run includes monotonic auth and native-only mode; the Browser-label correction was built afterward. Preserve each build distinction.
 
 ## Gaps and next action
-#285 remains open: reproduce termination with a targeted trace, establish hosted source and WebContent/GPU memory, compare Safari, then run sustained representative workloads only once stable. Minimum phone, touch/interior/multiplayer/recovery, human accessibility and distribution remain unverified. Signed commit/push and draft PR are authorized and pending final source review. Do not archive the worktree.
+#285 remains open: reproduce termination with a targeted trace, establish hosted source and WebContent/GPU memory, compare Safari, then run sustained representative workloads only once stable. Minimum phone, touch/interior/multiplayer/recovery, human accessibility and distribution remain unverified. Verified implementation committed and pushed as 9f2096a9c22890e5f3a5adc43e91f89441ec14e0 (valid SSH signature). Draft PR #309 is open; no merge or issue closure. Do not archive the worktree.
+
+## First-run handoff
+- Draft PR: https://github.com/BunsDev/river-oaks/pull/309. Implementation source: 9f2096a9c22890e5f3a5adc43e91f89441ec14e0; clean-source signed rebuild also passed in `.runtime/ios-probe/committed-device/` (not installed during Safari comparison).
+- Final Release simulator/device builds and strict code-sign verification passed. Staged secret scan passed; no unrelated files included.
+- Browser comparison: Val reports Safari cannot reach the world. Sign-in versus loading failure is pending clarification; no Safari rendering conclusion.
+- The task stays active and #285 stays open. Next: target WebContent/GPU memory rather than host-only metrics; preserve security and fidelity until cause is established.
+- Worktree contains the ongoing experiment and private raw evidence; it is not ready for retirement or archival.

@@ -4333,8 +4333,8 @@
       ],
       "owner": "codex-ios-rollout-20261013",
       "leaseUntil": "2026-10-13T14:32:53.088430+00:00",
-      "updatedAt": "2026-10-13T12:32:53.088093+00:00",
-      "nextAction": "Diagnose physical WebContent termination with targeted trace and Safari comparison; finish verified probe draft PR. Architecture gate remains open.",
+      "updatedAt": "2026-10-13T12:46:46.165561+00:00",
+      "nextAction": "Draft PR #309 contains verified probe (9f2096a). Capture WebContent/GPU memory during repeated native-only termination and clarify Safari blocking screen; #285 remains open.",
       "ledger": "docs/superpowers/plans/2026-10-13-ios-device-feasibility.md",
       "filesOwned": [
         "experiments/ios-probe/",
@@ -4349,7 +4349,8 @@
         "Safari and WKWebView physical device measurements",
         "pnpm run verify",
         "independent technical review"
-      ]
+      ],
+      "pr": 309
     }
   ]
 }
