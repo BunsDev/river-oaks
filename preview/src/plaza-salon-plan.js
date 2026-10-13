@@ -304,6 +304,15 @@ export function goSpot(table, index, blackChair = 0) {
   // Black in chair 0 sits east facing west: row 1 nearest (east), column a on its left (south).
   return [table.x + flip * (4 - row) * GO.spacing, table.north + flip * (column - 4) * GO.spacing];
 }
+// The xiangqi board on the grove table (when it is the table's game): nine files by ten
+// ranks of points 3.8 cm apart, on a board 2 cm thick. Point index (rank * 9 + file, rank 0
+// on red's side, file a on red's left) is a spot [east, north] for red in `redChair`.
+export const XIANGQI = { spacing: 0.038, width: 0.37, depth: 0.41, thick: 0.02, piece: 0.0165 };
+export function xiangqiSpot(table, index, redChair = 0) {
+  const rank = Math.floor(index / 9), file = index % 9, flip = redChair === 0 ? 1 : -1;
+  // Red in chair 0 sits east facing west: rank 0 nearest (east), file a on its left (south).
+  return [table.x + flip * (4.5 - rank) * XIANGQI.spacing, table.north + flip * (file - 4) * XIANGQI.spacing];
+}
 // Darts: the board's centre 1.73 m up on the post, facing along the board's heading
 // (north), and the throwing line 2.37 m out in front. Standing within 0.8 m of the line
 // plays. A dart's landing [x, y] in millimetres on the board maps to [east, north, height].

@@ -621,9 +621,18 @@ play-outs, thought out in a worker) as black or white, or pass and play. Capture
 no suicide, positional superko; two passes end the game, scored by area with 7.5
 komi. Rules: `preview/src/go-rules.js`.
 
+The grove table's switch also offers **Xiangqi** (Chinese chess), whose board and 32
+disc pieces replace the other boards. Play the plaza regular (a searching player,
+thinking in a worker) as red or black, or pass and play; red moves first. Every rule
+is played: palaces and the river, hobbled horses and blocked elephants, cannons that
+capture over one screen, soldiers that turn aside across the river, and generals that
+may never face each other. Checkmate wins, and so does leaving the other side no move;
+a third repetition, or sixty moves each without a capture, is a draw. Rules:
+`preview/src/xiangqi-rules.js`.
+
 The chess-table, café, backgammon, mancala, Go, Jenga and wine pong sheets have **How to play** in their
 header. It opens the Salon Guide on that game (chess, checkers, Connect Four,
-Reversi, nine men's morris, dominoes, Hearts, Spades, backgammon, cribbage, mancala, Go, Jenga, wine pong or darts), and **Play & rides → Game guide** opens it too. The guide is an
+Reversi, nine men's morris, dominoes, Hearts, Spades, backgammon, cribbage, mancala, Go, Jenga, wine pong, darts or xiangqi), and **Play & rides → Game guide** opens it too. The guide is an
 illustrated book with a few pages per game: taking a seat, the aim, a turn, and
 the keys. Its pictures are positions played on the real rules
 (`preview/tests/salon-guide.test.js`). A game you have not read yet shows a gold

@@ -17,7 +17,7 @@ import { chooseMove as reversiMove } from '../src/reversi-opponent.js';
 const text = id => guideGame(id).pages.flatMap(page => [page.title, ...page.text]).join(' ');
 
 test('every plaza table game has a guide of illustrated pages', () => {
-  assert.deepEqual(GUIDE.map(game => game.id), ['chess', 'checkers', 'connectFour', 'reversi', 'morris', 'dominoes', 'hearts', 'spades', 'backgammon', 'mancala', 'jenga', 'winePong', 'go', 'cribbage', 'darts']);
+  assert.deepEqual(GUIDE.map(game => game.id), ['chess', 'checkers', 'connectFour', 'reversi', 'morris', 'dominoes', 'hearts', 'spades', 'backgammon', 'mancala', 'jenga', 'winePong', 'go', 'xiangqi', 'cribbage', 'darts']);
   for (const game of GUIDE) {
     assert.ok(game.pages.length >= 4, game.id);
     assert.equal(game.pages[0].title, 'Taking a seat', `${game.id} starts at the table`);
@@ -216,4 +216,17 @@ test('the darts checkout picture follows the rules', async () => {
   const { checkout } = await import('../src/darts-rules.js');
   const { score, plan } = DIAGRAMS.dartsCheckout, found = checkout(score);
   assert.deepEqual(found.map(bed => `${bed.ring === 'treble' ? 'T' : bed.ring === 'double' ? 'D' : ''}${bed.number}`), plan);
+});
+
+test('the xiangqi pictures follow the rules', async () => {
+  const xq = await import('../src/xiangqi-rules.js');
+  for (const key of ['xqHorse', 'xqCannon']) {
+    const { pieces, reach, blocked } = DIAGRAMS[key], board = Array(90).fill(null);
+    // The generals, kept apart by a red soldier on e3 (off the pictured points).
+    for (const [name, piece] of Object.entries({ e0: 'K', e9: 'k', e3: 'P', ...pieces })) board[xq.pointOf(name)] = piece;
+    const from = Object.entries(pieces).find(([, piece]) => 'HC'.includes(piece))[0];
+    const moves = xq.legalMoves({ ...xq.startGame(), board, turn: 'r', seen: {} }).filter(move => move.from === xq.pointOf(from)).map(move => xq.pointName(move.to));
+    for (const name of reach) assert.ok(moves.includes(name), `${key}: ${name} is reachable`);
+    for (const name of blocked) assert.ok(!moves.includes(name), `${key}: ${name} is not`);
+  }
 });
