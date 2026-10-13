@@ -9,9 +9,12 @@ import { createWorkplaceUI } from './workplace-ui.js';
 import { accountName } from './resident-names.js';
 import { travelRefusal } from './travel-message.js';
 import { watchConnection } from './connection-deadline.js';
+import { createVoiceChat } from './voice-chat.js';
+import { createVoiceUI } from './voice-ui.js';
+import { sharedVoicePreferences } from './voice-preferences.js';
 
 const element = (tag,text,className) => { const node=document.createElement(tag);if(text)node.textContent=text;if(className)node.className=className;return node; };
-export function createMultiplayer({ getPose, getEnvironment = () => null, getRegionSha256 = () => null, getMeetingPlaces = () => [], getOwnerHomes = () => [], onSnapshot, onCorrection, onPlayers, onHomeAccess = () => {}, creationToolsEnabled = false }) {
+export function createMultiplayer({ getPose, getEnvironment = () => null, getRegionSha256 = () => null, getMeetingPlaces = () => [], getOwnerHomes = () => [], onSnapshot, onCorrection, onPlayers, onHomeAccess = () => {}, creationToolsEnabled = false, getWalking = () => null, onVoiceChange = () => {} }) {
   const lifetime=new AbortController();let connectionDeadline=null;
   const reloadRegion=()=>{
     if(window.__riverRegionReloadScheduled)return;
@@ -110,10 +113,22 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
   const greetings=createGreetingsUI({host:document.querySelector('#viewport'),getTown:()=>({connected,selfId,snapshot:latestSnapshot}),getEnvironment,request:command});
   let activeGreeting=null;
   const latestPlayers=new Map();
+  // Shared voice. Its requests go straight to fetch rather than api(): api()
+  // refuses once the client is disposed, and the final leave must still go out.
+  const voiceRequest=async(action,body={},options={})=>{
+    const response=await fetch(`/api/voice/${action}?world=${encodeURIComponent(worldId)}`,{method:'POST',credentials:'same-origin',keepalive:Boolean(options.keepalive),
+      headers:{'Content-Type':'application/json','X-CSRF-Token':csrfToken??''},body:JSON.stringify(body)});
+    let data=null;try{data=await response.json();}catch{data=null;}
+    return {status:response.status,data};
+  };
+  // Development only: a browser journey may hand in a fake transport (as VITE_WORKPLACE gates the workplace panel).
+  const voiceTransport=import.meta.env.DEV&&window.__riverVoiceTransport?{loadTransport:async()=>window.__riverVoiceTransport}:{};
+  const voice=createVoiceChat({request:voiceRequest,preferences:sharedVoicePreferences(),onChange:state=>{voiceUI.render(state);onVoiceChange(state);},...voiceTransport});
+  const voiceUI=createVoiceUI({voice,chatSection,chatDock,walking:getWalking(),players:()=>latestPlayers});
   const displayPlayers=players=>{
     latestPlayers.clear();for(const player of players)latestPlayers.set(player.id,player);
     summary.textContent=`${players.length} ${players.length===1?'player':'players'} in town`;
-    for(const [id,row]of rows)if(!players.some(player=>player.id===id)){row.remove();rows.delete(id);}
+    for(const [id,row]of rows)if(!players.some(player=>player.id===id)){row.remove();rows.delete(id);voiceUI.forgetRow(id);}
     for(const player of players){
       let row=rows.get(player.id);
       if(row && row.dataset.name!==player.name) {
@@ -133,6 +148,7 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
           const report=element('button','Report');report.type='button';report.dataset.label='Report disruption by {name}';report.setAttribute('aria-label',`Report disruption by ${player.name}`);
           report.addEventListener('click',async()=>{report.disabled=true;try{const result=await command({type:'report',playerId:player.id,reason:'disruption'});notice.textContent=result.message;}catch(error){notice.textContent=error.message;}finally{report.disabled=false;}});row.append(report);
           if(moderator){const ban=element('button','Ban');ban.type='button';ban.addEventListener('click',async()=>{ban.disabled=true;try{await api('/api/moderation/ban',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:player.id,banned:true})});notice.textContent='Account removed from the town.';}catch(error){notice.textContent=error.message;ban.disabled=false;}});row.append(ban);}
+          voiceUI.rosterButton(row,player);
         }
       }
     }
@@ -203,6 +219,7 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
             if(self?.interaction?.id&&self.interaction.id!==activeGreeting)onCorrection(self);
             activeGreeting=self?.interaction?.id??null;
             onSnapshot(data);onPlayers(data.players,selfId);displayPlayers(data.players);displayChat(data.chat??[]);
+            voice.setAvailable(Boolean(data.voice?.available),self?.voice?.space??null);voice.sync(data.players,selfId);
             chatInput.disabled=chatSend.disabled=false;gestureButtons.forEach(button=>button.disabled=false);
           }else if(data.type==='result'){
             if(data.correction)onCorrection(data.correction);
@@ -213,6 +230,8 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
       ws.addEventListener('close',event=>{
         deadline.stop();if(lifetime.signal.aborted||socket!==ws)return;
         socket=null;connected=false;connecting=false;latestSnapshot=null;homeAccess=[];onHomeAccess(homeAccess);social.refreshHomeAccess();chatInput.disabled=chatSend.disabled=true;gestureButtons.forEach(button=>button.disabled=true);clearPending();onPlayers([],selfId);
+        // Voice leases die with the connection; a non-terminal close rejoins voice with the town.
+        voice.onConnectionLost([4000,4003,4009].includes(event.code));
         if(stopped)return;
         if(event.code===4000 && event.reason==='World region updated.'){reloadRegion();return;}
         const terminal=[4000,4003,4009].includes(event.code);
@@ -236,6 +255,7 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
   retry.addEventListener('click',()=>{clearTimeout(retryTimer);retryTimer=null;connect();});
   const signOut=async()=>{
     logout.disabled=gateLogout.disabled=true;
+    voice.leave('sign-out');
     try{const result=await api('/auth/logout',{method:'POST'});stopped=true;clearTimeout(retryTimer);socket?.close();location.assign(result.url??'/');}
     catch(error){notice.textContent=error.message;if(!gate.hidden)status.textContent=error.message;logout.disabled=gateLogout.disabled=false;}
   };
@@ -243,7 +263,7 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
   connect();
   return {
     claimStoreIntro: storeId => api(`/api/profile/claim-intro?world=${encodeURIComponent(worldId)}`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({storeId})}),
-    get connected(){return connected;},get traveling(){return traveling;},get identity(){return identity;},get snapshot(){return latestSnapshot;},get homeAccess(){return homeAccess;},command,
+    get connected(){return connected;},get traveling(){return traveling;},get identity(){return identity;},get snapshot(){return latestSnapshot;},get homeAccess(){return homeAccess;},get voice(){return voice;},command,
     landmarkRequest(action,data={}){
       if(!connected)return Promise.reject(new Error('Reconnect before changing landmarks.'));
       return api(`/api/landmarks/${action}?world=${encodeURIComponent(worldId)}${action==='list'?'&allWorlds=1':''}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
@@ -264,6 +284,7 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
     },
     dispose(){
       if(lifetime.signal.aborted)return;
+      voice.dispose();voiceUI.dispose();
       stopped=true;lifetime.abort();clearTimeout(retryTimer);connectionDeadline?.stop();clearInterval(homeAccessTimer);
       const current=socket;socket=null;connected=connecting=traveling=false;latestSnapshot=null;homeAccess=[];
       current?.close();clearPending();onPlayers([],selfId);onHomeAccess(homeAccess);

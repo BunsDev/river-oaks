@@ -13,12 +13,12 @@ import { primaryAction } from './contextual-action.js';
 import { travelRefusal } from './travel-message.js';
 import './walking.css';
 
-export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getLocals, reducedMotion, onEnter, onLeave, canEnterStore = () => true, getInteraction = () => null, getPlay = () => null }) {
+export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getLocals, reducedMotion, onEnter, onLeave, canEnterStore = () => true, getInteraction = () => null, getPlay = () => null, getVoice = () => null }) {
   const $ = (selector) => document.querySelector(selector);
   const hud = document.createElement('section');
   hud.id = 'walking-hud'; hud.className = 'walking-hud'; hud.hidden = true;
   hud.setAttribute('aria-label', 'Walking controls');
-  hud.innerHTML = `<div class="walking-title"><span>RIVER OAKS · GARDEN CITY</span><strong>On foot</strong><small>4444 Westheimer Rd · Houston</small></div><div class="walking-center" aria-hidden="true">·</div><div class="walking-console"><p class="walking-notice" id="walking-notice" role="status" aria-live="polite" hidden></p><button id="walking-meet-nearby">Meet someone nearby</button><button id="walking-talk" disabled>Find a local to talk to <kbd>E</kbd></button><button id="walking-enter" hidden>Step inside <kbd>F</kbd></button><button id="walking-play" hidden></button><button id="walking-interact" hidden>Sit down <kbd>Z</kbd></button><p id="walking-place">Explore the public walkways</p><button id="walking-controls-toggle" aria-expanded="false" aria-controls="walking-movement">Show movement controls</button><div id="walking-movement" hidden><div class="walking-pad" role="group" aria-label="Walk and turn"><button data-walk-key="ArrowLeft" aria-label="Turn left"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5 3.5 8.5 7 12"/><path d="M3.5 8.5H12a4 4 0 0 1 0 8H9"/></svg></button><button data-walk-key="KeyA" aria-label="Walk left">←</button><button data-walk-key="KeyW" aria-label="Walk forward">↑</button><button data-walk-key="KeyS" aria-label="Walk backward">↓</button><button data-walk-key="KeyD" aria-label="Walk right">→</button><button data-walk-key="ArrowRight" aria-label="Turn right"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m13 5 3.5 3.5L13 12"/><path d="M16.5 8.5H8a4 4 0 0 0 0 8h3"/></svg></button></div><p class="walking-help">WASD to walk · Drag to look · Shift for a brisk walk<br>Arrow keys to turn · E to talk · F steps inside · Z to sit or water<br>B to fly · Space to rise · C to lower · Q calls Jev · G gets in / out · Escape closes conversations</p></div></div>`;
+  hud.innerHTML = `<div class="walking-title"><span>RIVER OAKS · GARDEN CITY</span><strong>On foot</strong><small>4444 Westheimer Rd · Houston</small></div><div class="walking-center" aria-hidden="true">·</div><div class="walking-console"><p class="walking-notice" id="walking-notice" role="status" aria-live="polite" hidden></p><button id="walking-meet-nearby">Meet someone nearby</button><button id="walking-talk" disabled>Find a local to talk to <kbd>E</kbd></button><button id="walking-enter" hidden>Step inside <kbd>F</kbd></button><button id="walking-play" hidden></button><button id="walking-interact" hidden>Sit down <kbd>Z</kbd></button><p id="walking-place">Explore the public walkways</p><button id="walking-controls-toggle" aria-expanded="false" aria-controls="walking-movement">Show movement controls</button><div id="walking-movement" hidden><div class="walking-pad" role="group" aria-label="Walk and turn"><button data-walk-key="ArrowLeft" aria-label="Turn left"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5 3.5 8.5 7 12"/><path d="M3.5 8.5H12a4 4 0 0 1 0 8H9"/></svg></button><button data-walk-key="KeyA" aria-label="Walk left">←</button><button data-walk-key="KeyW" aria-label="Walk forward">↑</button><button data-walk-key="KeyS" aria-label="Walk backward">↓</button><button data-walk-key="KeyD" aria-label="Walk right">→</button><button data-walk-key="ArrowRight" aria-label="Turn right"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m13 5 3.5 3.5L13 12"/><path d="M16.5 8.5H8a4 4 0 0 0 0 8h3"/></svg></button></div><p class="walking-help">WASD to walk · Drag to look · Shift for a brisk walk<br>Arrow keys to turn · E to talk · F steps inside · Z to sit or water<br>Y joins voice · M mutes<br>B to fly · Space to rise · C to lower · Q calls Jev · G gets in / out · Escape closes conversations</p></div></div>`;
   const primary = document.createElement('div'); primary.className = 'walking-primary';
   const more = document.createElement('details'); more.className = 'walking-more';
   more.innerHTML = '<summary>More actions</summary><div class="walking-other-actions"></div>';
@@ -74,6 +74,9 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   hud.querySelector('#walking-movement').append(sprintButton);
   $('#viewport').append(hud);
   const keys = new Set();
+  // Push-to-talk rides the held-keys set, so blur, Escape and an open dialogue
+  // release the microphone exactly as they release movement.
+  let voiceHeld = false;
   const placedObjects = [];
   let transport = null, sitting = null, seatedGround = 0, doorwayPending = false;
   let flight = createFlightState();
@@ -201,6 +204,12 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     if (event.code === 'KeyF' && !event.repeat) { event.preventDefault(); stepThrough(); }
     if (event.code === 'KeyZ' && !event.repeat) { event.preventDefault(); interact(); }
     if (event.code === 'KeyX' && !event.repeat) { event.preventDefault(); play(); }
+    // Y joins or leaves voice; M mutes, or is held to talk in push-to-talk mode.
+    if (event.code === 'KeyY' && !event.repeat) { event.preventDefault(); void getVoice()?.toggleJoin(); }
+    if (event.code === 'KeyM') {
+      const voice = getVoice();
+      if (voice) { event.preventDefault(); if (voice.state.pushToTalk) keys.add('KeyM'); else if (!event.repeat) void voice.toggleMic(); }
+    }
     if (event.code === 'Escape') { clear(); host.blur(); }
   });
   document.addEventListener('keyup', event => keys.delete(event.code));
@@ -234,8 +243,10 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     setTraversal({canFly=false,kind=null}={}) {
       flightAllowed=Boolean(canFly);beastKind=beastTraversal(kind)?kind:null;
       sprintButton.hidden=!beastKind;
-      hud.querySelector('.walking-help').innerHTML=`WASD to move · Drag to look · Shift to ${beastKind?'sprint':'walk briskly'}<br>Arrow keys to turn · E to talk · F steps inside · Z to sit or water<br>${flightAllowed?'B to fly · Space to rise · C to lower · ':''}Escape closes conversations`;
+      hud.querySelector('.walking-help').innerHTML=`WASD to move · Drag to look · Shift to ${beastKind?'sprint':'walk briskly'}<br>Arrow keys to turn · E to talk · F steps inside · Z to sit or water<br>Y joins voice · M mutes<br>${flightAllowed?'B to fly · Space to rise · C to lower · ':''}Escape closes conversations`;
     },
+    // The voice row sits under the actions, above the place line.
+    mountVoice(element) { more.after(element); },
     addObstacle(object) { placedObjects.push(object); return () => { const i=placedObjects.indexOf(object);if(i>=0)placedObjects.splice(i,1); }; },
     get active() { return active; },
     get riding() { return Boolean(transport); },
@@ -328,6 +339,8 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       const pressed = (...codes) => codes.some(code => keys.has(code));
       $('.walking-console').inert = dialogueOpen();
       if (dialogueOpen()) clear();
+      const held = pressed('KeyM');
+      if (held !== voiceHeld) { voiceHeld = held; getVoice()?.setTransmit(held); }
       else {
         const input={forward:Number(pressed('KeyW','ArrowUp'))-Number(pressed('KeyS','ArrowDown')),strafe:Number(pressed('KeyD'))-Number(pressed('KeyA')),turn:Number(pressed('ArrowLeft'))-Number(pressed('ArrowRight')),fast:pressed('ShiftLeft','ShiftRight'),lift:Number(pressed('Space'))-Number(pressed('KeyC'))};
         if(sitting) {

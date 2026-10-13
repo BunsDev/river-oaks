@@ -181,7 +181,8 @@ Branch `feat/voice-desktop-20261013`, from `main` (desktop files only).
 
 ## Next
 
-- PR 3: browser controller, Y/M keys, chat-dock and roster controls, settings.
+- PR 4: spatial audio graph, speaking rings, the two-context journey (which
+  also covers the Y/M keys).
 - PR 4: spatial audio graph, speaking rings, two-context journey.
 - PR 5: desktop audio-only permission; real two-browser acceptance against a
   LiveKit Cloud dev project with the receipt in `data/reports/voice-live.json`.

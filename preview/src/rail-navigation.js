@@ -57,6 +57,9 @@ export function setupRailNavigation({ sidebar, getSections, getDock, getClearVie
     { label: 'Save a landmark', selector: '#landmark-name', run: () => openTab(1, '#landmark-name') },
     { label: 'Browse shared worlds', selector: '.world-portal-list a', run: () => openTab(1, '.world-portal-list a') },
     { label: 'Town chat', selector: '.multiplayer-chat-form input', run: () => { getClearView()?.set(false); document.querySelector('#community-close')?.click(); document.querySelector('.town-chat-dock').open = true; document.querySelector('.multiplayer-chat-form input').focus(); } },
+    { label: 'Voice · join or leave', keys: 'Y', terms: 'talk microphone chat', selector: '#walking-voice-join', run: () => document.querySelector('#walking-voice-join').click() },
+    { label: 'Microphone · mute or unmute', keys: 'M', terms: 'voice talk push', selector: '#walking-voice-mic', run: () => document.querySelector('#walking-voice-mic').click() },
+    { label: 'Voice settings', terms: 'microphone push to talk device', selector: '#voice-input-device', run: () => openTab(2, '#voice-input-device') },
     { label: 'Character · appearance and abilities', selector: 'input[name=player-character]:checked', run: () => showPlay('.player-controls') },
     { label: 'Camera · Photo mode', enabled: () => Boolean(getPhotoMode?.()), run: () => getPhotoMode().open() },
     { label: 'Rides · driving and camera', selector: '#player-camera', run: () => showPlay('.player-settings') },
@@ -91,7 +94,7 @@ export function setupRailNavigation({ sidebar, getSections, getDock, getClearVie
       ? 'Bird ride: T take / give controls · N next bird · WASD steer · Space climb · C dive · Esc land'
       : document.querySelector('#build-mode[aria-pressed=true]')
         ? 'Builder: R rotate · Shift+R reverse · Enter place · Esc finish'
-        : 'WASD walk · arrows turn · Shift brisk walk · E talk · F enter / leave · Z sit / stand / water · B flight · Space rise · C lower · J companion · Q call Jev · G get in / out · P beast movement · V camera';
+        : 'WASD walk · arrows turn · Shift brisk walk · E talk · F enter / leave · Z sit / stand / water · Y voice · M mic · B flight · Space rise · C lower · J companion · Q call Jev · G get in / out · P beast movement · V camera';
   };
   const open = ({ help = false } = {}) => { returnFocus = document.activeElement; search.value = ''; dialog.querySelector('.commands-reference').open = help; render(); dialog.showModal(); search.focus(); };
   trigger.addEventListener('click', () => open());
