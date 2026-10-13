@@ -95,6 +95,7 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-13-plaza-reversi](2026-10-13-plaza-reversi.md)<br>Reversi at the plaza chess tables — 2026-10-13 | — |
 | [2026-10-13-plaza-morris](2026-10-13-plaza-morris.md)<br>Nine men's morris at the plaza chess tables — 2026-10-13 | #331 |
 | [2026-10-13-plaza-mancala](2026-10-13-plaza-mancala.md)<br>Plaza games: mancala at the grove table — 2026-10-13 | #324 |
+| [2026-10-13-plaza-liars-dice](2026-10-13-plaza-liars-dice.md)<br>Plaza games: liar's dice at the café — 2026-10-13 | — |
 | [2026-10-13-plaza-jenga](2026-10-13-plaza-jenga.md)<br>Plaza games: Jenga on the curved bench — 2026-10-13 | #312 |
 | [2026-10-13-plaza-go](2026-10-13-plaza-go.md)<br>Plaza games: Go at the grove table — 2026-10-13 | #328 |
 | [2026-10-13-plaza-games-guide](2026-10-13-plaza-games-guide.md)<br>The Salon Guide: a tutorial for every plaza table game — 2026-10-13 | — |

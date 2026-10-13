@@ -110,12 +110,18 @@ export const GUIDE = [
     { title: 'A throw', text: ['A line sweeps across the board: stop it to set where you aim across. A second line sweeps up and down: stop it, and the dart lands where they cross.'], figure: { kind: 'darts-throw' } },
     { title: '501, double out', text: ['Both start on 501 and take each turn\'s three darts off. The last dart must land in a double (or the bull) and bring you to exactly 0.', 'A dart that leaves you on 1, below 0, or on 0 without a double is a bust: the turn\'s darts don\'t count. On 170 or less the sheet suggests a checkout.'], figure: { kind: 'darts-checkout' } },
     { title: 'At the table', text: ['The real board shows the turn\'s darts where they landed.'], figure: { kind: 'keys', keys: [[['X'], 'Open the board, or put it away'], [['Space', 'Enter'], 'Stop the line: across, then up'], [['Tab'], 'Move between the buttons'], [['Esc'], 'Put the board away']] } },
+] },
+  { id: 'dice', name: 'Liar’s dice', place: 'The round café table', pages: [
+    { title: 'Taking a seat', text: ['At the round café table, press Z to sit and X to open the table, then choose Liar’s dice at the top of the sheet.', 'You and three plaza regulars each hold five dice under a cup.'], figure: { kind: 'emblem' } },
+    { title: 'Bidding', text: ['Everyone rolls in secret. In turn, bid how many dice of one face lie on the whole table, counting everyone’s: “four fives”. Ones are wild and count as any face.', 'Each bid must raise the last: more dice, or the same number of a higher face.'], figure: { kind: 'dice-bid' } },
+    { title: 'Calling liar', text: ['Instead of raising, call liar on the last bid. Every cup is lifted and the dice counted, ones included.', 'If there are at least as many as bid, the caller loses a die; if not, the bidder does. The loser opens the next round, and the last player with dice wins.'], figure: { kind: 'dice-call' } },
+    { title: 'At the table', text: ['The café table shows each player’s cup, lifted to show the dice when someone calls.'], figure: { kind: 'keys', keys: [[['Z'], 'Sit down or stand up'], [['X'], 'Open the table, or put it away'], [['Tab'], 'Move between count, faces and buttons'], [['Enter'], 'Bid, or call liar'], [['Esc'], 'Put the table away']] } },
   ] },
 ];
 
 export const guideGame = id => GUIDE.find(game => game.id === id) ?? null;
 // Pictures much wider than tall span the page above the text instead of beside it.
-export const WIDE_FIGURES = new Set(['darts-checkout', 'cribbage-crib', 'cribbage-play', 'cribbage-show', 'mancala-board', 'mancala-sow', 'mancala-capture', 'spades-bids', 'spades-trump', 'spades-score', 'dominoes-line', 'dominoes-modes', 'hearts-points', 'hearts-pass', 'hearts-trick', 'backgammon-opening', 'backgammon-hit', 'jenga-meter', 'jenga-edge', 'pong-racks', 'pong-outcomes']);
+export const WIDE_FIGURES = new Set(['dice-bid', 'dice-call', 'darts-checkout', 'cribbage-crib', 'cribbage-play', 'cribbage-show', 'mancala-board', 'mancala-sow', 'mancala-capture', 'spades-bids', 'spades-trump', 'spades-score', 'dominoes-line', 'dominoes-modes', 'hearts-points', 'hearts-pass', 'hearts-trick', 'backgammon-opening', 'backgammon-hit', 'jenga-meter', 'jenga-edge', 'pong-racks', 'pong-outcomes']);
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
 export const chapterOf = index => ROMAN[index] ?? String(index + 1);
 
@@ -166,6 +172,9 @@ export const DIAGRAMS = {
   cribbageShow: { hand: ['5H', '5D', 'TS', 'JC'], starter: '5C' },
   // Darts: the checkout the sheet suggests from 81.
   dartsCheckout: { score: 81, plan: ['T19', 'D12'] },
+  // Liar's dice: your cup and a bid, then all four cups lifted for "four fives".
+  diceBid: { cup: [1, 5, 5, 2, 6], bid: [4, 5] },
+  diceCall: { cups: [[1, 5, 5, 2, 6], [3, 3, 4, 6, 2], [5, 1, 2, 4, 4], [6, 6, 3, 2, 3]], bid: [4, 5], actual: 5 },
   // Mancala: the opening, pit 3 sown into the store, and a capture (side 0's pit 2 sown into its empty pit 3 opposite seven seeds).
   mancalaSow: { pit: 3 },
   // Go on a small corner of the board (5×5, rows from the bottom): territory, a capture and a ko.
@@ -304,6 +313,7 @@ export function iconMarkup(id) {
     morris: '<rect class="sg-icon-line" x="9" y="9" width="22" height="22"/><rect class="sg-icon-line" x="15" y="15" width="10" height="10"/><path class="sg-icon-line" d="M20 9v6M20 25v6M9 20h6M25 20h6"/><circle class="sg-icon-fill" cx="9" cy="9" r="2.6"/><circle class="sg-icon-fill" cx="31" cy="31" r="2.6"/>',
     cribbage: '<rect class="sg-icon-line" x="8" y="10" width="24" height="20" rx="4"/><circle class="sg-icon-fill" cx="14" cy="16" r="1.6"/><circle class="sg-icon-fill" cx="20" cy="16" r="1.6"/><circle class="sg-icon-fill" cx="26" cy="16" r="1.6"/><circle class="sg-icon-line" cx="14" cy="24" r="1.6"/><circle class="sg-icon-line" cx="20" cy="24" r="1.6"/><circle class="sg-icon-line" cx="26" cy="24" r="1.6"/>',
     darts: '<circle class="sg-icon-line" cx="20" cy="20" r="12"/><circle class="sg-icon-line" cx="20" cy="20" r="6.5"/><circle class="sg-icon-fill" cx="20" cy="20" r="2.2"/><path class="sg-icon-line" d="M27 13l7-7M30 6h4v4"/>',
+    dice: '<rect class="sg-icon-line" x="7" y="11" width="15" height="15" rx="3"/><rect class="sg-icon-fill" x="18" y="14" width="15" height="15" rx="3"/><circle class="sg-icon-fill" cx="11" cy="15" r="1.4"/><circle class="sg-icon-fill" cx="18" cy="22" r="1.4"/>',
     hearts: '<path class="sg-icon-fill" d="M20 31C11 24 8 19.5 8 15.5A5.5 5.5 0 0 1 20 13a5.5 5.5 0 0 1 12 2.5C32 19.5 29 24 20 31z"/>',
     spades: '<path class="sg-icon-fill" d="M20 8C12 16 8 19.5 8 23.5a5.5 5.5 0 0 0 10 3.2L16.5 32h7L22 26.7a5.5 5.5 0 0 0 10-3.2C32 19.5 28 16 20 8z"/>',
     backgammon: '<path class="sg-icon-line" d="M9 31L13 12L17 31M17 31L21 12L25 31"/><circle class="sg-icon-fill" cx="29" cy="25" r="4.5"/>',
@@ -382,6 +392,15 @@ export function figureMarkup(figure, game) {
       return svg(300, 110, `A checkout from ${score}: ${plan.join(', then ')}, finishing exactly on a double.`,
         `<text class="sg-label" x="30" y="62" font-size="26">${score}</text>` + plan.map((bed, i) => `<rect class="sg-tile-face" x="${110 + i * 90}" y="34" width="70" height="40" rx="8"/><text class="sg-label" x="${145 + i * 90}" y="60" text-anchor="middle" font-size="16">${bed}</text>`).join('')
         + arrow([[80, 54], [104, 54]], 'd') + arrowHead('d') + '<text class="sg-label sg-quiet" x="235" y="96" text-anchor="middle" font-size="11">the double ends it</text>'); }
+    case 'dice-bid': case 'dice-call': {
+      const pips = { 1: [[0.5, 0.5]], 2: [[0.28, 0.28], [0.72, 0.72]], 3: [[0.25, 0.25], [0.5, 0.5], [0.75, 0.75]], 4: [[0.28, 0.28], [0.72, 0.28], [0.28, 0.72], [0.72, 0.72]], 5: [[0.25, 0.25], [0.75, 0.25], [0.5, 0.5], [0.25, 0.75], [0.75, 0.75]], 6: [[0.28, 0.22], [0.72, 0.22], [0.28, 0.5], [0.72, 0.5], [0.28, 0.78], [0.72, 0.78]] };
+      const die = (x, y, value, size, lit) => `<rect x="${x}" y="${y}" width="${size}" height="${size}" rx="${size / 6}" class="sg-tile-face"${lit ? ' style="stroke:#e2b23a;stroke-width:2.5"' : ''}/>` + pips[value].map(([u, v]) => `<circle cx="${x + u * size}" cy="${y + v * size}" r="${size / 11}" class="sg-rim"/>`).join('');
+      if (figure.kind === 'dice-bid') { const { cup, bid } = DIAGRAMS.diceBid;
+        return svg(300, 120, `Your cup: a one, two fives, a two and a six. With the one wild you hold three fives, so a bid of four fives across the table is a fair one.`,
+          cup.map((value, i) => die(18 + i * 40, 30, value, 32, value === bid[1] || value === 1)).join('') + `<text class="sg-label" x="230" y="54" font-size="15">“four fives”</text><text class="sg-label sg-quiet" x="230" y="74" font-size="11">ones are wild</text>`); }
+      const { cups, bid, actual } = DIAGRAMS.diceCall;
+      return svg(300, 150, `Four cups lifted for a bid of four fives: counting the ones as wild, there are ${actual}, so the bid stands and the caller loses a die.`,
+        cups.map((cup, row) => cup.map((value, i) => die(14 + i * 26, 8 + row * 30, value, 22, value === bid[1] || value === 1)).join('')).join('') + `<text class="sg-label" x="160" y="70" font-size="15">${actual} fives</text><text class="sg-label sg-quiet" x="160" y="90" font-size="11">the bid stands</text>`); }
     case 'hearts-points': return svg(300, 130, 'Each heart scores one point; the queen of spades scores thirteen.',
       DIAGRAMS.heartsPoints.map((code, index) => code === 'QS' ? card(210, 22, code, { badge: 13, cls: 'sg-card-queen' }) : card(18 + index * 52, index === 0 ? 30 : 26, code, { badge: 1, rotate: [-8, -3, 3][index] })).join(''));
     case 'hearts-pass': return svg(300, 160, 'Three cards pass to the left, then the right, then across; every fourth hand nobody passes.',
