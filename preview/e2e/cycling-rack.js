@@ -56,7 +56,7 @@ async page => {
     check(true, 'Bob sees all four bikes parked again');
     const self = await page.evaluate(() => window.__riverMultiplayer().snapshot.players.find(p => p.id === window.__riverMultiplayer().selfId));
     check(self.vehicle === null, 'The town shows the rider on foot');
-  } finally { await other.close(); }
+  } finally { for (const key of ['ShiftLeft', 'ArrowRight', 'KeyW']) await page.keyboard.up(key); await other.close(); }
   await page.screenshot({ path: 'output/playwright/cycling-rack.png' });
   return { checks };
 }

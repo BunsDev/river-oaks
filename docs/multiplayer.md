@@ -254,7 +254,9 @@ ordinary walking-speed violation. A refused exit keeps the rider seated.
 
 The plaza bike rack is arbitrated like seating: `cycle {rackId, slot}` claims a
 free slot within seat reach and mounts the rider on a `bicycle`; `uncycle` hands
-it back, as do a pose without the bike, a travel, and leaving. A `bicycle` pose
+it back, as do a travel, leaving, and a pose without the bike once the 1.5 s
+hand-over grace has passed (a walking pose already in flight when the slot was
+granted is ignored). A `bicycle` pose
 is accepted only from a slot holder, under an 8.05 m/s (18 mph) budget; the
 owner-only rule still covers the car and motorcycle. Each accepted bicycle pose
 adds its ground distance to the rider's metres, which the transport drains into

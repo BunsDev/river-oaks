@@ -1484,3 +1484,30 @@ Then queue it: `pnpm run land <pr> --owner "<session>"`. No `Co-Authored-By` and
 - §3 dev: Memory store wired in `town.js` and the browser fixture (Task 6).
 - §4 tests: server (Tasks 4, 5, 6), client (Tasks 1, 2, 3, 7, 8, 9), journey (Task 10). The `cycling-leaderboard` journey is PR 2.
 - Placeholder scan: none. Type consistency: `drainRides()` → `[{userId,name,meters}]` is consumed with those names in Tasks 6; `cyclingMiles.add(userId,meters,name)` matches Task 5; `plazaSalonRack` slot shape `{id,rackId,slot,x,north,heading,approach}` is used identically in Tasks 4, 8, 9, 10; `userData.rack.setTaken/parked` match between Tasks 8 and 9/10.
+
+## Results (2026-10-13, branch feat/cycling-rack-20261013)
+
+Executed task by task with a fresh implementer per task and two reviews each
+(spec compliance, then code quality); fixes were folded in as follow-up commits.
+
+| Task | Commits | Evidence |
+| --- | --- | --- |
+| 1–2 vehicle spec, sprint speed | d67f32a, d99db4f | `vehicles.test.js` 11/11, `carriage-motion` + `carriage` + `carriage-driver` 19/19 |
+| 3 rack plan data | 80e7f99 | `plaza-salon.test.js` 8/8; rack bar moved to north -1294.0 (a trunk at (-2781,-1293) fails clearance at -1293.4…-1293.8 for every x) |
+| 4 server slots and metres | 9b7b409, 001a693, 4b37fbd | `cycling.test.js` 8 tests; restore refuses a held slot on a non-bicycle, an airborne bicycle, metres > 1e6 and duplicate slots (`invalid_cycling_slot`); rides west in tests because the curved bench sits 8 m south of the rack |
+| 5 cycling-miles store | f99d4a8, 54b046d | `cycling-miles.test.js` 6/6 with a scratch Redis on 6391 (4 + 2 skips without `REDIS_URL`); `top()` drops rows with a missing rider record; metres bounded at 1e6 per add |
+| 6 flush wiring | 38dd396, d864fb8 | `cycling-flush.test.js` 2/2 over a real WebSocket, `ride-flush.test.js` 4/4; hosted room drains after `world.step`, merges and sends after a successful COMMIT; `pnpm run test:server` 438 pass / 0 fail / 136 Redis-gated skips; Redis-backed `redis-room` + `world-gateway` 20/20 |
+| 7 bicycle mesh | 409c984, 64b5ccf | `vehicles.test.js` bicycle 1.77 × 1.04 × 0.53 m, spoked wheels, no spinners; `pnpm run build` ok |
+| 8 rack prop | 05093df | `plaza-rack.test.js` 1/1, parked bike faces +Z (south) verified; `setback`/`approach` named on the plan |
+| 9 client controller | 50c329c | `plaza-bicycle.test.js` 3/3; `pnpm test` 2759 pass / 1 pre-existing skip; `setback` raised to 1.1 m because the walking model pads the bar's discs |
+| 9 fixes | dce5cc6, (final commit) | hand-over grace on the server (`CYCLE_GRACE_MS` 1.5 s, test added); client applies the server pose before mounting; a correction or a refused step-off never leaves a ghost bike (`plaza-bicycle.test.js` 7/7) |
+| 10 journey | 684723c, (final commit) | `pnpm run test:experience cycling-rack` passed on the final code (two fixture accounts; the ride sets off south and turns west because the curved bench sits straight ahead of the rack); `output/playwright/cycling-rack-ride.png`, `cycling-rack.png` |
+| 11 docs, verify, PR | (final commit) | `docs/multiplayer.md` cycling paragraph; `pnpm run verify` core passed (receipt `.runtime/agent/core.json`, python 141 passed); `pnpm test` 2760 tests / 1 pre-existing skip; Redis-backed run on a scratch Redis (port 6391): `cycling-miles`, `cycling-flush`, `ride-flush`, `redis-room`, `world-gateway`, `cycling` 40 pass / 0 fail / 0 skipped |
+
+Decisions recorded during execution:
+- The bicycle's passenger seat is the saddle (same point as the driver seat), so every seat consumer works unchanged; `seats: 1` is declared metadata.
+- A bare `uncycle` steps the rider back to the slot's approach when it is free; the client's normal exit travels to a ground spot first.
+- Banked metres are process-local and never checkpointed: both transports drain right after `world.step`, before `checkpoint()`, so a restore cannot pay metres twice; a failed commit discards the tick-local drain and the previous checkpoint still carries the metres.
+- Client occupancy samples the frame between the axles (`FRAME_SHARE` 0.5), not the mudguard-to-mudguard length.
+
+Gaps: no Redis-backed regression drives a ride through `createRedisRoom`'s tick (the room harness has no rack); the helper's unit tests and the unchanged room suite cover that path. Hosted acceptance and the leaderboard sheet are PR 2.

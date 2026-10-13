@@ -104,3 +104,12 @@ test('G ignores typing in a field and acts only when a bike is in play', async (
   await new Promise(resolve => setTimeout(resolve, 0));
   assert.equal(h.bicycle.riding, true);
 });
+
+test('a refused step-off that still corrected the rider leaves no ghost bike', async () => {
+  const h = harness();
+  await h.bicycle.take();
+  // The town refuses the exit spot but its correction has already dropped the transport.
+  h.multiplayer.travel = async () => { h.walking.correct(); return { ok: false, message: 'blocked' }; };
+  assert.equal(await h.bicycle.stepOff(), false);
+  assert.equal(h.bicycle.riding, false); assert.equal(h.bike.visible, false); assert.equal(h.bicycle.slotId, null);
+});

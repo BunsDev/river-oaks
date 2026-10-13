@@ -123,7 +123,9 @@ export function createPlazaBicycle({ scene, host, walking, getMultiplayer, getLo
       clear();
       return true;
     } catch (error) { notify(error.message); return false; }
-    finally { busy = false; }
+    // A refused travel may still have carried a correction that dropped the
+    // walking transport: never leave a bike standing without its rider.
+    finally { busy = false; if (!walking.riding) clear(); }
   }
   const onKey = event => {
     if (event.code !== 'KeyG' || event.repeat || event.defaultPrevented || !isGameplayKey(event)) return;
