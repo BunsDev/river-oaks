@@ -454,3 +454,17 @@ test('missing GitHub lookups receive distinct stable account fallbacks', async t
   }
   assert.equal(new Set(names).size, 2);
 });
+
+test('a username approved at sign-up names the resident, and anything else falls back to the GitHub name', async t => {
+  let answer = 'rosy-heron-42';
+  const app = await fixture(t, { usernameOf: async userId => { if (answer instanceof Error) throw answer; return userId === 'user_1' ? answer : null; } });
+  const { sessionCookie } = await app.login();
+  const name = async () => (await (await app.request('/auth/session', { headers: { cookie: sessionCookie } })).json()).user.name;
+  assert.equal(await name(), 'rosy-heron-42');
+  answer = 'Jevica';
+  assert.equal(await name(), 'val-dev', 'a reserved name is never used');
+  answer = new Error('waitlist unavailable');
+  assert.equal(await name(), 'val-dev', 'a failed lookup keeps the GitHub name');
+  answer = null;
+  assert.equal(await name(), 'val-dev');
+});

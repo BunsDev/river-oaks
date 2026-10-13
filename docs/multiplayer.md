@@ -216,11 +216,11 @@ Run `pnpm run test:shared` for development onboarding and authenticated fixture 
 
 ## Resident names
 
-Every signed-in resident is shown by their GitHub username, everywhere another player can see them: the roster, nameplates, chat, contacts, groups, events, profiles, the map and the waitlist. The free-text name on a GitHub profile is never used. Only Jevica's accounts (`preview/src/jevica-accounts.js`) have a custom name, and that name is **Jevica**.
+Every signed-in resident is shown by their username, everywhere another player can see them: the roster, nameplates, chat, contacts, groups, events, profiles, the map and the waitlist. A resident chooses it while on the waitlist, or keeps the default (their GitHub login, else a generated name), and an approver may change it before approving ([usernames](email-access.md#usernames)). Residents approved before usernames existed are shown by their GitHub username. The free-text name on a GitHub profile is never used. Only Jevica's accounts (`preview/src/jevica-accounts.js`) have a custom name, and that name is **Jevica**.
 
-- **Lookup.** WorkOS records the GitHub account ID behind each sign-in. At sign-in the server asks GitHub's API for that account's current username, using the resident's own GitHub token when WorkOS returns one (**Return GitHub OAuth tokens** in the WorkOS dashboard), then `GITHUB_TOKEN`, then an anonymous request. Each answer is kept per account in Redis, so a GitHub outage never changes a known name; a failed lookup is retried after ten minutes. Until a first lookup succeeds the resident is shown as `github-<account ID>`.
-- **Reserved name.** Nobody else is ever shown as Jevica, under any spelling: case, accents, lookalike letters and digits, other scripts, spacing, punctuation, invisible characters, or Jevica inside a longer name (`preview/src/resident-names.js`). A GitHub username that reads as Jevica is shown as `github-<account ID>` instead.
-- **Stored copies.** Contacts, messages, groups, events, world chat, builds and waitlist requests keep the name a resident had when they were written. Each is checked against its account on the way out, so an older record that says Jevica is shown as `resident`. A returning player and a waitlist request take the current name.
+- **Lookup.** WorkOS records the GitHub account ID behind each sign-in. At sign-in the server asks GitHub's API for that account's current username, using the resident's own GitHub token when WorkOS returns one (**Return GitHub OAuth tokens** in the WorkOS dashboard), then `GITHUB_TOKEN`, then an anonymous request. Each answer is kept per account in Redis, so a GitHub outage never changes a known name; a failed lookup is retried after ten minutes. Until a first lookup succeeds the resident is shown as `Visitor #<account ID>`; an email sign-in without an approved username is shown the same way.
+- **Reserved name.** Nobody else is ever shown as Jevica, under any spelling: case, accents, lookalike letters and digits, other scripts, spacing, punctuation, invisible characters, or Jevica inside a longer name (`preview/src/resident-names.js`). A GitHub username that reads as Jevica is shown as `Visitor #<account ID>` instead.
+- **Stored copies.** Contacts, messages, groups, events, world chat, builds and waitlist requests keep the name a resident had when they were written. Each is checked against its account on the way out, so an older record that says Jevica is shown as that account's `Visitor #` fallback. A returning player and a waitlist request take the current name.
 - **Groups, events and places** have their own titles; those are not resident names and are not restricted.
 
 ## Shared storage and coordination
@@ -548,6 +548,15 @@ that is hit goes to the bar, and you bear off once all fifteen are home. A gammo
 scores 2 and a backgammon 3. You pick a checker, then its point (or the tray to bear
 off), and Undo takes back moves within your turn. The table's checkers mirror the
 game. Rules: `preview/src/backgammon-rules.js`.
+
+A Jenga tower stands on the curved bench's travertine drum. Seated on the bench,
+**Play Jenga** or **X** opens it. You play with two plaza regulars, or two players
+pass and play. Pick a block below the top (never the top level, nor the one under
+an unfinished top), then stop the steady-hand meter inside its green zone to slide
+the block out; it goes on top by itself. The zone narrows as the tower grows taller
+and weaker and as the level carries more. A level left on a single edge block
+brings the tower down. Whoever topples it gets the tally mark, and the drum's tower
+scatters across the drum and the paving. Rules: `preview/src/jenga-rules.js`.
 
 The town assigns the position, facing and cushion height. Occupied slots reject
 other visitors, and occupied furniture cannot be moved, turned or removed. Stand

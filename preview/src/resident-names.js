@@ -74,3 +74,16 @@ export function shownName(name, admin = false, userId) {
 }
 
 export const accountName = (userId, name) => shownName(name, isJevicaAccount(userId), userId);
+
+// Usernames chosen at sign-up, or the GitHub login, or a generated one: 2 to 39
+// letters and digits, joined by single - _ or . (every GitHub login fits). Two
+// usernames are the same when they read the same (nameSkeleton), and none may read
+// as Jevica or Resident or start like a Visitor fallback.
+const USERNAME = /^[A-Za-z0-9](?:[A-Za-z0-9]|[-_.](?=[A-Za-z0-9])){1,38}$/;
+export const usernameKey = name => nameSkeleton(name);
+export function usernameProblem(name) {
+  if (typeof name !== 'string' || !USERNAME.test(name)) return 'Use 2 to 39 letters or digits; a single -, _ or . may join them.';
+  if (unavailableName(name) || /^visitor/i.test(name)) return 'That name is reserved.';
+  return null;
+}
+export const validUsername = name => usernameProblem(name) === null;

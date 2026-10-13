@@ -34,6 +34,18 @@ test('game assets require an approved cookie while the sign-in bundle stays publ
   assert.equal(forwarded[1].headers['Cache-Control'], 'private, no-store');
 });
 
+// The first-paint boot script runs in <head> before anything paints, above all on the
+// sign-in page: a signed-out visitor must get it, and only it, from /assets/boot/.
+test('the first-paint boot script is public; nothing else in /assets/boot is', async () => {
+  assert.equal(protectedGameAsset('/assets/boot/first-paint.js'), false);
+  for (const path of ['/assets/boot/%66irst-paint.js', '/ASSETS/Boot/First-Paint.js']) assert.equal(protectedGameAsset(path), false, `${path} is the same file`);
+  for (const path of ['/assets/boot/first-paint-abc.js', '/assets/boot/other.js', '/assets/boot/first-paint.js/../main-abc.js', '/assets/first-paint.js', '/assets/boot/first-paint.css'])
+    assert.equal(protectedGameAsset(path), true, path);
+  const gate = createGameAssetMiddleware({ fetcher: async () => Response.json({ status: 'pending' }), forward: () => new Response('asset') });
+  assert.equal((await gate(new Request('https://sim.jev.works/assets/boot/first-paint.js'))).status, 200, 'served with no cookie at all');
+  assert.equal((await gate(new Request('https://sim.jev.works/assets/boot/other.js'))).status, 403);
+});
+
 // Production served /%64ata/district.json, /data%2Fdistrict.json, /data\\district.json
 // and /assets/main-abc%2Ejs to anonymous visitors: the CDN decodes them to the
 // gated file, so the gate must classify the decoded path, not the spelling.

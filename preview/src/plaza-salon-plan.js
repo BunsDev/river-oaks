@@ -228,3 +228,19 @@ export function backgammonSpot(table, place, slot, whiteChair = 0) {
   const pile = place === 'off-white' || place === 'off-black';
   return { position: [table.x + z, table.north + x], layer: pile ? slot : (place === 'bar-white' || place === 'bar-black') ? 0 : layer };
 }
+
+// Jenga on the curved bench's travertine drum (0.42 m round, its top 0.4 m up), set
+// clear of the lanterns and the bowl, toward the bench. Blocks are 12 × 4 × 2.4 cm.
+// Level n's blocks run east–west when n is even and north–south when it is odd, so
+// each level crosses the one below; slot 1 is the middle. A spot is [east, north],
+// with the block's centre height above the paving and its yaw.
+export const JENGA = { length: 0.12, width: 0.04, height: 0.024, gap: 0.0012, drumTop: 0.4, drumRadius: 0.42, offset: [0.1, -0.18] };
+export function jengaBlock(bench, level, slot) {
+  const { width, height, gap, drumTop, offset } = JENGA, across = (slot - 1) * (width + gap), even = level % 2 === 0;
+  return { position: [bench.x + offset[0] + (even ? 0 : across), bench.north + offset[1] + (even ? across : 0)], height: drumTop + height * (level + 0.5), yaw: even ? 0 : Math.PI / 2 };
+}
+
+// The curved bench's three places: Jenga is played from any of them.
+export function jengaSeat(sitting) {
+  return sitting?.buildId === 'bench:plaza-salon-bench' && [0, 1, 2].includes(sitting.slot) ? { tableId: 'jenga', seat: sitting.slot } : null;
+}
