@@ -12,6 +12,7 @@ import { VEHICLES, vehicleKind } from '../preview/src/vehicle-config.js';
 import { buildKind, buildGeometry, buildYaw, buildFinish, buildRoads, buildRoomAt, checkBuildSite, BUILD_REACH, BUILD_EDIT_REACH, BUILD_PLAYER_GAP, BUILD_REASONS, MAX_SAVED_DESIGNS } from '../preview/src/shared-build.js';
 import { resolveSeat, seatYaw, SEAT_REACH } from '../preview/src/shared-seating.js';
 import { WATER_REACH, WATER_MS, benchSeats, boutiquePlanters, buildPlanters, headingTo, lanePlanters, resolveBenchSeat } from '../preview/src/world-interactions.js';
+import { plazaSalonRack } from '../preview/src/plaza-salon-plan.js';
 import { objectCollider, blocksPlayer, blocksResident } from '../preview/src/creator-object.js';
 import { isJevicaAdmin } from './admin.js';
 import { accountName } from '../preview/src/resident-names.js';
@@ -98,6 +99,62 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   // Seats are Jevica's garden seats and lounge chairs, and the two places on
   // every storefront bench ('bench:<store>', slots 0 and 1).
   const benches=benchSeats(worldData);
+  // The plaza bike rack: a slot is held by at most one player (player.cycling),
+  // exactly as a seat is. Metres ride on the player until the transport drains
+  // them into the account store (drainRides), so a disconnect loses nothing.
+  const rackSlots=new Map(plazaSalonRack(worldData).map(slot=>[slot.id,slot]));
+  const slotHolder=slotId=>[...players.values()].find(p=>p.cycling===slotId)??null;
+  const takenSlots=()=>[...players.values()].filter(p=>p.cycling).map(p=>p.cycling).sort();
+  const rides=new Map();
+  const bankRide=player=>{
+    if(!(player.rideMeters>0))return;
+    const entry=rides.get(player.id)??{userId:player.id,name:accountName(player.id,player.name),meters:0};
+    entry.meters=Math.round((entry.meters+player.rideMeters)*1000)/1000;entry.name=accountName(player.id,player.name);rides.set(player.id,entry);
+    player.rideMeters=0;
+  };
+  const releaseBike=player=>{
+    if(!player.cycling)return false;
+    bankRide(player);player.cycling=null;if(player.vehicle==='bicycle')player.vehicle=null;revision++;return true;
+  };
+  function cycle(player,message,time) {
+    if(!fields(message,['type','rackId','slot']) || !textId(message.rackId) || !Number.isInteger(message.slot))return reject('invalid_slot');
+    const slot=rackSlots.get(`${message.rackId}:${message.slot}`);
+    if(!slot)return reject('invalid_slot');
+    if(player.cycling)return reject('already_cycling','Step off your bike before taking another.');
+    if(player.sitting)return reject('seated','Stand up before taking a bike.');
+    if(slotHolder(slot.id))return reject('slot_taken','That bike is out. Try another slot.');
+    const ground=environment.groundAt(slot.x,-slot.north),position=[slot.x,slot.north,ground];
+    if(player.altitude>.1 || player.vehicle || distance(player.position,slot.approach)>SEAT_REACH
+      || buildRoomAt(environment,player.position) || Math.abs(player.position[2]-ground)>.5)
+      return reject('rack_out_of_reach','Stand on the ground beside the rack.');
+    if(!environment.isFree(slot.x,-slot.north) || [...players.values()].some(other=>other.id!==player.id && distance(other.position,position)<.6))
+      return reject('rack_blocked','Someone is standing at the bike.');
+    interactions.cancel(player.id);
+    focus.delete(player.id);
+    Object.assign(player,{position,yaw:seatYaw(slot.heading-Math.PI),altitude:0,vehicle:'bicycle',cycling:slot.id,rideMeters:player.rideMeters??0,
+      poseAt:time,moveBudget:.1,liftBudget:.1,gesture:null,gestureUntil:0});
+    revision++;return {ok:true,player:publicPlayer(player)};
+  }
+  function uncycle(player,message,time) {
+    if(!fields(message,['type']))return reject('invalid_command');
+    if(!player.cycling)return reject('not_cycling');
+    const slot=rackSlots.get(player.cycling);
+    releaseBike(player);
+    // The client's normal exit travels to a ground spot first; a bare uncycle
+    // steps back to the approach so the slot is usable at once.
+    if(slot && distance(player.position,[slot.x,slot.north])<.6) {
+      const ground=environment.groundAt(slot.approach[0],-slot.approach[1]);
+      if(environment.isFree(slot.approach[0],-slot.approach[1])
+        && ![...players.values()].some(other=>other.id!==player.id && distance(other.position,slot.approach)<.6))
+        player.position=[slot.approach[0],slot.approach[1],ground];
+    }
+    Object.assign(player,{poseAt:time,moveBudget:.1,liftBudget:.1});
+    return {ok:true,player:publicPlayer(player)};
+  }
+  function drainRides() {
+    for(const player of players.values())bankRide(player);
+    const drained=[...rides.values()];rides.clear();return drained;
+  }
   const seatAt=(buildId,slot,source=builds)=>String(buildId).startsWith('bench:')
     ? resolveBenchSeat(benches,buildId,slot,(x,north)=>environment.groundAt(x,-north)) : resolveSeat(source.get(buildId),slot);
   // A townsperson resting on a bench place holds it as a player would.
@@ -131,6 +188,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       || [...players.values()].some(other=>other.id!==player.id && distance(other.position,seat.position)<.6))
       return reject('seat_blocked','Someone is standing at the seat.');
     interactions.cancel(player.id);
+    releaseBike(player);
     focus.delete(player.id);
     Object.assign(player,{position:seat.position,yaw:seatYaw(seat.yaw-Math.PI),altitude:0,vehicle:null,
       sitting:{buildId:seat.buildId,slot:seat.slot},poseAt:time,moveBudget:.1,liftBudget:.1,gesture:null,gestureUntil:0});
@@ -260,7 +318,10 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     return {ok:true,player:publicPlayer(player)};
   }
   function leave(userId) {
-    if (!players.delete(userId)) return false;
+    const leaving=players.get(userId);
+    if (!leaving) return false;
+    releaseBike(leaving);
+    players.delete(userId);
     interactions.cancel(userId);
     focus.delete(userId);
     voiceIdentities.delete(userId);
@@ -318,7 +379,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     }
     const activity=interactions.active(player.id);
     if(activity?.kind==='handshake'&&activity.expiresAt>time&&message.interactionId!==activity.id)return correction('greeting_aligning');
-    if (message.vehicle && !isJevicaOwner(player.id)) return correction('exclusive_vehicle');
+    if (message.vehicle==='bicycle' && !player.cycling) return correction('bike_required');
+    if (message.vehicle && message.vehicle!=='bicycle' && !isJevicaOwner(player.id)) return correction('exclusive_vehicle');
     if (message.vehicle && altitude>0.1) return correction('invalid_pose');
     if (altitude>0 && !canFlyAs(player.id,player.appearance)) return correction('flight_not_allowed');
     const ground = environment.groundAt(position[0],-position[1]);
@@ -342,6 +404,10 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if(distance(position,player.position)>.015 || altitude>.1 || message.vehicle)interactions.cancel(player.id);
     player.moveBudget -= cost;
     player.liftBudget -= liftCost;
+    // Metres count only from an accepted bicycle pose; stepping off the bike
+    // (a pose without it) hands the slot back.
+    if (message.vehicle==='bicycle') player.rideMeters=(player.rideMeters??0)+distance(position,player.position);
+    else if (player.cycling) releaseBike(player);
     // Watering keeps the body turned to the planter; walking off ends it.
     if (player.gesture==='water' && distance(position,player.position)>0.3) {player.gesture=null;player.gestureUntil=0;}
     const watering = player.gesture==='water' && player.gestureUntil>time;
@@ -450,6 +516,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     // A bare position keeps the traveller's own facing; a place faces its spot.
     const yaw=target && !(target[0]===destination[0] && target[1]===destination[1]) ? Math.atan2(destination[0]-target[0],target[1]-destination[1]) : player.yaw;
     interactions.cancel(player.id);
+    releaseBike(player);
     Object.assign(player,{position:destination,sitting:null,altitude:0,yaw,poseAt:time,moveBudget:0.1,liftBudget:0.1,vehicle:null,gesture:null,gestureUntil:0});
     revision++;
     return {ok:true,player:publicPlayer(player)};
@@ -471,6 +538,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if(message.type==='interaction')return interactions.command(player,message,ledger,time);
     if(message.type==='sit')return sit(player,message,time);
     if(message.type==='stand')return stand(player,message,time);
+    if(message.type==='cycle')return cycle(player,message,time);
+    if(message.type==='uncycle')return uncycle(player,message,time);
     if (message.type==='travel') return travel(player,message,ledger,time);
     if (message.type==='water') return water(player,message,ledger,time);
     if (message.type==='gesture') {
@@ -672,7 +741,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     const social=interactions.snapshot();
     const community={};
     for (const key of ['status','running','elapsed','target','supported','unmet','supplies','helpBudget','jobs','events','scenarioKey','generation','result','storm','resupplied']) community[key]=copy(state[key]);
-    return {type:'snapshot',interactions:social,worldId,protocolVersion:WORLD_PROTOCOL_VERSION,revision,elapsed,players:[...players.values()].map(publicPlayer),
+    return {type:'snapshot',interactions:social,worldId,protocolVersion:WORLD_PROTOCOL_VERSION,revision,elapsed,cycling:{taken:takenSlots()},players:[...players.values()].map(publicPlayer),
       chat:copy(chat).map(entry=>({...entry,authorName:accountName(entry.authorId,entry.authorName)})),
       builds:copy([...builds.values()]).map(item=>({...item,ownerName:accountName(item.ownerId,item.ownerName)})),wishes:copy(state.wishes),community,
       locals:state.locals.map(local=>({id:local.id,name:local.name,position:[...local.position],indoor:!!local.indoor,storeId:local.storeId??null,
@@ -803,7 +872,9 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
         && (player.sitting==null || saved.version>=3 && record(player.sitting) && fields(player.sitting,['buildId','slot'])
           && textId(player.sitting.buildId) && Number.isInteger(player.sitting.slot))
         && point(player.position,3) && Number.isFinite(player.yaw)
-        && (player.vehicle == null || isJevicaOwner(player.id) && vehicleKind(player.vehicle) && player.altitude<=0.1)
+        && (player.vehicle==null || player.vehicle==='bicycle'
+          ? (player.cycling==null || typeof player.cycling==='string' && rackSlots.has(player.cycling) && player.vehicle==='bicycle') && (player.rideMeters===undefined || nonnegative(player.rideMeters))
+          : isJevicaOwner(player.id) && vehicleKind(player.vehicle) && player.altitude<=0.1)
         && nonnegative(player.altitude) && player.altitude<=environment.flightCeiling && Number.isFinite(player.poseAt)
         && (player.gesture===undefined && player.gestureUntil===undefined
           || (player.gesture===null || SHOWN_GESTURES.includes(player.gesture)) && nonnegative(player.gestureUntil))
@@ -825,6 +896,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
             || Math.abs(seatYaw(player.yaw-(seat.yaw-Math.PI)))>1e-6)throw new Error('Invalid seated player');
           occupiedSeats.add(key);
         }
+        const heldSlots=new Set();
+        for(const player of nextPlayers.values())if(player.cycling){if(heldSlots.has(player.cycling))throw new Error('Invalid cycling slot');heldSlots.add(player.cycling);}
         // Older signed checkpoints allowed every player to fly. Keep their
         // account and appearance, but restore non-Jevica players on safe ground.
         if(player.altitude>0&&!canFlyAs(player.id,player.appearance)){
@@ -949,7 +1022,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   }
   const resolvePlace = placeId => placesOf(worldData).find(place=>place.id===placeId)??null;
   const listPlaces = () => placesOf(worldData);
-  return {worldId,join,rename,leave,command,step,snapshot,checkpoint,restore,reset,accountAppearance,applyAccountAppearance,resolvePlace,listPlaces,voiceSpaceOf,setVoice,players,state};
+  return {worldId,join,rename,leave,command,step,snapshot,checkpoint,restore,reset,accountAppearance,applyAccountAppearance,resolvePlace,listPlaces,voiceSpaceOf,setVoice,drainRides,players,state};
 }
 
 /** Validate an old room, then transfer durable account and creation state to a new geography. */
