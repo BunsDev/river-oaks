@@ -43,3 +43,8 @@ test('subscriptions use hysteresis between the far and resubscribe edges', () =>
   assert.equal(subscriptionDecision(VOICE_RESUBSCRIBE - 0.1, false), true);
   assert.equal(subscriptionDecision(NaN, true), true);
 });
+test('office listeners hear speakers at office-local positions rather than their street return point',()=>{
+ const speaker=speakerFromPlayer({position:[-2700,-1380,18],altitude:0,office:{id:'jevica-office',position:[1,3],yaw:0}});
+ const listener=listenerFromPose({position:[0,1.68,-3],ground:0,altitude:0,yaw:0});
+ assert.equal(spatialDistance(listener,speaker),1);assert.ok(spatialPan(listener,speaker)>0);
+});
