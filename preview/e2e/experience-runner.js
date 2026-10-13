@@ -26,10 +26,13 @@ let browser, fixture;
 const releaseBrowserLock = await holdBrowserLock('experience journeys');
 try {
   await mkdir(join(root, 'output/playwright'), { recursive: true });
+  // Fake media lets the voice journey grant a microphone without a device or a prompt; other journeys never ask.
+  const media = ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'];
   browser = await chromium.launch({ headless: !software,
-    args: software ? ['--use-gl=angle', '--use-angle=gl', '--ignore-gpu-blocklist'] : process.platform === 'darwin' ? ['--use-angle=metal'] : [] });
+    args: [...media, ...(software ? ['--use-gl=angle', '--use-angle=gl', '--ignore-gpu-blocklist'] : process.platform === 'darwin' ? ['--use-angle=metal'] : [])] });
   for (const name of names.length ? names : suite) {
-    fixture = await startBrowserFixture();
+    // The voice journey runs the real voice routes and reconciler over a fake LiveKit.
+    fixture = await startBrowserFixture(name === 'voice-shared' ? { env: { RIVER_OAKS_VOICE_FIXTURE: '1' } } : {});
     const { origin } = fixture;
     const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
     await context.addCookies([{ name: 'fixture_session', value: 'owner', url: origin }]);

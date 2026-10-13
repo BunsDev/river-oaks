@@ -171,10 +171,58 @@ server PRs land independently).
   (tooling 76; preview 2722 passed, 1 skipped; server 407 passed, 133 Redis-only
   skipped; desktop 49; Python and secrets clean).
 
+## PR 4: spatial audio, speaking rings and the two-browser journey
+
+Branch `feat/voice-spatial-20261013`, from PR 3's head.
+
+- `preview/src/voice-spatial.js`: `createPeerGraph(context, track)`, one
+  resident's voice as source → gain → stereo pan → output. The track stays
+  attached to a muted element that never plays, because Chromium decodes a
+  remote WebRTC track only while an element holds it. Gain starts at silence
+  and ramps over 80 ms. The listener is measured at the feet (ground plus
+  altitude), like residents.
+- `preview/src/voice-chat.js`: a graph per subscribed audio track, keyed by
+  participant identity (a track can arrive before the snapshot names its
+  player; it stays silent until then). At snapshot cadence every resident gets
+  gain from distance and pan from bearing, mutes and deafen force silence, and
+  subscriptions follow the 22/25 m hysteresis. Leaving, a dropped track or a
+  departed participant disposes its graph once.
+- `preview/src/remote-players.js`: `setSpeaking(ids)` sets a nameplate marker
+  at event time and feeds the speaker cadence of `conversation-motion` through
+  `avatar.update`; `main.js` wires it to the controller's speaking set.
+  `voice.css`: a ring on the nameplate, no pulse under reduced motion or
+  software rendering.
+- `server/tests/browser-fixture.js`: `RIVER_OAKS_VOICE_FIXTURE=1` runs the real
+  voice routes, leases and reconciler over the fake LiveKit from
+  `livekit-fixture.js`; `preview/e2e/experience-runner.js` sets it for the voice
+  journey and launches Chromium with fake media, so the journey can grant a
+  microphone without a device or a prompt.
+- `preview/e2e/voice-shared.js`: two residents. Alice joins with Y (no
+  microphone asked), the token names the server-derived outdoor room, M asks
+  for the microphone once, Bob's identity reaches Alice's snapshot through the
+  reconciler, Bob's oscillator track plays at full gain through the production
+  graph, the speaking ring and dock pill follow an active-speaker event, walking
+  away lowers the gain according to the snapshot distance, a resident mute and
+  deafen unsubscribe at the transport, Y leaves and stops the microphone track,
+  the server drops the lease, and at 390 px the dock row keeps 44 px targets.
+  Not covered here: an interior change (unit-tested) and real audio (PR 5).
+
+### Checks
+
+- `voice-graph`, `voice-chat`, `voice-spatial`, `voice-ui`,
+  `voice-preferences`, `remote-players`: 40 tests, 40 passed. Two of the
+  corrections were harness bugs; one was a wrong expectation (the curve gives
+  0.63 at ten metres, not 1). One product change came out of the tests: an
+  unknown distance no longer freezes a subscription under hysteresis.
+- The `voice-shared` journey, `pnpm test`, `pnpm run build` and `pnpm run
+  verify` have not run yet: the machine's disk and swap were critical and the
+  journey is a browser run. This PR is not opened until they have.
+
 ## Next
 
-- PR 4: spatial audio graph, speaking rings, the two-context journey (which
-  also covers the Y/M keys).
+- PR 5: desktop audio-only microphone permission; the live acceptance against a
+  LiveKit Cloud dev project with `data/reports/voice-live.json` and the measured
+  revocation delays.
 - PR 4: spatial audio graph, speaking rings, two-context journey.
 - PR 5: desktop audio-only permission; real two-browser acceptance against a
   LiveKit Cloud dev project with the receipt in `data/reports/voice-live.json`.
