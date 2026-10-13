@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
-import { VEHICLES, drivingInput, chauffeurCommand } from '../src/vehicle-config.js';
+import { VEHICLES, drivingInput, chauffeurCommand, vehicleKind } from '../src/vehicle-config.js';
 import { createRoadVehicle } from '../src/road-vehicles.js';
 
 test('chauffeur inputs accept only finite bounded controls and known commands',()=>{
@@ -85,4 +85,23 @@ test('manual reverse, steering and emergency brake remain collision bounded',()=
  const position=[...state.position];stepCarriage(state,env,{brake:true},1/60);
  assert.equal(state.speed,0);assert.deepEqual(state.position,position);
  env.canOccupy=()=>false;stepCarriage(state,env,{forward:1},1/60);assert.deepEqual(state.position,position);
+});
+test('the plaza bicycle is a one-seat vehicle capped at 18 mph with a slower cruise',()=>{
+ const spec=VEHICLES.bicycle;
+ assert.equal(spec.kind,'bicycle');
+ assert.equal(spec.seats,1);
+ assert.ok(Math.abs(spec.maxSpeed-8.05)<1e-9,'18 mph is 8.05 m/s');
+ assert.equal(spec.cruiseSpeed,5);
+ assert.deepEqual(spec.passengerSeat,spec.driverSeat,'the rider sits on the saddle');
+ assert.equal(spec.wheels.length,2);
+ assert.equal(spec.steeredWheels,1);
+ assert.equal(VEHICLES.rolls.cruiseSpeed,undefined);
+ assert.equal(VEHICLES.motorcycle.cruiseSpeed,undefined);
+});
+test('vehicleKind accepts the bicycle and drivingInput carries sprint only as a boolean',()=>{
+ assert.equal(vehicleKind('bicycle'),'bicycle');
+ assert.equal(vehicleKind('scooter'),null);
+ assert.deepEqual(drivingInput({forward:1,sprint:true}),{forward:1,turn:0,strafe:0,sprint:true});
+ assert.deepEqual(drivingInput({forward:1,fast:true}),{forward:1,turn:0,strafe:0,sprint:true});
+ assert.deepEqual(drivingInput({forward:1,sprint:'yes'}),{forward:1,turn:0,strafe:0});
 });
