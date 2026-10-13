@@ -38,7 +38,7 @@ landed. It plays on the grove table's switch rather than a new table.
     is outlined, and a general in check glows.
   - The arrow keys move between points, and Enter chooses.
   - Play as red or black, against the regular or pass and play.
-- **The grove switch:** Xiangqi in the mancala and Go sheets. `main.js` adds it
+- **The grove switch:** after merging Chinese checkers, every grove sheet offers Mancala, Go, Chinese checkers and Xiangqi. `main.js` adds it
   to `groveGames()` and swaps the boards. The `__riverPlazaXiangqi` debug hook
   (`reset()`).
 - **Salon Guide:** a xiangqi chapter after Go. Its horse and cannon pictures
@@ -52,8 +52,8 @@ landed. It plays on the grove table's switch rather than a new table.
 | `xiangqi.test.js` | 6/6. The opening (44 moves), hobbled horses, blocked elephants, soldiers over the river, palaces, facing generals, cannon screens, answering check, checkmate and stalemate both losing, replay and repetition, and the regular taking a hanging chariot, finding mate in one and replying deterministically. |
 | `plaza-games-mirror.test.js` | 14/14. 32 pieces, each side toward its chair, the board turning with red's chair, a moved cannon, every point on the board, and the mancala board swapping out. |
 | `salon-guide.test.js` | The horse and cannon pictures follow the rules. |
-| All `preview/tests` | 2942 pass, 0 fail |
-| Journeys | `plaza-xiangqi` passed. It sits at the grove table and X opens mancala. The switch sets out the xiangqi board (mancala and goban away, 32 pieces). Then it covers: Enter choosing the cannon and marking its moves (the capture over the screen too), the arrow keys, a click choosing the other cannon, a click playing h2e2 on the sheet and the table, the layout fit, the regular's reply from the worker, focus kept in the board, Escape, X reopening xiangqi where it was, the switch back, and standing up. `plaza-go` passed. `plaza-mancala` failed at standing up, because the stand-up spot lands at the darts line; the Chinese checkers branch fixes the grove journeys for that, and this branch reruns them after merging it. |
+| All `preview/tests` | 2942 pass, 0 fail on the branch; 2969 pass, 0 fail after merging liar's dice, shuffleboard, Yacht and Chinese checkers |
+| Journeys | `plaza-xiangqi` passed. It sits at the grove table and X opens mancala. The switch sets out the xiangqi board (mancala and goban away, 32 pieces). Then it covers: Enter choosing the cannon and marking its moves (the capture over the screen too), the arrow keys, a click choosing the other cannon, a click playing h2e2 on the sheet and the table, the layout fit, the regular's reply from the worker, focus kept in the board, Escape, X reopening xiangqi where it was, the switch back, and standing up. After merging Chinese checkers (the four-way grove switch), `plaza-xiangqi` (now also switching straight to Chinese checkers and back to mancala), `plaza-chinese-checkers`, `plaza-go` and `plaza-mancala` all passed. Before that merge, `plaza-mancala` had failed at standing up, at the darts line; Chinese checkers' journey fix covers it |
 
 ## Gaps
 
