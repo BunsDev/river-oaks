@@ -18,11 +18,15 @@ export function canonicalAssetPath(pathname) {
 
 // Vite's access entry and preload helpers must load before sign-in, and so must
 // the problem-report collector and dialog (debug-report*), which hold no game
-// code and let a player report a broken sign-in. Every other executable/style
-// chunk and world data requires server-side approval. A path that cannot be
-// classified is treated as gated.
+// code and let a player report a broken sign-in. So must the first-paint boot
+// script (preview/public/assets/boot/first-paint.js, one exact path): it only reads
+// the visitor's theme and returning mark before the sign-in page paints. Every
+// other executable/style chunk and world data requires server-side approval. A
+// path that cannot be classified is treated as gated.
+const PUBLIC_BOOT_SCRIPTS = new Set(['/assets/boot/first-paint.js']);
 export const protectedGameAsset = pathname => {
   const path = canonicalAssetPath(pathname);
+  if (PUBLIC_BOOT_SCRIPTS.has(path)) return false;
   return path === null || path === '/studio' || path === '/studio.html' || path.startsWith('/data/')
     || path.startsWith('/assets/') && /\.(?:js|css)$/.test(path)
       && !/^\/assets\/(?:index|preload-helper|modulepreload-polyfill|debug-report(?:-ui)?)-[a-z0-9_-]+\.(?:js|css)$/.test(path);
