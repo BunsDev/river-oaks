@@ -22,6 +22,21 @@ Studio shows the chat, explains that it needs the desktop app, and stays editabl
 - The top-right button starts a new chat. **⇤** or **Escape** collapses back to
   the pill. Shortcuts typed in the chat never reach the editor tools.
 
+## Furnished space updates
+
+Open one of the four **Space templates**, then ask for a concrete change such as
+“Give the living sofa sage upholstery” or “Change the lighting to evening.” The
+agent receives the current furnishing IDs, dimensions, catalog kinds and finishes.
+It can add, update or remove furnishings, move arrival, and update the Lighting
+object. It cannot load arbitrary assets, execute scripts or publish a space.
+
+The inspector exposes the same finite catalog. Updates to several items remain a
+single undoable edit. **Selected object only** constrains the proposed edits as
+well as the shared context; an edit to another object is rejected. Select an object
+before sending in that mode. A whole-scene request can also add furnishings.
+Room clearance still needs walkthrough review after a layout change: validation
+protects the arrival and bounds but does not certify every route.
+
 ## How edits stay safe
 
 The agent returns prose plus, at most, one `studio-edit` JSON block of operations.

@@ -112,6 +112,10 @@
       "destination": "/api/server?_river_path=/api/waitlist/invite-redeem"
     },
     {
+      "source": "/api/waitlist/username",
+      "destination": "/api/server?_river_path=/api/waitlist/username"
+    },
+    {
       "source": "/auth/callback",
       "destination": "/api/server?_river_path=/auth/callback"
     },

@@ -60,6 +60,14 @@
           </form>
           <p id="access-email-status" role="status"></p>
         </div>
+        <form id="access-username-form" class="access-form access-username-form" hidden>
+          <label for="access-username">Your name in River Oaks</label>
+          <input id="access-username" name="username" type="text" autocomplete="nickname" autocapitalize="off" spellcheck="false" minlength="2" maxlength="39" required aria-describedby="access-username-help" />
+          <p id="access-username-help">Letters and digits, joined by single - _ or . The district team may adjust it before approving you.</p>
+          <div class="access-username-choices"><button id="access-username-github" type="button" hidden>Use my GitHub name</button><button id="access-username-suggest" type="button">Suggest another</button></div>
+          <button id="access-username-save" type="submit">Save name</button>
+          <p id="access-username-status" role="status"></p>
+        </form>
         <form id="access-invite-form" class="access-form" hidden>
           <label for="access-invite-code">Have an invite code?</label>
           <input id="access-invite-code" name="invite" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="32" required placeholder="Your invite code" aria-describedby="access-invite-help" />
