@@ -55,11 +55,18 @@ export const GUIDE = [
     { title: 'Hitting and bearing off', text: ['A point held by two or more of your opponent\'s checkers is closed to you. A lone checker, a blot, is hit and goes to the bar, and a checker on the bar must enter before any other move.', 'Once all fifteen are home, bear off by the exact number, or from your highest point by a higher one: choose the checker, then the tray.'], figure: { kind: 'backgammon-hit' } },
     { title: 'At the table', text: ['The table\'s own checkers follow the game.'], figure: { kind: 'keys', keys: [[['Z'], 'Sit down or stand up'], [['X'], 'Open the board, or put it away'], [['Tab'], 'Move between checkers and points'], [['Enter'], 'Choose the checker or point'], [['Esc'], 'Put the board away']] } },
   ] },
+  { id: 'mancala', name: 'Mancala', place: 'The small grove table', pages: [
+    { title: 'Taking a seat', text: ['A small round table stands in the middle of the grove, with a carved mancala board and two chairs. Press Z to sit, then X (Play mancala).', 'Play the plaza regular, moving first or second, or Pass and play with a friend.'], figure: { kind: 'emblem' } },
+    { title: 'The aim', text: ['Each side has six pits of four seeds and a store at its right-hand end. Gather more seeds in your store than your opponent does.', 'The game ends when either side runs out of seeds; each player then banks what is left on their own side.'], figure: { kind: 'mancala-board' } },
+    { title: 'Sowing', text: ['Choose one of your pits: its seeds are sown one by one, counter-clockwise, into the following pits and your store, never your opponent\'s.', 'If the last seed lands in your store, you move again.'], figure: { kind: 'mancala-sow' } },
+    { title: 'Capturing', text: ['If the last seed lands in an empty pit on your side and the pit opposite holds seeds, you capture both into your store.'], figure: { kind: 'mancala-capture' } },
+    { title: 'At the table', text: ['The table\'s glass beads follow the game.'], figure: { kind: 'keys', keys: [[['Z'], 'Sit down or stand up'], [['X'], 'Open the board, or put it away'], [['←', '→'], 'Move between your pits'], [['Enter'], 'Sow the pit'], [['Esc'], 'Put the board away']] } },
+  ] },
 ];
 
 export const guideGame = id => GUIDE.find(game => game.id === id) ?? null;
 // Pictures much wider than tall span the page above the text instead of beside it.
-export const WIDE_FIGURES = new Set(['spades-bids', 'spades-trump', 'spades-score', 'dominoes-line', 'dominoes-modes', 'hearts-points', 'hearts-pass', 'hearts-trick', 'backgammon-opening', 'backgammon-hit']);
+export const WIDE_FIGURES = new Set(['mancala-board', 'mancala-sow', 'mancala-capture', 'spades-bids', 'spades-trump', 'spades-score', 'dominoes-line', 'dominoes-modes', 'hearts-points', 'hearts-pass', 'hearts-trick', 'backgammon-opening', 'backgammon-hit']);
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
 export const chapterOf = index => ROMAN[index] ?? String(index + 1);
 
@@ -98,6 +105,9 @@ export const DIAGRAMS = {
   dominoesLine: { line: [[2, 6], [6, 6], [6, 4]], hand: [4, 1] },
   heartsTrick: { cards: ['9D', 'QD', 'KD', '4S'], winner: 'KD' },
   heartsPoints: ['5H', '9H', 'AH', 'QS'],
+  // Mancala: the opening, pit 3 sown into the store, and a capture (side 0's pit 2 sown into its empty pit 3 opposite seven seeds).
+  mancalaSow: { pit: 3 },
+  mancalaCapture: { board: [0, 2, 0, 0, 0, 0, 0, 1, 1, 7, 1, 1, 1, 0], pit: 2 },
   // Spades: bids round the table (you, left, across, right), a heart trumped, and a hand's score.
   spadesBids: { bids: [3, 2, 4, 0], taken: [4, 2, 4, 0] },
   spadesTrump: { cards: ['KH', 'AH', '2S', '5H'], winner: '2S' },
@@ -201,6 +211,7 @@ export function iconMarkup(id) {
     checkers: '<ellipse class="sg-icon-fill" cx="20" cy="25" rx="11" ry="5"/><ellipse class="sg-icon-fill" cx="20" cy="19" rx="11" ry="5"/><ellipse class="sg-icon-line" cx="20" cy="19" rx="6" ry="2.5"/>',
     connectFour: '<rect class="sg-icon-line" x="9" y="9" width="22" height="22" rx="4"/><circle class="sg-icon-fill" cx="15.5" cy="15.5" r="3.6"/><circle class="sg-icon-line" cx="24.5" cy="15.5" r="3.6"/><circle class="sg-icon-line" cx="15.5" cy="24.5" r="3.6"/><circle class="sg-icon-fill" cx="24.5" cy="24.5" r="3.6"/>',
     dominoes: '<rect class="sg-icon-line" x="13" y="7" width="14" height="26" rx="3"/><line class="sg-icon-line" x1="15" y1="20" x2="25" y2="20"/><circle class="sg-icon-fill" cx="20" cy="13.5" r="1.8"/><circle class="sg-icon-fill" cx="17" cy="24" r="1.8"/><circle class="sg-icon-fill" cx="23" cy="29" r="1.8"/>',
+    mancala: '<rect class="sg-icon-line" x="6" y="13" width="28" height="14" rx="7"/><circle class="sg-icon-fill" cx="14" cy="20" r="2.4"/><circle class="sg-icon-fill" cx="20" cy="20" r="2.4"/><circle class="sg-icon-fill" cx="26" cy="20" r="2.4"/>',
     hearts: '<path class="sg-icon-fill" d="M20 31C11 24 8 19.5 8 15.5A5.5 5.5 0 0 1 20 13a5.5 5.5 0 0 1 12 2.5C32 19.5 29 24 20 31z"/>',
     spades: '<path class="sg-icon-fill" d="M20 8C12 16 8 19.5 8 23.5a5.5 5.5 0 0 0 10 3.2L16.5 32h7L22 26.7a5.5 5.5 0 0 0 10-3.2C32 19.5 28 16 20 8z"/>',
     backgammon: '<path class="sg-icon-line" d="M9 31L13 12L17 31M17 31L21 12L25 31"/><circle class="sg-icon-fill" cx="29" cy="25" r="4.5"/>',
@@ -256,6 +267,18 @@ export function figureMarkup(figure, game) {
         `<text class="sg-label" x="20" y="40" font-size="13">You &amp; Across: bid ${contract}, took ${made}</text><text class="sg-label" x="280" y="40" text-anchor="end" font-size="13">${10 * contract} + ${made - contract} bag = ${10 * contract + made - contract}</text>`
         + `<text class="sg-label" x="20" y="84" font-size="13">Right: nil, took none</text><text class="sg-label" x="280" y="84" text-anchor="end" font-size="13">+100</text>`
         + '<text class="sg-label sg-quiet" x="150" y="118" text-anchor="middle" font-size="11">every tenth bag: −100</text>'); }
+    case 'mancala-board': case 'mancala-sow': case 'mancala-capture': {
+      // Side 0 along the bottom (pits left to right, its store on the right), side 1 along the top.
+      const kind = figure.kind, board = kind === 'mancala-capture' ? DIAGRAMS.mancalaCapture.board : [4, 4, 4, 4, 4, 4, 0, 4, 4, 4, 4, 4, 4, 0];
+      const spot = index => index === 6 ? [272, 70] : index === 13 ? [28, 70] : index < 6 ? [62 + index * 36, 104] : [62 + (12 - index) * 36, 36];
+      const label = { 'mancala-board': 'A mancala board: six pits of four seeds a side, a store at each end; yours runs along the bottom with your store on the right.',
+        'mancala-sow': 'Your pit 3 is sown: its four seeds fall into the next three pits and your store, so you move again.',
+        'mancala-capture': 'Your pit 2 is sown: its last seed lands in your empty pit 4, opposite seven seeds, and you capture all eight.' }[kind];
+      const path = kind === 'mancala-sow' ? [3, 4, 5, 6] : kind === 'mancala-capture' ? [2, 3] : [];
+      return svg(300, 140, label, '<rect class="sg-felt" x="6" y="8" width="288" height="124" rx="40"/>'
+        + board.map((seeds, index) => { const [x, y] = spot(index), store = index === 6 || index === 13, glow = path.includes(index) || (kind === 'mancala-capture' && index === 9);
+          return `${glow ? `<circle class="sg-glow" cx="${x}" cy="${y}" r="${store ? 24 : 17}"/>` : ''}${store ? `<rect class="sg-rim" x="${x - 14}" y="${y - 40}" width="28" height="80" rx="14"/>` : `<circle class="sg-rim" cx="${x}" cy="${y}" r="14"/>`}<text class="sg-label" x="${x}" y="${y + 5}" text-anchor="middle" font-size="13" style="fill:#f3e6cf">${seeds}</text>`; }).join('')
+        + (kind === 'mancala-sow' ? arrow([[134, 122], [206, 122], [262, 102]], 'm') + arrowHead('m') : '')); }
     case 'backgammon-opening': { const { layout, dice, moves } = DIAGRAMS.backgammonOpening, near = nearPoints(layout), top = point => 10 + near[point][0] * 21 - 21 + 1;
       const strip = backgammonStrip(near, { dice, moves: moves.map(([from, to]) => [from, to, top(from)]) });
       return svg(strip.width, 222, 'The opening three-one: one checker from the eight-point and one from the six-point land together on the five-point.', strip.body); }

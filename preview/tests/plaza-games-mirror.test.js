@@ -188,3 +188,22 @@ test('wine pong: twelve glasses racked at the table ends, hit glasses gone, and 
   mirror.show(null);
   assert.equal(mirror.glasses(), 12);
 });
+
+test('mancala: the grove table holds the opening, and a game’s seeds in their pits and stores', async () => {
+  const { mancalaSpot } = await import('../src/plaza-salon-plan.js');
+  const { sow, startGame } = await import('../src/mancala-rules.js');
+  const mirror = group.userData.mancala, mesh = group.children.find(child => child.name === 'Mancala seeds');
+  const beads = () => Array.from({ length: mesh.count }, (_, i) => { const matrix = new THREE.Matrix4(); mesh.getMatrixAt(i, matrix); return new THREE.Vector3().setFromMatrixPosition(matrix); });
+  const inPit = (index, chair = 0) => { const [east, north] = mancalaSpot(plan.grove, index, chair); return beads().filter(p => Math.hypot(p.x - east, (p.z + north) / (index === 6 || index === 13 ? 2.2 : 1)) < 0.03).length; };
+  assert.equal(mirror.count(), 48, 'idle, four seeds in every pit');
+  assert.equal(inPit(0), 4); assert.equal(inPit(6), 0);
+  const state = sow(startGame(), 3);
+  mirror.show(state, 0);
+  assert.equal(mirror.count(), 48);
+  assert.equal(inPit(2), 0, 'the sown pit is empty'); assert.equal(inPit(6), 1, 'one seed in the store');
+  // From the other chair the board turns round: side 0's store is at the other end.
+  mirror.show(state, 1);
+  assert.equal(inPit(6, 1), 1);
+  mirror.show(null);
+  assert.equal(mirror.count(), 48);
+});
