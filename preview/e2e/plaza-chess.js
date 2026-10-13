@@ -72,7 +72,7 @@ async page => {
   await page.setViewportSize({ width: 1440, height: 900 });
 
   // Standing up puts the board away.
-  await page.locator('.table-game-close').click();
+  await page.locator('#table-game-panel .table-game-close').click();
   await page.locator('#canvas-host').focus();
   await page.keyboard.press('KeyZ');
   await page.waitForFunction(() => !window.__riverSeatAndWater().seated, null, { timeout: 15000 });

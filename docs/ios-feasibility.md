@@ -161,8 +161,12 @@ WebContent/GPU and cannot establish combined memory or the termination cause.
 The immediate next gate is a usable memory/termination trace and separate Safari
 comparison. The probe's Browser button opens the user's default browser, not
 necessarily Safari; explicitly verify the browser identity for this comparison. Do not begin production host selection or claim a 20-minute playable
-run from this failure. Val reported that Apple Safari cannot reach the world; the blocking screen or
-error is still being clarified. This is not yet a Safari rendering result.
+run from this failure. Val clarified that Apple Safari also freezes or reloads while loading the world.
+This is human-observed Safari evidence, without a correlated Safari trace. It
+supports investigating the shared scene/WebKit path, not a host-only explanation.
+A clean-source native-only run from `9f2096a9c22890e5f3a5adc43e91f89441ec14e0`
+reproduced WebContent termination at 12:48:23 UTC, five seconds after launch
+(recording `probe-C456B60A-9140-4A11-89D5-E158D76A16FA.jsonl`).
 Missing minimum-device, GPU and combined-memory evidence
 remain explicit.
 

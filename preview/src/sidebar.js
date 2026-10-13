@@ -108,27 +108,40 @@ export function setupSidebarSections({ graphics = null, sidebar } = {}) {
   dialog.setAttribute('aria-labelledby', 'settings-title');
   dialog.innerHTML = '<header class="settings-header"><div><p>Your experience</p><h2 id="settings-title">Settings</h2></div><button type="button" aria-label="Close settings">Close <kbd>Esc</kbd></button></header><div class="settings-layout"><nav role="tablist" aria-label="Settings categories" aria-orientation="vertical"></nav></div><footer>Changes apply as you choose them.</footer>';
   dialog.querySelector('.settings-layout').append(settings); panel.append(dialog);
+  // Each pane opens with what it is for; related rows sit together under a small heading.
+  const group = (heading, nodes) => {
+    const section = document.createElement('div'); section.className = 'settings-group';
+    if (heading) { const title = document.createElement('h4'); title.textContent = heading; section.append(title); }
+    section.append(...nodes); return section;
+  };
+  const studio = layers.find(node => node.querySelector?.('a[href="/studio.html"]'));
   const groups = [
-    ['Appearance', [appearance]], ['Graphics', graphics ? [graphics] : []],
-    ['Audio', [...voiceNodes, createVoiceSettings({ preferences: sharedVoicePreferences() }), createJevSettings('elevenlabs')]],
-    ['World', [...light, ...layers]],
-    ['Account', [account, createJevSettings(), connection]],
-    ['About', evidence],
+    ['Appearance', 'Light or dark, or follow your device.', [appearance]],
+    ['Graphics', 'Sharper or smoother. Auto adjusts as you play.', graphics ? [graphics] : []],
+    ['Audio', 'What you hear in town, and how you talk.', [group(null, voiceNodes), createVoiceSettings({ preferences: sharedVoicePreferences() }), createJevSettings('elevenlabs')]],
+    ['World', 'Light, weather and what the district shows.', [group('Light', light), group('Show in the district', layers.filter(node => node !== studio)), ...(studio ? [group('Build', [studio])] : [])]],
+    ['Account', 'Invitations, problem reports and signing out.', [account, createJevSettings(), group('World data', [connection])]],
+    ['About', 'Where this district comes from.', evidence],
   ];
   const tabs = [], panes = [];
   const selectSettings = (index, focus = false) => {
     tabs.forEach((tab, i) => { tab.setAttribute('aria-selected', String(index === i)); tab.tabIndex = i === index ? 0 : -1; panes[i].hidden = i !== index; });
+    // On phones the categories scroll sideways; keep the chosen one in view.
+    tabs[index].scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
     if (focus) tabs[index].focus();
   };
-  groups.forEach(([label, nodes], index) => {
+  groups.forEach(([label, purpose, nodes], index) => {
     const tab = document.createElement('button'); tab.type = 'button'; tab.textContent = label; tab.id = `settings-tab-${index}`;
     tab.setAttribute('role', 'tab'); tab.setAttribute('aria-controls', `settings-pane-${index}`);
     const pane = document.createElement('section'); pane.id = `settings-pane-${index}`; pane.setAttribute('role', 'tabpanel'); pane.setAttribute('aria-labelledby', tab.id); pane.tabIndex = 0;
-    const title = document.createElement('h3'); title.textContent = label; pane.append(title, ...nodes); settings.append(pane);
+    const title = document.createElement('h3'); title.textContent = label;
+    const intro = document.createElement('p'); intro.className = 'settings-pane-intro'; intro.id = `settings-intro-${index}`; intro.textContent = purpose;
+    pane.setAttribute('aria-describedby', intro.id); pane.append(title, intro, ...nodes); settings.append(pane);
     dialog.querySelector('nav').append(tab); tabs.push(tab); panes.push(pane);
     tab.addEventListener('click', () => selectSettings(index));
     tab.addEventListener('keydown', event => {
-      const next = event.key === 'ArrowDown' ? (index + 1) % groups.length : event.key === 'ArrowUp' ? (index + groups.length - 1) % groups.length : event.key === 'Home' ? 0 : event.key === 'End' ? groups.length - 1 : null;
+      // Narrow screens lay the categories out in a row, so left and right move too.
+      const next = ['ArrowDown', 'ArrowRight'].includes(event.key) ? (index + 1) % groups.length : ['ArrowUp', 'ArrowLeft'].includes(event.key) ? (index + groups.length - 1) % groups.length : event.key === 'Home' ? 0 : event.key === 'End' ? groups.length - 1 : null;
       if (next !== null) { event.preventDefault(); selectSettings(next, true); }
     });
   });

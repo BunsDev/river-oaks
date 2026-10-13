@@ -45,8 +45,13 @@ Private `.runtime/ios-probe/`: core.log, auth-green.log, js-green.log, webkit.js
 #285 remains open: reproduce termination with a targeted trace, establish hosted source and WebContent/GPU memory, compare Safari, then run sustained representative workloads only once stable. Minimum phone, touch/interior/multiplayer/recovery, human accessibility and distribution remain unverified. Verified implementation committed and pushed as 9f2096a9c22890e5f3a5adc43e91f89441ec14e0 (valid SSH signature). Draft PR #309 is open; no merge or issue closure. Do not archive the worktree.
 
 ## First-run handoff
-- Draft PR: https://github.com/BunsDev/river-oaks/pull/309. Implementation source: 9f2096a9c22890e5f3a5adc43e91f89441ec14e0; clean-source signed rebuild also passed in `.runtime/ios-probe/committed-device/` (not installed during Safari comparison).
+- Draft PR: https://github.com/BunsDev/river-oaks/pull/309. Implementation source: 9f2096a9c22890e5f3a5adc43e91f89441ec14e0; clean-source signed rebuild also passed in `.runtime/ios-probe/committed-device/` (subsequently installed for the next reproduction).
 - Final Release simulator/device builds and strict code-sign verification passed. Staged secret scan passed; no unrelated files included.
-- Browser comparison: Val reports Safari cannot reach the world. Sign-in versus loading failure is pending clarification; no Safari rendering conclusion.
+- Browser comparison: Val clarified Safari freezes or reloads while loading. This is human-observed behavior without a correlated Safari trace. Clean-source native-only probe C456B60A reproduced termination five seconds after launch at 12:48:23 UTC. An all-process Activity Monitor capture is being exported to include WebContent/GPU rather than only host memory.
 - The task stays active and #285 stays open. Next: target WebContent/GPU memory rather than host-only metrics; preserve security and fidelity until cause is established.
 - Worktree contains the ongoing experiment and private raw evidence; it is not ready for retirement or archival.
+
+## Updated-main verification and trace gap
+Integrated origin/main at e8a2c8d (email acceptance, settings, dominoes and desktop microphone work). The probe implementation and shared rendering pipeline are unchanged by that integration. `pnpm run verify` passed again: tooling 87, preview 2,750 passed/1 skipped, server 421 passed/134 skipped, desktop 51, Python 141. Receipt/log: `.runtime/agent/core.json`, `.runtime/ios-probe/core-integrated.log`.
+
+The 45-second all-process Activity Monitor capture reached its time limit but has not finished finalizing. `xctrace export` reports `Document Missing Template Error`; a process sample shows remote device symbol-signature lookup. One SIGINT requested normal stop after more than seven minutes. Preserve the raw trace and log; no WebContent/GPU footprint or termination cause has been extracted. This is a tooling gap, not evidence of a memory limit. Next continuation should inspect the existing trace process/output before starting another capture.
