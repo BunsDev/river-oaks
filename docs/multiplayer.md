@@ -597,9 +597,15 @@ in your own empty pit to capture the seeds opposite. When a side runs out, each 
 banks their own side and the fuller store wins. The table's glass beads follow the
 game. Rules: `preview/src/mancala-rules.js`.
 
-The chess-table, café, backgammon, mancala, Jenga and wine pong sheets have **How to play** in their
+The grove table's switch also offers **Go** on a 9×9 goban, which replaces the
+mancala board on the table while it is in play. Play the plaza regular (Monte Carlo
+play-outs, thought out in a worker) as black or white, or pass and play. Captures,
+no suicide, positional superko; two passes end the game, scored by area with 7.5
+komi. Rules: `preview/src/go-rules.js`.
+
+The chess-table, café, backgammon, mancala, Go, Jenga and wine pong sheets have **How to play** in their
 header. It opens the Salon Guide on that game (chess, checkers, Connect Four,
-Reversi, nine men's morris, dominoes, Hearts, Spades, backgammon, cribbage, mancala, Jenga or wine pong), and **Play & rides → Game guide** opens it too. The guide is an
+Reversi, nine men's morris, dominoes, Hearts, Spades, backgammon, cribbage, mancala, Go, Jenga or wine pong), and **Play & rides → Game guide** opens it too. The guide is an
 illustrated book with a few pages per game: taking a seat, the aim, a turn, and
 the keys. Its pictures are positions played on the real rules
 (`preview/tests/salon-guide.test.js`). A game you have not read yet shows a gold
