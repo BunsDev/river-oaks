@@ -90,14 +90,16 @@ async page => {
         dialog.querySelector('.salon-guide-next').click();
       }
     }
-    dialog.querySelector('[data-guide-game=backgammon]').click();
+    // The book ends with the last game in its index, whichever that is.
+    [...dialog.querySelectorAll('.salon-guide-index [data-guide-game]')].at(-1).click();
     return tight;
   });
   check(!unscrolled.length, `Every page reads without scrolling at 1440 × 900 (${unscrolled.join(', ') || 'all fit'})`);
   await page.keyboard.press('ArrowRight'); await page.keyboard.press('ArrowRight');
   await page.keyboard.press('End');
   state = await book();
-  check(state.game === 'backgammon' && state.title === 'At the table' && state.next === 'Back to the table', `The last page of the last game offers Back to the table (${state.next})`);
+  const lastGame = await page.evaluate(() => [...document.querySelectorAll('[data-guide-dialog] .salon-guide-index [data-guide-game]')].at(-1).dataset.guideGame);
+  check(state.game === lastGame && state.title === 'At the table' && state.next === 'Back to the table', `The last page of the last game (${lastGame}) offers Back to the table (${state.next})`);
   await page.locator('[data-guide-dialog] .salon-guide-next').click();
   check(!(await book()).open, 'Back to the table closes the book');
   // A click outside the book closes it too.

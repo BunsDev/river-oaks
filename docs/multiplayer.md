@@ -567,9 +567,9 @@ in (or out), or bounce on the table and in. Two throws a turn, and sinking all s
 the far glasses wins. A close-up of the far rack sits beside the table view. Rules:
 `preview/src/wine-pong-rules.js`.
 
-The chess-table, café and backgammon sheets have **How to play** in their
+The chess-table, café, backgammon, Jenga and wine pong sheets have **How to play** in their
 header. It opens the Salon Guide on that game (chess, checkers, Connect Four,
-dominoes, Hearts or backgammon), and **Play & rides → Game guide** opens it too. The guide is an
+dominoes, Hearts, backgammon, Jenga or wine pong), and **Play & rides → Game guide** opens it too. The guide is an
 illustrated book with a few pages per game: taking a seat, the aim, a turn, and
 the keys. Its pictures are positions played on the real rules
 (`preview/tests/salon-guide.test.js`). A game you have not read yet shows a gold

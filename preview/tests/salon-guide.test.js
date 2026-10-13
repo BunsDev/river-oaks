@@ -14,7 +14,7 @@ import * as backgammon from '../src/backgammon-rules.js';
 const text = id => guideGame(id).pages.flatMap(page => [page.title, ...page.text]).join(' ');
 
 test('every plaza table game has a guide of illustrated pages', () => {
-  assert.deepEqual(GUIDE.map(game => game.id), ['chess', 'checkers', 'connectFour', 'dominoes', 'hearts', 'backgammon']);
+  assert.deepEqual(GUIDE.map(game => game.id), ['chess', 'checkers', 'connectFour', 'dominoes', 'hearts', 'backgammon', 'jenga', 'winePong']);
   for (const game of GUIDE) {
     assert.ok(game.pages.length >= 4, game.id);
     assert.equal(game.pages[0].title, 'Taking a seat', `${game.id} starts at the table`);
@@ -125,4 +125,18 @@ test('the guides a player has read are remembered, and storage failures are harm
   assert.doesNotThrow(() => forgetful.add('hearts'));
   assert.equal(forgetful.has('hearts'), true, 'this visit still remembers');
   store.set('river-oaks-salon-guide-seen', '{not json'); assert.equal(createGuideMemory(storage).has('chess'), false);
+});
+
+test('the Jenga and wine pong pictures follow the rules', async () => {
+  const jenga = await import('../src/jenga-rules.js'), pong = await import('../src/wine-pong-rules.js');
+  // A level down to its two edges: pulling either is fatal.
+  const state = jenga.startTower(), levels = state.levels.map(row => row.slice());
+  levels[4] = DIAGRAMS.jengaEdge.level.map(Boolean);
+  assert.equal(jenga.legalPulls({ ...state, levels }).find(option => option.level === 4 && option.slot === DIAGRAMS.jengaEdge.pull).fatal, true);
+  // The tower picture keeps its top level (unfinished) and the one under it whole.
+  const tower = DIAGRAMS.jengaTower.levels;
+  assert.ok(tower.at(-1).filter(Boolean).length < 3 && tower.at(-2).every(Boolean));
+  // A dead-centre throw at the apex glass sinks it.
+  const { aim, power } = pong.aimAt(0, pong.glassAt(1, DIAGRAMS.pongThrow.glass));
+  assert.equal(pong.resolve(pong.startGame(1), aim, power).result, 'in');
 });
