@@ -1,3 +1,4 @@
+import { dismissOnOutsideClick } from './access-modal-dismiss.js';
 import './access-gate.css';
 import { installDiagnostics, registerDiagnosticSource } from './debug-report.js';
 import { startArtRotation } from './access-art-rotation.js';
@@ -30,10 +31,10 @@ new MutationObserver(() => artRotation.sync()).observe(gate, { attributes: true,
 registerDiagnosticSource('access', () => ({ gate: gate.hidden ? 'entered' : gateState || 'checking', signedIn: Boolean(session?.authenticated), entered, admin: isAdmin }));
 // Every "Report a problem" control dispatches one event; the dialog loads on first use.
 const reportSession = () => ({ signedIn: Boolean(session?.authenticated), csrfToken: session?.csrfToken ?? null });
-window.addEventListener('river-oaks:report-problem', () => { void import('./debug-report-ui.js').then(({ openReportDialog }) => openReportDialog({ getSession: reportSession })); });
+window.addEventListener('river-oaks:report-problem', () => { void import('./debug-report-ui.js').then(({ openReportDialog }) => openReportDialog({ getSession: reportSession, dismissOnOutsideClick })); });
 const reportProblem = () => window.dispatchEvent(new CustomEvent('river-oaks:report-problem'));
 for (const id of ['#access-report', '#access-gate-report']) $(id).addEventListener('click', reportProblem);
-$('#access-reports').addEventListener('click', () => { void import('./debug-report-ui.js').then(({ openReportInbox }) => openReportInbox()); });
+$('#access-reports').addEventListener('click', () => { void import('./debug-report-ui.js').then(({ openReportInbox }) => openReportInbox({ dismissOnOutsideClick })); });
 
 async function api(path, options = {}) {
   const response = await fetch(path, { credentials: 'same-origin', cache: 'no-store', ...options });
@@ -279,6 +280,7 @@ $('#access-invite-issue').addEventListener('submit', async event => {
   finally { button.disabled = false; }
 });
 $('#access-invites-open').addEventListener('click', loadInvites);
+dismissOnOutsideClick(invitesDialog, () => invitesDialog.close());
 $('#access-invites-close').addEventListener('click', () => invitesDialog.close());
 invitesDialog.addEventListener('close', () => { inviteGeneration++; });
 
@@ -379,6 +381,7 @@ function closeReview() {
   restoreReviewSettings = false;
   adminButton.focus();
 }
+dismissOnOutsideClick(review, closeReview, review.querySelector('.access-review-card'));
 $('#access-review-close').addEventListener('click', closeReview);
 review.addEventListener('keydown', event => {
   if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeReview(); }
