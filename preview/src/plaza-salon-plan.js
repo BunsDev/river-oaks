@@ -57,6 +57,9 @@ export function plazaSalonPlan(world) {
   const chess = [{ id: 'chess-west', x: -2793.0, north: -1301.4 }, { id: 'chess-east', x: -2786.4, north: -1300.4 }];
   // A walnut backgammon table in the open square between the grove's middle trunks.
   const backgammon = { id: 'backgammon', x: -2789.6, north: -1297.4 };
+  // A long linen-topped table for wine pong, east–west between the café and the north
+  // planters, played standing at either end.
+  const winePong = { id: 'wine-pong', x: -2797.2, north: -1296.0, heading: 0 };
   // The bench backs onto the Etro block and opens north, to the grove and Dior.
   const bench = { id: 'bench', x: -2781.4, north: -1302.0, seatRadius: 1.42, backRadius: 2.02, opening: Math.PI, span: Math.PI * 1.18 };
   const chairs = [
@@ -81,7 +84,7 @@ export function plazaSalonPlan(world) {
   const trees = treeSupports(world).filter(({ position: [x, north] }) => x > PLAZA.west && x < PLAZA.east && north > PLAZA.south && north < PLAZA.north)
     .map(({ position: [x, north] }) => ({ x, north, height: LIGHT_HEIGHT })).sort((a, b) => a.x - b.x || a.north - b.north);
   const strands = lightWeb([...trees, ...lanterns.map(({ x, north, height }) => ({ x, north, height }))]);
-  return { round, chess, backgammon, bench, chairs, planters, lanterns, stage, rack, trees, strands, postHeight: POST_HEIGHT };
+  return { round, chess, backgammon, winePong, bench, chairs, planters, lanterns, stage, rack, trees, strands, postHeight: POST_HEIGHT };
 }
 
 // Footprints the walking model blocks: [east, north, radius, height]. Chairs and
@@ -94,6 +97,8 @@ export function plazaSalonFootprints(world) {
     [plan.round.x, plan.round.north, plan.round.radius, 0.76],
     ...plan.chess.map(table => [table.x, table.north, 0.42, 0.76]),
     [plan.backgammon.x, plan.backgammon.north, 0.46, 0.76],
+    // The wine pong table is long: a row of overlapping discs (0.6 m apart, 0.36 m round).
+    ...[-0.9, -0.3, 0.3, 0.9].map(u => [...winePongPoint(plan.winePong, [u, 0]), 0.36, 0.76]),
     [plan.bench.x, plan.bench.north, 0.44, 0.42],
     ...plan.lanterns.map(post => [post.x, post.north, 0.16, plan.postHeight]),
     [plan.stage.x, plan.stage.north, plan.stage.radius, 0.24],
@@ -243,4 +248,18 @@ export function jengaBlock(bench, level, slot) {
 // The curved bench's three places: Jenga is played from any of them.
 export function jengaSeat(sitting) {
   return sitting?.buildId === 'bench:plaza-salon-bench' && [0, 1, 2].includes(sitting.slot) ? { tableId: 'jenga', seat: sitting.slot } : null;
+}
+
+// Wine pong's table frame to [east, north]: u along the table (its west end -1.2), v across.
+export function winePongPoint(table, [u, v]) {
+  const c = Math.cos(table.heading), s = Math.sin(table.heading);
+  return [table.x + u * c - v * s, table.north + u * s + v * c];
+}
+// Where each side stands to throw: just beyond its own end of the table.
+export const WINE_PONG_STAND = 1.7, WINE_PONG_REACH = 0.9;
+export const winePongStand = (table, side) => winePongPoint(table, [side === 0 ? -WINE_PONG_STAND : WINE_PONG_STAND, 0]);
+// The side a standing visitor at [east, north] would play, or null when not at an end.
+export function winePongSide(table, [east, north]) {
+  for (const side of [0, 1]) { const [x, n] = winePongStand(table, side); if (Math.hypot(east - x, north - n) <= WINE_PONG_REACH) return side; }
+  return null;
 }

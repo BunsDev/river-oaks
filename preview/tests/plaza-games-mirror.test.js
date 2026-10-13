@@ -165,3 +165,26 @@ test('jenga: the drum shows the game’s tower, and the blocks scattered once it
   mirror.show(null);
   assert.equal(mirror.fallen(), false);
 });
+
+test('wine pong: twelve glasses racked at the table ends, hit glasses gone, and the ball in flight', async () => {
+  const { winePongPoint } = await import('../src/plaza-salon-plan.js');
+  const { glassAt, play, aimAt, startGame, TABLE } = await import('../src/wine-pong-rules.js');
+  const mirror = group.userData.winePong, mesh = group.children.find(child => child.name === 'Wine pong glasses');
+  const centres = () => Array.from({ length: mesh.count }, (_, i) => { const matrix = new THREE.Matrix4(); mesh.getMatrixAt(i, matrix); return new THREE.Vector3().setFromMatrixPosition(matrix); });
+  assert.equal(mirror.glasses(), 12, 'idle, both racks are full');
+  const at = (side, k) => { const [east, north] = winePongPoint(plan.winePong, glassAt(side, k)); return centres().some(p => Math.hypot(p.x - east, p.z + north) < 0.001); };
+  assert.ok(at(0, 0) && at(1, 5), 'both racks at their own ends');
+  let state = startGame(3);
+  for (const k of [5, 2]) { const { aim, power } = aimAt(state.turn, glassAt(1 - state.turn, k)); state = play(state, aim, power); }
+  mirror.show(state);
+  assert.equal(mirror.glasses(), 10);
+  assert.ok(!at(1, 5) && !at(1, 2) && at(1, 4), 'the hit glasses leave the table');
+  const heights = centres().map(p => p.y);
+  assert.ok(Math.max(...heights) - Math.min(...heights) < 1e-6, 'every glass stands on the table top');
+  mirror.ball([0, 0, TABLE.height + 0.5]);
+  assert.equal(mirror.ballVisible(), true);
+  mirror.ball(null);
+  assert.equal(mirror.ballVisible(), false);
+  mirror.show(null);
+  assert.equal(mirror.glasses(), 12);
+});
