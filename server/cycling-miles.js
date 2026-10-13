@@ -7,20 +7,23 @@ import { createHash } from 'node:crypto';
 // {rank, meters} | null. Names are the public roster names at flush time, so
 // a board never has to read profiles. Redis keeps a sorted set of totals and a
 // hash of {userId, name, updatedAt}; the member is the hashed user id, and the
-// stored user id lets top() return the real id to the transport (never to clients).
+// stored user id lets top() return the real id to the transport (never to clients);
+// a rider whose record is gone is left off the board rather than shown as a hash.
 export const MAX_RIDERS=10000;
+const MAX_RIDE=1e6; // metres in one flush: never more than a thousand kilometres
 const validId=value=>typeof value==='string' && value.length>0 && value.length<=160 && !/[\u0000-\u001f\u007f]/.test(value);
-const validName=value=>typeof value==='string' && value.length<=80 && !/[\u0000-\u001f\u007f]/.test(value);
+const validName=value=>typeof value==='string' && [...value].length<=80
+  && !/[\u0000-\u001f\u007f\u202a-\u202e\u2066-\u2069]/u.test(value);
 function check(userId,meters,name) {
   if(!validId(userId))throw new Error('Invalid account');
-  if(typeof meters!=='number' || !Number.isFinite(meters) || meters<0)throw new Error('Invalid ride');
+  if(typeof meters!=='number' || !Number.isFinite(meters) || meters<0 || meters>MAX_RIDE)throw new Error('Invalid ride');
   if(!validName(name))throw new Error('Invalid rider name');
 }
 const round=value=>Math.round(value*1000)/1000;
 
 export function createMemoryCyclingMiles({now=Date.now,maxRiders=MAX_RIDERS}={}) {
   const riders=new Map();
-  const ordered=()=>[...riders.values()].sort((a,b)=>b.meters-a.meters || a.userId.localeCompare(b.userId));
+  const ordered=()=>[...riders.values()].sort((a,b)=>b.meters-a.meters || (a.userId<b.userId?-1:a.userId>b.userId?1:0));
   return {
     async add(userId,meters,name) {
       check(userId,meters,name);
@@ -52,7 +55,12 @@ export function createRedisCyclingMiles({redis,prefix,now=Date.now,maxRiders=MAX
   if(!redis?.eval || typeof prefix!=='string' || !/^\{[^{}]+\}$/.test(prefix))throw new Error('Invalid cycling storage');
   const totals=`${prefix}:cycling-miles:v1`,riders=`${prefix}:cycling-riders:v1`;
   const id=userId=>createHash('sha256').update(userId).digest('hex');
-  const decode=raw=>{const record=raw?JSON.parse(raw):null;return record && typeof record==='object' ? record : {};};
+  // A row whose record is missing, unparseable or has no user id is skipped: the
+  // hashed member must never stand in for an account id.
+  const decode=raw=>{
+    try {const record=raw?JSON.parse(raw):null;return record && typeof record==='object' && typeof record.userId==='string' ? record : null;}
+    catch {return null;}
+  };
   return {
     async add(userId,meters,name) {
       check(userId,meters,name);
@@ -66,7 +74,10 @@ export function createRedisCyclingMiles({redis,prefix,now=Date.now,maxRiders=MAX
       if(!rows.length)return [];
       const members=rows.filter((_,i)=>i%2===0),scores=rows.filter((_,i)=>i%2===1);
       const records=await redis.hmget(riders,...members);
-      return members.map((member,i)=>{const record=decode(records[i]);return {userId:record.userId??member,name:record.name??'',meters:round(Number(scores[i]))};});
+      return members.flatMap((_,i)=>{
+        const record=decode(records[i]);
+        return record?[{userId:record.userId,name:typeof record.name==='string'?record.name:'',meters:round(Number(scores[i]))}]:[];
+      });
     },
     async rank(userId) {
       if(!validId(userId))throw new Error('Invalid account');
