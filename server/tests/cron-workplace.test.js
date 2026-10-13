@@ -64,7 +64,7 @@ test('a drain sweep stops at its budget and leaves the task due for the next run
 
 test('Vercel declares a per-minute cron for the sweep route, rewritten to the server and allowlisted', () => {
   const config = JSON.parse(readFileSync(new URL('../../vercel.json', import.meta.url)));
-  assert.deepEqual(config.crons, [{path: '/api/workplace-sweep', schedule: '* * * * *'}]);
+  assert.deepEqual(config.crons.filter(cron => cron.path === '/api/workplace-sweep'), [{path: '/api/workplace-sweep', schedule: '* * * * *'}]);
   assert.equal(config.rewrites.find(item => item.source === '/api/workplace-sweep')?.destination, '/api/server?_river_path=/api/workplace-sweep');
   assert.equal(normalizeVercelRoute('/api/server?_river_path=/api/workplace-sweep'), '/api/workplace-sweep');
 });

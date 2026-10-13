@@ -22,6 +22,7 @@ import { createMemoryAvatarPreferences } from './avatar-preferences.js';
 import { createMemoryPresence } from './presence.js';
 import { isJevicaAdmin } from './admin.js';
 import { DEFAULT_WORLD_ID, validateWorldId } from '../preview/src/world-contract.js';
+import { configureVoice, createMemoryVoiceLeases } from './voice.js';
 
 export function workosConfigured(env) {
   return Boolean(env.WORKOS_API_KEY && env.WORKOS_CLIENT_ID && env.WORKOS_COOKIE_PASSWORD?.length >= 32);
@@ -62,6 +63,9 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
     return landmarkStores.get(id);
   };
   const worldDirectory=async()=>(await catalog.list()).map(entry=>({...entry,visitors:games.get(entry.id)?.game.playerCount??0}));
+  const localSecurity=createLocalChauffeurSecurity({isBanned:id=>moderation.isBanned(id)});
+  // One voice service for every world of this town; rooms are named per world and interior.
+  const voice=configureVoice({env,namespace:'river-oaks:local:v1',allow:(...args)=>localSecurity.allow(...args),leases:createMemoryVoiceLeases(),sweepMs:30_000});
   const onLogout = userId => {for(const {game} of games.values())game.disconnectUser(userId);};
   const auth = mode === 'local'
     ? createDevAuth({ origin, env, onLogout })
@@ -102,17 +106,17 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
         onBan:userId=>{for(const [otherId,other] of games)if(otherId!==id)other.game.disconnectUser(userId,4003,'This account cannot join the town.');},
         onMove:(userId,fromWorldId)=>games.get(fromWorldId)?.game.disconnectUser(userId,4009,'This account joined another world.'),
         moderators:(env.MODERATOR_USER_IDS??'').split(',').map(value=>value.trim()).filter(Boolean),
-        trustedProxyIPs:(env.TRUSTED_PROXY_IPS??'').split(',').map(value=>value.trim()).filter(Boolean)});
+        trustedProxyIPs:(env.TRUSTED_PROXY_IPS??'').split(',').map(value=>value.trim()).filter(Boolean),voice});
       const entry={game,world,meta};games.set(id,entry);return entry;
     })().finally(()=>pending.delete(id));
     pending.set(id,load);return load;
   }
   const handleRequest=createChauffeurRoute({auth,waitlist,origin,apiKey:env.TYPESAFE_API_KEY,model:env.JEV_AUTO_MODEL,dailyLimit:chauffeurDailyLimit(env),
-    security:createLocalChauffeurSecurity({isBanned:id=>moderation.isBanned(id)}),...(mode==='local'?{isAdmin:auth.isAdmin}:{})});
+    security:localSecurity,...(mode==='local'?{isAdmin:auth.isAdmin}:{})});
   const router=createWorldRouter({worldFor,configuredWorldId:worldId,handleRequest});
   return {server:router.server,auth:mode,origin,worldId,catalog,worldFor,close(){
     if(closing)return closing;
-    closed=true;workplace?.close();
+    closed=true;workplace?.close();voice?.close();
     closing=(async()=>{
       await Promise.allSettled([...pending.values()]);
       for(const {game} of games.values())await game.close();

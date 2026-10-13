@@ -68,7 +68,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   validateWorldId(worldId);
   const colliders=[],placementEnvironment=createWalkingEnvironment(worldData);
   const environment = createWalkingEnvironment(worldData,colliders);
-  const players = new Map(), ledgers = new Map(), focus = new Map(), chat = [], appearanceByUser = new Map(), movementByUser = new Map(), builds = new Map(), inventory = new Map(), homeGuests = new Map();
+  const players = new Map(), ledgers = new Map(), focus = new Map(), chat = [], appearanceByUser = new Map(), movementByUser = new Map(), builds = new Map(), inventory = new Map(), homeGuests = new Map(), voiceIdentities = new Map();
   let colliderKey='[]';
   const syncColliders=(navigation=life?.navigation)=>{
     const objects=[...builds.values()].filter(item=>item.kind==='object');
@@ -94,7 +94,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   // Every name leaves the world checked against its account: only Jevica's
   // accounts are Jevica, whatever a stored or restored record says.
   const interactions=createInteractions({players,environment,now,movementOf,changed:()=>revision++,residents:()=>state.locals});
-  const publicPlayer = player => ({interaction:interactions.publicFor(player),id:player.id,name:accountName(player.id,player.name),appearance:player.appearance,movement:movementOf(player),gesture:interactions.publicFor(player)?.kind??(player.gestureUntil>now()?player.gesture:null),canBuild:Boolean(isAdmin(player.id)),canGrantWishes:Boolean(isAdmin(player.id)),vehicle:player.vehicle??null,sitting:publicSeat(player),position:[...player.position],yaw:player.yaw,altitude:player.altitude});
+  const publicPlayer = player => ({interaction:interactions.publicFor(player),id:player.id,name:accountName(player.id,player.name),appearance:player.appearance,movement:movementOf(player),gesture:interactions.publicFor(player)?.kind??(player.gestureUntil>now()?player.gesture:null),canBuild:Boolean(isAdmin(player.id)),canGrantWishes:Boolean(isAdmin(player.id)),vehicle:player.vehicle??null,sitting:publicSeat(player),position:[...player.position],yaw:player.yaw,altitude:player.altitude,voice:{space:voiceSpaceOf(player.id),id:voiceIdentities.get(player.id)??null}});
   // Seats are Jevica's garden seats and lounge chairs, and the two places on
   // every storefront bench ('bench:<store>', slots 0 and 1).
   const benches=benchSeats(worldData);
@@ -263,6 +263,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if (!players.delete(userId)) return false;
     interactions.cancel(userId);
     focus.delete(userId);
+    voiceIdentities.delete(userId);
     const ledger = ledgers.get(userId);
     if (ledger) ledger.seen = now();
     // Transport calls leave after its reconnect grace, releasing abandoned wishes.
@@ -279,6 +280,26 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   }
   const ownerOnlyHomes = new Set((worldData.stores??[]).filter(store=>store.category==='home' && store.access==='owner').map(store=>store.id));
   const canEnterHome = (userId,storeId,access=homeGuests) => isAdmin(userId) || access.get(storeId)?.includes(userId);
+  // Shared voice: the space a player's audio belongs to. Flying is always
+  // outdoors, and a private home counts only for those allowed inside (null
+  // means no voice at all there). Identities are stamped by the transport's
+  // voice controller and are not checkpointed: a restored world starts silent.
+  function voiceSpaceOf(userId) {
+    const player=players.get(userId);
+    if (!player) return null;
+    if (player.altitude>0.1) return 'outdoor';
+    const room=environment.roomAt(player.position[0],-player.position[1]);
+    if (!room) return 'outdoor';
+    if (ownerOnlyHomes.has(room.storeId) && !canEnterHome(userId,room.storeId)) return null;
+    return room.storeId;
+  }
+  function setVoice(userId, participantIdentity) {
+    if (!players.has(userId) || !(participantIdentity===null || typeof participantIdentity==='string' && /^[A-Za-z0-9_-]{1,64}$/.test(participantIdentity))) return false;
+    const current=voiceIdentities.get(userId)??null;
+    if (participantIdentity===null) voiceIdentities.delete(userId); else voiceIdentities.set(userId,participantIdentity);
+    if (current!==participantIdentity) revision++;
+    return true;
+  }
   const restrictedRoomAt = (x,north) => {
     const room=environment.roomAt(x,-north);
     return room && ownerOnlyHomes.has(room.storeId) && room.contains(x,north) ? room : null;
@@ -440,6 +461,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     const ledger=ledgers.get(userId),time=now();
     ledger.seen=time;
     if (message.type==='pose') return pose(player,message,time);
+    // Voice is negotiated over HTTP from the transport's authority; it is never a game command.
+    if (message.type==='voice') return reject('invalid_command');
     ledger.tokens=Math.min(12,ledger.tokens+Math.max(0,time-ledger.tokenAt)/500);
     ledger.tokenAt=time;
     if (ledger.tokens<1) return reject('rate_limited');
@@ -905,7 +928,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       homeGuests.clear();for(const [storeId,ids] of nextHomeGuests)homeGuests.set(storeId,ids);
       localById.clear();for (const local of state.locals) localById.set(local.id,local);
       interactions.restore(nextInteractions);
-      life=nextLife;revision=recovered.revision;elapsed=recovered.elapsed;
+      life=nextLife;revision=recovered.revision;elapsed=recovered.elapsed;voiceIdentities.clear();
       return {ok:true};
     } catch (error) {
       onFailure?.(checkpointFailureReason(error));
@@ -922,11 +945,11 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     for(const player of players.values())if(player.sitting)Object.assign(player,{sitting:null,
       position:[player.position[0],player.position[1],environment.groundAt(player.position[0],-player.position[1])],
       poseAt:now(),moveBudget:.1,liftBudget:.1,gesture:null,gestureUntil:0});
-    focus.clear();chat.length=0;builds.clear();syncColliders();life=createResidentLife(worldData,state);elapsed=0;revision++;
+    focus.clear();voiceIdentities.clear();chat.length=0;builds.clear();syncColliders();life=createResidentLife(worldData,state);elapsed=0;revision++;
   }
   const resolvePlace = placeId => placesOf(worldData).find(place=>place.id===placeId)??null;
   const listPlaces = () => placesOf(worldData);
-  return {worldId,join,rename,leave,command,step,snapshot,checkpoint,restore,reset,accountAppearance,applyAccountAppearance,resolvePlace,listPlaces,players,state};
+  return {worldId,join,rename,leave,command,step,snapshot,checkpoint,restore,reset,accountAppearance,applyAccountAppearance,resolvePlace,listPlaces,voiceSpaceOf,setVoice,players,state};
 }
 
 /** Validate an old room, then transfer durable account and creation state to a new geography. */

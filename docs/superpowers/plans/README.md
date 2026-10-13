@@ -4,10 +4,11 @@
 
 Each plan is a task ledger. Status comes from the task register, where the primary checkout's live copy can be newer than the committed one. Plans from before the register are listed as historical: their own text is the record of what was delivered.
 
-## Active and blocked (7)
+## Active and blocked (8)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
+| [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `shared-voice-livekit` | active | — | 2026-10-13 |
 | [2026-10-13-plaza-games](2026-10-13-plaza-games.md)<br>Plaza games, phase 1: chess at the plaza tables — 2026-10-13 | `plaza-games` | active | — | 2026-10-13 |
 | [2026-10-13-plaza-checkers](2026-10-13-plaza-checkers.md)<br>Plaza games: checkers on the chess tables — 2026-10-13 | `plaza-checkers` | active | — | 2026-10-13 |
 | [2026-10-13-minimap-flicker](2026-10-13-minimap-flicker.md)<br>Stop the flicker, and take the minimap out of its scrolling sheet — 2026-10-13 | `minimap-flicker` | active | — | 2026-10-13 |
@@ -69,10 +70,11 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-11-delivered-source-retirement](2026-10-11-delivered-source-retirement.md)<br>Delivered source reconciliation | `reconcile-delivered-sources` | retired | — | 2026-10-11 |
 | [2026-10-11-ci-parallel-preview](2026-10-11-ci-parallel-preview.md)<br>Parallel preview check | `ci-parallel-preview` | retired | #252 | 2026-10-11 |
 
-## Historical, not in the register (72)
+## Historical, not in the register (73)
 
 | Plan | PRs mentioned |
 | --- | --- |
+| [2026-10-13-store-intro-cut-timing](2026-10-13-store-intro-cut-timing.md)<br>Sample the store intro's camera cut instead of timing it — 2026-10-13 | #281 |
 | [2026-10-13-store-intro-claim-race](2026-10-13-store-intro-claim-race.md)<br>Wait for the store intro before the walking HUD in spatial-circulation — 2026-10-13 | #265, #295 |
 | [2026-10-12-world-map-paint-cost](2026-10-12-world-map-paint-cost.md)<br>Stop the district map repainting while it is open — 2026-10-12 | #274, #281 |
 | [2026-10-12-town-ticket-ttl](2026-10-12-town-ticket-ttl.md)<br>Town join tickets that outlast a slow page — 2026-10-12 | #260, #253, #273 |
