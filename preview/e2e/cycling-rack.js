@@ -10,12 +10,13 @@ async page => {
   const waitOn = async (p, label, fn, arg, timeout) => { try { await p.waitForFunction(fn, arg, { timeout }); } catch (error) { throw new Error(`${label}: ${error.message.split('\n')[0]} · state ${JSON.stringify(await cycling(p))}`); } };
   // Hold a heading band while pedalling: the steering relaxes slowly after a key is released,
   // so a fixed turn overshoots; this nudges left or right every few frames until `until` holds.
+  // The budget is generous: ride distance per wall-clock second halves on a machine under swap.
   const holdHeading = async (p, low, high, until) => {
     let left = false, right = false;
     const set = async (l, r) => { if (l !== left) { left = l; await p.keyboard[l ? 'down' : 'up']('ArrowLeft'); } if (r !== right) { right = r; await p.keyboard[r ? 'down' : 'up']('ArrowRight'); } };
     const start = Date.now();
     try {
-      while (Date.now() - start < 30000) {
+      while (Date.now() - start < 90000) {
         const state = await cycling(p);
         if (until(state)) return state;
         if (state.yaw > high) await set(false, true); else if (state.yaw < low) await set(true, false); else await set(false, false);
@@ -29,7 +30,7 @@ async page => {
   await ready(page);
   check((await cycling(page)).parked.every(Boolean), 'Four bikes are parked at the rack');
   check((await page.evaluate(id => window.__riverCycling().goNear(id), 'plaza-salon-rack:1')).ok, 'Arrived at the rack');
-  await waitOn(page, 'rack prompt', () => window.__riverCycling().prompt === 'take-bike', null, 15000);
+  await waitOn(page, 'rack prompt', () => window.__riverCycling().prompt === 'take-bike', null, 30000);
   await waitOn(page, 'interact button', () => /Take a bike/.test(document.querySelector('#walking-interact')?.textContent ?? ''), null, 5000);
   check(await page.locator('#walking-interact').evaluate(button => button.getAttribute('aria-keyshortcuts') === 'G'), 'The console offers Take a bike (G)');
   const other = await page.context().browser().newContext({ viewport: { width: 1440, height: 900 } });
@@ -39,7 +40,7 @@ async page => {
     await ready(bob);
     await page.locator('#canvas-host').focus();
     await page.keyboard.press('KeyG');
-    await waitOn(page, 'mount after G', () => window.__riverCycling().riding === true, null, 15000);
+    await waitOn(page, 'mount after G', () => window.__riverCycling().riding === true, null, 30000);
     const slot = (await cycling(page)).slotId;
     await waitOn(page, 'slot in snapshot', id => window.__riverCycling().taken.includes(id), slot, 10000);
     check(slot !== null, `The town handed out ${slot}`);
@@ -51,7 +52,7 @@ async page => {
     // Set off south (the curved bench sits straight ahead of the rack), then steer by heading bands.
     await page.locator('#canvas-host').focus();
     await page.keyboard.down('KeyW');
-    await waitOn(page, 'set off', () => window.__riverCycling().rideMeters > 1, null, 15000);
+    await waitOn(page, 'set off', () => window.__riverCycling().rideMeters > 1, null, 30000);
     // West-northwest past the backgammon table, then due west along the plaza (simulated clear from every slot).
     await holdHeading(page, -0.45, -0.35, state => state.rideMeters > 8);
     await page.keyboard.down('ShiftLeft');

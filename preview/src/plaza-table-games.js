@@ -3,6 +3,7 @@ import { chessSeat } from './plaza-salon-plan.js';
 import * as chess from './chess-rules.js';
 import * as checkers from './checkers-rules.js';
 import { CONNECT_FOUR } from './connect-four-adapter.js';
+import { attachGuide } from './salon-guide.js';
 
 // Games at the plaza chess tables, for whoever sits down: chess, checkers or Connect Four,
 // against the plaza regular (a small engine in a worker) or pass-and-play. A game
@@ -108,6 +109,7 @@ export function createPlazaTableGames({ host = document.querySelector('#viewport
       <button type="button" data-action="undo">Take back</button><button type="button" data-action="new">New game</button></div>
     <p class="table-game-note">Others in the town see a fresh board; shared games are coming.</p></div></div>`;
   host.append(panel);
+  attachGuide(panel, () => panel.dataset.game);
   const $ = selector => panel.querySelector(selector);
   const board = $('.table-game-board'), status = $('.table-game-status'), moveList = $('.table-game-moves'), promotion = $('.table-game-promotion');
 

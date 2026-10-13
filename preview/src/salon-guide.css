@@ -1,0 +1,227 @@
+/* The Salon Guide (salon-guide.js): an illustrated book of the plaza's table games.
+   Ivory paper and champagne gold by day, ink and gold by night; a double gold rule
+   frames each page. Titles use the bundled Fraunces serif, text the bundled Outfit.
+   No backdrop blur and no endless animation: software-rendered CI composites every
+   frame on the CPU (see hud-glass.css). */
+@font-face { font-family: 'Salon Display'; src: url('/fonts/typesafe/fraunces-500-latin.woff2') format('woff2'); font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Salon Text'; src: url('/fonts/typesafe/outfit-latin.woff2') format('woff2'); font-weight: 400 700; font-display: swap; }
+
+:root {
+  --salon-paper: #fbf6ea; --salon-paper-deep: #f3ead7; --salon-paper-tint: rgb(176 136 62 / .1);
+  --salon-ink: #2a2119; --salon-muted: #75654f; --salon-gold: #9c7531; --salon-gold-bright: #b98f45; --salon-on-gold: #fffaf0;
+  --salon-line: rgb(156 117 49 / .42); --salon-line-faint: rgb(156 117 49 / .2); --salon-shadow: 0 34px 90px rgb(38 26 12 / .34), 0 2px 8px rgb(38 26 12 / .16);
+  --salon-light: #efe3c9; --salon-dark: #8c6b46; --salon-ivory: #fbf4e4; --salon-ebony: #2c2420; --salon-red: #b83a33; --salon-yellow: #e2b23a; --salon-navy: #1f3c68;
+  --salon-felt: #24493d; --salon-point-a: #c9a86a; --salon-point-b: #7a3b2e; --salon-card: #fffdf7;
+  --salon-display: 'Salon Display', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  --salon-text: 'Salon Text', 'Avenir Next', Avenir, 'Segoe UI', sans-serif;
+}
+:root[data-theme=dark] {
+  --salon-paper: #17130f; --salon-paper-deep: #201a14; --salon-paper-tint: rgb(214 178 108 / .1);
+  --salon-ink: #f2eadb; --salon-muted: #b9ab90; --salon-gold: #d6b36d; --salon-gold-bright: #e9cb88; --salon-on-gold: #1c160f;
+  --salon-line: rgb(214 179 109 / .4); --salon-line-faint: rgb(214 179 109 / .18); --salon-shadow: 0 34px 90px rgb(0 0 0 / .6), 0 2px 8px rgb(0 0 0 / .4);
+  --salon-light: #d9c7a2; --salon-dark: #6e5236; --salon-card: #f8f2e4;
+}
+
+/* The book. */
+.salon-guide {
+  box-sizing: border-box; width: min(960px, calc(100vw - 32px)); height: min(720px, calc(100dvh - 32px)); max-width: none; max-height: none;
+  margin: auto; padding: 0; border: 0; border-radius: 22px; overflow: hidden; color: var(--salon-ink); font-family: var(--salon-text);
+  background: radial-gradient(120% 80% at 50% 0%, var(--salon-paper-tint), transparent 60%), var(--salon-paper); box-shadow: var(--salon-shadow);
+}
+.salon-guide[open] { display: flex; }
+.salon-guide::backdrop { background: rgb(14 11 8 / .58); }
+.salon-guide-frame {
+  position: relative; flex: 1; min-width: 0; min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto;
+  margin: 10px; border: 1px solid var(--salon-line); border-radius: 15px;
+}
+.salon-guide-frame::before { content: ''; position: absolute; inset: 4px; border: 1px solid var(--salon-line-faint); border-radius: 11px; pointer-events: none; }
+.salon-guide button { box-sizing: border-box; margin: 0; font: inherit; color: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+/* Gold focus, over the HUD's own (visual-finish.css). */
+.salon-guide button:focus-visible, :root[data-theme] .salon-guide button:focus-visible { outline: 2px solid var(--salon-gold); outline-offset: 3px; }
+
+.salon-guide-masthead { position: relative; padding: 20px 72px 6px; text-align: center; }
+.salon-guide-eyebrow { margin: 0; color: var(--salon-gold); font-size: 10.5px; font-weight: 600; letter-spacing: .32em; text-transform: uppercase; }
+.salon-guide-masthead h2 { margin: 6px 0 0; font: 500 30px/1.1 var(--salon-display); letter-spacing: .01em; }
+.salon-guide-rule { display: flex; align-items: center; gap: 12px; width: min(280px, 60%); margin: 10px auto 0; color: var(--salon-gold); font-size: 10px; }
+.salon-guide-rule::before, .salon-guide-rule::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--salon-line)); }
+.salon-guide-rule::after { transform: scaleX(-1); }
+.salon-guide .salon-guide-close {
+  position: absolute; top: 14px; right: 16px; width: 38px; height: 38px; padding: 0; border: 1px solid var(--salon-line); border-radius: 50%;
+  background: transparent; font: 400 22px/1 var(--salon-display);
+}
+.salon-guide .salon-guide-close:hover { background: var(--salon-paper-tint); }
+
+.salon-guide-body { min-height: 0; display: grid; grid-template-columns: 236px minmax(0, 1fr); border-top: 1px solid var(--salon-line-faint); margin-top: 14px; }
+
+/* The index: one gilded medallion per game. */
+.salon-guide-index { display: flex; flex-direction: column; gap: 4px; min-height: 0; padding: 14px 12px; overflow-y: auto; border-right: 1px solid var(--salon-line-faint); scrollbar-width: thin; }
+.salon-guide .salon-guide-index [role=tab] {
+  display: grid; grid-template-columns: 42px minmax(0, 1fr); align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 7px 10px;
+  border: 1px solid transparent; border-radius: 12px; background: transparent; text-align: left;
+}
+.salon-guide .salon-guide-index [role=tab]:hover { background: var(--salon-paper-tint); }
+.salon-guide .salon-guide-index [role=tab][aria-selected=true] { border-color: var(--salon-line); background: var(--salon-paper-deep); }
+.salon-guide-tab-text { display: grid; gap: 2px; min-width: 0; }
+.salon-guide-tab-text strong { font: 500 16px/1.15 var(--salon-display); }
+.salon-guide-tab-text small { overflow: hidden; color: var(--salon-muted); font-size: 11.5px; text-overflow: ellipsis; white-space: nowrap; }
+.salon-medallion { display: grid; place-items: center; width: 42px; height: 42px; border: 1px solid var(--salon-line); border-radius: 50%; background: var(--salon-paper); box-shadow: inset 0 0 0 3px var(--salon-paper), inset 0 0 0 4px var(--salon-line-faint); }
+[aria-selected=true] > .salon-medallion { border-color: var(--salon-gold); background: var(--salon-gold); box-shadow: inset 0 0 0 3px var(--salon-gold), inset 0 0 0 4px var(--salon-on-gold); }
+.salon-icon { width: 26px; height: 26px; }
+.salon-icon .sg-icon-fill, .salon-icon .sg-icon-glyph { fill: var(--salon-gold); stroke: none; }
+.salon-icon .sg-icon-line { fill: none; stroke: var(--salon-gold); stroke-width: 1.6; stroke-linejoin: round; }
+[aria-selected=true] .salon-icon :is(.sg-icon-fill, .sg-icon-glyph) { fill: var(--salon-on-gold); }
+[aria-selected=true] .salon-icon .sg-icon-line { stroke: var(--salon-on-gold); }
+
+/* The page. */
+.salon-guide-page { min-width: 0; min-height: 0; padding: 22px 34px 24px; overflow-y: auto; scrollbar-width: thin; container-type: inline-size; outline: none; }
+.salon-guide-turn { animation: salon-turn .26s ease-out; }
+@keyframes salon-turn { from { opacity: 0; transform: translateY(6px); } }
+.salon-guide-chapter { margin: 0; color: var(--salon-gold); font-size: 11px; font-weight: 600; letter-spacing: .24em; text-transform: uppercase; }
+.salon-guide-page h3 { margin: 6px 0 18px; font: 500 28px/1.15 var(--salon-display); letter-spacing: .005em; }
+.salon-guide-spread { display: grid; gap: 22px; align-items: start; }
+@container (min-width: 560px) { .salon-guide-spread:not([data-guide-wide]) { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 30px; } }
+.salon-guide-spread[data-guide-wide] .salon-figure { max-height: 196px; }
+.salon-guide-spread[data-guide-wide] { gap: 18px; }
+.salon-guide-spread[data-guide-wide] .salon-guide-text { columns: 2 260px; column-gap: 30px; }
+.salon-guide-spread[data-guide-wide] .salon-guide-text p { break-inside: avoid; }
+.salon-guide-figure {
+  display: grid; place-items: center; margin: 0; padding: 16px; border: 1px solid var(--salon-line-faint); border-radius: 16px;
+  background: linear-gradient(160deg, var(--salon-paper-deep), var(--salon-paper)); box-shadow: inset 0 0 0 4px var(--salon-paper), inset 0 0 0 5px var(--salon-line-faint);
+}
+.salon-figure { display: block; width: 100%; height: auto; max-height: 280px; overflow: visible; }
+.salon-guide-text p { margin: 0 0 14px; font-size: 15px; line-height: 1.62; }
+.salon-guide-text p:first-child::first-letter { float: left; margin: 5px 3px 0 0; color: var(--salon-gold); font: 500 46px/.8 var(--salon-display); }
+.salon-guide-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* The footer: previous, the page dots, next. */
+.salon-guide-footer { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; padding: 12px 22px 16px; border-top: 1px solid var(--salon-line-faint); }
+.salon-guide .salon-guide-previous, .salon-guide .salon-guide-next { min-height: 42px; padding: 0 18px; border-radius: 999px; font-size: 14px; font-weight: 600; letter-spacing: .02em; }
+.salon-guide .salon-guide-previous { justify-self: start; border: 1px solid var(--salon-line); background: transparent; }
+.salon-guide .salon-guide-previous:disabled { opacity: .4; cursor: default; }
+.salon-guide .salon-guide-next { justify-self: end; border: 1px solid var(--salon-gold); background: linear-gradient(180deg, var(--salon-gold-bright), var(--salon-gold)); color: var(--salon-on-gold); box-shadow: 0 6px 16px rgb(120 86 30 / .24); }
+.salon-guide-dots { display: flex; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.salon-guide-dots li { width: 7px; height: 7px; border: 1px solid var(--salon-gold); border-radius: 1px; transform: rotate(45deg); }
+.salon-guide-dots li[data-current] { background: var(--salon-gold); }
+
+/* Figures: boards, discs, tiles, cards and checkers in the book's palette. */
+.salon-figure .sg-rim { fill: var(--salon-ebony); }
+.salon-figure .sg-light { fill: var(--salon-light); }
+.salon-figure .sg-dark { fill: var(--salon-dark); }
+.salon-figure .sg-glow { fill: rgb(226 178 58 / .45); }
+.salon-figure .sg-mark { fill: var(--salon-gold); stroke: var(--salon-ivory); stroke-width: 1.5; }
+.salon-figure .sg-piece { paint-order: stroke; stroke-width: 2.2px; stroke-linejoin: round; }
+.salon-figure .sg-piece.sg-w { fill: var(--salon-ivory); stroke: #2a2119; }
+.salon-figure .sg-piece.sg-b { fill: #241c16; stroke: #f5ecd8; stroke-width: 1.2px; }
+.salon-figure .sg-man { stroke-width: 1.5; }
+.salon-figure .sg-man.sg-w { fill: var(--salon-ivory); stroke: #b89a62; }
+.salon-figure .sg-man.sg-b { fill: #6e2a24; stroke: #d6b36d; }
+.salon-figure .sg-man-ring { fill: none; stroke: rgb(0 0 0 / .22); }
+.salon-figure .sg-taken { opacity: .38; }
+.salon-figure .sg-faded { opacity: .3; }
+.salon-figure .sg-crown { fill: #e9cb88; stroke: #7a5a22; stroke-width: .6; }
+.salon-figure .sg-path { fill: none; stroke: #e9c46f; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 6 4; }
+/* A dark halo under every arrow keeps it legible on light and dark squares alike. */
+.salon-figure .sg-path-halo { fill: none; stroke: rgb(30 22 14 / .72); stroke-width: 5.6; stroke-linecap: round; stroke-linejoin: round; }
+.salon-figure .sg-head { fill: #e9c46f; stroke: rgb(30 22 14 / .72); stroke-width: 1.2; }
+.salon-figure .sg-frame { fill: var(--salon-navy); stroke: #d6b36d; stroke-width: 1.5; }
+.salon-figure .sg-slot { fill: #13284a; stroke: rgb(0 0 0 / .35); stroke-width: 1; }
+.salon-figure .sg-red { fill: var(--salon-red); }
+.salon-figure .sg-yellow { fill: var(--salon-yellow); }
+.salon-figure .sg-win { fill: none; stroke: #fff4cf; stroke-width: 2.6; }
+.salon-figure .sg-ghost { fill: none; stroke: var(--salon-red); stroke-width: 2; stroke-dasharray: 4 3; }
+.salon-figure .sg-tile-face { fill: var(--salon-ivory); stroke: #a78a55; stroke-width: 1.2; }
+.salon-figure .sg-tile-line { stroke: #a78a55; stroke-width: 1.2; }
+.salon-figure .sg-tile-glow { fill: rgb(226 178 58 / .32); }
+.salon-figure .sg-pip { fill: #2a2119; }
+.salon-figure .sg-tile-hand .sg-tile-face { stroke: var(--salon-gold); stroke-width: 2; }
+.salon-figure .sg-tile-back { fill: #3b2e22; stroke: #d6b36d; stroke-width: 1; }
+.salon-figure .sg-card-face { fill: var(--salon-card); stroke: #c2a36a; stroke-width: 1.2; }
+.salon-figure .sg-card :is(.sg-card-rank, .sg-card-suit) { fill: #1f1a15; font-family: var(--salon-display); }
+.salon-figure .sg-card-red :is(.sg-card-rank, .sg-card-suit) { fill: #a52c33; }
+.salon-figure .sg-card-win .sg-card-face, .salon-figure .sg-card-queen .sg-card-face { stroke: var(--salon-gold); stroke-width: 2.6; }
+.salon-figure .sg-badge { fill: var(--salon-gold); }
+.salon-figure .sg-badge-text { fill: var(--salon-on-gold); font-weight: 700; }
+.salon-figure .sg-felt { fill: var(--salon-felt); stroke: #d6b36d; stroke-width: 1.5; }
+.salon-figure .sg-bar { fill: #3a2a1c; }
+.salon-figure .sg-point-a { fill: var(--salon-point-a); }
+.salon-figure .sg-point-b { fill: var(--salon-point-b); }
+.salon-figure .sg-point-number, .salon-figure .sg-label { fill: var(--salon-muted); font-family: var(--salon-text); }
+.salon-figure .sg-label { fill: var(--salon-ink); font-weight: 600; }
+.salon-figure .sg-quiet { fill: var(--salon-muted); font-weight: 400; }
+.salon-figure .sg-divider { stroke: var(--salon-line-faint); }
+.salon-figure .sg-checker { stroke-width: 1.4; }
+.salon-figure .sg-checker.sg-w { fill: var(--salon-ivory); stroke: #a78a55; }
+.salon-figure .sg-checker.sg-b { fill: #2a1d16; stroke: #d6b36d; }
+.salon-figure .sg-die { fill: var(--salon-ivory); stroke: var(--salon-gold); stroke-width: 1.4; }
+.salon-figure .sg-die-pip { fill: #2a2119; }
+
+/* An opening page: the game's medallion and where to find it. */
+.salon-emblem { display: grid; justify-items: center; gap: 14px; padding: 18px 0 8px; }
+.salon-emblem-ring { display: grid; place-items: center; width: 132px; height: 132px; border: 1px solid var(--salon-gold); border-radius: 50%; box-shadow: inset 0 0 0 7px var(--salon-paper-deep), inset 0 0 0 8px var(--salon-line); }
+.salon-emblem-ring .salon-icon { width: 72px; height: 72px; }
+.salon-emblem-place { margin: 0; color: var(--salon-gold); font: 500 15px/1.3 var(--salon-display); letter-spacing: .04em; text-align: center; }
+
+/* The keys, as keycaps. */
+.salon-keys { display: grid; gap: 10px; width: 100%; margin: 0; }
+.salon-keys > div { display: grid; grid-template-columns: 112px minmax(0, 1fr); align-items: center; gap: 12px; }
+.salon-keys dt { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
+.salon-keys dd { margin: 0; font-size: 13.5px; line-height: 1.35; }
+.salon-keys kbd {
+  min-width: 28px; height: 28px; padding: 0 7px; box-sizing: border-box; display: inline-grid; place-items: center; border: 1px solid var(--salon-line); border-bottom-width: 2px;
+  border-radius: 7px; background: var(--salon-paper); color: var(--salon-ink); font: 600 12px/1 var(--salon-text);
+}
+
+/* Phones and short windows: one column, the games as a row of medallions. */
+@media (max-width: 700px), (max-height: 560px) {
+  .salon-guide { width: calc(100vw - 16px); height: calc(100dvh - 16px); border-radius: 18px; }
+  .salon-guide-frame { margin: 6px; }
+  .salon-guide-masthead { padding: 14px 56px 4px; }
+  .salon-guide-eyebrow { font-size: 9.5px; letter-spacing: .24em; }
+  .salon-guide-masthead h2 { font-size: 22px; }
+  .salon-guide-rule { margin-top: 6px; }
+  .salon-guide .salon-guide-close { top: 10px; right: 10px; width: 36px; height: 36px; }
+  .salon-guide-body { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); margin-top: 10px; }
+  .salon-guide-index { flex-direction: row; justify-content: space-between; gap: 2px; padding: 8px 10px; overflow: visible; border-right: 0; border-bottom: 1px solid var(--salon-line-faint); }
+  .salon-guide .salon-guide-index [role=tab] { display: grid; place-items: center; grid-template-columns: none; width: auto; min-height: 48px; padding: 3px; border-radius: 50%; }
+  .salon-guide .salon-guide-index [role=tab][aria-selected=true] { border-color: transparent; background: transparent; }
+  .salon-guide-tab-text { display: none; }
+  .salon-guide-page { padding: 16px 18px 18px; }
+  .salon-guide-page h3 { margin-bottom: 14px; font-size: 23px; }
+  .salon-guide-figure { padding: 12px; }
+  .salon-figure { max-height: 210px; }
+  .salon-guide-text p { font-size: 14.5px; }
+  .salon-guide-footer { padding: 10px 12px 12px; gap: 8px; }
+  .salon-guide .salon-guide-previous, .salon-guide .salon-guide-next { padding: 0 14px; }
+  .salon-keys > div { grid-template-columns: 96px minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) { .salon-guide-turn { animation: none; } }
+
+/* "How to play" in a game sheet's header, before its close button. */
+:root[data-theme] .table-game-header:has(.salon-guide-open) > div:first-child { flex: 1 1 auto; min-width: 0; }
+:root[data-theme] .table-game-header .salon-guide-open {
+  position: relative; flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 36px; margin: 0; padding: 0 14px;
+  border: 1px solid var(--salon-line); border-radius: 999px; background: transparent; box-shadow: none; color: var(--salon-gold);
+  font: 600 12.5px/1 var(--salon-text); letter-spacing: .04em; white-space: nowrap; cursor: pointer;
+}
+:root[data-theme] .table-game-header .salon-guide-open:hover { background: var(--salon-paper-tint); }
+:root[data-theme] .table-game-header .salon-guide-open[hidden] { display: none; }
+.salon-guide-open-mark { display: none; font: 500 17px/1 var(--salon-display); }
+.salon-guide-open-new { display: none; }
+.salon-guide-open[data-guide-new] .salon-guide-open-new { display: inline; }
+:root[data-theme] .table-game-header .salon-guide-open[data-guide-new]::after {
+  content: ''; position: absolute; top: -2px; right: -2px; width: 9px; height: 9px; border-radius: 50%; background: var(--salon-gold); box-shadow: 0 0 0 2px var(--hud-glass, var(--salon-paper));
+}
+@media (max-width: 520px) {
+  :root[data-theme] .table-game-header .salon-guide-open { justify-content: center; width: 36px; padding: 0; border-radius: 50%; }
+  .salon-guide-open-mark { display: inline; }
+  .salon-guide-open-label { display: none; }
+}
+
+/* The Game guide entry in Play & rides, beside Photo mode. */
+:root[data-theme] .visit-tools .salon-guide-entry { padding: 10px 14px 12px; border-top: 1px solid var(--line, #ffffff24); }
+:root[data-theme] .visit-tools .salon-guide-entry-open {
+  width: 100%; display: flex; justify-content: space-between; align-items: center; min-height: 32px; margin: 0; padding: 0; border: 0;
+  background: transparent; box-shadow: none; color: var(--ink); font-size: 13px; font-weight: 600; cursor: pointer;
+}
+:root[data-theme] .visit-tools .salon-guide-entry-open span { color: var(--salon-gold); }
+:root[data-theme] .visit-tools .salon-guide-entry p { margin: 0; color: var(--hud-muted); font-size: 12px; }

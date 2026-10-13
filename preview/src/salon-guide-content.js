@@ -1,0 +1,244 @@
+// The Salon Guide's content: how to play each plaza table game, as pages of text and
+// illustrations (SVG strings), plus moving through the book and remembering which
+// guides a player has read. Pure, so node tests check it against the rules modules;
+// salon-guide.js puts it on screen.
+const SALON_SEAT = 'Two chess tables stand in the plaza salon, one by Dior and one by Toulouse. Walk to a chair and press Z to sit, then X (Play a table game) to open the board beside you.';
+const SALON_SHEET = 'Play the plaza regular and choose your side, or Pass and play to share the board with a friend. Take back returns you to your own turn; New game starts afresh. Each table keeps one game of each kind, so you can switch and come back.';
+const BOARD_KEYS = [[['Z'], 'Sit down or stand up'], [['X'], 'Open the board, or put it away'], [['←', '↑', '→', '↓'], 'Move across the board'], [['Enter'], 'Choose the square'], [['Esc'], 'Put the board away; your game waits']];
+const CAFE_KEYS = [[['Z'], 'Sit down or stand up'], [['X'], 'Open the table, or put it away'], [['←', '→'], 'Move along your hand'], [['Enter'], 'Choose the tile or card'], [['Esc'], 'Put the table away']];
+
+// Every game: an id (the sheet's), a name, where it is, and its pages. A page has a
+// chapter title, paragraphs, and a figure: { kind, ...options } drawn by figureMarkup.
+export const GUIDE = [
+  { id: 'chess', name: 'Chess', place: 'The salon chess tables', pages: [
+    { title: 'Taking a seat', text: [SALON_SEAT, `Choose Chess at the top of the sheet. ${SALON_SHEET}`], figure: { kind: 'emblem' } },
+    { title: 'The aim', text: ['Checkmate the other king: attack it so that no move can save it.', 'A game is drawn by stalemate (no legal move, but not in check), by the same position three times, by fifty moves each without a capture or a pawn move, or when neither side has enough to mate.'], figure: { kind: 'chess-mate' } },
+    { title: 'A turn', text: ['White moves first, then the sides take turns. Choose a piece to see its moves marked, then choose a marked square.', 'Castling, en passant and promotion are all played. A pawn that reaches the far rank asks which piece it becomes.'], figure: { kind: 'chess-knight' } },
+    { title: 'At the table', text: ['The move list keeps the game in notation, and the table\'s own pieces follow every move.'], figure: { kind: 'keys', keys: BOARD_KEYS } },
+  ] },
+  { id: 'checkers', name: 'Checkers', place: 'The salon chess tables', pages: [
+    { title: 'Taking a seat', text: [SALON_SEAT, `Choose Checkers at the top of the sheet. ${SALON_SHEET}`], figure: { kind: 'emblem' } },
+    { title: 'Moving and jumping', text: ['American checkers: dark moves first, and only the dark squares are played. Take every piece of your opponent\'s, or leave them no move, to win.', 'A man steps one square diagonally forward. Jump a neighbouring piece by hopping to the empty square beyond it, and that piece is taken. Captures are compulsory, and a jumping piece finishes its whole sequence.'], figure: { kind: 'checkers-jump' } },
+    { title: 'Crowning', text: ['A man that reaches the far row is crowned a king, and its move ends there, even in the middle of a jump.', 'A king steps or jumps one square along any diagonal. Forty moves each with no capture and no man moving is a draw.'], figure: { kind: 'checkers-crown' } },
+    { title: 'At the table', text: ['The move list keeps every move and jump, and the table\'s own pieces follow the game.'], figure: { kind: 'keys', keys: BOARD_KEYS } },
+  ] },
+  { id: 'connectFour', name: 'Connect Four', place: 'The salon chess tables', pages: [
+    { title: 'Taking a seat', text: [SALON_SEAT, `Choose Connect Four at the top of the sheet, and a standing frame rises on the table. ${SALON_SHEET}`], figure: { kind: 'emblem' } },
+    { title: 'The aim', text: ['Line up four of your discs before your opponent does: across, up, or along either diagonal. The winning four are lit.', 'A full board without four in a row is a draw.'], figure: { kind: 'four-win' } },
+    { title: 'A turn', text: ['Red moves first. Choose a column, anywhere in it, and your disc falls to the lowest open slot. While it is your turn, each column\'s landing slot is marked.', 'The centre column joins the most lines, so it is worth claiming early.'], figure: { kind: 'four-drop' } },
+    { title: 'At the table', text: ['The table\'s frame follows every disc, with the columns running from the first player\'s left.'], figure: { kind: 'keys', keys: BOARD_KEYS } },
+  ] },
+  { id: 'dominoes', name: 'Dominoes', place: 'The round café table', pages: [
+    { title: 'Taking a seat', text: ['The round café table stands in the plaza. Press Z to sit, then X (Play dominoes) to open the table. The sheet switches between Dominoes and Hearts, and X reopens whichever you played last.', 'You play the plaza regulars: choose 2 players or 4.'], figure: { kind: 'emblem' } },
+    { title: 'The aim', text: ['A match to 100 points, with a double-six set of 28 tiles. Win a round by playing your last tile, and score the pips left in every other hand.', 'The holder of the highest double leads it. Then each play matches a tile\'s end to an open end of the line.'], figure: { kind: 'dominoes-line' } },
+    { title: 'Draw or block', text: ['With two players it is the draw game: seven tiles each, and when nothing fits you draw from the boneyard.', 'With four it is the block game: seven each and no boneyard, so you pass. When nobody can play, the round is blocked and the lightest hand wins it.'], figure: { kind: 'dominoes-modes' } },
+    { title: 'At the table', text: ['The regulars see only what a player at the table could, and on the round table only your own tiles show their pips.'], figure: { kind: 'keys', keys: CAFE_KEYS } },
+  ] },
+  { id: 'hearts', name: 'Hearts', place: 'The round café table', pages: [
+    { title: 'Taking a seat', text: ['At the round café table, press Z to sit and X to open the table, then choose Hearts at the top of the sheet.', 'You play three plaza regulars, thirteen cards each.'], figure: { kind: 'emblem' } },
+    { title: 'The aim', text: ['Take as few points as you can. Each heart scores 1 and the queen of spades 13.', 'When someone reaches 100, the lowest score wins. Take all 26 points in a hand and you shoot the moon: you score nothing, and everyone else 26.'], figure: { kind: 'hearts-points' } },
+    { title: 'Passing', text: ['Before each hand, pass three cards: to the left, then the right, then across. Every fourth hand you keep them.', 'The 2♣ leads the first trick, and nobody may play points on it unless their hand holds nothing else.'], figure: { kind: 'hearts-pass' } },
+    { title: 'Tricks', text: ['Follow the suit that was led when you can. The highest card of that suit takes the trick and leads the next.', 'Hearts may not be led until one has been played, unless your hand holds only hearts.'], figure: { kind: 'hearts-trick' } },
+    { title: 'At the table', text: ['The table shows each trick face up before each player, with the hands and the won tricks face down.'], figure: { kind: 'keys', keys: CAFE_KEYS } },
+  ] },
+  { id: 'backgammon', name: 'Backgammon', place: 'The grove\'s walnut table', pages: [
+    { title: 'Taking a seat', text: ['A walnut backgammon table stands in the grove\'s middle square, with two armchairs. Press Z to sit, then X (Play backgammon) to open the board.', 'Play the plaza regular as white or black, or Pass and play.'], figure: { kind: 'emblem' } },
+    { title: 'The aim', text: ['Bring all fifteen of your checkers into your home board, then bear them off. The first to bear off all fifteen wins.', 'A win scores 1. A gammon scores 2 (the loser has borne none off), and a backgammon 3 (none off, and a checker still on the bar or in the winner\'s home board).'], figure: { kind: 'emblem' } },
+    { title: 'A turn', text: ['Each turn brings two dice, and you move one checker by each; doubles give four moves. Use both dice when you can, and the higher one when only one can be played.', 'Choose a checker, then its point. Undo takes back moves within your turn.'], figure: { kind: 'backgammon-opening' } },
+    { title: 'Hitting and bearing off', text: ['A point held by two or more of your opponent\'s checkers is closed to you. A lone checker, a blot, is hit and goes to the bar, and a checker on the bar must enter before any other move.', 'Once all fifteen are home, bear off by the exact number, or from your highest point by a higher one: choose the checker, then the tray.'], figure: { kind: 'backgammon-hit' } },
+    { title: 'At the table', text: ['The table\'s own checkers follow the game.'], figure: { kind: 'keys', keys: [[['Z'], 'Sit down or stand up'], [['X'], 'Open the board, or put it away'], [['Tab'], 'Move between checkers and points'], [['Enter'], 'Choose the checker or point'], [['Esc'], 'Put the board away']] } },
+  ] },
+];
+
+export const guideGame = id => GUIDE.find(game => game.id === id) ?? null;
+// Pictures much wider than tall span the page above the text instead of beside it.
+export const WIDE_FIGURES = new Set(['dominoes-line', 'dominoes-modes', 'hearts-points', 'hearts-pass', 'hearts-trick', 'backgammon-opening', 'backgammon-hit']);
+const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
+export const chapterOf = index => ROMAN[index] ?? String(index + 1);
+
+// Moving through the book: { game, page } indexes. Next and previous carry on into the
+// neighbouring game; choosing a game opens its first page.
+export function guideStep({ game, page }, action) {
+  const last = GUIDE.length - 1, pages = index => GUIDE[index].pages.length;
+  if (action.type === 'game') return { game: Math.max(0, Math.min(last, action.game)), page: 0 };
+  if (action.type === 'page') return { game, page: Math.max(0, Math.min(pages(game) - 1, action.page)) };
+  if (action.type === 'next') return page < pages(game) - 1 ? { game, page: page + 1 } : game < last ? { game: game + 1, page: 0 } : { game, page };
+  if (action.type === 'previous') return page > 0 ? { game, page: page - 1 } : game > 0 ? { game: game - 1, page: pages(game - 1) - 1 } : { game, page };
+  return { game, page };
+}
+
+// Which guides this player has opened, kept on this device. Storage can throw (a
+// private window, blocked site data), so every read and write is guarded.
+export function createGuideMemory(storage = globalThis.localStorage, key = 'river-oaks-salon-guide-seen') {
+  let seen = new Set();
+  try { const saved = JSON.parse(storage?.getItem(key) ?? '[]'); if (Array.isArray(saved)) seen = new Set(saved.filter(id => typeof id === 'string')); } catch { /* Start fresh. */ }
+  return {
+    has: id => seen.has(id),
+    add(id) { if (seen.has(id)) return; seen.add(id); try { storage?.setItem(key, JSON.stringify([...seen])); } catch { /* This visit still remembers. */ } },
+  };
+}
+
+// ——— Illustrations ———————————————————————————————————————————————————————————
+// The positions the pictures show, as data: preview/tests/salon-guide.test.js plays
+// each one on the real rules, so a picture cannot show an illegal move or a false mate.
+export const DIAGRAMS = {
+  chessMate: { pieces: { g8: 'k', f7: 'p', g7: 'p', h7: 'p', e8: 'R', g1: 'K' }, toMove: 'b' },
+  chessKnight: { from: 'd4', targets: ['b3', 'b5', 'c2', 'c6', 'e2', 'e6', 'f3', 'f5'] },
+  checkersJump: { dark: ['c3', 'a1', 'e1'], light: ['d4', 'f6', 'b6', 'h8'], path: ['c3', 'e5', 'g7'] },
+  checkersCrown: { dark: ['c7', 'b4'], light: ['f8', 'g5'], from: 'c7', to: 'd8' },
+  fourWin: { rows: ['.......', '.......', '.....r.', '....ry.', '..yrry.', '..ryyr.'], line: ['c1', 'd2', 'e3', 'f4'] },
+  fourDrop: { rows: ['.......', '.......', '.......', '.......', '...y...', '..yrr..'], column: 3, lands: 'd3' },
+  dominoesLine: { line: [[2, 6], [6, 6], [6, 4]], hand: [4, 1] },
+  heartsTrick: { cards: ['9D', 'QD', 'KD', '4S'], winner: 'KD' },
+  heartsPoints: ['5H', '9H', 'AH', 'QS'],
+  backgammonOpening: { layout: { 24: 2, 13: 5, 8: 3, 6: 5, 1: -2, 12: -5, 17: -3, 19: -5 }, dice: [3, 1], moves: [[8, 5], [6, 5]] },
+  backgammonHit: { layout: { 24: 2, 13: 5, 8: 2, 6: 4, 5: -1, 4: -2, 12: -4 }, dice: [3, 2], move: [8, 5], closed: 4 },
+};
+// Half a backgammon board shows points 12 to 1: white as 'w', black as 'b'.
+const nearPoints = layout => Object.fromEntries(Object.entries(layout).filter(([point]) => point <= 12).map(([point, count]) => [point, [Math.abs(count), count > 0 ? 'w' : 'b']]));
+const PIECE_GLYPH = { k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' };
+const escape = text => String(text).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
+const svg = (width, height, label, body) => `<svg class="salon-figure" viewBox="0 0 ${width} ${height}" role="img" aria-label="${escape(label)}">${body}</svg>`;
+const SYMBOL = 'font-family="Apple Symbols, Segoe UI Symbol, DejaVu Sans, Noto Sans Symbols 2, serif"';
+const arrow = (points, id = 'a') => { const list = points.map(point => point.join(',')).join(' '); return `<polyline class="sg-path-halo" points="${list}"/><polyline class="sg-path" points="${list}" marker-end="url(#sg-head-${id})"/>`; };
+const arrowHead = id => `<defs><marker id="sg-head-${id}" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path class="sg-head" d="M0 0L10 5L0 10z"/></marker></defs>`;
+
+// An 8×8 board from white's side, a1 at the bottom left; squares are named.
+const CELL = 30, file = name => name.charCodeAt(0) - 97, rank = name => Number(name[1]) - 1;
+const at = name => [file(name) * CELL + CELL / 2, (7 - rank(name)) * CELL + CELL / 2];
+function board8(body, { marks = [], glow = [] } = {}) {
+  let squares = '';
+  for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++) squares += `<rect class="${(r + f) % 2 ? 'sg-light' : 'sg-dark'}" x="${f * CELL}" y="${(7 - r) * CELL}" width="${CELL}" height="${CELL}"/>`;
+  const glows = glow.map(name => `<rect class="sg-glow" x="${file(name) * CELL}" y="${(7 - rank(name)) * CELL}" width="${CELL}" height="${CELL}"/>`).join('');
+  const dots = marks.map(name => `<circle class="sg-mark" cx="${at(name)[0]}" cy="${at(name)[1]}" r="5"/>`).join('');
+  return `<rect class="sg-rim" x="-6" y="-6" width="252" height="252" rx="6"/>${squares}${glows}${dots}${body}`;
+}
+const chessPiece = (glyph, name, side) => `<text class="sg-piece sg-${side}" x="${at(name)[0]}" y="${at(name)[1] + 10}" text-anchor="middle" font-size="27" ${SYMBOL}>${glyph}</text>`;
+const man = (name, side, { king = false, taken = false, faded = false } = {}) => {
+  const [x, y] = at(name), cls = `sg-man sg-${side}${taken ? ' sg-taken' : ''}${faded ? ' sg-faded' : ''}`;
+  return king ? `<circle class="${cls}" cx="${x}" cy="${y + 3}" r="11"/><circle class="${cls}" cx="${x}" cy="${y - 2}" r="11"/><path class="sg-crown" d="M${x - 6} ${y + 1}l2-7 4 4 4-4 2 7z"/>`
+    : `<circle class="${cls}" cx="${x}" cy="${y}" r="11"/><circle class="sg-man-ring" cx="${x}" cy="${y}" r="7"/>`;
+};
+
+// A Connect Four frame: rows are written top first, r / y / . per column.
+function fourFrame(rows, { win = [], ghost = null, column = null } = {}) {
+  const size = 32, discs = rows.flatMap((row, r) => [...row].map((disc, c) => ({ disc, c, r })));
+  const cell = ({ c, r }) => [24 + c * size + size / 2, 40 + r * size + size / 2];
+  let body = `<rect class="sg-frame" x="20" y="36" width="${7 * size + 8}" height="${6 * size + 8}" rx="10"/>`;
+  for (const item of discs) {
+    const [x, y] = cell(item), name = `${'abcdefg'[item.c]}${6 - item.r}`;
+    body += `<circle class="${item.disc === 'r' ? 'sg-red' : item.disc === 'y' ? 'sg-yellow' : 'sg-slot'}" cx="${x}" cy="${y}" r="12"/>`;
+    if (win.includes(name)) body += `<circle class="sg-win" cx="${x}" cy="${y}" r="14.5"/>`;
+    if (ghost === name) body += `<circle class="sg-ghost" cx="${x}" cy="${y}" r="12"/>`;
+  }
+  if (column !== null) { const x = 24 + column * size + size / 2; body += arrowHead('f') + arrow([[x, 4], [x, 30]], 'f'); }
+  return body;
+}
+
+// A domino on its side at (x, y): two squares of `s`, pips in the usual places.
+const PIPS = { 0: [], 1: [[.5, .5]], 2: [[.25, .25], [.75, .75]], 3: [[.25, .25], [.5, .5], [.75, .75]], 4: [[.25, .25], [.75, .25], [.25, .75], [.75, .75]], 5: [[.25, .25], [.75, .25], [.5, .5], [.25, .75], [.75, .75]], 6: [[.25, .25], [.75, .25], [.25, .5], [.75, .5], [.25, .75], [.75, .75]] };
+function domino(x, y, a, b, { s = 30, cls = '', glow = [] } = {}) {
+  let body = `<g class="sg-tile ${cls}"><rect class="sg-tile-face" x="${x}" y="${y}" width="${2 * s}" height="${s}" rx="5"/><line class="sg-tile-line" x1="${x + s}" y1="${y + 4}" x2="${x + s}" y2="${y + s - 4}"/>`;
+  [a, b].forEach((value, half) => {
+    if (glow.includes(half)) body += `<rect class="sg-tile-glow" x="${x + half * s + 2}" y="${y + 2}" width="${s - 4}" height="${s - 4}" rx="4"/>`;
+    for (const [px, py] of PIPS[value]) body += `<circle class="sg-pip" cx="${x + half * s + px * s}" cy="${y + py * s}" r="2.7"/>`;
+  });
+  return `${body}</g>`;
+}
+
+// A playing card: 'QS', 'TH', '2C'.
+const SUIT = { S: '♠', H: '♥', D: '♦', C: '♣' }, RANK = rank => rank === 'T' ? '10' : rank;
+function card(x, y, code, { cls = '', badge = null, rotate = 0 } = {}) {
+  const suit = code[1], red = suit === 'H' || suit === 'D', w = 52, h = 74;
+  const tilt = rotate ? ` transform="rotate(${rotate} ${x + w / 2} ${y + h / 2})"` : '';
+  return `<g class="sg-card ${red ? 'sg-card-red' : ''} ${cls}"${tilt}><rect class="sg-card-face" x="${x}" y="${y}" width="${w}" height="${h}" rx="6"/>`
+    + `<text class="sg-card-rank" x="${x + 7}" y="${y + 17}" font-size="13">${RANK(code[0])}</text>`
+    + `<text class="sg-card-suit" x="${x + w / 2}" y="${y + h / 2 + 11}" text-anchor="middle" font-size="28" ${SYMBOL}>${SUIT[suit]}</text>`
+    + (badge === null ? '' : `<circle class="sg-badge" cx="${x + w - 2}" cy="${y + 2}" r="11"/><text class="sg-badge-text" x="${x + w - 2}" y="${y + 6.5}" text-anchor="middle" font-size="11">${badge}</text>`)
+    + '</g>';
+}
+
+// A backgammon half board: points 12 to 1 along the bottom, white checkers moving
+// right towards 1; `checkers` maps a point to [count, side].
+function backgammonStrip(checkers, { dice = [], moves = [], bar = null } = {}) {
+  const w = 26, x0 = 12, base = 196, gap = 18, xOf = point => x0 + (12 - point) * w + (point <= 6 ? gap : 0) + w / 2;
+  let body = `<rect class="sg-felt" x="4" y="20" width="${12 * w + gap + 16}" height="184" rx="8"/><rect class="sg-bar" x="${x0 + 6 * w}" y="20" width="${gap}" height="184"/>`;
+  for (let point = 12; point >= 1; point--) {
+    const x = xOf(point);
+    body += `<path class="${point % 2 ? 'sg-point-a' : 'sg-point-b'}" d="M${x - w / 2 + 1} ${base}L${x} ${base - 104}L${x + w / 2 - 1} ${base}z"/><text class="sg-point-number" x="${x}" y="214" text-anchor="middle" font-size="9">${point}</text>`;
+    const [count = 0, side = 'w'] = checkers[point] ?? [];
+    for (let i = 0; i < count; i++) body += `<circle class="sg-checker sg-${side}" cx="${x}" cy="${base - 11 - i * 21}" r="10.5"/>`;
+  }
+  if (bar) body += `<circle class="sg-checker sg-${bar}" cx="${x0 + 6 * w + gap / 2}" cy="110" r="8.5"/>`;
+  const diceX = 12 * w + gap + 34;
+  dice.forEach((value, i) => {
+    const y = 40 + i * 54;
+    body += `<rect class="sg-die" x="${diceX}" y="${y}" width="40" height="40" rx="8"/>`;
+    for (const [px, py] of PIPS[value]) body += `<circle class="sg-die-pip" cx="${diceX + 4 + px * 32}" cy="${y + 4 + py * 32}" r="3.4"/>`;
+  });
+  body += arrowHead('b');
+  for (const [from, to, height] of moves) {
+    const d = `M${xOf(from)} ${base - height}Q${(xOf(from) + xOf(to)) / 2} ${base - height - 46} ${xOf(to)} ${base - height - 4}`;
+    body += `<path class="sg-path-halo" d="${d}"/><path class="sg-path" d="${d}" marker-end="url(#sg-head-b)"/>`;
+  }
+  return { body, width: diceX + 50 };
+}
+
+// The game's mark, used on its tab and its opening page.
+export function iconMarkup(id) {
+  const icon = {
+    chess: `<text class="sg-icon-glyph" x="20" y="29" text-anchor="middle" font-size="25" ${SYMBOL}>♛</text>`,
+    checkers: '<ellipse class="sg-icon-fill" cx="20" cy="25" rx="11" ry="5"/><ellipse class="sg-icon-fill" cx="20" cy="19" rx="11" ry="5"/><ellipse class="sg-icon-line" cx="20" cy="19" rx="6" ry="2.5"/>',
+    connectFour: '<rect class="sg-icon-line" x="9" y="9" width="22" height="22" rx="4"/><circle class="sg-icon-fill" cx="15.5" cy="15.5" r="3.6"/><circle class="sg-icon-line" cx="24.5" cy="15.5" r="3.6"/><circle class="sg-icon-line" cx="15.5" cy="24.5" r="3.6"/><circle class="sg-icon-fill" cx="24.5" cy="24.5" r="3.6"/>',
+    dominoes: '<rect class="sg-icon-line" x="13" y="7" width="14" height="26" rx="3"/><line class="sg-icon-line" x1="15" y1="20" x2="25" y2="20"/><circle class="sg-icon-fill" cx="20" cy="13.5" r="1.8"/><circle class="sg-icon-fill" cx="17" cy="24" r="1.8"/><circle class="sg-icon-fill" cx="23" cy="29" r="1.8"/>',
+    hearts: '<path class="sg-icon-fill" d="M20 31C11 24 8 19.5 8 15.5A5.5 5.5 0 0 1 20 13a5.5 5.5 0 0 1 12 2.5C32 19.5 29 24 20 31z"/>',
+    backgammon: '<path class="sg-icon-line" d="M9 31L13 12L17 31M17 31L21 12L25 31"/><circle class="sg-icon-fill" cx="29" cy="25" r="4.5"/>',
+  }[id] ?? '';
+  return `<svg class="salon-icon" viewBox="0 0 40 40" aria-hidden="true">${icon}</svg>`;
+}
+
+// The HTML for a page's figure: an SVG illustration, or the keys as keycaps.
+export function figureMarkup(figure, game) {
+  switch (figure.kind) {
+    case 'emblem': return `<div class="salon-emblem"><div class="salon-emblem-ring">${iconMarkup(game.id)}</div><p class="salon-emblem-place">${escape(game.place)}</p></div>`;
+    case 'keys': return `<dl class="salon-keys">${figure.keys.map(([keys, label]) => `<div><dt>${keys.map(key => `<kbd>${escape(key)}</kbd>`).join('')}</dt><dd>${escape(label)}</dd></div>`).join('')}</dl>`;
+    case 'chess-mate': return svg(240, 240, 'A back-rank mate: the white rook on e8 checks the black king on g8, whose own pawns block every escape.',
+      board8(arrowHead('m') + arrow([[at('e8')[0] + 10, at('e8')[1]], [at('g8')[0] - 14, at('g8')[1]]], 'm')
+        + Object.entries(DIAGRAMS.chessMate.pieces).map(([name, piece]) => chessPiece(PIECE_GLYPH[piece.toLowerCase()], name, piece === piece.toUpperCase() ? 'w' : 'b')).join(''), { glow: ['g8'] }));
+    case 'chess-knight': return svg(240, 240, 'A white knight on d4 and the eight squares it can reach, each two squares one way and one square aside.',
+      board8(chessPiece('♞', DIAGRAMS.chessKnight.from, 'w'), { marks: DIAGRAMS.chessKnight.targets }));
+    case 'checkers-jump': return svg(240, 240, 'A dark man on c3 jumps the light men on d4 and f6, landing on g7: a double jump.',
+      board8((({ dark, light, path }) => arrowHead('j') + arrow([...path.slice(0, -1).map(at), [at(path.at(-1))[0] - 7, at(path.at(-1))[1] + 7]], 'j')
+        + dark.map(name => man(name, 'b')).join('') + light.map(name => man(name, 'w', { taken: ['d4', 'f6'].includes(name) })).join(''))(DIAGRAMS.checkersJump)));
+    case 'checkers-crown': return svg(240, 240, 'A dark man steps from c7 to the far row and is crowned a king on d8.',
+      board8((({ dark, light, from, to }) => arrowHead('c') + arrow([at(from), [at(to)[0] - 8, at(to)[1] + 8]], 'c')
+        + dark.map(name => man(name, 'b', { faded: name === from })).join('') + man(to, 'b', { king: true }) + light.map(name => man(name, 'w')).join(''))(DIAGRAMS.checkersCrown), { glow: [DIAGRAMS.checkersCrown.to] }));
+    case 'four-win': return svg(272, 244, 'Red has four in a row along a diagonal, from c1 to f4, lit in gold.',
+      fourFrame(DIAGRAMS.fourWin.rows, { win: DIAGRAMS.fourWin.line }));
+    case 'four-drop': return svg(272, 244, 'A disc dropped into column d falls to the lowest open slot, d3.',
+      fourFrame(DIAGRAMS.fourDrop.rows, { ghost: DIAGRAMS.fourDrop.lands, column: DIAGRAMS.fourDrop.column }));
+    case 'dominoes-line': return svg(300, 150, 'A line of dominoes, 2–6, 6–6, 6–4, with open ends 2 and 4; the 4–1 in hand matches the 4 and plays on the right.',
+      DIAGRAMS.dominoesLine.line.map(([a, b], index, line) => domino(20 + index * 64, 28, a, b, { glow: [index === 0 && 0, index === line.length - 1 && 1].filter(half => half !== false) })).join('')
+      + domino(176, 104, ...DIAGRAMS.dominoesLine.hand, { cls: 'sg-tile-hand', glow: [0] }) + arrowHead('d') + arrow([[204, 100], [204, 66]], 'd'));
+    case 'dominoes-modes': return svg(300, 160, 'Two players draw from a boneyard of face-down tiles; four players hold seven tiles each and pass when blocked.',
+      `<text class="sg-label" x="75" y="22" text-anchor="middle" font-size="12">2 players · draw</text><text class="sg-label" x="225" y="22" text-anchor="middle" font-size="12">4 players · block</text><line class="sg-divider" x1="150" y1="14" x2="150" y2="150"/>`
+      + [0, 1, 2, 3].map(i => `<rect class="sg-tile-back" x="${28 + (i % 2) * 48}" y="${40 + Math.floor(i / 2) * 32}" width="42" height="24" rx="4"/>`).join('') + `<text class="sg-label sg-quiet" x="75" y="132" text-anchor="middle" font-size="11">the boneyard</text>`
+      + [0, 1, 2, 3, 4, 5, 6].map(i => `<rect class="sg-tile-back" x="${172 + i * 15}" y="${52 + Math.abs(i - 3) * 3}" width="12" height="40" rx="3"/>`).join('') + `<text class="sg-label sg-quiet" x="225" y="132" text-anchor="middle" font-size="11">seven each, then pass</text>`);
+    case 'hearts-points': return svg(300, 130, 'Each heart scores one point; the queen of spades scores thirteen.',
+      DIAGRAMS.heartsPoints.map((code, index) => code === 'QS' ? card(210, 22, code, { badge: 13, cls: 'sg-card-queen' }) : card(18 + index * 52, index === 0 ? 30 : 26, code, { badge: 1, rotate: [-8, -3, 3][index] })).join(''));
+    case 'hearts-pass': return svg(300, 160, 'Three cards pass to the left, then the right, then across; every fourth hand nobody passes.',
+      card(110, 68, '2C', { rotate: -10 }) + card(124, 62, 'KS') + card(138, 68, 'JD', { rotate: 10 }) + arrowHead('p')
+      + arrow([[104, 100], [40, 100]], 'p') + arrow([[200, 100], [262, 100]], 'p') + arrow([[150, 56], [150, 18]], 'p')
+      + '<text class="sg-label" x="40" y="88" text-anchor="middle" font-size="11">1 · left</text><text class="sg-label" x="262" y="88" text-anchor="middle" font-size="11">2 · right</text><text class="sg-label" x="186" y="26" font-size="11">3 · across</text><text class="sg-label sg-quiet" x="150" y="156" text-anchor="middle" font-size="11">4 · keep your cards</text>');
+    case 'hearts-trick': return svg(300, 170, 'A diamond is led; the king of diamonds takes the trick, and the spade, off suit, cannot win it.',
+      '<text class="sg-label sg-quiet" x="150" y="14" text-anchor="middle" font-size="11">led</text>'
+      + DIAGRAMS.heartsTrick.cards.map((code, index) => card(...[[124, 20], [48, 66], [124, 92], [200, 66]][index], code, { cls: code === DIAGRAMS.heartsTrick.winner ? 'sg-card-win' : '' })).join(''));
+    case 'backgammon-opening': { const { layout, dice, moves } = DIAGRAMS.backgammonOpening, near = nearPoints(layout), top = point => 10 + near[point][0] * 21 - 21 + 1;
+      const strip = backgammonStrip(near, { dice, moves: moves.map(([from, to]) => [from, to, top(from)]) });
+      return svg(strip.width, 222, 'The opening three-one: one checker from the eight-point and one from the six-point land together on the five-point.', strip.body); }
+    case 'backgammon-hit': { const { layout, dice, move } = DIAGRAMS.backgammonHit, near = nearPoints(layout);
+      const strip = backgammonStrip(near, { dice, moves: [[...move, 10 + near[move[0]][0] * 21 - 20]] });
+      return svg(strip.width, 222, 'A white checker lands on a lone black checker on the five-point and sends it to the bar; the black pair on the four-point is closed.', strip.body); }
+    default: return '';
+  }
+}
