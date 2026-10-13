@@ -9,7 +9,7 @@ Owner: `codex-root-20261013-procedural-interiors`. Branch: `docs/procedural-mult
 | Phase | Required outcome | State |
 | --- | --- | --- |
 | A. Contract | Pure versioned generator and server validation; legacy storefronts unchanged | Verified locally; delivery pending |
-| B. Pilot | One public generated ground floor, proximity preparation, safe entry | Next |
+| B. Pilot | One public generated ground floor, proximity preparation, safe entry | In progress; approved pilot asset staged |
 | C. Levels | Second floor and server-authoritative transition, queries, state, reconnect | Pending |
 | D. Studio | Level and layer editing, stable overrides, save/reopen/export compatibility | Pending |
 | E. Rollout | Additional archetypes only after visual, route and performance evidence | Pending |
@@ -32,7 +32,10 @@ Owner: `codex-root-20261013-procedural-interiors`. Branch: `docs/procedural-mult
 - Current district inventory: `Laura Rathe Fine Art` on `osm-way-625333006` fits a two-level candidate after reserving other storefront rooms. This is a data fit only; there is no render, entry, collision or shared traversal evidence for the pilot.
 - Final Phase A core on the current source diff: `pnpm run verify` exited 0 (`/tmp/river-oaks-procedural-phase-a-final-core.log`, `.runtime/agent/core.json`). Agent 76/76, preview 2,945 pass/1 existing skip, server 478 pass/140 Redis skips, desktop 54/54, Python 141/141; build, lint, format, synthetic pipeline and worktree secret scan passed. This is core scope only.
 - Focused isolated Redis publication check: `REDIS_URL=redis://127.0.0.1:16395 node --test server/tests/world-catalog.test.js server/tests/region-package.test.js` passed 18/18, zero skips. The owned disposable Redis service was shut down after the run. The generated world ID, digest and unrelated-revision stability are covered in `server/tests/world-catalog.test.js`.
-- Current task register claim is active in the primary checkout. The design guide is untracked in the owned worktree; preserve it.
-- No live Redis, browser, two-client, Studio, target hardware, native or hosted verification has run for this implementation.
+- Current task register claim is active in the primary checkout. The design guide and Phase A code are committed on the owned branch.
+- No full Redis gate, playable browser journey, two-client, Studio, target hardware, native or hosted verification has run for this implementation.
+- Phase B start: `preview/public/data/building-interiors/river-oaks-gallery-v1.json` freezes one hashed, generator-v1 level-0 plan for Laura Rathe Fine Art, reserving the other storefront rooms in the same building. `server/tests/district-building-interiors.test.js` independently regenerates and compares the serialized plan and digest, and checks neighbor clearance. This asset is staged data; walking, rendering, proximity loading and entry still use legacy rooms.
+- Initially adding the plan directly to `district.json` failed core at the two exact-fingerprint `district-checkpoint-migration.test.js` cases. The manifest was moved to a separate asset and `district.json` restored byte-for-byte. The focused gallery/checkpoint tests then passed 5/5. Activating the manifest in shared world data will require an explicit checkpoint migration rather than silently changing the historical world fingerprint.
+- Current staged-asset diff passed `pnpm run verify` (`/tmp/river-oaks-procedural-pilot-asset-core.log`, `.runtime/agent/core.json`): agent 76/76, preview 2,945 pass/1 existing skip, server 479 pass/140 Redis skips, desktop 54/54, Python 141/141, build/lint/format/synthetic pipeline/secrets. This does not prove the ground floor is playable.
 
-**Next action:** build the Laura Rathe ground-floor pilot from the approved plan while preserving other stores, then test real walking/collision and scene entry before claiming it playable.
+**Next action:** wire the approved gallery asset into shared world loading with a deliberate checkpoint/world-fingerprint migration, then replace the gallery's legacy walking/render room with plan-derived ground-floor geometry and test real entry, collision and proximity preparation.
