@@ -589,9 +589,9 @@ play-outs, thought out in a worker) as black or white, or pass and play. Capture
 no suicide, positional superko; two passes end the game, scored by area with 7.5
 komi. Rules: `preview/src/go-rules.js`.
 
-The chess-table, café and backgammon sheets have **How to play** in their
+The chess-table, café, backgammon, mancala, Go, Jenga and wine pong sheets have **How to play** in their
 header. It opens the Salon Guide on that game (chess, checkers, Connect Four,
-dominoes, Hearts, Spades, backgammon or mancala), and **Play & rides → Game guide** opens it too. The guide is an
+dominoes, Hearts, Spades, backgammon, mancala, Go, Jenga or wine pong), and **Play & rides → Game guide** opens it too. The guide is an
 illustrated book with a few pages per game: taking a seat, the aim, a turn, and
 the keys. Its pictures are positions played on the real rules
 (`preview/tests/salon-guide.test.js`). A game you have not read yet shows a gold
