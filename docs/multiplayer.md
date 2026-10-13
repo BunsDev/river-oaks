@@ -522,9 +522,20 @@ loses) switch in the sheet, and each table keeps one game of each. You can play 
 regular (a small engine that thinks in a worker) or pass and play, taking either
 side. The table's 3D pieces or discs mirror the game; for Connect Four a standing
 frame replaces the chess pieces, Reversi's black and white discs lie on the board, and
-for morris a walnut board with brass lines is laid over the chess squares. It is a practice game kept in your
-browser, so other visitors still see the chess opening. **Escape** or **X** puts the
-board away, and standing up closes it. The rules are in `preview/src/chess-rules.js`
+for morris a walnut board with brass lines is laid over the chess squares. A game
+against the regular or pass and play is a practice game kept in your browser.
+
+When someone sits in the other chair, the sheet offers **Play ⟨name⟩**: it invites
+them to the game on your board, as the side you play. Their **X** action and sheet
+show the invitation to accept or decline. The town then holds the game
+(`server/table-games.js`). It checks every move by replaying the game with the
+sheet's own adapters (`preview/src/table-game-adapters.js`), so a client offers
+moves and never sets a position. The snapshot carries every table's game, and the
+table's pieces show it to everyone in the plaza. You may **Resign**; standing up,
+travelling or leaving town ends the game for both, as "left the table". After a game,
+**Rematch** asks again. Your practice games stay as they were, and choosing a
+practice mode or another game shows them while the shared game carries on.
+**Escape** or **X** puts the board away, and standing up closes it. The rules are in `preview/src/chess-rules.js`
 and `checkers-rules.js`, each checked against published perft counts.
 
 At the round café table, **Play dominoes** or **X** opens a dominoes table. It is a
