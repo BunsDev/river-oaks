@@ -14,7 +14,7 @@ import * as backgammon from '../src/backgammon-rules.js';
 const text = id => guideGame(id).pages.flatMap(page => [page.title, ...page.text]).join(' ');
 
 test('every plaza table game has a guide of illustrated pages', () => {
-  assert.deepEqual(GUIDE.map(game => game.id), ['chess', 'checkers', 'connectFour', 'dominoes', 'hearts', 'spades', 'backgammon', 'mancala']);
+  assert.deepEqual(GUIDE.map(game => game.id), ['chess', 'checkers', 'connectFour', 'dominoes', 'hearts', 'spades', 'backgammon', 'mancala', 'go']);
   for (const game of GUIDE) {
     assert.ok(game.pages.length >= 4, game.id);
     assert.equal(game.pages[0].title, 'Taking a seat', `${game.id} starts at the table`);
@@ -142,4 +142,17 @@ test('the mancala pictures follow the rules', async () => {
   assert.deepEqual(sown.last.path, [3, 4, 5, 6]); assert.equal(sown.last.again, true);
   const capture = sow({ ...startGame(), board: DIAGRAMS.mancalaCapture.board.slice() }, DIAGRAMS.mancalaCapture.pit);
   assert.equal(capture.last.captured, 8);
+});
+
+test('the Go pictures follow the rules', async () => {
+  const go = await import('../src/go-rules.js');
+  // Rows are top first in the diagram; place the 5×5 corner at the bottom-left of a 9×9 board.
+  const board = rows => { const b = Array(81).fill(''); rows.forEach((line, r) => [...line].forEach((cell, column) => { if (cell !== '.') b[(rows.length - 1 - r) * 9 + column] = cell; })); return b; };
+  const capture = DIAGRAMS.goCapture, [row, column] = capture.play;
+  assert.equal(go.place(board(capture.rows), row * 9 + column, 'b').captured, 1, 'the black stone takes the white one');
+  // The ko: white takes the black stone at the marked point; black may not retake at once.
+  const ko = DIAGRAMS.goKo, start = board(ko.rows), state = { ...go.startGame(), board: start, turn: 'w', seen: [start.map(stone => stone || '.').join('')] };
+  const [pr, pc] = ko.play, [tr, tc] = ko.take, taken = go.play(state, pr * 9 + pc);
+  assert.equal(taken.last.captured, 1); assert.equal(taken.board[tr * 9 + tc], '', 'the black stone leaves the board');
+  assert.equal(go.isLegal(taken, tr * 9 + tc), false, 'black may not retake at once');
 });

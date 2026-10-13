@@ -62,6 +62,13 @@ export const GUIDE = [
     { title: 'Capturing', text: ['If the last seed lands in an empty pit on your side and the pit opposite holds seeds, you capture both into your store.'], figure: { kind: 'mancala-capture' } },
     { title: 'At the table', text: ['The table\'s glass beads follow the game.'], figure: { kind: 'keys', keys: [[['Z'], 'Sit down or stand up'], [['X'], 'Open the board, or put it away'], [['←', '→'], 'Move between your pits'], [['Enter'], 'Sow the pit'], [['Esc'], 'Put the board away']] } },
   ] },
+  { id: 'go', name: 'Go', place: 'The small grove table', pages: [
+    { title: 'Taking a seat', text: ['At the small grove table, press Z to sit and X to open the board, then choose Go at the top of the sheet.', 'Play the plaza regular as black or white, or Pass and play with a friend. Black moves first.'], figure: { kind: 'emblem' } },
+    { title: 'The aim', text: ['Take turns placing a stone on an empty point. Surround more of the board than your opponent: at the end, your stones and the empty points only you surround both count.', 'White gets 7.5 points of komi for moving second, so there are no ties.'], figure: { kind: 'go-territory' } },
+    { title: 'Capturing', text: ['The empty points beside a group are its liberties. Fill a group\'s last liberty and it is captured: its stones leave the board.', 'You may not play where your own stones would have no liberty, unless that move captures.'], figure: { kind: 'go-capture' } },
+    { title: 'Ko and passing', text: ['A move may not repeat an earlier position, so a single stone taken in a ko cannot be retaken at once: play elsewhere first.', 'Two passes in a row end the game. Stones left on the board count as alive, so capture dead groups before you pass.'], figure: { kind: 'go-ko' } },
+    { title: 'At the table', text: ['The table\'s goban follows the game; switching back to mancala puts it away.'], figure: { kind: 'keys', keys: [[['Z'], 'Sit down or stand up'], [['X'], 'Open the board, or put it away'], [['↑', '↓', '←', '→'], 'Move between points'], [['Enter'], 'Place a stone'], [['Esc'], 'Put the board away']] } },
+  ] },
 ];
 
 export const guideGame = id => GUIDE.find(game => game.id === id) ?? null;
@@ -107,6 +114,10 @@ export const DIAGRAMS = {
   heartsPoints: ['5H', '9H', 'AH', 'QS'],
   // Mancala: the opening, pit 3 sown into the store, and a capture (side 0's pit 2 sown into its empty pit 3 opposite seven seeds).
   mancalaSow: { pit: 3 },
+  // Go on a small corner of the board (5×5, rows from the bottom): territory, a capture and a ko.
+  goTerritory: { rows: ['..bw.', '.bbw.', 'bbww.', 'bw...', '.bw..'] },
+  goCapture: { rows: ['.....', '..b..', '.bw..', '..b..', '.....'], play: [2, 3] },
+  goKo: { rows: ['.....', '.bw..', 'b.bw.', '.bw..', '.....'], play: [2, 1], take: [2, 2] },
   mancalaCapture: { board: [0, 2, 0, 0, 0, 0, 0, 1, 1, 7, 1, 1, 1, 0], pit: 2 },
   // Spades: bids round the table (you, left, across, right), a heart trumped, and a hand's score.
   spadesBids: { bids: [3, 2, 4, 0], taken: [4, 2, 4, 0] },
@@ -211,6 +222,7 @@ export function iconMarkup(id) {
     checkers: '<ellipse class="sg-icon-fill" cx="20" cy="25" rx="11" ry="5"/><ellipse class="sg-icon-fill" cx="20" cy="19" rx="11" ry="5"/><ellipse class="sg-icon-line" cx="20" cy="19" rx="6" ry="2.5"/>',
     connectFour: '<rect class="sg-icon-line" x="9" y="9" width="22" height="22" rx="4"/><circle class="sg-icon-fill" cx="15.5" cy="15.5" r="3.6"/><circle class="sg-icon-line" cx="24.5" cy="15.5" r="3.6"/><circle class="sg-icon-line" cx="15.5" cy="24.5" r="3.6"/><circle class="sg-icon-fill" cx="24.5" cy="24.5" r="3.6"/>',
     dominoes: '<rect class="sg-icon-line" x="13" y="7" width="14" height="26" rx="3"/><line class="sg-icon-line" x1="15" y1="20" x2="25" y2="20"/><circle class="sg-icon-fill" cx="20" cy="13.5" r="1.8"/><circle class="sg-icon-fill" cx="17" cy="24" r="1.8"/><circle class="sg-icon-fill" cx="23" cy="29" r="1.8"/>',
+    go: '<rect class="sg-icon-line" x="8" y="8" width="24" height="24" rx="2"/><line class="sg-icon-line" x1="20" y1="8" x2="20" y2="32"/><line class="sg-icon-line" x1="8" y1="20" x2="32" y2="20"/><circle class="sg-icon-fill" cx="14" cy="14" r="4"/><circle class="sg-icon-line" cx="26" cy="26" r="4"/>',
     mancala: '<rect class="sg-icon-line" x="6" y="13" width="28" height="14" rx="7"/><circle class="sg-icon-fill" cx="14" cy="20" r="2.4"/><circle class="sg-icon-fill" cx="20" cy="20" r="2.4"/><circle class="sg-icon-fill" cx="26" cy="20" r="2.4"/>',
     hearts: '<path class="sg-icon-fill" d="M20 31C11 24 8 19.5 8 15.5A5.5 5.5 0 0 1 20 13a5.5 5.5 0 0 1 12 2.5C32 19.5 29 24 20 31z"/>',
     spades: '<path class="sg-icon-fill" d="M20 8C12 16 8 19.5 8 23.5a5.5 5.5 0 0 0 10 3.2L16.5 32h7L22 26.7a5.5 5.5 0 0 0 10-3.2C32 19.5 28 16 20 8z"/>',
@@ -267,6 +279,18 @@ export function figureMarkup(figure, game) {
         `<text class="sg-label" x="20" y="40" font-size="13">You &amp; Across: bid ${contract}, took ${made}</text><text class="sg-label" x="280" y="40" text-anchor="end" font-size="13">${10 * contract} + ${made - contract} bag = ${10 * contract + made - contract}</text>`
         + `<text class="sg-label" x="20" y="84" font-size="13">Right: nil, took none</text><text class="sg-label" x="280" y="84" text-anchor="end" font-size="13">+100</text>`
         + '<text class="sg-label sg-quiet" x="150" y="118" text-anchor="middle" font-size="11">every tenth bag: −100</text>'); }
+    case 'go-territory': case 'go-capture': case 'go-ko': {
+      const data = { 'go-territory': DIAGRAMS.goTerritory, 'go-capture': DIAGRAMS.goCapture, 'go-ko': DIAGRAMS.goKo }[figure.kind], n = 5, step = 34, edge = 24;
+      const label = { 'go-territory': 'A corner of the board: black has walled off the empty points on the left, white those on the right.',
+        'go-capture': 'The white stone has one liberty left; a black stone there captures it.',
+        'go-ko': 'A ko: white plays the marked point and takes the black stone beside it; black may not retake at once, and must play elsewhere first.' }[figure.kind];
+      const at = (row, column) => [edge + column * step, edge + (n - 1 - row) * step];
+      let body = '<rect class="sg-felt" x="4" y="4" width="' + (edge * 2 + step * (n - 1) - 8) + '" height="' + (edge * 2 + step * (n - 1) - 8) + '" rx="6" style="fill:#dcb46e"/>';
+      for (let i = 0; i < n; i++) { const a = edge + i * step, far = edge + (n - 1) * step; body += `<line x1="${edge}" y1="${a}" x2="${far}" y2="${a}" style="stroke:#3a2c1a"/><line x1="${a}" y1="${edge}" x2="${a}" y2="${far}" style="stroke:#3a2c1a"/>`; }
+      data.rows.forEach((line, r) => [...line].forEach((cell, column) => { const row = n - 1 - r, [x, y] = at(row, column); if (cell !== '.') body += `<circle cx="${x}" cy="${y}" r="14" style="fill:${cell === 'b' ? '#1b1b1d' : '#f4f1e8'};stroke:#00000066"/>`; }));
+      if (data.play) { const [x, y] = at(...data.play), ring = figure.kind === 'go-ko' ? '#f4f1e8' : '#1b1b1d'; body += `<circle class="sg-glow" cx="${x}" cy="${y}" r="15"/><circle cx="${x}" cy="${y}" r="13" style="fill:none;stroke:${ring};stroke-width:2;stroke-dasharray:4 3"/>`; }
+      if (data.take) { const [x, y] = at(...data.take); body += `<text class="sg-label" x="${x}" y="${y + 5}" text-anchor="middle" font-size="14" style="fill:#b3262e">×</text>`; }
+      return svg(edge * 2 + step * (n - 1), edge * 2 + step * (n - 1), label, body); }
     case 'mancala-board': case 'mancala-sow': case 'mancala-capture': {
       // Side 0 along the bottom (pits left to right, its store on the right), side 1 along the top.
       const kind = figure.kind, board = kind === 'mancala-capture' ? DIAGRAMS.mancalaCapture.board : [4, 4, 4, 4, 4, 4, 0, 4, 4, 4, 4, 4, 4, 0];
