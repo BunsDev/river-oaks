@@ -277,6 +277,7 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
       catch(error){notice.textContent=error.message;return {ok:false,message:error.message};}
       finally{traveling=false;}
     },
+    officeDeskRequest:(action,data={})=>api(`/api/office-desk/${action}?world=${encodeURIComponent(worldId)}`,{signal:AbortSignal.timeout(15000),method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}),
     update(now){
       greetings.update(now);
       if(!connected||socket?.readyState!==WebSocket.OPEN)return;

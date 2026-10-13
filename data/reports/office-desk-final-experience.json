@@ -1,0 +1,69 @@
+{
+  "createdAt": "2026-10-13T17:23:31.309Z",
+  "results": [
+    {
+      "name": "office-desk",
+      "status": "passed",
+      "seconds": 28.834,
+      "result": {
+        "checks": [
+          "Authorized office opens an empty private desk",
+          "Notes, file links and result save to the account",
+          "Typing at the desk does not move the player",
+          "Completed task retains the written result",
+          "Saved work can be downloaded",
+          "Closing the desk restores office focus",
+          "Leaving, reloading and returning resumes saved work",
+          "A failed save keeps the draft and offers retry",
+          "Mobile desk fits without horizontal overflow",
+          "Visible mobile actions keep touch-sized targets",
+          "Long titles wrap fully on mobile",
+          "Small phones retain a contained layout",
+          "Removing work requires confirmation and can be cancelled",
+          "Escape leaves the desk before leaving the office",
+          "Retry reopens cached work after a failed read"
+        ]
+      }
+    },
+    {
+      "name": "office-visit",
+      "status": "failed",
+      "seconds": 93.152,
+      "error": "locator.waitFor: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#office-request-dialog[open]') to be visible\u001b[22m\n\u001b[2m    - waiting for \"http://127.0.0.1:50908/?motion-debug=1\" navigation to finish...\u001b[22m\n\u001b[2m    - navigated to \"http://127.0.0.1:50908/?motion-debug=1\"\u001b[22m\n\n    at eval (preview/e2e/office-visit.js:46:57)\n    at async file:///Users/buns/Documents/GitHub/BunsDev/river-oaks-office-desk-20261013/preview/e2e/experience-runner.js:50:22",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
+        "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
+        "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
+        "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+      ],
+      "diagnostics": [
+        {
+          "url": "http://127.0.0.1:50908/?motion-debug=1",
+          "ready": "true",
+          "assets": "{\"loaded\":100,\"total\":100,\"failed\":0,\"done\":true}",
+          "renderStats": "{\"calls\":1318,\"triangles\":4574756,\"geometries\":423,\"textures\":152}",
+          "quality": "{\"mode\":\"auto\",\"scale\":0.6,\"occlusion\":false,\"fps\":27}",
+          "pipeline": "{\"samples\":4,\"ao\":false,\"bloom\":true,\"renderScale\":0.6,\"aoScale\":1,\"transmissionScale\":1}",
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+          "window": [
+            1440,
+            1000,
+            1
+          ],
+          "screen": [
+            1440,
+            1000,
+            24
+          ],
+          "canvas": [
+            1440,
+            1000,
+            1440,
+            1000
+          ]
+        }
+      ]
+    }
+  ]
+}
