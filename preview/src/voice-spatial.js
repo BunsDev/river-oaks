@@ -16,6 +16,7 @@ export function spatialGain(distance, { near = VOICE_NEAR, far = VOICE_FAR } = {
 
 // Snapshot positions are [east, north, ground] with altitude; the scene is (x, y, z) = (east, ground + altitude, -north).
 export function speakerFromPlayer(player) {
+  if(player.office)return [player.office.position[0],0,-player.office.position[1]];
   const [east, north, ground] = player.position;
   return [east, ground + (player.altitude ?? 0), -north];
 }
