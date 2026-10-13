@@ -224,3 +224,75 @@ mature tree leaves/branches, unnamed meshes, interiors and the player rig. These
 suggest physical profiling targets, not permission to remove foliage or residents.
 The next device capture must distinguish CPU submission from GPU execution with
 current settings/source evidence before proposing a rendering change.
+
+
+## Physical CPU and Metal attribution (continuation)
+
+The previous turn made progress: signed commits 519bad7 and b1454da, local GPU
+image equality, and a partial 12m53s foreground recording. This turn retains the
+full rollout scope; no architecture or delivery gate closes.
+
+- Reconciled the clean branch at 519bad7 and draft PR #309. Exact-head CodeQL and all
+  five language analyses succeeded. This is not the aggregate preview merge gate.
+  Primary main had advanced to d4734807d13b336367103e6f1caaeeb09d4138ee.
+- Built and verified a clean 519bad7 Release probe. Receipt:
+  `.runtime/ios-probe/identity-clean-binary.json`; binary SHA256:
+  `9403f50c03a994cf8dbc4d83eab7c1ddd36d4ea98b92785951c6a8bb75f82a5b`.
+  Installation succeeded. iOS refused the first launch because the phone was
+  locked. Val then confirmed it was unlocked and open. Relaunched with HTML-image
+  and snapshot flags, avoiding the default decoder used by a manual launch.
+- Run 5D7DA768 started at 14:42:05 UTC. At 22.2 seconds it observed HTML mode,
+  bitmap API unavailable, 100/100 assets, zero failures, 88/88 residents, 199 trees,
+  two beds, Auto 0.6/AO off, 739 draws, 2.928 million triangles and four samples.
+  The phone reported `index-DvTRKO1F.js`. Public import lookup correlates this to
+  `debug-report-Dgsnu5x8.js` and build d4734807. Hashes and limits are retained in
+  `profile-hosted-build.json`; this is not a hash of phone-loaded bytes.
+- WebContent 65947 Time Profiler capture ran 14:42:49.837–14:43:36.557 UTC.
+  `html-webcontent-cpu.trace` was exported through schema `time-profile` into
+  `html-webcontent-cpu-samples.xml`; derived summary:
+  `html-webcontent-cpu-summary.json`. It contains 16,675 Running samples, each 1 ms:
+  total 16.675 seconds of statistical CPU weight, 14.778 seconds on the main thread,
+  over a 46.332-second sample span. Unsymbolicated leaves account for 9.762 seconds;
+  independent review found 9.584 seconds of those under animation-frame callbacks.
+  RAF-inclusive weight is 12.214 seconds. Inclusive weights overlap; these are not
+  wall-time percentages or complete JavaScript cost. RAF ancestry cannot identify
+  whether a callback belongs to the game, a library or the probe.
+- GPU 65946 Metal System Trace ran 14:44:55.889–14:45:27.444 UTC. Raw trace:
+  `html-gpu-metal.trace`. Exported schemas: `metal-gpu-intervals`,
+  `metal-command-buffer-completed`, and `metal-application-command-buffer-submissions`.
+  Despite attaching to one process, raw intervals include compositor activity.
+  Analysis strictly selects PID 65946 and state Active: 17,235 intervals with
+  a 20.684862976-second union over the 31.173226667-second first-to-last span
+  (66.3546%). Vertex union is 17.345059374 seconds; fragment union is 15.756038493
+  seconds. They overlap and cannot be added. This is traced active-time coverage,
+  not hardware occupancy or device-wide utilization. The 977 GPU frame groups
+  have not been matched to game frames. CPU and GPU captures used separate
+  windows, so subtraction cannot establish the frame-delivery bottleneck.
+- Independent review reproduced every CPU and GPU summary value from the XML.
+  Next attribution should time resident updates, reflection capture and
+  `pipeline.render` with unchanged content, camera and effective quality,
+  preferably during a concurrent GPU capture.
+- Safari's developer menu was initially disabled. It was temporarily enabled to
+  open Apps and Devices Inspection, which listed the paired iPhone. Attempting
+  device selection encountered the UI tool's changed-app guard. Subsequent AX,
+  screenshot and rebind calls repeatedly timed out. No JavaScript profile was
+  obtained. Restoring the menu preference is pending UI access recovery; Val was
+  asked to close the inspection window. No auth, security or network setting was
+  changed. Do not force-close unrelated Safari windows.
+- Run 5D7DA768 backgrounded at 14:50:48 UTC, elapsed 523.27 seconds (8m43s), after
+  both captures. It is partial, includes profiler overhead, and cannot satisfy
+  the 20–30-minute unprofiled requirement. Raw copy: `profile-ten-records/`.
+  The foreground-availability question remains unanswered; the newer reply
+  authorized the completed short profile.
+
+Both traces used `xcrun xctrace record --device <paired-UDID> --attach <PID>`,
+with `--template 'Time Profiler' --time-limit 45s` for WebContent and
+`--template 'Metal System Trace' --time-limit 30s` for GPU. Both completed and
+saved successfully. Raw artifacts remain local under `.runtime/ios-probe/`.
+
+Next: restore Safari's developer-menu preference when UI access returns, then
+obtain source-level phase timing with unchanged scene/camera/quality and a
+concurrent GPU capture. Sustained unprofiled, interior, multiplayer,
+lock/relaunch, minimum-device, auth and visual acceptance remain open.
+No production rendering edit, deployment, merge or issue closure. Keep the
+worktree active.

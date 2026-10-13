@@ -263,3 +263,15 @@ The replacement run also backgrounded after12minutes53seconds:13,030RAF
 intervals have p50/p95/p99=66/79/84ms, nominal thermal state and no recorded
 WebContent termination. It is partial and fails the30fps floor; the20–30minute
 foreground and performance investigation remain open.
+
+
+A clean 519bad7 probe correlates the phone's observed entry filename to public
+build d4734807, without hashing phone-loaded bytes. Physical Time Profiler records
+16.675 seconds of sampled CPU weight over 46.332 seconds, mostly on WebContent's
+main thread with unsymbolicated animation-frame work. A separate Metal capture
+finds 20.685 seconds of target GPU Active interval union over 31.173 seconds.
+Independent review reproduced both calculations. Different capture windows do
+not establish a CPU-versus-GPU bottleneck, and GPU groups are not verified game
+frames. Next attribution needs bounded game-phase timing and concurrent GPU
+measurement with matched content, camera and effective quality. The profiled run
+backgrounded after 8m43s; continuous unprofiled thermal acceptance remains open.
