@@ -49,8 +49,10 @@ export async function createRedisBackend(env = process.env) {
     // Redis counts the daily budget in UTC-day windows across every gateway.
     const handleRequest = createChauffeurRoute({auth,security,waitlist,origin,apiKey:env.TYPESAFE_API_KEY,model:env.JEV_AUTO_MODEL,dailyLimit:chauffeurDailyLimit(env)});
     // Shared voice rooms and the daily join budget count across every gateway of this namespace.
-    const voice = configureVoice({ env, namespace, allow: (...args) => security.allow(...args), leases: createRedisVoiceLeases({ redis, prefix }) });
-    gateway = createWorldGateway({handleRequest,redis,namespace,worldData,auth,security,waitlist,waitlistAdmins:admins,origin,configuredWorldId:worldId,voice,
+    // A long-lived gateway sweeps orphaned voice participants on a timer; on
+    // Vercel the per-minute cron (/api/voice-sweep) does it.
+    const voice = configureVoice({ env, namespace, allow: (...args) => security.allow(...args), leases: createRedisVoiceLeases({ redis, prefix }), sweepMs: env.VERCEL !== '1' ? 30_000 : 0 });
+    gateway = createWorldGateway({handleRequest,redis,namespace,worldData,auth,security,waitlist,waitlistAdmins:admins,origin,configuredWorldId:worldId,voice,voiceCronSecret:env.CRON_SECRET||null,
       moderators: (env.MODERATOR_USER_IDS ?? '').split(',').map(id => id.trim()).filter(Boolean),
       trustedProxyIPs: (env.TRUSTED_PROXY_IPS ?? '').split(',').map(ip => ip.trim()).filter(Boolean),
       ...(env.VERCEL === '1' ? { address: vercelClientAddress } : {}),
@@ -62,7 +64,7 @@ export async function createRedisBackend(env = process.env) {
       assetGateSecret: env.WORKOS_COOKIE_PASSWORD,
     });
     return { worldId, server: gateway.server, catalog:gateway.catalog, async close() {
-      await gateway.close(); auth.close(); security.close(); redis.disconnect();
+      await gateway.close(); voice?.close(); auth.close(); security.close(); redis.disconnect();
     } };
   } catch {
     redis.disconnect();
