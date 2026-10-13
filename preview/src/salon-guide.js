@@ -4,6 +4,7 @@
 // its keys never reach a sheet or the world and the regulars' redraws never take its
 // focus. A game the player has not read yet shows a gold mark on its button.
 import './salon-guide.css';
+import { dismissOnOutsideClick } from './modal-dismiss.js';
 import { GUIDE, WIDE_FIGURES, chapterOf, createGuideMemory, figureMarkup, guideGame, guideStep, iconMarkup } from './salon-guide-content.js';
 
 const escape = text => String(text).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
@@ -58,14 +59,13 @@ function createBook() {
   const go = action => { state = guideStep(state, action); render(); };
 
   dialog.addEventListener('click', event => {
-    // A click outside the book's frame (on the backdrop) closes it.
-    const frame = dialog.querySelector('.salon-guide-frame').getBoundingClientRect();
-    if (event.target === dialog && (event.clientX < frame.left || event.clientX > frame.right || event.clientY < frame.top || event.clientY > frame.bottom)) return dialog.close();
     const tab = event.target.closest('[data-guide-game]'), step = event.target.closest('[data-guide-step]');
     if (tab) go({ type: 'game', game: tabs.indexOf(tab) });
     else if (step?.dataset.guideStep === 'close' || event.target.closest('[data-guide-close]')) dialog.close();
     else if (step) go({ type: step.dataset.guideStep });
   });
+  // A click pressed and released outside the book's frame closes it; a drag out does not.
+  dismissOnOutsideClick(dialog, () => dialog.close(), dialog.querySelector('.salon-guide-frame'));
   // Keys stay in the book: the sheets and the world listen further out.
   dialog.addEventListener('keydown', event => {
     event.stopPropagation();

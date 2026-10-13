@@ -1,3 +1,4 @@
+import { dismissOnOutsideClick } from './modal-dismiss.js';
 import { railShortcut } from './keyboard-input.js';
 import { matchCommands } from './command-search.js';
 
@@ -97,6 +98,7 @@ export function setupRailNavigation({ sidebar, getSections, getDock, getClearVie
         : 'WASD walk · arrows turn · Shift brisk walk · E talk · F enter / leave · Z sit / stand / water · Y voice · M mic · B flight · Space rise · C lower · J companion · Q call Jev · G get in / out · P beast movement · V camera';
   };
   const open = ({ help = false } = {}) => { returnFocus = document.activeElement; search.value = ''; dialog.querySelector('.commands-reference').open = help; render(); dialog.showModal(); search.focus(); };
+  dismissOnOutsideClick(dialog, () => close());
   trigger.addEventListener('click', () => open());
   dialog.querySelector('.commands-close').addEventListener('click', () => close());
   dialog.addEventListener('cancel', event => { event.preventDefault(); close(); });

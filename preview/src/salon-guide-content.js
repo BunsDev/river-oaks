@@ -29,7 +29,7 @@ export const GUIDE = [
     { title: 'At the table', text: ['The table\'s frame follows every disc, with the columns running from the first player\'s left.'], figure: { kind: 'keys', keys: BOARD_KEYS } },
   ] },
   { id: 'dominoes', name: 'Dominoes', place: 'The round café table', pages: [
-    { title: 'Taking a seat', text: ['The round café table stands in the plaza. Press Z to sit, then X (Play dominoes) to open the table. The sheet switches between Dominoes and Hearts, and X reopens whichever you played last.', 'You play the plaza regulars: choose 2 players or 4.'], figure: { kind: 'emblem' } },
+    { title: 'Taking a seat', text: ['The round café table stands in the plaza. Press Z to sit, then X (Play dominoes) to open the table. The sheet switches between Dominoes, Hearts and Spades, and X reopens whichever you played last.', 'You play the plaza regulars: choose 2 players or 4.'], figure: { kind: 'emblem' } },
     { title: 'The aim', text: ['A match to 100 points, with a double-six set of 28 tiles. Win a round by playing your last tile, and score the pips left in every other hand.', 'The holder of the highest double leads it. Then each play matches a tile\'s end to an open end of the line.'], figure: { kind: 'dominoes-line' } },
     { title: 'Draw or block', text: ['With two players it is the draw game: seven tiles each, and when nothing fits you draw from the boneyard.', 'With four it is the block game: seven each and no boneyard, so you pass. When nobody can play, the round is blocked and the lightest hand wins it.'], figure: { kind: 'dominoes-modes' } },
     { title: 'At the table', text: ['The regulars see only what a player at the table could, and on the round table only your own tiles show their pips.'], figure: { kind: 'keys', keys: CAFE_KEYS } },
@@ -39,6 +39,13 @@ export const GUIDE = [
     { title: 'The aim', text: ['Take as few points as you can. Each heart scores 1 and the queen of spades 13.', 'When someone reaches 100, the lowest score wins. Take all 26 points in a hand and you shoot the moon: you score nothing, and everyone else 26.'], figure: { kind: 'hearts-points' } },
     { title: 'Passing', text: ['Before each hand, pass three cards: to the left, then the right, then across. Every fourth hand you keep them.', 'The 2♣ leads the first trick, and nobody may play points on it unless their hand holds nothing else.'], figure: { kind: 'hearts-pass' } },
     { title: 'Tricks', text: ['Follow the suit that was led when you can. The highest card of that suit takes the trick and leads the next.', 'Hearts may not be led until one has been played, unless your hand holds only hearts.'], figure: { kind: 'hearts-trick' } },
+    { title: 'At the table', text: ['The table shows each trick face up before each player, with the hands and the won tricks face down.'], figure: { kind: 'keys', keys: CAFE_KEYS } },
+  ] },
+  { id: 'spades', name: 'Spades', place: 'The round café table', pages: [
+    { title: 'Taking a seat', text: ['At the round café table, press Z to sit and X to open the table, then choose Spades at the top of the sheet.', 'You and the regular across are partners against the regulars on your left and right, thirteen cards each.'], figure: { kind: 'emblem' } },
+    { title: 'Bidding', text: ['Each player bids the tricks they expect to take, starting left of the dealer; the dealer moves each hand. A bid of nil promises none.', 'Partners add their bids: making it scores 10 a trick bid, and each trick over is a bag worth 1.'], figure: { kind: 'spades-bids' } },
+    { title: 'Tricks', text: ['Follow the suit led when you can. Spades are trumps: the highest spade takes the trick, or else the highest card of the suit led.', 'Spades may not be led until one has been played, unless your hand holds only spades.'], figure: { kind: 'spades-trump' } },
+    { title: 'Scoring', text: ['Short of the bid, a partnership loses 10 a trick bid. A nil scores 100 if its bidder takes no trick and loses 100 if they take any.', 'Every tenth bag costs 100. The first partnership to 500 wins; falling to -200 loses.'], figure: { kind: 'spades-score' } },
     { title: 'At the table', text: ['The table shows each trick face up before each player, with the hands and the won tricks face down.'], figure: { kind: 'keys', keys: CAFE_KEYS } },
   ] },
   { id: 'backgammon', name: 'Backgammon', place: 'The grove\'s walnut table', pages: [
@@ -66,7 +73,7 @@ export const GUIDE = [
 
 export const guideGame = id => GUIDE.find(game => game.id === id) ?? null;
 // Pictures much wider than tall span the page above the text instead of beside it.
-export const WIDE_FIGURES = new Set(['jenga-meter', 'jenga-edge', 'pong-racks', 'pong-outcomes', 'dominoes-line', 'dominoes-modes', 'hearts-points', 'hearts-pass', 'hearts-trick', 'backgammon-opening', 'backgammon-hit']);
+export const WIDE_FIGURES = new Set(['jenga-meter', 'jenga-edge', 'pong-racks', 'pong-outcomes', 'spades-bids', 'spades-trump', 'spades-score', 'dominoes-line', 'dominoes-modes', 'hearts-points', 'hearts-pass', 'hearts-trick', 'backgammon-opening', 'backgammon-hit']);
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
 export const chapterOf = index => ROMAN[index] ?? String(index + 1);
 
@@ -105,6 +112,9 @@ export const DIAGRAMS = {
   dominoesLine: { line: [[2, 6], [6, 6], [6, 4]], hand: [4, 1] },
   heartsTrick: { cards: ['9D', 'QD', 'KD', '4S'], winner: 'KD' },
   heartsPoints: ['5H', '9H', 'AH', 'QS'],
+  // Spades: bids round the table (you, left, across, right), a heart trumped, and a hand's score.
+  spadesBids: { bids: [3, 2, 4, 0], taken: [4, 2, 4, 0] },
+  spadesTrump: { cards: ['KH', 'AH', '2S', '5H'], winner: '2S' },
   // Jenga: the top levels of a tower (bottom first), a pulled block's gap, and a level
   // whose last two blocks are its edges, so pulling one leaves the other alone.
   jengaTower: { levels: [[1, 1, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1], [1, 1, 1], [1, 1, 1], [0, 1, 0]], pulled: [3, 0] },
@@ -213,6 +223,7 @@ export function iconMarkup(id) {
     connectFour: '<rect class="sg-icon-line" x="9" y="9" width="22" height="22" rx="4"/><circle class="sg-icon-fill" cx="15.5" cy="15.5" r="3.6"/><circle class="sg-icon-line" cx="24.5" cy="15.5" r="3.6"/><circle class="sg-icon-line" cx="15.5" cy="24.5" r="3.6"/><circle class="sg-icon-fill" cx="24.5" cy="24.5" r="3.6"/>',
     dominoes: '<rect class="sg-icon-line" x="13" y="7" width="14" height="26" rx="3"/><line class="sg-icon-line" x1="15" y1="20" x2="25" y2="20"/><circle class="sg-icon-fill" cx="20" cy="13.5" r="1.8"/><circle class="sg-icon-fill" cx="17" cy="24" r="1.8"/><circle class="sg-icon-fill" cx="23" cy="29" r="1.8"/>',
     hearts: '<path class="sg-icon-fill" d="M20 31C11 24 8 19.5 8 15.5A5.5 5.5 0 0 1 20 13a5.5 5.5 0 0 1 12 2.5C32 19.5 29 24 20 31z"/>',
+    spades: '<path class="sg-icon-fill" d="M20 8C12 16 8 19.5 8 23.5a5.5 5.5 0 0 0 10 3.2L16.5 32h7L22 26.7a5.5 5.5 0 0 0 10-3.2C32 19.5 28 16 20 8z"/>',
     backgammon: '<path class="sg-icon-line" d="M9 31L13 12L17 31M17 31L21 12L25 31"/><circle class="sg-icon-fill" cx="29" cy="25" r="4.5"/>',
     jenga: '<rect class="sg-icon-fill" x="11" y="26" width="18" height="5" rx="1"/><rect class="sg-icon-line" x="11" y="19.5" width="18" height="5" rx="1"/><rect class="sg-icon-fill" x="11" y="13" width="5" height="5" rx="1"/><rect class="sg-icon-fill" x="24" y="13" width="5" height="5" rx="1"/><rect class="sg-icon-line" x="11" y="6.5" width="18" height="5" rx="1"/>',
     winePong: '<path class="sg-icon-line" d="M13 8h14c0 8-3 12-7 12s-7-4-7-12zM20 20v9M14 31h12"/><path class="sg-icon-fill" d="M13.6 12h12.8c-.6 4.5-3 7-6.4 7s-5.8-2.5-6.4-7z"/>',
@@ -256,6 +267,18 @@ export function figureMarkup(figure, game) {
     case 'hearts-trick': return svg(300, 170, 'A diamond is led; the king of diamonds takes the trick, and the spade, off suit, cannot win it.',
       '<text class="sg-label sg-quiet" x="150" y="14" text-anchor="middle" font-size="11">led</text>'
       + DIAGRAMS.heartsTrick.cards.map((code, index) => card(...[[124, 20], [48, 66], [124, 92], [200, 66]][index], code, { cls: code === DIAGRAMS.heartsTrick.winner ? 'sg-card-win' : '' })).join(''));
+    case 'spades-bids': { const { bids } = DIAGRAMS.spadesBids, seats = [['You', 150, 132], ['Left', 44, 80], ['Across', 150, 28], ['Right', 256, 80]];
+      return svg(300, 160, `Bids round the table: you ${bids[0]}, left ${bids[1]}, across ${bids[2]}, right nil. You and your partner across must take ${bids[0] + bids[2]} together.`,
+        seats.map(([name, x, y], player) => `<rect class="sg-tile-face" x="${x - 40}" y="${y - 18}" width="80" height="30" rx="8"/><text class="sg-label" x="${x}" y="${y + 2}" text-anchor="middle" font-size="12">${name} · ${bids[player] === 0 ? 'nil' : bids[player]}</text>`).join('')
+        + `<text class="sg-label sg-quiet" x="150" y="84" text-anchor="middle" font-size="11">you + across = ${bids[0] + bids[2]}</text>`); }
+    case 'spades-trump': return svg(300, 170, 'A heart is led; the two of spades, a trump, takes the trick over the ace of hearts.',
+      '<text class="sg-label sg-quiet" x="150" y="14" text-anchor="middle" font-size="11">led</text>'
+      + DIAGRAMS.spadesTrump.cards.map((code, index) => card(...[[124, 20], [48, 66], [124, 92], [200, 66]][index], code, { cls: code === DIAGRAMS.spadesTrump.winner ? 'sg-card-win' : '' })).join(''));
+    case 'spades-score': { const { bids, taken } = DIAGRAMS.spadesBids, contract = bids[0] + bids[2], made = taken[0] + taken[2];
+      return svg(300, 130, `You bid ${contract} together and took ${made}: ${10 * contract} points and ${made - contract} bag, ${10 * contract + made - contract} in all. Right's nil took no trick: 100.`,
+        `<text class="sg-label" x="20" y="40" font-size="13">You &amp; Across: bid ${contract}, took ${made}</text><text class="sg-label" x="280" y="40" text-anchor="end" font-size="13">${10 * contract} + ${made - contract} bag = ${10 * contract + made - contract}</text>`
+        + `<text class="sg-label" x="20" y="84" font-size="13">Right: nil, took none</text><text class="sg-label" x="280" y="84" text-anchor="end" font-size="13">+100</text>`
+        + '<text class="sg-label sg-quiet" x="150" y="118" text-anchor="middle" font-size="11">every tenth bag: −100</text>'); }
     case 'jenga-tower': { const { levels, pulled } = DIAGRAMS.jengaTower, h = 22, top = 16;
       return svg(220, 200, 'A Jenga tower seen from the front: blocks are pulled from below the top and laid on top; the top level, still being finished, and the one under it are kept.',
         levels.map((row, level) => row.map((present, slot) => {

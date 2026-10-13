@@ -7,8 +7,10 @@
 // page's module graph (module scripts, module preloads and stylesheets, then each
 // chunk's static imports) and asks the asset gate about every file.
 // Classic scripts (the first-paint boot script in <head>) are roots too: they run on
-// the sign-in page, so they must be served before sign-in as well. Dynamic imports
-// load after approval and are not followed.
+// the sign-in page, so they must be served before sign-in as well. A dynamic import
+// is followed when the gate serves its target before sign-in (the problem report,
+// debug-report-ui): it loads on the sign-in page too. Dynamic imports of gated
+// chunks (the game) load after approval and are not followed.
 import { readFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 import { protectedGameAsset } from '../server/game-assets.js';
@@ -37,10 +39,17 @@ async function visit(path) {
   if (protectedGameAsset(path)) refused.push(path);
   if (!path.endsWith('.js')) return;
   const code = await readFile(new URL(`.${path}`, dist), 'utf8');
-  // Static `import … from "./x.js"`, bare `import "./x.js"` and `export … from "./x.js"`;
-  // never `import("./x.js")`.
+  // Static `import … from "./x.js"`, bare `import "./x.js"` and `export … from "./x.js"`.
   for (const [, specifier] of code.matchAll(/\b(?:import|export)\s*(?:[^'"()]*?\bfrom\s*)?["'](\.{1,2}\/[^"']+)["']/g)) {
     await visit(new URL(specifier, `http://dist${path}`).pathname);
+  }
+  // `import("./x.js")` of a chunk the gate serves before sign-in (the problem report)
+  // loads before sign-in too, so its own imports must be served then. A dynamic
+  // import of a gated chunk (the game) loads after approval and is not followed.
+  // The bundler writes these with any quote, backticks included.
+  for (const [, specifier] of code.matchAll(/\bimport\(\s*["'`](\.{1,2}\/[^"'`]+)["'`]\s*\)/g)) {
+    const target = new URL(specifier, `http://dist${path}`).pathname;
+    if (!protectedGameAsset(target)) await visit(target);
   }
 }
 for (const root of roots) await visit(root);

@@ -14,7 +14,7 @@ import * as backgammon from '../src/backgammon-rules.js';
 const text = id => guideGame(id).pages.flatMap(page => [page.title, ...page.text]).join(' ');
 
 test('every plaza table game has a guide of illustrated pages', () => {
-  assert.deepEqual(GUIDE.map(game => game.id), ['chess', 'checkers', 'connectFour', 'dominoes', 'hearts', 'backgammon', 'jenga', 'winePong']);
+  assert.deepEqual(GUIDE.map(game => game.id), ['chess', 'checkers', 'connectFour', 'dominoes', 'hearts', 'spades', 'backgammon', 'jenga', 'winePong']);
   for (const game of GUIDE) {
     assert.ok(game.pages.length >= 4, game.id);
     assert.equal(game.pages[0].title, 'Taking a seat', `${game.id} starts at the table`);
@@ -125,6 +125,15 @@ test('the guides a player has read are remembered, and storage failures are harm
   assert.doesNotThrow(() => forgetful.add('hearts'));
   assert.equal(forgetful.has('hearts'), true, 'this visit still remembers');
   store.set('river-oaks-salon-guide-seen', '{not json'); assert.equal(createGuideMemory(storage).has('chess'), false);
+});
+
+test('the Spades pictures are a real trump and a real score', async () => {
+  const { trickWinner, scoreHand } = await import('../src/spades-rules.js');
+  const { cards, winner } = DIAGRAMS.spadesTrump;
+  assert.equal(cards[trickWinner(cards.map((card, player) => ({ player, card })))], winner);
+  const { bids, taken } = DIAGRAMS.spadesBids, [ours, theirs] = scoreHand(bids, taken);
+  assert.deepEqual([ours.points, ours.bags], [71, 1], 'bid 7, took 8: 70 and a bag');
+  assert.deepEqual(theirs.nils, [{ player: 3, made: true }]);
 });
 
 test('the Jenga and wine pong pictures follow the rules', async () => {

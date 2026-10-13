@@ -105,6 +105,10 @@ async page => {
   // A click outside the book closes it too.
   await page.locator('#table-game-panel [data-guide-open]').click();
   await page.waitForFunction(() => document.querySelector('[data-guide-dialog]')?.open);
+  // Selecting text and dragging out of the book is not a click outside.
+  const page3 = await page.locator('[data-guide-dialog] .salon-guide-text p').first().boundingBox();
+  await page.mouse.move(page3.x + 20, page3.y + 8); await page.mouse.down(); await page.mouse.move(6, 450, { steps: 6 }); await page.mouse.up();
+  check((await book()).open, 'Dragging from inside the book to outside it keeps the book open');
   await page.mouse.click(6, 450);
   check(!(await book()).open, 'A click outside the book closes it');
   await page.keyboard.press('Escape');
