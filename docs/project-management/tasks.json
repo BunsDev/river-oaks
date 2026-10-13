@@ -4323,6 +4323,33 @@
       ],
       "ledger": "docs/superpowers/plans/2026-10-13-shared-voice.md",
       "plan": "docs/superpowers/plans/2026-10-05-spatial-voice.md"
+    },
+    {
+      "id": "ios-device-feasibility",
+      "title": "iOS #285 physical iPhone architecture probe",
+      "status": "active",
+      "branches": [
+        "feat/ios-device-probe-20261013"
+      ],
+      "owner": "codex-ios-rollout-20261013",
+      "leaseUntil": "2026-10-13T14:32:53.088430+00:00",
+      "updatedAt": "2026-10-13T12:32:53.088093+00:00",
+      "nextAction": "Diagnose physical WebContent termination with targeted trace and Safari comparison; finish verified probe draft PR. Architecture gate remains open.",
+      "ledger": "docs/superpowers/plans/2026-10-13-ios-device-feasibility.md",
+      "filesOwned": [
+        "experiments/ios-probe/",
+        "scripts/ios-probe.mjs",
+        "scripts/tests/ios-probe.test.js",
+        "docs/ios-feasibility.md",
+        "docs/superpowers/plans/2026-10-13-ios-device-feasibility.md"
+      ],
+      "requiredChecks": [
+        "focused measurement and origin boundary tests",
+        "Release simulator and signed device build",
+        "Safari and WKWebView physical device measurements",
+        "pnpm run verify",
+        "independent technical review"
+      ]
     }
   ]
 }
