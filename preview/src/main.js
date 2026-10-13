@@ -248,6 +248,8 @@ function initializeRenderer() {
   seatAndWater = createSeatAndWater({ walking, playerAvatar, getLocals: () => community.state?.locals, getMultiplayer: () => multiplayer, isBusy: () => seatingControls?.busy() ?? false });
   // Seated at a plaza chess table, X plays chess, checkers or Connect Four; the table mirrors the game.
   plazaGames = createPlazaTableGames({ getMirror: () => plazaSalon?.userData.chess ?? null, getFourMirror: () => plazaSalon?.userData.connectFour ?? null, getMorrisMirror: () => plazaSalon?.userData.morris ?? null, getSeat: () => seatAtTable(walking?.getPose()),
+    // The town holds games between the two residents at a table (server/table-games.js).
+    getTown: () => multiplayer?.connected ? { selfId: multiplayer.identity?.id, snapshot: multiplayer.snapshot, command: message => multiplayer.command(message) } : null,
     focusWorld: () => host.focus({ preventScroll: true }) });
   // Seated at the café table, X plays dominoes, Hearts or Spades with the plaza regulars
   // (the last one played); switching clears the other game's pieces from the table when
