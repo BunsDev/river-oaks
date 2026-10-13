@@ -1,4 +1,5 @@
 import { createOffices } from './offices.js';
+import { createTableGames } from './table-games.js';
 import { officesFor } from '../preview/src/office-contract.js';
 import { createHash } from 'node:crypto';
 import { createInteractions } from './interactions.js';
@@ -103,6 +104,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   // accounts are Jevica, whatever a stored or restored record says.
   const interactions=createInteractions({players,environment,now,movementOf,changed:()=>revision++,residents:()=>state.locals});
   const offices=createOffices({worldData,players,isAdmin,environment,changed:()=>revision++,cancel:id=>{interactions.cancel(id);focus.delete(id);}});
+  // Shared games at the plaza chess tables (table-games.js): the town holds each table's game.
+  const tableGames=createTableGames({players,tableIds:plazaSalonPlan(worldData)?.chess.map(table=>table.id)??[],changed:()=>revision++});
   const publicPlayer = player => ({office:offices.publicVisit(player.id),interaction:interactions.publicFor(player),id:player.id,name:accountName(player.id,player.name),appearance:player.appearance,movement:movementOf(player),gesture:interactions.publicFor(player)?.kind??(player.gestureUntil>now()?player.gesture:null)??(player.performing?'perform':null),performing:Boolean(player.performing),canBuild:Boolean(isAdmin(player.id)),canGrantWishes:Boolean(isAdmin(player.id)),vehicle:player.vehicle??null,sitting:publicSeat(player),position:[...player.position],yaw:player.yaw,altitude:player.altitude,voice:{space:voiceSpaceOf(player.id),id:voiceIdentities.get(player.id)??null}});
   // Seats are Jevica's garden seats and lounge chairs, and the two places on
   // every storefront bench ('bench:<store>', slots 0 and 1).
@@ -618,6 +621,10 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       if(!fields(message,['type','action']) || !['take','leave'].includes(message.action))return reject('invalid_stage');
       return message.action==='take'?takeStage(player,time):leaveStage(player,time);
     }
+    if(message.type==='tableGame') {
+      const reply=tableGames.command(player,message,time);
+      return reply.ok?{...reply,player:publicPlayer(player)}:reply;
+    }
     if(message.type==='interaction' && player.performing)return reject('performing','Leave the stage first.');
     if(message.type==='office')return offices.command(player,message,time);
     if(message.type==='interaction' && offices.has(message.peerId))return reject('office_permission_required');
@@ -809,6 +816,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if (!Number.isFinite(delta) || delta<=0) return;
     const duration=Math.min(delta,0.25),time=now();
     clearExpiredLedgers(time);
+    tableGames.prune();
     for (const [id,hold] of focus) if (hold.until<=time || !reachable(players.get(id),localById.get(hold.localId))) focus.delete(id);
     const held=new Set([...focus.values()].map(hold=>hold.localId));
     for (const local of state.locals) {
@@ -828,7 +836,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     const social=interactions.snapshot();
     const community={};
     for (const key of ['status','running','elapsed','target','supported','unmet','supplies','helpBudget','jobs','events','scenarioKey','generation','result','storm','resupplied']) community[key]=copy(state[key]);
-    return {type:'snapshot',interactions:social,worldId,protocolVersion:WORLD_PROTOCOL_VERSION,revision,elapsed,cycling:{taken:takenSlots()},players:[...players.values()].map(publicPlayer),
+    return {type:'snapshot',interactions:social,worldId,protocolVersion:WORLD_PROTOCOL_VERSION,revision,elapsed,cycling:{taken:takenSlots()},tables:tableGames.snapshot(),players:[...players.values()].map(publicPlayer),
       chat:copy(chat).map(entry=>({...entry,authorName:accountName(entry.authorId,entry.authorName)})),
       builds:copy([...builds.values()]).map(item=>({...item,ownerName:accountName(item.ownerId,item.ownerName)})),wishes:copy(state.wishes),community,
       locals:state.locals.map(local=>({id:local.id,name:local.name,position:[...local.position],indoor:!!local.indoor,storeId:local.storeId??null,
@@ -842,7 +850,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   function checkpoint() {
     if (life?.planning) throw new Error('Cannot checkpoint an unfinished route search');
     interactions.prune();
-    const payload=JSON.parse(checkpointJSON({offices:offices.checkpoint(),revision,elapsed,state,interactions:interactions.snapshot(),players:[...players.values()].map(player=>{
+    tableGames.prune();
+    const payload=JSON.parse(checkpointJSON({offices:offices.checkpoint(),tableGames:tableGames.checkpoint(),revision,elapsed,state,interactions:interactions.snapshot(),players:[...players.values()].map(player=>{
       if(!player.performing)return player;
       const {performing,...rest}=player;
       return {...rest,position:stageStepDown(player)??performing.from};
@@ -973,6 +982,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       if(saved.version<6 && recovered.offices!==undefined)throw new Error('Invalid office version');
       if(saved.version>=6 && recovered.offices===undefined)throw new Error('Missing offices');
       const nextOffices=offices.validate(recovered.offices,nextPlayers);
+      // Older checkpoints have no table games: they restore with none.
+      const nextTables=tableGames.validate(recovered.tableGames??[]);
       const recoveredEnvironment=createWalkingEnvironment(worldData,[...nextBuilds.values()].map(objectCollider).filter(Boolean));
       const occupiedSeats=new Set(),heldSlots=new Set();
       for(const rider of nextPlayers.values())if(rider.cycling){if(heldSlots.has(rider.cycling))throw new Error('Invalid cycling slot');heldSlots.add(rider.cycling);}
@@ -1094,6 +1105,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       homeGuests.clear();for(const [storeId,ids] of nextHomeGuests)homeGuests.set(storeId,ids);
       localById.clear();for (const local of state.locals) localById.set(local.id,local);
       offices.load(nextOffices);
+      tableGames.load(nextTables);
       interactions.restore(nextInteractions);
       life=nextLife;revision=recovered.revision;elapsed=recovered.elapsed;voiceIdentities.clear();
       return {ok:true};
@@ -1105,6 +1117,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   // Trusted process/admin hook; deliberately absent from the command protocol.
   function reset() {
     interactions.clear();
+    tableGames.clear();
     const fresh=createCommunity(worldData,environment.rooms,{carriage:false,sharedPopulation});
     fresh.generation=state.generation+1;
     Object.assign(state,fresh);localById.clear();
