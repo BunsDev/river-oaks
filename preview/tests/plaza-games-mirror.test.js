@@ -106,3 +106,15 @@ test('dominoes on the café table: the line lies on its arc, only your hand show
   dominoes.show(null);
   assert.equal(tiles.count, 0); assert.equal(pips.count, 0);
 });
+
+test('Hearts on the café table: the trick face up before its players, hands and won tricks face down', () => {
+  const cards = group.userData.cards;
+  assert.equal(cards.count().drawn, false, 'no canvas here, so faces are plain');
+  cards.show({ trick: [{ chair: 2, card: '2C' }, { chair: 3, card: 'KC' }], hands: [{ chair: 2, count: 12 }, { chair: 3, count: 12 }, { chair: 0, count: 13 }, { chair: 1, count: 13 }], won: [{ chair: 1, tricks: 2 }] });
+  assert.deepEqual(cards.count(), { faces: 2, backs: 12 + 12 + 13 + 13 + 2, drawn: false });
+  const trick = group.children.filter(child => child.name?.startsWith('Card in the trick') && child.visible);
+  const angle = Math.PI / 4 + 2 * Math.PI / 2, [tx, tz] = [plan.round.x, -plan.round.north];
+  assert.ok((trick[0].position.x - tx) * Math.sin(angle) + (trick[0].position.z - tz) * Math.cos(angle) > 0.19, 'the first card lies before chair 2');
+  cards.show(null);
+  assert.deepEqual(cards.count(), { faces: 0, backs: 0, drawn: false });
+});

@@ -11,28 +11,17 @@
 // Deals come from a seed, so a round replays exactly from its seed and moves.
 // Pure and dependency-free, like the chess and checkers rules.
 
+import { shuffled } from './seeded-random.js';
+
 export const MATCH_POINTS = 100;
 export const TILES = Array.from({ length: 7 }, (_, a) => Array.from({ length: 7 - a }, (_, i) => `${a}-${a + i}`)).flat();
 export const values = id => id.split('-').map(Number);
 export const pips = id => values(id).reduce((sum, value) => sum + value, 0);
 const isDouble = id => { const [a, b] = values(id); return a === b; };
 
-// Mulberry32: a small, well-mixed generator, so a seed always deals the same hands.
-function random(seed) {
-  let state = seed >>> 0;
-  return () => {
-    state = (state + 0x6D2B79F5) >>> 0;
-    let t = state;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
 export function deal(seed, players = 2) {
   if (![2, 4].includes(players)) throw new Error('Dominoes is played by two or four');
-  const next = random(seed), tiles = TILES.slice();
-  for (let i = tiles.length - 1; i > 0; i--) { const j = Math.floor(next() * (i + 1)); [tiles[i], tiles[j]] = [tiles[j], tiles[i]]; }
+  const tiles = shuffled(TILES, seed);
   const hands = Array.from({ length: players }, (_, player) => tiles.slice(player * 7, player * 7 + 7));
   return { hands, boneyard: tiles.slice(players * 7) };
 }

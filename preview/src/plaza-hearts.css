@@ -1,0 +1,33 @@
+/* Hearts at the café: ivory cards on the table's walnut, the trick laid out as the
+   players sit. The sheet is the table-games frame; only its body is laid out here. */
+.hearts-panel { --card-face: #fbf8f1; --card-edge: #cfc6b4; --card-red: #b3262e; --card-black: #1d1b1f; }
+.hearts-panel .hearts-body { display: flex; flex-direction: column; gap: 12px; }
+.playing-card svg { display: block; overflow: visible; }
+.playing-card svg rect { fill: var(--card-face); stroke: var(--card-edge); stroke-width: 1.2; }
+.playing-card svg text { fill: var(--card-black); font-family: Georgia, "Iowan Old Style", serif; }
+.playing-card[data-suit=H] svg text, .playing-card[data-suit=D] svg text { fill: var(--card-red); }
+.playing-card .card-rank { font-size: 14px; font-weight: 700; }
+.playing-card .card-pip { font-size: 28px; font-family: "Apple Symbols", "Segoe UI Symbol", "DejaVu Sans", serif; }
+.hearts-scores { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.hearts-scores li { padding: 4px 11px; border-radius: 999px; background: var(--hud-tile); font-size: 12px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.hearts-scores li[data-turn] { background: var(--hud-action); color: var(--hud-on-action); }
+.hearts-trick { display: grid; grid-template: "across across" auto "left right" auto "you you" auto / 1fr 1fr; justify-items: center; gap: 6px 24px; padding: 12px; border-radius: var(--hud-tile-radius, 12px);
+  background: radial-gradient(120% 100% at 50% 0%, #7a5538, #573a26); box-shadow: inset 0 1px 0 rgb(255 255 255 / .12), inset 0 0 18px rgb(0 0 0 / .25); }
+.hearts-slot { display: grid; justify-items: center; gap: 3px; min-height: 76px; }
+.hearts-slot[data-seat=across] { grid-area: across; } .hearts-slot[data-seat=left] { grid-area: left; } .hearts-slot[data-seat=right] { grid-area: right; } .hearts-slot[data-seat=you] { grid-area: you; }
+.hearts-slot > span:first-child { font-size: 11px; font-weight: 650; color: #f3ead8; }
+.hearts-slot .playing-card svg { height: 56px; width: auto; }
+.hearts-slot[data-last] .playing-card { opacity: .7; }
+.hearts-slot[data-taker] > span:first-child { color: #f5cf7a; }
+.hearts-hand { display: flex; flex-wrap: wrap; gap: 4px; padding-top: 6px; }
+.playing-card.in-hand { padding: 0; border: 0; border-radius: 6px; background: none; cursor: pointer; transition: transform .12s ease; }
+.playing-card.in-hand svg { height: 70px; width: auto; }
+.playing-card.in-hand[data-legal], .playing-card.in-hand[data-selected] { transform: translateY(-6px); }
+.playing-card.in-hand[data-legal] svg rect { stroke: var(--hud-action); stroke-width: 1.8; }
+.playing-card.in-hand[data-selected] svg rect { stroke: var(--hud-action); stroke-width: 3; }
+.playing-card.in-hand:disabled { opacity: .6; cursor: default; }
+.hearts-panel[data-state=pass] .playing-card.in-hand:disabled { opacity: 1; }
+.playing-card.in-hand:focus-visible { outline: 2px solid var(--hud-focus); outline-offset: 3px; }
+.hearts-panel .table-game-actions [data-action=pass], .hearts-panel .table-game-actions [data-action=next] { background: var(--hud-action); border-color: transparent; color: var(--hud-on-action); }
+.hearts-panel .table-game-actions [hidden] { display: none; }
+@media (prefers-reduced-motion: reduce) { .playing-card.in-hand { transition: none; } .playing-card.in-hand:is([data-legal], [data-selected]) { transform: none; } }
