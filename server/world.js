@@ -872,15 +872,16 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
         && (player.sitting==null || saved.version>=3 && record(player.sitting) && fields(player.sitting,['buildId','slot'])
           && textId(player.sitting.buildId) && Number.isInteger(player.sitting.slot))
         && point(player.position,3) && Number.isFinite(player.yaw)
-        && (player.vehicle==null || player.vehicle==='bicycle'
-          ? (player.cycling==null || typeof player.cycling==='string' && rackSlots.has(player.cycling) && player.vehicle==='bicycle') && (player.rideMeters===undefined || nonnegative(player.rideMeters))
-          : isJevicaOwner(player.id) && vehicleKind(player.vehicle) && player.altitude<=0.1)
+        && (player.rideMeters===undefined || nonnegative(player.rideMeters))
+        && (player.cycling==null || typeof player.cycling==='string' && rackSlots.has(player.cycling) && player.vehicle==='bicycle')
+        && (player.vehicle==null || (player.vehicle==='bicycle' ? player.altitude<=0.1 : isJevicaOwner(player.id) && vehicleKind(player.vehicle) && player.altitude<=0.1))
         && nonnegative(player.altitude) && player.altitude<=environment.flightCeiling && Number.isFinite(player.poseAt)
         && (player.gesture===undefined && player.gestureUntil===undefined
           || (player.gesture===null || SHOWN_GESTURES.includes(player.gesture)) && nonnegative(player.gestureUntil))
         && ['moveBudget','liftBudget'].every(key=>Number.isFinite(player[key]) && player[key]>=-1e-8 && player[key]<=1));
       const recoveredEnvironment=createWalkingEnvironment(worldData,[...nextBuilds.values()].map(objectCollider).filter(Boolean));
-      const occupiedSeats=new Set();
+      const occupiedSeats=new Set(),heldSlots=new Set();
+      for(const rider of nextPlayers.values())if(rider.cycling){if(heldSlots.has(rider.cycling))throw new Error('Invalid cycling slot');heldSlots.add(rider.cycling);}
       for (const player of nextPlayers.values()) {
         player.gesture??=null;player.gestureUntil??=0;
         player.appearance=permittedAppearance(player.id,player.appearance??nextAppearances.get(player.id));
@@ -896,8 +897,6 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
             || Math.abs(seatYaw(player.yaw-(seat.yaw-Math.PI)))>1e-6)throw new Error('Invalid seated player');
           occupiedSeats.add(key);
         }
-        const heldSlots=new Set();
-        for(const player of nextPlayers.values())if(player.cycling){if(heldSlots.has(player.cycling))throw new Error('Invalid cycling slot');heldSlots.add(player.cycling);}
         // Older signed checkpoints allowed every player to fly. Keep their
         // account and appearance, but restore non-Jevica players on safe ground.
         if(player.altitude>0&&!canFlyAs(player.id,player.appearance)){

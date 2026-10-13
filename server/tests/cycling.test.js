@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import { createSharedWorld } from '../world.js';
 import { createWalkingEnvironment } from '../../preview/src/walking.js';
 import { plazaSalonRack } from '../../preview/src/plaza-salon-plan.js';
@@ -13,6 +14,8 @@ const environment = createWalkingEnvironment(data);
 const slots = plazaSalonRack(data);
 const OWNER = JEVICA_ADMIN_USER_IDS[0];
 const identity = userId => ({ userId, name: userId, sessionId: `${userId}-s`, expiresAt: Date.now() + 3_600_000 });
+// A tampered checkpoint re-signed so only the validator, not the checksum, refuses it.
+const resign = value => { const { checksum, ...envelope } = value; return { ...envelope, checksum: createHash('sha256').update(JSON.stringify(envelope)).digest('hex') }; };
 
 function setup(users = ['alice', 'bob']) {
   let time = 1_000_000;
@@ -93,15 +96,25 @@ test('a bicycle pose needs a slot, obeys the 18 mph budget, and only accepted di
 });
 
 test('leaving the town releases the slot and keeps the metres for the flush; a checkpoint restores a rider', () => {
-  const f = setup();
+  const f = setup(['alice', OWNER]);
   f.put('alice', slots[2].approach);
   assert.equal(f.act('alice', { type: 'cycle', rackId: 'plaza-salon-rack', slot: 2 }).ok, true);
   f.advance(1000);
   assert.equal(f.ride('alice', [slots[2].x, slots[2].north - 3]).ok, true);
   const restored = createSharedWorld(data, { now: () => 2_000_000 });
-  assert.deepEqual(restored.restore(f.world.checkpoint()), { ok: true });
+  const checkpoint = f.world.checkpoint();
+  assert.deepEqual(restored.restore(checkpoint), { ok: true });
   assert.deepEqual(restored.snapshot().cycling, { taken: ['plaza-salon-rack:2'] });
   assert.equal(restored.snapshot().players[0].vehicle, 'bicycle');
+  // A slot is only ever held with the bicycle, and a bicycle never flies.
+  const before = restored.snapshot();
+  const motorcycle = structuredClone(checkpoint);
+  Object.assign(motorcycle.payload.players.find(player => player.id === OWNER), { vehicle: 'motorcycle', cycling: 'plaza-salon-rack:0' });
+  assert.equal(restored.restore(resign(motorcycle)).error, 'invalid_checkpoint', 'a slot needs the bicycle');
+  const airborne = structuredClone(checkpoint);
+  airborne.payload.players.find(player => player.id === 'alice').altitude = 2;
+  assert.equal(restored.restore(resign(airborne)).error, 'invalid_checkpoint', 'a bicycle stays on the ground');
+  assert.deepEqual(restored.snapshot(), before, 'a refused restore changes nothing');
   assert.equal(f.world.leave('alice'), true);
   assert.deepEqual(f.world.snapshot().cycling, { taken: [] });
   assert.deepEqual(f.world.drainRides(), [{ userId: 'alice', name: 'alice', meters: 3 }]);
