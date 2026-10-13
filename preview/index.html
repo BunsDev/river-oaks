@@ -5,7 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#e9ece5" />
     <title>TypeSafe Place — Your place in the town</title>
+    <script src="/assets/boot/first-paint.js"></script>
     <style>
+      /* First paint, before any stylesheet loads: the sign-in gate's colour, or, for a browser
+         that entered last time (first-paint.js), a quiet splash in its own theme. */
+      html { background: #151517; }
+      :root[data-returning] { --returning-bg: #e9ece5; --returning-ink: #6a7871; background: var(--returning-bg); }
+      :root[data-returning][data-theme=dark] { --returning-bg: #24352d; --returning-ink: #adbbae; }
+      :root[data-returning] .access-gate { background: var(--returning-bg); }
+      :root[data-returning] .access-layout { visibility: hidden; }
+      :root[data-returning] .access-card #access-message { visibility: visible; position: fixed; inset: 50% 0 auto; margin: 0; text-align: center; color: var(--returning-ink); }
       body:not(.access-granted) .app-shell { display: none !important; }
       .access-gate [hidden], .access-gate[hidden], .access-review[hidden], .access-tools[hidden], .access-tools [hidden] { display: none !important; }
       /* Rotating art: only the active slide shows, from the first paint (the gate stylesheet loads later). */
@@ -51,6 +60,14 @@
           </form>
           <p id="access-email-status" role="status"></p>
         </div>
+        <form id="access-username-form" class="access-form access-username-form" hidden>
+          <label for="access-username">Your name in River Oaks</label>
+          <input id="access-username" name="username" type="text" autocomplete="nickname" autocapitalize="off" spellcheck="false" minlength="2" maxlength="39" required aria-describedby="access-username-help" />
+          <p id="access-username-help">Letters and digits, joined by single - _ or . The district team may adjust it before approving you.</p>
+          <div class="access-username-choices"><button id="access-username-github" type="button" hidden>Use my GitHub name</button><button id="access-username-suggest" type="button">Suggest another</button></div>
+          <button id="access-username-save" type="submit">Save name</button>
+          <p id="access-username-status" role="status"></p>
+        </form>
         <form id="access-invite-form" class="access-form" hidden>
           <label for="access-invite-code">Have an invite code?</label>
           <input id="access-invite-code" name="invite" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="32" required placeholder="Your invite code" aria-describedby="access-invite-help" />

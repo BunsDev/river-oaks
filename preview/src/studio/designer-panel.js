@@ -14,11 +14,11 @@ export function mountDesignerPanel(host, { doc, selected, apply, canEdit = () =>
     <button data-connect class="studio-primary">Set up and connect</button></section>
     <section data-connected hidden><p data-identity></p><button data-disconnect>Disconnect</button></section>
     <label>Project brief<textarea data-brief rows="3" maxlength="2000" placeholder="Purpose, audience, style, references and constraints"></textarea></label>
-    <label>Share with the designer<select data-scope><option value="selection">Selected object only</option><option value="region">Whole region</option></select></label>
+    <label>Share with the designer<select data-scope><option value="selection">Selected object only</option><option value="region">Whole scene</option></select></label>
     <p data-context class="studio-caption"></p><p class="studio-caption">The brief and chosen scene context are shared when you send. No screenshots or unrelated project memory are attached.</p>
     <label>Design task<textarea data-task rows="3" maxlength="1000" placeholder="Review the arrival and propose clearer wayfinding"></textarea></label>
     <div class="studio-designer-actions"><button data-send class="studio-primary" disabled>Ask designer</button><button data-cancel disabled>Cancel</button></div>
-    <p class="studio-caption">Supports buildings, trees, places and arrival. Roads and terrain can be reviewed and preserved.</p>
+    <p class="studio-caption">Furnished spaces support furniture, finishes, lighting and arrival. Regions support buildings, trees, places and arrival; roads and terrain stay read-only.</p>
     <section data-preview hidden><h3>Proposed changes</h3><p data-rationale></p><pre data-diff></pre><p data-evidence></p><div class="studio-designer-actions"><button data-apply class="studio-primary">Apply as one edit</button><button data-reject>Reject</button></div></section>`;
   host.append(panel);
   const $ = query => panel.querySelector(query), session = createDesignerSession(doc);

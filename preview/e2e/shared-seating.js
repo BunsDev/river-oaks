@@ -1,12 +1,20 @@
 async page => {
   const { openHudSpace } = await import('./hud-navigation.js');
-  const checks=[],errors=[];
+  const checks=[],errors=[],readiness=[];
   const check=(ok,label)=>{if(!ok)throw new Error(label);checks.push(label);};
   const origin='http://127.0.0.1:5173';
-  const join=async tab=>{
+  const join=async(tab,role)=>{
     tab.on('pageerror',error=>errors.push(error.message));
     await tab.goto(`${origin}/?motion-debug=1`,{waitUntil:'commit'});
-    await tab.waitForFunction(()=>window.__riverMultiplayer?.().connected && document.querySelector('#canvas-host')?.dataset.playerReady==='true');
+    const started=Date.now();
+    try{
+      // New guest contexts otherwise inherit 30s; match the office/resident avatar budget.
+      await tab.waitForFunction(()=>window.__riverMultiplayer?.().connected && document.querySelector('#canvas-host')?.dataset.playerReady==='true',null,{timeout:90000});
+    }catch(error){
+      const state=await tab.evaluate(()=>({connected:window.__riverMultiplayer?.().connected,ready:document.querySelector('#canvas-host')?.dataset.playerReady,appearance:document.querySelector('#canvas-host')?.dataset.playerAppearance,assets:document.querySelector('#viewport')?.dataset.assetProgress,player:document.querySelector('#player-status')?.textContent})).catch(()=>null);
+      throw new Error(`${role} readiness failed after ${Date.now()-started}ms: ${error.message}; ${JSON.stringify(state)}`,{cause:error});
+    }
+    const elapsedMs=Date.now()-started;readiness.push({role,elapsedMs});console.log(`Shared seating ${role} ready in ${elapsedMs}ms`);
   };
   const self=tab=>tab.evaluate(()=>{const t=window.__riverMultiplayer();return t.snapshot.players.find(p=>p.id===t.selfId);});
   const openPlaces=async tab=>{
@@ -18,7 +26,7 @@ async page => {
     if(await tab.locator('#places-dialog').evaluate(el=>el.open))await tab.locator('.places-close').click();
     for(const selector of ['#panel-toggle','#people-toggle'])if(await tab.locator(selector).getAttribute('aria-expanded')==='true')await tab.locator(selector).click();
   };
-  await join(page);
+  await join(page,'owner');
   const fixtureOwner=await self(page);
   check(fixtureOwner.canBuild&&fixtureOwner.canGrantWishes,'The fresh loopback owner has building and wish permissions');
   check(await page.locator('.shared-seating-controls').count()===1,'Shared play provides accessible furniture seating controls');
@@ -62,7 +70,7 @@ async page => {
   try{
     const guest=await context.newPage();let guestSocket,connections=0;
     await guest.routeWebSocket('**/multiplayer?*',route=>{guestSocket={client:route,server:route.connectToServer()};connections++;});
-    await join(guest);
+    await join(guest,'guest');
     if(!await guest.locator('.visit-tools').evaluate(node=>node.open))await guest.locator('.visit-tools-toggle').click();
     await guest.locator('input[name=player-form][value=beast]').check();
     await guest.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerAppearance==='woman-casual'&&document.querySelector('#canvas-host').dataset.playerReady==='true');
@@ -114,5 +122,5 @@ async page => {
   await page.locator('#build-list button',{hasText:'Remove'}).click();
   await page.waitForFunction(()=>window.__riverMultiplayer().snapshot.builds.length===0);
   check(errors.length===0,'No browser exceptions');
-  return {passed:true,checks,errors};
+  return {passed:true,checks,errors,readiness};
 }

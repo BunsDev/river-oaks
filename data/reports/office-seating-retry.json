@@ -1,0 +1,41 @@
+{
+  "createdAt": "2026-10-13T13:32:44.063Z",
+  "status": "passed",
+  "modes": [
+    "development"
+  ],
+  "rendering": "Full rendering",
+  "scope": "Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.",
+  "results": [
+    {
+      "name": "shared-seating",
+      "status": "passed",
+      "seconds": 56.231,
+      "result": {
+        "passed": true,
+        "checks": [
+          "The fresh loopback owner has building and wish permissions",
+          "Shared play provides accessible furniture seating controls",
+          "Seating controls have an accessible name",
+          "The fixture owner can place a garden seat on open ground (Ready to place.)",
+          "Seated poses use the furniture base height on sloping terrain",
+          "The local pose is seated only after server confirmation",
+          "Walking input cannot move a seated player",
+          "Looking around leaves the body facing the seat front",
+          "Occupied slots cannot be chosen in the guest UI",
+          "A guest uses the second slot without acquiring admin powers",
+          "The other browser renders the confirmed remote seated pose",
+          "Seated fox visitors visibly wave to the other browser without moving their seat",
+          "Occupied furniture cannot be removed by its admin builder",
+          "The same account recovers its seat on socket reconnect within the grace period",
+          "The stand control is available at a phone-sized viewport",
+          "The seats panel offers no second Stand up control while seated",
+          "Keyboard standing reaches a clear ground position",
+          "No browser exceptions"
+        ],
+        "errors": []
+      }
+    }
+  ],
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)"
+}

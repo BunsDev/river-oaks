@@ -1,0 +1,514 @@
+{
+  "createdAt": "2026-10-13T17:21:24.477Z",
+  "status": "failed",
+  "modes": [
+    "development",
+    "development-world",
+    "development-publish",
+    "required",
+    "creator"
+  ],
+  "rendering": "Full rendering",
+  "scope": "Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.",
+  "results": [
+    {
+      "name": "multiplayer-dev",
+      "status": "passed",
+      "seconds": 156.923,
+      "result": {
+        "checks": [
+          "each browser is its own development player",
+          "both players share one town",
+          "no sign-in gate blocks development",
+          "Players start with an appearance picker and a default look",
+          "Sable selection reaches the other browser and its rendered remote avatar",
+          "The production shared player has both fitted Silvan arm vines",
+          "New town chat rows are announced after initial history loads",
+          "A shared wave reaches the peer and visibly raises the remote avatar arm",
+          "A sent town message appears once for both players",
+          "Chat history returns once after reconnect",
+          "A reply reaches the reconnected player through the live chat UI",
+          "A pending contact cannot see the sender's online world",
+          "An accepted contact can join the sender's current world",
+          "Current world exposes named meeting places",
+          "A resident can publish a profile that someone in the same world can inspect",
+          "A contact invitation offers a validated link to the sender's world",
+          "A named-place invitation offers a link to that place in the sender's world",
+          "Private messages stay out of town chat",
+          "Accepted contacts and private history survive a browser reconnect",
+          "Shared play exposes player-owned building",
+          "A guest cannot access the shared builder",
+          "A guest cannot access wish granting",
+          "shared play hides the retired invasion",
+          "players arrive on separate spots (1.60 m apart)",
+          "a shared teleport lands beside Jo Malone London in both browsers' snapshots",
+          "A different account cannot see a private landmark",
+          "An account landmark survives reload without device storage",
+          "a landmark teleport is a server-checked position travel the other browser sees",
+          "Builder mode can be switched on",
+          "Builder preview uses the selected one-metre grid",
+          "Builder preview uses the selected half-metre grid",
+          "The preview appears where the pointer meets the ground",
+          "An open spot is marked ready (Ready to place.)",
+          "A click places the creation exactly where the preview stood",
+          "A guest cannot access saved building designs",
+          "The owner places a fresh copy from a saved design",
+          "Deleting a saved design leaves its placed copy intact",
+          "The preview turns red on the spot just taken (Keep clear of the road.)",
+          "R turns the preview",
+          "Escape leaves builder mode and removes the preview",
+          "Escape in builder mode leaves the dock open",
+          "Shared mobile play starts with a compact dock",
+          "Shared mobile guests get beast movement without flight",
+          "Shared mobile play hides private companion and vehicle actions",
+          "Shared mobile play hides local-only scenarios",
+          "Shared mobile controls stay within the viewport",
+          "No browser page errors"
+        ],
+        "a": {
+          "self": "dev-e2f0943ac2c6",
+          "players": [
+            "dev-e2f0943ac2c6",
+            "dev-515e9a4b2959"
+          ],
+          "gate": true,
+          "appearance": "sable-human",
+          "appearancePicker": true,
+          "invasion": true,
+          "roster": "2 players in town"
+        },
+        "b": {
+          "self": "dev-515e9a4b2959",
+          "players": [
+            "dev-e2f0943ac2c6",
+            "dev-515e9a4b2959"
+          ],
+          "gate": true,
+          "appearance": "sable-human",
+          "appearancePicker": true,
+          "invasion": true,
+          "roster": "2 players in town"
+        },
+        "errors": []
+      }
+    },
+    {
+      "name": "groups",
+      "status": "passed",
+      "seconds": 77.538,
+      "result": {
+        "checks": [
+          "An accepted contact appears in the group invitation picker",
+          "Group messages stay out of public town chat",
+          "Group membership and conversation survive reconnect"
+        ]
+      }
+    },
+    {
+      "name": "world-events",
+      "status": "passed",
+      "seconds": 9.791,
+      "result": {
+        "checks": [
+          "Unreleased Events has no browsing or hosting surface",
+          "Commands does not advertise Events",
+          "Neither initial load nor reconnect requests the Events service"
+        ]
+      }
+    },
+    {
+      "name": "rail-shared",
+      "status": "passed",
+      "seconds": 7.623,
+      "result": {
+        "checks": [
+          "Chat command opens the town dock and focuses its composer",
+          "Nearby residents and meeting actions precede town tools",
+          "Town chat lives independently of the People panel",
+          "Typing town chat retains keyboard ownership",
+          "Commands reflect the server-confirmed building permission",
+          "Shared-play commands omit retired force controls",
+          "Shared character command focuses a visible choice without retired abilities",
+          "Shared commands omit the unreleased Events surface",
+          "Shared map command expands the atlas and focuses its live map",
+          "No shared navigation page errors: "
+        ],
+        "canBuild": false,
+        "errors": []
+      }
+    },
+    {
+      "name": "shared-seating",
+      "status": "failed",
+      "seconds": 45.677,
+      "error": "page.waitForFunction: Timeout 30000ms exceeded.\n    at join (preview/e2e/shared-seating.js:9:15)\n    at async eval (preview/e2e/shared-seating.js:65:5)\n    at async file:///Users/buns/Documents/GitHub/BunsDev/river-oaks-office-desk-20261013/preview/e2e/shared-runner.js:127:18",
+      "pageErrors": [],
+      "diagnostics": [
+        {
+          "url": "http://127.0.0.1:51534/?motion-debug=1",
+          "mode": "joined",
+          "ready": "true",
+          "appearance": "sable-human",
+          "assets": "{\"loaded\":100,\"total\":100,\"failed\":0,\"done\":true}",
+          "town": "",
+          "player": "",
+          "places": "You're at Jo Malone London",
+          "landmarkCount": 0,
+          "connected": true
+        }
+      ]
+    },
+    {
+      "name": "world-boundary",
+      "status": "passed",
+      "seconds": 49.256,
+      "result": {
+        "passed": true,
+        "checks": [
+          "An alternate world joins with its own versioned snapshot",
+          "Jevica retains building permission in the alternate world",
+          "An unqualified link still joins the original River Oaks world",
+          "An unknown world cannot join this server",
+          "A missing world shows a clear connection gate",
+          "No browser errors: "
+        ],
+        "errors": []
+      }
+    },
+    {
+      "name": "world-map",
+      "status": "passed",
+      "seconds": 47.304,
+      "result": {
+        "passed": true,
+        "checks": [
+          "The map draws the active world roads and buildings",
+          "Named destinations and the live player position appear on the map",
+          "Selecting a map marker previews it before travel",
+          "Go here uses the shared server travel path",
+          "A saved landmark appears in its world map",
+          "Keyboard arrows choose an arbitrary destination",
+          "A selected map point shares its world and position",
+          "The active world contains a broad blocked building footprint",
+          "A building click remains an arbitrary point, not a storefront shortcut",
+          "The server refuses an indoor map destination",
+          "A player in the same world appears as a live map marker",
+          "The keyboard-accessible player list offers server-checked meeting without sharing another player position",
+          "Meet nearby arrives beside Bob rather than on top of him",
+          "A departed selected player leaves the map and clears the meeting action",
+          "Another world omits map landmarks saved in the configured alternate world",
+          "No browser errors: "
+        ],
+        "errors": []
+      }
+    },
+    {
+      "name": "world-publish",
+      "status": "failed",
+      "seconds": 66.229,
+      "error": "Error: The map follows the applied region revision\n    at check (preview/e2e/world-publish.js:4:41)\n    at eval (preview/e2e/world-publish.js:253:3)\n    at runNextTicks (node:internal/process/task_queues:65:5)\n    at process.processImmediate (node:internal/timers:472:9)\n    at async file:///Users/buns/Documents/GitHub/BunsDev/river-oaks-office-desk-20261013/preview/e2e/shared-runner.js:127:18",
+      "pageErrors": [],
+      "diagnostics": [
+        {
+          "url": "http://127.0.0.1:56197/?world=moon-garden&motion-debug=1",
+          "mode": "joined",
+          "ready": "false",
+          "assets": "{\"loaded\":5,\"total\":36,\"failed\":0,\"done\":false}",
+          "town": "",
+          "player": "Loading appearance…",
+          "places": "",
+          "landmarkCount": 0,
+          "connected": true
+        }
+      ]
+    },
+    {
+      "name": "access-gate",
+      "status": "passed",
+      "seconds": 4.054,
+      "result": {
+        "passed": true,
+        "checks": [
+          "Anonymous players can sign in with email",
+          "Anonymous players see only supported sign-in methods",
+          "Anonymous players cannot start either play mode",
+          "The first paint is the sign-in gate colour, not a white page",
+          "A returning visitor opens on a splash in their own theme ({\"returning\":true,\"theme\":\"light\",\"background\":\"rgb(233, 236, 229)\"})",
+          "The splash hides the sign-in art and card but keeps the access status readable",
+          "When sign-in is needed the gate appears and the visit is forgotten",
+          "Waiting players see their username; email sign-ins get a generated one",
+          "A name someone already holds is refused with a clear reason",
+          "Waiting players save their own username with CSRF protection",
+          "Suggest another offers a generated name",
+          "Pending players can redeem an invitation",
+          "Signed-in pending players cannot start either play mode",
+          "Pending players can sign out",
+          "Entering the district remembers the visit for a quiet next load",
+          "Waitlist review closes Settings before taking focus",
+          "Waitlist review opens with keyboard focus in its dialog",
+          "Approvers can review pending and decided accounts",
+          "User IDs are hidden from the waitlist by default",
+          "Approvers can reveal a user ID",
+          "Approvers can hide the user ID again",
+          "Approvers can copy a hidden user ID",
+          "Copying does not reveal the user ID",
+          "Approvers can revoke a prior approval with CSRF protection",
+          "Approvers see each username; an approved one is fixed",
+          "Approvers rename a waiting resident with CSRF protection",
+          "Revoking an approval sends no username",
+          "Approvers can reconsider a declined request with an edited username",
+          "Closing waitlist review restores Account settings",
+          "Escape keeps review closed and returns focus to the game controls"
+        ]
+      }
+    },
+    {
+      "name": "connection-required",
+      "status": "passed",
+      "seconds": 7.52,
+      "result": {
+        "checks": [
+          "Legacy solo preferences cannot unlock an offline game",
+          "An unavailable town never creates a private session",
+          "Offline keyboard input cannot move the player",
+          "There is no alternate play-mode control",
+          "Connection recovery unlocks the authenticated town",
+          "The recovered player belongs to the server snapshot",
+          "Device landmarks do not become account landmarks",
+          "Movement resumes after a successful authenticated connection"
+        ]
+      }
+    },
+    {
+      "name": "multiplayer",
+      "status": "failed",
+      "seconds": 98.492,
+      "error": "Error: page.waitForFunction: Timeout 45000ms exceeded.\n    at eval (preview/e2e/multiplayer.js:27:16)\n    at async file:///Users/buns/Documents/GitHub/BunsDev/river-oaks-office-desk-20261013/preview/e2e/shared-runner.js:127:18\n    at file:///Users/buns/Documents/GitHub/BunsDev/river-oaks-office-desk-20261013/preview/e2e/shared-runner.js:128:45\n    at runNextTicks (node:internal/process/task_queues:65:5)\n    at process.processImmediate (node:internal/timers:472:9)",
+      "pageErrors": [],
+      "diagnostics": [
+        {
+          "url": "http://127.0.0.1:57858/?motion-debug=1",
+          "mode": "joined",
+          "ready": "true",
+          "appearance": "sable-human",
+          "assets": "{\"loaded\":100,\"total\":100,\"failed\":0,\"done\":true}",
+          "town": "",
+          "player": "Disconnected. Your action was not confirmed.",
+          "places": "",
+          "landmarkCount": 0,
+          "connected": true
+        }
+      ],
+      "result": {
+        "passed": false,
+        "checks": [
+          "Shared appearance picker is available",
+          "Unsynchronized carriage and Force controls remain hidden in shared play after assets load",
+          "Shared diagnostics and town exclude the private coachman",
+          "Force shortcut cannot bypass shared-mode gating",
+          "Two accounts share the roster and rendered avatars"
+        ],
+        "errors": [],
+        "failure": "page.waitForFunction: Timeout 45000ms exceeded.\n    at eval (preview/e2e/multiplayer.js:27:16)\n    at async file:///Users/buns/Documents/GitHub/BunsDev/river-oaks-office-desk-20261013/preview/e2e/shared-runner.js:127:18"
+      }
+    },
+    {
+      "name": "indoor-npcs",
+      "status": "passed",
+      "seconds": 32.345,
+      "result": {
+        "passed": true,
+        "checks": [
+          "The retired local street-model loader is absent",
+          "The NPC directory contains only building residents",
+          "Rendered NPC identities belong to buildings",
+          "Outdoor players have no nearby NPC interactions",
+          "Building NPCs remain visible and conversational inside their room",
+          "Jevica retains her companion, chauffeur, and vehicles in multiplayer",
+          "A real player is still rendered as a remote avatar",
+          "No browser errors: "
+        ]
+      }
+    },
+    {
+      "name": "multiplayer-exclusivity",
+      "status": "passed",
+      "seconds": 73.901,
+      "result": {
+        "passed": true,
+        "guest": {
+          "appearance": "sable-human",
+          "jevicaHidden": true,
+          "flightHidden": true,
+          "garageHidden": true,
+          "companionHidden": true,
+          "carVisible": false,
+          "jevVisible": false
+        },
+        "privileged": {
+          "appearance": "jevica",
+          "jevicaVisible": true,
+          "garageVisible": true,
+          "companionVisible": true,
+          "carVisible": true,
+          "jevVisible": true
+        }
+      }
+    },
+    {
+      "name": "vehicle-exit",
+      "status": "passed",
+      "seconds": 10.542,
+      "result": {
+        "checks": [
+          "Jevica boards a vehicle accepted by the shared town",
+          "The initial parked vehicle supports a scenic drive: {\"riding\":true,\"chauffeur\":{\"active\":true,\"paused\":false,\"label\":\"Connecting to Jev…\",\"source\":null,\"remaining\":27},\"placement\":{\"position\":[-2768.3956419313604,18.462294390991243,1295.0133343366692],\"yaw\":1.5542610866111075,\"pitch\":-0.015001887053174272,\"roll\":-0.0020945138733826337,\"distance\":0,\"scale\":1,\"team\":false,\"vehicle\":\"rolls\",\"terrainError\":0.0029902968317507828,\"speed\":0,\"steering\":0,\"wheelOffsets\":[-0.0015592997989273272,0.000873349023500225,0.000590662636000161,-0.0007119591905535572]},\"princeVisible\":true,\"companion\":{\"enabled\":false,\"mode\":\"seat\",\"stance\":\"seat\",\"source\":null,\"label\":\"Ready to drive\",\"reason\":null,\"decisions\":0,\"carrying\":false,\"position\":null},\"status\":\"Ride with Jev, or give directions with W/S and A/D.\"}",
+          "Jev smart driving receives a valid decision",
+          "Paused smart drive holds the vehicle",
+          "A quick manual direction immediately cancels autopilot",
+          "Brake and park stops the vehicle",
+          "Shared corrections preserve the exit point: {\"exit\":[-2765.443238844423,20.156151659384932,1297.9163891104515],\"position\":[-2765.443238844423,20.156151659384932,1297.9163891104515],\"corrections\":[]}",
+          "The shared town confirms the same grounded exit",
+          "Jevica remains visible after stepping out",
+          "Stepping out produces no rejected pose"
+        ]
+      }
+    },
+    {
+      "name": "multiplayer-gate",
+      "status": "passed",
+      "seconds": 34.414,
+      "result": {
+        "passed": true,
+        "checks": [
+          "Disconnected game is locked",
+          "Disconnect focuses the recovery dialog title",
+          "Authenticated recovery hides the sign-in link",
+          "Forward Tab reaches the first available recovery action",
+          "Shift+Tab reaches sign-out without entering the inert game",
+          "Tab wraps to the first recovery action",
+          "Successful retry restores movement focus",
+          "Mobile recovery dialog fits the viewport",
+          "Signed-out gate starts with accessible title focus",
+          "GitHub sign-in link is reachable by keyboard",
+          "Email sign-in field is reachable by keyboard",
+          "Email code button is reachable by keyboard",
+          "Anonymous gate exposes only supported sign-in methods"
+        ],
+        "errors": []
+      }
+    },
+    {
+      "name": "resident-names",
+      "status": "passed",
+      "seconds": 202.332,
+      "result": {
+        "checks": [
+          "A resident is shown by their GitHub username",
+          "The admin account is Jevica",
+          "A non-admin session claiming Jevica is not shown as Jevica",
+          "Every viewer, including the impostor, sees the same name",
+          "The impostor’s own character panel does not call them Jevica",
+          "The roster names the impostor by their safe name",
+          "The roster names the admin Jevica",
+          "Roster buttons are labelled with the safe name (View profile for Visitor #impostor | Add Visitor #impostor as a contact | Report disruption by Visitor #impostor | Mute voice from Visitor #impostor)",
+          "Nameplates show the impostor safely and the admin as Jevica",
+          "Chat shows the impostor safely and the admin as Jevica ({\"impostor\":\"Visitor #impostor\",\"user_01M40Y914S1H4EJCEHH91DKTAY\":\"Jevica\"})",
+          "The impostor’s profile card does not call them Jevica",
+          "The contact list shows the impostor’s safe name ({\"status\":\"Invitation sent to Visitor #impostor.\",\"rows\":[\"Visitor #impostor\"]})",
+          "The map’s live player list shows the impostor safely",
+          "Alice’s view: nothing but the owner reads as Jevica ([])",
+          "The admin is still shown as Jevica on the roster, nameplate and chat",
+          "The impostor’s own view: nothing but the owner reads as Jevica ([])",
+          "The admin’s view: nothing but the owner reads as Jevica ([])",
+          "A lookalike spelling of Jevica is not shown as Jevica",
+          "Alice’s view with the lookalike: nothing but the owner reads as Jevica ([])",
+          "The lookalike’s own view: nothing but the owner reads as Jevica ([])",
+          "Different accounts receive distinct fallback names",
+          "A Resident session receives its own unique fallback",
+          "The automatic fallback survives reconnecting",
+          "No page errors: "
+        ]
+      }
+    },
+    {
+      "name": "sit-and-water",
+      "status": "passed",
+      "seconds": 22.33,
+      "result": {
+        "checks": [
+          "The town lists storefront benches as seats",
+          "Arrived beside bench:osm-node-8172494989:0",
+          "Contextual Sit seats Alice on a free storefront bench",
+          "Beside a bench, the seats panel lists it and Z offers to sit",
+          "Contextual Sit sits on a place on that bench",
+          "The HUD says the player is sitting",
+          "The town records the seat, through the shared seating model",
+          "Arrived beside bench:osm-node-8172494989:1",
+          "Another player sees them seated on that place",
+          "and facing the way the bench faces",
+          "Bob can still sit beside her",
+          "A held place is never offered; Bob takes the one beside it",
+          "Standing up is the single primary contextual action while seated",
+          "Contextual Stand stands up, for everyone",
+          "Bob stands up too",
+          "Arrived beside planter:osm-node-8172494989:0",
+          "Beside a planter, the Z prompt offers to water it",
+          "Arrived beside planter:osm-node-8172494989:1",
+          "Another player sees them turn to the planter and pour from a watering can ({\"seen\":5.351071252801775,\"toward\":-0.7853981633975945})",
+          "The watering animation ends by itself",
+          "No outdoor NPCs are rendered on multiplayer benches",
+          "No page errors: "
+        ]
+      }
+    },
+    {
+      "name": "greetings",
+      "status": "passed",
+      "seconds": 37.8,
+      "result": {
+        "checks": [
+          "Nearest person is selected without opening People",
+          "Invitation leaves both avatars at rest until accepted",
+          "Keyboard focus moves from Accept to Stop after confirmation",
+          "Keyboard acceptance starts a visible shared handshake",
+          "Local avatar turns toward their partner",
+          "Both dancers use the same server phase",
+          "Greeting controls fit a phone viewport",
+          "Either participant can stop from mobile controls",
+          "Declining clears the invitation on both clients",
+          "Walking away cancels both dancers through the actual movement transport",
+          "No browser errors: "
+        ],
+        "errors": [],
+        "scope": "Two authenticated local fixture accounts; keyboard acceptance and phone viewport; no human accessibility or art-quality acceptance."
+      }
+    },
+    {
+      "name": "creator-objects",
+      "status": "passed",
+      "seconds": 35.146,
+      "result": {
+        "checks": [
+          "Jevica can edit a named primitive assembly",
+          "Parts form one editable design",
+          "Creator travels through the authoritative room",
+          "The complete assembly has a valid placement (Ready to place.)",
+          "Authority confirms the full assembly and its material",
+          "A second browser renders the actual physical glass surface",
+          "Guests cannot remove the creator’s object",
+          "The full assembly is available as a saved design",
+          "The edited assembly has a valid placement (Ready to place.)",
+          "Jevica edits confirmed parts through the builder controls",
+          "Live edits release the previous material",
+          "Removal reaches the other browser and releases its object",
+          "The saved copy has a valid placement (Ready to place.)",
+          "Saved copies preserve the original parts rather than later edits",
+          "A reconnecting guest receives the complete saved assembly",
+          "No page errors: "
+        ]
+      }
+    }
+  ],
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)"
+}

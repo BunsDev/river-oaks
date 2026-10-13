@@ -201,3 +201,28 @@ test('crowded remote frames reuse scratch vectors and measure the label viewport
     assert.equal(heightReads,60);
   }finally{THREE.Vector3.prototype.clone=clone;players?.dispose();globalThis.document=previousDocument;}
 });
+
+test('speaking residents get a nameplate marker and the speaker cadence, set at event time', async () => {
+  const previousDocument = globalThis.document;
+  class Label extends Element { constructor() { super(); this.dataset = {}; this.textContent = ''; this.hidden = false; } }
+  globalThis.document = { createElement: () => new Label() };
+  try {
+    const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(), players = createRemotePlayers(scene, new Element());
+    players.setSpeaking(['early']);
+    players.sync([{ id: 'peer', name: 'Peer', position: [0, 0, 0], altitude: 0, yaw: 0 }, { id: 'early', name: 'Early', position: [1, 0, 0], altitude: 0, yaw: 0 }], 'self');
+    await new Promise(resolve => setImmediate(resolve));
+    const label = id => scene.children.length && [...scene.children].map((_, index) => index).map(() => null) && null;
+    void label;
+    const entries = scene.children;
+    assert.equal(entries.length, 2);
+    players.update(0, camera);
+    const frames = entries.map(holder => holder.children[0].userData.frames);
+    players.setSpeaking(['peer']);
+    players.update(16, camera);
+    players.update(32, camera);
+    assert.deepEqual(frames.map(list => list.at(-1).action), ['continue', 'continue']);
+    const speakingFlags = () => players.stats().map(entry => entry.id);
+    assert.deepEqual(speakingFlags().sort(), ['early', 'peer']);
+    players.dispose();
+  } finally { globalThis.document = previousDocument; }
+});

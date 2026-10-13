@@ -18,10 +18,19 @@ test('vercel.json sends exactly the headers the Node server sends', () => {
 
 test('the policy defaults to this origin and keeps its restrictive directives', () => {
   assert.deepEqual(directives['default-src'], ["'self'"]);
-  for (const [name, value] of [['object-src', ["'none'"]], ['base-uri', ["'self'"]], ['form-action', ["'self'"]], ['frame-ancestors', ["'none'"]], ['connect-src', ["'self'", 'data:', 'blob:']]])
+  // connect-src: this origin, plus LiveKit Cloud's signalling hosts for shared
+  // voice (clients are redirected to regional *.livekit.cloud hosts, so one
+  // pinned host is not enough). WebRTC media and TURN are outside the CSP.
+  for (const [name, value] of [['object-src', ["'none'"]], ['base-uri', ["'self'"]], ['form-action', ["'self'"]], ['frame-ancestors', ["'none'"]], ['connect-src', ["'self'", 'data:', 'blob:', 'https://*.livekit.cloud', 'wss://*.livekit.cloud']]])
     assert.deepEqual(directives[name], value, name);
   assert.deepEqual(directives['script-src'], ["'self'", 'https://challenges.cloudflare.com'], 'scripts: this origin and Turnstile only');
   assert.deepEqual(directives['frame-src'], ['https://challenges.cloudflare.com'], 'frames: Turnstile only');
   assert.equal(/'unsafe-eval'|'unsafe-inline'/.test(directives['script-src'].join(' ')), false, 'no inline or eval scripts');
   assert.equal(Object.values(directives).flat().some(value => value === '*' || value === 'https:' || value === 'http:'), false, 'no wildcard sources');
+});
+
+test('the microphone is available to this origin only, and no other powerful feature is delegated', () => {
+  const sent = {};
+  securityHeaders({ setHeader: (name, value) => { sent[name] = value; } });
+  assert.equal(sent['Permissions-Policy'], 'microphone=(self), camera=(), geolocation=(), display-capture=()');
 });

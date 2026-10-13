@@ -1,0 +1,24 @@
+/* Shuffleboard: the table from your end, maple with the three scoring zones toward the
+   far end and the foul line, red and blue pucks, and the aim line and power target. */
+.shuffleboard-panel .shuffleboard-body { display: flex; flex-direction: column; gap: 12px; }
+.shuffleboard-panel .shuffle-scores { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.shuffleboard-panel .shuffle-scores li { padding: 4px 10px; border-radius: 999px; background: var(--hud-tile); color: var(--ink); font-size: 12px; font-weight: 650; }
+.shuffleboard-panel .shuffle-scores li[data-turn] { outline: 2px solid var(--hud-action); outline-offset: -2px; }
+.shuffleboard-panel .shuffle-scores li[data-owner="0"]::before, .shuffleboard-panel .shuffle-scores li[data-owner="1"]::before { content: ''; display: inline-block; width: 9px; height: 9px; margin-right: 6px; border-radius: 50%; background: #b7342c; vertical-align: 0; }
+.shuffleboard-panel .shuffle-scores li[data-owner="1"]::before { background: #2f5fae; }
+.shuffleboard-panel .shuffle-table { display: block; align-self: center; width: auto; height: min(52vh, 460px); }
+@media (max-width: 520px) { .shuffleboard-panel .shuffle-table { height: min(42vh, 320px); } }
+.shuffleboard-panel .shuffle-wood { fill: #e9d7b4; stroke: #a98a5c; stroke-width: 1.5; }
+.shuffleboard-panel .shuffle-zone { fill: #c79b5f; opacity: .18; }
+.shuffleboard-panel .shuffle-zone-2 { opacity: .3; }
+.shuffleboard-panel .shuffle-zone-3 { opacity: .42; }
+.shuffleboard-panel .shuffle-zone-label { fill: #6b4f2a; font: 700 13px/1 system-ui, sans-serif; }
+.shuffleboard-panel .shuffle-foul { stroke: #6b4f2a; stroke-width: 2; stroke-dasharray: 5 4; }
+.shuffleboard-panel .shuffle-puck { stroke: #f7f2e8; stroke-width: 1.5; }
+.shuffleboard-panel .shuffle-puck-0 { fill: #b7342c; }
+.shuffleboard-panel .shuffle-puck-1 { fill: #2f5fae; }
+.shuffleboard-panel .shuffle-aim { stroke: var(--hud-action); stroke-width: 2; stroke-dasharray: 6 5; opacity: .75; }
+.shuffleboard-panel .shuffle-target { fill: none; stroke: var(--hud-action); stroke-width: 2.5; }
+.shuffleboard-panel .table-game-actions [data-shuffle-action=throw], .shuffleboard-panel .table-game-actions [data-shuffle-action=new] { background: var(--hud-action); border-color: transparent; color: var(--hud-on-action); }
+.shuffleboard-panel .table-game-actions [data-shuffle-action=throw] { min-width: 120px; }
+.shuffleboard-panel [data-shuffle-action=throw][aria-disabled=true] { opacity: .45; cursor: default; }
