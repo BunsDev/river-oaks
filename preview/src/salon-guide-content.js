@@ -3,7 +3,7 @@
 // guides a player has read. Pure, so node tests check it against the rules modules;
 // salon-guide.js puts it on screen.
 const SALON_SEAT = 'Two chess tables stand in the plaza salon, one by Dior and one by Toulouse. Walk to a chair and press Z to sit, then X (Play a table game) to open the board beside you.';
-const SALON_SHEET = 'Play the plaza regular and choose your side, or Pass and play to share the board with a friend. Take back returns you to your own turn; New game starts afresh. Each table keeps one game of each kind, so you can switch and come back.';
+const SALON_SHEET = 'Play the plaza regular, choosing your side, or Pass and play with a friend. With someone in the other chair, Play them instead: the town keeps that game, and the whole plaza sees it. Each table keeps one practice game of each kind.';
 const BOARD_KEYS = [[['Z'], 'Sit down or stand up'], [['X'], 'Open the board, or put it away'], [['←', '↑', '→', '↓'], 'Move across the board'], [['Enter'], 'Choose the square'], [['Esc'], 'Put the board away; your game waits']];
 const CAFE_KEYS = [[['Z'], 'Sit down or stand up'], [['X'], 'Open the table, or put it away'], [['←', '→'], 'Move along your hand'], [['Enter'], 'Choose the tile or card'], [['Esc'], 'Put the table away']];
 
