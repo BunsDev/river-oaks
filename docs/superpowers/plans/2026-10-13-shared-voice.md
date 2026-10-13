@@ -145,9 +145,82 @@ tests assert the mechanism under a fake clock; real numbers are a PR 5 item.
   server 421 passed, 134 Redis-only skipped; desktop 49; Python and secrets
   clean; build ok).
 
+PR 1 landed as #300 (`7b14325`). PR 2 is #302 (reconciler, sweep, headers;
+its own ledger section lands with it).
+
+## PR 3: browser controller and controls (shows only when the snapshot says voice is available)
+
+Branch `feat/voice-client-20261013`, from `main` (client files only; the
+server PRs land independently).
+
+- `preview/src/voice-chat.js`: the controller. States `unavailable | idle |
+  joining | joined | rejoining | error` with a microphone sub-state `off |
+  requesting | on | denied | none`, deafen, playback-blocked and per-resident
+  mutes. Every asynchronous step is fenced by a generation counter like
+  `speech.js`, so a late join result, token or microphone grant is disposed
+  instead of applied. Join creates and resumes the AudioContext inside the
+  gesture, asks `/api/voice/join`, loads `livekit-client` by dynamic import on
+  first use, connects with the lease token and keeps the microphone off. Unmute
+  is the only action that asks for the microphone; denial or missing hardware
+  is reported without leaving. Renew runs on the lease cadence and sends the
+  participant identity; `space_changed` rejoins keeping deafen and mutes;
+  anything else ends voice. A space change seen in the snapshot rejoins too;
+  our own identity missing from the snapshot (after a 2.5 s stamp grace) ends
+  voice. Hidden tab mutes and never auto-unmutes; blur releases push-to-talk;
+  pagehide, sign-out and dispose leave with `keepalive`. A lost town connection
+  leaves quietly and rejoins with the microphone off when the town is back.
+- `preview/src/voice-spatial.js`: the distance and pan math (full gain inside
+  `ENCOUNTER_FAR`, silence at 25 m, hysteresis for subscriptions at 22/25 m,
+  coordinates matching `remote-players.js`). The audio graph that uses it is
+  PR 4.
+- `preview/src/voice-preferences.js`: validated `localStorage` for device,
+  push-to-talk, automatic unmute (only once the microphone was allowed) and
+  per-resident mutes; one shared store per page so Settings and the town client
+  see each other's changes.
+- `preview/src/voice-ui.js` and `voice.css`: the walking-console row (Join Y,
+  Unmute M with keycaps, one `role=status` region), the chat-dock row (Join,
+  Mute, Deafen, Enable audio) with a "Voice on · N talking" pill in the dock
+  summary, a Mute button per resident in the roster, and the Settings → Audio
+  pane (device list read on focus without prompting, open mic or push-to-talk,
+  automatic unmute). `aria-pressed` for toggles, `aria-disabled` while busy.
+- `walking-ui.js`: Y joins or leaves, M toggles or, in push-to-talk, rides the
+  held-keys set so blur, Escape and an open dialogue release it like movement;
+  `mountVoice` places the row under the actions. `rail-navigation.js`: palette
+  entries and the key reference. `multiplayer-client.js`: the controller is
+  created with the chat dock; snapshots feed availability, the authoritative
+  space and identities; close, sign-out and dispose end voice. `main.js`:
+  `window.__riverVoice()` and the walking `getVoice` hook. `vite.config.js`: a
+  dedicated `livekit` chunk so the core bundle never references the SDK.
+- Known compact-screen gap: the single live region sits in the walking console,
+  which hides while the chat dock is open at ≤ 900 px; the dock row mirrors the
+  text without announcing it.
+
+### Checks
+
+- `voice-chat`, `voice-spatial`, `voice-preferences`, `voice-ui`: 27 tests, 27
+  passed with a fake transport (join loads the SDK once and keeps the mic off;
+  a late join is inert and its room torn down; denial and missing hardware keep
+  the room; renew cadence and a refused renewal; space change from renew and
+  from the snapshot keeping deafen and mutes; sign-out, pagehide and dispose
+  release once; hidden tab; deafen and per-resident mutes with subscriptions;
+  mute survives reload; blocked playback unlock; join failures explain
+  themselves; speaking maps to players; push-to-talk; own revocation after the
+  stamp grace; lost connection rejoins with the mic off; device switch).
+- Three test corrections were harness bugs (Node's getter-only `navigator`, a
+  missing `getAttribute` in the fake); one controller bug was caught by the
+  tests: the status line was computed before the microphone state changed.
+- No unit test drives `walking-ui.js` keys (it is DOM-bound and untested
+  today); Y and M are covered by the PR 4 browser journey instead.
+- `pnpm run build`: LiveKit lands in its own chunk (557 KB raw, 144 KB gzip);
+  the `index` chunk has no static reference to it.
+- `pnpm test`: 2723 tests, 2722 passed, 1 skipped. `pnpm run verify` core: passed
+  (tooling 76; preview 2722 passed, 1 skipped; server 407 passed, 133 Redis-only
+  skipped; desktop 49; Python and secrets clean).
+
 ## Next
 
-- PR 3: browser controller, Y/M keys, chat-dock and roster controls, settings.
+- PR 4: spatial audio graph, speaking rings, the two-context journey (which
+  also covers the Y/M keys).
 - PR 4: spatial audio graph, speaking rings, two-context journey.
 - PR 5: desktop audio-only permission; real two-browser acceptance against a
   LiveKit Cloud dev project with the receipt in `data/reports/voice-live.json`.

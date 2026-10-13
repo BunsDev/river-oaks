@@ -3999,6 +3999,106 @@
       ]
     },
     {
+      "id": "minimap-flicker",
+      "title": "Stop the website flickering, and take the compact district minimap out of the sidebar's scrolling container",
+      "status": "active",
+      "branches": [
+        "fix/minimap-flicker-20261013"
+      ],
+      "owner": "claude:river-oaks-c2",
+      "leaseUntil": "2026-10-13T16:26:56.000Z",
+      "updatedAt": "2026-10-13T08:26:56.000Z",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-minimap-flicker-20261013",
+      "nextAction": "Reproduce the flicker in a browser (GPU and software rendering), find its cause, then move the compact minimap out of .panel-scroll; verify with unit tests, minimap/places journeys and before/after captures, then PR.",
+      "filesOwned": [
+        "preview/src/world-map.js",
+        "preview/src/world-map.css",
+        "preview/src/sidebar.css",
+        "preview/src/sidebar.js",
+        "preview/src/places-guide.css",
+        "preview/index.html (#control-panel places area)",
+        "flicker-causing CSS/JS once identified"
+      ],
+      "requiredChecks": [
+        "pnpm test",
+        "pnpm run verify",
+        "destination-minimap, places, places-guide, rail-navigation, hardware-acceleration journeys",
+        "frame capture showing no flicker, before and after",
+        "Hosted CI"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-13-minimap-flicker.md",
+      "issues": []
+    },
+    {
+      "id": "shared-voice-livekit",
+      "title": "Shared voice, PR 1: server leases, routes and world authority behind RIVER_OAKS_VOICE (LiveKit Cloud)",
+      "status": "retired",
+      "branches": [
+        "feat/voice-server-20261013"
+      ],
+      "updatedAt": "2026-10-13T11:02:28.505Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "filesOwned": [
+        "server/voice.js",
+        "server/voice-routes.js",
+        "server/livekit-client.js",
+        "server/tests/livekit-fixture.js",
+        "server/tests/voice-leases.test.js",
+        "server/tests/voice-service.test.js",
+        "server/tests/voice-routes.test.js",
+        "server/world.js",
+        "server/app.js",
+        "server/distributed-app.js",
+        "server/world-gateway.js",
+        "server/redis-backend.js",
+        "server/town.js",
+        "server/redis-security.js",
+        "server/vercel-routing.js",
+        "vercel.json",
+        "preview/vite.config.js",
+        ".env.example",
+        "package.json"
+      ],
+      "requiredChecks": [
+        "pnpm run verify",
+        "REDIS_URL pnpm run test:server (voice leases and routes, Redis cases)",
+        "pnpm run build"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-13-shared-voice.md",
+      "plan": "docs/superpowers/plans/2026-10-05-spatial-voice.md",
+      "pr": 300,
+      "deliveryPr": 300,
+      "evidence": [
+        {
+          "pr": 300,
+          "reviewedHead": "550d88c",
+          "merge": "7b1432573fd767d2603f9cafd7011a8fa373e0f8",
+          "tree": "36a13a356ce78453760224b6640cccd6f238ad5d",
+          "checks": "Verify run 38385502525 passed on the updated head (preview checks rerun once after a flake); local: 582 server tests with Redis, verify core passed",
+          "note": "PR 1 of shared voice: leases, routes, world authority, flag off"
+        }
+      ],
+      "retirement": {
+        "head": "550d88c93f4315dd0349db738c54a5c0b5ec67de",
+        "sessionsReviewedAt": "2026-10-13T11:01:23.485Z",
+        "releasedAt": "2026-10-13T11:01:23.485Z",
+        "releasedBy": "claude:river-oaks-f1 (46fc41e0)",
+        "note": "Only this session worked the branch; #300 merged as 7b14325; worktree clean."
+      },
+      "retiredBranches": [
+        "feat/voice-server-20261013"
+      ],
+      "archive": {
+        "feat/voice-server-20261013": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-wfqXzq/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-wfqXzq/history.bundle",
+          "sha256": "681b96ae1a231b960ad3976b213be81befef7504844e27e73767ce3c6df152fd",
+          "tag": "refs/tags/archive/worktree-prune/e646ff1d-d336-46e9-a7e2-094e7a3cedbd",
+          "head": "550d88c93f4315dd0349db738c54a5c0b5ec67de"
+        }
+      }
+    },
+    {
       "id": "plaza-games",
       "title": "Playable games at the Dior–Toulouse plaza tables: solo chess first (X to play at a chess chair, local AI and pass-and-play, mirrored on the 3D board); later checkers, café cards/dominoes, more game tables, Jenga and wine pong",
       "status": "active",
@@ -4032,35 +4132,78 @@
       "issues": []
     },
     {
-      "id": "minimap-flicker",
-      "title": "Stop the website flickering, and take the compact district minimap out of the sidebar's scrolling container",
+      "id": "shared-voice-reconciler",
+      "title": "Shared voice, PR 2: tick reconciler, orphan sweep cron, LiveKit CSP and microphone Permissions-Policy",
       "status": "active",
       "branches": [
-        "fix/minimap-flicker-20261013"
+        "feat/voice-controller-20261013"
       ],
-      "owner": "claude:river-oaks-c2",
-      "leaseUntil": "2026-10-13T16:26:56.000Z",
-      "updatedAt": "2026-10-13T08:26:56.000Z",
-      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-minimap-flicker-20261013",
-      "nextAction": "Reproduce the flicker in a browser (GPU and software rendering), find its cause, then move the compact minimap out of .panel-scroll; verify with unit tests, minimap/places journeys and before/after captures, then PR.",
+      "owner": "claude:river-oaks-f1 (46fc41e0)",
+      "pr": 302,
+      "updatedAt": "2026-10-13T11:01:23.485Z",
+      "leaseUntil": "2026-10-13T13:01:23.485Z",
+      "nextAction": "#302 queued in pnpm run land (verify core passed; 597 server tests with Redis). Record delivery evidence when it merges, then retire the worktree.",
       "filesOwned": [
-        "preview/src/world-map.js",
-        "preview/src/world-map.css",
-        "preview/src/sidebar.css",
+        "server/voice.js",
+        "server/voice-routes.js",
+        "server/redis-room.js",
+        "server/app.js",
+        "server/distributed-app.js",
+        "server/world-gateway.js",
+        "server/redis-backend.js",
+        "server/town.js",
+        "server/security-headers.js",
+        "server/vercel-routing.js",
+        "api/server.js",
+        "vercel.json",
+        "docs/multiplayer.md",
+        "server/tests/voice-reconcile.test.js",
+        "server/tests/voice-sweep.test.js"
+      ],
+      "requiredChecks": [
+        "pnpm run verify",
+        "REDIS_URL pnpm run test:server"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-13-shared-voice.md",
+      "plan": "docs/superpowers/plans/2026-10-05-spatial-voice.md"
+    },
+    {
+      "id": "shared-voice-client",
+      "title": "Shared voice, PR 3: browser controller, Y/M keys, chat-dock and roster controls, voice settings",
+      "status": "active",
+      "branches": [
+        "feat/voice-client-20261013"
+      ],
+      "owner": "claude:river-oaks-f1 (46fc41e0)",
+      "updatedAt": "2026-10-13T11:05:45.848Z",
+      "leaseUntil": "2026-10-13T13:01:23.485Z",
+      "nextAction": "Verify core passed (preview 2722/2723, server 407 + 133 Redis-only skips, desktop 49); build keeps LiveKit in its own chunk. PR open; land after #302, then PR 4 (spatial audio, speaking rings, two-browser journey).",
+      "filesOwned": [
+        "preview/src/voice-chat.js",
+        "preview/src/voice-spatial.js",
+        "preview/src/voice-preferences.js",
+        "preview/src/voice-ui.js",
+        "preview/src/voice.css",
+        "preview/src/multiplayer-client.js",
+        "preview/src/walking-ui.js",
+        "preview/src/town-chat.js",
         "preview/src/sidebar.js",
-        "preview/src/places-guide.css",
-        "preview/index.html (#control-panel places area)",
-        "flicker-causing CSS/JS once identified"
+        "preview/src/rail-navigation.js",
+        "preview/src/main.js",
+        "preview/vite.config.js",
+        "package.json",
+        "preview/tests/voice-chat.test.js",
+        "preview/tests/voice-spatial.test.js",
+        "preview/tests/voice-preferences.test.js",
+        "preview/tests/voice-ui.test.js"
       ],
       "requiredChecks": [
         "pnpm test",
-        "pnpm run verify",
-        "destination-minimap, places, places-guide, rail-navigation, hardware-acceleration journeys",
-        "frame capture showing no flicker, before and after",
-        "Hosted CI"
+        "pnpm run build (livekit chunk, no static reference from index)",
+        "pnpm run verify"
       ],
-      "ledger": "docs/superpowers/plans/2026-10-13-minimap-flicker.md",
-      "issues": []
+      "ledger": "docs/superpowers/plans/2026-10-13-shared-voice.md",
+      "plan": "docs/superpowers/plans/2026-10-05-spatial-voice.md"
     },
     {
       "id": "plaza-checkers",
@@ -4091,49 +4234,6 @@
       ],
       "ledger": "docs/superpowers/plans/2026-10-13-plaza-checkers.md",
       "issues": []
-    },
-    {
-      "id": "shared-voice-livekit",
-      "title": "Resume shared spatial voice (deferred 2026-10-05) with LiveKit Cloud: server-issued scoped tokens, connectionId-fenced leases, tick reconciler plus cron sweep, then browser controls, spatial audio, desktop microphone permission and real two-browser acceptance",
-      "status": "active",
-      "branches": [
-        "feat/voice-server-20261013",
-        "feat/voice-controller-20261013"
-      ],
-      "owner": "claude:river-oaks-f1 (46fc41e0)",
-      "updatedAt": "2026-10-13T10:51:14.967Z",
-      "leaseUntil": "2026-10-13T12:13:11.370Z",
-      "nextAction": "PR 1 #300 landing; PR 2 (reconciler, sweep, headers) on feat/voice-controller-20261013: verify passed, open a PR and land after #300. PR 3 (browser controller) in progress on feat/voice-client-20261013.",
-      "filesOwned": [
-        "server/voice.js",
-        "server/voice-routes.js",
-        "server/livekit-client.js",
-        "server/tests/livekit-fixture.js",
-        "server/tests/voice-leases.test.js",
-        "server/tests/voice-service.test.js",
-        "server/tests/voice-routes.test.js",
-        "server/world.js",
-        "server/app.js",
-        "server/distributed-app.js",
-        "server/world-gateway.js",
-        "server/redis-backend.js",
-        "server/town.js",
-        "server/redis-security.js",
-        "server/vercel-routing.js",
-        "vercel.json",
-        "preview/vite.config.js",
-        ".env.example",
-        "package.json",
-        "docs/superpowers/plans/2026-10-13-shared-voice.md",
-        "docs/superpowers/plans/2026-10-05-spatial-voice.md"
-      ],
-      "requiredChecks": [
-        "pnpm run verify",
-        "REDIS_URL pnpm run test:server (voice leases and routes, Redis cases)",
-        "pnpm run build"
-      ],
-      "ledger": "docs/superpowers/plans/2026-10-13-shared-voice.md",
-      "plan": "docs/superpowers/plans/2026-10-05-spatial-voice.md"
     }
   ]
 }
