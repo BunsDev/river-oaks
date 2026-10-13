@@ -393,6 +393,57 @@ export function buildPlazaSalon(world) {
       },
       board: tableId => boards.get(tableId)?.board.slice() ?? null,
     };
+    // Connect Four (plaza-table-games.js): a standing frame across the middle of a chess
+    // table, shown only while Connect Four is that table's game. Columns run from the
+    // first player's left; dark slots show where discs can go.
+    const FOUR = 0.058, frameMaterial = new THREE.MeshStandardMaterial({ color: '#2f5fae', roughness: 0.42 });
+    const width = 7 * FOUR + 0.03, height = 6 * FOUR + 0.03, lift = 0.03;
+    const fourSlot = new THREE.CylinderGeometry(0.022, 0.022, 0.014, 20).rotateX(Math.PI / 2);
+    const fourDisc = new THREE.CylinderGeometry(0.024, 0.024, 0.022, 24).rotateX(Math.PI / 2);
+    // Both tables share the frame, slot and disc geometries and materials.
+    const frameGeometry = new THREE.BoxGeometry(width, height, 0.012), feetGeometry = new THREE.BoxGeometry(width + 0.04, 0.012, 0.09);
+    const slotMaterial = new THREE.MeshStandardMaterial({ color: '#16294a', roughness: 0.6 }), discMaterial = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.38 });
+    const fours = new Map(), tintOf = { r: new THREE.Color('#d2352d'), y: new THREE.Color('#f2c230') };
+    const cellAt = index => [((index % 7) - 3) * FOUR, lift + (Math.floor(index / 7) + 0.5) * FOUR + 0.015, 0];
+    for (const table of plan.chess) {
+      const [, y] = base(table), centre = chessCellPosition(table, { i: 3.5, j: 3.5 }), across = chessCellPosition(table, { i: 4.5, j: 3.5 });
+      const holder = new THREE.Group(); holder.name = `Connect Four ${table.id}`; holder.visible = false;
+      holder.position.set(centre[0], y + 0.774, -centre[1]);
+      holder.rotation.y = Math.atan2(-(-across[1] + centre[1]), across[0] - centre[0]);
+      const frame = new THREE.Mesh(frameGeometry, frameMaterial);
+      frame.position.y = lift + height / 2; frame.castShadow = frame.receiveShadow = true;
+      const feet = new THREE.Mesh(feetGeometry, frameMaterial);
+      feet.position.y = 0.006;
+      const slots = new THREE.InstancedMesh(fourSlot, slotMaterial, 42);
+      for (let index = 0; index < 42; index++) { dummy.position.set(...cellAt(index)); dummy.rotation.set(0, 0, 0); dummy.scale.set(1, 1, 1); dummy.updateMatrix(); slots.setMatrixAt(index, dummy.matrix); }
+      const discs = new THREE.InstancedMesh(fourDisc, discMaterial, 42);
+      discs.count = 0; discs.castShadow = true;
+      holder.add(frame, feet, slots, discs); group.add(holder);
+      fours.set(table.id, { holder, discs });
+    }
+    group.userData.connectFour = {
+      // A table's Connect Four grid (42 cells from connect-four-rules.js) and the chair of
+      // the side that moves first, or null to put the frame away.
+      show(tableId, board = null, firstChair = 0) {
+        const four = fours.get(tableId);
+        if (!four) return false;
+        four.holder.visible = Boolean(board);
+        if (!board) return true;
+        four.holder.scale.x = firstChair === 1 ? -1 : 1;
+        let count = 0;
+        board.forEach((side, index) => {
+          if (!tintOf[side]) return;
+          dummy.position.set(...cellAt(index)); dummy.rotation.set(0, 0, 0); dummy.scale.set(1, 1, 1); dummy.updateMatrix();
+          four.discs.setColorAt(count, tintOf[side]); four.discs.setMatrixAt(count++, dummy.matrix);
+        });
+        four.discs.count = count; four.discs.instanceMatrix.needsUpdate = true;
+        if (four.discs.instanceColor) four.discs.instanceColor.needsUpdate = true;
+        four.discs.computeBoundingSphere();
+        return true;
+      },
+      visible: tableId => fours.get(tableId)?.holder.visible ?? null,
+      discs: tableId => fours.get(tableId)?.discs.count ?? null,
+    };
   }
   // Dominoes at the café table: the line lies face up on an arc around the centrepiece,
   // and each hand stands at the table edge before its player's chair. Only an open hand
