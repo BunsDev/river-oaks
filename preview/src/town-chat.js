@@ -2,7 +2,7 @@
 export function createTownChatDock(section) {
   const dock = document.createElement('details'); dock.className = 'town-chat-dock'; dock.open = true;
   const toggle = document.createElement('summary'); toggle.className = 'town-chat-toggle';
-  toggle.innerHTML = '<span>Town chat <small>Everyone in this world</small></span><span class="chat-unread" aria-live="polite"></span><span aria-hidden="true">⌃</span>';
+  toggle.innerHTML = '<span>Town chat <small>Everyone in this world</small></span><span class="chat-voice"></span><span class="chat-unread" aria-live="polite"></span><span aria-hidden="true">⌃</span>';
   const history = section.querySelector('.multiplayer-chat-history');
   const jump = document.createElement('button'); jump.type = 'button'; jump.className = 'chat-jump'; jump.textContent = 'New messages ↓'; jump.hidden = true;
   history.after(jump);
@@ -36,6 +36,8 @@ export function createTownChatDock(section) {
       else { unread = Math.min(history.children.length, unread + added); showCount(); }
     },
     reveal() { if (dock.open && dock.checkVisibility({ visibilityProperty: true })) { history.scrollTop = history.scrollHeight; markRead(); } },
+    // A short voice state in the summary ("Voice on · 2 talking"); empty hides it.
+    setVoiceSummary(text) { const pill = toggle.querySelector('.chat-voice'); if (pill.textContent !== text) pill.textContent = text; },
     dispose() { dock.remove(); },
   };
 }
