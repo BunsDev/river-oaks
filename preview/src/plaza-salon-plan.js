@@ -66,12 +66,16 @@ export function plazaSalonPlan(world) {
   const planters = [-2802.9, -2793.0].map((x, index) => ({ id: `planter:${index}`, x, north: -1292.85, heading: 0 }));
   const stage = { id: 'stage', x: -2806.0, north: -1300.6, radius: 1.3 };
   stage.heading = heading([stage.x, stage.north], [round.x, round.north]);
+  // The bike rack: a bronze bar along the north footway, east of the Dior
+  // entrance (east ≈ -2784.7 stays open), with four bikes parked on its south
+  // side so riders roll out onto the plaza paving.
+  const rack = { id: 'rack', x: -2781.0, north: -1294.0, heading: 0, slots: 4, pitch: 0.9, length: 3.2 };
   const lanterns = [[-2805.9, -1294.2], [-2778.7, -1295.8], [-2797.4, -1303.0], [-2786.6, -1303.4]]
     .map(([x, north], index) => ({ id: `lantern:${index}`, x, north, heading: heading([x, north], [-2792.5, -1298.5]), height: POST_HEIGHT }));
   const trees = treeSupports(world).filter(({ position: [x, north] }) => x > PLAZA.west && x < PLAZA.east && north > PLAZA.south && north < PLAZA.north)
     .map(({ position: [x, north] }) => ({ x, north, height: LIGHT_HEIGHT })).sort((a, b) => a.x - b.x || a.north - b.north);
   const strands = lightWeb([...trees, ...lanterns.map(({ x, north, height }) => ({ x, north, height }))]);
-  return { round, chess, bench, chairs, planters, lanterns, stage, trees, strands, postHeight: POST_HEIGHT };
+  return { round, chess, bench, chairs, planters, lanterns, stage, rack, trees, strands, postHeight: POST_HEIGHT };
 }
 
 // Footprints the walking model blocks: [east, north, radius, height]. Chairs and
@@ -96,6 +100,11 @@ export function plazaSalonFootprints(world) {
     const [x, north] = along([bench.x, bench.north], angle, bench.backRadius);
     footprints.push([x, north, 0.17, 0.9]);
   }
+  // The rack bar: overlapping discs along its length; bikes and riders stand south of it.
+  for (let step = 0; step <= 8; step++) {
+    const offset = -plan.rack.length / 2 + plan.rack.length * step / 8;
+    footprints.push([plan.rack.x + Math.cos(plan.rack.heading) * offset, plan.rack.north + Math.sin(plan.rack.heading) * offset, 0.22, 0.8]);
+  }
   return footprints;
 }
 
@@ -118,6 +127,23 @@ export function plazaSalonSeats(world) {
     approach: along([chair.x, chair.north], chair.heading, -0.82) });
   // Residents resting at Dior may take a plaza seat (resident-life groups seats by store).
   return seats.map(seat => ({ ...seat, storeId: DIOR, id: `${seat.buildId}:${seat.slot}` }));
+}
+
+// Bike slots on the rack, in the seat conventions: a slot is `${rackId}:${n}`,
+// its position is where the bike stands (open paving), `approach` is where a
+// rider walks up to it, and `heading` is the way the bike points. The server
+// mounts a rider here; the browser draws a parked bike while the slot is free.
+export function plazaSalonRack(world) {
+  const plan = plazaSalonPlan(world);
+  if (!plan) return [];
+  const { rack } = plan, slots = [];
+  for (let slot = 0; slot < rack.slots; slot++) {
+    const across = -(rack.slots - 1) / 2 * rack.pitch + slot * rack.pitch;
+    const [x, north] = [rack.x + Math.cos(rack.heading) * across, rack.north + Math.sin(rack.heading) * across];
+    const [bx, bn] = along([x, north], rack.heading, 0.9);
+    slots.push({ id: `plaza-salon-rack:${slot}`, rackId: 'plaza-salon-rack', slot, x: bx, north: bn, heading: rack.heading, approach: along([bx, bn], rack.heading, 0.9) });
+  }
+  return slots;
 }
 
 // Chess tables. Each inlay is 116 of its 128 texels across a 0.6 m slab: eight

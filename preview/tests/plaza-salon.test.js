@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { CHESS_CELL_M, chessCell, chessCellIsDark, chessCellPosition, chessSeat, plazaSalonPlan, plazaSalonFootprints, plazaSalonSeats } from '../src/plaza-salon-plan.js';
+import { CHESS_CELL_M, chessCell, chessCellIsDark, chessCellPosition, chessSeat, plazaSalonPlan, plazaSalonFootprints, plazaSalonRack, plazaSalonSeats } from '../src/plaza-salon-plan.js';
 import { createWalkingEnvironment } from '../src/walking.js';
 import { distanceToRoad } from '../src/street-fixtures.js';
 import { treeSupports } from '../src/tree-placements.js';
@@ -120,4 +120,25 @@ test('every chess player has a light square at the right hand and their own back
   }
   assert.ok(Math.abs(CHESS_CELL_M - 0.068) < 0.001);
   assert.equal(chessSeat('bench:plaza-salon-round-0'), null);
+});
+
+test('the bike rack offers four slots on open paving that face south into the plaza', () => {
+  const slots = plazaSalonRack(district);
+  assert.equal(slots.length, 4);
+  assert.deepEqual(slots.map(slot => slot.id), ['plaza-salon-rack:0', 'plaza-salon-rack:1', 'plaza-salon-rack:2', 'plaza-salon-rack:3']);
+  assert.deepEqual(plazaSalonRack(blankRegion()), []);
+  assert.deepEqual(plazaSalonRack(vegetated), slots, 'slots do not depend on the vegetation dataset');
+  const plan = plazaSalonPlan(district);
+  for (const slot of slots) {
+    assert.equal(slot.rackId, 'plaza-salon-rack');
+    assert.equal(slot.heading, 0, 'a parked bike points south, away from the footway');
+    assert.ok(slot.approach[1] < slot.north, 'the approach is south of the bike');
+    assert.ok(free(furnished, [slot.x, slot.north]), `${slot.id} must stay mountable`);
+    assert.ok(free(furnished, slot.approach), `${slot.id} must be reachable`);
+    assert.ok(slot.x > -2784.7 + 1.2, 'the rack keeps the Dior entrance clear');
+    assert.ok(slot.north > plan.rack.north - 1.4 && slot.north < plan.rack.north, 'bikes sit just south of the bar');
+  }
+  // The bar blocks walking; a bike slot does not.
+  assert.equal(free(furnished, [plan.rack.x, plan.rack.north]), false, 'the rack bar must block');
+  assert.equal(free(bare, [plan.rack.x, plan.rack.north]), true, 'the bar stands on open paving');
 });
