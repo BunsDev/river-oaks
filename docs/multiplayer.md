@@ -549,8 +549,18 @@ scores 2 and a backgammon 3. You pick a checker, then its point (or the tray to 
 off), and Undo takes back moves within your turn. The table's checkers mirror the
 game. Rules: `preview/src/backgammon-rules.js`.
 
-Every game sheet has **How to play** in its header. It opens the Salon Guide on
-that game, and **Play & rides → Game guide** opens it too. The guide is an
+A Jenga tower stands on the curved bench's travertine drum. Seated on the bench,
+**Play Jenga** or **X** opens it. You play with two plaza regulars, or two players
+pass and play. Pick a block below the top (never the top level, nor the one under
+an unfinished top), then stop the steady-hand meter inside its green zone to slide
+the block out; it goes on top by itself. The zone narrows as the tower grows taller
+and weaker and as the level carries more. A level left on a single edge block
+brings the tower down. Whoever topples it gets the tally mark, and the drum's tower
+scatters across the drum and the paving. Rules: `preview/src/jenga-rules.js`.
+
+The chess-table, café and backgammon sheets have **How to play** in their
+header. It opens the Salon Guide on that game (chess, checkers, Connect Four,
+dominoes, Hearts or backgammon), and **Play & rides → Game guide** opens it too. The guide is an
 illustrated book with a few pages per game: taking a seat, the aim, a turn, and
 the keys. Its pictures are positions played on the real rules
 (`preview/tests/salon-guide.test.js`). A game you have not read yet shows a gold

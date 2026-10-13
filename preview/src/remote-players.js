@@ -7,7 +7,7 @@ import { VEHICLES, vehicleKind } from './vehicle-config.js';
 import { permittedAppearance, sharedAppearance } from './shared-appearances.js';
 import { traversalForAppearance } from './beast-traversal.js';
 
-export function createRemotePlayers(scene,host,{now=()=>Date.now()}={}){
+export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=>true}={}){
   const entries=new Map(),labels=document.createElement('div');labels.className='remote-player-labels';labels.setAttribute('aria-hidden','true');host.append(labels);
   // Who is talking on shared voice right now: a ring on the nameplate and the
   // speaker cadence in conversation-motion. Set at event time, read per frame.
@@ -89,7 +89,7 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now()}={}){
         else if(Math.hypot(dx,dz)>0.004)entry.heading=Math.atan2(dx,dz);
         if(target.sitting)holder.rotation.y=entry.heading;
         else holder.rotation.y+=Math.atan2(Math.sin(entry.heading-holder.rotation.y),Math.cos(entry.heading-holder.rotation.y))*(1-Math.exp(-12*delta));
-        holder.visible=holder.position.distanceTo(camera.position)<120;
+        holder.visible=isVisible(target)&&holder.position.distanceTo(camera.position)<120;
         entry.riderSeated=false;
         if(avatar&&!holder.visible)avatar.suspend();
         if(avatar&&holder.visible){

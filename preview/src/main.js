@@ -1,3 +1,4 @@
+import { createOfficeUI } from './office-ui.js';
 import { createStoreIntros } from './store-intro-ui.js';
 import {treeFlightEnvironment} from './tree-flight.js';
 import { buildRoads } from './street-roads.js';
@@ -43,6 +44,7 @@ import { plazaSalonPlan } from './plaza-salon-plan.js';
 import { createPlazaDominoes, seatAtCafe } from './plaza-dominoes.js';
 import { createPlazaHearts } from './plaza-hearts.js';
 import { createPlazaBackgammon, seatAtBackgammon } from './plaza-backgammon.js';
+import { createPlazaJenga, seatAtJenga } from './plaza-jenga.js';
 import { atmosphereFor } from './atmosphere.js';
 import { createWalkingEnvironment } from './walking.js';
 import { createQualityControl } from './render-quality.js';
@@ -110,9 +112,10 @@ let pendingSharedPlace = null, sharedPlaceInFlight = false;
 let worldPortal = null;
 let worldRegionSha256 = null;
 let landmarkAccountId = null;
-let playerAvatar;
+let playerAvatar, officeUI;
 let multiplayer, remotePlayers, buildLayer, buildControls, seatingControls, seatAndWater;
 let plazaSalon = null, plazaGames = null, plazaDominoes = null, plazaHearts = null, plazaBackgammon = null, cafeGame = 'dominoes', plazaStage = null, plazaBicycle = null, cyclingBoard = null;
+let plazaJenga = null;
 // What X does while seated: the first provider (a game table, the stage…) offering a play.
 // Each feature adds its own line to the list, so they never edit the same one.
 const playProviders = [];
@@ -252,11 +255,16 @@ function initializeRenderer() {
     focusWorld: () => host.focus({ preventScroll: true }) });
   playProviders.push(() => plazaGames);
   playProviders.push(() => plazaBackgammon);
+  // On the curved bench, X plays Jenga with two plaza regulars; the drum's tower mirrors it.
+  plazaJenga = createPlazaJenga({ getMirror: () => plazaSalon?.userData.jenga ?? null, getSeat: () => seatAtJenga(walking?.getPose()),
+    focusWorld: () => host.focus({ preventScroll: true }), reducedMotion });
+  playProviders.push(() => plazaJenga);
   playProviders.push(() => cafeGame === 'hearts' ? plazaHearts : plazaDominoes);
   playProviders.push(() => plazaStage);
   playDock = createPlayDock({creationToolsEnabled}); const visitTools = playDock.content;
   if (creationToolsEnabled) buildControls=createSharedBuildControls({getPose:()=>walking?.getPose(),isBuildableRoom:id=>world?.stores.some(store=>store.id===id && store.category==='home'),onBuilderChange:builder=>{builderAim='';if(!builder.active)buildLayer?.setGhost(null);},request:message=>multiplayer?.command(message)??Promise.resolve({ok:false,message:'Join the town before building.'})});
   visitTools.append($('.player-controls'), cyclingBoard.panel, ...(buildControls ? [buildControls.panel] : []));
+  officeUI=createOfficeUI({host,panelHost:visitTools,renderer,getWorld:()=>world,getMultiplayer:()=>multiplayer,walking});
   // Bird cams: Jev flies a few birds over the district; ride along or take over.
   birdCams = createBirdCams({ scene, camera, host, getEnvironment: () => world && walking?.active ? birdFlightEnvironment() : null, getInterests: birdInterests, getPathHints: () => world?.birdPathHints ?? {} });
   birdCamsUI = createBirdCamsUI(birdCams);
@@ -331,7 +339,7 @@ function startMultiplayer() {
     creationToolsEnabled,
     getWalking: () => walking,
     onVoiceChange: state => remotePlayers?.setSpeaking(state.speaking),
-    getPose: () => walking?.getPose(),
+    getPose: () => officeUI?.pose ?? walking?.getPose(),
     getEnvironment: () => walking?.environment,
     getMeetingPlaces: () => world ? placesOf(world) : [],
     getOwnerHomes: () => world?.stores.filter(store => store.category === 'home' && store.access === 'owner') ?? [],
@@ -341,7 +349,8 @@ function startMultiplayer() {
     onCorrection: player => { if (world && player) { walking.applyServerPose(player); plazaBicycle?.sync(); } },
     onPlayers: (players, selfId) => {
       host.dataset.multiplayer = players.length ? 'joined' : 'disconnected';
-      remotePlayers.sync(players, selfId);
+      remotePlayers.sync(players.filter(p=>!p.office), selfId);
+      officeUI?.sync(players,selfId);
       placesUI?.setPlayers(players, selfId);
       if (!players.length) buildLayer?.sync([]);
       const self = players.find(player => player.id === selfId);
@@ -732,10 +741,10 @@ function render(now) {
     worldId: worldIdFromSearch(location.search),
     canPlay: Boolean(walking?.active && !loading && !multiplayer?.traveling && !photoMode?.active && !birdCams?.riding && !self?.altitude),
   });
-  if (storeIntros?.active || photoMode?.active || birdCams?.riding) walking?.halt();
+  if (officeUI?.active || officeUI?.entering || storeIntros?.active || photoMode?.active || birdCams?.riding) walking?.halt();
   else if (multiplayer?.connected && !multiplayer.traveling) walking?.update(delta, now);
   else walking?.halt();
-  plazaGames?.update(); plazaDominoes?.update(); plazaHearts?.update(); plazaBackgammon?.update(); plazaStage?.update();
+  plazaGames?.update(); plazaDominoes?.update(); plazaHearts?.update(); plazaBackgammon?.update(); plazaJenga?.update(); plazaStage?.update();
   if (multiplayer?.connected) birdCams?.update(delta);
   multiplayer?.update(now);
   seatingControls?.update(now);
@@ -761,10 +770,10 @@ function render(now) {
   debugTools?.update(now);
   // llvmpipe draws both browser clients on CPU. Keep simulation and transport
   // updating every frame while capping only acceptance-profile draw work.
-  if (!softwareAcceptance || now - lastSoftwareDraw >= 1000) {
+  if (officeUI?.active || !softwareAcceptance || now - lastSoftwareDraw >= 1000) {
     lastSoftwareDraw = now;
     renderer.info.reset();
-    pipeline.render(delta);
+    if(!officeUI?.update(now,delta))pipeline.render(delta);
     photoMode?.afterRender();
     if (pendingCapture) { const capture = pendingCapture; pendingCapture = null; capture(renderer.domElement); }
   }
@@ -968,6 +977,8 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
     } });
   window.__riverPlazaDominoes = () => plazaDominoes ? { ...plazaDominoes.debug(), table: plazaSalon?.userData.dominoes?.count() ?? null,
     deal: (seed, players) => plazaDominoes.deal(seed, players) } : null;
+  window.__riverPlazaJenga = () => plazaJenga ? { ...plazaJenga.debug(), table: plazaSalon?.userData.jenga?.count() ?? null, towerFallen: plazaSalon?.userData.jenga?.fallen() ?? null,
+    aim: at => plazaJenga.aim(at), deal: seed => plazaJenga.deal(seed) } : null;
   window.__riverPlazaBackgammon = () => plazaBackgammon ? { ...plazaBackgammon.debug(), table: plazaSalon?.userData.backgammon?.count() ?? null,
     deal: seed => plazaBackgammon.deal(seed) } : null;
   window.__riverPlazaHearts = () => plazaHearts ? { ...plazaHearts.debug(), cafeGame, table: plazaSalon?.userData.cards?.count() ?? null,

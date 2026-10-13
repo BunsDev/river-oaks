@@ -1,7 +1,9 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { BACKGAMMON, CHESS_CELL_M, DOMINO, backgammonSpot, cafeChairAngle, chessCell, chessCellIsDark, chessCellPosition, dominoLine, plazaSalonPlan, plazaSalonRack } from './plaza-salon-plan.js';
+import { BACKGAMMON, CHESS_CELL_M, DOMINO, JENGA, backgammonSpot, cafeChairAngle, chessCell, chessCellIsDark, chessCellPosition, dominoLine, jengaBlock, plazaSalonPlan, plazaSalonRack } from './plaza-salon-plan.js';
 import { startGame as backgammonStart } from './backgammon-rules.js';
+import { startTower } from './jenga-rules.js';
+import { seededRandom } from './seeded-random.js';
 import { createRoadVehicle } from './road-vehicles.js';
 import { START_FEN, fromFEN } from './chess-rules.js';
 import { groundSurfaceHeight } from './world-surface.js';
@@ -525,6 +527,52 @@ export function buildPlazaSalon(world) {
       // A position ({ points, bar, off } from backgammon-rules.js) or null for the opening, and white's chair.
       show,
       count: () => checkers.count,
+    };
+  }
+  // Jenga on the bench's drum: one InstancedMesh of maple blocks (a little colour
+  // variation each), standing as the game's tower, or scattered over the drum and the
+  // paving once it falls. Idle, the full tower stands.
+  {
+    const { bench } = plan, [, y] = base(bench), [ox, , oz] = base({ x: bench.x + JENGA.offset[0], north: bench.north + JENGA.offset[1] });
+    const blocks = new THREE.InstancedMesh(new THREE.BoxGeometry(JENGA.length, JENGA.height, JENGA.width), new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.72 }), 80);
+    Object.assign(blocks, { name: 'Jenga blocks', castShadow: true, receiveShadow: true, count: 0 });
+    group.add(blocks);
+    const grain = Array.from({ length: 80 }, (_, i) => new THREE.Color('#d9b98b').offsetHSL(0, 0, (seededRandom(Math.imul(i + 1, 0x9e3779b1) >>> 0)() - 0.5) * 0.08));
+    const put = (x, height, z, yaw, roll = 0) => {
+      dummy.position.set(x, y + height, z); dummy.rotation.set(0, yaw, roll); dummy.scale.set(1, 1, 1); dummy.updateMatrix();
+      blocks.setColorAt(blocks.count, grain[blocks.count]); blocks.setMatrixAt(blocks.count++, dummy.matrix);
+    };
+    let fallen = false;
+    const show = (tower = null) => {
+      const state = tower ?? startTower();
+      blocks.count = 0; fallen = Boolean(state.fallen);
+      if (!state.fallen) {
+        state.levels.forEach((row, level) => row.forEach((present, slot) => {
+          if (!present) return;
+          const spot = jengaBlock(bench, level, slot), [x, , z] = base({ x: spot.position[0], north: spot.position[1] });
+          put(x, spot.height, z, spot.yaw);
+        }));
+      } else {
+        // Fallen: each block lands where its own seeded throw sends it, mostly away from the
+        // bench; those that stay within the drum lie on it, the rest on the paving.
+        // A toppling pull leaves its block in the tower, so the tower's count is every block.
+        const total = state.levels.reduce((sum, row) => sum + row.filter(Boolean).length, 0);
+        const salt = Math.imul(state.pulls + 1, 0x85ebca6b) ^ Math.imul(state.fallen.level * 3 + state.fallen.slot + 1, 0xc2b2ae35);
+        for (let i = 0; i < total; i++) {
+          const random = seededRandom((salt ^ Math.imul(i + 1, 0x9e3779b1)) >>> 0), angle = Math.PI * (random() * 1.5 - 0.75), reach = 0.05 + random() * 0.75;
+          const x = ox + Math.sin(angle) * reach, z = oz - Math.cos(angle) * reach, onDrum = Math.hypot(x - ox + JENGA.offset[0], z - oz - JENGA.offset[1]) < JENGA.drumRadius - 0.05;
+          const lying = (onDrum ? JENGA.drumTop : 0) + JENGA.height / 2 + (onDrum && reach < 0.12 ? JENGA.height * Math.floor(random() * 3) : 0);
+          put(x, lying, z, random() * Math.PI, random() < 0.3 ? Math.PI / 2 : 0);
+        }
+      }
+      blocks.instanceMatrix.needsUpdate = true; if (blocks.instanceColor) blocks.instanceColor.needsUpdate = true; blocks.computeBoundingSphere();
+    };
+    show();
+    group.userData.jenga = {
+      // A tower ({ levels, fallen } from jenga-rules.js), or null for the full tower.
+      show,
+      count: () => blocks.count,
+      fallen: () => fallen,
     };
   }
   // Hearts at the café table: the trick lies face up, each card in front of the player
