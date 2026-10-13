@@ -81,6 +81,9 @@ lines:
 - **Core gate:** `pnpm run verify` gave `core: passed`. Node: 2949 of 2950 (1
   skipped). Python: 76 of 76. Server: 476 of 616, with the 140 skipped needing
   Redis.
+- **After merging main** (`1861d1b7`, which brought Yacht and shuffleboard):
+  `plaza-table-lessons`, `salon-guide` and `plaza-chess` passed again. `pnpm run
+  verify` gave `core: passed` (node 2963 of 2964, 1 skipped; Python 76 of 76).
 
 ## Gaps
 
