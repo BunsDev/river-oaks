@@ -1,4 +1,6 @@
-import { dismissOnOutsideClick } from './modal-dismiss.js';
+// Loaded lazily by the sign-in page (access-entry.js), which passes in its outside-click
+// dismissal: importing a dismissal module here would split it into a chunk shared with
+// the sign-in page, which the asset gate refuses before sign-in.
 import { buildDebugReport, canCaptureScreenshot, captureScreenshot, reportMarkdown } from './debug-report.js';
 import './debug-report.css';
 
@@ -13,7 +15,7 @@ const download = (name, text, type = 'application/json') => {
 };
 const fileName = report => `typesafe-place-report-${report.createdAt.replace(/[:.]/g, '-')}.json`;
 
-function createDialog() {
+function createDialog({ dismissOnOutsideClick = null } = {}) {
   const status = element('p', { className: 'report-status', role: 'status' });
   const description = element('textarea', { id: 'report-description', maxLength: 2000, rows: 4, placeholder: 'For example: after stepping into Dior the screen went black and the controls stopped responding.' });
   const screenshot = element('input', { type: 'checkbox', id: 'report-screenshot' });
@@ -60,15 +62,15 @@ function createDialog() {
     else if (response.status === 401) say('Sign in to send a report, or copy or download it instead.', 'error');
     else say('The report could not be sent. Copy or download it instead, then share it with the team.', 'error');
   }));
-  dismissOnOutsideClick(node, () => node.close());
+  dismissOnOutsideClick?.(node, () => node.close());
   close.addEventListener('click', () => node.close());
   node.addEventListener('close', () => { if (state.opener?.isConnected) state.opener.focus(); });
   return { node, state, description, screenshot, send, details, say };
 }
 const post = (report, csrfToken) => fetch('/api/debug-reports', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken ?? '' }, body: JSON.stringify(report) });
 
-export function openReportDialog({ getSession = () => ({}) } = {}) {
-  dialog ??= createDialog();
+export function openReportDialog({ getSession = () => ({}), dismissOnOutsideClick = null } = {}) {
+  dialog ??= createDialog({ dismissOnOutsideClick });
   const { node, state, screenshot, send, details, say } = dialog, session = getSession();
   state.getSession = getSession; state.opener = document.activeElement;
   send.hidden = !session.signedIn || !session.csrfToken;
@@ -80,14 +82,14 @@ export function openReportDialog({ getSession = () => ({}) } = {}) {
 }
 
 // Admins: the reports players have sent, newest first, each downloadable.
-export async function openReportInbox() {
+export async function openReportInbox({ dismissOnOutsideClick = null } = {}) {
   if (!inbox) {
     const list = element('div', { className: 'report-list' }), status = element('p', { className: 'report-status', role: 'status' });
     const close = element('button', { type: 'button', className: 'report-close', ariaLabel: 'Close' }, '×');
     const node = element('dialog', { className: 'report-dialog report-inbox', id: 'report-inbox' },
       element('div', { className: 'report-head' }, element('h2', { id: 'report-inbox-title' }, 'Problem reports'), close), status, list);
     node.setAttribute('aria-labelledby', 'report-inbox-title');
-    dismissOnOutsideClick(node, () => node.close());
+    dismissOnOutsideClick?.(node, () => node.close());
     close.addEventListener('click', () => node.close());
     document.body.append(node);
     inbox = { node, list, status };

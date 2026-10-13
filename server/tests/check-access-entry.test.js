@@ -52,3 +52,15 @@ test('the sign-in page check covers classic scripts: the first-paint boot script
   // A page with only a classic script still has no access entry.
   assert.equal((await site(t, '<script src="/assets/boot/first-paint.js"></script>', { 'boot/first-paint.js': '' })).status, 1);
 });
+
+test('the sign-in page check follows a lazy import the gate serves before sign-in, not one it gates', async t => {
+  // The problem report loads lazily on the sign-in page; a shared chunk it imports is
+  // refused there (#modal-outside-dismiss, 2026-10-13). The game chunk loads after approval.
+  const result = await site(t, '<script type="module" src="/assets/index-abc.js"></script>', {
+    'index-abc.js': 'const report=async()=>{let{openReportDialog:e}=await import(`./debug-report-ui-r1.js`);return e};const game=()=>import("./main-y7.js");',
+    'debug-report-ui-r1.js': 'import{d as e}from"./modal-dismiss-m4.js";export{e};', 'modal-dismiss-m4.js': '', 'main-y7.js': 'import"./three-z9.js";', 'three-z9.js': '',
+  });
+  assert.equal(result.status, 1, result.stdout);
+  assert.match(result.stderr, /\/assets\/modal-dismiss-m4\.js/);
+  assert.doesNotMatch(result.stderr, /main-y7|three-z9|debug-report-ui/, 'the game loads after approval; the report chunk itself is served');
+});
