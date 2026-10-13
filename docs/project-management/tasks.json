@@ -4122,6 +4122,36 @@
       ],
       "ledger": "docs/superpowers/plans/2026-10-13-plaza-dominoes.md",
       "issues": []
+    },
+    {
+      "id": "plaza-hearts",
+      "title": "Hearts at the plaza café table: four players (you and three plaza regulars), passing, tricks, shooting the moon, game to 100; cards mirrored on the round table",
+      "status": "active",
+      "branches": [
+        "feat/plaza-hearts-20261013"
+      ],
+      "owner": "claude:river-oaks-c2",
+      "leaseUntil": "2026-10-13T21:17:10.000Z",
+      "updatedAt": "2026-10-13T11:17:10.000Z",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-plaza-hearts-20261013",
+      "nextAction": "Val chose cards at the café (Hearts) as the next table game (2026-10-13). Stacked on feat/plaza-dominoes-20261013: merge main once dominoes lands. hearts-rules.js (seeded deal, passing, tricks, scoring), a fair-view opponent, a café game switch (Dominoes / Hearts), cards on the round table, journey; then PR (land only when Val says).",
+      "filesOwned": [
+        "preview/src/hearts-rules.js",
+        "preview/src/hearts-opponent.js",
+        "preview/src/plaza-hearts.js",
+        "preview/src/plaza-hearts.css",
+        "preview/src/plaza-dominoes.js (café game switch)",
+        "preview/src/plaza-salon.js (café cards)",
+        "preview/e2e/plaza-hearts.js"
+      ],
+      "requiredChecks": [
+        "pnpm test (hearts rules, opponent, mirror)",
+        "plaza-hearts and plaza-dominoes journeys",
+        "pnpm run verify",
+        "Hosted CI"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-13-plaza-hearts.md",
+      "issues": []
     }
   ]
 }

@@ -510,6 +510,15 @@ hands. The regulars see only what a player at the table could. The round table
 mirrors the line and the hands, and only your own tiles show their pips. Rules:
 `preview/src/dominoes-rules.js`.
 
+The café sheet switches between **Dominoes** and **Hearts**, and X reopens whichever
+was played last. Hearts is you and three regulars, to 100. Before a hand you pass
+three cards left, then right, then across, and every fourth hand you hold them. The
+2♣ leads. You follow suit when you can, no points may be played on the first trick,
+and hearts cannot be led until one has been played. Each heart scores 1 and the Q♠
+13, and taking all 26 shoots the moon. The lowest score wins. The table shows the
+trick face up before each player, with the hands and won tricks face down. Rules:
+`preview/src/hearts-rules.js`.
+
 The town assigns the position, facing and cushion height. Occupied slots reject
 other visitors, and occupied furniture cannot be moved, turned or removed. Stand
 searches nearby clear ground in the same room, including the path to the exit

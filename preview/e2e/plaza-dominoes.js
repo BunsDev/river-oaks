@@ -42,8 +42,8 @@ async page => {
     if (state.over) break;
     if (state.turn !== 0 || state.playing) { await page.waitForTimeout(150); continue; }
     const move = state.legal[0];
-    if (move === 'draw') await page.locator('[data-action=draw]').click();
-    else if (move === 'pass') await page.locator('[data-action=pass]').click();
+    if (move === 'draw') await page.locator('#dominoes-panel [data-action=draw]').click();
+    else if (move === 'pass') await page.locator('#dominoes-panel [data-action=pass]').click();
     else {
       await page.locator(`.dominoes-hand [data-tile="${move.slice(2)}"]`).click();
       if (await page.locator('.dominoes-choice').isVisible()) await page.locator(`.dominoes-choice [data-end=${move.startsWith('L') ? 'left' : 'right'}]`).click();
@@ -54,11 +54,11 @@ async page => {
   check(Boolean(state.over), 'The round is played to its end');
   check(state.over.winner === null ? /no points/.test(state.status) : /points/.test(state.status), `The status reports the result (${state.status})`);
   check(state.scores.reduce((sum, score) => sum + score, 0) === (state.over.winner === null ? 0 : state.over.points), 'The winner is credited with the round');
-  check(await page.locator('[data-action=next]').isVisible(), 'Next round is offered');
+  check(await page.locator('#dominoes-panel [data-action=next]').isVisible(), 'Next round is offered');
   await page.screenshot({ path: 'output/playwright/plaza-dominoes-round.png' });
 
   // Four players: the block game, seven each and no boneyard.
-  await page.locator('[data-players="4"]').click();
+  await page.locator('#dominoes-panel [data-players="4"]').click();
   await page.waitForFunction(() => window.__riverPlazaDominoes().players === 4, null, { timeout: 5000 });
   state = await game();
   check(state.sizes.length === 4 && state.boneyard === 0 && state.scores.every(score => score === 0), `Four players start a block-game match (${JSON.stringify(state.sizes)})`);
