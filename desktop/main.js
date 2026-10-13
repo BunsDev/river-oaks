@@ -6,7 +6,7 @@ import { buildWorldDesignPack } from '../scripts/studio-skill-pack.js';
 import { createStudioDesignerHost, designerSenderAllowed, designerConsentDetail } from './studio-designer-host.js';
 import { createStudioAgentHost } from './studio-agent-host.js';
 import { publicError } from './host-error.js';
-import { navigationAllowed, windowBounds } from './runtime.js';
+import { mediaPermissionAllowed, navigationAllowed, windowBounds } from './runtime.js';
 import { photoDownloadAllowed } from './photo-download.js';
 import { studioDownloadAllowed } from './studio-download.js';
 import { deviceSignIn, exchangeDesktopSession } from './auth.js';
@@ -152,8 +152,14 @@ else {
   });
   app.on('window-all-closed', () => { designerHost?.dispose(); agentHost?.dispose(); app.quit(); });
   app.whenReady().then(async () => {
-    session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
-    session.defaultSession.setPermissionCheckHandler(() => false);
+    // Only the microphone, for shared voice, from the game origin in the main
+    // window; the policy itself is in runtime.js. The request handler sees
+    // `mediaTypes` (a list), the check handler a single `mediaType`.
+    const originOf = url => { try { return new URL(url).origin; } catch { return null; } };
+    session.defaultSession.setPermissionRequestHandler((contents, permission, callback, details = {}) =>
+      callback(contents === window?.webContents && mediaPermissionAllowed({ permission, origin: originOf(details.requestingUrl ?? contents.getURL()), mediaTypes: details.mediaTypes, mainFrame: details.isMainFrame !== false }, gameOrigin)));
+    session.defaultSession.setPermissionCheckHandler((contents, permission, requestingOrigin, details = {}) =>
+      contents === window?.webContents && mediaPermissionAllowed({ permission, origin: requestingOrigin, mediaTypes: details.mediaType ? [details.mediaType] : [], mainFrame: details.isMainFrame !== false }, gameOrigin));
     session.defaultSession.on('will-download', (event, item, contents) => {
       const download = {
         url: item.getURL(), initiator: item.getInitiatorOrigin(), filename: item.getFilename(),
@@ -175,7 +181,7 @@ else {
       // Debug tools (colliders, walkable grid, polygon inspector) live in the game; F3 toggles them there too.
       { label: 'View', submenu: [{ role: 'togglefullscreen' }, { label: 'Debug tools', accelerator: 'F3', click: () => window?.webContents.executeJavaScript("window.dispatchEvent(new CustomEvent('river-oaks:debug'))").catch(() => {}) }, ...(dev ? [{ role: 'toggleDevTools' }] : [])] },
       { role: 'windowMenu' },
-      { label: 'Help', submenu: [{ label: 'Game controls', click: () => dialog.showMessageBox(window, { message: 'Explore TypeSafe Place', detail: 'WASD · Walk\nDrag · Look around\nShift · Walk faster\nE · Talk nearby\nF · Enter or leave a shop\nB · Fly or land\nSpace / C · Rise / descend\nV · Change camera\nH · Hide or show the HUD\n\nGraphics and appearance are in Settings. Auto adjusts scene resolution to the available frame budget.' }) }] },
+      { label: 'Help', submenu: [{ label: 'Game controls', click: () => dialog.showMessageBox(window, { message: 'Explore TypeSafe Place', detail: 'WASD · Walk\nDrag · Look around\nShift · Walk faster\nE · Talk nearby\nF · Enter or leave a shop\nY · Join or leave voice\nM · Mute or unmute your microphone\nB · Fly or land\nSpace / C · Rise / descend\nV · Change camera\nH · Hide or show the HUD\n\nGraphics and appearance are in Settings. Auto adjusts scene resolution to the available frame budget.' }) }] },
     ]));
     const sourceRoot = fileURLToPath(new URL('../', import.meta.url));
     const pack = app.isPackaged ? JSON.parse(await readFile(join(sourceRoot, 'desktop/world-design-pack.json'), 'utf8')) : await buildWorldDesignPack(sourceRoot);
