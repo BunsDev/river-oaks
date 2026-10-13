@@ -4,7 +4,8 @@ async (page, { worldMapEnabled = false } = {}) => {
   page.on('pageerror', error => errors.push(error.message));
   await page.setViewportSize({ width: 1440, height: 800 });
   await page.goto('http://127.0.0.1:5173/');
-  await page.waitForFunction(() => document.querySelector('#canvas-host').dataset.playerReady === 'true');
+  // Avatar readiness can precede district loading; Commands lists ready targets.
+  await page.waitForFunction(() => document.querySelector('#canvas-host').dataset.playerReady === 'true' && document.querySelector('.world-map')?.hidden === false);
   const host = page.locator('#canvas-host'), trigger = page.locator('#panel-toggle'), dock = page.locator('.visit-tools'), menu = page.locator('.rail-commands'), search = page.locator('#rail-command-search');
   const expanded = () => trigger.getAttribute('aria-expanded');
   const selected = () => page.locator('#settings-dialog [role=tab][aria-selected=true]').getAttribute('id');
@@ -105,7 +106,7 @@ async (page, { worldMapEnabled = false } = {}) => {
   await dock.getByRole('button', { name: 'Birds', exact: true }).click();
   check(await page.evaluate(() => document.activeElement.closest('.bird-cams') !== null), 'Play activity jump reveals and focuses its destination');
   await page.keyboard.press('Escape');
-  await page.reload(); await page.waitForFunction(() => document.querySelector('#canvas-host').dataset.playerReady === 'true');
+  await page.reload(); await page.waitForFunction(() => document.querySelector('#canvas-host').dataset.playerReady === 'true' && document.querySelector('.world-map')?.hidden === false);
   check(await expanded() === 'false' && !await dock.evaluate(node => node.open), 'Collapsed Places and Play preferences survive reload');
 
   for (const [width, height] of [[390, 844], [844, 390], [1024, 600]]) {

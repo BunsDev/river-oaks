@@ -4,7 +4,7 @@
 
 Each plan is a task ledger. Status comes from the task register, where the primary checkout's live copy can be newer than the committed one. Plans from before the register are listed as historical: their own text is the record of what was delivered.
 
-## Active and blocked (15)
+## Active and blocked (16)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
@@ -17,8 +17,9 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-13-plaza-backgammon](2026-10-13-plaza-backgammon.md)<br>Plaza games: a backgammon table — 2026-10-13 | `plaza-backgammon` | active | — | 2026-10-13 |
 | [2026-10-13-office-elevator-access](2026-10-13-office-elevator-access.md)<br>Private office elevator and traversal | `office-elevator-access` | active | #317 | 2026-10-13 |
 | [2026-10-13-office-desk-workflow](2026-10-13-office-desk-workflow.md)<br>Office desk workflow | `office-desk-workflow` | active | — | 2026-10-13 |
-| [2026-10-13-office-arrival-refinement](2026-10-13-office-arrival-refinement.md)<br>Office arrival refinement | `office-arrival-refinement` | active | — | 2026-10-13 |
+| [2026-10-13-office-arrival-refinement](2026-10-13-office-arrival-refinement.md)<br>Office arrival refinement | `office-arrival-refinement` | active | #345 | 2026-10-13 |
 | [2026-10-13-minimap-flicker](2026-10-13-minimap-flicker.md)<br>Stop the flicker, and take the minimap out of its scrolling sheet — 2026-10-13 | `minimap-flicker` | active | — | 2026-10-13 |
+| [2026-10-13-ipic-photo-interior](2026-10-13-ipic-photo-interior.md)<br>IPIC Photo Interior Implementation Plan | `ipic-photo-interior` | active | #343 | 2026-10-13 |
 | [2026-10-12-town-connect-deadline](2026-10-12-town-connect-deadline.md)<br>Town connection deadline on a busy page — 2026-10-12 | `town-ticket-ttl` | active | — | 2026-10-12 |
 | [2026-10-12-liquid-glass-hud](2026-10-12-liquid-glass-hud.md)<br>Liquid-glass town gate, district map and Map button — 2026-10-12 | `liquid-glass-hud` | active | #274 | 2026-10-12 |
 | [2026-10-12-docs-refresh](2026-10-12-docs-refresh.md)<br>Docs and plans refresh (2026-10-12) | `docs-refresh-20261012` | active | — | 2026-10-12 |

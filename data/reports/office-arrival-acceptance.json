@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "kind": "Derived acceptance summary; original receipt data preserved verbatim in the archive identified below",
-  "compiledAt": "2026-10-13T22:12:45.155727+00:00",
+  "compiledAt": "2026-10-13T23:08:02.152774+00:00",
   "source": {
     "revision": "fdd59242766742545a4d0107afd8b45dbb9d9aca",
     "dirty": true,
@@ -9,6 +9,36 @@
   },
   "rawArchive": "/Users/buns/worktree-backups/river-oaks/office-arrival-20261013/reports",
   "rawReceipts": [
+    {
+      "file": "browser-integrated-before-fixture-retries.json",
+      "sha256": "f0dcff378f12bb399cdbbe375980c01be5531a0475a74104ef697ec3095adcc7",
+      "bytes": 1781
+    },
+    {
+      "file": "core-first.json",
+      "sha256": "60149db2531e493d88bc949ec0b7562f571260a036642cecfc5bbebfb04ffec1",
+      "bytes": 2746
+    },
+    {
+      "file": "experience-integrated-before-fixture-retries.json",
+      "sha256": "979047d338b71af466c2907c321dedb23e726cd8a89bfaee2d50a1d6b04b166a",
+      "bytes": 252721
+    },
+    {
+      "file": "full-first.json",
+      "sha256": "76f0bb4dd1f938407b7e23f16b6813f03d7880cb73274820b39bebd9752f05d3",
+      "bytes": 5063
+    },
+    {
+      "file": "full-integrated-before-browser-retry.json",
+      "sha256": "6580285340843128d2753a3faefbd02557618b77aa839ccc62fc7733eab01039",
+      "bytes": 5244
+    },
+    {
+      "file": "full-integrated-experience-before-retry.json",
+      "sha256": "add14714a7ba3ae4e53fced1c9f4a930ba6602b4daaeebc59c6a3da374f0a241",
+      "bytes": 286226
+    },
     {
       "file": "office-arrival-baseline-matched.json",
       "sha256": "2b3bbd75afc7fd88caeab9820dda719af9c9709c5b1b615ecd74c7e8cf5394b1",
@@ -75,9 +105,29 @@
       "bytes": 44122
     },
     {
+      "file": "office-arrival-merge-final.json",
+      "sha256": "cf8f1c10a21f2ec64f8a16c6ab5c83e17eda64cf26580d6047d527381feccadd",
+      "bytes": 49929
+    },
+    {
+      "file": "office-arrival-merge-first.json",
+      "sha256": "3a39aa9b142f9c763ca1b1a9edebcd78ad66c77c50567b7aebcbc3f7cecdd5bb",
+      "bytes": 8180
+    },
+    {
       "file": "office-arrival-portal-final.json",
       "sha256": "93292ea4fde91fedd543735434cf17b604dea422b00934bc0ab298f29226418b",
       "bytes": 7143
+    },
+    {
+      "file": "office-arrival-rail-final.json",
+      "sha256": "c3e89f29d40b896d6ed4d7dffde0a43dfec004b07c16cac9c771afca5b455341",
+      "bytes": 4943
+    },
+    {
+      "file": "office-arrival-resident-retry.json",
+      "sha256": "869430859f56db44d27e5d34f82107690d17eaffc41f3a14a9a80762c24b4891",
+      "bytes": 2438
     },
     {
       "file": "office-arrival-runtime-performance.json",
@@ -85,9 +135,19 @@
       "bytes": 22302
     },
     {
+      "file": "office-arrival-seating-retry.json",
+      "sha256": "3e60503a0041e2b56c99336897c1b436693ecea3eb4e3a874a670fd0d535d46e",
+      "bytes": 2019
+    },
+    {
       "file": "office-arrival-second-pass.json",
       "sha256": "dcb39b5a7ca46c88af4c36259fd5cd50da535a6597afff78c5968b1d4d1974ad",
       "bytes": 7155
+    },
+    {
+      "file": "office-arrival-spatial-diagnostic.json",
+      "sha256": "039bb63ea9c659e9d5a82d7847881695ebefa58156f2459239fc7291a77c784a",
+      "bytes": 580440
     },
     {
       "file": "office-arrival-third-pass.json",
@@ -108,12 +168,17 @@
       "file": "office-arrival-world-third.json",
       "sha256": "187f1241229a477c5f756fbd1ce27a9cff5b9144cd5072a3c8c6fc7d3da83683",
       "bytes": 46382
+    },
+    {
+      "file": "shared-integrated-before-focused-retries.json",
+      "sha256": "822a1b0de8164abca17f596877029b5a1ef08a1ed742e9e513c12e986ebf0697",
+      "bytes": 27220
     }
   ],
   "journeys": {
     "integratedStreetToOffice": {
       "status": "passed",
-      "seconds": 94.175,
+      "seconds": 93.718,
       "checks": [
         "Authoritative setup lands on the approach street",
         "street-approach completes using normal walking controls",
@@ -148,7 +213,9 @@
         "return-to-street completes using normal walking controls",
         "continue-along-street completes using normal walking controls",
         "No browser errors: "
-      ]
+      ],
+      "receipt": "office-arrival-merge-final.json",
+      "mainBase": "19f3a71a94f2fe7438c7ca167ea5cf4af447b44a"
     },
     "accessAndRevocation": {
       "status": "passed",
@@ -502,49 +569,58 @@
       "output/playwright/office-arrival-portal-final-office.png"
     ],
     "integratedJourneyCaptures": [
-      "output/playwright/office-arrival-journey-integrated-final-approach.png",
-      "output/playwright/office-arrival-journey-integrated-final-entrance.png",
-      "output/playwright/office-arrival-journey-integrated-final-entrance-day.png",
-      "output/playwright/office-arrival-journey-integrated-final-entrance-dusk.png",
-      "output/playwright/office-arrival-journey-integrated-final-entrance-night.png",
-      "output/playwright/office-arrival-journey-integrated-final-1440-lobby.png",
-      "output/playwright/office-arrival-journey-integrated-final-1440-boarding.png",
-      "output/playwright/office-arrival-journey-integrated-final-1440-cabin.png",
-      "output/playwright/office-arrival-journey-integrated-final-1440-reveal.png",
-      "output/playwright/office-arrival-journey-integrated-final-1440-office.png",
-      "output/playwright/office-arrival-journey-integrated-final-1440-access.png",
-      "output/playwright/office-arrival-journey-integrated-final-1440-return.png",
-      "output/playwright/office-arrival-journey-integrated-final-768-lobby.png",
-      "output/playwright/office-arrival-journey-integrated-final-768-boarding.png",
-      "output/playwright/office-arrival-journey-integrated-final-768-cabin.png",
-      "output/playwright/office-arrival-journey-integrated-final-768-reveal.png",
-      "output/playwright/office-arrival-journey-integrated-final-768-office.png",
-      "output/playwright/office-arrival-journey-integrated-final-768-access.png",
-      "output/playwright/office-arrival-journey-integrated-final-768-return.png",
-      "output/playwright/office-arrival-journey-integrated-final-390-lobby.png",
-      "output/playwright/office-arrival-journey-integrated-final-390-boarding.png",
-      "output/playwright/office-arrival-journey-integrated-final-390-cabin.png",
-      "output/playwright/office-arrival-journey-integrated-final-390-reveal.png",
-      "output/playwright/office-arrival-journey-integrated-final-390-office.png",
-      "output/playwright/office-arrival-journey-integrated-final-390-access.png",
-      "output/playwright/office-arrival-journey-integrated-final-390-desk-prompt.png",
-      "output/playwright/office-arrival-journey-integrated-final-390-return.png",
-      "output/playwright/office-arrival-journey-integrated-final-320-lobby.png",
-      "output/playwright/office-arrival-journey-integrated-final-320-boarding.png",
-      "output/playwright/office-arrival-journey-integrated-final-320-cabin.png",
-      "output/playwright/office-arrival-journey-integrated-final-320-reveal.png",
-      "output/playwright/office-arrival-journey-integrated-final-320-office.png",
-      "output/playwright/office-arrival-journey-integrated-final-320-access.png",
-      "output/playwright/office-arrival-journey-integrated-final-320-desk-prompt.png",
-      "output/playwright/office-arrival-journey-integrated-final-320-return.png",
-      "output/playwright/office-arrival-journey-integrated-final-departure.png"
+      "output/playwright/office-arrival-journey-merge-final-approach.png",
+      "output/playwright/office-arrival-journey-merge-final-entrance.png",
+      "output/playwright/office-arrival-journey-merge-final-entrance-day.png",
+      "output/playwright/office-arrival-journey-merge-final-entrance-dusk.png",
+      "output/playwright/office-arrival-journey-merge-final-entrance-night.png",
+      "output/playwright/office-arrival-journey-merge-final-1440-lobby.png",
+      "output/playwright/office-arrival-journey-merge-final-1440-boarding.png",
+      "output/playwright/office-arrival-journey-merge-final-1440-cabin.png",
+      "output/playwright/office-arrival-journey-merge-final-1440-reveal.png",
+      "output/playwright/office-arrival-journey-merge-final-1440-office.png",
+      "output/playwright/office-arrival-journey-merge-final-1440-access.png",
+      "output/playwright/office-arrival-journey-merge-final-1440-return.png",
+      "output/playwright/office-arrival-journey-merge-final-768-lobby.png",
+      "output/playwright/office-arrival-journey-merge-final-768-boarding.png",
+      "output/playwright/office-arrival-journey-merge-final-768-cabin.png",
+      "output/playwright/office-arrival-journey-merge-final-768-reveal.png",
+      "output/playwright/office-arrival-journey-merge-final-768-office.png",
+      "output/playwright/office-arrival-journey-merge-final-768-access.png",
+      "output/playwright/office-arrival-journey-merge-final-768-return.png",
+      "output/playwright/office-arrival-journey-merge-final-390-lobby.png",
+      "output/playwright/office-arrival-journey-merge-final-390-boarding.png",
+      "output/playwright/office-arrival-journey-merge-final-390-cabin.png",
+      "output/playwright/office-arrival-journey-merge-final-390-reveal.png",
+      "output/playwright/office-arrival-journey-merge-final-390-office.png",
+      "output/playwright/office-arrival-journey-merge-final-390-access.png",
+      "output/playwright/office-arrival-journey-merge-final-390-desk-prompt.png",
+      "output/playwright/office-arrival-journey-merge-final-390-return.png",
+      "output/playwright/office-arrival-journey-merge-final-320-lobby.png",
+      "output/playwright/office-arrival-journey-merge-final-320-boarding.png",
+      "output/playwright/office-arrival-journey-merge-final-320-cabin.png",
+      "output/playwright/office-arrival-journey-merge-final-320-reveal.png",
+      "output/playwright/office-arrival-journey-merge-final-320-office.png",
+      "output/playwright/office-arrival-journey-merge-final-320-access.png",
+      "output/playwright/office-arrival-journey-merge-final-320-desk-prompt.png",
+      "output/playwright/office-arrival-journey-merge-final-320-return.png",
+      "output/playwright/office-arrival-journey-merge-final-departure.png"
     ],
     "dayDuskNightCaptures": [
       "output/playwright/office-arrival-journey-fifth-pass-entrance-day.png",
       "output/playwright/office-arrival-journey-fifth-pass-entrance-dusk.png",
       "output/playwright/office-arrival-journey-fifth-pass-entrance-night.png"
     ],
-    "review": "Direct rendered review completed; final portal overlap corrected and independently reviewed. Viewport emulation is not physical-device or human accessibility acceptance."
+    "review": "Direct rendered review completed; final portal overlap corrected and independently reviewed. Viewport emulation is not physical-device or human accessibility acceptance.",
+    "latestMainReview": {
+      "base": "19f3a71a94f2fe7438c7ca167ea5cf4af447b44a",
+      "directlyInspected": [
+        "1440px boarding",
+        "320px office"
+      ],
+      "unchangedFrameArchive": "/Users/buns/worktree-backups/river-oaks/office-arrival-20261013/review-frames",
+      "manifest": "manifest.json"
+    }
   },
   "matchedPerformance": {
     "baseline": [
@@ -1239,7 +1315,94 @@
     "scope": "Two real shared-world visits on the local fixture authority, 1440x1000 desktop Chromium. CPU and rAF timing, not isolated GPU timing. Renderer.info describes the last render pass, not aggregate composer draw calls. Matched raw-fixture draw comparisons are in office-arrival-final-journeys.json."
   },
   "repositoryVerification": {
-    "state": "Final full gate in progress; see ledger and PR for final result. Initial full passed all non-browser tasks, then exposed an approval-reload fixture race. Corrected security browser gate passed2/2.",
+    "state": "All required local check coverage completed across the full run and focused retries; original core/full/browser/shared aggregates retain their failed status. Final exact-head hosted checks and protected landing are the remaining delivery steps.",
+    "implementationHead": "410e1a209b85e07e0c745d16591036a9bcbbda63",
+    "fullRun": {
+      "receipt": "full-integrated-before-browser-retry.json",
+      "status": "failed",
+      "passedBeforeFailure": [
+        "dependency audit",
+        "tooling76",
+        "client2999 with one existing skip",
+        "server658 with Redis and zero skips",
+        "desktop54",
+        "build",
+        "Python lint/format and141 tests",
+        "synthetic demo and expected blocked demo verification",
+        "worktree/history secret scans",
+        "security browser2",
+        "reflection WebGL"
+      ],
+      "failure": "spatial-circulation second-client readiness timed out; shared not run"
+    },
+    "browserRetry": {
+      "receipt": "browser-integrated-before-fixture-retries.json",
+      "status": "failed",
+      "experienceReceipt": "experience-integrated-before-fixture-retries.json",
+      "passedJourneys": 8,
+      "failedJourneys": [
+        "rail-navigation map readiness",
+        "spatial-circulation second-client readiness"
+      ]
+    },
+    "sharedRun": {
+      "receipt": "shared-integrated-before-focused-retries.json",
+      "status": "failed",
+      "passedJourneys": 17,
+      "totalJourneys": 19,
+      "failedJourneys": [
+        "shared-seating placement aim changed",
+        "resident-names lost connection before snapshot read"
+      ]
+    },
+    "focusedRetries": [
+      {
+        "receipt": "office-arrival-rail-final.json",
+        "journey": "rail-navigation",
+        "status": "passed",
+        "checks": 78,
+        "seconds": 27.625
+      },
+      {
+        "receipt": "office-arrival-spatial-diagnostic.json",
+        "journey": "spatial-circulation",
+        "status": "passed",
+        "checks": 55,
+        "seconds": 78.063
+      },
+      {
+        "receipt": "office-arrival-seating-retry.json",
+        "journey": "shared-seating",
+        "status": "passed",
+        "checks": 18,
+        "seconds": 56.849
+      },
+      {
+        "receipt": "office-arrival-resident-retry.json",
+        "journey": "resident-names",
+        "status": "passed",
+        "checks": 24,
+        "seconds": 204.844
+      }
+    ],
+    "finalIntegration": {
+      "mainBase": "19f3a71a94f2fe7438c7ca167ea5cf4af447b44a",
+      "build": "passed",
+      "focusedTests": {
+        "passed": 71,
+        "failed": 0,
+        "skipped": 0
+      },
+      "log": "/Users/buns/worktree-backups/river-oaks/office-arrival-20261013/logs/river-oaks-office-arrival-merge-final.log",
+      "officeJourney": {
+        "receipt": "office-arrival-merge-final.json",
+        "status": "passed",
+        "checks": 33,
+        "captures": 36,
+        "seconds": 93.718
+      },
+      "earlierJourneyFailure": "office-arrival-merge-first.json retains the closed-dialog stale-phase harness failure; fixed by requiring an open visit without changing phase assertions"
+    },
     "limits": [
       "One existing client Vince negative-approach skip",
       "No live WorkOS or LiveKit acceptance",

@@ -56,7 +56,8 @@ async page => {
   });
   for(const [width,height]of [[1440,1000],[768,1024],[390,844],[320,700]]){
     await page.setViewportSize({width,height});await page.locator('#canvas-host').focus();await page.keyboard.press('KeyF');
-    await page.waitForFunction(()=>['lobby','office'].includes(document.querySelector('#office-visit')?.dataset.phase),null,{timeout:60000});
+    // A closed dialog retains the previous visit's phase while entry awaits its ack.
+    await page.waitForFunction(()=>{const dialog=document.querySelector('#office-visit');return dialog?.open&&['lobby','office'].includes(dialog.dataset.phase);},null,{timeout:60000});
     const phase=await page.locator('#office-visit').getAttribute('data-phase');
     if(phase!=='lobby')throw new Error(`${width}px skipped lobby: ${JSON.stringify(await page.evaluate(()=>window.officeObservedPhases))}`);
     check(true,`${width}px starts with a visible lobby lead-in`);await shot(`${width}-lobby`);
