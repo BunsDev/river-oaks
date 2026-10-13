@@ -20,15 +20,17 @@ async page => {
       await page.locator('#destination').selectOption({ label: name }); await page.locator('#visit-destination').click();
       await page.waitForFunction(() => document.querySelector('#walking-hud').dataset.primaryAction === 'enter');
       await page.locator('#walking-enter').click();
-      await page.waitForFunction(() => document.querySelector('#walking-hud').dataset.inside || !document.querySelector('#walking-notice').hidden);
-      if (!await page.locator('#walking-hud').getAttribute('data-inside')) {
+      // The first-visit intro starts from the town's snapshot and can open before
+      // the walking HUD repaints, which then stays still until the intro ends.
+      const intro = page.locator('.store-intro[open]');
+      await page.waitForFunction(() => document.querySelector('#walking-hud').dataset.inside || document.querySelector('.store-intro[open]') || !document.querySelector('#walking-notice').hidden);
+      if (!await page.locator('#walking-hud').getAttribute('data-inside') && !await intro.count()) {
         await page.locator('#walking-notice').waitFor({ state: 'hidden' }); await page.locator('#walking-enter').click();
       }
-      await page.waitForFunction(() => !!document.querySelector('#walking-hud').dataset.inside);
-      const intro = page.locator('.store-intro[open]');
       await intro.waitFor({ state: 'visible' });
       await intro.getByRole('button', { name: /Skip intro|Continue/ }).click();
       await intro.waitFor({ state: 'hidden' });
+      await page.waitForFunction(() => !!document.querySelector('#walking-hud').dataset.inside);
       await page.locator('#panel-toggle').click();
       if (await page.locator('.player-settings').evaluate(node => node.open)) await page.locator('.player-settings > summary').click();
       await page.locator('#canvas-host').focus();
