@@ -74,9 +74,11 @@ async page => {
   await page.keyboard.press('ArrowRight'); await page.waitForTimeout(350);
   await page.screenshot({ path: 'output/playwright/salon-guide-four-aim.png' });
   await page.keyboard.press('ArrowLeft');
+  // The game after Connect Four in the index, whichever chapter that is.
+  const following = await page.locator('[data-guide-dialog] [role=tab][data-guide-game=connectFour] + [role=tab]').getAttribute('data-guide-game');
   await page.keyboard.press('ArrowDown');
   state = await book();
-  check(state.game === 'dominoes' && state.page === 0 && state.focus === 'dominoes', 'Down the index moves to the next game');
+  check(state.game === following && state.page === 0 && state.focus === following, `Down the index moves to the next game (${following})`);
   await page.locator('[data-guide-dialog] [data-guide-game=backgammon]').click();
   await page.keyboard.press('ArrowRight'); await page.keyboard.press('ArrowRight'); await page.waitForTimeout(350);
   await page.screenshot({ path: 'output/playwright/salon-guide-backgammon-turn.png' });
@@ -90,14 +92,15 @@ async page => {
         dialog.querySelector('.salon-guide-next').click();
       }
     }
-    dialog.querySelector('[data-guide-game=backgammon]').click();
+    [...dialog.querySelectorAll('[role=tab][data-guide-game]')].at(-1).click();
     return tight;
   });
   check(!unscrolled.length, `Every page reads without scrolling at 1440 × 900 (${unscrolled.join(', ') || 'all fit'})`);
-  await page.keyboard.press('ArrowRight'); await page.keyboard.press('ArrowRight');
+  // The last chapter, whichever game that is now.
+  const lastGame = await page.locator('[data-guide-dialog] [role=tab][data-guide-game]').last().getAttribute('data-guide-game');
   await page.keyboard.press('End');
   state = await book();
-  check(state.game === 'backgammon' && state.title === 'At the table' && state.next === 'Back to the table', `The last page of the last game offers Back to the table (${state.next})`);
+  check(state.game === lastGame && state.title === 'At the table' && state.next === 'Back to the table', `The last page of the last game (${lastGame}) offers Back to the table (${state.next})`);
   await page.locator('[data-guide-dialog] .salon-guide-next').click();
   check(!(await book()).open, 'Back to the table closes the book');
   // A click outside the book closes it too.
