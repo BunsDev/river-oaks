@@ -207,3 +207,22 @@ test('mancala: the grove table holds the opening, and a game’s seeds in their 
   mirror.show(null);
   assert.equal(mirror.count(), 48);
 });
+
+test('cribbage: the walnut table swaps the checkers for a pegging board, and the pegs follow the scores', () => {
+  const cribbage = group.userData.cribbage, backgammon = group.userData.backgammon;
+  const board = group.children.find(child => child.name === 'Cribbage board'), pegs = board.children.find(child => child.isInstancedMesh && child.count <= 2 && child.geometry.type === 'CylinderGeometry');
+  assert.equal(cribbage.visible(), false, 'the table starts as backgammon'); assert.equal(backgammon.visible(), true);
+  backgammon.setVisible(false); cribbage.setVisible(true);
+  assert.equal(cribbage.visible(), true); assert.equal(backgammon.visible(), false);
+  const at = () => Array.from({ length: pegs.count }, (_, i) => { const matrix = new THREE.Matrix4(); pegs.getMatrixAt(i, matrix); return new THREE.Vector3().setFromMatrixPosition(matrix); });
+  cribbage.show([10, 70], 0);
+  assert.equal(cribbage.pegs(), 2);
+  const [mine, theirs] = at();
+  assert.ok(mine.x > plan.backgammon.x && theirs.x < plan.backgammon.x, 'from chair 0 (east), your lane is the east one');
+  cribbage.show([10, 70], 1);
+  const [mine1] = at();
+  assert.ok(mine1.x < plan.backgammon.x, 'from chair 1 (west), your lane is the west one');
+  const early = at()[0].z; cribbage.show([40, 70], 1); assert.notEqual(at()[0].z, early, 'a higher score moves the peg along');
+  cribbage.show(null); assert.equal(cribbage.pegs(), 0);
+  cribbage.setVisible(false); backgammon.setVisible(true);
+});

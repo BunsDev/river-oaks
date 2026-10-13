@@ -552,6 +552,53 @@ export function buildPlazaSalon(world) {
       // A position ({ points, bar, off } from backgammon-rules.js) or null for the opening, and white's chair.
       show,
       count: () => checkers.count,
+      // Puts the checkers away while the table plays cribbage.
+      setVisible(visible) { checkers.visible = visible; },
+      visible: () => checkers.visible,
+    };
+  }
+  // Cribbage on the walnut table: a maple pegging board laid over the backgammon board,
+  // two lanes of sixty holes out and back, an ivory peg for the chair across the board
+  // from you and a red one for yours, a cut deck and the starter; shown while cribbage
+  // is the table's game.
+  {
+    const table = plan.backgammon, [tx, y, tz] = base(table), top = y + 0.759 + 0.012;
+    const board = new THREE.Group(); board.name = 'Cribbage board'; board.visible = false; group.add(board);
+    const plank = new THREE.Mesh(unit.box, new THREE.MeshStandardMaterial({ color: '#c99a5e', roughness: 0.55 }));
+    plank.position.set(tx, top - 0.006, tz); plank.scale.set(0.12, 0.012, 0.46); plank.castShadow = plank.receiveShadow = true;
+    const holes = new THREE.InstancedMesh(unit.disc, material.ebony, 244);
+    const pegs = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.0028, 0.0028, 0.022, 8), new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.4 }), 2);
+    pegs.count = 0; pegs.castShadow = true;
+    const deck = new THREE.Mesh(unit.box, new THREE.MeshStandardMaterial({ color: '#7b2f45', roughness: 0.55 }));
+    deck.position.set(tx - 0.13, top + 0.01, tz); deck.scale.set(0.063, 0.02, 0.088);
+    board.add(plank, holes, pegs, deck);
+    // The hole for a score on one side (0: the near lane from chair 0, 1: the far), out along the outer row and back along the inner.
+    const hole = (side, score) => {
+      const sign = side === 0 ? 1 : -1, back = score > 60, step = Math.min(score, 120) - (back ? 60 : 0);
+      const along = back ? 0.21 - (step - 1) * 0.007 : -0.21 + (step - 1) * 0.007, across = sign * (back ? 0.016 : 0.04);
+      return score >= 121 ? [0, -0.222] : [across, along];
+    };
+    for (let side = 0; side < 2; side++) for (let score = 1; score <= 120; score++) {
+      const [across, along] = hole(side, score);
+      dummy.position.set(tx + across, top + 0.0002, tz + along); dummy.rotation.set(0, 0, 0); dummy.scale.set(0.0035, 0.0004, 0.0035); dummy.updateMatrix(); holes.setMatrixAt(side * 120 + score - 1, dummy.matrix);
+    }
+    holes.count = 240;
+    const tint = [new THREE.Color('#b7342c'), new THREE.Color('#efe6d4')];
+    group.userData.cribbage = {
+      // Scores [yours, the other's] with your chair (0 east, 1 west), or null to put the pegs away.
+      show(scores = null, yourChair = 0) {
+        pegs.count = 0;
+        if (scores) scores.forEach((score, player) => {
+          // Your lane is the one nearer your chair.
+          const side = (yourChair === 0) === (player === 0) ? 0 : 1, [across, along] = score > 0 ? hole(side, score) : [(side === 0 ? 1 : -1) * 0.04, -0.226];
+          dummy.position.set(tx + across, top + 0.011, tz + along); dummy.rotation.set(0, 0, 0); dummy.scale.set(1, 1, 1); dummy.updateMatrix();
+          pegs.setColorAt(pegs.count, tint[player]); pegs.setMatrixAt(pegs.count++, dummy.matrix);
+        });
+        pegs.instanceMatrix.needsUpdate = true; if (pegs.instanceColor) pegs.instanceColor.needsUpdate = true; pegs.computeBoundingSphere();
+      },
+      pegs: () => pegs.count,
+      setVisible(visible) { board.visible = visible; },
+      visible: () => board.visible,
     };
   }
   // Jenga on the bench's drum: one InstancedMesh of maple blocks (a little colour
