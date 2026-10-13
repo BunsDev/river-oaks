@@ -32,6 +32,19 @@ export function createRoadVehicle(kind='rolls') {
  const ring=(pos,r,thick,mat,parent=object)=>add(new THREE.TorusGeometry(r,thick,10,64),mat,pos,[1,1,1],parent);
  for(const [index,[x,r,z]] of spec.wheels.entries()) {
   const wheel=new THREE.Group();wheel.position.set(x,r,z);object.add(wheel);groups.push(wheel);wheels.push(wheel);
+  if(kind==='bicycle') {
+   // A real bicycle wheel: slim rubber tyre (still rubber, so tread sampling and
+   // tyre clearances work), thin chrome rim, 20 radial spokes laced alternately
+   // to either hub flange. No disc hub, caliper, spinners or tread blocks.
+   ring([0,0,0],r-.028,.028,rubber,wheel);
+   ring([0,0,0],r-.062,.009,chrome,wheel);
+   const hub=add(new THREE.CylinderGeometry(.025,.025,.07,16),chrome,[0,0,0],[1,1,1],wheel);hub.rotation.x=Math.PI/2;hubs.push(hub);
+   for(let n=0;n<20;n++) {
+    const a=n/20*Math.PI*2,inner=.025,outer=r-.062,mid=(inner+outer)/2,flange=(n%2?1:-1)*.012;
+    const spoke=add(new THREE.CylinderGeometry(.0025,.0025,outer-inner,6),chrome,[Math.cos(a)*mid,Math.sin(a)*mid,flange],[1,1,1],wheel);spoke.rotation.z=a-Math.PI/2;
+   }
+   continue;
+  }
   const wide=kind==='rolls'?.125:.085,major=r-.067;
   const tyre=ring([0,0,0],major,.067,rubber,wheel);tyre.scale.z=wide/.067;
   for(const side of [-1,1]) {
@@ -128,7 +141,7 @@ export function createRoadVehicle(kind='rolls') {
   ring([0,0,0],.17,.018,darkLeather,steering);
   for(const a of [0,2.1,4.2])tube([[0,0,0],[Math.sin(a)*.15,Math.cos(a)*.15,0]],.012,chrome,steering);
   box([0,0,0],[.065,.065,.03],black,.015,steering);
- } else {
+ } else if(kind==='motorcycle') {
   // Twin-cylinder cruiser with exposed mechanical assemblies and fitted pillion.
   for(const side of [-1,1]) {
    tube([[-.76,1.05,side*.12],[-.61,.43,side*.21],[.55,.38,side*.22],[.66,.75,side*.18],[-.76,1.05,side*.12]],.032,black);
@@ -180,6 +193,32 @@ export function createRoadVehicle(kind='rolls') {
   tube([[-.70,1.43,-.16],[-.70,1.45,0],[-.70,1.43,.16]],.007,chrome);
   box([1.09,.66,0],[.048,.052,.16],red,.019);
   box([1.10,.51,0],[.025,.14,.17],black,.01);
+ } else if(kind==='bicycle') {
+  // A step-through city bike in rose and bronze: tubes for the frame, a
+  // leather saddle at the spec seat, bronze fork and bars that steer.
+  const frame=pink,bronze=alloy;
+  tube([[-.42,.62,0],[.05,.30,0]],.022,frame);           // down tube: head to bottom bracket
+  tube([[.05,.30,0],[.14,.88,0]],.022,frame);            // seat tube
+  tube([[.14,.88,0],[.52,.34,0]],.016,frame);            // seat stays
+  tube([[.05,.30,0],[.52,.34,0]],.016,frame);            // chain stays
+  tube([[-.42,.62,0],[-.46,.98,0]],.024,bronze);         // head tube
+  add(new THREE.CylinderGeometry(.09,.09,.02,24),black,[.05,.30,.045]);   // chainring
+  for(const z of [-.09,.09])add(new THREE.BoxGeometry(.11,.02,.04),black,[.05+(z<0?.08:-.08),.30,z]); // pedals
+  box([.12,.92,0],[.27,.06,.15],darkLeather,.03);        // saddle
+  tube([[.14,.88,0],[.12,.90,0]],.014,bronze);           // seat post
+  for(const [x,r] of spec.wheels) {
+   const shape=new THREE.Shape();
+   for(let i=0;i<=40;i++){const a=.35+i/40*(Math.PI-.7),px=x+Math.cos(a)*(r+.045),y=r+Math.sin(a)*(r+.045);if(!i)shape.moveTo(px,y);else shape.lineTo(px,y);}
+   for(let i=40;i>=0;i--){const a=.35+i/40*(Math.PI-.7);shape.lineTo(x+Math.cos(a)*(r+.02),r+Math.sin(a)*(r+.02));}
+   add(new THREE.ExtrudeGeometry(shape,{depth:.06,bevelEnabled:false}),pink,[0,0,-.03]);  // mudguard
+  }
+  steering=new THREE.Group();object.add(steering);groups.push(steering);
+  tube([[-.46,.98,0],[-.52,.62,0],[-.525,.34,0]],.014,bronze,steering);     // fork
+  tube([[-.42,1.02,-.22],[-.46,1.0,0],[-.42,1.02,.22]],.012,bronze,steering); // bars
+  for(const side of [-1,1]){const grip=add(new THREE.CylinderGeometry(.016,.016,.09,12),rubber,[-.42,1.02,side*.22],[1,1,1],steering);grip.rotation.x=Math.PI/2;}
+  const pivot=new THREE.Vector3(-.46,.98,0);for(const child of steering.children)child.position.sub(pivot);steering.position.copy(pivot);
+  tube([[-.49,.92,0],[-.52,.86,0]],.010,light);          // headlamp stalk
+  ball([-.52,.86,0],[.03,.03,.02],light);
  }
  batchCostumeAttachments(groups.map(group=>({group})),owned);
  if(kind==='rolls') {
