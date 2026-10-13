@@ -33,7 +33,7 @@ export function createPlazaDominoes({ host = document.querySelector('#viewport')
   panel.innerHTML = `<header class="table-game-header"><div><p class="table-game-eyebrow">Plaza games · practice game</p><h2 id="dominoes-title">Dominoes at the café</h2></div>
     <button type="button" class="table-game-close" aria-label="Close the dominoes table">×</button></header>
     <div class="table-game-body dominoes-body">
-      ${onSwitch ? '<div class="table-game-choice" role="group" aria-label="Game"><button type="button" data-cafe-game="dominoes" aria-pressed="true">Dominoes</button><button type="button" data-cafe-game="hearts" aria-pressed="false">Hearts</button></div>' : ''}
+      ${onSwitch ? '<div class="table-game-choice" role="group" aria-label="Game"><button type="button" data-cafe-game="dominoes" aria-pressed="true">Dominoes</button><button type="button" data-cafe-game="hearts" aria-pressed="false">Hearts</button><button type="button" data-cafe-game="spades" aria-pressed="false">Spades</button></div>' : ''}
       <p class="table-game-status" role="status" aria-live="polite"></p>
       <ul class="dominoes-scores" aria-label="Scores, first to ${MATCH_POINTS}"></ul>
       <section class="dominoes-table" aria-label="Played tiles"><ol class="dominoes-line"></ol><p class="dominoes-ends"></p></section>
