@@ -74,3 +74,29 @@ test('fallbacks are stable, distinct across accounts, and outside the GitHub nam
   }
   assert.equal(shownName(names[0], false, ids[1]), names[1], 'a copied fallback belongs to its actual account');
 });
+
+test('usernames are 2 to 39 letters or digits joined by single separators, and never reserved', async () => {
+  const { usernameProblem, validUsername, usernameKey } = await import('../src/resident-names.js');
+  for (const name of ['ab', 'octocat', 'rosy-heron-42', 'ok.name', 'under_score', 'A1b2', 'x'.repeat(39)]) assert.equal(usernameProblem(name), null, name);
+  for (const name of ['a', 'x'.repeat(40), '-lead', 'trail-', 'a--b', 'a._b', 'sp ace', 'émile', 'tab\tname', '', null, 42]) assert.equal(validUsername(name), false, String(name));
+  for (const name of ['Jevica', 'j3v1ca', 'the.jevica', 'Resident', 'visitor', 'Visitor42']) assert.match(usernameProblem(name), /reserved/, name);
+  // Names that read the same are the same name.
+  assert.equal(usernameKey('User1'), usernameKey('useri'));
+  assert.equal(usernameKey('Night_Owl'), usernameKey('night-owl'));
+  assert.notEqual(usernameKey('night-owl'), usernameKey('night-owls'));
+});
+
+test('a generated username is friendly, valid and the same for the same seed', async () => {
+  const { generatedUsername, suggestedUsername, validUsername } = await import('../src/resident-names.js');
+  assert.equal(generatedUsername('user_1'), generatedUsername('user_1'));
+  assert.notEqual(generatedUsername('user_1'), generatedUsername('user_2'));
+  for (let i = 0; i < 2000; i++) {
+    const name = generatedUsername(`seed-${i}`);
+    assert.match(name, /^[a-z]+-[a-z]+-\d\d$/);
+    assert.equal(validUsername(name), true, name);
+  }
+  assert.equal(suggestedUsername({ login: 'octocat', userId: 'u' }), 'octocat', 'a GitHub login is offered first');
+  assert.equal(suggestedUsername({ login: null, userId: 'u' }), generatedUsername('u:0'));
+  assert.equal(suggestedUsername({ login: 'octocat', userId: 'u', attempt: 1 }), generatedUsername('u:1'), 'later attempts are generated');
+  assert.equal(suggestedUsername({ login: 'Jevica', userId: 'u' }), generatedUsername('u:0'), 'a reserved login is never offered');
+});

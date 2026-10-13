@@ -164,3 +164,8 @@
 .access-invites article { padding-block: 1rem; border-top: 1px solid #c4d3ca; }
 .access-invites article p { margin-block: .35rem; }
 @media (prefers-reduced-motion: reduce) { .access-actions a, .access-card button, .access-tools button, .access-review button, .access-slide { transition: none; } }
+/* The username a waiting resident chooses, and the approver's copy of it in the review. */
+.access-username-choices { display: flex; flex-wrap: wrap; gap: .5rem; }
+.access-username-choices button { flex: 1 1 auto; }
+.access-request-username { flex: 1 1 12rem; min-width: 10rem; min-height: 2.25rem; padding: .35rem .6rem; border: 1px solid #c4d3ca; border-radius: .5rem; font: inherit; }
+.access-request-username[readonly] { border-color: transparent; background: transparent; font-weight: 600; }

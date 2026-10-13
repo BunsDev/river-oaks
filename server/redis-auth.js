@@ -6,7 +6,7 @@ import { VERIFY_COOKIE, verificationPage, readVerificationCode } from './email-v
 import { validWorkOSIssuer, logSessionRejection } from './workos-session.js';
 import { isJevicaAdmin } from './admin.js';
 import { createGitHubNames, createRedisGitHubNameStore } from './github-names.js';
-import { residentName, validGitHubLogin } from '../preview/src/resident-names.js';
+import { residentName, validGitHubLogin, validUsername } from '../preview/src/resident-names.js';
 
 const SESSION_COOKIE = 'river_oaks_session', STATE_COOKIE = 'river_oaks_auth_state';
 const STATE_TTL = 20 * 60_000, SESSION_TTL = 7 * 24 * 60 * 60_000;
@@ -192,7 +192,7 @@ function json(res, status, value) {
 }
 
 /** Durable auth only. The caller owns Redis and cross-instance WS invalidation. */
-export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePassword, origin, returnPath = '/', workos, githubToken = null, githubFetch = fetch, now = Date.now, onLogout = () => {}, magic = {} } = {}) {
+export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePassword, origin, returnPath = '/', workos, githubToken = null, githubFetch = fetch, now = Date.now, onLogout = () => {}, usernameOf = async () => null, magic = {} } = {}) {
   let base;
   try {
     const parsed = new URL(origin), local = ['localhost', '127.0.0.1', '[::1]'].includes(parsed.hostname);
@@ -211,6 +211,12 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
   const nameOf = (userId, account) => residentName({ admin: isJevicaAdmin(userId), login: account?.login, userId });
   // Sessions from before usernames were stored, or whose lookup failed, are
   // named from the per-user record, which is refreshed at most every 10 minutes.
+  // A username approved at sign-up (waitlist.js) names the resident; Jevica stays Jevica.
+  const withUsername = async user => {
+    if (!user || isJevicaAdmin(user.userId)) return user;
+    const username = await Promise.resolve().then(() => usernameOf(user.userId)).catch(() => null);
+    return validUsername(username) ? { ...user, name: username } : user;
+  };
   const named = async (user, record) => {
     if (!user || record.authMethod === 'MagicAuth' || isJevicaAdmin(record.userId) || validGitHubLogin(record.login)) return user;
     return { ...user, name: nameOf(record.userId, await github.known(record.userId).catch(() => null)) };
@@ -257,7 +263,7 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
         const user = identity(verified, record);
         if (!user || !enabled || !await active(record, hash)) return null;
         if (res && sealed !== presented) setCookie(res, SESSION_COOKIE, sealed, Math.floor((record.expiresAt - now()) / 1000));
-        return named(user, record);
+        return withUsername(await named(user, record));
       }
       if (!res || verified.reason !== 'invalid_jwt') return null;
       const owner = token();
@@ -276,7 +282,7 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
           nextHash: digest(refreshed.sealedSession), sealedSession: refreshed.sealedSession, grace: COOKIE_GRACE }));
         if (!committed || !enabled || !await active(committed, committed.cookieHash)) return null;
         setCookie(res, SESSION_COOKIE, refreshed.sealedSession, Math.floor((record.expiresAt - now()) / 1000));
-        return named(user, committed);
+        return withUsername(await named(user, committed));
       } finally {
         await transaction({ op: 'refresh-release', ...binding(record), owner });
       }

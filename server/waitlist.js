@@ -2,6 +2,7 @@ import { mkdir, readFile, rename, writeFile, appendFile } from 'node:fs/promises
 import { dirname } from 'node:path';
 import { createHash } from 'node:crypto';
 import { newInvite, visibleInvite, inviteDigest, validInviteCode, validInviteId, INVITE_TRANSACTION, INVITE_CAPACITY, INVITE_RETENTION } from './invitations.js';
+import { suggestedUsername, usernameKey, usernameProblem, validUsername } from '../preview/src/resident-names.js';
 
 const validId = value => typeof value === 'string' && value.length > 0 && value.length <= 100 && !/[\u0000-\u001f\u007f]/.test(value);
 const recordFor = (identity, admins, now, autoApprove = false) => ({
@@ -12,6 +13,25 @@ const recordFor = (identity, admins, now, autoApprove = false) => ({
   requestedAt: new Date(now()).toISOString(),
 });
 const compare = (a, b) => a.requestedAt.localeCompare(b.requestedAt);
+
+// Usernames (resident-names.js). A waiting resident has one from their first request:
+// their GitHub login unless someone already holds a name that reads the same, else a
+// generated name. They may change it while they wait, and an approver may change it
+// until the request is approved; an approved username names the resident in town.
+// A GitHub login is also held for its owner (`nameKey`), so nobody can choose it.
+const loginOf = identity => validUsername(identity?.name) ? identity.name : null;
+function defaultCandidates(identity) {
+  const seen = new Set(), out = [];
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const username = suggestedUsername({ login: loginOf(identity), userId: identity.userId, attempt }), key = usernameKey(username);
+    if (validUsername(username) && !seen.has(key)) { seen.add(key); out.push({ username, key }); }
+  }
+  return out;
+}
+const usernameRequest = ({ userId, username, actorId }, adminIds) => {
+  if (!validId(userId) || !validId(actorId) || (actorId !== userId && !adminIds.has(actorId))) throw new Error('Invalid username authority');
+  return usernameProblem(username);
+};
 
 /** Approval is independent of the town checkpoint and survives process restarts. */
 // Requests waiting for a decision. A full list gives up its oldest pending
@@ -53,6 +73,21 @@ export async function createFileWaitlist(path, { admins = [], now = Date.now, au
     record.invitesGrantedAt = new Date(now()).toISOString();
   };
   const approvedOwner = id => adminIds.has(id) || records.get(id)?.status === 'approved';
+  // Who else holds a name that reads like `key`, as a username or a GitHub login.
+  const holder = (key, except, rows = records) => {
+    for (const record of rows.values()) if (record.userId !== except && (record.usernameKey === key || record.nameKey === key)) return record.userId;
+    return null;
+  };
+  // Hold the owner's GitHub login, and give a waiting request its default username.
+  const settle = (record, identity, rows) => {
+    const login = loginOf(identity), loginKey = login && usernameKey(login);
+    if (loginKey && record.nameKey !== loginKey && !holder(loginKey, record.userId, rows)) record.nameKey = loginKey;
+    if (record.status === 'pending' && !validUsername(record.username)) {
+      const pick = defaultCandidates(identity).find(candidate => !holder(candidate.key, record.userId, rows));
+      if (pick) Object.assign(record, { username: pick.username, usernameKey: pick.key, usernameBy: 'default' });
+    }
+    return record;
+  };
   return {
     request(identity) {
       if (!validId(identity?.userId)) throw new Error('Invalid waitlist identity');
@@ -61,9 +96,12 @@ export async function createFileWaitlist(path, { admins = [], now = Date.now, au
         // A request keeps the name its owner currently signs in with, so the
         // approval list shows GitHub usernames rather than an older name.
         const name = recordFor(identity, adminIds, now).name;
-        if (existing && existing.name !== name) {
-          existing = { ...existing, name };
-          const next = new Map(records); next.set(existing.userId, existing); await persist(next);
+        if (existing) {
+          const updated = settle({ ...existing, name }, identity, records);
+          if (JSON.stringify(updated) !== JSON.stringify(existing)) {
+            existing = updated;
+            const next = new Map(records); next.set(existing.userId, existing); await persist(next);
+          }
         }
         if (existing) return adminIds.has(identity.userId) || autoApprove ? { ...existing, status: 'approved' } : existing;
         const record = recordFor(identity, adminIds, now, autoApprove), next = new Map(records);
@@ -72,9 +110,30 @@ export async function createFileWaitlist(path, { admins = [], now = Date.now, au
           if (!oldest) throw new Error('Waitlist capacity reached');
           next.delete(oldest.userId);
         }
+        settle(record, identity, next);
         next.set(record.userId, record); await persist(next);
         return record;
       });
+    },
+    async setUsername({ userId, username, actorId }) {
+      const problem = usernameRequest({ userId, username, actorId }, adminIds), admin = adminIds.has(actorId);
+      if (problem) return { ok: false, reason: 'invalid', message: problem };
+      const key = usernameKey(username);
+      return serialize(async () => {
+        const previous = records.get(userId);
+        if (!previous) return { ok: false, reason: 'missing' };
+        if (previous.username === username) return { ok: true, record: previous };
+        if (previous.status === 'approved' || (!admin && previous.status !== 'pending')) return { ok: false, reason: 'locked' };
+        if (holder(key, userId)) return { ok: false, reason: 'taken' };
+        const record = { ...previous, username, usernameKey: key, usernameBy: admin ? 'admin' : 'self' };
+        const next = new Map(records); next.set(userId, record);
+        await persist(next, admin ? [...audit, { action: 'username', userId, actorId, username, at: new Date(now()).toISOString() }] : audit);
+        return { ok: true, record };
+      });
+    },
+    async usernameOf(userId) {
+      const record = records.get(userId);
+      return record?.status === 'approved' && validUsername(record.username) ? record.username : null;
     },
     async isApproved(userId) { return autoApprove || adminIds.has(userId) || records.get(userId)?.status === 'approved'; },
     async list() { return [...records.values()].map(record => adminIds.has(record.userId) ? { ...record, status: 'approved' } : record).sort(compare); },
@@ -154,12 +213,46 @@ export async function createFileWaitlist(path, { admins = [], now = Date.now, au
 }
 
 const REQUEST = `
+-- KEYS[4] maps how a name reads (usernameKey) to the account that holds it.
+local function heldByOther(key, userId)
+  local owner = redis.call('HGET', KEYS[4], key)
+  return owner and owner ~= userId
+end
+-- Hold the owner's GitHub login, and give a waiting request its default username.
+local function settle(record)
+  local changed = false
+  if ARGV[6] ~= '' and record.nameKey ~= ARGV[6] and not heldByOther(ARGV[6], record.userId) then
+    redis.call('HSET', KEYS[4], ARGV[6], record.userId)
+    record.nameKey = ARGV[6]
+    changed = true
+  end
+  if record.status == 'pending' and type(record.username) ~= 'string' then
+    for _, candidate in ipairs(cjson.decode(ARGV[5])) do
+      if not heldByOther(candidate.key, record.userId) then
+        redis.call('HSET', KEYS[4], candidate.key, record.userId)
+        record.username = candidate.username
+        record.usernameKey = candidate.key
+        record.usernameBy = 'default'
+        changed = true
+        break
+      end
+    end
+  end
+  return changed
+end
+local function release(record, userId)
+  for _, key in ipairs({ record.usernameKey or false, record.nameKey or false }) do
+    if key and redis.call('HGET', KEYS[4], key) == userId then redis.call('HDEL', KEYS[4], key) end
+  end
+end
 local existing = redis.call('HGET', KEYS[1], ARGV[1])
 if existing then
   local record = cjson.decode(existing)
   local name = cjson.decode(ARGV[2]).name
-  if record.name == name then return existing end
+  local changed = record.name ~= name
   record.name = name
+  if settle(record) then changed = true end
+  if not changed then return existing end
   local updated = cjson.encode(record)
   redis.call('HSET', KEYS[1], ARGV[1], updated)
   return updated
@@ -181,15 +274,44 @@ while redis.call('HLEN', KEYS[1]) >= limit do
   redis.call('ZREM', KEYS[2], oldest)
   -- Index entries for requests decided since are skipped, never evicted.
   local raw = redis.call('HGET', KEYS[1], oldest)
-  if raw and cjson.decode(raw).status == 'pending' then redis.call('HDEL', KEYS[1], oldest) end
+  if raw then
+    local evicted = cjson.decode(raw)
+    if evicted.status == 'pending' then release(evicted, oldest); redis.call('HDEL', KEYS[1], oldest) end
+  end
 end
-redis.call('HSET', KEYS[1], ARGV[1], ARGV[2])
-if cjson.decode(ARGV[2]).status == 'pending' then redis.call('ZADD', KEYS[2], tonumber(ARGV[3]), ARGV[1]) end
-return ARGV[2]`;
+local record = cjson.decode(ARGV[2])
+settle(record)
+local encoded = cjson.encode(record)
+redis.call('HSET', KEYS[1], ARGV[1], encoded)
+if record.status == 'pending' then redis.call('ZADD', KEYS[2], tonumber(ARGV[3]), ARGV[1]) end
+return encoded`;
+// One username change, checked and claimed atomically. KEYS: users, usernames, audit.
+// ARGV: userId, username, key, '1' for an approver, actorId, time.
+const SET_USERNAME = `
+local raw = redis.call('HGET', KEYS[1], ARGV[1])
+if not raw then return cjson.encode({ reason = 'missing' }) end
+local record = cjson.decode(raw)
+local admin = ARGV[4] == '1'
+if record.username == ARGV[2] then return cjson.encode({ record = record }) end
+if record.status == 'approved' or (not admin and record.status ~= 'pending') then return cjson.encode({ reason = 'locked' }) end
+local owner = redis.call('HGET', KEYS[2], ARGV[3])
+if owner and owner ~= ARGV[1] then return cjson.encode({ reason = 'taken' }) end
+if record.usernameKey and record.usernameKey ~= ARGV[3] and record.usernameKey ~= record.nameKey
+  and redis.call('HGET', KEYS[2], record.usernameKey) == ARGV[1] then redis.call('HDEL', KEYS[2], record.usernameKey) end
+redis.call('HSET', KEYS[2], ARGV[3], ARGV[1])
+record.username = ARGV[2]
+record.usernameKey = ARGV[3]
+record.usernameBy = admin and 'admin' or 'self'
+redis.call('HSET', KEYS[1], ARGV[1], cjson.encode(record))
+if admin then
+  redis.call('LPUSH', KEYS[3], cjson.encode({ action = 'username', userId = ARGV[1], actorId = ARGV[5], username = ARGV[2], at = ARGV[6] }))
+  redis.call('LTRIM', KEYS[3], 0, 9999)
+end
+return cjson.encode({ record = record })`;
 export function createRedisWaitlist({ redis, prefix, admins = [], now = Date.now, maxRequests = MAX_WAITLIST_REQUESTS, inviteCapacity = INVITE_CAPACITY } = {}) {
   if (!redis?.eval || typeof prefix !== 'string' || !/^[A-Za-z0-9:{}_-]{1,160}$/.test(prefix)) throw new Error('Invalid waitlist configuration');
   const adminIds = new Set(admins), users = `${prefix}:waitlist:users`, audit = `${prefix}:waitlist:audit`;
-  const invites = `${prefix}:waitlist:invites`, pending = `${prefix}:waitlist:pending`;
+  const invites = `${prefix}:waitlist:invites`, pending = `${prefix}:waitlist:pending`, usernames = `${prefix}:waitlist:usernames`;
   const transaction = async payload => {
     const time = now();
     // The owner whose invite index this call may read or extend.
@@ -205,11 +327,24 @@ export function createRedisWaitlist({ redis, prefix, admins = [], now = Date.now
   return {
     async request(identity) {
       if (!validId(identity?.userId)) throw new Error('Invalid waitlist identity');
-      const record = recordFor(identity, adminIds, now);
-      const raw = await redis.eval(REQUEST, 3, users, pending, `${prefix}:waitlist:pending-indexed`, record.userId, JSON.stringify(record), now(), maxRequests);
+      const record = recordFor(identity, adminIds, now), login = loginOf(identity);
+      const raw = await redis.eval(REQUEST, 4, users, pending, `${prefix}:waitlist:pending-indexed`, usernames, record.userId, JSON.stringify(record), now(), maxRequests,
+        JSON.stringify(defaultCandidates(identity)), login ? usernameKey(login) : '');
       if (!raw) throw new Error('Waitlist capacity reached');
       const existing = JSON.parse(raw);
       return adminIds.has(identity.userId) ? { ...existing, status: 'approved' } : existing;
+    },
+    async setUsername({ userId, username, actorId }) {
+      const problem = usernameRequest({ userId, username, actorId }, adminIds);
+      if (problem) return { ok: false, reason: 'invalid', message: problem };
+      const time = now(), result = JSON.parse(await redis.eval(SET_USERNAME, 3, users, usernames, audit, userId, username, usernameKey(username),
+        adminIds.has(actorId) ? '1' : '0', actorId, new Date(time).toISOString()));
+      return result.record ? { ok: true, record: result.record } : { ok: false, reason: result.reason };
+    },
+    async usernameOf(userId) {
+      if (!validId(userId)) return null;
+      const raw = await redis.hget(users, userId), record = raw ? JSON.parse(raw) : null;
+      return record?.status === 'approved' && validUsername(record.username) ? record.username : null;
     },
     async isApproved(userId) {
       if (!validId(userId)) return false;
