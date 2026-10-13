@@ -4,12 +4,13 @@
 
 Each plan is a task ledger. Status comes from the task register, where the primary checkout's live copy can be newer than the committed one. Plans from before the register are listed as historical: their own text is the record of what was delivered.
 
-## Active and blocked (10)
+## Active and blocked (11)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
 | [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `shared-voice-spatial` | active | — | 2026-10-13 |
 | [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `shared-voice-desktop` | active | — | 2026-10-13 |
+| [2026-10-13-plaza-hearts](2026-10-13-plaza-hearts.md)<br>Plaza games: Hearts at the café table — 2026-10-13 | `plaza-hearts` | active | — | 2026-10-13 |
 | [2026-10-13-plaza-games](2026-10-13-plaza-games.md)<br>Plaza games, phase 1: chess at the plaza tables — 2026-10-13 | `plaza-games` | active | — | 2026-10-13 |
 | [2026-10-13-plaza-dominoes](2026-10-13-plaza-dominoes.md)<br>Plaza games: dominoes at the café table — 2026-10-13 | `plaza-dominoes` | active | — | 2026-10-13 |
 | [2026-10-13-plaza-checkers](2026-10-13-plaza-checkers.md)<br>Plaza games: checkers on the chess tables — 2026-10-13 | `plaza-checkers` | active | — | 2026-10-13 |

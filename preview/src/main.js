@@ -39,6 +39,7 @@ import { buildStreetFurniture } from './street-furniture.js';
 import { buildPlazaSalon } from './plaza-salon.js';
 import { createPlazaTableGames, seatAtTable } from './plaza-table-games.js';
 import { createPlazaDominoes, seatAtCafe } from './plaza-dominoes.js';
+import { createPlazaHearts } from './plaza-hearts.js';
 import { atmosphereFor } from './atmosphere.js';
 import { createWalkingEnvironment } from './walking.js';
 import { createQualityControl } from './render-quality.js';
@@ -103,7 +104,7 @@ let worldRegionSha256 = null;
 let landmarkAccountId = null;
 let playerAvatar;
 let multiplayer, remotePlayers, buildLayer, buildControls, seatingControls, seatAndWater;
-let plazaSalon = null, plazaGames = null, plazaDominoes = null;
+let plazaSalon = null, plazaGames = null, plazaDominoes = null, plazaHearts = null, cafeGame = 'dominoes';
 let birdCams = null, birdCamsUI = null;
 let debugTools = null, debugLoading = null;
 const worldMapEnabled = import.meta.env.VITE_WORLD_MAP === 'true';
@@ -198,7 +199,7 @@ function initializeRenderer() {
     void worldPortal.load();
   }
   sidebarSections = setupSidebarSections({ graphics: quality.element, sidebar });
-  walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore, canEnterStore, getInteraction: () => seatAndWater?.interaction() ?? null, getPlay: () => plazaGames?.interaction() ?? plazaDominoes?.interaction() ?? null, getVoice: () => multiplayer?.voice ?? null });
+  walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore, canEnterStore, getInteraction: () => seatAndWater?.interaction() ?? null, getPlay: () => plazaGames?.interaction() ?? (cafeGame === 'hearts' ? plazaHearts : plazaDominoes)?.interaction() ?? null, getVoice: () => multiplayer?.voice ?? null });
   storeIntros = createStoreIntros({ camera, host,
     claim: storeId => multiplayer.claimStoreIntro(storeId),
     onHalt: () => walking.halt(), onResume: () => walking.update(0, performance.now()),
@@ -218,9 +219,18 @@ function initializeRenderer() {
   // Seated at a plaza chess table, X plays chess or checkers; the table's pieces mirror the game.
   plazaGames = createPlazaTableGames({ getMirror: () => plazaSalon?.userData.chess ?? null, getSeat: () => seatAtTable(walking?.getPose()),
     focusWorld: () => host.focus({ preventScroll: true }) });
-  // Seated at the café table, X plays dominoes with the plaza regulars; the table mirrors the tiles.
+  // Seated at the café table, X plays dominoes or Hearts with the plaza regulars (the last
+  // one played); switching clears the other game's pieces from the table.
+  const switchCafe = kind => {
+    const [leaving, joining] = kind === 'hearts' ? [plazaDominoes, plazaHearts] : [plazaHearts, plazaDominoes];
+    cafeGame = kind; leaving.close({ toWorld: false });
+    plazaSalon?.userData[kind === 'hearts' ? 'dominoes' : 'cards']?.show(null);
+    joining.open();
+  };
   plazaDominoes = createPlazaDominoes({ getMirror: () => plazaSalon?.userData.dominoes ?? null, getSeat: () => seatAtCafe(walking?.getPose()),
-    focusWorld: () => host.focus({ preventScroll: true }) });
+    focusWorld: () => host.focus({ preventScroll: true }), onSwitch: switchCafe });
+  plazaHearts = createPlazaHearts({ getMirror: () => plazaSalon?.userData.cards ?? null, getSeat: () => seatAtCafe(walking?.getPose()),
+    focusWorld: () => host.focus({ preventScroll: true }), onSwitch: switchCafe });
   playDock = createPlayDock({creationToolsEnabled}); const visitTools = playDock.content;
   if (creationToolsEnabled) buildControls=createSharedBuildControls({getPose:()=>walking?.getPose(),isBuildableRoom:id=>world?.stores.some(store=>store.id===id && store.category==='home'),onBuilderChange:builder=>{builderAim='';if(!builder.active)buildLayer?.setGhost(null);},request:message=>multiplayer?.command(message)??Promise.resolve({ok:false,message:'Join the town before building.'})});
   visitTools.append($('.player-controls'), ...(buildControls ? [buildControls.panel] : []));
@@ -697,7 +707,7 @@ function render(now) {
   if (storeIntros?.active || photoMode?.active || birdCams?.riding) walking?.halt();
   else if (multiplayer?.connected && !multiplayer.traveling) walking?.update(delta, now);
   else walking?.halt();
-  plazaGames?.update(); plazaDominoes?.update();
+  plazaGames?.update(); plazaDominoes?.update(); plazaHearts?.update();
   if (multiplayer?.connected) birdCams?.update(delta);
   multiplayer?.update(now);
   seatingControls?.update(now);
@@ -914,6 +924,8 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
   };
   window.__riverPlazaDominoes = () => plazaDominoes ? { ...plazaDominoes.debug(), table: plazaSalon?.userData.dominoes?.count() ?? null,
     deal: (seed, players) => plazaDominoes.deal(seed, players) } : null;
+  window.__riverPlazaHearts = () => plazaHearts ? { ...plazaHearts.debug(), cafeGame, table: plazaSalon?.userData.cards?.count() ?? null,
+    deal: (seed, hand) => plazaHearts.deal(seed, hand) } : null;
   window.__riverSeatAndWater = () => seatAndWater ? {
     seated: walking?.getPose()?.sitting ? `${walking.getPose().sitting.buildId}:${walking.getPose().sitting.slot}` : null, interaction: seatAndWater.interaction()?.kind ?? null, offered: seatAndWater.interaction()?.targetId ?? null, ...seatAndWater.sites(),
     // Arrive on open pavement beside a seat or planter, by the normal travel path.
