@@ -260,9 +260,22 @@ Branch `feat/voice-spatial-20261013`, from PR 3's head.
   corrections were harness bugs; one was a wrong expectation (the curve gives
   0.63 at ten metres, not 1). One product change came out of the tests: an
   unknown distance no longer freezes a subscription under hysteresis.
-- The `voice-shared` journey, `pnpm test`, `pnpm run build` and `pnpm run
-  verify` have not run yet: the machine's disk and swap were critical and the
-  journey is a browser run. This PR is not opened until they have.
+- `pnpm run test:experience voice-shared`: passed in 79 s with 14 checks (Join
+  offered once the town reports voice; join asks for no microphone; the token
+  names the server-derived outdoor room; the status region announces; Unmute
+  asks exactly once; the snapshot carries Bob's server-stamped identity; one
+  graph per subscribed track; the speaking ring and dock pill; gain 0.89 at
+  6.0 m after walking away; a muted resident and deafen unsubscribe at the
+  transport; leaving stops the microphone track and disposes every graph; the
+  server drops the lease; 44 px targets at 390 px). Three earlier failures of
+  the same run were harness and base issues, not product bugs: the debug hook
+  needs `?motion-debug=1` like the other journeys; a predicate threw instead of
+  retrying before the hook existed; and this worktree had branched before #302,
+  so its fixture town had no reconciler and never stamped identities, which the
+  client correctly read as revocation. Merging `main` fixed the last one.
+- `pnpm run verify` core: passed (tooling 76; preview 2737 passed, 1 skipped; server
+  421 passed, 134 Redis-only skipped; desktop 49; Python and secrets clean). The
+  build keeps LiveKit in its own chunk with no static reference from `index`.
 
 ## Next
 

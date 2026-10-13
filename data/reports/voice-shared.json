@@ -1,43 +1,28 @@
 {
-  "createdAt": "2026-10-13T11:24:49.896Z",
+  "createdAt": "2026-10-13T11:27:45.270Z",
   "results": [
     {
       "name": "voice-shared",
-      "status": "failed",
-      "seconds": 49.295,
-      "error": "Error: page.waitForFunction: Timeout 15000ms exceeded.\nAlice sees [[\"alice\",{\"space\":\"outdoor\",\"id\":null}],[\"bob\",{\"space\":\"outdoor\",\"id\":null}]]\nBob: {\"status\":\"idle\",\"identity\":null,\"space\":null,\"message\":\"Voice access ended.\"}\n    at eval (preview/e2e/voice-shared.js:79:13)\n    at async eval (preview/e2e/voice-shared.js:76:5)\n    at async file:///Users/buns/Documents/GitHub/BunsDev/river-oaks-voice-spatial-20261013/preview/e2e/experience-runner.js:50:22",
-      "pageErrors": [],
-      "consoleErrors": [
-        "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
-        "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
-      ],
-      "diagnostics": [
-        {
-          "url": "http://127.0.0.1:60137/?motion-debug=1",
-          "ready": "true",
-          "assets": "{\"loaded\":100,\"total\":100,\"failed\":0,\"done\":true}",
-          "renderStats": "{\"calls\":903,\"triangles\":3485393,\"geometries\":295,\"textures\":129}",
-          "quality": "{\"mode\":\"auto\",\"scale\":0.6,\"occlusion\":false,\"fps\":37}",
-          "pipeline": "{\"samples\":4,\"ao\":false,\"bloom\":true,\"renderScale\":0.6,\"aoScale\":1,\"transmissionScale\":1}",
-          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
-          "window": [
-            1440,
-            1000,
-            1
-          ],
-          "screen": [
-            1440,
-            1000,
-            24
-          ],
-          "canvas": [
-            1440,
-            1000,
-            1440,
-            1000
-          ]
-        }
-      ]
+      "status": "passed",
+      "seconds": 79.146,
+      "result": {
+        "checks": [
+          "Join is offered once the town reports voice; the microphone control waits for a join",
+          "Joining connects with the lease token and asks for no microphone",
+          "The token names the server-derived outdoor room, never one the page chose",
+          "The status region announces the join",
+          "Unmute requests audio exactly once and the control reads pressed",
+          "The snapshot carries the server-stamped participant identity for a joined resident",
+          "A subscribed track gets one audio graph",
+          "A talking resident gets a nameplate ring and counts in the dock pill",
+          "Walking away lowers the gain (0.89 at 6.0 m)",
+          "A muted resident is unsubscribed at the transport",
+          "Deafen unsubscribes every resident",
+          "Leaving stops the microphone track and disposes every audio graph",
+          "The server drops the lease once the resident leaves",
+          "At 390 px the dock row keeps 44 px targets inside the viewport"
+        ]
+      }
     }
   ]
 }
