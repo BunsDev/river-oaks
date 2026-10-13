@@ -15,7 +15,7 @@ const SVG = 'http://www.w3.org/2000/svg';
 const FRAME = 16, BAR = [300, 340], HALF = (BAR[0] - FRAME) / 6, POINT_HEIGHT = 190, R = 20, TRAY = 640;
 
 export function createPlazaBackgammon({ host = document.querySelector('#viewport'), getMirror = () => null, getSeat = () => null, focusWorld = () => {},
-  random = Math.random, replyDelay = 500 } = {}) {
+  random = Math.random, replyDelay = 500, onSwitch = null } = {}) {
   let game = null, source = null, generation = 0, thinking = false;
 
   const panel = document.createElement('dialog');
@@ -24,6 +24,7 @@ export function createPlazaBackgammon({ host = document.querySelector('#viewport
   panel.innerHTML = `<header class="table-game-header"><div><p class="table-game-eyebrow">Plaza games · practice game</p><h2 id="backgammon-title">Backgammon at the plaza</h2></div>
     <button type="button" class="table-game-close" aria-label="Close the backgammon board">×</button></header>
     <div class="table-game-body backgammon-body">
+      ${onSwitch ? '<div class="table-game-choice" role="group" aria-label="Game"><button type="button" data-walnut-game="backgammon" aria-pressed="true">Backgammon</button><button type="button" data-walnut-game="cribbage" aria-pressed="false">Cribbage</button></div>' : ''}
       <p class="table-game-status" role="status" aria-live="polite"></p>
       <ul class="backgammon-scores" aria-label="Points won"></ul>
       <svg class="backgammon-board" viewBox="0 0 700 480" role="group" aria-label="Backgammon board"></svg>
@@ -195,8 +196,9 @@ export function createPlazaBackgammon({ host = document.querySelector('#viewport
     if (player === game.player) return;
     generation++; thinking = false; newGame({ player, scores: [0, 0] }); mirror(); render(); void regular();
   });
-  const close = () => { if (!panel.open) return; panel.close(); source = null; focusWorld(); };
-  $('.table-game-close').addEventListener('click', close);
+  for (const button of panel.querySelectorAll('[data-walnut-game]')) button.addEventListener('click', () => { if (button.dataset.walnutGame !== 'backgammon') onSwitch?.(button.dataset.walnutGame); });
+  const close = ({ toWorld = true } = {}) => { if (!panel.open) return; panel.close(); source = null; if (toWorld) focusWorld(); };
+  $('.table-game-close').addEventListener('click', () => close());
   panel.addEventListener('keydown', event => {
     if (event.key === 'Escape' || (event.code === 'KeyX' && !event.repeat && !event.metaKey && !event.ctrlKey && !event.altKey)) { event.preventDefault(); event.stopPropagation(); close(); }
   });
