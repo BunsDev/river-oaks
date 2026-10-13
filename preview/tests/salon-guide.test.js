@@ -196,3 +196,9 @@ test('the Go pictures follow the rules', async () => {
   assert.equal(taken.last.captured, 1); assert.equal(taken.board[tr * 9 + tc], '', 'the black stone leaves the board');
   assert.equal(go.isLegal(taken, tr * 9 + tc), false, 'black may not retake at once');
 });
+
+test('every chess-table chapter says you can play the resident across the table', () => {
+  for (const id of ['chess', 'checkers', 'connectFour', 'reversi', 'morris']) {
+    assert.match(guideGame(id).pages[0].text.join(' '), /With someone in the other chair, Play them instead/, id);
+  }
+});
