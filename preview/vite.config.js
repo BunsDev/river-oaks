@@ -36,6 +36,7 @@ export default defineConfig({
       '/api/moderation': townHttp,
       '/api/waitlist': townHttp,
       '/api/debug-reports': townHttp,
+      '/api/voice': townHttp,
       '/multiplayer': { target: `ws://127.0.0.1:${townPort}`, ws: true },
     },
   },
