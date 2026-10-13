@@ -17,7 +17,7 @@ import { chooseMove as reversiMove } from '../src/reversi-opponent.js';
 const text = id => guideGame(id).pages.flatMap(page => [page.title, ...page.text]).join(' ');
 
 test('every plaza table game has a guide of illustrated pages', () => {
-  assert.deepEqual(GUIDE.map(game => game.id), ['chess', 'checkers', 'connectFour', 'reversi', 'morris', 'dominoes', 'hearts', 'spades', 'backgammon', 'mancala', 'jenga', 'yacht', 'winePong', 'go', 'cribbage']);
+  assert.deepEqual(GUIDE.map(game => game.id), ['chess', 'checkers', 'connectFour', 'reversi', 'morris', 'dominoes', 'hearts', 'spades', 'backgammon', 'mancala', 'jenga', 'yacht', 'winePong', 'go', 'cribbage', 'darts', 'dice']);
   for (const game of GUIDE) {
     assert.ok(game.pages.length >= 4, game.id);
     assert.equal(game.pages[0].title, 'Taking a seat', `${game.id} starts at the table`);
@@ -197,6 +197,12 @@ test('the Go pictures follow the rules', async () => {
   assert.equal(go.isLegal(taken, tr * 9 + tc), false, 'black may not retake at once');
 });
 
+test('every chess-table chapter says you can play the resident across the table', () => {
+  for (const id of ['chess', 'checkers', 'connectFour', 'reversi', 'morris']) {
+    assert.match(guideGame(id).pages[0].text.join(' '), /With someone in the other chair, Play them instead/, id);
+  }
+});
+
 test('the cribbage pictures follow the rules', async () => {
   const { scoreShow, scorePlay } = await import('../src/cribbage-rules.js');
   assert.deepEqual(scorePlay(DIAGRAMS.cribbagePlay.pile).map(part => part.kind), ['fifteen']);
@@ -205,6 +211,17 @@ test('the cribbage pictures follow the rules', async () => {
   const by = kind => shown.parts.filter(part => part.kind === kind).reduce((sum, part) => sum + part.points, 0);
   assert.deepEqual([by('fifteen'), by('pair'), by('nobs')], [14, 6, 1]);
   assert.equal(DIAGRAMS.cribbageCrib.starter[0], 'J', 'the starter pictured is a jack: his heels');
+});
+test('the darts checkout picture follows the rules', async () => {
+  const { checkout } = await import('../src/darts-rules.js');
+  const { score, plan } = DIAGRAMS.dartsCheckout, found = checkout(score);
+  assert.deepEqual(found.map(bed => `${bed.ring === 'treble' ? 'T' : bed.ring === 'double' ? 'D' : ''}${bed.number}`), plan);
+});
+test('the liar’s dice pictures follow the rules', async () => {
+  const { countOf } = await import('../src/liars-dice-rules.js');
+  const { cups, bid, actual } = DIAGRAMS.diceCall;
+  assert.equal(countOf(cups, bid[1]), actual, 'the counted fives, ones wild');
+  assert.equal(countOf([DIAGRAMS.diceBid.cup], DIAGRAMS.diceBid.bid[1]), 3, 'three fives in your own cup');
 });
 
 test('the Yacht pictures follow the rules', async () => {

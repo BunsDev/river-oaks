@@ -22,7 +22,8 @@ shuffleboard landed.
   games: median 157 (p10 112, p90 210), about 4 ms a decision.
 - **`preview/src/plaza-salon.js`:**
   - An `ivoryDice()` helper: pip textures and the turn that brings each value
-    face up.
+    face up. Liar's dice (#338) now builds its dice with it too, and both restore
+    the shared `dummy`'s Euler order after turning a die.
   - `userData.yacht`: five dice where the tower stands. Rolled dice are tumbled
     by a seeded turn; kept dice line up toward the bench. Hidden until Yacht is
     in play.
@@ -55,4 +56,3 @@ shuffleboard landed.
 ## Gaps
 
 - Practice only, like the other plaza games.
-- Liar's dice builds its own dice; once it lands, both should share `ivoryDice()`.

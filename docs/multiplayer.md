@@ -601,6 +601,13 @@ in (or out), or bounce on the table and in. Two throws a turn, and sinking all s
 the far glasses wins. A close-up of the far rack sits beside the table view. Rules:
 `preview/src/wine-pong-rules.js`.
 
+A dartboard hangs on a post against the plaza's south wall, with a throwing line
+2.37 m out in front. Standing at the line, **Play darts** or **X** opens it: 501,
+double out, against a plaza regular or pass and play. A line sweeps across the board
+(stop it to aim across) and then up and down (stop it again); the dart lands where
+they cross. Busts restore the turn's start, and on 170 or less the sheet suggests a
+checkout. The real board shows the turn's darts. Rules: `preview/src/darts-rules.js`.
+
 The café table's switch now offers **Spades** beside dominoes and Hearts. You and the
 regular across partner against the regulars on your left and right. Bid the tricks you
 expect (nil means none), then play: spades are trumps and cannot be led until one has
@@ -608,6 +615,12 @@ been played. A partnership making its bid scores 10 a trick bid and 1 a bag (an
 overtrick); every tenth bag costs 100; short of the bid it loses 10 a trick bid. A nil
 scores ±100. First to 500 wins; falling to −200 loses. The round table shows the trick
 and hands as in Hearts. Rules: `preview/src/spades-rules.js`.
+
+The café switch also offers **Liar's dice**: you and three plaza regulars, five dice
+each under a cup. Bid how many of a face lie on the whole table (ones are wild), each
+bid raising the last, or call liar: the cups lift, and whoever was wrong loses a die.
+The last player with dice wins. The round table shows the cups, lifted to the dice on
+a call. Rules: `preview/src/liars-dice-rules.js`.
 
 A small round table stands in the middle of the grove with a carved mancala board and
 two chairs. Seated there, **Play mancala** or **X** opens it. You play the plaza regular
@@ -625,7 +638,7 @@ komi. Rules: `preview/src/go-rules.js`.
 
 The chess-table, café, backgammon, mancala, Go, Jenga and wine pong sheets have **How to play** in their
 header. It opens the Salon Guide on that game (chess, checkers, Connect Four,
-Reversi, nine men's morris, dominoes, Hearts, Spades, backgammon, cribbage, mancala, Go, Jenga, wine pong or Yacht), and **Play & rides → Game guide** opens it too. The guide is an
+Reversi, nine men's morris, dominoes, Hearts, Spades, backgammon, cribbage, mancala, Go, Jenga, Yacht, wine pong, darts or liar's dice), and **Play & rides → Game guide** opens it too. The guide is an
 illustrated book with a few pages per game: taking a seat, the aim, a turn, and
 the keys. Its pictures are positions played on the real rules
 (`preview/tests/salon-guide.test.js`). A game you have not read yet shows a gold
