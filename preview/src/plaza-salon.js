@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { BACKGAMMON, CHESS_CELL_M, DOMINO, JENGA, backgammonSpot, cafeChairAngle, chessCell, chessCellIsDark, chessCellPosition, dominoLine, jengaBlock, plazaSalonPlan, plazaSalonRack } from './plaza-salon-plan.js';
+import { BACKGAMMON, CHESS_CELL_M, DOMINO, JENGA, WINE_PONG_STAND, backgammonSpot, cafeChairAngle, chessCell, chessCellIsDark, chessCellPosition, dominoLine, jengaBlock, plazaSalonPlan, winePongPoint, plazaSalonRack } from './plaza-salon-plan.js';
 import { startGame as backgammonStart } from './backgammon-rules.js';
 import { startTower } from './jenga-rules.js';
+import { GLASS_HEIGHT, TABLE as PONG_TABLE, glassAt } from './wine-pong-rules.js';
 import { seededRandom } from './seeded-random.js';
 import { createRoadVehicle } from './road-vehicles.js';
 import { START_FEN, fromFEN } from './chess-rules.js';
@@ -160,6 +161,7 @@ export function buildPlazaSalon(world) {
     bloom: new THREE.MeshStandardMaterial({ color: '#e48a9a', roughness: 0.9 }),
     leaf: new THREE.MeshStandardMaterial({ color: '#4f6b3a', roughness: 0.9 }),
     mulch: new THREE.MeshStandardMaterial({ color: '#2e241b', roughness: 1 }),
+    linen: new THREE.MeshStandardMaterial({ color: '#f1ece2', roughness: 0.92 }),
   };
   const unit = {
     box: new THREE.BoxGeometry(1, 1, 1),
@@ -230,6 +232,14 @@ export function buildPlazaSalon(world) {
     part(unit.box, [material.walnut, material.walnut, material.backgammon, material.walnut, material.walnut, material.walnut], [0, 0.752, 0], [BACKGAMMON.width + 0.04, 0.014, BACKGAMMON.depth + 0.04]);
     part(unit.box, material.walnut, [0, 0.36, 0], [0.16, 0.62, 0.16]);
     part(unit.box, material.bronze, [0, 0.03, 0], [0.5, 0.06, 0.42]);
+  }
+  // The wine pong table: a long linen-topped table on four walnut legs, east–west.
+  {
+    const table = plan.winePong, origin = base(table), yaw = table.heading, part = (geometry, m, local, scale) => add(geometry, m, at(origin, yaw, local), scale, yaw);
+    const { length, width, height } = PONG_TABLE;
+    part(unit.box, material.linen, [0, height - 0.015, 0], [length + 0.04, 0.03, width + 0.04]);
+    part(unit.box, material.walnut, [0, height - 0.06, 0], [length - 0.1, 0.06, width - 0.08]);
+    for (const [u, v] of [[-1, -1], [-1, 1], [1, -1], [1, 1]]) part(unit.box, material.walnut, [u * (length / 2 - 0.08), (height - 0.09) / 2, v * (width / 2 - 0.07)], [0.05, height - 0.09, 0.05]);
   }
   // The curved bench: a slatted teak body, dusty-pink seat and back cushions,
   // flat teak ledges at each end, around a travertine drum with candle lanterns.
@@ -573,6 +583,42 @@ export function buildPlazaSalon(world) {
       show,
       count: () => blocks.count,
       fallen: () => fallen,
+    };
+  }
+  // Wine pong: twelve wine glasses (clear bowls on stems, a pour of red in each) racked
+  // at the table's two ends, standing glasses only, and the ball, shown in flight.
+  {
+    const table = plan.winePong, [, y] = base(table), top = y + PONG_TABLE.height;
+    const profile = [[0, 0], [0.034, 0], [0.034, 0.004], [0.005, 0.008], [0.004, 0.085], [0.016, 0.092], [0.036, 0.11], [0.042, 0.135], [0.039, GLASS_HEIGHT], [0.0375, GLASS_HEIGHT]].map(([r, h]) => new THREE.Vector2(r, h));
+    const bowl = new THREE.MeshStandardMaterial({ color: '#eef4f6', roughness: 0.06, transparent: true, opacity: 0.32, depthWrite: false, side: THREE.DoubleSide });
+    const glasses = new THREE.InstancedMesh(new THREE.LatheGeometry(profile, 20), bowl, 12);
+    const wine = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.033, 0.02, 0.028, 18), new THREE.MeshStandardMaterial({ color: '#5a0f1c', roughness: 0.25 }), 12);
+    const ball = new THREE.Mesh(new THREE.SphereGeometry(0.02, 14, 10), new THREE.MeshStandardMaterial({ color: '#fbfaf6', roughness: 0.4 }));
+    Object.assign(glasses, { name: 'Wine pong glasses', count: 0, renderOrder: 2 });
+    Object.assign(wine, { name: 'Wine pong wine', count: 0, castShadow: true });
+    Object.assign(ball, { name: 'Wine pong ball', visible: false, castShadow: true });
+    group.add(glasses, wine, ball);
+    const scenePoint = ([u, v], height) => { const [east, north] = winePongPoint(table, [u, v]); const [x, , z] = base({ x: east, north }); return [x, y + height, z]; };
+    const show = (game = null) => {
+      const racks = game?.glasses ?? [Array(6).fill(true), Array(6).fill(true)];
+      glasses.count = 0; wine.count = 0;
+      racks.forEach((rack, side) => rack.forEach((standing, k) => {
+        if (!standing) return;
+        const [x, , z] = scenePoint(glassAt(side, k), 0);
+        dummy.position.set(x, top, z); dummy.rotation.set(0, 0, 0); dummy.scale.set(1, 1, 1); dummy.updateMatrix(); glasses.setMatrixAt(glasses.count++, dummy.matrix);
+        dummy.position.set(x, top + 0.104, z); dummy.updateMatrix(); wine.setMatrixAt(wine.count++, dummy.matrix);
+      }));
+      for (const mesh of [glasses, wine]) { mesh.instanceMatrix.needsUpdate = true; mesh.computeBoundingSphere(); }
+    };
+    show();
+    group.userData.winePong = {
+      // A game ({ glasses } from wine-pong-rules.js) or null for two full racks.
+      show,
+      // The ball at a point of its flight ([u, v, height above the paving] in the table's frame), or null to put it away.
+      ball(point = null) { ball.visible = Boolean(point); if (point) ball.position.set(...scenePoint([point[0], point[1]], point[2])); },
+      glasses: () => glasses.count,
+      ballVisible: () => ball.visible,
+      stand: side => winePongPoint(table, [side === 0 ? -WINE_PONG_STAND : WINE_PONG_STAND, 0]),
     };
   }
   // Hearts at the café table: the trick lies face up, each card in front of the player

@@ -558,6 +558,15 @@ and weaker and as the level carries more. A level left on a single edge block
 brings the tower down. Whoever topples it gets the tally mark, and the drum's tower
 scatters across the drum and the paving. Rules: `preview/src/jenga-rules.js`.
 
+A long linen-topped wine pong table stands between the café and the north planters.
+Standing at either end, **Play wine pong** or **X** opens it. You play a plaza regular
+at the far end, or two players pass and play. Each side has six wine glasses racked
+at its own end. Stop the sweeping reticle once for the aim and once for the power;
+the ball flies over the real table. A ball can drop straight in, rattle off a rim and
+in (or out), or bounce on the table and in. Two throws a turn, and sinking all six of
+the far glasses wins. A close-up of the far rack sits beside the table view. Rules:
+`preview/src/wine-pong-rules.js`.
+
 The town assigns the position, facing and cushion height. Occupied slots reject
 other visitors, and occupied furniture cannot be moved, turned or removed. Stand
 searches nearby clear ground in the same room, including the path to the exit
