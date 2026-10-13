@@ -17,7 +17,7 @@ import { chooseMove as reversiMove } from '../src/reversi-opponent.js';
 const text = id => guideGame(id).pages.flatMap(page => [page.title, ...page.text]).join(' ');
 
 test('every plaza table game has a guide of illustrated pages', () => {
-  assert.deepEqual(GUIDE.map(game => game.id), ['chess', 'checkers', 'connectFour', 'reversi', 'morris', 'dominoes', 'hearts', 'spades', 'backgammon', 'mancala', 'jenga', 'yacht', 'winePong', 'shuffleboard', 'go', 'chineseCheckers', 'cribbage', 'darts', 'dice']);
+  assert.deepEqual(GUIDE.map(game => game.id), ['chess', 'checkers', 'connectFour', 'reversi', 'morris', 'dominoes', 'hearts', 'spades', 'backgammon', 'mancala', 'jenga', 'yacht', 'winePong', 'shuffleboard', 'go', 'chineseCheckers', 'xiangqi', 'cribbage', 'darts', 'dice']);
   for (const game of GUIDE) {
     assert.ok(game.pages.length >= 4, game.id);
     assert.equal(game.pages[0].title, 'Taking a seat', `${game.id} starts at the table`);
@@ -252,4 +252,17 @@ test('the Chinese checkers picture is a real chain of hops', async () => {
   assert.deepEqual(move?.path, path.map(hole), 'the pictured hops are the shortest chain there');
   assert.equal(board[hole(path[1].map((v, i) => (v + path[0][i]) / 2))], 1, 'the first hop is over blue');
   assert.equal(board[hole(path[2].map((v, i) => (v + path[1][i]) / 2))], 0, 'the second over red');
+});
+
+test('the xiangqi pictures follow the rules', async () => {
+  const xq = await import('../src/xiangqi-rules.js');
+  for (const key of ['xqHorse', 'xqCannon']) {
+    const { pieces, reach, blocked } = DIAGRAMS[key], board = Array(90).fill(null);
+    // The generals, kept apart by a red soldier on e3 (off the pictured points).
+    for (const [name, piece] of Object.entries({ e0: 'K', e9: 'k', e3: 'P', ...pieces })) board[xq.pointOf(name)] = piece;
+    const from = Object.entries(pieces).find(([, piece]) => 'HC'.includes(piece))[0];
+    const moves = xq.legalMoves({ ...xq.startGame(), board, turn: 'r', seen: {} }).filter(move => move.from === xq.pointOf(from)).map(move => xq.pointName(move.to));
+    for (const name of reach) assert.ok(moves.includes(name), `${key}: ${name} is reachable`);
+    for (const name of blocked) assert.ok(!moves.includes(name), `${key}: ${name} is not`);
+  }
 });
