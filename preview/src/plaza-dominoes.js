@@ -3,6 +3,7 @@ import './plaza-dominoes.css';
 import { cafeSeat } from './plaza-salon-plan.js';
 import { MATCH_POINTS, ends, handPips, legalMoves, notation, replay, values } from './dominoes-rules.js';
 import { chooseMove } from './dominoes-opponent.js';
+import { attachGuide } from './salon-guide.js';
 
 // Dominoes at the plaza café table, for whoever sits down: a match to 100 against
 // the plaza regulars, two players (the draw game) or four (the block game). It is
@@ -47,6 +48,7 @@ export function createPlazaDominoes({ host = document.querySelector('#viewport')
       <p class="table-game-note">Two play the draw game, four the block game. The regulars only see what a player at the table could.</p>
     </div>`;
   host.append(panel);
+  attachGuide(panel, 'dominoes');
   const $ = selector => panel.querySelector(selector);
   const status = $('.table-game-status'), hand = $('.dominoes-hand'), choice = $('.dominoes-choice');
 

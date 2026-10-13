@@ -3,6 +3,7 @@ import './plaza-backgammon.css';
 import { backgammonSeat } from './plaza-salon-plan.js';
 import { BLACK, WHITE, legalMoves, move, notation, parse, pips, replay } from './backgammon-rules.js';
 import { choosePlay } from './backgammon-opponent.js';
+import { attachGuide } from './salon-guide.js';
 
 // Backgammon at the plaza's backgammon table, for whoever sits down: against the
 // plaza regular or pass-and-play, white or black. A practice game kept in this
@@ -34,6 +35,7 @@ export function createPlazaBackgammon({ host = document.querySelector('#viewport
       <p class="table-game-note">Use both dice when you can; checkers on the bar enter first. A gammon scores two, a backgammon three.</p>
     </div>`;
   host.append(panel);
+  attachGuide(panel, 'backgammon');
   const $ = selector => panel.querySelector(selector);
   const board = $('.backgammon-board'), status = $('.table-game-status');
 

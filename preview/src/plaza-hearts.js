@@ -3,6 +3,7 @@ import './plaza-hearts.css';
 import { cafeSeat } from './plaza-salon-plan.js';
 import { GAME_POINTS, canPass, legalCards, points, replay, suitOf } from './hearts-rules.js';
 import { choosePass, choosePlay } from './hearts-opponent.js';
+import { attachGuide } from './salon-guide.js';
 
 // Hearts at the plaza café table: you and three plaza regulars, a game to 100. It
 // is a practice game kept in this browser; the round table shows the trick face up
@@ -39,6 +40,7 @@ export function createPlazaHearts({ host = document.querySelector('#viewport'), 
       <p class="table-game-note">Hearts score one each and the queen of spades thirteen; take all of them to shoot the moon. The regulars only see what a player at the table could.</p>
     </div>`;
   host.append(panel);
+  attachGuide(panel, 'hearts');
   const $ = selector => panel.querySelector(selector);
   const status = $('.table-game-status'), handBar = $('.hearts-hand');
 
