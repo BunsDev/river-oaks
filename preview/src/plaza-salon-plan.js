@@ -119,3 +119,28 @@ export function plazaSalonSeats(world) {
   // Residents resting at Dior may take a plaza seat (resident-life groups seats by store).
   return seats.map(seat => ({ ...seat, storeId: DIOR, id: `${seat.buildId}:${seat.slot}` }));
 }
+
+// Chess tables. Each inlay is 116 of its 128 texels across a 0.6 m slab: eight
+// cells of 6.8 cm. A cell is (i, j): row j = 0 is the edge nearest chair 0 (east)
+// and column i = 0 is on that player's left. Dark cells have (i + j) even, which
+// puts a light square at each player's right hand, as on a real board, whichever
+// chair white takes. Squares follow chess-rules.js: a1 = 0, h8 = 63.
+export const CHESS_CELL_M = 0.6 * 116 / 128 / 8;
+export const chessCellIsDark = (i, j) => ((i + j) & 1) === 0;
+export function chessCell(square, whiteChair = 0) {
+  const file = square & 7, rank = square >> 3;
+  return whiteChair === 0 ? { i: file, j: rank } : { i: 7 - file, j: 7 - rank };
+}
+// A cell's centre in the board's own frame, [x, z] before the table's quarter turn.
+export const chessCellOffset = ({ i, j }) => [(i - 3.5) * CHESS_CELL_M, (3.5 - j) * CHESS_CELL_M];
+// The chess table and chair behind a plaza seat ('bench:plaza-salon-chess-west-1'), or null.
+export function chessSeat(buildId) {
+  const match = /^bench:plaza-salon-(chess-(?:west|east))-([01])$/.exec(buildId ?? '');
+  return match ? { tableId: match[1], chair: Number(match[2]) } : null;
+}
+// A cell's centre as [east, north]. The slab turns a quarter (Three.js yaw π/2),
+// so its local x runs north and its local z runs east.
+export function chessCellPosition(table, cell) {
+  const [x, z] = chessCellOffset(cell);
+  return [table.x + z, table.north + x];
+}

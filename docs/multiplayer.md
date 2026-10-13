@@ -490,6 +490,14 @@ free one. **Stand up** (or **Z** again) works with keyboard and touch controls. 
 Furniture is usable by approved guests; building, saved designs and wish granting
 remain restricted to Jevica's verified owner accounts.
 
+Seated at one of the plaza's two chess tables (by Dior and Toulouse), **Play chess**
+or **X** opens a board beside the table. You can play the plaza regular (a small
+engine that thinks in a worker) or pass and play. The table's 3D pieces mirror
+the game. It is a practice game kept in your browser, so other visitors still see
+the opening position. **Escape** or **X** puts the board away, and standing up
+closes it. The rules are in `preview/src/chess-rules.js`, checked against
+published perft counts.
+
 The town assigns the position, facing and cushion height. Occupied slots reject
 other visitors, and occupied furniture cannot be moved, turned or removed. Stand
 searches nearby clear ground in the same room, including the path to the exit
