@@ -4,11 +4,10 @@
 
 Each plan is a task ledger. Status comes from the task register, where the primary checkout's live copy can be newer than the committed one. Plans from before the register are listed as historical: their own text is the record of what was delivered.
 
-## Active and blocked (12)
+## Active and blocked (11)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
-| [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `shared-voice-client` | active | #303 | 2026-10-13 |
 | [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `shared-voice-spatial` | active | — | 2026-10-13 |
 | [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `shared-voice-desktop` | active | — | 2026-10-13 |
 | [2026-10-13-plaza-hearts](2026-10-13-plaza-hearts.md)<br>Plaza games: Hearts at the café table — 2026-10-13 | `plaza-hearts` | active | — | 2026-10-13 |
@@ -29,12 +28,13 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-11-workplace-room-envelope](2026-10-11-workplace-room-envelope.md)<br>Workplace room: door height, measured seated bounds, depth-aware routes (#221 gap) | `workplace-room-envelope` | delivered | #235 | 2026-10-11 |
 | [2026-10-11-pending-integration](2026-10-11-pending-integration.md)<br>Pending delivery integration | `primary-reconciliation` | delivered | — | 2026-10-11 |
 
-## Retired (42)
+## Retired (43)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
 | [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `shared-voice-livekit` | retired | #300 | 2026-10-13 |
 | [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `shared-voice-reconciler` | retired | #302 | 2026-10-13 |
+| [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `shared-voice-client` | retired | #303 | 2026-10-13 |
 | [2026-10-12-town-connect-deadline](2026-10-12-town-connect-deadline.md)<br>Town connection deadline on a busy page — 2026-10-12 | `town-connect-deadline` | retired | #260 | 2026-10-12 |
 | [2026-10-12-shared-landing-queue](2026-10-12-shared-landing-queue.md)<br>Shared landing queue | `shared-landing-queue` | retired | #272 | 2026-10-12 |
 | [2026-10-12-server-hardening-followups](2026-10-12-server-hardening-followups.md)<br>Server hardening follow-ups (2026-10-12) | `server-hardening-followups` | retired | #264 | 2026-10-12 |
@@ -76,13 +76,14 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-11-delivered-source-retirement](2026-10-11-delivered-source-retirement.md)<br>Delivered source reconciliation | `reconcile-delivered-sources` | retired | — | 2026-10-11 |
 | [2026-10-11-ci-parallel-preview](2026-10-11-ci-parallel-preview.md)<br>Parallel preview check | `ci-parallel-preview` | retired | #252 | 2026-10-11 |
 
-## Historical, not in the register (74)
+## Historical, not in the register (75)
 
 | Plan | PRs mentioned |
 | --- | --- |
 | [2026-10-13-store-intro-cut-timing](2026-10-13-store-intro-cut-timing.md)<br>Sample the store intro's camera cut instead of timing it — 2026-10-13 | #281 |
 | [2026-10-13-store-intro-claim-race](2026-10-13-store-intro-claim-race.md)<br>Wait for the store intro before the walking HUD in spatial-circulation — 2026-10-13 | #265, #295 |
 | [2026-10-13-settings-tabs-ux](2026-10-13-settings-tabs-ux.md)<br>Settings tabs and a minimal walking console — 2026-10-13 | #303 |
+| [2026-10-13-email-access-join-recurrence](2026-10-13-email-access-join-recurrence.md)<br>Email access: give CI's cold first render its own join allowance — 2026-10-13 | #281, #297 |
 | [2026-10-12-world-map-paint-cost](2026-10-12-world-map-paint-cost.md)<br>Stop the district map repainting while it is open — 2026-10-12 | #274, #281 |
 | [2026-10-12-town-ticket-ttl](2026-10-12-town-ticket-ttl.md)<br>Town join tickets that outlast a slow page — 2026-10-12 | #260, #253, #273 |
 | [2026-10-12-town-first-snapshot-stall](2026-10-12-town-first-snapshot-stall.md)<br>Town first-snapshot stall under software rendering | #276, #274, #281 |

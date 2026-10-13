@@ -277,6 +277,40 @@ Branch `feat/voice-spatial-20261013`, from PR 3's head.
   421 passed, 134 Redis-only skipped; desktop 49; Python and secrets clean). The
   build keeps LiveKit in its own chunk with no static reference from `index`.
 
+## PR 5a: desktop microphone permission
+
+Branch `feat/voice-desktop-20261013`, from `main` (desktop files only).
+
+- `desktop/runtime.js`: `mediaPermissionAllowed({permission, origin,
+  mediaTypes, mainFrame}, gameOrigin)` is true only for `media` with exactly
+  `['audio']`, from the exact game origin, in the main frame.
+- `desktop/main.js`: the request handler (which sees `mediaTypes`, a list) and
+  the check handler (a single `mediaType`) both go through that policy and only
+  for the main window's contents; everything else stays denied as before. The
+  help dialog lists Y and M.
+- `desktop/package.js`: `NSMicrophoneUsageDescription` for the first macOS
+  prompt. The hardened-runtime audio-input entitlement belongs to the release
+  that adds Developer ID signing (`docs/desktop.md`).
+- `desktop/e2e.js`: launches with fake media and checks that
+  `getUserMedia({audio})` resolves with one audio track (then stops it) while
+  `{video}` and `{audio, video}` are refused.
+
+### Checks
+
+- `pnpm run test:desktop`: 51 tests, 51 passed (the new `permissions.test.js`
+  covers the loopback development origin, video, mixed media, empty and missing
+  media lists, other origins including a look-alike host and plain http, frames,
+  and every other permission name).
+- `pnpm run test:desktop:e2e --dev`: passed, 13 checks, including "microphone
+  permission is granted only for audio on the game origin": `getUserMedia({audio})`
+  resolves with one audio track, `{video}` and `{audio, video}` fail with
+  `NotAllowedError`. The first run granted everything: Chromium's
+  `--use-fake-ui-for-media-stream` approves before Electron's handler is asked,
+  so the harness keeps only the fake device. The report is
+  `data/reports/desktop-development.json` (`media`).
+- `pnpm run verify` core: passed (tooling 76; preview 2695 passed, 1 skipped; server
+  421 passed, 134 Redis-only skipped; desktop 51; Python and secrets clean).
+
 ## Next
 
 - PR 5: desktop audio-only microphone permission; the live acceptance against a
