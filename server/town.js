@@ -18,6 +18,7 @@ import { createMemoryProfiles } from './profiles.js';
 import { createMemoryEvents } from './events.js';
 import { createWorkplace } from './workplace.js';
 import { createMemoryDebugReports } from './debug-reports.js';
+import { createMemoryCyclingMiles } from './cycling-miles.js';
 import { createMemoryAvatarPreferences } from './avatar-preferences.js';
 import { createMemoryPresence } from './presence.js';
 import { isJevicaAdmin } from './admin.js';
@@ -57,7 +58,7 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
     admins, autoApprove: mode === 'local' && env.RIVER_OAKS_ACCEPTANCE_FIXTURE === '1',
   });
 
-  const games=new Map(),pending=new Map(),debugReports=createMemoryDebugReports(),catalog=createMemoryWorldCatalog(),social=createMemorySocial(),groups=createMemoryGroups(),profiles=createMemoryProfiles(),events=createMemoryEvents(),workplace=env.RIVER_OAKS_WORKPLACE==='1'?createWorkplace({allowed:async id=>!moderation.isBanned(id)&&await waitlist.isApproved(id)}):null,avatarPreferences=createMemoryAvatarPreferences(),presence=createMemoryPresence(),landmarkStores=new Map();
+  const games=new Map(),pending=new Map(),debugReports=createMemoryDebugReports(),catalog=createMemoryWorldCatalog(),social=createMemorySocial(),groups=createMemoryGroups(),profiles=createMemoryProfiles(),events=createMemoryEvents(),workplace=env.RIVER_OAKS_WORKPLACE==='1'?createWorkplace({allowed:async id=>!moderation.isBanned(id)&&await waitlist.isApproved(id)}):null,avatarPreferences=createMemoryAvatarPreferences(),cyclingMiles=createMemoryCyclingMiles(),presence=createMemoryPresence(),landmarkStores=new Map();
   const landmarkStoreFor=id=>{
     if(!landmarkStores.has(id))landmarkStores.set(id,createMemoryLandmarks());
     return landmarkStores.get(id);
@@ -69,7 +70,8 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
   const onLogout = userId => {for(const {game} of games.values())game.disconnectUser(userId);};
   const auth = mode === 'local'
     ? createDevAuth({ origin, env, onLogout })
-    : createAuth({ apiKey: env.WORKOS_API_KEY, clientId: env.WORKOS_CLIENT_ID, cookiePassword: env.WORKOS_COOKIE_PASSWORD, githubToken: env.GITHUB_TOKEN || null, returnPath: env.AUTH_RETURN_PATH, origin, onLogout, magic: magicOptions(env, origin) });
+    : createAuth({ apiKey: env.WORKOS_API_KEY, clientId: env.WORKOS_CLIENT_ID, cookiePassword: env.WORKOS_COOKIE_PASSWORD, githubToken: env.GITHUB_TOKEN || null, returnPath: env.AUTH_RETURN_PATH, origin, onLogout, magic: magicOptions(env, origin),
+      usernameOf: userId => waitlist.usernameOf(userId) });
   const sharedAuth={handle:(...args)=>auth.handle(...args),authenticate:(...args)=>auth.authenticate(...args),close:()=>{}};
   async function applyRegion(id,expectedDraftVersion,actorId) {
     if(!(mode==='local'?auth.isAdmin(actorId):isJevicaAdmin(actorId)))return {ok:false,error:'admin_only'};
@@ -100,7 +102,7 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
       const worldData=meta?.template==='region-v1'?await catalog.getRegion(id)
         :id===DEFAULT_WORLD_ID?data:{...data,title:meta?.title??data.title};
       const world=createSharedWorld(worldData,mode==='local'?{isAdmin:auth.isAdmin,worldId:id}:{worldId:id});
-      const game=createGameServer({auth:sharedAuth,world,worldTitle:meta?.title??worldData.title,waitlist,waitlistAdmins:admins,debugReports,landmarks:createWorldLandmarks({catalog,storeFor:landmarkStoreFor,worldId:id,worldTitle:meta?.title??worldData.title}),social,groups,profiles,events,workplace,avatarPreferences,presence,worldDirectory,moderation,origin,staticRoot,
+      const game=createGameServer({auth:sharedAuth,world,worldTitle:meta?.title??worldData.title,waitlist,waitlistAdmins:admins,debugReports,landmarks:createWorldLandmarks({catalog,storeFor:landmarkStoreFor,worldId:id,worldTitle:meta?.title??worldData.title}),social,groups,profiles,events,workplace,avatarPreferences,cyclingMiles,presence,worldDirectory,moderation,origin,staticRoot,
         ...(id===worldId?{worldCatalog:catalog}:{}),...(mode==='local'?{isAdmin:auth.isAdmin}:{}),
         ...(id===worldId?{onApplyRegion:applyRegion}:{}),regionSha256:meta?.regionSha256,
         onBan:userId=>{for(const [otherId,other] of games)if(otherId!==id)other.game.disconnectUser(userId,4003,'This account cannot join the town.');},

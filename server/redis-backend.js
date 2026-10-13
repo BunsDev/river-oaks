@@ -45,6 +45,7 @@ export async function createRedisBackend(env = process.env) {
       apiKey: env.WORKOS_API_KEY, clientId: env.WORKOS_CLIENT_ID, cookiePassword: env.WORKOS_COOKIE_PASSWORD,
       githubToken: env.GITHUB_TOKEN || null, returnPath: env.AUTH_RETURN_PATH,
       onLogout: (userId, sessionId) => gateway.disconnectUser(userId, sessionId), magic: magicOptions(env, origin),
+      usernameOf: userId => waitlist.usernameOf(userId),
     });
     // Redis counts the daily budget in UTC-day windows across every gateway.
     const handleRequest = createChauffeurRoute({auth,security,waitlist,origin,apiKey:env.TYPESAFE_API_KEY,model:env.JEV_AUTO_MODEL,dailyLimit:chauffeurDailyLimit(env)});

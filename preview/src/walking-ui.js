@@ -18,7 +18,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   const hud = document.createElement('section');
   hud.id = 'walking-hud'; hud.className = 'walking-hud'; hud.hidden = true;
   hud.setAttribute('aria-label', 'Walking controls');
-  hud.innerHTML = `<div class="walking-title"><span>RIVER OAKS · GARDEN CITY</span><strong>On foot</strong><small>4444 Westheimer Rd · Houston</small></div><div class="walking-center" aria-hidden="true">·</div><div class="walking-console"><p class="walking-notice" id="walking-notice" role="status" aria-live="polite" hidden></p><button id="walking-meet-nearby">Meet someone nearby</button><button id="walking-talk" disabled>Find a local to talk to <kbd>E</kbd></button><button id="walking-enter" hidden>Step inside <kbd>F</kbd></button><button id="walking-play" hidden></button><button id="walking-interact" hidden>Sit down <kbd>Z</kbd></button><p id="walking-place">Explore the public walkways</p><button id="walking-controls-toggle" aria-expanded="false" aria-controls="walking-movement">Show movement controls</button><div id="walking-movement" hidden><div class="walking-pad" role="group" aria-label="Walk and turn"><button data-walk-key="ArrowLeft" aria-label="Turn left"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5 3.5 8.5 7 12"/><path d="M3.5 8.5H12a4 4 0 0 1 0 8H9"/></svg></button><button data-walk-key="KeyA" aria-label="Walk left">←</button><button data-walk-key="KeyW" aria-label="Walk forward">↑</button><button data-walk-key="KeyS" aria-label="Walk backward">↓</button><button data-walk-key="KeyD" aria-label="Walk right">→</button><button data-walk-key="ArrowRight" aria-label="Turn right"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m13 5 3.5 3.5L13 12"/><path d="M16.5 8.5H8a4 4 0 0 0 0 8h3"/></svg></button></div><p class="walking-help">WASD to walk · Drag to look · Shift for a brisk walk<br>Arrow keys to turn · E to talk · F steps inside · Z to sit or water<br>Y joins voice · M mutes<br>B to fly · Space to rise · C to lower · Q calls Jev · G gets in / out · Escape closes conversations</p></div></div>`;
+  hud.innerHTML = `<div class="walking-title"><span>RIVER OAKS · GARDEN CITY</span><strong>On foot</strong><small>4444 Westheimer Rd · Houston</small></div><div class="walking-center" aria-hidden="true">·</div><div class="walking-console"><p class="walking-notice" id="walking-notice" role="status" aria-live="polite" hidden></p><button id="walking-meet-nearby">Meet someone nearby</button><button id="walking-talk" disabled>Find a local to talk to <kbd>E</kbd></button><button id="walking-enter" hidden>Step inside <kbd>F</kbd></button><button id="walking-play" hidden></button><button id="walking-interact" hidden>Sit down <kbd>Z</kbd></button><p id="walking-place">Explore the public walkways</p><button id="walking-controls-toggle" aria-expanded="false" aria-controls="walking-movement">Show movement controls</button><div id="walking-movement" hidden><div class="walking-pad" role="group" aria-label="Walk and turn"><button data-walk-key="ArrowLeft" aria-label="Turn left"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5 3.5 8.5 7 12"/><path d="M3.5 8.5H12a4 4 0 0 1 0 8H9"/></svg></button><button data-walk-key="KeyA" aria-label="Walk left">←</button><button data-walk-key="KeyW" aria-label="Walk forward">↑</button><button data-walk-key="KeyS" aria-label="Walk backward">↓</button><button data-walk-key="KeyD" aria-label="Walk right">→</button><button data-walk-key="ArrowRight" aria-label="Turn right"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m13 5 3.5 3.5L13 12"/><path d="M16.5 8.5H8a4 4 0 0 0 0 8h3"/></svg></button></div><p class="walking-help">WASD to walk · Drag to look · Shift for a brisk walk<br>Arrow keys to turn · E to talk · F steps inside · Z to sit or water · G takes a bike at the rack<br>Y joins voice · M mutes<br>B to fly · Space to rise · C to lower · Q calls Jev · G gets in / out · Escape closes conversations</p></div></div>`;
   const primary = document.createElement('div'); primary.className = 'walking-primary';
   const more = document.createElement('details'); more.className = 'walking-more';
   more.innerHTML = '<summary>More actions</summary><div class="walking-other-actions"></div>';
@@ -51,7 +51,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     // automatic context change must not swap the target beneath the user's finger.
     // Mouse and touch presses also leave focus behind, so they never pin.
     const keyboard = document.documentElement.dataset.uiInput === 'keyboard';
-    const selected = primaryAction(buttons, { seated: Boolean(sitting), focused: focused?.[0], inPrimary: focused?.[1].parentElement === primary, keyboard });
+    const selected = primaryAction(buttons, { seated: Boolean(sitting || performing), focused: focused?.[0], inPrimary: focused?.[1].parentElement === primary, keyboard });
     for (const [id, button] of Object.entries(actionButtons)) {
       const target = id === selected ? primary : secondary;
       if (button.parentElement !== target) {
@@ -78,7 +78,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   // release the microphone exactly as they release movement.
   let voiceHeld = false;
   const placedObjects = [];
-  let transport = null, sitting = null, seatedGround = 0, doorwayPending = false;
+  let transport = null, sitting = null, performing = false, seatedGround = 0, doorwayPending = false;
   let flight = createFlightState();
   let flightAllowed=false,beastKind=null;
   let thirdPerson = true, bodyVisible = true;
@@ -251,7 +251,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     get active() { return active; },
     get riding() { return Boolean(transport); },
     mount(controller) {
-      if(!active||flight.active||currentRoom()||transport||sitting)return false;
+      if(!active||flight.active||currentRoom()||transport||sitting||performing)return false;
       clear();transport=controller;
       thirdPerson=true;state.yaw=controller.pose.yaw+Math.PI+.38;state.pitch=-.25;
       state.position=[controller.pose.seat[0],controller.pose.seat[1]+.62,controller.pose.seat[2]];
@@ -271,7 +271,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       transport?.stop();transport=null;
       if (!active || !state || !player) return;
       clear();
-      sitting=player.sitting??null;seatedGround=player.position[2];
+      sitting=player.sitting??null;performing=Boolean(player.performing);seatedGround=player.position[2];
       state.position = [player.position[0], player.position[2] + (sitting?sitting.height+.65:1.68) + player.altitude, -player.position[1]];
       state.yaw = player.yaw; state.speed = 0;
       flight = createFlightState();
@@ -283,7 +283,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       if((player.sitting?.buildId??null)!==(sitting?.buildId??null) || player.sitting?.slot!==sitting?.slot)this.applyServerPose(player);
     },
     toggleFlight() {
-      if (!flightAllowed || !active || currentRoom() || transport || sitting) return false;
+      if (!flightAllowed || !active || currentRoom() || transport || sitting || performing) return false;
       clear();
       if (!flight.active) return beginFlight(state,environment,flight);
       else {flight.landing=!flight.landing;flight.target=flight.landing?0:Math.max(3.5,flight.altitude);}
@@ -294,7 +294,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     notify,
     get environment() { return environment ?? null; },
     setThirdPerson(enabled) { thirdPerson = Boolean(enabled);if (active) place(); },
-    getPose() { return active && state ? { position: [...state.position], riding:transport?.pose??null, sitting, ground: sitting?seatedGround:environment.groundAt(state.position[0], state.position[2]), altitude:flight.altitude, flying:flight.active, landing:flight.landing, yaw: state.yaw, speed: state.speed, velocity: [...state.velocity], distance: state.distance, roomId: currentRoom()?.storeId ?? null, showBody: thirdPerson && bodyVisible, groundAt: environment.groundAt } : null; },
+    getPose() { return active && state ? { position: [...state.position], riding:transport?.pose??null, sitting, ground: sitting||performing?seatedGround:environment.groundAt(state.position[0], state.position[2]), altitude:flight.altitude, flying:flight.active, landing:flight.landing, yaw: state.yaw, speed: state.speed, velocity: [...state.velocity], distance: state.distance, roomId: currentRoom()?.storeId ?? null, showBody: thirdPerson && bodyVisible, groundAt: environment.groundAt } : null; },
     canSee(point,eyeHeight) {
       if (!state) return false;
       const local=(getLocals()??[]).find(local=>local.position===point);
@@ -311,7 +311,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       state.pitch=Math.max(-1.1,Math.min(1.1,Math.atan2(position[2]+eyeHeight-state.position[1],distance)));
     },
     enter(world, position = world.walkSpawn, lookAt, pitch = 0) {
-       sitting=null;transport?.stop();transport=null;
+       sitting=null;performing=false;transport?.stop();transport=null;
       const creatorRegion = world.provenance?.kind === 'creator';
       $('.walking-title span').textContent = creatorRegion ? world.title : 'RIVER OAKS · GARDEN CITY';
       $('.walking-title small').textContent = creatorRegion ? 'Creator-authored region' : '4444 Westheimer Rd · Houston';
@@ -330,7 +330,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     },
     exit() {
 
-      transport?.stop();transport=null;sitting=null;active = false; clear(); hud.hidden = true; nearest = null;
+      transport?.stop();transport=null;sitting=null;performing=false;active = false; clear(); hud.hidden = true; nearest = null;
       document.body.classList.remove('walking', 'inside-store'); hud.dataset.inside = '';
       camera.fov = 42; camera.near = 0.5; camera.updateProjectionMatrix(); camera.rotation.z = 0;
     },
@@ -343,7 +343,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       if (held !== voiceHeld) { voiceHeld = held; getVoice()?.setTransmit(held); }
       else {
         const input={forward:Number(pressed('KeyW','ArrowUp'))-Number(pressed('KeyS','ArrowDown')),strafe:Number(pressed('KeyD'))-Number(pressed('KeyA')),turn:Number(pressed('ArrowLeft'))-Number(pressed('ArrowRight')),fast:pressed('ShiftLeft','ShiftRight'),lift:Number(pressed('Space'))-Number(pressed('KeyC'))};
-        if(sitting) {
+        if(sitting||performing) {
           state.yaw+=input.turn*1.8*delta;state.speed=0;state.velocity=[0,0];
         } else if(transport) {
           const yaw=transport.pose.yaw;
@@ -364,16 +364,16 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       setAction($('#walking-talk'), nearest ? `Talk to ${nearest.name}` : 'Find a local to talk to', 'E');
       const interaction = getInteraction(), interactButton = $('#walking-interact');
       interactButton.hidden = !interaction;
-      if (interaction) { setAction(interactButton, interaction.label, 'Z'); setBusy(interactButton, interaction.disabled); }
+      if (interaction) { setAction(interactButton, interaction.label, ['take-bike','step-off'].includes(interaction.kind) ? 'G' : 'Z'); setBusy(interactButton, interaction.disabled); }
       hud.dataset.interaction = interaction?.kind ?? '';
       const game = getPlay(), playButton = $('#walking-play');
       playButton.hidden = !game;
       if (game) { setAction(playButton, game.label, 'X'); setBusy(playButton, game.disabled); }
       const storefront = stores.reduce((best, store) => { const distance = Math.hypot(store.facade[0] - state.position[0], store.facade[1] + state.position[2]); return distance < (best?.distance ?? 16) ? { store, distance } : best; }, null);
       const room = currentRoom(), door = room ? null : doorway();
-      $('.walking-title strong').textContent = sitting ? 'Seated' : transport ? 'Riding with Jev' : flight.active ? (flight.landing ? 'Landing' : 'In flight') : room?.name ?? storefront?.store.name ?? 'On foot';
+      $('.walking-title strong').textContent = sitting ? 'Seated' : performing ? 'On stage' : transport ? (transport.pose.kind === 'bicycle' ? 'Cycling' : 'Riding with Jev') : flight.active ? (flight.landing ? 'Landing' : 'In flight') : room?.name ?? storefront?.store.name ?? 'On foot';
       const enter = $('#walking-enter');
-      enter.hidden = Boolean(sitting||transport)||(!room && !door);
+      enter.hidden = Boolean(sitting||performing||transport)||(!room && !door);
       enter.disabled = Boolean(door && !canEnterStore(door));
       if (room) setAction(enter, 'Step outside', 'F');
       else if (door) setAction(enter, canEnterStore(door) ? `Step inside ${door.name}` : `${door.name} · Invitation required`, canEnterStore(door) ? 'F' : null);
@@ -382,7 +382,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       hud.dataset.inside = room?.storeId ?? '';
       document.body.classList.toggle('inside-store', Boolean(room));
       const roomSummary=room && sharedRoomSummary(room);
-      $('#walking-place').textContent = sitting ? 'Drag to look around · Z stands up' : transport ? 'W/S to ride or reverse · A/D or arrows to steer · G to step out' : flight.active ? `${flight.altitude.toFixed(1)} m above ground · Space to rise · C to lower` : room ? room.theme === 'home'
+      $('#walking-place').textContent = sitting ? 'Drag to look around · Z stands up' : performing ? 'Drag to look around · X steps down' : transport ? (transport.pose.kind === 'bicycle' ? `${(transport.pose.distance / 1609.344).toFixed(2)} mi cycled this ride · W to pedal · Shift to sprint · G to step off` : 'W/S to ride or reverse · A/D or arrows to steer · G to step out') : flight.active ? `${flight.altitude.toFixed(1)} m above ground · Space to rise · C to lower` : room ? room.theme === 'home'
         ? `Inside ${room.name} · ${roomSummary.label} · ${roomSummary.guests} resident${roomSummary.guests === 1 ? '' : 's'}`
         : `Inside ${room.name} · ${roomSummary.label} · ${roomSummary.staff} staff, ${roomSummary.guests} guests`
         : nearest ? `${nearest.anchorName} · nearby` : `${state.distance.toFixed(0)} m walked · ${pathLabel}`;

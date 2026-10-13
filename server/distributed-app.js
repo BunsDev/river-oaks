@@ -15,6 +15,7 @@ import { MAX_REGION_REQUEST_BYTES } from './region-package.js';
 import { socialAction } from './social-api.js';
 import { groupAction } from './groups-api.js';
 import { profileAction } from './profile-api.js';
+import { createCyclingLeaderboard } from './cycling-api.js';
 import { eventAction } from './events-api.js';
 import { workplaceAction } from './workplace-api.js';
 import { accountDesignCommand } from './design-commands.js';
@@ -37,7 +38,9 @@ const json = (res, status, value) => {
 /** HTTP/WS edge for a durable room. No instance owns canonical game or auth state. */
 export function createDistributedServer({ auth, room, worldTitle, security, waitlist, waitlistAdmins = [], debugReports = null, landmarks, social = null, groups = null, profiles = null, events = null, workplace = null, workplaceCronSecret = null, presence = null, designLibrary = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
   trustedProxyIPs = [], address = createClientAddress(trustedProxyIPs), now = Date.now,
-  connectionLifetime = 270_000, assetGateSecret = null, heartbeatMs = 5000, onMove = null, voice = null, voiceCronSecret = null } = {}) {
+  connectionLifetime = 270_000, assetGateSecret = null, heartbeatMs = 5000, onMove = null, voice = null, voiceCronSecret = null,
+  // cyclingMiles: accepted for the leaderboard route (PR 2); the room owner flushes rides.
+  cyclingMiles = null } = {}) {
   if (!waitlist) throw new Error('Waitlist is required');
   const worldId = validateWorldId(room.worldId ?? DEFAULT_WORLD_ID);
   const matchesWorld = url => (url.searchParams.get('world') ?? (worldId === DEFAULT_WORLD_ID ? DEFAULT_WORLD_ID : null)) === worldId;
@@ -53,6 +56,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
   // Each sign-in start holds a pending slot until it completes or expires, so
   // one address may start only a few at a time.
   const signInStart = req => security.allow('login', rateLimitKey(address(req)), SIGN_INS_PER_ADDRESS, SIGN_IN_WINDOW);
+  const leaderboard = createCyclingLeaderboard({ store: cyclingMiles });
   const approvedIdentity = async (req, res) => {
     const identity = await auth.authenticate(req);
     if (!identity) { json(res, 401, { error: 'Sign in to join the town.' }); return null; }
@@ -270,6 +274,12 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
         const result=await workplaceAction({action:path.slice('/api/workplace/'.length),identity,workplace,worldId,readBody:()=>body(req),
           listPlaces:()=>room.listPlaces(),allowWrite:id=>security.allow('workplace',id,30,60_000),allowRead:id=>security.allow('workplace_read',id,120,60_000),now});
         return json(res,result.status,result.value);
+      }
+      if (path === '/api/cycling/leaderboard' && req.method === 'GET') {
+        const identity = await approvedIdentity(req, res); if (!identity) return;
+        if (!security.allow('cycling', identity.userId, 60, 60_000)) return json(res, 429, { error: 'Please wait before reading the leaderboard again.' });
+        const result = await leaderboard.read(identity);
+        return json(res, result.status, result.value);
       }
       if (path.startsWith('/api/profile/') && req.method === 'POST') {
         const identity = await authorized(req, res); if (!identity) return;

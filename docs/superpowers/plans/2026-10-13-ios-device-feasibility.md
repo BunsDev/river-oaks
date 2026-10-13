@@ -395,3 +395,18 @@ capture, merge or release occurred in this integration step. A matched source
 baseline and concrete deployment proposal remain necessary before the next phone
 measurement. The paired iPhone remains connected, but sustained foreground
 availability is not inferred from connection state.
+
+### Hosted baseline reconciliation
+
+Integrated `dc65b40044b839796a717f16a71cd0396c553adb` (the observed hosted source)
+into the isolated probe branch. No PR was merged and primary main was not changed
+by this operation. It brings current username/sign-in, plaza, cycling and studio
+work into the experiment without dropping the existing phase boundaries.
+
+`pnpm run verify` passed after integration: tooling 102; preview 2,836 passed /
+1 skipped; server 457 passed / 137 skipped; desktop 54; Python 141. The diagnostic
+build and all three actual built WebKit cases also passed, including native
+adapter capture. Receipts: `core-phase-main.log`, `diagnostic-main-build.log`,
+`built-phase-main.log`, and `built-render-audit.json`. This supersedes the earlier
+branch-baseline mismatch for the observed dc65b400 source; future hosted changes
+still require fresh correlation.

@@ -4409,6 +4409,145 @@
       ],
       "ledger": "docs/superpowers/plans/2026-10-13-plaza-dominoes.md",
       "issues": []
+    },
+    {
+      "id": "plaza-hearts",
+      "title": "Hearts at the plaza café table: four players (you and three plaza regulars), passing, tricks, shooting the moon, game to 100; cards mirrored on the round table",
+      "status": "retired",
+      "branches": [
+        "feat/plaza-hearts-20261013"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-13T13:31:53.390Z",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-plaza-hearts-20261013",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "filesOwned": [
+        "preview/src/hearts-rules.js",
+        "preview/src/hearts-opponent.js",
+        "preview/src/plaza-hearts.js",
+        "preview/src/plaza-hearts.css",
+        "preview/src/plaza-dominoes.js (café game switch)",
+        "preview/src/plaza-salon.js (café cards)",
+        "preview/e2e/plaza-hearts.js"
+      ],
+      "requiredChecks": [
+        "pnpm test (hearts rules, opponent, mirror)",
+        "plaza-hearts and plaza-dominoes journeys",
+        "pnpm run verify",
+        "Hosted CI"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-13-plaza-hearts.md",
+      "issues": [],
+      "pr": 310,
+      "evidence": [
+        {
+          "pr": 310,
+          "reviewedHead": "d69c8d0474a62e7e80dddf83eecf928be3a74751",
+          "merge": "2ecbf566aecc237b1e5bd7be3bb8af732660c91d",
+          "tree": "3e3889aeae28157896c19a76efb781b51c309693",
+          "checks": "All 16 hosted check runs succeeded on d69c8d0 (guard: mergeState CLEAN, 17 checks); landed by pnpm run land through gh-merge-when-green.sh (Val authorized). Local: verify core passed (preview 2760 pass/1 skip; server 421 pass/134 skips); unit 2764 pass/0 fail after the #307 and #306/#308 merges; plaza-hearts journey passed after the #307 merge, plaza-dominoes passed on the #304 merge. Earlier journey failures were environment only (Playwright browser deleted by disk cleanup; ENOSPC on the lock)."
+        }
+      ],
+      "retirement": {
+        "head": "d69c8d0474a62e7e80dddf83eecf928be3a74751",
+        "releasedAt": "2026-10-13T13:31:12+00:00",
+        "sessionsReviewedAt": "2026-10-13T13:31:12+00:00"
+      },
+      "retiredBranches": [
+        "feat/plaza-hearts-20261013"
+      ],
+      "archive": {
+        "feat/plaza-hearts-20261013": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-SQIunt/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-SQIunt/history.bundle",
+          "sha256": "df2b8527f77a95c1481c2c62d4c09685f6f485f2c54cd653834b5cc4f9114d62",
+          "tag": "refs/tags/archive/worktree-prune/007eb995-690f-4470-835f-6ef2ac7d0dc3",
+          "head": "d69c8d0474a62e7e80dddf83eecf928be3a74751"
+        }
+      }
+    },
+    {
+      "id": "studio-furnished-spaces",
+      "title": "Four furnished building templates and agentic space editing",
+      "status": "active",
+      "branches": [
+        "feat/studio-spaces-20261013"
+      ],
+      "owner": "codex:01a1351b-787e-7443-ab4c-0759b9fbecb8",
+      "updatedAt": "2026-10-13T15:03:53.897330+00:00",
+      "nextAction": "PR #316: current main 2642eda integrated without source conflicts; combined core passed 3543 tests, 137 existing skips. Push signed integration, wait for exact-head CI and queued Studio browser/native reruns, then land and deliver realism goal prompt.",
+      "ledger": "docs/superpowers/plans/2026-10-13-studio-spaces.md",
+      "filesOwned": [
+        ".agents/skills/studio-world-design/SKILL.md",
+        "desktop/agent-e2e.js",
+        "desktop/main.js (space export title only)",
+        "desktop/package-files.js",
+        "desktop/package.js",
+        "desktop/studio-agent-guide.js",
+        "desktop/studio-designer-host.js",
+        "desktop/studio-download.js",
+        "desktop/studio-scene-context.js",
+        "desktop/tests/fixtures/studio-agent-cli.mjs",
+        "desktop/tests/package-files.test.js",
+        "desktop/tests/studio-agent-host.test.js",
+        "desktop/tests/studio-designer-host.test.js",
+        "desktop/tests/studio-download.test.js",
+        "docs/starter-districts.md",
+        "docs/world-studio-agent.md",
+        "docs/world-studio.md",
+        "preview/e2e/world-studio.js",
+        "preview/src/studio/",
+        "preview/tests/studio-*.test.js",
+        "shared/studio-space-catalog.js",
+        "preview/src/studio/studio.css"
+      ],
+      "requiredChecks": [
+        "focused document, proposal, renderer and template regressions",
+        "pnpm run verify",
+        "pnpm run test:experience world-studio",
+        "pnpm run test:desktop:agent",
+        "rendered review of all four spaces"
+      ],
+      "verification": {
+        "focused": "87 Studio/desktop/package tests passed; later 17 renderer/template checks passed including red-green office glazing regression.",
+        "specReview": "Independent spec review passed after cabinet sink, chair orientation, guide and packaged dependency fixes.",
+        "pending": "PR #316 hosted CI and guarded landing pending. The separate requested realism prompt follows the merge; packaged release/live-provider/production/human accessibility/target GPU remain unverified.",
+        "core": "After integrating main 2642eda: all 11 core tasks passed; 3543 passing tests and 137 existing skips, zero failures. Local node --test concurrency=4; .runtime/studio-pr316-integrated-core.log and .runtime/agent/core.json.",
+        "qualityReview": "Independent quality review passed after local Stop cancellation fence and bounded observed-position traversal test.",
+        "browser": "Fresh world-studio journey passed in 28.663s through the repository browser queue; data/reports/studio-spaces-delivery-browser.json. All four scene captures previously inspected, including corrected office glazing.",
+        "native": "Fresh development Electron fixture passed all 13 checks with clean exit 0 after main integration; .runtime/studio-delivery-native.log and .runtime/agent/studio-agent-native.json. Synthetic providers only."
+      },
+      "leaseUntil": "2026-10-13T16:42:00.588982+00:00",
+      "pr": 316
+    },
+    {
+      "id": "plaza-backgammon",
+      "title": "A backgammon table for the plaza (Val's 'more game tables'): new table and chairs in the plan, backgammon rules and a plaza regular, board and checkers mirrored in 3D",
+      "status": "active",
+      "branches": [
+        "feat/plaza-backgammon-20261013"
+      ],
+      "owner": "claude:river-oaks-c2",
+      "leaseUntil": "2026-10-13T23:48:35.000Z",
+      "updatedAt": "2026-10-13T11:48:46.000Z",
+      "nextAction": "Stacked on feat/plaza-hearts-20261013: merge main once Hearts lands. Rules first (pure), then the table in the plan, board mirror, sheet, journey; land when green (Val authorized).",
+      "filesOwned": [
+        "preview/src/backgammon-rules.js",
+        "preview/src/backgammon-opponent.js",
+        "preview/src/plaza-backgammon.js",
+        "preview/src/plaza-salon-plan.js (new table)",
+        "preview/src/plaza-salon.js (board)",
+        "preview/e2e/plaza-backgammon.js"
+      ],
+      "requiredChecks": [
+        "pnpm test (rules, opponent, plaza placement/clearance, mirror)",
+        "plaza-backgammon and plaza-salon journeys",
+        "pnpm run verify",
+        "Hosted CI"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-13-plaza-backgammon.md",
+      "issues": [],
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-plaza-backgammon-20261013"
     }
   ]
 }

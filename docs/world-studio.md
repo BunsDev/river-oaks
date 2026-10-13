@@ -6,6 +6,35 @@ path is `/studio.html` (`/studio` on the hosted clean-URL route). The existing
 approved-account gate applies. The editor uses the browser renderer inside the
 Electron shell; Unreal is not required for this authoring loop.
 
+## Furnished spaces
+
+Choose **Space templates** for four building-sized scenes: **Courtyard House**,
+**Garden Office**, **Atelier Boutique** and **Corner Café**. Each contains editable
+walls, glazing, floor zones, furniture and small decorative objects. The house
+includes living, kitchen, bedroom, bathroom and patio areas; the office has
+reception, workstations, meeting and kitchenette areas; the boutique has displays,
+checkout and fitting rooms; the café has service, preparation, seating and terrace
+areas. These are original proposed layouts in metres, not surveyed buildings.
+
+Select an element to edit its dimensions, position, rotation, elevation, catalog
+kind or material finish. **Add furnishing** inserts a chair that can be changed
+with the inspector. Select **Lighting** in Scene objects for Daylight, Warm or
+Evening. Agent chat can propose the same edits as one undoable batch. Agent chat
+still needs the desktop app and its existing provider consent.
+
+**Walk through** starts outside the entrance and uses wall and furniture footprint
+collision. You can enter the space and walk between its rooms; furniture is visual
+and does not simulate opening cabinets, cooking or other household activities.
+The overhead view leaves the roof open for editing. Finish presets and built-in
+geometry improve material and shape detail, but photorealism remains a visual
+acceptance target, not a guarantee from automated tests.
+
+Space files use `document_type: "studio-space"`, are limited to 128 KiB and 160
+objects, and export as `world-studio-space.json`. Save, reopen, import and undo work
+as for regions. They are private Studio documents; the shared-world region
+publisher does not accept this format. Existing schema-v1 region files remain
+compatible, and **New region** still starts the original region workflow.
+
 ## Build a region
 
 Start with **New region**, **Open JSON**, or the saved device draft. The initial
@@ -51,7 +80,7 @@ Use WASD or arrow keys to move, drag to look, and Shift to move faster. **Escape
 or **Return to editor** restores the authoring camera. Editing is disabled during
 the preview; walking does not change your draft or contact the multiplayer server.
 
-The preview reuses the game's walking and building-footprint collision code.
+For creator region files, the preview reuses the game's walking and building-footprint collision code.
 Buildings are solid blockout volumes here; furnished interiors, residents and
 shared-world behavior are not simulated. Roads, terrain and parcels are retained,
 but this first workspace does not provide brushes or control-point editing for
