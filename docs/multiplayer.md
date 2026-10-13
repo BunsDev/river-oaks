@@ -684,7 +684,8 @@ lease and deletes empty rooms. With a live lease holder a revoked participant is
 removed within about 2 s; the worst case with no instance alive for the world is
 the lease TTL plus one cron period plus the sweep budget, about 127 s. Measured
 numbers belong in `data/reports/voice-revocation.json` before production
-enablement. The CSP allows `*.livekit.cloud` signalling, and `Permissions-Policy`
+enablement; [the LiveKit setup page](voice-livekit-setup.md) is the checklist for
+creating the project, setting the environment and recording that acceptance. The CSP allows `*.livekit.cloud` signalling, and `Permissions-Policy`
 grants the microphone to this origin only.
 
 
