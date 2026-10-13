@@ -32,6 +32,19 @@ export function createRoadVehicle(kind='rolls') {
  const ring=(pos,r,thick,mat,parent=object)=>add(new THREE.TorusGeometry(r,thick,10,64),mat,pos,[1,1,1],parent);
  for(const [index,[x,r,z]] of spec.wheels.entries()) {
   const wheel=new THREE.Group();wheel.position.set(x,r,z);object.add(wheel);groups.push(wheel);wheels.push(wheel);
+  if(kind==='bicycle') {
+   // A real bicycle wheel: slim rubber tyre (still rubber, so tread sampling and
+   // tyre clearances work), thin chrome rim, 20 radial spokes laced alternately
+   // to either hub flange. No disc hub, caliper, spinners or tread blocks.
+   ring([0,0,0],r-.028,.028,rubber,wheel);
+   ring([0,0,0],r-.062,.009,chrome,wheel);
+   const hub=add(new THREE.CylinderGeometry(.025,.025,.07,16),chrome,[0,0,0],[1,1,1],wheel);hub.rotation.x=Math.PI/2;hubs.push(hub);
+   for(let n=0;n<20;n++) {
+    const a=n/20*Math.PI*2,inner=.025,outer=r-.062,mid=(inner+outer)/2,flange=(n%2?1:-1)*.012;
+    const spoke=add(new THREE.CylinderGeometry(.0025,.0025,outer-inner,6),chrome,[Math.cos(a)*mid,Math.sin(a)*mid,flange],[1,1,1],wheel);spoke.rotation.z=a-Math.PI/2;
+   }
+   continue;
+  }
   const wide=kind==='rolls'?.125:.085,major=r-.067;
   const tyre=ring([0,0,0],major,.067,rubber,wheel);tyre.scale.z=wide/.067;
   for(const side of [-1,1]) {
@@ -180,8 +193,7 @@ export function createRoadVehicle(kind='rolls') {
   tube([[-.70,1.43,-.16],[-.70,1.45,0],[-.70,1.43,.16]],.007,chrome);
   box([1.09,.66,0],[.048,.052,.16],red,.019);
   box([1.10,.51,0],[.025,.14,.17],black,.01);
- }
- else if(kind==='bicycle') {
+ } else if(kind==='bicycle') {
   // A step-through city bike in rose and bronze: tubes for the frame, a
   // leather saddle at the spec seat, bronze fork and bars that steer.
   const frame=pink,bronze=alloy;
