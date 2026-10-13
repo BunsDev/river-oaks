@@ -83,16 +83,24 @@ visitor splash (`endSplash`) is untouched.
 - `preview/tests/resident-names.test.js`: 10/10, including the username rules
   and the generator over 2,000 seeds.
 - `pnpm test`: 2752 pass, 0 fail, 1 skipped. `pnpm run build` passes.
+- After merging main (`2ecbf56`, Hearts):
+  - `REDIS_URL=… pnpm run test:server`: 601 pass, 0 fail, 0 skipped.
+  - `pnpm run verify`: `core: passed` (unit 2766 pass, 0 fail, 1 skipped).
+  - `RIVER_OAKS_SHARED_JOURNEY=access-gate pnpm run test:shared required`
+    passed, with 30 checks. Nine of them are new.
+  - **Waiting resident:** sees a username, and email sign-ins get a generated
+    one. A held name is refused with a reason. They save their own name with
+    CSRF protection, and *Suggest another* offers a generated name.
+  - **Approver:** sees each username, and an approved one is fixed. They rename
+    a waiting resident with CSRF protection. Revoking sends no username, and
+    reconsidering a declined request sends the edited one.
 
 ## Gaps
 
-- The `access-gate` shared journey is extended (waiting player: see, refuse,
-  save, suggest; approver: see, rename, reconsider with a name, revoke without
-  one) but not yet run: the Mac's swap was at 51 of 52 GB.
 - Residents approved before this change keep their GitHub or `Visitor #`
   names. Their GitHub login is held for them from their next sign-in.
 - Usernames are fixed after approval; there is no rename later.
 
 ## Next step
 
-Run the access-gate journey and `pnpm run verify`, then PR and land.
+PR and `pnpm run land`.
