@@ -33,6 +33,13 @@
     for (const key of ['matureTrees','plantedBeds','storePeopleReady','storePeopleTotal']) {
       if (typeof data[key] === 'string' && data[key].trim() && Number.isFinite(Number(data[key]))) result[key] = Number(data[key]);
     }
+    // Vite's root-relative entry filename identifies a deployed artifact without
+    // exporting document URLs, query strings, inline scripts or resource history.
+    const modules = document.querySelectorAll?.('script[type="module"][src]') ?? [];
+    result.entryAssets = [...new Set(Array.from({ length: Math.min(modules.length, 16) }, (_, index) => modules[index]).map(script => {
+      const src = script.getAttribute('src');
+      return typeof src === 'string' ? /^\/assets\/(index-[A-Za-z0-9_-]{1,80}\.js)$/.exec(src)?.[1] : undefined;
+    }).filter(Boolean))].slice(0, 8);
     const progressRaw = document.querySelector('#viewport')?.dataset?.assetProgress;
     if (progressRaw) {
       result.assets = numeric(progressRaw, ['loaded','total','failed']);

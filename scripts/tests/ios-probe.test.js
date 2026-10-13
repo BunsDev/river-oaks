@@ -84,7 +84,7 @@ test('one-shot scene snapshot whitelists bounded numeric diagnostics without ins
  const sandbox=vm.createContext({document:{querySelector:()=>({dataset})}});
  vm.runInContext(source,sandbox);
  const snapshot=plain(sandbox.IOSProbe.sceneSnapshot());
- assert.deepEqual(snapshot,{ready:false,renderCounts:{calls:42,textures:64},pipeline:{samples:4,renderScale:1,ao:true,bloom:true},matureTrees:54,plantedBeds:12,storePeopleReady:0,storePeopleTotal:80});
+ assert.deepEqual(snapshot,{ready:false,renderCounts:{calls:42,textures:64},pipeline:{samples:4,renderScale:1,ao:true,bloom:true},matureTrees:54,plantedBeds:12,storePeopleReady:0,storePeopleTotal:80,entryAssets:[]});
  assert.equal(sandbox.__iosProbe,undefined);
  dataset.renderStats='invalid';dataset.matureTrees='Infinity';dataset.plantedBeds='';
  const invalid=plain(sandbox.IOSProbe.sceneSnapshot());
@@ -146,4 +146,16 @@ test('HTML decoder control records observed feature state without changing asset
  assert.equal(sandbox.createImageBitmap,undefined);
  vm.runInContext(source,sandbox);const snapshot=plain(sandbox.IOSProbe.sceneSnapshot());
  assert.equal(snapshot.decoderMode,'html-images');assert.equal(snapshot.imageBitmapAvailable,false);
+});
+
+
+test('scene snapshot exports only bounded root-relative production entry filenames', () => {
+ const paths=['/assets/index-build123.js','/assets/index-build123.js','https://other.example/assets/index-other.js','/assets/index-secret.js?token=secret','/assets/private.js','data:secret','/assets/index-../secret.js',...Array.from({length:20},(_,i)=>`/assets/index-good${i}.js`)];
+ const sandbox=vm.createContext({document:{querySelector:()=>null,querySelectorAll:()=>paths.map(src=>({getAttribute:()=>src}))}});
+ vm.runInContext(source,sandbox);
+ const snapshot=plain(sandbox.IOSProbe.sceneSnapshot());
+ assert.equal(snapshot.entryAssets.length,8);
+ assert.equal(snapshot.entryAssets[0],'index-build123.js');
+ assert.ok(snapshot.entryAssets.every(value=>/^index-(?:build123|good\d+)\.js$/.test(value)));
+ assert.ok(!JSON.stringify(snapshot).includes('secret'));
 });

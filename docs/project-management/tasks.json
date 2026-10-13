@@ -4360,8 +4360,8 @@
       ],
       "owner": "codex-ios-rollout-20261013",
       "leaseUntil": "2026-10-13T15:23:19.698214+00:00",
-      "updatedAt": "2026-10-13T14:26:09.985135+00:00",
-      "nextAction": "PR #309: HTML fallback restores movement; local WebGL2 uploads match all38images. Startup WebContent1707.60MiB and12–15fps still fail provisional budgets. Fresh foreground run409F0F62 began14:18:14UTC; first run backgrounded182s. Finish sustained evidence, verify/sign diagnostic patch, then profile frame-time. No gate closed.",
+      "updatedAt": "2026-10-13T14:36:17.354641+00:00",
+      "nextAction": "Draft PR309 includes signed b1454da decoder evidence. HTML fallback restores movement, but12m53s partial foreground run has RAF66/79/84ms and startup WebContent1708MiB. Follow-up build-entry correlation verified locally; finish signed push, inspect local pass/object costs, then physical CPU/GPU profile and20–30minforeground when available. No gate closed.",
       "ledger": "docs/superpowers/plans/2026-10-13-ios-device-feasibility.md",
       "filesOwned": [
         "experiments/ios-probe/",

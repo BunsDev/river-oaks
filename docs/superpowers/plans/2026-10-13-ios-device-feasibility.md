@@ -172,3 +172,55 @@ acceptance, merge, deployment or issue closure. Keep this worktree active.
 Coordination check uses the primary live task register and remains nonzero for
 unrelated expired leases, unregistered branches and pending retirements. The iOS
 claim is valid; preserve those unrelated tasks and branches.
+
+
+### Verified delivery and build correlation
+
+Decoder controls and evidence are signed/pushed as
+`b1454da3d081d51c119504d438df86f97033c053` on draft PR309. Signature verified;
+attribution scan empty and staged secret scan passed. Production remains unchanged.
+
+Run409F0F62 subsequently backgrounded at14:31:08UTC, elapsed773.41seconds
+(12minutes53seconds). The retained partial summary has155visible samples and
+13,030RAF intervals totaling766.084seconds: p50=66ms,p95=79ms,p99=84ms.
+Thermal states remained0; no WebContent termination event was recorded. It is
+unfinished, not a continuous20minute workload and not performance acceptance.
+Raw copy: `.runtime/ios-probe/html-second-background-records/`; summary:
+`html-second-partial-summary.json`. The foreground-availability question remains
+pending; do not infer approval or availability from elapsed time.
+
+Contemporary public entry `index-Bnbob92Q.js` imports `debug-report-D_-DtnBR.js`,
+whose build metadata names837bf3cae07f0dc9a2441ae3b870a4ca360202cb, captured
+14:31:05UTC. Whitelisted filenames, hashes and embedded revision are retained in
+`public-build-*.json`. This does not prove what earlier phone navigations loaded;
+deployments moved during the investigation. Do not retrospectively assign that
+revision to earlier runs or assume same native binary means frozen hosted code.
+
+A small follow-up snapshot now records at most8strictly matched root-relative
+Vite entry basenames from at most16module tags. No absolute URLs, queries, inline
+scripts, resource history or page content are retained. These are correlation
+hints, not proof of loaded bytes/source. Reviewer found no blocker; bounded
+iteration and explicit receipt limitations were added.20Node tests passed, core
+passed (96tooling; other counts/skips unchanged), local WebKit HTML check passed,
+and the signed Release device build passed strict codesign verification. This
+follow-up binary is built locally and has not replaced the phone's running app.
+
+Next: inspect existing local pass/object cost measurements, then collect a short
+physical CPU/GPU profile when the phone is available; continue the20–30minute
+foreground and visual/interior/recovery gates separately. Startup recovery alone
+cannot select the production host. Goal remains active; no issue is delivered.
+
+
+Local cost attribution completed using the repository's existing
+`preview/e2e/render-pass-cost.js` and `render-object-cost.js`, adapted only to the
+ordinary Bob fixture origin, mobile viewport and HTML decoder in the bounded
+`.runtime/ios-probe/profile-local.mjs` runner. Receipt:`local-render-cost.json`.
+At120sampled frames, macOS WebKit reports17msmedian/20msp95 with AO enabled;
+this is a different device/settings workload and cannot establish phone speed.
+RenderPass submits707draws/2.925million triangles at about3.99ms CPU submission;
+GTAO adds319draws/1.151million triangles at1.30ms. GPU timer extension is absent,
+so no GPU duration is inferred. Leading visible/shadow triangle categories include
+mature tree leaves/branches, unnamed meshes, interiors and the player rig. These
+suggest physical profiling targets, not permission to remove foliage or residents.
+The next device capture must distinguish CPU submission from GPU execution with
+current settings/source evidence before proposing a rendering change.

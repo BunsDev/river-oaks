@@ -259,4 +259,7 @@ separate startup trace sampled WebContent up to 1707.60 MiB, GPU 444.64 MiB and
 host 13.00 MiB (28 samples per process). These are separate process footprints,
 not a deduplicated total or an exact peak. The first timed run backgrounded after
 182 seconds and subsequently exited, so it cannot support sustained acceptance.
-The replacement foreground run and performance investigation remain active.
+The replacement run also backgrounded after12minutes53seconds:13,030RAF
+intervals have p50/p95/p99=66/79/84ms, nominal thermal state and no recorded
+WebContent termination. It is partial and fails the30fps floor; the20–30minute
+foreground and performance investigation remain open.

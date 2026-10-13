@@ -123,8 +123,12 @@ measured from document navigation, not process launch. Native elapsed time and
 navigation IDs distinguish reloads. Geometry/texture counts are object counts,
 not bytes. Quality mode, scale and occlusion identify workload changes.
 
-No page text, URLs/queries, cookies, typed input, chat or provider tokens are
-collected. WebContent/GPU memory is explicitly unavailable; collect it separately
+No page text, navigation URLs/queries, cookies, typed input, chat or provider
+tokens are collected. Scene snapshots include up to eight strictly matched
+`index-*.js` entry filenames from root-relative `/assets/` module scripts, so a
+later public bundle lookup can correlate the loaded build without page content.
+Filenames are correlation hints; their presence does not verify loaded bytes or
+the hosted source revision. Missing filenames leave that correlation unavailable. WebContent/GPU memory is explicitly unavailable; collect it separately
 with Instruments. Missing/overflowing/invalid samples and partial files cannot be
 turned into a passing run. Resource timing is bounded and may omit cross-origin
 transfer sizes; a zero size is not proof of no download. WebGL loss/restoration
