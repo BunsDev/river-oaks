@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { CHESS_CELL_M, DOMINO, cafeChairAngle, chessCell, chessCellIsDark, chessCellPosition, dominoLine, plazaSalonPlan } from './plaza-salon-plan.js';
+import { CHESS_CELL_M, DOMINO, cafeChairAngle, chessCell, chessCellIsDark, chessCellPosition, dominoLine, plazaSalonPlan, plazaSalonRack } from './plaza-salon-plan.js';
+import { createRoadVehicle } from './road-vehicles.js';
 import { START_FEN, fromFEN } from './chess-rules.js';
 import { groundSurfaceHeight } from './world-surface.js';
 import { buildPlanterPlanting } from './landscape-models.js';
@@ -391,6 +392,38 @@ export function buildPlazaSalon(world) {
       count: () => ({ tiles: tiles.count, pips: pips.count }),
     };
   }
-  group.userData.counts = { chairs: plan.chairs.length, chess: plan.chess.length, planters: plan.planters.length, lanterns: plan.lanterns.length, strands: plan.strands.length };
+  // The bike rack: a bronze bar on two posts along the north footway, with a parked
+  // bicycle on each slot while nobody has it out (plazaSalonRack). The bar joins the
+  // instanced batches above; each bike is the road vehicle's own small group.
+  const slots = plazaSalonRack(world), models = [];
+  {
+    const { rack } = plan, origin = base(rack), yaw = rack.heading, part = (geometry, m, local, scale) => add(geometry, m, at(origin, yaw, local), scale, yaw);
+    part(unit.box, material.bronze, [0, 0.8, 0], [rack.length, 0.05, 0.05]);
+    for (const lx of [-1, 1].map(side => side * (rack.length / 2 - 0.3))) {
+      part(unit.post, material.bronze, [lx, 0.4, 0], [0.07, 0.8, 0.07]);
+      part(unit.disc, material.bronze, [lx, 0.015, 0], [0.22, 0.03, 0.22]);
+    }
+    const bikes = new THREE.Group(); bikes.name = 'Parked bikes'; group.add(bikes);
+    for (const slot of slots) {
+      const model = createRoadVehicle('bicycle'), [x, y, z] = base(slot);
+      // The vehicle mesh faces local -X; a heading (0 = south = scene +Z) is the yaw of a
+      // model facing +Z, so the bike turns a further quarter (see parked-carriage pose).
+      model.object.position.set(x, y, z); model.object.rotation.y = slot.heading + Math.PI / 2;
+      bikes.add(model.object); models.push(model);
+    }
+  }
+  const parked = slots.map(() => true);
+  group.userData.rack = {
+    slots: slots.length,
+    parked: () => parked.slice(),
+    // Hide the bikes whose slots are taken (slot ids from the cycling snapshot); true when anything changed.
+    setTaken(taken) {
+      const held = new Set(taken ?? []); let changed = false;
+      slots.forEach((slot, i) => { const show = !held.has(slot.id); if (parked[i] !== show) { parked[i] = show; models[i].object.visible = show; changed = true; } });
+      return changed;
+    },
+    dispose: () => models.forEach(model => model.dispose()),
+  };
+  group.userData.counts = { chairs: plan.chairs.length, chess: plan.chess.length, planters: plan.planters.length, lanterns: plan.lanterns.length, strands: plan.strands.length, rackSlots: slots.length };
   return group;
 }

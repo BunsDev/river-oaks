@@ -410,6 +410,7 @@ function populateWorld(data) {
     buildingMesh?.userData.dispose?.();
     worldGroup.remove(interiorsLayer);
     storePeople?.userData.dispose?.(); storePeople = null; interiorsLayer = null;
+    plazaSalon?.userData.rack?.dispose();
     worldGroup.traverse((item) => {
       item.userData.cancelLandscapeLoad?.();
       item.userData.texture?.dispose();

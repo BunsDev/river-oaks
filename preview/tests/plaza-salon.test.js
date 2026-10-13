@@ -138,6 +138,10 @@ test('the bike rack offers four slots on open paving that face south into the pl
     assert.ok(slot.x > -2784.7 + 1.2, 'the rack keeps the Dior entrance clear');
     assert.ok(slot.north > plan.rack.north - 1.4 && slot.north < plan.rack.north, 'bikes sit just south of the bar');
   }
+  // The bar's footprint discs overlap, so there is no gap to slip through the bar.
+  const bar = plazaSalonFootprints(district).filter(([, north, radius]) => radius === 0.22 && Math.abs(north - plan.rack.north) < 1e-9);
+  assert.ok(bar.length >= 2, 'the bar has footprint discs');
+  for (let i = 1; i < bar.length; i++) assert.ok(Math.hypot(bar[i][0] - bar[i - 1][0], bar[i][1] - bar[i - 1][1]) < 2 * 0.22, 'consecutive bar discs overlap');
   // The bar blocks walking; a bike slot does not.
   assert.equal(free(furnished, [plan.rack.x, plan.rack.north]), false, 'the rack bar must block');
   assert.equal(free(bare, [plan.rack.x, plan.rack.north]), true, 'the bar stands on open paving');

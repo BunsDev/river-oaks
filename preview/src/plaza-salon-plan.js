@@ -69,7 +69,8 @@ export function plazaSalonPlan(world) {
   // The bike rack: a bronze bar along the north footway, east of the Dior
   // entrance (east ≈ -2784.7 stays open), with four bikes parked on its south
   // side so riders roll out onto the plaza paving.
-  const rack = { id: 'rack', x: -2781.0, north: -1294.0, heading: 0, slots: 4, pitch: 0.9, length: 3.2 };
+  // `setback` is the bike centre south of the bar; `approach` the walk-up south of the bike.
+  const rack = { id: 'plaza-salon-rack', x: -2781.0, north: -1294.0, heading: 0, slots: 4, pitch: 0.9, length: 3.2, setback: 0.9, approach: 0.9 };
   const lanterns = [[-2805.9, -1294.2], [-2778.7, -1295.8], [-2797.4, -1303.0], [-2786.6, -1303.4]]
     .map(([x, north], index) => ({ id: `lantern:${index}`, x, north, heading: heading([x, north], [-2792.5, -1298.5]), height: POST_HEIGHT }));
   const trees = treeSupports(world).filter(({ position: [x, north] }) => x > PLAZA.west && x < PLAZA.east && north > PLAZA.south && north < PLAZA.north)
@@ -100,9 +101,11 @@ export function plazaSalonFootprints(world) {
     const [x, north] = along([bench.x, bench.north], angle, bench.backRadius);
     footprints.push([x, north, 0.17, 0.9]);
   }
-  // The rack bar: overlapping discs along its length; bikes and riders stand south of it.
-  for (let step = 0; step <= 8; step++) {
-    const offset = -plan.rack.length / 2 + plan.rack.length * step / 8;
+  // The rack bar: discs every 0.4 m or less along its length (0.4 < 2 × 0.22, so they
+  // overlap whatever the length); bikes and riders stand south of it.
+  const steps = Math.ceil(plan.rack.length / 0.4);
+  for (let step = 0; step <= steps; step++) {
+    const offset = -plan.rack.length / 2 + plan.rack.length * step / steps;
     footprints.push([plan.rack.x + Math.cos(plan.rack.heading) * offset, plan.rack.north + Math.sin(plan.rack.heading) * offset, 0.22, 0.8]);
   }
   return footprints;
@@ -140,8 +143,8 @@ export function plazaSalonRack(world) {
   for (let slot = 0; slot < rack.slots; slot++) {
     const across = -(rack.slots - 1) / 2 * rack.pitch + slot * rack.pitch;
     const [x, north] = [rack.x + Math.cos(rack.heading) * across, rack.north + Math.sin(rack.heading) * across];
-    const [bx, bn] = along([x, north], rack.heading, 0.9);
-    slots.push({ id: `plaza-salon-rack:${slot}`, rackId: 'plaza-salon-rack', slot, x: bx, north: bn, heading: rack.heading, approach: along([bx, bn], rack.heading, 0.9) });
+    const [bx, bn] = along([x, north], rack.heading, rack.setback);
+    slots.push({ id: `${rack.id}:${slot}`, rackId: rack.id, slot, x: bx, north: bn, heading: rack.heading, approach: along([bx, bn], rack.heading, rack.approach) });
   }
   return slots;
 }
