@@ -84,3 +84,16 @@ test('games replay exactly from their seed and moves, keep every checker, and al
   }
   assert.throws(() => replay(3, ['1-off']), /Illegal move/);
 });
+
+test('any 32-bit seed deals: the opening finishes and the dice vary by turn', () => {
+  // The sheet deals from Math.random() * 2 ** 32, far beyond the small seeds above.
+  for (const seed of [3_400_000, 123_456_789, 2 ** 31, 2 ** 32 - 1, 4_000_000_007]) {
+    const { first, dice } = openingRoll(seed);
+    assert.notEqual(dice[0], dice[1], `seed ${seed} opens with different dice`);
+    assert.ok([WHITE, BLACK].includes(first));
+    const rolls = Array.from({ length: 40 }, (_, turn) => rollFor(seed, turn + 1).join());
+    assert.ok(new Set(rolls).size > 8, `seed ${seed} rolls vary (${new Set(rolls).size} distinct)`);
+    assert.ok(rolls.filter(roll => roll.split(',').length === 4).length < 20, `seed ${seed} is not all doubles`);
+    assert.equal(checkersOf(startGame(seed), WHITE), 15);
+  }
+});

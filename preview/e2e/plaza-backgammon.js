@@ -4,12 +4,14 @@ async page => {
   // the turn passes; the table's checkers mirror the game; Escape and standing up end it.
   const origin = 'http://127.0.0.1:5173', checks = [];
   const check = (ok, message) => { if (!ok) throw new Error(message); checks.push(message); };
-  const game = () => page.evaluate(() => { const { deal, ...state } = window.__riverPlazaBackgammon(); return state; });
+  // page.evaluate has no timeout of its own: bound each in-page wait so a stall fails with its name.
+  const bounded = (label, promise, ms = 60000) => Promise.race([promise, new Promise((_, reject) => setTimeout(() => reject(new Error(`${label} did not finish in ${ms / 1000} s`)), ms))]);
+  const game = () => bounded('Reading the backgammon game', page.evaluate(() => { const { deal, ...state } = window.__riverPlazaBackgammon(); return state; }), 20000);
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(origin + '/?motion-debug=1', { waitUntil: 'commit' });
   await page.waitForFunction(() => document.querySelector('#canvas-host')?.dataset.playerReady === 'true' && window.__riverSeatAndWater?.()?.seats.length > 0 && window.__riverPlazaBackgammon?.(), null, { timeout: 90000 });
   const chair = 'bench:plaza-salon-backgammon-0:0';
-  check((await page.evaluate(id => window.__riverSeatAndWater().goNear(id), chair)).ok, 'Arrived beside the backgammon table');
+  check((await bounded('Walking to the backgammon table', page.evaluate(id => window.__riverSeatAndWater().goNear(id), chair), 90000)).ok, 'Arrived beside the backgammon table');
   await page.waitForFunction(() => window.__riverSeatAndWater().interaction === 'sit', null, { timeout: 15000 });
   await page.locator('#canvas-host').focus();
   await page.keyboard.press('KeyZ');
@@ -21,7 +23,7 @@ async page => {
   await page.locator('#backgammon-panel[open]').waitFor();
   check(await page.locator('#backgammon-panel').evaluate(panel => !/(auto|scroll)/.test(getComputedStyle(panel).overflowY)), 'The backgammon sheet is a frame, never its own scroll container');
 
-  await page.evaluate(() => window.__riverPlazaBackgammon().deal(8));
+  await bounded('Dealing a seeded game', page.evaluate(() => window.__riverPlazaBackgammon().deal(8)), 20000);
   await page.waitForFunction(() => { const s = window.__riverPlazaBackgammon(); return !s.thinking && s.turn === s.player && s.legal.length > 0; }, null, { timeout: 30000 });
   let state = await game();
   check(state.table === 30 && state.player === 0, `The table shows all thirty checkers, and you play white (${state.table})`);

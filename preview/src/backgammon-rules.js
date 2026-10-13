@@ -22,7 +22,9 @@ const count = (state, player, point) => Math.max(0, state.points[point] * sign(p
 const inHome = (player, point) => player === WHITE ? point >= 1 && point <= 6 : point >= 19 && point <= 24;
 
 // One die from the seed, for a turn and a slot, so a game's dice never depend on play.
-const die = (seed, turn, slot) => 1 + Math.floor(seededRandom(((seed >>> 0) * 2654435761 + turn * 97 + slot * 13) >>> 0)() * 6);
+// Integer maths throughout: a float product of a 32-bit seed passes 2^53 and rounds the
+// turn and slot away, so every die of a large seed would match.
+const die = (seed, turn, slot) => 1 + Math.floor(seededRandom((Math.imul(seed >>> 0, 2654435761) ^ Math.imul(turn + 1, 0x85ebca6b) ^ Math.imul(slot + 1, 0xc2b2ae35)) >>> 0)() * 6);
 export function openingRoll(seed) {
   for (let attempt = 0; ; attempt++) {
     const white = die(seed, 1000 + attempt, 0), black = die(seed, 1000 + attempt, 1);
