@@ -28,3 +28,6 @@
 .office-request-dialog { color: #f5ecdf; background: #171c25; border: 1px solid #c9a16c99; border-radius: 20px; padding: 24px; width: min(400px,calc(100vw - 64px)); font: 15px/1.5 system-ui,sans-serif; }
 .office-request-dialog::backdrop { background: #0008; }
 .office-request-dialog button { min-height: 44px; padding: 10px 16px; border-radius: 10px; margin-right: 8px; }
+
+#office-desk-nearby { position:absolute; left:20px; bottom:100px; background:#f5f3e8; color:#2e4d3c; border-color:#d2d9c4; box-shadow:0 4px 20px #0003; }
+#office-desk-open { background:#dce6d1; color:#243f30; border-color:#c0cdb5; }
