@@ -278,3 +278,49 @@ test('liar’s dice: cups before each player still in, lifted on a call to show 
   }
   mirror.show(null); assert.deepEqual(mirror.count(), { cups: 0, dice: 0 });
 });
+
+test('shuffleboard: the long table swaps the glasses for pucks, placed from the throwing end', async () => {
+  const { winePongPoint } = await import('../src/plaza-salon-plan.js');
+  const pong = group.userData.winePong, board = group.userData.shuffleboard, mesh = group.children.find(child => child.name === 'Shuffleboard pucks');
+  assert.equal(board.visible(), false); assert.equal(pong.visible(), true, 'the table starts as wine pong');
+  pong.setVisible(false); board.setVisible(true);
+  board.show([{ owner: 0, u: 2.3, v: 0.05, out: false }, { owner: 1, u: 1.8, v: -0.1, out: false }, { owner: 1, u: 2.0, v: 0, out: true }], 0);
+  assert.equal(board.count(), 2, 'pucks that went off are not shown');
+  const at = i => { const matrix = new THREE.Matrix4(); mesh.getMatrixAt(i, matrix); return new THREE.Vector3().setFromMatrixPosition(matrix); };
+  const [east, north] = winePongPoint(plan.winePong, [-1.2 + 2.3, 0.05]);
+  assert.ok(Math.hypot(at(0).x - east, at(0).z + north) < 0.001, 'thrown from the west end, 2.3 m along');
+  board.show([{ owner: 0, u: 2.3, v: 0.05, out: false }], 1);
+  const [eastFromEast] = winePongPoint(plan.winePong, [1.2 - 2.3, -0.05]);
+  assert.ok(Math.abs(at(0).x - eastFromEast) < 0.001, 'from the east end, it runs the other way');
+  board.show([]); board.setVisible(false); pong.setVisible(true);
+});
+test('yacht: the drum swaps the tower for five dice, each showing its value face up, kept ones lined up', async () => {
+  const { JENGA } = await import('../src/plaza-salon-plan.js');
+  const yacht = group.userData.yacht, jenga = group.userData.jenga, mesh = group.children.find(child => child.name === 'Yacht dice');
+  assert.equal(yacht.visible(), false, 'idle, the drum shows the tower');
+  jenga.setVisible(false); yacht.setVisible(true);
+  assert.equal(jenga.visible(), false); assert.equal(mesh.visible, true);
+  // Faces in BoxGeometry order (+x, −x, +y, −y, +z, −z) show 3, 4, 1, 6, 2, 5: read the one turned up.
+  const faces = [[1, 0, 0, 3], [-1, 0, 0, 4], [0, 1, 0, 1], [0, -1, 0, 6], [0, 0, 1, 2], [0, 0, -1, 5]];
+  const dice = () => Array.from({ length: mesh.count }, (_, i) => {
+    const matrix = new THREE.Matrix4(), position = new THREE.Vector3(), rotation = new THREE.Quaternion();
+    mesh.getMatrixAt(i, matrix); matrix.decompose(position, rotation, new THREE.Vector3());
+    const up = faces.find(([x, y, z]) => new THREE.Vector3(x, y, z).applyQuaternion(rotation).y > 0.99);
+    return { position, value: up?.[3] };
+  });
+  const values = [6, 2, 5, 3, 4];
+  yacht.show(values, [true, false, true, false, false]);
+  const shown = dice();
+  assert.deepEqual(shown.map(die => die.value), values, 'every die shows its value face up');
+  const ground = plan.bench, [kept, rolled] = [shown.filter((_, i) => [0, 2].includes(i)), shown.filter((_, i) => ![0, 2].includes(i))];
+  assert.ok(Math.abs(kept[0].position.z - kept[1].position.z) < 1e-9, 'the kept dice stand in a line');
+  assert.ok(kept.every(die => rolled.every(other => die.position.z < other.position.z)), 'kept dice sit nearer the bench');
+  for (const die of shown) assert.ok(Math.hypot(die.position.x - ground.x, -die.position.z - ground.north) < JENGA.drumRadius - 0.05, 'on the drum');
+  for (const die of shown) for (const [east, north, radius] of [[-0.16, -0.08, 0.07], [0.15, 0.1, 0.07], [0.05, 0.16, 0.08]])
+    assert.ok(Math.hypot(die.position.x - (ground.x + east), -die.position.z - (ground.north + north)) > radius + 0.015, `clear of the drum's ornament at ${east}, ${north}`);
+  yacht.show(values, [true, false, true, false, false]);
+  assert.deepEqual(dice().map(die => die.position.toArray()), shown.map(die => die.position.toArray()), 'the same roll lies the same way');
+  yacht.show(null);
+  assert.equal(yacht.dice(), 5, 'before the first roll, five dice wait in a row');
+  yacht.setVisible(false); jenga.setVisible(true);
+});

@@ -14,7 +14,7 @@ import { seededRandom } from './seeded-random.js';
 const LETTERS = 'abc', ROW = 16, BLOCK = [62, 13], GUTTER = 4;
 
 export function createPlazaJenga({ host = document.querySelector('#viewport'), getMirror = () => null, getSeat = () => null, focusWorld = () => {},
-  random = Math.random, now = () => performance.now(), replyDelay = 700, reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false } = {}) {
+  random = Math.random, now = () => performance.now(), replyDelay = 700, reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false, onSwitch = null } = {}) {
   let game = null, selected = null, meter = null, generation = 0, thinking = false, frame = 0;
 
   const panel = document.createElement('dialog');
@@ -23,6 +23,7 @@ export function createPlazaJenga({ host = document.querySelector('#viewport'), g
   panel.innerHTML = `<header class="table-game-header"><div><p class="table-game-eyebrow">Plaza games · practice game</p><h2 id="jenga-title">Jenga at the bench</h2></div>
     <button type="button" class="table-game-close" aria-label="Close the Jenga tower">×</button></header>
     <div class="table-game-body jenga-body">
+      ${onSwitch ? '<div class="table-game-choice" role="group" aria-label="Game"><button type="button" data-bench-game="jenga" aria-pressed="true">Jenga</button><button type="button" data-bench-game="yacht" aria-pressed="false">Yacht</button></div>' : ''}
       <p class="table-game-status" role="status" aria-live="polite"></p>
       <ul class="jenga-scores" aria-label="Towers knocked over"></ul>
       <div class="jenga-play">
@@ -188,8 +189,9 @@ export function createPlazaJenga({ host = document.querySelector('#viewport'), g
     if (game.mode === button.dataset.jengaMode) return;
     generation++; thinking = false; newGame({ mode: button.dataset.jengaMode, losses: [0, 0, 0] }); mirror(); render(); void regulars();
   });
-  const close = () => { if (!panel.open) return; panel.close(); selected = null; stopMeter(); focusWorld(); };
-  $('.table-game-close').addEventListener('click', close);
+  for (const button of panel.querySelectorAll('[data-bench-game]')) button.addEventListener('click', () => { if (button.dataset.benchGame !== 'jenga') onSwitch?.(button.dataset.benchGame); });
+  const close = ({ toWorld = true } = {}) => { if (!panel.open) return; panel.close(); selected = null; stopMeter(); if (toWorld) focusWorld(); };
+  $('.table-game-close').addEventListener('click', () => close());
   panel.addEventListener('keydown', event => {
     if (event.key === 'Escape' || (event.code === 'KeyX' && !event.repeat && !event.metaKey && !event.ctrlKey && !event.altKey)) { event.preventDefault(); event.stopPropagation(); close(); }
   });

@@ -17,7 +17,7 @@ import { chooseMove as reversiMove } from '../src/reversi-opponent.js';
 const text = id => guideGame(id).pages.flatMap(page => [page.title, ...page.text]).join(' ');
 
 test('every plaza table game has a guide of illustrated pages', () => {
-  assert.deepEqual(GUIDE.map(game => game.id), ['chess', 'checkers', 'connectFour', 'reversi', 'morris', 'dominoes', 'hearts', 'spades', 'backgammon', 'mancala', 'jenga', 'winePong', 'go', 'cribbage', 'darts', 'dice']);
+  assert.deepEqual(GUIDE.map(game => game.id), ['chess', 'checkers', 'connectFour', 'reversi', 'morris', 'dominoes', 'hearts', 'spades', 'backgammon', 'mancala', 'jenga', 'yacht', 'winePong', 'shuffleboard', 'go', 'cribbage', 'darts', 'dice']);
   for (const game of GUIDE) {
     assert.ok(game.pages.length >= 4, game.id);
     assert.equal(game.pages[0].title, 'Taking a seat', `${game.id} starts at the table`);
@@ -222,4 +222,25 @@ test('the liar’s dice pictures follow the rules', async () => {
   const { cups, bid, actual } = DIAGRAMS.diceCall;
   assert.equal(countOf(cups, bid[1]), actual, 'the counted fives, ones wild');
   assert.equal(countOf([DIAGRAMS.diceBid.cup], DIAGRAMS.diceBid.bid[1]), 3, 'three fives in your own cup');
+});
+
+test('the shuffleboard pictures follow the rules', async () => {
+  const shuffle = await import('../src/shuffleboard-rules.js');
+  const { pucks, scored } = DIAGRAMS.shuffleScore;
+  assert.deepEqual(shuffle.roundScore(pucks.map(([owner, u, v]) => ({ owner, u, v, out: false }))), scored);
+  assert.equal(shuffle.pointsFor({ u: DIAGRAMS.shuffleHanger.u, v: 0 }), 4, 'the pictured hanger scores four');
+  assert.ok(pucks.every(([, u, v]) => u >= shuffle.FOUL && u <= shuffle.TABLE.length && Math.abs(v) < shuffle.TABLE.width / 2), 'every pictured puck is on the table');
+});
+test('the Yacht pictures follow the rules', async () => {
+  const yacht = await import('../src/yacht-rules.js');
+  const { dice, boxes } = DIAGRAMS.yachtScore;
+  for (const [box, points] of Object.entries(boxes)) assert.equal(yacht.scoreFor(box, dice), points, box);
+  const keep = DIAGRAMS.yachtKeep, kept = keep.dice.filter((_, i) => keep.keep[i]);
+  assert.ok(kept.length === 3 && new Set(kept).size === 1, 'three alike kept');
+  // A reroll keeps exactly the marked dice.
+  let state = yacht.play(yacht.startGame(5), 'roll');
+  state = { ...state, dice: keep.dice };
+  const next = yacht.play(state, `roll:${keep.keep.map(k => (k ? 1 : 0)).join('')}`);
+  assert.deepEqual(next.dice.filter((_, i) => keep.keep[i]), kept);
+  assert.equal(yacht.BOXES.length, 12, 'twelve boxes on the card');
 });
