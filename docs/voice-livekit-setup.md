@@ -65,6 +65,10 @@ values.
    push-to-talk work. When one account leaves, the other hears nothing. Walk
    one account indoors: the pair splits into different rooms (interior versus
    outdoor space) within a few seconds.
+   On the plaza, take the music stage (X) with one account while the other
+   stands at the far side of the plaza. The performer stays clearly heard: full
+   volume within 14 m of the stage, fading to silence at 40 m. Ordinary speech
+   is silent by 25 m (`voiceReach` in `preview/src/voice-spatial.js`).
 4. In LiveKit Cloud's sessions list, rooms appear with the naming above and
    empty rooms disappear within about two minutes of the last leave.
 

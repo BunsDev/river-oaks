@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { spatialGain, spatialPan, spatialDistance, speakerFromPlayer, listenerFromPose, subscriptionDecision, VOICE_NEAR, VOICE_FAR, VOICE_RESUBSCRIBE } from '../src/voice-spatial.js';
+import { spatialGain, spatialPan, spatialDistance, speakerFromPlayer, listenerFromPose, subscriptionDecision, voiceReach, STAGE_NEAR, STAGE_FAR, STAGE_RESUBSCRIBE, VOICE_NEAR, VOICE_FAR, VOICE_RESUBSCRIBE } from '../src/voice-spatial.js';
 
 test('full gain inside talking reach, silence past the far edge, falling monotonically between', () => {
   assert.equal(spatialGain(0), 1);
@@ -47,4 +47,18 @@ test('office listeners hear speakers at office-local positions rather than their
  const speaker=speakerFromPlayer({position:[-2700,-1380,18],altitude:0,office:{id:'jevica-office',position:[1,3],yaw:0}});
  const listener=listenerFromPose({position:[0,1.68,-3],ground:0,altitude:0,yaw:0});
  assert.equal(spatialDistance(listener,speaker),1);assert.ok(spatialPan(listener,speaker)>0);
+});
+
+test('a performer on the stage carries across the plaza; everyone else keeps talking reach', () => {
+  const performer = voiceReach({ performing: true }), talker = voiceReach({ performing: false });
+  assert.deepEqual(talker, { near: VOICE_NEAR, far: VOICE_FAR, resubscribe: VOICE_RESUBSCRIBE });
+  assert.deepEqual(performer, { near: STAGE_NEAR, far: STAGE_FAR, resubscribe: STAGE_RESUBSCRIBE });
+  assert.ok(STAGE_NEAR > VOICE_NEAR && STAGE_FAR > VOICE_FAR && STAGE_RESUBSCRIBE < STAGE_FAR);
+  // At the plaza's far side (about 28 m) a performer is still heard; a talker is not.
+  assert.equal(spatialGain(12, performer), 1);
+  assert.ok(spatialGain(28, performer) > 0);
+  assert.equal(spatialGain(28, talker), 0);
+  assert.equal(spatialGain(STAGE_FAR, performer), 0);
+  assert.deepEqual([subscriptionDecision(30, false, performer), subscriptionDecision(30, false, talker)], [true, false]);
+  assert.deepEqual([subscriptionDecision(38, true, performer), subscriptionDecision(38, false, performer)], [true, false], 'the same hysteresis band, further out');
 });

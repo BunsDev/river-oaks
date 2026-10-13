@@ -26,7 +26,7 @@ function fakeSdk() {
   return sdk;
 }
 
-function harness({ prefs = {}, storage = new Map() } = {}) {
+function harness({ prefs = {}, storage = new Map(), getListener } = {}) {
   const sdk = fakeSdk(), calls = [], queue = { join: [], renew: [], leave: [] }, timers = [], changes = [], listeners = {};
   let time = 1_000_000;
   const lease = (over = {}) => ({ status: 200, data: { ok: true, url: 'wss://x.livekit.cloud', token: 't1', space: 'outdoor', participantIdentity: 'p1', expiresAt: time + 45_000, renewMs: 15_000, ...over } });
@@ -40,7 +40,7 @@ function harness({ prefs = {}, storage = new Map() } = {}) {
   const audio = { state: 'suspended', resumes: 0, suspends: 0, closes: 0, resume() { this.state = 'running'; this.resumes++; }, suspend() { this.state = 'suspended'; this.suspends++; }, close() { this.closes++; } };
   const target = () => ({ addEventListener: (type, fn) => { (listeners[type] ??= []).push(fn); }, removeEventListener: (type, fn) => { listeners[type] = (listeners[type] ?? []).filter(item => item !== fn); } });
   const doc = { ...target(), visibilityState: 'visible' }, win = target();
-  const voice = createVoiceChat({ request, preferences, loadTransport: async () => { sdk.loads++; return sdk; }, createAudioContext: () => audio, now: () => time, schedule, cancel, document: doc, window: win, onChange: state => changes.push(`${state.status}/${state.mic}`) });
+  const voice = createVoiceChat({ ...(getListener ? { getListener } : {}), request, preferences, loadTransport: async () => { sdk.loads++; return sdk; }, createAudioContext: () => audio, now: () => time, schedule, cancel, document: doc, window: win, onChange: state => changes.push(`${state.status}/${state.mic}`) });
   const players = (...entries) => entries.map(([id, identity, space = 'outdoor']) => ({ id, name: id, position: [0, 0, 0], altitude: 0, voice: { space, id: identity } }));
   return { voice, sdk, calls, queue, preferences, timers, fire, pendingTimers, audio, doc, win, lease, changes, players, storage,
     emit: (type, ...args) => { for (const fn of listeners[type] ?? []) fn(...args); }, advance: ms => { time += ms; }, room: () => sdk.rooms.at(-1),
@@ -320,4 +320,24 @@ test('a changed microphone preference switches the live room\'s input device', a
   h.preferences.set({ deviceId: 'mic-2' });
   await settle();
   assert.deepEqual(h.room().switched, [['audioinput', 'mic-2']]);
+});
+
+test('a performer on the plaza stage is heard across the plaza, where someone talking is not', async () => {
+  const listener = { position: [0, 0, 0], yaw: 0 };
+  const h = harness({ getListener: () => listener });
+  await h.ready();
+  // Both residents stand 30 m away; Alice is performing on the stage.
+  const far = [{ id: 'alice', name: 'Alice', position: [30, 0, 0], altitude: 0, performing: true, voice: { space: 'outdoor', id: 'pa' } },
+    { id: 'bob', name: 'Bob', position: [0, 30, 0], altitude: 0, performing: false, voice: { space: 'outdoor', id: 'pb' } },
+    { id: 'me', position: [0, 0, 0], altitude: 0, voice: { space: 'outdoor', id: 'p1' } }];
+  h.voice.sync(far, 'me');
+  const alice = h.room().addParticipant('pa'), bob = h.room().addParticipant('pb');
+  h.voice.sync(far, 'me');
+  assert.equal(alice.publication.isSubscribed, true);
+  assert.ok(h.voice.state.peers.get('alice').gain > 0, 'the performer carries 30 m');
+  assert.equal(bob.publication.isSubscribed, false);
+  assert.equal(h.voice.state.peers.get('bob').gain, 0);
+  // Stepping down from the stage brings Alice back to talking reach.
+  h.voice.sync(far.map(player => player.id === 'alice' ? { ...player, performing: false } : player), 'me');
+  assert.equal(alice.publication.isSubscribed, false);
 });

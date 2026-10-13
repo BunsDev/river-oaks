@@ -13,7 +13,7 @@ const MESSAGES = {
 // A snapshot stamps a joined player's identity on the next room tick; before
 // that, an unstamped entry is not yet a revocation.
 const STAMP_GRACE_MS = 2500, RENEW_RETRY_MS = 10_000, STATUSES = ['unavailable', 'idle', 'joining', 'joined', 'rejoining', 'error'];
-import { createPeerGraph, listenerFromPose, speakerFromPlayer, spatialDistance, spatialGain, spatialPan, subscriptionDecision } from './voice-spatial.js';
+import { createPeerGraph, listenerFromPose, speakerFromPlayer, spatialDistance, spatialGain, spatialPan, subscriptionDecision, voiceReach } from './voice-spatial.js';
 
 export function createVoiceChat({ request, preferences, loadTransport = () => import('livekit-client'), createAudioContext = () => new AudioContext(),
   getListener = () => null, buildGraph = createPeerGraph,
@@ -56,12 +56,14 @@ export function createVoiceChat({ request, preferences, loadTransport = () => im
     for (const participant of room.remoteParticipants.values()) {
       const playerId = identityToPlayer.get(participant.identity), peer = playerId && state.peers.get(playerId), player = playerId && lastPlayers.get(playerId);
       const entry = graphs.get(participant.identity);
+      // A performer on the stage carries further than someone talking (voiceReach).
       let distance = NaN, gain = 0, pan = 0;
-      if (listener && player) { const speaker = speakerFromPlayer(player); distance = spatialDistance(listener, speaker); gain = spatialGain(distance); pan = spatialPan(listener, speaker); }
+      const reach = voiceReach(player);
+      if (listener && player) { const speaker = speakerFromPlayer(player); distance = spatialDistance(listener, speaker); gain = spatialGain(distance, reach); pan = spatialPan(listener, speaker); }
       else if (player) gain = 1;
       const silenced = state.deafened || Boolean(peer?.muted);
       // Distance hysteresis applies only when the distance is known; otherwise anyone unmuted is heard.
-      const subscribe = !silenced && (Number.isFinite(distance) ? subscriptionDecision(distance, peer ? peer.subscribed : true) : true);
+      const subscribe = !silenced && (Number.isFinite(distance) ? subscriptionDecision(distance, peer ? peer.subscribed : true, reach) : true);
       for (const publication of participant.trackPublications?.values?.() ?? []) if (publication.isSubscribed !== subscribe) publication.setSubscribed?.(subscribe);
       const level = silenced || !subscribe ? 0 : gain;
       entry?.graph.update(level, pan);
