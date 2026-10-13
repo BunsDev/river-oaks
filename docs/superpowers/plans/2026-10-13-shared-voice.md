@@ -169,8 +169,15 @@ Branch `feat/voice-desktop-20261013`, from `main` (desktop files only).
   covers the loopback development origin, video, mixed media, empty and missing
   media lists, other origins including a look-alike host and plain http, frames,
   and every other permission name).
-- `pnpm run test:desktop:e2e --dev` and `pnpm run verify` have not run yet:
-  the Electron run waits for the machine. This PR is not opened until they have.
+- `pnpm run test:desktop:e2e --dev`: passed, 13 checks, including "microphone
+  permission is granted only for audio on the game origin": `getUserMedia({audio})`
+  resolves with one audio track, `{video}` and `{audio, video}` fail with
+  `NotAllowedError`. The first run granted everything: Chromium's
+  `--use-fake-ui-for-media-stream` approves before Electron's handler is asked,
+  so the harness keeps only the fake device. The report is
+  `data/reports/desktop-development.json` (`media`).
+- `pnpm run verify` core: passed (tooling 76; preview 2695 passed, 1 skipped; server
+  421 passed, 134 Redis-only skipped; desktop 51; Python and secrets clean).
 
 ## Next
 

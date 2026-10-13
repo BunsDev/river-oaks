@@ -37,9 +37,10 @@ const started = performance.now();
 // A packaged build has the Node inspector fuse turned off (desktop/fuses.js),
 // so Playwright cannot attach to it. This mode only works on an unfused build.
 const executablePath = process.env.RIVER_OAKS_DESKTOP_EXECUTABLE;
-// Fake media lets the microphone check run without a device or a system prompt;
-// Electron's permission handler still decides before Chromium's fake UI.
-const app = await electron.launch({ executablePath, args: [...(executablePath ? [] : [root]), `--user-data-dir=${profile}`, '--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream'], env, timeout: 30000 });
+// A fake device lets the microphone check run without hardware. Electron shows
+// no prompt of its own: the permission handler in main.js decides. Chromium's
+// fake-UI flag must stay off, because it approves before that handler is asked.
+const app = await electron.launch({ executablePath, args: [...(executablePath ? [] : [root]), `--user-data-dir=${profile}`, '--use-fake-device-for-media-stream'], env, timeout: 30000 });
 const errors = [], failedAssets = [], tempFiles = [];
 const report = { mode: executablePath ? 'packaged' : env.RIVER_OAKS_DEV_URL ? 'development' : 'hosted', checks: [] };
 function check(name) { report.checks.push(name); console.log(`✓ ${name}`); }
