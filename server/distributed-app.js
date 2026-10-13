@@ -37,7 +37,7 @@ const json = (res, status, value) => {
 /** HTTP/WS edge for a durable room. No instance owns canonical game or auth state. */
 export function createDistributedServer({ auth, room, worldTitle, security, waitlist, waitlistAdmins = [], debugReports = null, landmarks, social = null, groups = null, profiles = null, events = null, workplace = null, workplaceCronSecret = null, presence = null, designLibrary = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
   trustedProxyIPs = [], address = createClientAddress(trustedProxyIPs), now = Date.now,
-  connectionLifetime = 270_000, assetGateSecret = null, heartbeatMs = 5000, onMove = null, voice = null } = {}) {
+  connectionLifetime = 270_000, assetGateSecret = null, heartbeatMs = 5000, onMove = null, voice = null, voiceCronSecret = null } = {}) {
   if (!waitlist) throw new Error('Waitlist is required');
   const worldId = validateWorldId(room.worldId ?? DEFAULT_WORLD_ID);
   const matchesWorld = url => (url.searchParams.get('world') ?? (worldId === DEFAULT_WORLD_ID ? DEFAULT_WORLD_ID : null)) === worldId;
@@ -86,7 +86,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
   // Snapshots carry whether voice can be joined right now; the per-player space
   // and identity come from the world itself.
   const withVoice = snapshot => voice ? { ...snapshot, voice: { available: voice.status().available } } : snapshot;
-  const handleVoice = voice ? createVoiceRoutes({ voice, worldId, authorized, matchesWorld, allow: id => security.allow('voice', id, 30, 60_000),
+  const handleVoice = voice ? createVoiceRoutes({ voice, worldId, authorized, matchesWorld, cronSecret: voiceCronSecret, allow: id => security.allow('voice', id, 30, 60_000),
     present: async identity => {
       const view = await room.read();
       const connection = view?.connections.find(item => item.userId === identity.userId && item.sessionId === identity.sessionId);

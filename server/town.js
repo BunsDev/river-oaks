@@ -65,7 +65,7 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
   const worldDirectory=async()=>(await catalog.list()).map(entry=>({...entry,visitors:games.get(entry.id)?.game.playerCount??0}));
   const localSecurity=createLocalChauffeurSecurity({isBanned:id=>moderation.isBanned(id)});
   // One voice service for every world of this town; rooms are named per world and interior.
-  const voice=configureVoice({env,namespace:'river-oaks:local:v1',allow:(...args)=>localSecurity.allow(...args),leases:createMemoryVoiceLeases()});
+  const voice=configureVoice({env,namespace:'river-oaks:local:v1',allow:(...args)=>localSecurity.allow(...args),leases:createMemoryVoiceLeases(),sweepMs:30_000});
   const onLogout = userId => {for(const {game} of games.values())game.disconnectUser(userId);};
   const auth = mode === 'local'
     ? createDevAuth({ origin, env, onLogout })
@@ -116,7 +116,7 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
   const router=createWorldRouter({worldFor,configuredWorldId:worldId,handleRequest});
   return {server:router.server,auth:mode,origin,worldId,catalog,worldFor,close(){
     if(closing)return closing;
-    closed=true;workplace?.close();
+    closed=true;workplace?.close();voice?.close();
     closing=(async()=>{
       await Promise.allSettled([...pending.values()]);
       for(const {game} of games.values())await game.close();
