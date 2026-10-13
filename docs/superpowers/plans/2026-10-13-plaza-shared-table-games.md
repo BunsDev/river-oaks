@@ -74,3 +74,56 @@ overwrites a practice game.
   twice; it does not touch table games.
 - `pnpm run verify`: `core: passed` (unit 2912 pass, 0 fail, 1 skipped; server
   476 pass, 140 skipped without Redis).
+
+## PR 2: the sheet plays the shared game
+
+**Branch:** `feat/shared-table-sheet-20261013`, stacked on #334.
+
+**`plaza-table-games.js`:**
+- **The town:** `getTown()`, wired in `main.js`, gives the snapshot, your id and
+  `command`.
+- **The view:** each table entry has a `view`, practice or shared. In the shared
+  view, `current()` is the town's game: its moves, your side, the first mover's
+  chair and the opponent.
+- **Results:** a shared game's result is the town's, since a resignation or
+  someone leaving is not in its moves. The journey caught the board staying
+  "Your move" after a resignation.
+- **Modes:** "Play ⟨name⟩" appears when someone sits across. It shows your game
+  with them, or invites them to the game on your board as your side. Choosing a
+  practice mode or another game shows the practice game while the shared one
+  carries on.
+- **Invitations:** a bar shows "⟨name⟩ invites you to play Chess as black."
+  with Accept and Decline, or "Waiting for ⟨name⟩…" with Cancel. While you are
+  invited, the X action reads "⟨name⟩ invites you to Chess".
+- **Buttons:** during a shared game there is Resign, with no Take back or New
+  game; after it, Rematch asks again.
+- **Moves:** they are sent to the town, and a refusal shows its message. The
+  sheet re-renders when the town's game or the resident across changes.
+- **Mirrors:** every table follows its shared game for everyone (`syncTables`),
+  and your practice game shows at your own table only while no shared game is
+  on it.
+- **Text:** the eyebrow reads "Plaza games · with ⟨name⟩". The note reads
+  "Everyone in the plaza sees this game.", or explains practice games.
+
+**Also:** CSS for the shared row and the invitation bar, and
+`docs/multiplayer.md`.
+
+### Verification (PR 2)
+
+- `pnpm run test:experience plaza-shared-game`, a two-browser journey, passed
+  with 19 checks:
+  - **Before the game:** a practice move is made first; with Bob across, the
+    sheet offers "Play bob"; the inviter waits.
+  - **The invitation:** Bob's X action and sheet show it, and he accepts.
+  - **Playing:** both boards show the game with the right sides and turns. The
+    sheet names the opponent, and only Resign shows. Moves cross both ways;
+    Black cannot move White's pieces.
+  - **The table:** the town holds the moves, and both players' tables show e4
+    and e5.
+  - **Practice:** the practice game is just as left while the table keeps the
+    shared game, and Play returns to the shared game.
+  - **Resigning:** it ends the game for both, and Rematch appears.
+- The practice journeys pass with the shared mode in the sheet: `plaza-chess`,
+  `plaza-checkers`, `plaza-connect-four`, `plaza-reversi` and `plaza-morris`.
+  `salon-guide` passes too.
+- `pnpm run verify`: `core: passed` (unit 2919 pass, 0 fail, 1 skipped).

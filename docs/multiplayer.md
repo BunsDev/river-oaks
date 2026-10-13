@@ -522,9 +522,20 @@ loses) switch in the sheet, and each table keeps one game of each. You can play 
 regular (a small engine that thinks in a worker) or pass and play, taking either
 side. The table's 3D pieces or discs mirror the game; for Connect Four a standing
 frame replaces the chess pieces, Reversi's black and white discs lie on the board, and
-for morris a walnut board with brass lines is laid over the chess squares. It is a practice game kept in your
-browser, so other visitors still see the chess opening. **Escape** or **X** puts the
-board away, and standing up closes it. The rules are in `preview/src/chess-rules.js`
+for morris a walnut board with brass lines is laid over the chess squares. A game
+against the regular or pass and play is a practice game kept in your browser.
+
+When someone sits in the other chair, the sheet offers **Play ⟨name⟩**: it invites
+them to the game on your board, as the side you play. Their **X** action and sheet
+show the invitation to accept or decline. The town then holds the game
+(`server/table-games.js`). It checks every move by replaying the game with the
+sheet's own adapters (`preview/src/table-game-adapters.js`), so a client offers
+moves and never sets a position. The snapshot carries every table's game, and the
+table's pieces show it to everyone in the plaza. You may **Resign**; standing up,
+travelling or leaving town ends the game for both, as "left the table". After a game,
+**Rematch** asks again. Your practice games stay as they were, and choosing a
+practice mode or another game shows them while the shared game carries on.
+**Escape** or **X** puts the board away, and standing up closes it. The rules are in `preview/src/chess-rules.js`
 and `checkers-rules.js`, each checked against published perft counts.
 
 At the round café table, **Play dominoes** or **X** opens a dominoes table. It is a
@@ -554,6 +565,14 @@ that is hit goes to the bar, and you bear off once all fifteen are home. A gammo
 scores 2 and a backgammon 3. You pick a checker, then its point (or the tray to bear
 off), and Undo takes back moves within your turn. The table's checkers mirror the
 game. Rules: `preview/src/backgammon-rules.js`.
+
+The walnut table's switch also offers **Cribbage** against a plaza regular, to 121.
+Each hand deals six cards; lay two away to the dealer's crib, and the starter is cut
+(a jack scores the dealer 2). In the play, keep the count to 31: fifteen and
+thirty-one score 2, pairs and runs as they fall, go and the last card 1. Then the
+show counts each hand with the starter (fifteens, pairs, runs, flushes and nobs),
+the dealer's crib last. A pegging board replaces the checkers while you play, and
+its pegs follow the scores. Rules: `preview/src/cribbage-rules.js`.
 
 A Jenga tower stands on the curved bench's travertine drum. Seated on the bench,
 **Play Jenga** or **X** opens it. You play with two plaza regulars, or two players
@@ -597,7 +616,7 @@ komi. Rules: `preview/src/go-rules.js`.
 
 The chess-table, café, backgammon, mancala, Go, Jenga and wine pong sheets have **How to play** in their
 header. It opens the Salon Guide on that game (chess, checkers, Connect Four,
-Reversi, nine men's morris, dominoes, Hearts, Spades, backgammon, mancala, Go, Jenga or wine pong), and **Play & rides → Game guide** opens it too. The guide is an
+Reversi, nine men's morris, dominoes, Hearts, Spades, backgammon, cribbage, mancala, Go, Jenga or wine pong), and **Play & rides → Game guide** opens it too. The guide is an
 illustrated book with a few pages per game: taking a seat, the aim, a turn, and
 the keys. Its pictures are positions played on the real rules
 (`preview/tests/salon-guide.test.js`). A game you have not read yet shows a gold

@@ -17,7 +17,7 @@ import { chooseMove as reversiMove } from '../src/reversi-opponent.js';
 const text = id => guideGame(id).pages.flatMap(page => [page.title, ...page.text]).join(' ');
 
 test('every plaza table game has a guide of illustrated pages', () => {
-  assert.deepEqual(GUIDE.map(game => game.id), ['chess', 'checkers', 'connectFour', 'reversi', 'morris', 'dominoes', 'hearts', 'spades', 'backgammon', 'mancala', 'jenga', 'winePong', 'go']);
+  assert.deepEqual(GUIDE.map(game => game.id), ['chess', 'checkers', 'connectFour', 'reversi', 'morris', 'dominoes', 'hearts', 'spades', 'backgammon', 'mancala', 'jenga', 'winePong', 'go', 'cribbage']);
   for (const game of GUIDE) {
     assert.ok(game.pages.length >= 4, game.id);
     assert.equal(game.pages[0].title, 'Taking a seat', `${game.id} starts at the table`);
@@ -201,4 +201,14 @@ test('every chess-table chapter says you can play the resident across the table'
   for (const id of ['chess', 'checkers', 'connectFour', 'reversi', 'morris']) {
     assert.match(guideGame(id).pages[0].text.join(' '), /With someone in the other chair, Play them instead/, id);
   }
+});
+
+test('the cribbage pictures follow the rules', async () => {
+  const { scoreShow, scorePlay } = await import('../src/cribbage-rules.js');
+  assert.deepEqual(scorePlay(DIAGRAMS.cribbagePlay.pile).map(part => part.kind), ['fifteen']);
+  const { hand, starter } = DIAGRAMS.cribbageShow, shown = scoreShow(hand, starter);
+  assert.equal(shown.total, 21);
+  const by = kind => shown.parts.filter(part => part.kind === kind).reduce((sum, part) => sum + part.points, 0);
+  assert.deepEqual([by('fifteen'), by('pair'), by('nobs')], [14, 6, 1]);
+  assert.equal(DIAGRAMS.cribbageCrib.starter[0], 'J', 'the starter pictured is a jack: his heels');
 });
