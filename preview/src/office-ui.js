@@ -1,4 +1,5 @@
-import { officesFor, OFFICE_SPEED, OFFICE_SPAWN, stepOffice } from './office-contract.js';
+import { createOfficeDeskUI } from './office-desk-ui.js';
+import { officesFor, OFFICE_ROOM, OFFICE_SPEED, OFFICE_SPAWN, stepOffice } from './office-contract.js';
 import { createOfficeScene } from './office-scene.js';
 import './office.css';
 const el=(tag,text,className)=>{const n=document.createElement(tag);if(text)n.textContent=text;if(className)n.className=className;return n;};
@@ -25,7 +26,11 @@ export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,
   const exit=button('Return to lobby','office-exit',()=>void leaveOffice());
   const accessButton=button('Office access','office-access',()=>{management.hidden=!management.hidden;accessButton.setAttribute('aria-expanded',String(!management.hidden));});accessButton.setAttribute('aria-expanded','false');
   const voiceJoin=button('Join voice · Y','office-voice',()=>void mp()?.voice?.toggleJoin()),voiceMic=button('Microphone off · M','office-mic',()=>void mp()?.voice?.toggleMic());
-  header.append(heading,label,skip,accessButton,voiceJoin,voiceMic,exit);
+  let desk=null,deskAccount=null;
+  const openDesk=()=>{if(phase!=='office'||!view)return;keys.clear();mp()?.voice?.setTransmit(false);desk??=createOfficeDeskUI({getMultiplayer:mp,onClose:()=>{keys.clear();dialog.focus({preventScroll:true});}});deskAccount=mp()?.identity?.id;void desk.open();};
+  const deskButton=button('Open desk · E','office-desk-open',openDesk);deskButton.hidden=true;
+  const deskNearby=button('Use this desk · E','office-desk-nearby',openDesk);deskNearby.hidden=true;dialog.append(deskNearby);
+  header.append(heading,label,skip,deskButton,accessButton,voiceJoin,voiceMic,exit);
   const help=el('p','WASD to walk · Drag or ← → to look · Escape returns to lobby','office-help');
   const pad=el('nav',null,'office-pad');pad.setAttribute('aria-label','Office movement');
   dialog.append(header,help,pad);document.body.append(dialog);
@@ -67,7 +72,7 @@ export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,
     try{view=createScene({renderer,host:dialog,self:player,players:mp().snapshot.players,reducedMotion:!cinematic||matchMedia('(prefers-reduced-motion: reduce)').matches});}
     catch{failedOffice=player.office.id;close();say('The office could not load. Please try again.');void send('leave');}
   }
-  function close(){epoch++;mp()?.voice?.setTransmit(false);view?.dispose();view=null;keys.clear();phase='closed';movePending=false;panel.append(management);management.hidden=false;dialog.close();document.body.classList.remove('visiting-office');walking.halt();host.focus({preventScroll:true});}
+  function close(){desk?.suspend();epoch++;mp()?.voice?.setTransmit(false);view?.dispose();view=null;keys.clear();phase='closed';movePending=false;panel.append(management);management.hidden=false;dialog.close();document.body.classList.remove('visiting-office');walking.halt();host.focus({preventScroll:true});}
   async function enterOffice(){
     if(busy||view)return;if(!near()){say('Go to the office lobby first.');return;}
     busy=true;const token=epoch;if(!currentOffice)await refresh();
@@ -84,7 +89,7 @@ export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,
   }
   dialog.addEventListener('cancel',e=>{e.preventDefault();void leaveOffice();},{signal});
   const typing=e=>e.target.closest('input,select,textarea,button');
-  dialog.addEventListener('keydown',e=>{if(typing(e)||e.metaKey||e.ctrlKey||e.altKey)return;if(e.code==='KeyY'&&!e.repeat){e.preventDefault();void mp()?.voice?.toggleJoin();}if(e.code==='KeyM'){e.preventDefault();const v=mp()?.voice;if(v?.state.pushToTalk)v.setTransmit(true);else if(!e.repeat)void v?.toggleMic();}if(['KeyW','KeyA','KeyS','KeyD','ArrowLeft','ArrowRight'].includes(e.code)){e.preventDefault();keys.add(e.code);}},{signal});
+  dialog.addEventListener('keydown',e=>{if(desk?.active||typing(e)||e.metaKey||e.ctrlKey||e.altKey)return;if(e.code==='KeyE'&&!e.repeat){e.preventDefault();openDesk();return;}if(e.code==='KeyY'&&!e.repeat){e.preventDefault();void mp()?.voice?.toggleJoin();}if(e.code==='KeyM'){e.preventDefault();const v=mp()?.voice;if(v?.state.pushToTalk)v.setTransmit(true);else if(!e.repeat)void v?.toggleMic();}if(['KeyW','KeyA','KeyS','KeyD','ArrowLeft','ArrowRight'].includes(e.code)){e.preventDefault();keys.add(e.code);}},{signal});
   dialog.addEventListener('keyup',e=>{keys.delete(e.code);if(e.code==='KeyM')mp()?.voice?.setTransmit(false);},{signal});
   let drag=null;
   dialog.addEventListener('pointerdown',e=>{if(e.target!==dialog)return;dialog.focus();drag={id:e.pointerId,x:e.clientX};dialog.setPointerCapture(e.pointerId);},{signal});
@@ -102,6 +107,7 @@ export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,
     get pose(){return view?{position:[position[0],1.68,-position[1]],ground:0,altitude:0,yaw,office:true}:null;},
     get active(){return Boolean(view);},get entering(){return busy;},
     sync(players,selfId){
+      if(desk&&deskAccount!==mp()?.identity?.id){desk.reset();deskAccount=mp()?.identity?.id;}
       const p=players.find(p=>p.id===selfId),key=`${selfId??''}:${Boolean(p)}`;if(key!==accountKey){accountKey=key;epoch++;busy=false;polling=null;currentOffice=null;lastPoll=0;}
       if(!p?.office)failedOffice=null;
       if(view&&!p?.office){close();say(p?'Your office visit has ended.':'Reconnect to continue your visit.');}
@@ -118,7 +124,7 @@ export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,
       if(document.hidden){keys.clear();return true;}
       if(phase==='loading'&&now-openedAt>45000&&!busy){void leaveOffice();say('Your avatar could not load in time. Please try the elevator again.');return true;}
       const voice=mp()?.voice?.state;voiceJoin.disabled=!voice?.available;voiceJoin.textContent=voice?.status==='joined'?'Leave voice · Y':'Join voice · Y';voiceMic.disabled=voice?.status!=='joined';voiceMic.textContent=voice?.mic==='on'?'Mute microphone · M':'Microphone off · M';
-      if(phase==='office'&&!busy){
+      if(phase==='office'&&!busy&&!desk?.active){
         yaw+=((keys.has('ArrowLeft')?1:0)-(keys.has('ArrowRight')?1:0))*delta*1.6;
         let f=(keys.has('KeyW')?1:0)-(keys.has('KeyS')?1:0),s=(keys.has('KeyD')?1:0)-(keys.has('KeyA')?1:0);const l=Math.hypot(f,s)||1;f/=l;s/=l;
         const speed=OFFICE_SPEED*delta;position=stepOffice(position,(s*Math.cos(yaw)-f*Math.sin(yaw))*speed,(f*Math.cos(yaw)+s*Math.sin(yaw))*speed);
@@ -127,9 +133,10 @@ export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,
       const frame=view.render(now,position,yaw,mp().snapshot.players);if(!frame)return true;
       if(phase!==frame.phase){phase=frame.phase;dialog.dataset.phase=phase;label.textContent={loading:'Preparing your arrival…',boarding:'Walking into the elevator',closing:'Doors closing',ascending:'Going up',opening:'Level 6 · Doors opening',arriving:'Welcome to your office',office:'Level 6 · Office'}[phase];}
       if(phase==='ascending')label.textContent=`Going up · Level ${frame.floor}`;
+      deskButton.hidden=phase!=='office';deskNearby.hidden=phase!=='office'||Boolean(desk?.active)||!OFFICE_ROOM.stations.some(s=>Math.hypot(position[0]-s.approach[0],position[1]-s.approach[1])<1.3);
       accessButton.hidden=!owned||phase!=='office';skip.hidden=phase==='office';help.hidden=phase!=='office';pad.hidden=phase!=='office';dialog.dataset.position=JSON.stringify(position);
       return true;
     },
-    dispose(){disposed=true;lifetime.abort();close();panel.remove();dialog.remove();guestPrompt.remove();nearby.remove();},
+    dispose(){disposed=true;lifetime.abort();close();desk?.dispose();panel.remove();dialog.remove();guestPrompt.remove();nearby.remove();},
   };
 }

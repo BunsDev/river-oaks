@@ -1,0 +1,434 @@
+{
+  "schemaVersion": 1,
+  "kind": "derived-verification-summary",
+  "createdAt": "2026-10-13T17:53:24.661Z",
+  "source": {
+    "path": "data/reports/office-desk-integrated-experience.json",
+    "sha256": "f4103b1fdff3ec82d62ba17ddf14bef5baee9841252e93324019bef7624aed86",
+    "retention": "Full per-frame traversal report retained in the local worktree; intentionally not committed."
+  },
+  "results": [
+    {
+      "name": "player-lifecycle",
+      "status": "passed",
+      "seconds": 8.792,
+      "checks": [
+        {
+          "passed": true,
+          "message": "live controller handles camera input"
+        },
+        {
+          "passed": true,
+          "message": "disposed controller releases host keyboard listeners"
+        },
+        {
+          "passed": true,
+          "message": "disposed controller releases window blur listener"
+        },
+        {
+          "passed": true,
+          "message": "disposed controller releases document visibility listener"
+        },
+        {
+          "passed": true,
+          "message": "disposal is idempotent"
+        },
+        {
+          "passed": true,
+          "message": "live controller handles camera input"
+        },
+        {
+          "passed": true,
+          "message": "disposed controller releases host keyboard listeners"
+        },
+        {
+          "passed": true,
+          "message": "disposed controller releases window blur listener"
+        },
+        {
+          "passed": true,
+          "message": "disposed controller releases document visibility listener"
+        },
+        {
+          "passed": true,
+          "message": "disposal is idempotent"
+        },
+        {
+          "passed": true,
+          "message": "live controller handles camera input"
+        },
+        {
+          "passed": true,
+          "message": "disposed controller releases host keyboard listeners"
+        },
+        {
+          "passed": true,
+          "message": "disposed controller releases window blur listener"
+        },
+        {
+          "passed": true,
+          "message": "disposed controller releases document visibility listener"
+        },
+        {
+          "passed": true,
+          "message": "disposal is idempotent"
+        },
+        {
+          "passed": true,
+          "message": "disposal cancels queued appearance request"
+        },
+        {
+          "passed": true,
+          "message": "late appearance reply cannot mutate the disposed controller"
+        },
+        {
+          "passed": true,
+          "message": "late reply cannot schedule the next queued appearance"
+        },
+        {
+          "passed": true,
+          "message": "late identity snapshots stay inert"
+        }
+      ]
+    },
+    {
+      "name": "multiplayer-lifecycle",
+      "status": "passed",
+      "seconds": 3.581,
+      "checks": [
+        {
+          "passed": true,
+          "message": "/auth/session: disposed connect cannot create a WebSocket"
+        },
+        {
+          "passed": true,
+          "message": "/auth/session: late completion cannot publish a snapshot"
+        },
+        {
+          "passed": true,
+          "message": "/auth/session: disposal aborts the owned HTTP request"
+        },
+        {
+          "passed": true,
+          "message": "disposal during session read prevents requesting a ticket"
+        },
+        {
+          "passed": true,
+          "message": "/api/multiplayer/ticket: disposed connect cannot create a WebSocket"
+        },
+        {
+          "passed": true,
+          "message": "/api/multiplayer/ticket: late completion cannot publish a snapshot"
+        },
+        {
+          "passed": true,
+          "message": "/api/multiplayer/ticket: disposal aborts the owned HTTP request"
+        },
+        {
+          "passed": true,
+          "message": "connection loss dismisses Settings before making the application inert"
+        },
+        {
+          "passed": true,
+          "message": "connection gate receives focus after Settings is dismissed"
+        },
+        {
+          "passed": true,
+          "message": "connected state and snapshot are cleared synchronously"
+        },
+        {
+          "passed": true,
+          "message": "disposal rejects pending command promises"
+        },
+        {
+          "passed": true,
+          "message": "disposed client refuses new commands"
+        },
+        {
+          "passed": true,
+          "message": "socket close and queued frames cannot publish after disposal"
+        },
+        {
+          "passed": true,
+          "message": "late callbacks cannot relock the application"
+        }
+      ]
+    },
+    {
+      "name": "contextual-first-visit",
+      "status": "passed",
+      "seconds": 35.874,
+      "checks": [
+        "First visit: search selects a destination",
+        "Arrival gives the doorway a single primary prompt",
+        "Rapid arrival/entry explains the authoritative cooldown at the action",
+        "Inside, the reachable conversation becomes primary",
+        "The primary action opens the actual conversation",
+        "Conversation dismissal restores world focus",
+        "Leaving remains reachable as a secondary action",
+        "Leaving immediately after a conversation explains the travel cooldown",
+        "Secondary doorway action returns to the street",
+        "First visit ends with walking restored after taking a photo",
+        "Narrow viewport exposes the on-screen movement pad",
+        "On-screen movement buttons also work from the keyboard",
+        "Narrow layout has no horizontal overflow",
+        "Photo survives returning to walking and reopening on a narrow screen",
+        "No page errors: ",
+        "First visit: search selects a destination",
+        "Arrival gives the doorway a single primary prompt",
+        "Rapid arrival/entry explains the authoritative cooldown at the action",
+        "Inside, the reachable conversation becomes primary",
+        "The primary action opens the actual conversation",
+        "Conversation dismissal restores world focus",
+        "Leaving remains reachable as a secondary action",
+        "Leaving immediately after a conversation explains the travel cooldown",
+        "Secondary doorway action returns to the street",
+        "First visit ends with walking restored after taking a photo",
+        "Narrow viewport exposes the on-screen movement pad",
+        "Releasing real touch input clears the held movement state",
+        "Touch test uses a coarse-pointer device context",
+        "Touch press turns the player using the on-screen pad",
+        "Narrow layout has no horizontal overflow",
+        "Photo survives returning to walking and reopening on a narrow screen",
+        "No page errors: "
+      ]
+    },
+    {
+      "name": "store-intro",
+      "status": "passed",
+      "seconds": 40.876,
+      "checks": [
+        "confirmed entry starts Harry Winston intro",
+        "sequence cuts from actual exterior to interior",
+        "camera sequence does not move player",
+        "Escape restores walking focus",
+        "movement works after skip",
+        "second entry does not replay intro",
+        "account marker survives browser reload",
+        "reduced motion offers Continue instead of Skip intro",
+        "reduced motion keeps the walking camera still",
+        "natural completion restores walking focus",
+        "real account service suppresses repeat claims",
+        "no browser runtime errors"
+      ]
+    },
+    {
+      "name": "photo-mode",
+      "status": "passed",
+      "seconds": 16.964,
+      "checks": [
+        "photo mode visually hides the play dock, trigger and walking title",
+        "photo mode focuses its shutter",
+        "pan exposes its numeric degrees",
+        "lens movement exposes meters",
+        "photo UI explains current graphics resolution",
+        "failed canvas encoding leaves the shutter usable",
+        "late capture cannot replace a newly opened camera session",
+        "reopening after an unfinished capture leaves the shutter usable",
+        "pan value follows framing changes",
+        "portrait PNG uses the selected aspect ratio",
+        "PNG contains a rendered scene (1946 sampled colors)",
+        "prospective dimensions match encoded PNG",
+        "photo output is bounded",
+        "download has a shareable PNG filename",
+        "PNG download succeeds",
+        "cancelled OS sharing preserves the downloadable photo",
+        "failed replacement preserves the retained photo",
+        "reopening offers the retained preview",
+        "reopening keeps the retained download",
+        "reopening keeps Share unavailable while a share sheet is open",
+        "late share cannot rewrite the new session status, and Share returns",
+        "framing reset returns pan to zero",
+        "closing restores the live canvas look",
+        "closing restores the game HUD",
+        "closing restores the actual HUD visibility",
+        "narrow photo mode also hides underlying HUD subtrees",
+        "narrow composition shows dimensions and quality without scrolling",
+        "mobile grid control stays inside the panel",
+        "composition controls collapse for a clear view",
+        "mobile controls fit the viewport",
+        "mobile story photo uses 9:16 framing",
+        "successful replacement releases the previous URL",
+        "explicit discard returns to composition",
+        "explicit discard releases the captured URL",
+        "no page errors: "
+      ]
+    },
+    {
+      "name": "rail-navigation",
+      "status": "passed",
+      "seconds": 22.05,
+      "checks": [
+        "Commands replaces the standalone Clear view button",
+        "District minimap is available independently of shared-world publishing",
+        "Worlds directory and publishing controls respect the environment flag",
+        "Ctrl+B opens Places and focuses its panel",
+        "Cmd+B closes the rail and returns to the world",
+        "Rail modifier chords never trigger B flight",
+        "Held shortcut repeats do not retrigger the rail",
+        "IME composition does not toggle a rail",
+        "Paste chord does not switch gameplay camera",
+        "Alt+2 opens Places directly",
+        "/ focuses destination search",
+        "Text fields retain rail chords and help characters",
+        "Composing Escape leaves the exploration rail and text focus intact",
+        "Escape from the left rail returns to the world",
+        "Commands open as a focused modal dialog",
+        "Commands always offers the district map",
+        "Commands omits shared worlds when disabled",
+        "Command list omits disabled building tools",
+        "Commands describe player activities rather than interface rails",
+        "Character is a discoverable player goal",
+        "Camera is a discoverable player goal",
+        "Command search explains an empty result",
+        "Arrow keys navigate filtered command actions",
+        "Executing a command reveals the play rail and nested rides controls",
+        "Play command focuses the revealed control",
+        "Composing Escape leaves the play rail and focus intact",
+        "Nested play controls are exposed below the persistent activity navigation",
+        "Escape closes the play rail with a safe focus handoff",
+        "Cmd+Shift+B opens the play rail",
+        "Ctrl+Shift+B closes the play rail",
+        "Help can be dismissed without losing previous focus",
+        "Other modal dialogs retain exclusive keyboard ownership",
+        "Plain modal keys do not toggle clear view",
+        "Alt+3 opens the settings modal",
+        "End selects the last settings category",
+        "Settings category navigation wraps",
+        "Home selects Appearance",
+        "Clear view remains available",
+        "Requesting hidden play controls recovers clear view",
+        "Commands can hide the visit controls",
+        "Commands can restore the visit controls",
+        "H hands focus to Commands before hiding a focused card",
+        "Play navigation omits unavailable activities",
+        "Play card order follows its stable activity navigation",
+        "Play activity jump reveals and focuses its destination",
+        "Collapsed Places and Play preferences survive reload",
+        "390×844: left rail opens",
+        "390×844: play rail has room without competing left rail",
+        "390×844: activity jump leaves its focused control exposed",
+        "390×844: activity navigation remains above the scrolling cards",
+        "390×844: Commands remains pointer-reachable",
+        "390×844: command opens the map with keyboard focus",
+        "390×844: no page overflow",
+        "844×390: left rail opens",
+        "844×390: play rail has room without competing left rail",
+        "844×390: activity jump leaves its focused control exposed",
+        "844×390: activity navigation remains above the scrolling cards",
+        "844×390: Commands remains pointer-reachable",
+        "844×390: command opens the map with keyboard focus",
+        "844×390: no page overflow",
+        "1024×600: left rail opens",
+        "1024×600: play rail has room without competing left rail",
+        "1024×600: activity jump leaves its focused control exposed",
+        "1024×600: activity navigation remains above the scrolling cards",
+        "1024×600: Commands remains pointer-reachable",
+        "1024×600: command opens the map with keyboard focus",
+        "1024×600: no page overflow",
+        "Requesting play controls dismisses a competing compact conversation",
+        "A native modal owns T, N and Escape without changing or landing the bird ride",
+        "Help shows keys for the current bird ride",
+        "Closing commands does not land a bird",
+        "Reading and dismissing the left rail does not interrupt the bird ride",
+        "Play rail can be explicitly requested during a bird ride",
+        "Escape dismisses requested play controls before landing",
+        "Escape in the world still lands the bird",
+        "Command dialog wraps focus at the last control",
+        "Command dialog wraps backward to its last control",
+        "No page errors: "
+      ]
+    },
+    {
+      "name": "places-guide",
+      "status": "passed",
+      "seconds": 14.387,
+      "checks": []
+    },
+    {
+      "name": "world-studio",
+      "status": "passed",
+      "seconds": 19.281,
+      "checks": []
+    },
+    {
+      "name": "spatial-circulation",
+      "status": "passed",
+      "seconds": 71.927,
+      "checks": [
+        "Zadig & Voltaire: normal keyboard walking reaches diagonal-approach",
+        "Zadig & Voltaire: peer receives the authoritative diagonal-approach position",
+        "Zadig & Voltaire: diagonal-approach clears occupied stations (0.35 m player + 0.28 m standing proxy), measured 2.813 m",
+        "Zadig & Voltaire: normal keyboard walking reaches rear",
+        "Zadig & Voltaire: peer receives the authoritative rear position",
+        "Zadig & Voltaire: rear clears occupied stations (0.35 m player + 0.28 m standing proxy), measured 0.892 m",
+        "Zadig & Voltaire: first-person camera is active",
+        "Zadig & Voltaire: third-person camera is restored",
+        "Zadig & Voltaire: rear activity area has reachable staff",
+        "Zadig & Voltaire: staff conversation opens in the same shop",
+        "Zadig & Voltaire: reconnect retains the authoritative identity",
+        "Zadig & Voltaire: reconnect retains the conversation position before the return walk",
+        "Zadig & Voltaire: normal keyboard walking reaches conversation-return",
+        "Zadig & Voltaire: peer receives the authoritative conversation-return position",
+        "Zadig & Voltaire: conversation-return clears occupied stations (0.35 m player + 0.28 m standing proxy), measured 0.870 m",
+        "Zadig & Voltaire: normal keyboard walking reaches diagonal-return",
+        "Zadig & Voltaire: peer receives the authoritative diagonal-return position",
+        "Zadig & Voltaire: diagonal-return clears occupied stations (0.35 m player + 0.28 m standing proxy), measured 0.890 m",
+        "Zadig & Voltaire: normal keyboard walking reaches return",
+        "Zadig & Voltaire: peer receives the authoritative return position",
+        "Zadig & Voltaire: return clears occupied stations (0.35 m player + 0.28 m standing proxy), measured 2.643 m",
+        "Zadig & Voltaire: normal keyboard walking reaches street",
+        "Zadig & Voltaire: peer receives the authoritative street position",
+        "Zadig & Voltaire: street clears occupied stations (0.35 m player + 0.28 m standing proxy), measured 3.953 m",
+        "Zadig & Voltaire: normal keyboard walking reaches threshold-return",
+        "Zadig & Voltaire: peer receives the authoritative threshold-return position",
+        "Zadig & Voltaire: threshold-return clears occupied stations (0.35 m player + 0.28 m standing proxy), measured 4.058 m",
+        "de Boulle: normal keyboard walking reaches diagonal-approach",
+        "de Boulle: peer receives the authoritative diagonal-approach position",
+        "de Boulle: diagonal-approach clears occupied stations (0.35 m player + 0.28 m standing proxy), measured 1.923 m",
+        "de Boulle: normal keyboard walking reaches rear",
+        "de Boulle: peer receives the authoritative rear position",
+        "de Boulle: rear clears occupied stations (0.35 m player + 0.28 m standing proxy), measured 0.748 m",
+        "de Boulle: first-person camera is active",
+        "de Boulle: third-person camera is restored",
+        "de Boulle: rear activity area has reachable staff",
+        "de Boulle: staff conversation opens in the same shop",
+        "de Boulle: reconnect retains the authoritative identity",
+        "de Boulle: reconnect retains the conversation position before the return walk",
+        "de Boulle: normal keyboard walking reaches conversation-return",
+        "de Boulle: peer receives the authoritative conversation-return position",
+        "de Boulle: conversation-return clears occupied stations (0.35 m player + 0.28 m standing proxy), measured 0.910 m",
+        "de Boulle: normal keyboard walking reaches diagonal-return",
+        "de Boulle: peer receives the authoritative diagonal-return position",
+        "de Boulle: diagonal-return clears occupied stations (0.35 m player + 0.28 m standing proxy), measured 0.742 m",
+        "de Boulle: normal keyboard walking reaches return",
+        "de Boulle: peer receives the authoritative return position",
+        "de Boulle: return clears occupied stations (0.35 m player + 0.28 m standing proxy), measured 1.794 m",
+        "de Boulle: normal keyboard walking reaches street",
+        "de Boulle: peer receives the authoritative street position",
+        "de Boulle: street clears occupied stations (0.35 m player + 0.28 m standing proxy), measured 3.233 m",
+        "de Boulle: normal keyboard walking reaches threshold-return",
+        "de Boulle: peer receives the authoritative threshold-return position",
+        "de Boulle: threshold-return clears occupied stations (0.35 m player + 0.28 m standing proxy), measured 3.344 m",
+        "No browser errors: "
+      ]
+    },
+    {
+      "name": "spatial-streets",
+      "status": "passed",
+      "seconds": 196.509,
+      "checks": [
+        "Dior: a pedestrian route exists",
+        "Dior: normal keyboard walking reaches the storefront",
+        "Dior: server position agrees with the walker (0.07 m when it stopped)",
+        "Equinox: a pedestrian route exists",
+        "Equinox: normal keyboard walking reaches the storefront",
+        "Equinox: server position agrees with the walker (0.19 m when it stopped)",
+        "Hermès: a pedestrian route exists",
+        "Hermès: normal keyboard walking reaches the storefront",
+        "Hermès: server position agrees with the walker (0.06 m when it stopped)",
+        "No browser errors: "
+      ]
+    }
+  ]
+}
