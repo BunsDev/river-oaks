@@ -11,9 +11,13 @@ deadline to this task.
 
 ## Evidence
 
-- In the last 40 Verify runs, the "Email access…" step failed 7 times. The first
-  was #253's branch run (2026-10-11 19:31Z), then #253's merge on main (19:59Z).
-  There were none before.
+- In the last 40 Verify runs, the "Email access…" step failed 7 times, mostly
+  from #253's branch run (2026-10-11 19:31Z) and #253's merge on main (19:59Z)
+  onwards.
+- *Correction (2026-10-12):* the flake predates #253. Verify run 38153200219 on
+  main (`c4a871b`, 15:53Z) failed this step on attempt 1, before #253 was
+  opened (19:17Z). #253's CPU-rendering cost made it much more frequent; it
+  did not create it.
 - Every failure times out at `email-access.test.js:162`, waiting 60 s for
   `.multiplayer-roster[data-connected="true"]`. The failure dump shows
   `connectionMessage: 'Connecting to the town…'` and `appInert: true`, and the

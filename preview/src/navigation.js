@@ -142,6 +142,28 @@ export function createResidentNavigation(world,{allowRoads=false,placedObjects=[
     }
     return result;
   };
+  // A waypoint at a fixture edge leaves a walker no room to approach it: the
+  // spatial-streets journey stalled 0.08 m from a slanted edge. Move such an
+  // intermediate waypoint to the nearest point with WAYPOINT_CLEARANCE of free
+  // ground around it, keeping both of its legs walkable; otherwise leave it.
+  const WAYPOINT_CLEARANCE=0.3;
+  const roomy=point=>{
+    for(let r=0.05;r<=WAYPOINT_CLEARANCE+1e-9;r+=0.05)for(let i=0;i<24;i++) {
+      const angle=i/24*Math.PI*2;if(!free([point[0]+Math.cos(angle)*r,point[1]+Math.sin(angle)*r]))return false;
+    }
+    return true;
+  };
+  const clearWaypoints=(start,path)=>{
+    for(let i=0;i<path.length-1;i++) {
+      if(roomy(path[i]))continue;
+      const before=i?path[i-1]:start,after=path[i+1];
+      search:for(let r=0.1;r<=0.6+1e-9;r+=0.1)for(let k=0;k<24;k++) {
+        const angle=k/24*Math.PI*2,point=[path[i][0]+Math.cos(angle)*r,path[i][1]+Math.sin(angle)*r];
+        if(roomy(point)&&walkable(before,point)&&walkable(point,after)){path[i]=point;break search;}
+      }
+    }
+    return path;
+  };
   const gridRoute = (start,end) => {
     if(!free(start) || !free(end)) return null;
     if(canTravel(start,end) && travelCost(start,end)<=distance(start,end)*1.15) return [[...end]];
@@ -182,7 +204,7 @@ export function createResidentNavigation(world,{allowRoads=false,placedObjects=[
       while(next+1<path.length) {retained+=travelCost(path[next],path[next+1]);if(!canTravel(previous,path[next+1]) || travelCost(previous,path[next+1])>retained*1.03)break;next++;}
       result.push(path[next]);previous=path[next];index=next+1;
     }
-    return result;
+    return clearWaypoints(start,result);
   };
   // Interior furniture needs finer waypoints than the outdoor grid.
   // A visibility graph around expanded fixture corners stays bounded per room.

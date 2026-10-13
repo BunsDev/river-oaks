@@ -1,3 +1,4 @@
+import { createOfficeUI } from './office-ui.js';
 import { createStoreIntros } from './store-intro-ui.js';
 import {treeFlightEnvironment} from './tree-flight.js';
 import { buildRoads } from './street-roads.js';
@@ -37,12 +38,30 @@ import { createStorefrontReflections } from './reflections.js';
 import { registerGroundSurfaces, groundSurfaceHeight } from './world-surface.js';
 import { buildStreetFurniture } from './street-furniture.js';
 import { buildPlazaSalon } from './plaza-salon.js';
+import { createPlazaTableGames, seatAtTable } from './plaza-table-games.js';
+import { createPlazaStage } from './plaza-stage.js';
+import { plazaSalonPlan } from './plaza-salon-plan.js';
+import { createPlazaDominoes, seatAtCafe } from './plaza-dominoes.js';
+import { createPlazaHearts } from './plaza-hearts.js';
+import { createPlazaSpades } from './plaza-spades.js';
+import { createPlazaLiarsDice } from './plaza-liars-dice.js';
+import { createPlazaBackgammon, seatAtBackgammon } from './plaza-backgammon.js';
+import { createPlazaCribbage } from './plaza-cribbage.js';
+import { createPlazaJenga, seatAtJenga } from './plaza-jenga.js';
+import { createPlazaYacht } from './plaza-yacht.js';
+import { createPlazaWinePong } from './plaza-wine-pong.js';
+import { createPlazaShuffleboard } from './plaza-shuffleboard.js';
+import { createPlazaDarts } from './plaza-darts.js';
+import { createPlazaMancala, seatAtGrove } from './plaza-mancala.js';
+import { createPlazaGo } from './plaza-go.js';
+import { createPlazaChineseCheckers } from './plaza-chinese-checkers.js';
 import { atmosphereFor } from './atmosphere.js';
 import { createWalkingEnvironment } from './walking.js';
 import { createQualityControl } from './render-quality.js';
 import { mountAssetProgress } from './asset-progress.js';
 import { createClearView } from './clear-view.js';
 import { createPhotoMode } from './photo-mode.js';
+import { createGuideEntry } from './salon-guide.js';
 import { createMultiplayer } from './multiplayer-client.js';
 import { createRemotePlayers } from './remote-players.js';
 import { createSharedBuildLayer } from './shared-build-layer.js';
@@ -71,6 +90,11 @@ import { DEFAULT_WORLD_ID, worldIdFromSearch } from './world-contract.js';
 // Panel material last, so it applies over the earlier interface layers.
 import './hud-glass.css';
 import './game-hud.css';
+import './settings-dialog.css';
+import { createPlazaBicycle } from './plaza-bicycle.js';
+import { createCyclingLeaderboard } from './cycling-leaderboard.js';
+import './cycling-leaderboard.css';
+import { plazaSalonRack } from './plaza-salon-plan.js';
 import { describeRenderer, describeScene, noteFrame, registerDiagnosticSource, setScreenshotCapture } from './debug-report.js';
 
 // Every stylesheet above is applied by now, so the sign-in gate can lift.
@@ -98,8 +122,21 @@ let pendingSharedPlace = null, sharedPlaceInFlight = false;
 let worldPortal = null;
 let worldRegionSha256 = null;
 let landmarkAccountId = null;
-let playerAvatar;
+let playerAvatar, officeUI;
 let multiplayer, remotePlayers, buildLayer, buildControls, seatingControls, seatAndWater;
+let plazaSalon = null, plazaGames = null, plazaDominoes = null, plazaHearts = null, plazaBackgammon = null, cafeGame = 'dominoes', plazaStage = null, plazaBicycle = null, cyclingBoard = null;
+let plazaJenga = null, plazaYacht = null, benchGame = 'jenga';
+let plazaCribbage = null, walnutGame = 'backgammon';
+let plazaWinePong = null, plazaShuffleboard = null, longTableGame = 'winePong';
+let plazaDarts = null;
+let plazaSpades = null;
+let plazaLiarsDice = null;
+let plazaMancala = null;
+let plazaGo = null, plazaChineseCheckers = null, groveGame = 'mancala';
+// What X does while seated: the first provider (a game table, the stage…) offering a play.
+// Each feature adds its own line to the list, so they never edit the same one.
+const playProviders = [];
+const playAction = () => { for (const provider of playProviders) { const play = provider()?.interaction(); if (play) return play; } return null; };
 let birdCams = null, birdCamsUI = null;
 let debugTools = null, debugLoading = null;
 const worldMapEnabled = import.meta.env.VITE_WORLD_MAP === 'true';
@@ -194,12 +231,15 @@ function initializeRenderer() {
     void worldPortal.load();
   }
   sidebarSections = setupSidebarSections({ graphics: quality.element, sidebar });
-  walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore, canEnterStore, getInteraction: () => seatAndWater?.interaction() ?? null });
+  walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore, canEnterStore, getInteraction: () => seatAndWater?.interaction() ?? plazaBicycle?.prompt() ?? null, getPlay: playAction, getVoice: () => multiplayer?.voice ?? null });
   storeIntros = createStoreIntros({ camera, host,
     claim: storeId => multiplayer.claimStoreIntro(storeId),
     onHalt: () => walking.halt(), onResume: () => walking.update(0, performance.now()),
   });
   walking.addObstacle({contains:(...args)=>buildLayer?.colliders.some(collider=>collider.contains(...args))??false});
+  // Before the player panel, so G reaches the rack first and the owner's ride button only when no bike is in play.
+  cyclingBoard = createCyclingLeaderboard();
+  plazaBicycle = createPlazaBicycle({ scene, host, walking, getMultiplayer: () => multiplayer, getLocals: () => community.state?.locals, getMiles: () => cyclingBoard?.mine() ?? null, reducedMotion });
   playerAvatar = createPlayerAvatar({ scene, host, walking, reducedMotion, userId: document.body.dataset.accountId, getLocals: () => community.state?.locals, getConversation: () => community.state?.locals.find(local=>local.id===community.state.selectedId), getWorld: () => world,
     requestAppearance: appearance => multiplayer?.command({type:'appearance',appearance}),
     requestMovement: movement => multiplayer?.command({type:'movement',movement}),
@@ -211,9 +251,108 @@ function initializeRenderer() {
     requestVehicleExit: position => multiplayer.travel({position:[position[0],-position[2]]}),
     getPortrait: id => portraits.portrait(id) });
   seatAndWater = createSeatAndWater({ walking, playerAvatar, getLocals: () => community.state?.locals, getMultiplayer: () => multiplayer, isBusy: () => seatingControls?.busy() ?? false });
+  // Seated at a plaza chess table, X plays chess, checkers or Connect Four; the table mirrors the game.
+  plazaGames = createPlazaTableGames({ getMirror: () => plazaSalon?.userData.chess ?? null, getFourMirror: () => plazaSalon?.userData.connectFour ?? null, getMorrisMirror: () => plazaSalon?.userData.morris ?? null, getSeat: () => seatAtTable(walking?.getPose()),
+    // The town holds games between the two residents at a table (server/table-games.js).
+    getTown: () => multiplayer?.connected ? { selfId: multiplayer.identity?.id, snapshot: multiplayer.snapshot, command: message => multiplayer.command(message) } : null,
+    focusWorld: () => host.focus({ preventScroll: true }) });
+  // Seated at the café table, X plays dominoes, Hearts or Spades with the plaza regulars
+  // (the last one played); switching clears the other game's pieces from the table when
+  // the two use different pieces (tiles or cards).
+  const cafeGames = () => ({ dominoes: plazaDominoes, hearts: plazaHearts, spades: plazaSpades, dice: plazaLiarsDice });
+  const cafePieces = kind => kind === 'dominoes' ? 'dominoes' : kind === 'dice' ? 'dice' : 'cards';
+  const switchCafe = kind => {
+    const leaving = cafeGames()[cafeGame], joining = cafeGames()[kind];
+    if (!joining || joining === leaving) return;
+    const from = cafeGame;
+    cafeGame = kind; leaving?.close({ toWorld: false });
+    if (cafePieces(from) !== cafePieces(kind)) plazaSalon?.userData[cafePieces(from)]?.show(null);
+    joining.open();
+  };
+  plazaDominoes = createPlazaDominoes({ getMirror: () => plazaSalon?.userData.dominoes ?? null, getSeat: () => seatAtCafe(walking?.getPose()),
+    focusWorld: () => host.focus({ preventScroll: true }), onSwitch: switchCafe });
+  plazaHearts = createPlazaHearts({ getMirror: () => plazaSalon?.userData.cards ?? null, getSeat: () => seatAtCafe(walking?.getPose()),
+    focusWorld: () => host.focus({ preventScroll: true }), onSwitch: switchCafe });
+  plazaSpades = createPlazaSpades({ getMirror: () => plazaSalon?.userData.cards ?? null, getSeat: () => seatAtCafe(walking?.getPose()),
+    focusWorld: () => host.focus({ preventScroll: true }), onSwitch: switchCafe });
+  plazaLiarsDice = createPlazaLiarsDice({ getMirror: () => plazaSalon?.userData.dice ?? null, getSeat: () => seatAtCafe(walking?.getPose()),
+    focusWorld: () => host.focus({ preventScroll: true }), onSwitch: switchCafe });
+  plazaStage = createPlazaStage({ walking, getMultiplayer: () => multiplayer, getStageView: () => plazaSalon?.userData.stage ?? null });
+  // Seated at the walnut table, X plays backgammon or cribbage (the last one played);
+  // switching puts the checkers or the pegging board away and sets out the other.
+  const walnutGames = () => ({ backgammon: plazaBackgammon, cribbage: plazaCribbage });
+  const switchWalnut = kind => {
+    const leaving = walnutGames()[walnutGame], joining = walnutGames()[kind];
+    if (!joining || joining === leaving) return;
+    walnutGame = kind; leaving?.close({ toWorld: false });
+    plazaSalon?.userData.backgammon?.setVisible(kind === 'backgammon'); plazaSalon?.userData.cribbage?.setVisible(kind === 'cribbage');
+    joining.open();
+  };
+  plazaBackgammon = createPlazaBackgammon({ getMirror: () => plazaSalon?.userData.backgammon ?? null, getSeat: () => seatAtBackgammon(walking?.getPose()),
+    focusWorld: () => host.focus({ preventScroll: true }), onSwitch: switchWalnut });
+  plazaCribbage = createPlazaCribbage({ getMirror: () => plazaSalon?.userData.cribbage ?? null, getSeat: () => seatAtBackgammon(walking?.getPose()),
+    focusWorld: () => host.focus({ preventScroll: true }), onSwitch: switchWalnut });
+  playProviders.push(() => plazaGames);
+  playProviders.push(() => walnutGames()[walnutGame]);
+  // On the curved bench, X plays Jenga or Yacht with two plaza regulars (the last one
+  // played); the drum's tower or its five dice mirror it, and switching puts the other away.
+  const benchGames = () => ({ jenga: plazaJenga, yacht: plazaYacht });
+  const switchBench = kind => {
+    const leaving = benchGames()[benchGame], joining = benchGames()[kind];
+    if (!joining || joining === leaving) return;
+    benchGame = kind; leaving?.close({ toWorld: false });
+    plazaSalon?.userData.jenga?.setVisible(kind === 'jenga'); plazaSalon?.userData.yacht?.setVisible(kind === 'yacht');
+    joining.open();
+  };
+  plazaJenga = createPlazaJenga({ getMirror: () => plazaSalon?.userData.jenga ?? null, getSeat: () => seatAtJenga(walking?.getPose()),
+    focusWorld: () => host.focus({ preventScroll: true }), reducedMotion, onSwitch: switchBench });
+  plazaYacht = createPlazaYacht({ getMirror: () => plazaSalon?.userData.yacht ?? null, getSeat: () => seatAtJenga(walking?.getPose()),
+    focusWorld: () => host.focus({ preventScroll: true }), onSwitch: switchBench });
+  playProviders.push(() => benchGames()[benchGame]);
+  // Standing at an end of the long café table, X plays wine pong or shuffleboard (the last
+  // one played); the table's glasses and ball, or its pucks, mirror it, and switching puts
+  // the other game's pieces away.
+  const longTableGames = () => ({ winePong: plazaWinePong, shuffleboard: plazaShuffleboard });
+  const switchLongTable = kind => {
+    const leaving = longTableGames()[longTableGame], joining = longTableGames()[kind];
+    if (!joining || joining === leaving) return;
+    longTableGame = kind; leaving?.close({ toWorld: false });
+    plazaSalon?.userData.winePong?.setVisible(kind === 'winePong'); plazaSalon?.userData.shuffleboard?.setVisible(kind === 'shuffleboard');
+    joining.open();
+  };
+  const longTable = () => (world && plazaSalonPlan(world)?.winePong) ?? null;
+  plazaWinePong = createPlazaWinePong({ getMirror: () => plazaSalon?.userData.winePong ?? null, getTable: longTable,
+    getPose: () => walking?.getPose(), focusWorld: () => host.focus({ preventScroll: true }), reducedMotion, onSwitch: switchLongTable });
+  plazaShuffleboard = createPlazaShuffleboard({ getMirror: () => plazaSalon?.userData.shuffleboard ?? null, getTable: longTable,
+    getPose: () => walking?.getPose(), focusWorld: () => host.focus({ preventScroll: true }), reducedMotion, onSwitch: switchLongTable });
+  playProviders.push(() => longTableGames()[longTableGame]);
+  // Standing at the darts line, X plays 501; the board on the wall shows the turn's darts.
+  plazaDarts = createPlazaDarts({ getMirror: () => plazaSalon?.userData.darts ?? null, getBoard: () => (world && plazaSalonPlan(world)?.darts) ?? null,
+    getPose: () => walking?.getPose(), focusWorld: () => host.focus({ preventScroll: true }), reducedMotion });
+  playProviders.push(() => plazaDarts);
+  // Seated at the grove table, X plays mancala, Go or Chinese checkers (the last one
+  // played); switching puts the other games' boards away and sets out this one's.
+  const groveGames = () => ({ mancala: plazaMancala, go: plazaGo, chineseCheckers: plazaChineseCheckers });
+  const switchGrove = kind => {
+    const leaving = groveGames()[groveGame], joining = groveGames()[kind];
+    if (!joining || joining === leaving) return;
+    groveGame = kind; leaving?.close({ toWorld: false });
+    plazaSalon?.userData.mancala?.setVisible(kind === 'mancala'); plazaSalon?.userData.go?.setVisible(kind === 'go'); plazaSalon?.userData.chineseCheckers?.setVisible(kind === 'chineseCheckers');
+    joining.open();
+  };
+  plazaMancala = createPlazaMancala({ getMirror: () => plazaSalon?.userData.mancala ?? null, getSeat: () => seatAtGrove(walking?.getPose()),
+    focusWorld: () => host.focus({ preventScroll: true }), onSwitch: switchGrove });
+  plazaGo = createPlazaGo({ getMirror: () => plazaSalon?.userData.go ?? null, getSeat: () => seatAtGrove(walking?.getPose()),
+    focusWorld: () => host.focus({ preventScroll: true }), onSwitch: switchGrove });
+  plazaChineseCheckers = createPlazaChineseCheckers({ getMirror: () => plazaSalon?.userData.chineseCheckers ?? null, getSeat: () => seatAtGrove(walking?.getPose()),
+    focusWorld: () => host.focus({ preventScroll: true }), reducedMotion, onSwitch: switchGrove });
+  playProviders.push(() => groveGames()[groveGame]);
+  playProviders.push(() => cafeGames()[cafeGame]);
+  playProviders.push(() => plazaStage);
   playDock = createPlayDock({creationToolsEnabled}); const visitTools = playDock.content;
   if (creationToolsEnabled) buildControls=createSharedBuildControls({getPose:()=>walking?.getPose(),isBuildableRoom:id=>world?.stores.some(store=>store.id===id && store.category==='home'),onBuilderChange:builder=>{builderAim='';if(!builder.active)buildLayer?.setGhost(null);},request:message=>multiplayer?.command(message)??Promise.resolve({ok:false,message:'Join the town before building.'})});
-  visitTools.append($('.player-controls'), ...(buildControls ? [buildControls.panel] : []));
+  visitTools.append($('.player-controls'), cyclingBoard.panel, ...(buildControls ? [buildControls.panel] : []));
+  officeUI=createOfficeUI({host,panelHost:visitTools,renderer,getWorld:()=>world,getMultiplayer:()=>multiplayer,walking});
   // Bird cams: Jev flies a few birds over the district; ride along or take over.
   birdCams = createBirdCams({ scene, camera, host, getEnvironment: () => world && walking?.active ? birdFlightEnvironment() : null, getInterests: birdInterests, getPathHints: () => world?.birdPathHints ?? {} });
   birdCamsUI = createBirdCamsUI(birdCams);
@@ -227,6 +366,7 @@ function initializeRenderer() {
     onOpen: () => { walking?.halt(); },
   });
   visitTools.prepend(photoMode.panel);
+  photoMode.panel.after(createGuideEntry());
   landmarks = createAccountLandmarks({ request: (action, data) => multiplayer.landmarkRequest(action, data), worldId: worldIdFromSearch(location.search) });
   placesUI = setupPlacesUI({ places: [], landmarks, onGo: goToPlace, getPosition: () => walking?.getPosition() ?? null, getYaw: () => walking?.getYaw() ?? 0,
     isOutdoor: position => Boolean(world && walkingEnvironment().isFree(position[0],-position[1]) && !walkingEnvironment().roomAt(position[0],-position[1])) });
@@ -285,21 +425,25 @@ function startMultiplayer() {
   buildControls?.hide();
   multiplayer = createMultiplayer({
     creationToolsEnabled,
-    getPose: () => walking?.getPose(),
+    getWalking: () => walking,
+    onVoiceChange: state => remotePlayers?.setSpeaking(state.speaking),
+    getPose: () => officeUI?.pose ?? walking?.getPose(),
     getEnvironment: () => walking?.environment,
     getMeetingPlaces: () => world ? placesOf(world) : [],
     getOwnerHomes: () => world?.stores.filter(store => store.category === 'home' && store.access === 'owner') ?? [],
     getRegionSha256: () => worldRegionSha256,
     onHomeAccess: () => districtUI?.refreshAccess(),
-    onSnapshot: snapshot => { if (world) community.applyRemote(snapshot);buildLayer?.sync(snapshot.builds??[]); },
-    onCorrection: player => { if (world && player) walking.applyServerPose(player); },
+    onSnapshot: snapshot => { if (world) community.applyRemote(snapshot);buildLayer?.sync(snapshot.builds??[]);plazaSalon?.userData.rack?.setTaken(snapshot.cycling?.taken ?? []); },
+    onCorrection: player => { if (world && player) { walking.applyServerPose(player); plazaBicycle?.sync(); } },
     onPlayers: (players, selfId) => {
       host.dataset.multiplayer = players.length ? 'joined' : 'disconnected';
-      remotePlayers.sync(players, selfId);
+      remotePlayers.sync(players.filter(p=>!p.office), selfId);
+      officeUI?.sync(players,selfId);
       placesUI?.setPlayers(players, selfId);
       if (!players.length) buildLayer?.sync([]);
       const self = players.find(player => player.id === selfId);
       walking?.syncSeating(self);
+      if (self) cyclingBoard?.setName(self.name);
       playerAvatar?.setSharedIdentity(self);
       if (self?.canBuild) buildControls?.show(); else buildControls?.hide();
       worldPortal?.refreshCapability();
@@ -398,6 +542,7 @@ function populateWorld(data) {
     buildingMesh?.userData.dispose?.();
     worldGroup.remove(interiorsLayer);
     storePeople?.userData.dispose?.(); storePeople = null; interiorsLayer = null;
+    plazaSalon?.userData.rack?.dispose();
     worldGroup.traverse((item) => {
       item.userData.cancelLandscapeLoad?.();
       item.userData.texture?.dispose();
@@ -435,6 +580,7 @@ function populateWorld(data) {
   registerGroundSurfaces(data,supports);
   const furniture=buildStreetFurniture(data,streetSpace);
   seatAndWater?.load(data,streetSpace);
+  plazaBicycle?.load(data);
   community.setWorld(data, buildingMesh.userData.rooms ?? []);
   storePeople = buildStorePeople(buildingMesh.userData.rooms ?? [], { reducedMotion, sharedPopulation: true });
   interiorsLayer = new THREE.Group(); interiorsLayer.name = 'Boutique interiors layer';
@@ -445,7 +591,9 @@ function populateWorld(data) {
   worldGroup.add(sidewalks);
   worldGroup.add(furniture);
   // The Dior-Toulouse plaza furnished as an open-air salon (plaza-salon-plan.js).
-  worldGroup.add(buildPlazaSalon(data));
+  plazaSalon = buildPlazaSalon(data);
+  plazaStage?.setWorld(data);
+  worldGroup.add(plazaSalon);
   buildingMesh.add(seeThroughNearCameraIn(buildDistrictFantasy(data)));
   document.querySelectorAll('[data-layer]').forEach((input) => { layers[input.dataset.layer].visible = input.checked; });
   scene.add(worldGroup);
@@ -681,9 +829,10 @@ function render(now) {
     worldId: worldIdFromSearch(location.search),
     canPlay: Boolean(walking?.active && !loading && !multiplayer?.traveling && !photoMode?.active && !birdCams?.riding && !self?.altitude),
   });
-  if (storeIntros?.active || photoMode?.active || birdCams?.riding) walking?.halt();
+  if (officeUI?.active || officeUI?.entering || storeIntros?.active || photoMode?.active || birdCams?.riding) walking?.halt();
   else if (multiplayer?.connected && !multiplayer.traveling) walking?.update(delta, now);
   else walking?.halt();
+  plazaGames?.update(); plazaDominoes?.update(); plazaHearts?.update(); plazaSpades?.update(); plazaLiarsDice?.update(); plazaBackgammon?.update(); plazaCribbage?.update(); plazaJenga?.update(); plazaYacht?.update(); plazaWinePong?.update(); plazaShuffleboard?.update(); plazaDarts?.update(); plazaMancala?.update(); plazaGo?.update(); plazaChineseCheckers?.update(); plazaStage?.update();
   if (multiplayer?.connected) birdCams?.update(delta);
   multiplayer?.update(now);
   seatingControls?.update(now);
@@ -694,6 +843,7 @@ function render(now) {
   buildLayer?.update(camera.position);
   updateBuilder();
   playerAvatar?.update(now, camera, renderer.getSize(viewportSize).y, Boolean(multiplayer?.connected));
+  plazaBicycle?.update(now);
   followSunShadow();
   treeShadows?.hide(); // Shadow proxies show only while the sun draws its map.
   if (!softwareAcceptance && storefrontReflections && environmentAssets) {
@@ -708,10 +858,10 @@ function render(now) {
   debugTools?.update(now);
   // llvmpipe draws both browser clients on CPU. Keep simulation and transport
   // updating every frame while capping only acceptance-profile draw work.
-  if (!softwareAcceptance || now - lastSoftwareDraw >= 1000) {
+  if (officeUI?.active || !softwareAcceptance || now - lastSoftwareDraw >= 1000) {
     lastSoftwareDraw = now;
     renderer.info.reset();
-    pipeline.render(delta);
+    if(!officeUI?.update(now,delta))pipeline.render(delta);
     photoMode?.afterRender();
     if (pendingCapture) { const capture = pendingCapture; pendingCapture = null; capture(renderer.domElement); }
   }
@@ -893,6 +1043,90 @@ if (import.meta.env.DEV && renderAudit) {
 
 // Read-only diagnostics for browser acceptance runs; absent from production.
 if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debug') === '1') {
+  window.__riverPlazaGames = () => {
+    if (!plazaGames) return null;
+    const state = plazaGames.debug();
+    return { ...state, mirror: state.tableId ? plazaSalon?.userData.chess?.board(state.tableId) ?? null : null,
+      four: state.tableId ? { visible: plazaSalon?.userData.connectFour?.visible(state.tableId) ?? null, discs: plazaSalon?.userData.connectFour?.discs(state.tableId) ?? null } : null,
+      morris: state.tableId ? { visible: plazaSalon?.userData.morris?.visible(state.tableId) ?? null, pieces: plazaSalon?.userData.morris?.pieces(state.tableId) ?? null } : null };
+  };
+  window.__riverPlazaStage = () => ({ live: plazaSalon?.userData.stage?.live ?? null, action: plazaStage?.interaction()?.label ?? null,
+    // Travel to open pavement in front of the stage, toward the salon.
+    async goNear() {
+      const stage = world && plazaSalonPlan(world)?.stage;
+      if (!stage) return { ok: false };
+      const environment = walkingEnvironment(), free = ([x, north]) => environment.isFree(x, -north) && !environment.roomAt(x, -north);
+      for (const angle of [0, 0.5, -0.5, 1, -1]) {
+        const position = [stage.x + Math.sin(stage.heading + angle) * (stage.radius + 0.8), stage.north - Math.cos(stage.heading + angle) * (stage.radius + 0.8)];
+        if (!free(position)) continue;
+        const result = await goToPlace({ kind: 'landmark', name: 'Nearby', position });
+        if (result?.ok) return { ok: true, position };
+      }
+      return { ok: false };
+    } });
+  window.__riverPlazaDominoes = () => plazaDominoes ? { ...plazaDominoes.debug(), table: plazaSalon?.userData.dominoes?.count() ?? null,
+    deal: (seed, players) => plazaDominoes.deal(seed, players) } : null;
+  window.__riverPlazaChineseCheckers = () => plazaChineseCheckers ? { ...plazaChineseCheckers.debug(), groveGame, table: plazaSalon?.userData.chineseCheckers?.count() ?? null,
+    starShown: plazaSalon?.userData.chineseCheckers?.visible() ?? null, mancalaShown: plazaSalon?.userData.mancala?.visible() ?? null, gobanShown: plazaSalon?.userData.go?.visible() ?? null,
+    reset: () => plazaChineseCheckers.reset() } : null;
+  window.__riverPlazaGo = () => plazaGo ? { ...plazaGo.debug(), groveGame, table: plazaSalon?.userData.go?.count() ?? null, goban: plazaSalon?.userData.go?.visible() ?? null,
+    mancalaBoard: plazaSalon?.userData.mancala?.visible() ?? null, reset: () => plazaGo.reset() } : null;
+  window.__riverPlazaMancala = () => plazaMancala ? { ...plazaMancala.debug(), table: plazaSalon?.userData.mancala?.count() ?? null, reset: () => plazaMancala.reset() } : null;
+  window.__riverPlazaDarts = () => plazaDarts ? { ...plazaDarts.debug(), board: plazaSalon?.userData.darts?.count() ?? null,
+    hold: value => plazaDarts.hold(value), holdAt: mm => plazaDarts.holdAt(mm), reset: seed => plazaDarts.reset(seed),
+    // Walk to the throwing line and face the board.
+    async goTo() {
+      const board = world && plazaSalonPlan(world)?.darts;
+      if (!board) return { ok: false };
+      const spot = [board.x + Math.sin(board.heading) * 2.37, board.north + Math.cos(board.heading) * 2.37];
+      const result = await goToPlace({ kind: 'landmark', name: 'Darts line', position: spot });
+      if (result?.ok) walking?.lookAt([board.x, board.north, groundSurfaceHeight(world, board.x, -board.north) + 1.73], 0.9);
+      return { ok: Boolean(result?.ok) };
+    } } : null;
+  window.__riverPlazaWinePong = () => plazaWinePong ? { ...plazaWinePong.debug(), table: plazaSalon?.userData.winePong?.glasses() ?? null, ball: plazaSalon?.userData.winePong?.ballVisible() ?? null,
+    hold: value => plazaWinePong.hold(value), deal: seed => plazaWinePong.deal(seed),
+    // Walk to one end of the table (0 west, 1 east) and face down it.
+    async goTo(side) {
+      const spot = plazaSalon?.userData.winePong?.stand(side), table = world && plazaSalonPlan(world)?.winePong;
+      if (!spot || !table) return { ok: false };
+      const result = await goToPlace({ kind: 'landmark', name: 'Wine pong', position: spot });
+      if (result?.ok) walking?.lookAt([table.x, table.north, groundSurfaceHeight(world, table.x, -table.north) + 0.8], 0.9);
+      return { ok: Boolean(result?.ok) };
+    } } : null;
+  window.__riverPlazaYacht = () => plazaYacht ? { ...plazaYacht.debug(), benchGame, table: plazaSalon?.userData.yacht?.dice() ?? null,
+    diceShown: plazaSalon?.userData.yacht?.visible() ?? null, towerShown: plazaSalon?.userData.jenga?.visible() ?? null, deal: seed => plazaYacht.deal(seed) } : null;
+  window.__riverPlazaShuffleboard = () => plazaShuffleboard ? { ...plazaShuffleboard.debug(), longTableGame, table: plazaSalon?.userData.shuffleboard?.count() ?? null,
+    pucksShown: plazaSalon?.userData.shuffleboard?.visible() ?? null, glassesShown: plazaSalon?.userData.winePong?.visible() ?? null,
+    hold: value => plazaShuffleboard.hold(value), reset: () => plazaShuffleboard.reset() } : null;
+  window.__riverPlazaJenga = () => plazaJenga ? { ...plazaJenga.debug(), table: plazaSalon?.userData.jenga?.count() ?? null, towerFallen: plazaSalon?.userData.jenga?.fallen() ?? null,
+    aim: at => plazaJenga.aim(at), deal: seed => plazaJenga.deal(seed) } : null;
+  window.__riverPlazaCribbage = () => plazaCribbage ? { ...plazaCribbage.debug(), walnutGame, pegs: plazaSalon?.userData.cribbage?.pegs() ?? null, board: plazaSalon?.userData.cribbage?.visible() ?? null,
+    checkers: plazaSalon?.userData.backgammon?.visible() ?? null, deal: seed => plazaCribbage.deal(seed) } : null;
+  window.__riverPlazaBackgammon = () => plazaBackgammon ? { ...plazaBackgammon.debug(), table: plazaSalon?.userData.backgammon?.count() ?? null,
+    deal: seed => plazaBackgammon.deal(seed) } : null;
+  window.__riverPlazaDice = () => plazaLiarsDice ? { ...plazaLiarsDice.debug(), cafeGame, table: plazaSalon?.userData.dice?.count() ?? null, cards: plazaSalon?.userData.cards?.count()?.backs ?? null, deal: seed => plazaLiarsDice.deal(seed) } : null;
+  window.__riverPlazaSpades = () => plazaSpades ? { ...plazaSpades.debug(), cafeGame, table: plazaSalon?.userData.cards?.count() ?? null, deal: seed => plazaSpades.deal(seed) } : null;
+  window.__riverPlazaHearts = () => plazaHearts ? { ...plazaHearts.debug(), cafeGame, table: plazaSalon?.userData.cards?.count() ?? null,
+    deal: (seed, hand) => plazaHearts.deal(seed, hand) } : null;
+  window.__riverCyclingBoard = () => cyclingBoard ? { ...cyclingBoard.debug(), mine: cyclingBoard.mine(), open: open => { cyclingBoard.panel.open = open; }, refresh: () => cyclingBoard.refresh() } : null;
+  window.__riverCycling = () => plazaBicycle ? { riding: plazaBicycle.riding, slotId: plazaBicycle.slotId, rideMeters: plazaBicycle.rideMeters, lastRideMeters: plazaBicycle.lastRideMeters, yaw: plazaBicycle.placement?.yaw ?? null, prompt: plazaBicycle.prompt()?.kind ?? null,
+    taken: multiplayer?.snapshot?.cycling?.taken ?? [], parked: plazaSalon?.userData.rack?.parked() ?? null,
+    // Arrive at a slot's approach by the normal travel path.
+    // Arrive at a slot's approach by the normal travel path. Like the seats' goNear, a
+    // refused travel (a cooldown, or a spot briefly taken) is retried after a pause, then
+    // nearby paving is tried, so a loaded machine does not fail the journey at the rack.
+    async goNear(slotId) {
+      const slot = world ? plazaSalonRack(world).find(item => item.id === slotId) : null;
+      if (!slot) return { ok: false };
+      const environment = walkingEnvironment(), free = ([x, north]) => environment.isFree(x, -north) && !environment.roomAt(x, -north);
+      const around = [0.6, 1.1].flatMap(radius => Array.from({ length: 8 }, (_, i) => [slot.approach[0] + Math.sin(i * Math.PI / 4) * radius, slot.approach[1] + Math.cos(i * Math.PI / 4) * radius]));
+      for (const position of [slot.approach, slot.approach, slot.approach, ...around].filter(point => free(point))) {
+        const result = await goToPlace({ kind: 'landmark', name: 'Bike rack', position });
+        if (result?.ok) return { ok: true, position };
+        await new Promise(resolve => setTimeout(resolve, 1100));
+      }
+      return { ok: false };
+    } } : null;
   window.__riverSeatAndWater = () => seatAndWater ? {
     seated: walking?.getPose()?.sitting ? `${walking.getPose().sitting.buildId}:${walking.getPose().sitting.slot}` : null, interaction: seatAndWater.interaction()?.kind ?? null, offered: seatAndWater.interaction()?.targetId ?? null, ...seatAndWater.sites(),
     // Arrive on open pavement beside a seat or planter, by the normal travel path.
@@ -911,7 +1145,8 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
     face(x, north) { walking?.lookAt([x, north, groundSurfaceHeight(world, x, -north)], 0.9); },
     goTo(x, north) { return goToPlace({ kind: 'landmark', name: 'Spot', position: [x, north] }); },
   } : null;
-  window.__riverMultiplayer = () => ({ connected: multiplayer?.connected ?? false, selfId: multiplayer?.identity?.id, snapshot: multiplayer?.snapshot, remotes: remotePlayers?.stats(),creations:buildLayer?.stats(),birds:birdCams?.state,builder:buildControls?{...buildControls.builder,ghost:buildLayer?.ghost?{position:buildLayer.ghost.position.toArray(),visible:buildLayer.ghost.visible}:null,hint:document.querySelector('#build-hint')?.textContent,valid:document.querySelector('#build-hint')?.dataset.valid}:null });
+  window.__riverVoice = () => multiplayer?.voice.debug() ?? null;
+  window.__riverMultiplayer = () => ({ connected: multiplayer?.connected ?? false, selfId: multiplayer?.identity?.id, snapshot: multiplayer?.snapshot, remotes: remotePlayers?.stats(), voice: multiplayer?.voice.debug() ?? null,creations:buildLayer?.stats(),birds:birdCams?.state,builder:buildControls?{...buildControls.builder,ghost:buildLayer?.ghost?{position:buildLayer.ghost.position.toArray(),visible:buildLayer.ghost.visible}:null,hint:document.querySelector('#build-hint')?.textContent,valid:document.querySelector('#build-hint')?.dataset.valid}:null });
   window.__riverPlayerAttention=()=>{
     const rig=playerAvatar?.rig;if(!rig)return null;
     rig.model.updateWorldMatrix(true,true);

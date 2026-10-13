@@ -1,0 +1,279 @@
+{
+  "schemaVersion": 1,
+  "profile": "full-continuation",
+  "startedAt": "2026-10-13T17:33:12.123Z",
+  "status": "failed",
+  "revision": "df54d3f9f581764f0fa498ec2364ef567085779f",
+  "dirty": true,
+  "scope": "Selected repository checks only; not production, live auth, native Unreal, human accessibility, or target GPU acceptance.",
+  "results": [
+    {
+      "id": "server-redis-tests",
+      "command": [
+        "node",
+        "--test",
+        "--test-concurrency=2",
+        "server/tests/adversarial-workplace.test.js",
+        "server/tests/app.test.js",
+        "server/tests/auth.test.js",
+        "server/tests/avatar-preferences.test.js",
+        "server/tests/backpressure.test.js",
+        "server/tests/chauffeur.test.js",
+        "server/tests/check-access-entry.test.js",
+        "server/tests/client-address.test.js",
+        "server/tests/creator-navigation.test.js",
+        "server/tests/creator-objects.test.js",
+        "server/tests/creator-transport.test.js",
+        "server/tests/cron-workplace.test.js",
+        "server/tests/cycling-api.test.js",
+        "server/tests/cycling-flush.test.js",
+        "server/tests/cycling-miles.test.js",
+        "server/tests/cycling.test.js",
+        "server/tests/debug-reports.test.js",
+        "server/tests/design-library-gateway.test.js",
+        "server/tests/design-library.test.js",
+        "server/tests/dev-auth.test.js",
+        "server/tests/distributed-app.test.js",
+        "server/tests/district-checkpoint-migration.test.js",
+        "server/tests/erase-workplace.test.js",
+        "server/tests/events-api.test.js",
+        "server/tests/events-gateway.test.js",
+        "server/tests/events.test.js",
+        "server/tests/github-names.test.js",
+        "server/tests/groups-api.test.js",
+        "server/tests/groups.test.js",
+        "server/tests/hardening-asset-cache.test.js",
+        "server/tests/hardening-asset-gate.test.js",
+        "server/tests/hardening-chauffeur-budget.test.js",
+        "server/tests/hardening-command-broadcast.test.js",
+        "server/tests/hardening-invites.test.js",
+        "server/tests/hardening-one-world.test.js",
+        "server/tests/hardening-room-isolation.test.js",
+        "server/tests/hardening-router-admission.test.js",
+        "server/tests/hardening-signin-limits.test.js",
+        "server/tests/hardening-tickets.test.js",
+        "server/tests/hardening-transport-resilience.test.js",
+        "server/tests/hardening2-invite-index.test.js",
+        "server/tests/hardening2-security-headers.test.js",
+        "server/tests/hardening2-turnstile.test.js",
+        "server/tests/hardening2-waitlist-cap.test.js",
+        "server/tests/interactions.test.js",
+        "server/tests/invitations.test.js",
+        "server/tests/landmarks.test.js",
+        "server/tests/livekit-client.test.js",
+        "server/tests/magic-auth.test.js",
+        "server/tests/middleware.test.js",
+        "server/tests/moderation.test.js",
+        "server/tests/name-guards.test.js",
+        "server/tests/office-desk-transport.test.js",
+        "server/tests/office-desk.test.js",
+        "server/tests/offices-transport.test.js",
+        "server/tests/offices.test.js",
+        "server/tests/plaza-stage.test.js",
+        "server/tests/presence.test.js",
+        "server/tests/profile-api.test.js",
+        "server/tests/profile-gateway.test.js",
+        "server/tests/profiles.test.js",
+        "server/tests/rate-limit.test.js",
+        "server/tests/redis-auth.test.js",
+        "server/tests/redis-backend.test.js",
+        "server/tests/redis-room.test.js",
+        "server/tests/redis-security.test.js",
+        "server/tests/region-package.test.js",
+        "server/tests/retention-workplace.test.js",
+        "server/tests/ride-flush.test.js",
+        "server/tests/seating.test.js",
+        "server/tests/shared-transport.test.js",
+        "server/tests/social.test.js",
+        "server/tests/store-intro.test.js",
+        "server/tests/studio-assets.test.js",
+        "server/tests/sweep-workplace.test.js",
+        "server/tests/town-lifecycle.test.js",
+        "server/tests/town-worlds.test.js",
+        "server/tests/transport-failure.test.js",
+        "server/tests/vercel-routing.test.js",
+        "server/tests/voice-leases.test.js",
+        "server/tests/voice-reconcile.test.js",
+        "server/tests/voice-routes.test.js",
+        "server/tests/voice-service.test.js",
+        "server/tests/voice-sweep.test.js",
+        "server/tests/waitlist-usernames.test.js",
+        "server/tests/waitlist.test.js",
+        "server/tests/workos-session.test.js",
+        "server/tests/workplace-api.test.js",
+        "server/tests/workplace-cap-drafts.test.js",
+        "server/tests/workplace.test.js",
+        "server/tests/world-catalog.test.js",
+        "server/tests/world-contract.test.js",
+        "server/tests/world-data-access.test.js",
+        "server/tests/world-gateway.test.js",
+        "server/tests/world-interactions.test.js",
+        "server/tests/world-invite-gateway.test.js",
+        "server/tests/world-keys.test.js",
+        "server/tests/world-landmarks.test.js",
+        "server/tests/world-migration.test.js",
+        "server/tests/world.test.js"
+      ],
+      "status": "failed",
+      "exitCode": 1,
+      "expectedExit": 0,
+      "signal": null,
+      "durationMs": 143140
+    },
+    {
+      "id": "desktop-tests",
+      "command": [
+        "pnpm",
+        "run",
+        "test:desktop"
+      ],
+      "status": "not_run"
+    },
+    {
+      "id": "build",
+      "command": [
+        "pnpm",
+        "run",
+        "build"
+      ],
+      "status": "not_run"
+    },
+    {
+      "id": "python-lint",
+      "command": [
+        "uv",
+        "run",
+        "--locked",
+        "ruff",
+        "check",
+        "."
+      ],
+      "status": "not_run"
+    },
+    {
+      "id": "python-format",
+      "command": [
+        "uv",
+        "run",
+        "--locked",
+        "ruff",
+        "format",
+        "--check",
+        "."
+      ],
+      "status": "not_run"
+    },
+    {
+      "id": "python-tests",
+      "command": [
+        "uv",
+        "run",
+        "--locked",
+        "pytest",
+        "-q"
+      ],
+      "status": "not_run"
+    },
+    {
+      "id": "demo",
+      "command": [
+        "uv",
+        "run",
+        "--locked",
+        "river-oaks",
+        "demo"
+      ],
+      "status": "not_run"
+    },
+    {
+      "id": "demo-verify",
+      "command": [
+        "uv",
+        "run",
+        "--locked",
+        "river-oaks",
+        "verify",
+        "--config",
+        "data/generated/demo/config.json",
+        "--raw",
+        "data/generated/demo",
+        "--world",
+        "data/generated/demo/world.json",
+        "--output",
+        "data/generated/demo/report.json"
+      ],
+      "status": "not_run"
+    },
+    {
+      "id": "secrets",
+      "command": [
+        "uv",
+        "run",
+        "--locked",
+        "python",
+        "scripts/check_secrets.py",
+        "--all"
+      ],
+      "status": "not_run"
+    },
+    {
+      "id": "secret-history",
+      "command": [
+        "gitleaks",
+        "git",
+        "--log-opts=--all",
+        "--redact",
+        "--no-banner",
+        "--ignore-gitleaks-allow"
+      ],
+      "status": "not_run"
+    },
+    {
+      "id": "security-browser",
+      "command": [
+        "pnpm",
+        "run",
+        "test:security:e2e"
+      ],
+      "status": "not_run"
+    },
+    {
+      "id": "reflections",
+      "command": [
+        "pnpm",
+        "run",
+        "test:reflections:webgl"
+      ],
+      "status": "not_run"
+    },
+    {
+      "id": "experience",
+      "command": [
+        "pnpm",
+        "run",
+        "test:experience",
+        "player-lifecycle",
+        "multiplayer-lifecycle",
+        "contextual-first-visit",
+        "store-intro",
+        "photo-mode",
+        "rail-navigation",
+        "places-guide",
+        "world-studio",
+        "spatial-circulation",
+        "spatial-streets"
+      ],
+      "status": "not_run"
+    },
+    {
+      "id": "shared",
+      "command": [
+        "pnpm",
+        "run",
+        "test:shared"
+      ],
+      "status": "not_run"
+    }
+  ],
+  "finishedAt": "2026-10-13T17:35:35.406Z"
+}

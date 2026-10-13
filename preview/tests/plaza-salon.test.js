@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { plazaSalonPlan, plazaSalonFootprints, plazaSalonSeats } from '../src/plaza-salon-plan.js';
+import { CHESS_CELL_M, chessCell, chessCellIsDark, chessCellPosition, chessSeat, plazaSalonPlan, plazaSalonFootprints, plazaSalonRack, plazaSalonSeats } from '../src/plaza-salon-plan.js';
 import { createWalkingEnvironment } from '../src/walking.js';
 import { distanceToRoad } from '../src/street-fixtures.js';
 import { treeSupports } from '../src/tree-placements.js';
@@ -99,4 +99,50 @@ test('salon seats join the shared bench places, resolvable by the authoritative 
   const seat = resolveBenchSeat(benches, 'bench:plaza-salon-chess-west-0', 0, () => 18.2);
   assert.ok(seat && seat.height > 0.4 && seat.height < 0.6);
   assert.deepEqual(benches.filter(seat => seat.buildId === 'bench:plaza-salon-bench').map(seat => seat.slot), [0, 1, 2]);
+});
+
+test('every chess player has a light square at the right hand and their own back rank nearest', () => {
+  const plan = plazaSalonPlan(district);
+  for (const table of plan.chess) {
+    for (const chair of [0, 1]) {
+      const seat = plan.chairs.find(item => item.id === `${table.id}-${chair}`);
+      // The player faces the table; right is that direction turned clockwise.
+      const facing = [table.x - seat.x, table.north - seat.north], right = [facing[1], -facing[0]];
+      const toward = ([east, north], [dx, dn]) => (east - table.x) * dx + (north - table.north) * dn;
+      const corners = [0, 7, 56, 63].map(square => ({ square, cell: chessCell(square, chair) })).map(item => ({ ...item, position: chessCellPosition(table, item.cell) }));
+      const nearRight = corners.reduce((best, item) => toward(item.position, right) - toward(item.position, facing) > toward(best.position, right) - toward(best.position, facing) ? item : best);
+      assert.equal(nearRight.square, 7, `${table.id} chair ${chair}: h1 is the near right corner`);
+      assert.equal(chessCellIsDark(nearRight.cell.i, nearRight.cell.j), false, `${table.id} chair ${chair}: h1 is light`);
+      const a1 = chessCell(0, chair);
+      assert.equal(chessCellIsDark(a1.i, a1.j), true, 'a1 is dark');
+      assert.equal(chessSeat(`bench:plaza-salon-${seat.id}`).tableId, table.id);
+    }
+  }
+  assert.ok(Math.abs(CHESS_CELL_M - 0.068) < 0.001);
+  assert.equal(chessSeat('bench:plaza-salon-round-0'), null);
+});
+
+test('the bike rack offers four slots on open paving that face south into the plaza', () => {
+  const slots = plazaSalonRack(district);
+  assert.equal(slots.length, 4);
+  assert.deepEqual(slots.map(slot => slot.id), ['plaza-salon-rack:0', 'plaza-salon-rack:1', 'plaza-salon-rack:2', 'plaza-salon-rack:3']);
+  assert.deepEqual(plazaSalonRack(blankRegion()), []);
+  assert.deepEqual(plazaSalonRack(vegetated), slots, 'slots do not depend on the vegetation dataset');
+  const plan = plazaSalonPlan(district);
+  for (const slot of slots) {
+    assert.equal(slot.rackId, 'plaza-salon-rack');
+    assert.equal(slot.heading, 0, 'a parked bike points south, away from the footway');
+    assert.ok(slot.approach[1] < slot.north, 'the approach is south of the bike');
+    assert.ok(free(furnished, [slot.x, slot.north]), `${slot.id} must stay mountable`);
+    assert.ok(free(furnished, slot.approach), `${slot.id} must be reachable`);
+    assert.ok(slot.x > -2784.7 + 1.2, 'the rack keeps the Dior entrance clear');
+    assert.ok(slot.north > plan.rack.north - 1.4 && slot.north < plan.rack.north, 'bikes sit just south of the bar');
+  }
+  // The bar's footprint discs overlap, so there is no gap to slip through the bar.
+  const bar = plazaSalonFootprints(district).filter(([, north, radius]) => radius === 0.22 && Math.abs(north - plan.rack.north) < 1e-9);
+  assert.ok(bar.length >= 2, 'the bar has footprint discs');
+  for (let i = 1; i < bar.length; i++) assert.ok(Math.hypot(bar[i][0] - bar[i - 1][0], bar[i][1] - bar[i - 1][1]) < 2 * 0.22, 'consecutive bar discs overlap');
+  // The bar blocks walking; a bike slot does not.
+  assert.equal(free(furnished, [plan.rack.x, plan.rack.north]), false, 'the rack bar must block');
+  assert.equal(free(bare, [plan.rack.x, plan.rack.north]), true, 'the bar stands on open paving');
 });

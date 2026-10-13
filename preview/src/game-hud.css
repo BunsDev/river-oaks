@@ -5,19 +5,36 @@
   background: none; border: 0; border-radius: 0; box-shadow: none; backdrop-filter: none;
 }
 .game-hud #control-panel > :is(.identity, .experience-nav, .panel-scroll) { display: none; }
+/* The glass sheet is a frame, never a scroll container (see sidebar.js): its body scrolls. */
 :root[data-theme] .game-hud #control-panel .hud-space {
   position: absolute; top: 76px; bottom: auto; width: 318px; max-height: calc(100dvh - 100px);
-  padding: 0 18px 18px; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin;
+  padding: 0 18px; overflow: clip;
   pointer-events: auto; border: 1px solid var(--hud-hairline); border-radius: 18px;
   background: var(--hud-glass); backdrop-filter: var(--hud-filter); box-shadow: var(--hud-shadow);
 }
+.game-hud #control-panel .hud-space:not([hidden]) { display: flex; flex-direction: column; }
 .game-hud #control-panel .hud-space[hidden] { display: none; }
 .game-hud #explore-section { left: 20px; }
 .game-hud #community-section { right: 20px; }
-.game-hud .hud-space-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--hud-hairline); margin-bottom: 14px; }
+.game-hud .hud-space-header { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--hud-hairline); margin-bottom: 14px; }
 .game-hud .hud-space-header h2 { font-size: 16px; margin: 0; font-weight: 650; }
 .game-hud .hud-space-header button { min-width: 36px; min-height: 36px; font-size: 24px; border-radius: 10px; }
-.game-hud .hud-space > .section-label:first-of-type { display: none; }
+.game-hud .hud-space-body { flex: 0 1 auto; min-height: 0; margin-inline: -18px; padding: 0 18px 18px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.game-hud .hud-space-body > .section-label:first-of-type { display: none; }
+/* The map sheet fits instead of scrolling: the map is as wide as the sheet when there is
+   room, and shrinks (never below 150px) when the window is short. Only an opened
+   Storefront access scrolls, inside itself. If the card still cannot fit (a very short
+   window, larger fonts) the body scrolls rather than clipping a control. */
+@media (min-height:560px) {
+  .game-hud #explore-section { container-type: inline-size; }
+  .game-hud #explore-section > .hud-space-body { display: flex; flex-direction: column; }
+  .game-hud #explore-section #places { display: contents; }
+  .game-hud #control-panel #explore-section #places-here { flex: none; align-self: flex-start; }
+  .game-hud #control-panel #explore-section .places-launcher, .game-hud #control-panel #explore-section .storefront-access { flex: none; }
+  .game-hud #control-panel #explore-section #places .world-map { flex: 0 1 100cqi; min-height: min(100cqi, 150px); container-type: size; }
+  .game-hud #control-panel #explore-section #places .world-map-surface { width: min(100%, 100cqh); margin-inline: auto; }
+  .game-hud #control-panel #explore-section .storefront-access[open] { flex: 0 100 auto; min-height: 160px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+}
 :root[data-theme] .game-hud :is(#panel-toggle, .hud-launcher) {
   position: absolute; top: 20px; bottom: auto; z-index: 8; transform: none;
   display: flex; align-items: center; justify-content: center; gap: 10px;
@@ -55,6 +72,8 @@
 .game-hud #panel-toggle[aria-expanded=true] .map-lens::before { opacity: 1; animation: map-lens-turn 6s linear infinite; }
 @keyframes map-lens-turn { to { transform: rotate(1turn); } }
 @media (prefers-reduced-motion: reduce) { .game-hud #panel-toggle .map-lens::before { animation: none !important; } .game-hud #panel-toggle :is(.map-lens-fold, .map-lens-pin) { transition: none; } }
+/* Software rendering (see hud-glass.css): the lens stops turning. */
+:root[data-rendering=software] .game-hud #panel-toggle .map-lens::before { animation: none; }
 .game-hud :is(#panel-toggle,.hud-launcher)[aria-expanded=true] { outline: 2px solid var(--hud-action); outline-offset: -2px; }
 :root[data-theme] .game-hud :is(.walking-title, .viewport-heading) { left: 190px; top: 22px; }
 :root[data-theme] .game-hud .walking-title strong { font-size: 21px; }
@@ -147,7 +166,14 @@
 }
 
 @media (min-width:901px) and (min-height:650px) {
-  :root[data-theme] .game-hud #control-panel #explore-section { max-height: calc(100dvh - 400px); }
+  /* The map sheet stops above the town chat below it: 76px from the top, a 12px gap, the
+     dock (160px empty, 121px plus its history, 57px folded) and its 20px margin. It never
+     gets too short for its 150px minimum map, and an open Storefront access may cover chat. */
+  .game-hud { --map-sheet-reserve: 268px; }
+  .game-hud:has(.town-chat-dock .multiplayer-chat-message) { --map-sheet-reserve: calc(229px + min(180px, 24dvh)); }
+  .game-hud:has(.town-chat-dock:not([open])) { --map-sheet-reserve: 165px; }
+  .game-hud:has(#explore-section .storefront-access[open]) { --map-sheet-reserve: 100px; }
+  :root[data-theme] .game-hud #control-panel #explore-section { max-height: max(calc(100dvh - var(--map-sheet-reserve)), min(440px, calc(100dvh - 100px))); }
 }
 @media (prefers-reduced-motion:reduce) {
   .game-hud :is(.hud-space, .town-chat-dock, .hud-launcher, #settings-dialog) { transition: none; animation: none; }

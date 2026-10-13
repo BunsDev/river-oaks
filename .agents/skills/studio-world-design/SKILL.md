@@ -71,7 +71,7 @@ until observed with appropriate participants and tooling.
 
 ## Schema and runtime routing
 
-The current Studio edits schema-v1 creator region packages. Read the
+The current Studio edits schema-v1 creator region packages and separate local `studio-space` furnished documents (see [furnished spaces](../../../docs/world-studio.md#furnished-spaces)). For a space, use its actual furnishing catalog, finish choices and lighting presets from the host; walls and furniture are individually editable and collidable. Space files are not publishable creator regions. The following region restrictions apply only to creator region documents. Read the
 [region contract](../../../docs/creator-regions.md) and current host capability
 snapshot before proposing operations. Design dimensions are meters: region positions
 are east/north; Three.js uses `(east, up, -north)`. Grounded objects derive altitude

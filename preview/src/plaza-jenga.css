@@ -1,0 +1,28 @@
+/* Jenga: the tower beside its steady-hand meter. Blocks are maple; levels alternate
+   between the long sides and the end grain, as a crossed tower looks from the front.
+   Open blocks lift on hover, the chosen one is outlined, and the meter's safe zone is
+   green on a dark track. */
+.jenga-panel .jenga-body { display: flex; flex-direction: column; gap: 12px; }
+.jenga-panel .jenga-scores { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.jenga-panel .jenga-scores li { padding: 4px 10px; border-radius: 999px; background: var(--hud-tile); color: var(--ink); font-size: 12px; font-weight: 650; }
+.jenga-panel .jenga-play { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 18px; align-items: center; }
+.jenga-panel[data-state=over] .jenga-tower { opacity: .45; }
+.jenga-panel .jenga-tower { display: block; width: 200px; height: auto; max-height: min(58vh, 520px); }
+.jenga-panel .jenga-block { fill: #dcc196; stroke: #8a6a42; stroke-width: 0.8; transition: transform 0.12s ease, fill 0.12s ease; }
+.jenga-panel .jenga-end { fill: #cfae7c; }
+.jenga-panel .jenga-block:not([data-open]) { opacity: 0.72; }
+.jenga-panel .jenga-block[data-open] { cursor: pointer; }
+.jenga-panel .jenga-block[data-open]:hover, .jenga-panel .jenga-block[data-open]:focus-visible { fill: #ecd4a8; transform: translateX(3px); outline: none; }
+.jenga-panel .jenga-block[data-selected] { stroke: var(--hud-action); stroke-width: 2.4; transform: translateX(6px); }
+.jenga-panel .jenga-block[data-open]:focus-visible { stroke: var(--ink); stroke-width: 2; }
+.jenga-panel .jenga-meter { display: grid; gap: 10px; padding: 12px; border-radius: 12px; background: var(--hud-tile); }
+.jenga-panel .jenga-meter[hidden] { display: none; }
+.jenga-panel .jenga-meter-label { margin: 0; color: var(--ink); font-size: 13px; font-weight: 650; }
+.jenga-panel .jenga-meter-track { position: relative; height: 22px; border-radius: 11px; background: #2a2622; overflow: hidden; }
+.jenga-panel .jenga-meter-zone { position: absolute; top: 0; bottom: 0; background: #3f9b5a; }
+.jenga-panel .jenga-meter-marker { position: absolute; top: -2px; bottom: -2px; width: 4px; margin-left: -2px; border-radius: 2px; background: #fff; box-shadow: 0 0 0 1px rgb(0 0 0 / .35); }
+.jenga-panel .jenga-meter-actions { display: flex; gap: 8px; }
+.jenga-panel .jenga-meter-actions button { flex: 1; min-height: 40px; }
+.jenga-panel .jenga-meter-actions [data-jenga-action=pull], .jenga-panel .table-game-actions [data-jenga-action=new] { background: var(--hud-action); border-color: transparent; color: var(--hud-on-action); }
+@media (max-width: 520px) { .jenga-panel .jenga-play { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .jenga-panel .jenga-block { transition: none; } }

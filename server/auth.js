@@ -5,7 +5,7 @@ import { VERIFY_COOKIE, verificationPage, readVerificationCode } from './email-v
 import { validWorkOSIssuer, logSessionRejection } from './workos-session.js';
 import { isJevicaAdmin } from './admin.js';
 import { createGitHubNames, createMemoryGitHubNameStore } from './github-names.js';
-import { residentName, validGitHubLogin } from '../preview/src/resident-names.js';
+import { residentName, validGitHubLogin, validUsername } from '../preview/src/resident-names.js';
 
 const SESSION_COOKIE = 'river_oaks_session';
 const STATE_COOKIE = 'river_oaks_auth_state';
@@ -38,7 +38,7 @@ function json(res, status, value) {
 }
 
 /** Single-process auth: restarting intentionally invalidates all local sessions. */
-export function createAuth({ apiKey, clientId, cookiePassword, origin, returnPath = '/', workos, githubToken = null, githubFetch = fetch, now = Date.now, onLogout = () => {}, maxStates = MAX_STATES, maxSessions = MAX_SESSIONS, magic = {} } = {}) {
+export function createAuth({ apiKey, clientId, cookiePassword, origin, returnPath = '/', workos, githubToken = null, githubFetch = fetch, now = Date.now, onLogout = () => {}, usernameOf = async () => null, maxStates = MAX_STATES, maxSessions = MAX_SESSIONS, magic = {} } = {}) {
   let base;
   try {
     const parsed = new URL(origin);
@@ -55,6 +55,12 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, returnPat
   // Residents are shown by GitHub username; only an admin account is Jevica.
   const nameOf = (userId, account) => residentName({ admin: isJevicaAdmin(userId), login: account?.login, userId });
   // A session whose lookup failed is renamed once GitHub answers again.
+  // A username approved at sign-up (waitlist.js) names the resident; Jevica stays Jevica.
+  const withUsername = async user => {
+    if (!user || isJevicaAdmin(user.userId)) return user;
+    const username = await Promise.resolve().then(() => usernameOf(user.userId)).catch(() => null);
+    return validUsername(username) ? { ...user, name: username } : user;
+  };
   const named = async (user, record) => {
     if (!user || record.authMethod === 'MagicAuth' || isJevicaAdmin(record.userId) || validGitHubLogin(record.login)) return user;
     const account = await github.known(record.userId).catch(() => null);
@@ -156,7 +162,7 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, returnPat
     try {
       const session = sdk.userManagement.loadSealedSession({ sessionData: sealed, cookiePassword });
       const result = await session.authenticate();
-      if (result.authenticated) return named(identity(result, record), record);
+      if (result.authenticated) return withUsername(await named(identity(result, record), record));
       // Only a previously issued, active cookie may refresh, and only over HTTP.
       if (!res || result.reason !== 'invalid_jwt') return null;
       if (!record.refreshing) {
@@ -175,7 +181,7 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, returnPat
       const refreshed = await record.refreshing;
       if (!refreshed || sessions.get(record.sessionId) !== record) return null;
       setCookie(res, SESSION_COOKIE, refreshed.sealed, Math.max(0, Math.floor((record.expiresAt - now()) / 1000)));
-      return named(refreshed.user, record);
+      return withUsername(await named(refreshed.user, record));
     } catch { return null; }
   }
 

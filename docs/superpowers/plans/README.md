@@ -4,11 +4,22 @@
 
 Each plan is a task ledger. Status comes from the task register, where the primary checkout's live copy can be newer than the committed one. Plans from before the register are listed as historical: their own text is the record of what was delivered.
 
-## Active and blocked (3)
+## Active and blocked (14)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
+| [2026-10-13-studio-spaces](2026-10-13-studio-spaces.md)<br>Furnished Studio spaces implementation plan | `studio-furnished-spaces` | active | #316 | 2026-10-13 |
+| [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `shared-voice-spatial` | active | — | 2026-10-13 |
+| [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `shared-voice-desktop` | active | — | 2026-10-13 |
+| [2026-10-13-plaza-games](2026-10-13-plaza-games.md)<br>Plaza games, phase 1: chess at the plaza tables — 2026-10-13 | `plaza-games` | active | — | 2026-10-13 |
+| [2026-10-13-plaza-dominoes](2026-10-13-plaza-dominoes.md)<br>Plaza games: dominoes at the café table — 2026-10-13 | `plaza-dominoes` | active | — | 2026-10-13 |
+| [2026-10-13-plaza-checkers](2026-10-13-plaza-checkers.md)<br>Plaza games: checkers on the chess tables — 2026-10-13 | `plaza-checkers` | active | — | 2026-10-13 |
+| [2026-10-13-plaza-backgammon](2026-10-13-plaza-backgammon.md)<br>Plaza games: a backgammon table — 2026-10-13 | `plaza-backgammon` | active | — | 2026-10-13 |
+| [2026-10-13-office-elevator-access](2026-10-13-office-elevator-access.md)<br>Private office elevator and traversal | `office-elevator-access` | active | #317 | 2026-10-13 |
+| [2026-10-13-office-desk-workflow](2026-10-13-office-desk-workflow.md)<br>Office desk workflow | `office-desk-workflow` | active | — | 2026-10-13 |
+| [2026-10-13-minimap-flicker](2026-10-13-minimap-flicker.md)<br>Stop the flicker, and take the minimap out of its scrolling sheet — 2026-10-13 | `minimap-flicker` | active | — | 2026-10-13 |
 | [2026-10-12-town-connect-deadline](2026-10-12-town-connect-deadline.md)<br>Town connection deadline on a busy page — 2026-10-12 | `town-ticket-ttl` | active | — | 2026-10-12 |
+| [2026-10-12-liquid-glass-hud](2026-10-12-liquid-glass-hud.md)<br>Liquid-glass town gate, district map and Map button — 2026-10-12 | `liquid-glass-hud` | active | #274 | 2026-10-12 |
 | [2026-10-12-docs-refresh](2026-10-12-docs-refresh.md)<br>Docs and plans refresh (2026-10-12) | `docs-refresh-20261012` | active | — | 2026-10-12 |
 | [2026-10-11-studio-prompt-polish](2026-10-11-studio-prompt-polish.md)<br>World Studio scene prompt polish | `studio-prompt-polish` | active | #246 | 2026-10-11 |
 
@@ -20,10 +31,14 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-11-workplace-room-envelope](2026-10-11-workplace-room-envelope.md)<br>Workplace room: door height, measured seated bounds, depth-aware routes (#221 gap) | `workplace-room-envelope` | delivered | #235 | 2026-10-11 |
 | [2026-10-11-pending-integration](2026-10-11-pending-integration.md)<br>Pending delivery integration | `primary-reconciliation` | delivered | — | 2026-10-11 |
 
-## Retired (40)
+## Retired (44)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
+| [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `shared-voice-livekit` | retired | #300 | 2026-10-13 |
+| [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `shared-voice-reconciler` | retired | #302 | 2026-10-13 |
+| [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `shared-voice-client` | retired | #303 | 2026-10-13 |
+| [2026-10-13-plaza-hearts](2026-10-13-plaza-hearts.md)<br>Plaza games: Hearts at the café table — 2026-10-13 | `plaza-hearts` | retired | #310 | 2026-10-13 |
 | [2026-10-12-town-connect-deadline](2026-10-12-town-connect-deadline.md)<br>Town connection deadline on a busy page — 2026-10-12 | `town-connect-deadline` | retired | #260 | 2026-10-12 |
 | [2026-10-12-shared-landing-queue](2026-10-12-shared-landing-queue.md)<br>Shared landing queue | `shared-landing-queue` | retired | #272 | 2026-10-12 |
 | [2026-10-12-server-hardening-followups](2026-10-12-server-hardening-followups.md)<br>Server hardening follow-ups (2026-10-12) | `server-hardening-followups` | retired | #264 | 2026-10-12 |
@@ -65,10 +80,43 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-11-delivered-source-retirement](2026-10-11-delivered-source-retirement.md)<br>Delivered source reconciliation | `reconcile-delivered-sources` | retired | — | 2026-10-11 |
 | [2026-10-11-ci-parallel-preview](2026-10-11-ci-parallel-preview.md)<br>Parallel preview check | `ci-parallel-preview` | retired | #252 | 2026-10-11 |
 
-## Historical, not in the register (64)
+## Historical, not in the register (97)
 
 | Plan | PRs mentioned |
 | --- | --- |
+| [2026-10-13-store-intro-cut-timing](2026-10-13-store-intro-cut-timing.md)<br>Sample the store intro's camera cut instead of timing it — 2026-10-13 | #281 |
+| [2026-10-13-store-intro-claim-race](2026-10-13-store-intro-claim-race.md)<br>Wait for the store intro before the walking HUD in spatial-circulation — 2026-10-13 | #265, #295 |
+| [2026-10-13-stage-voice-carry](2026-10-13-stage-voice-carry.md)<br>A stage performer is heard across the plaza — 2026-10-13 | #311 |
+| [2026-10-13-signup-usernames](2026-10-13-signup-usernames.md)<br>Usernames at sign-up — 2026-10-13 | #314 |
+| [2026-10-13-settings-tabs-ux](2026-10-13-settings-tabs-ux.md)<br>Settings tabs and a minimal walking console — 2026-10-13 | #303 |
+| [2026-10-13-plaza-yacht](2026-10-13-plaza-yacht.md)<br>Plaza games: Yacht at the bench — 2026-10-13 | #335, #338 |
+| [2026-10-13-plaza-wine-pong](2026-10-13-plaza-wine-pong.md)<br>Plaza games: wine pong at the café — 2026-10-13 | #320 |
+| [2026-10-13-plaza-table-lessons](2026-10-13-plaza-table-lessons.md)<br>Guided first games at the plaza tables — 2026-10-13 | — |
+| [2026-10-13-plaza-stage-performance](2026-10-13-plaza-stage-performance.md)<br>The plaza stage as a shared performance — 2026-10-13 | — |
+| [2026-10-13-plaza-spades](2026-10-13-plaza-spades.md)<br>Plaza games: Spades at the café — 2026-10-13 | #323, #321 |
+| [2026-10-13-plaza-shuffleboard](2026-10-13-plaza-shuffleboard.md)<br>Plaza games: shuffleboard on the long café table — 2026-10-13 | #333 |
+| [2026-10-13-plaza-shared-table-games](2026-10-13-plaza-shared-table-games.md)<br>Shared games at the plaza chess tables — 2026-10-13 | #334 |
+| [2026-10-13-plaza-reversi](2026-10-13-plaza-reversi.md)<br>Reversi at the plaza chess tables — 2026-10-13 | — |
+| [2026-10-13-plaza-morris](2026-10-13-plaza-morris.md)<br>Nine men's morris at the plaza chess tables — 2026-10-13 | #331 |
+| [2026-10-13-plaza-mancala](2026-10-13-plaza-mancala.md)<br>Plaza games: mancala at the grove table — 2026-10-13 | #324 |
+| [2026-10-13-plaza-liars-dice](2026-10-13-plaza-liars-dice.md)<br>Plaza games: liar's dice at the café — 2026-10-13 | — |
+| [2026-10-13-plaza-jenga](2026-10-13-plaza-jenga.md)<br>Plaza games: Jenga on the curved bench — 2026-10-13 | #312 |
+| [2026-10-13-plaza-go](2026-10-13-plaza-go.md)<br>Plaza games: Go at the grove table — 2026-10-13 | #328 |
+| [2026-10-13-plaza-games-guide](2026-10-13-plaza-games-guide.md)<br>The Salon Guide: a tutorial for every plaza table game — 2026-10-13 | — |
+| [2026-10-13-plaza-darts](2026-10-13-plaza-darts.md)<br>Plaza games: darts on the south wall — 2026-10-13 | — |
+| [2026-10-13-plaza-cribbage](2026-10-13-plaza-cribbage.md)<br>Plaza games: cribbage at the walnut table — 2026-10-13 | — |
+| [2026-10-13-plaza-connect-four](2026-10-13-plaza-connect-four.md)<br>Connect Four at the plaza chess tables — 2026-10-13 | — |
+| [2026-10-13-plaza-chinese-checkers](2026-10-13-plaza-chinese-checkers.md)<br>Plaza games: Chinese checkers in the grove — 2026-10-13 | #337, #336 |
+| [2026-10-13-modal-outside-dismiss](2026-10-13-modal-outside-dismiss.md)<br>Outside-click modal dismissal | #316, #314, #321 |
+| [2026-10-13-email-access-join-recurrence](2026-10-13-email-access-join-recurrence.md)<br>Email access: give CI's cold first render its own join allowance — 2026-10-13 | #281, #297 |
+| [2026-10-13-cycling-rack](2026-10-13-cycling-rack.md)<br>Cycling Rack Implementation Plan (PR 1 of 2) | #318 |
+| [2026-10-12-world-map-paint-cost](2026-10-12-world-map-paint-cost.md)<br>Stop the district map repainting while it is open — 2026-10-12 | #274, #281 |
+| [2026-10-12-town-ticket-ttl](2026-10-12-town-ticket-ttl.md)<br>Town join tickets that outlast a slow page — 2026-10-12 | #260, #253, #273 |
+| [2026-10-12-town-first-snapshot-stall](2026-10-12-town-first-snapshot-stall.md)<br>Town first-snapshot stall under software rendering | #276, #274, #281 |
+| [2026-10-12-route-waypoint-clearance](2026-10-12-route-waypoint-clearance.md)<br>Route waypoint clearance | #276 |
+| [2026-10-12-connect-deadline-grace](2026-10-12-connect-deadline-grace.md)<br>Let queued socket events run before the connect deadline expires — 2026-10-12 | #281, #276, #260 |
+| [2026-10-12-ci-playwright-cache](2026-10-12-ci-playwright-cache.md)<br>Cache Playwright browsers in CI | #252, #277, #276 |
+| [2026-10-12-browser-run-lock](2026-10-12-browser-run-lock.md)<br>Local browser runs take turns | #272, #277 |
 | [2026-10-09-world-studio](2026-10-09-world-studio.md)<br>World Studio implementation plan | — |
 | [2026-10-09-world-studio-designer](2026-10-09-world-studio-designer.md)<br>World Studio dual-path Designer implementation | — |
 | [2026-10-09-unique-player-names](2026-10-09-unique-player-names.md)<br>Unique player fallback names | #205, #204 |

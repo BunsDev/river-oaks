@@ -66,6 +66,17 @@ jobs:
         env:
           REDIS_URL: redis://127.0.0.1:6379
       - run: pnpm run test:desktop
+      # Each browser job used to download Chromium from Playwright's CDN; restore
+      # the browsers by Playwright version instead. Install still adds the system
+      # packages and skips browsers that are already present.
+      - name: Playwright version
+        id: playwright
+        run: echo "version=$(pnpm exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+      - name: Playwright browser cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm run build
       - name: Email access and content security browser regressions
@@ -110,6 +121,17 @@ jobs:
           node-version: '24'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # Each browser job used to download Chromium from Playwright's CDN; restore
+      # the browsers by Playwright version instead. Install still adds the system
+      # packages and skips browsers that are already present.
+      - name: Playwright version
+        id: playwright
+        run: echo "version=$(pnpm exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+      - name: Playwright browser cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm run build
       - name: Shared town journeys (local identities and authenticated fixtures)
@@ -145,7 +167,7 @@ jobs:
           - id: streets
             journeys: spatial-streets world-studio
           - id: places
-            journeys: contextual-first-visit store-intro photo-mode rail-navigation places-guide destination-minimap spatial-circulation
+            journeys: contextual-first-visit store-intro photo-mode rail-navigation places-guide destination-minimap spatial-circulation office-desk
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -156,6 +178,17 @@ jobs:
           node-version: '24'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # Each browser job used to download Chromium from Playwright's CDN; restore
+      # the browsers by Playwright version instead. Install still adds the system
+      # packages and skips browsers that are already present.
+      - name: Playwright version
+        id: playwright
+        run: echo "version=$(pnpm exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+      - name: Playwright browser cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm run build
       - name: Contextual action, photo and command journeys

@@ -1,0 +1,30 @@
+/* Liar's dice at the café: dice counts per player, your dice, the round's bids, a bid
+   builder (count and face), and the lifted cups with the matching dice lit. */
+.liars-dice-panel .liars-dice-body { display: flex; flex-direction: column; gap: 12px; }
+.liars-dice-panel .dice-players { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.liars-dice-panel .dice-players li { padding: 4px 11px; border-radius: 999px; background: var(--hud-tile); color: var(--ink); font-size: 12px; font-weight: 650; }
+.liars-dice-panel .dice-players li[data-turn] { background: var(--hud-action); color: var(--hud-on-action); }
+.liars-dice-panel .dice-cup { display: flex; gap: 6px; padding: 10px 14px; border-radius: 14px; background: radial-gradient(120% 100% at 50% 0%, #7a5538, #573a26); }
+.liars-dice-panel .dice-die { display: inline-block; width: 40px; height: 40px; }
+.liars-dice-panel .dice-die svg, .liars-dice-panel .dice-faces svg { display: block; width: 100%; height: 100%; }
+.liars-dice-panel .dice-die rect, .liars-dice-panel .dice-faces rect { fill: #f3ead8; stroke: #c9b78f; stroke-width: 3; }
+.liars-dice-panel .dice-die circle, .liars-dice-panel .dice-faces circle { fill: #241f1d; }
+.liars-dice-panel .dice-faces button[aria-pressed=true] rect { fill: #fff6dd; stroke: var(--hud-on-action); stroke-width: 6; }
+.liars-dice-panel .dice-reveal { display: grid; gap: 4px; padding: 10px 14px; border-radius: 12px; background: var(--hud-tile); color: var(--ink); font-size: 13px; }
+.liars-dice-panel .dice-reveal[hidden] { display: none; }
+.liars-dice-panel .dice-reveal p { display: flex; align-items: center; gap: 4px; margin: 0; }
+.liars-dice-panel .dice-reveal .dice-die { width: 28px; height: 28px; opacity: .45; }
+.liars-dice-panel .dice-reveal .dice-die[data-match] { opacity: 1; border-radius: 6px; box-shadow: 0 0 0 2px var(--hud-action); }
+.liars-dice-panel .dice-bids { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; color: var(--hud-muted, var(--ink)); font-size: 12px; }
+.liars-dice-panel .dice-bids li { padding: 3px 9px; border-radius: 999px; background: var(--hud-tile); }
+.liars-dice-panel .dice-bidder { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.liars-dice-panel .dice-quantity { display: flex; align-items: center; gap: 8px; }
+.liars-dice-panel .dice-quantity button, .liars-dice-panel .dice-faces button { min-width: 44px; min-height: 44px; border: 1px solid var(--hud-line, rgb(0 0 0 / .12)); border-radius: 10px; background: var(--hud-tile); color: var(--ink); font: 700 20px var(--font-ui, system-ui); cursor: pointer; }
+.liars-dice-panel .dice-faces { display: flex; gap: 6px; }
+.liars-dice-panel .dice-faces button { padding: 5px; }
+.liars-dice-panel .dice-faces button[aria-pressed=true] { background: var(--hud-action); color: var(--hud-on-action); border-color: transparent; }
+.liars-dice-panel .dice-faces button:disabled, .liars-dice-panel .dice-quantity button:disabled { opacity: .4; cursor: default; }
+.liars-dice-panel .dice-count { min-width: 32px; text-align: center; color: var(--ink); font: 700 20px var(--font-ui, system-ui); }
+.liars-dice-panel .table-game-actions [data-dice-action] { background: var(--hud-action); border-color: transparent; color: var(--hud-on-action); }
+.liars-dice-panel .table-game-actions [data-dice-action=liar] { background: #b3262e; }
+.liars-dice-panel .table-game-actions [hidden] { display: none; }

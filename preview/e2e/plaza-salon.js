@@ -6,7 +6,7 @@ async page => {
   await page.goto(origin + '/?motion-debug=1', { waitUntil: 'commit' });
   await page.waitForFunction(() => document.querySelector('#canvas-host')?.dataset.playerReady === 'true' && window.__riverSeatAndWater?.()?.seats.length > 0, null, { timeout: 90000 });
   const salon = await page.evaluate(() => window.__riverSeatAndWater().seats.filter(seat => seat.id.startsWith('bench:plaza-salon-')).map(seat => seat.id));
-  check(salon.length === 11, `The town lists the salon's eleven seats (${salon.length})`);
+  check(salon.length === 15, `The town lists the salon's fifteen seats (${salon.length})`);
 
   const hour = async value => { await page.evaluate(value => { const input = document.querySelector('#sun-hour'); input.value = String(value); input.dispatchEvent(new Event('input', { bubbles: true })); }, value); await page.waitForTimeout(1200); };
   check((await page.evaluate(() => window.__riverSeatAndWater().goTo(-2777.6, -1296.4)))?.ok, 'Walked to the plaza edge from arrival');

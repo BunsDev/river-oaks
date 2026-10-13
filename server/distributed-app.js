@@ -1,3 +1,4 @@
+import { officeDeskAction, OFFICE_DESK_BODY_LIMIT } from './office-desk-api.js';
 import {validAssembly} from '../preview/src/creator-object.js';
 import { createServer } from 'node:http';
 import { safeCheckpointReason } from './recovery-diagnostics.js';
@@ -15,10 +16,12 @@ import { MAX_REGION_REQUEST_BYTES } from './region-package.js';
 import { socialAction } from './social-api.js';
 import { groupAction } from './groups-api.js';
 import { profileAction } from './profile-api.js';
+import { createCyclingLeaderboard } from './cycling-api.js';
 import { eventAction } from './events-api.js';
 import { workplaceAction } from './workplace-api.js';
 import { accountDesignCommand } from './design-commands.js';
 import { securityHeaders } from './security-headers.js';
+import { createVoiceRoutes } from './voice-routes.js';
 
 // Constant-time comparison of an `Authorization: Bearer <secret>` header.
 function bearerMatches(header, secret) {
@@ -34,9 +37,11 @@ const json = (res, status, value) => {
 };
 
 /** HTTP/WS edge for a durable room. No instance owns canonical game or auth state. */
-export function createDistributedServer({ auth, room, worldTitle, security, waitlist, waitlistAdmins = [], debugReports = null, landmarks, social = null, groups = null, profiles = null, events = null, workplace = null, workplaceCronSecret = null, presence = null, designLibrary = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
+export function createDistributedServer({ auth, room, worldTitle, security, waitlist, waitlistAdmins = [], debugReports = null, landmarks, social = null, groups = null, profiles = null, events = null, workplace = null, officeDesk = null, workplaceCronSecret = null, presence = null, designLibrary = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
   trustedProxyIPs = [], address = createClientAddress(trustedProxyIPs), now = Date.now,
-  connectionLifetime = 270_000, assetGateSecret = null, heartbeatMs = 5000, onMove = null } = {}) {
+  connectionLifetime = 270_000, assetGateSecret = null, heartbeatMs = 5000, onMove = null, voice = null, voiceCronSecret = null,
+  // cyclingMiles: accepted for the leaderboard route (PR 2); the room owner flushes rides.
+  cyclingMiles = null } = {}) {
   if (!waitlist) throw new Error('Waitlist is required');
   const worldId = validateWorldId(room.worldId ?? DEFAULT_WORLD_ID);
   const matchesWorld = url => (url.searchParams.get('world') ?? (worldId === DEFAULT_WORLD_ID ? DEFAULT_WORLD_ID : null)) === worldId;
@@ -52,6 +57,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
   // Each sign-in start holds a pending slot until it completes or expires, so
   // one address may start only a few at a time.
   const signInStart = req => security.allow('login', rateLimitKey(address(req)), SIGN_INS_PER_ADDRESS, SIGN_IN_WINDOW);
+  const leaderboard = createCyclingLeaderboard({ store: cyclingMiles });
   const approvedIdentity = async (req, res) => {
     const identity = await auth.authenticate(req);
     if (!identity) { json(res, 401, { error: 'Sign in to join the town.' }); return null; }
@@ -77,8 +83,21 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
   }
   async function disconnectUser(userId, sessionId) {
     // Auth revocation / ban is persisted by the caller before this durable kick.
-    return room.request({ type: 'kick', userId, ...(sessionId ? { sessionId } : {}) });
+    const result = await room.request({ type: 'kick', userId, ...(sessionId ? { sessionId } : {}) });
+    // Every kick (ban, approval ended, logout, another world) ends the account's voice too.
+    if (voice) await voice.revokeUser(userId).catch(() => false);
+    return result;
   }
+  // Snapshots carry whether voice can be joined right now; the per-player space
+  // and identity come from the world itself.
+  const withVoice = snapshot => voice ? { ...snapshot, voice: { available: voice.status().available } } : snapshot;
+  const handleVoice = voice ? createVoiceRoutes({ voice, worldId, authorized, matchesWorld, cronSecret: voiceCronSecret, allow: id => security.allow('voice', id, 30, 60_000),
+    present: async identity => {
+      const view = await room.read();
+      const connection = view?.connections.find(item => item.userId === identity.userId && item.sessionId === identity.sessionId);
+      const player = connection && view.snapshot.players.find(item => item.id === identity.userId);
+      return player ? { connectionId: connection.connectionId, space: player.voice?.space ?? null } : null;
+    } }) : null;
   const handleWaitlist = createWaitlistRoutes({ auth, waitlist, admins: waitlistAdmins, origin, assetGateSecret, allowInviteList: id => security.allow('invites', id, 20, 60_000), isBanned: id => security.isBanned(id),
     onRevoke: async userId => { await disconnectUser(userId); await workplace?.suspend(userId); await onBan?.(userId); } });
   const handleDebugReports = createDebugReportRoutes({ auth, store: debugReports, admins: waitlistAdmins, origin, isBanned: id => security.isBanned(id),
@@ -108,7 +127,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
         continue;
       }
       if (active.connectionId !== connectionId) { ws.close(4009, 'This account joined in another tab.'); continue; }
-      send(ws, frame ??= JSON.stringify(view.snapshot), { snapshot: true });
+      send(ws, frame ??= JSON.stringify(withVoice(view.snapshot)), { snapshot: true });
     }
   }
   const server = createServer(async (req, res) => {
@@ -121,6 +140,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
       if (await auth.handle(req, res)) return;
       if (await handleWaitlist(req, res, path)) return;
       if (await handleDebugReports(req, res, path)) return;
+      if (handleVoice && await handleVoice(req, res, path, url)) return;
       if (path === '/api/world-data' && req.method === 'GET' && worldCatalog) {
         if (!await approvedIdentity(req, res)) return;
         const ids=url.searchParams.getAll('world');
@@ -249,12 +269,25 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
         if (!bearerMatches(req.headers.authorization, workplaceCronSecret)) return json(res, 401, { error: 'Unauthorized.' });
         return json(res, 200, { ok: true, ...await workplace.sweep({ drain: true, budgetMs: 20_000 }) });
       }
+      if (path.startsWith('/api/office-desk/') && req.method==='POST') {
+        const identity=await authorized(req,res);if(!identity)return;
+        if(!matchesWorld(url))return json(res,404,{error:'World not found.'});
+        const result=await officeDeskAction({action:path.slice('/api/office-desk/'.length),identity,desk:officeDesk,readBody:()=>body(req,OFFICE_DESK_BODY_LIMIT),
+          hasVisit:async user=>{const view=await room.read();return Boolean(view?.connections.some(c=>c.userId===user.userId&&c.sessionId===user.sessionId)&&view.snapshot.players.find(p=>p.id===user.userId)?.office);}, allow:id=>security.allow('office_desk',id,90,60000)});
+        return json(res,result.status,result.value);
+      }
       if (path.startsWith('/api/workplace/') && req.method==='POST' && workplace) {
         const identity=await authorized(req,res);if(!identity)return;
         if(!matchesWorld(url))return json(res,404,{error:'World not found.'});
         const result=await workplaceAction({action:path.slice('/api/workplace/'.length),identity,workplace,worldId,readBody:()=>body(req),
           listPlaces:()=>room.listPlaces(),allowWrite:id=>security.allow('workplace',id,30,60_000),allowRead:id=>security.allow('workplace_read',id,120,60_000),now});
         return json(res,result.status,result.value);
+      }
+      if (path === '/api/cycling/leaderboard' && req.method === 'GET') {
+        const identity = await approvedIdentity(req, res); if (!identity) return;
+        if (!security.allow('cycling', identity.userId, 60, 60_000)) return json(res, 429, { error: 'Please wait before reading the leaderboard again.' });
+        const result = await leaderboard.read(identity);
+        return json(res, result.status, result.value);
       }
       if (path.startsWith('/api/profile/') && req.method === 'POST') {
         const identity = await authorized(req, res); if (!identity) return;
@@ -341,7 +374,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
             if (onMove && !isAdmin(identity.userId) && previous && previous.worldId !== worldId) Promise.resolve(onMove(identity.userId, previous.worldId)).catch(() => {});
           }
           if (ws.readyState !== WebSocket.OPEN) return false;
-          send(ws, { ...view.snapshot, selfId: identity.userId });
+          send(ws, { ...withVoice(view.snapshot), selfId: identity.userId });
           return true;
         })().catch(error => {
           // Fixed classifications only: storage/provider errors can contain

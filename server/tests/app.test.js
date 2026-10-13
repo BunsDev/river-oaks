@@ -30,14 +30,17 @@ async function fixture(t,options={},staticRoot='/nonexistent'){
 test('standalone server protects every game chunk and world data after approval',async t=>{
   const root=await mkdtemp(join(tmpdir(),'river-oaks-assets-'));
   t.after(()=>rm(root,{recursive:true,force:true}));
-  await mkdir(join(root,'assets'));await mkdir(join(root,'data'));
-  for(const file of ['index.html','assets/index-entry.js','assets/preload-helper-entry.js','assets/modulepreload-polyfill-entry.js','assets/main-game.js','assets/walking-game.js','assets/three-game.js','data/district.json'])
+  await mkdir(join(root,'assets/boot'),{recursive:true});await mkdir(join(root,'data'));
+  for(const file of ['index.html','assets/index-entry.js','assets/preload-helper-entry.js','assets/modulepreload-polyfill-entry.js','assets/boot/first-paint.js','assets/boot/other.js','assets/main-game.js','assets/walking-game.js','assets/three-game.js','data/district.json'])
     await writeFile(join(root,file),'fixture');
   const waitlist={...approvedWaitlist,isApproved:async id=>id==='owner'};
   const {origin}=await fixture(t,waitlist,root);
   const get=(path,id)=>fetch(origin+path,{headers:id?{Cookie:`session=${id}`}:{}});
   for(const path of ['/','/assets/index-entry.js','/assets/preload-helper-entry.js','/assets/modulepreload-polyfill-entry.js'])assert.equal((await get(path)).status,200,path);
-  for(const path of ['/assets/main-game.js','/assets/walking-game.js','/assets/three-game.js','/data/district.json']){
+  // The first-paint boot script runs in <head> on the sign-in page, so it is served as script before approval.
+  const boot=await get('/assets/boot/first-paint.js');
+  assert.equal(boot.status,200);assert.match(boot.headers.get('content-type'),/javascript/);
+  for(const path of ['/assets/boot/other.js','/assets/main-game.js','/assets/walking-game.js','/assets/three-game.js','/data/district.json']){
     assert.equal((await get(path)).status,403,path);
     assert.equal((await get(path,'guest')).status,403,path);
     const response=await get(path,'owner');
