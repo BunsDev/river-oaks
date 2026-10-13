@@ -78,7 +78,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   // release the microphone exactly as they release movement.
   let voiceHeld = false;
   const placedObjects = [];
-  let transport = null, sitting = null, seatedGround = 0, doorwayPending = false;
+  let transport = null, sitting = null, performing = false, seatedGround = 0, doorwayPending = false;
   let flight = createFlightState();
   let flightAllowed=false,beastKind=null;
   let thirdPerson = true, bodyVisible = true;
@@ -251,7 +251,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     get active() { return active; },
     get riding() { return Boolean(transport); },
     mount(controller) {
-      if(!active||flight.active||currentRoom()||transport||sitting)return false;
+      if(!active||flight.active||currentRoom()||transport||sitting||performing)return false;
       clear();transport=controller;
       thirdPerson=true;state.yaw=controller.pose.yaw+Math.PI+.38;state.pitch=-.25;
       state.position=[controller.pose.seat[0],controller.pose.seat[1]+.62,controller.pose.seat[2]];
@@ -271,7 +271,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       transport?.stop();transport=null;
       if (!active || !state || !player) return;
       clear();
-      sitting=player.sitting??null;seatedGround=player.position[2];
+      sitting=player.sitting??null;performing=Boolean(player.performing);seatedGround=player.position[2];
       state.position = [player.position[0], player.position[2] + (sitting?sitting.height+.65:1.68) + player.altitude, -player.position[1]];
       state.yaw = player.yaw; state.speed = 0;
       flight = createFlightState();
@@ -283,7 +283,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       if((player.sitting?.buildId??null)!==(sitting?.buildId??null) || player.sitting?.slot!==sitting?.slot)this.applyServerPose(player);
     },
     toggleFlight() {
-      if (!flightAllowed || !active || currentRoom() || transport || sitting) return false;
+      if (!flightAllowed || !active || currentRoom() || transport || sitting || performing) return false;
       clear();
       if (!flight.active) return beginFlight(state,environment,flight);
       else {flight.landing=!flight.landing;flight.target=flight.landing?0:Math.max(3.5,flight.altitude);}
@@ -294,7 +294,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     notify,
     get environment() { return environment ?? null; },
     setThirdPerson(enabled) { thirdPerson = Boolean(enabled);if (active) place(); },
-    getPose() { return active && state ? { position: [...state.position], riding:transport?.pose??null, sitting, ground: sitting?seatedGround:environment.groundAt(state.position[0], state.position[2]), altitude:flight.altitude, flying:flight.active, landing:flight.landing, yaw: state.yaw, speed: state.speed, velocity: [...state.velocity], distance: state.distance, roomId: currentRoom()?.storeId ?? null, showBody: thirdPerson && bodyVisible, groundAt: environment.groundAt } : null; },
+    getPose() { return active && state ? { position: [...state.position], riding:transport?.pose??null, sitting, ground: sitting||performing?seatedGround:environment.groundAt(state.position[0], state.position[2]), altitude:flight.altitude, flying:flight.active, landing:flight.landing, yaw: state.yaw, speed: state.speed, velocity: [...state.velocity], distance: state.distance, roomId: currentRoom()?.storeId ?? null, showBody: thirdPerson && bodyVisible, groundAt: environment.groundAt } : null; },
     canSee(point,eyeHeight) {
       if (!state) return false;
       const local=(getLocals()??[]).find(local=>local.position===point);
@@ -311,7 +311,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       state.pitch=Math.max(-1.1,Math.min(1.1,Math.atan2(position[2]+eyeHeight-state.position[1],distance)));
     },
     enter(world, position = world.walkSpawn, lookAt, pitch = 0) {
-       sitting=null;transport?.stop();transport=null;
+       sitting=null;performing=false;transport?.stop();transport=null;
       const creatorRegion = world.provenance?.kind === 'creator';
       $('.walking-title span').textContent = creatorRegion ? world.title : 'RIVER OAKS · GARDEN CITY';
       $('.walking-title small').textContent = creatorRegion ? 'Creator-authored region' : '4444 Westheimer Rd · Houston';
@@ -330,7 +330,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     },
     exit() {
 
-      transport?.stop();transport=null;sitting=null;active = false; clear(); hud.hidden = true; nearest = null;
+      transport?.stop();transport=null;sitting=null;performing=false;active = false; clear(); hud.hidden = true; nearest = null;
       document.body.classList.remove('walking', 'inside-store'); hud.dataset.inside = '';
       camera.fov = 42; camera.near = 0.5; camera.updateProjectionMatrix(); camera.rotation.z = 0;
     },
@@ -343,7 +343,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       if (held !== voiceHeld) { voiceHeld = held; getVoice()?.setTransmit(held); }
       else {
         const input={forward:Number(pressed('KeyW','ArrowUp'))-Number(pressed('KeyS','ArrowDown')),strafe:Number(pressed('KeyD'))-Number(pressed('KeyA')),turn:Number(pressed('ArrowLeft'))-Number(pressed('ArrowRight')),fast:pressed('ShiftLeft','ShiftRight'),lift:Number(pressed('Space'))-Number(pressed('KeyC'))};
-        if(sitting) {
+        if(sitting||performing) {
           state.yaw+=input.turn*1.8*delta;state.speed=0;state.velocity=[0,0];
         } else if(transport) {
           const yaw=transport.pose.yaw;
@@ -371,9 +371,9 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       if (game) { setAction(playButton, game.label, 'X'); setBusy(playButton, game.disabled); }
       const storefront = stores.reduce((best, store) => { const distance = Math.hypot(store.facade[0] - state.position[0], store.facade[1] + state.position[2]); return distance < (best?.distance ?? 16) ? { store, distance } : best; }, null);
       const room = currentRoom(), door = room ? null : doorway();
-      $('.walking-title strong').textContent = sitting ? 'Seated' : transport ? 'Riding with Jev' : flight.active ? (flight.landing ? 'Landing' : 'In flight') : room?.name ?? storefront?.store.name ?? 'On foot';
+      $('.walking-title strong').textContent = sitting ? 'Seated' : performing ? 'On stage' : transport ? 'Riding with Jev' : flight.active ? (flight.landing ? 'Landing' : 'In flight') : room?.name ?? storefront?.store.name ?? 'On foot';
       const enter = $('#walking-enter');
-      enter.hidden = Boolean(sitting||transport)||(!room && !door);
+      enter.hidden = Boolean(sitting||performing||transport)||(!room && !door);
       enter.disabled = Boolean(door && !canEnterStore(door));
       if (room) setAction(enter, 'Step outside', 'F');
       else if (door) setAction(enter, canEnterStore(door) ? `Step inside ${door.name}` : `${door.name} · Invitation required`, canEnterStore(door) ? 'F' : null);
@@ -382,7 +382,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       hud.dataset.inside = room?.storeId ?? '';
       document.body.classList.toggle('inside-store', Boolean(room));
       const roomSummary=room && sharedRoomSummary(room);
-      $('#walking-place').textContent = sitting ? 'Drag to look around · Z stands up' : transport ? 'W/S to ride or reverse · A/D or arrows to steer · G to step out' : flight.active ? `${flight.altitude.toFixed(1)} m above ground · Space to rise · C to lower` : room ? room.theme === 'home'
+      $('#walking-place').textContent = sitting ? 'Drag to look around · Z stands up' : performing ? 'Drag to look around · X steps down' : transport ? 'W/S to ride or reverse · A/D or arrows to steer · G to step out' : flight.active ? `${flight.altitude.toFixed(1)} m above ground · Space to rise · C to lower` : room ? room.theme === 'home'
         ? `Inside ${room.name} · ${roomSummary.label} · ${roomSummary.guests} resident${roomSummary.guests === 1 ? '' : 's'}`
         : `Inside ${room.name} · ${roomSummary.label} · ${roomSummary.staff} staff, ${roomSummary.guests} guests`
         : nearest ? `${nearest.anchorName} · nearby` : `${state.distance.toFixed(0)} m walked · ${pathLabel}`;

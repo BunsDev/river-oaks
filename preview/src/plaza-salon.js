@@ -247,6 +247,18 @@ export function buildPlazaSalon(world) {
     part(unit.disc, material.bronze, [0, 0.235, 0.35], [0.24, 0.02, 0.24]);
     part(unit.post, material.bronze, [0, 0.98, 0.35], [0.022, 1.5, 0.022]);
     part(unit.ball, material.ebony, [0, 1.75, 0.35], [0.06, 0.09, 0.06]);
+    // Lights for a performer (plaza-stage.js): a soft shaft fading upward and a warm
+    // pool on the boards. Shown only while someone in town holds the stage.
+    const top = origin[1] + 0.22, live = new THREE.Group(), glow = { transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide };
+    const shaft = new THREE.CylinderGeometry(0.16, stage.radius * 0.8, 4.4, 40, 1, true), shaftAt = shaft.attributes.position, fade = [];
+    for (let i = 0; i < shaftAt.count; i++) fade.push(1, 0.86, 0.62, (1 - (shaftAt.getY(i) + 2.2) / 4.4) * 0.2);
+    shaft.setAttribute('color', new THREE.Float32BufferAttribute(fade, 4));
+    const beam = new THREE.Mesh(shaft, new THREE.MeshBasicMaterial({ ...glow, vertexColors: true }));
+    beam.position.set(origin[0], top + 2.2, origin[2]);
+    const pool = new THREE.Mesh(new THREE.CircleGeometry(stage.radius * 0.82, 48), new THREE.MeshBasicMaterial({ ...glow, color: '#ffdca8', opacity: 0.28 }));
+    pool.rotation.x = -Math.PI / 2; pool.position.set(origin[0], top + 0.006, origin[2]);
+    live.name = 'Stage lights'; live.visible = false; live.add(beam, pool); group.add(live);
+    group.userData.stage = { setLive(on) { live.visible = Boolean(on); }, get live() { return live.visible; } };
   }
   // String lights sag between the trees and the lantern posts, with a ring of
   // bulbs around each trunk under the crown.
