@@ -74,6 +74,7 @@ import { DEFAULT_WORLD_ID, worldIdFromSearch } from './world-contract.js';
 // Panel material last, so it applies over the earlier interface layers.
 import './hud-glass.css';
 import './game-hud.css';
+import './settings-dialog.css';
 import { describeRenderer, describeScene, noteFrame, registerDiagnosticSource, setScreenshotCapture } from './debug-report.js';
 
 // Every stylesheet above is applied by now, so the sign-in gate can lift.
