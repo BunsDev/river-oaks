@@ -2,11 +2,14 @@ import './plaza-table-games.css';
 import { chessSeat } from './plaza-salon-plan.js';
 import * as chess from './chess-rules.js';
 import * as checkers from './checkers-rules.js';
+import { CONNECT_FOUR } from './connect-four-adapter.js';
 
-// Games at the plaza chess tables, for whoever sits down: chess or checkers,
+// Games at the plaza chess tables, for whoever sits down: chess, checkers or Connect Four,
 // against the plaza regular (a small engine in a worker) or pass-and-play. A game
 // lives in this browser, a practice game; the table's 3D pieces mirror it while
 // you play. X opens the board. Each game is an adapter over its pure rules module.
+// Chess and checkers move a piece from one square to another on an 8×8 board; a
+// drop game (Connect Four) has its own board size and plays a column in one click.
 
 const GLYPH = { k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' };
 const NAME = { k: 'king', q: 'queen', r: 'rook', b: 'bishop', n: 'knight', p: 'pawn' };
@@ -65,7 +68,11 @@ const CHECKERS = {
   ending: reason => reason === 'no pieces left' ? 'Every piece taken.' : 'No moves left.',
   position: state => state,
 };
-export const TABLE_GAMES = { chess: CHESS, checkers: CHECKERS };
+export const TABLE_GAMES = { chess: CHESS, checkers: CHECKERS, connectFour: CONNECT_FOUR };
+const EMPTY_CHESS_BOARD = Array(64).fill('');
+const sizeOf = adapter => adapter.size ?? { rows: 8, cols: 8 };
+const nameOf = (adapter, square) => (adapter.squareName ?? chess.squareName)(square);
+const squareOf = (adapter, name) => (adapter.squareOf ?? chess.squareOf)(name);
 
 // The regular thinks in a worker; each request carries an id, so a late answer is dropped.
 function createWorkerThinker() {
@@ -80,7 +87,7 @@ function createWorkerThinker() {
   });
 }
 
-export function createPlazaTableGames({ host = document.querySelector('#viewport'), getMirror = () => null, getSeat = () => null, focusWorld = () => {},
+export function createPlazaTableGames({ host = document.querySelector('#viewport'), getMirror = () => null, getFourMirror = () => null, getSeat = () => null, focusWorld = () => {},
   think = createWorkerThinker(), budget = 30000, replyDelay = 450 } = {}) {
   const tables = new Map();
   let tableId = null, selected = null, cursor = 'e2', pendingChoice = null, thinking = null;
@@ -115,22 +122,31 @@ export function createPlazaTableGames({ host = document.querySelector('#viewport
     table().games[kind] = game; return game;
   };
   const yourTurn = (game, state) => game.mode === 'pass' || rules().turn(state) === game.player;
-  const mirror = () => { const game = current(); if (game) getMirror()?.show(tableId, rules().replay(game.moves).state.board, game.firstChair); };
+  // Each kind has its own table mirror; the other one is cleared while it is in play.
+  const mirror = () => {
+    const game = current();
+    if (!game) return;
+    const board = rules().replay(game.moves).state.board;
+    if (rules().mirror === 'connectFour') { getMirror()?.show(tableId, EMPTY_CHESS_BOARD, game.firstChair); getFourMirror()?.show(tableId, board, game.firstChair); }
+    else { getFourMirror()?.show(tableId, null); getMirror()?.show(tableId, board, game.firstChair); }
+  };
 
   function render() {
     const game = current(), adapter = rules();
     if (!game) return;
     const { state, played, result } = adapter.replay(game.moves);
     // Your own side sits at the bottom; pass-and-play keeps the first side at the bottom.
-    const bottom = game.mode === 'pass' ? adapter.sides[0] : game.player, flipped = bottom !== adapter.sides[0];
-    const last = played.at(-1), legal = selected === null ? [] : adapter.moves(state).filter(move => move.from === selected);
+    const bottom = game.mode === 'pass' ? adapter.sides[0] : game.player, flipped = adapter.flips !== false && bottom !== adapter.sides[0];
+    // A drop game marks where each column's next disc lands.
+    const last = played.at(-1), legal = adapter.drop ? (result ? [] : adapter.moves(state)) : selected === null ? [] : adapter.moves(state).filter(move => move.from === selected);
+    const { rows: size, cols } = sizeOf(adapter);
     // A mated king stays marked; the status only reads the alert while the game goes on.
     const alert = adapter.alert(state);
     const rows = [];
-    for (let row = 0; row < 8; row++) {
-      const rank = flipped ? row : 7 - row, cells = [];
-      for (let column = 0; column < 8; column++) {
-        const file = flipped ? 7 - column : column, square = rank * 8 + file, name = chess.squareName(square), piece = adapter.piece(state, square);
+    for (let row = 0; row < size; row++) {
+      const rank = flipped ? row : size - 1 - row, cells = [];
+      for (let column = 0; column < cols; column++) {
+        const file = flipped ? cols - 1 - column : column, square = rank * cols + file, name = nameOf(adapter, square), piece = adapter.piece(state, square);
         const cell = document.createElement('button');
         cell.type = 'button'; cell.className = 'table-square'; cell.setAttribute('role', 'gridcell');
         cell.dataset.square = name; cell.dataset.shade = (file + rank) % 2 ? 'light' : 'dark';
@@ -139,7 +155,8 @@ export function createPlazaTableGames({ host = document.querySelector('#viewport
         if (square === selected) cell.dataset.selected = '';
         const target = legal.find(move => move.to === square);
         if (target) cell.dataset.target = target.capture ? 'capture' : 'move';
-        if (last && (last.from === square || last.to === square)) cell.dataset.last = '';
+        if (last && ((last.from !== undefined && last.from === square) || last.to === square)) cell.dataset.last = '';
+        if (result?.cells?.includes(square)) cell.dataset.win = '';
         if (alert?.square === square) cell.dataset.check = '';
         if (piece) {
           const mark = document.createElement('span');
@@ -205,7 +222,7 @@ export function createPlazaTableGames({ host = document.querySelector('#viewport
 
   function play(move) {
     current().moves.push(move.key); selected = null; pendingChoice = null; promotion.hidden = true;
-    cursor = chess.squareName(move.to); mirror(); render(); void reply();
+    cursor = nameOf(rules(), move.to); mirror(); render(); void reply();
   }
 
   function choose(square) {
@@ -214,6 +231,7 @@ export function createPlazaTableGames({ host = document.querySelector('#viewport
     const { state, result } = adapter.replay(game.moves);
     if (result || !yourTurn(game, state)) return;
     const moves = adapter.moves(state);
+    if (adapter.drop) { const move = adapter.dropAt(moves, square); if (move) play(move); return; }
     if (selected !== null) {
       const options = moves.filter(move => move.from === selected && move.to === square);
       if (options.length && options[0].choice) { offerChoice(options); return; }
@@ -242,7 +260,7 @@ export function createPlazaTableGames({ host = document.querySelector('#viewport
   board.addEventListener('click', event => {
     const cell = event.target.closest('.table-square');
     if (!cell) return;
-    cursor = cell.dataset.square; choose(chess.squareOf(cell.dataset.square));
+    cursor = cell.dataset.square; choose(squareOf(rules(), cell.dataset.square));
   });
   // Arrow keys move around the board as you see it; Enter or Space picks the square.
   board.addEventListener('keydown', event => {
@@ -251,9 +269,9 @@ export function createPlazaTableGames({ host = document.querySelector('#viewport
     const steps = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] }[event.key];
     if (!steps) return;
     event.preventDefault();
-    const cells = [...board.querySelectorAll('.table-square')], index = cells.indexOf(cell);
-    const row = Math.min(7, Math.max(0, Math.floor(index / 8) + steps[1])), column = Math.min(7, Math.max(0, index % 8 + steps[0]));
-    const target = cells[row * 8 + column];
+    const cells = [...board.querySelectorAll('.table-square')], index = cells.indexOf(cell), { rows, cols } = sizeOf(rules());
+    const row = Math.min(rows - 1, Math.max(0, Math.floor(index / cols) + steps[1])), column = Math.min(cols - 1, Math.max(0, index % cols + steps[0]));
+    const target = cells[row * cols + column];
     cell.tabIndex = -1; target.tabIndex = 0; target.focus(); cursor = target.dataset.square;
   });
   $('[data-action="new"]').addEventListener('click', () => { if (current()) restart({}); });
@@ -279,8 +297,10 @@ export function createPlazaTableGames({ host = document.querySelector('#viewport
     const entry = table();
     if (!entry || entry.kind === button.dataset.game) return;
     thinking = null; selected = null; promotion.hidden = true;
+    // A new kind starts against the same opponent as the game being left.
+    const leaving = current();
     entry.kind = button.dataset.game;
-    entry.games[entry.kind] ??= newGame(entry.kind, current()?.chair ?? entry.chair, { mode: entry.games[entry.kind === 'chess' ? 'checkers' : 'chess']?.mode });
+    entry.games[entry.kind] ??= newGame(entry.kind, leaving?.chair ?? entry.chair, { mode: leaving?.mode });
     cursor = TABLE_GAMES[entry.kind].opening[current().player]; mirror(); render(); void reply();
   });
   const close = () => {
@@ -310,7 +330,7 @@ export function createPlazaTableGames({ host = document.querySelector('#viewport
     // What X does now, for the walking controls: only while seated at a game table.
     interaction() {
       if (!getSeat()) return null;
-      return { kind: 'play', label: panel.open ? 'Hide the game board' : 'Play chess or checkers', run: () => (panel.open ? close() : open()), disabled: false };
+      return { kind: 'play', label: panel.open ? 'Hide the game board' : 'Play chess, checkers or Connect Four', run: () => (panel.open ? close() : open()), disabled: false };
     },
     // Standing up or leaving the table puts the board away (its games are kept).
     update() {
@@ -321,7 +341,7 @@ export function createPlazaTableGames({ host = document.querySelector('#viewport
     debug() {
       const game = current(), adapter = rules(), state = game ? adapter.replay(game.moves).state : null;
       return { open: panel.open, tableId, game: game?.kind ?? null, thinking: Boolean(thinking), moves: game?.moves.slice() ?? [], mode: game?.mode ?? null,
-        player: game?.player ?? null, firstChair: game?.firstChair ?? null, position: state && game.kind === 'chess' ? chess.toFEN(state) : state ? checkers.positionKey(state) : null,
+        player: game?.player ?? null, firstChair: game?.firstChair ?? null, position: state && game.kind === 'chess' ? chess.toFEN(state) : state ? (adapter.key ?? checkers.positionKey)(state) : null,
         board: state?.board.slice() ?? null, status: status.textContent };
     },
   };

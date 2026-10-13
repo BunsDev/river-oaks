@@ -13,7 +13,7 @@ async page => {
   await page.locator('#canvas-host').focus();
   await page.keyboard.press('KeyZ');
   await page.waitForFunction(id => window.__riverSeatAndWater().seated === id, chair, { timeout: 15000 });
-  await page.waitForFunction(() => /Play chess or checkers/.test(document.querySelector('#walking-play')?.textContent ?? ''), null, { timeout: 5000 });
+  await page.waitForFunction(() => /Play chess, checkers or Connect Four/.test(document.querySelector('#walking-play')?.textContent ?? ''), null, { timeout: 5000 });
   await page.locator('#canvas-host').focus();
   await page.keyboard.press('KeyX');
   await page.locator('#table-game-panel[open]').waitFor();
