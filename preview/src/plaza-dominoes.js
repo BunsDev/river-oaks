@@ -23,7 +23,7 @@ function tileArt(first, second, vertical = false) {
 const tileName = id => id.replace('-', '–');
 
 export function createPlazaDominoes({ host = document.querySelector('#viewport'), getMirror = () => null, getSeat = () => null, focusWorld = () => {},
-  random = Math.random, replyDelay = 600 } = {}) {
+  random = Math.random, replyDelay = 600, onSwitch = null } = {}) {
   let match = null, pendingTile = null, generation = 0, playing = false;
 
   const panel = document.createElement('dialog');
@@ -32,6 +32,7 @@ export function createPlazaDominoes({ host = document.querySelector('#viewport')
   panel.innerHTML = `<header class="table-game-header"><div><p class="table-game-eyebrow">Plaza games · practice game</p><h2 id="dominoes-title">Dominoes at the café</h2></div>
     <button type="button" class="table-game-close" aria-label="Close the dominoes table">×</button></header>
     <div class="table-game-body dominoes-body">
+      ${onSwitch ? '<div class="table-game-choice" role="group" aria-label="Game"><button type="button" data-cafe-game="dominoes" aria-pressed="true">Dominoes</button><button type="button" data-cafe-game="hearts" aria-pressed="false">Hearts</button></div>' : ''}
       <p class="table-game-status" role="status" aria-live="polite"></p>
       <ul class="dominoes-scores" aria-label="Scores, first to ${MATCH_POINTS}"></ul>
       <section class="dominoes-table" aria-label="Played tiles"><ol class="dominoes-line"></ol><p class="dominoes-ends"></p></section>
@@ -194,11 +195,13 @@ export function createPlazaDominoes({ host = document.querySelector('#viewport')
     if (players === match.players) return;
     generation++; newMatch(players, match.chair); pendingTile = null; choice.hidden = true; mirror(); render(); void regulars();
   });
-  const close = () => {
+  for (const button of panel.querySelectorAll('[data-cafe-game]')) button.addEventListener('click', () => { if (button.dataset.cafeGame !== 'dominoes') onSwitch?.(button.dataset.cafeGame); });
+  const close = ({ toWorld = true } = {}) => {
     if (!panel.open) return;
-    panel.close(); pendingTile = null; choice.hidden = true; focusWorld();
+    panel.close(); pendingTile = null; choice.hidden = true;
+    if (toWorld) focusWorld();
   };
-  $('.table-game-close').addEventListener('click', close);
+  $('.table-game-close').addEventListener('click', () => close());
   // Escape, or X again (as in the world), puts the table away.
   panel.addEventListener('keydown', event => {
     if (event.key === 'Escape' || (event.code === 'KeyX' && !event.repeat && !event.metaKey && !event.ctrlKey && !event.altKey)) { event.preventDefault(); event.stopPropagation(); close(); }
@@ -223,7 +226,7 @@ export function createPlazaDominoes({ host = document.querySelector('#viewport')
     update() {
       if (panel.open && getSeat()?.chair !== match?.chair) close();
     },
-    open, close,
+    open, close, mirror,
     // For tests and the debug overlay; `deal` replaces the round with a seeded one.
     debug() {
       if (!match) return { open: panel.open, match: null };

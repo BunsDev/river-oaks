@@ -509,12 +509,14 @@ free one. **Stand up** (or **Z** again) works with keyboard and touch controls. 
 Furniture is usable by approved guests; building, saved designs and wish granting
 remain restricted to Jevica's verified owner accounts.
 
-Seated at one of the plaza's two chess tables (by Dior and Toulouse), **Play chess
-or checkers** or **X** opens a board beside the table. **Chess** and **Checkers**
-(American rules: captures are compulsory, and a crowned man stops) switch in the
-sheet, and each table keeps one game of each. You can play the plaza regular (a
-small engine that thinks in a worker) or pass and play, taking either side. The
-table's 3D pieces or discs mirror the game. It is a practice game kept in your
+Seated at one of the plaza's two chess tables (by Dior and Toulouse), **Play a
+table game** or **X** opens a board beside the table. **Chess**, **Checkers**
+(American rules: captures are compulsory, and a crowned man stops) and **Connect
+Four** (seven columns of six, red first; a click anywhere in a column drops a disc)
+switch in the sheet, and each table keeps one game of each. You can play the plaza
+regular (a small engine that thinks in a worker) or pass and play, taking either
+side. The table's 3D pieces or discs mirror the game; for Connect Four a standing
+frame replaces the chess pieces. It is a practice game kept in your
 browser, so other visitors still see the chess opening. **Escape** or **X** puts the
 board away, and standing up closes it. The rules are in `preview/src/chess-rules.js`
 and `checkers-rules.js`, each checked against published perft counts.
@@ -528,6 +530,24 @@ play and the lightest hand wins. The winner scores the pips left in the other
 hands. The regulars see only what a player at the table could. The round table
 mirrors the line and the hands, and only your own tiles show their pips. Rules:
 `preview/src/dominoes-rules.js`.
+
+The café sheet switches between **Dominoes** and **Hearts**, and X reopens whichever
+was played last. Hearts is you and three regulars, to 100. Before a hand you pass
+three cards left, then right, then across, and every fourth hand you hold them. The
+2♣ leads. You follow suit when you can, no points may be played on the first trick,
+and hearts cannot be led until one has been played. Each heart scores 1 and the Q♠
+13, and taking all 26 shoots the moon. The lowest score wins. The table shows the
+trick face up before each player, with the hands and won tricks face down. Rules:
+`preview/src/hearts-rules.js`.
+
+A walnut backgammon table now stands in the grove's middle square, with two
+armchairs. Seated there, **Play backgammon** or **X** opens the board. You play the
+plaza regular or pass and play, as white or black. Use both dice when you can, and
+the higher one when only one can be used. Checkers on the bar enter first, a blot
+that is hit goes to the bar, and you bear off once all fifteen are home. A gammon
+scores 2 and a backgammon 3. You pick a checker, then its point (or the tray to bear
+off), and Undo takes back moves within your turn. The table's checkers mirror the
+game. Rules: `preview/src/backgammon-rules.js`.
 
 The town assigns the position, facing and cushion height. Occupied slots reject
 other visitors, and occupied furniture cannot be moved, turned or removed. Stand

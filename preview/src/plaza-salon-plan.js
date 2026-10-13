@@ -55,11 +55,14 @@ export function plazaSalonPlan(world) {
   if (world?.scene !== 'district' || !world.stores?.some(store => store.id === DIOR)) return null;
   const round = { id: 'round', x: -2797.0, north: -1299.2, radius: 0.8 };
   const chess = [{ id: 'chess-west', x: -2793.0, north: -1301.4 }, { id: 'chess-east', x: -2786.4, north: -1300.4 }];
+  // A walnut backgammon table in the open square between the grove's middle trunks.
+  const backgammon = { id: 'backgammon', x: -2789.6, north: -1297.4 };
   // The bench backs onto the Etro block and opens north, to the grove and Dior.
   const bench = { id: 'bench', x: -2781.4, north: -1302.0, seatRadius: 1.42, backRadius: 2.02, opening: Math.PI, span: Math.PI * 1.18 };
   const chairs = [
     ...chairsAround('round', [round.x, round.north], 1.22, [Math.PI / 4, Math.PI * 3 / 4, Math.PI * 5 / 4, Math.PI * 7 / 4]),
     ...chess.flatMap(table => chairsAround(table.id, [table.x, table.north], 0.86, [Math.PI / 2, -Math.PI / 2])),
+    ...chairsAround(backgammon.id, [backgammon.x, backgammon.north], 0.86, [Math.PI / 2, -Math.PI / 2]),
   ];
   // Long planters edge the footway between the grove's northern trunks; the
   // Dior entrance (east ≈ -2784.7) stays open.
@@ -78,7 +81,7 @@ export function plazaSalonPlan(world) {
   const trees = treeSupports(world).filter(({ position: [x, north] }) => x > PLAZA.west && x < PLAZA.east && north > PLAZA.south && north < PLAZA.north)
     .map(({ position: [x, north] }) => ({ x, north, height: LIGHT_HEIGHT })).sort((a, b) => a.x - b.x || a.north - b.north);
   const strands = lightWeb([...trees, ...lanterns.map(({ x, north, height }) => ({ x, north, height }))]);
-  return { round, chess, bench, chairs, planters, lanterns, stage, rack, trees, strands, postHeight: POST_HEIGHT };
+  return { round, chess, backgammon, bench, chairs, planters, lanterns, stage, rack, trees, strands, postHeight: POST_HEIGHT };
 }
 
 // Footprints the walking model blocks: [east, north, radius, height]. Chairs and
@@ -90,6 +93,7 @@ export function plazaSalonFootprints(world) {
   const footprints = [
     [plan.round.x, plan.round.north, plan.round.radius, 0.76],
     ...plan.chess.map(table => [table.x, table.north, 0.42, 0.76]),
+    [plan.backgammon.x, plan.backgammon.north, 0.46, 0.76],
     [plan.bench.x, plan.bench.north, 0.44, 0.42],
     ...plan.lanterns.map(post => [post.x, post.north, 0.16, plan.postHeight]),
     [plan.stage.x, plan.stage.north, plan.stage.radius, 0.24],
@@ -127,7 +131,7 @@ export function plazaSalonSeats(world) {
       approach: along([x, north], facing, 0.62) });
   });
   for (const chair of plan.chairs) seats.push({ buildId: `bench:plaza-salon-${chair.id}`, slot: 0, kind: 'bench',
-    title: chair.id.startsWith('chess') ? 'Chess table' : 'Café armchair', x: chair.x, north: chair.north, heading: chair.heading, height: 0.48,
+    title: chair.id.startsWith('chess') ? 'Chess table' : chair.id.startsWith('backgammon') ? 'Backgammon table' : 'Café armchair', x: chair.x, north: chair.north, heading: chair.heading, height: 0.48,
     // Chairs face their table, so people step in from behind.
     approach: along([chair.x, chair.north], chair.heading, -0.82) });
   // Residents resting at Dior may take a plaza seat (resident-life groups seats by store).
@@ -196,4 +200,31 @@ export function dominoLine(table, line, leadIndex, facing = 0) {
   for (let i = leadIndex - 1; i >= 0; i--) angles[i] = angles[i + 1] - span(line[i + 1]) / 2 - gap - span(line[i]) / 2;
   return line.map((tile, i) => ({ ...tile, angle: angles[i], double: tile.left === tile.right, span: span(tile),
     position: [table.x + Math.sin(angles[i]) * CAFE_LINE_RADIUS, table.north - Math.cos(angles[i]) * CAFE_LINE_RADIUS] }));
+}
+
+// The backgammon table's two chairs: chair 0 east of the table, chair 1 west.
+export function backgammonSeat(buildId) {
+  const match = /^bench:plaza-salon-backgammon-([01])$/.exec(buildId ?? '');
+  return match ? { tableId: 'backgammon', chair: Number(match[1]) } : null;
+}
+
+// The backgammon board: 0.62 m across (two halves of six points and a 4 cm bar)
+// and 0.48 m deep. Point p is numbered from white's side: 1–12 along white's near
+// edge (white's home, 1–6, on its right), 13–24 along the far edge. Checkers stack
+// from the edge towards the middle, five to a layer. A spot is in the board's own
+// frame [x across, z towards white] before the table's quarter turn, then [east, north].
+export const BACKGAMMON = { width: 0.62, depth: 0.48, column: 0.045, bar: 0.04, radius: 0.019 };
+export function backgammonSpot(table, place, slot, whiteChair = 0) {
+  const { width, depth, column, bar, radius } = BACKGAMMON, layer = Math.floor(slot / 5), along = slot % 5;
+  let x, z;
+  if (place === 'bar-white' || place === 'bar-black') { x = 0; z = (place === 'bar-white' ? 1 : -1) * (0.05 + slot * 2 * radius); }
+  else if (place === 'off-white' || place === 'off-black') { x = width / 2 + 0.05; z = (place === 'off-white' ? 1 : -1) * 0.12; }
+  else {
+    const near = place <= 12, col = near ? 12 - place : place - 13;
+    x = (col - 5.5) * column + (col >= 6 ? bar / 2 : -bar / 2);
+    z = (near ? 1 : -1) * (depth / 2 - 0.02 - radius - along * 2 * radius);
+  }
+  if (whiteChair === 1) { x = -x; z = -z; }
+  const pile = place === 'off-white' || place === 'off-black';
+  return { position: [table.x + z, table.north + x], layer: pile ? slot : (place === 'bar-white' || place === 'bar-black') ? 0 : layer };
 }

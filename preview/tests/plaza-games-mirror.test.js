@@ -106,3 +106,31 @@ test('dominoes on the café table: the line lies on its arc, only your hand show
   dominoes.show(null);
   assert.equal(tiles.count, 0); assert.equal(pips.count, 0);
 });
+
+test('Hearts on the café table: the trick face up before its players, hands and won tricks face down', () => {
+  const cards = group.userData.cards;
+  assert.equal(cards.count().drawn, false, 'no canvas here, so faces are plain');
+  cards.show({ trick: [{ chair: 2, card: '2C' }, { chair: 3, card: 'KC' }], hands: [{ chair: 2, count: 12 }, { chair: 3, count: 12 }, { chair: 0, count: 13 }, { chair: 1, count: 13 }], won: [{ chair: 1, tricks: 2 }] });
+  assert.deepEqual(cards.count(), { faces: 2, backs: 12 + 12 + 13 + 13 + 2, drawn: false });
+  const trick = group.children.filter(child => child.name?.startsWith('Card in the trick') && child.visible);
+  const angle = Math.PI / 4 + 2 * Math.PI / 2, [tx, tz] = [plan.round.x, -plan.round.north];
+  assert.ok((trick[0].position.x - tx) * Math.sin(angle) + (trick[0].position.z - tz) * Math.cos(angle) > 0.19, 'the first card lies before chair 2');
+  cards.show(null);
+  assert.deepEqual(cards.count(), { faces: 0, backs: 0, drawn: false });
+});
+
+test('backgammon: the table shows the opening, and a game’s points, bar and trays', async () => {
+  const { fromPosition } = await import('../src/backgammon-rules.js');
+  const { backgammonSpot } = await import('../src/plaza-salon-plan.js');
+  const mirror = group.userData.backgammon, mesh = group.children.find(child => child.name === 'Backgammon checkers');
+  assert.equal(mirror.count(), 30, 'idle, the board is set up');
+  const centre = index => { const matrix = new THREE.Matrix4(); mesh.getMatrixAt(index, matrix); return new THREE.Vector3().setFromMatrixPosition(matrix); };
+  const near = ([east, north]) => Array.from({ length: mesh.count }, (_, i) => centre(i)).some(p => Math.hypot(p.x - east, p.z + north) < 0.002);
+  // White's two back checkers stand on point 24 at the far edge from white's chair.
+  assert.ok(near(backgammonSpot(plan.backgammon, 24, 0, 0).position) && near(backgammonSpot(plan.backgammon, 24, 1, 0).position));
+  mirror.show(fromPosition({ 6: 3, 1: -2 }, { bar: [1, 0], off: [11, 13] }), 1);
+  assert.equal(mirror.count(), 3 + 2 + 1 + 11 + 13);
+  assert.ok(near(backgammonSpot(plan.backgammon, 'bar-white', 0, 1).position), 'the hit checker waits on the bar');
+  mirror.show(null);
+  assert.equal(mirror.count(), 30, 'cleared, the table is set up again');
+});
