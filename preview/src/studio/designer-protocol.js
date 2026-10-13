@@ -47,7 +47,7 @@ export function createDesignerSession(doc) {
         projectId: connection.projectId, baseRevision: doc.revision, baseHash: documentHash(region),
         packVersion: connection.packVersion, capabilities: connection.capabilities.filter(cap => DESIGNER_CAPABILITIES.includes(cap)),
         brief, projectBrief, scope, selectedIds: scope === 'selection' ? ids : [],
-        context: { units: 'metres', axes: 'east,north; Three.js east,up,-north', bounds: region.bounds_m,
+        context: { documentType: region.document_type??'region', units: 'metres', axes: 'east,north; Three.js east,up,-north', bounds: region.bounds_m,
           ...(scope === 'region' ? { region } : { objects: items.filter(item => ids.includes(item.id)) }) },
       };
       active = { request: structuredClone(request), serialized: doc.serialize() };
@@ -72,7 +72,7 @@ export function createDesignerSession(doc) {
         if (op.op === 'add') {
           exactKeys(op, ['op','type','patch']);
           if (request.scope !== 'region') fail('Adding objects requires whole-region scope.');
-          if (!['building','tree','place'].includes(op.type) || !plain(op.patch)) fail('Invalid object addition.');
+          if (!['building','tree','place','furnishing'].includes(op.type) || !plain(op.patch)) fail('Invalid object addition.');
           const id = candidate.insert(op.type, op.patch); affected.add(id);
           changes.push({ op: op.op, id, before: null, after: candidate.items.find(item => item.id === id) });
         } else {
