@@ -416,12 +416,14 @@ export function buildDistrictBuildings(world) {
   }
   group.add(reference.group);
   const reflectionMaterials = [glass, upperGlass, ...reference.reflective];
-  const interiorGroup = buildStoreInteriors(rooms, { atlas: interiors, reflectionMaterials });
+  const generatedRooms = rooms.filter(room => room.generatedPlan);
+  const interiorGroup = buildStoreInteriors(rooms.filter(room => !room.generatedPlan), { atlas: interiors, reflectionMaterials });
   group.userData.reflectionMaterials = reflectionMaterials;
   const reflective = [];
   for (const root of [group, interiorGroup]) root.traverse(mesh => { if (mesh.material && reflectionMaterials.includes(mesh.material)) reflective.push(mesh); });
   group.userData.reflectionExclusions = reflective;
   group.userData.interiors = interiorGroup;
+  group.userData.generatedRooms = generatedRooms;
   group.userData.rooms = rooms;
   group.userData.updateDoors = (positions, delta) => {
     const step = 1 - Math.exp(-5 * Math.min(delta, 0.1));

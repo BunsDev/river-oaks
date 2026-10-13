@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { deflateSync, inflateSync } from 'node:zlib';
 import { createSharedWorld, migrateWorldCheckpoint } from './world.js';
 import { recoverDistrictHeightCheckpoint } from './district-checkpoint-migration.js';
+import { recoverDistrictInteriorCheckpoint } from './district-interior-checkpoint-migration.js';
 import { isJevicaAdmin } from './admin.js';
 import { DEFAULT_WORLD_ID, validateWorldId } from '../preview/src/world-contract.js';
 import { placesOf } from '../preview/src/places.js';
@@ -124,7 +125,7 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       currentData=await regionCatalog.getRegion(worldId);
     }
     let world=cached?.world??createSharedWorld(currentData,{now,isAdmin,worldId});
-    let heightMigration = null;
+    let districtMigration = null;
     if(!cached && previous) {
       let checkpointReason = 'unknown';
       if(!record(previous) || !(previous.version===1 && worldId===DEFAULT_WORLD_ID || previous.version===2 && previous.worldId===worldId)
@@ -136,13 +137,16 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
         throw error;
       }
       if (!world.restore(previous.checkpoint, { onFailure: reason => { checkpointReason = reason; } }).ok) {
-        const recovered = recoverDistrictHeightCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, worldId, now, isAdmin });
+        const interior = recoverDistrictInteriorCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, worldId, now, isAdmin });
+        const recovered = interior.ok ? interior
+          : recoverDistrictHeightCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, worldId, now, isAdmin });
         if (!recovered.ok || !world.restore(recovered.checkpoint, { onFailure: reason => { checkpointReason = reason; } }).ok) {
           const error = new Error('Invalid durable town checkpoint');
           error.checkpointReason = checkpointReason;
           throw error;
         }
-        heightMigration = recovered.revision;
+        districtMigration = interior.ok ? { kind: 'interior', from: interior.from }
+          : { kind: 'height', from: recovered.revision };
       }
       for(const connection of previous.connections) {
         if(!record(connection) || !validIdentity(connection.identity) || !id(connection.connectionId) || !Number.isFinite(connection.lastSeen)
@@ -287,7 +291,9 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       visitors,
       ...replies.map(reply=>JSON.stringify(reply.result)));
     if(!committed){cached=null;return read();}
-    if (heightMigration) console.info(JSON.stringify({ event: 'district_height_checkpoint_migrated', from: heightMigration, to: 'photographed_heights' }));
+    if (districtMigration) console.info(JSON.stringify(districtMigration.kind === 'interior'
+      ? { event: 'district_interior_checkpoint_migrated', from: districtMigration.from, to: 'gallery_plan_v1' }
+      : { event: 'district_height_checkpoint_migrated', from: districtMigration.from, to: 'photographed_heights' }));
     cached={world,connections,previous:checkpoint,currentData,currentHash};lastView=view;
     if(rides){rides.merge(drained);void rides.send();}
     return view;

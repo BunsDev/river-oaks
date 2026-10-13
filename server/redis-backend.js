@@ -1,6 +1,6 @@
 import { createChauffeurRoute, chauffeurDailyLimit } from './chauffeur.js';
-import { readFile } from 'node:fs/promises';
 import Redis from 'ioredis';
+import { loadDistrictData } from './district-data.js';
 import { createRedisAuth } from './redis-auth.js';
 import { magicOptions } from './magic-auth.js';
 import { createRedisSecurity } from './redis-security.js';
@@ -23,8 +23,7 @@ export async function createRedisBackend(env = process.env) {
   if (env.VERCEL_ENV && env.VERCEL_ENV !== 'production' && namespace.startsWith('river-oaks:production:')) throw new Error('Preview cannot use the production town');
   const worldId = validateWorldId(env.WORLD_ID ?? DEFAULT_WORLD_ID);
   const prefix = `{${namespace}}`;
-  const worldData = JSON.parse(await readFile(new URL('../preview/public/data/district.json', import.meta.url)));
-  worldData.vegetation = JSON.parse(await readFile(new URL('../preview/public/data/district-vegetation.json', import.meta.url)));
+  const worldData = await loadDistrictData();
   const redis = new Redis(env.REDIS_URL, {
     lazyConnect: true, connectTimeout: 3000, commandTimeout: 3000,
     maxRetriesPerRequest: 1, autoResendUnfulfilledCommands: false,

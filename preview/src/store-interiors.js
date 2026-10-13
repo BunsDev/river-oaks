@@ -392,6 +392,34 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
   for (room of rooms) {
     const [fx, fn] = room.facade, [ox, oy] = room.outward, W = room.width, D = room.depth, H = room.height, c = room.center;
     roomMatrix = new THREE.Matrix4().compose(new THREE.Vector3(fx, room.floor, -fn), new THREE.Quaternion().setFromAxisAngle(Y, Math.atan2(ox, -oy)), new THREE.Vector3(1, 1, 1));
+    if (room.generatedPlan) {
+      const front = room.frontInset, length = D - front, mid = (D + front) / 2;
+      const finish = room.generatedPlan.layers.finishes[0]?.material;
+      const floorColors = { limestone: '#e3d8c4', oak: '#bf9a72', terracotta: '#bf8671', concrete: '#c9c8c4' };
+      const floorMaterial = standard({ color: floorColors[finish] ?? floorColors.limestone, roughness: 0.82 });
+      floorMaterial.name = `generated-floor-${finish}`;
+      const floorGeometry = track.g(new THREE.PlaneGeometry(W, length)); floorGeometry.rotateX(-Math.PI / 2);
+      const floor = new THREE.Mesh(floorGeometry, floorMaterial); floor.receiveShadow = true;
+      placeMesh(floor, c, mid, 0.012);
+      add(box, black, c, mid, -0.3, [W, 0.6, length], 0, '#5a5148');
+      add(box, ceiling, c, mid, H + 0.125, [W, 0.25, length]);
+      add(box, walls[room.theme], c, D - 0.075, H / 2, [W, H, 0.15]);
+      for (const a of [room.aMin + 0.075, room.aMax - 0.075]) {
+        add(box, walls[room.theme], a, mid, H / 2, [0.15, H, length]);
+      }
+      // Only the approved entrance portal bridges the setback to the facade.
+      add(box, floorMaterial, 0, front / 2, 0.012, [1.7, 0.025, front]);
+      for (const fixture of room.obstacles) {
+        const a = (fixture.a0 + fixture.a1) / 2, d = (fixture.d0 + fixture.d1) / 2;
+        add(box, stone, a, d, 0.62, [fixture.a1 - fixture.a0, 1.24, fixture.d1 - fixture.d0]);
+        add(box, brass, a, d, 1.26, [fixture.a1 - fixture.a0 + 0.04, 0.04, fixture.d1 - fixture.d0 + 0.04]);
+      }
+      for (let d = front + 1.3; d < D - 0.3; d += 2.2) {
+        add(disc, lamp, c, d, H - 0.012, [0.065, 0.02, 0.065]);
+        lightPositions.push({ room, position: new THREE.Vector3(c, H - 1.5, -d).applyMatrix4(roomMatrix) });
+      }
+      continue;
+    }
     // shell
     const floorGeometry = track.g(new THREE.PlaneGeometry(W, D)); floorGeometry.rotateX(-Math.PI / 2);
     const uv = floorGeometry.attributes.uv; const tile = room.theme === 'cinema' ? 1.2 : 2.4;

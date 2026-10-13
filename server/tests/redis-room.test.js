@@ -6,6 +6,7 @@ import { deflateSync, inflateSync } from 'node:zlib';
 import Redis from 'ioredis';
 import { createRedisRoom } from '../redis-room.js';
 import { compileRegionPackage } from '../region-package.js';
+import { loadDistrictData } from '../district-data.js';
 
 const enabled=Boolean(process.env.REDIS_URL);
 const testRedis=(name,fn)=>test(name,{skip:!enabled},fn);
@@ -176,6 +177,42 @@ testRedis('default district recovers its historical heights through the fenced R
     await restored.close();
     const next=createRedisRoom({redis:f.redis,prefix:f.prefix,worldData:current,authorize:async()=>true,now:()=>100000,isAdmin:id=>id==='alice'});
     try{assert.equal((await f.join(next,'alice','third')).ok,true);assert.equal(logs.length,1,'migration is committed once');}
+    finally{await next.close();}
+  }finally{await restored.close();}
+});
+
+testRedis('default district commits the approved interior revision without losing town state',async t=>{
+  const current=await loadDistrictData(),previous=structuredClone(current);
+  delete previous.buildingInteriors;
+  const f=await setup(t,{world:previous}),first=f.create();
+  assert.equal((await f.join(first,'alice')).ok,true);
+  assert.equal((await f.command(first,'alice',{type:'chat',text:'Keep this gallery visit.'})).ok,true);
+  const local=(await first.read()).snapshot.locals[0];
+  assert.equal((await f.command(first,'alice',{type:'travel',localId:local.id})).ok,true);
+  assert.equal((await f.command(first,'alice',{type:'wish',localId:local.id,kind:'dog'})).ok,true);
+  const before=(await first.read()).snapshot,key=`${f.prefix}:state`;
+  await first.close();
+  const logs=[];t.mock.method(console,'info',message=>logs.push(JSON.parse(message)));
+  const restored=createRedisRoom({redis:f.redis,prefix:f.prefix,worldData:current,authorize:async()=>true,now:()=>100000,isAdmin:id=>id==='alice'});
+  try{
+    assert.equal((await f.join(restored,'alice','replacement')).ok,true);
+    const after=(await restored.read()).snapshot;
+    for(const field of ['chat','players','wishes'])assert.deepEqual(after[field],before[field],field);
+    const normalize=locals=>locals.map(local=>{
+      const copy=structuredClone(local);
+      if(copy.storeId==='osm-node-8172494977'){
+        delete copy.position;
+        if(copy.life)delete copy.life.routeVersion;
+      }
+      return copy;
+    });
+    assert.deepEqual(normalize(after.locals),normalize(before.locals),'only gallery standing positions may move');
+    const committed=JSON.parse(inflateSync(await f.redis.getBuffer(key)));
+    assert.equal(committed.checkpoint.worldFingerprint,createHash('sha256').update(JSON.stringify(current)).digest('hex'));
+    assert.deepEqual(logs,[{event:'district_interior_checkpoint_migrated',from:'previous_district',to:'gallery_plan_v1'}]);
+    await restored.close();
+    const next=createRedisRoom({redis:f.redis,prefix:f.prefix,worldData:current,authorize:async()=>true,now:()=>100000,isAdmin:id=>id==='alice'});
+    try{assert.equal((await f.join(next,'alice','third')).ok,true);assert.equal(logs.length,1);}
     finally{await next.close();}
   }finally{await restored.close();}
 });

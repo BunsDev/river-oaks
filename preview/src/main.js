@@ -29,8 +29,10 @@ import { createCommunityPanel } from './community-ui.js';
 import { buildDistrictBuildings, buildDistrictDetail } from './district.js';
 import { buildDistrictFantasy } from './district-fantasy.js';
 import { buildStorePeople } from './store-people.js';
+import { createGeneratedInteriorStream } from './generated-interior-stream.js';
 import { sharedRoomSummary } from './shared-population.js';
 import { storeRoomsFor } from './store-rooms.js';
+import { attachDistrictGalleryPlan } from './district-interior-contract.js';
 import { buildFoliage, buildObservedFoliage } from './foliage.js';
 import { castShadowsFromProxies } from './landscape-models.js';
 import { validateVegetation } from './vegetation.js';
@@ -112,7 +114,7 @@ const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matc
 const softwareAcceptance = import.meta.env.DEV && import.meta.env.VITE_SHARED_SOFTWARE_RENDERING === '1';
 const renderAudit = import.meta.env.DEV && new URLSearchParams(location.search).get('render-audit') === '1' ? createRenderAudit() : null;
 let auditCamera = null;
-let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, storePeople, interiorsLayer;
+let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, storePeople, interiorsLayer, generatedInteriors;
 let districtUI, environmentAssets = null, storefrontReflections = null, roomGroundClip = null;
 let placesUI = null, landmarks = null;
 let pendingSharedPlace = null, sharedPlaceInFlight = false;
@@ -506,6 +508,7 @@ function buildGround(data) {
 function populateWorld(data) {
   storeIntros?.reset();
   walking?.exit();
+  generatedInteriors?.dispose(); generatedInteriors = null;
   storefrontReflections?.dispose(); storefrontReflections = null;
   if (worldGroup) {
     scene.remove(worldGroup);
@@ -556,6 +559,7 @@ function populateWorld(data) {
   storePeople = buildStorePeople(buildingMesh.userData.rooms ?? [], { reducedMotion, sharedPopulation: true });
   interiorsLayer = new THREE.Group(); interiorsLayer.name = 'Boutique interiors layer';
   interiorsLayer.add(buildingMesh.userData.interiors, storePeople);
+  generatedInteriors = createGeneratedInteriorStream(buildingMesh.userData.generatedRooms ?? [], interiorsLayer);
   layers = { ground, roads, buildings: buildingMesh, interiors: interiorsLayer, trees: data.vegetation ? buildObservedFoliage(data) : buildFoliage(data) };
   Object.values(layers).forEach((layer) => worldGroup.add(layer));
   worldGroup.add(seeThroughNearCameraIn(buildDistrictDetail(data)));
@@ -708,8 +712,12 @@ async function loadWorld() {
     let data;
     if(manifest.template==='region-v1')data=manifest.world;
     else if(manifest.template==='river-oaks') {
-      const [district,vegetation]=await Promise.all([jsonResponse('/data/district.json'),jsonResponse('/data/district-vegetation.json')]);
-      data=district;data.vegetation=validateVegetation(data,vegetation);
+      const [district,vegetation,approved]=await Promise.all([
+        jsonResponse('/data/district.json'),jsonResponse('/data/district-vegetation.json'),
+        jsonResponse('/data/building-interiors/river-oaks-gallery-v1.json'),
+      ]);
+      district.vegetation=validateVegetation(district,vegetation);
+      data=attachDistrictGalleryPlan(district,approved);
     } else throw new Error('This region format is not supported by this client');
     if (data.schema_version !== 1 || data.scene !== 'district' || !Array.isArray(data.bounds_m) || !['roads', 'stores', 'buildings', 'trees'].every(key => Array.isArray(data[key]))) throw new Error('The district data does not match the supported schema.');
     populateWorld(data);
@@ -750,7 +758,8 @@ async function loadWorld() {
 
 function updateStoreLights() {
   roomGroundClip?.setEnabled(Boolean(interiorsLayer?.visible));
-  const positions = interiorsLayer?.visible ? buildingMesh?.userData.interiors?.userData.lightPositions ?? [] : [];
+  const positions = interiorsLayer?.visible
+    ? [...(buildingMesh?.userData.interiors?.userData.lightPositions ?? []), ...(generatedInteriors?.lightPositions ?? [])] : [];
   const picked = [];
   for (const item of positions) { const d2 = item.position.distanceToSquared(camera.position); if (d2 < 32 * 32) picked.push([d2, item]); }
   picked.sort((left, right) => left[0] - right[0]);
@@ -782,6 +791,7 @@ function render(now) {
   lastFrame = now;
   const delta = Math.min(clock.getDelta(), 0.08);
   community?.update(delta, now);
+  generatedInteriors?.update(camera.position, now);
   layers.trees?.userData.update?.(camera.position);
   if (storePeople && interiorsLayer?.visible) storePeople.userData.update(camera, now, community?.state, walking?.getPosition(), community?.speakingId);
   community?.updateSpeech(delta);
@@ -798,7 +808,8 @@ function render(now) {
     ? storeRoomsFor(world).find(room => room.category !== 'home' && room.contains(self.position[0], self.position[1], .2)) : null;
   storeIntros?.observe({ room: introRoom, accountId: multiplayer?.identity?.id,
     worldId: worldIdFromSearch(location.search),
-    canPlay: Boolean(walking?.active && !loading && !multiplayer?.traveling && !photoMode?.active && !birdCams?.riding && !self?.altitude),
+    canPlay: Boolean(walking?.active && !loading && !multiplayer?.traveling && !photoMode?.active && !birdCams?.riding && !self?.altitude
+      && (!introRoom?.generatedPlan || generatedInteriors?.readyFor(introRoom.planId))),
   });
   if (officeUI?.active || officeUI?.entering || storeIntros?.active || photoMode?.active || birdCams?.riding) walking?.halt();
   else if (multiplayer?.connected && !multiplayer.traveling) walking?.update(delta, now);
@@ -969,6 +980,7 @@ document.addEventListener('keydown', event => {
 });
 window.addEventListener('river-oaks:debug', event => void openDebugTools(event.detail?.open));
 window.__riverDebug = () => debugTools;
+if (import.meta.env.DEV) window.__riverGeneratedInteriors = () => generatedInteriors?.debug() ?? [];
 // Read-only bird cam state for development and browser acceptance runs.
 // Each bird also reports how it appears in the current view: inside the frame,
 // unobstructed by buildings, and its wingspan in CSS pixels.
