@@ -252,6 +252,19 @@ Vehicle exits use the server-checked travel command before completing the local
 dismount. This keeps the seat-to-ground transition from being rejected as an
 ordinary walking-speed violation. A refused exit keeps the rider seated.
 
+The plaza bike rack is arbitrated like seating: `cycle {rackId, slot}` claims a
+free slot within seat reach and mounts the rider on a `bicycle`; `uncycle` hands
+it back, as do a travel, leaving, and a pose without the bike once the 1.5 s
+hand-over grace has passed (a walking pose already in flight when the slot was
+granted is ignored). A `bicycle` pose
+is accepted only from a slot holder, under an 8.05 m/s (18 mph) budget; the
+owner-only rule still covers the car and motorcycle. Each accepted bicycle pose
+adds its ground distance to the rider's metres, which the transport drains into
+the cross-world `cycling-miles` account store (dev town: every 30 s and on
+`uncycle`; hosted room: on every tick, after the commit, through a pending map
+that retries on a store failure). The snapshot carries `cycling: {taken: [slotId]}`
+so clients hide bikes that are out.
+
 Production defaults to Redis namespace `river-oaks:production:v1`. Outside production, `REDIS_NAMESPACE` has no default and must be set. Previews reject any namespace beginning `river-oaks:production:`. `WAITLIST_NAMESPACE` defaults to `river-oaks:production:access:v1` in production and to `<REDIS_NAMESPACE>:access` elsewhere. Share the production namespace across production deployments. District/checkpoint incompatibility fails closed and needs an explicit migration; changing the namespace starts a different town and also separates sessions and bans.
 
 `WORLD_ID` can expose an alternate configured world and defaults to `river-oaks`.
@@ -522,6 +535,15 @@ and hearts cannot be led until one has been played. Each heart scores 1 and the 
 13, and taking all 26 shoots the moon. The lowest score wins. The table shows the
 trick face up before each player, with the hands and won tricks face down. Rules:
 `preview/src/hearts-rules.js`.
+
+A walnut backgammon table now stands in the grove's middle square, with two
+armchairs. Seated there, **Play backgammon** or **X** opens the board. You play the
+plaza regular or pass and play, as white or black. Use both dice when you can, and
+the higher one when only one can be used. Checkers on the bar enter first, a blot
+that is hit goes to the bar, and you bear off once all fifteen are home. A gammon
+scores 2 and a backgammon 3. You pick a checker, then its point (or the tray to bear
+off), and Undo takes back moves within your turn. The table's checkers mirror the
+game. Rules: `preview/src/backgammon-rules.js`.
 
 The town assigns the position, facing and cushion height. Occupied slots reject
 other visitors, and occupied furniture cannot be moved, turned or removed. Stand

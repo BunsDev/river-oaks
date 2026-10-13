@@ -86,3 +86,10 @@ Rerunning `pnpm run verify` with a local PATH launcher that adds `--test-concurr
 Fresh integrated core passed all 11 tasks on `d473480` plus this patch: 3,498 tests passed, 135 existing skips, no failures (`.runtime/studio-delivery-core.log`, `.runtime/agent/core.json`). The fresh Studio browser journey passed after main integration (`data/reports/studio-spaces-delivery-browser.json`).
 
 Fresh native verification also passed all 13 checks and exited 0 (`node scripts/browser-lock.mjs 'Studio delivery native fixture' -- pnpm run test:desktop:agent`; `.runtime/studio-delivery-native.log`, `.runtime/agent/studio-agent-native.json`). `git diff --check` is clean. The core and both acceptance runs include the final glazing correction and current main desktop integration.
+
+
+## PR #316 integration
+
+Signed functional commit `08e3aa1a6c86c488ef55fac9566a4a2a16740d76` was pushed and opened as [PR #316](https://github.com/BunsDev/river-oaks/pull/316). GitHub could not merge concurrent task-register additions; the repository's task-id merge driver reconciled current main locally without source conflicts. Integrating `2642eda1629c6588a318b3fe81130875927dc467` preserves the new cycling and backgammon work. Rechecking the combined core and Studio journeys before the signed integration commit. The shared landing queue and exact-head hosted checks remain required. The verified source commit now preserves the work, so its temporary pre-integration stash was dropped by exact OID.
+
+The combined core gate passed all 11 tasks: 3,543 passing tests, 137 existing skips, zero failures (`.runtime/studio-pr316-integrated-core.log`, `.runtime/agent/core.json`). The Studio browser rerun is waiting in the repository queue and the native fixture will follow it. Their earlier clean passes remain recorded above; these additional integrated runs are not yet acceptance evidence.

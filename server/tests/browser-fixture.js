@@ -10,6 +10,7 @@ import { createMemoryLandmarks } from '../landmarks.js';
 import { createMemorySocial } from '../social.js';
 import { createMemoryProfiles } from '../profiles.js';
 import { createMemoryEvents } from '../events.js';
+import { createMemoryCyclingMiles } from '../cycling-miles.js';
 import { createWorkplace } from '../workplace.js';
 import { createVoiceService, createMemoryVoiceLeases } from '../voice.js';
 import { createFakeLiveKit } from './livekit-fixture.js';
@@ -43,7 +44,7 @@ const auth={authenticate:async req=>identity(req),async handle(req,res){
 // a fake LiveKit (tokens are plain strings; nothing leaves the machine). The
 // browser journey supplies its own fake transport, so no audio provider is needed.
 const voice=process.env.RIVER_OAKS_VOICE_FIXTURE==='1'?createVoiceService({leases:createMemoryVoiceLeases(),livekit:createFakeLiveKit(),namespace:'river-oaks:fixture:v1',allow:async()=>true,log:{warn(){}}}):null;
-app=createGameServer({auth,world:createSharedWorld(data,process.env.RIVER_OAKS_TEST_CREATOR==='1'?{}:{isAdmin:id=>id==='alice'}),landmarks:createMemoryLandmarks(),social:createMemorySocial(),profiles:createMemoryProfiles(),events:createMemoryEvents(),workplace:process.env.RIVER_OAKS_WORKPLACE==='1'?createWorkplace():null,waitlist:approvedWaitlist,origin,...(voice?{voice,voiceReconcileMs:200}:{})});
+app=createGameServer({auth,world:createSharedWorld(data,process.env.RIVER_OAKS_TEST_CREATOR==='1'?{}:{isAdmin:id=>id==='alice'}),landmarks:createMemoryLandmarks(),social:createMemorySocial(),profiles:createMemoryProfiles(),events:createMemoryEvents(),cyclingMiles:createMemoryCyclingMiles(),cyclingFlushMs:1000,workplace:process.env.RIVER_OAKS_WORKPLACE==='1'?createWorkplace():null,waitlist:approvedWaitlist,origin,...(voice?{voice,voiceReconcileMs:200}:{})});
 await new Promise(resolve=>app.server.listen(townPort,'127.0.0.1',resolve));
 const townHttp=`http://127.0.0.1:${townPort}`;
 const vite=await createViteServer({configFile:'preview/vite.config.js',server:{host:'127.0.0.1',port:webPort,strictPort:true,proxy:{'/auth':townHttp,'/api/multiplayer':townHttp,'/api/landmarks':townHttp,'/api/social':townHttp,'/api/workplace':townHttp,'/api/profile':townHttp,'/api/waitlist':townHttp,'/api/debug-reports':townHttp,'/api/moderation':townHttp,'/api/voice':townHttp,'/multiplayer':{target:`ws://127.0.0.1:${townPort}`,ws:true}}}});

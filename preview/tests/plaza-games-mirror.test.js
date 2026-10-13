@@ -118,3 +118,19 @@ test('Hearts on the café table: the trick face up before its players, hands and
   cards.show(null);
   assert.deepEqual(cards.count(), { faces: 0, backs: 0, drawn: false });
 });
+
+test('backgammon: the table shows the opening, and a game’s points, bar and trays', async () => {
+  const { fromPosition } = await import('../src/backgammon-rules.js');
+  const { backgammonSpot } = await import('../src/plaza-salon-plan.js');
+  const mirror = group.userData.backgammon, mesh = group.children.find(child => child.name === 'Backgammon checkers');
+  assert.equal(mirror.count(), 30, 'idle, the board is set up');
+  const centre = index => { const matrix = new THREE.Matrix4(); mesh.getMatrixAt(index, matrix); return new THREE.Vector3().setFromMatrixPosition(matrix); };
+  const near = ([east, north]) => Array.from({ length: mesh.count }, (_, i) => centre(i)).some(p => Math.hypot(p.x - east, p.z + north) < 0.002);
+  // White's two back checkers stand on point 24 at the far edge from white's chair.
+  assert.ok(near(backgammonSpot(plan.backgammon, 24, 0, 0).position) && near(backgammonSpot(plan.backgammon, 24, 1, 0).position));
+  mirror.show(fromPosition({ 6: 3, 1: -2 }, { bar: [1, 0], off: [11, 13] }), 1);
+  assert.equal(mirror.count(), 3 + 2 + 1 + 11 + 13);
+  assert.ok(near(backgammonSpot(plan.backgammon, 'bar-white', 0, 1).position), 'the hit checker waits on the bar');
+  mirror.show(null);
+  assert.equal(mirror.count(), 30, 'cleared, the table is set up again');
+});
