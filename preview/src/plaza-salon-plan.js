@@ -295,6 +295,15 @@ export function mancalaSpot(table, index, sideZeroChair = 0) {
   return [table.x + flip * offset, table.north + flip * along];
 }
 
+// The goban on the grove table (when Go is the table's game): nine lines each way,
+// 4.2 cm apart, its top 3 cm above the table. Point index (row * 9 + column, rows from
+// black's side, column a on black's left) is a spot [east, north] for black in `blackChair`.
+export const GO = { spacing: 0.042, board: 0.44, thick: 0.03 };
+export function goSpot(table, index, blackChair = 0) {
+  const row = Math.floor(index / 9), column = index % 9, flip = blackChair === 0 ? 1 : -1;
+  // Black in chair 0 sits east facing west: row 1 nearest (east), column a on its left (south).
+  return [table.x + flip * (4 - row) * GO.spacing, table.north + flip * (column - 4) * GO.spacing];
+}
 // Darts: the board's centre 1.73 m up on the post, facing along the board's heading
 // (north), and the throwing line 2.37 m out in front. Standing within 0.8 m of the line
 // plays. A dart's landing [x, y] in millimetres on the board maps to [east, north, height].

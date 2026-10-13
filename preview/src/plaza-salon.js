@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { BACKGAMMON, CHESS_CELL_M, DOMINO, JENGA, MANCALA, WINE_PONG_STAND, backgammonSpot, cafeChairAngle, chessCell, chessCellIsDark, chessCellPosition, dominoLine, jengaBlock, mancalaSpot, plazaSalonPlan, winePongPoint, plazaSalonRack } from './plaza-salon-plan.js';
+import { BACKGAMMON, CHESS_CELL_M, DOMINO, GO, JENGA, MANCALA, WINE_PONG_STAND, backgammonSpot, cafeChairAngle, chessCell, chessCellIsDark, chessCellPosition, dominoLine, goSpot, jengaBlock, mancalaSpot, plazaSalonPlan, winePongPoint, plazaSalonRack } from './plaza-salon-plan.js';
 import { startGame as backgammonStart } from './backgammon-rules.js';
 import { startTower } from './jenga-rules.js';
 import { startGame as mancalaStart } from './mancala-rules.js';
@@ -250,11 +250,6 @@ export function buildPlazaSalon(world) {
     part(unit.disc, material.walnut, [0, 0.725, 0], [0.8, 0.04, 0.8]);
     part(unit.box, material.walnut, [0, 0.36, 0], [0.14, 0.62, 0.14]);
     part(unit.disc, material.bronze, [0, 0.025, 0], [0.46, 0.05, 0.46]);
-    part(unit.box, material.teak, [0, MANCALA.top - 0.012, 0], [MANCALA.depth, 0.024, MANCALA.length]);
-    for (let index = 0; index < 14; index++) {
-      const [east, north] = mancalaSpot(table, index, 0), [x, , z] = base({ x: east, north }), store = index === 6 || index === 13;
-      add(unit.disc, material.ebony, [x, origin[1] + MANCALA.top + 0.0005, z], store ? [0.075, 0.002, 0.11] : [0.058, 0.002, 0.058]);
-    }
   }
   // The curved bench: a slatted teak body, dusty-pink seat and back cushions,
   // flat teak ledges at each end, around a travertine drum with candle lanterns.
@@ -709,8 +704,18 @@ export function buildPlazaSalon(world) {
   }
   // Mancala seeds: glass beads in a few colours, one InstancedMesh, heaped in their pits
   // on a little spiral so a pit's count reads at a glance. Idle, the opening stands.
+  // The board (a carved teak slab with ebony cups) is its own group, put away while
+  // the table plays Go.
   {
-    const table = plan.grove, [, y] = base(table), top = y + MANCALA.top + 0.008;
+    const table = plan.grove, [tx, y, tz] = base(table), top = y + MANCALA.top + 0.008;
+    const board = new THREE.Group(); board.name = 'Mancala board'; group.add(board);
+    const slab = new THREE.Mesh(unit.box, material.teak); slab.position.set(tx, y + MANCALA.top - 0.012, tz); slab.scale.set(MANCALA.depth, 0.024, MANCALA.length); slab.castShadow = slab.receiveShadow = true;
+    const cups = new THREE.InstancedMesh(unit.disc, material.ebony, 14);
+    for (let index = 0; index < 14; index++) {
+      const [east, north] = mancalaSpot(table, index, 0), [x, , z] = base({ x: east, north }), store = index === 6 || index === 13;
+      dummy.position.set(x, y + MANCALA.top + 0.0005, z); dummy.rotation.set(0, 0, 0); dummy.scale.set(...(store ? [0.075, 0.002, 0.11] : [0.058, 0.002, 0.058])); dummy.updateMatrix(); cups.setMatrixAt(index, dummy.matrix);
+    }
+    board.add(slab, cups);
     const beads = new THREE.InstancedMesh(new THREE.SphereGeometry(0.0075, 10, 8), new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.18, metalness: 0.05 }), 48);
     Object.assign(beads, { name: 'Mancala seeds', castShadow: true, count: 0 });
     group.add(beads);
@@ -735,6 +740,45 @@ export function buildPlazaSalon(world) {
       // A game ({ board } from mancala-rules.js) or null for the opening, and the chair side 0 sits in.
       show,
       count: () => beads.count,
+      // Puts the board and beads away while the table plays something else.
+      setVisible(visible) { board.visible = beads.visible = visible; },
+      visible: () => board.visible,
+    };
+  }
+  // Go on the grove table: a kaya goban with its grid and star points, and the stones
+  // (black and white, one InstancedMesh), shown only while Go is the table's game.
+  {
+    const table = plan.grove, [tx, y, tz] = base(table), top = y + MANCALA.top - 0.012 + GO.thick;
+    const goban = new THREE.Group(); goban.name = 'Goban'; goban.visible = false; group.add(goban);
+    const wood = new THREE.Mesh(unit.box, new THREE.MeshStandardMaterial({ color: '#d9b26b', roughness: 0.6 }));
+    wood.position.set(tx, top - GO.thick / 2, tz); wood.scale.set(GO.board, GO.thick, GO.board); wood.castShadow = wood.receiveShadow = true;
+    const lines = new THREE.InstancedMesh(unit.box, new THREE.MeshStandardMaterial({ color: '#2b2116', roughness: 0.8 }), 18 + 5);
+    const span = 8 * GO.spacing;
+    for (let i = 0; i < 9; i++) {
+      const offset = (i - 4) * GO.spacing;
+      dummy.rotation.set(0, 0, 0); dummy.position.set(tx + offset, top + 0.0004, tz); dummy.scale.set(0.0012, 0.0008, span); dummy.updateMatrix(); lines.setMatrixAt(i, dummy.matrix);
+      dummy.position.set(tx, top + 0.0004, tz + offset); dummy.scale.set(span, 0.0008, 0.0012); dummy.updateMatrix(); lines.setMatrixAt(9 + i, dummy.matrix);
+    }
+    [[2, 2], [2, 6], [6, 2], [6, 6], [4, 4]].forEach(([r, c], i) => { dummy.position.set(tx + (r - 4) * GO.spacing, top + 0.0005, tz + (c - 4) * GO.spacing); dummy.scale.set(0.006, 0.001, 0.006); dummy.updateMatrix(); lines.setMatrixAt(18 + i, dummy.matrix); });
+    const stones = new THREE.InstancedMesh(new THREE.SphereGeometry(0.02, 16, 10), new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.3 }), 81);
+    Object.assign(stones, { name: 'Go stones', castShadow: true, count: 0 });
+    goban.add(wood, lines, stones);
+    const colour = { b: new THREE.Color('#151515'), w: new THREE.Color('#f2efe6') };
+    group.userData.go = {
+      // A game ({ board } from go-rules.js) and the chair black sits in; null clears the stones.
+      show(game = null, blackChair = 0) {
+        stones.count = 0;
+        (game?.board ?? []).forEach((stone, index) => {
+          if (!stone) return;
+          const [east, north] = goSpot(table, index, blackChair), [x, , z] = base({ x: east, north });
+          dummy.position.set(x, top + 0.007, z); dummy.rotation.set(0, 0, 0); dummy.scale.set(1, 0.42, 1); dummy.updateMatrix();
+          stones.setColorAt(stones.count, colour[stone]); stones.setMatrixAt(stones.count++, dummy.matrix);
+        });
+        stones.instanceMatrix.needsUpdate = true; if (stones.instanceColor) stones.instanceColor.needsUpdate = true; stones.computeBoundingSphere();
+      },
+      count: () => stones.count,
+      setVisible(visible) { goban.visible = visible; },
+      visible: () => goban.visible,
     };
   }
   // Hearts at the café table: the trick lies face up, each card in front of the player
