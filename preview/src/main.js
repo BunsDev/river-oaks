@@ -38,6 +38,8 @@ import { registerGroundSurfaces, groundSurfaceHeight } from './world-surface.js'
 import { buildStreetFurniture } from './street-furniture.js';
 import { buildPlazaSalon } from './plaza-salon.js';
 import { createPlazaTableGames, seatAtTable } from './plaza-table-games.js';
+import { createPlazaStage } from './plaza-stage.js';
+import { plazaSalonPlan } from './plaza-salon-plan.js';
 import { createPlazaDominoes, seatAtCafe } from './plaza-dominoes.js';
 import { createPlazaHearts } from './plaza-hearts.js';
 import { createPlazaBackgammon, seatAtBackgammon } from './plaza-backgammon.js';
@@ -105,7 +107,7 @@ let worldRegionSha256 = null;
 let landmarkAccountId = null;
 let playerAvatar;
 let multiplayer, remotePlayers, buildLayer, buildControls, seatingControls, seatAndWater;
-let plazaSalon = null, plazaGames = null, plazaDominoes = null, plazaHearts = null, plazaBackgammon = null, cafeGame = 'dominoes';
+let plazaSalon = null, plazaGames = null, plazaDominoes = null, plazaHearts = null, plazaBackgammon = null, cafeGame = 'dominoes', plazaStage = null;
 // What X does while seated: the first provider (a game table, the stage…) offering a play.
 // Each feature adds its own line to the list, so they never edit the same one.
 const playProviders = [];
@@ -236,12 +238,14 @@ function initializeRenderer() {
     focusWorld: () => host.focus({ preventScroll: true }), onSwitch: switchCafe });
   plazaHearts = createPlazaHearts({ getMirror: () => plazaSalon?.userData.cards ?? null, getSeat: () => seatAtCafe(walking?.getPose()),
     focusWorld: () => host.focus({ preventScroll: true }), onSwitch: switchCafe });
+  plazaStage = createPlazaStage({ walking, getMultiplayer: () => multiplayer, getStageView: () => plazaSalon?.userData.stage ?? null });
   // Seated at the backgammon table, X plays backgammon; the table's checkers mirror the game.
   plazaBackgammon = createPlazaBackgammon({ getMirror: () => plazaSalon?.userData.backgammon ?? null, getSeat: () => seatAtBackgammon(walking?.getPose()),
     focusWorld: () => host.focus({ preventScroll: true }) });
   playProviders.push(() => plazaGames);
   playProviders.push(() => plazaBackgammon);
   playProviders.push(() => cafeGame === 'hearts' ? plazaHearts : plazaDominoes);
+  playProviders.push(() => plazaStage);
   playDock = createPlayDock({creationToolsEnabled}); const visitTools = playDock.content;
   if (creationToolsEnabled) buildControls=createSharedBuildControls({getPose:()=>walking?.getPose(),isBuildableRoom:id=>world?.stores.some(store=>store.id===id && store.category==='home'),onBuilderChange:builder=>{builderAim='';if(!builder.active)buildLayer?.setGhost(null);},request:message=>multiplayer?.command(message)??Promise.resolve({ok:false,message:'Join the town before building.'})});
   visitTools.append($('.player-controls'), ...(buildControls ? [buildControls.panel] : []));
@@ -479,6 +483,7 @@ function populateWorld(data) {
   worldGroup.add(furniture);
   // The Dior-Toulouse plaza furnished as an open-air salon (plaza-salon-plan.js).
   plazaSalon = buildPlazaSalon(data);
+  plazaStage?.setWorld(data);
   worldGroup.add(plazaSalon);
   buildingMesh.add(seeThroughNearCameraIn(buildDistrictFantasy(data)));
   document.querySelectorAll('[data-layer]').forEach((input) => { layers[input.dataset.layer].visible = input.checked; });
@@ -718,7 +723,7 @@ function render(now) {
   if (storeIntros?.active || photoMode?.active || birdCams?.riding) walking?.halt();
   else if (multiplayer?.connected && !multiplayer.traveling) walking?.update(delta, now);
   else walking?.halt();
-  plazaGames?.update(); plazaDominoes?.update(); plazaHearts?.update(); plazaBackgammon?.update();
+  plazaGames?.update(); plazaDominoes?.update(); plazaHearts?.update(); plazaBackgammon?.update(); plazaStage?.update();
   if (multiplayer?.connected) birdCams?.update(delta);
   multiplayer?.update(now);
   seatingControls?.update(now);
@@ -933,6 +938,20 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
     const state = plazaGames.debug();
     return { ...state, mirror: state.tableId ? plazaSalon?.userData.chess?.board(state.tableId) ?? null : null };
   };
+  window.__riverPlazaStage = () => ({ live: plazaSalon?.userData.stage?.live ?? null, action: plazaStage?.interaction()?.label ?? null,
+    // Travel to open pavement in front of the stage, toward the salon.
+    async goNear() {
+      const stage = world && plazaSalonPlan(world)?.stage;
+      if (!stage) return { ok: false };
+      const environment = walkingEnvironment(), free = ([x, north]) => environment.isFree(x, -north) && !environment.roomAt(x, -north);
+      for (const angle of [0, 0.5, -0.5, 1, -1]) {
+        const position = [stage.x + Math.sin(stage.heading + angle) * (stage.radius + 0.8), stage.north - Math.cos(stage.heading + angle) * (stage.radius + 0.8)];
+        if (!free(position)) continue;
+        const result = await goToPlace({ kind: 'landmark', name: 'Nearby', position });
+        if (result?.ok) return { ok: true, position };
+      }
+      return { ok: false };
+    } });
   window.__riverPlazaDominoes = () => plazaDominoes ? { ...plazaDominoes.debug(), table: plazaSalon?.userData.dominoes?.count() ?? null,
     deal: (seed, players) => plazaDominoes.deal(seed, players) } : null;
   window.__riverPlazaBackgammon = () => plazaBackgammon ? { ...plazaBackgammon.debug(), table: plazaSalon?.userData.backgammon?.count() ?? null,
