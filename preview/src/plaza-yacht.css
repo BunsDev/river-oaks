@@ -1,0 +1,29 @@
+/* Yacht: five ivory dice (kept ones lifted and ringed) above the Roll button, beside a
+   score card with a column per player and, on your turn, what the dice would score in
+   each open box. */
+.yacht-panel .yacht-body { display: flex; flex-direction: column; gap: 12px; }
+.yacht-panel .yacht-play { display: grid; grid-template-columns: minmax(0, 280px) minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 620px) { .yacht-panel .yacht-play { grid-template-columns: minmax(0, 1fr); } }
+.yacht-panel .yacht-hand { display: grid; gap: 12px; justify-items: center; padding: 14px 12px; border-radius: 14px; background: var(--hud-tile); }
+.yacht-panel .yacht-dice { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; min-height: 54px; }
+.yacht-panel .yacht-die { width: 44px; height: 44px; padding: 0; border: 0; border-radius: 9px; background: transparent; cursor: pointer; transition: transform .12s ease; }
+.yacht-panel .yacht-die svg { display: block; width: 100%; height: 100%; }
+.yacht-panel .yacht-die-face { fill: #f6efdf; stroke: #b9ab8f; stroke-width: 1.5; }
+.yacht-panel .yacht-pip { fill: #2a221c; }
+.yacht-panel .yacht-die[aria-pressed=true] { transform: translateY(-5px); }
+.yacht-panel .yacht-die[aria-pressed=true] .yacht-die-face { stroke: var(--hud-action); stroke-width: 3; }
+.yacht-panel .yacht-die[aria-disabled=true] { cursor: default; }
+.yacht-panel .yacht-die:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.yacht-panel [data-yacht-action=roll] { min-width: 140px; min-height: 40px; border: 0; border-radius: 10px; background: var(--hud-action); color: var(--hud-on-action); font: inherit; font-weight: 700; cursor: pointer; }
+.yacht-panel [data-yacht-action=roll][aria-disabled=true] { opacity: .45; cursor: default; }
+.yacht-panel .yacht-rolls { margin: 0; color: var(--hud-muted); font-size: 12px; }
+.yacht-panel .yacht-card { width: 100%; border-collapse: collapse; font-size: 13px; color: var(--ink); }
+.yacht-panel .yacht-card th, .yacht-panel .yacht-card td { padding: 3px 6px; border-bottom: 1px solid var(--hud-hairline); text-align: right; }
+.yacht-panel .yacht-card th[scope=row], .yacht-panel .yacht-card thead th:first-child { text-align: left; font-weight: 600; }
+.yacht-panel .yacht-card thead th { font-size: 12px; font-weight: 650; white-space: nowrap; }
+.yacht-panel .yacht-card thead th[data-turn] { color: var(--hud-action); }
+.yacht-panel .yacht-card tfoot th, .yacht-panel .yacht-card tfoot td { font-weight: 750; border-bottom: 0; }
+.yacht-panel .yacht-card [hidden] { display: none; }
+.yacht-panel [data-yacht-box] { min-width: 48px; min-height: 26px; padding: 0 8px; border: 1px solid var(--hud-action); border-radius: 999px; background: transparent; color: var(--hud-action); font: inherit; font-weight: 700; cursor: pointer; }
+.yacht-panel [data-yacht-box]:hover, .yacht-panel [data-yacht-box]:focus-visible { background: var(--hud-action); color: var(--hud-on-action); }
+.yacht-panel .table-game-actions [data-yacht-action=new] { background: var(--hud-action); border-color: transparent; color: var(--hud-on-action); }

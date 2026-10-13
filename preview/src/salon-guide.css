@@ -137,6 +137,7 @@
 .salon-figure .sg-slot { fill: #13284a; stroke: rgb(0 0 0 / .35); stroke-width: 1; }
 .salon-figure .sg-red { fill: var(--salon-red); }
 .salon-figure .sg-yellow { fill: var(--salon-yellow); }
+.salon-figure .sg-blue { fill: var(--salon-navy); }
 .salon-figure .sg-win { fill: none; stroke: #fff4cf; stroke-width: 2.6; }
 .salon-figure .sg-ghost { fill: none; stroke: var(--salon-red); stroke-width: 2; stroke-dasharray: 4 3; }
 .salon-figure .sg-tile-face { fill: var(--salon-ivory); stroke: #a78a55; stroke-width: 1.2; }
