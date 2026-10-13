@@ -1,3 +1,4 @@
+import { dismissOnOutsideClick } from './modal-dismiss.js';
 import './places-guide.css';
 import { STORE_CATEGORIES } from './store-categories.js';
 
@@ -56,6 +57,7 @@ export function createPlacesGuide(host) {
     target.focus({ preventScroll: true }); target.scrollIntoView({ block: 'nearest' });
   };
   const close = () => dialog.close();
+  dismissOnOutsideClick(dialog, close);
   dialog.addEventListener('close', () => {
     if (map) host.querySelector('#places-here').after(map);
     const target = returnFocus?.isConnected && returnFocus.checkVisibility() && !returnFocus.closest('[inert]') ? returnFocus : trigger;

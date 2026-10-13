@@ -1,3 +1,4 @@
+import { dismissOnOutsideClick } from './modal-dismiss.js';
 import { blankRegion, buildingFits, editableRegion, insideRegion, mapPoint, nextRegionId, parcelFits, regionPoint, spawnClear, terrainIndex, REGION_DRAFT_STORAGE_KEY, REGION_MAP_SIZE } from './region-draft.js';
 import './region-editor.css';
 
@@ -26,6 +27,7 @@ export function createRegionEditor({ onChange = () => {}, getOwnerChoices = asyn
         <h3>Selected item</h3><label class="region-editor-choose-label">Choose an item<select class="region-editor-chooser"></select></label><div class="region-editor-fields"></div><button type="button" data-action="delete" hidden>Remove selected item</button></aside></div>
     <footer><p class="region-editor-status" role="status" aria-live="polite"></p><div><button type="button" data-action="new">New blank</button><button type="button" data-action="export">Download JSON</button><button type="button" data-action="done">Use this region</button></div></footer>
   </div>`;
+  dismissOnOutsideClick(dialog, () => dialog.close());
   document.body.append(dialog);
   const $ = selector => dialog.querySelector(selector);
   const map = $('.region-editor-map'), tools = $('.region-editor-tools'), fields = $('.region-editor-fields');
