@@ -80,6 +80,27 @@ function chessPieceGeometries() {
   return Object.fromEntries(Object.entries(parts).map(([type, list]) => [type, mergeGeometries(list)]));
 }
 
+// Card faces for the café table: a 13 × 4 atlas (ranks across, suits C D S H down),
+// drawn on a canvas. Without a document (tests, workers) there is no atlas.
+function cardAtlas() {
+  const canvas = globalThis.document?.createElement?.('canvas'), context = canvas?.getContext?.('2d');
+  if (!context) return null;
+  const width = 64, height = 90;
+  canvas.width = width * 13; canvas.height = height * 4;
+  [...'CDSH'].forEach((suit, row) => [...'23456789TJQKA'].forEach((rank, column) => {
+    const x = column * width, y = row * height, red = suit === 'H' || suit === 'D', glyph = { C: '\u2663', D: '\u2666', S: '\u2660', H: '\u2665' }[suit];
+    context.fillStyle = '#fbf8f1'; context.fillRect(x + 1, y + 1, width - 2, height - 2);
+    context.fillStyle = red ? '#b3262e' : '#1d1b1f';
+    context.font = '700 20px Georgia, serif'; context.textAlign = 'left'; context.textBaseline = 'top';
+    context.fillText(rank === 'T' ? '10' : rank, x + 6, y + 5);
+    context.font = '40px Georgia, "Apple Symbols", serif'; context.textAlign = 'center'; context.textBaseline = 'middle';
+    context.fillText(glyph, x + width / 2, y + height / 2 + 6);
+  }));
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace; texture.anisotropy = 4;
+  return texture;
+}
+
 function sector(innerRadius, outerRadius, bottom, top, start, length, segments = 48) {
   const shape = new THREE.Shape(), a0 = start - Math.PI / 2, a1 = a0 + length;
   shape.absarc(0, 0, outerRadius, a0, a1, false);
@@ -401,6 +422,55 @@ export function buildPlazaSalon(world) {
       // The café game: { line, leadIndex, facing (your chair), hands: [{ chair, tiles | count }] }, or null to clear.
       show,
       count: () => ({ tiles: tiles.count, pips: pips.count }),
+    };
+  }
+  // Hearts at the café table: the trick lies face up, each card in front of the player
+  // who played it; hands and won tricks wait face down at each seat. Faces come from a
+  // canvas atlas where there is a document (a plain face elsewhere); backs are one mesh.
+  {
+    const table = plan.round, [tx, ty, tz] = base(table), top = ty + 0.77, CARD = { width: 0.063, length: 0.088, thick: 0.0006 };
+    const backs = new THREE.InstancedMesh(new THREE.BoxGeometry(CARD.width, CARD.thick, CARD.length), new THREE.MeshStandardMaterial({ color: '#7b2f45', roughness: 0.55 }), 4 * 13 + 4 * 13);
+    Object.assign(backs, { name: 'Card backs', castShadow: true, receiveShadow: true, count: 0 });
+    group.add(backs);
+    const atlas = cardAtlas();
+    if (atlas) { const holder = new THREE.Object3D(); holder.userData.texture = atlas; group.add(holder); }
+    const edge = new THREE.MeshStandardMaterial({ color: '#f3efe6', roughness: 0.6 });
+    const faces = [0, 1, 2, 3].map(index => {
+      const map = atlas?.clone() ?? null;
+      if (map) map.repeat.set(1 / 13, 1 / 4);
+      const face = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.45, map });
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(CARD.width, CARD.thick, CARD.length), [edge, edge, face, edge, edge, edge]);
+      mesh.name = `Card in the trick ${index}`; mesh.visible = false; mesh.castShadow = mesh.receiveShadow = true;
+      group.add(mesh); return mesh;
+    });
+    const at = (chair, out, along = 0) => {
+      const angle = cafeChairAngle(chair);
+      return [tx + Math.sin(angle) * out + Math.cos(angle) * along, tz + Math.cos(angle) * out - Math.sin(angle) * along, angle];
+    };
+    const show = game => {
+      backs.count = 0; faces.forEach(mesh => { mesh.visible = false; });
+      if (game) {
+        (game.trick ?? []).forEach(({ chair, card }, order) => {
+          const mesh = faces[order], [x, z, angle] = at(chair, 0.2);
+          mesh.position.set(x, top + CARD.thick / 2 + order * 0.0008, z); mesh.rotation.set(0, angle + (order - 1.5) * 0.08, 0); mesh.visible = true;
+          if (mesh.material[2].map) { const column = '23456789TJQKA'.indexOf(card[0]), row = 'CDSH'.indexOf(card[1]); mesh.material[2].map.offset.set(column / 13, 1 - (row + 1) / 4); }
+        });
+        const stack = (chair, count, along, spread) => {
+          for (let k = 0; k < count && backs.count < backs.instanceMatrix.count; k++) {
+            const [x, z, angle] = at(chair, 0.6, along + (k - (count - 1) / 2) * spread);
+            dummy.position.set(x, top + CARD.thick / 2 + k * 0.0007, z); dummy.rotation.set(0, angle + (k - (count - 1) / 2) * 0.05, 0); dummy.scale.set(1, 1, 1); dummy.updateMatrix();
+            backs.setMatrixAt(backs.count++, dummy.matrix);
+          }
+        };
+        for (const hand of game.hands ?? []) stack(hand.chair, hand.count, 0, 0.012);
+        for (const pile of game.won ?? []) stack(pile.chair, pile.tricks, 0.16, 0);
+      }
+      backs.instanceMatrix.needsUpdate = true; backs.computeBoundingSphere();
+    };
+    group.userData.cards = {
+      // The café Hearts hand: { trick: [{ chair, card }], hands: [{ chair, count }], won: [{ chair, tricks }] }, or null to clear.
+      show,
+      count: () => ({ faces: faces.filter(mesh => mesh.visible).length, backs: backs.count, drawn: Boolean(atlas) }),
     };
   }
   group.userData.counts = { chairs: plan.chairs.length, chess: plan.chess.length, planters: plan.planters.length, lanterns: plan.lanterns.length, strands: plan.strands.length };
