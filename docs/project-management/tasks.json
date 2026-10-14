@@ -5820,14 +5820,14 @@
     {
       "id": "procedural-private-upper-revocation",
       "title": "Keep generated private home levels and voice access consistent after guest revocation",
-      "status": "active",
+      "status": "delivered",
       "branches": [
         "fix/procedural-private-level-revocation-20261014"
       ],
-      "owner": "codex-root-20261014-procedural-landing",
-      "updatedAt": "2026-10-14T21:00:10.105Z",
-      "handoff": "Signed draft PR #352 head 884aa1218e23aece622948db27070f297ed5e1a9 is pushed on #351; all exact-head hosted checks, including aggregate preview, passed. Focused regression failed before the fix and passed after; local core and full gates passed with 673 Redis server tests and zero skips, ten experience and 21 shared journeys. Clean worktree retained. Former owner: codex-root-20261014-private-level-revocation.",
-      "nextAction": "Review clean #352 privacy fix while #351 hosted checks run. After #351 lands, merge current main, verify focused/core, sign/push, obtain exact hosted checks and land serially. Keep broad rollout acceptance separate.",
+      "owner": null,
+      "updatedAt": "2026-10-14T21:24:49.915Z",
+      "handoff": "PR #352 merged to main as f9c3cb55a605dfa86e32d214e7f5e6e8bba0f160 at 2026-10-14T21:24:32Z. Reviewed signed head 1ed9624adcb6276caeab318ea8449b4f9686bb0d; exact-head preview and all 16 checks green. Final-main focused 33 pass/one existing hosted-edge skip and core passed; earlier isolated Redis full passed 673/673 and 21 shared journeys.",
+      "nextAction": "Delivered. Archive ignored receipts and retire local branch/worktree via project:prune after dry run. Human/target-device broader rollout gates remain with integration goal.",
       "ledger": "docs/superpowers/plans/2026-10-14-procedural-private-upper-revocation.md",
       "requiredChecks": [
         "Focused generated-home access and upper-level regression",
@@ -5841,8 +5841,45 @@
         "docs/superpowers/plans/README.md"
       ],
       "pr": 352,
-      "leaseUntil": "2026-10-14T23:00:10.105Z",
-      "previousOwner": "codex-root-20261014-private-level-revocation"
+      "leaseUntil": null,
+      "previousOwner": "codex-root-20261014-private-level-revocation",
+      "evidence": [
+        {
+          "pr": 352,
+          "reviewedHead": "1ed9624adcb6276caeab318ea8449b4f9686bb0d",
+          "merge": "f9c3cb55a605dfa86e32d214e7f5e6e8bba0f160",
+          "tree": "6cc7863c792c9642c725ed6eab06ec2bdede603e",
+          "checks": "Exact-head aggregate preview and all 16 hosted checks passed; final-main focused 33 pass/one existing hosted-edge skip and core passed; prior isolated Redis full passed 673 server tests and 21 shared journeys."
+        }
+      ]
+    },
+    {
+      "id": "procedural-gallery-cycle-soak",
+      "title": "Measure repeated generated gallery entry, moving frames, eviction and return in one session",
+      "status": "active",
+      "branches": [
+        "perf/procedural-gallery-cycle-soak-20261014"
+      ],
+      "owner": "codex-root-20261014-procedural-landing",
+      "updatedAt": "2026-10-14T21:15:57.101Z",
+      "leaseUntil": "2026-10-14T23:15:57.101Z",
+      "previousOwner": "codex-root-20261014-gallery-motion",
+      "pr": 353,
+      "handoff": "Signed draft PR #353 head e419b5a4c8a23a1b81a95b1d3eb879564cc0212b is pushed on #352. Its moving-camera journey reproduces 33.3\u201333.4 ms Auto p95 after revisit; Smoothest and Auto with AO off held 16.7\u201316.8 ms on local M3 Max Chromium. Named journeys, core, isolated-Redis full, and all ten exact-head hosted checks including aggregate preview passed. The worktree is clean and retained for review.",
+      "nextAction": "Review clean #353 cycle-soak slice while #352 hosted checks run. After #352 lands, merge current main, verify focused/core, sign/push, obtain exact hosted checks and land serially. Keep broader performance/human acceptance open.",
+      "ledger": "docs/superpowers/plans/2026-10-14-procedural-gallery-cycle-soak.md",
+      "requiredChecks": [
+        "Repeated one-client gallery entry and eviction behavioral journey",
+        "Per-cycle cold/return preparation, geometry/texture and heap evidence",
+        "Moving indoor frame sample with actual position delta",
+        "pnpm run verify core before commit",
+        "Full isolated Redis and browser gate before delivery"
+      ],
+      "filesOwned": [
+        "preview/e2e/generated-gallery-cycle-soak.js",
+        "docs/superpowers/plans/2026-10-14-procedural-gallery-cycle-soak.md",
+        "docs/superpowers/plans/README.md"
+      ]
     },
     {
       "id": "local-prune-20261013",
@@ -8377,34 +8414,6 @@
           "head": "bec6336cd26b3d264ab9cb989df54858a7647223"
         }
       }
-    },
-    {
-      "id": "procedural-gallery-cycle-soak",
-      "title": "Measure repeated generated gallery entry, moving frames, eviction and return in one session",
-      "status": "queued",
-      "branches": [
-        "perf/procedural-gallery-cycle-soak-20261014"
-      ],
-      "owner": null,
-      "updatedAt": "2026-10-14T06:45:08Z",
-      "leaseUntil": null,
-      "previousOwner": "codex-root-20261014-gallery-motion",
-      "pr": 353,
-      "handoff": "Signed draft PR #353 head e419b5a4c8a23a1b81a95b1d3eb879564cc0212b is pushed on #352. Its moving-camera journey reproduces 33.3\u201333.4 ms Auto p95 after revisit; Smoothest and Auto with AO off held 16.7\u201316.8 ms on local M3 Max Chromium. Named journeys, core, isolated-Redis full, and all ten exact-head hosted checks including aggregate preview passed. The worktree is clean and retained for review.",
-      "nextAction": "Scope a separate AO performance fix using the moving-camera evidence, then collect target-device and human visual acceptance before broader archetype rollout. Review draft PR #353 with the #349-#352 stack; preserve worktrees until delivery proof.",
-      "ledger": "docs/superpowers/plans/2026-10-14-procedural-gallery-cycle-soak.md",
-      "requiredChecks": [
-        "Repeated one-client gallery entry and eviction behavioral journey",
-        "Per-cycle cold/return preparation, geometry/texture and heap evidence",
-        "Moving indoor frame sample with actual position delta",
-        "pnpm run verify core before commit",
-        "Full isolated Redis and browser gate before delivery"
-      ],
-      "filesOwned": [
-        "preview/e2e/generated-gallery-cycle-soak.js",
-        "docs/superpowers/plans/2026-10-14-procedural-gallery-cycle-soak.md",
-        "docs/superpowers/plans/README.md"
-      ]
     },
     {
       "id": "procedural-gallery-ao-tail-pacing",
