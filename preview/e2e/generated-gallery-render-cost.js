@@ -164,8 +164,23 @@ async page => {
   const outwardCull = await page.evaluate(() => window.__riverExteriorCull());
   if (outwardCull.cull || outward.graphics.render.calls <= interior[0].graphics.render.calls)
     throw new Error(`Exterior did not return at the frontage: ${JSON.stringify(outwardCull)}`);
+  // Continue past the edge of the opening so the street is actually in frame.
+  let frontageView = outwardCull;
+  for (let turn = 0; turn < 16; turn++) {
+    const center = frontageView.front && frontageView.front.reduce((sum, corner) => sum.map((value, axis) => value + corner[axis] / 2), [0, 0, 0]);
+    if (!frontageView.cull && center && Math.abs(center[0]) < 0.7 && center[2] < 1) break;
+    await page.keyboard.down('ArrowLeft');
+    await page.waitForTimeout(250);
+    await page.keyboard.up('ArrowLeft');
+    await page.waitForTimeout(150);
+    frontageView = await page.evaluate(() => window.__riverExteriorCull());
+  }
+  const frontageCenter = frontageView.front?.reduce((sum, corner) => sum.map((value, axis) => value + corner[axis] / 2), [0, 0, 0]);
+  if (frontageView.cull || !frontageCenter || Math.abs(frontageCenter[0]) >= 0.7 || frontageCenter[2] >= 1)
+    throw new Error(`Gallery frontage never entered the settled view: ${JSON.stringify(frontageView)}`);
+  const frontageRender = await sample();
   await page.screenshot({ path: 'output/playwright/gallery-render-frontage.png' });
-  for (let turn = 0; turn < 8; turn++) {
+  for (let turn = 0; turn < 24; turn++) {
     await page.keyboard.down('ArrowLeft');
     await page.waitForTimeout(400);
     await page.keyboard.up('ArrowLeft');
@@ -218,6 +233,6 @@ async page => {
   await page.screenshot({ path: 'output/playwright/gallery-render-upper.png' });
   if (errors.length) throw new Error(errors.join('; '));
   return { passed: true, street, streetCull, interior, interiorCull, hiddenDetail, hiddenTrees, hiddenOutside, outside,
-    outward, outwardCull, inwardAgain, inwardAgainCull, upper, upperCull,
+    outward, outwardCull, frontageView, frontageRender, inwardAgain, inwardAgainCull, upper, upperCull,
     scope: 'Local Chromium, one fixture client, two 120-frame samples per player-height street, ground-gallery and upper-gallery view at 1440x900 Sharpest, plus diagnostic hidden-layer samples and a frontage turn. CPU pass timings include driver submission and profiler overhead; the cameras see different geometry. Hidden-layer comparisons change occlusion and are diagnostic only. No target-device acceptance.' };
 }
