@@ -4688,9 +4688,9 @@
       "branches": [
         "docs/procedural-multilevel-interiors-20261013"
       ],
-      "owner": "codex-resume-20261014-procedural-interiors",
-      "updatedAt": "2026-10-14T01:40:33.038450Z",
-      "nextAction": "Combined gallery f0a55434 / Studio source passed full on main 7cff31f4: 671 Redis tests, 10 experience and 20 shared journeys, plus 3 targeted gallery/Studio journeys. Sign the verified merge, push integration and open its draft PR. Keep broader rollout gated on 33.4 ms interior p95 and human review; separate level-streaming work awaits its verified handoff. No merge-to-main authorization.",
+      "owner": "codex-root-20261014-procedural-landing",
+      "updatedAt": "2026-10-14T19:30:58.996Z",
+      "nextAction": "User authorized landing to main and selected this session to take over. Reconcile current main, update #349 to main, verify exact hosted head and signatures, then merge serially through the stacked PRs; keep pilot rollout gaps explicit.",
       "ledger": "docs/superpowers/plans/2026-10-13-procedural-interiors-implementation.md",
       "requiredChecks": [
         "Focused behavioral and cross-runtime tests for each phase",
@@ -4714,8 +4714,9 @@
         "preview/e2e/creator-generated-levels.js",
         "preview/e2e/shared-runner.js (new creator-generated-levels acceptance registration)"
       ],
-      "leaseUntil": "2026-10-14T03:40:33.038450Z",
-      "previousOwner": "codex-root-20261013-procedural-interiors"
+      "leaseUntil": "2026-10-14T21:30:58.996Z",
+      "previousOwner": "codex-resume-20261014-procedural-interiors",
+      "pr": 349
     },
     {
       "id": "ipic-photo-interior",
@@ -5159,10 +5160,10 @@
       "branches": [
         "feat/procedural-level-streaming-20261014"
       ],
-      "owner": "codex-root-20261014-four-level-browser",
-      "updatedAt": "2026-10-14T02:36:16Z",
-      "handoff": "Signed merge b7976f67ee843226096aeb6530c7a1078c0afe99 is pushed; draft stacked PR #350 targets the published integration branch in draft PR #349. Combined focused 27/27, core, build and two-client gallery reload passed. Former owner: codex-root-20261014-level-streaming. Preserve the clean worktree until delivery and retirement evidence support cleanup.",
-      "nextAction": "Four-level browser, two-level creator, gallery and full isolated-Redis gates passed. Sign/push the verified route and journey changes to draft PR #350, then review hosted checks on the exact head. Performance, native and human acceptance remain open.",
+      "owner": "codex-root-20261014-procedural-landing",
+      "updatedAt": "2026-10-14T20:19:11.793Z",
+      "handoff": "Signed, verified PR #350 head ba0f5d473a048bfb673bb3831e3108392377c581 is pushed against draft #349. Local full passed with isolated Redis: 672 server tests, 10 experience and 21 shared journeys, including four-level creator ascent/descent and top-floor reload; worktree clean and retained. Hosted Python verify and dependency review passed; browser jobs were still in progress at handoff. Former owner: codex-root-20261014-four-level-browser. PR #349 merged at de0b64a9561f7cc1b32a9ea3594cadaee18fa771; integration takeover is reconciling #350 with main.",
+      "nextAction": "PR #349 landed at de0b64a. Merge current main into #350, verify combined core and exact hosted head, then mark ready and land #350 serially. Performance, native and human acceptance remain open.",
       "ledger": "docs/superpowers/plans/2026-10-14-level-aware-interior-streaming.md",
       "requiredChecks": [
         "Multi-level stream preparation, cancellation and eviction behavioral tests",
@@ -5186,7 +5187,30 @@
         "preview/tests/contextual-action.test.js (descent action regression only)"
       ],
       "pr": 350,
-      "leaseUntil": "2026-10-14T04:36:16Z"
+      "leaseUntil": "2026-10-14T22:19:11.793Z"
+    },
+    {
+      "id": "local-prune-20261013",
+      "title": "Reduce River Oaks local branches and worktrees to at most ten each",
+      "status": "active",
+      "branches": [
+        "feat/prune-tooling-20261014"
+      ],
+      "owner": "claude-code 69cb4235",
+      "updatedAt": "2026-10-14T18:48:28.304Z",
+      "nextAction": "Claimed 2026-10-14 by claude-code 69cb4235: build project:inventory, orphan checks in project:check, project:cancel, project:archives and a report-only remote inventory on feat/prune-tooling-20261014, recreate the missing ledger, then retire eligible refs with project:prune. Orphan cancellations and remote deletes wait on Val.",
+      "filesOwned": [
+        "docs/project-management/tasks.json (prune records only)",
+        "docs/superpowers/plans/2026-10-13-local-branch-worktree-prune.md"
+      ],
+      "requiredChecks": [
+        "fresh worktree and branch count <=10 each",
+        "project:check --github",
+        "restore manifests and archive hashes for retired refs"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-13-local-branch-worktree-prune.md",
+      "leaseUntil": "2026-10-15T06:48:28.304Z",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-prune-tooling-20261014"
     }
   ]
 }

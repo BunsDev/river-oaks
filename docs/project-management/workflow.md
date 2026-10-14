@@ -174,6 +174,20 @@ Remote branch deletion and discarding distinct unfinished work need explicit sco
 approval. Local cleanup does not imply either. Preserve archive tags, bundles,
 evidence and the restoration manifest; do not prune them as part of the same round.
 
+When the maintainer explicitly authorizes cancellation of local work untouched for
+a stated duration, `project:prune --cancel-stale --branch <branch> --expected-head
+<full-sha> --stale-hours <hours>` provides a separate dry run (default: 12 hours);
+`--apply` archives the exact Git tip and
+the full local worktree, restore-tests both, then removes the local checkout and
+ref through the installed guard. It checks file and directory times, reflog, task
+and PR updates, and running process CWDs before removal. Use `--detached-path
+<absolute-path>` instead of `--branch` for an old detached comparison checkout.
+An open remote PR or remote branch is left intact. If a nested ignored repository
+survives the first clean, use `--resume-manifest <manifest.json> --apply` only after
+reviewing that partial receipt; the resume checks archive hashes and the remaining
+files before finishing. The authorized duration is a selection boundary, not delivery
+proof or blanket approval to cancel newer work.
+
 ## Restore
 
 Read the task's `archive` manifest first. Verify its checksum, then fetch the
@@ -197,6 +211,13 @@ known unfinished work rather than treating this round as global task completion.
 Primary/default branches are excluded from retirement debt.
 A blocked cleanup stays visible until its evidence is reconciled; do not relabel
 the task active or retired to hide the gap.
+
+Orphan debt is a gap as well: a local branch or a detached worktree that no task
+records, and a non-retired task whose recorded `worktree` path no longer exists.
+Claim the checkout, cancel it (below), or fix the record. `project:check
+--allow-orphans` still prints those gaps, as warnings, but exits zero for them so
+a session mid-task is not blocked by someone else's stray checkout; every other
+gap still fails.
 
 Use `pnpm run project:prune --branch <branch> --expected-head <full-sha>` to
 refresh GitHub/Git evidence and report blockers. It fetches `origin` and calls the
@@ -254,6 +275,48 @@ are unaffected. Git offers no hook for `git worktree remove` or registration pru
 the supported removal path. Hooks are an accidental-deletion guard, not a security
 boundary; an explicit hooks override (including an older bootstrap resetting hooksPath) can
 bypass them. This command does not install a background cleanup scheduler.
+
+## Inventory, archives and remote branches
+
+`pnpm run project:inventory` lists every local branch and worktree with its task,
+owner, upstream state, matching pull request, cleanliness, process activity and
+any archive of the same tip, and classifies each one: `primary`, `active` (an
+owner; `lease-expired` is a flag, not a release), `open-pr`, `detached`,
+`orphan-no-task`, `zero-commit`, `parked` (a queued or blocked task),
+`retire-candidate` (delivered at the exact merged head; only the session release
+is missing), `retire-eligible` (`project:prune` would accept it now) or
+`blocked:<reasons>` (the same blockers `project:prune` reports). It reads the
+primary checkout's live register and GitHub (`--no-github` skips that), fetches
+without pruning (`--no-fetch` skips that), and changes nothing. `--json` and
+`--output <file>` give the machine-readable report.
+
+`--remote` adds the branches on `origin`: `merged-exact` when a merged pull
+request's head is that exact tip and its merge commit is on the default branch,
+`merged-ancestor-review` when the tip is an ancestor of the default branch without
+such a pull request, `open-pr`, `merged-pr-not-on-default` or `unproven`. For
+`merged-exact` branches it prints `gh api -X DELETE` commands and never runs
+them: remote deletion still needs explicit approval, and a branch whose local
+copy is still present stays listed for review. `pnpm run land <pr>
+--delete-remote-branch` deletes only the landed pull request's source branch,
+only after the merge commit is confirmed on the default branch, and is off by
+default. Turning it on by default, or enabling GitHub's delete-branch-on-merge
+setting, is a maintainer decision.
+
+`pnpm run project:archives` indexes `~/worktree-backups/river-oaks/` (or
+`--archive-root`): for each `manifest.json` it checks the bundle's SHA-256, that
+`restore.git` resolves the archive tag to the recorded head (`--fsck` also runs
+`git fsck --full` there; `--files` also hashes the local-file tars), whether the
+archive tag is still present locally, and which register task references it,
+including the flat 2026-10-11 record shape and `~/` paths. A partial receipt
+left by a failed first attempt is flagged `superseded-by-complete-archive` when a
+complete archive of the same tip exists; evidence manifests are listed without
+verification. Tasks whose `archive` records point at a missing manifest are
+reported. It exits nonzero for an archive that no longer verifies and writes
+nothing. Deleting or moving anything under the archive root is out of scope for
+every command here.
+
+`pnpm run project:cancel` is `project:prune --cancel-stale` under its own name;
+the authorization, cutoff and guard rules above apply unchanged.
 
 ## Register sweeps
 
