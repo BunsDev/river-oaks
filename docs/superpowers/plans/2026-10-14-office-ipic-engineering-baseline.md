@@ -59,7 +59,7 @@ Captures: no new captures were taken this round. The reproducible views are froz
 - [x] `node --test scripts/tests/office-ipic-contract.test.js`: 7/7 pass.
 - [x] `pnpm run verify tooling`: agent-tests 83/83 (inside the core run).
 - [x] `pnpm run verify` core: the aggregate run failed once on an unrelated voice flake, then every core task passed on a focused retry (see results). The failed aggregate is kept on record; the retry does not relabel it.
-- [ ] Draft PR opened against `main`, cross-linked from #360.
+- [x] Draft PR #381 opened against `main` at `c1b7fabf` (created over REST while GraphQL was rate-limited); cross-linked from #360.
 
 ## Results
 

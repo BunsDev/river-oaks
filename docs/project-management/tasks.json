@@ -5096,9 +5096,9 @@
         "docs/office-ipic-engineering-baseline-20261014"
       ],
       "owner": "claude-code river-oaks-dc 8fa1c14c",
-      "updatedAt": "2026-10-14T19:47:04.727Z",
-      "leaseUntil": "2026-10-14T21:47:04.727Z",
-      "nextAction": "Write the ledger and docs/design/office-ipic/{layout-contract.json,camera-manifest.json} with a behavioral validator in scripts/; run agent tests; open a draft PR. Design half (brief, reference-index, asset-manifest, review-matrix) is river-oaks-5d on docs/office-ipic-baseline-20261014.",
+      "updatedAt": "2026-10-14T20:09:23.856Z",
+      "leaseUntil": "2026-10-14T22:09:23.856Z",
+      "nextAction": "Draft PR #381 open at c1b7fabf; wait for the hosted preview check, address review, then undraft. Val decision pending: penthouse-volume-fit (31.9 m vs 28 m). After merge, hand #361 (reuse #349 level/portal shape) and #366 the contract; design half is river-oaks-5d's office-ipic-baseline-360.",
       "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-ipic-engineering-20261014",
       "ledger": "docs/superpowers/plans/2026-10-14-office-ipic-engineering-baseline.md",
       "issue": 360,
@@ -5114,7 +5114,8 @@
         "Focused office/IPIC/workplace unit and server tests with counts and skips recorded as baseline, failures preserved",
         "node --test scripts/tests/office-ipic-contract.test.js rejects stale versions, bad axes, duplicate ids and disconnected routes, and cross-checks the JSON against the live plan modules",
         "pnpm run verify core before commit"
-      ]
+      ],
+      "pr": 381
     }
   ]
 }
