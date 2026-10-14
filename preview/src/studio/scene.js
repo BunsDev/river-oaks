@@ -4,6 +4,8 @@ import * as THREE from 'three';
 import { terrainHeight } from '../geometry.js';
 import { registerGroundSurfaces, groundSurfaceHeight } from '../world-surface.js';
 import { assertStudioBudget } from './limits.js';
+import { previewBuildingInteriorPlan } from './interior-plan.js';
+import { createInteriorLevelPreview, showInteriorPreview } from './interior-scene.js';
 
 // Viewport backdrop per resolved appearance; matches the --sage panel token.
 const CLEAR_COLORS={light:'#e8eeea',dark:'#111815'};
@@ -30,7 +32,7 @@ export function buildStudioWorld(region) {
 export function createStudioScene(region, theme = 'light') {
   if(isSpaceDocument(region))return createSpaceScene(region,theme);
   assertStudioBudget(region);
-  const group = new THREE.Group(),items = new Map(), world = buildStudioWorld(region);
+  const group = new THREE.Group(),items = new Map(), interiorViews = new Map(), world = buildStudioWorld(region);
   const material = color => new THREE.MeshStandardMaterial({ color, roughness:.88 });
   const stone = material('#b9c8bf'), roof = material('#647b70'), bark = material('#887367'), leaves = material('#6f9976'), place = material('#c29a7c');
   const mesh = (geometry,mat,parent) => { const result=new THREE.Mesh(geometry,mat);result.castShadow=true;result.receiveShadow=true;parent.add(result);return result; };
@@ -54,7 +56,13 @@ export function createStudioScene(region, theme = 'light') {
   for(const b of region.buildings){
     const object=root(b.id,...b.center);object.rotation.y=b.yaw_deg*Math.PI/180;object.scale.set(b.size[0],b.size[2],b.size[1]);
     // Color the top face directly; overlapping roof slabs cause shadow acne.
-    mesh(new THREE.BoxGeometry(1,1,1),[stone,stone,roof,stone,stone,stone],object).position.y=.5;
+    const exterior=mesh(new THREE.BoxGeometry(1,1,1),[stone,stone,roof,stone,stone,stone],object);exterior.position.y=.5;
+    if(b.interior?.generation){
+      const plan=previewBuildingInteriorPlan(region,b.id),preview=createInteriorLevelPreview(plan);
+      preview.group.position.y=(plan.anchor.baseElevation-object.position.y)/b.size[2];
+      preview.group.scale.set(1/b.size[0],1/b.size[2],1/b.size[1]);
+      object.add(preview.group);interiorViews.set(b.id,{exterior,preview});
+    }
   }
   for(const t of region.trees){
     const object=root(t.id,...t.position);object.scale.set(t.crown_radius_m,t.height_m,t.crown_radius_m);
@@ -78,8 +86,18 @@ export function createStudioScene(region, theme = 'light') {
     grid.material.opacity=dark?.3:.45;
   }
   setAppearance(theme);
+  let activeInteriorView=null,walking=false;
+  function applyInteriorView(){
+    for(const [id,{exterior,preview}] of interiorViews){
+      const shown=!walking&&activeInteriorView?.buildingId===id;
+      exterior.visible=!shown;
+      showInteriorPreview(preview,shown?activeInteriorView.levelIndex:null,shown?activeInteriorView.layers:{});
+    }
+  }
   group.updateMatrixWorld(true);
-  return {group,items,world,setAppearance};
+  return {group,items,world,setAppearance,interiorViews,
+    setInteriorView(view){activeInteriorView=view;applyInteriorView();},
+    setWalk(enabled){walking=enabled;applyInteriorView();}};
 }
 export function disposeStudioScene(group) {
   const geometries=new Set(),materials=new Set();

@@ -1,7 +1,7 @@
 import { createMemoryOfficeDesk } from './office-desk.js';
 import { createChauffeurRoute, createLocalChauffeurSecurity, chauffeurDailyLimit } from './chauffeur.js';
-import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { loadDistrictData } from './district-data.js';
 import { createAuth } from './auth.js';
 import { magicOptions } from './magic-auth.js';
 import { createDevAuth, devAuthAllowed } from './dev-auth.js';
@@ -50,8 +50,7 @@ export function validateOrigin(origin) {
 export async function createTown({ env = process.env, origin, devAuth = 'auto', staticRoot = resolve('dist/preview') } = {}) {
   validateOrigin(origin);
   const worldId=validateWorldId(env.WORLD_ID??DEFAULT_WORLD_ID);
-  const data = JSON.parse(await readFile(new URL('../preview/public/data/district.json', import.meta.url), 'utf8'));
-  data.vegetation = JSON.parse(await readFile(new URL('../preview/public/data/district-vegetation.json', import.meta.url), 'utf8'));
+  const data = await loadDistrictData();
   const moderation = await createModeration(resolve(env.MODERATION_FILE ?? '.runtime/moderation.json'));
   const mode = chooseAuth({ env, origin, devAuth });
   const admins = (env.WAITLIST_ADMIN_USER_IDS ?? '').split(',').map(id => id.trim()).filter(Boolean);

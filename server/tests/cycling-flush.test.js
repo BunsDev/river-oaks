@@ -41,7 +41,7 @@ async function fixture(t, options = {}) {
   const response = await fetch(origin + '/api/multiplayer/ticket', { method: 'POST', headers: { Origin: publicOrigin, Cookie: 'test_session=alice', 'X-CSRF-Token': 'csrf' } });
   assert.equal(response.status, 200);
   const { ticket } = await response.json();
-  const ws = new WebSocket(`${origin.replace('http:', 'ws:')}/multiplayer?protocol=2&ticket=${ticket}`, { headers: { Origin: publicOrigin, Cookie: 'test_session=alice' } });
+  const ws = new WebSocket(`${origin.replace('http:', 'ws:')}/multiplayer?protocol=3&ticket=${ticket}`, { headers: { Origin: publicOrigin, Cookie: 'test_session=alice' } });
   await new Promise((resolve, reject) => { ws.once('open', resolve); ws.once('error', reject); });
   let requestId = 0;
   const command = message => new Promise(resolve => {
