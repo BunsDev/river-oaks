@@ -87,6 +87,7 @@ async page => {
   };
   await move(stair.position);
   await page.waitForFunction(() => document.querySelector('#walking-enter')?.textContent?.includes('Go up one level'));
+  await page.screenshot({ path: 'output/playwright/generated-gallery-level-0-route.png' });
   await page.locator('#canvas-host').focus();
   await page.keyboard.press('KeyF');
   await page.waitForFunction(upperId => {

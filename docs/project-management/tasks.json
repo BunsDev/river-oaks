@@ -4689,8 +4689,8 @@
         "docs/procedural-multilevel-interiors-20261013"
       ],
       "owner": "codex-resume-20261014-procedural-interiors",
-      "updatedAt": "2026-10-14T01:08:12.239549Z",
-      "nextAction": "Creator publication acceptance passed and signed at 0f830e42cf5dcca64439046bc44bffdbb30f81b3. Main 7cff31f4 merge is pending core verification; next integrate handed-off gallery head f0a55434, verify combined full/Redis/shared/Studio/gallery/performance scope, and open the integration draft PR. No merge-to-main authorization.",
+      "updatedAt": "2026-10-14T01:40:33.038450Z",
+      "nextAction": "Combined gallery f0a55434 / Studio source passed full on main 7cff31f4: 671 Redis tests, 10 experience and 20 shared journeys, plus 3 targeted gallery/Studio journeys. Sign the verified merge, push integration and open its draft PR. Keep broader rollout gated on 33.4 ms interior p95 and human review; separate level-streaming work awaits its verified handoff. No merge-to-main authorization.",
       "ledger": "docs/superpowers/plans/2026-10-13-procedural-interiors-implementation.md",
       "requiredChecks": [
         "Focused behavioral and cross-runtime tests for each phase",
@@ -4714,7 +4714,7 @@
         "preview/e2e/creator-generated-levels.js",
         "preview/e2e/shared-runner.js (new creator-generated-levels acceptance registration)"
       ],
-      "leaseUntil": "2026-10-14T03:08:12.239549Z",
+      "leaseUntil": "2026-10-14T03:40:33.038450Z",
       "previousOwner": "codex-root-20261013-procedural-interiors"
     },
     {
@@ -5123,6 +5123,34 @@
       ],
       "blocker": null,
       "ledger": "docs/project-management/workflow.md"
+    },
+    {
+      "id": "procedural-gallery-vertical-route",
+      "title": "Render the approved gallery vertical portal as a visible platform lift",
+      "status": "queued",
+      "branches": [
+        "feat/procedural-gallery-route-20261014"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-14T01:08:15.000Z",
+      "handoff": "Signed, verified gallery work is pushed at f0a55434e1cd43a1e3b34e894a615b8460854d61. The clean worktree is retained until integration and delivery evidence support retirement. Former owner: codex-root-20261014-gallery-route.",
+      "nextAction": "Integration owner: merge signed, pushed gallery head f0a55434 into docs/procedural-multilevel-interiors-20261013, resolve the generated fixture material overlap, then run combined full/shared/performance gates. Paired Mac M3 Max Chromium samples passed: street p95 16.8 ms, gallery p95 33.4 ms; views differ, so the draw-call change is not isolated gallery cost. The internal portal still says stairs. Gallery branch has no standalone PR because the integration base is not yet published.",
+      "ledger": "docs/superpowers/plans/2026-10-14-gallery-vertical-route.md",
+      "requiredChecks": [
+        "Focused geometry and browser regression for the gallery route",
+        "pnpm run verify core before commit",
+        "Two-client gallery level journey",
+        "Player-height visual and performance evidence"
+      ],
+      "filesOwned": [
+        "preview/src/store-interiors.js",
+        "preview/src/generated-vertical-route.js",
+        "preview/tests/generated-vertical-route.test.js",
+        "preview/e2e/generated-gallery.js",
+        "preview/e2e/generated-gallery-levels.js",
+        "docs/superpowers/plans/2026-10-14-gallery-vertical-route.md"
+      ],
+      "leaseUntil": null
     }
   ]
 }
