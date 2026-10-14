@@ -110,3 +110,75 @@ Decisions for Val:
 
 Next action: land this branch, then rerun `project:inventory` and retire every new
 `retire-eligible` branch; counts are still above ten each.
+
+## 2026-10-14 Round 0 and 1 continuation (claude-code aa2272b7)
+
+Worktree `../river-oaks-prune-tooling-20261014`, branch `feat/prune-tooling-20261014`
+(PR #375). Task `local-prune-20261013` claimed as `claude:river-oaks-fable (aa2272b7)`.
+
+Round 0 inventory at 2026-10-14T19:33Z (`git fetch --prune`, `git worktree list`,
+`git branch -vv`, `gh pr list`, `gh issue list`, `ps`/`lsof` cwd,
+`node scripts/project-inventory.mjs --remote --output .runtime/inventory-r0.json`):
+
+- 22 worktrees, 21 branches (the 2026-10-14 baseline of 20/19 grew by two
+  concurrent branches). Classes: primary 1, active 6, open-pr 10, parked 3,
+  orphan-no-task 1 (`feat/character-studio-20261013`, zero commits past main),
+  detached 1 (`river-oaks-c2-tools` at `3fdc842a`, orphan). 0 retire-eligible,
+  0 retire-candidate: nothing can be retired through `project:prune` right now.
+- Remote: 19 `merged-exact` branches (delete commands listed, none run), 13 open-pr,
+  5 unproven. Archives under `~/worktree-backups/river-oaks`: 203 directories,
+  92 `retirement-*`, 23 `cancel-*`, every `cancel-*` has a manifest.
+- Live sessions: four other `claude` processes with cwd in the primary checkout
+  (pids 7150, 23962, 37930, 39352); processes inside worktrees: a Redis server in
+  `gallery-contact-shading`, DTService in `ios-probe`, node in `release-0.2.0`, a
+  shell in `shared-dominoes-sheet`. No session cwd in `character-studio` or
+  `c2-tools`, which is not inactivity proof.
+- Open PRs: #376 release 0.2.0 (CLEAN, owned by a codex session), #375 (BEHIND
+  main after #374), drafts #350–#358 CLEAN, #349 DIRTY/CONFLICTING (owned by
+  `codex-root-20261014-procedural-landing`, lease live: not rebased here), #309
+  UNKNOWN (dirty worktree, expired codex lease, DTService running: not touched).
+- `project:check --github` on the live register: validates; gaps are the
+  unregistered `feat/character-studio-20261013`, two expired codex leases
+  (ios-device-feasibility, rider-performance-contact), #309 head mismatch, and two
+  no-local-branch tasks (ipic-photo-interior, dependency-prs-265-266-295).
+- The primary checkout still holds the stash-popped copies of `.gitignore`,
+  `workflow.md`, `project-prune.mjs`, `project-status.mjs` and the three untracked
+  cancel files. `git diff feat/prune-tooling-20261014 -- <files>` shows every one
+  is an older subset of this branch; nothing in the primary is newer. Left in place.
+
+Round 1 against the goal list: items 1–5 (inventory with the required classes and
+both orphan flags, orphan gaps in `project:check` with `--allow-orphans`,
+`project:cancel --branch --expected-head [--apply]` writing a queued
+restore-before-resume task, `project:archives`, `--remote` with an unexecuted delete
+list and opt-in `land --delete-remote-branch`) were already on this branch at
+`021f55a2`; the docs for item 6 too. Done this round:
+
+- Merged `origin/main` (#374) into the branch with a signed merge commit
+  (`b8064c63`, `merge-tree` clean). Focused suites
+  `node --test scripts/tests/{project-prune,project-prune-cancel,project-inventory,project-archives,project-status,land-pr}.test.js`:
+  56 pass, 0 fail, 0 skipped. Core `pnpm run verify` at `b8064c63`: passed, 11 tasks (agent, preview, server, desktop, build, python lint/format/tests 141 passed, demo, demo-verify, secrets), receipt `.runtime/agent/core.json`, dirty false.
+- Register sweep: worktree `../river-oaks-register-sweep-20261014`, branch
+  `docs/register-sweep-20261014` from `origin/main`, draft PR #378. The live file
+  (170 tasks) was compared with `main`'s copy (102 tasks) by id: 67 live-only, no
+  committed entry newer than its live counterpart. Signed commit `d75ad58b`;
+  `project:status --check --github` validates in that worktree.
+- Nothing removed: no branch is retire-eligible and the orphans wait on Val.
+
+Decisions for Val:
+
+- The ten-and-ten cap cannot be reached by retirement alone. Thirteen open PRs
+  (#309, #349–#358, #375, #376, #378) each hold a local branch, and eleven hold a
+  worktree; with `main` that is already over ten branches. Options: (a) cancel the
+  local checkouts of drafts #350–#358 through `project:cancel` once their tips are
+  confirmed pushed (the PRs stay reviewable from `origin`; restore from the
+  archive to resume), or (b) accept the cap as a target for after those drafts
+  land or close. Nothing is cancelled without that answer.
+- `feat/character-studio-20261013` and `river-oaks-c2-tools`: cancel or claim.
+- 19 merged-exact remote branches: run the listed `gh api -X DELETE` commands, or
+  enable `delete_branch_on_merge`. Report only; none run.
+- The primary's stash-popped prune files: after #375 lands they can be dropped
+  (`git checkout -- <four files>` and removing the three identical untracked
+  files), but that is a mutation of the live checkout and is not done here.
+
+Skips and unverified scope: Redis, browser, native, live auth. No remote branch or
+repository setting changed. No merge.
