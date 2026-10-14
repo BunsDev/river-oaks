@@ -49,4 +49,12 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Desktop unit tests
+        id: unit
         run: pnpm run test:desktop
+      # Until #370 lands, the Windows unit tests fail in the Studio host, skill
+      # pack and package-files suites (Unix-only paths and executables). The job
+      # stays red, but the later stages still run so each platform's packaging
+      # evidence is produced.
+      - name: Package the desktop app (unsigned, host platform and arch)
+        if: ${{ !cancelled() }}
+        run: pnpm run desktop:package
