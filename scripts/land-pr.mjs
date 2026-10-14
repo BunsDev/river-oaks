@@ -19,15 +19,26 @@ async function waitFor(check, sleep, poll, limit, what) {
   throw new Error(`Timed out waiting for ${what}.`);
 }
 
-// github: pull, updateBranch, verifyRun, failedJobs, rerunFailed. guard(pr): {code, output}.
-export async function land({ pr, owner, github, guard, queue, log = () => {}, sleep, poll = 30000, attempts = 4, limit = 120 }) {
+// github: pull, updateBranch, verifyRun, failedJobs, rerunFailed, and for
+// deleteRemoteBranch also mergedOnDefault(sha) and deleteBranch(ref). guard(pr): {code, output}.
+export async function land({ pr, owner, github, guard, queue, log = () => {}, sleep, poll = 30000, attempts = 4, limit = 120, deleteRemoteBranch = false }) {
+  // Off by default: the source branch is deleted only when asked, and only once
+  // the merge commit is confirmed on the default branch. A refusal is not an error.
+  const finish = async pull => {
+    const result = { status: 'merged', merge: pull.merge_commit_sha, deletedBranch: null };
+    if (!deleteRemoteBranch) return result;
+    if (!pull.ref || !pull.merge_commit_sha || !(await github.mergedOnDefault(pull.merge_commit_sha))) { log(`#${pr}: merge not confirmed on the default branch; leaving ${pull.ref ?? 'the branch'} in place.`); return result; }
+    await github.deleteBranch(pull.ref);
+    log(`#${pr}: deleted remote branch ${pull.ref}.`);
+    return { ...result, deletedBranch: pull.ref };
+  };
   queue.enqueue(pr, owner);
   try {
     for (let ahead; (ahead = queue.position(pr)) > 0;) { log(`#${pr}: ${ahead} ahead in the landing queue; waiting.`); await sleep(poll); }
     const run = (head, attempt) => waitFor(async () => { const value = await github.verifyRun(head); return value?.status === 'completed' && value.attempt >= attempt && value; }, sleep, poll, limit, `Verify on ${head.slice(0, 7)}`);
     for (let attempt = 0; attempt < attempts; attempt++) {
       const pull = await waitFor(async () => { const value = await github.pull(pr); return (value.merged || value.state !== 'open' || value.mergeable_state !== 'unknown') && value; }, sleep, poll, limit, `GitHub to compute #${pr}'s merge state`);
-      if (pull.merged) return { status: 'merged', merge: pull.merge_commit_sha };
+      if (pull.merged) return finish(pull);
       if (pull.state !== 'open') throw new Error(`#${pr} is ${pull.state}, not open.`);
       if (pull.mergeable_state === 'dirty') throw new Error(`#${pr} conflicts with main; merge main into the branch and resolve it first.`);
       if (pull.mergeable_state === 'behind') {
@@ -45,7 +56,7 @@ export async function land({ pr, owner, github, guard, queue, log = () => {}, sl
       }
       log(`#${pr}: Verify passed on ${pull.head.slice(0, 7)}; handing over to the merge guard.`);
       const result = await guard(pr), after = await github.pull(pr);
-      if (after.merged) return { status: 'merged', merge: after.merge_commit_sha };
+      if (after.merged) return finish(after);
       const reason = result.output.trim().split('\n').pop();
       if (after.mergeable_state !== 'behind') throw new Error(`#${pr}: the merge guard refused (${reason}).`);
       log(`#${pr}: main moved before the merge (${reason}); going again.`);
@@ -60,8 +71,11 @@ function gitHubApi(root) {
   if (!slug) throw new Error('Landing needs a github.com origin.');
   const api = (path, ...args) => { const text = execFileSync('gh', ['api', ...args, `repos/${slug}/${path}`], { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 }); return text.trim() ? JSON.parse(text) : null; };
   return {
-    async pull(pr) { const p = api(`pulls/${pr}`); return { state: p.state, merged: p.merged, mergeable_state: p.mergeable_state, head: p.head.sha, merge_commit_sha: p.merge_commit_sha }; },
+    async pull(pr) { const p = api(`pulls/${pr}`); return { state: p.state, merged: p.merged, mergeable_state: p.mergeable_state, head: p.head.sha, ref: p.head.ref, merge_commit_sha: p.merge_commit_sha }; },
     async updateBranch(pr, head) { api(`pulls/${pr}/update-branch`, '-X', 'PUT', '-f', `expected_head_sha=${head}`); },
+    // "identical" or "behind" means the default branch already contains the merge commit.
+    async mergedOnDefault(sha) { const base = api('').default_branch; return ['identical', 'behind'].includes(api(`compare/${base}...${sha}`).status); },
+    async deleteBranch(ref) { api(`git/refs/heads/${ref}`, '-X', 'DELETE'); },
     async verifyRun(head) {
       const run = api(`actions/runs?head_sha=${head}&per_page=20`).workflow_runs.find(item => item.name === 'Verify');
       return run && { id: run.id, status: run.status, conclusion: run.conclusion, attempt: run.run_attempt };
@@ -88,15 +102,16 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
     process.stdout.write(entries.length ? entries.map((entry, index) => `${index + 1}. #${entry.id}  ${entry.owner}  pid ${entry.pid}  since ${entry.queuedAt}`).join('\n') + '\n' : 'The landing queue is empty.\n');
   } else {
     const pr = Number(args[0]), ownerIndex = args.indexOf('--owner'), owner = ownerIndex >= 0 ? args[ownerIndex + 1] : process.env.RIVER_OAKS_LAND_OWNER;
+    const deleteRemoteBranch = args.includes('--delete-remote-branch');
     const guardPath = process.env.RIVER_OAKS_MERGE_GUARD ?? join(homedir(), '.claude', 'scripts', 'gh-merge-when-green.sh');
     try {
-      if (!Number.isInteger(pr) || pr <= 0) throw new Error('Usage: pnpm run land <pr> [--owner <name>] | pnpm run land --status');
+      if (!Number.isInteger(pr) || pr <= 0) throw new Error('Usage: pnpm run land <pr> [--owner <name>] [--delete-remote-branch] | pnpm run land --status');
       // Fail closed: this tool never merges on its own judgement.
       if (!existsSync(guardPath)) throw new Error(`Merge guard not found at ${guardPath}; set RIVER_OAKS_MERGE_GUARD.`);
       for (const signal of ['SIGINT', 'SIGTERM']) process.once(signal, () => { queue.dequeue(pr); process.exit(130); });
       const sleep = ms => new Promise(done => setTimeout(done, ms));
-      const result = await land({ pr, owner, github: gitHubApi(process.cwd()), guard: guardRunner(guardPath), queue, sleep, log: line => process.stdout.write(`${line}\n`) });
-      process.stdout.write(`#${pr} landed as ${result.merge}.\n`);
+      const result = await land({ pr, owner, github: gitHubApi(process.cwd()), guard: guardRunner(guardPath), queue, sleep, deleteRemoteBranch, log: line => process.stdout.write(`${line}\n`) });
+      process.stdout.write(`#${pr} landed as ${result.merge}.${result.deletedBranch ? ` Remote branch ${result.deletedBranch} deleted.` : ''}\n`);
     } catch (error) { process.stderr.write(`land: ${error.message}\n`); process.exitCode = 1; }
   }
 }

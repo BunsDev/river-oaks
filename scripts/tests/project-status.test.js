@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, writeFileSync, rmSync, mkdirSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, rmSync, mkdirSync, realpathSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { classify, validateTasks, inspectGit, reconcile } from '../project-status.mjs';
+import { classify, validateTasks, inspectGit, reconcile, isOrphanGap } from '../project-status.mjs';
 
 const delivered = { primary:false, branch:'fix/done', head:'a'.repeat(40), dirty:false, locked:false, active:false, merging:false, ancestorMain:true };
 test('delivery proof never overrides dirty, active, locked, default or merging state', () => {
@@ -101,4 +101,49 @@ test('a register with conflict markers is named as such instead of a JSON parse 
   const run=spawnSync(process.execPath,[new URL('../project-status.mjs',import.meta.url).pathname,'--repo',root],{encoding:'utf8'});
   assert.equal(run.status,2);
   assert.match(run.stderr,/conflict markers/);
+});
+
+// Orphan debt: checkouts no task accounts for, and records that point at checkouts
+// which are gone. --allow-orphans turns those, and only those, into warnings.
+function orphanFixture(t) {
+  const base=mkdtempSync(join(tmpdir(),'river-status-'));
+  t.after(()=>rmSync(base,{recursive:true,force:true}));
+  const root=join(base,'repo');mkdirSync(root);
+  const git=(...args)=>execFileSync('git',args,{cwd:root,encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim();
+  git('init','-b','main');git('config','user.name','Fixture');git('config','user.email','fixture@example.invalid');
+  writeFileSync(join(root,'file'),'base');git('add','.');git('commit','-m','base');
+  git('update-ref','refs/remotes/origin/main',git('rev-parse','main'));
+  return {base,root,git};
+}
+
+test('an unregistered detached worktree and a missing recorded worktree are orphan gaps',t=>{
+  const f=orphanFixture(t);
+  const detached=join(f.base,'comparison');f.git('worktree','add','--detach',detached,'main');
+  const owned=join(f.base,'owned');f.git('worktree','add','--detach',owned,'main');
+  const now=new Date().toISOString();
+  const register={schemaVersion:1,tasks:[
+    {id:'primary',title:'p',status:'delivered',branches:['main'],owner:null,updatedAt:now,nextAction:'x',evidence:[{}]},
+    {id:'compare',title:'c',status:'queued',branches:[],owner:null,worktree:owned,updatedAt:now,nextAction:'x'},
+    {id:'ghost',title:'g',status:'blocked',branches:['ghost'],owner:null,worktree:join(f.base,'gone'),updatedAt:now,nextAction:'x'},
+    {id:'history',title:'h',status:'retired',branches:['old'],retiredBranches:['old'],owner:null,worktree:join(f.base,'also-gone'),updatedAt:now,nextAction:'x',evidence:[{}],archive:{old:{manifest:'/m'}}},
+  ]};
+  const gaps=reconcile(inspectGit(f.root),register,null).gaps;
+  // Git reports worktree paths resolved; the temp directory may be a symlink.
+  assert.ok(gaps.some(g=>g.startsWith(`Unregistered worktree: ${realpathSync(detached)} (detached HEAD)`)),gaps.join('\n'));
+  assert.ok(!gaps.some(g=>g.includes(owned)),'a detached checkout a task records is not an orphan');
+  assert.ok(gaps.some(g=>g===`ghost: recorded worktree path is missing: ${join(f.base,'gone')}; fix the record or restore the checkout`),gaps.join('\n'));
+  assert.ok(!gaps.some(g=>g.includes('also-gone')),'retired records may point at removed checkouts');
+  const orphan=gaps.filter(isOrphanGap),other=gaps.filter(g=>!isOrphanGap(g));
+  assert.equal(orphan.length,2);
+  assert.ok(other.some(g=>g.startsWith('ghost: no local branch')),'non-orphan gaps still fail the check');
+});
+
+test('an unregistered branch is an orphan gap; expired leases and pending retirements are not',t=>{
+  const f=orphanFixture(t);
+  f.git('branch','stray');
+  const register={schemaVersion:1,tasks:[{id:'primary',title:'p',status:'delivered',branches:['main'],owner:null,updatedAt:new Date().toISOString(),nextAction:'x',evidence:[{}]}]};
+  const gaps=reconcile(inspectGit(f.root),register,null).gaps;
+  assert.deepEqual(gaps.filter(isOrphanGap),['Unregistered branch: stray']);
+  assert.equal(isOrphanGap('Expired ownership lease: x; do not take over without reconciliation'),false);
+  assert.equal(isOrphanGap('Pending local retirement: x (b); run project:prune and reconcile blockers'),false);
 });

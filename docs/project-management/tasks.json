@@ -5433,6 +5433,29 @@
         "release blocker fixes after owning-seam review"
       ],
       "pr": 376
+    },
+    {
+      "id": "local-prune-20261013",
+      "title": "Reduce River Oaks local branches and worktrees to at most ten each",
+      "status": "active",
+      "branches": [
+        "feat/prune-tooling-20261014"
+      ],
+      "owner": "claude-code 69cb4235",
+      "updatedAt": "2026-10-14T18:48:28.304Z",
+      "nextAction": "Claimed 2026-10-14 by claude-code 69cb4235: build project:inventory, orphan checks in project:check, project:cancel, project:archives and a report-only remote inventory on feat/prune-tooling-20261014, recreate the missing ledger, then retire eligible refs with project:prune. Orphan cancellations and remote deletes wait on Val.",
+      "filesOwned": [
+        "docs/project-management/tasks.json (prune records only)",
+        "docs/superpowers/plans/2026-10-13-local-branch-worktree-prune.md"
+      ],
+      "requiredChecks": [
+        "fresh worktree and branch count <=10 each",
+        "project:check --github",
+        "restore manifests and archive hashes for retired refs"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-13-local-branch-worktree-prune.md",
+      "leaseUntil": "2026-10-15T06:48:28.304Z",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-prune-tooling-20261014"
     }
   ]
 }
