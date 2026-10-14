@@ -48,6 +48,9 @@ const executablePath = process.env.RIVER_OAKS_DESKTOP_EXECUTABLE;
 const launchTimeout = Number(process.env.RIVER_OAKS_DESKTOP_LAUNCH_TIMEOUT ?? 30000);
 const app = await electron.launch({ executablePath, args: [...(executablePath ? [] : [root]), `--user-data-dir=${profile}`, '--use-fake-device-for-media-stream',
   ...(software ? ['--use-gl=angle', '--use-angle=gl', '--ignore-gpu-blocklist'] : [])], env, timeout: launchTimeout });
+// The main process's own lines (renderer recovery, load failures) otherwise
+// stay in Playwright's buffer and only surface on a launch failure.
+for (const stream of ['stdout', 'stderr']) app.process()[stream]?.on('data', chunk => process.stderr.write(`[electron] ${chunk}`));
 const errors = [], failedAssets = [], tempFiles = [];
 const report = { mode: executablePath ? 'packaged' : env.RIVER_OAKS_DEV_URL ? 'development' : 'hosted', software, checks: [] };
 function check(name) { report.checks.push(name); console.log(`✓ ${name}`); }

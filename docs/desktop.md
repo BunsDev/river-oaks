@@ -52,7 +52,24 @@ dist/desktop/TypeSafe Place-darwin-arm64/TypeSafe Place.app
 
 Open it in Finder. For a quick bundled run without packaging, use `pnpm run build && pnpm run desktop:start`.
 
-Packaging stages the desktop runtime; the packaged window loads the hosted game after device sign-in. Repository files, `.env`, server code, development dependencies, and game assets are excluded. This is a local development build, not a signed/notarized distribution release. Only macOS arm64 has been exercised; the packaging command targets its host platform and architecture.
+Packaging stages the desktop runtime; the packaged window loads the hosted game after device sign-in. Repository files, `.env`, server code, development dependencies, and game assets are excluded. This is a local development build, not a signed/notarized distribution release. The packaging command targets its host platform and architecture; the `Desktop` workflow below exercises Windows x64, Linux x64 and macOS arm64.
+
+## CI builds on Windows, Linux and macOS
+
+`.github/workflows/desktop.yml` runs on manual dispatch, on pushes to `main` and on pull requests that touch `desktop/**`, `shared/**`, `scripts/studio-skill-pack.js`, `package.json`, `pnpm-lock.yaml` or the workflow itself. One job per runner (`windows-latest`, `ubuntu-latest`, `macos-latest`, which is arm64) runs the desktop unit tests, `desktop:package`, `desktop:package:check` (the fuse wire must match `desktop/fuses.js` and the asar must hold exactly the staged files; a changed fuse fails the job), the development end-to-end suite with the loopback acceptance fixture (under Xvfb and Mesa on Linux), and uploads:
+
+- `TypeSafe-Place-<version>-<windows|linux|macos>-<arch>-unsigned`: a zip of the packaged directory with a `SHA256SUMS` file, kept 14 days. Only a build that passed the fuse and asar check is uploaded.
+- `desktop-e2e-<runner>`: the e2e receipt `data/reports/desktop-ci-<runner>.json` and `output/playwright/desktop-development*.png`.
+
+The workflow holds no secrets, so every build is unsigned (ad-hoc on macOS); signing and installers are separate work (#372). It is not a required check: the `preview` aggregate in `verify.yml` still gates `main`. To fetch a build for manual testing:
+
+```sh
+gh run list --workflow Desktop --branch main --limit 1
+gh run download <run id> -n TypeSafe-Place-<version>-macos-arm64-unsigned -D /tmp/typesafe-place
+cd /tmp/typesafe-place && shasum -a 256 -c SHA256SUMS
+```
+
+Locally, `pnpm run verify desktop-package` runs the same unit tests, packaging and check for the host platform and writes `.runtime/agent/desktop-package.json`.
 
 ## Rendering and recovery
 

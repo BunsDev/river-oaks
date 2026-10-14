@@ -72,9 +72,11 @@ jobs:
         if: ${{ !cancelled() && runner.os == 'Linux' }}
         run: sudo apt-get install -y --no-install-recommends openbox
       # Diagnosis for the Windows leg: electron.launch times out there after the
-      # main-process debugger attaches, with nothing logged. This runs the same
-      # Electron and app directly for 30 seconds, without Playwright, so the
-      # log shows whether the app reaches ready and opens its window.
+      # main-process debugger attaches. Playwright then waits for Chromium's
+      # "DevTools listening on ws://" line, which never arrives on this runner.
+      # This runs the same Electron and app directly with Playwright's two
+      # debugging switches for 30 seconds, so the log shows whether the app
+      # reaches ready, opens its window and prints that line at all.
       - name: Electron launch probe (Windows diagnosis)
         if: ${{ !cancelled() && runner.os == 'Windows' }}
         env:
@@ -84,7 +86,7 @@ jobs:
         run: |
           pnpm exec electron --version
           set +e
-          timeout 30 pnpm exec electron . --user-data-dir="$RUNNER_TEMP/electron-probe" --enable-logging=stderr --v=0
+          timeout 30 pnpm exec electron . --inspect=0 --remote-debugging-port=0 --user-data-dir="$RUNNER_TEMP/electron-probe" --enable-logging=stderr --v=0
           echo "probe exit $?"
           set -e
       - name: Development desktop end-to-end (loopback acceptance fixture)
