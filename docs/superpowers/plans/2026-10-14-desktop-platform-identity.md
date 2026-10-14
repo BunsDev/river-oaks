@@ -38,6 +38,9 @@ Register task `desktop-platform-identity`.
 `desktop/studio-designer-host.js` (extra dirs only), `desktop/package-files.js`,
 `desktop/tests/package-options.test.js`, `desktop/tests/package-files.test.js`,
 `desktop/tests/studio-agent-host.test.js`, `docs/desktop.md`, this ledger.
+Windows unit-test pass (2026-10-14, session river-oaks-97): also
+`desktop/tests/fixture-command.js`, `desktop/tests/studio-designer-host.test.js`,
+`desktop/tests/studio-skill-pack.test.js`.
 
 ## Checks
 
@@ -46,6 +49,9 @@ Register task `desktop-platform-identity`.
 - `pnpm run verify`
 - `pnpm run desktop:package` then `pnpm exec electron-fuses read --app "dist/desktop/TypeSafe Place-darwin-arm64/TypeSafe Place.app"`
 - `RIVER_OAKS_ACCEPTANCE_FIXTURE=1 RIVER_OAKS_DEV_TOWN_PORT=8797 pnpm run test:desktop:e2e --dev`
+- `pnpm run test:desktop` on `windows-latest`, `ubuntu-latest` and `macos-latest`
+  through a temporary push-only workflow on `diag/desktop-tests-matrix` (deleted
+  after use, never merged; #377's `desktop.yml` is not touched)
 
 ## Results
 
@@ -59,20 +65,67 @@ Register task `desktop-platform-identity`.
 | `RIVER_OAKS_ACCEPTANCE_FIXTURE=1 RIVER_OAKS_DEV_TOWN_PORT=8797 pnpm run test:desktop:e2e --dev` | exit 0, report status passed, errors []; `data/reports/desktop-development.json` refreshed by the run |
 | `node scripts/agent.mjs verify desktop` | passed; receipt `.runtime/agent/desktop.json` (the issue names `desktop-tests.json`; `desktop-tests` is the task inside the `desktop` profile, and the receipt is named after the profile) |
 
+
+### Windows unit tests (2026-10-14, session river-oaks-97)
+
+Each failure from #371 run 38625146725 (17 of 54 on `windows-latest`) was
+confirmed against its log and source before changing anything. A baseline diag
+run at this branch's head before the fixes, 38651982154 (`c8af4a6f`), failed 18
+of 61 on Windows: the same 17 plus one regression #379 had introduced.
+
+| Test (file) | Windows cause, confirmed | Fix |
+| --- | --- | --- |
+| the packaged app includes every desktop module main.js loads (`package-files`) | `path.join` gave `scripts\studio-skill-pack.js`; the staged set uses `/` | Walk specifiers with `path.posix` |
+| 5 agent-host tests: Claude path, Codex path, declined consent/errors/cancellation, scene context allowlist, rate limit (`studio-agent-host`) | The `.mjs` fixture was spawned directly; Windows `spawn` without a shell refuses a script (`EFTYPE`), reported as "CLI failed" | Tests pass `runFixtureCommand` (`desktop/tests/fixture-command.js`): `process.execPath` + script on win32, direct spawn elsewhere |
+| 5 designer-host tests plus the restart test and its restart/disconnect/cancel subtests (`studio-designer-host`) | Same `spawn EFTYPE` at `studio-command.js` | Same wrapper, including the tests that wrapped `runStudioCommand` themselves |
+| FIFO skill files and receipt (`studio-skill-pack`) | Git Bash's `mkfifo` made an MSYS emulation that Node reads as a regular file, so verification saw a hash mismatch, not `unsafe-path` | FIFO case kept where the OS has FIFOs, now asserting `isFIFO()`; a directory case runs on every platform. Windows has no file-system FIFO (named pipes live only in `\\.\pipe\`), so no workspace path can block an open there |
+| retries an interrupted owned install (`studio-skill-pack`) | Not `O_WRONLY`: the hook matched `target.endsWith(pack.files[1].path)`, and the installer's Windows path has backslashes | Compare resolved paths. Run 38652621873 passed on Windows with the `O_WRONLY` check unchanged, which shows the flag is present there |
+| executable lookup searches PATH and extra user install directories (`studio-agent-host`, new in #379) | #379's Windows rule accepts only `.exe`/`.com`, so the `.mjs` fixture is correctly refused on a Windows host | Expectation follows the host; the win32 synthetic test now also covers extra install directories. Depends on Val's open `.exe`-only decision |
+
+No production code changed: `studio-command.js`, both hosts, `scripts/studio-skill-pack.js`,
+fuses, asar staging and renderer isolation are untouched by these commits.
+
+| Diag run | Tree | windows-latest | ubuntu-latest | macos-latest |
+| --- | --- | --- | --- | --- |
+| [38651982154](https://github.com/BunsDev/river-oaks/actions/runs/38651982154) | `c8af4a6f` (before) | 43 pass, 18 fail of 61 | 61 pass | 61 pass |
+| [38652621873](https://github.com/BunsDev/river-oaks/actions/runs/38652621873) | `babe4007` (test fixes) | 61 pass | 61 pass | 61 pass |
+| [38652827284](https://github.com/BunsDev/river-oaks/actions/runs/38652827284) | `c2480227` (fixes, docs, hook note) | 61 pass | 61 pass | 61 pass |
+
+Every row: 0 skipped, 0 cancelled, 0 todo. The diag tree is this branch's tree plus
+`.github/workflows/desktop-tests-diag.yml` only. The pushed head adds this ledger
+update to `c2480227`; no test or source file differs.
+
+Local, macOS arm64, at `c2480227`:
+
+| Check | Result |
+| --- | --- |
+| `pnpm run test:desktop` | 61 pass, 0 fail, 0 skipped |
+| `pnpm run verify` (core) | exit 0; `.runtime/agent/core.json` status passed at `c2480227`, all 11 tasks. Scripts 76 pass; preview 3012 pass, 1 skipped of 3013; server 486 pass, 140 skipped of 626 (Redis and live-service gates, no `REDIS_URL`); desktop 61 pass; build; Ruff lint and format; pytest 141 passed; demo; secrets scan |
+
 ## Gaps
 
-- **Windows unit tests (acceptance, unproven).** A #370 comment at 19:40Z (from the
-  #371 matrix, run 38625146725) reports 17 of 54 desktop tests failing on
-  `windows-latest` in `package-files.test.js` (path separators),
-  `studio-agent-host.test.js` and `studio-designer-host.test.js` (Unix script
-  fixtures, `spawn EFTYPE`) and `studio-skill-pack.test.js` (FIFO, `O_WRONLY`).
-  #379 does not fix them; the matrix workflow is on `ci/desktop-package-matrix`
-  (#377), so this branch's own checks run only on Linux. Proposed fixes and the
-  rebase-or-wait choice are in the audit comment on #370.
+- **Windows unit tests: proven by diag run 38652827284** (see Results). Not yet
+  proven by #371's own Desktop workflow, which has not run on this head.
+- **#377's `package-check.test.js`** fails on Windows in run 38635174724 with the
+  same separator problem (`\r\dist\...` vs `/r/dist/...`). It lives on
+  `ci/desktop-package-matrix` (#371), not on this branch.
+- **New Windows finding, production, not fixed here.** Both hosts pass the whole
+  prompt as one argument, and Windows caps a command line at 32,767 characters.
+  Measured locally: the designer's Codex argv is 21,000 to 26,000 characters for
+  the tests' briefs and 45,500 for a brief that routes every skill; the agent host's
+  scene context may reach 160 KiB. Such a request fails at spawn on Windows and
+  reaches the page as a generic local error ("Claude CLI failed. Check that it is
+  signed in" for the agent). Passing the prompt on stdin would avoid the limit; it
+  needs checking against the real CLIs.
 
 - Windows and Linux packaging are proven by #371, not here.
 - Finder icon check is visual; recorded by hand.
 
 ## Next step
 
-PR #379 open (head 93ca62dd); status and audit comments posted on #370. Awaiting Val's decisions: where the Windows test fixes land (rebase onto #377 or after it), Linux name, .exe-only Windows lookup, company string, icon art. Do not merge.
+PR #379 carries the Windows unit-test fixes (signed, not merged), proven on all
+three runners by diag run 38652827284; the diag branch and workflow are deleted.
+Val's four decisions remain open: Linux executable name, `.exe`-only Windows lookup
+(the lookup test's Windows expectation depends on it), company string, icon art.
+Landing is with the #371 phase-2 session (`pnpm run land 379`, authorized on #371);
+the lander updates the branch from `main` before merging. Do not merge from this session.
