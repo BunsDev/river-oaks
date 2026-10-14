@@ -33,9 +33,16 @@ async page => {
       const { GTAOPass } = await import(url);
       const original = GTAOPass.prototype.render;
       const totals = new Map();
+      const gl = document.querySelector('#canvas-host canvas').getContext('webgl2');
+      const timer = gl.getExtension('EXT_disjoint_timer_query_webgl2');
+      const queries = [], cpuMs = [];
       const instrument = { frames: 0, calls: 0, culledFrames: 0, visibleExteriorFrames: 0,
-        roots: totals, restore: () => { GTAOPass.prototype.render = original; } };
+        roots: totals, gl, timer, queries, cpuMs,
+        restore: () => { GTAOPass.prototype.render = original; } };
       GTAOPass.prototype.render = function(renderer, ...args) {
+        const started = performance.now();
+        const query = timer && instrument.frames % 4 === 0 ? gl.createQuery() : null;
+        if (query) gl.beginQuery(timer.TIME_ELAPSED_EXT, query);
         if (window.__riverExteriorCull().cull) instrument.culledFrames++;
         const interiors = this.scene.getObjectByName('Boutique interiors layer');
         if (interiors?.parent?.children.some(child => child !== interiors && child.visible)) instrument.visibleExteriorFrames++;
@@ -53,7 +60,12 @@ async page => {
           return draw.call(this, camera, scene, geometry, material, object, group);
         };
         try { return original.call(this, renderer, ...args); }
-        finally { renderer.renderBufferDirect = draw; instrument.frames++; }
+        finally {
+          renderer.renderBufferDirect = draw;
+          if (query) { gl.endQuery(timer.TIME_ELAPSED_EXT); queries.push(query); }
+          cpuMs.push(performance.now() - started);
+          instrument.frames++;
+        }
       };
       window.__galleryAoGeometry = instrument;
       window.__riverRenderAudit.start();
@@ -63,19 +75,35 @@ async page => {
       await page.keyboard.down('KeyW');
       await page.waitForTimeout(1700);
     } finally { await page.keyboard.up('KeyW'); }
-    const sample = await page.evaluate(() => {
+    const sample = await page.evaluate(async () => {
       const instrument = window.__galleryAoGeometry;
       instrument.restore();
       delete window.__galleryAoGeometry;
       const { frames, overflow } = window.__riverRenderAudit.stop();
-      const intervals = frames.map(frame => frame.intervalMs).toSorted((a, b) => a - b);
-      const p95 = intervals[Math.min(intervals.length - 1, Math.floor(intervals.length * .95))];
+      const percentile = (values, fraction) => {
+        const sorted = values.toSorted((a, b) => a - b);
+        return sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * fraction))] ?? null;
+      };
+      const intervals = frames.map(frame => frame.intervalMs);
+      const mainThread = frames.map(frame => frame.cpuMs);
+      const { gl, timer, queries } = instrument;
+      if (timer) for (let index = 0; index < 30 && queries.some(query => !gl.getQueryParameter(query, gl.QUERY_RESULT_AVAILABLE)); index++)
+        await new Promise(resolve => requestAnimationFrame(resolve));
+      const disjoint = timer ? gl.getParameter(timer.GPU_DISJOINT_EXT) : null;
+      const gpuMs = timer && !disjoint ? queries.filter(query => gl.getQueryParameter(query, gl.QUERY_RESULT_AVAILABLE))
+        .map(query => gl.getQueryParameter(query, gl.QUERY_RESULT) / 1e6) : [];
+      for (const query of queries) gl.deleteQuery(query);
       return { aoFrames: instrument.frames, aoCallsPerFrame: instrument.calls / instrument.frames,
         culledFrames: instrument.culledFrames, visibleExteriorFrames: instrument.visibleExteriorFrames,
+        aoCpuMs: { p50: percentile(instrument.cpuMs, .5), p95: percentile(instrument.cpuMs, .95) },
+        aoGpuMs: { supported: Boolean(timer), disjoint, samples: gpuMs.length, pending: queries.length - gpuMs.length,
+          p50: percentile(gpuMs, .5), p95: percentile(gpuMs, .95) },
         roots: [...instrument.roots.values()].sort((a, b) => b.calls - a.calls)
           .map(entry => ({ name: entry.name, callsPerFrame: entry.calls / instrument.frames,
             trianglesPerFrame: entry.triangles / instrument.frames })),
-        moving: { frames: frames.length, overflow, p95, over25: intervals.filter(value => value > 25).length },
+        moving: { frames: frames.length, overflow, p95: percentile(intervals, .95),
+          over25: intervals.filter(value => value > 25).length,
+          mainThreadP95: percentile(mainThread, .95) },
         quality: document.querySelector('#canvas-host')?.dataset.quality,
         pipeline: document.querySelector('#canvas-host')?.dataset.pipeline };
     });
@@ -104,5 +132,5 @@ async page => {
     await page.waitForFunction(() => window.__riverGeneratedInteriors?.()[0]?.ready, null, { timeout: 30000 });
     await page.waitForTimeout(1500);
   }
-  return { passed: true, samples, scope: 'AO renderBufferDirect calls during 1.7s keyboard walks at fixed Sharpest quality on local Chromium; instrumentation itself adds CPU work, so frame intervals are diagnostic rather than an uninstrumented performance baseline.' };
+  return { passed: true, samples, scope: 'AO renderBufferDirect calls and optional whole-pass GPU timer queries during 1.7s keyboard walks at fixed Sharpest quality on local Chromium; instrumentation itself adds CPU work, so frame intervals are diagnostic rather than an uninstrumented performance baseline.' };
 }

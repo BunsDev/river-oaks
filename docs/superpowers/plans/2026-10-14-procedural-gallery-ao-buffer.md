@@ -43,4 +43,19 @@ Draft PR #356 was opened on #355 at signed diagnostic head `0755fc59412891fa1882
 
 ## Next action
 
-Measure moving AO GPU time versus main-thread time while preserving the frontage-visible route, then test a scoped quality change only if it improves repeated visits without losing useful contact shading. Keep full-resolution AO as the baseline; do not revive the 0.75 or 0.5 buffer variants without new evidence. Target-device selection and human shading review still gate the broader rollout.
+The opt-in journey now records one `EXT_disjoint_timer_query_webgl2` query around the entire GTAO pass every fourth moving frame, plus per-pass CPU and total main-thread timing. The extension was available with no disjoint or pending queries. Two separate three-visit runs passed on local M3 Max / Chromium Metal, 1440 × 900, Sharpest with AO on:
+
+| Run | Visit | GTAO GPU p50 | GTAO CPU p50 | Main-thread p95 | Moving interval p95 | AO calls/frame |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| A | 1 | 2.36 ms | 1.8 ms | 13.8 ms | 16.7 ms | 444 |
+| A | 2 | 7.65 ms | 1.8 ms | 14.3 ms | 33.4 ms | 444 |
+| A | 3 | 6.72 ms | 1.9 ms | 14.2 ms | 33.4 ms | 442 |
+| B | 1 | 2.32 ms | 1.8 ms | 14.3 ms | 16.8 ms | 449 |
+| B | 2 | 6.50 ms | 1.7 ms | 13.7 ms | 33.3 ms | 445 |
+| B | 3 | 6.70 ms | 1.9 ms | 13.8 ms | 16.7 ms | 446 |
+
+Receipts: ignored `.runtime/ao-timing-three.json` and `.runtime/ao-timing-pass-repeat.json`. The higher GPU timer values on revisits are repeatable while AO CPU and draw count stay flat, but visit B3 remained at 16.7 ms. The timer therefore does not by itself prove the missed-refresh cause. A separate five-query-per-frame stage experiment produced sums larger than the whole pass and changed frame pacing; its ignored `.runtime/ao-timing-stages-three.json` is retained as invalid attribution evidence, and the stage instrumentation was reverted.
+
+## Next action
+
+Test a lower-sample AO variant at full resolution against a fresh uninstrumented five-cycle baseline and same-camera visual capture. Retain it only if repeated moving pacing improves without unacceptable shading loss. Target-device selection and human shading review still gate the broader rollout.
