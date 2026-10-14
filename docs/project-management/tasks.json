@@ -5243,22 +5243,23 @@
     },
     {
       "id": "procedural-gallery-cycle-soak",
-      "title": "Measure repeated generated gallery entry, eviction and return in one session",
+      "title": "Measure repeated generated gallery entry, moving frames, eviction and return in one session",
       "status": "queued",
       "branches": [
         "perf/procedural-gallery-cycle-soak-20261014"
       ],
       "owner": null,
-      "updatedAt": "2026-10-14T05:42:59Z",
+      "updatedAt": "2026-10-14T06:35:07Z",
       "leaseUntil": null,
-      "previousOwner": "codex-root-20261014-gallery-cycles",
+      "previousOwner": "codex-root-20261014-gallery-motion",
       "pr": 353,
-      "handoff": "Signed gallery-cycle journey is pushed as draft PR #353 stacked on #352. Five-cycle local journey, core and isolated-Redis full verification passed. The worktree is retained for review; target-device and human visual acceptance remain open.",
-      "nextAction": "Check exact-head hosted CI for draft PR #353, then review it with the #349-#352 stack. Keep broader archetype rollout gated on target-device and human visual evidence.",
+      "handoff": "Draft PR #353 on #352 now includes measured keyboard motion and culling assertions. Five-cycle Auto runs exposed 33.3–33.4 ms moving p95 after revisit; Smoothest and Auto with AO off held 16.7–16.8 ms on the local M3 Max. Core and isolated-Redis full gates passed. The signed follow-up is being pushed; hosted checks on its new head remain pending. Preserve the worktree for review.",
+      "nextAction": "Check exact-head hosted CI for updated draft PR #353, then scope a separate AO performance fix. Do not expand archetypes until target-device and human visual acceptance supports the pilot.",
       "ledger": "docs/superpowers/plans/2026-10-14-procedural-gallery-cycle-soak.md",
       "requiredChecks": [
         "Repeated one-client gallery entry and eviction behavioral journey",
         "Per-cycle cold/return preparation, geometry/texture and heap evidence",
+        "Moving indoor frame sample with actual position delta",
         "pnpm run verify core before commit",
         "Full isolated Redis and browser gate before delivery"
       ],

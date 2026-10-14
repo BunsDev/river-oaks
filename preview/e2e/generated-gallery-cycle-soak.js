@@ -2,12 +2,17 @@ async page => {
   const { openHudSpace } = await import('./hud-navigation.js');
   const cycles = Number(process.env.RIVER_OAKS_GALLERY_CYCLES ?? 5);
   if (!Number.isInteger(cycles) || cycles < 1 || cycles > 10) throw new Error('Choose 1–10 gallery cycles');
+  const qualityMode = process.env.RIVER_OAKS_GALLERY_QUALITY ?? 'auto';
+  if (!['auto', 'sharp', 'smooth'].includes(qualityMode)) throw new Error('Choose auto, sharp or smooth gallery quality');
+  const aoMode = process.env.RIVER_OAKS_GALLERY_AO ?? 'on';
+  if (!['on', 'off'].includes(aoMode)) throw new Error('Choose on or off gallery ambient occlusion');
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto('http://127.0.0.1:5173/?motion-debug=1&render-audit=1');
+  await page.goto(`http://127.0.0.1:5173/?motion-debug=1&render-audit=1${aoMode === 'off' ? '&ao=off' : ''}`);
   await page.locator('#loading').waitFor({ state: 'hidden' });
   await page.waitForFunction(() => document.querySelector('#canvas-host')?.dataset.multiplayer === 'joined');
+  if (qualityMode !== 'auto') await page.evaluate(mode => document.querySelector(`[data-quality="${mode}"]`).click(), qualityMode);
   if (await page.locator('#panel-toggle').getAttribute('aria-expanded') === 'false') await page.locator('#panel-toggle').click();
   await openHudSpace(page, 'explore-section');
   const state = () => page.evaluate(() => window.__riverGeneratedInteriors?.()[0] ?? null);
@@ -15,21 +20,30 @@ async page => {
     memory: window.__riverRenderAudit.graphics().memory,
     heapBytes: performance.memory?.usedJSHeapSize ?? null,
   }));
-  const sampleRender = () => page.evaluate(async () => {
+  const finishRender = () => page.evaluate(() => {
     const audit = window.__riverRenderAudit;
-    audit.start();
-    for (let index = 0; index < 150; index++) await new Promise(resolve => requestAnimationFrame(resolve));
     const { frames, overflow } = audit.stop();
     const percentile = (values, fraction) => {
       const ordered = values.toSorted((a, b) => a - b);
       return ordered[Math.min(ordered.length - 1, Math.floor(ordered.length * fraction))];
     };
+    const intervals = frames.map(frame => frame.intervalMs);
+    const cpu = frames.map(frame => frame.cpuMs);
     return { frames: frames.length, overflow,
-      intervalMs: { p95: percentile(frames.map(frame => frame.intervalMs), .95),
-        p99: percentile(frames.map(frame => frame.intervalMs), .99) },
-      mainThreadMs: { p95: percentile(frames.map(frame => frame.cpuMs), .95) },
+      intervalMs: { p50: percentile(intervals, .5), p95: percentile(intervals, .95),
+        p99: percentile(intervals, .99), max: Math.max(...intervals),
+        over25: intervals.filter(value => value > 25).length },
+      mainThreadMs: { p50: percentile(cpu, .5), p95: percentile(cpu, .95),
+        p99: percentile(cpu, .99) },
       graphics: audit.graphics(), heapBytes: performance.memory?.usedJSHeapSize ?? null };
   });
+  const sampleRender = async () => {
+    await page.evaluate(() => window.__riverRenderAudit.start());
+    await page.evaluate(async () => {
+      for (let index = 0; index < 150; index++) await new Promise(resolve => requestAnimationFrame(resolve));
+    });
+    return finishRender();
+  };
   const visit = async label => {
     await page.locator('#destination').selectOption({ label });
     await page.locator('#visit-destination').click();
@@ -59,7 +73,24 @@ async page => {
     if (render.overflow || render.frames < 120) throw new Error(`Incomplete cycle ${cycle} frame sample: ${JSON.stringify(render)}`);
     if (cycle === 1 || cycle === cycles) await page.screenshot({ path: `output/playwright/gallery-cycle-${cycle}.png` });
     await page.locator('#canvas-host').focus();
-    await page.keyboard.down('KeyW'); await page.waitForTimeout(1700); await page.keyboard.up('KeyW');
+    const beforeWalk = await page.evaluate(() => ({
+      position: [...window.__riverCarriage().pose.position], cull: window.__riverExteriorCull().cull,
+    }));
+    await page.evaluate(() => window.__riverRenderAudit.start());
+    let moving;
+    try {
+      await page.keyboard.down('KeyW');
+      await page.waitForTimeout(1700);
+    } finally { await page.keyboard.up('KeyW'); moving = await finishRender(); }
+    const afterWalk = await page.evaluate(() => ({
+      position: [...window.__riverCarriage().pose.position], cull: window.__riverExteriorCull().cull,
+    }));
+    const movedM = Math.hypot(afterWalk.position[0] - beforeWalk.position[0],
+      afterWalk.position[2] - beforeWalk.position[2]);
+    if (moving.overflow || moving.frames < 45 || movedM < 0.4)
+      throw new Error(`Cycle ${cycle} did not produce a valid moving frame sample: ${JSON.stringify({ moving, movedM, beforeWalk, afterWalk })}`);
+    if (!beforeWalk.cull || !afterWalk.cull || !(await page.locator('#walking-hud').getAttribute('data-inside')))
+      throw new Error(`Cycle ${cycle} lost the opaque interior view while walking: ${JSON.stringify({ beforeWalk, afterWalk })}`);
     await page.waitForTimeout(250);
     await page.locator('#canvas-host').focus();
     await page.keyboard.press('KeyF');
@@ -81,7 +112,8 @@ async page => {
     await page.waitForFunction(() => window.__riverGeneratedInteriors?.()[0]?.ready, null, { timeout: 30000 });
     const returnMs = performance.now() - returnStart;
     await page.waitForTimeout(1500);
-    samples.push({ cycle, render, afterEviction, afterReturn: await graphics(), returnMs });
+    samples.push({ cycle, render, moving, movedM, beforeWalk, afterWalk,
+      afterEviction, afterReturn: await graphics(), returnMs });
     if (cycle > 1) {
       const baseline = samples[0];
       for (const [stage, current, first] of [
@@ -94,6 +126,6 @@ async page => {
     }
   }
   if (errors.length) throw new Error(errors.join('; '));
-  return { passed: true, cycles, coldMs, samples,
-    scope: 'One authenticated fixture client, repeated gallery entry, short walk, exit, distance eviction and return at 1440x900 on local Chromium. Frame samples include host load; renderer geometry/texture counts and Chromium JS heap are resource indicators, not physical GPU memory. No target-device or human visual acceptance.' };
+  return { passed: true, cycles, qualityMode, aoMode, coldMs, samples,
+    scope: 'One authenticated fixture client, repeated gallery entry, measured keyboard walk, exit, distance eviction and return at 1440x900 on local Chromium. Frame samples include host load; renderer geometry/texture counts and Chromium JS heap are resource indicators, not physical GPU memory. No target-device or human visual acceptance.' };
 }
