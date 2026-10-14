@@ -889,9 +889,14 @@ function render(now) {
   if (officeUI?.active || !softwareAcceptance || now - lastSoftwareDraw >= 1000) {
     lastSoftwareDraw = now;
     renderer.info.reset();
+    const currentRoom = buildingMesh?.userData.generatedRooms?.find(room => room.planId === self?.levelId);
+    const generatedRoomActive = !officeUI?.active && interiorsLayer?.visible
+      && generatedInteriors?.readyFor(self?.levelId) && currentRoom;
+    // The office presentation also calls this pipeline; clear a previous
+    // gallery mask before either render path runs.
+    pipeline.setOcclusionExteriorMask(generatedRoomActive ? worldGroup : null, interiorsLayer);
     if (!officeUI?.update(now, delta)) {
-      const currentRoom = buildingMesh?.userData.generatedRooms?.find(room => room.planId === self?.levelId);
-      if (generatedInteriors?.readyFor(self?.levelId) && canCullExterior(camera, currentRoom))
+      if (generatedRoomActive && canCullExterior(camera, currentRoom))
         renderWithoutExterior(worldGroup, interiorsLayer, () => pipeline.render(delta));
       else pipeline.render(delta);
     }
