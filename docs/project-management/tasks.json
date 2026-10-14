@@ -5196,8 +5196,8 @@
         "perf/procedural-pilot-render-20261014"
       ],
       "owner": "codex-root-20261014-pilot-render",
-      "updatedAt": "2026-10-14T03:34:57Z",
-      "leaseUntil": "2026-10-14T05:34:57Z",
+      "updatedAt": "2026-10-14T03:36:49Z",
+      "leaseUntil": "2026-10-14T05:36:49Z",
       "nextAction": "Review the performance draft PR's exact-head hosted checks, then hand its measured pilot frame gain and remaining visual and target-device gaps to the procedural-interiors integration owner.",
       "ledger": "docs/superpowers/plans/2026-10-14-procedural-pilot-frame-performance.md",
       "requiredChecks": [
@@ -5212,7 +5212,8 @@
         "preview/src/main.js",
         "preview/tests/interior-exterior-culling.test.js",
         "docs/superpowers/plans/2026-10-14-procedural-pilot-frame-performance.md"
-      ]
+      ],
+      "pr": 351
     }
   ]
 }
