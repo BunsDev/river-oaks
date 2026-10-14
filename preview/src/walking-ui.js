@@ -13,17 +13,17 @@ import { primaryAction } from './contextual-action.js';
 import { travelRefusal } from './travel-message.js';
 import './walking.css';
 
-export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getLocals, reducedMotion, onEnter, onLeave, canEnterStore = () => true, getInteraction = () => null, getPlay = () => null, getVoice = () => null }) {
+export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getLocals, reducedMotion, onEnter, onLeave, onLevelChange, canEnterStore = () => true, getInteraction = () => null, getPlay = () => null, getVoice = () => null }) {
   const $ = (selector) => document.querySelector(selector);
   const hud = document.createElement('section');
   hud.id = 'walking-hud'; hud.className = 'walking-hud'; hud.hidden = true;
   hud.setAttribute('aria-label', 'Walking controls');
-  hud.innerHTML = `<div class="walking-title"><span>RIVER OAKS · GARDEN CITY</span><strong>On foot</strong><small>4444 Westheimer Rd · Houston</small></div><div class="walking-center" aria-hidden="true">·</div><div class="walking-console"><p class="walking-notice" id="walking-notice" role="status" aria-live="polite" hidden></p><button id="walking-meet-nearby">Meet someone nearby</button><button id="walking-talk" disabled>Find a local to talk to <kbd>E</kbd></button><button id="walking-enter" hidden>Step inside <kbd>F</kbd></button><button id="walking-play" hidden></button><button id="walking-interact" hidden>Sit down <kbd>Z</kbd></button><p id="walking-place">Explore the public walkways</p><button id="walking-controls-toggle" aria-expanded="false" aria-controls="walking-movement">Show movement controls</button><div id="walking-movement" hidden><div class="walking-pad" role="group" aria-label="Walk and turn"><button data-walk-key="ArrowLeft" aria-label="Turn left"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5 3.5 8.5 7 12"/><path d="M3.5 8.5H12a4 4 0 0 1 0 8H9"/></svg></button><button data-walk-key="KeyA" aria-label="Walk left">←</button><button data-walk-key="KeyW" aria-label="Walk forward">↑</button><button data-walk-key="KeyS" aria-label="Walk backward">↓</button><button data-walk-key="KeyD" aria-label="Walk right">→</button><button data-walk-key="ArrowRight" aria-label="Turn right"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m13 5 3.5 3.5L13 12"/><path d="M16.5 8.5H8a4 4 0 0 0 0 8h3"/></svg></button></div><p class="walking-help">WASD to walk · Drag to look · Shift for a brisk walk<br>Arrow keys to turn · E to talk · F steps inside · Z to sit or water · G takes a bike at the rack<br>Y joins voice · M mutes<br>B to fly · Space to rise · C to lower · Q calls Jev · G gets in / out · Escape closes conversations</p></div></div>`;
+  hud.innerHTML = `<div class="walking-title"><span>RIVER OAKS · GARDEN CITY</span><strong>On foot</strong><small>4444 Westheimer Rd · Houston</small></div><div class="walking-center" aria-hidden="true">·</div><div class="walking-console"><p class="walking-notice" id="walking-notice" role="status" aria-live="polite" hidden></p><button id="walking-meet-nearby">Meet someone nearby</button><button id="walking-talk" disabled>Find a local to talk to <kbd>E</kbd></button><button id="walking-enter" hidden>Step inside <kbd>F</kbd></button><button id="walking-descend" hidden>Go down one level <kbd>Shift+F</kbd></button><button id="walking-play" hidden></button><button id="walking-interact" hidden>Sit down <kbd>Z</kbd></button><p id="walking-place">Explore the public walkways</p><button id="walking-controls-toggle" aria-expanded="false" aria-controls="walking-movement">Show movement controls</button><div id="walking-movement" hidden><div class="walking-pad" role="group" aria-label="Walk and turn"><button data-walk-key="ArrowLeft" aria-label="Turn left"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5 3.5 8.5 7 12"/><path d="M3.5 8.5H12a4 4 0 0 1 0 8H9"/></svg></button><button data-walk-key="KeyA" aria-label="Walk left">←</button><button data-walk-key="KeyW" aria-label="Walk forward">↑</button><button data-walk-key="KeyS" aria-label="Walk backward">↓</button><button data-walk-key="KeyD" aria-label="Walk right">→</button><button data-walk-key="ArrowRight" aria-label="Turn right"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m13 5 3.5 3.5L13 12"/><path d="M16.5 8.5H8a4 4 0 0 0 0 8h3"/></svg></button></div><p class="walking-help">WASD to walk · Drag to look · Shift for a brisk walk<br>Arrow keys to turn · E to talk · F uses stairs or doors · Shift+F goes down · Z to sit or water · G takes a bike at the rack<br>Y joins voice · M mutes<br>B to fly · Space to rise · C to lower · Q calls Jev · G gets in / out · Escape closes conversations</p></div></div>`;
   const primary = document.createElement('div'); primary.className = 'walking-primary';
   const more = document.createElement('details'); more.className = 'walking-more';
   more.innerHTML = '<summary>More actions</summary><div class="walking-other-actions"></div>';
   const secondary = more.querySelector('div');
-  const actionButtons = Object.fromEntries(['talk', 'enter', 'play', 'interact', 'meet'].map(action =>
+  const actionButtons = Object.fromEntries(['talk', 'enter', 'descend', 'play', 'interact', 'meet'].map(action =>
     [action, hud.querySelector(action === 'meet' ? '#walking-meet-nearby' : `#walking-${action}`)]));
   hud.querySelector('#walking-notice').after(primary, more);
   for (const button of Object.values(actionButtons)) secondary.append(button);
@@ -82,7 +82,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   let flight = createFlightState();
   let flightAllowed=false,beastKind=null;
   let thirdPerson = true, bodyVisible = true;
-  let active = false, environment, stores = [], state, nearest = null, lastPaint = 0, pathLabel = 'public district paths';
+  let active = false, environment, walkingWorld = null, stores = [], state, nearest = null, lastPaint = 0, pathLabel = 'public district paths';
   const drag = createPointerGesture();
   const cameraBoom=createCameraBoom();
   const clear = () => { keys.clear(); drag.cancel(); document.querySelectorAll('[data-walk-key]').forEach(b => b.classList.remove('held')); if (state) state.velocity = [0, 0]; };
@@ -135,6 +135,9 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   const talk = () => { if (!active) return; nearest = findNearest(); if (nearest) { clear(); onTalk(nearest.id); } };
   // Boutique thresholds: inside a room F steps back to the pavement, at a door F walks in.
   const currentRoom = () => environment?.roomAt?.(state.position[0], state.position[2]) ?? null;
+  const nearbyStairs = (room, direction) => room?.generatedPlan?.portals?.find(portal => portal.kind === 'stairs'
+    && portal.toLevelId === `${room.buildingId}/l${room.generatedPlan.index + (direction === 'down' ? -1 : 1)}`
+    && Math.hypot(portal.position[0] - state.position[0], portal.position[1] + state.position[2]) <= 1.3) ?? null;
   const doorway = () => {
     let result = null, distance = 6;
     for (const store of stores) {
@@ -143,15 +146,17 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     }
     return result;
   };
-  const stepThrough = async () => {
+  const stepThrough = async (direction = 'up') => {
     if (!active || transport || sitting || doorwayPending) return;
     const room = currentRoom();
+    const stairs = nearbyStairs(room, direction) ?? (direction === 'up' ? nearbyStairs(room, 'down') : null);
+    if (room?.generatedPlan?.index > 0 && !stairs) return;
     const store = room ? stores.find(item => item.id === room.storeId) : doorway();
-    if (!store || (!room && !canEnterStore(store))) return;
+    if ((!store && !stairs) || (!room && !canEnterStore(store))) return;
     const actionState = state;
     clear(); doorwayPending = true;
     try {
-      const result = await (room ? onLeave?.(store) : onEnter?.(store));
+      const result = await (stairs ? onLevelChange?.(stairs) : room ? onLeave?.(store) : onEnter?.(store));
       if (active && state === actionState && result?.ok === false) {
         notify(travelRefusal(result, { blocked: 'The way through is blocked right now. Try again in a moment.',
           cooldown: 'Wait a moment before stepping through. Try again.', fallback: 'Could not step through. Try again.' }));
@@ -160,7 +165,8 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       if (active && state === actionState) notify('Could not step through. Check your connection and try again.');
     } finally { doorwayPending = false; }
   };
-  $('#walking-enter').addEventListener('click', stepThrough);
+  $('#walking-enter').addEventListener('click', () => stepThrough());
+  $('#walking-descend').addEventListener('click', () => stepThrough('down'));
   // Z sits on a nearby seat, stands up, or waters a nearby planter; the
   // provider decides which and whether the town agrees.
   const interact = () => {
@@ -201,7 +207,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     }
     if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ShiftLeft', 'ShiftRight', 'Space', 'KeyC'].includes(event.code)) { event.preventDefault(); keys.add(event.code); }
     if (event.code === 'KeyE' && !event.repeat) { event.preventDefault(); talk(); }
-    if (event.code === 'KeyF' && !event.repeat) { event.preventDefault(); stepThrough(); }
+    if (event.code === 'KeyF' && !event.repeat) { event.preventDefault(); stepThrough(event.shiftKey ? 'down' : 'up'); }
     if (event.code === 'KeyZ' && !event.repeat) { event.preventDefault(); interact(); }
     if (event.code === 'KeyX' && !event.repeat) { event.preventDefault(); play(); }
     // Y joins or leaves voice; M mutes, or is held to talk in push-to-talk mode.
@@ -243,7 +249,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     setTraversal({canFly=false,kind=null}={}) {
       flightAllowed=Boolean(canFly);beastKind=beastTraversal(kind)?kind:null;
       sprintButton.hidden=!beastKind;
-      hud.querySelector('.walking-help').innerHTML=`WASD to move · Drag to look · Shift to ${beastKind?'sprint':'walk briskly'}<br>Arrow keys to turn · E to talk · F steps inside · Z to sit or water<br>Y joins voice · M mutes<br>${flightAllowed?'B to fly · Space to rise · C to lower · ':''}Escape closes conversations`;
+      hud.querySelector('.walking-help').innerHTML=`WASD to move · Drag to look · Shift to ${beastKind?'sprint':'walk briskly'}<br>Arrow keys to turn · E to talk · F uses stairs or doors · Shift+F goes down · Z to sit or water<br>Y joins voice · M mutes<br>${flightAllowed?'B to fly · Space to rise · C to lower · ':''}Escape closes conversations`;
     },
     // The voice row sits under the actions, above the place line.
     mountVoice(element) { more.after(element); },
@@ -271,6 +277,10 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       transport?.stop();transport=null;
       if (!active || !state || !player) return;
       clear();
+      const level = walkingWorld?.buildingInteriors?.flatMap(plan => plan.levels)
+        .find(item => item.id === player.levelId);
+      const selectedLevelId = level?.index > 0 ? level.id : null;
+      if (environment.levelId !== selectedLevelId) environment = createWalkingEnvironment(walkingWorld, placedObjects, selectedLevelId);
       sitting=player.sitting??null;performing=Boolean(player.performing);seatedGround=player.position[2];
       state.position = [player.position[0], player.position[2] + (sitting?sitting.height+.65:1.68) + player.altitude, -player.position[1]];
       state.yaw = player.yaw; state.speed = 0;
@@ -278,9 +288,11 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       if (player.altitude > 0) Object.assign(flight, { active: true, altitude: player.altitude, target: player.altitude });
       place();
     },
-    syncSeating(player) {
+    syncAuthoritativePose(player) {
       if(!player)return;
-      if((player.sitting?.buildId??null)!==(sitting?.buildId??null) || player.sitting?.slot!==sitting?.slot)this.applyServerPose(player);
+      const level=walkingWorld?.buildingInteriors?.flatMap(plan=>plan.levels).find(item=>item.id===player.levelId);
+      if((player.sitting?.buildId??null)!==(sitting?.buildId??null) || player.sitting?.slot!==sitting?.slot
+        || environment?.levelId!==(level?.index>0?level.id:null))this.applyServerPose(player);
     },
     toggleFlight() {
       if (!flightAllowed || !active || currentRoom() || transport || sitting || performing) return false;
@@ -294,7 +306,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     notify,
     get environment() { return environment ?? null; },
     setThirdPerson(enabled) { thirdPerson = Boolean(enabled);if (active) place(); },
-    getPose() { return active && state ? { position: [...state.position], riding:transport?.pose??null, sitting, ground: sitting||performing?seatedGround:environment.groundAt(state.position[0], state.position[2]), altitude:flight.altitude, flying:flight.active, landing:flight.landing, yaw: state.yaw, speed: state.speed, velocity: [...state.velocity], distance: state.distance, roomId: currentRoom()?.storeId ?? null, showBody: thirdPerson && bodyVisible, groundAt: environment.groundAt } : null; },
+    getPose() { return active && state ? { position: [...state.position], riding:transport?.pose??null, sitting, ground: sitting||performing?seatedGround:environment.groundAt(state.position[0], state.position[2]), altitude:flight.altitude, levelId:environment.levelId??currentRoom()?.planId??null, flying:flight.active, landing:flight.landing, yaw: state.yaw, speed: state.speed, velocity: [...state.velocity], distance: state.distance, roomId: currentRoom()?.storeId ?? null, showBody: thirdPerson && bodyVisible, groundAt: environment.groundAt } : null; },
     canSee(point,eyeHeight) {
       if (!state) return false;
       const local=(getLocals()??[]).find(local=>local.position===point);
@@ -316,6 +328,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       $('.walking-title span').textContent = creatorRegion ? world.title : 'RIVER OAKS · GARDEN CITY';
       $('.walking-title small').textContent = creatorRegion ? 'Creator-authored region' : '4444 Westheimer Rd · Houston';
       pathLabel = creatorRegion ? 'creator region paths' : 'public district paths';
+      walkingWorld = world;
       environment = createWalkingEnvironment(world, placedObjects);
       stores = world.stores ?? [];
       flight = createFlightState();
@@ -371,11 +384,16 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       if (game) { setAction(playButton, game.label, 'X'); setBusy(playButton, game.disabled); }
       const storefront = stores.reduce((best, store) => { const distance = Math.hypot(store.facade[0] - state.position[0], store.facade[1] + state.position[2]); return distance < (best?.distance ?? 16) ? { store, distance } : best; }, null);
       const room = currentRoom(), door = room ? null : doorway();
+      const up = nearbyStairs(room, 'up'), down = nearbyStairs(room, 'down'), stairs = up ?? down;
       $('.walking-title strong').textContent = sitting ? 'Seated' : performing ? 'On stage' : transport ? (transport.pose.kind === 'bicycle' ? 'Cycling' : 'Riding with Jev') : flight.active ? (flight.landing ? 'Landing' : 'In flight') : room?.name ?? storefront?.store.name ?? 'On foot';
       const enter = $('#walking-enter');
-      enter.hidden = Boolean(sitting||performing||transport)||(!room && !door);
+      enter.hidden = Boolean(sitting||performing||transport)||(!room && !door)||Boolean(room?.generatedPlan?.index>0 && !stairs);
       enter.disabled = Boolean(door && !canEnterStore(door));
-      if (room) setAction(enter, 'Step outside', 'F');
+      const descend = $('#walking-descend');
+      descend.hidden = Boolean(sitting||performing||transport)||!up||!down;
+      if (!descend.hidden) setAction(descend, down.toLevelId.endsWith('/l0') ? 'Go down to ground floor' : 'Go down one level', 'Shift+F');
+      if (stairs) setAction(enter, up ? 'Go up one level' : down.toLevelId.endsWith('/l0') ? 'Go down to ground floor' : 'Go down one level', 'F');
+      else if (room) setAction(enter, 'Step outside', 'F');
       else if (door) setAction(enter, canEnterStore(door) ? `Step inside ${door.name}` : `${door.name} · Invitation required`, canEnterStore(door) ? 'F' : null);
       else setAction(enter, '');
       presentActions();
@@ -384,7 +402,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       const roomSummary=room && sharedRoomSummary(room);
       $('#walking-place').textContent = sitting ? 'Drag to look around · Z stands up' : performing ? 'Drag to look around · X steps down' : transport ? (transport.pose.kind === 'bicycle' ? `${(transport.pose.distance / 1609.344).toFixed(2)} mi cycled this ride · W to pedal · Shift to sprint · G to step off` : 'W/S to ride or reverse · A/D or arrows to steer · G to step out') : flight.active ? `${flight.altitude.toFixed(1)} m above ground · Space to rise · C to lower` : room ? room.theme === 'home'
         ? `Inside ${room.name} · ${roomSummary.label} · ${roomSummary.guests} resident${roomSummary.guests === 1 ? '' : 's'}`
-        : `Inside ${room.name} · ${roomSummary.label} · ${roomSummary.staff} staff, ${roomSummary.guests} guests`
+        : `Inside ${room.name}${room.generatedPlan?.index ? ` · Level ${room.generatedPlan.index + 1}` : ''} · ${roomSummary.label} · ${roomSummary.staff} staff, ${roomSummary.guests} guests`
         : nearest ? `${nearest.anchorName} · nearby` : `${state.distance.toFixed(0)} m walked · ${pathLabel}`;
       hud.dataset.eyeHeight = (state.position[1] - environment.groundAt(state.position[0], state.position[2])).toFixed(2);
       hud.dataset.distance = state.distance.toFixed(2);

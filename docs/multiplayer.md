@@ -233,7 +233,7 @@ sequenceDiagram
 ```
 <details><summary>Diagram prompt: join-sequence</summary>
 
-Draw a sequence diagram of a signed-in, approved resident joining a world. Participants: Browser client (preview/src/multiplayer-client.js), Vercel function (distributed app), Redis security store, Redis room. Steps: POST /api/multiplayer/ticket?world=<id> with CSRF -> server checks session, ban, waitlist approval, one-world rule -> issues a single-use ticket (live for 60 s, at most 3 live per user; a new one retires the user's oldest) -> client opens wss://<host>/multiplayer?ticket=...&world=...&protocol=2 -> server consumes the ticket atomically and admits the connection -> snapshot sent -> client watchConnection deadlines (12 s to open, 45 s for the first snapshot, late timers restart up to 4 times). Add alt branches: the account joins another world (old socket closed with 4009 'joined another world'; admins exempt), ticket expired (401), room operation failure isolated (three consecutive failures before close).
+Draw a sequence diagram of a signed-in, approved resident joining a world. Participants: Browser client (preview/src/multiplayer-client.js), Vercel function (distributed app), Redis security store, Redis room. Steps: POST /api/multiplayer/ticket?world=<id> with CSRF -> server checks session, ban, waitlist approval, one-world rule -> issues a single-use ticket (live for 60 s, at most 3 live per user; a new one retires the user's oldest) -> client opens wss://<host>/multiplayer?ticket=...&world=...&protocol=3 -> server consumes the ticket atomically and admits the connection -> snapshot sent -> client watchConnection deadlines (12 s to open, 45 s for the first snapshot, late timers restart up to 4 times). Add alt branches: the account joins another world (old socket closed with 4009 'joined another world'; admins exempt), ticket expired (401), room operation failure isolated (three consecutive failures before close).
 
 See [the diagram index](diagrams.md) for the convention.
 
@@ -701,12 +701,14 @@ After that grace, departure releases it. A compatible region revision keeps
 furniture but disconnects players, so it leaves no stale occupancy. Checkpoint
 recovery validates slots, unique occupancy and the exact furniture-derived pose.
 
-Private world checkpoints write version 5 and read valid versions 1 (original
-district only), 2, 3, 4 and 5. Seat reservations require version 3 or later; custom
-assemblies require version 4; paired interactions require version 5. The version-5 coordinator atomically takes over
-older leases. Commit fencing prevents an older writer from publishing or
-trimming commands. Do not roll back older code against version-5 checkpoints.
-Browser protocol 2 is required: version-1 and unversioned clients must refresh
+Private world checkpoints write version 7 and read valid versions 1 (original
+district only) through 7. Seat reservations require version 3 or later; custom
+assemblies require version 4; paired interactions require version 5; office state
+requires version 6; explicit interior level occupancy requires version 7. The
+current coordinator atomically takes over older leases. Commit fencing prevents
+an older writer from publishing or trimming commands. Do not roll back older
+code against version-7 checkpoints. Browser protocol 3 is required: older and
+unversioned clients must refresh
 before joining.
 This prevents older renderers from applying snapshots with unknown geometry.
 

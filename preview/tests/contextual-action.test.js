@@ -16,6 +16,11 @@ test('unavailable actions never become a primary prompt', () => {
   assert.equal(contextualAction({ seated: true, interact: false, talk: true }), 'talk');
   assert.equal(contextualAction({ enter: false, meet: true }), 'meet');
 });
+test('an intermediate floor keeps ascent and descent separately reachable', () => {
+  assert.equal(contextualAction({ enter: true, descend: true }), 'enter');
+  assert.equal(contextualAction({ descend: true }), 'descend');
+  assert.equal(primaryAction({ enter: shown(), descend: shown() }, { focused: 'descend', inPrimary: true, keyboard: true }), 'descend');
+});
 
 const shown = (extra = {}) => ({ shown: true, disabled: false, busy: false, ...extra });
 test('an action whose request is still running keeps the primary slot', () => {

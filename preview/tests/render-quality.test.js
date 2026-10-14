@@ -3,6 +3,9 @@ import assert from 'node:assert/strict';
 import { createRenderScaleGovernor, normalizeQuality, DEFAULT_QUALITY, QUALITY_MODES } from '../src/render-quality.js';
 
 const feed = (governor, ms, windows, size = 45) => { for (let i = 0; i < windows * size; i++) governor.sample(ms); return governor.scale; };
+const tailWindow = (governor, missed = 7) => {
+  for (let frame = 0; frame < 45; frame++) governor.sample(frame < missed ? 33.3 : 16.7);
+};
 
 test('a steady 60 Hz frame keeps native resolution', () => {
   const governor = createRenderScaleGovernor();
@@ -39,6 +42,29 @@ test('tab switches and loading hitches are not a workload', () => {
   const governor = createRenderScaleGovernor();
   for (let i = 0; i < 500; i++) governor.sample(i % 2 ? 900 : NaN);
   assert.equal(governor.scale, 1);
+});
+
+test('two sustained tail-heavy windows shed AO without reducing the beauty resolution', () => {
+  const governor = createRenderScaleGovernor();
+  tailWindow(governor);
+  assert.equal(governor.occlusion, true, 'one tail-heavy window may be transient');
+  tailWindow(governor);
+  assert.equal(governor.occlusion, false, 'repeated missed refreshes need a response even with a fast median');
+  assert.equal(governor.scale, 1, 'the beauty image stays at native resolution');
+  feed(governor, 16.7, 120);
+  assert.equal(governor.occlusion, false, 'short calm periods do not restore expensive AO between visits');
+  feed(governor, 16.7, 12);
+  assert.equal(governor.occlusion, true, 'sustained calm eventually restores AO');
+});
+
+test('isolated tails and ordinary single-frame hitches do not disable AO', () => {
+  const governor = createRenderScaleGovernor();
+  tailWindow(governor);
+  feed(governor, 16.7, 1);
+  tailWindow(governor);
+  assert.equal(governor.occlusion, true, 'a calm window separates unrelated tails');
+  for (let window = 0; window < 10; window++) tailWindow(governor, 4);
+  assert.equal(governor.occlusion, true, 'four misses per window stay below the sustained threshold');
 });
 
 test('unknown stored preferences fall back to Auto', () => {
@@ -78,4 +104,30 @@ test('blocked storage falls back to Auto instead of aborting the graphics contro
     globalThis.document = previousDocument;
     if (descriptor) Object.defineProperty(globalThis, 'localStorage', descriptor); else delete globalThis.localStorage;
   }
+});
+
+test('manual quality choices keep their AO policy and returning to Auto resets the tail state', async () => {
+  const { createQualityControl } = await import('../src/render-quality.js');
+  const previousDocument = globalThis.document;
+  globalThis.document = { createElement: () => ({ dataset: {}, setAttribute() {}, append() {}, addEventListener() {}, set textContent(value) {} }) };
+  try {
+    const applied = [];
+    const control = createQualityControl({ storage: { getItem: () => null, setItem() {} }, apply: value => applied.push(value) });
+    control.select('sharp');
+    tailWindow(control); tailWindow(control);
+    assert.equal(control.mode, 'sharp');
+    assert.equal(control.stats.scale, 1);
+    assert.equal(control.stats.occlusion, true);
+    control.select('smooth');
+    tailWindow(control); tailWindow(control);
+    assert.deepEqual(applied.at(-1), { mode: 'smooth', scale: 0.75, occlusion: false });
+    control.select('auto');
+    tailWindow(control); tailWindow(control);
+    assert.deepEqual(applied.at(-1), { mode: 'auto', scale: 1, occlusion: false });
+    control.select('sharp');
+    control.select('auto');
+    assert.equal(control.mode, 'auto');
+    assert.equal(control.stats.scale, 1);
+    assert.equal(control.stats.occlusion, true);
+  } finally { globalThis.document = previousDocument; }
 });

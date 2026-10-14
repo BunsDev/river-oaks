@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { validTownSnapshot } from '../src/town-snapshot.js';
-const snapshot = () => ({ type: 'snapshot', selfId: 'resident', players: [{ id: 'resident', position: [1, 2, 0], yaw: 0, altitude: 0 }], locals: [], community: { scenarioKey: "heatwave", status: "ready", running: false, elapsed: 0, target: 6, supported: 0, unmet: 0, supplies: 12, helpBudget: 4, jobs: [], events: [] }, wishes: { events: [] } });
+const snapshot = () => ({ type: 'snapshot', selfId: 'resident', players: [{ id: 'resident', position: [1, 2, 0], yaw: 0, altitude: 0, buildingId: null, levelId: null }], locals: [], community: { scenarioKey: "heatwave", status: "ready", running: false, elapsed: 0, target: 6, supported: 0, unmet: 0, supplies: 12, helpBudget: 4, jobs: [], events: [] }, wishes: { events: [] } });
 test('town admission requires a complete self pose and shared snapshot', () => {
   assert.equal(validTownSnapshot(snapshot()), true);
   for (const change of [{ players: [] }, { players: null }, { locals: null }, { community: null }, { wishes: null }, { selfId: 'absent' }, { players: [{ id: 'resident', position: [NaN, 0, 0], yaw: 0 }] }]) {
@@ -19,5 +19,15 @@ test('missing altitude or community data cannot unlock gameplay', () => {
   assert.equal(validTownSnapshot(missingAltitude), false);
   for (const community of [{}, { ...snapshot().community, scenarioKey: 'unknown' }, { ...snapshot().community, jobs: null }, { ...snapshot().community, events: null }]) {
     assert.equal(validTownSnapshot({ ...snapshot(), community }), false);
+  }
+});
+
+test('level occupancy is explicit and paired in protocol snapshots', () => {
+  const valid = snapshot();
+  valid.players[0].buildingId = 'gallery'; valid.players[0].levelId = 'gallery/l1';
+  assert.equal(validTownSnapshot(valid), true);
+  for (const changes of [{ levelId: null }, { buildingId: null }, { levelId: 'other/l1' }, { levelId: undefined }]) {
+    const invalid = snapshot(); Object.assign(invalid.players[0], { buildingId: 'gallery', levelId: 'gallery/l1' }, changes);
+    assert.equal(validTownSnapshot(invalid), false);
   }
 });

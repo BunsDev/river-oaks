@@ -51,7 +51,7 @@ function publication(data,ownerId,now) {
     || Object.keys(data).some(key=>!['id','title','description','region'].includes(key)))return null;
   let region=null;
   if(data.region!==undefined) {
-    try {region=compileRegionPackage(data.region,data.title);} catch {return {error:'invalid_region'};}
+    try {region=compileRegionPackage(data.region,data.title,{worldId:id});} catch {return {error:'invalid_region'};}
   }
   const encoded=region?JSON.stringify(region):'';
   const world={id,title:data.title,description:data.description??'',template:region?'region-v1':'river-oaks',ownerId,createdAt:now(),
@@ -66,7 +66,7 @@ function draftInput(data,editorId,now) {
     || !Number.isSafeInteger(data?.expectedDraftVersion) || data.expectedDraftVersion<0 || data.expectedDraftVersion>100000
     || Object.keys(data).some(key=>!['id','baseRegionSha256','expectedDraftVersion','region'].includes(key)))return null;
   let compiled;
-  try {compiled=compileRegionPackage(data.region,'Revision draft');} catch {return null;}
+  try {compiled=compileRegionPackage(data.region,'Revision draft',{worldId:id});} catch {return null;}
   const encoded=JSON.stringify(data.region);
   if(Buffer.byteLength(encoded)>MAX_REGION_REQUEST_BYTES)return null;
   return {id,baseRegionSha256:data.baseRegionSha256,region:data.region,compiledSha256:digest(JSON.stringify(compiled)),
@@ -123,7 +123,7 @@ export function createRedisWorldCatalog({redis,prefix,now=Date.now}={}) {
       if(draft && (draft.id!==id || draft.baseRegionSha256!==world.regionSha256 || !clean(draft.editedBy,200)
         || !Number.isSafeInteger(draft.updatedAt) || draft.updatedAt<0 || !/^[a-f0-9]{64}$/.test(draft.compiledSha256)
         || !Number.isSafeInteger(draft.version) || draft.version<1 || draft.version>100001
-        || digest(JSON.stringify(compileRegionPackage(draft.region,'Revision draft')))!==draft.compiledSha256))throw new Error('Invalid region draft');
+        || digest(JSON.stringify(compileRegionPackage(draft.region,'Revision draft',{worldId:id})))!==draft.compiledSha256))throw new Error('Invalid region draft');
       return {world,publishedRegion,draft};
     },
     async history(id) {
@@ -158,7 +158,7 @@ export function createRedisWorldCatalog({redis,prefix,now=Date.now}={}) {
       const {world,draft}=editable;
       if(!draft || draft.version!==expectedDraftVersion)return {ok:false,reason:'draft_conflict'};
       if((world.revision??1)>=100000)return {ok:false,reason:'world_limit'};
-      const worldData=compileRegionPackage(draft.region,world.title),encoded=JSON.stringify(worldData);
+      const worldData=compileRegionPackage(draft.region,world.title,{worldId:id}),encoded=JSON.stringify(worldData);
       const next={...world,revision:(world.revision??1)+1,updatedAt:now(),regionSha256:digest(encoded)};
       return {ok:true,world:next,worldData,encoded,expectedRegionSha256:world.regionSha256,expectedDraftVersion,
         keys:{catalog:key,region:regionKey,draft:draftKey,history:`${prefix}:region-history:${id}`}};
@@ -223,7 +223,7 @@ export function createMemoryWorldCatalog({now=Date.now}={}) {
       const {world,draft}=editable;
       if(!draft || draft.version!==expectedDraftVersion)return {ok:false,reason:'draft_conflict'};
       if((world.revision??1)>=100000)return {ok:false,reason:'world_limit'};
-      const worldData=compileRegionPackage(draft.region,world.title),encoded=JSON.stringify(worldData);
+      const worldData=compileRegionPackage(draft.region,world.title,{worldId:id}),encoded=JSON.stringify(worldData);
       return {ok:true,world:{...world,revision:(world.revision??1)+1,updatedAt:now(),regionSha256:digest(encoded)},
         worldData,encoded,expectedRegionSha256:world.regionSha256,expectedDraftVersion};
     },

@@ -82,3 +82,16 @@
 .studio-agent-menu-wrap{position:relative}.studio-agent-menu{position:absolute;bottom:48px;left:0;width:230px;padding:12px;border-radius:16px;background:#2a2b2f;border:1px solid var(--agent-line);box-shadow:0 12px 30px #0006;font-size:13px}
 .studio-agent-menu p{margin:0 0 8px;color:var(--agent-muted)}.studio-agent-menu p:last-child{margin:8px 0 0}.studio-agent-menu label{display:flex;gap:8px;align-items:center;padding:5px 0}
 @media(max-width:760px){.studio-agent{top:52px;bottom:72px;width:calc(100% - 24px)}.studio-agent-select select{max-width:96px}}
+.studio-building-interior{border-top:1px solid var(--line);margin:18px 0;padding-top:12px;font-size:11px;line-height:1.45;color:var(--ink)}
+.studio-building-interior h3{font-size:12px;margin:0 0 8px}.studio-building-interior p{color:var(--muted);margin:6px 0 10px;overflow-wrap:anywhere}
+.studio-building-interior button{border:1px solid var(--line);border-radius:5px;background:var(--sage);color:var(--forest);padding:8px 10px;margin:5px 5px 0 0;font-size:11px;cursor:pointer}
+.studio-building-interior button:disabled{opacity:.5;cursor:default}.studio-building-interior button:focus-visible{outline:2px solid var(--forest);outline-offset:2px}
+.studio-interior-levels{padding-left:18px;margin:10px 0}.studio-interior-levels li{margin:7px 0}.studio-interior-levels small{display:block;color:var(--muted);font-size:10px;overflow-wrap:anywhere}
+.studio-interior-preview{border:1px solid var(--selected-line);border-radius:5px;background:var(--selected);padding:10px;margin-top:10px}
+.studio-interior-levels button[aria-pressed=true]{background:var(--selected);border-color:var(--selected-line)}
+.studio-interior-layers{display:grid;gap:6px;margin:12px 0;padding:10px;border:1px solid var(--line);border-radius:5px}
+.studio-interior-layers legend{padding:0 4px;color:var(--muted)}
+.studio-interior-layers label{display:flex;align-items:center;gap:7px;text-transform:capitalize}
+.studio-interior-edits{display:grid;gap:8px;margin:12px 0;padding:10px;border:1px solid var(--line);border-radius:5px}
+.studio-interior-edits label{display:grid;gap:4px}.studio-interior-edits input,.studio-interior-edits select{width:100%;min-width:0;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--paper);color:var(--ink);font:inherit}
+.studio-interior-edits input:focus-visible,.studio-interior-edits select:focus-visible{outline:2px solid var(--forest);outline-offset:2px}
