@@ -103,6 +103,15 @@ Parked here as the goal asks; the brief carries the same list with context.
    `perf/procedural-gallery-ao-sampling-20261014` (trial outcome recorded, no PR,
    queued, no owner) and `feat/voice-acceptance-20261013` (blocked task owned by
    cody) are distinct unfinished work and need their owners or you.
+   Dry runs at 2026-10-14T21:10Z (nothing applied): `project:prune --cancel-stale
+   --branch feat/procedural-gallery-route-20261014 --expected-head
+   f0a55434e1cd43a1e3b34e894a615b8460854d61` reports eligible under the default
+   12-hour rule (latest touch 2026-10-14T01:08Z, no blockers); the same for
+   `perf/procedural-gallery-ao-sampling-20261014` at `05ddd067…` is blocked
+   `touched-within-cutoff` (09:43Z). A yes on the first lets any session run that
+   command with `--apply` for 22 / 22; the eight draft checkouts (#351–#358) and
+   the twelve owned active ones remain, so ten-and-ten still needs the broader
+   answer above.
 
 ## Round end (2026-10-14T20:40Z)
 
