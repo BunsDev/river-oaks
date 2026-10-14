@@ -24,3 +24,11 @@ Owned files: `preview/src/generated-interior-stream.js`, its focused test, the o
 ## Next action
 
 Sign and push the four-level browser and intermediate-floor route fix to draft PR #350, then review hosted checks on its exact head. The broader performance, native and human acceptance limits remain open.
+
+## 2026-10-14 integration takeover
+
+- Val authorized serial landing to `main` and selected this session to take over the procedural stack. The primary live task is owned by `codex-root-20261014-procedural-landing`; the worktree was clean at signed `ba0f5d473a048bfb673bb3831e3108392377c581`.
+- PR #349 merged to `main` at `de0b64a9561f7cc1b32a9ea3594cadaee18fa771`. Merged that actual main head locally without source conflicts, retaining four-level streaming, stair selection, café game state, and current worktree lifecycle tooling. Refreshed only this task row from the primary live register.
+- Combined focused tests passed 22/22 before the final main merge and will be repeated on the final tree. `node --test preview/tests/generated-interior-stream.test.js preview/tests/contextual-action.test.js server/tests/creator-four-level-interiors.test.js server/tests/cafe-games.test.js server/tests/district-gallery-levels.test.js` passed 22/22 on the final main merge. `TMPDIR=/Volumes/Passport/river-oaks-agent-tmp-contact pnpm run verify` passed on that tree (`.runtime/level-streaming-main-merge-core.log`, `.runtime/agent/core.json`, 2026-10-14T20:36:54Z); Python passed 141/141 and the secret scan found no leaks. Exact-head hosted checks remain required after push. Broader performance, native, and human acceptance remain open.
+- While hosted checks for signed `70d48f6fc15a5f8c286c1a09a1acf784b90d016c` started, PR #378 moved `main` to `a52e195ec3b8c97df52afce6808ddc64c7c6c09c`. Merged that head locally with the installed task-register driver; only the live #350 task row was refreshed. This later tree needs its own verification, signed push and hosted checks.
+- `TMPDIR=/Volumes/Passport/river-oaks-agent-tmp-contact pnpm run verify` passed on the #378 merge tree (`.runtime/level-streaming-register-merge-core.log`, `.runtime/agent/core.json`, 2026-10-14), including Python 141/141 and a clean repository-wide secret scan. Focused combined tests passed 22/22; `git diff --check` passed.
