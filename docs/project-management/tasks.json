@@ -5087,6 +5087,35 @@
       ],
       "blocker": null,
       "ledger": "docs/project-management/workflow.md"
+    },
+    {
+      "id": "office-ipic-baseline-360",
+      "title": "Office + IPIC #360 (design side, D0/D1): kit/reference inventory, brief, asset manifest and review matrix in docs/design/office-ipic",
+      "status": "active",
+      "branches": [
+        "docs/office-ipic-baseline-20261014"
+      ],
+      "owner": "claude:river-oaks-fable (aa2272b7)",
+      "leaseUntil": "2026-10-14T21:41:38.859Z",
+      "updatedAt": "2026-10-14T19:46:09.240Z",
+      "nextAction": "Split agreed with river-oaks-dc (engineering side owns layout-contract.json, camera-manifest.json and their validator on docs/office-ipic-engineering-baseline-20261014). Write the design packet from the verified kit inventory (71/71 checksums OK) and the scale-review decisions; validator test; verify; draft PR. No kit bytes imported without Val approval.",
+      "filesOwned": [
+        "docs/design/office-ipic/brief.md",
+        "docs/design/office-ipic/reference-index.json",
+        "docs/design/office-ipic/asset-manifest.json",
+        "docs/design/office-ipic/review-matrix.md",
+        "scripts/office-ipic-reference-index.mjs",
+        "scripts/tests/office-ipic-references.test.js",
+        "docs/superpowers/plans/2026-10-14-office-ipic-baseline.md"
+      ],
+      "requiredChecks": [
+        "focused office/IPIC node tests",
+        "pnpm run verify"
+      ],
+      "blocker": null,
+      "issue": 360,
+      "ledger": "docs/superpowers/plans/2026-10-14-office-ipic-baseline.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-ipic-baseline-20261014"
     }
   ]
 }
