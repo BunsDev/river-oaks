@@ -4655,13 +4655,14 @@
     {
       "id": "procedural-gallery-vertical-route",
       "title": "Render the approved gallery vertical portal as a visible platform lift",
-      "status": "active",
+      "status": "queued",
       "branches": [
         "feat/procedural-gallery-route-20261014"
       ],
-      "owner": "codex-root-20261014-gallery-route",
-      "updatedAt": "2026-10-14T01:00:00.000Z",
-      "nextAction": "Commit the verified gallery visual branch and hand its head to the procedural-interiors owner for integration. Final core and post-removal two-client browser journey passed. The internal portal still says stairs and 60 Hz frame pacing remains unproven.",
+      "owner": null,
+      "updatedAt": "2026-10-14T01:08:15.000Z",
+      "handoff": "Signed, verified gallery work is pushed at f0a55434e1cd43a1e3b34e894a615b8460854d61. The clean worktree is retained until integration and delivery evidence support retirement. Former owner: codex-root-20261014-gallery-route.",
+      "nextAction": "Integration owner: merge signed, pushed gallery head f0a55434 into docs/procedural-multilevel-interiors-20261013, resolve the generated fixture material overlap, then run combined full/shared/performance gates. Paired Mac M3 Max Chromium samples passed: street p95 16.8 ms, gallery p95 33.4 ms; views differ, so the draw-call change is not isolated gallery cost. The internal portal still says stairs. Gallery branch has no standalone PR because the integration base is not yet published.",
       "ledger": "docs/superpowers/plans/2026-10-14-gallery-vertical-route.md",
       "requiredChecks": [
         "Focused geometry and browser regression for the gallery route",
@@ -4677,7 +4678,32 @@
         "preview/e2e/generated-gallery-levels.js",
         "docs/superpowers/plans/2026-10-14-gallery-vertical-route.md"
       ],
-      "leaseUntil": "2026-10-14T02:40:23.000Z"
+      "leaseUntil": null
+    },
+    {
+      "id": "procedural-level-aware-streaming",
+      "title": "Prepare generated interior levels according to authoritative occupancy",
+      "status": "active",
+      "branches": [
+        "feat/procedural-level-streaming-20261014"
+      ],
+      "owner": "codex-root-20261014-level-streaming",
+      "updatedAt": "2026-10-14T01:20:17.000Z",
+      "leaseUntil": "2026-10-14T03:09:40.000Z",
+      "nextAction": "Commit and push the verified level-aware streaming branch, then hand its exact head to the procedural integration owner. Focused 2/2, both gallery browser journeys and core passed; inside frame p95 remains 33.4 ms and combined full/Redis/hosted gates remain open.",
+      "ledger": "docs/superpowers/plans/2026-10-14-level-aware-interior-streaming.md",
+      "requiredChecks": [
+        "Multi-level stream preparation, cancellation and eviction behavioral tests",
+        "Generated gallery ascent/descent and reduced-motion browser journeys",
+        "pnpm run verify core before commit"
+      ],
+      "filesOwned": [
+        "preview/src/generated-interior-stream.js",
+        "preview/tests/generated-interior-stream.test.js",
+        "preview/src/main.js (generated interior stream occupancy hint only)",
+        "preview/e2e/generated-gallery-levels.js (stream readiness assertions only)",
+        "docs/superpowers/plans/2026-10-14-level-aware-interior-streaming.md"
+      ]
     },
     {
       "id": "ipic-photo-interior",

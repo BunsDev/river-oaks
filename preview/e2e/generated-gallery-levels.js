@@ -34,10 +34,12 @@ async page => {
   await page.locator('#destination').selectOption({ label: 'Laura Rathe Fine Art' });
   await page.locator('#visit-destination').click();
   await page.waitForFunction(() => window.__riverGeneratedInteriors?.().length === 2
-    && window.__riverGeneratedInteriors()[0].ready && window.__riverGeneratedInteriors()[1].ready);
+    && window.__riverGeneratedInteriors()[0].ready && !window.__riverGeneratedInteriors()[1].ready
+    && window.__riverGeneratedInteriors()[1].shellVisible);
   await page.waitForTimeout(1500);
   await page.locator('#enter-destination').click();
   await page.waitForFunction(() => document.querySelector('#walking-hud')?.dataset.inside);
+  await page.waitForFunction(() => window.__riverGeneratedInteriors?.()[1]?.ready);
   if (await page.locator('.store-intro').isVisible()) await page.locator('.store-intro button').click();
   if (await page.locator('#panel-toggle').getAttribute('aria-expanded') === 'true') await page.locator('#panel-toggle').click();
   if (await page.locator('.visit-tools[open] > .visit-tools-toggle').count()) await page.locator('.visit-tools[open] > .visit-tools-toggle').click();
