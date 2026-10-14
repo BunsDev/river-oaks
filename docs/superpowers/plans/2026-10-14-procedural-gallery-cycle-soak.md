@@ -28,3 +28,8 @@ Files owned: `preview/e2e/generated-gallery-cycle-soak.js`, this ledger, plans i
 ## Next action
 
 Draft PR #353 is queued for exact-head hosted CI after the signed measurement update. Use the AO comparison to scope a separate runtime quality fix; do not expand building archetypes on the current Auto moving-frame evidence. Target-device and human visual acceptance remain open. The worktree is not ready to archive.
+
+## 2026-10-14 integration landing
+
+- Val authorized serial landing. PR #352 merged to main as `f9c3cb55a605dfa86e32d214e7f5e6e8bba0f160`. Merged that actual main head into #353 without source conflicts and refreshed only delivered #350-#352 and owned #353 task rows from the primary live register. Final focused/core and named browser verification, signed push, exact hosted checks, ready state and REST guard remain required.
+- On the final main merge, `node --check preview/e2e/generated-gallery-cycle-soak.js` and focused Node tests passed 13/13. `TMPDIR=/Volumes/Passport/river-oaks-agent-tmp-contact pnpm run verify` passed (`.runtime/gallery-cycle-main-merge-core.log`, `.runtime/agent/core.json`, 2026-10-14), including Python 141/141 and no secret leaks. `RIVER_OAKS_E2E_REPORT=../../.runtime/gallery-cycle-main-merge.json pnpm run test:experience generated-gallery-cycle-soak` passed five Auto/AO-on cycles in 119.5 seconds. Stationary p95 was 16.7-16.8 ms; moving p95 was 33.4 ms on all five cycles, with 19-22 intervals above 25 ms each. Each eviction returned to 542 geometries/200 textures and each return to 546/205. This confirms the moving AO gap and stable renderer counts on local M3 Max; it is not target-device or human acceptance.

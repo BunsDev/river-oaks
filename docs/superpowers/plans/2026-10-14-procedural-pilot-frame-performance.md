@@ -33,3 +33,8 @@ Files owned: `preview/e2e/generated-gallery-render-cost.js`, `preview/e2e/genera
 ## Next action
 
 Review #351's hosted checks on the soak commit's exact head, then hand the measured pilot frame gain to the procedural-interiors integration owner. Keep target GPU, human visual review, and broader-rollout performance proof open; do not merge or retire this worktree on local evidence alone.
+
+## 2026-10-14 integration landing
+
+- Val authorized serial landing to main. PR #350 merged as `c36bf2dec992b284a06534d9e0047248b0ea08e5` after 16 exact-head green checks. Merged that current main locally into #351 without source conflicts. Refreshed only the delivered #350 and owned #351 task rows from the primary live register. The final combined tree requires focused/core verification, signed push, exact-head hosted checks, ready state, and the REST merge guard. Pilot target-device and human visual acceptance remain open for broader rollout.
+- `node --test preview/tests/interior-exterior-culling.test.js preview/tests/generated-interior-stream.test.js preview/tests/contextual-action.test.js server/tests/creator-four-level-interiors.test.js server/tests/cafe-games.test.js` passed 22/22 on the final main merge. `TMPDIR=/Volumes/Passport/river-oaks-agent-tmp-contact pnpm run verify` passed (`.runtime/pilot-main-merge-core.log`, `.runtime/agent/core.json`, 2026-10-14), including Python 141/141 and no secret leaks. `git diff --check` passed.

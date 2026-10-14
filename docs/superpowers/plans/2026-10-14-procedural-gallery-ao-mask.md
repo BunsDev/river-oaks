@@ -51,3 +51,7 @@ The first `pnpm run verify` passed after the measured trial. Source review then 
 ## Next action
 
 Sign/push this verified slice as a draft PR stacked on #357, then check exact-head hosted CI. Keep the partial frame-time result and target-device/human visual gates explicit; do not expand archetypes or merge on this local evidence alone.
+
+## Main integration, 2026-10-14
+
+PR #357 landed as `093b8d0f45b2ebaf5a680ac8b0999f889c7b46c6`. Merged current main into this branch without conflicts and reconciled the #356–#358 live task rows. Focused AO pipeline/culling tests passed 12/12. The integrated `generated-gallery-render-cost` and `office-visit` browser journeys passed, as did the Sharpest/AO-on five-cycle gallery soak (`.runtime/ao-mask-main-five.json`): moving p95 was 33.4 ms on visit 1 and 16.7–16.8 ms on visits 2–5, with each walk moving 2.63–2.69 m; eviction and return renderer counts remained 542/200 and 546/205. This local pacing differs from earlier runs and does not close target-device performance. `TMPDIR=/Volumes/Passport/river-oaks-agent-tmp-contact pnpm run verify` passed core on the integrated tree. The original #358 head passed isolated Redis full; exact-head hosted checks remain required after push. Human review of the AO mask's through-glass appearance remains separate from Val's later approval of the #382 pilot contact-shading screenshots.
