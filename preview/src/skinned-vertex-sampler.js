@@ -1,5 +1,37 @@
 import { Matrix4, Mesh, Vector4 } from 'three';
 
+// UV/normal seams can duplicate a body vertex without changing its deformation.
+// Cloth clearance takes a maximum over these positions, so one representative
+// has exactly the same effect. Keep every position morph and skin influence in
+// the key; coincident vertices that can move apart must remain independent.
+export function createUniqueSkinnedVertexSamples(geometry, indices) {
+  const attributesOf = geometry => [geometry.attributes.position, geometry.attributes.skinIndex,
+    geometry.attributes.skinWeight, ...(geometry.morphAttributes.position ?? [])];
+  const attributes = attributesOf(geometry);
+  const revisions = attributes.map(attribute => ({ attribute, array: attribute.array,
+    version: attribute.version, dataVersion: attribute.data?.version, normalized: attribute.normalized }));
+  const seen = new Set(), unique = [];
+  for (const index of indices) {
+    const values = [];
+    for (const attribute of attributes)
+      for (let component = 0; component < attribute.itemSize; component++) values.push(attribute.getComponent(index, component));
+    const key = values.join(',');
+    if (!seen.has(key)) { seen.add(key); unique.push(index); }
+  }
+  return current => {
+    // Speech may replace the geometry or its morph targets. Any changed buffer
+    // invalidates this optimization; retain the original complete contact set.
+    if (current !== geometry) return indices;
+    const live = attributesOf(current);
+    if (live.length !== revisions.length || live.some((attribute, i) => {
+      const saved = revisions[i];
+      return attribute !== saved.attribute || attribute.array !== saved.array || attribute.version !== saved.version
+        || attribute.data?.version !== saved.dataVersion || attribute.normalized !== saved.normalized;
+    })) return indices;
+    return unique;
+  };
+}
+
 // A CPU contact pass samples thousands of vertices in one pose. Reuse each
 // bone's transform within that pass instead of multiplying it per influence.
 // Keep a private cache: the renderer owns the shared skeleton's GPU matrices.
