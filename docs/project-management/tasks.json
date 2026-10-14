@@ -5414,9 +5414,9 @@
         "release/v0.2.0-20261014"
       ],
       "owner": "codex-resume-20261014-release-readiness",
-      "updatedAt": "2026-10-14T19:07:29.799720+00:00",
-      "leaseUntil": "2026-10-14T21:07:29.799720+00:00",
-      "nextAction": "Verify candidate merged with main 489a60e4; focused café/interior tests passed 12/12. Visual pilot acceptance recorded; performance budget pending. Then signed candidate commit and draft PR, retaining publish/deploy gates.",
+      "updatedAt": "2026-10-14T19:46:52.198065+00:00",
+      "leaseUntil": "2026-10-14T21:46:52.198065+00:00",
+      "nextAction": "Candidate PR #376: signed runtime 3cb9141 passed clean full profile (17 checks; 10 experience/21 shared journeys) and all 16 hosted checks. Finish docs handoff CI and final package. Val explicitly deferred quiet-machine measurement while retaining 60 Hz; visual appearance accepted. Keep performance, live packaged auth, signing/notarization, production migration and publishing gated; preserve checkout.",
       "ledger": "docs/superpowers/plans/2026-10-14-release-0.2.0-readiness.md",
       "requiredChecks": [
         "Review exact-head stacked PR checks and changes",
@@ -5431,7 +5431,8 @@
         "docs/superpowers/plans/2026-10-14-release-0.2.0-readiness.md",
         "docs/superpowers/plans/README.md",
         "release blocker fixes after owning-seam review"
-      ]
+      ],
+      "pr": 376
     }
   ]
 }
