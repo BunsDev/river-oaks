@@ -5277,9 +5277,10 @@
         "perf/procedural-ao-tail-20261014"
       ],
       "owner": "codex-root-20261014-ao-tail",
-      "updatedAt": "2026-10-14T07:21:12Z",
+      "updatedAt": "2026-10-14T07:22:40Z",
       "leaseUntil": "2026-10-14T08:46:33Z",
-      "nextAction": "Commit the verified Auto tail-frame fix and open a draft PR stacked on #353; wait for exact-head hosted checks. Target-device measurement and human AO visual acceptance still gate rollout.",
+      "pr": 354,
+      "nextAction": "Wait for exact-head hosted checks on draft PR #354, then hand off for target-device measurement and human AO visual review before broader rollout.",
       "ledger": "docs/superpowers/plans/2026-10-14-procedural-gallery-ao-tail.md",
       "requiredChecks": [
         "Focused render-quality governor behavior and recovery tests",

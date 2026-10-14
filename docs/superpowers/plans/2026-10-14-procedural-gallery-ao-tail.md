@@ -2,7 +2,7 @@
 
 Objective: make Auto quality react when a moving interior view repeatedly misses display refreshes even though its median frame interval stays fast. Keep manual Sharpest and Smoothest behavior, server-approved interiors, and the visible route unchanged.
 
-Owner: `codex-root-20261014-ao-tail`. Branch/worktree: `perf/procedural-ao-tail-20261014` in `/Users/buns/Documents/GitHub/BunsDev/river-oaks-ao-tail-20261014`, stacked on draft PR #353 head `e419b5a4c8a23a1b81a95b1d3eb879564cc0212b`.
+Owner: `codex-root-20261014-ao-tail`. Branch/worktree: `perf/procedural-ao-tail-20261014` in `/Users/buns/Documents/GitHub/BunsDev/river-oaks-ao-tail-20261014`, stacked on draft PR #353 head `e419b5a4c8a23a1b81a95b1d3eb879564cc0212b`. Draft PR #354 contains the fix; its first pushed head was `c86201871e005bb9b416bf44c021330f9b0dbc55`.
 
 Files owned: `preview/src/render-quality.js`, `preview/tests/render-quality.test.js`, this ledger, the generated plans index, and this task's branch-register entry. The primary live register was claimed before creating the worktree. Existing branches and primary dirty files are preserved.
 
@@ -21,7 +21,8 @@ Add focused unit behavior for sustained tails, isolated spikes, steady overload,
 - Compared `output/playwright/gallery-cycle-5.png` with the AO-on capture in the #353 worktree. The AO-off wall/floor and fixture contact shading looks flatter, while the gallery geometry, staff, art, exit action and cullable interior remain visible. This is agent visual inspection, not Val's human acceptance. Target-device measurement and AO visual approval still gate rollout.
 - `pnpm run verify` passed (`.runtime/agent/core.json`): agent, preview, server, desktop, build, Python, demo, and secrets checks passed. The focused render-quality suite passed 11/11.
 - `REDIS_URL=redis://127.0.0.1:16398 pnpm run verify full` passed with a disposable local Redis service (`.runtime/agent/full.json`): all 17 result groups passed, including the dependency audit, Redis server tests, security browser, ten experience journeys, and 21 shared journeys. The Redis service was stopped. Generated experience reports were archived under ignored `.runtime/ao-tail-full-*.json` and restored from git so they do not enter the patch. This gate does not prove target GPU, production, native, human visual, or accessibility acceptance.
+- The verified change was signed and pushed at `c86201871e005bb9b416bf44c021330f9b0dbc55`; the post-commit signature was `G`, the forbidden co-author check printed nothing, and the worktree was clean. Draft PR #354 targets #353. Exact-head hosted checks were running when the PR opened.
 
 ## Next action
 
-Commit the verified candidate and open a draft PR stacked on #353. Wait for exact-head hosted checks. Preserve the visual tradeoff and target-device acceptance gaps; keep broader building archetypes gated.
+Wait for exact-head hosted checks on PR #354, then hand off for target-device measurement and human AO visual review. Keep broader building archetypes gated.
