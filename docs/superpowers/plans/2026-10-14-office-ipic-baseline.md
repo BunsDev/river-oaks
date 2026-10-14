@@ -68,12 +68,47 @@ over-budget proxy, and a later edit to a referenced file (drift, not failure).
 
 ## Decisions for Val
 
-Listed in `docs/design/office-ipic/brief.md`: kit import, physical fit of the 7.6 m
-volume above the 24.3 m rise, library revision 3 adoption, IPIC lift decorative or
-routed, and the missing handoff briefs.
+Parked here as the goal asks; the brief carries the same list with context.
+
+1. Kit import: copy the kit bytes into the public repository (all 19 MB, or
+   `layout.json`, `asset-manifest.json` and the GLBs only), or keep them external
+   and indexed by hash as `reference-index.json` does now. The kit's README records
+   your approved direction but no approval to publish those bytes.
+2. Physical fit: the kit's 7.6 m clear main volume above the 24.3 m lift rise
+   exceeds the mapped building's estimated height. The measurement and options are
+   in the engineering packet (#381, `layout-contract.json`). G1 cannot close
+   without this answer.
+3. Mezzanine programme: adopt Cody's library revision 3 (two reading chairs at
+   d 18.3, bookcase-0 and the mezzanine table removed, east passing bay), or keep
+   the kit's library as drawn.
+4. IPIC lift: keep it decorative in this increment, or implement a fixed-endpoint,
+   server-validated reduced-motion route. A decorative door is not a usable route.
+5. Handoff briefs: `typesafe-place-coding-familiar-handoff.md` and
+   `typesafe-place-design-familiar-handoff.md` were not found in the repository
+   or on this machine. Supply them, or confirm #359 and its children are the record.
+6. Local count cap (task local-prune-20261013, retired after #375): at
+   2026-10-14T20:40Z the inventory shows 24 worktrees / 24 branches, 0
+   retire-eligible, 0 retire-candidate: 12 active checkouts owned by live sessions,
+   8 open draft PRs (#351–#358) with queued tasks, 3 parked queued/blocked tasks
+   owned by other sessions, and the primary. Ten-and-ten needs one of: authorize
+   `project:cancel` of the local checkouts of drafts #351–#358 once their tips are
+   confirmed pushed (the PRs stay reviewable from origin), or accept the cap as a
+   target for after those drafts land or close. Nothing is cancelled without that.
+
+## Round end (2026-10-14T20:40Z)
+
+HEAD `9825dfb3` on `docs/office-ipic-baseline-20261014`, worktree
+`../river-oaks-office-ipic-baseline-20261014`, draft PR #380: all 16 hosted checks
+green, mergeable clean, not merged. Engineering packet: draft PR #381
+(`docs/office-ipic-engineering-baseline-20261014`, river-oaks-dc). Commands and
+counts are in the Checks table above; `node scripts/project-inventory.mjs
+--no-fetch` from the primary gave the counts in decision 6. Standing report:
+#351–#358 mergeable and untouched, #349 moved by its codex owner, #350 stacked on
+it and conflicting (owned, in progress), #309 dirty with an expired codex lease.
+Skips: Redis (140 in core, permitted), browser, native, live auth.
 
 ## Next
 
-Open a draft PR for this branch; cross-link the engineering packet PR when it
-exists; G1 agreement needs both packets plus Val's answers to decisions 1–3.
+Draft PR #380 is open and green; the engineering packet is #381. G1 agreement
+needs both packets plus Val's answers to decisions 1–3.
 After G1, #361 or #366 in a new worktree, one scope per PR.

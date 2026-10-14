@@ -5,8 +5,8 @@ Issue #360 under tracker #359. Reconciled against `main` at
 design side of the packet: what exists, what is only inferred, what the kit
 proposes, and which decisions are still Val's. The engineering side
 (`layout-contract.json`, `camera-manifest.json` and their validator) is a
-separate branch owned by the engineering baseline task; this brief links to
-those files by name and does not restate their numbers.
+separate branch owned by the engineering baseline task (draft PR #381); this
+brief links to those files by name and does not restate their numbers.
 
 Companion files in this folder:
 
