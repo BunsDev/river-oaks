@@ -42,6 +42,20 @@ region contains a path, four meeting places, and an arrival point. Add a buildin
 tree or place from the scene panel. Select through that panel or click an object
 in the viewport. **Frame selection** moves the camera close enough to edit it.
 
+Select a retail or residential building to open **Generated interior** in the
+inspector. **Preview level 0** derives a floor from that building's fixed ID,
+footprint, center, yaw, terrain elevation and entrance. **Apply preview** adds
+the versioned generation fields to the region draft. Increase the building's
+height explicitly before using **Preview add level** where another floor needs
+roof clearance. The preview lists the resulting level elevations and shell,
+partition, fixture, finish and override layers. Undo, redo, save, reopen and
+export preserve the level count; an impossible stack leaves the draft unchanged.
+The editor uses a provisional world ID for preview finishes. Publication assigns
+the final world ID and validates its own server-approved plan. The current
+viewport remains a building blockout; level geometry and authored override
+editing are still in development. Existing furnished-space files retain their
+single-level schema and are not rewritten merely by opening them.
+
 - Drag to orbit, right-drag to pan, and scroll to zoom.
 - **Move / W**, **Rotate / E**, and **Size / R** choose transform handles.
 - **F** frames the selection. Inspector fields provide precise dimensions and
