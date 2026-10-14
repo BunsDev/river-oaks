@@ -723,6 +723,22 @@ on; a storm stands everyone up. A place a resident holds is occupied for players
 too. Their snapshot `life.seat` lets every browser draw them seated. Single
 player seats the visitor in the browser and keeps that place from residents.
 
+Seated across from each other at the café round table, two residents can play
+**Dominoes** held by the town (`server/cafe-games.js`). The same `tableGame`
+commands apply, routed by the sender's chair: `invite {kind:'dominoes'}` needs
+the chair across to be seated, `accept` deals a round, `move` takes the rules'
+own notation (`L:3-5`, `R:3-5`, `draw`, `pass`), `resign` ends the match, and
+`next` deals the following round until a player reaches 100 points. Unlike the
+chess tables, a round has hidden information, so the town keeps the real state
+(seed, hands, boneyard, moves) in memory and in the checkpoint, and the
+snapshot's `tables` entry `round` carries only the public view: the line, each
+hand's size, the boneyard count, whose turn, the last move (a draw shows no
+tile), scores, result and a `version` that ticks on every change. A player reads
+their own tiles and legal moves with `hand`, whose reply reaches that connection
+alone; spectators are refused. Standing, travel, leaving town and a reset end a
+live round for the one who left, and a restored checkpoint must replay its seed
+and moves to the saved state.
+
 ## Watering planters
 
 Anyone can water a planter: the two by each boutique door, the street planters

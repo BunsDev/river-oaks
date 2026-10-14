@@ -14,13 +14,15 @@ const instant = () => Promise.resolve();
 
 // A pull request that moves as the lander acts on it. `runs` maps a head to the
 // Verify conclusions of its attempts; `onGuard` decides what the guard does.
-function fakeGitHub({ mergeable = 'clean', head = 'a', runs = {}, onGuard } = {}) {
-  const pull = { state: 'open', merged: false, mergeable_state: mergeable, head, merge_commit_sha: null };
-  const calls = { pull: 0, updateBranch: [], rerun: [], guard: 0 };
+function fakeGitHub({ mergeable = 'clean', head = 'a', runs = {}, onGuard, onDefault = true } = {}) {
+  const pull = { state: 'open', merged: false, mergeable_state: mergeable, head, ref: 'feat/thing', merge_commit_sha: null };
+  const calls = { pull: 0, updateBranch: [], rerun: [], guard: 0, deleted: [] };
   const attempt = {};
   let heads = 0;
   const github = {
     async pull() { calls.pull++; return { ...pull }; },
+    async mergedOnDefault() { return onDefault; },
+    async deleteBranch(ref) { calls.deleted.push(ref); },
     async updateBranch(_, expected) { calls.updateBranch.push(expected); pull.head = `updated-${++heads}`; pull.mergeable_state = 'clean'; },
     async verifyRun(sha) {
       const results = runs[sha] ?? ['success'], index = attempt[sha] ?? 0;
@@ -114,6 +116,35 @@ test('a session waits for its turn before touching the pull request', async t =>
   const result = await land({ pr: 7, github: fake.github, guard: fake.guard, queue: mine, sleep });
   assert.equal(waited, 1);
   assert.equal(result.status, 'merged');
+});
+
+// Remote branch deletion is opt-in, and even then only after the merge commit
+// is confirmed on the default branch. Nothing here changes the default.
+test('the source branch stays unless --delete-remote-branch is given', async t => {
+  const queue = queueAt(scratch(t), 1), fake = fakeGitHub();
+  const result = await land({ pr: 7, github: fake.github, guard: fake.guard, queue, sleep: instant });
+  assert.deepEqual([result.status, result.deletedBranch, fake.calls.deleted], ['merged', null, []]);
+});
+
+test('with --delete-remote-branch the branch is deleted once the merge is on the default branch', async t => {
+  const queue = queueAt(scratch(t), 1), fake = fakeGitHub();
+  const result = await land({ pr: 7, github: fake.github, guard: fake.guard, queue, sleep: instant, deleteRemoteBranch: true });
+  assert.deepEqual([result.merge, result.deletedBranch, fake.calls.deleted], ['merge-of-a', 'feat/thing', ['feat/thing']]);
+});
+
+test('a merge not yet on the default branch leaves the remote branch in place', async t => {
+  const queue = queueAt(scratch(t), 1), fake = fakeGitHub({ onDefault: false });
+  const lines = [];
+  const result = await land({ pr: 7, github: fake.github, guard: fake.guard, queue, sleep: instant, deleteRemoteBranch: true, log: line => lines.push(line) });
+  assert.deepEqual([result.status, result.deletedBranch, fake.calls.deleted], ['merged', null, []]);
+  assert.ok(lines.some(line => line.includes('leaving feat/thing in place')));
+});
+
+test('a pull request found already merged is still eligible for the opt-in delete', async t => {
+  const queue = queueAt(scratch(t), 1), fake = fakeGitHub();
+  fake.pull.merged = true; fake.pull.state = 'closed'; fake.pull.merge_commit_sha = 'earlier';
+  const result = await land({ pr: 7, github: fake.github, guard: fake.guard, queue, sleep: instant, deleteRemoteBranch: true });
+  assert.deepEqual([result.merge, result.deletedBranch, fake.calls.guard], ['earlier', 'feat/thing', 0]);
 });
 
 // Checkouts update at different times, so the lander from #272 (which keys
