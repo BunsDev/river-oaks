@@ -1088,7 +1088,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
           const outside=storefrontSpot(worldData,store,'leave',{isFree:(x,z)=>recoveredEnvironment.isFree(x,z) && !recoveredEnvironment.roomAt(x,z)});
           if(!recoveredEnvironment.isFree(outside[0],-outside[1]) || recoveredEnvironment.roomAt(outside[0],-outside[1]))throw new Error('Invalid private home exit');
           player.position=[outside[0],outside[1],recoveredEnvironment.groundAt(outside[0],-outside[1])];
-          player.altitude=0;player.vehicle=null;player.sitting=null;player.cycling=null;
+          player.altitude=0;player.buildingId=null;player.levelId=null;player.vehicle=null;player.sitting=null;player.cycling=null;
         }
       }
       if(nextAppearances.size>MAX_APPEARANCES) throw new Error('Invalid appearances');
