@@ -5253,7 +5253,7 @@
       "leaseUntil": null,
       "previousOwner": "codex-root-20261014-gallery-motion",
       "pr": 353,
-      "handoff": "Draft PR #353 on #352 now includes measured keyboard motion and culling assertions. Five-cycle Auto runs exposed 33.3–33.4 ms moving p95 after revisit; Smoothest and Auto with AO off held 16.7–16.8 ms on the local M3 Max. Core and isolated-Redis full gates passed. The signed follow-up is being pushed; hosted checks on its new head remain pending. Preserve the worktree for review.",
+      "handoff": "Draft PR #353 on #352 now includes measured keyboard motion and culling assertions. Five-cycle Auto runs exposed 33.3\u201333.4 ms moving p95 after revisit; Smoothest and Auto with AO off held 16.7\u201316.8 ms on the local M3 Max. Core and isolated-Redis full gates passed. The signed follow-up is being pushed; hosted checks on its new head remain pending. Preserve the worktree for review.",
       "nextAction": "Check exact-head hosted CI for updated draft PR #353, then scope a separate AO performance fix. Do not expand archetypes until target-device and human visual acceptance supports the pilot.",
       "ledger": "docs/superpowers/plans/2026-10-14-procedural-gallery-cycle-soak.md",
       "requiredChecks": [
@@ -5404,6 +5404,36 @@
         "preview/tests/render-pipeline.test.js",
         "docs/superpowers/plans/2026-10-14-procedural-gallery-ao-mask.md",
         "docs/superpowers/plans/README.md"
+      ]
+    },
+    {
+      "id": "procedural-gallery-contact-shading",
+      "title": "Prototype low-cost gallery contact shading for generated interiors",
+      "status": "active",
+      "branches": [
+        "perf/procedural-gallery-contact-shading-20261014"
+      ],
+      "owner": "codex-root-20261014-gallery-contact",
+      "updatedAt": "2026-10-14T20:12:44.920Z",
+      "leaseUntil": "2026-10-14T22:12:44.920Z",
+      "nextAction": "Core and three generated-gallery/Studio browser journeys passed on final diff; five-cycle Auto and AO-off controls passed but Auto missed 60 Hz p95 twice under concurrent load. Open draft PR stacked on #358, run isolated-Redis full when storage permits, obtain exact-head CI, and keep target-device/human review gated.",
+      "ledger": "docs/superpowers/plans/2026-10-14-procedural-gallery-contact-shading.md",
+      "requiredChecks": [
+        "Matched player-height visual captures against AO-on and AO-off",
+        "Five-cycle moving gallery route on named hardware",
+        "Focused generated-room render and quality-control behavior",
+        "pnpm run verify before commit",
+        "Isolated-Redis full and exact-head hosted checks before delivery"
+      ],
+      "filesOwned": [
+        "preview/src/generated-contact-shading.js",
+        "preview/src/store-interiors.js",
+        "preview/src/main.js",
+        "preview/e2e/generated-gallery-cycle-soak.js",
+        "preview/tests/generated-contact-shading.test.js",
+        "docs/superpowers/plans/2026-10-14-procedural-gallery-contact-shading.md",
+        "docs/superpowers/plans/README.md",
+        "docs/project-management/tasks.json"
       ]
     }
   ]
