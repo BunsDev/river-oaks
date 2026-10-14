@@ -5087,6 +5087,34 @@
       ],
       "blocker": null,
       "ledger": "docs/project-management/workflow.md"
+    },
+    {
+      "id": "office-ipic-engineering-baseline",
+      "title": "Office + IPIC #360, engineering half: baseline checks, physical fit, keep/reuse against #349, and the executable layout/camera contract with its validator",
+      "status": "active",
+      "branches": [
+        "docs/office-ipic-engineering-baseline-20261014"
+      ],
+      "owner": "claude-code river-oaks-dc 8fa1c14c",
+      "updatedAt": "2026-10-14T19:47:04.727Z",
+      "leaseUntil": "2026-10-14T21:47:04.727Z",
+      "nextAction": "Write the ledger and docs/design/office-ipic/{layout-contract.json,camera-manifest.json} with a behavioral validator in scripts/; run agent tests; open a draft PR. Design half (brief, reference-index, asset-manifest, review-matrix) is river-oaks-5d on docs/office-ipic-baseline-20261014.",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-ipic-engineering-20261014",
+      "ledger": "docs/superpowers/plans/2026-10-14-office-ipic-engineering-baseline.md",
+      "issue": 360,
+      "filesOwned": [
+        "docs/superpowers/plans/2026-10-14-office-ipic-engineering-baseline.md",
+        "docs/design/office-ipic/layout-contract.json",
+        "docs/design/office-ipic/camera-manifest.json",
+        "docs/design/office-ipic/README.md (engineering section only; design files owned by river-oaks-5d)",
+        "scripts/office-ipic-contract.mjs",
+        "scripts/tests/office-ipic-contract.test.js"
+      ],
+      "requiredChecks": [
+        "Focused office/IPIC/workplace unit and server tests with counts and skips recorded as baseline, failures preserved",
+        "node --test scripts/tests/office-ipic-contract.test.js rejects stale versions, bad axes, duplicate ids and disconnected routes, and cross-checks the JSON against the live plan modules",
+        "pnpm run verify core before commit"
+      ]
     }
   ]
 }

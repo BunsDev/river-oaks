@@ -1,0 +1,207 @@
+{
+  "schemaVersion": 1,
+  "layoutVersion": "office-ipic-baseline-1",
+  "sourceRevision": "489a60e41bfe1a6499dfb0905ada55856be99825",
+  "reconciledAt": "2026-10-14",
+  "tracker": { "issue": 360, "parent": 359 },
+  "units": "metres",
+  "axes": {
+    "room": "x (or a) east across the entrance wall, d inward from the entrance wall, h up; positions below are [x, d] unless a level or h is given",
+    "three": "[x, h, -d]",
+    "kit": "the office kit's (x, d, h) maps to Three.js [x, h, -d]; apply it once at the room facade transform and never again on import",
+    "ipicGlb": "+X across the frontage, +Y up, -Z into the venue; place at the store-rooms facade transform (toWorld = facade + right*a + inward*d) and do not apply it twice"
+  },
+  "geometrySources": [
+    { "id": "office", "module": "preview/src/office-contract.js", "export": "OFFICE_ROOM", "governs": ["rendering", "collision", "server movement", "anchors"], "status": "observed", "note": "planWorkplaceRoom() in preview/src/workplace-room.js; server/offices.js imports officeFree/officeSegmentFree from the same module" },
+    { "id": "ipic", "module": "preview/src/ipic-plan.js", "export": "configureIpicRoom", "governs": ["rendering", "collision", "support heights", "seats", "export"], "status": "observed", "note": "one support height per XY through room.floorAt; preview/src/ipic-interior.js and scripts/export-ipic.mjs consume the same plan" },
+    { "id": "office-penthouse-kit", "module": "~/Downloads/jevica-office-kit/layout.json", "export": "layout", "governs": [], "status": "proposed", "note": "standalone kit, sha256 ccd7e275f3ef15ea0632c3deda08031a86a1a8ef0496ff72b6778ef7566596cc, not committed; governs nothing in the runtime until #361 imports a versioned copy" }
+  ],
+  "avatarEnvelope": {
+    "status": "observed",
+    "bodyHalfWidth": 0.505,
+    "turningRadius": 0.888,
+    "height": 2.45,
+    "seatedRadius": 1.27,
+    "source": "preview/src/workplace-room.js AVATAR_ENVELOPE",
+    "measurement": "docs/level-design/workplace-coworking-fixture/avatar-envelope.json, 22 shared appearances, rest-pose rig bounds, 2026-10-11 at eb628626",
+    "rosterCheck": "SHARED_APPEARANCES at sourceRevision lists the same 22 ids; no commit since eb628626 touches preview/public/assets/characters, avatars.js or shared-appearances.js (only player-avatar.js pose code), so the measured envelope is current"
+  },
+  "places": [
+    {
+      "id": "office-current",
+      "status": "observed",
+      "label": "Jevica's office, integrated 9 x 7 m room on level 6",
+      "source": "office",
+      "bounds": { "width": 9, "depth": 7, "height": 3.9 },
+      "door": { "x": 0, "halfWidth": 0.85, "height": 2.6 },
+      "levels": [ { "id": "l6", "elevation": 24.3, "clearHeight": 3.9, "note": "ARRIVAL.officeElevation; the lift rise is an authored interpretation, not a surveyed floor" } ],
+      "spawn": "spawn",
+      "speed": 2.6,
+      "anchors": [
+        { "id": "elevator-car", "kind": "arrival", "level": "l6", "position": [0, -1.45], "note": "ARRIVAL.carStop; the cinematic crosses the doorway along its centreline" },
+        { "id": "outside", "kind": "route", "level": "l6", "position": [0, -1.2] },
+        { "id": "entrance", "kind": "route", "level": "l6", "position": [0, 0.9] },
+        { "id": "spawn", "kind": "spawn", "level": "l6", "position": [0, 1.25] },
+        { "id": "station-1-approach", "kind": "approach", "level": "l6", "position": [-2.05, 2.2], "station": "station-1" },
+        { "id": "station-1-seat", "kind": "seat", "level": "l6", "position": [-3.15, 2.2], "station": "station-1", "facing": -1.5707963267948966 },
+        { "id": "station-2-approach", "kind": "approach", "level": "l6", "position": [-2.05, 4.6], "station": "station-2" },
+        { "id": "station-2-seat", "kind": "seat", "level": "l6", "position": [-3.15, 4.6], "station": "station-2", "facing": -1.5707963267948966 },
+        { "id": "review-socket", "kind": "approach", "level": "l6", "position": [1.65, 3.4], "facing": 1.5707963267948966 }
+      ],
+      "routes": [
+        { "from": "elevator-car", "to": "spawn", "kind": "cinematic", "required": true },
+        { "from": "spawn", "to": "station-1-approach", "kind": "walk", "required": true },
+        { "from": "spawn", "to": "station-2-approach", "kind": "walk", "required": true },
+        { "from": "spawn", "to": "review-socket", "kind": "walk", "required": true },
+        { "from": "station-1-approach", "to": "review-socket", "kind": "walk", "required": true },
+        { "from": "station-2-approach", "to": "review-socket", "kind": "walk", "required": true },
+        { "from": "station-1-approach", "to": "station-1-seat", "kind": "sit", "required": true },
+        { "from": "station-2-approach", "to": "station-2-seat", "kind": "sit", "required": true },
+        { "from": "entrance", "to": "spawn", "kind": "walk", "required": false },
+        { "from": "outside", "to": "entrance", "kind": "walk", "required": false }
+      ],
+      "obstacles": ["desk-station-1", "desk-station-2", "review-table", "storage-wall", "planter-east", "chairs at each station seat (radius 0.4)"],
+      "rollback": "default and rollback baseline; no new layout is activated by this contract"
+    },
+    {
+      "id": "ipic",
+      "status": "inferred",
+      "label": "IPIC Theaters, photo-guided reconstruction (ipic-photo-v1)",
+      "source": "ipic",
+      "bounds": { "width": 13.03, "depth": 34, "height": 10.4, "note": "width is the mapped bay span at sourceRevision (aMin -6.30, aMax 6.73); depth and height are authored estimates inside the mapped footprint of osm-way-625330798" },
+      "levels": [
+        { "id": "ground", "elevation": 0, "clearHeight": 10.4, "dRange": [0, 6] },
+        { "id": "mural", "elevation": 3, "clearHeight": 7.4, "dRange": [12, 14] },
+        { "id": "upper", "elevation": 6, "clearHeight": 4.4, "dRange": [20, 34] }
+      ],
+      "flights": [ { "start": 6, "end": 12, "base": 0 }, { "start": 14, "end": 20, "base": 3 } ],
+      "spawn": "entrance",
+      "anchors": [
+        { "id": "entrance", "kind": "spawn", "level": "ground", "position": [0, 0] },
+        { "id": "reception-desk", "kind": "view", "level": "ground", "position": [3.4, 3.5] },
+        { "id": "escalator-1-base", "kind": "route", "level": "ground", "position": [-1.4, 5.5] },
+        { "id": "escalator-1-top", "kind": "route", "level": "mural", "position": [-1.4, 12.5] },
+        { "id": "mural-landing", "kind": "view", "level": "mural", "position": [0, 13] },
+        { "id": "escalator-2-base", "kind": "route", "level": "mural", "position": [-1.4, 13.5] },
+        { "id": "escalator-2-top", "kind": "route", "level": "upper", "position": [-1.4, 20.5] },
+        { "id": "lounge", "kind": "view", "level": "upper", "position": [-2.8, 22] },
+        { "id": "lounge-sofa-0", "kind": "seat", "level": "upper", "position": [-3.25, 24.8], "seatId": "bench:ipic-lounge-sofa:0" },
+        { "id": "lounge-sofa-1", "kind": "seat", "level": "upper", "position": [-2.4, 24.8], "seatId": "bench:ipic-lounge-sofa:1" },
+        { "id": "bar", "kind": "view", "level": "upper", "position": [2.5, 23] },
+        { "id": "auditorium-door", "kind": "route", "level": "upper", "position": [-4.7, 26] },
+        { "id": "recliner-0-0", "kind": "seat", "level": "upper", "position": [-2.6, 28], "seatId": "bench:ipic-recliner-0-0:0" },
+        { "id": "recliner-1-3", "kind": "seat", "level": "upper", "position": [3.4, 31], "seatId": "bench:ipic-recliner-1-3:0" },
+        { "id": "screen", "kind": "screen", "level": "upper", "position": [0, 33.7], "note": "illuminated surface; not evidence of synchronized playback (#366/#367 own the playback contract)" }
+      ],
+      "routes": [
+        { "from": "entrance", "to": "reception-desk", "kind": "walk", "required": false },
+        { "from": "entrance", "to": "escalator-1-base", "kind": "walk", "required": true },
+        { "from": "escalator-1-base", "to": "escalator-1-top", "kind": "escalator", "required": true, "note": "continuous support slope, static treads, either lane a = -1.4 or 1.4" },
+        { "from": "escalator-1-top", "to": "mural-landing", "kind": "walk", "required": true },
+        { "from": "mural-landing", "to": "escalator-2-base", "kind": "walk", "required": true },
+        { "from": "escalator-2-base", "to": "escalator-2-top", "kind": "escalator", "required": true },
+        { "from": "escalator-2-top", "to": "lounge", "kind": "walk", "required": true },
+        { "from": "lounge", "to": "lounge-sofa-0", "kind": "sit", "required": true },
+        { "from": "lounge", "to": "lounge-sofa-1", "kind": "sit", "required": false },
+        { "from": "lounge", "to": "bar", "kind": "walk", "required": false },
+        { "from": "lounge", "to": "auditorium-door", "kind": "walk", "required": true, "note": "passage along the left wall around the lounge furniture" },
+        { "from": "auditorium-door", "to": "recliner-0-0", "kind": "sit", "required": true },
+        { "from": "auditorium-door", "to": "recliner-1-3", "kind": "sit", "required": false },
+        { "from": "recliner-0-0", "to": "screen", "kind": "sightline", "required": true }
+      ],
+      "lift": { "status": "decorative", "decision": "this increment keeps the bronze lift doors decorative; the only public route to the upper levels is the escalator slope. A decorative door does not satisfy a usable route, so the reduced-motion / step-free implication is unresolved and listed under decisions" },
+      "preserve": ["mapped entrance osm-node-8172494964 and its neighbours on osm-way-625330798", "both escalator paths", "seat ids bench:ipic-* and the existing server sit/stand protocol"]
+    },
+    {
+      "id": "office-penthouse-proposed",
+      "status": "proposed",
+      "label": "Jevica's penthouse office from the supplied kit (30 x 20 m main floor, 180 m2 mezzanine at +3.8 m, 160 m2 terrace)",
+      "source": "office-penthouse-kit",
+      "bounds": { "width": 30, "depth": 20, "height": 7.6, "terraceWidth": 8, "mezzanineDepth": 6, "mezzanineHeight": 3.8 },
+      "zones": [
+        { "id": "main-floor", "level": "l0", "x": [-15, 15], "d": [0, 20] },
+        { "id": "terrace", "level": "l0", "x": [-23, -15], "d": [0, 20], "note": "west of the main floor through two 4 m portals at d 3..7 and 10..14" },
+        { "id": "mezzanine", "level": "mezz", "x": [-15, 15], "d": [14, 20] }
+      ],
+      "levels": [
+        { "id": "l0", "elevation": 0, "clearHeight": 7.6, "note": "relative to the office floor; 3.5 m clear under the mezzanine" },
+        { "id": "mezz", "elevation": 3.8, "clearHeight": 3.8 }
+      ],
+      "stair": { "x": [10.2, 13.4], "d": [5.6, 14], "rise": 3.8, "risers": 22, "note": "22 visual treads, analytical ramp for movement; rail collisions protect the upper edge" },
+      "spawn": "arrival",
+      "anchors": [
+        { "id": "arrival", "kind": "spawn", "level": "l0", "position": [0, 1.5] },
+        { "id": "desk-executive", "kind": "approach", "level": "l0", "position": [-3, 4.5], "seat": [-3, 6.55], "monitors": 3 },
+        { "id": "desk-a1", "kind": "approach", "level": "l0", "position": [3.65, 3.55], "seat": [3.65, 5.6], "monitors": 2 },
+        { "id": "desk-a2", "kind": "approach", "level": "l0", "position": [6.35, 3.55], "seat": [6.35, 5.6], "monitors": 2 },
+        { "id": "desk-b1", "kind": "approach", "level": "l0", "position": [3.65, 8.55], "seat": [3.65, 10.6], "monitors": 2 },
+        { "id": "desk-b2", "kind": "approach", "level": "l0", "position": [6.35, 8.55], "seat": [6.35, 10.6], "monitors": 2 },
+        { "id": "lounge", "kind": "view", "level": "l0", "position": [-7, 8.8] },
+        { "id": "meeting", "kind": "view", "level": "l0", "position": [4.5, 16.9] },
+        { "id": "terrace", "kind": "view", "level": "l0", "position": [-18, 8] },
+        { "id": "stairs-bottom", "kind": "route", "level": "l0", "position": [11.8, 4.5] },
+        { "id": "stairs-top", "kind": "route", "level": "mezz", "position": [11.8, 15.2] },
+        { "id": "library", "kind": "view", "level": "mezz", "position": [0, 15.6] },
+        { "id": "lift-ground", "kind": "lift", "level": "l0", "position": [-12, 18] },
+        { "id": "lift-upper", "kind": "lift", "level": "mezz", "position": [-12, 18] }
+      ],
+      "routes": [
+        { "from": "arrival", "to": "desk-executive", "kind": "walk", "required": true },
+        { "from": "arrival", "to": "desk-a1", "kind": "walk", "required": true },
+        { "from": "arrival", "to": "desk-a2", "kind": "walk", "required": true },
+        { "from": "arrival", "to": "desk-b1", "kind": "walk", "required": true },
+        { "from": "arrival", "to": "desk-b2", "kind": "walk", "required": true },
+        { "from": "arrival", "to": "lounge", "kind": "walk", "required": true },
+        { "from": "arrival", "to": "meeting", "kind": "walk", "required": true },
+        { "from": "arrival", "to": "terrace", "kind": "walk", "required": true, "note": "through either west portal" },
+        { "from": "arrival", "to": "stairs-bottom", "kind": "walk", "required": true },
+        { "from": "stairs-bottom", "to": "stairs-top", "kind": "stairs", "required": true },
+        { "from": "stairs-top", "to": "library", "kind": "walk", "required": true },
+        { "from": "library", "to": "lift-upper", "kind": "walk", "required": true },
+        { "from": "lift-upper", "to": "lift-ground", "kind": "lift", "required": true, "note": "fixed endpoints; must become a server-validated transition, the kit's instantaneous preview is not the runtime" },
+        { "from": "lift-ground", "to": "arrival", "kind": "walk", "required": true }
+      ],
+      "kitValidation": "validation/spatial-validation.json (2026-10-13): 9 checks passed, 13 destinations reached with other seats occupied; standalone prototype logic, grants no server authority",
+      "priorReview": "~/Downloads/jevica-office-scale-review/assessment.md and library-final-plan.md (Cody, 2026-10-13/14): keep the double-height identity and stair width; refine library and terrace activity density; east passing bay on the mezzanine",
+      "fit": {
+        "building": "osm-way-625330785",
+        "buildingFootprint": [80.41, 40.69],
+        "buildingHeightEstimate": 28,
+        "buildingHeightSource": "preview/public/data/district.json height_source: street-level reference photographs (2024-2025), estimated",
+        "kitFootprintWithTerrace": [38, 20],
+        "footprintFits": true,
+        "currentOfficeFloorElevation": 24.3,
+        "kitClearHeight": 7.6,
+        "topOfProposedVolume": 31.9,
+        "volumeFitsAtCurrentFloor": false,
+        "resolution": "val-decision",
+        "options": [
+          "lower the office floor so the 7.6 m volume ends below the 28 m estimate (floor at or below 20.4 m, for example level 5), changing the lift rise and arrival timing",
+          "keep level 6 and reduce the clear height to about 3.7 m, which removes the mezzanine as proposed",
+          "treat the 28 m height as an estimate and raise the modelled building, which changes a mapped block visible from the street"
+        ]
+      }
+    }
+  ],
+  "transitions": {
+    "policy": "entry, level changes, seats and movement stay server-authoritative (server/offices.js); a layout is addressed by layoutVersion and an unknown or stale version fails closed; saved visits on an unknown layout return to that layout's spawn anchor; the current office stays loadable as the rollback target",
+    "checkpoint": "office grants/requests/visits are in private world checkpoint version 6 at sourceRevision; draft #349 moves the checkpoint to version 7 and adds building-interior levels with ids <building>/l<n> and portals of kind entrance|stairs. #361 should reuse that level/portal shape rather than add a second one; it must not assume #349 is merged"
+  },
+  "budgets": {
+    "status": "proposed",
+    "office": { "visibleDrawCalls": 150, "visibleTriangles": 250000, "residentTexturesMB": 128, "note": "kit production-guide first-pass desktop envelope; the kit overview measured 1296 draw calls and 83752 triangles in software rendering, so batching is still owed" },
+    "ipic": { "observed": "docs/ipic-review/review.json: reception 59 calls / 133418 triangles, mural 33 / 69742, lounge 24 / 95384, bar 37 / 112740, auditorium 12 / 56060; GLB 12394500 bytes" }
+  },
+  "decisions": [
+    { "id": "penthouse-volume-fit", "owner": "val", "status": "open", "summary": "the kit's 7.6 m clear volume above the 24.3 m lift rise tops out at 31.9 m against a 28 m estimated building; pick one of fit.options before #361 fixes level elevations" },
+    { "id": "ipic-lift", "owner": "design+engineering", "status": "recorded", "summary": "keep the lift decorative in this increment; step-free access to the upper levels is unresolved and must be stated in the IPIC accessibility notes until a fixed-endpoint server-validated route exists" },
+    { "id": "penthouse-library-terrace-density", "owner": "design", "status": "open", "summary": "Cody's review asks for denser library and terrace activity zones before final art; the east passing bay is the only proposed two-avatar passing point on the 2.4 m gallery" },
+    { "id": "envelope-remeasure", "owner": "engineering", "status": "deferred", "summary": "rigs are unchanged since the 2026-10-11 measurement; re-run the appearance fixture bounds when any character GLB, avatars.js or shared-appearances.js changes" }
+  ],
+  "gates": {
+    "G0": "this contract plus the design packet (brief, reference-index, asset-manifest, review-matrix) owned by the design session",
+    "G1": "designer and engineer agreement recorded in review-matrix.md and the open decisions above answered by their owners",
+    "G2": "#361, #363, #364, #366, #367 integrated runtime slices against layoutVersion office-ipic-baseline-1 or its successor",
+    "G3": "#368 two-player, recovery, privacy, visual and device evidence"
+  }
+}
