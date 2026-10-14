@@ -19,3 +19,8 @@ Files owned: `server/world.js` revocation/access seam, `server/tests/generated-p
 ## Next action
 
 Check PR #352's final exact-head hosted results, then hand it to the procedural-interiors integration owner. Human visual and target-device acceptance remain separate from this access fix.
+
+## 2026-10-14 integration landing
+
+- Val authorized serial landing. PR #351 merged to main as `a2739d6c2d78766c28c8bc1719e32156d00f4138`. Merged that main head into #352 without source conflicts, including the café state and render pilot; refreshed only the delivered #350/#351 and owned #352 rows from the live register. The final tree still needs focused/core verification, signed push, exact-head hosted checks, ready state and the REST merge guard.
+- `node --test server/tests/generated-private-level-access.test.js server/tests/region-package.test.js server/tests/district-gallery-transition.test.js server/tests/creator-four-level-interiors.test.js server/tests/voice-routes.test.js server/tests/cafe-games.test.js` passed 33 with one existing hosted-edge skip on the final main merge. `TMPDIR=/Volumes/Passport/river-oaks-agent-tmp-contact pnpm run verify` passed (`.runtime/private-main-merge-core.log`, `.runtime/agent/core.json`, 2026-10-14), including Python 141/141 and no secret leaks. Diff checks passed.
