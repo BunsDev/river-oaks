@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { mkdir, mkdtemp, readFile, writeFile, rm, symlink, readdir } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, writeFile, rm, symlink, readdir, lstat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -190,32 +190,47 @@ test('repository references hash exact binary bytes without UTF-8 replacement', 
   assert.equal(pack.manifest.repositoryReferences.find(item => item.path === 'reference.png').sha256, hash(bytes));
 });
 
-test('FIFO skill files and receipt are rejected without blocking verification or reinstall', async t => {
+// A skill file or the receipt replaced by something that is not a regular file is
+// refused, and reading it never blocks. Unix checks a FIFO, which open(2) for reading
+// would wait on, and a directory. Windows checks the directory only: it has no FIFO in
+// the file system. Its named pipes live only in the \\.\pipe\ namespace, so nothing at
+// a workspace path can block an open that way, and Git Bash's mkfifo writes an MSYS
+// emulation that Node reads as an ordinary file (a hash mismatch, not this rejection).
+test('FIFO and directory skill files and receipt are rejected without blocking verification or reinstall', async t => {
   const { buildWorldDesignPack, installWorldDesignPack } = await api();
   const pack = await buildWorldDesignPack(await sourceFixture(t)), directory = await fixture(t);
   const packFile = path.join(directory, 'pack.json');
   await writeFile(packFile, JSON.stringify(pack));
-  for (const [index, relative] of [pack.files[0].path, '.world-design-pack.json'].entries()) {
-    const destination = path.join(directory, `workspace-${index}`);
-    await installWorldDesignPack(pack, destination);
-    const target = path.join(destination, relative);
-    await rm(target);
-    await run('mkfifo', [target], { timeout: 1500, killSignal: 'SIGKILL' });
-    // A separate process bounds the regression even if an OS open() blocks a worker.
-    // SIGKILL on timeout and awaiting execFile ensure no child survives the test.
-    const checked = await run(process.execPath, ['--input-type=module', '-e', `
-      import assert from 'node:assert/strict';
-      import { readFile } from 'node:fs/promises';
-      const { verifyWorldDesignPack, installWorldDesignPack } = await import(process.argv[1]);
-      const pack = JSON.parse(await readFile(process.argv[2], 'utf8'));
-      const result = await verifyWorldDesignPack(pack, process.argv[3]);
-      assert.equal(result.ok, false);
-      assert.ok(result.errors.some(error => error.code === 'unsafe-path' && /regular file/.test(error.message)));
-      await assert.rejects(installWorldDesignPack(pack, process.argv[3]), /regular file/);
-      console.log('rejected FIFO');
-    `, new URL('../../scripts/studio-skill-pack.js', import.meta.url).href, packFile, destination],
-    { timeout: 2000, killSignal: 'SIGKILL' });
-    assert.equal(checked.stdout.trim(), 'rejected FIFO');
+  const artifacts = [
+    ...(process.platform === 'win32' ? [] : [['fifo', async target => {
+      await run('mkfifo', [target], { timeout: 1500, killSignal: 'SIGKILL' });
+      assert.ok((await lstat(target)).isFIFO(), 'mkfifo made a real FIFO');
+    }]]),
+    ['directory', target => mkdir(target)],
+  ];
+  for (const [kind, make] of artifacts) {
+    for (const [index, relative] of [pack.files[0].path, '.world-design-pack.json'].entries()) {
+      const destination = path.join(directory, `workspace-${kind}-${index}`);
+      await installWorldDesignPack(pack, destination);
+      const target = path.join(destination, relative);
+      await rm(target);
+      await make(target);
+      // A separate process bounds the regression even if an OS open() blocks a worker.
+      // SIGKILL on timeout and awaiting execFile ensure no child survives the test.
+      const checked = await run(process.execPath, ['--input-type=module', '-e', `
+        import assert from 'node:assert/strict';
+        import { readFile } from 'node:fs/promises';
+        const { verifyWorldDesignPack, installWorldDesignPack } = await import(process.argv[1]);
+        const pack = JSON.parse(await readFile(process.argv[2], 'utf8'));
+        const result = await verifyWorldDesignPack(pack, process.argv[3]);
+        assert.equal(result.ok, false);
+        assert.ok(result.errors.some(error => error.code === 'unsafe-path' && /regular file/.test(error.message)), JSON.stringify(result.errors));
+        await assert.rejects(installWorldDesignPack(pack, process.argv[3]), /regular file/);
+        console.log('rejected');
+      `, new URL('../../scripts/studio-skill-pack.js', import.meta.url).href, packFile, destination],
+      { timeout: 2000, killSignal: 'SIGKILL' });
+      assert.equal(checked.stdout.trim(), 'rejected', `${kind} at ${relative}`);
+    }
   }
 });
 
@@ -230,10 +245,15 @@ test('retries an interrupted owned install by creating only verified missing fil
     import fs from 'node:fs/promises';
     import { constants } from 'node:fs';
     import { syncBuiltinESMExports } from 'node:module';
+    import path from 'node:path';
     const pack = JSON.parse(await fs.readFile(process.argv[2], 'utf8'));
+    // The installer opens path.join(destination, file.path), which has backslashes on
+    // Windows, so compare resolved paths rather than a '/' suffix. O_WRONLY is this
+    // platform's own constant; the installer's create flags carry it on Windows too.
+    const interrupted = path.resolve(process.argv[3], pack.files[1].path);
     const originalOpen = fs.open;
     fs.open = async (target, flags, ...args) => {
-      if ((flags & constants.O_WRONLY) && target.endsWith(pack.files[1].path)) throw new Error('injected interrupted write');
+      if ((flags & constants.O_WRONLY) && path.resolve(String(target)) === interrupted) throw new Error('injected interrupted write');
       return originalOpen(target, flags, ...args);
     };
     syncBuiltinESMExports();

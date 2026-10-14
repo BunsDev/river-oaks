@@ -19,7 +19,7 @@ shared room, and its own terrain, roads, buildings, interiors, trees, and named 
 Guests can visit; only Jevica can publish, build, or grant wishes. Start from
 the [sample package](../preview/public/data/sample-region.json).
 
-The package has `schema_version: 1` and these required fields:
+The package has `schema_version: 1` and these fields (optional fields are marked):
 
 | Field | Format |
 | --- | --- |
@@ -29,6 +29,7 @@ The package has `schema_version: 1` and these required fields:
 | `roads` | 1–64 named roads with unique slug `id`, `kind` (`residential` or `footway`), `width_m`, and 2–128 `[x, north]` points |
 | `buildings` | Up to 80 structures with unique slug `id`, `center`, `size: [width, depth, height]`, `yaw_deg`, and `kind` (`retail`, `residential`, or `parking`) |
 | `buildings[].interior` | Optional on up to eight buildings at least 6 × 6 m. `name` (1–64 characters), `category` (`art`, `clothes`, `restaurant`, or `wellness` for retail; `home` for residential), and `entrance` (`south`, `east`, `north`, or `west`) select a walk-in room and its door on that face of the building. Residential homes may set `access` to `owner` for Jevica and invited visitors, or `public` for everyone. Omitted `access` is public. |
+| `buildings[].interior.generation` | Optional versioned levels for a retail venue or home. `version: 1` and `levels` (1–8) are required when present; `seed`, `levelSeeds` and `overrides` are optional. The building must have enough height and entrance clearance for the requested stack. |
 | `trees` | Up to 256 trees with unique slug `id`, `position`, `height_m`, and `crown_radius_m` |
 | `places` | 4–64 named spots with unique slug `id` and `position` |
 | `parcels` | Optional list of up to 32 named, nonoverlapping rectangular plots. Each has `id`, `name`, and `bounds_m: [west, south, east, north]`; each side is at least 6 m. `owner_id` may name an account. |
@@ -49,6 +50,52 @@ not grant building, furnishing, wish, home-entry, or publishing permission.
 The entrance face is chosen in the building's local footprint, then rotates
 with `yaw_deg`. Publication rejects an interior without a safe indoor arrival and
 an outdoor exit.
+
+### Generated interiors and levels
+
+Add `generation` to a building's existing `interior` to request a reproducible,
+multi-level plan. For example, the sample region's `moon-pavilion` can use:
+
+```json
+{
+  "name": "Moon Pavilion Gallery",
+  "category": "art",
+  "entrance": "south",
+  "generation": {
+    "version": 1,
+    "seed": "moon-gallery-01",
+    "levels": 2,
+    "overrides": [
+      { "targetId": "moon-pavilion/l0/finish/floor", "material": "concrete" }
+    ]
+  }
+}
+```
+
+The building's stable ID supplies the seed when `seed` is omitted. An explicit
+seed is 1–128 characters, starting with a letter or digit and then using only
+letters, digits, `_`, `.`, `:` or `-`. `levelSeeds` may assign the same kind of
+seed to an individual level index, such as `{ "1": "gallery-upper-02" }`.
+Only indexes below `levels` are accepted. Regenerating one untouched level
+changes its finish choice without changing its floor, portal or object IDs.
+
+`overrides` may contain at most two entries per level, each with a unique
+`targetId`. Version 1 accepts the generated `building-id/lN/object/wall-display`
+slot for a local two-coordinate `position` and/or `material`, and
+`building-id/lN/finish/floor` for `material` only. Materials are `limestone`,
+`oak`, `terracotta` or `concrete`. The server checks moved fixtures against the
+building footprint, entrance aisle and vertical landing. Edited levels cannot
+be regenerated until their overrides are explicitly reset in World Studio.
+
+The server derives the plan from the building ID, center, rotated footprint,
+terrain elevation, entrance, seed and generator version, then stores an approved
+SHA-256 digest. It rejects impossible floor stacks under the authored roof and
+does not accept client-invented doors or collision. Keep a published world's
+seed, primitive and overrides when revising it; changing them is an explicit
+region revision subject to compatibility checks. A legacy `interior` without
+`generation` retains its existing single-room behavior. [World Studio](world-studio.md)
+provides previews, level and layer controls, authored edits, undo and export
+before publication.
 
 The server validates and compiles the package once, then stores the compiled
 world and its SHA-256 digest alongside its catalog entry. The browser and

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Read-only reconciliation: recommendations are never deletion authorization.
 import { execFileSync } from 'node:child_process';
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, realpathSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -98,11 +98,23 @@ export function reconcile(snapshot, register, pulls, now=Date.now()) {
     return {...branch,taskId:task?.id??null,taskStatus:task?.status??null,worktree:worktree?.path??null,prs:matchingPRs.map(p=>({number:p.number,state:p.state,mergedAt:p.merged_at,head:p.head.sha})),...classify({...branch,...worktree,registeredOwner:task?.status==='active'&&Boolean(task.owner)},pulls,snapshot.defaultBranch)};
   });
   for(const stash of snapshot.stashedRegister??[])gaps.push(`Task register edits are held in ${stash.ref} (${stash.subject}); merge them into the live register by task id, then drop that stash`);
+  const real=p=>{try{return realpathSync(p);}catch{return resolve(p);}};
+  const samePath=(a,b)=>a&&b&&real(a)===real(b);
+  // Orphan debt: checkouts nothing in the register accounts for, and records that
+  // point at checkouts which are gone. Both hide work from the next sweep.
+  for(const w of snapshot.worktrees){
+    if(!w.branch&&!w.primary&&!tasks.some(t=>samePath(t.worktree,w.path)))gaps.push(`Unregistered worktree: ${w.path} (detached HEAD); claim it in the register or cancel it with project:prune --cancel-stale --detached-path`);
+  }
   for(const task of tasks){
     if(!['retired','queued'].includes(task.status)&&!task.branches.some(b=>snapshot.branches.some(x=>x.branch===b)))gaps.push(`${task.id}: no local branch; locate remote/session before changing status`);
+    if(task.status!=='retired'&&task.worktree&&!existsSync(task.worktree))gaps.push(`${task.id}: recorded worktree path is missing: ${task.worktree}; fix the record or restore the checkout`);
   }
   return {schemaVersion:1,generatedAt:new Date(now).toISOString(),scope:'Read-only local Git and optional GitHub evidence. Review recommendations require fresh ownership, ignored-data and archive checks.',...snapshot,githubChecked:pulls!==null,tasks,gaps,branches};
 }
+
+// Gaps that only say "nothing owns this" or "this record points nowhere". With
+// --allow-orphans they are still reported, as warnings, but do not fail --check.
+export const isOrphanGap=gap=>/^Unregistered (branch|worktree): |: recorded worktree path is missing: /.test(gap);
 
 export function loadPulls(root) {
   const remote=git(root,['remote','get-url','origin']);
@@ -111,7 +123,7 @@ export function loadPulls(root) {
   const all=[];
   for(let page=1;;page++){
     const response=execFileSync('gh',['api',`repos/${match[1]}/pulls?state=all&per_page=100&page=${page}`],{encoding:'utf8',maxBuffer:32*1024*1024,stdio:['ignore','pipe','pipe']});
-    const rows=JSON.parse(response);all.push(...rows.map(p=>({number:p.number,state:p.state,merged_at:p.merged_at,merge_commit_sha:p.merge_commit_sha,head:{ref:p.head.ref,sha:p.head.sha}})));if(rows.length<100)break;
+    const rows=JSON.parse(response);all.push(...rows.map(p=>({number:p.number,state:p.state,updated_at:p.updated_at,merged_at:p.merged_at,merge_commit_sha:p.merge_commit_sha,head:{ref:p.head.ref,sha:p.head.sha}})));if(rows.length<100)break;
   }
   return all;
 }
@@ -119,7 +131,7 @@ export function loadPulls(root) {
 if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href){
   try{
     const args=process.argv.slice(2),option=name=>{const i=args.indexOf(name);if(i<0)return null;if(!args[i+1]||args[i+1].startsWith('--'))throw new Error(`Missing value for ${name}`);return args[i+1];};
-    const allowed=new Set(['--repo','--tasks','--output','--github','--check']);
+    const allowed=new Set(['--repo','--tasks','--output','--github','--check','--allow-orphans']);
     for(let i=0;i<args.length;i++){if(!allowed.has(args[i]))throw new Error(`Unknown argument: ${args[i]}`);if(['--repo','--tasks','--output'].includes(args[i]))i++;}
     const root=resolve(option('--repo')??process.cwd()),text=readFileSync(resolve(root,option('--tasks')??REGISTER),'utf8');
     if(/^(<{7}|>{7})( |$)/m.test(text))throw new Error('Task register has conflict markers; merge it by task id (see docs/project-management/workflow.md)');
@@ -128,6 +140,8 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).hr
     const snapshot=inspectGit(root),pulls=args.includes('--github')?loadPulls(root):null;
     const report=reconcile(snapshot,register,pulls);const json=JSON.stringify(report,null,2)+'\n';
     const output=option('--output');if(output)writeFileSync(resolve(output),json);else process.stdout.write(json);
-    if(args.includes('--check')&&report.gaps.length)process.exitCode=1;
+    const failing=args.includes('--allow-orphans')?report.gaps.filter(gap=>!isOrphanGap(gap)):report.gaps;
+    if(args.includes('--allow-orphans'))for(const gap of report.gaps.filter(isOrphanGap))process.stderr.write(`project-status: warning (allowed): ${gap}\n`);
+    if(args.includes('--check')&&failing.length)process.exitCode=1;
   }catch(error){process.stderr.write(`project-status: ${error.message}\n`);process.exitCode=2;}
 }

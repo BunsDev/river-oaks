@@ -1,6 +1,6 @@
 // Shared by the browser and Node transport. A missing version denotes the
 // original River Oaks client. Protocol 2 adds creator assembly snapshots.
-export const WORLD_PROTOCOL_VERSION = 2;
+export const WORLD_PROTOCOL_VERSION = 3;
 export const DEFAULT_WORLD_ID = 'river-oaks';
 
 export function validateWorldId(value) {

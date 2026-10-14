@@ -33,7 +33,7 @@ it is not an unattended test fixture.
 
 | Command | Scope |
 | --- | --- |
-| `pnpm run verify tooling` | `test:agent`: runner failure/timeout/prerequisite regressions, catalog consistency, the task-register merge driver, project status/prune, secret and ref hooks, pnpm policy, skill views and the plans index |
+| `pnpm run verify tooling` | `test:agent`: runner failure/timeout/prerequisite regressions, catalog consistency, the task-register merge driver, project status/inventory/archives/prune/cancel, secret and ref hooks, pnpm policy, skill views and the plans index |
 | `pnpm run verify preview` / `server` / `desktop` / `build` | Focused existing suite or build for the owning runtime |
 | `pnpm run verify desktop-package` | Desktop unit tests, `desktop:package` for the host platform and arch, then `desktop:package:check`: the fuse wire matches `desktop/fuses.js` and the asar holds exactly the staged files (receipt `.runtime/agent/desktop-package.json`) |
 | `pnpm run verify web` | Agent, preview, server, desktop unit tests; production web/landing build |
@@ -153,4 +153,9 @@ See [the diagram index](diagrams.md) for the convention.
 Use [task ownership and retirement](project-management/workflow.md) at session
 start, delivery and handoff. `pnpm run --silent project:status --github` compares
 local branches/worktrees with the task register and live PRs without changing them.
-`project:check` exits nonzero for reconciliation gaps, not application test failures.
+`project:check` exits nonzero for reconciliation gaps, not application test failures;
+orphan checkouts (no task, or a task whose recorded worktree is gone) are gaps too, and
+`--allow-orphans` downgrades only those to warnings. `pnpm run project:inventory`
+classifies every local branch and worktree (`--remote` adds a report-only list of
+merged remote branches), and `pnpm run project:archives` verifies the restore
+archives under `~/worktree-backups/river-oaks/`. Both are read-only.

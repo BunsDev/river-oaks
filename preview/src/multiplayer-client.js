@@ -281,7 +281,7 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
     update(now){
       greetings.update(now);
       if(!connected||socket?.readyState!==WebSocket.OPEN)return;
-      if(!traveling&&now-lastPose>=200){lastPose=now;const pose=getPose();if(pose&&!pose.office)socket.send(JSON.stringify({type:'pose',position:[pose.position[0],-pose.position[2],pose.ground],yaw:pose.riding?pose.riding.yaw+Math.PI/2:pose.yaw,altitude:pose.altitude,...(activeGreeting?{interactionId:activeGreeting}:{}),...(pose.riding?{vehicle:pose.riding.kind}:{})}));}
+      if(!traveling&&now-lastPose>=200){lastPose=now;const pose=getPose();if(pose&&!pose.office)socket.send(JSON.stringify({type:'pose',position:[pose.position[0],-pose.position[2],pose.ground],yaw:pose.riding?pose.riding.yaw+Math.PI/2:pose.yaw,altitude:pose.altitude,levelId:pose.levelId??null,...(activeGreeting?{interactionId:activeGreeting}:{}),...(pose.riding?{vehicle:pose.riding.kind}:{})}));}
       if(now-lastFocus>=10000){lastFocus=now;const dialog=document.querySelector('#community-dialogue');if(dialog&&!dialog.hidden)command({type:'focus',localId:document.querySelector('#community-local')?.value}).catch(()=>{});}
     },
     dispose(){

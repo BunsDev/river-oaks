@@ -4,6 +4,8 @@ import { ROOM_HEIGHT } from './store-rooms.js';
 import { createLuxeFinishes, createSurfaceCollector, flutedPanels, luxeShellPlan, luxeSuiteFor, tintEmissiveByColor } from './interior-luxe.js';
 import { buildIpicInterior } from './ipic-interior.js';
 import { IPIC_INTERIOR } from './ipic-plan.js';
+import { generatedVerticalRoute } from './generated-vertical-route.js';
+import { generatedContactPixels } from './generated-contact-shading.js';
 
 // Walk-in boutique interiors: shell, finishes, fixtures and merchandise per
 // room plan. Generic shops use procedural surfaces; IPIC uses its dedicated
@@ -146,6 +148,7 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
   const pot = track.g(lathe([[0.12, 0], [0.16, 0.02], [0.19, 0.34], [0.17, 0.36], [0, 0.36]]));
   const tub = track.g(new THREE.CylinderGeometry(0.15, 0.13, 0.1, 12));
   const pane = track.g(new THREE.PlaneGeometry(1, 1));
+  let generatedWallContact = null;
 
   // ---- instancing kit ------------------------------------------------------
   const batches = new Map();
@@ -400,6 +403,98 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
     }
     const [fx, fn] = room.facade, [ox, oy] = room.outward, W = room.width, D = room.depth, H = room.height, c = room.center;
     roomMatrix = new THREE.Matrix4().compose(new THREE.Vector3(fx, room.floor, -fn), new THREE.Quaternion().setFromAxisAngle(Y, Math.atan2(ox, -oy)), new THREE.Vector3(1, 1, 1));
+    if (room.generatedPlan) {
+      if (!generatedWallContact) {
+        const gradient = canvasTexture([8, 128], (ctx, width, height) => {
+          const fade = ctx.createLinearGradient(0, 0, 0, height);
+          fade.addColorStop(0, '#20191500');
+          fade.addColorStop(1, '#20191555');
+          ctx.fillStyle = fade; ctx.fillRect(0, 0, width, height);
+        }, { repeat: false });
+        generatedWallContact = track.m(new THREE.MeshBasicMaterial({ map: track.t(gradient),
+          transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1,
+          side: THREE.DoubleSide }));
+      }
+      const front = room.frontInset, length = D - front, mid = (D + front) / 2;
+      const route = generatedVerticalRoute(room);
+      const finish = room.generatedPlan.layers.finishes[0]?.material;
+      const floorColors = { limestone: '#e3d8c4', oak: '#bf9a72', terracotta: '#bf8671', concrete: '#c9c8c4' };
+      const floorColor = floorColors[finish] ?? floorColors.limestone;
+      const contactTexture = canvasTexture([256, 256], (ctx, width, height) => {
+        const image = ctx.createImageData(width, height);
+        image.data.set(generatedContactPixels(room, width, height));
+        ctx.putImageData(image, 0, 0);
+      }, { repeat: false });
+      const floorMaterial = standard({ color: floorColor, map: track.t(contactTexture), roughness: 0.82 });
+      floorMaterial.name = `generated-floor-${finish}`;
+      const floorGeometry = track.g(new THREE.PlaneGeometry(W, length)); floorGeometry.rotateX(-Math.PI / 2);
+      const floor = new THREE.Mesh(floorGeometry, floorMaterial); floor.receiveShadow = true;
+      placeMesh(floor, c, mid, 0.012);
+      add(box, black, c, mid, -0.3, [W, 0.6, length], 0, '#5a5148');
+      for (const panel of route?.ceilingPanels ?? [{ a: c, d: mid, width: W, depth: length }])
+        add(box, ceiling, panel.a, panel.d, H + 0.125, [panel.width, 0.25, panel.depth]);
+      add(box, walls[room.theme], c, D - 0.075, H / 2, [W, H, 0.15]);
+      add(pane, generatedWallContact, c, D - 0.158, 0.48, [W - 0.3, 0.96, 1]);
+      for (const a of [room.aMin + 0.075, room.aMax - 0.075]) {
+        add(box, walls[room.theme], a, mid, H / 2, [0.15, H, length]);
+      }
+      for (const a of [room.aMin + 0.158, room.aMax - 0.158])
+        add(pane, generatedWallContact, a, mid, 0.48, [length - 0.3, 0.96, 1], Math.PI / 2);
+      // Only the approved entrance portal bridges the setback to the facade.
+      if (room.generatedPlan.index === 0)
+        add(box, standard({ color: floorColor, roughness: 0.82 }), 0, front / 2, 0.012, [1.7, 0.025, front]);
+      for (const fixture of room.obstacles) {
+        const a = (fixture.a0 + fixture.a1) / 2, d = (fixture.d0 + fixture.d1) / 2;
+        const authoredMaterial = room.generatedPlan.layers.fixtures.find(item => item.id === fixture.id)?.material;
+        const fixtureMaterial = authoredMaterial ? standard({ color: floorColors[authoredMaterial], roughness: 0.82 }) : stone;
+        add(box, fixtureMaterial, a, d, 0.62, [fixture.a1 - fixture.a0, 1.24, fixture.d1 - fixture.d0]);
+        add(box, brass, a, d, 1.26, [fixture.a1 - fixture.a0 + 0.04, 0.04, fixture.d1 - fixture.d0 + 0.04]);
+      }
+      if (route) {
+        const { a0, a1, d0, d1, platform } = route;
+        // The approved portal remains a walkable landing at both levels. The
+        // paired F transition acts as a platform lift while the shaft continues
+        // through the lower ceiling; no display mesh invents shared collision.
+        add(box, stone, platform.a, platform.d, 0.035, [platform.width, 0.045, platform.depth]);
+        add(box, brass, platform.a, d0 + 0.07, 0.065, [platform.width, 0.018, 0.035]);
+        for (const a of [a0 + 0.075, a1 - 0.075]) for (const d of [d0 + 0.075, d1 - 0.075])
+          add(box, brass, a, d, H / 2, [0.035, H - 0.16, 0.035]);
+        for (const a of [a0 + 0.075, a1 - 0.075])
+          add(box, brass, a, (d0 + d1) / 2, H - 0.09, [0.035, 0.035, d1 - d0 - 0.15]);
+        for (const d of [d0 + 0.075, d1 - 0.075])
+          add(box, brass, (a0 + a1) / 2, d, H - 0.09, [a1 - a0 - 0.15, 0.035, 0.035]);
+        add(box, glow, (a0 + a1) / 2, d0 + 0.075, H - 0.12,
+          [a1 - a0 - 0.22, 0.025, 0.025]);
+        add(box, brass, a0 - 0.08, d0 + 0.28, 1.08, [0.035, 0.32, 0.18]);
+        add(disc, lamp, a0 - 0.11, d0 + 0.28, 1.09, [0.075, 0.012, 0.075], 0,
+          '#ffffff', [Math.PI / 2, 0]);
+        if (route.above) {
+          for (const d of [d0, d1]) add(box, brass, (a0 + a1) / 2, d, H + 0.02,
+            [a1 - a0, 0.04, 0.035]);
+          for (const a of [a0, a1]) add(box, brass, a, (d0 + d1) / 2, H + 0.02,
+            [0.035, 0.04, d1 - d0]);
+        }
+      }
+      // The generated plan owns the route and footprint. Original canvas art
+      // hangs almost flush with the back wall, outside the shaft and walk path.
+      for (let index = 0; index < 3; index++) {
+        const a = room.aMin + 1.15 + index * 2.25, d = D - 0.17, y = 1.88;
+        if (a + 0.75 >= (route?.a0 ?? room.aMax) - 0.25) break;
+        const painting = standard({ map: track.t(artTexture(23 + room.generatedPlan.index * 17 + index * 5)),
+          roughness: 0.8, emissive: '#ffffff', emissiveIntensity: 0.06 });
+        placeMesh(new THREE.Mesh(pane, painting), a, d, y, 0, [1.34, 1.52, 1]);
+        for (const edge of [-1, 1]) {
+          add(box, brass, a + edge * 0.69, d + 0.012, y, [0.035, 1.6, 0.04]);
+          add(box, brass, a, d + 0.012, y + edge * 0.78, [1.42, 0.035, 0.04]);
+        }
+        add(box, glow, a, d - 0.05, y + 0.89, [0.55, 0.018, 0.025]);
+      }
+      for (let d = front + 1.3; d < D - 0.3; d += 2.2) {
+        add(disc, lamp, c, d, H - 0.012, [0.065, 0.02, 0.065]);
+        lightPositions.push({ room, position: new THREE.Vector3(c, H - 1.5, -d).applyMatrix4(roomMatrix) });
+      }
+      continue;
+    }
     // shell
     const floorGeometry = track.g(new THREE.PlaneGeometry(W, D)); floorGeometry.rotateX(-Math.PI / 2);
     const uv = floorGeometry.attributes.uv; const tile = room.theme === 'cinema' ? 1.2 : 2.4;
@@ -431,8 +526,9 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
     const mesh = new THREE.InstancedMesh(geometry, material, matrices.length);
     const color = new THREE.Color();
     matrices.forEach((matrix, index) => { mesh.setMatrixAt(index, matrix); mesh.setColorAt(index, color.set(colors[index])); });
-    mesh.castShadow = material !== glow && material !== lamp && material !== luxe.halo && material !== glassCase && material !== bottleGlass && material !== warmPanel;
-    mesh.receiveShadow = true;
+    mesh.castShadow = material !== generatedWallContact && material !== glow && material !== lamp && material !== luxe.halo && material !== glassCase && material !== bottleGlass && material !== warmPanel;
+    mesh.receiveShadow = material !== generatedWallContact;
+    if (material === generatedWallContact) mesh.userData.aoExclude = true;
     // One batch per building and material: the renderer culls by instance bounds without a draw-call explosion.
     mesh.computeBoundingSphere();
     if (material === glassCase || material === bottleGlass) mesh.renderOrder = 2;

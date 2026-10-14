@@ -31,8 +31,11 @@ import { createCommunityPanel } from './community-ui.js';
 import { buildDistrictBuildings, buildDistrictDetail } from './district.js';
 import { buildDistrictFantasy } from './district-fantasy.js';
 import { buildStorePeople } from './store-people.js';
+import { createGeneratedInteriorStream } from './generated-interior-stream.js';
+import { canCullExterior, renderWithoutExterior } from './interior-exterior-culling.js';
 import { sharedRoomSummary } from './shared-population.js';
 import { storeRoomsFor } from './store-rooms.js';
+import { attachDistrictGalleryPlan } from './district-interior-contract.js';
 import { buildFoliage, buildObservedFoliage } from './foliage.js';
 import { castShadowsFromProxies } from './landscape-models.js';
 import { validateVegetation } from './vegetation.js';
@@ -117,8 +120,9 @@ const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matc
 // Never enable this profile in a production build.
 const softwareAcceptance = import.meta.env.DEV && import.meta.env.VITE_SHARED_SOFTWARE_RENDERING === '1';
 const renderAudit = import.meta.env.DEV && new URLSearchParams(location.search).get('render-audit') === '1' ? createRenderAudit() : null;
+const debugOcclusion = new URLSearchParams(location.search).get('ao');
 let auditCamera = null;
-let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, storePeople, interiorsLayer;
+let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, storePeople, interiorsLayer, generatedInteriors;
 let districtUI, environmentAssets = null, storefrontReflections = null, roomGroundClip = null;
 let placesUI = null, landmarks = null;
 let pendingSharedPlace = null, sharedPlaceInFlight = false;
@@ -196,7 +200,6 @@ function initializeRenderer() {
   // CPU acceptance also skips bloom: under the normal-colour override its blur spread
   // one figure's invalid values across the whole Mesa frame (owner view, 2026-10-08).
   pipeline = createRenderPipeline(renderer, scene, camera, { samples: softwareAcceptance ? 0 : 4, bloom: !softwareAcceptance });
-  const debugOcclusion = new URLSearchParams(location.search).get('ao');
   // The storefront probe renders fixed-size cube faces outside the composer,
   // so quality changes never invalidate it.
   quality = createQualityControl({ apply({ scale, occlusion }) {
@@ -234,7 +237,12 @@ function initializeRenderer() {
     void worldPortal.load();
   }
   sidebarSections = setupSidebarSections({ graphics: quality.element, sidebar });
-  walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore, canEnterStore, getInteraction: () => seatAndWater?.interaction() ?? plazaBicycle?.prompt() ?? null, getPlay: playAction, getVoice: () => multiplayer?.voice ?? null });
+  walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore,
+    onLevelChange: async portal => {
+      const result = await multiplayer.command({ type: 'interiorLevel', portalId: portal.id });
+      if (result.ok && result.player) walking.applyServerPose(result.player);
+      return result;
+    }, canEnterStore, getInteraction: () => seatAndWater?.interaction() ?? plazaBicycle?.prompt() ?? null, getPlay: playAction, getVoice: () => multiplayer?.voice ?? null });
   storeIntros = createStoreIntros({ camera, host,
     claim: storeId => multiplayer.claimStoreIntro(storeId),
     onHalt: () => walking.halt(), onResume: () => walking.update(0, performance.now()),
@@ -448,7 +456,7 @@ function startMultiplayer() {
       placesUI?.setPlayers(players, selfId);
       if (!players.length) buildLayer?.sync([]);
       const self = players.find(player => player.id === selfId);
-      walking?.syncSeating(self);
+      walking?.syncAuthoritativePose(self);
       if (self) cyclingBoard?.setName(self.name);
       playerAvatar?.setSharedIdentity(self);
       if (self?.canBuild) buildControls?.show(); else buildControls?.hide();
@@ -542,6 +550,7 @@ function populateWorld(data) {
   officeUI?.reset();
   storeIntros?.reset();
   walking?.exit();
+  generatedInteriors?.dispose(); generatedInteriors = null;
   storefrontReflections?.dispose(); storefrontReflections = null;
   if (worldGroup) {
     scene.remove(worldGroup);
@@ -593,6 +602,7 @@ function populateWorld(data) {
   storePeople = buildStorePeople(buildingMesh.userData.rooms ?? [], { reducedMotion, sharedPopulation: true });
   interiorsLayer = new THREE.Group(); interiorsLayer.name = 'Boutique interiors layer';
   interiorsLayer.add(buildingMesh.userData.interiors, storePeople);
+  generatedInteriors = createGeneratedInteriorStream(buildingMesh.userData.generatedRooms ?? [], interiorsLayer);
   layers = { ground, roads, buildings: buildingMesh, interiors: interiorsLayer, trees: data.vegetation ? buildObservedFoliage(data) : buildFoliage(data) };
   Object.values(layers).forEach((layer) => worldGroup.add(layer));
   worldGroup.add(seeThroughNearCameraIn(buildDistrictDetail(data)));
@@ -745,8 +755,12 @@ async function loadWorld() {
     let data;
     if(manifest.template==='region-v1')data=manifest.world;
     else if(manifest.template==='river-oaks') {
-      const [district,vegetation]=await Promise.all([jsonResponse('/data/district.json'),jsonResponse('/data/district-vegetation.json')]);
-      data=district;data.vegetation=validateVegetation(data,vegetation);
+      const [district,vegetation,approved]=await Promise.all([
+        jsonResponse('/data/district.json'),jsonResponse('/data/district-vegetation.json'),
+        jsonResponse('/data/building-interiors/river-oaks-gallery-v2.json'),
+      ]);
+      district.vegetation=validateVegetation(district,vegetation);
+      data=attachDistrictGalleryPlan(district,approved);
     } else throw new Error('This region format is not supported by this client');
     if (data.schema_version !== 1 || data.scene !== 'district' || !Array.isArray(data.bounds_m) || !['roads', 'stores', 'buildings', 'trees'].every(key => Array.isArray(data[key]))) throw new Error('The district data does not match the supported schema.');
     populateWorld(data);
@@ -788,7 +802,8 @@ async function loadWorld() {
 function updateStoreLights() {
   roomGroundClip?.setEnabled(Boolean(interiorsLayer?.visible));
   roomGroundClip?.setPersistentEnabled(Boolean(buildingMesh?.visible));
-  const positions = interiorsLayer?.visible ? buildingMesh?.userData.interiors?.userData.lightPositions ?? [] : [];
+  const positions = interiorsLayer?.visible
+    ? [...(buildingMesh?.userData.interiors?.userData.lightPositions ?? []), ...(generatedInteriors?.lightPositions ?? [])] : [];
   const picked = [];
   for (const item of positions) { const d2 = item.position.distanceToSquared(camera.position); if (d2 < 32 * 32) picked.push([d2, item]); }
   picked.sort((left, right) => left[0] - right[0]);
@@ -819,7 +834,9 @@ function render(now) {
   if (lastFrame !== null) quality.sample(now - lastFrame);
   lastFrame = now;
   const delta = Math.min(clock.getDelta(), 0.08);
+  const self = multiplayer?.snapshot?.players.find(player => player.id === multiplayer.identity?.id);
   community?.update(delta, now);
+  generatedInteriors?.update(camera.position, now, self?.levelId);
   layers.trees?.userData.update?.(camera.position);
   if (storePeople && interiorsLayer?.visible) storePeople.userData.update(camera, now, community?.state, walking?.getPosition(), community?.speakingId);
   community?.updateSpeech(delta);
@@ -831,12 +848,13 @@ function render(now) {
   }
   updateStoreLights();
   // Riding a bird pauses walking; the bird drives the camera below.
-  const self = multiplayer?.snapshot?.players.find(player => player.id === multiplayer.identity?.id);
   const introRoom = self && multiplayer?.connected && world
-    ? storeRoomsFor(world).find(room => room.category !== 'home' && room.contains(self.position[0], self.position[1], .2)) : null;
+    ? storeRoomsFor(world).find(room => room.category !== 'home' && (!self.levelId || room.planId === self.levelId)
+      && room.contains(self.position[0], self.position[1], .2)) : null;
   storeIntros?.observe({ room: introRoom, accountId: multiplayer?.identity?.id,
     worldId: worldIdFromSearch(location.search),
-    canPlay: Boolean(walking?.active && !loading && !multiplayer?.traveling && !photoMode?.active && !birdCams?.riding && !self?.altitude),
+    canPlay: Boolean(walking?.active && !loading && !multiplayer?.traveling && !photoMode?.active && !birdCams?.riding && !self?.altitude
+      && (!introRoom?.generatedPlan || generatedInteriors?.readyFor(introRoom.planId))),
   });
   if (officeUI?.active || officeUI?.entering || storeIntros?.active || photoMode?.active || birdCams?.riding) walking?.halt();
   else if (multiplayer?.connected && !multiplayer.traveling) walking?.update(delta, now);
@@ -871,7 +889,22 @@ function render(now) {
   if (officeUI?.active || !softwareAcceptance || now - lastSoftwareDraw >= 1000) {
     lastSoftwareDraw = now;
     renderer.info.reset();
-    if(!officeUI?.update(now,delta))pipeline.render(delta);
+    const currentRoom = buildingMesh?.userData.generatedRooms?.find(room => room.planId === self?.levelId);
+    const generatedRoomActive = !officeUI?.active && interiorsLayer?.visible
+      && generatedInteriors?.readyFor(self?.levelId) && currentRoom;
+    // Auto uses the approved room's fixed contact layer while the visitor is
+    // inside. Keep full GTAO for Sharpest and photo mode, and restore the
+    // district's Auto policy on exit.
+    pipeline.setOcclusion(debugOcclusion !== 'off' && !softwareAcceptance && quality.stats.occlusion
+      && !(quality.mode === 'auto' && generatedRoomActive && !photoMode?.active));
+    // The office presentation also calls this pipeline; clear a previous
+    // gallery mask before either render path runs.
+    pipeline.setOcclusionExteriorMask(generatedRoomActive ? worldGroup : null, interiorsLayer);
+    if (!officeUI?.update(now, delta)) {
+      if (generatedRoomActive && canCullExterior(camera, currentRoom))
+        renderWithoutExterior(worldGroup, interiorsLayer, () => pipeline.render(delta));
+      else pipeline.render(delta);
+    }
     photoMode?.afterRender();
     if (pendingCapture) { const capture = pendingCapture; pendingCapture = null; capture(renderer.domElement); }
   }
@@ -1008,6 +1041,17 @@ document.addEventListener('keydown', event => {
 });
 window.addEventListener('river-oaks:debug', event => void openDebugTools(event.detail?.open));
 window.__riverDebug = () => debugTools;
+if (import.meta.env.DEV) window.__riverGeneratedInteriors = () => generatedInteriors?.debug() ?? [];
+if (import.meta.env.DEV) window.__riverExteriorCull = () => {
+  const self = multiplayer?.snapshot?.players.find(player => player.id === multiplayer.identity?.id);
+  const room = buildingMesh?.userData.generatedRooms?.find(item => item.planId === self?.levelId);
+  return { camera: camera.position.toArray(), player: self?.position, levelId: self?.levelId,
+    room: room && { floor: room.floor, height: room.height, local: room.toLocal(camera.position.x, -camera.position.z) },
+    direction: camera.getWorldDirection(new THREE.Vector3()).toArray(),
+    front: room && [room.aMin, room.aMax].map(a => { const [east, north] = room.toWorld(a, 0);
+      return new THREE.Vector3(east, room.floor + room.height / 2, -north).project(camera).toArray(); }),
+    cull: canCullExterior(camera, room) };
+};
 // Read-only bird cam state for development and browser acceptance runs.
 // Each bird also reports how it appears in the current view: inside the frame,
 // unobstructed by buildings, and its wingspan in CSS pixels.

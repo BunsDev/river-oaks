@@ -43,7 +43,7 @@ async function fixture(t, { voiceOn = true, worldData = data, worldId = 'river-o
   const voiceCall = (user, action, body, headers) => post(user, `/api/voice/${action}${query}`, body, headers);
   const connect = async user => {
     const ticket = (await (await post(user, `/api/multiplayer/ticket${query}`)).json()).ticket;
-    const params = new URLSearchParams({ ticket, protocol: '2' }); if (worldId !== 'river-oaks') params.set('world', worldId);
+    const params = new URLSearchParams({ ticket, protocol: '3' }); if (worldId !== 'river-oaks') params.set('world', worldId);
     const ws = new WebSocket(`${origin.replace('http', 'ws')}/multiplayer?${params}`, { headers: { Origin: 'http://127.0.0.1', Cookie: `session=${user}` } });
     sockets.push(ws);
     const snapshot = await new Promise((resolve, reject) => { ws.once('message', raw => resolve(JSON.parse(raw))); ws.once('error', reject); });
@@ -210,7 +210,7 @@ test('the hosted edge derives the voice space from the committed room view', liv
   const post = (user, path, body = {}) => fetch(url + path, { method: 'POST', headers: { Origin: 'https://sim.jev.works', Cookie: `test_session=${user}`, 'X-CSRF-Token': 'test-csrf', 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   assert.deepEqual(await (await post('alice', '/api/voice/join')).json(), { ok: false, error: 'not_connected' });
   const ticket = (await (await post('alice', '/api/multiplayer/ticket?world=river-oaks')).json()).ticket;
-  const ws = new WebSocket(`${url.replace('http:', 'ws:')}/multiplayer?${new URLSearchParams({ ticket, world: 'river-oaks', protocol: '2' })}`, { headers: { Origin: 'https://sim.jev.works', Cookie: 'test_session=alice' } });
+  const ws = new WebSocket(`${url.replace('http:', 'ws:')}/multiplayer?${new URLSearchParams({ ticket, world: 'river-oaks', protocol: '3' })}`, { headers: { Origin: 'https://sim.jev.works', Cookie: 'test_session=alice' } });
   sockets.push(ws);
   const snapshot = await new Promise((resolve, reject) => { ws.once('message', raw => resolve(JSON.parse(raw))); ws.once('error', reject); });
   assert.deepEqual(snapshot.voice, { available: true });

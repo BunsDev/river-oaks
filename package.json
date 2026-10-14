@@ -74,6 +74,12 @@
     "plans:index": "node scripts/plans-index.mjs",
     "preplans:index": "node scripts/enforce-pnpm.mjs",
     "preproject:prune": "node scripts/enforce-pnpm.mjs",
+    "project:cancel": "node scripts/project-prune.mjs --cancel-stale",
+    "preproject:cancel": "node scripts/enforce-pnpm.mjs",
+    "project:inventory": "node scripts/project-inventory.mjs",
+    "preproject:inventory": "node scripts/enforce-pnpm.mjs",
+    "project:archives": "node scripts/project-archives.mjs",
+    "preproject:archives": "node scripts/enforce-pnpm.mjs",
     "land": "node scripts/land-pr.mjs",
     "preland": "node scripts/enforce-pnpm.mjs"
   },
