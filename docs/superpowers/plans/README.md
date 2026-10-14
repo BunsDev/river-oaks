@@ -4,12 +4,13 @@
 
 Each plan is a task ledger. Status comes from the task register, where the primary checkout's live copy can be newer than the committed one. Plans from before the register are listed as historical: their own text is the record of what was delivered.
 
-## Active and blocked (21)
+## Active and blocked (22)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
 | [2026-10-14-procedural-private-upper-revocation](2026-10-14-procedural-private-upper-revocation.md)<br>Generated private home upper-level access | `procedural-private-upper-revocation` | active | #352 | 2026-10-14 |
 | [2026-10-14-procedural-pilot-frame-performance](2026-10-14-procedural-pilot-frame-performance.md)<br>Procedural gallery pilot frame performance | `procedural-pilot-frame-performance` | active | #351 | 2026-10-14 |
+| [2026-10-14-procedural-interior-ring-validity](2026-10-14-procedural-interior-ring-validity.md)<br>Procedural interior footprint validity | `procedural-interior-ring-validity` | active | — | 2026-10-14 |
 | [2026-10-14-procedural-gallery-cycle-soak](2026-10-14-procedural-gallery-cycle-soak.md)<br>Repeated generated gallery entry and eviction | `procedural-gallery-cycle-soak` | queued | #353 | 2026-10-14 |
 | [2026-10-14-procedural-gallery-ao-tail](2026-10-14-procedural-gallery-ao-tail.md)<br>Auto quality response to moving gallery frame tails | `procedural-gallery-ao-tail-pacing` | active | #354 | 2026-10-14 |
 | [2026-10-14-level-aware-interior-streaming](2026-10-14-level-aware-interior-streaming.md)<br>Level-aware generated interior streaming | `procedural-level-aware-streaming` | active | #350 | 2026-10-14 |

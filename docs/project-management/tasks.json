@@ -5294,6 +5294,31 @@
         "docs/superpowers/plans/2026-10-14-procedural-gallery-ao-tail.md",
         "docs/superpowers/plans/README.md"
       ]
+    },
+    {
+      "id": "procedural-interior-ring-validity",
+      "title": "Reject self-touching and doubled-back building footprints before generating interiors",
+      "status": "active",
+      "branches": [
+        "fix/procedural-interior-ring-validity-20261014"
+      ],
+      "owner": "codex-root-20261014-ring-validity",
+      "updatedAt": "2026-10-14T08:13:11Z",
+      "leaseUntil": "2026-10-14T09:44:56Z",
+      "nextAction": "Core and isolated-Redis full verification passed on the invalid-ring fix. Commit the verified patch and open a draft PR stacked on #354, then wait for exact-head hosted checks.",
+      "ledger": "docs/superpowers/plans/2026-10-14-procedural-interior-ring-validity.md",
+      "requiredChecks": [
+        "Focused generator regression for self-touching and overlapping edges",
+        "Node and browser plan parity",
+        "pnpm run verify core before commit",
+        "Isolated-Redis full and browser gates before delivery"
+      ],
+      "filesOwned": [
+        "preview/src/building-interiors-plan.js",
+        "preview/tests/building-interiors-plan.test.js",
+        "docs/superpowers/plans/2026-10-14-procedural-interior-ring-validity.md",
+        "docs/superpowers/plans/README.md"
+      ]
     }
   ]
 }
