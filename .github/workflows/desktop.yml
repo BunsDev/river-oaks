@@ -60,11 +60,33 @@ jobs:
         run: pnpm run desktop:package
       - name: Fuse wire and asar contents match desktop/fuses.js and desktop/package-files.js
         if: ${{ !cancelled() }}
+        id: check
         run: pnpm run desktop:package:check
       # The packaged build has the inspector fuse off, so Playwright drives the
       # development Electron (desktop/e2e.js --dev): its own Vite server, the
       # loopback acceptance identity, an in-process town and an offline bridge.
       # The report name keeps the tracked local receipts untouched.
+      # Xvfb has no window manager, so a native minimize never takes effect and
+      # the e2e's minimize check fails; Openbox gives the window real state.
+      - name: Window manager for the Xvfb session
+        if: ${{ !cancelled() && runner.os == 'Linux' }}
+        run: sudo apt-get install -y --no-install-recommends openbox
+      # Diagnosis for the Windows leg: electron.launch times out there after the
+      # main-process debugger attaches, with nothing logged. This runs the same
+      # Electron and app directly for 30 seconds, without Playwright, so the
+      # log shows whether the app reaches ready and opens its window.
+      - name: Electron launch probe (Windows diagnosis)
+        if: ${{ !cancelled() && runner.os == 'Windows' }}
+        env:
+          ELECTRON_ENABLE_LOGGING: '1'
+          RIVER_OAKS_ACCEPTANCE_FIXTURE: '1'
+          RIVER_OAKS_DEV_URL: http://127.0.0.1:9/
+        run: |
+          pnpm exec electron --version
+          set +e
+          timeout 30 pnpm exec electron . --user-data-dir="$RUNNER_TEMP/electron-probe" --enable-logging=stderr --v=0
+          echo "probe exit $?"
+          set -e
       - name: Development desktop end-to-end (loopback acceptance fixture)
         if: ${{ !cancelled() }}
         id: e2e
@@ -78,7 +100,11 @@ jobs:
         run: |
           if [ "$RUNNER_OS" = Linux ]; then
             # Mesa under Xvfb with the browser jobs' Chromium GL flags (verify.yml).
-            RIVER_OAKS_DESKTOP_SOFTWARE=1 LIBGL_ALWAYS_SOFTWARE=1 LP_NUM_THREADS=2 xvfb-run -a pnpm run test:desktop:e2e --dev
+            export RIVER_OAKS_DESKTOP_SOFTWARE=1 LIBGL_ALWAYS_SOFTWARE=1 LP_NUM_THREADS=2
+            xvfb-run -a bash -c 'openbox --sm-disable & sleep 1; exec pnpm run test:desktop:e2e --dev'
+          elif [ "$RUNNER_OS" = Windows ]; then
+            # Playwright's launch trace shows where the Windows launch stalls.
+            DEBUG='pw:browser*,pw:protocol*' pnpm run test:desktop:e2e --dev
           else
             pnpm run test:desktop:e2e --dev
           fi
@@ -92,3 +118,40 @@ jobs:
           path: |
             data/reports/desktop-ci-${{ matrix.os }}.json
             output/playwright/desktop-development*.png
+      # Testers download the zip from the run's artifacts and check it with
+      # `shasum -a 256 -c SHA256SUMS`. A build whose fuses or asar drifted is
+      # never uploaded. This workflow has no signing secrets; the builds are
+      # unsigned (ad-hoc on macOS).
+      - name: Zip the unsigned build and record its SHA-256
+        if: ${{ !cancelled() && steps.check.outcome == 'success' }}
+        id: bundle
+        run: |
+          version=$(node -p "require('./package.json').version")
+          arch=$(node -p process.arch)
+          case "$RUNNER_OS" in
+            Windows) os=windows; platform=win32;;
+            Linux) os=linux; platform=linux;;
+            macOS) os=macos; platform=darwin;;
+          esac
+          name="TypeSafe-Place-$version-$os-$arch-unsigned"
+          build="TypeSafe Place-$platform-$arch"
+          mkdir -p dist/bundles
+          case "$RUNNER_OS" in
+            # ditto keeps the app bundle's symlinks and permissions, as releases do.
+            macOS) ditto -c -k --sequesterRsrc --keepParent "dist/desktop/$build" "dist/bundles/$name.zip";;
+            Linux) (cd dist/desktop && zip -qry "../../dist/bundles/$name.zip" "$build");;
+            Windows) 7z a -tzip -bso0 "dist/bundles/$name.zip" "dist/desktop/$build";;
+          esac
+          cd dist/bundles
+          if command -v sha256sum > /dev/null; then sha256sum "$name.zip" > SHA256SUMS; else shasum -a 256 "$name.zip" > SHA256SUMS; fi
+          cat SHA256SUMS
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+      - name: Unsigned build with SHA256SUMS
+        if: ${{ !cancelled() && steps.bundle.outcome == 'success' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ${{ steps.bundle.outputs.name }}
+          retention-days: 14
+          path: |
+            dist/bundles/*.zip
+            dist/bundles/SHA256SUMS

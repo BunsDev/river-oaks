@@ -25,7 +25,9 @@ Each stage is pushed and its run read with `gh run view --log-failed` before the
    - macos-latest passed all 13 checks (ready in 79 s, 137 frame samples over 10 s, 13.7 fps mean).
    - ubuntu-latest failed at `e2e.js:60` (player never ready, 120 s): `THREE.WebGLRenderer: A WebGL context could not be created` and the "Preview unavailable: WebGL could not initialize" screen. Electron under Xvfb got no GL context because the browser jobs' Chromium flags were not passed. Fix: `RIVER_OAKS_DESKTOP_SOFTWARE=1` makes `desktop/e2e.js` launch Electron with `--use-gl=angle --use-angle=gl --ignore-gpu-blocklist` and set `VITE_SHARED_SOFTWARE_RENDERING=1` for its Vite server, as `preview/e2e/shared-runner.js` does.
    - windows-latest failed with `electron.launch: Timeout 30000ms exceeded` after the main-process debugger attached and nothing else was logged. Diagnosis push: `ELECTRON_ENABLE_LOGGING=1` and `RIVER_OAKS_DESKTOP_LAUNCH_TIMEOUT=120000` (the launch timeout in `desktop/e2e.js` is now overridable) to tell a slow cold start from a hang.
-5. Artifacts with `SHA256SUMS`: pending.
+   - Stage 4b, run [38630048297](https://github.com/BunsDev/river-oaks/actions/runs/38630048297) at `0c12234c` (dispatched by hand: GitHub created no `pull_request` runs for that push, for Verify either; the earlier and later pushes triggered normally). macOS passed again (161 samples, 16 fps). ubuntu-latest now renders under Mesa: ready in 17.7 s, 173 samples at 17 fps, 9 checks passed, and failed at the native minimize check (`e2e.js:214`, `isMinimized()` stayed false) because Xvfb has no window manager. Fix: Openbox inside the Xvfb session. windows-latest still timed out at 120 s with only the debugger-attached lines, so it is a hang, not a slow start; next push adds Playwright's launch trace and a direct 30 s Electron launch probe to find where it stalls.
+   - #370 now has PR #379 (`feat/desktop-platform-identity`), which renames the Linux executable to `typesafe-place` and moves the packaged binary path into `desktop/package-options.js` (`packagedBinary`). When #379 lands first, `desktop/package-check.js` must read its paths from that helper; when this PR lands first, #379 must update the check.
+5. Artifacts with `SHA256SUMS`: zip of `dist/desktop/TypeSafe Place-<platform>-<arch>` as `TypeSafe-Place-<version>-<windows|linux|macos>-<arch>-unsigned.zip` (ditto on macOS, zip on Linux, 7-Zip on Windows) plus `SHA256SUMS`, uploaded under the same name for 14 days, only when the fuse and asar check passed. The shell was run locally as macOS: 129.7 MB zip, `shasum -a 256 -c SHA256SUMS` OK. Pushed with stage 4c.
 6. Profile, docs, verification: pending.
 
 ## Results
@@ -34,4 +36,4 @@ Each stage is pushed and its run read with `gh run view --log-failed` before the
 
 ## Gaps and next step
 
-Next: read the stage 4b run (Linux CPU rendering, Windows launch diagnosis), then add the unsigned build zip with `SHA256SUMS`.
+Next: read the stage 4c run (Openbox on Linux, Windows launch trace and probe, artifacts), then commit the `desktop-package` profile and docs.
