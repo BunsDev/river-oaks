@@ -5348,6 +5348,33 @@
         "docs/superpowers/plans/2026-10-14-procedural-gallery-ao-buffer.md",
         "docs/superpowers/plans/README.md"
       ]
+    },
+    {
+      "id": "procedural-creator-interior-docs",
+      "title": "Document generated creator-region interiors and publication contract",
+      "status": "queued",
+      "branches": [
+        "docs/procedural-creator-interiors-20261014"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-14T09:50:03.869Z",
+      "leaseUntil": null,
+      "nextAction": "Commit the verified docs branch, open a draft PR stacked on #356, then check exact-head hosted CI and keep the interior rollout gates explicit.",
+      "ledger": "docs/superpowers/plans/2026-10-14-procedural-creator-interior-docs.md",
+      "requiredChecks": [
+        "Contract comparison against generator and server compiler",
+        "pnpm run plans:index",
+        "pnpm run test:agent",
+        "pnpm run verify before commit",
+        "Exact-head hosted checks before delivery"
+      ],
+      "filesOwned": [
+        "docs/creator-regions.md",
+        "docs/superpowers/plans/2026-10-14-procedural-creator-interior-docs.md",
+        "docs/superpowers/plans/README.md"
+      ],
+      "previousOwner": "codex-root-20261014-creator-docs",
+      "handoff": "Creator-region generated-interior guide now documents the live v1 schema, seed/level/override bounds, server-approved digest, Studio flow and legacy compatibility. Documented sample compiled with two levels and concrete authored floor; focused region-package tests passed 13/13; core passed on guide source. Branch commit and draft PR still pending."
     }
   ]
 }
