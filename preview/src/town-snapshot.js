@@ -18,6 +18,9 @@ export function validTownSnapshot(snapshot, previousSelfId = null) {
   return Boolean(self && Array.isArray(self.position) && self.position.length === 3
     && self.position.every(Number.isFinite) && Number.isFinite(self.yaw)
     && Number.isFinite(self.altitude) && self.altitude >= 0
-    && snapshot.players.every(player => player && typeof player.id === 'string')
+    && snapshot.players.every(player => player && typeof player.id === 'string'
+      && (player.buildingId === null && player.levelId === null
+        || typeof player.buildingId === 'string' && typeof player.levelId === 'string'
+          && player.levelId.startsWith(`${player.buildingId}/l`)))
     && snapshot.locals.every(local => local && typeof local.id === 'string'));
 }

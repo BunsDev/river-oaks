@@ -17,11 +17,11 @@ export function createStudioViewport(host,{onSelect,onTransform,onPosition,onExi
   const transform=new TransformControls(camera,renderer.domElement);scene.add(transform.getHelper());transform.setTranslationSnap(.5);transform.setRotationSnap(Math.PI/8);transform.setScaleSnap(.5);
   const box=new THREE.BoxHelper(undefined,'#365b49');scene.add(box);box.visible=false;
   const ray=new THREE.Raycaster(),pointer=new THREE.Vector2(),keys=new Set();
-  let content=null,selected=null,mode='translate',walking=null,environment=null,down=null,look=null,savedCamera=null,frame=0,last=0;
+  let content=null,selected=null,interiorView=null,mode='translate',walking=null,environment=null,down=null,look=null,savedCamera=null,frame=0,last=0;
   const events=new AbortController(),signal=events.signal;
   function configureTransform() {
     const object=content?.items.get(selected);transform.detach();box.visible=Boolean(object)&&!walking;
-    if(!object||walking||selected==='@environment'){box.visible=false;return;}
+    if(!object||walking||selected==='@environment'||selected===interiorView?.buildingId){box.visible=false;return;}
     box.setFromObject(object);const kind=object.userData.kind;
     const permitted=mode==='translate'||kind==='building'||kind==='furnishing'||kind==='tree'&&mode==='scale';
     if(!permitted)return;
@@ -82,10 +82,10 @@ export function createStudioViewport(host,{onSelect,onTransform,onPosition,onExi
   }
   frame=requestAnimationFrame(animate);
   const api={
-    render(region,id=selected){
+    render(region,id=selected,view=interiorView){
       transform.detach();if(content)disposeStudioScene(content.group);content=createStudioScene(region,document.documentElement.dataset.theme);
       for(const [key,object] of content.items)object.userData.kind=key==='@arrival'?'arrival':isSpaceDocument(region)?(key==='@environment'?'environment':'furnishing'):region.buildings.some(v=>v.id===key)?'building':region.trees.some(v=>v.id===key)?'tree':'place';
-      scene.add(content.group);selected=id;configureTransform();
+      scene.add(content.group);selected=id;interiorView=view;content.setInteriorView?.(view);configureTransform();
       const bounds=new THREE.Box3().setFromObject(content.group),center=bounds.getCenter(new THREE.Vector3());
       const space=isSpaceDocument(region),span=Math.max(space?25:100,bounds.getSize(new THREE.Vector3()).length());
       sun.intensity=space?(region.lighting==='evening'?.55:region.lighting==='warm'?2:2.5):3;sun.color.set(space&&region.lighting!=='daylight'?'#ffd6a3':'#fff5df');
@@ -93,8 +93,11 @@ export function createStudioViewport(host,{onSelect,onTransform,onPosition,onExi
       Object.assign(sun.shadow.camera,{left:-span/2,right:span/2,top:span/2,bottom:-span/2,far:span*3});sun.shadow.camera.updateProjectionMatrix();
     },
     select(id){selected=id;configureTransform();},
+    showInterior(view){interiorView=view;content?.setInteriorView?.(view);configureTransform();},
     tool(value){mode=value;configureTransform();},
-    frameSelection(){const object=content.items.get(selected);if(object)frameObject(object);},
+    frameSelection(){const level=selected===interiorView?.buildingId
+      ?content.interiorViews.get(selected)?.preview.levels.get(interiorView.levelIndex)?.root:null;
+      const object=level??content.items.get(selected);if(object)frameObject(object);},
     frameRegion(){frameObject(content.group);},
     walk(enabled){
       keys.clear();look=null;content?.setWalk?.(enabled);

@@ -185,7 +185,7 @@
   ],
   "transitions": {
     "policy": "entry, level changes, seats and movement stay server-authoritative (server/offices.js); a layout is addressed by layoutVersion and an unknown or stale version fails closed; saved visits on an unknown layout return to that layout's spawn anchor; the current office stays loadable as the rollback target",
-    "checkpoint": "office grants/requests/visits are in private world checkpoint version 6 at sourceRevision; draft #349 moves the checkpoint to version 7 and adds building-interior levels with ids <building>/l<n> and portals of kind entrance|stairs. #361 should reuse that level/portal shape rather than add a second one; it must not assume #349 is merged"
+    "checkpoint": "office grants/requests/visits are in private world checkpoint version 6 at sourceRevision; #349 (merged to main at de0b64a9, after sourceRevision) moves the checkpoint to version 7 and adds building-interior levels with ids <building>/l<n> and portals of kind entrance|stairs. #361 should reuse that level/portal shape rather than add a second one"
   },
   "budgets": {
     "status": "proposed",

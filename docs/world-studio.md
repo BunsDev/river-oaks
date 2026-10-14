@@ -42,6 +42,35 @@ region contains a path, four meeting places, and an arrival point. Add a buildin
 tree or place from the scene panel. Select through that panel or click an object
 in the viewport. **Frame selection** moves the camera close enough to edit it.
 
+Select a retail or residential building to open **Generated interior** in the
+inspector. **Preview level 0** derives a floor from that building's fixed ID,
+footprint, center, yaw, terrain elevation and entrance. **Apply preview** adds
+the versioned generation fields to the region draft. Increase the building's
+height explicitly before using **Preview add level** where another floor needs
+roof clearance. The preview lists the resulting level elevations and shell,
+partition, fixture, finish and override layers. Undo, redo, save, reopen and
+export preserve the level count; an impossible stack leaves the draft unchanged.
+Use **View level** to replace the selected building's exterior block with its
+generated floor footprint, stair opening, perimeter, display fixture and finish
+in the viewport. The layer checkboxes control preview visibility; they do not
+change saved collision or the published plan. **Show exterior** restores the
+block. Walk through still uses the exterior collision blockout.
+The editor uses a provisional world ID for preview finishes. Publication assigns
+the final world ID and validates its own server-approved plan. In a selected level,
+edit the display's local U/V position and material or the floor finish, then
+**Preview furnishing and finishes** and **Apply preview**. Invalid moves across
+walls, the entrance aisle or the stair landing leave the draft unchanged. Orange
+outlines in **Authored overrides** identify edited slots; hiding that layer only
+hides the outlines. Authored finishes survive publication's world ID assignment.
+
+**Preview regenerate untouched level** lists the finish change and unchanged
+level IDs before applying a new seed to that floor alone. Geometry and object IDs
+stay fixed. Levels with authored edits are locked against regeneration; use
+**Preview reset level edits** to explicitly remove their overrides first. Save,
+reopen, undo/redo and export retain both overrides and per-level seeds. Existing
+furnished-space files retain their single-level schema and are not rewritten
+merely by opening them.
+
 - Drag to orbit, right-drag to pan, and scroll to zoom.
 - **Move / W**, **Rotate / E**, and **Size / R** choose transform handles.
 - **F** frames the selection. Inspector fields provide precise dimensions and

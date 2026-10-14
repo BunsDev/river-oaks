@@ -49,7 +49,7 @@ Captures: no new captures were taken this round. The reproducible views are froz
 
 ### Keep / reuse / avoid
 
-- `#349` (procedural building levels, draft, base `main`): bumps the private checkpoint to version 7, adds `preview/src/building-interiors-plan.js` with levels `<building>/l<n>`, portals of kind `entrance`/`stairs` with `toLevelId`, `approvedLevelRoom` in `store-rooms.js`, and touches `docs/offices.md` and the office transport tests (protocol 3). **Reuse** that level/portal shape for #361's penthouse levels; **avoid** a second level schema and a second checkpoint bump; **do not assume** #349 is merged (it is queued behind #375 in the local lander, owned by a Codex session).
+- `#349` (procedural building levels, draft, base `main`): bumps the private checkpoint to version 7, adds `preview/src/building-interiors-plan.js` with levels `<building>/l<n>`, portals of kind `entrance`/`stairs` with `toLevelId`, `approvedLevelRoom` in `store-rooms.js`, and touches `docs/offices.md` and the office transport tests (protocol 3). **Reuse** that level/portal shape for #361's penthouse levels; **avoid** a second level schema and a second checkpoint bump; #349 **merged** into `main` at `de0b64a9` on 2026-10-14, after this packet's `sourceRevision`; this branch then merged `main` at `d8b92927` and the contract still validates 7/7 against the merged modules (`CHECKPOINT_VERSION` is 7 on `main`; the office/IPIC plan modules did not change).
 - `#357`/`#358` (creator-interior docs, gallery AO mask): touch `render-pipeline.js`, `main.js` and shared plans. **Avoid** editing scene roots or AO lifecycle in #363 until those land or are closed; coordinate with their owners when the office scene needs the shared pipeline.
 - `#214`/`#221` workplace slice: **reuse** its authority and privacy rules (owner predicate, no owner field in commands, desk text never in snapshots); **keep** `RIVER_OAKS_WORKPLACE`/`VITE_WORKPLACE` default-off; five rendered computers do not authorise five agents.
 - Prior kit review by Cody (`~/Downloads/jevica-office-scale-review`, 2026-10-13/14): **keep** the double-height identity and stair width; **adopt** the east passing bay as the only two-avatar passing point on the 2.4 m gallery; library/terrace density is a design decision.
@@ -74,6 +74,13 @@ Worktree at `489a60e4` plus the files above, 2026-10-14 19:55–20:10Z, load ave
 | `pnpm run verify python` | passed: ruff clean, 141 pytest passed, 66 warnings |
 | `pnpm run verify security` | passed (worktree secrets plus history scan) |
 | `node --test scripts/tests/office-ipic-contract.test.js` | 7/7 |
+
+Merge of `origin/main` at `d8b92927` (#349, #353, #354, #374–#378) on 2026-10-14 22:10Z, load average 20–37: the only conflict was the generated plans index, regenerated with `pnpm run plans:index`. PR #381 had sat in GitHub's `dirty` merge state since #349 landed, which is why no hosted Verify run existed for it.
+
+| Check on the merged tree | Result |
+| --- | --- |
+| `node --test scripts/tests/office-ipic-contract.test.js` | 7/7 |
+| focused office/IPIC/workplace tests (same file list as G0) | 75 tests, 72 pass, 0 fail, 3 Redis skips; the desk-transport memory variant that timed out at load 117–190 passed here |
 
 No change in this branch touches `server/` runtime code or voice; the voice failure matches the load pattern of the desk transport baseline failure and is recorded, not explained.
 
