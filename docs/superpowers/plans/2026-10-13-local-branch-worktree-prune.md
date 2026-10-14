@@ -182,3 +182,58 @@ Decisions for Val:
 
 Skips and unverified scope: Redis, browser, native, live auth. No remote branch or
 repository setting changed. No merge.
+
+## 2026-10-14 Round 2: landing, cancellations, remote deletes (claude-code c7385ac6)
+
+Session `river-oaks-fe`, working from the primary at `06f7476b` and this sweep
+worktree. Val authorized the landing, the two cancellations, the remote deletes
+and the repository setting on 2026-10-14; peers `river-oaks-cd`, `-97`, `-5d` and
+`-dc` were asked first and none objected.
+
+- **#375 landed** as `06f7476b10bd7fbb22f9db7c2f158ee38934dd24` (2026-10-14T19:49:16Z)
+  through `pnpm run land 375`: Verify passed on `b8064c63`, 17 hosted checks green,
+  merge state `CLEAN`. Head `56b63690` (docs-only ledger commit on `b8064c63`);
+  merge tree `58c60042` equals the head tree.
+- **Retired** `feat/prune-tooling-20261014` at `56b6369000d303b9ebe275caf67344f92b409717`
+  (by `river-oaks-5d`, 20:00:00Z): `~/worktree-backups/river-oaks/retirement-j6m3Nu/manifest.json`,
+  bundle SHA-256 `cf480cc89e8520b1821978e0c124ba54c83b93759651b005b51382455ad15100`,
+  evidence `~/worktree-backups/river-oaks/local-evidence-prune-tooling-20261014/manifest.json`.
+  A concurrent register write from `river-oaks-fe` briefly set the task back to
+  `delivered`; it was restored to `retired` at 20:01:50Z with the archive record intact.
+- **Cancelled** through `project:cancel` (dry run `eligible: true`, then `--apply`,
+  both `status: cancelled-local`, no process cwd inside either checkout):
+  - `feat/character-studio-20261013` at `3fdc842af742d875a9ce4c78e9195cd2a1ea9273`
+    (zero commits past `main`, last touch 2026-10-14T00:33Z, `--stale-hours 6`):
+    `~/worktree-backups/river-oaks/cancel-stale-SwztW4/manifest.json`, bundle
+    SHA-256 `b15292cc5f9f6e8ef806eead4299e86116b916be98971cda92eca71069e71310`,
+    local files tar (11,677 entries) SHA-256 `8c1b56eab4fcf37b1451b8860f1f9d9b352a3bbe4a345a870c8fbcf312e996e4`.
+  - detached `river-oaks-c2-tools` at the same commit (last touch 2026-10-13T23:22Z):
+    `~/worktree-backups/river-oaks/cancel-detached-ZcsStq/manifest.json`, bundle
+    SHA-256 `df08a20957b4e468cd48325431085a0521b712e08aae95a6856bb11b5a70ad45`,
+    local files tar (1,973 entries) SHA-256 `fcc4921f6040602e1702cdcc2394a0c579d2d5801ca6f92ad1807aefaac237d6`.
+- **Remote branches deleted**: the 19 `merged-exact` refs from the inventory, in one
+  `git push` with `--force-with-lease=<branch>:<sha>` per ref, after writing
+  `~/worktree-backups/river-oaks/remote-delete-20261014-c7385ac6/manifest.json`
+  (branch, SHA, PR, merge commit, `refs/pull/<n>/head` restore command). The
+  `feat/office-arrival-refinement-20261013` ref went only after its retirement
+  archive (`retirement-5zZF3C`) was fetched into a scratch repository and the
+  recovered commit `a82becac` reproduced tree `3eed997b`. `feat/prune-tooling-20261014`
+  (56b63690, #375) followed after the local retirement above (same manifest).
+- **`delete_branch_on_merge` enabled** on `BunsDev/river-oaks` (`gh api -X PATCH`),
+  so landed branches no longer leave remote refs; `land --delete-remote-branch`
+  stays available for repositories where the setting is off.
+- **Primary checkout**: the stash-popped copies of `workflow.md`,
+  `project-prune.mjs`, `project-status.mjs` and the four untracked prune files were
+  backed up to `~/worktree-backups/river-oaks/primary-popped-files-20261014-c7385ac6/`
+  (each held nothing newer than `main`: the untracked files were byte-identical, the
+  tracked ones pre-refactor copies) and discarded; the primary was fast-forwarded
+  `489a60e4..06f7476b` with the live register (174 tasks) written back by id
+  afterwards. `.gitignore` and `tasks.json` were left as live edits.
+- **Counts** after this round: 24 worktrees / 24 branches (primary 1, active 11,
+  open-pr 9, parked 3); remote `merged-exact` 0. The ten-and-ten cap still waits
+  on the procedural stack (#349–#358, Codex lease live on #349, which is `dirty`
+  against `main` after #375), the three parked branches and the expired Codex
+  leases listed in Round 1.
+- **Register sweep**: #378 refreshed from the live file after the above, with the
+  `desktop-platform-identity`, `desktop-package-matrix`, `office-ipic-baseline-360`
+  and `office-ipic-engineering-baseline` entries copied as their owners wrote them.
