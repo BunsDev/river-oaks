@@ -107,6 +107,12 @@ counts are in the Checks table above; `node scripts/project-inventory.mjs
 it and conflicting (owned, in progress), #309 dirty with an expired codex lease.
 Skips: Redis (140 in core, permitted), browser, native, live auth.
 
+After #349 merged (de0b64a9) the branch merged main again (d3c8683e, plans index
+regenerated). The packet check now reports one drift: `docs/offices.md` changed
+since `489a60e4`; the packet records the pre-#349 office documentation, and the
+next reconciliation should re-read it. #349 leaving draft is a change in the
+keep/reuse table's premise: its level/portal schema is now on `main`.
+
 ## Next
 
 Draft PR #380 is open and green; the engineering packet is #381. G1 agreement
