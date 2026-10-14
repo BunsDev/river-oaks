@@ -176,8 +176,48 @@ async page => {
   const inwardAgainCull = await page.evaluate(() => window.__riverExteriorCull());
   if (!inwardAgainCull.cull || inwardAgain.graphics.render.calls >= outward.graphics.render.calls)
     throw new Error(`Exterior remained drawn after turning back into the room: ${JSON.stringify({ inwardAgainCull, inwardCalls: inwardAgain.graphics.render.calls, outwardCalls: outward.graphics.render.calls })}`);
+  if (await page.locator('#panel-toggle').getAttribute('aria-expanded') === 'true') await page.locator('#panel-toggle').click();
+  if (await page.locator('.visit-tools[open] > .visit-tools-toggle').count()) await page.locator('.visit-tools[open] > .visit-tools-toggle').click();
+  await page.locator('#canvas-host').focus();
+  const stair = await page.evaluate(async () => {
+    const plan = await fetch('/data/building-interiors/river-oaks-gallery-v2.json').then(response => response.json());
+    return { position: plan.levels[0].portals.find(portal => portal.kind === 'stairs').position,
+      upperId: plan.levels[1].id };
+  });
+  let held = false;
+  try {
+    for (let step = 0; step < 360; step++) {
+      const pose = await page.evaluate(() => window.__riverCarriage().pose);
+      const dx = stair.position[0] - pose.position[0], dz = -stair.position[1] - pose.position[2];
+      if (Math.hypot(dx, dz) < 0.85 && pose.speed < 0.12) break;
+      const desiredYaw = Math.atan2(-dx, -dz);
+      const angle = Math.atan2(Math.sin(desiredYaw - pose.yaw), Math.cos(desiredYaw - pose.yaw));
+      if (Math.abs(angle) > 0.04) {
+        if (held) { await page.keyboard.up('KeyW'); held = false; }
+        const drag = Math.max(-100, Math.min(100, -angle / 0.003));
+        await page.mouse.move(600, 300); await page.mouse.down();
+        await page.mouse.move(606, 300); await page.mouse.move(600 + drag, 300); await page.mouse.up();
+        await page.locator('#canvas-host').focus();
+      } else if (!held || step % 12 === 0 && pose.speed < 0.05) {
+        if (held) await page.keyboard.up('KeyW');
+        await page.keyboard.down('KeyW'); held = true;
+      }
+      await page.waitForTimeout(35);
+      if (step === 359) throw new Error(`Could not reach gallery landing: ${JSON.stringify(pose)}`);
+    }
+  } finally { if (held) await page.keyboard.up('KeyW'); }
+  await page.waitForFunction(() => document.querySelector('#walking-enter')?.textContent?.includes('Go up one level'));
+  await page.keyboard.press('KeyF');
+  await page.waitForFunction(upperId => {
+    const multiplayer = window.__riverMultiplayer();
+    return multiplayer.snapshot.players.find(item => item.id === multiplayer.selfId)?.levelId === upperId;
+  }, stair.upperId);
+  await page.waitForTimeout(1000);
+  const upperCull = await page.evaluate(() => window.__riverExteriorCull());
+  const upper = [await sample(), await sample()];
+  await page.screenshot({ path: 'output/playwright/gallery-render-upper.png' });
   if (errors.length) throw new Error(errors.join('; '));
   return { passed: true, street, streetCull, interior, interiorCull, hiddenDetail, hiddenTrees, hiddenOutside, outside,
-    outward, outwardCull, inwardAgain, inwardAgainCull,
-    scope: 'Local Chromium, one fixture client, two 120-frame samples per player-height view at 1440x900 Sharpest, plus inside samples with generated detail, outdoor trees, and exterior world children hidden separately. CPU pass timings include driver submission and profiler overhead; street and interior cameras see different geometry. Hidden-layer comparisons change occlusion and are diagnostic only. No target-device acceptance.' };
+    outward, outwardCull, inwardAgain, inwardAgainCull, upper, upperCull,
+    scope: 'Local Chromium, one fixture client, two 120-frame samples per player-height street, ground-gallery and upper-gallery view at 1440x900 Sharpest, plus diagnostic hidden-layer samples and a frontage turn. CPU pass timings include driver submission and profiler overhead; the cameras see different geometry. Hidden-layer comparisons change occlusion and are diagnostic only. No target-device acceptance.' };
 }
