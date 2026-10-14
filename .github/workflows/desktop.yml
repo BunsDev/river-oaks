@@ -83,12 +83,20 @@ jobs:
           ELECTRON_ENABLE_LOGGING: '1'
           RIVER_OAKS_ACCEPTANCE_FIXTURE: '1'
           RIVER_OAKS_DEV_URL: http://127.0.0.1:9/
+        # Run 38633480853 showed the line printed when Electron's cli.js spawns
+        # electron.exe with inherited stdio. This spawns electron.exe directly
+        # with piped stdio, as Playwright does, and prints what the pipe carries.
         run: |
           pnpm exec electron --version
-          set +e
-          timeout 30 pnpm exec electron . --inspect=0 --remote-debugging-port=0 --user-data-dir="$RUNNER_TEMP/electron-probe" --enable-logging=stderr --v=0
-          echo "probe exit $?"
-          set -e
+          node --input-type=module - <<'PROBE'
+            import { spawn } from "node:child_process";
+            import { createRequire } from "node:module";
+            const electron = createRequire(import.meta.url)("electron");
+            const child = spawn(electron, [".", "--inspect=0", "--remote-debugging-port=0", `--user-data-dir=${process.env.RUNNER_TEMP}/electron-probe-pipe`], { stdio: ["pipe", "pipe", "pipe"], env: { ...process.env, ELECTRON_RUN_AS_NODE: undefined } });
+            for (const name of ["stdout", "stderr"]) child[name].on("data", chunk => process.stdout.write(`[${name}] ${chunk}`));
+            child.on("exit", (code, signal) => console.log(`probe exit ${code} ${signal}`));
+            setTimeout(() => { console.log("probe: 20 s elapsed, killing"); child.kill(); }, 20000);
+          PROBE
       - name: Development desktop end-to-end (loopback acceptance fixture)
         if: ${{ !cancelled() }}
         id: e2e
