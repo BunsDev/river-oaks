@@ -4,13 +4,11 @@
 
 Each plan is a task ledger. Status comes from the task register, where the primary checkout's live copy can be newer than the committed one. Plans from before the register are listed as historical: their own text is the record of what was delivered.
 
-## Active and blocked (16)
+## Active and blocked (14)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
 | [2026-10-13-studio-spaces](2026-10-13-studio-spaces.md)<br>Furnished Studio spaces implementation plan | `studio-furnished-spaces` | active | #316 | 2026-10-13 |
-| [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `shared-voice-spatial` | active | — | 2026-10-13 |
-| [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `shared-voice-desktop` | active | — | 2026-10-13 |
 | [2026-10-13-plaza-games](2026-10-13-plaza-games.md)<br>Plaza games, phase 1: chess at the plaza tables — 2026-10-13 | `plaza-games` | active | — | 2026-10-13 |
 | [2026-10-13-plaza-dominoes](2026-10-13-plaza-dominoes.md)<br>Plaza games: dominoes at the café table — 2026-10-13 | `plaza-dominoes` | active | — | 2026-10-13 |
 | [2026-10-13-plaza-checkers](2026-10-13-plaza-checkers.md)<br>Plaza games: checkers on the chess tables — 2026-10-13 | `plaza-checkers` | active | — | 2026-10-13 |
@@ -33,14 +31,21 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-11-workplace-room-envelope](2026-10-11-workplace-room-envelope.md)<br>Workplace room: door height, measured seated bounds, depth-aware routes (#221 gap) | `workplace-room-envelope` | delivered | #235 | 2026-10-11 |
 | [2026-10-11-pending-integration](2026-10-11-pending-integration.md)<br>Pending delivery integration | `primary-reconciliation` | delivered | — | 2026-10-11 |
 
-## Retired (44)
+## Retired (51)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
 | [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `shared-voice-livekit` | retired | #300 | 2026-10-13 |
 | [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `shared-voice-reconciler` | retired | #302 | 2026-10-13 |
 | [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `shared-voice-client` | retired | #303 | 2026-10-13 |
+| [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `shared-voice-spatial` | retired | #305 | 2026-10-13 |
+| [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `shared-voice-desktop` | retired | #306 | 2026-10-13 |
+| [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `voice-livekit-setup-docs` | retired | #326 | 2026-10-13 |
+| [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `shared-voice-live` | retired | #347 | 2026-10-14 |
 | [2026-10-13-plaza-hearts](2026-10-13-plaza-hearts.md)<br>Plaza games: Hearts at the café table — 2026-10-13 | `plaza-hearts` | retired | #310 | 2026-10-13 |
+| [2026-10-13-cycling-rack](2026-10-13-cycling-rack.md)<br>Cycling Rack Implementation Plan (PR 1 of 2) | `cycling-rack` | retired | #315 | 2026-10-13 |
+| [2026-10-13-cycling-rack](2026-10-13-cycling-rack.md)<br>Cycling Rack Implementation Plan (PR 1 of 2) | `cycling-leaderboard` | retired | #318 | 2026-10-13 |
+| [2026-10-13-cycling-rack](2026-10-13-cycling-rack.md)<br>Cycling Rack Implementation Plan (PR 1 of 2) | `cycling-journey-retries` | retired | #322 | 2026-10-13 |
 | [2026-10-12-town-connect-deadline](2026-10-12-town-connect-deadline.md)<br>Town connection deadline on a busy page — 2026-10-12 | `town-connect-deadline` | retired | #260 | 2026-10-12 |
 | [2026-10-12-shared-landing-queue](2026-10-12-shared-landing-queue.md)<br>Shared landing queue | `shared-landing-queue` | retired | #272 | 2026-10-12 |
 | [2026-10-12-server-hardening-followups](2026-10-12-server-hardening-followups.md)<br>Server hardening follow-ups (2026-10-12) | `server-hardening-followups` | retired | #264 | 2026-10-12 |
@@ -112,7 +117,6 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-13-plaza-chinese-checkers](2026-10-13-plaza-chinese-checkers.md)<br>Plaza games: Chinese checkers in the grove — 2026-10-13 | #337, #336 |
 | [2026-10-13-modal-outside-dismiss](2026-10-13-modal-outside-dismiss.md)<br>Outside-click modal dismissal | #316, #314, #321 |
 | [2026-10-13-email-access-join-recurrence](2026-10-13-email-access-join-recurrence.md)<br>Email access: give CI's cold first render its own join allowance — 2026-10-13 | #281, #297 |
-| [2026-10-13-cycling-rack](2026-10-13-cycling-rack.md)<br>Cycling Rack Implementation Plan (PR 1 of 2) | #318 |
 | [2026-10-12-world-map-paint-cost](2026-10-12-world-map-paint-cost.md)<br>Stop the district map repainting while it is open — 2026-10-12 | #274, #281 |
 | [2026-10-12-town-ticket-ttl](2026-10-12-town-ticket-ttl.md)<br>Town join tickets that outlast a slow page — 2026-10-12 | #260, #253, #273 |
 | [2026-10-12-town-first-snapshot-stall](2026-10-12-town-first-snapshot-stall.md)<br>Town first-snapshot stall under software rendering | #276, #274, #281 |
