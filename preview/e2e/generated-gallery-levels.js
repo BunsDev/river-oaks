@@ -34,10 +34,12 @@ async page => {
   await page.locator('#destination').selectOption({ label: 'Laura Rathe Fine Art' });
   await page.locator('#visit-destination').click();
   await page.waitForFunction(() => window.__riverGeneratedInteriors?.().length === 2
-    && window.__riverGeneratedInteriors()[0].ready && window.__riverGeneratedInteriors()[1].ready);
+    && window.__riverGeneratedInteriors()[0].ready && !window.__riverGeneratedInteriors()[1].ready
+    && window.__riverGeneratedInteriors()[1].shellVisible);
   await page.waitForTimeout(1500);
   await page.locator('#enter-destination').click();
   await page.waitForFunction(() => document.querySelector('#walking-hud')?.dataset.inside);
+  await page.waitForFunction(() => window.__riverGeneratedInteriors?.()[1]?.ready);
   if (await page.locator('.store-intro').isVisible()) await page.locator('.store-intro button').click();
   if (await page.locator('#panel-toggle').getAttribute('aria-expanded') === 'true') await page.locator('#panel-toggle').click();
   if (await page.locator('.visit-tools[open] > .visit-tools-toggle').count()) await page.locator('.visit-tools[open] > .visit-tools-toggle').click();
@@ -102,6 +104,7 @@ async page => {
   await peerSeesLevel(stair.upperId);
   await page.screenshot({ path: 'output/playwright/generated-gallery-level-1.png' });
   await page.emulateMedia({ reducedMotion: 'reduce' });
+  const reloadStarted = performance.now();
   await page.reload();
   await page.locator('#loading').waitFor({ state: 'hidden' });
   await page.waitForFunction(() => document.querySelector('#canvas-host')?.dataset.multiplayer === 'joined');
@@ -120,7 +123,7 @@ async page => {
         status: document.querySelector('#multiplayer-status')?.textContent,
         ready: document.querySelector('#canvas-host')?.dataset.playerReady };
     });
-    throw new Error(`Upper-level reload did not recover: ${JSON.stringify(diagnostic)}`, { cause: error });
+    throw new Error(`Upper-level reload did not recover after ${Math.round(performance.now() - reloadStarted)}ms: ${JSON.stringify(diagnostic)}`, { cause: error });
   }
   await peerSeesLevel(stair.upperId);
   await page.waitForFunction(() => document.querySelector('#walking-enter')?.textContent?.includes('Go down to ground floor'));

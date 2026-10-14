@@ -4,12 +4,13 @@
 
 Each plan is a task ledger. Status comes from the task register, where the primary checkout's live copy can be newer than the committed one. Plans from before the register are listed as historical: their own text is the record of what was delivered.
 
-## Active and blocked (6)
+## Active and blocked (7)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
 | [2026-10-14-shared-dominoes](2026-10-14-shared-dominoes.md)<br>Shared Dominoes Implementation Plan (PR 1: the town holds the round) | `shared-dominoes-sheet` | active | — | 2026-10-14 |
 | [2026-10-14-office-ipic-baseline](2026-10-14-office-ipic-baseline.md)<br>Office + IPIC #360, design-side baseline packet (2026-10-14) | `office-ipic-baseline-360` | active | #380 | 2026-10-14 |
+| [2026-10-14-level-aware-interior-streaming](2026-10-14-level-aware-interior-streaming.md)<br>Level-aware generated interior streaming | `procedural-level-aware-streaming` | active | #350 | 2026-10-14 |
 | [2026-10-14-gallery-vertical-route](2026-10-14-gallery-vertical-route.md)<br>Gallery vertical-route visual integration | `procedural-gallery-vertical-route` | queued | — | 2026-10-14 |
 | [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `shared-voice-acceptance` | blocked | — | 2026-10-13 |
 | [2026-10-13-procedural-interiors-implementation](2026-10-13-procedural-interiors-implementation.md)<br>Procedural interiors implementation ledger | `procedural-multilevel-interiors-plan` | active | #349 | 2026-10-14 |

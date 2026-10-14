@@ -359,7 +359,7 @@ for(const state of ['connected','departed'])test(`server shutdown releases ${sta
   if(state==='departed'){const leaving=closed(alice.ws);alice.ws.close();await leaving;await new Promise(resolve=>setImmediate(resolve));}
   assert.equal(f.world.players.size,1,'normal disconnect retains the reconnect grace before shutdown');
   const timers=[],schedule=globalThis.setTimeout;
-  t.mock.method(globalThis,'setTimeout',(fn,ms,...args)=>{const timer=schedule(fn,ms,...args);if(ms===10000)timers.push(timer);return timer;});
+  t.mock.method(globalThis,'setTimeout',(fn,ms,...args)=>{const timer=schedule(fn,ms,...args);if(ms===30000)timers.push(timer);return timer;});
   t.after(()=>timers.forEach(clearTimeout));
   const closing=state==='connected'?closed(alice.ws):Promise.resolve();
   await f.app.close();
