@@ -1,0 +1,23 @@
+{
+  "createdAt": "2026-10-14T00:42:27.995Z",
+  "scope": "Live LiveKit Cloud acceptance from the loopback fixture town (RIVER_OAKS_VOICE_FIXTURE=live): two fixture residents on the real livekit-client with fake microphones. No hosted sign-in; the project host, key and secret are not recorded.",
+  "checks": [
+    "The town reports live voice and offers Join",
+    "Both residents hold a real LiveKit room connection",
+    "The speaking ring showed on Bob's label for Alice",
+    "A dropped tab is removed within the lease window (10.1 s)"
+  ],
+  "timingsSeconds": {
+    "aliceJoin": 0.761,
+    "bobJoin": 0.609,
+    "aliceSeesBob": 0.001,
+    "bobSeesAlice": 0.002,
+    "aliceHearsBob": 0.54,
+    "bobHearsAlice": 0.002,
+    "ringObserved": true,
+    "leaveToPeerGone": 0.06,
+    "leaveToLeaseDropped": 0.339,
+    "dropToRemoved": 10.076,
+    "dropToRemovedWall": 10.124
+  }
+}

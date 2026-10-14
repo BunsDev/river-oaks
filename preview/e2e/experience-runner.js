@@ -32,7 +32,7 @@ try {
     args: [...media, ...(software ? ['--use-gl=angle', '--use-angle=gl', '--ignore-gpu-blocklist'] : process.platform === 'darwin' ? ['--use-angle=metal'] : [])] });
   for (const name of names.length ? names : suite) {
     // The voice journey runs the real voice routes and reconciler over a fake LiveKit.
-    fixture = await startBrowserFixture(name === 'voice-shared' ? { env: { RIVER_OAKS_VOICE_FIXTURE: '1' } } : {});
+    fixture = await startBrowserFixture(name === 'voice-shared' ? { env: { RIVER_OAKS_VOICE_FIXTURE: '1' } } : name === 'voice-live' ? { env: { RIVER_OAKS_VOICE_FIXTURE: 'live' } } : {});
     const { origin } = fixture;
     const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
     await context.addCookies([{ name: 'fixture_session', value: 'owner', url: origin }]);
