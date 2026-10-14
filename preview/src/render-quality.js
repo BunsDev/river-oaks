@@ -16,18 +16,21 @@ export function normalizeQuality(value) {
 
 // A 60 Hz display delivers 16.7 ms frames. A window median at or above 26 ms
 // means the GPU is missing every other refresh, so Auto steps resolution down.
+// Repeated missed refreshes can also hide behind a fast median while moving;
+// Auto temporarily drops the extra AO pass after two tail-heavy windows.
 // It steps back up only after several calm windows, and never straight back to
 // a scale that just failed: that ceiling lifts after a wait that doubles each
 // time the same scale fails again, so a borderline GPU settles instead of
 // oscillating between two resolutions.
-export function createRenderScaleGovernor({ min = 0.6, max = 1, slowMs = 26, fastMs = 18, windowSize = 45, calmWindows = 3, ceilingWindows = 8 } = {}) {
+export function createRenderScaleGovernor({ min = 0.6, max = 1, slowMs = 26, fastMs = 18, windowSize = 45,
+  calmWindows = 3, ceilingWindows = 8, tailFraction = 0.12, tailRecoveryWindows = 120 } = {}) {
   let scale = max, samples = [], calm = 0, ceiling = Infinity, ceilingWait = 0, ceilingPatience = ceilingWindows;
-  let occlusion = true, floorWindows = 0, detailRecovery = 0;
+  let occlusion = true, floorWindows = 0, detailRecovery = 0, tailWindows = 0, tailRecoveryWait = 0;
   const round = value => Math.round(value * 100) / 100;
   return {
     get scale() { return scale; },
     get occlusion() { return occlusion; },
-    reset(next = max) { scale = next; samples = []; calm = 0; ceiling = Infinity; ceilingWait = 0; ceilingPatience = ceilingWindows; occlusion = true; floorWindows = 0; detailRecovery = 0; },
+    reset(next = max) { scale = next; samples = []; calm = 0; ceiling = Infinity; ceilingWait = 0; ceilingPatience = ceilingWindows; occlusion = true; floorWindows = 0; detailRecovery = 0; tailWindows = 0; tailRecoveryWait = 0; },
     // Feed one frame interval in milliseconds; returns the scale to render at.
     sample(ms) {
       // Tab switches, asset decoding and GC pauses are not a steady workload.
@@ -36,14 +39,19 @@ export function createRenderScaleGovernor({ min = 0.6, max = 1, slowMs = 26, fas
       if (samples.length < windowSize) return scale;
       samples.sort((a, b) => a - b);
       const median = samples[samples.length >> 1];
+      const tailSlow = samples.filter(interval => interval >= slowMs).length >= Math.ceil(windowSize * tailFraction);
       samples = [];
       // If pixel scaling cannot meet the budget, remove the second geometry
       // pass. Restore it only after sustained headroom at native resolution.
       if (median >= slowMs && scale === min) {
         if (++floorWindows >= 2) occlusion = false;
       } else floorWindows = 0;
-      if (!occlusion && scale === max && median <= fastMs) {
-        if (++detailRecovery >= calmWindows * 4) { occlusion = true; detailRecovery = 0; }
+      if (occlusion && scale === max && median <= fastMs && tailSlow) {
+        if (++tailWindows >= 2) { occlusion = false; tailWindows = 0; tailRecoveryWait = tailRecoveryWindows; }
+      } else tailWindows = 0;
+      if (!occlusion && scale === max && median <= fastMs && !tailSlow) {
+        if (tailRecoveryWait > 0) tailRecoveryWait--;
+        else if (++detailRecovery >= calmWindows * 4) { occlusion = true; detailRecovery = 0; }
       } else detailRecovery = 0;
       if (ceilingWait > 0 && --ceilingWait === 0) ceiling = Infinity;
       if (median >= slowMs) {

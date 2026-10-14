@@ -119,6 +119,18 @@ Parked here as the goal asks; the brief carries the same list with context.
    `archive/worktree-prune/311aa502-5ba9-4895-a742-787ab47084f6`; the task
    `procedural-gallery-vertical-route` now says restore before resuming. Remote
    branch untouched. Count 22 / 22.
+   Retired through `project:prune` as the interiors stack landed and its tasks were
+   released (each: evidence from `.runtime`, `output/playwright` and
+   `data/generated` archived with a hash manifest under
+   `~/worktree-backups/river-oaks/local-evidence-<slug>-20261014/`, regenerable
+   caches removed, fresh retirement record, dry run eligible, `--apply` returned
+   `retired`): `feat/procedural-level-streaming-20261014` (#350, retirement-KpJYYo),
+   `perf/procedural-pilot-render-20261014` (#351, retirement-0bMJhS),
+   `fix/procedural-private-level-revocation-20261014` (#352, retirement-pdX5dd),
+   `perf/procedural-gallery-cycle-soak-20261014` (#353, retirement-0PK3tS),
+   `perf/procedural-ao-tail-20261014` (#354, retirement-B68qkm). Count 17 / 17 at
+   2026-10-14T22:08Z. #355–#358 follow the same path once their owners land and
+   release them; the eleven active checkouts stay with their sessions.
 
 ## Round end (2026-10-14T20:40Z)
 
