@@ -27,3 +27,7 @@ Draft PR #357 opened at signed head `94875bffa33afe76d4f9ad698eda9a7dc2d335aa` o
 ## Next action
 
 Commit/push the verified retry on #357, then check all exact-head hosted jobs. Preserve the stack and worktree while broader visual, target-device, and merge gates remain open.
+
+## Main integration, 2026-10-14
+
+PR #356 landed as `f171d7112651d45d61259c830d4d37b8ed9be717`. Merged current main into this branch without conflicts and reconciled the #355–#357 live task rows. The integrated server region-package suite passed 13/13, and `RIVER_OAKS_SHARED_JOURNEY=creator-objects RIVER_OAKS_SHARED_REPORT=../../.runtime/creator-objects-main-merge.json pnpm run test:shared creator` passed with both local browser clients. `TMPDIR=/Volumes/Passport/river-oaks-agent-tmp-contact pnpm run verify` passed core. Hosted exact-head checks remain required after push. This is documentation plus a retry for the specific transient occupied-placement response; server authority and the successful peer-render assertion remain in the journey.

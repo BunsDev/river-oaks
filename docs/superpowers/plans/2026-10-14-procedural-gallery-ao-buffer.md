@@ -59,3 +59,7 @@ Receipts: ignored `.runtime/ao-timing-three.json` and `.runtime/ao-timing-pass-r
 ## Next action
 
 Test a lower-sample AO variant at full resolution against a fresh uninstrumented five-cycle baseline and same-camera visual capture. Retain it only if repeated moving pacing improves without unacceptable shading loss. Target-device selection and human shading review still gate the broader rollout.
+
+## Main integration, 2026-10-14
+
+PR #355 landed as `46c44df7e45f0b73363a66734be6f14978b2d6a7`. Merged current main into this branch without conflicts and reconciled the #354–#356 live task rows. The opt-in `generated-gallery-ao-geometry` journey passed on the integrated tree (`.runtime/ao-geometry-main-merge.json`), recording about 434–446 AO geometry calls per moving frame over three visits. `TMPDIR=/Volumes/Passport/river-oaks-agent-tmp-contact pnpm run verify` passed the core gate. The original #356 head had already passed the isolated Redis full profile; exact-head hosted checks remain required after this integration push. This diagnostic is measurement evidence and does not change the production render path.
