@@ -66,4 +66,4 @@ Register task `desktop-platform-identity`.
 
 ## Next step
 
-Finish verify, package, fuse read and e2e; commit; open PR; comment on #370.
+PR #379 open (head e0001d50); comment posted on #370. Awaiting Val's decisions (Linux name, .exe-only Windows lookup, company string, icon art) and review. Do not merge.
