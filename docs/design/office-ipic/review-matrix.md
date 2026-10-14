@@ -21,14 +21,14 @@ are listed here only so the matrix is complete; their numbers are in those files
 | R11 | IPIC screen is an illuminated surface, no playback state | observed | engineering | `docs/ipic-interior.md` | #365/#366 define playback contract |
 | R12 | Five IPIC photo views (reception, mural, lounge, bar, auditorium) with eye/target | observed | engineering | `IPIC_CAMERAS`, `docs/ipic-review/review.json` | reuse as T1–T3 in `camera-manifest.json` |
 | R13 | 44 IPIC photographs, hashed, no redistribution license | observed | design | `assets/ipic/references/manifest.json` | keep as colour and material direction |
-| R14 | Kit: 30 × 20 m main floor, 7.6 m clear, mezzanine 180 m² at +3.8, terrace 160 m² | proposed | Val | kit `layout.json`, `docs/production-guide.md` | layout selection, see R20 |
+| R14 | Kit: 30 × 20 m main floor, 7.6 m clear, mezzanine 180 m² at +3.8, terrace 160 m² | approved scale | Val | kit `layout.json`, `docs/production-guide.md` | kept at full scale by raising the building (R20) |
 | R15 | Kit stair 3.2 m wide, 22 risers, ramp collision; two 4 m terrace portals | proposed | engineering | kit `layout.json`, kit spatial validation | numbers in `layout-contract.json` |
 | R16 | Kit stations: executive desk with 3 displays, four creative desks with 2 each | proposed | design | kit `layout.json` stations | seat/approach anchors kept; capacity per R07 |
 | R17 | Kit blockout 41,864 triangles, 647 nodes, 2.78 MB; every proxy under LOD0 target | proposed, measured by the kit | design | kit `asset-manifest.json`, `asset-manifest.json` here | budget check passes; targets are proposals |
 | R18 | Kit starter materials: 5 families, 512 px, factor-only in GLBs | proposed | design | kit `materials/README.md` | bind after final UVs |
 | R19 | Kit bytes not committed; approval to publish not recorded | observed | Val | kit `README.md` provenance | decision 1 in the brief |
-| R20 | Physical fit of 7.6 m volume above the 24.3 m rise in the mapped building | proposed, conflict | Val | engineering baseline measurement | decision 2; blocks G1 |
-| R21 | Library revision 3: two chairs at d 18.3, bookcase-0 and table removed, east passing bay | proposed | Val, design | scale-review `library-final-plan.md`, `passing-bay-check.json` | decision 3; no runtime proof |
+| R20 | Physical fit of 7.6 m volume above the 24.3 m rise in the mapped building | decided 2026-10-14 | Val, engineering | engineering `fit.options[2]`; brief "Decisions" | raise the Equinox tower to 33.0 m (`TOWER_TOP` 32.85); floor stays 24.3; needs a fourth checkpoint migration (#361) |
+| R21 | Library revision 3: two chairs at d 18.3, bookcase-0 and table removed, east passing bay | approved 2026-10-14 | design | scale-review `library-final-plan.md`, `passing-bay-check.json`; brief "Decisions" | coordinates in the brief; runtime proof in #363 |
 | R22 | A 2.4 m gallery cannot pass two 1.776 m standing diameters | observed arithmetic | design | scale-review `library-layout-decision.md` | design constraint for any mezzanine |
 | R23 | Scale review captures 01–19 and route receipts | observed, of the kit walkthrough | design | scale-review `walk.json`, `views.json`, PNGs | prototype only; not full-cast acceptance |
 | R24 | Handoff briefs C0–C5 and D0–D4 not found | observed absence | Val | `reference-index.json` missing entries | decision 5 |
@@ -45,6 +45,6 @@ resolve in `assets/ipic/references/manifest.json` and on disk; the camera
 receipts include `docs/ipic-review/review.json`, which this index also lists.
 
 Agreement record for G1: the design side agrees to the observed rows as the
-baseline and to R06 as the single axis convention. Rows R14, R19, R20, R21, R24
-need Val. Rows R15, R16, R26, R27 wait on the engineering packet. No row here
+baseline and to R06 as the single axis convention. Rows R14, R20 and R21 were decided by Val on 2026-10-14; R19 (kit import)
+and R24 (missing briefs) still need Val. Rows R15, R16 and R26 are carried by the engineering packet (#381). No row here
 activates a layout or changes a default.

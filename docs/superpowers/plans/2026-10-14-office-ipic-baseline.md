@@ -73,7 +73,19 @@ over-budget proxy, and a later edit to a referenced file (drift, not failure).
 
 ## Decisions for Val
 
-Parked here as the goal asks; the brief carries the same list with context.
+Answered by Val on 2026-10-14 (about 23:30Z), recorded in
+`docs/design/office-ipic/brief.md` "Decisions":
+
+- Physical fit (2 below): raise the modelled building if feasible. Feasible;
+  target 33.0 m building, `TOWER_TOP` 32.85 m, floor unchanged at 24.3 m, plus a
+  fourth checkpoint migration. Implementation belongs to #361.
+- Mezzanine (3 below): library revision 3 approved; coordinates in the brief.
+- Count cap (6 below): cancel as needed. Applied once the register validates
+  again (another session is repairing a rolled-back register at 23:35Z).
+- Kit import (1 below): Val asked what the kit holds; answered in the #360
+  comment with a recommendation; still open.
+
+The original questions, kept for the record:
 
 1. Kit import: copy the kit bytes into the public repository (all 19 MB, or
    `layout.json`, `asset-manifest.json` and the GLBs only), or keep them external

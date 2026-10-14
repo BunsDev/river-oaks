@@ -142,24 +142,90 @@ open and owned by other sessions; nothing below assumes it merged.
   are open; forking a second geometry source or renderer path; converting axes a
   second time; treating #355 (footprint ring validity) as related, it is not.
 
-## Decisions for Val
+## Decisions (Val, 2026-10-14)
 
-1. Import the kit bytes into the public repository (all 19 MB, or `layout.json`,
-   `asset-manifest.json` and the GLBs only), or keep them external and indexed by
-   hash as now. The kit's own README gives no publication approval.
-2. Physical fit: the kit's 7.6 m clear main volume sits above the 24.3 m lift
-   rise inside a building the engineering baseline measures at about 28 m. The
-   number and the options are in the engineering packet; the layout cannot be
-   approved until this is answered.
-3. Adopt Cody's library revision 3 (two chairs, one bookcase removed, east passing
-   bay) as the mezzanine programme for the blockout, or keep the kit's library.
-4. The IPIC lift: keep it decorative in this increment, or implement a
-   fixed-endpoint, server-validated reduced-motion route. The brief records that
-   a decorative door is not a usable route and that the accessibility implication
-   is unresolved.
-5. The handoff briefs `typesafe-place-coding-familiar-handoff.md` and
-   `typesafe-place-design-familiar-handoff.md` were not found in the repository or
-   on this machine. Supply them or confirm #359 and its children are the record.
+Val answered three of the five open questions on 2026-10-14. The engineering
+contract (`layout-contract.json`, #381) still lists them as open; its owner
+records the same answers there.
+
+**Physical fit: raise the modelled building** (contract `fit.options[2]`). Val
+asked for the building to be raised if feasible, else best judgement. It is
+feasible, and it is the only option that keeps level 6, the 24.3 m lift ride and
+the current arrival film unchanged. Target, for #361 to implement and review:
+
+| Item | Today | Raised |
+| --- | --- | --- |
+| Office floor (level 6) | 24.3 m | 24.3 m, unchanged |
+| Penthouse clear ceiling | 3.9 m room | 31.9 m (24.3 + 7.6) |
+| Mezzanine floor | none | 28.1 m (24.3 + 3.8), rear d 14–20 only |
+| Tower curtain-wall top (`TOWER_TOP`) | 27.85 m | 32.85 m (0.95 m roof structure above the ceiling) |
+| Building height (`size[2]`, `REFERENCE_HEIGHTS`) | 28.0 m | 33.0 m |
+| Podium and Le Colonial wing | 12.78 m and 10.6 m | unchanged |
+
+What the raise touches, all found in the current source:
+
+- `scripts/build_district.py` `REFERENCE_HEIGHTS["625330785"]` and the one
+  building's `size[2]` in `preview/public/data/district.json`. No GIS rebuild or
+  download is needed; the raw OSM and terrain files are already local.
+- `preview/src/reference-blocks.js` `TOWER_TOP` and the facade bands. Keep the
+  street face as one double-height band from 24.3 m to the new top, with no floor
+  line at 28.1 m, because the mezzanine covers only the rear of the plan.
+- Flight clearance follows automatically (`walking.js` uses `size[2] + 3.1`).
+  Studio and region-package bounds allow up to 50 m.
+- **The world fingerprint changes.** The durable town refuses a checkpoint whose
+  fingerprint does not match, so the raise needs a fourth checkpoint migration
+  chained ahead of `district-level-checkpoint-migration.js`, in the same
+  height-only, fail-closed pattern as the existing three. Deploying it migrates
+  the production town's checkpoint; that deploy needs its own authorization.
+- Tests that pin the height: `preview/tests/reference-facades.test.js` (Equinox
+  28 m), and the 8 m earliest-height fixtures in
+  `server/tests/district-checkpoint-migration.test.js` and `redis-room.test.js`,
+  which stay as they are and gain a 28 m to 33 m case.
+- Street captures change: rerun the `office-arrival-visual` stations and the
+  facade fixture views, and compare them against these baseline captures.
+
+The terrace (160 m² at floor level) needs open sky at 24.3 m. Recommendation for
+#362/#363 design review: carve it from the tower's west end, where it already
+meets sky above the 10.6 m Le Colonial wing, so the Westheimer frontage keeps its
+curtain-wall rhythm. The kit-to-building transform that decides which kit edge
+faces west is #361's.
+
+**Mezzanine programme: library revision 3, approved.** Coordinates are kit
+`(x, d)` in metres, furniture bases at h 3.8:
+
+- Quiet reading, x −9.5 to −3: two lounge chairs at (−8, 18.3) and (−4.5, 18.3)
+  facing the overlook, a 0.5 × 0.5 m side table at (−6.25, 18.3). `bookcase-0`
+  removed from behind the seats; an art or non-interactive backdrop instead.
+- Reference, x −2.7 to 2.7: `bookcase-1` kept at (0, 19.55); standing
+  consultation position at (0, 18.1).
+- Archive and discovery, x 3.3 to 8.7: `bookcase-2` kept at (6, 19.55); browsing
+  position at (6, 18.1).
+- East passing bay: open floor x 9.1 to 14.1, d 14.05 to 18.45, waiting centre
+  (11.6, 17.4); through-route centreline d 15.3. No furniture in the bay.
+- Gallery route: clear band d 14.05 to 16.45 from stair to lift; no furniture,
+  occupied-seat envelope or planter inside it.
+- `mezz-table` and `bookcase-0` are retired from the upstairs layout, not
+  deleted; anchor ids `stairs-top`, `library` and `lift-upper` are unchanged.
+
+These are calculated static gaps from the scale review, not runtime proof. The
+seated envelope ends 0.58 m from the gallery boundary and 0.43 m from the back
+wall; neither is a walkable aisle. #363 tests both chairs occupied, the bay with
+two clients, and lift use while passing, without shrinking collision radii.
+
+**Cancellation:** Val authorized cancelling local checkouts as needed to reach
+the ten-checkout cap (`project:cancel`, archive first, no remote change).
+
+Still open:
+
+1. Kit import. Val asked what the kit holds; the answer is in the
+   2026-10-14 #360 comment and `reference-index.json`. Recommendation: commit
+   `layout.json`, `asset-manifest.json`, `asset-catalog.csv`, the 22 GLBs
+   (3.9 MB) and the dimensioned plan SVG under `assets/office-penthouse/`, and keep
+   the 7 generated mood and object images (18 MB), the walkthrough and the
+   vendored viewer bundle outside the repository, indexed by hash.
+2. IPIC lift: recorded as decorative this increment with the accessibility
+   implication unresolved (engineering contract `ipic-lift`).
+3. The two handoff briefs named in #359 were not found.
 
 ## What this brief does not do
 
