@@ -5087,6 +5087,38 @@
       ],
       "blocker": null,
       "ledger": "docs/project-management/workflow.md"
+    },
+    {
+      "id": "desktop-package-matrix",
+      "title": "Desktop packaging build matrix (#371): package, fuse/asar checks and development e2e on Windows, Linux and macOS runners with unsigned artifacts",
+      "status": "active",
+      "branches": [
+        "ci/desktop-package-matrix"
+      ],
+      "owner": "claude:river-oaks-desktop-matrix (e8b6b86f)",
+      "updatedAt": "2026-10-14T19:34:37.600Z",
+      "nextAction": "Worktree ../river-oaks-desktop-package-matrix-20261014 created from origin/main 7cff31f4. Next: stage 1 workflow (unit tests on three runners), push, read gh run view --log-failed, then packaging, fuse/asar checks, e2e, artifacts.",
+      "filesOwned": [
+        ".github/workflows/desktop.yml",
+        "desktop/package-check.js",
+        "desktop/tests/package-check.test.js",
+        "config/agent-workflow.json (desktop-package profile)",
+        "docs/desktop.md (CI builds section)",
+        "docs/agent-workflow.md (desktop-package profile)",
+        "docs/superpowers/plans/2026-10-14-desktop-package-matrix.md"
+      ],
+      "requiredChecks": [
+        "pnpm run verify tooling",
+        "pnpm run test:desktop",
+        "pnpm run verify",
+        "Desktop workflow green on windows-latest, ubuntu-latest and macos-latest with artifacts"
+      ],
+      "issues": [
+        371
+      ],
+      "blocker": null,
+      "ledger": "docs/superpowers/plans/2026-10-14-desktop-package-matrix.md",
+      "leaseUntil": "2026-10-14T21:34:37.600Z"
     }
   ]
 }
