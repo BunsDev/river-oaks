@@ -5348,6 +5348,34 @@
         "docs/superpowers/plans/2026-10-14-procedural-gallery-ao-buffer.md",
         "docs/superpowers/plans/README.md"
       ]
+    },
+    {
+      "id": "procedural-gallery-ao-sampling",
+      "title": "Evaluate lower AO shader sample counts for repeated gallery movement",
+      "status": "queued",
+      "branches": [
+        "perf/procedural-gallery-ao-sampling-20261014"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-14T09:39:00.814Z",
+      "leaseUntil": null,
+      "nextAction": "Preserve the rejected AO-sample evidence and return to Studio authored-override/regeneration requirements; obtain target-device choice and human AO review before broader rollout.",
+      "ledger": "docs/superpowers/plans/2026-10-14-procedural-gallery-ao-sampling.md",
+      "requiredChecks": [
+        "Paired uninstrumented five-cycle moving gallery measurements",
+        "Same-camera AO visual comparison",
+        "Focused render-pipeline behavior",
+        "pnpm run verify before commit",
+        "Isolated-Redis full and exact-head hosted checks before delivery"
+      ],
+      "filesOwned": [
+        "preview/src/render-pipeline.js",
+        "preview/tests/render-pipeline.test.js",
+        "docs/superpowers/plans/2026-10-14-procedural-gallery-ao-sampling.md",
+        "docs/superpowers/plans/README.md"
+      ],
+      "previousOwner": "codex-root-20261014-ao-sampling",
+      "handoff": "Five-cycle M3 Max Chromium Sharpest baseline and 6/4-sample trial both passed route checks. Moving p95 remained 33.4 ms on visits 2-5; trial had 24-25 over-25ms intervals versus baseline 19-23. Trial image looked flatter at floor and associate contact. Runtime edit restored; no code PR or full gate claimed. Ignored receipts and screenshot remain in clean experiment worktree."
     }
   ]
 }
