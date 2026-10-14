@@ -4653,6 +4653,33 @@
       "leaseUntil": "2026-10-14T02:09:08.401Z"
     },
     {
+      "id": "procedural-gallery-vertical-route",
+      "title": "Render the approved gallery vertical portal as a visible platform lift",
+      "status": "active",
+      "branches": [
+        "feat/procedural-gallery-route-20261014"
+      ],
+      "owner": "codex-root-20261014-gallery-route",
+      "updatedAt": "2026-10-14T01:00:00.000Z",
+      "nextAction": "Commit the verified gallery visual branch and hand its head to the procedural-interiors owner for integration. Final core and post-removal two-client browser journey passed. The internal portal still says stairs and 60 Hz frame pacing remains unproven.",
+      "ledger": "docs/superpowers/plans/2026-10-14-gallery-vertical-route.md",
+      "requiredChecks": [
+        "Focused geometry and browser regression for the gallery route",
+        "pnpm run verify core before commit",
+        "Two-client gallery level journey",
+        "Player-height visual and performance evidence"
+      ],
+      "filesOwned": [
+        "preview/src/store-interiors.js",
+        "preview/src/generated-vertical-route.js",
+        "preview/tests/generated-vertical-route.test.js",
+        "preview/e2e/generated-gallery.js",
+        "preview/e2e/generated-gallery-levels.js",
+        "docs/superpowers/plans/2026-10-14-gallery-vertical-route.md"
+      ],
+      "leaseUntil": "2026-10-14T02:40:23.000Z"
+    },
+    {
       "id": "ipic-photo-interior",
       "title": "Photo-referenced connected IPIC interior, reusable assets and playable auditorium",
       "status": "active",

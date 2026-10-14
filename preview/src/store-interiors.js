@@ -4,6 +4,7 @@ import { ROOM_HEIGHT } from './store-rooms.js';
 import { createLuxeFinishes, createSurfaceCollector, flutedPanels, luxeShellPlan, luxeSuiteFor, tintEmissiveByColor } from './interior-luxe.js';
 import { buildIpicInterior } from './ipic-interior.js';
 import { IPIC_INTERIOR } from './ipic-plan.js';
+import { generatedVerticalRoute } from './generated-vertical-route.js';
 
 // Walk-in boutique interiors: shell, finishes, fixtures and merchandise per
 // room plan. Generic shops use procedural surfaces; IPIC uses its dedicated
@@ -402,6 +403,7 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
     roomMatrix = new THREE.Matrix4().compose(new THREE.Vector3(fx, room.floor, -fn), new THREE.Quaternion().setFromAxisAngle(Y, Math.atan2(ox, -oy)), new THREE.Vector3(1, 1, 1));
     if (room.generatedPlan) {
       const front = room.frontInset, length = D - front, mid = (D + front) / 2;
+      const route = generatedVerticalRoute(room);
       const finish = room.generatedPlan.layers.finishes[0]?.material;
       const floorColors = { limestone: '#e3d8c4', oak: '#bf9a72', terracotta: '#bf8671', concrete: '#c9c8c4' };
       const floorMaterial = standard({ color: floorColors[finish] ?? floorColors.limestone, roughness: 0.82 });
@@ -410,7 +412,8 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
       const floor = new THREE.Mesh(floorGeometry, floorMaterial); floor.receiveShadow = true;
       placeMesh(floor, c, mid, 0.012);
       add(box, black, c, mid, -0.3, [W, 0.6, length], 0, '#5a5148');
-      add(box, ceiling, c, mid, H + 0.125, [W, 0.25, length]);
+      for (const panel of route?.ceilingPanels ?? [{ a: c, d: mid, width: W, depth: length }])
+        add(box, ceiling, panel.a, panel.d, H + 0.125, [panel.width, 0.25, panel.depth]);
       add(box, walls[room.theme], c, D - 0.075, H / 2, [W, H, 0.15]);
       for (const a of [room.aMin + 0.075, room.aMax - 0.075]) {
         add(box, walls[room.theme], a, mid, H / 2, [0.15, H, length]);
@@ -422,20 +425,44 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
         add(box, stone, a, d, 0.62, [fixture.a1 - fixture.a0, 1.24, fixture.d1 - fixture.d0]);
         add(box, brass, a, d, 1.26, [fixture.a1 - fixture.a0 + 0.04, 0.04, fixture.d1 - fixture.d0 + 0.04]);
       }
-      const stairOpening = room.generatedPlan.layers.shell[0]?.stairOpening;
-      if (stairOpening?.length === 4) {
-        const corners = stairOpening.map(point => room.toLocal(...point));
-        const a0 = Math.min(...corners.map(point => point[0]));
-        const a1 = Math.max(...corners.map(point => point[0]));
-        const d0 = Math.min(...corners.map(point => point[1]));
-        const d1 = Math.max(...corners.map(point => point[1]));
-        const middle = (a0 + a1) / 2, depth = (d0 + d1) / 2;
-        for (const d of [d0, d1]) add(box, brass, middle, d, 0.03, [a1 - a0, 0.012, 0.035]);
-        for (const a of [a0, a1]) add(box, brass, a, depth, 0.03, [0.035, 0.012, d1 - d0]);
-        for (let index = 1; index <= 5; index++) {
-          add(box, glow, middle, d0 + (d1 - d0) * index / 6, 0.034, [(a1 - a0) * 0.58, 0.008, 0.025]);
+      if (route) {
+        const { a0, a1, d0, d1, platform } = route;
+        // The approved portal remains a walkable landing at both levels. The
+        // paired F transition acts as a platform lift while the shaft continues
+        // through the lower ceiling; no display mesh invents shared collision.
+        add(box, stone, platform.a, platform.d, 0.035, [platform.width, 0.045, platform.depth]);
+        add(box, brass, platform.a, d0 + 0.07, 0.065, [platform.width, 0.018, 0.035]);
+        for (const a of [a0 + 0.075, a1 - 0.075]) for (const d of [d0 + 0.075, d1 - 0.075])
+          add(box, brass, a, d, H / 2, [0.035, H - 0.16, 0.035]);
+        for (const a of [a0 + 0.075, a1 - 0.075])
+          add(box, brass, a, (d0 + d1) / 2, H - 0.09, [0.035, 0.035, d1 - d0 - 0.15]);
+        for (const d of [d0 + 0.075, d1 - 0.075])
+          add(box, brass, (a0 + a1) / 2, d, H - 0.09, [a1 - a0 - 0.15, 0.035, 0.035]);
+        add(box, glow, (a0 + a1) / 2, d0 + 0.075, H - 0.12,
+          [a1 - a0 - 0.22, 0.025, 0.025]);
+        add(box, brass, a0 - 0.08, d0 + 0.28, 1.08, [0.035, 0.32, 0.18]);
+        add(disc, lamp, a0 - 0.11, d0 + 0.28, 1.09, [0.075, 0.012, 0.075], 0,
+          '#ffffff', [Math.PI / 2, 0]);
+        if (route.above) {
+          for (const d of [d0, d1]) add(box, brass, (a0 + a1) / 2, d, H + 0.02,
+            [a1 - a0, 0.04, 0.035]);
+          for (const a of [a0, a1]) add(box, brass, a, (d0 + d1) / 2, H + 0.02,
+            [0.035, 0.04, d1 - d0]);
         }
-        add(disc, lamp, middle, depth, H - 0.012, [0.12, 0.02, 0.12]);
+      }
+      // The generated plan owns the route and footprint. Original canvas art
+      // hangs almost flush with the back wall, outside the shaft and walk path.
+      for (let index = 0; index < 3; index++) {
+        const a = room.aMin + 1.15 + index * 2.25, d = D - 0.17, y = 1.88;
+        if (a + 0.75 >= (route?.a0 ?? room.aMax) - 0.25) break;
+        const painting = standard({ map: track.t(artTexture(23 + room.generatedPlan.index * 17 + index * 5)),
+          roughness: 0.8, emissive: '#ffffff', emissiveIntensity: 0.06 });
+        placeMesh(new THREE.Mesh(pane, painting), a, d, y, 0, [1.34, 1.52, 1]);
+        for (const edge of [-1, 1]) {
+          add(box, brass, a + edge * 0.69, d + 0.012, y, [0.035, 1.6, 0.04]);
+          add(box, brass, a, d + 0.012, y + edge * 0.78, [1.42, 0.035, 0.04]);
+        }
+        add(box, glow, a, d - 0.05, y + 0.89, [0.55, 0.018, 0.025]);
       }
       for (let d = front + 1.3; d < D - 0.3; d += 2.2) {
         add(disc, lamp, c, d, H - 0.012, [0.065, 0.02, 0.065]);
