@@ -5416,7 +5416,7 @@
       "owner": "codex-root-20261014-gallery-contact",
       "updatedAt": "2026-10-14T20:12:44.920Z",
       "leaseUntil": "2026-10-14T22:12:44.920Z",
-      "nextAction": "Core and three generated-gallery/Studio browser journeys passed on final diff; five-cycle Auto and AO-off controls passed but Auto missed 60 Hz p95 twice under concurrent load. Open draft PR stacked on #358, run isolated-Redis full when storage permits, obtain exact-head CI, and keep target-device/human review gated.",
+      "nextAction": "Draft PR #382 is stacked on #358 at signed implementation head babe44b. Run isolated-Redis full with stable disk and Passport temporary storage, inspect exact-head CI and target-device/human visual gaps, then land after #349\u2013#358 only if gates pass.",
       "ledger": "docs/superpowers/plans/2026-10-14-procedural-gallery-contact-shading.md",
       "requiredChecks": [
         "Matched player-height visual captures against AO-on and AO-off",
@@ -5434,7 +5434,8 @@
         "docs/superpowers/plans/2026-10-14-procedural-gallery-contact-shading.md",
         "docs/superpowers/plans/README.md",
         "docs/project-management/tasks.json"
-      ]
+      ],
+      "pr": 382
     }
   ]
 }
