@@ -6,31 +6,7 @@ async page => {
   await page.goto('http://127.0.0.1:5173/?motion-debug=1&render-audit=1');
   await page.locator('#loading').waitFor({ state: 'hidden' });
   await page.waitForFunction(() => document.querySelector('#canvas-host')?.dataset.multiplayer === 'joined');
-  const state = () => page.evaluate(() => window.__riverGeneratedInteriors?.()[0] ?? null);
-  const initial = await state();
-  if (!initial || initial.ready || !initial.shellVisible) throw new Error(`Gallery must begin with its ready shell: ${JSON.stringify(initial)}`);
-  if (await page.locator('#panel-toggle').getAttribute('aria-expanded') === 'false') await page.locator('#panel-toggle').click();
-  await openHudSpace(page, 'explore-section');
-  await page.locator('#destination').selectOption({ label: 'Laura Rathe Fine Art' });
-  const coldStart = performance.now();
-  await page.locator('#visit-destination').click();
-  await page.waitForFunction(() => window.__riverGeneratedInteriors?.()[0]?.ready, null, { timeout: 30000 });
-  const coldMs = performance.now() - coldStart;
-  await page.screenshot({ path: 'output/playwright/generated-gallery-street.png' });
-  await page.waitForTimeout(1500);
-  await page.locator('#enter-destination').click();
-  await page.waitForFunction(() => document.querySelector('#walking-hud')?.dataset.inside, null, { timeout: 10000 });
-  const name = await page.locator('#walking-place').textContent();
-  if (!name.startsWith('Inside Laura Rathe Fine Art')) throw new Error(`Wrong interior: ${name}`);
-  const inside = await page.evaluate(() => {
-    const multiplayer = window.__riverMultiplayer();
-    const player = multiplayer.snapshot.players.find(item => item.id === multiplayer.selfId);
-    return { player: player?.position, stream: window.__riverGeneratedInteriors()[0] };
-  });
-  if (!inside.player || !inside.stream.ready || inside.stream.shellVisible) throw new Error(`Interior was not ready: ${JSON.stringify(inside)}`);
-  await page.screenshot({ path: 'output/playwright/generated-gallery-inside.png' });
-  if (await page.locator('.store-intro').isVisible()) await page.locator('.store-intro button').click();
-  const render = await page.evaluate(async () => {
+  const sampleRender = async () => page.evaluate(async () => {
     const audit = window.__riverRenderAudit;
     audit.start();
     for (let index = 0; index < 150; index++) await new Promise(resolve => requestAnimationFrame(resolve));
@@ -47,6 +23,34 @@ async page => {
         p95: percentile(sample.frames.map(frame => frame.cpuMs), 0.95) },
       graphics, heapBytes: performance.memory?.usedJSHeapSize ?? null };
   });
+  const state = () => page.evaluate(() => window.__riverGeneratedInteriors?.()[0] ?? null);
+  const initial = await state();
+  if (!initial || initial.ready || !initial.shellVisible) throw new Error(`Gallery must begin with its ready shell: ${JSON.stringify(initial)}`);
+  if (await page.locator('#panel-toggle').getAttribute('aria-expanded') === 'false') await page.locator('#panel-toggle').click();
+  await openHudSpace(page, 'explore-section');
+  await page.locator('#destination').selectOption({ label: 'Laura Rathe Fine Art' });
+  const coldStart = performance.now();
+  await page.locator('#visit-destination').click();
+  await page.waitForFunction(() => window.__riverGeneratedInteriors?.()[0]?.ready, null, { timeout: 30000 });
+  const coldMs = performance.now() - coldStart;
+  await page.screenshot({ path: 'output/playwright/generated-gallery-street.png' });
+  await page.waitForTimeout(1500);
+  const streetRender = await sampleRender();
+  if (streetRender.overflow || streetRender.frames < 120)
+    throw new Error(`Incomplete gallery street render sample: ${JSON.stringify(streetRender)}`);
+  await page.locator('#enter-destination').click();
+  await page.waitForFunction(() => document.querySelector('#walking-hud')?.dataset.inside, null, { timeout: 10000 });
+  const name = await page.locator('#walking-place').textContent();
+  if (!name.startsWith('Inside Laura Rathe Fine Art')) throw new Error(`Wrong interior: ${name}`);
+  const inside = await page.evaluate(() => {
+    const multiplayer = window.__riverMultiplayer();
+    const player = multiplayer.snapshot.players.find(item => item.id === multiplayer.selfId);
+    return { player: player?.position, stream: window.__riverGeneratedInteriors()[0] };
+  });
+  if (!inside.player || !inside.stream.ready || inside.stream.shellVisible) throw new Error(`Interior was not ready: ${JSON.stringify(inside)}`);
+  await page.screenshot({ path: 'output/playwright/generated-gallery-inside.png' });
+  if (await page.locator('.store-intro').isVisible()) await page.locator('.store-intro button').click();
+  const render = await sampleRender();
   if (render.overflow || render.frames < 120) throw new Error(`Incomplete gallery render sample: ${JSON.stringify(render)}`);
   await page.locator('#canvas-host').focus();
   await page.keyboard.down('KeyW'); await page.waitForTimeout(1700); await page.keyboard.up('KeyW');
@@ -94,6 +98,6 @@ async page => {
   await page.waitForFunction(() => document.querySelector('#walking-hud')?.dataset.inside, null, { timeout: 10000 });
   await page.screenshot({ path: 'output/playwright/generated-gallery-reduced-motion.png' });
   if (errors.length) throw new Error(errors.join('; '));
-  return { passed: true, coldMs, returnMs, initial, evicted, render, afterEviction, afterReturn,
-    hardware: 'Local Chromium on this Mac', scope: 'One local authenticated client; frame intervals and main-thread update/render cost include host load. GPU memory and target-hardware acceptance remain open.' };
+  return { passed: true, coldMs, returnMs, initial, evicted, streetRender, render, afterEviction, afterReturn,
+    hardware: 'Local Chromium on this Mac', scope: 'One local authenticated client; street and interior camera samples include full district and host load. They do not isolate gallery GPU cost. GPU memory and target-hardware acceptance remain open.' };
 }
