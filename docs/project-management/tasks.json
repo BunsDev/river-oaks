@@ -5736,14 +5736,14 @@
     {
       "id": "procedural-level-aware-streaming",
       "title": "Prepare generated interior levels according to authoritative occupancy",
-      "status": "active",
+      "status": "delivered",
       "branches": [
         "feat/procedural-level-streaming-20261014"
       ],
-      "owner": "codex-root-20261014-procedural-landing",
-      "updatedAt": "2026-10-14T20:37:37.822Z",
-      "handoff": "PR #349 merged de0b64a. #350 main-integration signed head 70d48f6fc15a5f8c286c1a09a1acf784b90d016c pushed; combined focused 22/22 and core passed on final merge tree, including Python 141/141 and secret scan. Earlier isolated-Redis full passed 672/672 and all experience/shared journeys on the pre-integration implementation.",
-      "nextAction": "Wait for all hosted checks including aggregate preview on exact #350 head 70d48f6; review mergeability and signed ancestry, mark ready via authorized gh pr ready, dry-run REST guard, then serially land. Continue #351 onward; keep target-device and human acceptance open.",
+      "owner": null,
+      "updatedAt": "2026-10-14T20:54:30.006Z",
+      "handoff": "PR #350 merged to main at c36bf2dec992b284a06534d9e0047248b0ea08e5 on 2026-10-14T20:53:55Z. Reviewed signed head 73798e40e1cabb3103ced7959a0497e0764cf04d; exact-head aggregate preview and all 16 checks passed. Local focused 22/22 and core passed on current-main merge; pre-integration isolated-Redis full covered 672 server tests and 21 shared journeys. Worktree remains for evidence and retirement.",
+      "nextAction": "Delivered. Archive ignored receipts and retire local branch/worktree through project:prune after exact-head dry run; keep broader pilot target-device and human acceptance tracked in the integration goal.",
       "ledger": "docs/superpowers/plans/2026-10-14-level-aware-interior-streaming.md",
       "requiredChecks": [
         "Multi-level stream preparation, cancellation and eviction behavioral tests",
@@ -5767,7 +5767,46 @@
         "preview/tests/contextual-action.test.js (descent action regression only)"
       ],
       "pr": 350,
-      "leaseUntil": "2026-10-14T22:37:37.822Z"
+      "leaseUntil": null,
+      "evidence": [
+        {
+          "pr": 350,
+          "reviewedHead": "73798e40e1cabb3103ced7959a0497e0764cf04d",
+          "merge": "c36bf2dec992b284a06534d9e0047248b0ea08e5",
+          "tree": "e3900eef89559e46cdf32f6aa4d548b77e5f44a4",
+          "checks": "Exact-head aggregate preview and all 16 hosted checks passed; local final-main focused 22/22 and core passed; pre-integration isolated-Redis full passed 672 server tests, ten experience and 21 shared journeys."
+        }
+      ]
+    },
+    {
+      "id": "procedural-pilot-frame-performance",
+      "title": "Profile and improve generated gallery frame pacing before broader interior rollout",
+      "status": "active",
+      "branches": [
+        "perf/procedural-pilot-render-20261014"
+      ],
+      "owner": "codex-root-20261014-procedural-landing",
+      "updatedAt": "2026-10-14T20:44:45.212Z",
+      "handoff": "Signed, verified draft PR #351 head 5a0f4f619ded0fa91c0fe959afad4c9a1eed0201 is pushed on #350; all exact-head hosted checks, including aggregate preview, passed. Local five-minute gallery soak held 16.7\u201316.8 ms p95 and 16.8 ms p99 with flat reported renderer counts on M3 Max. Worktree is clean and retained. Former owner: codex-root-20261014-pilot-render.",
+      "nextAction": "Val authorized serial stack landing. Review clean #351 slice and its prior verification; after #350 lands, merge current main into #351, verify final tree and exact hosted head, then mark ready and land through REST guard. Keep target-device and human pilot gates open.",
+      "ledger": "docs/superpowers/plans/2026-10-14-procedural-pilot-frame-performance.md",
+      "requiredChecks": [
+        "Comparable player-height street and gallery pass/object audit",
+        "Focused render behavior and visual regression",
+        "pnpm run verify core before commit",
+        "Paired browser frame pacing, cold/return load and memory evidence"
+      ],
+      "filesOwned": [
+        "preview/e2e/generated-gallery-render-cost.js",
+        "preview/e2e/generated-gallery-soak.js",
+        "preview/src/interior-exterior-culling.js",
+        "preview/src/main.js",
+        "preview/tests/interior-exterior-culling.test.js",
+        "docs/superpowers/plans/2026-10-14-procedural-pilot-frame-performance.md"
+      ],
+      "pr": 351,
+      "leaseUntil": "2026-10-14T22:44:45.212Z",
+      "previousOwner": "codex-root-20261014-pilot-render"
     },
     {
       "id": "local-prune-20261013",
@@ -8302,36 +8341,6 @@
           "head": "bec6336cd26b3d264ab9cb989df54858a7647223"
         }
       }
-    },
-    {
-      "id": "procedural-pilot-frame-performance",
-      "title": "Profile and improve generated gallery frame pacing before broader interior rollout",
-      "status": "queued",
-      "branches": [
-        "perf/procedural-pilot-render-20261014"
-      ],
-      "owner": null,
-      "updatedAt": "2026-10-14T04:15:53Z",
-      "handoff": "Signed, verified draft PR #351 head 5a0f4f619ded0fa91c0fe959afad4c9a1eed0201 is pushed on #350; all exact-head hosted checks, including aggregate preview, passed. Local five-minute gallery soak held 16.7\u201316.8 ms p95 and 16.8 ms p99 with flat reported renderer counts on M3 Max. Worktree is clean and retained. Former owner: codex-root-20261014-pilot-render.",
-      "nextAction": "Integration owner: review the stacked PR #351 performance change with #350 and #349, then obtain target-device and human player-height visual acceptance before broader building rollout. Do not mark delivered without merge evidence.",
-      "ledger": "docs/superpowers/plans/2026-10-14-procedural-pilot-frame-performance.md",
-      "requiredChecks": [
-        "Comparable player-height street and gallery pass/object audit",
-        "Focused render behavior and visual regression",
-        "pnpm run verify core before commit",
-        "Paired browser frame pacing, cold/return load and memory evidence"
-      ],
-      "filesOwned": [
-        "preview/e2e/generated-gallery-render-cost.js",
-        "preview/e2e/generated-gallery-soak.js",
-        "preview/src/interior-exterior-culling.js",
-        "preview/src/main.js",
-        "preview/tests/interior-exterior-culling.test.js",
-        "docs/superpowers/plans/2026-10-14-procedural-pilot-frame-performance.md"
-      ],
-      "pr": 351,
-      "leaseUntil": null,
-      "previousOwner": "codex-root-20261014-pilot-render"
     },
     {
       "id": "procedural-private-upper-revocation",
