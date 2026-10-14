@@ -133,8 +133,9 @@ Parked here as the goal asks; the brief carries the same list with context.
    `perf/procedural-pilot-render-20261014` (#351, retirement-0bMJhS),
    `fix/procedural-private-level-revocation-20261014` (#352, retirement-pdX5dd),
    `perf/procedural-gallery-cycle-soak-20261014` (#353, retirement-0PK3tS),
-   `perf/procedural-ao-tail-20261014` (#354, retirement-B68qkm). Count 17 / 17 at
-   2026-10-14T22:08Z. #355–#358 follow the same path once their owners land and
+   `perf/procedural-ao-tail-20261014` (#354, retirement-B68qkm),
+   `fix/procedural-interior-ring-validity-20261014` (#355, retirement-SSaIs2).
+   Count 16 / 16 at 2026-10-14T22:40Z. #355–#358 follow the same path once their owners land and
    release them; the eleven active checkouts stay with their sessions.
 
 ## Round end (2026-10-14T20:40Z)

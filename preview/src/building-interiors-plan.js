@@ -58,7 +58,11 @@ function normalizedRing(value) {
     if (Math.hypot(ring[i][0] - ring[(i + 1) % ring.length][0], ring[i][1] - ring[(i + 1) % ring.length][1]) < 0.1) fail('footprint');
     for (let j = i + 2; j < ring.length; j++) {
       if (i === 0 && j === ring.length - 1) continue;
-      if (segmentsCross(ring[i], ring[(i + 1) % ring.length], ring[j], ring[(j + 1) % ring.length])) fail('footprint');
+      const a = ring[i], b = ring[(i + 1) % ring.length], c = ring[j], d = ring[(j + 1) % ring.length];
+      // Nonadjacent edges may also meet at a vertex or double back along one
+      // another; neither shape is a simple building footprint.
+      if (segmentsCross(a, b, c, d) || [a, b].some(p => distanceToEdge(p, c, d) <= 1e-7)
+        || [c, d].some(p => distanceToEdge(p, a, b) <= 1e-7)) fail('footprint');
     }
   }
   return ring;

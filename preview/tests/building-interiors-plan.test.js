@@ -98,6 +98,14 @@ test('impossible entrances, inadequate building height and unbounded requests fa
   assert.throws(() => generateBuildingInteriorPlan({ ...input(), building: { ...input().building, ring: [[0, 0], [1, 0], [1, 1]] } }), /footprint/i);
 });
 
+test('self-touching and doubled-back building rings cannot produce an interior plan', () => {
+  const doubledBack = [[-8, -6], [8, -6], [8, 6], [0, 6], [0, 2], [0, 6], [-8, 6]];
+  const vertexTouch = [[-8, -6], [8, -6], [8, 6], [0, 6], [0, 4], [4, 4], [4, 5], [0, 4], [-8, 6]];
+  for (const ring of [doubledBack, vertexTouch]) {
+    assert.throws(() => generateBuildingInteriorPlan(input({ ring })), /footprint/);
+  }
+});
+
 test('authored furnishing positions and finishes use stable slots across rotated plans and reject blocked routes', () => {
   for (const yaw of [0, 31, 90]) {
     const request = input({ yaw }), before = generateBuildingInteriorPlan(request);
