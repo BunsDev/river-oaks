@@ -1,6 +1,6 @@
 // Only current, enabled actions enter this policy; the actual handlers still
 // recheck reach, doorway permissions and server-owned interactions on activation.
-export function contextualAction({ seated = false, talk = false, enter = false, play = false, interact = false, meet = false } = {}) {
+export function contextualAction({ seated = false, talk = false, enter = false, descend = false, play = false, interact = false, meet = false } = {}) {
   // Seated at a game table, playing comes first; standing up stays one key (Z) away.
   if (seated && play) return 'play';
   if (seated && interact) return 'interact';
@@ -9,6 +9,7 @@ export function contextualAction({ seated = false, talk = false, enter = false, 
   if (play) return 'play';
   if (talk) return 'talk';
   if (enter) return 'enter';
+  if (descend) return 'descend';
   if (interact) return 'interact';
   if (meet) return 'meet';
   return null;

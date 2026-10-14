@@ -44,12 +44,17 @@ export function createGeneratedInteriorStream(rooms, parent, {
     entry.detail = null; entry.shell.visible = true;
   };
   return {
-    update(position, now) {
+    update(position, now, activeLevelId = null) {
       if (disposed || !position) return;
+      const current = entries.find(entry => entry.room.planId === activeLevelId);
       for (const entry of entries) {
         const [east, north] = entry.room.facade;
         const distance2 = (position.x - east) ** 2 + (position.z + north) ** 2;
-        if (distance2 <= PREPARE_RADIUS ** 2) {
+        const sameBuilding = current?.room.buildingId && current.room.buildingId === entry.room.buildingId;
+        const eligible = sameBuilding
+          ? entry === current || current.room.generatedPlan?.portals?.some(portal => portal.toLevelId === entry.room.planId)
+          : (entry.room.generatedPlan?.index ?? 0) === 0;
+        if (eligible && distance2 <= PREPARE_RADIUS ** 2) {
           entry.farSince = null;
           if (entry.detail || entry.pending !== null || now < entry.retryAt) continue;
           entry.pending = schedule(() => {
@@ -61,7 +66,7 @@ export function createGeneratedInteriorStream(rooms, parent, {
             if (disposed) { detail.userData.dispose?.(); return; }
             entry.detail = detail; parent.add(detail); entry.shell.visible = false;
           });
-        } else if (distance2 >= EVICT_RADIUS ** 2) {
+        } else if (!eligible || distance2 >= EVICT_RADIUS ** 2) {
           if (entry.pending !== null) { cancel(entry.pending); entry.pending = null; }
           entry.farSince ??= now;
           if (now - entry.farSince >= EVICT_DELAY_MS) removeDetail(entry);

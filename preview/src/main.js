@@ -833,8 +833,9 @@ function render(now) {
   if (lastFrame !== null) quality.sample(now - lastFrame);
   lastFrame = now;
   const delta = Math.min(clock.getDelta(), 0.08);
+  const self = multiplayer?.snapshot?.players.find(player => player.id === multiplayer.identity?.id);
   community?.update(delta, now);
-  generatedInteriors?.update(camera.position, now);
+  generatedInteriors?.update(camera.position, now, self?.levelId);
   layers.trees?.userData.update?.(camera.position);
   if (storePeople && interiorsLayer?.visible) storePeople.userData.update(camera, now, community?.state, walking?.getPosition(), community?.speakingId);
   community?.updateSpeech(delta);
@@ -846,7 +847,6 @@ function render(now) {
   }
   updateStoreLights();
   // Riding a bird pauses walking; the bird drives the camera below.
-  const self = multiplayer?.snapshot?.players.find(player => player.id === multiplayer.identity?.id);
   const introRoom = self && multiplayer?.connected && world
     ? storeRoomsFor(world).find(room => room.category !== 'home' && (!self.levelId || room.planId === self.levelId)
       && room.contains(self.position[0], self.position[1], .2)) : null;
