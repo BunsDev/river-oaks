@@ -76,3 +76,23 @@ test('Studio swaps the exterior block for the selected physical level and restor
   assert.equal(view.exterior.visible, true);
   disposeStudioScene(scene.group);
 });
+
+
+test('authored overrides render their resolved position and material with a separate selection outline', () => {
+  const region = structuredClone(sample), building = region.buildings[0];
+  building.interior.generation.overrides = [{ targetId: `${building.id}/l0/object/wall-display`,
+    position: [-4.45, -1], material: 'oak' }];
+  const plan = previewBuildingInteriorPlan(region, building.id);
+  const preview = createInteriorLevelPreview(plan), level = preview.levels.get(0);
+  const mesh = level.layers.get('fixtures').getObjectByName(`${building.id}/l0/object/wall-display`);
+  assert.equal(mesh.material.color.getHexString(), 'b78b5e');
+  assert.ok(Math.abs(mesh.position.x + 4.45) < 1e-8);
+  assert.ok(Math.abs(mesh.position.z - 1) < 1e-8);
+  const outline = level.layers.get('authoredOverrides').children[0];
+  assert.equal(outline.name, `${mesh.name}/override`);
+  assert.deepEqual(outline.position, mesh.position);
+  showInteriorPreview(preview, 0, { authoredOverrides: false });
+  assert.equal(level.layers.get('authoredOverrides').visible, false);
+  assert.equal(level.layers.get('fixtures').visible, true, 'hiding edit markers does not undo the furnishing');
+  disposeStudioScene(preview.group);
+});

@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { terrainHeight } from '../preview/src/geometry.js';
 import { createWalkingEnvironment } from '../preview/src/walking.js';
 import { storefrontSpot } from '../preview/src/arrival.js';
-import { generateBuildingInteriorPlan, BUILDING_INTERIOR_GENERATOR_VERSION } from '../preview/src/building-interiors-plan.js';
+import { generateBuildingInteriorPlan, validBuildingInteriorGeneration } from '../preview/src/building-interiors-plan.js';
 
 export const MAX_REGION_REQUEST_BYTES = 128 * 1024;
 const record=value=>value!==null && typeof value==='object' && !Array.isArray(value);
@@ -59,12 +59,7 @@ export function compileRegionPackage(region,title,{worldId='creator-region'}={})
         || building.kind==='residential' && building.interior.category==='home')
       || (building.interior.access!==undefined && (building.interior.category!=='home' || !['public','owner'].includes(building.interior.access)))
       || !Object.hasOwn(ENTRANCE_EDGES,building.interior.entrance)
-      || building.interior.generation!==undefined && (!keys(building.interior.generation,['version','seed','levels'])
-        || building.interior.generation.version!==BUILDING_INTERIOR_GENERATOR_VERSION
-        || building.interior.generation.seed!==undefined && (typeof building.interior.generation.seed!=='string'
-          || building.interior.generation.seed.length<1 || building.interior.generation.seed.length>128
-          || !/^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$/.test(building.interior.generation.seed))
-        || !Number.isInteger(building.interior.generation.levels) || building.interior.generation.levels<1 || building.interior.generation.levels>8)))fail();
+      || building.interior.generation!==undefined && !validBuildingInteriorGeneration(building.interior.generation)))fail();
     const [x,y]=building.center,[width,depth,height]=building.size,angle=building.yaw_deg*Math.PI/180,c=Math.cos(angle),s=Math.sin(angle);
     const ring=[[-width/2,-depth/2],[width/2,-depth/2],[width/2,depth/2],[-width/2,depth/2]]
       .map(([dx,dy])=>[x+dx*c-dy*s,y+dx*s+dy*c]);
@@ -88,7 +83,7 @@ export function compileRegionPackage(region,title,{worldId='creator-region'}={})
   const buildingInteriors=buildings.filter(building=>building.interior?.generation).map(building=>{
     const store=stores.find(store=>store.building_id===building.id),generation=building.interior.generation;
     const plan=generateBuildingInteriorPlan({worldId,building,entrance:{id:store.id,position:store.facade,outward:store.outward},
-      seed:generation.seed??building.id,levels:generation.levels,baseElevation:store.facade[2]});
+      seed:generation.seed??building.id,levels:generation.levels,levelSeeds:generation.levelSeeds,overrides:generation.overrides,baseElevation:store.facade[2]});
     return {...plan,approvedSha256:createHash('sha256').update(JSON.stringify(plan)).digest('hex')};
   }).sort((a,b)=>a.buildingId.localeCompare(b.buildingId));
   if(Buffer.byteLength(JSON.stringify(buildingInteriors))>128*1024)fail();

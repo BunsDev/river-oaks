@@ -28,7 +28,8 @@ export function startStudio(host) {
     designer?.refresh();agent?.refresh();
     const space=isSpaceDocument(doc.value),items=doc.items,item=items.find(value=>value.id===selected);
     $('.studio-panel-title h1').textContent=space?doc.value.name:'Region';
-    $('.studio-scene-note').textContent=space?'Furnished local space. Select an element to change its finish, dimensions or position. Save or export to keep your work.':'Roads, terrain and parcels are preserved from your region file. Select a generated building to inspect its levels; walking still uses the exterior blockout.';
+    $('.studio-scene-panel h2').textContent=space?'Level 0 · objects':'Scene objects';
+    $('.studio-scene-note').textContent=space?'Level 0 · furnished local space. Select an element to change its finish, dimensions or position. Save or export to keep your work.':'Roads, terrain and parcels are preserved from your region file. Select a generated building to inspect its levels; walking still uses the exterior blockout.';
     $('#studio-count').textContent=`${items.length} objects`;
     $('#studio-dirty').textContent=doc.dirty?'● Unsaved changes':'○ Draft unchanged';
     $('#studio-undo').disabled=walking||!doc.canUndo;$('#studio-redo').disabled=walking||!doc.canRedo;

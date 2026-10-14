@@ -419,7 +419,9 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
       if (room.generatedPlan.index === 0) add(box, floorMaterial, 0, front / 2, 0.012, [1.7, 0.025, front]);
       for (const fixture of room.obstacles) {
         const a = (fixture.a0 + fixture.a1) / 2, d = (fixture.d0 + fixture.d1) / 2;
-        add(box, stone, a, d, 0.62, [fixture.a1 - fixture.a0, 1.24, fixture.d1 - fixture.d0]);
+        const authoredMaterial = room.generatedPlan.layers.fixtures.find(item => item.id === fixture.id)?.material;
+        const fixtureMaterial = authoredMaterial ? standard({ color: floorColors[authoredMaterial], roughness: 0.82 }) : stone;
+        add(box, fixtureMaterial, a, d, 0.62, [fixture.a1 - fixture.a0, 1.24, fixture.d1 - fixture.d0]);
         add(box, brass, a, d, 1.26, [fixture.a1 - fixture.a0 + 0.04, 0.04, fixture.d1 - fixture.d0 + 0.04]);
       }
       const stairOpening = room.generatedPlan.layers.shell[0]?.stairOpening;

@@ -1,6 +1,30 @@
 // A bounded, serializable building interior contract. The server approves this
 // plan; renderers may turn it into meshes but must not invent shared collision.
 export const BUILDING_INTERIOR_GENERATOR_VERSION = 1;
+export const BUILDING_INTERIOR_MATERIALS = ['limestone', 'oak', 'terracotta', 'concrete'];
+
+const record = value => value !== null && typeof value === 'object' && !Array.isArray(value);
+const keys = (value, allowed) => record(value) && Object.keys(value).every(key => allowed.includes(key));
+const validSeed = value => typeof value === 'string' && value.length >= 1 && value.length <= 128
+  && /^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$/.test(value);
+
+/** Shared structural boundary; geometry and exact target ownership are checked below. */
+export function validBuildingInteriorGeneration(value) {
+  return keys(value, ['version', 'seed', 'levels', 'levelSeeds', 'overrides'])
+    && value.version === BUILDING_INTERIOR_GENERATOR_VERSION
+    && (value.seed === undefined || validSeed(value.seed))
+    && Number.isInteger(value.levels) && value.levels >= 1 && value.levels <= 8
+    && (value.levelSeeds === undefined || record(value.levelSeeds)
+      && Object.entries(value.levelSeeds).every(([index, seed]) => /^[0-7]$/.test(index) && Number(index) < value.levels && validSeed(seed)))
+    && (value.overrides === undefined || Array.isArray(value.overrides) && value.overrides.length <= value.levels * 2
+      && new Set(value.overrides.map(item => item?.targetId)).size === value.overrides.length
+      && value.overrides.every(item => keys(item, ['targetId', 'position', 'material'])
+        && typeof item.targetId === 'string' && item.targetId.length <= 128
+        && (item.position !== undefined || item.material !== undefined)
+        && (item.position === undefined || Array.isArray(item.position) && item.position.length === 2
+          && item.position.every(n => Number.isFinite(n) && Math.abs(n) <= 100))
+        && (item.material === undefined || BUILDING_INTERIOR_MATERIALS.includes(item.material))));
+}
 
 const finite = value => Number.isFinite(value);
 const point = value => Array.isArray(value) && value.length >= 2 && finite(value[0]) && finite(value[1])
@@ -82,7 +106,7 @@ export function worldToBuildingLocal(anchor, [east, north]) {
 }
 
 /** Generate one versioned building plan from approved primitive and entrance data. */
-export function generateBuildingInteriorPlan({ worldId, building, entrance, seed = building?.id, levels = 1, baseElevation = building?.center?.[2], reservedFootprints = [] } = {}) {
+export function generateBuildingInteriorPlan({ worldId, building, entrance, seed = building?.id, levels = 1, levelSeeds, overrides = [], baseElevation = building?.center?.[2], reservedFootprints = [] } = {}) {
   if (!id(worldId) || !id(building?.id) || !Array.isArray(building?.center) || building.center.length !== 3
     || !point(building.center) || !finite(building.center[2])
     || !Array.isArray(building?.size) || building.size.length !== 3 || !building.size.every(finite)
@@ -90,6 +114,12 @@ export function generateBuildingInteriorPlan({ worldId, building, entrance, seed
     || !finite(building.yaw_deg) || !finite(baseElevation)) fail('building anchor');
   if (typeof seed !== 'string' || seed.length < 1 || seed.length > 128 || !/^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$/.test(seed)) fail('seed');
   if (!Number.isInteger(levels) || levels < 1 || levels > 8) fail('level count');
+  if (!validBuildingInteriorGeneration({ version: BUILDING_INTERIOR_GENERATOR_VERSION, seed, levels, levelSeeds, overrides })) fail('generation edits');
+  for (const override of overrides) {
+    const target = Array.from({ length: levels }, (_, index) => `${building.id}/l${index}`)
+      .find(levelId => override.targetId === `${levelId}/object/wall-display` || override.targetId === `${levelId}/finish/floor`);
+    if (!target || override.targetId.endsWith('/finish/floor') && override.position !== undefined) fail('override target');
+  }
   if (!Array.isArray(reservedFootprints) || reservedFootprints.length > 32
     || reservedFootprints.some(polygon => !Array.isArray(polygon) || polygon.length < 3 || polygon.length > 64 || !polygon.every(point))) fail('reserved footprint');
   const reserved = reservedFootprints.map(polygon => polygon.map(([x, y]) => [x, y]));
@@ -122,14 +152,15 @@ export function generateBuildingInteriorPlan({ worldId, building, entrance, seed
   const anchor = { origin: [building.center[0], building.center[1]], eastAxis: [c, s], northAxis: [-s, c], baseElevation };
   const localFootprint = polygon => polygon.map(p => worldToBuildingLocal(anchor, p));
   const key = `${worldId}:${building.id}:v${BUILDING_INTERIOR_GENERATOR_VERSION}:${seed}`;
-  const palettes = ['limestone', 'oak', 'terracotta', 'concrete'];
+  const palettes = BUILDING_INTERIOR_MATERIALS;
   const planLevels = Array.from({ length: levels }, (_, index) => {
     const levelId = `${building.id}/l${index}`, elevation = floorElevation(index);
+    const levelKey = levelSeeds?.[index] === undefined ? key : `${worldId}:${building.id}:v${BUILDING_INTERIOR_GENERATOR_VERSION}:${levelSeeds[index]}`;
     const portals = index === 0 ? [{ id: `${levelId}/portal/${entrance.id}`, kind: 'entrance', position: [ex, ey], outward, levelId }] : [];
     if (index > 0) portals.push({ id: `${levelId}/portal/stairs-down`, kind: 'stairs', position: [...stairCenter], levelId, toLevelId: `${building.id}/l${index - 1}` });
     if (index < levels - 1) portals.push({ id: `${levelId}/portal/stairs-up`, kind: 'stairs', position: [...stairCenter], levelId, toLevelId: `${building.id}/l${index + 1}` });
     for (const portal of portals) portal.localPosition = worldToBuildingLocal(anchor, portal.position);
-    return {
+    const level = {
       id: levelId, index, floorElevation: elevation, clearHeight: clearHeight(index),
       rooms: [{ id: `${levelId}/room/main`, kind: 'primary', footprint: chosen.polygon.map(p => [...p]), localFootprint: localFootprint(chosen.polygon) }],
       portals,
@@ -139,10 +170,29 @@ export function generateBuildingInteriorPlan({ worldId, building, entrance, seed
           localStairOpening: levels > 1 ? localFootprint(stairFootprint) : null }],
         partitions: [], fixtures: [{ id: `${levelId}/object/wall-display`, kind: 'display', footprint: displayFootprint.map(p => [...p]),
           localFootprint: localFootprint(displayFootprint) }],
-        finishes: [{ id: `${levelId}/finish/floor`, material: palettes[hash32(`${key}:${index}:floor`) % palettes.length], variation: hash32(`${key}:${index}:variation`) }],
+        finishes: [{ id: `${levelId}/finish/floor`, material: palettes[hash32(`${levelKey}:${index}:floor`) % palettes.length], variation: hash32(`${levelKey}:${index}:variation`) }],
         authoredOverrides: [],
       },
     };
+    for (const override of overrides.filter(item => item.targetId.startsWith(`${levelId}/`)).sort((a, b) => a.targetId.localeCompare(b.targetId))) {
+      const target = [...level.layers.fixtures, ...level.layers.finishes].find(item => item.id === override.targetId);
+      if (override.position) {
+        const center = target.localFootprint.reduce((sum, p) => [sum[0] + p[0] / 4, sum[1] + p[1] / 4], [0, 0]);
+        const local = target.localFootprint.map(p => [p[0] + override.position[0] - center[0], p[1] + override.position[1] - center[1]]);
+        const world = local.map(p => buildingLocalToWorld(anchor, p));
+        // Reserve a continuous 1.4 m entry aisle and cross aisle to the landing.
+        const aisle = footprint(toWorld, -0.7, 0.7, 0.5, chosen.depth - 1.1);
+        const landing = footprint(toWorld, 0, chosen.width / 2 - 0.65, chosen.depth - 2.5, chosen.depth - 1.1);
+        if (!polygonFits(world, chosen.polygon, 0.2) || polygonsOverlap(world, aisle, 0.2)
+          || polygonsOverlap(world, landing, 0.2) || polygonsOverlap(world, stairFootprint, 0.45)) fail('furnishing placement: keep walls, entrance and stair routes clear');
+        target.localFootprint = local; target.footprint = world;
+      }
+      if (override.material !== undefined) target.material = override.material;
+      level.layers.authoredOverrides.push({ id: `${override.targetId}/override`, targetId: override.targetId,
+        ...(override.position ? { position: [...override.position] } : {}),
+        ...(override.material !== undefined ? { material: override.material } : {}) });
+    }
+    return level;
   });
   return {
     schemaVersion: 1, generatorVersion: BUILDING_INTERIOR_GENERATOR_VERSION, worldId, buildingId: building.id, seed,

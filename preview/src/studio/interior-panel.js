@@ -1,4 +1,5 @@
-import { BUILDING_INTERIOR_GENERATOR_VERSION } from '../building-interiors-plan.js';
+import { BUILDING_INTERIOR_GENERATOR_VERSION, BUILDING_INTERIOR_MATERIALS } from '../building-interiors-plan.js';
+import { previewInteriorLevelRegeneration, withInteriorOverride } from './interior-plan.js';
 
 const element = (tag, text, className) => {
   const node = document.createElement(tag);
@@ -28,20 +29,22 @@ export function renderBuildingInteriorPanel(host, { doc, buildingId, disabled, a
     control.addEventListener('click', action);
     return control;
   };
-  const propose = (next, label) => run(() => {
+  const propose = (next, label, details = []) => run(() => {
     const plan = doc.previewBuildingInterior(buildingId, next);
     const revision = doc.revision;
     preview.replaceChildren(element('strong', label),
       element('p', `${plan.levels.length} level${plan.levels.length === 1 ? '' : 's'} inside the existing ${building.size[2].toFixed(1)} m roof. Entrance, floor IDs and source geometry stay anchored to ${building.id}.`),
-      element('p', `New top floor: ${plan.levels.at(-1).floorElevation.toFixed(2)} m. Its shell, partitions, fixtures, finishes and override layers are separate.`),
-      element('p', 'Finish choices in this preview may change when the published world ID is assigned.'));
+      element('p', `Top floor: ${plan.levels.at(-1).floorElevation.toFixed(2)} m. Its shell, partitions, fixtures, finishes and override layers are separate.`),
+      ...details.map(text => element('p', text)),
+      element('p', 'Generated finishes may change when the published world ID is assigned. Authored finishes are retained.'));
     preview.append(button('Apply preview', () => run(() => {
       if (doc.revision !== revision) throw new Error('The building changed. Preview its levels again.');
       doc.setBuildingInterior(buildingId, next);
-      apply(); say('Generated interior updated. Save or export to keep the levels.');
+      apply(); host.querySelector(`[data-interior-level="${interiorView?.levelIndex ?? 0}"]`)?.focus();
+      say('Generated interior updated. Save or export to keep your edits.');
     })), button('Cancel', () => { preview.hidden = true; }));
     preview.hidden = false;
-    say('Review the proposed level change, then apply it.');
+    say('Review the proposed interior change, then apply it.');
   });
   if (!interior?.generation) {
     const next = { ...(interior ?? { name: building.id.replaceAll('-', ' '),
@@ -76,6 +79,49 @@ export function renderBuildingInteriorPanel(host, { doc, buildingId, disabled, a
       label.prepend(input); controls.append(label);
     }
     host.append(controls, button('Show exterior', () => onViewLevel(null)));
+    const level = plan.levels[interiorView.levelIndex], fixture = level.layers.fixtures[0], finish = level.layers.finishes[0];
+    const edits = element('fieldset', '', 'studio-interior-edits');
+    edits.append(element('legend', `Edit level ${level.index}`),
+      element('p', 'Move the wall display in building-local metres. Keep the entrance and stair route clear.'));
+    const field = (label, value, options) => {
+      const wrapper = element('label', label), input = document.createElement(options ? 'select' : 'input');
+      input.setAttribute('aria-label', label);
+      if (options) for (const choice of options) { const option = element('option', choice); option.value = choice; input.append(option); }
+      else { input.type = 'number'; input.step = '0.1'; input.min = '-100'; input.max = '100'; }
+      input.value = value; input.disabled = disabled; wrapper.append(input); edits.append(wrapper); return input;
+    };
+    const center = fixture.localFootprint.reduce((sum, p) => [sum[0] + p[0] / 4, sum[1] + p[1] / 4], [0, 0]);
+    const u = field('Display local U (m)', Number(center[0].toFixed(4))), v = field('Display local V (m)', Number(center[1].toFixed(4)));
+    const originalPosition = [u.value, v.value];
+    const displayFinish = field('Display finish', fixture.material ?? 'generated', ['generated', ...BUILDING_INTERIOR_MATERIALS]);
+    const floorFinish = field('Floor finish', finish.material, BUILDING_INTERIOR_MATERIALS);
+    edits.append(button('Preview furnishing and finishes', () => run(() => {
+      let next = interior;
+      const moved = u.value !== originalPosition[0] || v.value !== originalPosition[1];
+      if (moved && (!u.value.trim() || !v.value.trim())) throw new Error('Enter both furnishing coordinates.');
+      if (moved || displayFinish.value !== (fixture.material ?? 'generated')) {
+        if (displayFinish.value === 'generated' && fixture.material) throw new Error('Choose a display finish, or reset the level edits.');
+        next = withInteriorOverride(next, { targetId: fixture.id,
+          ...(moved ? { position: [Number(u.value), Number(v.value)] } : {}),
+          ...(displayFinish.value !== 'generated' ? { material: displayFinish.value } : {}) });
+      }
+      if (floorFinish.value !== finish.material) next = withInteriorOverride(next, { targetId: finish.id, material: floorFinish.value });
+      if (next === interior) throw new Error('Change a furnishing coordinate or finish before previewing.');
+      propose(next, `Edit level ${level.index}`, ['Only the selected furnishing and finish slots change. Other levels keep their seeds and authored edits.']);
+    })));
+    if (level.layers.authoredOverrides.length) {
+      edits.append(element('p', 'Authored level: regeneration is locked. Other untouched levels can still be regenerated.'),
+        button('Preview reset level edits', () => propose({ ...interior, generation: { ...generation,
+          overrides: (generation.overrides ?? []).filter(item => !item.targetId.startsWith(`${level.id}/`)) } },
+        `Reset level ${level.index} edits`, ['Removes this level’s authored overrides and restores its generated furnishing and finish.'])));
+    } else edits.append(button('Preview regenerate untouched level', () => run(() => {
+      const result = previewInteriorLevelRegeneration(doc.value, buildingId, level.index);
+      propose(result.interior, `Regenerate level ${level.index}`, [
+        ...result.changes.map(change => `${change.id}: ${change.before} → ${change.after}`),
+        `Unchanged levels: ${result.preservedLevelIds.join(', ') || 'none'}. Room geometry, furnishing IDs and stair connections stay fixed.`,
+      ]);
+    })));
+    host.append(edits);
   }
   if (generation.levels < 8) host.append(button('Preview add level', () => propose({ ...interior,
     generation: { ...generation, levels: generation.levels + 1 } }, `Add level ${generation.levels}`)));

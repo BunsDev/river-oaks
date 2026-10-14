@@ -56,9 +56,20 @@ in the viewport. The layer checkboxes control preview visibility; they do not
 change saved collision or the published plan. **Show exterior** restores the
 block. Walk through still uses the exterior collision blockout.
 The editor uses a provisional world ID for preview finishes. Publication assigns
-the final world ID and validates its own server-approved plan. Authored override
-editing and a regeneration diff are still in development. Existing furnished-space files retain their
-single-level schema and are not rewritten merely by opening them.
+the final world ID and validates its own server-approved plan. In a selected level,
+edit the display's local U/V position and material or the floor finish, then
+**Preview furnishing and finishes** and **Apply preview**. Invalid moves across
+walls, the entrance aisle or the stair landing leave the draft unchanged. Orange
+outlines in **Authored overrides** identify edited slots; hiding that layer only
+hides the outlines. Authored finishes survive publication's world ID assignment.
+
+**Preview regenerate untouched level** lists the finish change and unchanged
+level IDs before applying a new seed to that floor alone. Geometry and object IDs
+stay fixed. Levels with authored edits are locked against regeneration; use
+**Preview reset level edits** to explicitly remove their overrides first. Save,
+reopen, undo/redo and export retain both overrides and per-level seeds. Existing
+furnished-space files retain their single-level schema and are not rewritten
+merely by opening them.
 
 - Drag to orbit, right-drag to pan, and scroll to zoom.
 - **Move / W**, **Rotate / E**, and **Size / R** choose transform handles.

@@ -47,7 +47,8 @@ export function createInteriorLevelPreview(plan) {
       const points = fixture.localFootprint;
       const us = points.map(point => point[0]), vs = points.map(point => point[1]);
       const width = Math.max(...us) - Math.min(...us), depth = Math.max(...vs) - Math.min(...vs);
-      const mesh = new THREE.Mesh(new THREE.BoxGeometry(width, 0.95, depth), fixtureMaterial);
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(width, 0.95, depth),
+        fixture.material ? material(COLORS[fixture.material]) : fixtureMaterial);
       mesh.position.set((Math.min(...us) + Math.max(...us)) / 2, 0.51, -(Math.min(...vs) + Math.max(...vs)) / 2);
       mesh.name = fixture.id; layers.get('fixtures').add(mesh);
     }
@@ -61,6 +62,14 @@ export function createInteriorLevelPreview(plan) {
       material(COLORS[finish.material] ?? '#c9bca4', 0.72));
     finishSurface.rotation.x = -Math.PI / 2; finishSurface.position.y = 0.045;
     finishSurface.name = finish.id; layers.get('finishes').add(finishSurface);
+    for (const override of level.layers.authoredOverrides) {
+      const target = root.getObjectByName(override.targetId);
+      if (!target) continue;
+      const outline = new THREE.LineSegments(new THREE.EdgesGeometry(target.geometry),
+        new THREE.LineBasicMaterial({ color: '#c56a22', depthTest: false }));
+      outline.position.copy(target.position); outline.rotation.copy(target.rotation);
+      outline.name = override.id; outline.renderOrder = 2; layers.get('authoredOverrides').add(outline);
+    }
     root.visible = false; group.add(root); levels.set(level.index, { root, layers });
   }
   return { group, levels };

@@ -92,3 +92,6 @@
 .studio-interior-layers{display:grid;gap:6px;margin:12px 0;padding:10px;border:1px solid var(--line);border-radius:5px}
 .studio-interior-layers legend{padding:0 4px;color:var(--muted)}
 .studio-interior-layers label{display:flex;align-items:center;gap:7px;text-transform:capitalize}
+.studio-interior-edits{display:grid;gap:8px;margin:12px 0;padding:10px;border:1px solid var(--line);border-radius:5px}
+.studio-interior-edits label{display:grid;gap:4px}.studio-interior-edits input,.studio-interior-edits select{width:100%;min-width:0;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--paper);color:var(--ink);font:inherit}
+.studio-interior-edits input:focus-visible,.studio-interior-edits select:focus-visible{outline:2px solid var(--forest);outline-offset:2px}

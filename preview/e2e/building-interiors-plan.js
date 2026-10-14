@@ -10,6 +10,8 @@ const request = {
   worldId: 'browser-plan-check', seed: 'rotated-gallery-01', levels: 2, baseElevation: 7,
   building: { id: 'gallery', center: [20, 10, 7], size: [16, 12, 10], yaw_deg: 0,
     ring: [[12, 4], [28, 4], [28, 16], [12, 16], [12, 4]], kind: 'retail' },
+  levelSeeds: { 1: 'fresh-upper-floor' },
+  overrides: [{ targetId: 'gallery/l0/object/wall-display', position: [-4.45, -1], material: 'oak' }],
   entrance: { id: 'south-door', position: [20, 4], outward: [0, -1] },
 };
 const moduleSource = await readFile(new URL('../src/building-interiors-plan.js', import.meta.url));
