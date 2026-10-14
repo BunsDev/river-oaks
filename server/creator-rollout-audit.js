@@ -28,7 +28,7 @@ try{
   await pause();await old.tick();assert.equal(await redis.get(prefix+':lease'),nextLease,'old writer does not replace v6');
   await old.close();assert.equal(await redis.get(prefix+':lease'),nextLease,'old close does not release v6');
   const before=await redis.getBuffer(prefix+':state');
-  assert.equal(JSON.parse(inflateSync(before).toString()).checkpoint.version,6);
+  assert.equal(JSON.parse(inflateSync(before).toString()).checkpoint.version,7);
   await redis.del(prefix+':lease');obsolete=previousRoom(options);
   await assert.rejects(obsolete.tick(),/Invalid durable town checkpoint/);
   assert.deepEqual(await redis.getBuffer(prefix+':state'),before,'obsolete recovery does not write a partial state');

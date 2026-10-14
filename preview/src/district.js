@@ -10,7 +10,7 @@ import { thinStorefrontGlass, displayRoomSurface } from './storefront-materials.
 import { hedgeClusters } from './street-furniture.js';
 import { storefrontBenchSpots } from './street-fixtures.js';
 export { storefrontBenchSpots };
-import { storeRoomsFor, uncoveredBay, coveringRoom } from './store-rooms.js';
+import { storeRoomsFor, interiorLevelRoomsFor, uncoveredBay, coveringRoom } from './store-rooms.js';
 import { buildStoreInteriors } from './store-interiors.js';
 import { createReferenceFacades, visibleRoofHeight } from './reference-facades.js';
 import { finishKey } from './material-finish.js';
@@ -427,12 +427,18 @@ export function buildDistrictBuildings(world) {
     arrival.object.name='Office lobby and elevator';group.add(arrival.object);group.userData.officeArrival=arrival;
   }
   const reflectionMaterials = [glass, upperGlass, ...reference.reflective];
-  const interiorGroup = buildStoreInteriors(rooms, { atlas: interiors, reflectionMaterials });
+  const generatedRooms = [
+    ...rooms.filter(room => room.generatedPlan),
+    ...(world.buildingInteriors ?? []).flatMap(plan => plan.levels.filter(level => level.index > 0)
+      .flatMap(level => interiorLevelRoomsFor(world, level.id))),
+  ];
+  const interiorGroup = buildStoreInteriors(rooms.filter(room => !room.generatedPlan), { atlas: interiors, reflectionMaterials });
   group.userData.reflectionMaterials = reflectionMaterials;
   const reflective = [];
   for (const root of [group, interiorGroup]) root.traverse(mesh => { if (mesh.material && reflectionMaterials.includes(mesh.material)) reflective.push(mesh); });
   group.userData.reflectionExclusions = reflective;
   group.userData.interiors = interiorGroup;
+  group.userData.generatedRooms = generatedRooms;
   group.userData.rooms = rooms;
   group.userData.updateDoors = (positions, delta) => {
     const step = 1 - Math.exp(-5 * Math.min(delta, 0.1));

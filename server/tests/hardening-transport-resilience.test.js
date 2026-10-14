@@ -17,7 +17,7 @@ async function serve(t, room, identities, options = {}) {
   t.after(() => app.close());
   await new Promise(resolve => app.server.listen(0, '127.0.0.1', resolve));
   const connect = async () => {
-    const ws = new WebSocket(`ws://127.0.0.1:${app.server.address().port}/multiplayer?protocol=2&ticket=test`, {headers: {Origin: 'http://localhost'}});
+    const ws = new WebSocket(`ws://127.0.0.1:${app.server.address().port}/multiplayer?protocol=3&ticket=test`, {headers: {Origin: 'http://localhost'}});
     t.after(() => ws.terminate());
     await once(ws, 'message');
     return ws;

@@ -13,7 +13,7 @@ import { primaryAction } from './contextual-action.js';
 import { travelRefusal } from './travel-message.js';
 import './walking.css';
 
-export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getLocals, reducedMotion, onEnter, onLeave, canEnterStore = () => true, getInteraction = () => null, getPlay = () => null, getVoice = () => null }) {
+export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getLocals, reducedMotion, onEnter, onLeave, onLevelChange, canEnterStore = () => true, getInteraction = () => null, getPlay = () => null, getVoice = () => null }) {
   const $ = (selector) => document.querySelector(selector);
   const hud = document.createElement('section');
   hud.id = 'walking-hud'; hud.className = 'walking-hud'; hud.hidden = true;
@@ -82,7 +82,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   let flight = createFlightState();
   let flightAllowed=false,beastKind=null;
   let thirdPerson = true, bodyVisible = true;
-  let active = false, environment, stores = [], state, nearest = null, lastPaint = 0, pathLabel = 'public district paths';
+  let active = false, environment, walkingWorld = null, stores = [], state, nearest = null, lastPaint = 0, pathLabel = 'public district paths';
   const drag = createPointerGesture();
   const cameraBoom=createCameraBoom();
   const clear = () => { keys.clear(); drag.cancel(); document.querySelectorAll('[data-walk-key]').forEach(b => b.classList.remove('held')); if (state) state.velocity = [0, 0]; };
@@ -135,6 +135,8 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   const talk = () => { if (!active) return; nearest = findNearest(); if (nearest) { clear(); onTalk(nearest.id); } };
   // Boutique thresholds: inside a room F steps back to the pavement, at a door F walks in.
   const currentRoom = () => environment?.roomAt?.(state.position[0], state.position[2]) ?? null;
+  const nearbyStairs = room => room?.generatedPlan?.portals?.find(portal => portal.kind === 'stairs'
+    && Math.hypot(portal.position[0] - state.position[0], portal.position[1] + state.position[2]) <= 1.3) ?? null;
   const doorway = () => {
     let result = null, distance = 6;
     for (const store of stores) {
@@ -146,12 +148,14 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   const stepThrough = async () => {
     if (!active || transport || sitting || doorwayPending) return;
     const room = currentRoom();
+    const stairs = nearbyStairs(room);
+    if (room?.generatedPlan?.index > 0 && !stairs) return;
     const store = room ? stores.find(item => item.id === room.storeId) : doorway();
-    if (!store || (!room && !canEnterStore(store))) return;
+    if ((!store && !stairs) || (!room && !canEnterStore(store))) return;
     const actionState = state;
     clear(); doorwayPending = true;
     try {
-      const result = await (room ? onLeave?.(store) : onEnter?.(store));
+      const result = await (stairs ? onLevelChange?.(stairs) : room ? onLeave?.(store) : onEnter?.(store));
       if (active && state === actionState && result?.ok === false) {
         notify(travelRefusal(result, { blocked: 'The way through is blocked right now. Try again in a moment.',
           cooldown: 'Wait a moment before stepping through. Try again.', fallback: 'Could not step through. Try again.' }));
@@ -271,6 +275,10 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       transport?.stop();transport=null;
       if (!active || !state || !player) return;
       clear();
+      const level = walkingWorld?.buildingInteriors?.flatMap(plan => plan.levels)
+        .find(item => item.id === player.levelId);
+      const selectedLevelId = level?.index > 0 ? level.id : null;
+      if (environment.levelId !== selectedLevelId) environment = createWalkingEnvironment(walkingWorld, placedObjects, selectedLevelId);
       sitting=player.sitting??null;performing=Boolean(player.performing);seatedGround=player.position[2];
       state.position = [player.position[0], player.position[2] + (sitting?sitting.height+.65:1.68) + player.altitude, -player.position[1]];
       state.yaw = player.yaw; state.speed = 0;
@@ -278,9 +286,11 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       if (player.altitude > 0) Object.assign(flight, { active: true, altitude: player.altitude, target: player.altitude });
       place();
     },
-    syncSeating(player) {
+    syncAuthoritativePose(player) {
       if(!player)return;
-      if((player.sitting?.buildId??null)!==(sitting?.buildId??null) || player.sitting?.slot!==sitting?.slot)this.applyServerPose(player);
+      const level=walkingWorld?.buildingInteriors?.flatMap(plan=>plan.levels).find(item=>item.id===player.levelId);
+      if((player.sitting?.buildId??null)!==(sitting?.buildId??null) || player.sitting?.slot!==sitting?.slot
+        || environment?.levelId!==(level?.index>0?level.id:null))this.applyServerPose(player);
     },
     toggleFlight() {
       if (!flightAllowed || !active || currentRoom() || transport || sitting || performing) return false;
@@ -294,7 +304,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     notify,
     get environment() { return environment ?? null; },
     setThirdPerson(enabled) { thirdPerson = Boolean(enabled);if (active) place(); },
-    getPose() { return active && state ? { position: [...state.position], riding:transport?.pose??null, sitting, ground: sitting||performing?seatedGround:environment.groundAt(state.position[0], state.position[2]), altitude:flight.altitude, flying:flight.active, landing:flight.landing, yaw: state.yaw, speed: state.speed, velocity: [...state.velocity], distance: state.distance, roomId: currentRoom()?.storeId ?? null, showBody: thirdPerson && bodyVisible, groundAt: environment.groundAt } : null; },
+    getPose() { return active && state ? { position: [...state.position], riding:transport?.pose??null, sitting, ground: sitting||performing?seatedGround:environment.groundAt(state.position[0], state.position[2]), altitude:flight.altitude, levelId:environment.levelId??currentRoom()?.planId??null, flying:flight.active, landing:flight.landing, yaw: state.yaw, speed: state.speed, velocity: [...state.velocity], distance: state.distance, roomId: currentRoom()?.storeId ?? null, showBody: thirdPerson && bodyVisible, groundAt: environment.groundAt } : null; },
     canSee(point,eyeHeight) {
       if (!state) return false;
       const local=(getLocals()??[]).find(local=>local.position===point);
@@ -316,6 +326,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       $('.walking-title span').textContent = creatorRegion ? world.title : 'RIVER OAKS · GARDEN CITY';
       $('.walking-title small').textContent = creatorRegion ? 'Creator-authored region' : '4444 Westheimer Rd · Houston';
       pathLabel = creatorRegion ? 'creator region paths' : 'public district paths';
+      walkingWorld = world;
       environment = createWalkingEnvironment(world, placedObjects);
       stores = world.stores ?? [];
       flight = createFlightState();
@@ -370,12 +381,13 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       playButton.hidden = !game;
       if (game) { setAction(playButton, game.label, 'X'); setBusy(playButton, game.disabled); }
       const storefront = stores.reduce((best, store) => { const distance = Math.hypot(store.facade[0] - state.position[0], store.facade[1] + state.position[2]); return distance < (best?.distance ?? 16) ? { store, distance } : best; }, null);
-      const room = currentRoom(), door = room ? null : doorway();
+      const room = currentRoom(), door = room ? null : doorway(), stairs = nearbyStairs(room);
       $('.walking-title strong').textContent = sitting ? 'Seated' : performing ? 'On stage' : transport ? (transport.pose.kind === 'bicycle' ? 'Cycling' : 'Riding with Jev') : flight.active ? (flight.landing ? 'Landing' : 'In flight') : room?.name ?? storefront?.store.name ?? 'On foot';
       const enter = $('#walking-enter');
-      enter.hidden = Boolean(sitting||performing||transport)||(!room && !door);
+      enter.hidden = Boolean(sitting||performing||transport)||(!room && !door)||Boolean(room?.generatedPlan?.index>0 && !stairs);
       enter.disabled = Boolean(door && !canEnterStore(door));
-      if (room) setAction(enter, 'Step outside', 'F');
+      if (stairs) setAction(enter, stairs.toLevelId.endsWith('/l0') ? 'Go down to ground floor' : 'Go up one level', 'F');
+      else if (room) setAction(enter, 'Step outside', 'F');
       else if (door) setAction(enter, canEnterStore(door) ? `Step inside ${door.name}` : `${door.name} · Invitation required`, canEnterStore(door) ? 'F' : null);
       else setAction(enter, '');
       presentActions();
@@ -384,7 +396,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       const roomSummary=room && sharedRoomSummary(room);
       $('#walking-place').textContent = sitting ? 'Drag to look around · Z stands up' : performing ? 'Drag to look around · X steps down' : transport ? (transport.pose.kind === 'bicycle' ? `${(transport.pose.distance / 1609.344).toFixed(2)} mi cycled this ride · W to pedal · Shift to sprint · G to step off` : 'W/S to ride or reverse · A/D or arrows to steer · G to step out') : flight.active ? `${flight.altitude.toFixed(1)} m above ground · Space to rise · C to lower` : room ? room.theme === 'home'
         ? `Inside ${room.name} · ${roomSummary.label} · ${roomSummary.guests} resident${roomSummary.guests === 1 ? '' : 's'}`
-        : `Inside ${room.name} · ${roomSummary.label} · ${roomSummary.staff} staff, ${roomSummary.guests} guests`
+        : `Inside ${room.name}${room.generatedPlan?.index ? ` · Level ${room.generatedPlan.index + 1}` : ''} · ${roomSummary.label} · ${roomSummary.staff} staff, ${roomSummary.guests} guests`
         : nearest ? `${nearest.anchorName} · nearby` : `${state.distance.toFixed(0)} m walked · ${pathLabel}`;
       hud.dataset.eyeHeight = (state.position[1] - environment.groundAt(state.position[0], state.position[2])).toFixed(2);
       hud.dataset.distance = state.distance.toFixed(2);

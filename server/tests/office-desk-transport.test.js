@@ -24,7 +24,7 @@ for(const mode of ['memory','redis'])test(`${mode}: private desk authorization a
  assert.equal((await ticket('owner','wrong')).status,403);assert.equal((await ticket('missing')).status,401);
  const join=async id=>{
   const response=await ticket(id);assert.equal(response.status,200);const {ticket:token}=await response.json();
-  const ws=new WebSocket(`${base.replace('http:','ws:')}/multiplayer?ticket=${token}&world=river-oaks&protocol=2`,{headers:{Origin:origin,Cookie:`fixture=${id}`}});sockets.push(ws);
+  const ws=new WebSocket(`${base.replace('http:','ws:')}/multiplayer?ticket=${token}&world=river-oaks&protocol=3`,{headers:{Origin:origin,Cookie:`fixture=${id}`}});sockets.push(ws);
   const pending=new Map();let last=null,seq=0;
   await new Promise((resolve,reject)=>{ws.once('error',reject);ws.on('message',raw=>{const v=JSON.parse(raw);if(v.type==='snapshot'){last=v;resolve();}if(v.type==='result'&&pending.has(v.requestId)){pending.get(v.requestId)(v);pending.delete(v.requestId);}});});
   return {ws,get snapshot(){return last;},send:message=>new Promise((resolve,reject)=>{const requestId=String(++seq),timeout=setTimeout(()=>{pending.delete(requestId);reject(new Error('Office command timed out'));},5000);pending.set(requestId,v=>{clearTimeout(timeout);resolve(v);});ws.send(JSON.stringify({...message,requestId}));})};

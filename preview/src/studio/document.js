@@ -1,6 +1,7 @@
 import { isSpaceDocument, validateSpace, spaceItems, mutateSpace } from './space-document.js';
 import { blankRegion, editableRegion, nextRegionId } from '../region-draft.js';
 import { assertStudioBudget } from './limits.js';
+import { previewBuildingInteriorPlan } from './interior-plan.js';
 
 export const STORAGE_KEY = 'river-oaks-world-studio-v1';
 export const MAX_REGION_BYTES = 128 * 1024;
@@ -11,7 +12,9 @@ const validate = region => {
   const text = encode(region);
   if (typeof text !== 'string' || new TextEncoder().encode(text).length > MAX_REGION_BYTES
     || (!isSpaceDocument(region) && !editableRegion(JSON.parse(text)))) throw new Error('Use a valid Studio JSON, within 128 KiB and the document bounds.');
-  const parsed=JSON.parse(text);if(isSpaceDocument(parsed))return validateSpace(parsed);assertStudioBudget(parsed);return parsed;
+  const parsed=JSON.parse(text);if(isSpaceDocument(parsed))return validateSpace(parsed);assertStudioBudget(parsed);
+  for (const building of parsed.buildings) if (building.interior?.generation) previewBuildingInteriorPlan(parsed, building.id);
+  return parsed;
 };
 export function parseRegion(text) {
   if (typeof text !== 'string' || new TextEncoder().encode(text).length > MAX_REGION_BYTES) throw new Error('Studio files must be at most 128 KiB.');
@@ -43,6 +46,20 @@ export function createStudioDocument(initial = blankRegion(), { historyLimit = 8
     get canRedo() { return future.length > 0; },
     serialize() { return JSON.stringify(region, null, 2); },
     replace(next) { const changed = transact(next); if (!changed) revision++; return changed; },
+    previewBuildingInterior(id, interior) {
+      if (isSpaceDocument(region)) throw new Error('Furnished spaces keep their existing document format.');
+      const next = clone(region), building = next.buildings.find(item => item.id === id);
+      if (!building) throw new Error('Select a building.');
+      building.interior = clone(interior);
+      validate(next);
+      return interior?.generation ? previewBuildingInteriorPlan(next, id) : null;
+    },
+    setBuildingInterior(id, interior) {
+      api.previewBuildingInterior(id, interior);
+      const next = clone(region);
+      next.buildings.find(item => item.id === id).interior = clone(interior);
+      return transact(next);
+    },
     add(type) {
       if(isSpaceDocument(region)){
         const [w,s,e,n]=region.bounds_m;
