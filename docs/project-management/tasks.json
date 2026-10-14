@@ -5224,9 +5224,9 @@
         "fix/procedural-private-level-revocation-20261014"
       ],
       "owner": "codex-root-20261014-private-level-revocation",
-      "updatedAt": "2026-10-14T04:49:12Z",
-      "leaseUntil": "2026-10-14T06:49:12Z",
-      "nextAction": "Open a draft PR stacked on #351 from the verified private upper-level revocation fix, then check its exact-head hosted results.",
+      "updatedAt": "2026-10-14T04:50:34Z",
+      "leaseUntil": "2026-10-14T06:50:34Z",
+      "nextAction": "Review draft PR #352 exact-head hosted checks, then hand the private upper-level revocation fix to the procedural-interiors integration owner. Keep the worktree until delivery evidence exists.",
       "ledger": "docs/superpowers/plans/2026-10-14-procedural-private-upper-revocation.md",
       "requiredChecks": [
         "Focused generated-home access and upper-level regression",
@@ -5238,7 +5238,8 @@
         "server/tests/generated-private-level-access.test.js",
         "docs/superpowers/plans/2026-10-14-procedural-private-upper-revocation.md",
         "docs/superpowers/plans/README.md"
-      ]
+      ],
+      "pr": 352
     }
   ]
 }
