@@ -1,0 +1,12 @@
+{
+  "createdAt": "2026-10-14T00:42:27.995Z",
+  "measuredAgainst": "LiveKit Cloud (preview project) from the fixture town",
+  "leaveToPeerGoneSeconds": 0.06,
+  "leaveToLeaseDroppedSeconds": 0.339,
+  "droppedTabToRemovedSeconds": 10.076,
+  "targets": {
+    "withLiveLeaseHolderSeconds": 2,
+    "noInstanceAliveSeconds": 127
+  },
+  "note": "A dropped tab keeps its lease until the reconciler sees the connection gone (departure grace) or the per-minute sweep removes it; the fixture town has no cron, so the 30 s timer sweep applies."
+}

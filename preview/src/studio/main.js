@@ -16,19 +16,20 @@ export function startStudio(host) {
     <aside class="studio-inspector" aria-label="Object properties"><div class="studio-panel-title"><h2>Inspector</h2><span id="studio-kind">Selection</span></div><h3 id="studio-selected">Choose an object</h3><form id="studio-properties" autocomplete="off"></form><section id="studio-building-interior" class="studio-building-interior" aria-label="Generated interior" hidden></section><button id="studio-delete" class="studio-delete" hidden>Delete object</button><p class="studio-inspector-note">Moves snap to 0.5 m. Rotation snaps to 22.5°. Use the fields for precise values.</p><div class="studio-document-note"><strong>Yours to shape</strong><p>Save keeps a draft on this device. Export makes a portable Studio file. Your edits never change a live shared world.</p><button id="studio-reopen">Reopen saved draft</button></div></aside></div>
     <footer class="studio-footer"><span id="studio-dirty">New draft</span><p id="studio-status" role="status" aria-live="polite">Select an object, or add something to your region.</p><span id="studio-position">East / North · m</span></footer>`;
   const $=selector=>host.querySelector(selector),doc=createStudioDocument();
-  let selected=null,walking=false,disposed=false,importGeneration=0,viewport,designer,agent;
+  let selected=null,interiorView=null,walking=false,disposed=false,importGeneration=0,viewport,designer,agent;
   let renderedRevision = doc.revision;
   const say=text=>{$('#studio-status').textContent=text;};
   try { if(doc.restore(localStorage))say('Saved draft reopened.'); } catch(error){say(`${error.message} Export or open a valid Studio file; the saved draft has not been changed.`);}
   const acceptDiscard=()=>!doc.dirty||window.confirm('Discard unsaved changes? Export or save first to keep them.');
   const run=action=>{try{action();}catch(error){say(error.message);render();}};
-  const select=id=>{selected=id;viewport.select(id);renderPanels();};
+  const select=id=>{if(id!==selected)interiorView=null;selected=id;viewport.select(id);viewport.showInterior(interiorView);renderPanels();};
   viewport=createStudioViewport($('#studio-viewport'),{onSelect:select,onTransform:(id,patch)=>run(()=>{doc.update(id,patch);render();say('Transform applied.');}),onExitWalk:()=>setWalk(false),onPosition:position=>{$('#studio-position').textContent=`${position[0].toFixed(1)} E / ${(-position[2]).toFixed(1)} N · m`;}});
   function renderPanels(){
     designer?.refresh();agent?.refresh();
     const space=isSpaceDocument(doc.value),items=doc.items,item=items.find(value=>value.id===selected);
     $('.studio-panel-title h1').textContent=space?doc.value.name:'Region';
-    $('.studio-scene-note').textContent=space?'Furnished local space. Select an element to change its finish, dimensions or position. Save or export to keep your work.':'Roads, terrain and parcels are preserved from your region file. This view shows a blockout of your world.';
+    $('.studio-scene-panel h2').textContent=space?'Level 0 · objects':'Scene objects';
+    $('.studio-scene-note').textContent=space?'Level 0 · furnished local space. Select an element to change its finish, dimensions or position. Save or export to keep your work.':'Roads, terrain and parcels are preserved from your region file. Select a generated building to inspect its levels; walking still uses the exterior blockout.';
     $('#studio-count').textContent=`${items.length} objects`;
     $('#studio-dirty').textContent=doc.dirty?'● Unsaved changes':'○ Draft unchanged';
     $('#studio-undo').disabled=walking||!doc.canUndo;$('#studio-redo').disabled=walking||!doc.canRedo;
@@ -58,13 +59,23 @@ export function startStudio(host) {
       input.addEventListener('change',()=>run(()=>{doc.update(item.id,{[key]:input.value});render();say('Property updated.');}));wrapper.append(input);form.append(wrapper);
     }
     renderBuildingInteriorPanel($('#studio-building-interior'), { doc, buildingId: item?.type === 'building' ? item.id : null,
-      disabled: walking, apply: render, say, run });
+      disabled: walking, apply: render, say, run, interiorView,
+      onViewLevel:levelIndex=>{const focusLevel=levelIndex??interiorView?.levelIndex;
+        interiorView=levelIndex===null?null:{buildingId:selected,levelIndex,layers:interiorView?.layers??{}};
+        viewport.showInterior(interiorView);renderPanels();if(interiorView)viewport.frameSelection();
+        $(`#studio-building-interior [data-interior-level="${focusLevel}"]`)?.focus();},
+      onLayer:(name,visible)=>{interiorView={...interiorView,layers:{...interiorView.layers,[name]:visible}};
+        viewport.showInterior(interiorView);} });
     for(const button of host.querySelectorAll('[data-add]'))button.hidden=space?button.dataset.add!=='furnishing':button.dataset.add==='furnishing';
     $('#studio-delete').hidden=!item||['arrival','environment'].includes(item.type);$('#studio-delete').disabled=walking;
     $('#studio-frame').disabled=!item||item.type==='environment'||walking;$('#studio-region').disabled=walking;
     for(const button of host.querySelectorAll('[data-add],[data-tool],#studio-new,#studio-templates,#studio-reopen,#studio-import'))button.disabled=walking;
   }
-  function render(){if (doc.revision !== renderedRevision) { designer?.changed(); renderedRevision = doc.revision; } if(!doc.items.some(item=>item.id===selected))selected=null;viewport.render(doc.value,selected);renderPanels();}
+  function render(){if (doc.revision !== renderedRevision) { designer?.changed(); renderedRevision = doc.revision; }
+    if(!doc.items.some(item=>item.id===selected))selected=null;
+    const building=doc.value.buildings?.find(item=>item.id===interiorView?.buildingId);
+    if(!building?.interior?.generation||interiorView.levelIndex>=building.interior.generation.levels||selected!==interiorView.buildingId)interiorView=null;
+    viewport.render(doc.value,selected,interiorView);renderPanels();}
   function setWalk(enabled){
     try {viewport.walk(enabled);walking=enabled;document.body.dataset.mode=enabled?'walk':'edit';$('#studio-walk').textContent=enabled?'Return to editor':'Walk through';
       $('#studio-hint').textContent=enabled?'WASD / arrows · drag to look · Shift to hurry · Esc to edit':'Drag to orbit · right-drag to pan · scroll to zoom';renderPanels();say(enabled?(isSpaceDocument(doc.value)?'Private space walkthrough. Walls and furniture block movement.':'Private blockout playtest. Buildings use solid collision; interiors are not furnished in this view.'):'Returned to your draft.');

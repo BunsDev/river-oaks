@@ -3140,7 +3140,7 @@
           "reviewedHead": "444dd451312665b88a69756e282b8d968916e1e6",
           "merge": "e55c3866fcf8ec85090c22789fd5bc8ca5364a05",
           "tree": "6504df673f23e0b750f69c262664a1c83c5df1e6",
-          "checks": "All 17 hosted checks passed on 444dd45 (guard CLEAN, first attempt after a rebase onto #268; the earlier head lost a run to the known spatial-streets Hermès stall). Docs-only; project:status validated the register."
+          "checks": "All 17 hosted checks passed on 444dd45 (guard CLEAN, first attempt after a rebase onto #268; the earlier head lost a run to the known spatial-streets Herm\u00e8s stall). Docs-only; project:status validated the register."
         }
       ],
       "retirement": {
@@ -3163,7 +3163,7 @@
     },
     {
       "id": "plaza-salon",
-      "title": "Furnish the Dior-Toulouse plaza as a café and chess promenade (Val's reference set: curved bench, café armchairs, chess and timber tables, travertine planters, bronze lanterns, string lights)",
+      "title": "Furnish the Dior-Toulouse plaza as a caf\u00e9 and chess promenade (Val's reference set: curved bench, caf\u00e9 armchairs, chess and timber tables, travertine planters, bronze lanterns, string lights)",
       "status": "retired",
       "branches": [
         "feat/plaza-salon"
@@ -4000,7 +4000,7 @@
     },
     {
       "id": "plaza-games",
-      "title": "Playable games at the Dior–Toulouse plaza tables: solo chess first (X to play at a chess chair, local AI and pass-and-play, mirrored on the 3D board); later checkers, café cards/dominoes, more game tables, Jenga and wine pong",
+      "title": "Playable games at the Dior\u2013Toulouse plaza tables: solo chess first (X to play at a chess chair, local AI and pass-and-play, mirrored on the 3D board); later checkers, caf\u00e9 cards/dominoes, more game tables, Jenga and wine pong",
       "status": "active",
       "branches": [
         "feat/plaza-chess-20261013"
@@ -4009,7 +4009,7 @@
       "leaseUntil": "2026-10-13T19:34:31.000Z",
       "updatedAt": "2026-10-13T09:34:31.000Z",
       "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-plaza-games-20261013",
-      "nextAction": "Phase 1: in-repo chess rules (perft-tested), budgeted local opponent in a worker, plaza chess UI and 3D piece mirror, X 'Play chess' seated action, plaza-chess journey; then PR. Later phases per Val 2026-10-13: checkers, café cards/dominoes, more tables, Jenga, wine pong, shared two-player tables.",
+      "nextAction": "Phase 1: in-repo chess rules (perft-tested), budgeted local opponent in a worker, plaza chess UI and 3D piece mirror, X 'Play chess' seated action, plaza-chess journey; then PR. Later phases per Val 2026-10-13: checkers, caf\u00e9 cards/dominoes, more tables, Jenga, wine pong, shared two-player tables.",
       "filesOwned": [
         "preview/src/chess-rules.js",
         "preview/src/chess-opponent*.js",
@@ -4094,7 +4094,7 @@
     },
     {
       "id": "plaza-dominoes",
-      "title": "Dominoes at the plaza café table: double-six draw (2 players) and block (4 players) games against the plaza regulars, scored to 100, tiles mirrored on the round table",
+      "title": "Dominoes at the plaza caf\u00e9 table: double-six draw (2 players) and block (4 players) games against the plaza regulars, scored to 100, tiles mirrored on the round table",
       "status": "active",
       "branches": [
         "feat/plaza-dominoes-20261013"
@@ -4103,14 +4103,14 @@
       "leaseUntil": "2026-10-13T21:00:04.000Z",
       "updatedAt": "2026-10-13T11:00:04.000Z",
       "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-plaza-dominoes-20261013",
-      "nextAction": "Stacked on feat/plaza-checkers-20261013 (#299, landing): merge main once it lands. Write dominoes-rules.js (seeded deal, draw and block games, scoring), a dominoes opponent, a café dominoes sheet sharing the table-game frame, tiles on the round table, journey; then PR (land only when Val says).",
+      "nextAction": "Stacked on feat/plaza-checkers-20261013 (#299, landing): merge main once it lands. Write dominoes-rules.js (seeded deal, draw and block games, scoring), a dominoes opponent, a caf\u00e9 dominoes sheet sharing the table-game frame, tiles on the round table, journey; then PR (land only when Val says).",
       "filesOwned": [
         "preview/src/dominoes-rules.js",
         "preview/src/dominoes-opponent.js",
         "preview/src/plaza-dominoes.js",
         "preview/src/plaza-dominoes.css",
-        "preview/src/plaza-salon.js (café table tiles)",
-        "preview/src/plaza-salon-plan.js (café seats)",
+        "preview/src/plaza-salon.js (caf\u00e9 table tiles)",
+        "preview/src/plaza-salon-plan.js (caf\u00e9 seats)",
         "preview/src/main.js (wiring)",
         "preview/e2e/plaza-dominoes.js"
       ],
@@ -4125,7 +4125,7 @@
     },
     {
       "id": "plaza-hearts",
-      "title": "Hearts at the plaza café table: four players (you and three plaza regulars), passing, tricks, shooting the moon, game to 100; cards mirrored on the round table",
+      "title": "Hearts at the plaza caf\u00e9 table: four players (you and three plaza regulars), passing, tricks, shooting the moon, game to 100; cards mirrored on the round table",
       "status": "retired",
       "branches": [
         "feat/plaza-hearts-20261013"
@@ -4139,8 +4139,8 @@
         "preview/src/hearts-opponent.js",
         "preview/src/plaza-hearts.js",
         "preview/src/plaza-hearts.css",
-        "preview/src/plaza-dominoes.js (café game switch)",
-        "preview/src/plaza-salon.js (café cards)",
+        "preview/src/plaza-dominoes.js (caf\u00e9 game switch)",
+        "preview/src/plaza-salon.js (caf\u00e9 cards)",
         "preview/e2e/plaza-hearts.js"
       ],
       "requiredChecks": [
@@ -4380,14 +4380,12 @@
     {
       "id": "shared-voice-spatial",
       "title": "Shared voice, PR 4: per-resident audio graph with distance gain and pan, speaking rings, fixture-side fake LiveKit and the two-browser journey",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "feat/voice-spatial-20261013"
       ],
-      "owner": "claude:river-oaks-f1 (46fc41e0)",
-      "updatedAt": "2026-10-13T11:28:17.175Z",
-      "leaseUntil": "2026-10-13T13:28:17.175Z",
-      "nextAction": "voice-shared journey passed (14 checks) after merging main (#302's reconciler). pnpm run verify running; then push, PR, land after #303.",
+      "updatedAt": "2026-10-13T11:44:44.004Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "filesOwned": [
         "preview/src/voice-spatial.js",
         "preview/src/voice-chat.js",
@@ -4409,19 +4407,48 @@
         "pnpm run verify"
       ],
       "ledger": "docs/superpowers/plans/2026-10-13-shared-voice.md",
-      "plan": "docs/superpowers/plans/2026-10-05-spatial-voice.md"
+      "plan": "docs/superpowers/plans/2026-10-05-spatial-voice.md",
+      "pr": 305,
+      "deliveryPr": 305,
+      "evidence": [
+        {
+          "pr": 305,
+          "reviewedHead": "8f9ef4de2517556deba77cc4711f45c6d8867874",
+          "merge": "3db6a5f0e381d3e9257bff42c63ac785d08e2ba4",
+          "tree": "6747b8bbdb1179cf6e2d5024078ce7c873a2073d",
+          "checks": "pnpm run land: Verify passed on the updated head; local: voice-shared journey 14 checks, 40 voice unit tests, verify core passed"
+        }
+      ],
+      "retirement": {
+        "head": "8f9ef4de2517556deba77cc4711f45c6d8867874",
+        "sessionsReviewedAt": "2026-10-13T11:44:08.839Z",
+        "releasedAt": "2026-10-13T11:44:08.839Z",
+        "releasedBy": "claude:river-oaks-f1 (46fc41e0)",
+        "note": "Only this session worked the branch; #305 merged as 3db6a5f; evidence archived; worktree clean."
+      },
+      "retiredBranches": [
+        "feat/voice-spatial-20261013"
+      ],
+      "archive": {
+        "feat/voice-spatial-20261013": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-ltqpMy/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-ltqpMy/history.bundle",
+          "sha256": "55e9d204f38726854158b3634ebbf53ebe0a5ef3edef3f5b896f555bbca09472",
+          "tag": "refs/tags/archive/worktree-prune/f69fcaa9-f5ac-4626-b29d-c55521fe43fe",
+          "head": "8f9ef4de2517556deba77cc4711f45c6d8867874"
+        }
+      }
     },
     {
       "id": "shared-voice-desktop",
       "title": "Shared voice, PR 5a: desktop microphone-only permission for the game origin, usage description, desktop e2e check",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "feat/voice-desktop-20261013"
       ],
-      "owner": "claude:river-oaks-f1 (46fc41e0)",
-      "updatedAt": "2026-10-13T11:17:18.342Z",
-      "leaseUntil": "2026-10-13T13:17:18.342Z",
-      "nextAction": "Electron e2e passed (13 checks; fake UI flag dropped), verify core passed. PR open; land after #305.",
+      "owner": null,
+      "updatedAt": "2026-10-13T12:30:57.348Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "filesOwned": [
         "desktop/runtime.js",
         "desktop/main.js",
@@ -4436,7 +4463,40 @@
         "pnpm run verify"
       ],
       "ledger": "docs/superpowers/plans/2026-10-13-shared-voice.md",
-      "plan": "docs/superpowers/plans/2026-10-05-spatial-voice.md"
+      "plan": "docs/superpowers/plans/2026-10-05-spatial-voice.md",
+      "pr": 306,
+      "evidence": [
+        {
+          "pr": 306,
+          "reviewedHead": "e70228ac71051e364f504c56720b59f584055048",
+          "merge": "b755be962b589b1406e3d731814157ce49264d69",
+          "tree": "c48023d59bf7621ceb81859c395e3cf183199835",
+          "checks": [
+            "pnpm run land 306 (2026-10-13, river-oaks-dc): 17 checks ok, mergeState CLEAN",
+            "verify core passed at f88e59f (receipt archived to ~/worktree-backups/river-oaks/shared-voice-desktop-evidence-20261013/runtime/agent/core.json)",
+            "pnpm run test:desktop 51 pass 0 fail at f88e59f",
+            "desktop e2e report data/reports/desktop-development.json (f1 session: audio ok, video and both NotAllowedError)"
+          ]
+        }
+      ],
+      "retirement": {
+        "head": "e70228ac71051e364f504c56720b59f584055048",
+        "releasedAt": "2026-10-13T12:30:24.845Z",
+        "sessionsReviewedAt": "2026-10-13T12:30:24.845Z",
+        "note": "lsof found no process inside the worktree; caches removed, .runtime archived"
+      },
+      "retiredBranches": [
+        "feat/voice-desktop-20261013"
+      ],
+      "archive": {
+        "feat/voice-desktop-20261013": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-BYVpwr/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-BYVpwr/history.bundle",
+          "sha256": "485c07096b7838c15ee5e5468426a945cd98c0fec852c675ce47f4a9b899cef5",
+          "tag": "refs/tags/archive/worktree-prune/4cff4b2e-2305-42d4-b2c9-c73082efb127",
+          "head": "e70228ac71051e364f504c56720b59f584055048"
+        }
+      }
     },
     {
       "id": "plaza-backgammon",
@@ -4628,9 +4688,9 @@
       "branches": [
         "docs/procedural-multilevel-interiors-20261013"
       ],
-      "owner": "codex-root-20261013-procedural-interiors",
-      "updatedAt": "2026-10-14T00:09:08.401Z",
-      "nextAction": "World Studio generated level preview/add slice committed at 68529f1. Verify integration with current main, rerun the full profile and named browser journeys, then implement rendered Studio levels, authored overrides and gallery visual/performance acceptance.",
+      "owner": "codex-resume-20261014-procedural-interiors",
+      "updatedAt": "2026-10-14T01:40:33.038450Z",
+      "nextAction": "Combined gallery f0a55434 / Studio source passed full on main 7cff31f4: 671 Redis tests, 10 experience and 20 shared journeys, plus 3 targeted gallery/Studio journeys. Sign the verified merge, push integration and open its draft PR. Keep broader rollout gated on 33.4 ms interior p95 and human review; separate level-streaming work awaits its verified handoff. No merge-to-main authorization.",
       "ledger": "docs/superpowers/plans/2026-10-13-procedural-interiors-implementation.md",
       "requiredChecks": [
         "Focused behavioral and cross-runtime tests for each phase",
@@ -4648,64 +4708,14 @@
         "server/tests/region-package.test.js",
         "preview/src/store-rooms.js (migration adapter)",
         "preview/src/district.js, preview/src/walking.js, server/world.js (later phases)",
-        "preview/src/studio/* (later phases)"
+        "preview/src/studio/* (later phases)",
+        "preview/src/region-draft.js (generation schema validation)",
+        "preview/src/store-interiors.js (generated fixture material override only; coordinate gallery-route integration)",
+        "preview/e2e/creator-generated-levels.js",
+        "preview/e2e/shared-runner.js (new creator-generated-levels acceptance registration)"
       ],
-      "leaseUntil": "2026-10-14T02:09:08.401Z"
-    },
-    {
-      "id": "procedural-gallery-vertical-route",
-      "title": "Render the approved gallery vertical portal as a visible platform lift",
-      "status": "queued",
-      "branches": [
-        "feat/procedural-gallery-route-20261014"
-      ],
-      "owner": null,
-      "updatedAt": "2026-10-14T01:08:15.000Z",
-      "handoff": "Signed, verified gallery work is pushed at f0a55434e1cd43a1e3b34e894a615b8460854d61. The clean worktree is retained until integration and delivery evidence support retirement. Former owner: codex-root-20261014-gallery-route.",
-      "nextAction": "Integration owner: merge signed, pushed gallery head f0a55434 into docs/procedural-multilevel-interiors-20261013, resolve the generated fixture material overlap, then run combined full/shared/performance gates. Paired Mac M3 Max Chromium samples passed: street p95 16.8 ms, gallery p95 33.4 ms; views differ, so the draw-call change is not isolated gallery cost. The internal portal still says stairs. Gallery branch has no standalone PR because the integration base is not yet published.",
-      "ledger": "docs/superpowers/plans/2026-10-14-gallery-vertical-route.md",
-      "requiredChecks": [
-        "Focused geometry and browser regression for the gallery route",
-        "pnpm run verify core before commit",
-        "Two-client gallery level journey",
-        "Player-height visual and performance evidence"
-      ],
-      "filesOwned": [
-        "preview/src/store-interiors.js",
-        "preview/src/generated-vertical-route.js",
-        "preview/tests/generated-vertical-route.test.js",
-        "preview/e2e/generated-gallery.js",
-        "preview/e2e/generated-gallery-levels.js",
-        "docs/superpowers/plans/2026-10-14-gallery-vertical-route.md"
-      ],
-      "leaseUntil": null
-    },
-    {
-      "id": "procedural-level-aware-streaming",
-      "title": "Prepare generated interior levels according to authoritative occupancy",
-      "status": "active",
-      "branches": [
-        "feat/procedural-level-streaming-20261014"
-      ],
-      "owner": "codex-root-20261014-level-streaming",
-      "updatedAt": "2026-10-14T01:41:13.000Z",
-      "leaseUntil": "2026-10-14T03:24:20.000Z",
-      "nextAction": "Commit and push the verified four-level server regression on the streaming branch, then hand the updated head to procedural integration. Focused 1/1 and core passed; four-level browser acceptance and combined integration gates remain open.",
-      "ledger": "docs/superpowers/plans/2026-10-14-level-aware-interior-streaming.md",
-      "requiredChecks": [
-        "Multi-level stream preparation, cancellation and eviction behavioral tests",
-        "Generated gallery ascent/descent and reduced-motion browser journeys",
-        "Four-level creator publication and checkpoint server regression",
-        "pnpm run verify core before commit"
-      ],
-      "filesOwned": [
-        "preview/src/generated-interior-stream.js",
-        "preview/tests/generated-interior-stream.test.js",
-        "preview/src/main.js (generated interior stream occupancy hint only)",
-        "preview/e2e/generated-gallery-levels.js (stream readiness assertions only)",
-        "server/tests/creator-four-level-interiors.test.js",
-        "docs/superpowers/plans/2026-10-14-level-aware-interior-streaming.md"
-      ]
+      "leaseUntil": "2026-10-14T03:40:33.038450Z",
+      "previousOwner": "codex-root-20261013-procedural-interiors"
     },
     {
       "id": "ipic-photo-interior",
@@ -4805,6 +4815,371 @@
         "Independent review and exact-head hosted gate before protected merge"
       ],
       "pr": 345
+    },
+    {
+      "id": "cycling-rack",
+      "title": "Cycling rack: bicycle vehicle, plaza rack slots, server ride counting and miles store",
+      "status": "retired",
+      "branches": [
+        "feat/cycling-rack-20261013"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-13T15:02:03.037Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "filesOwned": [
+        "preview/src/vehicle-config.js",
+        "preview/src/plaza-salon-plan.js",
+        "preview/src/plaza-salon.js",
+        "preview/src/road-vehicles.js",
+        "server/world.js (cycle/uncycle, pose gating)",
+        "server/cycling-miles.js",
+        "server/tests/cycling.test.js",
+        "preview/e2e/cycling-rack.js"
+      ],
+      "requiredChecks": [
+        "pnpm run test:server (with REDIS_URL)",
+        "pnpm run verify",
+        "cycling-rack journey"
+      ],
+      "blocker": null,
+      "ledger": "docs/superpowers/plans/2026-10-13-cycling-rack.md",
+      "spec": "docs/superpowers/specs/2026-10-13-cycling-rack-design.md",
+      "pr": 315,
+      "evidence": [
+        {
+          "pr": 315,
+          "reviewedHead": "b0d4065d7c525cb03652d564af68cf9c8758d67e",
+          "merge": "2642eda1629c6588a318b3fe81130875927dc467",
+          "tree": "9e3a238de57c80c1a170cdb069796648149efb6a",
+          "checks": [
+            "pnpm run land 315 (2026-10-13, river-oaks-dc): 17 checks ok, mergeState CLEAN",
+            "pnpm run verify core passed at 684723c (receipt archived to ~/worktree-backups/river-oaks/cycling-rack-evidence-20261013/runtime/agent/core.json)",
+            "pnpm test 2759 pass / 1 pre-existing skip; pnpm run test:server 438 pass / 0 fail / 136 Redis-gated skips; Redis-backed cycling suites 40/40 on a scratch Redis",
+            "pnpm run test:experience cycling-rack passed on 8819af5 and on the merged head (journey steering fix ships in PR 2)"
+          ]
+        }
+      ],
+      "retirement": {
+        "head": "b0d4065d7c525cb03652d564af68cf9c8758d67e",
+        "releasedAt": "2026-10-13T15:01:19.077Z",
+        "sessionsReviewedAt": "2026-10-13T15:01:19.077Z",
+        "note": "lsof found no process inside the worktree; caches removed, .runtime and playwright output archived"
+      },
+      "retiredBranches": [
+        "feat/cycling-rack-20261013"
+      ],
+      "archive": {
+        "feat/cycling-rack-20261013": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-ggh7jA/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-ggh7jA/history.bundle",
+          "sha256": "b4627634f4f3d92944754da2d4d33f41c03d3c2a64f7e4487a336a4bd871f123",
+          "tag": "refs/tags/archive/worktree-prune/4e5b81a3-bcbf-4e20-88a7-db2b10f43522",
+          "head": "b0d4065d7c525cb03652d564af68cf9c8758d67e"
+        }
+      }
+    },
+    {
+      "id": "cycling-leaderboard",
+      "title": "Cycling leaderboard: API route, Play-dock sheet, rack prompt",
+      "status": "retired",
+      "branches": [
+        "feat/cycling-leaderboard-20261013"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-13T15:28:40.975Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "filesOwned": [
+        "server/cycling-api.js",
+        "server/tests/cycling-api.test.js",
+        "preview/src/cycling-leaderboard.js",
+        "preview/src/cycling-leaderboard.css",
+        "preview/e2e/cycling-leaderboard.js",
+        "preview/vite.config.js (cycling proxy)"
+      ],
+      "requiredChecks": [
+        "pnpm run verify",
+        "cycling-leaderboard journey"
+      ],
+      "blocker": null,
+      "ledger": "docs/superpowers/plans/2026-10-13-cycling-rack.md",
+      "spec": "docs/superpowers/specs/2026-10-13-cycling-rack-design.md",
+      "pr": 318,
+      "evidence": [
+        {
+          "pr": 318,
+          "reviewedHead": "3d89e84b920fdb2cdf8f535f7ac0671ef06b3a54",
+          "merge": "ca7c6f7d287c34fe365fac21f65f3b3af0027975",
+          "tree": "5c2907bbb1443b59f5da113b2847722eabb8b7ae",
+          "checks": [
+            "pnpm run land 318 (2026-10-13, river-oaks-dc): 17 checks ok, mergeState CLEAN after the lander updated the branch from main",
+            "pnpm run verify core passed at f99c3e5 (receipt archived to ~/worktree-backups/river-oaks/cycling-leaderboard-evidence-20261013/runtime/agent/core.json)",
+            "pnpm test 2764 pass / 1 pre-existing skip; pnpm run test:server 443 pass / 0 fail / 136 Redis-gated skips at 27ebc7d",
+            "pnpm run test:experience cycling-rack cycling-leaderboard passed on f99c3e5"
+          ]
+        }
+      ],
+      "retirement": {
+        "head": "3d89e84b920fdb2cdf8f535f7ac0671ef06b3a54",
+        "releasedAt": "2026-10-13T15:27:59.344Z",
+        "sessionsReviewedAt": "2026-10-13T15:27:59.344Z",
+        "note": "lsof found no process inside the worktree; caches removed, .runtime and playwright output archived"
+      },
+      "retiredBranches": [
+        "feat/cycling-leaderboard-20261013"
+      ],
+      "archive": {
+        "feat/cycling-leaderboard-20261013": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-WnaHCT/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-WnaHCT/history.bundle",
+          "sha256": "655227303b81f96325923ab76147689f1f6771af23925d33496f0393c8b81352",
+          "tag": "refs/tags/archive/worktree-prune/e050b9c5-b092-47d6-829c-47dd8ce3250c",
+          "head": "3d89e84b920fdb2cdf8f535f7ac0671ef06b3a54"
+        }
+      }
+    },
+    {
+      "id": "cycling-journey-retries",
+      "title": "Cycling journeys: retry the rack approach on a travel cooldown and widen ride timeouts for loaded machines",
+      "status": "retired",
+      "branches": [
+        "fix/cycling-journey-retries-20261013"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-13T16:21:14.870Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "filesOwned": [
+        "preview/src/main.js (__riverCycling.goNear)",
+        "preview/e2e/cycling-rack.js",
+        "preview/e2e/cycling-leaderboard.js"
+      ],
+      "requiredChecks": [
+        "pnpm run test:experience cycling-rack cycling-leaderboard",
+        "pnpm test"
+      ],
+      "blocker": null,
+      "ledger": "docs/superpowers/plans/2026-10-13-cycling-rack.md",
+      "note": "Follow-up to #315/#318 after c2 saw the rack journey fail at goNear (travel cooldown) and at the ride distance on a Mac under heavy swap.",
+      "pr": 322,
+      "evidence": [
+        {
+          "pr": 322,
+          "reviewedHead": "c0affeb33cc07c5b7eca0f58a62eaffeee80c275",
+          "merge": "e18f4bda70ea057e16b41a98b9f569cd01024199",
+          "tree": "a0ccd44f2cec1ae40552e9a8be699c03d323f832",
+          "checks": [
+            "pnpm run land 322 (2026-10-13, river-oaks-dc): checks ok, merged after the lander updated the branch",
+            "pnpm run test:experience cycling-rack cycling-leaderboard passed on dc65b40 + 5c5a7c9",
+            "pnpm test 2826 pass / 1 pre-existing skip (workplace-office load flake passes alone)"
+          ]
+        }
+      ],
+      "retirement": {
+        "head": "c0affeb33cc07c5b7eca0f58a62eaffeee80c275",
+        "releasedAt": "2026-10-13T16:20:37.482Z",
+        "sessionsReviewedAt": "2026-10-13T16:20:37.482Z",
+        "note": "lsof found no process inside the worktree; caches removed, receipts archived"
+      },
+      "retiredBranches": [
+        "fix/cycling-journey-retries-20261013"
+      ],
+      "archive": {
+        "fix/cycling-journey-retries-20261013": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-vKbydt/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-vKbydt/history.bundle",
+          "sha256": "a1d8e8d2fd8745d186212457aabcd8442c62d4c58479e4b2d826c360c2ec42fe",
+          "tag": "refs/tags/archive/worktree-prune/9458b095-5abe-48ae-b427-790ffe39b7c3",
+          "head": "c0affeb33cc07c5b7eca0f58a62eaffeee80c275"
+        }
+      }
+    },
+    {
+      "id": "voice-livekit-setup-docs",
+      "title": "Docs: LiveKit Cloud setup and live acceptance checklist for shared voice (hand-off for PR 5b)",
+      "status": "retired",
+      "branches": [
+        "docs/voice-livekit-setup-20261013"
+      ],
+      "owner": null,
+      "pr": 326,
+      "updatedAt": "2026-10-13T17:30:04.330Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "filesOwned": [
+        "docs/voice-livekit-setup.md",
+        "docs/multiplayer.md (shared voice link)"
+      ],
+      "requiredChecks": [
+        "docs only; hosted preview check"
+      ],
+      "blocker": null,
+      "ledger": "docs/superpowers/plans/2026-10-13-shared-voice.md",
+      "note": "Public-safe checklist Val can hand to another agent; no account names, paths or secrets.",
+      "evidence": [
+        {
+          "pr": 326,
+          "reviewedHead": "9a43893c853a9b59c6fe866c9da4cd7aa4e4f1ce",
+          "merge": "0e6704501a6ce0c91e601096561c50129da5c9f7",
+          "tree": "4fe9f72b26a8398f47cee76b0540f44a411db8cb",
+          "checks": [
+            "pnpm run land 326 (2026-10-13, river-oaks-dc): checks ok, merged after the lander updated the branch",
+            "docs only: public-safety scan of docs/voice-livekit-setup.md found no paths, account names or secrets"
+          ]
+        }
+      ],
+      "retirement": {
+        "head": "9a43893c853a9b59c6fe866c9da4cd7aa4e4f1ce",
+        "releasedAt": "2026-10-13T17:28:45.207Z",
+        "sessionsReviewedAt": "2026-10-13T17:28:45.207Z",
+        "note": "lsof found no process inside the worktree; caches removed"
+      },
+      "retiredBranches": [
+        "docs/voice-livekit-setup-20261013"
+      ],
+      "archive": {
+        "docs/voice-livekit-setup-20261013": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-PHIP7P/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-PHIP7P/history.bundle",
+          "sha256": "5ab308c48732915ff9aacdd9720053d049f56db17220382eab582d3388ffee8a",
+          "tag": "refs/tags/archive/worktree-prune/9f6ecc71-9cf8-40e9-ba5d-e9a8d6bce257",
+          "head": "9a43893c853a9b59c6fe866c9da4cd7aa4e4f1ce"
+        }
+      }
+    },
+    {
+      "id": "shared-voice-live",
+      "title": "Shared voice, PR 5b: live acceptance against the LiveKit Cloud preview project, with measured revocation delays",
+      "status": "retired",
+      "branches": [
+        "feat/voice-live-acceptance-20261013"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-14T00:51:16.301Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "filesOwned": [
+        "server/tests/browser-fixture.js (voice mode)",
+        "preview/e2e/voice-live.js",
+        "preview/e2e/experience-runner.js",
+        "data/reports/voice-live.json",
+        "data/reports/voice-revocation.json",
+        "docs/superpowers/plans/2026-10-13-shared-voice.md"
+      ],
+      "requiredChecks": [
+        "pnpm run test:experience voice-live (RIVER_OAKS_VOICE_LIVE=1 with LiveKit preview settings in the process environment)",
+        "pnpm run test:server voice suites",
+        "pnpm run verify"
+      ],
+      "blocker": null,
+      "ledger": "docs/superpowers/plans/2026-10-13-shared-voice.md",
+      "note": "LiveKit settings come from the Vercel preview environment, pulled into a private scratch file for the run and never committed or printed.",
+      "pr": 347,
+      "evidence": [
+        {
+          "pr": 347,
+          "reviewedHead": "d529b2503645749cacd1b4dd9dfdcd271f8a9eef",
+          "merge": "c3f118069158a47602524c378087d10fdd44d754",
+          "tree": "6441c2ed3c06c84a97d81767adb0701da91e1490",
+          "checks": [
+            "pnpm run land 347 (2026-10-13, river-oaks-dc): checks ok, mergeState CLEAN",
+            "pnpm run test:experience voice-live passed against the LiveKit Cloud preview project (data/reports/voice-live.json, voice-revocation.json)",
+            "server voice suites 41 pass / 0 fail / 9 Redis-gated skips"
+          ]
+        }
+      ],
+      "retirement": {
+        "head": "d529b2503645749cacd1b4dd9dfdcd271f8a9eef",
+        "releasedAt": "2026-10-14T00:50:45.853Z",
+        "sessionsReviewedAt": "2026-10-14T00:50:45.853Z",
+        "note": "lsof found no process inside the worktree; caches removed, receipts archived"
+      },
+      "retiredBranches": [
+        "feat/voice-live-acceptance-20261013"
+      ],
+      "archive": {
+        "feat/voice-live-acceptance-20261013": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-6BTV2m/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-6BTV2m/history.bundle",
+          "sha256": "559ecb71a176553bd14cfcbc1c837ab7aa1bc0ce596aa5c3b175ae798874ea30",
+          "tag": "refs/tags/archive/worktree-prune/f5760a28-ec35-440c-8982-ac1024a485bd",
+          "head": "d529b2503645749cacd1b4dd9dfdcd271f8a9eef"
+        }
+      }
+    },
+    {
+      "id": "register-sweep-20261013-dc",
+      "title": "Register sweep: cycling and shared-voice retirements from session river-oaks-dc (2026-10-13)",
+      "status": "active",
+      "branches": [
+        "docs/register-sweep-20261013-dc"
+      ],
+      "owner": "claude:river-oaks-dc (842fd6a9)",
+      "updatedAt": "2026-10-14T00:52:44.779Z",
+      "leaseUntil": "2026-10-14T02:52:44.780Z",
+      "nextAction": "Docs-only sweep PR: copy the seven live entries exactly, regenerate the plans index, project:check, land.",
+      "filesOwned": [
+        "docs/project-management/tasks.json (listed entries)",
+        "docs/superpowers/plans/README.md"
+      ],
+      "requiredChecks": [
+        "pnpm run project:check"
+      ],
+      "blocker": null,
+      "ledger": "docs/project-management/workflow.md"
+    },
+    {
+      "id": "procedural-gallery-vertical-route",
+      "title": "Render the approved gallery vertical portal as a visible platform lift",
+      "status": "queued",
+      "branches": [
+        "feat/procedural-gallery-route-20261014"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-14T01:08:15.000Z",
+      "handoff": "Signed, verified gallery work is pushed at f0a55434e1cd43a1e3b34e894a615b8460854d61. The clean worktree is retained until integration and delivery evidence support retirement. Former owner: codex-root-20261014-gallery-route.",
+      "nextAction": "Integration owner: merge signed, pushed gallery head f0a55434 into docs/procedural-multilevel-interiors-20261013, resolve the generated fixture material overlap, then run combined full/shared/performance gates. Paired Mac M3 Max Chromium samples passed: street p95 16.8 ms, gallery p95 33.4 ms; views differ, so the draw-call change is not isolated gallery cost. The internal portal still says stairs. Gallery branch has no standalone PR because the integration base is not yet published.",
+      "ledger": "docs/superpowers/plans/2026-10-14-gallery-vertical-route.md",
+      "requiredChecks": [
+        "Focused geometry and browser regression for the gallery route",
+        "pnpm run verify core before commit",
+        "Two-client gallery level journey",
+        "Player-height visual and performance evidence"
+      ],
+      "filesOwned": [
+        "preview/src/store-interiors.js",
+        "preview/src/generated-vertical-route.js",
+        "preview/tests/generated-vertical-route.test.js",
+        "preview/e2e/generated-gallery.js",
+        "preview/e2e/generated-gallery-levels.js",
+        "docs/superpowers/plans/2026-10-14-gallery-vertical-route.md"
+      ],
+      "leaseUntil": null
+    },
+    {
+      "id": "procedural-level-aware-streaming",
+      "title": "Prepare generated interior levels according to authoritative occupancy",
+      "status": "active",
+      "branches": [
+        "feat/procedural-level-streaming-20261014"
+      ],
+      "owner": "codex-root-20261014-level-streaming",
+      "updatedAt": "2026-10-14T01:57:38Z",
+      "leaseUntil": "2026-10-14T03:57:38Z",
+      "nextAction": "Open the verified stacked draft PR against docs/procedural-multilevel-interiors-20261013 and hand its exact head to the integration owner. Four-level browser, hosted, native, performance and human acceptance remain open.",
+      "ledger": "docs/superpowers/plans/2026-10-14-level-aware-interior-streaming.md",
+      "requiredChecks": [
+        "Multi-level stream preparation, cancellation and eviction behavioral tests",
+        "Generated gallery ascent/descent and reduced-motion browser journeys",
+        "Four-level creator publication and checkpoint server regression",
+        "pnpm run verify core before commit"
+      ],
+      "filesOwned": [
+        "preview/src/generated-interior-stream.js",
+        "preview/tests/generated-interior-stream.test.js",
+        "preview/src/main.js (generated interior stream occupancy hint only)",
+        "preview/e2e/generated-gallery-levels.js (stream readiness assertions only)",
+        "server/tests/creator-four-level-interiors.test.js",
+        "docs/superpowers/plans/2026-10-14-level-aware-interior-streaming.md",
+        "server/app.js (local reconnect grace default only)",
+        "server/tests/shared-transport.test.js (shutdown grace timer assertion only)"
+      ]
     }
   ]
 }

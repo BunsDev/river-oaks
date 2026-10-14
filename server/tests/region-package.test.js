@@ -40,6 +40,20 @@ test('opt-in generated levels are server-approved, stable, bounded and editor-ro
   }
 });
 
+test('publication rejects malformed or obstructing interior overrides and unbounded level seeds', () => {
+  const targetId = 'moon-pavilion/l0/object/wall-display';
+  const interior = { name: 'Moon Pavilion Gallery', category: 'art', entrance: 'south', generation: { version: 1, levels: 2 } };
+  for (const changes of [{ overrides: [{ targetId, position: [0, 0] }] },
+    { overrides: [{ targetId: 'other/l0/object/wall-display', material: 'oak' }] },
+    { overrides: [{ targetId, material: 'oak', scale: 99 }] },
+    { overrides: [{ targetId, material: 'oak' }, { targetId, material: 'concrete' }] },
+    { levelSeeds: { 8: 'outside' } }, { levelSeeds: { 1: 'x'.repeat(129) } }]) {
+    const region = structuredClone(sample);
+    region.buildings[0].interior = { ...interior, generation: { ...interior.generation, ...changes } };
+    assert.throws(() => compileRegionPackage(region, 'Invalid edited district'), /Invalid/);
+  }
+});
+
 test('creator parcels retain named bounds and account ownership through publication and revisions',()=>{
   const parcel={id:'moon-lot',name:'Moon Lot',bounds_m:[-50,-48,-20,-20],owner_id:'guest'};
   const region={...sample,parcels:[parcel]};

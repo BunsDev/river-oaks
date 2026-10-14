@@ -97,3 +97,45 @@ test('impossible entrances, inadequate building height and unbounded requests fa
   assert.throws(() => generateBuildingInteriorPlan(input({ seed: '<script>' })), /seed/i);
   assert.throws(() => generateBuildingInteriorPlan({ ...input(), building: { ...input().building, ring: [[0, 0], [1, 0], [1, 1]] } }), /footprint/i);
 });
+
+test('authored furnishing positions and finishes use stable slots across rotated plans and reject blocked routes', () => {
+  for (const yaw of [0, 31, 90]) {
+    const request = input({ yaw }), before = generateBuildingInteriorPlan(request);
+    const targetId = before.levels[0].layers.fixtures[0].id;
+    const overrides = [{ targetId, position: [-4.45, -1], material: 'oak' },
+      { targetId: before.levels[0].layers.finishes[0].id, material: 'terracotta' }];
+    const edited = generateBuildingInteriorPlan({ ...request, overrides });
+    assert.deepEqual(edited.levels[1], before.levels[1]);
+    assert.deepEqual(edited.levels[0].portals, before.levels[0].portals);
+    assert.deepEqual(edited.levels[0].layers.shell, before.levels[0].layers.shell);
+    assert.equal(edited.levels[0].layers.fixtures[0].id, targetId);
+    assert.equal(edited.levels[0].layers.fixtures[0].material, 'oak');
+    assert.equal(edited.levels[0].layers.finishes[0].material, 'terracotta');
+    assert.deepEqual(edited.levels[0].layers.authoredOverrides.map(item => item.id),
+      [...overrides].sort((a,b) => a.targetId.localeCompare(b.targetId)).map(item => `${item.targetId}/override`));
+    const center = edited.levels[0].layers.fixtures[0].footprint.reduce((sum, p) => [sum[0] + p[0] / 4, sum[1] + p[1] / 4], [0, 0]);
+    const expected = buildingLocalToWorld(before.anchor, [-4.45, -1]);
+    assert.ok(Math.hypot(center[0] - expected[0], center[1] - expected[1]) < 1e-8);
+    for (const position of [[0, -3], [3.65, 1.2], [20, 20]])
+      assert.throws(() => generateBuildingInteriorPlan({ ...request, overrides: [{ targetId, position }] }), /placement/);
+  }
+});
+
+test('override and level-seed inputs fail closed and unedited plans remain byte-identical', () => {
+  const request = input(), baseline = generateBuildingInteriorPlan(request);
+  assert.equal(JSON.stringify(baseline), JSON.stringify(generateBuildingInteriorPlan({ ...request, overrides: [], levelSeeds: {} })));
+  const targetId = baseline.levels[0].layers.fixtures[0].id;
+  for (const overrides of [null, [{ targetId }], [{ targetId, material: 'script' }],
+    [{ targetId, position: [0, Infinity] }], [{ targetId, position: [0, 1, 2] }],
+    [{ targetId, material: 'oak', script: 'x' }], [{ targetId: 'other/l0/object/wall-display', material: 'oak' }],
+    [{ targetId: targetId.replace('/l0/', '/l7/'), material: 'oak' }],
+    [{ targetId: baseline.levels[0].layers.finishes[0].id, position: [0, 1] }],
+    [{ targetId, material: 'oak' }, { targetId, material: 'concrete' }]])
+    assert.throws(() => generateBuildingInteriorPlan({ ...request, overrides }), /Invalid building interior/);
+  for (const levelSeeds of [[], null, { '01': 'one' }, { 2: 'two' }, { 1: '<script>' }])
+    assert.throws(() => generateBuildingInteriorPlan({ ...request, levelSeeds }), /generation edits/);
+  const rerolled = generateBuildingInteriorPlan({ ...request, levelSeeds: { 1: 'fresh-floor' } });
+  assert.deepEqual(rerolled.levels[0], baseline.levels[0]);
+  assert.notDeepEqual(rerolled.levels[1].layers.finishes, baseline.levels[1].layers.finishes);
+  assert.deepEqual(rerolled.levels[1].rooms, baseline.levels[1].rooms);
+});

@@ -1,3 +1,5 @@
+import { validBuildingInteriorGeneration } from './building-interiors-plan.js';
+
 // A local editing model for schema v1 creator regions. The server remains the
 // publication authority; these helpers keep map interaction and drafts bounded.
 export const REGION_MAP_SIZE = 600;
@@ -13,11 +15,7 @@ const interior = value => keys(value, ['name', 'category', 'entrance', 'access',
   && ['clothes', 'art', 'restaurant', 'wellness', 'home'].includes(value.category)
   && ['south', 'east', 'north', 'west'].includes(value.entrance)
   && (value.access === undefined || value.category === 'home' && ['public', 'owner'].includes(value.access))
-  && (value.generation === undefined || keys(value.generation, ['version', 'seed', 'levels'])
-    && value.generation.version === 1 && (value.generation.seed === undefined || typeof value.generation.seed === 'string'
-      && value.generation.seed.length >= 1 && value.generation.seed.length <= 128
-      && /^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$/.test(value.generation.seed))
-    && Number.isInteger(value.generation.levels) && value.generation.levels >= 1 && value.generation.levels <= 8);
+  && (value.generation === undefined || validBuildingInteriorGeneration(value.generation));
 
 export function blankRegion() {
   return {
