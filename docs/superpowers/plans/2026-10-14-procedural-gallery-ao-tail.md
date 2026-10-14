@@ -26,3 +26,9 @@ Add focused unit behavior for sustained tails, isolated spikes, steady overload,
 ## Next action
 
 Wait for exact-head hosted checks on PR #354, then hand off for target-device measurement and human AO visual review. Keep broader building archetypes gated.
+
+## Main integration, 2026-10-14
+
+PR #353 landed as `4da775df2c54bc43d6613b9214580f8d720273fe`. Merged that current `origin/main` into this branch without conflicts and reconciled the live #353 delivery and #354 ownership rows from the primary task register. The integrated focused stream, culling and render-quality suite passed 15/15; `TMPDIR=/Volumes/Passport/river-oaks-agent-tmp-contact pnpm run verify` passed all core groups.
+
+The named five-cycle gallery journey passed on the integrated tree (`.runtime/ao-tail-main-merge.json`): Auto disabled AO at full scale; all five cycles preserved movement, culling and stable eviction/return renderer counts. Moving p95 was 33.3 ms in all five cycles despite AO being off, so this run does **not** demonstrate the earlier 16.7–16.8 ms pacing gain. A one-cycle explicit `ao=off` comparison (`.runtime/ao-tail-explicit-off.json`) measured 16.8 ms moving p95, while a subsequent one-cycle Auto/AO-off run (`.runtime/ao-tail-auto-one.json`) measured 33.3 ms with the same AO-off pipeline, render counts and similar main-thread timing. This suggests variable host/render scheduling and does not isolate a steady AO benefit. Target-device performance and human visual acceptance remain open; no rollout claim follows from the local frame samples.
