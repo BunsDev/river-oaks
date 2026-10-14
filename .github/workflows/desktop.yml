@@ -61,3 +61,30 @@ jobs:
       - name: Fuse wire and asar contents match desktop/fuses.js and desktop/package-files.js
         if: ${{ !cancelled() }}
         run: pnpm run desktop:package:check
+      # The packaged build has the inspector fuse off, so Playwright drives the
+      # development Electron (desktop/e2e.js --dev): its own Vite server, the
+      # loopback acceptance identity, an in-process town and an offline bridge.
+      # The report name keeps the tracked local receipts untouched.
+      - name: Development desktop end-to-end (loopback acceptance fixture)
+        if: ${{ !cancelled() }}
+        id: e2e
+        env:
+          RIVER_OAKS_ACCEPTANCE_FIXTURE: '1'
+          RIVER_OAKS_DESKTOP_REPORT: desktop-ci-${{ matrix.os }}.json
+        run: |
+          if [ "$RUNNER_OS" = Linux ]; then
+            # Mesa under Xvfb, the same CPU path as the browser jobs in verify.yml.
+            LIBGL_ALWAYS_SOFTWARE=1 LP_NUM_THREADS=2 xvfb-run -a pnpm run test:desktop:e2e --dev
+          else
+            pnpm run test:desktop:e2e --dev
+          fi
+      - name: Desktop e2e receipt and screenshots
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: desktop-e2e-${{ matrix.os }}
+          retention-days: 14
+          if-no-files-found: ignore
+          path: |
+            data/reports/desktop-ci-${{ matrix.os }}.json
+            output/playwright/desktop-development*.png
