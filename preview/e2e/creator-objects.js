@@ -73,15 +73,30 @@ async page=>{
     await guest.waitForFunction(id=>!window.__riverCreatorObjects().rendered.some(item=>item.id===id),item.id);
     check(true,'Removal reaches the other browser and releases its object');
     await page.locator('#design-list .shared-build-row').filter({hasText:'Rose glass sculpture'}).getByRole('button',{name:'Place a copy'}).click();
-    let aimed3=false;
-    for(const [x,y]of [[.5,.72],[.42,.74],[.58,.74],[.5,.8],[.35,.7],[.65,.7],[.2,.7],[.25,.8],[.15,.85],[.3,.9],[.1,.72],[.18,.64]]){
-      await page.mouse.move(canvas.x+canvas.width*x,canvas.y+canvas.height*y);await page.waitForTimeout(300);
-      if(await page.locator('#build-hint').getAttribute('data-valid')==='true'){aimed3=true;break;}
+    let copy;
+    for(let attempt=0;attempt<4&&!copy;attempt++){
+      let aimed=false;
+      for(const [x,y]of [[.5,.72],[.42,.74],[.58,.74],[.5,.8],[.35,.7],[.65,.7],[.2,.7],[.25,.8],[.15,.85],[.3,.9],[.1,.72],[.18,.64]]){
+        await page.mouse.move(canvas.x+canvas.width*x,canvas.y+canvas.height*y);await page.waitForTimeout(300);
+        if(await page.locator('#build-hint').getAttribute('data-valid')==='true'){aimed=true;break;}
+      }
+      if(!aimed){await page.waitForTimeout(500);continue;}
+      // A walking resident can occupy a previously clear spot before the
+      // authoritative click. Re-aim only for that transient rejection.
+      await page.locator('#build-status').evaluate(node=>{node.textContent='';});
+      await page.mouse.down();await page.mouse.up();
+      await page.waitForFunction(()=>{
+        const status=document.querySelector('#build-status')?.textContent?.trim();
+        return status&&status!=='Saving creation…';
+      });
+      const status=await page.locator('#build-status').textContent();
+      check(status==='Town updated.'||status==='A neighbor is standing there.'||status==='Someone is standing there.',`Saved copy placement rejected: ${status}`);
+      if(status==='Town updated.'){
+        await page.waitForFunction(old=>window.__riverMultiplayer().snapshot.builds.some(item=>item.id!==old&&item.assembly?.name==='Rose glass sculpture'),item.id);
+        copy=await page.evaluate(old=>window.__riverMultiplayer().snapshot.builds.find(item=>item.id!==old&&item.assembly?.name==='Rose glass sculpture'),item.id);
+      }
     }
-    check(aimed3,`The saved copy has a valid placement (${await page.locator('#build-hint').textContent()})`);
-    await page.mouse.down();await page.mouse.up();
-    await page.waitForFunction(old=>window.__riverMultiplayer().snapshot.builds.some(item=>item.id!==old&&item.assembly?.name==='Rose glass sculpture'),item.id);
-    const copy=await page.evaluate(()=>window.__riverMultiplayer().snapshot.builds.find(item=>item.assembly?.name==='Rose glass sculpture'));
+    check(Boolean(copy),`The saved copy has a valid placement (${await page.locator('#build-hint').textContent()})`);
     check(JSON.stringify(copy.assembly)===JSON.stringify(item.assembly),'Saved copies preserve the original parts rather than later edits');
     await guest.reload({waitUntil:'commit'});
     await guest.waitForFunction(id=>window.__riverMultiplayer?.().connected&&window.__riverCreatorObjects?.().rendered.some(item=>item.id===id&&item.parts.length===2),copy.id);
