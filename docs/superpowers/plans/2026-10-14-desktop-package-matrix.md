@@ -19,8 +19,8 @@ Files owned: `.github/workflows/desktop.yml`, `desktop/package-check.js`, `deskt
 Each stage is pushed and its run read with `gh run view --log-failed` before the next.
 
 1. Unit tests on three runners: run [38625146725](https://github.com/BunsDev/river-oaks/actions/runs/38625146725) at `157fbbbf`. ubuntu-latest and macos-latest passed (54 tests). windows-latest failed 17 of 54 existing desktop unit tests (Studio agent host, designer host, skill pack and package-files suites: Unix-only executable spawning, FIFO fixtures and path separators). Recorded on #370; the later stages run on Windows with `if: !cancelled()` so packaging evidence is still produced while that job stays red.
-2. Packaging: `pnpm run desktop:package` step added; pushed as stage 2.
-3. Fuse and asar checks: pending.
+2. Packaging: run [38625588426](https://github.com/BunsDev/river-oaks/actions/runs/38625588426) at `1a894c94`. `desktop:package` succeeded on all three runners: `dist/desktop/TypeSafe Place-win32-x64`, `TypeSafe Place-linux-x64`, `TypeSafe Place-darwin-arm64` (Electron 44.7.0). The Windows job is still red from stage 1's unit tests only.
+3. Fuse and asar checks: `desktop/package-check.js` reads the fuse wire with `@electron/fuses` `getCurrentFuseWire` and compares it with `desktop/fuses.js` (flipped, missing, undecided or differently versioned fuses are drift), and lists the asar from its header (no new dependency) against `DESKTOP_FILES`, `DESKTOP_SHARED_FILES`, the world-design pack and `package.json`, failing on anything missing or extra. Unit tests in `desktop/tests/package-check.test.js` (5, synthetic asar and wires). Locally on macOS arm64: fuses match, 17 files, `ok: true`. Pushed as stage 3.
 4. Development e2e per platform: pending.
 5. Artifacts with `SHA256SUMS`: pending.
 6. Profile, docs, verification: pending.
@@ -31,4 +31,4 @@ Each stage is pushed and its run read with `gh run view --log-failed` before the
 
 ## Gaps and next step
 
-Next: read the stage 2 run, then add the fuse and asar check (`desktop/package-check.js`, already passing locally against a macOS arm64 build: fuses match, asar holds exactly the 17 expected files).
+Next: read the stage 3 run, then add the development e2e per platform (xvfb and Mesa on Linux).

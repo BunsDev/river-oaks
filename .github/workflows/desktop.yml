@@ -58,3 +58,6 @@ jobs:
       - name: Package the desktop app (unsigned, host platform and arch)
         if: ${{ !cancelled() }}
         run: pnpm run desktop:package
+      - name: Fuse wire and asar contents match desktop/fuses.js and desktop/package-files.js
+        if: ${{ !cancelled() }}
+        run: pnpm run desktop:package:check
