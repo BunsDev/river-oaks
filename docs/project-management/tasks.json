@@ -5196,9 +5196,9 @@
         "perf/procedural-pilot-render-20261014"
       ],
       "owner": "codex-root-20261014-pilot-render",
-      "updatedAt": "2026-10-14T03:36:49Z",
-      "leaseUntil": "2026-10-14T05:36:49Z",
-      "nextAction": "Review the performance draft PR's exact-head hosted checks, then hand its measured pilot frame gain and remaining visual and target-device gaps to the procedural-interiors integration owner.",
+      "updatedAt": "2026-10-14T04:07:00Z",
+      "leaseUntil": "2026-10-14T06:07:00Z",
+      "nextAction": "Review draft PR #351 hosted checks on the soak commit's exact head, then hand the measured pilot gain to the procedural-interiors integration owner. Target-device and human visual acceptance remain open.",
       "ledger": "docs/superpowers/plans/2026-10-14-procedural-pilot-frame-performance.md",
       "requiredChecks": [
         "Comparable player-height street and gallery pass/object audit",
@@ -5208,6 +5208,7 @@
       ],
       "filesOwned": [
         "preview/e2e/generated-gallery-render-cost.js",
+        "preview/e2e/generated-gallery-soak.js",
         "preview/src/interior-exterior-culling.js",
         "preview/src/main.js",
         "preview/tests/interior-exterior-culling.test.js",
