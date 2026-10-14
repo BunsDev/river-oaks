@@ -8,7 +8,7 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
-| [2026-10-14-desktop-package-matrix](2026-10-14-desktop-package-matrix.md)<br>Desktop packaging build matrix (#371), 2026-10-14 | `desktop-package-matrix` | active | — | 2026-10-14 |
+| [2026-10-14-desktop-package-matrix](2026-10-14-desktop-package-matrix.md)<br>Desktop packaging build matrix (#371), 2026-10-14 | `desktop-package-matrix` | active | #377 | 2026-10-14 |
 | [2026-10-13-studio-spaces](2026-10-13-studio-spaces.md)<br>Furnished Studio spaces implementation plan | `studio-furnished-spaces` | active | #316 | 2026-10-13 |
 | [2026-10-13-plaza-games](2026-10-13-plaza-games.md)<br>Plaza games, phase 1: chess at the plaza tables — 2026-10-13 | `plaza-games` | active | — | 2026-10-13 |
 | [2026-10-13-plaza-dominoes](2026-10-13-plaza-dominoes.md)<br>Plaza games: dominoes at the café table — 2026-10-13 | `plaza-dominoes` | active | — | 2026-10-13 |
