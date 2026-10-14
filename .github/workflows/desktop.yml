@@ -71,10 +71,14 @@ jobs:
         env:
           RIVER_OAKS_ACCEPTANCE_FIXTURE: '1'
           RIVER_OAKS_DESKTOP_REPORT: desktop-ci-${{ matrix.os }}.json
+          # Electron's own log lines reach the Playwright call log on a failure.
+          ELECTRON_ENABLE_LOGGING: '1'
+          # A cold runner starts Electron more slowly than a developer machine.
+          RIVER_OAKS_DESKTOP_LAUNCH_TIMEOUT: '120000'
         run: |
           if [ "$RUNNER_OS" = Linux ]; then
-            # Mesa under Xvfb, the same CPU path as the browser jobs in verify.yml.
-            LIBGL_ALWAYS_SOFTWARE=1 LP_NUM_THREADS=2 xvfb-run -a pnpm run test:desktop:e2e --dev
+            # Mesa under Xvfb with the browser jobs' Chromium GL flags (verify.yml).
+            RIVER_OAKS_DESKTOP_SOFTWARE=1 LIBGL_ALWAYS_SOFTWARE=1 LP_NUM_THREADS=2 xvfb-run -a pnpm run test:desktop:e2e --dev
           else
             pnpm run test:desktop:e2e --dev
           fi

@@ -10,6 +10,9 @@ import { createServer as createSocket } from 'node:net';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const profile = await mkdtemp(join(tmpdir(), 'river-oaks-e2e-'));
 const env = { ...process.env };
+// CPU rendering for Linux CI: Mesa under Xvfb with the same Chromium GL flags and
+// scene budget as the browser journeys (preview/e2e/shared-runner.js).
+const software = process.env.RIVER_OAKS_DESKTOP_SOFTWARE === '1';
 let vite;
 if (process.argv.includes('--dev')) {
   const socket=createSocket();
@@ -17,7 +20,8 @@ if (process.argv.includes('--dev')) {
   const townPort=socket.address().port;
   await new Promise(resolve=>socket.close(resolve));
   const fixture={RIVER_OAKS_ACCEPTANCE_FIXTURE:'1',RIVER_OAKS_DEV_AUTH:'local',RIVER_OAKS_DEV_TOWN:'on',
-    RIVER_OAKS_DEV_TOWN_PORT:String(townPort),MODERATION_FILE:join(profile,'moderation.json'),WAITLIST_FILE:join(profile,'waitlist.json')};
+    RIVER_OAKS_DEV_TOWN_PORT:String(townPort),MODERATION_FILE:join(profile,'moderation.json'),WAITLIST_FILE:join(profile,'waitlist.json'),
+    ...(software?{VITE_SHARED_SOFTWARE_RENDERING:'1'}:{})};
   Object.assign(process.env,fixture);Object.assign(env,fixture);
   const { createServer } = await import('vite');
   // Keep provider fixtures in the server: Playwright page interception cannot
@@ -40,9 +44,12 @@ const executablePath = process.env.RIVER_OAKS_DESKTOP_EXECUTABLE;
 // A fake device lets the microphone check run without hardware. Electron shows
 // no prompt of its own: the permission handler in main.js decides. Chromium's
 // fake-UI flag must stay off, because it approves before that handler is asked.
-const app = await electron.launch({ executablePath, args: [...(executablePath ? [] : [root]), `--user-data-dir=${profile}`, '--use-fake-device-for-media-stream'], env, timeout: 30000 });
+// A cold CI runner can take longer than a developer machine to start Electron.
+const launchTimeout = Number(process.env.RIVER_OAKS_DESKTOP_LAUNCH_TIMEOUT ?? 30000);
+const app = await electron.launch({ executablePath, args: [...(executablePath ? [] : [root]), `--user-data-dir=${profile}`, '--use-fake-device-for-media-stream',
+  ...(software ? ['--use-gl=angle', '--use-angle=gl', '--ignore-gpu-blocklist'] : [])], env, timeout: launchTimeout });
 const errors = [], failedAssets = [], tempFiles = [];
-const report = { mode: executablePath ? 'packaged' : env.RIVER_OAKS_DEV_URL ? 'development' : 'hosted', checks: [] };
+const report = { mode: executablePath ? 'packaged' : env.RIVER_OAKS_DEV_URL ? 'development' : 'hosted', software, checks: [] };
 function check(name) { report.checks.push(name); console.log(`✓ ${name}`); }
 try {
   const page = await app.firstWindow();
