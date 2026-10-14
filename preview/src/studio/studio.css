@@ -88,3 +88,7 @@
 .studio-building-interior button:disabled{opacity:.5;cursor:default}.studio-building-interior button:focus-visible{outline:2px solid var(--forest);outline-offset:2px}
 .studio-interior-levels{padding-left:18px;margin:10px 0}.studio-interior-levels li{margin:7px 0}.studio-interior-levels small{display:block;color:var(--muted);font-size:10px;overflow-wrap:anywhere}
 .studio-interior-preview{border:1px solid var(--selected-line);border-radius:5px;background:var(--selected);padding:10px;margin-top:10px}
+.studio-interior-levels button[aria-pressed=true]{background:var(--selected);border-color:var(--selected-line)}
+.studio-interior-layers{display:grid;gap:6px;margin:12px 0;padding:10px;border:1px solid var(--line);border-radius:5px}
+.studio-interior-layers legend{padding:0 4px;color:var(--muted)}
+.studio-interior-layers label{display:flex;align-items:center;gap:7px;text-transform:capitalize}

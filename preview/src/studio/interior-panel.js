@@ -8,7 +8,8 @@ const element = (tag, text, className) => {
 };
 
 /** Author level counts through the same region field the server compiles. */
-export function renderBuildingInteriorPanel(host, { doc, buildingId, disabled, apply, say, run }) {
+export function renderBuildingInteriorPanel(host, { doc, buildingId, disabled, apply, say, run,
+  interiorView, onViewLevel, onLayer }) {
   host.replaceChildren();
   const building = doc.value.buildings?.find(item => item.id === buildingId);
   host.hidden = !building;
@@ -59,9 +60,23 @@ export function renderBuildingInteriorPanel(host, { doc, buildingId, disabled, a
     const item = element('li', `Level ${level.index} · ${level.floorElevation.toFixed(2)} m`);
     const layers = element('small', Object.entries(level.layers).map(([name, values]) =>
       `${name} ${values.length}`).join(' · '));
-    item.append(layers); levels.append(item);
+    const view = button(`View level ${level.index}`, () => onViewLevel(level.index));
+    view.dataset.interiorLevel = String(level.index);
+    view.setAttribute('aria-pressed', String(interiorView?.levelIndex === level.index));
+    item.append(layers, view); levels.append(item);
   }
   host.append(levels);
+  if (interiorView?.buildingId === buildingId) {
+    const controls = element('fieldset', '', 'studio-interior-layers');
+    controls.append(element('legend', `Level ${interiorView.levelIndex} layers`));
+    for (const name of ['shell', 'partitions', 'fixtures', 'finishes', 'authoredOverrides']) {
+      const label = element('label', name === 'authoredOverrides' ? 'Authored overrides' : name);
+      const input = document.createElement('input'); input.type = 'checkbox'; input.checked = interiorView.layers[name] !== false;
+      input.disabled = disabled; input.addEventListener('change', () => onLayer(name, input.checked));
+      label.prepend(input); controls.append(label);
+    }
+    host.append(controls, button('Show exterior', () => onViewLevel(null)));
+  }
   if (generation.levels < 8) host.append(button('Preview add level', () => propose({ ...interior,
     generation: { ...generation, levels: generation.levels + 1 } }, `Add level ${generation.levels}`)));
   host.append(preview);

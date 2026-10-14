@@ -50,10 +50,14 @@ height explicitly before using **Preview add level** where another floor needs
 roof clearance. The preview lists the resulting level elevations and shell,
 partition, fixture, finish and override layers. Undo, redo, save, reopen and
 export preserve the level count; an impossible stack leaves the draft unchanged.
+Use **View level** to replace the selected building's exterior block with its
+generated floor footprint, stair opening, perimeter, display fixture and finish
+in the viewport. The layer checkboxes control preview visibility; they do not
+change saved collision or the published plan. **Show exterior** restores the
+block. Walk through still uses the exterior collision blockout.
 The editor uses a provisional world ID for preview finishes. Publication assigns
-the final world ID and validates its own server-approved plan. The current
-viewport remains a building blockout; level geometry and authored override
-editing are still in development. Existing furnished-space files retain their
+the final world ID and validates its own server-approved plan. Authored override
+editing and a regeneration diff are still in development. Existing furnished-space files retain their
 single-level schema and are not rewritten merely by opening them.
 
 - Drag to orbit, right-drag to pan, and scroll to zoom.
