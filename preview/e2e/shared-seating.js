@@ -47,7 +47,8 @@ async page => {
     if(await page.locator('#build-hint').getAttribute('data-valid')==='true'){aimed=true;break;}
   }
   check(aimed,`The fixture owner can place a garden seat on open ground (${await page.locator('#build-hint').textContent()})`);
-  await page.locator('#build-place').click();
+  // Keep the validated canvas aim; entering the panel changes the build target.
+  await page.mouse.down(); await page.mouse.up();
   await page.waitForFunction(()=>window.__riverMultiplayer().snapshot.builds.length===1);
   const build=await page.evaluate(()=>window.__riverMultiplayer().snapshot.builds[0]);
   await page.locator('#build-mode').click();

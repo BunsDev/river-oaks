@@ -5,12 +5,15 @@
 <script type="module">
 import * as THREE from 'three';
 import {createOfficeScene} from '../../src/office-scene.js';
+import {SHARED_APPEARANCES} from '../../src/shared-appearances.js';
 const host=document.querySelector('#office-render'),label=document.querySelector('#phase');
 const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(1);renderer.setSize(innerWidth,innerHeight);renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.95;host.append(renderer.domElement);
 // Synthetic appearance identity only. This fixture does not join a town or grant access.
 const self={id:'user_01M40Y914S1H4EJCEHH91DKTAY',name:'Jevica',appearance:'jevica',movement:'upright',office:{id:'jevica-office',position:[0,1.25],yaw:0}};
-const scene=createOfficeScene({renderer,host,self,players:[self],reducedMotion:false});
-window.officeFixture={time:0,frames:[],draw(seconds){this.time=seconds;const f=scene.render(seconds*1000,[0,1.25],0,[self]);label.textContent=f.phase;host.dataset.phase=f.phase;this.frames.push(f);return f;}};
+let scene=createOfficeScene({renderer,host,self,players:[self],reducedMotion:false});
+window.officeFixture={time:0,frames:[],renderer,self,get scene(){return scene;},appearances:SHARED_APPEARANCES.map(({id,form})=>({id,form})),
+reset(appearance,movement='upright'){scene.dispose();self.appearance=appearance;self.movement=movement;this.time=0;this.frames=[];scene=createOfficeScene({renderer,host,self,players:[self],reducedMotion:false});ready=false;requestAnimationFrame(load);},
+draw(seconds){this.time=seconds;const f=scene.render(seconds*1000,[0,1.25],0,[self]);label.textContent=f.phase;host.dataset.phase=f.phase;this.frames.push(f);if(this.frames.length>120)this.frames.shift();return f;}};
 let ready=false;
 function load(){if(!ready){const f=window.officeFixture.draw(0);ready=f.ready;if(!ready)requestAnimationFrame(load);}}
 requestAnimationFrame(load);

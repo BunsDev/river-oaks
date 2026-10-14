@@ -7,6 +7,7 @@ import { chooseMove as connectFourMove } from './connect-four-opponent.js';
 import { chooseMove as reversiMove } from './reversi-opponent.js';
 import { chooseMove as morrisMove } from './morris-opponent.js';
 import { chooseMove as goMove } from './go-opponent.js';
+import { chooseMove as xiangqiMove } from './xiangqi-opponent.js';
 
 const GAMES = {
   chess: ({ position, history, budget }) => chessMove(fromFEN(position), { history, budget }),
@@ -17,6 +18,8 @@ const GAMES = {
   morris: ({ position, history, budget }) => morrisMove(position, { history, budget }),
   // Go's regular counts play-outs, not nodes: `budget` is passed as is.
   go: ({ position, budget }) => ({ move: goMove(position, { budget }) }),
+  // Xiangqi's position is the rules' state; `history` holds the keys of positions already seen.
+  xiangqi: ({ position, history, budget }) => ({ move: xiangqiMove(position, { history, budget }) }),
 };
 
 self.addEventListener('message', ({ data }) => {

@@ -110,7 +110,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     host.dataset.companion=JSON.stringify(value);
   });
   const identity = VISITOR_FORMS[0], form = identity.id;
-  let avatar = null, outfit = null, vehicle = null, version = 0, previous = null, disposed = false, castUntil = 0;
+  let avatar = null, outfit = null, vehicle = null, version = 0, previous = null, disposed = false, castUntil = 0,presentation=null;
   // Watering: until when, and the planter the body turns toward (scene coordinates).
   let waterUntil = 0, waterTarget = null;
   // Appearance and movement belong to the account and are confirmed by the town.
@@ -301,6 +301,8 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
   return {
     get carriage(){return carriage;},
     get object(){return holder;},
+    get ready(){return Boolean(avatar)&&loadedAppearance===appearance;},
+    setPresentation(pose){presentation=pose;},
     get form() {return form;},
     // Residents greet and recognise the player as Jevica only on her accounts.
     get persona() {return owner?form:'visitor';},
@@ -325,7 +327,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     onChange(listener) { if(disposed)return ()=>{};listeners.add(listener); return () => listeners.delete(listener); },
     update(now,camera,viewportHeight,connected) {
       if(disposed)return;
-      const pose = walking.getPose(),seated=Boolean(pose?.riding||pose?.sitting);panel.hidden = !pose;holder.visible = Boolean(pose?.showBody && avatar);
+      const pose = presentation??walking.getPose(),seated=Boolean(pose?.riding||pose?.sitting);panel.hidden = !pose;holder.visible = Boolean(pose?.showBody && avatar);
       if (connected) carriage.update(now);
       carriage.updateOptics(camera,viewportHeight);
       const prince=carriage.prince.companion,away=prince.mode!=='seat';
@@ -354,7 +356,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
         if(!pose.riding){holder.rotation.x=0;holder.rotation.z=0;}
         vehicle.object.visible=pose.flying;
         const dt = previous === null ? 0 : Math.min(0.08, (now - previous) / 1000);
-        const focus=attention.update(previous===null?0:(now-previous)/1000,{position:holder.position.toArray(),heading:holder.rotation.y,speed:pose.speed,riding:seated,flying:pose.flying,conversation:getConversation()});
+        const focus=presentation?{facing:null,target:null,mode:'idle'}:attention.update(previous===null?0:(now-previous)/1000,{position:holder.position.toArray(),heading:holder.rotation.y,speed:pose.speed,riding:seated,flying:pose.flying,conversation:getConversation()});
         const travelHeading=pose.speed>.05?Math.atan2(pose.velocity[0],pose.velocity[1]):undefined;
         // Walking off, sitting, riding or flying ends watering.
         if(waterUntil&&(pose.speed>.3||seated||pose.flying))waterUntil=0;
@@ -365,7 +367,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
           holder.rotation.y=turnToward(holder.rotation.y,facing,previous===null?1:dt);
         }
         if(!seated&&focus.facing!==null&&!sharedInteraction)holder.rotation.y=focus.facing;
-        if(sharedInteraction&&!seated&&!pose.flying)holder.rotation.y=turnToward(holder.rotation.y,sharedInteraction.heading,previous===null?1:dt);
+        if(sharedInteraction&&!presentation&&!seated&&!pose.flying)holder.rotation.y=turnToward(holder.rotation.y,sharedInteraction.heading,previous===null?1:dt);
         avatar.update(now, now < castUntil ? 'amazed' : watering ? 'water' : !pose.flying&&!pose.riding ? (sharedGesture??'continue') : 'continue', false, {speed:pose.flying||seated?0:pose.speed,flightSpeed:pose.flying?pose.speed:0,distance:pose.distance,flying:pose.flying,riding:seated,ridingKind:pose.sitting?'seat':pose.riding?.kind,seatToFloor:pose.sitting?.height??pose.riding?.seatToFloor,vehicle:form,beast:movement==='beast',handshakeTarget:sharedInteraction?.kind==='handshake'?sharedInteraction.target:undefined,gestureTime:sharedInteraction?sharedInteraction.elapsed+Math.max(0,now-interactionAt)/1000:undefined}, pose.groundAt, focus.target, {conversing:focus.mode==='conversation'});outfit.update(pose.flying,now,seated);
         outfit.updateOptics(camera,viewportHeight);
         host.dataset.beastMotion=(avatar.beastMotion??0).toFixed(2);

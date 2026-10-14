@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { BACKGAMMON, CHESS_CELL_M, DARTS, DOMINO, GO, JENGA, MANCALA, STAR, starSpot, WINE_PONG_STAND, backgammonSpot, cafeChairAngle, chessCell, chessCellIsDark, chessCellPosition, dominoLine, dartSpot, goSpot, jengaBlock, mancalaSpot, plazaSalonPlan, winePongPoint, plazaSalonRack } from './plaza-salon-plan.js';
+import { BACKGAMMON, CHESS_CELL_M, DARTS, DOMINO, GO, JENGA, MANCALA, STAR, starSpot, XIANGQI, xiangqiSpot, WINE_PONG_STAND, backgammonSpot, cafeChairAngle, chessCell, chessCellIsDark, chessCellPosition, dominoLine, dartSpot, goSpot, jengaBlock, mancalaSpot, plazaSalonPlan, winePongPoint, plazaSalonRack } from './plaza-salon-plan.js';
 import { startGame as backgammonStart } from './backgammon-rules.js';
 import { startTower } from './jenga-rules.js';
+import { startGame as startXiangqi } from './xiangqi-rules.js';
 import { scoreAt } from './darts-rules.js';
 import { HOLES, MARBLES, startGame as startStar } from './chinese-checkers-rules.js';
 import { startGame as mancalaStart } from './mancala-rules.js';
@@ -897,6 +898,69 @@ export function buildPlazaSalon(world) {
       count: () => stones.count,
       setVisible(visible) { goban.visible = visible; },
       visible: () => goban.visible,
+    };
+  }
+  // Xiangqi on the grove table: a pale board with its lines, river and palace diagonals,
+  // and the 32 disc pieces (one InstancedMesh a kind, the character painted on top where
+  // there is a document), shown only while it is the table's game.
+  {
+    const table = plan.grove, [tx, y, tz] = base(table), top = y + MANCALA.top - 0.012 + XIANGQI.thick, S = XIANGQI.spacing;
+    const board = new THREE.Group(); board.name = 'Xiangqi board'; board.visible = false; group.add(board);
+    const wood = new THREE.Mesh(unit.box, new THREE.MeshStandardMaterial({ color: '#e7c98f', roughness: 0.6 }));
+    wood.position.set(tx, top - XIANGQI.thick / 2, tz); wood.scale.set(XIANGQI.depth, XIANGQI.thick, XIANGQI.width); wood.castShadow = wood.receiveShadow = true;
+    // Lines in red's chair-0 frame (ranks run east–west): ten across, the inner file lines
+    // broken at the river, and each palace's cross.
+    const segments = [];
+    for (let rank = 0; rank < 10; rank++) segments.push([[rank, 0], [rank, 8]]);
+    for (let file = 0; file < 9; file++) if (file === 0 || file === 8) segments.push([[0, file], [9, file]]); else segments.push([[0, file], [4, file]], [[5, file], [9, file]]);
+    for (const near of [0, 7]) segments.push([[near, 3], [near + 2, 5]], [[near, 5], [near + 2, 3]]);
+    const lines = new THREE.InstancedMesh(unit.box, new THREE.MeshStandardMaterial({ color: '#5b2a17', roughness: 0.8 }), segments.length);
+    const spot = ([rank, file]) => [tx + (4.5 - rank) * S, tz - (file - 4) * S];
+    segments.forEach(([a, b], i) => {
+      const [x1, z1] = spot(a), [x2, z2] = spot(b), length = Math.hypot(x2 - x1, z2 - z1);
+      dummy.position.set((x1 + x2) / 2, top + 0.0004, (z1 + z2) / 2); dummy.rotation.set(0, -Math.atan2(z2 - z1, x2 - x1), 0); dummy.scale.set(length, 0.0008, 0.0014); dummy.updateMatrix(); lines.setMatrixAt(i, dummy.matrix);
+    });
+    board.add(wood, lines);
+    // The pieces: discs with a pale rim; the top face shows the character.
+    const GLYPH = { K: '帥', A: '仕', E: '相', H: '傌', R: '俥', C: '炮', P: '兵', k: '將', a: '士', e: '象', h: '馬', r: '車', c: '砲', p: '卒' };
+    const disc = new THREE.CylinderGeometry(XIANGQI.piece, XIANGQI.piece, 0.009, 28), rim = new THREE.MeshStandardMaterial({ color: '#d9c39a', roughness: 0.5 });
+    const faceFor = piece => {
+      const canvas = globalThis.document?.createElement?.('canvas'), context = canvas?.getContext?.('2d'), red = piece === piece.toUpperCase();
+      if (!context) return new THREE.MeshStandardMaterial({ color: red ? '#f3e6c8' : '#efe3c4', roughness: 0.45 });
+      canvas.width = canvas.height = 64;
+      context.fillStyle = '#f4e8cc'; context.fillRect(0, 0, 64, 64);
+      context.strokeStyle = red ? '#b3262e' : '#1d1b1f'; context.lineWidth = 3; context.beginPath(); context.arc(32, 32, 27, 0, Math.PI * 2); context.stroke();
+      context.fillStyle = red ? '#b3262e' : '#1d1b1f'; context.font = '700 36px "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Microsoft YaHei", serif'; context.textAlign = 'center'; context.textBaseline = 'middle';
+      context.fillText(GLYPH[piece], 32, 34);
+      const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace;
+      // The world reload releases a texture through userData.texture (main.js populateWorld).
+      { const holder = new THREE.Object3D(); holder.userData.texture = texture; group.add(holder); }
+      return new THREE.MeshStandardMaterial({ map: texture, roughness: 0.45 });
+    };
+    const kinds = Object.fromEntries(Object.keys(GLYPH).map(piece => {
+      const mesh = new THREE.InstancedMesh(disc, [rim, faceFor(piece), rim], 5);
+      Object.assign(mesh, { name: `Xiangqi ${piece}`, count: 0, castShadow: true });
+      board.add(mesh);
+      return [piece, mesh];
+    }));
+    const show = (game = null, redChair = 0) => {
+      for (const mesh of Object.values(kinds)) mesh.count = 0;
+      (game?.board ?? startXiangqi().board).forEach((piece, index) => {
+        if (!piece) return;
+        const [east, north] = xiangqiSpot(table, index, redChair), [x, , z] = base({ x: east, north }), mesh = kinds[piece];
+        // The character reads upright for the player who owns it.
+        const facing = (piece === piece.toUpperCase()) === (redChair === 0) ? -Math.PI / 2 : Math.PI / 2;
+        dummy.position.set(x, top + 0.0045, z); dummy.rotation.set(0, facing, 0); dummy.scale.set(1, 1, 1); dummy.updateMatrix(); mesh.setMatrixAt(mesh.count++, dummy.matrix);
+      });
+      for (const mesh of Object.values(kinds)) { mesh.instanceMatrix.needsUpdate = true; mesh.computeBoundingSphere(); }
+    };
+    show();
+    group.userData.xiangqi = {
+      // A game ({ board } from xiangqi-rules.js) and the chair red sits in; null shows the opening.
+      show,
+      count: () => Object.values(kinds).reduce((sum, mesh) => sum + mesh.count, 0),
+      setVisible(visible) { board.visible = visible; },
+      visible: () => board.visible,
     };
   }
   // Darts: a dark post backed against the wall, a round backboard, and the board itself,

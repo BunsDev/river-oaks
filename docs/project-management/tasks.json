@@ -4629,8 +4629,8 @@
         "docs/procedural-multilevel-interiors-20261013"
       ],
       "owner": "codex-root-20261013-procedural-interiors",
-      "updatedAt": "2026-10-13T23:17:53.995Z",
-      "nextAction": "Phase C functional slice committed at ae1bc5c with local core, isolated Redis and two-client browser evidence. Finish vertical-route/gallery visual quality and target-hardware profiling, then add World Studio levels/layers/overrides after reconciling the active Studio owner.",
+      "updatedAt": "2026-10-14T00:09:08.401Z",
+      "nextAction": "World Studio generated level preview/add slice committed at 68529f1. Verify integration with current main, rerun the full profile and named browser journeys, then implement rendered Studio levels, authored overrides and gallery visual/performance acceptance.",
       "ledger": "docs/superpowers/plans/2026-10-13-procedural-interiors-implementation.md",
       "requiredChecks": [
         "Focused behavioral and cross-runtime tests for each phase",
@@ -4650,7 +4650,7 @@
         "preview/src/district.js, preview/src/walking.js, server/world.js (later phases)",
         "preview/src/studio/* (later phases)"
       ],
-      "leaseUntil": "2026-10-14T01:17:53.995Z"
+      "leaseUntil": "2026-10-14T02:09:08.401Z"
     },
     {
       "id": "ipic-photo-interior",
@@ -4690,6 +4690,66 @@
       "verification": "Core passed; focused 10/10; production IPIC visit 4/4; five material views; GLB and Blender validated. See task ledger for skips and scope.",
       "publicationAuthorization": "User approved unsigned draft PR on 2026-10-13 in the IPIC implementation session.",
       "pr": 343
+    },
+    {
+      "id": "office-arrival-refinement",
+      "title": "Polish the office building exterior, lobby and elevator arrival as one coherent journey",
+      "status": "active",
+      "branches": [
+        "feat/office-arrival-refinement-20261013"
+      ],
+      "owner": "codex:office-arrival-refinement-20261013",
+      "leaseUntil": "2026-10-14T01:08:02.152774Z",
+      "updatedAt": "2026-10-13T23:08:02.152774Z",
+      "nextAction": "Local verification coverage complete via full run and focused retries; latest-main build71 tests and33-check/36-capture office journey pass. Finalize signed integration/evidence commit, push PR345, await exact-head hosted checks and protected landing. Original failed aggregates preserved; unrelated GitHub Desktop stash retained.",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-arrival-20261013",
+      "ledger": "docs/superpowers/plans/2026-10-13-office-arrival-refinement.md",
+      "filesOwned": [
+        "preview/src/office-*.js (arrival only, preserve desk)",
+        "preview/src/office.css",
+        "preview/src/reference-blocks.js (office building/lobby only)",
+        "preview/src/reference-facades.js (only if entrance needs shared dimensions)",
+        "preview/tests/office-*.test.js",
+        "preview/tests/reference-blocks.test.js",
+        "preview/e2e/office-visit.js",
+        "preview/e2e/fixtures/office-elevator.html",
+        "docs/offices.md",
+        "docs/superpowers/plans/2026-10-13-office-arrival-refinement.md",
+        "preview/src/district.js (office lobby alcove exclusion only)",
+        "preview/src/remote-players.js (cinematic initial heading only)",
+        "preview/e2e/office-arrival-visual.js",
+        "preview/tests/remote-players.test.js",
+        "preview/e2e/office-arrival-clearance.js",
+        "preview/e2e/office-arrival-journey.js",
+        "preview/tests/office-arrival-architecture.test.js",
+        "preview/src/main.js (office arrival integration only)",
+        "preview/tests/room-ground-clip.test.js",
+        "preview/src/room-ground-clip.js (office exterior mask only)",
+        "preview/src/player-avatar.js (temporary office presentation pose only)",
+        "preview/src/office-world-scene.js",
+        "preview/src/office-world-presentation.js",
+        "preview/tests/office-world-presentation.test.js",
+        "preview/src/near-camera-fade.js (keep enclosed arrival materials opaque only)",
+        "preview/e2e/office-arrival-interruptions.js",
+        "preview/e2e/office-arrival-performance.js",
+        "server/tests/hardening-transport-resilience.test.js (baseline timing fixture only)",
+        "docs/superpowers/plans/README.md",
+        "preview/e2e/email-access.test.js (revocation reload synchronization only)",
+        "preview/e2e/rail-navigation.js (baseline map readiness fixture only)",
+        "preview/e2e/spatial-circulation.js (retain second-client failure diagnostics)",
+        "preview/e2e/shared-seating.js (baseline validated placement aim fixture only)",
+        "data/reports/office-arrival-acceptance.json"
+      ],
+      "requiredChecks": [
+        "Matched before/after exterior, lobby, elevator and return captures",
+        "All supported avatar route/door clearances",
+        "Authorization, failure/revocation, skip/reduced-motion and desk regressions",
+        "Desktop/tablet/phone visual review at 1440,768,390,320px",
+        "Comparable frame-time/draw-call/memory/asset measurements",
+        "pnpm run verify and pnpm run verify full with isolated Redis",
+        "Independent review and exact-head hosted gate before protected merge"
+      ],
+      "pr": 345
     }
   ]
 }

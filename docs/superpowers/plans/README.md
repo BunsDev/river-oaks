@@ -4,7 +4,7 @@
 
 Each plan is a task ledger. Status comes from the task register, where the primary checkout's live copy can be newer than the committed one. Plans from before the register are listed as historical: their own text is the record of what was delivered.
 
-## Active and blocked (14)
+## Active and blocked (16)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
@@ -17,7 +17,9 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-13-plaza-backgammon](2026-10-13-plaza-backgammon.md)<br>Plaza games: a backgammon table — 2026-10-13 | `plaza-backgammon` | active | — | 2026-10-13 |
 | [2026-10-13-office-elevator-access](2026-10-13-office-elevator-access.md)<br>Private office elevator and traversal | `office-elevator-access` | active | #317 | 2026-10-13 |
 | [2026-10-13-office-desk-workflow](2026-10-13-office-desk-workflow.md)<br>Office desk workflow | `office-desk-workflow` | active | — | 2026-10-13 |
+| [2026-10-13-office-arrival-refinement](2026-10-13-office-arrival-refinement.md)<br>Office arrival refinement | `office-arrival-refinement` | active | #345 | 2026-10-13 |
 | [2026-10-13-minimap-flicker](2026-10-13-minimap-flicker.md)<br>Stop the flicker, and take the minimap out of its scrolling sheet — 2026-10-13 | `minimap-flicker` | active | — | 2026-10-13 |
+| [2026-10-13-ipic-photo-interior](2026-10-13-ipic-photo-interior.md)<br>IPIC Photo Interior Implementation Plan | `ipic-photo-interior` | active | #343 | 2026-10-13 |
 | [2026-10-12-town-connect-deadline](2026-10-12-town-connect-deadline.md)<br>Town connection deadline on a busy page — 2026-10-12 | `town-ticket-ttl` | active | — | 2026-10-12 |
 | [2026-10-12-liquid-glass-hud](2026-10-12-liquid-glass-hud.md)<br>Liquid-glass town gate, district map and Map button — 2026-10-12 | `liquid-glass-hud` | active | #274 | 2026-10-12 |
 | [2026-10-12-docs-refresh](2026-10-12-docs-refresh.md)<br>Docs and plans refresh (2026-10-12) | `docs-refresh-20261012` | active | — | 2026-10-12 |
@@ -90,6 +92,7 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-13-signup-usernames](2026-10-13-signup-usernames.md)<br>Usernames at sign-up — 2026-10-13 | #314 |
 | [2026-10-13-settings-tabs-ux](2026-10-13-settings-tabs-ux.md)<br>Settings tabs and a minimal walking console — 2026-10-13 | #303 |
 | [2026-10-13-plaza-yacht](2026-10-13-plaza-yacht.md)<br>Plaza games: Yacht at the bench — 2026-10-13 | #335, #338 |
+| [2026-10-13-plaza-xiangqi](2026-10-13-plaza-xiangqi.md)<br>Plaza games: xiangqi in the grove — 2026-10-13 | #336 |
 | [2026-10-13-plaza-wine-pong](2026-10-13-plaza-wine-pong.md)<br>Plaza games: wine pong at the café — 2026-10-13 | #320 |
 | [2026-10-13-plaza-table-lessons](2026-10-13-plaza-table-lessons.md)<br>Guided first games at the plaza tables — 2026-10-13 | — |
 | [2026-10-13-plaza-stage-performance](2026-10-13-plaza-stage-performance.md)<br>The plaza stage as a shared performance — 2026-10-13 | — |

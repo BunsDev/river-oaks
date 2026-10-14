@@ -45,7 +45,9 @@ export function roomMask(rooms, cell = MASK_CELL) {
   return { data, width, height, west, south, cell, overflow };
 }
 
-export function createRoomGroundClip(rooms) {
+export function createRoomGroundClip(rooms,{persistent=[]}={}) {
+  // Exterior architectural recesses stay visible when boutique interiors hide.
+  rooms=[...persistent,...rooms];
   const count = Math.min(rooms.length, 254), mask = roomMask(rooms.slice(0, count));
   const frames = rooms.slice(0, count).map(room => [room.facade[0], room.facade[1], room.right[0], room.right[1]]);
   const spans = rooms.slice(0, count).map(room => [room.aMin, room.aMax, room.depth, room.floor]);
@@ -57,7 +59,7 @@ export function createRoomGroundClip(rooms) {
   const local = frame => mask ? [frame[0] - mask.west, frame[1] - mask.south, frame[2], frame[3]] : frame;
   const roomData = count ? nearest(new THREE.DataTexture(new Float32Array(frames.flatMap((frame, i) => [...local(frame), ...spans[i]])), count * 2, 1, THREE.RGBAFormat, THREE.FloatType)) : null;
   const uniforms = {
-    roRoomClip: { value: count ? 1 : 0 }, roRoomMask: { value: texture }, roRoomData: { value: roomData },
+    roRoomClip: { value: count ? 1 : 0 }, roPersistentClip: { value: persistent.length ? 1 : 0 }, roRoomMask: { value: texture }, roRoomData: { value: roomData },
     roRoomGrid: { value: mask ? new THREE.Vector4(mask.west, mask.south, mask.cell, 0) : new THREE.Vector4() },
     roRoomFrame: { value: frames.flat() }, roRoomSpan: { value: spans.flat() },
   };
@@ -77,11 +79,12 @@ export function createRoomGroundClip(rooms) {
         .replace('#include <common>', `#include <common>
           varying vec3 vRoRoomWorld;
           uniform float roRoomClip;
+          uniform float roPersistentClip;
           uniform sampler2D roRoomMask;
           uniform highp sampler2D roRoomData;
           uniform vec4 roRoomGrid;`)
         .replace('void main() {', `void main() {
-          if (roRoomClip > 0.5) {
+          if (roRoomClip > 0.5 || roPersistentClip > 0.5) {
             // Three.js z is south; rooms are planned in east/north metres.
             vec2 roEN = vec2(vRoRoomWorld.x, -vRoRoomWorld.z);
             vec2 roLocal = roEN - roRoomGrid.xy;
@@ -91,6 +94,8 @@ export function createRoomGroundClip(rooms) {
               for (int k = 0; k < ${MASK_SLOTS}; k++) {
                 int id = int(roIds[k] + 0.5) - 1;
                 if (id < 0) break;
+                if (roPersistentClip < 0.5 && id < ${persistent.length}) continue;
+                if (roRoomClip < 0.5 && id >= ${persistent.length}) continue;
                 vec4 frame = texelFetch(roRoomData, ivec2(id * 2, 0), 0), span = texelFetch(roRoomData, ivec2(id * 2 + 1, 0), 0);
                 vec2 rel = roLocal - frame.xy, inward = vec2(-frame.w, frame.z);
                 float a = dot(rel, frame.zw), d = dot(rel, inward);
@@ -99,7 +104,7 @@ export function createRoomGroundClip(rooms) {
             }
           }`);
     };
-    material.customProgramCacheKey = () => `${previousKey?.call(material) ?? ''}|ro-room-ground-mask-${count}`;
+    material.customProgramCacheKey = () => `${previousKey?.call(material) ?? ''}|ro-room-ground-mask-${count}${persistent.length?`-persistent-${persistent.length}`:''}`;
     material.needsUpdate = true;
     return material;
   }
@@ -111,6 +116,7 @@ export function createRoomGroundClip(rooms) {
       return clipped.size;
     },
     setEnabled(enabled) { uniforms.roRoomClip.value = enabled && count ? 1 : 0; },
+    setPersistentEnabled(enabled) { uniforms.roPersistentClip.value = enabled && persistent.length ? 1 : 0; },
     dispose() { texture?.dispose(); roomData?.dispose(); },
   };
 }

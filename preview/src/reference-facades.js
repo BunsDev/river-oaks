@@ -375,7 +375,7 @@ export function createReferenceFacades(world, { part, pane, plane, glass }) {
   }
   const windowRow = (f, s0, s1, h0, h1, mullion, pitch) => storefront(f, s0, s1, h1, { h0, transom: h1, mullion, pitch, lower: m.shopGlass, d: 0.13, depth: 0.1 });
   const harryWinston = harryWinstonFacade({ m, keep, surface, sign, box, sheet, lettering, cladding, group, geometries });
-  const blocks = blockFacades({ m, keep, surface, glazing, sign, box, sheet, storefront, lettering, cladding });
+  const blocks = blockFacades({ world, m, keep, surface, glazing, sign, box, sheet, storefront, lettering, cladding });
 
   // The Hermès faces measure from their shared corner; the rest read left to
   // right as seen from the street.

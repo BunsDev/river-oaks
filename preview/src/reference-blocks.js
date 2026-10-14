@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { officeLobbySpan, officeLobbyFloor } from './office-arrival-model.js';
 
 // Six more District blocks rebuilt from street-level photographs (Street View,
 // 2019–2025): the Equinox office building on Kettering Drive, the single-storey
@@ -129,10 +130,10 @@ function verticalStripes(count = 26) {
   return new THREE.MeshStandardMaterial({ map: texture, roughness: 0.6 });
 }
 
-export function blockFacades({ m, keep, surface, glazing, sign, box, sheet, storefront, lettering, cladding }) {
+export function blockFacades({ world, m, keep, surface, glazing, sign, box, sheet, storefront, lettering, cladding }) {
   const n = {
     equinoxStone: keep(cladding({ color: '#e5dfd2', panel: [1.5, 0.75], bond: true, tone: 0.04, joint: 0.82 }), 'equinox-stone'),
-    royalGlass: glazing('royal-glass', { color: '#2f52b4', roughness: 0.03, metalness: 0.85, envMapIntensity: 2.6 }),
+    royalGlass: glazing('royal-glass', { color: '#547280', roughness: 0.17, metalness: 0.55, envMapIntensity: 1.35 }),
     royalFrame: surface('royal-frame', { color: '#283a66', roughness: 0.32, metalness: 0.7 }),
     etroStone: keep(cladding({ color: '#cbc3b5', panel: [1.2, 0.6], tone: 0.1, joint: 0.86, veins: 0.06, roughness: 0.5 }), 'etro-stone'),
     white: keep(cladding({ color: '#efeee9', panel: [1.5, 0.75], tone: 0.02, joint: 0.9, roughness: 0.48 }), 'residence-panel'),
@@ -378,7 +379,7 @@ export function blockFacades({ m, keep, surface, glazing, sign, box, sheet, stor
     // each with a five-pane window over the soffit.
     const pylon = Math.max(gymDoor + 1.6, 37.6), gym = splitBays(0.6, pylon, 3, 1.1);
     const right = [wing - 4.3, wing - 0.8], left = [right[0] - 4.7, right[0] - 1.2], davidoff = [left, right];
-    const lobby = [Math.max(pylon + 3.2, left[0] - 9.2), left[0] - 2.6];
+    const lobby = officeLobbySpan(W,gymDoor);
     const holes = [...gym.map(([a, b]) => [a, b, 0, 4.9]), ...gym.map(([a, b]) => [a + 0.3, b - 0.3, ...GYM_WINDOW]),
       [lobby[0], lobby[1], 0, UPPER_TOP], ...davidoff.map(([a, b]) => [a, b, 0, UPPER_TOP])];
     wall(f, n.equinoxStone, -0.45, wing, 0.5, UPPER_TOP, -0.05, 0.45, holes);
@@ -395,19 +396,29 @@ export function blockFacades({ m, keep, surface, glazing, sign, box, sheet, stor
     letter('G', { family: '"Gill Sans", Futura, sans-serif', weight: 600, color: '#26272a' }, f, plaque, 1.78, 0.505, 0.2, 0.18);
     // The office lobby: a dark stone portal set back under a green-glass canopy.
     const [l0, l1] = lobby, middle = (l0 + l1) / 2;
+    const streetFrame=f,threshold=f.at(middle,0,0),floor=officeLobbyFloor(world,[threshold[0],-threshold[2]]),rise=floor-f.base;
+    f={...f,base:floor,at:(s,h,d)=>streetFrame.at(s,h+rise,d)};
     box(f, n.soffit, l0, l1, 4.35, 4.4, -1.25, 0.45);
     for (const s of [l0, l1 - 0.1]) box(f, n.equinoxStone, s, s + 0.1, 0, 4.4, -1.25, 0.45);
     wall(f, m.granite, l0, l1, 0, 4.35, -1.3, -1.1, [[middle - 1.8, middle + 1.8, 0, 3.3]]);
-    storefront(f, middle - 1.8, middle + 1.8, 3.3, { mullion: m.charcoal, pitch: 0.9, transom: 2.7, d: -1.28, depth: 0.1 });
-    letter('Davidoff of Geneva', { family: '"Avenir Next", Avenir, "Century Gothic", sans-serif', weight: 400, color: '#dcd8cf', spacing: 0.05 }, f, middle, 3.82, -1.09, 2.2, 0.24);
+    // The shared animated lobby/cabin in district.js owns the floor, returns,
+    // glazing and lift. Keep this photographed stone portal and canopy around it.
+    letter('OFFICES', { family: 'Avenir, sans-serif', weight: 500, color: '#f1eee5', spacing:.25, emissive:.12 }, f, middle, 3.84, -1.09, 2.25, .34);
+    letter('RIVER OAKS  ·  LEVEL 6', { family: 'Avenir, sans-serif', weight: 400, color: '#ddcbb0', spacing:.04 }, f, middle, 3.48, -1.09, 2.4, .16);
+    // Recessed warm strips reveal the entrance at night without freestanding
+    // obstructions in the existing pedestrian lane.
+    for(const s of [l0+.13,l1-.13])box(f,m.lamp,s-.025,s+.025,.45,3.8,-.99,-.96);
+    for(const s of [l0-.18,l1+.18])box(f,n.equinoxStone,s-.08,s+.08,0,5.1,.43,.65);
     box(f, n.lobbyGlass, l0 - 0.6, l1 + 0.6, 5.28, 5.36, 0.45, 3.7);
     box(f, n.steel, l0 - 0.6, l1 + 0.6, 5.18, 5.3, 3.62, 3.76);
     for (const s of [l0 - 0.6, l1 + 0.48]) box(f, n.steel, s, s + 0.12, 5.16, 5.3, 0.45, 3.76);
     for (let s = l0 + 0.8; s < l1; s += 1.45) box(f, n.steel, s - 0.03, s + 0.03, 5.22, 5.28, 0.45, 3.7);
+    box(f,m.lamp,l0-.2,l1+.2,5.16,5.19,3.53,3.58);
     for (const s of [l0 + 0.4, l1 - 0.4]) {
       const rise = 7.3 - 5.3, run = 3.2, pitch = Math.atan2(rise, run), length = Math.hypot(rise, run);
       box(f, n.steel, s - 0.02, s + 0.02, 6.3 - 0.02, 6.3 + 0.02, 2.05 - length / 2, 2.05 + length / 2, pitch);
     }
+    f=streetFrame;
     // Davidoff of Geneva: in each bay, taupe-framed shop glass, an orange rule,
     // the grey name band, grey louvres, a pale spandrel and a three-pane window.
     davidoff.forEach(([a, b], i) => {

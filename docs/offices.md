@@ -6,14 +6,20 @@ Jevica is the sole initial office owner. Every visitor needs an authenticated, a
 
 Jevica can invite residents currently in town, accept or decline requests, and revoke access from **Play → Offices**. Upstairs, **Office access** exposes the same controls. Invitations and accepted requests last until revoked. Revoking access returns an occupant to their lobby position immediately.
 
-The arrival sequence shows the player’s current avatar boarding an elevator, riding to level 6, and walking into the finished office. **Skip arrival** bypasses the sequence; reduced motion skips it automatically. Inside:
+The arrival sequence starts from your current street view, opens the lobby doors, and follows your selected avatar into the elevator. The same cabin rides to level 6 and opens into the furnished office. **Skip arrival** bypasses the sequence; reduced motion skips it automatically. Inside:
 
 - **WASD** walks; drag or **← / →** turns the view.
 - On-screen movement controls support touch and keyboard activation.
 - **Y** joins/leaves voice and **M** mutes or holds to talk, following the existing voice preference. Voice remains optional.
-- **Return to lobby** or **Escape** ends the visit and restores street controls.
+- **Return to street** or **Escape** ends the visit and restores your street view and controls. During the access check, **Cancel entry** also handles an acceptance that arrives late.
 
 The office uses the existing 9 × 7 m furnished room, with collision against walls, desks, chairs, storage and the review table. Walking reserves the measured 0.888 m turning radius of the longest playable body. The cinematic crosses the doorway along its centerline; free walking stays inside the office.
+
+## Arrival presentation
+
+The web client keeps one scene, camera, renderer and postprocessing pipeline for the street, lobby, cabin and office. A temporary presentation pose animates the actual player avatar; it does not publish cinematic positions as street movement. The district is hidden only after both cabin doors close. The existing light pool supplies the cabin and office without changing the scene's light count. Leaving, revocation, disconnect or a world rebuild releases borrowed camera, avatar, lighting and lobby state.
+
+The entrance retains the mapped office frontage, neighboring tenants, stone portal and green-glass canopy. Lobby finishes, signage, interior dimensions and the 24.3 m lift rise are authored interpretations, not surveyed building plans. The local floor mask is a rendering correction; it does not create an unrestricted walk-in room or change authoritative collision.
 
 ## Work at your desk
 

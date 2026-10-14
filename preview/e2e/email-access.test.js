@@ -195,6 +195,10 @@ test('email access: browser verification, invitation, member controls and revoca
     await waitlist.decide({ userId: 'user_sdk', actorId: 'admin', approved: false });
     assert.equal((await post('/api/multiplayer/ticket', {})).status(), 403);
     assert.equal((await request.get(`${origin}/data/district.json`)).status(), 403);
+    // The entered page polls approval and reloads itself on revocation. Let
+    // that navigation settle before testing persistence through another reload.
+    await page.locator('#access-gate').waitFor({state:'visible',timeout:60000});
+    await page.waitForFunction(() => document.querySelector('#access-message')?.textContent.includes('has not been approved'));
     await page.reload();
     await page.waitForFunction(() => document.querySelector('#access-message').textContent.includes('has not been approved'));
     assert.equal(await page.locator('#access-invite-form').isVisible(), false);
