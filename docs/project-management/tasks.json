@@ -5268,6 +5268,31 @@
         "docs/superpowers/plans/2026-10-14-procedural-gallery-cycle-soak.md",
         "docs/superpowers/plans/README.md"
       ]
+    },
+    {
+      "id": "procedural-gallery-ao-tail-pacing",
+      "title": "Make Auto quality respond to sustained moving-gallery AO frame tails",
+      "status": "active",
+      "branches": [
+        "perf/procedural-ao-tail-20261014"
+      ],
+      "owner": "codex-root-20261014-ao-tail",
+      "updatedAt": "2026-10-14T07:21:12Z",
+      "leaseUntil": "2026-10-14T08:46:33Z",
+      "nextAction": "Commit the verified Auto tail-frame fix and open a draft PR stacked on #353; wait for exact-head hosted checks. Target-device measurement and human AO visual acceptance still gate rollout.",
+      "ledger": "docs/superpowers/plans/2026-10-14-procedural-gallery-ao-tail.md",
+      "requiredChecks": [
+        "Focused render-quality governor behavior and recovery tests",
+        "Five-cycle moving gallery measurement on named local hardware",
+        "pnpm run verify core before commit",
+        "Isolated-Redis full and browser gates before delivery"
+      ],
+      "filesOwned": [
+        "preview/src/render-quality.js",
+        "preview/tests/render-quality.test.js",
+        "docs/superpowers/plans/2026-10-14-procedural-gallery-ao-tail.md",
+        "docs/superpowers/plans/README.md"
+      ]
     }
   ]
 }
