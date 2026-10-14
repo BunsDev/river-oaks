@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- TypeSafe Place app icon. Source of truth; build.mjs derives png/, .icns and .ico. -->
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#24392d"/>
+      <stop offset="1" stop-color="#18271f"/>
+    </linearGradient>
+    <linearGradient id="leaf" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#b9e4bf"/>
+      <stop offset="1" stop-color="#7fc48f"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="224" fill="url(#sky)"/>
+  <!-- Ground line: the plaza -->
+  <rect x="192" y="748" width="640" height="40" rx="20" fill="#3a5a46"/>
+  <!-- Place marker -->
+  <path d="M512 176c-150 0-260 110-260 252 0 178 194 282 246 404 4 10 24 10 28 0 52-122 246-226 246-404 0-142-110-252-260-252z" fill="url(#leaf)"/>
+  <circle cx="512" cy="430" r="118" fill="#18271f"/>
+  <!-- Window light: the house inside the marker -->
+  <path d="M512 350l92 70v112H420V420z" fill="#f4e9c8"/>
+  <rect x="488" y="474" width="48" height="58" rx="6" fill="#18271f"/>
+</svg>

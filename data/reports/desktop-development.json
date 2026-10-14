@@ -15,10 +15,10 @@
     "external navigation blocked",
     "renderer crash recovers to playable game"
   ],
-  "readyMs": 10552,
+  "readyMs": 42423,
   "assets": {
-    "loaded": 100,
-    "total": 100,
+    "loaded": 102,
+    "total": 102,
     "failed": 0,
     "done": true
   },
@@ -49,10 +49,10 @@
   },
   "sharedTown": true,
   "performance": {
-    "samples": 422,
-    "medianMs": 24.900000000001455,
-    "p95Ms": 29.200000000000728,
-    "meanFps": 42.16416046360594,
+    "samples": 388,
+    "medianMs": 25,
+    "p95Ms": 29.69999999999709,
+    "meanFps": 38.71946351588694,
     "canvas": [
       2560,
       1536
@@ -61,13 +61,13 @@
       "mode": "auto",
       "scale": 0.61,
       "occlusion": true,
-      "fps": 41
+      "fps": 39
     },
     "renderer": {
-      "calls": 1407,
-      "triangles": 5179956,
-      "geometries": 315,
-      "textures": 140
+      "calls": 1470,
+      "triangles": 5290466,
+      "geometries": 439,
+      "textures": 152
     }
   },
   "gpu": {
