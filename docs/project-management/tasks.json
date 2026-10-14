@@ -5885,17 +5885,17 @@
     {
       "id": "procedural-gallery-cycle-soak",
       "title": "Measure repeated generated gallery entry, moving frames, eviction and return in one session",
-      "status": "delivered",
+      "status": "retired",
       "branches": [
         "perf/procedural-gallery-cycle-soak-20261014"
       ],
       "owner": null,
-      "updatedAt": "2026-10-14T21:41:45.215Z",
+      "updatedAt": "2026-10-14T21:45:14.322Z",
       "leaseUntil": null,
       "previousOwner": "codex-root-20261014-gallery-motion",
       "pr": 353,
       "handoff": "PR #353 merged to main as 4da775df2c54bc43d6613b9214580f8d720273fe at 2026-10-14T21:41:26Z. Reviewed signed head fb1de91f600a78030dbd1f191da730a18f26d599; exact-head preview and all 16 checks green. Final-main focused 13/13, core and five-cycle browser journey passed. Moving p95 remained 33.4 ms, framing #354.",
-      "nextAction": "Delivered. Archive ignored receipts and retire local branch/worktree via project:prune after dry run. Follow #354 for moving AO pacing; target-device and human visual gates remain open.",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "ledger": "docs/superpowers/plans/2026-10-14-procedural-gallery-cycle-soak.md",
       "requiredChecks": [
         "Repeated one-client gallery entry and eviction behavioral journey",
@@ -5917,22 +5917,40 @@
           "tree": "a36107715828497e4f4d14002b7ab672fde23260",
           "checks": "Exact-head aggregate preview and all 16 hosted checks passed; final-main focused 13/13, core and five-cycle browser journey passed with stable renderer counts and measured 33.4 ms moving p95."
         }
-      ]
+      ],
+      "retirement": {
+        "head": "fb1de91f600a78030dbd1f191da730a18f26d599",
+        "releasedAt": "2026-10-14T21:44:23.704Z",
+        "sessionsReviewedAt": "2026-10-14T21:44:23.704Z",
+        "note": "Session aa2272b7: lsof shows no process cwd in the worktree; evidence archived at ~/worktree-backups/river-oaks/local-evidence-gallery-cycle-soak-20261014/manifest.json before removing regenerable caches"
+      },
+      "retiredBranches": [
+        "perf/procedural-gallery-cycle-soak-20261014"
+      ],
+      "archive": {
+        "perf/procedural-gallery-cycle-soak-20261014": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-0PK3tS/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-0PK3tS/history.bundle",
+          "sha256": "49eee831b8e7b54ddabb5647219c2928a101b35517adf71d1a4cd61d0f47e4a9",
+          "tag": "refs/tags/archive/worktree-prune/c572b882-845b-454d-9e90-9ce0287d26a8",
+          "head": "fb1de91f600a78030dbd1f191da730a18f26d599"
+        }
+      }
     },
     {
       "id": "procedural-gallery-ao-tail-pacing",
       "title": "Make Auto quality respond to sustained moving-gallery AO frame tails",
-      "status": "active",
+      "status": "delivered",
       "branches": [
         "perf/procedural-ao-tail-20261014"
       ],
-      "owner": "codex-root-20261014-procedural-landing",
-      "updatedAt": "2026-10-14T21:32:04.072Z",
-      "leaseUntil": "2026-10-14T23:32:04.072Z",
+      "owner": null,
+      "updatedAt": "2026-10-14T22:01:47.838Z",
+      "leaseUntil": null,
       "previousOwner": "codex-root-20261014-ao-tail",
       "pr": 354,
-      "handoff": "Draft PR #354 on #353 is signed and pushed at 3b8ef9d3a19723226795698866f4bdcf49bc7fc4. Local core and isolated-Redis full gates passed; all ten exact-head hosted checks passed, including aggregate preview. The named generated-gallery, generated-gallery-levels, and world-studio-generated-levels journeys also passed on this exact head, with local report .runtime/ao-head-targeted.json. The five-cycle local Mac M3 Max journey showed Auto shedding AO by the third visit and restoring 16.7-16.8 ms moving p95, with flatter contact shading. Target-device and human visual acceptance remain open. Preserve the clean worktree for review.",
-      "nextAction": "Review clean #354 Auto-quality slice while #353 hosted checks run. After #353 lands, merge current main, verify focused/core and named five-cycle browser journey, sign/push, obtain exact hosted checks and land serially. Keep target-device and human AO visual acceptance open.",
+      "handoff": "PR #354 merged to main as d8b9292723c9e3ae95422c4e6e30f77bc0aa48c5 from signed head a357df5b74d16ec2e6032bbd59b815c60106fb20. Exact-head aggregate preview and all 16 hosted checks green; integrated focused 15/15, core and five-cycle browser correctness passed. Local moving p95 varied with AO off; target-device pacing and human AO visual acceptance remain rollout gates.",
+      "nextAction": "Delivered. Retire local branch/worktree with project:prune after dry-run and exact-head review; continue #355 stack. Broader rollout awaits target-device and human visual review.",
       "ledger": "docs/superpowers/plans/2026-10-14-procedural-gallery-ao-tail.md",
       "requiredChecks": [
         "Focused render-quality governor behavior and recovery tests",
@@ -5945,6 +5963,14 @@
         "preview/tests/render-quality.test.js",
         "docs/superpowers/plans/2026-10-14-procedural-gallery-ao-tail.md",
         "docs/superpowers/plans/README.md"
+      ],
+      "evidence": [
+        {
+          "pr": 354,
+          "reviewedHead": "a357df5b74d16ec2e6032bbd59b815c60106fb20",
+          "merge": "d8b9292723c9e3ae95422c4e6e30f77bc0aa48c5",
+          "checks": "Exact-head aggregate preview and all 16 hosted checks passed; integrated focused 15/15, core and five-cycle browser correctness passed. Performance variability documented in ledger."
+        }
       ]
     },
     {
@@ -8484,17 +8510,17 @@
     {
       "id": "procedural-interior-ring-validity",
       "title": "Reject self-touching and doubled-back building footprints before generating interiors",
-      "status": "queued",
+      "status": "active",
       "branches": [
         "fix/procedural-interior-ring-validity-20261014"
       ],
-      "owner": null,
-      "updatedAt": "2026-10-14T08:24:18Z",
-      "leaseUntil": null,
+      "owner": "codex-root-20261014-procedural-landing",
+      "updatedAt": "2026-10-14T21:58:22.608Z",
+      "leaseUntil": "2026-10-14T23:58:22.608Z",
       "previousOwner": "codex-root-20261014-ring-validity",
       "pr": 355,
       "handoff": "Draft PR #355 on #354 is signed and pushed at 9eac78b651d2debbc5607468c06ceee7a3e050eb. The invalid-ring regression failed before the fix and passed after; 24 focused generator/district/server tests, Node/browser parity, local core, isolated-Redis full, and three named gallery/Studio journeys passed. All ten exact-head hosted checks passed, including aggregate preview. The worktree is clean and retained for review. This does not establish target-device or human visual acceptance for the larger interior rollout.",
-      "nextAction": "Review PR #355 with the ordered interior stack. Keep it draft and unmerged until required authorization; choose pilot target device/browser and review AO visuals before broader archetype rollout.",
+      "nextAction": "After #354 lands, merge current main into clean PR #355 branch, reconcile task register, run focused/core and browser checks, sign/push, await exact-head hosted checks, then land.",
       "ledger": "docs/superpowers/plans/2026-10-14-procedural-interior-ring-validity.md",
       "requiredChecks": [
         "Focused generator regression for self-touching and overlapping edges",
