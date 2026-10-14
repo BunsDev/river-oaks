@@ -8345,14 +8345,14 @@
     {
       "id": "procedural-pilot-frame-performance",
       "title": "Profile and improve generated gallery frame pacing before broader interior rollout",
-      "status": "active",
+      "status": "delivered",
       "branches": [
         "perf/procedural-pilot-render-20261014"
       ],
-      "owner": "codex-root-20261014-procedural-landing",
-      "updatedAt": "2026-10-14T20:44:45.212Z",
-      "handoff": "Signed, verified draft PR #351 head 5a0f4f619ded0fa91c0fe959afad4c9a1eed0201 is pushed on #350; all exact-head hosted checks, including aggregate preview, passed. Local five-minute gallery soak held 16.7–16.8 ms p95 and 16.8 ms p99 with flat reported renderer counts on M3 Max. Worktree is clean and retained. Former owner: codex-root-20261014-pilot-render.",
-      "nextAction": "Val authorized serial stack landing. Review clean #351 slice and its prior verification; after #350 lands, merge current main into #351, verify final tree and exact hosted head, then mark ready and land through REST guard. Keep target-device and human pilot gates open.",
+      "owner": null,
+      "updatedAt": "2026-10-14T21:12:11.462Z",
+      "handoff": "PR #351 merged to main as a2739d6c2d78766c28c8bc1719e32156d00f4138 at 2026-10-14T21:11:51Z. Reviewed signed head 7abbd41c6e41c21ba601a1b8dba096e886f22fa3; exact-head preview and all 16 checks green. Final-main focused 22/22 and core passed. Pilot stationary five-minute M3 Max soak was 16.7-16.8 ms p95/p99; broader target-device and human visual acceptance remain open.",
+      "nextAction": "Delivered. Archive ignored receipts and retire local branch/worktree via project:prune after dry run. Broader pilot target-device and human visual acceptance remains with the integration goal.",
       "ledger": "docs/superpowers/plans/2026-10-14-procedural-pilot-frame-performance.md",
       "requiredChecks": [
         "Comparable player-height street and gallery pass/object audit",
@@ -8369,20 +8369,29 @@
         "docs/superpowers/plans/2026-10-14-procedural-pilot-frame-performance.md"
       ],
       "pr": 351,
-      "leaseUntil": "2026-10-14T22:44:45.212Z",
-      "previousOwner": "codex-root-20261014-pilot-render"
+      "leaseUntil": null,
+      "previousOwner": "codex-root-20261014-pilot-render",
+      "evidence": [
+        {
+          "pr": 351,
+          "reviewedHead": "7abbd41c6e41c21ba601a1b8dba096e886f22fa3",
+          "merge": "a2739d6c2d78766c28c8bc1719e32156d00f4138",
+          "tree": "8b83c085dce60be8c0426a6338298888bc2d0195",
+          "checks": "Exact-head aggregate preview and all 16 hosted checks passed; final-main focused 22/22 and core passed; prior full and five-minute local stationary gallery soak passed with stated scope limits."
+        }
+      ]
     },
     {
       "id": "procedural-private-upper-revocation",
       "title": "Keep generated private home levels and voice access consistent after guest revocation",
-      "status": "queued",
+      "status": "active",
       "branches": [
         "fix/procedural-private-level-revocation-20261014"
       ],
-      "owner": null,
-      "updatedAt": "2026-10-14T05:00:19Z",
+      "owner": "codex-root-20261014-procedural-landing",
+      "updatedAt": "2026-10-14T21:00:10.105Z",
       "handoff": "Signed draft PR #352 head 884aa1218e23aece622948db27070f297ed5e1a9 is pushed on #351; all exact-head hosted checks, including aggregate preview, passed. Focused regression failed before the fix and passed after; local core and full gates passed with 673 Redis server tests and zero skips, ten experience and 21 shared journeys. Clean worktree retained. Former owner: codex-root-20261014-private-level-revocation.",
-      "nextAction": "Integration owner: review the owner-only generated-home revocation fix in PR #352 with the #349-#351 stack. Preserve the clean worktree until merge and retirement evidence exists; broader interior rollout still needs target-device and human visual acceptance.",
+      "nextAction": "Review clean #352 privacy fix while #351 hosted checks run. After #351 lands, merge current main, verify focused/core, sign/push, obtain exact hosted checks and land serially. Keep broad rollout acceptance separate.",
       "ledger": "docs/superpowers/plans/2026-10-14-procedural-private-upper-revocation.md",
       "requiredChecks": [
         "Focused generated-home access and upper-level regression",
@@ -8396,7 +8405,7 @@
         "docs/superpowers/plans/README.md"
       ],
       "pr": 352,
-      "leaseUntil": null,
+      "leaseUntil": "2026-10-14T23:00:10.105Z",
       "previousOwner": "codex-root-20261014-private-level-revocation"
     },
     {

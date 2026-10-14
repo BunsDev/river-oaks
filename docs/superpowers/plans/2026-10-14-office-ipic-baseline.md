@@ -112,6 +112,13 @@ Parked here as the goal asks; the brief carries the same list with context.
    command with `--apply` for 22 / 22; the eight draft checkouts (#351–#358) and
    the twelve owned active ones remain, so ten-and-ten still needs the broader
    answer above.
+   Applied at 2026-10-14T21:40Z: `feat/procedural-gallery-route-20261014` cancelled
+   through the guarded path (fresh dry run eligible, no process in the worktree,
+   task queued with no owner, tip on `main`): status `cancelled-local`, manifest
+   `~/worktree-backups/river-oaks/cancel-stale-dufthR/manifest.json`, archive tag
+   `archive/worktree-prune/311aa502-5ba9-4895-a742-787ab47084f6`; the task
+   `procedural-gallery-vertical-route` now says restore before resuming. Remote
+   branch untouched. Count 22 / 22.
 
 ## Round end (2026-10-14T20:40Z)
 
