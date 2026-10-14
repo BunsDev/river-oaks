@@ -5405,6 +5405,33 @@
         "docs/superpowers/plans/2026-10-14-procedural-gallery-ao-mask.md",
         "docs/superpowers/plans/README.md"
       ]
+    },
+    {
+      "id": "release-0-2-0-readiness",
+      "title": "Prepare TypeSafe Place 0.2.0 release candidate from verified procedural interior stack",
+      "status": "active",
+      "branches": [
+        "release/v0.2.0-20261014"
+      ],
+      "owner": "codex-resume-20261014-release-readiness",
+      "updatedAt": "2026-10-14T19:07:29.799720+00:00",
+      "leaseUntil": "2026-10-14T21:07:29.799720+00:00",
+      "nextAction": "Verify candidate merged with main 489a60e4; focused café/interior tests passed 12/12. Visual pilot acceptance recorded; performance budget pending. Then signed candidate commit and draft PR, retaining publish/deploy gates.",
+      "ledger": "docs/superpowers/plans/2026-10-14-release-0.2.0-readiness.md",
+      "requiredChecks": [
+        "Review exact-head stacked PR checks and changes",
+        "Focused behavior plus full isolated Redis/browser gate",
+        "Mac Chromium repeated moving gallery performance",
+        "Desktop development and Studio acceptance plus local package integrity",
+        "Hosted preview on candidate head"
+      ],
+      "filesOwned": [
+        "package.json (release version)",
+        "docs/releases/0.2.0.md",
+        "docs/superpowers/plans/2026-10-14-release-0.2.0-readiness.md",
+        "docs/superpowers/plans/README.md",
+        "release blocker fixes after owning-seam review"
+      ]
     }
   ]
 }
