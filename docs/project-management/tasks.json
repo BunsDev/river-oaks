@@ -8689,14 +8689,14 @@
     {
       "id": "procedural-gallery-ao-exterior-mask",
       "title": "Measure an interior-only AO geometry mask for repeated gallery visits",
-      "status": "active",
+      "status": "delivered",
       "branches": [
         "perf/procedural-gallery-ao-mask-20261014"
       ],
-      "owner": "codex-root-20261014-procedural-landing",
-      "updatedAt": "2026-10-14T22:32:05.950Z",
-      "leaseUntil": "2026-10-15T00:32:05.950Z",
-      "nextAction": "After #357 lands, merge current main into #358, reconcile register, run focused/core and named gallery browser checks, sign/push, await exact-hosted checks and land.",
+      "owner": null,
+      "updatedAt": "2026-10-14T23:00:56.388Z",
+      "leaseUntil": null,
+      "nextAction": "Delivered. Retire local branch/worktree after project:prune dry-run and exact-head proof. Continue #382 contact-shading pilot.",
       "ledger": "docs/superpowers/plans/2026-10-14-procedural-gallery-ao-mask.md",
       "requiredChecks": [
         "Paired uninstrumented five-cycle moving gallery measurements",
@@ -8714,7 +8714,15 @@
       ],
       "pr": 358,
       "previousOwner": "codex-root-20261014-ao-followup",
-      "handoff": "Signed/pushed head 0bcf539e9b5028b9e84468f58be3caa5632f3c57 remains clean; draft PR #358 on #357 passed all ten exact-head hosted jobs in Verify run 38555059714, plus prior local focused/core/full/experience gates. New matched control on M3 Max/Chromium Metal: AO-off five-cycle moving p95 16.7ms throughout, zero >25ms intervals; AO-on three-cycle control 16.7/33.3/33.3ms. Temporary browser-only stage skips: normal 16.8/33.3/33.4ms, denoise 16.8/33.3/16.8ms, GTAO shading 16.7/16.8/16.8ms. With the mask, separate 0.75 AO-buffer and 6-sample GTAO five-cycle trials still reached ~33ms p95 on multiple revisits. All trials passed route checks; temporary source/harness edits restored, worktree clean. Ignored receipts: .runtime/ao-mask-sharp-off-five.json, ao-mask-matched-on-three.json, ao-mask-skip-{normal,denoise,gtao}-three.json, ao-mask-075-five.json and ao-mask-6sample-five.json. PR body records diagnosis. No acceptable visual replacement, target-device/human acceptance, merge or deployment claimed."
+      "handoff": "PR #358 merged to main as c89c98ddac5a4aaa57f549d1ccc840a33e873af7 from signed head 35d23a560cafaa01665d489f84851d653ccb3241. Exact-head aggregate preview and all 16 hosted checks green; integrated focused 12/12, gallery render-cost, office visit, five-cycle Sharpest AO-on and core passed. Target-device and human through-glass mask review remain rollout gates.",
+      "evidence": [
+        {
+          "pr": 358,
+          "reviewedHead": "35d23a560cafaa01665d489f84851d653ccb3241",
+          "merge": "c89c98ddac5a4aaa57f549d1ccc840a33e873af7",
+          "checks": "Exact-head aggregate preview and all 16 hosted checks green; integrated focused 12/12, named browser and five-cycle Sharpest journeys, core passed."
+        }
+      ]
     },
     {
       "id": "procedural-gallery-contact-shading",
@@ -8723,10 +8731,10 @@
       "branches": [
         "perf/procedural-gallery-contact-shading-20261014"
       ],
-      "owner": "codex-root-20261014-gallery-contact",
-      "updatedAt": "2026-10-14T20:12:44.920Z",
-      "leaseUntil": "2026-10-14T22:12:44.920Z",
-      "nextAction": "Draft PR #382 is stacked on #358 at signed implementation head babe44b. Run isolated-Redis full with stable disk and Passport temporary storage, inspect exact-head CI and target-device/human visual gaps, then land after #349–#358 only if gates pass.",
+      "owner": "codex-root-20261014-procedural-landing",
+      "updatedAt": "2026-10-14T23:00:56.388Z",
+      "leaseUntil": "2026-10-15T01:00:56.388Z",
+      "nextAction": "Take over clean #382 worktree after #358 merge. Merge current main, record Val approved gallery pilot Auto appearance, rerun focused/core and named browser checks, sign/push, await exact-hosted checks and land. Keep target-device and live keyboard/accessibility rollout gates open.",
       "ledger": "docs/superpowers/plans/2026-10-14-procedural-gallery-contact-shading.md",
       "requiredChecks": [
         "Matched player-height visual captures against AO-on and AO-off",
@@ -8745,7 +8753,9 @@
         "docs/superpowers/plans/README.md",
         "docs/project-management/tasks.json"
       ],
-      "pr": 382
+      "pr": 382,
+      "handoff": "Val approved the generated gallery pilot Auto contact-shading appearance in output/playwright/gallery-canvas-cycle-1.png and gallery-canvas-cycle-5.png on 2026-10-14. Local isolated-Redis full gate passed after Passport temp recovery; signed draft PR #382 remains stacked on #358. Live keyboard/accessibility and target-device performance remain separate rollout gates.",
+      "previousOwner": "codex-root-20261014-gallery-contact"
     },
     {
       "id": "release-0-2-0-readiness",

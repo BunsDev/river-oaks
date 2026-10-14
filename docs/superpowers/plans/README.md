@@ -4,24 +4,26 @@
 
 Each plan is a task ledger. Status comes from the task register, where the primary checkout's live copy can be newer than the committed one. Plans from before the register are listed as historical: their own text is the record of what was delivered.
 
-## Active and blocked (7)
+## Active and blocked (8)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
 | [2026-10-14-shared-dominoes](2026-10-14-shared-dominoes.md)<br>Shared Dominoes Implementation Plan (PR 1: the town holds the round) | `shared-dominoes-sheet` | active | — | 2026-10-14 |
-| [2026-10-14-procedural-gallery-ao-mask](2026-10-14-procedural-gallery-ao-mask.md)<br>Gallery AO exterior geometry experiment | `procedural-gallery-ao-exterior-mask` | active | #358 | 2026-10-14 |
+| [2026-10-14-procedural-gallery-contact-shading](2026-10-14-procedural-gallery-contact-shading.md)<br>Generated gallery contact shading pilot | `procedural-gallery-contact-shading` | active | #382 | 2026-10-14 |
 | [2026-10-14-office-ipic-baseline](2026-10-14-office-ipic-baseline.md)<br>Office + IPIC #360, design-side baseline packet (2026-10-14) | `office-ipic-baseline-360` | active | #380 | 2026-10-14 |
 | [2026-10-14-gallery-vertical-route](2026-10-14-gallery-vertical-route.md)<br>Gallery vertical-route visual integration | `procedural-gallery-vertical-route` | queued | — | 2026-10-14 |
+| [2026-10-14-desktop-platform-identity](2026-10-14-desktop-platform-identity.md)<br>Desktop cross-platform identity (#370) | `desktop-platform-identity` | active | #379 | 2026-10-14 |
 | [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `shared-voice-acceptance` | blocked | — | 2026-10-13 |
 | [2026-10-13-procedural-interiors-implementation](2026-10-13-procedural-interiors-implementation.md)<br>Procedural interiors implementation ledger | `procedural-multilevel-interiors-plan` | active | #349 | 2026-10-14 |
 | [2026-10-13-local-branch-worktree-prune](2026-10-13-local-branch-worktree-prune.md)<br>Local branch and worktree pruning, 2026-10-13 | `register-sweep-20261014` | active | #378 | 2026-10-14 |
 
-## Delivered, awaiting local retirement (7)
+## Delivered, awaiting local retirement (8)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
 | [2026-10-14-procedural-private-upper-revocation](2026-10-14-procedural-private-upper-revocation.md)<br>Generated private home upper-level access | `procedural-private-upper-revocation` | delivered | #352 | 2026-10-14 |
 | [2026-10-14-procedural-pilot-frame-performance](2026-10-14-procedural-pilot-frame-performance.md)<br>Procedural gallery pilot frame performance | `procedural-pilot-frame-performance` | delivered | #351 | 2026-10-14 |
+| [2026-10-14-procedural-gallery-ao-mask](2026-10-14-procedural-gallery-ao-mask.md)<br>Gallery AO exterior geometry experiment | `procedural-gallery-ao-exterior-mask` | delivered | #358 | 2026-10-14 |
 | [2026-10-14-procedural-gallery-ao-buffer](2026-10-14-procedural-gallery-ao-buffer.md)<br>Gallery ambient occlusion buffer experiment | `procedural-gallery-ao-buffer` | delivered | #356 | 2026-10-14 |
 | [2026-10-14-procedural-creator-interior-docs](2026-10-14-procedural-creator-interior-docs.md)<br>Generated creator-region interior documentation | `procedural-creator-interior-docs` | delivered | #357 | 2026-10-14 |
 | [2026-10-14-level-aware-interior-streaming](2026-10-14-level-aware-interior-streaming.md)<br>Level-aware generated interior streaming | `procedural-level-aware-streaming` | delivered | #350 | 2026-10-14 |

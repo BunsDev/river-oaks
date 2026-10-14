@@ -162,7 +162,26 @@ The original questions, kept for the record:
    owner, one commit not on main, so distinct unfinished work). Reaching ten
    needs three of: #349's owner releasing its branch (then it retires like the
    rest), #380 and #381 landing, or your yes to cancel the AO-sampling trial
-   branch or reclaim the expired codex rider checkout. #355–#358 follow the same path once their owners land and
+   branch or reclaim the expired codex rider checkout.
+
+   **Reached ten, 2026-10-14T23:44Z.** Val answered "cancel if need be". After
+   river-oaks-b7 repaired the register (a codex write had left #349's entry
+   active with no owner, and GitHub Desktop pulls of the primary had rolled back
+   seven retirement records, since restored), the remaining work ran through the
+   guarded tools, archive first:
+   - cancelled `perf/procedural-gallery-ao-sampling-20261014` (cancel-stale-YWFhGa),
+     `fix/rider-performance-contact-20261013` (cancel-stale-3c2tGJ; its 20
+     uncommitted codex edits are in the archive) and `feat/voice-acceptance-20261013`
+     (cancel-stale-FmCCfR; pushed, remote branch untouched);
+   - retired `docs/procedural-multilevel-interiors-20261013` (#349,
+     retirement-Cymdje) and `perf/procedural-gallery-contact-shading-20261014`
+     (#382, retirement-xkcN8s). For #382 the 103 pilot screenshots its handoff
+     asked to keep, and the `dump.rdb` of an orphaned disposable test Redis on
+     127.0.0.1:16399 (no clients, parent launchd, stopped with `SHUTDOWN SAVE`), are
+     in `local-evidence-gallery-contact-shading-20261014`.
+   Count 10 worktrees / 10 branches: primary, #380, #381, #376 release, #377 and
+   #379 desktop, #309 iOS, the shared-dominoes sheet, and river-oaks-b7's two fix
+   branches. b7 was asked to open its third fix only after one of those retires. #355–#358 follow the same path once their owners land and
    release them; the eleven active checkouts stay with their sessions.
 
 ## Round end (2026-10-14T20:40Z)
