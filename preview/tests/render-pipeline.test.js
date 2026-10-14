@@ -43,6 +43,35 @@ test('a failed AO geometry render restores hidden foliage and renderer state',()
   } finally {pipeline.dispose();leaf.geometry.dispose();leaf.material.dispose();}
 });
 
+test('generated-room AO omits exterior geometry only for normals and restores it after failure',()=>{
+  const {scene,leaf,renderer,pipeline}=fixture();
+  const world=new THREE.Group(),exterior=new THREE.Group(),interior=new THREE.Group(),userHidden=new THREE.Group();
+  userHidden.visible=false;world.add(exterior,interior,userHidden);scene.add(world);
+  let failGeometry=false,normalPasses=0;
+  renderer.render=subject=>{
+    if(subject===scene){
+      normalPasses++;
+      assert.equal(exterior.visible,false,'Exterior is absent from AO normals/depth');
+      assert.equal(interior.visible,true,'Generated room retains contact shading');
+      if(failGeometry)throw new Error('geometry failure');
+    }else assert.equal(exterior.visible,true,'The later AO composite sees restored exterior');
+    assert.equal(userHidden.visible,false);
+  };
+  try{
+    pipeline.setOcclusionExteriorMask(world,interior);
+    pipeline.occlusion.render(renderer,{texture:{}},{texture:{}});
+    assert.equal(exterior.visible,true);
+    failGeometry=true;
+    assert.throws(()=>pipeline.occlusion.render(renderer,{texture:{}},{texture:{}}),/geometry failure/);
+    assert.equal(exterior.visible,true,'A failed AO pass restores the beauty scene');
+    failGeometry=false;
+    pipeline.setOcclusionExteriorMask(null,null);
+    renderer.render=subject=>{if(subject===scene)assert.equal(exterior.visible,true,'Exterior returns to AO outside the room');};
+    pipeline.occlusion.render(renderer,{texture:{}},{texture:{}});
+    assert.equal(normalPasses,2);
+  }finally{pipeline.dispose();leaf.geometry.dispose();leaf.material.dispose();}
+});
+
 test('complete GTAO renders preserve exclusions and initially hidden objects across frames and failure recovery',()=>{
   const {scene,leaf,renderer,pipeline}=fixture();
   const hiddenLeaf=leaf.clone();hiddenLeaf.visible=false;scene.add(hiddenLeaf);

@@ -6059,14 +6059,14 @@
     {
       "id": "procedural-creator-interior-docs",
       "title": "Document generated creator-region interiors and stabilize creator acceptance",
-      "status": "active",
+      "status": "delivered",
       "branches": [
         "docs/procedural-creator-interiors-20261014"
       ],
-      "owner": "codex-root-20261014-procedural-landing",
-      "updatedAt": "2026-10-14T22:19:18.700Z",
-      "leaseUntil": "2026-10-15T00:19:18.700Z",
-      "nextAction": "After #356 lands, merge current main into #357, reconcile task register, run focused/core and creator journey, sign/push, await exact-hosted checks and land.",
+      "owner": null,
+      "updatedAt": "2026-10-14T22:44:15.795Z",
+      "leaseUntil": null,
+      "nextAction": "Delivered. Retire local branch/worktree after project:prune dry-run and exact-head proof. Continue #358 stack.",
       "ledger": "docs/superpowers/plans/2026-10-14-procedural-creator-interior-docs.md",
       "requiredChecks": [
         "Contract comparison against generator and server compiler",
@@ -6083,8 +6083,46 @@
         "preview/e2e/creator-objects.js"
       ],
       "previousOwner": "codex-root-20261014-creator-docs",
-      "handoff": "Draft PR #357 is open on #356 at signed/pushed head 07f44c61cefb6c13961b8a853789d8603634221b. Bounded creator-objects retry follows prior resident-occupied failure; local shared 17/17, test:agent 76/76, core and diff checks passed. Hosted run 38547235258 passed all ten exact-head checks including worlds-and-creator, required shared and aggregate preview. Worktree clean. No merge or target-device/human acceptance claimed.",
-      "pr": 357
+      "handoff": "PR #357 merged to main as 093b8d0f45b2ebaf5a680ac8b0999f889c7b46c6 from signed head 284714e3317c267e882fde36221ba600c858f94d. Exact-head aggregate preview and all 16 hosted checks green, including worlds-and-creator; integrated region-package 13/13, shared creator-objects and core passed.",
+      "pr": 357,
+      "evidence": [
+        {
+          "pr": 357,
+          "reviewedHead": "284714e3317c267e882fde36221ba600c858f94d",
+          "merge": "093b8d0f45b2ebaf5a680ac8b0999f889c7b46c6",
+          "checks": "Exact-head aggregate preview and all 16 hosted checks green; integrated region-package 13/13, shared creator-objects and core passed."
+        }
+      ]
+    },
+    {
+      "id": "procedural-gallery-ao-exterior-mask",
+      "title": "Measure an interior-only AO geometry mask for repeated gallery visits",
+      "status": "active",
+      "branches": [
+        "perf/procedural-gallery-ao-mask-20261014"
+      ],
+      "owner": "codex-root-20261014-procedural-landing",
+      "updatedAt": "2026-10-14T22:32:05.950Z",
+      "leaseUntil": "2026-10-15T00:32:05.950Z",
+      "nextAction": "After #357 lands, merge current main into #358, reconcile register, run focused/core and named gallery browser checks, sign/push, await exact-hosted checks and land.",
+      "ledger": "docs/superpowers/plans/2026-10-14-procedural-gallery-ao-mask.md",
+      "requiredChecks": [
+        "Paired uninstrumented five-cycle moving gallery measurements",
+        "Same-camera AO visual comparison",
+        "Focused render-pipeline visibility restoration tests",
+        "pnpm run verify before commit",
+        "Isolated-Redis full and exact-head hosted checks before delivery"
+      ],
+      "filesOwned": [
+        "preview/src/render-pipeline.js",
+        "preview/src/main.js",
+        "preview/tests/render-pipeline.test.js",
+        "docs/superpowers/plans/2026-10-14-procedural-gallery-ao-mask.md",
+        "docs/superpowers/plans/README.md"
+      ],
+      "pr": 358,
+      "previousOwner": "codex-root-20261014-ao-followup",
+      "handoff": "Signed/pushed head 0bcf539e9b5028b9e84468f58be3caa5632f3c57 remains clean; draft PR #358 on #357 passed all ten exact-head hosted jobs in Verify run 38555059714, plus prior local focused/core/full/experience gates. New matched control on M3 Max/Chromium Metal: AO-off five-cycle moving p95 16.7ms throughout, zero >25ms intervals; AO-on three-cycle control 16.7/33.3/33.3ms. Temporary browser-only stage skips: normal 16.8/33.3/33.4ms, denoise 16.8/33.3/16.8ms, GTAO shading 16.7/16.8/16.8ms. With the mask, separate 0.75 AO-buffer and 6-sample GTAO five-cycle trials still reached ~33ms p95 on multiple revisits. All trials passed route checks; temporary source/harness edits restored, worktree clean. Ignored receipts: .runtime/ao-mask-sharp-off-five.json, ao-mask-matched-on-three.json, ao-mask-skip-{normal,denoise,gtao}-three.json, ao-mask-075-five.json and ao-mask-6sample-five.json. PR body records diagnosis. No acceptable visual replacement, target-device/human acceptance, merge or deployment claimed."
     },
     {
       "id": "local-prune-20261013",
@@ -8647,36 +8685,6 @@
       ],
       "previousOwner": "codex-root-20261014-ao-sampling",
       "handoff": "Signed/pushed evidence-only head 05ddd067201f414a6fb1126162fbc03cc847b7d9 on perf/procedural-gallery-ao-sampling-20261014. Five-cycle 10/8 baseline and 6/4 trial both passed route checks, but visits 2-5 stayed 33.4ms moving p95 and trial had more >25ms intervals plus flatter contact shading. Runtime edit restored. plans:index, test:agent, and core passed; no runtime PR/full gate claimed. Worktree clean; ignored receipts retained."
-    },
-    {
-      "id": "procedural-gallery-ao-exterior-mask",
-      "title": "Measure an interior-only AO geometry mask for repeated gallery visits",
-      "status": "queued",
-      "branches": [
-        "perf/procedural-gallery-ao-mask-20261014"
-      ],
-      "owner": null,
-      "updatedAt": "2026-10-14T11:39:02.000Z",
-      "leaseUntil": null,
-      "nextAction": "Prototype a visually acceptable lower-cost contact-shading path or refine GTAO shading on a separate owned slice; compare matched moving p95 and player-height images, then obtain target-device timing and human gallery review before broader archetypes.",
-      "ledger": "docs/superpowers/plans/2026-10-14-procedural-gallery-ao-mask.md",
-      "requiredChecks": [
-        "Paired uninstrumented five-cycle moving gallery measurements",
-        "Same-camera AO visual comparison",
-        "Focused render-pipeline visibility restoration tests",
-        "pnpm run verify before commit",
-        "Isolated-Redis full and exact-head hosted checks before delivery"
-      ],
-      "filesOwned": [
-        "preview/src/render-pipeline.js",
-        "preview/src/main.js",
-        "preview/tests/render-pipeline.test.js",
-        "docs/superpowers/plans/2026-10-14-procedural-gallery-ao-mask.md",
-        "docs/superpowers/plans/README.md"
-      ],
-      "pr": 358,
-      "previousOwner": "codex-root-20261014-ao-followup",
-      "handoff": "Signed/pushed head 0bcf539e9b5028b9e84468f58be3caa5632f3c57 remains clean; draft PR #358 on #357 passed all ten exact-head hosted jobs in Verify run 38555059714, plus prior local focused/core/full/experience gates. New matched control on M3 Max/Chromium Metal: AO-off five-cycle moving p95 16.7ms throughout, zero >25ms intervals; AO-on three-cycle control 16.7/33.3/33.3ms. Temporary browser-only stage skips: normal 16.8/33.3/33.4ms, denoise 16.8/33.3/16.8ms, GTAO shading 16.7/16.8/16.8ms. With the mask, separate 0.75 AO-buffer and 6-sample GTAO five-cycle trials still reached ~33ms p95 on multiple revisits. All trials passed route checks; temporary source/harness edits restored, worktree clean. Ignored receipts: .runtime/ao-mask-sharp-off-five.json, ao-mask-matched-on-three.json, ao-mask-skip-{normal,denoise,gtao}-three.json, ao-mask-075-five.json and ao-mask-6sample-five.json. PR body records diagnosis. No acceptable visual replacement, target-device/human acceptance, merge or deployment claimed."
     },
     {
       "id": "procedural-gallery-contact-shading",
