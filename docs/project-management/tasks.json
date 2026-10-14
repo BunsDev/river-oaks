@@ -5159,10 +5159,10 @@
       "branches": [
         "feat/procedural-level-streaming-20261014"
       ],
-      "owner": "codex-root-20261014-level-streaming",
-      "updatedAt": "2026-10-14T01:57:38Z",
-      "leaseUntil": "2026-10-14T03:57:38Z",
-      "nextAction": "Open the verified stacked draft PR against docs/procedural-multilevel-interiors-20261013 and hand its exact head to the integration owner. Four-level browser, hosted, native, performance and human acceptance remain open.",
+      "owner": "codex-root-20261014-four-level-browser",
+      "updatedAt": "2026-10-14T02:36:16Z",
+      "handoff": "Signed merge b7976f67ee843226096aeb6530c7a1078c0afe99 is pushed; draft stacked PR #350 targets the published integration branch in draft PR #349. Combined focused 27/27, core, build and two-client gallery reload passed. Former owner: codex-root-20261014-level-streaming. Preserve the clean worktree until delivery and retirement evidence support cleanup.",
+      "nextAction": "Four-level browser, two-level creator, gallery and full isolated-Redis gates passed. Sign/push the verified route and journey changes to draft PR #350, then review hosted checks on the exact head. Performance, native and human acceptance remain open.",
       "ledger": "docs/superpowers/plans/2026-10-14-level-aware-interior-streaming.md",
       "requiredChecks": [
         "Multi-level stream preparation, cancellation and eviction behavioral tests",
@@ -5178,8 +5178,15 @@
         "server/tests/creator-four-level-interiors.test.js",
         "docs/superpowers/plans/2026-10-14-level-aware-interior-streaming.md",
         "server/app.js (local reconnect grace default only)",
-        "server/tests/shared-transport.test.js (shutdown grace timer assertion only)"
-      ]
+        "server/tests/shared-transport.test.js (shutdown grace timer assertion only)",
+        "preview/e2e/creator-four-levels.js",
+        "preview/e2e/shared-runner.js (named journey registration only)",
+        "preview/src/walking-ui.js (intermediate level direction controls only)",
+        "preview/src/contextual-action.js (descent action priority only)",
+        "preview/tests/contextual-action.test.js (descent action regression only)"
+      ],
+      "pr": 350,
+      "leaseUntil": "2026-10-14T04:36:16Z"
     }
   ]
 }
