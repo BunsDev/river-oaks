@@ -92,8 +92,9 @@ test('executable lookup searches PATH and extra user install directories', async
   assert.equal(await resolveExecutable('definitely-not-a-cli', { env: { PATH: '' }, extra: [] }), null);
   // Unix appends no extension and keeps the execute-bit check.
   assert.equal(await resolveExecutable('studio-agent-cli', { env: { PATH: '' }, extra: [join(root, 'desktop/tests/fixtures')], platform: 'linux' }), null);
-  assert.deepEqual(extraExecutableDirs('darwin', '/Users/val'), ['/Users/val/.local/bin', '/opt/homebrew/bin', '/usr/local/bin']);
-  assert.deepEqual(extraExecutableDirs('linux', '/home/val'), ['/home/val/.local/bin', '/usr/local/bin']);
+  // join() so the expectation holds on a Windows host too, where separators flip.
+  assert.deepEqual(extraExecutableDirs('darwin', '/Users/val'), [join('/Users/val', '.local/bin'), '/opt/homebrew/bin', '/usr/local/bin']);
+  assert.deepEqual(extraExecutableDirs('linux', '/home/val'), [join('/home/val', '.local/bin'), '/usr/local/bin']);
 });
 
 test('on Windows, lookup follows PATHEXT to a .exe and never returns a .cmd/.bat shim', async t => {
