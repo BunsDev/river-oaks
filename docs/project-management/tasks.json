@@ -4688,13 +4688,14 @@
         "feat/procedural-level-streaming-20261014"
       ],
       "owner": "codex-root-20261014-level-streaming",
-      "updatedAt": "2026-10-14T01:20:17.000Z",
-      "leaseUntil": "2026-10-14T03:09:40.000Z",
-      "nextAction": "Commit and push the verified level-aware streaming branch, then hand its exact head to the procedural integration owner. Focused 2/2, both gallery browser journeys and core passed; inside frame p95 remains 33.4 ms and combined full/Redis/hosted gates remain open.",
+      "updatedAt": "2026-10-14T01:41:13.000Z",
+      "leaseUntil": "2026-10-14T03:24:20.000Z",
+      "nextAction": "Commit and push the verified four-level server regression on the streaming branch, then hand the updated head to procedural integration. Focused 1/1 and core passed; four-level browser acceptance and combined integration gates remain open.",
       "ledger": "docs/superpowers/plans/2026-10-14-level-aware-interior-streaming.md",
       "requiredChecks": [
         "Multi-level stream preparation, cancellation and eviction behavioral tests",
         "Generated gallery ascent/descent and reduced-motion browser journeys",
+        "Four-level creator publication and checkpoint server regression",
         "pnpm run verify core before commit"
       ],
       "filesOwned": [
@@ -4702,6 +4703,7 @@
         "preview/tests/generated-interior-stream.test.js",
         "preview/src/main.js (generated interior stream occupancy hint only)",
         "preview/e2e/generated-gallery-levels.js (stream readiness assertions only)",
+        "server/tests/creator-four-level-interiors.test.js",
         "docs/superpowers/plans/2026-10-14-level-aware-interior-streaming.md"
       ]
     },
