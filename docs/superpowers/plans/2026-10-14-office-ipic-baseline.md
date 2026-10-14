@@ -202,8 +202,35 @@ since `489a60e4`; the packet records the pre-#349 office documentation, and the
 next reconciliation should re-read it. #349 leaving draft is a change in the
 keep/reuse table's premise: its level/portal schema is now on `main`.
 
+## Round end (2026-10-14T23:58Z)
+
+- Branch `docs/office-ipic-baseline-20261014`, worktree
+  `../river-oaks-office-ipic-baseline-20261014`, draft PR #380. Head `bfff7a30`
+  passed all 16 hosted checks and is mergeable clean; main unchanged since.
+- Packet checks: `node scripts/office-ipic-reference-index.mjs --check` 147
+  references, 53 assets, 0 problems, 1 drift (`docs/offices.md`, changed by #349);
+  `node --test scripts/tests/office-ipic-references.test.js` 6 pass, 0 fail,
+  0 skipped. Captures: three office journeys passed at `7feef523`.
+- Local count: 10 worktrees / 10 branches since 23:44Z (peak 25 / 24 today).
+  Register validates (`project:check` exit 1, gaps only).
+- Issue #360: 10 of 12 boxes ticked. Val's fit and mezzanine decisions are in the
+  brief. A direct message to river-oaks-dc expired unapproved (that session holds
+  peer messages), so the same decisions were posted on #381 for its contract
+  (comment 6181015788). #381 is owned by `office-ipic-engineering-baseline`,
+  lease to 2026-10-15T00:23Z, marked ready for review; its contract still lists
+  both decisions as open. The last two boxes (G1 review, implement without
+  guessing) close once #381 records them.
+- Standing: #349–#358 and #382 landed by their codex owners; this session merged
+  nothing. #309 is dirty; its codex lease expired 2026-10-13 but `DTService`
+  runs in its worktree, so it was left alone.
+- Commits after the model change carry `Coven-Harness: claude-code /
+  claude-opus-5-5`; no model co-author line.
+- Still open for Val: kit import (recommendation in the brief), IPIC lift,
+  the two missing handoff briefs.
+
 ## Next
 
-Draft PR #380 is open and green; the engineering packet is #381. G1 agreement
-needs both packets plus Val's answers to decisions 1–3.
+#381 records Val's fit and mezzanine decisions in its contract; then the G1
+review can close #360. #361 (multilevel traversal, including the building raise
+and its checkpoint migration) and #366 start after G1, each in its own worktree.
 After G1, #361 or #366 in a new worktree, one scope per PR.
