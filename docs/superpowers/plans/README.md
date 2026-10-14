@@ -4,50 +4,43 @@
 
 Each plan is a task ledger. Status comes from the task register, where the primary checkout's live copy can be newer than the committed one. Plans from before the register are listed as historical: their own text is the record of what was delivered.
 
-## Active and blocked (27)
+## Active and blocked (7)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
+| [2026-10-14-shared-dominoes](2026-10-14-shared-dominoes.md)<br>Shared Dominoes Implementation Plan (PR 1: the town holds the round) | `shared-dominoes-sheet` | active | — | 2026-10-14 |
 | [2026-10-14-release-0.2.0-readiness](2026-10-14-release-0.2.0-readiness.md)<br>TypeSafe Place 0.2.0 release readiness | `release-0-2-0-readiness` | active | #376 | 2026-10-14 |
-| [2026-10-14-procedural-private-upper-revocation](2026-10-14-procedural-private-upper-revocation.md)<br>Generated private home upper-level access | `procedural-private-upper-revocation` | active | #352 | 2026-10-14 |
-| [2026-10-14-procedural-pilot-frame-performance](2026-10-14-procedural-pilot-frame-performance.md)<br>Procedural gallery pilot frame performance | `procedural-pilot-frame-performance` | active | #351 | 2026-10-14 |
-| [2026-10-14-procedural-interior-ring-validity](2026-10-14-procedural-interior-ring-validity.md)<br>Procedural interior footprint validity | `procedural-interior-ring-validity` | active | #355 | 2026-10-14 |
-| [2026-10-14-procedural-gallery-cycle-soak](2026-10-14-procedural-gallery-cycle-soak.md)<br>Repeated generated gallery entry and eviction | `procedural-gallery-cycle-soak` | queued | #353 | 2026-10-14 |
-| [2026-10-14-procedural-gallery-ao-tail](2026-10-14-procedural-gallery-ao-tail.md)<br>Auto quality response to moving gallery frame tails | `procedural-gallery-ao-tail-pacing` | active | #354 | 2026-10-14 |
-| [2026-10-14-procedural-gallery-ao-mask](2026-10-14-procedural-gallery-ao-mask.md)<br>Gallery AO exterior geometry experiment | `procedural-gallery-ao-exterior-mask` | active | — | 2026-10-14 |
-| [2026-10-14-procedural-gallery-ao-buffer](2026-10-14-procedural-gallery-ao-buffer.md)<br>Gallery ambient occlusion buffer experiment | `procedural-gallery-ao-buffer` | queued | — | 2026-10-14 |
-| [2026-10-14-procedural-creator-interior-docs](2026-10-14-procedural-creator-interior-docs.md)<br>Generated creator-region interior documentation | `procedural-creator-interior-docs` | active | #357 | 2026-10-14 |
-| [2026-10-14-level-aware-interior-streaming](2026-10-14-level-aware-interior-streaming.md)<br>Level-aware generated interior streaming | `procedural-level-aware-streaming` | active | #350 | 2026-10-14 |
+| [2026-10-14-procedural-gallery-contact-shading](2026-10-14-procedural-gallery-contact-shading.md)<br>Generated gallery contact shading pilot | `procedural-gallery-contact-shading` | active | #382 | 2026-10-14 |
 | [2026-10-14-gallery-vertical-route](2026-10-14-gallery-vertical-route.md)<br>Gallery vertical-route visual integration | `procedural-gallery-vertical-route` | queued | — | 2026-10-14 |
-| [2026-10-13-studio-spaces](2026-10-13-studio-spaces.md)<br>Furnished Studio spaces implementation plan | `studio-furnished-spaces` | active | #316 | 2026-10-13 |
-| [2026-10-13-procedural-interiors-implementation](2026-10-13-procedural-interiors-implementation.md)<br>Procedural interiors implementation ledger | `procedural-multilevel-interiors-plan` | active | — | 2026-10-14 |
-| [2026-10-13-plaza-games](2026-10-13-plaza-games.md)<br>Plaza games, phase 1: chess at the plaza tables — 2026-10-13 | `plaza-games` | active | — | 2026-10-13 |
-| [2026-10-13-plaza-dominoes](2026-10-13-plaza-dominoes.md)<br>Plaza games: dominoes at the café table — 2026-10-13 | `plaza-dominoes` | active | — | 2026-10-13 |
-| [2026-10-13-plaza-checkers](2026-10-13-plaza-checkers.md)<br>Plaza games: checkers on the chess tables — 2026-10-13 | `plaza-checkers` | active | — | 2026-10-13 |
-| [2026-10-13-plaza-backgammon](2026-10-13-plaza-backgammon.md)<br>Plaza games: a backgammon table — 2026-10-13 | `plaza-backgammon` | active | — | 2026-10-13 |
-| [2026-10-13-office-elevator-access](2026-10-13-office-elevator-access.md)<br>Private office elevator and traversal | `office-elevator-access` | active | #317 | 2026-10-13 |
-| [2026-10-13-office-desk-workflow](2026-10-13-office-desk-workflow.md)<br>Office desk workflow | `office-desk-workflow` | active | — | 2026-10-13 |
-| [2026-10-13-office-arrival-refinement](2026-10-13-office-arrival-refinement.md)<br>Office arrival refinement | `office-arrival-refinement` | active | #345 | 2026-10-13 |
-| [2026-10-13-minimap-flicker](2026-10-13-minimap-flicker.md)<br>Stop the flicker, and take the minimap out of its scrolling sheet — 2026-10-13 | `minimap-flicker` | active | — | 2026-10-13 |
-| [2026-10-13-local-branch-worktree-prune](2026-10-13-local-branch-worktree-prune.md)<br>Local branch and worktree pruning, 2026-10-13 | `local-prune-20261013` | active | — | 2026-10-14 |
-| [2026-10-13-ipic-photo-interior](2026-10-13-ipic-photo-interior.md)<br>IPIC Photo Interior Implementation Plan | `ipic-photo-interior` | active | #343 | 2026-10-13 |
-| [2026-10-12-town-connect-deadline](2026-10-12-town-connect-deadline.md)<br>Town connection deadline on a busy page — 2026-10-12 | `town-ticket-ttl` | active | — | 2026-10-12 |
-| [2026-10-12-liquid-glass-hud](2026-10-12-liquid-glass-hud.md)<br>Liquid-glass town gate, district map and Map button — 2026-10-12 | `liquid-glass-hud` | active | #274 | 2026-10-12 |
-| [2026-10-12-docs-refresh](2026-10-12-docs-refresh.md)<br>Docs and plans refresh (2026-10-12) | `docs-refresh-20261012` | active | — | 2026-10-12 |
-| [2026-10-11-studio-prompt-polish](2026-10-11-studio-prompt-polish.md)<br>World Studio scene prompt polish | `studio-prompt-polish` | active | #246 | 2026-10-11 |
+| [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `shared-voice-acceptance` | blocked | — | 2026-10-13 |
+| [2026-10-13-procedural-interiors-implementation](2026-10-13-procedural-interiors-implementation.md)<br>Procedural interiors implementation ledger | `procedural-multilevel-interiors-plan` | active | #349 | 2026-10-14 |
+| [2026-10-13-local-branch-worktree-prune](2026-10-13-local-branch-worktree-prune.md)<br>Local branch and worktree pruning, 2026-10-13 | `register-sweep-20261014` | active | #378 | 2026-10-14 |
 
-## Delivered, awaiting local retirement (3)
+## Delivered, awaiting local retirement (8)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
-| [2026-10-11-workplace-slice](2026-10-11-workplace-slice.md)<br>Workplace first slice (#214) | `workplace-slice` | delivered | #227 | 2026-10-12 |
-| [2026-10-11-workplace-room-envelope](2026-10-11-workplace-room-envelope.md)<br>Workplace room: door height, measured seated bounds, depth-aware routes (#221 gap) | `workplace-room-envelope` | delivered | #235 | 2026-10-11 |
+| [2026-10-14-procedural-private-upper-revocation](2026-10-14-procedural-private-upper-revocation.md)<br>Generated private home upper-level access | `procedural-private-upper-revocation` | delivered | #352 | 2026-10-14 |
+| [2026-10-14-procedural-pilot-frame-performance](2026-10-14-procedural-pilot-frame-performance.md)<br>Procedural gallery pilot frame performance | `procedural-pilot-frame-performance` | delivered | #351 | 2026-10-14 |
+| [2026-10-14-procedural-gallery-ao-mask](2026-10-14-procedural-gallery-ao-mask.md)<br>Gallery AO exterior geometry experiment | `procedural-gallery-ao-exterior-mask` | delivered | #358 | 2026-10-14 |
+| [2026-10-14-procedural-gallery-ao-buffer](2026-10-14-procedural-gallery-ao-buffer.md)<br>Gallery ambient occlusion buffer experiment | `procedural-gallery-ao-buffer` | delivered | #356 | 2026-10-14 |
+| [2026-10-14-procedural-creator-interior-docs](2026-10-14-procedural-creator-interior-docs.md)<br>Generated creator-region interior documentation | `procedural-creator-interior-docs` | delivered | #357 | 2026-10-14 |
+| [2026-10-14-level-aware-interior-streaming](2026-10-14-level-aware-interior-streaming.md)<br>Level-aware generated interior streaming | `procedural-level-aware-streaming` | delivered | #350 | 2026-10-14 |
+| [2026-10-13-ipic-photo-interior](2026-10-13-ipic-photo-interior.md)<br>IPIC Photo Interior Implementation Plan | `ipic-photo-interior` | delivered | #343 | 2026-10-13 |
 | [2026-10-11-pending-integration](2026-10-11-pending-integration.md)<br>Pending delivery integration | `primary-reconciliation` | delivered | — | 2026-10-11 |
 
-## Retired (51)
+## Retired (100)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
+| [2026-10-14-shared-dominoes](2026-10-14-shared-dominoes.md)<br>Shared Dominoes Implementation Plan (PR 1: the town holds the round) | `shared-dominoes-server` | retired | #374 | 2026-10-14 |
+| [2026-10-14-procedural-interior-ring-validity](2026-10-14-procedural-interior-ring-validity.md)<br>Procedural interior footprint validity | `procedural-interior-ring-validity` | retired | #355 | 2026-10-14 |
+| [2026-10-14-procedural-gallery-cycle-soak](2026-10-14-procedural-gallery-cycle-soak.md)<br>Repeated generated gallery entry and eviction | `procedural-gallery-cycle-soak` | retired | #353 | 2026-10-14 |
+| [2026-10-14-procedural-gallery-ao-tail](2026-10-14-procedural-gallery-ao-tail.md)<br>Auto quality response to moving gallery frame tails | `procedural-gallery-ao-tail-pacing` | retired | #354 | 2026-10-14 |
+| [2026-10-13-studio-spaces](2026-10-13-studio-spaces.md)<br>Furnished Studio spaces implementation plan | `studio-furnished-spaces` | retired | #316 | 2026-10-13 |
+| [2026-10-13-store-intro-cut-timing](2026-10-13-store-intro-cut-timing.md)<br>Sample the store intro's camera cut instead of timing it — 2026-10-13 | `store-intro-cut-timing` | retired | #301 | 2026-10-13 |
+| [2026-10-13-store-intro-claim-race](2026-10-13-store-intro-claim-race.md)<br>Wait for the store intro before the walking HUD in spatial-circulation — 2026-10-13 | `store-intro-claim-race` | retired | #296 | 2026-10-13 |
+| [2026-10-13-signup-usernames](2026-10-13-signup-usernames.md)<br>Usernames at sign-up — 2026-10-13 | `signup-usernames` | retired | #314 | 2026-10-13 |
 | [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `shared-voice-livekit` | retired | #300 | 2026-10-13 |
 | [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `shared-voice-reconciler` | retired | #302 | 2026-10-13 |
 | [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `shared-voice-client` | retired | #303 | 2026-10-13 |
@@ -55,25 +48,66 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `shared-voice-desktop` | retired | #306 | 2026-10-13 |
 | [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `voice-livekit-setup-docs` | retired | #326 | 2026-10-13 |
 | [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `shared-voice-live` | retired | #347 | 2026-10-14 |
+| [2026-10-13-settings-tabs-ux](2026-10-13-settings-tabs-ux.md)<br>Settings tabs and a minimal walking console — 2026-10-13 | `settings-tabs-ux` | retired | #307 | 2026-10-13 |
+| [2026-10-13-plaza-yacht](2026-10-13-plaza-yacht.md)<br>Plaza games: Yacht at the bench — 2026-10-13 | `plaza-yacht` | retired | #341 | 2026-10-13 |
+| [2026-10-13-plaza-xiangqi](2026-10-13-plaza-xiangqi.md)<br>Plaza games: xiangqi in the grove — 2026-10-13 | `plaza-xiangqi` | retired | #346 | 2026-10-13 |
+| [2026-10-13-plaza-wine-pong](2026-10-13-plaza-wine-pong.md)<br>Plaza games: wine pong at the café — 2026-10-13 | `plaza-wine-pong` | retired | #323 | 2026-10-13 |
+| [2026-10-13-plaza-stage-performance](2026-10-13-plaza-stage-performance.md)<br>The plaza stage as a shared performance — 2026-10-13 | `plaza-stage-performance` | retired | #311 | 2026-10-13 |
+| [2026-10-13-plaza-spades](2026-10-13-plaza-spades.md)<br>Plaza games: Spades at the café — 2026-10-13 | `plaza-spades` | retired | #324 | 2026-10-13 |
+| [2026-10-13-plaza-shuffleboard](2026-10-13-plaza-shuffleboard.md)<br>Plaza games: shuffleboard on the long café table — 2026-10-13 | `plaza-shuffleboard` | retired | #339 | 2026-10-13 |
+| [2026-10-13-plaza-reversi](2026-10-13-plaza-reversi.md)<br>Reversi at the plaza chess tables — 2026-10-13 | `plaza-reversi` | retired | #331 | 2026-10-13 |
+| [2026-10-13-plaza-morris](2026-10-13-plaza-morris.md)<br>Nine men's morris at the plaza chess tables — 2026-10-13 | `plaza-morris` | retired | #332 | 2026-10-13 |
+| [2026-10-13-plaza-mancala](2026-10-13-plaza-mancala.md)<br>Plaza games: mancala at the grove table — 2026-10-13 | `plaza-mancala` | retired | #328 | 2026-10-13 |
+| [2026-10-13-plaza-liars-dice](2026-10-13-plaza-liars-dice.md)<br>Plaza games: liar's dice at the café — 2026-10-13 | `plaza-liars-dice` | retired | #338 | 2026-10-13 |
+| [2026-10-13-plaza-jenga](2026-10-13-plaza-jenga.md)<br>Plaza games: Jenga on the curved bench — 2026-10-13 | `plaza-jenga` | retired | #320 | 2026-10-13 |
 | [2026-10-13-plaza-hearts](2026-10-13-plaza-hearts.md)<br>Plaza games: Hearts at the café table — 2026-10-13 | `plaza-hearts` | retired | #310 | 2026-10-13 |
+| [2026-10-13-plaza-go](2026-10-13-plaza-go.md)<br>Plaza games: Go at the grove table — 2026-10-13 | `plaza-go` | retired | #329 | 2026-10-13 |
+| [2026-10-13-plaza-games](2026-10-13-plaza-games.md)<br>Plaza games, phase 1: chess at the plaza tables — 2026-10-13 | `plaza-games` | retired | #298 | 2026-10-13 |
+| [2026-10-13-plaza-dominoes](2026-10-13-plaza-dominoes.md)<br>Plaza games: dominoes at the café table — 2026-10-13 | `plaza-dominoes` | retired | #304 | 2026-10-13 |
+| [2026-10-13-plaza-darts](2026-10-13-plaza-darts.md)<br>Plaza games: darts on the south wall — 2026-10-13 | `plaza-darts` | retired | #336 | 2026-10-13 |
+| [2026-10-13-plaza-cribbage](2026-10-13-plaza-cribbage.md)<br>Plaza games: cribbage at the walnut table — 2026-10-13 | `plaza-cribbage` | retired | #333 | 2026-10-13 |
+| [2026-10-13-plaza-connect-four](2026-10-13-plaza-connect-four.md)<br>Connect Four at the plaza chess tables — 2026-10-13 | `plaza-connect-four` | retired | #313 | 2026-10-13 |
+| [2026-10-13-plaza-chinese-checkers](2026-10-13-plaza-chinese-checkers.md)<br>Plaza games: Chinese checkers in the grove — 2026-10-13 | `plaza-chinese-checkers` | retired | #342 | 2026-10-13 |
+| [2026-10-13-plaza-checkers](2026-10-13-plaza-checkers.md)<br>Plaza games: checkers on the chess tables — 2026-10-13 | `plaza-checkers` | retired | #299 | 2026-10-13 |
+| [2026-10-13-plaza-backgammon](2026-10-13-plaza-backgammon.md)<br>Plaza games: a backgammon table — 2026-10-13 | `plaza-backgammon` | retired | #312 | 2026-10-13 |
+| [2026-10-13-office-elevator-access](2026-10-13-office-elevator-access.md)<br>Private office elevator and traversal | `office-elevator-access` | retired | #317 | 2026-10-13 |
+| [2026-10-13-office-desk-workflow](2026-10-13-office-desk-workflow.md)<br>Office desk workflow | `office-desk-workflow` | retired | #330 | 2026-10-13 |
+| [2026-10-13-office-arrival-refinement](2026-10-13-office-arrival-refinement.md)<br>Office arrival refinement | `office-arrival-refinement` | retired | #345 | 2026-10-14 |
+| [2026-10-13-modal-outside-dismiss](2026-10-13-modal-outside-dismiss.md)<br>Outside-click modal dismissal | `modal-outside-dismiss` | retired | #325 | 2026-10-13 |
+| [2026-10-13-minimap-flicker](2026-10-13-minimap-flicker.md)<br>Stop the flicker, and take the minimap out of its scrolling sheet — 2026-10-13 | `minimap-flicker` | retired | #297 | 2026-10-13 |
+| [2026-10-13-local-branch-worktree-prune](2026-10-13-local-branch-worktree-prune.md)<br>Local branch and worktree pruning, 2026-10-13 | `local-prune-20261013` | retired | #375 | 2026-10-14 |
+| [2026-10-13-ipic-photo-interior](2026-10-13-ipic-photo-interior.md)<br>IPIC Photo Interior Implementation Plan | `ipic-pr-343` | retired | #343 | 2026-10-13 |
+| [2026-10-13-email-access-join-recurrence](2026-10-13-email-access-join-recurrence.md)<br>Email access: give CI's cold first render its own join allowance — 2026-10-13 | `email-access-join-recurrence` | retired | #308 | 2026-10-13 |
 | [2026-10-13-cycling-rack](2026-10-13-cycling-rack.md)<br>Cycling Rack Implementation Plan (PR 1 of 2) | `cycling-rack` | retired | #315 | 2026-10-13 |
 | [2026-10-13-cycling-rack](2026-10-13-cycling-rack.md)<br>Cycling Rack Implementation Plan (PR 1 of 2) | `cycling-leaderboard` | retired | #318 | 2026-10-13 |
 | [2026-10-13-cycling-rack](2026-10-13-cycling-rack.md)<br>Cycling Rack Implementation Plan (PR 1 of 2) | `cycling-journey-retries` | retired | #322 | 2026-10-13 |
+| [2026-10-12-world-map-paint-cost](2026-10-12-world-map-paint-cost.md)<br>Stop the district map repainting while it is open — 2026-10-12 | `world-map-paint-cost` | retired | #283 | 2026-10-12 |
+| [2026-10-12-town-ticket-ttl](2026-10-12-town-ticket-ttl.md)<br>Town join tickets that outlast a slow page — 2026-10-12 | `town-ticket-ttl` | retired | #276 | 2026-10-12 |
 | [2026-10-12-town-connect-deadline](2026-10-12-town-connect-deadline.md)<br>Town connection deadline on a busy page — 2026-10-12 | `town-connect-deadline` | retired | #260 | 2026-10-12 |
 | [2026-10-12-shared-landing-queue](2026-10-12-shared-landing-queue.md)<br>Shared landing queue | `shared-landing-queue` | retired | #272 | 2026-10-12 |
 | [2026-10-12-server-hardening-followups](2026-10-12-server-hardening-followups.md)<br>Server hardening follow-ups (2026-10-12) | `server-hardening-followups` | retired | #264 | 2026-10-12 |
+| [2026-10-12-route-waypoint-clearance](2026-10-12-route-waypoint-clearance.md)<br>Route waypoint clearance | `route-waypoint-clearance` | retired | #276 | 2026-10-13 |
 | [2026-10-12-register-merge-driver](2026-10-12-register-merge-driver.md)<br>Task register merge driver | `register-merge-driver` | retired | #258 | 2026-10-12 |
 | [2026-10-12-plaza-salon](2026-10-12-plaza-salon.md)<br>Plaza salon at Dior–Toulouse — 2026-10-12 | `plaza-salon` | retired | #270 | 2026-10-12 |
+| [2026-10-12-liquid-glass-hud](2026-10-12-liquid-glass-hud.md)<br>Liquid-glass town gate, district map and Map button — 2026-10-12 | `liquid-glass-hud` | retired | #274 | 2026-10-12 |
 | [2026-10-12-explore-destinations-ui](2026-10-12-explore-destinations-ui.md)<br>Explore destinations UI (2026-10-12) | `explore-destinations-ui` | retired | #263 | 2026-10-12 |
+| [2026-10-12-docs-refresh](2026-10-12-docs-refresh.md)<br>Docs and plans refresh (2026-10-12) | `docs-refresh-20261012` | retired | #273 | 2026-10-12 |
+| [2026-10-12-connect-deadline-grace](2026-10-12-connect-deadline-grace.md)<br>Let queued socket events run before the connect deadline expires — 2026-10-12 | `connect-deadline-grace` | retired | #282 | 2026-10-12 |
+| [2026-10-12-ci-playwright-cache](2026-10-12-ci-playwright-cache.md)<br>Cache Playwright browsers in CI | `ci-playwright-cache` | retired | #279 | 2026-10-12 |
 | [2026-10-12-ci-flaky-journeys](2026-10-12-ci-flaky-journeys.md)<br>Flaky CI journeys | `ci-flaky-journeys` | retired | #261 | 2026-10-12 |
 | [2026-10-12-ci-flaky-journeys](2026-10-12-ci-flaky-journeys.md)<br>Flaky CI journeys | `contextual-first-visit-evidence` | retired | #262 | 2026-10-12 |
 | [2026-10-12-ci-flaky-journeys](2026-10-12-ci-flaky-journeys.md)<br>Flaky CI journeys | `creator-objects-flake` | retired | #271 | 2026-10-12 |
+| [2026-10-12-browser-run-lock](2026-10-12-browser-run-lock.md)<br>Local browser runs take turns | `browser-run-lock` | retired | #277 | 2026-10-12 |
 | [2026-10-11-workplace-vercel-sweep](2026-10-11-workplace-vercel-sweep.md)<br>Workplace: scheduled sweep on Vercel (#221 gap) | `workplace-vercel-sweep` | retired | #237 | 2026-10-11 |
 | [2026-10-11-workplace-task-sweep](2026-10-11-workplace-task-sweep.md)<br>Workplace: unattended recovery of orphaned tasks (#221 gap) | `workplace-task-sweep` | retired | #235 | 2026-10-11 |
+| [2026-10-11-workplace-slice](2026-10-11-workplace-slice.md)<br>Workplace first slice (#214) | `workplace-slice` | retired | #227 | 2026-10-13 |
+| [2026-10-11-workplace-room-envelope](2026-10-11-workplace-room-envelope.md)<br>Workplace room: door height, measured seated bounds, depth-aware routes (#221 gap) | `workplace-room-envelope` | retired | #235 | 2026-10-13 |
 | [2026-10-11-workplace-retention-status](2026-10-11-workplace-retention-status.md)<br>Workplace: exact retention and truthful panel status (#221 gaps) | `workplace-retention-status` | retired | #232 | 2026-10-11 |
 | [2026-10-11-workplace-erase](2026-10-11-workplace-erase.md)<br>Workplace: erase my workplace (#221 gap) | `workplace-erase` | retired | #238 | 2026-10-11 |
 | [2026-10-11-workplace-221-adversarial](2026-10-11-workplace-221-adversarial.md)<br>Workplace #221: adversarial suite and operations write-up | `workplace-221-adversarial` | retired | #230 | 2026-10-11 |
 | [2026-10-11-workplace-221-adversarial](2026-10-11-workplace-221-adversarial.md)<br>Workplace #221: adversarial suite and operations write-up | `workplace-delivery-records` | retired | #254 | 2026-10-11 |
+| [2026-10-11-typesafe-place-season-1](2026-10-11-typesafe-place-season-1.md)<br>TypeSafe Place Season 1 content plan | `typesafe-place-season-1` | retired | #247 | 2026-10-13 |
+| [2026-10-11-studio-prompt-polish](2026-10-11-studio-prompt-polish.md)<br>World Studio scene prompt polish | `studio-prompt-polish` | retired | #246 | 2026-10-13 |
 | [2026-10-11-studio-bridge-hardening](2026-10-11-studio-bridge-hardening.md)<br>Studio desktop bridge hardening — 2026-10-11 | `studio-bridge-hardening` | retired | #243 | 2026-10-11 |
 | [2026-10-11-studio-bridge-hardening](2026-10-11-studio-bridge-hardening.md)<br>Studio desktop bridge hardening — 2026-10-11 | `studio-retirement-register` | retired | #248 | 2026-10-11 |
 | [2026-10-11-studio-bridge-hardening](2026-10-11-studio-bridge-hardening.md)<br>Studio desktop bridge hardening — 2026-10-11 | `desktop-host-errors` | retired | #250 | 2026-10-11 |
@@ -100,46 +134,16 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-11-delivered-source-retirement](2026-10-11-delivered-source-retirement.md)<br>Delivered source reconciliation | `reconcile-delivered-sources` | retired | — | 2026-10-11 |
 | [2026-10-11-ci-parallel-preview](2026-10-11-ci-parallel-preview.md)<br>Parallel preview check | `ci-parallel-preview` | retired | #252 | 2026-10-11 |
 
-## Historical, not in the register (100)
+## Historical, not in the register (70)
 
 | Plan | PRs mentioned |
 | --- | --- |
-| [2026-10-14-shared-dominoes](2026-10-14-shared-dominoes.md)<br>Shared Dominoes Implementation Plan (PR 1: the town holds the round) | — |
-| [2026-10-13-store-intro-cut-timing](2026-10-13-store-intro-cut-timing.md)<br>Sample the store intro's camera cut instead of timing it — 2026-10-13 | #281 |
-| [2026-10-13-store-intro-claim-race](2026-10-13-store-intro-claim-race.md)<br>Wait for the store intro before the walking HUD in spatial-circulation — 2026-10-13 | #265, #295 |
 | [2026-10-13-stage-voice-carry](2026-10-13-stage-voice-carry.md)<br>A stage performer is heard across the plaza — 2026-10-13 | #311 |
-| [2026-10-13-signup-usernames](2026-10-13-signup-usernames.md)<br>Usernames at sign-up — 2026-10-13 | #314 |
-| [2026-10-13-settings-tabs-ux](2026-10-13-settings-tabs-ux.md)<br>Settings tabs and a minimal walking console — 2026-10-13 | #303 |
 | [2026-10-13-procedural-multilevel-interiors](2026-10-13-procedural-multilevel-interiors.md)<br>Building-anchored procedural interiors and levels | — |
-| [2026-10-13-plaza-yacht](2026-10-13-plaza-yacht.md)<br>Plaza games: Yacht at the bench — 2026-10-13 | #335, #338 |
-| [2026-10-13-plaza-xiangqi](2026-10-13-plaza-xiangqi.md)<br>Plaza games: xiangqi in the grove — 2026-10-13 | #336 |
-| [2026-10-13-plaza-wine-pong](2026-10-13-plaza-wine-pong.md)<br>Plaza games: wine pong at the café — 2026-10-13 | #320 |
 | [2026-10-13-plaza-table-lessons](2026-10-13-plaza-table-lessons.md)<br>Guided first games at the plaza tables — 2026-10-13 | — |
-| [2026-10-13-plaza-stage-performance](2026-10-13-plaza-stage-performance.md)<br>The plaza stage as a shared performance — 2026-10-13 | — |
-| [2026-10-13-plaza-spades](2026-10-13-plaza-spades.md)<br>Plaza games: Spades at the café — 2026-10-13 | #323, #321 |
-| [2026-10-13-plaza-shuffleboard](2026-10-13-plaza-shuffleboard.md)<br>Plaza games: shuffleboard on the long café table — 2026-10-13 | #333 |
 | [2026-10-13-plaza-shared-table-games](2026-10-13-plaza-shared-table-games.md)<br>Shared games at the plaza chess tables — 2026-10-13 | #334 |
-| [2026-10-13-plaza-reversi](2026-10-13-plaza-reversi.md)<br>Reversi at the plaza chess tables — 2026-10-13 | — |
-| [2026-10-13-plaza-morris](2026-10-13-plaza-morris.md)<br>Nine men's morris at the plaza chess tables — 2026-10-13 | #331 |
-| [2026-10-13-plaza-mancala](2026-10-13-plaza-mancala.md)<br>Plaza games: mancala at the grove table — 2026-10-13 | #324 |
-| [2026-10-13-plaza-liars-dice](2026-10-13-plaza-liars-dice.md)<br>Plaza games: liar's dice at the café — 2026-10-13 | — |
-| [2026-10-13-plaza-jenga](2026-10-13-plaza-jenga.md)<br>Plaza games: Jenga on the curved bench — 2026-10-13 | #312 |
-| [2026-10-13-plaza-go](2026-10-13-plaza-go.md)<br>Plaza games: Go at the grove table — 2026-10-13 | #328 |
 | [2026-10-13-plaza-games-guide](2026-10-13-plaza-games-guide.md)<br>The Salon Guide: a tutorial for every plaza table game — 2026-10-13 | — |
-| [2026-10-13-plaza-darts](2026-10-13-plaza-darts.md)<br>Plaza games: darts on the south wall — 2026-10-13 | — |
-| [2026-10-13-plaza-cribbage](2026-10-13-plaza-cribbage.md)<br>Plaza games: cribbage at the walnut table — 2026-10-13 | — |
-| [2026-10-13-plaza-connect-four](2026-10-13-plaza-connect-four.md)<br>Connect Four at the plaza chess tables — 2026-10-13 | — |
-| [2026-10-13-plaza-chinese-checkers](2026-10-13-plaza-chinese-checkers.md)<br>Plaza games: Chinese checkers in the grove — 2026-10-13 | #337, #336 |
-| [2026-10-13-modal-outside-dismiss](2026-10-13-modal-outside-dismiss.md)<br>Outside-click modal dismissal | #316, #314, #321 |
-| [2026-10-13-email-access-join-recurrence](2026-10-13-email-access-join-recurrence.md)<br>Email access: give CI's cold first render its own join allowance — 2026-10-13 | #281, #297 |
-| [2026-10-12-world-map-paint-cost](2026-10-12-world-map-paint-cost.md)<br>Stop the district map repainting while it is open — 2026-10-12 | #274, #281 |
-| [2026-10-12-town-ticket-ttl](2026-10-12-town-ticket-ttl.md)<br>Town join tickets that outlast a slow page — 2026-10-12 | #260, #253, #273 |
 | [2026-10-12-town-first-snapshot-stall](2026-10-12-town-first-snapshot-stall.md)<br>Town first-snapshot stall under software rendering | #276, #274, #281 |
-| [2026-10-12-route-waypoint-clearance](2026-10-12-route-waypoint-clearance.md)<br>Route waypoint clearance | #276 |
-| [2026-10-12-connect-deadline-grace](2026-10-12-connect-deadline-grace.md)<br>Let queued socket events run before the connect deadline expires — 2026-10-12 | #281, #276, #260 |
-| [2026-10-12-ci-playwright-cache](2026-10-12-ci-playwright-cache.md)<br>Cache Playwright browsers in CI | #252, #277, #276 |
-| [2026-10-12-browser-run-lock](2026-10-12-browser-run-lock.md)<br>Local browser runs take turns | #272, #277 |
-| [2026-10-11-typesafe-place-season-1](2026-10-11-typesafe-place-season-1.md)<br>TypeSafe Place Season 1 content plan | — |
 | [2026-10-09-world-studio](2026-10-09-world-studio.md)<br>World Studio implementation plan | — |
 | [2026-10-09-world-studio-designer](2026-10-09-world-studio-designer.md)<br>World Studio dual-path Designer implementation | — |
 | [2026-10-09-unique-player-names](2026-10-09-unique-player-names.md)<br>Unique player fallback names | #205, #204 |
