@@ -1,0 +1,25 @@
+# Repeated generated gallery entry and eviction
+
+Objective: measure loading, renderer resource counts and frame pacing while one authenticated client repeatedly enters, leaves and revisits the generated Laura Rathe Fine Art pilot. This covers a different risk from the stationary five-minute render soak in PR #351.
+
+Owner: `codex-root-20261014-gallery-cycles`. Branch/worktree: `perf/procedural-gallery-cycle-soak-20261014` in `/Users/buns/Documents/GitHub/BunsDev/river-oaks-gallery-cycle-soak-20261014`, based on signed draft PR #352 head `884aa1218e23aece622948db27070f297ed5e1a9`.
+
+Files owned: `preview/e2e/generated-gallery-cycle-soak.js`, this ledger, plans index and this task's register entry. The primary live task register was claimed before editing. Existing #349–#352 branches and unrelated dirty primary files remain untouched.
+
+## Evidence and limits
+
+- The existing `generated-gallery` browser journey measures one cold preparation, one eviction and one return. `generated-gallery-soak` holds one stationary interior view for five minutes. Neither repeats entry, eviction and return in one browser session.
+- The stream keeps a collision-aligned shell, prepares detail within 14 m and evicts detail after 12 seconds beyond 36 m. A repeated route should record readiness, authoritative indoor state, renderer geometry/textures, Chromium JS heap and a bounded frame sample each cycle. Renderer counts are not physical GPU memory, and this local hardware is not the still-unselected target device.
+- The first one-cycle smoke reached the exit but clicked Cartier before the authoritative travel cooldown had settled; the browser remained at Laura Rathe and the gallery detail correctly stayed loaded. The journey now waits for the server's outdoor level state, follows the existing gallery journey's 1.5-second post-exit interval, and checks the Cartier arrival label before timing eviction. This was a harness ordering failure, not evidence of a streaming leak.
+- The next smoke arrived at Cartier, as its failure screenshot showed, but the journey checked `#walking-place`; outdoors that node reports distance walked. Arrival now checks the nearby storefront action (`#walking-enter`). No eviction measurement from either failed smoke is accepted.
+- Corrected one-cycle smoke passed in 29.2 seconds: cold preparation 383 ms, return 207 ms, 149 frames at p95/p99 16.7/16.8 ms. Geometry/texture counts fell from 551/216 inside to 543/206 after eviction; Chromium reported 342 MB of JS heap at its coarse resolution.
+- Five-cycle run passed in 113.1 seconds on Apple M3 Max, Chromium Metal, 1440×900. Cold preparation was 463 ms; returns were 185–285 ms. Each eviction returned to 542 geometries/200 textures and each return to 546/205. Interior frame p95 was 16.7–16.8 ms, p99 16.8 ms; reported heap remained 364 MB. Last-cycle screenshot `output/playwright/gallery-cycle-5.png` shows the player inside the gallery with fixtures and exit action. This is local single-client evidence, not target-device or physical GPU memory acceptance.
+- The journey now rejects renderer geometry or texture growth greater than two resources over the first cycle at eviction and return. This new assertion still needs a five-cycle rerun and core/full verification.
+- The final five-cycle journey with that assertion passed in 112.8 seconds (`.runtime/gallery-cycle-five-final.json`). Cold preparation was 452 ms; returns were 162–280 ms. Every eviction returned to 542 geometries/200 textures; every return to 546/205. Interior p95 was 16.7–16.8 ms and p99 16.8 ms across five 149-frame samples; Chromium reported 364 MB JS heap throughout. No page or console errors were recorded. The result establishes stable resource counts in this local session, not GPU memory or target-device acceptance.
+- `pnpm run verify` passed on the final journey source (`.runtime/agent/core.json`): agent 76/76, preview 3,035 pass/1 existing skip, server 490 pass/141 Redis skips, desktop 54/54, Python 141/141, build and secret scan passed.
+- `REDIS_URL=redis://127.0.0.1:16398 pnpm run verify full` passed on that source (`.runtime/agent/full.json`, 2026-10-14T05:16:41Z–05:41:01Z). Agent 76/76, preview 3,035 pass/1 existing skip, Redis server 673/673 with zero skips, desktop 54/54, Python 141/141, all ten standard experience and 21 shared journeys passed. Dependency audit, history and worktree secret scans, WebGL reflection and security browser checks passed. Isolated Redis was stopped afterward. Browser reports were archived under `.runtime/gallery-cycle-full-{experience,shared}.json` before restoring tracked historical reports.
+- `pnpm run project:check --tasks <primary>/docs/project-management/tasks.json` found this task and branch, but exited 1 for eight other repository reconciliation gaps (expired ownership, an unregistered branch, pending retirement, Desktop task stash and missing local branches). This task does not own those gaps.
+
+## Next action
+
+Commit the verified branch and prepare a reviewable draft PR stacked on #352. Keep rollout gated on target-device and human visual acceptance.

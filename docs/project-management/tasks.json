@@ -5240,6 +5240,30 @@
         "docs/superpowers/plans/README.md"
       ],
       "pr": 352
+    },
+    {
+      "id": "procedural-gallery-cycle-soak",
+      "title": "Measure repeated generated gallery entry, eviction and return in one session",
+      "status": "active",
+      "branches": [
+        "perf/procedural-gallery-cycle-soak-20261014"
+      ],
+      "owner": "codex-root-20261014-gallery-cycles",
+      "updatedAt": "2026-10-14T05:41:54Z",
+      "leaseUntil": "2026-10-14T07:03:43Z",
+      "nextAction": "Five-cycle journey, core and isolated-Redis full gates passed; commit the verified branch and open a draft PR stacked on #352.",
+      "ledger": "docs/superpowers/plans/2026-10-14-procedural-gallery-cycle-soak.md",
+      "requiredChecks": [
+        "Repeated one-client gallery entry and eviction behavioral journey",
+        "Per-cycle cold/return preparation, geometry/texture and heap evidence",
+        "pnpm run verify core before commit",
+        "Full isolated Redis and browser gate before delivery"
+      ],
+      "filesOwned": [
+        "preview/e2e/generated-gallery-cycle-soak.js",
+        "docs/superpowers/plans/2026-10-14-procedural-gallery-cycle-soak.md",
+        "docs/superpowers/plans/README.md"
+      ]
     }
   ]
 }
