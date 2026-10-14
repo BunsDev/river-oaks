@@ -319,3 +319,15 @@ Branch `feat/voice-desktop-20261013`, from `main` (desktop files only).
 - PR 4: spatial audio graph, speaking rings, two-context journey.
 - PR 5: desktop audio-only permission; real two-browser acceptance against a
   LiveKit Cloud dev project with the receipt in `data/reports/voice-live.json`.
+
+## PR 5b: live LiveKit Cloud acceptance (2026-10-13, branch feat/voice-live-acceptance-20261013, task `shared-voice-live`)
+
+- Setup: the LiveKit Cloud preview project exists; the Vercel preview environment carries `RIVER_OAKS_VOICE`, `LIVEKIT_URL`, `LIVEKIT_API_KEY` and `LIVEKIT_API_SECRET` (names checked, values never read; they are stored as sensitive, so `vercel env pull` does not export them), production carries none, and the newest preview deployments are newer than the settings. The checklist lives in `docs/voice-livekit-setup.md`.
+- Harness: `RIVER_OAKS_VOICE_FIXTURE=live` makes the browser fixture use the real `livekit-server-sdk` client with the `LIVEKIT_*` settings from the process environment (sourced for the run from a private file outside the repository) under a fresh room namespace per run; the `voice-live` journey joins two fixture residents over the real `livekit-client` with Chromium's fake microphone.
+- Result: `pnpm run test:experience voice-live` passed. Both residents joined the real outdoor room, subscribed to each other once their microphones published, and each heard the other as an active speaker; the speaking ring showed; leaving removed the peer and dropped the lease; a dropped tab was removed from the room within the lease window.
+- Measured (seconds): join 0.76 / 0.61; subscribe after unmute 0.001 / 0.002; heard as speaking 0.54 / 0.002; leave → peer gone 0.06; leave → lease dropped 0.34; dropped tab → removed 10.1 (the 10 s departure grace, then the reconciler). Reports: `data/reports/voice-live.json`, `data/reports/voice-revocation.json` (targets: about 2 s with a live lease holder; up to about 127 s with no instance alive).
+- Not covered: a hosted two-browser check with real sign-in on the preview deployment (the branch preview carries voice on; a person can confirm it with Y in two browsers), and the no-instance-alive path (cron sweep on Vercel), which the sweep tests cover with the fake provider.
+
+## Next
+
+- Production enablement is a separate decision: set the four settings on production and watch the daily join budget and the `voice_reconcile_failed` / sweep logs.
