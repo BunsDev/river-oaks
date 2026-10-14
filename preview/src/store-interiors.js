@@ -5,6 +5,7 @@ import { createLuxeFinishes, createSurfaceCollector, flutedPanels, luxeShellPlan
 import { buildIpicInterior } from './ipic-interior.js';
 import { IPIC_INTERIOR } from './ipic-plan.js';
 import { generatedVerticalRoute } from './generated-vertical-route.js';
+import { generatedContactPixels } from './generated-contact-shading.js';
 
 // Walk-in boutique interiors: shell, finishes, fixtures and merchandise per
 // room plan. Generic shops use procedural surfaces; IPIC uses its dedicated
@@ -147,6 +148,7 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
   const pot = track.g(lathe([[0.12, 0], [0.16, 0.02], [0.19, 0.34], [0.17, 0.36], [0, 0.36]]));
   const tub = track.g(new THREE.CylinderGeometry(0.15, 0.13, 0.1, 12));
   const pane = track.g(new THREE.PlaneGeometry(1, 1));
+  let generatedWallContact = null;
 
   // ---- instancing kit ------------------------------------------------------
   const batches = new Map();
@@ -402,11 +404,28 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
     const [fx, fn] = room.facade, [ox, oy] = room.outward, W = room.width, D = room.depth, H = room.height, c = room.center;
     roomMatrix = new THREE.Matrix4().compose(new THREE.Vector3(fx, room.floor, -fn), new THREE.Quaternion().setFromAxisAngle(Y, Math.atan2(ox, -oy)), new THREE.Vector3(1, 1, 1));
     if (room.generatedPlan) {
+      if (!generatedWallContact) {
+        const gradient = canvasTexture([8, 128], (ctx, width, height) => {
+          const fade = ctx.createLinearGradient(0, 0, 0, height);
+          fade.addColorStop(0, '#20191500');
+          fade.addColorStop(1, '#20191555');
+          ctx.fillStyle = fade; ctx.fillRect(0, 0, width, height);
+        }, { repeat: false });
+        generatedWallContact = track.m(new THREE.MeshBasicMaterial({ map: track.t(gradient),
+          transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1,
+          side: THREE.DoubleSide }));
+      }
       const front = room.frontInset, length = D - front, mid = (D + front) / 2;
       const route = generatedVerticalRoute(room);
       const finish = room.generatedPlan.layers.finishes[0]?.material;
       const floorColors = { limestone: '#e3d8c4', oak: '#bf9a72', terracotta: '#bf8671', concrete: '#c9c8c4' };
-      const floorMaterial = standard({ color: floorColors[finish] ?? floorColors.limestone, roughness: 0.82 });
+      const floorColor = floorColors[finish] ?? floorColors.limestone;
+      const contactTexture = canvasTexture([256, 256], (ctx, width, height) => {
+        const image = ctx.createImageData(width, height);
+        image.data.set(generatedContactPixels(room, width, height));
+        ctx.putImageData(image, 0, 0);
+      }, { repeat: false });
+      const floorMaterial = standard({ color: floorColor, map: track.t(contactTexture), roughness: 0.82 });
       floorMaterial.name = `generated-floor-${finish}`;
       const floorGeometry = track.g(new THREE.PlaneGeometry(W, length)); floorGeometry.rotateX(-Math.PI / 2);
       const floor = new THREE.Mesh(floorGeometry, floorMaterial); floor.receiveShadow = true;
@@ -415,11 +434,15 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
       for (const panel of route?.ceilingPanels ?? [{ a: c, d: mid, width: W, depth: length }])
         add(box, ceiling, panel.a, panel.d, H + 0.125, [panel.width, 0.25, panel.depth]);
       add(box, walls[room.theme], c, D - 0.075, H / 2, [W, H, 0.15]);
+      add(pane, generatedWallContact, c, D - 0.158, 0.48, [W - 0.3, 0.96, 1]);
       for (const a of [room.aMin + 0.075, room.aMax - 0.075]) {
         add(box, walls[room.theme], a, mid, H / 2, [0.15, H, length]);
       }
+      for (const a of [room.aMin + 0.158, room.aMax - 0.158])
+        add(pane, generatedWallContact, a, mid, 0.48, [length - 0.3, 0.96, 1], Math.PI / 2);
       // Only the approved entrance portal bridges the setback to the facade.
-      if (room.generatedPlan.index === 0) add(box, floorMaterial, 0, front / 2, 0.012, [1.7, 0.025, front]);
+      if (room.generatedPlan.index === 0)
+        add(box, standard({ color: floorColor, roughness: 0.82 }), 0, front / 2, 0.012, [1.7, 0.025, front]);
       for (const fixture of room.obstacles) {
         const a = (fixture.a0 + fixture.a1) / 2, d = (fixture.d0 + fixture.d1) / 2;
         const authoredMaterial = room.generatedPlan.layers.fixtures.find(item => item.id === fixture.id)?.material;
@@ -503,8 +526,9 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
     const mesh = new THREE.InstancedMesh(geometry, material, matrices.length);
     const color = new THREE.Color();
     matrices.forEach((matrix, index) => { mesh.setMatrixAt(index, matrix); mesh.setColorAt(index, color.set(colors[index])); });
-    mesh.castShadow = material !== glow && material !== lamp && material !== luxe.halo && material !== glassCase && material !== bottleGlass && material !== warmPanel;
-    mesh.receiveShadow = true;
+    mesh.castShadow = material !== generatedWallContact && material !== glow && material !== lamp && material !== luxe.halo && material !== glassCase && material !== bottleGlass && material !== warmPanel;
+    mesh.receiveShadow = material !== generatedWallContact;
+    if (material === generatedWallContact) mesh.userData.aoExclude = true;
     // One batch per building and material: the renderer culls by instance bounds without a draw-call explosion.
     mesh.computeBoundingSphere();
     if (material === glassCase || material === bottleGlass) mesh.renderOrder = 2;
