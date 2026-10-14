@@ -5320,6 +5320,34 @@
         "docs/superpowers/plans/2026-10-14-procedural-interior-ring-validity.md",
         "docs/superpowers/plans/README.md"
       ]
+    },
+    {
+      "id": "procedural-gallery-ao-buffer",
+      "title": "Measure reduced AO buffer resolution for moving gallery quality and frame pacing",
+      "status": "queued",
+      "branches": [
+        "perf/procedural-gallery-ao-buffer-20261014"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-14T08:37:47Z",
+      "leaseUntil": null,
+      "previousOwner": "codex-root-20261014-ao-buffer",
+      "handoff": "Paired Sharpest five-cycle runs on local M3 Max Chromium rejected both 0.75 and 0.5 AO buffers: later moving p95 remained 33.3-33.4 ms. The half-scale image showed coarser edge noise. Runtime/test trial edits were restored; no code PR or full gate is claimed. Ignored receipts and the screenshot remain in the clean experiment worktree.",
+      "nextAction": "Attribute moving-gallery AO geometry draw calls by visible object group; keep full-resolution AO baseline. Target-device selection and human shading review still gate rollout.",
+      "ledger": "docs/superpowers/plans/2026-10-14-procedural-gallery-ao-buffer.md",
+      "requiredChecks": [
+        "Paired five-cycle moving gallery measurements at fixed Sharpest quality",
+        "AO-on visual comparison at the same camera",
+        "Focused render-pipeline resolution behavior",
+        "pnpm run verify core before commit",
+        "Isolated-Redis full and browser gates before delivery"
+      ],
+      "filesOwned": [
+        "preview/src/render-pipeline.js",
+        "preview/tests/render-pipeline.test.js",
+        "docs/superpowers/plans/2026-10-14-procedural-gallery-ao-buffer.md",
+        "docs/superpowers/plans/README.md"
+      ]
     }
   ]
 }
