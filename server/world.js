@@ -747,7 +747,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
         const outside=storefrontSpot(worldData,store,'leave',{isFree:(x,z)=>environment.isFree(x,z) && !environment.roomAt(x,z)});
         peer.position=[outside[0],outside[1],environment.groundAt(outside[0],-outside[1])];
         releaseBike(peer);
-        peer.altitude=0;peer.vehicle=null;peer.sitting=null;peer.poseAt=time;peer.moveBudget=peer.liftBudget=0.1;
+        peer.altitude=0;peer.buildingId=null;peer.levelId=null;peer.vehicle=null;peer.sitting=null;
+        peer.poseAt=time;peer.moveBudget=peer.liftBudget=0.1;
         peer.gesture=null;peer.gestureUntil=0;focus.delete(peer.id);
       }
       revision++;

@@ -5215,6 +5215,30 @@
         "docs/superpowers/plans/2026-10-14-procedural-pilot-frame-performance.md"
       ],
       "pr": 351
+    },
+    {
+      "id": "procedural-private-upper-revocation",
+      "title": "Keep generated private home levels and voice access consistent after guest revocation",
+      "status": "active",
+      "branches": [
+        "fix/procedural-private-level-revocation-20261014"
+      ],
+      "owner": "codex-root-20261014-private-level-revocation",
+      "updatedAt": "2026-10-14T04:49:12Z",
+      "leaseUntil": "2026-10-14T06:49:12Z",
+      "nextAction": "Open a draft PR stacked on #351 from the verified private upper-level revocation fix, then check its exact-head hosted results.",
+      "ledger": "docs/superpowers/plans/2026-10-14-procedural-private-upper-revocation.md",
+      "requiredChecks": [
+        "Focused generated-home access and upper-level regression",
+        "Server suite and core verification before commit",
+        "Shared transport or browser journey if command behavior changes"
+      ],
+      "filesOwned": [
+        "server/world.js (homeAccess revocation and generated-level access only)",
+        "server/tests/generated-private-level-access.test.js",
+        "docs/superpowers/plans/2026-10-14-procedural-private-upper-revocation.md",
+        "docs/superpowers/plans/README.md"
+      ]
     }
   ]
 }
