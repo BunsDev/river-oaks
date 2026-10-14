@@ -22,4 +22,4 @@ Files owned: `preview/e2e/generated-gallery-cycle-soak.js`, this ledger, plans i
 
 ## Next action
 
-Commit the verified branch and prepare a reviewable draft PR stacked on #352. Keep rollout gated on target-device and human visual acceptance.
+Draft PR #353 is open on #352. Check exact-head hosted CI and review with the #349–#352 stack. Keep rollout gated on target-device and human visual acceptance. The worktree remains for review and is not ready to archive.

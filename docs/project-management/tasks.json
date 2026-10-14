@@ -5244,14 +5244,17 @@
     {
       "id": "procedural-gallery-cycle-soak",
       "title": "Measure repeated generated gallery entry, eviction and return in one session",
-      "status": "active",
+      "status": "queued",
       "branches": [
         "perf/procedural-gallery-cycle-soak-20261014"
       ],
-      "owner": "codex-root-20261014-gallery-cycles",
-      "updatedAt": "2026-10-14T05:41:54Z",
-      "leaseUntil": "2026-10-14T07:03:43Z",
-      "nextAction": "Five-cycle journey, core and isolated-Redis full gates passed; commit the verified branch and open a draft PR stacked on #352.",
+      "owner": null,
+      "updatedAt": "2026-10-14T05:42:59Z",
+      "leaseUntil": null,
+      "previousOwner": "codex-root-20261014-gallery-cycles",
+      "pr": 353,
+      "handoff": "Signed gallery-cycle journey is pushed as draft PR #353 stacked on #352. Five-cycle local journey, core and isolated-Redis full verification passed. The worktree is retained for review; target-device and human visual acceptance remain open.",
+      "nextAction": "Check exact-head hosted CI for draft PR #353, then review it with the #349-#352 stack. Keep broader archetype rollout gated on target-device and human visual evidence.",
       "ledger": "docs/superpowers/plans/2026-10-14-procedural-gallery-cycle-soak.md",
       "requiredChecks": [
         "Repeated one-client gallery entry and eviction behavioral journey",
