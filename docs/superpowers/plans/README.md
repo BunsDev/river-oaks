@@ -4,7 +4,7 @@
 
 Each plan is a task ledger. Status comes from the task register, where the primary checkout's live copy can be newer than the committed one. Plans from before the register are listed as historical: their own text is the record of what was delivered.
 
-## Active and blocked (22)
+## Active and blocked (23)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
@@ -13,6 +13,7 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-14-procedural-interior-ring-validity](2026-10-14-procedural-interior-ring-validity.md)<br>Procedural interior footprint validity | `procedural-interior-ring-validity` | active | #355 | 2026-10-14 |
 | [2026-10-14-procedural-gallery-cycle-soak](2026-10-14-procedural-gallery-cycle-soak.md)<br>Repeated generated gallery entry and eviction | `procedural-gallery-cycle-soak` | queued | #353 | 2026-10-14 |
 | [2026-10-14-procedural-gallery-ao-tail](2026-10-14-procedural-gallery-ao-tail.md)<br>Auto quality response to moving gallery frame tails | `procedural-gallery-ao-tail-pacing` | active | #354 | 2026-10-14 |
+| [2026-10-14-procedural-gallery-ao-buffer](2026-10-14-procedural-gallery-ao-buffer.md)<br>Gallery ambient occlusion buffer experiment | `procedural-gallery-ao-buffer` | queued | — | 2026-10-14 |
 | [2026-10-14-level-aware-interior-streaming](2026-10-14-level-aware-interior-streaming.md)<br>Level-aware generated interior streaming | `procedural-level-aware-streaming` | active | #350 | 2026-10-14 |
 | [2026-10-14-gallery-vertical-route](2026-10-14-gallery-vertical-route.md)<br>Gallery vertical-route visual integration | `procedural-gallery-vertical-route` | queued | — | 2026-10-14 |
 | [2026-10-13-studio-spaces](2026-10-13-studio-spaces.md)<br>Furnished Studio spaces implementation plan | `studio-furnished-spaces` | active | #316 | 2026-10-13 |
