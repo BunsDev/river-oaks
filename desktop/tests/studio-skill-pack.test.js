@@ -248,7 +248,8 @@ test('retries an interrupted owned install by creating only verified missing fil
     import path from 'node:path';
     const pack = JSON.parse(await fs.readFile(process.argv[2], 'utf8'));
     // The installer opens path.join(destination, file.path), which has backslashes on
-    // Windows, so compare resolved paths rather than a '/' suffix.
+    // Windows, so compare resolved paths rather than a '/' suffix. O_WRONLY is this
+    // platform's own constant; the installer's create flags carry it on Windows too.
     const interrupted = path.resolve(process.argv[3], pack.files[1].path);
     const originalOpen = fs.open;
     fs.open = async (target, flags, ...args) => {
