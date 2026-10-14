@@ -1,6 +1,6 @@
 import { terrainHeight } from './geometry.js';
 import { groundSurfaceHeight } from './world-surface.js';
-import { storeRoomsFor, roomAt, roomBlocked } from './store-rooms.js';
+import { storeRoomsFor, interiorLevelRoomsFor, roomAt, roomBlocked } from './store-rooms.js';
 import { roomBlocksConversation } from './conversation-sight.js';
 import { beastTraversal } from './beast-traversal.js';
 import { plazaSalonFootprints } from './plaza-salon-plan.js';
@@ -24,7 +24,7 @@ function overlaps(x, z, ring, radius = RADIUS) {
   return inside;
 }
 
-export function createWalkingEnvironment(world, placedObjects = []) {
+export function createWalkingEnvironment(world, placedObjects = [], levelId = null) {
   const [west, south, east, north] = world.bounds_m;
   const polygons = (world.collisionPolygons ?? []).map((ring) => ring.map(([x, y]) => [x, -y]));
   if (!world.collisionPolygons) for (const building of world.buildings ?? []) {
@@ -34,7 +34,8 @@ export function createWalkingEnvironment(world, placedObjects = []) {
   }
   const obstacles = polygons.map((ring) => ({ ring, minX: Math.min(...ring.map(p => p[0])) - RADIUS, maxX: Math.max(...ring.map(p => p[0])) + RADIUS, minZ: Math.min(...ring.map(p => p[1])) - RADIUS, maxZ: Math.max(...ring.map(p => p[1])) + RADIUS }));
   // Boutique interiors are free pockets inside footprints, entered through the mapped door.
-  const rooms = storeRoomsFor(world);
+  const rooms = levelId === null ? storeRoomsFor(world) : interiorLevelRoomsFor(world, levelId);
+  if (levelId !== null && rooms.length !== 1) throw new Error('Unknown or ambiguous interior level');
   const roomBuckets = new Map(), roomBucketSize = 16;
   for (const room of rooms) {
     const [minX, minY, maxX, maxY] = room.lookupBounds;
@@ -78,6 +79,7 @@ export function createWalkingEnvironment(world, placedObjects = []) {
   const baseIsFree = (x, z) => {
     if (x < west + RADIUS || x > east - RADIUS || z < -north + RADIUS || z > -south - RADIUS) return false;
     const room = roomFor(x, z, RADIUS);
+    if (levelId !== null) return Boolean(room && !roomBlocked(room, x, -z, RADIUS));
     if (room) return !roomBlocked(room, x, -z, RADIUS);
     return !obstacles.some(o => x > o.minX && x < o.maxX && z > o.minZ && z < o.maxZ && overlaps(x, z, o.ring));
   };
@@ -87,6 +89,7 @@ export function createWalkingEnvironment(world, placedObjects = []) {
     const margin=radius+RADIUS;
     if(x<west+margin||x>east-margin||z<-north+margin||z>-south-margin)return false;
     const room=roomFor(x,z,margin);
+    if(levelId!==null)return Boolean(room&&!roomBlocked(room,x,-z,margin));
     if(room)return !roomBlocked(room,x,-z,margin);
     if(propAt(x,groundAt(x,z)+.9,z,margin,.9))return false;
     return !obstacles.some(o=>x>o.minX-radius&&x<o.maxX+radius&&z>o.minZ-radius&&z<o.maxZ+radius&&overlaps(x,z,o.ring,margin));
@@ -100,6 +103,7 @@ export function createWalkingEnvironment(world, placedObjects = []) {
     return !propAt(x,y,z,RADIUS,.9) && !placedObjects.some(object=>object.contains(x,y,z,RADIUS,.9));
   };
   const canFly = (x, altitude, z) => {
+    if(levelId!==null)return false;
     if(x<west+flightRadius || x>east-flightRadius || z<-north+flightRadius || z>-south-flightRadius) return false;
     if(propAt(x,altitude,z,flightRadius) || placedObjects.some(object=>object.contains(x,altitude,z,flightRadius)))return false;
     return !roofs.some(roof=>altitude<=roof.top && x>roof.minX && x<roof.maxX && z>roof.minZ && z<roof.maxZ && overlaps(x,z,roof.ring,flightRadius));
@@ -115,7 +119,7 @@ export function createWalkingEnvironment(world, placedObjects = []) {
     }
     return true;
   };
-  return { groundAt, isFree, isAreaFree, canFly, flightCeiling, hasSightLine, roomAt: (x, z) => roomFor(x, z, 0), rooms, bounds: [west, -north, east, -south], spawn: world.walkSpawn ?? [(west + east) / 2, (south + north) / 2, 0] };
+  return { levelId, groundAt, isFree, isAreaFree, canFly, flightCeiling, hasSightLine, roomAt: (x, z) => roomFor(x, z, 0), rooms, bounds: [west, -north, east, -south], spawn: world.walkSpawn ?? [(west + east) / 2, (south + north) / 2, 0] };
 }
 
 export function createWalkingState(environment, position = environment.spawn, yaw = 0) {

@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { terrainHeight } from '../preview/src/geometry.js';
 import { createWalkingEnvironment } from '../preview/src/walking.js';
 import { storefrontSpot } from '../preview/src/arrival.js';
+import { generateBuildingInteriorPlan, validBuildingInteriorGeneration } from '../preview/src/building-interiors-plan.js';
 
 export const MAX_REGION_REQUEST_BYTES = 128 * 1024;
 const record=value=>value!==null && typeof value==='object' && !Array.isArray(value);
@@ -16,7 +17,7 @@ const VENUE_CATEGORIES=['clothes','art','restaurant','wellness'];
 const ENTRANCE_EDGES={south:0,east:1,north:2,west:3};
 
 /** Compile a bounded, creator-authored local-metre map into the shared district contract. */
-export function compileRegionPackage(region,title) {
+export function compileRegionPackage(region,title,{worldId='creator-region'}={}) {
   if(!label(title) || !keys(region,['schema_version','bounds_m','terrain','spawn','roads','buildings','trees','places','parcels'])
     || region.schema_version!==1 || !Array.isArray(region.bounds_m) || region.bounds_m.length!==4)fail();
   const [west,south,east,north]=region.bounds_m;
@@ -53,11 +54,12 @@ export function compileRegionPackage(region,title) {
       || !finite(building.size[0],4,80) || !finite(building.size[1],4,80) || !finite(building.size[2],5.5,50)
       || !finite(building.yaw_deg,-180,180) || !['retail','residential','parking'].includes(building.kind))fail();
     if(building.interior!==undefined && (building.size[0]<6 || building.size[1]<6
-      || !keys(building.interior,['name','category','entrance','access']) || !label(building.interior.name)
+      || !keys(building.interior,['name','category','entrance','access','generation']) || !label(building.interior.name)
       || !(building.kind==='retail' && VENUE_CATEGORIES.includes(building.interior.category)
         || building.kind==='residential' && building.interior.category==='home')
       || (building.interior.access!==undefined && (building.interior.category!=='home' || !['public','owner'].includes(building.interior.access)))
-      || !Object.hasOwn(ENTRANCE_EDGES,building.interior.entrance)))fail();
+      || !Object.hasOwn(ENTRANCE_EDGES,building.interior.entrance)
+      || building.interior.generation!==undefined && !validBuildingInteriorGeneration(building.interior.generation)))fail();
     const [x,y]=building.center,[width,depth,height]=building.size,angle=building.yaw_deg*Math.PI/180,c=Math.cos(angle),s=Math.sin(angle);
     const ring=[[-width/2,-depth/2],[width/2,-depth/2],[width/2,depth/2],[-width/2,depth/2]]
       .map(([dx,dy])=>[x+dx*c-dy*s,y+dx*s+dy*c]);
@@ -78,6 +80,13 @@ export function compileRegionPackage(region,title) {
       position:[...building.center],facade,outward,visit,building_id:building.id,
       ...(building.interior.access==='owner'?{access:'owner'}:{})}];
   });
+  const buildingInteriors=buildings.filter(building=>building.interior?.generation).map(building=>{
+    const store=stores.find(store=>store.building_id===building.id),generation=building.interior.generation;
+    const plan=generateBuildingInteriorPlan({worldId,building,entrance:{id:store.id,position:store.facade,outward:store.outward},
+      seed:generation.seed??building.id,levels:generation.levels,levelSeeds:generation.levelSeeds,overrides:generation.overrides,baseElevation:store.facade[2]});
+    return {...plan,approvedSha256:createHash('sha256').update(JSON.stringify(plan)).digest('hex')};
+  }).sort((a,b)=>a.buildingId.localeCompare(b.buildingId));
+  if(Buffer.byteLength(JSON.stringify(buildingInteriors))>128*1024)fail();
   const trees=region.trees.map(tree=>{
     if(!keys(tree,['id','position','height_m','crown_radius_m']) || !position(tree.position)
       || !finite(tree.height_m,2,35) || !finite(tree.crown_radius_m,.5,10))fail();
@@ -109,6 +118,7 @@ export function compileRegionPackage(region,title) {
     provenance:{kind:'creator',source:'Creator-authored region package',source_sha256:hash,attribution:'World creator'},
     limitations:['This region and its geography were supplied by its creator.'],
     walkLookAt:[...roads[0].points[1]],street_design:{version:1,minimum_curb_width_m:8.4,clear_lane_width_m:3.5904,gutters_m:.6096,basis:'Creator-authored roads.'}};
+  if(buildingInteriors.length)world.buildingInteriors=buildingInteriors;
   const environment=createWalkingEnvironment(world);
   if(!environment.isFree(region.spawn[0],-region.spawn[1]))fail();
   if(environment.rooms.length!==stores.length)fail();

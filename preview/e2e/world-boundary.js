@@ -4,8 +4,8 @@ async page => {
   page.on('pageerror',error=>errors.push(error.message));
   await page.goto(`${origin}/?world=garden-2&motion-debug=1`,{waitUntil:'commit'});
   await page.waitForFunction(()=>window.__riverMultiplayer?.().connected&&document.querySelector('#canvas-host')?.dataset.playerReady==='true');
-  const live=await page.evaluate(()=>{const m=window.__riverMultiplayer();return {worldId:m.snapshot.worldId,version:m.snapshot.protocolVersion,admin:m.snapshot.players.find(player=>player.id===m.selfId)?.canBuild};});
-  check(live.worldId==='garden-2'&&live.version===2,'An alternate world joins with its own versioned snapshot');
+  const live=await page.evaluate(async()=>{const {WORLD_PROTOCOL_VERSION}=await import('/src/world-contract.js');const m=window.__riverMultiplayer();return {worldId:m.snapshot.worldId,version:m.snapshot.protocolVersion,expectedVersion:WORLD_PROTOCOL_VERSION,admin:m.snapshot.players.find(player=>player.id===m.selfId)?.canBuild};});
+  check(live.worldId==='garden-2'&&live.version===live.expectedVersion,'An alternate world joins with its own versioned snapshot');
   check(live.admin===true,'Jevica retains building permission in the alternate world');
   const otherContext=await page.context().browser().newContext();
   try {

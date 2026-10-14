@@ -3140,7 +3140,7 @@
           "reviewedHead": "444dd451312665b88a69756e282b8d968916e1e6",
           "merge": "e55c3866fcf8ec85090c22789fd5bc8ca5364a05",
           "tree": "6504df673f23e0b750f69c262664a1c83c5df1e6",
-          "checks": "All 17 hosted checks passed on 444dd45 (guard CLEAN, first attempt after a rebase onto #268; the earlier head lost a run to the known spatial-streets Hermès stall). Docs-only; project:status validated the register."
+          "checks": "All 17 hosted checks passed on 444dd45 (guard CLEAN, first attempt after a rebase onto #268; the earlier head lost a run to the known spatial-streets Herm\u00e8s stall). Docs-only; project:status validated the register."
         }
       ],
       "retirement": {
@@ -3163,7 +3163,7 @@
     },
     {
       "id": "plaza-salon",
-      "title": "Furnish the Dior-Toulouse plaza as a café and chess promenade (Val's reference set: curved bench, café armchairs, chess and timber tables, travertine planters, bronze lanterns, string lights)",
+      "title": "Furnish the Dior-Toulouse plaza as a caf\u00e9 and chess promenade (Val's reference set: curved bench, caf\u00e9 armchairs, chess and timber tables, travertine planters, bronze lanterns, string lights)",
       "status": "retired",
       "branches": [
         "feat/plaza-salon"
@@ -4000,7 +4000,7 @@
     },
     {
       "id": "plaza-games",
-      "title": "Playable games at the Dior–Toulouse plaza tables: solo chess first (X to play at a chess chair, local AI and pass-and-play, mirrored on the 3D board); later checkers, café cards/dominoes, more game tables, Jenga and wine pong",
+      "title": "Playable games at the Dior\u2013Toulouse plaza tables: solo chess first (X to play at a chess chair, local AI and pass-and-play, mirrored on the 3D board); later checkers, caf\u00e9 cards/dominoes, more game tables, Jenga and wine pong",
       "status": "active",
       "branches": [
         "feat/plaza-chess-20261013"
@@ -4009,7 +4009,7 @@
       "leaseUntil": "2026-10-13T19:34:31.000Z",
       "updatedAt": "2026-10-13T09:34:31.000Z",
       "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-plaza-games-20261013",
-      "nextAction": "Phase 1: in-repo chess rules (perft-tested), budgeted local opponent in a worker, plaza chess UI and 3D piece mirror, X 'Play chess' seated action, plaza-chess journey; then PR. Later phases per Val 2026-10-13: checkers, café cards/dominoes, more tables, Jenga, wine pong, shared two-player tables.",
+      "nextAction": "Phase 1: in-repo chess rules (perft-tested), budgeted local opponent in a worker, plaza chess UI and 3D piece mirror, X 'Play chess' seated action, plaza-chess journey; then PR. Later phases per Val 2026-10-13: checkers, caf\u00e9 cards/dominoes, more tables, Jenga, wine pong, shared two-player tables.",
       "filesOwned": [
         "preview/src/chess-rules.js",
         "preview/src/chess-opponent*.js",
@@ -4094,7 +4094,7 @@
     },
     {
       "id": "plaza-dominoes",
-      "title": "Dominoes at the plaza café table: double-six draw (2 players) and block (4 players) games against the plaza regulars, scored to 100, tiles mirrored on the round table",
+      "title": "Dominoes at the plaza caf\u00e9 table: double-six draw (2 players) and block (4 players) games against the plaza regulars, scored to 100, tiles mirrored on the round table",
       "status": "active",
       "branches": [
         "feat/plaza-dominoes-20261013"
@@ -4103,14 +4103,14 @@
       "leaseUntil": "2026-10-13T21:00:04.000Z",
       "updatedAt": "2026-10-13T11:00:04.000Z",
       "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-plaza-dominoes-20261013",
-      "nextAction": "Stacked on feat/plaza-checkers-20261013 (#299, landing): merge main once it lands. Write dominoes-rules.js (seeded deal, draw and block games, scoring), a dominoes opponent, a café dominoes sheet sharing the table-game frame, tiles on the round table, journey; then PR (land only when Val says).",
+      "nextAction": "Stacked on feat/plaza-checkers-20261013 (#299, landing): merge main once it lands. Write dominoes-rules.js (seeded deal, draw and block games, scoring), a dominoes opponent, a caf\u00e9 dominoes sheet sharing the table-game frame, tiles on the round table, journey; then PR (land only when Val says).",
       "filesOwned": [
         "preview/src/dominoes-rules.js",
         "preview/src/dominoes-opponent.js",
         "preview/src/plaza-dominoes.js",
         "preview/src/plaza-dominoes.css",
-        "preview/src/plaza-salon.js (café table tiles)",
-        "preview/src/plaza-salon-plan.js (café seats)",
+        "preview/src/plaza-salon.js (caf\u00e9 table tiles)",
+        "preview/src/plaza-salon-plan.js (caf\u00e9 seats)",
         "preview/src/main.js (wiring)",
         "preview/e2e/plaza-dominoes.js"
       ],
@@ -4125,7 +4125,7 @@
     },
     {
       "id": "plaza-hearts",
-      "title": "Hearts at the plaza café table: four players (you and three plaza regulars), passing, tricks, shooting the moon, game to 100; cards mirrored on the round table",
+      "title": "Hearts at the plaza caf\u00e9 table: four players (you and three plaza regulars), passing, tricks, shooting the moon, game to 100; cards mirrored on the round table",
       "status": "retired",
       "branches": [
         "feat/plaza-hearts-20261013"
@@ -4139,8 +4139,8 @@
         "preview/src/hearts-opponent.js",
         "preview/src/plaza-hearts.js",
         "preview/src/plaza-hearts.css",
-        "preview/src/plaza-dominoes.js (café game switch)",
-        "preview/src/plaza-salon.js (café cards)",
+        "preview/src/plaza-dominoes.js (caf\u00e9 game switch)",
+        "preview/src/plaza-salon.js (caf\u00e9 cards)",
         "preview/e2e/plaza-hearts.js"
       ],
       "requiredChecks": [
@@ -4682,6 +4682,82 @@
       }
     },
     {
+      "id": "procedural-multilevel-interiors-plan",
+      "title": "Build building-anchored procedural multi-level interiors and World Studio editing",
+      "status": "active",
+      "branches": [
+        "docs/procedural-multilevel-interiors-20261013"
+      ],
+      "owner": "codex-root-20261014-procedural-landing",
+      "updatedAt": "2026-10-14T19:30:58.996Z",
+      "nextAction": "User authorized landing to main and selected this session to take over. Reconcile current main, update #349 to main, verify exact hosted head and signatures, then merge serially through the stacked PRs; keep pilot rollout gaps explicit.",
+      "ledger": "docs/superpowers/plans/2026-10-13-procedural-interiors-implementation.md",
+      "requiredChecks": [
+        "Focused behavioral and cross-runtime tests for each phase",
+        "pnpm run verify core before commit",
+        "pnpm run verify full with isolated Redis and browser prerequisites",
+        "Two-client and Studio browser acceptance",
+        "Hosted preview on up-to-date PR head before merge"
+      ],
+      "filesOwned": [
+        "docs/superpowers/plans/2026-10-13-procedural-multilevel-interiors.md",
+        "docs/superpowers/plans/2026-10-13-procedural-interiors-implementation.md",
+        "preview/src/building-interiors-plan.js",
+        "preview/tests/building-interiors-plan.test.js",
+        "server/region-package.js (bounded contract)",
+        "server/tests/region-package.test.js",
+        "preview/src/store-rooms.js (migration adapter)",
+        "preview/src/district.js, preview/src/walking.js, server/world.js (later phases)",
+        "preview/src/studio/* (later phases)",
+        "preview/src/region-draft.js (generation schema validation)",
+        "preview/src/store-interiors.js (generated fixture material override only; coordinate gallery-route integration)",
+        "preview/e2e/creator-generated-levels.js",
+        "preview/e2e/shared-runner.js (new creator-generated-levels acceptance registration)"
+      ],
+      "leaseUntil": "2026-10-14T21:30:58.996Z",
+      "previousOwner": "codex-resume-20261014-procedural-interiors",
+      "pr": 349
+    },
+    {
+      "id": "ipic-photo-interior",
+      "title": "Photo-referenced connected IPIC interior, reusable assets and playable auditorium",
+      "status": "active",
+      "branches": [
+        "feat/ipic-photo-interior-20261013"
+      ],
+      "owner": "codex:8304a3c9d0ca-ipic",
+      "leaseUntil": "2026-10-13T23:33:52.433092+00:00",
+      "updatedAt": "2026-10-13T21:38:02.806236+00:00",
+      "nextAction": "Review draft PR #343 and photo-guided layout limits. Branch is mergeable but behind main; satisfy up-to-date hosted checks before separately authorized landing. Preserve worktree.",
+      "ledger": "docs/superpowers/plans/2026-10-13-ipic-photo-interior.md",
+      "worktree": "/workspace/scratch/8304a3c9d0ca/river-oaks-ipic",
+      "filesOwned": [
+        "preview/src/ipic-*.js",
+        "preview/src/store-rooms.js (IPIC only)",
+        "preview/src/store-interiors.js (IPIC hook only)",
+        "preview/src/walking.js (room floor support)",
+        "preview/src/world-interactions.js (IPIC seats)",
+        "preview/src/conversation-sight.js (IPIC partitions)",
+        "preview/tests/ipic-*.test.js",
+        "server/tests/ipic-*.test.js",
+        "preview/e2e/ipic-*.js",
+        "preview/e2e/fixtures/ipic.*",
+        "assets/ipic/",
+        "preview/public/assets/ipic/",
+        "scripts/export-ipic*",
+        "docs/ipic-interior.md"
+      ],
+      "requiredChecks": [
+        "focused client/server route and seating regressions",
+        "pnpm run verify",
+        "IPIC rendered browser journey",
+        "GLB export validation"
+      ],
+      "verification": "Core passed; focused 10/10; production IPIC visit 4/4; five material views; GLB and Blender validated. See task ledger for skips and scope.",
+      "publicationAuthorization": "User approved unsigned draft PR on 2026-10-13 in the IPIC implementation session.",
+      "pr": 343
+    },
+    {
       "id": "office-arrival-refinement",
       "title": "Polish the office building exterior, lobby and elevator arrival as one coherent journey",
       "status": "active",
@@ -4740,45 +4816,6 @@
         "Independent review and exact-head hosted gate before protected merge"
       ],
       "pr": 345
-    },
-    {
-      "id": "ipic-photo-interior",
-      "title": "Photo-referenced connected IPIC interior, reusable assets and playable auditorium",
-      "status": "active",
-      "branches": [
-        "feat/ipic-photo-interior-20261013"
-      ],
-      "owner": "codex:8304a3c9d0ca-ipic",
-      "leaseUntil": "2026-10-13T23:33:52.433092+00:00",
-      "updatedAt": "2026-10-13T21:38:02.806236+00:00",
-      "nextAction": "Review draft PR #343 and photo-guided layout limits. Branch is mergeable but behind main; satisfy up-to-date hosted checks before separately authorized landing. Preserve worktree.",
-      "ledger": "docs/superpowers/plans/2026-10-13-ipic-photo-interior.md",
-      "worktree": "/workspace/scratch/8304a3c9d0ca/river-oaks-ipic",
-      "filesOwned": [
-        "preview/src/ipic-*.js",
-        "preview/src/store-rooms.js (IPIC only)",
-        "preview/src/store-interiors.js (IPIC hook only)",
-        "preview/src/walking.js (room floor support)",
-        "preview/src/world-interactions.js (IPIC seats)",
-        "preview/src/conversation-sight.js (IPIC partitions)",
-        "preview/tests/ipic-*.test.js",
-        "server/tests/ipic-*.test.js",
-        "preview/e2e/ipic-*.js",
-        "preview/e2e/fixtures/ipic.*",
-        "assets/ipic/",
-        "preview/public/assets/ipic/",
-        "scripts/export-ipic*",
-        "docs/ipic-interior.md"
-      ],
-      "requiredChecks": [
-        "focused client/server route and seating regressions",
-        "pnpm run verify",
-        "IPIC rendered browser journey",
-        "GLB export validation"
-      ],
-      "verification": "Core passed; focused 10/10; production IPIC visit 4/4; five material views; GLB and Blender validated. See task ledger for skips and scope.",
-      "publicationAuthorization": "User approved unsigned draft PR on 2026-10-13 in the IPIC implementation session.",
-      "pr": 343
     },
     {
       "id": "cycling-rack",
@@ -5087,6 +5124,34 @@
       ],
       "blocker": null,
       "ledger": "docs/project-management/workflow.md"
+    },
+    {
+      "id": "procedural-gallery-vertical-route",
+      "title": "Render the approved gallery vertical portal as a visible platform lift",
+      "status": "queued",
+      "branches": [
+        "feat/procedural-gallery-route-20261014"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-14T01:08:15.000Z",
+      "handoff": "Signed, verified gallery work is pushed at f0a55434e1cd43a1e3b34e894a615b8460854d61. The clean worktree is retained until integration and delivery evidence support retirement. Former owner: codex-root-20261014-gallery-route.",
+      "nextAction": "Integration owner: merge signed, pushed gallery head f0a55434 into docs/procedural-multilevel-interiors-20261013, resolve the generated fixture material overlap, then run combined full/shared/performance gates. Paired Mac M3 Max Chromium samples passed: street p95 16.8 ms, gallery p95 33.4 ms; views differ, so the draw-call change is not isolated gallery cost. The internal portal still says stairs. Gallery branch has no standalone PR because the integration base is not yet published.",
+      "ledger": "docs/superpowers/plans/2026-10-14-gallery-vertical-route.md",
+      "requiredChecks": [
+        "Focused geometry and browser regression for the gallery route",
+        "pnpm run verify core before commit",
+        "Two-client gallery level journey",
+        "Player-height visual and performance evidence"
+      ],
+      "filesOwned": [
+        "preview/src/store-interiors.js",
+        "preview/src/generated-vertical-route.js",
+        "preview/tests/generated-vertical-route.test.js",
+        "preview/e2e/generated-gallery.js",
+        "preview/e2e/generated-gallery-levels.js",
+        "docs/superpowers/plans/2026-10-14-gallery-vertical-route.md"
+      ],
+      "leaseUntil": null
     },
     {
       "id": "local-prune-20261013",

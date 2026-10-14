@@ -86,7 +86,7 @@ test('the standalone town stamps voice identities on its players and revokes a d
   t.after(() => app.close());
   const post = (path, body = {}) => fetch(origin + path, { method: 'POST', headers: { Origin: 'http://127.0.0.1', Cookie: 'session=alice', 'X-CSRF-Token': 'test-csrf', 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   const ticket = (await (await post('/api/multiplayer/ticket')).json()).ticket;
-  const ws = new WebSocket(`${origin.replace('http', 'ws')}/multiplayer?${new URLSearchParams({ ticket, protocol: '2' })}`, { headers: { Origin: 'http://127.0.0.1', Cookie: 'session=alice' } });
+  const ws = new WebSocket(`${origin.replace('http', 'ws')}/multiplayer?${new URLSearchParams({ ticket, protocol: '3' })}`, { headers: { Origin: 'http://127.0.0.1', Cookie: 'session=alice' } });
   const snapshots = [];
   ws.on('message', raw => snapshots.push(JSON.parse(raw)));
   await new Promise((resolve, reject) => { ws.once('message', resolve); ws.once('error', reject); });

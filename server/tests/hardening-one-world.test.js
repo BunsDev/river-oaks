@@ -24,7 +24,7 @@ async function joinWith(t, presence, {admin = false} = {}) {
     onMove: async (userId, fromWorldId) => { moves.push([userId, fromWorldId]); }});
   t.after(() => app.close());
   await new Promise(resolve => app.server.listen(0, '127.0.0.1', resolve));
-  const ws = new WebSocket(`ws://127.0.0.1:${app.server.address().port}/multiplayer?protocol=2&ticket=test`, {headers: {Origin: 'http://localhost'}});
+  const ws = new WebSocket(`ws://127.0.0.1:${app.server.address().port}/multiplayer?protocol=3&ticket=test`, {headers: {Origin: 'http://localhost'}});
   t.after(() => ws.terminate());
   await once(ws, 'message');
   return moves;
@@ -65,7 +65,7 @@ async function removedWhile(t, presenceWorld) {
     room, presence, worldTitle: 'River Oaks', waitlist: approvedWaitlist, origin: 'http://localhost'});
   t.after(() => app.close());
   await new Promise(resolve => app.server.listen(0, '127.0.0.1', resolve));
-  const ws = new WebSocket(`ws://127.0.0.1:${app.server.address().port}/multiplayer?protocol=2&ticket=test`, {headers: {Origin: 'http://localhost'}});
+  const ws = new WebSocket(`ws://127.0.0.1:${app.server.address().port}/multiplayer?protocol=3&ticket=test`, {headers: {Origin: 'http://localhost'}});
   t.after(() => ws.terminate());
   await once(ws, 'message');
   await presence.join('resident', {id: presenceWorld, title: 'Elsewhere'}, 'other-socket');

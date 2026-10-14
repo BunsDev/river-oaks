@@ -1,5 +1,6 @@
 import { terrainHeight } from './geometry.js';
 import { clearStandingStations } from './store-clearance.js';
+import { approvedGroundRoom, approvedLevelRoom } from './approved-interior-room.js';
 import { isIpicStore, configureIpicRoom } from './ipic-plan.js';
 
 // Walk-in boutique floor plans behind each mapped storefront. Rooms stay inside
@@ -31,10 +32,41 @@ export function rectanglesOverlap(a, b, margin = 0) {
 }
 
 const cache = new WeakMap();
+const levelCache = new WeakMap();
 export function storeRoomsFor(world) {
   if (!world || typeof world !== 'object') return [];
-  if (!cache.has(world)) cache.set(world, planStoreRooms(world));
+  if (!cache.has(world)) {
+    const rooms = planStoreRooms(world);
+    if (world.buildingInteriors?.length) {
+      for (const plan of world.buildingInteriors) {
+        const storeId = plan.levels?.[0]?.portals?.find(portal => portal.kind === 'entrance')?.id?.split('/portal/')[1];
+        const index = rooms.findIndex(room => room.storeId === storeId && room.buildingId === plan.buildingId);
+        if (index < 0) throw new Error('Approved interior has no mapped entrance');
+        rooms[index] = approvedGroundRoom(plan, rooms[index]);
+      }
+    }
+    cache.set(world, rooms);
+  }
   return cache.get(world);
+}
+
+/** Resolve an assigned upper level without mixing its overlapping ground footprint into street queries. */
+export function interiorLevelRoomsFor(world, levelId) {
+  if (!world || typeof world !== 'object' || typeof levelId !== 'string') return [];
+  if (!levelCache.has(world)) levelCache.set(world, new Map());
+  const levels = levelCache.get(world);
+  if (!levels.has(levelId)) {
+    const rooms = [];
+    for (const plan of world.buildingInteriors ?? []) {
+      const level = plan.levels?.find(item => item.id === levelId && item.index > 0);
+      if (!level) continue;
+      const storeId = plan.levels[0].portals.find(portal => portal.kind === 'entrance')?.id?.split('/portal/')[1];
+      const legacy = planStoreRooms(world).find(room => room.storeId === storeId && room.buildingId === plan.buildingId);
+      rooms.push(approvedLevelRoom(plan, level, legacy));
+    }
+    levels.set(levelId, rooms);
+  }
+  return levels.get(levelId);
 }
 
 export function planStoreRooms(world) {
@@ -355,6 +387,10 @@ export function roomAt(rooms, east, north, shrink = 0) {
   for (const room of rooms) {
     const bounds = room.lookupBounds;
     if (shrink >= 0 && bounds && (east < bounds[0] || north < bounds[1] || east > bounds[2] || north > bounds[3])) continue;
+    if (room.generatedPlan) {
+      if (room.containsAccess(east, north, shrink)) return room;
+      continue;
+    }
     const [a, d] = room.toLocal(east, north);
     if (a <= room.aMin + shrink || a >= room.aMax - shrink || d >= room.depth - shrink) continue;
     if (d > shrink + 0.02) return room;
@@ -364,6 +400,7 @@ export function roomAt(rooms, east, north, shrink = 0) {
 }
 
 export function roomBlocked(room, east, north, radius) {
+  if (room.generatedPlan) return room.blocks(east, north, radius);
   const [a, d] = room.toLocal(east, north);
   return room.obstacles.some(o => a > o.a0 - radius && a < o.a1 + radius && d > o.d0 - radius && d < o.d1 + radius);
 }

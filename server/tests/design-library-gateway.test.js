@@ -42,7 +42,7 @@ test(`Jevica saves and copies designs across published worlds without granting g
       const response = await post(user, `/api/multiplayer/ticket?world=${worldId}`, {});
       assert.equal(response.status, 200);
       const { ticket } = await response.json();
-      const socket = new WebSocket(`${base.replace('http:', 'ws:')}/multiplayer?world=${worldId}&protocol=2&ticket=${ticket}`,
+      const socket = new WebSocket(`${base.replace('http:', 'ws:')}/multiplayer?world=${worldId}&protocol=3&ticket=${ticket}`,
         { headers: { Origin: origin, Cookie: `test_session=${user}` } });
       sockets.push(socket);
       await new Promise((resolve, reject) => {
