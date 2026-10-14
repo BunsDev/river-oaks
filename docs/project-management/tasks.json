@@ -5187,6 +5187,32 @@
       ],
       "pr": 350,
       "leaseUntil": "2026-10-14T04:36:16Z"
+    },
+    {
+      "id": "procedural-pilot-frame-performance",
+      "title": "Profile and improve generated gallery frame pacing before broader interior rollout",
+      "status": "active",
+      "branches": [
+        "perf/procedural-pilot-render-20261014"
+      ],
+      "owner": "codex-root-20261014-pilot-render",
+      "updatedAt": "2026-10-14T03:34:57Z",
+      "leaseUntil": "2026-10-14T05:34:57Z",
+      "nextAction": "Review the performance draft PR's exact-head hosted checks, then hand its measured pilot frame gain and remaining visual and target-device gaps to the procedural-interiors integration owner.",
+      "ledger": "docs/superpowers/plans/2026-10-14-procedural-pilot-frame-performance.md",
+      "requiredChecks": [
+        "Comparable player-height street and gallery pass/object audit",
+        "Focused render behavior and visual regression",
+        "pnpm run verify core before commit",
+        "Paired browser frame pacing, cold/return load and memory evidence"
+      ],
+      "filesOwned": [
+        "preview/e2e/generated-gallery-render-cost.js",
+        "preview/src/interior-exterior-culling.js",
+        "preview/src/main.js",
+        "preview/tests/interior-exterior-culling.test.js",
+        "docs/superpowers/plans/2026-10-14-procedural-pilot-frame-performance.md"
+      ]
     }
   ]
 }

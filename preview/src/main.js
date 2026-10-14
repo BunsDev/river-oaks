@@ -32,6 +32,7 @@ import { buildDistrictBuildings, buildDistrictDetail } from './district.js';
 import { buildDistrictFantasy } from './district-fantasy.js';
 import { buildStorePeople } from './store-people.js';
 import { createGeneratedInteriorStream } from './generated-interior-stream.js';
+import { canCullExterior, renderWithoutExterior } from './interior-exterior-culling.js';
 import { sharedRoomSummary } from './shared-population.js';
 import { storeRoomsFor } from './store-rooms.js';
 import { attachDistrictGalleryPlan } from './district-interior-contract.js';
@@ -888,7 +889,12 @@ function render(now) {
   if (officeUI?.active || !softwareAcceptance || now - lastSoftwareDraw >= 1000) {
     lastSoftwareDraw = now;
     renderer.info.reset();
-    if(!officeUI?.update(now,delta))pipeline.render(delta);
+    if (!officeUI?.update(now, delta)) {
+      const currentRoom = buildingMesh?.userData.generatedRooms?.find(room => room.planId === self?.levelId);
+      if (generatedInteriors?.readyFor(self?.levelId) && canCullExterior(camera, currentRoom))
+        renderWithoutExterior(worldGroup, interiorsLayer, () => pipeline.render(delta));
+      else pipeline.render(delta);
+    }
     photoMode?.afterRender();
     if (pendingCapture) { const capture = pendingCapture; pendingCapture = null; capture(renderer.domElement); }
   }
@@ -1026,6 +1032,16 @@ document.addEventListener('keydown', event => {
 window.addEventListener('river-oaks:debug', event => void openDebugTools(event.detail?.open));
 window.__riverDebug = () => debugTools;
 if (import.meta.env.DEV) window.__riverGeneratedInteriors = () => generatedInteriors?.debug() ?? [];
+if (import.meta.env.DEV) window.__riverExteriorCull = () => {
+  const self = multiplayer?.snapshot?.players.find(player => player.id === multiplayer.identity?.id);
+  const room = buildingMesh?.userData.generatedRooms?.find(item => item.planId === self?.levelId);
+  return { camera: camera.position.toArray(), player: self?.position, levelId: self?.levelId,
+    room: room && { floor: room.floor, height: room.height, local: room.toLocal(camera.position.x, -camera.position.z) },
+    direction: camera.getWorldDirection(new THREE.Vector3()).toArray(),
+    front: room && [room.aMin, room.aMax].map(a => { const [east, north] = room.toWorld(a, 0);
+      return new THREE.Vector3(east, room.floor + room.height / 2, -north).project(camera).toArray(); }),
+    cull: canCullExterior(camera, room) };
+};
 // Read-only bird cam state for development and browser acceptance runs.
 // Each bird also reports how it appears in the current view: inside the frame,
 // unobstructed by buildings, and its wingspan in CSS pixels.
