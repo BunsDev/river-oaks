@@ -17,7 +17,8 @@ import { resolveSeat, seatYaw, SEAT_REACH } from '../preview/src/shared-seating.
 import { WATER_REACH, WATER_MS, benchSeats, boutiquePlanters, buildPlanters, headingTo, lanePlanters, resolveBenchSeat } from '../preview/src/world-interactions.js';
 import { plazaSalonRack } from '../preview/src/plaza-salon-plan.js';
 import { objectCollider, blocksPlayer, blocksResident } from '../preview/src/creator-object.js';
-import { plazaSalonPlan } from '../preview/src/plaza-salon-plan.js';
+import { cafeSeat, plazaSalonPlan } from '../preview/src/plaza-salon-plan.js';
+import { createCafeGames } from './cafe-games.js';
 import { isJevicaAdmin } from './admin.js';
 import { accountName } from '../preview/src/resident-names.js';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, validateWorldId } from '../preview/src/world-contract.js';
@@ -73,7 +74,7 @@ function decodeCheckpoint(json) {
 
 // The transport authenticates identities. Only this object advances the town;
 // client messages contain player intent, never resident state or elapsed time.
-export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, sharedPopulation = true, isAdmin = isJevicaAdmin, worldId = DEFAULT_WORLD_ID } = {}) {
+export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, sharedPopulation = true, isAdmin = isJevicaAdmin, worldId = DEFAULT_WORLD_ID, random } = {}) {
   validateWorldId(worldId);
   const colliders=[],placementEnvironment=createWalkingEnvironment(worldData);
   const environment = createWalkingEnvironment(worldData,colliders);
@@ -115,6 +116,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   const offices=createOffices({worldData,players,isAdmin,environment,changed:()=>revision++,cancel:id=>{interactions.cancel(id);focus.delete(id);}});
   // Shared games at the plaza chess tables (table-games.js): the town holds each table's game.
   const tableGames=createTableGames({players,tableIds:plazaSalonPlan(worldData)?.chess.map(table=>table.id)??[],changed:()=>revision++});
+  // The café round table's shared dominoes: hidden hands stay here and in the checkpoint.
+  const cafeGames=createCafeGames({players,changed:()=>revision++,now,...(random?{random}:{})});
   const publicPlayer = player => ({office:offices.publicVisit(player.id),interaction:interactions.publicFor(player),id:player.id,name:accountName(player.id,player.name),appearance:player.appearance,movement:movementOf(player),gesture:interactions.publicFor(player)?.kind??(player.gestureUntil>now()?player.gesture:null)??(player.performing?'perform':null),performing:Boolean(player.performing),canBuild:Boolean(isAdmin(player.id)),canGrantWishes:Boolean(isAdmin(player.id)),vehicle:player.vehicle??null,sitting:publicSeat(player),position:[...player.position],yaw:player.yaw,altitude:player.altitude,buildingId:player.buildingId??null,levelId:player.levelId??null,voice:{space:voiceSpaceOf(player.id),id:voiceIdentities.get(player.id)??null}});
   // Seats are Jevica's garden seats and lounge chairs, and the two places on
   // every storefront bench ('bench:<store>', slots 0 and 1).
@@ -677,7 +680,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       return message.action==='take'?takeStage(player,time):leaveStage(player,time);
     }
     if(message.type==='tableGame') {
-      const reply=tableGames.command(player,message,time);
+      const reply=(cafeSeat(player.sitting?.buildId)?cafeGames:tableGames).command(player,message,time);
       return reply.ok?{...reply,player:publicPlayer(player)}:reply;
     }
     if(message.type==='interaction' && player.performing)return reject('performing','Leave the stage first.');
@@ -871,7 +874,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if (!Number.isFinite(delta) || delta<=0) return;
     const duration=Math.min(delta,0.25),time=now();
     clearExpiredLedgers(time);
-    tableGames.prune();
+    tableGames.prune();cafeGames.prune();
     for (const [id,hold] of focus) if (hold.until<=time || !reachable(players.get(id),localById.get(hold.localId))) focus.delete(id);
     const held=new Set([...focus.values()].map(hold=>hold.localId));
     for (const local of state.locals) {
@@ -891,7 +894,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     const social=interactions.snapshot();
     const community={};
     for (const key of ['status','running','elapsed','target','supported','unmet','supplies','helpBudget','jobs','events','scenarioKey','generation','result','storm','resupplied']) community[key]=copy(state[key]);
-    return {type:'snapshot',interactions:social,worldId,protocolVersion:WORLD_PROTOCOL_VERSION,revision,elapsed,cycling:{taken:takenSlots()},tables:tableGames.snapshot(),players:[...players.values()].map(publicPlayer),
+    return {type:'snapshot',interactions:social,worldId,protocolVersion:WORLD_PROTOCOL_VERSION,revision,elapsed,cycling:{taken:takenSlots()},tables:[...tableGames.snapshot(),...cafeGames.snapshot()],players:[...players.values()].map(publicPlayer),
       chat:copy(chat).map(entry=>({...entry,authorName:accountName(entry.authorId,entry.authorName)})),
       builds:copy([...builds.values()]).map(item=>({...item,ownerName:accountName(item.ownerId,item.ownerName)})),wishes:copy(state.wishes),community,
       locals:state.locals.map(local=>({id:local.id,name:local.name,position:[...local.position],indoor:!!local.indoor,storeId:local.storeId??null,
@@ -905,8 +908,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   function checkpoint() {
     if (life?.planning) throw new Error('Cannot checkpoint an unfinished route search');
     interactions.prune();
-    tableGames.prune();
-    const payload=JSON.parse(checkpointJSON({offices:offices.checkpoint(),tableGames:tableGames.checkpoint(),revision,elapsed,state,interactions:interactions.snapshot(),players:[...players.values()].map(player=>{
+    tableGames.prune();cafeGames.prune();
+    const payload=JSON.parse(checkpointJSON({offices:offices.checkpoint(),tableGames:tableGames.checkpoint(),cafeGames:cafeGames.checkpoint(),revision,elapsed,state,interactions:interactions.snapshot(),players:[...players.values()].map(player=>{
       if(!player.performing)return player;
       const {performing,...rest}=player;
       return {...rest,position:stageStepDown(player)??performing.from};
@@ -1041,6 +1044,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       const nextOffices=offices.validate(recovered.offices,nextPlayers);
       // Older checkpoints have no table games: they restore with none.
       const nextTables=tableGames.validate(recovered.tableGames??[]);
+      const nextCafe=cafeGames.validate(recovered.cafeGames??[]);
       const recoveredEnvironment=createWalkingEnvironment(worldData,[...nextBuilds.values()].map(objectCollider).filter(Boolean));
       const recoveredUpperEnvironments=new Map();
       const recoveredEnvironmentFor=levelId=>{
@@ -1174,6 +1178,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       localById.clear();for (const local of state.locals) localById.set(local.id,local);
       offices.load(nextOffices);
       tableGames.load(nextTables);
+      cafeGames.load(nextCafe);
       interactions.restore(nextInteractions);
       life=nextLife;revision=recovered.revision;elapsed=recovered.elapsed;voiceIdentities.clear();
       return {ok:true};
@@ -1186,6 +1191,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   function reset() {
     interactions.clear();
     tableGames.clear();
+    cafeGames.clear();
     const fresh=createCommunity(worldData,environment.rooms,{carriage:false,sharedPopulation});
     fresh.generation=state.generation+1;
     Object.assign(state,fresh);localById.clear();
