@@ -5965,17 +5965,17 @@
     {
       "id": "procedural-interior-ring-validity",
       "title": "Reject self-touching and doubled-back building footprints before generating interiors",
-      "status": "delivered",
+      "status": "retired",
       "branches": [
         "fix/procedural-interior-ring-validity-20261014"
       ],
       "owner": null,
-      "updatedAt": "2026-10-14T22:14:53.777Z",
+      "updatedAt": "2026-10-14T22:18:29.648Z",
       "leaseUntil": null,
       "previousOwner": "codex-root-20261014-ring-validity",
       "pr": 355,
       "handoff": "PR #355 merged to main as 46c44df7e45f0b73363a66734be6f14978b2d6a7 from signed head b9326cbadadb0aa5be58c5f00ed3c39570fd84e6. Exact-head aggregate preview and all 16 hosted checks green; integrated focused 11/11, browser/Node parity and core passed; earlier isolated-Redis full passed.",
-      "nextAction": "Delivered. Retire local branch/worktree with project:prune after dry-run and exact-head proof. Continue #356 stack.",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "ledger": "docs/superpowers/plans/2026-10-14-procedural-interior-ring-validity.md",
       "requiredChecks": [
         "Focused generator regression for self-touching and overlapping edges",
@@ -5996,21 +5996,39 @@
           "merge": "46c44df7e45f0b73363a66734be6f14978b2d6a7",
           "checks": "Exact-head aggregate preview and all 16 hosted checks green; integrated focused 11/11, browser/Node plan parity and core passed."
         }
-      ]
+      ],
+      "retirement": {
+        "head": "b9326cbadadb0aa5be58c5f00ed3c39570fd84e6",
+        "releasedAt": "2026-10-14T22:17:47.751Z",
+        "sessionsReviewedAt": "2026-10-14T22:17:47.751Z",
+        "note": "Session aa2272b7: lsof shows no process cwd in the worktree; evidence archived at ~/worktree-backups/river-oaks/local-evidence-ring-validity-20261014/manifest.json before removing regenerable caches"
+      },
+      "retiredBranches": [
+        "fix/procedural-interior-ring-validity-20261014"
+      ],
+      "archive": {
+        "fix/procedural-interior-ring-validity-20261014": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-SSaIs2/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-SSaIs2/history.bundle",
+          "sha256": "ffc7d577b7d0fa89d4e8bf6a59204d5eff0c877cbab526a914f3d849df5f0fae",
+          "tag": "refs/tags/archive/worktree-prune/ef2ad6f9-b9d7-44b1-aaa5-8fd0f3636002",
+          "head": "b9326cbadadb0aa5be58c5f00ed3c39570fd84e6"
+        }
+      }
     },
     {
       "id": "procedural-gallery-ao-buffer",
       "title": "Measure gallery AO geometry costs and test frame pacing fixes",
-      "status": "active",
+      "status": "delivered",
       "branches": [
         "perf/procedural-gallery-ao-buffer-20261014"
       ],
-      "owner": "codex-root-20261014-procedural-landing",
-      "updatedAt": "2026-10-14T22:05:20.182Z",
-      "leaseUntil": "2026-10-15T00:05:20.182Z",
+      "owner": null,
+      "updatedAt": "2026-10-14T22:29:22.952Z",
+      "leaseUntil": null,
       "previousOwner": "codex-root-20261014-ao-pass-timing",
-      "handoff": "Draft PR #356 signed/pushed at c2e8f27b0f8b22339370129b28c4a658f6ec6d6a. Two named three-cycle AO timing journeys and core passed; isolated-Redis full passed on earlier diagnostic source. All ten exact-head hosted checks, including aggregate preview, now pass. AO GPU timer rises on revisits, but one revisit remained smooth; no causal fix claimed. Worktree clean.",
-      "nextAction": "After #355 lands, merge current main into #356, reconcile task register, run focused/core and named AO geometry browser diagnostic, sign/push, wait for exact-hosted checks, then land.",
+      "handoff": "PR #356 merged to main as f171d7112651d45d61259c830d4d37b8ed9be717 from signed head 9d02655924cee3fd1b6c3e224201f9229a81349a. Exact-head aggregate preview and all 16 hosted checks green; integrated opt-in AO geometry journey and core passed; earlier isolated-Redis full passed. Diagnostic only; no production render path change.",
+      "nextAction": "Delivered. Retire local branch/worktree after project:prune dry-run and exact-head proof. Continue #357 stack.",
       "ledger": "docs/superpowers/plans/2026-10-14-procedural-gallery-ao-buffer.md",
       "requiredChecks": [
         "Paired five-cycle moving gallery measurements at fixed Sharpest quality",
@@ -6028,7 +6046,45 @@
         "docs/superpowers/plans/README.md",
         "preview/e2e/generated-gallery-render-cost.js"
       ],
-      "pr": 356
+      "pr": 356,
+      "evidence": [
+        {
+          "pr": 356,
+          "reviewedHead": "9d02655924cee3fd1b6c3e224201f9229a81349a",
+          "merge": "f171d7112651d45d61259c830d4d37b8ed9be717",
+          "checks": "Exact-head aggregate preview and all 16 hosted checks green; integrated opt-in AO geometry journey and core passed."
+        }
+      ]
+    },
+    {
+      "id": "procedural-creator-interior-docs",
+      "title": "Document generated creator-region interiors and stabilize creator acceptance",
+      "status": "active",
+      "branches": [
+        "docs/procedural-creator-interiors-20261014"
+      ],
+      "owner": "codex-root-20261014-procedural-landing",
+      "updatedAt": "2026-10-14T22:19:18.700Z",
+      "leaseUntil": "2026-10-15T00:19:18.700Z",
+      "nextAction": "After #356 lands, merge current main into #357, reconcile task register, run focused/core and creator journey, sign/push, await exact-hosted checks and land.",
+      "ledger": "docs/superpowers/plans/2026-10-14-procedural-creator-interior-docs.md",
+      "requiredChecks": [
+        "Contract comparison against generator and server compiler",
+        "pnpm run plans:index",
+        "pnpm run test:agent",
+        "pnpm run verify before commit",
+        "Exact-head hosted checks before delivery",
+        "Focused creator-objects shared journey after retry fix"
+      ],
+      "filesOwned": [
+        "docs/creator-regions.md",
+        "docs/superpowers/plans/2026-10-14-procedural-creator-interior-docs.md",
+        "docs/superpowers/plans/README.md",
+        "preview/e2e/creator-objects.js"
+      ],
+      "previousOwner": "codex-root-20261014-creator-docs",
+      "handoff": "Draft PR #357 is open on #356 at signed/pushed head 07f44c61cefb6c13961b8a853789d8603634221b. Bounded creator-objects retry follows prior resident-occupied failure; local shared 17/17, test:agent 76/76, core and diff checks passed. Hosted run 38547235258 passed all ten exact-head checks including worlds-and-creator, required shared and aggregate preview. Worktree clean. No merge or target-device/human acceptance claimed.",
+      "pr": 357
     },
     {
       "id": "local-prune-20261013",
@@ -8591,36 +8647,6 @@
       ],
       "previousOwner": "codex-root-20261014-ao-sampling",
       "handoff": "Signed/pushed evidence-only head 05ddd067201f414a6fb1126162fbc03cc847b7d9 on perf/procedural-gallery-ao-sampling-20261014. Five-cycle 10/8 baseline and 6/4 trial both passed route checks, but visits 2-5 stayed 33.4ms moving p95 and trial had more >25ms intervals plus flatter contact shading. Runtime edit restored. plans:index, test:agent, and core passed; no runtime PR/full gate claimed. Worktree clean; ignored receipts retained."
-    },
-    {
-      "id": "procedural-creator-interior-docs",
-      "title": "Document generated creator-region interiors and stabilize creator acceptance",
-      "status": "queued",
-      "branches": [
-        "docs/procedural-creator-interiors-20261014"
-      ],
-      "owner": null,
-      "updatedAt": "2026-10-14T10:15:32.000Z",
-      "leaseUntil": null,
-      "nextAction": "Review draft PR #357 with the #349-#356 stack and preserve this clean worktree until delivery. Broader archetypes still need target-device frame timing and human gallery visual acceptance; do not merge without authorization.",
-      "ledger": "docs/superpowers/plans/2026-10-14-procedural-creator-interior-docs.md",
-      "requiredChecks": [
-        "Contract comparison against generator and server compiler",
-        "pnpm run plans:index",
-        "pnpm run test:agent",
-        "pnpm run verify before commit",
-        "Exact-head hosted checks before delivery",
-        "Focused creator-objects shared journey after retry fix"
-      ],
-      "filesOwned": [
-        "docs/creator-regions.md",
-        "docs/superpowers/plans/2026-10-14-procedural-creator-interior-docs.md",
-        "docs/superpowers/plans/README.md",
-        "preview/e2e/creator-objects.js"
-      ],
-      "previousOwner": "codex-root-20261014-creator-docs",
-      "handoff": "Draft PR #357 is open on #356 at signed/pushed head 07f44c61cefb6c13961b8a853789d8603634221b. Bounded creator-objects retry follows prior resident-occupied failure; local shared 17/17, test:agent 76/76, core and diff checks passed. Hosted run 38547235258 passed all ten exact-head checks including worlds-and-creator, required shared and aggregate preview. Worktree clean. No merge or target-device/human acceptance claimed.",
-      "pr": 357
     },
     {
       "id": "procedural-gallery-ao-exterior-mask",
