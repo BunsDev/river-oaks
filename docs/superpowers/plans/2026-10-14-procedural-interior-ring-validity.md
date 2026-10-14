@@ -24,3 +24,7 @@ Add a focused behavioral regression for the doubled-back ring and a nonadjacent 
 ## Next action
 
 Wait for exact-head hosted checks on draft PR #355, then release task ownership while retaining the clean review worktree. The overall goal still awaits target-device and human visual acceptance before broader rollout.
+
+## Main integration, 2026-10-14
+
+PR #354 landed as `d8b9292723c9e3ae95422c4e6e30f77bc0aa48c5`. Merged current main into this branch without conflicts and reconciled the live task register rows for #353–#355. The focused ring/level/stream tests passed 11/11, browser and Node produced identical two-level plans, and `TMPDIR=/Volumes/Passport/river-oaks-agent-tmp-contact pnpm run verify` passed the core gate on the integrated tree. The earlier isolated Redis full gate remains evidence for the original #355 head; hosted exact-head checks are required after push.
