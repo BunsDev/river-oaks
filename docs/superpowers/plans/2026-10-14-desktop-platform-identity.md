@@ -61,9 +61,18 @@ Register task `desktop-platform-identity`.
 
 ## Gaps
 
+- **Windows unit tests (acceptance, unproven).** A #370 comment at 19:40Z (from the
+  #371 matrix, run 38625146725) reports 17 of 54 desktop tests failing on
+  `windows-latest` in `package-files.test.js` (path separators),
+  `studio-agent-host.test.js` and `studio-designer-host.test.js` (Unix script
+  fixtures, `spawn EFTYPE`) and `studio-skill-pack.test.js` (FIFO, `O_WRONLY`).
+  #379 does not fix them; the matrix workflow is on `ci/desktop-package-matrix`
+  (#377), so this branch's own checks run only on Linux. Proposed fixes and the
+  rebase-or-wait choice are in the audit comment on #370.
+
 - Windows and Linux packaging are proven by #371, not here.
 - Finder icon check is visual; recorded by hand.
 
 ## Next step
 
-PR #379 open (head e0001d50); comment posted on #370. Awaiting Val's decisions (Linux name, .exe-only Windows lookup, company string, icon art) and review. Do not merge.
+PR #379 open (head 93ca62dd); status and audit comments posted on #370. Awaiting Val's decisions: where the Windows test fixes land (rebase onto #377 or after it), Linux name, .exe-only Windows lookup, company string, icon art. Do not merge.
