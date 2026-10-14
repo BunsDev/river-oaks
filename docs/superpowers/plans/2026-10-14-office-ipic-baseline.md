@@ -50,6 +50,8 @@ Files owned here:
 | `node scripts/office-ipic-reference-index.mjs --write --kit … --scale-review … --loose …` | 147 references, 53 assets at `489a60e4` |
 | `node scripts/office-ipic-reference-index.mjs --check` | 0 problems, 0 drifted |
 | `node --test scripts/tests/office-ipic-references.test.js` | 6 pass, 0 fail, 0 skipped |
+| `RIVER_OAKS_E2E_REPORT=office-ipic-baseline-captures.json pnpm run test:experience office-arrival-visual office-visit` at `7feef523` | both passed; 12 screenshots, Metal ANGLE on Apple M3 Max, 1440 × 1000 |
+| `RIVER_OAKS_E2E_REPORT=office-ipic-baseline-captures-desk.json pnpm run test:experience office-desk` | passed; 4 screenshots |
 | `pnpm run verify` (core) at `489a60e4` + this patch | passed: agent 82/82, preview 3,012 pass / 1 existing skip, server 486 pass / 140 Redis skips (core permits them), desktop 54/54, Python 141 passed; receipt `.runtime/agent/core.json` |
 
 The validator is behavioural: scratch repository and scratch kit fixtures, a
@@ -59,8 +61,11 @@ over-budget proxy, and a later edit to a referenced file (drift, not failure).
 
 ## Gaps and skips
 
-- Baseline captures with avatars, focused office/IPIC check counts, envelope
-  re-measurement and the physical-fit analysis are on the engineering branch.
+- Baseline captures: eight office views O0–O3 with the player avatar on real
+  materials are in `docs/design/office-ipic/captures/` with `receipt.json`
+  (journeys passed at `7feef523`; reports committed under `data/reports/`).
+  Focused office/IPIC check counts, envelope re-measurement and the physical-fit
+  analysis are on the engineering branch (#381). No O4 until a penthouse exists.
 - No kit bytes imported; the public repository would publish generated images
   without recorded approval (decision for Val).
 - No human visual, target-device, native or live-auth evidence. Core verify

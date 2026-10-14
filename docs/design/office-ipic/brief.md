@@ -71,6 +71,13 @@ Since the kit's repository receipts of 2026-10-13, `workplace-room.js` and
 and `package.json` changed (#345 arrival refinement). The kit's conclusions about
 the room, envelope and authority still hold; its office-scene receipt is stale.
 
+Baseline captures with avatars on real materials are in `captures/` with
+`captures/receipt.json`: the `office-arrival-visual`, `office-visit` and
+`office-desk` journeys at `7feef523` on local Chromium with Metal ANGLE
+(1440 × 1000 viewport, Apple M3 Max), eight views mapped to O0–O3 of the camera
+manifest. The IPIC views keep their committed receipts in `docs/ipic-review/`;
+there is no penthouse to capture for O4.
+
 ## Inferred: estimates the current build relies on
 
 - IPIC stacking, adjacencies, floor heights, seat count and accessibility routes

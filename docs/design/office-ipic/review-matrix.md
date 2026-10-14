@@ -34,7 +34,7 @@ are listed here only so the matrix is complete; their numbers are in those files
 | R24 | Handoff briefs C0–C5 and D0–D4 not found | observed absence | Val | `reference-index.json` missing entries | decision 5 |
 | R25 | Open interiors stack #349–#358 owned by other sessions | observed | engineering | PR bodies 2026-10-14 | keep/reuse/avoid recorded in the brief |
 | R26 | Review cameras O1–O4 and T1–T3 frozen with eye, target, FOV, viewport, quality | proposed | engineering | `camera-manifest.json` | not in this branch |
-| R27 | Baseline captures with avatars on real materials | required by #360 | engineering | capture runners | not in this branch |
+| R27 | Baseline captures with avatars on real materials | observed | design | `captures/receipt.json`, journeys passed at `7feef523` | eight office views O0–O3 captured; IPIC keeps `docs/ipic-review`; no O4 yet |
 
 Agreement record for G1: the design side agrees to the observed rows as the
 baseline and to R06 as the single axis convention. Rows R14, R19, R20, R21, R24
