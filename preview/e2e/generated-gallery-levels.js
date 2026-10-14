@@ -10,8 +10,22 @@ async page => {
   await peerContext.addCookies([{ name: 'fixture_session', value: 'bob', url: new URL(page.url()).origin }]);
   const peer = await peerContext.newPage();
   peer.on('pageerror', error => errors.push(error.message));
+  const peerStart = performance.now();
   await peer.goto(page.url());
-  await peer.waitForFunction(() => window.__riverMultiplayer?.().connected);
+  try {
+    await peer.waitForFunction(() => window.__riverMultiplayer?.().connected, null, { timeout: 90000 });
+  } catch (error) {
+    const diagnostic = await peer.evaluate(() => ({
+      connected: window.__riverMultiplayer?.().connected,
+      selfId: window.__riverMultiplayer?.().selfId,
+      worldId: window.__riverMultiplayer?.().snapshot?.worldId,
+      status: document.querySelector('#multiplayer-status')?.textContent,
+      ready: document.querySelector('#canvas-host')?.dataset.playerReady,
+      loading: document.querySelector('#loading')?.textContent,
+    }));
+    throw new Error(`Gallery peer did not connect: ${JSON.stringify(diagnostic)}`, { cause: error });
+  }
+  const peerReadyMs = performance.now() - peerStart;
   const peerSeesLevel = levelId => peer.waitForFunction(({ selfId, levelId }) =>
     window.__riverMultiplayer().snapshot.players.find(item => item.id === selfId)?.levelId === levelId,
   { selfId, levelId });
@@ -90,11 +104,23 @@ async page => {
   await page.reload();
   await page.locator('#loading').waitFor({ state: 'hidden' });
   await page.waitForFunction(() => document.querySelector('#canvas-host')?.dataset.multiplayer === 'joined');
-  await page.waitForFunction(upperId => {
-    const multiplayer = window.__riverMultiplayer();
-    return multiplayer.snapshot.players.find(item => item.id === multiplayer.selfId)?.levelId === upperId
-      && window.__riverCarriage().pose?.levelId === upperId;
-  }, stair.upperId);
+  try {
+    await page.waitForFunction(upperId => {
+      const multiplayer = window.__riverMultiplayer();
+      return multiplayer.snapshot.players.find(item => item.id === multiplayer.selfId)?.levelId === upperId
+        && window.__riverCarriage().pose?.levelId === upperId;
+    }, stair.upperId, { timeout: 60000 });
+  } catch (error) {
+    const diagnostic = await page.evaluate(() => {
+      const multiplayer = window.__riverMultiplayer();
+      return { connected: multiplayer.connected, selfId: multiplayer.selfId,
+        player: multiplayer.snapshot?.players.find(item => item.id === multiplayer.selfId),
+        pose: window.__riverCarriage().pose,
+        status: document.querySelector('#multiplayer-status')?.textContent,
+        ready: document.querySelector('#canvas-host')?.dataset.playerReady };
+    });
+    throw new Error(`Upper-level reload did not recover: ${JSON.stringify(diagnostic)}`, { cause: error });
+  }
   await peerSeesLevel(stair.upperId);
   await page.waitForFunction(() => document.querySelector('#walking-enter')?.textContent?.includes('Go down to ground floor'));
   await page.locator('#canvas-host').focus();
@@ -106,6 +132,6 @@ async page => {
   await peerSeesLevel(stair.groundId);
   await peerContext.close();
   if (errors.length) throw new Error(errors.join('; '));
-  return { passed: true, upperId: stair.upperId, groundId: stair.groundId,
+  return { passed: true, upperId: stair.upperId, groundId: stair.groundId, peerReadyMs,
     scope: 'Two local authenticated clients agree on keyboard ascent, descent, reconnect and reduced motion.' };
 }
