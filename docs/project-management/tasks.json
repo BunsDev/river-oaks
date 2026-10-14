@@ -5303,9 +5303,10 @@
         "fix/procedural-interior-ring-validity-20261014"
       ],
       "owner": "codex-root-20261014-ring-validity",
-      "updatedAt": "2026-10-14T08:13:11Z",
+      "updatedAt": "2026-10-14T08:14:26Z",
       "leaseUntil": "2026-10-14T09:44:56Z",
-      "nextAction": "Core and isolated-Redis full verification passed on the invalid-ring fix. Commit the verified patch and open a draft PR stacked on #354, then wait for exact-head hosted checks.",
+      "pr": 355,
+      "nextAction": "Wait for exact-head hosted checks on draft PR #355, then release the claim and hand off the clean review worktree.",
       "ledger": "docs/superpowers/plans/2026-10-14-procedural-interior-ring-validity.md",
       "requiredChecks": [
         "Focused generator regression for self-touching and overlapping edges",

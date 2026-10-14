@@ -4,6 +4,8 @@ Objective: reject a self-touching or doubled-back building ring before producing
 
 Owner: `codex-root-20261014-ring-validity`. Branch/worktree: `fix/procedural-interior-ring-validity-20261014` in `/Users/buns/Documents/GitHub/BunsDev/river-oaks-ring-validity-20261014`, stacked on draft PR #354 head `3b8ef9d3a19723226795698866f4bdcf49bc7fc4`.
 
+Draft PR #355 carries the signed fix; its initial head was `4634200509de8ff2b3f6d65616fdc9a7cee6baba`. The post-commit signature was `G`, the forbidden co-author check printed nothing, and the worktree was clean before push.
+
 Files owned: `preview/src/building-interiors-plan.js`, `preview/tests/building-interiors-plan.test.js`, this ledger, generated plans index, and this task's branch-register entry. The primary live register was claimed before worktree creation. Unrelated primary edits and worktrees are preserved.
 
 ## Evidence and decision
@@ -21,4 +23,4 @@ Add a focused behavioral regression for the doubled-back ring and a nonadjacent 
 
 ## Next action
 
-Commit the verified patch and open a draft PR stacked on #354. Wait for exact-head hosted checks, then release task ownership while retaining the clean review worktree.
+Wait for exact-head hosted checks on draft PR #355, then release task ownership while retaining the clean review worktree. The overall goal still awaits target-device and human visual acceptance before broader rollout.
