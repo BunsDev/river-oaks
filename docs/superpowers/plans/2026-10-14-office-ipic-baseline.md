@@ -134,8 +134,23 @@ Parked here as the goal asks; the brief carries the same list with context.
    `fix/procedural-private-level-revocation-20261014` (#352, retirement-pdX5dd),
    `perf/procedural-gallery-cycle-soak-20261014` (#353, retirement-0PK3tS),
    `perf/procedural-ao-tail-20261014` (#354, retirement-B68qkm),
-   `fix/procedural-interior-ring-validity-20261014` (#355, retirement-SSaIs2).
-   Count 16 / 16 at 2026-10-14T22:40Z. #355–#358 follow the same path once their owners land and
+   `fix/procedural-interior-ring-validity-20261014` (#355, retirement-SSaIs2),
+   `perf/procedural-gallery-ao-buffer-20261014` (#356, retirement-L1eW58),
+   `docs/procedural-creator-interiors-20261014` (#357, retirement-uT7833),
+   `perf/procedural-gallery-ao-mask-20261014` (#358, retirement-zJskE1).
+   Count 13 / 13 at 2026-10-14T23:05Z (from 25 / 24 at this session's peak).
+   What remains above ten, at 23:05Z: the primary; two #360 packet branches
+   (this one, #380, and river-oaks-dc's #381); seven checkouts with a live owner
+   (#376 release, #377 and #379 desktop, #382 contact shading, #309 iOS, the
+   shared-dominoes sheet, and #349's integration branch, merged but not yet
+   released by its codex landing session, whose lease lapsed at 22:23Z);
+   `fix/rider-performance-contact-20261013` (codex owner, lease expired
+   2026-10-13, dirty worktree); `feat/voice-acceptance-20261013` (blocked task
+   owned by cody); `perf/procedural-gallery-ao-sampling-20261014` (queued, no
+   owner, one commit not on main, so distinct unfinished work). Reaching ten
+   needs three of: #349's owner releasing its branch (then it retires like the
+   rest), #380 and #381 landing, or your yes to cancel the AO-sampling trial
+   branch or reclaim the expired codex rider checkout. #355–#358 follow the same path once their owners land and
    release them; the eleven active checkouts stay with their sessions.
 
 ## Round end (2026-10-14T20:40Z)

@@ -36,6 +36,14 @@ are listed here only so the matrix is complete; their numbers are in those files
 | R26 | Review cameras O1–O4 and T1–T3 frozen with eye, target, FOV, viewport, quality | proposed | engineering | `camera-manifest.json` | not in this branch |
 | R27 | Baseline captures with avatars on real materials | observed | design | `captures/receipt.json`, journeys passed at `7feef523` | eight office views O0–O3 captured; IPIC keeps `docs/ipic-review`; no O4 yet |
 
+Cross-packet check against #381 (read at its head `7c7f7368`, 2026-10-14T23:10Z):
+both halves pin `sourceRevision` `489a60e4`; the contract's `[x, h, -d]` and this
+packet's `(x,d,h) -> [x,h,-d]` are the same convention; the contract's
+`office-penthouse-proposed` place carries exactly the kit's 14 anchor ids (none
+missing, none extra); the five IPIC photo views in `camera-manifest.json` all
+resolve in `assets/ipic/references/manifest.json` and on disk; the camera
+receipts include `docs/ipic-review/review.json`, which this index also lists.
+
 Agreement record for G1: the design side agrees to the observed rows as the
 baseline and to R06 as the single axis convention. Rows R14, R19, R20, R21, R24
 need Val. Rows R15, R16, R26, R27 wait on the engineering packet. No row here
