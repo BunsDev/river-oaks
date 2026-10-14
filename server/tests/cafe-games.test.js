@@ -55,7 +55,7 @@ test('the resident across is invited, the town deals seven tiles each, and nobod
   assert.equal(act('bob', { action: 'accept' }).ok, true);
   const view = round();
   assert.deepEqual([view.kind, view.players, view.sides, view.sizes, view.boneyard, view.version, view.invite], ['dominoes', ['alice', 'bob'], [0, 2], [7, 7], 14, 1, null]);
-  assert.equal(view.line.length, 0);
+  assert.equal(view.line.length, 0); assert.equal(view.lead, null, 'the lead tile stays private until it is played');
   assert.ok(!('hands' in view) && !('hand' in view) && !('seed' in view) && !('moves' in view), 'the snapshot carries no hand, seed or moves');
   assert.equal(JSON.stringify(world.snapshot()).includes('"hands"'), false);
   const alice = hand('alice'), bob = hand('bob');
@@ -67,6 +67,27 @@ test('the resident across is invited, the town deals seven tiles each, and nobod
   assert.deepEqual(hand(view.players[1 - view.turn]).legal, [], 'the other player has no move yet');
   assert.equal(hand('carol').error, 'not_at_table');
   assert.equal(act('alice', { action: 'invite', kind: 'dominoes' }).error, 'game_in_progress');
+  assert.equal(act('alice', { action: 'hand', extra: 1 }).error, 'invalid_table_game');
+  assert.equal(act('alice', { action: 'resign', extra: 1 }).error, 'invalid_table_game');
+});
+
+test('a seated spectator gets no hand, a third resident does not disturb the round, and an invitation can be declined', () => {
+  const f = setup({ seats: { alice: 1, bob: 3 } });
+  assert.equal(f.act('alice', { action: 'invite', kind: 'dominoes' }).ok, true, 'chair 1 invites chair 3');
+  assert.equal(f.act('alice', { action: 'decline' }).ok, true, 'the inviter can cancel');
+  assert.equal(f.round(), null);
+  f.act('alice', { action: 'invite', kind: 'dominoes' }); f.act('bob', { action: 'accept' });
+  f.sit('carol', 'bench:plaza-salon-round-0');
+  assert.equal(f.hand('carol').error, 'no_round', 'a seated spectator has no hand');
+  assert.equal(f.act('carol', { action: 'move', move: 'pass' }).error, 'no_round');
+  assert.equal(f.act('carol', { action: 'invite', kind: 'dominoes' }).error, 'no_opponent', 'nobody sits across from chair 0');
+  f.tick();
+  assert.deepEqual([f.round().players, f.round().sides, f.round().result], [['alice', 'bob'], [1, 3], null], 'the round is untouched');
+  // No tile of either hand reaches the plaza, only the line.
+  const hidden = [...f.hand('alice').hand, ...f.hand('bob').hand].filter(tile => !f.round().line.some(item => item.tile === tile));
+  const frame = JSON.stringify(f.world.snapshot());
+  assert.ok(hidden.length === 14 && hidden.every(tile => !frame.includes(`"${tile}"`)), 'no hand tile is in the snapshot');
+  f.world.reset(); assert.equal(f.round(), null, 'a reset clears the table');
 });
 
 test('plays join the line, a draw keeps the turn and hides the tile, and the version ticks', () => {
@@ -138,7 +159,8 @@ test('leaving the chair mid-round loses it, an invitation lapses when either lea
   f.sit('bob', 'bench:plaza-salon-round-2');
   f.act('alice', { action: 'invite', kind: 'dominoes' }); f.act('bob', { action: 'accept' });
   assert.equal(f.world.leave('bob'), true); f.tick();
-  assert.deepEqual(f.round().result, { winner: 0, reason: 'left the table', left: 'bob' });
+  assert.deepEqual(f.round().result, { winner: 0, reason: 'left the table', left: 'bob', match: true });
+  assert.equal(f.act('alice', { action: 'next' }).error, 'match_over', 'no new round against an empty chair');
   assert.deepEqual(f.hand('alice').hand.length, 7, 'the winner can still look at the hand');
 });
 
@@ -148,17 +170,25 @@ test('a checkpoint restores the hidden round exactly, and a tampered hand is ref
   const leader = f.round().players[f.round().turn];
   f.act(leader, { action: 'move', move: f.hand(leader).legal[0] });
   const saved = f.world.checkpoint();
-  assert.equal(JSON.stringify(f.world.snapshot()).includes(f.hand('alice').hand[0]) && !f.round().line.some(t => t.tile === f.hand('alice').hand[0]), false, 'a hand tile is not in the snapshot');
+  assert.ok(!JSON.stringify(f.world.snapshot()).includes('"seed"') && !JSON.stringify(f.world.snapshot()).includes('"moves"'), 'the snapshot carries no seed or move list');
   const restored = createSharedWorld(data, { now: () => 2_000_000 });
   assert.deepEqual(restored.restore(saved), { ok: true });
   const view = restored.snapshot().tables.find(item => item.id === 'round');
   assert.deepEqual([view.version, view.line.length, view.sizes], [f.round().version, 1, f.round().sizes]);
   assert.deepEqual(restored.command('alice', { type: 'tableGame', action: 'hand' }).hand, f.hand('alice').hand);
-  const tampered = JSON.parse(JSON.stringify(saved));
-  tampered.payload.cafeGames[0].round.hands[0][0] = '6-6';
-  let reason = null;
-  assert.equal(createSharedWorld(data, { now: () => 2_000_000 }).restore(resign(tampered), { onFailure: r => { reason = r; } }).ok, false);
-  assert.equal(reason, 'invalid_cafe_game');
+  const refuse = (mutate, label) => {
+    const tampered = JSON.parse(JSON.stringify(saved)); mutate(tampered.payload.cafeGames[0]);
+    let reason = null;
+    assert.equal(createSharedWorld(data, { now: () => 2_000_000 }).restore(resign(tampered), { onFailure: r => { reason = r; } }).ok, false, label);
+    assert.equal(reason, 'invalid_cafe_game', label);
+  };
+  refuse(item => { item.round.hands[0][0] = '6-6'; }, 'a tampered hand');
+  refuse(item => { item.round.seed += 1; }, 'a seed that does not replay');
+  refuse(item => { item.seats = [0, 1]; }, 'seats that are not across');
+  refuse(item => { item.scores = [-1, 0]; }, 'a negative score');
+  refuse(item => { item.version = 1e10; }, 'an oversize version');
+  refuse(item => { item.last = { player: 0, kind: 'draw' }; }, 'a last move that does not match the moves');
+  refuse(item => { item.result = { winner: 0, reason: 'domino', points: 9 }; }, 'a result the round did not reach');
 });
 
 test('a chess-table sender still reaches the chess module, and the café refuses chess actions', () => {

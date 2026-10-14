@@ -24,24 +24,24 @@ export function createCafeGames({ players, changed = () => {}, now = Date.now, r
   const seatOf = player => player?.sitting ? cafeSeat(player.sitting.buildId) : null;
   const occupant = chair => [...players.values()].find(player => seatOf(player)?.chair === chair) ?? null;
   const playing = () => Boolean(table?.round && !table.result);
-  const lastMove = () => {
-    const text = table.moves.at(-1); if (!text) return null;
-    const { played } = replay(table.round.seed, 2, table.moves), move = played.at(-1);
-    return move.kind === 'play' ? { player: move.player, kind: 'play', tile: move.tile, end: move.end } : { player: move.player, kind: move.kind };
-  };
+  // The last move as the plaza may see it: a draw names no tile. Kept on the table
+  // (and validated on restore) so a snapshot never replays the round.
+  const publicMove = (player, move) => move.kind === 'play' ? { player, kind: 'play', tile: move.tile, end: move.end } : { player, kind: move.kind };
   // What the whole plaza may see: never a hand, the seed or the move list.
   const view = () => {
     const { round } = table;
     return {
       id: TABLE_ID, kind: table.kind, players: [...table.players], sides: [...table.seats], invite: table.invite ? { ...table.invite } : null,
-      turn: round?.turn ?? null, line: round ? round.line.map(tile => ({ ...tile })) : [], lead: round?.lead ?? null,
+      // The lead tile is a hand tile until it is played: publish it only once it is on the line.
+      turn: round?.turn ?? null, line: round ? round.line.map(tile => ({ ...tile })) : [], lead: round?.line.length ? round.lead : null,
       leadIndex: round ? Math.max(0, round.line.findIndex(tile => tile.tile === round.lead)) : 0,
       sizes: round ? round.hands.map(hand => hand.length) : [0, 0], boneyard: round?.boneyard.length ?? 0, passes: round?.passes ?? 0,
-      lastMove: round ? lastMove() : null, result: plain(table.result), scores: [...table.scores], version: table.version,
+      lastMove: plain(table.last), result: plain(table.result), scores: [...table.scores], version: table.version,
     };
   };
   const bump = () => { table.version += 1; changed(); };
-  const deal = time => { table.round = startRound(random(), 2); table.moves = []; table.result = null; table.startedAt = time; };
+  const seed = () => { const value = random(); if (!Number.isInteger(value) || value < 0) throw new Error('Invalid cafe seed'); return value; };
+  const deal = time => { table.round = startRound(seed(), 2); table.moves = []; table.last = null; table.result = null; table.startedAt = time; };
   const settle = () => {
     const over = table.round.over; if (!over) return;
     if (over.winner !== null) table.scores[over.winner] += over.points;
@@ -57,7 +57,7 @@ export function createCafeGames({ players, changed = () => {}, now = Date.now, r
     if (invite && (occupant(invite.chair)?.id !== invite.from || occupant(across(invite.chair))?.id !== invite.to)) { table.invite = null; touched = true; }
     if (table.kind && !table.result) {
       const gone = table.seats.findIndex((chair, index) => occupant(chair)?.id !== table.players[index]);
-      if (gone >= 0) { table.result = { winner: 1 - gone, reason: 'left the table', left: table.players[gone] }; touched = true; }
+      if (gone >= 0) { table.result = { winner: 1 - gone, reason: 'left the table', left: table.players[gone], match: true }; touched = true; }
     }
     if (table.kind && table.result && table.seats.every((chair, index) => occupant(chair)?.id !== table.players[index])) { table = null; changed(); return; }
     if (!table.kind && !table.invite) { table = null; changed(); return; }
@@ -77,7 +77,7 @@ export function createCafeGames({ players, changed = () => {}, now = Date.now, r
         if (!opponent) return reject('no_opponent', 'Nobody is sitting across from you.');
         if (playing()) return reject('game_in_progress', 'Finish or resign this round first.');
         if (table?.invite) return reject('invite_pending', 'An invitation is already open at this table.');
-        table = { id: TABLE_ID, kind: null, seats: [null, null], players: [null, null], invite: { from: player.id, to: opponent.id, chair: seat.chair, kind: 'dominoes', at: time }, round: null, moves: [], scores: [0, 0], version: table?.version ?? 0, result: null, startedAt: null };
+        table = { id: TABLE_ID, kind: null, seats: [null, null], players: [null, null], invite: { from: player.id, to: opponent.id, chair: seat.chair, kind: 'dominoes', at: time }, round: null, moves: [], last: null, scores: [0, 0], version: table?.version ?? 0, result: null, startedAt: null };
         bump(); return { ok: true, table: view() };
       }
       case 'accept': {
@@ -108,7 +108,7 @@ export function createCafeGames({ players, changed = () => {}, now = Date.now, r
         const move = findMove(table.round, message.move);
         if (!move) return reject('illegal_move', 'That move is not allowed.');
         if (table.moves.length >= MAX_ROUND_MOVES) return reject('illegal_move', 'This round has gone on too long.');
-        table.round = makeMove(table.round, move); table.moves.push(message.move); settle(); bump();
+        table.last = publicMove(index, move); table.round = makeMove(table.round, move); table.moves.push(message.move); settle(); bump();
         return { ok: true, table: view() };
       }
       case 'resign': {
@@ -138,7 +138,7 @@ export function createCafeGames({ players, changed = () => {}, now = Date.now, r
     const item = saved[0];
     const id = value => value === null || (typeof value === 'string' && value.length > 0 && value.length <= 128);
     const chair = value => value === null || [0, 1, 2, 3].includes(value);
-    if (!record(item) || !only(item, ['id', 'kind', 'seats', 'players', 'invite', 'round', 'moves', 'scores', 'version', 'result', 'startedAt'])
+    if (!record(item) || !only(item, ['id', 'kind', 'seats', 'players', 'invite', 'round', 'moves', 'last', 'scores', 'version', 'result', 'startedAt'])
       || item.id !== TABLE_ID || ![null, 'dominoes'].includes(item.kind) || !Array.isArray(item.seats) || item.seats.length !== 2 || !item.seats.every(chair)
       || !Array.isArray(item.players) || item.players.length !== 2 || !item.players.every(id) || !Array.isArray(item.scores) || item.scores.length !== 2
       || !item.scores.every(score => Number.isInteger(score) && score >= 0 && score <= 10000) || !Number.isInteger(item.version) || item.version < 0 || item.version > 1e9
@@ -146,10 +146,18 @@ export function createCafeGames({ players, changed = () => {}, now = Date.now, r
     if (item.kind === 'dominoes') {
       if (!item.players.every(Boolean) || !item.seats.every(value => value !== null) || item.seats[1] !== across(item.seats[0]) || !record(item.round)) throw new Error('Invalid cafe game');
       if (!Number.isInteger(item.round.seed) || item.round.seed < 0) throw new Error('Invalid cafe game');
-      let state; try { state = replay(item.round.seed, 2, item.moves).state; } catch { throw new Error('Invalid cafe game'); }
+      let state, played; try { ({ state, played } = replay(item.round.seed, 2, item.moves)); } catch { throw new Error('Invalid cafe game'); }
       if (JSON.stringify(state) !== JSON.stringify(item.round)) throw new Error('Invalid cafe game');
-      if (item.result !== null && (!record(item.result) || typeof item.result.reason !== 'string' || ![null, 0, 1].includes(item.result.winner ?? null))) throw new Error('Invalid cafe game');
-    } else if (item.round !== null || item.moves.length || item.result !== null || item.players.some(Boolean)) throw new Error('Invalid cafe game');
+      const last = played.length ? publicMove(played.at(-1).player, played.at(-1)) : null;
+      if (JSON.stringify(item.last ?? null) !== JSON.stringify(last)) throw new Error('Invalid cafe game');
+      // The result follows the round: a finished round carries its outcome; an open one ends only by resigning or leaving.
+      const result = item.result;
+      if (result !== null && (!record(result) || !only(result, ['winner', 'reason', 'points', 'match', 'resigned', 'left']) || typeof result.reason !== 'string'
+        || ![null, 0, 1].includes(result.winner ?? null) || (result.match !== undefined && result.match !== true))) throw new Error('Invalid cafe game');
+      if (state.over) {
+        if (!result || result.winner !== state.over.winner || result.reason !== state.over.reason || result.points !== state.over.points) throw new Error('Invalid cafe game');
+      } else if (result !== null && !['resigned', 'left the table'].includes(result.reason)) throw new Error('Invalid cafe game');
+    } else if (item.round !== null || item.moves.length || (item.last ?? null) !== null || item.result !== null || item.players.some(Boolean)) throw new Error('Invalid cafe game');
     if (item.invite !== null) {
       const invite = item.invite;
       if (!record(invite) || !only(invite, ['from', 'to', 'chair', 'kind', 'at']) || !id(invite.from) || !id(invite.to) || !invite.from || !invite.to
