@@ -94,6 +94,15 @@ Parked here as the goal asks; the brief carries the same list with context.
    `project:cancel` of the local checkouts of drafts #351–#358 once their tips are
    confirmed pushed (the PRs stay reviewable from origin), or accept the cap as a
    target for after those drafts land or close. Nothing is cancelled without that.
+   Concrete candidates at 2026-10-14T20:50Z (inventory r3, 23 / 23):
+   `feat/procedural-gallery-route-20261014` is now zero-commit, its tip
+   `f0a55434` is on `main` through #349's integration merge, its task
+   `procedural-gallery-vertical-route` is queued with no owner and no PR of its
+   own; `project:prune` refuses it (no exact merged PR head) and `project:cancel`
+   needs a stated staleness window, so it needs an explicit yes.
+   `perf/procedural-gallery-ao-sampling-20261014` (trial outcome recorded, no PR,
+   queued, no owner) and `feat/voice-acceptance-20261013` (blocked task owned by
+   cody) are distinct unfinished work and need their owners or you.
 
 ## Round end (2026-10-14T20:40Z)
 
