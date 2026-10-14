@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { join, normalize, dirname } from 'node:path';
+import { join, posix } from 'node:path';
 import { DESKTOP_FILES, DESKTOP_SHARED_FILES } from '../package-files.js';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
@@ -21,7 +21,9 @@ test('the packaged app includes every desktop module main.js loads', async () =>
     const source = await readFile(join(root, file), 'utf8');
     assert.doesNotMatch(source, COMPUTED, `${file} uses a computed import the package check cannot follow`);
     for (const [, specifier] of source.matchAll(SPECIFIERS)) {
-      const target = normalize(join(dirname(file), specifier));
+      // Staged paths and import specifiers both use '/'. path.posix keeps them that way
+      // on Windows, where path.join would produce backslashes the staged set never holds.
+      const target = posix.normalize(posix.join(posix.dirname(file), specifier));
       if (/\.(c?js)$/.test(target)) queue.push(target);
     }
   }

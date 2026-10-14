@@ -5,13 +5,14 @@ import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 import { createStudioAgentHost, createStreamReader, resolveExecutable, extraExecutableDirs } from '../studio-agent-host.js';
 import { STUDIO_AGENT_GUIDE } from '../studio-agent-guide.js';
+import { runFixtureCommand } from './fixture-command.js';
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const cli = join(root, 'desktop/tests/fixtures/studio-agent-cli.mjs');
 async function fixture(t, { mode = 'ok', confirm = async () => true, env: extra = {}, ...options } = {}) {
   await mkdir(join(root, '.runtime/tmp'), { recursive: true });
   const path = await mkdtemp(join(root, '.runtime/tmp/agent-')), log = join(path, 'argv.jsonl');
   const env = { PATH: process.env.PATH, RIVER_OAKS_AGENT_CLAUDE: cli, RIVER_OAKS_AGENT_CODEX: cli, AGENT_FIXTURE_MODE: mode, AGENT_FIXTURE_LOG: log, ...extra };
-  const host = createStudioAgentHost({ root: join(path, 'agent'), env, confirm, ...options });
+  const host = createStudioAgentHost({ root: join(path, 'agent'), env, confirm, execute: runFixtureCommand, ...options });
   t.after(async () => { host.dispose(); await rm(path, { recursive: true, force: true }); });
   return { host, argv: async () => (await readFile(log, 'utf8')).trim().split('\n').map(line => JSON.parse(line)) };
 }
@@ -88,7 +89,9 @@ test('stream reader ignores noise and requires a completed answer', () => {
 });
 
 test('executable lookup searches PATH and extra user install directories', async () => {
-  assert.equal(await resolveExecutable('studio-agent-cli.mjs', { env: { PATH: '' }, extra: [join(root, 'desktop/tests/fixtures')] }), cli);
+  // On this host's own rules: Unix finds the executable fixture script in an extra
+  // directory; Windows refuses it, because only .exe/.com run without a shell.
+  assert.equal(await resolveExecutable('studio-agent-cli.mjs', { env: { PATH: '' }, extra: [join(root, 'desktop/tests/fixtures')] }), process.platform === 'win32' ? null : cli);
   assert.equal(await resolveExecutable('definitely-not-a-cli', { env: { PATH: '' }, extra: [] }), null);
   // Unix appends no extension and keeps the execute-bit check.
   assert.equal(await resolveExecutable('studio-agent-cli', { env: { PATH: '' }, extra: [join(root, 'desktop/tests/fixtures')], platform: 'linux' }), null);
@@ -111,6 +114,7 @@ test('on Windows, lookup follows PATHEXT to a .exe and never returns a .cmd/.bat
   assert.equal(await resolveExecutable('claude', { ...win, env: { PATH: shims } }), null);
   assert.equal(await resolveExecutable('claude', { ...win, env: { PATH: bin } }), join(bin, 'claude.exe'), 'PATHEXT falls back to the default list');
   assert.equal(await resolveExecutable('claude.exe', { ...win, env: { PATH: bin } }), join(bin, 'claude.exe'), 'an explicit extension is kept');
+  assert.equal(await resolveExecutable('claude', { ...win, env: { PATH: '' }, extra: [shims, bin] }), join(bin, 'claude.exe'), 'extra install directories are searched too');
   assert.deepEqual(extraExecutableDirs('win32', 'C:\\Users\\val'), [join('C:\\Users\\val', '.local', 'bin')]);
   // A configured override that points at a shim is refused with a reason, not a generic spawn failure.
   const host = createStudioAgentHost({ root: join(bin, 'agent'), env: { RIVER_OAKS_AGENT_CLAUDE: join(shims, 'claude.cmd'), RIVER_OAKS_AGENT_CODEX: '' }, platform: 'win32', resolve: async () => null, confirm: async () => true });
