@@ -27,4 +27,18 @@ Both runtime and test trial edits were restored. There is **no AO buffer code ch
 
 ## Next action
 
-Investigate which visible objects and geometry calls dominate the AO pass during a moving gallery view. Keep full-resolution AO as the baseline, and do not revive the 0.75 or 0.5 buffer variants without new evidence. Target-device selection and human shading review still gate the broader rollout.
+The follow-up diagnostic `preview/e2e/generated-gallery-ao-geometry.js` instruments `GTAOPass.render` and `renderer.renderBufferDirect` only during three 1.7-second keyboard walks. It records AO geometry calls by named root, the number of frames where the generated-room exterior cull is eligible, and frame intervals. Its first smoke exposed a harness ordering mistake: the Cartier teleport ran before the authoritative outdoor state and travel cooldown settled. The corrected journey waits for both, then passed with `RIVER_OAKS_E2E_REPORT=ao-geometry-three.json pnpm run test:experience generated-gallery-ao-geometry` on local Apple M3 Max / Chromium Metal, 1440 × 900, Sharpest quality and AO enabled.
+
+| Visit | AO calls/frame | Interior calls/frame | Exterior-cull eligible AO frames | Moving p95 | Intervals above 25 ms |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 1 | 446.4 | 170.1 | 6/104 | 16.7 ms | 0 |
+| 2 | 447.3 | 170.1 | 5/92 | 33.4 ms | 11 |
+| 3 | 444.0 | 170.1 | 6/89 | 33.3 ms | 15 |
+
+The other large AO roots were plaza salon (~53–54 calls/frame), unnamed mesh (~49–50), mature urban shade trees (~48), and street furniture (~29). The cull was eligible before and after each walk, but the moving camera exposed the glazed frontage for most intervening frames. Stable calls with worsening intervals reject draw-count growth as the cause of the repeat-visit tail. The diagnostic's per-draw JavaScript instrumentation adds CPU work, so its frame intervals are corroboration of the uninstrumented cycle soak, not a fresh frame budget. The exact receipt is ignored `.runtime/ao-geometry-three.json` in this worktree.
+
+`pnpm run verify` passed on the diagnostic and ledger source (`.runtime/agent/core.json`); this is the core profile, which skips Redis and browser acceptance. After adding explicit AO-on and Sharpest assertions, the named three-cycle journey passed again (`.runtime/ao-geometry-three-final.json`, 47.8 seconds): 449, 447 and 449 AO calls/frame while moving p95 was 16.8, 33.3 and 33.3 ms. A full profile and hosted checks remain delivery gates if the diagnostic is submitted for review.
+
+## Next action
+
+Measure moving AO GPU time versus main-thread time while preserving the frontage-visible route, then test a scoped quality change only if it improves repeated visits without losing useful contact shading. Keep full-resolution AO as the baseline; do not revive the 0.75 or 0.5 buffer variants without new evidence. Target-device selection and human shading review still gate the broader rollout.
