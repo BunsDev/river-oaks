@@ -5378,6 +5378,33 @@
       "previousOwner": "codex-root-20261014-creator-docs",
       "handoff": "Draft PR #357 is open on #356 at signed/pushed head 94875bffa33afe76d4f9ad698eda9a7dc2d335aa. Its exact-head worlds-and-creator shared job failed in creator-objects after a resident occupied a saved-copy placement spot between preview and authoritative click; the other eight jobs passed. A bounded retry is in progress on the existing branch.",
       "pr": 357
+    },
+    {
+      "id": "procedural-gallery-ao-exterior-mask",
+      "title": "Measure an interior-only AO geometry mask for repeated gallery visits",
+      "status": "active",
+      "branches": [
+        "perf/procedural-gallery-ao-mask-20261014"
+      ],
+      "owner": "codex-root-20261014-ao-mask",
+      "updatedAt": "2026-10-14T11:11:25.000Z",
+      "leaseUntil": "2026-10-14T13:11:25.000Z",
+      "nextAction": "Sign and push the verified occupancy-scoped AO mask, open a draft PR stacked on #357, then check exact-head hosted CI.",
+      "ledger": "docs/superpowers/plans/2026-10-14-procedural-gallery-ao-mask.md",
+      "requiredChecks": [
+        "Paired uninstrumented five-cycle moving gallery measurements",
+        "Same-camera AO visual comparison",
+        "Focused render-pipeline visibility restoration tests",
+        "pnpm run verify before commit",
+        "Isolated-Redis full and exact-head hosted checks before delivery"
+      ],
+      "filesOwned": [
+        "preview/src/render-pipeline.js",
+        "preview/src/main.js",
+        "preview/tests/render-pipeline.test.js",
+        "docs/superpowers/plans/2026-10-14-procedural-gallery-ao-mask.md",
+        "docs/superpowers/plans/README.md"
+      ]
     }
   ]
 }

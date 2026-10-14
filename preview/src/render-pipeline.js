@@ -56,6 +56,7 @@ export function createRenderPipeline(renderer, scene, camera, { samples = 4, blo
   occlusion.output = GTAOPass.OUTPUT.Default;
   occlusion.blendIntensity = 1.0;
   const hidden = [], pending = [];
+  let aoExteriorRoot = null, aoInteriorLayer = null;
   occlusion._overrideVisibility = () => {
     // Fold GTAO's line/point exclusion into the foliage/glass pass. Hidden
     // rooms and excluded groups already hide their descendants; do not scan
@@ -64,7 +65,8 @@ export function createRenderPipeline(renderer, scene, camera, { samples = 4, blo
     while(pending.length) {
       const object=pending.pop();
       if(!object.visible)continue;
-      if(isOcclusionExcluded(object)||object.isPoints||object.isLine||object.isLine2) {
+      if((aoExteriorRoot && object.parent === aoExteriorRoot && object !== aoInteriorLayer)
+        || isOcclusionExcluded(object)||object.isPoints||object.isLine||object.isLine2) {
         object.visible=false;hidden.push(object);continue;
       }
       for(const child of object.children)pending.push(child);
@@ -118,8 +120,14 @@ export function createRenderPipeline(renderer, scene, camera, { samples = 4, blo
       renderScale = next; applySize();
     },
     setOcclusion(enabled) { occlusion.enabled = enabled; },
+    // Keep the exterior in the beauty pass while omitting it from interior AO
+    // normals/depth. The geometry hook restores every hidden root afterward.
+    setOcclusionExteriorMask(worldGroup, interiorsLayer) {
+      aoExteriorRoot = worldGroup;
+      aoInteriorLayer = interiorsLayer;
+    },
     get stats() { return { samples: target.samples, ao: occlusion.enabled, bloom: bloom.enabled, renderScale, aoScale: aoResolutionScale(size.width * size.pixelRatio * renderScale, size.height * size.pixelRatio * renderScale), transmissionScale:renderer.transmissionResolutionScale }; },
     render(delta) { if(sized)composeFrame(() => composer.render(delta)); },
-    dispose() { occlusion.dispose(); bloom.dispose(); output.dispose(); render.dispose(); composer.dispose(); },
+    dispose() { aoExteriorRoot = aoInteriorLayer = null; occlusion.dispose(); bloom.dispose(); output.dispose(); render.dispose(); composer.dispose(); },
   };
 }
