@@ -9373,14 +9373,28 @@
     },
     {
       "id": "cancelled-feat-character-studio-20261013",
-      "title": "Archived local feat/character-studio-20261013",
-      "status": "queued",
-      "branches": [],
-      "owner": null,
-      "updatedAt": "2026-10-14T19:54:03.182Z",
-      "nextAction": "Local feat/character-studio-20261013 archived under /Users/buns/worktree-backups/river-oaks/cancel-stale-SwztW4/manifest.json; restore it before resuming this task. Remote PR and branch, if any, remain unchanged.",
-      "filesOwned": [],
-      "requiredChecks": [],
+      "title": "TypeSafe Place Character Studio #440\u2013#444",
+      "status": "active",
+      "branches": [
+        "feat/character-studio-contract-20261015"
+      ],
+      "owner": "codex-character-studio-20261015",
+      "updatedAt": "2026-10-15T20:12:35.519080+00:00",
+      "nextAction": "Review #457 verified #440 contract/baseline. Continue #441 staged reversible editor and #442 compatible authored controls; retain #443 persistence and #444 full acceptance. No merge/deploy authorization.",
+      "filesOwned": [
+        "preview/src/character-definition.js",
+        "preview/tests/character-definition.test.js",
+        "docs/character-studio.md",
+        "docs/superpowers/plans/2026-10-15-character-studio.md",
+        "preview/src/character-assets.js",
+        "preview/src/player-avatar.js",
+        "preview/e2e/character-contract.js"
+      ],
+      "requiredChecks": [
+        "Focused contract and rig tests",
+        "pnpm run verify",
+        "Rendered human/beast fixture inspection"
+      ],
       "cancelledBranches": [
         "feat/character-studio-20261013"
       ],
@@ -9400,6 +9414,16 @@
             }
           ]
         }
+      },
+      "leaseUntil": "2026-10-15T22:03:39.309718+00:00",
+      "ledger": "docs/superpowers/plans/2026-10-15-character-studio.md",
+      "pr": 457,
+      "verification": {
+        "core": "passed; .runtime/agent/core.json; server 153 Redis skips, preview 1 skip/1 todo",
+        "focused": "14/14 contract and beast tests",
+        "browser": "player-forms 139; beast-movement 17; character-contract 4; captures inspected",
+        "review": "independent contract review: no blocking findings",
+        "limitations": "No Redis/full/native/4K/crowd/device/human acceptance; downstream #441\u2013#444 pending"
       }
     },
     {
