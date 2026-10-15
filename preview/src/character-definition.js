@@ -1,3 +1,4 @@
+import { customizedCharacterDefinition } from './character-customization.js';
 import { CHARACTER_ASSETS } from './character-assets.js';
 import { canUseAppearance, permittedAppearance, sharedAppearance } from './shared-appearances.js';
 
@@ -31,9 +32,11 @@ function equal(value, expected) {
 export function validateCharacterDefinition(value, { ownerId } = {}) {
   if (!record(value) || Object.keys(value).length !== fields.length || fields.some(key => !Object.hasOwn(value,key))) return { ok:false, error:'invalid_character_definition' };
   if (!owner(ownerId) || value.ownerId !== ownerId) return { ok:false, error:'character_owner_mismatch' };
-  if (value.schemaVersion !== CHARACTER_SCHEMA_VERSION) return { ok:false, error:'unsupported_character_version' };
+  if (![CHARACTER_SCHEMA_VERSION,2].includes(value.schemaVersion)) return { ok:false, error:'unsupported_character_version' };
   let canonical;
-  try { canonical = characterDefinitionFor(ownerId,value.appearanceId,{revision:value.revision}); }
+  try { canonical = value.schemaVersion===2
+    ? customizedCharacterDefinition(ownerId,value.appearanceId,{revision:value.revision,palette:value.palette,hair:value.hair})
+    : characterDefinitionFor(ownerId,value.appearanceId,{revision:value.revision}); }
   catch { return { ok:false, error:'invalid_character_definition' }; }
   // Legacy aliases are migrated on read, never published as a new identity.
   if (!equal(value,canonical)) return { ok:false, error:'invalid_character_definition' };

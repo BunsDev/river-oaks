@@ -9376,11 +9376,12 @@
       "title": "TypeSafe Place Character Studio #440\u2013#444",
       "status": "active",
       "branches": [
-        "feat/character-studio-contract-20261015"
+        "feat/character-studio-contract-20261015",
+        "feat/character-studio-editor-20261015"
       ],
       "owner": "codex-character-studio-20261015",
-      "updatedAt": "2026-10-15T20:12:35.519080+00:00",
-      "nextAction": "Review #457 verified #440 contract/baseline. Continue #441 staged reversible editor and #442 compatible authored controls; retain #443 persistence and #444 full acceptance. No merge/deploy authorization.",
+      "updatedAt": "2026-10-15T20:51:57.221604+00:00",
+      "nextAction": "Draft editor PR #461 pushed at bf0f8aac, stacked on #457. Finish queued wave capture, then #442 native 4K integration and walk/skirt clipping regression; continue #443 persistence and #444 full acceptance. No merge/deploy authorization.",
       "filesOwned": [
         "preview/src/character-definition.js",
         "preview/tests/character-definition.test.js",
@@ -9388,7 +9389,18 @@
         "docs/superpowers/plans/2026-10-15-character-studio.md",
         "preview/src/character-assets.js",
         "preview/src/player-avatar.js",
-        "preview/e2e/character-contract.js"
+        "preview/e2e/character-contract.js",
+        "preview/src/character-studio*",
+        "preview/src/character-customization.js",
+        "preview/src/reference-archetypes.js",
+        "preview/src/romance-look.js",
+        "preview/src/sable-look.js",
+        "preview/src/main.js",
+        "preview/tests/character-studio.test.js",
+        "preview/e2e/character-studio.js",
+        "preview/tests/character-studio*.test.js",
+        "preview/src/character-portrait.js",
+        "preview/tests/character-portrait.test.js"
       ],
       "requiredChecks": [
         "Focused contract and rig tests",
@@ -9415,15 +9427,15 @@
           ]
         }
       },
-      "leaseUntil": "2026-10-15T22:03:39.309718+00:00",
+      "leaseUntil": "2026-10-15T22:51:57.221604+00:00",
       "ledger": "docs/superpowers/plans/2026-10-15-character-studio.md",
-      "pr": 457,
+      "pr": 461,
       "verification": {
-        "core": "passed; .runtime/agent/core.json; server 153 Redis skips, preview 1 skip/1 todo",
-        "focused": "14/14 contract and beast tests",
-        "browser": "player-forms 139; beast-movement 17; character-contract 4; captures inspected",
-        "review": "independent contract review: no blocking findings",
-        "limitations": "No Redis/full/native/4K/crowd/device/human acceptance; downstream #441\u2013#444 pending"
+        "core": "passed; .runtime/character-studio/editor-core-passed.json; server 153 Redis skips; preview 1 skip/1 todo",
+        "focused": "20 contract/state/material/beast checks, 8 recovery checks, 9 gesture tests; 3 portrait prototype tests (not committed)",
+        "browser": "Editor 21 checks passed; final-source regressions 253 checks passed; fresh wave capture queued; captures inspected with skirt clipping retained as #442 defect",
+        "review": "Independent editor review findings fixed and retested; no remaining blocking lifecycle finding",
+        "limitations": "No full Redis/native/4K/crowd/physical-device/human acceptance; #443 publication not implemented; hosted checks separate"
       }
     },
     {

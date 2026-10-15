@@ -63,6 +63,7 @@ export function createSableLook(avatar, root, appearance) {
     geometry.setIndex(keep);geometry.computeVertexNormals(); mesh.geometry=geometry; geometries.add(geometry); replacements.push([mesh,original]);
     mesh.material.map=null; mesh.material.normalMap=null;
     mesh.material.color.set(name==='young_asian_female'?'#b87948':'#f2e7dc');
+    if(name==='jevica_silk')mesh.material.userData.characterSlot='outfit';
     mesh.material.roughness=name==='young_asian_female'?.88:.58;
     mesh.material.needsUpdate=true;
   });
@@ -96,6 +97,7 @@ export function createSableLook(avatar, root, appearance) {
   }
   const hairMap=new THREE.DataTexture(hairPixels,128,256);hairMap.wrapS=hairMap.wrapT=THREE.RepeatWrapping;hairMap.needsUpdate=true;textures.add(hairMap);
   const hair=material('#9b7353',{roughness:.6,sheen:.75,sheenColor:new THREE.Color('#d9b797'),bumpMap:hairMap,bumpScale:.00065,side:THREE.DoubleSide});
+  hair.userData.characterSlot='hair';
   const crownPositions=[],crownUV=[],crownIndices=[],crownRows=32,crownCols=256;
   for(let row=0;row<=crownRows;row++)for(let col=0;col<=crownCols;col++){
     const a=col/crownCols*Math.PI*2,front=Math.max(0,Math.cos(a));

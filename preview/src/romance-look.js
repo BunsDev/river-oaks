@@ -165,6 +165,8 @@ export function createRomanceLook(avatar,root,appearance) {
   const cloth=new THREE.Color(style.cloth);
   for(const [original,material] of avatar.materials){
     const name=original.name??'';
+    if(character==='sable'&&name==='jevica_silk')material.userData.characterSlot='outfit';
+    if(character==='sable'&&name==='long01')material.userData.characterSlot='hair';
     if(beast&&SKIN.test(name)){
       const skin=beast.skin;
       if(skin.pattern==='lynx'){material.map=lynxCoatTexture();material.color.set('#ffffff');material.bumpMap=furTexture();material.bumpScale=.002;}

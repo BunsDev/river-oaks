@@ -1,6 +1,6 @@
 # Character Studio architecture decision (#440)
 
-Status: implemented contract increment, pending rendered acceptance and review.
+Status: contract in draft PR #457; local Studio editor under verification.
 This is the first increment of #440–#444, not a shipped Studio.
 
 ## Decision and evidence
@@ -60,6 +60,24 @@ CAS conflicts and rollback tests in both memory and Redis implementations.
 Appearance cannot grant flight, speed, admin access or companion privileges.
 Continue using server confirmed appearance/movement, Jevica ownership and existing
 2-second appearance cooldown. Definition ownership never replaces those checks.
+
+## Local editor increment (#441)
+
+The People controls open a native modal with an isolated Three.js preview.
+Definitions remain staged: keep a draft in the current tab, discard back to the
+opening draft, or store up to eight owner-scoped favorites on this device.
+Unavailable device storage falls back to the visit. Undo/redo retains at most
+50 edits; comparison, curated randomization, keyboard controls, touch, camera
+framing, two lights and animated poses all use the same validated definition.
+Reduced motion freezes the preview and disables turntable/animated poses.
+
+V2 adds allowlisted dress and hair colors for Sable human and fox. Other looks
+retain authored colors with explicit compatibility feedback. V1 remains readable.
+Colors touch tagged, avatar-owned materials only; teardown restores their original
+values and disposes the preview. Late loads are discarded, including after close,
+and a stale failed load cannot drop a newer selection. The town renderer pauses
+drawing behind the Studio while authoritative world/network updates continue.
+Custom colors are not published or replicated yet; #443 supplies that boundary.
 
 ## Components and delivery order
 1. #440: strict baseline contract, migration and actual human/beast rig fixtures;
