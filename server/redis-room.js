@@ -5,6 +5,7 @@ import { createSharedWorld, migrateWorldCheckpoint } from './world.js';
 import { recoverDistrictHeightCheckpoint } from './district-checkpoint-migration.js';
 import { recoverDistrictInteriorCheckpoint } from './district-interior-checkpoint-migration.js';
 import { recoverDistrictLevelsCheckpoint } from './district-level-checkpoint-migration.js';
+import { recoverDistrictTowerCheckpoint } from './district-tower-checkpoint-migration.js';
 import { isJevicaAdmin } from './admin.js';
 import { DEFAULT_WORLD_ID, validateWorldId } from '../preview/src/world-contract.js';
 import { placesOf } from '../preview/src/places.js';
@@ -142,7 +143,8 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
         throw error;
       }
       if (!world.restore(previous.checkpoint, { onFailure: reason => { checkpointReason = reason; } }).ok) {
-        const levels = recoverDistrictLevelsCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
+        const tower = recoverDistrictTowerCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
+        const levels = tower.ok ? tower : recoverDistrictLevelsCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
         const interior = levels.ok ? levels : recoverDistrictInteriorCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
         const recovered = interior.ok ? interior
           : recoverDistrictHeightCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
@@ -151,7 +153,8 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
           error.checkpointReason = checkpointReason;
           throw error;
         }
-        districtMigration = levels.ok ? { kind: 'levels', from: levels.from }
+        districtMigration = tower.ok ? { kind: 'tower', from: tower.from }
+          : levels.ok ? { kind: 'levels', from: levels.from }
           : interior.ok ? { kind: 'interior', from: interior.from }
           : { kind: 'height', from: recovered.revision };
       }
@@ -302,7 +305,9 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       visitors,
       ...replies.map(reply=>JSON.stringify(reply.result)));
     if(!committed){cached=null;return read();}
-    if (districtMigration) console.info(JSON.stringify(districtMigration.kind === 'levels'
+    if (districtMigration) console.info(JSON.stringify(districtMigration.kind === 'tower'
+      ? { event: 'district_tower_checkpoint_migrated', from: districtMigration.from, to: 'penthouse_tower_33m' }
+      : districtMigration.kind === 'levels'
       ? { event: 'district_levels_checkpoint_migrated', from: districtMigration.from, to: 'gallery_plan_v2' }
       : districtMigration.kind === 'interior'
         ? { event: 'district_interior_checkpoint_migrated', from: districtMigration.from, to: 'gallery_plan_v1' }
