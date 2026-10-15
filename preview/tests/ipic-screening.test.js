@@ -7,12 +7,14 @@ const FILM = SCREENING_MEDIA['ipic-fixture-v1'];
 const tick = () => new Promise(resolve => setImmediate(resolve));
 
 // A media element double: time advances only while playing, at its playback rate.
-function fakeMedia({ canPlay = type => type.startsWith('video/webm') ? 'probably' : 'maybe', play = () => Promise.resolve() } = {}) {
+function fakeMedia({ canPlay = type => type.startsWith('video/webm') ? 'probably' : 'maybe', play = () => Promise.resolve(), slowSeeks = false } = {}) {
   const listeners = new Map(), calls = { play: 0, pause: 0, load: 0, seeks: [] };
   let time = 0;
   const media = {
     calls, paused: true, playbackRate: 1, muted: true, volume: 1, readyState: 4, src: '', textTracks: [{ mode: 'disabled' }],
-    get currentTime() { return time; }, set currentTime(value) { calls.seeks.push(value); time = value; },
+    get currentTime() { return time; }, set currentTime(value) { calls.seeks.push(value); time = value; if (slowSeeks) media.seeking = true; },
+    // With slowSeeks, a seek stays pending (time frozen, as a decoder works from the keyframe) until landed.
+    seeking: false, land() { media.seeking = false; media.emit('seeked'); },
     canPlayType: canPlay,
     // As in browsers, pause() while play() is pending aborts that play() and stays paused.
     play() { calls.play++; const attempt = { aborted: false }; media.attempt = attempt;
@@ -24,7 +26,7 @@ function fakeMedia({ canPlay = type => type.startsWith('video/webm') ? 'probably
     removeEventListener(type, fn) { listeners.get(type)?.delete(fn); },
     emit(type) { for (const fn of listeners.get(type) ?? []) fn({ type }); },
     listenerCount: () => [...listeners.values()].reduce((sum, set) => sum + set.size, 0),
-    advance(ms) { if (!media.paused) time += ms / 1000 * media.playbackRate; },
+    advance(ms) { if (!media.paused && !media.seeking) time += ms / 1000 * media.playbackRate; },
   };
   return media;
 }
@@ -33,7 +35,7 @@ function setup({ media = fakeMedia(), offset = 0 } = {}) {
   const local = { now: 50_000 };
   const clock = createServerClock({ now: () => local.now });
   clock.observeSync(local.now + offset, local.now, local.now); // a zero-latency sync: server = local + offset
-  const player = createScreeningPlayer({ media, clock });
+  const player = createScreeningPlayer({ media, clock, now: () => local.now });
   return { media, clock, player, local };
 }
 
@@ -200,4 +202,46 @@ test('captions come from the active cues of a tracked track, because the video i
   assert.equal(player.captionText(), '', 'between cues shows nothing');
   player.dispose();
   assert.equal(player.captionText(), '');
+});
+
+// Found by the #368 soak on main (2026-10-15): with the short's 2 s keyframes a loaded decoder took
+// 0.3-1.2 s per seek. Each seek landed that far behind, past the 400 ms threshold, so the next tick
+// seeked again, and a tick during a pending seek abandoned it: the viewer froze for up to 1.2 s.
+test('a slow seek is never re-issued while pending, and the next seek aims ahead by the time seeks take', async () => {
+  const f = setup({ media: fakeMedia({ slowSeeks: true }), offset: 52_000 });
+  f.player.apply(view()); f.player.tick(); await tick(); // late join: seeks to 2.0 s and plays
+  f.media.land();
+  const late = () => f.media.calls.seeks.length;
+  f.media.currentTime = 1.0; f.media.land(); // a full second behind
+  let seeks = late();
+  f.player.tick();
+  assert.equal(late(), seeks + 1, 'a large drift seeks');
+  const firstTarget = f.media.currentTime;
+  assert.ok(Math.abs(firstTarget - 2.0) < 0.05, `first seek, nothing measured yet: ${firstTarget}`);
+  // The seek is pending for 800 ms while the shared film runs on: no tick may seek again.
+  for (let i = 0; i < 8; i++) { f.local.now += 100; f.player.tick(); }
+  assert.equal(late(), seeks + 1, 'no second seek while the first is pending');
+  f.media.land();
+  // It landed 800 ms behind; the correction seeks once more, now aiming 800 ms ahead.
+  seeks = late(); f.player.tick();
+  assert.equal(late(), seeks + 1);
+  const at = 2.0 + 0.8;
+  assert.ok(Math.abs(f.media.currentTime - (at + 0.8)) < 0.05, `aimed ${f.media.currentTime} for a target of ${at} plus the measured 0.8 s`);
+  // That seek also takes 800 ms; it lands on the shared position, so nothing more is needed.
+  f.local.now += 800; f.media.land(); f.player.tick();
+  assert.equal(late(), seeks + 1, 'landed in step: no further seek');
+  assert.ok(Math.abs(f.player.stats().driftMs) < 50, `drift ${f.player.stats().driftMs}`);
+});
+
+test('a seek that never lands is retried after the timeout, and the lead stays bounded', async () => {
+  const f = setup({ media: fakeMedia({ slowSeeks: true }), offset: 52_000 });
+  f.player.apply(view()); f.player.tick(); await tick(); f.media.land();
+  f.media.currentTime = 0.5; f.media.land();
+  const seeks = f.media.calls.seeks.length;
+  f.player.tick(); // seeks; the decoder never answers
+  f.local.now += SCREENING_SYNC.seekTimeoutMs + 1; f.player.tick();
+  assert.equal(f.media.calls.seeks.length, seeks + 2, 'retried after the timeout');
+  // A very slow measured seek never pushes the aim past the cap.
+  f.local.now += 10_000; f.media.land(); f.media.currentTime = 1.0; f.media.land(); f.player.tick();
+  assert.ok(f.media.currentTime * 1000 - (2_000 + SCREENING_SYNC.seekTimeoutMs + 1 + 10_000) <= SCREENING_SYNC.maxSeekLeadMs + 1, `aim ${f.media.currentTime}`);
 });
