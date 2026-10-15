@@ -42,6 +42,7 @@ test('status text separates the shared film from this viewer’s decoder', () =>
 test('host commands carry the current epoch, revision and one id per intent', () => {
   const view = shared('paused');
   assert.deepEqual(screeningCommand(view, 'play', 'op-abcdef12'), { type: 'screening', action: 'play', venueId: 'ipic', epoch: 'e1', expectedRevision: 4, operationId: 'op-abcdef12' });
-  assert.deepEqual(screeningCommand(shared('stopped'), 'start', 'op-abcdef13'), { type: 'screening', action: 'start', venueId: 'ipic', epoch: 'e1', expectedRevision: 4, operationId: 'op-abcdef13', mediaId: FILM.id });
+  // Starting from a stopped screen plays the venue's first film: the approved short (#365).
+  assert.deepEqual(screeningCommand(shared('stopped'), 'start', 'op-abcdef13'), { type: 'screening', action: 'start', venueId: 'ipic', epoch: 'e1', expectedRevision: 4, operationId: 'op-abcdef13', mediaId: 'ipic-original-v1' });
   assert.equal(screeningCommand(view, 'seek', 'op-abcdef14'), null);
 });
