@@ -4,13 +4,14 @@
 
 Each plan is a task ledger. Status comes from the task register, where the primary checkout's live copy can be newer than the committed one. Plans from before the register are listed as historical: their own text is the record of what was delivered.
 
-## Active and blocked (6)
+## Active and blocked (7)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
 | [2026-10-14-shared-dominoes](2026-10-14-shared-dominoes.md)<br>Shared Dominoes Implementation Plan (PR 1: the town holds the round) | `shared-dominoes-sheet` | active | — | 2026-10-14 |
 | [2026-10-14-procedural-gpu-acceptance](2026-10-14-procedural-gpu-acceptance.md)<br>Procedural interiors: physical GPU acceptance plan | `procedural-gpu-acceptance` | queued | — | 2026-10-15 |
 | [2026-10-14-gallery-vertical-route](2026-10-14-gallery-vertical-route.md)<br>Gallery vertical-route visual integration | `procedural-gallery-vertical-route` | queued | — | 2026-10-14 |
+| [2026-10-14-desktop-package-matrix](2026-10-14-desktop-package-matrix.md)<br>Desktop packaging build matrix (#371), 2026-10-14 | `desktop-package-matrix` | active | #377 | 2026-10-15 |
 | [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `shared-voice-acceptance` | queued | — | 2026-10-15 |
 | [2026-10-13-procedural-interiors-implementation](2026-10-13-procedural-interiors-implementation.md)<br>Procedural interiors implementation ledger | `procedural-interior-human-acceptance` | queued | — | 2026-10-15 |
 | [2026-10-13-local-branch-worktree-prune](2026-10-13-local-branch-worktree-prune.md)<br>Local branch and worktree pruning, 2026-10-13 | `register-sweep-20261015` | active | — | 2026-10-15 |
