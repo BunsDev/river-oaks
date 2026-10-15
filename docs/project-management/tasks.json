@@ -10350,6 +10350,43 @@
       "pr": 427
     },
     {
+      "id": "wine-pong-dynamic-throw-20261015",
+      "title": "Review and improve wine pong stance, release animation, and table views",
+      "status": "active",
+      "branches": [
+        "feat/wine-pong-dynamic-throw-20261015"
+      ],
+      "owner": "codex-root-wine-pong-dynamic-throw-20261015",
+      "leaseUntil": "2026-10-15T18:50:00.000Z",
+      "updatedAt": "2026-10-15T17:47:00.000Z",
+      "nextAction": "Review draft PR #448 and its exact-head checks; keep camera occlusion, touch target selection, audio, and human play/accessibility acceptance as follow-up before declaring the experience complete.",
+      "ledger": "docs/superpowers/plans/2026-10-15-wine-pong-dynamic-throw-review.md",
+      "requiredChecks": [
+        "Position-aware aim/landing/replay behavioral tests",
+        "Plaza wine pong browser journey with view and animation review",
+        "pnpm run verify",
+        "Exact-head hosted preview before merge"
+      ],
+      "filesOwned": [
+        "preview/src/wine-pong-rules.js",
+        "preview/src/plaza-wine-pong.js",
+        "preview/src/plaza-wine-pong.css",
+        "preview/src/plaza-salon-plan.js (wine pong geometry)",
+        "preview/src/plaza-salon.js (wine pong table mirror)",
+        "preview/tests/wine-pong.test.js",
+        "preview/e2e/plaza-wine-pong.js",
+        "docs/superpowers/plans/2026-10-15-wine-pong-dynamic-throw-review.md",
+        "docs/superpowers/plans/README.md (generated index)",
+        "docs/project-management/tasks.json (this task only)",
+        "preview/src/main.js (wine pong camera callback)",
+        "docs/multiplayer.md (wine pong play instructions)",
+        "preview/src/player-avatar.js (wine pong throw action)",
+        "preview/src/resident-gestures.js (wine pong throw pose)",
+        "preview/tests/resident-gestures.test.js (throw pose regression)"
+      ],
+      "pr": 448
+    },
+    {
       "id": "garden-office-416",
       "title": "#416 Garden Office realism pilot (coding scope): one desk/chair family, glazing, finishes, light/planting sample, catalog records and compatibility on the #414 interface",
       "status": "active",
