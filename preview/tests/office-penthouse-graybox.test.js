@@ -128,6 +128,21 @@ test('the terrace portals stay walkable at full body height under their transoms
   built.dispose();
 });
 
+test('the imported desks (R19) are one draw, each exactly on its plan footprint at its height', () => {
+  const built = buildPenthouseOffice(THREE, layout);
+  const desks = meshes(built.object).filter(mesh => mesh.name === 'desks');
+  assert.equal(desks.length, 1);
+  assert.ok(desks[0].isInstancedMesh && desks[0].count === 3);
+  const drawn = parts(built.object).filter(part => part.mesh === desks[0]);
+  for (const o of l0.obstacles.filter(item => item.kind === 'desk')) {
+    const part = drawn.find(item => item.zone === `obstacle:${o.id}`);
+    assert.ok(part, `${o.id} is drawn`);
+    for (const [a, b] of [[part.e.x0, o.x0], [part.e.x1, o.x1], [part.e.d0, o.d0], [part.e.d1, o.d1], [part.e.y0, l0.floorElevation], [part.e.y1, l0.floorElevation + o.height]])
+      assert.ok(Math.abs(a - b) < 1e-6, `${o.id}: ${a} vs ${b}`);
+  }
+  built.dispose();
+});
+
 test('the curtain wall is two draws, glass handled like the district storefront glazing', () => {
   const built = buildPenthouseOffice(THREE, layout);
   const curtain = meshes(built.object).filter(mesh => mesh.name.startsWith('curtain wall'));

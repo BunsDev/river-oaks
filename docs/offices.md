@@ -71,7 +71,7 @@ To see it locally, run `node preview/e2e/office-penthouse-runner.mjs`: the loopb
 
 **Skyline (prototype).** Once the doors close the street stops drawing, so a layout with a terrace captures the actual district once, from the middle of its main floor and terrace at standing height, into a cube map shown as the backdrop outside (`preview/src/office-skyline.js`); it is a local picture that never moves the office or changes collision, membership or position, the legacy room never captures, and `?office-skyline=off` compares without it in development.
 
-The penthouse is not active anywhere by default. Raising the mapped building to fit it, desk footprints and furniture collision beyond the chairs (#362's measured data), and final art are later steps (#362, #363). The graybox chairs are drawn at the plan's 0.5 m seat height; final chair art must match it.
+The penthouse's three desks are the supplied kit's measured footprints: the executive desk and two shared benches, 0.76 m high. They were imported as numbers only under Val's R19 decision of 2026-10-15. They are collision for the server and the client, and the graybox draws them in one batch. The penthouse is not active anywhere by default. Raising the mapped building to fit it, furniture collision beyond the desks and chairs, and final art are later steps (#362, #363). The graybox chairs are drawn at the plan's 0.5 m seat height; final chair art must match it.
 
 ## Operating office storage
 
