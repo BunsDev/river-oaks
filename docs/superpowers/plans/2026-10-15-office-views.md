@@ -32,7 +32,10 @@ needs no separate path.
 | --- | --- |
 | Plan, UI and world-scene view tests written first | red (missing exports; 2 UI; 1 scene), then green |
 | `node --test preview/tests/office-*.test.js` | 87/87 |
-| `node preview/e2e/office-penthouse-runner.mjs` | pending (browser lock) |
+| Core verify at `8f1552d1` | passed |
+| Review fixes (`3a851655`): `node --test preview/tests/office-*.test.js` | 88/88 |
+| `node preview/e2e/office-penthouse-runner.mjs` at `bfb45ee4` (SwiftShader, no reload needed) | **passed 24 checks**: seat claimed and released at the plan pose, eye 0.480 m lower, both prompts topmost and clear of the header at 1280 and 390 px, five views each placing the camera elsewhere with the server position unchanged, Escape back to the exact walking camera, stairs +3.800 m, no page errors. Normal-material software captures: geometry and framing only. |
+| Earlier runs (2–3) | failed before any office step: the district fetch missed its 20 s deadline at load 80–300, then an outside disk sweep deleted every `node_modules` and the Playwright cache dropped Chromium 1248. Both were restored. |
 
 ## Next
 
