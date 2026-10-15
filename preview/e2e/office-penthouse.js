@@ -96,6 +96,9 @@ async page => {
   check(stood.position[0] === chair.stand[0] && stood.position[1] === chair.stand[1], `standing returned to the chair's approach: ${JSON.stringify(stood.position)}`);
   await page.waitForTimeout(300); at = await position();
 
+  // South of the desk row first, so no leg passes close to a chair while steering by drag.
+  await walkTo([3.65, 2.4], 'the aisle in front of the desks');
+  await walkTo([9.6, 2.4], 'the aisle east of the desks');
   const target = [11.8, 4.5];
   await walkTo(target, 'the stair foot');
   await page.waitForFunction(() => !document.querySelector('#office-level')?.hidden);
