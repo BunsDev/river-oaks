@@ -132,13 +132,14 @@ async function checkInstalledCopy(label, dir, platform, arch, version, manifest,
 
 // --- Windows ---------------------------------------------------------------
 
-async function powershell(script) {
-  const result = await sh('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script]);
+// Scripts are constant text; values such as paths reach them only as environment
+// variables ($env:…), never spliced into the command.
+async function powershell(script, values = {}) {
+  const result = await sh('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script], { env: { ...process.env, ...values } });
   return result.stdout.trim();
 }
 async function windowsProcesses(dir) {
-  const quoted = dir.replaceAll("'", "''");
-  const json = await powershell(`@(Get-CimInstance Win32_Process | Where-Object { $_.ExecutablePath -and $_.ExecutablePath.StartsWith('${quoted}', [StringComparison]::OrdinalIgnoreCase) } | Select-Object ProcessId,ParentProcessId,ExecutablePath,CommandLine) | ConvertTo-Json -Compress -Depth 2`);
+  const json = await powershell('@(Get-CimInstance Win32_Process | Where-Object { $_.ExecutablePath -and $_.ExecutablePath.StartsWith($env:TYPESAFE_PLACE_DIR, [StringComparison]::OrdinalIgnoreCase) } | Select-Object ProcessId,ParentProcessId,ExecutablePath,CommandLine) | ConvertTo-Json -Compress -Depth 2', { TYPESAFE_PLACE_DIR: dir });
   if (!json) return [];
   const parsed = JSON.parse(json);
   return Array.isArray(parsed) ? parsed : [parsed];
