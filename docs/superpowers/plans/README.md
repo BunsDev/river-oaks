@@ -4,12 +4,13 @@
 
 Each plan is a task ledger. Status comes from the task register, where the primary checkout's live copy can be newer than the committed one. Plans from before the register are listed as historical: their own text is the record of what was delivered.
 
-## Active and blocked (9)
+## Active and blocked (10)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
 | [2026-10-15-procedural-gpu-matrix-harness](2026-10-15-procedural-gpu-matrix-harness.md)<br>Procedural GPU matrix harness | `procedural-gpu-matrix-harness` | active | #389 | 2026-10-15 |
 | [2026-10-15-office-computer-db-mvp](2026-10-15-office-computer-db-mvp.md)<br>Office computer database MVP | `office-computer-db-mvp` | active | — | 2026-10-15 |
+| [2026-10-15-desktop-e2e-walk-game-time](2026-10-15-desktop-e2e-walk-game-time.md)<br>Desktop e2e: the W walk over game time, 2026-10-15 | `desktop-e2e-walk-game-time` | active | — | 2026-10-15 |
 | [2026-10-14-shared-dominoes](2026-10-14-shared-dominoes.md)<br>Shared Dominoes Implementation Plan (PR 1: the town holds the round) | `shared-dominoes-sheet` | active | — | 2026-10-14 |
 | [2026-10-14-procedural-gpu-acceptance](2026-10-14-procedural-gpu-acceptance.md)<br>Procedural interiors: physical GPU acceptance plan | `procedural-gpu-acceptance` | queued | — | 2026-10-15 |
 | [2026-10-14-gallery-vertical-route](2026-10-14-gallery-vertical-route.md)<br>Gallery vertical-route visual integration | `procedural-gallery-vertical-route` | queued | — | 2026-10-14 |

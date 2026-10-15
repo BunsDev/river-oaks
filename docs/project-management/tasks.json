@@ -9634,6 +9634,33 @@
       "parent": "procedural-gpu-acceptance",
       "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-procedural-gpu-matrix-harness-20261015",
       "pr": 389
+    },
+    {
+      "id": "desktop-e2e-walk-game-time",
+      "title": "Desktop e2e: measure the W walk over 1.2 s of game time so a stalled frame on the macOS runner cannot fail it (Desktop CI flake)",
+      "status": "active",
+      "branches": [
+        "fix/desktop-e2e-walk-game-time-20261015"
+      ],
+      "owner": "claude:river-oaks-27 (16ffadb4)",
+      "leaseUntil": "2026-10-15T05:23:36.406Z",
+      "updatedAt": "2026-10-15T03:23:36.406Z",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-desktop-walk-check-20261015",
+      "issues": [
+        371
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-15-desktop-e2e-walk-game-time.md",
+      "nextAction": "Change the keyboard movement check to hold W for 1.2 s of game time and report frames/stall; then PR and Desktop runs.",
+      "filesOwned": [
+        "desktop/e2e.js (keyboard movement check)",
+        "docs/superpowers/plans/2026-10-15-desktop-e2e-walk-game-time.md"
+      ],
+      "requiredChecks": [
+        "node --check desktop/e2e.js",
+        "local desktop e2e on macOS",
+        "Desktop workflow on three runners",
+        "pnpm run verify"
+      ]
     }
   ]
 }
