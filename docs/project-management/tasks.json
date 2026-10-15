@@ -9717,6 +9717,41 @@
         "to": "claude:river-oaks-1b (f4107618)",
         "reason": "Released by session aa2272b7; Val's /goal of 2026-10-15 asks river-oaks-1b to merge draft #388 into #381."
       }
+    },
+    {
+      "id": "ipic-screening-authority-366",
+      "title": "IPIC #366: authoritative screening timeline and host controls (server/screenings.js, preview/src/screening-contract.js) with fixture media, checkpoint v9",
+      "status": "active",
+      "branches": [
+        "feat/ipic-screening-authority-20261015"
+      ],
+      "owner": "claude:river-oaks-1b (f4107618)",
+      "leaseUntil": "2026-10-15T06:20:30.386Z",
+      "updatedAt": "2026-10-15T04:20:30.386Z",
+      "issue": 366,
+      "ledger": "docs/superpowers/plans/2026-10-15-ipic-screening-authority.md",
+      "nextAction": "Core verify passed at a714a8a5 + patch (agent 109/109, preview 3056+1 skip, server 519+146 Redis skips, desktop 66/66, python 141); Redis-backed server run in progress. Commit signed, open PR, land with pnpm run land.",
+      "filesOwned": [
+        "preview/src/screening-contract.js",
+        "server/screenings.js",
+        "server/world.js (screening command, snapshot, checkpoint v9, reset/leave hooks)",
+        "server/redis-room.js (lease generation v9, session context)",
+        "server/app.js (session context)",
+        "server/town.js and the Redis world options (screening host grants)",
+        "server/tests/screenings*.test.js",
+        "server/tests/redis-room.test.js (lease generation)",
+        "preview/tests/screening-contract.test.js",
+        "docs/screenings.md",
+        "docs/superpowers/plans/2026-10-15-ipic-screening-authority.md"
+      ],
+      "requiredChecks": [
+        "node --test preview/tests/screening-contract.test.js server/tests/screenings*.test.js",
+        "memory and isolated-Redis transport tests incl. two-coordinator race",
+        "pnpm run test:server",
+        "pnpm run verify",
+        "pnpm run verify full with isolated Redis"
+      ],
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-ipic-screening-20261015"
     }
   ]
 }
