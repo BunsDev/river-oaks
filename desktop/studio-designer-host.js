@@ -216,8 +216,9 @@ export function createStudioDesignerHost({ root, pack, executable = 'coven', cod
         // The familiar's identity is already in the prompt (declarations); Coven only verifies it.
         const codexExecutable = await locateCodex();
         if (!codexExecutable) throw new HostError(missingExecutableMessage('Codex', 'codex', 'RIVER_OAKS_DESIGNER_CODEX'));
-        const output = await execute(codexExecutable, codexArgs({ model: model ?? 'default', workspace: state.workspace, prompt }),
-          { cwd: state.workspace, env: { ...process.env, PATH: `${process.env.PATH ?? ''}${delimiter}${extraPath}` }, signal: control.signal, timeout: 180000, maxBytes: 2 * 1024 * 1024 });
+        // On stdin: with every skill routed the prompt passes 32,767 characters, Windows' command-line limit.
+        const output = await execute(codexExecutable, codexArgs({ model: model ?? 'default', workspace: state.workspace }),
+          { cwd: state.workspace, env: { ...process.env, PATH: `${process.env.PATH ?? ''}${delimiter}${extraPath}` }, signal: control.signal, timeout: 180000, maxBytes: 2 * 1024 * 1024, input: prompt });
         if (control.signal.aborted || !connections.has(state.id)) throw new HostError('Design request canceled.');
         const message = lastCodexMessage(output);
         let response;

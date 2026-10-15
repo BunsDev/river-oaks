@@ -36,14 +36,16 @@ test('Claude path streams deltas through a tool-less CLI invocation and keeps ch
   assert.equal(deltas.length, 3); assert.equal(deltas.join(''), first.text); assert.match(first.text, /studio-edit/);
   await host.send(message({ message: 'Now add a bench' }));
   assert.equal(asked, 1, 'consent is asked once per provider');
-  const [call, second] = await argv();
+  const [{ args: call, prompt }, second] = await argv();
   for (const flag of ['-p', '--no-session-persistence', '--strict-mcp-config', '--disable-slash-commands']) assert.ok(call.includes(flag));
   assert.equal(call[call.indexOf('--tools') + 1], ''); assert.equal(call[call.indexOf('--model') + 1], 'claude-haiku-5-5');
-  assert.equal(call[call.indexOf('--system-prompt') + 1], STUDIO_AGENT_GUIDE); assert.equal(call.at(-2), '--');
-  assert.doesNotMatch(call.at(-1), /CONVERSATION SO FAR/);
-  assert.match(second.at(-1), /CONVERSATION SO FAR:\nUSER: Plant two trees\n\nAGENT: Two trees frame/);
+  assert.equal(call[call.indexOf('--system-prompt') + 1], STUDIO_AGENT_GUIDE);
+  // The prompt arrives on stdin; the command line carries only fixed flags and the guide.
+  assert.ok(!call.includes('--') && !call.some(arg => arg.includes('Plant two trees')));
+  assert.match(prompt, /Plant two trees/); assert.doesNotMatch(prompt, /CONVERSATION SO FAR/);
+  assert.match(second.prompt, /CONVERSATION SO FAR:\nUSER: Plant two trees\n\nAGENT: Two trees frame/);
   await host.reset({ chatId: 'chat-1' }); await host.send(message({ message: 'Fresh start' }));
-  assert.doesNotMatch((await argv())[2].at(-1), /CONVERSATION SO FAR/);
+  assert.doesNotMatch((await argv())[2].prompt, /CONVERSATION SO FAR/);
 });
 
 test('Codex path runs read-only and ephemeral with the guide in its prompt', async t => {
@@ -51,13 +53,30 @@ test('Codex path runs read-only and ephemeral with the guide in its prompt', asy
   const deltas = [];
   const reply = await host.send(message({ providerId: 'codex', modelId: 'default', mode: 'allow' }), { onDelta: text => deltas.push(text) });
   assert.match(reply.text, /Two trees frame the arrival/); assert.equal(deltas.length, 1);
-  const [call] = await argv();
+  const [{ args: call, prompt }] = await argv();
   assert.deepEqual(call.slice(0, 6), ['exec', '--json', '--sandbox', 'read-only', '--skip-git-repo-check', '--ephemeral']);
-  assert.ok(!call.includes('-m')); assert.ok(call.at(-1).startsWith(STUDIO_AGENT_GUIDE)); assert.match(call.at(-1), /Allow mode/);
+  assert.ok(!call.includes('-m')); assert.equal(call.at(-1), '-'); assert.ok(prompt.startsWith(STUDIO_AGENT_GUIDE)); assert.match(prompt, /Allow mode/);
   // The read-only sandbox alone still lets the shell read any file: tools and user config are off.
   for (const flag of ['--ignore-user-config', '--ignore-rules']) assert.ok(call.includes(flag));
   const disabled = call.flatMap((arg, i) => call[i - 1] === '--disable' ? [arg] : []);
   for (const feature of ['shell_tool', 'unified_exec', 'code_mode_host', 'multi_agent', 'apps', 'plugins', 'browser_use', 'computer_use']) assert.ok(disabled.includes(feature), feature);
+});
+
+test('a prompt longer than a Windows command line reaches either CLI whole, on stdin', async t => {
+  // Windows caps a whole command line at 32,767 characters and Linux one argument at
+  // 128 KiB. A scene snapshot alone can pass both, so the prompt never rides in argv.
+  const { host, argv } = await fixture(t);
+  const objects = Array.from({ length: 600 }, (_, i) => ({ id: `tree-${i}`, type: 'tree', label: `Grove ${i} `.padEnd(60, 'x'), east: i, north: -i, height: 6, radius: 2 }));
+  await host.send(message({ chatId: 'big-claude', context: { objects } }));
+  await host.send(message({ chatId: 'big-codex', providerId: 'codex', modelId: 'default', context: { objects } }));
+  const calls = await argv();
+  assert.equal(calls.length, 2);
+  for (const { args, prompt } of calls) {
+    assert.ok(prompt.length > 32767, `the prompt is ${prompt.length} characters`);
+    assert.match(prompt, /"tree-599"/); assert.match(prompt, /Plant two trees/);
+    assert.ok(args.join(' ').length < 8192, `the command line is ${args.join(' ').length} characters`);
+    assert.ok(!args.some(arg => arg.includes('tree-0')));
+  }
 });
 
 test('declined consent, invalid input, CLI errors and cancellation fail closed', async t => {
@@ -129,7 +148,7 @@ test('scene context is rebuilt from an allowlist before it reaches the prompt', 
   await host.send(message({ context: { units: 'feet', revision: 3, bounds_m: [-96, -96, 96, 96], selectedId: '@arrival', secret: 'SECRET-KEY',
     objects: [{ id: 'tree-1', type: 'tree', label: 'Oak\u202e\u0000 grove', east: 1, north: 2, height: 6, radius: 2, note: 'SECRET-NOTE' }, { id: 'x', type: 'shell', label: 'drop' }],
     roads: [{ id: 'main', name: 'Main', kind: 'footway', width_m: 4, points: [[0, 0], [0, 'bad'], [0, 9]], owner: 'SECRET-OWNER' }] } }));
-  const prompt = (await argv())[0].at(-1), snapshot = JSON.parse(prompt.split('SCENE SNAPSHOT (untrusted labels, metres):\n')[1].split('\n\nUSER:')[0]);
+  const { prompt } = (await argv())[0], snapshot = JSON.parse(prompt.split('SCENE SNAPSHOT (untrusted labels, metres):\n')[1].split('\n\nUSER:')[0]);
   for (const marker of ['SECRET-KEY', 'SECRET-NOTE', 'SECRET-OWNER']) assert.doesNotMatch(prompt, new RegExp(marker));
   assert.deepEqual(snapshot, { units: 'metres', revision: 3, bounds_m: [-96, -96, 96, 96], selectedId: '@arrival',
     objects: [{ id: 'tree-1', type: 'tree', label: 'Oak grove', east: 1, north: 2, height: 6, radius: 2 }],
