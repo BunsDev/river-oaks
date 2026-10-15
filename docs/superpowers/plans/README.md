@@ -157,12 +157,14 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-11-delivered-source-retirement](2026-10-11-delivered-source-retirement.md)<br>Delivered source reconciliation | `reconcile-delivered-sources` | retired | — | 2026-10-11 |
 | [2026-10-11-ci-parallel-preview](2026-10-11-ci-parallel-preview.md)<br>Parallel preview check | `ci-parallel-preview` | retired | #252 | 2026-10-11 |
 
-## Historical, not in the register (73)
+## Historical, not in the register (75)
 
 | Plan | PRs mentioned |
 | --- | --- |
+| [2026-10-15-office-penthouse-glazing](2026-10-15-office-penthouse-glazing.md)<br>Penthouse graybox: glazed curtain wall | #363, #362, #351 |
 | [2026-10-15-ipic-screening-replay](2026-10-15-ipic-screening-replay.md)<br>#368 slice: stale and replayed playback in the two-browser screening journey (2026-10-15) | #368, #359, #406 |
 | [2026-10-15-ipic-route-evidence](2026-10-15-ipic-route-evidence.md)<br>IPIC #364: routes, seats, collision agreement, screen data and exports (2026-10-15) | #364, #359, #365 |
+| [2026-10-15-greetings-dock-overlap](2026-10-15-greetings-dock-overlap.md)<br>Phone HUD: the greetings card covered Play & rides (2026-10-15) | #368, #407, #359 |
 | [2026-10-15-bar-games](2026-10-15-bar-games.md)<br>Bar games: shared darts in the IPIC Tuck Room and an unbranded axe-and-darts room (2026-10-15) | #402, #364 |
 | [2026-10-13-stage-voice-carry](2026-10-13-stage-voice-carry.md)<br>A stage performer is heard across the plaza — 2026-10-13 | #311 |
 | [2026-10-13-procedural-multilevel-interiors](2026-10-13-procedural-multilevel-interiors.md)<br>Building-anchored procedural interiors and levels | — |
