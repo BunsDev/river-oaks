@@ -2,7 +2,9 @@ import { isSpaceDocument } from './space-document.js';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { createStudioScene, disposeStudioScene, frameStudioObject, studioClearColor } from './scene.js';
+import { SPACE_LIGHT } from './space-scene.js';
 import { createWalkingEnvironment, createWalkingState, stepWalking } from '../walking.js';
 
 export function createStudioViewport(host,{onSelect,onTransform,onPosition,onExitWalk,getRevision=()=>0}) {
@@ -10,7 +12,8 @@ export function createStudioViewport(host,{onSelect,onTransform,onPosition,onExi
   renderer.setClearColor(studioClearColor(document.documentElement.dataset.theme));renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;
   host.append(renderer.domElement);renderer.domElement.setAttribute('aria-label','World Studio 3D viewport');
   const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(45,1,.1,2000);
-  scene.add(new THREE.HemisphereLight('#f9fff9','#8c9b8b',2.5));
+  const sky=new THREE.HemisphereLight('#f9fff9','#8c9b8b',2.5);scene.add(sky);
+  let reflections=null;
   const sun=new THREE.DirectionalLight('#fff5df',3);sun.position.set(65,120,40);sun.castShadow=true;
   sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-130,right:130,top:130,bottom:-130,near:1,far:400});sun.shadow.bias=-.0005;sun.shadow.normalBias=.04;scene.add(sun,sun.target);
   const orbit=new OrbitControls(camera,renderer.domElement);orbit.enableDamping=false;orbit.maxPolarAngle=Math.PI/2-.05;orbit.minDistance=3;orbit.maxDistance=700;
@@ -98,7 +101,14 @@ export function createStudioViewport(host,{onSelect,onTransform,onPosition,onExi
       scene.add(content.group);selected=id;interiorView=view;content.setInteriorView?.(view);configureTransform();
       const bounds=new THREE.Box3().setFromObject(content.group),center=bounds.getCenter(new THREE.Vector3());
       const space=isSpaceDocument(region),span=Math.max(space?25:100,bounds.getSize(new THREE.Vector3()).length());
-      sun.intensity=space?(region.lighting==='evening'?.55:region.lighting==='warm'?2:2.5):3;sun.color.set(space&&region.lighting!=='daylight'?'#ffd6a3':'#fff5df');
+      // Furnished spaces reflect a neutral room so glass and metal finishes read, and the
+      // sky fill follows the preset so evening is darker. Regions keep their lighting.
+      const light=space?SPACE_LIGHT[region.lighting]:null;
+      sun.intensity=light?light.sun:3;sun.color.set(space&&region.lighting!=='daylight'?'#ffd6a3':'#fff5df');
+      if(space&&!reflections){const pmrem=new THREE.PMREMGenerator(renderer),room=new RoomEnvironment();try{reflections=pmrem.fromScene(room);}finally{room.dispose();pmrem.dispose();}}
+      scene.environment=light?reflections.texture:null;
+      scene.environmentIntensity=light?light.reflections:1;
+      sky.intensity=light?light.sky:2.5;
       sun.target.position.copy(center);sun.position.copy(center).add(new THREE.Vector3(.5,1,.4).multiplyScalar(span));
       Object.assign(sun.shadow.camera,{left:-span/2,right:span/2,top:span/2,bottom:-span/2,far:span*3});sun.shadow.camera.updateProjectionMatrix();
     },
@@ -115,6 +125,6 @@ export function createStudioViewport(host,{onSelect,onTransform,onPosition,onExi
       else {walking=null;orbit.enabled=true;if(savedCamera){camera.position.copy(savedCamera.position);orbit.target.copy(savedCamera.target);orbit.update();}configureTransform();}
       host.focus();last=0;
     },
-    dispose(){cancelAnimationFrame(frame);events.abort();resize.disconnect();transform.detach();transform.dispose();orbit.dispose();if(content)disposeStudioScene(content.group);box.geometry.dispose();box.material.dispose();sun.shadow.dispose();renderer.dispose();renderer.forceContextLoss();renderer.domElement.remove();},
+    dispose(){cancelAnimationFrame(frame);events.abort();resize.disconnect();transform.detach();transform.dispose();orbit.dispose();if(content)disposeStudioScene(content.group);box.geometry.dispose();box.material.dispose();sun.shadow.dispose();reflections?.dispose();renderer.dispose();renderer.forceContextLoss();renderer.domElement.remove();},
   };return api;
 }

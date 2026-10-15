@@ -1,0 +1,216 @@
+# Garden Office realism pilot (#416, parent #413)
+
+## Objective and ownership
+
+Make the private **Garden Office** World Studio template read as a real workplace
+at player height: one desk/chair family, credible glazing, calibrated finishes and
+a restrained light/planting sample. Keep reception, four workstations, meeting
+room and kitchenette, the #414 route profile, v1 files and save/reopen. Garden
+Office is a Studio template, not Jevica's office (#359).
+
+Branch `feat/garden-office-416-20261015` in
+`river-oaks-garden-office-416`, owner `claude:river-oaks-safe-edits (e9aa0185)`,
+register task `garden-office-416`. Base `326506f7eaaa97db851f03537d3c7c93049ef799`
+(origin/main at pickup, 2026-10-15). Coding scope: catalog records, renderer
+forms, office recipe, compatibility and tests. Visual approval is a human/design
+review and is not claimed here. No merge, deployment or asset publication.
+
+## Decisions (Val, 2026-10-15)
+
+- **Procedural forms behind v1.** The family is original geometry in the existing
+  renderer, keyed by existing v1 kinds. No saved field changes, so no v2 document
+  and no conversion: every v1 file opens unchanged and renders with the new forms.
+  No GLB is produced, so there is no export/reimport step. Accepted side effect:
+  `chair`, `glazing`, `pendant` and `plant` are shared kinds, so House, Boutique and
+  Café pick up the new forms without layout changes; #418 owns their acceptance.
+- **Floating desk lamps are fixed in the office recipe.** New Garden Office copies
+  place lighting at ceiling height. Saved drafts keep their objects.
+
+## Recorded baseline, before implementation
+
+Source `326506f7`: `space-scene.js` sha256 `aaf992f5ea7147bd…`,
+`space-templates.js` `b08dae042a9d1aff…`. Office profile v1 (#414): bounds
+`[-12,-11,12,10]`, arrival `[0,-8.5]`, targets reception (0,-4), work area (-2,1),
+meeting (3,1), kitchenette (-1,5); controller `studio-walking-v1`, radius 0.35 m,
+eye 1.68 m.
+
+Cost from the real renderer in Node (`.runtime/garden-office/baseline-cost.json`):
+42 objects, 347 meshes, 1 line set, 31,618 triangles, 9 unique geometries,
+19 materials. Chairs 9 × 8 meshes (6,048 triangles); desks 4 × 12 meshes (1,728).
+
+Player-height captures: `preview/e2e/studio-office-stations.js` (new journey; six
+stations × daylight/warm/evening, 1440×1000, Metal ANGLE, eye 1.68 m). Each station
+stands on a profile target and looks at its role object. Run
+`RIVER_OAKS_E2E_REPORT=garden-office-baseline.json pnpm run test:experience studio-office-stations`:
+passed, 18 captures in `.runtime/garden-office/baseline/` (local-only).
+
+Observed defects (baseline):
+
+| ID | Defect | Where |
+| --- | --- | --- |
+| D1 | Desk "lamps" are ceiling pendants at 1.0 m, floating over desks with a rod to nothing | CAM-03 |
+| D2 | Chairs are stretched boxes; leg thickness and rounding scale with the object | CAM-01/03/04 |
+| D3 | One rounded unit cube is stretched per part: long tops look like pillows, thin parts flatten | CAM-03/04/05 |
+| D4 | Linear pendant (1.8×0.35 m) becomes a giant flattened disc | CAM-04 |
+| D5 | Concrete floor uses the outdoor paver texture | CAM-01/03/05 |
+| D6 | Glazing reads as flat grey panels with plain stiles | CAM-01/04 |
+| D7 | No ceiling; sky visible at player height (not addressed: overhead editing needs an open top) | all |
+| D8 | Evening preset barely differs from daylight at these stations | evening set |
+| D9 | Exit station looks out a 2 m doorless opening onto a bare ground plane (not addressed) | CAM-06 |
+
+## Checks and evidence
+
+### Slice 1: desk and chair family
+
+New `preview/src/studio/space-furniture.js` draws each form inside a group that
+cancels the editable root's width/height/depth scale, so parts are in metres:
+rounded edges use `RoundedBoxGeometry` at true size and legs keep their section.
+The root keeps its `(width,height,depth)` scale, so selection, the gizmo and the
+existing silhouette, knee-space, material-ownership and disposal tests still apply.
+`desk` (only the office uses it): 25 mm oak top, 40 mm charcoal legs, side rails, a
+back modesty panel when legs exceed 0.45 m; the drawer pedestal is gone. `chair`
+(all templates): turned 17 mm timber legs, seat frame, upholstered seat at
+min(0.47 m, 55% of height), back leaning 8° kept inside the footprint. `table` keeps
+its old form.
+
+Red first, `node --test preview/tests/studio-garden-office.test.js` on unchanged code
+(`.runtime/garden-office/slice1-red.txt`): "Tabletop is stretched 1.8,0.0684,0.8";
+desk leg sections varied 0.033–0.132 m across sizes; pendants at 1 m.
+
+### Slice 2: office lighting and pendants
+
+Recipe: the four `desk-lamp-N` pendants at 1 m are replaced by `work-pendant-1/2`,
+2.4 m linear pendants at 2.4 m over each desk row (three office pendants, all within
+the renderer's four point lights). Pendant form: a footprint at least 2:1 draws an
+80 mm linear body on two cables; otherwise an open round shade on one cord.
+
+Focused suite after slices 1–2: 90 passed / 0 failed / 0 skipped. Cost
+(`.runtime/garden-office/slice2-cost.json`): objects 42 → 40, meshes 347 → 338,
+triangles 31,618 → 32,862 (+4%), unique geometries 9 → 16, materials 19 → 19.
+Chairs 72 → 81 meshes; desks 48 → 32; pendants 20 → 18.
+
+After captures, same journey and conditions: passed 2026-10-15 16:11 UTC, 18 captures
+in `.runtime/garden-office/slice2/`. Observed: D1, D2, D4 fixed; D3 fixed for desks,
+chairs and pendants (counter, table and cabinets still swell). New **D10**: the
+linear pendant diffuser shared its bottom face with the body and flickered.
+Brass reads dark bronze for the same reason glass reads grey (D6).
+
+### Catalog records
+
+`docs/design/garden-office/asset-manifest.json` follows the office-ipic packet
+shape: id, version, v1 kind, source `procedural`, file, sha256, nominal size,
+measured bounds (object frame, metres), axes/pivot, resize policy, material slots,
+collision, approach, cost (mesh nodes, triangles), stage, availability and
+permission (original geometry, no third-party source). `scripts/garden-office-manifest.mjs`
+measures the forms from the real renderer; `--write` refreshes the file. The pilot
+test fails whenever the records and the code disagree. No GLB exists, so there is
+no export or reimport to check.
+
+### Slice 3: reflections, sky fill and the D10 fix
+
+Red first: "diffuser 0..0.006 overlaps body 0..0.045". The body now starts 6 mm up.
+`viewport.js`: furnished spaces get a `RoomEnvironment` reflection map (PMREM,
+created once, disposed with the viewport) and the viewport's own sky fill, which
+had stayed at 2.5 for every preset (the cause of D8), now follows the preset.
+Region documents keep reflections off and the sky at 2.5. Records refreshed: only
+the source hash changed. Focused suite 92 / 0 / 0.
+
+Captures 16:27 UTC (`.runtime/garden-office/slice3/`): D6 and D8 fixed, D10 gone.
+New **D11**: at 0.55 / 0.45 reflections and full sky the reflection map lifted every
+surface. Mean of a 7×7 patch, 0–255: daylight meeting wall 208 → 235, walnut table
+107 → 150, floor 148 → 183 against the forms-only set.
+
+### Slice 4: concrete floor, glazing frames and calibration
+
+Red first: concrete still used the photographed `pavement_03` (Poly Haven, CC0)
+running-bond paver texture; no `SPACE_LIGHT` table; office glazing white and no base
+shoe. That texture cannot be recalibrated into interior concrete, and no download
+was needed: concrete surfaces are now a plain polished material (`#96938b`,
+roughness 0.5) and concrete floors draw saw-cut control joints every 4 m, 0.2 m clear
+of the edges, as one line set. Floor-standing glazing (elevation 0, at least 2 m)
+sits in an 80 mm base shoe; raised glazing such as the café display keeps its rail.
+The office recipe gives all its glazing charcoal frames. A 1.2 m pane module was
+dropped: it would centre a mullion on both meeting dividers, where the existing
+"partitions show glazing through their broad faces" test looks through the glass.
+
+`SPACE_LIGHT` (exported from `space-scene.js`, read by `viewport.js`) holds sun / sky
+fill / reflections per preset; a test requires each to fall from daylight to evening.
+Two measured passes:
+
+| Daylight patch | forms only | pass 1 (sky 2.0, refl 0.30) | pass 2 (sky 1.7, refl 0.25) |
+| --- | ---: | ---: | ---: |
+| work-area wall | 210 | 218 | 214 |
+| meeting wall | 208 | 225 | 221 |
+| meeting table | 107 | 130 | 124 |
+| concrete floor | 148 | 218 (old concrete colour) | 191 |
+
+Final values: daylight 2.5 / 1.7 / 0.25, warm 2 / 1.45 / 0.2, evening 0.55 / 0.8 / 0.12.
+The meeting room is brighter than before because its pendant now emits light (the
+old recipe's four desk lamps took all four point lights). Evening walls 176–193.
+
+Focused suite 95 / 0 / 0. Cost (`.runtime/garden-office/slice4-cost.json`): meshes 338
+(base shoe replaces the bottom rail), line sets 1 → 2 (concrete joints), triangles
+32,862, materials 19. Final captures 16:33 UTC in `.runtime/garden-office/slice5/`
+(local-only); all four sets are on the review page.
+
+Review page (private): https://claude.ai/artifact/QxWWoXxB9DMotJyQr77Xpf
+
+### Slice 5: planting sample
+
+Baseline plant (`.runtime/garden-office/plant-baseline.json`): a stretched unit pot and
+nine sphere leaves, 2,832 triangles at every size, and 30.6% of horizontal sight lines
+through the canopy band (55–90% of height, 8 directions × 8 heights × 7 offsets)
+hitting foliage. Red first: "Planter is stretched 0.55,1.25,0.55".
+
+`plant` (all templates) is now drawn in metres: tapered pot (32% of height, at most
+0.42 m) with rim and soil, three stems, and three leaf clusters. Each cluster is one
+mesh of flat, midribbed blades at the golden angle, pitched −10° to 60° and twisted up
+to ±40° so the canopy does not read edge-on, gathered on the upper 70% of the stems.
+Leaves per cluster scale from 30 to 50 with canopy height relative to width. A
+double-sided leaf material is shared. The office recipe gives its pots terracotta.
+
+Measured during design: flat blades alone reached only 25–34% coverage; adding pitch
+range and twist 54–59%; the 1.6 m × 0.5 m case stayed at 42–45% until leaves moved up
+the stems and density scaled. Final: 62–68% coverage at 696–936 triangles for a 0.55 ×
+1.25 m floor plant, a 0.3 m café vase, a 0.6 m display plant and a 1.6 m × 0.5 m
+planter; the test requires at least 50% and at most 1,000 triangles. New record
+`studio-plant-potted` (9 meshes, 696 triangles). Focused suite 96 / 0 / 0.
+
+Office cost against the baseline (`.runtime/garden-office/slice6-cost.json`): meshes
+347 → 326, triangles 31,618 → 24,318, line sets 1 → 2, unique geometries 9 → 23,
+materials 19 → 20. Plants 11,328 → 2,784 triangles.
+
+Captures 16:47 UTC (`.runtime/garden-office/slice6/`, local-only): plants read as a
+terracotta pot, bare stems and a leafy crown; the crown is narrow with pointed leaves
+(a design-review question, not a defect). Review page now shows all five sets.
+
+### Affected gates (2026-10-15, base 326506f7 + this patch, worktree unchanged by the run)
+
+`.runtime/garden-office/gates/` (local-only):
+
+- `pnpm run verify`: **core passed, 11/11 tasks**. Agent 111; preview 3,257 passed,
+  1 skipped, 1 TODO; server 582 passed, 149 Redis skips; desktop 69; Python 141.
+  Total **4,160 passed / 150 skipped / 1 TODO**. Includes `pnpm run build` and
+  `pnpm run test:desktop`.
+- `pnpm run test:experience world-studio`: **passed in 29.068 s, 0 page errors**
+  (create, transform, undo, save/reopen, pick, export/import, walk, safe-edit
+  rejection and repair; Garden Office renders with the new forms).
+- `node desktop/studio-e2e.js`: **11/11** native checks, including save/reopen with the
+  assessment sidecar and bare v1 export/import.
+- Focused `node --test preview/tests/studio-*.test.js server/tests/studio-assets.test.js`:
+  96 / 0 / 0.
+
+## Open defects and limits
+
+- D3 remains for counters, tables and cabinets (outside the first family).
+- D7 (no ceiling) and D9 (bare exterior) are outside this pilot.
+- Not run: full Redis profile, hosted CI (pending on the PR), packaged builds,
+  physical devices.
+- Visual approval is a design/human review; automated captures are evidence, not
+  approval. No device, packaged or accessibility acceptance is claimed.
+
+## Next
+
+Signed commit and draft PR (Val, 2026-10-15: push and open the draft once checks
+pass; post the link to #413). Then design review of the captures and the recipe
+destinations (#414 handoff), and #417 pilot acceptance. No merge.
