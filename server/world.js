@@ -268,7 +268,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   }
   function publicSeat(player) {
     const seat=player.sitting && seatAt(player.sitting.buildId,player.sitting.slot);
-    return seat?{buildId:seat.buildId,slot:seat.slot,height:seat.height,yaw:seat.yaw}:null;
+    return seat?{buildId:seat.buildId,slot:seat.slot,height:seat.height,yaw:seat.yaw,...(Number.isFinite(seat.eyePitch)?{eyePitch:seat.eyePitch}:{})}:null;
   }
   const seatOccupied=(buildId,slot)=>[...players.values()].some(p=>p.sitting?.buildId===buildId && p.sitting.slot===slot);
   const buildOccupied=id=>[...players.values()].some(p=>p.sitting?.buildId===id);

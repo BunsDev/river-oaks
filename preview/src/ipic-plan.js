@@ -108,9 +108,13 @@ export function ipicSeatSites(rooms) {
     const [x, north] = room.toWorld(seat.a, seat.d);
     const yaw = Math.atan2(room.inward[0], -room.inward[1]) + seat.yaw;
     const buildId = `bench:ipic-${seat.key}`;
+    // A recliner's back rises above its sitter's eye, so a camera behind it sees only leather:
+    // its sitter watches from the seated eye (0.65 m above the cushion, as walking-ui places it),
+    // pitched at the screen centre.
+    const eyePitch = seat.key.startsWith('recliner') ? Math.atan2(IPIC_SCREEN.y - seat.height - .65, IPIC_SCREEN.d - seat.d) : null;
     return { id: `${buildId}:${seat.slot}`, buildId, slot: seat.slot, kind: seat.kind, storeId: room.storeId,
       title: seat.key === 'lounge-sofa' ? 'IPIC lounge sofa' : 'IPIC theater recliner',
       x, north, heading: yaw, height: seat.height, approach: [x + Math.sin(yaw) * .9, north - Math.cos(yaw) * .9],
-      ...(seat.stand ? { standAt: [room.toWorld(...seat.stand)] } : {}) };
+      ...(seat.stand ? { standAt: [room.toWorld(...seat.stand)] } : {}), ...(eyePitch === null ? {} : { eyePitch }) };
   }));
 }
