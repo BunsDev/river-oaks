@@ -24,10 +24,14 @@ export function startStudio(host) {
   try { if(doc.restore(localStorage))say('Saved draft reopened.'); } catch(error){say(`${error.message} Export or open a valid Studio file; the saved draft has not been changed.`);}
   const acceptDiscard=()=>!doc.dirty||window.confirm('Discard unsaved changes? Export or save first to keep them.');
   const reportError=error=>{say(error.message);render();};
-  const run=async action=>{
+  // Only awaited edits hold the busy state; a synchronous action must not re-render
+  // panels, which would discard transient UI such as an open interior preview.
+  const run=action=>{
+    let pending;
+    try{pending=action();}catch(error){reportError(error);return;}
+    if(typeof pending?.then!=='function')return;
     editPending++;document.body.dataset.studioBusy='true';renderPanels();say('Checking edit…');
-    try{await action();}catch(error){reportError(error);}
-    finally{editPending--;document.body.dataset.studioBusy=String(editPending>0);renderPanels();refreshRoutes();}
+    pending.catch(reportError).finally(()=>{editPending--;document.body.dataset.studioBusy=String(editPending>0);renderPanels();refreshRoutes();});
   };
   const select=id=>{if(id!==selected)interiorView=null;selected=id;viewport.select(id);viewport.showInterior(interiorView);renderPanels();};
   viewport=createStudioViewport($('#studio-viewport'),{onSelect:select,getRevision:()=>doc.revision,onTransform:(id,patch,baseRevision)=>run(async()=>{await doc.update(id,patch,{baseRevision});render();say('Transform applied.');}),onExitWalk:()=>setWalk(false),onPosition:position=>{$('#studio-position').textContent=`${position[0].toFixed(1)} E / ${(-position[2]).toFixed(1)} N · m`;}});

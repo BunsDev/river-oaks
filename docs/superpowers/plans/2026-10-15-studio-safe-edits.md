@@ -278,3 +278,55 @@ review the draft and confirm the current recipe destinations for the #416 pilot;
 then mark ready when review and hosted gates permit. Merge/deployment remain
 unauthorized. The worktree is preserved with ignored runtime evidence because
 its PR is still open; do not retire it or mark the task delivered.
+
+## Hosted CI regression: generated-interior preview (2026-10-15)
+
+Owner for this slice: `claude:river-oaks-safe-edits (e9aa0185)`, handed off from
+the released Codex claim with Val's authorization to fix it on #427 (no merge).
+
+Hosted Preview runs 38739736495 (`f5d7899a`) and 38739898046 (`44f62a12`) failed
+`preview shared (worlds-and-creator)` at `creator-generated-levels`: the click on
+`Generated interior` → `Apply preview` timed out after 60 s. Main passed the same
+job on its five preceding pushes, including base `cd99570a`. The failure
+screenshot showed the status "Review the proposed interior change, then apply it."
+with no preview under `Preview level 0`.
+
+Cause: the asynchronous `run()` called `renderPanels()` before and after every
+action. `renderBuildingInteriorPanel()` starts with `host.replaceChildren()`, so
+the synchronous preview it had just shown was rebuilt hidden, and the focus target
+after Apply was replaced too. Fix: a synchronous action runs and reports errors as
+before #427; only an action that returns a promise enters `studioBusy`, disables
+controls and re-renders when it settles. Assessment, stale-revision fences and
+undo are unchanged.
+
+Local failure before / pass after, Metal ANGLE full rendering:
+
+- `RIVER_OAKS_SHARED_JOURNEY=creator-generated-levels node preview/e2e/shared-runner.js development-publish`
+  at `44f62a12`: **failed**, same `Apply preview` timeout
+  (`.runtime/safe-edits/creator-levels-before-44f62a12.{txt,json}`).
+- `node preview/e2e/shared-runner.js development-world development-publish creator`
+  after the fix: **6/6 passed** (world-boundary 20.1 s, world-map 57.5 s,
+  world-publish 57.3 s, creator-generated-levels 26.7 s, creator-four-levels
+  32.2 s, creator-objects 38.5 s; `.runtime/safe-edits/worlds-creator-after.*`).
+- Focused `node --test preview/tests/studio-*.test.js server/tests/studio-assets.test.js`:
+  **86 passed / 0 failed / 0 skipped**.
+- `pnpm run test:experience world-studio`: **passed 23.854 s, 0 page errors**
+  (`.runtime/safe-edits/world-studio-after.*`).
+- `node desktop/studio-e2e.js`: **11/11** native checks passed
+  (`.runtime/safe-edits/native-studio-after.txt`).
+- `pnpm run verify`: **core passed, 11/11 tasks**; agent 109, preview 3223 pass /
+  1 skip / 1 TODO, server 572 pass / 148 Redis skips, desktop 69, Python 141.
+  Total **4114 passed / 149 skipped / 1 TODO** (`.runtime/safe-edits/ci-fix-core.txt`).
+
+The same run's `desktop (macos-latest)` failure ("render loop keeps advancing",
+`desktop/e2e.js:213`) passed on `f5d7899a`, whose runtime source is identical to
+`44f62a12`; it is treated as a runner flake, not addressed here. Independent
+read-only checks at `44f62a12` before this fix: the focused suite passed 86/86;
+`meeting_route_blocked_spawn_clear` failed on `cd99570a` source ("Missing
+expected exception") and passed on the PR; an endpoint-only mutation of
+`spaceMovementSegment` failed the thin-obstacle and support-height tests.
+
+Next: push the signed fix, confirm hosted `worlds-and-creator` and the aggregate
+`preview` check on the new head, then review #427 and confirm recipe destinations
+for #416. Full Redis, packaged/live-auth, device and human accessibility
+acceptance remain unclaimed. Merge and deployment remain unauthorized.
