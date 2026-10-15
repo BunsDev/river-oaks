@@ -262,3 +262,19 @@ the assessed batch's actual applied status before reading its changed values.
 Final source/profile hashes: `.runtime/safe-edits/delivery-source-manifest.json`.
 The original source manifest and patch above remain historical, unchanged.
 Signed commit and draft PR are the remaining delivery actions; merge is excluded.
+
+
+## Draft PR handoff
+
+Signed implementation commit `f5d7899a34a68a6e3af96833f3f4fb55ade33030` was
+verified with `git verify-commit` and the attribution check printed nothing.
+Pushed to `origin/fix/studio-safe-edits-414` and opened draft
+[PR #427](https://github.com/BunsDev/river-oaks/pull/427). Its body records the
+local verification counts and remaining acceptance. A documentation/register
+follow-up records this handoff; runtime source still matches the tested manifest.
+
+The primary live claim is released, with this task queued at PR #427. Next:
+review the draft and confirm the current recipe destinations for the #416 pilot;
+then mark ready when review and hosted gates permit. Merge/deployment remain
+unauthorized. The worktree is preserved with ignored runtime evidence because
+its PR is still open; do not retire it or mark the task delivered.
