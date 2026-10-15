@@ -247,33 +247,32 @@ async function acceptWindows({ dir, version, arch, manifest, signed }) {
   check(`the installed app is running ${LAUNCH_SECONDS} s after Update.exe --processStart`, Boolean(browser) && children.length > 0, { browser: browser?.CommandLine, children });
   check('the launched app has stopped', await stopWindows(root));
 
-  // Squirrel's uninstall runs the app with --squirrel-uninstall (shortcuts), removes the
-  // Installed apps entry and makes one pass at deleting the folder, giving up on any
-  // file still held. By its design it leaves Update.exe (running, so it cannot delete
-  // itself) and a .dead marker that tells the next Setup.exe to clear the folder.
-  // Measured on windows-latest: the app folder's squirrel.exe, which its own scan of
-  // the folder holds, stayed every time, and the app executable, which it had just
-  // run for the uninstall hook, once in two. Nothing else may remain (resources,
-  // packages, stub, icon), nothing may run, and a reinstall over the leftovers must work.
-  const leftovers = ['.dead', 'Update.exe', `app-${version}`, join(`app-${version}`, 'squirrel.exe'), join(`app-${version}`, WINDOWS_EXECUTABLE)];
+  // Squirrel's uninstall runs the app with --squirrel-uninstall, removes the
+  // Installed apps entry, deletes what it can in one pass and marks the folder
+  // .dead. The hook's cleanup (desktop/squirrel.js) removes the rest once Update.exe
+  // exits, so the whole install folder must go, with no shortcut, entry or process.
   const uninstall = async label => {
     const result = await sh(update, ['--uninstall', '-s'], { timeout: 300_000 });
     check(`${label}: Update.exe --uninstall -s exits 0`, result.code === 0, { code: result.code, log: result.code === 0 ? undefined : tail(`${result.stdout}${result.stderr}`) });
-    const left = async () => (await readdir(root, { recursive: true }).catch(() => [])).sort();
-    const removed = async () => (await left()).every(entry => leftovers.includes(entry)) && !(await Promise.all(shortcuts.map(exists))).some(Boolean) && !(await uninstallEntry()) && !(await windowsProcesses(root)).length;
+    const removed = async () => !(await exists(root)) && !(await Promise.all(shortcuts.map(exists))).some(Boolean) && !(await uninstallEntry()) && !(await windowsProcesses(root)).length;
     const gone = await waitFor(removed, 120);
-    check(`${label}: the app, both shortcuts and the Installed apps entry are gone; only Squirrel's own leftovers remain`, gone, {
-      left: await left(), shortcuts: await Promise.all(shortcuts.map(exists)), entry: Boolean(await uninstallEntry()), running: (await windowsProcesses(root)).map(proc => proc.CommandLine),
+    check(`${label}: the install folder, both shortcuts and the Installed apps entry are gone`, gone, {
+      left: (await readdir(root, { recursive: true }).catch(() => [])).sort(), shortcuts: await Promise.all(shortcuts.map(exists)), entry: Boolean(await uninstallEntry()), running: (await windowsProcesses(root)).map(proc => proc.CommandLine),
     });
+    if (!gone) {
+      // The hook's cleanup logs what it did; a PowerShell still waiting shows here too.
+      const log = await readFile(join(process.env.TEMP ?? '', `${WINDOWS_INSTALL_ID}-uninstall.log`), 'utf8').catch(error => error.code);
+      const cleanup = await powershell(`@(Get-CimInstance Win32_Process -Filter "Name='powershell.exe'" | Where-Object { $_.CommandLine -like '*-EncodedCommand*' } | Select-Object ProcessId,CreationDate) | ConvertTo-Json -Compress`);
+      note(`${label}: uninstall cleanup`, { log: tail(String(log), 1500), running: cleanup || '[]' });
+    }
   };
   await uninstall('uninstall');
 
-  // Reinstall over the leftovers, then remove it again.
-  await install('reinstall over the leftovers');
+  // Install and remove once more: a second round must behave the same.
+  await install('reinstall');
   const again = await inspectBuild(buildPaths(app, 'win32'), { platform: 'win32', arch, version });
-  check('reinstall over the leftovers: the installed copy passes the package check', again.ok, { problems: again.problems });
+  check('reinstall: the installed copy passes the package check', again.ok, { problems: again.problems });
   await uninstall('second uninstall');
-  note('left in the install folder after uninstall', { root, entries: await readdir(root, { recursive: true }).catch(() => []) });
 }
 
 // --- Linux -----------------------------------------------------------------
