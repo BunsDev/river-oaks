@@ -23,6 +23,11 @@
 .office-journey progress::-webkit-progress-bar { background:#ffffff24; border-radius:4px; }
 .office-journey progress::-webkit-progress-value { background:#d8c697; border-radius:4px; }
 .office-visit button:focus-visible { outline: 3px solid #e8c995; outline-offset: 3px; }
+/* Views (#363): the view select reads as one of the header actions. */
+#office-view { min-height:44px; background:#ffffff0c; color:#f5f1df; border:1px solid #d2cbb147; border-radius:10px; padding:10px 12px; font:inherit; font-size:12px; cursor:pointer; }
+#office-view:focus-visible { outline:3px solid #e8c995; outline-offset:3px; }
+#office-view option { color:#1d2a26; background:#f5f3e8; }
+#office-view[hidden] { display:none; }
 .office-help { position: absolute; bottom: max(20px,env(safe-area-inset-bottom)); left: 20px; background: #10151cdd; padding: 10px 16px; border-radius: 12px; font-size: 12px; }
 .office-pad { position: absolute; bottom: max(76px,env(safe-area-inset-bottom)); right: 20px; display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; }
 .office-pad[hidden] { display: none; }
@@ -34,7 +39,7 @@
  .office-visit > header { top: max(10px,env(safe-area-inset-top)); left: max(10px,env(safe-area-inset-left)); right: max(10px,env(safe-area-inset-right)); padding: 14px; gap: 12px; flex-direction:column; align-items:stretch; }
  .office-visit h2 { font-size:22px; } .office-identity { text-align:left; }
  .office-actions { max-width:none; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
- .office-actions button { min-width:0; padding:8px; font-size:11px; }
+ .office-actions button, #office-view { min-width:0; padding:8px; font-size:11px; }
  .office-help { max-width: calc(100vw - 40px); left: 10px; font-size: 11px; box-sizing:border-box; }
  .office-pad { right: 10px; gap:5px; } .office-pad button { padding:8px; font-size:11px; }
  .office-journey { width:calc(100% - 32px); padding:14px; gap:12px; }

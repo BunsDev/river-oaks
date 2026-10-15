@@ -56,7 +56,7 @@ export function buildSeats(builds = []) {
 // {buildId, slot, height, yaw, position: [east, north, ground]}.
 export function resolveBenchSeat(benches, buildId, slot, groundAt) {
   const seat = benches.find(item => item.buildId === buildId && item.slot === slot);
-  return seat ? { buildId, slot, height: seat.height, yaw: seat.heading, position: [seat.x, seat.north, groundAt(seat.x, seat.north)], ...(seat.standAt ? { standAt: seat.standAt } : {}) } : null;
+  return seat ? { buildId, slot, height: seat.height, yaw: seat.heading, position: [seat.x, seat.north, groundAt(seat.x, seat.north)], ...(seat.standAt ? { standAt: seat.standAt } : {}), ...(Number.isFinite(seat.eyePitch) ? { eyePitch: seat.eyePitch } : {}) } : null;
 }
 
 // Boxwood planters flank each boutique entrance (district.js draws them).

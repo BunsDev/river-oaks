@@ -1,6 +1,6 @@
 import { personPosition, personEyeHeight, personDistance } from './person-position.js';
 import { createFlightState, beginFlight, stepFlight } from './flight.js';
-import { thirdPersonPose, createCameraBoom } from './third-person.js';
+import { thirdPersonPose, createCameraBoom, pitchAfterSeatChange, seatedEyeView } from './third-person.js';
 import { createPointerGesture } from './pointer-gesture.js';
 import { withinTalkingReach } from './people-picking.js';
 import { nearbyPeople } from './nearby-people.js';
@@ -94,7 +94,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   };
   const dialogueOpen = () => !$('#community-dialogue')?.hidden;
   const place = (delta=0) => {
-    if (thirdPerson) {
+    if (thirdPerson && !seatedEyeView(sitting)) {
       const pose = thirdPersonPose({...state,position:transport?.pose.cameraTarget??state.position,cameraDistance:transport?10.4:4.2}, environment);
       const clearDistance=Math.hypot(...pose.position.map((v,i)=>v-pose.target[i]));
       if(clearDistance<.05){
@@ -273,6 +273,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       state.speed=0;place();host.focus({preventScroll:true});
     },
     get thirdPerson() { return thirdPerson; },
+    get cameraView() { return thirdPerson && !seatedEyeView(sitting) ? 'third-person' : 'eye'; },
     halt() { clear(); if (state) { state.velocity = [0, 0]; state.speed = 0; } },
     applyServerPose(player) {
       transport?.stop();transport=null;
@@ -282,9 +283,11 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
         .find(item => item.id === player.levelId);
       const selectedLevelId = level?.index > 0 ? level.id : null;
       if (environment.levelId !== selectedLevelId) environment = createWalkingEnvironment(walkingWorld, placedObjects, selectedLevelId);
+      const before=sitting;
       sitting=player.sitting??null;performing=Boolean(player.performing);seatedGround=player.position[2];
       state.position = [player.position[0], player.position[2] + (sitting?sitting.height+.65:1.68) + player.altitude, -player.position[1]];
       state.yaw = player.yaw; state.speed = 0;
+      state.pitch = pitchAfterSeatChange(before, sitting, state.pitch);
       flight = createFlightState();
       if (player.altitude > 0) Object.assign(flight, { active: true, altitude: player.altitude, target: player.altitude });
       place();

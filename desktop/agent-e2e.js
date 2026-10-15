@@ -86,6 +86,7 @@ try {
  await page.locator('input[name="studio-agent-scope"][value="region"]').check();
  await page.getByLabel('Message the World Studio agent').fill('Warm the entire living room');await page.getByLabel('Message the World Studio agent').press('Enter');
  await page.getByRole('button',{name:'Apply as one edit'}).click();
+ await page.locator('.studio-agent-edit-status').filter({hasText:'Applied as one edit.'}).waitFor();
  assert.equal(await page.getByRole('combobox',{name:'Finish',exact:true}).inputValue(),'sage');
  await page.locator('[data-item="@environment"]').click();assert.equal(await page.getByRole('combobox',{name:'Lighting',exact:true}).inputValue(),'evening');
  await page.locator('#studio-undo').click();assert.equal(await page.getByRole('combobox',{name:'Lighting',exact:true}).inputValue(),'warm');
