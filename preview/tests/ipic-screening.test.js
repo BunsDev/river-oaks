@@ -209,28 +209,35 @@ test('captions come from the active cues of a tracked track, because the video i
 // seeked again, and a tick during a pending seek abandoned it: the viewer froze for up to 1.2 s.
 test('a slow seek is never re-issued while pending, and the next seek aims ahead by the time seeks take', async () => {
   const f = setup({ media: fakeMedia({ slowSeeks: true }), offset: 52_000 });
-  f.player.apply(view()); f.player.tick(); await tick(); // late join: seeks to 2.0 s and plays
-  f.media.land();
-  const late = () => f.media.calls.seeks.length;
-  f.media.currentTime = 1.0; f.media.land(); // a full second behind
-  let seeks = late();
-  f.player.tick();
-  assert.equal(late(), seeks + 1, 'a large drift seeks');
-  const firstTarget = f.media.currentTime;
-  assert.ok(Math.abs(firstTarget - 2.0) < 0.05, `first seek, nothing measured yet: ${firstTarget}`);
-  // The seek is pending for 800 ms while the shared film runs on: no tick may seek again.
+  const seeks = () => f.media.calls.seeks.length;
+  f.player.apply(view()); f.player.tick(); await tick(); // late join: seeks to 2.0 s, nothing measured yet
+  assert.ok(Math.abs(f.media.currentTime - 2.0) < 1e-6, `late join aims at the target: ${f.media.currentTime}`);
+  // The decoder takes 800 ms; the shared film runs on and no tick may seek again meanwhile.
+  const pending = seeks();
   for (let i = 0; i < 8; i++) { f.local.now += 100; f.player.tick(); }
-  assert.equal(late(), seeks + 1, 'no second seek while the first is pending');
+  assert.equal(seeks(), pending, 'no second seek while the first is pending');
   f.media.land();
-  // It landed 800 ms behind; the correction seeks once more, now aiming 800 ms ahead.
-  seeks = late(); f.player.tick();
-  assert.equal(late(), seeks + 1);
-  const at = 2.0 + 0.8;
-  assert.ok(Math.abs(f.media.currentTime - (at + 0.8)) < 0.05, `aimed ${f.media.currentTime} for a target of ${at} plus the measured 0.8 s`);
-  // That seek also takes 800 ms; it lands on the shared position, so nothing more is needed.
+  // It landed 800 ms behind; the correction seeks once, aiming 800 ms past the target of 2.8 s.
+  f.player.tick();
+  assert.equal(seeks(), pending + 1);
+  assert.ok(Math.abs(f.media.currentTime - 3.6) < 0.05, `aimed ${f.media.currentTime} for 2.8 s plus the measured 0.8 s`);
+  // That seek also takes 800 ms and lands on the shared position: nothing more is needed.
   f.local.now += 800; f.media.land(); f.player.tick();
-  assert.equal(late(), seeks + 1, 'landed in step: no further seek');
+  assert.equal(seeks(), pending + 1, 'landed in step: no further seek');
   assert.ok(Math.abs(f.player.stats().driftMs) < 50, `drift ${f.player.stats().driftMs}`);
+});
+
+// The first version adopted the slowest recent seek at once; under swinging load the next seek was
+// faster and the viewer landed up to 1.3 s ahead (A/B on main, 2026-10-15). The lead is the fastest
+// of the last few seeks, so a seek lands on the target or a little behind, never ahead.
+test('one slow seek does not push the aim ahead: the lead is the fastest of the recent seeks', async () => {
+  const f = setup({ media: fakeMedia({ slowSeeks: true }), offset: 52_000 });
+  const seekBehind = async (ms, behindS) => { f.media.currentTime = f.media.currentTime - behindS; f.media.land(); f.player.tick(); f.local.now += ms; f.media.land(); };
+  f.player.apply(view()); f.player.tick(); await tick(); f.local.now += 200; f.media.land(); // a 200 ms seek
+  await seekBehind(1200, 1); // then a 1.2 s one
+  const at = () => (f.local.now + 52_000 - 100_000) / 1000;
+  f.media.currentTime = at() - 1; f.media.land(); f.player.tick();
+  assert.ok(f.media.currentTime - at() <= 0.2 + 1e-6, `aimed ${(f.media.currentTime - at()).toFixed(3)} s ahead; the fastest recent seek was 0.2 s`);
 });
 
 test('a seek that never lands is retried after the timeout, and the lead stays bounded', async () => {

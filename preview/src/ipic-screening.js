@@ -11,9 +11,10 @@ import { SCREENING_MEDIA, screeningPositionAt, screeningStatusAt } from './scree
 // playback rate is nudged (at most 8 %, so pitch stays natural); beyond it the film seeks.
 // A seek decodes from the nearest keyframe, which a slow or busy decoder can take longer than the
 // threshold to do. So a pending seek is never re-issued (until seekTimeoutMs), and each seek aims
-// ahead by how long recent seeks took (capped at maxSeekLeadMs); otherwise every seek lands behind
-// by its own duration and the next tick seeks again, freezing the film.
-export const SCREENING_SYNC = Object.freeze({ deadBandMs: 40, seekMs: 400, maxRateChange: 0.08, rateGainPerMs: 0.0004, frameUncertaintyMs: 250, samples: 16, seekTimeoutMs: 3000, maxSeekLeadMs: 1500 });
+// ahead by the fastest of the last seekHistory seeks (capped at maxSeekLeadMs); otherwise every seek
+// lands behind by its own duration and the next tick seeks again, freezing the film. The fastest,
+// not the latest: seek times swing with load, and a lead from a slow seek lands the next one ahead.
+export const SCREENING_SYNC = Object.freeze({ deadBandMs: 40, seekMs: 400, maxRateChange: 0.08, rateGainPerMs: 0.0004, frameUncertaintyMs: 250, samples: 16, seekTimeoutMs: 3000, maxSeekLeadMs: 1500, seekHistory: 3 });
 
 // Texture mapping that keeps the film's aspect on the screen: a narrower film is
 // pillarboxed and a wider one letterboxed (with clamped edges; the media carries a black border).
@@ -50,19 +51,20 @@ export function createServerClock({ now = () => performance.now() } = {}) {
 // blocked (autoplay needs a gesture), error, unsupported (no playable source), disposed.
 export function createScreeningPlayer({ media: element, clock, onChange = () => {}, now = () => performance.now() }) {
   let shared = null, mediaId = null, state = 'idle', generation = 0, playing = null, rate = 1, drift = 0, captions = false;
-  let seekStartedAt = null, seekLeadMs = null;
+  let seekStartedAt = null;
+  const seekTimes = [];
+  const seekLead = () => (seekTimes.length ? Math.min(SCREENING_SYNC.maxSeekLeadMs, ...seekTimes) : 0);
   const set = next => { if (state !== next) { state = next; onChange(stats()); } };
   const listeners = {
     playing: () => { if (shared?.status === 'playing' && !['blocked', 'error'].includes(state)) set('playing'); },
     waiting: () => { if (shared?.status === 'playing' && state === 'playing') set('buffering'); },
     canplay: () => { if (state === 'loading') set('ready'); },
     error: () => { playing = null; set('error'); },
-    // How long the decoder took to land our seek. A slower seek is taken at once (too small a lead
-    // lands behind and starts the loop again); a faster one only halves the gap.
+    // How long the decoder took to land our seek; the last few are kept.
     seeked: () => {
       if (seekStartedAt === null) return;
-      const took = Math.max(0, now() - seekStartedAt); seekStartedAt = null;
-      seekLeadMs = Math.min(SCREENING_SYNC.maxSeekLeadMs, seekLeadMs === null || took > seekLeadMs ? took : (seekLeadMs + took) / 2);
+      seekTimes.push(Math.max(0, now() - seekStartedAt)); seekStartedAt = null;
+      if (seekTimes.length > SCREENING_SYNC.seekHistory) seekTimes.shift();
     },
   };
   const seekTo = (ms, lead = 0) => {
@@ -117,7 +119,7 @@ export function createScreeningPlayer({ media: element, clock, onChange = () => 
       drift = element.currentTime * 1000 - at;
       if (status === 'playing') {
         if (seekPending()) rate = 1; // the frame is frozen until the seek lands; correcting now would abandon it
-        else if (Math.abs(drift) > SCREENING_SYNC.seekMs) { seekTo(at, seekLeadMs ?? 0); drift = 0; rate = 1; }
+        else if (Math.abs(drift) > SCREENING_SYNC.seekMs) { seekTo(at, seekLead()); drift = 0; rate = 1; }
         else if (Math.abs(drift) > SCREENING_SYNC.deadBandMs) rate = 1 - Math.sign(drift) * Math.min(SCREENING_SYNC.maxRateChange, Math.abs(drift) * SCREENING_SYNC.rateGainPerMs);
         else rate = 1;
         element.playbackRate = rate;
