@@ -140,6 +140,9 @@ const penthouse = {
     { id: 'workstations', label: 'Workstations', levelId: L0, eye: [9, 2.4, 1.8], target: [4.5, 0.8, 7.5] },
     { id: 'library', label: 'Library', levelId: L1, eye: [13.5, 2.2, 19.2], target: [-6, 1, 17.5] },
     { id: 'terrace', label: 'Terrace', levelId: L0, eye: [-16, 1.8, 17.5], target: [-30, 1, 4] },
+    // From the front terrace corner, look over its parapet toward the actual
+    // neighbouring podiums in the live district; no visitor relocation.
+    { id: 'roof-gardens', label: 'Roof gardens', levelId: L0, eye: [-22, 1.8, 1], target: [-5, -15.2, -33] },
   ],
 };
 
