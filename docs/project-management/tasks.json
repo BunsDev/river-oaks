@@ -5672,97 +5672,39 @@
       }
     },
     {
-      "id": "office-ipic-baseline-360",
-      "title": "Office + IPIC #360 (design side, D0/D1): kit/reference inventory, brief, asset manifest and review matrix in docs/design/office-ipic",
+      "id": "desktop-package-matrix",
+      "title": "Desktop packaging build matrix (#371): package, fuse/asar checks and development e2e on Windows, Linux and macOS runners with unsigned artifacts",
       "status": "active",
       "branches": [
-        "docs/office-ipic-baseline-20261014"
+        "ci/desktop-package-matrix"
       ],
-      "owner": "claude:river-oaks-1b (f4107618)",
-      "updatedAt": "2026-10-15T03:43:33.020Z",
-      "nextAction": "main c1cfd584 merged (dace7b1a); engineering G1 agreement added to review-matrix.md, brief notes #388. Push, mark #380 ready, land after #381.",
+      "owner": "claude:river-oaks-27 (16ffadb4)",
+      "updatedAt": "2026-10-15T00:07:04.000Z",
+      "nextAction": "#379 landed (18be0f56) and merged in; check reads packagedBinary. Windows launch fixed (app path without trailing backslash; diag 38655207182). Linux crash recovery fixed by kernel core handling on the runner (diag 38657104883); Linux finding on #370. Next: core verify, push, Desktop + Verify runs, fuse-drift draft PR, artifact checksums, land #377.",
       "filesOwned": [
-        "docs/design/office-ipic/brief.md",
-        "docs/design/office-ipic/reference-index.json",
-        "docs/design/office-ipic/asset-manifest.json",
-        "docs/design/office-ipic/review-matrix.md",
-        "scripts/office-ipic-reference-index.mjs",
-        "scripts/tests/office-ipic-references.test.js",
-        "docs/superpowers/plans/2026-10-14-office-ipic-baseline.md",
-        "docs/design/office-ipic/captures/**",
-        "data/reports/office-ipic-baseline-captures.json",
-        "data/reports/office-ipic-baseline-captures-desk.json"
+        ".github/workflows/desktop.yml",
+        "desktop/package-check.js",
+        "desktop/tests/package-check.test.js",
+        "config/agent-workflow.json (desktop-package profile)",
+        "docs/desktop.md (CI builds section)",
+        "docs/agent-workflow.md (desktop-package profile)",
+        "docs/superpowers/plans/2026-10-14-desktop-package-matrix.md"
       ],
       "requiredChecks": [
-        "focused office/IPIC node tests",
-        "pnpm run verify"
+        "pnpm run verify tooling",
+        "pnpm run test:desktop",
+        "pnpm run verify",
+        "Desktop workflow green on windows-latest, ubuntu-latest and macos-latest with artifacts"
       ],
-      "issue": 360,
-      "ledger": "docs/superpowers/plans/2026-10-14-office-ipic-baseline.md",
-      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-ipic-baseline-20261014",
-      "pr": 380,
-      "leaseUntil": "2026-10-15T05:43:33.020Z",
-      "handoff": {
-        "at": "2026-10-15T03:38:57.407Z",
-        "from": null,
-        "to": "claude:river-oaks-1b (f4107618)",
-        "reason": "Released design packet task; Val's /goal of 2026-10-15 asks river-oaks-1b to mark #380 ready, land it and close #360."
-      }
-    },
-    {
-      "id": "local-prune-20261013",
-      "title": "Reduce River Oaks local branches and worktrees to at most ten each",
-      "status": "retired",
-      "branches": [
-        "feat/prune-tooling-20261014"
+      "issues": [
+        371
       ],
-      "owner": null,
-      "updatedAt": "2026-10-14T20:01:50.925490Z",
-      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
-      "filesOwned": [
-        "docs/project-management/tasks.json (prune records only)",
-        "docs/superpowers/plans/2026-10-13-local-branch-worktree-prune.md"
-      ],
-      "requiredChecks": [
-        "fresh worktree and branch count <=10 each",
-        "project:check --github",
-        "restore manifests and archive hashes for retired refs"
-      ],
-      "ledger": "docs/superpowers/plans/2026-10-13-local-branch-worktree-prune.md",
-      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-prune-tooling-20261014",
-      "pr": 375,
-      "evidence": [
-        {
-          "pr": 375,
-          "reviewedHead": "56b6369000d303b9ebe275caf67344f92b409717",
-          "merge": "06f7476b10bd7fbb22f9db7c2f158ee38934dd24",
-          "tree": "58c60042c8a107d64a15402ec0ca200ef14fa464",
-          "checks": [
-            "pnpm run land 375 (claude-c7385ac6): Verify passed on b8064c63, 17 checks ok, mergeState CLEAN, merged 2026-10-14T19:49:16Z as 06f7476b",
-            "focused node --test suites 56/56 and core pnpm run verify passed at b8064c63 (ledger round 1)",
-            "56b63690 is a docs-only ledger commit on b8064c63; merge tree equals head tree"
-          ]
-        }
-      ],
-      "retirement": {
-        "head": "56b6369000d303b9ebe275caf67344f92b409717",
-        "releasedAt": "2026-10-14T20:00:44.862276Z",
-        "sessionsReviewedAt": "2026-10-14T20:00:44.862276Z",
-        "note": "No process cwd in the worktree (lsof +d); worktree clean with no ignored data; released by river-oaks-fe after landing #375 with Val's authorization."
-      },
-      "retiredBranches": [
-        "feat/prune-tooling-20261014"
-      ],
-      "archive": {
-        "feat/prune-tooling-20261014": {
-          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-j6m3Nu/manifest.json",
-          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-j6m3Nu/history.bundle",
-          "sha256": "cf480cc89e8520b1821978e0c124ba54c83b93759651b005b51382455ad15100",
-          "tag": "refs/tags/archive/worktree-prune/b89610aa-3e31-475c-bca9-e9096d6baea1",
-          "head": "56b6369000d303b9ebe275caf67344f92b409717"
-        }
-      },
-      "handoff": "2026-10-14 river-oaks-fe: #375 landed as 06f7476b. Orphans cancelled: feat/character-studio-20261013 (cancel-stale-SwztW4) and river-oaks-c2-tools (cancel-detached-ZcsStq). 19 merged-exact remote branches deleted (manifest ~/worktree-backups/river-oaks/remote-delete-20261014-c7385ac6/manifest.json); office-arrival archive restore verified (tree 3eed997b). delete_branch_on_merge enabled. Primary fast-forwarded to 06f7476b with the live register preserved; popped stash copies discarded (backup primary-popped-files-20261014-c7385ac6). Retired by river-oaks-5d (aa2272b7) through project:prune at 20:00:00Z (retirement-j6m3Nu, evidence local-evidence-prune-tooling-20261014); river-oaks-fe briefly overwrote the status with \"delivered\" at 20:00:44Z and restored \"retired\" at 2026-10-14T20:01:50.925490Z."
+      "blocker": null,
+      "ledger": "docs/superpowers/plans/2026-10-14-desktop-package-matrix.md",
+      "leaseUntil": "2026-10-15T02:07:04.000Z",
+      "pr": 377,
+      "deliveryPr": 377,
+      "previousOwner": "claude:river-oaks-desktop-matrix (e8b6b86f)"
     },
     {
       "id": "procedural-multilevel-interiors-plan",
@@ -5873,6 +5815,628 @@
           ]
         }
       }
+    },
+    {
+      "id": "procedural-level-aware-streaming",
+      "title": "Prepare generated interior levels according to authoritative occupancy",
+      "status": "retired",
+      "branches": [
+        "feat/procedural-level-streaming-20261014"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-14T21:35:28.584Z",
+      "handoff": "PR #350 merged to main at c36bf2dec992b284a06534d9e0047248b0ea08e5 on 2026-10-14T20:53:55Z. Reviewed signed head 73798e40e1cabb3103ced7959a0497e0764cf04d; exact-head aggregate preview and all 16 checks passed. Local focused 22/22 and core passed on current-main merge; pre-integration isolated-Redis full covered 672 server tests and 21 shared journeys. Worktree remains for evidence and retirement.",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "ledger": "docs/superpowers/plans/2026-10-14-level-aware-interior-streaming.md",
+      "requiredChecks": [
+        "Multi-level stream preparation, cancellation and eviction behavioral tests",
+        "Generated gallery ascent/descent and reduced-motion browser journeys",
+        "Four-level creator publication and checkpoint server regression",
+        "pnpm run verify core before commit"
+      ],
+      "filesOwned": [
+        "preview/src/generated-interior-stream.js",
+        "preview/tests/generated-interior-stream.test.js",
+        "preview/src/main.js (generated interior stream occupancy hint only)",
+        "preview/e2e/generated-gallery-levels.js (stream readiness assertions only)",
+        "server/tests/creator-four-level-interiors.test.js",
+        "docs/superpowers/plans/2026-10-14-level-aware-interior-streaming.md",
+        "server/app.js (local reconnect grace default only)",
+        "server/tests/shared-transport.test.js (shutdown grace timer assertion only)",
+        "preview/e2e/creator-four-levels.js",
+        "preview/e2e/shared-runner.js (named journey registration only)",
+        "preview/src/walking-ui.js (intermediate level direction controls only)",
+        "preview/src/contextual-action.js (descent action priority only)",
+        "preview/tests/contextual-action.test.js (descent action regression only)"
+      ],
+      "pr": 350,
+      "leaseUntil": null,
+      "evidence": [
+        {
+          "pr": 350,
+          "reviewedHead": "73798e40e1cabb3103ced7959a0497e0764cf04d",
+          "merge": "c36bf2dec992b284a06534d9e0047248b0ea08e5",
+          "tree": "e3900eef89559e46cdf32f6aa4d548b77e5f44a4",
+          "checks": "Exact-head aggregate preview and all 16 hosted checks passed; local final-main focused 22/22 and core passed; pre-integration isolated-Redis full passed 672 server tests, ten experience and 21 shared journeys."
+        }
+      ],
+      "retirement": {
+        "head": "73798e40e1cabb3103ced7959a0497e0764cf04d",
+        "releasedAt": "2026-10-14T21:34:25.530Z",
+        "sessionsReviewedAt": "2026-10-14T21:34:25.530Z",
+        "note": "Session aa2272b7: lsof shows no process cwd in the worktree; evidence archived at ~/worktree-backups/river-oaks/local-evidence-level-streaming-20261014/manifest.json before removing regenerable caches"
+      },
+      "retiredBranches": [
+        "feat/procedural-level-streaming-20261014"
+      ],
+      "archive": {
+        "feat/procedural-level-streaming-20261014": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-KpJYYo/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-KpJYYo/history.bundle",
+          "sha256": "e13706c85a699675b0fcfe164a1fcf77f1361b036226ff0a8b21b6acb0ba05fa",
+          "tag": "refs/tags/archive/worktree-prune/aa788305-db75-4b4d-a518-585b1eadb633",
+          "head": "73798e40e1cabb3103ced7959a0497e0764cf04d"
+        }
+      }
+    },
+    {
+      "id": "procedural-pilot-frame-performance",
+      "title": "Profile and improve generated gallery frame pacing before broader interior rollout",
+      "status": "retired",
+      "branches": [
+        "perf/procedural-pilot-render-20261014"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-14T21:35:53.332Z",
+      "handoff": "PR #351 merged to main as a2739d6c2d78766c28c8bc1719e32156d00f4138 at 2026-10-14T21:11:51Z. Reviewed signed head 7abbd41c6e41c21ba601a1b8dba096e886f22fa3; exact-head preview and all 16 checks green. Final-main focused 22/22 and core passed. Pilot stationary five-minute M3 Max soak was 16.7-16.8 ms p95/p99; broader target-device and human visual acceptance remain open.",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "ledger": "docs/superpowers/plans/2026-10-14-procedural-pilot-frame-performance.md",
+      "requiredChecks": [
+        "Comparable player-height street and gallery pass/object audit",
+        "Focused render behavior and visual regression",
+        "pnpm run verify core before commit",
+        "Paired browser frame pacing, cold/return load and memory evidence"
+      ],
+      "filesOwned": [
+        "preview/e2e/generated-gallery-render-cost.js",
+        "preview/e2e/generated-gallery-soak.js",
+        "preview/src/interior-exterior-culling.js",
+        "preview/src/main.js",
+        "preview/tests/interior-exterior-culling.test.js",
+        "docs/superpowers/plans/2026-10-14-procedural-pilot-frame-performance.md"
+      ],
+      "pr": 351,
+      "leaseUntil": null,
+      "previousOwner": "codex-root-20261014-pilot-render",
+      "evidence": [
+        {
+          "pr": 351,
+          "reviewedHead": "7abbd41c6e41c21ba601a1b8dba096e886f22fa3",
+          "merge": "a2739d6c2d78766c28c8bc1719e32156d00f4138",
+          "tree": "8b83c085dce60be8c0426a6338298888bc2d0195",
+          "checks": "Exact-head aggregate preview and all 16 hosted checks passed; final-main focused 22/22 and core passed; prior full and five-minute local stationary gallery soak passed with stated scope limits."
+        }
+      ],
+      "retirement": {
+        "head": "7abbd41c6e41c21ba601a1b8dba096e886f22fa3",
+        "releasedAt": "2026-10-14T21:34:25.530Z",
+        "sessionsReviewedAt": "2026-10-14T21:34:25.530Z",
+        "note": "Session aa2272b7: lsof shows no process cwd in the worktree; evidence archived at ~/worktree-backups/river-oaks/local-evidence-pilot-render-20261014/manifest.json before removing regenerable caches"
+      },
+      "retiredBranches": [
+        "perf/procedural-pilot-render-20261014"
+      ],
+      "archive": {
+        "perf/procedural-pilot-render-20261014": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-0bMJhS/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-0bMJhS/history.bundle",
+          "sha256": "0f078fef36428feab648bd814d2a62e9d907f7154a14e6b430dc7737791c78ff",
+          "tag": "refs/tags/archive/worktree-prune/cc32115e-e42d-4958-8940-18069674ad30",
+          "head": "7abbd41c6e41c21ba601a1b8dba096e886f22fa3"
+        }
+      }
+    },
+    {
+      "id": "procedural-private-upper-revocation",
+      "title": "Keep generated private home levels and voice access consistent after guest revocation",
+      "status": "retired",
+      "branches": [
+        "fix/procedural-private-level-revocation-20261014"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-14T21:36:19.750Z",
+      "handoff": "PR #352 merged to main as f9c3cb55a605dfa86e32d214e7f5e6e8bba0f160 at 2026-10-14T21:24:32Z. Reviewed signed head 1ed9624adcb6276caeab318ea8449b4f9686bb0d; exact-head preview and all 16 checks green. Final-main focused 33 pass/one existing hosted-edge skip and core passed; earlier isolated Redis full passed 673/673 and 21 shared journeys.",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "ledger": "docs/superpowers/plans/2026-10-14-procedural-private-upper-revocation.md",
+      "requiredChecks": [
+        "Focused generated-home access and upper-level regression",
+        "Server suite and core verification before commit",
+        "Shared transport or browser journey if command behavior changes"
+      ],
+      "filesOwned": [
+        "server/world.js (homeAccess revocation and generated-level access only)",
+        "server/tests/generated-private-level-access.test.js",
+        "docs/superpowers/plans/2026-10-14-procedural-private-upper-revocation.md",
+        "docs/superpowers/plans/README.md"
+      ],
+      "pr": 352,
+      "leaseUntil": null,
+      "previousOwner": "codex-root-20261014-private-level-revocation",
+      "evidence": [
+        {
+          "pr": 352,
+          "reviewedHead": "1ed9624adcb6276caeab318ea8449b4f9686bb0d",
+          "merge": "f9c3cb55a605dfa86e32d214e7f5e6e8bba0f160",
+          "tree": "6cc7863c792c9642c725ed6eab06ec2bdede603e",
+          "checks": "Exact-head aggregate preview and all 16 hosted checks passed; final-main focused 33 pass/one existing hosted-edge skip and core passed; prior isolated Redis full passed 673 server tests and 21 shared journeys."
+        }
+      ],
+      "retirement": {
+        "head": "1ed9624adcb6276caeab318ea8449b4f9686bb0d",
+        "releasedAt": "2026-10-14T21:34:25.530Z",
+        "sessionsReviewedAt": "2026-10-14T21:34:25.530Z",
+        "note": "Session aa2272b7: lsof shows no process cwd in the worktree; evidence archived at ~/worktree-backups/river-oaks/local-evidence-private-level-revocation-20261014/manifest.json before removing regenerable caches"
+      },
+      "retiredBranches": [
+        "fix/procedural-private-level-revocation-20261014"
+      ],
+      "archive": {
+        "fix/procedural-private-level-revocation-20261014": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-pdX5dd/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-pdX5dd/history.bundle",
+          "sha256": "215908d5826ded2b0bb125ef3a0a2cd560eccc322198c2c49e86a8216eb57a98",
+          "tag": "refs/tags/archive/worktree-prune/38a767d3-c31c-4580-acc2-26ead4358e05",
+          "head": "1ed9624adcb6276caeab318ea8449b4f9686bb0d"
+        }
+      }
+    },
+    {
+      "id": "procedural-gallery-cycle-soak",
+      "title": "Measure repeated generated gallery entry, moving frames, eviction and return in one session",
+      "status": "retired",
+      "branches": [
+        "perf/procedural-gallery-cycle-soak-20261014"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-14T21:45:14.322Z",
+      "leaseUntil": null,
+      "previousOwner": "codex-root-20261014-gallery-motion",
+      "pr": 353,
+      "handoff": "PR #353 merged to main as 4da775df2c54bc43d6613b9214580f8d720273fe at 2026-10-14T21:41:26Z. Reviewed signed head fb1de91f600a78030dbd1f191da730a18f26d599; exact-head preview and all 16 checks green. Final-main focused 13/13, core and five-cycle browser journey passed. Moving p95 remained 33.4 ms, framing #354.",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "ledger": "docs/superpowers/plans/2026-10-14-procedural-gallery-cycle-soak.md",
+      "requiredChecks": [
+        "Repeated one-client gallery entry and eviction behavioral journey",
+        "Per-cycle cold/return preparation, geometry/texture and heap evidence",
+        "Moving indoor frame sample with actual position delta",
+        "pnpm run verify core before commit",
+        "Full isolated Redis and browser gate before delivery"
+      ],
+      "filesOwned": [
+        "preview/e2e/generated-gallery-cycle-soak.js",
+        "docs/superpowers/plans/2026-10-14-procedural-gallery-cycle-soak.md",
+        "docs/superpowers/plans/README.md"
+      ],
+      "evidence": [
+        {
+          "pr": 353,
+          "reviewedHead": "fb1de91f600a78030dbd1f191da730a18f26d599",
+          "merge": "4da775df2c54bc43d6613b9214580f8d720273fe",
+          "tree": "a36107715828497e4f4d14002b7ab672fde23260",
+          "checks": "Exact-head aggregate preview and all 16 hosted checks passed; final-main focused 13/13, core and five-cycle browser journey passed with stable renderer counts and measured 33.4 ms moving p95."
+        }
+      ],
+      "retirement": {
+        "head": "fb1de91f600a78030dbd1f191da730a18f26d599",
+        "releasedAt": "2026-10-14T21:44:23.704Z",
+        "sessionsReviewedAt": "2026-10-14T21:44:23.704Z",
+        "note": "Session aa2272b7: lsof shows no process cwd in the worktree; evidence archived at ~/worktree-backups/river-oaks/local-evidence-gallery-cycle-soak-20261014/manifest.json before removing regenerable caches"
+      },
+      "retiredBranches": [
+        "perf/procedural-gallery-cycle-soak-20261014"
+      ],
+      "archive": {
+        "perf/procedural-gallery-cycle-soak-20261014": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-0PK3tS/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-0PK3tS/history.bundle",
+          "sha256": "49eee831b8e7b54ddabb5647219c2928a101b35517adf71d1a4cd61d0f47e4a9",
+          "tag": "refs/tags/archive/worktree-prune/c572b882-845b-454d-9e90-9ce0287d26a8",
+          "head": "fb1de91f600a78030dbd1f191da730a18f26d599"
+        }
+      }
+    },
+    {
+      "id": "procedural-gallery-ao-tail-pacing",
+      "title": "Make Auto quality respond to sustained moving-gallery AO frame tails",
+      "status": "retired",
+      "branches": [
+        "perf/procedural-ao-tail-20261014"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-14T22:05:45.807Z",
+      "leaseUntil": null,
+      "previousOwner": "codex-root-20261014-ao-tail",
+      "pr": 354,
+      "handoff": "PR #354 merged to main as d8b9292723c9e3ae95422c4e6e30f77bc0aa48c5 from signed head a357df5b74d16ec2e6032bbd59b815c60106fb20. Exact-head aggregate preview and all 16 hosted checks green; integrated focused 15/15, core and five-cycle browser correctness passed. Local moving p95 varied with AO off; target-device pacing and human AO visual acceptance remain rollout gates.",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "ledger": "docs/superpowers/plans/2026-10-14-procedural-gallery-ao-tail.md",
+      "requiredChecks": [
+        "Focused render-quality governor behavior and recovery tests",
+        "Five-cycle moving gallery measurement on named local hardware",
+        "pnpm run verify core before commit",
+        "Isolated-Redis full and browser gates before delivery"
+      ],
+      "filesOwned": [
+        "preview/src/render-quality.js",
+        "preview/tests/render-quality.test.js",
+        "docs/superpowers/plans/2026-10-14-procedural-gallery-ao-tail.md",
+        "docs/superpowers/plans/README.md"
+      ],
+      "evidence": [
+        {
+          "pr": 354,
+          "reviewedHead": "a357df5b74d16ec2e6032bbd59b815c60106fb20",
+          "merge": "d8b9292723c9e3ae95422c4e6e30f77bc0aa48c5",
+          "checks": "Exact-head aggregate preview and all 16 hosted checks passed; integrated focused 15/15, core and five-cycle browser correctness passed. Performance variability documented in ledger."
+        }
+      ],
+      "retirement": {
+        "head": "a357df5b74d16ec2e6032bbd59b815c60106fb20",
+        "releasedAt": "2026-10-14T22:05:01.545Z",
+        "sessionsReviewedAt": "2026-10-14T22:05:01.545Z",
+        "note": "Session aa2272b7: lsof shows no process cwd in the worktree; evidence archived at ~/worktree-backups/river-oaks/local-evidence-ao-tail-20261014/manifest.json before removing regenerable caches"
+      },
+      "retiredBranches": [
+        "perf/procedural-ao-tail-20261014"
+      ],
+      "archive": {
+        "perf/procedural-ao-tail-20261014": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-B68qkm/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-B68qkm/history.bundle",
+          "sha256": "2cf9e3daed3a3e680d2f69b1f9d817e88e6266841dbdff4b857720ca44545db7",
+          "tag": "refs/tags/archive/worktree-prune/eb14a55b-e2b2-4ad6-8d15-e4bba193b368",
+          "head": "a357df5b74d16ec2e6032bbd59b815c60106fb20"
+        }
+      }
+    },
+    {
+      "id": "procedural-interior-ring-validity",
+      "title": "Reject self-touching and doubled-back building footprints before generating interiors",
+      "status": "retired",
+      "branches": [
+        "fix/procedural-interior-ring-validity-20261014"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-14T22:18:29.648Z",
+      "leaseUntil": null,
+      "previousOwner": "codex-root-20261014-ring-validity",
+      "pr": 355,
+      "handoff": "PR #355 merged to main as 46c44df7e45f0b73363a66734be6f14978b2d6a7 from signed head b9326cbadadb0aa5be58c5f00ed3c39570fd84e6. Exact-head aggregate preview and all 16 hosted checks green; integrated focused 11/11, browser/Node parity and core passed; earlier isolated-Redis full passed.",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "ledger": "docs/superpowers/plans/2026-10-14-procedural-interior-ring-validity.md",
+      "requiredChecks": [
+        "Focused generator regression for self-touching and overlapping edges",
+        "Node and browser plan parity",
+        "pnpm run verify core before commit",
+        "Isolated-Redis full and browser gates before delivery"
+      ],
+      "filesOwned": [
+        "preview/src/building-interiors-plan.js",
+        "preview/tests/building-interiors-plan.test.js",
+        "docs/superpowers/plans/2026-10-14-procedural-interior-ring-validity.md",
+        "docs/superpowers/plans/README.md"
+      ],
+      "evidence": [
+        {
+          "pr": 355,
+          "reviewedHead": "b9326cbadadb0aa5be58c5f00ed3c39570fd84e6",
+          "merge": "46c44df7e45f0b73363a66734be6f14978b2d6a7",
+          "checks": "Exact-head aggregate preview and all 16 hosted checks green; integrated focused 11/11, browser/Node plan parity and core passed."
+        }
+      ],
+      "retirement": {
+        "head": "b9326cbadadb0aa5be58c5f00ed3c39570fd84e6",
+        "releasedAt": "2026-10-14T22:17:47.751Z",
+        "sessionsReviewedAt": "2026-10-14T22:17:47.751Z",
+        "note": "Session aa2272b7: lsof shows no process cwd in the worktree; evidence archived at ~/worktree-backups/river-oaks/local-evidence-ring-validity-20261014/manifest.json before removing regenerable caches"
+      },
+      "retiredBranches": [
+        "fix/procedural-interior-ring-validity-20261014"
+      ],
+      "archive": {
+        "fix/procedural-interior-ring-validity-20261014": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-SSaIs2/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-SSaIs2/history.bundle",
+          "sha256": "ffc7d577b7d0fa89d4e8bf6a59204d5eff0c877cbab526a914f3d849df5f0fae",
+          "tag": "refs/tags/archive/worktree-prune/ef2ad6f9-b9d7-44b1-aaa5-8fd0f3636002",
+          "head": "b9326cbadadb0aa5be58c5f00ed3c39570fd84e6"
+        }
+      }
+    },
+    {
+      "id": "procedural-gallery-ao-buffer",
+      "title": "Measure gallery AO geometry costs and test frame pacing fixes",
+      "status": "retired",
+      "branches": [
+        "perf/procedural-gallery-ao-buffer-20261014"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-14T23:04:55.124Z",
+      "leaseUntil": null,
+      "previousOwner": "codex-root-20261014-ao-pass-timing",
+      "handoff": "PR #356 merged to main as f171d7112651d45d61259c830d4d37b8ed9be717 from signed head 9d02655924cee3fd1b6c3e224201f9229a81349a. Exact-head aggregate preview and all 16 hosted checks green; integrated opt-in AO geometry journey and core passed; earlier isolated-Redis full passed. Diagnostic only; no production render path change.",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "ledger": "docs/superpowers/plans/2026-10-14-procedural-gallery-ao-buffer.md",
+      "requiredChecks": [
+        "Paired five-cycle moving gallery measurements at fixed Sharpest quality",
+        "AO-on visual comparison at the same camera",
+        "Focused render-pipeline resolution behavior",
+        "pnpm run verify core before commit",
+        "Isolated-Redis full and browser gates before delivery",
+        "Named three-cycle moving AO geometry browser diagnostic",
+        "Exact-head hosted checks for PR #356"
+      ],
+      "filesOwned": [
+        "preview/src/render-pipeline.js",
+        "preview/tests/render-pipeline.test.js",
+        "docs/superpowers/plans/2026-10-14-procedural-gallery-ao-buffer.md",
+        "docs/superpowers/plans/README.md",
+        "preview/e2e/generated-gallery-render-cost.js"
+      ],
+      "pr": 356,
+      "evidence": [
+        {
+          "pr": 356,
+          "reviewedHead": "9d02655924cee3fd1b6c3e224201f9229a81349a",
+          "merge": "f171d7112651d45d61259c830d4d37b8ed9be717",
+          "checks": "Exact-head aggregate preview and all 16 hosted checks green; integrated opt-in AO geometry journey and core passed."
+        }
+      ],
+      "retirement": {
+        "head": "9d02655924cee3fd1b6c3e224201f9229a81349a",
+        "releasedAt": "2026-10-14T23:03:39.927Z",
+        "sessionsReviewedAt": "2026-10-14T23:03:39.927Z",
+        "note": "Session aa2272b7: lsof shows no process cwd in the worktree; evidence archived at ~/worktree-backups/river-oaks/local-evidence-ao-buffer-20261014/manifest.json before removing regenerable caches"
+      },
+      "retiredBranches": [
+        "perf/procedural-gallery-ao-buffer-20261014"
+      ],
+      "archive": {
+        "perf/procedural-gallery-ao-buffer-20261014": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-L1eW58/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-L1eW58/history.bundle",
+          "sha256": "ba88b99a1ed4dc842f95fe39f3299d8c51261ca746fdddfddbd37f14fcce6ab6",
+          "tag": "refs/tags/archive/worktree-prune/0c9a52cc-8675-4a2f-9313-d933383eafba",
+          "head": "9d02655924cee3fd1b6c3e224201f9229a81349a"
+        }
+      }
+    },
+    {
+      "id": "procedural-creator-interior-docs",
+      "title": "Document generated creator-region interiors and stabilize creator acceptance",
+      "status": "retired",
+      "branches": [
+        "docs/procedural-creator-interiors-20261014"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-14T23:04:24.213Z",
+      "leaseUntil": null,
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "ledger": "docs/superpowers/plans/2026-10-14-procedural-creator-interior-docs.md",
+      "requiredChecks": [
+        "Contract comparison against generator and server compiler",
+        "pnpm run plans:index",
+        "pnpm run test:agent",
+        "pnpm run verify before commit",
+        "Exact-head hosted checks before delivery",
+        "Focused creator-objects shared journey after retry fix"
+      ],
+      "filesOwned": [
+        "docs/creator-regions.md",
+        "docs/superpowers/plans/2026-10-14-procedural-creator-interior-docs.md",
+        "docs/superpowers/plans/README.md",
+        "preview/e2e/creator-objects.js"
+      ],
+      "previousOwner": "codex-root-20261014-creator-docs",
+      "handoff": "PR #357 merged to main as 093b8d0f45b2ebaf5a680ac8b0999f889c7b46c6 from signed head 284714e3317c267e882fde36221ba600c858f94d. Exact-head aggregate preview and all 16 hosted checks green, including worlds-and-creator; integrated region-package 13/13, shared creator-objects and core passed.",
+      "pr": 357,
+      "evidence": [
+        {
+          "pr": 357,
+          "reviewedHead": "284714e3317c267e882fde36221ba600c858f94d",
+          "merge": "093b8d0f45b2ebaf5a680ac8b0999f889c7b46c6",
+          "checks": "Exact-head aggregate preview and all 16 hosted checks green; integrated region-package 13/13, shared creator-objects and core passed."
+        }
+      ],
+      "retirement": {
+        "head": "284714e3317c267e882fde36221ba600c858f94d",
+        "releasedAt": "2026-10-14T23:03:39.927Z",
+        "sessionsReviewedAt": "2026-10-14T23:03:39.927Z",
+        "note": "Session aa2272b7: lsof shows no process cwd in the worktree; evidence archived at ~/worktree-backups/river-oaks/local-evidence-creator-interior-docs-20261014/manifest.json before removing regenerable caches"
+      },
+      "retiredBranches": [
+        "docs/procedural-creator-interiors-20261014"
+      ],
+      "archive": {
+        "docs/procedural-creator-interiors-20261014": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-uT7833/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-uT7833/history.bundle",
+          "sha256": "ce93dee1014418d8b8fee9226c9be8ef4fc8466352a67421fd6218d157b14bf7",
+          "tag": "refs/tags/archive/worktree-prune/a00cf734-b71e-4590-bc49-ef7a03852671",
+          "head": "284714e3317c267e882fde36221ba600c858f94d"
+        }
+      }
+    },
+    {
+      "id": "procedural-gallery-ao-exterior-mask",
+      "title": "Measure an interior-only AO geometry mask for repeated gallery visits",
+      "status": "retired",
+      "branches": [
+        "perf/procedural-gallery-ao-mask-20261014"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-14T23:05:23.530Z",
+      "leaseUntil": null,
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "ledger": "docs/superpowers/plans/2026-10-14-procedural-gallery-ao-mask.md",
+      "requiredChecks": [
+        "Paired uninstrumented five-cycle moving gallery measurements",
+        "Same-camera AO visual comparison",
+        "Focused render-pipeline visibility restoration tests",
+        "pnpm run verify before commit",
+        "Isolated-Redis full and exact-head hosted checks before delivery"
+      ],
+      "filesOwned": [
+        "preview/src/render-pipeline.js",
+        "preview/src/main.js",
+        "preview/tests/render-pipeline.test.js",
+        "docs/superpowers/plans/2026-10-14-procedural-gallery-ao-mask.md",
+        "docs/superpowers/plans/README.md"
+      ],
+      "pr": 358,
+      "previousOwner": "codex-root-20261014-ao-followup",
+      "handoff": "PR #358 merged to main as c89c98ddac5a4aaa57f549d1ccc840a33e873af7 from signed head 35d23a560cafaa01665d489f84851d653ccb3241. Exact-head aggregate preview and all 16 hosted checks green; integrated focused 12/12, gallery render-cost, office visit, five-cycle Sharpest AO-on and core passed. Target-device and human through-glass mask review remain rollout gates.",
+      "evidence": [
+        {
+          "pr": 358,
+          "reviewedHead": "35d23a560cafaa01665d489f84851d653ccb3241",
+          "merge": "c89c98ddac5a4aaa57f549d1ccc840a33e873af7",
+          "checks": "Exact-head aggregate preview and all 16 hosted checks green; integrated focused 12/12, named browser and five-cycle Sharpest journeys, core passed."
+        }
+      ],
+      "retirement": {
+        "head": "35d23a560cafaa01665d489f84851d653ccb3241",
+        "releasedAt": "2026-10-14T23:03:39.927Z",
+        "sessionsReviewedAt": "2026-10-14T23:03:39.927Z",
+        "note": "Session aa2272b7: lsof shows no process cwd in the worktree; evidence archived at ~/worktree-backups/river-oaks/local-evidence-ao-mask-20261014/manifest.json before removing regenerable caches"
+      },
+      "retiredBranches": [
+        "perf/procedural-gallery-ao-mask-20261014"
+      ],
+      "archive": {
+        "perf/procedural-gallery-ao-mask-20261014": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-zJskE1/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-zJskE1/history.bundle",
+          "sha256": "31ea7e22d1eecdb228934bfcaf61550d17aff7836cc9cf663095337376a693c6",
+          "tag": "refs/tags/archive/worktree-prune/1ea1847d-b224-4990-b343-9d02c473188f",
+          "head": "35d23a560cafaa01665d489f84851d653ccb3241"
+        }
+      }
+    },
+    {
+      "id": "procedural-gallery-contact-shading",
+      "title": "Prototype low-cost gallery contact shading for generated interiors",
+      "status": "retired",
+      "branches": [
+        "perf/procedural-gallery-contact-shading-20261014"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-14T23:43:30.053Z",
+      "leaseUntil": null,
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "ledger": "docs/superpowers/plans/2026-10-14-procedural-gallery-contact-shading.md",
+      "requiredChecks": [
+        "Matched player-height visual captures against AO-on and AO-off",
+        "Five-cycle moving gallery route on named hardware",
+        "Focused generated-room render and quality-control behavior",
+        "pnpm run verify before commit",
+        "Isolated-Redis full and exact-head hosted checks before delivery"
+      ],
+      "filesOwned": [
+        "preview/src/generated-contact-shading.js",
+        "preview/src/store-interiors.js",
+        "preview/src/main.js",
+        "preview/e2e/generated-gallery-cycle-soak.js",
+        "preview/tests/generated-contact-shading.test.js",
+        "docs/superpowers/plans/2026-10-14-procedural-gallery-contact-shading.md",
+        "docs/superpowers/plans/README.md",
+        "docs/project-management/tasks.json"
+      ],
+      "pr": 382,
+      "handoff": "PR #382 merged to main as c1104f4741f7a17fcce7812d47b82e8f6e1a31d0 at 2026-10-14T23:21:40Z from signed head 0761c65dabbb6afb71ed195554a9f0fef1b0955d. Exact-head aggregate preview and all 16 hosted checks green. Integrated focused 25/25, generated-level browser journeys, Auto five-cycle, Sharpest one-cycle and core passed; prior isolated-Redis full retry passed all 17 groups. Val approved pilot Auto appearance in gallery-canvas cycle-1 and cycle-5 captures. Target-device pacing, live keyboard/accessibility and wider archetype rollout remain open.",
+      "previousOwner": "codex-root-20261014-gallery-contact",
+      "evidence": [
+        {
+          "pr": 382,
+          "reviewedHead": "0761c65dabbb6afb71ed195554a9f0fef1b0955d",
+          "merge": "c1104f4741f7a17fcce7812d47b82e8f6e1a31d0",
+          "checks": "Exact-head aggregate preview and all 16 hosted checks green; focused 25/25, named levels and Auto/Sharpest journeys, core, and prior isolated-Redis full retry passed; pilot appearance approved by Val.",
+          "tree": "9ca37573ba0388898bfc443c6bd60e8c3637e8c1"
+        }
+      ],
+      "retirement": {
+        "head": "0761c65dabbb6afb71ed195554a9f0fef1b0955d",
+        "releasedAt": "2026-10-14T23:42:19.781Z",
+        "sessionsReviewedAt": "2026-10-14T23:42:19.781Z",
+        "note": "Session aa2272b7: orphaned disposable test Redis on 127.0.0.1:16399 (no clients, parent launchd) stopped with SHUTDOWN SAVE; no process cwd remains. The pilot screenshots the handoff asked to keep, the runtime evidence and dump.rdb are archived at ~/worktree-backups/river-oaks/local-evidence-gallery-contact-shading-20261014/manifest.json before removing regenerable caches."
+      },
+      "retiredBranches": [
+        "perf/procedural-gallery-contact-shading-20261014"
+      ],
+      "archive": {
+        "perf/procedural-gallery-contact-shading-20261014": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-xkcN8s/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-xkcN8s/history.bundle",
+          "sha256": "87969fd16adcb116836b4c023457651e988b46a4ccfe2b1fbb9ff0e5267c9267",
+          "tag": "refs/tags/archive/worktree-prune/e192283d-3d7b-4dcd-9d6a-04c55cba0568",
+          "head": "0761c65dabbb6afb71ed195554a9f0fef1b0955d"
+        }
+      }
+    },
+    {
+      "id": "local-prune-20261013",
+      "title": "Reduce River Oaks local branches and worktrees to at most ten each",
+      "status": "retired",
+      "branches": [
+        "feat/prune-tooling-20261014"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-14T20:01:50.925490Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "filesOwned": [
+        "docs/project-management/tasks.json (prune records only)",
+        "docs/superpowers/plans/2026-10-13-local-branch-worktree-prune.md"
+      ],
+      "requiredChecks": [
+        "fresh worktree and branch count <=10 each",
+        "project:check --github",
+        "restore manifests and archive hashes for retired refs"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-13-local-branch-worktree-prune.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-prune-tooling-20261014",
+      "pr": 375,
+      "evidence": [
+        {
+          "pr": 375,
+          "reviewedHead": "56b6369000d303b9ebe275caf67344f92b409717",
+          "merge": "06f7476b10bd7fbb22f9db7c2f158ee38934dd24",
+          "tree": "58c60042c8a107d64a15402ec0ca200ef14fa464",
+          "checks": [
+            "pnpm run land 375 (claude-c7385ac6): Verify passed on b8064c63, 17 checks ok, mergeState CLEAN, merged 2026-10-14T19:49:16Z as 06f7476b",
+            "focused node --test suites 56/56 and core pnpm run verify passed at b8064c63 (ledger round 1)",
+            "56b63690 is a docs-only ledger commit on b8064c63; merge tree equals head tree"
+          ]
+        }
+      ],
+      "retirement": {
+        "head": "56b6369000d303b9ebe275caf67344f92b409717",
+        "releasedAt": "2026-10-14T20:00:44.862276Z",
+        "sessionsReviewedAt": "2026-10-14T20:00:44.862276Z",
+        "note": "No process cwd in the worktree (lsof +d); worktree clean with no ignored data; released by river-oaks-fe after landing #375 with Val's authorization."
+      },
+      "retiredBranches": [
+        "feat/prune-tooling-20261014"
+      ],
+      "archive": {
+        "feat/prune-tooling-20261014": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-j6m3Nu/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-j6m3Nu/history.bundle",
+          "sha256": "cf480cc89e8520b1821978e0c124ba54c83b93759651b005b51382455ad15100",
+          "tag": "refs/tags/archive/worktree-prune/b89610aa-3e31-475c-bca9-e9096d6baea1",
+          "head": "56b6369000d303b9ebe275caf67344f92b409717"
+        }
+      },
+      "handoff": "2026-10-14 river-oaks-fe: #375 landed as 06f7476b. Orphans cancelled: feat/character-studio-20261013 (cancel-stale-SwztW4) and river-oaks-c2-tools (cancel-detached-ZcsStq). 19 merged-exact remote branches deleted (manifest ~/worktree-backups/river-oaks/remote-delete-20261014-c7385ac6/manifest.json); office-arrival archive restore verified (tree 3eed997b). delete_branch_on_merge enabled. Primary fast-forwarded to 06f7476b with the live register preserved; popped stash copies discarded (backup primary-popped-files-20261014-c7385ac6). Retired by river-oaks-5d (aa2272b7) through project:prune at 20:00:00Z (retirement-j6m3Nu, evidence local-evidence-prune-tooling-20261014); river-oaks-fe briefly overwrote the status with \"delivered\" at 20:00:44Z and restored \"retired\" at 2026-10-14T20:01:50.925490Z."
     },
     {
       "id": "browser-run-lock",
@@ -7796,69 +8360,6 @@
       }
     },
     {
-      "id": "procedural-level-aware-streaming",
-      "title": "Prepare generated interior levels according to authoritative occupancy",
-      "status": "retired",
-      "branches": [
-        "feat/procedural-level-streaming-20261014"
-      ],
-      "owner": null,
-      "updatedAt": "2026-10-14T21:35:28.584Z",
-      "handoff": "PR #350 merged to main at c36bf2dec992b284a06534d9e0047248b0ea08e5 on 2026-10-14T20:53:55Z. Reviewed signed head 73798e40e1cabb3103ced7959a0497e0764cf04d; exact-head aggregate preview and all 16 checks passed. Local focused 22/22 and core passed on current-main merge; pre-integration isolated-Redis full covered 672 server tests and 21 shared journeys. Worktree remains for evidence and retirement.",
-      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
-      "ledger": "docs/superpowers/plans/2026-10-14-level-aware-interior-streaming.md",
-      "requiredChecks": [
-        "Multi-level stream preparation, cancellation and eviction behavioral tests",
-        "Generated gallery ascent/descent and reduced-motion browser journeys",
-        "Four-level creator publication and checkpoint server regression",
-        "pnpm run verify core before commit"
-      ],
-      "filesOwned": [
-        "preview/src/generated-interior-stream.js",
-        "preview/tests/generated-interior-stream.test.js",
-        "preview/src/main.js (generated interior stream occupancy hint only)",
-        "preview/e2e/generated-gallery-levels.js (stream readiness assertions only)",
-        "server/tests/creator-four-level-interiors.test.js",
-        "docs/superpowers/plans/2026-10-14-level-aware-interior-streaming.md",
-        "server/app.js (local reconnect grace default only)",
-        "server/tests/shared-transport.test.js (shutdown grace timer assertion only)",
-        "preview/e2e/creator-four-levels.js",
-        "preview/e2e/shared-runner.js (named journey registration only)",
-        "preview/src/walking-ui.js (intermediate level direction controls only)",
-        "preview/src/contextual-action.js (descent action priority only)",
-        "preview/tests/contextual-action.test.js (descent action regression only)"
-      ],
-      "pr": 350,
-      "leaseUntil": null,
-      "evidence": [
-        {
-          "pr": 350,
-          "reviewedHead": "73798e40e1cabb3103ced7959a0497e0764cf04d",
-          "merge": "c36bf2dec992b284a06534d9e0047248b0ea08e5",
-          "tree": "e3900eef89559e46cdf32f6aa4d548b77e5f44a4",
-          "checks": "Exact-head aggregate preview and all 16 hosted checks passed; local final-main focused 22/22 and core passed; pre-integration isolated-Redis full passed 672 server tests, ten experience and 21 shared journeys."
-        }
-      ],
-      "retirement": {
-        "head": "73798e40e1cabb3103ced7959a0497e0764cf04d",
-        "releasedAt": "2026-10-14T21:34:25.530Z",
-        "sessionsReviewedAt": "2026-10-14T21:34:25.530Z",
-        "note": "Session aa2272b7: lsof shows no process cwd in the worktree; evidence archived at ~/worktree-backups/river-oaks/local-evidence-level-streaming-20261014/manifest.json before removing regenerable caches"
-      },
-      "retiredBranches": [
-        "feat/procedural-level-streaming-20261014"
-      ],
-      "archive": {
-        "feat/procedural-level-streaming-20261014": {
-          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-KpJYYo/manifest.json",
-          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-KpJYYo/history.bundle",
-          "sha256": "e13706c85a699675b0fcfe164a1fcf77f1361b036226ff0a8b21b6acb0ba05fa",
-          "tag": "refs/tags/archive/worktree-prune/aa788305-db75-4b4d-a518-585b1eadb633",
-          "head": "73798e40e1cabb3103ced7959a0497e0764cf04d"
-        }
-      }
-    },
-    {
       "id": "plaza-shared-table-games-server",
       "title": "Shared chess-table games, PR 1: the town holds and checks the games (server/table-games.js, pure table-game-adapters.js)",
       "status": "retired",
@@ -8477,338 +8978,6 @@
       }
     },
     {
-      "id": "procedural-pilot-frame-performance",
-      "title": "Profile and improve generated gallery frame pacing before broader interior rollout",
-      "status": "retired",
-      "branches": [
-        "perf/procedural-pilot-render-20261014"
-      ],
-      "owner": null,
-      "updatedAt": "2026-10-14T21:35:53.332Z",
-      "handoff": "PR #351 merged to main as a2739d6c2d78766c28c8bc1719e32156d00f4138 at 2026-10-14T21:11:51Z. Reviewed signed head 7abbd41c6e41c21ba601a1b8dba096e886f22fa3; exact-head preview and all 16 checks green. Final-main focused 22/22 and core passed. Pilot stationary five-minute M3 Max soak was 16.7-16.8 ms p95/p99; broader target-device and human visual acceptance remain open.",
-      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
-      "ledger": "docs/superpowers/plans/2026-10-14-procedural-pilot-frame-performance.md",
-      "requiredChecks": [
-        "Comparable player-height street and gallery pass/object audit",
-        "Focused render behavior and visual regression",
-        "pnpm run verify core before commit",
-        "Paired browser frame pacing, cold/return load and memory evidence"
-      ],
-      "filesOwned": [
-        "preview/e2e/generated-gallery-render-cost.js",
-        "preview/e2e/generated-gallery-soak.js",
-        "preview/src/interior-exterior-culling.js",
-        "preview/src/main.js",
-        "preview/tests/interior-exterior-culling.test.js",
-        "docs/superpowers/plans/2026-10-14-procedural-pilot-frame-performance.md"
-      ],
-      "pr": 351,
-      "leaseUntil": null,
-      "previousOwner": "codex-root-20261014-pilot-render",
-      "evidence": [
-        {
-          "pr": 351,
-          "reviewedHead": "7abbd41c6e41c21ba601a1b8dba096e886f22fa3",
-          "merge": "a2739d6c2d78766c28c8bc1719e32156d00f4138",
-          "tree": "8b83c085dce60be8c0426a6338298888bc2d0195",
-          "checks": "Exact-head aggregate preview and all 16 hosted checks passed; final-main focused 22/22 and core passed; prior full and five-minute local stationary gallery soak passed with stated scope limits."
-        }
-      ],
-      "retirement": {
-        "head": "7abbd41c6e41c21ba601a1b8dba096e886f22fa3",
-        "releasedAt": "2026-10-14T21:34:25.530Z",
-        "sessionsReviewedAt": "2026-10-14T21:34:25.530Z",
-        "note": "Session aa2272b7: lsof shows no process cwd in the worktree; evidence archived at ~/worktree-backups/river-oaks/local-evidence-pilot-render-20261014/manifest.json before removing regenerable caches"
-      },
-      "retiredBranches": [
-        "perf/procedural-pilot-render-20261014"
-      ],
-      "archive": {
-        "perf/procedural-pilot-render-20261014": {
-          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-0bMJhS/manifest.json",
-          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-0bMJhS/history.bundle",
-          "sha256": "0f078fef36428feab648bd814d2a62e9d907f7154a14e6b430dc7737791c78ff",
-          "tag": "refs/tags/archive/worktree-prune/cc32115e-e42d-4958-8940-18069674ad30",
-          "head": "7abbd41c6e41c21ba601a1b8dba096e886f22fa3"
-        }
-      }
-    },
-    {
-      "id": "procedural-private-upper-revocation",
-      "title": "Keep generated private home levels and voice access consistent after guest revocation",
-      "status": "retired",
-      "branches": [
-        "fix/procedural-private-level-revocation-20261014"
-      ],
-      "owner": null,
-      "updatedAt": "2026-10-14T21:36:19.750Z",
-      "handoff": "PR #352 merged to main as f9c3cb55a605dfa86e32d214e7f5e6e8bba0f160 at 2026-10-14T21:24:32Z. Reviewed signed head 1ed9624adcb6276caeab318ea8449b4f9686bb0d; exact-head preview and all 16 checks green. Final-main focused 33 pass/one existing hosted-edge skip and core passed; earlier isolated Redis full passed 673/673 and 21 shared journeys.",
-      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
-      "ledger": "docs/superpowers/plans/2026-10-14-procedural-private-upper-revocation.md",
-      "requiredChecks": [
-        "Focused generated-home access and upper-level regression",
-        "Server suite and core verification before commit",
-        "Shared transport or browser journey if command behavior changes"
-      ],
-      "filesOwned": [
-        "server/world.js (homeAccess revocation and generated-level access only)",
-        "server/tests/generated-private-level-access.test.js",
-        "docs/superpowers/plans/2026-10-14-procedural-private-upper-revocation.md",
-        "docs/superpowers/plans/README.md"
-      ],
-      "pr": 352,
-      "leaseUntil": null,
-      "previousOwner": "codex-root-20261014-private-level-revocation",
-      "evidence": [
-        {
-          "pr": 352,
-          "reviewedHead": "1ed9624adcb6276caeab318ea8449b4f9686bb0d",
-          "merge": "f9c3cb55a605dfa86e32d214e7f5e6e8bba0f160",
-          "tree": "6cc7863c792c9642c725ed6eab06ec2bdede603e",
-          "checks": "Exact-head aggregate preview and all 16 hosted checks passed; final-main focused 33 pass/one existing hosted-edge skip and core passed; prior isolated Redis full passed 673 server tests and 21 shared journeys."
-        }
-      ],
-      "retirement": {
-        "head": "1ed9624adcb6276caeab318ea8449b4f9686bb0d",
-        "releasedAt": "2026-10-14T21:34:25.530Z",
-        "sessionsReviewedAt": "2026-10-14T21:34:25.530Z",
-        "note": "Session aa2272b7: lsof shows no process cwd in the worktree; evidence archived at ~/worktree-backups/river-oaks/local-evidence-private-level-revocation-20261014/manifest.json before removing regenerable caches"
-      },
-      "retiredBranches": [
-        "fix/procedural-private-level-revocation-20261014"
-      ],
-      "archive": {
-        "fix/procedural-private-level-revocation-20261014": {
-          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-pdX5dd/manifest.json",
-          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-pdX5dd/history.bundle",
-          "sha256": "215908d5826ded2b0bb125ef3a0a2cd560eccc322198c2c49e86a8216eb57a98",
-          "tag": "refs/tags/archive/worktree-prune/38a767d3-c31c-4580-acc2-26ead4358e05",
-          "head": "1ed9624adcb6276caeab318ea8449b4f9686bb0d"
-        }
-      }
-    },
-    {
-      "id": "procedural-gallery-cycle-soak",
-      "title": "Measure repeated generated gallery entry, moving frames, eviction and return in one session",
-      "status": "retired",
-      "branches": [
-        "perf/procedural-gallery-cycle-soak-20261014"
-      ],
-      "owner": null,
-      "updatedAt": "2026-10-14T21:45:14.322Z",
-      "leaseUntil": null,
-      "previousOwner": "codex-root-20261014-gallery-motion",
-      "pr": 353,
-      "handoff": "PR #353 merged to main as 4da775df2c54bc43d6613b9214580f8d720273fe at 2026-10-14T21:41:26Z. Reviewed signed head fb1de91f600a78030dbd1f191da730a18f26d599; exact-head preview and all 16 checks green. Final-main focused 13/13, core and five-cycle browser journey passed. Moving p95 remained 33.4 ms, framing #354.",
-      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
-      "ledger": "docs/superpowers/plans/2026-10-14-procedural-gallery-cycle-soak.md",
-      "requiredChecks": [
-        "Repeated one-client gallery entry and eviction behavioral journey",
-        "Per-cycle cold/return preparation, geometry/texture and heap evidence",
-        "Moving indoor frame sample with actual position delta",
-        "pnpm run verify core before commit",
-        "Full isolated Redis and browser gate before delivery"
-      ],
-      "filesOwned": [
-        "preview/e2e/generated-gallery-cycle-soak.js",
-        "docs/superpowers/plans/2026-10-14-procedural-gallery-cycle-soak.md",
-        "docs/superpowers/plans/README.md"
-      ],
-      "evidence": [
-        {
-          "pr": 353,
-          "reviewedHead": "fb1de91f600a78030dbd1f191da730a18f26d599",
-          "merge": "4da775df2c54bc43d6613b9214580f8d720273fe",
-          "tree": "a36107715828497e4f4d14002b7ab672fde23260",
-          "checks": "Exact-head aggregate preview and all 16 hosted checks passed; final-main focused 13/13, core and five-cycle browser journey passed with stable renderer counts and measured 33.4 ms moving p95."
-        }
-      ],
-      "retirement": {
-        "head": "fb1de91f600a78030dbd1f191da730a18f26d599",
-        "releasedAt": "2026-10-14T21:44:23.704Z",
-        "sessionsReviewedAt": "2026-10-14T21:44:23.704Z",
-        "note": "Session aa2272b7: lsof shows no process cwd in the worktree; evidence archived at ~/worktree-backups/river-oaks/local-evidence-gallery-cycle-soak-20261014/manifest.json before removing regenerable caches"
-      },
-      "retiredBranches": [
-        "perf/procedural-gallery-cycle-soak-20261014"
-      ],
-      "archive": {
-        "perf/procedural-gallery-cycle-soak-20261014": {
-          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-0PK3tS/manifest.json",
-          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-0PK3tS/history.bundle",
-          "sha256": "49eee831b8e7b54ddabb5647219c2928a101b35517adf71d1a4cd61d0f47e4a9",
-          "tag": "refs/tags/archive/worktree-prune/c572b882-845b-454d-9e90-9ce0287d26a8",
-          "head": "fb1de91f600a78030dbd1f191da730a18f26d599"
-        }
-      }
-    },
-    {
-      "id": "procedural-gallery-ao-tail-pacing",
-      "title": "Make Auto quality respond to sustained moving-gallery AO frame tails",
-      "status": "retired",
-      "branches": [
-        "perf/procedural-ao-tail-20261014"
-      ],
-      "owner": null,
-      "updatedAt": "2026-10-14T22:05:45.807Z",
-      "leaseUntil": null,
-      "previousOwner": "codex-root-20261014-ao-tail",
-      "pr": 354,
-      "handoff": "PR #354 merged to main as d8b9292723c9e3ae95422c4e6e30f77bc0aa48c5 from signed head a357df5b74d16ec2e6032bbd59b815c60106fb20. Exact-head aggregate preview and all 16 hosted checks green; integrated focused 15/15, core and five-cycle browser correctness passed. Local moving p95 varied with AO off; target-device pacing and human AO visual acceptance remain rollout gates.",
-      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
-      "ledger": "docs/superpowers/plans/2026-10-14-procedural-gallery-ao-tail.md",
-      "requiredChecks": [
-        "Focused render-quality governor behavior and recovery tests",
-        "Five-cycle moving gallery measurement on named local hardware",
-        "pnpm run verify core before commit",
-        "Isolated-Redis full and browser gates before delivery"
-      ],
-      "filesOwned": [
-        "preview/src/render-quality.js",
-        "preview/tests/render-quality.test.js",
-        "docs/superpowers/plans/2026-10-14-procedural-gallery-ao-tail.md",
-        "docs/superpowers/plans/README.md"
-      ],
-      "evidence": [
-        {
-          "pr": 354,
-          "reviewedHead": "a357df5b74d16ec2e6032bbd59b815c60106fb20",
-          "merge": "d8b9292723c9e3ae95422c4e6e30f77bc0aa48c5",
-          "checks": "Exact-head aggregate preview and all 16 hosted checks passed; integrated focused 15/15, core and five-cycle browser correctness passed. Performance variability documented in ledger."
-        }
-      ],
-      "retirement": {
-        "head": "a357df5b74d16ec2e6032bbd59b815c60106fb20",
-        "releasedAt": "2026-10-14T22:05:01.545Z",
-        "sessionsReviewedAt": "2026-10-14T22:05:01.545Z",
-        "note": "Session aa2272b7: lsof shows no process cwd in the worktree; evidence archived at ~/worktree-backups/river-oaks/local-evidence-ao-tail-20261014/manifest.json before removing regenerable caches"
-      },
-      "retiredBranches": [
-        "perf/procedural-ao-tail-20261014"
-      ],
-      "archive": {
-        "perf/procedural-ao-tail-20261014": {
-          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-B68qkm/manifest.json",
-          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-B68qkm/history.bundle",
-          "sha256": "2cf9e3daed3a3e680d2f69b1f9d817e88e6266841dbdff4b857720ca44545db7",
-          "tag": "refs/tags/archive/worktree-prune/eb14a55b-e2b2-4ad6-8d15-e4bba193b368",
-          "head": "a357df5b74d16ec2e6032bbd59b815c60106fb20"
-        }
-      }
-    },
-    {
-      "id": "procedural-interior-ring-validity",
-      "title": "Reject self-touching and doubled-back building footprints before generating interiors",
-      "status": "retired",
-      "branches": [
-        "fix/procedural-interior-ring-validity-20261014"
-      ],
-      "owner": null,
-      "updatedAt": "2026-10-14T22:18:29.648Z",
-      "leaseUntil": null,
-      "previousOwner": "codex-root-20261014-ring-validity",
-      "pr": 355,
-      "handoff": "PR #355 merged to main as 46c44df7e45f0b73363a66734be6f14978b2d6a7 from signed head b9326cbadadb0aa5be58c5f00ed3c39570fd84e6. Exact-head aggregate preview and all 16 hosted checks green; integrated focused 11/11, browser/Node parity and core passed; earlier isolated-Redis full passed.",
-      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
-      "ledger": "docs/superpowers/plans/2026-10-14-procedural-interior-ring-validity.md",
-      "requiredChecks": [
-        "Focused generator regression for self-touching and overlapping edges",
-        "Node and browser plan parity",
-        "pnpm run verify core before commit",
-        "Isolated-Redis full and browser gates before delivery"
-      ],
-      "filesOwned": [
-        "preview/src/building-interiors-plan.js",
-        "preview/tests/building-interiors-plan.test.js",
-        "docs/superpowers/plans/2026-10-14-procedural-interior-ring-validity.md",
-        "docs/superpowers/plans/README.md"
-      ],
-      "evidence": [
-        {
-          "pr": 355,
-          "reviewedHead": "b9326cbadadb0aa5be58c5f00ed3c39570fd84e6",
-          "merge": "46c44df7e45f0b73363a66734be6f14978b2d6a7",
-          "checks": "Exact-head aggregate preview and all 16 hosted checks green; integrated focused 11/11, browser/Node plan parity and core passed."
-        }
-      ],
-      "retirement": {
-        "head": "b9326cbadadb0aa5be58c5f00ed3c39570fd84e6",
-        "releasedAt": "2026-10-14T22:17:47.751Z",
-        "sessionsReviewedAt": "2026-10-14T22:17:47.751Z",
-        "note": "Session aa2272b7: lsof shows no process cwd in the worktree; evidence archived at ~/worktree-backups/river-oaks/local-evidence-ring-validity-20261014/manifest.json before removing regenerable caches"
-      },
-      "retiredBranches": [
-        "fix/procedural-interior-ring-validity-20261014"
-      ],
-      "archive": {
-        "fix/procedural-interior-ring-validity-20261014": {
-          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-SSaIs2/manifest.json",
-          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-SSaIs2/history.bundle",
-          "sha256": "ffc7d577b7d0fa89d4e8bf6a59204d5eff0c877cbab526a914f3d849df5f0fae",
-          "tag": "refs/tags/archive/worktree-prune/ef2ad6f9-b9d7-44b1-aaa5-8fd0f3636002",
-          "head": "b9326cbadadb0aa5be58c5f00ed3c39570fd84e6"
-        }
-      }
-    },
-    {
-      "id": "procedural-gallery-ao-buffer",
-      "title": "Measure gallery AO geometry costs and test frame pacing fixes",
-      "status": "retired",
-      "branches": [
-        "perf/procedural-gallery-ao-buffer-20261014"
-      ],
-      "owner": null,
-      "updatedAt": "2026-10-14T23:04:55.124Z",
-      "leaseUntil": null,
-      "previousOwner": "codex-root-20261014-ao-pass-timing",
-      "handoff": "PR #356 merged to main as f171d7112651d45d61259c830d4d37b8ed9be717 from signed head 9d02655924cee3fd1b6c3e224201f9229a81349a. Exact-head aggregate preview and all 16 hosted checks green; integrated opt-in AO geometry journey and core passed; earlier isolated-Redis full passed. Diagnostic only; no production render path change.",
-      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
-      "ledger": "docs/superpowers/plans/2026-10-14-procedural-gallery-ao-buffer.md",
-      "requiredChecks": [
-        "Paired five-cycle moving gallery measurements at fixed Sharpest quality",
-        "AO-on visual comparison at the same camera",
-        "Focused render-pipeline resolution behavior",
-        "pnpm run verify core before commit",
-        "Isolated-Redis full and browser gates before delivery",
-        "Named three-cycle moving AO geometry browser diagnostic",
-        "Exact-head hosted checks for PR #356"
-      ],
-      "filesOwned": [
-        "preview/src/render-pipeline.js",
-        "preview/tests/render-pipeline.test.js",
-        "docs/superpowers/plans/2026-10-14-procedural-gallery-ao-buffer.md",
-        "docs/superpowers/plans/README.md",
-        "preview/e2e/generated-gallery-render-cost.js"
-      ],
-      "pr": 356,
-      "evidence": [
-        {
-          "pr": 356,
-          "reviewedHead": "9d02655924cee3fd1b6c3e224201f9229a81349a",
-          "merge": "f171d7112651d45d61259c830d4d37b8ed9be717",
-          "checks": "Exact-head aggregate preview and all 16 hosted checks green; integrated opt-in AO geometry journey and core passed."
-        }
-      ],
-      "retirement": {
-        "head": "9d02655924cee3fd1b6c3e224201f9229a81349a",
-        "releasedAt": "2026-10-14T23:03:39.927Z",
-        "sessionsReviewedAt": "2026-10-14T23:03:39.927Z",
-        "note": "Session aa2272b7: lsof shows no process cwd in the worktree; evidence archived at ~/worktree-backups/river-oaks/local-evidence-ao-buffer-20261014/manifest.json before removing regenerable caches"
-      },
-      "retiredBranches": [
-        "perf/procedural-gallery-ao-buffer-20261014"
-      ],
-      "archive": {
-        "perf/procedural-gallery-ao-buffer-20261014": {
-          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-L1eW58/manifest.json",
-          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-L1eW58/history.bundle",
-          "sha256": "ba88b99a1ed4dc842f95fe39f3299d8c51261ca746fdddfddbd37f14fcce6ab6",
-          "tag": "refs/tags/archive/worktree-prune/0c9a52cc-8675-4a2f-9313-d933383eafba",
-          "head": "9d02655924cee3fd1b6c3e224201f9229a81349a"
-        }
-      }
-    },
-    {
       "id": "procedural-gallery-ao-sampling",
       "title": "Evaluate lower AO shader sample counts for repeated gallery movement",
       "status": "queued",
@@ -8850,178 +9019,6 @@
               "entries": 15904
             }
           ]
-        }
-      }
-    },
-    {
-      "id": "procedural-creator-interior-docs",
-      "title": "Document generated creator-region interiors and stabilize creator acceptance",
-      "status": "retired",
-      "branches": [
-        "docs/procedural-creator-interiors-20261014"
-      ],
-      "owner": null,
-      "updatedAt": "2026-10-14T23:04:24.213Z",
-      "leaseUntil": null,
-      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
-      "ledger": "docs/superpowers/plans/2026-10-14-procedural-creator-interior-docs.md",
-      "requiredChecks": [
-        "Contract comparison against generator and server compiler",
-        "pnpm run plans:index",
-        "pnpm run test:agent",
-        "pnpm run verify before commit",
-        "Exact-head hosted checks before delivery",
-        "Focused creator-objects shared journey after retry fix"
-      ],
-      "filesOwned": [
-        "docs/creator-regions.md",
-        "docs/superpowers/plans/2026-10-14-procedural-creator-interior-docs.md",
-        "docs/superpowers/plans/README.md",
-        "preview/e2e/creator-objects.js"
-      ],
-      "previousOwner": "codex-root-20261014-creator-docs",
-      "handoff": "PR #357 merged to main as 093b8d0f45b2ebaf5a680ac8b0999f889c7b46c6 from signed head 284714e3317c267e882fde36221ba600c858f94d. Exact-head aggregate preview and all 16 hosted checks green, including worlds-and-creator; integrated region-package 13/13, shared creator-objects and core passed.",
-      "pr": 357,
-      "evidence": [
-        {
-          "pr": 357,
-          "reviewedHead": "284714e3317c267e882fde36221ba600c858f94d",
-          "merge": "093b8d0f45b2ebaf5a680ac8b0999f889c7b46c6",
-          "checks": "Exact-head aggregate preview and all 16 hosted checks green; integrated region-package 13/13, shared creator-objects and core passed."
-        }
-      ],
-      "retirement": {
-        "head": "284714e3317c267e882fde36221ba600c858f94d",
-        "releasedAt": "2026-10-14T23:03:39.927Z",
-        "sessionsReviewedAt": "2026-10-14T23:03:39.927Z",
-        "note": "Session aa2272b7: lsof shows no process cwd in the worktree; evidence archived at ~/worktree-backups/river-oaks/local-evidence-creator-interior-docs-20261014/manifest.json before removing regenerable caches"
-      },
-      "retiredBranches": [
-        "docs/procedural-creator-interiors-20261014"
-      ],
-      "archive": {
-        "docs/procedural-creator-interiors-20261014": {
-          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-uT7833/manifest.json",
-          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-uT7833/history.bundle",
-          "sha256": "ce93dee1014418d8b8fee9226c9be8ef4fc8466352a67421fd6218d157b14bf7",
-          "tag": "refs/tags/archive/worktree-prune/a00cf734-b71e-4590-bc49-ef7a03852671",
-          "head": "284714e3317c267e882fde36221ba600c858f94d"
-        }
-      }
-    },
-    {
-      "id": "procedural-gallery-ao-exterior-mask",
-      "title": "Measure an interior-only AO geometry mask for repeated gallery visits",
-      "status": "retired",
-      "branches": [
-        "perf/procedural-gallery-ao-mask-20261014"
-      ],
-      "owner": null,
-      "updatedAt": "2026-10-14T23:05:23.530Z",
-      "leaseUntil": null,
-      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
-      "ledger": "docs/superpowers/plans/2026-10-14-procedural-gallery-ao-mask.md",
-      "requiredChecks": [
-        "Paired uninstrumented five-cycle moving gallery measurements",
-        "Same-camera AO visual comparison",
-        "Focused render-pipeline visibility restoration tests",
-        "pnpm run verify before commit",
-        "Isolated-Redis full and exact-head hosted checks before delivery"
-      ],
-      "filesOwned": [
-        "preview/src/render-pipeline.js",
-        "preview/src/main.js",
-        "preview/tests/render-pipeline.test.js",
-        "docs/superpowers/plans/2026-10-14-procedural-gallery-ao-mask.md",
-        "docs/superpowers/plans/README.md"
-      ],
-      "pr": 358,
-      "previousOwner": "codex-root-20261014-ao-followup",
-      "handoff": "PR #358 merged to main as c89c98ddac5a4aaa57f549d1ccc840a33e873af7 from signed head 35d23a560cafaa01665d489f84851d653ccb3241. Exact-head aggregate preview and all 16 hosted checks green; integrated focused 12/12, gallery render-cost, office visit, five-cycle Sharpest AO-on and core passed. Target-device and human through-glass mask review remain rollout gates.",
-      "evidence": [
-        {
-          "pr": 358,
-          "reviewedHead": "35d23a560cafaa01665d489f84851d653ccb3241",
-          "merge": "c89c98ddac5a4aaa57f549d1ccc840a33e873af7",
-          "checks": "Exact-head aggregate preview and all 16 hosted checks green; integrated focused 12/12, named browser and five-cycle Sharpest journeys, core passed."
-        }
-      ],
-      "retirement": {
-        "head": "35d23a560cafaa01665d489f84851d653ccb3241",
-        "releasedAt": "2026-10-14T23:03:39.927Z",
-        "sessionsReviewedAt": "2026-10-14T23:03:39.927Z",
-        "note": "Session aa2272b7: lsof shows no process cwd in the worktree; evidence archived at ~/worktree-backups/river-oaks/local-evidence-ao-mask-20261014/manifest.json before removing regenerable caches"
-      },
-      "retiredBranches": [
-        "perf/procedural-gallery-ao-mask-20261014"
-      ],
-      "archive": {
-        "perf/procedural-gallery-ao-mask-20261014": {
-          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-zJskE1/manifest.json",
-          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-zJskE1/history.bundle",
-          "sha256": "31ea7e22d1eecdb228934bfcaf61550d17aff7836cc9cf663095337376a693c6",
-          "tag": "refs/tags/archive/worktree-prune/1ea1847d-b224-4990-b343-9d02c473188f",
-          "head": "35d23a560cafaa01665d489f84851d653ccb3241"
-        }
-      }
-    },
-    {
-      "id": "procedural-gallery-contact-shading",
-      "title": "Prototype low-cost gallery contact shading for generated interiors",
-      "status": "retired",
-      "branches": [
-        "perf/procedural-gallery-contact-shading-20261014"
-      ],
-      "owner": null,
-      "updatedAt": "2026-10-14T23:43:30.053Z",
-      "leaseUntil": null,
-      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
-      "ledger": "docs/superpowers/plans/2026-10-14-procedural-gallery-contact-shading.md",
-      "requiredChecks": [
-        "Matched player-height visual captures against AO-on and AO-off",
-        "Five-cycle moving gallery route on named hardware",
-        "Focused generated-room render and quality-control behavior",
-        "pnpm run verify before commit",
-        "Isolated-Redis full and exact-head hosted checks before delivery"
-      ],
-      "filesOwned": [
-        "preview/src/generated-contact-shading.js",
-        "preview/src/store-interiors.js",
-        "preview/src/main.js",
-        "preview/e2e/generated-gallery-cycle-soak.js",
-        "preview/tests/generated-contact-shading.test.js",
-        "docs/superpowers/plans/2026-10-14-procedural-gallery-contact-shading.md",
-        "docs/superpowers/plans/README.md",
-        "docs/project-management/tasks.json"
-      ],
-      "pr": 382,
-      "handoff": "PR #382 merged to main as c1104f4741f7a17fcce7812d47b82e8f6e1a31d0 at 2026-10-14T23:21:40Z from signed head 0761c65dabbb6afb71ed195554a9f0fef1b0955d. Exact-head aggregate preview and all 16 hosted checks green. Integrated focused 25/25, generated-level browser journeys, Auto five-cycle, Sharpest one-cycle and core passed; prior isolated-Redis full retry passed all 17 groups. Val approved pilot Auto appearance in gallery-canvas cycle-1 and cycle-5 captures. Target-device pacing, live keyboard/accessibility and wider archetype rollout remain open.",
-      "previousOwner": "codex-root-20261014-gallery-contact",
-      "evidence": [
-        {
-          "pr": 382,
-          "reviewedHead": "0761c65dabbb6afb71ed195554a9f0fef1b0955d",
-          "merge": "c1104f4741f7a17fcce7812d47b82e8f6e1a31d0",
-          "checks": "Exact-head aggregate preview and all 16 hosted checks green; focused 25/25, named levels and Auto/Sharpest journeys, core, and prior isolated-Redis full retry passed; pilot appearance approved by Val.",
-          "tree": "9ca37573ba0388898bfc443c6bd60e8c3637e8c1"
-        }
-      ],
-      "retirement": {
-        "head": "0761c65dabbb6afb71ed195554a9f0fef1b0955d",
-        "releasedAt": "2026-10-14T23:42:19.781Z",
-        "sessionsReviewedAt": "2026-10-14T23:42:19.781Z",
-        "note": "Session aa2272b7: orphaned disposable test Redis on 127.0.0.1:16399 (no clients, parent launchd) stopped with SHUTDOWN SAVE; no process cwd remains. The pilot screenshots the handoff asked to keep, the runtime evidence and dump.rdb are archived at ~/worktree-backups/river-oaks/local-evidence-gallery-contact-shading-20261014/manifest.json before removing regenerable caches."
-      },
-      "retiredBranches": [
-        "perf/procedural-gallery-contact-shading-20261014"
-      ],
-      "archive": {
-        "perf/procedural-gallery-contact-shading-20261014": {
-          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-xkcN8s/manifest.json",
-          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-xkcN8s/history.bundle",
-          "sha256": "87969fd16adcb116836b4c023457651e988b46a4ccfe2b1fbb9ff0e5267c9267",
-          "tag": "refs/tags/archive/worktree-prune/e192283d-3d7b-4dcd-9d6a-04c55cba0568",
-          "head": "0761c65dabbb6afb71ed195554a9f0fef1b0955d"
         }
       }
     },
@@ -9141,41 +9138,6 @@
       "leaseUntil": "2026-10-14T23:03:20.122Z"
     },
     {
-      "id": "desktop-package-matrix",
-      "title": "Desktop packaging build matrix (#371): package, fuse/asar checks and development e2e on Windows, Linux and macOS runners with unsigned artifacts",
-      "status": "active",
-      "branches": [
-        "ci/desktop-package-matrix"
-      ],
-      "owner": "claude:river-oaks-27 (16ffadb4)",
-      "updatedAt": "2026-10-15T00:07:04.000Z",
-      "nextAction": "#379 landed (18be0f56) and merged in; check reads packagedBinary. Windows launch fixed (app path without trailing backslash; diag 38655207182). Linux crash recovery fixed by kernel core handling on the runner (diag 38657104883); Linux finding on #370. Next: core verify, push, Desktop + Verify runs, fuse-drift draft PR, artifact checksums, land #377.",
-      "filesOwned": [
-        ".github/workflows/desktop.yml",
-        "desktop/package-check.js",
-        "desktop/tests/package-check.test.js",
-        "config/agent-workflow.json (desktop-package profile)",
-        "docs/desktop.md (CI builds section)",
-        "docs/agent-workflow.md (desktop-package profile)",
-        "docs/superpowers/plans/2026-10-14-desktop-package-matrix.md"
-      ],
-      "requiredChecks": [
-        "pnpm run verify tooling",
-        "pnpm run test:desktop",
-        "pnpm run verify",
-        "Desktop workflow green on windows-latest, ubuntu-latest and macos-latest with artifacts"
-      ],
-      "issues": [
-        371
-      ],
-      "blocker": null,
-      "ledger": "docs/superpowers/plans/2026-10-14-desktop-package-matrix.md",
-      "leaseUntil": "2026-10-15T02:07:04.000Z",
-      "pr": 377,
-      "deliveryPr": 377,
-      "previousOwner": "claude:river-oaks-desktop-matrix (e8b6b86f)"
-    },
-    {
       "id": "register-sweep-20261014",
       "title": "Register sweep: commit the live register (67 live-only tasks, 2026-10-14)",
       "status": "retired",
@@ -9275,6 +9237,44 @@
           "checks": "Landed by river-oaks-27 with pnpm run land 379 under Val's #371 phase-2 authorization at 2026-10-14T23:38:19Z: GitHub update-branch head 5cb22281, all 17 checks green (preview aggregate, verify 3.11/3.13, CodeQL, dependency review, Vercel), guard CLEAN. Windows unit tests 61/61 on diag run 38652827284 (see #370)."
         }
       ]
+    },
+    {
+      "id": "office-ipic-baseline-360",
+      "title": "Office + IPIC #360 (design side, D0/D1): kit/reference inventory, brief, asset manifest and review matrix in docs/design/office-ipic",
+      "status": "active",
+      "branches": [
+        "docs/office-ipic-baseline-20261014"
+      ],
+      "owner": "claude:river-oaks-1b (f4107618)",
+      "updatedAt": "2026-10-15T03:43:33.020Z",
+      "nextAction": "main c1cfd584 merged (dace7b1a); engineering G1 agreement added to review-matrix.md, brief notes #388. Push, mark #380 ready, land after #381.",
+      "filesOwned": [
+        "docs/design/office-ipic/brief.md",
+        "docs/design/office-ipic/reference-index.json",
+        "docs/design/office-ipic/asset-manifest.json",
+        "docs/design/office-ipic/review-matrix.md",
+        "scripts/office-ipic-reference-index.mjs",
+        "scripts/tests/office-ipic-references.test.js",
+        "docs/superpowers/plans/2026-10-14-office-ipic-baseline.md",
+        "docs/design/office-ipic/captures/**",
+        "data/reports/office-ipic-baseline-captures.json",
+        "data/reports/office-ipic-baseline-captures-desk.json"
+      ],
+      "requiredChecks": [
+        "focused office/IPIC node tests",
+        "pnpm run verify"
+      ],
+      "issue": 360,
+      "ledger": "docs/superpowers/plans/2026-10-14-office-ipic-baseline.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-ipic-baseline-20261014",
+      "pr": 380,
+      "leaseUntil": "2026-10-15T05:43:33.020Z",
+      "handoff": {
+        "at": "2026-10-15T03:38:57.407Z",
+        "from": null,
+        "to": "claude:river-oaks-1b (f4107618)",
+        "reason": "Released design packet task; Val's /goal of 2026-10-15 asks river-oaks-1b to mark #380 ready, land it and close #360."
+      }
     },
     {
       "id": "office-ipic-engineering-baseline",
@@ -9572,6 +9572,72 @@
       ]
     },
     {
+      "id": "procedural-gpu-matrix-harness",
+      "title": "Make generated gallery AO-tail GPU comparison repeatable without source edits",
+      "status": "active",
+      "branches": [
+        "test/procedural-gpu-matrix-harness-20261015"
+      ],
+      "owner": "codex-root-procedural-gpu-matrix-harness",
+      "leaseUntil": "2026-10-15T03:52:32.496Z",
+      "updatedAt": "2026-10-15T02:25:57.921Z",
+      "nextAction": "Watch exact-head hosted preview on draft PR #389, mark ready when passing, and land through the queue; then prepare test-only iPhone Safari access for the GPU matrix.",
+      "ledger": "docs/superpowers/plans/2026-10-15-procedural-gpu-matrix-harness.md",
+      "requiredChecks": [
+        "Focused journey with AO tail off and on",
+        "pnpm run verify",
+        "pnpm run verify full or explicit gate gap"
+      ],
+      "filesOwned": [
+        "preview/e2e/generated-gallery-cycle-soak.js",
+        "docs/superpowers/plans/2026-10-14-procedural-gpu-acceptance.md",
+        "docs/superpowers/plans/2026-10-15-procedural-gpu-matrix-harness.md",
+        "docs/superpowers/plans/README.md",
+        "docs/project-management/tasks.json (this task only)"
+      ],
+      "parent": "procedural-gpu-acceptance",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-procedural-gpu-matrix-harness-20261015",
+      "pr": 389
+    },
+    {
+      "id": "studio-prompt-stdin",
+      "title": "Studio hosts: pass prompts on stdin so Windows command-line limits (32,767 characters) cannot break agent and designer requests (#370 finding)",
+      "status": "active",
+      "branches": [
+        "fix/studio-prompt-stdin-20261015"
+      ],
+      "owner": "claude:river-oaks-27 (16ffadb4)",
+      "leaseUntil": "2026-10-15T04:55:23.202Z",
+      "updatedAt": "2026-10-15T02:55:23.202Z",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-studio-prompt-stdin-20261015",
+      "issues": [
+        370
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-15-studio-prompt-stdin.md",
+      "nextAction": "Fix done and verified locally (desktop 69, agent/designer e2e, core, live claude+codex stdin). Next: push, open PR, read the Desktop run on windows-latest. Merge needs Val.",
+      "filesOwned": [
+        "desktop/studio-command.js",
+        "desktop/studio-codex.js",
+        "desktop/studio-agent-host.js",
+        "desktop/studio-designer-host.js",
+        "desktop/agent-e2e.js",
+        "desktop/tests/studio-command.test.js",
+        "desktop/tests/studio-codex.test.js",
+        "desktop/tests/studio-agent-host.test.js",
+        "desktop/tests/studio-designer-host.test.js",
+        "desktop/tests/fixtures/studio-agent-cli.mjs",
+        "docs/world-studio-agent.md",
+        "docs/superpowers/plans/2026-10-15-studio-prompt-stdin.md"
+      ],
+      "requiredChecks": [
+        "pnpm run test:desktop",
+        "pnpm run verify",
+        "node desktop/agent-e2e.js",
+        "node desktop/designer-e2e.js",
+        "Desktop workflow green on windows-latest, ubuntu-latest, macos-latest"
+      ]
+    },
+    {
       "id": "office-computer-db-mvp",
       "title": "Resident-owned office computers with private and shared database tasks",
       "status": "active",
@@ -9619,34 +9685,6 @@
         "pnpm run verify full"
       ],
       "leaseUntil": "2026-10-15T04:42:50.281103+00:00"
-    },
-    {
-      "id": "procedural-gpu-matrix-harness",
-      "title": "Make generated gallery AO-tail GPU comparison repeatable without source edits",
-      "status": "active",
-      "branches": [
-        "test/procedural-gpu-matrix-harness-20261015"
-      ],
-      "owner": "codex-root-procedural-gpu-matrix-harness",
-      "leaseUntil": "2026-10-15T03:52:32.496Z",
-      "updatedAt": "2026-10-15T02:25:57.921Z",
-      "nextAction": "Watch exact-head hosted preview on draft PR #389, mark ready when passing, and land through the queue; then prepare test-only iPhone Safari access for the GPU matrix.",
-      "ledger": "docs/superpowers/plans/2026-10-15-procedural-gpu-matrix-harness.md",
-      "requiredChecks": [
-        "Focused journey with AO tail off and on",
-        "pnpm run verify",
-        "pnpm run verify full or explicit gate gap"
-      ],
-      "filesOwned": [
-        "preview/e2e/generated-gallery-cycle-soak.js",
-        "docs/superpowers/plans/2026-10-14-procedural-gpu-acceptance.md",
-        "docs/superpowers/plans/2026-10-15-procedural-gpu-matrix-harness.md",
-        "docs/superpowers/plans/README.md",
-        "docs/project-management/tasks.json (this task only)"
-      ],
-      "parent": "procedural-gpu-acceptance",
-      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-procedural-gpu-matrix-harness-20261015",
-      "pr": 389
     },
     {
       "id": "office-ipic-contract-decisions",

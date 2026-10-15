@@ -53,7 +53,9 @@ try {
  await page.locator('.studio-agent-edit-status').filter({hasText:'Applied automatically'}).waitFor();assert.equal(await count(),before+1);
  check('Codex: suggested next step sends, Allow mode applies one edit');
  const calls=(await readFile(log,'utf8')).trim().split('\n').map(line=>JSON.parse(line));
- assert.equal(calls.length,2);assert.equal(calls[0][0],'-p');assert.equal(calls[1][0],'exec');assert.match(calls[1].at(-1),/CONVERSATION SO FAR:\nUSER: Frame the arrival/);
+ // The fixture logs {args, prompt}: the prompt arrives on stdin, never on the command line.
+ assert.equal(calls.length,2);assert.equal(calls[0].args[0],'-p');assert.equal(calls[1].args[0],'exec');assert.equal(calls[1].args.at(-1),'-');
+ assert.match(calls[1].prompt,/CONVERSATION SO FAR:\nUSER: Frame the arrival/);assert.ok(calls.every(call=>!call.args.some(arg=>arg.includes('Frame the arrival'))));
  assert.equal(await app.evaluate(()=>globalThis.__agentConsents),2);
  check('host ran each fixed CLI once, kept chat history, and asked consent once per provider');
  // One click fanning out into many sends still runs the CLI only once.
