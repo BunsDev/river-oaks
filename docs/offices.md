@@ -61,9 +61,10 @@ Each visit records the layout and the floor the server admitted it to (`preview/
 
 
 - **In the browser.** Within reach of the stair foot or the lift, **Take the stairs up · Q** (or down, or **Use the lift · Q**) appears; it sends the transition and adopts the floor the server answers with. Moves carry the layout and floor; a reply that arrives after the visit closed changes nothing. The first-person eye and avatars stand at the server-derived floor elevation, and a visitor on the other floor stays visible even directly above or below. Until #362's assets arrive, the penthouse is a graybox drawn from the same plan (`preview/src/office-penthouse-graybox.js`); an unknown layout refuses to render rather than show another plan's geometry.
-- **Skyline (prototype).** Once the doors close the street stops drawing, so a layout with a terrace captures the actual district once, from the middle of its main floor and terrace at standing height, into a cube map shown as the backdrop outside (`preview/src/office-skyline.js`); it is a local picture that never moves the office or changes collision, membership or position, the legacy room never captures, and `?office-skyline=off` compares without it in development.
 
 To see it locally, run `node preview/e2e/office-penthouse-runner.mjs`: the loopback fixture serves the penthouse, and the owner takes the stairs to the mezzanine.
+
+**Skyline (prototype).** Once the doors close the street stops drawing, so a layout with a terrace captures the actual district once, from the middle of its main floor and terrace at standing height, into a cube map shown as the backdrop outside (`preview/src/office-skyline.js`); it is a local picture that never moves the office or changes collision, membership or position, the legacy room never captures, and `?office-skyline=off` compares without it in development.
 
 The penthouse is not active anywhere by default. Raising the mapped building to fit it, furniture collision beyond the desk chairs, and final art are later steps (#362, #363).
 
