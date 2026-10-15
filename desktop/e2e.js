@@ -134,9 +134,26 @@ try {
   await page.locator('#canvas-host').focus();
   const position = () => page.locator('#walking-hud').evaluate(el => JSON.parse(el.dataset.position));
   const before = await position();
-  await page.keyboard.down('KeyW'); await page.waitForTimeout(1200); await page.keyboard.up('KeyW');
+  // Hold W for 1.2 s of the game's clock, not the wall clock. The game reads keys in
+  // its frame loop and advances at most 0.08 s a frame (main.js), so a frame stall on
+  // a slow runner (macOS CI compiling shader pipelines) could cover a wall-clock hold
+  // and leave the player at the spawn: "0 m walked" in Desktop runs 38659435397 and
+  // 38673593628. The distance threshold is unchanged.
+  await page.keyboard.down('KeyW');
+  const hold = await page.evaluate(() => new Promise(resolve => {
+    const started = performance.now(); let last, game = 0, frames = 0, longest = 0;
+    const frame = now => {
+      if (last !== undefined) { const dt = (now - last) / 1000; game += Math.min(dt, 0.08); longest = Math.max(longest, dt); frames++; }
+      last = now;
+      if (game >= 1.2 || now - started > 30000) resolve({ game, frames, longest, wall: (now - started) / 1000 }); else requestAnimationFrame(frame);
+    };
+    requestAnimationFrame(frame);
+  }));
+  await page.keyboard.up('KeyW');
   const after = await position();
-  assert.ok(Math.hypot(after[0] - before[0], after[2] - before[2]) > 0.5, 'W moves the player');
+  const walked = Math.hypot(after[0] - before[0], after[2] - before[2]);
+  report.walk = { metres: walked, ...hold };
+  assert.ok(walked > 0.5, `W moves the player: ${walked.toFixed(2)} m over ${hold.game.toFixed(2)} s of game time (${hold.frames} frames in ${hold.wall.toFixed(2)} s, longest ${hold.longest.toFixed(2)} s)`);
   check('keyboard movement');
   const sharedTown = await page.locator('#canvas-host').getAttribute('data-multiplayer') === 'joined';
   report.sharedTown = sharedTown;
