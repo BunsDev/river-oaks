@@ -29,8 +29,10 @@ export function createWaitlistRoutes({ auth, waitlist, admins = [], origin, onRe
       if (record.status === 'approved' && assetGateSecret && session)
         res.appendHeader('Set-Cookie', assetGateCookie(await signAssetGate({ secret: assetGateSecret, session, now: now() }), String(origin).startsWith('https://')));
       // The username a waiting resident will be known by, and their GitHub login when it could be one.
+      // `requestedAt` is when they joined the waitlist; `invited` says they joined with an invitation code.
       json(res, 200, { status: record.status, admin: adminIds.has(identity.userId), user: { id: identity.userId, name: accountName(identity.userId, identity.name) },
-        username: validUsername(record.username) ? record.username : null, usernameBy: record.usernameBy ?? null, github: validUsername(identity.name) ? identity.name : null });
+        username: validUsername(record.username) ? record.username : null, usernameBy: record.usernameBy ?? null, github: validUsername(identity.name) ? identity.name : null,
+        requestedAt: typeof record.requestedAt === 'string' ? record.requestedAt : null, invited: Boolean(record.inviteId) });
       return true;
     }
     if (path === '/api/waitlist/invites') {
