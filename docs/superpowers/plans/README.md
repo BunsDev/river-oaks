@@ -4,14 +4,16 @@
 
 Each plan is a task ledger. Status comes from the task register, where the primary checkout's live copy can be newer than the committed one. Plans from before the register are listed as historical: their own text is the record of what was delivered.
 
-## Active and blocked (20)
+## Active and blocked (22)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
+| [2026-10-15-studio-safe-edits](2026-10-15-studio-safe-edits.md)<br>World Studio safe edits (#414, parent #413) | `studio-safe-edits-414` | queued | #427 | 2026-10-15 |
 | [2026-10-15-studio-prompt-stdin](2026-10-15-studio-prompt-stdin.md)<br>Studio prompts on stdin (#370 finding), 2026-10-15 | `studio-prompt-stdin` | active | — | 2026-10-15 |
 | [2026-10-15-safari-gltf-decoder-investigation](2026-10-15-safari-gltf-decoder-investigation.md)<br>Physical Safari glTF decoder investigation | `safari-gltf-decoder-investigation` | active | #411 | 2026-10-15 |
 | [2026-10-15-procedural-phone-gpu-fixture](2026-10-15-procedural-phone-gpu-fixture.md)<br>Procedural gallery phone GPU fixture | `procedural-phone-gpu-fixture` | active | #393 | 2026-10-15 |
 | [2026-10-15-office-world-lifecycle-reliability](2026-10-15-office-world-lifecycle-reliability.md)<br>Office world lifecycle reliability | `office-world-lifecycle-reliability` | active | — | 2026-10-15 |
+| [2026-10-15-office-skyline-prototype](2026-10-15-office-skyline-prototype.md)<br>Penthouse skyline prototype (#363 views, kit guide P26) | `office-skyline-prototype` | active | #408 | 2026-10-15 |
 | [2026-10-15-office-penthouse-traversal](2026-10-15-office-penthouse-traversal.md)<br>Office #361: versioned multilevel office traversal and safe visit migration (2026-10-15) | `office-penthouse-traversal-361` | active | — | 2026-10-15 |
 | [2026-10-15-office-ipic-contract-decisions](2026-10-15-office-ipic-contract-decisions.md)<br>Office + IPIC #360: record Val's decisions in the layout contract (2026-10-15) | `office-ipic-contract-decisions` | active | #388 | 2026-10-15 |
 | [2026-10-15-office-computer-reliability](2026-10-15-office-computer-reliability.md)<br>Office computer reliability | `office-computer-reliability` | active | #394 | 2026-10-15 |
@@ -156,11 +158,14 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-11-delivered-source-retirement](2026-10-11-delivered-source-retirement.md)<br>Delivered source reconciliation | `reconcile-delivered-sources` | retired | — | 2026-10-11 |
 | [2026-10-11-ci-parallel-preview](2026-10-11-ci-parallel-preview.md)<br>Parallel preview check | `ci-parallel-preview` | retired | #252 | 2026-10-11 |
 
-## Historical, not in the register (72)
+## Historical, not in the register (75)
 
 | Plan | PRs mentioned |
 | --- | --- |
+| [2026-10-15-office-penthouse-glazing](2026-10-15-office-penthouse-glazing.md)<br>Penthouse graybox: glazed curtain wall | #363, #362, #351 |
+| [2026-10-15-ipic-screening-replay](2026-10-15-ipic-screening-replay.md)<br>#368 slice: stale and replayed playback in the two-browser screening journey (2026-10-15) | #368, #359, #406 |
 | [2026-10-15-ipic-route-evidence](2026-10-15-ipic-route-evidence.md)<br>IPIC #364: routes, seats, collision agreement, screen data and exports (2026-10-15) | #364, #359, #365 |
+| [2026-10-15-greetings-dock-overlap](2026-10-15-greetings-dock-overlap.md)<br>Phone HUD: the greetings card covered Play & rides (2026-10-15) | #368, #407, #359 |
 | [2026-10-15-bar-games](2026-10-15-bar-games.md)<br>Bar games: shared darts in the IPIC Tuck Room and an unbranded axe-and-darts room (2026-10-15) | #402, #364 |
 | [2026-10-13-stage-voice-carry](2026-10-13-stage-voice-carry.md)<br>A stage performer is heard across the plaza — 2026-10-13 | #311 |
 | [2026-10-13-procedural-multilevel-interiors](2026-10-13-procedural-multilevel-interiors.md)<br>Building-anchored procedural interiors and levels | — |

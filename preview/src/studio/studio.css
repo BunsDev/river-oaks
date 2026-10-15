@@ -95,3 +95,5 @@
 .studio-interior-edits{display:grid;gap:8px;margin:12px 0;padding:10px;border:1px solid var(--line);border-radius:5px}
 .studio-interior-edits label{display:grid;gap:4px}.studio-interior-edits input,.studio-interior-edits select{width:100%;min-width:0;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--paper);color:var(--ink);font:inherit}
 .studio-interior-edits input:focus-visible,.studio-interior-edits select:focus-visible{outline:2px solid var(--forest);outline-offset:2px}
+
+#studio-assessment{margin-top:20px;overflow-wrap:anywhere}#studio-assessment label{display:grid;gap:6px}#studio-profile{width:100%;min-width:0;padding:7px;border:1px solid var(--line);border-radius:4px;background:var(--field);color:var(--ink);font:inherit}#studio-profile:focus-visible{outline:2px solid var(--forest);outline-offset:3px}#studio-findings button{margin:3px 0;max-width:100%;overflow-wrap:anywhere}

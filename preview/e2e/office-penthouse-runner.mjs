@@ -1,10 +1,11 @@
-// Penthouse office smoke (#361): node preview/e2e/office-penthouse-runner.mjs
+// Penthouse office smoke (#361, #363 seats): node preview/e2e/office-penthouse-runner.mjs
 // Starts the loopback browser fixture with RIVER_OAKS_OFFICE_LAYOUT=office-penthouse-1 and
 // runs preview/e2e/office-penthouse.js as the office owner.
 import { chromium } from 'playwright';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { startBrowserFixture } from './fixture-server.js';
 import { holdBrowserLock } from '../../scripts/browser-lock.mjs';
+import { loadavg } from 'node:os';
 const release = await holdBrowserLock('Penthouse office smoke');
 let fixture, browser;
 await mkdir('output/playwright', { recursive: true });
@@ -17,11 +18,11 @@ try {
   const source = (await readFile('preview/e2e/office-penthouse.js', 'utf8')).replaceAll('http://127.0.0.1:5173', fixture.origin);
   try {
     const result = await eval(`(${source})`)(page);
-    await writeFile('output/playwright/office-penthouse.json', JSON.stringify({ status: 'passed', browser: await browser.version(), ...result }, null, 2));
-    console.log(JSON.stringify({ checks: result.checks, eyeRise: result.eyeRise }));
+    await writeFile('output/playwright/office-penthouse.json', JSON.stringify({ status: 'passed', browser: await browser.version(), loadAverage: loadavg().map(n => Number(n.toFixed(1))), ...result }, null, 2));
+    console.log(JSON.stringify({ checks: result.checks, seatedEyeDrop: result.seatedEyeDrop, eyeRise: result.eyeRise }));
   } catch (error) {
     await page.screenshot({ path: 'output/playwright/office-penthouse-failure.png' }).catch(() => {});
-    await writeFile('output/playwright/office-penthouse.json', JSON.stringify({ status: 'failed', error: error.stack }, null, 2));
+    await writeFile('output/playwright/office-penthouse.json', JSON.stringify({ status: 'failed', loadAverage: loadavg().map(n => Number(n.toFixed(1))), error: error.stack }, null, 2));
     throw error;
   }
 } finally { await browser?.close(); await fixture?.close(); release(); }
