@@ -9574,14 +9574,13 @@
     {
       "id": "procedural-gpu-matrix-harness",
       "title": "Make generated gallery AO-tail GPU comparison repeatable without source edits",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "test/procedural-gpu-matrix-harness-20261015"
       ],
-      "owner": "codex-root-procedural-gpu-matrix-harness",
-      "leaseUntil": "2026-10-15T03:52:32.496Z",
-      "updatedAt": "2026-10-15T02:25:57.921Z",
-      "nextAction": "Watch exact-head hosted preview on draft PR #389, mark ready when passing, and land through the queue; then prepare test-only iPhone Safari access for the GPU matrix.",
+      "owner": null,
+      "updatedAt": "2026-10-15T02:38:54.474Z",
+      "nextAction": "Preserve restoration bundle and selected local receipts; prepare a separate test-only iPhone Safari fixture for the physical GPU matrix.",
       "ledger": "docs/superpowers/plans/2026-10-15-procedural-gpu-matrix-harness.md",
       "requiredChecks": [
         "Focused journey with AO tail off and on",
@@ -9596,46 +9595,72 @@
         "docs/project-management/tasks.json (this task only)"
       ],
       "parent": "procedural-gpu-acceptance",
-      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-procedural-gpu-matrix-harness-20261015",
-      "pr": 389
+      "pr": 389,
+      "evidence": [
+        {
+          "pr": 389,
+          "reviewedHead": "9ab0e1248f7d6d50f35eaca8944fc0615b1945a0",
+          "merge": "d2ea93c34137651b21e497ac519805fd403ba93f",
+          "tree": "08baf815f8e9ae5955b755d15828c96421b31ac0",
+          "checks": [
+            "pnpm run verify passed; .runtime/agent/core.json",
+            "pnpm run verify full passed with isolated Redis; .runtime/agent/full.json",
+            "Gallery cycle off and on focused journeys passed with active-mode assertion",
+            "Hosted exact-head preview and all 17 landing checks passed; pnpm run land 389 merged at 2026-10-15T02:35:54Z"
+          ]
+        }
+      ],
+      "retirement": {
+        "head": "9ab0e1248f7d6d50f35eaca8944fc0615b1945a0",
+        "releasedAt": "2026-10-15T02:37:47.377Z",
+        "sessionsReviewedAt": "2026-10-15T02:37:47.377Z",
+        "note": "Owner codex-root-procedural-gpu-matrix-harness reviewed the sole owned worktree, clean tracked/untracked/ignored state, and no process CWD in it. Nine selected receipts and capture files were hash-verified at ~/worktree-backups/river-oaks/procedural-gpu-matrix-harness-20261015/manifest.json; regenerable caches removed. Project:prune retired the exact branch/worktree, then reported a concurrent register change; reconciled from its retired manifest."
+      },
+      "previousOwner": "codex-root-procedural-gpu-matrix-harness",
+      "retiredBranches": [
+        "test/procedural-gpu-matrix-harness-20261015"
+      ],
+      "archive": {
+        "test/procedural-gpu-matrix-harness-20261015": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-Yxk2Cv/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-Yxk2Cv/history.bundle",
+          "sha256": "2c0bb31d72dcfb7bb3687ce74bf6bd72dd21a0912deb7097535b4a78105e2886",
+          "tag": "refs/tags/archive/worktree-prune/0895babe-2d33-43ec-883e-6e0978dd33eb",
+          "head": "9ab0e1248f7d6d50f35eaca8944fc0615b1945a0"
+        }
+      }
     },
     {
-      "id": "studio-prompt-stdin",
-      "title": "Studio hosts: pass prompts on stdin so Windows command-line limits (32,767 characters) cannot break agent and designer requests (#370 finding)",
+      "id": "procedural-phone-gpu-fixture",
+      "title": "Provide isolated private-LAN Safari fixture for procedural gallery GPU acceptance",
       "status": "active",
       "branches": [
-        "fix/studio-prompt-stdin-20261015"
+        "test/procedural-phone-gpu-fixture-20261015"
       ],
-      "owner": "claude:river-oaks-27 (16ffadb4)",
-      "leaseUntil": "2026-10-15T04:55:23.202Z",
-      "updatedAt": "2026-10-15T02:55:23.202Z",
-      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-studio-prompt-stdin-20261015",
-      "issues": [
-        370
-      ],
-      "ledger": "docs/superpowers/plans/2026-10-15-studio-prompt-stdin.md",
-      "nextAction": "Fix done and verified locally (desktop 69, agent/designer e2e, core, live claude+codex stdin). Next: push, open PR, read the Desktop run on windows-latest. Merge needs Val.",
-      "filesOwned": [
-        "desktop/studio-command.js",
-        "desktop/studio-codex.js",
-        "desktop/studio-agent-host.js",
-        "desktop/studio-designer-host.js",
-        "desktop/agent-e2e.js",
-        "desktop/tests/studio-command.test.js",
-        "desktop/tests/studio-codex.test.js",
-        "desktop/tests/studio-agent-host.test.js",
-        "desktop/tests/studio-designer-host.test.js",
-        "desktop/tests/fixtures/studio-agent-cli.mjs",
-        "docs/world-studio-agent.md",
-        "docs/superpowers/plans/2026-10-15-studio-prompt-stdin.md"
-      ],
+      "owner": "codex-root-procedural-phone-gpu-fixture",
+      "leaseUntil": "2026-10-15T07:42:45.000Z",
+      "updatedAt": "2026-10-15T05:42:45.000Z",
+      "nextAction": "Physical Safari crashes on normal and AO-off routes but joins with the fixture-only HTML decoder control. Finish integrated full gate, exact-head hosted preview and PR #393 landing; retain the production decoder crash and phone GPU row as separate open work.",
+      "ledger": "docs/superpowers/plans/2026-10-15-procedural-phone-gpu-fixture.md",
       "requiredChecks": [
-        "pnpm run test:desktop",
+        "Focused phone fixture HTTP/WebSocket and host tests",
         "pnpm run verify",
-        "node desktop/agent-e2e.js",
-        "node desktop/designer-e2e.js",
-        "Desktop workflow green on windows-latest, ubuntu-latest, macos-latest"
-      ]
+        "pnpm run verify full with isolated Redis",
+        "Exact-head hosted preview"
+      ],
+      "filesOwned": [
+        "server/tests/browser-fixture.js",
+        "server/tests/phone-fixture-host.js",
+        "server/tests/phone-fixture-decoder.js",
+        "server/tests/phone-fixture.test.js",
+        "preview/e2e/world-publish.js (revision readiness wait)",
+        "docs/superpowers/plans/2026-10-14-procedural-gpu-acceptance.md",
+        "docs/superpowers/plans/2026-10-15-procedural-phone-gpu-fixture.md",
+        "docs/superpowers/plans/README.md",
+        "docs/project-management/tasks.json (this task and retired gpu harness only)"
+      ],
+      "parent": "procedural-gpu-acceptance",
+      "pr": 393
     },
     {
       "id": "office-computer-db-mvp",
@@ -9717,6 +9742,44 @@
         "to": "claude:river-oaks-1b (f4107618)",
         "reason": "Released by session aa2272b7; Val's /goal of 2026-10-15 asks river-oaks-1b to merge draft #388 into #381."
       }
+    },
+    {
+      "id": "studio-prompt-stdin",
+      "title": "Studio hosts: pass prompts on stdin so Windows command-line limits (32,767 characters) cannot break agent and designer requests (#370 finding)",
+      "status": "active",
+      "branches": [
+        "fix/studio-prompt-stdin-20261015"
+      ],
+      "owner": "claude:river-oaks-27 (16ffadb4)",
+      "leaseUntil": "2026-10-15T04:55:23.202Z",
+      "updatedAt": "2026-10-15T02:55:23.202Z",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-studio-prompt-stdin-20261015",
+      "issues": [
+        370
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-15-studio-prompt-stdin.md",
+      "nextAction": "Fix done and verified locally (desktop 69, agent/designer e2e, core, live claude+codex stdin). Next: push, open PR, read the Desktop run on windows-latest. Merge needs Val.",
+      "filesOwned": [
+        "desktop/studio-command.js",
+        "desktop/studio-codex.js",
+        "desktop/studio-agent-host.js",
+        "desktop/studio-designer-host.js",
+        "desktop/agent-e2e.js",
+        "desktop/tests/studio-command.test.js",
+        "desktop/tests/studio-codex.test.js",
+        "desktop/tests/studio-agent-host.test.js",
+        "desktop/tests/studio-designer-host.test.js",
+        "desktop/tests/fixtures/studio-agent-cli.mjs",
+        "docs/world-studio-agent.md",
+        "docs/superpowers/plans/2026-10-15-studio-prompt-stdin.md"
+      ],
+      "requiredChecks": [
+        "pnpm run test:desktop",
+        "pnpm run verify",
+        "node desktop/agent-e2e.js",
+        "node desktop/designer-e2e.js",
+        "Desktop workflow green on windows-latest, ubuntu-latest, macos-latest"
+      ]
     },
     {
       "id": "ipic-screening-authority-366",
