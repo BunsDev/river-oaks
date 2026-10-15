@@ -5,8 +5,9 @@ procedural gallery GPU matrix comes from avatar glTF image decoding, before
 changing the production loading policy.
 
 Task: `safari-gltf-decoder-investigation`. Branch:
-`test/safari-phone-frame-receipt-20261015` in the existing diagnostic sibling
-worktree. The previous diagnostic branch
+`test/safari-phone-error-receipt-20261015` in the existing diagnostic sibling
+worktree. The prior frame-receipt branch
+`test/safari-phone-frame-receipt-20261015` delivered PR #409. The first diagnostic branch
 `test/safari-gltf-decoder-investigation-20261015` delivered PR #401, merged at `67388f8dd894601833366d8d355e7e8d20726809`
 on 2026-10-15. Files owned: the avatar loader, a small glTF decoder-selection helper
 and its focused test, the phone fixture's test-only control and regression, this ledger, and
@@ -158,13 +159,49 @@ asset readiness, WebContent process identity and exact source revision.
   `.runtime/agent/core.json`. The host still had a concurrent full gate and
   load averages above 250, so a physical frame-time run at this moment would
   be confounded by host load.
-- Signed commit `df6ae23f8003ef5ece6ff054be64767ac5ec61d7` is on draft PR
-  #409. The follow-up is fixture-only; exact-head hosted checks and its
-  physical receipt are pending.
+- Signed PR #409 reached reviewed head
+  `5605c1cd8d5484ccd1c36a35271711047e49edb9`; all 16 hosted check
+  runs and the Vercel status passed. It merged through the REST endpoint at
+  `cc7f5561e925a4976692ce91bcfc7900ee4f9655` on 2026-10-15
+  08:47:09 UTC. Its physical frame receipt was pending at merge.
+- A new physical iPhone launch at the exact scoped URL plus
+  `phone-frame-report=1` sent two readiness reports and a five-second frame
+  sample. At 25.52 seconds, the scene and connection overlays were hidden,
+  Apple GPU reported 964 calls and 98 textures, assets were 88/102 with zero
+  failures, and the authoritative town had one player. The sample at 30.26
+  seconds contained 55 intervals, no overflow, 61 ms median, 265 ms p95,
+  542 ms maximum, CPU p95 33 ms and four intervals over 250 ms. The Mac host
+  load average was about 158 during collection and the guest later
+  disconnected. Val's visible-state confirmation for this specific visit is
+  pending. This is a diagnostic receipt, not a valid performance acceptance
+  result. Raw data:
+  `.runtime/safari-gltf-decoder-investigation/scoped-frame-sample-20261015.json`.
+- A subsequent normal-decoder launch at the same fixture with readiness and
+  frame reporting sent one early report at 10.50 seconds: assets 7/66, both
+  overlays visible, 28 render calls, 25 textures and Apple GPU. Safari also
+  reloaded an older avatar-control tab, which sent its own early report
+  (assets 2/7, viewport 300 × 150). Neither tab sent a 25-second report or
+  frame sample, and the authoritative town had zero players after 60 seconds.
+  Host load average reached about 343. This attempt does not isolate a
+  default-decoder cause because two tabs and high host load confound it. Raw
+  records: `.runtime/safari-gltf-decoder-investigation/default-control-20261015.json`.
+- CoreDevice's `systemCrashLogs` inventory exposed no same-time WebKit,
+  Safari or Jetsam file for the 08:49–08:54 UTC visits. The latest visible
+  WebContent entry was a CPU-resource report at 00:30 local time; this absence
+  does not prove Safari avoided a process termination. The installed
+  `idevicesyslog` could not identify the paired iPhone, so it did not provide
+  a live error stream.
+- The private fixture's next opt-in control `?phone-errors=1` now imports the
+  app's existing redacted diagnostic collector and reports only four recent
+  error, console and network summaries at 5, 15 and 25 seconds. It does not
+  alter the decoder or production build. The focused decoder and fixture
+  suites passed 9/9. `pnpm run verify` passed after this change and the
+  generated plan index update; `.runtime/agent/core.json` is the receipt.
+  A physical error receipt is pending.
 
-**Next action:** Review PR #409's exact-head hosted checks and land when green.
-Then capture a new exact-URL scoped-control physical frame receipt on a quiet
-host. Obtain the normal route's
+**Next action:** Deliver the fixture-only error receipt through exact-head
+hosted checks, then correlate Val's visible state with the frame receipt and repeat with only
+one Safari test tab on a quiet host. Obtain the normal route's
 WebKit exception and a controlled same-device comparison. Keep the scoped
 decoder helper experimental until the cause is demonstrated; the physical
 default-decoder GPU row and broader archetype rollout remain open.
