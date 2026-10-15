@@ -9758,14 +9758,14 @@
       "title": "Office #361: versioned penthouse layout (#349 level/portal shape, jevica-office/l<n>), server-validated levels and transitions, safe saved-visit migration; legacy office stays default",
       "status": "active",
       "branches": [
-        "feat/office-penthouse-layout-20261015"
+        "feat/office-penthouse-client-20261015"
       ],
       "owner": "claude:river-oaks-1b (f4107618)",
-      "leaseUntil": "2026-10-15T06:43:43.132Z",
-      "updatedAt": "2026-10-15T04:43:43.132Z",
+      "leaseUntil": "2026-10-15T07:18:55.576Z",
+      "updatedAt": "2026-10-15T05:18:55.576Z",
       "issue": 361,
       "ledger": "docs/superpowers/plans/2026-10-15-office-penthouse-traversal.md",
-      "nextAction": "PR A verified at main 096a6cdd + PR A (Redis server suite 715/715, core verify passed). Commit signed, open PR, land; PR B (client) next.",
+      "nextAction": "PR B verified: office preview 75/75, penthouse browser smoke passed (stairs to mezzanine, eye +3.800 m), legacy office-visit passed, core verify passed. Commit, PR, land, then close #361.",
       "filesOwned": [
         "preview/src/office-layouts.js",
         "preview/tests/office-layouts.test.js",
@@ -9783,7 +9783,7 @@
         "pnpm run verify",
         "pnpm run verify full with isolated Redis"
       ],
-      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-penthouse-20261015"
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-penthouse-client-20261015"
     },
     {
       "id": "desktop-e2e-walk-game-time",
@@ -9811,6 +9811,53 @@
         "Desktop workflow on three runners",
         "pnpm run verify"
       ]
+    },
+    {
+      "id": "office-penthouse-layout-361a",
+      "title": "Office #361 PR A: versioned penthouse layout plan and server-authoritative floors (checkpoint v10), legacy default",
+      "status": "retired",
+      "owner": null,
+      "updatedAt": "2026-10-15T04:59:38.308Z",
+      "branches": [
+        "feat/office-penthouse-layout-20261015"
+      ],
+      "issue": 361,
+      "pr": 396,
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-penthouse-20261015",
+      "ledger": "docs/superpowers/plans/2026-10-15-office-penthouse-traversal.md",
+      "handoff": {
+        "at": "2026-10-15T04:58:53.029Z",
+        "from": "office-penthouse-traversal-361",
+        "to": null,
+        "reason": "Split so project:prune can retire PR A's branch while #361's client PR continues under office-penthouse-traversal-361."
+      },
+      "evidence": [
+        {
+          "pr": 396,
+          "reviewedHead": "642f42dda9ea044e6227ea7041310eb6b38db6d8",
+          "merge": "0a74d0c3adabb092378463f9ec9979ed9fd74665",
+          "tree": "8c807e80bac77039c0d51350450f1f4ac601442d",
+          "checks": "pnpm run land 396: Verify passed, merge guard CLEAN. Local: isolated-Redis server suite 715/715, core verify passed (agent 109/109, preview 3065+1 skip, server 526+147 Redis skips, desktop 69/69, python 141)."
+        }
+      ],
+      "retirement": {
+        "head": "642f42dda9ea044e6227ea7041310eb6b38db6d8",
+        "releasedAt": "2026-10-15T04:58:53.029Z",
+        "sessionsReviewedAt": "2026-10-15T04:58:53.029Z"
+      },
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "retiredBranches": [
+        "feat/office-penthouse-layout-20261015"
+      ],
+      "archive": {
+        "feat/office-penthouse-layout-20261015": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-VYCKOh/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-VYCKOh/history.bundle",
+          "sha256": "38dd6c4d5fe0b01164f2d37e8cf6c30fe338c3ecfe7fa0a4119789db32ee1e2f",
+          "tag": "refs/tags/archive/worktree-prune/c64d8a81-492c-46d8-bae1-6adf3dc78023",
+          "head": "642f42dda9ea044e6227ea7041310eb6b38db6d8"
+        }
+      }
     }
   ]
 }
