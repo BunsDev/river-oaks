@@ -10399,8 +10399,8 @@
         "test/garden-office-416-audit-20261015"
       ],
       "owner": "codex-root-garden-office-audit-20261015",
-      "updatedAt": "2026-10-15T20:47:00.156489+00:00",
-      "nextAction": "Draft PR #459 contains signed verified implementation 0b0bf2017e479323aa2f1b324f0e90b921b28f43. Await Val visual/profile decision at .runtime/garden-office-audit/review.html and hosted checks/review; then hand off to #417. No merge authorized; preserve worktree and local evidence.",
+      "updatedAt": "2026-10-15T20:57:05.686880+00:00",
+      "nextAction": "Draft #459: add verified neutral-light/occupied-chair diagnostic (12 captures, original renderer restored), then hand off to #417. Await Val visual/profile decision; hosted review remains separate, no merge authorized.",
       "ledger": "docs/superpowers/plans/2026-10-15-garden-office-pilot.md",
       "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-garden-office-audit",
       "issue": 416,
@@ -10409,7 +10409,8 @@
         "docs/design/garden-office/ (only if audit exposes metadata gaps)",
         "preview/tests/studio-garden-office.test.js (only concrete uncovered pilot regressions)",
         "preview/src/studio/space-furniture.js (valid v1 bounds only)",
-        "scripts/garden-office-manifest.mjs (pilot contract accuracy/completeness)"
+        "scripts/garden-office-manifest.mjs (pilot contract accuracy/completeness)",
+        "preview/e2e/studio-office-{stations,neutral}.js (neutral diagnostic evidence only)"
       ],
       "requiredChecks": [
         "node --test preview/tests/studio-*.test.js server/tests/studio-assets.test.js",

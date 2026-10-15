@@ -374,3 +374,73 @@ check clear. Branch `test/garden-office-416-audit-20261015`; worktree
 The primary live task record is blocked on Val's visual/profile decision and
 hosted review/checks. #417 can consume the source/asset contract and receipts now;
 no merge, issue closure, delivery status or worktree retirement is claimed.
+
+
+### Completion-audit follow-up: neutral and occupied-use evidence
+
+The previous capture matrix is daylight/warm/evening. A neutral reflection map
+alone does not prove a neutral-light inspection. Added browser-only diagnostic
+`preview/e2e/studio-office-neutral.js`, reusing the matched station harness:
+white sun, sky, scene fill and practical lights; neutral `#888888` ground fill;
+unchanged daylight intensities, ACES exposure, neutral RoomEnvironment, material
+and emissive colors. The override exists only in the intercepted local module
+response, is labelled in capture filenames/receipts, and is removed before an
+original-renderer reload in `finally`. This adds no persisted lighting enum.
+
+Capture both authored chairs and the same conservative occupied-use fixture as
+our movement regression: all nine chairs pulled back 0.4 m with depth at least
+0.75 m, applied through numeric UI fields and read back. This represents chair-use
+clearance, not avatars, animated seating or a human accessibility test.
+
+Independent static review caught and resolved nested fixture-origin rewriting;
+a mock at port 54321 proves both capture navigation and restoration use the
+runner's fixture origin. No remaining important review findings. Browser execution passed in **18.473 s**, 12 captures, no page errors. Original
+viewport response SHA-256 matched after restoration; the diagnostic attribute
+was absent after reload. This is runtime evidence, not human visual approval.
+
+### Exact interface supplied to #417
+
+Document remains `document_type: 'studio-space'`, `schema_version: 1`, with closed
+existing kinds/finishes and 160 objects / 128 KiB.
+`spaceAssessmentContext('office')` supplies `{templateId:'office',profileVersion:1}`;
+`assessSpace(space, context, {revision,maxWork})` and document
+`assessCandidate` / `commitCandidate` retain #414's checks and revision fences.
+Local-save envelope carries `{revision,region,assessmentContext}`. A bare imported
+v1 document has no template provenance and remains unassessed. Asset metadata v2
+for the five furniture records does not change document or profile versions.
+
+Current source hashes (SHA-256; unchanged by neutral capture tooling):
+
+| Interface source | SHA-256 |
+| --- | --- |
+| `preview/src/studio/space-templates.js` | `56c6c57fc0419f60ba88414ea1680c7199e6106cb9daafa82f270e58145e8f45` |
+| `preview/src/studio/space-document.js` | `2c0e8cb5b0bdbbcb56ea489ecd339ec22abf5fac1bf56da68a25adb71bc24794` |
+| `preview/src/studio/space-assessment.js` | `f7e8b820a9070992748a8c1df5979326e1ad8da0570a4bdb5fd8b89aa0584ab1` |
+| `preview/src/studio/document.js` | `da45ef1ee7039edf6810acb15b57ce6888429986ef89397948c3a81ddb9f84fe` |
+
+The asset manifest records renderer/material dependencies and costs separately.
+Scene rebuild disposes prior scene resources, creates new scene-owned geometry
+and materials, and reuses the viewport-owned reflection map; viewport disposal
+releases reflection/render resources. Ten-cycle counters are evidence for that
+bounded run, not sustained/device resource acceptance. #417 retains those budgets.
+
+
+Neutral diagnostic command:
+`RIVER_OAKS_E2E_REPORT=garden-office-audit-neutral.json pnpm run test:experience studio-office-neutral`.
+Receipt: `data/reports/garden-office-audit-neutral.json`. All six runtime lights
+report white color; both hemisphere ground colors are `888888`. Intensities remain
+sun 2.5, sky 1.7, scene fill 0.35 and three practical lights 5 each; exposure 1 and
+reflection intensity 0.25. All nine chair edits were read back successfully.
+
+Agent inspected all twelve neutral PNGs: desk top/frame, chair support, floor
+contact and glazing remain legible without warm light tints. Reception stone keeps
+its visible texture. Occupied views show the intended chair pullback; the central
+entry aisle stays visibly open. Physical route evidence remains the separate
+movement tests, not these images. Kitchenette and exterior framing are unchanged;
+the known open roof and bare exterior remain D7/D9. No new major visual defect
+observed in this diagnostic; Val's design disposition is still pending.
+
+Capture filenames use `garden-office-neutral-diagnostic[-occupied]-CAM-0N-*.png`.
+Their SHA-256 values and harness hashes are appended to the local
+`.runtime/garden-office-audit/evidence-manifest.json`; the paired review HTML now
+includes both neutral conditions. No original captures were overwritten.
