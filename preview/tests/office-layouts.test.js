@@ -107,6 +107,26 @@ test('every required contract route works on the penthouse with the measured bod
   }
 });
 
+test('the penthouse main floor has the kit\'s three measured desks (R19), clear of every approach, chair and obstacle', () => {
+  const main = penthouse.levels.find(level => level.id === L0), desks = main.obstacles.filter(o => o.kind === 'desk');
+  // Val's R19 decision (2026-10-15): the supplied kit's desk colliders, as numbers only.
+  assert.deepEqual(desks.map(({ id, x0, x1, d0, d1, height }) => [id, x0, x1, d0, d1, height]), [
+    ['executive-desk', -5, -1, 7.2, 8.8, 0.76], ['bench-a', 2.4, 7.6, 6.4, 7.6, 0.76], ['bench-b', 2.4, 7.6, 11.4, 12.6, 0.76],
+  ]);
+  const gap = (box, [x, d]) => Math.hypot(x - Math.max(box.x0, Math.min(x, box.x1)), d - Math.max(box.d0, Math.min(d, box.d1)));
+  for (const station of penthouse.anchors.filter(item => item.kind === 'approach')) {
+    const nearest = Math.min(...desks.map(desk => gap(desk, station.position)));
+    assert.ok(nearest >= AVATAR_ENVELOPE.turningRadius, `${station.id} keeps ${nearest.toFixed(2)} m clear for the turning body`);
+    assert.ok(desks.some(desk => station.seat[0] >= desk.x0 && station.seat[0] <= desk.x1 && desk.d0 > station.seat[1]), `${station.id}'s chair faces a desk`);
+  }
+  for (const chair of main.chairs) assert.ok(desks.every(desk => gap(desk, chair.position) >= 0.4), `${chair.id} is not under a desk`);
+  for (const desk of desks) for (const other of main.obstacles.filter(o => o !== desk))
+    assert.ok(!(desk.x0 < other.x1 && desk.x1 > other.x0 && desk.d0 < other.d1 && desk.d1 > other.d0), `${desk.id} overlaps ${other.id}`);
+  // A desk is collision for the body, server and client alike.
+  assert.equal(officeLevelFree(penthouse, L0, [5, 7]), false);
+  assert.equal(officeLevelFree(penthouse, L0, [-3, 8]), false);
+});
+
 test('overlapping floors are told apart by level, never by a nearest elevation', () => {
   const lift = anchor('lift-ground').position;
   assert.ok(officeLevelFree(penthouse, L0, lift) && officeLevelFree(penthouse, L1, lift), 'the lift stands on both floors at one position');

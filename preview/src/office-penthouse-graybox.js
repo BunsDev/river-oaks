@@ -43,12 +43,13 @@ export function buildPenthouseOffice(THREE, layout) {
 
   // Collision obstacles, drawn exactly on their footprints: the stair, mezzanine furniture, and the
   // terrace walls, which the curtain wall below glazes.
-  const glazedWalls = [];
+  const glazedWalls = [], desks = [];
   for (const level of layout.levels) for (const o of level.obstacles) {
     if (o.kind === 'stair') {
       const { rise, risers } = layout.stair, run = (o.d1 - o.d0) / risers;
       for (let i = 0; i < risers; i++) box(`obstacle:${o.id}`, `stair tread ${i + 1}`, { x0: o.x0, x1: o.x1, d0: o.d0 + i * run, d1: o.d0 + (i + 1) * run }, level.floorElevation, level.floorElevation + rise * (i + 1) / risers, 'stone');
     } else if (o.kind === 'wall') glazedWalls.push({ ...o, y0: level.floorElevation, y1: level.floorElevation + level.clearHeight });
+    else if (o.kind === 'desk') desks.push({ ...o, y0: level.floorElevation, y1: level.floorElevation + o.height });
     else if (officeSeat(layout, o.id)) {
       // A reading chair: its seat at the plan's seat height, its back toward the bookcases (+d).
       const seat = officeSeat(layout, o.id), y = level.floorElevation + seat.height;
@@ -56,8 +57,15 @@ export function buildPenthouseOffice(THREE, layout) {
       box(`obstacle:${o.id}`, `${o.id} back`, { ...o, d0: o.d1 - 0.15 }, y, y + BACK, 'blush');
     } else box(`obstacle:${o.id}`, o.id, o, level.floorElevation, level.floorElevation + (HEIGHTS[o.id] ?? 0.75), o.id.startsWith('bookcase') || o.id.includes('table') ? 'walnut' : 'blush');
   }
-  // Desk chairs are collision at the plan's seats; the desks themselves arrive with #362. The seat
-  // top is the plan's seat height, so a seated visitor sits on it; the back is on the approach side.
+  // The imported desks (R19) share one draw; each instance keeps its own plan zone.
+  if (desks.length) {
+    const geometry = new THREE.BoxGeometry(1, 1, 1); geometries.push(geometry);
+    const mesh = new THREE.InstancedMesh(geometry, material('walnut'), desks.length), matrix = new THREE.Matrix4();
+    desks.forEach((o, i) => mesh.setMatrixAt(i, matrix.compose(new THREE.Vector3((o.x0 + o.x1) / 2, (o.y0 + o.y1) / 2, -(o.d0 + o.d1) / 2), new THREE.Quaternion(), new THREE.Vector3(o.x1 - o.x0, o.y1 - o.y0, o.d1 - o.d0))));
+    mesh.name = 'desks'; mesh.userData.zones = desks.map(o => `obstacle:${o.id}`); object.add(mesh);
+  }
+  // Desk chairs are collision at the plan's seats, facing the imported desks. The seat top is the
+  // plan's seat height, so a seated visitor sits on it; the back is on the approach side.
   for (const chair of ground.chairs) {
     const [x, d] = chair.position, height = officeSeat(layout, chair.id)?.height ?? 0.5, geometry = new THREE.CylinderGeometry(0.35, 0.35, height, 20); geometries.push(geometry);
     const mesh = new THREE.Mesh(geometry, material('blush'));
@@ -103,7 +111,11 @@ export function buildPenthouseOffice(THREE, layout) {
     object,
     get lights() { return object.children.filter(node => node.isPointLight); },
     update() {},
-    dispose() { for (const geometry of geometries) geometry.dispose(); for (const finish of materials.values()) finish.dispose(); },
+    dispose() {
+      // Instanced draws hold their own instance buffers on the GPU.
+      object.traverse(node => { if (node.isInstancedMesh) node.dispose(); });
+      for (const geometry of geometries) geometry.dispose(); for (const finish of materials.values()) finish.dispose();
+    },
   };
 }
 
