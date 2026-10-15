@@ -7,6 +7,7 @@ import Redis from 'ioredis';
 import { createRedisRoom } from '../redis-room.js';
 import { compileRegionPackage } from '../region-package.js';
 import { loadDistrictData } from '../district-data.js';
+import { beforeTowerRaise } from './district-history.js';
 
 const enabled=Boolean(process.env.REDIS_URL);
 const testRedis=(name,fn)=>test(name,{skip:!enabled},fn);
@@ -144,7 +145,7 @@ testRedis('default room upgrades a stored version-one checkpoint without losing 
 });
 
 testRedis('default district recovers its historical heights through the fenced Redis commit without resetting wishes or accounts',async t=>{
-  const current=JSON.parse(readFileSync(new URL('../../preview/public/data/district.json',import.meta.url)));
+  const current=beforeTowerRaise(JSON.parse(readFileSync(new URL('../../preview/public/data/district.json',import.meta.url))));
   current.vegetation=JSON.parse(readFileSync(new URL('../../preview/public/data/district-vegetation.json',import.meta.url)));
   const old=structuredClone(current),heights={
     'osm-way-625330785':8,'osm-way-625333006':6.5,'osm-way-625333008':6.5,
@@ -181,8 +182,34 @@ testRedis('default district recovers its historical heights through the fenced R
   }finally{await restored.close();}
 });
 
+testRedis('default district commits the raised penthouse tower once, without losing town state',async t=>{
+  const current=await loadDistrictData(),previous=beforeTowerRaise(current);
+  const f=await setup(t,{world:previous}),first=f.create();
+  assert.equal((await f.join(first,'alice')).ok,true);
+  assert.equal((await f.command(first,'alice',{type:'chat',text:'Keep this town under the raised tower.'})).ok,true);
+  const local=(await first.read()).snapshot.locals[0];
+  assert.equal((await f.command(first,'alice',{type:'travel',localId:local.id})).ok,true);
+  assert.equal((await f.command(first,'alice',{type:'wish',localId:local.id,kind:'dog'})).ok,true);
+  const before=(await first.read()).snapshot,key=`${f.prefix}:state`;
+  await first.close();
+  const logs=[];t.mock.method(console,'info',message=>logs.push(JSON.parse(message)));
+  const restored=createRedisRoom({redis:f.redis,prefix:f.prefix,worldData:current,authorize:async()=>true,now:()=>100000,isAdmin:id=>id==='alice'});
+  try{
+    assert.equal((await f.join(restored,'alice','replacement')).ok,true);
+    const after=(await restored.read()).snapshot;
+    for(const field of ['chat','players','wishes','locals'])assert.deepEqual(after[field],before[field],field);
+    const committed=JSON.parse(inflateSync(await f.redis.getBuffer(key)));
+    assert.equal(committed.checkpoint.worldFingerprint,createHash('sha256').update(JSON.stringify(current)).digest('hex'));
+    assert.deepEqual(logs,[{event:'district_tower_checkpoint_migrated',from:'before_office_tower_raise',to:'penthouse_tower_33m'}]);
+    await restored.close();
+    const next=createRedisRoom({redis:f.redis,prefix:f.prefix,worldData:current,authorize:async()=>true,now:()=>100000,isAdmin:id=>id==='alice'});
+    try{assert.equal((await f.join(next,'alice','third')).ok,true);assert.equal(logs.length,1,'migration is committed once');}
+    finally{await next.close();}
+  }finally{await restored.close();}
+});
+
 testRedis('default district commits the approved two-level revision without losing town state',async t=>{
-  const current=await loadDistrictData(),previous=structuredClone(current);
+  const current=beforeTowerRaise(await loadDistrictData()),previous=structuredClone(current);
   delete previous.buildingInteriors;
   const f=await setup(t,{world:previous}),first=f.create();
   assert.equal((await f.join(first,'alice')).ok,true);

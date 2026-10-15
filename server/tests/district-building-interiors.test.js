@@ -9,8 +9,10 @@ import { createWalkingEnvironment } from '../../preview/src/walking.js';
 import { loadDistrictData } from '../district-data.js';
 import { recoverDistrictInteriorCheckpoint } from '../district-interior-checkpoint-migration.js';
 import { createSharedWorld } from '../world.js';
+import { beforeTowerRaise } from './district-history.js';
 
-const district = JSON.parse(readFileSync(new URL('../../preview/public/data/district.json', import.meta.url)));
+// The gallery revisions' district, before the later penthouse tower raise.
+const district = beforeTowerRaise(JSON.parse(readFileSync(new URL('../../preview/public/data/district.json', import.meta.url))));
 const approved = JSON.parse(readFileSync(new URL('../../preview/public/data/building-interiors/river-oaks-gallery-v1.json', import.meta.url)));
 const approvedLevels = JSON.parse(readFileSync(new URL('../../preview/public/data/building-interiors/river-oaks-gallery-v2.json', import.meta.url)));
 
@@ -44,7 +46,7 @@ test('the previous gallery revision preserves a validated town checkpoint for ch
   const oldData = structuredClone(district);
   oldData.vegetation = JSON.parse(readFileSync(new URL('../../preview/public/data/district-vegetation.json', import.meta.url)));
   const newData = attachDistrictGalleryPlan(oldData, approved);
-  assert.deepEqual(await loadDistrictData(), attachDistrictGalleryPlan(oldData, approvedLevels));
+  assert.deepEqual(beforeTowerRaise(await loadDistrictData()), attachDistrictGalleryPlan(oldData, approvedLevels));
   const options = { now: () => 100000 };
   const oldWorld = createSharedWorld(oldData, options);
   assert.equal(oldWorld.join({ userId: 'gallery-visitor', name: 'Visitor' }).ok, true);
