@@ -32,8 +32,8 @@ The page re-joined voice, keeping the microphone, but with about a second of sil
 | Full server suite on a throwaway Redis, first run | 787/792. All 5 failures were load: 4 `request_timeout` or slow-tick failures in Redis coordinator tests, and #447's rotation check. The browser journey and other sessions' runs were sharing the machine at load average 36–47. Run alone, `distributed-app` 11/11, `office-desk-transport` 2/2, `office-world-lifecycle` 6/6 and `penthouse-seats-redis` 1/1 passed. |
 | Rotation test hardening | #447's rotation test (on `main`) could pass with no snapshot inside a fixed 600 ms window, and its 3 s lifetime retired the fresh socket under load. It now uses a 6 s lifetime with a 4 s notice, and waits up to 5 s for the next snapshot. Passes 6/6, twice. |
 | Full server suite on a throwaway Redis, after hardening | **792/792, nothing skipped**, run in parallel at the same load |
-| `node preview/e2e/connection-continuity.mjs` (rotations now carry `continues`) | JOURNEY |
-| `pnpm run verify` (core) | VERIFY |
+| `node preview/e2e/connection-continuity.mjs` (rotations now carry `continues`) | **Passed:** 5 rotations, each bracketed by samples (2328, 12337, 22346, 32353, 42362 ms); the gate never appeared, and bob never left alice's town or view. The watchdog noticed a deafened socket in 8058 ms and recovered it in 9067 ms; going online reconnected in 254 ms. |
+| `pnpm run verify` (core), after hardening | **Passed:** agent 112/112; preview 3290, plus 1 skip and 1 todo; server 598, plus 152 Redis skips (core runs without Redis; the full Redis run is above); desktop 69/69. The first core run failed only #447's rotation check under the same load. |
 
 ## Not covered
 
