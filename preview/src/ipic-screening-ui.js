@@ -92,7 +92,7 @@ export function createIpicScreening({ host, THREE, getMultiplayer, getVenue, get
       else if (id === 'play-local') void state.player.unlock();
       else if (id === 'retry') state.player.retry();
       else if (id === 'sound') { state.sound = !state.sound; }
-      else if (id === 'captions') { state.captions = !state.captions; state.player.setCaptions(state.captions); }
+      else if (id === 'captions') { state.captions = !state.captions; state.player.setCaptions(state.captions); showCaption(state); }
       else if (id === 'transcript') { transcript.hidden = !transcript.hidden; }
       else if (id === 'stop-watching') { close(); session = { stopped: true, generation }; }
       render(state, true);
@@ -152,6 +152,12 @@ export function createIpicScreening({ host, THREE, getMultiplayer, getVenue, get
     state.texture?.dispose(); state.texture = null; state.saved = null;
   }
 
+  // The active cue, refreshed every frame and at once when Captions is toggled.
+  function showCaption(state) {
+    const text = state.player.captionText();
+    if (state.caption.textContent !== text) state.caption.textContent = text;
+    state.caption.hidden = !text;
+  }
   function render(state, force = false) {
     const venue = getVenue(), stats = state.player.stats();
     state.video.muted = !(state.sound && venue.auditorium);
@@ -189,10 +195,7 @@ export function createIpicScreening({ host, THREE, getMultiplayer, getVenue, get
       if (!session) open();
       const state = session; if (state.stopped) return;
       if (now() - state.syncAt > 15_000) void sync(state);
-      state.player.tick(); attach(state); render(state);
-      const text = state.player.captionText();
-      if (state.caption.textContent !== text) state.caption.textContent = text;
-      state.caption.hidden = !text;
+      state.player.tick(); attach(state); render(state); showCaption(state);
     },
     inspect() {
       const state = session; if (!state || state.stopped) return { active: false, stopped: Boolean(state?.stopped) };

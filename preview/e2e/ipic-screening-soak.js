@@ -166,8 +166,8 @@ async (host, viewer, tools) => {
   await viewer.waitForFunction(() => document.querySelector('#ipic-screening .ipic-screening-caption')?.textContent, null, { timeout: 15000 });
   const shownCaption = await caption();
   check(shownCaption.shown && shownCaption.text && shownCaption.text === shownCaption.cue, `the active caption cue is shown: ${JSON.stringify(shownCaption)}`);
-  await viewer.locator('#ipic-screening [data-control="captions"]').click(); await viewer.waitForTimeout(300);
-  check(!(await caption()).shown, 'Captions off hides the caption line');
+  await viewer.locator('#ipic-screening [data-control="captions"]').click();
+  check(await viewer.waitForFunction(() => document.querySelector('#ipic-screening .ipic-screening-caption')?.hidden, null, { timeout: 5000 }).then(() => true, () => false), 'Captions off hides the caption line');
   await viewer.locator('#ipic-screening [data-control="captions"]').click();
   await viewer.waitForFunction(() => document.querySelector('#ipic-screening .ipic-screening-caption')?.textContent, null, { timeout: 15000 });
   checks.push(`the active caption is shown on screen ("${shownCaption.text.split('\n')[0]}") and the toggle hides and restores it`);
