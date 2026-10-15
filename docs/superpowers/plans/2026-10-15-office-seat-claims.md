@@ -80,6 +80,10 @@ this branch, update that paragraph's "fenced at v10" to v11.
 - **Deferred to merge time:** `docs/offices.md`'s checkpoint paragraph ("fenced at v10") and
   `docs/screenings.md`'s Versions bullet (Codex's branch says "the current Redis writer generation is
   `v10:`") are rewritten by `fix/office-world-lifecycle-reliability`; whichever lands second updates both to v11.
+- **Neighbouring work (2026-10-15 09:00Z):** `office-penthouse-glazing` and `office-skyline-prototype`
+  (claude:river-oaks-penthouse) edit the graybox shell section and add a skyline hook in
+  `office-world-scene.js`. This branch edits the graybox chairs and the scene's seated/eye code: different
+  hunks, reconcile at merge.
 - **Hosted CI:** all checks green on #400 at `7ba96bd0` (aggregate `preview`, shared and experience shards,
   verify 3.11/3.13, CodeQL, dependency review).
 
