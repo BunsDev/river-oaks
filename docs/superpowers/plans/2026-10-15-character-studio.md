@@ -68,3 +68,25 @@ passed. Tooling 112/112; preview 3302 pass, 1 skipped, 1 todo; server 598 pass,
 153 Redis-dependent skips; desktop 69/69; Python 141 passed (66 warnings).
 Build, lint/format, synthetic demo verification and secret scan passed. This
 excludes Redis, browser, native, live-auth, target-device and human acceptance.
+
+Browser gate finished on the first increment:
+- `pnpm run test:experience player-forms beast-movement`: passed, 139 + 17 checks.
+  Preserved report `.runtime/character-studio/forms-and-movement.json`.
+- `pnpm run test:experience character-contract`: passed, 4 checks; report
+  `.runtime/character-studio/contract-browser.json`; both 1440×1000 screenshots
+  inspected with actual rendered human/fox geometry and textures visible.
+- Short whole-world p50/p95 frame intervals: human 16.7/33.3 ms; fox 16.7/33.4 ms.
+  Full statistics and evidence limits recorded in design doc. Proposed desktop
+  p95 target is not met by this sample; no final quality/performance claim.
+- Signed commit `0730ff45` pushed; signature verified and forbidden-attribution
+  check printed nothing. Background Git pack-refs hit installed ref guard;
+  commit and push succeeded, no guard bypass performed.
+- Draft PR https://github.com/BunsDev/river-oaks/pull/457; no merge authorization.
+
+#440 now has a reviewed design, versioned contract, actual human/beast fixtures,
+permission/migration tests and measured/rendered baseline in this PR. It remains
+open pending maintainer review. Full goal remains active: next implement #441's
+staged reversible editor using compatible authored controls, coordinate #442
+catalog/preview rendering, then #443 publication and #444 acceptance. Native 4K,
+modular customization, Redis publication, crowd/device matrix and human usability
+are still unimplemented/unverified. Do not archive this active checkout.

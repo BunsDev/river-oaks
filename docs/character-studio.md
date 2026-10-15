@@ -117,3 +117,21 @@ Base asset inventory measured directly from shipped GLB JSON on this branch:
 These are base-file totals across mesh primitives, not final procedural costume
 geometry, decoded texture memory, renderer calls, crowds or frame-time results.
 Each file has one skin. The first Sable fixtures use the Jevica base.
+
+Rendered baseline (2026-10-15, HeadlessChrome 156.0.8078.4 on macOS,
+Metal launch path, 1440×1000 canvas):
+
+| Fixture | Frame p50 / p95 ms | World draw calls | World triangles |
+| --- | --- | ---: | ---: |
+| Sable human | 16.7 / 33.3 | 1547 | 5,275,904 |
+| Sable fox | 16.7 / 33.4 | 1649 | 5,540,490 |
+
+Measured 60 frame intervals per look. Scene statistics include the whole active
+world, and varying residents, so differences are not isolated avatar costs.
+These short samples do not pass the proposed 16.7 ms p95 desktop gate and are
+not a crowd or phone benchmark. Browser/GPU is not yet a pinned golden target.
+`output/playwright/character-contract-human.png` and `character-contract-beast.png`
+were inspected: both authored forms render with head, hair, dress, bag and shoes
+visible; the fox has its head and tail. No gross missing geometry or textures
+were visible in the captured standing view. This does not establish the full pose,
+clipping, lighting or high-fidelity acceptance matrix from #442.
