@@ -9524,8 +9524,8 @@
       ],
       "owner": "codex-root-safari-gltf-decoder-investigation-20261015",
       "leaseUntil": "2026-10-15T09:00:47.000Z",
-      "updatedAt": "2026-10-15T07:30:53.000Z",
-      "nextAction": "Reconcile the phone's visible view with the scoped renderer report, obtain the normal route's WebKit exception, and keep the default iPhone GPU acceptance row open until it renders and meets timing.",
+      "updatedAt": "2026-10-15T07:42:49.000Z",
+      "nextAction": "Review draft PR #401 and its hosted checks, confirm which phone URL Val saw, obtain the normal route's WebKit exception, and keep the default iPhone GPU row open.",
       "ledger": "docs/superpowers/plans/2026-10-15-safari-gltf-decoder-investigation.md",
       "requiredChecks": [
         "Focused decoder selection regression",
@@ -9544,7 +9544,8 @@
         "docs/project-management/tasks.json (this task only)"
       ],
       "parent": "procedural-gpu-acceptance",
-      "related": "ios-device-feasibility #309; preserve its dirty worktree and do not modify owned files"
+      "related": "ios-device-feasibility #309; preserve its dirty worktree and do not modify owned files",
+      "pr": 401
     },
     {
       "id": "procedural-gpu-acceptance",

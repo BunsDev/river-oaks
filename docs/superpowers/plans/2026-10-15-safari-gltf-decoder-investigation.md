@@ -6,7 +6,8 @@ changing the production loading policy.
 
 Task: `safari-gltf-decoder-investigation`. Branch:
 `test/safari-gltf-decoder-investigation-20261015` in the sibling worktree of the
-same name. Files owned: the avatar loader, a small glTF decoder-selection helper
+same name. Draft PR #401 contains signed diagnostic commit `7b5a921f`;
+hosted checks are in progress. Files owned: the avatar loader, a small glTF decoder-selection helper
 and its focused test, the phone fixture's test-only control and regression, this ledger, and
 this task's register entry. The separate iOS probe #309 worktree has dirty work
 owned by another session and is preserved untouched.
