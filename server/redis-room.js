@@ -96,10 +96,10 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
   const rides=cyclingMiles?createRideFlush({world:()=>null,store:cyclingMiles,warn:detail=>console.warn(JSON.stringify({...detail,worldId}))}):null;
   if(!/^\{[^{}]+\}$/.test(tag))throw new Error('Room prefix must be one Redis hash tag');
   const keys={lease:`${tag}:lease`,state:`${tag}:state`,view:`${tag}:view`,queue:`${tag}:queue`,population:`${tag}:population`};
-  // Monotonic writer generation: checkpoint v10 adds office visit layouts and levels (v9 venue
-  // screenings, v8 resident-owned workspace visits). A newer writer atomically fences an older
-  // lease; peers/future generations retain it.
-  const token=`v10:${randomUUID()}`;
+  // Monotonic writer generation: checkpoint v11 adds office seat claims (v10 office visit layouts
+  // and levels, v9 venue screenings, v8 resident-owned workspace visits). A newer writer
+  // atomically fences an older lease; peers/future generations retain it.
+  const token=`v11:${randomUUID()}`;
   let closed=false,pendingTick=null,lastAttempt=-Infinity,lastView=null,cached=null;
   async function read() {
     const buffer=await redis.getBuffer(keys.view);

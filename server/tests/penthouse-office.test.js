@@ -115,25 +115,25 @@ test('revocation during a climb ends the visit; a delayed transition or move can
   assert.equal(f.visit('guest'), null);
 });
 
-test('checkpoint v10 keeps the floor; older checkpoints migrate to the legacy room; forged visits fail closed', () => {
+test('checkpoints keep the floor; older checkpoints migrate to the legacy room; forged visits fail closed', () => {
   const f = setup();
   f.enter(owner);
   f.walk(owner, anchor('stairs-bottom'));
   f.send(owner, 'transition', { portalId: portal(L0, 'stairs'), layout: OFFICE_LAYOUT_PENTHOUSE });
   const saved = f.world.checkpoint();
-  assert.equal(saved.version, 10);
+  assert.equal(saved.version, 11);
   const restored = setup({ restore: saved });
   assert.deepEqual([restored.visit(owner).levelId, restored.visit(owner).elevation], [L1, 3.8]);
 
   // A version 9 town written before layouts: its visits are legacy-room visits.
   const legacyTown = setup({ officeLayout: OFFICE_LAYOUT_LEGACY });
   legacyTown.enter(owner);
-  const v10 = legacyTown.world.checkpoint();
-  const v9 = structuredClone(v10); v9.version = 9;
+  const current = legacyTown.world.checkpoint();
+  const v9 = structuredClone(current); v9.version = 9;
   for (const [, visit] of v9.payload.offices.visits) { delete visit.layout; delete visit.levelId; }
   const upgraded = setup({ officeLayout: OFFICE_LAYOUT_LEGACY, restore: resign(v9) });
   assert.deepEqual([upgraded.visit(owner).layout, upgraded.visit(owner).levelId], [OFFICE_LAYOUT_LEGACY, L0]);
-  const masquerade = structuredClone(v10); masquerade.version = 9;
+  const masquerade = structuredClone(current); masquerade.version = 9;
   assert.equal(createSharedWorld(data, { officeLayout: OFFICE_LAYOUT_LEGACY }).restore(resign(masquerade)).ok, false, 'layout fields cannot hide in a v9 checkpoint');
 
   const forged = [

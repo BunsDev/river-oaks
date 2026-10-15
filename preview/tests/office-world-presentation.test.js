@@ -94,3 +94,22 @@ test('enclosed arrival walls remain opaque near the camera while street facades 
   assert.equal(cabin.userData.seeThroughNearCamera,undefined);assert.equal(facade.userData.seeThroughNearCamera,true);
   cabin.dispose();facade.dispose();
 });
+test('seated peers render on their plan seat facing its desk, and a seated visitor\'s eye drops to the seated height',t=>{
+  const previous=globalThis.document,element=()=>({style:{},classList:{},append(){},setAttribute(){},remove(){}});
+  globalThis.document={createElement:element};t.after(()=>{globalThis.document=previous;});
+  const f=fixture();f.avatar.ready=true;
+  const place={layoutId:'office-penthouse-1',levelId:'jevica-office/l0'};
+  const visit=createOfficeWorldScene({street:f.street,host:{...element(),clientWidth:1440,clientHeight:1000},self:{id:'self',office:{id:'jevica-office',...place,layout:place.layoutId}},reducedMotion:true});
+  t.after(()=>visit.dispose());
+  const guest={id:'guest',name:'Guest',office:{id:'jevica-office',layout:'office-penthouse-1',levelId:'jevica-office/l0',elevation:0,position:[3.65,5.6],yaw:0,seat:{id:'desk-a1-chair'}}};
+  visit.prepare(0);visit.render(0,[3.65,3.55],0,[guest],place);
+  const turn=Math.atan2(f.street.frame.elements[8],f.street.frame.elements[10]);
+  const seated=visit.inspect().actors.find(actor=>actor.id==='guest').sitting;
+  assert.equal(seated.height,0.5);
+  assert.ok(Math.abs(Math.atan2(Math.sin(seated.yaw-(Math.PI+turn)),Math.cos(seated.yaw-(Math.PI+turn))))<1e-9,'faces the desk at +d');
+  visit.render(16,[3.65,3.55],0,[{...guest,office:{...guest.office,position:[3.65,3.55],seat:undefined}}],place);
+  assert.equal(visit.inspect().actors.find(actor=>actor.id==='guest').sitting,null,'standing up clears the pose');
+  const standing=visit.inspect().camera.position[1];
+  visit.render(32,[3.65,5.6],0,[],{...place,seatId:'desk-a1-chair'});
+  assert.ok(Math.abs(standing-visit.inspect().camera.position[1]-(1.68-1.2))<1e-9,'seated eye is 0.48 m lower');
+});
