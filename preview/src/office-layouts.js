@@ -9,8 +9,8 @@
 // as #349's stairs are: entry within reach, a paired landing that must be free.
 //
 // The penthouse carries only what the reviewed contract states: shell, levels, terrace
-// openings, stair, lift, anchors and the approved mezzanine programme. The supplied
-// kit's furniture colliders are not imported here (#362).
+// openings, stair, lift, anchors and the approved mezzanine programme. Of the supplied
+// kit's furniture colliders, only the measured desk footprints are imported (R19, below).
 //
 // Seats (#363) are the desk chairs and the library reading chairs. A visitor claims one from
 // its stand point and stands back up there. While a seat is taken, the measured seated body

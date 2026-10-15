@@ -109,7 +109,11 @@ export function buildPenthouseOffice(THREE, layout) {
     object,
     get lights() { return object.children.filter(node => node.isPointLight); },
     update() {},
-    dispose() { for (const geometry of geometries) geometry.dispose(); for (const finish of materials.values()) finish.dispose(); },
+    dispose() {
+      // Instanced draws hold their own instance buffers on the GPU.
+      object.traverse(node => { if (node.isInstancedMesh) node.dispose(); });
+      for (const geometry of geometries) geometry.dispose(); for (const finish of materials.values()) finish.dispose();
+    },
   };
 }
 

@@ -140,9 +140,13 @@ export function createOffices({worldData,players,isAdmin,environment,changed,can
       return Boolean(seat)&&seat.levelId===v.levelId&&Array.isArray(v.position)&&v.position.length===2&&v.position.every((n,i)=>n===seat.position[i])
         &&v.yaw===seat.facing&&officeLevelFree(layout,v.levelId,seat.stand);
     };
+    // A standing visit must name a real floor of its layout. Whether the plan still has room for it
+    // is decided below: a plan change (such as R19's desks) ends that visit, not the whole town.
+    const onFloor=v=>officeLayout(v.layout).levels.some(level=>level.id===v.levelId)&&Array.isArray(v.position)&&v.position.length===2&&v.position.every(Number.isFinite);
+    const fits=v=>v.seat!==undefined||officeLevelFree(officeLayout(v.layout),v.levelId,v.position);
     const placed=v=>version>=10
       ?fields(v,['id','layout','levelId','position','yaw','at','budget',...(version>=11?['seat']:[])])&&Boolean(officeLayout(v.layout))
-        &&(v.seat===undefined?officeLevelFree(officeLayout(v.layout),v.levelId,v.position):seated(v,officeLayout(v.layout)))
+        &&(v.seat===undefined?onFloor(v):seated(v,officeLayout(v.layout)))
       :fields(v,['id','position','yaw','at','budget'])&&officeFree(v.position);
     const claims=new Set();
     for(const [,v] of Array.isArray(saved.visits)?saved.visits:[]){
@@ -154,11 +158,12 @@ export function createOffices({worldData,players,isAdmin,environment,changed,can
     for(const [,v] of Array.isArray(saved.visits)?saved.visits:[]){
       if(v?.seat!==undefined||!officeLayout(v?.layout))continue;
       const taken=saved.visits.filter(([,other])=>other?.seat&&other.id===v.id&&other.layout===v.layout).map(([,other])=>officeSeat(officeLayout(other.layout),other.seat?.id)).filter(Boolean);
-      if(!officeLevelFree(officeLayout(v.layout),v.levelId,v.position,taken))throw new Error('Invalid office visit beside an occupied seat');
+      const layout=officeLayout(v.layout);
+      if(officeLevelFree(layout,v.levelId,v.position)&&!officeLevelFree(layout,v.levelId,v.position,taken))throw new Error('Invalid office visit beside an occupied seat');
     }
     checkMap(saved.visits,nextPlayers.size,(id,v)=>nextPlayers.has(id)&&placed(v)&&(catalog.some(o=>o.id===v.id)||allowWorkspaces&&workspaceId(v.id))&&Number.isFinite(v.yaw)&&Number.isFinite(v.at)&&Number.isFinite(v.budget)&&v.budget>=0&&v.budget<=1&&(allowWorkspaces&&workspaceId(v.id)||isAdmin(id)||g.get(v.id)?.some(p=>p.userId===id)));
     const next=structuredClone(saved);
-    next.visits=next.visits.map(([id,v])=>[id,version>=10?v:{...v,layout:OFFICE_LAYOUT_LEGACY,levelId:LEGACY_LEVEL}]).filter(([,v])=>v.layout===layoutFor(v.id));
+    next.visits=next.visits.map(([id,v])=>[id,version>=10?v:{...v,layout:OFFICE_LAYOUT_LEGACY,levelId:LEGACY_LEVEL}]).filter(([,v])=>v.layout===layoutFor(v.id)&&fits(v));
     return next;
   }
   function load(saved){for(const [map,entries]of [[grants,saved.grants],[requests,saved.requests],[visits,saved.visits]]){map.clear();for(const [k,v]of entries)map.set(k,v);}}

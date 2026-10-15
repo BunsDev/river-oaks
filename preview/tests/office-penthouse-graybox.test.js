@@ -143,6 +143,14 @@ test('the imported desks (R19) are one draw, each exactly on its plan footprint 
   built.dispose();
 });
 
+test('disposing the graybox releases every instanced draw, desks and curtain wall included', () => {
+  const built = buildPenthouseOffice(THREE, layout), instanced = meshes(built.object).filter(mesh => mesh.isInstancedMesh), released = new Set();
+  assert.ok(instanced.length >= 3, 'the desks and both curtain-wall batches');
+  for (const mesh of instanced) mesh.addEventListener('dispose', () => released.add(mesh));
+  built.dispose();
+  assert.equal(released.size, instanced.length);
+});
+
 test('the curtain wall is two draws, glass handled like the district storefront glazing', () => {
   const built = buildPenthouseOffice(THREE, layout);
   const curtain = meshes(built.object).filter(mesh => mesh.name.startsWith('curtain wall'));
