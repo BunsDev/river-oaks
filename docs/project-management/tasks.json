@@ -10396,26 +10396,20 @@
       "title": "#416 Garden Office realism pilot (coding scope): one desk/chair family, glazing, finishes, light/planting sample, catalog records and compatibility on the #414 interface",
       "status": "active",
       "branches": [
-        "feat/garden-office-416-20261015"
+        "test/garden-office-416-audit-20261015"
       ],
-      "owner": "claude:river-oaks-safe-edits (e9aa0185)",
-      "updatedAt": "2026-10-15T16:35:54.339Z",
-      "leaseUntil": "2026-10-15T18:35:54.339Z",
-      "nextAction": "Floor, glazing and calibrated light done (focused 95/0/0; captures on https://claude.ai/artifact/QxWWoXxB9DMotJyQr77Xpf). Next: planting sample, then desktop/browser/build/verify gates, signed commit and draft PR. No merge.",
+      "owner": "codex-root-garden-office-audit-20261015",
+      "updatedAt": "2026-10-15T20:45:48.892824+00:00",
+      "nextAction": "Create signed draft PR: focused 105/105, browser 3/3, Electron 11/11, ten-cycle capture and final serial-server/core recovery 9/9 passed. Standard core had 19 server failures; retain both receipts. Await Val visual/destination decision; no merge authorized.",
       "ledger": "docs/superpowers/plans/2026-10-15-garden-office-pilot.md",
-      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-garden-office-416",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-garden-office-audit",
       "issue": 416,
       "filesOwned": [
-        "preview/src/studio/space-furniture.js (new: desk, chair, pendant forms)",
-        "preview/src/studio/space-scene.js (wiring for those forms)",
-        "preview/src/studio/space-templates.js (office recipe only)",
-        "preview/src/studio/viewport.js (furnished-space reflections and sky fill)",
-        "preview/tests/studio-garden-office.test.js (new)",
-        "preview/e2e/studio-office-stations.js (new capture journey)",
-        "scripts/garden-office-manifest.mjs (new)",
-        "docs/design/garden-office/ (new packet)",
-        "docs/world-studio.md",
-        "docs/superpowers/plans/2026-10-15-garden-office-pilot.md"
+        "docs/superpowers/plans/2026-10-15-garden-office-pilot.md (continuation audit)",
+        "docs/design/garden-office/ (only if audit exposes metadata gaps)",
+        "preview/tests/studio-garden-office.test.js (only concrete uncovered pilot regressions)",
+        "preview/src/studio/space-furniture.js (valid v1 bounds only)",
+        "scripts/garden-office-manifest.mjs (pilot contract accuracy/completeness)"
       ],
       "requiredChecks": [
         "node --test preview/tests/studio-*.test.js server/tests/studio-assets.test.js",
@@ -10424,7 +10418,38 @@
         "node desktop/studio-e2e.js",
         "pnpm run build",
         "pnpm run verify"
-      ]
+      ],
+      "previousOwner": "claude:river-oaks-safe-edits (e9aa0185)",
+      "deliveryPr": 439,
+      "evidence": [
+        {
+          "pr": 439,
+          "reviewedHead": "c83532f2a264743de042bd06562641567d813043",
+          "merge": "05a5e9fe45ba5250678a08ed077245b52e077942",
+          "tree": "0d183fdbfd79058f22824ad43896786e2b3a1487",
+          "checks": "Landed by claude:river-oaks-safe-edits (e9aa0185) with pnpm run land 439 under Val's authorization at 2026-10-15T17:38:01Z: the lander updated the branch from main (c83532f2, GitHub-verified), Verify passed, guard read 17 checks green, CLEAN; merge tree equals head tree. Before landing: signed 3b67438d (pilot) and signed merge cf428566 (register conflict GitHub update-branch cannot resolve) with all 16 check runs and Vercel green. Local at 3b67438d: pnpm run verify 11/11 tasks, 4,160 passed / 150 skipped / 1 TODO; world-studio 29.068 s, 0 page errors; native Studio 11/11; focused 96/0/0. Ledger docs/superpowers/plans/2026-10-15-garden-office-pilot.md. #416 left open for design review and #417."
+        }
+      ],
+      "retirement": {
+        "head": "c83532f2a264743de042bd06562641567d813043",
+        "releasedAt": "2026-10-15T17:40:04.500Z",
+        "sessionsReviewedAt": "2026-10-15T17:40:04.500Z"
+      },
+      "evidenceArchive": "/Users/buns/worktree-backups/river-oaks/garden-office-416-evidence-20261015 (.runtime/garden-office: baseline and five after capture sets, cost and canopy-coverage measurements, red-test output, gate receipts; .runtime/agent; output/playwright)",
+      "retiredBranches": [
+        "feat/garden-office-416-20261015"
+      ],
+      "archive": {
+        "feat/garden-office-416-20261015": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-LEDVWb/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-LEDVWb/history.bundle",
+          "sha256": "4faeeda0c621d63c605570e1405e6e44aa8f703e2078924d917736252cba35ff",
+          "tag": "refs/tags/archive/worktree-prune/692d1f85-2662-4136-87aa-4ca358e0f394",
+          "head": "c83532f2a264743de042bd06562641567d813043"
+        }
+      },
+      "leaseUntil": "2026-10-15T22:41:42.300950+00:00",
+      "previousPr": 439
     },
     {
       "id": "ipic-route-evidence-364",

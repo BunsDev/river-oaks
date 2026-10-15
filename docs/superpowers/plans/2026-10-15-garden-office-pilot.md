@@ -214,3 +214,154 @@ terracotta pot, bare stems and a leafy crown; the crown is narrow with pointed l
 Signed commit and draft PR (Val, 2026-10-15: push and open the draft once checks
 pass; post the link to #413). Then design review of the captures and the recipe
 destinations (#414 handoff), and #417 pilot acceptance. No merge.
+
+## Continuation audit (2026-10-15)
+
+Owner `codex-root-garden-office-audit-20261015`; branch
+`test/garden-office-416-audit-20261015`, sibling `river-oaks-garden-office-audit`.
+Base `bd37555ff32bc99fb5cddf1f1cf593d74e43a0ce`. PR #439 is merged
+(`05a5e9fe`); #414 delivered through #427; #417's harness/fixes merged through
+#452. Earlier counts above remain historical. No new merge/deploy authorization.
+
+Audit scope: actual pilot source/manifest, valid-v1 resize compatibility, negative
+imports, current browser/Electron edit/walk/reopen and matched runtime views.
+Existing v1 mapping is retained; no new persisted fields, exports or conversion.
+Files owned: metric furniture helper, its regression tests, manifest generator and
+packet, this ledger. Other active worktrees and primary edits remain untouched.
+
+Reproduced on base: a valid 0.1 × 0.1 × 4 m chair draws to local z=0.445 m
+outside its ±0.05 m collision depth; 0.01 m plant/pendant details fall below ground.
+Cause: fixed detail offsets/sections and unconstrained back lean. Rounded geometry
+cache keys also alias nearby distinct sizes. Contract gap: generic manifest text
+incorrectly says pendants block by elevation; glazing/finish assets are unrecorded.
+Next: failing behavioral bounds tests, constrain details at source, measure records,
+then focused/core/runtime checks and scoped visual review. Design destination and
+human acceptance remain open; #417 closure is not a prerequisite for this package.
+
+### Audit findings and fixes
+
+- **Valid-v1 bounds:** reduced the detail offsets/sections only when the accepted
+  dimensions cannot contain them; constrained chair-back lean by depth; exact
+  metric geometry cache keys avoid sharing a larger shape after sub-mm resizing.
+  No validator, collider, controller, template or persisted field changed.
+- Independent review found two additional asymmetric limits: a narrow desk rear
+  panel and the canopy at the linear pendant's exact 2:1 threshold. Regressions
+  failed before each fix. Panel thickness now respects leg clearance and canopy
+  radius respects its distance to the long edge. Reviewer reran **4,000 cases**
+  (1,000 per kind), zero bounds failures, no remaining important findings.
+- Eight measured records now include glazing, concrete and plaster; five furniture
+  records advance their **asset metadata version to 2**, not the document version.
+  Source/dependency SHA-256, metre bounds/pivots, resize policy, material slots,
+  actual nominal collider polygons, geometry buffers/material counts and explicit
+  `export: null` are recorded. There are no GLBs to reimport. Existing v1 kinds
+  resolve in the renderer; unknown asset fields/URLs are rejected by closed v1.
+- Negative import tests cover unknown versions/kinds/finishes, extra asset URLs,
+  invalid sizing, malformed JSON, 161 objects and byte overflow. Accepted edited
+  draft, profile, revision, saved data and undo recovery survive each rejection.
+  Bare v1 import remains unassessed; no synthetic conversion is claimed.
+- Four workstation side approaches now have real bidirectional movement tests,
+  empty and with all chairs pushed back 0.4 m/deepened to 0.75 m. The first proposed
+  cross-aisle line at north 1.0 m intersects a pulled-back chair; measured passage
+  is at north 0.6 m. An obstruction in that passage correctly fails all four routes.
+  This adds evidence, not new required profile targets or an accessibility claim.
+
+### Current runtime and visual inspection
+
+`data/reports/garden-office-audit-browser.json`: stations **22.214 s** (18 captures),
+World Studio **45.059 s**, pilot journey **64.062 s**, all passed. Pilot journey has
+13 checks including an actual four-destination out-and-return walk. Electron
+`node scripts/browser-lock.mjs garden-office-native -- node desktop/studio-e2e.js`:
+**11/11 passed**, development app, loopback identity. No provider key or paid call.
+
+The 18 PNGs are `output/playwright/garden-office-<preset>-CAM-0N-<station>.png`.
+Local paired review: `.runtime/garden-office-audit/review.html`; baseline is the
+archived `326506f7` capture set (not recaptured or relabelled). Eye 1.68 m, page
+1440×1000, stage 984×786, same station coordinates/yaw, perspective vertical FOV
+45°, ACES tone mapping. Daylight/warm/evening are the existing presets; there is no
+new saved "neutral" preset. Furnished scenes use the existing neutral room reflection.
+
+Agent visual observations: CAM-03 has a thin oak top, charcoal frame, open knee
+space, separate seat/back and ceiling-height pendant; CAM-04 has legible charcoal
+stiles/base shoe and restrained plant canopy. CAM-01 preserves the entry and open
+central aisle. CAM-02/05 show the original reception/kitchenette and corrected
+loaded stone material from #452. Evening is visibly dimmer. No nominal-scale
+regression observed against the merged pilot captures. Open roof and bare exterior
+remain known limits D7/D9; counters/table remain outside this family. These are
+agent observations, not Val's design approval or human accessibility acceptance.
+
+Review requested from Val for visual treatment and unchanged required profile
+points: arrival/exit (0,-8.5), reception (0,-4), work area (-2,1), meeting (3,1),
+kitchenette (-1,5). Test-only workstation approaches: (-5,-1.4), (-3.4,-1.4),
+(-5,1.9), (-3.4,1.9). All coordinates east/north metres. Await the review decision;
+#417 full acceptance is not a prerequisite for handing off these assets.
+
+### Verification receipts (continuation)
+
+- Dependencies installed with frozen pnpm/uv locks. Doctor initially blocked only
+  on missing `.venv`; after `uv sync --locked`, doctor passed.
+- `node --test preview/tests/studio-*.test.js server/tests/studio-assets.test.js`:
+  **105 passed, 0 failed/skipped/TODO** on final code and tests.
+- `.runtime/garden-office-audit/{bounds-red,review-red,contract-red}.txt` retain
+  failures. `independent-review.json` records exact hashes and review disposition.
+- `evidence-manifest.json` hashes source/interface files and each current capture.
+- First `pnpm run verify`: 11/11 passed, 4,243 passed / 154 skipped / 1 TODO
+  (112 tooling, 3,323 preview, 598 server, 69 desktop, 141 Python). It began before
+  the two review fixes; final focused checks cover them; final standard/core recovery
+  results are recorded below. Synthetic demo's exit 2 is the expected fixture result.
+- Project reconciliation exits 1 for unrelated expired leases, retirement and
+  orphan/mismatched-worktree debt. It is not an application failure; no other
+  task's records or worktrees are changed by this continuation.
+
+Next: finish final core/resource checks, retain exact receipts, deliver the reviewed
+patch under normal signed-commit gates, and record Val's design disposition. No
+merge/deploy, packaged/live-auth, full Redis, device or human acceptance claimed.
+
+Current scene cost: **40 objects, 326 meshes, 24,318 triangles**, unchanged from the
+merged pilot. Mesh-only unique resources remain **23 geometries / 20 materials**;
+including the two line sets gives **25 / 22**, with **236,468 bytes** of resident
+geometry typed arrays. This is CPU construction evidence, not GPU frame-time or
+texture-transfer acceptance (`.runtime/garden-office-audit/current-cost.json`).
+
+Ten-cycle resource capture (plus one warm-up) completed in **57.181 s** with no page
+errors: `data/reports/garden-office-audit-soak.json`. Office render counters after
+warm-up: 648 calls, 48,564 submitted triangles (includes shadow work), 25 resident
+geometries, 10 textures, 6 programs, one canvas; geometry/program counts remain
+flat. The first House replacement populates three additional shared textures.
+Office listeners stay 157. Heap rises from 13.63 to 15.11 MiB during this short run,
+with undo history still filling; no plateau or leak-free long-run claim is made.
+The harness collects counts without asserting a resource budget; #417 owns that
+budget and sustained/device acceptance. Its returned `passed` is execution success.
+
+Final standard core rerun: preview/tooling passed, but **19 unchanged server tests
+failed under host contention** (load average about 90): connection-rotation (4),
+office-desk-transport (1), office-world-lifecycle (6), offices-transport (1),
+penthouse-transport (1), phone-fixture (3), screenings-transport (1), town-worlds
+(1), voice-reconcile (1). Errors are request/socket/startup timeouts, ECONNRESET,
+and a missed snapshot deadline. No thresholds or auth behavior were changed.
+`core-final.txt` and `.runtime/agent/core.json` retain the failed result. The queued
+recovery runs **every server test with `--test-concurrency=1`**, then every remaining
+configured core task through `runProfile`; it does not rerun already-passing
+preview/tooling or label the failed standard command green. Diagnostic runner and
+receipt: `.runtime/garden-office-audit/{recover-core.mjs,core-recovery.json}`.
+
+
+Recovery completed: **9/9 remaining core tasks passed**. Command:
+`node scripts/browser-lock.mjs garden-office-core-recovery -- node .runtime/garden-office-audit/recover-core.mjs`.
+The diagnostic runner selects configured core tasks after tooling/preview and uses
+`node --test --test-concurrency=1 server/tests/*.test.js` for all server files.
+Server **598 passed / 153 skipped**, desktop **69 passed**, build passed, Python
+lint/format passed, Python **141 passed**, demo and its expected-exit-2 validation
+passed, secrets scan passed. The final standard run had already passed tooling
+**112** and preview **3,324 / 1 skipped / 1 TODO**. Combined final-source coverage
+is **4,244 passed / 154 skipped / 1 TODO** across these two receipts; this is not
+an all-green standard `pnpm run verify` run. No failing tests were excluded.
+
+Browser reproduction:
+`RIVER_OAKS_E2E_REPORT=garden-office-audit-browser.json pnpm run test:experience studio-office-stations world-studio studio-pilot-journey`.
+Resource reproduction:
+`RIVER_OAKS_E2E_REPORT=garden-office-audit-soak.json pnpm run test:experience studio-pilot-soak`.
+
+Handoff: source patch reviewed and local verification complete with the scheduling
+qualification above. Prepare signed draft PR; await Val's visual/profile decision.
+Keep this worktree and local captures/logs until delivery and evidence archival.
+No authorization to merge or retire is inferred from successful checks.
