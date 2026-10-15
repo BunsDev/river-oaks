@@ -3311,7 +3311,7 @@
           "reviewedHead": "444dd451312665b88a69756e282b8d968916e1e6",
           "merge": "e55c3866fcf8ec85090c22789fd5bc8ca5364a05",
           "tree": "6504df673f23e0b750f69c262664a1c83c5df1e6",
-          "checks": "All 17 hosted checks passed on 444dd45 (guard CLEAN, first attempt after a rebase onto #268; the earlier head lost a run to the known spatial-streets Hermès stall). Docs-only; project:status validated the register."
+          "checks": "All 17 hosted checks passed on 444dd45 (guard CLEAN, first attempt after a rebase onto #268; the earlier head lost a run to the known spatial-streets Herm\u00e8s stall). Docs-only; project:status validated the register."
         }
       ],
       "retirement": {
@@ -3334,7 +3334,7 @@
     },
     {
       "id": "plaza-salon",
-      "title": "Furnish the Dior-Toulouse plaza as a café and chess promenade (Val's reference set: curved bench, café armchairs, chess and timber tables, travertine planters, bronze lanterns, string lights)",
+      "title": "Furnish the Dior-Toulouse plaza as a caf\u00e9 and chess promenade (Val's reference set: curved bench, caf\u00e9 armchairs, chess and timber tables, travertine planters, bronze lanterns, string lights)",
       "status": "retired",
       "branches": [
         "feat/plaza-salon"
@@ -4287,7 +4287,7 @@
     },
     {
       "id": "plaza-games",
-      "title": "Playable games at the Dior–Toulouse plaza tables: solo chess first (X to play at a chess chair, local AI and pass-and-play, mirrored on the 3D board); later checkers, café cards/dominoes, more game tables, Jenga and wine pong",
+      "title": "Playable games at the Dior\u2013Toulouse plaza tables: solo chess first (X to play at a chess chair, local AI and pass-and-play, mirrored on the 3D board); later checkers, caf\u00e9 cards/dominoes, more game tables, Jenga and wine pong",
       "status": "retired",
       "branches": [
         "feat/plaza-chess-20261013"
@@ -4459,7 +4459,7 @@
     },
     {
       "id": "plaza-dominoes",
-      "title": "Dominoes at the plaza café table: double-six draw (2 players) and block (4 players) games against the plaza regulars, scored to 100, tiles mirrored on the round table",
+      "title": "Dominoes at the plaza caf\u00e9 table: double-six draw (2 players) and block (4 players) games against the plaza regulars, scored to 100, tiles mirrored on the round table",
       "status": "retired",
       "branches": [
         "feat/plaza-dominoes-20261013"
@@ -4473,8 +4473,8 @@
         "preview/src/dominoes-opponent.js",
         "preview/src/plaza-dominoes.js",
         "preview/src/plaza-dominoes.css",
-        "preview/src/plaza-salon.js (café table tiles)",
-        "preview/src/plaza-salon-plan.js (café seats)",
+        "preview/src/plaza-salon.js (caf\u00e9 table tiles)",
+        "preview/src/plaza-salon-plan.js (caf\u00e9 seats)",
         "preview/src/main.js (wiring)",
         "preview/e2e/plaza-dominoes.js"
       ],
@@ -4516,7 +4516,7 @@
     },
     {
       "id": "plaza-hearts",
-      "title": "Hearts at the plaza café table: four players (you and three plaza regulars), passing, tricks, shooting the moon, game to 100; cards mirrored on the round table",
+      "title": "Hearts at the plaza caf\u00e9 table: four players (you and three plaza regulars), passing, tricks, shooting the moon, game to 100; cards mirrored on the round table",
       "status": "retired",
       "branches": [
         "feat/plaza-hearts-20261013"
@@ -4530,8 +4530,8 @@
         "preview/src/hearts-opponent.js",
         "preview/src/plaza-hearts.js",
         "preview/src/plaza-hearts.css",
-        "preview/src/plaza-dominoes.js (café game switch)",
-        "preview/src/plaza-salon.js (café cards)",
+        "preview/src/plaza-dominoes.js (caf\u00e9 game switch)",
+        "preview/src/plaza-salon.js (caf\u00e9 cards)",
         "preview/e2e/plaza-hearts.js"
       ],
       "requiredChecks": [
@@ -5001,7 +5001,7 @@
           "reviewedHead": "3cdc45a91b7dcad603ea41685658bac309ec401a",
           "merge": "fb068e47b5a7a8f9aead367a98ccea170b85a330",
           "tree": "7885452832f54b9446adfdadcf1d9dddd355aaaa",
-          "checks": "https://github.com/BunsDev/river-oaks/actions/runs/38427259400 — all hosted Verify jobs including aggregate preview passed on the exact head; guard reported 17 successful checks and verified signatures. Local core 3747 passed / 1 existing skip; final-head office browser 9/9 passed (.runtime/office-final-head-experience.json)."
+          "checks": "https://github.com/BunsDev/river-oaks/actions/runs/38427259400 \u2014 all hosted Verify jobs including aggregate preview passed on the exact head; guard reported 17 successful checks and verified signatures. Local core 3747 passed / 1 existing skip; final-head office browser 9/9 passed (.runtime/office-final-head-experience.json)."
         }
       ],
       "retirement": {
@@ -5750,7 +5750,7 @@
           "checks": "Exact-head hosted preview and 15 other checks passed; focused combined 47/47 and local pnpm run verify core passed after current-main reconciliation. Earlier isolated-Redis full and targeted gallery/Studio journeys are recorded in the implementation ledger; pilot 60 Hz, target-device and human acceptance remain open."
         }
       ],
-      "handoff": "Ordered procedural interior stack #349–#358 and pilot contact-shading #382 merged to main; final merge c1104f4741f7a17fcce7812d47b82e8f6e1a31d0. Pilot appearance approved for two player-height captures. All PRs had exact-head aggregate preview and hosted checks green before merge. Broader objective remains active for target-device pacing, live keyboard/accessibility and additional archetype rollout.",
+      "handoff": "Ordered procedural interior stack #349\u2013#358 and pilot contact-shading #382 merged to main; final merge c1104f4741f7a17fcce7812d47b82e8f6e1a31d0. Pilot appearance approved for two player-height captures. All PRs had exact-head aggregate preview and hosted checks green before merge. Broader objective remains active for target-device pacing, live keyboard/accessibility and additional archetype rollout.",
       "statusRepair": "2026-10-14T23:35:49.761Z claude:river-oaks-b7 (43d73155): Codex released this entry at 2026-10-14T23:22:47Z (owner null, no lease) but left status active, which validateTasks rejects (\"active owner and leaseUntil required\") and which stopped project:status, inventory and prune for every session. The PR is merged with exact-head evidence, so the entry is delivered; the broader objective continues in procedural-landing-follow-through.",
       "retirement": {
         "head": "0b8f88dd4b5919fea7a6b78cbfec9c02f6038dcf",
@@ -6546,7 +6546,7 @@
     },
     {
       "id": "route-waypoint-clearance",
-      "title": "Keep navigation route waypoints clear of obstacles (spatial-streets Hermès stall)",
+      "title": "Keep navigation route waypoints clear of obstacles (spatial-streets Herm\u00e8s stall)",
       "status": "retired",
       "branches": [],
       "owner": null,
@@ -7533,7 +7533,7 @@
     },
     {
       "id": "plaza-spades",
-      "title": "Spades at the plaza café table: four players in two partnerships (you and a plaza regular against two regulars), bids, nil, bags, game to 500; cards mirrored on the round table",
+      "title": "Spades at the plaza caf\u00e9 table: four players in two partnerships (you and a plaza regular against two regulars), bids, nil, bags, game to 500; cards mirrored on the round table",
       "status": "retired",
       "branches": [
         "feat/plaza-spades-20261013"
@@ -7681,7 +7681,7 @@
     },
     {
       "id": "plaza-reversi",
-      "title": "Reversi at the plaza chess tables: a fourth game in the table-games sheet (8×8, place a disc on the clicked square, flips), against the plaza regular in a worker or pass-and-play; discs mirrored on the table",
+      "title": "Reversi at the plaza chess tables: a fourth game in the table-games sheet (8\u00d78, place a disc on the clicked square, flips), against the plaza regular in a worker or pass-and-play; discs mirrored on the table",
       "status": "retired",
       "branches": [
         "feat/plaza-reversi-20261013"
@@ -7728,7 +7728,7 @@
     },
     {
       "id": "plaza-go",
-      "title": "Go (9×9) at the plaza grove table (a Mancala/Go switch): captures, suicide, ko, passing, area scoring with komi; a Monte Carlo plaza regular in a worker or pass-and-play; stones mirrored on a goban",
+      "title": "Go (9\u00d79) at the plaza grove table (a Mancala/Go switch): captures, suicide, ko, passing, area scoring with komi; a Monte Carlo plaza regular in a worker or pass-and-play; stones mirrored on a goban",
       "status": "retired",
       "branches": [
         "feat/plaza-go-20261013"
@@ -7935,7 +7935,7 @@
     },
     {
       "id": "plaza-liars-dice",
-      "title": "Liar's dice at the plaza café table: you and three regulars, five dice under a cup each, bids and 'liar' calls, ones wild, lose a die per lost challenge; cups and dice mirrored on the round table; joins the café switch",
+      "title": "Liar's dice at the plaza caf\u00e9 table: you and three regulars, five dice under a cup each, bids and 'liar' calls, ones wild, lose a die per lost challenge; cups and dice mirrored on the round table; joins the caf\u00e9 switch",
       "status": "retired",
       "branches": [
         "feat/plaza-liars-dice-20261013"
@@ -8262,7 +8262,7 @@
     },
     {
       "id": "plaza-xiangqi",
-      "title": "Xiangqi (Chinese chess) at the plaza grove table (joins the Mancala/Go switch): 9×10 board with river and palaces, cannons, flying-general rule; a search-based plaza regular in a worker or pass-and-play; disc pieces mirrored in 3D",
+      "title": "Xiangqi (Chinese chess) at the plaza grove table (joins the Mancala/Go switch): 9\u00d710 board with river and palaces, cannons, flying-general rule; a search-based plaza regular in a worker or pass-and-play; disc pieces mirrored in 3D",
       "status": "retired",
       "branches": [
         "feat/plaza-xiangqi-20261013"
@@ -9025,13 +9025,13 @@
     {
       "id": "release-0-2-0-readiness",
       "title": "Prepare TypeSafe Place 0.2.0 release candidate from verified procedural interior stack",
-      "status": "blocked",
+      "status": "delivered",
       "branches": [
         "release/v0.2.0-20261014"
       ],
       "owner": null,
-      "updatedAt": "2026-10-15T00:28:34.282389+00:00",
-      "nextAction": "Prepared signed/pushed candidate 89d17cdcd65d61009ca7ba1d20c4c08e3043708f in draft PR #376, cut at main f72a89f8 including #379 desktop identity and #383 restore fix. Core 11/11 passed (95 tooling, 3045 preview + one existing skip, 682 Redis/server zero skips, 61 desktop, 141 Python); all 16 exact-head hosted checks passed. Final ad-hoc macOS arm64 package inspected, SHA-256 6557488c4da6f7af3b2c8b561ff9badb0ab7fda0c63e2d46e6023257c17542fa. Cloth contacts -21.1%, component CPU about -10%, sampled pixels/vertices identical. Release owner must schedule quiet-machine local shared/full rerun and 60 Hz acceptance: 0e15133 full passed 16/17 then shared reconnect timed out with host load 996.96. Complete live packaged auth, human accessibility, Developer ID/notarization and migration acceptance; obtain landing/publication authorization. Main 4966d99f now adds test-only #384; refresh via landing queue and require current-head checks before landing. Preserve worktree and archived artifacts; receipts in .runtime/release-0.2.0/candidate-handoff.json. Owned Redis stopped; no merge/publish performed.",
+      "updatedAt": "2026-10-15T18:19:47.201Z",
+      "nextAction": "Delivered: main is 0.2.0 (#376 merged as e87b458e). No tag, desktop publication, Developer ID signing or notarization was done; those and the remaining release gates (quiet-machine shared/full + 60 Hz, live packaged sign-in, human accessibility, production migration acceptance) still need their own decisions. Retirement must first archive the worktree's original candidate evidence (.runtime 161 MB, output 70 MB) as its previous owner asked; the worktree is preserved until then.",
       "ledger": "docs/superpowers/plans/2026-10-14-release-0.2.0-readiness.md",
       "requiredChecks": [
         "Review exact-head stacked PR checks and changes",
@@ -9052,11 +9052,20 @@
         "preview/e2e/gown-contact-samples.js"
       ],
       "pr": 376,
-      "previousOwner": "codex-resume-20261014-release-readiness"
+      "previousOwner": "codex-resume-20261014-release-readiness",
+      "evidence": [
+        {
+          "pr": 376,
+          "reviewedHead": "d7e8ea1d2ff8a8a54d1f53bcdcf77dd404e4422f",
+          "merge": "e87b458ec7883c2355c0f3e1028b07a65120355f",
+          "tree": "4b042e93144018fb58c08f8946b6f8f7824fc1b1",
+          "checks": "Landed by claude:river-oaks-1b with pnpm run land 376 at 2026-10-15T18:19:11Z after Val asked to take #376 through to merging (land updated the branch to d7e8ea1d; Verify passed; guard CLEAN). Refreshed head: cloth unit 3/3; gown-contact-samples, jevica-gown, jevica-waist passed; core verify passed (agent 111/111, preview 3268+1 skip+1 todo, server 590+150 Redis skips, desktop 69/69). Release notes and readiness addendum updated to main's content; generated plans index and register kept identical to main."
+        }
+      ]
     },
     {
       "id": "shared-dominoes-server",
-      "title": "Shared dominoes, PR 1: the town deals and holds the café round (server module, hidden hands via command replies)",
+      "title": "Shared dominoes, PR 1: the town deals and holds the caf\u00e9 round (server module, hidden hands via command replies)",
       "status": "retired",
       "branches": [
         "feat/shared-dominoes-20261014"
@@ -9069,7 +9078,7 @@
         "server/tests/cafe-games.test.js",
         "server/world.js (tableGame routing, snapshot, checkpoint)",
         "server/recovery-diagnostics.js",
-        "docs/multiplayer.md (café games)"
+        "docs/multiplayer.md (caf\u00e9 games)"
       ],
       "requiredChecks": [
         "pnpm run test:server",
@@ -10889,18 +10898,43 @@
     {
       "id": "register-sweep-20261015-1b",
       "title": "Register sweep: commit claude:river-oaks-1b live entries to main (7 from the morning session: #360 baseline, contract decisions, office computer MVP, #366, #361, #367; 9 from today rounds)",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "docs/register-sweep-20261015-1b"
       ],
-      "owner": "claude:river-oaks-1b (b929a625)",
-      "leaseUntil": "2026-10-15T19:00:00.000Z",
-      "nextAction": "Copy the 13 live entries exactly into a branch from main, validate with project:check, PR, land.",
+      "owner": null,
+      "nextAction": "Preserve restoration archives; nothing left to deliver.",
       "filesOwned": [
         "docs/project-management/tasks.json (the 13 named entries and this one only)"
       ],
-      "pr": null,
-      "updatedAt": "2026-10-15T16:48:05.427Z"
+      "pr": 438,
+      "updatedAt": "2026-10-15T19:37:36.932Z",
+      "evidence": [
+        {
+          "pr": 438,
+          "reviewedHead": "823f9aa6c0b01857db200f1640dfccce29116685",
+          "merge": "ee6a044a5781f358a65b8f1623a360fde9c6aa4b",
+          "tree": "e2855228446b9ed87b4cc3eef9d7a0d87d1fb450",
+          "checks": "Landed by claude:river-oaks-1b with pnpm run land 438 (Verify passed on 823f9aa; guard CLEAN; merge tree equals head tree). project:check on the swept file added no gaps and cleared 15 of main's."
+        }
+      ],
+      "retirement": {
+        "head": "823f9aa6c0b01857db200f1640dfccce29116685",
+        "releasedAt": "2026-10-15T18:31:18.000Z",
+        "sessionsReviewedAt": "2026-10-15T18:31:18.000Z"
+      },
+      "retiredBranches": [
+        "docs/register-sweep-20261015-1b"
+      ],
+      "archive": {
+        "docs/register-sweep-20261015-1b": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-OVdmf5/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-OVdmf5/history.bundle",
+          "sha256": "6f41cd1532d71723af0cbc60611fedf366e1c59202ddefb31529d8a68a138066",
+          "tag": "refs/tags/archive/worktree-prune/c1f18347-dc69-4ac8-bde3-7daa4eebc801",
+          "head": "823f9aa6c0b01857db200f1640dfccce29116685"
+        }
+      }
     },
     {
       "id": "studio-acceptance-417",
@@ -10931,6 +10965,167 @@
         "node desktop/studio-e2e.js",
         "pnpm run verify"
       ]
+    },
+    {
+      "id": "connection-continuity",
+      "title": "Players stay connected (Val, 2026-10-15): seamless 270 s rotation, dead-connection watchdog, online/visible reconnect + jitter, 30 s production grace, and update messaging that says the world is improving",
+      "status": "retired",
+      "branches": [
+        "fix/connection-continuity-20261015"
+      ],
+      "owner": null,
+      "nextAction": "Preserve restoration archives; nothing left to deliver.",
+      "ledger": "docs/superpowers/plans/2026-10-15-connection-continuity.md",
+      "requiredChecks": [
+        "new unit and transport tests red then green",
+        "connection-continuity browser journey",
+        "multiplayer and voice journeys",
+        "Redis server suite on throwaway Redis",
+        "pnpm run verify",
+        "hosted Verify via pnpm run land"
+      ],
+      "filesOwned": [
+        "preview/src/multiplayer-client.js",
+        "preview/src/connection-policy.js (new)",
+        "preview/src/voice-chat.js",
+        "server/distributed-app.js",
+        "server/app.js (connection lifetime + shutdown close only)",
+        "server/redis-room.js (leave grace)",
+        "server/world-gateway.js (option pass-through)",
+        "server/tests/browser-fixture.js (lifetime env)",
+        "tests and e2e for these"
+      ],
+      "pr": 447,
+      "updatedAt": "2026-10-15T18:31:05.764Z",
+      "evidence": [
+        {
+          "pr": 447,
+          "reviewedHead": "c5d7ca60c052e77295a9ae26d43c39672c4aeead",
+          "merge": "5bb0470d061c76c8d291624097954eb8eb32aa9e",
+          "tree": "60ff38f2415d473fd727119af72d7dd86a875b82",
+          "checks": "Landed by claude:river-oaks-1b with pnpm run land 447 at 2026-10-15T18:29Z (land updated the branch to c5d7ca60, Verify passed; guard CLEAN). Local: connection-continuity journey run 6 passed every check (5 hand-overs, no gate, bob never gone, quiet socket noticed 8.8 s, online 256 ms, update screens); mutation (ignore rotate) failed on the gate; connection-rotation 4/4 memory+Redis; full server suite on throwaway Redis 786/786; multiplayer-lifecycle, greetings, ipic-screening journeys passed; core verify passed (agent 111/111, preview 3265+1 skip, server 592+152 Redis skips, desktop 69/69). Evidence in ~/worktree-backups/river-oaks/connection-continuity-evidence-20261015/."
+        }
+      ],
+      "retirement": {
+        "head": "c5d7ca60c052e77295a9ae26d43c39672c4aeead",
+        "releasedAt": "2026-10-15T18:30:09.000Z",
+        "sessionsReviewedAt": "2026-10-15T18:30:09.000Z"
+      },
+      "retiredBranches": [
+        "fix/connection-continuity-20261015"
+      ],
+      "archive": {
+        "fix/connection-continuity-20261015": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-Cw3f1P/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-Cw3f1P/history.bundle",
+          "sha256": "319989475e71676f2267b99dda7dd5b5189ccaeca755bc2a32ae1aefdbc3a8cb",
+          "tag": "refs/tags/archive/worktree-prune/2061e65b-df24-4685-9ef9-400081d429fa",
+          "head": "c5d7ca60c052e77295a9ae26d43c39672c4aeead"
+        }
+      }
+    },
+    {
+      "id": "release-0-2-0-tag",
+      "title": "Cut the signed v0.2.0 tag on the 0.2.0 bump merge e87b458e (Val, 2026-10-15): fresh install, tests, desktop package and inspection; GitHub release publication only on a separate yes",
+      "status": "retired",
+      "branches": [],
+      "owner": null,
+      "nextAction": "Retired: the detached tag worktree was removed after its artifacts, receipts and runtime were copied to ~/worktree-backups/river-oaks/release-v0.2.0-artifacts/. GitHub release publication, Developer ID and notarization remain separate decisions.",
+      "filesOwned": [
+        "refs/tags/v0.2.0"
+      ],
+      "pr": 376,
+      "updatedAt": "2026-10-15T19:34:56.511Z",
+      "evidence": [
+        {
+          "pr": 376,
+          "reviewedHead": "d7e8ea1d2ff8a8a54d1f53bcdcf77dd404e4422f",
+          "merge": "e87b458ec7883c2355c0f3e1028b07a65120355f",
+          "tree": "4b042e93144018fb58c08f8946b6f8f7824fc1b1",
+          "checks": "Tag v0.2.0 (object 55eafd8d) -> e87b458e, git tag -v Good ED25519, GitHub verified=true. Release worktree at e87b458e with fresh pnpm install: test:desktop 69/69; desktop:package; desktop:package:check ok (exact ASAR allowlist, no fuse drift); codesign --verify --deep --strict valid; Info.plist 0.2.0, bundle id works.jev.river-oaks; ASAR package.json 0.2.0; desktop e2e --dev passed (status passed, 0 failed). TypeSafe-Place-0.2.0-macOS-arm64.zip 127,305,352 bytes, SHA-256 5c3ae6a4a450de18a03ed33d7a67573c9c96b6b2ee09df792e7b6f5cdd4c28b0, unzip -t clean."
+        }
+      ],
+      "retirement": {
+        "head": "e87b458ec7883c2355c0f3e1028b07a65120355f",
+        "releasedAt": "2026-10-15T19:00:18.000Z",
+        "sessionsReviewedAt": "2026-10-15T19:00:18.000Z"
+      },
+      "archive": {
+        "ref": "refs/tags/v0.2.0",
+        "sha": "e87b458ec7883c2355c0f3e1028b07a65120355f",
+        "tagObject": "55eafd8d",
+        "evidence": "/Users/buns/worktree-backups/river-oaks/release-v0.2.0-artifacts",
+        "note": "Detached worktree (no branch); its head is main history and the signed, pushed v0.2.0 tag. Restore with git worktree add --detach <path> v0.2.0. Ignored runtime, receipts and the packaged zip are in the evidence folder."
+      }
+    },
+    {
+      "id": "voice-continuity",
+      "title": "Voice survives the 270 s socket hand-over (Val, 2026-10-15): the replacement socket proves continuity with the old connection id, the server moves the voice lease (compare-and-swap) and reconcile allows a short grace, so voice need not rejoin",
+      "status": "retired",
+      "branches": [
+        "fix/voice-continuity-20261015"
+      ],
+      "owner": null,
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "filesOwned": [
+        "server/voice.js",
+        "server/voice-routes.js",
+        "server/app.js (voice continuity only)",
+        "server/distributed-app.js (voice continuity only)",
+        "server/connection-close.js",
+        "preview/src/multiplayer-client.js (continues param)",
+        "preview/src/voice-chat.js (onConnectionChanged)",
+        "tests for these"
+      ],
+      "pr": 454,
+      "updatedAt": "2026-10-15T19:36:23.286Z",
+      "evidence": [
+        {
+          "pr": 454,
+          "reviewedHead": "287c466fa2e0e0ba2d26be9a8ac3bb48bf53c7b7",
+          "merge": "ec03695650d6436f106d8c7bdb353e134d054523",
+          "tree": "44b3e4f56f7672c3b7441171fa1d6084f4e62f44",
+          "checks": "17 hosted checks green via pnpm run land 454. Local: voice-chat 19/19; voice server tests on throwaway Redis 48/48; connection-rotation 6/6 twice (voice carries on across a hand-over; control loses voice after the 3 s grace); mutation (no continueConnection) fails with no_lease; full Redis server suite 792/792 nothing skipped; connection-continuity journey passed (5 bracketed rotations, no gate); pnpm run verify core passed. Evidence archived in ~/worktree-backups/river-oaks/voice-continuity-evidence-20261015/."
+        }
+      ],
+      "retirement": {
+        "head": "287c466fa2e0e0ba2d26be9a8ac3bb48bf53c7b7",
+        "releasedAt": "2026-10-15T19:34:31.000Z",
+        "sessionsReviewedAt": "2026-10-15T19:34:31.000Z"
+      },
+      "retiredBranches": [
+        "fix/voice-continuity-20261015"
+      ],
+      "archive": {
+        "fix/voice-continuity-20261015": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-RnXb7j/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-RnXb7j/history.bundle",
+          "sha256": "25259849de41993c7188ebdb78d29aac401315c1c34a6cb99b0eeef9a10d6792",
+          "tag": "refs/tags/archive/worktree-prune/5b3d33d1-3d0f-4ce6-9047-2ea34f7295da",
+          "head": "287c466fa2e0e0ba2d26be9a8ac3bb48bf53c7b7"
+        }
+      }
+    },
+    {
+      "id": "register-sweep-20261015-1b2",
+      "title": "Commit river-oaks-1b's later register entries and record the v0.2.0 tag evidence",
+      "status": "active",
+      "owner": "claude:river-oaks-1b (b929a625)",
+      "leaseUntil": "2026-10-15T21:37:36.000Z",
+      "branches": [
+        "docs/register-sweep-20261015-1b2"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-14-release-0.2.0-readiness.md",
+      "requiredChecks": [
+        "node scripts/project-status.mjs --check"
+      ],
+      "filesOwned": [
+        "docs/project-management/tasks.json (the named entries and this one only)",
+        "docs/superpowers/plans/2026-10-14-release-0.2.0-readiness.md",
+        "data/reports/desktop-development.json"
+      ],
+      "nextAction": "Copy connection-continuity, release-0-2-0-readiness, register-sweep-20261015-1b, release-0-2-0-tag and voice-continuity from the live register onto main's; add the tag addendum and the tag-run desktop receipt; PR and land.",
+      "updatedAt": "2026-10-15T19:37:37.078Z"
     }
   ]
 }
