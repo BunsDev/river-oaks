@@ -9520,12 +9520,13 @@
       "title": "Isolate physical iPhone Safari glTF image decode startup failure before procedural GPU acceptance",
       "status": "active",
       "branches": [
-        "test/safari-gltf-decoder-investigation-20261015"
+        "test/safari-gltf-decoder-investigation-20261015",
+        "test/safari-phone-frame-receipt-20261015"
       ],
       "owner": "codex-root-safari-gltf-decoder-investigation-20261015",
-      "leaseUntil": "2026-10-15T09:00:47.000Z",
-      "updatedAt": "2026-10-15T07:42:49.000Z",
-      "nextAction": "Review draft PR #401 and its hosted checks, confirm which phone URL Val saw, obtain the normal route's WebKit exception, and keep the default iPhone GPU row open.",
+      "leaseUntil": "2026-10-15T10:05:31.000Z",
+      "updatedAt": "2026-10-15T08:35:16.000Z",
+      "nextAction": "Draft PR #409 at df6ae23 has the opt-in five-second frame receipt, focused suites 8/8 and core passed. Review exact-head hosted checks, land when green, then capture a scoped-control sample on a quiet host and obtain the normal route's WebKit exception before any production decoder change.",
       "ledger": "docs/superpowers/plans/2026-10-15-safari-gltf-decoder-investigation.md",
       "requiredChecks": [
         "Focused decoder selection regression",
@@ -9545,7 +9546,19 @@
       ],
       "parent": "procedural-gpu-acceptance",
       "related": "ios-device-feasibility #309; preserve its dirty worktree and do not modify owned files",
-      "pr": 401
+      "pr": 409,
+      "evidence": [
+        {
+          "pr": 401,
+          "reviewedHead": "7ff43d9edee77abe4ae29d06f90a656b60a578c9",
+          "merge": "67388f8dd894601833366d8d355e7e8d20726809",
+          "checks": [
+            "Focused decoder and phone fixture tests 7/7; pnpm run verify core passed after the last code change",
+            "Hosted exact-head preview and all 17 landing checks passed; merged by pnpm run land 401 at 2026-10-15T08:14:58Z",
+            "Local full gate twice stopped on unchanged voice and office timing assertions under concurrent load; both files passed in isolated Redis-backed reruns; physical GPU timing remains open"
+          ]
+        }
+      ]
     },
     {
       "id": "procedural-gpu-acceptance",

@@ -5,9 +5,10 @@ procedural gallery GPU matrix comes from avatar glTF image decoding, before
 changing the production loading policy.
 
 Task: `safari-gltf-decoder-investigation`. Branch:
-`test/safari-gltf-decoder-investigation-20261015` in the sibling worktree of the
-same name. Draft PR #401 contains signed diagnostic commit `7b5a921f`;
-hosted checks are in progress. Files owned: the avatar loader, a small glTF decoder-selection helper
+`test/safari-phone-frame-receipt-20261015` in the existing diagnostic sibling
+worktree. The previous diagnostic branch
+`test/safari-gltf-decoder-investigation-20261015` delivered PR #401, merged at `67388f8dd894601833366d8d355e7e8d20726809`
+on 2026-10-15. Files owned: the avatar loader, a small glTF decoder-selection helper
 and its focused test, the phone fixture's test-only control and regression, this ledger, and
 this task's register entry. The separate iOS probe #309 worktree has dirty work
 owned by another session and is preserved untouched.
@@ -130,8 +131,40 @@ asset readiness, WebContent process identity and exact source revision.
   `.runtime/safari-gltf-decoder-investigation/full-gate-retry.log` record this
   run. Browser coverage still did not start locally. A third full run should
   wait for the other active machine verification to finish.
+- On a later controlled physical iPhone visit, `devicectl` launched the exact
+  private fixture URL
+  `http://10.0.0.152:5184/?phone-avatar-decoder=html&phone-report=1&render-audit=1&motion-debug=1`.
+  Val stayed on that tab and answered “Town visible and playable” after 30
+  seconds. Its paired fixture reports showed, at 5.35 seconds, 3/14 assets,
+  zero failures, the scene overlay and connection gate visible, Apple GPU,
+  440 × 796 viewport, and zero render calls. At 25.52 seconds, they showed
+  88/102 assets, zero failures, both overlays hidden, 955 render calls and
+  98 textures. The authoritative town reported one player. This confirms
+  visible play and matching telemetry for this scoped control on this visit;
+  it does not establish normal-decoder recovery, frame pacing or a WebKit
+  failure cause. The earlier loading-message visit remains a distinct failure.
+  The raw reports are saved in ignored
+  `.runtime/safari-gltf-decoder-investigation/scoped-control-confirmed-20261015.json`
+  in this worktree.
+- The private phone fixture now accepts an additional explicit
+  `?phone-frame-report=1&render-audit=1` control. It waits for both scene and
+  connection overlays to clear, captures five seconds through the existing
+  render audit, and stores at most 1,200 interval/CPU pairs plus its overflow
+  flag in `/__phone_readiness`. It does not run in the ordinary fixture or a
+  production build. The focused decoder and fixture suites passed 8/8,
+  including a VM-driven readiness transition, receipt round trip, and invalid
+  frame rejection. No physical frame receipt has been captured yet.
+- `pnpm run verify` passed after the frame-report change; the core receipt is
+  `.runtime/agent/core.json`. The host still had a concurrent full gate and
+  load averages above 250, so a physical frame-time run at this moment would
+  be confounded by host load.
+- Signed commit `df6ae23f8003ef5ece6ff054be64767ac5ec61d7` is on draft PR
+  #409. The follow-up is fixture-only; exact-head hosted checks and its
+  physical receipt are pending.
 
-**Next action:** Capture a new visible-town observation with its exact phone
-URL and obtain the normal route's WebKit exception. Keep the scoped
+**Next action:** Review PR #409's exact-head hosted checks and land when green.
+Then capture a new exact-URL scoped-control physical frame receipt on a quiet
+host. Obtain the normal route's
+WebKit exception and a controlled same-device comparison. Keep the scoped
 decoder helper experimental until the cause is demonstrated; the physical
 default-decoder GPU row and broader archetype rollout remain open.
