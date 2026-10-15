@@ -24,10 +24,12 @@ export const CODEX_DISABLED = [
   // Context the page should not be able to ask for.
   'memories', 'mentions_v2'];
 
-export function codexArgs({ model = 'default', prompt, workspace }) {
+// The prompt is never an argument: `-` makes Codex read it from stdin, which the
+// caller passes as runStudioCommand's `input` (see studio-command.js for why).
+export function codexArgs({ model = 'default', workspace }) {
   return ['exec', '--json', '--sandbox', 'read-only', '--skip-git-repo-check', '--ephemeral', '--ignore-user-config', '--ignore-rules',
     ...CODEX_DISABLED.flatMap(feature => ['--disable', feature]), '-c', 'web_search="disabled"', '-C', workspace,
-    ...(model === 'default' ? [] : ['-m', model]), '--', prompt];
+    ...(model === 'default' ? [] : ['-m', model]), '--', '-'];
 }
 
 // The final agent message of a completed `codex exec --json` turn. Earlier messages
