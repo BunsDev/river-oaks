@@ -331,3 +331,9 @@ drafts/immutable publication/CAS/replication and #444 broad acceptance remain
 unimplemented. The #461 parent still lacks this focus correction; reconcile the
 stack/backport before any future landing. No merge/deploy authorization. Preserve
 this active checkout and all three draft PR branches.
+
+Audit/focus commitb21bf7b85103254dcd792207fe26b2722def9fbc signed, signature and
+attribution checked, pushed to draft #462. PR title/body rewritten around final
+asset audit + portrait + skirt + focus scope. Hosted checks must be verified on the
+new head; prior failed run is not success. Goal/task remain active and checkout
+preserved. Resume exact next actions above using live register and existing PRs.

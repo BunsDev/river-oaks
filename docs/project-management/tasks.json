@@ -9381,8 +9381,8 @@
         "feat/character-studio-render-20261015"
       ],
       "owner": "codex-character-studio-20261015",
-      "updatedAt": "2026-10-15T21:21:13.171646+00:00",
-      "nextAction": "Verify catalog audit and compatibility registry for #442 on render PR #462: targeted tests, portrait browser, core. Review transform fix. Then rendered pose/device/crowd/provenance gates, #443 persistence, #444 acceptance; no merge/deploy.",
+      "updatedAt": "2026-10-15T21:28:13.930565+00:00",
+      "nextAction": "PR #462 render749353bc + catalog/focus b21bf7b8 signed/pushed; final core passed, portrait15/shared rail17/focused16. Inspect new hosted checks; finish #442 pose matrix/procedural provenance/pinned golden/crowd device budgets. Reconcile #461 focus backport before landing, then #443 persistence and #444 acceptance. No merge/deploy.",
       "filesOwned": [
         "preview/src/character-definition.js",
         "preview/tests/character-definition.test.js",
@@ -9438,7 +9438,7 @@
           ]
         }
       },
-      "leaseUntil": "2026-10-15T23:21:13.171646+00:00",
+      "leaseUntil": "2026-10-15T23:28:13.930565+00:00",
       "ledger": "docs/superpowers/plans/2026-10-15-character-studio.md",
       "pr": 462,
       "verification": {
@@ -9447,7 +9447,7 @@
         "browser": "Editor 21 checks passed; final-source regressions 253 checks passed; fresh wave capture queued; captures inspected with skirt clipping retained as #442 defect",
         "review": "Independent editor review findings fixed and retested; no remaining blocking lifecycle finding",
         "limitations": "No full Redis/native/4K/crowd/physical-device/human acceptance; #443 publication not implemented; hosted checks separate",
-        "render": "749353bc: final core passed, 15 portrait/21 editor browser checks, 13 focused tests; native PNGs and walking capture inspected. PR #462 draft."
+        "render": "PR #462 b21bf7b8: final core passed tooling117/preview3319/server598/desktop69/Python141; preview1 skip1 todo; server153 Redis skips. Portrait15/shared rail17/focused16 passed; real 4K and walk captures inspected."
       }
     },
     {
