@@ -27,6 +27,25 @@ const frameReportScript = `(() => {
   };
   setTimeout(ready, 250);
 })();`;
+const errorReportScript = `import { diagnosticLogs } from '/src/debug-report.js';
+const started = performance.now();
+const mode = document.documentElement.dataset.phoneAvatarDecoder === 'html-images'
+  ? 'avatar-html' : document.documentElement.dataset.phoneDecoder === 'html-images' ? 'global-html' : 'normal';
+const summarize = entries => entries.slice(-4).map(entry => ({
+  at: entry.at, type: entry.type ?? entry.level ?? 'unknown',
+  message: String(entry.message ?? '').slice(0, 180),
+}));
+for (const delay of [5000, 15000, 25000]) setTimeout(() => {
+  const logs = diagnosticLogs();
+  void fetch('/__phone_readiness', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ mode, elapsedMs: Math.round(performance.now() - started),
+      diagnostics: {
+        errors: summarize(logs.errors), console: summarize(logs.console),
+        network: summarize(logs.network),
+      } }),
+  }).catch(() => {});
+}, delay);`;
 export function phoneDecoderProbePlugin() {
   const reports = [];
   return {
@@ -51,6 +70,12 @@ export function phoneDecoderProbePlugin() {
                 || frame.some(value => !Number.isFinite(value) || value < 0 || value > 10000))))
               throw new Error('invalid frame sample');
             const finite = value => Number.isFinite(value) ? Math.max(0, Math.round(value)) : null;
+            const diagnosticEntries = entries => {
+              if (!Array.isArray(entries) || entries.length > 4 || entries.some(entry =>
+                !entry || typeof entry !== 'object' || typeof entry.message !== 'string')) throw new Error('invalid diagnostics');
+              return entries.map(entry => ({ at: finite(entry.at), type: String(entry.type ?? '').slice(0, 32),
+                message: entry.message.slice(0, 180) }));
+            };
             reports.push({ mode: report.mode, elapsedMs: finite(report.elapsedMs),
               asset: report.asset && { loaded: finite(report.asset.loaded), total: finite(report.asset.total), failed: finite(report.asset.failed), done: report.asset.done === true },
               loading: report.loading && { shown: report.loading.shown === true, error: report.loading.error === true, title: String(report.loading.title ?? '').slice(0, 80), message: String(report.loading.message ?? '').slice(0, 200) },
@@ -58,7 +83,10 @@ export function phoneDecoderProbePlugin() {
               graphics: report.graphics && { renderer: String(report.graphics.renderer ?? '').slice(0, 120), viewport: report.graphics.viewport?.slice(0, 2).map(finite) ?? null,
                 render: { calls: finite(report.graphics.render?.calls) }, memory: { textures: finite(report.graphics.memory?.textures) } },
               sample: report.sample && { durationMs: finite(report.sample.durationMs), overflow: report.sample.overflow === true,
-                frames: report.sample.frames.map(frame => frame.map(value => Math.round(value * 100) / 100)) } });
+                frames: report.sample.frames.map(frame => frame.map(value => Math.round(value * 100) / 100)) },
+              diagnostics: report.diagnostics && { errors: diagnosticEntries(report.diagnostics.errors),
+                console: diagnosticEntries(report.diagnostics.console),
+                network: diagnosticEntries(report.diagnostics.network) } });
             if (reports.length > 20) reports.shift();
             res.writeHead(204).end();
           } catch { res.writeHead(400).end(); }
@@ -86,6 +114,8 @@ export function phoneDecoderProbePlugin() {
         if (url.searchParams.get('phone-report') === '1') tags.push({ tag: 'script', attrs: { id: 'phone-readiness-report' }, injectTo: 'head-prepend', children: reportScript });
         if (url.searchParams.get('phone-frame-report') === '1' && url.searchParams.get('render-audit') === '1')
           tags.push({ tag: 'script', attrs: { id: 'phone-frame-report' }, injectTo: 'head-prepend', children: frameReportScript });
+        if (url.searchParams.get('phone-errors') === '1')
+          tags.push({ tag: 'script', attrs: { id: 'phone-error-report', type: 'module' }, injectTo: 'head-prepend', children: errorReportScript });
         return tags;
       },
     },

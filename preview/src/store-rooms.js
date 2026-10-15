@@ -2,6 +2,7 @@ import { terrainHeight } from './geometry.js';
 import { clearStandingStations } from './store-clearance.js';
 import { approvedGroundRoom, approvedLevelRoom } from './approved-interior-room.js';
 import { isIpicStore, configureIpicRoom } from './ipic-plan.js';
+import { planVenueRooms } from './venue-rooms.js';
 
 // Walk-in boutique floor plans behind each mapped storefront. Rooms stay inside
 // the OSM footprint ring, never overlap, and open through the mapped entrance.
@@ -45,6 +46,8 @@ export function storeRoomsFor(world) {
         rooms[index] = approvedGroundRoom(plan, rooms[index]);
       }
     }
+    // Code-only venues (venue-rooms.js) after every tenant: not in the world data.
+    rooms.push(...planVenueRooms(world));
     cache.set(world, rooms);
   }
   return cache.get(world);

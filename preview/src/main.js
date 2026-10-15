@@ -105,6 +105,9 @@ import { createCyclingLeaderboard } from './cycling-leaderboard.js';
 import './cycling-leaderboard.css';
 import { plazaSalonRack } from './plaza-salon-plan.js';
 import { describeRenderer, describeScene, noteFrame, registerDiagnosticSource, setScreenshotCapture } from './debug-report.js';
+import { venueDoorSites } from './venue-rooms.js';
+import { createAxePanel } from './axe-panel.js';
+import { AXE_LANES, AXE_ROOM_DARTS, AXE_ROOM_INTERIOR, atAxeLane, atAxeRoomDarts } from './axe-room-plan.js';
 
 // Every stylesheet above is applied by now, so the sign-in gate can lift.
 document.dispatchEvent(new Event('river-oaks:styled'));
@@ -140,7 +143,7 @@ let plazaSalon = null, plazaGames = null, plazaDominoes = null, plazaHearts = nu
 let plazaJenga = null, plazaYacht = null, benchGame = 'jenga';
 let plazaCribbage = null, walnutGame = 'backgammon';
 let plazaWinePong = null, plazaShuffleboard = null, longTableGame = 'winePong';
-let plazaDarts = null, ipicDarts = null;
+let plazaDarts = null, ipicDarts = null, venueDarts = null, axePanel = null;
 let plazaSpades = null;
 let plazaLiarsDice = null;
 let plazaMancala = null;
@@ -360,6 +363,26 @@ function initializeRenderer() {
       peers: () => (multiplayer?.snapshot?.players ?? []).filter(player => !player.sitting && (player.altitude ?? 0) <= .1 && atIpicLine(player.position)).map(player => ({ id: player.id, name: player.name })),
       send: message => multiplayer?.command(message) ?? Promise.resolve({ ok: false, message: 'Connect to the town to play together.' }) } });
   playProviders.push(() => ipicDarts);
+  // The axe-and-darts venue (venue-rooms.js): its board is a second shared darts line and
+  // its lanes play shared axes (server/axe-games.js); both show on the venue's own props.
+  const roomPoint = (interior, [east, north]) => { const room = walkingEnvironment().rooms.find(item => item.interior === interior); return room && walkingEnvironment().roomAt(east, -north) === room ? room.toLocal(east, north) : null; };
+  const onFoot = () => { const pose = walking?.getPose(); return pose && !pose.sitting && !pose.riding && pose.altitude <= .1 ? [pose.position[0], -pose.position[2]] : null; };
+  const venueProps = () => buildingMesh?.userData.interiors?.userData.axeVenue ?? null;
+  const snapshotPlayers = () => (multiplayer?.snapshot?.players ?? []).filter(player => !player.sitting && (player.altitude ?? 0) <= .1);
+  const townShared = { selfId: () => multiplayer?.identity?.id ?? null, name: id => multiplayer?.snapshot?.players?.find(player => player.id === id)?.name ?? 'A visitor',
+    send: message => multiplayer?.command(message) ?? Promise.resolve({ ok: false, message: 'Connect to the town to play together.' }) };
+  const atVenueDarts = position => { const point = position && roomPoint(AXE_ROOM_INTERIOR, position); return Boolean(point && atAxeRoomDarts(point)); };
+  venueDarts = createPlazaDarts({ getMirror: () => venueProps()?.venueDarts ?? null, getPose: () => walking?.getPose(), focusWorld: () => host.focus({ preventScroll: true }), reducedMotion,
+    shared: { ...townShared, lineId: AXE_ROOM_DARTS.id, eyebrow: 'Axe & Darts · shared game', title: 'Darts at Axe & Darts',
+      line: () => multiplayer?.snapshot?.darts?.find(item => item.id === AXE_ROOM_DARTS.id) ?? null, atLine: () => atVenueDarts(onFoot()),
+      peers: () => snapshotPlayers().filter(player => atVenueDarts(player.position)).map(player => ({ id: player.id, name: player.name })) } });
+  playProviders.push(() => venueDarts);
+  const laneOf = position => { const point = position && roomPoint(AXE_ROOM_INTERIOR, position); return point ? atAxeLane(point) : null; };
+  axePanel = createAxePanel({ getMirror: id => venueProps()?.axeLanes?.[id] ?? null, focusWorld: () => host.focus({ preventScroll: true }), reducedMotion,
+    shared: { ...townShared, laneIds: AXE_LANES.map(lane => lane.id), laneAt: () => laneOf(onFoot()),
+      lane: id => multiplayer?.snapshot?.axes?.find(item => item.id === id) ?? null,
+      peers: id => snapshotPlayers().filter(player => laneOf(player.position) === id).map(player => ({ id: player.id, name: player.name })) } });
+  playProviders.push(() => axePanel);
   // Seated at the grove table, X plays mancala, Go, Chinese checkers or xiangqi (the last
   // one played); switching puts the other games' boards away and sets out this one's.
   const groveGames = () => ({ mancala: plazaMancala, go: plazaGo, chineseCheckers: plazaChineseCheckers, xiangqi: plazaXiangqi });
@@ -652,7 +675,7 @@ function populateWorld(data) {
   $('#district-source').hidden = creatorRegion;
   $('#district-directory').hidden = false;
   $('#building-layer-label').textContent = creatorRegion?'Buildings & architecture':'Boutiques & architecture';
-  districtUI.setStores(data.stores, 'Dior');
+  districtUI.setStores([...data.stores, ...venueDoorSites(data)], 'Dior');
   $('#view-scale').textContent = creatorRegion?'Explore a creator-built region':'Street level · meet the locals';
   $('#connection').textContent = 'World ready to explore';
   $('#stores-count').textContent = data.stores.length;
@@ -886,7 +909,7 @@ function render(now) {
   if (officeUI?.active || officeUI?.entering || storeIntros?.active || photoMode?.active || birdCams?.riding) walking?.halt();
   else if (multiplayer?.connected && !multiplayer.traveling) walking?.update(delta, now);
   else walking?.halt();
-  plazaGames?.update(); plazaDominoes?.update(); plazaHearts?.update(); plazaSpades?.update(); plazaLiarsDice?.update(); plazaBackgammon?.update(); plazaCribbage?.update(); plazaJenga?.update(); plazaYacht?.update(); plazaWinePong?.update(); plazaShuffleboard?.update(); plazaDarts?.update(); ipicDarts?.update(); plazaMancala?.update(); plazaGo?.update(); plazaChineseCheckers?.update(); plazaXiangqi?.update(); plazaStage?.update();
+  plazaGames?.update(); plazaDominoes?.update(); plazaHearts?.update(); plazaSpades?.update(); plazaLiarsDice?.update(); plazaBackgammon?.update(); plazaCribbage?.update(); plazaJenga?.update(); plazaYacht?.update(); plazaWinePong?.update(); plazaShuffleboard?.update(); plazaDarts?.update(); ipicDarts?.update(); venueDarts?.update(); axePanel?.update(); plazaMancala?.update(); plazaGo?.update(); plazaChineseCheckers?.update(); plazaXiangqi?.update(); plazaStage?.update();
   if (multiplayer?.connected) birdCams?.update(delta);
   multiplayer?.update(now);
   officeUI?.prepare(now);
@@ -1166,6 +1189,10 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
   window.__riverPlazaGo = () => plazaGo ? { ...plazaGo.debug(), groveGame, table: plazaSalon?.userData.go?.count() ?? null, goban: plazaSalon?.userData.go?.visible() ?? null,
     mancalaBoard: plazaSalon?.userData.mancala?.visible() ?? null, reset: () => plazaGo.reset() } : null;
   window.__riverPlazaMancala = () => plazaMancala ? { ...plazaMancala.debug(), table: plazaSalon?.userData.mancala?.count() ?? null, reset: () => plazaMancala.reset() } : null;
+  window.__riverAxes = () => axePanel ? { ...axePanel.debug(), stuck: Object.fromEntries(AXE_LANES.map(lane => [lane.id, buildingMesh?.userData.interiors?.userData.axeVenue?.axeLanes?.[lane.id]?.count() ?? null])),
+    holdAt: mm => axePanel.holdAt(mm), open: () => axePanel.open() } : null;
+  window.__riverVenueDarts = () => venueDarts ? { ...venueDarts.debug(), board: buildingMesh?.userData.interiors?.userData.axeVenue?.venueDarts?.count() ?? null,
+    holdAt: mm => venueDarts.holdAt(mm), open: () => venueDarts.open() } : null;
   window.__riverIpicDarts = () => ipicDarts ? { ...ipicDarts.debug(), board: buildingMesh?.userData.interiors?.userData.dartboards?.[0]?.count() ?? null,
     hold: value => ipicDarts.hold(value), holdAt: mm => ipicDarts.holdAt(mm), open: () => ipicDarts.open() } : null;
   window.__riverPlazaDarts = () => plazaDarts ? { ...plazaDarts.debug(), board: plazaSalon?.userData.darts?.count() ?? null,
