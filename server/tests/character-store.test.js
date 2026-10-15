@@ -122,6 +122,7 @@ for(const [backend,setup] of Object.entries(fixtures)){
     await store.saveDraft('alice',draft(),{expectedVersion:0,requestId:'edit'});
     for(let i=1;i<CHARACTER_STORE_LIMITS.accounts;i++)await store.deleteAccount(`deleted-${i}`);
     await assert.rejects(store.saveDraft('bob',draft('bob'),{expectedVersion:0,requestId:'overflow'}),code('character_account_capacity'));
+    await assert.rejects(store.initializeSelection('carol',{appearance:'sable-human',movement:'upright'}),code('character_account_capacity'));
     await store.deleteAccount('alice');assert.equal((await store.get('alice')).deleted,true);
     assert.equal((await store.get('bob')).version,0,'refused admission creates no partial record');
   });

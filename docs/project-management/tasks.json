@@ -11223,9 +11223,9 @@
         "feat/character-studio-persistence-20261015"
       ],
       "owner": "codex-character-studio-20261015",
-      "updatedAt": "2026-10-15T23:38:03.612479+00:00",
-      "leaseUntil": "2026-10-16T01:38:03.612479+00:00",
-      "nextAction": "Selected-state v12 increment verified: full 18-task gate passed, 822 server tests zero Redis skips, 13 experience/21 shared journeys, 36 focused tests and actual v11/v12 audit. Sign/push to draft #464 and update #443. Next implement reviewed durable account CAS/pending-room-intent selection before enabling publication/equip transport; UI/peer/fallback/deletion acceptance remains open.",
+      "updatedAt": "2026-10-15T23:53:23.977271+00:00",
+      "leaseUntil": "2026-10-16T01:53:23.977271+00:00",
+      "nextAction": "Atomic account selection verified: 38 focused memory/Redis/HTTP checks, four actual prior/current codec audit checks, core gate with 842 server tests zero Redis skips; review clear. Sign/push to draft #464 and update #443, then implement lease-fenced durable room intents, account migration wiring and confirmed projection with failure tests before transport/UI activation. Keep full #440\u2013#444 acceptance open.",
       "filesOwned": [
         "server/character-store.js",
         "server/tests/character-store.test.js",
@@ -11253,7 +11253,8 @@
         "server/tests/interactions.test.js",
         "server/tests/penthouse-seats-redis.test.js",
         "server/tests/penthouse-seats.test.js",
-        "server/recovery-diagnostics.js"
+        "server/recovery-diagnostics.js",
+        "server/tests/character-selection.test.js"
       ],
       "requiredChecks": [
         "Memory and real isolated Redis store contract tests",

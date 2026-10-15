@@ -311,3 +311,33 @@ revision resolution, durable account/room selection reconciliation and client
 rendering/UI remain required. Corrupt/stale revision fallback and asset-unavailable
 journeys must be proven across the integrated path before #443 acceptance. The
 currently exposed HTTP routes still read/save private drafts only.
+
+### Atomic account selection store
+
+The character store now holds selected account state in the same atomic record as
+immutable revisions and the deletion tombstone. `initializeSelection` conditionally
+imports a trusted legacy preference once; a custom definition must exactly match
+an existing owner revision. `changeSelection` accepts an explicit character
+revision, legacy appearance, or movement command with an expected selection
+version and request ID. It resolves character data from storage, never from a
+client-supplied definition. Movement changes retain the current selected look;
+legacy appearance changes clear customization.
+
+Selection versions and bounded retry receipts are separate from draft/publication
+versions. Concurrent worlds conflict on the selection version, while a concurrent
+private draft save and selection preserve both changes through whole-record CAS.
+A repeated operation returns its original applied version plus current selection;
+it never re-equips an older look. Deletion removes selection and receipts together
+with private drafts and revisions, and tombstones prevent late initialization.
+
+Persisted record schema v2 reads and upgrades v1 without altering existing draft
+or publication versions. Accounts can have selected authored preferences before
+their first draft (`version: 0`). Rollback must retain the v2 character-store codec
+as well as the v12 world codec; an older character-store reader rejects v2 records.
+The existing Redis hash key remains stable for migration.
+
+This is a trusted storage API. Room connection/flight/cooldown validation, durable
+pending intents, account-store migration wiring, confirmed room projection and
+transport authorization still have to be integrated before enabling custom equip.
+The legacy avatar-preference service remains the running transport's account store
+until that integration is complete. No publication/equip endpoint is enabled here.

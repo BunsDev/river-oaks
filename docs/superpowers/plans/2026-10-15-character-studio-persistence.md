@@ -277,3 +277,52 @@ Selected-state full gate PASSED: `node scripts/browser-lock.mjs 'character selec
 Verification: `pnpm run verify full` passed all 18 tasks against isolated loopback Redis (2026-10-15 23:03:18–23:36:45 UTC). Tooling 117; preview 3319 passed, 1 skip, 1 todo; server 822 passed with zero Redis skips; desktop 69; Python 141 (66 warnings); dependency/build/lint/format/demo/secrets gates; security browser and reflections; 13 experience journeys, 21 shared journeys, 12 screening checks. Browser rendering used ANGLE Metal on Apple M3 Max. Focused selected-state tests passed 36/36 with zero skips; actual prior/current writer audit passed 7 checks; independent review found no blocker in this increment. Existing preview gaps remain: obstructed Vince glazing approach (skip), 1.005 m lounge passage against 1.01 m (todo). No physical-device, human accessibility, live WorkOS, production, native Unreal or full Studio visual acceptance is claimed.
 
 Receipts: `.runtime/character-studio/world-full.json`, `world-full.log`, `world-experience.json`, `world-shared-experience.json`, `world-source-hashes.json`, `world-focused.log`, `world-upgrade.json`. All changed server source/test hashes stayed unchanged during the full gate; world/coordinator hashes match the upgrade audit. Generated tracked reports were restored only after retaining this run. Ready for signed commit/push to draft #464. No issue or goal completion claim.
+
+
+Continuation after signed/pushed f1db4d5c: previous turn PROGRESS, full gate passed and issue443 updated at https://github.com/BunsDev/river-oaks/issues/443#issuecomment-6204561169. Clean owned branch reused; 14 worktrees preserved. Current next dependency is durable account selection. Extend the existing atomic character-record CAS so tombstone, immutable revision and selection cannot race across Redis slots. Keep selection version/receipts separate from private draft/publication version; publication must not equip. Add conditional legacy initialization, explicit appearance/revision/movement operations, expected-version conflict and retry receipts returning current state without replaying an old selection. Test concurrency, deletion, corruption, migration and bounds in memory and independent real Redis clients. No room/transport activation until durable pending-intent recovery is integrated and verified.
+
+Atomic account selection implemented in character-store.js: schema v2 adds
+selection and separate bounded selection receipts, conditionally migrates v1,
+resolves only stored immutable owner revisions, and shares CAS/deletion fencing
+with drafts and publication. Selection version changes do not invalidate a draft
+editor; movement updates retain custom identity, explicit legacy changes clear it.
+Initialization only seeds once, validates custom revision identity and cannot
+resurrect a tombstone. Retried commands return current selection and original
+applied version, never replaying a stale look.
+
+Red: six memory cases asserted missing selection APIs before implementation.
+Initial green exposed an incorrect fixture ID (`sable-fox`); corrected it to the
+catalog's actual `woman-casual` ID without relaxing validation. First isolated run
+passed 32 checks. Review found no blocker and requested concurrent draft/selection
+and selection-only-account regressions. Added both plus selection account-capacity
+coverage. Final focused run passed 36/36 with zero skips, including independent
+Redis clients, v1 migration/corruption, lost CAS reply, write failure, deletion,
+concurrency and existing real HTTP draft admission/replacement checks.
+
+Core verification with isolated Redis is running. No room, browser or transport
+selection wiring changes in this increment; previous full browser evidence belongs
+to f1db4d5c. Keep durable room intent/CAS reconciliation and all original integration,
+visual, usability and rollout requirements open. Record v2 requires compatible
+store codec on rollback; the hash key remains stable and older readers fail closed.
+
+Final review caught two additional cases: changing JSON field order reused the
+same logical command but produced a different fingerprint; a selection-only v2
+record could carry a private draft at version zero. Regressions reproduced each
+failure, then canonical command construction and strict zero-version decoding
+fixed them. The first core gate passed before those refinements; its receipt is
+retained as selection-core-before-refinement.json, not final verification.
+
+Final focused run:38/38 passed, zero skips, including the new regressions.
+Actual prior-v1/current-v2 codec audit:4 checks passed. Prior f1db4d5c writer creates
+its original draft/revision record; v2 conditional migration preserves both;
+actual v1 reader/writer reject v2 without modifying selection; a replacement v2
+store restores the canonical look. Receipt selection-upgrade.json records current
+source hash and exact prior revision. Final review found no blocker. Final core
+verification is running on frozen source after those fixes.
+
+
+Final core PASSED 2026-10-15T23:49:59.733Z to 2026-10-15T23:52:37.024Z. `node scripts/browser-lock.mjs 'character account selection final verification' -- python3 .runtime/character-studio/run-selection-final.py` ran focused tests, actual codec audit and `pnpm run verify` against isolated loopback Redis, then terminated its own service.
+
+Current verification: `pnpm run verify` passed all 11 core tasks with isolated Redis: tooling 117; preview 3319 passed, 1 skip, 1 todo; server 842 passed with zero skips; desktop 69; Python 141 (66 warnings); build/lint/format/demo/working-tree secrets. Focused memory/Redis/HTTP checks passed 38/38 with zero skips; actual prior/current codec audit passed four checks. Independent review found no blocker. This run does not include browser, native, live-auth, device or human acceptance.
+
+All changed source/test hashes stayed unchanged during the final run. Receipts: selection-core.json/.log, selection-focused.log, selection-upgrade.json/.log and selection-source-hashes.json in .runtime/character-studio. Previous full-browser receipt remains scoped to f1db4d5c. Ready for signed commit/push and issue443 update, then durable room-intent implementation.
