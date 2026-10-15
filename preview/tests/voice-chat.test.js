@@ -298,20 +298,46 @@ test('our own revocation in the snapshot ends voice, but not before the room tic
   assert.equal(h.voice.state.message, 'Voice access ended.');
 });
 
-test('a lost town connection leaves quietly and rejoins with the microphone off once the town is back', async () => {
+test('a lost town connection leaves quietly and rejoins once the town is back, with the microphone as it was', async () => {
   const h = harness();
+  const back = () => h.voice.sync([{ id: 'me', position: [0, 0, 0], altitude: 0, voice: { space: 'outdoor', id: null } }], 'me');
   await h.ready();
   await h.voice.setMic(true);
   const leaves = h.calls.filter(([action]) => action === 'leave').length;
   h.voice.onConnectionLost(false); await settle();
   assert.equal(h.voice.state.status, 'idle');
   assert.equal(h.calls.filter(([action]) => action === 'leave').length, leaves, 'the server already knows: the lease dies with the connection');
-  h.voice.sync([{ id: 'me', position: [0, 0, 0], altitude: 0, voice: { space: 'outdoor', id: null } }], 'me'); await settle();
+  h.advance(5_000); back(); await settle();
+  assert.equal(h.voice.state.status, 'joined');
+  assert.equal(h.voice.state.mic, 'on', 'a quick reconnect keeps the resident talking');
+  // After a long outage the microphone stays off until the resident turns it on.
+  h.voice.onConnectionLost(false); await settle();
+  h.advance(61_000); back(); await settle();
   assert.equal(h.voice.state.status, 'joined');
   assert.equal(h.voice.state.mic, 'off');
+  // A microphone that was off stays off.
+  h.voice.onConnectionLost(false); await settle();
+  h.advance(1_000); back(); await settle();
+  assert.equal(h.voice.state.mic, 'off');
   h.voice.onConnectionLost(true); await settle();
-  h.voice.sync([{ id: 'me', position: [0, 0, 0], altitude: 0, voice: { space: 'outdoor', id: null } }], 'me'); await settle();
+  back(); await settle();
   assert.equal(h.voice.state.status, 'idle', 'a terminal close does not come back by itself');
+});
+
+test('a move to a fresh town socket takes a fresh voice lease and keeps the microphone and deafen', async () => {
+  const h = harness();
+  await h.ready();
+  await h.voice.setMic(true);
+  const joins = h.calls.filter(([action]) => action === 'join').length;
+  h.voice.onConnectionChanged(); await settle();
+  assert.equal(h.calls.filter(([action]) => action === 'join').length, joins + 1, 'a lease for the fresh connection');
+  assert.equal(h.voice.state.status, 'joined');
+  assert.equal(h.voice.state.mic, 'on');
+  // Nothing to do when voice is not joined.
+  h.voice.leave('user'); await settle();
+  const after = h.calls.filter(([action]) => action === 'join').length;
+  h.voice.onConnectionChanged(); await settle();
+  assert.equal(h.calls.filter(([action]) => action === 'join').length, after);
 });
 
 test('a changed microphone preference switches the live room\'s input device', async () => {

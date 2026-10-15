@@ -20,10 +20,10 @@
 @media(max-width:700px){.ipic-screening{z-index:6}}
 @media(prefers-reduced-motion:reduce){.ipic-screening{backdrop-filter:none}}
 /* Seated in a cinema recliner (walking-ui's theater-seated): the film comes first. The play dock,
-   town chat, the idle greeting card and the walking console's other actions step aside and return
-   on standing; an invitation and Stand up stay. The panel turns compact and dark, the captions larger,
+   town chat and the walking console's other actions step aside and return on standing (the Say
+   hello prompt does too, in multiplayer.css); an invitation and Stand up stay. The panel turns compact and dark, the captions larger,
    and sits just above the walking card (--ipic-clear, measured by ipic-screening-ui.js). */
-body.theater-seated .visit-tools,body.theater-seated .town-chat-dock,body.theater-seated .nearby-greetings:has(#greeting-person:not([hidden])),
+body.theater-seated .visit-tools,body.theater-seated .town-chat-dock,
 body.theater-seated #walking-hud :is(#walking-meet-nearby,#walking-talk,#walking-play){visibility:hidden}
 body.theater-seated .ipic-screening{bottom:var(--ipic-clear,96px);padding:8px 10px;gap:6px;background:color-mix(in srgb,#120d0a 80%,transparent);color:#f4ece4;border-color:#ffffff1f;box-shadow:0 10px 30px #00000055}
 /* On phones an open town chat or play dock hides the walking card (game-hud.css, visual-finish.css).

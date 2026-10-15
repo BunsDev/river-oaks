@@ -22,7 +22,7 @@
   `ipic-screening.css`, the following step aside while seated:
   - the play dock;
   - the town chat;
-  - the idle greeting card;
+  - the Say hello prompt (#446's own rule in `multiplayer.css`);
   - the walking card's Meet nearby, Talk and Play.
 
   Stand up and any invitation stay. The panel turns compact and dark, with 17 px captions.

@@ -10,8 +10,8 @@
 // penthouse stair can also be walked (officeWalk, below); the server derives the height.
 //
 // The penthouse carries only what the reviewed contract states: shell, levels, terrace
-// openings, stair, lift, anchors and the approved mezzanine programme. The supplied
-// kit's furniture colliders are not imported here (#362).
+// openings, stair, lift, anchors and the approved mezzanine programme. Of the supplied
+// kit's furniture colliders, only the measured desk footprints are imported (R19, below).
 //
 // Seats (#363) are the desk chairs and the library reading chairs. A visitor claims one from
 // its stand point and stands back up there. While a seat is taken, the measured seated body
@@ -61,6 +61,15 @@ const desks = [
   ['desk-executive', [-3, 4.5], [-3, 6.55], 3], ['desk-a1', [3.65, 3.55], [3.65, 5.6], 2], ['desk-a2', [6.35, 3.55], [6.35, 5.6], 2],
   ['desk-b1', [3.65, 8.55], [3.65, 10.6], 2], ['desk-b2', [6.35, 8.55], [6.35, 10.6], 2],
 ];
+// The desks themselves (R19, Val, 2026-10-15): the supplied kit's measured desk colliders, as
+// numbers only (its layout.json, SHA-256 ccd7e275…; no art). Each bench serves two stations, and
+// every approach stays clear for the turning body (scripts/office-kit-fit.mjs checks the rules).
+const DESK_HEIGHT = 0.76;
+const deskFootprints = [
+  { id: 'executive-desk', x: [-5, -1], d: [7.2, 8.8] },
+  { id: 'bench-a', x: [2.4, 7.6], d: [6.4, 7.6] },
+  { id: 'bench-b', x: [2.4, 7.6], d: [11.4, 12.6] },
+];
 const stair = { x: [10.2, 13.4], d: [5.6, 14], rise: 3.8, risers: 22 };
 // Library revision 3 (approved 2026-10-14): furniture bases at the mezzanine floor.
 const mezzanine = {
@@ -91,6 +100,7 @@ const penthouse = {
       obstacles: [
         box('terrace-wall-south', 'wall', -15, 1.5, WALL, 3, 7.6), box('terrace-wall-middle', 'wall', -15, 8.5, WALL, 3, 7.6), box('terrace-wall-north', 'wall', -15, 17, WALL, 6, 7.6),
         { id: 'stair', kind: 'stair', x0: stair.x[0], x1: stair.x[1], d0: stair.d[0], d1: stair.d[1], height: stair.rise },
+        ...deskFootprints.map(({ id, x, d }) => ({ id, kind: 'desk', x0: x[0], x1: x[1], d0: d[0], d1: d[1], height: DESK_HEIGHT })),
       ],
       chairs: desks.map(([id, , seat]) => ({ id: `${id}-chair`, position: seat })),
       portals: [
@@ -172,6 +182,19 @@ export function officeLevelFree(layout, levelId, position, occupied = []) {
   if (x < x0 + r || x > x1 - r || d < d0 + r || d > d1 - r) return false;
   if (level.obstacles.some(o => Math.hypot(x - Math.max(o.x0, Math.min(x, o.x1)), d - Math.max(o.d0, Math.min(d, o.d1))) < r)) return false;
   return level.chairs.every(chair => Math.hypot(x - chair.position[0], d - chair.position[1]) >= r + CHAIR_RADIUS) && clearOf(levelId, position, occupied);
+}
+
+// Where a stair or lift traveller arrives. A body standing on the landing never keeps anyone off a
+// floor: the traveller arrives at the nearest free spot beside it, reachable from the landing and
+// clear of every body; with nowhere clear, at the landing itself (standing bodies do not collide).
+export function officeLandingSpot(layout, levelId, landing, bodies = [], occupied = []) {
+  const clear = p => bodies.every(body => Math.hypot(body[0] - p[0], body[1] - p[1]) >= OFFICE_BODY_SPACING);
+  if (clear(landing)) return [...landing];
+  for (const radius of [0.8, 1.1, 1.4, 1.8, 2.2]) for (let i = 0; i < 16; i++) {
+    const angle = i * Math.PI / 8, p = [landing[0] + Math.cos(angle) * radius, landing[1] + Math.sin(angle) * radius];
+    if (clear(p) && officeLevelFree(layout, levelId, p, occupied) && officeLevelSegmentFree(layout, levelId, landing, p, occupied)) return p;
+  }
+  return [...landing];
 }
 
 // Swept movement on one level, sampled every 0.1 m and bounded like the legacy office.
