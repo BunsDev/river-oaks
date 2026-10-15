@@ -83,9 +83,9 @@ export function parseSigningChain(text) {
 // --- helpers ---------------------------------------------------------------
 
 const exists = path => access(path).then(() => true, () => false);
-function sh(command, args, { timeout = 600_000, env = process.env, cwd, input } = {}) {
+// Collects a child's output and exit; never throws.
+function settle(child, { timeout = 600_000, input } = {}) {
   return new Promise(resolve => {
-    const child = spawn(command, args, { env, cwd, shell: false, stdio: [input === undefined ? 'ignore' : 'pipe', 'pipe', 'pipe'] });
     let stdout = '', stderr = '';
     child.stdout.on('data', chunk => { stdout += chunk; });
     child.stderr.on('data', chunk => { stderr += chunk; });
@@ -94,6 +94,11 @@ function sh(command, args, { timeout = 600_000, env = process.env, cwd, input } 
     child.on('error', error => { clearTimeout(timer); resolve({ code: -1, stdout, stderr: `${stderr}${error.message}` }); });
     child.on('close', (code, signal) => { clearTimeout(timer); resolve({ code: code ?? signal, stdout, stderr }); });
   });
+}
+const stdio = input => [input === undefined ? 'ignore' : 'pipe', 'pipe', 'pipe'];
+// Programs with argument lists, never a shell: no command here is sh, cmd or PowerShell.
+function sh(command, args, { timeout, env = process.env, cwd, input } = {}) {
+  return settle(spawn(command, args, { env, cwd, shell: false, stdio: stdio(input) }), { timeout, input });
 }
 async function waitFor(predicate, seconds) {
   for (let elapsed = 0; elapsed <= seconds; elapsed += 1) { if (await predicate()) return true; await delay(1000); }
@@ -135,7 +140,7 @@ async function checkInstalledCopy(label, dir, platform, arch, version, manifest,
 // Scripts are constant text; values such as paths reach them only as environment
 // variables ($env:…), never spliced into the command.
 async function powershell(script, values = {}) {
-  const result = await sh('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script], { env: { ...process.env, ...values } });
+  const result = await settle(spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script], { env: { ...process.env, ...values }, shell: false, stdio: stdio() }));
   return result.stdout.trim();
 }
 async function windowsProcesses(dir) {
@@ -360,7 +365,7 @@ async function acceptLinux({ dir, version, arch, manifest }) {
     restrictUserns: await readFile(RESTRICT, 'utf8').then(text => text.trim(), () => 'absent'),
     unprivilegedUsernsClone: await readFile('/proc/sys/kernel/unprivileged_userns_clone', 'utf8').then(text => text.trim(), () => 'absent'),
     apparmor: await exists('/sys/kernel/security/apparmor'), abi4: await exists('/etc/apparmor.d/abi/4.0'),
-    fusermount3: (await sh('sh', ['-c', 'command -v fusermount3'])).stdout.trim() || null,
+    fusermount3: (await Promise.all(['/usr/bin/fusermount3', '/bin/fusermount3'].map(async path => await exists(path) && path))).find(Boolean) || null,
     os: (await readFile('/etc/os-release', 'utf8')).match(/^PRETTY_NAME="?([^"\n]+)/m)?.[1],
     kernel: (await sh('uname', ['-r'])).stdout.trim(),
   };
