@@ -195,7 +195,6 @@ async (host, viewer, tools) => {
       // centre, so a real click lands on it rather than the banner, dock or canvas.
       const hits = await viewer.evaluate(() => {
         const targets = [...document.querySelectorAll('#ipic-screening [data-control]')].filter(el => !el.hidden && el.getClientRects().length);
-        const exit = document.querySelector('#walking-enter'); if (exit && !exit.hidden && exit.getClientRects().length) targets.push(exit);
         const banner = document.querySelector('.hardware-acceleration-warning')?.getBoundingClientRect();
         return targets.map(el => {
           const r = el.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2, top = document.elementFromPoint(x, y);
@@ -205,7 +204,23 @@ async (host, viewer, tools) => {
       });
       const blocked = hits.filter(hit => !hit.inView || !hit.reachable);
       check(!blocked.length, `${width} px, dock ${dockOpen ? 'open' : 'closed'}: controls not reachable: ${JSON.stringify(blocked)}`);
-      check(hits.some(hit => hit.control === 'walking-enter'), `${width} px: Step outside is offered inside IPIC`);
+      // Step outside the way a visitor reaches it: narrow screens hide the walking console while Town
+      // chat is open (by design), and leaving is a secondary action under More. With chat collapsed and
+      // More open, it must be on screen and not covered by the screening panel.
+      const exit = await viewer.evaluate(async () => {
+        const chat = document.querySelector('.town-chat-dock'), more = document.querySelector('.walking-more'), button = document.querySelector('#walking-enter');
+        const chatWasOpen = Boolean(chat?.open); if (chat) chat.open = false;
+        await new Promise(resolve => setTimeout(resolve, 400));
+        const viaMore = Boolean(more?.contains(button)); if (viaMore) more.open = true;
+        await new Promise(resolve => setTimeout(resolve, 400));
+        const r = button.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2, top = document.elementFromPoint(x, y);
+        const result = { chatWasOpen, viaMore, label: button.textContent.trim(), inView: x >= 0 && x <= innerWidth && y >= 0 && y <= innerHeight,
+          reachable: Boolean(top && (top === button || button.contains(top))), coveredBy: top && !(top === button || button.contains(top)) ? (top.closest('[class]')?.className ?? top.tagName) : null, rect: [r.left, r.top, r.width, r.height].map(Math.round) };
+        if (viaMore) more.open = false; if (chat) chat.open = chatWasOpen;
+        return result;
+      });
+      check(exit.inView && exit.reachable && /Step outside/.test(exit.label), `${width} px, dock ${dockOpen ? 'open' : 'closed'}: Step outside is reachable with Town chat collapsed: ${JSON.stringify(exit)}`);
+      hits.push({ control: 'walking-enter', ...exit });
       views[dockOpen ? 'dockOpen' : 'dockClosed'] = hits;
       await viewer.screenshot({ path: `output/playwright/ipic/soak-${width}-dock-${dockOpen ? 'open' : 'closed'}.png` });
     }
