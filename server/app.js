@@ -52,7 +52,8 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
   const rides=cyclingMiles?createRideFlush({world:()=>world,store:cyclingMiles,warn:detail=>console.warn(JSON.stringify({...detail,worldId}))}):null;
   const flushRides=()=>rides?rides.flush():Promise.resolve();
   const send = (ws,value,options) => sendFrame(ws,value,options);
-  const snapshot=()=>({...world.snapshot(),...(regionSha256?{regionSha256}:{}),...(voice?{voice:{available:voice.status().available}}:{})});
+  // Frames carry the world clock that anchors screenings (screenings.js).
+  const snapshot=()=>({...world.snapshot(),...(typeof world.serverTime==='function'?{serverTimeMs:world.serverTime()}:{}),...(regionSha256?{regionSha256}:{}),...(voice?{voice:{available:voice.status().available}}:{})});
   const approvedIdentity = async (req,res) => {
     const identity = await auth.authenticate(req);
     if (!identity) {json(res,401,{error:'Sign in to join the town.'});return null;}
@@ -377,7 +378,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
             const {requestId,...command}=message;
             const officeWorkspace=await workspaceContext(officeWorkspaces,identity.userId,command);
             if(connections.get(identity.userId)!==connection || ws.readyState!==WebSocket.OPEN)return;
-            const result=world.command(identity.userId,command,{officeWorkspace});
+            const result=world.command(identity.userId,command,{officeWorkspace,sessionId:identity.sessionId??null});
             if(result.ok && avatarPreferences && ['appearance','movement'].includes(command.type))
               await avatarPreferences.save(identity.userId,world.accountAppearance(identity.userId));
             if(result.ok && command.type==='uncycle')await flushRides();
