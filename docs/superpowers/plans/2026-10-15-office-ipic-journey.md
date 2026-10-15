@@ -96,8 +96,8 @@ screen centre.
 - Metal, with #407's captions merged in uncommitted: 10 checks at 1440 and 390 px.
 - Independent review addressed.
 - Posted on #368 (issuecomment-6191475574). The #359 status comment is updated.
-- Also found: at 390 px, Play & rides is open by default and covers most of the film. It goes to the HUD
-  owners and was not changed.
+- At 390 px, Play & rides is closed when a page first loads at that width (`play-dock.js:17`). A frame
+  that seemed to show it open by default came from resizing a page loaded at 1440 px; corrected on #368.
 
 **#365 candidate in this journey (local only, reverted).** Candidate 1 was listed first in `SCREENING_MEDIA`
 (52,555 ms) with its media under `preview/public/assets/ipic/screening/`, uncommitted. The journey passed 31
