@@ -183,3 +183,21 @@ test('the film keeps its aspect on the wide IPIC screen: pillarboxed, never stre
   assert.ok(tall.repeat[1] === 2 && tall.offset[1] === -0.5, 'letterboxed top and bottom');
   assert.deepEqual(fitVideoToScreen(Number.NaN, 3), { repeat: [1, 1], offset: [0, 0] }, 'unknown size maps plainly until metadata arrives');
 });
+
+test('captions come from the active cues of a tracked track, because the video itself is never shown', () => {
+  // The film reaches the screen as texture frames; a browser draws cues only on a visible video
+  // element, so the panel must render them. 'hidden' keeps the cues tracked without drawing them.
+  const media = fakeMedia(), track = media.textTracks[0];
+  const { player } = setup({ media });
+  player.setCaptions(true);
+  assert.equal(track.mode, 'hidden');
+  track.activeCues = [{ text: 'Fixture clip: a test pattern' }, { text: 'for shared playback.' }];
+  assert.equal(player.captionText(), 'Fixture clip: a test pattern\nfor shared playback.');
+  player.setCaptions(false);
+  assert.equal(track.mode, 'disabled');
+  assert.equal(player.captionText(), '', 'captions off shows nothing');
+  player.setCaptions(true); track.activeCues = [];
+  assert.equal(player.captionText(), '', 'between cues shows nothing');
+  player.dispose();
+  assert.equal(player.captionText(), '');
+});

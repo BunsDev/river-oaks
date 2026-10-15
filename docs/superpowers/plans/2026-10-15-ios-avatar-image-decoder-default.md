@@ -44,6 +44,8 @@ remain unchanged. The fixture-only override remains available for diagnosis.
   server, desktop and Python tests, client build, demo checks and secret scan.
   It excludes physical GPU timing, Redis, browser experience journeys and human
   accessibility acceptance.
+- After merging `origin/main` at `873f750e`, `pnpm run verify` passed again on
+  the integration branch. The same ignored core receipt records this run.
 - An isolated private fixture on port 5186 served this branch to the paired
   iPhone 16 Pro Max. The first `devicectl` Safari launch did not reach the
   fixture; a repeat launch did. Its normal URL had no decoder override. At
@@ -71,10 +73,10 @@ remain unchanged. The fixture-only override remains available for diagnosis.
 - Collect a quieter frame sample before evaluating mobile pacing.
 - Capture bounded phone frame and portal timing only after the normal route is
   stable. The five-device GPU matrix and human gallery review remain separate.
-- Refresh from current `main`, run the required verification gates, then land a
-  reviewed PR with exact-head hosted `preview` and Vercel checks. Preserve the
+- Run the remaining verification gates, then land a reviewed PR with exact-head
+  hosted `preview` and Vercel checks. Preserve the
   old fixture worktree and its ignored receipts until evidence is archived.
 
-**Next action:** Run the browser experience journey and full gate, then refresh
-from main for exact-head hosted checks.
+**Next action:** Run the browser experience journey and full gate, then verify
+the PR's exact-head hosted checks against current main.
 Phone portal and quieter frame timing remain open acceptance work.

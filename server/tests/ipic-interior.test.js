@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { createSharedWorld } from '../world.js';
 import { createWalkingEnvironment } from '../../preview/src/walking.js';
 import { benchSeats } from '../../preview/src/world-interactions.js';
+import { IPIC_SCREEN } from '../../preview/src/ipic-plan.js';
 const data = JSON.parse(readFileSync(new URL('../../preview/public/data/district.json', import.meta.url)));
 const env = createWalkingEnvironment(data), room = env.rooms.find(r => r.interior);
 
@@ -50,6 +51,30 @@ test('shared visitor walks both flights, sits, stands, restores checkpoint, and 
   walk(f, -5.55, 20.7); walk(f, -1.4, 20.7); walk(f, -1.4, 4.8); walk(f, 0, 1);
   assert.equal(f.command({ type: 'travel', storeId: room.storeId, mode: 'leave' }).ok, true);
   assert.equal(env.roomAt(f.player().position[0], -f.player().position[1]), null);
+});
+
+test('recliner sitters see the screen from the seated eye; every other seat keeps the walking camera', () => {
+  // A recliner's back stands 1.55 m above the floor, above the seated eye, so a camera behind it
+  // sees only leather (#368). The seat names the pitch that aims the seated eye (0.65 m above the
+  // cushion, as walking-ui places it) at the screen centre.
+  const sites = benchSeats(data), recliners = sites.filter(s => s.buildId.startsWith('bench:ipic-recliner-'));
+  assert.equal(recliners.length, 8);
+  for (const site of recliners) {
+    const seat = room.ipicSeats.find(s => `bench:ipic-${s.key}` === site.buildId);
+    const aimed = seat.height + .65 + Math.tan(site.eyePitch) * (IPIC_SCREEN.d - seat.d);
+    assert.ok(Math.abs(aimed - IPIC_SCREEN.y) < 1e-9, `${site.buildId} aims at the screen centre`);
+  }
+  const pitch = id => recliners.find(s => s.buildId === id).eyePitch;
+  assert.ok(pitch('bench:ipic-recliner-1-0') > pitch('bench:ipic-recliner-0-0'), 'the front row looks up further');
+  assert.ok(sites.filter(s => !s.buildId.startsWith('bench:ipic-recliner-')).every(s => !('eyePitch' in s)), 'benches, café chairs and the lounge sofa keep the boom');
+  // The server publishes it with the seated pose; the checkpoint still holds only the claim.
+  const f = fixture();
+  route.forEach(p => walk(f, ...p));
+  const seated = f.command({ type: 'sit', buildId: 'bench:ipic-recliner-0-0', slot: 0 });
+  assert.equal(seated.ok, true, seated.error);
+  assert.equal(seated.player.sitting.eyePitch, pitch('bench:ipic-recliner-0-0'));
+  assert.equal(f.player().sitting.eyePitch, pitch('bench:ipic-recliner-0-0'));
+  assert.deepEqual(f.town.checkpoint().payload.players.find(p => p.id === 'ipic-guest').sitting, { buildId: 'bench:ipic-recliner-0-0', slot: 0 });
 });
 
 test('shared IPIC traversal rejects false height, solid railings and remote seating', () => {

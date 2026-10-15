@@ -2,7 +2,8 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { physicalSurface } from '../materials.js';
 import { thinStorefrontGlass } from '../storefront-materials.js';
-import { spaceObjectBlocks, spaceFootprint } from './space-document.js';
+import { buildSpaceWorld } from './space-document.js';
+export { buildSpaceWorld } from './space-document.js';
 
 const FINISHES = {
   plaster: ['#e5dfd2', .92, 0], oak: ['#b58b5c', .6, 0], walnut: ['#644634', .55, 0],
@@ -10,16 +11,6 @@ const FINISHES = {
   fabric: ['#e6d8bd', 1, 0], sage: ['#83917d', .88, 0], brass: ['#bda36d', .28, .82],
   charcoal: ['#333833', .65, .08], white: ['#eeeae2', .36, 0],
 };
-
-// Match Three's positive Y rotation, after converting scene Z back to north.
-export function buildSpaceWorld(space) {
-  const [west,south,east,north] = space.bounds_m;
-  const collisionPolygons = space.objects.filter(spaceObjectBlocks).map(spaceFootprint);
-  return {
-    bounds_m: [...space.bounds_m], terrain: { width: 2, height: 2, grid_origin_m: [west,south], spacing_m: [east-west,north-south], heights_m: [0,0,0,0] },
-    walkSurfaceOffset: 0, walkSpawn: [...space.spawn,0], collisionPolygons, buildings: [], stores: [],
-  };
-}
 
 export function createSpaceScene(space, theme = 'light') {
   const group = new THREE.Group(), items = new Map(), world = buildSpaceWorld(space);

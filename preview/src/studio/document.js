@@ -1,3 +1,5 @@
+import { createSpace, spaceRouteProfile } from './space-templates.js';
+import { assessSpace, normalizeAssessmentContext } from './space-assessment.js';
 import { isSpaceDocument, validateSpace, spaceItems, mutateSpace } from './space-document.js';
 import { blankRegion, editableRegion, nextRegionId } from '../region-draft.js';
 import { assertStudioBudget } from './limits.js';
@@ -7,6 +9,7 @@ export const STORAGE_KEY = 'river-oaks-world-studio-v1';
 export const MAX_REGION_BYTES = 128 * 1024;
 const clone = value => structuredClone(value);
 const encode = value => JSON.stringify(value);
+const after = (value, next) => value?.then ? value.then(next) : next(value);
 const validate = region => {
   // JSON round-tripping rejects sparse/nonfinite input the same way a file does.
   const text = encode(region);
@@ -29,23 +32,108 @@ export function studioItems(region) {
     ...region.places.map(p => ({ id: p.id, type: 'place', label: p.name, east: p.position[0], north: p.position[1] })),
   ];
 }
-export function createStudioDocument(initial = blankRegion(), { historyLimit = 80 } = {}) {
-  let region = validate(initial), past = [], future = [], saved = encode(region), savedRecord = null, revision = 0;
-  const transact = next => {
+export function createStudioDocument(initial = blankRegion(), { historyLimit = 80, assessmentContext = null, routeBudget, assessmentRunner } = {}) {
+  let region = validate(initial), context = isSpaceDocument(region) ? normalizeAssessmentContext(assessmentContext) : null;
+  const snapshot = () => ({ region, context });
+  let past = [], future = [], saved = encode(snapshot()), savedRecord = null, revision = 0, assessment = null, rejected = null;
+  const jobs = new Set();
+  let refreshing = null;
+  const cancelled = () => new DOMException('Assessment cancelled. The draft is unchanged.', 'AbortError');
+  const invalidate = () => { for (const controller of jobs) controller.abort(); assessment = null; rejected = null; refreshing = null; };
+  const checkRevision = (baseRevision, signal) => {
+    if (signal?.aborted) throw cancelled();
+    if (baseRevision !== revision) throw Error('The document changed; start a fresh edit.');
+  };
+  const assess = (next, { baseRevision = revision, signal } = {}) => {
+    if (!assessmentRunner || !isSpaceDocument(next) || !context) return assessSpace(next, context, { revision: baseRevision, maxWork: routeBudget });
+    const controller = new AbortController(), profile = clone(context);
+    const abort = () => controller.abort();
+    signal?.addEventListener('abort', abort, { once: true });
+    if (signal?.aborted) controller.abort();
+    jobs.add(controller);
+    return Promise.resolve().then(() => {
+      checkRevision(baseRevision, controller.signal);
+      return assessmentRunner(next, profile, { revision: baseRevision, maxWork: routeBudget, signal: controller.signal });
+    }).then(result => {
+      checkRevision(baseRevision, controller.signal);
+      if (result.revision !== baseRevision || encode(result.context) !== encode(profile)) throw Error('Stale assessment response.');
+      return result;
+    }).finally(() => { jobs.delete(controller); signal?.removeEventListener('abort', abort); });
+  };
+  const assertCandidate = (next, { baseRevision = revision, signal } = {}) => {
+    checkRevision(baseRevision, signal);
     next = validate(next);
-    if (encode(next) === encode(region)) return false;
-    past.push(region); if (past.length > historyLimit) past.shift();
-    region = next; future = []; revision++; return true;
+    return after(assess(next, { baseRevision, signal }), result => {
+      checkRevision(baseRevision, signal);
+      if (context && result.status !== 'passed') {
+        const changed = next.objects?.filter(item => encode(item) !== encode(region.objects?.find(old => old.id === item.id))).map(item => item.id) ?? [];
+        for (const finding of result.findings) finding.objectIds = [...new Set([...changed, ...finding.objectIds])];
+        rejected = result;
+        const error = Error(result.findings[0]?.message ?? 'Template version is not assessed. Select a supported program before editing.');
+        error.assessment = clone(result); throw error;
+      }
+      return { next, result };
+    });
+  };
+  const commit = (next, nextContext, result = null) => {
+    if (encode(next) === encode(region) && encode(nextContext) === encode(context)) return false;
+    past.push(snapshot()); if (past.length > historyLimit) past.shift();
+    invalidate(); region = next; context = nextContext; future = []; revision++; assessment = result ? { ...result, revision } : null; rejected = null; return true;
+  };
+  const transact = (next, options) => {
+    return after(assertCandidate(next, options), checked => commit(checked.next, context, checked.result));
   };
   const api = {
     get value() { return clone(region); },
     get revision() { return revision; },
+    get assessmentContext() { return clone(context); },
+    get assessment() {
+      if (assessment) return clone(assessment);
+      if (!assessmentRunner || !context || !isSpaceDocument(region)) return clone(assessment ??= assess(region));
+      return { ...assessSpace(region, null, { revision }), context: clone(context), status: 'pending' };
+    },
+    refreshAssessment() {
+      if (assessment) return Promise.resolve(clone(assessment));
+      if (refreshing?.revision === revision) return refreshing.promise;
+      const baseRevision = revision;
+      const promise = Promise.resolve(assess(region, { baseRevision })).then(result => {
+        checkRevision(baseRevision); assessment = result; return clone(result);
+      }).finally(() => { if(refreshing?.promise===promise)refreshing=null; });
+      refreshing = { revision: baseRevision, promise }; return promise;
+    },
+    restoreRequiredRoles() {
+      const profile = spaceRouteProfile(context);
+      if (!isSpaceDocument(region) || !profile) throw Error('Select a supported assessment program first.');
+      const next = clone(region), stock = createSpace(profile.templateId);
+      for (const target of profile.targets) {
+        const item = next.objects.find(o => o.id === target.objectId);
+        if (item) item.kind = target.kind;
+        else next.objects.push(stock.objects.find(o => o.id === target.objectId));
+      }
+      return transact(next);
+    },
+    cancelPendingAssessments() { for (const controller of jobs) controller.abort(); refreshing=null; },
+    dispose() { invalidate(); },
+    get rejectedAssessment() { return clone(rejected); },
+    assessCandidate(next, options) { return after(assertCandidate(next, options), checked => clone(checked.result)); },
+    commitCandidate(next, options) { return transact(next, options); },
+    selectAssessmentContext(value) {
+      if (!isSpaceDocument(region)) throw Error('Choose a furnished space first.');
+      return commit(region, normalizeAssessmentContext(value));
+    },
+    open(next, { assessmentContext = null } = {}) {
+      next = validate(next);
+      const nextContext = isSpaceDocument(next) ? normalizeAssessmentContext(assessmentContext) : null;
+      const changed = commit(next, nextContext);
+      if (!changed) { invalidate(); revision++; }
+      return changed;
+    },
     get items() { return studioItems(region); },
-    get dirty() { return encode(region) !== saved; },
+    get dirty() { return encode(snapshot()) !== saved; },
     get canUndo() { return past.length > 0; },
     get canRedo() { return future.length > 0; },
     serialize() { return JSON.stringify(region, null, 2); },
-    replace(next) { const changed = transact(next); if (!changed) revision++; return changed; },
+    replace(next) { return after(transact(next), changed => { if (!changed) { invalidate(); revision++; } return changed; }); },
     previewBuildingInterior(id, interior) {
       if (isSpaceDocument(region)) throw new Error('Furnished spaces keep their existing document format.');
       const next = clone(region), building = next.buildings.find(item => item.id === id);
@@ -65,7 +153,7 @@ export function createStudioDocument(initial = blankRegion(), { historyLimit = 8
         const [w,s,e,n]=region.bounds_m;
         for(let y=s+2;y<n-2;y+=2)for(let x=w+2;x<e-2;x+=2){
           if(region.objects.some(item=>Math.hypot(item.east-x,item.north-y)<2))continue;
-          try{const next=mutateSpace(region,'add',type,{east:x,north:y});transact(next.value);return next.id;}catch{ /* Try the next bounded position. */ }
+          try{const next=mutateSpace(region,'add',type,{east:x,north:y});return after(transact(next.value), () => next.id);}catch(error){ if(error.assessment)throw error; /* Try the next structurally valid position. */ }
         }
         throw Error('No clear insertion point remains.');
       }
@@ -86,7 +174,7 @@ export function createStudioDocument(initial = blankRegion(), { historyLimit = 8
       throw new Error('No clear insertion point remains, or the region object limit was reached.');
     },
     insert(type, patch) {
-      if(isSpaceDocument(region)){const next=mutateSpace(region,'add',type,patch);transact(next.value);return next.id;}
+      if(isSpaceDocument(region)){const next=mutateSpace(region,'add',type,patch);return after(transact(next.value), () => next.id);}
       const allowed = { building: ['east','north','width','depth','height','yaw'], tree: ['east','north','height','radius'], place: ['east','north','label'] }[type];
       if (!allowed || !patch || typeof patch !== 'object' || Array.isArray(patch) || Object.keys(patch).some(key => !allowed.includes(key))) throw Error('Invalid object properties.');
       const value = { east: 0, north: 0, width: 12, depth: 10, height: type === 'building' ? 7 : 6, yaw: 0, radius: 2.5, label: 'New place', ...patch };
@@ -96,8 +184,8 @@ export function createStudioDocument(initial = blankRegion(), { historyLimit = 8
       else next.places.push({ id, name: value.label, position: [value.east,value.north] });
       transact(next); return id;
     },
-    update(id, patch) {
-      if(isSpaceDocument(region))return transact(mutateSpace(region,'update',id,patch).value);
+    update(id, patch, options) {
+      if(isSpaceDocument(region))return transact(mutateSpace(region,'update',id,patch).value, options);
       const item = api.items.find(value => value.id === id);
       if (!item) throw new Error('Select an existing object.');
       const allowed = { arrival: ['east','north'], building: ['east','north','width','depth','height','yaw'], tree: ['east','north','height','radius'], place: ['east','north','label'] }[item.type];
@@ -107,7 +195,7 @@ export function createStudioDocument(initial = blankRegion(), { historyLimit = 8
       else if (item.type === 'building') Object.assign(next.buildings.find(b => b.id === id), { center: [value.east,value.north], size: [value.width,value.depth,value.height], yaw_deg: value.yaw });
       else if (item.type === 'tree') Object.assign(next.trees.find(t => t.id === id), { position: [value.east,value.north], height_m: value.height, crown_radius_m: value.radius });
       else Object.assign(next.places.find(p => p.id === id), { position: [value.east,value.north], name: value.label });
-      return transact(next);
+      return transact(next, options);
     },
     remove(id) {
       if(isSpaceDocument(region))return transact(mutateSpace(region,'remove',id).value);
@@ -116,8 +204,8 @@ export function createStudioDocument(initial = blankRegion(), { historyLimit = 8
       const next = clone(region), key = { building:'buildings', tree:'trees', place:'places' }[item.type];
       next[key] = next[key].filter(value => value.id !== id);return transact(next);
     },
-    undo() { if (!past.length) return false;future.push(region);region = past.pop();revision++;return true; },
-    redo() { if (!future.length) return false;past.push(region);region = future.pop();revision++;return true; },
+    undo() { if (!past.length) return false;future.push(snapshot());invalidate();({ region, context } = past.pop());revision++;return true; },
+    redo() { if (!future.length) return false;past.push(snapshot());invalidate();({ region, context } = future.pop());revision++;return true; },
     restore(storage) {
       const raw = storage.getItem(STORAGE_KEY);
       savedRecord = raw;
@@ -125,16 +213,37 @@ export function createStudioDocument(initial = blankRegion(), { historyLimit = 8
       const entry = JSON.parse(raw);
       if (typeof entry?.revision !== 'string') throw new Error('Saved draft is invalid. Import a Studio file to recover.');
       const candidate = validate(entry.region);
-      region = candidate; revision++; saved = encode(region); past = []; future = [];return true;
+      const nextContext = isSpaceDocument(candidate) ? normalizeAssessmentContext(entry.assessmentContext) : null;
+      invalidate(); region = candidate; context = nextContext; revision++;
+      saved = encode(snapshot()); past = []; future = [];return true;
     },
     save(storage) {
       const raw = storage.getItem(STORAGE_KEY);
       if (raw !== savedRecord) throw new Error('A draft changed in another tab. Export your work, then reopen the saved draft.');
       const next = globalThis.crypto.randomUUID();
-      const record = encode({ revision:next,region });
+      const record = encode({ revision:next,region, ...(context ? { assessmentContext: context } : {}) });
       storage.setItem(STORAGE_KEY, record);
-      savedRecord = record;saved = encode(region);
+      savedRecord = record;saved = encode(snapshot());
     },
   };
   return api;
+}
+
+// Detached, bounded-operation preview only: no save, history or accepted-state
+// mutation. The designer validates the final candidate through the live document.
+export function createStudioEditPreview(initial) {
+  if (!isSpaceDocument(initial)) return createStudioDocument(initial);
+  let region = validate(initial), operations = 0;
+  const apply = (op, id, patch) => {
+    if (++operations > 64) throw Error('Use at most 64 preview operations.');
+    const next = mutateSpace(region, op, id, patch, { validateResult: false });
+    region = next.value; return next.id;
+  };
+  return {
+    get value() { return clone(region); },
+    get items() { return studioItems(region); },
+    update(id, patch) { apply('update', id, patch); },
+    remove(id) { apply('remove', id); },
+    insert(type, patch) { return apply('add', type, patch); },
+  };
 }
