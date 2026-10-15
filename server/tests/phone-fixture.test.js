@@ -185,3 +185,32 @@ test('opt-in phone frame report waits for a playable view and retains bounded re
     body: JSON.stringify({ ...report, sample: { ...report.sample, frames: [[-1, 4]] } }),
   })).status, 400);
 });
+
+test('phone fixture can retain only bounded redacted app diagnostic summaries', { timeout: 90000 }, async t => {
+  const phone = await startBrowserFixture({ env: { RIVER_OAKS_PHONE_FIXTURE_HOST: '127.0.0.1' } });
+  t.after(() => phone.close());
+  const ordinary = await (await fetch(phone.origin)).text();
+  assert.doesNotMatch(ordinary, /html-proxy/);
+  const html = await (await fetch(`${phone.origin}/?phone-errors=1`)).text();
+  const proxy = html.match(/<script type="module" src="([^"]*html-proxy[^"]*)"/)?.[1];
+  assert.ok(proxy, 'Vite proxies the opt-in inline module');
+  const script = await (await fetch(new URL(proxy, phone.origin))).text();
+  assert.match(script, /diagnosticLogs/);
+  assert.doesNotMatch(script, /buildDebugReport\(/);
+  const desktop = await startBrowserFixture();
+  t.after(() => desktop.close());
+  assert.doesNotMatch(await (await fetch(`${desktop.origin}/?phone-errors=1`)).text(), /html-proxy/);
+
+  const body = { mode: 'normal', elapsedMs: 15000, diagnostics: {
+    errors: [{ at: 14000, type: 'error', message: 'synthetic error' }],
+    console: [], network: [],
+  } };
+  const post = value => fetch(`${phone.origin}/__phone_readiness`, {
+    method: 'POST', headers: { Origin: phone.origin, 'Content-Type': 'application/json' }, body: JSON.stringify(value),
+  });
+  assert.equal((await post(body)).status, 204);
+  const reports = await (await fetch(`${phone.origin}/__phone_readiness`)).json();
+  assert.deepEqual(reports[0].diagnostics.errors, [{ at: 14000, type: 'error', message: 'synthetic error' }]);
+  assert.equal((await post({ ...body, diagnostics: { ...body.diagnostics,
+    errors: Array.from({ length: 5 }, () => ({ at: 1, type: 'error', message: 'too many' })) } })).status, 400);
+});

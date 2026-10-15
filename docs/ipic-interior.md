@@ -138,12 +138,12 @@ The server walks these routes in `server/tests/ipic-routes.test.js`. It covers:
 the Tuck Room back shelving, the IPIC Express counter and the lift front. They now
 collide; none is on a public route.
 
-**Open defects**, kept as `todo` tests or recorded allowances:
+**Open defects**, kept as a `todo` test or recorded allowances:
 
-1. **The lounge sofa traps its sitter.** Standing up returns `stand_blocked`, even in
-   an empty room: every stand ray crosses the coffee table, an arm or the back, and
-   the pocket in front of the cushions is closed to the server body. The only way up
-   is Places > travel out. Fix needs a server stand point or a layout change.
+1. ~~**The lounge sofa traps its sitter.**~~ Fixed: each sofa place names where its sitter
+   steps out, past the arm at its end (`ipic-plan.js` `stand`). The server's `stand()` tries
+   that spot, with the usual destination checks, before its radial search, which never
+   finds a straight clear path out of the sofa.
 2. **The lounge-to-auditorium passage** is 1.005 m against the 1.01 m accepted body.
 3. **Drawn without collision, where a body can stand:**
    - recliner bases, footrests and side tables, and the sofa cushions: seat zones,

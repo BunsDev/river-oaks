@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { planStoreRooms } from '../src/store-rooms.js';
 import { createWalkingEnvironment, createWalkingState, stepWalking, steerWalkingToward } from '../src/walking.js';
+import { isVenueRoom } from '../src/venue-rooms.js';
 
 const world = JSON.parse(readFileSync(new URL('../public/data/district.json', import.meta.url)));
 const environment = createWalkingEnvironment(world);
@@ -53,7 +54,7 @@ test('IPIC specialization leaves other tenant footprints and generic cinemas alo
   const generic = structuredClone(world);
   generic.stores.find(s => s.id === room.storeId).name = 'Other Cinema';
   const previous = planStoreRooms(generic);
-  for (const next of environment.rooms.filter(r => r.storeId !== room.storeId)) {
+  for (const next of environment.rooms.filter(r => r.storeId !== room.storeId && !isVenueRoom(r))) {
     assert.deepEqual(next.footprint, previous.find(r => r.storeId === next.storeId).footprint, next.name);
   }
   assert.equal(previous.find(r => r.storeId === room.storeId).depth, 9);
