@@ -18,8 +18,11 @@ export function retireAfter(ws, lifetimeMs, { noticeMs = ROTATE_NOTICE_MS, notif
   return () => { clearTimeout(notice); clearTimeout(close); };
 }
 
-// The rotate notice a page receives: how long it has before this socket closes.
-export const rotateNotice = (lifetimeMs, noticeMs = ROTATE_NOTICE_MS) => ({ type: 'rotate', closeInMs: Math.min(noticeMs, lifetimeMs) });
+// The rotate notice a page receives: how long it has before this socket closes, and the
+// connection it is leaving, which the fresh socket presents (`continues`) so voice can follow.
+export const rotateNotice = (lifetimeMs, noticeMs = ROTATE_NOTICE_MS, connectionId = null) => ({ type: 'rotate', closeInMs: Math.min(noticeMs, lifetimeMs), ...(connectionId ? { connectionId } : {}) });
+// A `continues` value from the upgrade URL, or null.
+export const continuedConnection = value => typeof value === 'string' && /^[A-Za-z0-9-]{8,64}$/.test(value) ? value : null;
 
 // Tells every page the world is updating, waits briefly for the close handshakes, then makes
 // sure no socket outlives the shutdown.

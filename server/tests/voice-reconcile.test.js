@@ -8,7 +8,7 @@ import { WebSocket } from 'ws';
 import { createGameServer } from '../app.js';
 import { createRedisRoom } from '../redis-room.js';
 import { createSharedWorld } from '../world.js';
-import { createVoiceService, createMemoryVoiceLeases, createRedisVoiceLeases, voiceSpaceName } from '../voice.js';
+import { createVoiceService, createMemoryVoiceLeases, createRedisVoiceLeases, voiceSpaceName, VOICE_MOVE_GRACE_MS } from '../voice.js';
 import { createFakeLiveKit } from './livekit-fixture.js';
 import { approvedWaitlist } from './waitlist-fixture.js';
 
@@ -28,15 +28,34 @@ function service({ leases: wrap = store => store } = {}) {
   return { voice, livekit, leases, join, reconcile, advance: ms => { time += ms; } };
 }
 
-test('a present player with a matching lease keeps its identity; a replaced connection loses it on the next reconcile', async () => {
+test('a present player with a matching lease keeps its identity; a replaced connection loses it once the move grace runs out', async () => {
   const f = service();
   const joined = await f.join('alice', 'c1');
   assert.deepEqual([...await f.reconcile([{ userId: 'alice', connectionId: 'c1', space: 'outdoor' }, { userId: 'bob', connectionId: 'c1', space: 'outdoor' }])], [['alice', joined.participantIdentity], ['bob', null]]);
+  // Another connection (a new tab, or a page mid hand-over): held for the grace, then revoked.
+  assert.deepEqual([...await f.reconcile([{ userId: 'alice', connectionId: 'c2', space: 'outdoor' }])], [['alice', joined.participantIdentity]]);
+  f.advance(VOICE_MOVE_GRACE_MS - 1);
+  assert.deepEqual([...await f.reconcile([{ userId: 'alice', connectionId: 'c2', space: 'outdoor' }])], [['alice', joined.participantIdentity]]);
+  f.advance(1);
   assert.deepEqual([...await f.reconcile([{ userId: 'alice', connectionId: 'c2', space: 'outdoor' }])], [['alice', null]]);
   await flush();
   assert.deepEqual(f.livekit.called('removeParticipant'), [['removeParticipant', room('outdoor'), joined.participantIdentity]]);
   assert.equal((await f.leases.getMany(['alice'])).size, 0);
   assert.deepEqual([...await f.reconcile([{ userId: 'alice', connectionId: 'c2', space: 'outdoor' }])], [['alice', null]], 'the stale tab cannot be revived by its successor');
+});
+
+test('a page that moves to a fresh socket brings its lease along and stays in the room', async () => {
+  const f = service();
+  const joined = await f.join('alice', 'c1');
+  await f.reconcile([{ userId: 'alice', connectionId: 'c2', space: 'outdoor' }]);
+  assert.equal(await f.voice.continueConnection({ userId: 'alice', from: 'c1', to: 'c2' }), true);
+  f.advance(VOICE_MOVE_GRACE_MS * 3);
+  assert.deepEqual([...await f.reconcile([{ userId: 'alice', connectionId: 'c2', space: 'outdoor' }])], [['alice', joined.participantIdentity]]);
+  await flush();
+  assert.deepEqual(f.livekit.called('removeParticipant'), [], 'nobody was removed');
+  const renewed = await f.voice.renew({ userId: 'alice', worldId: 'river-oaks', connectionId: 'c2', space: 'outdoor', participantIdentity: joined.participantIdentity });
+  assert.equal(renewed.ok, true, 'the fresh connection renews the same participant');
+  assert.equal((await f.voice.renew({ userId: 'alice', worldId: 'river-oaks', connectionId: 'c1', space: 'outdoor', participantIdentity: joined.participantIdentity })).reason, 'stale_connection', 'the socket it left cannot');
 });
 
 test('walking into an interior revokes the lease after three consecutive mismatches, not on a doorway flicker', async () => {
@@ -118,8 +137,12 @@ test('the hosted room tick reconciles leases against its committed presence', li
   const joined = await voice.join({ userId: 'alice', worldId: 'river-oaks', connectionId: 'alice-socket', space: 'outdoor' });
   await tick();
   assert.deepEqual((await player()).voice, { space: 'outdoor', id: joined.participantIdentity });
-  // Another tab replaces the connection: the old lease goes with it.
+  // Another tab replaces the connection: the old lease goes with it once the move grace
+  // runs out (a page handing over would have moved it by then).
   assert.equal((await hosted.request({ type: 'join', identity: identity('alice'), connectionId: 'alice-second' })).ok, true);
+  await tick();
+  assert.deepEqual((await player()).voice, { space: 'outdoor', id: joined.participantIdentity }, 'held during the grace');
+  time += VOICE_MOVE_GRACE_MS;
   await tick();
   assert.deepEqual((await player()).voice, { space: 'outdoor', id: null });
   assert.deepEqual(livekit.called('removeParticipant'), [['removeParticipant', room('outdoor'), joined.participantIdentity]]);

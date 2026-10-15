@@ -25,7 +25,7 @@ export function createVoiceChat({ request, preferences, loadTransport = () => im
   if (typeof request !== 'function' || !preferences) throw new Error('Voice needs a request function and preferences');
   const state = { status: 'unavailable', mic: 'off', deafened: false, playbackBlocked: false, space: null, participantIdentity: null, expiresAt: 0, message: MESSAGES.unavailable, peers: new Map() };
   let generation = 0, room = null, sdk = null, audioContext = null, renewTimer = null, renewRetried = false, joinedAt = 0;
-  let available = false, authorizedSpace = null, wanted = false, micGranted = false, disposed = false, token = null, restoreMicUntil = 0;
+  let available = false, authorizedSpace = null, wanted = false, micGranted = false, disposed = false, token = null, restoreMicUntil = 0, moved = false;
   const identityToPlayer = new Map(), playerToIdentity = new Map(), lastPlayers = new Map();
   // One audio graph per subscribed remote track, keyed by participant identity
   // (a track can arrive before the snapshot names its player; it stays silent until then).
@@ -183,8 +183,9 @@ export function createVoiceChat({ request, preferences, loadTransport = () => im
     catch { if (stale(gen)) return; if (!renewRetried) { renewRetried = true; scheduleRenew(RENEW_RETRY_MS); } else leave('lost'); return; }
     if (stale(gen)) return;
     const { status, data } = response;
-    if (status === 200) { renewRetried = false; token = data.token; set({ expiresAt: data.expiresAt }); scheduleRenew(data.renewMs ?? 15_000); return; }
+    if (status === 200) { moved = false; renewRetried = false; token = data.token; set({ expiresAt: data.expiresAt }); scheduleRenew(data.renewMs ?? 15_000); return; }
     if (status === 409 && data?.error === 'space_changed') { void rejoin(); return; }
+    if (status === 409 && data?.error === 'stale_connection' && moved) { moved = false; void rejoin(); return; }
     if (status === 503) { if (!renewRetried) { renewRetried = true; scheduleRenew(RENEW_RETRY_MS); } else leave('lost'); return; }
     leave('revoked');
   }
@@ -290,9 +291,10 @@ export function createVoiceChat({ request, preferences, loadTransport = () => im
       restoreMicUntil = !terminal && state.mic === 'on' ? now() + MIC_RESTORE_MS : 0;
       leave('connection', { rejoinWanted: !terminal });
     },
-    // The town moved this page to a fresh socket. The voice lease belongs to the old one, so
-    // take a fresh lease now, keeping the microphone and deafen as they were.
-    onConnectionChanged() { if (state.status === 'joined') void rejoin(); },
+    // The town moved this page to a fresh socket and its lease followed (server voice.js
+    // continueConnection): renew now, without leaving the room. A town that could not move it
+    // answers stale_connection, and voice rejoins, keeping the microphone and deafen.
+    onConnectionChanged() { if (state.status !== 'joined') return; moved = true; stopRenew(); void renew(); },
     playerFor: identity => identityToPlayer.get(identity) ?? null,
     debug() { return { ...snapshot(), peers: Object.fromEntries(snapshot().peers), speaking: [...speakingIds()], wanted, micGranted, hasRoom: Boolean(room), hasAudioContext: Boolean(audioContext), graphs: [...graphs.keys()], renewScheduled: renewTimer !== null, statuses: STATUSES }; },
     dispose() {
