@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { once } from 'node:events';
+import { runInNewContext } from 'node:vm';
 import WebSocket from 'ws';
 import { startBrowserFixture } from '../../preview/e2e/fixture-server.js';
 import { phoneFixtureHost } from './phone-fixture-host.js';
@@ -51,4 +52,24 @@ test('ordinary browser fixture keeps anonymous entry unauthenticated', { timeout
   const response = await fetch(`${fixture.origin}/auth/session`);
   assert.equal((await response.json()).authenticated, false);
   assert.equal(response.headers.get('set-cookie'), null);
+});
+
+test('HTML-image decoder control applies only to the phone fixture and only when requested', { timeout: 90000 }, async t => {
+  const phone = await startBrowserFixture({ env: { RIVER_OAKS_PHONE_FIXTURE_HOST: '127.0.0.1' } });
+  t.after(() => phone.close());
+  const normal = await (await fetch(phone.origin)).text();
+  assert.doesNotMatch(normal, /phone-decoder-control/);
+  const controlled = await (await fetch(`${phone.origin}/?phone-decoder=html`)).text();
+  const injected = controlled.match(/<script id="phone-decoder-control">([^<]+)<\/script>/)?.[1];
+  assert.ok(injected, 'requested phone control is present in served HTML');
+  assert.ok(controlled.indexOf('phone-decoder-control') < controlled.indexOf('/assets/boot/first-paint.js'));
+  const context = { createImageBitmap() {}, document: { documentElement: { dataset: {} } } };
+  runInNewContext(injected, context);
+  assert.equal(context.createImageBitmap, undefined);
+  assert.equal(context.document.documentElement.dataset.phoneDecoder, 'html-images');
+
+  const desktop = await startBrowserFixture();
+  t.after(() => desktop.close());
+  const desktopHtml = await (await fetch(`${desktop.origin}/?phone-decoder=html`)).text();
+  assert.doesNotMatch(desktopHtml, /phone-decoder-control/);
 });

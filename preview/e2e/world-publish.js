@@ -250,6 +250,8 @@ async page=>{
     && document.querySelector('#view-name')?.textContent==='Moon Garden',null,{timeout:60000});
   const live=await (await page.request.get(`${origin}/api/world-data?world=moon-garden`)).json();
   check(live.world.communityLocations.some(place=>place.name==='Revised Moon Arch'),'Applying a saved draft updates the published region');
+  await page.waitForFunction(sha=>window.__riverMultiplayer?.().snapshot?.regionSha256===sha,live.regionSha256,{timeout:60000});
+  await page.locator('.world-map-place title').filter({hasText:'Revised Moon Arch'}).waitFor({state:'attached',timeout:60000});
   check((await page.locator('.world-map-place title').allTextContents()).includes('Revised Moon Arch'),'The map follows the applied region revision');
   check((await page.evaluate(()=>window.__riverMultiplayer().snapshot.regionSha256))===live.regionSha256,'The client reconnects to the applied region');
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
@@ -274,6 +276,7 @@ async page=>{
     && document.querySelector('#view-name')?.textContent==='Moon Garden',null,{timeout:60000});
   const restored=await (await page.request.get(`${origin}/api/world-data?world=moon-garden`)).json();
   check(restored.world.communityLocations.some(place=>place.name==='Moon Arch'),'Saving and applying the retained version restores the live region');
+  await page.waitForFunction(sha=>window.__riverMultiplayer?.().snapshot?.regionSha256===sha,restored.regionSha256,{timeout:60000});
   check(restored.regionSha256===(await page.evaluate(()=>window.__riverMultiplayer().snapshot.regionSha256)),'The client reconnects to the restored region');
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
   await openHudSpace(page, 'explore-section');

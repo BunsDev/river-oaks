@@ -86,6 +86,12 @@ quality, pipeline, calls, triangles, geometries and textures. Use
 transition and `window.__riverRenderAudit.stop()` immediately after it; keep the
 returned frames and overflow flag in the receipt. An overflowed sample is invalid.
 
+If Safari terminates WebContent during loading, `?phone-decoder=html` on this
+private fixture selects the HTML image decoder control from iOS probe #309.
+Compare it with the ordinary URL and `?ao=off`, recording each visible outcome.
+The decoder control is diagnostic only; a visit using it cannot pass the phone
+GPU row or justify a production decoder change.
+
 Walk the same route by hand: enter the gallery, walk to the back wall, go up,
 come down, leave, visit Cartier, and return. Record cold and return preparation
 times separately, plus the ascent and descent frame intervals and a capture at the
@@ -127,4 +133,5 @@ results table. A green local or hosted gate is not a substitute for these runs.
 
 | Date | Device / GPU | Browser | Item | Result | Receipt |
 | --- | --- | --- | --- | --- | --- |
+| 2026-10-14 CDT | iPhone 16 Pro Max / renderer unavailable | Safari | Phone prerequisite | Failed startup: Safari showed “a problem repeatedly occurred” before the guest joined; no GPU timing captured. | [Phone fixture ledger](2026-10-15-procedural-phone-gpu-fixture.md) |
 | — | — | — | — | Not run yet | — |
