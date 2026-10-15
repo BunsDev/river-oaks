@@ -137,7 +137,7 @@ export function startStudio(host) {
   }
   function setWalk(enabled){
     try {if(enabled)doc.cancelPendingAssessments();viewport.walk(enabled);walking=enabled;document.body.dataset.mode=enabled?'walk':'edit';$('#studio-walk').textContent=enabled?'Return to editor':'Walk through';
-      $('#studio-hint').textContent=enabled?'WASD / arrows · drag to look · Shift to hurry · Esc to edit':'Drag to orbit · right-drag to pan · scroll to zoom';renderPanels();say(enabled?(isSpaceDocument(doc.value)?'Private space walkthrough. Walls and furniture block movement.':'Private blockout playtest. Buildings use solid collision; interiors are not furnished in this view.'):'Returned to your draft.');if(!enabled)refreshRoutes();
+      $('#studio-hint').textContent=enabled?'WASD / ↑↓ to move · ←→ or drag to turn · Shift to hurry · Esc to edit':'Drag to orbit · right-drag to pan · scroll to zoom';renderPanels();say(enabled?(isSpaceDocument(doc.value)?'Private space walkthrough. Walls and furniture block movement.':'Private blockout playtest. Buildings use solid collision; interiors are not furnished in this view.'):'Returned to your draft.');if(!enabled)refreshRoutes();
     }catch(error){say(error.message);}
   }
   for(const button of host.querySelectorAll('[data-add]'))button.addEventListener('click',()=>run(async()=>{selected=await doc.add(button.dataset.add);render();say('Object added. Use the inspector or the handles to shape it.');}));
