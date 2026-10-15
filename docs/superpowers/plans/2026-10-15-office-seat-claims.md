@@ -21,9 +21,12 @@ would refuse. Final desk footprints are #362's; nothing here invents them.
 2. **Occupied clearance = turning radius + seated footprint (0.888 + 1.27 = 2.158 m)**, the same sum the
    legacy room's `validateRoomPlan` uses. No radius is shrunk. Every stand point lies inside its own
    seat's envelope, so nobody else can stand there and standing up is never body-blocked.
-3. **A claim is refused while another standing visitor is inside the envelope** (`office_seat_blocked`),
-   so sitting can never trap someone. Moves exclude an envelope that already contains the mover (only a
-   restored checkpoint could produce that), so nobody is ever trapped.
+3. **A taken seat also keeps a 0.7 m disc around its stand point clear** (`OFFICE_BODY_SPACING`, the spacing
+   landings and standing already used). Independent review found that without it a bystander just outside
+   the envelope could keep the occupant seated (`de13bbcb`). A claim is refused while another standing
+   visitor is inside either area (`office_seat_blocked`), so sitting never traps anyone and standing up is
+   never body-blocked. A standing visit inside a taken seat is therefore unreachable: moves no longer
+   tolerate it, and a checkpoint holding one fails closed.
 4. **Persistence needs checkpoint v11.** Production runs the gateway on Vercel functions
    (`maxDuration` 300 s), so the Redis lease changes hands at least every few minutes; transient seats
    would stand people up. v11 adds optional `seat: {id}` to office visits, validated as exactly the plan
@@ -58,6 +61,24 @@ this branch, update that paragraph's "fenced at v10" to v11.
 | `REDIS_URL=<isolated :16473> node --test server/tests/*.test.js` (before UI work, after server + v11) | 727/729; the two failures were timeouts (`offices-transport` 7 s command, `design-library-gateway` 23 s) and pass alone 4/4 |
 | `REDIS_URL=… node --test server/tests/penthouse-seats-redis.test.js` | 1/1: two coordinators, one winner; claim survives replacement; departure after grace releases |
 | `node --test preview/tests/*.test.js` | 3101/3103 + 1 skip; the failure (plaza mill AI budget, 24 s) passes alone |
+| `node preview/e2e/office-penthouse-runner.mjs` at `d79016c1` + journey edits | passed 13 checks: seated at `[3.65, 5.6]` facing 0, eye 0.480 m lower, desk offered, keys do not move, stood at `[3.65, 3.55]`; stairs eye rise 3.800 m. Its screenshot showed **Stand up · Z** behind the header (fixed in `de13bbcb`, now asserted) |
+| Rerun before the fix | failed before any office step: `#office-lobby` not attached in 15 s (load ~80) |
+| After the review fix: office preview tests | 82/82 |
+| After the review fix: `REDIS_URL=… node --test server/tests/penthouse-*.test.js server/tests/offices*.test.js` | 26/26 |
+| After the review fix: `REDIS_URL=<isolated :16473> node --test server/tests/*.test.js` at `de13bbcb` | 732/732, 0 skipped |
+
+## Independent review (subagent, 2026-10-15, at `d79016c1`)
+
+- **Confirmed, fixed in `de13bbcb`:** a bystander within 0.7 m of a stand point but outside the envelope
+  blocked `stand` (reproduced at [3.65, 3.44] beside desk A1). Regressions: plan disc test, server
+  `a visitor beside the stand point blocks the claim…`, `nobody walks… beside its stand point`.
+- **Folded in:** the escape rule (broader than an escape) and the client's matching rule were removed;
+  restore now refuses the unreachable state. **Seat taken** replaces **Sit down** for an occupied chair.
+  Rollout-audit proof labels now say v11.
+- **Accepted as is:** a stale tick snapshot can briefly flip the client's seat state after a reply; the
+  next snapshot corrects it, the same as the existing floor adoption.
+- **Deferred to merge time:** `docs/offices.md`'s checkpoint paragraph ("fenced at v10") is rewritten by
+  Codex's branch; reconcile it with whichever lands second.
 
 ## Gaps / next
 
