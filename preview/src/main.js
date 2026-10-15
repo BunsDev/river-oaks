@@ -1,6 +1,6 @@
 import { createOfficeUI } from './office-ui.js';
 import { createIpicScreening } from './ipic-screening-ui.js';
-import { IPIC_INTERIOR } from './ipic-plan.js';
+import { IPIC_DARTS, IPIC_INTERIOR, atIpicDartsLine } from './ipic-plan.js';
 import './ipic-screening.css';
 import { officeLobbyGroundCutout } from './office-contract.js';
 import { captureOfficeStreet } from './office-world-presentation.js';
@@ -140,7 +140,7 @@ let plazaSalon = null, plazaGames = null, plazaDominoes = null, plazaHearts = nu
 let plazaJenga = null, plazaYacht = null, benchGame = 'jenga';
 let plazaCribbage = null, walnutGame = 'backgammon';
 let plazaWinePong = null, plazaShuffleboard = null, longTableGame = 'winePong';
-let plazaDarts = null;
+let plazaDarts = null, ipicDarts = null;
 let plazaSpades = null;
 let plazaLiarsDice = null;
 let plazaMancala = null;
@@ -346,6 +346,20 @@ function initializeRenderer() {
   plazaDarts = createPlazaDarts({ getMirror: () => plazaSalon?.userData.darts ?? null, getBoard: () => (world && plazaSalonPlan(world)?.darts) ?? null,
     getPose: () => walking?.getPose(), focusWorld: () => host.focus({ preventScroll: true }), reducedMotion });
   playProviders.push(() => plazaDarts);
+  // Standing at the Tuck Room line in IPIC, X plays shared darts that the town holds
+  // (server/darts-games.js); the cabinet's board shows every match's darts.
+  const ipicRoom = () => walkingEnvironment().rooms.find(room => room.interior === IPIC_INTERIOR) ?? null;
+  const atIpicLine = ([east, north]) => { const room = ipicRoom(); return Boolean(room && walkingEnvironment().roomAt(east, -north) === room && atIpicDartsLine(room.toLocal(east, north))); };
+  ipicDarts = createPlazaDarts({ getMirror: () => buildingMesh?.userData.interiors?.userData.dartboards?.[0] ?? null,
+    getPose: () => walking?.getPose(), focusWorld: () => host.focus({ preventScroll: true }), reducedMotion,
+    shared: { lineId: IPIC_DARTS.id, eyebrow: 'IPIC · shared game', title: 'Darts in the Tuck Room',
+      line: () => multiplayer?.snapshot?.darts?.find(item => item.id === IPIC_DARTS.id) ?? null,
+      selfId: () => multiplayer?.identity?.id ?? null,
+      name: id => multiplayer?.snapshot?.players?.find(player => player.id === id)?.name ?? 'A visitor',
+      atLine: () => { const pose = walking?.getPose(); return Boolean(pose && !pose.sitting && !pose.riding && pose.altitude <= .1 && atIpicLine([pose.position[0], -pose.position[2]])); },
+      peers: () => (multiplayer?.snapshot?.players ?? []).filter(player => !player.sitting && (player.altitude ?? 0) <= .1 && atIpicLine(player.position)).map(player => ({ id: player.id, name: player.name })),
+      send: message => multiplayer?.command(message) ?? Promise.resolve({ ok: false, message: 'Connect to the town to play together.' }) } });
+  playProviders.push(() => ipicDarts);
   // Seated at the grove table, X plays mancala, Go, Chinese checkers or xiangqi (the last
   // one played); switching puts the other games' boards away and sets out this one's.
   const groveGames = () => ({ mancala: plazaMancala, go: plazaGo, chineseCheckers: plazaChineseCheckers, xiangqi: plazaXiangqi });
@@ -872,12 +886,16 @@ function render(now) {
   if (officeUI?.active || officeUI?.entering || storeIntros?.active || photoMode?.active || birdCams?.riding) walking?.halt();
   else if (multiplayer?.connected && !multiplayer.traveling) walking?.update(delta, now);
   else walking?.halt();
-  plazaGames?.update(); plazaDominoes?.update(); plazaHearts?.update(); plazaSpades?.update(); plazaLiarsDice?.update(); plazaBackgammon?.update(); plazaCribbage?.update(); plazaJenga?.update(); plazaYacht?.update(); plazaWinePong?.update(); plazaShuffleboard?.update(); plazaDarts?.update(); plazaMancala?.update(); plazaGo?.update(); plazaChineseCheckers?.update(); plazaXiangqi?.update(); plazaStage?.update();
+  plazaGames?.update(); plazaDominoes?.update(); plazaHearts?.update(); plazaSpades?.update(); plazaLiarsDice?.update(); plazaBackgammon?.update(); plazaCribbage?.update(); plazaJenga?.update(); plazaYacht?.update(); plazaWinePong?.update(); plazaShuffleboard?.update(); plazaDarts?.update(); ipicDarts?.update(); plazaMancala?.update(); plazaGo?.update(); plazaChineseCheckers?.update(); plazaXiangqi?.update(); plazaStage?.update();
   if (multiplayer?.connected) birdCams?.update(delta);
   multiplayer?.update(now);
   officeUI?.prepare(now);
   seatingControls?.update(now);
-  if (auditCamera) { camera.position.copy(auditCamera.position); camera.lookAt(auditCamera.target); camera.updateMatrixWorld(); }
+  if (auditCamera) {
+    camera.position.copy(auditCamera.position); camera.lookAt(auditCamera.target);
+    if (auditCamera.fov && camera.fov !== auditCamera.fov) { camera.fov = auditCamera.fov; camera.updateProjectionMatrix(); }
+    camera.updateMatrixWorld();
+  }
   photoMode?.update();
   storeIntros?.update(now);
   remotePlayers?.update(now, camera);
@@ -1100,6 +1118,10 @@ if (import.meta.env.DEV && renderAudit) {
       const distance = radius / Math.tan(camera.fov * Math.PI / 360) * Math.max(1, 1 / camera.aspect) * 1.3;
       auditCamera = { target, position: target.clone().add(new THREE.Vector3(0, distance * .55, distance)) };
     },
+    // A fixed review pose for camera-manifest captures (#364): Three.js world
+    // position and target, and optional FOV. release() hands the camera back.
+    view({ position, target, fov }) { auditCamera = { position: new THREE.Vector3(...position), target: new THREE.Vector3(...target), fov, restoreFov: auditCamera?.restoreFov ?? camera.fov }; },
+    release() { if (auditCamera?.fov) { camera.fov = auditCamera.restoreFov; camera.updateProjectionMatrix(); } auditCamera = null; },
     graphics() {
       const gl = renderer.getContext(), info = gl.getExtension('WEBGL_debug_renderer_info');
       return { renderer: info ? gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER),
@@ -1144,6 +1166,8 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
   window.__riverPlazaGo = () => plazaGo ? { ...plazaGo.debug(), groveGame, table: plazaSalon?.userData.go?.count() ?? null, goban: plazaSalon?.userData.go?.visible() ?? null,
     mancalaBoard: plazaSalon?.userData.mancala?.visible() ?? null, reset: () => plazaGo.reset() } : null;
   window.__riverPlazaMancala = () => plazaMancala ? { ...plazaMancala.debug(), table: plazaSalon?.userData.mancala?.count() ?? null, reset: () => plazaMancala.reset() } : null;
+  window.__riverIpicDarts = () => ipicDarts ? { ...ipicDarts.debug(), board: buildingMesh?.userData.interiors?.userData.dartboards?.[0]?.count() ?? null,
+    hold: value => ipicDarts.hold(value), holdAt: mm => ipicDarts.holdAt(mm), open: () => ipicDarts.open() } : null;
   window.__riverPlazaDarts = () => plazaDarts ? { ...plazaDarts.debug(), board: plazaSalon?.userData.darts?.count() ?? null,
     hold: value => plazaDarts.hold(value), holdAt: mm => plazaDarts.holdAt(mm), reset: seed => plazaDarts.reset(seed),
     // Walk to the throwing line and face the board.

@@ -11,7 +11,7 @@ import { applyResidentStyle } from './resident-style.js';
 import { applyResidentHairstyle } from './resident-hairstyle.js';
 import { residentFaceFor, bakeResidentFace } from './resident-face.js';
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { createAssetGLTFLoader } from './gltf-image-decoder.js';
 import { clone } from 'three/addons/utils/SkeletonUtils.js';
 import { createUpperBodyGait } from './upper-body-gait.js';
 import { createResidentGestures } from './resident-gestures.js';
@@ -24,7 +24,7 @@ import { sharedAppearance } from './shared-appearances.js';
 
 export const AVATAR_PROFILES = ['woman-casual','man-casual','woman-tailored','man-tailored','woman-daywear','man-workwear'];
 const cache = new Map();
-const loader = new GLTFLoader();
+const loader = createAssetGLTFLoader({ htmlImages: globalThis.__riverPhoneAvatarHtmlImages === true });
 let kitAssets=null;
 function supplyBag() {
   if(!kitAssets) {
