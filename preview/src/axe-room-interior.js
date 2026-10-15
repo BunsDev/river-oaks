@@ -57,13 +57,12 @@ export function buildAxeRoomInterior(room, options = {}) {
   };
   const { aMin, aMax, depth: D, height: H } = room, W = aMax - aMin, c = (aMin + aMax) / 2;
 
-  // Shell: rubber floor, plaster sides, a brick back wall, the street wall with its door.
+  // Shell: rubber floor, plaster sides and a brick back wall. The street side is the
+  // district's own storefront glazing and door (district.js), so passers-by see in.
   box(m.floor, c, -.05, D / 2, W, .1, D);
   box(m.ceiling, c, H + .05, D / 2, W, .1, D);
   for (const a of [aMin, aMax]) box(m.plaster, a, H / 2, D / 2, .15, H, D);
   box(m.brick, c, H / 2, D, W, H, .2);
-  for (const [a0, a1] of [[aMin, -.85], [.85, aMax]]) box(m.plaster, (a0 + a1) / 2, H / 2, 0, a1 - a0, H, .2);
-  box(m.plaster, 0, (3.2 + H) / 2, 0, 1.7, H - 3.2, .2);
   for (const d of [2.5, 5, 7.5]) box(m.timber, c, H - .12, d, W, .22, .3);
 
   // Lanes: maple planks, chain-link cages open at the front, a yellow throwing line.
