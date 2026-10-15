@@ -227,6 +227,12 @@ keep/reuse table's premise: its level/portal schema is now on `main`.
   claude-opus-5-5`; no model co-author line.
 - Still open for Val: kit import (recommendation in the brief), IPIC lift,
   the two missing handoff briefs.
+- 2026-10-15T00:45Z: #381 was unchanged and its lease had lapsed at 00:23Z, so
+  the two decisions were proposed for the contract as draft #388, stacked on
+  #381's branch (`fit.decision`, `mezzanineProgramme`, both decisions `decided`,
+  a validator rule with a failing-case test; contract tests 8/8, core verify
+  passed). G1 closes when #381 takes #388 and the engineer side records agreement
+  in `review-matrix.md`. Local count 10 / 10 including the #388 worktree.
 
 ## Next
 

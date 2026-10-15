@@ -4,11 +4,14 @@
 
 Each plan is a task ledger. Status comes from the task register, where the primary checkout's live copy can be newer than the committed one. Plans from before the register are listed as historical: their own text is the record of what was delivered.
 
-## Active and blocked (8)
+## Active and blocked (11)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
 | [2026-10-14-shared-dominoes](2026-10-14-shared-dominoes.md)<br>Shared Dominoes Implementation Plan (PR 1: the town holds the round) | `shared-dominoes-sheet` | active | — | 2026-10-14 |
+| [2026-10-14-procedural-landing-follow-through](2026-10-14-procedural-landing-follow-through.md)<br>Procedural stack follow-through | `procedural-landing-follow-through` | active | — | 2026-10-15 |
+| [2026-10-14-procedural-landing-follow-through](2026-10-14-procedural-landing-follow-through.md)<br>Procedural stack follow-through | `departure-grace-regression-20261014` | active | #384 | 2026-10-15 |
+| [2026-10-14-procedural-gpu-acceptance](2026-10-14-procedural-gpu-acceptance.md)<br>Procedural interiors: physical GPU acceptance plan | `procedural-gpu-acceptance` | queued | — | 2026-10-15 |
 | [2026-10-14-procedural-gallery-contact-shading](2026-10-14-procedural-gallery-contact-shading.md)<br>Generated gallery contact shading pilot | `procedural-gallery-contact-shading` | active | #382 | 2026-10-14 |
 | [2026-10-14-office-ipic-baseline](2026-10-14-office-ipic-baseline.md)<br>Office + IPIC #360, design-side baseline packet (2026-10-14) | `office-ipic-baseline-360` | active | #380 | 2026-10-14 |
 | [2026-10-14-gallery-vertical-route](2026-10-14-gallery-vertical-route.md)<br>Gallery vertical-route visual integration | `procedural-gallery-vertical-route` | queued | — | 2026-10-14 |
@@ -30,11 +33,12 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-13-ipic-photo-interior](2026-10-13-ipic-photo-interior.md)<br>IPIC Photo Interior Implementation Plan | `ipic-photo-interior` | delivered | #343 | 2026-10-13 |
 | [2026-10-11-pending-integration](2026-10-11-pending-integration.md)<br>Pending delivery integration | `primary-reconciliation` | delivered | — | 2026-10-11 |
 
-## Retired (100)
+## Retired (101)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
 | [2026-10-14-shared-dominoes](2026-10-14-shared-dominoes.md)<br>Shared Dominoes Implementation Plan (PR 1: the town holds the round) | `shared-dominoes-server` | retired | #374 | 2026-10-14 |
+| [2026-10-14-procedural-landing-follow-through](2026-10-14-procedural-landing-follow-through.md)<br>Procedural stack follow-through | `private-restore-level-exit-20261014` | retired | #383 | 2026-10-15 |
 | [2026-10-14-procedural-interior-ring-validity](2026-10-14-procedural-interior-ring-validity.md)<br>Procedural interior footprint validity | `procedural-interior-ring-validity` | retired | #355 | 2026-10-14 |
 | [2026-10-14-procedural-gallery-cycle-soak](2026-10-14-procedural-gallery-cycle-soak.md)<br>Repeated generated gallery entry and eviction | `procedural-gallery-cycle-soak` | retired | #353 | 2026-10-14 |
 | [2026-10-14-procedural-gallery-ao-tail](2026-10-14-procedural-gallery-ao-tail.md)<br>Auto quality response to moving gallery frame tails | `procedural-gallery-ao-tail-pacing` | retired | #354 | 2026-10-14 |

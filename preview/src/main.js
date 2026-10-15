@@ -121,6 +121,8 @@ const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matc
 const softwareAcceptance = import.meta.env.DEV && import.meta.env.VITE_SHARED_SOFTWARE_RENDERING === '1';
 const renderAudit = import.meta.env.DEV && new URLSearchParams(location.search).get('render-audit') === '1' ? createRenderAudit() : null;
 const debugOcclusion = new URLSearchParams(location.search).get('ao');
+// Auto's AO tail rule stays off until it passes device acceptance (render-quality.js).
+const aoTailShedding = new URLSearchParams(location.search).get('aotail') === 'on';
 let auditCamera = null;
 let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, storePeople, interiorsLayer, generatedInteriors;
 let districtUI, environmentAssets = null, storefrontReflections = null, roomGroundClip = null;
@@ -206,7 +208,7 @@ function initializeRenderer() {
     pipeline.setRenderScale(softwareAcceptance ? 0.25 : scale);
     if (debugOcclusion !== 'off') pipeline.setOcclusion(!softwareAcceptance && occlusion);
     photoMode?.qualityChanged();
-  } });
+  }, tailShedding: aoTailShedding });
   if (debugOcclusion === 'off') pipeline.setOcclusion(false);
   else if (debugOcclusion === 'only') pipeline.occlusion.output = AO_OUTPUT.Denoise;
   if (!softwareAcceptance) loadEnvironment(renderer, scene).then((assets) => { environmentAssets = assets; updateAtmosphere(); }).catch(() => { $('#connection').textContent = 'Sky lighting unavailable · base lighting active'; });
