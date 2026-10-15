@@ -5,9 +5,10 @@ import { register } from 'node:module';
 register(`data:text/javascript,${encodeURIComponent("export async function load(url, context, next) { return url.endsWith('.css') ? {format:'module',source:'',shortCircuit:true} : next(url,context); }")}`,import.meta.url);
 const {createOfficeUI}=await import('../src/office-ui.js');
 const {officesFor}=await import('../src/office-contract.js');
+const {officeLayout,officeTransition}=await import('../src/office-layouts.js');
 const data=JSON.parse(readFileSync(new URL('../public/data/district.json',import.meta.url)));
 const tick=()=>new Promise(resolve=>setImmediate(resolve));
-function setup(t,{access='owner',sceneError=false,listPending=null,leavePending=null,renderPhase='office',captureStreet=()=>null,workspaces=null}={}){
+function setup(t,{access='owner',sceneError=false,listPending=null,leavePending=null,renderPhase='office',captureStreet=()=>null,workspaces=null,layout=null,startAt=null,transitionPending=null}={}){
  class Element {
   constructor(tag){this.tagName=tag;this.children=[];this.dataset={};this.events={};this.attributes={};this.textContent='';this.value='';this.hidden=false;this.open=false;this.classList={add(){},remove(){}};}
   append(...items){for(const i of items){i.remove();i.parent=this;this.children.push(i);}}
@@ -30,13 +31,14 @@ function setup(t,{access='owner',sceneError=false,listPending=null,leavePending=
  globalThis.document={body:root,createElement:tag=>new Element(tag),addEventListener(){},hidden:false};globalThis.window={addEventListener(){}};globalThis.matchMedia=()=>({matches:false});
 
  const player={id:'owner',name:'Jevica',position:[...officesFor(data)[0].entrance,0],office:null};
- const calls=[],voiceCalls=[],scenes=[],prepared=[];let pending=null,disposed=0;
- const mp={connected:true,identity:{id:'owner'},snapshot:{players:[player]},voice:{state:{available:true,status:'joined',mic:'off',pushToTalk:false},toggleJoin(){voiceCalls.push('join');},toggleMic(){voiceCalls.push('mic');},setTransmit(v){voiceCalls.push(v);}},async command(m){calls.push(m);if(m.action==='list'){if(listPending)await listPending;return {ok:true,offices:[{...officesFor(data)[0],access,requested:false,guests:[],requests:[]}]};}if(m.action==='enter'){if(pending)return pending;player.office={id:m.officeId,position:[0,1.25],yaw:0};}if(m.action==='leave'){if(leavePending)await leavePending;player.office=null;}return {ok:true};}};
+ const calls=[],voiceCalls=[],scenes=[],prepared=[],renders=[];let pending=null,disposed=0;
+ const mp={connected:true,identity:{id:'owner'},snapshot:{players:[player]},voice:{state:{available:true,status:'joined',mic:'off',pushToTalk:false},toggleJoin(){voiceCalls.push('join');},toggleMic(){voiceCalls.push('mic');},setTransmit(v){voiceCalls.push(v);}},async command(m){calls.push(m);if(m.action==='list'){if(listPending)await listPending;return {ok:true,offices:[{...officesFor(data)[0],access,requested:false,guests:[],requests:[]}]};}if(m.action==='enter'){if(pending)return pending;player.office=layout?{id:m.officeId,layout,levelId:'jevica-office/l0',elevation:0,position:startAt??officeLayout(layout).spawn.position,yaw:0}:{id:m.officeId,position:[0,1.25],yaw:0};}
+ if(m.action==='transition'){if(transitionPending)await transitionPending;const moved=officeTransition(officeLayout(player.office.layout),player.office,m.portalId);if(!moved.ok)return moved;player.office={...player.office,levelId:moved.levelId,position:moved.position,elevation:moved.elevation};return {ok:true,office:player.office};}if(m.action==='leave'){if(leavePending)await leavePending;player.office=null;}return {ok:true};}};
  if(workspaces)mp.officeDeskRequest=async(action,data)=>{calls.push({api:action,...data});if(action==='workspace/provision')return {ok:true,workspace:workspaces[0]};if(action==='workspace/list')return {ok:true,workspaces};if(action==='workspace/accept'){workspaces.find(w=>w.id===data.workspaceId).role='accepted';return {ok:true};}return {ok:true};};
  const walking={halt(){},getPosition:()=>player.position,getPose:()=>({altitude:0}),riding:false};
- const ui=createOfficeUI({host,panelHost,renderer:{},getWorld:()=>data,getMultiplayer:()=>mp,walking,captureStreet,createScene(options){scenes.push(options);if(sceneError)throw new Error('GPU unavailable');return {prepare:now=>prepared.push(now),render:()=>({phase:renderPhase,done:renderPhase==='office'}),skip(){},dispose(){disposed++;}};}});
+ const ui=createOfficeUI({host,panelHost,renderer:{},getWorld:()=>data,getMultiplayer:()=>mp,walking,captureStreet,createScene(options){scenes.push(options);if(sceneError)throw new Error('GPU unavailable');return {prepare:now=>prepared.push(now),render:(...args)=>{renders.push(args);return {phase:renderPhase,done:renderPhase==='office'};},skip(){},dispose(){disposed++;}};}});
  t.after(()=>{ui.dispose();Object.assign(globalThis,original);});
- return {ui,mp,player,calls,voiceCalls,scenes,prepared,host,setAccess:v=>{access=v;},setPhase:v=>{renderPhase=v;},find:id=>root.find(id),pending:p=>{pending=p;},get disposed(){return disposed;}};
+ return {ui,mp,player,calls,voiceCalls,scenes,prepared,renders,host,setAccess:v=>{access=v;},setPhase:v=>{renderPhase=v;},find:id=>root.find(id),pending:p=>{pending=p;},get disposed(){return disposed;}};
 }
 test('entry captures the street before acknowledgement and reset releases presentation once',async t=>{
  let captured=0;const street={camera:'original street pose'},f=setup(t,{captureStreet:()=>{captured++;return street;}});
@@ -170,4 +172,39 @@ test('an open office panel refreshes invitations even away from the lobby',async
  const f=setup(t,{workspaces:[]});f.player.position=[9999,9999];
  f.find('office-personal').parent.visible=true;f.ui.update(6000,.016);await tick();
  assert.ok(f.calls.some(c=>c.api==='workspace/list'));
+});
+
+test('a legacy visit keeps its move commands unchanged',async t=>{
+ const f=setup(t);f.ui.update(6000,.016);await tick();f.find('office-enter').emit('click');await tick();
+ f.ui.update(6100,.016);f.find('office-visit').emit('keydown',{code:'KeyW'});f.ui.update(6400,.1);await tick();
+ const move=f.calls.find(c=>c.action==='move');assert.ok(move);assert.deepEqual(Object.keys(move).sort(),['action','officeId','position','type','yaw']);
+ assert.equal(f.find('office-level').hidden,true,'the legacy room has no stairs');
+});
+test('penthouse moves name their layout and floor; no stair control at the arrival',async t=>{
+ const f=setup(t,{layout:'office-penthouse-1'});f.ui.update(6000,.016);await tick();f.find('office-enter').emit('click');await tick();
+ f.ui.update(6100,.016);assert.equal(f.find('office-level').hidden,true,'no stair near the arrival');
+ f.find('office-visit').emit('keydown',{code:'KeyW'});f.ui.update(6400,.1);await tick();
+ const move=f.calls.find(c=>c.action==='move');assert.deepEqual([move.layout,move.levelId],['office-penthouse-1','jevica-office/l0']);
+ assert.deepEqual(f.renders.at(-1)[4],{layoutId:'office-penthouse-1',levelId:'jevica-office/l0'});
+});
+test('the stair control appears within reach of the stair foot',async t=>{
+ const g=setup(t,{layout:'office-penthouse-1',startAt:[11.8,4.5]});g.ui.update(7000,.016);await tick();g.find('office-enter').emit('click');await tick();
+ g.ui.update(7100,.016);assert.equal(g.find('office-level').hidden,false);assert.match(g.find('office-level').textContent,/stairs up/);
+});
+test('taking the stairs adopts the server floor, raises the eye and renders the mezzanine',async t=>{
+ const f=setup(t,{layout:'office-penthouse-1',startAt:[11.8,4.5]});f.ui.update(6000,.016);await tick();f.find('office-enter').emit('click');await tick();
+ f.ui.update(6100,.016);f.find('office-level').emit('click');await tick();await tick();
+ const transition=f.calls.find(c=>c.action==='transition');assert.deepEqual([transition.portalId,transition.layout],['jevica-office/l0/portal/stairs-up','office-penthouse-1']);
+ f.ui.update(6200,.016);
+ assert.deepEqual(f.ui.pose.position.map(v=>Math.round(v*100)/100),[11.8,5.48,-15.2]);assert.equal(f.ui.pose.ground,3.8);
+ assert.deepEqual(f.renders.at(-1)[4],{layoutId:'office-penthouse-1',levelId:'jevica-office/l1'});
+ assert.match(f.find('office-level').textContent,/stairs down/);
+});
+test('a transition answered after the visit closed changes nothing',async t=>{
+ let resolve;const transitionPending=new Promise(r=>{resolve=r;}),f=setup(t,{layout:'office-penthouse-1',startAt:[11.8,4.5],transitionPending});
+ f.ui.update(6000,.016);await tick();f.find('office-enter').emit('click');await tick();f.ui.update(6100,.016);
+ f.find('office-level').emit('click');await tick();f.find('office-level').emit('click');await tick();
+ assert.equal(f.calls.filter(c=>c.action==='transition').length,1,'one transition at a time');
+ f.player.office=null;f.ui.sync([f.player],f.player.id);assert.equal(f.ui.active,false);
+ resolve();await tick();await tick();assert.equal(f.ui.active,false);assert.equal(f.ui.pose,null);
 });

@@ -2,6 +2,8 @@
 // The fixture supplies its own town and identities, and tests the sign-in gate.
 process.env.RIVER_OAKS_DEV_TOWN='off';
 import { createServer as createViteServer } from 'vite';
+import { configuredOfficeLayout } from '../offices.js';
+import { parseScreeningHosts } from '../screenings.js';
 import { createGameServer } from '../app.js';
 import { createSharedWorld } from '../world.js';
 import { loadDistrictData } from '../district-data.js';
@@ -52,7 +54,11 @@ const liveVoice=process.env.RIVER_OAKS_VOICE_FIXTURE==='live';
 if(liveVoice && !livekitConfigured(process.env))throw new Error('RIVER_OAKS_VOICE_FIXTURE=live needs LIVEKIT_URL, LIVEKIT_API_KEY and LIVEKIT_API_SECRET in the environment');
 const voice=liveVoice?createVoiceService({leases:createMemoryVoiceLeases(),livekit:createLiveKitClient({url:process.env.LIVEKIT_URL,apiKey:process.env.LIVEKIT_API_KEY,apiSecret:process.env.LIVEKIT_API_SECRET}),namespace:`river-oaks:fixture-live:${randomUUID().slice(0,8)}`,allow:async()=>true,log:{warn(){}}})
   :process.env.RIVER_OAKS_VOICE_FIXTURE==='1'?createVoiceService({leases:createMemoryVoiceLeases(),livekit:createFakeLiveKit(),namespace:'river-oaks:fixture:v1',allow:async()=>true,log:{warn(){}}}):null;
-app=createGameServer({auth,world:createSharedWorld(data,process.env.RIVER_OAKS_TEST_CREATOR==='1'?{}:{isAdmin:id=>id==='alice'}),landmarks:createMemoryLandmarks(),social:createMemorySocial(),profiles:createMemoryProfiles(),events:createMemoryEvents(),cyclingMiles:createMemoryCyclingMiles(),cyclingFlushMs:1000,workplace:process.env.RIVER_OAKS_WORKPLACE==='1'?createWorkplace():null,waitlist:approvedWaitlist,origin,...(voice?{voice,voiceReconcileMs:200}:{})});
+// The office layout for penthouse journeys only (RIVER_OAKS_OFFICE_LAYOUT=office-penthouse-1); unset keeps the legacy room.
+const officeLayout=configuredOfficeLayout(process.env.RIVER_OAKS_OFFICE_LAYOUT);
+// Synthetic venue-host grants for screening journeys only (e.g. RIVER_OAKS_SCREENING_HOSTS=ipic:alice).
+const screeningHosts=parseScreeningHosts(process.env.RIVER_OAKS_SCREENING_HOSTS);
+app=createGameServer({auth,world:createSharedWorld(data,{...(process.env.RIVER_OAKS_TEST_CREATOR==='1'?{}:{isAdmin:id=>id==='alice'}),officeLayout,screeningHosts}),landmarks:createMemoryLandmarks(),social:createMemorySocial(),profiles:createMemoryProfiles(),events:createMemoryEvents(),cyclingMiles:createMemoryCyclingMiles(),cyclingFlushMs:1000,workplace:process.env.RIVER_OAKS_WORKPLACE==='1'?createWorkplace():null,waitlist:approvedWaitlist,origin,...(voice?{voice,voiceReconcileMs:200}:{})});
 await new Promise(resolve=>app.server.listen(townPort,'127.0.0.1',resolve));
 const townHttp=`http://127.0.0.1:${townPort}`;
 const vite=await createViteServer({configFile:'preview/vite.config.js',server:{host:'127.0.0.1',port:webPort,strictPort:true,proxy:{'/auth':townHttp,'/api/multiplayer':townHttp,'/api/landmarks':townHttp,'/api/social':townHttp,'/api/workplace':townHttp,'/api/profile':townHttp,'/api/waitlist':townHttp,'/api/debug-reports':townHttp,'/api/moderation':townHttp,'/api/voice':townHttp,'/multiplayer':{target:`ws://127.0.0.1:${townPort}`,ws:true}}}});

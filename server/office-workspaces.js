@@ -10,15 +10,19 @@ const member=(w,user)=>w.members.find(m=>m.userId===user);
 const allowed=(w,user)=>w.ownerId===user||member(w,user)?.status==='accepted';
 const summary=(w,user)=>({id:w.id,ownerId:w.ownerId,role:w.ownerId===user?'owner':member(w,user)?.status??null,revision:w.revision,
  members:w.ownerId===user?structuredClone(w.members):[],createdAt:w.createdAt,updatedAt:w.updatedAt});
-function decode(raw){
- if(!raw)return null;const w=JSON.parse(raw);
+function metadata(w){
  if(w.schemaVersion!==1||!userId(w.ownerId)||w.id!==officeWorkspaceId(w.ownerId)||!validDeskVersion(w.revision)
   ||!Array.isArray(w.members)||w.members.length>MAX_MEMBERS||!w.members.every(m=>userId(m.userId)&&['invited','accepted'].includes(m.status)&&deskId(m.epoch))
-  ||new Set(w.members.map(m=>m.userId)).size!==w.members.length||!Array.isArray(w.receipts)||w.receipts.length>MAX_RECEIPTS
+  ||new Set(w.members.map(m=>m.userId)).size!==w.members.length)throw Error('Invalid office workspace metadata');
+ return w;
+}
+function decode(raw){
+ if(!raw)return null;const w=metadata(JSON.parse(raw));
+ if(!Array.isArray(w.receipts)||w.receipts.length>MAX_RECEIPTS
   ||!validDeskVersion(w.desk?.version)||!Array.isArray(w.desk.tasks)||w.desk.tasks.length>DESK_LIMITS.tasks||!w.desk.tasks.every(validDeskTask))throw Error('Invalid office workspace record');
  return w;
 }
-function service({read,index,commit,now}){
+function service({read,readMetadata,index,commit,now}){
  async function mutate(actor,id,change){
   if(!userId(actor)||!/^office-[a-f0-9]{64}$/.test(id??''))return fail('invalid_office');
   for(let attempt=0;attempt<8;attempt++){
@@ -35,7 +39,7 @@ function service({read,index,commit,now}){
  async function provision(owner){
   if(!userId(owner))throw Error('Invalid office owner');const id=officeWorkspaceId(owner);
   for(let attempt=0;attempt<8;attempt++){
-   const raw=await read(id);if(raw)return summary(decode(raw),owner);
+   const existing=await readMetadata(id);if(existing)return summary(metadata(existing),owner);
    const w={schemaVersion:1,id,ownerId:owner,revision:0,members:[],desk:emptyDesk(),receipts:[],createdAt:now(),updatedAt:now()};
    const result=await commit(id,null,JSON.stringify(w));if(result==='ok')return summary(w,owner);
    if(result!=='conflict')throw Error(result);
@@ -80,21 +84,24 @@ function service({read,index,commit,now}){
   });
  }
  return {provision,
-  async list(actor){if(!userId(actor))throw Error('Invalid office user');const ids=await index(actor);const rows=await Promise.all(ids.map(id=>read(id).then(decode)));return rows.filter(w=>w&&(w.ownerId===actor||member(w,actor))).map(w=>summary(w,actor));},
+  async list(actor){if(!userId(actor))throw Error('Invalid office user');const ids=await index(actor);const rows=await Promise.all(ids.map(id=>readMetadata(id).then(w=>w&&metadata(w))));return rows.filter(w=>w&&(w.ownerId===actor||member(w,actor))).map(w=>summary(w,actor));},
+  async authorize(actor,id){if(!userId(actor)||!/^office-[a-f0-9]{64}$/.test(id??''))return fail('invalid_office');const value=await readMetadata(id),w=value&&metadata(value);return w&&allowed(w,actor)?{ok:true,workspace:{id:w.id,ownerId:w.ownerId,role:w.ownerId===actor?'owner':'accepted'}}:fail('office_access_denied');},
   async read(actor,id){if(!userId(actor)||!/^office-[a-f0-9]{64}$/.test(id??''))return fail('invalid_office');const w=decode(await read(id));return w&&allowed(w,actor)?{ok:true,workspace:summary(w,actor),desk:structuredClone(w.desk)}:fail('office_access_denied');},
   invite:(actor,id,target)=>membership('invite',actor,id,target),accept:(actor,id)=>membership('accept',actor,id,actor),revoke:(actor,id,target)=>membership('revoke',actor,id,target),
   save:(actor,id,data)=>changeDesk(actor,id,data,false),remove:(actor,id,data)=>changeDesk(actor,id,data,true)};
 }
 export function createMemoryOfficeWorkspaces({now=Date.now}={}){
  const records=new Map(),indices=new Map();
- return service({now,read:async id=>records.get(id)??null,index:async user=>[...(indices.get(user)??[])],commit:async(id,raw,next)=>{
-  if((records.get(id)??null)!==raw)return 'conflict';
+ return service({now,read:async id=>records.has(id)?JSON.stringify(records.get(id)):null,
+  readMetadata:async id=>{const w=records.get(id);if(!w)return null;const {desk,receipts,...fields}=w;return structuredClone(fields);},
+  index:async user=>[...(indices.get(user)??[])],commit:async(id,raw,next)=>{
+  if((records.has(id)?JSON.stringify(records.get(id)):null)!==raw)return 'conflict';
   if(!raw&&records.size>=MAX_WORKSPACES)return 'office_limit';
   const w=JSON.parse(next),before=raw?JSON.parse(raw):null,users=[w.ownerId,...w.members.map(m=>m.userId)];
   for(const user of users){const set=indices.get(user);if(!set?.has(id)&&(set?.size??0)>=MAX_JOINED)return 'office_limit';}
   for(const user of before?[before.ownerId,...before.members.map(m=>m.userId)]:[]){if(!users.includes(user)){const set=indices.get(user);set?.delete(id);if(!set?.size)indices.delete(user);}}
   for(const user of users){if(!indices.has(user))indices.set(user,new Set());indices.get(user).add(id);}
-  records.set(id,next);return 'ok';
+  records.set(id,w);return 'ok';
  }});
 }
 // Workspace, membership, shared tasks and discovery indices change in one Redis
@@ -138,6 +145,23 @@ const COMMIT=`
 export function createRedisOfficeWorkspaces({redis,prefix,now=Date.now}){
  if(!redis?.eval||typeof prefix!=='string'||!/^\{[^{}]+\}$/.test(prefix))throw Error('Invalid workspace storage');
  const key=`${prefix}:office-workspaces:v1`,lookup=`${prefix}:office-workspaces-index:v1`;
- return service({now,read:id=>redis.hget(key,id),index:async user=>JSON.parse(await redis.hget(lookup,user)??'[]'),
+ return service({now,read:id=>redis.hget(key,id),readMetadata:async id=>{
+   const raw=await redis.eval(METADATA,1,key,id);if(!raw)return null;
+   const w=JSON.parse(raw);
+   // Redis cjson encodes an empty Lua array as {}.
+   if(w.members&&Object.getPrototypeOf(w.members)===Object.prototype&&Object.keys(w.members).length===0)w.members=[];
+   return w;
+  },index:async user=>JSON.parse(await redis.hget(lookup,user)??'[]'),
   commit:(id,raw,next)=>redis.eval(COMMIT,2,key,lookup,id,raw??'',next,MAX_WORKSPACES,MAX_JOINED)});
 }
+
+// Read the canonical record at execution time: no secondary index/cache can
+// lag revocation. Redis still decodes a bounded document, but task text and
+// retry receipts never cross the wire for discovery or visit authorization.
+const METADATA=`
+ local raw=redis.call('HGET',KEYS[1],ARGV[1])
+ if not raw then return false end
+ local w=cjson.decode(raw)
+ return cjson.encode({schemaVersion=w.schemaVersion,id=w.id,ownerId=w.ownerId,
+  revision=w.revision,members=w.members,createdAt=w.createdAt,updatedAt=w.updatedAt})
+`;

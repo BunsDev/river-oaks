@@ -6,6 +6,9 @@ import { IPIC_ESCALATOR, IPIC_FLIGHTS, IPIC_INTERIOR, IPIC_PLANTERS, IPIC_SOFA_A
 
 // Editable metre-scale scene. Local +X=across frontage, -Z=into the venue,
 // +Y=up. Furniture shares geometry; static parts merge per zone/material.
+// The auditorium screen's width and height in metres (about 3:1).
+const SCREEN_SIZE = [9.8, 3.25];
+
 export function buildIpicInterior(room, options = {}) {
   if (room?.interior !== IPIC_INTERIOR) throw new Error('An IPIC room plan is required');
   const root = new THREE.Group(); root.name = 'IPIC River Oaks';
@@ -200,7 +203,7 @@ export function buildIpicInterior(room, options = {}) {
   section('Auditorium'); floor(m.black, 26, 34, 6); ceiling(26, 34, 10.4, m.black);
   for (const a of [room.aMin, room.aMax]) box(m.black, a, 8.2, 30, .18, 4.4, 8);
   box(m.black, room.center, 8.2, 33.92, room.width, 4.4, .16);
-  panel(m.screen, .3, 8.5, 33.79, 9.8, 3.25);
+  panel(m.screen, .3, 8.5, 33.79, SCREEN_SIZE[0], SCREEN_SIZE[1]);
   for (const seat of room.ipicSeats.filter(s => s.key.startsWith('recliner'))) recliner(seat);
   for (const d of [27, 28.5, 30, 31.5, 33]) box(m.glow, -5.4, 6.05, d, .18, .025, .035);
   rod(m.steel, [-5.55, 6.9, 27], [-5.55, 6.9, 33], .023);
@@ -225,6 +228,9 @@ export function buildIpicInterior(room, options = {}) {
     const [x, north] = room.toWorld(l.a, l.d);
     return { room, position: new THREE.Vector3(x, room.floor + l.y, -north) };
   });
+  // The screen's own material, so a screening (#367) can show a film on it and restore it.
+  root.userData.screen = m.screen;
+  root.userData.screenAspect = SCREEN_SIZE[0] / SCREEN_SIZE[1];
   root.userData.ready = finishes.ready();
   // Loading failure remains observable by callers; attach a handler for callers
   // that only mount the production mesh, to avoid an unhandled rejection.

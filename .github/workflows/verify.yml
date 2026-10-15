@@ -62,6 +62,8 @@ jobs:
           path: .runtime/agent/tooling.json
           include-hidden-files: true
       - run: pnpm test
+      - name: Install local Redis recovery prerequisite
+        run: command -v redis-server || (sudo apt-get update && sudo apt-get install -y redis-server)
       - run: pnpm run test:server
         env:
           REDIS_URL: redis://127.0.0.1:6379
@@ -167,7 +169,7 @@ jobs:
           - id: streets
             journeys: spatial-streets world-studio
           - id: places
-            journeys: contextual-first-visit store-intro photo-mode rail-navigation places-guide destination-minimap spatial-circulation office-desk
+            journeys: contextual-first-visit store-intro photo-mode rail-navigation places-guide destination-minimap spatial-circulation office-desk office-computer-shared office-visit
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

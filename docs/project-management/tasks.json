@@ -9796,6 +9796,182 @@
       ],
       "blocker": null,
       "updatedAt": "2026-10-15T05:34:01.000Z"
+    },
+    {
+      "id": "office-penthouse-traversal-361",
+      "title": "Office #361: versioned penthouse layout (#349 level/portal shape, jevica-office/l<n>), server-validated levels and transitions, safe saved-visit migration; legacy office stays default",
+      "status": "active",
+      "branches": [
+        "feat/office-penthouse-client-20261015"
+      ],
+      "owner": "claude:river-oaks-1b (f4107618)",
+      "leaseUntil": "2026-10-15T07:18:55.576Z",
+      "updatedAt": "2026-10-15T05:18:55.576Z",
+      "issue": 361,
+      "ledger": "docs/superpowers/plans/2026-10-15-office-penthouse-traversal.md",
+      "nextAction": "PR B verified: office preview 75/75, penthouse browser smoke passed (stairs to mezzanine, eye +3.800 m), legacy office-visit passed, core verify passed. Commit, PR, land, then close #361.",
+      "filesOwned": [
+        "preview/src/office-layouts.js",
+        "preview/tests/office-layouts.test.js",
+        "server/offices.js",
+        "server/world.js (office checkpoint version)",
+        "preview/src/office-scene.js and office-world-scene.js (level elevation)",
+        "server/tests/offices*.test.js",
+        "docs/offices.md",
+        "docs/superpowers/plans/2026-10-15-office-penthouse-traversal.md"
+      ],
+      "requiredChecks": [
+        "node --test preview/tests/office-*.test.js server/tests/offices*.test.js",
+        "pnpm run test:experience office-visit",
+        "two-client local vertical traversal",
+        "pnpm run verify",
+        "pnpm run verify full with isolated Redis"
+      ],
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-penthouse-client-20261015"
+    },
+    {
+      "id": "desktop-e2e-walk-game-time",
+      "title": "Desktop e2e: measure the W walk over 1.2 s of game time so a stalled frame on the macOS runner cannot fail it (Desktop CI flake)",
+      "status": "active",
+      "branches": [
+        "fix/desktop-e2e-walk-game-time-20261015"
+      ],
+      "owner": "claude:river-oaks-27 (16ffadb4)",
+      "leaseUntil": "2026-10-15T05:23:36.406Z",
+      "updatedAt": "2026-10-15T03:23:36.406Z",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-desktop-walk-check-20261015",
+      "issues": [
+        371
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-15-desktop-e2e-walk-game-time.md",
+      "nextAction": "Change the keyboard movement check to hold W for 1.2 s of game time and report frames/stall; then PR and Desktop runs.",
+      "filesOwned": [
+        "desktop/e2e.js (keyboard movement check)",
+        "docs/superpowers/plans/2026-10-15-desktop-e2e-walk-game-time.md"
+      ],
+      "requiredChecks": [
+        "node --check desktop/e2e.js",
+        "local desktop e2e on macOS",
+        "Desktop workflow on three runners",
+        "pnpm run verify"
+      ]
+    },
+    {
+      "id": "office-penthouse-layout-361a",
+      "title": "Office #361 PR A: versioned penthouse layout plan and server-authoritative floors (checkpoint v10), legacy default",
+      "status": "retired",
+      "owner": null,
+      "updatedAt": "2026-10-15T04:59:38.308Z",
+      "branches": [
+        "feat/office-penthouse-layout-20261015"
+      ],
+      "issue": 361,
+      "pr": 396,
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-penthouse-20261015",
+      "ledger": "docs/superpowers/plans/2026-10-15-office-penthouse-traversal.md",
+      "handoff": {
+        "at": "2026-10-15T04:58:53.029Z",
+        "from": "office-penthouse-traversal-361",
+        "to": null,
+        "reason": "Split so project:prune can retire PR A's branch while #361's client PR continues under office-penthouse-traversal-361."
+      },
+      "evidence": [
+        {
+          "pr": 396,
+          "reviewedHead": "642f42dda9ea044e6227ea7041310eb6b38db6d8",
+          "merge": "0a74d0c3adabb092378463f9ec9979ed9fd74665",
+          "tree": "8c807e80bac77039c0d51350450f1f4ac601442d",
+          "checks": "pnpm run land 396: Verify passed, merge guard CLEAN. Local: isolated-Redis server suite 715/715, core verify passed (agent 109/109, preview 3065+1 skip, server 526+147 Redis skips, desktop 69/69, python 141)."
+        }
+      ],
+      "retirement": {
+        "head": "642f42dda9ea044e6227ea7041310eb6b38db6d8",
+        "releasedAt": "2026-10-15T04:58:53.029Z",
+        "sessionsReviewedAt": "2026-10-15T04:58:53.029Z"
+      },
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "retiredBranches": [
+        "feat/office-penthouse-layout-20261015"
+      ],
+      "archive": {
+        "feat/office-penthouse-layout-20261015": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-VYCKOh/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-VYCKOh/history.bundle",
+          "sha256": "38dd6c4d5fe0b01164f2d37e8cf6c30fe338c3ecfe7fa0a4119789db32ee1e2f",
+          "tag": "refs/tags/archive/worktree-prune/c64d8a81-492c-46d8-bae1-6adf3dc78023",
+          "head": "642f42dda9ea044e6227ea7041310eb6b38db6d8"
+        }
+      }
+    },
+    {
+      "id": "office-computer-reliability",
+      "title": "Bound office database work and prove persistence recovery with continuous shared acceptance",
+      "status": "active",
+      "branches": [
+        "fix/office-computer-reliability"
+      ],
+      "owner": "codex:01a13dbe-349d-79c1-aa5c-f66ecac56a50",
+      "leaseUntil": "2026-10-15T07:03:41.730747+00:00",
+      "updatedAt": "2026-10-15T05:03:41.730747+00:00",
+      "nextAction": "PR #394: v8 full passed all17; latest-main v10 core, 45 Redis cases, all3 office journeys and v3/v10 rollout passed. Push verified head and land through exact-head hosted checks; record merge and release ownership.",
+      "ledger": "docs/superpowers/plans/2026-10-15-office-computer-reliability.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-computer-reliability",
+      "filesOwned": [
+        "server/office-workspaces.js",
+        "server/office-workspace-visits.js",
+        "server/tests/office*.test.js",
+        "server/tests/helpers/office*.js",
+        "scripts/office*.mjs",
+        ".github/workflows/verify.yml",
+        "config/agent-workflow.json",
+        "docs/offices.md (operations section)",
+        "docs/superpowers/plans/2026-10-15-office-computer-reliability.md",
+        "docs/agent-workflow.md"
+      ],
+      "requiredChecks": [
+        "Reproducible before/after Redis command/byte/latency fixtures",
+        "Disposable Redis restart and backup/restore tests",
+        "Office browser journeys",
+        "pnpm run verify",
+        "pnpm run verify full",
+        "Review and hosted preview gate; pnpm run land"
+      ],
+      "pr": 394
+    },
+    {
+      "id": "ipic-screening-playback-367",
+      "title": "IPIC #367: synchronized client playback, accessible controls and media recovery against #366's contract, with a labelled local fixture clip",
+      "status": "active",
+      "branches": [
+        "feat/ipic-screening-playback-20261015"
+      ],
+      "owner": "claude:river-oaks-1b (f4107618)",
+      "leaseUntil": "2026-10-15T07:20:42.517Z",
+      "updatedAt": "2026-10-15T05:20:42.517Z",
+      "issue": 367,
+      "ledger": "docs/superpowers/plans/2026-10-15-ipic-screening-playback.md",
+      "nextAction": "Two-browser journey passed twice (max spread 7 ms, pause 0 ms); core verify passed. Commit, merge main, PR, land after #397.",
+      "filesOwned": [
+        "preview/src/ipic-screening.js",
+        "preview/src/ipic-screening-ui.js",
+        "preview/src/screening-contract.js (client media fields)",
+        "preview/src/ipic-interior.js (screen material handle)",
+        "preview/src/main.js (screening wiring)",
+        "preview/public/assets/ipic/screening/**",
+        "scripts/make-screening-fixture.mjs",
+        "preview/tests/ipic-screening*.test.js",
+        "preview/e2e/ipic-screening.js",
+        "server/app.js (media types and Range)",
+        "docs/screenings.md",
+        "docs/superpowers/plans/2026-10-15-ipic-screening-playback.md"
+      ],
+      "requiredChecks": [
+        "node --test preview/tests/ipic-screening*.test.js",
+        "two-client fixture browser journey with drift samples",
+        "pnpm run verify",
+        "hosted Verify"
+      ],
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-ipic-playback-20261015"
     }
   ]
 }
