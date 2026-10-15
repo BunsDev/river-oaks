@@ -3,7 +3,7 @@ import { _electron as electron } from 'playwright';
 import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve as resolvePath } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createServer as createSocket } from 'node:net';
 
@@ -46,7 +46,11 @@ const executablePath = process.env.RIVER_OAKS_DESKTOP_EXECUTABLE;
 // fake-UI flag must stay off, because it approves before that handler is asked.
 // A cold CI runner can take longer than a developer machine to start Electron.
 const launchTimeout = Number(process.env.RIVER_OAKS_DESKTOP_LAUNCH_TIMEOUT ?? 30000);
-const app = await electron.launch({ executablePath, args: [...(executablePath ? [] : [root]), `--user-data-dir=${profile}`, '--use-fake-device-for-media-stream',
+// On Windows Playwright starts Electron through cmd.exe with each argument in
+// double quotes. A trailing backslash would escape the closing quote and merge
+// the app path with the arguments after it, so pass the root without one.
+const appPath = resolvePath(root);
+const app = await electron.launch({ executablePath, args: [...(executablePath ? [] : [appPath]), `--user-data-dir=${profile}`, '--use-fake-device-for-media-stream',
   ...(software ? ['--use-gl=angle', '--use-angle=gl', '--ignore-gpu-blocklist'] : [])], env, timeout: launchTimeout });
 // The main process's own lines (renderer recovery, load failures) otherwise
 // stay in Playwright's buffer and only surface on a launch failure.
