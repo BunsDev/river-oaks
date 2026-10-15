@@ -1,9 +1,12 @@
 // IPIC runtime photo views (#364: T1–T3, the five photo-indexed views): node preview/e2e/ipic-photo-views.mjs
 // The game itself with real materials on this machine's GPU (Metal ANGLE on macOS) and two
 // loopback fixture accounts. alice holds a synthetic IPIC host grant, sits in a front-row
-// recliner and starts the fixture film; owner stands at the Tuck Room bar. alice's page frames
-// each IPIC_CAMERAS pose (FOV 67, as preview/e2e/fixtures/ipic.js) through the DEV-only
-// render-audit camera, plus her own seated eye on the screen. Writes the frames and a receipt
+// recliner and starts the fixture film; owner stands at the Tuck Room bar. Each IPIC_CAMERAS
+// pose (FOV 67, as preview/e2e/fixtures/ipic.js) is framed through the DEV-only render-audit
+// camera from the page whose player is not the subject (a player's own avatar is hidden in
+// first person): the auditorium from owner's page, so seated alice shows, and the rest from
+// alice's, so owner shows at the bar; plus alice's own seated eye on the screen. The
+// screening panel and HUD are hidden for the frames. Writes the frames and a receipt
 // to docs/design/office-ipic/captures/. Not physical-device, human, final-art or final-media acceptance.
 import { chromium } from 'playwright';
 import { createHash } from 'node:crypto';
@@ -77,24 +80,28 @@ try {
   await alice.waitForFunction(() => !document.querySelector('#ipic-screening [data-control="host-start"]')?.hidden);
   await alice.locator('#ipic-screening [data-control="host-start"]').click();
   await alice.waitForFunction(() => window.__riverScreening().state === 'playing' && window.__riverScreening().currentTime > 1, null, { timeout: 30000 });
-  await alice.evaluate(() => document.body.classList.add('clear-view'));
+  const hideUi = page => page.evaluate(() => { document.body.classList.add('clear-view'); const style = document.createElement('style'); style.id = 'photo-views-hide'; style.textContent = '#ipic-screening{visibility:hidden!important}'; document.head.append(style); });
+  await Promise.all([alice, owner].map(hideUi));
+  await owner.waitForFunction(() => window.__riverScreening?.()?.state === 'playing', null, { timeout: 30000 });
 
   const seat = await alice.evaluate(() => window.__riverCarriage().pose);
   const views = [
-    ...['auditorium', 'bar', 'lounge', 'reception', 'mural'].map(name => { const c = IPIC_CAMERAS.find(item => item.name === name); return { id: IDS[name], camera: name, eye: c.eye, target: c.target, photo: `assets/ipic/references/${c.photo}` }; }),
+    ...['auditorium', 'bar', 'lounge', 'reception', 'mural'].map(name => { const c = IPIC_CAMERAS.find(item => item.name === name); return { id: IDS[name], camera: name, eye: c.eye, target: c.target, photo: `assets/ipic/references/${c.photo}`, page: name === 'auditorium' ? 'owner' : 'alice' }; }),
     // alice's own seated eye (cushion + 0.69 m, store-encounters.js) on the screen centre.
-    { id: 'T3-seated', camera: 'recliner-1-1 seated eye', eye: [-.6, 6 + .53 + .69, 31], target: [.3, 6 + 2.5, 33.79], photo: 'assets/ipic/references/IMG_9767.jpg' },
+    { id: 'T3-seated', camera: 'recliner-1-1 seated eye', eye: [-.6, 6 + .53 + .69, 31], target: [.3, 6 + 2.5, 33.79], photo: 'assets/ipic/references/IMG_9767.jpg', page: 'alice' },
   ];
   const captures = [];
   for (const view of views) {
-    await alice.evaluate(([position, target, fov]) => window.__riverRenderAudit.view({ position, target, fov }), [three(view.eye), three(view.target), FOV]);
-    await alice.waitForTimeout(1500);
-    await alice.evaluate(() => new Promise(done => { let n = 0; const step = () => (++n > 10 ? done() : requestAnimationFrame(step)); requestAnimationFrame(step); }));
-    const file = `${OUT}/${view.id}.png`, png = await alice.screenshot({ path: file });
-    const stats = await alice.evaluate(() => { const g = window.__riverRenderAudit.graphics(); const s = window.__riverScreening(); return { calls: g.render.calls, triangles: g.render.triangles, film: { state: s.state, currentTime: +s.currentTime.toFixed(2), shared: s.sharedStatus } }; });
+    const page = view.page === 'owner' ? owner : alice;
+    await page.evaluate(([position, target, fov]) => window.__riverRenderAudit.view({ position, target, fov }), [three(view.eye), three(view.target), FOV]);
+    await page.waitForTimeout(1500);
+    await page.evaluate(() => new Promise(done => { let n = 0; const step = () => (++n > 10 ? done() : requestAnimationFrame(step)); requestAnimationFrame(step); }));
+    const file = `${OUT}/${view.id}.png`, png = await page.screenshot({ path: file });
+    await page.evaluate(() => window.__riverRenderAudit.release());
+    const stats = await page.evaluate(() => { const g = window.__riverRenderAudit.graphics(); const s = window.__riverScreening(); return { calls: g.render.calls, triangles: g.render.triangles, film: { state: s.state, currentTime: +s.currentTime.toFixed(2), shared: s.sharedStatus } }; });
     captures.push({ ...view, file, bytes: png.length, sha256: createHash('sha256').update(png).digest('hex'), ...stats });
   }
-  await alice.evaluate(() => { window.__riverRenderAudit.release(); document.body.classList.remove('clear-view'); });
+  await Promise.all([alice, owner].map(page => page.evaluate(() => { document.body.classList.remove('clear-view'); document.querySelector('#photo-views-hide')?.remove(); })));
   const graphics = await alice.evaluate(() => window.__riverRenderAudit.graphics());
   const head = execFileSync('git', ['rev-parse', 'HEAD']).toString().trim();
   const dirty = execFileSync('git', ['diff', 'HEAD', '--binary']);
@@ -103,7 +110,7 @@ try {
     sourceRevision: head, dirtyPatchSha256: dirty.length ? createHash('sha256').update(dirty).digest('hex') : null,
     browser: await browser.version(), renderer: graphics.renderer, viewport: [VIEWPORT.width, VIEWPORT.height], pixelRatio: 1, quality: 'sharp',
     fov: FOV, frame: 'eye and target are [a, h, d] in the IPIC room frame, h above the street floor (camera-manifest.json frame)',
-    scene: { alice: `${SEAT}:0 seated, synthetic host, fixture film playing`, owner: 'standing at the Tuck Room bar', seatPose: seat.position },
+    scene: { alice: `${SEAT}:0 seated, synthetic host, fixture film playing`, owner: 'standing at the Tuck Room bar', seatPose: seat.position, framedFrom: Object.fromEntries(views.map(view => [view.id, view.page])) },
     limits: 'Local macOS Chromium with Metal ANGLE under shared load; fixture film (fixture-v1), not the approved short (#365); not physical-device, human or final-art acceptance.',
     errors, captures,
   };
