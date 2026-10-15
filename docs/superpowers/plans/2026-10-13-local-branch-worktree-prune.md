@@ -237,3 +237,102 @@ and the repository setting on 2026-10-14; peers `river-oaks-cd`, `-97`, `-5d` an
 - **Register sweep**: #378 refreshed from the live file after the above, with the
   `desktop-platform-identity`, `desktop-package-matrix`, `office-ipic-baseline-360`
   and `office-ipic-engineering-baseline` entries copied as their owners wrote them.
+
+## 2026-10-14/15: procedural landing follow-through (claude-code 43d73155, river-oaks-b7)
+
+This session worked alongside `river-oaks-5d` (aa2272b7). 5d ran the cancellations and the
+#349/#382 retirements; this session took the register repair, the three review-note fixes
+and this sweep. Codex owned the stack landing. Its landing session ended at
+2026-10-14T23:23:54Z with every PR #349–#358 and #382 merged; the final merge was
+`c1104f47`.
+
+**Round 0, baseline at 2026-10-14T23:36Z.** `git fetch --prune`, `project:inventory
+--remote`, `project:status --check --github`, `gh pr list`, `ListAgents`, `ps`/`lsof` cwd.
+Main was `c1104f47`, with 13 worktrees and 13 branches and 6 open PRs (#309, #376, #377,
+#379, #380, #381). Remote: 6 open-PR, 4 unproven, 1 merged-ancestor-review, nothing
+merged-exact. Codex had already retired #350–#358 locally (manifests `retirement-KpJYYo`,
+`-0bMJhS`, `-pdX5dd`, `-0PK3tS`, `-B68qkm`, `-SSaIs2`, `-L1eW58`, `-uT7833`, `-zJskE1`)
+and cancelled `feat/procedural-gallery-route-20261014` (`cancel-stale-dufthR`).
+
+**Register faults found and fixed.**
+
+- The live register failed validation for every session: "procedural-multilevel-interiors-plan:
+  active owner and leaseUntil required". Codex had released that entry at 23:22:47Z but
+  left its status `active`. It was moved to `delivered` with its #349 evidence (head
+  `0b8f88dd` = PR head, tree `47db0cc5` = merge tree), and its open rollout gates moved to
+  `procedural-landing-follow-through`. Written atomically at 23:35:49Z.
+- Seven of the day's retirements and cancellations had been rolled back to pre-retirement
+  copies. **Root cause:** two GitHub Desktop pulls of the primary checkout, at 23:15:30Z
+  and 23:22:18Z. Each was a `reset: moving to HEAD` followed by `pull --ff`, which resets
+  the live register to the committed copy; the merge driver never runs on a reset. A
+  by-id merge of GitHub Desktop's `stash@{0}` (23:22:17Z) restored all seven at 23:34:10Z,
+  before this session's own repair could run. The stash now holds nothing newer than the
+  live file.
+- `ipic-photo-interior` (a remote sandbox worktree path) and `dependency-prs-265-266-295`
+  (no local refs ever existed) were retired in the register only. Their archive records
+  are copied from `ipic-pr-343`, and for the dependency PRs come from the
+  `refs/pull/<n>/head` heads re-read from GitHub.
+
+**Round 1, landed stack.** 5d retired `docs/procedural-multilevel-interiors-20261013`
+(#349, `retirement-Cymdje`) and `perf/procedural-gallery-contact-shading-20261014` (#382,
+`retirement-xkcN8s`; 103 pilot screenshots and a stopped test Redis dump are in
+`local-evidence-gallery-contact-shading-20261014`). With Val's approval given in 5d's
+session, 5d also cancelled `perf/procedural-gallery-ao-sampling-20261014`
+(`cancel-stale-YWFhGa`), `fix/rider-performance-contact-20261013` (`cancel-stale-3c2tGJ`;
+its 20 uncommitted Codex edits are in that archive) and `feat/voice-acceptance-20261013`
+(`cancel-stale-FmCCfR`; the remote branch was left untouched). Count at 23:44Z: 10
+worktrees / 10 branches.
+
+**Round 3, fixes** (ledger `2026-10-14-procedural-landing-follow-through.md`):
+
+- #383 restore-path `levelId`: merged as `f72a89f8`, retired as `retirement-7d0duH`.
+- #384 30 s reconnect-grace regression: merged as `4966d99f` (2026-10-15T00:23:03Z; PR head is the lander's
+  update-branch commit `8f1c5ea4`, GitHub-verified) and retired as `retirement-3UcHkw`.
+- #386, AO tail rule made opt-in, with the GPU acceptance plan
+  (`2026-10-14-procedural-gpu-acceptance.md`, task `procedural-gpu-acceptance`, queued
+  for device runs): merged as `98e1fa54` (2026-10-15T00:32:50Z, head `6b5d79e2`) and
+  retired as `retirement-go29Tt`. The first `--apply` stopped on a transient
+  `git fetch failed (1)` and left the partial receipt `retirement-d14CRN`
+  (`status: archiving`, bundle and restore repository only). The retry completed. The
+  partial receipt is preserved; it is superseded by the complete archive of the same tip.
+- Each fix: focused regression before and after, then core `pnpm run verify` (agent 95,
+  preview 3,042–3,044 plus 1 existing skip, server 499 with 141 `REDIS_URL`-gated skips,
+  desktop 61, Python 141), then `pnpm run land`. The worktree was retired in the same
+  round. Not run: Redis, browser journeys, physical GPUs.
+- Live keyboard/accessibility review and the archetype rollout decision are queued as
+  `procedural-interior-human-acceptance`.
+
+**Round 4, sweep.** Owners were messaged once. `river-oaks-5d` and `river-oaks-27`
+received the notice. The notice to `river-oaks-dc` was held, because that session runs
+in a different permission mode, and expired undelivered. So dc's
+`office-ipic-engineering-baseline` stays at main's copy in the sweep; its
+`shared-dominoes-sheet` was already identical. Codex entries are copied as written, as in
+#378. Before writing: 178 committed ids and 180 live; no committed entry newer than live;
+no main-only ids. Branch `docs/register-sweep-20261015`, worktree
+`../river-oaks-register-sweep-20261015`.
+
+**Counts.** 2026-10-14T23:36Z: 13 worktrees / 13 branches. 23:44Z: 10 / 10. After the
+fixes retired (2026-10-15T00:35Z): 8 / 8. 9 / 9 while the sweep worktree exists.
+Commands used: `node scripts/project-inventory.mjs --remote`,
+`node scripts/project-status.mjs --check --github`, `project-prune.mjs` dry run then
+`--apply`, `pnpm run land <pr> --owner river-oaks-b7`.
+
+Decisions for Val:
+
+- **`ios-device-feasibility` (#309, draft).** Local tip `5efcb069` (2026-10-13 16:02Z) is
+  10 commits past main. Two are pushed nowhere, and there are 6 uncommitted Codex edits
+  in `experiments/ios-probe/`. DTService (pid 7967, an Xcode device helper) has its cwd
+  in the worktree. The Codex lease expired 2026-10-13T17:30Z, and nothing has been
+  touched since. Options: (a) cancel through `project:cancel` once DTService is stopped;
+  the archive keeps the commits and edits, and #309 stays open on GitHub. (b) Claim it
+  and continue the probe. (c) Leave it. Nothing was done; the cap is met without it.
+- **GitHub Desktop and the primary checkout.** Its pulls reset the live register (see
+  above). Leave the primary to the controlled fast-forward in
+  `primary-checkout-live-state`, or pull only when `tasks.json` is the sole local change
+  and no prune is running. Its `stash@{0}` from 23:22:17Z is redundant (no entry newer
+  than live) and can be dropped; it was left for you.
+- **AO tail rule default.** It ships off. Turn it on only after the device runs in
+  `procedural-gpu-acceptance` show a gain; otherwise remove it.
+- **Commit provenance.** The goal asked for `Coven-Harness: claude-code / claude-fable-5-1`.
+  This session ran on `claude-opus-5-5`, so its commits say that instead. Tell me if you
+  want the literal string.

@@ -4,43 +4,42 @@
 
 Each plan is a task ledger. Status comes from the task register, where the primary checkout's live copy can be newer than the committed one. Plans from before the register are listed as historical: their own text is the record of what was delivered.
 
-## Active and blocked (10)
+## Active and blocked (6)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
 | [2026-10-14-shared-dominoes](2026-10-14-shared-dominoes.md)<br>Shared Dominoes Implementation Plan (PR 1: the town holds the round) | `shared-dominoes-sheet` | active | — | 2026-10-14 |
-| [2026-10-14-procedural-landing-follow-through](2026-10-14-procedural-landing-follow-through.md)<br>Procedural stack follow-through | `procedural-landing-follow-through` | active | — | 2026-10-15 |
-| [2026-10-14-procedural-landing-follow-through](2026-10-14-procedural-landing-follow-through.md)<br>Procedural stack follow-through | `departure-grace-regression-20261014` | active | #384 | 2026-10-15 |
 | [2026-10-14-procedural-gpu-acceptance](2026-10-14-procedural-gpu-acceptance.md)<br>Procedural interiors: physical GPU acceptance plan | `procedural-gpu-acceptance` | queued | — | 2026-10-15 |
-| [2026-10-14-procedural-gallery-contact-shading](2026-10-14-procedural-gallery-contact-shading.md)<br>Generated gallery contact shading pilot | `procedural-gallery-contact-shading` | active | #382 | 2026-10-14 |
 | [2026-10-14-gallery-vertical-route](2026-10-14-gallery-vertical-route.md)<br>Gallery vertical-route visual integration | `procedural-gallery-vertical-route` | queued | — | 2026-10-14 |
-| [2026-10-14-desktop-platform-identity](2026-10-14-desktop-platform-identity.md)<br>Desktop cross-platform identity (#370) | `desktop-platform-identity` | active | #379 | 2026-10-14 |
-| [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `shared-voice-acceptance` | blocked | — | 2026-10-13 |
-| [2026-10-13-procedural-interiors-implementation](2026-10-13-procedural-interiors-implementation.md)<br>Procedural interiors implementation ledger | `procedural-multilevel-interiors-plan` | active | #349 | 2026-10-14 |
-| [2026-10-13-local-branch-worktree-prune](2026-10-13-local-branch-worktree-prune.md)<br>Local branch and worktree pruning, 2026-10-13 | `register-sweep-20261014` | active | #378 | 2026-10-14 |
+| [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `shared-voice-acceptance` | queued | — | 2026-10-15 |
+| [2026-10-13-procedural-interiors-implementation](2026-10-13-procedural-interiors-implementation.md)<br>Procedural interiors implementation ledger | `procedural-interior-human-acceptance` | queued | — | 2026-10-15 |
+| [2026-10-13-local-branch-worktree-prune](2026-10-13-local-branch-worktree-prune.md)<br>Local branch and worktree pruning, 2026-10-13 | `register-sweep-20261015` | active | — | 2026-10-15 |
 
-## Delivered, awaiting local retirement (8)
+## Delivered, awaiting local retirement (2)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
-| [2026-10-14-procedural-private-upper-revocation](2026-10-14-procedural-private-upper-revocation.md)<br>Generated private home upper-level access | `procedural-private-upper-revocation` | delivered | #352 | 2026-10-14 |
-| [2026-10-14-procedural-pilot-frame-performance](2026-10-14-procedural-pilot-frame-performance.md)<br>Procedural gallery pilot frame performance | `procedural-pilot-frame-performance` | delivered | #351 | 2026-10-14 |
-| [2026-10-14-procedural-gallery-ao-mask](2026-10-14-procedural-gallery-ao-mask.md)<br>Gallery AO exterior geometry experiment | `procedural-gallery-ao-exterior-mask` | delivered | #358 | 2026-10-14 |
-| [2026-10-14-procedural-gallery-ao-buffer](2026-10-14-procedural-gallery-ao-buffer.md)<br>Gallery ambient occlusion buffer experiment | `procedural-gallery-ao-buffer` | delivered | #356 | 2026-10-14 |
-| [2026-10-14-procedural-creator-interior-docs](2026-10-14-procedural-creator-interior-docs.md)<br>Generated creator-region interior documentation | `procedural-creator-interior-docs` | delivered | #357 | 2026-10-14 |
-| [2026-10-14-level-aware-interior-streaming](2026-10-14-level-aware-interior-streaming.md)<br>Level-aware generated interior streaming | `procedural-level-aware-streaming` | delivered | #350 | 2026-10-14 |
-| [2026-10-13-ipic-photo-interior](2026-10-13-ipic-photo-interior.md)<br>IPIC Photo Interior Implementation Plan | `ipic-photo-interior` | delivered | #343 | 2026-10-13 |
+| [2026-10-14-desktop-platform-identity](2026-10-14-desktop-platform-identity.md)<br>Desktop cross-platform identity (#370) | `desktop-platform-identity` | delivered | #379 | 2026-10-14 |
 | [2026-10-11-pending-integration](2026-10-11-pending-integration.md)<br>Pending delivery integration | `primary-reconciliation` | delivered | — | 2026-10-11 |
 
-## Retired (101)
+## Retired (113)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
 | [2026-10-14-shared-dominoes](2026-10-14-shared-dominoes.md)<br>Shared Dominoes Implementation Plan (PR 1: the town holds the round) | `shared-dominoes-server` | retired | #374 | 2026-10-14 |
+| [2026-10-14-procedural-private-upper-revocation](2026-10-14-procedural-private-upper-revocation.md)<br>Generated private home upper-level access | `procedural-private-upper-revocation` | retired | #352 | 2026-10-14 |
+| [2026-10-14-procedural-pilot-frame-performance](2026-10-14-procedural-pilot-frame-performance.md)<br>Procedural gallery pilot frame performance | `procedural-pilot-frame-performance` | retired | #351 | 2026-10-14 |
+| [2026-10-14-procedural-landing-follow-through](2026-10-14-procedural-landing-follow-through.md)<br>Procedural stack follow-through | `procedural-landing-follow-through` | retired | #386 | 2026-10-15 |
+| [2026-10-14-procedural-landing-follow-through](2026-10-14-procedural-landing-follow-through.md)<br>Procedural stack follow-through | `departure-grace-regression-20261014` | retired | #384 | 2026-10-15 |
 | [2026-10-14-procedural-landing-follow-through](2026-10-14-procedural-landing-follow-through.md)<br>Procedural stack follow-through | `private-restore-level-exit-20261014` | retired | #383 | 2026-10-15 |
 | [2026-10-14-procedural-interior-ring-validity](2026-10-14-procedural-interior-ring-validity.md)<br>Procedural interior footprint validity | `procedural-interior-ring-validity` | retired | #355 | 2026-10-14 |
 | [2026-10-14-procedural-gallery-cycle-soak](2026-10-14-procedural-gallery-cycle-soak.md)<br>Repeated generated gallery entry and eviction | `procedural-gallery-cycle-soak` | retired | #353 | 2026-10-14 |
+| [2026-10-14-procedural-gallery-contact-shading](2026-10-14-procedural-gallery-contact-shading.md)<br>Generated gallery contact shading pilot | `procedural-gallery-contact-shading` | retired | #382 | 2026-10-14 |
 | [2026-10-14-procedural-gallery-ao-tail](2026-10-14-procedural-gallery-ao-tail.md)<br>Auto quality response to moving gallery frame tails | `procedural-gallery-ao-tail-pacing` | retired | #354 | 2026-10-14 |
+| [2026-10-14-procedural-gallery-ao-mask](2026-10-14-procedural-gallery-ao-mask.md)<br>Gallery AO exterior geometry experiment | `procedural-gallery-ao-exterior-mask` | retired | #358 | 2026-10-14 |
+| [2026-10-14-procedural-gallery-ao-buffer](2026-10-14-procedural-gallery-ao-buffer.md)<br>Gallery ambient occlusion buffer experiment | `procedural-gallery-ao-buffer` | retired | #356 | 2026-10-14 |
+| [2026-10-14-procedural-creator-interior-docs](2026-10-14-procedural-creator-interior-docs.md)<br>Generated creator-region interior documentation | `procedural-creator-interior-docs` | retired | #357 | 2026-10-14 |
+| [2026-10-14-level-aware-interior-streaming](2026-10-14-level-aware-interior-streaming.md)<br>Level-aware generated interior streaming | `procedural-level-aware-streaming` | retired | #350 | 2026-10-14 |
 | [2026-10-13-studio-spaces](2026-10-13-studio-spaces.md)<br>Furnished Studio spaces implementation plan | `studio-furnished-spaces` | retired | #316 | 2026-10-13 |
 | [2026-10-13-store-intro-cut-timing](2026-10-13-store-intro-cut-timing.md)<br>Sample the store intro's camera cut instead of timing it — 2026-10-13 | `store-intro-cut-timing` | retired | #301 | 2026-10-13 |
 | [2026-10-13-store-intro-claim-race](2026-10-13-store-intro-claim-race.md)<br>Wait for the store intro before the walking HUD in spatial-circulation — 2026-10-13 | `store-intro-claim-race` | retired | #296 | 2026-10-13 |
@@ -53,6 +52,7 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `voice-livekit-setup-docs` | retired | #326 | 2026-10-13 |
 | [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `shared-voice-live` | retired | #347 | 2026-10-14 |
 | [2026-10-13-settings-tabs-ux](2026-10-13-settings-tabs-ux.md)<br>Settings tabs and a minimal walking console — 2026-10-13 | `settings-tabs-ux` | retired | #307 | 2026-10-13 |
+| [2026-10-13-procedural-interiors-implementation](2026-10-13-procedural-interiors-implementation.md)<br>Procedural interiors implementation ledger | `procedural-multilevel-interiors-plan` | retired | #349 | 2026-10-14 |
 | [2026-10-13-plaza-yacht](2026-10-13-plaza-yacht.md)<br>Plaza games: Yacht at the bench — 2026-10-13 | `plaza-yacht` | retired | #341 | 2026-10-13 |
 | [2026-10-13-plaza-xiangqi](2026-10-13-plaza-xiangqi.md)<br>Plaza games: xiangqi in the grove — 2026-10-13 | `plaza-xiangqi` | retired | #346 | 2026-10-13 |
 | [2026-10-13-plaza-wine-pong](2026-10-13-plaza-wine-pong.md)<br>Plaza games: wine pong at the café — 2026-10-13 | `plaza-wine-pong` | retired | #323 | 2026-10-13 |
@@ -80,6 +80,8 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-13-modal-outside-dismiss](2026-10-13-modal-outside-dismiss.md)<br>Outside-click modal dismissal | `modal-outside-dismiss` | retired | #325 | 2026-10-13 |
 | [2026-10-13-minimap-flicker](2026-10-13-minimap-flicker.md)<br>Stop the flicker, and take the minimap out of its scrolling sheet — 2026-10-13 | `minimap-flicker` | retired | #297 | 2026-10-13 |
 | [2026-10-13-local-branch-worktree-prune](2026-10-13-local-branch-worktree-prune.md)<br>Local branch and worktree pruning, 2026-10-13 | `local-prune-20261013` | retired | #375 | 2026-10-14 |
+| [2026-10-13-local-branch-worktree-prune](2026-10-13-local-branch-worktree-prune.md)<br>Local branch and worktree pruning, 2026-10-13 | `register-sweep-20261014` | retired | #378 | 2026-10-14 |
+| [2026-10-13-ipic-photo-interior](2026-10-13-ipic-photo-interior.md)<br>IPIC Photo Interior Implementation Plan | `ipic-photo-interior` | retired | #343 | 2026-10-14 |
 | [2026-10-13-ipic-photo-interior](2026-10-13-ipic-photo-interior.md)<br>IPIC Photo Interior Implementation Plan | `ipic-pr-343` | retired | #343 | 2026-10-13 |
 | [2026-10-13-email-access-join-recurrence](2026-10-13-email-access-join-recurrence.md)<br>Email access: give CI's cold first render its own join allowance — 2026-10-13 | `email-access-join-recurrence` | retired | #308 | 2026-10-13 |
 | [2026-10-13-cycling-rack](2026-10-13-cycling-rack.md)<br>Cycling Rack Implementation Plan (PR 1 of 2) | `cycling-rack` | retired | #315 | 2026-10-13 |
