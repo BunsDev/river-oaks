@@ -5,7 +5,7 @@
 // fixture stands in for #365's approved short in tests and is labelled as such.
 //
 //   node scripts/make-screening-fixture.mjs           # write files and sources.json
-//   node scripts/make-screening-fixture.mjs --check   # verify committed hashes and durations
+//   node scripts/make-screening-fixture.mjs --check   # verify every bundled film's hashes and durations
 //
 // Encoders are not bit-reproducible across ffmpeg builds, so --check verifies the committed
 // bytes against sources.json and probes their duration; it does not re-encode.
@@ -38,14 +38,17 @@ const vtt = `WEBVTT\n\n${CUES.map(([a, b, text], i) => `${i + 1}\n${stamp(a)} --
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 const probe = path => Number(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', path], { encoding: 'utf8' }).trim());
 
+// sources.json lists every bundled film; this script owns only the fixture's entry.
+const manifestPath = join(dir, 'sources.json');
 if (process.argv.includes('--check')) {
-  const sources = JSON.parse(readFileSync(join(dir, 'sources.json'), 'utf8'));
-  for (const item of sources.files) {
+  const { media } = JSON.parse(readFileSync(manifestPath, 'utf8'));
+  const files = media.flatMap(entry => entry.files);
+  for (const item of files) {
     const bytes = readFileSync(join(root, item.path));
     if (sha256(bytes) !== item.sha256 || bytes.length !== item.bytes) throw new Error(`${item.path} does not match sources.json`);
     if (item.durationMs !== undefined && Math.abs(probe(join(root, item.path)) * 1000 - item.durationMs) > 60) throw new Error(`${item.path} duration differs from ${item.durationMs} ms`);
   }
-  process.stdout.write(`screening fixture: ${sources.files.length} files match sources.json\n`);
+  process.stdout.write(`screening media: ${files.length} files of ${media.length} films match sources.json\n`);
 } else {
   mkdirSync(dir, { recursive: true });
   const files = [];
@@ -59,11 +62,22 @@ if (process.argv.includes('--check')) {
   const captions = readFileSync(join(dir, 'fixture-v1.en.vtt'));
   files.push({ path: relative(root, join(dir, 'fixture-v1.en.vtt')), type: 'text/vtt', bytes: captions.length, sha256: sha256(captions) });
   const ffmpeg = execFileSync('ffmpeg', ['-version'], { encoding: 'utf8' }).split('\n')[0];
-  writeFileSync(join(dir, 'sources.json'), `${JSON.stringify({
+  const fixture = {
     id: 'ipic-fixture-v1', label: 'Fixture clip (test pattern)', fixture: true,
     provenance: `Synthetic, generated locally by scripts/make-screening-fixture.mjs with ${ffmpeg}: lavfi testsrc and a sine beep. No source footage, voices, music, artwork or likeness.`,
     license: 'Original synthetic test signal; no third-party content.', approval: 'Test fixture only. Not the approved short (#365).',
     transcript: CUES.map(([, , text]) => text), files,
-  }, null, 2)}\n`);
+  };
+  // Keep every other film's entry (the approved short) exactly as it is.
+  // Only a missing manifest is a first run; a malformed one stops here rather than drop other films.
+  // (The manifest before #365 was the fixture's entry alone.)
+  let media = [];
+  try {
+    const saved = JSON.parse(readFileSync(manifestPath, 'utf8'));
+    media = Array.isArray(saved.media) ? saved.media : saved.id ? [saved] : null;
+  } catch (error) { if (error.code !== 'ENOENT') throw error; }
+  if (!Array.isArray(media)) throw new Error(`${relative(root, manifestPath)} has no media list`);
+  media = media.some(entry => entry.id === fixture.id) ? media.map(entry => (entry.id === fixture.id ? fixture : entry)) : [...media, fixture];
+  writeFileSync(manifestPath, `${JSON.stringify({ media }, null, 2)}\n`);
   process.stdout.write(`wrote ${files.length} files to ${relative(root, dir)}\n`);
 }

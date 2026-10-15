@@ -51,6 +51,12 @@ try {
   await page.locator('#enter-destination').click();
   await page.waitForFunction(() => document.querySelector('#walking-hud')?.dataset.inside === 'osm-node-8172494964');
   await page.locator('#panel-toggle').click();
+  // The first-visit welcome can open a moment after entry and close by itself; under load it
+  // once covered the first pose's culled capture and was gone for the comparison. Dismiss it.
+  if (await page.locator('.store-intro').waitFor({ state: 'visible', timeout: 8000 }).then(() => true, () => false)) {
+    await page.locator('.store-intro button').click();
+    await page.locator('.store-intro').waitFor({ state: 'hidden' });
+  }
   const hideUi = () => page.evaluate(() => { document.body.classList.add('clear-view'); if (!document.querySelector('#cull-hide')) { const style = document.createElement('style'); style.id = 'cull-hide'; style.textContent = '#ipic-screening,.nearby-greetings,.walking-console{visibility:hidden!important}'; document.head.append(style); } });
   await hideUi();
 
@@ -135,7 +141,7 @@ try {
     // The pixel comparison proves a culled frame; where nothing is culled (the doorway
     // shows the lounge and beyond), only the decision and the unchanged counts matter.
     if (r.decision && r.noise.changed > 0) problems.push(`${r.name}: consecutive frames differ (${r.noise.changed} px), so the comparison is not valid`);
-    if (r.change.changed > 0) problems.push(`${r.name}: culling changed ${r.change.changed} px (max channel ${r.change.max})`);
+    if (r.decision && r.change.changed > 0) problems.push(`${r.name}: culling changed ${r.change.changed} px (max channel ${r.change.max})`);
     if (r.decision && !(r.on.calls < r.off.calls)) problems.push(`${r.name}: culling saved no draw calls (${r.on.calls} vs ${r.off.calls})`);
     // Animation seen through the doorway moves the counts a little; culling removes about 60 %.
     if (!r.decision && Math.abs(r.on.calls - r.off.calls) > r.off.calls * .05) problems.push(`${r.name}: counts moved without culling (${r.on.calls} vs ${r.off.calls})`);

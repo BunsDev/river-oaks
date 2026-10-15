@@ -13,9 +13,20 @@ export const SCREENING_VENUES = freeze({
 
 // Allowlisted media. The server takes only the id and duration from here; the client plays
 // the bundled sources (preview/public/assets/ipic/screening, hashes in its sources.json).
-// The fixture is a labelled synthetic test clip, never the approved short (#365).
+// Host Start plays a venue's first film: the approved short (#365, Val, 2026-10-15). The
+// fixture is a labelled synthetic test clip that tests and tools can still name.
+const SHORT_TEXT = ['Westheimer Road, River Oaks.', 'Jevica’s office, by invitation.', 'Room for good work.', 'A scene idea, saved privately.', 'Then out, to meet a friend at IPIC.', 'Past the lounge.', 'Two seats, one screen.', 'Then back to the street.'];
 const FIXTURE_TEXT = ['Fixture clip: a test pattern for shared playback.', 'A tone sounds once each second.', 'This is not the IPIC screening short.'];
 export const SCREENING_MEDIA = freeze({
+  'ipic-original-v1': freeze({
+    id: 'ipic-original-v1', venues: freeze(['ipic']), durationMs: 52_555, label: 'River Oaks: an evening at the office and IPIC', fixture: false,
+    sources: freeze([
+      freeze({ src: '/assets/ipic/screening/ipic-original-v1.webm', type: 'video/webm; codecs="vp9, opus"' }),
+      freeze({ src: '/assets/ipic/screening/ipic-original-v1.mp4', type: 'video/mp4; codecs="avc1.4D401F, mp4a.40.2"' }),
+    ]),
+    captions: freeze({ src: '/assets/ipic/screening/ipic-original-v1.en.vtt', srclang: 'en', label: 'English' }),
+    transcript: freeze(SHORT_TEXT),
+  }),
   'ipic-fixture-v1': freeze({
     id: 'ipic-fixture-v1', venues: freeze(['ipic']), durationMs: 30_000, label: 'Fixture clip (test pattern)', fixture: true,
     sources: freeze([

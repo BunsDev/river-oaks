@@ -10,7 +10,7 @@ import { dartboardPixel } from './dartboard-texture.js';
 
 export function buildIpicInterior(room, options = {}) {
   if (room?.interior !== IPIC_INTERIOR) throw new Error('An IPIC room plan is required');
-  const root = new THREE.Group(); root.name = 'IPIC River Oaks';
+  const root = new THREE.Group(); root.name = 'IPIC River Oaks'; root.userData.interior = IPIC_INTERIOR;
   const finishes = createIpicMaterials(options), { m } = finishes;
   const geometry = new Set(), batches = new Map();
   const keep = g => { geometry.add(g); return g; };
