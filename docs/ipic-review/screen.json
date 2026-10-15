@@ -1,0 +1,141 @@
+{
+  "schemaVersion": 1,
+  "interior": "ipic-photo-v1",
+  "source": "preview/src/ipic-plan.js IPIC_SCREEN",
+  "frame": "room metres; heights above the auditorium floor (room floor + 6 m)",
+  "screen": {
+    "centre": [
+      0.3,
+      2.5,
+      33.79
+    ],
+    "widthM": 9.8,
+    "heightM": 3.25,
+    "aspect": 3.015,
+    "leftM": -4.6,
+    "rightM": 5.2,
+    "bottomM": 0.875,
+    "topM": 4.125,
+    "auditoriumFloorM": 6
+  },
+  "seatedEye": "cushion height + 0.69 m (store-encounters.js); seated avatars in front are not modelled, only recliner headrests",
+  "seats": [
+    {
+      "seat": "bench:ipic-recliner-0-0:0",
+      "at": [
+        -2.6,
+        28
+      ],
+      "eyeM": 1.22,
+      "distanceM": 5.79,
+      "horizontalDeg": 72.5,
+      "offAxisDeg": 26.6,
+      "topElevationDeg": 26.6,
+      "lowestVisibleM": 2.01,
+      "hiddenBottomFraction": 0.35
+    },
+    {
+      "seat": "bench:ipic-recliner-0-1:0",
+      "at": [
+        -0.6,
+        28
+      ],
+      "eyeM": 1.22,
+      "distanceM": 5.79,
+      "horizontalDeg": 79.7,
+      "offAxisDeg": 8.8,
+      "topElevationDeg": 26.6,
+      "lowestVisibleM": 2.01,
+      "hiddenBottomFraction": 0.35
+    },
+    {
+      "seat": "bench:ipic-recliner-0-2:0",
+      "at": [
+        1.4,
+        28
+      ],
+      "eyeM": 1.22,
+      "distanceM": 5.79,
+      "horizontalDeg": 79.3,
+      "offAxisDeg": -10.8,
+      "topElevationDeg": 26.6,
+      "lowestVisibleM": 2.01,
+      "hiddenBottomFraction": 0.35
+    },
+    {
+      "seat": "bench:ipic-recliner-0-3:0",
+      "at": [
+        3.4,
+        28
+      ],
+      "eyeM": 1.22,
+      "distanceM": 5.79,
+      "horizontalDeg": 71.4,
+      "offAxisDeg": -28.2,
+      "topElevationDeg": 26.6,
+      "lowestVisibleM": 2.01,
+      "hiddenBottomFraction": 0.35
+    },
+    {
+      "seat": "bench:ipic-recliner-1-0:0",
+      "at": [
+        -2.6,
+        31
+      ],
+      "eyeM": 1.22,
+      "distanceM": 2.79,
+      "horizontalDeg": 106,
+      "offAxisDeg": 46.1,
+      "topElevationDeg": 46.2,
+      "lowestVisibleM": 0.88,
+      "hiddenBottomFraction": 0
+    },
+    {
+      "seat": "bench:ipic-recliner-1-1:0",
+      "at": [
+        -0.6,
+        31
+      ],
+      "eyeM": 1.22,
+      "distanceM": 2.79,
+      "horizontalDeg": 119.4,
+      "offAxisDeg": 17.9,
+      "topElevationDeg": 46.2,
+      "lowestVisibleM": 0.88,
+      "hiddenBottomFraction": 0
+    },
+    {
+      "seat": "bench:ipic-recliner-1-2:0",
+      "at": [
+        1.4,
+        31
+      ],
+      "eyeM": 1.22,
+      "distanceM": 2.79,
+      "horizontalDeg": 118.8,
+      "offAxisDeg": -21.5,
+      "topElevationDeg": 46.2,
+      "lowestVisibleM": 0.88,
+      "hiddenBottomFraction": 0
+    },
+    {
+      "seat": "bench:ipic-recliner-1-3:0",
+      "at": [
+        3.4,
+        31
+      ],
+      "eyeM": 1.22,
+      "distanceM": 2.79,
+      "horizontalDeg": 103.6,
+      "offAxisDeg": -48,
+      "topElevationDeg": 46.2,
+      "lowestVisibleM": 0.88,
+      "hiddenBottomFraction": 0
+    }
+  ],
+  "burnedInTextSafe": {
+    "lowestM": 2.01,
+    "fractionFromTop": 0.65,
+    "note": "Lowest screen height every recliner sees over the headrest in front. Captions in the player are a WebVTT track, not burned in."
+  }
+}
