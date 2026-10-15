@@ -28,6 +28,7 @@
     "desktop:start": "electron .",
     "desktop:package": "node desktop/package.js",
     "desktop:package:check": "node desktop/package-check.js",
+    "desktop:installers": "node desktop/installers.js",
     "test:desktop": "node --test desktop/tests/*.test.js",
     "test:desktop:e2e": "node desktop/e2e.js",
     "audit:multiplayer:render": "node preview/audit/rendered-multiplayer.js",
@@ -57,6 +58,7 @@
     "predesktop:start": "node scripts/enforce-pnpm.mjs",
     "predesktop:package": "node scripts/enforce-pnpm.mjs",
     "predesktop:package:check": "node scripts/enforce-pnpm.mjs",
+    "predesktop:installers": "node scripts/enforce-pnpm.mjs",
     "pretest:desktop": "node scripts/enforce-pnpm.mjs",
     "pretest:desktop:e2e": "node scripts/enforce-pnpm.mjs",
     "preaudit:multiplayer:render": "node scripts/enforce-pnpm.mjs",
@@ -97,6 +99,7 @@
     "@electron/fuses": "2.1.3",
     "@electron/packager": "20.3.0",
     "electron": "44.7.0",
+    "electron-winstaller": "5.4.4",
     "playwright": "1.64.0",
     "vite": "8.3.4"
   },
