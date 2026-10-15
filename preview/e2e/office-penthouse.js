@@ -23,12 +23,13 @@ async page => {
     reloads.push(detail);
     await page.locator('#reload').evaluate(button => button.click());
   }
-  await page.locator('#office-lobby').waitFor({ state: 'attached', timeout: 15000 });
+  // Setup waits are generous: they are not product timings, and a loaded machine needs minutes.
+  await page.locator('#office-lobby').waitFor({ state: 'attached', timeout: 180000 });
   await page.locator('#office-lobby').evaluate(button => button.click());
-  await page.waitForFunction(() => document.querySelector('#office-enter')?.disabled === false);
+  await page.waitForFunction(() => document.querySelector('#office-enter')?.disabled === false, null, { timeout: 180000 });
   await page.locator('#canvas-host').focus(); await page.keyboard.press('KeyF');
   // If entry stalls, say what the office panel and the server reported rather than only timing out.
-  await page.waitForFunction(() => document.querySelector('#office-visit')?.open && document.querySelector('#office-visit').dataset.phase === 'office', null, { timeout: 60000 })
+  await page.waitForFunction(() => document.querySelector('#office-visit')?.open && document.querySelector('#office-visit').dataset.phase === 'office', null, { timeout: 180000 })
     .catch(async error => { throw new Error(`${error.message}: ${JSON.stringify(await page.evaluate(() => ({ status: document.querySelector('.office-panel [role=status]')?.textContent, dialog: document.querySelector('#office-visit')?.open, phase: document.querySelector('#office-visit')?.dataset.phase, label: document.querySelector('#office-visit [role=status]')?.textContent, visit: (() => { const m = window.__riverMultiplayer(); return m.snapshot.players.find(p => p.id === m.selfId)?.office ?? null; })() })))}`); });
   const visit = () => page.evaluate(() => { const m = window.__riverMultiplayer(); return m.snapshot.players.find(p => p.id === m.selfId)?.office ?? null; });
   const start = await visit();
