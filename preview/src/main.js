@@ -358,7 +358,10 @@ function initializeRenderer() {
   };
   const longTable = () => (world && plazaSalonPlan(world)?.winePong) ?? null;
   plazaWinePong = createPlazaWinePong({ getMirror: () => plazaSalon?.userData.winePong ?? null, getTable: longTable,
-    getPose: () => walking?.getPose(), focusWorld: () => host.focus({ preventScroll: true }), reducedMotion, onSwitch: switchLongTable });
+    getPose: () => walking?.getPose(), focusWorld: () => host.focus({ preventScroll: true }),
+    frameTable: table => { if (world && table) walking?.lookAt([table.x, table.north, groundSurfaceHeight(world, table.x, -table.north) + 0.8], 0.9); },
+    onWindup: () => playerAvatar?.throwBall(performance.now()),
+    reducedMotion, onSwitch: switchLongTable });
   plazaShuffleboard = createPlazaShuffleboard({ getMirror: () => plazaSalon?.userData.shuffleboard ?? null, getTable: longTable,
     getPose: () => walking?.getPose(), focusWorld: () => host.focus({ preventScroll: true }), reducedMotion, onSwitch: switchLongTable });
   playProviders.push(() => longTableGames()[longTableGame]);

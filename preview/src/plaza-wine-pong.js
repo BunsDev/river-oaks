@@ -1,7 +1,7 @@
 import './plaza-table-games.css';
 import { attachGuide } from './salon-guide.js';
 import './plaza-wine-pong.css';
-import { winePongSide } from './plaza-salon-plan.js';
+import { winePongOrigin, winePongSide } from './plaza-salon-plan.js';
 import { RIM, TABLE, THROWS_PER_TURN, glassAt, landing, notation, replay, trajectory } from './wine-pong-rules.js';
 import { chooseThrow } from './wine-pong-opponent.js';
 
@@ -13,15 +13,15 @@ import { chooseThrow } from './wine-pong-opponent.js';
 // The board: the table at 150 px a metre, with room above the far end for a long throw
 // and below your end for your hand.
 const SVG = 'http://www.w3.org/2000/svg', SCALE = 150, PAD = 26, TOP = 0.4 * SCALE;
-const VIEW = { width: TABLE.width * SCALE + PAD * 2, height: TOP + (TABLE.length + 0.6) * SCALE };
+const VIEW = { width: TABLE.width * SCALE + PAD * 2, height: TOP + (TABLE.length + 1.65) * SCALE };
 // The close-up of the far rack: 0.75–1.5 m past the table's middle, at 300 px a metre.
 const ZOOM = { scale: 300, near: 0.75, far: 1.5, pad: 14 };
 ZOOM.width = TABLE.width * ZOOM.scale + ZOOM.pad * 2; ZOOM.height = (ZOOM.far - ZOOM.near) * ZOOM.scale + ZOOM.pad * 2;
 const RESULT = { in: 'In! A glass goes down.', 'rim-in': 'Off the rim… and in!', 'rim-out': 'Off the rim, and out.', 'bounce-in': 'A bounce, and in!', miss: 'Missed.' };
 
 export function createPlazaWinePong({ host = document.querySelector('#viewport'), getMirror = () => null, getTable = () => null, getPose = () => null, focusWorld = () => {},
-  random = Math.random, now = () => performance.now(), replyDelay = 650, flight = 900, reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false, onSwitch = null } = {}) {
-  let game = null, phase = 'aim', meter = null, aim = 0.5, generation = 0, thinking = false, flying = false, said = '', frame = 0;
+  frameTable = () => {}, onWindup = () => {}, random = Math.random, now = () => performance.now(), replyDelay = 650, flight = 900, reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false, onSwitch = null } = {}) {
+  let game = null, stance = null, phase = 'aim', meter = null, aim = 0.5, generation = 0, thinking = false, flying = false, said = '', frame = 0, inspectRack = false;
 
   const panel = document.createElement('dialog');
   panel.id = 'wine-pong-panel'; panel.className = 'table-game-panel wine-pong-panel';
@@ -34,14 +34,16 @@ export function createPlazaWinePong({ host = document.querySelector('#viewport')
       <ul class="wine-pong-scores" aria-label="Glasses left"></ul>
       <div class="wine-pong-views">
         <svg class="wine-pong-table" viewBox="0 0 ${VIEW.width} ${VIEW.height}" role="img" aria-label="The table from your end"></svg>
-        <svg class="wine-pong-zoom" viewBox="0 0 ${ZOOM.width} ${ZOOM.height}" role="img" aria-label="Close-up of the far glasses"></svg>
+        <svg class="wine-pong-zoom" viewBox="0 0 ${ZOOM.width} ${ZOOM.height}" role="img" aria-label="Close-up of the far glasses" hidden></svg>
       </div>
       <div class="table-game-actions">
         <button type="button" data-pong-action="throw">Lock aim</button>
+        <button type="button" data-pong-action="inspect" aria-pressed="false">Inspect rack</button>
+        <button type="button" data-pong-action="reposition">Reposition</button>
         <button type="button" data-pong-action="new">New game</button>
         <div class="table-game-mode" role="group" aria-label="Opponent"><button type="button" data-pong-mode="regular" aria-pressed="true">Plaza regular</button><button type="button" data-pong-mode="pass" aria-pressed="false">Pass and play</button></div>
       </div>
-      <p class="table-game-note">Two throws a turn. Stop the reticle to aim, then again for the power. Sink all six of the far glasses to win.</p>
+      <p class="table-game-note">Two throws a turn. Your standing position changes the launch. Reposition to walk along your end, then press X to resume. Stop the reticle to aim, then again for the power.</p>
     </div>`;
   host.append(panel);
   attachGuide(panel, 'winePong');
@@ -49,6 +51,8 @@ export function createPlazaWinePong({ host = document.querySelector('#viewport')
   const board = $('.wine-pong-table'), zoom = $('.wine-pong-zoom'), status = $('.table-game-status'), throwButton = $('[data-pong-action="throw"]');
 
   const round = () => replay(game.seed, game.throws);
+  const shotOrigin = side => stance?.side === side ? stance.origin : null;
+  const handAt = side => shotOrigin(side) ?? [side === 0 ? -1.6 : 1.6, 0];
   const yours = state => game.mode === 'pass' || state.turn === game.side;
   const who = side => game.mode === 'pass' ? (side === 0 ? 'West end' : 'East end') : side === game.side ? 'You' : 'The plaza regular';
   const newGame = (keep = {}) => {
@@ -86,7 +90,7 @@ export function createPlazaWinePong({ host = document.querySelector('#viewport')
       nodes.push(el('circle', { class: `pong-glass${standing ? '' : ' pong-glass-down'}${rackSide === side ? ' pong-glass-own' : ''}`, cx: x, cy: y, r: RIM * SCALE, 'data-pong-glass': `${rackSide}-${k}` }));
       if (standing) nodes.push(el('circle', { class: 'pong-wine', cx: x, cy: y, r: RIM * SCALE * 0.62 }));
     }));
-    const hand = toScreen(side, [side === 0 ? -1.6 : 1.6, 0]);
+    const hand = toScreen(side, handAt(side));
     nodes.push(el('circle', { class: 'pong-hand', cx: hand[0], cy: hand[1], r: 7 }));
     nodes.push(el('g', { class: 'pong-reticle' }));
     if (state.last) { const [x, y] = toScreen(side, state.last.bounce ?? state.last.land); nodes.push(el('circle', { class: 'pong-mark', cx: x, cy: y, r: 4 })); }
@@ -124,14 +128,14 @@ export function createPlazaWinePong({ host = document.querySelector('#viewport')
     if (!group || !game) return;
     const { state } = round(), side = viewer(state);
     if (state.winner !== null || thinking || flying || !yours(state) || !meter) { group.replaceChildren(); close?.replaceChildren(); return; }
-    const value = meterValue(), hand = toScreen(side, [side === 0 ? -1.6 : 1.6, 0]);
-    const aimNow = phase === 'aim' ? value : aim, far = toScreen(side, landing(side, aimNow, 1)), near = toScreen(side, landing(side, aimNow, 0));
+    const value = meterValue(), origin = shotOrigin(side), hand = toScreen(side, handAt(side));
+    const aimNow = phase === 'aim' ? value : aim, far = toScreen(side, landing(side, aimNow, 1, origin)), near = toScreen(side, landing(side, aimNow, 0, origin));
     const nodes = [el('line', { class: 'pong-aim', x1: hand[0], y1: hand[1], x2: far[0], y2: far[1] })];
-    if (phase === 'power') { const [x, y] = toScreen(side, landing(side, aim, value)); nodes.push(el('line', { class: 'pong-span', x1: near[0], y1: near[1], x2: far[0], y2: far[1] }), el('circle', { class: 'pong-target', cx: x, cy: y, r: 9 })); }
+    if (phase === 'power') { const [x, y] = toScreen(side, landing(side, aim, value, origin)); nodes.push(el('line', { class: 'pong-span', x1: near[0], y1: near[1], x2: far[0], y2: far[1] }), el('circle', { class: 'pong-target', cx: x, cy: y, r: 9 })); }
     group.replaceChildren(...nodes);
     // In the close-up the aim line crosses the far rack, and the power target rides along it.
-    const [ax1, ay1] = toZoom(side, landing(side, aimNow, 0)), [ax2, ay2] = toZoom(side, landing(side, aimNow, 1)), closeNodes = [el('line', { class: 'pong-aim', x1: ax1, y1: ay1, x2: ax2, y2: ay2 })];
-    if (phase === 'power') { const [x, y] = toZoom(side, landing(side, aim, value)); closeNodes.push(el('circle', { class: 'pong-target', cx: x, cy: y, r: (RIM - 0.01) * ZOOM.scale })); }
+    const [ax1, ay1] = toZoom(side, landing(side, aimNow, 0, origin)), [ax2, ay2] = toZoom(side, landing(side, aimNow, 1, origin)), closeNodes = [el('line', { class: 'pong-aim', x1: ax1, y1: ay1, x2: ax2, y2: ay2 })];
+    if (phase === 'power') { const [x, y] = toZoom(side, landing(side, aim, value, origin)); closeNodes.push(el('circle', { class: 'pong-target', cx: x, cy: y, r: (RIM - 0.01) * ZOOM.scale })); }
     close?.replaceChildren(...closeNodes);
   }
 
@@ -165,9 +169,13 @@ export function createPlazaWinePong({ host = document.querySelector('#viewport')
     });
   }
 
-  async function throwBall(aimValue, power) {
-    const { state } = round(), side = state.turn, text = notation(aimValue, power);
+  async function throwBall(aimValue, power, origin) {
+    const { state } = round(), side = state.turn, text = notation(aimValue, power, origin);
     const next = replay(game.seed, [...game.throws, text]).state, outcome = next.last;
+    const ticket = generation;
+    onWindup();
+    if (!reducedMotion) await new Promise(resolve => setTimeout(resolve, 180));
+    if (ticket !== generation) return;
     if (!(await fly(side, outcome))) return;
     game.throws.push(text); said = RESULT[outcome.result]; flying = false;
     mirror(); startMeter('aim'); render(); void regular();
@@ -178,8 +186,8 @@ export function createPlazaWinePong({ host = document.querySelector('#viewport')
     const { state } = round();
     if (!game || state.winner !== null || thinking || flying || !yours(state) || !meter) return;
     if (phase === 'aim') { aim = meterValue(); startMeter('power'); render(); return; }
-    const power = meterValue(); meter = null;
-    void throwBall(Number(aim.toFixed(3)), Number(power.toFixed(3)));
+    const power = meterValue(), origin = shotOrigin(state.turn)?.slice() ?? null; meter = null; flying = true; render();
+    void throwBall(Number(aim.toFixed(3)), Number(power.toFixed(3)), origin);
   }
 
   async function regular() {
@@ -203,6 +211,15 @@ export function createPlazaWinePong({ host = document.querySelector('#viewport')
   }
 
   throwButton.addEventListener('click', press);
+  $('[data-pong-action="inspect"]').addEventListener('click', event => {
+    inspectRack = !inspectRack;
+    zoom.toggleAttribute('hidden', !inspectRack);
+    event.currentTarget.setAttribute('aria-pressed', String(inspectRack));
+  });
+  $('[data-pong-action="reposition"]').addEventListener('click', () => {
+    if (flying || thinking) return;
+    startMeter('aim'); close();
+  });
   panel.addEventListener('keydown', event => {
     // Space and Enter press the focused Throw button natively (one click each).
     if (event.key === 'Escape' || (event.code === 'KeyX' && !event.repeat && !event.metaKey && !event.ctrlKey && !event.altKey)) { event.preventDefault(); event.stopPropagation(); close(); }
@@ -217,16 +234,23 @@ export function createPlazaWinePong({ host = document.querySelector('#viewport')
   $('.table-game-close').addEventListener('click', () => close());
 
   // The end of the table a standing visitor is at, if any.
-  function standingSide() {
+  function standingStance() {
     const pose = getPose(), table = getTable();
     if (!pose || !table || pose.sitting || pose.riding || pose.altitude > 0.1) return null;
-    return winePongSide(table, [pose.position[0], -pose.position[2]]);
+    const point = [pose.position[0], -pose.position[2]], side = winePongSide(table, point);
+    if (side === null) return null;
+    const origin = winePongOrigin(table, side, point);
+    return origin ? { side, origin } : null;
   }
 
   function open() {
-    const side = standingSide();
-    if (side === null) return;
+    const nextStance = standingStance();
+    if (!nextStance) return;
+    const { side } = nextStance;
     if (!game || game.side !== side) newGame({ side, wins: game?.side === side ? game.wins : [0, 0] });
+    if (!stance || stance.side !== side || stance.origin.some((value, index) => Math.abs(value - nextStance.origin[index]) > 0.001)) startMeter('aim');
+    stance = nextStance;
+    frameTable(getTable(), stance);
     panel.show(); startMeter(phase); mirror(); render(); void regular();
     throwButton.focus({ preventScroll: true });
   }
@@ -235,15 +259,15 @@ export function createPlazaWinePong({ host = document.querySelector('#viewport')
     panel,
     interaction() {
       if (panel.open) return { kind: 'play', label: 'Leave the wine pong table', run: () => close(), disabled: false };
-      if (standingSide() === null) return null;
+      if (!standingStance()) return null;
       return { kind: 'play', label: 'Play wine pong', run: open, disabled: false };
     },
-    update() { if (panel.open && standingSide() === null) close(); },
+    update() { if (panel.open && !standingStance()) close(); },
     open, close,
     debug() {
-      if (!game) return { open: panel.open, game: null };
+      if (!game) return { open: panel.open, game: null, standing: getPose()?.position.slice() ?? null };
       const { state } = round();
-      return { open: panel.open, seed: game.seed, side: game.side, mode: game.mode, turn: state.turn, throwsLeft: state.throwsLeft, throws: game.throws.slice(),
+      return { open: panel.open, seed: game.seed, side: game.side, origin: stance?.origin.slice() ?? null, standing: getPose()?.position.slice() ?? null, mode: game.mode, turn: state.turn, throwsLeft: state.throwsLeft, throws: game.throws.slice(),
         glasses: state.glasses.map(rack => rack.filter(Boolean).length), winner: state.winner, wins: game.wins.slice(), phase, aim, meter: meter ? meterValue() : null,
         thinking, flying, last: state.last ? { result: state.last.result, glass: state.last.glass, side: state.last.side } : null, status: status.textContent };
     },

@@ -609,10 +609,13 @@ bench. Rules: `preview/src/yacht-rules.js`.
 A long linen-topped wine pong table stands between the café and the north planters.
 Standing at either end, **Play wine pong** or **X** opens it. You play a plaza regular
 at the far end, or two players pass and play. Each side has six wine glasses racked
-at its own end. Stop the sweeping reticle once for the aim and once for the power;
-the ball flies over the real table. A ball can drop straight in, rattle off a rim and
+at its own end. Your standing point is the ball's release point; choose
+**Reposition** to walk along your end without losing the game, then press **X**
+again to resume. Stop the sweeping reticle once for the aim and once for the power;
+the ball flies over the real table. **Inspect rack** briefly magnifies the far
+glasses. A ball can drop straight in, rattle off a rim and
 in (or out), or bounce on the table and in. Two throws a turn, and sinking all six of
-the far glasses wins. A close-up of the far rack sits beside the table view. Rules:
+the far glasses wins. Rules:
 `preview/src/wine-pong-rules.js`.
 
 The wine pong table's switch also offers **Shuffleboard**, which puts the glasses away
