@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createServer } from 'node:http';
@@ -10,7 +10,7 @@ import Redis from 'ioredis';
 import { createFileWaitlist, createRedisWaitlist, suggestedUsername } from '../waitlist.js';
 import { generatedUsername } from '../../preview/src/generated-username.js';
 import { createWaitlistRoutes } from '../waitlist-routes.js';
-import { validUsername } from '../../preview/src/resident-names.js';
+import { usernameKey, validUsername } from '../../preview/src/resident-names.js';
 
 // Usernames at sign-up: a GitHub login by default (held for its owner), otherwise a
 // generated name; the waiting resident may change it; an approver may change it until
@@ -23,6 +23,7 @@ test('the first suggestion is the GitHub login when it can be a username, then g
   assert.equal(suggestedUsername({ login: null, userId: 'u' }), generatedUsername('u:0'));
   assert.equal(suggestedUsername({ login: 'octocat', userId: 'u', attempt: 1 }), generatedUsername('u:1'), 'later attempts are generated');
   assert.equal(suggestedUsername({ login: 'Jevica', userId: 'u' }), generatedUsername('u:0'), 'a reserved login is never offered');
+  for (const login of ['bob', 'r2d2', 'ab-12']) assert.equal(suggestedUsername({ login, userId: 'u' }), generatedUsername('u:0'), `${login} has fewer than 4 letters`);
 });
 
 async function contract(t, waitlist, readAudit) {
@@ -49,6 +50,14 @@ async function contract(t, waitlist, readAudit) {
   assert.equal(invalid.reason, 'invalid');
   assert.match(invalid.message, /reserved/);
   assert.equal((await waitlist.setUsername({ userId: 'guest-2', username: 'a', actorId: 'guest-2' })).reason, 'invalid');
+  // A new choice needs at least 4 letters, from the resident or an approver.
+  for (const [name, actorId] of [['bob99', 'guest-2'], ['abc', 'admin'], ['x-y-z-1', 'guest-2']]) {
+    const short = await waitlist.setUsername({ userId: 'guest-2', username: name, actorId });
+    assert.equal(short.reason, 'invalid', name);
+    assert.match(short.message, /at least 4 letters/, name);
+  }
+  // Capital and lowercase letters are the same name.
+  assert.equal((await waitlist.setUsername({ userId: 'guest-2', username: 'NIGHT-OWL', actorId: 'guest-2' })).reason, 'taken');
   await assert.rejects(waitlist.setUsername({ userId: 'guest-2', username: 'stolen-name', actorId: 'guest-1' }), /authority/, 'nobody renames another resident');
 
   // The approver may rename before approving; the approved name then names the resident.
@@ -101,6 +110,36 @@ test('the Redis waitlist enforces the same usernames atomically', { skip: !proce
   await waitlist.request(email('racer-a')); await waitlist.request(email('racer-b'));
   const results = await Promise.all(['racer-a', 'racer-b'].map(id => waitlist.setUsername({ userId: id, username: 'photo-finish', actorId: id })));
   assert.deepEqual(results.map(result => result.ok).sort(), [false, true]);
+});
+
+// Names chosen before the 4-letter minimum: a waiting "bob" and an approved "al".
+const keptRecord = (userId, username, status) => ({ userId, name: `Visitor #${userId}`, email: `${userId}@example.test`, status,
+  requestedAt: new Date(0).toISOString(), username, usernameKey: usernameKey(username), usernameBy: 'self' });
+async function keptNames(waitlist) {
+  assert.equal((await waitlist.request(email('old-1'))).username, 'bob', 'a waiting resident keeps a short name');
+  assert.equal((await waitlist.setUsername({ userId: 'old-1', username: 'bob', actorId: 'old-1' })).ok, true, 'saving it again unchanged is fine');
+  const short = await waitlist.setUsername({ userId: 'old-1', username: 'abc', actorId: 'old-1' });
+  assert.equal(short.reason, 'invalid');
+  assert.match(short.message, /at least 4 letters/, 'a new short name is refused');
+  assert.equal((await waitlist.setUsername({ userId: 'old-1', username: 'bobby', actorId: 'old-1' })).ok, true, 'a longer name is fine');
+  assert.equal(await waitlist.usernameOf('old-2'), 'al', 'an approved short name still names its resident');
+}
+
+test('the file waitlist keeps names chosen before the 4-letter minimum', async t => {
+  const directory = await mkdtemp(join(tmpdir(), 'river-oaks-kept-names-'));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const file = join(directory, 'waitlist.json');
+  await writeFile(file, JSON.stringify({ records: [keptRecord('old-1', 'bob', 'pending'), keptRecord('old-2', 'al', 'approved')], audit: [] }));
+  await keptNames(await createFileWaitlist(file, { admins: ['admin'] }));
+});
+
+test('the Redis waitlist keeps names chosen before the 4-letter minimum', { skip: !process.env.REDIS_URL }, async t => {
+  const redis = new Redis(process.env.REDIS_URL);
+  const prefix = `{test-kept-names-${randomUUID()}}`;
+  t.after(async () => { const keys = await redis.keys(`${prefix}*`); if (keys.length) await redis.del(...keys); redis.disconnect(); });
+  await redis.hset(`${prefix}:waitlist:users`, 'old-1', JSON.stringify(keptRecord('old-1', 'bob', 'pending')), 'old-2', JSON.stringify(keptRecord('old-2', 'al', 'approved')));
+  await redis.hset(`${prefix}:waitlist:usernames`, usernameKey('bob'), 'old-1', usernameKey('al'), 'old-2');
+  await keptNames(createRedisWaitlist({ redis, prefix, admins: ['admin'] }));
 });
 
 test('the routes let a waiting resident name themselves and an approver rename before approving', async t => {
