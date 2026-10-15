@@ -1,6 +1,6 @@
 import { buildWorldDesignPack } from '../scripts/studio-skill-pack.js';
 import { packager } from '@electron/packager';
-import { flipFuses } from '@electron/fuses';
+import { flipFuses, FuseV1Options } from '@electron/fuses';
 import { DESKTOP_FUSES } from './fuses.js';
 import { DESKTOP_FILES, DESKTOP_SHARED_FILES } from './package-files.js';
 import { packagerOptions, packagedBinary } from './package-options.js';
@@ -27,7 +27,8 @@ try {
   // --inspect, and the app only runs from its integrity-checked asar.
   for (const path of paths) {
     const binary = packagedBinary(path, process.platform);
-    await flipFuses(binary, { ...DESKTOP_FUSES, resetAdHocDarwinSignature: process.platform === 'darwin' && process.arch === 'arm64' });
+    // THROWAWAY (#371 fuse-drift proof, never merged): RunAsNode on, against desktop/fuses.js.
+    await flipFuses(binary, { ...DESKTOP_FUSES, [FuseV1Options.RunAsNode]: true, resetAdHocDarwinSignature: process.platform === 'darwin' && process.arch === 'arm64' });
   }
   console.log(paths.join('\n'));
 } finally { await rm(stage, { recursive: true, force: true }); }
