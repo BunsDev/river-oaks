@@ -68,8 +68,65 @@ test('HTML-image decoder control applies only to the phone fixture and only when
   assert.equal(context.createImageBitmap, undefined);
   assert.equal(context.document.documentElement.dataset.phoneDecoder, 'html-images');
 
+  const avatarOnly = await (await fetch(`${phone.origin}/?phone-avatar-decoder=html`)).text();
+  const avatarScript = avatarOnly.match(/<script id="phone-avatar-decoder-control">([^<]+)<\/script>/)?.[1];
+  assert.ok(avatarScript, 'avatar-only control is present in served phone HTML');
+  const avatarContext = { createImageBitmap() {}, document: { documentElement: { dataset: {} } } };
+  const bitmap = avatarContext.createImageBitmap;
+  runInNewContext(avatarScript, avatarContext);
+  assert.equal(avatarContext.createImageBitmap, bitmap);
+  assert.equal(avatarContext.__riverPhoneAvatarHtmlImages, true);
+
   const desktop = await startBrowserFixture();
   t.after(() => desktop.close());
   const desktopHtml = await (await fetch(`${desktop.origin}/?phone-decoder=html`)).text();
   assert.doesNotMatch(desktopHtml, /phone-decoder-control/);
+  const desktopAvatarHtml = await (await fetch(`${desktop.origin}/?phone-avatar-decoder=html`)).text();
+  assert.doesNotMatch(desktopAvatarHtml, /phone-avatar-decoder-control/);
+});
+
+test('phone readiness report sends bounded asset and renderer data only to its private fixture', { timeout: 90000 }, async t => {
+  const phone = await startBrowserFixture({ env: { RIVER_OAKS_PHONE_FIXTURE_HOST: '127.0.0.1' } });
+  t.after(() => phone.close());
+  const html = await (await fetch(`${phone.origin}/?phone-avatar-decoder=html&phone-report=1`)).text();
+  const script = html.match(/<script id="phone-readiness-report">([^<]+)<\/script>/)?.[1];
+  assert.ok(script, 'explicit phone report script is injected');
+
+  const scheduled = [], sent = [];
+  const context = {
+    document: { documentElement: { dataset: { phoneAvatarDecoder: 'html-images' } },
+      querySelector: selector => {
+        if (selector === '#viewport') return { dataset: { assetProgress: JSON.stringify({ loaded: 88, total: 88, failed: 0, done: true }) } };
+        if (selector === '.multiplayer-gate') return { hidden: false };
+        if (selector === '#multiplayer-status') return { textContent: 'Connecting to the town…' };
+        return { hidden: false, classList: { contains: () => false }, querySelector: () => ({ textContent: 'Building the view' }) };
+      } },
+    performance: { now: () => 7000 },
+    __riverRenderAudit: { graphics: () => ({ renderer: 'Test WebGL', viewport: [400, 800], render: { calls: 123 }, memory: { textures: 12 } }) },
+    setTimeout: (fn, ms) => scheduled.push({ fn, ms }),
+    fetch: (url, options) => { sent.push({ url, options }); return Promise.resolve(); },
+  };
+  runInNewContext(script, context);
+  assert.deepEqual(scheduled.map(item => item.ms), [5000, 25000]);
+  await scheduled[0].fn();
+  assert.equal(sent[0].url, '/__phone_readiness');
+  const report = JSON.parse(sent[0].options.body);
+  assert.equal(report.mode, 'avatar-html');
+  assert.deepEqual(JSON.parse(JSON.stringify(report.asset)), { loaded: 88, total: 88, failed: 0, done: true });
+  assert.equal(report.graphics.renderer, 'Test WebGL');
+  assert.equal(report.gate.shown, true);
+  assert.equal(report.gate.status, 'Connecting to the town…');
+
+  const posted = await fetch(`${phone.origin}/__phone_readiness`, {
+    method: 'POST', headers: { Origin: phone.origin, 'Content-Type': 'application/json' }, body: JSON.stringify(report),
+  });
+  assert.equal(posted.status, 204);
+  const records = await (await fetch(`${phone.origin}/__phone_readiness`)).json();
+  assert.equal(records.length, 1);
+  assert.equal(records[0].asset.failed, 0);
+  assert.equal(records[0].graphics.renderer, 'Test WebGL');
+  assert.equal(records[0].gate.status, 'Connecting to the town…');
+  assert.equal((await fetch(`${phone.origin}/__phone_readiness`, {
+    method: 'POST', headers: { Origin: 'https://evil.example', 'Content-Type': 'application/json' }, body: JSON.stringify(report),
+  })).status, 403);
 });
