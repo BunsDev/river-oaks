@@ -11214,6 +11214,30 @@
       ],
       "ledger": "docs/superpowers/plans/2026-10-15-character-studio.md",
       "pr": 461
+    },
+    {
+      "id": "character-studio-persistence-20261015",
+      "title": "Character Studio #443 authoritative drafts and immutable revisions",
+      "status": "active",
+      "branches": [
+        "feat/character-studio-persistence-20261015"
+      ],
+      "owner": "codex-character-studio-20261015",
+      "updatedAt": "2026-10-15T22:01:40.056512+00:00",
+      "leaseUntil": "2026-10-16T00:01:40.056512+00:00",
+      "nextAction": "Implement shared memory/Redis draft CAS, immutable publication/rollback, idempotency and deletion contracts with real isolated Redis tests; then authenticated routes and peer replication. Rendering acceptance gaps remain in #442. No merge/deploy.",
+      "filesOwned": [
+        "server/character-store.js",
+        "server/tests/character-store.test.js",
+        "docs/character-studio.md",
+        "docs/superpowers/plans/2026-10-15-character-studio-persistence.md"
+      ],
+      "requiredChecks": [
+        "Memory and real isolated Redis store contract tests",
+        "pnpm run verify",
+        "Authenticated HTTP/WebSocket and two-player journeys before integration acceptance"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-15-character-studio-persistence.md"
     }
   ]
 }

@@ -237,3 +237,32 @@ coverage or appearance review; none of those experimental garment changes are
 included. Resolve the seated fit using the actual runtime pose before accepting
 this matrix. Other wardrobes, wing/armor cases, continuous gait phases, pinned
 hero goldens, crowd/device budgets and human review remain open.
+
+
+## Authoritative store increment (#443, integration pending)
+
+`server/character-store.js` implements the same state transitions for memory and
+Redis. An authenticated boundary will supply the owner ID; this module does not
+infer authentication from an arbitrary caller argument. Draft definitions must be
+canonical and have revision zero. Every mutation requires the expected account
+version and a bounded request ID. Two editors cannot both write the same version.
+Publishing allocates an immutable revision; rollback copies an earlier revision
+into a new revision without discarding the private draft.
+
+A matching request retry returns its original `appliedVersion`/`revision` together
+with the **current** account state. Reusing its ID for different input fails.
+After a receipt expires, its old expected version still prevents reapplication.
+Records allow64 immutable revisions and64 recent receipts, at most256KiB each;
+10,000 account slots include deletion tombstones. Capacity errors preserve existing
+records. These are explicit store limits, not measured production capacity claims.
+
+Trusted account deletion removes all definitions and receipts, including corrupt
+private records, leaving only a hashed owner key and minimal tombstone. Stale
+commands cannot recreate it. Tombstones require an explicit future lifecycle policy
+before reclaiming account slots; silently expiring them would reopen retry races.
+
+Routes, authentication/CSRF/rate limits, account-deletion hooks, legacy preference
+migration, two-second world publication cooldown, peer replication and UI save/
+conflict behavior are not wired yet. No existing account/checkpoint format or live
+appearance behavior changes in this store-only increment. Its tests do not establish
+the create/save/join/peer/reconnect/edit/republish acceptance path.
