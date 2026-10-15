@@ -66,6 +66,9 @@ this branch, update that paragraph's "fenced at v10" to v11.
 | After the review fix: office preview tests | 82/82 |
 | After the review fix: `REDIS_URL=… node --test server/tests/penthouse-*.test.js server/tests/offices*.test.js` | 26/26 |
 | After the review fix: `REDIS_URL=<isolated :16473> node --test server/tests/*.test.js` at `de13bbcb` | 732/732, 0 skipped |
+| `node preview/e2e/office-penthouse-runner.mjs` at `bf01150f` (load 26–97, SwiftShader, no reload needed) | **passed 17 checks**: seated at the plan chair facing the desk, eye 0.480 m lower, desk offered, both prompts topmost and clear of the header at 1280 and 390 px, keys do not move a seated visitor, stood at the approach, stairs +3.800 m, no page errors |
+| Reruns 2–8 before it | failed in setup or harness steering under load 80–470: the 20 s district fetch, short setup waits, an outside disk sweep deleting every `node_modules`, the Playwright cache dropping Chromium 1248, and a drag-steered walk drifting into a chair. Each was fixed in the harness (wait for the district; one recorded reload; three-minute setup waits; aisle waypoints) or restored. |
+| Hosted checks at `ea004093` | 16/16 green |
 
 ## Independent review (subagent, 2026-10-15, at `d79016c1`)
 
@@ -77,8 +80,15 @@ this branch, update that paragraph's "fenced at v10" to v11.
   Rollout-audit proof labels now say v11.
 - **Accepted as is:** a stale tick snapshot can briefly flip the client's seat state after a reply; the
   next snapshot corrects it, the same as the existing floor adoption.
-- **Deferred to merge time:** `docs/offices.md`'s checkpoint paragraph ("fenced at v10") is rewritten by
-  Codex's branch; reconcile it with whichever lands second.
+- **Deferred to merge time:** `docs/offices.md`'s checkpoint paragraph ("fenced at v10") and
+  `docs/screenings.md`'s Versions bullet (Codex's branch says "the current Redis writer generation is
+  `v10:`") are rewritten by `fix/office-world-lifecycle-reliability`; whichever lands second updates both to v11.
+- **Neighbouring work (2026-10-15 09:00Z):** `office-penthouse-glazing` and `office-skyline-prototype`
+  (claude:river-oaks-penthouse) edit the graybox shell section and add a skyline hook in
+  `office-world-scene.js`. This branch edits the graybox chairs and the scene's seated/eye code: different
+  hunks, reconcile at merge.
+- **Hosted CI:** all checks green on #400 at `7ba96bd0` (aggregate `preview`, shared and experience shards,
+  verify 3.11/3.13, CodeQL, dependency review).
 
 ## Gaps / next
 

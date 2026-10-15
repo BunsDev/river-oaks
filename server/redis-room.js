@@ -100,6 +100,8 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
   // and levels, v9 venue screenings, v8 resident-owned workspace visits). A newer writer
   // atomically fences an older lease; peers/future generations retain it.
   const token=`v11:${randomUUID()}`;
+  // Every replacement and recovery probe uses this coordinator's current configuration.
+  const worldOptions={now,isAdmin,worldId,screeningHosts,officeLayout};
   let closed=false,pendingTick=null,lastAttempt=-Infinity,lastView=null,cached=null;
   async function read() {
     const buffer=await redis.getBuffer(keys.view);
@@ -127,7 +129,7 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
         throw new Error('Invalid durable town region');
       currentData=await regionCatalog.getRegion(worldId);
     }
-    let world=cached?.world??createSharedWorld(currentData,{now,isAdmin,worldId,screeningHosts,...(officeLayout?{officeLayout}:{})});
+    let world=cached?.world??createSharedWorld(currentData,worldOptions);
     let districtMigration = null;
     if(!cached && previous) {
       let checkpointReason = 'unknown';
@@ -140,10 +142,10 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
         throw error;
       }
       if (!world.restore(previous.checkpoint, { onFailure: reason => { checkpointReason = reason; } }).ok) {
-        const levels = recoverDistrictLevelsCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, worldId, now, isAdmin });
-        const interior = levels.ok ? levels : recoverDistrictInteriorCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, worldId, now, isAdmin });
+        const levels = recoverDistrictLevelsCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
+        const interior = levels.ok ? levels : recoverDistrictInteriorCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
         const recovered = interior.ok ? interior
-          : recoverDistrictHeightCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, worldId, now, isAdmin });
+          : recoverDistrictHeightCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
         if (!recovered.ok || !world.restore(recovered.checkpoint, { onFailure: reason => { checkpointReason = reason; } }).ok) {
           const error = new Error('Invalid durable town checkpoint');
           error.checkpointReason = checkpointReason;
@@ -197,9 +199,9 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
         if(!candidate.ok)return rejected(candidate.reason);
         let checkpoint;
         try {checkpoint=world.checkpoint();} catch {return rejected('world_busy');}
-        const migrated=migrateWorldCheckpoint({fromData:currentData,toData:candidate.worldData,checkpoint,worldId,now,isAdmin});
+        const migrated=migrateWorldCheckpoint({fromData:currentData,toData:candidate.worldData,checkpoint,...worldOptions});
         if(!migrated.ok)return rejected(migrated.error);
-        const next=createSharedWorld(candidate.worldData,{now,isAdmin,worldId});
+        const next=createSharedWorld(candidate.worldData,worldOptions);
         if(!next.restore(migrated.checkpoint).ok)return rejected('incompatible_region');
         if(rides)drained.push(...world.drainRides());
         world=next;currentData=candidate.worldData;currentHash=candidate.world.regionSha256;
