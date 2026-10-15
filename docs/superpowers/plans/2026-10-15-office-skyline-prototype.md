@@ -29,12 +29,19 @@ only, at no cost to the legacy room.
    overlaps the footprint (the sign sheet) is never hidden. The podium below the floor and every neighbour stay.
 4. **Shown as** `scene.background`, at intensity 1 (the faces already hold the sky at its own intensity), with blur and
    rotation cleared. Every face clears; the sun's shadow maps from the last street frame are reused rather than redrawn
-   six times. No lights are added (the fixed light pool is untouched), no network or asset loads.
+   six times. No lights are added, no network or asset loads. The fixed light pool, which by `closingEnd` has been blended
+   to the cabin and office lights, is put back on the street's own lights (the shop interior lights picked within 32 m of
+   the street camera) for the capture and returned to the cabin right after, so the faces never show the district lit by
+   the cabin.
 5. **Restored** on every exit path through the visit's `dispose` (leave, revoke, disconnect, world rebuild): background,
    intensity, blur and rotation return, unless the sky changed while inside (time of day or weather), which then belongs
    to the street. The render target is disposed. A capture requested after dispose does nothing; a failed capture
    restores everything it borrowed and shows no backdrop.
-6. **Sizes.** 1024 per face at full render scale, 512 below 0.75, capped by `maxCubemapSize`. **CPU software acceptance
+6. **No GPU wait.** The capture never calls `gl.finish` (review of #408): it only submits the six faces. Stats report the
+   host search (`traverseMs`), the CPU submission (`submitMs`), the whole `capture()` (`ms`) and the shader programs three.js
+   first compiled for it (`newPrograms`). The host search rejects most instances from their translation and bounding reach
+   before any exact box.
+7. **Sizes.** 1024 per face at full render scale, 512 below 0.75, capped by `maxCubemapSize`. **CPU software acceptance
    takes no capture:** six full-district views on SwiftShader pushed the repository penthouse smoke past its 60 s wait for
    the office (first run below), and that profile already leaves visual quality to GPU runs. **Switch:**
    `?office-skyline=off` in development builds.
@@ -42,31 +49,49 @@ only, at no cost to the legacy room.
 ## Files owned
 
 `preview/src/office-skyline.js` (new), `preview/tests/office-skyline.test.js` (new), `preview/src/office-world-scene.js`
-(skyline hook: create, capture before going inside, dispose, `inspect().skyline`), `preview/src/office-world-presentation.js`
+(skyline hook: created inside the visit's try block, captured with the street lighting before going inside, released
+through the visit's returned `dispose`, `inspect().skyline`; kept off the `dispose` line #405 changes), `preview/src/office-world-presentation.js`
 (`captureOfficeStreet` carries `renderer` and `skyline`), `preview/src/main.js` (passes the renderer, the size and the
-switch), `docs/offices.md` (one bullet), this ledger, the register entry.
+switch), `docs/offices.md` (one paragraph, clear of #405's edit), this ledger, the register entry.
 
 ## Measurements
 
 GPU memory per capture: colour 6 × size² × 8 bytes (RGBA half float) plus depth 6 × size² × 4 bytes:
 **72 MiB at 1024**, 18 MiB at 512. It lives for the visit and is released on leaving.
 
-Capture time, `inspect().skyline` (`submitMs` CPU submission, `ms` until `gl.finish` returns), Chrome Headless Shell
-156.0.8078.4, Metal ANGLE, 1440 × 900, on a Mac shared with other sessions' browser runs and dev servers:
+Capture time, `inspect().skyline`, Chrome Headless Shell 156.0.8078.4, Metal ANGLE, 1440 × 900, on a Mac shared with
+other sessions' browser runs and dev servers. Rows before 09:38Z still waited on `gl.finish` (since removed), and their
+`ms` excluded the host search.
 
-| Run | Size | ms | Hidden host instances | Inside frame median / p95 |
-| --- | --- | --- | --- | --- |
-| skyline on, 08:40Z (first visit after start) | 1024 | 1319.7 | 155 | 16.7 / 16.8 ms |
-| `?office-skyline=off`, 08:40Z | — | — | — | 16.7 / 16.7 ms |
-| skyline on, probe run, 09:05Z | 1024 | 119.3 | 155 | — |
-| skyline on, footprint rule, 09:26Z | 1024 | **97.4** | 160 instances, 3 meshes | 16.7 / 16.8 ms |
+| Run | Size | Host search | Submit | Whole capture | New programs | Longest frame | Hidden |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 08:40Z first ever, `gl.finish` | 1024 | — | — | 1319.7 | — | — | 155 inst. |
+| 09:05Z probe, `gl.finish` | 1024 | — | 119.3 | 119.3 | — | — | 155 inst. |
+| 09:26Z footprint rule, `gl.finish` | 1024 | — | 97.4 | 97.4 | — | — | 160 inst., 3 meshes |
+| **09:38Z fresh browser, first visit** | 1024 | 12.9 | 150.0 | **162.9** | **0** | 200 ms | 160 inst., 3 meshes |
+| **09:38Z same page, second visit** | 1024 | 6.5 | 16.9 | **23.5** | 0 | 33 ms | 160 inst., 3 meshes |
+| 09:38Z same page, 19:00 | 1024 | 3.0 | 14.8 | 17.8 | 0 | 33 ms | 160 inst., 3 meshes |
+| 09:44Z / 09:50Z combined with #405, fresh browser | 1024 | 13.6 / 13.8 | 133.5 / 146.5 | 147.2 / 160.6 | 0 | 433 / 183 ms | 160 inst., 3 meshes |
 
-`submitMs` equalled `ms` in the later runs, so Chrome's `gl.finish` returned without waiting there: these are CPU
-submission times, not measured GPU time. The 1.3 s first figure came from the first visit after a fresh server start on a
-loaded machine (likely shader programs first used by the capture); it was not reproduced.
+Inside frames (09:26Z): median 16.7 ms, p95 16.8 ms, the same as `?office-skyline=off` (16.7 / 16.7 ms). The host search
+is 3–14 ms, small beside the first submission, so it is not cached.
 
-Showing the backdrop costs nothing measurable once captured (inside frame medians match with it off); the capture itself is
-one long frame (about 0.1 s here) while the cabin doors are closed. Auto quality ignores it (a 45-frame median, frames over 250 ms discarded).
+**The first-visit cost (review item 4).** Three.js compiles no new shader programs for the capture (`newPrograms` 0, even
+in a fresh browser), yet the first capture in a page submits in 130–150 ms and a later one in 15–17 ms. So the first-use
+cost sits below three.js: most likely the GPU pipeline states ANGLE/Metal create for the existing programs drawing into a
+new target format (single-sample RGBA16F cube faces; the street draws into a 4-sample composer target), plus first uploads
+for district objects the street camera had not yet drawn. That is an inference from these numbers, not a profile. The
+1,320 ms first-ever figure also waited on `gl.finish`, on a cold machine, and was not reproduced. Mitigation if a device
+shows a visible hitch: the capture already lands while the cabin doors are closed; spreading the six faces over the
+closing frames would cut the single frame to about a sixth. A warm-up render earlier would move the same cost into a frame
+the visitor can see, so it is not recommended.
+
+**Lighting at capture (review item 3).** The dev build has no night: the time-of-day control runs 07:00–19:00, and the
+presets are 13:00, 17:30 and 16:00 haze. A 19:00 capture (latest available, 09:38Z run) is lit by the low dusk sun, warmer
+on the rooftops, under the same sky image (`review/a-1900-terrace-south-street.png`, `review/a-1900-terrace-west.png` in
+the session scratchpad). The pool lights are shop interior lights (intensity 10, 10 m range) near the street camera; they
+are now restored for the capture, and at 26 m their effect is not visible in these shots. A true night check needs a
+night setting the build does not have.
 
 ## Checks
 
@@ -84,23 +109,51 @@ one long frame (about 0.1 s here) while the cabin doors are closed. Auto quality
 | Near-field probe (temporary, not committed) | ring overhead = `Retrofuturistic garden district` instanced ornament, ~4 m from the eye, no building index |
 | `pnpm run verify` (core) after the footprint rule and the software skip | passed: agent 109/109, preview 3101/3102 (1 skipped), server 534/681 (147 Redis cases skip without `REDIS_URL`), desktop 69/69, Python 141; receipt `.runtime/agent/core.json` |
 
+| `node --test preview/tests/office-skyline.test.js` after the review fixes | 9/9 (adds: no `gl.finish`, the timing and program fields, the street pool lighting the faces then returned to the cabin; removing the restore fails the test) |
+| `node --test preview/tests/office-*.test.js` after the review fixes and `origin/main` | 80/80 |
+| `git merge-tree` with `origin/feat/office-penthouse-glazing-20261015` (#405, `bef644ee`) | clean after moving the hook and the docs paragraph (it conflicted on the `dispose` line and the docs bullet before) |
+| Signed merge of `origin/main` (`b5d99a13`) into this branch | `175b6e0c`; the register merged by task id, valid JSON; `project:check --tasks <primary>` adds no gap for this task (the only new one was the scratch worktree, since removed) |
+| `pnpm run verify` (core) after the merge | passed: agent 109/109, preview 3113/3115 (1 skipped, 1 todo), server 549/698 (148 skipped without `REDIS_URL`, 1 todo), desktop 69/69, Python 141 |
+| Combined #405 + this branch, detached scratch from `origin/main`, office tests | 84/84 |
+| Combined GPU walk (09:44Z and 09:50Z, browser lock) | see Combined view below; no page errors |
+
+## Combined view with #405's glass (review item 5)
+
+A detached scratch worktree from `origin/main` `b5d99a13` merged `origin/feat/office-penthouse-glazing-20261015` at
+`bef644ee` (#405 had moved on from `75aaea13`) and this branch at `175b6e0c`. Nothing was pushed; the scratch was removed
+with `git worktree remove`. Screenshots, in the session scratchpad `combined/`: `combined-front-glass.png`,
+`combined-east-glass.png`, `combined-mezzanine-to-front.png`, `combined-mezzanine-west.png`,
+`combined-terrace-to-office.png`, `combined-terrace-south-street.png`.
+
+What it looks like, honestly:
+- **It now reads as an enclosed glass penthouse.** Full-height clear glass with bronze mullions runs along the front and
+  east walls. The actual neighbouring residences, rooftops and parking deck stand behind it at the right scale and under
+  the same sky. The closed bronze lift doors sit in the solid centre panel of the front wall.
+- **From the mezzanine**, over the glass guard and bronze rail, the front and east glass corner frames the district below.
+- **From the terrace looking back**, the terrace openings, with glazed transoms above, show the double-height room, stair
+  and mezzanine, with the front curtain wall and the residences on the right.
+- **Still a graybox inside.** Plain finishes, cylinders for chairs, no desks. The office's point lights leave small bright
+  glints on the glass.
+- **West is the weakest view.** Past the terrace the mapped district ends in flat ground to the horizon, crossed by thin
+  dark lines from the district. There is no distant skyline because the mapped area has none.
+- **Parallax.** From the mezzanine (5.5 m above the capture eye) nearby roofs sit slightly off where the eye would expect
+  them; at a glance it is not noticeable.
+
 ## Limits
 
-- A cube backdrop has no parallax: it is exact only at the capture point (x −4, d 10). From the terrace, 15 m away, nearby
-  roofs shift a little; distant buildings do not move.
+- A cube backdrop has no parallax: it is exact only at the capture point (x −4, d 10, standing height on the main floor).
+  From the terrace (15 m away) or the mezzanine (5.5 m higher), nearby roofs shift a little; distant ones do not.
 - The picture is from the unraised 28 m building. The penthouse's own ceiling is 31.9 m; the raise to 33 m is held for
-  activation. West of the tower the mapped district ends soon, so that side shows mostly flat ground to the horizon.
+  activation. West of the tower the mapped district ends soon, so that side shows mostly flat ground.
 - The capture freezes the district, its people, cars and sky at the moment the doors close. A time-of-day change while
-  inside replaces the backdrop with the plain sky (the street owns it); it is not re-captured.
+  inside replaces the backdrop with the plain sky (the street owns it); it is not re-captured. No night exists to test.
 - 72 MiB at 1024 is a lot for phones. The size drops to 512 when the render scale is reduced, but there is no device
-  measurement yet. The timings above are CPU submission on one Mac, not GPU time or device evidence.
+  measurement. All timings are CPU submission on one shared Mac, not GPU time or device evidence.
 - CPU software acceptance (hosted CI's profile) never captures, so the CI journeys do not exercise the capture; the unit
   tests and the local GPU runs do.
-- With the current opaque graybox walls, the district shows only through the terrace openings. The sibling glazing branch
-  (#405) makes the front, east and terrace walls glass.
 
 ## Next
 
-Independent review; device measurement (memory and capture time on a phone) before activation; spreading the six faces
-over the closing frames if a device shows a visible hitch; a lower-memory format if phones need it; re-check the view once
-the building is raised and the glazing lands.
+Independent review; phone measurement (memory and the first-capture frame) before activation; spreading the six faces over
+the closing frames if a device shows a visible hitch; a lower-memory format if phones need it; re-check after the building
+raise.

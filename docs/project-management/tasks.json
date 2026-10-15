@@ -10000,18 +10000,18 @@
         "feat/office-skyline-prototype-20261015"
       ],
       "owner": "claude:river-oaks-penthouse (7a57e655)",
-      "leaseUntil": "2026-10-15T11:30:09.000Z",
-      "updatedAt": "2026-10-15T09:30:09.000Z",
-      "nextAction": "Draft PR #408: GPU views verified (district past the terrace, host tower and rooftop ornament left out, 97 ms capture at 1024, 72 MiB), penthouse smoke 6/6 with software acceptance skipping the capture, core verify passed. Next: independent review, device measurement before activation.",
+      "leaseUntil": "2026-10-15T11:53:06.000Z",
+      "updatedAt": "2026-10-15T09:53:06.000Z",
+      "nextAction": "Review fixes pushed to draft #408: no gl.finish, whole-capture timing (first capture in a page 147-163 ms, later 18-24 ms, no new programs), street pool lighting for the capture, hook kept clear of #405 (merge-tree clean), origin/main merged signed; combined #405 glass + skyline GPU walk recorded. Next: independent review, phone measurement before activation.",
       "ledger": "docs/superpowers/plans/2026-10-15-office-skyline-prototype.md",
       "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-skyline",
       "filesOwned": [
         "preview/src/office-skyline.js (new)",
         "preview/tests/office-skyline.test.js (new)",
-        "preview/src/office-world-scene.js (skyline hook only)",
+        "preview/src/office-world-scene.js (skyline hook only, clear of #405's dispose line)",
         "preview/src/office-world-presentation.js (captureOfficeStreet renderer/skyline only)",
         "preview/src/main.js (renderer, size and ?office-skyline switch only)",
-        "docs/offices.md (skyline bullet)",
+        "docs/offices.md (skyline paragraph)",
         "docs/superpowers/plans/2026-10-15-office-skyline-prototype.md",
         "docs/project-management/tasks.json (own entry)"
       ],
