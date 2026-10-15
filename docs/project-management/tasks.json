@@ -9557,6 +9557,34 @@
         "docs/superpowers/plans/README.md (generated)",
         "docs/superpowers/plans/2026-10-13-local-branch-worktree-prune.md (this session section)"
       ]
+    },
+    {
+      "id": "procedural-gpu-matrix-harness",
+      "title": "Make generated gallery AO-tail GPU comparison repeatable without source edits",
+      "status": "active",
+      "branches": [
+        "test/procedural-gpu-matrix-harness-20261015"
+      ],
+      "owner": "codex-root-procedural-gpu-matrix-harness",
+      "leaseUntil": "2026-10-15T03:52:32.496Z",
+      "updatedAt": "2026-10-15T02:25:57.921Z",
+      "nextAction": "Watch exact-head hosted preview on draft PR #389, mark ready when passing, and land through the queue; then prepare test-only iPhone Safari access for the GPU matrix.",
+      "ledger": "docs/superpowers/plans/2026-10-15-procedural-gpu-matrix-harness.md",
+      "requiredChecks": [
+        "Focused journey with AO tail off and on",
+        "pnpm run verify",
+        "pnpm run verify full or explicit gate gap"
+      ],
+      "filesOwned": [
+        "preview/e2e/generated-gallery-cycle-soak.js",
+        "docs/superpowers/plans/2026-10-14-procedural-gpu-acceptance.md",
+        "docs/superpowers/plans/2026-10-15-procedural-gpu-matrix-harness.md",
+        "docs/superpowers/plans/README.md",
+        "docs/project-management/tasks.json (this task only)"
+      ],
+      "parent": "procedural-gpu-acceptance",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-procedural-gpu-matrix-harness-20261015",
+      "pr": 389
     }
   ]
 }

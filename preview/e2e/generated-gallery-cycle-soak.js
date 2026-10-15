@@ -6,12 +6,17 @@ async page => {
   if (!['auto', 'sharp', 'smooth'].includes(qualityMode)) throw new Error('Choose auto, sharp or smooth gallery quality');
   const aoMode = process.env.RIVER_OAKS_GALLERY_AO ?? 'on';
   if (!['on', 'off'].includes(aoMode)) throw new Error('Choose on or off gallery ambient occlusion');
+  const aoTailMode = process.env.RIVER_OAKS_GALLERY_AO_TAIL ?? 'off';
+  if (!['on', 'off'].includes(aoTailMode)) throw new Error('Choose on or off gallery AO tail rule');
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto(`http://127.0.0.1:5173/?motion-debug=1&render-audit=1${aoMode === 'off' ? '&ao=off' : ''}`);
+  await page.goto(`http://127.0.0.1:5173/?motion-debug=1&render-audit=1${aoMode === 'off' ? '&ao=off' : ''}${aoTailMode === 'on' ? '&aotail=on' : ''}`);
   await page.locator('#loading').waitFor({ state: 'hidden' });
   await page.waitForFunction(() => document.querySelector('#canvas-host')?.dataset.multiplayer === 'joined');
+  const tailShedding = await page.evaluate(() => window.__riverRenderAudit.graphics().quality.tailShedding);
+  if (tailShedding !== (aoTailMode === 'on'))
+    throw new Error(`Gallery AO tail mode mismatch: requested ${aoTailMode}, active ${tailShedding}`);
   if (qualityMode !== 'auto') await page.evaluate(mode => document.querySelector(`[data-quality="${mode}"]`).click(), qualityMode);
   if (await page.locator('#panel-toggle').getAttribute('aria-expanded') === 'false') await page.locator('#panel-toggle').click();
   await openHudSpace(page, 'explore-section');
@@ -140,6 +145,6 @@ async page => {
     }
   }
   if (errors.length) throw new Error(errors.join('; '));
-  return { passed: true, cycles, qualityMode, aoMode, coldMs, samples,
+  return { passed: true, cycles, qualityMode, aoMode, aoTailMode, coldMs, samples,
     scope: 'One authenticated fixture client, repeated gallery entry, measured keyboard walk, exit, distance eviction and return at 1440x900 on local Chromium. Frame samples include host load; renderer geometry/texture counts and Chromium JS heap are resource indicators, not physical GPU memory. No target-device or human visual acceptance.' };
 }
