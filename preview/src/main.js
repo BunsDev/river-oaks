@@ -36,7 +36,7 @@ import { buildDistrictBuildings, buildDistrictDetail } from './district.js';
 import { buildDistrictFantasy } from './district-fantasy.js';
 import { buildStorePeople } from './store-people.js';
 import { createGeneratedInteriorStream } from './generated-interior-stream.js';
-import { canCullExterior, canCullIpicAuditorium, renderWithoutExterior } from './interior-exterior-culling.js';
+import { canCullExterior, canCullIpicAuditorium, renderOnly, renderWithoutExterior } from './interior-exterior-culling.js';
 import { sharedRoomSummary } from './shared-population.js';
 import { storeRoomsFor } from './store-rooms.js';
 import { attachDistrictGalleryPlan } from './district-interior-contract.js';
@@ -128,11 +128,17 @@ const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matc
 const softwareAcceptance = import.meta.env.DEV && import.meta.env.VITE_SHARED_SOFTWARE_RENDERING === '1';
 const renderAudit = import.meta.env.DEV && new URLSearchParams(location.search).get('render-audit') === '1' ? createRenderAudit() : null;
 let exteriorCulling = true; // A development audit can switch it off to compare frames.
-// Inside IPIC's auditorium, facing away from its only partition, nothing outdoors can be seen (#428).
+// Inside IPIC's auditorium, facing away from its only partition, nothing outdoors can be seen (#428),
+// nor any other store's interior or people (#431): the frame keeps only IPIC's own.
 function ipicAuditoriumCull() {
   const pose = !officeUI?.active && interiorsLayer?.visible ? walking?.getPose() : null;
   const room = pose ? walking?.environment?.roomAt(pose.position[0], pose.position[2]) : null;
   return room?.interior === IPIC_INTERIOR && canCullIpicAuditorium(camera, room);
+}
+function ipicOwn() {
+  const interior = buildingMesh?.userData.interiors?.children.find(child => child.userData.interior === IPIC_INTERIOR);
+  const people = storePeople?.children.find(group => group.userData.room?.interior === IPIC_INTERIOR);
+  return interior ? [interior, ...(people ? [people] : [])] : null;
 }
 const debugOcclusion = new URLSearchParams(location.search).get('ao');
 // Auto's AO tail rule stays off until it passes device acceptance (render-quality.js).
@@ -967,9 +973,13 @@ function render(now) {
     pipeline.setOcclusionExteriorMask(generatedRoomActive ? worldGroup : null, interiorsLayer);
     ipicScreening?.update();
     if (!officeUI?.update(now, delta)) {
-      if (exteriorCulling && ((generatedRoomActive && canCullExterior(camera, currentRoom)) || ipicAuditoriumCull()))
+      if (exteriorCulling && generatedRoomActive && canCullExterior(camera, currentRoom))
         renderWithoutExterior(worldGroup, interiorsLayer, () => pipeline.render(delta));
-      else pipeline.render(delta);
+      else if (exteriorCulling && ipicAuditoriumCull()) {
+        const own = ipicOwn();
+        if (own) renderOnly(worldGroup, own, () => pipeline.render(delta));
+        else renderWithoutExterior(worldGroup, interiorsLayer, () => pipeline.render(delta));
+      } else pipeline.render(delta);
     }
     photoMode?.afterRender();
     if (pendingCapture) { const capture = pendingCapture; pendingCapture = null; capture(renderer.domElement); }

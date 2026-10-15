@@ -135,7 +135,7 @@ try {
     // The pixel comparison proves a culled frame; where nothing is culled (the doorway
     // shows the lounge and beyond), only the decision and the unchanged counts matter.
     if (r.decision && r.noise.changed > 0) problems.push(`${r.name}: consecutive frames differ (${r.noise.changed} px), so the comparison is not valid`);
-    if (r.change.changed > 0) problems.push(`${r.name}: culling changed ${r.change.changed} px (max channel ${r.change.max})`);
+    if (r.decision && r.change.changed > 0) problems.push(`${r.name}: culling changed ${r.change.changed} px (max channel ${r.change.max})`);
     if (r.decision && !(r.on.calls < r.off.calls)) problems.push(`${r.name}: culling saved no draw calls (${r.on.calls} vs ${r.off.calls})`);
     // Animation seen through the doorway moves the counts a little; culling removes about 60 %.
     if (!r.decision && Math.abs(r.on.calls - r.off.calls) > r.off.calls * .05) problems.push(`${r.name}: counts moved without culling (${r.on.calls} vs ${r.off.calls})`);
