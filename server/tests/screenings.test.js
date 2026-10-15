@@ -221,3 +221,55 @@ function resealed(checkpoint) {
   const { checksum, ...envelope } = checkpoint;
   return { ...envelope, checksum: createHash('sha256').update(JSON.stringify(envelope)).digest('hex') };
 }
+
+test('the historical 12-second fixture resets only screening state and fences old replies on restore', () => {
+  for (const status of ['playing', 'paused', 'ended', 'stopped']) {
+    const f = fixture();
+    assert.equal(start(f).ok, true);
+    if (status === 'paused') assert.equal(f.send('host', 'pause').ok, true);
+    if (status === 'ended') f.tick(FILM.durationMs);
+    if (status === 'stopped') assert.equal(f.send('host', 'stop').ok, true);
+    const saved = f.town.checkpoint();
+    // Rebuild the exact pre-#398 media contract; no Git history needed in CI.
+    // #398 reused this id for the bundled 30-second clip.
+    for (const item of [saved.payload.screenings.venues[0], ...saved.payload.screenings.receipts.map(r => r.reply.screening)]) {
+      if (item.mediaId === FILM.id) {
+        item.durationMs = 12_000;
+        if (item.status === 'ended') item.positionMs = 12_000;
+      }
+    }
+    const old = resealed(saved), retained = structuredClone(old);
+    const restored = fixture({ restore: old, at: f.clock.time });
+    assert.equal(restored.view().status, 'stopped', status);
+    assert.notEqual(restored.view().epoch, old.payload.screenings.epoch, status);
+    assert.equal(restored.view().revision, old.payload.screenings.venues[0].revision + 1);
+    assert.equal(restored.town.checkpoint().payload.screenings.receipts.length, 0);
+    assert.deepEqual(restored.town.snapshot().players, f.town.snapshot().players);
+    const retry = { type: 'screening', action: 'start', venueId: 'ipic', mediaId: FILM.id,
+      epoch: old.payload.screenings.epoch, expectedRevision: 0, operationId: 'op-000001' };
+    assert.equal(restored.town.command('host', retry, { sessionId: 'host-session' }).error, 'screening_stale');
+    assert.equal(start(restored).ok, true);
+    assert.equal(restored.view().durationMs, FILM.durationMs);
+    assert.deepEqual(old, retained, 'migration does not mutate its input');
+  }
+});
+
+test('historical fixture migration still rejects corrupt timelines and receipts', () => {
+  const f = fixture(); assert.equal(start(f).ok, true);
+  const saved = f.town.checkpoint();
+  saved.payload.screenings.venues[0].durationMs = 12_000;
+  saved.payload.screenings.receipts[0].reply.screening.durationMs = 12_000;
+  for (const mutate of [
+    s => { s.venues[0].durationMs = 12_001; },
+    s => { s.venues[0].positionMs = 12_001; },
+    s => { s.venues[0].status = 'ended'; s.venues[0].positionMs = 1; },
+    s => { s.venues[0].mediaId = 'unknown-legacy-media'; },
+    s => { s.receipts[0].reply.screening.positionMs = 12_001; },
+    s => { s.receipts[0].reply.screening.epoch = 'other-epoch'; },
+  ]) {
+    const bad = structuredClone(saved); mutate(bad.payload.screenings);
+    const target = createSharedWorld(data);
+    assert.equal(target.restore(resealed(bad)).ok, false, String(mutate));
+    assert.deepEqual(target.snapshot().players, []);
+  }
+});

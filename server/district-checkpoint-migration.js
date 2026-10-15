@@ -20,7 +20,7 @@ const earliestHeights = new Map([
 const rejected = () => ({ ok: false, error: 'invalid_checkpoint' });
 
 /** Explicit height-only migration. Never resets a town or accepts an unchecked payload. */
-export function recoverDistrictHeightCheckpoint({ worldData, checkpoint, worldId = DEFAULT_WORLD_ID, now, isAdmin } = {}) {
+export function recoverDistrictHeightCheckpoint({ worldData, checkpoint, worldId = DEFAULT_WORLD_ID, now, isAdmin, screeningHosts, officeLayout } = {}) {
   try {
     const revision = revisions.get(checkpoint?.worldFingerprint);
     if (worldId !== DEFAULT_WORLD_ID || !revision || digest(worldData) !== TARGET) return rejected();
@@ -31,7 +31,7 @@ export function recoverDistrictHeightCheckpoint({ worldData, checkpoint, worldId
       building.height_source = 'estimated from tagged/default levels';
     }
     if (digest(previousData) !== checkpoint.worldFingerprint) return rejected();
-    const options = { worldId, ...(now ? { now } : {}), ...(isAdmin ? { isAdmin } : {}) };
+    const options = { worldId, screeningHosts, officeLayout, ...(now ? { now } : {}), ...(isAdmin ? { isAdmin } : {}) };
     const source = createSharedWorld(previousData, options);
     if (!source.restore(checkpoint).ok) return rejected();
     const { checksum: _checksum, ...envelope } = source.checkpoint();

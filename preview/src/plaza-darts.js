@@ -9,18 +9,24 @@ import { throwPoint } from './darts-opponent.js';
 // the throwing line, against a plaza regular or two players passing the turn. Stop the
 // sweeping line once across and once up; the dart lands where they cross. The real
 // board shows the turn's darts. X opens the board.
+// With `shared` (the IPIC Tuck Room board), the town holds the match instead
+// (server/darts-games.js): a throw sends only where the meter stopped and the server
+// lands the dart, the house regular throws on the server, players invite each other
+// at the line, and the real board shows every match to everyone in the room.
 
 const SVG = 'http://www.w3.org/2000/svg', SCALE = 1.25, R = 205, VIEW = R * 2 * SCALE + 20;
 const NAMES = ['You', 'The plaza regular'];
 
 export function createPlazaDarts({ host = document.querySelector('#viewport'), getMirror = () => null, getBoard = () => null, getPose = () => null, focusWorld = () => {},
-  random = Math.random, now = () => performance.now(), replyDelay = 650, reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false } = {}) {
-  let game = null, phase = 'x', meter = null, aimX = 0, generation = 0, thinking = false, frame = 0;
+  random = Math.random, now = () => performance.now(), replyDelay = 650, reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false,
+  shared = null } = {}) {
+  let game = null, phase = 'x', meter = null, aimX = 0, generation = 0, thinking = false, frame = 0, lastKey = '';
+  const titleId = shared ? `darts-title-${shared.lineId}` : 'darts-title';
 
   const panel = document.createElement('dialog');
-  panel.id = 'darts-panel'; panel.className = 'table-game-panel darts-panel';
-  panel.setAttribute('aria-labelledby', 'darts-title');
-  panel.innerHTML = `<header class="table-game-header"><div><p class="table-game-eyebrow">Plaza games · practice game</p><h2 id="darts-title">Darts on the south wall</h2></div>
+  panel.id = shared ? `darts-panel-${shared.lineId}` : 'darts-panel'; panel.className = 'table-game-panel darts-panel';
+  panel.setAttribute('aria-labelledby', titleId);
+  panel.innerHTML = `<header class="table-game-header"><div><p class="table-game-eyebrow">${shared?.eyebrow ?? 'Plaza games · practice game'}</p><h2 id="${titleId}">${shared?.title ?? 'Darts on the south wall'}</h2></div>
     <button type="button" class="table-game-close" aria-label="Close the dartboard">×</button></header>
     <div class="table-game-body darts-body">
       <p class="table-game-status" role="status" aria-live="polite"></p>
@@ -31,7 +37,7 @@ export function createPlazaDarts({ host = document.querySelector('#viewport'), g
       </div>
       <div class="table-game-actions">
         <button type="button" data-darts-action="throw">Set the line</button><button type="button" data-darts-action="new">New game</button>
-        <div class="table-game-mode" role="group" aria-label="Opponent"><button type="button" data-darts-mode="regular" aria-pressed="true">Plaza regular</button><button type="button" data-darts-mode="pass" aria-pressed="false">Pass and play</button></div>
+        ${shared ? '<div class="table-game-mode darts-shared" role="group" aria-label="Match"></div>' : '<div class="table-game-mode" role="group" aria-label="Opponent"><button type="button" data-darts-mode="regular" aria-pressed="true">Plaza regular</button><button type="button" data-darts-mode="pass" aria-pressed="false">Pass and play</button></div>'}
       </div>
       <p class="table-game-note">501, double out: three darts a turn, finish exactly on a double or the bull. Going below 2 is a bust.</p>
     </div>`;
@@ -40,9 +46,14 @@ export function createPlazaDarts({ host = document.querySelector('#viewport'), g
   const $ = selector => panel.querySelector(selector);
   const board = $('.darts-board'), status = $('.table-game-status'), throwButton = $('[data-darts-action="throw"]');
 
-  const round = () => replay(game.points);
-  const yours = state => game.mode === 'pass' || state.turn === 0;
-  const who = player => game.mode === 'pass' ? `Player ${player + 1}` : NAMES[player];
+  // The shared line's match from the town's snapshot, or null.
+  const line = () => shared?.line() ?? null;
+  const seat = player => line()?.players?.[player] ?? null;
+  const round = () => replay(shared ? (line()?.players ? line().points : []) : game.points);
+  const yours = state => shared ? Boolean(line()?.players && !line().result && seat(state.turn) === shared.selfId()) : game.mode === 'pass' || state.turn === 0;
+  const who = player => shared ? (seat(player) === shared.selfId() ? 'You' : seat(player) === 'regular' ? 'The house regular' : shared.name(seat(player)))
+    : game.mode === 'pass' ? `Player ${player + 1}` : NAMES[player];
+  const sharedGame = () => ({ points: [], mode: 'shared', wins: [0, 0], scored: true, said: '' });
   const newGame = (keep = {}) => { game = { seed: Math.floor(random() * 2 ** 32), points: [], mode: keep.mode ?? game?.mode ?? 'regular', wins: keep.wins ?? game?.wins ?? [0, 0], scored: false, said: '' }; startMeter('x'); };
   const mirror = () => { if (game) { const { state } = round(); getMirror()?.show(state.darts.length ? state.darts.map(dart => dart.point) : (state.history.at(-1)?.darts ?? []).map(dart => dart.point)); } };
   const toScreen = ([x, y]) => [VIEW / 2 + x * SCALE, VIEW / 2 - y * SCALE];
@@ -99,19 +110,28 @@ export function createPlazaDarts({ host = document.querySelector('#viewport'), g
     drawBoard(state); drawReticle();
     status.textContent = describe(state);
     panel.dataset.state = state.winner !== null ? 'over' : thinking ? 'thinking' : 'playing';
-    $('.darts-scores').replaceChildren(...[0, 1].map(player => { const item = document.createElement('li'); item.textContent = `${who(player)}: ${state.scores[player]}${game.wins[player] ? ` · ${game.wins[player]} won` : ''}`; if (state.turn === player && state.winner === null) item.dataset.turn = ''; return item; }));
+    if (shared) renderShared();
+    $('.darts-scores').replaceChildren(...(shared && !line()?.players ? [] : [0, 1]).map(player => { const item = document.createElement('li'); item.textContent = `${who(player)}: ${state.scores[player]}${game.wins[player] ? ` · ${game.wins[player]} won` : ''}`; if (state.turn === player && state.winner === null) item.dataset.turn = ''; return item; }));
     const turn = state.darts.length ? state.darts : [];
     $('.darts-turn').textContent = turn.length ? `This turn: ${turn.map(dart => dart.label).join(' · ')}` : state.history.length ? `${who(state.history.at(-1).player)} last threw ${state.history.at(-1).darts.map(dart => dart.label).join(' · ')}${state.history.at(-1).result === 'bust' ? ': bust' : ''}.` : 'Three darts a turn.';
     const plan = state.winner === null && state.scores[state.turn] <= 170 ? checkout(state.scores[state.turn], 3 - state.darts.length) : null;
     $('.darts-checkout').textContent = plan ? `Checkout: ${plan.map(bed => bed.number === 25 ? (bed.double ? 'Bull' : '25') : `${bed.ring === 'treble' ? 'T' : bed.ring === 'double' ? 'D' : ''}${bed.number}`).join(' ')}` : '';
     throwButton.textContent = phase === 'x' ? 'Set the line' : 'Throw';
     throwButton.setAttribute('aria-disabled', String(state.winner !== null || thinking || !yours(state)));
-    $('[data-darts-action="new"]').hidden = state.winner === null;
+    $('[data-darts-action="new"]').hidden = Boolean(shared) || state.winner === null;
     for (const button of panel.querySelectorAll('[data-darts-mode]')) button.setAttribute('aria-pressed', String(button.dataset.dartsMode === game.mode));
     if (hadFocus && !panel.contains(document.activeElement)) (state.winner !== null ? $('[data-darts-action="new"]') : throwButton).focus({ preventScroll: true });
   }
 
   function describe(state) {
+    if (shared) {
+      const view = line(), me = shared.selfId(), said = game.said ? `${game.said} ` : '';
+      if (!view?.players) return said + (view?.invite?.to === me ? `${shared.name(view.invite.from)} invites you to a match.`
+        : view?.invite?.from === me ? `Waiting for ${shared.name(view.invite.to)} to accept.` : 'Practise against the house regular, or invite someone at the line to a match.');
+      if (view.result) return said + (view.result.reason === 'checkout' ? `${who(view.result.winner)} ${seat(view.result.winner) === me ? 'check out' : 'checks out'}: game!`
+        : view.result.winner === null ? 'The match ran out of darts.' : `${who(1 - view.result.winner)} ${view.result.reason === 'resigned' ? 'resigned' : 'left the line'}.`);
+      if (!view.players.includes(me)) return `${said}${who(0)} and ${who(1)} are playing; ${who(state.turn)} to throw.`;
+    }
     if (state.winner !== null) return `${who(state.winner)} ${state.winner === 0 && game.mode !== 'pass' ? 'check out' : 'checks out'}: game!`;
     const before = game.said ? `${game.said} ` : '';
     if (thinking || !yours(state)) return `${before}${who(state.turn)} is at the line…`;
@@ -132,10 +152,36 @@ export function createPlazaDarts({ host = document.querySelector('#viewport'), g
     if (!game || state.winner !== null || thinking || !yours(state) || !meter) return;
     if (phase === 'x') { aimX = toMm(meterValue()); startMeter('y'); render(); return; }
     const point = [aimX, toMm(meterValue())];
+    if (shared) { startMeter('x'); render(); void send({ action: 'throw', aim: point.map(n => Math.round(n * 10) / 10) }); return; }
     land(point); startMeter('x'); render(); void regular();
   }
 
+  // Shared matches: the town answers, and its snapshot brings the darts back.
+  async function send(message) {
+    let reply;
+    try { reply = await shared.send({ type: 'darts', lineId: shared.lineId, ...message }); }
+    catch (error) { reply = { ok: false, message: error.message }; }
+    game.said = reply?.ok ? '' : reply?.message ?? 'The board did not take that.';
+    lastKey = ''; render();
+  }
+  function renderShared() {
+    const view = line(), me = shared.selfId(), playing = Boolean(view?.players && !view.result), buttons = [];
+    const add = (label, action, peer) => { const button = document.createElement('button'); button.type = 'button'; button.textContent = label; button.dataset.dartsShared = action; if (peer) button.dataset.peer = peer; buttons.push(button); };
+    if (view?.invite?.to === me) { add(`Accept ${shared.name(view.invite.from)}`, 'accept'); add('Decline', 'decline'); }
+    if (playing && view.players.includes(me)) add('Resign', 'resign');
+    if (!playing || (view.players[0] === me && view.players[1] === 'regular')) {
+      if (!playing) add('Practise against the regular', 'practice');
+      for (const peer of shared.peers()) if (peer.id !== me && view?.invite?.to !== peer.id) add(`Invite ${peer.name}`, 'invite', peer.id);
+    }
+    $('.darts-shared').replaceChildren(...buttons);
+  }
+  $('.darts-shared')?.addEventListener('click', event => {
+    const button = event.target.closest('[data-darts-shared]');
+    if (button) void send(button.dataset.dartsShared === 'invite' ? { action: 'invite', peerId: button.dataset.peer } : { action: button.dataset.dartsShared });
+  });
+
   async function regular() {
+    if (shared) return;
     const ticket = ++generation;
     thinking = true;
     try {
@@ -160,13 +206,14 @@ export function createPlazaDarts({ host = document.querySelector('#viewport'), g
   });
 
   function atLine() {
+    if (shared) return shared.atLine();
     const pose = getPose(), table = getBoard();
     if (!pose || !table || pose.sitting || pose.riding || pose.altitude > 0.1) return false;
     return atDartsLine(table, [pose.position[0], -pose.position[2]]);
   }
   function open() {
     if (!atLine()) return;
-    if (!game) newGame({});
+    if (!game) { if (shared) game = sharedGame(); else newGame({}); }
     panel.show(); startMeter(phase); mirror(); render(); void regular();
     throwButton.focus({ preventScroll: true });
   }
@@ -178,9 +225,18 @@ export function createPlazaDarts({ host = document.querySelector('#viewport'), g
       if (!atLine()) return null;
       return { kind: 'play', label: 'Play darts', run: open, disabled: false };
     },
-    update() { if (panel.open && !atLine()) close(); },
+    update() {
+      if (panel.open && !atLine()) close();
+      if (!shared) return;
+      // Everyone in the room sees each match on the real board, panel open or not.
+      const view = line(), key = JSON.stringify([view?.points.length, view?.result, view?.invite, view?.players, panel.open && shared.peers().map(peer => peer.id)]);
+      if (key === lastKey) return;
+      lastKey = key; game ??= sharedGame(); mirror();
+      if (panel.open) render();
+    },
     open, close,
     debug() {
+      if (shared) return { open: panel.open, shared: true, line: line(), status: status.textContent, phase, aimX, meter: meter ? meterValue() : null, buttons: [...panel.querySelectorAll('[data-darts-shared]')].map(button => button.textContent) };
       if (!game) return { open: panel.open, game: null };
       const { state } = round();
       return { open: panel.open, mode: game.mode, turn: state.turn, scores: state.scores.slice(), darts: state.darts.map(dart => dart.label), thrown: game.points.length,
@@ -191,7 +247,7 @@ export function createPlazaDarts({ host = document.querySelector('#viewport'), g
     hold(value) { if (!meter) return false; meter.held = Math.min(1, Math.max(0, value)); drawReticle(); return true; },
     holdAt(mm) { if (!meter) return false; meter.held = Math.min(1, Math.max(0, (mm / R + 1) / 2)); drawReticle(); return true; },
     // Starts afresh (for tests), keeping the mode.
-    reset(seed) { if (!game) return false; generation++; thinking = false; newGame({ wins: game.wins }); if (seed !== undefined) game.seed = seed >>> 0; mirror(); render(); void regular(); return true; },
+    reset(seed) { if (!game || shared) return false; generation++; thinking = false; newGame({ wins: game.wins }); if (seed !== undefined) game.seed = seed >>> 0; mirror(); render(); void regular(); return true; },
   };
 }
 
