@@ -1,7 +1,8 @@
 // Phone HUD layering with another resident nearby: node preview/e2e/greetings-dock-runner.mjs
-// Two pages share a loopback town, so alice sees the nearby greetings card. At each width the
-// runner hit-tests the Play & rides toggle and every greetings control at its centre, then taps
-// the toggle as a person would. UI layout only; software rendering, not device proof.
+// Two pages share a loopback town; alice faces bob, so the Say hello prompt shows, and E opens the
+// greetings menu. At each width the runner hit-tests the Play & rides toggle, the prompt and every
+// menu control at its centre, then taps the toggle as a person would. UI layout only; software
+// rendering, not device proof.
 import { chromium } from 'playwright';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { startBrowserFixture } from './fixture-server.js';
@@ -33,7 +34,13 @@ try {
     const banner = tab.locator('.hardware-acceleration-warning button');
     if (await banner.isVisible().catch(() => false)) await banner.click();
   }
-  await page.waitForFunction(() => { const card = document.querySelector('.nearby-greetings'); return card && !card.hidden; }, null, { timeout: 60000 });
+  // Greetings are intentional: alice faces bob, so the prompt shows; E opens the menu.
+  const face = (tab, id) => tab.evaluate(peerId => { const town = window.__riverMultiplayer(), peer = town.snapshot.players.find(p => p.id === peerId); window.__riverSeatAndWater().face(peer.position[0], peer.position[1]); }, id);
+  await page.waitForFunction(() => window.__riverMultiplayer().snapshot.players.length === 2, null, { timeout: 60000 });
+  await face(page, 'bob');
+  await page.waitForFunction(() => { const prompt = document.querySelector('.greeting-prompt'); return prompt && !prompt.hidden; }, null, { timeout: 60000 });
+  const openMenu = async () => { await page.locator('#canvas-host').focus(); await page.keyboard.press('KeyE'); await page.waitForTimeout(300); };
+  const closeMenu = async () => { await page.keyboard.press('Escape'); await page.waitForTimeout(300); };
 
   const measure = () => page.evaluate(selectors => {
     const shown = el => !!el && !el.hidden && getComputedStyle(el).visibility !== 'hidden' && el.getBoundingClientRect().height > 0;
@@ -42,13 +49,14 @@ try {
       const reachable = !!top && (top === el || el.contains(top));
       return { reachable, rect: [r.left, r.top, r.width, r.height].map(Math.round), ...(reachable ? {} : { coveredBy: top ? top.closest('[class]')?.className || top.id || top.tagName : null }) };
     };
-    const card = document.querySelector('.nearby-greetings'), dock = document.querySelector('.visit-tools'), toggle = document.querySelector('.visit-tools-toggle');
+    const card = document.querySelector('.nearby-greetings'), prompt = document.querySelector('.greeting-prompt'), dock = document.querySelector('.visit-tools'), toggle = document.querySelector('.visit-tools-toggle');
     const hud = selectors.map(selector => [selector, document.querySelector(selector)]).filter(([, el]) => shown(el)).map(([selector, el]) => ({ name: selector, ...hit(el) }));
     const controls = (root, selector) => shown(root) ? [...root.querySelectorAll(selector)].filter(shown).map(el => ({ name: (el.textContent || el.id).trim().slice(0, 24), ...hit(el) })) : [];
     return {
       card: shown(card), cardRect: shown(card) ? [card.getBoundingClientRect()].map(r => [r.left, r.top, r.width, r.height].map(Math.round))[0] : null,
+      prompt: shown(prompt) ? hit(prompt) : null,
       dockOpen: !!dock?.open, toggle: shown(toggle) ? hit(toggle) : null,
-      cardControls: controls(card, 'button, select'), dockControls: dock?.open ? controls(dock, '.play-rail-nav button') : [], hud,
+      cardControls: controls(card, 'button'), dockControls: dock?.open ? controls(dock, '.play-rail-nav button') : [], hud,
     };
   }, HUD);
 
@@ -59,12 +67,16 @@ try {
     await page.waitForTimeout(400);
     const closed = await measure();
     await page.screenshot({ path: `${OUT}/hud-${width}x${height}.png` });
+    await openMenu();
+    const menu = await measure();
+    await page.screenshot({ path: `${OUT}/hud-${width}x${height}-menu.png` });
+    await closeMenu();
     let tap = 'opened', opened = null;
     try { await page.locator('.visit-tools-toggle').click({ timeout: 10000 }); } catch (error) { tap = error.message.replace(/\u001b\[\d+m/g, '').split('\n').map(line => line.trim()).filter(line => /intercepts|stable|visible|viewport|Timeout|scroll/.test(line)).slice(-4).join(' | '); }
     if (tap === 'opened') { await page.waitForTimeout(300); opened = await measure(); if (!opened.dockOpen) tap = 'tap did not open the dock'; }
     if (opened?.dockOpen) await page.screenshot({ path: `${OUT}/hud-${width}x${height}-open.png` });
     await page.evaluate(() => { const dock = document.querySelector('.visit-tools'); if (dock) dock.open = false; });
-    results.push({ width, height, closed, tap, opened });
+    results.push({ width, height, closed, menu, tap, opened });
   }
 
   // An invitation does not yield to an open dock: on a phone with the dock open, alice can still
@@ -72,6 +84,8 @@ try {
   const card = tab => tab.getByRole('region', { name: 'Nearby greetings' });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.evaluate(() => { document.querySelector('.visit-tools').open = true; });
+  await face(bob, 'alice'); await bob.waitForFunction(() => !document.querySelector('.greeting-prompt')?.hidden, null, { timeout: 15000 });
+  await bob.locator('#canvas-host').focus(); await bob.keyboard.press('KeyE');
   await card(bob).getByRole('button', { name: 'Dance together', exact: true }).click();
   await card(page).getByRole('button', { name: 'Decline', exact: true }).waitFor({ state: 'visible', timeout: 15000 });
   await page.waitForTimeout(300);
@@ -82,11 +96,17 @@ try {
   if (declined === 'declined') await page.waitForFunction(() => window.__riverMultiplayer().snapshot.interactions.length === 0, null, { timeout: 15000 }).catch(() => { declined = 'the invitation was not cleared'; });
   await page.waitForTimeout(400);
   const after = await measure();
-  const invitation = { invited, declined, idleCardShownAfter: after.card, dockOpenAfter: after.dockOpen };
+  const invitation = { invited, declined, cardShownAfter: after.card, promptShownAfter: Boolean(after.prompt), dockOpenAfter: after.dockOpen };
 
   const problems = [];
-  for (const { width, closed, tap, opened } of results) {
-    if (!closed.card) problems.push(`${width}: the greetings card was not showing, so this width proves nothing`);
+  for (const { width, closed, menu, tap, opened } of results) {
+    if (closed.card) problems.push(`${width}: the greetings card showed before anyone opened it`);
+    if (!closed.prompt) problems.push(`${width}: the Say hello prompt was not showing, so this width proves nothing`);
+    else if (!closed.prompt.reachable) problems.push(`${width}: the prompt is covered by ${closed.prompt.coveredBy}`);
+    if (!menu.card) problems.push(`${width}: E did not open the greetings menu`);
+    for (const control of menu.cardControls) if (!control.reachable) problems.push(`${width}: greetings menu ${control.name} covered by ${control.coveredBy}`);
+    for (const control of menu.hud) if (!control.reachable) problems.push(`${width}: with the menu open, ${control.name} covered by ${control.coveredBy}`);
+    if (width <= 900 && opened?.prompt) problems.push(`${width}: the prompt should yield to the open dock`);
     if (!closed.toggle?.reachable) problems.push(`${width}: toggle covered by ${closed.toggle?.coveredBy ?? 'nothing visible'}`);
     if (tap !== 'opened') problems.push(`${width}: tapping Play & rides failed: ${tap}`);
     for (const control of closed.hud) if (!control.reachable && control.name !== '.visit-tools-toggle') problems.push(`${width}: ${control.name} covered by ${control.coveredBy}`);
@@ -98,7 +118,7 @@ try {
   for (const name of ['Accept', 'Decline']) if (!invited.cardControls.some(control => control.name === name && control.reachable)) problems.push(`invitation: ${name} not reachable with the dock open: ${JSON.stringify(invited.cardControls)}`);
   if (!invited.toggle?.reachable) problems.push(`invitation: Play & rides covered by ${invited.toggle?.coveredBy}`);
   if (declined !== 'declined') problems.push(`invitation: declining failed: ${declined}`);
-  if (after.card || !after.dockOpen) problems.push(`after declining, the idle card should yield to the open dock: card ${after.card}, dock ${after.dockOpen}`);
+  if (after.card || after.prompt || !after.dockOpen) problems.push(`after declining, no card and the prompt yields to the open dock: card ${after.card}, prompt ${Boolean(after.prompt)}, dock ${after.dockOpen}`);
   const receipt = { status: problems.length || errors.length ? 'failed' : 'passed', browser: await browser.version(), problems, errors, results, invitation };
   await writeFile(`${OUT}/receipt.json`, JSON.stringify(receipt, null, 2));
   console.log(JSON.stringify({ status: receipt.status, problems, errors }, null, 1));

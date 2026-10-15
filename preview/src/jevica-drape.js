@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { createSkinnedVertexSampler } from './skinned-vertex-sampler.js';
+import { createSkinnedVertexSampler, createUniqueSkinnedVertexSamples } from './skinned-vertex-sampler.js';
 
 // Pose-driven clearance for the hero's opaque skirt. Skin and locomotion remain
 // authoritative; only the independent cloth surfaces receive radial offsets.
@@ -13,6 +13,7 @@ export function createJevicaDrape(avatar, waist, skirts) {
   for(let i=0;i<skin.count;i++) {
     for(let j=0;j<4;j++)if(coveredBones.has(skin.getComponent(i,j))&&weights.getComponent(i,j)>.05){samples.push(i);break;}
   }
+  const contactSamples=createUniqueSkinnedVertexSamples(body.geometry,samples);
   const tau=Math.PI*2,rows=45,sectors=64,low=-1,step=1.1/(rows-1);
   // The lap compresses the skirt vertically. Resolve that waist fold at 5 mm
   // instead of interpolating across a full standing-skirt row (27.5 mm).
@@ -111,7 +112,7 @@ export function createJevicaDrape(avatar, waist, skirts) {
       body.updateMatrixWorld(true);
       sampler.update();
       inverse.copy(waist.matrixWorld).invert();matrix.multiplyMatrices(inverse,body.matrixWorld);
-      for(const index of samples) {
+      for(const index of contactSamples(body.geometry)) {
         sampler.getVertexPosition(index,point).applyMatrix4(matrix);
         if(point.y<(riding?-.03:low)||point.y>.085)continue;
         const radius=Math.hypot(point.x,point.z),angle=(Math.atan2(point.x,point.z)+tau)%tau;
