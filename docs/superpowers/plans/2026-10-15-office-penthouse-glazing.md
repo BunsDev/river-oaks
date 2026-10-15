@@ -66,6 +66,17 @@ server lets a body walk through.
 | `pnpm run verify` after the fix (dirty tree at `ed9e993a`) | core passed: preview 3,096/3,097 (1 skipped), server 534/681 (147 skipped), agent 109/109, desktop 69/69, Python 141 passed, build, ruff, secrets |
 | Same runner at `3fd86141`, after the lobby fix | passed at 09:07Z: 6/6 checks (penthouse main floor admitted, walked to the stair foot, stairs offered only there, landed at the stair head, eye rose 3.800 m, no page errors). Software rendering; the scripted path never faces the front glass, so the hidden lobby is covered by the unit regression and the probe, not by this capture. |
 
+## Independent review (coordinator session 7a57e655, 2026-10-15, head `75aaea13`)
+
+Read the full diff of `office-penthouse-graybox.js` and `office-world-scene.js`. No findings.
+
+- `thinStorefrontGlass()` builds a new material on each call. Disposing the office's materials therefore never disposes the district's shared storefront glass.
+- `aoExclude` is the flag `render-pipeline.js` actually reads.
+- The terrace obstacles keep their plan footprints, and the transom underside (3 m) clears the 2.45 m body.
+- The lobby fix keeps exactly `street.lobby.frontDoors`, which `office-arrival-architecture.js` exports.
+- That lobby's `update()` changes only door positions and the floor display, never child visibility. So forcing each part's saved visibility every frame cannot fight the arrival film.
+- `dispose` restores each part's own saved visibility, and the legacy room collects no parts.
+
 ## Gaps
 
 - **Expected merge conflict.** The edits touch the import line and the terrace-wall line of the obstacle
