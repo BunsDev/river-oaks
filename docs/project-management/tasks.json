@@ -10000,9 +10000,9 @@
         "feat/office-skyline-prototype-20261015"
       ],
       "owner": "claude:river-oaks-penthouse (7a57e655)",
-      "leaseUntil": "2026-10-15T11:53:06.000Z",
-      "updatedAt": "2026-10-15T09:53:06.000Z",
-      "nextAction": "Review fixes pushed to draft #408: no gl.finish, whole-capture timing (first capture in a page 147-163 ms, later 18-24 ms, no new programs), street pool lighting for the capture, hook kept clear of #405 (merge-tree clean), origin/main merged signed; combined #405 glass + skyline GPU walk recorded. Next: independent review, phone measurement before activation.",
+      "leaseUntil": "2026-10-15T13:16:48.000Z",
+      "updatedAt": "2026-10-15T11:16:48.000Z",
+      "nextAction": "Draft #408: navy rings fixed (host tower floor-line bands, found by raycast probe; tower skin rule keeps the wing parapet), recaptured on the branch and with #405 glass (scratch removed). Next: independent review, phone measurement before activation.",
       "ledger": "docs/superpowers/plans/2026-10-15-office-skyline-prototype.md",
       "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-skyline",
       "filesOwned": [

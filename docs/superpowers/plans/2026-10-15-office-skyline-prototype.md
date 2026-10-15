@@ -20,13 +20,19 @@ only, at no cost to the legacy room.
    `lease.inside(true)` hides the street: as the doors finish closing, or on the first frame when the arrival is skipped
    or reduced motion is on. The district is still drawn then; the player sees only the closed cabin.
 3. **What is left out.** The office stage, the borrowed lobby and cabin, the visitor's avatar and the peer root are hidden
-   for the capture. The eye stands inside the mapped 28 m tower, so everything of the host building that reaches above the
-   office floor is collapsed for the capture only and restored right after: its facade instances by building index
-   (`userData.buildingIndices`), its massing by id (`userData.districtBuilding`), and anything else whose centre stands in
-   its footprint (the mapped ring, with a 1 m margin for parts on the wall). The last rule exists because the first GPU
-   capture showed a large ring overhead: a near-field probe traced it to the retro-futurist rooftop ornament (instanced
-   spheres, tori and cylinders tagged only with `storeIds`) about 4 m from the eye. A district-wide merged mesh that merely
-   overlaps the footprint (the sign sheet) is never hidden. The podium below the floor and every neighbour stay.
+   for the capture. The eye stands inside the mapped 28 m tower, so for the capture only (restored right after):
+   - **The tower's own skin:** host facade instances (`userData.buildingIndices`) that reach above the office floor or stand
+     wholly above the host's lower roof (the top of its massing below the floor, plus a 1.2 m parapet allowance). A
+     building's exterior skin cannot be seen from inside it. The rule exists because every capture showed two thin navy
+     rings below the horizon; a raycast probe from the eye traced both to the tower's floor-line bands (colour `#283a66`)
+     about 19–20 m out, the 24.3 m line just under the office floor and the 20.45 m line 3.9 m lower. A stepped host's
+     lower wing (the Le Colonial parapet below the terrace) and its street frontage stay; a single-mass host hides its
+     whole facade.
+   - **Its massing** (`userData.districtBuilding`) and **anything else whose centre stands in its footprint** (the mapped
+     ring, 1 m margin), where they reach above the office floor. This caught the retro-futurist rooftop ornament (instanced
+     spheres, tori and cylinders tagged only with `storeIds`) that drew a large ring overhead about 4 m from the eye.
+   - A district-wide merged mesh that merely overlaps the footprint (the sign sheet) is never hidden. Lower roofs and every
+     neighbour stay.
 4. **Shown as** `scene.background`, at intensity 1 (the faces already hold the sky at its own intensity), with blur and
    rotation cleared. Every face clears; the sun's shadow maps from the last street frame are reused rather than redrawn
    six times. No lights are added, no network or asset loads. The fixed light pool, which by `closingEnd` has been blended
@@ -72,6 +78,8 @@ other sessions' browser runs and dev servers. Rows before 09:38Z still waited on
 | **09:38Z same page, second visit** | 1024 | 6.5 | 16.9 | **23.5** | 0 | 33 ms | 160 inst., 3 meshes |
 | 09:38Z same page, 19:00 | 1024 | 3.0 | 14.8 | 17.8 | 0 | 33 ms | 160 inst., 3 meshes |
 | 09:44Z / 09:50Z combined with #405, fresh browser | 1024 | 13.6 / 13.8 | 133.5 / 146.5 | 147.2 / 160.6 | 0 | 433 / 183 ms | 160 inst., 3 meshes |
+| 10:04Z / 10:05Z all host facade hidden (branch / combined) | 1024 | 11.7 / 13.0 | 132.0 / 117.6 | 144.4 / 130.8 | 0 | 167 / 150 ms | 2119 inst., 3 meshes |
+| **11:14Z tower skin rule (branch / combined)** | 1024 | 12.7 / 14.1 | 151.4 / 128.4 | **164.3 / 142.5** | 0 | 200 / 167 ms | 177 inst., 3 meshes |
 
 Inside frames (09:26Z): median 16.7 ms, p95 16.8 ms, the same as `?office-skyline=off` (16.7 / 16.7 ms). The host search
 is 3–14 ms, small beside the first submission, so it is not cached.
@@ -105,10 +113,9 @@ night setting the build does not have.
 | GPU views (Metal ANGLE), skyline on and `?office-skyline=off`, terrace walk (08:40Z, before the footprint rule) | on: captured, 1024, 155 host instances hidden, no page errors; the district shows past the terrace rail and through both terrace openings; a large ring overhead (the rooftop ornament, fixed below). Off: plain sky. Street restored after leaving in both. |
 | `node preview/e2e/office-penthouse-runner.mjs` (software) with a 64 px capture | **failed**: timed out at 60 s waiting for the office phase; the failure screenshot shows the office reached late |
 | same, software acceptance taking no capture | **passed** 6/6 checks, 47 s (09:05Z) |
-| GPU views, skyline on, footprint rule (09:26Z) | captured, 160 host instances and 3 meshes hidden, no page errors; the ring overhead is gone. West: the Le Colonial wing roof below, a neighbour's edge, then the mapped district's flat ground to the horizon, crossed by thin dark lines from the district. South: the neighbouring residences, rooftops and parking deck. Screenshots in the session scratchpad, not committed. |
+| GPU views, skyline on, footprint rule (09:26Z) | captured, 160 host instances and 3 meshes hidden, no page errors; the ring overhead is gone. West: the Le Colonial wing roof below, a neighbour's edge, then the mapped district's flat ground to the horizon. (The thin dark lines also visible then were the host's floor-line bands, fixed below, not district edges as first written.) South: the neighbouring residences, rooftops and parking deck. Screenshots in the session scratchpad, not committed. |
 | Near-field probe (temporary, not committed) | ring overhead = `Retrofuturistic garden district` instanced ornament, ~4 m from the eye, no building index |
 | `pnpm run verify` (core) after the footprint rule and the software skip | passed: agent 109/109, preview 3101/3102 (1 skipped), server 534/681 (147 Redis cases skip without `REDIS_URL`), desktop 69/69, Python 141; receipt `.runtime/agent/core.json` |
-
 | `node --test preview/tests/office-skyline.test.js` after the review fixes | 9/9 (adds: no `gl.finish`, the timing and program fields, the street pool lighting the faces then returned to the cabin; removing the restore fails the test) |
 | `node --test preview/tests/office-*.test.js` after the review fixes and `origin/main` | 80/80 |
 | `git merge-tree` with `origin/feat/office-penthouse-glazing-20261015` (#405, `bef644ee`) | clean after moving the hook and the docs paragraph (it conflicted on the `dispose` line and the docs bullet before) |
@@ -116,14 +123,21 @@ night setting the build does not have.
 | `pnpm run verify` (core) after the merge | passed: agent 109/109, preview 3113/3115 (1 skipped, 1 todo), server 549/698 (148 skipped without `REDIS_URL`, 1 todo), desktop 69/69, Python 141 |
 | Combined #405 + this branch, detached scratch from `origin/main`, office tests | 84/84 |
 | Combined GPU walk (09:44Z and 09:50Z, browser lock) | see Combined view below; no page errors |
+| Raycast probe from the capture eye at the two dark lines' depressions, 5.3° and 16°, eight azimuths (temporary, not committed) | first hits at 19–20 m: host facade instances 50, 51 and 85 (building index 0), colour `#283a66`, spanning −0.21…−0.07 m and −4.06…−3.92 m from the office floor; other azimuths hit neighbours' roofs and facades or the ground |
+| `office-skyline.test.js` with the host-skin regressions (written first, red) | 11/11: from inside, the host's floor lines and facade below the floor go while a neighbour's band stays; with the eye outside only parts above the floor go; a stepped host keeps its wing parapet and street frontage |
+| `node --test preview/tests/office-*.test.js` | 82/82 (combined scratch with #405 `bef644ee` and `origin/main` `a079271a`: 86/86) |
+| GPU recapture, all host facade hidden (10:04Z branch, 10:05Z combined) | both navy lines gone in every view, but the wing parapet below the terrace was gone too, so the terrace looked out over flat ground |
+| GPU recapture, tower skin rule (11:14Z branch and combined) | navy lines gone in the front, east, mezzanine and terrace views; the wing parapet is back below the terrace; no page errors; street restored after leaving |
 
 ## Combined view with #405's glass (review item 5)
 
 A detached scratch worktree from `origin/main` `b5d99a13` merged `origin/feat/office-penthouse-glazing-20261015` at
 `bef644ee` (#405 had moved on from `75aaea13`) and this branch at `175b6e0c`. Nothing was pushed; the scratch was removed
-with `git worktree remove`. Screenshots, in the session scratchpad `combined/`: `combined-front-glass.png`,
-`combined-east-glass.png`, `combined-mezzanine-to-front.png`, `combined-mezzanine-west.png`,
-`combined-terrace-to-office.png`, `combined-terrace-south-street.png`.
+with `git worktree remove`. It was recreated at 10:04Z and again at 11:14Z (from `origin/main` `a079271a`) for the ring
+fix, and removed the same way. Current screenshots, in the session scratchpad `rings2/`: `combined-front-glass.png`,
+`combined-east-glass.png`, `combined-mezzanine-to-front.png`, `combined-terrace-to-office.png`,
+`combined-terrace-west.png`, `branch-terrace-south-street.png`, `branch-terrace-west.png`. The earlier set (with the navy
+lines) is in `combined/`.
 
 What it looks like, honestly:
 - **It now reads as an enclosed glass penthouse.** Full-height clear glass with bronze mullions runs along the front and
@@ -134,8 +148,10 @@ What it looks like, honestly:
   and mezzanine, with the front curtain wall and the residences on the right.
 - **Still a graybox inside.** Plain finishes, cylinders for chairs, no desks. The office's point lights leave small bright
   glints on the glass.
-- **West is the weakest view.** Past the terrace the mapped district ends in flat ground to the horizon, crossed by thin
-  dark lines from the district. There is no distant skyline because the mapped area has none.
+- **West is the weakest view.** Below the terrace the Le Colonial wing's roof and parapet, then the mapped district ends in
+  flat ground to the horizon. There is no distant skyline because the mapped area has none.
+- **No dark lines.** The two thin navy rings below the horizon in the first set were the host tower's own floor-line
+  bands seen from inside it; they are gone since the tower skin rule.
 - **Parallax.** From the mezzanine (5.5 m above the capture eye) nearby roofs sit slightly off where the eye would expect
   them; at a glance it is not noticeable.
 
