@@ -49,7 +49,7 @@ server lets a body walk through.
 | `node --test preview/tests/office-*.test.js` | 74/74 |
 | Graybox draw calls / triangles (counting script, one draw per mesh) | before 53 / 976 (4 transparent); after 51 / 1,564 (5 transparent) |
 | `pnpm run verify` (worktree, dirty tree at `9d83cd31`) | core passed (`.runtime/agent/core.json`): preview 3,095/3,096 (1 skipped), server 534/681 (147 skipped: Redis and live services), agent 109/109, desktop 69/69, Python 141 passed, build, ruff, secrets |
-| `node preview/e2e/office-penthouse-runner.mjs` (browser lock) | pending: queued 7th on the shared browser lock behind another session's full gate at 08:22Z; not run |
+| `node preview/e2e/office-penthouse-runner.mjs` (browser lock) | not run. Queued 7th on the shared browser lock at 08:22Z. When it reached the front (about 08:37Z), the fixture exited with `Cannot find package 'vite'`: the primary checkout's `node_modules`, which this worktree symlinks, had been deleted after core verify passed (08:21Z), apparently by an external disk cleanup. No browser or visual evidence. |
 
 ## Gaps
 
@@ -65,6 +65,6 @@ server lets a body walk through.
 
 ## Next
 
-Run the penthouse browser smoke once the browser lock frees and look at the arrival and mezzanine
-captures. Rebase onto the #363 seat stack, or onto main once #400 lands, keeping both sides of the
+Once the primary's dependencies are restored, run the penthouse browser smoke and look at the arrival
+and mezzanine captures. Rebase onto the #363 seat stack, or onto main once #400 lands, keeping both sides of the
 two neighbouring lines. Design review of the glazing against #362's window module.
