@@ -1,6 +1,6 @@
 # Office + IPIC #360, engineering half: baseline and executable layout contract
 
-Task `office-ipic-engineering-baseline` · branch `docs/office-ipic-engineering-baseline-20261014` · worktree `../river-oaks-office-ipic-engineering-20261014` · owner claude-code river-oaks-dc (session 8fa1c14c) · parent #359, package #360.
+Task `office-ipic-engineering-baseline` · branch `docs/office-ipic-engineering-baseline-20261014` · worktree `../river-oaks-office-ipic-engineering-20261014` · owner claude-code river-oaks-dc (session 8fa1c14c) until its lease expired 2026-10-15T00:23Z, then claude:river-oaks-1b (f4107618) from 03:39Z with the handoff recorded in the register (see "Takeover and G1" below) · parent #359, package #360.
 
 The design half of #360 (brief, reference-index, asset-manifest, review-matrix, the kit inventory) is owned by session river-oaks-5d on `docs/office-ipic-baseline-20261014`, register task `office-ipic-baseline-360`, ledger `2026-10-14-office-ipic-baseline.md`. The split follows #359's "engineering captures current behavior/ownership; design audits references and numeric layout". Packet files are cross-linked by name only; neither session edits the other's files.
 
@@ -91,11 +91,49 @@ No change in this branch touches `server/` runtime code or voice; the voice fail
 - IPIC camera viewports are not recorded in `docs/ipic-review/review.json`; the manifest says so and freezes them at the next capture.
 - `office-penthouse-proposed` geometry is the kit's `layout.json` by hash; it governs nothing until #361 imports a versioned copy. Its 46 colliders and 32 placements are not duplicated into the contract to avoid a second truth.
 
+## Takeover and G1 (2026-10-15)
+
+river-oaks-dc's lease expired at 00:23Z and the session no longer appears in `ListAgents`. Val's goal of 2026-10-15 directed river-oaks-1b to take the task over; the handoff (from, to, reason) is in the live register entry. The worktree was clean and in sync with `origin` at `7c7f7368`.
+
+- **#388 taken.** Draft #388 (Val's fit and mezzanine decisions, stacked on this branch) was marked ready and landed into this branch with `pnpm run land 388 --owner river-oaks-1b`: all 11 checks green, merge `cbe393b8`. The contract now records `penthouse-volume-fit` as decided (`fit.options[2]`, building raised to 33.0 m, tower top 32.85 m, floor 24.3 m, ceiling 31.9 m, mezzanine floor 28.1 m) and the library revision 3 `mezzanineProgramme`.
+- **main merged** at `c1cfd584` (#384–#390) as `f1a80496`; the generated plans index was the only conflict.
+
+### Engineering cross-check of both packet halves
+
+Run on a tree made of this branch at `cbe393b8` plus #380's packet files at `0928bab3` (no extra worktree), with a throwaway script that reads the kit's `layout.json` in `~/Downloads` without copying it:
+
+| Check | Result |
+| --- | --- |
+| contract, camera manifest and reference index pin the same `sourceRevision` (`489a60e4`) and `layoutVersion` | pass |
+| kit `layout.json` SHA-256 `ccd7e275…` equals the contract's note and the index entry `kit-layout-json` | pass |
+| the penthouse place carries exactly the kit's 14 anchor ids | pass |
+| the brief's raise table (24.3, 31.9, 28.1, 32.85, 33.0) equals `fit.decision` | pass |
+| the brief's reading chairs and east passing bay equal `mezzanineProgramme` | pass |
+| decision states: volume fit decided, IPIC lift recorded, library decided, envelope re-measure deferred | pass |
+| `node --test scripts/tests/office-ipic-contract.test.js` | 8/8 |
+| `node scripts/office-ipic-reference-index.mjs --check` | 147 references, 53 assets, 0 problems, 1 drift (`docs/offices.md` changed since `489a60e4` by #390; drift is reported, not a broken packet) |
+| `node --test scripts/tests/office-ipic-references.test.js` | 6/6 |
+
+### Engineering agreement (G1)
+
+Engineering agrees to the packet as the G1 contract: the observed rows, the single axis convention, the decided fit and library programme, and the decorative IPIC lift for this increment. The design side's agreement is in `review-matrix.md` (#380), where this agreement is also recorded.
+
+Implementing #361 and #366 from the packet needs no guess on levels, openings, anchor ids or ownership. The ordinary details below are engineering's, recorded here so nobody re-asks:
+
+- **#361 geometry source.** The kit's `layout.json` is not imported (Val decision R19 is open, and the goal forbids copying kit bytes). #361 authors a versioned penthouse plan module from the contract's committed numbers: shell 30 × 20 m, levels `l0` and `mezz` (+3.8 m), stair x 10.2–13.4 / d 5.6–14, mezzanine edge guard at d 14 with the stair-top opening, terrace x −23 to −15 through portals d 3–7 and 10–14, lift anchors at (−12, 18) as a fixed-endpoint server transition, the 14 anchors, and the `mezzanineProgramme` seats, furniture and clear bands. The kit's 46 colliders and 32 placements join the plan only through #362's import. Level and portal records reuse #349's `<building>/l<n>` and `entrance|stairs` shape.
+- **Arrival opening.** The penthouse keeps the current lift car, film and doorway on the d 0 wall at x 0 (Val's fit decision keeps level 6 and the arrival film); the `arrival` spawn is the kit's (0, 1.5).
+- **The building raise is not activation-free.** It changes the world fingerprint, so merging it puts a checkpoint migration on the production town's next deploy. #361 ships the versioned layout without it, behind the legacy default; the raise ships with activation, which needs Val's authorization.
+- **#366** needs only the IPIC `screen` anchor, the seat ids and the decorative-lift decision, all observed in the contract.
+
 ## Decisions for Val
 
-1. **Penthouse volume fit** (contract decision `penthouse-volume-fit`): choose lower floor, lower clear height, or taller building before #361 fixes level elevations.
-2. **IPIC step-free access**: this increment keeps the lift decorative; the escalator slope is the only upper-level route. Accept that for #364, or scope a fixed-endpoint server-validated lift route.
+1. **Kit import** (review matrix R19, brief open item 1): commit `layout.json`, the metadata and the 22 GLBs under `assets/office-penthouse/`, or keep the kit external. #362's assets and the penthouse furniture colliders wait on it; #361 does not.
+2. **Building raise and checkpoint migration deploy**: the raise you chose changes the world fingerprint and migrates the production town checkpoint on deploy. It is held for the activation step; say when that deploy is authorized.
+3. **IPIC step-free access**: this increment keeps the lift decorative; the escalator slope is the only upper-level route. Accept that for #364, or scope a fixed-endpoint server-validated lift route.
+4. **Missing handoff briefs** (R24): the two role briefs named in #359 were not found; supply them or confirm the issues replace them.
+
+The volume-fit question is answered (option 2, recorded through #388).
 
 ## Next action
 
-Run the tooling and core gates, commit signed, push, open the draft PR, update the register, and hand #361/#366 the contract's `layoutVersion` and transition policy. Engineering can start #361 (reusing #349's level/portal shape) or #366 (authoritative screening timeline) in separate owned scopes once Val's volume-fit decision lands; #366 does not depend on it.
+Land #381 with `pnpm run land 381 --owner river-oaks-1b`, then #380; tick #360's last two boxes with the evidence above; retire `docs/office-ipic-contract-decisions-20261015`, this branch and #380's branch with `project:prune`. Then #361 and #366 start in their own worktrees.
