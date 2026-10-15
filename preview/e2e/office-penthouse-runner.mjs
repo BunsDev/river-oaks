@@ -11,7 +11,7 @@ let fixture, browser;
 await mkdir('output/playwright', { recursive: true });
 try {
   fixture = await startBrowserFixture({ env: { VITE_SHARED_SOFTWARE_RENDERING: '1', RIVER_OAKS_OFFICE_LAYOUT: 'office-penthouse-1' } });
-  browser = await chromium.launch({ headless: true, args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+  browser = await chromium.launch({ headless: true, args: process.platform === 'darwin' ? ['--use-angle=metal'] : ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
   const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
   await context.addCookies([{ name: 'fixture_session', value: 'owner', url: fixture.origin }]);
   const page = await context.newPage(); page.setDefaultTimeout(60000);

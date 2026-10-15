@@ -319,3 +319,31 @@ test('the legacy room and the off switch never capture or change the sky', t => 
     v.scene.dispose();
   }
 });
+
+test('live skyline draws current district without a cubemap, filters host only during each draw, and restores on errors', () => {
+  const f = district(), renderer = fakeRenderer(), roof = new THREE.Mesh(new THREE.BoxGeometry(2,2,2), new THREE.MeshStandardMaterial());
+  roof.position.set(0, f.floorY + 2, 0); f.stage.add(roof); f.scene.updateMatrixWorld(true);
+  const skyline = createOfficeSkyline({ mode: 'live', hostRoot: f.group, renderer, scene: f.scene, eye: new THREE.Vector3(0,f.floorY+1.68,0), floorY:f.floorY, hostBuildingIndex:0,hostBuildingId:'host',hide:[f.stage] });
+  assert.equal(skyline.texture, null); assert.equal(skyline.stats.bytes,0);
+  const actor = new THREE.Mesh(new THREE.BoxGeometry(1,2,1),new THREE.MeshStandardMaterial());actor.position.set(0,f.floorY+2,0);f.scene.add(actor);f.scene.updateMatrixWorld(true);
+  const draw = () => { assert.equal(actor.visible,true,'live filtering never adopts moving actors');assert.equal(scaleOf(f.mesh,0),0);assert.ok(scaleOf(f.mesh,2)>0);assert.equal(f.mass.visible,false);assert.equal(roof.visible,true);assert.equal(f.stage.visible,true); };
+  skyline.render(draw);assert.ok(scaleOf(f.mesh,0)>0);assert.equal(f.mass.visible,true);
+  actor.position.x=50;actor.updateMatrixWorld(true);
+  const dusk = new THREE.Color('#443344');f.scene.background=dusk;skyline.render(()=>{draw();assert.equal(f.scene.background,dusk);});
+  assert.throws(()=>skyline.render(()=>{draw();throw new Error('draw failed');}),/draw failed/);
+  assert.ok(scaleOf(f.mesh,0)>0);assert.equal(f.mass.visible,true);assert.equal(f.scene.background,dusk);
+  assert.equal(renderer.renders.length,0,'no six-face renderer submissions');assert.equal(skyline.stats.state,'live');
+  skyline.dispose();skyline.dispose();assert.equal(skyline.render(()=>assert.fail('disposed view draws')),false);
+});
+
+test('live office keeps exterior current, moves the actual viewpoint and restores street presentation', t => {
+  const s=street({layout:OFFICE_LAYOUT_PENTHOUSE,skyline:{mode:'live'}}),v=visit(t,s);v.scene.skip();
+  let draws=0;s.captured.pipeline.render=()=>{draws++;assert.equal(s.districtGroup.visible,true);};
+  s.lamp.intensity=27;s.lamp.position.set(10,20,30);
+  v.draw(0);v.draw(16);const first=s.captured.camera.position.clone();
+  const next=new THREE.Color('#776655');s.scene.background=next;
+  v.scene.render(32,[-18,8],.4,[]);assert.ok(s.captured.camera.position.distanceTo(first)>10);
+  assert.equal(s.scene.background,next);assert.equal(s.renderer.renders.length,0);assert.equal(s.lamp.intensity,27,'street lights retain their current environment');assert.deepEqual(s.lamp.position.toArray(),[10,20,30]);
+  assert.equal(v.scene.inspect().skyline.state,'live');assert.equal(v.scene.inspect().skyline.bytes,0);assert.equal(draws,3);
+  v.scene.dispose();assert.equal(s.lamp.intensity,27);assert.deepEqual(s.lamp.position.toArray(),[10,20,30]);assert.equal(s.districtGroup.visible,true);assert.equal(s.scene.background,next);assert.equal(s.captured.lobby.object.parent,s.districtGroup);
+});

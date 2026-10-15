@@ -96,3 +96,9 @@ shadow pass. In the 20-planter fixture, the mixed planting is about 271k triangl
 versus about 593k for the uniform planting. Planter views drew 8-29 % fewer
 triangles and needed 6-29 more draw calls. `preview/tests/plant-diversity.test.js`
 covers layering, determinism, variation, clearance and triangle budgets.
+
+## Authored green roofs
+
+The green-roof scenery pilot is separate from observed stems and canopy records.
+See [green roof coverage and evidence](green-roofs.md) for reviewed surfaces,
+exclusions, placement margins and the outstanding visual/performance gates.
