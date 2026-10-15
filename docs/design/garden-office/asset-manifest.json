@@ -1,0 +1,222 @@
+{
+  "packet": "garden-office",
+  "schemaVersion": 1,
+  "issue": 416,
+  "threeAxes": "x east / y up / z south",
+  "assets": [
+    {
+      "id": "studio-desk-workstation",
+      "kind": "desk",
+      "resize": "Any v1 width, depth and height. Top 25 mm, legs 40 mm square and rails keep metric sections; a back modesty panel appears when the legs exceed 0.45 m.",
+      "materialSlots": {
+        "top": "object finish",
+        "frame": "charcoal"
+      },
+      "approach": "Seated side is the local +z edge; the office places each chair 1 m south of its desk.",
+      "version": 1,
+      "source": "procedural",
+      "file": "preview/src/studio/space-furniture.js",
+      "sha256": "09feb1b2f4492ed9e723924f7e048d74a06b39df7fc9879c744fc5392166e183",
+      "nominal": {
+        "width": 1.8,
+        "depth": 0.8,
+        "height": 0.76
+      },
+      "finishUsedForMeasure": "oak",
+      "bounds": [
+        [
+          -0.9,
+          0,
+          -0.4
+        ],
+        [
+          0.9,
+          0.76,
+          0.4
+        ]
+      ],
+      "axes": "object frame at yaw 0: x east / y up / z south; pivot at the floor centre of the footprint",
+      "collision": "v1 footprint rectangle (width × depth); blocks walking when elevation < 1.8 m and the top is above 0.25 m",
+      "cost": {
+        "meshNodes": 8,
+        "triangles": 384,
+        "textures": "none of its own; stone finishes reuse the shared PBR set"
+      },
+      "stage": "procedural-pilot",
+      "availability": "repository",
+      "permission": "Original geometry authored in this repository for #416; no third-party source."
+    },
+    {
+      "id": "studio-chair-side",
+      "kind": "chair",
+      "resize": "Any v1 size. Seat height is min(0.47 m, 55% of height); legs keep a 17 mm turned section; the back leans 8° and stays inside the footprint; no back below 8 cm.",
+      "materialSlots": {
+        "upholstery": "object finish",
+        "timber": "oak, or walnut when the finish is walnut"
+      },
+      "approach": "Sitter enters from the local +z edge; the back is the local -z edge.",
+      "version": 1,
+      "source": "procedural",
+      "file": "preview/src/studio/space-furniture.js",
+      "sha256": "09feb1b2f4492ed9e723924f7e048d74a06b39df7fc9879c744fc5392166e183",
+      "nominal": {
+        "width": 0.6,
+        "depth": 0.65,
+        "height": 0.85
+      },
+      "finishUsedForMeasure": "charcoal",
+      "bounds": [
+        [
+          -0.29,
+          0,
+          -0.32
+        ],
+        [
+          0.29,
+          0.828,
+          0.315
+        ]
+      ],
+      "axes": "object frame at yaw 0: x east / y up / z south; pivot at the floor centre of the footprint",
+      "collision": "v1 footprint rectangle (width × depth); blocks walking when elevation < 1.8 m and the top is above 0.25 m",
+      "cost": {
+        "meshNodes": 9,
+        "triangles": 828,
+        "textures": "none of its own; stone finishes reuse the shared PBR set"
+      },
+      "stage": "procedural-pilot",
+      "availability": "repository",
+      "permission": "Original geometry authored in this repository for #416; no third-party source."
+    },
+    {
+      "id": "studio-pendant-linear",
+      "kind": "pendant",
+      "resize": "Used when the long side is at least twice the short side: an 80 mm body along the long side on two cables; otherwise the round variant.",
+      "materialSlots": {
+        "body": "object finish",
+        "cables": "charcoal",
+        "diffuser": "shared emissive lamp"
+      },
+      "approach": "Overhead; does not block walking.",
+      "version": 1,
+      "source": "procedural",
+      "file": "preview/src/studio/space-furniture.js",
+      "sha256": "09feb1b2f4492ed9e723924f7e048d74a06b39df7fc9879c744fc5392166e183",
+      "nominal": {
+        "width": 2.4,
+        "depth": 0.22,
+        "height": 0.3
+      },
+      "finishUsedForMeasure": "brass",
+      "bounds": [
+        [
+          -1.2,
+          0,
+          -0.04
+        ],
+        [
+          1.2,
+          0.3,
+          0.04
+        ]
+      ],
+      "axes": "object frame at yaw 0: x east / y up / z south; pivot at the floor centre of the footprint",
+      "collision": "v1 footprint rectangle (width × depth); blocks walking when elevation < 1.8 m and the top is above 0.25 m",
+      "cost": {
+        "meshNodes": 6,
+        "triangles": 504,
+        "textures": "none of its own; stone finishes reuse the shared PBR set"
+      },
+      "stage": "procedural-pilot",
+      "availability": "repository",
+      "permission": "Original geometry authored in this repository for #416; no third-party source."
+    },
+    {
+      "id": "studio-pendant-round",
+      "kind": "pendant",
+      "resize": "Used below a 2:1 footprint: an open shade sized by the short side, at most 0.35 m tall, on one cord.",
+      "materialSlots": {
+        "shade": "object finish",
+        "cord": "charcoal",
+        "diffuser": "shared emissive lamp"
+      },
+      "approach": "Overhead; does not block walking.",
+      "version": 1,
+      "source": "procedural",
+      "file": "preview/src/studio/space-furniture.js",
+      "sha256": "09feb1b2f4492ed9e723924f7e048d74a06b39df7fc9879c744fc5392166e183",
+      "nominal": {
+        "width": 0.45,
+        "depth": 0.45,
+        "height": 0.35
+      },
+      "finishUsedForMeasure": "brass",
+      "bounds": [
+        [
+          -0.214,
+          0,
+          -0.214
+        ],
+        [
+          0.214,
+          0.35,
+          0.214
+        ]
+      ],
+      "axes": "object frame at yaw 0: x east / y up / z south; pivot at the floor centre of the footprint",
+      "collision": "v1 footprint rectangle (width × depth); blocks walking when elevation < 1.8 m and the top is above 0.25 m",
+      "cost": {
+        "meshNodes": 4,
+        "triangles": 200,
+        "textures": "none of its own; stone finishes reuse the shared PBR set"
+      },
+      "stage": "procedural-pilot",
+      "availability": "repository",
+      "permission": "Original geometry authored in this repository for #416; no third-party source."
+    },
+    {
+      "id": "studio-plant-potted",
+      "kind": "plant",
+      "resize": "Any v1 size. Round within the shorter side; the pot is 32% of the height (at most 0.42 m); 30–50 leaves per cluster keep the canopy full on tall plants; works from a 0.3 m table vase up.",
+      "materialSlots": {
+        "pot": "object finish",
+        "soil": "walnut",
+        "stems": "walnut",
+        "foliage": "shared double-sided leaf green"
+      },
+      "approach": "Blocks walking like other furniture when standing on the floor.",
+      "version": 1,
+      "source": "procedural",
+      "file": "preview/src/studio/space-furniture.js",
+      "sha256": "09feb1b2f4492ed9e723924f7e048d74a06b39df7fc9879c744fc5392166e183",
+      "nominal": {
+        "width": 0.55,
+        "depth": 0.55,
+        "height": 1.25
+      },
+      "finishUsedForMeasure": "terracotta",
+      "bounds": [
+        [
+          -0.207,
+          0,
+          -0.215
+        ],
+        [
+          0.241,
+          1.197,
+          0.237
+        ]
+      ],
+      "axes": "object frame at yaw 0: x east / y up / z south; pivot at the floor centre of the footprint",
+      "collision": "v1 footprint rectangle (width × depth); blocks walking when elevation < 1.8 m and the top is above 0.25 m",
+      "cost": {
+        "meshNodes": 9,
+        "triangles": 696,
+        "textures": "none of its own; stone finishes reuse the shared PBR set"
+      },
+      "stage": "procedural-pilot",
+      "availability": "repository",
+      "permission": "Original geometry authored in this repository for #416; no third-party source."
+    }
+  ]
+}

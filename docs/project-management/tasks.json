@@ -10168,6 +10168,41 @@
         "limits": "No full Redis, hosted CI, packaged distribution, live auth, physical-device performance or human accessibility acceptance claimed."
       },
       "pr": 427
+    },
+    {
+      "id": "garden-office-416",
+      "title": "#416 Garden Office realism pilot (coding scope): one desk/chair family, glazing, finishes, light/planting sample, catalog records and compatibility on the #414 interface",
+      "status": "active",
+      "branches": [
+        "feat/garden-office-416-20261015"
+      ],
+      "owner": "claude:river-oaks-safe-edits (e9aa0185)",
+      "updatedAt": "2026-10-15T16:35:54.339Z",
+      "leaseUntil": "2026-10-15T18:35:54.339Z",
+      "nextAction": "Floor, glazing and calibrated light done (focused 95/0/0; captures on https://claude.ai/artifact/QxWWoXxB9DMotJyQr77Xpf). Next: planting sample, then desktop/browser/build/verify gates, signed commit and draft PR. No merge.",
+      "ledger": "docs/superpowers/plans/2026-10-15-garden-office-pilot.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-garden-office-416",
+      "issue": 416,
+      "filesOwned": [
+        "preview/src/studio/space-furniture.js (new: desk, chair, pendant forms)",
+        "preview/src/studio/space-scene.js (wiring for those forms)",
+        "preview/src/studio/space-templates.js (office recipe only)",
+        "preview/src/studio/viewport.js (furnished-space reflections and sky fill)",
+        "preview/tests/studio-garden-office.test.js (new)",
+        "preview/e2e/studio-office-stations.js (new capture journey)",
+        "scripts/garden-office-manifest.mjs (new)",
+        "docs/design/garden-office/ (new packet)",
+        "docs/world-studio.md",
+        "docs/superpowers/plans/2026-10-15-garden-office-pilot.md"
+      ],
+      "requiredChecks": [
+        "node --test preview/tests/studio-*.test.js server/tests/studio-assets.test.js",
+        "pnpm run test:desktop",
+        "pnpm run test:experience world-studio",
+        "node desktop/studio-e2e.js",
+        "pnpm run build",
+        "pnpm run verify"
+      ]
     }
   ]
 }

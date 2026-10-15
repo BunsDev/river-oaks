@@ -64,14 +64,18 @@ function office(){
   add('waiting-sofa','sofa',5,-4.6,2.6,.85,.85,'sage');add('waiting-table','table',5,-3.3,1.2,.6,.45,'oak');
   for(const [i,x,y] of [[1,-5.7,-.4],[2,-2.7,-.4],[3,-5.7,2.9],[4,-2.7,2.9]]){
     add(`work-desk-${i}`,'desk',x,y,1.8,.8,.76,'oak');chair(`work-chair-${i}`,x,y-1,180,'charcoal');
-    add(`desk-lamp-${i}`,'pendant',x+.6,y,.25,.25,.3,'brass',0,1);
   }
+  // One linear pendant over each pair of desks, at ceiling height.
+  add('work-pendant-1','pendant',-4.2,-.4,2.4,.22,.3,'brass',0,2.4);add('work-pendant-2','pendant',-4.2,2.9,2.4,.22,.3,'brass',0,2.4);
   add('meeting-table','table',5,2.6,2.2,1.2,.76,'walnut');
   for(const [i,x,y,a] of [[1,3.4,2,90],[2,3.4,3.2,90],[3,6.6,2,-90],[4,6.6,3.2,-90]])chair(`meeting-chair-${i}`,x,y,a,'sage');
   add('meeting-pendant','pendant',5,2.6,1.8,.35,.3,'brass',0,2.4);
   add('kitchenette-cabinets','cabinet',-5.925,5.5,.65,.65,.9,'white');add('kitchenette-cabinets-east','cabinet',-3.275,5.5,3.05,.65,.9,'white');add('kitchenette-sink','sink',-5.2,5.45,.8,.65,.95,'white');
   add('office-storage','shelf',-7.5,1.5,2.4,.6,1.8,'oak',90);
   add('reception-art','art',-7.87,-4,1.3,.05,.9,'sage',90,1.4);plant('meeting-plant',7,5);plant('work-plant',.7,4.8);
+  // Slim charcoal frames give the workplace glass a clear outline; terracotta pots
+  // stand apart from their foliage.
+  for(const item of space.objects)if(item.kind==='glazing')item.finish='charcoal';else if(item.kind==='plant')item.finish='terracotta';
   return space;
 }
 function boutique(){

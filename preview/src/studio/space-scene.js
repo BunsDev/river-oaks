@@ -3,6 +3,7 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import { physicalSurface } from '../materials.js';
 import { thinStorefrontGlass } from '../storefront-materials.js';
 import { buildSpaceWorld } from './space-document.js';
+import { createFurnitureForms } from './space-furniture.js';
 export { buildSpaceWorld } from './space-document.js';
 
 const FINISHES = {
@@ -10,6 +11,12 @@ const FINISHES = {
   limestone: ['#ddd1b9', .72, 0], concrete: ['#bbb9af', .83, 0], terracotta: ['#b76e50', .88, 0],
   fabric: ['#e6d8bd', 1, 0], sage: ['#83917d', .88, 0], brass: ['#bda36d', .28, .82],
   charcoal: ['#333833', .65, .08], white: ['#eeeae2', .36, 0],
+};
+// Viewport light for furnished spaces: sun, sky fill and reflection-map intensity per preset.
+export const SPACE_LIGHT = {
+  daylight: { sun: 2.5, sky: 1.7, reflections: .25 },
+  warm: { sun: 2, sky: 1.45, reflections: .2 },
+  evening: { sun: .55, sky: .8, reflections: .12 },
 };
 
 export function createSpaceScene(space, theme = 'light') {
@@ -24,9 +31,10 @@ export function createSpaceScene(space, theme = 'light') {
     if (!materials.has(key)) {
       const [color,roughness,metalness] = FINISHES[name] ?? FINISHES.plaster;
       const options = { color,roughness,metalness };
-      const material = surface && ['limestone','concrete','terracotta'].includes(name)
-        ? physicalSurface(name === 'limestone' ? 'stone' : name === 'terracotta' ? 'paver' : 'pavement', { ...options, tileSize: 2.4, normalScale: new THREE.Vector2(.22,.22), aoMapIntensity: .3, textureContrast: .5 })
-        : new THREE.MeshStandardMaterial(options);
+      // Interior concrete is a polished slab; floors add its saw-cut joints as lines.
+      const material = surface && ['limestone','terracotta'].includes(name)
+        ? physicalSurface(name === 'limestone' ? 'stone' : 'paver', { ...options, tileSize: 2.4, normalScale: new THREE.Vector2(.22,.22), aoMapIntensity: .3, textureContrast: .5 })
+        : new THREE.MeshStandardMaterial(surface && name === 'concrete' ? { ...options, color: '#96938b', roughness: .5 } : options);
       materials.set(key,material);
     }
     return materials.get(key);
@@ -74,6 +82,7 @@ export function createSpaceScene(space, theme = 'light') {
       return shape;
     });
   };
+  const forms = createFurnitureForms({ geometry, mesh });
   let lamps = 0, floorIndex = 0;
   for (const object of space.objects) {
     const root = new THREE.Group();root.name = object.label;root.userData.studioId = object.id;root.userData.kind = object.kind;
@@ -92,7 +101,10 @@ export function createSpaceScene(space, theme = 'light') {
         box(root,glass(),[.96,.96,.14],[0,.5,0],'Glass pane');
         const stile = Math.min(.1,.055/object.width), rail = Math.min(.1,.055/object.height);
         for (const x of [-.5+stile/2,.5-stile/2]) box(root,mat,[stile,1,1],[x,.5,0],'Window stile');
-        for (const y of [rail/2,1-rail/2]) box(root,mat,[1,rail,1],[0,y,0],'Window rail');
+        box(root,mat,[1,rail,1],[0,1-rail/2,0],'Window rail');
+        // Floor-standing glass sits in an 80 mm base shoe; raised glazing keeps a plain rail.
+        if (object.elevation === 0 && object.height >= 2) { const shoe = .08/object.height;box(root,mat,[1,shoe,1],[0,shoe/2,0],'Base shoe'); }
+        else box(root,mat,[1,rail,1],[0,rail/2,0],'Window rail');
         const panels = Math.max(1,Math.ceil(object.width/1.6));
         for (let i = 1; i < panels; i++) box(root,mat,[stile*.6,1,.8],[-.5+i/panels,.5,0],'Mullion');
         break;
@@ -115,6 +127,16 @@ export function createSpaceScene(space, theme = 'light') {
           const lines = new THREE.LineSegments(shape,new THREE.LineBasicMaterial({ color: object.finish === 'oak' ? '#896647' : '#4b3429', transparent:true,opacity:.3 }));
           lines.name = 'Timber joints';root.add(lines);
         }
+        if (object.finish === 'concrete') {
+          // Saw-cut control joints every 4 m, kept 0.2 m clear of the slab edges; one draw call.
+          const cuts = size => { const reach = Math.floor((size/2-.2)/4), list = []; for (let k = -reach; k <= reach; k++) list.push(k*4/size); return list; };
+          const positions = [...cuts(object.width).flatMap(x => [x,0,-.5,x,0,.5]), ...cuts(object.depth).flatMap(z => [-.5,0,z,.5,0,z])];
+          if (positions.length) {
+            const shape = new THREE.BufferGeometry();shape.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+            const lines = new THREE.LineSegments(shape,new THREE.LineBasicMaterial({ color:'#7f7c74', transparent:true, opacity:.35 }));
+            lines.name = 'Control joints';root.add(lines);
+          }
+        }
         break;
       }
       case 'sofa': {
@@ -128,24 +150,11 @@ export function createSpaceScene(space, theme = 'light') {
         }
         break;
       }
-      case 'chair': {
-        legs(root,wood(),.49,.065,.37);
-        box(root,mat,[.94,.12,.92],[0,.52,.02],'Seat cushion',true);
-        box(root,mat,[.9,.43,.15],[0,.785,-.395],'Backrest',true);
-        for (const x of [-.37,.37]) box(root,wood(),[.055,.43,.055],[x,.785,-.4],'Back support');
-        break;
-      }
-      case 'table':
-      case 'desk': {
+      case 'chair': forms.chair(root,object,mat,wood()); break;
+      case 'desk': forms.desk(root,object,mat,finish('charcoal')); break;
+      case 'table': {
         legs(root,wood(),.91,.055,.4);
         box(root,mat,[1,.09,1],[0,.955,0],'Tabletop',true);
-        if (object.kind === 'desk') {
-          box(root,mat,[.27,.35,.8],[.315,.715,0],'Drawer pedestal');
-          for (const y of [.6,.74,.88]) {
-            box(root,mat,[.25,.12,.025],[.315,y,.411],'Drawer');
-            box(root,finish('brass'),[.11,.013,.02],[.315,y,.433],'Drawer handle');
-          }
-        }
         break;
       }
       case 'bed': {
@@ -213,18 +222,7 @@ export function createSpaceScene(space, theme = 'light') {
         cylinder(root,finish('charcoal'),[.08,.005,.08],[.23,.037,.23],'Drain');
         break;
       }
-      case 'plant': {
-        const pot = geometry('pot',()=>new THREE.CylinderGeometry(.3,.23,.3,20));
-        mesh(root,pot,mat,[0,.15,0],[1,1,1],'Planter');
-        cylinder(root,finish('walnut'),[.52,.025,.52],[0,.295,0],'Soil');
-        cylinder(root,finish('walnut'),[.025,.59,.025],[0,.59,0],'Stem');
-        for (let i = 0; i < 9; i++) {
-          const angle = i*2.39996, reach = i%2 ? .26 : .2, y = .43+i*.055;
-          const leaf = sphere(root,finish('sage'),[.31,.065,.17],[Math.sin(angle)*reach,y,Math.cos(angle)*reach],'Leaf');
-          leaf.rotation.y = angle;leaf.rotation.z = Math.sin(angle)*.28;
-        }
-        break;
-      }
+      case 'plant': forms.plant(root,object,mat,finish('walnut'),special('leaf',{ color:'#6f8a66', roughness:.75, side:THREE.DoubleSide })); break;
       case 'rug': {
         box(root,mat,[1,.65,1],[0,.325,0],'Woven border',true);
         box(root,finish('fabric'),[.91,.35,.91],[0,.825,0],'Woven field',true);
@@ -242,14 +240,10 @@ export function createSpaceScene(space, theme = 'light') {
         break;
       }
       case 'pendant': {
-        cylinder(root,finish('charcoal'),[.025,.57,.025],[0,.715,0],'Suspension');
-        cylinder(root,mat,[.2,.04,.2],[0,.98,0],'Ceiling rose');
-        const shade = geometry('shade',()=>new THREE.CylinderGeometry(.2,.5,.38,28,1,true));
-        mesh(root,shade,mat,[0,.25,0],[1,1,1],'Shade');
         const emitter = special('lamp',{ color:'#fff2d2', emissive:'#ffda98', emissiveIntensity:1.4, roughness:.45 });
-        cylinder(root,emitter,[.86,.025,.86],[0,.06,0],'Diffuser');
+        const lamp = forms.pendant(root,object,mat,finish('charcoal'),emitter);
         if (lamps++ < 4) {
-          const light = new THREE.PointLight('#ffe5bd',space.lighting === 'daylight' ? 5 : 12,7,2);light.position.y=.05;root.add(light);
+          const light = new THREE.PointLight('#ffe5bd',space.lighting === 'daylight' ? 5 : 12,7,2);light.position.y=lamp.y;lamp.group.add(light);
         }
         break;
       }
