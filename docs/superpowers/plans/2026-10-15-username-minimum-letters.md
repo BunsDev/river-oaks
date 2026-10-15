@@ -68,8 +68,13 @@ Then, at base `ec036956` plus this change (uncommitted):
   passed (it fills `night-owl` and `taken-name`, both 4+ letters).
 - `pnpm run test:security:e2e`: 2/2.
 
+After merging `origin/main` at `15c5b7d1` (#451 landed; the one conflict was the username
+form, resolved on #451's markup with `minlength="4"` and the rule in its help text), at
+`6b06abb9`: waitlist and username tests with the isolated Redis 20/20; `pnpm run verify`
+passed again (112/112, 3,297/3,299 with 1 skipped, server 599/753 with 154 skipped, 69/69,
+pytest 141); `access-gate` journey passed; `test:security:e2e` 2/2.
+
 ## Gaps and next step
 
-Not run: hosted CI, a live sign-up against production auth, the desktop app. Next:
-signed commit, then push and a draft PR only when Val asks; after #451 lands, merge
-main and re-run the username tests.
+Not run: hosted CI, a live sign-up against production auth, the desktop app. Val
+authorized PR, landing when CI is green and retirement (2026-10-15).
