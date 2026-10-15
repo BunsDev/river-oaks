@@ -48,8 +48,7 @@ test('only a layout that opens to the outside gets a skyline eye', () => {
   assert.deepEqual(eye, [-4, 1.68, 10], 'the penthouse eye is the centre of the main floor and terrace, at standing height');
 });
 
-test('capture sizes: software acceptance stays tiny, a reduced render scale halves the faces', () => {
-  assert.equal(officeSkylineSize({ software: true }), 64);
+test('capture sizes: a reduced render scale halves the faces, within the device cube limit', () => {
   assert.equal(officeSkylineSize({ scale: 1 }), 1024);
   assert.equal(officeSkylineSize({ scale: 0.5 }), 512);
   assert.equal(officeSkylineSize({ scale: 1, maxCubemapSize: 256 }), 256);
@@ -77,6 +76,27 @@ test('the penthouse captures the district once, without the host tower, the stag
   assert.equal(skyline.stats.bytes, 16 * 16 * 6 * 12);
   skyline.dispose();
   assert.equal(f.scene.background, f.background); assert.equal(f.scene.backgroundIntensity, 0.7); assert.equal(f.scene.backgroundBlurriness, 0.2);
+});
+
+test('anything standing in the host footprint above the office floor is left out, whatever tagged it', () => {
+  const f = district(), ring = [[-10, -10], [10, -10], [10, 10], [-10, 10]];
+  // Rooftop ornaments and edge parts from other modules carry no building index.
+  const loose = new THREE.InstancedMesh(new THREE.SphereGeometry(1), new THREE.MeshStandardMaterial(), 5), part = new THREE.Object3D();
+  [[2, f.floorY + 3, 1], [40, f.floorY + 3, 0], [0, f.floorY - 5, 0], [10.5, f.floorY + 2, 0], [13, f.floorY + 2, 0]].forEach(([x, y, z], i) => { part.position.set(x, y, z); part.updateMatrix(); loose.setMatrixAt(i, part.matrix); });
+  const finial = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), new THREE.MeshStandardMaterial()); finial.position.set(3, f.floorY + 2, 3);
+  const signs = new THREE.Mesh(new THREE.BoxGeometry(200, 4, 200), new THREE.MeshStandardMaterial()); signs.position.y = f.floorY;
+  f.group.add(loose, finial, signs); f.scene.updateMatrixWorld(true);
+  const seen = [], renderer = fakeRenderer(() => seen.push({ loose: [0, 1, 2, 3, 4].map(i => scaleOf(loose, i)), finial: finial.visible, signs: signs.visible }));
+  const skyline = createOfficeSkyline({ renderer, scene: f.scene, eye: new THREE.Vector3(0, f.floorY + 1.68, 0), floorY: f.floorY, hostRing: ring, size: 16 });
+  skyline.capture();
+  assert.deepEqual(seen[0].loose.map(height => height > 0), [false, true, true, false, true], 'the ornament and the part on the wall go; the neighbour, the low part and one 3 m out stay');
+  assert.equal(seen[0].finial, false, 'a small mesh on the tower top goes');
+  assert.equal(seen[0].signs, true, 'a district-wide merged mesh that happens to overlap stays');
+  assert.equal(scaleOf(loose, 0), 1); assert.equal(finial.visible, true);
+  assert.equal(scaleOf(f.mesh, 0) > 0 && seen[0].loose.length === 5, true);
+  assert.equal(skyline.stats.hiddenInstances, 3, 'the two loose parts and, by footprint alone, the indexed host mullion');
+  assert.equal(skyline.stats.hiddenMeshes, 2, 'the finial and the host massing, by footprint alone');
+  skyline.dispose();
 });
 
 test('a failed capture restores everything it borrowed and shows no backdrop', () => {
@@ -112,7 +132,7 @@ function street({ layout, skyline = { size: 16 } }) {
   body.position.set(-2742, 18.4, 1378);
   const background = new THREE.Color('#99bbdd'); scene.background = background; scene.backgroundIntensity = 0.7;
   const avatar = { object: body, ready: true, setPresentation(value) { this.presentation = value; } }, lobby = { object, setEntryOpen() {}, update() {} };
-  const seen = [], renderer = fakeRenderer(() => seen.push({ district: districtGroup.visible, body: body.visible }));
+  const seen = [], renderer = fakeRenderer(() => seen.push({ district: districtGroup.visible, body: body.visible, lobby: object.visible }));
   const captured = captureOfficeStreet({ scene, camera, pipeline: { render() {} }, renderer, skyline, avatar, lobby, world: { buildings: [] }, pose: { position: [-2742, 20.08, 1378], velocity: [0, 0] } });
   return { scene, districtGroup, background, renderer, seen, captured, self: { id: 'self', office: { id: 'jevica-office', layout, levelId: 'jevica-office/l0' } } };
 }
@@ -131,7 +151,8 @@ test('a penthouse visit captures while the doors close, before the district is h
   v.draw(0);
   for (let i = 1; i <= 1500 && s.renderer.renders.length === 0; i++) v.draw(i * 1000 / 60);
   assert.equal(s.renderer.renders.length, 6, 'one capture during the arrival');
-  assert.ok(s.seen.every(face => face.district && !face.body), 'the faces see the district, never the visitor');
+  assert.ok(s.seen.every(face => face.district && !face.body && !face.lobby), 'the faces see the district, never the visitor or the cabin');
+  assert.equal(s.captured.lobby.object.visible, true, 'the cabin is shown again after the capture');
   assert.ok(['closing', 'ascending'].includes(v.phases.at(-1)), `captured as the doors close, not later: ${v.phases.at(-1)}`);
   assert.equal(s.districtGroup.visible, false, 'the district is hidden right after');
   assert.equal(s.scene.background.isTexture, true);

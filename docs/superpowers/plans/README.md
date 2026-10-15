@@ -10,7 +10,7 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | --- | --- | --- | --- | --- |
 | [2026-10-15-studio-prompt-stdin](2026-10-15-studio-prompt-stdin.md)<br>Studio prompts on stdin (#370 finding), 2026-10-15 | `studio-prompt-stdin` | active | — | 2026-10-15 |
 | [2026-10-15-procedural-phone-gpu-fixture](2026-10-15-procedural-phone-gpu-fixture.md)<br>Procedural gallery phone GPU fixture | `procedural-phone-gpu-fixture` | active | #393 | 2026-10-15 |
-| [2026-10-15-office-skyline-prototype](2026-10-15-office-skyline-prototype.md)<br>Penthouse skyline prototype (#363 views, kit guide P26) | `office-skyline-prototype` | active | — | 2026-10-15 |
+| [2026-10-15-office-skyline-prototype](2026-10-15-office-skyline-prototype.md)<br>Penthouse skyline prototype (#363 views, kit guide P26) | `office-skyline-prototype` | active | #408 | 2026-10-15 |
 | [2026-10-15-office-penthouse-traversal](2026-10-15-office-penthouse-traversal.md)<br>Office #361: versioned multilevel office traversal and safe visit migration (2026-10-15) | `office-penthouse-traversal-361` | active | — | 2026-10-15 |
 | [2026-10-15-office-ipic-contract-decisions](2026-10-15-office-ipic-contract-decisions.md)<br>Office + IPIC #360: record Val's decisions in the layout contract (2026-10-15) | `office-ipic-contract-decisions` | active | #388 | 2026-10-15 |
 | [2026-10-15-office-computer-reliability](2026-10-15-office-computer-reliability.md)<br>Office computer reliability | `office-computer-reliability` | active | #394 | 2026-10-15 |

@@ -18,7 +18,7 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
   const layoutId=self.office?.layout??OFFICE_LAYOUT_LEGACY,layout=officeLayout(layoutId);
   const peerRoot=new THREE.Group();street.scene.add(peerRoot);lease.allow(peerRoot);
   // A layout with an outside shows the district captured once as the doors close (office-skyline.js).
-  const skyline=createVisitSkyline(street,layout,[stage,street.avatar.object,peerRoot]);
+  const skyline=createVisitSkyline(street,layout,[stage,street.lobby.object,street.avatar.object,peerRoot]);
   const dispose=()=>{if(disposed)return;disposed=true;actors?.dispose();peerRoot.removeFromParent();office?.dispose();skyline?.dispose();lease.dispose();};
   try{
     office=buildOfficeGeometry(THREE,layoutId,{buildLegacy:()=>buildWorkplaceOffice(THREE,OFFICE_ROOM)});stage.add(office.object);office.object.visible=false;

@@ -128,6 +128,7 @@ const debugOcclusion = new URLSearchParams(location.search).get('ao');
 // Auto's AO tail rule stays off until it passes device acceptance (render-quality.js).
 const aoTailShedding = new URLSearchParams(location.search).get('aotail') === 'on';
 // The penthouse skyline (office-skyline.js); ?office-skyline=off compares without it in development.
+// Software acceptance never captures it.
 const officeSkylineOff = import.meta.env.DEV && new URLSearchParams(location.search).get('office-skyline') === 'off';
 let auditCamera = null;
 let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, storePeople, interiorsLayer, generatedInteriors;
@@ -374,7 +375,7 @@ function initializeRenderer() {
   if (creationToolsEnabled) buildControls=createSharedBuildControls({getPose:()=>walking?.getPose(),isBuildableRoom:id=>world?.stores.some(store=>store.id===id && store.category==='home'),onBuilderChange:builder=>{builderAim='';if(!builder.active)buildLayer?.setGhost(null);},request:message=>multiplayer?.command(message)??Promise.resolve({ok:false,message:'Join the town before building.'})});
   visitTools.append($('.player-controls'), cyclingBoard.panel, ...(buildControls ? [buildControls.panel] : []));
   officeUI=createOfficeUI({host,panelHost:visitTools,renderer,getWorld:()=>world,getMultiplayer:()=>multiplayer,walking,
-    captureStreet:()=>captureOfficeStreet({scene,camera,pipeline,renderer,skyline:officeSkylineOff?null:{size:officeSkylineSize({software:softwareAcceptance,scale:quality?.stats.scale,maxCubemapSize:renderer.capabilities.maxCubemapSize})},lights:storeLights,avatar:playerAvatar,lobby:buildingMesh?.userData.officeArrival,world,getWorld:()=>world,pose:walking?.getPose()})});
+    captureStreet:()=>captureOfficeStreet({scene,camera,pipeline,renderer,skyline:officeSkylineOff||softwareAcceptance?null:{size:officeSkylineSize({scale:quality?.stats.scale,maxCubemapSize:renderer.capabilities.maxCubemapSize})},lights:storeLights,avatar:playerAvatar,lobby:buildingMesh?.userData.officeArrival,world,getWorld:()=>world,pose:walking?.getPose()})});
   // IPIC screenings (#367): the town's timeline on the existing screen, while the player is inside IPIC.
   // Mounted on the viewport, not the canvas host: walking takes pointer capture on the canvas host.
   ipicScreening??=createIpicScreening({host:host.parentElement??host,THREE,getMultiplayer:()=>multiplayer,getScreen:()=>buildingMesh?.userData.interiors?.userData.screens?.[0]??null,
