@@ -95,9 +95,12 @@ test('phone readiness report sends bounded asset and renderer data only to its p
   const scheduled = [], sent = [];
   const context = {
     document: { documentElement: { dataset: { phoneAvatarDecoder: 'html-images' } },
-      querySelector: selector => selector === '#viewport'
-        ? { dataset: { assetProgress: JSON.stringify({ loaded: 88, total: 88, failed: 0, done: true }) } }
-        : { hidden: false, classList: { contains: () => false }, querySelector: () => ({ textContent: 'Connecting to the town…' }) } },
+      querySelector: selector => {
+        if (selector === '#viewport') return { dataset: { assetProgress: JSON.stringify({ loaded: 88, total: 88, failed: 0, done: true }) } };
+        if (selector === '.multiplayer-gate') return { hidden: false };
+        if (selector === '#multiplayer-status') return { textContent: 'Connecting to the town…' };
+        return { hidden: false, classList: { contains: () => false }, querySelector: () => ({ textContent: 'Building the view' }) };
+      } },
     performance: { now: () => 7000 },
     __riverRenderAudit: { graphics: () => ({ renderer: 'Test WebGL', viewport: [400, 800], render: { calls: 123 }, memory: { textures: 12 } }) },
     setTimeout: (fn, ms) => scheduled.push({ fn, ms }),
@@ -111,7 +114,8 @@ test('phone readiness report sends bounded asset and renderer data only to its p
   assert.equal(report.mode, 'avatar-html');
   assert.deepEqual(JSON.parse(JSON.stringify(report.asset)), { loaded: 88, total: 88, failed: 0, done: true });
   assert.equal(report.graphics.renderer, 'Test WebGL');
-  assert.equal(report.loading.message, 'Connecting to the town…');
+  assert.equal(report.gate.shown, true);
+  assert.equal(report.gate.status, 'Connecting to the town…');
 
   const posted = await fetch(`${phone.origin}/__phone_readiness`, {
     method: 'POST', headers: { Origin: phone.origin, 'Content-Type': 'application/json' }, body: JSON.stringify(report),
@@ -121,7 +125,7 @@ test('phone readiness report sends bounded asset and renderer data only to its p
   assert.equal(records.length, 1);
   assert.equal(records[0].asset.failed, 0);
   assert.equal(records[0].graphics.renderer, 'Test WebGL');
-  assert.equal(records[0].loading.message, 'Connecting to the town…');
+  assert.equal(records[0].gate.status, 'Connecting to the town…');
   assert.equal((await fetch(`${phone.origin}/__phone_readiness`, {
     method: 'POST', headers: { Origin: 'https://evil.example', 'Content-Type': 'application/json' }, body: JSON.stringify(report),
   })).status, 403);

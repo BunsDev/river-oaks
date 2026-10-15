@@ -105,6 +105,15 @@ asset readiness, WebContent process identity and exact source revision.
 - Safari's developer menu on the Mac was restored to its original off state
   and confirmed in Safari Settings. The physical phone still has no Web
   Inspector connection for an exact exception or bounded GPU frame sample.
+- The earlier “Connecting to the town…” wording is rendered by
+  `preview/src/multiplayer-client.js` in `.multiplayer-gate`, independently of
+  the `#loading` scene overlay. The fixture report now includes the gate's
+  visible state and bounded status text. Its focused regression failed before
+  this addition and passed afterward (7/7 combined). A fresh physical scoped
+  launch sent no report and never joined (`/health` players 0) after 50
+  seconds; it adds no renderer or gate evidence. The fixture was stopped.
+  `pnpm run verify` passed again after this change, with the updated core
+  receipt at `.runtime/agent/core.json`.
 - `REDIS_URL=redis://127.0.0.1:16621 pnpm run verify full` reached the Redis
   server suite after dependency audit and preview tests (3094 pass, one skip),
   then failed one unchanged voice lease deadline assertion under concurrent
