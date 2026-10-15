@@ -139,8 +139,9 @@ test('the curtain wall is two draws, glass handled like the district storefront 
   assert.equal(panes.userData.aoExclude, true);
   assert.equal(panes.material.depthWrite, false);
   assert.equal(panes.castShadow, false);
-  // The opaque-walled graybox drew 53 meshes; glazing it must not cost more draws.
-  assert.ok(meshes(built.object).length <= 53, `graybox draw calls ${meshes(built.object).length}`);
+  // The opaque-walled graybox drew 53 meshes, and 60 once #400 added the desk and reading chairs
+  // (measured on its pre-glazing head d1266a15); glazing it must not cost more draws.
+  assert.ok(meshes(built.object).length <= 60, `graybox draw calls ${meshes(built.object).length}`);
   built.dispose();
 });
 

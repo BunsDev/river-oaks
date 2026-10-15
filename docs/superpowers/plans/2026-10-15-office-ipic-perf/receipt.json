@@ -1,0 +1,921 @@
+{
+  "runner": "node preview/e2e/office-ipic-perf.mjs",
+  "capturedAt": "2026-10-15T13:01:20.823Z",
+  "sourceRevision": "cd99570a6d1ff4171c83637744d38cc8131a2684",
+  "dirty": null,
+  "browser": "156.0.8078.4",
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+  "args": [
+    "--use-angle=metal",
+    "--ignore-gpu-blocklist",
+    "--disable-gpu-vsync",
+    "--disable-frame-rate-limit",
+    "--enable-precise-memory-info"
+  ],
+  "viewport": [
+    1440,
+    900
+  ],
+  "pixelRatio": 1,
+  "quality": "sharp",
+  "fov": 67,
+  "windows": 3,
+  "framesPerWindow": 180,
+  "loadAverage": {
+    "start": [
+      22.8,
+      21.7,
+      17.8
+    ],
+    "end": [
+      11.4,
+      17.8,
+      16.9
+    ]
+  },
+  "profile": "One shared macOS workstation under other sessions' load; vsync and the frame cap off, so intervals are render cost, not display rate. renderer.info is the last render pass, not the composer total. Transfer bytes are from the Vite dev server (unbundled, uncompressed modules); asset bytes are representative. One page, no other residents beyond fixture staff.",
+  "limits": "Provisional local evidence for #368, not accepted device budgets: no phone, Safari, iOS, Windows or Linux GPU; fixture film; graybox penthouse; no final art.",
+  "errors": [],
+  "spaces": {
+    "ipic": {
+      "street": {
+        "label": "ipic-street",
+        "windows": [
+          {
+            "frames": 180,
+            "intervalMs": {
+              "p50": 15.8,
+              "p95": 33.7,
+              "max": 34.9
+            },
+            "cpuMs": {
+              "p50": 15.2,
+              "p95": 18.7
+            }
+          },
+          {
+            "frames": 180,
+            "intervalMs": {
+              "p50": 15.8,
+              "p95": 33.5,
+              "max": 34.9
+            },
+            "cpuMs": {
+              "p50": 15.1,
+              "p95": 17.7
+            }
+          },
+          {
+            "frames": 180,
+            "intervalMs": {
+              "p50": 15.2,
+              "p95": 32.9,
+              "max": 34.4
+            },
+            "cpuMs": {
+              "p50": 14.7,
+              "p95": 16.9
+            }
+          }
+        ],
+        "intervalMs": {
+          "p50": 15.8,
+          "p95": 33.5
+        },
+        "cpuMs": {
+          "p50": 15.1,
+          "p95": 17.7
+        },
+        "render": {
+          "calls": 973,
+          "triangles": 4075400,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 550,
+          "textures": 196,
+          "heapBytes": 359301145
+        },
+        "pipeline": {
+          "samples": 4,
+          "ao": true,
+          "bloom": true,
+          "renderScale": 1,
+          "aoScale": 1,
+          "transmissionScale": 1
+        },
+        "quality": {
+          "mode": "sharp",
+          "scale": 1,
+          "occlusion": true,
+          "fps": 63,
+          "tailShedding": false
+        }
+      },
+      "entered": {
+        "ms": 7748,
+        "requests": 6,
+        "transferBytes": 2114,
+        "decodedBytes": 131206
+      },
+      "views": [
+        {
+          "label": "ipic-reception",
+          "windows": [
+            {
+              "frames": 180,
+              "intervalMs": {
+                "p50": 14.3,
+                "p95": 31.3,
+                "max": 34.2
+              },
+              "cpuMs": {
+                "p50": 13.5,
+                "p95": 16.3
+              }
+            },
+            {
+              "frames": 180,
+              "intervalMs": {
+                "p50": 14.5,
+                "p95": 32.1,
+                "max": 34.8
+              },
+              "cpuMs": {
+                "p50": 13.9,
+                "p95": 16.8
+              }
+            },
+            {
+              "frames": 180,
+              "intervalMs": {
+                "p50": 14.6,
+                "p95": 32.1,
+                "max": 33.9
+              },
+              "cpuMs": {
+                "p50": 14,
+                "p95": 16.2
+              }
+            }
+          ],
+          "intervalMs": {
+            "p50": 14.5,
+            "p95": 32.1
+          },
+          "cpuMs": {
+            "p50": 13.9,
+            "p95": 16.3
+          },
+          "render": {
+            "calls": 1308,
+            "triangles": 5276146,
+            "points": 0,
+            "lines": 0
+          },
+          "memory": {
+            "geometries": 579,
+            "textures": 220,
+            "heapBytes": 412677427
+          },
+          "pipeline": {
+            "samples": 4,
+            "ao": true,
+            "bloom": true,
+            "renderScale": 1,
+            "aoScale": 1,
+            "transmissionScale": 1
+          },
+          "quality": {
+            "mode": "sharp",
+            "scale": 1,
+            "occlusion": true,
+            "fps": 66,
+            "tailShedding": false
+          }
+        },
+        {
+          "label": "ipic-mural",
+          "windows": [
+            {
+              "frames": 180,
+              "intervalMs": {
+                "p50": 15.5,
+                "p95": 33.2,
+                "max": 35
+              },
+              "cpuMs": {
+                "p50": 14.9,
+                "p95": 17.5
+              }
+            },
+            {
+              "frames": 180,
+              "intervalMs": {
+                "p50": 15.5,
+                "p95": 33.3,
+                "max": 34.4
+              },
+              "cpuMs": {
+                "p50": 14.9,
+                "p95": 17.1
+              }
+            },
+            {
+              "frames": 180,
+              "intervalMs": {
+                "p50": 15.2,
+                "p95": 33.3,
+                "max": 35
+              },
+              "cpuMs": {
+                "p50": 14.7,
+                "p95": 17.3
+              }
+            }
+          ],
+          "intervalMs": {
+            "p50": 15.5,
+            "p95": 33.3
+          },
+          "cpuMs": {
+            "p50": 14.9,
+            "p95": 17.3
+          },
+          "render": {
+            "calls": 1704,
+            "triangles": 5393945,
+            "points": 36,
+            "lines": 0
+          },
+          "memory": {
+            "geometries": 579,
+            "textures": 220,
+            "heapBytes": 364511866
+          },
+          "pipeline": {
+            "samples": 4,
+            "ao": true,
+            "bloom": true,
+            "renderScale": 1,
+            "aoScale": 1,
+            "transmissionScale": 1
+          },
+          "quality": {
+            "mode": "sharp",
+            "scale": 1,
+            "occlusion": true,
+            "fps": 63,
+            "tailShedding": false
+          }
+        },
+        {
+          "label": "ipic-lounge",
+          "windows": [
+            {
+              "frames": 180,
+              "intervalMs": {
+                "p50": 11.8,
+                "p95": 16.3,
+                "max": 30.4
+              },
+              "cpuMs": {
+                "p50": 11.1,
+                "p95": 14
+              }
+            },
+            {
+              "frames": 180,
+              "intervalMs": {
+                "p50": 12,
+                "p95": 15.7,
+                "max": 28.2
+              },
+              "cpuMs": {
+                "p50": 11.3,
+                "p95": 13.6
+              }
+            },
+            {
+              "frames": 180,
+              "intervalMs": {
+                "p50": 11.9,
+                "p95": 15.8,
+                "max": 30.1
+              },
+              "cpuMs": {
+                "p50": 11.2,
+                "p95": 13.7
+              }
+            }
+          ],
+          "intervalMs": {
+            "p50": 11.9,
+            "p95": 15.8
+          },
+          "cpuMs": {
+            "p50": 11.2,
+            "p95": 13.7
+          },
+          "render": {
+            "calls": 713,
+            "triangles": 3341995,
+            "points": 0,
+            "lines": 0
+          },
+          "memory": {
+            "geometries": 579,
+            "textures": 220,
+            "heapBytes": 341178443
+          },
+          "pipeline": {
+            "samples": 4,
+            "ao": true,
+            "bloom": true,
+            "renderScale": 1,
+            "aoScale": 1,
+            "transmissionScale": 1
+          },
+          "quality": {
+            "mode": "sharp",
+            "scale": 1,
+            "occlusion": true,
+            "fps": 81,
+            "tailShedding": false
+          }
+        },
+        {
+          "label": "ipic-bar",
+          "windows": [
+            {
+              "frames": 180,
+              "intervalMs": {
+                "p50": 19.6,
+                "p95": 34.8,
+                "max": 35.4
+              },
+              "cpuMs": {
+                "p50": 18,
+                "p95": 26.7
+              }
+            },
+            {
+              "frames": 180,
+              "intervalMs": {
+                "p50": 22.3,
+                "p95": 31,
+                "max": 37.4
+              },
+              "cpuMs": {
+                "p50": 20.2,
+                "p95": 29.2
+              }
+            },
+            {
+              "frames": 180,
+              "intervalMs": {
+                "p50": 22.7,
+                "p95": 34.9,
+                "max": 50.6
+              },
+              "cpuMs": {
+                "p50": 19.6,
+                "p95": 33.1
+              }
+            }
+          ],
+          "intervalMs": {
+            "p50": 22.3,
+            "p95": 34.8
+          },
+          "cpuMs": {
+            "p50": 19.6,
+            "p95": 29.2
+          },
+          "render": {
+            "calls": 2420,
+            "triangles": 7064824,
+            "points": 124,
+            "lines": 0
+          },
+          "memory": {
+            "geometries": 579,
+            "textures": 220,
+            "heapBytes": 342283537
+          },
+          "pipeline": {
+            "samples": 4,
+            "ao": true,
+            "bloom": true,
+            "renderScale": 1,
+            "aoScale": 1,
+            "transmissionScale": 1
+          },
+          "quality": {
+            "mode": "sharp",
+            "scale": 1,
+            "occlusion": true,
+            "fps": 45,
+            "tailShedding": false
+          }
+        },
+        {
+          "label": "ipic-auditorium",
+          "windows": [
+            {
+              "frames": 180,
+              "intervalMs": {
+                "p50": 11.5,
+                "p95": 16.1,
+                "max": 29.9
+              },
+              "cpuMs": {
+                "p50": 10.9,
+                "p95": 12.8
+              }
+            },
+            {
+              "frames": 180,
+              "intervalMs": {
+                "p50": 11.5,
+                "p95": 16,
+                "max": 29
+              },
+              "cpuMs": {
+                "p50": 10.9,
+                "p95": 12.9
+              }
+            },
+            {
+              "frames": 180,
+              "intervalMs": {
+                "p50": 11.5,
+                "p95": 15.3,
+                "max": 29.6
+              },
+              "cpuMs": {
+                "p50": 10.9,
+                "p95": 12.7
+              }
+            }
+          ],
+          "intervalMs": {
+            "p50": 11.5,
+            "p95": 16
+          },
+          "cpuMs": {
+            "p50": 10.9,
+            "p95": 12.8
+          },
+          "render": {
+            "calls": 789,
+            "triangles": 3533116,
+            "points": 0,
+            "lines": 0
+          },
+          "memory": {
+            "geometries": 579,
+            "textures": 220,
+            "heapBytes": 352319791
+          },
+          "pipeline": {
+            "samples": 4,
+            "ao": true,
+            "bloom": true,
+            "renderScale": 1,
+            "aoScale": 1,
+            "transmissionScale": 1
+          },
+          "quality": {
+            "mode": "sharp",
+            "scale": 1,
+            "occlusion": true,
+            "fps": 83,
+            "tailShedding": false
+          }
+        },
+        {
+          "label": "ipic-auditorium-film",
+          "windows": [
+            {
+              "frames": 180,
+              "intervalMs": {
+                "p50": 12.1,
+                "p95": 15.5,
+                "max": 31.4
+              },
+              "cpuMs": {
+                "p50": 11.4,
+                "p95": 13.5
+              },
+              "driftMs": {
+                "samples": 19,
+                "p50": 53,
+                "p95": 81,
+                "max": 81
+              }
+            },
+            {
+              "frames": 180,
+              "intervalMs": {
+                "p50": 12.1,
+                "p95": 16.7,
+                "max": 30
+              },
+              "cpuMs": {
+                "p50": 11.4,
+                "p95": 13.6
+              },
+              "driftMs": {
+                "samples": 19,
+                "p50": 43,
+                "p95": 67,
+                "max": 67
+              }
+            },
+            {
+              "frames": 180,
+              "intervalMs": {
+                "p50": 11.9,
+                "p95": 16.2,
+                "max": 32.3
+              },
+              "cpuMs": {
+                "p50": 11.2,
+                "p95": 13.7
+              },
+              "driftMs": {
+                "samples": 19,
+                "p50": 67,
+                "p95": 84,
+                "max": 84
+              }
+            }
+          ],
+          "intervalMs": {
+            "p50": 12.1,
+            "p95": 16.2
+          },
+          "cpuMs": {
+            "p50": 11.4,
+            "p95": 13.6
+          },
+          "render": {
+            "calls": 789,
+            "triangles": 3533116,
+            "points": 0,
+            "lines": 0
+          },
+          "memory": {
+            "geometries": 579,
+            "textures": 221,
+            "heapBytes": 328492160
+          },
+          "pipeline": {
+            "samples": 4,
+            "ao": true,
+            "bloom": true,
+            "renderScale": 1,
+            "aoScale": 1,
+            "transmissionScale": 1
+          },
+          "quality": {
+            "mode": "sharp",
+            "scale": 1,
+            "occlusion": true,
+            "fps": 81,
+            "tailShedding": false
+          }
+        }
+      ],
+      "cumulativeAfterFilm": {
+        "requests": 33,
+        "transferBytes": 680722,
+        "decodedBytes": 801714
+      }
+    },
+    "penthouse": {
+      "street": {
+        "label": "penthouse-street",
+        "windows": [
+          {
+            "frames": 180,
+            "intervalMs": {
+              "p50": 13.4,
+              "p95": 17.7,
+              "max": 33.2
+            },
+            "cpuMs": {
+              "p50": 12.7,
+              "p95": 15.2
+            }
+          },
+          {
+            "frames": 180,
+            "intervalMs": {
+              "p50": 13.6,
+              "p95": 17.4,
+              "max": 33.5
+            },
+            "cpuMs": {
+              "p50": 12.9,
+              "p95": 15.1
+            }
+          },
+          {
+            "frames": 180,
+            "intervalMs": {
+              "p50": 13.7,
+              "p95": 17.3,
+              "max": 34.2
+            },
+            "cpuMs": {
+              "p50": 12.9,
+              "p95": 15.4
+            }
+          }
+        ],
+        "intervalMs": {
+          "p50": 13.6,
+          "p95": 17.4
+        },
+        "cpuMs": {
+          "p50": 12.9,
+          "p95": 15.2
+        },
+        "render": {
+          "calls": 986,
+          "triangles": 3980846,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 481,
+          "textures": 177,
+          "heapBytes": 394890178
+        },
+        "pipeline": {
+          "samples": 4,
+          "ao": true,
+          "bloom": true,
+          "renderScale": 1,
+          "aoScale": 1,
+          "transmissionScale": 1
+        },
+        "quality": {
+          "mode": "sharp",
+          "scale": 1,
+          "occlusion": true,
+          "fps": 71,
+          "tailShedding": false
+        }
+      },
+      "entered": {
+        "ms": 13327,
+        "requests": 4,
+        "transferBytes": 1416,
+        "decodedBytes": 216
+      },
+      "views": [
+        {
+          "label": "penthouse-arrival",
+          "windows": [
+            {
+              "frames": 180,
+              "intervalMs": {
+                "p50": 6.7,
+                "p95": 8.6,
+                "max": 15.3
+              },
+              "cpuMs": {
+                "p50": 6.1,
+                "p95": 6.8
+              }
+            },
+            {
+              "frames": 180,
+              "intervalMs": {
+                "p50": 6.8,
+                "p95": 8.3,
+                "max": 15.5
+              },
+              "cpuMs": {
+                "p50": 6.2,
+                "p95": 7
+              }
+            },
+            {
+              "frames": 180,
+              "intervalMs": {
+                "p50": 6.7,
+                "p95": 10.6,
+                "max": 14.8
+              },
+              "cpuMs": {
+                "p50": 6.2,
+                "p95": 6.9
+              }
+            }
+          ],
+          "intervalMs": {
+            "p50": 6.7,
+            "p95": 8.6
+          },
+          "cpuMs": {
+            "p50": 6.2,
+            "p95": 6.9
+          },
+          "render": {
+            "calls": 91,
+            "triangles": 2578,
+            "points": 0,
+            "lines": 0
+          },
+          "memory": {
+            "geometries": 552,
+            "textures": 210,
+            "heapBytes": 334181977
+          },
+          "pipeline": {
+            "samples": 4,
+            "ao": true,
+            "bloom": true,
+            "renderScale": 1,
+            "aoScale": 1,
+            "transmissionScale": 1
+          },
+          "quality": {
+            "mode": "sharp",
+            "scale": 1,
+            "occlusion": true,
+            "fps": 143,
+            "tailShedding": false
+          }
+        }
+      ],
+      "layout": "office-penthouse-1"
+    },
+    "legacy": {
+      "street": {
+        "label": "legacy-street",
+        "windows": [
+          {
+            "frames": 180,
+            "intervalMs": {
+              "p50": 13.5,
+              "p95": 17.2,
+              "max": 32
+            },
+            "cpuMs": {
+              "p50": 12.8,
+              "p95": 14.8
+            }
+          },
+          {
+            "frames": 180,
+            "intervalMs": {
+              "p50": 13.4,
+              "p95": 17,
+              "max": 32.1
+            },
+            "cpuMs": {
+              "p50": 12.8,
+              "p95": 14.5
+            }
+          },
+          {
+            "frames": 180,
+            "intervalMs": {
+              "p50": 13.5,
+              "p95": 16.5,
+              "max": 31.3
+            },
+            "cpuMs": {
+              "p50": 12.7,
+              "p95": 14.6
+            }
+          }
+        ],
+        "intervalMs": {
+          "p50": 13.5,
+          "p95": 17
+        },
+        "cpuMs": {
+          "p50": 12.8,
+          "p95": 14.6
+        },
+        "render": {
+          "calls": 973,
+          "triangles": 4075400,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 550,
+          "textures": 195,
+          "heapBytes": 355359110
+        },
+        "pipeline": {
+          "samples": 4,
+          "ao": true,
+          "bloom": true,
+          "renderScale": 1,
+          "aoScale": 1,
+          "transmissionScale": 1
+        },
+        "quality": {
+          "mode": "sharp",
+          "scale": 1,
+          "occlusion": true,
+          "fps": 73,
+          "tailShedding": false
+        }
+      },
+      "entered": {
+        "ms": 13394,
+        "requests": 4,
+        "transferBytes": 1416,
+        "decodedBytes": 216
+      },
+      "views": [
+        {
+          "label": "legacy-arrival",
+          "windows": [
+            {
+              "frames": 180,
+              "intervalMs": {
+                "p50": 7.4,
+                "p95": 11.3,
+                "max": 16
+              },
+              "cpuMs": {
+                "p50": 6.8,
+                "p95": 7.6
+              }
+            },
+            {
+              "frames": 180,
+              "intervalMs": {
+                "p50": 7.5,
+                "p95": 11.7,
+                "max": 15.5
+              },
+              "cpuMs": {
+                "p50": 6.8,
+                "p95": 7.7
+              }
+            },
+            {
+              "frames": 180,
+              "intervalMs": {
+                "p50": 7.4,
+                "p95": 11.2,
+                "max": 15.1
+              },
+              "cpuMs": {
+                "p50": 6.7,
+                "p95": 7.5
+              }
+            }
+          ],
+          "intervalMs": {
+            "p50": 7.4,
+            "p95": 11.3
+          },
+          "cpuMs": {
+            "p50": 6.8,
+            "p95": 7.6
+          },
+          "render": {
+            "calls": 329,
+            "triangles": 56996,
+            "points": 0,
+            "lines": 0
+          },
+          "memory": {
+            "geometries": 621,
+            "textures": 239,
+            "heapBytes": 329973363
+          },
+          "pipeline": {
+            "samples": 4,
+            "ao": true,
+            "bloom": true,
+            "renderScale": 1,
+            "aoScale": 1,
+            "transmissionScale": 1
+          },
+          "quality": {
+            "mode": "sharp",
+            "scale": 1,
+            "occlusion": true,
+            "fps": 131,
+            "tailShedding": false
+          }
+        }
+      ],
+      "layout": "office-legacy-1"
+    }
+  }
+}
