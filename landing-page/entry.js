@@ -1,3 +1,5 @@
+import { accessLabel, applyPlayLabel } from './access.js';
+
 // Preserve shared links made before the landing page had its own address.
 const params = new URLSearchParams(location.search);
 if (['play', 'world', 'place', 'at'].some(key => params.has(key))) {
@@ -32,3 +34,6 @@ openDetails(location.hash.slice(1));
 window.addEventListener('hashchange', () => {
   if (!openDetails(location.hash.slice(1)) && dialog.open) dialog.close();
 });
+
+// A resident who already has access is invited in rather than onto the waitlist.
+void accessLabel().then(label => applyPlayLabel(document, label));

@@ -26,7 +26,7 @@ are listed here only so the matrix is complete; their numbers are in those files
 | R16 | Kit stations: executive desk with 3 displays, four creative desks with 2 each | proposed | design | kit `layout.json` stations | seat/approach anchors kept; capacity per R07 |
 | R17 | Kit blockout 41,864 triangles, 647 nodes, 2.78 MB; every proxy under LOD0 target | proposed, measured by the kit | design | kit `asset-manifest.json`, `asset-manifest.json` here | budget check passes; targets are proposals |
 | R18 | Kit starter materials: 5 families, 512 px, factor-only in GLBs | proposed | design | kit `materials/README.md` | bind after final UVs |
-| R19 | Kit bytes not committed; approval to publish not recorded | observed | Val | kit `README.md` provenance | decision 1 in the brief |
+| R19 | Kit bytes not committed. Val decided on 2026-10-15 to import only the measured desk footprints, as numbers, with no art and no kit bytes. | decided | Val | kit `README.md` provenance; `preview/src/office-layouts.js` desk footprints | decision 1 in the brief |
 | R20 | Physical fit of 7.6 m volume above the 24.3 m rise in the mapped building | decided 2026-10-14 | Val, engineering | engineering `fit.options[2]`; brief "Decisions" | raise the Equinox tower to 33.0 m (`TOWER_TOP` 32.85); floor stays 24.3; needs a fourth checkpoint migration (#361) |
 | R21 | Library revision 3: two chairs at d 18.3, bookcase-0 and table removed, east passing bay | approved 2026-10-14 | design | scale-review `library-final-plan.md`, `passing-bay-check.json`; brief "Decisions" | coordinates in the brief; runtime proof in #363 |
 | R22 | A 2.4 m gallery cannot pass two 1.776 m standing diameters | observed arithmetic | design | scale-review `library-layout-decision.md` | design constraint for any mezzanine |
@@ -45,8 +45,8 @@ resolve in `assets/ipic/references/manifest.json` and on disk; the camera
 receipts include `docs/ipic-review/review.json`, which this index also lists.
 
 Agreement record for G1: the design side agrees to the observed rows as the
-baseline and to R06 as the single axis convention. Rows R14, R20 and R21 were decided by Val on 2026-10-14; R19 (kit import)
-and R24 (missing briefs) still need Val. Rows R15, R16 and R26 are carried by the engineering packet (#381). No row here
+baseline and to R06 as the single axis convention. Rows R14, R20 and R21 were decided by Val on 2026-10-14, and R19 (kit import: desk footprints only) on 2026-10-15;
+R24 (missing briefs) still needs Val. Rows R15, R16 and R26 are carried by the engineering packet (#381). No row here
 activates a layout or changes a default.
 
 Engineering agreement for G1 (river-oaks-1b, which took over #381 on 2026-10-15
