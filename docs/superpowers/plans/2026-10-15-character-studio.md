@@ -185,3 +185,22 @@ Report retained at `.runtime/character-studio/editor-regressions.json`. Fresh
 wave/editor capture remains queued behind a live IPIC soak; no bypass or fabricated
 result. Editor draft PR may be reviewed with this precise visual gap and the known
 walking skirt defect; full issue acceptance remains open.
+
+## Editor PR delivery and continuation
+Signed commit `bf0f8aacb04933d7236f20ed10efc49a7f0ca392` pushed; SSH signature
+verified and prohibited-attribution check printed nothing. Draft PR
+https://github.com/BunsDev/river-oaks/pull/461 is stacked on #457. No merge.
+Progress: #441 comment 6202027703; #442 updated with material evidence, skirt
+clipping and the unintegrated native 4K prototype. Full goal remains active.
+
+Resume the same checkout/task. First inspect `/tmp/river-studio-editor-browser-final.log`
+and session 28249 (queued editor/wave capture); do not restart a live run. Its report
+will be `data/reports/character-studio-editor-final.json`. Inspect the wave screenshot,
+record any defect and update #461's pending capture note. Then create the next
+stacked render branch from the verified editor head, retain the uncommitted
+`preview/src/character-portrait.js` and `preview/tests/character-portrait.test.js`,
+and implement #442 native hero capture with browser dimension/color/lifecycle
+verification and actual-rig skirt fitting. Do not claim 4K integration from the
+helper tests. Continue #443 and #444 after that. Preserve this checkout; it contains
+undelivered portrait code. Hosted/editor review, physical-device targets, human
+acceptance and all downstream criteria remain explicit gaps.
