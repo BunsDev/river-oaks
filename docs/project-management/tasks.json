@@ -9025,13 +9025,13 @@
     {
       "id": "release-0-2-0-readiness",
       "title": "Prepare TypeSafe Place 0.2.0 release candidate from verified procedural interior stack",
-      "status": "delivered",
+      "status": "retired",
       "branches": [
         "release/v0.2.0-20261014"
       ],
       "owner": null,
-      "updatedAt": "2026-10-15T18:19:47.201Z",
-      "nextAction": "Delivered: main is 0.2.0 (#376 merged as e87b458e). No tag, desktop publication, Developer ID signing or notarization was done; those and the remaining release gates (quiet-machine shared/full + 60 Hz, live packaged sign-in, human accessibility, production migration acceptance) still need their own decisions. Retirement must first archive the worktree's original candidate evidence (.runtime 161 MB, output 70 MB) as its previous owner asked; the worktree is preserved until then.",
+      "updatedAt": "2026-10-15T20:05:11.761Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "ledger": "docs/superpowers/plans/2026-10-14-release-0.2.0-readiness.md",
       "requiredChecks": [
         "Review exact-head stacked PR checks and changes",
@@ -9061,7 +9061,24 @@
           "tree": "4b042e93144018fb58c08f8946b6f8f7824fc1b1",
           "checks": "Landed by claude:river-oaks-1b with pnpm run land 376 at 2026-10-15T18:19:11Z after Val asked to take #376 through to merging (land updated the branch to d7e8ea1d; Verify passed; guard CLEAN). Refreshed head: cloth unit 3/3; gown-contact-samples, jevica-gown, jevica-waist passed; core verify passed (agent 111/111, preview 3268+1 skip+1 todo, server 590+150 Redis skips, desktop 69/69). Release notes and readiness addendum updated to main's content; generated plans index and register kept identical to main."
         }
-      ]
+      ],
+      "retirement": {
+        "head": "d7e8ea1d2ff8a8a54d1f53bcdcf77dd404e4422f",
+        "releasedAt": "2026-10-15T20:03:59.000Z",
+        "sessionsReviewedAt": "2026-10-15T20:03:59.000Z"
+      },
+      "retiredBranches": [
+        "release/v0.2.0-20261014"
+      ],
+      "archive": {
+        "release/v0.2.0-20261014": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-PqNQgF/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-PqNQgF/history.bundle",
+          "sha256": "8bbf15be36f774fe39c8c6d05dd255586c8618b63bee206bd58b52c051020d1f",
+          "tag": "refs/tags/archive/worktree-prune/4f9b3c42-3023-4ddc-912d-474b053eed7b",
+          "head": "d7e8ea1d2ff8a8a54d1f53bcdcf77dd404e4422f"
+        }
+      }
     },
     {
       "id": "shared-dominoes-server",
@@ -10937,6 +10954,64 @@
       }
     },
     {
+      "id": "green-roofs-20261015",
+      "title": "Implement composed green roof scenery and verify office outlook, fit and rendering budgets",
+      "status": "active",
+      "branches": [
+        "feat/green-roofs-20261015"
+      ],
+      "owner": "codex:green-roofs-20261015",
+      "updatedAt": "2026-10-15T19:40:15.925333+00:00",
+      "nextAction": "Signed19cf13ee all16 hosted checks passed; prior queue refused stale main. Integrated ec036956 (Studio/voice main) with repo task merge driver; final combined pnpm verify core passed. Commit/push signed final merge, re-enter pnpm land449, await exact-head hosted checks and actual merge proof. Full18-component pass9a4404da and Metal evidence retain recorded scope.",
+      "ledger": "docs/superpowers/plans/2026-10-15-green-roofs.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-green-roofs",
+      "filesOwned": [
+        "preview/src/green-roofs.js (new)",
+        "preview/tests/green-roofs.test.js (new)",
+        "preview/src/district.js (roof integration only)",
+        "docs/vegetation.md (authored roof planting)",
+        "docs/superpowers/plans/2026-10-15-green-roofs.md",
+        "preview/e2e/green-roofs-webgl.js (new)",
+        "docs/green-roofs.md",
+        "preview/e2e/green-roofs-office.mjs (new)",
+        "preview/src/roof-field-boundaries.js (new)",
+        "preview/tests/roof-field-boundaries.test.js (new)",
+        "preview/src/roof-field-mesh.js (new)",
+        "preview/tests/roof-field-mesh.test.js (new)",
+        "preview/src/hermes-roof-surface.js (new)",
+        "preview/tests/hermes-roof-surface.test.js (new)",
+        "preview/src/reference-facades.js (pavilion helper replacement only)",
+        "preview/src/roof-grasses.js (new)",
+        "preview/tests/roof-grasses.test.js (new)",
+        "preview/e2e/green-roofs-town.mjs (new)",
+        "preview/src/office-layouts.js (roof-gardens view only)",
+        "preview/tests/office-views.test.js",
+        "preview/tests/office-ui.test.js",
+        "preview/e2e/office-penthouse.js",
+        "preview/e2e/office-penthouse-runner.mjs",
+        "docs/offices.md (bounded views)",
+        "preview/src/office-world-scene.js",
+        "preview/src/office-world-presentation.js",
+        "preview/src/office-skyline.js",
+        "preview/tests/office-skyline.test.js",
+        "preview/tests/office-world-presentation.test.js",
+        "preview/src/main.js (live office mode)",
+        "preview/e2e/spatial-circulation.js (startup fence and failure diagnostics)",
+        "preview/e2e/spatial-circulation.js (fixture readiness/diagnostics)"
+      ],
+      "requiredChecks": [
+        "deterministic containment, equipment and geometry regressions",
+        "office capture lifecycle and inclusion",
+        "pnpm run verify",
+        "matched daylight/dusk street/elevated captures and performance deltas",
+        "live current-light/parallax/actor-mask/lifecycle regressions",
+        "pnpm run verify full with owned isolated Redis",
+        "native live office routes, in-visit time change, fixed-view costs"
+      ],
+      "pr": 449,
+      "leaseUntil": "2026-10-15T22:23:30.634352+00:00"
+    },
+    {
       "id": "studio-acceptance-417",
       "title": "#417 Garden Office pilot acceptance (coding scope): review profile, full Studio journey, warm-up plus ten-cycle resource soak, late/missing asset recovery, real-GPU measurements, keyboard and layout checks",
       "status": "active",
@@ -11030,12 +11105,12 @@
       "status": "retired",
       "branches": [],
       "owner": null,
-      "nextAction": "Retired: the detached tag worktree was removed after its artifacts, receipts and runtime were copied to ~/worktree-backups/river-oaks/release-v0.2.0-artifacts/. GitHub release publication, Developer ID and notarization remain separate decisions.",
+      "nextAction": "Published: GitHub release v0.2.0 (https://github.com/BunsDev/river-oaks/releases/tag/v0.2.0, 2026-10-15T20:07:56Z, Latest) with TypeSafe-Place-0.2.0-macOS-arm64.zip (sha256 5c3ae6a4..., GitHub digest and re-download match) and SHA256SUMS, at Val's request. Ad-hoc signed only; Developer ID signing and notarization remain open.",
       "filesOwned": [
         "refs/tags/v0.2.0"
       ],
       "pr": 376,
-      "updatedAt": "2026-10-15T19:34:56.511Z",
+      "updatedAt": "2026-10-15T20:08:31.581Z",
       "evidence": [
         {
           "pr": 376,
@@ -11109,9 +11184,8 @@
     {
       "id": "register-sweep-20261015-1b2",
       "title": "Commit river-oaks-1b's later register entries and record the v0.2.0 tag evidence",
-      "status": "active",
-      "owner": "claude:river-oaks-1b (b929a625)",
-      "leaseUntil": "2026-10-15T21:37:36.000Z",
+      "status": "retired",
+      "owner": null,
       "branches": [
         "docs/register-sweep-20261015-1b2"
       ],
@@ -11124,8 +11198,55 @@
         "docs/superpowers/plans/2026-10-14-release-0.2.0-readiness.md",
         "data/reports/desktop-development.json"
       ],
-      "nextAction": "Copy connection-continuity, release-0-2-0-readiness, register-sweep-20261015-1b, release-0-2-0-tag and voice-continuity from the live register onto main's; add the tag addendum and the tag-run desktop receipt; PR and land.",
-      "updatedAt": "2026-10-15T19:37:37.078Z"
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "updatedAt": "2026-10-15T19:57:28.909Z",
+      "pr": 455,
+      "evidence": [
+        {
+          "pr": 455,
+          "reviewedHead": "60bccd746e61dd27fc73f2bf973e2a2f9a8217d1",
+          "merge": "6dac1b21039f005788b8524a67c74b02bd71246d",
+          "tree": "bff2a2ce6aca0690e388ef700156aef562a0e0ef",
+          "checks": "Landed by claude:river-oaks-1b with pnpm run land 455 (branch updated to 60bccd74; 17 hosted checks; guard CLEAN; merge tree equals head tree). Both JSON files parse; project-status --check on the swept register cleared 2 of main's gaps and added only the accurate release-0-2-0-readiness pending-retirement gap."
+        }
+      ],
+      "retirement": {
+        "head": "60bccd746e61dd27fc73f2bf973e2a2f9a8217d1",
+        "releasedAt": "2026-10-15T19:56:46.000Z",
+        "sessionsReviewedAt": "2026-10-15T19:56:46.000Z"
+      },
+      "retiredBranches": [
+        "docs/register-sweep-20261015-1b2"
+      ],
+      "archive": {
+        "docs/register-sweep-20261015-1b2": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-Co6TTW/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-Co6TTW/history.bundle",
+          "sha256": "d0db1e1e5cbf688c19fbef42039545237a5fb9d994922869ebf1598f6d634034",
+          "tag": "refs/tags/archive/worktree-prune/e9c8ccfc-16c5-4aaf-bbf7-9a45f5df6461",
+          "head": "60bccd746e61dd27fc73f2bf973e2a2f9a8217d1"
+        }
+      }
+    },
+    {
+      "id": "release-0-2-0-published",
+      "title": "Record the published v0.2.0 GitHub release in the readiness ledger and register",
+      "status": "active",
+      "owner": "claude:river-oaks-1b (b929a625)",
+      "leaseUntil": "2026-10-15T22:08:36.000Z",
+      "branches": [
+        "docs/release-0-2-0-published-20261015"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-14-release-0.2.0-readiness.md",
+      "requiredChecks": [
+        "node scripts/project-status.mjs --check"
+      ],
+      "filesOwned": [
+        "docs/superpowers/plans/2026-10-14-release-0.2.0-readiness.md",
+        "docs/project-management/tasks.json (the named entries and this one only)"
+      ],
+      "nextAction": "Update the readiness ledger's tag section for the published release; copy release-0-2-0-readiness, register-sweep-20261015-1b2, release-0-2-0-tag and this entry onto main's register; PR and land.",
+      "updatedAt": "2026-10-15T20:08:36.760Z"
     }
   ]
 }
