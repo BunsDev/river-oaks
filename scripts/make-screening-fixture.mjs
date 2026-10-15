@@ -69,8 +69,14 @@ if (process.argv.includes('--check')) {
     transcript: CUES.map(([, , text]) => text), files,
   };
   // Keep every other film's entry (the approved short) exactly as it is.
+  // Only a missing manifest is a first run; a malformed one stops here rather than drop other films.
+  // (The manifest before #365 was the fixture's entry alone.)
   let media = [];
-  try { media = JSON.parse(readFileSync(manifestPath, 'utf8')).media ?? []; } catch { /* A first run writes a new manifest. */ }
+  try {
+    const saved = JSON.parse(readFileSync(manifestPath, 'utf8'));
+    media = Array.isArray(saved.media) ? saved.media : saved.id ? [saved] : null;
+  } catch (error) { if (error.code !== 'ENOENT') throw error; }
+  if (!Array.isArray(media)) throw new Error(`${relative(root, manifestPath)} has no media list`);
   media = media.some(entry => entry.id === fixture.id) ? media.map(entry => (entry.id === fixture.id ? fixture : entry)) : [...media, fixture];
   writeFileSync(manifestPath, `${JSON.stringify({ media }, null, 2)}\n`);
   process.stdout.write(`wrote ${files.length} files to ${relative(root, dir)}\n`);

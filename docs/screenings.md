@@ -113,6 +113,11 @@ second interior or renderer is built.
     - `scripts/ipic-short/` holds the capture, the cut and the decode check. A new cut needs approval again.
   - **The fixture**, `ipic-fixture-v1`. A 30 s test pattern with one beep a second, in WebM (VP9/Opus) and MP4 (H.264/AAC), with English captions. It is labelled as a fixture everywhere, and tests can still name it. `scripts/make-screening-fixture.mjs` regenerates it, rewriting only its own entry in `sources.json`.
   - **Checks.** `node scripts/make-screening-fixture.mjs --check` verifies every film's committed hashes and durations. `preview/tests/screening-media.test.js` checks each allowlisted film against `sources.json`: types, bytes, SHA-256, duration within 60 ms, captions equal to the transcript, and a recorded approval.
+- **Rolling back.** Once the short has started, a town's checkpoint names `ipic-original-v1`, in its
+  timeline and in the start's operation receipt (up to 64 receipts are kept, even after Stop). A server
+  without that id in `SCREENING_MEDIA`, which means any build before #429, refuses the checkpoint, and the
+  town does not restore. Roll back by configuration on a build that still has the entry: stop the film
+  and remove the host grants. Do not redeploy an older build. #400's checkpoint v11 already rules that out.
 - **Sync.** The player projects the shared position from the snapshot and an estimate of
   server time. It prefers `sync` replies measured over a round trip, taken on entry, every
   15 s and on return to the foreground, and falls back to snapshot frames. Drift up to 40 ms

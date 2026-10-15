@@ -9,7 +9,9 @@ import { SCREENING_MEDIA } from '../src/screening-contract.js';
 const root = new URL('../../', import.meta.url);
 const manifest = JSON.parse(readFileSync(new URL('preview/public/assets/ipic/screening/sources.json', root), 'utf8'));
 const local = src => `preview/public${src}`;
-const cueText = vtt => vtt.split(/\r?\n\r?\n/).slice(1).map(block => block.split(/\r?\n/).filter(line => line && !/^\d+$/.test(line) && !line.includes('-->')).join(' ')).filter(Boolean);
+// A cue's text is every line after its timing line; NOTE, STYLE and REGION blocks are not cues.
+const cueText = vtt => vtt.replace(/^\uFEFF/, '').split(/\r?\n\r?\n+/).slice(1).map(block => block.split(/\r?\n/))
+  .filter(lines => !/^(NOTE|STYLE|REGION)\b/.test(lines[0])).map(lines => lines.slice(lines.findIndex(line => line.includes('-->')) + 1).join(' ').trim()).filter(Boolean);
 
 test('every allowlisted film has a manifest entry whose files match their bytes, hashes and types', () => {
   assert.deepEqual(manifest.media.map(entry => entry.id).sort(), Object.keys(SCREENING_MEDIA).sort());
@@ -37,3 +39,9 @@ test('the approved short records who approved it and what it shows', () => {
   assert.ok(entry.files.some(file => file.path.endsWith('ipic-original-v1-poster.jpg') && file.type === 'image/jpeg'));
   assert.match(entry.provenance, /OpenStreetMap/, 'the ODbL credit stays with the film');
 });
+
+test('the caption parser reads cue text only, whatever the cue ids and comment blocks', () => {
+  const vtt = 'WEBVTT\n\nNOTE written for the cut\n\n1\n00:00:00.200 --> 00:00:05.000\n1999\n\nintro\n00:00:05.000 --> 00:00:07.000\nTwo lines,\none cue.\n';
+  assert.deepEqual(cueText(vtt), ['1999', 'Two lines, one cue.']);
+});
+

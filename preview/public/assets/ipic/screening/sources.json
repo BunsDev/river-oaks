@@ -8,9 +8,9 @@
       "license": "The project's own runtime capture. Jevica's in-game appearance, the IPIC lounge's floral wall (a texture from venue photo IMG_9761.jpg) and lettering, and the visible signage are shown with Val Alexander's approval (2026-10-15). Street geometry © OpenStreetMap contributors, ODbL; the credit stays in frame.",
       "approval": "Approved by Val Alexander on 2026-10-15 (#365): candidate 1 as cut, including the items listed under approvedItems.",
       "approvedItems": [
-        "Lounge shot (about 34–39 s): the floral wall is a texture cut from venue photo IMG_9761.jpg (preview/src/ipic-interior.js:232), and the repeated \"I'm Busy for the rest of my Life.\" wall text reproduces the venue's own lettering (ipic-interior.js:162). A supplied venue photo is not blanket permission for its artwork (#365), so clear these or recut the shot.",
-        "Reception and return shots: real marks on the signage (\"RIVER OAKS DISTRICT\", \"IPIC & THE TUCK ROOM\") and photographed street frontages. The game already shows them in place; showing them in public media is a separate decision.",
-        "Jevica's in-game appearance in public media (Val)."
+        "Lounge shot (about 0:34-0:39): the floral wall is a texture cut from venue photo IMG_9761.jpg (preview/src/ipic-interior.js), and the repeated \"I'm Busy for the rest of my Life.\" wall text reproduces the venue's own lettering. Approved by Val Alexander on 2026-10-15 as shown.",
+        "Reception and return shots: real marks on the signage (\"RIVER OAKS DISTRICT\", \"IPIC & THE TUCK ROOM\") and photographed street frontages. Approved by Val Alexander on 2026-10-15 as shown.",
+        "Jevica's in-game appearance (preview/public/assets/characters/jevica.glb, CC0-1.0, a fictional generic appearance) in public media. Approved by Val Alexander on 2026-10-15."
       ],
       "transcript": [
         "Westheimer Road, River Oaks.",

@@ -38,6 +38,23 @@ edge has a black border of at least 4 px. The OpenStreetMap (ODbL) credit stays 
 | Run 2 | Passed: two browsers, Start, late join within 500 ms after 5 ms, pause, replay and stale commands, transcript, cleanup |
 | #406's two-account journey with the candidate allowlisted locally (before this branch) | 31 checks, both viewers on `ipic-original-v1` |
 
+## Independent review (794e4644)
+
+| Finding | Disposition |
+| --- | --- |
+| Bug: the caption track and transcript were built once from the venue's first film, so another allowlisted film (a restored fixture, or one started by command) played under the short's captions | Fixed. `filmText()` in `ipic-screening-ui.js` swaps the track and transcript when the playing film changes. New journey step: the host starts the fixture by command, and the viewer's single track and transcript must be the fixture's. It failed first (`{"tracks":["…ipic-original-v1.en.vtt"],"transcript":false,"stale":true}`). |
+| Risk: a server build before #429 refuses a checkpoint naming `ipic-original-v1` | Documented in `docs/screenings.md` under "Rolling back": roll back by configuration on a build that has the entry; never redeploy an older one (as with #400's v11). Fail-closed restore is kept. |
+| `ipic-photo-views.mjs` recorded "fixture film" | It now records the playing film's `mediaId` per capture. `office-ipic-perf.mjs` reached main after this branch was cut; it is fixed when main is merged here before landing. |
+| The generator swallowed manifest read errors | Only a missing file counts as a first run. The pre-#365 single-entry shape is still accepted. |
+| `approvedItems` read as open questions | Reworded as what Val approved |
+| The test's VTT parser was loose | It reads cue text after the timing line and skips NOTE/STYLE/REGION blocks, with its own test |
+
+A screening run during the review failed once in the replay step: spreads of 1581–1948 ms, then a steady 657 ms, at load average 16. Checked by measurement:
+- the short's seeks take a median of 45 ms in headless Chromium (the fixture's 15 ms), so slow seeks don't explain it;
+- the next run, at load average 9–21, passed that step.
+
+It was a load transient, recorded here rather than retried away.
+
 ## Next
 
 After the stack (#400–#407) lands, rerun the two-account journey on main with the short as the default.
