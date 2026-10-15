@@ -9991,6 +9991,42 @@
         "hosted Verify"
       ],
       "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-ipic-playback-20261015"
+    },
+    {
+      "id": "office-world-lifecycle-reliability",
+      "title": "Preserve office configuration and access through publication, coordinator replacement and recovery",
+      "status": "active",
+      "branches": [
+        "fix/office-world-lifecycle-reliability"
+      ],
+      "owner": "codex:01a13e08-bc72-7333-a97a-d1ab642e0933",
+      "leaseUntil": "2026-10-15T10:44:52.915089+00:00",
+      "updatedAt": "2026-10-15T08:44:52.915089+00:00",
+      "nextAction": "Verified source ready for signed commit and PR. Local core11/11, focused105/105, independent18/18, full16 passed stages including Redis731/731 and13 experience; shared timed out. Retain failure; require complete exact-head hosted shared/experience matrix on up-to-date PR, then pnpm land and delivery proof.",
+      "ledger": "docs/superpowers/plans/2026-10-15-office-world-lifecycle-reliability.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-world-lifecycle",
+      "filesOwned": [
+        "server/redis-room.js",
+        "server/tests/office-world-lifecycle.test.js",
+        "docs/offices.md (lifecycle and recovery)",
+        "docs/superpowers/plans/2026-10-15-office-world-lifecycle-reliability.md",
+        "docs/project-management/tasks.json (own entry)",
+        "server/world.js (configuration propagation)",
+        "server/district-*-checkpoint-migration.js (configuration propagation)",
+        "server/screenings.js (historical fixture checkpoint recovery)",
+        "server/tests/screenings.test.js (historical recovery)",
+        "docs/screenings.md (recovery contract)",
+        "preview/e2e/creator-objects.js (consistent guest readiness timeout)",
+        "data/reports/office-lifecycle-*.json (verification evidence)"
+      ],
+      "requiredChecks": [
+        "focused office/checkpoint/transport/recovery regressions with disposable Redis",
+        "office-desk office-computer-shared office-visit journeys",
+        "pnpm run verify",
+        "pnpm run verify full with disposable Redis",
+        "independent review",
+        "hosted Verify and pnpm run land"
+      ]
     }
   ]
 }

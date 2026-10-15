@@ -946,7 +946,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
         // Validate the entire old checkpoint before dropping any retired shop
         // residents. This keeps invalid data in a removed record from being
         // laundered into an accepted reduced-population checkpoint.
-        const fullPopulation=createSharedWorld(worldData,{now,maxPlayers,sharedPopulation:false,isAdmin,worldId});
+        const fullPopulation=createSharedWorld(worldData,{now,maxPlayers,sharedPopulation:false,isAdmin,worldId,screeningHosts,officeLayout});
         if (!fullPopulation.restore(saved).ok) throw new Error('Invalid legacy checkpoint');
         const activeIds=new Set(residentIdentities.map(local=>local.id));
         const kept=recovered.state.locals.filter(local=>activeIds.has(local.id));
@@ -1225,12 +1225,13 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
 }
 
 /** Validate an old room, then transfer durable account and creation state to a new geography. */
-export function migrateWorldCheckpoint({fromData,toData,checkpoint,worldId=DEFAULT_WORLD_ID,now=Date.now,isAdmin=isJevicaAdmin}={}) {
+export function migrateWorldCheckpoint({fromData,toData,checkpoint,worldId=DEFAULT_WORLD_ID,now=Date.now,isAdmin=isJevicaAdmin,screeningHosts,officeLayout}={}) {
   if(!fromData || !toData || !checkpoint)return reject('invalid_checkpoint');
-  const oldWorld=createSharedWorld(fromData,{worldId,now,isAdmin});
+  const options={worldId,now,isAdmin,screeningHosts,officeLayout};
+  const oldWorld=createSharedWorld(fromData,options);
   if(!oldWorld.restore(checkpoint).ok)return reject('invalid_checkpoint');
   const old=oldWorld.checkpoint();
-  const fresh=createSharedWorld(toData,{worldId,now,isAdmin}).checkpoint();
+  const fresh=createSharedWorld(toData,options).checkpoint();
   const payload=fresh.payload,previous=old.payload;
   // Simulation and NPC routes depend on geography. Account-owned state does not.
   payload.revision=previous.revision+1;
@@ -1241,7 +1242,7 @@ export function migrateWorldCheckpoint({fromData,toData,checkpoint,worldId=DEFAU
   payload.homeGuests=(previous.homeGuests??[]).filter(([storeId])=>retainedHomes.has(storeId));
   const envelope={version:CHECKPOINT_VERSION,worldId,worldFingerprint:fresh.worldFingerprint,payload};
   const migrated={...envelope,checksum:digest(envelope)};
-  const probe=createSharedWorld(toData,{worldId,now,isAdmin});
+  const probe=createSharedWorld(toData,options);
   if(!probe.restore(migrated).ok)return reject('incompatible_region');
   return {ok:true,checkpoint:migrated,disconnectedPlayers:previous.players.length,
     clearedWishes:previous.state.locals.filter(local=>Boolean(local.wish)).length};
