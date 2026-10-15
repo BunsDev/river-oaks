@@ -48,9 +48,9 @@ async (owner, resident) => {
     for (let step = 0; step < 60; step++) {
       const want = Math.atan2(target[0] - at[0], target[1] - at[1]);
       if (Math.abs(want - state.heading) > 0.03) { await drag((want - state.heading) / 0.004); state.heading = want; }
-      if (Math.hypot(target[0] - at[0], target[1] - at[1]) < 0.6) break;
+      if (Math.hypot(target[0] - at[0], target[1] - at[1]) < 0.25) break;
       await dialog.focus(); await page.keyboard.down('KeyW');
-      await page.waitForTimeout(Math.min(400, Math.max(60, Math.hypot(target[0] - at[0], target[1] - at[1]) * 300)));
+      await page.waitForTimeout(Math.min(400, Math.max(40, Math.hypot(target[0] - at[0], target[1] - at[1]) * 300)));
       await page.keyboard.up('KeyW'); await page.waitForTimeout(150);
       const next = await position();
       if (Math.hypot(next[0] - at[0], next[1] - at[1]) > 0.05) state.heading = Math.atan2(next[0] - at[0], next[1] - at[1]);
@@ -58,7 +58,7 @@ async (owner, resident) => {
     }
     await page.waitForTimeout(450); // the last move reaches the server
     const server = await visit(page);
-    check(Math.hypot(target[0] - server.position[0], target[1] - server.position[1]) < 1.2, `${label}: ${JSON.stringify(server.position)}`);
+    check(Math.hypot(target[0] - server.position[0], target[1] - server.position[1]) < 0.4, `${label}: ${JSON.stringify(server.position)}`);
   }
 
   await load(owner, 'owner'); await load(resident, 'resident');
@@ -116,10 +116,12 @@ async (owner, resident) => {
   }, ownerId);
   check(probe.forged.status === 400 && !probe.own.text.includes('terrace at dusk'), `a direct desk read cannot name another account and returns only the resident's own desk: ${JSON.stringify({ forged: probe.forged.status, own: probe.own.status })}`);
 
-  // 4. Chairs: both stand clear of creative desk 01's seated envelope; their claims race on two real sockets.
+  // 4. Chairs: both stand within reach of creative desk 01's stand point (1.3 m) but clear of the
+  // taken seat's exclusion (0.7 m around the stand point, 2.158 m around the seat); their claims
+  // race on two real sockets.
   const chair = { id: 'desk-a1-chair', position: [3.65, 5.6], stand: [3.65, 3.55] };
-  await walkTo(owner, [chair.stand[0] + 1, chair.stand[1] - 0.5], 'Jevica beside creative desk 01');
-  await walkTo(resident, [chair.stand[0] - 1, chair.stand[1] - 0.5], 'the resident beside creative desk 01');
+  await walkTo(owner, [chair.stand[0] + 0.8, chair.stand[1] - 0.4], 'Jevica beside creative desk 01');
+  await walkTo(resident, [chair.stand[0] - 0.8, chair.stand[1] - 0.4], 'the resident beside creative desk 01');
   const claim = { type: 'office', action: 'sit', officeId: OFFICE, seatId: chair.id, layout: LAYOUT };
   const claims = await Promise.all([command(owner, claim), command(resident, claim)]);
   check(claims.filter(result => result.ok).length === 1 && claims.some(result => result.error === 'office_seat_occupied'), `one winner for one chair: ${JSON.stringify(claims.map(result => result.ok || result.error))}`);
