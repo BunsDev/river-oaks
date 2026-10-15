@@ -9991,6 +9991,37 @@
         "hosted Verify"
       ],
       "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-ipic-playback-20261015"
+    },
+    {
+      "id": "office-skyline-prototype",
+      "title": "Penthouse skyline prototype: show the actual district outside the penthouse glass and terrace while the street is hidden, as a one-time local capture at entry (kit P26 cosmetic backdrop: never moves the office, authority or geography); penthouse layout only",
+      "status": "active",
+      "branches": [
+        "feat/office-skyline-prototype-20261015"
+      ],
+      "owner": "claude:river-oaks-penthouse (7a57e655)",
+      "leaseUntil": "2026-10-15T10:47:00.000Z",
+      "updatedAt": "2026-10-15T08:47:00.000Z",
+      "nextAction": "Implemented and core verify passed (office tests 79/79). GPU skyline views and the penthouse smoke queued on the browser lock; commit, push and draft PR next.",
+      "ledger": "docs/superpowers/plans/2026-10-15-office-skyline-prototype.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-skyline",
+      "filesOwned": [
+        "preview/src/office-skyline.js (new)",
+        "preview/tests/office-skyline.test.js (new)",
+        "preview/src/office-world-scene.js (skyline hook only)",
+        "preview/src/office-world-presentation.js (captureOfficeStreet renderer/skyline only)",
+        "preview/src/main.js (renderer, size and ?office-skyline switch only)",
+        "docs/offices.md (skyline bullet)",
+        "docs/superpowers/plans/2026-10-15-office-skyline-prototype.md",
+        "docs/project-management/tasks.json (own entry)"
+      ],
+      "requiredChecks": [
+        "node --test preview/tests/office-*.test.js",
+        "browser capture of the penthouse with the skyline under the browser lock",
+        "pnpm run verify",
+        "independent review"
+      ],
+      "pr": null
     }
   ]
 }

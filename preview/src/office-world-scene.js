@@ -6,6 +6,7 @@ import { createRemotePlayers } from './remote-players.js';
 import { borrowOfficePresentation, officeStreetApproach, createOfficeArrivalClock, officePeerVisible } from './office-world-presentation.js';
 import { buildOfficeGeometry } from './office-penthouse-graybox.js';
 import { OFFICE_LAYOUT_LEGACY, officeLayout, officeLevelElevation } from './office-layouts.js';
+import { createVisitSkyline } from './office-skyline.js';
 
 // The street, car and office share one scene/camera/composer. Once both car
 // doors close the outside district is occluded and can stop drawing. The same
@@ -16,7 +17,9 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
   let position=[...OFFICE_SPAWN],yaw=0,current=null,levelId=self.office?.levelId??null,floor=0;
   const layoutId=self.office?.layout??OFFICE_LAYOUT_LEGACY,layout=officeLayout(layoutId);
   const peerRoot=new THREE.Group();street.scene.add(peerRoot);lease.allow(peerRoot);
-  const dispose=()=>{if(disposed)return;disposed=true;actors?.dispose();peerRoot.removeFromParent();office?.dispose();lease.dispose();};
+  // A layout with an outside shows the district captured once as the doors close (office-skyline.js).
+  const skyline=createVisitSkyline(street,layout,[stage,street.avatar.object,peerRoot]);
+  const dispose=()=>{if(disposed)return;disposed=true;actors?.dispose();peerRoot.removeFromParent();office?.dispose();skyline?.dispose();lease.dispose();};
   try{
     office=buildOfficeGeometry(THREE,layoutId,{buildLegacy:()=>buildWorkplaceOffice(THREE,OFFICE_ROOM)});stage.add(office.object);office.object.visible=false;
     const lights=[2,-3].map((z,i)=>({position:new THREE.Vector3(0,2.9,z),color:new THREE.Color('#fff1df'),intensity:i?65:45,distance:i?10:7,decay:2}));
@@ -42,7 +45,9 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
       stage.position.copy(basePosition);stage.position.y+=height;
       worldLights.forEach((light,i)=>{light.position.copy(lights[i].position).applyMatrix4(street.frame);light.position.y+=height;});
       lease.lights(worldLights,skipped?1:ease(elapsed/.8));
-      lease.inside(!entering&&(skipped||time>=ARRIVAL.closingEnd));
+      const inside=!entering&&(skipped||time>=ARRIVAL.closingEnd);
+      if(inside)skyline?.capture();
+      lease.inside(inside);
       office.object.visible=!entering&&['opening','arriving','office'].includes(frame.phase);
       street.lobby.setEntryOpen(entering?ease(elapsed/.8):1);
       street.lobby.update(entering?{phase:'idle',doors:0,floor:1}:frame);
@@ -80,7 +85,7 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
         actors.update(now,street.camera);office.update?.(now/1000);lease.render(1/60);return current;
       },
       skip(){skipped=true;},get position(){return current?.position??position;},
-      inspect(){return {camera:{position:street.camera.position.toArray(),quaternion:street.camera.quaternion.toArray(),verticalFov:street.camera.fov},actors:actors.stats(),duration:approach.duration+ARRIVAL.duration,dimensions:ARRIVAL,presentation:'shared-world',elevation:stage.position.y-basePosition.y,phase:current?.phase,progress:current?.progress,skipped,avatar:street.avatar.object.position.toArray()};},
+      inspect(){return {camera:{position:street.camera.position.toArray(),quaternion:street.camera.quaternion.toArray(),verticalFov:street.camera.fov},actors:actors.stats(),duration:approach.duration+ARRIVAL.duration,dimensions:ARRIVAL,presentation:'shared-world',skyline:skyline?.stats??null,elevation:stage.position.y-basePosition.y,phase:current?.phase,progress:current?.progress,skipped,avatar:street.avatar.object.position.toArray()};},
       dispose,
     };
   }catch(error){dispose();throw error;}
