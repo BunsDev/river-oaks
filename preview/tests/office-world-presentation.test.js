@@ -46,6 +46,30 @@ test('the real world scene survives a stalled render, completes all phases and r
   assert.equal(f.district.visible,false);visit.dispose();visit.dispose();
   assert.equal(f.lobby.object.parent,f.district);assert.equal(f.avatar.presentation,null);assert.equal(f.scene.children.length,2);assert.equal(f.district.visible,true);
 });
+test('a glazed penthouse hides the borrowed cabin and lobby after arrival, leaving the closed car doors, and restores them on exit',t=>{
+  const previous=globalThis.document,element=()=>({style:{},classList:{},append(){},setAttribute(){},remove(){}});
+  globalThis.document={createElement:element};t.after(()=>{globalThis.document=previous;});
+  const visitIn=layout=>{
+    const f=fixture();f.avatar.ready=true;
+    const stone=new THREE.Group(),hiddenTrim=new THREE.Group(),door=new THREE.Group();hiddenTrim.visible=false;
+    f.lobby.object.add(stone,hiddenTrim,door);f.lobby.frontDoors=[door];
+    const visit=createOfficeWorldScene({street:f.street,host:{...element(),clientWidth:1440,clientHeight:1000},self:{id:'self',office:{id:'jevica-office',layout,levelId:'jevica-office/l0'}}});
+    t.after(()=>visit.dispose());
+    const seen={};
+    for(let i=0;i<=1500;i++){const now=i*1000/60;visit.prepare(now);const {phase}=visit.render(now,[0,1.25],0,[]);seen[phase]??={stone:stone.visible,door:door.visible,doors:f.lobby.frame.doors};}
+    return {f,visit,stone,hiddenTrim,door,seen};
+  };
+  const glazed=visitIn('office-penthouse-1');
+  assert.equal(glazed.seen.arriving.stone&&glazed.seen.arriving.door,true,'the cabin stays drawn while the visitor walks out of it');
+  assert.deepEqual(glazed.seen.office,{stone:false,door:true,doors:0},'arrived: cabin and lobby hidden, front doors drawn and closed');
+  assert.equal(glazed.hiddenTrim.visible,false);
+  glazed.visit.dispose();
+  assert.equal(glazed.stone.visible,true,'leaving restores the lobby');assert.equal(glazed.hiddenTrim.visible,false,'and keeps a part that was already hidden hidden');
+  assert.equal(glazed.f.lobby.object.parent,glazed.f.district);
+  const legacy=visitIn('office-legacy-1');
+  assert.deepEqual(legacy.seen.office,{stone:true,door:true,doors:1},'the windowless legacy room is unchanged');
+  legacy.visit.dispose();
+});
 test('street lead-in begins at the exact camera and avatar and meets the established lobby path',()=>{
   const {street,body,camera}=fixture(),path=officeStreetApproach(street),rotation=new THREE.Quaternion().setFromRotationMatrix(street.frame);
   const first=path.at(0,1.44),last=path.at(path.duration,1.44),expected=arrivalCamera(0,{aspect:1.44});
