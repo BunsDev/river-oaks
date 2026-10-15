@@ -9376,11 +9376,12 @@
       "title": "TypeSafe Place Character Studio #440\u2013#444",
       "status": "active",
       "branches": [
-        "feat/character-studio-contract-20261015"
+        "feat/character-studio-contract-20261015",
+        "feat/character-studio-editor-20261015"
       ],
       "owner": "codex-character-studio-20261015",
-      "updatedAt": "2026-10-15T20:12:35.519080+00:00",
-      "nextAction": "Review #457 verified #440 contract/baseline. Continue #441 staged reversible editor and #442 compatible authored controls; retain #443 persistence and #444 full acceptance. No merge/deploy authorization.",
+      "updatedAt": "2026-10-15T20:38:57.573654+00:00",
+      "nextAction": "Finish queued #441 editor browser/core/regression checks; inspect phone/walk/wave captures, then signed commit and stacked draft PR on #457. Continue #442 asset/native-4K and #443 authoritative persistence; no merge/deploy authorization.",
       "filesOwned": [
         "preview/src/character-definition.js",
         "preview/tests/character-definition.test.js",
@@ -9388,7 +9389,18 @@
         "docs/superpowers/plans/2026-10-15-character-studio.md",
         "preview/src/character-assets.js",
         "preview/src/player-avatar.js",
-        "preview/e2e/character-contract.js"
+        "preview/e2e/character-contract.js",
+        "preview/src/character-studio*",
+        "preview/src/character-customization.js",
+        "preview/src/reference-archetypes.js",
+        "preview/src/romance-look.js",
+        "preview/src/sable-look.js",
+        "preview/src/main.js",
+        "preview/tests/character-studio.test.js",
+        "preview/e2e/character-studio.js",
+        "preview/tests/character-studio*.test.js",
+        "preview/src/character-portrait.js",
+        "preview/tests/character-portrait.test.js"
       ],
       "requiredChecks": [
         "Focused contract and rig tests",
@@ -9415,7 +9427,7 @@
           ]
         }
       },
-      "leaseUntil": "2026-10-15T22:03:39.309718+00:00",
+      "leaseUntil": "2026-10-15T22:38:57.573654+00:00",
       "ledger": "docs/superpowers/plans/2026-10-15-character-studio.md",
       "pr": 457,
       "verification": {

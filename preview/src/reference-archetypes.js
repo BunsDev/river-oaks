@@ -47,6 +47,7 @@ export function createReferenceStyle(avatar,appearance){
   }
   function dressSkirt(color,{wrap=false,slit=false}={}){
     const surface=material(color,wrap?{roughness:.9,sheen:1,sheenColor:new THREE.Color('#a94d68'),side:THREE.DoubleSide}:{roughness:.46,sheen:.32,side:THREE.DoubleSide});
+    if(appearance.character==='sable')surface.userData.characterSlot='outfit';
     const levels=[[-.17,.218,.145],[-.07,.216,.145],[.025,.202,.135],[.105,.161,.11]],segments=40,vertices=[],uv=[],indices=[];
     for(let layer=0;layer<levels.length;layer++){
       const [y,rx,rz]=levels[layer];
@@ -65,6 +66,7 @@ export function createReferenceStyle(avatar,appearance){
       tube(pelvis,material('#8d3b52',{roughness:.82}),[[-.18,.015,.085],[-.10,-.035,.14],[.02,-.10,.151],[.16,-.16,.10]],.009);
     }else{
       const belt=material('#eee1d4',{roughness:.46});
+      if(appearance.character==='sable')belt.userData.characterSlot='outfit';
       const beltBand=mesh(pelvis,new THREE.CylinderGeometry(.169,.177,.029,48,1,true),belt,[0,.091,0]);beltBand.scale.z=.685;
       for(const x of [-.023,.023]){const loop=mesh(pelvis,new THREE.TorusGeometry(.015,.003,8,24),gold,[x*.72,.091,.12]);loop.scale.x=.85;}
     }

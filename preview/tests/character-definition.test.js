@@ -18,7 +18,7 @@ test('every permitted authored ID round trips without changing identity or permi
 
 test('malformed, foreign, future and privilege-bearing definitions fail closed', () => {
   const base = characterDefinitionFor('fixture-owner','sable-human');
-  for (const change of [{ownerId:'other'},{schemaVersion:2},{revision:-1},{revision:1.5},{revision:Number.MAX_SAFE_INTEGER+1},{appearanceId:'jevica'},{rig:'jevica-beast'},{form:'beast'},{parameters:{height:200}},{palette:'#fff'},{hair:'file:///tmp/x'},{outfit:'unlicensed'},{attachments:['wings']},{assets:[{url:'https://example.com/a.glb'}]},{provenance:{kind:'generated'}},{canFly:true}]) {
+  for (const change of [{ownerId:'other'},{schemaVersion:99},{revision:-1},{revision:1.5},{revision:Number.MAX_SAFE_INTEGER+1},{appearanceId:'jevica'},{rig:'jevica-beast'},{form:'beast'},{parameters:{height:200}},{palette:'#fff'},{hair:'file:///tmp/x'},{outfit:'unlicensed'},{attachments:['wings']},{assets:[{url:'https://example.com/a.glb'}]},{provenance:{kind:'generated'}},{canFly:true}]) {
     assert.equal(validateCharacterDefinition({...base,...change},{ownerId:'fixture-owner'}).ok,false,JSON.stringify(change));
   }
   for (const value of [null,[],{},Object.create(base)]) assert.equal(validateCharacterDefinition(value,{ownerId:'fixture-owner'}).ok,false);

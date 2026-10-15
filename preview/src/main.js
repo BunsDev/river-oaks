@@ -1,3 +1,5 @@
+import { createCharacterStudio } from './character-studio.js';
+import { migrateCharacterAppearance } from './character-definition.js';
 import { createOfficeUI } from './office-ui.js';
 import { createIpicScreening } from './ipic-screening-ui.js';
 import { IPIC_DARTS, IPIC_INTERIOR, atIpicDartsLine } from './ipic-plan.js';
@@ -154,7 +156,7 @@ let pendingSharedPlace = null, sharedPlaceInFlight = false;
 let worldPortal = null;
 let worldRegionSha256 = null;
 let landmarkAccountId = null;
-let playerAvatar, officeUI, ipicScreening;
+let playerAvatar, characterStudio, officeUI, ipicScreening;
 let multiplayer, remotePlayers, buildLayer, buildControls, seatingControls, seatAndWater;
 let plazaSalon = null, plazaGames = null, plazaDominoes = null, plazaHearts = null, plazaBackgammon = null, cafeGame = 'dominoes', plazaStage = null, plazaBicycle = null, cyclingBoard = null;
 let plazaJenga = null, plazaYacht = null, benchGame = 'jenga';
@@ -286,6 +288,11 @@ function initializeRenderer() {
     },
     requestVehicleExit: position => multiplayer.travel({position:[position[0],-position[2]]}),
     getPortrait: id => portraits.portrait(id) });
+  characterStudio = createCharacterStudio({ownerId:document.body.dataset.accountId,
+    getDefinition:()=>migrateCharacterAppearance(document.body.dataset.accountId,playerAvatar.appearance),
+    canOpen:()=>Boolean(playerAvatar?.ready&&!loading&&!multiplayer?.traveling&&!photoMode?.active&&!officeUI?.active),
+    onOpen:()=>walking.halt(),reducedMotion});
+  document.querySelector('.character-picker').before(characterStudio.trigger);
   seatAndWater = createSeatAndWater({ walking, playerAvatar, getLocals: () => community.state?.locals, getMultiplayer: () => multiplayer, isBusy: () => seatingControls?.busy() ?? false });
   // Seated at a plaza chess table, X plays chess, checkers or Connect Four; the table mirrors the game.
   plazaGames = createPlazaTableGames({ getMirror: () => plazaSalon?.userData.chess ?? null, getFourMirror: () => plazaSalon?.userData.connectFour ?? null, getMorrisMirror: () => plazaSalon?.userData.morris ?? null, getSeat: () => seatAtTable(walking?.getPose()),
@@ -924,7 +931,7 @@ function render(now) {
     canPlay: Boolean(walking?.active && !loading && !multiplayer?.traveling && !photoMode?.active && !birdCams?.riding && !self?.altitude
       && (!introRoom?.generatedPlan || generatedInteriors?.readyFor(introRoom.planId))),
   });
-  if (officeUI?.active || officeUI?.entering || storeIntros?.active || photoMode?.active || birdCams?.riding) walking?.halt();
+  if (characterStudio?.active || officeUI?.active || officeUI?.entering || storeIntros?.active || photoMode?.active || birdCams?.riding) walking?.halt();
   else if (multiplayer?.connected && !multiplayer.traveling) walking?.update(delta, now);
   else walking?.halt();
   plazaGames?.update(); plazaDominoes?.update(); plazaHearts?.update(); plazaSpades?.update(); plazaLiarsDice?.update(); plazaBackgammon?.update(); plazaCribbage?.update(); plazaJenga?.update(); plazaYacht?.update(); plazaWinePong?.update(); plazaShuffleboard?.update(); plazaDarts?.update(); ipicDarts?.update(); venueDarts?.update(); axePanel?.update(); plazaMancala?.update(); plazaGo?.update(); plazaChineseCheckers?.update(); plazaXiangqi?.update(); plazaStage?.update();
@@ -938,6 +945,7 @@ function render(now) {
     camera.updateMatrixWorld();
   }
   photoMode?.update();
+  characterStudio?.update();
   storeIntros?.update(now);
   remotePlayers?.update(now, camera);
   buildLayer?.update(camera.position);
@@ -958,7 +966,7 @@ function render(now) {
   debugTools?.update(now);
   // llvmpipe draws both browser clients on CPU. Keep simulation and transport
   // updating every frame while capping only acceptance-profile draw work.
-  if (officeUI?.active || !softwareAcceptance || now - lastSoftwareDraw >= 1000) {
+  if (!characterStudio?.active && (officeUI?.active || !softwareAcceptance || now - lastSoftwareDraw >= 1000)) {
     lastSoftwareDraw = now;
     renderer.info.reset();
     const currentRoom = buildingMesh?.userData.generatedRooms?.find(room => room.planId === self?.levelId);
