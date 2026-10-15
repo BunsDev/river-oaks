@@ -15,7 +15,7 @@ import { pathToFileURL } from 'node:url';
 import { AVATAR_ENVELOPE } from '../preview/src/workplace-room.js';
 import { OFFICE_LAYOUT_PENTHOUSE, officeLayout, officeLevelFree, officeLevelSegmentFree, officeSeats } from '../preview/src/office-layouts.js';
 
-const L0 = 'jevica-office/l0';
+const L0 = 'jevica-office/l0', CHAIR_RADIUS = 0.4; // the plan's chair collision radius (office-layouts.js)
 const contains = (box, [x, d]) => x >= box.x0 && x <= box.x1 && d >= box.d0 && d <= box.d1;
 const gap = (box, [x, d]) => Math.hypot(x - Math.max(box.x0, Math.min(x, box.x1)), d - Math.max(box.d0, Math.min(d, box.d1)));
 
@@ -47,9 +47,13 @@ export function checkKitDesks(kit, routes) {
     // The desk is the floor collider holding the kit's desk centre, never a chair.
     const box = proposed && floorColliders.find(c => contains(c, [proposed.x, proposed.d]) && !/chair/.test(c.id));
     if (!box) { problems.push(`${station.id}: no desk collider at the kit's desk centre`); desks.push({ station: station.id, ok: false }); continue; }
-    const clearance = gap(box, station.position), seat = station.seat;
-    const ok = clearance >= AVATAR_ENVELOPE.turningRadius && !contains(box, seat) && (box.y1 ?? 0) <= 1.2;
-    if (!ok) problems.push(`${station.id}: ${box.id} leaves its approach ${clearance.toFixed(3)} m clear (needs ${AVATAR_ENVELOPE.turningRadius}), covers its seat, or stands over 1.2 m`);
+    const clearance = gap(box, station.position), height = Number.isFinite(box.y1) && box.y1 <= 1.2;
+    // A desk may not cover any plan chair, its own included: the seated body sits at the chair.
+    const covered = plan.levels.find(level => level.id === L0).chairs.filter(chair => gap(box, chair.position) < CHAIR_RADIUS).map(chair => chair.id);
+    const ok = clearance >= AVATAR_ENVELOPE.turningRadius && !covered.length && height;
+    if (clearance < AVATAR_ENVELOPE.turningRadius) problems.push(`${station.id}: ${box.id} leaves its approach ${clearance.toFixed(3)} m clear (needs ${AVATAR_ENVELOPE.turningRadius})`);
+    if (covered.length) problems.push(`${station.id}: ${box.id} covers ${covered.join(', ')}`);
+    if (!height) problems.push(`${station.id}: ${box.id} has no height, or stands over 1.2 m`);
     desks.push({ station: station.id, collider: box.id, footprint: [box.x0, box.x1, box.d0, box.d1], height: box.y1 ?? null, approachClearanceM: Number(clearance.toFixed(3)), ok });
     footprints.set(box.id, box);
   }
@@ -66,7 +70,9 @@ export function checkKitDesks(kit, routes) {
     if (!ok) problems.push(`${route.from} -> ${route.to} is not walkable with the proposed desks and ${occupied.map(seat => seat.id).join(', ')} occupied`);
     results.push({ from: route.from, to: route.to, occupied: occupied.map(seat => seat.id), ok });
   }
-  return { ok: !problems.length, desks, routes: results, problems };
+  // Only colliders holding a station's desk centre are checked; list the rest rather than trust them.
+  const unchecked = floorColliders.filter(c => !footprints.has(c.id)).map(c => c.id);
+  return { ok: !problems.length, desks, routes: results, unchecked, problems };
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
