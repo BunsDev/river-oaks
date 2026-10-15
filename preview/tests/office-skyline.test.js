@@ -347,3 +347,12 @@ test('live office keeps exterior current, moves the actual viewpoint and restore
   assert.equal(v.scene.inspect().skyline.state,'live');assert.equal(v.scene.inspect().skyline.bytes,0);assert.equal(draws,3);
   v.scene.dispose();assert.equal(s.lamp.intensity,27);assert.deepEqual(s.lamp.position.toArray(),[10,20,30]);assert.equal(s.districtGroup.visible,true);assert.equal(s.scene.background,next);assert.equal(s.captured.lobby.object.parent,s.districtGroup);
 });
+
+test('phones and tablets keep the bounded snapshot outlook; other devices draw the live district', async () => {
+  const { officeOutlookFor } = await import('../src/office-skyline.js');
+  assert.deepEqual(officeOutlookFor({ coarsePointer: true, scale: 1 }), { mode: 'snapshot', size: 512 }, 'a touch-first device keeps the snapshot at the phone size');
+  assert.deepEqual(officeOutlookFor({ coarsePointer: false, scale: 0.6 }), { mode: 'snapshot', size: 512 }, 'a reduced render scale keeps the snapshot');
+  assert.deepEqual(officeOutlookFor({ coarsePointer: true, scale: 1, maxCubemapSize: 256 }), { mode: 'snapshot', size: 256 }, 'within the device limits');
+  assert.deepEqual(officeOutlookFor({ coarsePointer: false, scale: 1 }), { mode: 'live' }, 'a full-scale fine-pointer device draws the live district');
+  assert.deepEqual(officeOutlookFor(), { mode: 'live' });
+});
