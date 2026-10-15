@@ -7,6 +7,8 @@ import { arrivalCamera, ARRIVAL, OFFICE_FINISH } from './office-arrival-model.js
 import { buildOfficeArrival } from './office-arrival-architecture.js';
 import { createOfficeWorldScene } from './office-world-scene.js';
 import { officePeerVisible } from './office-world-presentation.js';
+import { buildOfficeGeometry } from './office-penthouse-graybox.js';
+import { OFFICE_LAYOUT_LEGACY, officeLayout, officeLevelElevation } from './office-layouts.js';
 
 // Keep the eye clear when residents share the arrival point or pass each other.
 export const officePlayerVisible=officePeerVisible;
@@ -23,20 +25,22 @@ export function createOfficeScene({renderer,host,self,players,reducedMotion=fals
   try{target=pmrem.fromScene(environment);scene.environment=target.texture;scene.environmentIntensity=.65;}finally{environment.dispose();pmrem.dispose();}
   scene.add(new THREE.HemisphereLight('#fff5e6','#647386',1.6));
   const light=new THREE.DirectionalLight('#fff1de',2.5);light.position.set(2,6,2);scene.add(light);
-  office=buildWorkplaceOffice(THREE,OFFICE_ROOM);scene.add(office.object);
+  const layout=officeLayout(self.office?.layout??OFFICE_LAYOUT_LEGACY)??{id:self.office.layout};
+  office=buildOfficeGeometry(THREE,layout.id,{buildLegacy:()=>buildWorkplaceOffice(THREE,OFFICE_ROOM)});scene.add(office.object);
   lift=buildOfficeArrival();scene.add(lift.object);
   let firstPerson=false;
-  actors=createRemotePlayers(scene,host,{snapInitialHeading:true,isVisible:player=>officePlayerVisible(player,self.id,lastPosition,firstPerson)});
-  let started=null,skipped=reducedMotion,lastPosition=[...OFFICE_SPAWN];
-  function render(now,position,yaw,allPlayers) {
+  actors=createRemotePlayers(scene,host,{snapInitialHeading:true,isVisible:player=>officePlayerVisible(player,self.id,lastPosition,firstPerson,levelId)});
+  let started=null,skipped=reducedMotion,lastPosition=[...OFFICE_SPAWN],levelId=self.office?.levelId??null;
+  function render(now,position,yaw,allPlayers,place={}) {
     if(disposed)return null;
+    levelId=place.levelId??levelId;const floor=officeLevelElevation(layout,levelId)??0;
     const ready=actors.stats().some(a=>a.id===self.id&&a.ready);
     if(started===null&&ready)started=now;
     const elapsed=started===null?0:(now-started)/1000,frame=elevatorFrame(elapsed,{reducedMotion:skipped});
     const walking=frame.done,at=walking?position:frame.position;firstPerson=walking;
     lastPosition=[...at];
     const activePlayers=allPlayers.filter(p=>p.office?.id===self.office.id);
-    actors.sync(activePlayers.map(p=>({...p,position:p.id===self.id?[...at,0]:[...p.office.position,0],yaw:p.id===self.id?(walking?yaw:0):p.office.yaw,altitude:0,vehicle:null,sitting:null,interaction:null})),null);
+    actors.sync(activePlayers.map(p=>({...p,position:p.id===self.id?[...at,walking?floor:0]:[...p.office.position,p.office.elevation??0],yaw:p.id===self.id?(walking?yaw:0):p.office.yaw,altitude:0,vehicle:null,sitting:null,interaction:null})),null);
     lift.update(frame);
     office.object.visible=walking||['opening','arriving'].includes(frame.phase);
     if(!walking){
@@ -46,7 +50,7 @@ export function createOfficeScene({renderer,host,self,players,reducedMotion=fals
       firstPerson=frame.phase==='arriving'&&Math.hypot(camera.position.x-at[0],camera.position.z+at[1])<.95;
     }else{
       // First person keeps the camera inside the room walls.
-      camera.position.set(position[0],1.68,-position[1]);
+      camera.position.set(position[0],1.68+floor,-position[1]);
       camera.rotation.set(0,yaw,0,'YXZ');
     }
     camera.aspect=host.clientWidth/Math.max(1,host.clientHeight);camera.updateProjectionMatrix();

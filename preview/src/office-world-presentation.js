@@ -12,8 +12,13 @@ export function createOfficeArrivalClock() {
   }};
 }
 
-export function officePeerVisible(player,selfId,position,firstPerson) {
-  return !firstPerson||(player.id!==selfId&&Math.hypot(player.position[0]-position[0],player.position[1]-position[1])>=.9);
+// In first person, hide only bodies that would overlap the eye: the viewer's own, and a
+// peer close by on the same floor. A peer on another penthouse floor is never in the way.
+export function officePeerVisible(player,selfId,position,firstPerson,levelId=null) {
+  if(!firstPerson)return true;
+  if(player.id===selfId)return false;
+  if(levelId&&player.office?.levelId&&player.office.levelId!==levelId)return true;
+  return Math.hypot(player.position[0]-position[0],player.position[1]-position[1])>=.9;
 }
 
 // A presentation lease borrows the actual street camera, avatar and lobby. It

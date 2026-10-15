@@ -92,6 +92,13 @@ Compare it with the ordinary URL and `?ao=off`, recording each visible outcome.
 The decoder control is diagnostic only; a visit using it cannot pass the phone
 GPU row or justify a production decoder change.
 
+Physical iPhone Safari startup check, 2026-10-15: the normal fixture crashed
+before joining, and `?ao=off` showed the same “a problem repeatedly occurred”
+page. `?phone-decoder=html` joined the town with ordinary AO still enabled.
+This points to the decoder path rather than AO as the startup trigger; the
+phone GPU row remains unmeasured and open. See the
+[phone fixture ledger](2026-10-15-procedural-phone-gpu-fixture.md).
+
 Walk the same route by hand: enter the gallery, walk to the back wall, go up,
 come down, leave, visit Cartier, and return. Record cold and return preparation
 times separately, plus the ascent and descent frame intervals and a capture at the

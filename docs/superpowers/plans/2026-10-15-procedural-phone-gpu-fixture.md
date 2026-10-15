@@ -107,7 +107,13 @@ it does not constitute a device result by itself.
   one connected player. This isolates a working HTML-image decoder control with
   normal AO still enabled; the default route had crashed on prior reloads.
   It is diagnostic evidence, not a production decoder change or a measured GPU
-  matrix result. The `?ao=off` control and Web Inspector timings remain pending.
+  matrix result. Val then opened `?ao=off` on the same physical iPhone and
+  reported Safari's “a problem repeatedly occurred” crash message. The
+  fixture health endpoint subsequently showed zero connected players. This
+  supports the normal image-decoder path as the startup trigger over AO, but
+  does not identify the exact WebKit termination reason. Web Inspector timings
+  remain pending. The private LAN fixture was stopped after the comparison;
+  its loopback health endpoint no longer accepts connections.
 - Integrated `origin/main` at `c1cfd584` after PR #390 landed. The sole
   content conflict was the generated plans index; regenerating it from the
   merged task register retained the phone task, the retired GPU harness, and
@@ -120,13 +126,40 @@ it does not constitute a device result by itself.
   checks and core verification after each integration. PR #393's hosted Verify
   run 38680848494 passed the aggregate `preview` check at exact head
   `4161fc936a61b1aabee73f67e56e57f189b7e6cb`.
+- Merged `origin/main` at `65feca351330262c3352e5107541816018d40d6a`
+  into this branch for the next verification. The sole manual conflict was the
+  generated plans index, regenerated with `pnpm run plans:index` and checked
+  with `pnpm run plans:index --check`. The merged task entry was synchronized
+  with the primary checkout's live phone-task lease and file ownership.
+  Integrated `node --test server/tests/phone-fixture.test.js` passed 4/4.
+- Integrated `pnpm run verify` passed; receipt `.runtime/agent/core.json`.
+  The first integrated full-gate run passed core and isolated Redis, then hit
+  `ENOSPC` while creating the browser lock and writing its receipt. It did not
+  establish a full-gate result. The inactive iOS probe's 1.7 GB `.runtime/ios-probe`
+  evidence was copied and checksum-verified on Passport, and its original path
+  now resolves through a symlink to that copy. A second preserved copy was moved
+  to Passport after automatic review rejected deleting the local backup. The
+  internal data volume then had 3.8 GiB free. A second full run again passed
+  core and isolated Redis, but concurrent disk pressure caused `ENOSPC` while
+  releasing the browser queue lock. No browser acceptance result was recorded.
+  The regenerable 1.9 GB Playwright browser cache was then copied and
+  checksum-verified on Passport, replaced by a symlink at its original path,
+  and its local backup moved to Passport. Chromium's executable resolves
+  through that link; the internal data volume then had 6.5 GiB free. A third
+  full run with `TMPDIR` on Passport passed core, Redis, build, Python and
+  secret checks, then timed out after 10 minutes queued behind the active
+  office lifecycle browser run. Its `security-browser` receipt says
+  `ETIMEDOUT`/`SIGKILL`; browser journeys were not run. A fresh full run is
+  pending after the shared browser lock releases.
+- With Playwright's browser cache on Passport, `pnpm run test:security:e2e`
+  passed 2/2 and launched Chromium successfully. The integrated targeted
+  `world-publish` run is queued behind a separate office full-gate retry.
 
 ## Gaps and next step
 
-Finish the revised `world-publish` browser check and full gate. Compare the
-physical iPhone's `?ao=off` control with the joined HTML-image visit, then
-diagnose the default decoder crash before changing production decoding or
-render quality. Capture Web Inspector measurements on the phone. Keep PR #393
+Finish the integrated full gate. Diagnose the default decoder crash and make
+the production decoder decision separately from this test fixture. Capture Web
+Inspector measurements on the phone after the normal route joins. Keep PR #393
 in draft while the phone fixture and checks are being verified, and recheck
 exact-head hosted `preview` after any new commit before landing. Record actual
 device results in the GPU matrix only when captured on the phone.
