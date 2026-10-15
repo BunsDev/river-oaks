@@ -33,9 +33,19 @@ async page => {
     await page.keyboard.up('KeyW');
     check(distance <= .16, `Walking could not reach ${a}, ${d}: ${JSON.stringify(await pose())}`);
   }
+  // Step outside is offered by the street door, not from deep inside the venue (Val, 2026-10-15).
+  const hud = () => page.evaluate(() => { const shown = selector => { const el = document.querySelector(selector); return Boolean(el) && !el.hidden && getComputedStyle(el).visibility !== 'hidden' && el.getClientRects().length > 0; };
+    return { theater: document.body.classList.contains('theater-seated'), exit: shown('#walking-enter') ? document.querySelector('#walking-enter').textContent : null, dock: shown('.visit-tools'), chat: shown('.town-chat-dock'), stand: shown('#walking-interact') ? document.querySelector('#walking-interact').textContent : null, inside: document.querySelector('#walking-hud')?.dataset.inside ?? '' }; });
+  const atDoor = await hud();
+  check(/Step outside/.test(atDoor.exit ?? ''), `Step outside is offered in reception: ${JSON.stringify(atDoor)}`);
   // Between the rows, beside recliners 0-1 and 1-1 (the T3 seat), as the screening journeys stand.
   for (const p of [[-1.4,4.8],[-1.4,20.7],[-5.55,20.7],[-5.55,24.7],[-4.85,24.7],[-4.85,29],[-4.85,29.65],[-1.6,29.65]]) await walk(...p);
   const top = await pose(); check(Math.abs(top.ground - plan.floor - 6) < .01, 'Shared player reached the upstairs auditorium');
+  const deep = await hud();
+  check(deep.exit === null && deep.inside, `No Step outside in the auditorium: ${JSON.stringify(deep)}`);
+  await page.locator('#canvas-host').focus(); await page.keyboard.press('KeyF'); await page.waitForTimeout(1500);
+  check((await hud()).inside === deep.inside, 'F does not step outside from the auditorium');
+  checks.push('Step outside shows by the door; in the auditorium neither the prompt nor F leaves');
   checks.push('walked from reception up both escalator runs into auditorium');
   // Townspeople visiting IPIC rest in its seats too (#364), so take the first recliner the server grants,
   // starting with front-row 1-1, where the seat back hid the screen in the T3 review.
@@ -59,9 +69,18 @@ async page => {
   const seatedView = await page.evaluate(() => { const c = window.__riverCarriage(); return { view: c.camera.view, offset: Math.hypot(...c.camera.position.map((v, i) => v - c.pose.position[i])), centre: window.__riverDebug().pickAt(innerWidth / 2, innerHeight / 2)?.materials ?? null }; });
   check(seatedView.view === 'eye' && seatedView.offset < .01 && seatedView.centre?.includes('ipic-cinema-screen'), `Seated viewer sees the screen from the seated eye: ${JSON.stringify(seatedView)}`);
   checks.push('seated viewer faces the screen from the seated eye');
+  // Seated in a recliner, the HUD steps back for the film: dock and chat aside, Stand up kept.
+  await page.waitForFunction(() => document.body.classList.contains('theater-seated'));
+  const seatedHud = await hud();
+  check(seatedHud.theater && !seatedHud.dock && !seatedHud.chat && /Stand up/.test(seatedHud.stand ?? ''), `Seated theater mode: ${JSON.stringify(seatedHud)}`);
+  checks.push('seated: the dock and town chat step aside, Stand up stays');
   await page.locator('#canvas-host').focus(); await page.keyboard.press('KeyZ');
   await page.waitForFunction(() => !window.__riverCarriage().pose.sitting);
   check(await page.evaluate(() => window.__riverCarriage().camera.view) === 'third-person', 'Standing restores the walking camera');
+  // The HUD repaints on its next pass (every 150 ms); a slow software frame is allowed 10 s.
+  await page.waitForFunction(() => !document.body.classList.contains('theater-seated'), null, { timeout: 10000 }).catch(() => {});
+  const stoodHud = await hud();
+  check(!stoodHud.theater && stoodHud.dock && stoodHud.chat, `Standing brings the HUD back: ${JSON.stringify(stoodHud)}`);
   checks.push('stood with keyboard interaction; the walking camera returned');
   // Arms and back box each cushion in, so leave forward past its footrest; the front row then
   // goes round by the left aisle, since the gaps between its seats are narrower than a body.

@@ -52,9 +52,15 @@ export function screeningCommand(view, action, operationId) {
 
 const operationId = () => `op-${Array.from(crypto.getRandomValues(new Uint8Array(9)), byte => byte.toString(16).padStart(2, '0')).join('')}`;
 
+// House lights: the auditorium's downlights dim while a film plays in IPIC and come back up when it
+// pauses, ends or stops, or the visitor leaves. Eased over about a second, as a cinema's are.
+export const HOUSE_LIGHTS_DIMMED = 0.25;
+export const houseLightTarget = ({ status, inside } = {}) => (inside && status === 'playing' ? HOUSE_LIGHTS_DIMMED : 1);
+export const nextHouseLight = (level, target, seconds) => target + (level - target) * Math.exp(-Math.max(0, seconds) / 0.45);
+
 // getVenue() → { active: inside the IPIC room, auditorium: within the auditorium's walls }.
 export function createIpicScreening({ host, THREE, getMultiplayer, getVenue, getScreen, venueId = 'ipic', now = () => performance.now(), doc = document }) {
-  let session = null, generation = 0;
+  let session = null, generation = 0, houseLights = 1, lightsAt = null;
   const media = SCREENING_MEDIA[Object.keys(SCREENING_MEDIA).find(id => SCREENING_MEDIA[id].venues.includes(venueId))];
 
   function open() {
@@ -190,7 +196,9 @@ export function createIpicScreening({ host, THREE, getMultiplayer, getVenue, get
       if (view) { state.player.apply(view); if (!state.view || view.epoch !== state.view.epoch || view.revision >= state.view.revision) state.view = view; }
     },
     update() {
-      const venue = getVenue(), connected = getMultiplayer()?.connected;
+      const venue = getVenue(), connected = getMultiplayer()?.connected, at = now();
+      const status = session && !session.stopped ? session.player.stats().sharedStatus : null;
+      houseLights = nextHouseLight(houseLights, houseLightTarget({ status, inside: venue.active && connected }), lightsAt === null ? 0 : (at - lightsAt) / 1000); lightsAt = at;
       if (!venue.active || !connected) { if (session) close(); return; }
       if (!session) open();
       const state = session; if (state.stopped) return;
@@ -199,8 +207,9 @@ export function createIpicScreening({ host, THREE, getMultiplayer, getVenue, get
     },
     inspect() {
       const state = session; if (!state || state.stopped) return { active: false, stopped: Boolean(state?.stopped) };
-      return { active: true, ...state.player.stats(), canHost: state.canHost, currentTime: state.video.currentTime, paused: state.video.paused, muted: state.video.muted, attached: Boolean(state.texture), serverNow: state.clock.serverNow() };
+      return { active: true, houseLights, ...state.player.stats(), canHost: state.canHost, currentTime: state.video.currentTime, paused: state.video.paused, muted: state.video.muted, attached: Boolean(state.texture), serverNow: state.clock.serverNow() };
     },
+    get houseLights() { return houseLights; },
     dispose() { close(); },
     get venue() { return SCREENING_VENUES[venueId]; },
   };

@@ -19,3 +19,11 @@
    sound, volume and caption controls above it, below the greetings and banner. */
 @media(max-width:700px){.ipic-screening{z-index:6}}
 @media(prefers-reduced-motion:reduce){.ipic-screening{backdrop-filter:none}}
+/* Seated in a cinema recliner (walking-ui's theater-seated): the film comes first. The play dock,
+   town chat, the idle greeting card and the walking console's other actions step aside and return
+   on standing; an invitation and Stand up stay. The panel turns compact and dark, the captions larger. */
+body.theater-seated .visit-tools,body.theater-seated .town-chat-dock,body.theater-seated .nearby-greetings:has(#greeting-person:not([hidden])),
+body.theater-seated #walking-hud :is(#walking-meet-nearby,#walking-talk,#walking-play){visibility:hidden}
+body.theater-seated .ipic-screening{bottom:96px;padding:8px 10px;gap:6px;background:color-mix(in srgb,#120d0a 80%,transparent);color:#f4ece4;border-color:#ffffff1f;box-shadow:0 10px 30px #00000055}
+body.theater-seated .ipic-screening-status{opacity:.8}
+body.theater-seated .ipic-screening-caption{font-size:17px}

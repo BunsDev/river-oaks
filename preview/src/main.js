@@ -876,7 +876,8 @@ function updateStoreLights() {
   picked.sort((left, right) => left[0] - right[0]);
   storeLights.forEach((light, index) => {
     const hit = picked[index];
-    if (hit) { light.position.copy(hit[1].position); light.intensity = 10; } else light.intensity = 0;
+    // IPIC's house lights follow the screening (dimmed while a film plays).
+    if (hit) { light.position.copy(hit[1].position); light.intensity = 10 * (hit[1].house ? ipicScreening?.houseLights ?? 1 : 1); } else light.intensity = 0;
   });
 }
 
