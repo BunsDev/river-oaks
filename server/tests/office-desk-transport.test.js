@@ -21,7 +21,7 @@ for(const mode of ['memory','redis'])test(`${mode}: private desk authorization a
  const officeWorkspaces=mode==='redis'?createRedisOfficeWorkspaces({redis,prefix:`{${namespace}}`}):createMemoryOfficeWorkspaces();
  const createApp=()=>mode==='redis'?createWorldGateway({redis,namespace,worldData:data,auth,security,waitlist,origin}):createGameServer({world:createSharedWorld(data),auth,waitlist,origin,officeWorkspaces,staticRoot:'/nonexistent'});
  let app=createApp();
- await new Promise(r=>app.server.listen(0,'127.0.0.1',r));const base=`http://127.0.0.1:${app.server.address().port}`,sockets=[];
+ await new Promise(r=>app.server.listen(0,'127.0.0.1',r));let base=`http://127.0.0.1:${app.server.address().port}`;const sockets=[];
  t.after(async()=>{for(const ws of sockets)ws.terminate();await app.close();security?.close();if(redis){const keys=await redis.keys(`*${namespace}*`);if(keys.length)await redis.del(...keys);await redis.quit();}});
  const ticket=(id,csrf='test-csrf')=>fetch(base+'/api/multiplayer/ticket',{method:'POST',headers:{Origin:origin,Cookie:`fixture=${id}`,'X-CSRF-Token':csrf}});
  assert.equal((await ticket('owner','wrong')).status,403);assert.equal((await ticket('missing')).status,401);
@@ -75,9 +75,10 @@ for(const mode of ['memory','redis'])test(`${mode}: private desk authorization a
  if(mode==='redis'){
   const privateRetry={expectedVersion:5,operationId:'replacement-private',task:{...draft,id:'replacement-private'}};
   assert.equal((await post('owner','save',privateRetry)).status,200);
-  const port=app.server.address().port;
   for(const ws of sockets)ws.terminate();
-  await app.close();app=createApp();await new Promise(r=>app.server.listen(port,'127.0.0.1',r));
+  await app.close();app=createApp();await new Promise(r=>app.server.listen(0,'127.0.0.1',r));
+  // A replacement is a fresh transport: do not reuse Undici's dying HTTP pool.
+  base=`http://127.0.0.1:${app.server.address().port}`;
   a=await join('owner');b=await join('guest');
   assert.equal(a.snapshot.players.find(p=>p.id===owner).office.id,workspace.id,'application replacement restores authorized visit');
   assert.equal((await (await post('owner','read')).json()).desk.tasks[0].id,'replacement-private');

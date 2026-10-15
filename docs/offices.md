@@ -88,6 +88,12 @@ after SIGKILL/restart. RDB snapshots and less frequent AOF fsync have different 
 windows; replication alone is not a backup. No test here inspects or changes the
 hosted provider's configuration, guarantees its disk durability, or proves production
 recovery. Verify that separately before making a production durability claim.
+The version/receipt and membership records must also survive without expiration or
+eviction. Losing a tombstone or reverting to an older snapshot loses its stale-write
+fence. Capacity planning must preserve these records (for example, a no-eviction
+policy with adequate headroom); this patch does not inspect or change that policy.
+See Redis’s [persistence](https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/)
+and [eviction](https://redis.io/docs/latest/develop/reference/eviction/) references.
 
 **Compatibility and failures.** Workspace records remain schema 1 in
 `<namespace-tag>:office-workspaces:v1`; the account discovery index remains

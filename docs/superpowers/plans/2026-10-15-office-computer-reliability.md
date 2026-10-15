@@ -54,3 +54,8 @@ Signed commit 43ae449 pushed in PR #394. Initial full gate passed dependency aud
 Integrated origin/main cede4d1c (#391 Studio stdin, no office path changes) without application conflicts. Reverify the integrated tree before the signed merge commit; complete full gate and hosted checks before `pnpm run land 394`.
 
 Integrated `pnpm run verify` passed again (`/tmp/office-reliability-integrated-core.log`, `.runtime/agent/core.json`). The office implementation is unchanged; the incoming Studio changes are included in that core pass. Full rerun is live with the repaired browser prerequisite.
+
+## Hosted transport-fixture correction
+Hosted Verify run 38681283993 on d623eafd failed the Redis office transport case with `UND_ERR_SOCKET: other side closed`: the replacement reused the closed server's port and Undici's old connection pool. The fixture now binds a fresh endpoint before reconnecting both synthetic accounts. It proves persisted gateway state over fresh HTTP/WebSocket connections, not transparent same-origin failover. No application code changed. Five consecutive runs of `node --test server/tests/office-desk-transport.test.js` with owned Redis passed (10 cases total, zero skips). Independent review found no required issue. The continuing full run exercised the earlier fixture successfully; the correction has separate repeated coverage and must pass final-head hosted CI.
+
+Clarified runbook assumptions: version/receipt records must not expire or be evicted, and restoring an older backup cannot retain newer deletion/revocation fences. Provider policy remains uninspected and unchanged.
