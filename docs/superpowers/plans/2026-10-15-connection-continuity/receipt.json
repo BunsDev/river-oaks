@@ -1,0 +1,30 @@
+{
+  "status": "passed",
+  "browser": "156.0.8078.4",
+  "lifetimeMs": 15000,
+  "noticeMs": 5000,
+  "rotations": 5,
+  "bobRotations": 0,
+  "chats": 29,
+  "watchdog": {
+    "noticedMs": 8817,
+    "recoveredMs": 9584
+  },
+  "checks": [
+    "the gate never appeared: null",
+    "bob never left alice's town or view: null",
+    "alice moved to a fresh socket 5 times in 45 s (bob 0)",
+    "every hand-over in the window is bracketed by samples: 1417, 11421, 21428, 31436, 41466 ms",
+    "all 29 chat commands across the hand-overs were confirmed: []",
+    "a quiet socket was noticed after 8817 ms (8 s without a snapshot)",
+    "the page said why: The town went quiet. Rejoining…",
+    "and was replaced 9584 ms after it went quiet",
+    "a drop after many failures waits on a long backoff",
+    "going online reconnected in 256 ms",
+    "an update says the world is improving: {\"connected\":false,\"connecting\":false,\"rotating\":false,\"rotations\":14,\"rotatedAt\":[1792085983842,1792085993870,1792086003874,1792086013881,1792086023889,1792086033919,1792086043924,1792086054147,1792086064095,1792086074117,1792086084125,1792086094136,1792086104147,1792086114158],\"attempt\":1,\"retryScheduled\":true,\"halted\":false,\"updating\":true,\"gate\":true,\"title\":\"River Oaks is improving\",\"status\":\"Updating the world…\"}",
+    "and never that the player was disconnected",
+    "the page rejoined on its own and reset its welcome",
+    "a new version offers a refresh: {\"connected\":false,\"connecting\":false,\"rotating\":false,\"rotations\":16,\"rotatedAt\":[1792085983842,1792085993870,1792086003874,1792086013881,1792086023889,1792086033919,1792086043924,1792086054147,1792086064095,1792086074117,1792086084125,1792086094136,1792086104147,1792086114158,1792086134788,1792086144801],\"attempt\":0,\"retryScheduled\":false,\"halted\":true,\"updating\":false,\"gate\":true,\"title\":\"River Oaks has been improved\",\"status\":\"Refresh to join the improved world.\"}",
+    "no page errors: "
+  ]
+}

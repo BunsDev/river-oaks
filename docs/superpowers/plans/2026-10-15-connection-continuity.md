@@ -67,11 +67,11 @@ Val asked for a review of how players stay connected, then chose all four fixes.
 | `node preview/e2e/connection-continuity.mjs`, run 1 | Every continuity check passed: 4 hand-overs in 45 s, 427 samples at most 169 ms apart, the gate never shown, bob never gone, 29/29 chats confirmed. It failed only on a check that a sample fell inside a hand-over, because each hand-over completed inside one sampling gap on loopback. That check now records each hand-over's time and requires samples within 300 ms on both sides. |
 | Runs 2–5 | Run 2: the old deaf hook still heard the rotate notice, so the page moved to a healthy socket. The hook now ignores every message, as a dead socket would. Runs 3 and 4 passed every check (noticed after 8.9 s and 8.2 s; online reconnect in 0.4 s and 0.03 s). Run 5 timed out in the watchdog step with no diagnostics. The journey now polls on a timer and reports the page's state on any timeout. |
 | Watchdog rule after run 5 | The earlier rule gave grace to any check that ran more than 2 s late, so a page whose every check runs late (a slow device, or software rendering at load 40) never reached a verdict. Now the socket is judged after more than 8 s without a snapshot **and** at least 5 watchdog checks since the last one. The policy tests cover a frozen page, late checks and a return to view. |
-| Run 6 (final code) | RUN6 |
+| Run 6, final code (receipt `2026-10-15-connection-continuity/receipt.json`) | **Passed every check.** Rotation: 5 hand-overs in 45 s, every one bracketed by samples, no gate, bob never gone, all chats confirmed. Quiet socket noticed after 8.8 s and replaced at 9.6 s. Online reconnect in 256 ms. The update and new-version screens are correct. |
 | Mutation: the client ignores `rotate`, then restored (`cmp` identical) | **Failed as intended**: `the gate never appeared: {connected:false, gate:true, status:"Reconnecting to the town…", bobInTown:false, bobShown:false}`. Without the hand-over the old experience returns: the gate, and the other resident gone. |
-| Neighbouring journeys | JOURNEYS |
-| Full server suite on throwaway Redis | REDIS_FULL |
-| `pnpm run verify` (core) | VERIFY |
+| Neighbouring journeys | `experience-runner.js multiplayer-lifecycle greetings` passed, and `ipic-screening-runner.mjs` (two browsers, host commands, late join, stale and replayed commands) passed 10 checks. The tracked experience report the runner rewrote was restored. |
+| `REDIS_URL=<throwaway> node --test server/tests/*.test.js` | **786/786, nothing skipped** |
+| `pnpm run verify` (core) | **Passed:** agent 111/111; preview 3265, plus 1 skip; server 592, plus 152 Redis skips (core runs without Redis; the full Redis run is above); desktop 69/69 |
 
 ## Not covered
 
