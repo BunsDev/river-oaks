@@ -16,8 +16,10 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
   let office,actors,disposed=false,started=null,skipped=reducedMotion,lastNow=null,lastBody=null,distance=street.startPose.distance;
   let position=[...OFFICE_SPAWN],yaw=0,current=null,levelId=self.office?.levelId??null,floor=0;
   const layoutId=self.office?.layout??OFFICE_LAYOUT_LEGACY,layout=officeLayout(layoutId);
+  // A glazed layout would show the borrowed cabin and lobby through its front glass once arrived.
+  const lobbyParts=layoutId===OFFICE_LAYOUT_LEGACY?[]:street.lobby.object.children.filter(part=>!street.lobby.frontDoors?.includes(part)).map(part=>[part,part.visible]);
   const peerRoot=new THREE.Group();street.scene.add(peerRoot);lease.allow(peerRoot);
-  const dispose=()=>{if(disposed)return;disposed=true;actors?.dispose();peerRoot.removeFromParent();office?.dispose();lease.dispose();};
+  const dispose=()=>{if(disposed)return;disposed=true;actors?.dispose();peerRoot.removeFromParent();office?.dispose();for(const[part,visible]of lobbyParts)part.visible=visible;lease.dispose();};
   try{
     office=buildOfficeGeometry(THREE,layoutId,{buildLegacy:()=>buildWorkplaceOffice(THREE,OFFICE_ROOM)});stage.add(office.object);office.object.visible=false;
     const lights=[2,-3].map((z,i)=>({position:new THREE.Vector3(0,2.9,z),color:new THREE.Color('#fff1df'),intensity:i?65:45,distance:i?10:7,decay:2}));
@@ -53,6 +55,9 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
       office.object.visible=!entering&&['opening','arriving','office'].includes(frame.phase);
       street.lobby.setEntryOpen(entering?ease(elapsed/.8):1);
       street.lobby.update(entering?{phase:'idle',doors:0,floor:1}:frame);
+      // Once arrived there, only the car's front doors stay drawn, closed, in the doorway.
+      const arrived=frame.done&&lobbyParts.length>0;if(arrived)street.lobby.update({...frame,doors:0});
+      for(const[part,visible]of lobbyParts)part.visible=visible&&!arrived;
       let body;
       if(entering){
         const start=approach.at(elapsed,aspect);body=start.player;view.position.copy(start.camera);view.quaternion.copy(start.quaternion);view.fov=start.fov;
