@@ -26,6 +26,8 @@ export function createFootRoll(foot,ball,sole,toeWeights) {
       return {target:ankle,orientation:rolled};
     },
     reset() {angle=0;support=null;lastTarget=null;currentSwing=null;swingOffset=null;},
+    // A moving floor (foot-placement.js) carries the remembered contact with it.
+    carry(offset) {support?.position.add(offset);lastTarget?.add(offset);},
     commit(target,orientation,scale,pivotId,contact) {
       lastTarget=target.clone();
       support=contact?{id:pivotId,position:points[pivotId].clone().multiply(scale).applyQuaternion(orientation).add(target)}:null;
