@@ -91,17 +91,22 @@ async (host, viewer, tools) => {
   checks.push('host started the 30 s fixture inside IPIC');
 
   async function cycle(index) {
-    const restarted = await ensureRunning(Math.min(29.5, lastTripS + 20));
+    // A fresh film before every trip in: the viewer still joins it late, while it runs.
+    const restarted = await ensureRunning(29.5);
     const started = Date.now();
     await enterIpic(viewer);
     const entryMs = Date.now() - started; lastTripS = entryMs / 1000;
     // On a loaded machine the trip in can outlast the 30 s fixture. Then the host starts it again
     // and this cycle is recorded as an in-room start rather than a late join.
-    const lateJoin = (await screening(host)).sharedStatus === 'playing';
+    let lateJoin = (await screening(host)).sharedStatus === 'playing';
     if (!lateJoin) await ensureRunning();
-    const before = await screening(host);
-    await viewer.waitForFunction(() => window.__riverScreening().state === 'playing', null, { timeout: 60000 })
+    let before = await screening(host);
+    const playingOrEnded = async () => viewer.waitForFunction(() => { const s = window.__riverScreening(); return s.state === 'playing' ? 'playing' : s.sharedStatus === 'ended' ? 'ended' : false; }, null, { timeout: 60000 })
+      .then(handle => handle.jsonValue())
       .catch(async error => { throw new Error(`${error.message}: cycle ${index} viewer ${JSON.stringify(await screening(viewer))}, host ${JSON.stringify(await screening(host))}`); });
+    // A decoder that starts after the 30 s fixture has ended meets an ended film: the host starts it
+    // again and the cycle is an in-room start.
+    if (await playingOrEnded() === 'ended') { lateJoin = false; await ensureRunning(); before = await screening(host); check(await playingOrEnded() === 'playing', `cycle ${index}: the viewer plays the restarted film`); }
     const joined = Date.now(), late = await screening(viewer);
     check(late.epoch === before.epoch, `cycle ${index}: the viewer joined the host's epoch ${before.epoch}, got ${late.epoch}`);
     let converged = null, worst = 0;
