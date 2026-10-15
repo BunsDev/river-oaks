@@ -36,7 +36,7 @@ import { buildDistrictBuildings, buildDistrictDetail } from './district.js';
 import { buildDistrictFantasy } from './district-fantasy.js';
 import { buildStorePeople } from './store-people.js';
 import { createGeneratedInteriorStream } from './generated-interior-stream.js';
-import { canCullExterior, renderWithoutExterior } from './interior-exterior-culling.js';
+import { canCullExterior, canCullIpicAuditorium, renderWithoutExterior } from './interior-exterior-culling.js';
 import { sharedRoomSummary } from './shared-population.js';
 import { storeRoomsFor } from './store-rooms.js';
 import { attachDistrictGalleryPlan } from './district-interior-contract.js';
@@ -127,6 +127,13 @@ const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matc
 // Never enable this profile in a production build.
 const softwareAcceptance = import.meta.env.DEV && import.meta.env.VITE_SHARED_SOFTWARE_RENDERING === '1';
 const renderAudit = import.meta.env.DEV && new URLSearchParams(location.search).get('render-audit') === '1' ? createRenderAudit() : null;
+let exteriorCulling = true; // A development audit can switch it off to compare frames.
+// Inside IPIC's auditorium, facing away from its only partition, nothing outdoors can be seen (#428).
+function ipicAuditoriumCull() {
+  const pose = !officeUI?.active && interiorsLayer?.visible ? walking?.getPose() : null;
+  const room = pose ? walking?.environment?.roomAt(pose.position[0], pose.position[2]) : null;
+  return room?.interior === IPIC_INTERIOR && canCullIpicAuditorium(camera, room);
+}
 const debugOcclusion = new URLSearchParams(location.search).get('ao');
 // Auto's AO tail rule stays off until it passes device acceptance (render-quality.js).
 const aoTailShedding = new URLSearchParams(location.search).get('aotail') === 'on';
@@ -960,7 +967,7 @@ function render(now) {
     pipeline.setOcclusionExteriorMask(generatedRoomActive ? worldGroup : null, interiorsLayer);
     ipicScreening?.update();
     if (!officeUI?.update(now, delta)) {
-      if (generatedRoomActive && canCullExterior(camera, currentRoom))
+      if (exteriorCulling && ((generatedRoomActive && canCullExterior(camera, currentRoom)) || ipicAuditoriumCull()))
         renderWithoutExterior(worldGroup, interiorsLayer, () => pipeline.render(delta));
       else pipeline.render(delta);
     }
@@ -1109,7 +1116,7 @@ if (import.meta.env.DEV) window.__riverExteriorCull = () => {
     direction: camera.getWorldDirection(new THREE.Vector3()).toArray(),
     front: room && [room.aMin, room.aMax].map(a => { const [east, north] = room.toWorld(a, 0);
       return new THREE.Vector3(east, room.floor + room.height / 2, -north).project(camera).toArray(); }),
-    cull: canCullExterior(camera, room) };
+    cull: canCullExterior(camera, room), ipic: ipicAuditoriumCull() };
 };
 // Read-only bird cam state for development and browser acceptance runs.
 // Each bird also reports how it appears in the current view: inside the frame,
@@ -1135,6 +1142,7 @@ try {
 if (import.meta.env.DEV && renderAudit) {
   window.__riverRenderAudit = {
     start: () => renderAudit.start(), stop: () => renderAudit.stop(),
+    exteriorCulling(enabled) { exteriorCulling = Boolean(enabled); },
     crowdView() {
       const players = multiplayer?.snapshot?.players ?? [];
       if (!players.length) throw new Error('Join the shared world before framing its crowd.');
