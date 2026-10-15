@@ -1,0 +1,852 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-10-15T08:45:29.385Z",
+  "status": "hosted_acceptance_pending",
+  "fullGateStatus": "Failed: shared stage ETIMEDOUT after16 passed stages. Complete hosted shared acceptance pending. This is not a monolithic full-gate pass; hosted exact-head checks remain required.",
+  "scope": "Local synthetic identities, disposable loopback Redis, browser fixtures on macOS Chromium/Metal. Not production durability, live WorkOS, human accessibility or physical-device performance acceptance.",
+  "runtime": {
+    "base": "9d83cd311a3cd1295b95405849e1b9bb0d70d2c9",
+    "files": {
+      "server/district-checkpoint-migration.js": "38420fdf2bfaf945059efa53a6178a8ab98cccc360a95b1b05cd21a6d472f1be",
+      "server/district-interior-checkpoint-migration.js": "3bc8a59a08098c690d44cb4fbefd5a6a3775a7d63a8fe60f8ff0f075a3452757",
+      "server/district-level-checkpoint-migration.js": "e81b8517a4836472e52133b5f3bd5d6d8f24364d18696fe8447325166a882160",
+      "server/redis-room.js": "e9469f7c7ecf184b234ff21eb4adc7835e5e6e12aadb5bb2cf21e949b8dcbd8d",
+      "server/screenings.js": "6598f2162ec13a8bb0002e4d476efbf3c9d0d72af1eb0a1a86abeb5d28eba436",
+      "server/tests/screenings.test.js": "9676e71fd8544e3efc0e7d870d5caf4b86dfdb0388f0b1ca77979c41a19e86df",
+      "server/world.js": "ca4f28e954de24b19177c617f088ea0a3f507cb2f84e3ac4e2781f5b90e9d29e",
+      "server/tests/office-world-lifecycle.test.js": "53335b857b857dff3dfcda106b20d98bb28a39b65d50825406cf7388048b7fd3",
+      "preview/e2e/creator-objects.js": "ab7b570f75992d61efeb0363ca966bc7168ddae092c076ac985cba03b11b2d42"
+    }
+  },
+  "command": "PATH=\"$PWD/.runtime/office-lifecycle/node-bin:$PATH\" node scripts/browser-lock.mjs \"office lifecycle final current-main full gate\" -- node .runtime/office-lifecycle/run-isolated.mjs pnpm run verify full",
+  "execution": "Same Node executable; process-local wrapper adds --test-concurrency=1 to Node test invocations. Repository check catalog and assertions unchanged.",
+  "counts": {
+    "focused": {
+      "passed": 105,
+      "failed": 0,
+      "skipped": 0
+    },
+    "independent": {
+      "passed": 18,
+      "failed": 0,
+      "skipped": 0
+    },
+    "tooling": {
+      "passed": 109,
+      "failed": 0,
+      "skipped": 0
+    },
+    "preview": {
+      "passed": 3092,
+      "failed": 0,
+      "skipped": 1
+    },
+    "redis": {
+      "passed": 731,
+      "failed": 0,
+      "skipped": 0
+    },
+    "desktop": {
+      "passed": 69,
+      "failed": 0,
+      "skipped": 0
+    },
+    "python": {
+      "passed": 141,
+      "failed": 0
+    }
+  },
+  "skip": "Existing storefront negative-test approach already obstructed; not glass evidence. Core server147 external-Redis skips are covered separately by the complete full Redis stage.",
+  "core": {
+    "schemaVersion": 1,
+    "profile": "core",
+    "startedAt": "2026-10-15T07:15:01.428Z",
+    "status": "passed",
+    "revision": "9d83cd311a3cd1295b95405849e1b9bb0d70d2c9",
+    "dirty": true,
+    "scope": "Selected repository checks only; not production, live auth, native Unreal, human accessibility, or target GPU acceptance.",
+    "results": [
+      {
+        "id": "agent-tests",
+        "command": [
+          "pnpm",
+          "run",
+          "test:agent"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 88282
+      },
+      {
+        "id": "preview-tests",
+        "command": [
+          "pnpm",
+          "test"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 151870
+      },
+      {
+        "id": "server-tests",
+        "command": [
+          "pnpm",
+          "run",
+          "test:server"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 64389
+      },
+      {
+        "id": "desktop-tests",
+        "command": [
+          "pnpm",
+          "run",
+          "test:desktop"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 9867
+      },
+      {
+        "id": "build",
+        "command": [
+          "pnpm",
+          "run",
+          "build"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 3870
+      },
+      {
+        "id": "python-lint",
+        "command": [
+          "uv",
+          "run",
+          "--locked",
+          "ruff",
+          "check",
+          "."
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 300
+      },
+      {
+        "id": "python-format",
+        "command": [
+          "uv",
+          "run",
+          "--locked",
+          "ruff",
+          "format",
+          "--check",
+          "."
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 50
+      },
+      {
+        "id": "python-tests",
+        "command": [
+          "uv",
+          "run",
+          "--locked",
+          "pytest",
+          "-q"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 5185
+      },
+      {
+        "id": "demo",
+        "command": [
+          "uv",
+          "run",
+          "--locked",
+          "river-oaks",
+          "demo"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 361
+      },
+      {
+        "id": "demo-verify",
+        "command": [
+          "uv",
+          "run",
+          "--locked",
+          "river-oaks",
+          "verify",
+          "--config",
+          "data/generated/demo/config.json",
+          "--raw",
+          "data/generated/demo",
+          "--world",
+          "data/generated/demo/world.json",
+          "--output",
+          "data/generated/demo/report.json"
+        ],
+        "status": "passed",
+        "exitCode": 2,
+        "expectedExit": 2,
+        "signal": null,
+        "durationMs": 295
+      },
+      {
+        "id": "secrets",
+        "command": [
+          "uv",
+          "run",
+          "--locked",
+          "python",
+          "scripts/check_secrets.py",
+          "--all"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 11061
+      }
+    ],
+    "finishedAt": "2026-10-15T07:20:37.088Z"
+  },
+  "full": {
+    "schemaVersion": 1,
+    "profile": "full",
+    "startedAt": "2026-10-15T07:40:20.415Z",
+    "status": "failed",
+    "revision": "9d83cd311a3cd1295b95405849e1b9bb0d70d2c9",
+    "dirty": true,
+    "scope": "Selected repository checks only; not production, live auth, native Unreal, human accessibility, or target GPU acceptance.",
+    "results": [
+      {
+        "id": "dependency-audit",
+        "command": [
+          "pnpm",
+          "audit",
+          "--audit-level=moderate"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 1401
+      },
+      {
+        "id": "agent-tests",
+        "command": [
+          "pnpm",
+          "run",
+          "test:agent"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 194910
+      },
+      {
+        "id": "preview-tests",
+        "command": [
+          "pnpm",
+          "test"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 232048
+      },
+      {
+        "id": "server-redis-tests",
+        "command": [
+          "pnpm",
+          "run",
+          "test:server"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 382225
+      },
+      {
+        "id": "desktop-tests",
+        "command": [
+          "pnpm",
+          "run",
+          "test:desktop"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 70994
+      },
+      {
+        "id": "build",
+        "command": [
+          "pnpm",
+          "run",
+          "build"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 4845
+      },
+      {
+        "id": "python-lint",
+        "command": [
+          "uv",
+          "run",
+          "--locked",
+          "ruff",
+          "check",
+          "."
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 391
+      },
+      {
+        "id": "python-format",
+        "command": [
+          "uv",
+          "run",
+          "--locked",
+          "ruff",
+          "format",
+          "--check",
+          "."
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 329
+      },
+      {
+        "id": "python-tests",
+        "command": [
+          "uv",
+          "run",
+          "--locked",
+          "pytest",
+          "-q"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 10275
+      },
+      {
+        "id": "demo",
+        "command": [
+          "uv",
+          "run",
+          "--locked",
+          "river-oaks",
+          "demo"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 886
+      },
+      {
+        "id": "demo-verify",
+        "command": [
+          "uv",
+          "run",
+          "--locked",
+          "river-oaks",
+          "verify",
+          "--config",
+          "data/generated/demo/config.json",
+          "--raw",
+          "data/generated/demo",
+          "--world",
+          "data/generated/demo/world.json",
+          "--output",
+          "data/generated/demo/report.json"
+        ],
+        "status": "passed",
+        "exitCode": 2,
+        "expectedExit": 2,
+        "signal": null,
+        "durationMs": 912
+      },
+      {
+        "id": "secrets",
+        "command": [
+          "uv",
+          "run",
+          "--locked",
+          "python",
+          "scripts/check_secrets.py",
+          "--all"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 18986
+      },
+      {
+        "id": "secret-history",
+        "command": [
+          "gitleaks",
+          "git",
+          "--log-opts=--all",
+          "--redact",
+          "--no-banner",
+          "--ignore-gitleaks-allow"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 3358
+      },
+      {
+        "id": "security-browser",
+        "command": [
+          "pnpm",
+          "run",
+          "test:security:e2e"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 29847
+      },
+      {
+        "id": "reflections",
+        "command": [
+          "pnpm",
+          "run",
+          "test:reflections:webgl"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 6889
+      },
+      {
+        "id": "experience",
+        "command": [
+          "pnpm",
+          "run",
+          "test:experience",
+          "player-lifecycle",
+          "multiplayer-lifecycle",
+          "contextual-first-visit",
+          "store-intro",
+          "photo-mode",
+          "rail-navigation",
+          "places-guide",
+          "world-studio",
+          "spatial-circulation",
+          "spatial-streets",
+          "office-desk",
+          "office-computer-shared",
+          "office-visit"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 648022
+      },
+      {
+        "id": "shared",
+        "command": [
+          "pnpm",
+          "run",
+          "test:shared"
+        ],
+        "status": "failed",
+        "exitCode": null,
+        "expectedExit": 0,
+        "signal": "SIGKILL",
+        "error": "ETIMEDOUT",
+        "durationMs": 1800444
+      }
+    ],
+    "finishedAt": "2026-10-15T08:37:07.547Z"
+  },
+  "sharedRetry": {
+    "status": "cancelled_before_start",
+    "command": "DEBUG=pw:api pnpm run test:shared",
+    "scope": "Local shared retry cancelled before starting after waiting behind seven runs; final hosted shared shards cover all21 journeys. Final exact-head hosted matrix and delivery evidence recorded in PR and primary live task register."
+  },
+  "experience": {
+    "createdAt": "2026-10-15T08:07:06.290Z",
+    "results": [
+      {
+        "name": "player-lifecycle",
+        "status": "passed",
+        "seconds": 15.479,
+        "checks": 19
+      },
+      {
+        "name": "multiplayer-lifecycle",
+        "status": "passed",
+        "seconds": 4.114,
+        "checks": 14
+      },
+      {
+        "name": "contextual-first-visit",
+        "status": "passed",
+        "seconds": 41.1,
+        "checks": null
+      },
+      {
+        "name": "store-intro",
+        "status": "passed",
+        "seconds": 46.921,
+        "checks": 12
+      },
+      {
+        "name": "photo-mode",
+        "status": "passed",
+        "seconds": 21.024,
+        "checks": 35
+      },
+      {
+        "name": "rail-navigation",
+        "status": "passed",
+        "seconds": 27.518,
+        "checks": 78
+      },
+      {
+        "name": "places-guide",
+        "status": "passed",
+        "seconds": 14.508,
+        "checks": null
+      },
+      {
+        "name": "world-studio",
+        "status": "passed",
+        "seconds": 21.314,
+        "checks": null
+      },
+      {
+        "name": "spatial-circulation",
+        "status": "passed",
+        "seconds": 80.487,
+        "checks": 55
+      },
+      {
+        "name": "spatial-streets",
+        "status": "passed",
+        "seconds": 211.89,
+        "checks": 10
+      },
+      {
+        "name": "office-desk",
+        "status": "passed",
+        "seconds": 33.772,
+        "checks": 22
+      },
+      {
+        "name": "office-computer-shared",
+        "status": "passed",
+        "seconds": 30.061,
+        "checks": 6
+      },
+      {
+        "name": "office-visit",
+        "status": "passed",
+        "seconds": 69.972,
+        "checks": 11
+      }
+    ]
+  },
+  "shared": {
+    "createdAt": "2026-10-15T08:07:09.505Z",
+    "status": "running",
+    "rendering": "Full rendering",
+    "scope": "Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.",
+    "results": [
+      {
+        "name": "multiplayer-dev",
+        "status": "passed",
+        "seconds": 167.46,
+        "checks": 47
+      },
+      {
+        "name": "groups",
+        "status": "passed",
+        "seconds": 69.356,
+        "checks": 3
+      },
+      {
+        "name": "world-events",
+        "status": "passed",
+        "seconds": 12.499,
+        "checks": 3
+      },
+      {
+        "name": "rail-shared",
+        "status": "passed",
+        "seconds": 9.17,
+        "checks": 10
+      },
+      {
+        "name": "shared-seating",
+        "status": "passed",
+        "seconds": 59.887,
+        "checks": 18
+      },
+      {
+        "name": "world-boundary",
+        "status": "passed",
+        "seconds": 17.496,
+        "checks": 6
+      },
+      {
+        "name": "world-map",
+        "status": "passed",
+        "seconds": 69.615,
+        "checks": 16
+      }
+    ]
+  },
+  "officeJourneys": {
+    "createdAt": "2026-10-15T08:07:06.290Z",
+    "results": [
+      {
+        "name": "office-desk",
+        "status": "passed",
+        "seconds": 33.772,
+        "checks": 22
+      },
+      {
+        "name": "office-computer-shared",
+        "status": "passed",
+        "seconds": 30.061,
+        "checks": 6
+      },
+      {
+        "name": "office-visit",
+        "status": "passed",
+        "seconds": 69.972,
+        "checks": 11
+      }
+    ]
+  },
+  "cost": {
+    "path": ".runtime/office-reliability/cost-after.json",
+    "sha256": "cdf8113f446f47f95254a3a83eab8dd107dda176df542ecf57eb042c73dfe8eb",
+    "nearCapacity": {
+      "discovery": {
+        "bytes": 6258,
+        "commands": 18
+      },
+      "enterFour": {
+        "bytes": 3500,
+        "commands": 8
+      },
+      "walkForty": {
+        "bytes": 35000,
+        "commands": 80
+      }
+    },
+    "scope": "Loopback command/wire counts reproduce PR394; latency is not production performance."
+  },
+  "review": "No remaining required findings after historical screening migration, current-main integration and documentation corrections. Independent exact historical checkpoint reproduction succeeds.",
+  "priorAttempts": "Interrupted full during preview (cause unproven); deliberately stopped second full for disk pressure; third failed rail-navigation with connection-loss gate and two503s, shared not run. Unchanged rail retry passed before complete final run. Next full passed13 experience and20/21 shared, then guest readiness timed out at30s. Guest context explicitly uses the runner60s timeout after initial entry and reload hit its30s default; assertions unchanged. Complete creator journey then passed86.67s. Final base includes PR393 fixtures/docs; application source unchanged. Targeted retry first found missing Chromium cache; prerequisite restored and launch checked. Subsequent full Redis run passed730/731 with creator-transport response timeout; unchanged isolated creator-transport passed6/6, then final full runs one test file at a time. That full attempt passed16 stages and timed out in shared publication after seven shared journeys. Dependencies and browser executable were absent after exit, with no proven causal attribution. Frozen dependencies/browser restored; complete local shared retry cancelled before starting; exact-head hosted shared shards required. All failed/incomplete receipts retained.",
+  "retainedEvidence": [
+    {
+      "path": ".runtime/office-lifecycle/core-current.json",
+      "sha256": "29e16f9c8a5755ae857e2dc585be5b0478f6274db4828999f43b81a527d1e0db"
+    },
+    {
+      "path": ".runtime/office-lifecycle/core-current.log",
+      "sha256": "fe886b722ef1e9581c1d9e1020b395563ca10affd4cff73ffa547facd247fa9b"
+    },
+    {
+      "path": ".runtime/office-lifecycle/focused-final.log",
+      "sha256": "66d51fec40e3b746778289a5f95e489de7fd2d37ea93f567086f7499e24d4dd5"
+    },
+    {
+      "path": ".runtime/office-lifecycle/full-final.json",
+      "sha256": "ea831b1c19cb05026884536b10a1a0c986ceac0cfac8c8d801fb22072b0bcf0e"
+    },
+    {
+      "path": ".runtime/office-lifecycle/full-final.log",
+      "sha256": "9801e80cc8921f54eff32a44e9a07f0e070d64ffed4dfe76d2c4e496fc03f807"
+    },
+    {
+      "path": ".runtime/office-lifecycle/experience-final.json",
+      "sha256": "97481c42908347e14fa13cd7c4921cee8c83729ec3e37e94ff03718cc1d53d07"
+    },
+    {
+      "path": ".runtime/office-lifecycle/shared-final.json",
+      "sha256": "8d5ce6af7047d23da15bb91610666ee5447bb491d1e61e01da7292e666250a23"
+    },
+    {
+      "path": ".runtime/office-lifecycle/independent-review.md",
+      "sha256": "5ca409bce8e9b4a9d5503cfba6356e5a88735be62e71bfa0a14814b05f490e94"
+    },
+    {
+      "path": ".runtime/office-lifecycle/rail-retry.json",
+      "sha256": "03a0712f2374c1c6b1450a4e8d08f776cbbffa2f387ae03910002c4ff7ac6a3d"
+    },
+    {
+      "path": ".runtime/office-lifecycle/full-interrupted.json",
+      "sha256": "cba33f48e569b4ab0c1e9f17bcee7466ebd132606b102d88c346034e142103ae"
+    },
+    {
+      "path": ".runtime/office-lifecycle/full-interrupted.log",
+      "sha256": "7882b1abd87b7797259747e3c2bc901a6b86801be1227bad9cc3e4281c6e6ed3"
+    },
+    {
+      "path": ".runtime/office-lifecycle/full-memory-pressure.json",
+      "sha256": "8dae1eb2bd6d1262ea630b4171d696e8edd576a6d207045d389e7c1e44369166"
+    },
+    {
+      "path": ".runtime/office-lifecycle/full-memory-pressure.log",
+      "sha256": "137e643e953ce9b288ad6fa827763c185eaf6ff22c9fe1851cba3b63cba15874"
+    },
+    {
+      "path": ".runtime/office-lifecycle/full-rail-failed.json",
+      "sha256": "898a3cd70f5fa0bd8a2cbabe9a4d69a4904f5e3ad33689818112f88dd9e754b5"
+    },
+    {
+      "path": ".runtime/office-lifecycle/full-rail-failed.log",
+      "sha256": "484a02182d59ac93fdbb437e67a8d51b7ba91bafe076320a56b5ab43bce5de3a"
+    },
+    {
+      "path": ".runtime/office-lifecycle/experience-rail-failed.json",
+      "sha256": "a3bd321236375c180ed18913d6b78231c6271f39febece1e3622cb3e8488fc0d"
+    },
+    {
+      "path": ".runtime/office-lifecycle/rail-connection-loss.png",
+      "sha256": "58bd9ca0e8b608f0e6ddd2315b80acd8829b537a07936c02988ab36cf50ee698"
+    },
+    {
+      "path": ".runtime/office-lifecycle/full-creator-failed.json",
+      "sha256": "454a0691bc1fdb873c8aff35ede8d8c8d6138b517dbe4d5d8fddf84288bc2ba1"
+    },
+    {
+      "path": ".runtime/office-lifecycle/full-creator-failed.log",
+      "sha256": "d073f3cca6018e50233ef6b869e67385bd063a1c1d6041439e0767adefb28a76"
+    },
+    {
+      "path": ".runtime/office-lifecycle/shared-creator-failed.json",
+      "sha256": "f315eaaf4864447412a5e1357feb07060eb63bea0c6b9843f55fed409060c0ce"
+    },
+    {
+      "path": ".runtime/office-lifecycle/experience-passed-before-creator.json",
+      "sha256": "eaf5b2560c80bdeeea411197f617496be853085ad028d153cb901999052187ff"
+    },
+    {
+      "path": ".runtime/office-lifecycle/creator-join-timeout.png",
+      "sha256": "faf6d1e60bb9f55f9fcc48a6a97054917e228c81aa0020ba8b05c2c3a1fcca30"
+    },
+    {
+      "path": ".runtime/office-lifecycle/creator-retry.log",
+      "sha256": "834c7158e66e4a97d60ccbe69a4bae80b064101064f233839ccf884cde552a24"
+    },
+    {
+      "path": ".runtime/office-lifecycle/creator-final.log",
+      "sha256": "43ec4ce856f4df3f61c3ee781bd6658969c0e96980d6d8c90727fc0452e5fa45"
+    },
+    {
+      "path": ".runtime/office-lifecycle/creator-final.json",
+      "sha256": "eb5ec9dbceb03eb611a9244872c78b520b9f08ac29236a941b2cfe72a47d8178"
+    },
+    {
+      "path": ".runtime/office-lifecycle/creator-launch-failed.json",
+      "sha256": "c167af4cb0d1b3e9774c97c7fb637af3039b3f1973a24769056d83d1a9383544"
+    },
+    {
+      "path": ".runtime/office-lifecycle/creator-reload-failed.json",
+      "sha256": "25598af8bfa20f851591e4fd31bd857c00d53d243d7df3c08df3c20e09f63b18"
+    },
+    {
+      "path": ".runtime/office-lifecycle/creator-reload-failed.log",
+      "sha256": "900424c9125d2483b6adf9cdee740b952a2c7d614648ca86c7a45f31350332c3"
+    },
+    {
+      "path": ".runtime/office-lifecycle/office-named-before-final-base.json",
+      "sha256": "bb927ee28537aecb6895f6588c93021dc1d8d738d4ff06fc98e102d681ad8bee"
+    },
+    {
+      "path": ".runtime/office-lifecycle/full-transport-failed.json",
+      "sha256": "30e5cb0e1f787be04023a119efe128735da46e6172818457bf51202355dfe8de"
+    },
+    {
+      "path": ".runtime/office-lifecycle/full-transport-failed.log",
+      "sha256": "2eb09ad4f54be3155fe72c16768a653602ce80e2b706687e4dd2e6b842f30401"
+    },
+    {
+      "path": ".runtime/office-lifecycle/creator-transport-retry.log",
+      "sha256": "6360758166d69ef27ddcd8b082c1e156c9bae86ac83974024e276fc80df2d6fb"
+    },
+    {
+      "path": ".runtime/office-lifecycle/full-shared-timeout.json",
+      "sha256": "ea831b1c19cb05026884536b10a1a0c986ceac0cfac8c8d801fb22072b0bcf0e"
+    },
+    {
+      "path": ".runtime/office-lifecycle/full-shared-timeout.log",
+      "sha256": "9801e80cc8921f54eff32a44e9a07f0e070d64ffed4dfe76d2c4e496fc03f807"
+    },
+    {
+      "path": ".runtime/office-lifecycle/shared-timeout.json",
+      "sha256": "8d5ce6af7047d23da15bb91610666ee5447bb491d1e61e01da7292e666250a23"
+    },
+    {
+      "path": ".runtime/office-lifecycle/shared-missing-browser.json",
+      "sha256": "783022b423d1b17e96e217f3d5ef76ff579eb01404d00237681dd2b2a837ea14"
+    },
+    {
+      "path": ".runtime/office-lifecycle/shared-missing-browser.log",
+      "sha256": "7aef40b8aeb13b7dfd904e563062201bab369d7e2977b3ae555f6d9cd9fe74b4"
+    },
+    {
+      "path": ".runtime/office-lifecycle/doctor-restored.log",
+      "sha256": "f948b579fc0edb6207695b599fc3861e62f95ea0f12c7fa124794303057afea5"
+    },
+    {
+      "path": ".runtime/office-lifecycle/dependencies-restored.log",
+      "sha256": "781ffe5228b27cf0c0ecedfc6965ff8cd6c7d55a3f87aaa0ca2284b18885ce73"
+    }
+  ],
+  "delivery": "Pending signed commit, hosted checks and authorized landing; local success is not merge/deployment proof."
+}

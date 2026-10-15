@@ -122,25 +122,41 @@ export function createScreenings({ players, inVenue, grants: listed = [], change
       || !Number.isFinite(saved.savedAt) || saved.savedAt < 0 || !Array.isArray(saved.venues) || saved.venues.length !== Object.keys(SCREENING_VENUES).length
       || !Array.isArray(saved.receipts) || saved.receipts.length > SCREENING_RECEIPTS) throw new Error('Invalid screenings');
     const next = new Map();
-    for (const item of saved.venues) {
-      if (!exactly(item, VIEW_FIELDS) || !Object.hasOwn(SCREENING_VENUES, item.venueId) || next.has(item.venueId) || !SCREENING_STATUSES.includes(item.status)
+    let retiredFixture = false;
+    const validateTimeline = item => {
+      if (!exactly(item, VIEW_FIELDS) || !Object.hasOwn(SCREENING_VENUES, item.venueId) || !SCREENING_STATUSES.includes(item.status)
         || !Number.isSafeInteger(item.revision) || item.revision < 0) throw new Error('Invalid screening');
       if (item.status === 'stopped') {
         if (JSON.stringify(item) !== JSON.stringify(stopped(item.venueId, item.revision))) throw new Error('Invalid stopped screening');
       } else {
         const media = SCREENING_MEDIA[item.mediaId];
-        if (!Object.hasOwn(SCREENING_MEDIA, item.mediaId) || !media.venues.includes(item.venueId) || item.durationMs !== media.durationMs
+        // Before bundled playback, this fixture id described a 12-second placeholder.
+        // Recognize only that exact contract; never accept arbitrary media/durations.
+        const historical = item.mediaId === 'ipic-fixture-v1' && item.durationMs === 12_000 && media?.durationMs === 30_000;
+        if (!Object.hasOwn(SCREENING_MEDIA, item.mediaId) || !media.venues.includes(item.venueId) || (!historical && item.durationMs !== media.durationMs)
           || !Number.isFinite(item.positionMs) || item.positionMs < 0 || item.positionMs > item.durationMs || !Number.isFinite(item.anchorServerTimeMs) || item.anchorServerTimeMs < 0
           || typeof item.screeningId !== 'string' || !/^[a-z0-9_-]{1,128}$/i.test(item.screeningId)
           || !(item.hostId === null && item.status !== 'playing' || typeof item.hostId === 'string' && USER.test(item.hostId))
           || item.status === 'ended' && item.positionMs !== item.durationMs) throw new Error('Invalid screening timeline');
+        retiredFixture ||= historical;
       }
+    };
+    for (const item of saved.venues) {
+      validateTimeline(item);
+      if (next.has(item.venueId)) throw new Error('Duplicate screening venue');
       next.set(item.venueId, { ...item });
     }
     for (const item of saved.receipts) {
       if (!exactly(item, ['key', 'digest', 'reply']) || typeof item.key !== 'string' || item.key.length > 512 || !/^[a-f0-9]{64}$/.test(item.digest)
         || !exactly(item.reply, ['ok', 'screening']) || item.reply.ok !== true || !exactly(item.reply.screening, [...VIEW_FIELDS, 'epoch'])) throw new Error('Invalid screening receipt');
+      const { epoch: receiptEpoch, ...timeline } = item.reply.screening;
+      if (receiptEpoch !== saved.epoch) throw new Error('Invalid screening receipt epoch');
+      validateTimeline(timeline);
     }
+    // The old clip cannot resume as different media. Rotate the epoch only after
+    // validating everything, including old replies retained by a stopped venue.
+    // Office visits and all other world state remain untouched; retries are stale.
+    if (retiredFixture) return { epoch: randomId(), venues: fresh(new Map([...next].map(([id, entry]) => [id, entry.revision + 1]))), receipts: [] };
     if (time - saved.savedAt > SCREENING_RESTORE_GRACE_MS) for (const entry of next.values()) if (entry.status === 'playing') pause(entry, saved.savedAt);
     return { epoch: saved.epoch, venues: next, receipts: structuredClone(saved.receipts) };
   }
