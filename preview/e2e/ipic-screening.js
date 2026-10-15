@@ -34,7 +34,9 @@ async (host, viewer) => {
   checks.push('host sees Start film inside IPIC after the server reported canHost');
   await host.locator('#ipic-screening [data-control="host-start"]').click();
   await host.waitForFunction(() => window.__riverScreening().state === 'playing' && window.__riverScreening().currentTime > 0.3, null, { timeout: 30000 });
-  checks.push('host started the fixture and its own video element is playing');
+  const film = await host.evaluate(() => window.__riverMultiplayer().snapshot.screenings.find(item => item.venueId === 'ipic')?.mediaId);
+  check(film === 'ipic-original-v1', `Start plays the approved short by default, not ${film}`);
+  checks.push(`host started ${film} and its own video element is playing`);
 
   await host.waitForTimeout(2500);
   await enterIpic(viewer);
@@ -83,7 +85,7 @@ async (host, viewer) => {
   if (refused) { check(refused.error === 'screening_host_required', `viewer transport pause refused: ${JSON.stringify(refused)}`); checks.push('a direct transport pause from the viewer is refused by the server'); }
 
   // Stale and replayed playback (#368), as real transport commands from the host's page. The
-  // host stops and starts the film again, so the step has the whole 30 s fixture even when a
+  // host stops and starts the film again, so the step has the whole film even when a
   // loaded machine paused late. A resent start applies once (twice would restart the film);
   // a stale revision, an earlier epoch and a reused operation id with another action are
   // refused; neither film rewinds, restarts or pauses meanwhile.
@@ -123,9 +125,35 @@ async (host, viewer) => {
 
 
   await viewer.locator('#ipic-screening [data-control="transcript"]').click();
-  check(await viewer.evaluate(() => !document.querySelector('.ipic-screening-transcript').hidden && document.querySelector('.ipic-screening-transcript').textContent.includes('test pattern')), 'transcript readable');
+  // The panel shows the playing film's own transcript (the approved short by default, #365).
+  check(await viewer.evaluate(async () => {
+    const { SCREENING_MEDIA } = await import('/src/screening-contract.js'), panel = document.querySelector('.ipic-screening-transcript');
+    const film = SCREENING_MEDIA[window.__riverMultiplayer().snapshot.screenings.find(item => item.venueId === 'ipic')?.mediaId];
+    return Boolean(film) && !panel.hidden && film.transcript.every(line => panel.textContent.includes(line));
+  }), 'transcript readable');
   check(await viewer.evaluate(() => document.querySelector('#ipic-screening [data-control="captions"]').getAttribute('aria-pressed') === 'true'), 'captions on by default');
   checks.push('captions on by default and the transcript opens without audio');
+
+  // Another allowlisted film brings its own captions and transcript: the host starts the labelled
+  // fixture by command, and the viewer's caption track and transcript follow it (#365 review).
+  const current = await host.evaluate(() => window.__riverMultiplayer().snapshot.screenings.find(item => item.venueId === 'ipic'));
+  const swapBase = { type: 'screening', venueId: 'ipic', epoch: current.epoch };
+  const halted = await hostCommand({ ...swapBase, action: 'stop', expectedRevision: current.revision, operationId: 'journey-stop-002' });
+  const fixture = await hostCommand({ ...swapBase, action: 'start', mediaId: 'ipic-fixture-v1', expectedRevision: halted?.screening?.revision, operationId: 'journey-start-02' });
+  check(fixture?.ok === true, `host started the fixture by command: ${JSON.stringify(fixture)}`);
+  await viewer.waitForFunction(revision => window.__riverScreening().revision === revision && window.__riverScreening().mediaId === 'ipic-fixture-v1', fixture.screening.revision, { timeout: 15000 });
+  // The panel follows on its next frame; a slow software-rendered frame is allowed up to 10 s.
+  await viewer.waitForFunction(() => document.querySelector('#ipic-screening video track')?.getAttribute('src')?.endsWith('fixture-v1.en.vtt'), null, { timeout: 10000 }).catch(() => {});
+  const text = await viewer.evaluate(async () => {
+    const { SCREENING_MEDIA } = await import('/src/screening-contract.js'), panel = document.querySelector('.ipic-screening-transcript');
+    return {
+      tracks: [...document.querySelectorAll('#ipic-screening video track')].map(track => track.getAttribute('src')),
+      transcript: SCREENING_MEDIA['ipic-fixture-v1'].transcript.every(line => panel.textContent.includes(line)),
+      stale: SCREENING_MEDIA['ipic-original-v1'].transcript.some(line => panel.textContent.includes(line)),
+    };
+  });
+  check(text.tracks.length === 1 && text.tracks[0] === '/assets/ipic/screening/fixture-v1.en.vtt' && text.transcript && !text.stale, `captions and transcript follow the playing film: ${JSON.stringify(text)}`);
+  checks.push('another film (the fixture, by command) brings its own captions and transcript');
 
   await openHudSpace(viewer, 'explore-section');
   const other = await viewer.evaluate(() => [...document.querySelectorAll('#destination option')].map(option => option.textContent).find(label => label && label !== 'IPIC Theaters'));

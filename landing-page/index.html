@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="/landing-page/styles.css">
-  <script src="/landing-page/entry.js" defer></script>
+  <script type="module" src="/landing-page/entry.js"></script>
 </head>
 <body>
   <svg class="icon-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
@@ -36,7 +36,7 @@
         <h1 id="welcome">TypeSafe <em>Place</em></h1>
         <p class="hero-tagline">A place that feels like you.</p>
         <p class="intro">Find your people. Express yourself. Explore a shared little town with familiar streets, unexpected encounters, and room to be a little more you.</p>
-        <div class="hero-actions"><a class="button" href="/play">Join the waitlist <svg class="icon" aria-hidden="true"><use href="#arrow"/></svg></a><a class="button secondary" href="#world">Explore the world <svg class="icon" aria-hidden="true"><use href="#compass"/></svg></a><a class="button secondary mac-download" href="https://github.com/BunsDev/river-oaks/releases/download/v0.1.6/TypeSafe-Place-0.1.6-macOS-arm64.zip" aria-label="Download for Mac, Apple silicon, version 0.1.6"><svg class="icon apple-icon" aria-hidden="true"><use href="#apple"/></svg><span>Download for Mac<small>Apple silicon · v0.1.6</small></span><svg class="icon" aria-hidden="true"><use href="#arrow"/></svg></a></div>
+        <div class="hero-actions"><a class="button" href="/play"><span class="play-label">Join the waitlist</span> <svg class="icon" aria-hidden="true"><use href="#arrow"/></svg></a><a class="button secondary" href="#world">Explore the world <svg class="icon" aria-hidden="true"><use href="#compass"/></svg></a><a class="button secondary mac-download" href="https://github.com/BunsDev/river-oaks/releases/download/v0.1.6/TypeSafe-Place-0.1.6-macOS-arm64.zip" aria-label="Download for Mac, Apple silicon, version 0.1.6"><svg class="icon apple-icon" aria-hidden="true"><use href="#apple"/></svg><span>Download for Mac<small>Apple silicon · v0.1.6</small></span><svg class="icon" aria-hidden="true"><use href="#arrow"/></svg></a></div>
         <p class="access-note"><strong>Waitlist only</strong><span>Email or GitHub · Approval or invite required</span></p>
       </div>
     </section>
@@ -72,23 +72,23 @@
   </dialog>
   <template id="panel-avatars">
     <img class="detail-art" src="/landing-page/assets/pantheon-hero.jpg" width="1621" height="591" style="--focus: 58%" alt="Friends in laurel crowns, gold armor and blossom-trimmed gowns">
-    <div class="detail-copy"><p class="eyebrow">Avatars</p><h2 id="detail-title" tabindex="-1">From street style to starlight.</h2><p>Choose a character and find your look. A little realistic, a little fantastical, entirely your kind of energy.</p><a class="button" href="/play">Join the waitlist <svg class="icon" aria-hidden="true"><use href="#arrow"/></svg></a><p class="access-note"><strong>Waitlist only</strong><span>Email or GitHub · Approval or invite required</span></p></div>
+    <div class="detail-copy"><p class="eyebrow">Avatars</p><h2 id="detail-title" tabindex="-1">From street style to starlight.</h2><p>Choose a character and find your look. A little realistic, a little fantastical, entirely your kind of energy.</p><a class="button" href="/play"><span class="play-label">Join the waitlist</span> <svg class="icon" aria-hidden="true"><use href="#arrow"/></svg></a><p class="access-note"><strong>Waitlist only</strong><span>Email or GitHub · Approval or invite required</span></p></div>
   </template>
   <template id="panel-world">
     <img class="detail-art" src="/landing-page/assets/pantheon-hero.jpg" width="1621" height="591" style="--focus: 100%" alt="Palm lights, terraces and a pink neon butterfly above the district">
-    <div class="detail-copy"><p class="eyebrow">World</p><h2 id="detail-title" tabindex="-1">Places made for belonging.</h2><p>Walk the tree-lined streets of a shared town inspired by Houston’s River Oaks District. Peek inside the shops, take the scenic route, and find your favorite corner.</p><a class="button" href="/play">Join the waitlist <svg class="icon" aria-hidden="true"><use href="#arrow"/></svg></a><p class="access-note"><strong>Waitlist only</strong><span>Email or GitHub · Approval or invite required</span></p></div>
+    <div class="detail-copy"><p class="eyebrow">World</p><h2 id="detail-title" tabindex="-1">Places made for belonging.</h2><p>Walk the tree-lined streets of a shared town inspired by Houston’s River Oaks District. Peek inside the shops, take the scenic route, and find your favorite corner.</p><a class="button" href="/play"><span class="play-label">Join the waitlist</span> <svg class="icon" aria-hidden="true"><use href="#arrow"/></svg></a><p class="access-note"><strong>Waitlist only</strong><span>Email or GitHub · Approval or invite required</span></p></div>
   </template>
   <template id="panel-community">
     <img class="detail-art" src="/landing-page/assets/pantheon-hero.jpg" width="1621" height="591" style="--focus: 70%" alt="Friends leaning in close on a warm evening">
-    <div class="detail-copy"><p class="eyebrow">Community</p><h2 id="detail-title" tabindex="-1">A hello can go a long way.</h2><p>Share the streets with real players. Chat with friends, find a meeting spot, and see where the evening takes you.</p><a class="button" href="/play">Join the waitlist <svg class="icon" aria-hidden="true"><use href="#arrow"/></svg></a><p class="access-note"><strong>Waitlist only</strong><span>Email or GitHub · Approval or invite required</span></p></div>
+    <div class="detail-copy"><p class="eyebrow">Community</p><h2 id="detail-title" tabindex="-1">A hello can go a long way.</h2><p>Share the streets with real players. Chat with friends, find a meeting spot, and see where the evening takes you.</p><a class="button" href="/play"><span class="play-label">Join the waitlist</span> <svg class="icon" aria-hidden="true"><use href="#arrow"/></svg></a><p class="access-note"><strong>Waitlist only</strong><span>Email or GitHub · Approval or invite required</span></p></div>
   </template>
   <template id="panel-events">
     <img class="detail-art" src="/landing-page/assets/pantheon-hero.jpg" width="1621" height="591" style="--focus: 84%" alt="Friends settling in for an evening together">
-    <div class="detail-copy"><p class="eyebrow">Events</p><h2 id="detail-title" tabindex="-1">Make an evening of it.</h2><p>Find a shared gathering, meet up with friends, or simply see who’s around. A little company can turn an ordinary stroll into a favorite memory.</p><a class="button" href="/play">Join the waitlist <svg class="icon" aria-hidden="true"><use href="#arrow"/></svg></a><p class="access-note"><strong>Waitlist only</strong><span>Email or GitHub · Approval or invite required</span></p></div>
+    <div class="detail-copy"><p class="eyebrow">Events</p><h2 id="detail-title" tabindex="-1">Make an evening of it.</h2><p>Find a shared gathering, meet up with friends, or simply see who’s around. A little company can turn an ordinary stroll into a favorite memory.</p><a class="button" href="/play"><span class="play-label">Join the waitlist</span> <svg class="icon" aria-hidden="true"><use href="#arrow"/></svg></a><p class="access-note"><strong>Waitlist only</strong><span>Email or GitHub · Approval or invite required</span></p></div>
   </template>
   <template id="panel-create">
     <img class="detail-art" src="/landing-page/assets/pantheon-hero.jpg" width="1621" height="591" style="--focus: 40%" alt="The skyline and palm-lit terraces behind the gathering">
-    <div class="detail-copy"><p class="eyebrow">Create</p><h2 id="detail-title" tabindex="-1">A world made with imagination.</h2><p>Spaces with personality, small details worth noticing, and room for new ideas. Building is currently reserved for Jevica, the town’s admin; approved residents can explore and enjoy the shared spaces.</p><a class="button" href="/play">Join the waitlist <svg class="icon" aria-hidden="true"><use href="#arrow"/></svg></a><p class="access-note"><strong>Waitlist only</strong><span>Email or GitHub · Approval or invite required</span></p></div>
+    <div class="detail-copy"><p class="eyebrow">Create</p><h2 id="detail-title" tabindex="-1">A world made with imagination.</h2><p>Spaces with personality, small details worth noticing, and room for new ideas. Building is currently reserved for Jevica, the town’s admin; approved residents can explore and enjoy the shared spaces.</p><a class="button" href="/play"><span class="play-label">Join the waitlist</span> <svg class="icon" aria-hidden="true"><use href="#arrow"/></svg></a><p class="access-note"><strong>Waitlist only</strong><span>Email or GitHub · Approval or invite required</span></p></div>
   </template>
 </body>
 </html>

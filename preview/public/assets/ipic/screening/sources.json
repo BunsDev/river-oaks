@@ -1,35 +1,90 @@
 {
-  "id": "ipic-fixture-v1",
-  "label": "Fixture clip (test pattern)",
-  "fixture": true,
-  "provenance": "Synthetic, generated locally by scripts/make-screening-fixture.mjs with ffmpeg version 9.0.1 Copyright (c) 2000-2026 the FFmpeg developers: lavfi testsrc and a sine beep. No source footage, voices, music, artwork or likeness.",
-  "license": "Original synthetic test signal; no third-party content.",
-  "approval": "Test fixture only. Not the approved short (#365).",
-  "transcript": [
-    "Fixture clip: a test pattern for shared playback.",
-    "A tone sounds once each second.",
-    "This is not the IPIC screening short."
-  ],
-  "files": [
+  "media": [
     {
-      "path": "preview/public/assets/ipic/screening/fixture-v1.webm",
-      "type": "video/webm; codecs=\"vp9, opus\"",
-      "bytes": 669050,
-      "sha256": "69b0cc60d14ada21c913e978a32347406b99c3005e496e98c251885ad96bd0e6",
-      "durationMs": 30008
+      "id": "ipic-original-v1",
+      "label": "River Oaks: an evening at the office and IPIC",
+      "fixture": false,
+      "provenance": "Runtime capture of River Oaks only, from commit 7712634b4a4b73a993684541887850af6f128fa7: headless Chromium 156.0.8078.4 with Metal ANGLE (ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)), recorded 2026-10-15T10:20:16.541Z by scripts/ipic-short/capture.mjs and cut by scripts/ipic-short/cut.mjs. The default (legacy) office layout, synthetic fixture identities, an idle IPIC screen. No external images, music, voices, generated footage or new likenesses; characters appear as committed at that revision. Characters: Jevica is preview/public/assets/characters/jevica.glb (sha256 722b96e2…, CC0-1.0, MakeHuman system assets, marked fictional_generic_appearance) in the committed Jevica costume; the seated friend and the IPIC staff are the committed CC0 resident avatars. Street geometry is derived from OpenStreetMap; the game's \"© OpenStreetMap contributors · ODbL · Artistic interpretation\" credit stays in frame in the street shots and must stay in any recut. The audio is a silent stereo track (ffmpeg anullsrc). Captions were written for this cut.",
+      "license": "The project's own runtime capture. Jevica's in-game appearance, the IPIC lounge's floral wall (a texture from venue photo IMG_9761.jpg) and lettering, and the visible signage are shown with Val Alexander's approval (2026-10-15). Street geometry © OpenStreetMap contributors, ODbL; the credit stays in frame.",
+      "approval": "Approved by Val Alexander on 2026-10-15 (#365): candidate 1 as cut, including the items listed under approvedItems.",
+      "approvedItems": [
+        "Lounge shot (about 0:34-0:39): the floral wall is a texture cut from venue photo IMG_9761.jpg (preview/src/ipic-interior.js), and the repeated \"I'm Busy for the rest of my Life.\" wall text reproduces the venue's own lettering. Approved by Val Alexander on 2026-10-15 as shown.",
+        "Reception and return shots: real marks on the signage (\"RIVER OAKS DISTRICT\", \"IPIC & THE TUCK ROOM\") and photographed street frontages. Approved by Val Alexander on 2026-10-15 as shown.",
+        "Jevica's in-game appearance (preview/public/assets/characters/jevica.glb, CC0-1.0, a fictional generic appearance) in public media. Approved by Val Alexander on 2026-10-15."
+      ],
+      "transcript": [
+        "Westheimer Road, River Oaks.",
+        "Jevica’s office, by invitation.",
+        "Room for good work.",
+        "A scene idea, saved privately.",
+        "Then out, to meet a friend at IPIC.",
+        "Past the lounge.",
+        "Two seats, one screen.",
+        "Then back to the street."
+      ],
+      "files": [
+        {
+          "path": "preview/public/assets/ipic/screening/ipic-original-v1.webm",
+          "type": "video/webm; codecs=\"vp9, opus\"",
+          "bytes": 9283827,
+          "sha256": "ec1cf538dea2cb42984c47ccab35d7a2d93afc5528635f0e86da264b74313ff9",
+          "durationMs": 52563
+        },
+        {
+          "path": "preview/public/assets/ipic/screening/ipic-original-v1.mp4",
+          "type": "video/mp4; codecs=\"avc1.4D401F, mp4a.40.2\"",
+          "bytes": 13395283,
+          "sha256": "4ff75438b9e8a5d165fbd8952b6518ad92743e235ababe1288431f093d832faf",
+          "durationMs": 52555
+        },
+        {
+          "path": "preview/public/assets/ipic/screening/ipic-original-v1.en.vtt",
+          "type": "text/vtt",
+          "bytes": 486,
+          "sha256": "4bb1df707bc4feac95f1ab95da1e64b7fa4baae920ec36b9ca975cad7c89c0b6"
+        },
+        {
+          "path": "preview/public/assets/ipic/screening/ipic-original-v1-poster.jpg",
+          "type": "image/jpeg",
+          "bytes": 93773,
+          "sha256": "85e4f31b273c572644f0fe795dcd844ea4fb0cef86dee4aa0657caf8001ac94a"
+        }
+      ]
     },
     {
-      "path": "preview/public/assets/ipic/screening/fixture-v1.mp4",
-      "type": "video/mp4; codecs=\"avc1.42E01E, mp4a.40.2\"",
-      "bytes": 911982,
-      "sha256": "f6ccc3a6b1757a55413c7e43edc71792f88f60c2a9b67896871fe162e52c7826",
-      "durationMs": 30000
-    },
-    {
-      "path": "preview/public/assets/ipic/screening/fixture-v1.en.vtt",
-      "type": "text/vtt",
-      "bytes": 226,
-      "sha256": "e3f926e05cf4d98559638ef475ff2d4183f894709204a535b83aca445c134bd1"
+      "id": "ipic-fixture-v1",
+      "label": "Fixture clip (test pattern)",
+      "fixture": true,
+      "provenance": "Synthetic, generated locally by scripts/make-screening-fixture.mjs with ffmpeg version 9.0.1 Copyright (c) 2000-2026 the FFmpeg developers: lavfi testsrc and a sine beep. No source footage, voices, music, artwork or likeness.",
+      "license": "Original synthetic test signal; no third-party content.",
+      "approval": "Test fixture only. Not the approved short (#365).",
+      "transcript": [
+        "Fixture clip: a test pattern for shared playback.",
+        "A tone sounds once each second.",
+        "This is not the IPIC screening short."
+      ],
+      "files": [
+        {
+          "path": "preview/public/assets/ipic/screening/fixture-v1.webm",
+          "type": "video/webm; codecs=\"vp9, opus\"",
+          "bytes": 669050,
+          "sha256": "69b0cc60d14ada21c913e978a32347406b99c3005e496e98c251885ad96bd0e6",
+          "durationMs": 30008
+        },
+        {
+          "path": "preview/public/assets/ipic/screening/fixture-v1.mp4",
+          "type": "video/mp4; codecs=\"avc1.42E01E, mp4a.40.2\"",
+          "bytes": 911982,
+          "sha256": "f6ccc3a6b1757a55413c7e43edc71792f88f60c2a9b67896871fe162e52c7826",
+          "durationMs": 30000
+        },
+        {
+          "path": "preview/public/assets/ipic/screening/fixture-v1.en.vtt",
+          "type": "text/vtt",
+          "bytes": 226,
+          "sha256": "e3f926e05cf4d98559638ef475ff2d4183f894709204a535b83aca445c134bd1"
+        }
+      ]
     }
   ]
 }
