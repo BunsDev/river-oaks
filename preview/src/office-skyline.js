@@ -27,12 +27,14 @@ export function officeSkylineSize({ scale = 1, maxCubemapSize = Infinity } = {})
 
 // `hide` is drawn neither in the capture nor changed afterwards. The eye stands inside the
 // host building (the mapped tower is not yet raised to the penthouse), so for the capture
-// only: none of the host's own facade instances (by building index) are drawn, at any height,
-// since its exterior skin cannot be seen from inside (its floor-line bands below the office
-// floor drew dark rings); its massing (by building id) and anything else standing in its
-// footprint (`hostRing`, [x, z] world corners, 1 m margin), such as a rooftop ornament, are
-// hidden where they reach above the office floor. Lower roofs and every neighbour stay.
-const MARGIN = 1, IDENTITY = new THREE.Matrix4();
+// only: the host's facade instances (by building index) that reach above the office floor, or
+// stand wholly above its lower roof, are not drawn, since the tower's own exterior skin cannot
+// be seen from inside it (its floor-line bands below the office floor drew dark rings). A
+// stepped host's lower wing (parapet within PARAPET of its roof) and street frontage stay. Its
+// massing (by building id) and anything else standing in its footprint (`hostRing`, [x, z]
+// world corners, 1 m margin), such as a rooftop ornament, are hidden where they reach above
+// the office floor. Every neighbour stays.
+const MARGIN = 1, PARAPET = 1.2, IDENTITY = new THREE.Matrix4();
 function insideRing(ring, x, z, margin = MARGIN) {
   let inside = false;
   for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
@@ -57,6 +59,15 @@ export function createOfficeSkyline({ renderer, scene, eye, floorY, hostBuilding
   const ringBounds = hostRing?.length > 2 ? hostRing.reduce((b, [x, z]) => [Math.min(b[0], x), Math.max(b[1], x), Math.min(b[2], z), Math.max(b[3], z)], [Infinity, -Infinity, Infinity, -Infinity]) : null;
   const inFootprint = (x, z) => Boolean(ringBounds) && insideRing(hostRing, x, z);
   const eyeInside = Boolean(ringBounds) && insideRing(hostRing, eye.x, eye.z, 0);
+  // The host's lower roof: the top of its massing that stays below the office floor (a stepped
+  // block's wing). None for a single-mass building, whose whole facade is then skin.
+  function lowerRoof() {
+    let top = -Infinity; const box = new THREE.Box3();
+    if (hostBuildingId) scene.traverseVisible(object => {
+      if (object.isMesh && object.userData.districtBuilding === hostBuildingId && box.setFromObject(object).max.y <= floorY + 0.05) top = Math.max(top, box.max.y);
+    });
+    return top;
+  }
 
   // Host instances that reach above the office floor, as [mesh, index, matrix]. Most of the
   // district is rejected from each instance's translation and bounding reach alone; only
@@ -64,6 +75,7 @@ export function createOfficeSkyline({ renderer, scene, eye, floorY, hostBuilding
   function hostInstances() {
     const found = [], box = new THREE.Box3(), matrix = new THREE.Matrix4(), centre = new THREE.Vector3();
     if (hostBuildingIndex < 0 && !ringBounds) return found;
+    const skinFrom = eyeInside ? lowerRoof() + PARAPET : Infinity;
     scene.traverseVisible(object => {
       if (!object.isInstancedMesh) return;
       const indices = object.userData.buildingIndices, geometry = object.geometry, world = object.matrixWorld, e = object.instanceMatrix.array;
@@ -73,7 +85,11 @@ export function createOfficeSkyline({ renderer, scene, eye, floorY, hostBuilding
       for (let i = 0; i < object.count; i++) {
         const o = i * 16, reach = radius * Math.max(Math.hypot(e[o], e[o + 1], e[o + 2]), Math.hypot(e[o + 4], e[o + 5], e[o + 6]), Math.hypot(e[o + 8], e[o + 9], e[o + 10]));
         const indexed = hostBuildingIndex >= 0 && indices?.[i] === hostBuildingIndex;
-        if (indexed && eyeInside) { object.getMatrixAt(i, matrix); found.push([object, i, matrix.clone()]); continue; }
+        if (indexed && skinFrom < Infinity) {
+          object.getMatrixAt(i, matrix); box.copy(geometry.boundingBox).applyMatrix4(matrix).applyMatrix4(world);
+          if (box.max.y > floorY + 0.05 || box.min.y >= skinFrom) found.push([object, i, matrix.clone()]);
+          continue;
+        }
         centre.set(e[o + 12], e[o + 13], e[o + 14]); if (!plain) centre.applyMatrix4(world);
         if (centre.y + reach <= floorY + 0.05) continue;
         if (!indexed && (!ringBounds || centre.x + reach < ringBounds[0] - MARGIN || centre.x - reach > ringBounds[1] + MARGIN || centre.z + reach < ringBounds[2] - MARGIN || centre.z - reach > ringBounds[3] + MARGIN)) continue;

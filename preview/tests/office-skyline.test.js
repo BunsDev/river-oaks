@@ -130,6 +130,21 @@ test('from inside the host, none of its own facade shows, at any height: its flo
   outside.dispose();
 });
 
+test('a stepped host keeps its lower wing: only the tower above the wing roof is skin the eye stands in', () => {
+  // The Equinox block is a two-storey wing with the tower rising beside it. From the terrace
+  // the wing's parapet is seen from above; the tower's own floor lines never are.
+  const f = district(), ring = [[-30, -30], [30, -30], [30, 30], [-30, 30]], part = new THREE.Object3D(), wingRoof = f.floorY - 14;
+  f.mass.geometry.dispose(); f.mass.geometry = new THREE.BoxGeometry(10, 10, 10); f.mass.position.y = wingRoof - 5; // the wing's massing, top at its roof
+  const parts = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial(), 4);
+  [[wingRoof + 0.5, 1], [f.floorY - 4, 0.14], [f.floorY - 11, 0.6], [2, 4]].forEach(([y, h], i) => { part.position.set(0, y, 19); part.scale.set(8, h, 0.2); part.updateMatrix(); parts.setMatrixAt(i, part.matrix); });
+  parts.userData.buildingIndices = [0, 0, 0, 0]; f.group.add(parts); f.scene.updateMatrixWorld(true);
+  const seen = [], renderer = fakeRenderer(() => seen.push([0, 1, 2, 3].map(i => scaleOf(parts, i) > 0)));
+  const skyline = createOfficeSkyline({ renderer, scene: f.scene, eye: new THREE.Vector3(0, f.floorY + 1.68, 0), floorY: f.floorY, hostBuildingIndex: 0, hostBuildingId: 'host', hostRing: ring, size: 16 });
+  skyline.capture();
+  assert.deepEqual(seen[0], [true, false, false, true], 'the wing parapet and the street frontage stay; the tower floor line and podium cornice go');
+  skyline.dispose();
+});
+
 test('a failed capture restores everything it borrowed and shows no backdrop', () => {
   const f = district(), renderer = fakeRenderer(() => { throw new Error('context lost'); });
   const skyline = createOfficeSkyline({ renderer, scene: f.scene, eye: new THREE.Vector3(0, f.floorY + 1.68, 0), floorY: f.floorY, hostBuildingIndex: 0, hide: [f.stage], size: 16 });
