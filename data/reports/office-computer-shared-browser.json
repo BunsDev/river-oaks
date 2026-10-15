@@ -1,0 +1,20 @@
+{
+  "createdAt": "2026-10-15T01:01:23.106Z",
+  "results": [
+    {
+      "name": "office-computer-shared",
+      "status": "passed",
+      "seconds": 23.054,
+      "result": {
+        "checks": [
+          "A pending collaboration invitation does not permit office entry",
+          "Collaborator cannot see the owner’s private tasks",
+          "Accepted collaborator reads the shared office task",
+          "Shared edits resume on the owner’s computer",
+          "Revocation closes the computer and clears shared task fields",
+          "Revocation clears the shared task list"
+        ]
+      }
+    }
+  ]
+}
