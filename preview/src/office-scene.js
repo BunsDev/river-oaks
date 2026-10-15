@@ -4,7 +4,7 @@ import { buildWorkplaceOffice } from './workplace-office.js';
 import { OFFICE_ROOM, OFFICE_SPAWN, elevatorFrame } from './office-contract.js';
 import { createRemotePlayers } from './remote-players.js';
 import { arrivalCamera, ARRIVAL, OFFICE_FINISH } from './office-arrival-model.js';
-import { buildOfficeArrival } from './office-arrival-architecture.js';
+import { arrivalBehindGlass, buildOfficeArrival } from './office-arrival-architecture.js';
 import { createOfficeWorldScene } from './office-world-scene.js';
 import { officePeerVisible } from './office-world-presentation.js';
 import { buildOfficeGeometry } from './office-penthouse-graybox.js';
@@ -28,6 +28,8 @@ export function createOfficeScene({renderer,host,self,players,reducedMotion=fals
   const layout=officeLayout(self.office?.layout??OFFICE_LAYOUT_LEGACY)??{id:self.office.layout};
   office=buildOfficeGeometry(THREE,layout.id,{buildLegacy:()=>buildWorkplaceOffice(THREE,OFFICE_ROOM)});scene.add(office.object);
   lift=buildOfficeArrival();scene.add(lift.object);
+  // Behind the penthouse glass the lift and lobby would show once the visitor walks.
+  const glass=arrivalBehindGlass(lift,layout.id!==OFFICE_LAYOUT_LEGACY);
   let firstPerson=false;
   actors=createRemotePlayers(scene,host,{snapInitialHeading:true,isVisible:player=>officePlayerVisible(player,self.id,lastPosition,firstPerson,levelId)});
   let started=null,skipped=reducedMotion,lastPosition=[...OFFICE_SPAWN],levelId=self.office?.levelId??null;
@@ -41,7 +43,7 @@ export function createOfficeScene({renderer,host,self,players,reducedMotion=fals
     lastPosition=[...at];
     const activePlayers=allPlayers.filter(p=>p.office?.id===self.office.id);
     actors.sync(activePlayers.map(p=>({...p,position:p.id===self.id?[...at,walking?floor:0]:[...p.office.position,p.office.elevation??0],yaw:p.id===self.id?(walking?yaw:0):p.office.yaw,altitude:0,vehicle:null,sitting:null,interaction:null})),null);
-    lift.update(frame);
+    lift.update(frame);glass.update(frame);
     office.object.visible=walking||['opening','arriving'].includes(frame.phase);
     if(!walking){
       const path=arrivalCamera(elapsed,{aspect:host.clientWidth/Math.max(1,host.clientHeight)});
