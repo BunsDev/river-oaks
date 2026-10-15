@@ -72,8 +72,7 @@ world pool; this cost is included in actual live scene measurements.
 
 ## Evidence and limits
 
-Current delivery baseline is `941dfe6a652cf6b101749172c1735033a4b2b9bf` plus the
-owned patch. Earlier checkpoints in the task ledger refer to older revisions.
+Current integrated product head is `a7b2a996a2e4b77714ca589bcc568bdef75534d7` (signed feature45e064d3 plus current main). Earlier checkpoints in the task ledger refer to older revisions.
 The preserved pre-main-update town and static-office runs are historical evidence,
 not the current live-office performance baseline.
 
@@ -122,22 +121,21 @@ and are reported separately from this roof-only town comparison.
 ## Live office cost and lifecycle
 
 The current Metal run uses the same 800×600/DPR1/Smoothest preset. Each fixed
-outlook sample has 15 frame intervals and 16 submissions. The first visit starts
-at the application default hour17.5; the repeat visit uses hour15 after the
-explicit time reset. Both change to18.5 while inside the office, without leaving
-or capturing a backdrop. The screenshot pairs show the real planted podium and
-current lighting. All ten recorded product source hashes match this patch.
+outlook sample has 15 frame intervals and 16 submissions. The current-main v10 run explicitly sets hour15 for both visits, then changes
+to18.5 while inside the office, without leaving or capturing a backdrop. It
+includes main’s imported desk footprints/geometry and records15 product source hashes. The screenshot pairs show the real planted podium and
+current lighting. All15 recorded product source hashes match the integrated product tree.
 
 | Visit/time | Median whole-frame CPU ms | Median interval ms | Median draws | Median triangles |
 | --- | --- | --- | --- | --- |
-| First /17.5 | 15.0 | 16.7 | 1408 | 4379845 |
-| First /18.5 | 14.6 | 16.7 | 1420 | 4418205 |
-| Repeat /15 | 15.1 | 16.7 | 1402 | 4367922 |
-| Repeat /18.5 | 14.6 | 16.7 | 1411 | 4416691 |
+| First /15 | 13.3 | 16.7 | 1393 | 4366408 |
+| First /18.5 | 12.4 | 16.7 | 1420 | 4418205 |
+| Repeat /15 | 13.6 | 16.7 | 1384 | 4364894 |
+| Repeat /18.5 | 12.8 | 16.7 | 1403 | 4415200 |
 
 The live presentation allocates zero cubemap bytes/peak bytes and masks177 host
 instances/3 host meshes per ordinary draw. Renderer allocations observed across
-these samples were553–577 geometries and155–156 textures; they are persistent
+these samples were578 geometries and155–156 textures; they are persistent
 allocation counts, not total GPU memory. The five office point lights are included
 in this workload. These short samples do not establish sustained or mobile GPU
 performance, nor are they a matched speed comparison with the old static backdrop.
@@ -146,3 +144,39 @@ position unchanged while selecting the view, restore walking on Escape and dispo
 on departure. Page errors/reloads: zero. Current-light ownership, moving-actor
 exclusion from static filtering and restoration on render errors have focused
 regressions and independent review.
+
+## Delivery verification
+
+The full local profile passed all 18 components on integration9a4404da with the
+final startup harness: dependency audit, tooling112, preview3308 passed with one
+skip/one TODO, Redis-server788 (no skips), desktop69, build, Ruff, Python141
+(66 warnings), demo/expected verifier, secret/history, security-browser,
+reflections, all13 experience journeys, all21 shared scenarios and IPIC screening.
+Receipt: `.runtime/green-roofs-full-final-passed.json`; browser reports:
+`.runtime/green-roofs-full-final-{experience,shared}.json`. The owned disposable
+loopback Redis process terminated after the run.
+
+The first two full runs failed only the second browser's spatial startup; their
+receipts/reports/images remain under `.runtime/green-roofs-full-{first,second}-*`.
+A diagnostic cold peer completed loading at32.273s, exceeding its implicit30s
+Playwright budget. The primary runner already allowed60s. Both pages now receive
+that same explicit startup budget, after connection/player/render/assets readiness;
+later peer convergence limits and all movement/server assertions remain unchanged.
+The final full run passed all14 spatial routes, clearances and reconnect checks.
+Original failure causes beyond this reproduced timeout mismatch are not claimed.
+
+After that frozen full run, current main2d7a1ef3 was integrated cleanly, including
+Safari avatar decoding and IPIC house-light/exit UX. Those incoming changes retain
+the live skyline and world-owned lighting; affected focused tests and build are
+verified separately. Final hosted CI on the pushed merge head remains the landing
+gate. This is not deployment or human approval.
+
+Actual office evidence is
+`output/playwright/green-roofs-office-v10-current-main/`: two real portal routes,
+fixed-view day/dusk images and costs, current lighting, walking reset and departure
+cleanup. Errors/reloads and cubemap bytes are zero. All15 recorded product source
+hashes matched9a4404da; the later main integration changes the IPIC light intensity
+line in main.js, so v10 is evidence of its recorded revision. Earlier v7/v9 runs
+remain historical evidence with their recorded scope. Native Unreal, live auth,
+human accessibility, user visual approval and sustained/mobile GPU certification
+remain outside these checks.

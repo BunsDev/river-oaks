@@ -8,9 +8,9 @@ import { startBrowserFixture } from './fixture-server.js';
 import { holdBrowserLock } from '../../scripts/browser-lock.mjs';
 const release = await holdBrowserLock('Green roofs actual office and terrace');
 let fixture, browser;
-const output = 'output/playwright/green-roofs-office-v9-live-cost';
+const output = 'output/playwright/green-roofs-office-v10-current-main';
 await mkdir(output, { recursive: true });
-const sourceNames=['office-skyline.js','office-world-scene.js','office-world-presentation.js','office-layouts.js','main.js','green-roofs.js','roof-grasses.js','roof-field-mesh.js','roof-field-boundaries.js','hermes-roof-surface.js'];
+const sourceNames=['office-skyline.js','office-world-scene.js','office-world-presentation.js','office-layouts.js','office-penthouse-graybox.js','office-contract.js','office-arrival-model.js','district.js','reference-facades.js','main.js','green-roofs.js','roof-grasses.js','roof-field-mesh.js','roof-field-boundaries.js','hermes-roof-surface.js'];
 const sourceHashes=async()=>Object.fromEntries(await Promise.all(sourceNames.map(async name=>[name,createHash('sha256').update(await readFile('preview/src/'+name)).digest('hex')])));
 const sources=await sourceHashes();
 try {
@@ -56,6 +56,7 @@ try {
         await page.waitForFunction(() => document.querySelector('#office-visit')?.dataset.phase === 'office' && document.querySelector('#office-visit')?.open);
         heading = 0; at = await position();
       }
+      await page.locator('#sun-hour').evaluate(input => {input.value='15';input.dispatchEvent(new Event('input',{bubbles:true}));});
       await page.waitForFunction(() => window.__riverOffice()?.skyline?.state === 'live', null, { timeout: 300000 });
       const captured = await page.evaluate(() => window.__riverOffice().skyline);
       check(captured.bytes === 0 && captured.peakBytes === 0, 'live exterior allocates no cubemap targets');
@@ -86,7 +87,7 @@ try {
         const samples=[];let prior=performance.now();for(let i=0;i<16;i++){await new Promise(requestAnimationFrame);const now=performance.now();samples.push({intervalMs:now-prior,cpuMs:window.__riverOffice().skyline.lastRenderMs,render:JSON.parse(stats.renderStats),quality:JSON.parse(stats.quality)});prior=now;}
         return {camera,samples};
       });
-      captures.push({ cycle, captured, later, outlook, daylightCost, duskCost, diagnostics, position: await position() });
+      captures.push({ cycle, daylightHour:15, duskHour:18.5, captured, later, outlook, daylightCost, duskCost, diagnostics, position: await position() });
       await page.locator('#sun-hour').evaluate(input => {input.value='15';input.dispatchEvent(new Event('input',{bubbles:true}));});
       await page.locator('#office-exit').click();
       await page.waitForFunction(() => !document.querySelector('#office-visit').open);
