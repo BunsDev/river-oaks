@@ -1,0 +1,243 @@
+{
+  "status": "passed",
+  "browser": "156.0.8078.4",
+  "problems": [],
+  "errors": [],
+  "results": [
+    {
+      "name": "review-auditorium",
+      "decision": true,
+      "on": {
+        "calls": 314,
+        "triangles": 746722
+      },
+      "off": {
+        "calls": 771,
+        "triangles": 3372812
+      },
+      "noise": {
+        "changed": 0,
+        "max": 0
+      },
+      "change": {
+        "changed": 0,
+        "max": 0
+      },
+      "expected": true
+    },
+    {
+      "name": "front-row-screen",
+      "decision": true,
+      "on": {
+        "calls": 240,
+        "triangles": 698738
+      },
+      "off": {
+        "calls": 612,
+        "triangles": 3031507
+      },
+      "noise": {
+        "changed": 0,
+        "max": 0
+      },
+      "change": {
+        "changed": 0,
+        "max": 0
+      },
+      "expected": true
+    },
+    {
+      "name": "back-centre-screen",
+      "decision": true,
+      "on": {
+        "calls": 269,
+        "triangles": 739270
+      },
+      "off": {
+        "calls": 628,
+        "triangles": 3097356
+      },
+      "noise": {
+        "changed": 0,
+        "max": 0
+      },
+      "change": {
+        "changed": 0,
+        "max": 0
+      },
+      "expected": true
+    },
+    {
+      "name": "front-row-left-wall",
+      "decision": true,
+      "on": {
+        "calls": 255,
+        "triangles": 673886
+      },
+      "off": {
+        "calls": 627,
+        "triangles": 3147619
+      },
+      "noise": {
+        "changed": 0,
+        "max": 0
+      },
+      "change": {
+        "changed": 0,
+        "max": 0
+      },
+      "expected": true
+    },
+    {
+      "name": "front-row-right-wall",
+      "decision": true,
+      "on": {
+        "calls": 560,
+        "triangles": 1212178
+      },
+      "off": {
+        "calls": 1391,
+        "triangles": 4583786
+      },
+      "noise": {
+        "changed": 0,
+        "max": 0
+      },
+      "change": {
+        "changed": 0,
+        "max": 0
+      },
+      "expected": true
+    },
+    {
+      "name": "ceiling",
+      "decision": true,
+      "on": {
+        "calls": 256,
+        "triangles": 703956
+      },
+      "off": {
+        "calls": 603,
+        "triangles": 3009441
+      },
+      "noise": {
+        "changed": 0,
+        "max": 0
+      },
+      "change": {
+        "changed": 0,
+        "max": 0
+      },
+      "expected": true
+    },
+    {
+      "name": "back-to-doorway",
+      "decision": false,
+      "on": {
+        "calls": 1719,
+        "triangles": 5707616
+      },
+      "off": {
+        "calls": 1701,
+        "triangles": 5704588
+      },
+      "noise": {
+        "changed": 0,
+        "max": 0
+      },
+      "change": {
+        "changed": 0,
+        "max": 0
+      },
+      "expected": false
+    },
+    {
+      "name": "back-row-sideways",
+      "decision": false,
+      "on": {
+        "calls": 674,
+        "triangles": 3265011
+      },
+      "off": {
+        "calls": 674,
+        "triangles": 3265011
+      },
+      "noise": {
+        "changed": 0,
+        "max": 0
+      },
+      "change": {
+        "changed": 0,
+        "max": 0
+      },
+      "expected": false
+    },
+    {
+      "name": "seated-own-camera",
+      "decision": true,
+      "on": {
+        "calls": 218,
+        "triangles": 358392
+      },
+      "off": {
+        "calls": 564,
+        "triangles": 2662513
+      },
+      "noise": {
+        "changed": 0,
+        "max": 0
+      },
+      "change": {
+        "changed": 0,
+        "max": 0
+      },
+      "expected": true
+    }
+  ],
+  "seatedTiming": {
+    "on": {
+      "windows": [
+        {
+          "intervalP50": 5.4,
+          "intervalP95": 8.8,
+          "cpuP50": 4.7
+        },
+        {
+          "intervalP50": 5.2,
+          "intervalP95": 7.9,
+          "cpuP50": 4.6
+        },
+        {
+          "intervalP50": 5.6,
+          "intervalP95": 8.2,
+          "cpuP50": 5
+        }
+      ],
+      "intervalP50": 5.4,
+      "intervalP95": 8.2,
+      "cpuP50": 4.7
+    },
+    "off": {
+      "windows": [
+        {
+          "intervalP50": 7.7,
+          "intervalP95": 11,
+          "cpuP50": 7
+        },
+        {
+          "intervalP50": 7.6,
+          "intervalP95": 11,
+          "cpuP50": 6.9
+        },
+        {
+          "intervalP50": 7.5,
+          "intervalP95": 12.8,
+          "cpuP50": 6.8
+        }
+      ],
+      "intervalP50": 7.6,
+      "intervalP95": 11,
+      "cpuP50": 6.9
+    }
+  }
+}

@@ -4,7 +4,7 @@ import { ARRIVAL, OFFICE_FINISH as F } from './office-arrival-model.js';
 // Static architectural parts are instanced by finish. Doors alone move. No new
 // asset fetches, render loop, real-time reflection probe, or audio context.
 export function buildOfficeArrival({facade=true}={}) {
-  const object=new THREE.Group(),resources=new Set(),batches=new Map(),unit=new THREE.BoxGeometry(1,1,1);resources.add(unit);
+  const object=new THREE.Group(),resources=new Set(),batches=new Map(),unit=new THREE.BoxGeometry(1,1,1);resources.add(unit);object.name='office-arrival';
   let disposed=false;
   const dispose=()=>{if(disposed)return;disposed=true;for(const r of resources)r.dispose();object.clear();};
   try{
@@ -100,4 +100,16 @@ export function buildOfficeArrival({facade=true}={}) {
     dimensions:ARRIVAL,
   };
   }catch(error){dispose();throw error;}
+}
+
+// Glass beside the arrival doorway (any layout but the windowless legacy room) would show this
+// cabin and lobby once the visitor has arrived, so from then on only the car's front doors stay
+// drawn, closed in the doorway. Call update after the arrival's own update each frame; restore
+// returns every part to the visibility it had, an already hidden part staying hidden.
+export function arrivalBehindGlass(arrival,glazed) {
+  const parts=glazed?arrival.object.children.filter(part=>!arrival.frontDoors?.includes(part)).map(part=>[part,part.visible]):[];
+  return {
+    update(frame){const arrived=frame.done&&parts.length>0;if(arrived)arrival.update({...frame,doors:0});for(const[part,visible]of parts)part.visible=visible&&!arrived;},
+    restore(){for(const[part,visible]of parts)part.visible=visible;},
+  };
 }

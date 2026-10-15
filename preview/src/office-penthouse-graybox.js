@@ -4,14 +4,15 @@
 // so tests can hold the art to the collision: nothing solid stands where a body may walk,
 // and the arrival doorway on the entrance wall stays open. Units are metres in the office
 // frame (x across, d inward, y up); Three.js uses [x, y, -d].
-import { OFFICE_LAYOUT_LEGACY, officeLayout } from './office-layouts.js';
+import { OFFICE_LAYOUT_LEGACY, officeLayout, officeSeat } from './office-layouts.js';
 import { thinStorefrontGlass } from './storefront-materials.js';
 
 const COLORS = {
   travertine: '#e9dfd0', terrace: '#cbbfae', wall: '#efe7dc', ceiling: '#f6f1ea', walnut: '#6b4a33',
   blush: '#e7b7b2', bronze: '#b08d57', glass: '#cfe3ea', stone: '#d9c7b4',
 };
-const HEIGHTS = { 'reading-chair-a': 0.9, 'reading-chair-b': 0.9, 'reading-side-table': 0.55, 'bookcase-1': 2.6, 'bookcase-2': 2.6 };
+const HEIGHTS = { 'reading-side-table': 0.55, 'bookcase-1': 2.6, 'bookcase-2': 2.6 };
+const BACK = 0.5; // a chair back above the plan's seat height (#363), on the side away from where it faces
 const DOOR = { halfWidth: 0.85, height: 2.6 }, SHELL = 0.2;
 // Curtain wall: pane thickness, the solid arrival core's half-width (it hides the cabin and lobby
 // that rise with the office), the transom underside over the terrace portals, mullion size.
@@ -48,13 +49,20 @@ export function buildPenthouseOffice(THREE, layout) {
       const { rise, risers } = layout.stair, run = (o.d1 - o.d0) / risers;
       for (let i = 0; i < risers; i++) box(`obstacle:${o.id}`, `stair tread ${i + 1}`, { x0: o.x0, x1: o.x1, d0: o.d0 + i * run, d1: o.d0 + (i + 1) * run }, level.floorElevation, level.floorElevation + rise * (i + 1) / risers, 'stone');
     } else if (o.kind === 'wall') glazedWalls.push({ ...o, y0: level.floorElevation, y1: level.floorElevation + level.clearHeight });
-    else box(`obstacle:${o.id}`, o.id, o, level.floorElevation, level.floorElevation + (HEIGHTS[o.id] ?? 0.75), o.id.startsWith('bookcase') || o.id.includes('table') ? 'walnut' : 'blush');
+    else if (officeSeat(layout, o.id)) {
+      // A reading chair: its seat at the plan's seat height, its back toward the bookcases (+d).
+      const seat = officeSeat(layout, o.id), y = level.floorElevation + seat.height;
+      box(`obstacle:${o.id}`, o.id, o, level.floorElevation, y, 'blush');
+      box(`obstacle:${o.id}`, `${o.id} back`, { ...o, d0: o.d1 - 0.15 }, y, y + BACK, 'blush');
+    } else box(`obstacle:${o.id}`, o.id, o, level.floorElevation, level.floorElevation + (HEIGHTS[o.id] ?? 0.75), o.id.startsWith('bookcase') || o.id.includes('table') ? 'walnut' : 'blush');
   }
-  // Desk chairs are collision at the plan's seats; the desks themselves arrive with #362.
+  // Desk chairs are collision at the plan's seats; the desks themselves arrive with #362. The seat
+  // top is the plan's seat height, so a seated visitor sits on it; the back is on the approach side.
   for (const chair of ground.chairs) {
-    const [x, d] = chair.position, geometry = new THREE.CylinderGeometry(0.35, 0.35, 0.9, 20); geometries.push(geometry);
+    const [x, d] = chair.position, height = officeSeat(layout, chair.id)?.height ?? 0.5, geometry = new THREE.CylinderGeometry(0.35, 0.35, height, 20); geometries.push(geometry);
     const mesh = new THREE.Mesh(geometry, material('blush'));
-    mesh.position.set(x, ground.floorElevation + 0.45, -d); mesh.name = chair.id; mesh.userData.zone = `chair:${chair.id}`; object.add(mesh);
+    mesh.position.set(x, ground.floorElevation + height / 2, -d); mesh.name = chair.id; mesh.userData.zone = `chair:${chair.id}`; object.add(mesh);
+    box(`chair:${chair.id}`, `${chair.id} back`, { x0: x - 0.3, x1: x + 0.3, d0: d - 0.34, d1: d - 0.26 }, ground.floorElevation + height, ground.floorElevation + height + BACK, 'blush');
   }
 
   // The mezzanine's glass guard runs its whole d 14 edge, with a bronze top rail.

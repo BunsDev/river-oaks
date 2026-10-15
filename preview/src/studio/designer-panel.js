@@ -1,7 +1,7 @@
 import { createDesignerSession } from './designer-protocol.js';
 
 const SETTINGS_KEY = 'river-oaks-studio-designer-v1';
-export function mountDesignerPanel(host, { doc, selected, apply, canEdit = () => true, bridge = globalThis.worldDesigner, storage = localStorage }) {
+export function mountDesignerPanel(host, { doc, selected, apply, reportError = () => {}, canEdit = () => true, bridge = globalThis.worldDesigner, storage = localStorage }) {
   const panel = document.createElement('aside');
   panel.className = 'studio-designer'; panel.hidden = true; panel.setAttribute('aria-label', 'World Designer');
   panel.innerHTML = `<div class="studio-panel-title"><div><p class="studio-caption">Your world-building partner</p><h2>World Designer</h2></div><button data-close aria-label="Close World Designer">×</button></div>
@@ -33,7 +33,7 @@ export function mountDesignerPanel(host, { doc, selected, apply, canEdit = () =>
   function persist() { settings.brief = $('[data-brief]').value; settings.name = $('[data-name]').value; settings.mode = $('[data-path]').value; try { storage.setItem(SETTINGS_KEY, JSON.stringify(settings)); return true; } catch { say('Project preferences could not be saved. Your region is unchanged.'); return false; } }
   function render() {
     $('[data-setup]').hidden = Boolean(connection); $('[data-connected]').hidden = !connection;
-    $('[data-send]').disabled = !connection || busy || !canEdit(); $('[data-apply]').disabled = !canEdit(); $('[data-cancel]').disabled = !busy;
+    $('[data-send]').disabled = !connection || busy || !canEdit(); $('[data-apply]').disabled = busy || !canEdit(); $('[data-cancel]').disabled = !busy;
     $('[data-connect]').disabled = !bridge || busy || !catalog?.runtimes?.length;
     $('[data-path]').disabled = busy; $('[data-runtime]').disabled = busy;
     $('[data-context]').textContent = `${$('[data-scope]').value === 'region' ? `${doc.items.length} objects` : selected() ? `Selected: ${selected()}` : 'No object selected'} · document revision ${doc.revision} · metres`;
@@ -73,16 +73,16 @@ export function mountDesignerPanel(host, { doc, selected, apply, canEdit = () =>
       requestId = request.requestId; busy = true; render(); say('Waiting for the designer. Provider usage may be billed by your configured runtime.');
       const response = await bridge.request(request);
       if (token !== generation) return;
-      const preview = session.preview(response); $('[data-rationale]').textContent = preview.rationale;
+      const preview = await session.preview(response); if(token!==generation)return; $('[data-rationale]').textContent = preview.rationale;
       $('[data-diff]').textContent = preview.changes.map(change => `${change.op.toUpperCase()} ${change.id}\nBefore: ${JSON.stringify(change.before)}\nAfter: ${JSON.stringify(change.after)}`).join('\n\n');
       $('[data-evidence]').textContent = `Reported skills: ${preview.skillsUsed.join(', ') || 'none'}. Assumptions: ${preview.assumptions.join('; ') || 'none reported'}. These are agent reports, not independent checks.`;
       $('[data-preview]').hidden = false; say('Provider responded. Proposal validated; review before applying.');
-    } catch (error) { if (token === generation) say(error.message || 'The designer request failed.'); }
+    } catch (error) { if (token === generation) { reportError(error); say(error.message || 'The designer request failed.'); } }
     finally { if (token === generation) { busy = false; requestId = null; render(); } }
   });
   $('[data-cancel]').addEventListener('click', () => { invalidate(); say('Canceled. Late responses cannot change this draft.'); });
   $('[data-reject]').addEventListener('click', () => { invalidate(); say('Proposal rejected. Your draft is unchanged.'); });
-  $('[data-apply]').addEventListener('click', () => { try { if (!canEdit()) throw Error('Return to the editor before applying changes.'); session.apply(); $('[data-preview]').hidden = true; apply(); say('Applied as one edit. Undo restores the previous region.'); } catch (error) { invalidate(); say(error.message); } });
+  $('[data-apply]').addEventListener('click', async () => { try { if (!canEdit()) throw Error('Return to the editor before applying changes.'); busy=true;render();await session.apply();busy=false; $('[data-preview]').hidden = true; apply(); say('Applied as one edit. Undo restores the previous region.'); } catch (error) { invalidate(); reportError(error); say(error.message); } });
   const close = () => { panel.hidden = true; opener?.focus(); };
   $('[data-close]').addEventListener('click', close);
   panel.addEventListener('keydown', event => { event.stopPropagation(); if (event.key === 'Escape') { event.preventDefault(); close(); } });
