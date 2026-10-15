@@ -1,3 +1,4 @@
+import { characterCompatibility } from './character-compatibility.js';
 import { characterDefinitionFor } from './character-definition.js';
 
 export const CHARACTER_PALETTES=Object.freeze({
@@ -13,7 +14,7 @@ export const CHARACTER_HAIR=Object.freeze({
   copper:{label:'Copper',color:'#995431'},
   silver:{label:'Silver',color:'#c1bab3'},
 });
-export const supportsCharacterColors=id=>id==='sable-human'||id==='woman-casual';
+export const supportsCharacterColors=id=>characterCompatibility(id)?.colors===true;
 export function customizedCharacterDefinition(ownerId,appearanceId,{palette='authored',hair='authored',revision=0}={}){
   const value=characterDefinitionFor(ownerId,appearanceId,{revision});
   if(!Object.hasOwn(CHARACTER_PALETTES,palette)||!Object.hasOwn(CHARACTER_HAIR,hair)

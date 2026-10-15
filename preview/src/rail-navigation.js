@@ -61,7 +61,7 @@ export function setupRailNavigation({ sidebar, getSections, getDock, getClearVie
     { label: 'Voice · join or leave', keys: 'Y', terms: 'talk microphone chat', selector: '#walking-voice-join', run: () => document.querySelector('#walking-voice-join').click() },
     { label: 'Microphone · mute or unmute', keys: 'M', terms: 'voice talk push', selector: '#walking-voice-mic', run: () => document.querySelector('#walking-voice-mic').click() },
     { label: 'Voice settings', terms: 'microphone push to talk device', selector: '#voice-input-device', run: () => openTab(2, '#voice-input-device') },
-    { label: 'Character · appearance and abilities', selector: 'input[name=player-character]:checked', run: () => showPlay('.player-controls') },
+    { label: 'Character · appearance and abilities', selector: 'input[name=player-character]:checked', run: () => showPlay('input[name=player-character]:checked') },
     { label: 'Camera · Photo mode', enabled: () => Boolean(getPhotoMode?.()), run: () => getPhotoMode().open() },
     { label: 'Rides · driving and camera', selector: '#player-camera', run: () => showPlay('.player-settings') },
     { label: 'Bird cams', selector: '.bird-cams', run: () => showPlay('.bird-cams') },

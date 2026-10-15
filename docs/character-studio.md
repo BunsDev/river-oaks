@@ -1,6 +1,6 @@
 # Character Studio architecture decision (#440)
 
-Status: contract in draft PR #457; local Studio editor under verification.
+Status: contract in draft PR #457; editor in draft PR #461; render increment under verification.
 This is the first increment of #440–#444, not a shipped Studio.
 
 ## Decision and evidence
@@ -153,3 +153,87 @@ were inspected: both authored forms render with head, hair, dress, bag and shoes
 visible; the fox has its head and tail. No gross missing geometry or textures
 were visible in the captured standing view. This does not establish the full pose,
 clipping, lighting or high-fidelity acceptance matrix from #442.
+
+## Native portrait and garment increment (#442)
+
+Create 4K portrait renders the displayed validated definition into a native
+3840×2160 target, independent of the viewport and DPR. Before/after changes
+invalidate exports just like palette and character changes. Only one capture can
+be in flight, including across edits and closing/reopening. Stale completions
+cannot attach downloads; object URLs and owned hero resources are released.
+Unsupported target sizes or incomplete framebuffers fail visibly without upscaling.
+
+`garden-front-v1` uses a fresh neutral rig at time zero, a 30-degree perspective
+camera at (0, 1.08, 3.8) looking at (0, 0.9, 0), and the garden daylight key,
+hemisphere fill and rim. A 2048-pixel key shadow map grounds the model. The native
+4-sample half-float target retains linear HDR; an OutputPass applies ACES exposure
+1.1 and sRGB exactly once into an RGBA8 readback target. PNG rows are flipped
+without resampling. Existing photo mode remains available independently.
+
+Sable's skirt now uses the body's existing pelvis/thigh skeleton and bind space.
+The waist stays at the pelvis and the hem follows the legs, preserving geometry
+counts, materials and cleanup. Actual human/fox rig fixtures probe covered upper
+thighs through opposing strides and translated/rotated/scaled parents. This fixes
+the observed rigid-skirt intersection; it does not establish every animation,
+wardrobe or camera angle. The intentional hem slit is excluded from coverage probes.
+
+Current-machine captures repeat identically, but are not approved goldens. Named
+physical device targets, full animation/wardrobe compatibility, measured crowd
+budgets, complete procedural dependency provenance and shared custom colors remain
+open. Keep unsupported shape, skin, attachment and asset combinations unavailable.
+
+## Shipped asset compatibility audit (#442)
+
+`character-compatibility.js` records the authoritative appearance-to-rig/form/outfit
+mapping, exact 53-bone MakeHuman game family and supported color control boundary.
+Only Sable human/fox expose curated colors. Independent morphs, hair meshes and
+attachments remain unavailable; original bundles keep their existing behavior and
+permission checks. Definition v1/v2 shapes are unchanged.
+
+`node scripts/character-assets-audit.mjs` audits the three pinned shipped base GLBs.
+Core tooling tests run the same audit. It verifies actual hashes/sizes against CC0
+source receipts, embedded buffer bounds, exact bones/shared skin, finite invertible
+bind and node transforms, indexed triangles, finite bounded positions and morphs,
+normalized weights/joint references, embedded WebP headers/dimensions and material
+texture references. Malformed real-asset fixtures exercise each boundary. This is
+a build-time gate for the shipped subset, not a general glTF upload validator.
+
+| Base rig | Texture images | RGBA8 base-level estimate | Largest image |
+| --- | ---: | ---: | --- |
+| jevica | 7 | 31 MiB | 2048 × 2048 |
+| man-casual | 7 | 37 MiB | 2048 × 2048 |
+| man-tailored | 5 | 29 MiB | 2048 × 2048 |
+
+These are per-file decoded-format estimates, excluding mipmaps, runtime-generated
+maps, sharing, shadows and framebuffer allocations. They are not measured GPU
+allocation or approved budgets. Embedded header checks do not decode images;
+rendered/browser checks remain separate. Base source receipts identify MakeHuman
+system/face assets as CC0-1.0. Procedural overlays are authored repository code;
+complete dependency pinning/distribution provenance remains open and no additional
+license is inferred from the base files. The `.5m` position-morph and 4096 texture
+limits are integrity envelopes for this catalog, not interactive design controls
+or device performance promises.
+
+
+## Runtime pose diagnostics (#442, incomplete acceptance)
+
+Run `pnpm run test:experience character-poses` to capture the canonical rose/espresso
+Sable human and fox through idle, walk, run, sit and wave, plus fox prowl and lope.
+The fixture moves the root while updating planted contacts, uses the runtime seat
+height/hip offset and samples the actual visible skinned geometry and decoded
+textures. It saves front, side and rear views for each of the 12 poses, plus two
+seated overhead views. This is one phase per pose, not a whole animation-cycle test.
+
+The automated checks establish finite geometry, decoded textures, active beast
+locomotion and nonempty body probes. They do **not** establish visual acceptance.
+At render head `7c6facc5`, inspection finds a major seated skirt coverage defect
+for both supported Sable forms. Of 689 rest-covered body samples, 594 are uncovered
+from above and 418 from the front diagnostic camera. Counts describe the probe
+region and viewing direction, not a universal clipping metric or acceptance limit.
+The side garment cutout also needs authored-reference review.
+
+Stronger front weights and altered hems were investigated but failed runtime
+coverage or appearance review; none of those experimental garment changes are
+included. Resolve the seated fit using the actual runtime pose before accepting
+this matrix. Other wardrobes, wing/armor cases, continuous gait phases, pinned
+hero goldens, crowd/device budgets and human review remain open.

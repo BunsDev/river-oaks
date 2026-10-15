@@ -9376,12 +9376,11 @@
       "title": "TypeSafe Place Character Studio #440\u2013#444",
       "status": "active",
       "branches": [
-        "feat/character-studio-contract-20261015",
-        "feat/character-studio-editor-20261015"
+        "feat/character-studio-render-20261015"
       ],
       "owner": "codex-character-studio-20261015",
-      "updatedAt": "2026-10-15T20:51:57.221604+00:00",
-      "nextAction": "Draft editor PR #461 pushed at bf0f8aac, stacked on #457. Finish queued wave capture, then #442 native 4K integration and walk/skirt clipping regression; continue #443 persistence and #444 full acceptance. No merge/deploy authorization.",
+      "updatedAt": "2026-10-15T21:57:05.134413+00:00",
+      "nextAction": "Deliver reviewed pose diagnostic harness after core; seated Sable fit remains visually failed (594/689 above probes), experiments restored. Fix against runtime pose, then remaining #442 render/provenance/budgets and #443 persistence/#444 full acceptance. Existing7c6facc5 hosted checks pass; no merge/deploy.",
       "filesOwned": [
         "preview/src/character-definition.js",
         "preview/tests/character-definition.test.js",
@@ -9400,7 +9399,19 @@
         "preview/e2e/character-studio.js",
         "preview/tests/character-studio*.test.js",
         "preview/src/character-portrait.js",
-        "preview/tests/character-portrait.test.js"
+        "preview/tests/character-portrait.test.js",
+        "preview/src/character-hero.js",
+        "preview/src/skirt-skinning.js",
+        "preview/tests/skirt-skinning.test.js",
+        "preview/tests/character-hero.test.js",
+        "preview/e2e/character-portrait.js",
+        "scripts/character-assets-audit.mjs",
+        "scripts/tests/character-assets-audit.test.js",
+        "preview/src/character-compatibility.js",
+        "preview/tests/character-compatibility.test.js",
+        "preview/src/rail-navigation.js",
+        "preview/e2e/character-poses.js",
+        "preview/e2e/fixtures/jevica.js"
       ],
       "requiredChecks": [
         "Focused contract and rig tests",
@@ -9427,15 +9438,16 @@
           ]
         }
       },
-      "leaseUntil": "2026-10-15T22:51:57.221604+00:00",
+      "leaseUntil": "2026-10-15T23:57:05.134413+00:00",
       "ledger": "docs/superpowers/plans/2026-10-15-character-studio.md",
-      "pr": 461,
+      "pr": 462,
       "verification": {
-        "core": "passed; .runtime/character-studio/editor-core-passed.json; server 153 Redis skips; preview 1 skip/1 todo",
-        "focused": "20 contract/state/material/beast checks, 8 recovery checks, 9 gesture tests; 3 portrait prototype tests (not committed)",
-        "browser": "Editor 21 checks passed; final-source regressions 253 checks passed; fresh wave capture queued; captures inspected with skirt clipping retained as #442 defect",
-        "review": "Independent editor review findings fixed and retested; no remaining blocking lifecycle finding",
-        "limitations": "No full Redis/native/4K/crowd/physical-device/human acceptance; #443 publication not implemented; hosted checks separate"
+        "core": "catalog/focus patch b21bf7b8 passed; .runtime/character-studio/catalog-rail-core-final.json; preview1 skip1 todo, server153 Redis skips",
+        "focused": "13 native portrait/skirt/material tests plus16 catalog/contract/editor tests passed",
+        "browser": "15 final portrait checks,17 shared rail checks passed; editor21 and previous regressions253 passed; native human/fox PNGs and walking render inspected",
+        "review": "Portrait lifecycle, invalid transforms and character focus findings fixed, regression verified, re-reviewed without blocking findings",
+        "limitations": "Full Redis/native/crowd/physical-device/human acceptance and approved goldens remain open; #443 not implemented; hosted checks pending on current head",
+        "render": "PR #462 b21bf7b8: final core passed tooling117/preview3319/server598/desktop69/Python141; preview1 skip1 todo; server153 Redis skips. Portrait15/shared rail17/focused16 passed; real 4K and walk captures inspected."
       }
     },
     {
@@ -11162,6 +11174,46 @@
       ],
       "nextAction": "Copy connection-continuity, release-0-2-0-readiness, register-sweep-20261015-1b, release-0-2-0-tag and voice-continuity from the live register onto main's; add the tag addendum and the tag-run desktop receipt; PR and land.",
       "updatedAt": "2026-10-15T19:37:37.078Z"
+    },
+    {
+      "id": "character-studio-contract-20261015",
+      "title": "Character Studio contract PR #457",
+      "status": "active",
+      "branches": [
+        "feat/character-studio-contract-20261015"
+      ],
+      "owner": "codex-character-studio-20261015",
+      "updatedAt": "2026-10-15T21:57:05.134413+00:00",
+      "leaseUntil": "2026-10-15T23:57:05.134413+00:00",
+      "nextAction": "Preserve draft contract #457 at b6ef443e; review baseline/contract acceptance with render/editor stack. No merge authorization.",
+      "filesOwned": [],
+      "requiredChecks": [
+        "Focused contract and rig tests",
+        "pnpm run verify",
+        "Rendered human/beast fixture inspection"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-15-character-studio.md",
+      "pr": 457
+    },
+    {
+      "id": "character-studio-editor-20261015",
+      "title": "Character Studio editor PR #461",
+      "status": "active",
+      "branches": [
+        "feat/character-studio-editor-20261015"
+      ],
+      "owner": "codex-character-studio-20261015",
+      "updatedAt": "2026-10-15T21:57:05.134413+00:00",
+      "leaseUntil": "2026-10-15T23:57:05.134413+00:00",
+      "nextAction": "Preserve draft editor #461 at 93f29271; backport/reconcile selected-character focus correction from #462 before any future landing. No merge authorization.",
+      "filesOwned": [],
+      "requiredChecks": [
+        "Focused contract and rig tests",
+        "pnpm run verify",
+        "Rendered human/beast fixture inspection"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-15-character-studio.md",
+      "pr": 461
     }
   ]
 }

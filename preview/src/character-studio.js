@@ -20,20 +20,24 @@ export function createCharacterStudio({ownerId,getDefinition,canOpen=()=>true,on
       <p class="cs-help" data-compatibility></p>
       <div class="cs-edit-tools"><button type="button" data-undo>Undo</button><button type="button" data-redo>Redo</button><button type="button" data-compare aria-pressed="false">Before / after</button><button type="button" data-random>Surprise me</button></div>
       <div class="cs-favorites"><button type="button" data-favorite>Favorite this look</button><label class="sr-only" for="cs-favorites">Favorite looks</label><select id="cs-favorites"><option value="">Your favorites</option></select><button type="button" data-remove-favorite disabled>Remove favorite</button></div>
+      <div class="cs-portrait"><button type="button" data-portrait>Create 4K portrait</button><a data-download hidden>Download PNG</a><p>Front pose · Garden daylight · 3840 × 2160</p></div>
       <p class="cs-status" role="status" aria-live="polite"></p></section></div>
     <footer class="cs-footer"><p>Drafts stay in this tab. Favorites stay on this device.<br>Your town appearance changes only when publishing is available.</p><div><button type="button" data-cancel>Discard changes</button><button type="button" data-keep>Keep draft</button></div></footer>`;
   document.body.append(dialog);
   const $=selector=>dialog.querySelector(selector),status=$('.cs-status'),stage=$('.cs-preview');
   let draft=null,preview=null,retained=null,baseline=null,comparing=false,spinning=false,returnFocus=null,closed=false;
+  let portraitGeneration=0,portraitPending=false,portraitURL=null,portraitKey='';
+  const releasePortrait=()=>{portraitGeneration++;if(portraitURL)URL.revokeObjectURL(portraitURL);portraitURL=null;$('[data-download]').hidden=true;$('[data-download]').removeAttribute('href');$('[data-portrait]').disabled=portraitPending||stage.dataset.ready!=='true';};
   let favorites=[],storageUnavailable=false;const storageKey=`river-oaks-character-favorites-v2:${encodeURIComponent(ownerId)}`;
   const valid=value=>validateCharacterDefinition(value,{ownerId}).ok;
   const readFavorites=()=>{if(storageUnavailable)return;try{const saved=JSON.parse(localStorage.getItem(storageKey)??'[]');favorites=Array.isArray(saved)?saved.filter(valid).slice(0,8):[];}catch{storageUnavailable=true;}};
   const saveFavorites=()=>{try{localStorage.setItem(storageKey,JSON.stringify(favorites));return true;}catch{storageUnavailable=true;status.textContent='Device storage is unavailable. Favorites will last for this visit only.';return false;}};
   const showFavorites=()=>{$('#cs-favorites').replaceChildren(new Option('Your favorites',''),...favorites.map((value,index)=>new Option(`${sharedAppearance(value.appearanceId).name} · ${value.form} · ${CHARACTER_PALETTES[value.palette].label}`,String(index))));$('[data-remove-favorite]').disabled=true;};
-  const setStatus=state=>{status.textContent=state==='loading'?'Preparing your look…':state==='error'?'The preview could not load. Choose a character to try again.':'Preview ready. Your town appearance is unchanged.';};
+  const setStatus=state=>{$('[data-portrait]').disabled=state!=='ready'||portraitPending;status.textContent=state==='loading'?'Preparing your look…':state==='error'?'The preview could not load. Choose a character to try again.':'Preview ready. Your town appearance is unchanged.';};
   const render=()=>{
     if(!draft||!dialog.open)return;
-    const value=draft.value,look=sharedAppearance(value.appearanceId),person=sharedCharacter(look.character),colors=supportsCharacterColors(value.appearanceId);
+    const value=draft.value,shown=comparing?draft.original:value,key=JSON.stringify(shown);if(portraitKey!==key){releasePortrait();portraitKey=key;}
+    const look=sharedAppearance(value.appearanceId),person=sharedCharacter(look.character),colors=supportsCharacterColors(value.appearanceId);
     for(const button of dialog.querySelectorAll('[data-character]'))button.setAttribute('aria-pressed',String(button.dataset.character===person.id));
     $('[name=form]').value=look.form;
     const variants=$('[name=variant]');if(variants.dataset.character!==person.id){variants.replaceChildren(...person.variants.map(v=>new Option(v.label,v.id)));variants.dataset.character=person.id;}
@@ -43,7 +47,7 @@ export function createCharacterStudio({ownerId,getDefinition,canOpen=()=>true,on
     $('[data-compatibility]').textContent=colors?'Colors are fitted to Sable’s human and fox looks. Shape, skin and accessories keep their authored fit.':'This character keeps its authored colors. Choose Sable to explore dress and hair colors.';
     $('[data-undo]').disabled=!draft.canUndo;$('[data-redo]').disabled=!draft.canRedo;
     $('[data-compare]').setAttribute('aria-pressed',String(comparing));$('[data-comparing]').hidden=!comparing;
-    const shown=comparing?draft.original:value;$('[data-look]').textContent=sharedAppearance(shown.appearanceId).label;
+    $('[data-look]').textContent=sharedAppearance(shown.appearanceId).label;
     dialog.dataset.appearance=value.appearanceId;dialog.dataset.palette=value.palette;dialog.dataset.hair=value.hair;
     preview?.setDefinition(shown);
   };
@@ -64,7 +68,7 @@ export function createCharacterStudio({ownerId,getDefinition,canOpen=()=>true,on
   trigger.addEventListener('click',open);
   $('[data-close]').addEventListener('click',()=>close(true));$('[data-keep]').addEventListener('click',()=>close(true));$('[data-cancel]').addEventListener('click',()=>close(false));
   dialog.addEventListener('cancel',event=>{event.preventDefault();close(true);});
-  dialog.addEventListener('close',()=>{preview?.dispose();preview=null;stage.replaceChildren();returnFocus?.focus({preventScroll:true});});
+  dialog.addEventListener('close',()=>{releasePortrait();preview?.dispose();preview=null;stage.replaceChildren();returnFocus?.focus({preventScroll:true});});
   dialog.addEventListener('click',event=>{
     const button=event.target.closest('button');if(!button||button.disabled||!draft)return;
     const look=sharedAppearance(draft.value.appearanceId);
@@ -72,6 +76,17 @@ export function createCharacterStudio({ownerId,getDefinition,canOpen=()=>true,on
     if(button.dataset.palette)change({palette:button.dataset.palette});if(button.dataset.hair)change({hair:button.dataset.hair});
   });
   for(const name of ['form','variant'])$(`[name=${name}]`).addEventListener('change',event=>{const look=sharedAppearance(draft.value.appearanceId);change({appearanceId:appearanceFor(look.character,{form:look.form,variant:look.variant,[name]:event.target.value}).id});});
+  $('[data-portrait]').addEventListener('click',async()=>{
+    if(!preview||portraitPending)return;
+    releasePortrait();const token=++portraitGeneration;portraitPending=true;$('[data-portrait]').disabled=true;status.textContent='Rendering your 4K portrait…';
+    try{
+      const result=await preview.capturePortrait();if(token!==portraitGeneration||!dialog.open)return;
+      portraitURL=URL.createObjectURL(result.blob);const link=$('[data-download]');link.href=portraitURL;link.download=`typesafe-place-${result.definition.appearanceId}-4k.png`;link.hidden=false;
+      link.dataset.width=String(result.width);link.dataset.height=String(result.height);link.dataset.appearance=result.definition.appearanceId;link.dataset.palette=result.definition.palette;link.dataset.preset=result.preset;
+      status.textContent='Your 3840 × 2160 portrait is ready. Download the PNG to keep it.';link.focus();
+    }catch(error){if(token===portraitGeneration&&dialog.open)status.textContent=error.message||'Portrait could not be created. Try again.';}
+    finally{portraitPending=false;$('[data-portrait]').disabled=stage.dataset.ready!=='true';}
+  });
   $('[data-undo]').addEventListener('click',()=>{draft.undo();comparing=false;render();});$('[data-redo]').addEventListener('click',()=>{draft.redo();comparing=false;render();});
   $('[data-compare]').addEventListener('click',()=>{comparing=!comparing;render();});$('[data-random]').addEventListener('click',()=>{draft.randomize();comparing=false;render();});
   $('[data-favorite]').addEventListener('click',()=>{const value=draft.value;if(favorites.some(item=>JSON.stringify(item)===JSON.stringify(value))){status.textContent='This look is already a favorite.';return;}if(favorites.length>=8){status.textContent='Your eight favorites are full. Remove one to make room.';return;}favorites.push(value);if(saveFavorites())status.textContent='Favorite saved on this device.';showFavorites();});

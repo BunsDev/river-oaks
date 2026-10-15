@@ -204,3 +204,192 @@ verification and actual-rig skirt fitting. Do not claim 4K integration from the
 helper tests. Continue #443 and #444 after that. Preserve this checkout; it contains
 undelivered portrait code. Hosted/editor review, physical-device targets, human
 acceptance and all downstream criteria remain explicit gaps.
+
+## Render increment (#442)
+Previous goal turn was progress: signed editor implementation/evidence pushed in
+#461 and 253 regressions/core passed. Revalidated #461 open/draft at 93f29271,
+primary main now a5697b57, owned checkout preserved with only portrait helper/test
+untracked. Final editor/wave session 28249 remains live and queued; do not restart.
+New stacked branch `feat/character-studio-render-20261015` uses this same checkout.
+
+Objective: native 3840x2160 export with deterministic neutral hero pose, documented
+camera/light/color settings and validated identity; async load/encoding fencing,
+resource disposal and pixel/dimension verification. Then address the observed
+walking skirt intersection with actual geometry/rig regression and rendered poses.
+Files owned recorded in primary tasks register. Keep existing appearance authority.
+
+Final editor/wave journey completed on unchanged #461 code: 21 checks passed in
+89.982 s. Wave capture inspected: arm visibly raised, actual rig remains rendered.
+Report `.runtime/character-studio/editor-browser-final.json`; #461 body updated.
+Previous pending wave gap is resolved; walking skirt clipping remains separate.
+Hero scene and readback unit tests now 6/6: canonical owner/identity, fixed neutral
+camera/pose, failure cleanup, native target dimensions, row orientation, state
+restoration and incomplete framebuffer rejection. No browser/4K acceptance yet.
+
+Native export is now integrated: dedicated HDR/output targets, fixed hero rig,
+neutral pose, camera, daylight and 2048 shadow map; canonical edited identity in
+human/fox PNGs. Initial portrait browser run passed 11 checks in 13.494 s and
+allocated actual 3840x2160 GPU targets. Both exports inspected. Repeated decoded
+pixels had maximum/mean error zero on this machine; no approved golden implied.
+
+Replaced the rigid Sable skirt with weights on the existing pelvis/thigh skeleton.
+The old code fails the actual-geometry regression at +0.45 stride: 8/114 covered
+upper-thigh points exposed. New human and fox fixtures pass five opposing stride
+angles and transformed parents. Geometry counts remain unchanged. Updated walking
+capture inspected: previously protruding upper thigh is covered. Full pose,
+wardrobe and view matrix remains open.
+
+`pnpm run test:experience character-studio` passed 21 checks in 86.032 s on the
+new render integration. First `pnpm run verify` passed: tooling 112, preview 3318
+pass/1 existing skip/1 todo, server 598 pass/153 Redis skips, desktop 69, Python141.
+Receipt `.runtime/character-studio/render-core-before-review-fixes.json`.
+
+Independent review found two P2 lifecycle defects: edits could clear an in-flight
+capture lock; Before/after could retain a download for the wrong shown definition.
+Both reproduced with browser regressions, then fixed. In-flight work remains
+bounded across edits/close/reopen; export key tracks the actual shown definition.
+Re-review found no remaining blocker. Final portrait journey passed 15 checks in
+13.418 s, including both red/green regressions and unsupported hardware, with
+identical repeated decoded pixels. Report `.runtime/character-studio/portrait-browser-final.json`.
+Final focused command `node --test preview/tests/character-portrait.test.js
+preview/tests/character-hero.test.js preview/tests/skirt-skinning.test.js
+preview/tests/character-studio-materials.test.js preview/tests/reference-batching.test.js`
+passed 13, no skips; build passed. Final core gate rerun in progress after fixes.
+
+Final core gate passed after both review fixes. Receipt
+`.runtime/character-studio/render-core-final.json`: tooling112, preview3318 passed
+(1 existing skip/1 todo), server598 passed (153 Redis skips), desktop69, Python141
+(66 warnings), build/lint/format/demo expected-status/secrets all passed. Tested
+patch is the render implementation based on editor head93f29271. No source changes
+after these final checks. Live project:check remains exit1 for unrelated existing
+ownership/retirement/missing-checkout records; this task remains owned and active.
+
+Signed render commit749353bc546d5f2822713cc952730dd083e9d9bf pushed after signature
+and prohibited-attribution checks. Draft PR https://github.com/BunsDev/river-oaks/pull/462
+stacked on #461. Issue #442 progress: issuecomment-6202398265. No merge/deploy.
+
+Next increment objective: audit pinned shipped GLBs against source/license receipts,
+actual skeleton/skin weights/positions/indices and embedded texture metadata.
+Record measured base asset costs and explicit compatibility from the authoritative
+appearance mapping, keeping v1/v2 persisted definition shape unchanged. Negative
+fixtures must exercise invalid bytes, receipts, skeletons, weights and textures.
+Owned files: scripts/character-assets-audit.mjs, scripts/tests/character-assets-audit.test.mjs,
+preview/src/character-compatibility.js, preview/tests/character-compatibility.test.js.
+No paid downloads or source receipt regeneration. Complete procedural licensing,
+full pose/crowd/device matrix and human approval stay open.
+
+Catalog increment now implements explicit immutable compatibility for all authored
+looks and the shared 53-bone rig. Studio color support delegates to this registry
+without changing v1/v2 payloads. New build audit checks pinned bytes and CC0 source
+receipts, bounded embedded buffers, skeleton/binds/node transforms, geometry,
+weights, sparse morphs, WebP headers and texture references; actual-asset negative
+fixtures cover tampering, source/license mismatch, invalid geometry/skin/morph and
+textures. Review exposed empty/zero-scale transforms passing the initial audit;
+red regression reproduced it, then arity/quaternion/affine/non-singular effective
+transform validation fixed it. Re-review found no remaining blocker.
+
+Focused command `node --test scripts/tests/character-assets-audit.test.js
+preview/tests/character-compatibility.test.js preview/tests/character-definition.test.js
+preview/tests/character-studio.test.js`:16 passed, no skips. Audit CLI passes all
+three base rigs; `.runtime/character-studio/asset-audit.json` records measured
+vertices/triangles, local bounds, morph position deltas and 31/37/29MiB RGBA8 base
+texture estimates. Header validation does not decode images or prove GPU budgets.
+Catalog-backed portrait journey passed15 checks; report
+`.runtime/character-studio/catalog-portrait.json`. Core gate in progress.
+
+Hosted render head749353bc: aggregate preview failed because shared(development)
+failed; other listed checks passed. Investigating the failed job log. No hosted
+acceptance or merge claimed. No source or dependency change should be made merely
+to hide a failing test; determine its owning seam first.
+
+Catalog core gate passed before the subsequent rail focus fix; receipt
+`.runtime/character-studio/catalog-core.json`. Hosted failure root cause confirmed:
+new Studio trigger precedes the character picker, so Character command's generic
+`.player-controls` jump focused that first button. Existing rail-shared assertion
+failed locally too. Changed only its destination to the selected character radio.
+Existing shared journey now passes on full Metal rendering; report
+`.runtime/character-studio/rail-shared-green.json` and preserved red counterpart.
+Review found no blocker. Final core rerun after this line is in progress. Generated
+shared-experience report restored after preserving both runs; no unrelated evidence
+will be committed.
+
+Final catalog/focus core gate passed: tooling117; preview3319 pass/1 existing
+skip/1 todo; server598 pass/153 Redis skips; desktop69; Python141 with66 warnings.
+Build, lint/format, demo expected-status and secrets passed. Receipt
+`.runtime/character-studio/catalog-rail-core-final.json`. Tested dirty patch is this
+catalog/audit and one-line rail change on render head749353bc; no further runtime
+changes after verification. Shared rail journey passed17 checks in9.096s; catalog
+portrait passed15 in11.988s. Full five-issue goal remains active.
+
+Next: push the verified audit/focus increment to #462, inspect hosted checks, then
+complete #442 human/fox idle/walk/run/sit/wave/prowl/lope rendered matrix with the
+existing Jevica fixture and actual avatar.update locomotion fields. Capture
+clipping/attachment failures, not just dimensions. Pin hero reference environment,
+measure isolated/crowd costs and resolve procedural dependency/provenance scope.
+Physical device targets and human acceptance remain missing inputs. #443 durable
+drafts/immutable publication/CAS/replication and #444 broad acceptance remain
+unimplemented. The #461 parent still lacks this focus correction; reconcile the
+stack/backport before any future landing. No merge/deploy authorization. Preserve
+this active checkout and all three draft PR branches.
+
+Audit/focus commitb21bf7b85103254dcd792207fe26b2722def9fbc signed, signature and
+attribution checked, pushed to draft #462. PR title/body rewritten around final
+asset audit + portrait + skirt + focus scope. Hosted checks must be verified on the
+new head; prior failed run is not success. Goal/task remain active and checkout
+preserved. Resume exact next actions above using live register and existing PRs.
+
+Handoff register check exposed two Studio head-mismatch warnings because one task
+listed three stacked branches but had only one `pr`. Split contract/editor into
+separate owned register records pointing to #457/#461; retained the original stable
+goal task, archive history and active render branch at #462. No branches/checkouts
+removed. Initial inventory31 branches/27 worktrees; final observed20/14 reflects
+other concurrent sessions, not cleanup by this task. Re-run reconciliation after
+this metadata correction; unrelated lease/retirement/missing-checkout gaps remain.
+
+## Pose-matrix continuation
+Prior goal turn made progress: signed/pushed #462 render, asset audit and focus
+fix; final core and targeted/browser checks passed. Revalidated clean checkout at
+7c6facc5, primary maina5697b57, 14 worktrees and live #462 draft. Hosted checks are
+in progress. Renewed all three owned stack records. No memory matches found.
+
+Objective: rendered canonical Sable human/fox idle/walk/run/sit/wave, plus fox
+prowl/lope, with front/profile/back views and decoded texture checks. Reuse the
+existing Jevica fixture and actual avatar.update movement/seat fields. Test/evidence
+files owned: preview/e2e/character-poses.js and fixtures/jevica.js. Detect and fix
+observed major intersections, retain explicit untested other wardrobe/forms.
+
+
+Pose diagnostic increment: actual moving roots, runtime seating, canonical colors,
+12 poses / 38 views, finite skinned geometry and decoded-texture checks. Final
+focused command `RIVER_OAKS_E2E_REPORT=character-poses-final.json node
+preview/e2e/experience-runner.js character-poses` passed29 checks in8.363s.
+Receipt preserved at `.runtime/character-studio/poses-final.json`. This is diagnostic
+success, NOT no-clipping acceptance: both Sable seated forms visibly fail garment
+coverage (594/689 above probes and418/689 front probes uncovered). Rendered front,
+side and overhead evidence agrees. Previous narrower thigh probes missed the
+center/pelvis and runtime pose, so they were insufficient.
+
+Investigated front/rear skin weights, broader rest-covered samples, shorter slit,
+hem length and central drape. Some synthetic probes passed while runtime probes or
+rendered views failed. Restored all production garment and unit-test experiments
+to HEAD; preserved experiments, logs/reports and images under
+`.runtime/character-studio/pose-fitting-experiments/`. No garment fix or visual
+acceptance is claimed. Review independently confirmed the seated defect. Keep the
+full #440–#444 objective active. Core verification and diagnostic-harness review
+are in progress. Hosted checks for pushed7c6facc5 now all succeed, including preview;
+that does not cover this uncommitted harness or prove visual acceptance.
+
+Next: deliver the reviewed diagnostic increment to #462; resolve seated Sable fit
+with actual runtime/body coverage and rendered review, then the remaining #442
+wardrobe/attachment, procedural provenance, pinned hero and measured crowd/device
+gates. Continue #443 persistence/publication/replication and #444 full journey
+acceptance against the validated contract/catalog, retaining those rendering gaps.
+
+
+Diagnostic-harness review found no blocker; fixture changes are opt-in and all
+experimental production garment changes remain restored. Final core command
+`pnpm run verify` passed: tooling117, preview3319 pass/1 existing skip/1 todo,
+server598 pass/153 Redis skips, desktop69, Python141/66 warnings. Build, lint,
+format, demo expected-status and secrets passed. Receipt:
+`.runtime/character-studio/pose-core.json`. No Redis/full gate, physical device,
+human accessibility, pinned-golden or production acceptance is claimed.
