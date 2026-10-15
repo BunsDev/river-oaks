@@ -52,6 +52,7 @@ const legacy = {
     portals: [portal(L0, 'entrance', 'entrance', [0, 0])] }],
   anchors: [],
   seats: [],
+  views: [],
 };
 
 // Kit [x, d] anchors and stations from the reviewed contract.
@@ -130,6 +131,15 @@ const penthouse = {
     { id: 'lift-upper', kind: 'lift', levelId: L1, position: [-12, 18] },
   ],
   seats,
+  // Bounded local views (#363): fixed camera eye/target pairs, [x, height above the level's floor, d],
+  // inside the shell. They move only the camera, never the visitor.
+  views: [
+    { id: 'overview', label: 'Overview', levelId: L0, eye: [13.6, 6.4, 1.2], target: [-6, 1, 12] },
+    { id: 'main-floor', label: 'Main floor', levelId: L0, eye: [-8, 1.7, 1.5], target: [5, 1.2, 12] },
+    { id: 'workstations', label: 'Workstations', levelId: L0, eye: [9, 2.4, 1.8], target: [4.5, 0.8, 7.5] },
+    { id: 'library', label: 'Library', levelId: L1, eye: [13.5, 2.2, 19.2], target: [-6, 1, 17.5] },
+    { id: 'terrace', label: 'Terrace', levelId: L0, eye: [-16, 1.8, 17.5], target: [-30, 1, 4] },
+  ],
 };
 
 export const OFFICE_LAYOUTS = deepFreeze({ [OFFICE_LAYOUT_LEGACY]: legacy, [OFFICE_LAYOUT_PENTHOUSE]: penthouse });
@@ -139,6 +149,8 @@ export const officeLevelElevation = (layout, levelId) => levelOf(layout, levelId
 const point = value => Array.isArray(value) && value.length === 2 && value.every(Number.isFinite);
 
 export const officeSeats = layout => layout?.seats ?? [];
+export const officeViews = layout => layout?.views ?? [];
+export const officeView = (layout, id) => officeViews(layout).find(view => view.id === id) ?? null;
 export const officeSeat = (layout, id) => officeSeats(layout).find(seat => seat.id === id) ?? null;
 // The seat whose stand point is within reach on this floor, nearest first.
 export function officeNearbySeat(layout, levelId, position) {
