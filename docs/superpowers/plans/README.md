@@ -4,7 +4,7 @@
 
 Each plan is a task ledger. Status comes from the task register, where the primary checkout's live copy can be newer than the committed one. Plans from before the register are listed as historical: their own text is the record of what was delivered.
 
-## Active and blocked (17)
+## Active and blocked (16)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
@@ -18,7 +18,6 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-15-garden-office-pilot](2026-10-15-garden-office-pilot.md)<br>Garden Office realism pilot (#416, parent #413) | `garden-office-416` | active | — | 2026-10-15 |
 | [2026-10-15-desktop-e2e-walk-game-time](2026-10-15-desktop-e2e-walk-game-time.md)<br>Desktop e2e: the W walk over game time, 2026-10-15 | `desktop-e2e-walk-game-time` | active | — | 2026-10-15 |
 | [2026-10-14-shared-dominoes](2026-10-14-shared-dominoes.md)<br>Shared Dominoes Implementation Plan (PR 1: the town holds the round) | `shared-dominoes-sheet` | active | — | 2026-10-14 |
-| [2026-10-14-release-0.2.0-readiness](2026-10-14-release-0.2.0-readiness.md)<br>TypeSafe Place 0.2.0 release readiness | `release-0-2-0-readiness` | blocked | #376 | 2026-10-15 |
 | [2026-10-14-procedural-gpu-acceptance](2026-10-14-procedural-gpu-acceptance.md)<br>Procedural interiors: physical GPU acceptance plan | `procedural-gpu-acceptance` | queued | — | 2026-10-15 |
 | [2026-10-14-gallery-vertical-route](2026-10-14-gallery-vertical-route.md)<br>Gallery vertical-route visual integration | `procedural-gallery-vertical-route` | queued | — | 2026-10-14 |
 | [2026-10-14-desktop-package-matrix](2026-10-14-desktop-package-matrix.md)<br>Desktop packaging build matrix (#371), 2026-10-14 | `desktop-package-matrix` | active | #377 | 2026-10-15 |
@@ -169,7 +168,7 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-11-delivered-source-retirement](2026-10-11-delivered-source-retirement.md)<br>Delivered source reconciliation | `reconcile-delivered-sources` | retired | — | 2026-10-11 |
 | [2026-10-11-ci-parallel-preview](2026-10-11-ci-parallel-preview.md)<br>Parallel preview check | `ci-parallel-preview` | retired | #252 | 2026-10-11 |
 
-## Historical, not in the register (84)
+## Historical, not in the register (81)
 
 | Plan | PRs mentioned |
 | --- | --- |
@@ -181,12 +180,9 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-15-office-kit-fit](2026-10-15-office-kit-fit.md)<br>#362: read-only desk fit check for the supplied kit | #362, #400, #363 |
 | [2026-10-15-office-ipic-journey](2026-10-15-office-ipic-journey.md)<br>#368 slice 2: two-account office + IPIC journey and rollback evidence | #368, #400, #361 |
 | [2026-10-15-office-fallback-lift-glass](2026-10-15-office-fallback-lift-glass.md)<br>Office: fallback scene lift behind the penthouse glass | #405, #408, #400 |
-| [2026-10-15-office-desk-footprints](2026-10-15-office-desk-footprints.md)<br>#362 R19: the kit's measured desk footprints | #362, #403, #400 |
 | [2026-10-15-office-building-raise](2026-10-15-office-building-raise.md)<br>Office: raise the penthouse tower to 33 m | #363 |
-| [2026-10-15-landing-enter-for-approved](2026-10-15-landing-enter-for-approved.md)<br>Landing page: "Enter River Oaks" for residents who already have access | — |
 | [2026-10-15-ipic-screening-soak](2026-10-15-ipic-screening-soak.md)<br>#368 slice 1: IPIC screening catalog profile and ten-cycle soak | #368, #367, #365 |
 | [2026-10-15-ipic-recliner-view](2026-10-15-ipic-recliner-view.md)<br>#368 T3 finding: a seated IPIC viewer sees the recliner, not the screen | #368, #359, #422 |
-| [2026-10-15-ipic-original-short](2026-10-15-ipic-original-short.md)<br>#365: the approved original short | #365, #406, #429 |
 | [2026-10-13-stage-voice-carry](2026-10-13-stage-voice-carry.md)<br>A stage performer is heard across the plaza — 2026-10-13 | #311 |
 | [2026-10-13-procedural-multilevel-interiors](2026-10-13-procedural-multilevel-interiors.md)<br>Building-anchored procedural interiors and levels | — |
 | [2026-10-13-plaza-table-lessons](2026-10-13-plaza-table-lessons.md)<br>Guided first games at the plaza tables — 2026-10-13 | — |
