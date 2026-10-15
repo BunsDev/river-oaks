@@ -1,3 +1,5 @@
+import { createCharacterHero } from './character-hero.js';
+import { characterPortraitPNG } from './character-portrait.js';
 import { loadLatestCharacter } from './character-studio-loading.js';
 import * as THREE from 'three';
 import { AVATAR_PROFILES, loadResidentAvatar } from './avatars.js';
@@ -63,6 +65,17 @@ export function createCharacterPreview({host,ownerId,reducedMotion=false,onStatu
   return {
     setDefinition(value){const result=validateCharacterDefinition(value,{ownerId});if(!result.ok)throw new TypeError(result.error);wanted=result.definition;
       if(loadedId===wanted.appearanceId){colors.apply(wanted);renderDirty=true;}else load();},
+    async capturePortrait(){
+      if(disposed||loading||!avatar)throw new Error('Wait for the preview to finish loading.');
+      let hero;
+      try{
+        hero=await createCharacterHero({definition:wanted,ownerId});
+        if(disposed)throw new Error('Studio closed during portrait preparation.');
+        const result=await characterPortraitPNG({renderer,scene:hero.scene,camera:hero.camera});
+        if(disposed)throw new Error('Studio closed during portrait capture.');
+        return {...result,definition:hero.definition,preset:hero.preset};
+      }finally{hero?.dispose();renderDirty=true;}
+    },
     setView(options){if(options.yaw!==undefined)yaw=options.yaw*Math.PI/180;if(options.turntable!==undefined)turntable=options.turntable;
       if(['idle','walk','wave'].includes(options.pose))pose=options.pose;if(['full','portrait'].includes(options.framing))framing=options.framing;
       if(options.lighting){const warm=options.lighting==='warm';scene.background.set(warm?'#dfcdbb':'#cbd8d1');key.color.set(warm?'#ffd1a6':'#fff0df');fill.intensity=warm?1.6:2;}

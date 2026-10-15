@@ -9377,11 +9377,12 @@
       "status": "active",
       "branches": [
         "feat/character-studio-contract-20261015",
-        "feat/character-studio-editor-20261015"
+        "feat/character-studio-editor-20261015",
+        "feat/character-studio-render-20261015"
       ],
       "owner": "codex-character-studio-20261015",
-      "updatedAt": "2026-10-15T20:51:57.221604+00:00",
-      "nextAction": "Draft editor PR #461 pushed at bf0f8aac, stacked on #457. Finish queued wave capture, then #442 native 4K integration and walk/skirt clipping regression; continue #443 persistence and #444 full acceptance. No merge/deploy authorization.",
+      "updatedAt": "2026-10-15T21:10:17.254958+00:00",
+      "nextAction": "Finish final core verification and stacked render PR: native 4K portrait, capture lifecycle fixes, actual-rig skirt regression. Then complete #442 catalog/pose/performance evidence before #443 authoritative persistence and #444 acceptance. No merge/deploy.",
       "filesOwned": [
         "preview/src/character-definition.js",
         "preview/tests/character-definition.test.js",
@@ -9400,7 +9401,12 @@
         "preview/e2e/character-studio.js",
         "preview/tests/character-studio*.test.js",
         "preview/src/character-portrait.js",
-        "preview/tests/character-portrait.test.js"
+        "preview/tests/character-portrait.test.js",
+        "preview/src/character-hero.js",
+        "preview/src/skirt-skinning.js",
+        "preview/tests/skirt-skinning.test.js",
+        "preview/tests/character-hero.test.js",
+        "preview/e2e/character-portrait.js"
       ],
       "requiredChecks": [
         "Focused contract and rig tests",
@@ -9427,7 +9433,7 @@
           ]
         }
       },
-      "leaseUntil": "2026-10-15T22:51:57.221604+00:00",
+      "leaseUntil": "2026-10-15T23:10:17.254958+00:00",
       "ledger": "docs/superpowers/plans/2026-10-15-character-studio.md",
       "pr": 461,
       "verification": {

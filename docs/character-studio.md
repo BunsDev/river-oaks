@@ -1,6 +1,6 @@
 # Character Studio architecture decision (#440)
 
-Status: contract in draft PR #457; local Studio editor under verification.
+Status: contract in draft PR #457; editor in draft PR #461; render increment under verification.
 This is the first increment of #440–#444, not a shipped Studio.
 
 ## Decision and evidence
@@ -153,3 +153,31 @@ were inspected: both authored forms render with head, hair, dress, bag and shoes
 visible; the fox has its head and tail. No gross missing geometry or textures
 were visible in the captured standing view. This does not establish the full pose,
 clipping, lighting or high-fidelity acceptance matrix from #442.
+
+## Native portrait and garment increment (#442)
+
+Create 4K portrait renders the displayed validated definition into a native
+3840×2160 target, independent of the viewport and DPR. Before/after changes
+invalidate exports just like palette and character changes. Only one capture can
+be in flight, including across edits and closing/reopening. Stale completions
+cannot attach downloads; object URLs and owned hero resources are released.
+Unsupported target sizes or incomplete framebuffers fail visibly without upscaling.
+
+`garden-front-v1` uses a fresh neutral rig at time zero, a 30-degree perspective
+camera at (0, 1.08, 3.8) looking at (0, 0.9, 0), and the garden daylight key,
+hemisphere fill and rim. A 2048-pixel key shadow map grounds the model. The native
+4-sample half-float target retains linear HDR; an OutputPass applies ACES exposure
+1.1 and sRGB exactly once into an RGBA8 readback target. PNG rows are flipped
+without resampling. Existing photo mode remains available independently.
+
+Sable's skirt now uses the body's existing pelvis/thigh skeleton and bind space.
+The waist stays at the pelvis and the hem follows the legs, preserving geometry
+counts, materials and cleanup. Actual human/fox rig fixtures probe covered upper
+thighs through opposing strides and translated/rotated/scaled parents. This fixes
+the observed rigid-skirt intersection; it does not establish every animation,
+wardrobe or camera angle. The intentional hem slit is excluded from coverage probes.
+
+Current-machine captures repeat identically, but are not approved goldens. Named
+physical device targets, full animation/wardrobe compatibility, measured crowd
+budgets, complete procedural dependency provenance and shared custom colors remain
+open. Keep unsupported shape, skin, attachment and asset combinations unavailable.

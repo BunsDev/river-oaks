@@ -204,3 +204,62 @@ verification and actual-rig skirt fitting. Do not claim 4K integration from the
 helper tests. Continue #443 and #444 after that. Preserve this checkout; it contains
 undelivered portrait code. Hosted/editor review, physical-device targets, human
 acceptance and all downstream criteria remain explicit gaps.
+
+## Render increment (#442)
+Previous goal turn was progress: signed editor implementation/evidence pushed in
+#461 and 253 regressions/core passed. Revalidated #461 open/draft at 93f29271,
+primary main now a5697b57, owned checkout preserved with only portrait helper/test
+untracked. Final editor/wave session 28249 remains live and queued; do not restart.
+New stacked branch `feat/character-studio-render-20261015` uses this same checkout.
+
+Objective: native 3840x2160 export with deterministic neutral hero pose, documented
+camera/light/color settings and validated identity; async load/encoding fencing,
+resource disposal and pixel/dimension verification. Then address the observed
+walking skirt intersection with actual geometry/rig regression and rendered poses.
+Files owned recorded in primary tasks register. Keep existing appearance authority.
+
+Final editor/wave journey completed on unchanged #461 code: 21 checks passed in
+89.982 s. Wave capture inspected: arm visibly raised, actual rig remains rendered.
+Report `.runtime/character-studio/editor-browser-final.json`; #461 body updated.
+Previous pending wave gap is resolved; walking skirt clipping remains separate.
+Hero scene and readback unit tests now 6/6: canonical owner/identity, fixed neutral
+camera/pose, failure cleanup, native target dimensions, row orientation, state
+restoration and incomplete framebuffer rejection. No browser/4K acceptance yet.
+
+Native export is now integrated: dedicated HDR/output targets, fixed hero rig,
+neutral pose, camera, daylight and 2048 shadow map; canonical edited identity in
+human/fox PNGs. Initial portrait browser run passed 11 checks in 13.494 s and
+allocated actual 3840x2160 GPU targets. Both exports inspected. Repeated decoded
+pixels had maximum/mean error zero on this machine; no approved golden implied.
+
+Replaced the rigid Sable skirt with weights on the existing pelvis/thigh skeleton.
+The old code fails the actual-geometry regression at +0.45 stride: 8/114 covered
+upper-thigh points exposed. New human and fox fixtures pass five opposing stride
+angles and transformed parents. Geometry counts remain unchanged. Updated walking
+capture inspected: previously protruding upper thigh is covered. Full pose,
+wardrobe and view matrix remains open.
+
+`pnpm run test:experience character-studio` passed 21 checks in 86.032 s on the
+new render integration. First `pnpm run verify` passed: tooling 112, preview 3318
+pass/1 existing skip/1 todo, server 598 pass/153 Redis skips, desktop 69, Python141.
+Receipt `.runtime/character-studio/render-core-before-review-fixes.json`.
+
+Independent review found two P2 lifecycle defects: edits could clear an in-flight
+capture lock; Before/after could retain a download for the wrong shown definition.
+Both reproduced with browser regressions, then fixed. In-flight work remains
+bounded across edits/close/reopen; export key tracks the actual shown definition.
+Re-review found no remaining blocker. Final portrait journey passed 15 checks in
+13.418 s, including both red/green regressions and unsupported hardware, with
+identical repeated decoded pixels. Report `.runtime/character-studio/portrait-browser-final.json`.
+Final focused command `node --test preview/tests/character-portrait.test.js
+preview/tests/character-hero.test.js preview/tests/skirt-skinning.test.js
+preview/tests/character-studio-materials.test.js preview/tests/reference-batching.test.js`
+passed 13, no skips; build passed. Final core gate rerun in progress after fixes.
+
+Final core gate passed after both review fixes. Receipt
+`.runtime/character-studio/render-core-final.json`: tooling112, preview3318 passed
+(1 existing skip/1 todo), server598 passed (153 Redis skips), desktop69, Python141
+(66 warnings), build/lint/format/demo expected-status/secrets all passed. Tested
+patch is the render implementation based on editor head93f29271. No source changes
+after these final checks. Live project:check remains exit1 for unrelated existing
+ownership/retirement/missing-checkout records; this task remains owned and active.

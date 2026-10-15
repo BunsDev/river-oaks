@@ -1,3 +1,4 @@
+import { skinSkirt } from './skirt-skinning.js';
 import {measureLimbProfile,limbSurfacePoint} from './limb-fit.js';
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
@@ -62,6 +63,7 @@ export function createReferenceStyle(avatar,appearance){
     }
     const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));geometry.setIndex(indices);geometry.computeVertexNormals();
     const skirt=mesh(pelvis,geometry,surface);skirt.name=wrap?'Vesper velvet wrap skirt':'Sable ivory mini dress';
+    if(appearance.character==='sable')attachments.add(skinSkirt(skirt,model.getObjectByName('Jevica')).group);
     if(wrap){
       tube(pelvis,material('#8d3b52',{roughness:.82}),[[-.18,.015,.085],[-.10,-.035,.14],[.02,-.10,.151],[.16,-.16,.10]],.009);
     }else{
