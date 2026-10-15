@@ -4,16 +4,19 @@ const fields=(v,keys)=>v&&typeof v==='object'&&!Array.isArray(v)&&Object.keys(v)
 const userId=v=>typeof v==='string'&&/^[A-Za-z0-9_-]{1,160}$/.test(v)&&!['__proto__','constructor','prototype'].includes(v);
 const fail=error=>({ok:false,error,message:error});
 const LIMIT=64;
+const workspaceId=id=>typeof id==='string'&&/^office-[a-f0-9]{64}$/.test(id);
 export function createOffices({worldData,players,isAdmin,environment,changed,cancel}) {
   const catalog=officesFor(worldData),grants=new Map(),requests=new Map(),visits=new Map();
   const access=(id,officeId)=>isAdmin(id)?'owner':grants.get(officeId)?.find(g=>g.userId===id)?.kind??null;
   const leave=id=>{const visit=visits.get(id),player=players.get(id);if(!visit)return;visits.delete(id);if(player){player.poseAt=visit.at;player.moveBudget=.1;player.liftBudget=.1;}changed();};
   const publicVisit=id=>{const v=visits.get(id);return v?{id:v.id,position:[...v.position],yaw:v.yaw}:null;};
-  function command(player,m,time) {
-    const office=catalog.find(o=>o.id===m.officeId);
+  function command(player,m,time,workspace=null) {
+    const personal=workspaceId(m.officeId);
+    const office=personal&&catalog[0]?{...catalog[0],id:m.officeId}:catalog.find(o=>o.id===m.officeId);
     if(!office)return fail('unknown_office');
     if(!fields(m,['type','action','officeId',...(['invite','approve','deny','revoke'].includes(m.action)?['peerId']:m.action==='move'?['position','yaw']:[])]))return fail('invalid_office_command');
-    const id=player.id,permission=access(id,office.id),visit=visits.get(id);
+    const id=player.id,permission=personal?(workspace?.id===office.id&&['owner','accepted'].includes(workspace.role)?workspace.role:null):access(id,office.id),visit=visits.get(id);
+    if(personal&&!['enter','move','leave'].includes(m.action))return fail('invalid_office_command');
     if(m.action==='list')return {ok:true,offices:catalog.map(o=>({...o,access:access(id,o.id),requested:(requests.get(o.id)??[]).some(r=>r.userId===id),...(isAdmin(id)?{guests:structuredClone(grants.get(o.id)??[]),requests:structuredClone(requests.get(o.id)??[])}:{})}))};
     if(m.action==='request'){
       if(permission)return {ok:true};
@@ -37,7 +40,7 @@ export function createOffices({worldData,players,isAdmin,environment,changed,can
       requests.set(office.id,pending.filter(r=>r.userId!==m.peerId));changed();return {ok:true};
     }
     if(m.action==='leave'){leave(id);return {ok:true};}
-    if(!permission)return fail('office_permission_required');
+    if(!permission){if(personal&&visit?.id===office.id)leave(id);return fail('office_permission_required');}
     if(m.action==='enter'){
       if(visit)return {ok:true,office:publicVisit(id)};
       if(player.altitude>.1||player.vehicle||player.sitting||Math.hypot(player.position[0]-office.entrance[0],player.position[1]-office.entrance[1])>3)return fail('office_lobby_required');
@@ -57,7 +60,7 @@ export function createOffices({worldData,players,isAdmin,environment,changed,can
     return fail('invalid_office_command');
   }
   const checkpoint=()=>structuredClone({grants:[...grants],requests:[...requests],visits:[...visits]});
-  function validate(saved={grants:[],requests:[],visits:[]},nextPlayers=players){
+  function validate(saved={grants:[],requests:[],visits:[]},nextPlayers=players,allowWorkspaces=false){
     if(!fields(saved,['grants','requests','visits']))throw new Error('Invalid office checkpoint');
     const checkMap=(entries,limit,check)=>{
       if(!Array.isArray(entries)||entries.length>limit)throw new Error('Invalid office map');
@@ -66,7 +69,7 @@ export function createOffices({worldData,players,isAdmin,environment,changed,can
     const checkPeople=(id,items,grant)=>catalog.some(o=>o.id===id)&&Array.isArray(items)&&items.length<=LIMIT&&new Set(items.map(p=>p?.userId)).size===items.length&&items.every(p=>fields(p,grant?['userId','name','kind']:['userId','name'])&&userId(p.userId)&&typeof p.name==='string'&&p.name.length<=160&&(!grant||['invited','accepted'].includes(p.kind)));
     const g=checkMap(saved.grants,catalog.length,(id,items)=>checkPeople(id,items,true));
     checkMap(saved.requests,catalog.length,(id,items)=>checkPeople(id,items,false));
-    checkMap(saved.visits,nextPlayers.size,(id,v)=>nextPlayers.has(id)&&fields(v,['id','position','yaw','at','budget'])&&catalog.some(o=>o.id===v.id)&&officeFree(v.position)&&Number.isFinite(v.yaw)&&Number.isFinite(v.at)&&Number.isFinite(v.budget)&&v.budget>=0&&v.budget<=1&&(isAdmin(id)||g.get(v.id)?.some(p=>p.userId===id)));
+    checkMap(saved.visits,nextPlayers.size,(id,v)=>nextPlayers.has(id)&&fields(v,['id','position','yaw','at','budget'])&&(catalog.some(o=>o.id===v.id)||allowWorkspaces&&workspaceId(v.id))&&officeFree(v.position)&&Number.isFinite(v.yaw)&&Number.isFinite(v.at)&&Number.isFinite(v.budget)&&v.budget>=0&&v.budget<=1&&(allowWorkspaces&&workspaceId(v.id)||isAdmin(id)||g.get(v.id)?.some(p=>p.userId===id)));
     return structuredClone(saved);
   }
   function load(saved){for(const [map,entries]of [[grants,saved.grants],[requests,saved.requests],[visits,saved.visits]]){map.clear();for(const [k,v]of entries)map.set(k,v);}}

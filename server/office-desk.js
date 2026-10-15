@@ -1,29 +1,45 @@
 import { createHash } from 'node:crypto';
-import { DESK_LIMITS, deskFields, deskId, validDeskTask, validDeskVersion, emptyDesk } from '../preview/src/office-desk-contract.js';
-const MAX_ACCOUNTS=10000;
+import { DESK_LIMITS, deskFields, deskId, validDeskTask, validDeskVersion, emptyDesk, stampDeskTask } from '../preview/src/office-desk-contract.js';
+const MAX_ACCOUNTS=10000,MAX_RECEIPTS=32;
+const publicDesk=({schemaVersion,receipts,...desk})=>structuredClone(desk);
+const digest=value=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const validUser=id=>typeof id==='string'&&id.length>0&&id.length<=160&&!/[\u0000-\u001f\u007f]/.test(id);
 function decode(raw){
  if(!raw)return emptyDesk();const d=JSON.parse(raw);
- if(!deskFields(d,['version','activeId','tasks','updatedAt'])||!validDeskVersion(d.version)||!Number.isSafeInteger(d.updatedAt)||d.updatedAt<0
+ if(!deskFields(d,['version','activeId','tasks','updatedAt','schemaVersion','receipts'])||!validDeskVersion(d.version)||!Number.isSafeInteger(d.updatedAt)||d.updatedAt<0
+  ||(d.schemaVersion!==undefined&&d.schemaVersion!==2)||(d.receipts!==undefined&&(!Array.isArray(d.receipts)||d.receipts.length>MAX_RECEIPTS||!d.receipts.every(r=>deskId(r.id)&&/^[a-f0-9]{64}$/.test(r.digest))))
   ||!Array.isArray(d.tasks)||d.tasks.length>DESK_LIMITS.tasks||!d.tasks.every(validDeskTask)||new Set(d.tasks.map(t=>t.id)).size!==d.tasks.length
   ||(d.activeId!==null&&!d.tasks.some(t=>t.id===d.activeId)))throw new Error('Invalid desk record');
  return d;
 }
 function service({read,commit,now}){
  async function change(userId,data,remove){
-  if(!validUser(userId)||!deskFields(data,remove?['expectedVersion','id']:['expectedVersion','task'])||!validDeskVersion(data.expectedVersion)
-   ||(remove?!deskId(data.id):!validDeskTask(data.task)))return {ok:false,reason:'invalid_desk'};
-  const current=await read(userId);if(current.version!==data.expectedVersion)return {ok:false,reason:'desk_conflict'};
-  const id=remove?data.id:data.task.id,index=current.tasks.findIndex(t=>t.id===id);
-  if(remove&&index<0)return {ok:false,reason:'desk_missing'};
-  if(!remove&&index<0&&current.tasks.length>=DESK_LIMITS.tasks)return {ok:false,reason:'desk_limit'};
-  const tasks=structuredClone(current.tasks);
-  if(remove)tasks.splice(index,1);else if(index<0)tasks.unshift(structuredClone(data.task));else tasks[index]=structuredClone(data.task);
-  const desk={version:current.version+1,activeId:remove?(current.activeId===id?tasks[0]?.id??null:current.activeId):id,tasks,updatedAt:now()};
-  if(Buffer.byteLength(JSON.stringify(desk))>DESK_LIMITS.bytes)return {ok:false,reason:'desk_limit'};
-  const reason=await commit(userId,current.version,desk);return reason==='ok'?{ok:true,desk}:{ok:false,reason};
+  if(!validUser(userId)||!deskFields(data,remove?['expectedVersion','id','operationId']:['expectedVersion','task','operationId'])||!validDeskVersion(data.expectedVersion)
+   ||(data.operationId!==undefined&&!deskId(data.operationId))||(remove?!deskId(data.id):!validDeskTask(data.task)))return {ok:false,reason:'invalid_desk'};
+  const fingerprint=digest([remove,data.expectedVersion,remove?data.id:data.task]);
+  for(let attempt=0;attempt<2;attempt++){
+   const current=await read(userId),receipt=current.receipts?.find(r=>r.id===data.operationId);
+   if(receipt)return receipt.digest===fingerprint?{ok:true,desk:publicDesk(current)}:{ok:false,reason:'desk_operation_conflict'};
+   if(current.version!==data.expectedVersion)return {ok:false,reason:'desk_conflict'};
+   const id=remove?data.id:data.task.id,index=current.tasks.findIndex(t=>t.id===id);
+   if(remove&&index<0)return {ok:false,reason:'desk_missing'};
+   if(!remove&&index<0&&current.tasks.length>=DESK_LIMITS.tasks)return {ok:false,reason:'desk_limit'};
+   const tasks=structuredClone(current.tasks),time=now();
+   if(remove)tasks.splice(index,1);else{
+    const task=stampDeskTask(data.task,current.tasks[index],time);
+    if(index<0)tasks.unshift(task);else tasks[index]=task;
+   }
+   const desk={version:current.version+1,activeId:remove?(current.activeId===id?tasks[0]?.id??null:current.activeId):id,tasks,updatedAt:time};
+   if(Buffer.byteLength(JSON.stringify(desk))>DESK_LIMITS.bytes)return {ok:false,reason:'desk_limit'};
+   const receipts=[...(current.receipts??[])];if(data.operationId)receipts.push({id:data.operationId,digest:fingerprint});
+   const record={...desk,schemaVersion:2,receipts:receipts.slice(-MAX_RECEIPTS)};
+   const reason=await commit(userId,current.version,record);
+   if(reason==='ok')return {ok:true,desk};
+   if(reason!=='desk_conflict')return {ok:false,reason};
+  }
+  return {ok:false,reason:'desk_conflict'};
  }
- return {async read(id){if(!validUser(id))throw new Error('Invalid account');return structuredClone(await read(id));},save:(id,data)=>change(id,data,false),remove:(id,data)=>change(id,data,true)};
+ return {async read(id){if(!validUser(id))throw new Error('Invalid account');return publicDesk(await read(id));},save:(id,data)=>change(id,data,false),remove:(id,data)=>change(id,data,true)};
 }
 export function createMemoryOfficeDesk({now=Date.now}={}){
  const records=new Map();

@@ -1,0 +1,1002 @@
+{
+  "packet": "office-ipic",
+  "schemaVersion": 1,
+  "sourceRevision": "489a60e41bfe1a6499dfb0905ada55856be99825",
+  "reconciledAt": "2026-10-14T19:51:14Z",
+  "threeAxes": "x east / y up / z south",
+  "counts": {
+    "kit:model": 22,
+    "kit:texture": 15,
+    "kit:reference-image": 9,
+    "repo:model": 4,
+    "repo:reference-image": 2,
+    "repo:data": 1
+  },
+  "assets": [
+    {
+      "id": "kit-model-jevica-office-blockout",
+      "kind": "model",
+      "source": "kit",
+      "reference": "kit-models-jevica-office-blockout-glb",
+      "file": "models/jevica-office-blockout.glb",
+      "bytes": 2783612,
+      "sha256": "826f4d5aed67fc704db70a92ca4e2253b3dbefea0acd6624c54b3fd0ea0e5a0f",
+      "triangles": 41864,
+      "meshNodes": 647,
+      "bounds": [
+        [
+          -23.02500000037253,
+          -0.18000000357627868,
+          -20.100000001490116
+        ],
+        [
+          15.04500000178814,
+          7.780000003576279,
+          0.054999999701976776
+        ]
+      ],
+      "axes": "x east / y up / z south",
+      "stage": "procedural-blockout",
+      "targetDimensions": null,
+      "lod0Target": null,
+      "availability": "local-only"
+    },
+    {
+      "id": "kit-model-architecture-shell",
+      "kind": "model",
+      "source": "kit",
+      "reference": "kit-models-architecture-shell-glb",
+      "file": "models/architecture-shell.glb",
+      "bytes": 256876,
+      "sha256": "6ece9951ab9926fd3a21b7181347bda7c109addfffbb57a8b6146876e51bf104",
+      "triangles": 1716,
+      "meshNodes": 143,
+      "bounds": [
+        [
+          -23.02500000037253,
+          -0.18000000357627868,
+          -20.100000001490116
+        ],
+        [
+          15.04500000178814,
+          7.780000003576279,
+          0.054999999701976776
+        ]
+      ],
+      "axes": "x east / y up / z south",
+      "stage": "procedural-blockout",
+      "targetDimensions": null,
+      "lod0Target": null,
+      "availability": "local-only"
+    },
+    {
+      "id": "kit-model-executive-desk",
+      "kind": "model",
+      "source": "kit",
+      "reference": "kit-models-executive-desk-glb",
+      "file": "models/executive-desk.glb",
+      "bytes": 23376,
+      "sha256": "0ddfe6ea53d2756a7281ac3eae7fa9ec00fffa0acecb2efc2c5eb525deb12b70",
+      "triangles": 208,
+      "meshNodes": 4,
+      "bounds": [
+        [
+          -2,
+          -0.03918520156713484,
+          -0.800000011920929
+        ],
+        [
+          2,
+          0.7600000014901164,
+          0.800000011920929
+        ]
+      ],
+      "axes": "x east / y up / z south",
+      "stage": "procedural-blockout",
+      "targetDimensions": "4.0 × 1.6 × 0.76 m",
+      "lod0Target": 12000,
+      "availability": "local-only"
+    },
+    {
+      "id": "kit-model-workbench",
+      "kind": "model",
+      "source": "kit",
+      "reference": "kit-models-workbench-glb",
+      "file": "models/workbench.glb",
+      "bytes": 54672,
+      "sha256": "a6db8af0e77db23dd95da32c23378aaa110812c852291521767a15081c118ed7",
+      "triangles": 528,
+      "meshNodes": 4,
+      "bounds": [
+        [
+          -2.5999999046325684,
+          -1.132427463941836e-16,
+          -0.6000000238418579
+        ],
+        [
+          2.5999999046325684,
+          0.7600000014901163,
+          0.6000000238418579
+        ]
+      ],
+      "axes": "x east / y up / z south",
+      "stage": "procedural-blockout",
+      "targetDimensions": "5.2 × 1.2 × 0.76 m",
+      "lod0Target": 8000,
+      "availability": "local-only"
+    },
+    {
+      "id": "kit-model-task-chair",
+      "kind": "model",
+      "source": "kit",
+      "reference": "kit-models-task-chair-glb",
+      "file": "models/task-chair.glb",
+      "bytes": 100952,
+      "sha256": "8166a756117183d235c980086f2fe0057284b860b7c2d2f50eb5f85b28d9cf41",
+      "triangles": 1988,
+      "meshNodes": 17,
+      "bounds": [
+        [
+          -0.40999999932944775,
+          -2.980232227667301e-9,
+          -0.3499999940395355
+        ],
+        [
+          0.40999999932944775,
+          1.1699999928474427,
+          0.3899999994039536
+        ]
+      ],
+      "axes": "x east / y up / z south",
+      "stage": "procedural-blockout",
+      "targetDimensions": "0.82 × 0.84 × 1.20 m",
+      "lod0Target": 8000,
+      "availability": "local-only"
+    },
+    {
+      "id": "kit-model-meeting-chair",
+      "kind": "model",
+      "source": "kit",
+      "reference": "kit-models-meeting-chair-glb",
+      "file": "models/meeting-chair.glb",
+      "bytes": 32828,
+      "sha256": "538d3e9dd4d16243abc3e32f7b911656b10b9383a4ce48c4f74c0ec983f1ecb9",
+      "triangles": 344,
+      "meshNodes": 6,
+      "bounds": [
+        [
+          -0.30000001192092896,
+          1.1920928966180355e-9,
+          -0.30000001192092896
+        ],
+        [
+          0.30000001192092896,
+          0.9600000041723251,
+          0.30000001192092896
+        ]
+      ],
+      "axes": "x east / y up / z south",
+      "stage": "procedural-blockout",
+      "targetDimensions": "0.64 × 0.70 × 1.0 m",
+      "lod0Target": 4000,
+      "availability": "local-only"
+    },
+    {
+      "id": "kit-model-sofa",
+      "kind": "model",
+      "source": "kit",
+      "reference": "kit-models-sofa-glb",
+      "file": "models/sofa.glb",
+      "bytes": 48068,
+      "sha256": "0ddc94c1da97d1dab2be92e8a4585058c81bb9b4469bc4591c1bacf8629fc2e4",
+      "triangles": 428,
+      "meshNodes": 9,
+      "bounds": [
+        [
+          -2,
+          0.08999999999999987,
+          -0.550000011920929
+        ],
+        [
+          2,
+          1.0249999964237213,
+          0.5500000119209291
+        ]
+      ],
+      "axes": "x east / y up / z south",
+      "stage": "procedural-blockout",
+      "targetDimensions": "4.0 × 1.1 × 1.0 m",
+      "lod0Target": 9000,
+      "availability": "local-only"
+    },
+    {
+      "id": "kit-model-outdoor-sofa",
+      "kind": "model",
+      "source": "kit",
+      "reference": "kit-models-outdoor-sofa-glb",
+      "file": "models/outdoor-sofa.glb",
+      "bytes": 48084,
+      "sha256": "8cbea039954564de1fafb14944598d94642aa02b46e99db4cf345519f9d40a34",
+      "triangles": 428,
+      "meshNodes": 9,
+      "bounds": [
+        [
+          -2,
+          0.08999999999999987,
+          -0.550000011920929
+        ],
+        [
+          2,
+          1.0249999964237213,
+          0.5500000119209291
+        ]
+      ],
+      "axes": "x east / y up / z south",
+      "stage": "procedural-blockout",
+      "targetDimensions": "4.0 × 1.1 × 1.0 m",
+      "lod0Target": 8500,
+      "availability": "local-only"
+    },
+    {
+      "id": "kit-model-lounge-chair",
+      "kind": "model",
+      "source": "kit",
+      "reference": "kit-models-lounge-chair-glb",
+      "file": "models/lounge-chair.glb",
+      "bytes": 36396,
+      "sha256": "7a9acc9244edf3b3f80383fa254e577224119013d0a900f56cb04f091b8ed4af",
+      "triangles": 368,
+      "meshNodes": 8,
+      "bounds": [
+        [
+          -0.5099999986588954,
+          -1.7881393310492655e-9,
+          -0.5
+        ],
+        [
+          0.5099999986588954,
+          1,
+          0.5
+        ]
+      ],
+      "axes": "x east / y up / z south",
+      "stage": "procedural-blockout",
+      "targetDimensions": "1.0 × 1.0 × 1.0 m",
+      "lod0Target": 6000,
+      "availability": "local-only"
+    },
+    {
+      "id": "kit-model-coffee-table",
+      "kind": "model",
+      "source": "kit",
+      "reference": "kit-models-coffee-table-glb",
+      "file": "models/coffee-table.glb",
+      "bytes": 24252,
+      "sha256": "4b6539999ddd25ec77fd77c710a6551459a37b82e07e4a7de068645ca4613e08",
+      "triangles": 268,
+      "meshNodes": 2,
+      "bounds": [
+        [
+          -0.75,
+          -5.9604643443123e-10,
+          -0.5
+        ],
+        [
+          0.75,
+          0.3999999973177911,
+          0.5
+        ]
+      ],
+      "axes": "x east / y up / z south",
+      "stage": "procedural-blockout",
+      "targetDimensions": "1.5 × 1.0 × 0.40 m",
+      "lod0Target": 3500,
+      "availability": "local-only"
+    },
+    {
+      "id": "kit-model-meeting-table",
+      "kind": "model",
+      "source": "kit",
+      "reference": "kit-models-meeting-table-glb",
+      "file": "models/meeting-table.glb",
+      "bytes": 30616,
+      "sha256": "8d3f50389099aee1180432b1c9a50af14c2184319c6d92ce7acf06773bbc4dff",
+      "triangles": 364,
+      "meshNodes": 3,
+      "bounds": [
+        [
+          -2.700000047683716,
+          -1.3113021835042815e-8,
+          -1
+        ],
+        [
+          2.700000047683716,
+          0.7600000014901164,
+          1
+        ]
+      ],
+      "axes": "x east / y up / z south",
+      "stage": "procedural-blockout",
+      "targetDimensions": "5.4 × 2.0 × 0.76 m",
+      "lod0Target": 6500,
+      "availability": "local-only"
+    },
+    {
+      "id": "kit-model-bookcase",
+      "kind": "model",
+      "source": "kit",
+      "reference": "kit-models-bookcase-glb",
+      "file": "models/bookcase.glb",
+      "bytes": 70628,
+      "sha256": "cb36362824876d56b711abd24303deef81cc45d9c1d119551e0f024eaf6c86c7",
+      "triangles": 468,
+      "meshNodes": 39,
+      "bounds": [
+        [
+          -2.700000047683716,
+          4.768371586472142e-8,
+          -0.30000001192092896
+        ],
+        [
+          2.700000047683716,
+          2.599999952316284,
+          0.30000001192092896
+        ]
+      ],
+      "axes": "x east / y up / z south",
+      "stage": "procedural-blockout",
+      "targetDimensions": "5.4 × 0.6 × 2.6 m",
+      "lod0Target": 7000,
+      "availability": "local-only"
+    },
+    {
+      "id": "kit-model-planter-tree",
+      "kind": "model",
+      "source": "kit",
+      "reference": "kit-models-planter-tree-glb",
+      "file": "models/planter-tree.glb",
+      "bytes": 73612,
+      "sha256": "d9842c842ff58add1377c012c8058bde7785ec436799b540962f1607c0918bac",
+      "triangles": 2208,
+      "meshNodes": 9,
+      "bounds": [
+        [
+          -1.1123439278970635,
+          0,
+          -0.9882357200644867
+        ],
+        [
+          1.12,
+          3.3800000000000003,
+          0.9742025772126679
+        ]
+      ],
+      "axes": "x east / y up / z south",
+      "stage": "procedural-blockout",
+      "targetDimensions": "Planter 1.15 m diameter; overall height 3.4 m",
+      "lod0Target": 9000,
+      "availability": "local-only"
+    },
+    {
+      "id": "kit-model-petal-chandelier",
+      "kind": "model",
+      "source": "kit",
+      "reference": "kit-models-petal-chandelier-glb",
+      "file": "models/petal-chandelier.glb",
+      "bytes": 217180,
+      "sha256": "cd647dcd5a947693306c53fb528698fefdfbdbb19aeb49d1967b29e7ad738e9f",
+      "triangles": 6048,
+      "meshNodes": 37,
+      "bounds": [
+        [
+          -2.0709503469751054,
+          0.11064875202859337,
+          -2.0541979671872848
+        ],
+        [
+          2.0709503469751054,
+          1.620000011920929,
+          2.030476614180026
+        ]
+      ],
+      "axes": "x east / y up / z south",
+      "stage": "procedural-blockout",
+      "targetDimensions": "4.0 m diameter × 1.7 m hanging height",
+      "lod0Target": 12000,
+      "availability": "local-only"
+    },
+    {
+      "id": "kit-model-control-pedestal",
+      "kind": "model",
+      "source": "kit",
+      "reference": "kit-models-control-pedestal-glb",
+      "file": "models/control-pedestal.glb",
+      "bytes": 32544,
+      "sha256": "f57d5ff7a3a596fbed1bbe3fcb1c6b5a8181cd0409edc021aeb9cf56a56d58c7",
+      "triangles": 316,
+      "meshNodes": 6,
+      "bounds": [
+        [
+          -0.30000001192092896,
+          -0.0050000035762786665,
+          -0.23999999463558197
+        ],
+        [
+          0.30000001192092896,
+          1.170880630074063,
+          0.239999994635582
+        ]
+      ],
+      "axes": "x east / y up / z south",
+      "stage": "procedural-blockout",
+      "targetDimensions": "0.65 × 0.55 × 1.15 m",
+      "lod0Target": 2500,
+      "availability": "local-only"
+    },
+    {
+      "id": "kit-model-monitor",
+      "kind": "model",
+      "source": "kit",
+      "reference": "kit-models-monitor-glb",
+      "file": "models/monitor.glb",
+      "bytes": 37648,
+      "sha256": "f1d007583149327d1de6d1f058318d72a15c1907fdd89477836397acc61aedc4",
+      "triangles": 352,
+      "meshNodes": 9,
+      "bounds": [
+        [
+          -0.3700000047683716,
+          0.014999999999999979,
+          -0.0949999988079071
+        ],
+        [
+          0.3700000047683716,
+          0.7150000035762787,
+          0.0949999988079071
+        ]
+      ],
+      "axes": "x east / y up / z south",
+      "stage": "procedural-blockout",
+      "targetDimensions": "0.74 × 0.25 × 0.73 m including stand",
+      "lod0Target": 2500,
+      "availability": "local-only"
+    },
+    {
+      "id": "kit-model-computer",
+      "kind": "model",
+      "source": "kit",
+      "reference": "kit-models-computer-glb",
+      "file": "models/computer.glb",
+      "bytes": 4396,
+      "sha256": "652a54acbc8269010747af5960fbaecead999fa49b1dedf7313b9436538de774",
+      "triangles": 24,
+      "meshNodes": 2,
+      "bounds": [
+        [
+          -0.09000000357627869,
+          2.682209010451686e-9,
+          -0.10999999940395355
+        ],
+        [
+          0.09000000357627869,
+          0.23999999731779098,
+          0.11549999994412065
+        ]
+      ],
+      "axes": "x east / y up / z south",
+      "stage": "procedural-blockout",
+      "targetDimensions": "0.18 × 0.22 × 0.24 m",
+      "lod0Target": 1200,
+      "availability": "local-only"
+    },
+    {
+      "id": "kit-model-peripherals",
+      "kind": "model",
+      "source": "kit",
+      "reference": "kit-models-peripherals-glb",
+      "file": "models/peripherals.glb",
+      "bytes": 26448,
+      "sha256": "e6ba896e85b230957ef5e500cf5724e83405b7feff289183045a6df9b23a19c6",
+      "triangles": 460,
+      "meshNodes": 2,
+      "bounds": [
+        [
+          -0.2199999988079071,
+          0,
+          -0.07500000298023224
+        ],
+        [
+          0.345,
+          0.036,
+          0.07500000298023224
+        ]
+      ],
+      "axes": "x east / y up / z south",
+      "stage": "procedural-blockout",
+      "targetDimensions": "Keyboard 0.44 × 0.15 m; mouse separate",
+      "lod0Target": 1800,
+      "availability": "local-only"
+    },
+    {
+      "id": "kit-model-floor-tile",
+      "kind": "model",
+      "source": "kit",
+      "reference": "kit-models-floor-tile-glb",
+      "file": "models/floor-tile.glb",
+      "bytes": 2188,
+      "sha256": "d09dd74163028a0fe5146286d09409b319cc3ff16bd48b1abe2254080d04c6c8",
+      "triangles": 12,
+      "meshNodes": 1,
+      "bounds": [
+        [
+          -1,
+          -0.15000000298023225,
+          -1
+        ],
+        [
+          1,
+          2.980232241545089e-9,
+          1
+        ]
+      ],
+      "axes": "x east / y up / z south",
+      "stage": "procedural-blockout",
+      "targetDimensions": "2.0 × 2.0 m; 0.15 m thick below datum",
+      "lod0Target": 150,
+      "availability": "local-only"
+    },
+    {
+      "id": "kit-model-wall-panel",
+      "kind": "model",
+      "source": "kit",
+      "reference": "kit-models-wall-panel-glb",
+      "file": "models/wall-panel.glb",
+      "bytes": 2192,
+      "sha256": "199290198dae4438f744e185dfb1b028f37a79131a08780963ab0f6692fbfcdd",
+      "triangles": 12,
+      "meshNodes": 1,
+      "bounds": [
+        [
+          -1,
+          0,
+          -0.09000000357627869
+        ],
+        [
+          1,
+          3.5,
+          0.09000000357627869
+        ]
+      ],
+      "axes": "x east / y up / z south",
+      "stage": "procedural-blockout",
+      "targetDimensions": "2.0 × 0.18 × 3.5 m",
+      "lod0Target": 250,
+      "availability": "local-only"
+    },
+    {
+      "id": "kit-model-window-module",
+      "kind": "model",
+      "source": "kit",
+      "reference": "kit-models-window-module-glb",
+      "file": "models/window-module.glb",
+      "bytes": 5964,
+      "sha256": "d03b4682aef3f48453d01f12f822e56d92de1099de571a3f6ca5a37ea71bce93",
+      "triangles": 36,
+      "meshNodes": 3,
+      "bounds": [
+        [
+          -1.8324999988079071,
+          2.3841857821338408e-8,
+          -0.04500000178813934
+        ],
+        [
+          1.8324999988079071,
+          3.799999976158142,
+          0.04500000178813934
+        ]
+      ],
+      "axes": "x east / y up / z south",
+      "stage": "procedural-blockout",
+      "targetDimensions": "3.6 m wide × 3.8 m high",
+      "lod0Target": 600,
+      "availability": "local-only"
+    },
+    {
+      "id": "kit-model-glass-rail",
+      "kind": "model",
+      "source": "kit",
+      "reference": "kit-models-glass-rail-glb",
+      "file": "models/glass-rail.glb",
+      "bytes": 4140,
+      "sha256": "935e290f7c37393a705c33d17e60f4168b489221ecdd1ba1018eed57a3615333",
+      "triangles": 24,
+      "meshNodes": 2,
+      "bounds": [
+        [
+          -1,
+          2.384185793236071e-8,
+          -0.02500000037252903
+        ],
+        [
+          1,
+          1.1199999995529653,
+          0.02500000037252903
+        ]
+      ],
+      "axes": "x east / y up / z south",
+      "stage": "procedural-blockout",
+      "targetDimensions": "2.0 m wide × 1.1 m high",
+      "lod0Target": 500,
+      "availability": "local-only"
+    },
+    {
+      "id": "kit-texture-materials-blush-upholstery-basecolor-png",
+      "kind": "texture",
+      "source": "kit",
+      "reference": "kit-materials-blush-upholstery-basecolor-png",
+      "file": "materials/blush-upholstery-basecolor.png",
+      "bytes": 80014,
+      "sha256": "a0ae1b6187cc695208b3411aa991216179cf07ff9add6d6d84a61f27069af78f",
+      "colorSpace": "sRGB",
+      "availability": "local-only",
+      "note": "Starter 512 px study, not bound to any GLB"
+    },
+    {
+      "id": "kit-texture-materials-blush-upholstery-normal-opengl-png",
+      "kind": "texture",
+      "source": "kit",
+      "reference": "kit-materials-blush-upholstery-normal-opengl-png",
+      "file": "materials/blush-upholstery-normal-opengl.png",
+      "bytes": 23106,
+      "sha256": "7e3ce41d0e237bfc47198e09eedf75dac5f0e5fd8022cb671110807e15ab979a",
+      "colorSpace": "linear",
+      "availability": "local-only",
+      "note": "Starter 512 px study, not bound to any GLB"
+    },
+    {
+      "id": "kit-texture-materials-blush-upholstery-orm-png",
+      "kind": "texture",
+      "source": "kit",
+      "reference": "kit-materials-blush-upholstery-orm-png",
+      "file": "materials/blush-upholstery-orm.png",
+      "bytes": 11731,
+      "sha256": "c3179c462995e9c2729ad13ea9b6629859bfef9149711d47e3efe59b07d54272",
+      "colorSpace": "linear",
+      "availability": "local-only",
+      "note": "Starter 512 px study, not bound to any GLB"
+    },
+    {
+      "id": "kit-texture-materials-champagne-bronze-basecolor-png",
+      "kind": "texture",
+      "source": "kit",
+      "reference": "kit-materials-champagne-bronze-basecolor-png",
+      "file": "materials/champagne-bronze-basecolor.png",
+      "bytes": 13025,
+      "sha256": "bb7ef3d2c8c2eb302ca1641aae6b2b0b491167c866049d0538df46b47bb672f6",
+      "colorSpace": "sRGB",
+      "availability": "local-only",
+      "note": "Starter 512 px study, not bound to any GLB"
+    },
+    {
+      "id": "kit-texture-materials-champagne-bronze-normal-opengl-png",
+      "kind": "texture",
+      "source": "kit",
+      "reference": "kit-materials-champagne-bronze-normal-opengl-png",
+      "file": "materials/champagne-bronze-normal-opengl.png",
+      "bytes": 16075,
+      "sha256": "cfa29ef3c415a4362bc43ade54fbab49a4b4a50093306aec12536fa7b495bf7a",
+      "colorSpace": "linear",
+      "availability": "local-only",
+      "note": "Starter 512 px study, not bound to any GLB"
+    },
+    {
+      "id": "kit-texture-materials-champagne-bronze-orm-png",
+      "kind": "texture",
+      "source": "kit",
+      "reference": "kit-materials-champagne-bronze-orm-png",
+      "file": "materials/champagne-bronze-orm.png",
+      "bytes": 21975,
+      "sha256": "0cf68ca833b2846b5030d156f1e244c5589631701b5579982afa42e93179b379",
+      "colorSpace": "linear",
+      "availability": "local-only",
+      "note": "Starter 512 px study, not bound to any GLB"
+    },
+    {
+      "id": "kit-texture-materials-ivory-travertine-basecolor-png",
+      "kind": "texture",
+      "source": "kit",
+      "reference": "kit-materials-ivory-travertine-basecolor-png",
+      "file": "materials/ivory-travertine-basecolor.png",
+      "bytes": 70591,
+      "sha256": "fc8b33ec102e9703a2e49574f8e50ba2cc94f1682bb5e6fdc3f1dbe14a65a9b3",
+      "colorSpace": "sRGB",
+      "availability": "local-only",
+      "note": "Starter 512 px study, not bound to any GLB"
+    },
+    {
+      "id": "kit-texture-materials-ivory-travertine-normal-opengl-png",
+      "kind": "texture",
+      "source": "kit",
+      "reference": "kit-materials-ivory-travertine-normal-opengl-png",
+      "file": "materials/ivory-travertine-normal-opengl.png",
+      "bytes": 86900,
+      "sha256": "64658f143e479d34a87a501d299b85dfc19b20fc3c16a0d0a360b8b3dded5e74",
+      "colorSpace": "linear",
+      "availability": "local-only",
+      "note": "Starter 512 px study, not bound to any GLB"
+    },
+    {
+      "id": "kit-texture-materials-ivory-travertine-orm-png",
+      "kind": "texture",
+      "source": "kit",
+      "reference": "kit-materials-ivory-travertine-orm-png",
+      "file": "materials/ivory-travertine-orm.png",
+      "bytes": 52497,
+      "sha256": "daaddc3e691a30656e3fb265886a6440d975f328cdbee619dc32d87904a4dc56",
+      "colorSpace": "linear",
+      "availability": "local-only",
+      "note": "Starter 512 px study, not bound to any GLB"
+    },
+    {
+      "id": "kit-texture-materials-rose-stone-basecolor-png",
+      "kind": "texture",
+      "source": "kit",
+      "reference": "kit-materials-rose-stone-basecolor-png",
+      "file": "materials/rose-stone-basecolor.png",
+      "bytes": 77599,
+      "sha256": "2933e9bbb99d92ceec6e50ad7e43cc862ab724a7ef268d423e7634023bc0563c",
+      "colorSpace": "sRGB",
+      "availability": "local-only",
+      "note": "Starter 512 px study, not bound to any GLB"
+    },
+    {
+      "id": "kit-texture-materials-rose-stone-normal-opengl-png",
+      "kind": "texture",
+      "source": "kit",
+      "reference": "kit-materials-rose-stone-normal-opengl-png",
+      "file": "materials/rose-stone-normal-opengl.png",
+      "bytes": 80435,
+      "sha256": "455a71295c377972b0492d31ebc0674d67a9c91a692c3e35df83622668f0e80d",
+      "colorSpace": "linear",
+      "availability": "local-only",
+      "note": "Starter 512 px study, not bound to any GLB"
+    },
+    {
+      "id": "kit-texture-materials-rose-stone-orm-png",
+      "kind": "texture",
+      "source": "kit",
+      "reference": "kit-materials-rose-stone-orm-png",
+      "file": "materials/rose-stone-orm.png",
+      "bytes": 34533,
+      "sha256": "8ad1105ab603bf28e6e5bc0f9e33948a2b767b008d3fbd2f86897b853b5ea45c",
+      "colorSpace": "linear",
+      "availability": "local-only",
+      "note": "Starter 512 px study, not bound to any GLB"
+    },
+    {
+      "id": "kit-texture-materials-walnut-basecolor-png",
+      "kind": "texture",
+      "source": "kit",
+      "reference": "kit-materials-walnut-basecolor-png",
+      "file": "materials/walnut-basecolor.png",
+      "bytes": 52017,
+      "sha256": "10da239988b8534a29f63089ce494b6f3e83caef79f6d91eaf32d73151d663b7",
+      "colorSpace": "sRGB",
+      "availability": "local-only",
+      "note": "Starter 512 px study, not bound to any GLB"
+    },
+    {
+      "id": "kit-texture-materials-walnut-normal-opengl-png",
+      "kind": "texture",
+      "source": "kit",
+      "reference": "kit-materials-walnut-normal-opengl-png",
+      "file": "materials/walnut-normal-opengl.png",
+      "bytes": 63771,
+      "sha256": "e4981fe0e407b2ec734b5d912d63f09301ab61342d466454d77f498941a4286a",
+      "colorSpace": "linear",
+      "availability": "local-only",
+      "note": "Starter 512 px study, not bound to any GLB"
+    },
+    {
+      "id": "kit-texture-materials-walnut-orm-png",
+      "kind": "texture",
+      "source": "kit",
+      "reference": "kit-materials-walnut-orm-png",
+      "file": "materials/walnut-orm.png",
+      "bytes": 31736,
+      "sha256": "473136794a60c1e8b01cbc3a540bd788771fd4047f80e4b57bc7bbd4894208e1",
+      "colorSpace": "linear",
+      "availability": "local-only",
+      "note": "Starter 512 px study, not bound to any GLB"
+    },
+    {
+      "id": "kit-ref-reference-dimensioned-floor-plan-png",
+      "kind": "reference-image",
+      "source": "kit",
+      "reference": "kit-reference-dimensioned-floor-plan-png",
+      "file": "reference/dimensioned-floor-plan.png",
+      "bytes": 168671,
+      "sha256": "721c037c20740b4b0262c00295bfdecf3157bcdf0874227843ec292f8ba5ff1a",
+      "availability": "local-only",
+      "note": "Generated from layout.json"
+    },
+    {
+      "id": "kit-ref-reference-dimensioned-floor-plan-svg",
+      "kind": "reference-image",
+      "source": "kit",
+      "reference": "kit-reference-dimensioned-floor-plan-svg",
+      "file": "reference/dimensioned-floor-plan.svg",
+      "bytes": 117423,
+      "sha256": "ea07afbd71859f289e7027d18c36cadbcc91e40c49313a6ea0fe3ad9e218dbd7",
+      "availability": "local-only",
+      "note": "Generated from layout.json"
+    },
+    {
+      "id": "kit-ref-reference-executive-desk-reference-png",
+      "kind": "reference-image",
+      "source": "kit",
+      "reference": "kit-reference-executive-desk-reference-png",
+      "file": "reference/executive-desk-reference.png",
+      "bytes": 1851964,
+      "sha256": "77dc58f56a5dede019dcd13dd98bbed70f16082f51b48c52eeb233ecdb4fb98a",
+      "availability": "local-only",
+      "note": "Generated mood or isolated-object reference; art direction only"
+    },
+    {
+      "id": "kit-ref-reference-office-computers-png",
+      "kind": "reference-image",
+      "source": "kit",
+      "reference": "kit-reference-office-computers-png",
+      "file": "reference/office-computers.png",
+      "bytes": 2912462,
+      "sha256": "835e649200cc9f5817a5b45679c817680366008e60c0c310ff307f2a6e85fb0c",
+      "availability": "local-only",
+      "note": "Generated mood or isolated-object reference; art direction only"
+    },
+    {
+      "id": "kit-ref-reference-office-main-png",
+      "kind": "reference-image",
+      "source": "kit",
+      "reference": "kit-reference-office-main-png",
+      "file": "reference/office-main.png",
+      "bytes": 3083332,
+      "sha256": "d45a3e99653ea14e8868b7662be5a904d82ca53722e91407309902d82bde0e69",
+      "availability": "local-only",
+      "note": "Generated mood or isolated-object reference; art direction only"
+    },
+    {
+      "id": "kit-ref-reference-office-mezzanine-png",
+      "kind": "reference-image",
+      "source": "kit",
+      "reference": "kit-reference-office-mezzanine-png",
+      "file": "reference/office-mezzanine.png",
+      "bytes": 3242998,
+      "sha256": "5bfd427f583feaed885f3aff6af75952658c7b43d540f3264ac51fdf4965076e",
+      "availability": "local-only",
+      "note": "Generated mood or isolated-object reference; art direction only"
+    },
+    {
+      "id": "kit-ref-reference-office-terrace-png",
+      "kind": "reference-image",
+      "source": "kit",
+      "reference": "kit-reference-office-terrace-png",
+      "file": "reference/office-terrace.png",
+      "bytes": 3018197,
+      "sha256": "bcb0febe00bda5ac27598fcf11ae12e07bcd08c773c4c3e02d69c1067613b829",
+      "availability": "local-only",
+      "note": "Generated mood or isolated-object reference; art direction only"
+    },
+    {
+      "id": "kit-ref-reference-petal-chandelier-reference-png",
+      "kind": "reference-image",
+      "source": "kit",
+      "reference": "kit-reference-petal-chandelier-reference-png",
+      "file": "reference/petal-chandelier-reference.png",
+      "bytes": 1975941,
+      "sha256": "c801c00b47260706fb73f63034f62eb167363b24a330e3e90c87e49d15dbcccd",
+      "availability": "local-only",
+      "note": "Generated mood or isolated-object reference; art direction only"
+    },
+    {
+      "id": "kit-ref-reference-task-chair-reference-png",
+      "kind": "reference-image",
+      "source": "kit",
+      "reference": "kit-reference-task-chair-reference-png",
+      "file": "reference/task-chair-reference.png",
+      "bytes": 2114065,
+      "sha256": "98e2d0b3b65be4302e1e1ec5479f11b78df600740281c9e2aa4b30c31d39986e",
+      "availability": "local-only",
+      "note": "Generated mood or isolated-object reference; art direction only"
+    },
+    {
+      "id": "repo-ipic-interior-glb",
+      "kind": "model",
+      "source": "repo",
+      "reference": null,
+      "file": "preview/public/assets/ipic/ipic-interior.glb",
+      "bytes": 12394500,
+      "sha256": "4279d80d14279848cece42cfa278db6c7b3e7eebe44cbfabf0ce604fb6688ba5",
+      "blob": "21a4a7ad29a216635803ac06c0c6da10f43a0beb",
+      "axes": "+X across frontage, +Y up, -Z into venue",
+      "availability": "committed",
+      "note": "IPIC metre-scale game mesh exported from the JS master"
+    },
+    {
+      "id": "repo-ipic-interior-blend",
+      "kind": "model",
+      "source": "repo",
+      "reference": null,
+      "file": "assets/ipic/ipic-interior.blend",
+      "bytes": 10101846,
+      "sha256": "eb4d92035dfa4c211de607418ca81bfc255501b40405c6e6c6eadbbddebffa9c",
+      "blob": "6135c1ce329a3e36f29f04c0c84407047588f972",
+      "axes": "Blender Z up, +Y into venue",
+      "availability": "committed",
+      "note": "IPIC editable Blender handoff generated from the JS master"
+    },
+    {
+      "id": "repo-jevica-glb",
+      "kind": "model",
+      "source": "repo",
+      "reference": null,
+      "file": "preview/public/assets/characters/jevica.glb",
+      "bytes": 5779116,
+      "sha256": "722b96e2fd77b36c85ec01c1594a35e3f3f39b5ec76dfc3c9a351ef1eb4f117a",
+      "blob": "f2190f5a8ce892704c498bfb06abbb3d2647031d",
+      "axes": "glTF",
+      "availability": "committed",
+      "note": "Jevica playable appearance (MPFB/MakeHuman CC0 system assets)"
+    },
+    {
+      "id": "repo-jevica-glb-speech",
+      "kind": "model",
+      "source": "repo",
+      "reference": null,
+      "file": "preview/public/assets/characters/speech/jevica.glb",
+      "bytes": 12403512,
+      "sha256": "9752d509b67c318930c542bbb94412f6ab5c676ea00ba7e413b9f3bb59fcf729",
+      "blob": "69e5358dda93710af680790cb60f515bb1a4b17a",
+      "axes": "glTF",
+      "availability": "committed",
+      "note": "Jevica speech-rig appearance"
+    },
+    {
+      "id": "repo-jevica-portrait-png",
+      "kind": "reference-image",
+      "source": "repo",
+      "reference": null,
+      "file": "preview/public/assets/characters/jevica-portrait.png",
+      "bytes": 45043,
+      "sha256": "5a47f00ca5217be8b962a654add530c4b8f8406829b0021b5f6e396db1fdbd66",
+      "blob": "953609c2a8907d6c2e8e059ed4f344edf634f3d7",
+      "axes": null,
+      "availability": "committed",
+      "note": "Jevica portrait used by the UI"
+    },
+    {
+      "id": "repo-jevica-sources-json",
+      "kind": "data",
+      "source": "repo",
+      "reference": null,
+      "file": "preview/public/assets/characters/jevica.sources.json",
+      "bytes": 1995,
+      "sha256": "104ce65388e02ad9e08730334083f297269faf74341b0685ed6eac36bfb9e1a3",
+      "blob": "c686cfe95ad5a2a727f5543a9c767aedaf91eefd",
+      "axes": null,
+      "availability": "committed",
+      "note": "Jevica generator parameters, license and SHA-256"
+    },
+    {
+      "id": "repo-ipic-reference-photographs",
+      "kind": "reference-image",
+      "source": "repo",
+      "reference": "repo-ipic-references-manifest-json",
+      "file": "assets/ipic/references/",
+      "count": 44,
+      "bytes": 27926748,
+      "sha256": null,
+      "availability": "committed",
+      "note": "User supplied for this recreation. Underlying venue artwork and marks remain their owners’; no CC0 or third-party redistribution license asserted."
+    }
+  ]
+}

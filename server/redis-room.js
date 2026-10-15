@@ -1,3 +1,4 @@
+import { workspaceContext, reconcileOfficeVisit, reconcileOfficeVisits } from './office-workspace-visits.js';
 import { randomUUID } from 'node:crypto';
 import { deflateSync, inflateSync } from 'node:zlib';
 import { createSharedWorld, migrateWorldCheckpoint } from './world.js';
@@ -87,7 +88,7 @@ function validOperation(operation) {
 }
 
 /** Private room coordinator. Authentication and connection IDs come from the server. */
-export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID,now=Date.now,authorize,isAdmin=isJevicaAdmin,regionCatalog=null,regionSha256=null,avatarPreferences=null,voice=null,cyclingMiles=null}) {
+export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID,now=Date.now,authorize,isAdmin=isJevicaAdmin,regionCatalog=null,regionSha256=null,avatarPreferences=null,voice=null,cyclingMiles=null,officeWorkspaces=null}) {
   if(!redis || typeof authorize!=='function' || typeof prefix!=='string' || !prefix || prefix.length>180) throw new Error('Invalid room configuration');
   validateWorldId(worldId);
   const tag=prefix.includes('{')?prefix:`{${prefix}}`;
@@ -95,9 +96,9 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
   const rides=cyclingMiles?createRideFlush({world:()=>null,store:cyclingMiles,warn:detail=>console.warn(JSON.stringify({...detail,worldId}))}):null;
   if(!/^\{[^{}]+\}$/.test(tag))throw new Error('Room prefix must be one Redis hash tag');
   const keys={lease:`${tag}:lease`,state:`${tag}:state`,view:`${tag}:view`,queue:`${tag}:queue`,population:`${tag}:population`};
-  // Monotonic writer generation: checkpoint v6 adds office permissions and visits. A newer
+  // Monotonic writer generation: checkpoint v8 adds resident-owned workspace visits. A newer
   // writer atomically fences an older lease; peers/future generations retain it.
-  const token=`v6:${randomUUID()}`;
+  const token=`v8:${randomUUID()}`;
   let closed=false,pendingTick=null,lastAttempt=-Infinity,lastView=null,cached=null;
   async function read() {
     const buffer=await redis.getBuffer(keys.view);
@@ -219,6 +220,7 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
             result.player=world.applyAccountAppearance(operation.identity.userId,preference);
           } catch {console.warn(JSON.stringify({event:'room_appearance_unavailable',worldId}));}
         }
+        if(result.ok)await reconcileOfficeVisit(world,officeWorkspaces,operation.identity.userId);
         if(result.ok)connections.set(operation.identity.userId,{identity:operation.identity,connectionId:operation.connectionId,lastSeen:time,leftAt:null});
         return result;
       }
@@ -238,7 +240,8 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       }
       if(avatarPreferences && ['appearance','movement'].includes(operation.message.type))
         await syncAccount(operation.userId);
-      const result=world.command(operation.userId,operation.message);
+      const officeWorkspace=await workspaceContext(officeWorkspaces,operation.userId,operation.message);
+      const result=world.command(operation.userId,operation.message,{officeWorkspace});
       if(result.ok && avatarPreferences && ['appearance','movement'].includes(operation.message.type))
         await avatarPreferences.save(operation.userId,world.accountAppearance(operation.userId));
       return result;
@@ -266,6 +269,8 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       }
       replies.push({key:`${tag}:reply:${entry.id}`,result});
     }
+    let officeCheckedAt=cached?.officeCheckedAt??-Infinity;
+    if(time-officeCheckedAt>=5000){await reconcileOfficeVisits(world,officeWorkspaces);officeCheckedAt=time;}
     if(closed){cached=null;return null;}
     // Shared voice: the lease holder is the one place with both the live world
     // and the authoritative connections, so it reconciles leases here, after
@@ -299,7 +304,7 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       : districtMigration.kind === 'interior'
         ? { event: 'district_interior_checkpoint_migrated', from: districtMigration.from, to: 'gallery_plan_v1' }
         : { event: 'district_height_checkpoint_migrated', from: districtMigration.from, to: 'photographed_heights' }));
-    cached={world,connections,previous:checkpoint,currentData,currentHash};lastView=view;
+    cached={world,connections,previous:checkpoint,currentData,currentHash,officeCheckedAt};lastView=view;
     if(rides){rides.merge(drained);void rides.send();}
     return view;
   }

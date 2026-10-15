@@ -9241,13 +9241,13 @@
     {
       "id": "office-ipic-baseline-360",
       "title": "Office + IPIC #360 (design side, D0/D1): kit/reference inventory, brief, asset manifest and review matrix in docs/design/office-ipic",
-      "status": "blocked",
+      "status": "active",
       "branches": [
         "docs/office-ipic-baseline-20261014"
       ],
-      "owner": null,
-      "updatedAt": "2026-10-14T23:58:32.619Z",
-      "nextAction": "Draft PR #380 at ab1a2b46 (docs-only round end; bfff7a30 passed 16/16, mergeable clean). Issue #360 10/12 ticked. Exit condition: #381 records the two decisions, then record designer + engineer agreement and close the last two boxes; Val answers kit import. Local count 10 / 10. Released by session aa2272b7 at round end; the worktree holds no uncommitted work.",
+      "owner": "claude:river-oaks-1b (f4107618)",
+      "updatedAt": "2026-10-15T03:43:33.020Z",
+      "nextAction": "main c1cfd584 merged (dace7b1a); engineering G1 agreement added to review-matrix.md, brief notes #388. Push, mark #380 ready, land after #381.",
       "filesOwned": [
         "docs/design/office-ipic/brief.md",
         "docs/design/office-ipic/reference-index.json",
@@ -9264,11 +9264,17 @@
         "focused office/IPIC node tests",
         "pnpm run verify"
       ],
-      "blocker": "G1 needs #381 (office-ipic-engineering-baseline, river-oaks-dc) to record Val's fit and mezzanine decisions in layout-contract.json (posted on #381); kit import, IPIC lift and the missing briefs await Val.",
       "issue": 360,
       "ledger": "docs/superpowers/plans/2026-10-14-office-ipic-baseline.md",
       "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-ipic-baseline-20261014",
-      "pr": 380
+      "pr": 380,
+      "leaseUntil": "2026-10-15T05:43:33.020Z",
+      "handoff": {
+        "at": "2026-10-15T03:38:57.407Z",
+        "from": null,
+        "to": "claude:river-oaks-1b (f4107618)",
+        "reason": "Released design packet task; Val's /goal of 2026-10-15 asks river-oaks-1b to mark #380 ready, land it and close #360."
+      }
     },
     {
       "id": "office-ipic-engineering-baseline",
@@ -9277,10 +9283,10 @@
       "branches": [
         "docs/office-ipic-engineering-baseline-20261014"
       ],
-      "owner": "claude-code river-oaks-dc 8fa1c14c",
-      "updatedAt": "2026-10-14T20:09:23.856Z",
-      "leaseUntil": "2026-10-14T22:09:23.856Z",
-      "nextAction": "Draft PR #381 open at c1b7fabf; wait for the hosted preview check, address review, then undraft. Val decision pending: penthouse-volume-fit (31.9 m vs 28 m). After merge, hand #361 (reuse #349 level/portal shape) and #366 the contract; design half is river-oaks-5d's office-ipic-baseline-360.",
+      "owner": "claude:river-oaks-1b (f4107618)",
+      "updatedAt": "2026-10-15T03:43:33.020Z",
+      "leaseUntil": "2026-10-15T05:43:33.020Z",
+      "nextAction": "#388 landed into this branch (merge cbe393b8); main c1cfd584 merged (f1a80496); core verify passed (agent 103/103, preview 3052+1 skip, server 508+144 Redis skips, desktop 66/66, python 141). Engineering G1 agreement in the ledger and review-matrix.md (#380). Push, then pnpm run land 381 --owner river-oaks-1b.",
       "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-ipic-engineering-20261014",
       "ledger": "docs/superpowers/plans/2026-10-14-office-ipic-engineering-baseline.md",
       "issue": 360,
@@ -9297,7 +9303,14 @@
         "node --test scripts/tests/office-ipic-contract.test.js rejects stale versions, bad axes, duplicate ids and disconnected routes, and cross-checks the JSON against the live plan modules",
         "pnpm run verify core before commit"
       ],
-      "pr": 381
+      "pr": 381,
+      "previousOwner": "claude-code river-oaks-dc bc053eff",
+      "handoff": {
+        "at": "2026-10-15T03:38:57.407Z",
+        "from": "claude-code river-oaks-dc bc053eff",
+        "to": "claude:river-oaks-1b (f4107618)",
+        "reason": "Val's /goal of 2026-10-15 directs river-oaks-1b to take over #381 from the expired river-oaks-dc lease (expired 2026-10-15T00:23:26Z). river-oaks-dc is not in ListAgents; worktree clean and in sync with origin at 7c7f7368."
+      }
     },
     {
       "id": "cancelled-feat-character-studio-20261013",
@@ -9623,6 +9636,87 @@
         "node desktop/designer-e2e.js",
         "Desktop workflow green on windows-latest, ubuntu-latest, macos-latest"
       ]
+    },
+    {
+      "id": "office-computer-db-mvp",
+      "title": "Resident-owned office computers with private and shared database tasks",
+      "status": "active",
+      "branches": [
+        "feat/office-computer-db-mvp"
+      ],
+      "owner": "codex-root-office-computer-db-mvp",
+      "updatedAt": "2026-10-15T02:42:50.281103+00:00",
+      "nextAction": "User authorized commit, push and merge to main. Commit verified MVP, open PR, land through CI and merge guard, reconcile delivery evidence; provide next long-running goal.",
+      "ledger": "docs/superpowers/plans/2026-10-15-office-computer-db-mvp.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-computer-db-mvp",
+      "filesOwned": [
+        "server/office-workspaces*.js",
+        "server/office-desk*.js",
+        "server/offices.js",
+        "server/world.js (office workspace wiring)",
+        "server/app.js (office routes)",
+        "server/distributed-app.js (office routes)",
+        "server/town.js (workspace store)",
+        "server/world-gateway.js (workspace store)",
+        "preview/src/office-*.js",
+        "preview/src/office-desk.css",
+        "server/tests/office*.test.js",
+        "preview/tests/office*.test.js",
+        "preview/e2e/office-desk.js",
+        "docs/offices.md",
+        "server/redis-room.js (workspace visit authorization and writer generation)",
+        "server/tests/redis-room.test.js (writer generation)",
+        "server/tests/creator-objects.test.js (checkpoint version)",
+        "server/tests/interactions.test.js (checkpoint version)",
+        "server/tests/seating.test.js (checkpoint version)",
+        "server/vercel-routing.js (workspace endpoint allowlist)",
+        "vercel.json (workspace endpoint rewrites)",
+        "server/tests/vercel-routing.test.js (workspace rewrites)",
+        "server/avatar-preferences.js (v8 checkpoint compatibility)",
+        "server/creator-rollout-audit.js (current writer/checkpoint generation)",
+        "preview/e2e/office-computer-shared.js",
+        "data/reports/office-computer*.json"
+      ],
+      "requiredChecks": [
+        "Focused memory and isolated Redis workspace/access/race tests",
+        "Office real HTTP/WebSocket regressions",
+        "Office browser journeys including narrow screen and keyboard",
+        "pnpm run verify",
+        "pnpm run verify full"
+      ],
+      "leaseUntil": "2026-10-15T04:42:50.281103+00:00"
+    },
+    {
+      "id": "office-ipic-contract-decisions",
+      "title": "Office + IPIC #360: record Val's fit and mezzanine decisions in layout-contract.json (stacked on #381)",
+      "status": "active",
+      "branches": [
+        "docs/office-ipic-contract-decisions-20261015"
+      ],
+      "owner": "claude:river-oaks-1b (f4107618)",
+      "updatedAt": "2026-10-15T03:43:33.020Z",
+      "nextAction": "PR #388 merged into docs/office-ipic-engineering-baseline-20261014 as cbe393b8 (land, 11 checks green). Retire with project:prune after #381 lands on main.",
+      "filesOwned": [
+        "docs/design/office-ipic/layout-contract.json (decisions, fit.decision, mezzanineProgramme only)",
+        "scripts/office-ipic-contract.mjs (fit decision rule)",
+        "scripts/tests/office-ipic-contract.test.js (one test)",
+        "docs/superpowers/plans/2026-10-15-office-ipic-contract-decisions.md"
+      ],
+      "requiredChecks": [
+        "node --test scripts/tests/office-ipic-contract.test.js",
+        "pnpm run verify"
+      ],
+      "issue": 360,
+      "ledger": "docs/superpowers/plans/2026-10-15-office-ipic-contract-decisions.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-ipic-contract-decisions-20261015",
+      "pr": 388,
+      "leaseUntil": "2026-10-15T05:43:33.020Z",
+      "handoff": {
+        "at": "2026-10-15T03:38:57.407Z",
+        "from": null,
+        "to": "claude:river-oaks-1b (f4107618)",
+        "reason": "Released by session aa2272b7; Val's /goal of 2026-10-15 asks river-oaks-1b to merge draft #388 into #381."
+      }
     }
   ]
 }

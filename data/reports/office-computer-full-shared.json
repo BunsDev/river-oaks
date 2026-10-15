@@ -1,0 +1,198 @@
+{
+  "createdAt": "2026-10-15T01:25:51.215Z",
+  "status": "running",
+  "modes": [
+    "development",
+    "development-world",
+    "development-publish",
+    "required",
+    "creator"
+  ],
+  "rendering": "Full rendering",
+  "scope": "Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.",
+  "results": [
+    {
+      "name": "multiplayer-dev",
+      "status": "passed",
+      "seconds": 109.262,
+      "result": {
+        "checks": [
+          "each browser is its own development player",
+          "both players share one town",
+          "no sign-in gate blocks development",
+          "Players start with an appearance picker and a default look",
+          "Sable selection reaches the other browser and its rendered remote avatar",
+          "The production shared player has both fitted Silvan arm vines",
+          "New town chat rows are announced after initial history loads",
+          "A shared wave reaches the peer and visibly raises the remote avatar arm",
+          "A sent town message appears once for both players",
+          "Chat history returns once after reconnect",
+          "A reply reaches the reconnected player through the live chat UI",
+          "A pending contact cannot see the sender's online world",
+          "An accepted contact can join the sender's current world",
+          "Current world exposes named meeting places",
+          "A resident can publish a profile that someone in the same world can inspect",
+          "A contact invitation offers a validated link to the sender's world",
+          "A named-place invitation offers a link to that place in the sender's world",
+          "Private messages stay out of town chat",
+          "Accepted contacts and private history survive a browser reconnect",
+          "Shared play exposes player-owned building",
+          "A guest cannot access the shared builder",
+          "A guest cannot access wish granting",
+          "shared play hides the retired invasion",
+          "players arrive on separate spots (1.60 m apart)",
+          "a shared teleport lands beside Jo Malone London in both browsers' snapshots",
+          "A different account cannot see a private landmark",
+          "An account landmark survives reload without device storage",
+          "a landmark teleport is a server-checked position travel the other browser sees",
+          "Builder mode can be switched on",
+          "Builder preview uses the selected one-metre grid",
+          "Builder preview uses the selected half-metre grid",
+          "The preview appears where the pointer meets the ground",
+          "An open spot is marked ready (Ready to place.)",
+          "A click places the creation exactly where the preview stood",
+          "A guest cannot access saved building designs",
+          "The owner places a fresh copy from a saved design",
+          "Deleting a saved design leaves its placed copy intact",
+          "The preview turns red on the spot just taken (Keep clear of the road.)",
+          "R turns the preview",
+          "Escape leaves builder mode and removes the preview",
+          "Escape in builder mode leaves the dock open",
+          "Shared mobile play starts with a compact dock",
+          "Shared mobile guests get beast movement without flight",
+          "Shared mobile play hides private companion and vehicle actions",
+          "Shared mobile play hides local-only scenarios",
+          "Shared mobile controls stay within the viewport",
+          "No browser page errors"
+        ],
+        "a": {
+          "self": "dev-768e9baa8685",
+          "players": [
+            "dev-768e9baa8685",
+            "dev-200d9ab1fb27"
+          ],
+          "gate": true,
+          "appearance": "sable-human",
+          "appearancePicker": true,
+          "invasion": true,
+          "roster": "2 players in town"
+        },
+        "b": {
+          "self": "dev-200d9ab1fb27",
+          "players": [
+            "dev-768e9baa8685",
+            "dev-200d9ab1fb27"
+          ],
+          "gate": true,
+          "appearance": "sable-human",
+          "appearancePicker": true,
+          "invasion": true,
+          "roster": "2 players in town"
+        },
+        "errors": []
+      }
+    },
+    {
+      "name": "groups",
+      "status": "passed",
+      "seconds": 42.679,
+      "result": {
+        "checks": [
+          "An accepted contact appears in the group invitation picker",
+          "Group messages stay out of public town chat",
+          "Group membership and conversation survive reconnect"
+        ]
+      }
+    },
+    {
+      "name": "world-events",
+      "status": "passed",
+      "seconds": 9.111,
+      "result": {
+        "checks": [
+          "Unreleased Events has no browsing or hosting surface",
+          "Commands does not advertise Events",
+          "Neither initial load nor reconnect requests the Events service"
+        ]
+      }
+    },
+    {
+      "name": "rail-shared",
+      "status": "passed",
+      "seconds": 6.303,
+      "result": {
+        "checks": [
+          "Chat command opens the town dock and focuses its composer",
+          "Nearby residents and meeting actions precede town tools",
+          "Town chat lives independently of the People panel",
+          "Typing town chat retains keyboard ownership",
+          "Commands reflect the server-confirmed building permission",
+          "Shared-play commands omit retired force controls",
+          "Shared character command focuses a visible choice without retired abilities",
+          "Shared commands omit the unreleased Events surface",
+          "Shared map command expands the atlas and focuses its live map",
+          "No shared navigation page errors: "
+        ],
+        "canBuild": false,
+        "errors": []
+      }
+    },
+    {
+      "name": "shared-seating",
+      "status": "passed",
+      "seconds": 36.285,
+      "result": {
+        "passed": true,
+        "checks": [
+          "The fresh loopback owner has building and wish permissions",
+          "Shared play provides accessible furniture seating controls",
+          "Seating controls have an accessible name",
+          "The fixture owner can place a garden seat on open ground (Ready to place.)",
+          "Seated poses use the furniture base height on sloping terrain",
+          "The local pose is seated only after server confirmation",
+          "Walking input cannot move a seated player",
+          "Looking around leaves the body facing the seat front",
+          "Occupied slots cannot be chosen in the guest UI",
+          "A guest uses the second slot without acquiring admin powers",
+          "The other browser renders the confirmed remote seated pose",
+          "Seated fox visitors visibly wave to the other browser without moving their seat",
+          "Occupied furniture cannot be removed by its admin builder",
+          "The same account recovers its seat on socket reconnect within the grace period",
+          "The stand control is available at a phone-sized viewport",
+          "The seats panel offers no second Stand up control while seated",
+          "Keyboard standing reaches a clear ground position",
+          "No browser exceptions"
+        ],
+        "errors": [],
+        "readiness": [
+          {
+            "role": "owner",
+            "elapsedMs": 3200
+          },
+          {
+            "role": "guest",
+            "elapsedMs": 17579
+          }
+        ]
+      }
+    },
+    {
+      "name": "world-boundary",
+      "status": "passed",
+      "seconds": 17.81,
+      "result": {
+        "passed": true,
+        "checks": [
+          "An alternate world joins with its own versioned snapshot",
+          "Jevica retains building permission in the alternate world",
+          "An unqualified link still joins the original River Oaks world",
+          "An unknown world cannot join this server",
+          "A missing world shows a clear connection gate",
+          "No browser errors: "
+        ],
+        "errors": []
+      }
+    }
+  ],
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)"
+}
