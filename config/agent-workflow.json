@@ -40,7 +40,8 @@
       "security-browser",
       "reflections",
       "experience",
-      "shared"
+      "shared",
+      "ipic-screening"
     ],
     "full": [
       "dependency-audit",
@@ -59,7 +60,8 @@
       "security-browser",
       "reflections",
       "experience",
-      "shared"
+      "shared",
+      "ipic-screening"
     ],
     "preview": [
       "preview-tests"
@@ -77,6 +79,10 @@
       "desktop-tests",
       "desktop-package",
       "desktop-package-check"
+    ],
+    "screening": [
+      "ipic-screening",
+      "ipic-screening-soak"
     ]
   },
   "tasks": [
@@ -294,6 +300,24 @@
         "run",
         "desktop:package:check"
       ]
+    },
+    {
+      "id": "ipic-screening",
+      "command": [
+        "node",
+        "preview/e2e/ipic-screening-runner.mjs"
+      ],
+      "browser": true,
+      "timeoutMs": 600000
+    },
+    {
+      "id": "ipic-screening-soak",
+      "command": [
+        "node",
+        "preview/e2e/ipic-screening-soak-runner.mjs"
+      ],
+      "browser": true,
+      "timeoutMs": 1800000
     }
   ]
 }

@@ -4,6 +4,7 @@ import { IPIC_DARTS, IPIC_INTERIOR, atIpicDartsLine } from './ipic-plan.js';
 import './ipic-screening.css';
 import { officeLobbyGroundCutout } from './office-contract.js';
 import { captureOfficeStreet } from './office-world-presentation.js';
+import { officeSkylineSize } from './office-skyline.js';
 import { createStoreIntros } from './store-intro-ui.js';
 import {treeFlightEnvironment} from './tree-flight.js';
 import { buildRoads } from './street-roads.js';
@@ -35,7 +36,7 @@ import { buildDistrictBuildings, buildDistrictDetail } from './district.js';
 import { buildDistrictFantasy } from './district-fantasy.js';
 import { buildStorePeople } from './store-people.js';
 import { createGeneratedInteriorStream } from './generated-interior-stream.js';
-import { canCullExterior, renderWithoutExterior } from './interior-exterior-culling.js';
+import { canCullExterior, canCullIpicAuditorium, renderWithoutExterior } from './interior-exterior-culling.js';
 import { sharedRoomSummary } from './shared-population.js';
 import { storeRoomsFor } from './store-rooms.js';
 import { attachDistrictGalleryPlan } from './district-interior-contract.js';
@@ -126,9 +127,19 @@ const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matc
 // Never enable this profile in a production build.
 const softwareAcceptance = import.meta.env.DEV && import.meta.env.VITE_SHARED_SOFTWARE_RENDERING === '1';
 const renderAudit = import.meta.env.DEV && new URLSearchParams(location.search).get('render-audit') === '1' ? createRenderAudit() : null;
+let exteriorCulling = true; // A development audit can switch it off to compare frames.
+// Inside IPIC's auditorium, facing away from its only partition, nothing outdoors can be seen (#428).
+function ipicAuditoriumCull() {
+  const pose = !officeUI?.active && interiorsLayer?.visible ? walking?.getPose() : null;
+  const room = pose ? walking?.environment?.roomAt(pose.position[0], pose.position[2]) : null;
+  return room?.interior === IPIC_INTERIOR && canCullIpicAuditorium(camera, room);
+}
 const debugOcclusion = new URLSearchParams(location.search).get('ao');
 // Auto's AO tail rule stays off until it passes device acceptance (render-quality.js).
 const aoTailShedding = new URLSearchParams(location.search).get('aotail') === 'on';
+// The penthouse skyline (office-skyline.js); ?office-skyline=off compares without it in development.
+// Software acceptance never captures it.
+const officeSkylineOff = import.meta.env.DEV && new URLSearchParams(location.search).get('office-skyline') === 'off';
 let auditCamera = null;
 let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, storePeople, interiorsLayer, generatedInteriors;
 let districtUI, environmentAssets = null, storefrontReflections = null, roomGroundClip = null;
@@ -408,7 +419,7 @@ function initializeRenderer() {
   if (creationToolsEnabled) buildControls=createSharedBuildControls({getPose:()=>walking?.getPose(),isBuildableRoom:id=>world?.stores.some(store=>store.id===id && store.category==='home'),onBuilderChange:builder=>{builderAim='';if(!builder.active)buildLayer?.setGhost(null);},request:message=>multiplayer?.command(message)??Promise.resolve({ok:false,message:'Join the town before building.'})});
   visitTools.append($('.player-controls'), cyclingBoard.panel, ...(buildControls ? [buildControls.panel] : []));
   officeUI=createOfficeUI({host,panelHost:visitTools,renderer,getWorld:()=>world,getMultiplayer:()=>multiplayer,walking,
-    captureStreet:()=>captureOfficeStreet({scene,camera,pipeline,lights:storeLights,avatar:playerAvatar,lobby:buildingMesh?.userData.officeArrival,world,getWorld:()=>world,pose:walking?.getPose()})});
+    captureStreet:()=>captureOfficeStreet({scene,camera,pipeline,renderer,skyline:officeSkylineOff||softwareAcceptance?null:{size:officeSkylineSize({scale:quality?.stats.scale,maxCubemapSize:renderer.capabilities.maxCubemapSize})},lights:storeLights,avatar:playerAvatar,lobby:buildingMesh?.userData.officeArrival,world,getWorld:()=>world,pose:walking?.getPose()})});
   // IPIC screenings (#367): the town's timeline on the existing screen, while the player is inside IPIC.
   // Mounted on the viewport, not the canvas host: walking takes pointer capture on the canvas host.
   ipicScreening??=createIpicScreening({host:host.parentElement??host,THREE,getMultiplayer:()=>multiplayer,getScreen:()=>buildingMesh?.userData.interiors?.userData.screens?.[0]??null,
@@ -956,7 +967,7 @@ function render(now) {
     pipeline.setOcclusionExteriorMask(generatedRoomActive ? worldGroup : null, interiorsLayer);
     ipicScreening?.update();
     if (!officeUI?.update(now, delta)) {
-      if (generatedRoomActive && canCullExterior(camera, currentRoom))
+      if (exteriorCulling && ((generatedRoomActive && canCullExterior(camera, currentRoom)) || ipicAuditoriumCull()))
         renderWithoutExterior(worldGroup, interiorsLayer, () => pipeline.render(delta));
       else pipeline.render(delta);
     }
@@ -1105,7 +1116,7 @@ if (import.meta.env.DEV) window.__riverExteriorCull = () => {
     direction: camera.getWorldDirection(new THREE.Vector3()).toArray(),
     front: room && [room.aMin, room.aMax].map(a => { const [east, north] = room.toWorld(a, 0);
       return new THREE.Vector3(east, room.floor + room.height / 2, -north).project(camera).toArray(); }),
-    cull: canCullExterior(camera, room) };
+    cull: canCullExterior(camera, room), ipic: ipicAuditoriumCull() };
 };
 // Read-only bird cam state for development and browser acceptance runs.
 // Each bird also reports how it appears in the current view: inside the frame,
@@ -1131,6 +1142,7 @@ try {
 if (import.meta.env.DEV && renderAudit) {
   window.__riverRenderAudit = {
     start: () => renderAudit.start(), stop: () => renderAudit.stop(),
+    exteriorCulling(enabled) { exteriorCulling = Boolean(enabled); },
     crowdView() {
       const players = multiplayer?.snapshot?.players ?? [];
       if (!players.length) throw new Error('Join the shared world before framing its crowd.');

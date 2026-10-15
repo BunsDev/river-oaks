@@ -1,8 +1,9 @@
-import { createStudioDocument, MAX_REGION_BYTES } from './document.js';
+import { createStudioEditPreview, MAX_REGION_BYTES } from './document.js';
 
 export const DESIGNER_PROTOCOL = 1;
 export const DESIGNER_CAPABILITIES = ['objects.update', 'objects.remove', 'objects.add'];
 const bytes = value => new TextEncoder().encode(JSON.stringify(value)).length;
+const after = (value, next) => value?.then ? value.then(next) : next(value);
 const fail = message => { throw new Error(message); };
 const plain = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 const boundedString = (value, max = 4000) => typeof value === 'string' && value.length > 0 && value.length <= max;
@@ -21,7 +22,8 @@ function exactKeys(value, allowed) {
 }
 export function createDesignerSession(doc) {
   let connection = null, active = null, pending = null;
-  const cancel = () => { active = null; pending = null; };
+  let previewGeneration = 0;
+  const cancel = () => { active?.controller.abort(); active = null; pending = null; previewGeneration++; };
   const assertActive = () => {
     if (!connection || !active) fail('No active design request.');
     if (doc.revision !== active.request.baseRevision || doc.serialize() !== active.serialized) fail('The document changed; request a fresh proposal.');
@@ -50,11 +52,11 @@ export function createDesignerSession(doc) {
         context: { documentType: region.document_type??'region', units: 'metres', axes: 'east,north; Three.js east,up,-north', bounds: region.bounds_m,
           ...(scope === 'region' ? { region } : { objects: items.filter(item => ids.includes(item.id)) }) },
       };
-      active = { request: structuredClone(request), serialized: doc.serialize() };
+      active = { request: structuredClone(request), serialized: doc.serialize(), controller: new AbortController() };
       return request;
     },
     preview(value) {
-      pending = null; assertActive();
+      pending = null; assertActive(); const generation = ++previewGeneration;
       finiteJson(value);
       if (!plain(value) || bytes(value) > MAX_REGION_BYTES) fail('Proposal exceeds 128 KiB.');
       exactKeys(value, ['protocol','requestId','connectionId','projectId','baseRevision','baseHash','packVersion','rationale','assumptions','skillsUsed','requiredCapabilities','affectedIds','operations']);
@@ -65,7 +67,7 @@ export function createDesignerSession(doc) {
       if (!Array.isArray(value.requiredCapabilities) || value.requiredCapabilities.some(cap => !request.capabilities.includes(cap))) fail('This proposal needs unsupported capabilities.');
       if (!Array.isArray(value.operations) || !value.operations.length || value.operations.length > 64) fail('Use 1–64 operations.');
       if (!Array.isArray(value.affectedIds) || value.affectedIds.some(id => !boundedString(id,100))) fail('Invalid affected object IDs.');
-      const candidate = createStudioDocument(doc.value), affected = new Set(), changes = [];
+      const candidate = createStudioEditPreview(doc.value), affected = new Set(), changes = [];
       for (const op of value.operations) {
         if (!plain(op) || !['update','remove','add'].includes(op.op) || !value.requiredCapabilities.includes(`objects.${op.op}`)) fail('Unsupported or undeclared operation capability.');
         const before = candidate.value;
@@ -89,12 +91,16 @@ export function createDesignerSession(doc) {
         if (JSON.stringify(before) === JSON.stringify(candidate.value)) fail('Proposal contains an unchanged operation.');
       }
       if (affected.size !== new Set(value.affectedIds).size || [...affected].some(id => !value.affectedIds.includes(id))) fail('Affected IDs do not match the proposed operations.');
-      pending = { region: candidate.value, changes, rationale: value.rationale, assumptions: value.assumptions, skillsUsed: value.skillsUsed };
-      return structuredClone(pending);
+      return after(doc.assessCandidate(candidate.value, { baseRevision: request.baseRevision, signal: active.controller.signal }), () => {
+        assertActive();
+        if (active.request !== request || generation !== previewGeneration) fail('Stale assessment response.');
+        pending = { region: candidate.value, changes, rationale: value.rationale, assumptions: value.assumptions, skillsUsed: value.skillsUsed };
+        return structuredClone(pending);
+      });
     },
     apply() {
       assertActive(); if (!pending) fail('Preview a valid proposal first.');
-      const result = doc.replace(pending.region); cancel(); return result;
+      return after(doc.commitCandidate(pending.region, { baseRevision: active.request.baseRevision, signal: active.controller.signal }), result => { cancel(); return result; });
     },
   };
 }

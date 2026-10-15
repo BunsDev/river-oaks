@@ -23,10 +23,10 @@ export function officePeerVisible(player,selfId,position,firstPerson,levelId=nul
 
 // A presentation lease borrows the actual street camera, avatar and lobby. It
 // never changes walking/server coordinates, and releases only resources it owns.
-export function captureOfficeStreet({scene,camera,pipeline,lights=[],avatar,lobby,world,getWorld,pose}) {
+export function captureOfficeStreet({scene,camera,pipeline,renderer=null,skyline=null,lights=[],avatar,lobby,world,getWorld,pose}) {
   if(!lobby||!pose||!avatar)return null;
   lobby.object.updateWorldMatrix(true,false);
-  return {scene,camera,pipeline,lights,avatar,lobby,world,getWorld,startCamera:camera.clone(),
+  return {scene,camera,pipeline,renderer,skyline,lights,avatar,lobby,world,getWorld,startCamera:camera.clone(),
     startPose:{...pose,position:[...pose.position],velocity:[...pose.velocity]},
     startAvatar:{position:avatar.object.position.clone(),quaternion:avatar.object.quaternion.clone(),visible:avatar.object.visible},
     frame:lobby.object.matrixWorld.clone()};

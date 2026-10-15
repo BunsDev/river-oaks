@@ -1,0 +1,58 @@
+# #368 slice 1: IPIC screening catalog profile and ten-cycle soak
+
+- **Task:** `ipic-screening-soak-368` (live register), owner `claude:office-seats-363 (928f5d63)`.
+- **Branch / worktree:** `test/ipic-screening-soak-20261015` in `../river-oaks-ipic-soak-368`, from `origin/main` `9d83cd31`.
+- **Issues:** #368 (first executable slice), returning the repeated-entry receipt and the catalog disposition to #367.
+- **Media:** the committed 30 s synthetic fixture (`preview/public/assets/ipic/screening/`), not the approved short (#365).
+
+## Objective
+
+Make the existing two-browser screening journey runnable from the agent catalog, and prove
+repeated IPIC entry/exit releases the player's resources: one warm-up plus ten cycles with
+real counters, late-play detection and per-cycle convergence; then review the panel at 390 and
+320 px with the software-rendering banner and the play dock on screen.
+
+## Decisions
+
+1. **Catalog, not hosted CI.** New local profile `screening` (journey + soak); the journey also
+   joins `browser` and `full`. Hosted CI lists its browser journeys explicitly in
+   `.github/workflows/verify.yml`, so this adds no hosted minutes. A hosted job (for example
+   path-filtered on screening sources) would add recurring CI time: Val's decision, recorded as
+   not done.
+2. **Counters without changing the app.** CDP `Memory.getDOMCounters` after two forced GCs (DOM
+   nodes, JS listeners, documents); the existing dev-only `?render-audit=1` hook for renderer
+   textures/geometries; an init script that counts media elements the page created or played
+   (via WeakRef, so collected ones drop out), open AudioContexts, live intervals, pending timeouts
+   and `play()` calls.
+3. **Growth rules.** Media, AudioContexts, intervals, documents and renderer resources must not end
+   above the warm-up baseline. Nodes, listeners and timeouts move with the HUD, so the rule is
+   "no rise in every one of the ten steps" (a one-per-cycle leak rises every step).
+4. **T3 captures are not here.** `ipic-route-evidence-364` (river-oaks-1b) owns T1–T3.
+
+5. **Captions were never visible (fixed here).** river-oaks-1b (#364) pointed out, and the code confirms, that
+   the caption track sat on a `hidden` video whose frames go only to the screen texture, so no cue was ever
+   drawn; the Captions toggle changed only `aria-pressed`. The player now keeps the track in `hidden` mode
+   and exposes the active cue text; the panel shows it in a caption line the toggle controls. A player unit
+   test (written first, red) and a soak runtime check (the shown line equals the video's active cue) cover it.
+
+## Files
+
+`preview/e2e/ipic-screening-soak.js`, `preview/e2e/ipic-screening-soak-runner.mjs`,
+`preview/src/ipic-screening.js` and `ipic-screening-ui.js`/`.css` (caption line only), `preview/tests/ipic-screening.test.js`,
+`docs/screenings.md` (captions sentence),
+`config/agent-workflow.json` (screening entries), `docs/testing.md` (screening paragraph), this ledger.
+
+## Checks
+
+| Check | Result |
+| --- | --- |
+| `node --test scripts/tests/agent.test.js` | 10/10 |
+| Soak runs 1–7 | each failed in setup or harness timing, never on a resource or sync assertion. Causes: another interior's 20 s district deadline (1); my static-media count (2); the host's district fetch (3); an outside disk sweep deleting every `node_modules`, then the shared Playwright cache dropping Chromium 1248 (4–5); a 30 s fixture ending during a slow trip in (6); reading `attached` before a slow frame (7). Each fixed in the harness. |
+| **Soak run 8** (load average 190–295, SwiftShader, `80a98eb2`'s parent; per-cycle log kept in the session scratchpad) | **all 11 cycles passed** (warm-up + 10): every cycle a late join (in at 3.4–22.5 s), within 500 ms after 2–8 ms; after every exit 0 screening videos, 0 playing, 0 tracked or loaded media (collected), 0 AudioContexts, 0 pending timeouts, intervals 5 flat, listeners 794 flat, textures 47 and geometries 258 flat, DOM nodes 5502 flat from cycle 1, exactly one `play()` per entry. Growth gates passed; the caption line showed the active cue. It then failed one check: **Captions off** left the line up until the next slow frame. |
+| Caption toggle fix (`80a98eb2`) | toggling refreshes the line at once |
+| Soak runs 9–15 | every one passed all eleven cycles; the narrow pass found, in turn: the dock toggle covered by nearby greetings (HUD finding, recorded, not this panel's), Step outside hidden while Town chat is open (by design; the check now collapses chat and opens More), **Step outside beneath the screening panel when More is open (fixed: the panel steps aside, `c3d92c4d`)**, **the open play dock covering the panel's sound and captions on narrow screens (fixed: panel above the dock at 700 px and below, `842c5b49`)**, Sound disabled outside the auditorium (by design), and film timing under load spikes (harness: a fresh film before each trip in). |
+| **Soak run 16** at `51ee96e5` (merged with main `29cdff5d`; load average 39–78, SwiftShader, no reloads) | **passed**: warm-up + 10 cycles, all 11 late joins, within 500 ms after 2–6 ms (worst spread after converging 3–105 ms); after every exit 0 screening videos, 0 playing, 0 tracked/loaded media, 0 AudioContexts, 0 pending timeouts; listeners 800, textures 47, geometries 261, intervals 5 flat; DOM nodes 5547→5548 (3 of 10 rises); the caption line equals the active cue and Captions off hides it; at 390 and 320 px with the banner and the dock closed or open every panel control and Step outside is topmost; captions toggle by pointer, focus ring visible, Sound disabled in the reception by design; Stop watching left the shared film playing. Finding: the dock's toggle is covered by the nearby greetings panel at 390 and 320 px. |
+
+## Next
+
+Run the soak under the browser lock; record counters; review; PR (no merge without authorization).
