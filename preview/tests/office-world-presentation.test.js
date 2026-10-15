@@ -137,3 +137,23 @@ test('seated peers render on their plan seat facing its desk, and a seated visit
   visit.render(32,[3.65,5.6],0,[],{...place,seatId:'desk-a1-chair'});
   assert.ok(Math.abs(standing-visit.inspect().camera.position[1]-(1.68-1.2))<1e-9,'seated eye is 0.48 m lower');
 });
+test('a view moves the camera to its fixed eye inside the office and shows the visitor\'s own body, seated when seated',t=>{
+  const previous=globalThis.document,element=()=>({style:{},classList:{},append(){},setAttribute(){},remove(){}});
+  globalThis.document={createElement:element};t.after(()=>{globalThis.document=previous;});
+  const f=fixture();f.avatar.ready=true;
+  const place={layoutId:'office-penthouse-1',levelId:'jevica-office/l0'};
+  const visit=createOfficeWorldScene({street:f.street,host:{...element(),clientWidth:1440,clientHeight:1000},self:{id:'self',office:{id:'jevica-office',...place,layout:place.layoutId}},reducedMotion:true});
+  t.after(()=>visit.dispose());
+  visit.prepare(0);visit.render(0,[3.65,3.55],0,[],place);
+  assert.equal(f.avatar.presentation.showBody,false,'first person hides the body');
+  const walking=visit.inspect().camera.position;
+  visit.render(16,[3.65,3.55],0,[],{...place,viewId:'overview'});
+  const eye=new THREE.Vector3(13.6,6.4,-1.2).applyMatrix4(f.street.frame);eye.y+=ARRIVAL.officeElevation;
+  near(new THREE.Vector3(...visit.inspect().camera.position),eye,'the camera sits at the overview eye');
+  assert.equal(f.avatar.presentation.showBody,true,'the visitor sees their own body from a view');
+  assert.equal(f.avatar.presentation.sitting,null);
+  visit.render(32,[3.65,5.6],0,[],{...place,viewId:'overview',seatId:'desk-a1-chair'});
+  assert.equal(f.avatar.presentation.sitting?.height,0.5,'seated visitors are drawn seated in a view');
+  visit.render(48,[3.65,3.55],0,[],place);
+  near(new THREE.Vector3(...visit.inspect().camera.position),new THREE.Vector3(...walking),'leaving the view restores the walking camera');
+});
