@@ -9381,8 +9381,8 @@
         "feat/character-studio-render-20261015"
       ],
       "owner": "codex-character-studio-20261015",
-      "updatedAt": "2026-10-15T21:10:17.254958+00:00",
-      "nextAction": "Finish final core verification and stacked render PR: native 4K portrait, capture lifecycle fixes, actual-rig skirt regression. Then complete #442 catalog/pose/performance evidence before #443 authoritative persistence and #444 acceptance. No merge/deploy.",
+      "updatedAt": "2026-10-15T21:21:13.171646+00:00",
+      "nextAction": "Verify catalog audit and compatibility registry for #442 on render PR #462: targeted tests, portrait browser, core. Review transform fix. Then rendered pose/device/crowd/provenance gates, #443 persistence, #444 acceptance; no merge/deploy.",
       "filesOwned": [
         "preview/src/character-definition.js",
         "preview/tests/character-definition.test.js",
@@ -9406,7 +9406,12 @@
         "preview/src/skirt-skinning.js",
         "preview/tests/skirt-skinning.test.js",
         "preview/tests/character-hero.test.js",
-        "preview/e2e/character-portrait.js"
+        "preview/e2e/character-portrait.js",
+        "scripts/character-assets-audit.mjs",
+        "scripts/tests/character-assets-audit.test.js",
+        "preview/src/character-compatibility.js",
+        "preview/tests/character-compatibility.test.js",
+        "preview/src/rail-navigation.js"
       ],
       "requiredChecks": [
         "Focused contract and rig tests",
@@ -9433,15 +9438,16 @@
           ]
         }
       },
-      "leaseUntil": "2026-10-15T23:10:17.254958+00:00",
+      "leaseUntil": "2026-10-15T23:21:13.171646+00:00",
       "ledger": "docs/superpowers/plans/2026-10-15-character-studio.md",
-      "pr": 461,
+      "pr": 462,
       "verification": {
         "core": "passed; .runtime/character-studio/editor-core-passed.json; server 153 Redis skips; preview 1 skip/1 todo",
         "focused": "20 contract/state/material/beast checks, 8 recovery checks, 9 gesture tests; 3 portrait prototype tests (not committed)",
         "browser": "Editor 21 checks passed; final-source regressions 253 checks passed; fresh wave capture queued; captures inspected with skirt clipping retained as #442 defect",
         "review": "Independent editor review findings fixed and retested; no remaining blocking lifecycle finding",
-        "limitations": "No full Redis/native/4K/crowd/physical-device/human acceptance; #443 publication not implemented; hosted checks separate"
+        "limitations": "No full Redis/native/4K/crowd/physical-device/human acceptance; #443 publication not implemented; hosted checks separate",
+        "render": "749353bc: final core passed, 15 portrait/21 editor browser checks, 13 focused tests; native PNGs and walking capture inspected. PR #462 draft."
       }
     },
     {

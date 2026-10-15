@@ -263,3 +263,71 @@ Final core gate passed after both review fixes. Receipt
 patch is the render implementation based on editor head93f29271. No source changes
 after these final checks. Live project:check remains exit1 for unrelated existing
 ownership/retirement/missing-checkout records; this task remains owned and active.
+
+Signed render commit749353bc546d5f2822713cc952730dd083e9d9bf pushed after signature
+and prohibited-attribution checks. Draft PR https://github.com/BunsDev/river-oaks/pull/462
+stacked on #461. Issue #442 progress: issuecomment-6202398265. No merge/deploy.
+
+Next increment objective: audit pinned shipped GLBs against source/license receipts,
+actual skeleton/skin weights/positions/indices and embedded texture metadata.
+Record measured base asset costs and explicit compatibility from the authoritative
+appearance mapping, keeping v1/v2 persisted definition shape unchanged. Negative
+fixtures must exercise invalid bytes, receipts, skeletons, weights and textures.
+Owned files: scripts/character-assets-audit.mjs, scripts/tests/character-assets-audit.test.mjs,
+preview/src/character-compatibility.js, preview/tests/character-compatibility.test.js.
+No paid downloads or source receipt regeneration. Complete procedural licensing,
+full pose/crowd/device matrix and human approval stay open.
+
+Catalog increment now implements explicit immutable compatibility for all authored
+looks and the shared 53-bone rig. Studio color support delegates to this registry
+without changing v1/v2 payloads. New build audit checks pinned bytes and CC0 source
+receipts, bounded embedded buffers, skeleton/binds/node transforms, geometry,
+weights, sparse morphs, WebP headers and texture references; actual-asset negative
+fixtures cover tampering, source/license mismatch, invalid geometry/skin/morph and
+textures. Review exposed empty/zero-scale transforms passing the initial audit;
+red regression reproduced it, then arity/quaternion/affine/non-singular effective
+transform validation fixed it. Re-review found no remaining blocker.
+
+Focused command `node --test scripts/tests/character-assets-audit.test.js
+preview/tests/character-compatibility.test.js preview/tests/character-definition.test.js
+preview/tests/character-studio.test.js`:16 passed, no skips. Audit CLI passes all
+three base rigs; `.runtime/character-studio/asset-audit.json` records measured
+vertices/triangles, local bounds, morph position deltas and 31/37/29MiB RGBA8 base
+texture estimates. Header validation does not decode images or prove GPU budgets.
+Catalog-backed portrait journey passed15 checks; report
+`.runtime/character-studio/catalog-portrait.json`. Core gate in progress.
+
+Hosted render head749353bc: aggregate preview failed because shared(development)
+failed; other listed checks passed. Investigating the failed job log. No hosted
+acceptance or merge claimed. No source or dependency change should be made merely
+to hide a failing test; determine its owning seam first.
+
+Catalog core gate passed before the subsequent rail focus fix; receipt
+`.runtime/character-studio/catalog-core.json`. Hosted failure root cause confirmed:
+new Studio trigger precedes the character picker, so Character command's generic
+`.player-controls` jump focused that first button. Existing rail-shared assertion
+failed locally too. Changed only its destination to the selected character radio.
+Existing shared journey now passes on full Metal rendering; report
+`.runtime/character-studio/rail-shared-green.json` and preserved red counterpart.
+Review found no blocker. Final core rerun after this line is in progress. Generated
+shared-experience report restored after preserving both runs; no unrelated evidence
+will be committed.
+
+Final catalog/focus core gate passed: tooling117; preview3319 pass/1 existing
+skip/1 todo; server598 pass/153 Redis skips; desktop69; Python141 with66 warnings.
+Build, lint/format, demo expected-status and secrets passed. Receipt
+`.runtime/character-studio/catalog-rail-core-final.json`. Tested dirty patch is this
+catalog/audit and one-line rail change on render head749353bc; no further runtime
+changes after verification. Shared rail journey passed17 checks in9.096s; catalog
+portrait passed15 in11.988s. Full five-issue goal remains active.
+
+Next: push the verified audit/focus increment to #462, inspect hosted checks, then
+complete #442 human/fox idle/walk/run/sit/wave/prowl/lope rendered matrix with the
+existing Jevica fixture and actual avatar.update locomotion fields. Capture
+clipping/attachment failures, not just dimensions. Pin hero reference environment,
+measure isolated/crowd costs and resolve procedural dependency/provenance scope.
+Physical device targets and human acceptance remain missing inputs. #443 durable
+drafts/immutable publication/CAS/replication and #444 broad acceptance remain
+unimplemented. The #461 parent still lacks this focus correction; reconcile the
+stack/backport before any future landing. No merge/deploy authorization. Preserve
+this active checkout and all three draft PR branches.

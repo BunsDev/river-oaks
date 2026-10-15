@@ -181,3 +181,35 @@ Current-machine captures repeat identically, but are not approved goldens. Named
 physical device targets, full animation/wardrobe compatibility, measured crowd
 budgets, complete procedural dependency provenance and shared custom colors remain
 open. Keep unsupported shape, skin, attachment and asset combinations unavailable.
+
+## Shipped asset compatibility audit (#442)
+
+`character-compatibility.js` records the authoritative appearance-to-rig/form/outfit
+mapping, exact 53-bone MakeHuman game family and supported color control boundary.
+Only Sable human/fox expose curated colors. Independent morphs, hair meshes and
+attachments remain unavailable; original bundles keep their existing behavior and
+permission checks. Definition v1/v2 shapes are unchanged.
+
+`node scripts/character-assets-audit.mjs` audits the three pinned shipped base GLBs.
+Core tooling tests run the same audit. It verifies actual hashes/sizes against CC0
+source receipts, embedded buffer bounds, exact bones/shared skin, finite invertible
+bind and node transforms, indexed triangles, finite bounded positions and morphs,
+normalized weights/joint references, embedded WebP headers/dimensions and material
+texture references. Malformed real-asset fixtures exercise each boundary. This is
+a build-time gate for the shipped subset, not a general glTF upload validator.
+
+| Base rig | Texture images | RGBA8 base-level estimate | Largest image |
+| --- | ---: | ---: | --- |
+| jevica | 7 | 31 MiB | 2048 × 2048 |
+| man-casual | 7 | 37 MiB | 2048 × 2048 |
+| man-tailored | 5 | 29 MiB | 2048 × 2048 |
+
+These are per-file decoded-format estimates, excluding mipmaps, runtime-generated
+maps, sharing, shadows and framebuffer allocations. They are not measured GPU
+allocation or approved budgets. Embedded header checks do not decode images;
+rendered/browser checks remain separate. Base source receipts identify MakeHuman
+system/face assets as CC0-1.0. Procedural overlays are authored repository code;
+complete dependency pinning/distribution provenance remains open and no additional
+license is inferred from the base files. The `.5m` position-morph and 4096 texture
+limits are integrity envelopes for this catalog, not interactive design controls
+or device performance promises.
