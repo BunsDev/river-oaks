@@ -6,6 +6,8 @@ import { createRemotePlayers } from './remote-players.js';
 import { borrowOfficePresentation, officeStreetApproach, createOfficeArrivalClock, officePeerVisible } from './office-world-presentation.js';
 import { buildOfficeGeometry } from './office-penthouse-graybox.js';
 import { OFFICE_EYE_HEIGHT, OFFICE_LAYOUT_LEGACY, OFFICE_SEATED_EYE_HEIGHT, officeLayout, officeLevelElevation, officeSeatedPose } from './office-layouts.js';
+import { createVisitSkyline } from './office-skyline.js';
+import { arrivalBehindGlass } from './office-arrival-architecture.js';
 
 // The street, car and office share one scene/camera/composer. Once both car
 // doors close the outside district is occluded and can stop drawing. The same
@@ -15,8 +17,10 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
   let office,actors,disposed=false,started=null,skipped=reducedMotion,lastNow=null,lastBody=null,distance=street.startPose.distance;
   let position=[...OFFICE_SPAWN],yaw=0,current=null,levelId=self.office?.levelId??null,floor=0,eye=OFFICE_EYE_HEIGHT;
   const layoutId=self.office?.layout??OFFICE_LAYOUT_LEGACY,layout=officeLayout(layoutId);
+  // A glazed layout would show the borrowed cabin and lobby through its front glass once arrived.
+  const glass=arrivalBehindGlass(street.lobby,layoutId!==OFFICE_LAYOUT_LEGACY);
   const peerRoot=new THREE.Group();street.scene.add(peerRoot);lease.allow(peerRoot);
-  const dispose=()=>{if(disposed)return;disposed=true;actors?.dispose();peerRoot.removeFromParent();office?.dispose();lease.dispose();};
+  const dispose=()=>{if(disposed)return;disposed=true;actors?.dispose();peerRoot.removeFromParent();office?.dispose();glass.restore();lease.dispose();};
   try{
     office=buildOfficeGeometry(THREE,layoutId,{buildLegacy:()=>buildWorkplaceOffice(THREE,OFFICE_ROOM)});stage.add(office.object);office.object.visible=false;
     const lights=[2,-3].map((z,i)=>({position:new THREE.Vector3(0,2.9,z),color:new THREE.Color('#fff1df'),intensity:i?65:45,distance:i?10:7,decay:2}));
@@ -25,6 +29,9 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
     for(const light of [...office.object.children].filter(n=>n.isPointLight)){
       lights.push({position:light.position.clone(),color:light.color.clone(),intensity:light.intensity,distance:light.distance,decay:light.decay});light.removeFromParent();
     }
+    // A layout with an outside shows the district captured once as the doors close (office-skyline.js).
+    // It changes the scene only once captured, so it is released with the visit's own dispose below.
+    const skyline=createVisitSkyline(street,layout,[stage,street.lobby.object,street.avatar.object,peerRoot]);
     const worldLights=lights.map(light=>({...light,position:light.position.clone()}));
     actors=createRemotePlayers(peerRoot,host,{snapInitialHeading:true,isVisible:p=>current?.done&&officePeerVisible({...p,position:p.office.position},self.id,position,true,levelId)});
     const view=street.startCamera.clone(),localView=new THREE.PerspectiveCamera(),worldRotation=new THREE.Quaternion().setFromRotationMatrix(street.frame);
@@ -41,11 +48,16 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
       const height=ARRIVAL.officeElevation*ascent;
       stage.position.copy(basePosition);stage.position.y+=height;
       worldLights.forEach((light,i)=>{light.position.copy(lights[i].position).applyMatrix4(street.frame);light.position.y+=height;});
-      lease.lights(worldLights,skipped?1:ease(elapsed/.8));
-      lease.inside(!entering&&(skipped||time>=ARRIVAL.closingEnd));
+      const lightBlend=skipped?1:ease(elapsed/.8);lease.lights(worldLights,lightBlend);
+      const inside=!entering&&(skipped||time>=ARRIVAL.closingEnd);
+      // The capture sees the street's own lighting, not the cabin's (office-skyline.js).
+      if(inside&&skyline?.pending){lease.lights(worldLights,0);skyline.capture();lease.lights(worldLights,lightBlend);}
+      lease.inside(inside);
       office.object.visible=!entering&&['opening','arriving','office'].includes(frame.phase);
       street.lobby.setEntryOpen(entering?ease(elapsed/.8):1);
       street.lobby.update(entering?{phase:'idle',doors:0,floor:1}:frame);
+      // Once arrived there, only the car's front doors stay drawn, closed, in the doorway.
+      glass.update(frame);
       let body;
       if(entering){
         const start=approach.at(elapsed,aspect);body=start.player;view.position.copy(start.camera);view.quaternion.copy(start.quaternion);view.fov=start.fov;
@@ -83,8 +95,8 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
         actors.update(now,street.camera);office.update?.(now/1000);lease.render(1/60);return current;
       },
       skip(){skipped=true;},get position(){return current?.position??position;},
-      inspect(){return {camera:{position:street.camera.position.toArray(),quaternion:street.camera.quaternion.toArray(),verticalFov:street.camera.fov},actors:actors.stats(),duration:approach.duration+ARRIVAL.duration,dimensions:ARRIVAL,presentation:'shared-world',elevation:stage.position.y-basePosition.y,phase:current?.phase,progress:current?.progress,skipped,avatar:street.avatar.object.position.toArray()};},
-      dispose,
+      inspect(){return {camera:{position:street.camera.position.toArray(),quaternion:street.camera.quaternion.toArray(),verticalFov:street.camera.fov},actors:actors.stats(),duration:approach.duration+ARRIVAL.duration,dimensions:ARRIVAL,presentation:'shared-world',skyline:skyline?.stats??null,elevation:stage.position.y-basePosition.y,phase:current?.phase,progress:current?.progress,skipped,avatar:street.avatar.object.position.toArray()};},
+      dispose(){skyline?.dispose();dispose();},
     };
   }catch(error){dispose();throw error;}
 }
