@@ -9752,6 +9752,38 @@
         "pnpm run verify full with isolated Redis"
       ],
       "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-ipic-screening-20261015"
+    },
+    {
+      "id": "office-penthouse-traversal-361",
+      "title": "Office #361: versioned penthouse layout (#349 level/portal shape, jevica-office/l<n>), server-validated levels and transitions, safe saved-visit migration; legacy office stays default",
+      "status": "active",
+      "branches": [
+        "feat/office-penthouse-layout-20261015"
+      ],
+      "owner": "claude:river-oaks-1b (f4107618)",
+      "leaseUntil": "2026-10-15T06:43:43.132Z",
+      "updatedAt": "2026-10-15T04:43:43.132Z",
+      "issue": 361,
+      "ledger": "docs/superpowers/plans/2026-10-15-office-penthouse-traversal.md",
+      "nextAction": "PR A verified at main 096a6cdd + PR A (Redis server suite 715/715, core verify passed). Commit signed, open PR, land; PR B (client) next.",
+      "filesOwned": [
+        "preview/src/office-layouts.js",
+        "preview/tests/office-layouts.test.js",
+        "server/offices.js",
+        "server/world.js (office checkpoint version)",
+        "preview/src/office-scene.js and office-world-scene.js (level elevation)",
+        "server/tests/offices*.test.js",
+        "docs/offices.md",
+        "docs/superpowers/plans/2026-10-15-office-penthouse-traversal.md"
+      ],
+      "requiredChecks": [
+        "node --test preview/tests/office-*.test.js server/tests/offices*.test.js",
+        "pnpm run test:experience office-visit",
+        "two-client local vertical traversal",
+        "pnpm run verify",
+        "pnpm run verify full with isolated Redis"
+      ],
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-penthouse-20261015"
     }
   ]
 }
