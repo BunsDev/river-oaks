@@ -106,6 +106,30 @@ test('anything standing in the host footprint above the office floor is left out
   skyline.dispose();
 });
 
+test('from inside the host, none of its own facade shows, at any height: its floor lines drew dark rings', () => {
+  // The first combined captures showed two navy rings below the horizon: the host tower's
+  // floor-line bands just under the office floor, seen from inside the tower.
+  const f = district(), ring = [[-30, -30], [30, -30], [30, 30], [-30, 30]], part = new THREE.Object3D();
+  const bands = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial(), 3);
+  [[0, f.floorY - 0.14, 19], [0, f.floorY - 4, 20], [80, f.floorY - 4, 0]].forEach(([x, y, z], i) => { part.position.set(x, y, z); part.scale.set(8, 0.14, 0.2); part.updateMatrix(); bands.setMatrixAt(i, part.matrix); });
+  bands.userData.buildingIndices = [0, 0, 1]; f.group.add(bands); f.scene.updateMatrixWorld(true);
+  const seen = [], renderer = fakeRenderer(() => seen.push({ bands: [0, 1, 2].map(i => scaleOf(bands, i) > 0), podium: scaleOf(f.mesh, 1) > 0, neighbour: scaleOf(f.mesh, 2) > 0, mass: f.mass.visible }));
+  const inside = createOfficeSkyline({ renderer, scene: f.scene, eye: new THREE.Vector3(0, f.floorY + 1.68, 0), floorY: f.floorY, hostBuildingIndex: 0, hostBuildingId: 'host', hostRing: ring, size: 16 });
+  inside.capture();
+  assert.deepEqual(seen[0].bands, [false, false, true], 'both host floor lines go; a neighbour band at the same height stays');
+  assert.equal(seen[0].podium, false, 'so does the rest of the host facade below the floor');
+  assert.equal(seen[0].neighbour, true);
+  assert.equal(seen[0].mass, false, 'the massing above the floor goes as before');
+  assert.ok([0, 1, 2].every(i => scaleOf(bands, i) > 0), 'every band is back after the capture');
+  inside.dispose();
+  // With the eye outside the footprint, only what reaches above the floor goes.
+  const outsideSeen = [], other = fakeRenderer(() => outsideSeen.push([0, 1].map(i => scaleOf(bands, i) > 0)));
+  const outside = createOfficeSkyline({ renderer: other, scene: f.scene, eye: new THREE.Vector3(60, f.floorY + 1.68, 0), floorY: f.floorY, hostBuildingIndex: 0, hostRing: ring, size: 16 });
+  outside.capture();
+  assert.deepEqual(outsideSeen[0], [true, true]);
+  outside.dispose();
+});
+
 test('a failed capture restores everything it borrowed and shows no backdrop', () => {
   const f = district(), renderer = fakeRenderer(() => { throw new Error('context lost'); });
   const skyline = createOfficeSkyline({ renderer, scene: f.scene, eye: new THREE.Vector3(0, f.floorY + 1.68, 0), floorY: f.floorY, hostBuildingIndex: 0, hide: [f.stage], size: 16 });

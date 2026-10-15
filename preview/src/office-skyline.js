@@ -25,13 +25,15 @@ export function officeSkylineSize({ scale = 1, maxCubemapSize = Infinity } = {})
   return Math.min(scale < 0.75 ? 512 : 1024, maxCubemapSize);
 }
 
-// `hide` is drawn neither in the capture nor changed afterwards. Everything of the host tower
-// that reaches above the office floor is hidden only while capturing, since the eye stands
-// inside it (the mapped tower is not yet raised to the penthouse): its facade instances by
-// building index, its massing by building id, and anything else standing in its footprint
-// (`hostRing`, [x, z] world corners, with a 1 m margin), such as a rooftop ornament.
+// `hide` is drawn neither in the capture nor changed afterwards. The eye stands inside the
+// host building (the mapped tower is not yet raised to the penthouse), so for the capture
+// only: none of the host's own facade instances (by building index) are drawn, at any height,
+// since its exterior skin cannot be seen from inside (its floor-line bands below the office
+// floor drew dark rings); its massing (by building id) and anything else standing in its
+// footprint (`hostRing`, [x, z] world corners, 1 m margin), such as a rooftop ornament, are
+// hidden where they reach above the office floor. Lower roofs and every neighbour stay.
 const MARGIN = 1, IDENTITY = new THREE.Matrix4();
-function insideRing(ring, x, z) {
+function insideRing(ring, x, z, margin = MARGIN) {
   let inside = false;
   for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
     const [xi, zi] = ring[i], [xj, zj] = ring[j];
@@ -42,7 +44,7 @@ function insideRing(ring, x, z) {
   for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
     const [ax, az] = ring[j], [bx, bz] = ring[i], dx = bx - ax, dz = bz - az, length = dx * dx + dz * dz;
     const t = length ? Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / length)) : 0;
-    if (Math.hypot(x - ax - dx * t, z - az - dz * t) <= MARGIN) return true;
+    if (Math.hypot(x - ax - dx * t, z - az - dz * t) <= margin) return true;
   }
   return false;
 }
@@ -54,6 +56,7 @@ export function createOfficeSkyline({ renderer, scene, eye, floorY, hostBuilding
   let attempted = false, disposed = false, saved = null;
   const ringBounds = hostRing?.length > 2 ? hostRing.reduce((b, [x, z]) => [Math.min(b[0], x), Math.max(b[1], x), Math.min(b[2], z), Math.max(b[3], z)], [Infinity, -Infinity, Infinity, -Infinity]) : null;
   const inFootprint = (x, z) => Boolean(ringBounds) && insideRing(hostRing, x, z);
+  const eyeInside = Boolean(ringBounds) && insideRing(hostRing, eye.x, eye.z, 0);
 
   // Host instances that reach above the office floor, as [mesh, index, matrix]. Most of the
   // district is rejected from each instance's translation and bounding reach alone; only
@@ -69,9 +72,10 @@ export function createOfficeSkyline({ renderer, scene, eye, floorY, hostBuilding
       const radius = geometry.boundingSphere.radius + geometry.boundingSphere.center.length(), plain = world.equals(IDENTITY);
       for (let i = 0; i < object.count; i++) {
         const o = i * 16, reach = radius * Math.max(Math.hypot(e[o], e[o + 1], e[o + 2]), Math.hypot(e[o + 4], e[o + 5], e[o + 6]), Math.hypot(e[o + 8], e[o + 9], e[o + 10]));
+        const indexed = hostBuildingIndex >= 0 && indices?.[i] === hostBuildingIndex;
+        if (indexed && eyeInside) { object.getMatrixAt(i, matrix); found.push([object, i, matrix.clone()]); continue; }
         centre.set(e[o + 12], e[o + 13], e[o + 14]); if (!plain) centre.applyMatrix4(world);
         if (centre.y + reach <= floorY + 0.05) continue;
-        const indexed = hostBuildingIndex >= 0 && indices?.[i] === hostBuildingIndex;
         if (!indexed && (!ringBounds || centre.x + reach < ringBounds[0] - MARGIN || centre.x - reach > ringBounds[1] + MARGIN || centre.z + reach < ringBounds[2] - MARGIN || centre.z - reach > ringBounds[3] + MARGIN)) continue;
         object.getMatrixAt(i, matrix);
         box.copy(geometry.boundingBox).applyMatrix4(matrix).applyMatrix4(world);
