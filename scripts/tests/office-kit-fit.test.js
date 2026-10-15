@@ -38,3 +38,19 @@ test('a crowded approach, a missing desk, a route-closing desk, a desk over a ch
   const noHeight = checkKitDesks({ stations, colliders: [{ ...narrow()[0], y1: undefined }, ...narrow().slice(1)] }, routes);
   assert.ok(noHeight.problems.some(problem => problem.startsWith('desk-executive: exec') && problem.includes('height')), noHeight.problems.join('\n'));
 });
+
+test('the penthouse plan\'s own imported desks pass the same rules, every route walkable with the other seats taken', async () => {
+  const { OFFICE_LAYOUT_PENTHOUSE, officeLayout } = await import('../../preview/src/office-layouts.js');
+  const plan = officeLayout(OFFICE_LAYOUT_PENTHOUSE), desks = plan.levels.find(level => level.id === 'jevica-office/l0').obstacles.filter(o => o.kind === 'desk');
+  assert.equal(desks.length, 3, 'the R19 import is in the plan');
+  // Present the plan's desks as a kit would: each station's desk centre and the desk colliders.
+  const centre = desk => [(desk.x0 + desk.x1) / 2, (desk.d0 + desk.d1) / 2];
+  const own = plan.anchors.filter(item => item.kind === 'approach').map(item => {
+    const desk = desks.find(box => item.seat[0] >= box.x0 && item.seat[0] <= box.x1 && box.d0 > item.seat[1]);
+    return { id: item.id, x: item.seat[0], d: centre(desk)[1] };
+  });
+  const report = checkKitDesks({ stations: own, colliders: desks.map(({ id, x0, x1, d0, d1, height }) => ({ id, x0, x1, d0, d1, y0: 0, y1: height })) }, routes);
+  assert.deepEqual(report.problems, []);
+  assert.ok(report.routes.length >= 8 && report.routes.every(item => item.ok));
+});
+

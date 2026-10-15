@@ -49,8 +49,10 @@ function setup({ officeLayout: chosen = layout, restore, users = [owner, 'guest'
   const stand = (user, more = {}) => send(user, 'stand', { layout, ...more });
   return { world, clock, send, visit, enter, walk, sit, stand };
 }
-// The west corridor past the executive chair to the B row, clear of an occupied A-row seat.
-const toB1 = [[1, 3], [1, 8], seat('desk-b1-chair').stand];
+// The west corridor past the executive chair to the B row, clear of an occupied A-row seat. It
+// turns onto the B row's approach line (d 8.55), which keeps the turning body clear of bench A's
+// corner now that the kit's desks are collision (R19).
+const toB1 = [[1, 3], [1, 8.55], seat('desk-b1-chair').stand];
 
 test('a visitor sits from the seat\'s stand point and stands back up there; snapshots carry the seat id only', () => {
   const f = setup(), chair = seat('desk-a1-chair');
@@ -120,7 +122,7 @@ test('leaving, revocation and departure release the seat; a late sit or stand ca
   assert.equal(f.sit(owner, chair.id).ok, true);
   assert.equal(f.send(owner, 'leave').ok, true);
   assert.equal(f.visit(owner), null);
-  f.walk('guest', [1, 8], [1, 3], chair.stand);
+  f.walk('guest', [1, 8.55], [1, 3], chair.stand);
   assert.equal(f.sit('guest', chair.id).ok, true, 'leaving released the chair');
 
   assert.equal(f.send(owner, 'revoke', { peerId: 'guest' }).ok, true);
@@ -227,3 +229,28 @@ test('a restored standing visit inside another visit\'s occupied seat fails clos
     assert.equal(createSharedWorld(data, { officeLayout: layout }).restore(resign(copy)).ok, false, `standing at ${at}`);
   }
 });
+
+test('a standing visit the plan no longer fits ends on restore, and the rest of the town restores', () => {
+  // A plan change (R19's desks) can cover a spot where a visitor stood when the town was saved.
+  // That visit ends, as a layout change ends visits; it never fails the whole checkpoint.
+  const f = setup(), chair = seat('desk-a1-chair');
+  f.send(owner, 'invite', { peerId: 'guest' });
+  f.enter(owner); f.enter('guest');
+  f.walk(owner, chair.stand); assert.equal(f.sit(owner, chair.id).ok, true);
+  f.walk('guest', [1, 3]);
+  const saved = structuredClone(f.world.checkpoint()), guestVisit = saved.payload.offices.visits.find(([id]) => id === 'guest')[1];
+  guestVisit.position = [5, 7]; // inside bench A
+  for (const officeLayout of [layout, OFFICE_LAYOUT_LEGACY]) {
+    const world = createSharedWorld(data, { officeLayout });
+    assert.deepEqual(world.restore(resign(saved)), { ok: true }, officeLayout);
+    const players = world.snapshot().players;
+    assert.equal(players.find(p => p.id === 'guest').office, null, `${officeLayout}: the guest's visit ended`);
+  }
+  const kept = setup({ restore: resign(saved) });
+  assert.equal(kept.visit(owner).seat.id, chair.id, 'the owner keeps the seat');
+  assert.equal(kept.send(owner, 'invite', { peerId: 'guest' }).ok, true, 'grants still restore');
+  // A position no plan could hold is still refused.
+  const nowhere = structuredClone(f.world.checkpoint()); nowhere.payload.offices.visits.find(([id]) => id === 'guest')[1].levelId = 'jevica-office/l9';
+  assert.equal(createSharedWorld(data, { officeLayout: layout }).restore(resign(nowhere)).ok, false);
+});
+
