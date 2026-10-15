@@ -198,13 +198,21 @@ asset readiness, WebContent process identity and exact source revision.
   suites passed 9/9. `pnpm run verify` passed after this change and the
   generated plan index update; `.runtime/agent/core.json` is the receipt.
   A physical error receipt is pending.
-- Signed commit `2e4350600cdf20a308c67d77062360df9c2e0fef` is on draft
-  PR #411. Hosted checks on its final head remain pending.
+- Signed PR #411 reached ready head `b3baa60cf142ffa107fdb6d625d9c7ff45973467`
+  after #402 merged. All hosted check runs and Vercel status passed at that head.
+  A Chromium smoke of the full town page captured the diagnostic collector and
+  a successful fixture POST, but the test ended before the busy page's GET
+  observed the stored report. A narrower browser smoke loaded the real
+  injected module and collector without starting the town; its five-second
+  receipt was stored with the synthetic console error (one report, console
+  one entry, POST 204). Temporary tracing markers were removed; source matches
+  the reviewed head. This proves the fixture reporter path, not physical
+  Safari delivery or default-decoder recovery.
 
-**Next action:** Review PR #411's exact-head hosted checks and land the
-fixture-only error receipt, then correlate Val's visible state with the frame
-receipt and repeat with only
-one Safari test tab on a quiet host. Obtain the normal route's
+**Next action:** Recheck PR #411's exact-head hosted checks and land the
+fixture-only error receipt, then run one physical Safari tab with
+`?phone-errors=1` on a quiet host and correlate it with the visible state.
+Repeat the normal decoder comparison with only one tab. Obtain the normal route's
 WebKit exception and a controlled same-device comparison. Keep the scoped
 decoder helper experimental until the cause is demonstrated; the physical
 default-decoder GPU row and broader archetype rollout remain open.
