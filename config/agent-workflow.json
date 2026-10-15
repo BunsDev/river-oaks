@@ -112,6 +112,9 @@
       ],
       "requiresEnv": [
         "REDIS_URL"
+      ],
+      "requiresTools": [
+        "redis-server"
       ]
     },
     {
@@ -268,7 +271,10 @@
         "places-guide",
         "world-studio",
         "spatial-circulation",
-        "spatial-streets"
+        "spatial-streets",
+        "office-desk",
+        "office-computer-shared",
+        "office-visit"
       ],
       "browser": true,
       "timeoutMs": 1200000
