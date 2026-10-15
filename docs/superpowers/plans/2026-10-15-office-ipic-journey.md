@@ -99,6 +99,13 @@ screen centre.
 - Also found: at 390 px, Play & rides is open by default and covers most of the film. It goes to the HUD
   owners and was not changed.
 
+**#365 candidate in this journey (local only, reverted).** Candidate 1 was listed first in `SCREENING_MEDIA`
+(52,555 ms) with its media under `preview/public/assets/ipic/screening/`, uncommitted. The journey passed 31
+checks: its 30 plus both viewers on `mediaId: "ipic-original-v1"`. The late join came at 9.7 s and was
+within 500 ms after 507 ms. Afterwards the tree was clean again. Software rendering, load average 24–26.
+Posted on #365 (issuecomment-6191641392). Approval is the only step left: add the entry, commit the media
+and `sources.json`, rerun.
+
 **Next action:** once Val approves the short, add `ipic-original-v1` to `SCREENING_MEDIA` and
 `sources.json`, then rerun this journey with the short instead of the fixture. Otherwise, watch #424's hosted
 checks. Land #400 first when authorised; merging and landing are Val's.
