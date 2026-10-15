@@ -52,9 +52,15 @@ it does not constitute a device result by itself.
   waitlist and ticket, followed by a WebSocket upgrade. These are simulator
   debugging results, not physical phone GPU acceptance. The simulator was
   shut down before asking Val for a quiet physical Safari reload.
-- Val reported a different visible error on the quiet physical iPhone reload.
-  Its exact text or screenshot is still pending, so the phone join and GPU
-  matrix row remain unverified.
+- Val's quiet physical iPhone reload showed Safari's “a problem repeatedly
+  occurred” page crash, and the same message appeared on a second reload
+  during paired-device log capture. The visible failure is a WebContent crash
+  before the guest joined; no HTTP or WebSocket refusal was established. The
+  log recorded a memory pressure event for WebContent PID 85781 at about
+  23:28:59 local time and
+  roughly 332 MB resident memory; that process was absent from the subsequent
+  running-process list. The exact termination reason is still unconfirmed.
+  Neither reload is a GPU timing result.
 - Integrated `origin/main` at `c1cfd584` after PR #390 landed. The sole
   content conflict was the generated plans index; regenerating it from the
   merged task register retained the phone task, the retired GPU harness, and
@@ -62,9 +68,17 @@ it does not constitute a device result by itself.
   passed 3/3, `pnpm run verify` passed (`.runtime/agent/core.json`), and
   `REDIS_URL=redis://127.0.0.1:16389 pnpm run verify full` passed
   (`.runtime/agent/full.json`). The isolated Redis service was stopped.
+- Integrated subsequent `main` heads `a714a8a5` and `cede4d1c` with signed
+  merge commits, regenerated the plans index, and passed the focused desktop
+  checks and core verification after each integration. PR #393's hosted Verify
+  run 38680848494 passed the aggregate `preview` check at exact head
+  `4161fc936a61b1aabee73f67e56e57f189b7e6cb`.
 
 ## Gaps and next step
 
-Resolve the iPhone Safari join failure, then capture Web Inspector measurements.
-Obtain exact-head hosted `preview` on the integrated PR and land the fixture. Record actual
-device results in the GPU matrix only when captured on the phone.
+Compare a physical Safari visit with `?ao=off` against the crash, then isolate
+the startup render allocation if it still fails. Resolve the WebContent crash,
+verify the guest joins, and capture Web Inspector measurements. Keep PR #393 in
+draft until the phone fixture works on the device; recheck exact-head hosted
+`preview` after any new commit before landing. Record actual device results in
+the GPU matrix only when captured on the phone.
