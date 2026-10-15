@@ -82,6 +82,45 @@ async (host, viewer) => {
   });
   if (refused) { check(refused.error === 'screening_host_required', `viewer transport pause refused: ${JSON.stringify(refused)}`); checks.push('a direct transport pause from the viewer is refused by the server'); }
 
+  // Stale and replayed playback (#368), as real transport commands from the host's page. The
+  // host stops and starts the film again, so the step has the whole 30 s fixture even when a
+  // loaded machine paused late. A resent start applies once (twice would restart the film);
+  // a stale revision, an earlier epoch and a reused operation id with another action are
+  // refused; neither film rewinds, restarts or pauses meanwhile.
+  const hostCommand = message => host.evaluate(value => window.__riverMultiplayerCommand(value), message);
+  const before = await host.evaluate(() => window.__riverMultiplayer().snapshot.screenings.find(item => item.venueId === 'ipic'));
+  const base = { type: 'screening', venueId: 'ipic', epoch: before.epoch };
+  const stopped = await hostCommand({ ...base, action: 'stop', expectedRevision: before.revision, operationId: 'journey-stop-001' });
+  check(stopped?.ok === true && stopped.screening.status === 'stopped', `host stop applied: ${JSON.stringify(stopped)}`);
+  const start = { ...base, action: 'start', mediaId: before.mediaId, expectedRevision: stopped.screening.revision, operationId: 'journey-start-01' };
+  const started = await hostCommand(start);
+  check(started?.ok === true && started.screening.revision === stopped.screening.revision + 1, `host start applied: ${JSON.stringify(started)}`);
+  await Promise.all([host, viewer].map(page => page.waitForFunction(revision => window.__riverScreening().state === 'playing' && window.__riverScreening().revision === revision, started.screening.revision, { timeout: 15000 })));
+  await viewer.waitForTimeout(1500);
+  const replayed = await hostCommand(start);
+  check(replayed?.ok === true && replayed.replayed === true && replayed.screening.revision === started.screening.revision, `a resent start applied once: ${JSON.stringify(replayed)}`);
+  const refusals = {
+    staleRevision: (await hostCommand({ ...base, action: 'pause', expectedRevision: stopped.screening.revision, operationId: 'journey-stale-01' }))?.error,
+    earlierEpoch: (await hostCommand({ ...base, action: 'stop', epoch: `${before.epoch}x`.slice(-64), expectedRevision: started.screening.revision, operationId: 'journey-epoch-01' }))?.error,
+    reusedOperation: (await hostCommand({ ...base, action: 'pause', expectedRevision: started.screening.revision, operationId: start.operationId }))?.error,
+  };
+  check(refusals.staleRevision === 'screening_stale' && refusals.earlierEpoch === 'screening_stale' && refusals.reusedOperation === 'screening_operation_conflict', `stale and reused commands refused: ${JSON.stringify(refusals)}`);
+  const replay = { revision: started.screening.revision, refusals, samples: [] };
+  for (let i = 0; i < 9; i++) {
+    const sample = await spread();
+    replay.samples.push({ host: sample.host.currentTime, viewer: sample.viewer.currentTime, hostRevision: sample.host.revision, viewerRevision: sample.viewer.revision, spreadMs: Math.round(sample.spreadMs), paused: sample.host.paused || sample.viewer.paused });
+    await viewer.waitForTimeout(250);
+  }
+  for (const side of ['host', 'viewer']) {
+    const times = replay.samples.map(sample => sample[side]);
+    check(times[0] >= 1, `${side} film was not restarted by the resent start (${times[0]} s at the first sample)`);
+    check(times.every((time, i) => i === 0 || time >= times[i - 1] - 0.05), `${side} film never rewound: ${times.join(', ')}`);
+    check(times.at(-1) - times[0] > 1, `${side} film kept playing: ${times[0]} -> ${times.at(-1)}`);
+  }
+  check(replay.samples.every(sample => !sample.paused && sample.hostRevision === replay.revision && sample.viewerRevision === replay.revision), `both pages stayed on the started revision: ${JSON.stringify(replay.samples)}`);
+  check(replay.samples.every(sample => sample.spreadMs < 500), `viewers stayed within 500 ms through the refused commands: ${replay.samples.map(sample => sample.spreadMs).join(', ')}`);
+  checks.push('a resent start applied once; stale revision, earlier epoch and reused operation id refused; both films kept playing forward together');
+
 
   await viewer.locator('#ipic-screening [data-control="transcript"]').click();
   check(await viewer.evaluate(() => !document.querySelector('.ipic-screening-transcript').hidden && document.querySelector('.ipic-screening-transcript').textContent.includes('test pattern')), 'transcript readable');
@@ -96,5 +135,5 @@ async (host, viewer) => {
   await viewer.waitForFunction(() => window.__riverScreening()?.active === false && !document.querySelector('#ipic-screening video'));
   checks.push(`leaving IPIC (to ${other}) released the viewer's film, panel and video element`);
   check(!errors.length, errors.join('; '));
-  return { checks, errors, convergedAfterMs: converged, samples, panels, pausedSpreadMs: Math.round(paused.spreadMs), profile: 'one machine, loopback town, headless Chromium with SwiftShader, 250 ms sampling; local clocks share one wall clock' };
+  return { checks, errors, convergedAfterMs: converged, samples, panels, pausedSpreadMs: Math.round(paused.spreadMs), replay, profile: 'one machine, loopback town, headless Chromium with SwiftShader, 250 ms sampling; local clocks share one wall clock' };
 }
