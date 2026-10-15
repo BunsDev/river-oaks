@@ -2,7 +2,7 @@
 
 Objective: the Studio agent (Claude or Codex CLI) and the World Designer (Codex) pass their whole prompt as one command-line argument. Windows caps a command line at 32,767 characters and Linux caps a single argument at 128 KiB (`MAX_ARG_STRLEN`). A long prompt fails at spawn, and the page shows a generic error ("Claude CLI failed…" or "The designer host hit a local error"). Recorded on #370 by the desktop-identity session, unfixed. Fix: send the prompt on stdin.
 
-Branch and worktree: `fix/studio-prompt-stdin-20261015` in `../river-oaks-studio-prompt-stdin-20261015`, from `origin/main` at `d2ea93c3`. Register task: `studio-prompt-stdin` (primary checkout's live `tasks.json`). Owner: river-oaks-27 (session 16ffadb4).
+Branch and worktree: `fix/studio-prompt-stdin-20261015` in `../river-oaks-studio-prompt-stdin-20261015`, from `origin/main` at `d2ea93c3`. Register task: `studio-prompt-stdin` (primary checkout's live `tasks.json`). Owner: river-oaks-27 (session 16ffadb4), then river-oaks-80 (session 80241f07) for landing.
 
 Files owned: `desktop/studio-command.js`, `desktop/studio-codex.js`, `desktop/studio-agent-host.js`, `desktop/studio-designer-host.js`, `desktop/tests/studio-command.test.js`, `desktop/tests/studio-codex.test.js`, `desktop/tests/studio-agent-host.test.js`, `desktop/tests/studio-designer-host.test.js`, `desktop/tests/fixtures/studio-agent-cli.mjs`, `desktop/agent-e2e.js` (reads the fixture log), `docs/world-studio-agent.md`, this ledger.
 
@@ -29,9 +29,11 @@ Files owned: `desktop/studio-command.js`, `desktop/studio-codex.js`, `desktop/st
 | `node desktop/agent-e2e.js` (Electron, synthetic CLI) | Passed after its log reader moved to `{ args, prompt }`; it also asserts that no call's argv carries the message |
 | `node desktop/designer-e2e.js` (Electron, synthetic Coven and Codex) | Passed |
 | `pnpm run verify` (core) | Passed: scripts 95, preview 3,044 with 1 skip, server 500 with 141 Redis skips (no `REDIS_URL`), desktop 69, pytest 141, build, Ruff, demo, secrets |
+| Desktop 38673593628 on `e7d9ba81` (PR #391) | windows-latest: 69 pass, 0 fail, including the three over-limit stdin tests. ubuntu-latest passed. macOS attempt 1 failed "W moves the player" with the player still at the spawn (the known flake, fixed by #392); attempt 2 passed on all three runners |
+| Verify 38673593640 on `e7d9ba81` (PR #391) | Passed: verify (3.11), verify (3.13), preview |
 
 ## Gaps and next step
 
-- Windows proof is the Desktop workflow's `windows-latest` unit tests on the PR (the new over-limit tests run there through `node.exe`).
+- Windows proof is the `windows-latest` unit tests above, run through `node.exe`. The live check against the real Claude and Codex CLIs ran on macOS only; no Windows Studio session has run yet.
 - Not changed: `--system-prompt` still carries the 6,111-character guide on Claude's argv (fixed size, well within both limits).
-- Next: push, open the PR, read the Desktop run (Windows unit tests are the Windows proof). Merging needs Val's authorization; it was not part of the #371 phase-2 grant.
+- Next: Val authorized the merge on 2026-10-15. Land with `pnpm run land 391`, record the merge in the register, then retire the worktree.
