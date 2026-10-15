@@ -134,7 +134,9 @@ jobs:
             # ditto keeps the app bundle's symlinks and permissions, as releases do.
             macOS) ditto -c -k --sequesterRsrc --keepParent "dist/desktop/$build" "dist/bundles/$name.zip";;
             Linux) (cd dist/desktop && zip -qry "../../dist/bundles/$name.zip" "$build");;
-            Windows) 7z a -tzip -bso0 "dist/bundles/$name.zip" "dist/desktop/$build";;
+            # 7-Zip stores the path it is given; start from dist/desktop so the
+            # zip opens to the build folder, as on Linux and macOS.
+            Windows) (cd dist/desktop && 7z a -tzip -bso0 "../bundles/$name.zip" "$build");;
           esac
           cd dist/bundles
           if command -v sha256sum > /dev/null; then sha256sum "$name.zip" > SHA256SUMS; else shasum -a 256 "$name.zip" > SHA256SUMS; fi
