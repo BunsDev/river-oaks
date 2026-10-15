@@ -64,15 +64,36 @@ RIVER_OAKS_GALLERY_CYCLES=5 RIVER_OAKS_GALLERY_AO_TAIL=off pnpm run test:experie
 RIVER_OAKS_GALLERY_CYCLES=5 RIVER_OAKS_GALLERY_AO_TAIL=on pnpm run test:experience generated-gallery-cycle-soak
 ```
 
-Phones cannot run the Playwright journeys. The current Vite/browser fixture binds
-to `127.0.0.1`, and the local identity accepts only a loopback origin. A plain
-LAN URL is therefore not yet a working authenticated phone fixture; prepare a
-dedicated test-only phone access path without relaxing production origin or
-CSRF checks before recording a phone result. Once available, open it with
-`?render-audit=1&motion-debug=1`, then walk the same route by hand: enter the
-gallery, walk to the back wall, go up, come down, leave, visit Cartier, and return. Read
-`window.__riverRenderAudit` from a remote inspector (Safari Web Inspector, or Chrome
-`chrome://inspect`).
+Phones cannot run the Playwright journeys. On a trusted private Wi-Fi or Tailscale
+network, find this Mac's private IPv4 address (for example, `ipconfig getifaddr en0`)
+and start the dedicated test-only fixture from the checkout:
+
+```sh
+RIVER_OAKS_PHONE_FIXTURE_HOST=<private-ipv4> \
+  RIVER_OAKS_TEST_WEB_PORT=5180 RIVER_OAKS_DEV_TOWN_PORT=8788 \
+  node server/tests/browser-fixture.js
+```
+
+The fixture binds Vite to that one private address, keeps the authoritative town
+on loopback, and issues a synthetic guest cookie through `/auth/session`. It does
+not use WorkOS, and the normal HTTP/WebSocket origin and CSRF gates still apply.
+Stop the fixture after review. On the phone, open
+`http://<private-ipv4>:5180/?render-audit=1&motion-debug=1`; verify the shared
+world joins before timing anything. In Safari Web Inspector, read
+`window.__riverRenderAudit.graphics()` to record the WebGL renderer, viewport,
+quality, pipeline, calls, triangles, geometries and textures. Use
+`window.__riverRenderAudit.start()` immediately before each timed walk or portal
+transition and `window.__riverRenderAudit.stop()` immediately after it; keep the
+returned frames and overflow flag in the receipt. An overflowed sample is invalid.
+
+Walk the same route by hand: enter the gallery, walk to the back wall, go up,
+come down, leave, visit Cartier, and return. Record cold and return preparation
+times separately, plus the ascent and descent frame intervals and a capture at the
+glazed frontage. Repeat Auto with `&aotail=on`, and the AO-off control with
+`&ao=off` as separate visits. The `graphics().quality.tailShedding` value must
+match the chosen tail mode. Safari's remote Web Inspector is on the paired Mac;
+Android uses Chrome `chrome://inspect`. Manual phone timings are distinct from
+the Playwright desktop receipts above.
 
 Keep the JSON receipts under `.runtime/` and the captures under `output/playwright/`. Copy
 both into `~/worktree-backups/river-oaks/gpu-acceptance-<date>/` before the checkout is
