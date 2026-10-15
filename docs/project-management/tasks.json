@@ -5674,13 +5674,13 @@
     {
       "id": "office-ipic-baseline-360",
       "title": "Office + IPIC #360 (design side, D0/D1): kit/reference inventory, brief, asset manifest and review matrix in docs/design/office-ipic",
-      "status": "blocked",
+      "status": "active",
       "branches": [
         "docs/office-ipic-baseline-20261014"
       ],
-      "owner": null,
-      "updatedAt": "2026-10-14T23:58:32.619Z",
-      "nextAction": "Draft PR #380 at ab1a2b46 (docs-only round end; bfff7a30 passed 16/16, mergeable clean). Issue #360 10/12 ticked. Exit condition: #381 records the two decisions, then record designer + engineer agreement and close the last two boxes; Val answers kit import. Local count 10 / 10. Released by session aa2272b7 at round end; the worktree holds no uncommitted work.",
+      "owner": "claude:river-oaks-1b (f4107618)",
+      "updatedAt": "2026-10-15T03:43:33.020Z",
+      "nextAction": "main c1cfd584 merged (dace7b1a); engineering G1 agreement added to review-matrix.md, brief notes #388. Push, mark #380 ready, land after #381.",
       "filesOwned": [
         "docs/design/office-ipic/brief.md",
         "docs/design/office-ipic/reference-index.json",
@@ -5697,11 +5697,17 @@
         "focused office/IPIC node tests",
         "pnpm run verify"
       ],
-      "blocker": "G1 needs #381 (office-ipic-engineering-baseline, river-oaks-dc) to record Val's fit and mezzanine decisions in layout-contract.json (posted on #381); kit import, IPIC lift and the missing briefs await Val.",
       "issue": 360,
       "ledger": "docs/superpowers/plans/2026-10-14-office-ipic-baseline.md",
       "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-ipic-baseline-20261014",
-      "pr": 380
+      "pr": 380,
+      "leaseUntil": "2026-10-15T05:43:33.020Z",
+      "handoff": {
+        "at": "2026-10-15T03:38:57.407Z",
+        "from": null,
+        "to": "claude:river-oaks-1b (f4107618)",
+        "reason": "Released design packet task; Val's /goal of 2026-10-15 asks river-oaks-1b to mark #380 ready, land it and close #360."
+      }
     },
     {
       "id": "local-prune-20261013",

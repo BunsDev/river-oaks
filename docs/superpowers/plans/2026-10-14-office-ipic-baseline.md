@@ -234,9 +234,23 @@ keep/reuse table's premise: its level/portal schema is now on `main`.
   passed). G1 closes when #381 takes #388 and the engineer side records agreement
   in `review-matrix.md`. Local count 10 / 10 including the #388 worktree.
 
+## Handoff to river-oaks-1b (2026-10-15T03:39Z)
+
+Val's goal of 2026-10-15 gave the #360 close-out to river-oaks-1b, which claimed
+this released task, #381 (`office-ipic-engineering-baseline`, river-oaks-dc's lease
+expired) and #388 in the live register with the handoffs recorded there.
+
+- #388 was marked ready and landed into #381's branch with `pnpm run land 388`
+  (11 checks green, merge `cbe393b8`). #381's contract now records both decisions.
+- `main` at `c1cfd584` merged here as `dace7b1a`; the plans index was the only
+  conflict.
+- `review-matrix.md` gains the engineering side's G1 agreement with its
+  cross-check, and the brief's note that the contract still lists the decisions as
+  open is replaced by the #388 reference. The cross-check table is in the
+  engineering ledger, "Takeover and G1".
+
 ## Next
 
-#381 records Val's fit and mezzanine decisions in its contract; then the G1
-review can close #360. #361 (multilevel traversal, including the building raise
-and its checkpoint migration) and #366 start after G1, each in its own worktree.
-After G1, #361 or #366 in a new worktree, one scope per PR.
+Mark #380 ready and land it with `pnpm run land 380 --owner river-oaks-1b` after
+#381; tick #360's last two boxes; retire this branch with `project:prune`. Still
+open for Val: kit import (R19), the missing briefs (R24), and IPIC step-free access.

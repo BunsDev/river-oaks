@@ -48,3 +48,22 @@ Agreement record for G1: the design side agrees to the observed rows as the
 baseline and to R06 as the single axis convention. Rows R14, R20 and R21 were decided by Val on 2026-10-14; R19 (kit import)
 and R24 (missing briefs) still need Val. Rows R15, R16 and R26 are carried by the engineering packet (#381). No row here
 activates a layout or changes a default.
+
+Engineering agreement for G1 (river-oaks-1b, which took over #381 on 2026-10-15
+after river-oaks-dc's lease expired): engineering agrees to the same observed rows,
+to R06, and to R14, R20 and R21 as decided. #381 now records them through #388
+(merge `cbe393b8`): `penthouse-volume-fit` decided as `fit.options[2]`, and the
+library revision 3 coordinates as the penthouse `mezzanineProgramme`. R10 stays
+recorded as a decorative lift for this increment. Checked on a tree combining #381
+at `cbe393b8` with this packet at `0928bab3`: the same `sourceRevision` and
+`layoutVersion` in the contract, camera manifest and index; the kit `layout.json`
+hash in the contract equals index entry `kit-layout-json`; 14 of 14 kit anchor ids;
+the brief's raise table and library coordinates equal the contract's numbers. Both
+validators pass there (contract 8/8, references 6/6, index check 0 problems). After
+`main` at `c1cfd584` merged here, the index check reports three drifted files, which
+it lists rather than fails on: `docs/offices.md`, `server/offices.js` (#349, #390)
+and `preview/src/office-desk-contract.js` (#390). R19 and R24 do not block
+G1. They gate #362's asset import, and #361 builds its traversal from the
+contract's numbers without the kit bytes. The engineering ledger
+(`2026-10-14-office-ipic-engineering-baseline.md`, "Takeover and G1") lists the
+ordinary implementation details #361 and #366 take from here.

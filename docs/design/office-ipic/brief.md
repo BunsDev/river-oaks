@@ -145,8 +145,9 @@ open and owned by other sessions; nothing below assumes it merged.
 ## Decisions (Val, 2026-10-14)
 
 Val answered three of the five open questions on 2026-10-14. The engineering
-contract (`layout-contract.json`, #381) still lists them as open; its owner
-records the same answers there.
+contract (`layout-contract.json`, #381) records the same answers through #388
+(merged into #381 as `cbe393b8` on 2026-10-15): `penthouse-volume-fit` is decided
+with `fit.decision`, and the library programme is `mezzanineProgramme`.
 
 **Physical fit: raise the modelled building** (contract `fit.options[2]`). Val
 asked for the building to be raised if feasible, else best judgement. It is
