@@ -60,10 +60,13 @@ a member's invitation code skips the wait.
 Every request has a username from its first status check (`server/waitlist.js`,
 rules in `preview/src/resident-names.js`).
 
-- **Default.** The resident's verified GitHub login, when it can be a username
-  and nobody holds a name that reads the same; otherwise a generated name such
-  as `rosy-heron-42`.
-- **Rules.** 2 to 39 letters and digits, joined by single `-`, `_` or `.`.
+- **Default.** The resident's verified GitHub login, when it can be chosen as a
+  username and nobody holds a name that reads the same; otherwise a generated name
+  such as `rosy-heron-42`.
+- **Rules.** 2 to 39 letters and digits, joined by single `-`, `_` or `.`. A name
+  chosen now, by the resident, an approver or as a default, also needs at least 4
+  letters A–Z; digits and separators don't count (`usernameChoiceProblem`). Names
+  chosen before that rule are kept, and saving one again unchanged is accepted.
   Two names are the same when they read the same (case, accents and lookalike
   characters folded by `nameSkeleton`). No name may read as Jevica or Resident,
   or start like a `Visitor #` fallback.

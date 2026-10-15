@@ -86,8 +86,17 @@ test('usernames are 2 to 39 letters or digits joined by single separators, and n
   assert.notEqual(usernameKey('night-owl'), usernameKey('night-owls'));
 });
 
+test('a newly chosen username needs at least 4 letters; names already in use stay valid', async () => {
+  const { usernameChoiceProblem, validUsername } = await import('../src/resident-names.js');
+  for (const name of ['alice', 'ALICE', 'night-owl', 'Abcd', 'a1b2c3d4', 'r2d2-unit']) assert.equal(usernameChoiceProblem(name), null, name);
+  // Digits and separators do not count, even where they read like letters in usernameKey.
+  for (const name of ['ab', 'abc', 'bob99', 'a1b2c3', 'x-y-z-1', '1234']) assert.match(usernameChoiceProblem(name), /at least 4 letters/, name);
+  for (const name of ['Jevica', 'a', '-lead', 'x'.repeat(40)]) assert.notEqual(usernameChoiceProblem(name), null, name);
+  for (const name of ['ab', 'bob99']) assert.equal(validUsername(name), true, `${name} stays valid for whoever already has it`);
+});
+
 test('a generated username is friendly, valid and the same for the same seed', async () => {
-  const { validUsername } = await import('../src/resident-names.js');
+  const { validUsername, usernameChoiceProblem } = await import('../src/resident-names.js');
   const { generatedUsername } = await import('../src/generated-username.js');
   assert.equal(generatedUsername('user_1'), generatedUsername('user_1'));
   assert.notEqual(generatedUsername('user_1'), generatedUsername('user_2'));
@@ -95,5 +104,6 @@ test('a generated username is friendly, valid and the same for the same seed', a
     const name = generatedUsername(`seed-${i}`);
     assert.match(name, /^[a-z]+-[a-z]+-\d\d$/);
     assert.equal(validUsername(name), true, name);
+    assert.equal(usernameChoiceProblem(name), null, `${name} meets the 4-letter minimum`);
   }
 });
