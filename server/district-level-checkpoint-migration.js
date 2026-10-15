@@ -12,7 +12,7 @@ const digest = value => createHash('sha256').update(JSON.stringify(value)).diges
 const rejected = () => ({ ok: false, error: 'invalid_checkpoint' });
 
 /** Re-sign only a validated one-level district checkpoint for the reviewed two-level revision. */
-export function recoverDistrictLevelsCheckpoint({ worldData, checkpoint, worldId = DEFAULT_WORLD_ID, now, isAdmin } = {}) {
+export function recoverDistrictLevelsCheckpoint({ worldData, checkpoint, worldId = DEFAULT_WORLD_ID, now, isAdmin, screeningHosts, officeLayout } = {}) {
   try {
     const currentPlan = worldData?.buildingInteriors?.[0];
     if (worldId !== DEFAULT_WORLD_ID || worldData.buildingInteriors.length !== 1
@@ -23,7 +23,7 @@ export function recoverDistrictLevelsCheckpoint({ worldData, checkpoint, worldId
     if (digest(currentPayload) !== currentDigest || digest(previousPayload) !== previousDigest) return rejected();
     const beforeData = { ...worldData, buildingInteriors: [previousPlan] };
     if (digest(beforeData) !== PREVIOUS_DISTRICT_SHA256) return rejected();
-    const options = { worldId, ...(now ? { now } : {}), ...(isAdmin ? { isAdmin } : {}) };
+    const options = { worldId, screeningHosts, officeLayout, ...(now ? { now } : {}), ...(isAdmin ? { isAdmin } : {}) };
     const before = createSharedWorld(beforeData, options);
     let from = 'gallery_plan_v1';
     if (!before.restore(checkpoint).ok) {

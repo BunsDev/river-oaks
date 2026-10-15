@@ -881,7 +881,11 @@ function render(now) {
   multiplayer?.update(now);
   officeUI?.prepare(now);
   seatingControls?.update(now);
-  if (auditCamera) { camera.position.copy(auditCamera.position); camera.lookAt(auditCamera.target); camera.updateMatrixWorld(); }
+  if (auditCamera) {
+    camera.position.copy(auditCamera.position); camera.lookAt(auditCamera.target);
+    if (auditCamera.fov && camera.fov !== auditCamera.fov) { camera.fov = auditCamera.fov; camera.updateProjectionMatrix(); }
+    camera.updateMatrixWorld();
+  }
   photoMode?.update();
   storeIntros?.update(now);
   remotePlayers?.update(now, camera);
@@ -1104,6 +1108,10 @@ if (import.meta.env.DEV && renderAudit) {
       const distance = radius / Math.tan(camera.fov * Math.PI / 360) * Math.max(1, 1 / camera.aspect) * 1.3;
       auditCamera = { target, position: target.clone().add(new THREE.Vector3(0, distance * .55, distance)) };
     },
+    // A fixed review pose for camera-manifest captures (#364): Three.js world
+    // position and target, and optional FOV. release() hands the camera back.
+    view({ position, target, fov }) { auditCamera = { position: new THREE.Vector3(...position), target: new THREE.Vector3(...target), fov, restoreFov: auditCamera?.restoreFov ?? camera.fov }; },
+    release() { if (auditCamera?.fov) { camera.fov = auditCamera.restoreFov; camera.updateProjectionMatrix(); } auditCamera = null; },
     graphics() {
       const gl = renderer.getContext(), info = gl.getExtension('WEBGL_debug_renderer_info');
       return { renderer: info ? gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER),

@@ -7,6 +7,10 @@ export const IPIC_FLIGHTS = Object.freeze([{ start: 6, end: 12, base: 0 }, { sta
 export const IPIC_ESCALATOR = Object.freeze({ lanes: [-1.4, 1.4], railOffset: .91, railWidth: .11, treadWidth: 1.5 });
 export const IPIC_PLANTERS = Object.freeze([[-4.8, 0, 1.6, 1.8], [5.7, 0, 1.6, 1.8], [-5.6, 6, 25.4, 1.5], [1, 6, 25.4, 1.5]]);
 export const IPIC_SOFA_ARMS = Object.freeze([-4.26, -1.37]);
+// The auditorium screen, independent of what plays on it (#364/#365): centre
+// across the room (a) and above the auditorium floor (y), plane depth (d) and
+// size in metres, about 3:1. A film fits inside it; see ipic-screening.js.
+export const IPIC_SCREEN = Object.freeze({ a: .3, y: 2.5, d: 33.79, width: 9.8, height: 3.25 });
 export const IPIC_CAMERAS = Object.freeze([
   { name: 'reception', eye: [0, 1.65, 1], target: [2, 1.5, 5.7], photo: 'IMG_9738.jpg' },
   { name: 'mural', eye: [-1.4, 4.6, 11.7], target: [3, 4.65, 13.65], photo: 'IMG_9771.jpg' },
@@ -46,6 +50,13 @@ export function configureIpicRoom(room) {
   }
   block('ipic-mural-wall', 4.7, 13.72, 3.4, .15, 3, 3.2);
   block('ipic-bar', 4.45, 23, 1.1, 4.2, 6, 1.1);
+  // Solid parts that were drawn without collision (#364): the Tuck Room back
+  // shelving and wall, the IPIC Express counter, the decorative lift front and
+  // the auditorium's aisle handrail. Each sits off every public route.
+  block('ipic-bar-shelves', (5.675 + room.aMax) / 2, 23, room.aMax - 5.675, 4.8, 6, 3.3);
+  block('ipic-express-counter', 5.4, 25.62, 1.5, .45, 6, 1.1);
+  block('ipic-lift-front', 5.3, 5.85, 1.85, .2, 0, 2.8);
+  block('ipic-aisle-rail', -5.55, 30, .05, 6.05, 6, .92);
   block('ipic-coffee-table', -2.8, 23.3, 1.5, .9, 6, .4);
   block('ipic-tub-chair', -4.3, 22.4, .95, .95, 6, 1.1);
   block('ipic-tub-chair', -1.05, 22.6, .95, .95, 6, 1.1);
