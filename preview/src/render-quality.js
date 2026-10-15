@@ -16,14 +16,20 @@ export function normalizeQuality(value) {
 
 // A 60 Hz display delivers 16.7 ms frames. A window median at or above 26 ms
 // means the GPU is missing every other refresh, so Auto steps resolution down.
-// Repeated missed refreshes can also hide behind a fast median while moving;
-// Auto temporarily drops the extra AO pass after two tail-heavy windows.
+// Repeated missed refreshes can also hide behind a fast median while moving.
+// With `tailShedding`, Auto temporarily drops the extra AO pass after two
+// tail-heavy windows. It is off by default: it was measured only in the
+// generated gallery on one Mac, where the gain did not hold once main moved
+// (#354), and inside approved generated rooms Auto already replaces AO with
+// the room's contact layer (#382). Left on, it reacts to district tails no
+// device has been measured for, and gallery tails keep district AO off after
+// the visitor leaves. Turn it on with `?aotail=on` for device acceptance.
 // It steps back up only after several calm windows, and never straight back to
 // a scale that just failed: that ceiling lifts after a wait that doubles each
 // time the same scale fails again, so a borderline GPU settles instead of
 // oscillating between two resolutions.
 export function createRenderScaleGovernor({ min = 0.6, max = 1, slowMs = 26, fastMs = 18, windowSize = 45,
-  calmWindows = 3, ceilingWindows = 8, tailFraction = 0.12, tailRecoveryWindows = 120 } = {}) {
+  calmWindows = 3, ceilingWindows = 8, tailFraction = 0.12, tailRecoveryWindows = 120, tailShedding = false } = {}) {
   let scale = max, samples = [], calm = 0, ceiling = Infinity, ceilingWait = 0, ceilingPatience = ceilingWindows;
   let occlusion = true, floorWindows = 0, detailRecovery = 0, tailWindows = 0, tailRecoveryWait = 0;
   const round = value => Math.round(value * 100) / 100;
@@ -46,7 +52,7 @@ export function createRenderScaleGovernor({ min = 0.6, max = 1, slowMs = 26, fas
       if (median >= slowMs && scale === min) {
         if (++floorWindows >= 2) occlusion = false;
       } else floorWindows = 0;
-      if (occlusion && scale === max && median <= fastMs && tailSlow) {
+      if (tailShedding && occlusion && scale === max && median <= fastMs && tailSlow) {
         if (++tailWindows >= 2) { occlusion = false; tailWindows = 0; tailRecoveryWait = tailRecoveryWindows; }
       } else tailWindows = 0;
       if (!occlusion && scale === max && median <= fastMs && !tailSlow) {
@@ -74,13 +80,14 @@ export function createRenderScaleGovernor({ min = 0.6, max = 1, slowMs = 26, fas
 
 // The Settings control. `apply` receives { mode, scale, occlusion } whenever the
 // effective quality changes; `sample` is fed each animation frame's interval.
-export function createQualityControl({ apply, storage: given }) {
+// `tailShedding` opts Auto into the tail rule above (device acceptance only).
+export function createQualityControl({ apply, storage: given, tailShedding = false }) {
   // Reading localStorage can itself throw (blocked storage, opaque origins).
   let storage = given ?? null;
   if (given === undefined) try { storage = globalThis.localStorage; } catch { storage = null; }
   let mode = DEFAULT_QUALITY, lastScale = null, lastOcclusion = null, frames = 0, frameTime = 0, fps = 0;
   try { mode = normalizeQuality(storage?.getItem(storageKey)); } catch { /* Storage may be disabled; Auto still works. */ }
-  const governor = createRenderScaleGovernor();
+  const governor = createRenderScaleGovernor({ tailShedding });
   const element = document.createElement('div');
   element.className = 'graphics-control';
   const heading = document.createElement('div'); heading.className = 'section-label';
@@ -120,7 +127,7 @@ export function createQualityControl({ apply, storage: given }) {
   return {
     element,
     get mode() { return mode; },
-    get stats() { return { mode, scale: lastScale, occlusion: lastOcclusion, fps }; },
+    get stats() { return { mode, scale: lastScale, occlusion: lastOcclusion, fps, tailShedding }; },
     select,
     sample(ms) {
       if (mode === 'auto') governor.sample(ms);

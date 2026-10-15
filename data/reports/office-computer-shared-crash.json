@@ -1,0 +1,110 @@
+{
+  "createdAt": "2026-10-15T01:04:54.077Z",
+  "status": "failed",
+  "modes": [
+    "development",
+    "development-world",
+    "development-publish",
+    "required",
+    "creator"
+  ],
+  "rendering": "Full rendering",
+  "scope": "Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.",
+  "results": [
+    {
+      "name": "multiplayer-dev",
+      "status": "passed",
+      "seconds": 140.729,
+      "result": {
+        "checks": [
+          "each browser is its own development player",
+          "both players share one town",
+          "no sign-in gate blocks development",
+          "Players start with an appearance picker and a default look",
+          "Sable selection reaches the other browser and its rendered remote avatar",
+          "The production shared player has both fitted Silvan arm vines",
+          "New town chat rows are announced after initial history loads",
+          "A shared wave reaches the peer and visibly raises the remote avatar arm",
+          "A sent town message appears once for both players",
+          "Chat history returns once after reconnect",
+          "A reply reaches the reconnected player through the live chat UI",
+          "A pending contact cannot see the sender's online world",
+          "An accepted contact can join the sender's current world",
+          "Current world exposes named meeting places",
+          "A resident can publish a profile that someone in the same world can inspect",
+          "A contact invitation offers a validated link to the sender's world",
+          "A named-place invitation offers a link to that place in the sender's world",
+          "Private messages stay out of town chat",
+          "Accepted contacts and private history survive a browser reconnect",
+          "Shared play exposes player-owned building",
+          "A guest cannot access the shared builder",
+          "A guest cannot access wish granting",
+          "shared play hides the retired invasion",
+          "players arrive on separate spots (1.60 m apart)",
+          "a shared teleport lands beside Jo Malone London in both browsers' snapshots",
+          "A different account cannot see a private landmark",
+          "An account landmark survives reload without device storage",
+          "a landmark teleport is a server-checked position travel the other browser sees",
+          "Builder mode can be switched on",
+          "Builder preview uses the selected one-metre grid",
+          "Builder preview uses the selected half-metre grid",
+          "The preview appears where the pointer meets the ground",
+          "An open spot is marked ready (Ready to place.)",
+          "A click places the creation exactly where the preview stood",
+          "A guest cannot access saved building designs",
+          "The owner places a fresh copy from a saved design",
+          "Deleting a saved design leaves its placed copy intact",
+          "The preview turns red on the spot just taken (Keep clear of the road.)",
+          "R turns the preview",
+          "Escape leaves builder mode and removes the preview",
+          "Escape in builder mode leaves the dock open",
+          "Shared mobile play starts with a compact dock",
+          "Shared mobile guests get beast movement without flight",
+          "Shared mobile play hides private companion and vehicle actions",
+          "Shared mobile play hides local-only scenarios",
+          "Shared mobile controls stay within the viewport",
+          "No browser page errors"
+        ],
+        "a": {
+          "self": "dev-9f541ec432e0",
+          "players": [
+            "dev-9f541ec432e0",
+            "dev-5ad22e916d43"
+          ],
+          "gate": true,
+          "appearance": "sable-human",
+          "appearancePicker": true,
+          "invasion": true,
+          "roster": "2 players in town"
+        },
+        "b": {
+          "self": "dev-5ad22e916d43",
+          "players": [
+            "dev-9f541ec432e0",
+            "dev-5ad22e916d43"
+          ],
+          "gate": true,
+          "appearance": "sable-human",
+          "appearancePicker": true,
+          "invasion": true,
+          "roster": "2 players in town"
+        },
+        "errors": []
+      }
+    },
+    {
+      "name": "groups",
+      "status": "passed",
+      "seconds": 62.122,
+      "result": {
+        "checks": [
+          "An accepted contact appears in the group invitation picker",
+          "Group messages stay out of public town chat",
+          "Group membership and conversation survive reconnect"
+        ]
+      }
+    }
+  ],
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+  "error": "browserContext.newPage: Target crashed \n    at /Users/buns/Documents/GitHub/BunsDev/river-oaks-office-computer-db-mvp/preview/e2e/shared-runner.js:117:72"
+}

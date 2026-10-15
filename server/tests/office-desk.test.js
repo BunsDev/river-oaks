@@ -35,3 +35,22 @@ test('desk task count is bounded and deleting releases capacity',async()=>{
  await desk.remove('a',{expectedVersion:version++,id:'task-0'});
  assert.equal((await desk.save('a',{expectedVersion:version,task:task()})).ok,true);
 });
+
+for(const mode of ['memory','redis'])test(`${mode}: private task timestamps and lost-response retries remain stable`,{skip:mode==='redis'&&!process.env.REDIS_URL},async t=>{
+ const prefix=`{desk-retry-${randomUUID()}}`,redis=mode==='redis'?new Redis(process.env.REDIS_URL):null;let time=100;
+ t.after(async()=>{if(redis){const keys=await redis.keys(`${prefix}*`);if(keys.length)await redis.del(...keys);await redis.quit();}});
+ const store=mode==='memory'?createMemoryOfficeDesk({now:()=>time}):createRedisOfficeDesk({redis,prefix,now:()=>time});
+ const write={expectedVersion:0,operationId:'op-1',task:task()};
+ const saved=await store.save('alice',write);assert.equal(saved.ok,true);
+ assert.equal(saved.desk.tasks[0].createdAt,100);assert.equal(saved.desk.tasks[0].updatedAt,100);
+ time=200;assert.equal((await store.save('alice',write)).ok,true);
+ assert.equal((await store.read('alice')).version,1);
+ assert.equal((await store.save('alice',{...write,task:task({notes:'different'})})).reason,'desk_operation_conflict');
+ const updated=await store.save('alice',{expectedVersion:1,operationId:'op-2',task:{...saved.desk.tasks[0],createdAt:0,updatedAt:0,notes:'Updated'}});
+ assert.equal(updated.desk.tasks[0].createdAt,100);assert.equal(updated.desk.tasks[0].updatedAt,200);
+ const removal={expectedVersion:2,operationId:'op-3',id:write.task.id};
+ assert.equal((await store.remove('alice',removal)).ok,true);assert.equal((await store.remove('alice',removal)).ok,true);
+ assert.equal((await store.read('alice')).version,3);assert.equal((await store.save('alice',write)).ok,true,'old save retry reports current state without resurrecting task');
+ assert.deepEqual((await store.read('alice')).tasks,[]);
+ assert.equal('receipts' in await store.read('alice'),false);
+});

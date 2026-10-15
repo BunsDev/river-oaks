@@ -6,12 +6,17 @@ async page => {
   if (!['auto', 'sharp', 'smooth'].includes(qualityMode)) throw new Error('Choose auto, sharp or smooth gallery quality');
   const aoMode = process.env.RIVER_OAKS_GALLERY_AO ?? 'on';
   if (!['on', 'off'].includes(aoMode)) throw new Error('Choose on or off gallery ambient occlusion');
+  const aoTailMode = process.env.RIVER_OAKS_GALLERY_AO_TAIL ?? 'off';
+  if (!['on', 'off'].includes(aoTailMode)) throw new Error('Choose on or off gallery AO tail rule');
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto(`http://127.0.0.1:5173/?motion-debug=1&render-audit=1${aoMode === 'off' ? '&ao=off' : ''}`);
+  await page.goto(`http://127.0.0.1:5173/?motion-debug=1&render-audit=1${aoMode === 'off' ? '&ao=off' : ''}${aoTailMode === 'on' ? '&aotail=on' : ''}`);
   await page.locator('#loading').waitFor({ state: 'hidden' });
   await page.waitForFunction(() => document.querySelector('#canvas-host')?.dataset.multiplayer === 'joined');
+  const tailShedding = await page.evaluate(() => window.__riverRenderAudit.graphics().quality.tailShedding);
+  if (tailShedding !== (aoTailMode === 'on'))
+    throw new Error(`Gallery AO tail mode mismatch: requested ${aoTailMode}, active ${tailShedding}`);
   if (qualityMode !== 'auto') await page.evaluate(mode => document.querySelector(`[data-quality="${mode}"]`).click(), qualityMode);
   if (await page.locator('#panel-toggle').getAttribute('aria-expanded') === 'false') await page.locator('#panel-toggle').click();
   await openHudSpace(page, 'explore-section');
@@ -71,6 +76,10 @@ async page => {
       throw new Error(`Cycle ${cycle} entered without approved detail and occupancy: ${JSON.stringify(inside)}`);
     const render = await sampleRender();
     if (render.overflow || render.frames < 120) throw new Error(`Incomplete cycle ${cycle} frame sample: ${JSON.stringify(render)}`);
+    if (aoMode === 'on' && qualityMode === 'auto' && render.graphics.pipeline.ao)
+      throw new Error(`Auto kept full AO inside a generated room on cycle ${cycle}`);
+    if (aoMode === 'on' && qualityMode === 'sharp' && !render.graphics.pipeline.ao)
+      throw new Error(`Sharpest lost full AO inside a generated room on cycle ${cycle}`);
     if (cycle === 1 || cycle === cycles) await page.screenshot({ path: `output/playwright/gallery-cycle-${cycle}.png` });
     await page.locator('#canvas-host').focus();
     const beforeWalk = await page.evaluate(() => ({
@@ -91,6 +100,11 @@ async page => {
       throw new Error(`Cycle ${cycle} did not produce a valid moving frame sample: ${JSON.stringify({ moving, movedM, beforeWalk, afterWalk })}`);
     if (!beforeWalk.cull || !afterWalk.cull || !(await page.locator('#walking-hud').getAttribute('data-inside')))
       throw new Error(`Cycle ${cycle} lost the opaque interior view while walking: ${JSON.stringify({ beforeWalk, afterWalk })}`);
+    if (process.env.RIVER_OAKS_GALLERY_CANVAS_CAPTURE === '1' && (cycle === 1 || cycle === cycles)) {
+      const hideUi = await page.addStyleTag({ content: 'body * { visibility: hidden !important } #canvas-host, #canvas-host * { visibility: visible !important }' });
+      try { await page.locator('#canvas-host canvas').screenshot({ path: `output/playwright/gallery-canvas-cycle-${cycle}.png` }); }
+      finally { await hideUi.evaluate(element => element.remove()); }
+    }
     await page.waitForTimeout(250);
     await page.locator('#canvas-host').focus();
     await page.keyboard.press('KeyF');
@@ -100,6 +114,11 @@ async page => {
       return multiplayer.snapshot.players.find(item => item.id === multiplayer.selfId)?.levelId === null;
     }, null, { timeout: 10000 });
     await page.waitForTimeout(1500);
+    if (aoMode === 'on' && qualityMode === 'auto') {
+      const outside = await page.evaluate(() => window.__riverRenderAudit.graphics());
+      if (outside.pipeline.ao !== outside.quality.occlusion)
+        throw new Error(`Auto did not restore district AO after cycle ${cycle}: ${JSON.stringify(outside)}`);
+    }
     await visit('Cartier');
     await page.waitForFunction(() => document.querySelector('#walking-enter')?.textContent?.includes('Cartier'), null, { timeout: 10000 });
     await page.waitForTimeout(12500);
@@ -126,6 +145,6 @@ async page => {
     }
   }
   if (errors.length) throw new Error(errors.join('; '));
-  return { passed: true, cycles, qualityMode, aoMode, coldMs, samples,
+  return { passed: true, cycles, qualityMode, aoMode, aoTailMode, coldMs, samples,
     scope: 'One authenticated fixture client, repeated gallery entry, measured keyboard walk, exit, distance eviction and return at 1440x900 on local Chromium. Frame samples include host load; renderer geometry/texture counts and Chromium JS heap are resource indicators, not physical GPU memory. No target-device or human visual acceptance.' };
 }

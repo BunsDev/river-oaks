@@ -120,6 +120,9 @@ const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matc
 // Never enable this profile in a production build.
 const softwareAcceptance = import.meta.env.DEV && import.meta.env.VITE_SHARED_SOFTWARE_RENDERING === '1';
 const renderAudit = import.meta.env.DEV && new URLSearchParams(location.search).get('render-audit') === '1' ? createRenderAudit() : null;
+const debugOcclusion = new URLSearchParams(location.search).get('ao');
+// Auto's AO tail rule stays off until it passes device acceptance (render-quality.js).
+const aoTailShedding = new URLSearchParams(location.search).get('aotail') === 'on';
 let auditCamera = null;
 let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, storePeople, interiorsLayer, generatedInteriors;
 let districtUI, environmentAssets = null, storefrontReflections = null, roomGroundClip = null;
@@ -199,14 +202,13 @@ function initializeRenderer() {
   // CPU acceptance also skips bloom: under the normal-colour override its blur spread
   // one figure's invalid values across the whole Mesa frame (owner view, 2026-10-08).
   pipeline = createRenderPipeline(renderer, scene, camera, { samples: softwareAcceptance ? 0 : 4, bloom: !softwareAcceptance });
-  const debugOcclusion = new URLSearchParams(location.search).get('ao');
   // The storefront probe renders fixed-size cube faces outside the composer,
   // so quality changes never invalidate it.
   quality = createQualityControl({ apply({ scale, occlusion }) {
     pipeline.setRenderScale(softwareAcceptance ? 0.25 : scale);
     if (debugOcclusion !== 'off') pipeline.setOcclusion(!softwareAcceptance && occlusion);
     photoMode?.qualityChanged();
-  } });
+  }, tailShedding: aoTailShedding });
   if (debugOcclusion === 'off') pipeline.setOcclusion(false);
   else if (debugOcclusion === 'only') pipeline.occlusion.output = AO_OUTPUT.Denoise;
   if (!softwareAcceptance) loadEnvironment(renderer, scene).then((assets) => { environmentAssets = assets; updateAtmosphere(); }).catch(() => { $('#connection').textContent = 'Sky lighting unavailable · base lighting active'; });
@@ -889,9 +891,19 @@ function render(now) {
   if (officeUI?.active || !softwareAcceptance || now - lastSoftwareDraw >= 1000) {
     lastSoftwareDraw = now;
     renderer.info.reset();
+    const currentRoom = buildingMesh?.userData.generatedRooms?.find(room => room.planId === self?.levelId);
+    const generatedRoomActive = !officeUI?.active && interiorsLayer?.visible
+      && generatedInteriors?.readyFor(self?.levelId) && currentRoom;
+    // Auto uses the approved room's fixed contact layer while the visitor is
+    // inside. Keep full GTAO for Sharpest and photo mode, and restore the
+    // district's Auto policy on exit.
+    pipeline.setOcclusion(debugOcclusion !== 'off' && !softwareAcceptance && quality.stats.occlusion
+      && !(quality.mode === 'auto' && generatedRoomActive && !photoMode?.active));
+    // The office presentation also calls this pipeline; clear a previous
+    // gallery mask before either render path runs.
+    pipeline.setOcclusionExteriorMask(generatedRoomActive ? worldGroup : null, interiorsLayer);
     if (!officeUI?.update(now, delta)) {
-      const currentRoom = buildingMesh?.userData.generatedRooms?.find(room => room.planId === self?.levelId);
-      if (generatedInteriors?.readyFor(self?.levelId) && canCullExterior(camera, currentRoom))
+      if (generatedRoomActive && canCullExterior(camera, currentRoom))
         renderWithoutExterior(worldGroup, interiorsLayer, () => pipeline.render(delta));
       else pipeline.render(delta);
     }

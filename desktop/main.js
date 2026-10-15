@@ -10,8 +10,12 @@ import { mediaPermissionAllowed, navigationAllowed, windowBounds } from './runti
 import { photoDownloadAllowed } from './photo-download.js';
 import { studioDownloadAllowed } from './studio-download.js';
 import { deviceSignIn, exchangeDesktopSession } from './auth.js';
+import { APP_NAME, APP_USER_MODEL_ID } from './identity.js';
 
-app.setName('TypeSafe Place');
+app.setName(APP_NAME);
+// Windows groups the taskbar button, notifications and jump list by this ID; without it
+// Electron falls back to its own, so pinned shortcuts and notifications split from the app.
+if (process.platform === 'win32') app.setAppUserModelId(APP_USER_MODEL_ID);
 app.enableSandbox();
 const dev = !app.isPackaged && Boolean(process.env.RIVER_OAKS_DEV_URL);
 const profile = app.commandLine.getSwitchValue('user-data-dir');

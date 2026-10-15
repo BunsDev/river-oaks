@@ -370,6 +370,34 @@ for(const state of ['connected','departed'])test(`server shutdown releases ${sta
   assert.equal(f.world.players.size,0,'shutdown releases departed players immediately');
 });
 
+// The local server keeps a dropped player for 30 s (#350). A slow reload of an
+// upper generated floor can take longer than the old 10 s to open its
+// replacement socket, and must resume the same player rather than respawn it.
+test('a dropped player is kept for the 30 s reconnect grace and resumes on reconnect',async t=>{
+  const f=await fixture(t),alice=await connect(f,'alice-session');
+  assert.equal((await alice.command({type:'travel',localId:'local-00'})).ok,true);
+  const position=f.world.snapshot().players.find(player=>player.id==='alice').position;
+  // The close handler releases the connection and schedules the departure in
+  // one synchronous step, so an empty connection count means the timer is set.
+  const drop=async connection=>{
+    const leaving=closed(connection.ws);connection.ws.close();await leaving;
+    while(f.app.playerCount)await new Promise(resolve=>setImmediate(resolve));
+  };
+  t.mock.timers.enable({apis:['setTimeout']});
+  await drop(alice);
+  t.mock.timers.tick(29_999);
+  assert.ok(f.world.players.has('alice'),'still in the world 29.999 s after the socket closed');
+  const back=await connect(f,'alice-session');
+  assert.deepEqual(f.world.snapshot().players.find(player=>player.id==='alice').position,position,'reconnect resumes the same player where they were');
+  t.mock.timers.tick(60_000);
+  assert.ok(f.world.players.has('alice'),'reconnecting cancels the pending departure');
+  await drop(back);
+  t.mock.timers.tick(29_999);
+  assert.ok(f.world.players.has('alice'),'a second drop gets the full grace again');
+  t.mock.timers.tick(1);
+  assert.equal(f.world.players.has('alice'),false,'released once the grace passes');
+});
+
 // A slow page (busy main thread) may open its socket long after asking for a
 // ticket; the ticket must still work, but only within its lifetime.
 test('a join ticket works for its whole lifetime and expires after it',async t=>{

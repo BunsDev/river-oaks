@@ -52,7 +52,37 @@ dist/desktop/TypeSafe Place-darwin-arm64/TypeSafe Place.app
 
 Open it in Finder. For a quick bundled run without packaging, use `pnpm run build && pnpm run desktop:start`.
 
-Packaging stages the desktop runtime; the packaged window loads the hosted game after device sign-in. Repository files, `.env`, server code, development dependencies, and game assets are excluded. This is a local development build, not a signed/notarized distribution release. Only macOS arm64 has been exercised; the packaging command targets its host platform and architecture.
+Packaging stages the desktop runtime; the packaged window loads the hosted game after device sign-in. Repository files, `.env`, server code, development dependencies, and game assets are excluded. This is a local development build, not a signed/notarized distribution release. The packaging command targets its host platform and architecture; the `Desktop` workflow below exercises Windows x64, Linux x64 and macOS arm64.
+
+## CI builds on Windows, Linux and macOS
+
+`.github/workflows/desktop.yml` runs on manual dispatch, on pushes to `main` and on pull requests that touch `desktop/**`, `shared/**`, `scripts/studio-skill-pack.js`, `package.json`, `pnpm-lock.yaml` or the workflow itself. One job per runner (`windows-latest`, `ubuntu-latest`, `macos-latest`, which is arm64) runs the desktop unit tests, `desktop:package`, `desktop:package:check` (the fuse wire must match `desktop/fuses.js` and the asar must hold exactly the staged files; a changed fuse fails the job), the development end-to-end suite with the loopback acceptance fixture, and uploads the results. The Windows and Linux runners have no GPU, so their e2e uses the browser journeys' CPU scene budget (`RIVER_OAKS_DESKTOP_SOFTWARE=1`); it proves behavior, not visual quality or frame rate. On Linux the e2e runs under Xvfb and Mesa with Openbox, so minimize has a window manager. The job also turns off the image's `systemd-coredump` pipe: the collector keeps the deliberately crashed renderer alive for about five minutes while it reads the core, and Electron reports the crash only after that. The uploads are:
+
+- `TypeSafe-Place-<version>-<windows|linux|macos>-<arch>-unsigned`: a zip of the packaged directory with a `SHA256SUMS` file, kept 14 days. Only a build that passed the fuse and asar check is uploaded.
+- `desktop-e2e-<runner>`: the e2e receipt `data/reports/desktop-ci-<runner>.json` and `output/playwright/desktop-development*.png`.
+
+The workflow holds no secrets, so every build is unsigned (ad-hoc on macOS); signing and installers are separate work (#372). It is not a required check: the `preview` aggregate in `verify.yml` still gates `main`. To fetch a build for manual testing:
+
+```sh
+gh run list --workflow Desktop --branch main --limit 1
+gh run download <run id> -n TypeSafe-Place-<version>-macos-arm64-unsigned -D /tmp/typesafe-place
+cd /tmp/typesafe-place && shasum -a 256 -c SHA256SUMS
+```
+
+Locally, `pnpm run verify desktop-package` runs the same unit tests, packaging and check for the host platform and writes `.runtime/agent/desktop-package.json`.
+
+### Platform identity
+
+The app's names and IDs live in `desktop/identity.js`; `desktop/package-options.js` turns them into the packager call, and `desktop/tests/package-options.test.js` checks them for all three platforms on any host.
+
+- **Icon.** `desktop/icon/typesafe-place.svg` is the source. `node desktop/icon/build.mjs` rasterises it with `rsvg-convert` (librsvg 2.63 was used for the committed set) into `desktop/icon/png/{16,32,48,64,128,256,512}.png` and writes `typesafe-place.icns` (PNG-bearing `icp4`–`ic09` plus the `@2x` aliases) and `typesafe-place.ico` (16–256, PNG-compressed) in plain Node, so no platform tool is needed for the containers. The packager receives the extension-less base path and completes it per platform; a missing icon fails packaging before the packager runs. Linux reads no icon from the binary; the PNGs are for the desktop entry an installer writes (#372).
+- **macOS.** Bundle ID `works.jev.river-oaks`, the adventure-games category and the microphone usage string are unchanged.
+- **Windows.** The executable carries `win32metadata` (company Jev Works, product and description TypeSafe Place, internal name TypeSafePlace, original filename `TypeSafe Place.exe`), and the main process calls `app.setAppUserModelId('works.jev.river-oaks')` so the taskbar button, notifications and any future jump list group under one identity. Installers and signing are #372.
+- **Linux executable name.** The product name keeps its space (`TypeSafe Place-linux-x64/`), but the binary is `typesafe-place`, so launchers, desktop entries and shell scripts need no quoting. Decided here (#370) pending Val's confirmation; Linux packaging is proven by the CI matrix (#371), not by this machine.
+
+### Studio hosts by platform
+
+The Studio agent (Claude or Codex CLI) and the World Designer (Coven running Codex) are launched only by the main process from executables it resolves itself. On macOS and Linux, `resolveExecutable` searches `PATH` then `~/.local/bin`, `/opt/homebrew/bin` (macOS) and `/usr/local/bin`, and requires the execute bit. On Windows it follows `PATHEXT` but accepts only `.exe` and `.com`: Node spawns them without a shell, whereas npm's `claude.cmd`/`codex.cmd` shims (and `.ps1`) would need `cmd.exe` or PowerShell, which would parse the prompt text. A host with only shims, or a `RIVER_OAKS_AGENT_*`/`RIVER_OAKS_DESIGNER_CODEX` override that points at one, shows the provider as unavailable and the first send explains why and names the `.exe` to install. The Windows search adds `%USERPROFILE%\.local\bin`, where Claude Code's native installer puts `claude.exe`. These rules are covered by unit tests that stub the platform and a synthetic directory, so they run on every host. The Studio host tests stand in for both CLIs with Node fixture scripts; Unix spawns them directly, and on Windows the tests start them with the Node binary, because a spawn without a shell cannot run a script there. Production spawning does not change: it never uses a shell, and on Windows it runs only `.exe` and `.com` files.
 
 ## Rendering and recovery
 

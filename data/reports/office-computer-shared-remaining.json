@@ -1,0 +1,250 @@
+{
+  "createdAt": "2026-10-15T01:31:38.482Z",
+  "status": "interrupted",
+  "modes": [
+    "development-publish",
+    "required",
+    "creator"
+  ],
+  "rendering": "Full rendering",
+  "scope": "Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.",
+  "results": [
+    {
+      "name": "world-publish",
+      "status": "passed",
+      "seconds": 73.222,
+      "result": {
+        "passed": true,
+        "checks": [
+          "The editor provides a publishable region draft",
+          "Buildings and the assigned parcel survive in the local draft",
+          "Jevica publishes from the world directory",
+          "The directory gives the new world a shareable URL",
+          "A published world place link keeps its world and shared play mode",
+          "The saved draft is available after navigating to the published world",
+          "The editor submits terrain, roads, buildings, trees, and places to the shared world",
+          "The published region retains its named parcel and Jevica account ownership",
+          "The map renders the published region roads, buildings, and named place",
+          "The live world map shows the parcel boundary and its account ownership",
+          "Parcel selection shows its area and cannot teleport through its building",
+          "The parcel boundary is visible and selected: {\"width\":84.95919799804688,\"height\":78.38700103759766,\"stroke\":\"rgb(255, 240, 200)\",\"selected\":true}",
+          "The region package publishes a walk-in venue and Jevica-only home",
+          "Both creator interiors appear in the world directory",
+          "Jevica can enter the creator venue in the shared world",
+          "Jevica can leave the creator venue",
+          "The directory filters to homes",
+          "Jevica can enter the furnished home",
+          "The home builder finds a clear floor spot (Ready to place.)",
+          "Jevica places a shared side table inside her home",
+          "Jevica saves a version-bound revision draft on the server",
+          "Saving a draft leaves the live geography unchanged",
+          "The published world renders its own venue and home without River Oaks stores",
+          "Jevica can build in her new world",
+          "The published world has a shareable URL",
+          "The directory recovers after a temporary failure",
+          "A copied place link brings another resident into the same published world near its named place",
+          "A guest has no publishing form",
+          "A guest cannot open a region revision draft",
+          "The server refuses a guest revision draft request",
+          "The server keeps published version history private to Jevica",
+          "A guest can visit but cannot build",
+          "The guest sees Jevica’s home furnishing in shared state",
+          "The directory disables private home entry for uninvited guests",
+          "A guest sees that home entry requires an invitation",
+          "The doorway also blocks guest entry",
+          "The guest remains outside",
+          "Jevica invites an accepted contact into a specific private home from the People panel",
+          "Invited visitors can enter the home without building permission",
+          "Jevica can revoke home access after removing the visitor from contacts",
+          "Revocation moves the guest outside and blocks reentry",
+          "The new world has shared presence",
+          "The world directory shows current visitors without exposing their identities",
+          "Applying a saved draft updates the published region",
+          "The map follows the applied region revision",
+          "The client reconnects to the applied region",
+          "Jevica loads a retained published version into the private editor",
+          "A restored version must be saved before it can be applied",
+          "Saving and applying the retained version restores the live region",
+          "The client reconnects to the restored region",
+          "A landmark link includes its origin world and server-saved position",
+          "The account directory routes a saved landmark to its original world",
+          "Go opens the saved world and arrives at its landmark",
+          "No browser errors: "
+        ],
+        "errors": []
+      }
+    },
+    {
+      "name": "creator-generated-levels",
+      "status": "passed",
+      "seconds": 35.719,
+      "result": {
+        "passed": true,
+        "checks": [
+          "Studio export includes stable authored furnishing slots",
+          "Published authority compiles the exported overrides and level seed exactly",
+          "Published plan carries its approval digest",
+          "Both clients load the same approved plan",
+          "A guest cannot publish a generated region",
+          "Keyboard traversal reaches the published upper floor and replicates to the second client",
+          "Reconnect restores the upper controller floor rather than street elevation",
+          "The published route returns through ground level to the street",
+          "No browser errors: "
+        ],
+        "approvedSha256": "1a5fe908ad4a6004a5b6d56fd6110ca6079cedf5d8fc8322b9b9088b89d021ff",
+        "worldId": "studio-published",
+        "scope": "Local Studio export, real publication UI and two authenticated development clients; no hosted or live identity acceptance."
+      }
+    },
+    {
+      "name": "creator-four-levels",
+      "status": "passed",
+      "seconds": 36.06,
+      "result": {
+        "passed": true,
+        "checks": [
+          "The published server plan has four ordered levels",
+          "The published plan carries an approval digest",
+          "Both clients load the same approved four-level plan",
+          "Level 1 is a floor, not flight altitude",
+          "Level 2 is a floor, not flight altitude",
+          "Level 3 is a floor, not flight altitude",
+          "Reduced-motion reload restores the top floor height",
+          "Level 3 exposes descent",
+          "Level 2 exposes descent",
+          "Level 1 exposes descent",
+          "No browser errors: "
+        ],
+        "levels": [
+          "moon-pavilion/l0",
+          "moon-pavilion/l1",
+          "moon-pavilion/l2",
+          "moon-pavilion/l3"
+        ],
+        "approvedSha256": "1d2c23406400f112fd4d40b9ada097d1ab6b2b45e7a7040b4a9e7db1f95b6d02",
+        "scope": "Four-level publication and two local authenticated clients, keyboard traversal, stream readiness, reconnect and reduced motion; no hosted or human visual acceptance."
+      }
+    },
+    {
+      "name": "access-gate",
+      "status": "passed",
+      "seconds": 1.426,
+      "result": {
+        "passed": true,
+        "checks": [
+          "Anonymous players can sign in with email",
+          "Anonymous players see only supported sign-in methods",
+          "Anonymous players cannot start either play mode",
+          "The first paint is the sign-in gate colour, not a white page",
+          "A returning visitor opens on a splash in their own theme ({\"returning\":true,\"theme\":\"light\",\"background\":\"rgb(233, 236, 229)\"})",
+          "The splash hides the sign-in art and card but keeps the access status readable",
+          "When sign-in is needed the gate appears and the visit is forgotten",
+          "Waiting players see their username; email sign-ins get a generated one",
+          "A name someone already holds is refused with a clear reason",
+          "Waiting players save their own username with CSRF protection",
+          "Suggest another offers a generated name",
+          "Pending players can redeem an invitation",
+          "Signed-in pending players cannot start either play mode",
+          "Pending players can sign out",
+          "Entering the district remembers the visit for a quiet next load",
+          "Waitlist review closes Settings before taking focus",
+          "Waitlist review opens with keyboard focus in its dialog",
+          "Approvers can review pending and decided accounts",
+          "Clicking inside approvals keeps it open",
+          "Dragging from approvals onto the backdrop keeps it open",
+          "Clicking outside approvals closes it",
+          "Outside dismissal restores Account settings",
+          "Outside dismissal restores focus and releases the game",
+          "User IDs are hidden from the waitlist by default",
+          "Approvers can reveal a user ID",
+          "Approvers can hide the user ID again",
+          "Approvers can copy a hidden user ID",
+          "Copying does not reveal the user ID",
+          "Approvers can revoke a prior approval with CSRF protection",
+          "Approvers see each username; an approved one is fixed",
+          "Approvers rename a waiting resident with CSRF protection",
+          "Revoking an approval sends no username",
+          "Approvers can reconsider a declined request with an edited username",
+          "Closing waitlist review restores Account settings",
+          "Outside dismissal stays closed after a late response and returns focus to the game controls",
+          "Escape still dismisses approvals",
+          "Clicking inside Settings keeps it open",
+          "Clicking outside Settings closes its native dialog",
+          "Closing Settings from its backdrop restores launcher focus"
+        ]
+      }
+    },
+    {
+      "name": "connection-required",
+      "status": "passed",
+      "seconds": 6.162,
+      "result": {
+        "checks": [
+          "Legacy solo preferences cannot unlock an offline game",
+          "An unavailable town never creates a private session",
+          "Offline keyboard input cannot move the player",
+          "There is no alternate play-mode control",
+          "Connection recovery unlocks the authenticated town",
+          "The recovered player belongs to the server snapshot",
+          "Device landmarks do not become account landmarks",
+          "Movement resumes after a successful authenticated connection"
+        ]
+      }
+    },
+    {
+      "name": "multiplayer",
+      "status": "passed",
+      "seconds": 92.254,
+      "result": {
+        "passed": true,
+        "checks": [
+          "Shared appearance picker is available",
+          "Unsynchronized carriage and Force controls remain hidden in shared play after assets load",
+          "Shared diagnostics and town exclude the private coachman",
+          "Force shortcut cannot bypass shared-mode gating",
+          "Two accounts share the roster and rendered avatars",
+          "A peer sees the selected avatar",
+          "Quick person-then-form choices settle without a cooldown error",
+          "A peer sees beast movement on the shared beast form",
+          "Appearance survives reconnect",
+          "Beast movement belongs to the account and survives reconnect",
+          "Alice fixture retains server-issued wish permission after reconnect",
+          "A shared resident is reachable after a bounded retry",
+          "Confirmed grant moves keyboard focus to undo",
+          "Second player sees server-owned dragon wish",
+          "Egg hatches into a visible dragon",
+          "The same wish disrupts town residents for both players",
+          "Confirmed undo restores keyboard focus",
+          "Invisible resident keeps visible clothing in shared play",
+          "Reload rejoins the existing town and keeps its active wishes",
+          "Walking is validated and visible to the other player",
+          "Shared town has no mobile horizontal overflow",
+          "Sign-out revokes play and returns to the sign-in gate",
+          "No uncaught errors: "
+        ],
+        "errors": [],
+        "scope": "Two real browsers, test-only authenticated identities, real shared server; not live WorkOS or production hosting acceptance."
+      }
+    },
+    {
+      "name": "indoor-npcs",
+      "status": "passed",
+      "seconds": 15.551,
+      "result": {
+        "passed": true,
+        "checks": [
+          "The retired local street-model loader is absent",
+          "The NPC directory contains only building residents",
+          "Rendered NPC identities belong to buildings",
+          "Outdoor players have no nearby NPC interactions",
+          "Building NPCs remain visible and conversational inside their room",
+          "Jevica retains her companion, chauffeur, and vehicles in multiplayer",
+          "A real player is still rendered as a remote avatar",
+          "No browser errors: "
+        ]
+      }
+    }
+  ],
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+  "error": "Error: Shared acceptance interrupted by SIGTERM.\n    at process.<anonymous> (file:///Users/buns/Documents/GitHub/BunsDev/river-oaks-office-computer-db-mvp/preview/e2e/shared-runner.js:25:22)\n    at process.emit (node:events:509:28)"
+}

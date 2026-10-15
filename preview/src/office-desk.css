@@ -11,3 +11,6 @@
 @media(prefers-reduced-motion:reduce){.office-desk button{transition:none}.office-desk button:active:not(:disabled){scale:1}.office-desk::backdrop{backdrop-filter:none}}
 
 .office-desk .desk-title{min-height:0;resize:none;overflow:hidden;line-height:1.3;}
+
+.desk-scopes{display:flex;flex:none;gap:8px;padding:8px 24px;border-bottom:1px solid var(--desk-rule);background:#fbfbf5}.desk-scopes button{background:transparent;color:var(--desk-muted)}.desk-scopes button[aria-pressed=true]{background:#dfe8d8;color:var(--desk-ink);font-weight:650}
+@media(max-width:760px){.desk-scopes{padding:6px 16px}.desk-top-actions{min-width:0}.desk-private{max-width:130px;line-height:1.3}}

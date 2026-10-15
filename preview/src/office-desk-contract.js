@@ -8,9 +8,13 @@ export function safeDeskURL(value){
  try{const u=new URL(value);return ['https:','http:'].includes(u.protocol)&&!u.username&&!u.password;}catch{return false;}
 }
 export function validDeskTask(t){
- return deskFields(t,['id','title','notes','links','result','status'])&&deskId(t.id)&&text(t.title,DESK_LIMITS.title)&&Boolean(t.title.trim())
+ return deskFields(t,['id','title','notes','links','result','status','createdAt','updatedAt'])&&deskId(t.id)&&text(t.title,DESK_LIMITS.title)&&Boolean(t.title.trim())
+  &&['createdAt','updatedAt'].every(k=>t[k]===undefined||Number.isSafeInteger(t[k])&&t[k]>=0)
   &&text(t.notes,DESK_LIMITS.notes)&&text(t.result,DESK_LIMITS.result)&&['open','done'].includes(t.status)
   &&Array.isArray(t.links)&&t.links.length<=DESK_LIMITS.links&&t.links.every(l=>deskFields(l,['label','url'])&&text(l.label,DESK_LIMITS.linkLabel)&&Boolean(l.label.trim())&&safeDeskURL(l.url));
 }
 export const validDeskVersion=v=>Number.isSafeInteger(v)&&v>=0&&v<Number.MAX_SAFE_INTEGER;
 export const emptyDesk=()=>({version:0,activeId:null,tasks:[],updatedAt:0});
+
+// Timestamp authority belongs to the store; legacy tasks acquire metadata on edit.
+export const stampDeskTask=(task,previous,time)=>({...structuredClone(task),createdAt:previous?.createdAt??time,updatedAt:time});
