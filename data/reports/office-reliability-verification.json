@@ -522,6 +522,22 @@
     {
       "path": ".runtime/office-reliability/rollout-v9.log",
       "sha256": "bd1465b4debac0e4be70e31792d664794812dcd4c9922eb9ba98f66ab6377a5c"
+    },
+    {
+      "path": ".runtime/office-reliability/core-v10.log",
+      "sha256": "65e9970e8915eb952985b479bf06b49cccd4ca2c2e08ffceb9dbc53ccc51e52c"
+    },
+    {
+      "path": ".runtime/office-reliability/core-v10.json",
+      "sha256": "84bed143cfd56c799c285b13467af45a10f047ce036626b2e33db9c40f9efb3c"
+    },
+    {
+      "path": ".runtime/office-reliability/focused-v10.log",
+      "sha256": "b468bbaa3abb1be9ef1477ff481fa306d12f66517c8dc85ba4db4effa8c1ffea"
+    },
+    {
+      "path": ".runtime/office-reliability/browser-v10.log",
+      "sha256": "bf44dfde35a346bec0a629adf3c9e6b7824a97c25e18b07ba0ee05479e01e13c"
     }
   ],
   "earlierFailedFull": {
@@ -784,7 +800,7 @@
     ],
     "finishedAt": "2026-10-15T04:20:51.169Z"
   },
-  "finalIntegration": {
+  "v9Integration": {
     "main": "0cb10518706490372223f7f763f774551d86a089",
     "core": {
       "schemaVersion": 1,
@@ -974,5 +990,213 @@
     "browserReport": "data/reports/office-reliability-v9-browser.json",
     "rolloutReport": "data/reports/office-reliability-v9-rollout.json",
     "scope": "Uncommitted integration of 20d5892 with origin/main 0cb10518. Full receipt above remains v8 evidence. One-line audit expectation corrected to v9 after core; actual previous-v3/current-v9 rollout probe passed separately."
+  },
+  "finalIntegration": {
+    "main": "0a74d0c3adabb092378463f9ec9979ed9fd74665",
+    "core": {
+      "schemaVersion": 1,
+      "profile": "core",
+      "startedAt": "2026-10-15T04:59:44.925Z",
+      "status": "passed",
+      "revision": "77ddb2bbd838dee9996bcf3f6c59c75c9890fad7",
+      "dirty": true,
+      "scope": "Selected repository checks only; not production, live auth, native Unreal, human accessibility, or target GPU acceptance.",
+      "results": [
+        {
+          "id": "agent-tests",
+          "command": [
+            "pnpm",
+            "run",
+            "test:agent"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "expectedExit": 0,
+          "signal": null,
+          "durationMs": 28616
+        },
+        {
+          "id": "preview-tests",
+          "command": [
+            "pnpm",
+            "test"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "expectedExit": 0,
+          "signal": null,
+          "durationMs": 59740
+        },
+        {
+          "id": "server-tests",
+          "command": [
+            "pnpm",
+            "run",
+            "test:server"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "expectedExit": 0,
+          "signal": null,
+          "durationMs": 9309
+        },
+        {
+          "id": "desktop-tests",
+          "command": [
+            "pnpm",
+            "run",
+            "test:desktop"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "expectedExit": 0,
+          "signal": null,
+          "durationMs": 12326
+        },
+        {
+          "id": "build",
+          "command": [
+            "pnpm",
+            "run",
+            "build"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "expectedExit": 0,
+          "signal": null,
+          "durationMs": 3689
+        },
+        {
+          "id": "python-lint",
+          "command": [
+            "uv",
+            "run",
+            "--locked",
+            "ruff",
+            "check",
+            "."
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "expectedExit": 0,
+          "signal": null,
+          "durationMs": 240
+        },
+        {
+          "id": "python-format",
+          "command": [
+            "uv",
+            "run",
+            "--locked",
+            "ruff",
+            "format",
+            "--check",
+            "."
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "expectedExit": 0,
+          "signal": null,
+          "durationMs": 46
+        },
+        {
+          "id": "python-tests",
+          "command": [
+            "uv",
+            "run",
+            "--locked",
+            "pytest",
+            "-q"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "expectedExit": 0,
+          "signal": null,
+          "durationMs": 5285
+        },
+        {
+          "id": "demo",
+          "command": [
+            "uv",
+            "run",
+            "--locked",
+            "river-oaks",
+            "demo"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "expectedExit": 0,
+          "signal": null,
+          "durationMs": 306
+        },
+        {
+          "id": "demo-verify",
+          "command": [
+            "uv",
+            "run",
+            "--locked",
+            "river-oaks",
+            "verify",
+            "--config",
+            "data/generated/demo/config.json",
+            "--raw",
+            "data/generated/demo",
+            "--world",
+            "data/generated/demo/world.json",
+            "--output",
+            "data/generated/demo/report.json"
+          ],
+          "status": "passed",
+          "exitCode": 2,
+          "expectedExit": 2,
+          "signal": null,
+          "durationMs": 331
+        },
+        {
+          "id": "secrets",
+          "command": [
+            "uv",
+            "run",
+            "--locked",
+            "python",
+            "scripts/check_secrets.py",
+            "--all"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "expectedExit": 0,
+          "signal": null,
+          "durationMs": 18713
+        }
+      ],
+      "finishedAt": "2026-10-15T05:02:03.659Z"
+    },
+    "focusedRedis": {
+      "status": "passed",
+      "tests": 45,
+      "skips": 0,
+      "command": "node --test server/tests/office-authorization.test.js server/tests/office-recovery.test.js server/tests/office-workspaces.test.js server/tests/office-desk-transport.test.js server/tests/offices.test.js server/tests/redis-room.test.js server/tests/penthouse-office.test.js server/tests/penthouse-transport.test.js",
+      "environment": "Owned disposable loopback Redis"
+    },
+    "rolloutReport": "data/reports/office-reliability-v10-rollout.json",
+    "scope": "Uncommitted integration of 77ddb2b with origin/main 0a74d0c3. Runtime unchanged during verification. Full v8 run remains separate; v10 core/focused/browser/rollout are integration coverage.",
+    "browserReport": "data/reports/office-reliability-v10-browser.json",
+    "browserResults": [
+      {
+        "name": "office-desk",
+        "status": "passed",
+        "checks": 22
+      },
+      {
+        "name": "office-computer-shared",
+        "status": "passed",
+        "checks": 6
+      },
+      {
+        "name": "office-visit",
+        "status": "passed",
+        "checks": 11
+      }
+    ]
   }
 }

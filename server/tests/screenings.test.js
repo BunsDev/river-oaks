@@ -174,7 +174,7 @@ test('a checkpoint keeps playing across a quick handoff and pauses after an outa
   assert.equal(start(f).ok, true);
   f.tick(2000);
   const saved = f.town.checkpoint();
-  assert.equal(saved.version, 9);
+  assert.ok(saved.version >= 9, 'screenings persist from checkpoint v9');
   const quick = fixture({ restore: saved, at: f.clock.time + 3000 });
   assert.equal(quick.view().status, 'playing', 'a lease handoff keeps the shared film running');
   assert.equal(quick.view().anchorServerTimeMs, f.view().anchorServerTimeMs);

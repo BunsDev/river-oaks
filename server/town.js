@@ -8,6 +8,7 @@ import { magicOptions } from './magic-auth.js';
 import { createDevAuth, devAuthAllowed } from './dev-auth.js';
 import { createSharedWorld, migrateWorldCheckpoint } from './world.js';
 import { parseScreeningHosts } from './screenings.js';
+import { configuredOfficeLayout } from './offices.js';
 import { createModeration } from './moderation.js';
 import { createGameServer } from './app.js';
 import { createFileWaitlist } from './waitlist.js';
@@ -62,6 +63,8 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
 
   // Venue hosts are explicit grants; none configured means no one can control a screening.
   const screeningHosts=parseScreeningHosts(env.RIVER_OAKS_SCREENING_HOSTS,{onInvalid:()=>console.warn(JSON.stringify({event:'screening_host_grant_ignored'}))});
+  // Jevica's office layout; unset or unknown keeps the legacy room (the default and the rollback).
+  const officeLayout=configuredOfficeLayout(env.RIVER_OAKS_OFFICE_LAYOUT,{onInvalid:()=>console.warn(JSON.stringify({event:'office_layout_ignored'}))});
   const officeDesk=createMemoryOfficeDesk(),officeWorkspaces=createMemoryOfficeWorkspaces();
   const games=new Map(),pending=new Map(),debugReports=createMemoryDebugReports(),catalog=createMemoryWorldCatalog(),social=createMemorySocial(),groups=createMemoryGroups(),profiles=createMemoryProfiles(),events=createMemoryEvents(),workplace=env.RIVER_OAKS_WORKPLACE==='1'?createWorkplace({allowed:async id=>!moderation.isBanned(id)&&await waitlist.isApproved(id)}):null,avatarPreferences=createMemoryAvatarPreferences(),cyclingMiles=createMemoryCyclingMiles(),presence=createMemoryPresence(),landmarkStores=new Map();
   const landmarkStoreFor=id=>{
@@ -84,7 +87,7 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
     if(!entry || entry.meta?.template!=='region-v1')return {ok:false,error:'missing'};
     const candidate=await catalog.revisionCandidate(id,expectedDraftVersion);
     if(!candidate.ok)return {ok:false,error:candidate.reason};
-    const options=mode==='local'?{isAdmin:auth.isAdmin,worldId:id,screeningHosts}:{worldId:id,screeningHosts};
+    const options=mode==='local'?{isAdmin:auth.isAdmin,worldId:id,screeningHosts,officeLayout}:{worldId:id,screeningHosts,officeLayout};
     const migrated=migrateWorldCheckpoint({fromData:await catalog.getRegion(id),toData:candidate.worldData,
       checkpoint:entry.world.checkpoint(),...options});
     if(!migrated.ok)return migrated;
@@ -106,7 +109,7 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
       if(!meta && id!==worldId)return null;
       const worldData=meta?.template==='region-v1'?await catalog.getRegion(id)
         :id===DEFAULT_WORLD_ID?data:{...data,title:meta?.title??data.title};
-      const world=createSharedWorld(worldData,mode==='local'?{isAdmin:auth.isAdmin,worldId:id,screeningHosts}:{worldId:id,screeningHosts});
+      const world=createSharedWorld(worldData,mode==='local'?{isAdmin:auth.isAdmin,worldId:id,screeningHosts,officeLayout}:{worldId:id,screeningHosts,officeLayout});
       const game=createGameServer({auth:sharedAuth,world,worldTitle:meta?.title??worldData.title,waitlist,waitlistAdmins:admins,debugReports,landmarks:createWorldLandmarks({catalog,storeFor:landmarkStoreFor,worldId:id,worldTitle:meta?.title??worldData.title}),social,groups,profiles,events,workplace,officeDesk,officeWorkspaces,avatarPreferences,cyclingMiles,presence,worldDirectory,moderation,origin,staticRoot,
         ...(id===worldId?{worldCatalog:catalog}:{}),...(mode==='local'?{isAdmin:auth.isAdmin}:{}),
         ...(id===worldId?{onApplyRegion:applyRegion}:{}),regionSha256:meta?.regionSha256,
