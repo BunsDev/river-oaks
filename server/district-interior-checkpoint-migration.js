@@ -13,7 +13,7 @@ const digest = value => createHash('sha256').update(JSON.stringify(value)).diges
 const rejected = () => ({ ok: false, error: 'invalid_checkpoint' });
 
 /** Preserve a fully validated town when the reviewed gallery plan joins district data. */
-export function recoverDistrictInteriorCheckpoint({ worldData, checkpoint, worldId = DEFAULT_WORLD_ID, now, isAdmin } = {}) {
+export function recoverDistrictInteriorCheckpoint({ worldData, checkpoint, worldId = DEFAULT_WORLD_ID, now, isAdmin, screeningHosts, officeLayout } = {}) {
   try {
     if (worldId !== DEFAULT_WORLD_ID || worldData?.buildingInteriors?.length !== 1
       || worldData.buildingInteriors[0].approvedSha256 !== DISTRICT_GALLERY_PLAN_SHA256) return rejected();
@@ -22,7 +22,7 @@ export function recoverDistrictInteriorCheckpoint({ worldData, checkpoint, world
     const previousData = structuredClone(worldData);
     delete previousData.buildingInteriors;
     if (digest(previousData) !== PREVIOUS_DISTRICT_SHA256) return rejected();
-    const options = { worldId, ...(now ? { now } : {}), ...(isAdmin ? { isAdmin } : {}) };
+    const options = { worldId, screeningHosts, officeLayout, ...(now ? { now } : {}), ...(isAdmin ? { isAdmin } : {}) };
     const previous = createSharedWorld(previousData, options);
     let source = checkpoint, from = 'previous_district';
     if (!previous.restore(source).ok) {

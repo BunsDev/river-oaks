@@ -536,6 +536,7 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
   }
   group.userData.lightPositions = lightPositions;
   group.userData.screens = specialtyInteriors.filter(interior => interior.userData.screen).map(interior => ({ material: interior.userData.screen, aspect: interior.userData.screenAspect }));
+  group.userData.dartboards = specialtyInteriors.filter(interior => interior.userData.darts).map(interior => interior.userData.darts);
   group.userData.dispose = () => {
     specialtyInteriors.forEach(interior => interior.userData.dispose());
     group.traverse(item => { if (item.isInstancedMesh) item.dispose(); if (item.material) materials.add(item.material); });

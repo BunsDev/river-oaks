@@ -92,11 +92,11 @@ acceptance fixtures set synthetic grants only.
 - **The film ends.** It stops at its duration with status `ended`.
 - **Restore.** A checkpoint restored within 15 s of being saved keeps playing, as in a lease handoff between gateways. An older one pauses at its saved position, so an outage never jumps the film forward.
 - **Reset.** A trusted reset, or a region migration, opens a new epoch and stops every venue. Commands from the old epoch are stale.
-- **Versions.** Checkpoint version 9 adds screenings, and the Redis writer generation is `v9:`. Older checkpoints restore with a stopped timeline.
+- **Versions.** Checkpoint version 9 adds screenings; version 10 adds office layout/floor state; version 11 adds office seat claims, and the current Redis writer generation is `v11:`. Pre-v9 checkpoints restore with a stopped timeline.
 
 ### Turning it off
 
-Unset `RIVER_OAKS_SCREENING_HOSTS`. Running films then pause on the next tick, because their host's grant is gone, and nobody can start another.
+Unset `RIVER_OAKS_SCREENING_HOSTS` and replace the running gateways/coordinators with that configuration, consistently across gateways. The new processes use the current grants when restoring and ticking the room: films whose host lost the grant pause, and nobody can start another. Running processes do not reread environment values each tick.
 
 ## Watching in the browser (#367)
 
@@ -104,7 +104,7 @@ Inside IPIC, a panel shows the shared status and this viewer's own controls. The
 the auditorium's existing screen material, which is restored when the viewer leaves; no
 second interior or renderer is built.
 
-- **Media.** Only bundled sources from `SCREENING_MEDIA` play. The fixture is a 12 s test
+- **Media.** Only bundled sources from `SCREENING_MEDIA` play. The fixture is a 30 s test
   pattern with one beep a second, in WebM (VP9/Opus) and MP4 (H.264/AAC), with English
   captions (`preview/public/assets/ipic/screening`). `scripts/make-screening-fixture.mjs`
   regenerates it and `--check` verifies the committed hashes and durations. It is labelled
@@ -149,3 +149,14 @@ node preview/e2e/ipic-screening-runner.mjs   # two real browsers; takes the shar
 The transport test covers the real ticket and WebSocket gates in memory and Redis, and
 two Redis coordinators racing one start. Without `REDIS_URL` the Redis cases skip. A skip
 is not evidence.
+
+### Historical fixture checkpoints
+
+Before bundled playback, `ipic-fixture-v1` described a 12-second placeholder.
+The bundled fixture is 30 seconds. Recovery validates the known old timeline and
+receipts, then stops the screening with a fresh epoch and clears its receipts.
+Commands from the old epoch are stale; the current configured host can start the
+bundled fixture normally. This also handles a stopped venue retaining an old
+receipt. Other world state, including office visits, remains intact. Unknown media,
+other duration mismatches and malformed timelines still fail validation. No manual
+checkpoint editing or provider changes are needed.

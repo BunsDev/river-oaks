@@ -42,7 +42,10 @@ async page=>{
   const item=await page.evaluate(()=>window.__riverMultiplayer().snapshot.builds.find(item=>item.assembly?.name==='Rose glass sculpture'));
   check(item.assembly.parts.length===2&&item.assembly.parts[1].material==='glass','Authority confirms the full assembly and its material');
   await page.waitForFunction(id=>window.__riverCreatorObjects().rendered.some(item=>item.id===id&&item.parts.length===2),item.id);
-  const context=await page.context().browser().newContext(),guest=await context.newPage();
+  const context=await page.context().browser().newContext();
+  // Separate contexts do not inherit the runner's timeout, including on reload.
+  context.setDefaultTimeout(60000);
+  const guest=await context.newPage();
   try{
     await join(guest,'alice');
     await guest.waitForFunction(id=>window.__riverCreatorObjects().rendered.some(item=>item.id===id&&item.parts.length===2),item.id);
