@@ -1,6 +1,6 @@
 import { officesFor, OFFICE_SPEED, officeFree } from '../preview/src/office-contract.js';
 import {
-  DEFAULT_OFFICE_LAYOUT, OFFICE_LAYOUT_LEGACY, OFFICE_OCCUPIED_CLEARANCE, OFFICE_SEAT_REACH, officeLayout, officeLevelElevation, officeLevelFree,
+  DEFAULT_OFFICE_LAYOUT, OFFICE_BODY_SPACING, OFFICE_LAYOUT_LEGACY, OFFICE_SEAT_REACH, officeLayout, officeLevelElevation, officeLevelFree,
   officeLevelSegmentFree, officeSeat, officeTransition,
 } from '../preview/src/office-layouts.js';
 
@@ -75,9 +75,8 @@ export function createOffices({worldData,players,isAdmin,environment,changed,can
       if(m.layout===undefined?visit.layout!==OFFICE_LAYOUT_LEGACY:m.layout!==visit.layout)return fail('office_layout_stale');
       if(m.levelId!==undefined&&m.levelId!==visit.levelId)return fail('office_level_stale');
       if(visit.seat)return fail('office_seated');
-      // Occupied seats are collision. One whose envelope already holds this visitor (only a
-      // restored checkpoint can do that) does not trap them.
-      const layout=officeLayout(visit.layout),occupied=occupiedBy(id,visit).filter(seat=>away(seat.position,visit.position)>=OFFICE_OCCUPIED_CLEARANCE);
+      // Other visitors' occupied seats are collision (office-layouts.js).
+      const layout=officeLayout(visit.layout),occupied=occupiedBy(id,visit);
       if(!Number.isFinite(m.yaw)||!officeLevelFree(layout,visit.levelId,m.position,occupied))return fail('office_blocked');
       const budget=Math.min(1,visit.budget+Math.max(0,time-visit.at)/1000);
       const cost=Math.hypot(m.position[0]-visit.position[0],m.position[1]-visit.position[1])/OFFICE_SPEED;
@@ -94,7 +93,7 @@ export function createOffices({worldData,players,isAdmin,environment,changed,can
       const moved=officeTransition(officeLayout(visit.layout),{levelId:visit.levelId,position:visit.position},m.portalId,occupiedBy(id,visit));
       if(!moved.ok)return fail(moved.error);
       if([...visits].some(([other,v])=>other!==id&&v.id===visit.id&&v.layout===visit.layout&&v.levelId===moved.levelId
-        &&Math.hypot(v.position[0]-moved.position[0],v.position[1]-moved.position[1])<.7))return fail('office_landing_blocked');
+        &&Math.hypot(v.position[0]-moved.position[0],v.position[1]-moved.position[1])<OFFICE_BODY_SPACING))return fail('office_landing_blocked');
       Object.assign(visit,{levelId:moved.levelId,position:moved.position,at:time,budget:.1});changed();return {ok:true,office:publicVisit(id)};
     }
     // Seats are plan seats claimed from their stand point, one occupant each. The pose is the
@@ -110,13 +109,14 @@ export function createOffices({worldData,players,isAdmin,environment,changed,can
         if(!seat)return fail('invalid_office_seat');
         if(seat.levelId!==visit.levelId||away(visit.position,seat.stand)>OFFICE_SEAT_REACH)return fail('office_seat_out_of_reach');
         if(others.some(v=>v.seat?.id===seat.id))return fail('office_seat_occupied');
-        // Nobody may stand where the seated body will be: they would be shut inside its envelope.
-        if(others.some(v=>!v.seat&&away(v.position,seat.position)<OFFICE_OCCUPIED_CLEARANCE))return fail('office_seat_blocked');
+        // Nobody may stand where the taken seat will be collision: inside the seated envelope they
+        // would be shut in, and beside the stand point they would keep the occupant seated.
+        if(others.some(v=>!v.seat&&!officeLevelFree(layout,visit.levelId,v.position,[seat])))return fail('office_seat_blocked');
         Object.assign(visit,{seat:{id:seat.id},position:[...seat.position],yaw:seat.facing,at:time,budget:.1});changed();return {ok:true,office:publicVisit(id)};
       }
       if(!visit.seat)return fail('office_not_seated');
       const seat=officeSeat(layout,visit.seat.id);
-      if(!officeLevelFree(layout,visit.levelId,seat.stand,occupiedBy(id,visit))||others.some(v=>away(v.position,seat.stand)<.7))return fail('office_stand_blocked');
+      if(!officeLevelFree(layout,visit.levelId,seat.stand,occupiedBy(id,visit))||others.some(v=>away(v.position,seat.stand)<OFFICE_BODY_SPACING))return fail('office_stand_blocked');
       delete visit.seat;Object.assign(visit,{position:[...seat.stand],at:time,budget:.1});changed();return {ok:true,office:publicVisit(id)};
     }
     return fail('invalid_office_command');
@@ -149,6 +149,12 @@ export function createOffices({worldData,players,isAdmin,environment,changed,can
       if(!v?.seat)continue;
       const claim=JSON.stringify([v.id,v.layout,v.seat.id]);
       if(claims.has(claim))throw new Error('Invalid office seat claim');claims.add(claim);
+    }
+    // No standing visit inside another's occupied seat: commands never produce one.
+    for(const [,v] of Array.isArray(saved.visits)?saved.visits:[]){
+      if(v?.seat!==undefined||!officeLayout(v?.layout))continue;
+      const taken=saved.visits.filter(([,other])=>other?.seat&&other.id===v.id&&other.layout===v.layout).map(([,other])=>officeSeat(officeLayout(other.layout),other.seat?.id)).filter(Boolean);
+      if(!officeLevelFree(officeLayout(v.layout),v.levelId,v.position,taken))throw new Error('Invalid office visit beside an occupied seat');
     }
     checkMap(saved.visits,nextPlayers.size,(id,v)=>nextPlayers.has(id)&&placed(v)&&(catalog.some(o=>o.id===v.id)||allowWorkspaces&&workspaceId(v.id))&&Number.isFinite(v.yaw)&&Number.isFinite(v.at)&&Number.isFinite(v.budget)&&v.budget>=0&&v.budget<=1&&(allowWorkspaces&&workspaceId(v.id)||isAdmin(id)||g.get(v.id)?.some(p=>p.userId===id)));
     const next=structuredClone(saved);

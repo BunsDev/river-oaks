@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { AVATAR_ENVELOPE } from '../src/workplace-room.js';
 import {
-  OFFICE_LAYOUT_LEGACY, OFFICE_LAYOUT_PENTHOUSE, OFFICE_OCCUPIED_CLEARANCE, OFFICE_SEAT_REACH, officeLayout, officeLevelFree,
+  OFFICE_BODY_SPACING, OFFICE_LAYOUT_LEGACY, OFFICE_LAYOUT_PENTHOUSE, OFFICE_OCCUPIED_CLEARANCE, OFFICE_SEAT_REACH, officeLayout, officeLevelFree,
   officeLevelSegmentFree, officeNearbySeat, officeSeat, officeSeats, officeTransition, stepOfficeLevel,
 } from '../src/office-layouts.js';
 
@@ -80,6 +80,14 @@ test('an occupied seat blocks the measured turning body around it, on its own fl
   assert.equal(officeLevelFree(penthouse, L0, [edge[0] + 0.01, d], [chair]), false, 'inside the occupied envelope');
   assert.equal(officeLevelFree(penthouse, L0, [edge[0] - 0.01, d], [chair]), true, 'just outside it');
   assert.equal(officeLevelFree(penthouse, L1, [-8, 15.6], [chair]), true, 'occupancy downstairs does not block the mezzanine');
+  // The occupant stands up to the stand point, so it stays clear too: a body just outside the
+  // seated envelope but within body spacing of the stand point would block standing up.
+  const [sx, sd] = chair.stand, beside = [sx, d - OFFICE_OCCUPIED_CLEARANCE - 0.01];
+  assert.ok(Math.hypot(beside[0] - x, beside[1] - d) >= OFFICE_OCCUPIED_CLEARANCE && Math.hypot(beside[0] - sx, beside[1] - sd) < OFFICE_BODY_SPACING);
+  assert.equal(officeLevelFree(penthouse, L0, beside), true);
+  assert.equal(officeLevelFree(penthouse, L0, beside, [chair]), false, 'the stand point keeps body spacing while its seat is taken');
+  assert.equal(officeLevelFree(penthouse, L0, [sx - 0.5, sd - 0.5], [chair]), true, 'beyond body spacing of the stand point');
+  assert.equal(officeLevelFree(penthouse, L0, [sx - 0.4, sd - 0.4], [chair]), false);
   assert.equal(officeLevelSegmentFree(penthouse, L0, [x - 3, d - 0.3], [x - 3, d + 0.3], [chair]), true);
   assert.equal(officeLevelSegmentFree(penthouse, L0, [x - 3, d], [x - 1.5, d], [chair]), false, 'a sweep may not enter it');
   // Client prediction slides along the envelope exactly as the server's rule refuses.

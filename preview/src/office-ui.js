@@ -1,7 +1,7 @@
 import { createOfficeDeskUI } from './office-desk-ui.js';
 import { officesFor, OFFICE_SPEED, OFFICE_SPAWN } from './office-contract.js';
 import {
-  OFFICE_EYE_HEIGHT, OFFICE_LAYOUT_LEGACY, OFFICE_OCCUPIED_CLEARANCE, OFFICE_SEATED_EYE_HEIGHT, officeLayout, officeLevelElevation, officeNearbyPortal,
+  OFFICE_EYE_HEIGHT, OFFICE_LAYOUT_LEGACY, OFFICE_SEATED_EYE_HEIGHT, officeLayout, officeLevelElevation, officeNearbyPortal,
   officeNearbySeat, officeSeat, officeWorkstations, stepOfficeLevel,
 } from './office-layouts.js';
 import { createOfficeScene } from './office-scene.js';
@@ -138,13 +138,12 @@ export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,
     catch{failedOffice=player.office.id;close();say('The office could not load. Please try again.');void send('leave');}
   }
   const layout=()=>officeLayout(layoutId),elevation=()=>officeLevelElevation(layout(),levelId)??0;
-  // Seats other visitors hold are collision for prediction, as on the server. One whose envelope
-  // already holds this visitor does not trap them.
+  // Seats other visitors hold are collision for prediction, as on the server.
   const occupied=()=>(mp()?.snapshot?.players??[]).filter(p=>p.id!==mp()?.identity?.id&&p.office?.seat&&p.office.id===self()?.office?.id&&p.office.layout===layoutId)
-    .map(p=>officeSeat(layout(),p.office.seat.id)).filter(seat=>seat&&Math.hypot(seat.position[0]-position[0],seat.position[1]-position[1])>=OFFICE_OCCUPIED_CLEARANCE);
+    .map(p=>officeSeat(layout(),p.office.seat.id)).filter(Boolean);
   async function toggleSeat(){
     if(seatPending||levelPending||busy||phase!=='office'||!view||desk?.active||layoutId===OFFICE_LAYOUT_LEGACY)return;
-    const seat=seatId?null:officeNearbySeat(layout(),levelId,position);if(!seatId&&!seat)return;
+    const seat=seatId?null:officeNearbySeat(layout(),levelId,position);if(!seatId&&(!seat||occupied().includes(seat)))return;
     seatPending=true;keys.clear();const token=epoch;
     const r=await send(seatId?'stand':'sit',seatId?{layout:layoutId}:{seatId:seat.id,layout:layoutId});
     if(token!==epoch||disposed)return;seatPending=false;
@@ -270,7 +269,8 @@ export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,
       deskButton.hidden=phase!=='office';deskNearby.hidden=phase!=='office'||Boolean(desk?.active)||!(officeSeat(layout(),seatId)?.workstation||officeWorkstations(layout(),levelId).some(s=>Math.hypot(position[0]-s.approach[0],position[1]-s.approach[1])<1.3));
       const portal=phase==='office'&&!desk?.active&&!seatId?officeNearbyPortal(layout(),levelId,position):null;levelButton.hidden=!portal||levelPending;
       const chair=phase==='office'&&!desk?.active&&layoutId!==OFFICE_LAYOUT_LEGACY?(seatId?officeSeat(layout(),seatId):officeNearbySeat(layout(),levelId,position)):null;
-      seatButton.hidden=!chair||seatPending;seatButton.textContent=seatId?'Stand up · Z':'Sit down · Z';
+      const taken=Boolean(chair&&!seatId&&occupied().includes(chair));
+      seatButton.hidden=!chair||seatPending;seatButton.disabled=taken;seatButton.textContent=seatId?'Stand up · Z':taken?'Seat taken':'Sit down · Z';
       if(portal)levelButton.textContent=portal.kind==='lift'?'Use the lift · Q':layout().levels.find(l=>l.id===portal.toLevelId)?.index?'Take the stairs up · Q':'Take the stairs down · Q';
       accessButton.hidden=!owned||phase!=='office';skip.hidden=phase==='office';help.hidden=phase!=='office';pad.hidden=phase!=='office';dialog.dataset.position=JSON.stringify(position);
       return true;

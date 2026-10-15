@@ -5,7 +5,7 @@ import { register } from 'node:module';
 register(`data:text/javascript,${encodeURIComponent("export async function load(url, context, next) { return url.endsWith('.css') ? {format:'module',source:'',shortCircuit:true} : next(url,context); }")}`,import.meta.url);
 const {createOfficeUI}=await import('../src/office-ui.js');
 const {officesFor}=await import('../src/office-contract.js');
-const {officeLayout,officeSeat,officeTransition}=await import('../src/office-layouts.js');
+const {OFFICE_OCCUPIED_CLEARANCE,officeLayout,officeSeat,officeTransition}=await import('../src/office-layouts.js');
 const data=JSON.parse(readFileSync(new URL('../public/data/district.json',import.meta.url)));
 const tick=()=>new Promise(resolve=>setImmediate(resolve));
 function setup(t,{access='owner',sceneError=false,listPending=null,leavePending=null,renderPhase='office',captureStreet=()=>null,workspaces=null,layout=null,startAt=null,transitionPending=null,seatPending=null}={}){
@@ -239,12 +239,14 @@ test('a sit answered after the visit closed changes nothing',async t=>{
 });
 test('a peer\'s occupied seat is collision for prediction, and the server\'s seat is adopted from snapshots',async t=>{
  const layout=officeLayout('office-penthouse-1'),taken=officeSeat(layout,'desk-a2-chair');
- const f=setup(t,{layout:'office-penthouse-1',startAt:[taken.position[0],3]});
+ // Beside the chair's stand point, clear of it and of the seated envelope: what the server allows.
+ const f=setup(t,{layout:'office-penthouse-1',startAt:[taken.position[0]+0.9,2.6]});
  f.mp.snapshot.players.push({id:'guest',name:'Guest',office:{id:'jevica-office',layout:layout.id,levelId:'jevica-office/l0',elevation:0,position:[...taken.position],yaw:taken.facing,seat:{id:taken.id}}});
  f.ui.update(6000,.016);await tick();f.find('office-enter').emit('click');await tick();f.ui.update(6100,.016);
  f.find('office-visit').emit('keydown',{code:'KeyW'});for(let i=0;i<8;i++)f.ui.update(6200+i*100,.1);f.find('office-visit').emit('keyup',{code:'KeyW'});
- assert.ok(-f.ui.pose.position[2]<=taken.position[1]-2.158+1e-9,`stopped outside the seated envelope at d ${-f.ui.pose.position[2]}`);
- assert.ok(-f.ui.pose.position[2]>3.1,'still walked up to it');
+ const edge=taken.position[1]-Math.sqrt(OFFICE_OCCUPIED_CLEARANCE**2-0.9**2);
+ assert.ok(-f.ui.pose.position[2]<=edge+1e-9,`stopped outside the seated envelope at d ${-f.ui.pose.position[2]}`);
+ assert.ok(-f.ui.pose.position[2]>edge-0.3,'still walked up to it');
  // A seat the server gives this visit (another tab, a restore) is adopted, and its release too.
  const own=officeSeat(layout,'desk-a1-chair');f.player.office={...f.player.office,position:[...own.position],yaw:own.facing,seat:{id:own.id}};
  f.ui.sync(f.mp.snapshot.players,f.player.id);f.ui.update(7100,.016);
@@ -257,4 +259,12 @@ test('the legacy room offers no seat control',async t=>{
  const f=setup(t,{startAt:[-2.05,2.2]});f.ui.update(6000,.016);await tick();f.find('office-enter').emit('click');await tick();
  f.ui.update(6100,.016);assert.equal(f.find('office-seat').hidden,true);
  f.find('office-visit').emit('keydown',{code:'KeyZ'});await tick();assert.equal(f.calls.some(c=>c.action==='sit'),false);
+});
+test('an occupied chair shows Seat taken instead of offering to sit',async t=>{
+ const layout=officeLayout('office-penthouse-1'),taken=officeSeat(layout,'desk-a1-chair');
+ const f=setup(t,{layout:'office-penthouse-1',startAt:[taken.stand[0]+1,taken.stand[1]-0.5]});
+ f.mp.snapshot.players.push({id:'guest',name:'Guest',office:{id:'jevica-office',layout:layout.id,levelId:'jevica-office/l0',elevation:0,position:[...taken.position],yaw:taken.facing,seat:{id:taken.id}}});
+ f.ui.update(6000,.016);await tick();f.find('office-enter').emit('click');await tick();f.ui.update(6100,.016);
+ assert.equal(f.find('office-seat').hidden,false);assert.equal(f.find('office-seat').textContent,'Seat taken');assert.equal(f.find('office-seat').disabled,true);
+ f.find('office-visit').emit('keydown',{code:'KeyZ'});await tick();assert.equal(f.calls.some(c=>c.action==='sit'),false,'Z does not send a claim for a taken chair');
 });

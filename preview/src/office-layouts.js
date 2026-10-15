@@ -15,8 +15,9 @@
 // Seats (#363) are the desk chairs and the library reading chairs. A visitor claims one from
 // its stand point and stands back up there. While a seat is taken, the measured seated body
 // (AVATAR_ENVELOPE.seatedRadius) is collision for everyone else on that floor, who keep their
-// turning radius clear of it, as the legacy room's plan check does (workplace-room.js).
-// Functions that take `occupied` expect seat records (`levelId`, `position`) from this plan.
+// turning radius clear of it, as the legacy room's plan check does (workplace-room.js), and
+// keep body spacing from its stand point.
+// Functions that take `occupied` expect seat records (`levelId`, `position`, `stand`) from this plan.
 import { AVATAR_ENVELOPE } from './workplace-room.js';
 import { OFFICE_ROOM, OFFICE_SPAWN, officeFree } from './office-contract.js';
 
@@ -27,6 +28,10 @@ export const OFFICE_BUILDING = 'jevica-office';
 export const OFFICE_PORTAL_REACH = 1.3;
 export const OFFICE_SEAT_REACH = 1.3;
 export const OFFICE_OCCUPIED_CLEARANCE = AVATAR_ENVELOPE.turningRadius + AVATAR_ENVELOPE.seatedRadius;
+// Two standing bodies' centres stay at least this far apart where one is placed: a stair or lift
+// landing, or a seat's stand point. While a seat is taken its stand point keeps this clear too,
+// so its occupant can always stand up.
+export const OFFICE_BODY_SPACING = 0.7;
 // First-person eye heights above the visitor's floor, standing and seated.
 export const OFFICE_EYE_HEIGHT = 1.68, OFFICE_SEATED_EYE_HEIGHT = 1.2;
 // Seat surface height for the seated pose; the graybox chairs are drawn to it (#362's art must match).
@@ -142,7 +147,7 @@ export function officeSeatedPose(layout, office) {
   return seat && seat.levelId === office.levelId ? { height: seat.height, yaw: Math.atan2(Math.sin(seat.facing + Math.PI), Math.cos(seat.facing + Math.PI)) } : null;
 }
 const clearOf = (levelId, [x, d], occupied) => occupied.every(seat => seat.levelId !== levelId
-  || Math.hypot(x - seat.position[0], d - seat.position[1]) >= OFFICE_OCCUPIED_CLEARANCE);
+  || Math.hypot(x - seat.position[0], d - seat.position[1]) >= OFFICE_OCCUPIED_CLEARANCE && Math.hypot(x - seat.stand[0], d - seat.stand[1]) >= OFFICE_BODY_SPACING);
 
 // Is the measured turning body free at [x, d] on this level of this layout, beside any occupied seats?
 export function officeLevelFree(layout, levelId, position, occupied = []) {

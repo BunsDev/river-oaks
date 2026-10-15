@@ -1,4 +1,4 @@
-// Penthouse office smoke (#361): node preview/e2e/office-penthouse-runner.mjs
+// Penthouse office smoke (#361, #363 seats): node preview/e2e/office-penthouse-runner.mjs
 // Starts the loopback browser fixture with RIVER_OAKS_OFFICE_LAYOUT=office-penthouse-1 and
 // runs preview/e2e/office-penthouse.js as the office owner.
 import { chromium } from 'playwright';
@@ -18,7 +18,7 @@ try {
   try {
     const result = await eval(`(${source})`)(page);
     await writeFile('output/playwright/office-penthouse.json', JSON.stringify({ status: 'passed', browser: await browser.version(), ...result }, null, 2));
-    console.log(JSON.stringify({ checks: result.checks, eyeRise: result.eyeRise }));
+    console.log(JSON.stringify({ checks: result.checks, seatedEyeDrop: result.seatedEyeDrop, eyeRise: result.eyeRise }));
   } catch (error) {
     await page.screenshot({ path: 'output/playwright/office-penthouse-failure.png' }).catch(() => {});
     await writeFile('output/playwright/office-penthouse.json', JSON.stringify({ status: 'failed', error: error.stack }, null, 2));

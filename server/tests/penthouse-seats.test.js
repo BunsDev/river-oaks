@@ -102,6 +102,8 @@ test('one winner per seat; a body inside the envelope blocks sitting; nobody wal
   // The seated body's measured envelope is collision for everyone else on that floor.
   assert.equal(f.send(owner, 'move', { position: chair.stand, yaw: 0, layout }).error, 'office_blocked');
   f.walk(owner, ...toB1);
+  // Nor right beside its stand point, just outside the seated envelope (independent review, 2026-10-15).
+  assert.equal(f.send(owner, 'move', { position: [chair.stand[0], chair.stand[1] - 0.11], yaw: 0, layout }).error, 'office_blocked');
   // Standing up returns to the stand point, which nobody else could have taken.
   const stood = f.stand('guest');
   assert.deepEqual([stood.ok, stood.office.position], [true, chair.stand], stood.error);
@@ -196,4 +198,32 @@ test('checkpoints keep each claim at the plan\'s exact pose; older checkpoints c
   // Rolling back to the legacy room ends the penthouse visits and their claims with them.
   const rolledBack = setup({ officeLayout: OFFICE_LAYOUT_LEGACY, restore: saved });
   assert.equal(rolledBack.visit(owner), null);
+});
+
+test('a visitor beside the stand point blocks the claim, so standing up is never body-blocked', () => {
+  const f = setup(), chair = seat('desk-a1-chair'), beside = [chair.stand[0] - 0.35, chair.stand[1] - 0.35];
+  f.send(owner, 'invite', { peerId: 'guest' });
+  f.enter(owner); f.enter('guest');
+  f.walk('guest', beside); // outside the seated envelope, inside body spacing of the stand point
+  f.walk(owner, chair.stand);
+  assert.equal(f.sit(owner, chair.id).error, 'office_seat_blocked', 'the friend beside the approach would block standing up');
+  f.walk('guest', [chair.stand[0] - 1, chair.stand[1] - 0.5]);
+  assert.equal(f.sit(owner, chair.id).ok, true);
+  assert.equal(f.send('guest', 'move', { position: beside, yaw: 0, layout }).error, 'office_blocked');
+  assert.equal(f.stand(owner).ok, true);
+});
+
+test('a restored standing visit inside another visit\'s occupied seat fails closed', () => {
+  const f = setup(), chair = seat('desk-a1-chair');
+  f.send(owner, 'invite', { peerId: 'guest' });
+  f.enter(owner); f.enter('guest');
+  f.walk(owner, chair.stand);
+  f.walk('guest', [chair.stand[0] - 1, chair.stand[1] - 0.5]);
+  assert.equal(f.sit(owner, chair.id).ok, true);
+  const saved = f.world.checkpoint();
+  assert.equal(setup({ restore: saved }).visit(owner).seat.id, chair.id);
+  for (const at of [chair.stand, [chair.stand[0], chair.position[1] - 1.5]]) {
+    const copy = structuredClone(saved); copy.payload.offices.visits[1][1].position = at;
+    assert.equal(createSharedWorld(data, { officeLayout: layout }).restore(resign(copy)).ok, false, `standing at ${at}`);
+  }
 });
