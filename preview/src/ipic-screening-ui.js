@@ -68,6 +68,8 @@ export function createIpicScreening({ host, THREE, getMultiplayer, getVenue, get
       video.append(track);
     }
     const panel = doc.createElement('section'), status = doc.createElement('p'), controls = doc.createElement('div'), transcript = doc.createElement('div');
+    // Captions: the active cue, shown here because the film reaches the screen only as texture frames.
+    const caption = doc.createElement('p'); caption.className = 'ipic-screening-caption'; caption.hidden = true;
     panel.id = 'ipic-screening'; panel.className = 'ipic-screening'; panel.setAttribute('aria-label', 'IPIC screening');
     status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite'); status.className = 'ipic-screening-status';
     transcript.className = 'ipic-screening-transcript'; transcript.hidden = true;
@@ -78,8 +80,8 @@ export function createIpicScreening({ host, THREE, getMultiplayer, getVenue, get
       if (id === 'volume') Object.assign(control, { type: 'range', min: '0', max: '1', step: '0.05', value: '0.8' }); else control.type = 'button';
       control.dataset.control = id; control.hidden = true; controls.append(control); buttons.set(id, control);
     }
-    panel.append(status, controls, transcript, video); host.append(panel);
-    const state = { token, clock, video, panel, status, transcript, buttons, view: null, canHost: false, sound: false, captions: true, texture: null, saved: null, lastRender: '', syncAt: -Infinity, message: '', busy: false };
+    panel.append(status, caption, controls, transcript, video); host.append(panel);
+    const state = { token, clock, video, panel, status, caption, transcript, buttons, view: null, canHost: false, sound: false, captions: true, texture: null, saved: null, lastRender: '', syncAt: -Infinity, message: '', busy: false };
     state.player = createScreeningPlayer({ media: video, clock });
     state.player.setCaptions(true); state.player.setVolume(0.8);
     const listeners = [];
@@ -188,6 +190,9 @@ export function createIpicScreening({ host, THREE, getMultiplayer, getVenue, get
       const state = session; if (state.stopped) return;
       if (now() - state.syncAt > 15_000) void sync(state);
       state.player.tick(); attach(state); render(state);
+      const text = state.player.captionText();
+      if (state.caption.textContent !== text) state.caption.textContent = text;
+      state.caption.hidden = !text;
     },
     inspect() {
       const state = session; if (!state || state.stopped) return { active: false, stopped: Boolean(state?.stopped) };
