@@ -9521,12 +9521,13 @@
       "status": "active",
       "branches": [
         "test/safari-gltf-decoder-investigation-20261015",
-        "test/safari-phone-frame-receipt-20261015"
+        "test/safari-phone-frame-receipt-20261015",
+        "test/safari-phone-error-receipt-20261015"
       ],
       "owner": "codex-root-safari-gltf-decoder-investigation-20261015",
-      "leaseUntil": "2026-10-15T10:05:31.000Z",
-      "updatedAt": "2026-10-15T08:35:16.000Z",
-      "nextAction": "Draft PR #409 at df6ae23 has the opt-in five-second frame receipt, focused suites 8/8 and core passed. Review exact-head hosted checks, land when green, then capture a scoped-control sample on a quiet host and obtain the normal route's WebKit exception before any production decoder change.",
+      "leaseUntil": "2026-10-15T10:47:23.000Z",
+      "updatedAt": "2026-10-15T09:07:20.000Z",
+      "nextAction": "Draft PR #411 at 2e43506 adds the opt-in redacted error receipt; focused suites 9/9 and core passed. Review exact-head hosted checks and land, then repeat a one-tab normal/scoped Safari comparison when Val clears old tabs. Keep production decoding unchanged.",
       "ledger": "docs/superpowers/plans/2026-10-15-safari-gltf-decoder-investigation.md",
       "requiredChecks": [
         "Focused decoder selection regression",
@@ -9546,7 +9547,7 @@
       ],
       "parent": "procedural-gpu-acceptance",
       "related": "ios-device-feasibility #309; preserve its dirty worktree and do not modify owned files",
-      "pr": 409,
+      "pr": 411,
       "evidence": [
         {
           "pr": 401,
@@ -9556,6 +9557,16 @@
             "Focused decoder and phone fixture tests 7/7; pnpm run verify core passed after the last code change",
             "Hosted exact-head preview and all 17 landing checks passed; merged by pnpm run land 401 at 2026-10-15T08:14:58Z",
             "Local full gate twice stopped on unchanged voice and office timing assertions under concurrent load; both files passed in isolated Redis-backed reruns; physical GPU timing remains open"
+          ]
+        },
+        {
+          "pr": 409,
+          "reviewedHead": "5605c1cd8d5484ccd1c36a35271711047e49edb9",
+          "merge": "cc7f5561e925a4976692ce91bcfc7900ee4f9655",
+          "checks": [
+            "Focused decoder and fixture suites 8/8; pnpm run verify core passed after fixture change",
+            "Hosted exact-head 16/16 check runs and Vercel status passed; merged by GitHub REST at 2026-10-15T08:47:09Z",
+            "Physical bounded iPhone frame receipt and default-decoder root cause remain open"
           ]
         }
       ]

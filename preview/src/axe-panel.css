@@ -1,0 +1,8 @@
+/* Axe throwing in the axe-and-darts venue: a plank target with painted rings and blue
+   killshots, stuck axes marked like darts, bounced ones hollow. */
+.axe-panel .axe-planks { fill: #d6b88c; stroke: #78593b; stroke-width: 2; }
+.axe-panel .axe-ring { fill: #285ca0; }
+.axe-panel .axe-killshot { fill: #2860c4; stroke: #f3ead8; stroke-width: 2; }
+.axe-panel .axe-drop { fill: none; stroke: #1a1716; stroke-width: 2; stroke-dasharray: 3 3; }
+.axe-panel .table-game-actions [data-axe-action] { background: var(--hud-action); border-color: transparent; color: var(--hud-on-action); min-width: 120px; }
+.axe-panel .table-game-actions [data-axe-action][aria-disabled=true] { opacity: .45; cursor: default; }
