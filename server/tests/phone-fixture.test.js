@@ -68,8 +68,120 @@ test('HTML-image decoder control applies only to the phone fixture and only when
   assert.equal(context.createImageBitmap, undefined);
   assert.equal(context.document.documentElement.dataset.phoneDecoder, 'html-images');
 
+  const avatarOnly = await (await fetch(`${phone.origin}/?phone-avatar-decoder=html`)).text();
+  const avatarScript = avatarOnly.match(/<script id="phone-avatar-decoder-control">([^<]+)<\/script>/)?.[1];
+  assert.ok(avatarScript, 'avatar-only control is present in served phone HTML');
+  const avatarContext = { createImageBitmap() {}, document: { documentElement: { dataset: {} } } };
+  const bitmap = avatarContext.createImageBitmap;
+  runInNewContext(avatarScript, avatarContext);
+  assert.equal(avatarContext.createImageBitmap, bitmap);
+  assert.equal(avatarContext.__riverPhoneAvatarHtmlImages, true);
+
   const desktop = await startBrowserFixture();
   t.after(() => desktop.close());
   const desktopHtml = await (await fetch(`${desktop.origin}/?phone-decoder=html`)).text();
   assert.doesNotMatch(desktopHtml, /phone-decoder-control/);
+  const desktopAvatarHtml = await (await fetch(`${desktop.origin}/?phone-avatar-decoder=html`)).text();
+  assert.doesNotMatch(desktopAvatarHtml, /phone-avatar-decoder-control/);
+});
+
+test('phone readiness report sends bounded asset and renderer data only to its private fixture', { timeout: 90000 }, async t => {
+  const phone = await startBrowserFixture({ env: { RIVER_OAKS_PHONE_FIXTURE_HOST: '127.0.0.1' } });
+  t.after(() => phone.close());
+  const html = await (await fetch(`${phone.origin}/?phone-avatar-decoder=html&phone-report=1`)).text();
+  const script = html.match(/<script id="phone-readiness-report">([^<]+)<\/script>/)?.[1];
+  assert.ok(script, 'explicit phone report script is injected');
+
+  const scheduled = [], sent = [];
+  const context = {
+    document: { documentElement: { dataset: { phoneAvatarDecoder: 'html-images' } },
+      querySelector: selector => {
+        if (selector === '#viewport') return { dataset: { assetProgress: JSON.stringify({ loaded: 88, total: 88, failed: 0, done: true }) } };
+        if (selector === '.multiplayer-gate') return { hidden: false };
+        if (selector === '#multiplayer-status') return { textContent: 'Connecting to the town…' };
+        return { hidden: false, classList: { contains: () => false }, querySelector: () => ({ textContent: 'Building the view' }) };
+      } },
+    performance: { now: () => 7000 },
+    __riverRenderAudit: { graphics: () => ({ renderer: 'Test WebGL', viewport: [400, 800], render: { calls: 123 }, memory: { textures: 12 } }) },
+    setTimeout: (fn, ms) => scheduled.push({ fn, ms }),
+    fetch: (url, options) => { sent.push({ url, options }); return Promise.resolve(); },
+  };
+  runInNewContext(script, context);
+  assert.deepEqual(scheduled.map(item => item.ms), [5000, 25000]);
+  await scheduled[0].fn();
+  assert.equal(sent[0].url, '/__phone_readiness');
+  const report = JSON.parse(sent[0].options.body);
+  assert.equal(report.mode, 'avatar-html');
+  assert.deepEqual(JSON.parse(JSON.stringify(report.asset)), { loaded: 88, total: 88, failed: 0, done: true });
+  assert.equal(report.graphics.renderer, 'Test WebGL');
+  assert.equal(report.gate.shown, true);
+  assert.equal(report.gate.status, 'Connecting to the town…');
+
+  const posted = await fetch(`${phone.origin}/__phone_readiness`, {
+    method: 'POST', headers: { Origin: phone.origin, 'Content-Type': 'application/json' }, body: JSON.stringify(report),
+  });
+  assert.equal(posted.status, 204);
+  const records = await (await fetch(`${phone.origin}/__phone_readiness`)).json();
+  assert.equal(records.length, 1);
+  assert.equal(records[0].asset.failed, 0);
+  assert.equal(records[0].graphics.renderer, 'Test WebGL');
+  assert.equal(records[0].gate.status, 'Connecting to the town…');
+  assert.equal((await fetch(`${phone.origin}/__phone_readiness`, {
+    method: 'POST', headers: { Origin: 'https://evil.example', 'Content-Type': 'application/json' }, body: JSON.stringify(report),
+  })).status, 403);
+});
+
+test('opt-in phone frame report waits for a playable view and retains bounded render frames', { timeout: 90000 }, async t => {
+  const phone = await startBrowserFixture({ env: { RIVER_OAKS_PHONE_FIXTURE_HOST: '127.0.0.1' } });
+  t.after(() => phone.close());
+  const ordinary = await (await fetch(`${phone.origin}/?phone-frame-report=1`)).text();
+  assert.doesNotMatch(ordinary, /id="phone-frame-report"/);
+  const html = await (await fetch(`${phone.origin}/?phone-avatar-decoder=html&phone-frame-report=1&render-audit=1`)).text();
+  const script = html.match(/<script id="phone-frame-report">([\s\S]*?)<\/script>/)?.[1];
+  assert.ok(script);
+
+  const scheduled = [], sent = [];
+  const loading = { hidden: false }, gate = { hidden: false };
+  let now = 0, starts = 0, stops = 0;
+  const context = {
+    document: { documentElement: { dataset: { phoneAvatarDecoder: 'html-images' } },
+      querySelector: selector => selector === '#loading' ? loading : selector === '.multiplayer-gate' ? gate : null },
+    performance: { now: () => now },
+    __riverRenderAudit: { start: () => { starts++; }, stop: () => {
+      stops++;
+      return { frames: [{ intervalMs: 16.67, cpuMs: 3.42 }, { intervalMs: 33.34, cpuMs: 4.51 }], overflow: false };
+    } },
+    setTimeout: (fn, ms) => scheduled.push({ fn, ms }),
+    fetch: (url, options) => { sent.push({ url, options }); return Promise.resolve(); },
+  };
+  runInNewContext(script, context);
+  const firstPoll = scheduled.shift();
+  assert.equal(firstPoll.ms, 250);
+  now = 250;
+  firstPoll.fn();
+  assert.equal(starts, 0);
+  loading.hidden = gate.hidden = true;
+  now = 500;
+  scheduled.shift().fn();
+  assert.equal(starts, 1);
+  const finishSample = scheduled.shift();
+  assert.equal(finishSample.ms, 5000);
+  now = 5500;
+  finishSample.fn();
+  assert.equal(stops, 1);
+  assert.equal(sent.length, 1);
+  const report = JSON.parse(sent[0].options.body);
+  assert.equal(report.mode, 'avatar-html');
+  assert.deepEqual(report.sample.frames, [[16.67, 3.42], [33.34, 4.51]]);
+  assert.equal(report.sample.overflow, false);
+  const posted = await fetch(`${phone.origin}/__phone_readiness`, {
+    method: 'POST', headers: { Origin: phone.origin, 'Content-Type': 'application/json' }, body: JSON.stringify(report),
+  });
+  assert.equal(posted.status, 204);
+  const records = await (await fetch(`${phone.origin}/__phone_readiness`)).json();
+  assert.deepEqual(records[0].sample.frames, [[16.67, 3.42], [33.34, 4.51]]);
+  assert.equal((await fetch(`${phone.origin}/__phone_readiness`, {
+    method: 'POST', headers: { Origin: phone.origin, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...report, sample: { ...report.sample, frames: [[-1, 4]] } }),
+  })).status, 400);
 });
