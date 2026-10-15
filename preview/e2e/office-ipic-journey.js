@@ -95,9 +95,10 @@ async (owner, resident) => {
   await owner.locator('#office-desk-open').click(); await owner.locator('#desk-loading').waitFor({ state: 'hidden' });
   check(await owner.locator('#desk-scope-label').textContent() === 'Private to you' || !await owner.locator('#desk-scope-shared').isVisible(), 'Jevica\'s office desk is My tasks, private to the account');
   await owner.locator('#desk-scene').click();
-  check(await owner.locator('#desk-title').inputValue() === SCENE.title && /Three lines/.test(await owner.locator('#desk-notes').getAttribute('placeholder')),
-    'the optional prompt starts a private Scene idea with a three-line hint');
+  check(await owner.locator('#desk-title').inputValue() === '' && await owner.locator('#desk-title').getAttribute('placeholder') === SCENE.title
+    && /Three lines/.test(await owner.locator('#desk-notes').getAttribute('placeholder')), 'the optional prompt opens a private task with a three-line hint and saves nothing yet');
   await owner.locator('#desk-notes').fill(SCENE.notes);
+  check(await owner.locator('#desk-title').inputValue() === SCENE.title, 'writing the idea names the task Scene idea');
   await owner.waitForFunction(() => document.querySelector('#desk-save-status')?.textContent === 'All changes saved');
   check(true, 'Jevica wrote and saved a three-line scene idea in My tasks');
   await owner.locator('#desk-close').click();
