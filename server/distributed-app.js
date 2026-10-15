@@ -23,7 +23,7 @@ import { workplaceAction } from './workplace-api.js';
 import { accountDesignCommand } from './design-commands.js';
 import { securityHeaders } from './security-headers.js';
 import { createVoiceRoutes } from './voice-routes.js';
-import { ROTATE_NOTICE_MS, UPDATE_CLOSE, closeForUpdate, retireAfter, rotateNotice } from './connection-close.js';
+import { ROTATE_NOTICE_MS, UPDATE_CLOSE, closeForUpdate, continuedConnection, retireAfter, rotateNotice } from './connection-close.js';
 
 // Constant-time comparison of an `Authorization: Bearer <secret>` header.
 function bearerMatches(header, secret) {
@@ -354,6 +354,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
       const identity = await auth.authenticate(req);
       if (!identity || identity.expiresAt <= now() || !(await waitlist.isApproved(identity.userId)) || await security.isBanned(identity.userId)
         || !(await security.consumeTicket(url.searchParams.get('ticket'), identity, worldId))) return reject(401);
+      const continues = continuedConnection(url.searchParams.get('continues'));
       wss.handleUpgrade(req, socket, head, ws => {
         ws.on('error', () => {});
         if (stopped) { ws.close(UPDATE_CLOSE.code, UPDATE_CLOSE.reason); return; }
@@ -363,12 +364,14 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
         // The host ends each request after a few minutes, so the town retires the socket first,
         // after a notice that lets the page move to a fresh one without dropping anything.
         const retire = retireAfter(ws, connectionLifetime, { noticeMs: rotateNoticeMs,
-          notify: () => { if (connection.joined && connections.get(connectionId) === connection) send(ws, rotateNotice(connectionLifetime, rotateNoticeMs)); } });
+          notify: () => { if (connection.joined && connections.get(connectionId) === connection) send(ws, rotateNotice(connectionLifetime, rotateNoticeMs, connectionId)); } });
         let admissionStage = 'join';
         const ready = (async () => {
           const result = await room.request({ type: 'join', identity, connectionId });
           if (!result.ok) { ws.close(1013, 'The town cannot accept this connection.'); return false; }
           connection.joined = true;
+          // A page moving from another socket brings its voice lease along (voice.js continueConnection).
+          if (voice && continues) void voice.continueConnection({ userId: identity.userId, from: continues, to: connectionId });
           admissionStage = 'snapshot';
           const view = await room.read();
           if (!view) throw new Error('No committed town');

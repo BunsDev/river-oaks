@@ -324,20 +324,29 @@ test('a lost town connection leaves quietly and rejoins once the town is back, w
   assert.equal(h.voice.state.status, 'idle', 'a terminal close does not come back by itself');
 });
 
-test('a move to a fresh town socket takes a fresh voice lease and keeps the microphone and deafen', async () => {
+test('a move to a fresh town socket renews the lease it brought along, staying in the room with the microphone on', async () => {
   const h = harness();
   await h.ready();
   await h.voice.setMic(true);
-  const joins = h.calls.filter(([action]) => action === 'join').length;
+  const count = action => h.calls.filter(([name]) => name === action).length;
+  const [joins, leaves, rooms] = [count('join'), count('leave'), h.sdk.rooms.length];
   h.voice.onConnectionChanged(); await settle();
-  assert.equal(h.calls.filter(([action]) => action === 'join').length, joins + 1, 'a lease for the fresh connection');
-  assert.equal(h.voice.state.status, 'joined');
-  assert.equal(h.voice.state.mic, 'on');
+  assert.equal(count('renew'), 1, 'renewed at once on the fresh connection');
+  assert.deepEqual([count('join'), count('leave'), h.sdk.rooms.length], [joins, leaves, rooms], 'no rejoin: the same room carries on');
+  assert.deepEqual([h.voice.state.status, h.voice.state.mic], ['joined', 'on']);
+  // A town that could not move the lease answers stale_connection: voice rejoins, keeping the microphone.
+  h.queue.renew.push({ status: 409, data: { ok: false, error: 'stale_connection' } });
+  h.voice.onConnectionChanged(); await settle();
+  assert.equal(count('join'), joins + 1, 'a fresh lease for the fresh connection');
+  assert.deepEqual([h.voice.state.status, h.voice.state.mic], ['joined', 'on']);
+  // An ordinary stale renewal (not after a move) still ends voice, as before.
+  h.queue.renew.push({ status: 409, data: { ok: false, error: 'stale_connection' } });
+  h.fire(); await settle();
+  assert.notEqual(h.voice.state.status, 'joined');
   // Nothing to do when voice is not joined.
-  h.voice.leave('user'); await settle();
-  const after = h.calls.filter(([action]) => action === 'join').length;
+  const renews = count('renew');
   h.voice.onConnectionChanged(); await settle();
-  assert.equal(h.calls.filter(([action]) => action === 'join').length, after);
+  assert.equal(count('renew'), renews);
 });
 
 test('a changed microphone preference switches the live room\'s input device', async () => {

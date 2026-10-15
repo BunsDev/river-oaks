@@ -30,7 +30,7 @@ import { securityHeaders } from './security-headers.js';
 import { createVoiceRoutes } from './voice-routes.js';
 import { createRideFlush } from './ride-flush.js';
 import { createCyclingLeaderboard } from './cycling-api.js';
-import { ROTATE_NOTICE_MS, closeForUpdate, retireAfter, rotateNotice } from './connection-close.js';
+import { ROTATE_NOTICE_MS, UPDATE_CLOSE, closeForUpdate, continuedConnection, retireAfter, rotateNotice } from './connection-close.js';
 
 const types = { '.webm':'video/webm','.mp4':'video/mp4','.vtt':'text/vtt; charset=utf-8','.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.glb':'model/gltf-binary','.hdr':'application/octet-stream','.svg':'image/svg+xml','.woff2':'font/woff2' };
 const equal = (a,b) => typeof a==='string' && typeof b==='string' && Buffer.byteLength(a)===Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a),Buffer.from(b));
@@ -321,11 +321,12 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
       const key=url.searchParams.get('ticket'),ticket=tickets.get(key);
       if(!ticket || ticket.until<=now() || ticket.identity.sessionId!==identity.sessionId || ticket.identity.userId!==identity.userId)return reject(401);
       tickets.delete(key);
+      const continues=continuedConnection(url.searchParams.get('continues'));
       wss.handleUpgrade(req,socket,head,ws=>{
         let joinedHere=false;
         const token=randomUUID();
         void (async()=>{
-        if(stopped){ws.close(1012,'Town restarting');return;}
+        if(stopped){ws.close(UPDATE_CLOSE.code,UPDATE_CLOSE.reason);return;}
         if(avatarPreferences) {
           const preference=await avatarPreferences.initialize(identity.userId,world.accountAppearance(identity.userId));
           world.applyAccountAppearance(identity.userId,preference);
@@ -354,7 +355,9 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
         const connection={ws,identity,token,alive:true,pending:0};connections.set(identity.userId,connection);
         old?.ws.close(4009,'This account joined in another tab.');
         // Off by default here; a host with a request limit sets it, and the page moves to a fresh socket first.
-        const retire=retireAfter(ws,connectionLifetime,{noticeMs:rotateNoticeMs,notify:()=>{if(connections.get(identity.userId)===connection)send(ws,rotateNotice(connectionLifetime,rotateNoticeMs));}});
+        const retire=retireAfter(ws,connectionLifetime,{noticeMs:rotateNoticeMs,notify:()=>{if(connections.get(identity.userId)===connection)send(ws,rotateNotice(connectionLifetime,rotateNoticeMs,token));}});
+        // A page moving from another socket brings its voice lease along (voice.js continueConnection).
+        if(voice&&continues)void voice.continueConnection({userId:identity.userId,from:continues,to:token});
         ws.on('error',()=>{});ws.on('pong',()=>{connection.alive=true;});
         let messageQueue = Promise.resolve(),waitingPose=null;
         ws.on('message',(raw,isBinary)=>{

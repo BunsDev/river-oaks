@@ -192,7 +192,7 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
   };
   const schedule=()=>{if(stopped||retryTimer)return;retryTimer=setTimeout(()=>{retryTimer=null;connect();},retryDelay(attempt++));};
   // The session and a fresh ticket for one town socket.
-  async function townUrl(){
+  async function townUrl(continues=null){
     worldId=worldIdFromSearch(location.search);
     const session=await api('/auth/session');
     if(stopped)return null;
@@ -204,6 +204,8 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
     }
     const url=new URL('/multiplayer',location.href);url.protocol=location.protocol==='https:'?'wss:':'ws:';url.searchParams.set('ticket',access.ticket);
     url.searchParams.set('world',worldId);url.searchParams.set('protocol',String(WORLD_PROTOCOL_VERSION));
+    // A fresh socket for a hand-over names the connection it continues, so voice can follow.
+    if(typeof continues==='string'&&continues)url.searchParams.set('continues',continues);
     return url;
   }
   async function connect(){
@@ -241,7 +243,7 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
           promote(ws,deadline);
         }
         if(data.type==='snapshot')receive(ws,data,deadline);
-        else if(data.type==='rotate')void rotate(ws);
+        else if(data.type==='rotate')void rotate(ws,data.connectionId);
       }catch{notice.textContent='A town update could not be read.';}
     });
     ws.addEventListener('close',event=>{
@@ -282,14 +284,14 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
   // The town retires each socket after a few minutes (the host's request limit) and warns
   // first. The page moves to a fresh socket and nothing is dropped: commands already sent
   // finish here, new ones wait for the fresh socket, and the player never leaves the town.
-  async function rotate(from){
+  async function rotate(from,continues=null){
     if(rotation||stopped||socket!==from)return;
     const current=rotation={from,ws:null,fromClosed:null,queued:[]};
     const until=performance.now()+3000;
     while(pending.size&&performance.now()<until&&rotation===current)await new Promise(resolve=>setTimeout(resolve,100));
     if(rotation!==current)return;
     try{
-      const url=await townUrl();
+      const url=await townUrl(continues);
       if(rotation!==current)return;
       if(!url||url==='signed-out'){abandonRotation();return;}
       current.ws=openSocket(url,from);
