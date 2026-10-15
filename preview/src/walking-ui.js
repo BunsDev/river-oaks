@@ -12,6 +12,7 @@ import { isGameplayKey } from './keyboard-input.js';
 import { primaryAction } from './contextual-action.js';
 import { travelRefusal } from './travel-message.js';
 import './walking.css';
+import { venueDoorSites } from './venue-rooms.js';
 
 export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getLocals, reducedMotion, onEnter, onLeave, onLevelChange, canEnterStore = () => true, getInteraction = () => null, getPlay = () => null, getVoice = () => null }) {
   const $ = (selector) => document.querySelector(selector);
@@ -330,7 +331,8 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       pathLabel = creatorRegion ? 'creator region paths' : 'public district paths';
       walkingWorld = world;
       environment = createWalkingEnvironment(world, placedObjects);
-      stores = world.stores ?? [];
+      // Code-only venues (venue-rooms.js) have doors too: F steps in and out of them.
+      stores = [...(world.stores ?? []), ...venueDoorSites(world)];
       flight = createFlightState();
       state = createWalkingState(environment, position);
       if (lookAt) state.yaw = Math.atan2(state.position[0] - lookAt[0], state.position[2] + lookAt[1]);

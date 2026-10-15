@@ -21,6 +21,9 @@ import { cafeSeat, plazaSalonPlan } from '../preview/src/plaza-salon-plan.js';
 import { createCafeGames } from './cafe-games.js';
 import { createDartsGames } from './darts-games.js';
 import { IPIC_DARTS, atIpicDartsLine } from '../preview/src/ipic-plan.js';
+import { createAxeGames } from './axe-games.js';
+import { AXE_LANES, AXE_ROOM_DARTS, AXE_ROOM_INTERIOR, atAxeLane, atAxeRoomDarts } from '../preview/src/axe-room-plan.js';
+import { isVenueRoom } from '../preview/src/venue-rooms.js';
 import { createScreenings } from './screenings.js';
 import { SCREENING_VENUES } from '../preview/src/screening-contract.js';
 import { isJevicaAdmin } from './admin.js';
@@ -122,12 +125,19 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   const tableGames=createTableGames({players,tableIds:plazaSalonPlan(worldData)?.chess.map(table=>table.id)??[],changed:()=>revision++});
   // The café round table's shared dominoes: hidden hands stay here and in the checkpoint.
   const cafeGames=createCafeGames({players,changed:()=>revision++,now,...(random?{random}:{})});
-  // Shared darts at the IPIC Tuck Room line (darts-games.js): standing on foot in its
-  // throwing area plays; the server lands every dart.
+  // Shared darts at the IPIC Tuck Room line and the axe-and-darts venue's board
+  // (darts-games.js), and axes in the venue's lanes (axe-games.js): standing on foot in
+  // a throwing area plays; the server lands every dart and axe.
   const ipicRoom=environment.rooms.find(room=>room.interior==='ipic-photo-v1')??null;
-  const dartsGames=createDartsGames({players,lineIds:ipicRoom?[IPIC_DARTS.id]:[],changed:()=>revision++,
-    atLine:player=>ipicRoom && !player.sitting && !player.vehicle && !player.performing && player.altitude<=.1 && !offices.has(player.id) && (player.levelId??null)===null
-      && environment.roomAt(player.position[0],-player.position[1])===ipicRoom && atIpicDartsLine(ipicRoom.toLocal(player.position[0],player.position[1])) ? IPIC_DARTS.id : null});
+  const axeRoom=environment.rooms.find(room=>room.interior===AXE_ROOM_INTERIOR)??null;
+  const onFootIn=(player,room)=>Boolean(room) && !player.sitting && !player.vehicle && !player.performing && player.altitude<=.1 && !offices.has(player.id)
+    && (player.levelId??null)===null && environment.roomAt(player.position[0],-player.position[1])===room;
+  const roomPoint=(room,player)=>room.toLocal(player.position[0],player.position[1]);
+  const dartsGames=createDartsGames({players,lineIds:[...(ipicRoom?[IPIC_DARTS.id]:[]),...(axeRoom?[AXE_ROOM_DARTS.id]:[])],changed:()=>revision++,
+    atLine:player=>onFootIn(player,ipicRoom) && atIpicDartsLine(roomPoint(ipicRoom,player)) ? IPIC_DARTS.id
+      : onFootIn(player,axeRoom) && atAxeRoomDarts(roomPoint(axeRoom,player)) ? AXE_ROOM_DARTS.id : null});
+  const axeGames=createAxeGames({players,laneIds:axeRoom?AXE_LANES.map(lane=>lane.id):[],changed:()=>revision++,
+    atLane:player=>onFootIn(player,axeRoom) ? atAxeLane(roomPoint(axeRoom,player)) : null});
   // Venue screenings (screenings.js): the server decides who is in the venue and who may host.
   const screenings=createScreenings({players,grants:screeningHosts,changed:()=>revision++,
     inVenue:(player,venueId)=>!player.levelId && !offices.has(player.id)
@@ -554,7 +564,9 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     const local = localById.get(message.localId);
     const peer = players.get(message.peerId);
     if(peer && offices.has(peer.id))return reject('office_permission_required');
-    const store = worldData.stores?.find(store=>store.id===message.storeId);
+    // A code-only venue (venue-rooms.js) travels like a store, from its own facade.
+    const venue = environment.rooms.find(room=>room.storeId===message.storeId && isVenueRoom(room));
+    const store = worldData.stores?.find(store=>store.id===message.storeId) ?? (venue ? { id:venue.storeId, name:venue.name, facade:venue.facade, outward:venue.outward } : undefined);
     const room = environment.rooms.find(room=>room.storeId===message.storeId);
     const place = (worldData.communityLocations ?? []).find(place=>place.id===message.placeId);
     const point = Object.hasOwn(message,'position') ? message.position : null;
@@ -706,8 +718,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       const reply=(cafeSeat(player.sitting?.buildId)?cafeGames:tableGames).command(player,message,time);
       return reply.ok?{...reply,player:publicPlayer(player)}:reply;
     }
-    if(message.type==='darts') {
-      const reply=dartsGames.command(player,message,time);
+    if(message.type==='darts' || message.type==='axes') {
+      const reply=(message.type==='darts'?dartsGames:axeGames).command(player,message,time);
       return reply.ok?{...reply,player:publicPlayer(player)}:reply;
     }
     if(message.type==='screening')return screenings.command(player,message,time,{sessionId});
@@ -903,7 +915,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if (!Number.isFinite(delta) || delta<=0) return;
     const duration=Math.min(delta,0.25),time=now();
     clearExpiredLedgers(time);
-    tableGames.prune();cafeGames.prune();dartsGames.prune();screenings.prune(time);
+    tableGames.prune();cafeGames.prune();dartsGames.prune();axeGames.prune();screenings.prune(time);
     for (const [id,hold] of focus) if (hold.until<=time || !reachable(players.get(id),localById.get(hold.localId))) focus.delete(id);
     const held=new Set([...focus.values()].map(hold=>hold.localId));
     for (const local of state.locals) {
@@ -923,7 +935,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     const social=interactions.snapshot();
     const community={};
     for (const key of ['status','running','elapsed','target','supported','unmet','supplies','helpBudget','jobs','events','scenarioKey','generation','result','storm','resupplied']) community[key]=copy(state[key]);
-    return {type:'snapshot',interactions:social,worldId,protocolVersion:WORLD_PROTOCOL_VERSION,revision,elapsed,screenings:screenings.snapshot(),cycling:{taken:takenSlots()},tables:[...tableGames.snapshot(),...cafeGames.snapshot()],darts:dartsGames.snapshot(),players:[...players.values()].map(publicPlayer),
+    return {type:'snapshot',interactions:social,worldId,protocolVersion:WORLD_PROTOCOL_VERSION,revision,elapsed,screenings:screenings.snapshot(),cycling:{taken:takenSlots()},tables:[...tableGames.snapshot(),...cafeGames.snapshot()],darts:dartsGames.snapshot(),axes:axeGames.snapshot(),players:[...players.values()].map(publicPlayer),
       chat:copy(chat).map(entry=>({...entry,authorName:accountName(entry.authorId,entry.authorName)})),
       builds:copy([...builds.values()]).map(item=>({...item,ownerName:accountName(item.ownerId,item.ownerName)})),wishes:copy(state.wishes),community,
       locals:state.locals.map(local=>({id:local.id,name:local.name,position:[...local.position],indoor:!!local.indoor,storeId:local.storeId??null,
@@ -937,8 +949,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   function checkpoint() {
     if (life?.planning) throw new Error('Cannot checkpoint an unfinished route search');
     interactions.prune();
-    tableGames.prune();cafeGames.prune();dartsGames.prune();screenings.prune(now());
-    const payload=JSON.parse(checkpointJSON({offices:offices.checkpoint(),tableGames:tableGames.checkpoint(),cafeGames:cafeGames.checkpoint(),dartsGames:dartsGames.checkpoint(),screenings:screenings.checkpoint(now()),revision,elapsed,state,interactions:interactions.snapshot(),players:[...players.values()].map(player=>{
+    tableGames.prune();cafeGames.prune();dartsGames.prune();axeGames.prune();screenings.prune(now());
+    const payload=JSON.parse(checkpointJSON({offices:offices.checkpoint(),tableGames:tableGames.checkpoint(),cafeGames:cafeGames.checkpoint(),dartsGames:dartsGames.checkpoint(),axeGames:axeGames.checkpoint(),screenings:screenings.checkpoint(now()),revision,elapsed,state,interactions:interactions.snapshot(),players:[...players.values()].map(player=>{
       if(!player.performing)return player;
       const {performing,...rest}=player;
       return {...rest,position:stageStepDown(player)??performing.from};
@@ -1076,6 +1088,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       const nextCafe=cafeGames.validate(recovered.cafeGames??[]);
       // Darts lines are optional in the payload: older checkpoints restore with none.
       const nextDarts=dartsGames.validate(recovered.dartsGames??[]);
+      const nextAxes=axeGames.validate(recovered.axeGames??[]);
       // Checkpoint v9 adds screenings; older ones restore with a fresh, stopped timeline.
       if((saved.version<9)!==(recovered.screenings===undefined))throw new Error('Invalid screening version');
       const nextScreenings=saved.version>=9?screenings.validate(recovered.screenings,now()):screenings.blank();
@@ -1214,6 +1227,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       tableGames.load(nextTables);
       cafeGames.load(nextCafe);
       dartsGames.load(nextDarts);
+      axeGames.load(nextAxes);
       screenings.load(nextScreenings);
       interactions.restore(nextInteractions);
       life=nextLife;revision=recovered.revision;elapsed=recovered.elapsed;voiceIdentities.clear();
@@ -1229,6 +1243,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     tableGames.clear();
     cafeGames.clear();
     dartsGames.clear();
+    axeGames.clear();
     screenings.reset();
     const fresh=createCommunity(worldData,environment.rooms,{carriage:false,sharedPopulation});
     fresh.generation=state.generation+1;
