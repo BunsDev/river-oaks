@@ -87,12 +87,19 @@ export function createStudioViewport(host,{onSelect,onTransform,onPosition,onExi
   function animate(time) {
     frame=requestAnimationFrame(animate);if(document.hidden){last=0;return;}
     if(walking){
-      stepWalking(walking,environment,{forward:Number(keys.has('w')||keys.has('arrowup'))-Number(keys.has('s')||keys.has('arrowdown')),strafe:Number(keys.has('d')||keys.has('arrowright'))-Number(keys.has('a')||keys.has('arrowleft')),fast:keys.has('shift')},last?(time-last)/1000:0);
+      // As in the office walk: A/D strafe and the left/right arrows turn, so keyboard-only
+      // visitors can face each room without a pointer drag.
+      const turn=Number(keys.has('arrowleft'))-Number(keys.has('arrowright'));if(turn&&last)walking.yaw+=turn*1.6*(time-last)/1000;
+      stepWalking(walking,environment,{forward:Number(keys.has('w')||keys.has('arrowup'))-Number(keys.has('s')||keys.has('arrowdown')),strafe:Number(keys.has('d'))-Number(keys.has('a')),fast:keys.has('shift')},last?(time-last)/1000:0);
       camera.position.fromArray(walking.position);camera.rotation.order='YXZ';camera.rotation.set(walking.pitch,walking.yaw,0);
       onPosition(walking.position);
     }
     last=time;renderer.render(scene,camera);
+    // Same once-a-second render stats the game publishes, for acceptance runs.
+    if(time-lastStats>1000){lastStats=time;const {render,memory,programs}=renderer.info;
+      host.dataset.renderStats=JSON.stringify({calls:render.calls,triangles:render.triangles,geometries:memory.geometries,textures:memory.textures,programs:programs?.length??null,at:Math.round(time)});}
   }
+  let lastStats=-Infinity;
   frame=requestAnimationFrame(animate);
   const api={
     render(region,id=selected,view=interiorView){

@@ -143,7 +143,8 @@ world. Existing server publication validation remains authoritative.
 ## Walk through
 
 **Walk through** starts a private blockout preview at the region's arrival point.
-Use WASD or arrow keys to move, drag to look, and Shift to move faster. **Escape**
+Use WASD or the up and down arrows to move, the left and right arrows or a drag to
+turn (as in the office), and Shift to move faster. **Escape**
 or **Return to editor** restores the authoring camera. Editing is disabled during
 the preview; walking does not change your draft or contact the multiplayer server.
 
@@ -184,6 +185,22 @@ RIVER_OAKS_E2E_REPORT=garden-office-stations.json pnpm run test:experience studi
 ```
 
 It writes `output/playwright/garden-office-<preset>-CAM-0N-<station>.png`.
+
+Pilot acceptance (#417) reuses four more checks against Garden Office:
+
+```sh
+pnpm run test:experience studio-pilot-journey   # edit, refusal, undo/redo, save/reopen, stale tab, walked route tour
+pnpm run test:experience studio-pilot-soak      # one warm-up plus ten open/walk/replace cycles; STUDIO_SOAK_CYCLES=N for longer
+pnpm run test:experience studio-pilot-assets    # missing, late and replaced-while-loading textures
+pnpm run test:experience studio-pilot-a11y      # 320/390 px layouts, keyboard-only use, focus, reduced motion
+node preview/e2e/studio-pilot-perf.mjs          # vsync-off frame times, load and transfer
+```
+
+The soak samples renderer counts from the viewport's `data-render-stats` (the game's
+format plus `programs`) and heap, listeners and DOM nodes from Chromium after a
+forced garbage collection. Persistent by design: the shared PBR texture cache, one
+reflection map, compiled shader programs and up to 80 undo steps. The performance
+profile writes `.runtime/acceptance/perf/receipt.json`.
 
 ## World Designer
 

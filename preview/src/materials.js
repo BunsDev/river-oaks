@@ -11,6 +11,15 @@ export function configureMaterials(renderer) {
   anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
 }
 
+// Light grey albedo, a flat normal, and ARM with no occlusion, fairly rough and non-metallic.
+const PLACEHOLDER = { color: [196, 196, 196], normal: [128, 128, 255], arm: [255, 220, 0] };
+function placeholder(channel) {
+  const canvas = document.createElement('canvas');canvas.width = canvas.height = 1;
+  const [red, green, blue] = PLACEHOLDER[channel] ?? PLACEHOLDER.color, context = canvas.getContext('2d');
+  context.fillStyle = `rgb(${red},${green},${blue})`;context.fillRect(0, 0, 1, 1);
+  return canvas;
+}
+
 function texture(name, channel) {
   const key = `${name}-${channel}`;
   if (maps.has(key)) return maps.get(key);
@@ -21,10 +30,16 @@ function texture(name, channel) {
   // Node unit tests build street geometry without a DOM: hand back an
   // unloaded texture so materials still construct.
   if (typeof document === 'undefined') { const map = new THREE.Texture(); maps.set(key, map); return map; }
-  const map = new THREE.TextureLoader().load(`/assets/materials/${key}.jpg`, undefined, undefined, () => {
+  const map = new THREE.TextureLoader().load(`/assets/materials/${key}.jpg`, loaded => {
+    // The placeholder fixed the GPU allocation at 1×1; release it so the photograph gets its own.
+    loaded.dispose();
+  }, undefined, () => {
     errors.add(key);
     document.dispatchEvent(new CustomEvent('visualasseterror', { detail: { count: errors.size } }));
   });
+  // An unloaded texture samples as black (and glossy, through the ARM map). A neutral pixel
+  // stands in until the photograph arrives, and stays if it never does.
+  map.image = placeholder(channel);map.needsUpdate = true;
   map.colorSpace = channel === 'color' ? THREE.SRGBColorSpace : THREE.NoColorSpace;
   map.wrapS = map.wrapT = THREE.RepeatWrapping;
   map.anisotropy = anisotropy;
