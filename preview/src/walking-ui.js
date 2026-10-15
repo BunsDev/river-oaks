@@ -1,6 +1,7 @@
 import { personPosition, personEyeHeight, personDistance } from './person-position.js';
 import { createFlightState, beginFlight, stepFlight } from './flight.js';
 import { thirdPersonPose, createCameraBoom, pitchAfterSeatChange, seatedEyeView } from './third-person.js';
+import { nearRoomExit } from './room-exit.js';
 import { createPointerGesture } from './pointer-gesture.js';
 import { withinTalkingReach } from './people-picking.js';
 import { nearbyPeople } from './nearby-people.js';
@@ -152,6 +153,8 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     const room = currentRoom();
     const stairs = nearbyStairs(room, direction) ?? (direction === 'up' ? nearbyStairs(room, 'down') : null);
     if (room?.generatedPlan?.index > 0 && !stairs) return;
+    // Deep inside a venue (IPIC's auditorium) F does not step outside; walk back or use the Map.
+    if (room && !stairs && !nearRoomExit(room, [state.position[0], -state.position[2]])) return;
     const store = room ? stores.find(item => item.id === room.storeId) : doorway();
     if ((!store && !stairs) || (!room && !canEnterStore(store))) return;
     const actionState = state;
@@ -349,7 +352,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     exit() {
 
       transport?.stop();transport=null;sitting=null;performing=false;active = false; clear(); hud.hidden = true; nearest = null;
-      document.body.classList.remove('walking', 'inside-store'); hud.dataset.inside = '';
+      document.body.classList.remove('walking', 'inside-store', 'theater-seated'); hud.dataset.inside = '';
       camera.fov = 42; camera.near = 0.5; camera.updateProjectionMatrix(); camera.rotation.z = 0;
     },
     update(delta, now) {
@@ -392,7 +395,8 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       const up = nearbyStairs(room, 'up'), down = nearbyStairs(room, 'down'), stairs = up ?? down;
       $('.walking-title strong').textContent = sitting ? 'Seated' : performing ? 'On stage' : transport ? (transport.pose.kind === 'bicycle' ? 'Cycling' : 'Riding with Jev') : flight.active ? (flight.landing ? 'Landing' : 'In flight') : room?.name ?? storefront?.store.name ?? 'On foot';
       const enter = $('#walking-enter');
-      enter.hidden = Boolean(sitting||performing||transport)||(!room && !door)||Boolean(room?.generatedPlan?.index>0 && !stairs);
+      const farFromExit = Boolean(room && !stairs && !nearRoomExit(room, [state.position[0], -state.position[2]]));
+      enter.hidden = Boolean(sitting||performing||transport)||(!room && !door)||Boolean(room?.generatedPlan?.index>0 && !stairs)||farFromExit;
       enter.disabled = Boolean(door && !canEnterStore(door));
       const descend = $('#walking-descend');
       descend.hidden = Boolean(sitting||performing||transport)||!up||!down;
@@ -404,6 +408,8 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       presentActions();
       hud.dataset.inside = room?.storeId ?? '';
       document.body.classList.toggle('inside-store', Boolean(room));
+      // Seated in a cinema recliner: the HUD steps back for the film (ipic-screening.css).
+      document.body.classList.toggle('theater-seated', Boolean(seatedEyeView(sitting)));
       const roomSummary=room && sharedRoomSummary(room);
       $('#walking-place').textContent = sitting ? 'Drag to look around · Z stands up' : performing ? 'Drag to look around · X steps down' : transport ? (transport.pose.kind === 'bicycle' ? `${(transport.pose.distance / 1609.344).toFixed(2)} mi cycled this ride · W to pedal · Shift to sprint · G to step off` : 'W/S to ride or reverse · A/D or arrows to steer · G to step out') : flight.active ? `${flight.altitude.toFixed(1)} m above ground · Space to rise · C to lower` : room ? room.theme === 'home'
         ? `Inside ${room.name} · ${roomSummary.label} · ${roomSummary.guests} resident${roomSummary.guests === 1 ? '' : 's'}`
