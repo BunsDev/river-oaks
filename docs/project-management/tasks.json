@@ -8951,6 +8951,32 @@
           ]
         }
       }
+    },
+    {
+      "id": "office-ipic-contract-decisions",
+      "title": "Office + IPIC #360: record Val's fit and mezzanine decisions in layout-contract.json (stacked on #381)",
+      "status": "active",
+      "branches": [
+        "docs/office-ipic-contract-decisions-20261015"
+      ],
+      "owner": "claude:river-oaks-5d (aa2272b7)",
+      "leaseUntil": "2026-10-15T02:41:18.334Z",
+      "updatedAt": "2026-10-15T00:41:18.334Z",
+      "nextAction": "Contract edits and validator rule done (contract tests 8/8); run core verify, commit signed, open a draft PR into docs/office-ipic-engineering-baseline-20261014 (#381).",
+      "filesOwned": [
+        "docs/design/office-ipic/layout-contract.json (decisions, fit.decision, mezzanineProgramme only)",
+        "scripts/office-ipic-contract.mjs (fit decision rule)",
+        "scripts/tests/office-ipic-contract.test.js (one test)",
+        "docs/superpowers/plans/2026-10-15-office-ipic-contract-decisions.md"
+      ],
+      "requiredChecks": [
+        "node --test scripts/tests/office-ipic-contract.test.js",
+        "pnpm run verify"
+      ],
+      "blocker": null,
+      "issue": 360,
+      "ledger": "docs/superpowers/plans/2026-10-15-office-ipic-contract-decisions.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-ipic-contract-decisions-20261015"
     }
   ]
 }

@@ -124,3 +124,17 @@ test('an unfit proposal must hand its resolution to a named owner', () => {
   penthouse.fit.resolution = 'none';
   assert.match(validateLayoutContract(fit).join('\n'), /must name its resolution/);
 });
+
+test('a recorded fit decision must name an option, enclose the volume and be marked decided', () => {
+  const penthouse = contract => contract.places.find(place => place.id === 'office-penthouse-proposed');
+  assert.equal(penthouse(packet.layout).fit.decision.option, 2);
+  assert.equal(packet.layout.decisions.find(d => d.id === 'penthouse-volume-fit').status, 'decided');
+  const outOfRange = clone(packet.layout); penthouse(outOfRange).fit.decision.option = 7;
+  assert.match(validateLayoutContract(outOfRange).join('\n'), /names no listed option/);
+  const tooLow = clone(packet.layout); penthouse(tooLow).fit.decision.raisedBuildingHeight = 30;
+  assert.match(validateLayoutContract(tooLow).join('\n'), /must enclose the ceiling/);
+  const wrongCeiling = clone(packet.layout); penthouse(wrongCeiling).fit.decision.ceilingElevation = 28;
+  assert.match(validateLayoutContract(wrongCeiling).join('\n'), /is not floor \+ clear height/);
+  const stillOpen = clone(packet.layout); stillOpen.decisions.find(d => d.id === 'penthouse-volume-fit').status = 'open';
+  assert.match(validateLayoutContract(stillOpen).join('\n'), /is not marked decided/);
+});

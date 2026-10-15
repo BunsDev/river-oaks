@@ -71,6 +71,18 @@ export function validateLayoutContract(contract, { live = null, expectedVersion 
         if (!requiredReach.has(route.from) || !requiredReach.has(route.to)) problems.push(`${at}: required route ${route.from} -> ${route.to} is disconnected from ${place.spawn} by required routes`);
     }
     if (place.status === 'proposed' && place.fit && place.fit.volumeFitsAtCurrentFloor === false && place.fit.resolution !== 'val-decision') problems.push(`${at}: an unfit proposal must name its resolution`);
+    // A recorded fit decision must name a listed option, clear the proposed volume
+    // it was taken for, and agree with the contract's decision list.
+    const decision = place.fit?.decision;
+    if (decision) {
+      if (!Number.isInteger(decision.option) || typeof place.fit.options?.[decision.option] !== 'string') problems.push(`${at}: fit decision names no listed option`);
+      const entry = (contract.decisions ?? []).find(d => d.id === decision.decisionId);
+      if (entry?.status !== 'decided') problems.push(`${at}: fit decision ${decision.decisionId} is not marked decided`);
+      const top = decision.officeFloorElevation + place.fit.kitClearHeight;
+      if (!near(decision.ceilingElevation, top)) problems.push(`${at}: fit decision ceiling ${decision.ceilingElevation} is not floor + clear height ${top}`);
+      if (decision.raisedBuildingHeight !== undefined && !(decision.raisedBuildingHeight >= decision.towerTop && decision.towerTop > decision.ceilingElevation))
+        problems.push(`${at}: raised building ${decision.raisedBuildingHeight} and tower top ${decision.towerTop} must enclose the ceiling ${decision.ceilingElevation}`);
+    }
     if (live && place.status === 'observed' && place.source === 'office') checkOffice(place, live, problems);
     if (live && place.source === 'ipic') checkIpic(place, live, problems);
   }
