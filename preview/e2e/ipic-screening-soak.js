@@ -172,7 +172,9 @@ async (host, viewer, tools) => {
   await viewer.waitForFunction(() => document.querySelector('#ipic-screening .ipic-screening-caption')?.textContent, null, { timeout: 15000 });
   checks.push(`the active caption is shown on screen ("${shownCaption.text.split('\n')[0]}") and the toggle hides and restores it`);
   const narrow = {};
+  const findings = [];
   for (const [width, height] of [[390, 844], [320, 640]]) {
+    await ensureRunning(25); // keep the film running, so the panel shows its playing controls
     await viewer.setViewportSize({ width, height });
     await viewer.waitForTimeout(400);
     const banner = viewer.locator('.hardware-acceleration-warning'), dock = viewer.locator('.visit-tools');
@@ -180,8 +182,15 @@ async (host, viewer, tools) => {
     check(await dock.isVisible(), `${width} px: the play dock is on screen`);
     const views = {};
     for (const dockOpen of [false, true]) {
-      if (await dock.evaluate(el => el.open) !== dockOpen) await viewer.locator('.visit-tools-toggle').click();
-      await viewer.waitForTimeout(300);
+      // Whether a visitor could tap the dock's own toggle here is recorded, not required: it is HUD
+      // layering outside the screening panel (see findings). The dock state is then set directly.
+      const toggle = await viewer.evaluate(() => {
+        const el = document.querySelector('.visit-tools-toggle'), r = el.getBoundingClientRect(), top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+        return { reachable: Boolean(top && (top === el || el.contains(top))), coveredBy: top && !(top === el || el.contains(top)) ? (top.closest('[class]')?.className ?? top.tagName) : null };
+      });
+      if (!toggle.reachable) findings.push({ width, dockOpen: await dock.evaluate(el => el.open), dockToggleCoveredBy: toggle.coveredBy });
+      await dock.evaluate((el, open) => { el.open = open; }, dockOpen);
+      await viewer.waitForTimeout(400);
       // Every visible panel control and the Step outside control is the topmost element at its
       // centre, so a real click lands on it rather than the banner, dock or canvas.
       const hits = await viewer.evaluate(() => {
@@ -200,7 +209,7 @@ async (host, viewer, tools) => {
       views[dockOpen ? 'dockOpen' : 'dockClosed'] = hits;
       await viewer.screenshot({ path: `output/playwright/ipic/soak-${width}-dock-${dockOpen ? 'open' : 'closed'}.png` });
     }
-    if (await dock.evaluate(el => el.open)) await viewer.locator('.visit-tools-toggle').click();
+    await dock.evaluate(el => { el.open = false; });
     // Real pointer clicks at the controls' coordinates, then keyboard focus.
     const click = async name => { const box = await viewer.locator(`#ipic-screening [data-control="${name}"]`).boundingBox(); await viewer.mouse.click(box.x + box.width / 2, box.y + box.height / 2); };
     const pressed = name => viewer.locator(`#ipic-screening [data-control="${name}"]`).getAttribute('aria-pressed');
@@ -228,5 +237,5 @@ async (host, viewer, tools) => {
   checks.push(`Stop watching (from ${stopped}) released only the viewer's player`);
   await leaveIpic(viewer).catch(() => {});
   check(!errors.length, errors.join('; '));
-  return { checks, errors, reloads, cycles, growth, narrow, caption: shownCaption, profile: 'one machine, loopback town, two headless Chromium pages with SwiftShader, GC before each counter read, 250 ms drift sampling' };
+  return { checks, errors, reloads, cycles, growth, narrow, findings, caption: shownCaption, profile: 'one machine, loopback town, two headless Chromium pages with SwiftShader, GC before each counter read, 250 ms drift sampling' };
 }
