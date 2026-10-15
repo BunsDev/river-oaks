@@ -4,6 +4,8 @@ import { ROOM_HEIGHT } from './store-rooms.js';
 import { createLuxeFinishes, createSurfaceCollector, flutedPanels, luxeShellPlan, luxeSuiteFor, tintEmissiveByColor } from './interior-luxe.js';
 import { buildIpicInterior } from './ipic-interior.js';
 import { IPIC_INTERIOR } from './ipic-plan.js';
+import { buildAxeRoomInterior } from './axe-room-interior.js';
+import { AXE_ROOM_INTERIOR } from './axe-room-plan.js';
 import { generatedVerticalRoute } from './generated-vertical-route.js';
 import { generatedContactPixels } from './generated-contact-shading.js';
 
@@ -395,8 +397,8 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
   const Y = new THREE.Vector3(0, 1, 0);
   const lightPositions = [], specialtyInteriors = [];
   for (room of rooms) {
-    if (room.interior === IPIC_INTERIOR) {
-      const interior = buildIpicInterior(room);
+    if (room.interior === IPIC_INTERIOR || room.interior === AXE_ROOM_INTERIOR) {
+      const interior = room.interior === IPIC_INTERIOR ? buildIpicInterior(room) : buildAxeRoomInterior(room);
       specialtyInteriors.push(interior); group.add(interior);
       lightPositions.push(...interior.userData.lightPositions);
       continue;
@@ -537,6 +539,8 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
   group.userData.lightPositions = lightPositions;
   group.userData.screens = specialtyInteriors.filter(interior => interior.userData.screen).map(interior => ({ material: interior.userData.screen, aspect: interior.userData.screenAspect }));
   group.userData.dartboards = specialtyInteriors.filter(interior => interior.userData.darts).map(interior => interior.userData.darts);
+  // The axe-and-darts venue's lanes and board (venue-rooms.js), when it is in this world.
+  group.userData.axeVenue = specialtyInteriors.find(interior => interior.userData.axeLanes)?.userData ?? null;
   group.userData.dispose = () => {
     specialtyInteriors.forEach(interior => interior.userData.dispose());
     group.traverse(item => { if (item.isInstancedMesh) item.dispose(); if (item.material) materials.add(item.material); });
