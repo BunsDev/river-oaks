@@ -9021,6 +9021,130 @@
           ]
         }
       }
+    },
+    {
+      "id": "procedural-landing-follow-through",
+      "title": "Follow through on the landed procedural interior stack (#349-#358, #382): review-note fixes, GPU acceptance plan and rollout gates",
+      "status": "active",
+      "branches": [
+        "perf/ao-tail-shedding-opt-in-20261014"
+      ],
+      "owner": "claude:river-oaks-b7 (43d73155)",
+      "leaseUntil": "2026-10-15T02:04:51.830Z",
+      "updatedAt": "2026-10-15T00:04:51.830Z",
+      "nextAction": "AO tail rule opt-in, follow-through ledger and GPU acceptance plan on perf/ao-tail-shedding-opt-in-20261014 (../river-oaks-ao-tail-opt-in-20261014): core verify, signed commit, PR, land, retire. #383 delivered and retired; #384 queued. Physical device runs are queued as procedural-gpu-acceptance.",
+      "ledger": "docs/superpowers/plans/2026-10-14-procedural-landing-follow-through.md",
+      "requiredChecks": [
+        "Focused node --test behavioral regression per fix, failing before the fix",
+        "pnpm run verify core before each commit",
+        "Hosted preview on an up-to-date head through pnpm run land"
+      ],
+      "filesOwned": [
+        "docs/superpowers/plans/2026-10-14-procedural-landing-follow-through.md",
+        "docs/superpowers/plans/2026-10-14-procedural-gpu-acceptance.md",
+        "preview/src/render-quality.js (AO tail-shedding opt-in only)",
+        "preview/src/main.js (aotail query flag only)",
+        "preview/tests/render-quality.test.js",
+        "docs/project-management/tasks.json (this task, its fix tasks and procedural-gpu-acceptance only)"
+      ],
+      "handoff": "Takes over the open gates of procedural-multilevel-interiors-plan (Codex, codex-root-20261014-procedural-landing, handoff 2026-10-14T23:23Z): target-device frame timing (one local Auto visit still 33.3 ms moving p95), live keyboard/accessibility review, further building archetypes as separately claimed tasks."
+    },
+    {
+      "id": "departure-grace-regression-20261014",
+      "title": "Assert the 30 s local reconnect grace (#350 review note) with a behavioral transport test",
+      "status": "active",
+      "branches": [
+        "fix/departure-grace-regression-20261014"
+      ],
+      "owner": "claude:river-oaks-b7 (43d73155)",
+      "leaseUntil": "2026-10-15T02:04:51.830Z",
+      "updatedAt": "2026-10-15T00:04:51.830Z",
+      "nextAction": "PR #384 at signed head 233ff633c0f072b43326bd8a83c4fb5816439904 queued with pnpm run land 384 --owner river-oaks-b7. Core verify passed on that tree. After merge: fast-forward if land updated the branch, record evidence, release, dry-run and apply project:prune.",
+      "ledger": "docs/superpowers/plans/2026-10-14-procedural-landing-follow-through.md",
+      "requiredChecks": [
+        "Focused node --test regression that fails before the change",
+        "pnpm run verify core",
+        "Hosted preview on an up-to-date head via pnpm run land"
+      ],
+      "filesOwned": [
+        "server/tests/shared-transport.test.js (reconnect grace regression only)"
+      ],
+      "parent": "procedural-landing-follow-through",
+      "pr": 384
+    },
+    {
+      "id": "private-restore-level-exit-20261014",
+      "title": "Clear the generated level when restore sends an ungranted upstairs guest outside (#352 review note)",
+      "status": "retired",
+      "branches": [
+        "fix/private-restore-level-exit-20261014"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-15T00:02:50.713Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "ledger": "docs/superpowers/plans/2026-10-14-procedural-landing-follow-through.md",
+      "requiredChecks": [
+        "Focused node --test regression that fails before the change",
+        "pnpm run verify core",
+        "Hosted preview on an up-to-date head via pnpm run land"
+      ],
+      "filesOwned": [
+        "server/world.js (restore-path private-home exit only)",
+        "server/tests/generated-private-level-access.test.js"
+      ],
+      "parent": "procedural-landing-follow-through",
+      "pr": 383,
+      "previousOwner": "claude:river-oaks-b7 (43d73155)",
+      "evidence": [
+        {
+          "pr": 383,
+          "reviewedHead": "f8d7bb112c88a04bbfadc9bb1b75512a17f00b55",
+          "merge": "f72a89f8e7127104d0b5ccbc23617f030b5b0c66",
+          "tree": "789b3728c866082ac63947cd1a3348c41f66e45f",
+          "checks": [
+            "pnpm run land 383 (river-oaks-b7): Verify passed on f8d7bb1, 17 hosted checks ok, mergeState CLEAN, merged 2026-10-15T00:00:42Z as f72a89f8",
+            "focused node --test generated-private-level-access 2/2 (fails before the fix); neighbouring world/checkpoint/private suites 86 pass, 4 Redis skips",
+            "core pnpm run verify passed 2026-10-14T23:49Z: agent 95, preview 3042 (+1 existing skip), server 499 (141 REDIS_URL-gated skips), desktop 61, Python 141",
+            "merge tree 789b3728 equals head tree"
+          ]
+        }
+      ],
+      "retirement": {
+        "head": "f8d7bb112c88a04bbfadc9bb1b75512a17f00b55",
+        "releasedAt": "2026-10-15T00:02:05.755Z",
+        "sessionsReviewedAt": "2026-10-15T00:02:05.755Z",
+        "note": "river-oaks-b7: no process cwd or command line inside the worktree (lsof, ps); ignored evidence archived at ~/worktree-backups/river-oaks/local-evidence-private-restore-exit-20261014/manifest.json, regenerable caches removed; worktree clean with no ignored files."
+      },
+      "retiredBranches": [
+        "fix/private-restore-level-exit-20261014"
+      ],
+      "archive": {
+        "fix/private-restore-level-exit-20261014": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-7d0duH/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-7d0duH/history.bundle",
+          "sha256": "5c9047ff4cc5c6855c207e52adaed733e29aa7b7f7e0dde265e3dbae4cfe3903",
+          "tag": "refs/tags/archive/worktree-prune/1954c520-98e8-4ea8-a62f-6f37d38971c5",
+          "head": "f8d7bb112c88a04bbfadc9bb1b75512a17f00b55"
+        }
+      }
+    },
+    {
+      "id": "procedural-gpu-acceptance",
+      "title": "Run physical GPU acceptance for the procedural interior stack (#349 portals on mobile, #351 culling, #354 AO tail rule, #358/#382 AO contact shading)",
+      "status": "queued",
+      "branches": [],
+      "owner": null,
+      "updatedAt": "2026-10-15T00:04:51.830Z",
+      "nextAction": "Val (or whoever Val names) runs the device matrix in the plan on physical GPUs: integrated x86 laptop, discrete desktop, iPhone Safari, mid-range Android Chrome, plus a second Apple silicon laptop. Record each run in the plan results table and decide whether the AO tail rule becomes default.",
+      "ledger": "docs/superpowers/plans/2026-10-14-procedural-gpu-acceptance.md",
+      "requiredChecks": [
+        "One receipt per device class row",
+        "Val review of capture pairs for AO contact shading"
+      ],
+      "filesOwned": [
+        "docs/superpowers/plans/2026-10-14-procedural-gpu-acceptance.md (results table)"
+      ],
+      "parent": "procedural-landing-follow-through"
     }
   ]
 }
