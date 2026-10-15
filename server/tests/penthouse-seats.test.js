@@ -49,8 +49,10 @@ function setup({ officeLayout: chosen = layout, restore, users = [owner, 'guest'
   const stand = (user, more = {}) => send(user, 'stand', { layout, ...more });
   return { world, clock, send, visit, enter, walk, sit, stand };
 }
-// The west corridor past the executive chair to the B row, clear of an occupied A-row seat.
-const toB1 = [[1, 3], [1, 8], seat('desk-b1-chair').stand];
+// The west corridor past the executive chair to the B row, clear of an occupied A-row seat. It
+// turns onto the B row's approach line (d 8.55), which keeps the turning body clear of bench A's
+// corner now that the kit's desks are collision (R19).
+const toB1 = [[1, 3], [1, 8.55], seat('desk-b1-chair').stand];
 
 test('a visitor sits from the seat\'s stand point and stands back up there; snapshots carry the seat id only', () => {
   const f = setup(), chair = seat('desk-a1-chair');
@@ -120,7 +122,7 @@ test('leaving, revocation and departure release the seat; a late sit or stand ca
   assert.equal(f.sit(owner, chair.id).ok, true);
   assert.equal(f.send(owner, 'leave').ok, true);
   assert.equal(f.visit(owner), null);
-  f.walk('guest', [1, 8], [1, 3], chair.stand);
+  f.walk('guest', [1, 8.55], [1, 3], chair.stand);
   assert.equal(f.sit('guest', chair.id).ok, true, 'leaving released the chair');
 
   assert.equal(f.send(owner, 'revoke', { peerId: 'guest' }).ok, true);
