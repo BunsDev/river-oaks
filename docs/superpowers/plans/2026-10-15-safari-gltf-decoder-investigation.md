@@ -158,9 +158,13 @@ asset readiness, WebContent process identity and exact source revision.
   `.runtime/agent/core.json`. The host still had a concurrent full gate and
   load averages above 250, so a physical frame-time run at this moment would
   be confounded by host load.
+- Signed commit `df6ae23f8003ef5ece6ff054be64767ac5ec61d7` is on draft PR
+  #409. The follow-up is fixture-only; exact-head hosted checks and its
+  physical receipt are pending.
 
-**Next action:** Capture a new exact-URL scoped-control physical frame receipt
-on a quiet host. Obtain the normal route's
+**Next action:** Review PR #409's exact-head hosted checks and land when green.
+Then capture a new exact-URL scoped-control physical frame receipt on a quiet
+host. Obtain the normal route's
 WebKit exception and a controlled same-device comparison. Keep the scoped
 decoder helper experimental until the cause is demonstrated; the physical
 default-decoder GPU row and broader archetype rollout remain open.
