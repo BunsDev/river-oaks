@@ -261,9 +261,10 @@ export function buildIpicInterior(room, options = {}) {
     root.rotation.y = Math.atan2(room.outward[0], -room.outward[1]);
   }
   root.userData.source = 'User reference photographs; inferred dimensions';
+  // The auditorium's downlights (past d 27) are its house lights: they dim while a film plays.
   root.userData.lightPositions = room.lights.map(l => {
     const [x, north] = room.toWorld(l.a, l.d);
-    return { room, position: new THREE.Vector3(x, room.floor + l.y, -north) };
+    return { room, position: new THREE.Vector3(x, room.floor + l.y, -north), house: l.d > 27 };
   });
   // The screen's own material, so a screening (#367) can show a film on it and restore it.
   root.userData.screen = m.screen;
