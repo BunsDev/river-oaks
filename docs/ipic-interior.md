@@ -167,9 +167,9 @@ collide; none is on a public route.
      wall that stops a body.
 
 **Runtime against the photos** (2026-10-15): `docs/ipic-review/photo-review.md` compares
-T1–T3 with the photos they are indexed to and lists 17 differences by photo ID, severity
-and owner. P1 (open sky) is fixed; the rest are art direction or layout decisions,
-tracked on #359.
+T1–T3 with the photos they are indexed to and lists 18 differences by photo ID, severity
+and owner. P1 (open sky) is fixed; the rest, P18 (the street showing past the mural panel)
+included, are art direction or layout work tracked on #359.
 
 **Screen** (`IPIC_SCREEN` in `ipic-plan.js`, used by the renderer and the data):
 
