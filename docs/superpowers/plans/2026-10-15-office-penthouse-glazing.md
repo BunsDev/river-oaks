@@ -64,7 +64,7 @@ server lets a body walk through.
 | Glazed-lobby regression (`office-world-presentation.test.js`) | red without the fix ("arrived: cabin and lobby hidden…"), green with it |
 | `node --test preview/tests/office-*.test.js` after the fix | 75/75 |
 | `pnpm run verify` after the fix (dirty tree at `ed9e993a`) | core passed: preview 3,096/3,097 (1 skipped), server 534/681 (147 skipped), agent 109/109, desktop 69/69, Python 141 passed, build, ruff, secrets |
-| Same runner after the lobby fix | queued on the browser lock (2 runs ahead, 09:06Z) |
+| Same runner at `3fd86141`, after the lobby fix | passed at 09:07Z: 6/6 checks (penthouse main floor admitted, walked to the stair foot, stairs offered only there, landed at the stair head, eye rose 3.800 m, no page errors). Software rendering; the scripted path never faces the front glass, so the hidden lobby is covered by the unit regression and the probe, not by this capture. |
 
 ## Gaps
 
@@ -80,6 +80,5 @@ server lets a body walk through.
 
 ## Next
 
-Once the primary's dependencies are restored, run the penthouse browser smoke and look at the arrival
-and mezzanine captures. Rebase onto the #363 seat stack, or onto main once #400 lands, keeping both sides of the
+Hosted Verify on #405, then independent review, and a GPU (non-software) capture facing the front glass. Rebase onto the #363 seat stack, or onto main once #400 lands, keeping both sides of the
 two neighbouring lines. Design review of the glazing against #362's window module.
