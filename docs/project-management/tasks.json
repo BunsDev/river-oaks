@@ -10833,6 +10833,62 @@
       ],
       "pr": null,
       "updatedAt": "2026-10-15T16:48:05.427Z"
+    },
+    {
+      "id": "green-roofs-20261015",
+      "title": "Implement composed green roof scenery and verify office outlook, fit and rendering budgets",
+      "status": "active",
+      "branches": [
+        "feat/green-roofs-20261015"
+      ],
+      "owner": "codex:green-roofs-20261015",
+      "updatedAt": "2026-10-15T17:48:24.049918+00:00",
+      "nextAction": "Product live skyline fixes independently reviewed; source-frozen v9 routes/current lighting/cost pass; current-main town comparison pass. Full core+Redis782/security/reflections passed, experience/shared in progress. Signed commit/push/draftPR to start hostedCI; merge only after green gates.",
+      "ledger": "docs/superpowers/plans/2026-10-15-green-roofs.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-green-roofs",
+      "filesOwned": [
+        "preview/src/green-roofs.js (new)",
+        "preview/tests/green-roofs.test.js (new)",
+        "preview/src/district.js (roof integration only)",
+        "docs/vegetation.md (authored roof planting)",
+        "docs/superpowers/plans/2026-10-15-green-roofs.md",
+        "preview/e2e/green-roofs-webgl.js (new)",
+        "docs/green-roofs.md",
+        "preview/e2e/green-roofs-office.mjs (new)",
+        "preview/src/roof-field-boundaries.js (new)",
+        "preview/tests/roof-field-boundaries.test.js (new)",
+        "preview/src/roof-field-mesh.js (new)",
+        "preview/tests/roof-field-mesh.test.js (new)",
+        "preview/src/hermes-roof-surface.js (new)",
+        "preview/tests/hermes-roof-surface.test.js (new)",
+        "preview/src/reference-facades.js (pavilion helper replacement only)",
+        "preview/src/roof-grasses.js (new)",
+        "preview/tests/roof-grasses.test.js (new)",
+        "preview/e2e/green-roofs-town.mjs (new)",
+        "preview/src/office-layouts.js (roof-gardens view only)",
+        "preview/tests/office-views.test.js",
+        "preview/tests/office-ui.test.js",
+        "preview/e2e/office-penthouse.js",
+        "preview/e2e/office-penthouse-runner.mjs",
+        "docs/offices.md (bounded views)",
+        "preview/src/office-world-scene.js",
+        "preview/src/office-world-presentation.js",
+        "preview/src/office-skyline.js",
+        "preview/tests/office-skyline.test.js",
+        "preview/tests/office-world-presentation.test.js",
+        "preview/src/main.js (live office mode)"
+      ],
+      "requiredChecks": [
+        "deterministic containment, equipment and geometry regressions",
+        "office capture lifecycle and inclusion",
+        "pnpm run verify",
+        "matched daylight/dusk street/elevated captures and performance deltas",
+        "live current-light/parallax/actor-mask/lifecycle regressions",
+        "pnpm run verify full with owned isolated Redis",
+        "native live office routes, in-visit time change, fixed-view costs"
+      ],
+      "pr": null,
+      "leaseUntil": "2026-10-15T19:48:24.049918+00:00"
     }
   ]
 }
