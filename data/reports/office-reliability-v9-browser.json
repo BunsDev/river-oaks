@@ -1,0 +1,71 @@
+{
+  "createdAt": "2026-10-15T04:55:35.143Z",
+  "results": [
+    {
+      "name": "office-desk",
+      "status": "passed",
+      "seconds": 23.51,
+      "result": {
+        "checks": [
+          "Computer distinguishes My tasks from Office tasks",
+          "Authorized office opens an empty private desk",
+          "Notes, file links and result save to the account",
+          "Typing at the desk does not move the player",
+          "Completed task retains the written result",
+          "Saved work can be downloaded",
+          "Closing the desk restores office focus",
+          "Leaving, reloading and returning resumes saved work",
+          "A failed save keeps the draft and offers retry",
+          "Mobile desk fits without horizontal overflow",
+          "Visible mobile actions keep touch-sized targets",
+          "Long titles wrap fully on mobile",
+          "Small phones retain a contained layout",
+          "Removing work requires confirmation and can be cancelled",
+          "Escape leaves the desk before leaving the office",
+          "Retry reopens cached work after a failed read",
+          "Confirmed removal restores focus to the empty desk",
+          "Shared scope is explicit before typing",
+          "Keyboard scope switch keeps shared work out of My tasks",
+          "Office work resumes when switching back",
+          "Leaving an office warns before discarding a failed shared draft",
+          "Cancelling departure retains the shared draft"
+        ]
+      }
+    },
+    {
+      "name": "office-computer-shared",
+      "status": "passed",
+      "seconds": 42.423,
+      "result": {
+        "checks": [
+          "A pending collaboration invitation does not permit office entry",
+          "Collaborator cannot see the owner’s private tasks",
+          "Accepted collaborator reads the shared office task",
+          "Shared edits resume on the owner’s computer",
+          "Revocation closes the computer and clears shared task fields",
+          "Revocation clears the shared task list"
+        ]
+      }
+    },
+    {
+      "name": "office-visit",
+      "status": "passed",
+      "seconds": 64.565,
+      "result": {
+        "checks": [
+          "All elevator phases render before walking begins",
+          "F at the lobby boards the elevator, rides upstairs and releases walking",
+          "W moves the player into the office",
+          "The back wall and storage stop movement",
+          "Leaving returns focus to the street",
+          "Reduced motion enters without the elevator camera motion",
+          "An uninvited guest cannot board",
+          "Jevica accepts the visit request from her office and the guest enters",
+          "Revocation returns the guest to the lobby immediately",
+          "Revocation during boarding ends the authoritative visit and restores street controls",
+          "No guest browser errors: "
+        ]
+      }
+    }
+  ]
+}

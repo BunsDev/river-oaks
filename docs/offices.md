@@ -41,7 +41,7 @@ The desk routes require the existing authenticated, approved session, origin/CSR
 
 `server/offices.js` handles the `office` world command. It derives ownership from the existing Jevica admin predicate; no command accepts an owner field. The same authenticated ticket/WebSocket gates enforce waitlist approval, session expiry and bans for both the local and Redis servers. Movement uses office-local coordinates, a speed budget and swept collision. Office visitors cannot perform street interactions or travel until they leave. Voice receives a distinct office space.
 
-Grants, pending requests and current visits entered the private world checkpoint in version 6. Version 7 adds interior level occupancy; version 8 adds personal workspace visits. Workspace membership is revalidated before the first reconnect snapshot and by the coordinator before restored visits are published. The Redis writer generation is fenced at v8 (v9 since venue screenings, [screenings](screenings.md)). Older versions upgrade without office state; older writers reject the current version. Region migration preserves grants/requests when the office remains and ends visits along with other player connections. Redis persists this state with the world; a standalone in-memory town loses it when restarted.
+Grants, pending requests and current visits entered the private world checkpoint in version 6. Version 7 adds interior level occupancy; version 8 adds personal workspace visits. Workspace membership is revalidated before the first reconnect snapshot and by the coordinator before restored visits are published. Version 10 records each visit's layout and level (below). The Redis writer generation is fenced at v10 (v9 added venue screenings, [screenings](screenings.md)). Pre-v6 checkpoints upgrade without office state; v6–v9 visits upgrade to the legacy layout. Older writers reject the current version. Region migration preserves grants/requests when the office remains and ends visits along with other player connections. Redis persists this state with the world; a standalone in-memory town loses it when restarted.
 
 Workspace metadata, invitations and shared tasks live in a versioned account-level store outside world checkpoints. Provisioning uses a deterministic workspace ID and atomic compare-and-set writes. Redis updates membership, discovery indices and shared tasks in the same transaction, preventing stale writes from bypassing revocation. Storage is bounded to 10,000 workspaces, 32 collaborators per office and 64 owned/invited offices per account; discovery uses per-account indices, not database scans. Browser discovery refreshes only near the lobby, in an active office, or while the office panel is visible. Private desk records read the legacy shape and write schema version 2 with bounded retry receipts. No existing task content is made public or shared.
 
@@ -49,4 +49,109 @@ The new endpoints are POST `/api/office-desk/workspace/{provision,list,invite,ac
 
 This office visit feature is independent of the experimental companion drafting panel and its `RIVER_OAKS_WORKPLACE` / `VITE_WORKPLACE` flags. It performs no paid model or speech calls. It does not enable the drafting service.
 
-Tests: `server/tests/offices*.test.js`, `preview/tests/office-*.test.js`, the office spatial-voice regression, and `pnpm run test:experience office-visit office-desk office-computer-shared`. Browser fixtures use synthetic identities; they do not establish live WorkOS, hosted deployment, human accessibility or target-device performance acceptance.
+Tests: `server/tests/offices*.test.js`, `server/tests/penthouse-*.test.js`, `preview/tests/office-*.test.js`, the office spatial-voice regression, and `pnpm run test:experience office-visit office-desk office-computer-shared`. Browser fixtures use synthetic identities; they do not establish live WorkOS, hosted deployment, human accessibility or target-device performance acceptance.
+
+## Layouts and floors
+
+Each visit records the layout and the floor the server admitted it to (`preview/src/office-layouts.js`). The legacy 9 × 7 m room (`office-legacy-1`) is the default and the rollback. `RIVER_OAKS_OFFICE_LAYOUT=office-penthouse-1` selects the penthouse for Jevica's office on that server. It is a two-floor plan in #349's level shape (`jevica-office/l0` main floor and terrace, `jevica-office/l1` mezzanine at +3.8 m), built from the reviewed #360 contract. Personal workspaces always use the legacy room. An unknown value keeps the legacy room and logs `office_layout_ignored`.
+
+- **Floors.** Moves are checked against the visit's own floor, so the mezzanine and the main floor beneath it never share collision. A move names the layout it was computed for (`office_layout_stale` otherwise). It may repeat the visit's floor but never choose it (`office_level_stale`). Height and elevation are not command fields. Snapshots publish `layout`, `levelId` and the server-derived `elevation`.
+- **Stairs and lift.** `{type:'office', action:'transition', officeId, portalId, layout}` works only from within 1.3 m of a stair or lift portal on the current floor. It lands on that portal's pair if the landing is free and no other visitor stands within 0.7 m, then resets the movement budget. There is no arbitrary destination.
+- **Checkpoints.** Version 10 stores `layout` and `levelId` with each visit. Visits from versions 6–9 were in the legacy room and upgrade to it. A malformed layout, floor or position refuses the restore. A well-formed visit on a layout the server no longer serves for that office ends safely; grants, requests and desks stay. Switching the option back to the legacy room is the rollback.
+
+
+The penthouse is not active anywhere by default. Raising the mapped building to fit it, furniture collision beyond the desk chairs, and its rendering are later steps (#361's second pull request, #362, #363).
+
+## Operating office storage
+
+Office provisioning, invitations and task management need no maintainer intervention.
+Keep the existing account authentication and Redis backend; no additional service,
+provider setting, scheduled cleanup or task runner is needed.
+
+**Bounds and cost.** Each private/shared desk has at most 24 tasks and 128 KiB of
+serialized public desk data. Private storage admits 10,000 accounts; shared storage
+admits 10,000 offices, 32 collaborators per office and 64 office references per
+account. These are admission limits, not TTLs: deleting the last task retains its
+version and bounded retry receipts (32) so stale writes cannot recreate it. Metadata,
+receipts, Redis hash/index overhead, checkpoints and other application data consume
+additional memory; 128 KiB is not a whole-record or deployment memory limit.
+Full-capacity public task data alone can approach 2.44 GiB across both stores.
+Existing desks remain readable at capacity; new writes exceeding limits return a
+conflict instead of growing storage silently.
+
+Movement, reconnect validation, visit reconciliation, repeat provisioning and
+indexed discovery project current metadata from the canonical record in Redis.
+No task text/receipts cross the wire on these paths, and there is no authorization
+cache. Redis still decodes the bounded record per projection; each projection is
+one EVAL with one internal HGET. Discovery reads at most 64 indexed offices per
+account. Task saves and membership changes retain the full-record compare-and-set
+transaction, including discovery index updates; their transfer/CPU cost still grows
+with desk size and membership. Task reads always recheck membership. A request
+ordered after revocation is denied, including a previously successful save retry.
+An already-running read ordered before revocation can complete afterward; previously
+delivered content cannot be recalled.
+
+**Persistence is not durability configuration.** Replacing a gateway leaves Redis
+records intact; restarting the standalone memory server loses them. Redis restart
+survival depends on its existing persistence and recovery configuration. Our local
+recovery fixture uses AOF with `appendfsync always` and verifies acknowledged writes
+after SIGKILL/restart. RDB snapshots and less frequent AOF fsync have different loss
+windows; replication alone is not a backup. No test here inspects or changes the
+hosted provider's configuration, guarantees its disk durability, or proves production
+recovery. Verify that separately before making a production durability claim.
+The version/receipt and membership records must also survive without expiration or
+eviction. Losing a tombstone or reverting to an older snapshot loses its stale-write
+fence. Capacity planning must preserve these records (for example, a no-eviction
+policy with adequate headroom); this patch does not inspect or change that policy.
+See Redis’s [persistence](https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/)
+and [eviction](https://redis.io/docs/latest/develop/reference/eviction/) references.
+
+**Compatibility and failures.** Workspace records remain schema 1 in
+`<namespace-tag>:office-workspaces:v1`; the account discovery index remains
+`office-workspaces-index:v1`. Private records remain schema 2 in `office-desk:v1`
+and still read the legacy shape. This improvement requires no data migration or
+backfill; old and new compatible writers share the same atomic record. Personal workspace visits entered checkpoint generation 8; the integrated world
+now uses checkpoint/writer generation 10 for office layouts (v9 added venue screenings). Do not roll back to a writer that cannot read
+the current checkpoint/schema. Deploy the gateway and client as a compatible pair.
+Storage failures deny access rather than granting cached membership; a failed save
+keeps its current-page draft and stable operation ID for Retry. Export a needed draft
+before closing the page. For a conflict, explicitly reload saved work or export the
+local draft. Do not delete version records, edit memberships by hand, flush Redis,
+or replay an old operation with a new expected version as a recovery shortcut.
+
+**Validate recovery with synthetic local data.** Install the repository prerequisites
+and a local `redis-server`, then run:
+
+```sh
+node --test server/tests/office-recovery.test.js
+node scripts/office-database-cost.mjs a714a8a5
+node scripts/office-database-cost.mjs
+```
+
+The recovery test starts its own temporary loopback Redis processes and never uses
+an existing database URL. It replaces stores, drops successful responses, kills and
+restarts AOF Redis, makes a consistent RDB snapshot with SAVE, copies it to a fresh
+owned directory and boots a separate Redis with AOF disabled to validate the backup.
+It checks exact private/shared tasks, membership, versions and receipts, then exercises
+concurrent edits, deletion, revocation, reinvitation and stale retries after recovery.
+Temporary data/processes are removed on completion. A missing local binary is a skip
+in the core suite, never recovery proof; the full profile requires `redis-server` and
+fails if it is unavailable. Full verification also requires its separate disposable
+`REDIS_URL` for the existing server suites. Real HTTP/WebSocket replacement/reconnect
+coverage is in `office-desk-transport.test.js`.
+
+The cost fixture writes raw and summarized receipts under
+`.runtime/office-reliability/cost-{baseline,after}.json`. It measures office-store
+commands (including Lua subcommands), RESP socket bytes, and five latency samples per
+scenario; it excludes authentication and room transport overhead. Use the same host
+and fixture for comparison; loopback latency is not hosted performance acceptance.
+
+A real backup must preserve the workspace records **and** discovery indices, private
+desk records and relevant world/checkpoint state from a consistent recovery point.
+Restore into an isolated destination first and validate account isolation, versions,
+retry behavior and membership before any separately authorized cutover. Restoring
+an older backup also restores its older grants and task contents: post-snapshot
+revocations/deletions cannot be inferred from that backup. Keep traffic stopped until
+those changes are reconciled from authoritative evidence; do not claim that stale
+backup restoration preserves newer revocations. This runbook authorizes no production
+backup, restore, deployment or provider changes.
