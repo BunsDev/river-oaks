@@ -9679,6 +9679,40 @@
         "to": "claude:river-oaks-1b (f4107618)",
         "reason": "Released by session aa2272b7; Val's /goal of 2026-10-15 asks river-oaks-1b to merge draft #388 into #381."
       }
+    },
+    {
+      "id": "office-computer-reliability",
+      "title": "Bound office database work and prove persistence recovery with continuous shared acceptance",
+      "status": "active",
+      "branches": [
+        "fix/office-computer-reliability"
+      ],
+      "owner": "codex:01a13dbe-349d-79c1-aa5c-f66ecac56a50",
+      "leaseUntil": "2026-10-15T06:18:31.877752+00:00",
+      "updatedAt": "2026-10-15T04:18:31.877752+00:00",
+      "nextAction": "Core and focused Redis/browser gates passed; full gate running. Sign verified feature commit, push PR, require full and exact-head hosted checks before pnpm run land.",
+      "ledger": "docs/superpowers/plans/2026-10-15-office-computer-reliability.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-computer-reliability",
+      "filesOwned": [
+        "server/office-workspaces.js",
+        "server/office-workspace-visits.js",
+        "server/tests/office*.test.js",
+        "server/tests/helpers/office*.js",
+        "scripts/office*.mjs",
+        ".github/workflows/verify.yml",
+        "config/agent-workflow.json",
+        "docs/offices.md (operations section)",
+        "docs/superpowers/plans/2026-10-15-office-computer-reliability.md",
+        "docs/agent-workflow.md"
+      ],
+      "requiredChecks": [
+        "Reproducible before/after Redis command/byte/latency fixtures",
+        "Disposable Redis restart and backup/restore tests",
+        "Office browser journeys",
+        "pnpm run verify",
+        "pnpm run verify full",
+        "Review and hosted preview gate; pnpm run land"
+      ]
     }
   ]
 }

@@ -50,3 +50,91 @@ The new endpoints are POST `/api/office-desk/workspace/{provision,list,invite,ac
 This office visit feature is independent of the experimental companion drafting panel and its `RIVER_OAKS_WORKPLACE` / `VITE_WORKPLACE` flags. It performs no paid model or speech calls. It does not enable the drafting service.
 
 Tests: `server/tests/offices*.test.js`, `preview/tests/office-*.test.js`, the office spatial-voice regression, and `pnpm run test:experience office-visit office-desk office-computer-shared`. Browser fixtures use synthetic identities; they do not establish live WorkOS, hosted deployment, human accessibility or target-device performance acceptance.
+
+## Operating office storage
+
+Office provisioning, invitations and task management need no maintainer intervention.
+Keep the existing account authentication and Redis backend; no additional service,
+provider setting, scheduled cleanup or task runner is needed.
+
+**Bounds and cost.** Each private/shared desk has at most 24 tasks and 128 KiB of
+serialized public desk data. Private storage admits 10,000 accounts; shared storage
+admits 10,000 offices, 32 collaborators per office and 64 office references per
+account. These are admission limits, not TTLs: deleting the last task retains its
+version and bounded retry receipts (32) so stale writes cannot recreate it. Metadata,
+receipts, Redis hash/index overhead, checkpoints and other application data consume
+additional memory; 128 KiB is not a whole-record or deployment memory limit.
+Full-capacity public task data alone can approach 2.44 GiB across both stores.
+Existing desks remain readable at capacity; new writes exceeding limits return a
+conflict instead of growing storage silently.
+
+Movement, reconnect validation, visit reconciliation, repeat provisioning and
+indexed discovery project current metadata from the canonical record in Redis.
+No task text/receipts cross the wire on these paths, and there is no authorization
+cache. Redis still decodes the bounded record per projection; each projection is
+one EVAL with one internal HGET. Discovery reads at most 64 indexed offices per
+account. Task saves and membership changes retain the full-record compare-and-set
+transaction, including discovery index updates; their transfer/CPU cost still grows
+with desk size and membership. Task reads always recheck membership. A request
+ordered after revocation is denied, including a previously successful save retry.
+An already-running read ordered before revocation can complete afterward; previously
+delivered content cannot be recalled.
+
+**Persistence is not durability configuration.** Replacing a gateway leaves Redis
+records intact; restarting the standalone memory server loses them. Redis restart
+survival depends on its existing persistence and recovery configuration. Our local
+recovery fixture uses AOF with `appendfsync always` and verifies acknowledged writes
+after SIGKILL/restart. RDB snapshots and less frequent AOF fsync have different loss
+windows; replication alone is not a backup. No test here inspects or changes the
+hosted provider's configuration, guarantees its disk durability, or proves production
+recovery. Verify that separately before making a production durability claim.
+
+**Compatibility and failures.** Workspace records remain schema 1 in
+`<namespace-tag>:office-workspaces:v1`; the account discovery index remains
+`office-workspaces-index:v1`. Private records remain schema 2 in `office-desk:v1`
+and still read the legacy shape. This improvement requires no data migration or
+backfill; old and new compatible writers share the same atomic record. World visits
+remain checkpoint/writer generation 8. Do not roll back to a writer that cannot read
+the current checkpoint/schema. Deploy the gateway and client as a compatible pair.
+Storage failures deny access rather than granting cached membership; a failed save
+keeps its current-page draft and stable operation ID for Retry. Export a needed draft
+before closing the page. For a conflict, explicitly reload saved work or export the
+local draft. Do not delete version records, edit memberships by hand, flush Redis,
+or replay an old operation with a new expected version as a recovery shortcut.
+
+**Validate recovery with synthetic local data.** Install the repository prerequisites
+and a local `redis-server`, then run:
+
+```sh
+node --test server/tests/office-recovery.test.js
+node scripts/office-database-cost.mjs a714a8a5
+node scripts/office-database-cost.mjs
+```
+
+The recovery test starts its own temporary loopback Redis processes and never uses
+an existing database URL. It replaces stores, drops successful responses, kills and
+restarts AOF Redis, makes a consistent RDB snapshot with SAVE, copies it to a fresh
+owned directory and boots a separate Redis with AOF disabled to validate the backup.
+It checks exact private/shared tasks, membership, versions and receipts, then exercises
+concurrent edits, deletion, revocation, reinvitation and stale retries after recovery.
+Temporary data/processes are removed on completion. A missing local binary is a skip
+in the core suite, never recovery proof; the full profile requires `redis-server` and
+fails if it is unavailable. Full verification also requires its separate disposable
+`REDIS_URL` for the existing server suites. Real HTTP/WebSocket replacement/reconnect
+coverage is in `office-desk-transport.test.js`.
+
+The cost fixture writes raw and summarized receipts under
+`.runtime/office-reliability/cost-{baseline,after}.json`. It measures office-store
+commands (including Lua subcommands), RESP socket bytes, and five latency samples per
+scenario; it excludes authentication and room transport overhead. Use the same host
+and fixture for comparison; loopback latency is not hosted performance acceptance.
+
+A real backup must preserve the workspace records **and** discovery indices, private
+desk records and relevant world/checkpoint state from a consistent recovery point.
+Restore into an isolated destination first and validate account isolation, versions,
+retry behavior and membership before any separately authorized cutover. Restoring
+an older backup also restores its older grants and task contents: post-snapshot
+revocations/deletions cannot be inferred from that backup. Keep traffic stopped until
+those changes are reconciled from authoritative evidence; do not claim that stale
+backup restoration preserves newer revocations. This runbook authorizes no production
+backup, restore, deployment or provider changes.
