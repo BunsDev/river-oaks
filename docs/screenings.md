@@ -1,7 +1,7 @@
 # Venue screenings
 
 The town holds one screening timeline per venue. Today the only venue is the IPIC
-auditorium, and the only media is a labelled fixture clip. A host with an explicit
+auditorium. It shows the approved original short (#365), and keeps a labelled fixture clip for tests. A host with an explicit
 server-side grant starts, pauses, resumes and stops the film; everyone else reads the
 timeline from the snapshot. This page describes the authority (#366). The client
 player, captions and recovery are #367; the approved short is #365.
@@ -104,11 +104,20 @@ Inside IPIC, a panel shows the shared status and this viewer's own controls. The
 the auditorium's existing screen material, which is restored when the viewer leaves; no
 second interior or renderer is built.
 
-- **Media.** Only bundled sources from `SCREENING_MEDIA` play. The fixture is a 30 s test
-  pattern with one beep a second, in WebM (VP9/Opus) and MP4 (H.264/AAC), with English
-  captions (`preview/public/assets/ipic/screening`). `scripts/make-screening-fixture.mjs`
-  regenerates it and `--check` verifies the committed hashes and durations. It is labelled
-  as a fixture everywhere and is not the approved short (#365).
+- **Media.** Only bundled sources from `SCREENING_MEDIA` play. **Start** plays the venue's first film:
+  - **The approved short**, `ipic-original-v1`. Val approved candidate 1 as cut on 2026-10-15.
+    - A silent, captioned 52.6 s film captured from the game itself.
+    - WebM (VP9/Opus, 1.41 Mbps) and MP4 (H.264 Main/AAC, 2.04 Mbps), 1280×720 at 24 fps, with a black border of at least 4 px.
+    - Eight English captions, a transcript and a poster.
+    - `sources.json` records provenance, what Val approved, and the OpenStreetMap credit, which stays in frame.
+    - `scripts/ipic-short/` holds the capture, the cut and the decode check. A new cut needs approval again.
+  - **The fixture**, `ipic-fixture-v1`. A 30 s test pattern with one beep a second, in WebM (VP9/Opus) and MP4 (H.264/AAC), with English captions. It is labelled as a fixture everywhere, and tests can still name it. `scripts/make-screening-fixture.mjs` regenerates it, rewriting only its own entry in `sources.json`.
+  - **Checks.** `node scripts/make-screening-fixture.mjs --check` verifies every film's committed hashes and durations. `preview/tests/screening-media.test.js` checks each allowlisted film against `sources.json`: types, bytes, SHA-256, duration within 60 ms, captions equal to the transcript, and a recorded approval.
+- **Rolling back.** Once the short has started, a town's checkpoint names `ipic-original-v1`, in its
+  timeline and in the start's operation receipt (up to 64 receipts are kept, even after Stop). A server
+  without that id in `SCREENING_MEDIA`, which means any build before #429, refuses the checkpoint, and the
+  town does not restore. Roll back by configuration on a build that still has the entry: stop the film
+  and remove the host grants. Do not redeploy an older build. #400's checkpoint v11 already rules that out.
 - **Sync.** The player projects the shared position from the snapshot and an estimate of
   server time. It prefers `sync` replies measured over a round trip, taken on entry, every
   15 s and on return to the foreground, and falls back to snapshot frames. Drift up to 40 ms
@@ -146,7 +155,7 @@ REDIS_URL=redis://127.0.0.1:<isolated port> node --test server/tests/screenings-
 Browser and player:
 
 ```sh
-node --test preview/tests/ipic-screening.test.js preview/tests/ipic-screening-ui.test.js server/tests/static-media.test.js
+node --test preview/tests/ipic-screening.test.js preview/tests/ipic-screening-ui.test.js preview/tests/screening-media.test.js server/tests/static-media.test.js
 node scripts/make-screening-fixture.mjs --check
 node preview/e2e/ipic-screening-runner.mjs   # two real browsers; takes the shared browser lock
 ```
