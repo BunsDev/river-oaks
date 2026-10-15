@@ -122,6 +122,14 @@ asset readiness, WebContent process identity and exact source revision.
   rerun alone. Full browser coverage, secret history and hosted preview did
   not run because the full gate stopped there; `.runtime/agent/full.json`
   records the failure. A green full gate is still outstanding.
+- A full retry with the same isolated Redis service reached the server suite
+  and failed a different unchanged transport deadline:
+  `server/tests/offices-transport.test.js:30`, “Office command timed out.”
+  The exact file then passed 2/2 alone with Redis. The latest
+  `.runtime/agent/full.json` and ignored
+  `.runtime/safari-gltf-decoder-investigation/full-gate-retry.log` record this
+  run. Browser coverage still did not start locally. A third full run should
+  wait for the other active machine verification to finish.
 
 **Next action:** Pin Val's visible-town observation to the exact phone URL
 and obtain the normal route's WebKit exception. Keep the scoped
