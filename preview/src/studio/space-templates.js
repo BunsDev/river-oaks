@@ -110,3 +110,27 @@ function cafe(){
 }
 const factories={house,office,boutique,cafe};
 export function createSpace(id){if(!Object.hasOwn(factories,id))throw Error('Choose a known space template.');return factories[id]();}
+
+// Assessment semantics are independent of mutable names and furnishing labels.
+// Bump this version when destinations, roles or controller policy change.
+export const SPACE_PROFILE_VERSION = 1;
+const routeRoles = {
+  house: ['living-sofa', 'kitchen-sink', 'bed', 'toilet', 'patio-table'],
+  office: ['reception-desk', 'work-desk-1', 'meeting-table', 'kitchenette-sink'],
+  boutique: ['display-table-one', 'checkout', 'fitting-chair-one', 'fitting-chair-two'],
+  cafe: ['cafe-table-1', 'service-counter-left', 'prep-sink', 'terrace-table'],
+};
+export function spaceAssessmentContext(templateId) {
+  if (!Object.hasOwn(factories, templateId)) throw Error('Choose a known space template.');
+  return { templateId, profileVersion: SPACE_PROFILE_VERSION };
+}
+export function spaceRouteProfile(context) {
+  if (!context || context.profileVersion !== SPACE_PROFILE_VERSION || !Object.hasOwn(factories, context.templateId)) return null;
+  const template = spaceTemplates.find(t => t.id === context.templateId), stock = createSpace(template.id);
+  return { ...spaceAssessmentContext(template.id), exit: stock.spawn,
+    targets: template.walkTargets.map((target, index) => {
+      const objectId = routeRoles[template.id][index];
+      return { ...structuredClone(target), id: `${template.id}-${index + 1}`, objectId,
+        kind: stock.objects.find(o => o.id === objectId).kind };
+    }) };
+}

@@ -10114,6 +10114,60 @@
         "independent review",
         "hosted Verify and pnpm run land"
       ]
+    },
+    {
+      "id": "studio-safe-edits-414",
+      "title": "#414 World Studio required-route safe edits and recoverable profile context",
+      "status": "active",
+      "branches": [
+        "fix/studio-safe-edits-414"
+      ],
+      "owner": "codex-root-studio-safe-edits-414-20261015",
+      "updatedAt": "2026-10-15T13:03:58.638345+00:00",
+      "nextAction": "All review fixes and local gates passed; signed commit and draft PR delivery underway. No merge/deployment authorized.",
+      "ledger": "docs/superpowers/plans/2026-10-15-studio-safe-edits.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-studio-safe-edits-414",
+      "filesOwned": [
+        "preview/src/studio/document.js",
+        "preview/src/studio/space-document.js",
+        "preview/src/studio/space-templates.js",
+        "preview/src/studio/space-scene.js (data-only world extraction)",
+        "preview/src/studio/space-assessment.js",
+        "preview/src/studio/main.js (transactions and findings)",
+        "preview/src/studio/viewport.js (drag preview)",
+        "preview/tests/studio-*.test.js (safe edit regressions)",
+        "preview/e2e/world-studio.js",
+        "docs/world-studio.md",
+        "docs/superpowers/plans/2026-10-15-studio-safe-edits.md",
+        "preview/src/studio/designer-protocol.js",
+        "preview/src/studio/agent-chat.js (failure reporting)",
+        "preview/src/studio/designer-panel.js (failure reporting)",
+        "preview/src/studio/studio.css (compact findings)",
+        "desktop/studio-e2e.js (local save sidecar and bare v1 export/import coverage)",
+        "preview/src/studio/space-assessment-worker.js",
+        "preview/src/studio/space-assessment-runner.js",
+        "preview/tests/studio-safe-edits.test.js",
+        "preview/tests/studio-safe-edits-async.test.js",
+        "preview/tests/studio-assessment-runner.test.js",
+        "desktop/agent-e2e.js (await assessed agent batch)"
+      ],
+      "requiredChecks": [
+        "node --test preview/tests/studio-*.test.js server/tests/studio-assets.test.js",
+        "pnpm run test:experience world-studio",
+        "pnpm run test:desktop",
+        "node desktop/studio-e2e.js",
+        "pnpm run verify"
+      ],
+      "verification": {
+        "source": "cd99570a6d1ff4171c83637744d38cc8131a2684 + reviewed working patch; .runtime/safe-edits/delivery-source-manifest.json",
+        "focused": "86/86 passed, no skips",
+        "core": "11/11 tasks; 4114 passed, 149 skipped, 1 TODO; .runtime/safe-edits/review-core.txt",
+        "browser": "worker-backed world-studio passed 24.885s, zero page errors; .runtime/safe-edits/reports/studio-safe-edits-worker-browser.json",
+        "desktop": "69 units; native Studio11, synthetic agent13, designer9 passed",
+        "review": "Fresh independent review: both Important findings fixed; no remaining Important/Critical findings",
+        "limits": "No full Redis, hosted CI, packaged distribution, live auth, physical-device performance or human accessibility acceptance claimed."
+      },
+      "leaseUntil": "2026-10-15T15:03:58.638345+00:00"
     }
   ]
 }
