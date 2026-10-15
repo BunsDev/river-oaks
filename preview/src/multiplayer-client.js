@@ -112,7 +112,7 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
     request:(action,data={})=>api(`/api/workplace/${action}?world=${encodeURIComponent(worldId)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})}):null;
   panel.append(logout);
   const chatDock = createTownChatDock(chatSection);
-  const greetings=createGreetingsUI({host:document.querySelector('#viewport'),getTown:()=>({connected,selfId,snapshot:latestSnapshot}),getEnvironment,request:command});
+  const greetings=createGreetingsUI({host:document.querySelector('#viewport'),getTown:()=>({connected,selfId,snapshot:latestSnapshot}),getEnvironment,request:command,getPose});
   let activeGreeting=null;
   const latestPlayers=new Map();
   // Shared voice. Its requests go straight to fetch rather than api(): api()

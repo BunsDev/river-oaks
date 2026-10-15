@@ -7,10 +7,17 @@ import {
 
 const control = (action, more = {}) => ({ type: 'screening', action, venueId: 'ipic', epoch: 'e1', expectedRevision: 3, operationId: 'op-123456', ...more });
 
-test('the only venue is the IPIC auditorium and the only media is the bundled fixture', () => {
+test('the only venue is the IPIC auditorium; it shows the approved short first and keeps the labelled fixture', () => {
   assert.deepEqual(Object.keys(SCREENING_VENUES), ['ipic']);
   assert.equal(SCREENING_VENUES.ipic.interior, IPIC_INTERIOR);
-  assert.deepEqual(Object.keys(SCREENING_MEDIA), ['ipic-fixture-v1']);
+  // Host Start plays the venue's first film, so the approved short (#365) leads.
+  assert.deepEqual(Object.keys(SCREENING_MEDIA), ['ipic-original-v1', 'ipic-fixture-v1']);
+  const short = SCREENING_MEDIA['ipic-original-v1'];
+  assert.equal(short.fixture, false);
+  assert.deepEqual(short.venues, ['ipic']);
+  assert.ok(short.durationMs >= 45_000 && short.durationMs <= 90_000, 'the proposed 45-90 s');
+  assert.equal(short.transcript.length, 8);
+  assert.ok(Object.isFrozen(short) && Object.isFrozen(short.sources) && Object.isFrozen(short.transcript));
   const fixture = SCREENING_MEDIA['ipic-fixture-v1'];
   assert.equal(fixture.fixture, true);
   assert.deepEqual(fixture.venues, ['ipic']);

@@ -29,6 +29,19 @@ The overhead view leaves the roof open for editing. Finish presets and built-in
 geometry improve material and shape detail, but photorealism remains a visual
 acceptance target, not a guarantee from automated tests.
 
+Desks, chairs, pendants and plants are drawn at true size, so resizing one keeps its legs,
+frame and rounded edges in proportion instead of stretching them. A pendant whose
+footprint is at least twice as long as it is wide becomes a linear fitting on two
+cables; others get a round shade. Plants have a tapered pot and leafy clusters on
+their upper stems, from a café table vase to a floor plant. Interior concrete is a polished slab with
+saw-cut joints every 4 m, and floor-standing glazing sits in a base shoe. Furnished
+spaces reflect a neutral room, so glass and brass read as glass and metal, and the
+Evening preset dims the sky as well as the sun. Saved v1 files are unchanged and pick
+up the new forms when opened. The forms' catalog records, with measured size and
+cost, are in `docs/design/garden-office/asset-manifest.json`; refresh them with
+`node scripts/garden-office-manifest.mjs --write` after reviewing a change to
+`space-furniture.js`.
+
 Space files use `document_type: "studio-space"`, are limited to 128 KiB and 160
 objects, and export as `world-studio-space.json`. Save, reopen, import and undo work
 as for regions. They are private Studio documents; the shared-world region
@@ -161,6 +174,16 @@ or physical-device performance evidence. Screenshots live in
 `output/playwright/world-studio-*.png`; the browser receipt is
 `data/reports/world-studio-browser.json` and the Electron receipt is
 `.runtime/agent/studio-desktop.json`.
+
+For a visual review of Garden Office, capture its six player-height stations under
+all three presets. Each station stands on a required route target and faces the
+furnishing it serves:
+
+```sh
+RIVER_OAKS_E2E_REPORT=garden-office-stations.json pnpm run test:experience studio-office-stations
+```
+
+It writes `output/playwright/garden-office-<preset>-CAM-0N-<station>.png`.
 
 ## World Designer
 

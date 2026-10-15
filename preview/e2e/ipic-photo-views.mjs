@@ -1,7 +1,7 @@
 // IPIC runtime photo views (#364: T1–T3, the five photo-indexed views): node preview/e2e/ipic-photo-views.mjs
 // The game itself with real materials on this machine's GPU (Metal ANGLE on macOS) and two
 // loopback fixture accounts. alice holds a synthetic IPIC host grant, sits in a front-row
-// recliner and starts the fixture film; owner stands at the Tuck Room bar. Each IPIC_CAMERAS
+// recliner and starts the venue's default film (the approved short, #365); owner stands at the Tuck Room bar. Each IPIC_CAMERAS
 // pose (FOV 67, as preview/e2e/fixtures/ipic.js) is framed through the DEV-only render-audit
 // camera from the page whose player is not the subject (a player's own avatar is hidden in
 // first person): the auditorium from owner's page, so seated alice shows, and the rest from
@@ -98,7 +98,7 @@ try {
     await page.evaluate(() => new Promise(done => { let n = 0; const step = () => (++n > 10 ? done() : requestAnimationFrame(step)); requestAnimationFrame(step); }));
     const file = `${OUT}/${view.id}.png`, png = await page.screenshot({ path: file });
     await page.evaluate(() => window.__riverRenderAudit.release());
-    const stats = await page.evaluate(() => { const g = window.__riverRenderAudit.graphics(); const s = window.__riverScreening(); return { calls: g.render.calls, triangles: g.render.triangles, film: { state: s.state, currentTime: +s.currentTime.toFixed(2), shared: s.sharedStatus } }; });
+    const stats = await page.evaluate(() => { const g = window.__riverRenderAudit.graphics(); const s = window.__riverScreening(); return { calls: g.render.calls, triangles: g.render.triangles, film: { mediaId: s.mediaId, state: s.state, currentTime: +s.currentTime.toFixed(2), shared: s.sharedStatus } }; });
     captures.push({ ...view, file, bytes: png.length, sha256: createHash('sha256').update(png).digest('hex'), ...stats });
   }
   await Promise.all([alice, owner].map(page => page.evaluate(() => { document.body.classList.remove('clear-view'); document.querySelector('#photo-views-hide')?.remove(); })));
@@ -110,8 +110,8 @@ try {
     sourceRevision: head, dirtyPatchSha256: dirty.length ? createHash('sha256').update(dirty).digest('hex') : null,
     browser: await browser.version(), renderer: graphics.renderer, viewport: [VIEWPORT.width, VIEWPORT.height], pixelRatio: 1, quality: 'sharp',
     fov: FOV, frame: 'eye and target are [a, h, d] in the IPIC room frame, h above the street floor (camera-manifest.json frame)',
-    scene: { alice: `${SEAT}:0 seated, synthetic host, fixture film playing`, owner: 'standing at the Tuck Room bar', seatPose: seat.position, framedFrom: Object.fromEntries(views.map(view => [view.id, view.page])) },
-    limits: 'Local macOS Chromium with Metal ANGLE under shared load; fixture film (fixture-v1), not the approved short (#365); not physical-device, human or final-art acceptance.',
+    scene: { alice: `${SEAT}:0 seated, synthetic host, ${captures[0]?.film.mediaId} playing`, owner: 'standing at the Tuck Room bar', seatPose: seat.position, framedFrom: Object.fromEntries(views.map(view => [view.id, view.page])) },
+    limits: 'Local macOS Chromium with Metal ANGLE under shared load; the film named in scene; not physical-device, human or final-art acceptance.',
     errors, captures,
   };
   await writeFile(`${OUT}/ipic-runtime-receipt.json`, `${JSON.stringify(receipt, null, 2)}\n`);

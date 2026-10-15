@@ -128,6 +128,29 @@ test('the terrace portals stay walkable at full body height under their transoms
   built.dispose();
 });
 
+test('the imported desks (R19) are one draw, each exactly on its plan footprint at its height', () => {
+  const built = buildPenthouseOffice(THREE, layout);
+  const desks = meshes(built.object).filter(mesh => mesh.name === 'desks');
+  assert.equal(desks.length, 1);
+  assert.ok(desks[0].isInstancedMesh && desks[0].count === 3);
+  const drawn = parts(built.object).filter(part => part.mesh === desks[0]);
+  for (const o of l0.obstacles.filter(item => item.kind === 'desk')) {
+    const part = drawn.find(item => item.zone === `obstacle:${o.id}`);
+    assert.ok(part, `${o.id} is drawn`);
+    for (const [a, b] of [[part.e.x0, o.x0], [part.e.x1, o.x1], [part.e.d0, o.d0], [part.e.d1, o.d1], [part.e.y0, l0.floorElevation], [part.e.y1, l0.floorElevation + o.height]])
+      assert.ok(Math.abs(a - b) < 1e-6, `${o.id}: ${a} vs ${b}`);
+  }
+  built.dispose();
+});
+
+test('disposing the graybox releases every instanced draw, desks and curtain wall included', () => {
+  const built = buildPenthouseOffice(THREE, layout), instanced = meshes(built.object).filter(mesh => mesh.isInstancedMesh), released = new Set();
+  assert.ok(instanced.length >= 3, 'the desks and both curtain-wall batches');
+  for (const mesh of instanced) mesh.addEventListener('dispose', () => released.add(mesh));
+  built.dispose();
+  assert.equal(released.size, instanced.length);
+});
+
 test('the curtain wall is two draws, glass handled like the district storefront glazing', () => {
   const built = buildPenthouseOffice(THREE, layout);
   const curtain = meshes(built.object).filter(mesh => mesh.name.startsWith('curtain wall'));
@@ -140,8 +163,9 @@ test('the curtain wall is two draws, glass handled like the district storefront 
   assert.equal(panes.material.depthWrite, false);
   assert.equal(panes.castShadow, false);
   // The opaque-walled graybox drew 53 meshes, and 60 once #400 added the desk and reading chairs
-  // (measured on its pre-glazing head d1266a15); glazing it must not cost more draws.
-  assert.ok(meshes(built.object).length <= 60, `graybox draw calls ${meshes(built.object).length}`);
+  // (measured on its pre-glazing head d1266a15); main's stair walk (bf6a7ad3) brought the glazed one
+  // to 60, and R19's three desks add one instanced draw. Glazing must not cost more draws than walls.
+  assert.ok(meshes(built.object).length <= 61, `graybox draw calls ${meshes(built.object).length}`);
   built.dispose();
 });
 
