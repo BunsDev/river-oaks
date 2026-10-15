@@ -337,3 +337,11 @@ attribution checked, pushed to draft #462. PR title/body rewritten around final
 asset audit + portrait + skirt + focus scope. Hosted checks must be verified on the
 new head; prior failed run is not success. Goal/task remain active and checkout
 preserved. Resume exact next actions above using live register and existing PRs.
+
+Handoff register check exposed two Studio head-mismatch warnings because one task
+listed three stacked branches but had only one `pr`. Split contract/editor into
+separate owned register records pointing to #457/#461; retained the original stable
+goal task, archive history and active render branch at #462. No branches/checkouts
+removed. Initial inventory31 branches/27 worktrees; final observed20/14 reflects
+other concurrent sessions, not cleanup by this task. Re-run reconciliation after
+this metadata correction; unrelated lease/retirement/missing-checkout gaps remain.
