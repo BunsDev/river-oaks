@@ -1,6 +1,6 @@
-import { mkdir, lstat, access } from 'node:fs/promises';
+import { mkdir, lstat, access, stat } from 'node:fs/promises';
 import { constants } from 'node:fs';
-import { join, delimiter } from 'node:path';
+import { join } from 'node:path';
 import { homedir } from 'node:os';
 import { runStudioCommand } from './studio-command.js';
 import { STUDIO_AGENT_GUIDE, studioAgentPrompt } from './studio-agent-guide.js';
@@ -34,10 +34,36 @@ export const STUDIO_AGENT_PROVIDERS = {
 };
 
 // GUI launches often miss the shell PATH, so common user install locations are searched too.
-export async function resolveExecutable(command, { env = process.env, extra = [join(homedir(), '.local/bin'), '/opt/homebrew/bin', '/usr/local/bin'] } = {}) {
-  for (const dir of [...(env.PATH || '').split(delimiter), ...extra].filter(Boolean)) {
-    const path = join(dir, command);
-    try { await access(path, constants.X_OK); return path; } catch { /* Try the next directory. */ }
+export function extraExecutableDirs(platform = process.platform, home = homedir()) {
+  if (platform === 'win32') return [join(home, '.local', 'bin')];
+  return [join(home, '.local/bin'), ...(platform === 'darwin' ? ['/opt/homebrew/bin'] : []), '/usr/local/bin'];
+}
+const pathDelimiter = platform => platform === 'win32' ? ';' : ':';
+export const extraExecutablePath = (platform = process.platform) => extraExecutableDirs(platform).join(pathDelimiter(platform));
+// Windows has no execute bit; PATHEXT names what the shell would run. Only .exe and
+// .com can be spawned without a shell. npm's .cmd/.bat shims (and .ps1) need cmd.exe
+// or PowerShell, which would parse the prompt text, so they are never selected.
+const DEFAULT_PATHEXT = '.COM;.EXE;.BAT;.CMD', SPAWNABLE = ['.exe', '.com'];
+const extensionOf = path => /\.[^\\/.]+$/.exec(path)?.[0].toLowerCase() ?? '';
+export const windowsShim = path => ['.cmd', '.bat', '.ps1'].includes(extensionOf(path));
+export function missingExecutableMessage(name, command, env, platform = process.platform) {
+  return platform === 'win32'
+    ? `${name} CLI was not found. Install the native ${command}.exe, sign in, or set ${env} to its path. Studio cannot run Windows script shims (${command}.cmd).`
+    : `${name} CLI was not found. Install it, sign in, or set ${env} to its path.`;
+}
+export async function resolveExecutable(command, { env = process.env, platform = process.platform, extra = extraExecutableDirs(platform) } = {}) {
+  const windows = platform === 'win32';
+  const names = dir => {
+    if (!windows || extensionOf(command)) return [join(dir, command)];
+    return (env.PATHEXT || DEFAULT_PATHEXT).split(';').map(ext => ext.toLowerCase()).filter(ext => SPAWNABLE.includes(ext)).map(ext => join(dir, command + ext));
+  };
+  for (const dir of [...(env.PATH || '').split(pathDelimiter(platform)), ...extra].filter(Boolean)) {
+    for (const path of names(dir)) {
+      try {
+        if (windows) { if (!windowsShim(path) && SPAWNABLE.includes(extensionOf(path)) && (await stat(path)).isFile()) return path; }
+        else { await access(path, constants.X_OK); if ((await stat(path)).isFile()) return path; }
+      } catch { /* Try the next candidate. */ }
+    }
   }
   return null;
 }
@@ -71,13 +97,20 @@ export function createStreamReader(providerId, onDelta) {
   };
 }
 
-export function createStudioAgentHost({ root, env = process.env, execute = runStudioCommand, resolve = resolveExecutable, confirm = async () => false, timeout = 180000 }) {
-  const chats = new Map(), active = new Map(), consented = new Set(), sent = [];
+export function createStudioAgentHost({ root, env = process.env, platform = process.platform, execute = runStudioCommand, resolve = resolveExecutable, confirm = async () => false, timeout = 180000 }) {
+  const chats = new Map(), active = new Map(), consented = new Set(), sent = [], unavailable = {};
   let executables = null;
   async function locate() {
     if (!executables) {
       executables = {};
-      for (const [id, provider] of Object.entries(STUDIO_AGENT_PROVIDERS)) executables[id] = env[provider.env] || await resolve(provider.command, { env });
+      for (const [id, provider] of Object.entries(STUDIO_AGENT_PROVIDERS)) {
+        const configured = env[provider.env];
+        if (configured && platform === 'win32' && windowsShim(configured)) {
+          // A configured shim would fail at spawn with no useful message; say why up front.
+          unavailable[id] = `${provider.env} points at ${configured}, but Studio cannot run Windows script shims (.cmd, .bat, .ps1) without a shell. Point it at ${provider.command}.exe instead.`;
+          executables[id] = null;
+        } else executables[id] = configured || await resolve(provider.command, { env, platform });
+      }
     }
     return executables;
   }
@@ -109,7 +142,7 @@ export function createStudioAgentHost({ root, env = process.env, execute = runSt
       const control = new AbortController(); active.set(input.chatId, { requestId: input.requestId, control });
       try {
         const executable = (await locate())[input.providerId];
-        if (!executable) throw new HostError(`${provider.name} CLI was not found. Install it, sign in, or set ${provider.env} to its path.`);
+        if (!executable) throw new HostError(unavailable[input.providerId] ?? missingExecutableMessage(provider.name, provider.command, provider.env, platform));
         if (!consented.has(input.providerId)) {
           if (!await confirm({ providerId: input.providerId, name: provider.name })) throw new HostError('Agent chat canceled.');
           consented.add(input.providerId);
@@ -125,9 +158,8 @@ export function createStudioAgentHost({ root, env = process.env, execute = runSt
           const part = capBytes(delta, MAX_REPLY - forwarded); forwarded += part.used;
           if (part.text) onDelta(part.text);
         });
-        const extraPath = [join(homedir(), '.local/bin'), '/opt/homebrew/bin', '/usr/local/bin'].join(delimiter);
         try {
-          await execute(executable, provider.args({ model: input.modelId, prompt, workspace }), { cwd: workspace, env: { ...env, PATH: `${env.PATH || ''}${delimiter}${extraPath}` },
+          await execute(executable, provider.args({ model: input.modelId, prompt, workspace }), { cwd: workspace, env: { ...env, PATH: `${env.PATH || ''}${pathDelimiter(platform)}${extraExecutablePath(platform)}` },
             signal: control.signal, timeout, maxBytes: 8 * 1024 * 1024, onStdout: chunk => reader.push(chunk) });
         } catch (error) {
           if (control.signal.aborted) throw new HostError('Agent reply stopped.');
