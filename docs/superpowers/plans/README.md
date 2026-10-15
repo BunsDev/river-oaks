@@ -4,21 +4,22 @@
 
 Each plan is a task ledger. Status comes from the task register, where the primary checkout's live copy can be newer than the committed one. Plans from before the register are listed as historical: their own text is the record of what was delivered.
 
-## Active and blocked (17)
+## Active and blocked (18)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
 | [2026-10-15-studio-safe-edits](2026-10-15-studio-safe-edits.md)<br>World Studio safe edits (#414, parent #413) | `studio-safe-edits-414` | queued | #427 | 2026-10-15 |
 | [2026-10-15-studio-prompt-stdin](2026-10-15-studio-prompt-stdin.md)<br>Studio prompts on stdin (#370 finding), 2026-10-15 | `studio-prompt-stdin` | active | — | 2026-10-15 |
 | [2026-10-15-studio-pilot-acceptance](2026-10-15-studio-pilot-acceptance.md)<br>Garden Office pilot acceptance (#417, parent #413) | `studio-acceptance-417` | active | — | 2026-10-15 |
-| [2026-10-15-safari-gltf-decoder-investigation](2026-10-15-safari-gltf-decoder-investigation.md)<br>Physical Safari glTF decoder investigation | `safari-gltf-decoder-investigation` | active | #411 | 2026-10-15 |
 | [2026-10-15-procedural-phone-gpu-fixture](2026-10-15-procedural-phone-gpu-fixture.md)<br>Procedural gallery phone GPU fixture | `procedural-phone-gpu-fixture` | active | #393 | 2026-10-15 |
 | [2026-10-15-office-world-lifecycle-reliability](2026-10-15-office-world-lifecycle-reliability.md)<br>Office world lifecycle reliability | `office-world-lifecycle-reliability` | active | — | 2026-10-15 |
 | [2026-10-15-office-skyline-prototype](2026-10-15-office-skyline-prototype.md)<br>Penthouse skyline prototype (#363 views, kit guide P26) | `office-skyline-prototype` | active | #408 | 2026-10-15 |
 | [2026-10-15-office-computer-reliability](2026-10-15-office-computer-reliability.md)<br>Office computer reliability | `office-computer-reliability` | active | #394 | 2026-10-15 |
+| [2026-10-15-ios-avatar-image-decoder-default](2026-10-15-ios-avatar-image-decoder-default.md)<br>iOS resident avatar image decoder default | `safari-gltf-decoder-investigation` | active | — | 2026-10-15 |
 | [2026-10-15-garden-office-pilot](2026-10-15-garden-office-pilot.md)<br>Garden Office realism pilot (#416, parent #413) | `garden-office-416` | active | — | 2026-10-15 |
 | [2026-10-15-desktop-e2e-walk-game-time](2026-10-15-desktop-e2e-walk-game-time.md)<br>Desktop e2e: the W walk over game time, 2026-10-15 | `desktop-e2e-walk-game-time` | active | — | 2026-10-15 |
 | [2026-10-14-shared-dominoes](2026-10-14-shared-dominoes.md)<br>Shared Dominoes Implementation Plan (PR 1: the town holds the round) | `shared-dominoes-sheet` | active | — | 2026-10-14 |
+| [2026-10-14-release-0.2.0-readiness](2026-10-14-release-0.2.0-readiness.md)<br>TypeSafe Place 0.2.0 release readiness | `release-0-2-0-readiness` | blocked | #376 | 2026-10-15 |
 | [2026-10-14-procedural-gpu-acceptance](2026-10-14-procedural-gpu-acceptance.md)<br>Procedural interiors: physical GPU acceptance plan | `procedural-gpu-acceptance` | queued | — | 2026-10-15 |
 | [2026-10-14-gallery-vertical-route](2026-10-14-gallery-vertical-route.md)<br>Gallery vertical-route visual integration | `procedural-gallery-vertical-route` | queued | — | 2026-10-14 |
 | [2026-10-14-desktop-package-matrix](2026-10-14-desktop-package-matrix.md)<br>Desktop packaging build matrix (#371), 2026-10-14 | `desktop-package-matrix` | active | #377 | 2026-10-15 |
@@ -169,10 +170,11 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-11-delivered-source-retirement](2026-10-11-delivered-source-retirement.md)<br>Delivered source reconciliation | `reconcile-delivered-sources` | retired | — | 2026-10-11 |
 | [2026-10-11-ci-parallel-preview](2026-10-11-ci-parallel-preview.md)<br>Parallel preview check | `ci-parallel-preview` | retired | #252 | 2026-10-11 |
 
-## Historical, not in the register (84)
+## Historical, not in the register (88)
 
 | Plan | PRs mentioned |
 | --- | --- |
+| [2026-10-15-safari-gltf-decoder-investigation](2026-10-15-safari-gltf-decoder-investigation.md)<br>Physical Safari glTF decoder investigation | #409, #401, #309 |
 | [2026-10-15-office-walkable-stairs](2026-10-15-office-walkable-stairs.md)<br>Office: walk the penthouse stair | #360, #430 |
 | [2026-10-15-office-views](2026-10-15-office-views.md)<br>#363 slice 2: bounded local office views | #363, #400 |
 | [2026-10-15-office-skyline-memory](2026-10-15-office-skyline-memory.md)<br>Penthouse skyline: resident memory for phones (#363) | #363, #408 |
@@ -183,10 +185,13 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-15-office-fallback-lift-glass](2026-10-15-office-fallback-lift-glass.md)<br>Office: fallback scene lift behind the penthouse glass | #405, #408, #400 |
 | [2026-10-15-office-desk-footprints](2026-10-15-office-desk-footprints.md)<br>#362 R19: the kit's measured desk footprints | #362, #403, #400 |
 | [2026-10-15-office-building-raise](2026-10-15-office-building-raise.md)<br>Office: raise the penthouse tower to 33 m | #363 |
+| [2026-10-15-landing-never-body-blocked](2026-10-15-landing-never-body-blocked.md)<br>No barricades: a body on a landing never keeps a visitor off a floor | #400, #403 |
 | [2026-10-15-landing-enter-for-approved](2026-10-15-landing-enter-for-approved.md)<br>Landing page: "Enter River Oaks" for residents who already have access | — |
 | [2026-10-15-ipic-screening-soak](2026-10-15-ipic-screening-soak.md)<br>#368 slice 1: IPIC screening catalog profile and ten-cycle soak | #368, #367, #365 |
 | [2026-10-15-ipic-recliner-view](2026-10-15-ipic-recliner-view.md)<br>#368 T3 finding: a seated IPIC viewer sees the recliner, not the screen | #368, #359, #422 |
 | [2026-10-15-ipic-original-short](2026-10-15-ipic-original-short.md)<br>#365: the approved original short | #365, #406, #429 |
+| [2026-10-15-greetings-face-to-greet](2026-10-15-greetings-face-to-greet.md)<br>Say hello: semi-transparent, and opened on purpose when you face someone | #441 |
+| [2026-10-15-connection-continuity](2026-10-15-connection-continuity.md)<br>Players stay connected (2026-10-15) | — |
 | [2026-10-13-stage-voice-carry](2026-10-13-stage-voice-carry.md)<br>A stage performer is heard across the plaza — 2026-10-13 | #311 |
 | [2026-10-13-procedural-multilevel-interiors](2026-10-13-procedural-multilevel-interiors.md)<br>Building-anchored procedural interiors and levels | — |
 | [2026-10-13-plaza-table-lessons](2026-10-13-plaza-table-lessons.md)<br>Guided first games at the plaza tables — 2026-10-13 | — |

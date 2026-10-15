@@ -2,7 +2,7 @@ import { officesFor, OFFICE_SPEED, officeFree } from '../preview/src/office-cont
 import { AVATAR_ENVELOPE } from '../preview/src/workplace-room.js';
 import {
   DEFAULT_OFFICE_LAYOUT, OFFICE_BODY_SPACING, OFFICE_LAYOUT_LEGACY, OFFICE_SEAT_REACH, officeLayout, officeLevelFree,
-  officeElevationAt, officeSeat, officeStandFree, officeTransition, officeWalk,
+  officeElevationAt, officeLandingSpot, officeSeat, officeStandFree, officeTransition, officeWalk,
 } from '../preview/src/office-layouts.js';
 
 const fields=(v,keys)=>v&&typeof v==='object'&&!Array.isArray(v)&&Object.keys(v).every(k=>keys.includes(k));
@@ -96,9 +96,10 @@ export function createOffices({worldData,players,isAdmin,environment,changed,can
       // Fixed endpoints only: from within reach of a stair or lift on this floor, to its pair.
       const moved=officeTransition(officeLayout(visit.layout),{levelId:visit.levelId,position:visit.position},m.portalId,occupiedBy(id,visit));
       if(!moved.ok)return fail(moved.error);
-      if([...visits].some(([other,v])=>other!==id&&v.id===visit.id&&v.layout===visit.layout&&v.levelId===moved.levelId
-        &&Math.hypot(v.position[0]-moved.position[0],v.position[1]-moved.position[1])<OFFICE_BODY_SPACING))return fail('office_landing_blocked');
-      Object.assign(visit,{levelId:moved.levelId,position:moved.position,at:time,budget:.1});changed();return {ok:true,office:publicVisit(id)};
+      // Someone on the landing never keeps a visitor off a floor: arrive beside them instead.
+      const bodies=[...visits].filter(([other,v])=>other!==id&&v.id===visit.id&&v.layout===visit.layout&&v.levelId===moved.levelId).map(([,v])=>v.position);
+      const arrival=officeLandingSpot(officeLayout(visit.layout),moved.levelId,moved.position,bodies,occupiedBy(id,visit));
+      Object.assign(visit,{levelId:moved.levelId,position:arrival,at:time,budget:.1});changed();return {ok:true,office:publicVisit(id)};
     }
     // Seats are plan seats claimed from their stand point, one occupant each. The pose is the
     // plan's; a client never sends one. Standing up returns to the stand point.

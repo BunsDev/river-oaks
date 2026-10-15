@@ -184,6 +184,19 @@ export function officeLevelFree(layout, levelId, position, occupied = []) {
   return level.chairs.every(chair => Math.hypot(x - chair.position[0], d - chair.position[1]) >= r + CHAIR_RADIUS) && clearOf(levelId, position, occupied);
 }
 
+// Where a stair or lift traveller arrives. A body standing on the landing never keeps anyone off a
+// floor: the traveller arrives at the nearest free spot beside it, reachable from the landing and
+// clear of every body; with nowhere clear, at the landing itself (standing bodies do not collide).
+export function officeLandingSpot(layout, levelId, landing, bodies = [], occupied = []) {
+  const clear = p => bodies.every(body => Math.hypot(body[0] - p[0], body[1] - p[1]) >= OFFICE_BODY_SPACING);
+  if (clear(landing)) return [...landing];
+  for (const radius of [0.8, 1.1, 1.4, 1.8, 2.2]) for (let i = 0; i < 16; i++) {
+    const angle = i * Math.PI / 8, p = [landing[0] + Math.cos(angle) * radius, landing[1] + Math.sin(angle) * radius];
+    if (clear(p) && officeLevelFree(layout, levelId, p, occupied) && officeLevelSegmentFree(layout, levelId, landing, p, occupied)) return p;
+  }
+  return [...landing];
+}
+
 // Swept movement on one level, sampled every 0.1 m and bounded like the legacy office.
 export function officeLevelSegmentFree(layout, levelId, from, to, occupied = []) {
   if (!officeLevelFree(layout, levelId, from, occupied) || !officeLevelFree(layout, levelId, to, occupied)) return false;

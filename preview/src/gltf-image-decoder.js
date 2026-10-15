@@ -1,8 +1,15 @@
 import { TextureLoader } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-// Diagnostic only: constrain the HTML-image fallback to one GLTFLoader rather
-// than hiding createImageBitmap from every library in the document.
+export function prefersHtmlAvatarImages(nav = globalThis.navigator) {
+  const userAgent = nav?.userAgent ?? '';
+  if (!userAgent.includes('AppleWebKit/')) return false;
+  return /\b(?:iPhone|iPad|iPod)\b/.test(userAgent)
+    || (nav?.platform === 'MacIntel' && nav?.maxTouchPoints > 1);
+}
+
+// Constrain the iOS fallback to resident avatars instead of changing image
+// decoding for every loader in the document.
 export function createAssetGLTFLoader({ htmlImages = false } = {}) {
   const loader = new GLTFLoader();
   if (htmlImages) loader.register(parser => {

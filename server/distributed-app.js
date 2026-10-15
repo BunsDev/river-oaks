@@ -23,6 +23,7 @@ import { workplaceAction } from './workplace-api.js';
 import { accountDesignCommand } from './design-commands.js';
 import { securityHeaders } from './security-headers.js';
 import { createVoiceRoutes } from './voice-routes.js';
+import { ROTATE_NOTICE_MS, UPDATE_CLOSE, closeForUpdate, retireAfter, rotateNotice } from './connection-close.js';
 
 // Constant-time comparison of an `Authorization: Bearer <secret>` header.
 function bearerMatches(header, secret) {
@@ -40,7 +41,7 @@ const json = (res, status, value) => {
 /** HTTP/WS edge for a durable room. No instance owns canonical game or auth state. */
 export function createDistributedServer({ auth, room, worldTitle, security, waitlist, waitlistAdmins = [], debugReports = null, landmarks, social = null, groups = null, profiles = null, events = null, workplace = null, officeDesk = null, officeWorkspaces = null, workplaceCronSecret = null, presence = null, designLibrary = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
   trustedProxyIPs = [], address = createClientAddress(trustedProxyIPs), now = Date.now,
-  connectionLifetime = 270_000, assetGateSecret = null, heartbeatMs = 5000, onMove = null, voice = null, voiceCronSecret = null,
+  connectionLifetime = 270_000, rotateNoticeMs = ROTATE_NOTICE_MS, assetGateSecret = null, heartbeatMs = 5000, onMove = null, voice = null, voiceCronSecret = null,
   // cyclingMiles: accepted for the leaderboard route (PR 2); the room owner flushes rides.
   cyclingMiles = null } = {}) {
   if (!waitlist) throw new Error('Waitlist is required');
@@ -355,12 +356,14 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
         || !(await security.consumeTicket(url.searchParams.get('ticket'), identity, worldId))) return reject(401);
       wss.handleUpgrade(req, socket, head, ws => {
         ws.on('error', () => {});
-        if (stopped) { ws.close(1012, 'Town restarting'); return; }
+        if (stopped) { ws.close(UPDATE_CLOSE.code, UPDATE_CLOSE.reason); return; }
         const connectionId = randomUUID();
         const connection = { ws, identity, connectionId, joined: false, alive: true, pending: 0 };
         connections.set(connectionId, connection);
-        const lifetime = setTimeout(() => ws.close(1012, 'Reconnecting to the town.'), connectionLifetime);
-        lifetime.unref();
+        // The host ends each request after a few minutes, so the town retires the socket first,
+        // after a notice that lets the page move to a fresh one without dropping anything.
+        const retire = retireAfter(ws, connectionLifetime, { noticeMs: rotateNoticeMs,
+          notify: () => { if (connection.joined && connections.get(connectionId) === connection) send(ws, rotateNotice(connectionLifetime, rotateNoticeMs)); } });
         let admissionStage = 'join';
         const ready = (async () => {
           const result = await room.request({ type: 'join', identity, connectionId });
@@ -447,7 +450,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
           }).catch(() => { ws.close(1013, 'Town temporarily unavailable.'); }).finally(() => { if (!coalescible) connection.pending--; });
         });
         ws.on('close', () => {
-          clearTimeout(lifetime); connections.delete(connectionId);
+          retire(); connections.delete(connectionId);
           if (presence) void presence.leave(identity.userId, connectionId).catch(() => {});
           // A join can commit before its acknowledgment or first snapshot fails.
           // The room fences leave by connectionId, so cleanup is safe even then.
@@ -497,7 +500,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
   return { server, disconnectUser, async close() {
     stopped = true; clearInterval(loop); clearInterval(heartbeat);
     if (presence) await Promise.allSettled([...connections.values()].map(connection => presence.leave(connection.identity.userId, connection.connectionId)));
-    for (const { ws } of connections.values()) ws.terminate();
+    await closeForUpdate([...connections.values()].map(({ ws }) => ws));
     wss.close(); auth.close?.();
     await new Promise(resolve => server.close(resolve));
   } };
