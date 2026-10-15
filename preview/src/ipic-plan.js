@@ -11,6 +11,13 @@ export const IPIC_SOFA_ARMS = Object.freeze([-4.26, -1.37]);
 // across the room (a) and above the auditorium floor (y), plane depth (d) and
 // size in metres, about 3:1. A film fits inside it; see ipic-screening.js.
 export const IPIC_SCREEN = Object.freeze({ a: .3, y: 2.5, d: 33.79, width: 9.8, height: 3.25 });
+// The Tuck Room dartboard (Val, 2026-10-15): a freestanding cabinet in front of the
+// cinema wall, below the floral artwork. The board's face is at d, its centre at a and
+// 1.73 m above the floor; the throwing line is 2.37 m out. The throwing area behind the
+// line clears the east tub chair and holds two players; standing in it plays.
+export const IPIC_DARTS = Object.freeze({ id: 'ipic-tuck-room', a: .1, face: 25.6, bull: 1.73, line: 23.23,
+  area: Object.freeze({ a: Object.freeze([-.2, 1.1]), d: Object.freeze([22.2, 23.23]) }) });
+export const atIpicDartsLine = ([a, d]) => a >= IPIC_DARTS.area.a[0] && a <= IPIC_DARTS.area.a[1] && d >= IPIC_DARTS.area.d[0] && d <= IPIC_DARTS.area.d[1];
 export const IPIC_CAMERAS = Object.freeze([
   { name: 'reception', eye: [0, 1.65, 1], target: [2, 1.5, 5.7], photo: 'IMG_9738.jpg' },
   { name: 'mural', eye: [-1.4, 4.6, 11.7], target: [3, 4.65, 13.65], photo: 'IMG_9771.jpg' },
@@ -58,6 +65,8 @@ export function configureIpicRoom(room) {
   block('ipic-lift-front', 5.3, 5.85, 1.85, .2, 0, 2.8);
   block('ipic-aisle-rail', -5.55, 30, .05, 6.05, 6, .92);
   block('ipic-coffee-table', -2.8, 23.3, 1.5, .9, 6, .4);
+  // The dart cabinet, its board and the darts in it.
+  block('ipic-dart-cabinet', IPIC_DARTS.a, 25.71, .95, .32, 6, 2.05);
   block('ipic-tub-chair', -4.3, 22.4, .95, .95, 6, 1.1);
   block('ipic-tub-chair', -1.05, 22.6, .95, .95, 6, 1.1);
   for (const d of [21.5, 22.7, 23.9]) block('ipic-bar-stool', 3.4, d, .6, .6, 6, 1.4);

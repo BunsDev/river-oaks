@@ -16,7 +16,8 @@ const room = environment.rooms.find(r => r.interior === 'ipic-photo-v1');
 const group = buildIpicInterior(room, { textures: false, local: true });
 group.updateMatrixWorld(true);
 const meshes = [];
-group.traverse(item => { if (item.isMesh) meshes.push(item); });
+// Instanced darts are placed at runtime by a match, not part of the room.
+group.traverse(item => { if (item.isMesh && !item.isInstancedMesh) meshes.push(item); });
 const serverFree = (a, d) => { const [x, n] = room.toWorld(a, d); return environment.isFree(x, -n); };
 const serverGround = (a, d) => { const [x, n] = room.toWorld(a, d); return environment.groundAt(x, -n) - room.floor; };
 
