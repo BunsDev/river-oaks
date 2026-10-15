@@ -45,6 +45,15 @@
 .access-card h1 { margin: 4px 0 5px; font: 600 clamp(26px, 7vw, 31px)/1.15 var(--gate-sans); letter-spacing: -.02em; color: var(--gate-ink); }
 .access-card h1:focus { outline: none; }
 .access-card #access-message { margin: 0 0 22px; color: var(--gate-muted); font-size: 15px; line-height: 1.65; white-space: pre-line; }
+/* How joining works: one row of three steps, the visitor's own step marked (aria-current). */
+.access-journey { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0 0 8px; padding: 0; list-style: none; counter-reset: step; }
+.access-journey li { display: flex; align-items: center; gap: 8px; color: var(--gate-quiet); font-size: 13.5px; line-height: 22px; counter-increment: step; }
+.access-journey li::before {
+  content: counter(step); display: grid; place-items: center; flex: none; width: 22px; height: 22px;
+  border: 1px solid var(--gate-line); border-radius: 50%; font: 600 12px/1 var(--gate-sans); color: var(--gate-muted);
+}
+.access-journey li[aria-current="step"] { color: var(--gate-ink); font-weight: 600; }
+.access-journey li[aria-current="step"]::before { border-color: var(--gate-pink); background: var(--gate-pink); color: var(--gate-on-pink); }
 .access-actions { display: grid; gap: 0; }
 .access-actions a, .access-card button {
   display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; min-height: var(--gate-control);

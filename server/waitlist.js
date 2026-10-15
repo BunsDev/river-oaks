@@ -72,8 +72,10 @@ export async function createFileWaitlist(path, { admins = [], now = Date.now, au
     await rename(`${path}.tmp`, path);
     records = next; audit = nextAudit; invites = nextInvites;
   };
+  // Starter invitations go to accounts approved from the waitlist. An account that joined with an
+  // invitation code (record.inviteId) gets none, then or on a later re-approval: the referral decay.
   const grant = (record, nextInvites, actorId) => {
-    if (record.invitesGrantedAt) return;
+    if (record.invitesGrantedAt || record.inviteId) return;
     if (nextInvites.size + 2 > 50000) throw new Error('Invitation capacity reached');
     for (let i = 0; i < 2; i++) { const invite = newInvite(record.userId, actorId, now()); nextInvites.set(invite.id, invite); }
     record.invitesGrantedAt = new Date(now()).toISOString();
@@ -209,7 +211,7 @@ export async function createFileWaitlist(path, { admins = [], now = Date.now, au
         const at = new Date(now()).toISOString();
         const record = { ...previous, status: 'approved', decidedAt: at, decidedBy: invite.ownerId, inviteId: invite.id };
         const next = new Map(records), nextInvites = new Map(invites);
-        grant(record, nextInvites, identity.userId); next.set(record.userId, record);
+        next.set(record.userId, record);
         nextInvites.set(invite.id, { ...invite, status: 'redeemed', redeemedBy: record.userId, redeemedAt: at });
         await persist(next, [...audit, { action: 'invite-redeemed', inviteId: invite.id, userId: record.userId, actorId: record.userId, at }], nextInvites);
         return { ok: true };

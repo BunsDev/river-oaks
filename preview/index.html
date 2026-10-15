@@ -41,7 +41,12 @@
       </aside>
       <div class="access-panel">
       <div class="access-card">
-        <span class="access-kicker">Step inside</span>
+        <span class="access-kicker" id="access-kicker">Step inside</span>
+        <ol id="access-journey" class="access-journey" aria-label="How joining works" hidden>
+          <li data-step="sign-in">Sign in</li>
+          <li data-step="wait">Get approved</li>
+          <li data-step="enter">Enter</li>
+        </ol>
         <h1 id="access-title" tabindex="-1">Welcome to the district</h1>
         <p id="access-message" role="status">Checking your access…</p>
         <div id="access-providers" class="access-actions" hidden>
@@ -69,10 +74,10 @@
           <p id="access-username-status" role="status"></p>
         </form>
         <form id="access-invite-form" class="access-form" hidden>
-          <label for="access-invite-code">Have an invite code?</label>
-          <input id="access-invite-code" name="invite" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="32" required placeholder="Your invite code" aria-describedby="access-invite-help" />
-          <p id="access-invite-help">Sign in first, then redeem your invite.</p>
-          <button id="access-invite-redeem" type="submit" disabled>Redeem invite and join</button>
+          <label for="access-invite-code">Have an invitation code?</label>
+          <input id="access-invite-code" name="invite" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="32" required placeholder="Invitation code" aria-describedby="access-invite-help" />
+          <p id="access-invite-help">A member’s one-time code skips the waitlist.</p>
+          <button id="access-invite-redeem" type="submit" disabled>Sign in first to use a code</button>
           <p id="access-invite-status" role="status"></p>
         </form>
         <button id="access-retry" type="button" hidden>Try again</button>
@@ -84,7 +89,7 @@
     </section>
     <dialog id="access-invites" class="access-invites" aria-labelledby="access-invites-title">
       <h2 id="access-invites-title">Your invitations</h2>
-      <p>Each newly accepted member receives two single-use invites. They expire 30 days after they are issued.</p>
+      <p>Members approved from the waitlist receive two one-time invitation codes. Each lets one person skip the waitlist and expires 30 days after it’s made. Members who joined with a code don’t receive codes of their own.</p>
       <p id="access-invites-status" role="status"></p>
       <form id="access-invite-issue" class="access-form" hidden>
         <label for="access-invite-owner">Give an invitation to</label>

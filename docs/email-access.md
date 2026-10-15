@@ -11,6 +11,33 @@ waitlist admin approves it or it redeems a valid invitation. Rejected accounts
 must be reconsidered by an admin; another invitation cannot override rejection.
 Existing HTTP, asset, and WebSocket approval checks still apply.
 
+## What the gate tells people
+
+Joining is a waitlist, and the gate says so at every step, so nobody signs in again and
+again thinking it failed (`preview/src/access-entry.js`).
+
+- **Signed out.** *Signing in adds you to the waitlist. Already waiting? Sign in here to
+  check.* A one-row step list in the kicker's place shows how joining works: *Sign in*,
+  *Get approved*, *Enter*. The visitor's own step is marked (`aria-current="step"`); the
+  list shows only while signed out or waiting. The code field says a member's one-time
+  code skips the waitlist, and its button reads *Sign in first to use a code* until
+  then. The column still fits a 1440×900 or 1280×720 screen beside the artwork without
+  scrolling.
+- **Waiting.** The title reads *You’re on the waitlist*. The message says they are signed
+  in and their place is saved, since the day they joined (`requestedAt` from
+  `/api/waitlist/status`), and that they don't need to sign in again: the page checks
+  every 15 seconds and opens River Oaks by itself once they're approved, or they can come
+  back any time.
+- **Invitation codes.** The code field explains itself: a one-time code a member shares
+  so one person can skip the waitlist, which expires 30 days after it's made; its button
+  reads *Use code and enter*. A code that can't be used says why it might not work and
+  that the visitor is still on the waitlist.
+- **Not approved.** The title reads *Your request wasn’t approved*, with the existing
+  contact message.
+
+The landing page's waitlist note says the same: sign in with email or GitHub to join, and
+a member's invitation code skips the wait.
+
 ## Usernames
 
 Every request has a username from its first status check (`server/waitlist.js`,
@@ -47,7 +74,13 @@ sign in. A list with no pending requests refuses new ones.
 
 ## Invitations
 
-- First approval or successful invitation redemption grants exactly two codes.
+- First approval from the waitlist grants exactly two codes.
+- **Referral decay:** an account that joined by redeeming a code receives no codes of
+  its own, then or on a later re-approval. Its record keeps the `inviteId` it joined
+  with, and `/api/waitlist/status` reports `invited: true`; its **Your invitations**
+  dialog says it joined with a code and has none to share. An admin can still issue it
+  codes explicitly. Accounts that joined with a code before this rule (2026-10-15) keep
+  any codes they were already given; nothing is revoked.
 - Each code expires 30 days after issuance and admits one account.
 - Re-approval, signing in again, expiry, and spending codes do not replenish them.
 - Existing approved accounts and configured admins are not retroactively granted
@@ -115,11 +148,12 @@ and update. Listing invites is limited to 20 per minute per account. Codes conta
 the private store also retains the shareable code so the owner/admin can copy it
 again. Protect the Redis database and local private volume accordingly.
 
-The two-invite policy permits accepted users to sponsor new accounts, which then
-receive their own two invitations. Email verification is not proof that accounts
-belong to different humans. Admin assignment and revocation provide control over
-this intended referral growth; they do not prevent someone controlling multiple
-inboxes from participating in that growth.
+The two-invite policy lets members approved from the waitlist sponsor up to two new
+accounts. Those accounts receive no codes of their own, so referral growth stops one
+step from each approval instead of compounding. Email verification is not proof that
+accounts belong to different humans. Admin assignment and revocation provide further
+control; they do not prevent someone controlling multiple inboxes from redeeming the
+codes they were given.
 
 ## Configuration and operations
 

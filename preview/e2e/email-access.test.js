@@ -147,7 +147,9 @@ test('email access: browser verification, invitation, member controls and revoca
     await page.locator('#access-email-code').waitFor({ state: 'visible' });
     await page.locator('#access-email-code').fill('123456');
     await page.getByRole('button', { name: 'Verify email', exact: true }).click();
-    await page.waitForFunction(() => document.querySelector('#access-message').textContent.includes('You’re on the waitlist'));
+    // Signed in once, the visitor is told they are on the waitlist and need not sign in again.
+    await page.waitForFunction(() => document.querySelector('#access-title').textContent === 'You’re on the waitlist'
+      && document.querySelector('#access-message').textContent.includes('You don’t need to sign in again'));
     assert.equal(await page.locator('.app-shell').isVisible(), false);
     const session = await (await request.get(`${origin}/auth/session`)).json();
     const post = (path, data, csrf = session.csrfToken) => request.post(origin + path, {
@@ -174,7 +176,7 @@ test('email access: browser verification, invitation, member controls and revoca
     assert.equal((await request.get(`${origin}/data/district.json`)).status(), 200);
     assert.equal((await post('/api/waitlist/invite-redeem', { code: invite.code })).status(), 400);
     const invitations = await (await request.get(`${origin}/api/waitlist/invites`)).json();
-    assert.equal(invitations.invites.length, 2);
+    assert.equal(invitations.invites.length, 0, 'a newcomer who joined with an invitation code gets no codes of their own');
     // Admission and town connection are separate gates. Wait for the real
     // connected roster before interacting with the previously inert app.
     await page.locator('.multiplayer-roster[data-connected="true"]').waitFor({ state: 'attached', timeout: joinTimeout });
@@ -187,6 +189,7 @@ test('email access: browser verification, invitation, member controls and revoca
     await openHudSpace(page, 'settings-section', 'Account');
     await page.locator('#access-invites-open').click();
     await page.locator('#access-invites[open]').waitFor();
+    await page.locator('#access-invites-status').getByText('You joined with an invitation code, so you have no codes to share.').waitFor();
     await page.locator('#canvas-host canvas').waitFor({ state: 'visible' });
     assert.deepEqual(await page.evaluate(() => window.__policyViolations), [], 'normal game modules must satisfy the script policy');
     assert.equal(await page.locator('#access-invite-issue').isVisible(), false);

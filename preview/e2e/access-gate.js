@@ -7,6 +7,11 @@ async page => {
   await page.goto(origin, { waitUntil: 'commit' });
   await page.getByRole('link', { name: 'Continue with GitHub' }).waitFor({ state: 'visible' });
   check(await page.locator('#access-email').isVisible(), 'Anonymous players can sign in with email');
+  // Joining is a waitlist, said up front: signing in is step one, and an invitation code is explained.
+  check(await page.locator('#access-journey').isVisible() && await page.locator('#access-journey li[aria-current="step"]').getAttribute('data-step') === 'sign-in',
+    'Signed out, the steps show that signing in is how you join the waitlist');
+  check((await page.locator('#access-invite-help').textContent()).includes('skips the waitlist') && await page.locator('#access-invite-redeem').isDisabled(),
+    'The invitation code is explained and needs a sign-in first');
   check(!await page.getByRole('link', { name: 'Continue with Google' }).count(), 'Anonymous players see only supported sign-in methods');
   check(!await page.locator('.app-shell').isVisible() && !await page.locator('#canvas-host canvas').count(), 'Anonymous players cannot start either play mode');
   check(await page.evaluate(() => getComputedStyle(document.documentElement).backgroundColor) === 'rgb(21, 21, 23)', 'The first paint is the sign-in gate colour, not a white page');
@@ -32,6 +37,7 @@ async page => {
   } }));
   await page.route('**/api/waitlist/status', route => route.fulfill({ json: {
     status: 'pending', admin: false, user: { id: 'pending', name: 'Pending' }, username: 'rosy-heron-42', usernameBy: 'default', github: null,
+    requestedAt: '2026-10-15T12:00:00.000Z', invited: false,
   } }));
   let named = null;
   await page.route('**/api/waitlist/username', route => {
@@ -40,7 +46,12 @@ async page => {
       : route.fulfill({ json: { userId: 'pending', username: named.body.username, usernameBy: 'self' } });
   });
   await page.reload({ waitUntil: 'commit' });
-  await page.getByText('You’re on the waitlist. An admin can approve you, or you can redeem an invite below.').waitFor({ state: 'visible' });
+  await page.locator('#access-title').getByText('You’re on the waitlist').waitFor({ state: 'visible' });
+  const waiting = await page.locator('#access-message').textContent();
+  check(waiting.includes('your place on the waitlist is saved') && /October 15|15 October/.test(waiting) && waiting.includes('You don’t need to sign in again'),
+    `Waiting players are told they are signed in, their place is saved since the day they joined, and the page opens itself (${waiting})`);
+  check(await page.locator('#access-journey li[aria-current="step"]').getAttribute('data-step') === 'wait', 'The steps mark waiting for approval');
+  check((await page.locator('#access-invite-help').textContent()).includes('expire 30 days'), 'Waiting players read what an invitation code does and how long it lasts');
   // A waiting player sees the name they will be known by, and may change it.
   check(await page.locator('#access-username').inputValue() === 'rosy-heron-42' && await page.locator('#access-username-github').isHidden(), 'Waiting players see their username; email sign-ins get a generated one');
   await page.locator('#access-username').fill('taken-name'); await page.locator('#access-username-save').click();

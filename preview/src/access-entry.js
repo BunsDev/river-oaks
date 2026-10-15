@@ -14,7 +14,23 @@ const retry = $('#access-retry'), tools = $('#access-tools'), adminButton = $('#
 const gateSignout = $('#access-gate-signout');
 const review = $('#access-review'), reviewList = $('#access-review-list'), reviewStatus = $('#access-review-status');
 let session = null, entered = false, checking = false, gateState = '', isAdmin = false;
-const inviteForm = $('#access-invite-form'), redeemButton = $('#access-invite-redeem');
+const inviteForm = $('#access-invite-form'), redeemButton = $('#access-invite-redeem'), inviteHelp = $('#access-invite-help');
+// Joining is a waitlist: the gate names the step a visitor is on, so signing in once is clearly enough.
+const title = $('#access-title'), journey = $('#access-journey');
+const TITLES = { pending: 'You’re on the waitlist', rejected: 'Your request wasn’t approved' }, WELCOME = 'Welcome to the district';
+const INVITE_HELP = {
+  'signed-out': 'A member’s one-time code skips the waitlist.',
+  pending: 'An invitation code is a one-time code a member shares so one person can skip the waitlist. Enter it to join right away. Codes expire 30 days after they’re made.',
+};
+// The steps take the kicker's place above the title, as a progress row.
+const kicker = $('#access-kicker');
+function showJourney(step) {
+  journey.hidden = !step; kicker.hidden = Boolean(step);
+  for (const item of journey.children) if (item.dataset.step === step) item.setAttribute('aria-current', 'step'); else item.removeAttribute('aria-current');
+}
+// When a waiting resident joined the waitlist, as a date ("15 October"), or '' if unknown.
+const joinedOn = requestedAt => { const date = new Date(requestedAt ?? ''); return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString(undefined, { month: 'long', day: 'numeric' }); };
+let joinedByInvite = false;
 // A waiting resident's username: the field is never overwritten while they edit it.
 const usernameForm = $('#access-username-form'), usernameInput = $('#access-username'), usernameStatus = $('#access-username-status');
 const usernameGitHub = $('#access-username-github');
@@ -61,8 +77,9 @@ async function checkAccess() {
       if (entered) location.reload();
       endSplash({ forget: true });
       tools.hidden = true; gateSignout.hidden = true; providers.hidden = false; usernameForm.hidden = true;
-      inviteForm.hidden = false; redeemButton.disabled = true;
-      message.textContent = 'Sign in with email or GitHub.\nEntry is by invitation or waitlist approval.';
+      inviteForm.hidden = false; redeemButton.disabled = true; redeemButton.textContent = 'Sign in first to use a code'; inviteHelp.textContent = INVITE_HELP['signed-out'];
+      title.textContent = WELCOME; showJourney('sign-in');
+      message.textContent = 'Signing in adds you to the waitlist.\nAlready waiting? Sign in here to check.';
       if (gateState !== 'signed-out') $('#access-title').focus({ preventScroll: true });
       gateState = 'signed-out';
       return;
@@ -73,26 +90,28 @@ async function checkAccess() {
     }
     tools.hidden = false; gateSignout.hidden = false;
     const access = await api('/api/waitlist/status');
-    isAdmin = access.admin;
+    isAdmin = access.admin; joinedByInvite = access.invited === true;
     adminButton.hidden = !access.admin;
     $('#access-reports').hidden = !access.admin;
     if (access.status !== 'approved') {
       if (entered) location.reload();
       endSplash({ forget: true });
       providers.hidden = true;
-      inviteForm.hidden = access.status === 'rejected'; redeemButton.disabled = false;
+      inviteForm.hidden = access.status === 'rejected'; redeemButton.disabled = false; redeemButton.textContent = 'Use code and enter'; inviteHelp.textContent = INVITE_HELP.pending;
+      title.textContent = TITLES[access.status] ?? WELCOME; showJourney(access.status === 'pending' ? 'wait' : null);
       usernameForm.hidden = access.status !== 'pending';
       githubName = access.github ?? null;
       if (!usernameEdited && document.activeElement !== usernameInput) usernameInput.value = access.username ?? '';
       usernameGitHub.hidden = !githubName || usernameInput.value === githubName;
+      const since = joinedOn(access.requestedAt);
       message.textContent = access.status === 'rejected'
         ? 'Your request has not been approved. Contact the district team if you think this is a mistake.'
-        : 'You’re on the waitlist. An admin can approve you, or you can redeem an invite below.';
+        : `You’re signed in and your place on the waitlist is saved${since ? ` (since ${since})` : ''}. You don’t need to sign in again: keep this page open and River Oaks opens by itself once you’re approved, or come back any time.`;
       if (gateState !== access.status) $('#access-title').focus({ preventScroll: true });
       gateState = access.status;
       return;
     }
-    usernameForm.hidden = true;
+    usernameForm.hidden = true; showJourney(null); title.textContent = WELCOME;
     if (!entered) {
       entered = true;
       document.body.dataset.accountId = session.user.id;
@@ -108,7 +127,7 @@ async function checkAccess() {
   } catch {
     if (entered) location.reload();
     endSplash();
-    providers.hidden = true; retry.hidden = false;
+    providers.hidden = true; retry.hidden = false; showJourney(null);
     redeemButton.disabled = true;
     message.textContent = 'Access could not be checked. Try again shortly.';
   } finally { checking = false; }
@@ -202,9 +221,9 @@ inviteForm.addEventListener('submit', async event => {
   try {
     await post('/api/waitlist/invite-redeem', { code: $('#access-invite-code').value.trim() });
     $('#access-invite-code').value = '';
-    $('#access-invite-status').textContent = 'Invite accepted. Welcome to TypeSafe Place.';
+    $('#access-invite-status').textContent = 'Code accepted. Welcome to TypeSafe Place.';
     await checkAccess();
-  } catch { $('#access-invite-status').textContent = 'This invite can’t be used. It may have expired, been used, or belong to another person.'; }
+  } catch { $('#access-invite-status').textContent = 'This code can’t be used. It may have expired, already been used, or be meant for someone else. You’re still on the waitlist.'; }
   finally { redeemButton.disabled = false; }
 });
 
@@ -232,7 +251,8 @@ async function loadInvites() {
       userOptions($('#access-invite-owner'), owners, { selected: session.user.id });
       userOptions($('#access-invite-assignee'), requests.filter(r => r.status === 'pending'), { anyone: true });
     }
-    invitesStatus.textContent = invites.length ? `${invites.filter(i => i.status === 'active').length} active · ${invites.length} total` : 'No invitations available.';
+    invitesStatus.textContent = invites.length ? `${invites.filter(i => i.status === 'active').length} active · ${invites.length} total`
+      : !isAdmin && joinedByInvite ? 'You joined with an invitation code, so you have no codes to share.' : 'No invitations available.';
     for (const invite of invites) {
       const row = document.createElement('article');
       const details = document.createElement('p');

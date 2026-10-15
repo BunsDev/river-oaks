@@ -41,11 +41,17 @@ test('real SDK email login stays waitlisted until invite redemption unlocks a mu
   assert.equal(session.authenticated, true);
   const status = await (await fetch(base + '/api/waitlist/status', { headers: { cookie: sessionCookie } })).json();
   assert.equal(status.status, 'pending');
+  // The waiting page can say when this person joined the waitlist, and that they joined it, not by invitation.
+  assert.equal(status.invited, false);
+  assert.ok(!Number.isNaN(Date.parse(status.requestedAt)), 'the status says when the request was made');
   assert.equal((await post('/api/multiplayer/ticket', {}, sessionCookie, session.csrfToken)).status, 403);
   assert.equal((await post('/api/waitlist/invite-redeem', { code: invite.code }, sessionCookie, session.csrfToken)).status, 200);
   assert.equal((await post('/api/multiplayer/ticket', {}, sessionCookie, session.csrfToken)).status, 200);
+  const admitted = await (await fetch(base + '/api/waitlist/status', { headers: { cookie: sessionCookie } })).json();
+  assert.deepEqual([admitted.status, admitted.invited], ['approved', true], 'the status says this resident joined by invitation');
+  // Referral decay: someone who joined with an invitation code receives no codes of their own.
   const codes = await (await fetch(base + '/api/waitlist/invites', { headers: { cookie: sessionCookie } })).json();
-  assert.equal(codes.invites.length, 2);
+  assert.equal(codes.invites.length, 0);
 });
 
 test('invitation HTTP routes require a verified session, CSRF and administrator authority', async t => {
@@ -155,7 +161,13 @@ for (const backend of ['file', 'redis']) {
     assert.equal(outcomes.filter(r => r.ok).length, 1);
     const accepted = await store.isApproved('first') ? 'first' : 'second';
     const pending = accepted === 'first' ? 'second' : 'first';
-    assert.equal((await store.listInvites({ userId: accepted })).length, 2);
+    // Referral decay: an account that joined with an invitation code gets none of its own, even on a
+    // later re-approval. An admin may still give it one explicitly.
+    assert.equal((await store.listInvites({ userId: accepted })).length, 0, 'an invitee receives no starter invitations');
+    await store.decide({ userId: accepted, approved: true, actorId: 'admin' });
+    assert.equal((await store.listInvites({ userId: accepted })).length, 0, 'nor when an admin approves them again');
+    const given = await store.issueInvite({ actorId: 'admin', ownerId: accepted });
+    assert.deepEqual((await store.listInvites({ userId: accepted })).map(invite => invite.id), [given.id], 'an admin can still give an invitee one explicitly');
     assert.equal(await store.isApproved(pending), false);
     await store.updateInvite({ actorId: 'admin', id: invites[1].id, assignedUserId: 'assigned' });
     assert.equal((await store.redeemInvite({ identity: identity(pending), code: invites[1].code })).ok, false);
