@@ -98,11 +98,52 @@ acceptance fixtures set synthetic grants only.
 
 Unset `RIVER_OAKS_SCREENING_HOSTS`. Running films then pause on the next tick, because their host's grant is gone, and nobody can start another.
 
+## Watching in the browser (#367)
+
+Inside IPIC, a panel shows the shared status and this viewer's own controls. The film plays on
+the auditorium's existing screen material, which is restored when the viewer leaves; no
+second interior or renderer is built.
+
+- **Media.** Only bundled sources from `SCREENING_MEDIA` play. The fixture is a 12 s test
+  pattern with one beep a second, in WebM (VP9/Opus) and MP4 (H.264/AAC), with English
+  captions (`preview/public/assets/ipic/screening`). `scripts/make-screening-fixture.mjs`
+  regenerates it and `--check` verifies the committed hashes and durations. It is labelled
+  as a fixture everywhere and is not the approved short (#365).
+- **Sync.** The player projects the shared position from the snapshot and an estimate of
+  server time. It prefers `sync` replies measured over a round trip, taken on entry, every
+  15 s and on return to the foreground, and falls back to snapshot frames. Drift up to 40 ms
+  is left alone, drift up to 400 ms is corrected with the playback rate (at most ±8 %), and
+  anything larger seeks. A stale revision is ignored and a new epoch resets the player.
+- **Local states.** Loading, playing, buffering, paused, ended, blocked (autoplay refused),
+  error and unsupported belong to this viewer only. None of them sends a command or changes
+  the shared film. **Play film** answers a refused autoplay, **Retry** reloads after an
+  error, and **Stop watching** releases the film locally.
+- **Sound, captions and transcript.** The film starts muted. **Sound on** is the viewer's
+  choice and plays only inside the auditorium; the lounge and the street stay silent.
+  Captions are on by default, and the transcript opens in the panel. No microphone is
+  involved.
+- **Host controls.** **Start**, **Pause**, **Resume** and **Stop** appear only when the
+  server's `sync` reply says this viewer may host. Each sends one operation id and retries
+  once with the same id if the reply is lost.
+- **Cleanup.** Leaving IPIC, losing the connection, a world rebuild or disposal stops the
+  film and releases the video element, the screen texture, listeners and timers. A late
+  `play()` cannot start a disposed film.
+- **Serving.** The standalone server sends video and caption types and honours single byte
+  ranges, which Safari needs. The Vite dev server and Vercel already do.
+
 ## Tests
 
 ```sh
 node --test preview/tests/screening-contract.test.js server/tests/screenings.test.js
 REDIS_URL=redis://127.0.0.1:<isolated port> node --test server/tests/screenings-transport.test.js
+```
+
+Browser and player:
+
+```sh
+node --test preview/tests/ipic-screening.test.js preview/tests/ipic-screening-ui.test.js server/tests/static-media.test.js
+node scripts/make-screening-fixture.mjs --check
+node preview/e2e/ipic-screening-runner.mjs   # two real browsers; takes the shared browser lock
 ```
 
 The transport test covers the real ticket and WebSocket gates in memory and Redis, and

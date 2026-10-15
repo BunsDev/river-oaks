@@ -9893,6 +9893,41 @@
         "Review and hosted preview gate; pnpm run land"
       ],
       "pr": 394
+    },
+    {
+      "id": "ipic-screening-playback-367",
+      "title": "IPIC #367: synchronized client playback, accessible controls and media recovery against #366's contract, with a labelled local fixture clip",
+      "status": "active",
+      "branches": [
+        "feat/ipic-screening-playback-20261015"
+      ],
+      "owner": "claude:river-oaks-1b (f4107618)",
+      "leaseUntil": "2026-10-15T07:20:42.517Z",
+      "updatedAt": "2026-10-15T05:20:42.517Z",
+      "issue": 367,
+      "ledger": "docs/superpowers/plans/2026-10-15-ipic-screening-playback.md",
+      "nextAction": "Two-browser journey passed twice (max spread 7 ms, pause 0 ms); core verify passed. Commit, merge main, PR, land after #397.",
+      "filesOwned": [
+        "preview/src/ipic-screening.js",
+        "preview/src/ipic-screening-ui.js",
+        "preview/src/screening-contract.js (client media fields)",
+        "preview/src/ipic-interior.js (screen material handle)",
+        "preview/src/main.js (screening wiring)",
+        "preview/public/assets/ipic/screening/**",
+        "scripts/make-screening-fixture.mjs",
+        "preview/tests/ipic-screening*.test.js",
+        "preview/e2e/ipic-screening.js",
+        "server/app.js (media types and Range)",
+        "docs/screenings.md",
+        "docs/superpowers/plans/2026-10-15-ipic-screening-playback.md"
+      ],
+      "requiredChecks": [
+        "node --test preview/tests/ipic-screening*.test.js",
+        "two-client fixture browser journey with drift samples",
+        "pnpm run verify",
+        "hosted Verify"
+      ],
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-ipic-playback-20261015"
     }
   ]
 }
