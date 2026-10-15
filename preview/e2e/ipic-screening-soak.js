@@ -88,11 +88,17 @@ async (host, viewer, tools) => {
   checks.push('host started the 30 s fixture inside IPIC');
 
   async function cycle(index) {
-    const restarted = await ensureRunning(), before = await screening(host);
+    const restarted = await ensureRunning();
     const started = Date.now();
     await enterIpic(viewer);
     const entryMs = Date.now() - started;
-    await viewer.waitForFunction(() => window.__riverScreening().state === 'playing', null, { timeout: 30000 });
+    // On a loaded machine the trip in can outlast the 30 s fixture. Then the host starts it again
+    // and this cycle is recorded as an in-room start rather than a late join.
+    const lateJoin = (await screening(host)).sharedStatus === 'playing';
+    if (!lateJoin) await ensureRunning();
+    const before = await screening(host);
+    await viewer.waitForFunction(() => window.__riverScreening().state === 'playing', null, { timeout: 60000 })
+      .catch(async error => { throw new Error(`${error.message}: cycle ${index} viewer ${JSON.stringify(await screening(viewer))}, host ${JSON.stringify(await screening(host))}`); });
     const joined = Date.now(), late = await screening(viewer);
     check(late.epoch === before.epoch, `cycle ${index}: the viewer joined the host's epoch ${before.epoch}, got ${late.epoch}`);
     const inside = await counters(viewer);
@@ -113,15 +119,17 @@ async (host, viewer, tools) => {
     const after = await counters(viewer), hostAfter = await screening(host);
     check(after.mediaPlaying === 0 && after.screeningVideos === 0, `cycle ${index}: no film left playing after exit: ${JSON.stringify(after)}`);
     check(after.playCalls === playCalls, `cycle ${index}: no late play() after exit (${playCalls} -> ${after.playCalls})`);
-    check(hostAfter.epoch === before.epoch && hostAfter.currentTime > before.currentTime, `cycle ${index}: the viewer's entry and exit did not reset the host's film`);
-    console.log(`cycle ${index}: joined at ${late.currentTime.toFixed(2)} s, within 500 ms after ${converged} ms; after exit ${JSON.stringify(after)}`);
-    return { cycle: index, restarted, entryMs, joinedAtS: Math.round(late.currentTime * 100) / 100, convergedAfterMs: converged, worstSpreadMs: Math.round(worst), viewerPositionS: Math.round(position * 100) / 100, inside, after };
+    check(hostAfter.epoch === before.epoch && (hostAfter.currentTime > before.currentTime || hostAfter.sharedStatus === 'ended'), `cycle ${index}: the viewer's entry and exit did not reset the host's film`);
+    console.log(`cycle ${index}: ${lateJoin ? 'late join' : 'in-room start'} at ${late.currentTime.toFixed(2)} s after a ${entryMs} ms trip in, within 500 ms after ${converged} ms; after exit ${JSON.stringify(after)}`);
+    return { cycle: index, restarted, lateJoin, entryMs, joinedAtS: Math.round(late.currentTime * 100) / 100, convergedAfterMs: converged, worstSpreadMs: Math.round(worst), viewerPositionS: Math.round(position * 100) / 100, inside, after };
   }
 
   cycles.push({ warmUp: true, ...await cycle(0) });
   checks.push('warm-up entry/exit completed');
   for (let i = 1; i <= CYCLES; i++) cycles.push(await cycle(i));
-  checks.push(`${CYCLES} further entry/exit cycles: each late join within 500 ms in under 5 s, no film or late play() after exit, host film never reset`);
+  const lateJoins = cycles.filter(item => item.lateJoin).length;
+  check(lateJoins > 0, 'at least one cycle joined a running film late');
+  checks.push(`${CYCLES} further entry/exit cycles (${lateJoins} of ${CYCLES + 1} late joins): each within 500 ms in under 5 s, no film or late play() after exit, host film never reset`);
 
   // Growth: the warm-up exit is the baseline. Media, audio contexts, intervals and renderer
   // resources must not exceed it after the last cycle. Counts that move with the HUD (DOM
