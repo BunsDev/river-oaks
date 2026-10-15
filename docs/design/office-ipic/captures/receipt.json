@@ -1,0 +1,102 @@
+{
+  "packet": "office-ipic",
+  "schemaVersion": 1,
+  "sourceRevision": "7feef5232b799ccadd6088d8f3ecce78a2011f07",
+  "capturedAt": "2026-10-14T22:12:27.959Z",
+  "commands": [
+    "RIVER_OAKS_E2E_REPORT=office-ipic-baseline-captures.json pnpm run test:experience office-arrival-visual office-visit",
+    "RIVER_OAKS_E2E_REPORT=office-ipic-baseline-captures-desk.json pnpm run test:experience office-desk"
+  ],
+  "reports": [
+    "data/reports/office-ipic-baseline-captures.json",
+    "data/reports/office-ipic-baseline-captures-desk.json"
+  ],
+  "results": {
+    "office-arrival-visual": "passed",
+    "office-visit": "passed",
+    "office-desk": "passed"
+  },
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+  "viewport": [
+    1440,
+    1000
+  ],
+  "pixelRatio": 1,
+  "quality": "journey default",
+  "lighting": "scene default (office RoomEnvironment, hemisphere + directional)",
+  "limits": "Local macOS Chromium with Metal ANGLE at load average about 30; desktop and the 320 px UI view are not physical-device proof; the IPIC views reuse docs/ipic-review/review.json and are not re-rendered here; no penthouse (O4) exists to capture",
+  "captures": [
+    {
+      "id": "O0-street-facade",
+      "file": "captures/O0-street-facade.png",
+      "source": "output/playwright/office-arrival-refined-facade.png",
+      "journey": "office-arrival-visual",
+      "note": "street frontage, lobby canopy",
+      "bytes": 941431,
+      "sha256": "cd69b0bd0b86bd8e39d54e777366e7147757912ee277fd24e19e959e536da15d"
+    },
+    {
+      "id": "O0-lobby",
+      "file": "captures/O0-lobby.png",
+      "source": "output/playwright/office-arrival-refined-lobby.png",
+      "journey": "office-arrival-visual",
+      "note": "lobby before boarding",
+      "bytes": 261039,
+      "sha256": "534d639431a96a581578ec622ae042ced2975d01730c22d38540808e4e59247b"
+    },
+    {
+      "id": "O1-cabin-avatar",
+      "file": "captures/O1-cabin-avatar.png",
+      "source": "output/playwright/office-elevator-ride.png",
+      "journey": "office-visit",
+      "note": "player avatar riding the cabin, level indicator",
+      "bytes": 939038,
+      "sha256": "872b5e86939f5f876f007de32375a37f0ca2535415a51a43731d13fd9540a73b"
+    },
+    {
+      "id": "O1-arrival",
+      "file": "captures/O1-arrival.png",
+      "source": "output/playwright/office-arrival-refined-office.png",
+      "journey": "office-arrival-visual",
+      "note": "arrival reveal into the 9 x 7 m office",
+      "bytes": 385818,
+      "sha256": "d2e577dda3a831ae1a818dc015b9d9aef435db5f583107fdfddf404a09f40996"
+    },
+    {
+      "id": "O2-walking",
+      "file": "captures/O2-walking.png",
+      "source": "output/playwright/office-walking.png",
+      "journey": "office-visit",
+      "note": "first-person walking view, hosting/work side",
+      "bytes": 965577,
+      "sha256": "2f584c7a0d25872749a7a7ff49503afe1f9f1bde0455b323e1be9506341ea263"
+    },
+    {
+      "id": "O2-guest-hud",
+      "file": "captures/O2-guest-hud.png",
+      "source": "output/playwright/office-guest.png",
+      "journey": "office-visit",
+      "note": "accepted guest view with the office HUD",
+      "bytes": 646701,
+      "sha256": "be1cc90fa97fdd8dd6cb393cf4de3daa59357933ce006f7a37047216856967a9"
+    },
+    {
+      "id": "O3-desk-desktop",
+      "file": "captures/O3-desk-desktop.png",
+      "source": "output/playwright/desk-complete-desktop.png",
+      "journey": "office-desk",
+      "note": "occupied workstation, private desk open (desktop)",
+      "bytes": 304322,
+      "sha256": "e4f3183ece6faf0c2f172a0aa2c69225603a88cc7d851a61c667b24997bfcaa1"
+    },
+    {
+      "id": "O3-desk-phone",
+      "file": "captures/O3-desk-phone.png",
+      "source": "output/playwright/desk-small-phone.png",
+      "journey": "office-desk",
+      "note": "occupied workstation, private desk (320 px UI view, not device proof)",
+      "bytes": 54709,
+      "sha256": "3bdd31cf3aca5366941633cf8f34dd60a6d3be941c3fcdc6c81587090356995d"
+    }
+  ]
+}

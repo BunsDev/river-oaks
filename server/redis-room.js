@@ -1,9 +1,11 @@
+import { workspaceContext, reconcileOfficeVisit, reconcileOfficeVisits } from './office-workspace-visits.js';
 import { randomUUID } from 'node:crypto';
 import { deflateSync, inflateSync } from 'node:zlib';
 import { createSharedWorld, migrateWorldCheckpoint } from './world.js';
 import { recoverDistrictHeightCheckpoint } from './district-checkpoint-migration.js';
 import { recoverDistrictInteriorCheckpoint } from './district-interior-checkpoint-migration.js';
 import { recoverDistrictLevelsCheckpoint } from './district-level-checkpoint-migration.js';
+import { recoverDistrictTowerCheckpoint } from './district-tower-checkpoint-migration.js';
 import { isJevicaAdmin } from './admin.js';
 import { DEFAULT_WORLD_ID, validateWorldId } from '../preview/src/world-contract.js';
 import { placesOf } from '../preview/src/places.js';
@@ -87,7 +89,7 @@ function validOperation(operation) {
 }
 
 /** Private room coordinator. Authentication and connection IDs come from the server. */
-export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID,now=Date.now,authorize,isAdmin=isJevicaAdmin,regionCatalog=null,regionSha256=null,avatarPreferences=null,voice=null,cyclingMiles=null}) {
+export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID,now=Date.now,authorize,isAdmin=isJevicaAdmin,regionCatalog=null,regionSha256=null,avatarPreferences=null,voice=null,cyclingMiles=null,officeWorkspaces=null,screeningHosts=[],officeLayout}) {
   if(!redis || typeof authorize!=='function' || typeof prefix!=='string' || !prefix || prefix.length>180) throw new Error('Invalid room configuration');
   validateWorldId(worldId);
   const tag=prefix.includes('{')?prefix:`{${prefix}}`;
@@ -95,9 +97,12 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
   const rides=cyclingMiles?createRideFlush({world:()=>null,store:cyclingMiles,warn:detail=>console.warn(JSON.stringify({...detail,worldId}))}):null;
   if(!/^\{[^{}]+\}$/.test(tag))throw new Error('Room prefix must be one Redis hash tag');
   const keys={lease:`${tag}:lease`,state:`${tag}:state`,view:`${tag}:view`,queue:`${tag}:queue`,population:`${tag}:population`};
-  // Monotonic writer generation: checkpoint v6 adds office permissions and visits. A newer
-  // writer atomically fences an older lease; peers/future generations retain it.
-  const token=`v6:${randomUUID()}`;
+  // Monotonic writer generation: checkpoint v11 adds office seat claims (v10 office visit layouts
+  // and levels, v9 venue screenings, v8 resident-owned workspace visits). A newer writer
+  // atomically fences an older lease; peers/future generations retain it.
+  const token=`v11:${randomUUID()}`;
+  // Every replacement and recovery probe uses this coordinator's current configuration.
+  const worldOptions={now,isAdmin,worldId,screeningHosts,officeLayout};
   let closed=false,pendingTick=null,lastAttempt=-Infinity,lastView=null,cached=null;
   async function read() {
     const buffer=await redis.getBuffer(keys.view);
@@ -125,7 +130,7 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
         throw new Error('Invalid durable town region');
       currentData=await regionCatalog.getRegion(worldId);
     }
-    let world=cached?.world??createSharedWorld(currentData,{now,isAdmin,worldId});
+    let world=cached?.world??createSharedWorld(currentData,worldOptions);
     let districtMigration = null;
     if(!cached && previous) {
       let checkpointReason = 'unknown';
@@ -138,16 +143,18 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
         throw error;
       }
       if (!world.restore(previous.checkpoint, { onFailure: reason => { checkpointReason = reason; } }).ok) {
-        const levels = recoverDistrictLevelsCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, worldId, now, isAdmin });
-        const interior = levels.ok ? levels : recoverDistrictInteriorCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, worldId, now, isAdmin });
+        const tower = recoverDistrictTowerCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
+        const levels = tower.ok ? tower : recoverDistrictLevelsCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
+        const interior = levels.ok ? levels : recoverDistrictInteriorCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
         const recovered = interior.ok ? interior
-          : recoverDistrictHeightCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, worldId, now, isAdmin });
+          : recoverDistrictHeightCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
         if (!recovered.ok || !world.restore(recovered.checkpoint, { onFailure: reason => { checkpointReason = reason; } }).ok) {
           const error = new Error('Invalid durable town checkpoint');
           error.checkpointReason = checkpointReason;
           throw error;
         }
-        districtMigration = levels.ok ? { kind: 'levels', from: levels.from }
+        districtMigration = tower.ok ? { kind: 'tower', from: tower.from }
+          : levels.ok ? { kind: 'levels', from: levels.from }
           : interior.ok ? { kind: 'interior', from: interior.from }
           : { kind: 'height', from: recovered.revision };
       }
@@ -195,9 +202,9 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
         if(!candidate.ok)return rejected(candidate.reason);
         let checkpoint;
         try {checkpoint=world.checkpoint();} catch {return rejected('world_busy');}
-        const migrated=migrateWorldCheckpoint({fromData:currentData,toData:candidate.worldData,checkpoint,worldId,now,isAdmin});
+        const migrated=migrateWorldCheckpoint({fromData:currentData,toData:candidate.worldData,checkpoint,...worldOptions});
         if(!migrated.ok)return rejected(migrated.error);
-        const next=createSharedWorld(candidate.worldData,{now,isAdmin,worldId});
+        const next=createSharedWorld(candidate.worldData,worldOptions);
         if(!next.restore(migrated.checkpoint).ok)return rejected('incompatible_region');
         if(rides)drained.push(...world.drainRides());
         world=next;currentData=candidate.worldData;currentHash=candidate.world.regionSha256;
@@ -219,6 +226,7 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
             result.player=world.applyAccountAppearance(operation.identity.userId,preference);
           } catch {console.warn(JSON.stringify({event:'room_appearance_unavailable',worldId}));}
         }
+        if(result.ok)await reconcileOfficeVisit(world,officeWorkspaces,operation.identity.userId);
         if(result.ok)connections.set(operation.identity.userId,{identity:operation.identity,connectionId:operation.connectionId,lastSeen:time,leftAt:null});
         return result;
       }
@@ -238,7 +246,8 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       }
       if(avatarPreferences && ['appearance','movement'].includes(operation.message.type))
         await syncAccount(operation.userId);
-      const result=world.command(operation.userId,operation.message);
+      const officeWorkspace=await workspaceContext(officeWorkspaces,operation.userId,operation.message);
+      const result=world.command(operation.userId,operation.message,{officeWorkspace,sessionId:connection.identity.sessionId??null});
       if(result.ok && avatarPreferences && ['appearance','movement'].includes(operation.message.type))
         await avatarPreferences.save(operation.userId,world.accountAppearance(operation.userId));
       return result;
@@ -266,6 +275,8 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       }
       replies.push({key:`${tag}:reply:${entry.id}`,result});
     }
+    let officeCheckedAt=cached?.officeCheckedAt??-Infinity;
+    if(time-officeCheckedAt>=5000){await reconcileOfficeVisits(world,officeWorkspaces);officeCheckedAt=time;}
     if(closed){cached=null;return null;}
     // Shared voice: the lease holder is the one place with both the live world
     // and the authoritative connections, so it reconciles leases here, after
@@ -280,7 +291,7 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       } catch {console.warn(JSON.stringify({event:'voice_reconcile_failed',worldId}));}
     }
     const revision=(previous?.revision??0)+1;
-    const snapshot=world.snapshot();if(currentHash)snapshot.regionSha256=currentHash;
+    const snapshot={...world.snapshot(),serverTimeMs:time};if(currentHash)snapshot.regionSha256=currentHash;
     const view={worldId,snapshot,connections:[...connections.values()].map(({identity,connectionId})=>({userId:identity.userId,connectionId,sessionId:identity.sessionId,expiresAt:identity.expiresAt})),revision};
     const checkpoint={version:2,worldId,revision,lastTick:time,connections:[...connections.values()],checkpoint:world.checkpoint(),
       ...(previous?.regionSha256||revisionUpdate?{regionSha256:currentHash}:{})};
@@ -294,12 +305,14 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       visitors,
       ...replies.map(reply=>JSON.stringify(reply.result)));
     if(!committed){cached=null;return read();}
-    if (districtMigration) console.info(JSON.stringify(districtMigration.kind === 'levels'
+    if (districtMigration) console.info(JSON.stringify(districtMigration.kind === 'tower'
+      ? { event: 'district_tower_checkpoint_migrated', from: districtMigration.from, to: 'penthouse_tower_33m' }
+      : districtMigration.kind === 'levels'
       ? { event: 'district_levels_checkpoint_migrated', from: districtMigration.from, to: 'gallery_plan_v2' }
       : districtMigration.kind === 'interior'
         ? { event: 'district_interior_checkpoint_migrated', from: districtMigration.from, to: 'gallery_plan_v1' }
         : { event: 'district_height_checkpoint_migrated', from: districtMigration.from, to: 'photographed_heights' }));
-    cached={world,connections,previous:checkpoint,currentData,currentHash};lastView=view;
+    cached={world,connections,previous:checkpoint,currentData,currentHash,officeCheckedAt};lastView=view;
     if(rides){rides.merge(drained);void rides.send();}
     return view;
   }

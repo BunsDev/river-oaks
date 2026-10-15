@@ -8,6 +8,7 @@ import { planStoreRooms } from '../../preview/src/store-rooms.js';
 import { loadDistrictData } from '../district-data.js';
 import { recoverDistrictLevelsCheckpoint } from '../district-level-checkpoint-migration.js';
 import { createSharedWorld } from '../world.js';
+import { beforeTowerRaise } from './district-history.js';
 
 const data = name => JSON.parse(readFileSync(new URL(`../../preview/public/data/${name}`, import.meta.url)));
 
@@ -44,7 +45,8 @@ test('the proposed second gallery level preserves ground identity and fits below
 });
 
 test('a validated occupied one-level town migrates to the two-level plan without losing its player', async () => {
-  const nextData = await loadDistrictData();
+  // The two-level plan's district, before the later penthouse tower raise.
+  const nextData = beforeTowerRaise(await loadDistrictData());
   const approved = data('building-interiors/river-oaks-gallery-v2.json');
   const previousData = { ...nextData, buildingInteriors: [data('building-interiors/river-oaks-gallery-v1.json')] };
   const options = { now: () => 100000 };
@@ -65,6 +67,7 @@ test('a validated occupied one-level town migrates to the two-level plan without
   assert.equal(recoverDistrictLevelsCheckpoint({ worldData: nextData, checkpoint: { ...checkpoint, checksum: 'bad' }, ...options }).ok, false);
   const legacy = structuredClone(checkpoint);
   legacy.version = 6;
+  delete legacy.payload.screenings;
   for (const player of legacy.payload.players) {
     delete player.buildingId;
     delete player.levelId;

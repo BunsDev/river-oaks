@@ -8,6 +8,7 @@ import { createSharedWorld } from '../world.js';
 import { createGameServer } from '../app.js';
 import { createWorldGateway } from '../world-gateway.js';
 import { createRedisSecurity } from '../redis-security.js';
+import { createMemoryOfficeWorkspaces, createRedisOfficeWorkspaces } from '../office-workspaces.js';
 import { approvedWaitlist } from './waitlist-fixture.js';
 import { JEVICA_ADMIN_USER_IDS } from '../admin.js';
 const data=JSON.parse(readFileSync(new URL('../../preview/public/data/district.json',import.meta.url)));
@@ -17,8 +18,10 @@ for(const mode of ['memory','redis'])test(`${mode}: private desk authorization a
  const waitlist={...approvedWaitlist,isApproved:async id=>id===owner||approved};
  let redis,security;const namespace=`river-oaks:office-test:${randomUUID()}`;
  if(mode==='redis'){redis=new Redis(process.env.REDIS_URL);security=createRedisSecurity({redis,prefix:`{${namespace}}`});}
- const app=mode==='redis'?createWorldGateway({redis,namespace,worldData:data,auth,security,waitlist,origin}):createGameServer({world:createSharedWorld(data),auth,waitlist,origin,staticRoot:'/nonexistent'});
- await new Promise(r=>app.server.listen(0,'127.0.0.1',r));const base=`http://127.0.0.1:${app.server.address().port}`,sockets=[];
+ const officeWorkspaces=mode==='redis'?createRedisOfficeWorkspaces({redis,prefix:`{${namespace}}`}):createMemoryOfficeWorkspaces();
+ const createApp=()=>mode==='redis'?createWorldGateway({redis,namespace,worldData:data,auth,security,waitlist,origin}):createGameServer({world:createSharedWorld(data),auth,waitlist,origin,officeWorkspaces,staticRoot:'/nonexistent'});
+ let app=createApp();
+ await new Promise(r=>app.server.listen(0,'127.0.0.1',r));let base=`http://127.0.0.1:${app.server.address().port}`;const sockets=[];
  t.after(async()=>{for(const ws of sockets)ws.terminate();await app.close();security?.close();if(redis){const keys=await redis.keys(`*${namespace}*`);if(keys.length)await redis.del(...keys);await redis.quit();}});
  const ticket=(id,csrf='test-csrf')=>fetch(base+'/api/multiplayer/ticket',{method:'POST',headers:{Origin:origin,Cookie:`fixture=${id}`,'X-CSRF-Token':csrf}});
  assert.equal((await ticket('owner','wrong')).status,403);assert.equal((await ticket('missing')).status,401);
@@ -29,7 +32,7 @@ for(const mode of ['memory','redis'])test(`${mode}: private desk authorization a
   await new Promise((resolve,reject)=>{ws.once('error',reject);ws.on('message',raw=>{const v=JSON.parse(raw);if(v.type==='snapshot'){last=v;resolve();}if(v.type==='result'&&pending.has(v.requestId)){pending.get(v.requestId)(v);pending.delete(v.requestId);}});});
   return {ws,get snapshot(){return last;},send:message=>new Promise((resolve,reject)=>{const requestId=String(++seq),timeout=setTimeout(()=>{pending.delete(requestId);reject(new Error('Office command timed out'));},5000);pending.set(requestId,v=>{clearTimeout(timeout);resolve(v);});ws.send(JSON.stringify({...message,requestId}));})};
  };
- const a=await join('owner'),b=await join('guest');
+ let a=await join('owner'),b=await join('guest');
  const office=(client,action,more={})=>client.send({type:'office',officeId:'jevica-office',action,...more});
  const post=(id,action,data={},csrf='test-csrf')=>fetch(base+'/api/office-desk/'+action,{method:'POST',headers:{Origin:origin,Cookie:`fixture=${id}`,'X-CSRF-Token':csrf,'Content-Type':'application/json'},body:JSON.stringify(data)});
  assert.equal((await post('missing','read')).status,401);
@@ -56,4 +59,38 @@ for(const mode of ['memory','redis'])test(`${mode}: private desk authorization a
  assert.equal((await post('owner','save',{expectedVersion:3,task:{...draft,status:'done'}})).status,200);
  assert.equal((await post('owner','remove',{expectedVersion:4,id:draft.id})).status,200);
  assert.deepEqual((await (await post('owner','read')).json()).desk.tasks,[]);
+ const own=await post('guest','workspace/provision');assert.equal(own.status,200);const workspace=(await own.json()).workspace;
+ const ownerWorkspace=(await (await post('owner','workspace/provision')).json()).workspace;
+ assert.notEqual(workspace.id,ownerWorkspace.id);
+ assert.equal((await post('guest','workspace/read',{workspaceId:workspace.id})).status,403);
+ assert.equal((await b.send({type:'office',action:'enter',officeId:workspace.id})).ok,true);
+ assert.equal((await post('guest','workspace/read',{workspaceId:workspace.id})).status,200);
+ assert.equal((await post('guest','workspace/invite',{workspaceId:workspace.id,peerId:owner})).status,200);
+ assert.equal((await post('owner','workspace/accept',{workspaceId:workspace.id})).status,200);
+ await office(a,'leave');
+ assert.equal((await a.send({type:'office',action:'enter',officeId:workspace.id})).ok,true);
+ assert.equal((await post('owner','workspace/save',{workspaceId:workspace.id,expectedVersion:0,operationId:'shared-save',task:draft})).status,200);
+ assert.equal((await (await post('guest','workspace/read',{workspaceId:workspace.id})).json()).desk.tasks[0].title,draft.title);
+ assert.deepEqual((await (await post('guest','read')).json()).desk.tasks,[],'shared tasks never enter private desk');
+ if(mode==='redis'){
+  const privateRetry={expectedVersion:5,operationId:'replacement-private',task:{...draft,id:'replacement-private'}};
+  assert.equal((await post('owner','save',privateRetry)).status,200);
+  for(const ws of sockets)ws.terminate();
+  await app.close();app=createApp();await new Promise(r=>app.server.listen(0,'127.0.0.1',r));
+  // A replacement is a fresh transport: do not reuse Undici's dying HTTP pool.
+  base=`http://127.0.0.1:${app.server.address().port}`;
+  a=await join('owner');b=await join('guest');
+  assert.equal(a.snapshot.players.find(p=>p.id===owner).office.id,workspace.id,'application replacement restores authorized visit');
+  assert.equal((await (await post('owner','read')).json()).desk.tasks[0].id,'replacement-private');
+  assert.equal((await (await post('owner','save',privateRetry)).json()).desk.version,6,'lost response retry survives gateway replacement');
+  assert.equal((await (await post('owner','workspace/read',{workspaceId:workspace.id})).json()).desk.tasks[0].title,draft.title);
+  assert.equal((await (await post('owner','workspace/save',{workspaceId:workspace.id,expectedVersion:0,operationId:'shared-save',task:draft})).json()).desk.version,1,'shared receipt survives gateway replacement');
+  assert.deepEqual((await (await post('guest','read')).json()).desk.tasks,[]);
+ }
+ await officeWorkspaces.revoke('visitor',workspace.id,owner);
+ const reconnected=await join('owner_alt');
+ assert.equal(reconnected.snapshot.players.find(p=>p.id===owner).office,null,'reconnect revalidates membership before its first snapshot');
+ assert.equal((await post('guest','workspace/revoke',{workspaceId:workspace.id,peerId:owner})).status,200);
+ assert.equal((await post('owner','workspace/read',{workspaceId:workspace.id})).status,403);
+ assert.equal((await post('owner','workspace/save',{workspaceId:workspace.id,expectedVersion:1,operationId:'revoked-save',task:draft})).status,403);
 });

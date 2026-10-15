@@ -1,0 +1,31 @@
+{
+  "createdAt": "2026-10-15T01:38:45.652Z",
+  "status": "passed",
+  "modes": [
+    "required"
+  ],
+  "rendering": "Full rendering",
+  "scope": "Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.",
+  "results": [
+    {
+      "name": "vehicle-exit",
+      "status": "passed",
+      "seconds": 7.701,
+      "result": {
+        "checks": [
+          "Jevica boards a vehicle accepted by the shared town",
+          "The initial parked vehicle supports a scenic drive: {\"riding\":true,\"chauffeur\":{\"active\":true,\"paused\":false,\"label\":\"Connecting to Jev…\",\"source\":null,\"remaining\":27},\"placement\":{\"position\":[-2768.3956419313604,18.462294390991243,1295.0133343366692],\"yaw\":1.5542610866111075,\"pitch\":-0.015001887053174272,\"roll\":-0.0020945138733826337,\"distance\":0,\"scale\":1,\"team\":false,\"vehicle\":\"rolls\",\"terrainError\":0.0029902968317507828,\"speed\":0,\"steering\":0,\"wheelOffsets\":[-0.0015592997989273272,0.000873349023500225,0.000590662636000161,-0.0007119591905535572]},\"princeVisible\":true,\"companion\":{\"enabled\":false,\"mode\":\"seat\",\"stance\":\"seat\",\"source\":null,\"label\":\"Ready to drive\",\"reason\":null,\"decisions\":0,\"carrying\":false,\"position\":null},\"status\":\"Ride with Jev, or give directions with W/S and A/D.\"}",
+          "Jev smart driving receives a valid decision",
+          "Paused smart drive holds the vehicle",
+          "A quick manual direction immediately cancels autopilot",
+          "Brake and park stops the vehicle",
+          "Shared corrections preserve the exit point: {\"exit\":[-2765.4297126814963,20.15133834757125,1297.098443186172],\"position\":[-2765.4297126814963,20.15133834757125,1297.098443186172],\"corrections\":[]}",
+          "The shared town confirms the same grounded exit",
+          "Jevica remains visible after stepping out",
+          "Stepping out produces no rejected pose"
+        ]
+      }
+    }
+  ],
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)"
+}

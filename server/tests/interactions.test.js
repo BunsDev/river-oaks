@@ -96,8 +96,8 @@ test('handshake alignment corrects in-flight poses and refuses occupied space',(
 });
 
 test('interaction checkpoints use a new writer version and still recover version 4 worlds',()=>{
-  const f=setup(),current=f.world.checkpoint();assert.equal(current.version,7);
-  const legacy={...current,version:4};delete legacy.payload.interactions;delete legacy.payload.offices;
+  const f=setup(),current=f.world.checkpoint();assert.equal(current.version,11);
+  const legacy={...current,version:4};delete legacy.payload.interactions;delete legacy.payload.offices;delete legacy.payload.screenings;
   const {checksum,...envelope}=legacy;legacy.checksum=createHash('sha256').update(JSON.stringify(envelope)).digest('hex');
   assert.equal(f.world.restore(legacy).ok,true);
   assert.equal(f.world.snapshot().interactions.length,0);

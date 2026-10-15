@@ -6,6 +6,8 @@ import { magicOptions } from './magic-auth.js';
 import { createRedisSecurity } from './redis-security.js';
 import { createRedisWaitlist } from './waitlist.js';
 import { createWorldGateway } from './world-gateway.js';
+import { parseScreeningHosts } from './screenings.js';
+import { configuredOfficeLayout } from './offices.js';
 import { vercelClientAddress } from './vercel-routing.js';
 import { DEFAULT_WORLD_ID, validateWorldId } from '../preview/src/world-contract.js';
 import { configureVoice, createRedisVoiceLeases } from './voice.js';
@@ -57,6 +59,10 @@ export async function createRedisBackend(env = process.env) {
       trustedProxyIPs: (env.TRUSTED_PROXY_IPS ?? '').split(',').map(ip => ip.trim()).filter(Boolean),
       ...(env.VERCEL === '1' ? { address: vercelClientAddress } : {}),
       workplaceEnabled: env.RIVER_OAKS_WORKPLACE === '1',
+      // Venue hosts are explicit grants; none configured means no one can control a screening.
+      // Jevica's office layout; unset or unknown keeps the legacy room (the default and the rollback).
+      officeLayout: configuredOfficeLayout(env.RIVER_OAKS_OFFICE_LAYOUT, { onInvalid: () => console.warn(JSON.stringify({ event: 'office_layout_ignored' })) }),
+      screeningHosts: parseScreeningHosts(env.RIVER_OAKS_SCREENING_HOSTS, { onInvalid: () => console.warn(JSON.stringify({ event: 'screening_host_grant_ignored' })) }),
       workplaceSweep: env.VERCEL !== '1',
       // Vercel Cron sends it as a Bearer token; without it the sweep route stays closed.
       workplaceCronSecret: env.CRON_SECRET || null,

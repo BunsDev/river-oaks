@@ -169,11 +169,11 @@ test('a seat checkpoint keeps its furniture base height when terrain beneath one
 });
 
 test('seating uses a new private checkpoint version while upgrading valid pre-seat checkpoints',()=>{
-  const f=fixture();const old=f.world.checkpoint();old.version=2;delete old.payload.offices;
+  const f=fixture();const old=f.world.checkpoint();old.version=2;delete old.payload.offices;delete old.payload.screenings;
   for(const player of old.payload.players)delete player.sitting;
   const restored=createSharedWorld(data);assert.deepEqual(restored.restore(resign(old)),{ok:true});
   assert.equal(sit(f).ok,true);
-  const current=f.world.checkpoint();assert.equal(current.version,7,'old coordinators must reject state whose seat locks they do not understand');
-  const downgrade=structuredClone(current);downgrade.version=2;delete downgrade.payload.offices;
+  const current=f.world.checkpoint();assert.equal(current.version,11,'old coordinators must reject state whose seat locks they do not understand');
+  const downgrade=structuredClone(current);downgrade.version=2;delete downgrade.payload.offices;delete downgrade.payload.screenings;
   assert.equal(restored.restore(resign(downgrade)).error,'invalid_checkpoint','a seat cannot be laundered into the old format');
 });

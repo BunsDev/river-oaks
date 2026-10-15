@@ -1,6 +1,6 @@
 import { isSpaceDocument } from './space-document.js';
 import { createDesignerSession, DESIGNER_CAPABILITIES } from './designer-protocol.js';
-import { createStudioDocument } from './document.js';
+import { createStudioEditPreview } from './document.js';
 
 const SETTINGS_KEY = 'river-oaks-studio-agent-v1';
 const MAX_MESSAGE = 4000;
@@ -37,8 +37,9 @@ export function parseAgentReply(text, { streaming = false } = {}) {
 // detached copy derives affected IDs (including new IDs) and declared capabilities.
 export function proposalEnvelope(request, edit, doc) {
   if (!edit || typeof edit !== 'object' || Array.isArray(edit) || !Array.isArray(edit.operations)) throw Error('The proposed edit has no operations.');
+  if (!edit.operations.length || edit.operations.length > 64) throw Error('Use 1–64 proposed operations.');
   const ids = new Set(), capabilities = new Set();
-  const dry = createStudioDocument(doc.value);
+  const dry = createStudioEditPreview(doc.value);
   for (const op of edit.operations) {
     capabilities.add(`objects.${op?.op}`);
     try {
@@ -90,7 +91,7 @@ function renderProse(target, text) {
   }
 }
 
-export function mountAgentChat(host, { doc, selected, apply, canEdit = () => true, bridge = globalThis.studioAgent, storage = localStorage }) {
+export function mountAgentChat(host, { doc, selected, apply, reportError = () => {}, canEdit = () => true, bridge = globalThis.studioAgent, storage = localStorage }) {
   const root = document.createElement('div');
   root.className = 'studio-agent'; root.dataset.open = 'false';
   root.innerHTML = `<form class="studio-agent-pill" data-agent-pill><input data-agent-pill-input maxlength="${MAX_MESSAGE}" placeholder="Describe the scene you imagine…" aria-label="Ask the World Studio agent"><button class="studio-agent-go" aria-label="Open agent chat">${ICONS.sparkle}</button></form>
@@ -149,17 +150,17 @@ export function mountAgentChat(host, { doc, selected, apply, canEdit = () => tru
   function bubble(role) {
     const node = document.createElement('div'); node.className = `studio-agent-msg studio-agent-${role}`; log.append(node); return node;
   }
-  function proposalCard(target, request, session, edit, editError) {
+  async function proposalCard(target, request, session, edit, editError) {
     const card = document.createElement('div'); card.className = 'studio-agent-edit'; target.after(card);
     const title = document.createElement('p'), list = document.createElement('ul'), status = document.createElement('p'), actions = document.createElement('div');
     title.className = 'studio-agent-edit-title'; status.className = 'studio-agent-edit-status'; actions.className = 'studio-agent-edit-actions';
     const applyButton = document.createElement('button'), dismiss = document.createElement('button');
     applyButton.type = dismiss.type = 'button'; applyButton.className = 'studio-agent-apply'; applyButton.textContent = 'Apply as one edit'; dismiss.textContent = 'Dismiss';
     actions.append(applyButton, dismiss); card.append(title, list, status, actions);
-    let state = 'pending', appliedRevision = null;
+    let state = 'pending', appliedRevision = null, applying=false;
     const entry = { refresh() {
       applyButton.hidden = dismiss.hidden = state !== 'pending';
-      applyButton.disabled = !canEdit() || doc.revision !== request.baseRevision;
+      applyButton.disabled = applying || !canEdit() || doc.revision !== request.baseRevision;
       if (state === 'pending' && doc.revision !== request.baseRevision) status.textContent = 'The region changed since this proposal. Ask again for a fresh one.';
       else if (state === 'pending' && !canEdit()) status.textContent = 'Return to the editor to apply.';
       else if (state === 'pending') status.textContent = 'Validated against this draft. Nothing changes until you apply.';
@@ -168,23 +169,24 @@ export function mountAgentChat(host, { doc, selected, apply, canEdit = () => tru
     let preview = null;
     try {
       if (editError) throw Error(editError);
-      preview = session.preview(proposalEnvelope(request, edit, doc));
+      preview = await session.preview(proposalEnvelope(request, edit, doc));
       title.textContent = `Proposed edit · ${preview.changes.length} change${preview.changes.length === 1 ? '' : 's'}`;
       list.replaceChildren(...preview.changes.map(change => { const li = document.createElement('li'); li.textContent = describeChange(change); return li; }));
-    } catch (error) { title.textContent = 'Proposed edit not applied'; finish(error.message); return; }
-    const commit = automatic => {
+    } catch (error) { reportError(error); title.textContent = 'Proposed edit not applied'; finish(error.message); return; }
+    const commit = async automatic => {
+      if(applying)return;applying=true;entry.refresh();
       try {
         if (!canEdit()) throw Error('Return to the editor before applying changes.');
-        session.apply(); appliedRevision = doc.revision; apply();
+        applyButton.disabled=true; await session.apply(); appliedRevision = doc.revision; apply();
         finish(automatic ? 'Applied automatically as one edit (Allow mode).' : 'Applied as one edit.');
         const undo = document.createElement('button'); undo.type = 'button'; undo.textContent = 'Undo'; actions.append(undo); undo.hidden = false;
         undo.addEventListener('click', () => { if (doc.revision !== appliedRevision) { status.textContent = 'Later edits exist; use the editor Undo instead.'; return; } doc.undo(); apply(); undo.remove(); status.textContent = 'Undone. Your region is back to how it was.'; });
-      } catch (error) { finish(error.message); }
+      } catch (error) { reportError(error); finish(error.message); }
     };
     applyButton.addEventListener('click', () => commit(false));
     dismiss.addEventListener('click', () => { session.cancel(); finish('Dismissed. Your region is unchanged.'); });
     pending.push(entry); entry.refresh();
-    if ($('[data-agent-edit-mode]').value === 'allow') commit(true);
+    if ($('[data-agent-edit-mode]').value === 'allow') await commit(true);
   }
   async function send(text) {
     text = (text ?? input.value).trim();
@@ -208,7 +210,7 @@ export function mountAgentChat(host, { doc, selected, apply, canEdit = () => tru
       const parsed = parseAgentReply(result.text);
       renderProse(reply, parsed.body || (parsed.edit ? 'Here is a proposed edit.' : '…'));
       suggestions = parsed.next;
-      if (parsed.edit || parsed.editError) proposalCard(reply, request, session, parsed.edit, parsed.editError);
+      if (parsed.edit || parsed.editError) await proposalCard(reply, request, session, parsed.edit, parsed.editError);
     } catch (error) {
       if (disposed || running?.requestId !== requestId) return;
       if (!running.text) reply.remove(); else renderProse(reply, parseAgentReply(running.text, { streaming: true }).body);

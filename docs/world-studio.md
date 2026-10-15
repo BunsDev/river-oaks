@@ -35,6 +35,31 @@ as for regions. They are private Studio documents; the shared-world region
 publisher does not accept this format. Existing schema-v1 region files remain
 compatible, and **New region** still starts the original region workflow.
 
+New templates select their **Assessment program** explicitly. Accepted inspector
+edits, completed drags and agent batches must preserve routes from arrival to the
+program's required destinations and back to its exit. A blocked edit leaves the
+accepted draft and undo history unchanged. The finding explains the route and
+lets you select a changed or nearby furnishing in the inspector to repair it.
+Dragging previews changes only the view; Escape cancels the drag. A valid final
+agent batch is one undoable edit even when its intermediate layout blocks a route.
+
+The selected program and its version are saved **on this device**, alongside the
+v1 document. Bare JSON export contains only the v1 document, so importing it shows
+**Not assessed** until you explicitly select a program. A document's name never
+selects its program. Unknown or newer program versions cannot report a pass;
+select a current program to reassess. These checks are local layout guidance, not
+shared-world publication approval or a guarantee of visual quality.
+
+An old draft can open, save and export even when newly selected route rules find
+a problem. Repair it to accept a guided edit; undo can return to the recoverable
+draft and shows its findings again. Required destination roles retain their IDs
+and kinds, although their display names can change. **Restore required furnishings**
+recovers missing roles from the selected template as one checked, undoable edit,
+preserving other furnishings. Checks keep the viewport responsive and leave
+changes pending until a result arrives. Failed assessments offer **Retry assessment**. Fixed recipe destinations
+remain required when furniture is moved. A work-limit result is blocked, never
+a pass; simplify the layout and assess again.
+
 ## Build a region
 
 Start with **New region**, **Open JSON**, or the saved device draft. The initial

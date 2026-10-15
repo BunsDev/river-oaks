@@ -1,6 +1,10 @@
 import { createOfficeUI } from './office-ui.js';
+import { createIpicScreening } from './ipic-screening-ui.js';
+import { IPIC_DARTS, IPIC_INTERIOR, atIpicDartsLine } from './ipic-plan.js';
+import './ipic-screening.css';
 import { officeLobbyGroundCutout } from './office-contract.js';
 import { captureOfficeStreet } from './office-world-presentation.js';
+import { officeSkylineSize } from './office-skyline.js';
 import { createStoreIntros } from './store-intro-ui.js';
 import {treeFlightEnvironment} from './tree-flight.js';
 import { buildRoads } from './street-roads.js';
@@ -32,7 +36,7 @@ import { buildDistrictBuildings, buildDistrictDetail } from './district.js';
 import { buildDistrictFantasy } from './district-fantasy.js';
 import { buildStorePeople } from './store-people.js';
 import { createGeneratedInteriorStream } from './generated-interior-stream.js';
-import { canCullExterior, renderWithoutExterior } from './interior-exterior-culling.js';
+import { canCullExterior, canCullIpicAuditorium, renderOnly, renderWithoutExterior } from './interior-exterior-culling.js';
 import { sharedRoomSummary } from './shared-population.js';
 import { storeRoomsFor } from './store-rooms.js';
 import { attachDistrictGalleryPlan } from './district-interior-contract.js';
@@ -102,6 +106,9 @@ import { createCyclingLeaderboard } from './cycling-leaderboard.js';
 import './cycling-leaderboard.css';
 import { plazaSalonRack } from './plaza-salon-plan.js';
 import { describeRenderer, describeScene, noteFrame, registerDiagnosticSource, setScreenshotCapture } from './debug-report.js';
+import { venueDoorSites } from './venue-rooms.js';
+import { createAxePanel } from './axe-panel.js';
+import { AXE_LANES, AXE_ROOM_DARTS, AXE_ROOM_INTERIOR, atAxeLane, atAxeRoomDarts } from './axe-room-plan.js';
 
 // Every stylesheet above is applied by now, so the sign-in gate can lift.
 document.dispatchEvent(new Event('river-oaks:styled'));
@@ -120,7 +127,25 @@ const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matc
 // Never enable this profile in a production build.
 const softwareAcceptance = import.meta.env.DEV && import.meta.env.VITE_SHARED_SOFTWARE_RENDERING === '1';
 const renderAudit = import.meta.env.DEV && new URLSearchParams(location.search).get('render-audit') === '1' ? createRenderAudit() : null;
+let exteriorCulling = true; // A development audit can switch it off to compare frames.
+// Inside IPIC's auditorium, facing away from its only partition, nothing outdoors can be seen (#428),
+// nor any other store's interior or people (#431): the frame keeps only IPIC's own.
+function ipicAuditoriumCull() {
+  const pose = !officeUI?.active && interiorsLayer?.visible ? walking?.getPose() : null;
+  const room = pose ? walking?.environment?.roomAt(pose.position[0], pose.position[2]) : null;
+  return room?.interior === IPIC_INTERIOR && canCullIpicAuditorium(camera, room);
+}
+function ipicOwn() {
+  const interior = buildingMesh?.userData.interiors?.children.find(child => child.userData.interior === IPIC_INTERIOR);
+  const people = storePeople?.children.find(group => group.userData.room?.interior === IPIC_INTERIOR);
+  return interior ? [interior, ...(people ? [people] : [])] : null;
+}
 const debugOcclusion = new URLSearchParams(location.search).get('ao');
+// Auto's AO tail rule stays off until it passes device acceptance (render-quality.js).
+const aoTailShedding = new URLSearchParams(location.search).get('aotail') === 'on';
+// The penthouse skyline (office-skyline.js); ?office-skyline=off compares without it in development.
+// Software acceptance never captures it.
+const officeSkylineOff = import.meta.env.DEV && new URLSearchParams(location.search).get('office-skyline') === 'off';
 let auditCamera = null;
 let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, storePeople, interiorsLayer, generatedInteriors;
 let districtUI, environmentAssets = null, storefrontReflections = null, roomGroundClip = null;
@@ -129,13 +154,13 @@ let pendingSharedPlace = null, sharedPlaceInFlight = false;
 let worldPortal = null;
 let worldRegionSha256 = null;
 let landmarkAccountId = null;
-let playerAvatar, officeUI;
+let playerAvatar, officeUI, ipicScreening;
 let multiplayer, remotePlayers, buildLayer, buildControls, seatingControls, seatAndWater;
 let plazaSalon = null, plazaGames = null, plazaDominoes = null, plazaHearts = null, plazaBackgammon = null, cafeGame = 'dominoes', plazaStage = null, plazaBicycle = null, cyclingBoard = null;
 let plazaJenga = null, plazaYacht = null, benchGame = 'jenga';
 let plazaCribbage = null, walnutGame = 'backgammon';
 let plazaWinePong = null, plazaShuffleboard = null, longTableGame = 'winePong';
-let plazaDarts = null;
+let plazaDarts = null, ipicDarts = null, venueDarts = null, axePanel = null;
 let plazaSpades = null;
 let plazaLiarsDice = null;
 let plazaMancala = null;
@@ -206,7 +231,7 @@ function initializeRenderer() {
     pipeline.setRenderScale(softwareAcceptance ? 0.25 : scale);
     if (debugOcclusion !== 'off') pipeline.setOcclusion(!softwareAcceptance && occlusion);
     photoMode?.qualityChanged();
-  } });
+  }, tailShedding: aoTailShedding });
   if (debugOcclusion === 'off') pipeline.setOcclusion(false);
   else if (debugOcclusion === 'only') pipeline.occlusion.output = AO_OUTPUT.Denoise;
   if (!softwareAcceptance) loadEnvironment(renderer, scene).then((assets) => { environmentAssets = assets; updateAtmosphere(); }).catch(() => { $('#connection').textContent = 'Sky lighting unavailable · base lighting active'; });
@@ -341,6 +366,40 @@ function initializeRenderer() {
   plazaDarts = createPlazaDarts({ getMirror: () => plazaSalon?.userData.darts ?? null, getBoard: () => (world && plazaSalonPlan(world)?.darts) ?? null,
     getPose: () => walking?.getPose(), focusWorld: () => host.focus({ preventScroll: true }), reducedMotion });
   playProviders.push(() => plazaDarts);
+  // Standing at the Tuck Room line in IPIC, X plays shared darts that the town holds
+  // (server/darts-games.js); the cabinet's board shows every match's darts.
+  const ipicRoom = () => walkingEnvironment().rooms.find(room => room.interior === IPIC_INTERIOR) ?? null;
+  const atIpicLine = ([east, north]) => { const room = ipicRoom(); return Boolean(room && walkingEnvironment().roomAt(east, -north) === room && atIpicDartsLine(room.toLocal(east, north))); };
+  ipicDarts = createPlazaDarts({ getMirror: () => buildingMesh?.userData.interiors?.userData.dartboards?.[0] ?? null,
+    getPose: () => walking?.getPose(), focusWorld: () => host.focus({ preventScroll: true }), reducedMotion,
+    shared: { lineId: IPIC_DARTS.id, eyebrow: 'IPIC · shared game', title: 'Darts in the Tuck Room',
+      line: () => multiplayer?.snapshot?.darts?.find(item => item.id === IPIC_DARTS.id) ?? null,
+      selfId: () => multiplayer?.identity?.id ?? null,
+      name: id => multiplayer?.snapshot?.players?.find(player => player.id === id)?.name ?? 'A visitor',
+      atLine: () => { const pose = walking?.getPose(); return Boolean(pose && !pose.sitting && !pose.riding && pose.altitude <= .1 && atIpicLine([pose.position[0], -pose.position[2]])); },
+      peers: () => (multiplayer?.snapshot?.players ?? []).filter(player => !player.sitting && (player.altitude ?? 0) <= .1 && atIpicLine(player.position)).map(player => ({ id: player.id, name: player.name })),
+      send: message => multiplayer?.command(message) ?? Promise.resolve({ ok: false, message: 'Connect to the town to play together.' }) } });
+  playProviders.push(() => ipicDarts);
+  // The axe-and-darts venue (venue-rooms.js): its board is a second shared darts line and
+  // its lanes play shared axes (server/axe-games.js); both show on the venue's own props.
+  const roomPoint = (interior, [east, north]) => { const room = walkingEnvironment().rooms.find(item => item.interior === interior); return room && walkingEnvironment().roomAt(east, -north) === room ? room.toLocal(east, north) : null; };
+  const onFoot = () => { const pose = walking?.getPose(); return pose && !pose.sitting && !pose.riding && pose.altitude <= .1 ? [pose.position[0], -pose.position[2]] : null; };
+  const venueProps = () => buildingMesh?.userData.interiors?.userData.axeVenue ?? null;
+  const snapshotPlayers = () => (multiplayer?.snapshot?.players ?? []).filter(player => !player.sitting && (player.altitude ?? 0) <= .1);
+  const townShared = { selfId: () => multiplayer?.identity?.id ?? null, name: id => multiplayer?.snapshot?.players?.find(player => player.id === id)?.name ?? 'A visitor',
+    send: message => multiplayer?.command(message) ?? Promise.resolve({ ok: false, message: 'Connect to the town to play together.' }) };
+  const atVenueDarts = position => { const point = position && roomPoint(AXE_ROOM_INTERIOR, position); return Boolean(point && atAxeRoomDarts(point)); };
+  venueDarts = createPlazaDarts({ getMirror: () => venueProps()?.venueDarts ?? null, getPose: () => walking?.getPose(), focusWorld: () => host.focus({ preventScroll: true }), reducedMotion,
+    shared: { ...townShared, lineId: AXE_ROOM_DARTS.id, eyebrow: 'Axe & Darts · shared game', title: 'Darts at Axe & Darts',
+      line: () => multiplayer?.snapshot?.darts?.find(item => item.id === AXE_ROOM_DARTS.id) ?? null, atLine: () => atVenueDarts(onFoot()),
+      peers: () => snapshotPlayers().filter(player => atVenueDarts(player.position)).map(player => ({ id: player.id, name: player.name })) } });
+  playProviders.push(() => venueDarts);
+  const laneOf = position => { const point = position && roomPoint(AXE_ROOM_INTERIOR, position); return point ? atAxeLane(point) : null; };
+  axePanel = createAxePanel({ getMirror: id => venueProps()?.axeLanes?.[id] ?? null, focusWorld: () => host.focus({ preventScroll: true }), reducedMotion,
+    shared: { ...townShared, laneIds: AXE_LANES.map(lane => lane.id), laneAt: () => laneOf(onFoot()),
+      lane: id => multiplayer?.snapshot?.axes?.find(item => item.id === id) ?? null,
+      peers: id => snapshotPlayers().filter(player => laneOf(player.position) === id).map(player => ({ id: player.id, name: player.name })) } });
+  playProviders.push(() => axePanel);
   // Seated at the grove table, X plays mancala, Go, Chinese checkers or xiangqi (the last
   // one played); switching puts the other games' boards away and sets out this one's.
   const groveGames = () => ({ mancala: plazaMancala, go: plazaGo, chineseCheckers: plazaChineseCheckers, xiangqi: plazaXiangqi });
@@ -366,7 +425,15 @@ function initializeRenderer() {
   if (creationToolsEnabled) buildControls=createSharedBuildControls({getPose:()=>walking?.getPose(),isBuildableRoom:id=>world?.stores.some(store=>store.id===id && store.category==='home'),onBuilderChange:builder=>{builderAim='';if(!builder.active)buildLayer?.setGhost(null);},request:message=>multiplayer?.command(message)??Promise.resolve({ok:false,message:'Join the town before building.'})});
   visitTools.append($('.player-controls'), cyclingBoard.panel, ...(buildControls ? [buildControls.panel] : []));
   officeUI=createOfficeUI({host,panelHost:visitTools,renderer,getWorld:()=>world,getMultiplayer:()=>multiplayer,walking,
-    captureStreet:()=>captureOfficeStreet({scene,camera,pipeline,lights:storeLights,avatar:playerAvatar,lobby:buildingMesh?.userData.officeArrival,world,getWorld:()=>world,pose:walking?.getPose()})});
+    captureStreet:()=>captureOfficeStreet({scene,camera,pipeline,renderer,skyline:officeSkylineOff||softwareAcceptance?null:{size:officeSkylineSize({scale:quality?.stats.scale,coarsePointer:window.matchMedia('(pointer: coarse)').matches,maxCubemapSize:renderer.capabilities.maxCubemapSize,maxTextureSize:renderer.capabilities.maxTextureSize})},lights:storeLights,avatar:playerAvatar,lobby:buildingMesh?.userData.officeArrival,world,getWorld:()=>world,pose:walking?.getPose()})});
+  // IPIC screenings (#367): the town's timeline on the existing screen, while the player is inside IPIC.
+  // Mounted on the viewport, not the canvas host: walking takes pointer capture on the canvas host.
+  ipicScreening??=createIpicScreening({host:host.parentElement??host,THREE,getMultiplayer:()=>multiplayer,getScreen:()=>buildingMesh?.userData.interiors?.userData.screens?.[0]??null,
+    getVenue:()=>{
+      const pose=walking?.getPose(),room=pose&&!officeUI?.active?walking?.environment?.roomAt(pose.position[0],pose.position[2]):null;
+      if(room?.interior!==IPIC_INTERIOR)return {active:false,auditorium:false};
+      return {active:true,auditorium:room.toLocal(pose.position[0],-pose.position[2])[1]>=26};
+    }});
   // Bird cams: Jev flies a few birds over the district; ride along or take over.
   birdCams = createBirdCams({ scene, camera, host, getEnvironment: () => world && walking?.active ? birdFlightEnvironment() : null, getInterests: birdInterests, getPathHints: () => world?.birdPathHints ?? {} });
   birdCamsUI = createBirdCamsUI(birdCams);
@@ -447,7 +514,7 @@ function startMultiplayer() {
     getOwnerHomes: () => world?.stores.filter(store => store.category === 'home' && store.access === 'owner') ?? [],
     getRegionSha256: () => worldRegionSha256,
     onHomeAccess: () => districtUI?.refreshAccess(),
-    onSnapshot: snapshot => { if (world) community.applyRemote(snapshot);buildLayer?.sync(snapshot.builds??[]);plazaSalon?.userData.rack?.setTaken(snapshot.cycling?.taken ?? []); },
+    onSnapshot: snapshot => { ipicScreening?.onSnapshot(snapshot); if (world) community.applyRemote(snapshot);buildLayer?.sync(snapshot.builds??[]);plazaSalon?.userData.rack?.setTaken(snapshot.cycling?.taken ?? []); },
     onCorrection: player => { if (world && player) { walking.applyServerPose(player); plazaBicycle?.sync(); } },
     onPlayers: (players, selfId) => {
       host.dataset.multiplayer = players.length ? 'joined' : 'disconnected';
@@ -557,7 +624,7 @@ function populateWorld(data) {
     worldGroup.remove(buildingMesh);
     buildingMesh?.userData.dispose?.();
     worldGroup.remove(interiorsLayer);
-    storePeople?.userData.dispose?.(); storePeople = null; interiorsLayer = null;
+    ipicScreening?.dispose(); storePeople?.userData.dispose?.(); storePeople = null; interiorsLayer = null;
     plazaSalon?.userData.rack?.dispose();
     worldGroup.traverse((item) => {
       item.userData.cancelLandscapeLoad?.();
@@ -625,7 +692,7 @@ function populateWorld(data) {
   $('#district-source').hidden = creatorRegion;
   $('#district-directory').hidden = false;
   $('#building-layer-label').textContent = creatorRegion?'Buildings & architecture':'Boutiques & architecture';
-  districtUI.setStores(data.stores, 'Dior');
+  districtUI.setStores([...data.stores, ...venueDoorSites(data)], 'Dior');
   $('#view-scale').textContent = creatorRegion?'Explore a creator-built region':'Street level · meet the locals';
   $('#connection').textContent = 'World ready to explore';
   $('#stores-count').textContent = data.stores.length;
@@ -859,12 +926,16 @@ function render(now) {
   if (officeUI?.active || officeUI?.entering || storeIntros?.active || photoMode?.active || birdCams?.riding) walking?.halt();
   else if (multiplayer?.connected && !multiplayer.traveling) walking?.update(delta, now);
   else walking?.halt();
-  plazaGames?.update(); plazaDominoes?.update(); plazaHearts?.update(); plazaSpades?.update(); plazaLiarsDice?.update(); plazaBackgammon?.update(); plazaCribbage?.update(); plazaJenga?.update(); plazaYacht?.update(); plazaWinePong?.update(); plazaShuffleboard?.update(); plazaDarts?.update(); plazaMancala?.update(); plazaGo?.update(); plazaChineseCheckers?.update(); plazaXiangqi?.update(); plazaStage?.update();
+  plazaGames?.update(); plazaDominoes?.update(); plazaHearts?.update(); plazaSpades?.update(); plazaLiarsDice?.update(); plazaBackgammon?.update(); plazaCribbage?.update(); plazaJenga?.update(); plazaYacht?.update(); plazaWinePong?.update(); plazaShuffleboard?.update(); plazaDarts?.update(); ipicDarts?.update(); venueDarts?.update(); axePanel?.update(); plazaMancala?.update(); plazaGo?.update(); plazaChineseCheckers?.update(); plazaXiangqi?.update(); plazaStage?.update();
   if (multiplayer?.connected) birdCams?.update(delta);
   multiplayer?.update(now);
   officeUI?.prepare(now);
   seatingControls?.update(now);
-  if (auditCamera) { camera.position.copy(auditCamera.position); camera.lookAt(auditCamera.target); camera.updateMatrixWorld(); }
+  if (auditCamera) {
+    camera.position.copy(auditCamera.position); camera.lookAt(auditCamera.target);
+    if (auditCamera.fov && camera.fov !== auditCamera.fov) { camera.fov = auditCamera.fov; camera.updateProjectionMatrix(); }
+    camera.updateMatrixWorld();
+  }
   photoMode?.update();
   storeIntros?.update(now);
   remotePlayers?.update(now, camera);
@@ -900,10 +971,15 @@ function render(now) {
     // The office presentation also calls this pipeline; clear a previous
     // gallery mask before either render path runs.
     pipeline.setOcclusionExteriorMask(generatedRoomActive ? worldGroup : null, interiorsLayer);
+    ipicScreening?.update();
     if (!officeUI?.update(now, delta)) {
-      if (generatedRoomActive && canCullExterior(camera, currentRoom))
+      if (exteriorCulling && generatedRoomActive && canCullExterior(camera, currentRoom))
         renderWithoutExterior(worldGroup, interiorsLayer, () => pipeline.render(delta));
-      else pipeline.render(delta);
+      else if (exteriorCulling && ipicAuditoriumCull()) {
+        const own = ipicOwn();
+        if (own) renderOnly(worldGroup, own, () => pipeline.render(delta));
+        else renderWithoutExterior(worldGroup, interiorsLayer, () => pipeline.render(delta));
+      } else pipeline.render(delta);
     }
     photoMode?.afterRender();
     if (pendingCapture) { const capture = pendingCapture; pendingCapture = null; capture(renderer.domElement); }
@@ -1050,7 +1126,7 @@ if (import.meta.env.DEV) window.__riverExteriorCull = () => {
     direction: camera.getWorldDirection(new THREE.Vector3()).toArray(),
     front: room && [room.aMin, room.aMax].map(a => { const [east, north] = room.toWorld(a, 0);
       return new THREE.Vector3(east, room.floor + room.height / 2, -north).project(camera).toArray(); }),
-    cull: canCullExterior(camera, room) };
+    cull: canCullExterior(camera, room), ipic: ipicAuditoriumCull() };
 };
 // Read-only bird cam state for development and browser acceptance runs.
 // Each bird also reports how it appears in the current view: inside the frame,
@@ -1076,6 +1152,7 @@ try {
 if (import.meta.env.DEV && renderAudit) {
   window.__riverRenderAudit = {
     start: () => renderAudit.start(), stop: () => renderAudit.stop(),
+    exteriorCulling(enabled) { exteriorCulling = Boolean(enabled); },
     crowdView() {
       const players = multiplayer?.snapshot?.players ?? [];
       if (!players.length) throw new Error('Join the shared world before framing its crowd.');
@@ -1086,6 +1163,10 @@ if (import.meta.env.DEV && renderAudit) {
       const distance = radius / Math.tan(camera.fov * Math.PI / 360) * Math.max(1, 1 / camera.aspect) * 1.3;
       auditCamera = { target, position: target.clone().add(new THREE.Vector3(0, distance * .55, distance)) };
     },
+    // A fixed review pose for camera-manifest captures (#364): Three.js world
+    // position and target, and optional FOV. release() hands the camera back.
+    view({ position, target, fov }) { auditCamera = { position: new THREE.Vector3(...position), target: new THREE.Vector3(...target), fov, restoreFov: auditCamera?.restoreFov ?? camera.fov }; },
+    release() { if (auditCamera?.fov) { camera.fov = auditCamera.restoreFov; camera.updateProjectionMatrix(); } auditCamera = null; },
     graphics() {
       const gl = renderer.getContext(), info = gl.getExtension('WEBGL_debug_renderer_info');
       return { renderer: info ? gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER),
@@ -1130,6 +1211,12 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
   window.__riverPlazaGo = () => plazaGo ? { ...plazaGo.debug(), groveGame, table: plazaSalon?.userData.go?.count() ?? null, goban: plazaSalon?.userData.go?.visible() ?? null,
     mancalaBoard: plazaSalon?.userData.mancala?.visible() ?? null, reset: () => plazaGo.reset() } : null;
   window.__riverPlazaMancala = () => plazaMancala ? { ...plazaMancala.debug(), table: plazaSalon?.userData.mancala?.count() ?? null, reset: () => plazaMancala.reset() } : null;
+  window.__riverAxes = () => axePanel ? { ...axePanel.debug(), stuck: Object.fromEntries(AXE_LANES.map(lane => [lane.id, buildingMesh?.userData.interiors?.userData.axeVenue?.axeLanes?.[lane.id]?.count() ?? null])),
+    holdAt: mm => axePanel.holdAt(mm), open: () => axePanel.open() } : null;
+  window.__riverVenueDarts = () => venueDarts ? { ...venueDarts.debug(), board: buildingMesh?.userData.interiors?.userData.axeVenue?.venueDarts?.count() ?? null,
+    holdAt: mm => venueDarts.holdAt(mm), open: () => venueDarts.open() } : null;
+  window.__riverIpicDarts = () => ipicDarts ? { ...ipicDarts.debug(), board: buildingMesh?.userData.interiors?.userData.dartboards?.[0]?.count() ?? null,
+    hold: value => ipicDarts.hold(value), holdAt: mm => ipicDarts.holdAt(mm), open: () => ipicDarts.open() } : null;
   window.__riverPlazaDarts = () => plazaDarts ? { ...plazaDarts.debug(), board: plazaSalon?.userData.darts?.count() ?? null,
     hold: value => plazaDarts.hold(value), holdAt: mm => plazaDarts.holdAt(mm), reset: seed => plazaDarts.reset(seed),
     // Walk to the throwing line and face the board.
@@ -1204,6 +1291,9 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
     goTo(x, north) { return goToPlace({ kind: 'landmark', name: 'Spot', position: [x, north] }); },
   } : null;
   window.__riverVoice = () => multiplayer?.voice.debug() ?? null;
+  window.__riverScreening = () => ipicScreening?.inspect() ?? null;
+  // Development-only: send a raw command, as a modified client could, to prove the server refuses it.
+  window.__riverMultiplayerCommand = message => multiplayer?.command(message);
   window.__riverMultiplayer = () => ({ connected: multiplayer?.connected ?? false, selfId: multiplayer?.identity?.id, snapshot: multiplayer?.snapshot, remotes: remotePlayers?.stats(), voice: multiplayer?.voice.debug() ?? null,creations:buildLayer?.stats(),birds:birdCams?.state,builder:buildControls?{...buildControls.builder,ghost:buildLayer?.ghost?{position:buildLayer.ghost.position.toArray(),visible:buildLayer.ghost.visible}:null,hint:document.querySelector('#build-hint')?.textContent,valid:document.querySelector('#build-hint')?.dataset.valid}:null });
   window.__riverPlayerAttention=()=>{
     const rig=playerAvatar?.rig;if(!rig)return null;
@@ -1220,7 +1310,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
     return {id,speaking:Boolean(id&&community?.speakingId===id),nod:station?.conversation.pose,face:station?.face.pose,mouth:rig?.speechPose,eyes:rig?.eyes.pose,head:head?.quaternion.toArray()};
   };
   window.__riverCreatorObjects=()=>({resources:buildLayer?.stats(),rendered:(buildLayer?.object.children??[]).filter(entry=>entry.userData.build).map(entry=>({id:entry.userData.build.id,parts:entry.children.filter(child=>child.isMesh).map(child=>({color:child.material.color.getHexString(),transmission:child.material.transmission??0,position:child.position.toArray(),size:child.scale.toArray()}))}))});
-  window.__riverCarriage = () => ({vehicle:playerAvatar?.carriage.kind,chauffeur:playerAvatar?.carriage.chauffeur,companion:playerAvatar?.carriage.prince.companion,princePosition:playerAvatar?.carriage.prince.object.position.toArray(),princeVisible:playerAvatar?.carriage.prince.object.visible,wingsVisible:playerAvatar?.carriage.prince.object.getObjectByName('Jev’s angel wings')?.visible,placement:playerAvatar?.carriage.placement,unicorns:playerAvatar?.carriage.unicorns,spinners:playerAvatar?.carriage.spinners?.map(spinner=>({rotation:spinner.rotation.z})),visible:playerAvatar?.carriage.object.visible,riding:playerAvatar?.carriage.riding,tyreClearances:playerAvatar?.carriage.tyreClearances,pose:walking.getPose(),rider:playerAvatar?.object.position.toArray(),riderYaw:playerAvatar?.object.rotation.y});
+  window.__riverCarriage = () => ({camera:{view:walking?.cameraView,position:camera.position.toArray()},vehicle:playerAvatar?.carriage.kind,chauffeur:playerAvatar?.carriage.chauffeur,companion:playerAvatar?.carriage.prince.companion,princePosition:playerAvatar?.carriage.prince.object.position.toArray(),princeVisible:playerAvatar?.carriage.prince.object.visible,wingsVisible:playerAvatar?.carriage.prince.object.getObjectByName('Jev’s angel wings')?.visible,placement:playerAvatar?.carriage.placement,unicorns:playerAvatar?.carriage.unicorns,spinners:playerAvatar?.carriage.spinners?.map(spinner=>({rotation:spinner.rotation.z})),visible:playerAvatar?.carriage.object.visible,riding:playerAvatar?.carriage.riding,tyreClearances:playerAvatar?.carriage.tyreClearances,pose:walking.getPose(),rider:playerAvatar?.object.position.toArray(),riderYaw:playerAvatar?.object.rotation.y});
   window.__riverPeople = (bone = 'head') => [...[playerAvatar?.carriage.driver].filter(p=>p?.userData.avatar).map(person => ({id:person.userData.localId,holder:person})), ...(storePeople?.userData.figures ?? [])]
     .filter(person => person.id&&(community.state?.locals ?? []).some(local=>local.id===person.id)).map(person => {
       person.holder.updateWorldMatrix(true,true);

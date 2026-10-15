@@ -12,16 +12,21 @@ export function createOfficeArrivalClock() {
   }};
 }
 
-export function officePeerVisible(player,selfId,position,firstPerson) {
-  return !firstPerson||(player.id!==selfId&&Math.hypot(player.position[0]-position[0],player.position[1]-position[1])>=.9);
+// In first person, hide only bodies that would overlap the eye: the viewer's own, and a
+// peer close by on the same floor. A peer on another penthouse floor is never in the way.
+export function officePeerVisible(player,selfId,position,firstPerson,levelId=null) {
+  if(!firstPerson)return true;
+  if(player.id===selfId)return false;
+  if(levelId&&player.office?.levelId&&player.office.levelId!==levelId)return true;
+  return Math.hypot(player.position[0]-position[0],player.position[1]-position[1])>=.9;
 }
 
 // A presentation lease borrows the actual street camera, avatar and lobby. It
 // never changes walking/server coordinates, and releases only resources it owns.
-export function captureOfficeStreet({scene,camera,pipeline,lights=[],avatar,lobby,world,getWorld,pose}) {
+export function captureOfficeStreet({scene,camera,pipeline,renderer=null,skyline=null,lights=[],avatar,lobby,world,getWorld,pose}) {
   if(!lobby||!pose||!avatar)return null;
   lobby.object.updateWorldMatrix(true,false);
-  return {scene,camera,pipeline,lights,avatar,lobby,world,getWorld,startCamera:camera.clone(),
+  return {scene,camera,pipeline,renderer,skyline,lights,avatar,lobby,world,getWorld,startCamera:camera.clone(),
     startPose:{...pose,position:[...pose.position],velocity:[...pose.velocity]},
     startAvatar:{position:avatar.object.position.clone(),quaternion:avatar.object.quaternion.clone(),visible:avatar.object.visible},
     frame:lobby.object.matrixWorld.clone()};

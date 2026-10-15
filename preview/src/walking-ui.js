@@ -1,6 +1,6 @@
 import { personPosition, personEyeHeight, personDistance } from './person-position.js';
 import { createFlightState, beginFlight, stepFlight } from './flight.js';
-import { thirdPersonPose, createCameraBoom } from './third-person.js';
+import { thirdPersonPose, createCameraBoom, pitchAfterSeatChange, seatedEyeView } from './third-person.js';
 import { createPointerGesture } from './pointer-gesture.js';
 import { withinTalkingReach } from './people-picking.js';
 import { nearbyPeople } from './nearby-people.js';
@@ -12,6 +12,7 @@ import { isGameplayKey } from './keyboard-input.js';
 import { primaryAction } from './contextual-action.js';
 import { travelRefusal } from './travel-message.js';
 import './walking.css';
+import { venueDoorSites } from './venue-rooms.js';
 
 export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getLocals, reducedMotion, onEnter, onLeave, onLevelChange, canEnterStore = () => true, getInteraction = () => null, getPlay = () => null, getVoice = () => null }) {
   const $ = (selector) => document.querySelector(selector);
@@ -93,7 +94,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   };
   const dialogueOpen = () => !$('#community-dialogue')?.hidden;
   const place = (delta=0) => {
-    if (thirdPerson) {
+    if (thirdPerson && !seatedEyeView(sitting)) {
       const pose = thirdPersonPose({...state,position:transport?.pose.cameraTarget??state.position,cameraDistance:transport?10.4:4.2}, environment);
       const clearDistance=Math.hypot(...pose.position.map((v,i)=>v-pose.target[i]));
       if(clearDistance<.05){
@@ -272,6 +273,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       state.speed=0;place();host.focus({preventScroll:true});
     },
     get thirdPerson() { return thirdPerson; },
+    get cameraView() { return thirdPerson && !seatedEyeView(sitting) ? 'third-person' : 'eye'; },
     halt() { clear(); if (state) { state.velocity = [0, 0]; state.speed = 0; } },
     applyServerPose(player) {
       transport?.stop();transport=null;
@@ -281,9 +283,11 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
         .find(item => item.id === player.levelId);
       const selectedLevelId = level?.index > 0 ? level.id : null;
       if (environment.levelId !== selectedLevelId) environment = createWalkingEnvironment(walkingWorld, placedObjects, selectedLevelId);
+      const before=sitting;
       sitting=player.sitting??null;performing=Boolean(player.performing);seatedGround=player.position[2];
       state.position = [player.position[0], player.position[2] + (sitting?sitting.height+.65:1.68) + player.altitude, -player.position[1]];
       state.yaw = player.yaw; state.speed = 0;
+      state.pitch = pitchAfterSeatChange(before, sitting, state.pitch);
       flight = createFlightState();
       if (player.altitude > 0) Object.assign(flight, { active: true, altitude: player.altitude, target: player.altitude });
       place();
@@ -330,7 +334,8 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       pathLabel = creatorRegion ? 'creator region paths' : 'public district paths';
       walkingWorld = world;
       environment = createWalkingEnvironment(world, placedObjects);
-      stores = world.stores ?? [];
+      // Code-only venues (venue-rooms.js) have doors too: F steps in and out of them.
+      stores = [...(world.stores ?? []), ...venueDoorSites(world)];
       flight = createFlightState();
       state = createWalkingState(environment, position);
       if (lookAt) state.yaw = Math.atan2(state.position[0] - lookAt[0], state.position[2] + lookAt[1]);

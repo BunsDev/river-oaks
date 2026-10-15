@@ -3,13 +3,19 @@ import { _electron as electron } from 'playwright';
 import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve as resolvePath } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createServer as createSocket } from 'node:net';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const profile = await mkdtemp(join(tmpdir(), 'river-oaks-e2e-'));
 const env = { ...process.env };
+// CPU rendering for CI runners, with the browser journeys' scene budget
+// (preview/e2e/shared-runner.js). Linux draws with Mesa under Xvfb and needs
+// ANGLE's GL backend and the journeys' Chromium flags; Windows runners draw with
+// ANGLE's default Direct3D 11 backend on Microsoft's software rasterizer.
+const software = process.env.RIVER_OAKS_DESKTOP_SOFTWARE === '1';
+const softwareFlags = software && process.platform === 'linux' ? ['--use-gl=angle', '--use-angle=gl', '--ignore-gpu-blocklist'] : [];
 let vite;
 if (process.argv.includes('--dev')) {
   const socket=createSocket();
@@ -17,7 +23,8 @@ if (process.argv.includes('--dev')) {
   const townPort=socket.address().port;
   await new Promise(resolve=>socket.close(resolve));
   const fixture={RIVER_OAKS_ACCEPTANCE_FIXTURE:'1',RIVER_OAKS_DEV_AUTH:'local',RIVER_OAKS_DEV_TOWN:'on',
-    RIVER_OAKS_DEV_TOWN_PORT:String(townPort),MODERATION_FILE:join(profile,'moderation.json'),WAITLIST_FILE:join(profile,'waitlist.json')};
+    RIVER_OAKS_DEV_TOWN_PORT:String(townPort),MODERATION_FILE:join(profile,'moderation.json'),WAITLIST_FILE:join(profile,'waitlist.json'),
+    ...(software?{VITE_SHARED_SOFTWARE_RENDERING:'1'}:{})};
   Object.assign(process.env,fixture);Object.assign(env,fixture);
   const { createServer } = await import('vite');
   // Keep provider fixtures in the server: Playwright page interception cannot
@@ -40,9 +47,19 @@ const executablePath = process.env.RIVER_OAKS_DESKTOP_EXECUTABLE;
 // A fake device lets the microphone check run without hardware. Electron shows
 // no prompt of its own: the permission handler in main.js decides. Chromium's
 // fake-UI flag must stay off, because it approves before that handler is asked.
-const app = await electron.launch({ executablePath, args: [...(executablePath ? [] : [root]), `--user-data-dir=${profile}`, '--use-fake-device-for-media-stream'], env, timeout: 30000 });
+// A cold CI runner can take longer than a developer machine to start Electron.
+const launchTimeout = Number(process.env.RIVER_OAKS_DESKTOP_LAUNCH_TIMEOUT ?? 30000);
+// On Windows Playwright starts Electron through cmd.exe with each argument in
+// double quotes. A trailing backslash would escape the closing quote and merge
+// the app path with the arguments after it, so pass the root without one.
+const appPath = resolvePath(root);
+const app = await electron.launch({ executablePath, args: [...(executablePath ? [] : [appPath]), `--user-data-dir=${profile}`, '--use-fake-device-for-media-stream',
+  ...softwareFlags], env, timeout: launchTimeout });
+// The main process's own lines (renderer recovery, load failures) otherwise
+// stay in Playwright's buffer and only surface on a launch failure.
+for (const stream of ['stdout', 'stderr']) app.process()[stream]?.on('data', chunk => process.stderr.write(`[electron] ${chunk}`));
 const errors = [], failedAssets = [], tempFiles = [];
-const report = { mode: executablePath ? 'packaged' : env.RIVER_OAKS_DEV_URL ? 'development' : 'hosted', checks: [] };
+const report = { mode: executablePath ? 'packaged' : env.RIVER_OAKS_DEV_URL ? 'development' : 'hosted', software, checks: [] };
 function check(name) { report.checks.push(name); console.log(`✓ ${name}`); }
 try {
   const page = await app.firstWindow();
@@ -56,9 +73,13 @@ try {
   });
   page.on('requestfailed', request => console.error('Request failed:', request.url(), request.failure()?.errorText));
   page.on('response', response => { if (response.status() >= 400 && /\/(assets|data)\//.test(response.url())) failedAssets.push(`${response.status()} ${response.url()}`); });
+  // The first window can still hold the document before the game's. An absent
+  // #loading counts as hidden, and a predicate that throws ends its wait, so wait
+  // for the game's own element and read the rest without assuming it exists.
+  await page.locator('#canvas-host').waitFor({ state: 'attached' });
   await page.locator('#loading').waitFor({ state: 'hidden' });
-  await page.waitForFunction(() => document.querySelector('#canvas-host').dataset.playerReady === 'true');
-  await page.waitForFunction(() => JSON.parse(document.querySelector('#viewport').dataset.assetProgress || '{}').done === true);
+  await page.waitForFunction(() => document.querySelector('#canvas-host')?.dataset.playerReady === 'true');
+  await page.waitForFunction(() => JSON.parse(document.querySelector('#viewport')?.dataset.assetProgress || '{}').done === true);
   report.readyMs = Math.round(performance.now() - started);
   report.assets = await page.locator('#viewport').evaluate(el => JSON.parse(el.dataset.assetProgress));
   assert.equal(report.assets.failed, 0);
@@ -113,9 +134,26 @@ try {
   await page.locator('#canvas-host').focus();
   const position = () => page.locator('#walking-hud').evaluate(el => JSON.parse(el.dataset.position));
   const before = await position();
-  await page.keyboard.down('KeyW'); await page.waitForTimeout(1200); await page.keyboard.up('KeyW');
+  // Hold W for 1.2 s of the game's clock, not the wall clock. The game reads keys in
+  // its frame loop and advances at most 0.08 s a frame (main.js), so a frame stall on
+  // a slow runner (macOS CI compiling shader pipelines) could cover a wall-clock hold
+  // and leave the player at the spawn: "0 m walked" in Desktop runs 38659435397 and
+  // 38673593628. The distance threshold is unchanged.
+  await page.keyboard.down('KeyW');
+  const hold = await page.evaluate(() => new Promise(resolve => {
+    const started = performance.now(); let last, game = 0, frames = 0, longest = 0;
+    const frame = now => {
+      if (last !== undefined) { const dt = (now - last) / 1000; game += Math.min(dt, 0.08); longest = Math.max(longest, dt); frames++; }
+      last = now;
+      if (game >= 1.2 || now - started > 30000) resolve({ game, frames, longest, wall: (now - started) / 1000 }); else requestAnimationFrame(frame);
+    };
+    requestAnimationFrame(frame);
+  }));
+  await page.keyboard.up('KeyW');
   const after = await position();
-  assert.ok(Math.hypot(after[0] - before[0], after[2] - before[2]) > 0.5, 'W moves the player');
+  const walked = Math.hypot(after[0] - before[0], after[2] - before[2]);
+  report.walk = { metres: walked, ...hold };
+  assert.ok(walked > 0.5, `W moves the player: ${walked.toFixed(2)} m over ${hold.game.toFixed(2)} s of game time (${hold.frames} frames in ${hold.wall.toFixed(2)} s, longest ${hold.longest.toFixed(2)} s)`);
   check('keyboard movement');
   const sharedTown = await page.locator('#canvas-host').getAttribute('data-multiplayer') === 'joined';
   report.sharedTown = sharedTown;

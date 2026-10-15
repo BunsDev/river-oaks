@@ -40,7 +40,8 @@
       "security-browser",
       "reflections",
       "experience",
-      "shared"
+      "shared",
+      "ipic-screening"
     ],
     "full": [
       "dependency-audit",
@@ -59,7 +60,8 @@
       "security-browser",
       "reflections",
       "experience",
-      "shared"
+      "shared",
+      "ipic-screening"
     ],
     "preview": [
       "preview-tests"
@@ -72,6 +74,15 @@
     ],
     "build": [
       "build"
+    ],
+    "desktop-package": [
+      "desktop-tests",
+      "desktop-package",
+      "desktop-package-check"
+    ],
+    "screening": [
+      "ipic-screening",
+      "ipic-screening-soak"
     ]
   },
   "tasks": [
@@ -107,6 +118,9 @@
       ],
       "requiresEnv": [
         "REDIS_URL"
+      ],
+      "requiresTools": [
+        "redis-server"
       ]
     },
     {
@@ -263,10 +277,47 @@
         "places-guide",
         "world-studio",
         "spatial-circulation",
-        "spatial-streets"
+        "spatial-streets",
+        "office-desk",
+        "office-computer-shared",
+        "office-visit"
       ],
       "browser": true,
       "timeoutMs": 1200000
+    },
+    {
+      "id": "desktop-package",
+      "command": [
+        "pnpm",
+        "run",
+        "desktop:package"
+      ]
+    },
+    {
+      "id": "desktop-package-check",
+      "command": [
+        "pnpm",
+        "run",
+        "desktop:package:check"
+      ]
+    },
+    {
+      "id": "ipic-screening",
+      "command": [
+        "node",
+        "preview/e2e/ipic-screening-runner.mjs"
+      ],
+      "browser": true,
+      "timeoutMs": 600000
+    },
+    {
+      "id": "ipic-screening-soak",
+      "command": [
+        "node",
+        "preview/e2e/ipic-screening-soak-runner.mjs"
+      ],
+      "browser": true,
+      "timeoutMs": 1800000
     }
   ]
 }

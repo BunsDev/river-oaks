@@ -35,11 +35,12 @@ it is not an unattended test fixture.
 | --- | --- |
 | `pnpm run verify tooling` | `test:agent`: runner failure/timeout/prerequisite regressions, catalog consistency, the task-register merge driver, project status/inventory/archives/prune/cancel, secret and ref hooks, pnpm policy, skill views and the plans index |
 | `pnpm run verify preview` / `server` / `desktop` / `build` | Focused existing suite or build for the owning runtime |
+| `pnpm run verify desktop-package` | Desktop unit tests, `desktop:package` for the host platform and arch, then `desktop:package:check`: the fuse wire matches `desktop/fuses.js` and the asar holds exactly the staged files (receipt `.runtime/agent/desktop-package.json`) |
 | `pnpm run verify web` | Agent, preview, server, desktop unit tests; production web/landing build |
 | `pnpm run verify python` | Ruff, Python tests, offline synthetic pipeline |
 | `pnpm run verify` | Web + Python + worktree secret guard; default `core` |
 | `pnpm run verify security` | Worktree and full local Git-history secret scan |
-| `pnpm run verify browser` | Build, security browser regressions, WebGL reflection, ten experience journeys (player-lifecycle, multiplayer-lifecycle, contextual-first-visit, store-intro, photo-mode, rail-navigation, places-guide, world-studio, spatial-circulation, spatial-streets) and all shared-town journeys |
+| `pnpm run verify browser` | Build, security browser regressions, WebGL reflection, thirteen experience journeys (player-lifecycle, multiplayer-lifecycle, contextual-first-visit, store-intro, photo-mode, rail-navigation, places-guide, world-studio, spatial-circulation, spatial-streets, office-desk, office-computer-shared, office-visit) and all shared-town journeys |
 | `pnpm run verify full` | Core + mandatory Redis server tests + JavaScript dependency audit + history scan + browser journeys |
 
 `pnpm run agent:doctor full` prints JSON prerequisite diagnostics, exits 2 when
@@ -48,6 +49,8 @@ files. It checks presence, not service health or dependency freshness. The actua
 suite proves connectivity and behavior. `agent:list` prints the task catalog. For JSON-only output, use
 `pnpm run --silent agent:list` or `pnpm run --silent agent:doctor`.
 
+Full verification also requires a local `redis-server` executable for the owned
+AOF restart and synthetic backup/restore test. It never restarts the supplied service.
 For full verification, start a disposable Redis service separately and set
 `REDIS_URL` to that isolated test service in the invoking environment. Never point
 it at production or run FLUSHDB. Without REDIS_URL, `full` blocks; `core` permits
@@ -68,7 +71,7 @@ directly. The `shared` (30 minutes) and `experience` (20 minutes) tasks have lon
 For a changed browser interaction, also run its named journey, for example:
 `pnpm run test:experience hud-and-quality`. Local browser runs from different
 sessions take turns; see [Local browser runs take turns](project-management/workflow.md#local-browser-runs-take-turns). Desktop changes may require
-`pnpm run test:desktop:e2e`. Native changes require the build and automation
+`pnpm run test:desktop:e2e`. The hosted `Desktop` workflow packages and checks the app on Windows, Linux and macOS and uploads unsigned builds ([desktop](desktop.md#ci-builds-on-windows-linux-and-macos)). Native changes require the build and automation
 commands in [Unreal setup](unreal.md); source-only hosts can run
 `RiverOaks.Contracts` after a native build. These are not silently included in
 `full`, which covers the listed local runtime checks. The hosted Python-version matrix,

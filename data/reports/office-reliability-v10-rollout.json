@@ -1,0 +1,20 @@
+{
+  "createdAt": "2026-10-15T05:00:21.635Z",
+  "status": "passed",
+  "previousSourceCommit": "23f2503ecd81e4ddb230c39773022bc2828504e3",
+  "sha256": {
+    "previousRoom": "0fedf89e1d6c34aa6cdef0844c369ea48fb370ddcafd8e0e19cfb2741468e5df",
+    "previousWorld": "54488637f397c508465ec6d33465e1c83cba11c6a455ea0476391567c4b06ca0",
+    "currentRoom": "aeb57b1b142e1765f11e13d6ded7f57c31f76a873b4d064b1b7ea431ba4f7cf9",
+    "currentWorld": "37f0160527589ec7b40b618f4c2bdfc4e0a85617559527a5af44748fd3ff53c5"
+  },
+  "scope": "Actual previous v3 coordinator and current v10 coordinator against owned loopback Redis.",
+  "checks": [
+    "v3 checkpoint/presence recovered by v10",
+    "v10 lease replaces v3 without TTL wait",
+    "v3 writer and close cannot disturb live v10 lease",
+    "v3 recovery rejects v10 checkpoint without mutation",
+    "v10 retakes obsolete lease and preserves assembly"
+  ],
+  "hostedAcceptance": false
+}

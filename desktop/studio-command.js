@@ -2,10 +2,19 @@ import { spawn } from 'node:child_process';
 import { HostError } from './host-error.js';
 
 // Only the host supplies executable/argv/env. Renderer input never selects commands.
-export function runStudioCommand(executable, args, { cwd, env = process.env, signal, timeout = 120000, maxBytes = 512 * 1024, onStdout = null } = {}) {
+// Prompts go in `input`, written to stdin: Windows caps a whole command line at
+// 32,767 characters and Linux caps one argument at 128 KiB, and a prompt with scene
+// context or installed skills can pass both. Without input, stdin stays closed.
+export function runStudioCommand(executable, args, { cwd, env = process.env, signal, timeout = 120000, maxBytes = 512 * 1024, onStdout = null, input = null } = {}) {
   return new Promise((resolve, reject) => {
     if (signal?.aborted) return reject(new HostError('Design request canceled.'));
-    const child = spawn(executable, args, { cwd, env, shell: false, windowsHide: true, detached: process.platform !== 'win32', stdio: ['ignore','pipe','pipe'] });
+    const child = spawn(executable, args, { cwd, env, shell: false, windowsHide: true, detached: process.platform !== 'win32', stdio: [input === null ? 'ignore' : 'pipe','pipe','pipe'] });
+    if (input !== null) {
+      // A child that exits before reading everything closes the pipe (EPIPE); its exit
+      // status, not the write, decides the result.
+      child.stdin.on('error', () => {});
+      child.stdin.end(input);
+    }
     let output = '', size = 0, failure = null, killTimer;
     const kill = () => { try { if (process.platform === 'win32') child.kill('SIGTERM'); else process.kill(-child.pid, 'SIGTERM'); } catch { /* Child already exited. */ } };
     const stop = message => {

@@ -1,0 +1,3477 @@
+{
+  "schemaVersion": 1,
+  "baseline": {
+    "revision": "a714a8a5",
+    "measuredAt": "2026-10-15T04:15:42.780Z",
+    "scope": "Office-store/authorization calls only, RESP socket bytes and Redis commandstats including Lua subcommands; loopback AOF always; 5 samples; no auth/room transport costs or production latency claim.",
+    "summary": [
+      {
+        "size": "empty",
+        "operation": "provision-new",
+        "deskBytes": 54,
+        "commands": {
+          "eval": 1,
+          "hget": 4,
+          "hlen": 1,
+          "hset": 2
+        },
+        "sentBytes": 2096,
+        "receivedBytes": 11,
+        "medianMs": 4.604167000000018,
+        "maxMs": 7.191958999999997
+      },
+      {
+        "size": "empty",
+        "operation": "provision-existing",
+        "deskBytes": 54,
+        "commands": {
+          "hget": 1
+        },
+        "sentBytes": 141,
+        "receivedBytes": 513,
+        "medianMs": 0.1552920000000313,
+        "maxMs": 0.25004200000000765
+      },
+      {
+        "size": "empty",
+        "operation": "discovery-four-residents",
+        "deskBytes": 54,
+        "commands": {
+          "hget": 11
+        },
+        "sentBytes": 1305,
+        "receivedBytes": 3377,
+        "medianMs": 0.7007499999999709,
+        "maxMs": 4.1248749999999745
+      },
+      {
+        "size": "empty",
+        "operation": "enter-four-residents",
+        "deskBytes": 54,
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 564,
+        "receivedBytes": 2052,
+        "medianMs": 0.33858399999999733,
+        "maxMs": 0.46766700000000583
+      },
+      {
+        "size": "empty",
+        "operation": "walk-40-authorizations",
+        "deskBytes": 54,
+        "commands": {
+          "hget": 40
+        },
+        "sentBytes": 5640,
+        "receivedBytes": 20520,
+        "medianMs": 3.1697079999999858,
+        "maxMs": 6.08420799999999
+      },
+      {
+        "size": "empty",
+        "operation": "reconcile-four-visits",
+        "deskBytes": 54,
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 564,
+        "receivedBytes": 2052,
+        "medianMs": 0.21308299999998326,
+        "maxMs": 0.7121250000000146
+      },
+      {
+        "size": "empty",
+        "operation": "read-four-residents",
+        "deskBytes": 54,
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 564,
+        "receivedBytes": 2052,
+        "medianMs": 0.33408299999996416,
+        "maxMs": 0.5379590000000007
+      },
+      {
+        "size": "empty",
+        "operation": "private-read-four-residents",
+        "deskBytes": 54,
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 512,
+        "receivedBytes": 12,
+        "medianMs": 0.35283300000003237,
+        "maxMs": 0.4789169999999956
+      },
+      {
+        "size": "empty",
+        "operation": "private-save",
+        "deskBytes": 54,
+        "commands": {
+          "eval": 1,
+          "hget": 2,
+          "hlen": 1,
+          "hset": 1
+        },
+        "sentBytes": 6128,
+        "receivedBytes": 11,
+        "medianMs": 5.231708999999967,
+        "maxMs": 6.664209000000028
+      },
+      {
+        "size": "empty",
+        "operation": "save",
+        "deskBytes": 54,
+        "commands": {
+          "eval": 1,
+          "hget": 10,
+          "hset": 5
+        },
+        "sentBytes": 8354,
+        "receivedBytes": 521,
+        "medianMs": 5.401707999999985,
+        "maxMs": 6.0788330000000315
+      },
+      {
+        "size": "empty",
+        "operation": "revoke-and-deny",
+        "deskBytes": 54,
+        "commands": {
+          "eval": 1,
+          "hget": 10,
+          "hset": 5
+        },
+        "sentBytes": 13744,
+        "receivedBytes": 11779,
+        "medianMs": 5.372165999999993,
+        "maxMs": 5.950374999999951
+      },
+      {
+        "size": "near-capacity",
+        "operation": "provision-new",
+        "deskBytes": 127971,
+        "commands": {
+          "eval": 1,
+          "hget": 4,
+          "hlen": 1,
+          "hset": 2
+        },
+        "sentBytes": 2120,
+        "receivedBytes": 11,
+        "medianMs": 7.1985839999999826,
+        "maxMs": 13.257708999999522
+      },
+      {
+        "size": "near-capacity",
+        "operation": "provision-existing",
+        "deskBytes": 127971,
+        "commands": {
+          "hget": 1
+        },
+        "sentBytes": 149,
+        "receivedBytes": 131423,
+        "medianMs": 0.8709579999999733,
+        "maxMs": 2.8615829999998823
+      },
+      {
+        "size": "near-capacity",
+        "operation": "discovery-four-residents",
+        "deskBytes": 127971,
+        "commands": {
+          "hget": 11
+        },
+        "sentBytes": 1393,
+        "receivedBytes": 527017,
+        "medianMs": 5.196833000000424,
+        "maxMs": 21.302208000000064
+      },
+      {
+        "size": "near-capacity",
+        "operation": "enter-four-residents",
+        "deskBytes": 127971,
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 596,
+        "receivedBytes": 525692,
+        "medianMs": 2.0646669999996448,
+        "maxMs": 4.673791999999594
+      },
+      {
+        "size": "near-capacity",
+        "operation": "walk-40-authorizations",
+        "deskBytes": 127971,
+        "commands": {
+          "hget": 40
+        },
+        "sentBytes": 5960,
+        "receivedBytes": 5256920,
+        "medianMs": 49.2238339999999,
+        "maxMs": 123.53979199999958
+      },
+      {
+        "size": "near-capacity",
+        "operation": "reconcile-four-visits",
+        "deskBytes": 127971,
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 596,
+        "receivedBytes": 525692,
+        "medianMs": 1.6569169999993392,
+        "maxMs": 2.3848339999999553
+      },
+      {
+        "size": "near-capacity",
+        "operation": "read-four-residents",
+        "deskBytes": 127971,
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 596,
+        "receivedBytes": 525692,
+        "medianMs": 3.52154100000007,
+        "maxMs": 4.461416999999983
+      },
+      {
+        "size": "near-capacity",
+        "operation": "private-read-four-residents",
+        "deskBytes": 127971,
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 544,
+        "receivedBytes": 520940,
+        "medianMs": 1.752875000000131,
+        "maxMs": 3.6873749999999745
+      },
+      {
+        "size": "near-capacity",
+        "operation": "private-save",
+        "deskBytes": 127971,
+        "commands": {
+          "eval": 1,
+          "hget": 2,
+          "hset": 1
+        },
+        "sentBytes": 130951,
+        "receivedBytes": 130243,
+        "medianMs": 9.425500000000284,
+        "maxMs": 10.643082999999933
+      },
+      {
+        "size": "near-capacity",
+        "operation": "save",
+        "deskBytes": 127971,
+        "commands": {
+          "eval": 1,
+          "hget": 10,
+          "hset": 5
+        },
+        "sentBytes": 264863,
+        "receivedBytes": 131431,
+        "medianMs": 9.324333999999908,
+        "maxMs": 11.599499999999352
+      },
+      {
+        "size": "near-capacity",
+        "operation": "revoke-and-deny",
+        "deskBytes": 127971,
+        "commands": {
+          "eval": 1,
+          "hget": 10,
+          "hset": 5
+        },
+        "sentBytes": 264925,
+        "receivedBytes": 262928,
+        "medianMs": 9.748458000000028,
+        "maxMs": 20.608541000000514
+      }
+    ],
+    "results": [
+      {
+        "size": "empty",
+        "round": 0,
+        "operation": "provision-new",
+        "commands": {
+          "eval": 1,
+          "hget": 4,
+          "hlen": 1,
+          "hset": 2
+        },
+        "sentBytes": 2096,
+        "receivedBytes": 11,
+        "latencyMs": 7.191958999999997,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 0,
+        "operation": "provision-existing",
+        "commands": {
+          "hget": 1
+        },
+        "sentBytes": 141,
+        "receivedBytes": 513,
+        "latencyMs": 0.07574999999999932,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 0,
+        "operation": "discovery-four-residents",
+        "commands": {
+          "hget": 11
+        },
+        "sentBytes": 1305,
+        "receivedBytes": 3377,
+        "latencyMs": 0.6158750000000168,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 0,
+        "operation": "enter-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 564,
+        "receivedBytes": 2052,
+        "latencyMs": 0.33858399999999733,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 0,
+        "operation": "walk-40-authorizations",
+        "commands": {
+          "hget": 40
+        },
+        "sentBytes": 5640,
+        "receivedBytes": 20520,
+        "latencyMs": 3.1697079999999858,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 0,
+        "operation": "reconcile-four-visits",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 564,
+        "receivedBytes": 2052,
+        "latencyMs": 0.7121250000000146,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 0,
+        "operation": "read-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 564,
+        "receivedBytes": 2052,
+        "latencyMs": 0.5379590000000007,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 0,
+        "operation": "private-read-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 512,
+        "receivedBytes": 12,
+        "latencyMs": 0.4789169999999956,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 0,
+        "operation": "private-save",
+        "commands": {
+          "eval": 1,
+          "hget": 2,
+          "hlen": 1,
+          "hset": 1
+        },
+        "sentBytes": 6128,
+        "receivedBytes": 11,
+        "latencyMs": 4.881333000000012,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 0,
+        "operation": "save",
+        "commands": {
+          "eval": 1,
+          "hget": 10,
+          "hset": 5
+        },
+        "sentBytes": 8354,
+        "receivedBytes": 521,
+        "latencyMs": 5.338875000000002,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 0,
+        "operation": "revoke-and-deny",
+        "commands": {
+          "eval": 1,
+          "hget": 10,
+          "hset": 5
+        },
+        "sentBytes": 13744,
+        "receivedBytes": 11779,
+        "latencyMs": 5.386832999999996,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 1,
+        "operation": "provision-new",
+        "commands": {
+          "eval": 1,
+          "hget": 4,
+          "hlen": 1,
+          "hset": 2
+        },
+        "sentBytes": 2096,
+        "receivedBytes": 11,
+        "latencyMs": 4.038291999999984,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 1,
+        "operation": "provision-existing",
+        "commands": {
+          "hget": 1
+        },
+        "sentBytes": 141,
+        "receivedBytes": 513,
+        "latencyMs": 0.25004200000000765,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 1,
+        "operation": "discovery-four-residents",
+        "commands": {
+          "hget": 11
+        },
+        "sentBytes": 1305,
+        "receivedBytes": 3377,
+        "latencyMs": 0.7340829999999983,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 1,
+        "operation": "enter-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 564,
+        "receivedBytes": 2052,
+        "latencyMs": 0.40637500000002547,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 1,
+        "operation": "walk-40-authorizations",
+        "commands": {
+          "hget": 40
+        },
+        "sentBytes": 5640,
+        "receivedBytes": 20520,
+        "latencyMs": 6.08420799999999,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 1,
+        "operation": "reconcile-four-visits",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 564,
+        "receivedBytes": 2052,
+        "latencyMs": 0.11704099999997197,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 1,
+        "operation": "read-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 564,
+        "receivedBytes": 2052,
+        "latencyMs": 0.17566600000003518,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 1,
+        "operation": "private-read-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 512,
+        "receivedBytes": 12,
+        "latencyMs": 0.37487499999997453,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 1,
+        "operation": "private-save",
+        "commands": {
+          "eval": 1,
+          "hget": 2,
+          "hlen": 1,
+          "hset": 1
+        },
+        "sentBytes": 6128,
+        "receivedBytes": 11,
+        "latencyMs": 5.342874999999992,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 1,
+        "operation": "save",
+        "commands": {
+          "eval": 1,
+          "hget": 10,
+          "hset": 5
+        },
+        "sentBytes": 8354,
+        "receivedBytes": 521,
+        "latencyMs": 4.768957999999998,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 1,
+        "operation": "revoke-and-deny",
+        "commands": {
+          "eval": 1,
+          "hget": 10,
+          "hset": 5
+        },
+        "sentBytes": 13744,
+        "receivedBytes": 11779,
+        "latencyMs": 4.706332999999972,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 2,
+        "operation": "provision-new",
+        "commands": {
+          "eval": 1,
+          "hget": 4,
+          "hlen": 1,
+          "hset": 2
+        },
+        "sentBytes": 2096,
+        "receivedBytes": 11,
+        "latencyMs": 4.741792000000032,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 2,
+        "operation": "provision-existing",
+        "commands": {
+          "hget": 1
+        },
+        "sentBytes": 141,
+        "receivedBytes": 513,
+        "latencyMs": 0.1552920000000313,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 2,
+        "operation": "discovery-four-residents",
+        "commands": {
+          "hget": 11
+        },
+        "sentBytes": 1305,
+        "receivedBytes": 3377,
+        "latencyMs": 0.535459000000003,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 2,
+        "operation": "enter-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 564,
+        "receivedBytes": 2052,
+        "latencyMs": 0.23175000000003365,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 2,
+        "operation": "walk-40-authorizations",
+        "commands": {
+          "hget": 40
+        },
+        "sentBytes": 5640,
+        "receivedBytes": 20520,
+        "latencyMs": 2.352624999999989,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 2,
+        "operation": "reconcile-four-visits",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 564,
+        "receivedBytes": 2052,
+        "latencyMs": 0.22612500000002456,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 2,
+        "operation": "read-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 564,
+        "receivedBytes": 2052,
+        "latencyMs": 0.3699579999999969,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 2,
+        "operation": "private-read-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 512,
+        "receivedBytes": 12,
+        "latencyMs": 0.20050000000003365,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 2,
+        "operation": "private-save",
+        "commands": {
+          "eval": 1,
+          "hget": 2,
+          "hlen": 1,
+          "hset": 1
+        },
+        "sentBytes": 6128,
+        "receivedBytes": 11,
+        "latencyMs": 5.231708999999967,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 2,
+        "operation": "save",
+        "commands": {
+          "eval": 1,
+          "hget": 10,
+          "hset": 5
+        },
+        "sentBytes": 8354,
+        "receivedBytes": 521,
+        "latencyMs": 5.443458000000021,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 2,
+        "operation": "revoke-and-deny",
+        "commands": {
+          "eval": 1,
+          "hget": 10,
+          "hset": 5
+        },
+        "sentBytes": 13744,
+        "receivedBytes": 11779,
+        "latencyMs": 5.950374999999951,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 3,
+        "operation": "provision-new",
+        "commands": {
+          "eval": 1,
+          "hget": 4,
+          "hlen": 1,
+          "hset": 2
+        },
+        "sentBytes": 2096,
+        "receivedBytes": 11,
+        "latencyMs": 4.604167000000018,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 3,
+        "operation": "provision-existing",
+        "commands": {
+          "hget": 1
+        },
+        "sentBytes": 141,
+        "receivedBytes": 513,
+        "latencyMs": 0.10779200000001765,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 3,
+        "operation": "discovery-four-residents",
+        "commands": {
+          "hget": 11
+        },
+        "sentBytes": 1305,
+        "receivedBytes": 3377,
+        "latencyMs": 4.1248749999999745,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 3,
+        "operation": "enter-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 564,
+        "receivedBytes": 2052,
+        "latencyMs": 0.2712089999999989,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 3,
+        "operation": "walk-40-authorizations",
+        "commands": {
+          "hget": 40
+        },
+        "sentBytes": 5640,
+        "receivedBytes": 20520,
+        "latencyMs": 2.5464170000000195,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 3,
+        "operation": "reconcile-four-visits",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 564,
+        "receivedBytes": 2052,
+        "latencyMs": 0.21308299999998326,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 3,
+        "operation": "read-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 564,
+        "receivedBytes": 2052,
+        "latencyMs": 0.33408299999996416,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 3,
+        "operation": "private-read-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 512,
+        "receivedBytes": 12,
+        "latencyMs": 0.35283300000003237,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 3,
+        "operation": "private-save",
+        "commands": {
+          "eval": 1,
+          "hget": 2,
+          "hlen": 1,
+          "hset": 1
+        },
+        "sentBytes": 6128,
+        "receivedBytes": 11,
+        "latencyMs": 4.514542000000006,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 3,
+        "operation": "save",
+        "commands": {
+          "eval": 1,
+          "hget": 10,
+          "hset": 5
+        },
+        "sentBytes": 8354,
+        "receivedBytes": 521,
+        "latencyMs": 5.401707999999985,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 3,
+        "operation": "revoke-and-deny",
+        "commands": {
+          "eval": 1,
+          "hget": 10,
+          "hset": 5
+        },
+        "sentBytes": 13744,
+        "receivedBytes": 11779,
+        "latencyMs": 5.220582999999976,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 4,
+        "operation": "provision-new",
+        "commands": {
+          "eval": 1,
+          "hget": 4,
+          "hlen": 1,
+          "hset": 2
+        },
+        "sentBytes": 2096,
+        "receivedBytes": 11,
+        "latencyMs": 4.380541999999991,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 4,
+        "operation": "provision-existing",
+        "commands": {
+          "hget": 1
+        },
+        "sentBytes": 141,
+        "receivedBytes": 513,
+        "latencyMs": 0.1828750000000241,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 4,
+        "operation": "discovery-four-residents",
+        "commands": {
+          "hget": 11
+        },
+        "sentBytes": 1305,
+        "receivedBytes": 3377,
+        "latencyMs": 0.7007499999999709,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 4,
+        "operation": "enter-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 564,
+        "receivedBytes": 2052,
+        "latencyMs": 0.46766700000000583,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 4,
+        "operation": "walk-40-authorizations",
+        "commands": {
+          "hget": 40
+        },
+        "sentBytes": 5640,
+        "receivedBytes": 20520,
+        "latencyMs": 6.0219999999999345,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 4,
+        "operation": "reconcile-four-visits",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 564,
+        "receivedBytes": 2052,
+        "latencyMs": 0.12458300000002964,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 4,
+        "operation": "read-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 564,
+        "receivedBytes": 2052,
+        "latencyMs": 0.28137500000002547,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 4,
+        "operation": "private-read-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 512,
+        "receivedBytes": 12,
+        "latencyMs": 0.22345900000004804,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 4,
+        "operation": "private-save",
+        "commands": {
+          "eval": 1,
+          "hget": 2,
+          "hlen": 1,
+          "hset": 1
+        },
+        "sentBytes": 6128,
+        "receivedBytes": 11,
+        "latencyMs": 6.664209000000028,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 4,
+        "operation": "save",
+        "commands": {
+          "eval": 1,
+          "hget": 10,
+          "hset": 5
+        },
+        "sentBytes": 8354,
+        "receivedBytes": 521,
+        "latencyMs": 6.0788330000000315,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 4,
+        "operation": "revoke-and-deny",
+        "commands": {
+          "eval": 1,
+          "hget": 10,
+          "hset": 5
+        },
+        "sentBytes": 13744,
+        "receivedBytes": 11779,
+        "latencyMs": 5.372165999999993,
+        "deskBytes": 54
+      },
+      {
+        "size": "near-capacity",
+        "round": 0,
+        "operation": "provision-new",
+        "commands": {
+          "eval": 1,
+          "hget": 4,
+          "hlen": 1,
+          "hset": 2
+        },
+        "sentBytes": 2120,
+        "receivedBytes": 11,
+        "latencyMs": 7.095875000000092,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 0,
+        "operation": "provision-existing",
+        "commands": {
+          "hget": 1
+        },
+        "sentBytes": 149,
+        "receivedBytes": 131423,
+        "latencyMs": 2.1997499999999945,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 0,
+        "operation": "discovery-four-residents",
+        "commands": {
+          "hget": 11
+        },
+        "sentBytes": 1393,
+        "receivedBytes": 527017,
+        "latencyMs": 11.953166999999894,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 0,
+        "operation": "enter-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 596,
+        "receivedBytes": 525692,
+        "latencyMs": 1.656041999999843,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 0,
+        "operation": "walk-40-authorizations",
+        "commands": {
+          "hget": 40
+        },
+        "sentBytes": 5960,
+        "receivedBytes": 5256920,
+        "latencyMs": 49.2238339999999,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 0,
+        "operation": "reconcile-four-visits",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 596,
+        "receivedBytes": 525692,
+        "latencyMs": 1.2530830000000606,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 0,
+        "operation": "read-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 596,
+        "receivedBytes": 525692,
+        "latencyMs": 3.52154100000007,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 0,
+        "operation": "private-read-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 544,
+        "receivedBytes": 520940,
+        "latencyMs": 1.7157079999999496,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 0,
+        "operation": "private-save",
+        "commands": {
+          "eval": 1,
+          "hget": 2,
+          "hset": 1
+        },
+        "sentBytes": 130951,
+        "receivedBytes": 130243,
+        "latencyMs": 10.643082999999933,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 0,
+        "operation": "save",
+        "commands": {
+          "eval": 1,
+          "hget": 10,
+          "hset": 5
+        },
+        "sentBytes": 264863,
+        "receivedBytes": 131431,
+        "latencyMs": 10.528708000000051,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 0,
+        "operation": "revoke-and-deny",
+        "commands": {
+          "eval": 1,
+          "hget": 10,
+          "hset": 5
+        },
+        "sentBytes": 264925,
+        "receivedBytes": 262928,
+        "latencyMs": 9.748458000000028,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 1,
+        "operation": "provision-new",
+        "commands": {
+          "eval": 1,
+          "hget": 4,
+          "hlen": 1,
+          "hset": 2
+        },
+        "sentBytes": 2120,
+        "receivedBytes": 11,
+        "latencyMs": 7.1985839999999826,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 1,
+        "operation": "provision-existing",
+        "commands": {
+          "hget": 1
+        },
+        "sentBytes": 149,
+        "receivedBytes": 131423,
+        "latencyMs": 0.8709579999999733,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 1,
+        "operation": "discovery-four-residents",
+        "commands": {
+          "hget": 11
+        },
+        "sentBytes": 1393,
+        "receivedBytes": 527017,
+        "latencyMs": 5.196833000000424,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 1,
+        "operation": "enter-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 596,
+        "receivedBytes": 525692,
+        "latencyMs": 3.621624999999767,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 1,
+        "operation": "walk-40-authorizations",
+        "commands": {
+          "hget": 40
+        },
+        "sentBytes": 5960,
+        "receivedBytes": 5256920,
+        "latencyMs": 89.33566699999983,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 1,
+        "operation": "reconcile-four-visits",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 596,
+        "receivedBytes": 525692,
+        "latencyMs": 2.3848339999999553,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 1,
+        "operation": "read-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 596,
+        "receivedBytes": 525692,
+        "latencyMs": 4.461416999999983,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 1,
+        "operation": "private-read-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 544,
+        "receivedBytes": 520940,
+        "latencyMs": 3.6873749999999745,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 1,
+        "operation": "private-save",
+        "commands": {
+          "eval": 1,
+          "hget": 2,
+          "hset": 1
+        },
+        "sentBytes": 130951,
+        "receivedBytes": 130243,
+        "latencyMs": 8.52541599999995,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 1,
+        "operation": "save",
+        "commands": {
+          "eval": 1,
+          "hget": 10,
+          "hset": 5
+        },
+        "sentBytes": 264863,
+        "receivedBytes": 131431,
+        "latencyMs": 7.220082999999704,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 1,
+        "operation": "revoke-and-deny",
+        "commands": {
+          "eval": 1,
+          "hget": 10,
+          "hset": 5
+        },
+        "sentBytes": 264925,
+        "receivedBytes": 262928,
+        "latencyMs": 8.109667000000172,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 2,
+        "operation": "provision-new",
+        "commands": {
+          "eval": 1,
+          "hget": 4,
+          "hlen": 1,
+          "hset": 2
+        },
+        "sentBytes": 2120,
+        "receivedBytes": 11,
+        "latencyMs": 4.160708000000341,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 2,
+        "operation": "provision-existing",
+        "commands": {
+          "hget": 1
+        },
+        "sentBytes": 149,
+        "receivedBytes": 131423,
+        "latencyMs": 2.8615829999998823,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 2,
+        "operation": "discovery-four-residents",
+        "commands": {
+          "hget": 11
+        },
+        "sentBytes": 1393,
+        "receivedBytes": 527017,
+        "latencyMs": 21.302208000000064,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 2,
+        "operation": "enter-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 596,
+        "receivedBytes": 525692,
+        "latencyMs": 4.673791999999594,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 2,
+        "operation": "walk-40-authorizations",
+        "commands": {
+          "hget": 40
+        },
+        "sentBytes": 5960,
+        "receivedBytes": 5256920,
+        "latencyMs": 123.53979199999958,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 2,
+        "operation": "reconcile-four-visits",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 596,
+        "receivedBytes": 525692,
+        "latencyMs": 1.7529590000003736,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 2,
+        "operation": "read-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 596,
+        "receivedBytes": 525692,
+        "latencyMs": 1.7854999999999563,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 2,
+        "operation": "private-read-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 544,
+        "receivedBytes": 520940,
+        "latencyMs": 3.330707999999504,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 2,
+        "operation": "private-save",
+        "commands": {
+          "eval": 1,
+          "hget": 2,
+          "hset": 1
+        },
+        "sentBytes": 130951,
+        "receivedBytes": 130243,
+        "latencyMs": 7.325000000000728,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 2,
+        "operation": "save",
+        "commands": {
+          "eval": 1,
+          "hget": 10,
+          "hset": 5
+        },
+        "sentBytes": 264863,
+        "receivedBytes": 131431,
+        "latencyMs": 7.554000000000087,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 2,
+        "operation": "revoke-and-deny",
+        "commands": {
+          "eval": 1,
+          "hget": 10,
+          "hset": 5
+        },
+        "sentBytes": 264925,
+        "receivedBytes": 262928,
+        "latencyMs": 14.831167000000278,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 3,
+        "operation": "provision-new",
+        "commands": {
+          "eval": 1,
+          "hget": 4,
+          "hlen": 1,
+          "hset": 2
+        },
+        "sentBytes": 2120,
+        "receivedBytes": 11,
+        "latencyMs": 13.257708999999522,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 3,
+        "operation": "provision-existing",
+        "commands": {
+          "hget": 1
+        },
+        "sentBytes": 149,
+        "receivedBytes": 131423,
+        "latencyMs": 0.4513749999996435,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 3,
+        "operation": "discovery-four-residents",
+        "commands": {
+          "hget": 11
+        },
+        "sentBytes": 1393,
+        "receivedBytes": 527017,
+        "latencyMs": 1.86200000000008,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 3,
+        "operation": "enter-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 596,
+        "receivedBytes": 525692,
+        "latencyMs": 2.0646669999996448,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 3,
+        "operation": "walk-40-authorizations",
+        "commands": {
+          "hget": 40
+        },
+        "sentBytes": 5960,
+        "receivedBytes": 5256920,
+        "latencyMs": 30.150416999999834,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 3,
+        "operation": "reconcile-four-visits",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 596,
+        "receivedBytes": 525692,
+        "latencyMs": 1.3149579999999332,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 3,
+        "operation": "read-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 596,
+        "receivedBytes": 525692,
+        "latencyMs": 4.0287500000004,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 3,
+        "operation": "private-read-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 544,
+        "receivedBytes": 520940,
+        "latencyMs": 1.752875000000131,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 3,
+        "operation": "private-save",
+        "commands": {
+          "eval": 1,
+          "hget": 2,
+          "hset": 1
+        },
+        "sentBytes": 130951,
+        "receivedBytes": 130243,
+        "latencyMs": 10.276417000000038,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 3,
+        "operation": "save",
+        "commands": {
+          "eval": 1,
+          "hget": 10,
+          "hset": 5
+        },
+        "sentBytes": 264863,
+        "receivedBytes": 131431,
+        "latencyMs": 9.324333999999908,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 3,
+        "operation": "revoke-and-deny",
+        "commands": {
+          "eval": 1,
+          "hget": 10,
+          "hset": 5
+        },
+        "sentBytes": 264925,
+        "receivedBytes": 262928,
+        "latencyMs": 7.625999999999294,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 4,
+        "operation": "provision-new",
+        "commands": {
+          "eval": 1,
+          "hget": 4,
+          "hlen": 1,
+          "hset": 2
+        },
+        "sentBytes": 2120,
+        "receivedBytes": 11,
+        "latencyMs": 8.513375000000451,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 4,
+        "operation": "provision-existing",
+        "commands": {
+          "hget": 1
+        },
+        "sentBytes": 149,
+        "receivedBytes": 131423,
+        "latencyMs": 0.4662500000004002,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 4,
+        "operation": "discovery-four-residents",
+        "commands": {
+          "hget": 11
+        },
+        "sentBytes": 1393,
+        "receivedBytes": 527017,
+        "latencyMs": 2.9648749999996653,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 4,
+        "operation": "enter-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 596,
+        "receivedBytes": 525692,
+        "latencyMs": 1.7574169999998048,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 4,
+        "operation": "walk-40-authorizations",
+        "commands": {
+          "hget": 40
+        },
+        "sentBytes": 5960,
+        "receivedBytes": 5256920,
+        "latencyMs": 29.705041999999594,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 4,
+        "operation": "reconcile-four-visits",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 596,
+        "receivedBytes": 525692,
+        "latencyMs": 1.6569169999993392,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 4,
+        "operation": "read-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 596,
+        "receivedBytes": 525692,
+        "latencyMs": 2.1728750000002037,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 4,
+        "operation": "private-read-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 544,
+        "receivedBytes": 520940,
+        "latencyMs": 1.6224160000001575,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 4,
+        "operation": "private-save",
+        "commands": {
+          "eval": 1,
+          "hget": 2,
+          "hset": 1
+        },
+        "sentBytes": 130951,
+        "receivedBytes": 130243,
+        "latencyMs": 9.425500000000284,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 4,
+        "operation": "save",
+        "commands": {
+          "eval": 1,
+          "hget": 10,
+          "hset": 5
+        },
+        "sentBytes": 264863,
+        "receivedBytes": 131431,
+        "latencyMs": 11.599499999999352,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 4,
+        "operation": "revoke-and-deny",
+        "commands": {
+          "eval": 1,
+          "hget": 10,
+          "hset": 5
+        },
+        "sentBytes": 264925,
+        "receivedBytes": 262928,
+        "latencyMs": 20.608541000000514,
+        "deskBytes": 127971
+      }
+    ]
+  },
+  "after": {
+    "revision": "working-tree",
+    "measuredAt": "2026-10-15T04:15:48.818Z",
+    "scope": "Office-store/authorization calls only, RESP socket bytes and Redis commandstats including Lua subcommands; loopback AOF always; 5 samples; no auth/room transport costs or production latency claim.",
+    "summary": [
+      {
+        "size": "empty",
+        "operation": "provision-new",
+        "deskBytes": 54,
+        "commands": {
+          "eval": 2,
+          "hlen": 1,
+          "hset": 2,
+          "hget": 4
+        },
+        "sentBytes": 2384,
+        "receivedBytes": 11,
+        "medianMs": 4.909334000000001,
+        "maxMs": 6.901582999999988
+      },
+      {
+        "size": "empty",
+        "operation": "provision-existing",
+        "deskBytes": 54,
+        "commands": {
+          "eval": 1,
+          "hget": 1
+        },
+        "sentBytes": 429,
+        "receivedBytes": 437,
+        "medianMs": 0.21845899999999574,
+        "maxMs": 0.42208299999998644
+      },
+      {
+        "size": "empty",
+        "operation": "discovery-four-residents",
+        "deskBytes": 54,
+        "commands": {
+          "eval": 7,
+          "hget": 11
+        },
+        "sentBytes": 3321,
+        "receivedBytes": 2845,
+        "medianMs": 1.0209580000000074,
+        "maxMs": 1.9165840000000003
+      },
+      {
+        "size": "empty",
+        "operation": "enter-four-residents",
+        "deskBytes": 54,
+        "commands": {
+          "eval": 4,
+          "hget": 4
+        },
+        "sentBytes": 1716,
+        "receivedBytes": 1748,
+        "medianMs": 0.5707499999999754,
+        "maxMs": 1.6876669999999763
+      },
+      {
+        "size": "empty",
+        "operation": "walk-40-authorizations",
+        "deskBytes": 54,
+        "commands": {
+          "eval": 40,
+          "hget": 40
+        },
+        "sentBytes": 17160,
+        "receivedBytes": 17480,
+        "medianMs": 5.535542000000021,
+        "maxMs": 7.642457999999976
+      },
+      {
+        "size": "empty",
+        "operation": "reconcile-four-visits",
+        "deskBytes": 54,
+        "commands": {
+          "eval": 4,
+          "hget": 4
+        },
+        "sentBytes": 1716,
+        "receivedBytes": 1748,
+        "medianMs": 0.15908399999989342,
+        "maxMs": 0.6285829999999919
+      },
+      {
+        "size": "empty",
+        "operation": "read-four-residents",
+        "deskBytes": 54,
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 564,
+        "receivedBytes": 2052,
+        "medianMs": 0.281708999999978,
+        "maxMs": 1.675958000000037
+      },
+      {
+        "size": "empty",
+        "operation": "private-read-four-residents",
+        "deskBytes": 54,
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 512,
+        "receivedBytes": 12,
+        "medianMs": 0.37991699999997763,
+        "maxMs": 0.8918749999999989
+      },
+      {
+        "size": "empty",
+        "operation": "private-save",
+        "deskBytes": 54,
+        "commands": {
+          "eval": 1,
+          "hlen": 1,
+          "hset": 1,
+          "hget": 2
+        },
+        "sentBytes": 6128,
+        "receivedBytes": 11,
+        "medianMs": 4.919292000000041,
+        "maxMs": 5.899624999999986
+      },
+      {
+        "size": "empty",
+        "operation": "save",
+        "deskBytes": 54,
+        "commands": {
+          "eval": 1,
+          "hset": 5,
+          "hget": 10
+        },
+        "sentBytes": 8354,
+        "receivedBytes": 521,
+        "medianMs": 5.101541999999995,
+        "maxMs": 7.47458400000005
+      },
+      {
+        "size": "empty",
+        "operation": "revoke-and-deny",
+        "deskBytes": 54,
+        "commands": {
+          "eval": 1,
+          "hset": 5,
+          "hget": 10
+        },
+        "sentBytes": 13744,
+        "receivedBytes": 11779,
+        "medianMs": 4.836749999999938,
+        "maxMs": 6.023957999999993
+      },
+      {
+        "size": "near-capacity",
+        "operation": "provision-new",
+        "deskBytes": 127971,
+        "commands": {
+          "eval": 2,
+          "hlen": 1,
+          "hset": 2,
+          "hget": 4
+        },
+        "sentBytes": 2408,
+        "receivedBytes": 11,
+        "medianMs": 5.412124999999833,
+        "maxMs": 14.11870799999997
+      },
+      {
+        "size": "near-capacity",
+        "operation": "provision-existing",
+        "deskBytes": 127971,
+        "commands": {
+          "eval": 1,
+          "hget": 1
+        },
+        "sentBytes": 437,
+        "receivedBytes": 438,
+        "medianMs": 0.8872080000001006,
+        "maxMs": 1.4573749999999563
+      },
+      {
+        "size": "near-capacity",
+        "operation": "discovery-four-residents",
+        "deskBytes": 127971,
+        "commands": {
+          "eval": 7,
+          "hget": 11
+        },
+        "sentBytes": 3409,
+        "receivedBytes": 2849,
+        "medianMs": 4.6808750000000146,
+        "maxMs": 23.585207999999966
+      },
+      {
+        "size": "near-capacity",
+        "operation": "enter-four-residents",
+        "deskBytes": 127971,
+        "commands": {
+          "eval": 4,
+          "hget": 4
+        },
+        "sentBytes": 1748,
+        "receivedBytes": 1752,
+        "medianMs": 2.8314170000003287,
+        "maxMs": 3.6670829999998205
+      },
+      {
+        "size": "near-capacity",
+        "operation": "walk-40-authorizations",
+        "deskBytes": 127971,
+        "commands": {
+          "eval": 40,
+          "hget": 40
+        },
+        "sentBytes": 17480,
+        "receivedBytes": 17520,
+        "medianMs": 32.73416700000007,
+        "maxMs": 45.03845900000033
+      },
+      {
+        "size": "near-capacity",
+        "operation": "reconcile-four-visits",
+        "deskBytes": 127971,
+        "commands": {
+          "eval": 4,
+          "hget": 4
+        },
+        "sentBytes": 1748,
+        "receivedBytes": 1752,
+        "medianMs": 2.594833000000108,
+        "maxMs": 3.506583999999748
+      },
+      {
+        "size": "near-capacity",
+        "operation": "read-four-residents",
+        "deskBytes": 127971,
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 596,
+        "receivedBytes": 525692,
+        "medianMs": 2.255333000000064,
+        "maxMs": 11.559917000000041
+      },
+      {
+        "size": "near-capacity",
+        "operation": "private-read-four-residents",
+        "deskBytes": 127971,
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 544,
+        "receivedBytes": 520940,
+        "medianMs": 1.6759580000002643,
+        "maxMs": 3.1763749999995525
+      },
+      {
+        "size": "near-capacity",
+        "operation": "private-save",
+        "deskBytes": 127971,
+        "commands": {
+          "eval": 1,
+          "hset": 1,
+          "hget": 2
+        },
+        "sentBytes": 130951,
+        "receivedBytes": 130243,
+        "medianMs": 7.583666999999878,
+        "maxMs": 11.221542
+      },
+      {
+        "size": "near-capacity",
+        "operation": "save",
+        "deskBytes": 127971,
+        "commands": {
+          "eval": 1,
+          "hset": 5,
+          "hget": 10
+        },
+        "sentBytes": 264863,
+        "receivedBytes": 131431,
+        "medianMs": 8.20049999999992,
+        "maxMs": 9.241542000000663
+      },
+      {
+        "size": "near-capacity",
+        "operation": "revoke-and-deny",
+        "deskBytes": 127971,
+        "commands": {
+          "eval": 1,
+          "hset": 5,
+          "hget": 10
+        },
+        "sentBytes": 264925,
+        "receivedBytes": 262928,
+        "medianMs": 8.50775000000067,
+        "maxMs": 15.167667000000165
+      }
+    ],
+    "results": [
+      {
+        "size": "empty",
+        "round": 0,
+        "operation": "provision-new",
+        "commands": {
+          "eval": 2,
+          "hlen": 1,
+          "hset": 2,
+          "hget": 4
+        },
+        "sentBytes": 2384,
+        "receivedBytes": 11,
+        "latencyMs": 6.901582999999988,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 0,
+        "operation": "provision-existing",
+        "commands": {
+          "eval": 1,
+          "hget": 1
+        },
+        "sentBytes": 429,
+        "receivedBytes": 437,
+        "latencyMs": 0.397625000000005,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 0,
+        "operation": "discovery-four-residents",
+        "commands": {
+          "eval": 7,
+          "hget": 11
+        },
+        "sentBytes": 3321,
+        "receivedBytes": 2845,
+        "latencyMs": 1.9165840000000003,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 0,
+        "operation": "enter-four-residents",
+        "commands": {
+          "eval": 4,
+          "hget": 4
+        },
+        "sentBytes": 1716,
+        "receivedBytes": 1748,
+        "latencyMs": 0.6453750000000014,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 0,
+        "operation": "walk-40-authorizations",
+        "commands": {
+          "eval": 40,
+          "hget": 40
+        },
+        "sentBytes": 17160,
+        "receivedBytes": 17480,
+        "latencyMs": 6.565832999999998,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 0,
+        "operation": "reconcile-four-visits",
+        "commands": {
+          "eval": 4,
+          "hget": 4
+        },
+        "sentBytes": 1716,
+        "receivedBytes": 1748,
+        "latencyMs": 0.6285829999999919,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 0,
+        "operation": "read-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 564,
+        "receivedBytes": 2052,
+        "latencyMs": 0.8899589999999762,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 0,
+        "operation": "private-read-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 512,
+        "receivedBytes": 12,
+        "latencyMs": 0.8918749999999989,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 0,
+        "operation": "private-save",
+        "commands": {
+          "eval": 1,
+          "hlen": 1,
+          "hset": 1,
+          "hget": 2
+        },
+        "sentBytes": 6128,
+        "receivedBytes": 11,
+        "latencyMs": 5.899624999999986,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 0,
+        "operation": "save",
+        "commands": {
+          "eval": 1,
+          "hset": 5,
+          "hget": 10
+        },
+        "sentBytes": 8354,
+        "receivedBytes": 521,
+        "latencyMs": 4.988209000000012,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 0,
+        "operation": "revoke-and-deny",
+        "commands": {
+          "eval": 1,
+          "hset": 5,
+          "hget": 10
+        },
+        "sentBytes": 13744,
+        "receivedBytes": 11779,
+        "latencyMs": 6.023957999999993,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 1,
+        "operation": "provision-new",
+        "commands": {
+          "eval": 2,
+          "hlen": 1,
+          "hset": 2,
+          "hget": 4
+        },
+        "sentBytes": 2384,
+        "receivedBytes": 11,
+        "latencyMs": 4.909334000000001,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 1,
+        "operation": "provision-existing",
+        "commands": {
+          "eval": 1,
+          "hget": 1
+        },
+        "sentBytes": 429,
+        "receivedBytes": 437,
+        "latencyMs": 0.42208299999998644,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 1,
+        "operation": "discovery-four-residents",
+        "commands": {
+          "eval": 7,
+          "hget": 11
+        },
+        "sentBytes": 3321,
+        "receivedBytes": 2845,
+        "latencyMs": 0.8769580000000019,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 1,
+        "operation": "enter-four-residents",
+        "commands": {
+          "eval": 4,
+          "hget": 4
+        },
+        "sentBytes": 1716,
+        "receivedBytes": 1748,
+        "latencyMs": 0.29483300000003965,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 1,
+        "operation": "walk-40-authorizations",
+        "commands": {
+          "eval": 40,
+          "hget": 40
+        },
+        "sentBytes": 17160,
+        "receivedBytes": 17480,
+        "latencyMs": 3.488084000000015,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 1,
+        "operation": "reconcile-four-visits",
+        "commands": {
+          "eval": 4,
+          "hget": 4
+        },
+        "sentBytes": 1716,
+        "receivedBytes": 1748,
+        "latencyMs": 0.19149999999996226,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 1,
+        "operation": "read-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 564,
+        "receivedBytes": 2052,
+        "latencyMs": 0.281708999999978,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 1,
+        "operation": "private-read-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 512,
+        "receivedBytes": 12,
+        "latencyMs": 0.37137500000000045,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 1,
+        "operation": "private-save",
+        "commands": {
+          "eval": 1,
+          "hlen": 1,
+          "hset": 1,
+          "hget": 2
+        },
+        "sentBytes": 6128,
+        "receivedBytes": 11,
+        "latencyMs": 4.919292000000041,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 1,
+        "operation": "save",
+        "commands": {
+          "eval": 1,
+          "hset": 5,
+          "hget": 10
+        },
+        "sentBytes": 8354,
+        "receivedBytes": 521,
+        "latencyMs": 5.247540999999956,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 1,
+        "operation": "revoke-and-deny",
+        "commands": {
+          "eval": 1,
+          "hset": 5,
+          "hget": 10
+        },
+        "sentBytes": 13744,
+        "receivedBytes": 11779,
+        "latencyMs": 4.801499999999976,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 2,
+        "operation": "provision-new",
+        "commands": {
+          "eval": 2,
+          "hlen": 1,
+          "hset": 2,
+          "hget": 4
+        },
+        "sentBytes": 2384,
+        "receivedBytes": 11,
+        "latencyMs": 4.5989999999999895,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 2,
+        "operation": "provision-existing",
+        "commands": {
+          "eval": 1,
+          "hget": 1
+        },
+        "sentBytes": 429,
+        "receivedBytes": 437,
+        "latencyMs": 0.21845899999999574,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 2,
+        "operation": "discovery-four-residents",
+        "commands": {
+          "eval": 7,
+          "hget": 11
+        },
+        "sentBytes": 3321,
+        "receivedBytes": 2845,
+        "latencyMs": 1.0157500000000255,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 2,
+        "operation": "enter-four-residents",
+        "commands": {
+          "eval": 4,
+          "hget": 4
+        },
+        "sentBytes": 1716,
+        "receivedBytes": 1748,
+        "latencyMs": 0.386415999999997,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 2,
+        "operation": "walk-40-authorizations",
+        "commands": {
+          "eval": 40,
+          "hget": 40
+        },
+        "sentBytes": 17160,
+        "receivedBytes": 17480,
+        "latencyMs": 5.535542000000021,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 2,
+        "operation": "reconcile-four-visits",
+        "commands": {
+          "eval": 4,
+          "hget": 4
+        },
+        "sentBytes": 1716,
+        "receivedBytes": 1748,
+        "latencyMs": 0.1366249999999809,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 2,
+        "operation": "read-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 564,
+        "receivedBytes": 2052,
+        "latencyMs": 0.23879099999999198,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 2,
+        "operation": "private-read-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 512,
+        "receivedBytes": 12,
+        "latencyMs": 0.19983300000001236,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 2,
+        "operation": "private-save",
+        "commands": {
+          "eval": 1,
+          "hlen": 1,
+          "hset": 1,
+          "hget": 2
+        },
+        "sentBytes": 6128,
+        "receivedBytes": 11,
+        "latencyMs": 4.421958000000018,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 2,
+        "operation": "save",
+        "commands": {
+          "eval": 1,
+          "hset": 5,
+          "hget": 10
+        },
+        "sentBytes": 8354,
+        "receivedBytes": 521,
+        "latencyMs": 5.101541999999995,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 2,
+        "operation": "revoke-and-deny",
+        "commands": {
+          "eval": 1,
+          "hset": 5,
+          "hget": 10
+        },
+        "sentBytes": 13744,
+        "receivedBytes": 11779,
+        "latencyMs": 5.299750000000017,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 3,
+        "operation": "provision-new",
+        "commands": {
+          "eval": 2,
+          "hlen": 1,
+          "hset": 2,
+          "hget": 4
+        },
+        "sentBytes": 2384,
+        "receivedBytes": 11,
+        "latencyMs": 6.728250000000003,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 3,
+        "operation": "provision-existing",
+        "commands": {
+          "eval": 1,
+          "hget": 1
+        },
+        "sentBytes": 429,
+        "receivedBytes": 437,
+        "latencyMs": 0.17983300000003055,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 3,
+        "operation": "discovery-four-residents",
+        "commands": {
+          "eval": 7,
+          "hget": 11
+        },
+        "sentBytes": 3321,
+        "receivedBytes": 2845,
+        "latencyMs": 1.0209580000000074,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 3,
+        "operation": "enter-four-residents",
+        "commands": {
+          "eval": 4,
+          "hget": 4
+        },
+        "sentBytes": 1716,
+        "receivedBytes": 1748,
+        "latencyMs": 1.6876669999999763,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 3,
+        "operation": "walk-40-authorizations",
+        "commands": {
+          "eval": 40,
+          "hget": 40
+        },
+        "sentBytes": 17160,
+        "receivedBytes": 17480,
+        "latencyMs": 7.642457999999976,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 3,
+        "operation": "reconcile-four-visits",
+        "commands": {
+          "eval": 4,
+          "hget": 4
+        },
+        "sentBytes": 1716,
+        "receivedBytes": 1748,
+        "latencyMs": 0.1379159999999615,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 3,
+        "operation": "read-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 564,
+        "receivedBytes": 2052,
+        "latencyMs": 0.22037499999999,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 3,
+        "operation": "private-read-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 512,
+        "receivedBytes": 12,
+        "latencyMs": 0.37991699999997763,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 3,
+        "operation": "private-save",
+        "commands": {
+          "eval": 1,
+          "hlen": 1,
+          "hset": 1,
+          "hget": 2
+        },
+        "sentBytes": 6128,
+        "receivedBytes": 11,
+        "latencyMs": 5.092792000000031,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 3,
+        "operation": "save",
+        "commands": {
+          "eval": 1,
+          "hset": 5,
+          "hget": 10
+        },
+        "sentBytes": 8354,
+        "receivedBytes": 521,
+        "latencyMs": 4.953417000000002,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 3,
+        "operation": "revoke-and-deny",
+        "commands": {
+          "eval": 1,
+          "hset": 5,
+          "hget": 10
+        },
+        "sentBytes": 13744,
+        "receivedBytes": 11779,
+        "latencyMs": 4.367707999999993,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 4,
+        "operation": "provision-new",
+        "commands": {
+          "eval": 2,
+          "hlen": 1,
+          "hset": 2,
+          "hget": 4
+        },
+        "sentBytes": 2384,
+        "receivedBytes": 11,
+        "latencyMs": 4.801333,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 4,
+        "operation": "provision-existing",
+        "commands": {
+          "eval": 1,
+          "hget": 1
+        },
+        "sentBytes": 429,
+        "receivedBytes": 437,
+        "latencyMs": 0.11941600000000108,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 4,
+        "operation": "discovery-four-residents",
+        "commands": {
+          "eval": 7,
+          "hget": 11
+        },
+        "sentBytes": 3321,
+        "receivedBytes": 2845,
+        "latencyMs": 1.1375830000000633,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 4,
+        "operation": "enter-four-residents",
+        "commands": {
+          "eval": 4,
+          "hget": 4
+        },
+        "sentBytes": 1716,
+        "receivedBytes": 1748,
+        "latencyMs": 0.5707499999999754,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 4,
+        "operation": "walk-40-authorizations",
+        "commands": {
+          "eval": 40,
+          "hget": 40
+        },
+        "sentBytes": 17160,
+        "receivedBytes": 17480,
+        "latencyMs": 3.694749999999999,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 4,
+        "operation": "reconcile-four-visits",
+        "commands": {
+          "eval": 4,
+          "hget": 4
+        },
+        "sentBytes": 1716,
+        "receivedBytes": 1748,
+        "latencyMs": 0.15908399999989342,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 4,
+        "operation": "read-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 564,
+        "receivedBytes": 2052,
+        "latencyMs": 1.675958000000037,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 4,
+        "operation": "private-read-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 512,
+        "receivedBytes": 12,
+        "latencyMs": 0.48820900000009715,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 4,
+        "operation": "private-save",
+        "commands": {
+          "eval": 1,
+          "hlen": 1,
+          "hset": 1,
+          "hget": 2
+        },
+        "sentBytes": 6128,
+        "receivedBytes": 11,
+        "latencyMs": 4.729791999999975,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 4,
+        "operation": "save",
+        "commands": {
+          "eval": 1,
+          "hset": 5,
+          "hget": 10
+        },
+        "sentBytes": 8354,
+        "receivedBytes": 521,
+        "latencyMs": 7.47458400000005,
+        "deskBytes": 54
+      },
+      {
+        "size": "empty",
+        "round": 4,
+        "operation": "revoke-and-deny",
+        "commands": {
+          "eval": 1,
+          "hset": 5,
+          "hget": 10
+        },
+        "sentBytes": 13744,
+        "receivedBytes": 11779,
+        "latencyMs": 4.836749999999938,
+        "deskBytes": 54
+      },
+      {
+        "size": "near-capacity",
+        "round": 0,
+        "operation": "provision-new",
+        "commands": {
+          "eval": 2,
+          "hlen": 1,
+          "hset": 2,
+          "hget": 4
+        },
+        "sentBytes": 2408,
+        "receivedBytes": 11,
+        "latencyMs": 4.625875000000065,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 0,
+        "operation": "provision-existing",
+        "commands": {
+          "eval": 1,
+          "hget": 1
+        },
+        "sentBytes": 437,
+        "receivedBytes": 438,
+        "latencyMs": 1.4573749999999563,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 0,
+        "operation": "discovery-four-residents",
+        "commands": {
+          "eval": 7,
+          "hget": 11
+        },
+        "sentBytes": 3409,
+        "receivedBytes": 2849,
+        "latencyMs": 23.585207999999966,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 0,
+        "operation": "enter-four-residents",
+        "commands": {
+          "eval": 4,
+          "hget": 4
+        },
+        "sentBytes": 1748,
+        "receivedBytes": 1752,
+        "latencyMs": 3.6670829999998205,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 0,
+        "operation": "walk-40-authorizations",
+        "commands": {
+          "eval": 40,
+          "hget": 40
+        },
+        "sentBytes": 17480,
+        "receivedBytes": 17520,
+        "latencyMs": 38.463832999999795,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 0,
+        "operation": "reconcile-four-visits",
+        "commands": {
+          "eval": 4,
+          "hget": 4
+        },
+        "sentBytes": 1748,
+        "receivedBytes": 1752,
+        "latencyMs": 3.080833999999868,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 0,
+        "operation": "read-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 596,
+        "receivedBytes": 525692,
+        "latencyMs": 2.255333000000064,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 0,
+        "operation": "private-read-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 544,
+        "receivedBytes": 520940,
+        "latencyMs": 2.8903750000001764,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 0,
+        "operation": "private-save",
+        "commands": {
+          "eval": 1,
+          "hset": 1,
+          "hget": 2
+        },
+        "sentBytes": 130951,
+        "receivedBytes": 130243,
+        "latencyMs": 11.221542,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 0,
+        "operation": "save",
+        "commands": {
+          "eval": 1,
+          "hset": 5,
+          "hget": 10
+        },
+        "sentBytes": 264863,
+        "receivedBytes": 131431,
+        "latencyMs": 8.20049999999992,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 0,
+        "operation": "revoke-and-deny",
+        "commands": {
+          "eval": 1,
+          "hset": 5,
+          "hget": 10
+        },
+        "sentBytes": 264925,
+        "receivedBytes": 262928,
+        "latencyMs": 8.2506249999999,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 1,
+        "operation": "provision-new",
+        "commands": {
+          "eval": 2,
+          "hlen": 1,
+          "hset": 2,
+          "hget": 4
+        },
+        "sentBytes": 2408,
+        "receivedBytes": 11,
+        "latencyMs": 4.732584000000088,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 1,
+        "operation": "provision-existing",
+        "commands": {
+          "eval": 1,
+          "hget": 1
+        },
+        "sentBytes": 437,
+        "receivedBytes": 438,
+        "latencyMs": 0.7294159999996737,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 1,
+        "operation": "discovery-four-residents",
+        "commands": {
+          "eval": 7,
+          "hget": 11
+        },
+        "sentBytes": 3409,
+        "receivedBytes": 2849,
+        "latencyMs": 4.6808750000000146,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 1,
+        "operation": "enter-four-residents",
+        "commands": {
+          "eval": 4,
+          "hget": 4
+        },
+        "sentBytes": 1748,
+        "receivedBytes": 1752,
+        "latencyMs": 2.8175830000000133,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 1,
+        "operation": "walk-40-authorizations",
+        "commands": {
+          "eval": 40,
+          "hget": 40
+        },
+        "sentBytes": 17480,
+        "receivedBytes": 17520,
+        "latencyMs": 29.691749999999956,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 1,
+        "operation": "reconcile-four-visits",
+        "commands": {
+          "eval": 4,
+          "hget": 4
+        },
+        "sentBytes": 1748,
+        "receivedBytes": 1752,
+        "latencyMs": 2.203875000000153,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 1,
+        "operation": "read-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 596,
+        "receivedBytes": 525692,
+        "latencyMs": 1.7772500000000946,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 1,
+        "operation": "private-read-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 544,
+        "receivedBytes": 520940,
+        "latencyMs": 1.6759580000002643,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 1,
+        "operation": "private-save",
+        "commands": {
+          "eval": 1,
+          "hset": 1,
+          "hget": 2
+        },
+        "sentBytes": 130951,
+        "receivedBytes": 130243,
+        "latencyMs": 7.5947909999999865,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 1,
+        "operation": "save",
+        "commands": {
+          "eval": 1,
+          "hset": 5,
+          "hget": 10
+        },
+        "sentBytes": 264863,
+        "receivedBytes": 131431,
+        "latencyMs": 6.890540999999757,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 1,
+        "operation": "revoke-and-deny",
+        "commands": {
+          "eval": 1,
+          "hset": 5,
+          "hget": 10
+        },
+        "sentBytes": 264925,
+        "receivedBytes": 262928,
+        "latencyMs": 8.48324999999977,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 2,
+        "operation": "provision-new",
+        "commands": {
+          "eval": 2,
+          "hlen": 1,
+          "hset": 2,
+          "hget": 4
+        },
+        "sentBytes": 2408,
+        "receivedBytes": 11,
+        "latencyMs": 5.412124999999833,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 2,
+        "operation": "provision-existing",
+        "commands": {
+          "eval": 1,
+          "hget": 1
+        },
+        "sentBytes": 437,
+        "receivedBytes": 438,
+        "latencyMs": 0.8872080000001006,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 2,
+        "operation": "discovery-four-residents",
+        "commands": {
+          "eval": 7,
+          "hget": 11
+        },
+        "sentBytes": 3409,
+        "receivedBytes": 2849,
+        "latencyMs": 5.776041999999961,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 2,
+        "operation": "enter-four-residents",
+        "commands": {
+          "eval": 4,
+          "hget": 4
+        },
+        "sentBytes": 1748,
+        "receivedBytes": 1752,
+        "latencyMs": 3.5450000000000728,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 2,
+        "operation": "walk-40-authorizations",
+        "commands": {
+          "eval": 40,
+          "hget": 40
+        },
+        "sentBytes": 17480,
+        "receivedBytes": 17520,
+        "latencyMs": 32.73416700000007,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 2,
+        "operation": "reconcile-four-visits",
+        "commands": {
+          "eval": 4,
+          "hget": 4
+        },
+        "sentBytes": 1748,
+        "receivedBytes": 1752,
+        "latencyMs": 2.594833000000108,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 2,
+        "operation": "read-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 596,
+        "receivedBytes": 525692,
+        "latencyMs": 11.559917000000041,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 2,
+        "operation": "private-read-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 544,
+        "receivedBytes": 520940,
+        "latencyMs": 3.1763749999995525,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 2,
+        "operation": "private-save",
+        "commands": {
+          "eval": 1,
+          "hset": 1,
+          "hget": 2
+        },
+        "sentBytes": 130951,
+        "receivedBytes": 130243,
+        "latencyMs": 7.583666999999878,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 2,
+        "operation": "save",
+        "commands": {
+          "eval": 1,
+          "hset": 5,
+          "hget": 10
+        },
+        "sentBytes": 264863,
+        "receivedBytes": 131431,
+        "latencyMs": 8.36737499999981,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 2,
+        "operation": "revoke-and-deny",
+        "commands": {
+          "eval": 1,
+          "hset": 5,
+          "hget": 10
+        },
+        "sentBytes": 264925,
+        "receivedBytes": 262928,
+        "latencyMs": 15.167667000000165,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 3,
+        "operation": "provision-new",
+        "commands": {
+          "eval": 2,
+          "hlen": 1,
+          "hset": 2,
+          "hget": 4
+        },
+        "sentBytes": 2408,
+        "receivedBytes": 11,
+        "latencyMs": 14.11870799999997,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 3,
+        "operation": "provision-existing",
+        "commands": {
+          "eval": 1,
+          "hget": 1
+        },
+        "sentBytes": 437,
+        "receivedBytes": 438,
+        "latencyMs": 0.9656250000007276,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 3,
+        "operation": "discovery-four-residents",
+        "commands": {
+          "eval": 7,
+          "hget": 11
+        },
+        "sentBytes": 3409,
+        "receivedBytes": 2849,
+        "latencyMs": 4.177124999999251,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 3,
+        "operation": "enter-four-residents",
+        "commands": {
+          "eval": 4,
+          "hget": 4
+        },
+        "sentBytes": 1748,
+        "receivedBytes": 1752,
+        "latencyMs": 2.8314170000003287,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 3,
+        "operation": "walk-40-authorizations",
+        "commands": {
+          "eval": 40,
+          "hget": 40
+        },
+        "sentBytes": 17480,
+        "receivedBytes": 17520,
+        "latencyMs": 45.03845900000033,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 3,
+        "operation": "reconcile-four-visits",
+        "commands": {
+          "eval": 4,
+          "hget": 4
+        },
+        "sentBytes": 1748,
+        "receivedBytes": 1752,
+        "latencyMs": 3.506583999999748,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 3,
+        "operation": "read-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 596,
+        "receivedBytes": 525692,
+        "latencyMs": 2.4750420000000304,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 3,
+        "operation": "private-read-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 544,
+        "receivedBytes": 520940,
+        "latencyMs": 1.622750000000451,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 3,
+        "operation": "private-save",
+        "commands": {
+          "eval": 1,
+          "hset": 1,
+          "hget": 2
+        },
+        "sentBytes": 130951,
+        "receivedBytes": 130243,
+        "latencyMs": 7.058208000000377,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 3,
+        "operation": "save",
+        "commands": {
+          "eval": 1,
+          "hset": 5,
+          "hget": 10
+        },
+        "sentBytes": 264863,
+        "receivedBytes": 131431,
+        "latencyMs": 7.284333999999944,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 3,
+        "operation": "revoke-and-deny",
+        "commands": {
+          "eval": 1,
+          "hset": 5,
+          "hget": 10
+        },
+        "sentBytes": 264925,
+        "receivedBytes": 262928,
+        "latencyMs": 8.50775000000067,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 4,
+        "operation": "provision-new",
+        "commands": {
+          "eval": 2,
+          "hlen": 1,
+          "hset": 2,
+          "hget": 4
+        },
+        "sentBytes": 2408,
+        "receivedBytes": 11,
+        "latencyMs": 5.481249999999818,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 4,
+        "operation": "provision-existing",
+        "commands": {
+          "eval": 1,
+          "hget": 1
+        },
+        "sentBytes": 437,
+        "receivedBytes": 438,
+        "latencyMs": 0.7201249999998254,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 4,
+        "operation": "discovery-four-residents",
+        "commands": {
+          "eval": 7,
+          "hget": 11
+        },
+        "sentBytes": 3409,
+        "receivedBytes": 2849,
+        "latencyMs": 2.826000000000022,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 4,
+        "operation": "enter-four-residents",
+        "commands": {
+          "eval": 4,
+          "hget": 4
+        },
+        "sentBytes": 1748,
+        "receivedBytes": 1752,
+        "latencyMs": 2.5371249999998327,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 4,
+        "operation": "walk-40-authorizations",
+        "commands": {
+          "eval": 40,
+          "hget": 40
+        },
+        "sentBytes": 17480,
+        "receivedBytes": 17520,
+        "latencyMs": 26.976208000000042,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 4,
+        "operation": "reconcile-four-visits",
+        "commands": {
+          "eval": 4,
+          "hget": 4
+        },
+        "sentBytes": 1748,
+        "receivedBytes": 1752,
+        "latencyMs": 2.3591669999996157,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 4,
+        "operation": "read-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 596,
+        "receivedBytes": 525692,
+        "latencyMs": 1.7405829999997877,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 4,
+        "operation": "private-read-four-residents",
+        "commands": {
+          "hget": 4
+        },
+        "sentBytes": 544,
+        "receivedBytes": 520940,
+        "latencyMs": 1.5275830000000497,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 4,
+        "operation": "private-save",
+        "commands": {
+          "eval": 1,
+          "hset": 1,
+          "hget": 2
+        },
+        "sentBytes": 130951,
+        "receivedBytes": 130243,
+        "latencyMs": 6.828875000000153,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 4,
+        "operation": "save",
+        "commands": {
+          "eval": 1,
+          "hset": 5,
+          "hget": 10
+        },
+        "sentBytes": 264863,
+        "receivedBytes": 131431,
+        "latencyMs": 9.241542000000663,
+        "deskBytes": 127971
+      },
+      {
+        "size": "near-capacity",
+        "round": 4,
+        "operation": "revoke-and-deny",
+        "commands": {
+          "eval": 1,
+          "hset": 5,
+          "hget": 10
+        },
+        "sentBytes": 264925,
+        "receivedBytes": 262928,
+        "latencyMs": 8.63812499999949,
+        "deskBytes": 127971
+      }
+    ]
+  }
+}
