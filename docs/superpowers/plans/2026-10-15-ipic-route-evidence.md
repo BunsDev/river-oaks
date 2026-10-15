@@ -58,6 +58,21 @@ The 2026-10-11 envelope (`AVATAR_ENVELOPE`, 1.01 m wide) used `Box3.setFromObjec
   | desktop | 69/69 |
   | pytest | 141 passed |
   | build, demo, secrets | passed |
+- **Full server suite on throwaway Redis** (`REDIS_URL=redis://127.0.0.1:16493 node --test server/tests/*.test.js`, at `083373ff`): **730 tests, 729 pass, 0 fail, 0 skipped, 1 todo** (the sofa).
+- **GLB export** (`node scripts/export-ipic.mjs`, Chromium 156 SwiftShader, at `083373ff`): exit 0.
+  - **Geometry is reproduced exactly:** all 57 meshes' vertex and index data are byte for byte the same as the committed GLB (digest `15e43deab5b10188`), as are the 65 node names and 28 materials.
+  - The five review views have the same draw calls and triangles as `docs/ipic-review/review.json`.
+  - **Only the 12 embedded PNG textures differ in bytes:** 13,647,120 against 12,394,500, because Chromium 156's canvas encoder compresses differently from 134's.
+  - The committed GLB is kept, since no art changed. The regenerated copy is in the session scratchpad.
+- **Runtime views** (`node preview/e2e/ipic-photo-views.mjs`, Chromium 156, Metal ANGLE on an Apple M3 Max, 1440×900, sharp quality, FOV 67, no page errors). Six frames are committed with sha256 hashes in `docs/design/office-ipic/captures/ipic-runtime-receipt.json`: T1 reception, T2a mural, T2b lounge, T2c bar, T3 auditorium and T3 seated.
+  - **The film was playing** in every frame (fixture-v1).
+  - **Avatars.** T3 is framed from owner's page, so seated alice shows, though mostly hidden behind the front-row recliner backs, which bears out the flat-floor sightline finding. The other frames are from alice's page, so the owner shows at the bar in T2c.
+  - **The screening panel and HUD are hidden.**
+  - **Defects visible in T1:**
+    - the fluted reception backing drawn across the right lane;
+    - a neighbouring tenant's interior visible between the escalator lanes;
+    - the owner's name label drawn through walls.
+  - **The first capture run** left the panel visible and framed T3 from alice's own page, which hides her avatar. The runner was fixed and rerun; only the rerun is committed.
 - **Blender** (`/Applications/Blender.app`, 5.2.2 LTS): re-importing the committed GLB gives 57 meshes, 131,284 triangles and 12 packed images, the same as the committed `docs/ipic-review/blender.json` (4.2.3 LTS). Only the byte count differs (10,027,663 against 10,101,846), which is the Blender version. The committed `.blend` is kept unchanged; the 5.2.2 output is in the session scratchpad.
 - **The two `todo` tests reproduce the open defects:**
   - the sofa returns `stand_blocked`;
@@ -83,6 +98,4 @@ The 2026-10-11 envelope (`AVATAR_ENVELOPE`, 1.01 m wide) used `Box3.setFromObjec
 
 ## Next
 
-1. Export check: `node scripts/export-ipic.mjs`, then Blender (`/Applications/Blender.app/Contents/MacOS/Blender --background --threads 2 --python scripts/export-ipic-blender.py`). Compare against the committed GLB and .blend (sha256 `4279d80d…` / `eb4d9203…`).
-2. Runtime captures: `node preview/e2e/ipic-photo-views.mjs`.
-3. `pnpm run verify`; sign, PR and land.
+1. Mark #402 ready; `pnpm run land 402 --owner claude:river-oaks-1b`; post on #364/#359; retire the branch with `project:prune`.
