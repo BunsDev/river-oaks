@@ -11223,21 +11223,29 @@
         "feat/character-studio-persistence-20261015"
       ],
       "owner": "codex-character-studio-20261015",
-      "updatedAt": "2026-10-15T22:01:40.056512+00:00",
-      "leaseUntil": "2026-10-16T00:01:40.056512+00:00",
-      "nextAction": "Implement shared memory/Redis draft CAS, immutable publication/rollback, idempotency and deletion contracts with real isolated Redis tests; then authenticated routes and peer replication. Rendering acceptance gaps remain in #442. No merge/deploy.",
+      "updatedAt": "2026-10-15T22:49:19.055373+00:00",
+      "leaseUntil": "2026-10-16T00:49:19.055373+00:00",
+      "nextAction": "HTTP draft increment fully verified (811 server tests with Redis;13 experience and21 shared journeys;18 focused tests), review clear. Sign/push to draft #464 and update #443. Then implement authoritative equip/publication, stable peer revision rendering, UI conflicts and deletion integration. Full goal remains active.",
       "filesOwned": [
         "server/character-store.js",
         "server/tests/character-store.test.js",
         "docs/character-studio.md",
-        "docs/superpowers/plans/2026-10-15-character-studio-persistence.md"
+        "docs/superpowers/plans/2026-10-15-character-studio-persistence.md",
+        "server/character-routes.js",
+        "server/tests/character-transport.test.js",
+        "server/app.js",
+        "server/distributed-app.js",
+        "server/world-gateway.js",
+        "server/town.js",
+        "server/redis-security.js"
       ],
       "requiredChecks": [
         "Memory and real isolated Redis store contract tests",
         "pnpm run verify",
         "Authenticated HTTP/WebSocket and two-player journeys before integration acceptance"
       ],
-      "ledger": "docs/superpowers/plans/2026-10-15-character-studio-persistence.md"
+      "ledger": "docs/superpowers/plans/2026-10-15-character-studio-persistence.md",
+      "pr": 464
     }
   ]
 }

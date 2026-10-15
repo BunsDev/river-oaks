@@ -239,11 +239,11 @@ this matrix. Other wardrobes, wing/armor cases, continuous gait phases, pinned
 hero goldens, crowd/device budgets and human review remain open.
 
 
-## Authoritative store increment (#443, integration pending)
+## Authoritative drafts (#443, publication integration pending)
 
 `server/character-store.js` implements the same state transitions for memory and
-Redis. An authenticated boundary will supply the owner ID; this module does not
-infer authentication from an arbitrary caller argument. Draft definitions must be
+Redis. The HTTP boundary supplies the authenticated owner ID; the store module
+does not infer authentication from an arbitrary caller argument. Draft definitions must be
 canonical and have revision zero. Every mutation requires the expected account
 version and a bounded request ID. Two editors cannot both write the same version.
 Publishing allocates an immutable revision; rollback copies an earlier revision
@@ -261,8 +261,22 @@ private records, leaving only a hashed owner key and minimal tombstone. Stale
 commands cannot recreate it. Tombstones require an explicit future lifecycle policy
 before reclaiming account slots; silently expiring them would reopen retry races.
 
-Routes, authentication/CSRF/rate limits, account-deletion hooks, legacy preference
-migration, two-second world publication cooldown, peer replication and UI save/
-conflict behavior are not wired yet. No existing account/checkpoint format or live
-appearance behavior changes in this store-only increment. Its tests do not establish
-the create/save/join/peer/reconnect/edit/republish acceptance path.
+Both standalone and distributed servers expose `GET /api/character` and
+`PUT /api/character/draft` through existing session, approval and ban checks.
+Writes require exact Origin and CSRF authorization. The body contains exactly
+`definition`, `expectedVersion` and `requestId`, with JSON content type and a16KiB
+limit. The owner always comes from the session. Private no-store responses,
+per-owner quotas (120 reads and30 writes per minute), strict query fields and
+generic backend failures keep this boundary bounded. Conflicts return409; a retry
+with identical content returns its original receipt and the current account state.
+
+The account store is shared across world instances. Real HTTP/WebSocket tests
+cover memory and isolated Redis, concurrent edits, retry, owner separation,
+authorization, malformed/oversized input, write quotas and gateway replacement.
+Drafts remain absent from peer snapshots and do not change the current appearance.
+
+Account-deletion hooks, legacy preference migration, two-second world publication
+cooldown, peer replication and UI save/conflict behavior remain pending. Existing
+account/checkpoint formats are unchanged. Store publication and rollback are
+internal operations only; no HTTP publication endpoint is enabled yet. These tests
+do not establish the create/save/join/peer/reconnect/edit/republish acceptance path.

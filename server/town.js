@@ -1,3 +1,4 @@
+import { createMemoryCharacterStore } from './character-store.js';
 import { createMemoryOfficeWorkspaces } from './office-workspaces.js';
 import { createMemoryOfficeDesk } from './office-desk.js';
 import { createChauffeurRoute, createLocalChauffeurSecurity, chauffeurDailyLimit } from './chauffeur.js';
@@ -66,7 +67,7 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
   // Jevica's office layout; unset or unknown keeps the legacy room (the default and the rollback).
   const officeLayout=configuredOfficeLayout(env.RIVER_OAKS_OFFICE_LAYOUT,{onInvalid:()=>console.warn(JSON.stringify({event:'office_layout_ignored'}))});
   const officeDesk=createMemoryOfficeDesk(),officeWorkspaces=createMemoryOfficeWorkspaces();
-  const games=new Map(),pending=new Map(),debugReports=createMemoryDebugReports(),catalog=createMemoryWorldCatalog(),social=createMemorySocial(),groups=createMemoryGroups(),profiles=createMemoryProfiles(),events=createMemoryEvents(),workplace=env.RIVER_OAKS_WORKPLACE==='1'?createWorkplace({allowed:async id=>!moderation.isBanned(id)&&await waitlist.isApproved(id)}):null,avatarPreferences=createMemoryAvatarPreferences(),cyclingMiles=createMemoryCyclingMiles(),presence=createMemoryPresence(),landmarkStores=new Map();
+  const games=new Map(),pending=new Map(),debugReports=createMemoryDebugReports(),catalog=createMemoryWorldCatalog(),social=createMemorySocial(),groups=createMemoryGroups(),profiles=createMemoryProfiles(),events=createMemoryEvents(),workplace=env.RIVER_OAKS_WORKPLACE==='1'?createWorkplace({allowed:async id=>!moderation.isBanned(id)&&await waitlist.isApproved(id)}):null,avatarPreferences=createMemoryAvatarPreferences(),characters=createMemoryCharacterStore(),cyclingMiles=createMemoryCyclingMiles(),presence=createMemoryPresence(),landmarkStores=new Map();
   const landmarkStoreFor=id=>{
     if(!landmarkStores.has(id))landmarkStores.set(id,createMemoryLandmarks());
     return landmarkStores.get(id);
@@ -110,7 +111,7 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
       const worldData=meta?.template==='region-v1'?await catalog.getRegion(id)
         :id===DEFAULT_WORLD_ID?data:{...data,title:meta?.title??data.title};
       const world=createSharedWorld(worldData,mode==='local'?{isAdmin:auth.isAdmin,worldId:id,screeningHosts,officeLayout}:{worldId:id,screeningHosts,officeLayout});
-      const game=createGameServer({auth:sharedAuth,world,worldTitle:meta?.title??worldData.title,waitlist,waitlistAdmins:admins,debugReports,landmarks:createWorldLandmarks({catalog,storeFor:landmarkStoreFor,worldId:id,worldTitle:meta?.title??worldData.title}),social,groups,profiles,events,workplace,officeDesk,officeWorkspaces,avatarPreferences,cyclingMiles,presence,worldDirectory,moderation,origin,staticRoot,
+      const game=createGameServer({auth:sharedAuth,world,worldTitle:meta?.title??worldData.title,waitlist,waitlistAdmins:admins,debugReports,landmarks:createWorldLandmarks({catalog,storeFor:landmarkStoreFor,worldId:id,worldTitle:meta?.title??worldData.title}),social,groups,profiles,events,workplace,officeDesk,officeWorkspaces,avatarPreferences,characters,cyclingMiles,presence,worldDirectory,moderation,origin,staticRoot,
         ...(id===worldId?{worldCatalog:catalog}:{}),...(mode==='local'?{isAdmin:auth.isAdmin}:{}),
         ...(id===worldId?{onApplyRegion:applyRegion}:{}),regionSha256:meta?.regionSha256,
         onBan:userId=>{for(const [otherId,other] of games)if(otherId!==id)other.game.disconnectUser(userId,4003,'This account cannot join the town.');},

@@ -1,3 +1,4 @@
+import { createCharacterRoutes } from './character-routes.js';
 import { officeWorkspaceAction } from './office-workspaces-api.js';
 import { officeDeskAction, OFFICE_DESK_BODY_LIMIT } from './office-desk-api.js';
 import {validAssembly} from '../preview/src/creator-object.js';
@@ -39,7 +40,7 @@ const json = (res, status, value) => {
 };
 
 /** HTTP/WS edge for a durable room. No instance owns canonical game or auth state. */
-export function createDistributedServer({ auth, room, worldTitle, security, waitlist, waitlistAdmins = [], debugReports = null, landmarks, social = null, groups = null, profiles = null, events = null, workplace = null, officeDesk = null, officeWorkspaces = null, workplaceCronSecret = null, presence = null, designLibrary = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
+export function createDistributedServer({ auth, room, worldTitle, security, waitlist, waitlistAdmins = [], debugReports = null, landmarks, social = null, groups = null, profiles = null, characters = null, events = null, workplace = null, officeDesk = null, officeWorkspaces = null, workplaceCronSecret = null, presence = null, designLibrary = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
   trustedProxyIPs = [], address = createClientAddress(trustedProxyIPs), now = Date.now,
   connectionLifetime = 270_000, rotateNoticeMs = ROTATE_NOTICE_MS, assetGateSecret = null, heartbeatMs = 5000, onMove = null, voice = null, voiceCronSecret = null,
   // cyclingMiles: accepted for the leaderboard route (PR 2); the room owner flushes rides.
@@ -74,6 +75,8 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
     }
     return identity;
   };
+  const handleCharacters=characters?createCharacterRoutes({store:characters,approvedIdentity,authorized,
+    allowRead:id=>security.allow('character-read',id,120,60000),allowWrite:id=>security.allow('character-write',id,30,60000)}):null;
   async function body(req,max=4096) {
     let size = 0; const chunks = [];
     for await (const chunk of req) {
@@ -142,6 +145,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
       if (await auth.handle(req, res)) return;
       if (await handleWaitlist(req, res, path)) return;
       if (await handleDebugReports(req, res, path)) return;
+      if (handleCharacters && await handleCharacters(req,res,path)) return;
       if (handleVoice && await handleVoice(req, res, path, url)) return;
       if (path === '/api/world-data' && req.method === 'GET' && worldCatalog) {
         if (!await approvedIdentity(req, res)) return;
