@@ -15,7 +15,7 @@ The arrival sequence starts from your current street view, opens the lobby doors
 - **Y** joins/leaves voice and **M** mutes or holds to talk, following the existing voice preference. Voice remains optional.
 - **Return to street** or **Escape** ends the visit and restores your street view and controls. During the access check, **Cancel entry** also handles an acceptance that arrives late.
 
-The office uses the existing 9 × 7 m furnished room, with collision against walls, desks, chairs, storage and the review table. Walking reserves the measured 0.888 m turning radius of the longest playable body. The cinematic crosses the doorway along its centerline; free walking stays inside the office.
+By default, the office uses the existing 9 × 7 m furnished room, with collision against walls, desks, chairs, storage and the review table. Walking reserves the measured 0.888 m turning radius of the longest playable body. The cinematic crosses the doorway along its centerline; free walking stays inside the office.
 
 ## Arrival presentation
 
@@ -41,7 +41,11 @@ The desk routes require the existing authenticated, approved session, origin/CSR
 
 `server/offices.js` handles the `office` world command. It derives ownership from the existing Jevica admin predicate; no command accepts an owner field. The same authenticated ticket/WebSocket gates enforce waitlist approval, session expiry and bans for both the local and Redis servers. Movement uses office-local coordinates, a speed budget and swept collision. Office visitors cannot perform street interactions or travel until they leave. Voice receives a distinct office space.
 
-Grants, pending requests and current visits entered the private world checkpoint in version 6. Version 7 adds interior level occupancy; version 8 adds personal workspace visits. Workspace membership is revalidated before the first reconnect snapshot and by the coordinator before restored visits are published. Version 10 records each visit's layout and level (below). The Redis writer generation is fenced at v10 (v9 added venue screenings, [screenings](screenings.md)). Pre-v6 checkpoints upgrade without office state; v6–v9 visits upgrade to the legacy layout. Older writers reject the current version. Region migration preserves grants/requests when the office remains and ends visits along with other player connections. Redis persists this state with the world; a standalone in-memory town loses it when restarted.
+Grants, pending requests and current visits entered the private world checkpoint in version 6. Version 7 adds interior level occupancy; version 8 adds personal workspace visits; version 9 adds venue screenings; version 10 adds each office visit’s layout and floor. The Redis writer generation is fenced at v10. Earlier supported checkpoints upgrade according to their schema: pre-v6 checkpoints have no office state, and pre-v10 office visits use the legacy layout. Unsupported writers cannot replace a newer coordinator.
+
+Application replacement and coordinator takeover restore compatible visits, including their floor, within the normal session and presence timeouts, while rechecking current sessions and workspace membership before publishing the restored room. This is separate from region publication, which intentionally disconnects players and ends visits as geography changes; office grants/requests survive when that office remains. Both paths use the new coordinator’s configured `RIVER_OAKS_OFFICE_LAYOUT` and `RIVER_OAKS_SCREENING_HOSTS`, including the supported district checkpoint recovery chain. Configuration comes from the application, not the backup. Keep it consistent across gateways; changing environment values takes effect when those processes are replaced.
+
+`RIVER_OAKS_OFFICE_LAYOUT=office-penthouse-1` selects Jevica’s penthouse; unset or `office-legacy-1` selects the legacy room. Personal workspaces always keep the legacy layout. An intentional change back to legacy ends incompatible penthouse visits without discarding grants, workspace memberships or tasks. Removed or expired screening-host grants cannot be recovered from an old checkpoint. The pre-playback 12-second synthetic screening fixture is recognized during recovery and stopped with a new screening epoch; its old command receipts cannot replay. This does not discard office visits, memberships or tasks. Failed region publication leaves the previous committed region and world authoritative; a competing draft must be refreshed before retrying. Redis retains world state across application replacement; the standalone in-memory town loses it when restarted.
 
 Workspace metadata, invitations and shared tasks live in a versioned account-level store outside world checkpoints. Provisioning uses a deterministic workspace ID and atomic compare-and-set writes. Redis updates membership, discovery indices and shared tasks in the same transaction, preventing stale writes from bypassing revocation. Storage is bounded to 10,000 workspaces, 32 collaborators per office and 64 owned/invited offices per account; discovery uses per-account indices, not database scans. Browser discovery refreshes only near the lobby, in an active office, or while the office panel is visible. Private desk records read the legacy shape and write schema version 2 with bounded retry receipts. No existing task content is made public or shared.
 
@@ -127,7 +131,7 @@ or replay an old operation with a new expected version as a recovery shortcut.
 and a local `redis-server`, then run:
 
 ```sh
-node --test server/tests/office-recovery.test.js
+node --test server/tests/office-recovery.test.js server/tests/office-world-lifecycle.test.js
 node scripts/office-database-cost.mjs a714a8a5
 node scripts/office-database-cost.mjs
 ```
@@ -142,7 +146,12 @@ Temporary data/processes are removed on completion. A missing local binary is a 
 in the core suite, never recovery proof; the full profile requires `redis-server` and
 fails if it is unavailable. Full verification also requires its separate disposable
 `REDIS_URL` for the existing server suites. Real HTTP/WebSocket replacement/reconnect
-coverage is in `office-desk-transport.test.js`.
+coverage is in `office-desk-transport.test.js`. The lifecycle suite drives real room
+requests and fenced Redis commits with synthetic catalog records for the district-only
+office and IPIC geometry. It covers publication, rejected publication, takeover,
+compatible checkpoint recovery, revocation/expiry and intentional configuration
+rollback. The creator-region HTTP publication path remains covered separately by
+`world-gateway.test.js`.
 
 The cost fixture writes raw and summarized receipts under
 `.runtime/office-reliability/cost-{baseline,after}.json`. It measures office-store

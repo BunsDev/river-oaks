@@ -5,6 +5,7 @@ import { createCommunity } from '../src/community.js';
 import { storeRoomsFor } from '../src/store-rooms.js';
 import { includeSharedStorePerson, sharedRoomSummary } from '../src/shared-population.js';
 import { storePersonId } from '../src/store-encounters.js';
+import { isVenueRoom } from '../src/venue-rooms.js';
 
 const district=JSON.parse(await readFile(new URL('../public/data/district.json',import.meta.url),'utf8'));
 
@@ -27,6 +28,8 @@ test('shared district removes about half its NPCs while retaining outdoor scenar
   assert.ok(1-shared.locals.length/solo.locals.length>=.4 && 1-shared.locals.length/solo.locals.length<=.6);
   const active=new Set(shared.locals.map(local=>local.id));
   for(const room of rooms){
+    // A code-only venue has nobody in it (venue-rooms.js), so it adds no residents.
+    if(isVenueRoom(room)){assert.deepEqual(room.people,[],room.name);continue;}
     const included=room.people.map((spot,index)=>({spot,index})).filter(({spot,index})=>includeSharedStorePerson(room,spot,index));
     const summary=sharedRoomSummary(room);
     assert.equal(summary.staff,1,room.name);

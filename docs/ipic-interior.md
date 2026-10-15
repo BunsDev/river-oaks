@@ -70,8 +70,11 @@ From the repository root, after the normal locked dependency install:
 ```sh
 node scripts/export-ipic.mjs
 blender --background --threads 2 --python scripts/export-ipic-blender.py
-node --test preview/tests/ipic-*.test.js server/tests/ipic-interior.test.js
+node --test preview/tests/ipic-*.test.js server/tests/ipic-*.test.js
+REDIS_URL=redis://127.0.0.1:<throwaway port> node --test server/tests/ipic-routes.test.js
+node scripts/ipic-review-data.mjs --check
 node preview/e2e/ipic-runner.mjs
+node preview/e2e/ipic-photo-views.mjs   # runtime T1–T3 on this GPU, see below
 pnpm run verify
 ```
 
@@ -88,6 +91,80 @@ controls and server behavior, not material fidelity. Material views are
 captured separately with real Three.js materials. This host's software browser
 is not evidence of target-device performance, human accessibility or Unreal
 integration. Verify the native runtime separately before shipping there.
+
+## Circulation, collision and screen evidence (#364)
+
+`preview/src/ipic-circulation.js` measures how wide a body each trip admits,
+against the same walls and boxes the server collides with.
+`node scripts/ipic-review-data.mjs` writes the results to
+[ipic-review/circulation.json](ipic-review/circulation.json) and
+[ipic-review/screen.json](ipic-review/screen.json); `--check` fails if they are stale.
+
+Bodies:
+
+- **Server body.** A 0.35 m disc against square-inflated boxes (`walking.js`).
+- **Accepted envelope.** `AVATAR_ENVELOPE`: 1.01 m widest, 0.888 m turning radius.
+  Those are bind-pose bounds from 2026-10-11. Posed vertices measured on 2026-10-15
+  are at most 0.80 m wide.
+- **Seated reach.** From the seat origin, worst over the 22 looks, in the game's
+  seat pose: 0.644 m forward (legs), 1.155 m back (beast tails), 0.514 m to the side.
+  Data: `docs/superpowers/plans/2026-10-15-ipic-route-evidence/seated-extents.json`.
+
+Results:
+
+| Trip | Width | Accepted body |
+| --- | --- | --- |
+| Street door to the top of either escalator lane | 1.70 m (the door) | fits; lanes are 1.71 m between glass rails |
+| Lane top to inside the auditorium doorway | 1.005 m (planter at −5.6, 25.4 to the sofa's west arm) | **5 mm short** of 1.01 m; posed bodies fit |
+| Doorway to each of the 8 recliner approaches, other 9 seats occupied | 1.11–1.14 m | fits |
+| Turning circles: reception, landing, lounge, auditorium, every seat occupied | 3.05, 1.31, 1.85, 1.50 m radius | fit (0.888 m needed) |
+
+The server walks these routes in `server/tests/ipic-routes.test.js`. It covers:
+
+- both lanes, up one and down the other;
+- every recliner, with the other nine seats held by restored sessions;
+- exclusive claims, and release on travel out or disconnect;
+- false heights, solid shortcuts, teleports and a "lift" level command;
+- seats through the cinema wall;
+- one recliner contested by two Redis coordinators.
+
+`preview/tests/ipic-agreement.test.js` checks the rendered meshes against the server:
+
+- floors and landings sit within 1 cm of the server support everywhere a body can stand;
+- treads sit 0–10 cm above the continuous ramp the server walks;
+- every collision box has drawn geometry in it.
+
+**Fixed here.** Four drawn solids had no collision: the auditorium aisle handrail,
+the Tuck Room back shelving, the IPIC Express counter and the lift front. They now
+collide; none is on a public route.
+
+**Open defects**, kept as a `todo` test or recorded allowances:
+
+1. ~~**The lounge sofa traps its sitter.**~~ Fixed: each sofa place names where its sitter
+   steps out, past the arm at its end (`ipic-plan.js` `stand`). The server's `stand()` tries
+   that spot, with the usual destination checks, before its radial search, which never
+   finds a straight clear path out of the sofa.
+2. **The lounge-to-auditorium passage** is 1.005 m against the 1.01 m accepted body.
+3. **Drawn without collision, where a body can stand:**
+   - recliner bases, footrests and side tables, and the sofa cushions: seat zones,
+     whose cushion centres must stay free for the sit protocol;
+   - the fluted reception backing and its sign, drawn across the right escalator
+     lane's entrance (slats from a = 1.29 m; the lane runs 0.545–2.255 m), so a
+     collider there would close the lane: an art fix;
+   - pitched escalator glass and stone courses overhanging the lane ends;
+   - tub-chair shells, planter foliage, and the screen plane, 0.13 m in front of the
+     wall that stops a body.
+
+**Screen** (`IPIC_SCREEN` in `ipic-plan.js`, used by the renderer and the data):
+
+- Size and place: 9.8 × 3.25 m (3.015:1), centred 2.5 m above the auditorium floor,
+  0.875–4.125 m.
+- **Back row.** Sees the screen only above 2.01 m over the front-row headrests, so
+  the bottom 35 % is hidden: anything burned into the picture belongs in the top 65 %.
+- **Front row.** 2.79 m from the screen: it spans 104–119° across, and the top edge
+  is 46° up.
+- Seated eye: cushion + 0.69 m. Seated avatars in front are not modelled.
+- The player's captions are a WebVTT track, not burned in.
 
 ## Recorded review
 

@@ -1,0 +1,472 @@
+{
+  "measured": "2026-10-15T07:07:33.566Z",
+  "seatToFloorM": 0.45,
+  "renderer": "156.0.8078.4",
+  "frame": "avatar local metres, unrotated: +X right, +Z front, +Y up; extents are distances from the avatar origin (the seat origin when seated)",
+  "looks": {
+    "jevica": {
+      "rotation": 0,
+      "standing": {
+        "left": 0.321,
+        "right": 0.321,
+        "back": 0.109,
+        "front": 0.302,
+        "top": 1.683,
+        "bottom": -0.45
+      },
+      "seated": {
+        "left": 0.268,
+        "right": 0.51,
+        "back": 0.125,
+        "front": 0.593,
+        "top": 1.684,
+        "bottom": -0.45
+      }
+    },
+    "jevica-beast": {
+      "rotation": 0,
+      "standing": {
+        "left": 0.321,
+        "right": 0.321,
+        "back": 1.142,
+        "front": 0.302,
+        "top": 1.78,
+        "bottom": -0.45
+      },
+      "seated": {
+        "left": 0.268,
+        "right": 0.51,
+        "back": 1.142,
+        "front": 0.593,
+        "top": 1.782,
+        "bottom": -0.45
+      }
+    },
+    "sable-human": {
+      "rotation": 0,
+      "standing": {
+        "left": 0.321,
+        "right": 0.396,
+        "back": 0.134,
+        "front": 0.302,
+        "top": 1.683,
+        "bottom": -0.45
+      },
+      "seated": {
+        "left": 0.268,
+        "right": 0.51,
+        "back": 0.134,
+        "front": 0.621,
+        "top": 1.684,
+        "bottom": -0.45
+      }
+    },
+    "woman-casual": {
+      "rotation": 0,
+      "standing": {
+        "left": 0.321,
+        "right": 0.475,
+        "back": 0.59,
+        "front": 0.302,
+        "top": 1.784,
+        "bottom": -0.45
+      },
+      "seated": {
+        "left": 0.268,
+        "right": 0.51,
+        "back": 0.59,
+        "front": 0.621,
+        "top": 1.786,
+        "bottom": -0.45
+      }
+    },
+    "rowan-human": {
+      "rotation": 0,
+      "standing": {
+        "left": 0.417,
+        "right": 0.312,
+        "back": 0.128,
+        "front": 0.302,
+        "top": 1.779,
+        "bottom": -0.45
+      },
+      "seated": {
+        "left": 0.417,
+        "right": 0.511,
+        "back": 0.151,
+        "front": 0.622,
+        "top": 1.778,
+        "bottom": -0.45
+      }
+    },
+    "man-casual": {
+      "rotation": 0,
+      "standing": {
+        "left": 0.417,
+        "right": 0.312,
+        "back": 1.102,
+        "front": 0.302,
+        "top": 1.85,
+        "bottom": -0.45
+      },
+      "seated": {
+        "left": 0.417,
+        "right": 0.511,
+        "back": 1.102,
+        "front": 0.622,
+        "top": 1.85,
+        "bottom": -0.45
+      }
+    },
+    "woman-tailored": {
+      "rotation": 0,
+      "standing": {
+        "left": 0.321,
+        "right": 0.396,
+        "back": 0.134,
+        "front": 0.302,
+        "top": 1.683,
+        "bottom": -0.45
+      },
+      "seated": {
+        "left": 0.323,
+        "right": 0.51,
+        "back": 0.163,
+        "front": 0.631,
+        "top": 1.684,
+        "bottom": -0.45
+      }
+    },
+    "vesper-beast": {
+      "rotation": 0,
+      "standing": {
+        "left": 0.321,
+        "right": 0.396,
+        "back": 1.051,
+        "front": 0.302,
+        "top": 1.72,
+        "bottom": -0.45
+      },
+      "seated": {
+        "left": 0.323,
+        "right": 0.51,
+        "back": 1.051,
+        "front": 0.631,
+        "top": 1.722,
+        "bottom": -0.45
+      }
+    },
+    "man-tailored": {
+      "rotation": 0,
+      "standing": {
+        "left": 0.354,
+        "right": 0.354,
+        "back": 0.128,
+        "front": 0.302,
+        "top": 1.779,
+        "bottom": -0.45
+      },
+      "seated": {
+        "left": 0.354,
+        "right": 0.514,
+        "back": 0.151,
+        "front": 0.644,
+        "top": 1.777,
+        "bottom": -0.45
+      }
+    },
+    "midnight-host-wolf": {
+      "rotation": 0,
+      "standing": {
+        "left": 0.354,
+        "right": 0.354,
+        "back": 1.142,
+        "front": 0.302,
+        "top": 1.864,
+        "bottom": -0.45
+      },
+      "seated": {
+        "left": 0.354,
+        "right": 0.514,
+        "back": 1.142,
+        "front": 0.644,
+        "top": 1.863,
+        "bottom": -0.45
+      }
+    },
+    "lyra-human": {
+      "rotation": 0,
+      "standing": {
+        "left": 0.321,
+        "right": 0.396,
+        "back": 0.208,
+        "front": 0.302,
+        "top": 1.683,
+        "bottom": -0.45
+      },
+      "seated": {
+        "left": 0.314,
+        "right": 0.51,
+        "back": 0.208,
+        "front": 0.631,
+        "top": 1.684,
+        "bottom": -0.45
+      }
+    },
+    "woman-daywear": {
+      "rotation": 0,
+      "standing": {
+        "left": 0.321,
+        "right": 0.396,
+        "back": 0.349,
+        "front": 0.302,
+        "top": 1.788,
+        "bottom": -0.45
+      },
+      "seated": {
+        "left": 0.314,
+        "right": 0.51,
+        "back": 0.349,
+        "front": 0.631,
+        "top": 1.79,
+        "bottom": -0.45
+      }
+    },
+    "man-workwear": {
+      "rotation": 0,
+      "standing": {
+        "left": 0.338,
+        "right": 0.338,
+        "back": 0.128,
+        "front": 0.302,
+        "top": 1.779,
+        "bottom": -0.45
+      },
+      "seated": {
+        "left": 0.338,
+        "right": 0.514,
+        "back": 0.151,
+        "front": 0.635,
+        "top": 1.777,
+        "bottom": -0.45
+      }
+    },
+    "kai-formal-beast": {
+      "rotation": 0,
+      "standing": {
+        "left": 0.338,
+        "right": 0.338,
+        "back": 1.155,
+        "front": 0.302,
+        "top": 1.806,
+        "bottom": -0.45
+      },
+      "seated": {
+        "left": 0.338,
+        "right": 0.514,
+        "back": 1.155,
+        "front": 0.635,
+        "top": 1.806,
+        "bottom": -0.45
+      }
+    },
+    "kai-explorer": {
+      "rotation": 0,
+      "standing": {
+        "left": 0.448,
+        "right": 0.305,
+        "back": 0.128,
+        "front": 0.302,
+        "top": 1.779,
+        "bottom": -0.45
+      },
+      "seated": {
+        "left": 0.448,
+        "right": 0.514,
+        "back": 0.151,
+        "front": 0.644,
+        "top": 1.777,
+        "bottom": -0.45
+      }
+    },
+    "kai-explorer-beast": {
+      "rotation": 0,
+      "standing": {
+        "left": 0.448,
+        "right": 0.305,
+        "back": 1.155,
+        "front": 0.302,
+        "top": 1.806,
+        "bottom": -0.45
+      },
+      "seated": {
+        "left": 0.448,
+        "right": 0.514,
+        "back": 1.155,
+        "front": 0.644,
+        "top": 1.806,
+        "bottom": -0.45
+      }
+    },
+    "kai-noir": {
+      "rotation": 0,
+      "standing": {
+        "left": 0.338,
+        "right": 0.338,
+        "back": 0.128,
+        "front": 0.302,
+        "top": 1.779,
+        "bottom": -0.45
+      },
+      "seated": {
+        "left": 0.338,
+        "right": 0.514,
+        "back": 0.151,
+        "front": 0.644,
+        "top": 1.777,
+        "bottom": -0.45
+      }
+    },
+    "kai-noir-beast": {
+      "rotation": 0,
+      "standing": {
+        "left": 0.338,
+        "right": 0.338,
+        "back": 1.155,
+        "front": 0.302,
+        "top": 1.806,
+        "bottom": -0.45
+      },
+      "seated": {
+        "left": 0.338,
+        "right": 0.514,
+        "back": 1.155,
+        "front": 0.644,
+        "top": 1.806,
+        "bottom": -0.45
+      }
+    },
+    "forest-aristocrat": {
+      "rotation": 0,
+      "standing": {
+        "left": 0.33,
+        "right": 0.333,
+        "back": 0.231,
+        "front": 0.302,
+        "top": 2.001,
+        "bottom": -0.45
+      },
+      "seated": {
+        "left": 0.295,
+        "right": 0.514,
+        "back": 0.231,
+        "front": 0.614,
+        "top": 2,
+        "bottom": -0.45
+      }
+    },
+    "forest-aristocrat-beast": {
+      "rotation": 0,
+      "standing": {
+        "left": 0.33,
+        "right": 0.333,
+        "back": 0.27,
+        "front": 0.325,
+        "top": 2.001,
+        "bottom": -0.45
+      },
+      "seated": {
+        "left": 0.295,
+        "right": 0.514,
+        "back": 0.27,
+        "front": 0.614,
+        "top": 2,
+        "bottom": -0.45
+      }
+    },
+    "forest-aristocrat-feminine": {
+      "rotation": 0,
+      "standing": {
+        "left": 0.35,
+        "right": 0.352,
+        "back": 0.211,
+        "front": 0.302,
+        "top": 1.914,
+        "bottom": -0.45
+      },
+      "seated": {
+        "left": 0.293,
+        "right": 0.51,
+        "back": 0.211,
+        "front": 0.593,
+        "top": 1.916,
+        "bottom": -0.45
+      }
+    },
+    "forest-aristocrat-feminine-beast": {
+      "rotation": 0,
+      "standing": {
+        "left": 0.35,
+        "right": 0.352,
+        "back": 0.27,
+        "front": 0.302,
+        "top": 1.914,
+        "bottom": -0.45
+      },
+      "seated": {
+        "left": 0.293,
+        "right": 0.51,
+        "back": 0.27,
+        "front": 0.593,
+        "top": 1.916,
+        "bottom": -0.45
+      }
+    }
+  },
+  "worst": {
+    "standing": {
+      "left": {
+        "look": "kai-explorer",
+        "value": 0.448
+      },
+      "right": {
+        "look": "woman-casual",
+        "value": 0.475
+      },
+      "back": {
+        "look": "kai-formal-beast",
+        "value": 1.155
+      },
+      "front": {
+        "look": "forest-aristocrat-beast",
+        "value": 0.325
+      },
+      "top": {
+        "look": "forest-aristocrat",
+        "value": 2.001
+      }
+    },
+    "seated": {
+      "left": {
+        "look": "kai-explorer",
+        "value": 0.448
+      },
+      "right": {
+        "look": "man-tailored",
+        "value": 0.514
+      },
+      "back": {
+        "look": "kai-formal-beast",
+        "value": 1.155
+      },
+      "front": {
+        "look": "man-tailored",
+        "value": 0.644
+      },
+      "top": {
+        "look": "forest-aristocrat",
+        "value": 2
+      }
+    }
+  }
+}
