@@ -148,7 +148,7 @@ for (const backend of ['file', 'redis']) {
       store = await reopen();
     }
     const identity = userId => ({ userId, name: 'Resident', email: `${userId}@example.com` });
-    for (const user of ['owner', 'first', 'second', 'assigned', 'blocked']) await store.request(identity(user));
+    for (const user of ['owner', 'first', 'second', 'assigned', 'blocked', 'late']) await store.request(identity(user));
     assert.deepEqual(await store.listInvites({ userId: 'owner' }), []);
     await assert.rejects(store.issueInvite({ actorId: 'owner', ownerId: 'owner' }));
     await store.decide({ userId: 'owner', approved: true, actorId: 'admin' });
@@ -168,6 +168,10 @@ for (const backend of ['file', 'redis']) {
     assert.equal((await store.listInvites({ userId: accepted })).length, 0, 'nor when an admin approves them again');
     const given = await store.issueInvite({ actorId: 'admin', ownerId: accepted });
     assert.deepEqual((await store.listInvites({ userId: accepted })).map(invite => invite.id), [given.id], 'an admin can still give an invitee one explicitly');
+    // A waitlist approval that follows a rejection is still a first approval: two codes.
+    await store.decide({ userId: 'late', approved: false, actorId: 'admin' });
+    await store.decide({ userId: 'late', approved: true, actorId: 'admin' });
+    assert.equal((await store.listInvites({ userId: 'late' })).length, 2, 'approval after a rejection grants starter codes');
     assert.equal(await store.isApproved(pending), false);
     await store.updateInvite({ actorId: 'admin', id: invites[1].id, assignedUserId: 'assigned' });
     assert.equal((await store.redeemInvite({ identity: identity(pending), code: invites[1].code })).ok, false);
@@ -197,3 +201,19 @@ for (const backend of ['file', 'redis']) {
     assert.deepEqual(await store.listInvites({ userId: pending }), []);
   });
 }
+
+test('redis: a full invitation table still admits a code holder, since redeeming grants no codes', { skip: !process.env.REDIS_URL }, async t => {
+  const redis = new Redis(process.env.REDIS_URL);
+  const prefix = `{invites-full:${randomUUID()}}`;
+  t.after(async () => { const keys = await redis.keys(`${prefix}:*`); if (keys.length) await redis.del(...keys); await redis.quit(); });
+  const store = createRedisWaitlist({ redis, prefix, admins: ['admin'], inviteCapacity: 3 });
+  const identity = userId => ({ userId, name: 'Resident', email: `${userId}@example.com` });
+  for (const user of ['owner', 'newcomer']) await store.request(identity(user));
+  await store.decide({ userId: 'owner', approved: true, actorId: 'admin' });
+  await store.issueInvite({ actorId: 'admin', ownerId: 'admin' });
+  await assert.rejects(store.issueInvite({ actorId: 'admin', ownerId: 'admin' }), /capacity/, 'the table is full');
+  const [code] = await store.listInvites({ userId: 'owner' });
+  assert.equal((await store.redeemInvite({ identity: identity('newcomer'), code: code.code })).ok, true);
+  assert.equal(await store.isApproved('newcomer'), true);
+  assert.deepEqual(await store.listInvites({ userId: 'newcomer' }), []);
+});

@@ -16,24 +16,41 @@ Existing HTTP, asset, and WebSocket approval checks still apply.
 Joining is a waitlist, and the gate says so at every step, so nobody signs in again and
 again thinking it failed (`preview/src/access-entry.js`).
 
+The sign-in column is up to 460 px wide beside the artwork, and each part has one job:
+
+- **Steps.** A track of three steps in the kicker's place: *Sign in*, *Get approved*,
+  *Enter*. Done steps carry a tick (`data-done`), the visitor's own step is filled
+  (`aria-current="step"`), and the rest wait in outline. It shows only while signed out
+  or waiting. On phones narrower than 400 px only the current step keeps its name on
+  screen (the others stay readable to screen readers).
 - **Signed out.** *Signing in adds you to the waitlist. Already waiting? Sign in here to
-  check.* A one-row step list in the kicker's place shows how joining works: *Sign in*,
-  *Get approved*, *Enter*. The visitor's own step is marked (`aria-current="step"`); the
-  list shows only while signed out or waiting. The code field says a member's one-time
-  code skips the waitlist, and its button reads *Sign in first to use a code* until
-  then. The column still fits a 1440×900 or 1280×720 screen beside the artwork without
+  check.* The column still fits a 1440×900 or 1280×720 screen beside the artwork without
   scrolling.
-- **Waiting.** The title reads *You’re on the waitlist*. The message says they are signed
-  in and their place is saved, since the day they joined (`requestedAt` from
-  `/api/waitlist/status`), and that they don't need to sign in again: the page checks
-  every 15 seconds and opens River Oaks by itself once they're approved, or they can come
-  back any time.
-- **Invitation codes.** The code field explains itself: a one-time code a member shares
-  so one person can skip the waitlist, which expires 30 days after it's made; its button
-  reads *Use code and enter*. A code that can't be used says why it might not work and
-  that the visitor is still on the waitlist.
+- **Waiting.** The title reads *You’re on the waitlist*, and the lead says they're signed
+  in and their place is saved since the day they joined (`requestedAt` from
+  `/api/waitlist/status`; the year shows once it isn't this year). Below it a card,
+  *Waiting for approval*, with a quiet pulse (still under reduced motion and software
+  rendering), says what happens next: no need to sign in again; leave the page open and
+  River Oaks opens by itself once they're approved (the page checks every 15 seconds);
+  closing it is fine, their place is kept. It doesn't promise they stay signed in: a
+  session lasts 7 days, and signing in again later finds the same request. The lead is
+  only rewritten when its text changes, so screen readers don't repeat it. One edge:
+  when the list is full (10,000), the oldest pending request gives way, and the next
+  check re-requests it with a new date. The column fits 1440×900; at 1280×720 only the
+  footer needs a scroll.
+- **Your name in River Oaks.** A heading with a person icon, one line on what the name
+  is for and its rules, the field with its button beside it, and *Use my GitHub name* /
+  *Suggest another* as small secondary buttons. The button reads *Saved* (at rest) while
+  the field holds the kept name and *Save* once it changes.
+- **Have an invitation code?** A heading with a ticket icon and one line on what a code
+  is: a member's one-time code that lets one person in right away, expiring 30 days
+  after it's made (signed out: *Sign in first to use one*). *Use code* sits beside the
+  field and becomes the pink action once a code is typed. A code that can't be used says
+  why it might not work and that the visitor is still on the waitlist.
+- **Sign out** is a quiet text button under the sections, available but not suggested.
 - **Not approved.** The title reads *Your request wasn’t approved*, with the existing
-  contact message.
+  contact message, and no steps, kicker, card or code field.
+- **A failed check** resets the title and hides the steps, card and username form.
 
 The landing page's waitlist note says the same: sign in with email or GitHub to join, and
 a member's invitation code skips the wait.

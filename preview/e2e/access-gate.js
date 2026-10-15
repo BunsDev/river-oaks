@@ -48,23 +48,55 @@ async page => {
   await page.reload({ waitUntil: 'commit' });
   await page.locator('#access-title').getByText('You’re on the waitlist').waitFor({ state: 'visible' });
   const waiting = await page.locator('#access-message').textContent();
-  check(waiting.includes('your place on the waitlist is saved') && /October 15|15 October/.test(waiting) && waiting.includes('You don’t need to sign in again'),
-    `Waiting players are told they are signed in, their place is saved since the day they joined, and the page opens itself (${waiting})`);
-  check(await page.locator('#access-journey li[aria-current="step"]').getAttribute('data-step') === 'wait', 'The steps mark waiting for approval');
+  // The join date in the browser's own locale and time zone, as the gate writes it.
+  const joined = await page.evaluate(() => new Date('2026-10-15T12:00:00.000Z').toLocaleDateString(undefined, { month: 'long', day: 'numeric' }));
+  check(waiting.includes('You’re signed in') && waiting.includes('your place on the waitlist is saved') && waiting.includes(joined),
+    `Waiting players are told they are signed in and their place is saved since the day they joined (${waiting})`);
+  const next = await page.locator('#access-waiting').textContent();
+  check(await page.locator('#access-waiting').isVisible() && next.includes('Waiting for approval') && next.includes('You don’t need to sign in again') && next.includes('opens by itself'),
+    'A waiting card says what happens next: no need to sign in again, and the page opens itself');
+  check(await page.locator('#access-journey li[aria-current="step"]').getAttribute('data-step') === 'wait'
+    && await page.locator('#access-journey li[data-step="sign-in"]').getAttribute('data-done') === ''
+    && await page.locator('#access-journey li[data-step="enter"]').getAttribute('data-done') === null, 'The steps show signing in done and waiting for approval current');
   check((await page.locator('#access-invite-help').textContent()).includes('expire 30 days'), 'Waiting players read what an invitation code does and how long it lasts');
   // A waiting player sees the name they will be known by, and may change it.
   check(await page.locator('#access-username').inputValue() === 'rosy-heron-42' && await page.locator('#access-username-github').isHidden(), 'Waiting players see their username; email sign-ins get a generated one');
-  await page.locator('#access-username').fill('taken-name'); await page.locator('#access-username-save').click();
+  check(await page.locator('#access-username-save').isDisabled() && (await page.locator('#access-username-save').textContent()) === 'Saved', 'The kept name reads as saved');
+  await page.locator('#access-username').fill('taken-name');
+  check(await page.locator('#access-username-save').isEnabled() && (await page.locator('#access-username-save').textContent()) === 'Save', 'A changed name asks to be saved');
+  await page.locator('#access-username-save').click();
   await page.locator('#access-username-status').getByText('Someone already has that name. Try another.').waitFor();
   check(true, 'A name someone already holds is refused with a clear reason');
   await page.locator('#access-username').fill('night-owl'); await page.locator('#access-username-save').click();
   await page.locator('#access-username-status').getByText('Saved. You’ll be known as night-owl.').waitFor();
+  check((await page.locator('#access-username-save').textContent()) === 'Saved', 'Saving returns the button to Saved');
   check(named?.body.username === 'night-owl' && named.body.userId === undefined && named.csrf === 'fixture-csrf', 'Waiting players save their own username with CSRF protection');
   await page.locator('#access-username-suggest').click();
   check(/^[a-z]+-[a-z]+-\d\d$/.test(await page.locator('#access-username').inputValue()), 'Suggest another offers a generated name');
   check(await page.locator('#access-invite-redeem').isEnabled(), 'Pending players can redeem an invitation');
   check(!await page.locator('.app-shell').isVisible() && !await page.locator('#canvas-host canvas').count(), 'Signed-in pending players cannot start either play mode');
   check(await page.locator('#access-gate-signout').isVisible(), 'Pending players can sign out');
+  // A failed check after waiting, and a refused request, each show their own state.
+  const otherContext = await page.context().browser().newContext();
+  try {
+    const other = await otherContext.newPage();
+    await other.route('**/auth/session', route => route.fulfill({ json: { authenticated: true, user: { id: 'other', name: 'Other' }, csrfToken: 'other-csrf' } }));
+    let state = 'pending';
+    await other.route('**/api/waitlist/status', route => state === 'failing' ? route.fulfill({ status: 503, json: { error: 'unavailable' } })
+      : route.fulfill({ json: { status: state, admin: false, user: { id: 'other', name: 'Other' }, username: 'other-one', usernameBy: 'default', github: null, requestedAt: '2026-10-15T12:00:00.000Z', invited: false } }));
+    await other.goto(origin, { waitUntil: 'commit' });
+    await other.locator('#access-title').getByText('You’re on the waitlist').waitFor({ state: 'visible' });
+    state = 'failing';
+    await other.locator('#access-message').getByText('Access could not be checked. Try again shortly.').waitFor({ state: 'visible', timeout: 25_000 });
+    check(await other.locator('#access-title').textContent() === 'Welcome to the district' && await other.locator('#access-username-form').isHidden()
+      && await other.locator('#access-journey').isHidden() && await other.locator('#access-waiting').isHidden(), 'A failed re-check drops the waiting title, steps, card and username form');
+    state = 'rejected';
+    await other.reload({ waitUntil: 'commit' });
+    await other.locator('#access-title').getByText('Your request wasn’t approved').waitFor({ state: 'visible' });
+    check(await other.locator('#access-kicker').isHidden() && await other.locator('#access-journey').isHidden() && await other.locator('#access-invite-form').isHidden(),
+      'A refused request shows its own title, without the steps, the kicker or the code field');
+    check(await other.locator('#access-waiting').isHidden(), 'A refused request shows no waiting card');
+  } finally { await otherContext.close(); }
   const adminContext = await page.context().browser().newContext();
   try {
     const admin = await adminContext.newPage();

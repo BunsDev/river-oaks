@@ -149,7 +149,7 @@ test('email access: browser verification, invitation, member controls and revoca
     await page.getByRole('button', { name: 'Verify email', exact: true }).click();
     // Signed in once, the visitor is told they are on the waitlist and need not sign in again.
     await page.waitForFunction(() => document.querySelector('#access-title').textContent === 'You’re on the waitlist'
-      && document.querySelector('#access-message').textContent.includes('You don’t need to sign in again'));
+      && document.querySelector('#access-waiting:not([hidden])')?.textContent.includes('You don’t need to sign in again'));
     assert.equal(await page.locator('.app-shell').isVisible(), false);
     const session = await (await request.get(`${origin}/auth/session`)).json();
     const post = (path, data, csrf = session.csrfToken) => request.post(origin + path, {

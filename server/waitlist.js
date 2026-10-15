@@ -328,7 +328,8 @@ export function createRedisWaitlist({ redis, prefix, admins = [], now = Date.now
     const raw = await redis.eval(INVITE_TRANSACTION, 5, users, audit, invites, ownerIndex, `${prefix}:waitlist:invites:pruned`, JSON.stringify({
       ...payload, indexOwner, capacity: inviteCapacity, retention: INVITE_RETENTION,
       now: time, at: new Date(time).toISOString(), admins: Object.fromEntries(admins.map(id => [id, true])),
-      starter: payload.userId && payload.op !== 'list-owner' ? [newInvite(payload.userId, payload.actorId ?? payload.userId, time), newInvite(payload.userId, payload.actorId ?? payload.userId, time)] : [],
+      // Only an approval can grant starter codes (never a redeem: the referral decay).
+      starter: payload.op === 'decide' && payload.approved ? [newInvite(payload.userId, payload.actorId ?? payload.userId, time), newInvite(payload.userId, payload.actorId ?? payload.userId, time)] : [],
     }));
     return raw ? JSON.parse(raw) : null;
   };

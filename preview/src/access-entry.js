@@ -19,22 +19,39 @@ const inviteForm = $('#access-invite-form'), redeemButton = $('#access-invite-re
 const title = $('#access-title'), journey = $('#access-journey');
 const TITLES = { pending: 'You’re on the waitlist', rejected: 'Your request wasn’t approved' }, WELCOME = 'Welcome to the district';
 const INVITE_HELP = {
-  'signed-out': 'A member’s one-time code skips the waitlist.',
-  pending: 'An invitation code is a one-time code a member shares so one person can skip the waitlist. Enter it to join right away. Codes expire 30 days after they’re made.',
+  'signed-out': 'A member’s one-time code skips the waitlist. Sign in first to use one.',
+  pending: 'A member can share a one-time code that lets one person in right away. Codes expire 30 days after they’re made.',
 };
-// The steps take the kicker's place above the title, as a progress row.
-const kicker = $('#access-kicker');
-function showJourney(step) {
-  journey.hidden = !step; kicker.hidden = Boolean(step);
-  for (const item of journey.children) if (item.dataset.step === step) item.setAttribute('aria-current', 'step'); else item.removeAttribute('aria-current');
+// The steps take the kicker's place above the title, as a progress row: steps before the
+// visitor's own are done (data-done), theirs is current (aria-current).
+const kicker = $('#access-kicker'), waiting = $('#access-waiting');
+function showJourney(step, kickerShown = !step) {
+  journey.hidden = !step; kicker.hidden = !kickerShown;
+  let reached = !step;
+  for (const item of journey.children) {
+    if (item.dataset.step === step) { item.setAttribute('aria-current', 'step'); reached = true; } else item.removeAttribute('aria-current');
+    item.toggleAttribute('data-done', !reached);
+  }
 }
-// When a waiting resident joined the waitlist, as a date ("15 October"), or '' if unknown.
-const joinedOn = requestedAt => { const date = new Date(requestedAt ?? ''); return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString(undefined, { month: 'long', day: 'numeric' }); };
+// When a waiting resident joined the waitlist, as a date ("15 October", with the year once it
+// isn't this year), or '' if unknown.
+const joinedOn = requestedAt => {
+  const date = new Date(requestedAt ?? '');
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleDateString(undefined, { month: 'long', day: 'numeric', ...(date.getFullYear() !== new Date().getFullYear() && { year: 'numeric' }) });
+};
+// The message is a live region the 15-second check rewrites; unchanged text isn't announced again.
+const say = text => { if (message.textContent !== text) message.textContent = text; };
 let joinedByInvite = false;
 // A waiting resident's username: the field is never overwritten while they edit it.
 const usernameForm = $('#access-username-form'), usernameInput = $('#access-username'), usernameStatus = $('#access-username-status');
-const usernameGitHub = $('#access-username-github');
-let usernameEdited = false, githubName = null;
+const usernameGitHub = $('#access-username-github'), usernameSave = $('#access-username-save');
+let usernameEdited = false, githubName = null, savedUsername = '';
+// Save reads "Saved" (and rests) while the field holds the name already kept for them.
+const syncUsernameSave = () => {
+  const saved = usernameInput.value.trim() === savedUsername;
+  usernameSave.disabled = saved; usernameSave.toggleAttribute('data-saved', saved); usernameSave.textContent = saved ? 'Saved' : 'Save';
+};
 const USERNAME_ERRORS = { username_taken: 'Someone already has that name. Try another.', username_locked: 'Your name is already settled.',
   username_missing: 'Your request could not be found. Reload and try again.' };
 const usernameError = error => USERNAME_ERRORS[error.message] ?? error.detail?.message ?? 'That name could not be saved. Try again.';
@@ -77,9 +94,9 @@ async function checkAccess() {
       if (entered) location.reload();
       endSplash({ forget: true });
       tools.hidden = true; gateSignout.hidden = true; providers.hidden = false; usernameForm.hidden = true;
-      inviteForm.hidden = false; redeemButton.disabled = true; redeemButton.textContent = 'Sign in first to use a code'; inviteHelp.textContent = INVITE_HELP['signed-out'];
-      title.textContent = WELCOME; showJourney('sign-in');
-      message.textContent = 'Signing in adds you to the waitlist.\nAlready waiting? Sign in here to check.';
+      inviteForm.hidden = false; redeemButton.disabled = true; inviteHelp.textContent = INVITE_HELP['signed-out'];
+      title.textContent = WELCOME; showJourney('sign-in'); waiting.hidden = true;
+      say('Signing in adds you to the waitlist.\nAlready waiting? Sign in here to check.');
       if (gateState !== 'signed-out') $('#access-title').focus({ preventScroll: true });
       gateState = 'signed-out';
       return;
@@ -97,21 +114,23 @@ async function checkAccess() {
       if (entered) location.reload();
       endSplash({ forget: true });
       providers.hidden = true;
-      inviteForm.hidden = access.status === 'rejected'; redeemButton.disabled = false; redeemButton.textContent = 'Use code and enter'; inviteHelp.textContent = INVITE_HELP.pending;
-      title.textContent = TITLES[access.status] ?? WELCOME; showJourney(access.status === 'pending' ? 'wait' : null);
+      inviteForm.hidden = access.status === 'rejected'; redeemButton.disabled = false; inviteHelp.textContent = INVITE_HELP.pending;
+      title.textContent = TITLES[access.status] ?? WELCOME; showJourney(access.status === 'pending' ? 'wait' : null, false);
+      waiting.hidden = access.status !== 'pending';
       usernameForm.hidden = access.status !== 'pending';
       githubName = access.github ?? null;
       if (!usernameEdited && document.activeElement !== usernameInput) usernameInput.value = access.username ?? '';
+      savedUsername = access.username ?? ''; syncUsernameSave();
       usernameGitHub.hidden = !githubName || usernameInput.value === githubName;
       const since = joinedOn(access.requestedAt);
-      message.textContent = access.status === 'rejected'
+      say(access.status === 'rejected'
         ? 'Your request has not been approved. Contact the district team if you think this is a mistake.'
-        : `You’re signed in and your place on the waitlist is saved${since ? ` (since ${since})` : ''}. You don’t need to sign in again: keep this page open and River Oaks opens by itself once you’re approved, or come back any time.`;
+        : `You’re signed in, and your place on the waitlist is saved${since ? ` since ${since}` : ''}.`);
       if (gateState !== access.status) $('#access-title').focus({ preventScroll: true });
       gateState = access.status;
       return;
     }
-    usernameForm.hidden = true; showJourney(null); title.textContent = WELCOME;
+    usernameForm.hidden = true; showJourney(null); title.textContent = WELCOME; waiting.hidden = true;
     if (!entered) {
       entered = true;
       document.body.dataset.accountId = session.user.id;
@@ -127,9 +146,9 @@ async function checkAccess() {
   } catch {
     if (entered) location.reload();
     endSplash();
-    providers.hidden = true; retry.hidden = false; showJourney(null);
-    redeemButton.disabled = true;
-    message.textContent = 'Access could not be checked. Try again shortly.';
+    providers.hidden = true; retry.hidden = false; showJourney(null); usernameForm.hidden = true; waiting.hidden = true;
+    redeemButton.disabled = true; title.textContent = WELCOME;
+    say('Access could not be checked. Try again shortly.');
   } finally { checking = false; }
 }
 
@@ -140,21 +159,22 @@ const post = (path, data) => api(path, { method: 'POST', headers: {
 usernameInput.addEventListener('input', () => {
   usernameEdited = true; usernameStatus.textContent = '';
   usernameGitHub.hidden = !githubName || usernameInput.value === githubName;
+  syncUsernameSave();
 });
-usernameGitHub.addEventListener('click', () => { usernameInput.value = githubName; usernameEdited = true; usernameGitHub.hidden = true; usernameInput.focus(); });
+usernameGitHub.addEventListener('click', () => { usernameInput.value = githubName; usernameEdited = true; usernameGitHub.hidden = true; syncUsernameSave(); usernameInput.focus(); });
 $('#access-username-suggest').addEventListener('click', () => {
   usernameInput.value = generatedUsername(crypto.randomUUID()); usernameEdited = true;
-  usernameGitHub.hidden = !githubName; usernameInput.focus();
+  usernameGitHub.hidden = !githubName; syncUsernameSave(); usernameInput.focus();
 });
 usernameForm.addEventListener('submit', async event => {
   event.preventDefault();
-  const save = $('#access-username-save'); save.disabled = true;
+  usernameSave.disabled = true; usernameSave.textContent = 'Saving…';
   try {
     const result = await post('/api/waitlist/username', { username: usernameInput.value.trim() });
-    usernameInput.value = result.username; usernameEdited = false;
+    usernameInput.value = result.username; usernameEdited = false; savedUsername = result.username;
     usernameStatus.textContent = `Saved. You’ll be known as ${result.username}.`;
   } catch (error) { usernameStatus.textContent = usernameError(error); }
-  finally { save.disabled = false; }
+  finally { syncUsernameSave(); }
 });
 
 // Cloudflare Turnstile guards email sign-in when the build has a site key. The
