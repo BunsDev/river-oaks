@@ -146,10 +146,11 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-11-delivered-source-retirement](2026-10-11-delivered-source-retirement.md)<br>Delivered source reconciliation | `reconcile-delivered-sources` | retired | — | 2026-10-11 |
 | [2026-10-11-ci-parallel-preview](2026-10-11-ci-parallel-preview.md)<br>Parallel preview check | `ci-parallel-preview` | retired | #252 | 2026-10-11 |
 
-## Historical, not in the register (70)
+## Historical, not in the register (71)
 
 | Plan | PRs mentioned |
 | --- | --- |
+| [2026-10-15-ipic-screening-authority](2026-10-15-ipic-screening-authority.md)<br>IPIC #366: authoritative screening timeline and host controls (2026-10-15) | #366, #359, #367 |
 | [2026-10-13-stage-voice-carry](2026-10-13-stage-voice-carry.md)<br>A stage performer is heard across the plaza — 2026-10-13 | #311 |
 | [2026-10-13-procedural-multilevel-interiors](2026-10-13-procedural-multilevel-interiors.md)<br>Building-anchored procedural interiors and levels | — |
 | [2026-10-13-plaza-table-lessons](2026-10-13-plaza-table-lessons.md)<br>Guided first games at the plaza tables — 2026-10-13 | — |

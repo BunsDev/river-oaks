@@ -95,11 +95,14 @@ test('a version 3 checkpoint preserves occupied furniture while new geometry req
   const world=town(),placed=world.command(owner,{type:'build',action:'place',kind:'seat',finish:'rose',position:[-12,2.4],yaw:0});
   assert.equal(placed.ok,true);
   assert.equal(world.command(owner,{type:'sit',buildId:placed.item.id,slot:0}).ok,true);
-  const checkpoint=world.checkpoint();assert.equal(checkpoint.version,8);
-  checkpoint.version=3;delete checkpoint.payload.offices;
+  const checkpoint=world.checkpoint();assert.equal(checkpoint.version,9);
+  checkpoint.version=3;delete checkpoint.payload.offices;delete checkpoint.payload.screenings;
   const restored=createSharedWorld(data);
   assert.equal(restored.restore(signed(checkpoint)).ok,true,'valid old seated state remains recoverable');
-  assert.deepEqual(restored.snapshot(),world.snapshot());
+  // A pre-screening checkpoint upgrades with a fresh, stopped screening epoch.
+  const {screenings,...after}=restored.snapshot(),{screenings:_current,...before}=world.snapshot();
+  assert.deepEqual(after,before);
+  assert.deepEqual(screenings.map(item=>[item.status,item.revision]),[['stopped',0]]);
 });
 
 test('authoritative movement cannot cross a placed creator object',()=>{

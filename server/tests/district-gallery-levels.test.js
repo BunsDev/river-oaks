@@ -65,6 +65,7 @@ test('a validated occupied one-level town migrates to the two-level plan without
   assert.equal(recoverDistrictLevelsCheckpoint({ worldData: nextData, checkpoint: { ...checkpoint, checksum: 'bad' }, ...options }).ok, false);
   const legacy = structuredClone(checkpoint);
   legacy.version = 6;
+  delete legacy.payload.screenings;
   for (const player of legacy.payload.players) {
     delete player.buildingId;
     delete player.levelId;

@@ -39,6 +39,7 @@ test('only the default world accepts a correctly signed legacy checkpoint', () =
   const { checksum: _checksum, worldId: _worldId, ...legacy } = original.checkpoint();
   legacy.version = 1;
   delete legacy.payload.offices;
+  delete legacy.payload.screenings;
   const saved = sign(legacy);
   const defaultWorld = createSharedWorld(data);
   assert.deepEqual(defaultWorld.restore(saved), { ok: true });
