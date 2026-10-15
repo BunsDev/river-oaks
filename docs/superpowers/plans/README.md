@@ -4,10 +4,11 @@
 
 Each plan is a task ledger. Status comes from the task register, where the primary checkout's live copy can be newer than the committed one. Plans from before the register are listed as historical: their own text is the record of what was delivered.
 
-## Active and blocked (7)
+## Active and blocked (8)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
+| [2026-10-15-office-ipic-contract-decisions](2026-10-15-office-ipic-contract-decisions.md)<br>Office + IPIC #360: record Val's decisions in the layout contract (2026-10-15) | `office-ipic-contract-decisions` | active | — | 2026-10-15 |
 | [2026-10-14-shared-dominoes](2026-10-14-shared-dominoes.md)<br>Shared Dominoes Implementation Plan (PR 1: the town holds the round) | `shared-dominoes-sheet` | active | — | 2026-10-14 |
 | [2026-10-14-procedural-interior-ring-validity](2026-10-14-procedural-interior-ring-validity.md)<br>Procedural interior footprint validity | `procedural-interior-ring-validity` | active | #355 | 2026-10-14 |
 | [2026-10-14-office-ipic-engineering-baseline](2026-10-14-office-ipic-engineering-baseline.md)<br>Office + IPIC #360, engineering half: baseline and executable layout contract | `office-ipic-engineering-baseline` | active | #381 | 2026-10-14 |

@@ -179,7 +179,24 @@
           "lower the office floor so the 7.6 m volume ends below the 28 m estimate (floor at or below 20.4 m, for example level 5), changing the lift rise and arrival timing",
           "keep level 6 and reduce the clear height to about 3.7 m, which removes the mezzanine as proposed",
           "treat the 28 m height as an estimate and raise the modelled building, which changes a mapped block visible from the street"
-        ]
+        ],
+        "decision": {
+          "decisionId": "penthouse-volume-fit", "option": 2, "decidedBy": "val", "decidedAt": "2026-10-14",
+          "officeFloorElevation": 24.3, "ceilingElevation": 31.9, "mezzanineFloorElevation": 28.1, "towerTop": 32.85, "raisedBuildingHeight": 33.0,
+          "implementedBy": "#361",
+          "note": "Val: raise the building if feasible, else best judgement. Feasible; it keeps level 6, the 24.3 m rise and the arrival film. #361 changes REFERENCE_HEIGHTS['625330785'] and the building's size[2] to 33.0, reference-blocks TOWER_TOP to 32.85 with one double-height frontage band (no 28.1 m line), adds a fourth checkpoint migration ahead of district-level-checkpoint-migration.js because the world fingerprint changes, and updates reference-facades.test.js. Deploying it migrates the production town checkpoint and needs its own authorization. Terrace: recommended setback at the tower's west end above the 10.6 m Le Colonial wing; the kit-to-building transform is #361's. Design record: docs/design/office-ipic/brief.md on #380."
+        }
+      },
+      "mezzanineProgramme": {
+        "decisionId": "penthouse-library-terrace-density", "source": "Cody's library revision 3 (~/Downloads/jevica-office-scale-review/library-final-plan.md), approved by Val 2026-10-14",
+        "level": "mezz", "frame": "kit [x, d], furniture bases at h 3.8",
+        "seats": [ { "id": "reading-chair-a", "position": [-8, 18.3] }, { "id": "reading-chair-b", "position": [-4.5, 18.3] } ],
+        "furniture": [ { "id": "reading-side-table", "position": [-6.25, 18.3], "size": [0.5, 0.5] }, { "id": "bookcase-1", "position": [0, 19.55] }, { "id": "bookcase-2", "position": [6, 19.55] } ],
+        "standingPoints": [ { "id": "reference-consultation", "position": [0, 18.1] }, { "id": "archive-browse", "position": [6, 18.1] } ],
+        "retired": ["bookcase-0", "mezz-table"],
+        "clearBands": [ { "id": "gallery-route", "x": [-15, 15], "d": [14.05, 16.45], "note": "stair-to-lift circulation; no furniture, occupied-seat envelope or planter" }, { "id": "east-passing-bay", "x": [9.1, 14.1], "d": [14.05, 18.45], "waitingCentre": [11.6, 17.4], "throughRouteD": 15.3, "note": "open floor, no furniture" } ],
+        "keptAnchors": ["stairs-top", "library", "lift-upper"],
+        "limits": "calculated static gaps from the scale review, not runtime proof; seated envelope ends 0.58 m from the gallery band and 0.43 m from the back wall, neither a walkable aisle; #363 tests both chairs occupied, the bay with two clients and lift use while passing without shrinking collision radii"
       }
     }
   ],
@@ -193,9 +210,9 @@
     "ipic": { "observed": "docs/ipic-review/review.json: reception 59 calls / 133418 triangles, mural 33 / 69742, lounge 24 / 95384, bar 37 / 112740, auditorium 12 / 56060; GLB 12394500 bytes" }
   },
   "decisions": [
-    { "id": "penthouse-volume-fit", "owner": "val", "status": "open", "summary": "the kit's 7.6 m clear volume above the 24.3 m lift rise tops out at 31.9 m against a 28 m estimated building; pick one of fit.options before #361 fixes level elevations" },
+    { "id": "penthouse-volume-fit", "owner": "val", "status": "decided", "summary": "Val (2026-10-14) chose fit.options[2]: raise the modelled building to 33.0 m (tower top 32.85 m) and keep the office floor at 24.3 m; numbers and implementation in the penthouse place's fit.decision" },
     { "id": "ipic-lift", "owner": "design+engineering", "status": "recorded", "summary": "keep the lift decorative in this increment; step-free access to the upper levels is unresolved and must be stated in the IPIC accessibility notes until a fixed-endpoint server-validated route exists" },
-    { "id": "penthouse-library-terrace-density", "owner": "design", "status": "open", "summary": "Cody's review asks for denser library and terrace activity zones before final art; the east passing bay is the only proposed two-avatar passing point on the 2.4 m gallery" },
+    { "id": "penthouse-library-terrace-density", "owner": "design", "status": "decided", "summary": "library: Val approved Cody's revision 3 on 2026-10-14 (penthouse mezzanineProgramme); terrace activity density stays a design item for #362" },
     { "id": "envelope-remeasure", "owner": "engineering", "status": "deferred", "summary": "rigs are unchanged since the 2026-10-11 measurement; re-run the appearance fixture bounds when any character GLB, avatars.js or shared-appearances.js changes" }
   ],
   "gates": {
