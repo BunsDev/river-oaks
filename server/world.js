@@ -288,7 +288,15 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     const centre=anchor?[anchor.position[0],anchor.position[1]]:[player.position[0],player.position[1]],facing=anchor?.yaw??seatYaw(player.yaw+Math.PI);
     const objects=[...builds.values()],others=[...players.values()];
     let destination=null;
-    for(const radius of [1.65,2.2,2.8]) {
+    // A seat may name where its sitter steps out (the IPIC sofa, boxed in by its arms and
+    // the coffee table): that spot gets the same checks as any other, without a straight path.
+    for(const [x,north] of anchor?.standAt ?? []) {
+      const ground=environment.groundAt(x,-north);
+      if(Number.isFinite(ground) && Math.abs(ground-player.position[2])<=.35 && (buildRoomAt(environment,[x,north])?.storeId??null)===roomId
+        && environment.isFree(x,-north) && !objects.some(item=>distance(item.position,[x,north])<buildGeometry(item).radius+.4)
+        && !others.some(other=>other.id!==player.id && distance(other.position,[x,north])<.85)){destination=[x,north,ground];break;}
+    }
+    if(!destination) for(const radius of [1.65,2.2,2.8]) {
       for(const angle of [0,Math.PI/4,-Math.PI/4,Math.PI/2,-Math.PI/2,3*Math.PI/4,-3*Math.PI/4,Math.PI]) {
         const yaw=facing+angle,x=centre[0]+Math.sin(yaw)*radius,north=centre[1]-Math.cos(yaw)*radius;
         const ground=environment.groundAt(x,-north);

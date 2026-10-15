@@ -64,8 +64,10 @@ export function configureIpicRoom(room) {
   // Auditorium doorway at a=-4.7; partitions agree with rendered geometry.
   block('ipic-cinema-wall', (room.aMin - 5.6) / 2, 26, -5.6 - room.aMin, .18, 6, 4.4);
   block('ipic-cinema-wall', (-3.8 + room.aMax) / 2, 26, room.aMax + 3.8, .18, 6, 4.4);
+  // The sofa's arms, back and coffee table box its front in for the server body, so each
+  // place names where its sitter steps out: past the arm at that place's end.
   room.ipicSeats = [
-    ...[0, 1].map(slot => ({ key: 'lounge-sofa', slot, a: -3.25 + slot * .85, d: 24.8, yaw: Math.PI, height: .49, kind: 'seat' })),
+    ...[0, 1].map(slot => ({ key: 'lounge-sofa', slot, a: -3.25 + slot * .85, d: 24.8, yaw: Math.PI, height: .49, kind: 'seat', stand: slot ? [-.75, 24.3] : [-4.95, 24.3] })),
     ...[28, 31].flatMap((d, row) => [-2.6, -.6, 1.4, 3.4].map((a, col) => ({ key: `recliner-${row}-${col}`, slot: 0, a, d, yaw: 0, height: .53, kind: 'armchair' }))),
   ];
   // Collision covers the backs and arms. Cushion centres remain valid for the
@@ -99,6 +101,7 @@ export function ipicSeatSites(rooms) {
     const buildId = `bench:ipic-${seat.key}`;
     return { id: `${buildId}:${seat.slot}`, buildId, slot: seat.slot, kind: seat.kind, storeId: room.storeId,
       title: seat.key === 'lounge-sofa' ? 'IPIC lounge sofa' : 'IPIC theater recliner',
-      x, north, heading: yaw, height: seat.height, approach: [x + Math.sin(yaw) * .9, north - Math.cos(yaw) * .9] };
+      x, north, heading: yaw, height: seat.height, approach: [x + Math.sin(yaw) * .9, north - Math.cos(yaw) * .9],
+      ...(seat.stand ? { standAt: [room.toWorld(...seat.stand)] } : {}) };
   }));
 }

@@ -143,27 +143,32 @@ test('every recliner is reached, held exclusively, stood from and left with ever
   }
 });
 
-test('both lounge sofa places are reached and held exclusively with every other seat occupied', () => {
+test('both lounge sofa places are reached, held exclusively, stood from and left with every other seat occupied', () => {
   for (const seat of room.ipicSeats.filter(s => s.key === 'lounge-sofa')) {
-    const { t } = takeSeat(seat);
-    // Standing is the open defect below; leaving by travel releases the place.
+    const { t, blockers } = takeSeat(seat);
+    const stood = t.command('walker', { type: 'stand' });
+    assert.equal(stood.ok, true, `${seatId(seat)}:${seat.slot} stand: ${stood.error}`);
+    assert.equal(stood.player.position[2], room.floor + 6, 'stands on the lounge floor');
+    t.walk('walker', route(local(stood.player.position), DOOR, blockers).path);
     assert.equal(t.command('walker', { type: 'travel', storeId: room.storeId, mode: 'leave' }).ok, true);
-    t.advance(1000);
-    assert.equal(t.command('contender', { type: 'sit', buildId: seatId(seat), slot: seat.slot }).error, 'seat_out_of_reach', 'released, so only reach refuses');
   }
 });
 
-// Open (#364): the sofa's arms, back and coffee table leave no straight clear
-// path for the server's stand search, even in an empty room, so the only way
-// up is Places > travel out. Fix is a server stand point or a layout change.
-test('standing from the lounge sofa finds clear ground', { todo: 'stand_blocked on main; see docs/ipic-interior.md circulation findings' }, () => {
-  const t = town();
-  t.world.join({ userId: 'walker', name: 'Walker' });
-  const start = t.enter('walker'), seat = room.ipicSeats.find(s => s.key === 'lounge-sofa');
-  t.walk('walker', route(start, sitSpot(seat, [], start)).path);
-  assert.equal(t.command('walker', { type: 'sit', buildId: seatId(seat), slot: seat.slot }).ok, true);
-  const stood = t.command('walker', { type: 'stand' });
-  assert.equal(stood.ok, true, stood.error);
+// The sofa's arms, back and coffee table leave no straight clear path for the server's
+// radial stand search, so each place names where its sitter steps out (ipic-plan.js).
+test('standing from either sofa place in an empty lounge steps out beside the sofa onto open floor', () => {
+  for (const seat of room.ipicSeats.filter(s => s.key === 'lounge-sofa')) {
+    const t = town();
+    t.world.join({ userId: 'walker', name: 'Walker' });
+    const start = t.enter('walker');
+    t.walk('walker', route(start, sitSpot(seat, [], start)).path);
+    assert.equal(t.command('walker', { type: 'sit', buildId: seatId(seat), slot: seat.slot }).ok, true);
+    const stood = t.command('walker', { type: 'stand' });
+    assert.equal(stood.ok, true, `${seat.slot}: ${stood.error}`);
+    const [a, d] = local(stood.player.position);
+    assert.ok(serverFree([a, d]) && d > 23.5 && d < 25.3 && Math.abs(a - seat.a) < 2.2, `slot ${seat.slot} stood at ${a.toFixed(2)},${d.toFixed(2)}`);
+    t.walk('walker', route([a, d], DOOR).path);
+  }
 });
 
 test('IPIC refuses false heights, solid shortcuts, teleports, a working lift and seats through walls', () => {
