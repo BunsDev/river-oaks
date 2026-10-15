@@ -69,12 +69,14 @@ async (host, viewer, tools) => {
       screeningVideos: own.screeningVideos, mediaTracked: own.mediaTracked, mediaInDom: own.mediaInDom, mediaLoaded: own.mediaLoaded, mediaPlaying: own.mediaPlaying, audioContexts: own.audioContexts,
       intervals: own.intervals, timeouts: own.timeouts, playCalls: own.playCalls };
   }
-  // The fixture lasts 30 s. Before each entry the host restarts it unless 18 s remain, so
-  // every late join meets a running film; restarts are host actions, never the viewer's.
+  // The fixture lasts 30 s. Before each entry the host restarts it unless enough remains for the
+  // last measured trip in plus 12 s, so the late join meets a running film; restarts are host
+  // actions, never the viewer's.
   const hostControl = async name => { await host.locator(`#ipic-screening [data-control="${name}"]`).click(); };
-  async function ensureRunning() {
+  let lastTripS = 6;
+  async function ensureRunning(minRemainingS = 18) {
     const s = await screening(host);
-    if (s.sharedStatus === 'playing' && s.currentTime < 12) return false;
+    if (s.sharedStatus === 'playing' && 30 - s.currentTime >= minRemainingS) return false;
     if (!['stopped', 'ended'].includes(s.sharedStatus)) { await hostControl('host-stop'); await host.waitForFunction(() => window.__riverScreening().sharedStatus === 'stopped'); }
     await hostControl('host-start');
     await host.waitForFunction(() => window.__riverScreening().state === 'playing' && window.__riverScreening().currentTime > 0.3, null, { timeout: 30000 });
@@ -88,10 +90,10 @@ async (host, viewer, tools) => {
   checks.push('host started the 30 s fixture inside IPIC');
 
   async function cycle(index) {
-    const restarted = await ensureRunning();
+    const restarted = await ensureRunning(Math.max(18, lastTripS + 12));
     const started = Date.now();
     await enterIpic(viewer);
-    const entryMs = Date.now() - started;
+    const entryMs = Date.now() - started; lastTripS = entryMs / 1000;
     // On a loaded machine the trip in can outlast the 30 s fixture. Then the host starts it again
     // and this cycle is recorded as an in-room start rather than a late join.
     const lateJoin = (await screening(host)).sharedStatus === 'playing';
@@ -101,8 +103,6 @@ async (host, viewer, tools) => {
       .catch(async error => { throw new Error(`${error.message}: cycle ${index} viewer ${JSON.stringify(await screening(viewer))}, host ${JSON.stringify(await screening(host))}`); });
     const joined = Date.now(), late = await screening(viewer);
     check(late.epoch === before.epoch, `cycle ${index}: the viewer joined the host's epoch ${before.epoch}, got ${late.epoch}`);
-    const inside = await counters(viewer);
-    check(inside.screeningVideos === 1 && inside.mediaPlaying === 1 && late.attached, `cycle ${index}: one playing video attached inside IPIC: ${JSON.stringify(inside)}`);
     let converged = null, worst = 0;
     while (Date.now() - joined < 5000) {
       const sample = await spread();
@@ -112,6 +112,13 @@ async (host, viewer, tools) => {
     }
     check(converged !== null && converged <= 5000, `cycle ${index}: viewers within 500 ms in ${converged} ms`);
     check(worst < 500, `cycle ${index}: stayed within 500 ms after converging (worst ${Math.round(worst)} ms)`);
+    // Sampled after the convergence window, so the GC and the wait below never eat into it. The
+    // texture attaches on a later rendered frame; a loaded machine renders slowly, so wait for it
+    // (it must still attach).
+    await viewer.waitForFunction(() => window.__riverScreening().attached, null, { timeout: 30000 })
+      .catch(async error => { throw new Error(`${error.message}: cycle ${index} the film never reached the screen: ${JSON.stringify(await screening(viewer))}`); });
+    const inside = await counters(viewer);
+    check(inside.screeningVideos === 1 && inside.mediaPlaying === 1 && (await screening(viewer)).attached, `cycle ${index}: one playing video attached inside IPIC: ${JSON.stringify(inside)}`);
     const position = (await screening(viewer)).currentTime;
     await leaveIpic(viewer);
     const playCalls = (await viewer.evaluate(() => window.__soak.counters().playCalls));
@@ -148,7 +155,7 @@ async (host, viewer, tools) => {
   checks.push('no growth in media, audio contexts, intervals, documents or renderer resources; no steady growth in DOM nodes, listeners or timeouts');
 
   // Narrow screens with the banner and dock present (#367): the viewer goes back in.
-  await ensureRunning();
+  await ensureRunning(Math.max(18, lastTripS + 15));
   await enterIpic(viewer);
   await viewer.waitForFunction(() => window.__riverScreening().state === 'playing', null, { timeout: 30000 });
   // Captions: the active cue is on screen in the panel, and the toggle hides and restores it.
