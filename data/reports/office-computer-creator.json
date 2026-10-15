@@ -1,0 +1,38 @@
+{
+  "createdAt": "2026-10-15T01:42:55.082Z",
+  "status": "passed",
+  "modes": [
+    "creator"
+  ],
+  "rendering": "Full rendering",
+  "scope": "Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.",
+  "results": [
+    {
+      "name": "creator-objects",
+      "status": "passed",
+      "seconds": 33.12,
+      "result": {
+        "checks": [
+          "Jevica can edit a named primitive assembly",
+          "Parts form one editable design",
+          "Creator travels through the authoritative room",
+          "The complete assembly has a valid placement (Ready to place.)",
+          "Authority confirms the full assembly and its material",
+          "A second browser renders the actual physical glass surface",
+          "Guests cannot remove the creator’s object",
+          "The full assembly is available as a saved design",
+          "The edited assembly has a valid placement (Ready to place.)",
+          "Jevica edits confirmed parts through the builder controls",
+          "Live edits release the previous material",
+          "Removal reaches the other browser and releases its object",
+          "Saved copy placement rejected: Town updated.",
+          "The saved copy has a valid placement (Keep clear of the road.)",
+          "Saved copies preserve the original parts rather than later edits",
+          "A reconnecting guest receives the complete saved assembly",
+          "No page errors: "
+        ]
+      }
+    }
+  ],
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)"
+}

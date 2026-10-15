@@ -1,0 +1,45 @@
+{
+  "createdAt": "2026-10-15T01:39:38.575Z",
+  "status": "passed",
+  "modes": [
+    "required"
+  ],
+  "rendering": "Full rendering",
+  "scope": "Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.",
+  "results": [
+    {
+      "name": "resident-names",
+      "status": "passed",
+      "seconds": 158.232,
+      "result": {
+        "checks": [
+          "A resident is shown by their GitHub username",
+          "The admin account is Jevica",
+          "A non-admin session claiming Jevica is not shown as Jevica",
+          "Every viewer, including the impostor, sees the same name",
+          "The impostor’s own character panel does not call them Jevica",
+          "The roster names the impostor by their safe name",
+          "The roster names the admin Jevica",
+          "Roster buttons are labelled with the safe name (View profile for Visitor #impostor | Add Visitor #impostor as a contact | Report disruption by Visitor #impostor | Mute voice from Visitor #impostor)",
+          "Nameplates show the impostor safely and the admin as Jevica",
+          "Chat shows the impostor safely and the admin as Jevica ({\"impostor\":\"Visitor #impostor\",\"user_01M40Y914S1H4EJCEHH91DKTAY\":\"Jevica\"})",
+          "The impostor’s profile card does not call them Jevica",
+          "The contact list shows the impostor’s safe name ({\"status\":\"Invitation sent to Visitor #impostor.\",\"rows\":[\"Visitor #impostor\"]})",
+          "The map’s live player list shows the impostor safely",
+          "Alice’s view: nothing but the owner reads as Jevica ([])",
+          "The admin is still shown as Jevica on the roster, nameplate and chat",
+          "The impostor’s own view: nothing but the owner reads as Jevica ([])",
+          "The admin’s view: nothing but the owner reads as Jevica ([])",
+          "A lookalike spelling of Jevica is not shown as Jevica",
+          "Alice’s view with the lookalike: nothing but the owner reads as Jevica ([])",
+          "The lookalike’s own view: nothing but the owner reads as Jevica ([])",
+          "Different accounts receive distinct fallback names",
+          "A Resident session receives its own unique fallback",
+          "The automatic fallback survives reconnecting",
+          "No page errors: "
+        ]
+      }
+    }
+  ],
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)"
+}

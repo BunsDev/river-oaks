@@ -7,7 +7,7 @@ const {createOfficeUI}=await import('../src/office-ui.js');
 const {officesFor}=await import('../src/office-contract.js');
 const data=JSON.parse(readFileSync(new URL('../public/data/district.json',import.meta.url)));
 const tick=()=>new Promise(resolve=>setImmediate(resolve));
-function setup(t,{access='owner',sceneError=false,listPending=null,leavePending=null,renderPhase='office',captureStreet=()=>null}={}){
+function setup(t,{access='owner',sceneError=false,listPending=null,leavePending=null,renderPhase='office',captureStreet=()=>null,workspaces=null}={}){
  class Element {
   constructor(tag){this.tagName=tag;this.children=[];this.dataset={};this.events={};this.attributes={};this.textContent='';this.value='';this.hidden=false;this.open=false;this.classList={add(){},remove(){}};}
   append(...items){for(const i of items){i.remove();i.parent=this;this.children.push(i);}}
@@ -17,6 +17,7 @@ function setup(t,{access='owner',sceneError=false,listPending=null,leavePending=
   get options(){return this.children;}
   addEventListener(k,fn){(this.events[k]??=[]).push(fn);}
   emit(k,e={}){for(const f of this.events[k]??[])f({target:this,preventDefault(){},stopImmediatePropagation(){},...e});}
+  checkVisibility(){return Boolean(this.visible);}
   closest(){return null;}
   showModal(){this.open=true;}
   close(){this.open=false;this.emit('close');}
@@ -30,7 +31,8 @@ function setup(t,{access='owner',sceneError=false,listPending=null,leavePending=
 
  const player={id:'owner',name:'Jevica',position:[...officesFor(data)[0].entrance,0],office:null};
  const calls=[],voiceCalls=[],scenes=[],prepared=[];let pending=null,disposed=0;
- const mp={connected:true,identity:{id:'owner'},snapshot:{players:[player]},voice:{state:{available:true,status:'joined',mic:'off',pushToTalk:false},toggleJoin(){voiceCalls.push('join');},toggleMic(){voiceCalls.push('mic');},setTransmit(v){voiceCalls.push(v);}},async command(m){calls.push(m);if(m.action==='list'){if(listPending)await listPending;return {ok:true,offices:[{...officesFor(data)[0],access,requested:false,guests:[],requests:[]}]};}if(m.action==='enter'){if(pending)return pending;player.office={id:'jevica-office',position:[0,1.25],yaw:0};}if(m.action==='leave'){if(leavePending)await leavePending;player.office=null;}return {ok:true};}};
+ const mp={connected:true,identity:{id:'owner'},snapshot:{players:[player]},voice:{state:{available:true,status:'joined',mic:'off',pushToTalk:false},toggleJoin(){voiceCalls.push('join');},toggleMic(){voiceCalls.push('mic');},setTransmit(v){voiceCalls.push(v);}},async command(m){calls.push(m);if(m.action==='list'){if(listPending)await listPending;return {ok:true,offices:[{...officesFor(data)[0],access,requested:false,guests:[],requests:[]}]};}if(m.action==='enter'){if(pending)return pending;player.office={id:m.officeId,position:[0,1.25],yaw:0};}if(m.action==='leave'){if(leavePending)await leavePending;player.office=null;}return {ok:true};}};
+ if(workspaces)mp.officeDeskRequest=async(action,data)=>{calls.push({api:action,...data});if(action==='workspace/provision')return {ok:true,workspace:workspaces[0]};if(action==='workspace/list')return {ok:true,workspaces};if(action==='workspace/accept'){workspaces.find(w=>w.id===data.workspaceId).role='accepted';return {ok:true};}return {ok:true};};
  const walking={halt(){},getPosition:()=>player.position,getPose:()=>({altitude:0}),riding:false};
  const ui=createOfficeUI({host,panelHost,renderer:{},getWorld:()=>data,getMultiplayer:()=>mp,walking,captureStreet,createScene(options){scenes.push(options);if(sceneError)throw new Error('GPU unavailable');return {prepare:now=>prepared.push(now),render:()=>({phase:renderPhase,done:renderPhase==='office'}),skip(){},dispose(){disposed++;}};}});
  t.after(()=>{ui.dispose();Object.assign(globalThis,original);});
@@ -133,4 +135,39 @@ test('dragging during the elevator cannot preload an abrupt arrival camera turn'
  const f=setup(t,{renderPhase:'ascending'});f.ui.update(6000,.016);await tick();f.find('office-enter').emit('click');await tick();f.ui.update(6100,.016);
  const dialog=f.find('office-visit');dialog.emit('pointerdown',{pointerId:1,clientX:100});dialog.emit('pointermove',{pointerId:1,clientX:200});assert.equal(f.ui.pose.yaw,0);
  f.setPhase('office');f.ui.update(6200,.016);dialog.emit('pointerdown',{pointerId:2,clientX:100});dialog.emit('pointermove',{pointerId:2,clientX:200});assert.equal(f.ui.pose.yaw,-.4);
+});
+
+test('resident provisions their office and enters it without Jevica permissions',async t=>{
+ const workspace={id:'office-'+'a'.repeat(64),ownerId:'owner',role:'owner',members:[]};
+ const f=setup(t,{access:null,workspaces:[workspace]});f.ui.update(6000,.016);await tick();
+ assert.ok(f.find('office-personal'));f.find('office-personal').emit('click');await tick();await tick();
+ assert.ok(f.calls.some(c=>c.api==='workspace/provision'));
+ assert.equal(f.player.office?.id,workspace.id);assert.equal(f.ui.active,true);
+ f.ui.update(6400,.1);f.ui.update(6600,.1);await tick();assert.equal(f.calls.find(c=>c.action==='move').officeId,workspace.id);
+ f.find('office-exit').emit('click');await tick();assert.equal(f.player.office,null);
+});
+
+test('pending collaborator accepts explicitly before shared office entry',async t=>{
+ const workspace={id:'office-'+'b'.repeat(64),ownerId:'other',role:'invited',members:[]};
+ const f=setup(t,{access:null,workspaces:[workspace]});f.ui.update(6000,.016);await tick();
+ const picker=f.find('office-workspace');assert.ok(picker);picker.value=workspace.id;picker.emit('change');await tick();
+ assert.equal(f.find('office-enter').disabled,true);assert.equal(f.find('office-accept').hidden,false);
+ f.find('office-accept').emit('click');await tick();await tick();
+ assert.ok(f.calls.some(c=>c.api==='workspace/accept'&&c.workspaceId===workspace.id));
+ f.find('office-nearby').emit('click');await tick();assert.equal(f.player.office?.id,workspace.id);
+});
+
+
+test('office discovery stays idle away from the lobby and resumes when needed',async t=>{
+ const f=setup(t,{workspaces:[]});f.player.position=[9999,9999];
+ f.ui.update(6000,.016);await tick();f.ui.update(12000,.016);await tick();
+ assert.equal(f.calls.length,0);
+ f.player.position=[...officesFor(data)[0].entrance,0];f.ui.update(18000,.016);await tick();
+ assert.ok(f.calls.some(c=>c.api==='workspace/list'));
+});
+
+test('an open office panel refreshes invitations even away from the lobby',async t=>{
+ const f=setup(t,{workspaces:[]});f.player.position=[9999,9999];
+ f.find('office-personal').parent.visible=true;f.ui.update(6000,.016);await tick();
+ assert.ok(f.calls.some(c=>c.api==='workspace/list'));
 });

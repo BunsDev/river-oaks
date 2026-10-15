@@ -55,12 +55,21 @@ pnpm run test:experience generated-gallery-levels
 RIVER_OAKS_SHARED_JOURNEY=creator-four-levels pnpm run test:shared development-publish
 ```
 
-For B, run the Auto cycle soak twice more: once as is (tail rule off, the shipped default)
-and once with the tail rule on. The journey builds its own URL, so the second run needs a
-one-line local edit adding `&aotail=on`. Do not commit that edit.
+For B, compare Auto with the shipped tail rule off and the opt-in rule on. Repeat
+each command at least three times on the same device. The receipt includes
+`aoTailMode`; keep the runs separate so run-to-run spread can be compared.
 
-Phones cannot run the Playwright journeys. On a phone, open the dev server over the LAN
-with `?render-audit=1&motion-debug=1`, then walk the same route by hand: enter the
+```sh
+RIVER_OAKS_GALLERY_CYCLES=5 RIVER_OAKS_GALLERY_AO_TAIL=off pnpm run test:experience generated-gallery-cycle-soak
+RIVER_OAKS_GALLERY_CYCLES=5 RIVER_OAKS_GALLERY_AO_TAIL=on pnpm run test:experience generated-gallery-cycle-soak
+```
+
+Phones cannot run the Playwright journeys. The current Vite/browser fixture binds
+to `127.0.0.1`, and the local identity accepts only a loopback origin. A plain
+LAN URL is therefore not yet a working authenticated phone fixture; prepare a
+dedicated test-only phone access path without relaxing production origin or
+CSRF checks before recording a phone result. Once available, open it with
+`?render-audit=1&motion-debug=1`, then walk the same route by hand: enter the
 gallery, walk to the back wall, go up, come down, leave, visit Cartier, and return. Read
 `window.__riverRenderAudit` from a remote inspector (Safari Web Inspector, or Chrome
 `chrome://inspect`).

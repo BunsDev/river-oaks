@@ -1,3 +1,6 @@
+import { createMemoryOfficeWorkspaces } from './office-workspaces.js';
+import { officeWorkspaceAction } from './office-workspaces-api.js';
+import { workspaceContext, reconcileOfficeVisit, reconcileOfficeVisits } from './office-workspace-visits.js';
 import { createMemoryOfficeDesk } from './office-desk.js';
 import { officeDeskAction, OFFICE_DESK_BODY_LIMIT } from './office-desk-api.js';
 import {validAssembly} from '../preview/src/creator-object.js';
@@ -31,7 +34,7 @@ import { createCyclingLeaderboard } from './cycling-api.js';
 const types = { '.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.glb':'model/gltf-binary','.hdr':'application/octet-stream','.svg':'image/svg+xml','.woff2':'font/woff2' };
 const equal = (a,b) => typeof a==='string' && typeof b==='string' && Buffer.byteLength(a)===Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a),Buffer.from(b));
 const json = (res,status,value) => { res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(value)); };
-export function createGameServer({ debugReports = createMemoryDebugReports(), auth, world, worldTitle = world.title, landmarks, social = null, groups = null, profiles = null, events = null, workplace = null, officeDesk = createMemoryOfficeDesk(), avatarPreferences = null, presence = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, regionSha256 = null, onBan = null, origin, staticRoot, moderation, waitlist, waitlistAdmins = [], moderators = [], trustedProxyIPs = [], now = Date.now, onMove = null, voice = null, voiceReconcileMs = 1000, departureGraceMs = 30000, cyclingMiles = null, cyclingFlushMs = 30000 }) {
+export function createGameServer({ debugReports = createMemoryDebugReports(), auth, world, worldTitle = world.title, landmarks, social = null, groups = null, profiles = null, events = null, workplace = null, officeDesk = createMemoryOfficeDesk(), officeWorkspaces = createMemoryOfficeWorkspaces(), avatarPreferences = null, presence = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, regionSha256 = null, onBan = null, origin, staticRoot, moderation, waitlist, waitlistAdmins = [], moderators = [], trustedProxyIPs = [], now = Date.now, onMove = null, voice = null, voiceReconcileMs = 1000, departureGraceMs = 30000, cyclingMiles = null, cyclingFlushMs = 30000 }) {
   if (!waitlist) throw new Error('Waitlist is required');
   const worldId=validateWorldId(world.worldId??DEFAULT_WORLD_ID);
   const matchesWorld=url=>(url.searchParams.get('world')??(worldId===DEFAULT_WORLD_ID?DEFAULT_WORLD_ID:null))===worldId;
@@ -216,8 +219,14 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
       if (pathname.startsWith('/api/office-desk/') && req.method==='POST') {
         const identity=await authorized(req,res);if(!identity)return;
         if(!matchesWorld(new URL(req.url,"http://localhost")))return json(res,404,{error:'World not found.'});
-        const result=await officeDeskAction({action:pathname.slice('/api/office-desk/'.length),identity,desk:officeDesk,readBody:()=>body(req,OFFICE_DESK_BODY_LIMIT),
-          hasVisit:async user=>connections.get(user.userId)?.identity.sessionId===user.sessionId && Boolean(snapshot().players.find(p=>p.id===user.userId)?.office), allow:id=>deskCalls(id)});
+        const action=pathname.slice('/api/office-desk/'.length);
+        const visit=async user=>connections.get(user.userId)?.identity.sessionId===user.sessionId ? world.officeVisit(user.userId) : null;
+        const common={identity,readBody:()=>body(req,OFFICE_DESK_BODY_LIMIT),allow:id=>deskCalls(id)};
+        const result=action.startsWith('workspace/')
+          ? await officeWorkspaceAction({...common,action:action.slice('workspace/'.length),workspaces:officeWorkspaces,visit,
+            isApproved:async id=>!isBanned(id)&&await waitlist.isApproved(id)})
+          : await officeDeskAction({...common,action,desk:officeDesk,hasVisit:async user=>Boolean(await visit(user))});
+        if(action==='workspace/revoke'&&result.status===200)await reconcileOfficeVisits(world,officeWorkspaces);
         return json(res,result.status,result.value);
       }
       if (pathname.startsWith('/api/workplace/') && req.method==='POST' && workplace) {
@@ -314,6 +323,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
           const result=world.join(identity);if(!result.ok){ws.close(1013,'The town is full. Try again shortly.');return;}
           joinedHere=true;
         } else world.rename(identity);
+        await reconcileOfficeVisit(world,officeWorkspaces,identity.userId);
         // One world per account (as on the hosted gateway): arriving here removes
         // the account from the world it was last in, in the background.
         if(presence){
@@ -365,7 +375,9 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
               moderation.report(identity.userId,message.playerId,message.reason).then(()=>send(ws,{type:'result',requestId:message.requestId,ok:true,message:'Report sent to the town moderators.'}),()=>send(ws,{type:'result',requestId:message.requestId,ok:false,message:'Report unavailable. Try again.'}));return;
             }
             const {requestId,...command}=message;
-            const result=world.command(identity.userId,command);
+            const officeWorkspace=await workspaceContext(officeWorkspaces,identity.userId,command);
+            if(connections.get(identity.userId)!==connection || ws.readyState!==WebSocket.OPEN)return;
+            const result=world.command(identity.userId,command,{officeWorkspace});
             if(result.ok && avatarPreferences && ['appearance','movement'].includes(command.type))
               await avatarPreferences.save(identity.userId,world.accountAppearance(identity.userId));
             if(result.ok && command.type==='uncycle')await flushRides();
@@ -388,6 +400,12 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
       });
     }catch{return reject(401);}
   });
+  let officeSyncing=false;
+  const officeSync=setInterval(()=>{
+    if(stopped||officeSyncing||!connections.size)return;
+    officeSyncing=true;
+    void reconcileOfficeVisits(world,officeWorkspaces).finally(()=>{officeSyncing=false;});
+  },5000);officeSync.unref();
   let previous=now(),broadcastAt=0;
   const loop=setInterval(()=>{
     const time=now(),delta=Math.min(0.25,Math.max(0,(time-previous)/1000));previous=time;
@@ -436,7 +454,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
     for(const {ws} of connections.values())ws.close(4000,'World region updated.');
     connections.clear();void flushRides();world=next;regionSha256=hash;
   },async close(){
-    stopped=true;clearInterval(loop);clearInterval(heartbeat);clearInterval(avatarSync);clearInterval(voiceLoop);clearInterval(rideFlush);
+    stopped=true;clearInterval(officeSync);clearInterval(loop);clearInterval(heartbeat);clearInterval(avatarSync);clearInterval(voiceLoop);clearInterval(rideFlush);
     for(const [id,timer] of departures){clearTimeout(timer);world.leave(id);}
     departures.clear();tickets.clear();
     if(presence)await Promise.allSettled([...connections.values()].map(connection=>presence.leave(connection.identity.userId,connection.token)));

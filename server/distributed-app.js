@@ -1,3 +1,4 @@
+import { officeWorkspaceAction } from './office-workspaces-api.js';
 import { officeDeskAction, OFFICE_DESK_BODY_LIMIT } from './office-desk-api.js';
 import {validAssembly} from '../preview/src/creator-object.js';
 import { createServer } from 'node:http';
@@ -37,7 +38,7 @@ const json = (res, status, value) => {
 };
 
 /** HTTP/WS edge for a durable room. No instance owns canonical game or auth state. */
-export function createDistributedServer({ auth, room, worldTitle, security, waitlist, waitlistAdmins = [], debugReports = null, landmarks, social = null, groups = null, profiles = null, events = null, workplace = null, officeDesk = null, workplaceCronSecret = null, presence = null, designLibrary = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
+export function createDistributedServer({ auth, room, worldTitle, security, waitlist, waitlistAdmins = [], debugReports = null, landmarks, social = null, groups = null, profiles = null, events = null, workplace = null, officeDesk = null, officeWorkspaces = null, workplaceCronSecret = null, presence = null, designLibrary = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
   trustedProxyIPs = [], address = createClientAddress(trustedProxyIPs), now = Date.now,
   connectionLifetime = 270_000, assetGateSecret = null, heartbeatMs = 5000, onMove = null, voice = null, voiceCronSecret = null,
   // cyclingMiles: accepted for the leaderboard route (PR 2); the room owner flushes rides.
@@ -272,8 +273,14 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
       if (path.startsWith('/api/office-desk/') && req.method==='POST') {
         const identity=await authorized(req,res);if(!identity)return;
         if(!matchesWorld(url))return json(res,404,{error:'World not found.'});
-        const result=await officeDeskAction({action:path.slice('/api/office-desk/'.length),identity,desk:officeDesk,readBody:()=>body(req,OFFICE_DESK_BODY_LIMIT),
-          hasVisit:async user=>{const view=await room.read();return Boolean(view?.connections.some(c=>c.userId===user.userId&&c.sessionId===user.sessionId)&&view.snapshot.players.find(p=>p.id===user.userId)?.office);}, allow:id=>security.allow('office_desk',id,90,60000)});
+        const action=path.slice('/api/office-desk/'.length);
+        const visit=async user=>{const view=await room.read();return view?.connections.some(c=>c.userId===user.userId&&c.sessionId===user.sessionId)
+          ? view.snapshot.players.find(p=>p.id===user.userId)?.office : null;};
+        const common={identity,readBody:()=>body(req,OFFICE_DESK_BODY_LIMIT),allow:id=>security.allow('office_desk',id,90,60000)};
+        const result=action.startsWith('workspace/')
+          ? await officeWorkspaceAction({...common,action:action.slice('workspace/'.length),workspaces:officeWorkspaces,visit,
+            isApproved:async id=>!await security.isBanned(id)&&await waitlist.isApproved(id)})
+          : await officeDeskAction({...common,action,desk:officeDesk,hasVisit:async user=>Boolean(await visit(user))});
         return json(res,result.status,result.value);
       }
       if (path.startsWith('/api/workplace/') && req.method==='POST' && workplace) {

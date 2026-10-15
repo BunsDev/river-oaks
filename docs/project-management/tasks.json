@@ -9557,6 +9557,83 @@
         "docs/superpowers/plans/README.md (generated)",
         "docs/superpowers/plans/2026-10-13-local-branch-worktree-prune.md (this session section)"
       ]
+    },
+    {
+      "id": "office-computer-db-mvp",
+      "title": "Resident-owned office computers with private and shared database tasks",
+      "status": "active",
+      "branches": [
+        "feat/office-computer-db-mvp"
+      ],
+      "owner": "codex-root-office-computer-db-mvp",
+      "updatedAt": "2026-10-15T02:42:50.281103+00:00",
+      "nextAction": "User authorized commit, push and merge to main. Commit verified MVP, open PR, land through CI and merge guard, reconcile delivery evidence; provide next long-running goal.",
+      "ledger": "docs/superpowers/plans/2026-10-15-office-computer-db-mvp.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-computer-db-mvp",
+      "filesOwned": [
+        "server/office-workspaces*.js",
+        "server/office-desk*.js",
+        "server/offices.js",
+        "server/world.js (office workspace wiring)",
+        "server/app.js (office routes)",
+        "server/distributed-app.js (office routes)",
+        "server/town.js (workspace store)",
+        "server/world-gateway.js (workspace store)",
+        "preview/src/office-*.js",
+        "preview/src/office-desk.css",
+        "server/tests/office*.test.js",
+        "preview/tests/office*.test.js",
+        "preview/e2e/office-desk.js",
+        "docs/offices.md",
+        "server/redis-room.js (workspace visit authorization and writer generation)",
+        "server/tests/redis-room.test.js (writer generation)",
+        "server/tests/creator-objects.test.js (checkpoint version)",
+        "server/tests/interactions.test.js (checkpoint version)",
+        "server/tests/seating.test.js (checkpoint version)",
+        "server/vercel-routing.js (workspace endpoint allowlist)",
+        "vercel.json (workspace endpoint rewrites)",
+        "server/tests/vercel-routing.test.js (workspace rewrites)",
+        "server/avatar-preferences.js (v8 checkpoint compatibility)",
+        "server/creator-rollout-audit.js (current writer/checkpoint generation)",
+        "preview/e2e/office-computer-shared.js",
+        "data/reports/office-computer*.json"
+      ],
+      "requiredChecks": [
+        "Focused memory and isolated Redis workspace/access/race tests",
+        "Office real HTTP/WebSocket regressions",
+        "Office browser journeys including narrow screen and keyboard",
+        "pnpm run verify",
+        "pnpm run verify full"
+      ],
+      "leaseUntil": "2026-10-15T04:42:50.281103+00:00"
+    },
+    {
+      "id": "procedural-gpu-matrix-harness",
+      "title": "Make generated gallery AO-tail GPU comparison repeatable without source edits",
+      "status": "active",
+      "branches": [
+        "test/procedural-gpu-matrix-harness-20261015"
+      ],
+      "owner": "codex-root-procedural-gpu-matrix-harness",
+      "leaseUntil": "2026-10-15T03:52:32.496Z",
+      "updatedAt": "2026-10-15T02:25:57.921Z",
+      "nextAction": "Watch exact-head hosted preview on draft PR #389, mark ready when passing, and land through the queue; then prepare test-only iPhone Safari access for the GPU matrix.",
+      "ledger": "docs/superpowers/plans/2026-10-15-procedural-gpu-matrix-harness.md",
+      "requiredChecks": [
+        "Focused journey with AO tail off and on",
+        "pnpm run verify",
+        "pnpm run verify full or explicit gate gap"
+      ],
+      "filesOwned": [
+        "preview/e2e/generated-gallery-cycle-soak.js",
+        "docs/superpowers/plans/2026-10-14-procedural-gpu-acceptance.md",
+        "docs/superpowers/plans/2026-10-15-procedural-gpu-matrix-harness.md",
+        "docs/superpowers/plans/README.md",
+        "docs/project-management/tasks.json (this task only)"
+      ],
+      "parent": "procedural-gpu-acceptance",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-procedural-gpu-matrix-harness-20261015",
+      "pr": 389
     }
   ]
 }
