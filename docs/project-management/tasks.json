@@ -9626,8 +9626,8 @@
       ],
       "owner": "codex-root-procedural-phone-gpu-fixture",
       "leaseUntil": "2026-10-15T04:40:22.037Z",
-      "updatedAt": "2026-10-15T03:27:54.000Z",
-      "nextAction": "Await a quiet physical iPhone Safari reload after full local verification and simulator join; then commit, obtain exact-head hosted preview, and land the private-LAN fixture.",
+      "updatedAt": "2026-10-15T03:42:52.000Z",
+      "nextAction": "Resolve the physical iPhone Safari join error from Val's visible message, complete main integration verification, obtain exact-head hosted preview, and land PR #393.",
       "ledger": "docs/superpowers/plans/2026-10-15-procedural-phone-gpu-fixture.md",
       "requiredChecks": [
         "Focused phone fixture HTTP/WebSocket and host tests",
@@ -9644,7 +9644,57 @@
         "docs/superpowers/plans/README.md",
         "docs/project-management/tasks.json (this task and retired gpu harness only)"
       ],
-      "parent": "procedural-gpu-acceptance"
+      "parent": "procedural-gpu-acceptance",
+      "pr": 393
+    },
+    {
+      "id": "office-computer-db-mvp",
+      "title": "Resident-owned office computers with private and shared database tasks",
+      "status": "active",
+      "branches": [
+        "feat/office-computer-db-mvp"
+      ],
+      "owner": "codex-root-office-computer-db-mvp",
+      "updatedAt": "2026-10-15T02:42:50.281103+00:00",
+      "nextAction": "User authorized commit, push and merge to main. Commit verified MVP, open PR, land through CI and merge guard, reconcile delivery evidence; provide next long-running goal.",
+      "ledger": "docs/superpowers/plans/2026-10-15-office-computer-db-mvp.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-computer-db-mvp",
+      "filesOwned": [
+        "server/office-workspaces*.js",
+        "server/office-desk*.js",
+        "server/offices.js",
+        "server/world.js (office workspace wiring)",
+        "server/app.js (office routes)",
+        "server/distributed-app.js (office routes)",
+        "server/town.js (workspace store)",
+        "server/world-gateway.js (workspace store)",
+        "preview/src/office-*.js",
+        "preview/src/office-desk.css",
+        "server/tests/office*.test.js",
+        "preview/tests/office*.test.js",
+        "preview/e2e/office-desk.js",
+        "docs/offices.md",
+        "server/redis-room.js (workspace visit authorization and writer generation)",
+        "server/tests/redis-room.test.js (writer generation)",
+        "server/tests/creator-objects.test.js (checkpoint version)",
+        "server/tests/interactions.test.js (checkpoint version)",
+        "server/tests/seating.test.js (checkpoint version)",
+        "server/vercel-routing.js (workspace endpoint allowlist)",
+        "vercel.json (workspace endpoint rewrites)",
+        "server/tests/vercel-routing.test.js (workspace rewrites)",
+        "server/avatar-preferences.js (v8 checkpoint compatibility)",
+        "server/creator-rollout-audit.js (current writer/checkpoint generation)",
+        "preview/e2e/office-computer-shared.js",
+        "data/reports/office-computer*.json"
+      ],
+      "requiredChecks": [
+        "Focused memory and isolated Redis workspace/access/race tests",
+        "Office real HTTP/WebSocket regressions",
+        "Office browser journeys including narrow screen and keyboard",
+        "pnpm run verify",
+        "pnpm run verify full"
+      ],
+      "leaseUntil": "2026-10-15T04:42:50.281103+00:00"
     }
   ]
 }

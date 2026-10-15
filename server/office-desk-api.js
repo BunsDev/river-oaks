@@ -1,6 +1,6 @@
 export const OFFICE_DESK_BODY_LIMIT=98304;
 import { deskFields } from '../preview/src/office-desk-contract.js';
-const STATUS={invalid_desk:400,desk_conflict:409,desk_missing:404,desk_limit:409};
+const STATUS={invalid_desk:400,desk_conflict:409,desk_operation_conflict:409,desk_missing:404,desk_limit:409};
 /** The authenticated account alone owns this document, including while visiting another owner's office. */
 export async function officeDeskAction({action,identity,desk,readBody,hasVisit,allow}){
  if(!desk)return {status:503,value:{error:'desk_unavailable'}};

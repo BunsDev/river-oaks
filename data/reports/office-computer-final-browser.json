@@ -1,0 +1,92 @@
+{
+  "createdAt": "2026-10-15T01:16:36.222Z",
+  "results": [
+    {
+      "name": "office-desk",
+      "status": "passed",
+      "seconds": 21.606,
+      "result": {
+        "checks": [
+          "Computer distinguishes My tasks from Office tasks",
+          "Authorized office opens an empty private desk",
+          "Notes, file links and result save to the account",
+          "Typing at the desk does not move the player",
+          "Completed task retains the written result",
+          "Saved work can be downloaded",
+          "Closing the desk restores office focus",
+          "Leaving, reloading and returning resumes saved work",
+          "A failed save keeps the draft and offers retry",
+          "Mobile desk fits without horizontal overflow",
+          "Visible mobile actions keep touch-sized targets",
+          "Long titles wrap fully on mobile",
+          "Small phones retain a contained layout",
+          "Removing work requires confirmation and can be cancelled",
+          "Escape leaves the desk before leaving the office",
+          "Retry reopens cached work after a failed read",
+          "Confirmed removal restores focus to the empty desk",
+          "Shared scope is explicit before typing",
+          "Keyboard scope switch keeps shared work out of My tasks",
+          "Office work resumes when switching back",
+          "Leaving an office warns before discarding a failed shared draft",
+          "Cancelling departure retains the shared draft"
+        ]
+      }
+    },
+    {
+      "name": "office-computer-shared",
+      "status": "passed",
+      "seconds": 18.72,
+      "result": {
+        "checks": [
+          "A pending collaboration invitation does not permit office entry",
+          "Collaborator cannot see the owner’s private tasks",
+          "Accepted collaborator reads the shared office task",
+          "Shared edits resume on the owner’s computer",
+          "Revocation closes the computer and clears shared task fields",
+          "Revocation clears the shared task list"
+        ]
+      }
+    },
+    {
+      "name": "office-visit",
+      "status": "failed",
+      "seconds": 81.147,
+      "error": "Error: locator.waitFor: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#office-nearby') to be visible\u001b[22m\n\u001b[2m    47 × locator resolved to hidden <button hidden=\"\" type=\"button\" id=\"office-nearby\">Request office visit · F</button>\u001b[22m\n\nGuest diagnostics: {\"diagnostics\":{\"connected\":true,\"self\":{\"office\":null,\"interaction\":null,\"id\":\"guest\",\"name\":\"guest\",\"appearance\":\"sable-human\",\"movement\":\"upright\",\"gesture\":null,\"performing\":false,\"canBuild\":false,\"canGrantWishes\":false,\"vehicle\":null,\"sitting\":null,\"position\":[-2765.321977373157,-1295.064162750871,18.383521112135007],\"yaw\":0,\"altitude\":0,\"buildingId\":null,\"levelId\":null,\"voice\":{\"space\":\"outdoor\",\"id\":null}},\"local\":{\"position\":[-2765.321977373157,20.140092870626113,1295.064162750871],\"riding\":null,\"sitting\":null,\"ground\":18.460092870626113,\"altitude\":0,\"levelId\":null,\"flying\":false,\"landing\":false,\"yaw\":0,\"speed\":0,\"velocity\":[0,0],\"distance\":0,\"roomId\":null,\"showBody\":true},\"nearby\":{\"x\":0,\"y\":0,\"width\":0,\"height\":0,\"top\":0,\"right\":0,\"bottom\":0,\"left\":0},\"active\":\"canvas-host\",\"pending\":false,\"request\":false,\"status\":[\"Private office. Request access or ask Jevica to invite you.\",\"Private office. Request access or ask Jevica to invite you.\"]},\"guestErrors\":[]}\n    at eval (preview/e2e/office-visit.js:77:11)\n    at async file:///Users/buns/Documents/GitHub/BunsDev/river-oaks-office-computer-db-mvp/preview/e2e/experience-runner.js:50:22",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
+        "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
+        "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+        "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
+        "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+      ],
+      "diagnostics": [
+        {
+          "url": "http://127.0.0.1:56400/?motion-debug=1",
+          "ready": "true",
+          "assets": "{\"loaded\":102,\"total\":102,\"failed\":0,\"done\":true}",
+          "renderStats": "{\"calls\":1379,\"triangles\":4695136,\"geometries\":500,\"textures\":160}",
+          "quality": "{\"mode\":\"auto\",\"scale\":0.6,\"occlusion\":false,\"fps\":30}",
+          "pipeline": "{\"samples\":4,\"ao\":false,\"bloom\":true,\"renderScale\":0.6,\"aoScale\":1,\"transmissionScale\":1}",
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+          "window": [
+            1440,
+            1000,
+            1
+          ],
+          "screen": [
+            1440,
+            1000,
+            24
+          ],
+          "canvas": [
+            1440,
+            1000,
+            1440,
+            1000
+          ]
+        }
+      ]
+    }
+  ]
+}

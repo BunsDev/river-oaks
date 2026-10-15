@@ -52,9 +52,19 @@ it does not constitute a device result by itself.
   waitlist and ticket, followed by a WebSocket upgrade. These are simulator
   debugging results, not physical phone GPU acceptance. The simulator was
   shut down before asking Val for a quiet physical Safari reload.
+- Val reported a different visible error on the quiet physical iPhone reload.
+  Its exact text or screenshot is still pending, so the phone join and GPU
+  matrix row remain unverified.
+- Integrated `origin/main` at `c1cfd584` after PR #390 landed. The sole
+  content conflict was the generated plans index; regenerating it from the
+  merged task register retained the phone task, the retired GPU harness, and
+  the office computer task. On this integrated tree, the focused phone test
+  passed 3/3, `pnpm run verify` passed (`.runtime/agent/core.json`), and
+  `REDIS_URL=redis://127.0.0.1:16389 pnpm run verify full` passed
+  (`.runtime/agent/full.json`). The isolated Redis service was stopped.
 
 ## Gaps and next step
 
 Resolve the iPhone Safari join failure, then capture Web Inspector measurements.
-Obtain exact-head hosted `preview` and land the fixture. Record actual
+Obtain exact-head hosted `preview` on the integrated PR and land the fixture. Record actual
 device results in the GPU matrix only when captured on the phone.
