@@ -59,6 +59,11 @@ and would have needed about 49 s to climb 24.3 m.
   ride (60 s), with load still about 100 (another browser and a VM). The guest step is left
   to CI's places shard, which runs `office-visit` before landing.
 
+- After merging `origin/main` (`b9a2cebe`, clean; #449 and #450 included): focused
+  suites 54/54 (main added office tests); `pnpm run verify` passed (112/112; 3,318/3,320
+  with 1 skipped; server 598/751 with 153 skipped; 69/69; pytest 141); `office-lift-ride`
+  passed, worst 0.000 m over 199 frames.
+
 ## Gaps and next step
 
 Not run: hosted CI (pending), the legacy fallback scene (its car does not move), a
