@@ -117,11 +117,16 @@ second interior or renderer is built.
 - **Local states.** Loading, playing, buffering, paused, ended, blocked (autoplay refused),
   error and unsupported belong to this viewer only. None of them sends a command or changes
   the shared film. **Play film** answers a refused autoplay, **Retry** reloads after an
-  error, and **Stop watching** releases the film locally.
+  error, and **Stop watching** releases the film locally. While the walking console's
+  **More** actions are open, the panel steps aside, so **Step outside** stays reachable on
+  narrow screens; it returns when More closes. On narrow screens the panel also stays above an
+  open play dock, so its sound and caption controls remain reachable.
 - **Sound, captions and transcript.** The film starts muted. **Sound on** is the viewer's
   choice and plays only inside the auditorium; the lounge and the street stay silent.
-  Captions are on by default, and the transcript opens in the panel. No microphone is
-  involved.
+  Captions are on by default: the panel shows the active cue, because the film reaches
+  the screen only as texture frames and a browser draws cues only on a visible video
+  element (the caption track is kept in `hidden` mode to track them). **Captions off**
+  hides the line. The transcript opens in the panel. No microphone is involved.
 - **Host controls.** **Start**, **Pause**, **Resume** and **Stop** appear only when the
   server's `sync` reply says this viewer may host. Each sends one operation id and retries
   once with the same id if the reply is lost.
