@@ -5,7 +5,7 @@ import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { createStudioScene, disposeStudioScene, frameStudioObject, studioClearColor } from './scene.js';
 import { createWalkingEnvironment, createWalkingState, stepWalking } from '../walking.js';
 
-export function createStudioViewport(host,{onSelect,onTransform,onPosition,onExitWalk}) {
+export function createStudioViewport(host,{onSelect,onTransform,onPosition,onExitWalk,getRevision=()=>0}) {
   const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));
   renderer.setClearColor(studioClearColor(document.documentElement.dataset.theme));renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;
   host.append(renderer.domElement);renderer.domElement.setAttribute('aria-label','World Studio 3D viewport');
@@ -18,8 +18,10 @@ export function createStudioViewport(host,{onSelect,onTransform,onPosition,onExi
   const box=new THREE.BoxHelper(undefined,'#365b49');scene.add(box);box.visible=false;
   const ray=new THREE.Raycaster(),pointer=new THREE.Vector2(),keys=new Set();
   let content=null,selected=null,interiorView=null,mode='translate',walking=null,environment=null,down=null,look=null,savedCamera=null,frame=0,last=0;
+  let drag=null, generation=0;
   const events=new AbortController(),signal=events.signal;
   function configureTransform() {
+    cancelDrag(true);
     const object=content?.items.get(selected);transform.detach();box.visible=Boolean(object)&&!walking;
     if(!object||walking||selected==='@environment'||selected===interiorView?.buildingId){box.visible=false;return;}
     box.setFromObject(object);const kind=object.userData.kind;
@@ -30,15 +32,23 @@ export function createStudioViewport(host,{onSelect,onTransform,onPosition,onExi
   }
   transform.addEventListener('dragging-changed',event=>{orbit.enabled=!event.value&&!walking;});
   transform.addEventListener('objectChange',()=>{if(transform.object)box.setFromObject(transform.object);});
+  transform.addEventListener('mouseDown',()=>{drag={id:selected,revision:getRevision(),generation};});
+  const cancelDrag=(finish=false)=>{
+    if(drag){transform.reset();drag=null;transform.axis=null;}
+    // Keep orbit locked until pointer-up after Escape, so the cancelled drag
+    // cannot become an accidental camera orbit while the pointer is still down.
+    if(finish)transform.dragging=false;
+  };
   transform.addEventListener('mouseUp',()=>{
-    const object=transform.object;if(!object)return;
+    const pending=drag;drag=null;
+    const object=transform.object;if(!object||!pending)return;
     const round=value=>Math.round(value*1000)/1000;
     let patch;
     if(mode==='translate')patch={east:round(object.position.x),north:round(-object.position.z),...(object.userData.kind==='furnishing'?{elevation:round(object.position.y)}:{})};
     else if(mode==='rotate')patch={yaw:round(((object.rotation.y*180/Math.PI+180)%360+360)%360-180)};
     else if(object.userData.kind==='tree')patch={radius:round(object.scale.x),height:round(object.scale.y)};
     else patch={width:round(object.scale.x),height:round(object.scale.y),depth:round(object.scale.z)};
-    const id=selected;queueMicrotask(()=>onTransform(id,patch));
+    queueMicrotask(()=>{if(!signal.aborted&&pending.generation===generation)onTransform(pending.id,patch,pending.revision);});
   });
   renderer.domElement.addEventListener('pointerdown',event=>{
     host.focus();down={x:event.clientX,y:event.clientY};
@@ -58,12 +68,12 @@ export function createStudioViewport(host,{onSelect,onTransform,onPosition,onExi
       if(object){onSelect(object.userData.studioId);return;}
     }
   },{signal});
-  renderer.domElement.addEventListener('pointercancel',()=>{down=null;look=null;},{signal});
-  window.addEventListener('blur',()=>{keys.clear();look=null;},{signal});
+  renderer.domElement.addEventListener('pointercancel',()=>{cancelDrag(true);down=null;look=null;},{signal});
+  window.addEventListener('blur',()=>{cancelDrag(true);keys.clear();look=null;},{signal});
   host.addEventListener('blur',()=>keys.clear(),{signal});
   document.addEventListener('visibilitychange',()=>{keys.clear();last=0;},{signal});
   host.addEventListener('keydown',event=>{
-    if(!walking)return;if(event.key==='Escape'){event.preventDefault();onExitWalk();return;}
+    if(!walking){if(event.key==='Escape')cancelDrag();return;}if(event.key==='Escape'){event.preventDefault();onExitWalk();return;}
     if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright','shift'].includes(event.key.toLowerCase())){event.preventDefault();keys.add(event.key.toLowerCase());}
   },{signal});
   window.addEventListener('keyup',event=>keys.delete(event.key.toLowerCase()),{signal});
@@ -83,7 +93,7 @@ export function createStudioViewport(host,{onSelect,onTransform,onPosition,onExi
   frame=requestAnimationFrame(animate);
   const api={
     render(region,id=selected,view=interiorView){
-      transform.detach();if(content)disposeStudioScene(content.group);content=createStudioScene(region,document.documentElement.dataset.theme);
+      cancelDrag(true);generation++;transform.detach();if(content)disposeStudioScene(content.group);content=createStudioScene(region,document.documentElement.dataset.theme);
       for(const [key,object] of content.items)object.userData.kind=key==='@arrival'?'arrival':isSpaceDocument(region)?(key==='@environment'?'environment':'furnishing'):region.buildings.some(v=>v.id===key)?'building':region.trees.some(v=>v.id===key)?'tree':'place';
       scene.add(content.group);selected=id;interiorView=view;content.setInteriorView?.(view);configureTransform();
       const bounds=new THREE.Box3().setFromObject(content.group),center=bounds.getCenter(new THREE.Vector3());

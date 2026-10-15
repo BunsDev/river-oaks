@@ -36,7 +36,7 @@ import { buildDistrictBuildings, buildDistrictDetail } from './district.js';
 import { buildDistrictFantasy } from './district-fantasy.js';
 import { buildStorePeople } from './store-people.js';
 import { createGeneratedInteriorStream } from './generated-interior-stream.js';
-import { canCullExterior, renderWithoutExterior } from './interior-exterior-culling.js';
+import { canCullExterior, canCullIpicAuditorium, renderWithoutExterior } from './interior-exterior-culling.js';
 import { sharedRoomSummary } from './shared-population.js';
 import { storeRoomsFor } from './store-rooms.js';
 import { attachDistrictGalleryPlan } from './district-interior-contract.js';
@@ -127,6 +127,13 @@ const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matc
 // Never enable this profile in a production build.
 const softwareAcceptance = import.meta.env.DEV && import.meta.env.VITE_SHARED_SOFTWARE_RENDERING === '1';
 const renderAudit = import.meta.env.DEV && new URLSearchParams(location.search).get('render-audit') === '1' ? createRenderAudit() : null;
+let exteriorCulling = true; // A development audit can switch it off to compare frames.
+// Inside IPIC's auditorium, facing away from its only partition, nothing outdoors can be seen (#428).
+function ipicAuditoriumCull() {
+  const pose = !officeUI?.active && interiorsLayer?.visible ? walking?.getPose() : null;
+  const room = pose ? walking?.environment?.roomAt(pose.position[0], pose.position[2]) : null;
+  return room?.interior === IPIC_INTERIOR && canCullIpicAuditorium(camera, room);
+}
 const debugOcclusion = new URLSearchParams(location.search).get('ao');
 // Auto's AO tail rule stays off until it passes device acceptance (render-quality.js).
 const aoTailShedding = new URLSearchParams(location.search).get('aotail') === 'on';
@@ -960,7 +967,7 @@ function render(now) {
     pipeline.setOcclusionExteriorMask(generatedRoomActive ? worldGroup : null, interiorsLayer);
     ipicScreening?.update();
     if (!officeUI?.update(now, delta)) {
-      if (generatedRoomActive && canCullExterior(camera, currentRoom))
+      if (exteriorCulling && ((generatedRoomActive && canCullExterior(camera, currentRoom)) || ipicAuditoriumCull()))
         renderWithoutExterior(worldGroup, interiorsLayer, () => pipeline.render(delta));
       else pipeline.render(delta);
     }
@@ -1109,7 +1116,7 @@ if (import.meta.env.DEV) window.__riverExteriorCull = () => {
     direction: camera.getWorldDirection(new THREE.Vector3()).toArray(),
     front: room && [room.aMin, room.aMax].map(a => { const [east, north] = room.toWorld(a, 0);
       return new THREE.Vector3(east, room.floor + room.height / 2, -north).project(camera).toArray(); }),
-    cull: canCullExterior(camera, room) };
+    cull: canCullExterior(camera, room), ipic: ipicAuditoriumCull() };
 };
 // Read-only bird cam state for development and browser acceptance runs.
 // Each bird also reports how it appears in the current view: inside the frame,
@@ -1135,6 +1142,7 @@ try {
 if (import.meta.env.DEV && renderAudit) {
   window.__riverRenderAudit = {
     start: () => renderAudit.start(), stop: () => renderAudit.stop(),
+    exteriorCulling(enabled) { exteriorCulling = Boolean(enabled); },
     crowdView() {
       const players = multiplayer?.snapshot?.players ?? [];
       if (!players.length) throw new Error('Join the shared world before framing its crowd.');
@@ -1292,7 +1300,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
     return {id,speaking:Boolean(id&&community?.speakingId===id),nod:station?.conversation.pose,face:station?.face.pose,mouth:rig?.speechPose,eyes:rig?.eyes.pose,head:head?.quaternion.toArray()};
   };
   window.__riverCreatorObjects=()=>({resources:buildLayer?.stats(),rendered:(buildLayer?.object.children??[]).filter(entry=>entry.userData.build).map(entry=>({id:entry.userData.build.id,parts:entry.children.filter(child=>child.isMesh).map(child=>({color:child.material.color.getHexString(),transmission:child.material.transmission??0,position:child.position.toArray(),size:child.scale.toArray()}))}))});
-  window.__riverCarriage = () => ({vehicle:playerAvatar?.carriage.kind,chauffeur:playerAvatar?.carriage.chauffeur,companion:playerAvatar?.carriage.prince.companion,princePosition:playerAvatar?.carriage.prince.object.position.toArray(),princeVisible:playerAvatar?.carriage.prince.object.visible,wingsVisible:playerAvatar?.carriage.prince.object.getObjectByName('Jev’s angel wings')?.visible,placement:playerAvatar?.carriage.placement,unicorns:playerAvatar?.carriage.unicorns,spinners:playerAvatar?.carriage.spinners?.map(spinner=>({rotation:spinner.rotation.z})),visible:playerAvatar?.carriage.object.visible,riding:playerAvatar?.carriage.riding,tyreClearances:playerAvatar?.carriage.tyreClearances,pose:walking.getPose(),rider:playerAvatar?.object.position.toArray(),riderYaw:playerAvatar?.object.rotation.y});
+  window.__riverCarriage = () => ({camera:{view:walking?.cameraView,position:camera.position.toArray()},vehicle:playerAvatar?.carriage.kind,chauffeur:playerAvatar?.carriage.chauffeur,companion:playerAvatar?.carriage.prince.companion,princePosition:playerAvatar?.carriage.prince.object.position.toArray(),princeVisible:playerAvatar?.carriage.prince.object.visible,wingsVisible:playerAvatar?.carriage.prince.object.getObjectByName('Jev’s angel wings')?.visible,placement:playerAvatar?.carriage.placement,unicorns:playerAvatar?.carriage.unicorns,spinners:playerAvatar?.carriage.spinners?.map(spinner=>({rotation:spinner.rotation.z})),visible:playerAvatar?.carriage.object.visible,riding:playerAvatar?.carriage.riding,tyreClearances:playerAvatar?.carriage.tyreClearances,pose:walking.getPose(),rider:playerAvatar?.object.position.toArray(),riderYaw:playerAvatar?.object.rotation.y});
   window.__riverPeople = (bone = 'head') => [...[playerAvatar?.carriage.driver].filter(p=>p?.userData.avatar).map(person => ({id:person.userData.localId,holder:person})), ...(storePeople?.userData.figures ?? [])]
     .filter(person => person.id&&(community.state?.locals ?? []).some(local=>local.id===person.id)).map(person => {
       person.holder.updateWorldMatrix(true,true);
