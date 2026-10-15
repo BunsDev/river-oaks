@@ -128,7 +128,9 @@ sound, a real phone device play review, and human accessibility acceptance
 remain for slices 3 and 4. The fixed deterministic rules, rather than a
 general physics simulation, remain the game authority.
 
-**Next action:** Open a draft PR for this bounded position/gesture/view slice,
-then use a separate follow-up to clear the world-table camera and complete
-human play, touch and accessibility acceptance. Keep PR #436's iPhone landing
-separate.
+Draft PR: [#448](https://github.com/BunsDev/river-oaks/pull/448).
+
+**Next action:** Review #448's exact-head checks and this bounded
+position/gesture/view slice, then use a separate follow-up to clear the
+world-table camera and complete human play, touch and accessibility acceptance.
+Keep PR #436's iPhone landing separate.
