@@ -701,13 +701,15 @@ After that grace, departure releases it. A compatible region revision keeps
 furniture but disconnects players, so it leaves no stale occupancy. Checkpoint
 recovery validates slots, unique occupancy and the exact furniture-derived pose.
 
-Private world checkpoints write version 7 and read valid versions 1 (original
-district only) through 7. Seat reservations require version 3 or later; custom
+Private world checkpoints write version 9 and read valid versions 1 (original
+district only) through 9. Seat reservations require version 3 or later; custom
 assemblies require version 4; paired interactions require version 5; office state
-requires version 6; explicit interior level occupancy requires version 7. The
-current coordinator atomically takes over older leases. Commit fencing prevents
+requires version 6; explicit interior level occupancy requires version 7; personal
+workspace visits require version 8; venue screenings ([screenings](screenings.md))
+require version 9. The
+current coordinator (writer generation `v9:`) atomically takes over older leases. Commit fencing prevents
 an older writer from publishing or trimming commands. Do not roll back older
-code against version-7 checkpoints. Browser protocol 3 is required: older and
+code against version-9 checkpoints. Browser protocol 3 is required: older and
 unversioned clients must refresh
 before joining.
 This prevents older renderers from applying snapshots with unknown geometry.

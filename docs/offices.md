@@ -41,7 +41,7 @@ The desk routes require the existing authenticated, approved session, origin/CSR
 
 `server/offices.js` handles the `office` world command. It derives ownership from the existing Jevica admin predicate; no command accepts an owner field. The same authenticated ticket/WebSocket gates enforce waitlist approval, session expiry and bans for both the local and Redis servers. Movement uses office-local coordinates, a speed budget and swept collision. Office visitors cannot perform street interactions or travel until they leave. Voice receives a distinct office space.
 
-Grants, pending requests and current visits entered the private world checkpoint in version 6. Version 7 adds interior level occupancy; version 8 adds personal workspace visits. Workspace membership is revalidated before the first reconnect snapshot and by the coordinator before restored visits are published. The Redis writer generation is fenced at v8. Older versions upgrade without office state; older writers reject the current version. Region migration preserves grants/requests when the office remains and ends visits along with other player connections. Redis persists this state with the world; a standalone in-memory town loses it when restarted.
+Grants, pending requests and current visits entered the private world checkpoint in version 6. Version 7 adds interior level occupancy; version 8 adds personal workspace visits. Workspace membership is revalidated before the first reconnect snapshot and by the coordinator before restored visits are published. The Redis writer generation is fenced at v8 (v9 since venue screenings, [screenings](screenings.md)). Older versions upgrade without office state; older writers reject the current version. Region migration preserves grants/requests when the office remains and ends visits along with other player connections. Redis persists this state with the world; a standalone in-memory town loses it when restarted.
 
 Workspace metadata, invitations and shared tasks live in a versioned account-level store outside world checkpoints. Provisioning uses a deterministic workspace ID and atomic compare-and-set writes. Redis updates membership, discovery indices and shared tasks in the same transaction, preventing stale writes from bypassing revocation. Storage is bounded to 10,000 workspaces, 32 collaborators per office and 64 owned/invited offices per account; discovery uses per-account indices, not database scans. Browser discovery refreshes only near the lobby, in an active office, or while the office panel is visible. Private desk records read the legacy shape and write schema version 2 with bounded retry receipts. No existing task content is made public or shared.
 
@@ -99,8 +99,8 @@ and [eviction](https://redis.io/docs/latest/develop/reference/eviction/) referen
 `<namespace-tag>:office-workspaces:v1`; the account discovery index remains
 `office-workspaces-index:v1`. Private records remain schema 2 in `office-desk:v1`
 and still read the legacy shape. This improvement requires no data migration or
-backfill; old and new compatible writers share the same atomic record. World visits
-remain checkpoint/writer generation 8. Do not roll back to a writer that cannot read
+backfill; old and new compatible writers share the same atomic record. Personal workspace visits entered checkpoint generation 8; the integrated world
+now uses checkpoint/writer generation 9 for venue screenings. Do not roll back to a writer that cannot read
 the current checkpoint/schema. Deploy the gateway and client as a compatible pair.
 Storage failures deny access rather than granting cached membership; a failed save
 keeps its current-page draft and stable operation ID for Retry. Export a needed draft

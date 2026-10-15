@@ -66,12 +66,12 @@ test('leaving the world clears visit presence; private office state cannot be fo
 test('checkpoint version fences old writers and retains permissions on geography migration',async()=>{
  const {migrateWorldCheckpoint}=await import('../world.js');
  const {createHash}=await import('node:crypto');const {world,send}=setup();send(owner,'invite',{peerId:'guest'});send('stranger','request');
- const checkpoint=world.checkpoint();assert.equal(checkpoint.version,8);
+ const checkpoint=world.checkpoint();assert.equal(checkpoint.version,9);
  const migrated=migrateWorldCheckpoint({fromData:data,toData:{...data,title:'Updated district'},checkpoint});assert.ok(migrated.ok);
  assert.deepEqual(migrated.checkpoint.payload.offices.grants,checkpoint.payload.offices.grants);assert.deepEqual(migrated.checkpoint.payload.offices.requests,checkpoint.payload.offices.requests);
  const resign=v=>{const {checksum,...envelope}=v;v.checksum=createHash('sha256').update(JSON.stringify(envelope)).digest('hex');};
  const bad=structuredClone(checkpoint);bad.payload.offices.visits=[['guest',{id:'jevica-office',position:[0,999],yaw:0,at:0,budget:1}]];resign(bad);assert.equal(world.restore(bad).ok,false);
- const old=structuredClone(checkpoint);old.version=5;resign(old);assert.equal(world.restore(old).ok,false,'office data cannot masquerade as a v5 checkpoint');delete old.payload.offices;resign(old);assert.equal(world.restore(old).ok,true,'real v5 checkpoint upgrades');
+ const old=structuredClone(checkpoint);old.version=5;resign(old);assert.equal(world.restore(old).ok,false,'office data cannot masquerade as a v5 checkpoint');delete old.payload.offices;delete old.payload.screenings;resign(old);assert.equal(world.restore(old).ok,true,'real v5 checkpoint upgrades');
 });
 
 test('resident workspaces reuse the room with isolated visits and trusted membership only',async()=>{
@@ -85,7 +85,7 @@ test('resident workspaces reuse the room with isolated visits and trusted member
  assert.equal(enter('stranger',b.id,b).ok,true);
  assert.notEqual(world.voiceSpaceOf('guest'),world.voiceSpaceOf('stranger'));
  assert.equal(world.snapshot().players.find(p=>p.id==='guest').office.id,a.id);
- const checkpoint=world.checkpoint(),restored=createSharedWorld(data);assert.equal(checkpoint.version,8);
+ const checkpoint=world.checkpoint(),restored=createSharedWorld(data);assert.equal(checkpoint.version,9);
  assert.equal(restored.restore(checkpoint).ok,true);
  assert.equal(restored.snapshot().players.find(p=>p.id==='guest').office.id,a.id);
  assert.equal(world.command('guest',{type:'office',action:'move',officeId:a.id,position:[0,1.3],yaw:0}).ok,false,'movement needs current authorization');

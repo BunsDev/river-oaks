@@ -1,0 +1,978 @@
+{
+  "schemaVersion": 1,
+  "runtimeSourceCheckpoint": "d623eafd4ff649f8e1d6e3e94fa64a74ce26116a",
+  "scope": "Full run started on the uncommitted current-main integration subsequently signed as d623eafd. Runtime code was unchanged while it ran. Test-only fresh-endpoint correction 20d5892 was verified by five separate transport runs and hosted CI. Subsequent checkpoint-v9 main integration has separate final core/office checks, recorded in the ledger. This is synthetic local verification, not production or human accessibility proof.",
+  "full": {
+    "schemaVersion": 1,
+    "profile": "full",
+    "startedAt": "2026-10-15T04:23:25.373Z",
+    "status": "passed",
+    "revision": "43ae4496130a42f3cc6a4191a7b977ca9c6fb452",
+    "dirty": true,
+    "scope": "Selected repository checks only; not production, live auth, native Unreal, human accessibility, or target GPU acceptance.",
+    "results": [
+      {
+        "id": "dependency-audit",
+        "command": [
+          "pnpm",
+          "audit",
+          "--audit-level=moderate"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 416
+      },
+      {
+        "id": "agent-tests",
+        "command": [
+          "pnpm",
+          "run",
+          "test:agent"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 16147
+      },
+      {
+        "id": "preview-tests",
+        "command": [
+          "pnpm",
+          "test"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 51540
+      },
+      {
+        "id": "server-redis-tests",
+        "command": [
+          "pnpm",
+          "run",
+          "test:server"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 40055
+      },
+      {
+        "id": "desktop-tests",
+        "command": [
+          "pnpm",
+          "run",
+          "test:desktop"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 7079
+      },
+      {
+        "id": "build",
+        "command": [
+          "pnpm",
+          "run",
+          "build"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 2548
+      },
+      {
+        "id": "python-lint",
+        "command": [
+          "uv",
+          "run",
+          "--locked",
+          "ruff",
+          "check",
+          "."
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 198
+      },
+      {
+        "id": "python-format",
+        "command": [
+          "uv",
+          "run",
+          "--locked",
+          "ruff",
+          "format",
+          "--check",
+          "."
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 46
+      },
+      {
+        "id": "python-tests",
+        "command": [
+          "uv",
+          "run",
+          "--locked",
+          "pytest",
+          "-q"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 5105
+      },
+      {
+        "id": "demo",
+        "command": [
+          "uv",
+          "run",
+          "--locked",
+          "river-oaks",
+          "demo"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 317
+      },
+      {
+        "id": "demo-verify",
+        "command": [
+          "uv",
+          "run",
+          "--locked",
+          "river-oaks",
+          "verify",
+          "--config",
+          "data/generated/demo/config.json",
+          "--raw",
+          "data/generated/demo",
+          "--world",
+          "data/generated/demo/world.json",
+          "--output",
+          "data/generated/demo/report.json"
+        ],
+        "status": "passed",
+        "exitCode": 2,
+        "expectedExit": 2,
+        "signal": null,
+        "durationMs": 387
+      },
+      {
+        "id": "secrets",
+        "command": [
+          "uv",
+          "run",
+          "--locked",
+          "python",
+          "scripts/check_secrets.py",
+          "--all"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 11387
+      },
+      {
+        "id": "secret-history",
+        "command": [
+          "gitleaks",
+          "git",
+          "--log-opts=--all",
+          "--redact",
+          "--no-banner",
+          "--ignore-gitleaks-allow"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 2741
+      },
+      {
+        "id": "security-browser",
+        "command": [
+          "pnpm",
+          "run",
+          "test:security:e2e"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 20816
+      },
+      {
+        "id": "reflections",
+        "command": [
+          "pnpm",
+          "run",
+          "test:reflections:webgl"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 3127
+      },
+      {
+        "id": "experience",
+        "command": [
+          "pnpm",
+          "run",
+          "test:experience",
+          "player-lifecycle",
+          "multiplayer-lifecycle",
+          "contextual-first-visit",
+          "store-intro",
+          "photo-mode",
+          "rail-navigation",
+          "places-guide",
+          "world-studio",
+          "spatial-circulation",
+          "spatial-streets",
+          "office-desk",
+          "office-computer-shared",
+          "office-visit"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 554103
+      },
+      {
+        "id": "shared",
+        "command": [
+          "pnpm",
+          "run",
+          "test:shared"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 1018012
+      }
+    ],
+    "finishedAt": "2026-10-15T04:52:19.450Z"
+  },
+  "fullExperience": [
+    {
+      "name": "player-lifecycle",
+      "status": "passed",
+      "seconds": 9.679,
+      "checks": 19
+    },
+    {
+      "name": "multiplayer-lifecycle",
+      "status": "passed",
+      "seconds": 3.597,
+      "checks": 14
+    },
+    {
+      "name": "contextual-first-visit",
+      "status": "passed",
+      "seconds": 29.632,
+      "checks": 0
+    },
+    {
+      "name": "store-intro",
+      "status": "passed",
+      "seconds": 38.849,
+      "checks": 12
+    },
+    {
+      "name": "photo-mode",
+      "status": "passed",
+      "seconds": 14.417,
+      "checks": 35
+    },
+    {
+      "name": "rail-navigation",
+      "status": "passed",
+      "seconds": 19.13,
+      "checks": 78
+    },
+    {
+      "name": "places-guide",
+      "status": "passed",
+      "seconds": 14.187,
+      "checks": 0
+    },
+    {
+      "name": "world-studio",
+      "status": "passed",
+      "seconds": 19.937,
+      "checks": 0
+    },
+    {
+      "name": "spatial-circulation",
+      "status": "passed",
+      "seconds": 66.091,
+      "checks": 55
+    },
+    {
+      "name": "spatial-streets",
+      "status": "passed",
+      "seconds": 201.177,
+      "checks": 10
+    },
+    {
+      "name": "office-desk",
+      "status": "passed",
+      "seconds": 25.075,
+      "checks": 22
+    },
+    {
+      "name": "office-computer-shared",
+      "status": "passed",
+      "seconds": 20.053,
+      "checks": 6
+    },
+    {
+      "name": "office-visit",
+      "status": "passed",
+      "seconds": 71.88,
+      "checks": 11
+    }
+  ],
+  "fullShared": [
+    {
+      "name": "multiplayer-dev",
+      "status": "passed",
+      "seconds": 121.478,
+      "checks": 47
+    },
+    {
+      "name": "groups",
+      "status": "passed",
+      "seconds": 55.524,
+      "checks": 3
+    },
+    {
+      "name": "world-events",
+      "status": "passed",
+      "seconds": 9.228,
+      "checks": 3
+    },
+    {
+      "name": "rail-shared",
+      "status": "passed",
+      "seconds": 6.903,
+      "checks": 10
+    },
+    {
+      "name": "shared-seating",
+      "status": "passed",
+      "seconds": 54.227,
+      "checks": 18
+    },
+    {
+      "name": "world-boundary",
+      "status": "passed",
+      "seconds": 19.184,
+      "checks": 6
+    },
+    {
+      "name": "world-map",
+      "status": "passed",
+      "seconds": 56.476,
+      "checks": 16
+    },
+    {
+      "name": "world-publish",
+      "status": "passed",
+      "seconds": 59.792,
+      "checks": 54
+    },
+    {
+      "name": "creator-generated-levels",
+      "status": "passed",
+      "seconds": 25.486,
+      "checks": 9
+    },
+    {
+      "name": "creator-four-levels",
+      "status": "passed",
+      "seconds": 33.272,
+      "checks": 11
+    },
+    {
+      "name": "access-gate",
+      "status": "passed",
+      "seconds": 1.361,
+      "checks": 39
+    },
+    {
+      "name": "connection-required",
+      "status": "passed",
+      "seconds": 5.745,
+      "checks": 8
+    },
+    {
+      "name": "multiplayer",
+      "status": "passed",
+      "seconds": 93.626,
+      "checks": 23
+    },
+    {
+      "name": "indoor-npcs",
+      "status": "passed",
+      "seconds": 16.916,
+      "checks": 8
+    },
+    {
+      "name": "multiplayer-exclusivity",
+      "status": "passed",
+      "seconds": 41.921,
+      "checks": 0
+    },
+    {
+      "name": "vehicle-exit",
+      "status": "passed",
+      "seconds": 9.055,
+      "checks": 10
+    },
+    {
+      "name": "multiplayer-gate",
+      "status": "passed",
+      "seconds": 34.809,
+      "checks": 13
+    },
+    {
+      "name": "resident-names",
+      "status": "passed",
+      "seconds": 238.802,
+      "checks": 24
+    },
+    {
+      "name": "sit-and-water",
+      "status": "passed",
+      "seconds": 30.059,
+      "checks": 22
+    },
+    {
+      "name": "greetings",
+      "status": "passed",
+      "seconds": 43.856,
+      "checks": 11
+    },
+    {
+      "name": "creator-objects",
+      "status": "passed",
+      "seconds": 44.114,
+      "checks": 17
+    }
+  ],
+  "retainedRawEvidence": [
+    {
+      "path": ".runtime/office-reliability/full-passed.log",
+      "sha256": "64612c4f4ee73d54b033d6c68fb7524f564f3e2ae88cd8b342e9579d3253caed"
+    },
+    {
+      "path": ".runtime/office-reliability/full-experience.json",
+      "sha256": "fc7b5012c72e733534261b17386574ca6f1086d575d6c7b7340c5b86c0ef047a"
+    },
+    {
+      "path": ".runtime/office-reliability/full-shared.json",
+      "sha256": "c13cca82ad571938e23a59acf6dfbc2ed7ab8e4cf0a9cf004b293f00ac1a124a"
+    },
+    {
+      "path": ".runtime/office-reliability/full-first.json",
+      "sha256": "d8960355366dae8067cd249ba2938999d27eabd856832eab5abf190e792df65c"
+    },
+    {
+      "path": ".runtime/office-reliability/replacement-retries.log",
+      "sha256": "d55b65e58e461bd6443412e6c788b54d11ea81e01b86b0d04fd9e4aa0d7a6fb2"
+    },
+    {
+      "path": ".runtime/office-reliability/core-v9.log",
+      "sha256": "6e02009fea433b74965f18edb563ec885df10a2e29714796c519aa55017893a6"
+    },
+    {
+      "path": ".runtime/office-reliability/core-v9.json",
+      "sha256": "a4c649cc279fb840ad9345deb0896ffa533d48fb1c6902d09d80a8b1e5df6d40"
+    },
+    {
+      "path": ".runtime/office-reliability/focused-v9.log",
+      "sha256": "e9bfa7cbc802745f2487866b35c8510ba2438f1c1a9e14877c203d1e418a48d2"
+    },
+    {
+      "path": ".runtime/office-reliability/browser-v9.log",
+      "sha256": "0e6b3122227344a5acfd0576f5b622883382dfe15c5741021079358a3d721e63"
+    },
+    {
+      "path": ".runtime/office-reliability/rollout-v9.log",
+      "sha256": "bd1465b4debac0e4be70e31792d664794812dcd4c9922eb9ba98f66ab6377a5c"
+    }
+  ],
+  "earlierFailedFull": {
+    "schemaVersion": 1,
+    "profile": "full",
+    "startedAt": "2026-10-15T04:18:05.885Z",
+    "status": "failed",
+    "revision": "a714a8a5038e10747ed53a117b1dc4703953a6a6",
+    "dirty": true,
+    "scope": "Selected repository checks only; not production, live auth, native Unreal, human accessibility, or target GPU acceptance.",
+    "results": [
+      {
+        "id": "dependency-audit",
+        "command": [
+          "pnpm",
+          "audit",
+          "--audit-level=moderate"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 489
+      },
+      {
+        "id": "agent-tests",
+        "command": [
+          "pnpm",
+          "run",
+          "test:agent"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 20966
+      },
+      {
+        "id": "preview-tests",
+        "command": [
+          "pnpm",
+          "test"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 72012
+      },
+      {
+        "id": "server-redis-tests",
+        "command": [
+          "pnpm",
+          "run",
+          "test:server"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 40521
+      },
+      {
+        "id": "desktop-tests",
+        "command": [
+          "pnpm",
+          "run",
+          "test:desktop"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 5523
+      },
+      {
+        "id": "build",
+        "command": [
+          "pnpm",
+          "run",
+          "build"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 7189
+      },
+      {
+        "id": "python-lint",
+        "command": [
+          "uv",
+          "run",
+          "--locked",
+          "ruff",
+          "check",
+          "."
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 134
+      },
+      {
+        "id": "python-format",
+        "command": [
+          "uv",
+          "run",
+          "--locked",
+          "ruff",
+          "format",
+          "--check",
+          "."
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 133
+      },
+      {
+        "id": "python-tests",
+        "command": [
+          "uv",
+          "run",
+          "--locked",
+          "pytest",
+          "-q"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 5150
+      },
+      {
+        "id": "demo",
+        "command": [
+          "uv",
+          "run",
+          "--locked",
+          "river-oaks",
+          "demo"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 286
+      },
+      {
+        "id": "demo-verify",
+        "command": [
+          "uv",
+          "run",
+          "--locked",
+          "river-oaks",
+          "verify",
+          "--config",
+          "data/generated/demo/config.json",
+          "--raw",
+          "data/generated/demo",
+          "--world",
+          "data/generated/demo/world.json",
+          "--output",
+          "data/generated/demo/report.json"
+        ],
+        "status": "passed",
+        "exitCode": 2,
+        "expectedExit": 2,
+        "signal": null,
+        "durationMs": 300
+      },
+      {
+        "id": "secrets",
+        "command": [
+          "uv",
+          "run",
+          "--locked",
+          "python",
+          "scripts/check_secrets.py",
+          "--all"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 8578
+      },
+      {
+        "id": "secret-history",
+        "command": [
+          "gitleaks",
+          "git",
+          "--log-opts=--all",
+          "--redact",
+          "--no-banner",
+          "--ignore-gitleaks-allow"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 2997
+      },
+      {
+        "id": "security-browser",
+        "command": [
+          "pnpm",
+          "run",
+          "test:security:e2e"
+        ],
+        "status": "failed",
+        "exitCode": 1,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 935
+      },
+      {
+        "id": "reflections",
+        "command": [
+          "pnpm",
+          "run",
+          "test:reflections:webgl"
+        ],
+        "status": "not_run"
+      },
+      {
+        "id": "experience",
+        "command": [
+          "pnpm",
+          "run",
+          "test:experience",
+          "player-lifecycle",
+          "multiplayer-lifecycle",
+          "contextual-first-visit",
+          "store-intro",
+          "photo-mode",
+          "rail-navigation",
+          "places-guide",
+          "world-studio",
+          "spatial-circulation",
+          "spatial-streets",
+          "office-desk",
+          "office-computer-shared",
+          "office-visit"
+        ],
+        "status": "not_run"
+      },
+      {
+        "id": "shared",
+        "command": [
+          "pnpm",
+          "run",
+          "test:shared"
+        ],
+        "status": "not_run"
+      }
+    ],
+    "finishedAt": "2026-10-15T04:20:51.169Z"
+  },
+  "finalIntegration": {
+    "main": "0cb10518706490372223f7f763f774551d86a089",
+    "core": {
+      "schemaVersion": 1,
+      "profile": "core",
+      "startedAt": "2026-10-15T04:53:12.709Z",
+      "status": "passed",
+      "revision": "20d589247c84efc3b0cdc3cf39b8d3620df73f6a",
+      "dirty": true,
+      "scope": "Selected repository checks only; not production, live auth, native Unreal, human accessibility, or target GPU acceptance.",
+      "results": [
+        {
+          "id": "agent-tests",
+          "command": [
+            "pnpm",
+            "run",
+            "test:agent"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "expectedExit": 0,
+          "signal": null,
+          "durationMs": 27409
+        },
+        {
+          "id": "preview-tests",
+          "command": [
+            "pnpm",
+            "test"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "expectedExit": 0,
+          "signal": null,
+          "durationMs": 132832
+        },
+        {
+          "id": "server-tests",
+          "command": [
+            "pnpm",
+            "run",
+            "test:server"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "expectedExit": 0,
+          "signal": null,
+          "durationMs": 8659
+        },
+        {
+          "id": "desktop-tests",
+          "command": [
+            "pnpm",
+            "run",
+            "test:desktop"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "expectedExit": 0,
+          "signal": null,
+          "durationMs": 10888
+        },
+        {
+          "id": "build",
+          "command": [
+            "pnpm",
+            "run",
+            "build"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "expectedExit": 0,
+          "signal": null,
+          "durationMs": 3101
+        },
+        {
+          "id": "python-lint",
+          "command": [
+            "uv",
+            "run",
+            "--locked",
+            "ruff",
+            "check",
+            "."
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "expectedExit": 0,
+          "signal": null,
+          "durationMs": 312
+        },
+        {
+          "id": "python-format",
+          "command": [
+            "uv",
+            "run",
+            "--locked",
+            "ruff",
+            "format",
+            "--check",
+            "."
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "expectedExit": 0,
+          "signal": null,
+          "durationMs": 51
+        },
+        {
+          "id": "python-tests",
+          "command": [
+            "uv",
+            "run",
+            "--locked",
+            "pytest",
+            "-q"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "expectedExit": 0,
+          "signal": null,
+          "durationMs": 5095
+        },
+        {
+          "id": "demo",
+          "command": [
+            "uv",
+            "run",
+            "--locked",
+            "river-oaks",
+            "demo"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "expectedExit": 0,
+          "signal": null,
+          "durationMs": 323
+        },
+        {
+          "id": "demo-verify",
+          "command": [
+            "uv",
+            "run",
+            "--locked",
+            "river-oaks",
+            "verify",
+            "--config",
+            "data/generated/demo/config.json",
+            "--raw",
+            "data/generated/demo",
+            "--world",
+            "data/generated/demo/world.json",
+            "--output",
+            "data/generated/demo/report.json"
+          ],
+          "status": "passed",
+          "exitCode": 2,
+          "expectedExit": 2,
+          "signal": null,
+          "durationMs": 883
+        },
+        {
+          "id": "secrets",
+          "command": [
+            "uv",
+            "run",
+            "--locked",
+            "python",
+            "scripts/check_secrets.py",
+            "--all"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "expectedExit": 0,
+          "signal": null,
+          "durationMs": 15827
+        }
+      ],
+      "finishedAt": "2026-10-15T04:56:38.151Z"
+    },
+    "focusedRedis": {
+      "status": "passed",
+      "tests": 37,
+      "skips": 0,
+      "command": "node --test server/tests/office-authorization.test.js server/tests/office-recovery.test.js server/tests/office-workspaces.test.js server/tests/office-desk-transport.test.js server/tests/offices.test.js server/tests/redis-room.test.js",
+      "environment": "Owned disposable loopback Redis"
+    },
+    "browserReport": "data/reports/office-reliability-v9-browser.json",
+    "rolloutReport": "data/reports/office-reliability-v9-rollout.json",
+    "scope": "Uncommitted integration of 20d5892 with origin/main 0cb10518. Full receipt above remains v8 evidence. One-line audit expectation corrected to v9 after core; actual previous-v3/current-v9 rollout probe passed separately."
+  }
+}
