@@ -73,9 +73,13 @@ try {
   });
   page.on('requestfailed', request => console.error('Request failed:', request.url(), request.failure()?.errorText));
   page.on('response', response => { if (response.status() >= 400 && /\/(assets|data)\//.test(response.url())) failedAssets.push(`${response.status()} ${response.url()}`); });
+  // The first window can still hold the document before the game's. An absent
+  // #loading counts as hidden, and a predicate that throws ends its wait, so wait
+  // for the game's own element and read the rest without assuming it exists.
+  await page.locator('#canvas-host').waitFor({ state: 'attached' });
   await page.locator('#loading').waitFor({ state: 'hidden' });
-  await page.waitForFunction(() => document.querySelector('#canvas-host').dataset.playerReady === 'true');
-  await page.waitForFunction(() => JSON.parse(document.querySelector('#viewport').dataset.assetProgress || '{}').done === true);
+  await page.waitForFunction(() => document.querySelector('#canvas-host')?.dataset.playerReady === 'true');
+  await page.waitForFunction(() => JSON.parse(document.querySelector('#viewport')?.dataset.assetProgress || '{}').done === true);
   report.readyMs = Math.round(performance.now() - started);
   report.assets = await page.locator('#viewport').evaluate(el => JSON.parse(el.dataset.assetProgress));
   assert.equal(report.assets.failed, 0);
