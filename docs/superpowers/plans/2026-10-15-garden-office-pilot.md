@@ -365,3 +365,12 @@ Handoff: source patch reviewed and local verification complete with the scheduli
 qualification above. Prepare signed draft PR; await Val's visual/profile decision.
 Keep this worktree and local captures/logs until delivery and evidence archival.
 No authorization to merge or retire is inferred from successful checks.
+
+
+Draft handoff: https://github.com/BunsDev/river-oaks/pull/459, implementation
+`0b0bf2017e479323aa2f1b324f0e90b921b28f43`, SSH signature verified and provenance
+check clear. Branch `test/garden-office-416-audit-20261015`; worktree
+`/Users/buns/Documents/GitHub/BunsDev/river-oaks-garden-office-audit`.
+The primary live task record is blocked on Val's visual/profile decision and
+hosted review/checks. #417 can consume the source/asset contract and receipts now;
+no merge, issue closure, delivery status or worktree retirement is claimed.

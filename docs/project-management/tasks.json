@@ -10394,13 +10394,13 @@
     {
       "id": "garden-office-416",
       "title": "#416 Garden Office realism pilot (coding scope): one desk/chair family, glazing, finishes, light/planting sample, catalog records and compatibility on the #414 interface",
-      "status": "active",
+      "status": "blocked",
       "branches": [
         "test/garden-office-416-audit-20261015"
       ],
       "owner": "codex-root-garden-office-audit-20261015",
-      "updatedAt": "2026-10-15T20:45:48.892824+00:00",
-      "nextAction": "Create signed draft PR: focused 105/105, browser 3/3, Electron 11/11, ten-cycle capture and final serial-server/core recovery 9/9 passed. Standard core had 19 server failures; retain both receipts. Await Val visual/destination decision; no merge authorized.",
+      "updatedAt": "2026-10-15T20:47:00.156489+00:00",
+      "nextAction": "Draft PR #459 contains signed verified implementation 0b0bf2017e479323aa2f1b324f0e90b921b28f43. Await Val visual/profile decision at .runtime/garden-office-audit/review.html and hosted checks/review; then hand off to #417. No merge authorized; preserve worktree and local evidence.",
       "ledger": "docs/superpowers/plans/2026-10-15-garden-office-pilot.md",
       "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-garden-office-audit",
       "issue": 416,
@@ -10449,7 +10449,8 @@
         }
       },
       "leaseUntil": "2026-10-15T22:41:42.300950+00:00",
-      "previousPr": 439
+      "previousPr": 439,
+      "pr": 459
     },
     {
       "id": "ipic-route-evidence-364",
