@@ -69,7 +69,7 @@ directly. The `shared` (30 minutes) and `experience` (20 minutes) tasks have lon
 For a changed browser interaction, also run its named journey, for example:
 `pnpm run test:experience hud-and-quality`. Local browser runs from different
 sessions take turns; see [Local browser runs take turns](project-management/workflow.md#local-browser-runs-take-turns). Desktop changes may require
-`pnpm run test:desktop:e2e`. The hosted `Desktop` workflow packages and checks the app on Windows, Linux and macOS and uploads unsigned builds ([desktop](desktop.md#ci-builds-on-windows-linux-and-macos)). Native changes require the build and automation
+`pnpm run test:desktop:e2e`. The hosted `Desktop` workflow packages and checks the app on Windows, Linux and macOS, uploads unsigned builds, and builds and install-tests the Windows and Linux installers ([desktop](desktop.md#ci-builds-on-windows-linux-and-macos), [installers](desktop.md#installers-for-windows-and-linux)). Native changes require the build and automation
 commands in [Unreal setup](unreal.md); source-only hosts can run
 `RiverOaks.Contracts` after a native build. These are not silently included in
 `full`, which covers the listed local runtime checks. The hosted Python-version matrix,

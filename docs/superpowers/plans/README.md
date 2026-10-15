@@ -4,7 +4,7 @@
 
 Each plan is a task ledger. Status comes from the task register, where the primary checkout's live copy can be newer than the committed one. Plans from before the register are listed as historical: their own text is the record of what was delivered.
 
-## Active and blocked (13)
+## Active and blocked (15)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
@@ -12,6 +12,8 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-15-procedural-gpu-matrix-harness](2026-10-15-procedural-gpu-matrix-harness.md)<br>Procedural GPU matrix harness | `procedural-gpu-matrix-harness` | active | #389 | 2026-10-15 |
 | [2026-10-15-office-ipic-contract-decisions](2026-10-15-office-ipic-contract-decisions.md)<br>Office + IPIC #360: record Val's decisions in the layout contract (2026-10-15) | `office-ipic-contract-decisions` | active | #388 | 2026-10-15 |
 | [2026-10-15-office-computer-db-mvp](2026-10-15-office-computer-db-mvp.md)<br>Office computer database MVP | `office-computer-db-mvp` | active | — | 2026-10-15 |
+| [2026-10-15-ipic-screening-authority](2026-10-15-ipic-screening-authority.md)<br>IPIC #366: authoritative screening timeline and host controls (2026-10-15) | `ipic-screening-authority-366` | active | — | 2026-10-15 |
+| [2026-10-15-desktop-installers](2026-10-15-desktop-installers.md)<br>Desktop installers and signing (#372), 2026-10-15 | `desktop-installers` | active | — | 2026-10-15 |
 | [2026-10-14-shared-dominoes](2026-10-14-shared-dominoes.md)<br>Shared Dominoes Implementation Plan (PR 1: the town holds the round) | `shared-dominoes-sheet` | active | — | 2026-10-14 |
 | [2026-10-14-procedural-gpu-acceptance](2026-10-14-procedural-gpu-acceptance.md)<br>Procedural interiors: physical GPU acceptance plan | `procedural-gpu-acceptance` | queued | — | 2026-10-15 |
 | [2026-10-14-office-ipic-engineering-baseline](2026-10-14-office-ipic-engineering-baseline.md)<br>Office + IPIC #360, engineering half: baseline and executable layout contract | `office-ipic-engineering-baseline` | active | #381 | 2026-10-15 |
@@ -147,11 +149,10 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-11-delivered-source-retirement](2026-10-11-delivered-source-retirement.md)<br>Delivered source reconciliation | `reconcile-delivered-sources` | retired | — | 2026-10-11 |
 | [2026-10-11-ci-parallel-preview](2026-10-11-ci-parallel-preview.md)<br>Parallel preview check | `ci-parallel-preview` | retired | #252 | 2026-10-11 |
 
-## Historical, not in the register (71)
+## Historical, not in the register (70)
 
 | Plan | PRs mentioned |
 | --- | --- |
-| [2026-10-15-ipic-screening-authority](2026-10-15-ipic-screening-authority.md)<br>IPIC #366: authoritative screening timeline and host controls (2026-10-15) | #366, #359, #367 |
 | [2026-10-13-stage-voice-carry](2026-10-13-stage-voice-carry.md)<br>A stage performer is heard across the plaza — 2026-10-13 | #311 |
 | [2026-10-13-procedural-multilevel-interiors](2026-10-13-procedural-multilevel-interiors.md)<br>Building-anchored procedural interiors and levels | — |
 | [2026-10-13-plaza-table-lessons](2026-10-13-plaza-table-lessons.md)<br>Guided first games at the plaza tables — 2026-10-13 | — |
