@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createWalkingEnvironment, createWalkingState, stepWalking } from '../src/walking.js';
+import { isVenueRoom } from '../src/venue-rooms.js';
 
 const world = JSON.parse(readFileSync(new URL('../public/data/district.json', import.meta.url)));
 const environment = createWalkingEnvironment(world);
@@ -21,8 +22,10 @@ function walk(room, from, to, fps, fast = false) {
 }
 
 test('every mapped destination has a physical doorway test', () => {
-  assert.equal(environment.rooms.length, world.stores.length);
-  assert.equal(environment.rooms.length, 30);
+  // Every mapped store has its room, plus the one code-only venue (venue-rooms.js).
+  assert.equal(environment.rooms.filter(room => !isVenueRoom(room)).length, world.stores.length);
+  assert.equal(environment.rooms.filter(room => !isVenueRoom(room)).length, 30);
+  assert.equal(environment.rooms.filter(isVenueRoom).length, 1);
 });
 
 for (const room of environment.rooms) {

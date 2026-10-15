@@ -11,6 +11,7 @@ import { hedgeClusters } from './street-furniture.js';
 import { storefrontBenchSpots } from './street-fixtures.js';
 export { storefrontBenchSpots };
 import { storeRoomsFor, interiorLevelRoomsFor, uncoveredBay, coveringRoom } from './store-rooms.js';
+import { venueDoorSites } from './venue-rooms.js';
 import { buildStoreInteriors } from './store-interiors.js';
 import { createReferenceFacades, visibleRoofHeight } from './reference-facades.js';
 import { finishKey } from './material-finish.js';
@@ -100,6 +101,8 @@ export function buildDistrictBuildings(world) {
   interiors.materials.forEach(material => materials.add(material));
   // Walk-in rooms replace the shallow alcoves wherever a boutique plan covers a bay.
   const rooms = storeRoomsFor(world), roomById = new Map(rooms.map(room => [room.storeId, room])), doors = [];
+  // Code-only venues (venue-rooms.js) open onto the street like a tenant: glazing, door and sign.
+  const doorSites = [...world.stores, ...venueDoorSites(world)];
   const displays=[],officeLobby=officeLobbyFor(world);
   const batches = new Map();
   const part = (material, position, scale, yaw = 0, buildingIndex = -1, pitch = 0, geometry = box) => {
@@ -174,7 +177,7 @@ export function buildDistrictBuildings(world) {
       run(upper, stone, -0.05, roofHeight - 0.5, [0.12, 0.26], 0.1);
       for (const level of levels) run(upper, stone, -0.02, level - 1.25, [0.14, 0.2]);
       const bays = Math.floor(length / 3.2), span = length / Math.max(1, bays);
-      const entries=world.stores.filter(store=>store.building_id===building.id).map(store=>{
+      const entries=doorSites.filter(store=>store.building_id===building.id).map(store=>{
         const sx=store.facade[0]-a[0],sy=store.facade[1]-a[1];
         return {storeId:store.id,along:(sx*dx+sy*dy)/length,distance:Math.abs(sx*dy-sy*dx)/length,name:store.name};
       }).filter(entry=>entry.distance<0.2 && entry.along>=0 && entry.along<=length);
@@ -286,7 +289,7 @@ export function buildDistrictBuildings(world) {
       }
     }
   });
-  for (const store of world.stores) {
+  for (const store of doorSites) {
     const [x, north, base] = store.facade, [nx, ny] = store.outward;
     const yaw = Math.atan2(nx, -ny);
     const isDior = store.name === 'Dior', isCartier = store.name === 'Cartier', isVanCleef = store.name === 'Van Cleef & Arpels';
@@ -327,7 +330,7 @@ export function buildDistrictBuildings(world) {
     part(velvet, [x+nx*1.25, base+0.165, -north-ny*1.25], [1.3, 0.012, 0.75], yaw);
     // Clipped boxwood in limestone planters flank each boutique entrance. They
     // are also watering sites (world-interactions.js), so rebuilt frontages keep them.
-    if (!dining && !isColonial && !(isHarry && rebuilt)) for (const side of [-1, 1]) {
+    if (!dining && !isColonial && !store.venue && !(isHarry && rebuilt)) for (const side of [-1, 1]) {
       const across = side * 1.6;
       part(planter, [x-ny*across+nx*1.05, base+0.44, -north-nx*across-ny*1.05], [0.62, 0.56, 0.62], yaw);
       for (const [dx, dy, dz, scale, spin] of hedgeClusters(0.56, 0.56, 0.5, 11 + side)) part(hedge, [x-ny*(across+dx)+nx*(1.05+dz), base+0.98+dy, -north-nx*(across+dx)-ny*(1.05+dz)], scale, yaw + spin, -1, 0, lobe);
