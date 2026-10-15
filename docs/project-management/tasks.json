@@ -9689,8 +9689,8 @@
       ],
       "owner": "codex:01a13dbe-349d-79c1-aa5c-f66ecac56a50",
       "leaseUntil": "2026-10-15T06:18:31.877752+00:00",
-      "updatedAt": "2026-10-15T04:18:31.877752+00:00",
-      "nextAction": "Core and focused Redis/browser gates passed; full gate running. Sign verified feature commit, push PR, require full and exact-head hosted checks before pnpm run land.",
+      "updatedAt": "2026-10-15T04:21:48.754687+00:00",
+      "nextAction": "PR #394: integrate current main, rerun core/full after restoring missing Playwright headless-shell prerequisite, then land after exact-head hosted checks.",
       "ledger": "docs/superpowers/plans/2026-10-15-office-computer-reliability.md",
       "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-computer-reliability",
       "filesOwned": [
@@ -9712,6 +9712,45 @@
         "pnpm run verify",
         "pnpm run verify full",
         "Review and hosted preview gate; pnpm run land"
+      ],
+      "pr": 394
+    },
+    {
+      "id": "studio-prompt-stdin",
+      "title": "Studio hosts: pass prompts on stdin so Windows command-line limits (32,767 characters) cannot break agent and designer requests (#370 finding)",
+      "status": "active",
+      "branches": [
+        "fix/studio-prompt-stdin-20261015"
+      ],
+      "owner": "claude:river-oaks-27 (16ffadb4)",
+      "leaseUntil": "2026-10-15T04:55:23.202Z",
+      "updatedAt": "2026-10-15T02:55:23.202Z",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-studio-prompt-stdin-20261015",
+      "issues": [
+        370
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-15-studio-prompt-stdin.md",
+      "nextAction": "Fix done and verified locally (desktop 69, agent/designer e2e, core, live claude+codex stdin). Next: push, open PR, read the Desktop run on windows-latest. Merge needs Val.",
+      "filesOwned": [
+        "desktop/studio-command.js",
+        "desktop/studio-codex.js",
+        "desktop/studio-agent-host.js",
+        "desktop/studio-designer-host.js",
+        "desktop/agent-e2e.js",
+        "desktop/tests/studio-command.test.js",
+        "desktop/tests/studio-codex.test.js",
+        "desktop/tests/studio-agent-host.test.js",
+        "desktop/tests/studio-designer-host.test.js",
+        "desktop/tests/fixtures/studio-agent-cli.mjs",
+        "docs/world-studio-agent.md",
+        "docs/superpowers/plans/2026-10-15-studio-prompt-stdin.md"
+      ],
+      "requiredChecks": [
+        "pnpm run test:desktop",
+        "pnpm run verify",
+        "node desktop/agent-e2e.js",
+        "node desktop/designer-e2e.js",
+        "Desktop workflow green on windows-latest, ubuntu-latest, macos-latest"
       ]
     }
   ]

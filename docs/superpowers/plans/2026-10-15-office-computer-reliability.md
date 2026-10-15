@@ -47,3 +47,10 @@ Focused owned-Redis run: 10/10 tests passed, zero skips, including real gateway 
 `RIVER_OAKS_E2E_REPORT=office-reliability-browser.json pnpm run test:experience office-desk office-computer-shared office-visit` passed: 22/6/11 checks; receipt `data/reports/office-reliability-browser.json`. Final owned Redis metadata/recovery rerun: 3/3 zero skips. Browser automation does not prove human accessibility or live hosted authentication.
 
 Project check still reports unrelated ownership/retirement/PR-head gaps; own task is actively claimed. No unrelated state was changed or retired.
+
+## Delivery and full-gate recovery
+Signed commit 43ae449 pushed in PR #394. Initial full gate passed dependency audit, tooling, client, 697 Redis server tests (zero skips), 66 desktop tests, build, Python 141 tests/lint/format/demo, and secret/history scans. It failed before security-browser execution because Playwright chromium_headless_shell-1248 was absent; reflections, experience and shared were not run. Failed receipt retained at `.runtime/office-reliability/full-first.json`; this is not a full pass. Installed the missing prerequisite with `pnpm exec playwright install chromium`.
+
+Integrated origin/main cede4d1c (#391 Studio stdin, no office path changes) without application conflicts. Reverify the integrated tree before the signed merge commit; complete full gate and hosted checks before `pnpm run land 394`.
+
+Integrated `pnpm run verify` passed again (`/tmp/office-reliability-integrated-core.log`, `.runtime/agent/core.json`). The office implementation is unchanged; the incoming Studio changes are included in that core pass. Full rerun is live with the repaired browser prerequisite.

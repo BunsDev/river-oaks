@@ -64,6 +64,10 @@ page only picks IDs from that table.
   cannot turn one on (`desktop/studio-codex.js`). That also drops your Codex
   MCP servers, rules and configured model; Codex uses its default model. Codex
   returns each reply whole.
+- Both CLIs read the prompt (message, history and scene snapshot) on stdin;
+  the command line holds only fixed flags. Windows caps a command line at
+  32,767 characters and Linux caps one argument at 128 KiB, and a large scene
+  passes both. The World Designer sends its Codex prompt the same way.
 - The first message to each provider asks for native consent, because your
   messages and the scene snapshot go to that provider and usage may be billed.
   It asks again after the app restarts.

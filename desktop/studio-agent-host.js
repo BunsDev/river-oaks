@@ -21,16 +21,20 @@ function capBytes(text, budget) {
 const RATE = { sends: 20, windowMs: 10 * 60 * 1000 };
 
 // Executables, argv and models are fixed here. The renderer picks only IDs from this table.
+// The prompt is never an argument: `input` builds what the CLI reads on stdin.
 export const STUDIO_AGENT_PROVIDERS = {
   claude: { name: 'Claude', command: 'claude', env: 'RIVER_OAKS_AGENT_CLAUDE',
     models: [{ id: 'claude-opus-5-5', label: 'Opus 5.5' }, { id: 'claude-sonnet-5-5', label: 'Sonnet 5.5' }, { id: 'claude-haiku-5-5', label: 'Haiku 5.5' }],
     // No tools, slash commands, MCP servers, settings sources (so no CLAUDE.md) or saved sessions.
-    args: ({ model, prompt }) => ['-p', '--output-format', 'stream-json', '--verbose', '--include-partial-messages', '--model', model,
-      '--no-session-persistence', '--strict-mcp-config', '--setting-sources', '', '--disable-slash-commands', '--system-prompt', STUDIO_AGENT_GUIDE, '--tools', '', '--', prompt] },
+    // With no prompt argument, -p reads the prompt from stdin.
+    args: ({ model }) => ['-p', '--output-format', 'stream-json', '--verbose', '--include-partial-messages', '--model', model,
+      '--no-session-persistence', '--strict-mcp-config', '--setting-sources', '', '--disable-slash-commands', '--system-prompt', STUDIO_AGENT_GUIDE, '--tools', ''],
+    input: prompt => prompt },
   codex: { name: 'Codex', command: 'codex', env: 'RIVER_OAKS_AGENT_CODEX',
     models: [{ id: 'default', label: 'Codex' }],
     // Tool-less: see studio-codex.js for why the read-only sandbox alone is not enough.
-    args: ({ model, prompt, workspace }) => codexArgs({ model, workspace, prompt: `${STUDIO_AGENT_GUIDE}\n\n${prompt}` }) },
+    args: ({ model, workspace }) => codexArgs({ model, workspace }),
+    input: prompt => `${STUDIO_AGENT_GUIDE}\n\n${prompt}` },
 };
 
 // GUI launches often miss the shell PATH, so common user install locations are searched too.
@@ -159,8 +163,8 @@ export function createStudioAgentHost({ root, env = process.env, platform = proc
           if (part.text) onDelta(part.text);
         });
         try {
-          await execute(executable, provider.args({ model: input.modelId, prompt, workspace }), { cwd: workspace, env: { ...env, PATH: `${env.PATH || ''}${pathDelimiter(platform)}${extraExecutablePath(platform)}` },
-            signal: control.signal, timeout, maxBytes: 8 * 1024 * 1024, onStdout: chunk => reader.push(chunk) });
+          await execute(executable, provider.args({ model: input.modelId, workspace }), { cwd: workspace, env: { ...env, PATH: `${env.PATH || ''}${pathDelimiter(platform)}${extraExecutablePath(platform)}` },
+            signal: control.signal, timeout, maxBytes: 8 * 1024 * 1024, onStdout: chunk => reader.push(chunk), input: provider.input(prompt) });
         } catch (error) {
           if (control.signal.aborted) throw new HostError('Agent reply stopped.');
           if (/timed out/.test(error.message)) throw new HostError(`${provider.name} did not answer in time.`);
