@@ -47,7 +47,9 @@ real counters, late-play detection and per-cycle convergence; then review the pa
 | Check | Result |
 | --- | --- |
 | `node --test scripts/tests/agent.test.js` | 10/10 |
-| `node preview/e2e/ipic-screening-soak-runner.mjs` | pending |
+| Soak runs 1–7 | each failed in setup or harness timing, never on a resource or sync assertion. Causes: another interior's 20 s district deadline (1); my static-media count (2); the host's district fetch (3); an outside disk sweep deleting every `node_modules`, then the shared Playwright cache dropping Chromium 1248 (4–5); a 30 s fixture ending during a slow trip in (6); reading `attached` before a slow frame (7). Each fixed in the harness. |
+| **Soak run 8** (load average 190–295, SwiftShader, `80a98eb2`'s parent; per-cycle log kept in the session scratchpad) | **all 11 cycles passed** (warm-up + 10): every cycle a late join (in at 3.4–22.5 s), within 500 ms after 2–8 ms; after every exit 0 screening videos, 0 playing, 0 tracked or loaded media (collected), 0 AudioContexts, 0 pending timeouts, intervals 5 flat, listeners 794 flat, textures 47 and geometries 258 flat, DOM nodes 5502 flat from cycle 1, exactly one `play()` per entry. Growth gates passed; the caption line showed the active cue. It then failed one check: **Captions off** left the line up until the next slow frame. |
+| Caption toggle fix (`80a98eb2`) | toggling refreshes the line at once; soak run 9 pending |
 
 ## Next
 
