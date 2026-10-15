@@ -1,4 +1,5 @@
 import { officesFor, OFFICE_SPEED, officeFree } from '../preview/src/office-contract.js';
+import { AVATAR_ENVELOPE } from '../preview/src/workplace-room.js';
 import {
   DEFAULT_OFFICE_LAYOUT, OFFICE_BODY_SPACING, OFFICE_LAYOUT_LEGACY, OFFICE_SEAT_REACH, officeLayout, officeLevelElevation, officeLevelFree,
   officeLevelSegmentFree, officeSeat, officeTransition,
@@ -140,9 +141,16 @@ export function createOffices({worldData,players,isAdmin,environment,changed,can
       return Boolean(seat)&&seat.levelId===v.levelId&&Array.isArray(v.position)&&v.position.length===2&&v.position.every((n,i)=>n===seat.position[i])
         &&v.yaw===seat.facing&&officeLevelFree(layout,v.levelId,seat.stand);
     };
-    // A standing visit must name a real floor of its layout. Whether the plan still has room for it
-    // is decided below: a plan change (such as R19's desks) ends that visit, not the whole town.
-    const onFloor=v=>officeLayout(v.layout).levels.some(level=>level.id===v.levelId)&&Array.isArray(v.position)&&v.position.length===2&&v.position.every(Number.isFinite);
+    // A standing visit must stand inside a real floor of its layout, or the checkpoint fails closed.
+    // Furniture is different: a plan change (such as R19's desks) can cover a spot someone stood on,
+    // and that ends the visit below, not the whole town. The legacy room has no furniture to change.
+    const onFloor=v=>{
+      const layout=officeLayout(v.layout),level=layout.levels.find(item=>item.id===v.levelId),p=v.position;
+      if(!level||!Array.isArray(p)||p.length!==2||!p.every(Number.isFinite))return false;
+      if(layout.id===OFFICE_LAYOUT_LEGACY)return officeLevelFree(layout,v.levelId,p);
+      const r=AVATAR_ENVELOPE.turningRadius,{x0,x1,d0,d1}=level.bounds;
+      return p[0]>=x0+r&&p[0]<=x1-r&&p[1]>=d0+r&&p[1]<=d1-r;
+    };
     const fits=v=>v.seat!==undefined||officeLevelFree(officeLayout(v.layout),v.levelId,v.position);
     const placed=v=>version>=10
       ?fields(v,['id','layout','levelId','position','yaw','at','budget',...(version>=11?['seat']:[])])&&Boolean(officeLayout(v.layout))
