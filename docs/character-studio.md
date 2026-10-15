@@ -276,7 +276,38 @@ authorization, malformed/oversized input, write quotas and gateway replacement.
 Drafts remain absent from peer snapshots and do not change the current appearance.
 
 Account-deletion hooks, legacy preference migration, two-second world publication
-cooldown, peer replication and UI save/conflict behavior remain pending. Existing
-account/checkpoint formats are unchanged. Store publication and rollback are
+cooldown, peer replication and UI save/conflict behavior remain pending. Account preferences can now retain a validated selected definition, and checkpoint
+v12 preserves selected revisions. Store publication and rollback are
 internal operations only; no HTTP publication endpoint is enabled yet. These tests
 do not establish the create/save/join/peer/reconnect/edit/republish acceptance path.
+
+
+## Authoritative selection contract (#443, transport integration pending)
+
+The world accepts a `character` intent containing only an immutable revision
+number. A trusted server caller supplies the matching canonical definition in
+command context; client fields cannot supply it. Ownership, revision, catalog and
+appearance permissions are revalidated. Custom and legacy appearance changes share
+the same two-second cooldown, flight/ground and office rules. Selecting the same
+immutable definition is a no-op; returning to the same authored base clears custom
+state and still observes the cooldown. Beast movement and Jevica rights remain
+server-owned.
+
+Selected canonical definitions are defensive copies in peer snapshots and trusted
+account preferences. They survive departure, room replacement and geography
+migration. Account preference updates retain the selected definition when movement
+changes; legacy selection clears it. Redis preserves canonical empty arrays during
+preference saves. No private draft is copied into this selected state.
+
+Checkpoint v12 requires the selected-definition map, validates owner/revision and
+appearance consistency before restoration, and continues loading v1–v11 authored
+looks. The v12 writer generation preempts older coordinators; old writers must not
+write over or downgrade the new checkpoint. A feature rollback must retain the
+v12 reader/writer; deploying a v11 writer over v12 state fails closed. Invalid selected checkpoint records
+fail restoration without mutating the live room.
+
+This is an internal world/account contract. HTTP publication, trusted WebSocket
+revision resolution, durable account/room selection reconciliation and client
+rendering/UI remain required. Corrupt/stale revision fallback and asset-unavailable
+journeys must be proven across the integrated path before #443 acceptance. The
+currently exposed HTTP routes still read/save private drafts only.

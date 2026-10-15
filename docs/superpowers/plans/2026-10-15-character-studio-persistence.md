@@ -178,3 +178,102 @@ reports were restored to HEAD only after copying this run's evidence. Focused18/
 checks and independent review remain recorded above. Source did not change during
 the gate. Ready for signed commit/push to #464, then world publication/equipping,
 UI and peer revision integration. Keep the checkout and goal active.
+
+
+Continuation after HTTP delivery675ca26fc2619e61d4ce85c68d47d68f57b3f42f: previous turn
+classified PROGRESS (code pushed to #464, full gate passed, issue443 updated at
+https://github.com/BunsDev/river-oaks/issues/443#issuecomment-6203907829).
+Live checkout clean before claim;13 worktrees preserved; hosted new-head browser
+checks still running. The full objective remains unachieved.
+
+Claim world selection dependency: world.js, character-world.test.js, redis-room.js,
+redis-room.test.js, avatar-preferences.js and its tests. No competing active owner
+claims these exact files. Implement server-resolved immutable definition selection
+under existing appearance/cooldown/permission authority, public canonical revision
+state and strict checkpoint v12 recovery. Retain legacy checkpoint fallback and
+writer-generation fencing. Client transport must never supply the trusted definition.
+Account persistence/reconciliation, publication endpoints and client UI/peer rendering
+remain separate required integration; this world contract does not claim them.
+
+
+World selection implemented: trusted context resolves the canonical published
+revision; client intent contains only its revision. Owner/catalog/permission checks,
+legacy/custom shared cooldown, same-definition retry, same-base legacy clearing,
+flight/beast constraints and defensive peer/account copies are covered. Checkpoint
+v12 preserves selected definitions, old authored checkpoint fallback and geography
+migration; v12 writer fencing prevents obsolete coordinators mutating it. Current
+version assertions in existing checkpoint/office/seat/creator tests were updated;
+historical v10/v11 fixtures and their semantics remain retained.
+
+Red: seven new world tests failed before implementation; preference tests exposed
+lost selected definitions before account support. Redis then caught cjson converting
+empty arrays into objects; canonical JSON is now preserved during Lua saves.
+Focused run:36/36 checks passed, zero skips,34.054s against isolated Redis, including
+room replacement, clearing without resurrection and client-forged definition refusal.
+Reviewer found no blocker; its independent memory run passed12 with2 Redis skips.
+The separate real Redis run supplies that evidence.
+
+Actual prior-v11/current-v12 audit: extracted only tracked source and required
+interior fixtures from675ca26f into an ignored local fixture, no credentials/runtime
+state. Initial harness attempts needed path/fixture corrections; the final lease
+retake also needed to respect the coordinator's200ms tick throttle. Those were
+harness failures, not evidence of successful upgrade. The corrected audit proves
+actual v11 checkpoint upgrade, v12 lease preemption, canonical selection retained,
+old tick/close fencing, v11 rejection of v12 recovery without partial writes and
+v12 retake/recovery. Receipt .runtime/character-studio/world-upgrade.json records
+seven checks and old/current source hashes. No production rollback claimed.
+
+Full verification is next. No HTTP publication/selection resolution or client UI is
+enabled by this increment; full #443 remains incomplete, including durable account/
+room recovery and graceful stale-revision/asset fallback. Keep #442 visual gaps and
+#444 full acceptance active. No merge/deploy/paid services.
+
+
+Full issue scope re-read live during verification (#440,#441,#442,#444 remain
+open; #443 already read this continuation). Completion is still unproven:
+- #440: contract/design/human-beast fixtures have draft PR evidence; research is
+  inaccessible, and performance targets are not accepted measurements.
+- #441: reversible editor and compatible Sable colors exist, but exposed looks
+  still inherit the failed seated dress fit; integrated save/publish and human
+  usability/keyboard/VoiceOver acceptance remain pending.
+- #442: seated human/fox garment clipping remains a verified failure. Pinned
+  goldens, broader supported wardrobe/wing/hair/armor poses, crowd/device budgets
+  and preview/portrait/multiplayer identity parity still require evidence.
+- #443: private HTTP drafts and this internal selected-state contract are progress,
+  not the full create/save/join/peer/reconnect/edit/republish journey. Transport
+  resolution, durable cross-room/account selection, UI, fallback and deletion
+  integration remain required.
+- #444: full automated regression gates do not establish the requested novice
+  usability trials, approved device/performance gates, Studio rollout flag,
+  support/rollback/privacy-safe telemetry or release decision. Optional AI remains
+  separate with no paid calls; no new speculative generation dependency is added.
+Keep these requirements intact after the current commit; do not close the goal
+or issues merely because the configured full regression profile passes.
+
+Read-only next integration review during the full gate: current legacy appearance
+writes happen after world mutation but before the Redis lease-fenced room commit.
+A failed save can leave the world mutated despite an error; lease loss can leave
+an account write without its room commit. Whole-preference saves also lack CAS,
+so a stale movement command can overwrite another world's selected definition.
+Room request UUIDs are server-generated per attempt, not durable client operation
+identities. These are concrete prerequisites before enabling custom equip.
+
+Next design to implement and verify: publication remains separate from selection;
+move selected account state into the character account hash slot with conditional
+legacy migration, expected preference version, bounded durable operation receipts
+and tombstone/revision checks. Commit a pending equip intent under the room lease
+after validating connection, permissions, flight and cooldown; deliver account CAS
+idempotently, then commit the confirmed room projection and acknowledgement.
+Replacement coordinators resume pending intents. Joins/heartbeats use confirmed
+selection, never newest publication. Legacy appearance/movement must use the same
+CAS path so they cannot erase a concurrent selection. Cover lease loss on both
+sides of account CAS, process replacement between commits, failed writes, duplicate
+requests, concurrent-world movement/equip and deletion during selection. This is
+a reviewed next-step design, not implemented behavior or verified acceptance.
+
+
+Selected-state full gate PASSED: `node scripts/browser-lock.mjs 'character selected revision full verification' -- python3 .runtime/character-studio/run-world-full.py` starts isolated loopback Redis, runs `pnpm run verify full`, and cleans up its own service.
+
+Verification: `pnpm run verify full` passed all 18 tasks against isolated loopback Redis (2026-10-15 23:03:18–23:36:45 UTC). Tooling 117; preview 3319 passed, 1 skip, 1 todo; server 822 passed with zero Redis skips; desktop 69; Python 141 (66 warnings); dependency/build/lint/format/demo/secrets gates; security browser and reflections; 13 experience journeys, 21 shared journeys, 12 screening checks. Browser rendering used ANGLE Metal on Apple M3 Max. Focused selected-state tests passed 36/36 with zero skips; actual prior/current writer audit passed 7 checks; independent review found no blocker in this increment. Existing preview gaps remain: obstructed Vince glazing approach (skip), 1.005 m lounge passage against 1.01 m (todo). No physical-device, human accessibility, live WorkOS, production, native Unreal or full Studio visual acceptance is claimed.
+
+Receipts: `.runtime/character-studio/world-full.json`, `world-full.log`, `world-experience.json`, `world-shared-experience.json`, `world-source-hashes.json`, `world-focused.log`, `world-upgrade.json`. All changed server source/test hashes stayed unchanged during the full gate; world/coordinator hashes match the upgrade audit. Generated tracked reports were restored only after retaining this run. Ready for signed commit/push to draft #464. No issue or goal completion claim.

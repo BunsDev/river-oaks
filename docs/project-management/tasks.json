@@ -11223,9 +11223,9 @@
         "feat/character-studio-persistence-20261015"
       ],
       "owner": "codex-character-studio-20261015",
-      "updatedAt": "2026-10-15T22:49:19.055373+00:00",
-      "leaseUntil": "2026-10-16T00:49:19.055373+00:00",
-      "nextAction": "HTTP draft increment fully verified (811 server tests with Redis;13 experience and21 shared journeys;18 focused tests), review clear. Sign/push to draft #464 and update #443. Then implement authoritative equip/publication, stable peer revision rendering, UI conflicts and deletion integration. Full goal remains active.",
+      "updatedAt": "2026-10-15T23:38:03.612479+00:00",
+      "leaseUntil": "2026-10-16T01:38:03.612479+00:00",
+      "nextAction": "Selected-state v12 increment verified: full 18-task gate passed, 822 server tests zero Redis skips, 13 experience/21 shared journeys, 36 focused tests and actual v11/v12 audit. Sign/push to draft #464 and update #443. Next implement reviewed durable account CAS/pending-room-intent selection before enabling publication/equip transport; UI/peer/fallback/deletion acceptance remains open.",
       "filesOwned": [
         "server/character-store.js",
         "server/tests/character-store.test.js",
@@ -11237,7 +11237,23 @@
         "server/distributed-app.js",
         "server/world-gateway.js",
         "server/town.js",
-        "server/redis-security.js"
+        "server/redis-security.js",
+        "server/world.js",
+        "server/redis-room.js",
+        "server/avatar-preferences.js",
+        "server/tests/character-world.test.js",
+        "server/tests/redis-room.test.js",
+        "server/tests/avatar-preferences.test.js",
+        "server/creator-rollout-audit.js",
+        "server/tests/seating.test.js",
+        "server/tests/creator-objects.test.js",
+        "server/tests/penthouse-office.test.js",
+        "server/tests/offices.test.js",
+        "server/tests/office-ipic-rollback.test.js",
+        "server/tests/interactions.test.js",
+        "server/tests/penthouse-seats-redis.test.js",
+        "server/tests/penthouse-seats.test.js",
+        "server/recovery-diagnostics.js"
       ],
       "requiredChecks": [
         "Memory and real isolated Redis store contract tests",
