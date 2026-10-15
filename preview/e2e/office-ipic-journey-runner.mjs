@@ -6,6 +6,7 @@ import { chromium } from 'playwright';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { startBrowserFixture } from './fixture-server.js';
 import { holdBrowserLock } from '../../scripts/browser-lock.mjs';
+import { loadavg } from 'node:os';
 const OWNER = 'user_01M40Y914S1H4EJCEHH91DKTAY'; // server/tests/browser-fixture.js's synthetic Jevica account
 const release = await holdBrowserLock('Office and IPIC two-account journey');
 let fixture, browser;
@@ -23,11 +24,11 @@ try {
   const started = Date.now();
   try {
     const result = await eval(`(${source})`)(owner, resident);
-    await writeFile('output/playwright/office-ipic-journey.json', JSON.stringify({ status: 'passed', browser: await browser.version(), durationMs: Date.now() - started, ...result }, null, 2));
+    await writeFile('output/playwright/office-ipic-journey.json', JSON.stringify({ status: 'passed', loadAverage: loadavg().map(n => Number(n.toFixed(1))), browser: await browser.version(), durationMs: Date.now() - started, ...result }, null, 2));
     console.log(JSON.stringify({ checks: result.checks, convergedAfterMs: result.convergedAfterMs }));
   } catch (error) {
     await Promise.all([owner.screenshot({ path: 'output/playwright/office-ipic-owner-failure.png' }), resident.screenshot({ path: 'output/playwright/office-ipic-resident-failure.png' })].map(p => p.catch(() => {})));
-    await writeFile('output/playwright/office-ipic-journey.json', JSON.stringify({ status: 'failed', durationMs: Date.now() - started, error: error.stack }, null, 2));
+    await writeFile('output/playwright/office-ipic-journey.json', JSON.stringify({ status: 'failed', loadAverage: loadavg().map(n => Number(n.toFixed(1))), durationMs: Date.now() - started, error: error.stack }, null, 2));
     throw error;
   }
 } finally { await browser?.close(); await fixture?.close(); release(); }
