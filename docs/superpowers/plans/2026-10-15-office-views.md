@@ -22,6 +22,10 @@ needs no separate path.
 3. **Control:** a `<select>` in the header (pointer/touch) and **V** to cycle; Escape leaves a view before
    the office. Walking keys, Q, Z and the desk return to walking first.
 
+4. **Scene idea prompt** (#363 task "optional short instruction"): an empty private desk offers **Or write a
+   three-line scene idea**, which creates an ordinary private task titled Scene idea with a three-line notes
+   hint. Hidden in shared Office tasks; no new backend, invitation, publishing or copying.
+
 ## Checks
 
 | Check | Result |
