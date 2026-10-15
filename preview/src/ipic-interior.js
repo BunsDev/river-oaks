@@ -2,7 +2,8 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 import { createIpicMaterials } from './ipic-materials.js';
-import { IPIC_ESCALATOR, IPIC_FLIGHTS, IPIC_INTERIOR, IPIC_PLANTERS, IPIC_SCREEN, IPIC_SOFA_ARMS } from './ipic-plan.js';
+import { IPIC_DARTS, IPIC_ESCALATOR, IPIC_FLIGHTS, IPIC_INTERIOR, IPIC_PLANTERS, IPIC_SCREEN, IPIC_SOFA_ARMS } from './ipic-plan.js';
+import { dartboardPixel } from './dartboard-texture.js';
 
 // Editable metre-scale scene. Local +X=across frontage, -Z=into the venue,
 // +Y=up. Furniture shares geometry; static parts merge per zone/material.
@@ -187,6 +188,44 @@ export function buildIpicInterior(room, options = {}) {
     box(m.glass, 4.6, 9.08, d, .14, .18, .14, { shape: sphere });
   }
   label('THE TUCK ROOM', 4.9, 9, 25.65, 2.5, .43);
+  // The dart cabinet (Val, 2026-10-15): a freestanding pub cabinet in front of the
+  // cinema wall, its board 1.73 m up and facing the lounge, and a brass throwing line
+  // on the carpet. Everything but the darts stays inside its collider (ipic-plan.js).
+  const darts = (() => {
+    const { a, face: d, bull, line } = IPIC_DARTS, y = 6;
+    box(m.timber, a, y + .03, d + .11, .95, .06, .32);
+    for (const side of [-1, 1]) box(m.timber, a + side * .38, y + .62, d + .2, .08, 1.12, .08);
+    box(m.timber, a, y + bull, d + .2, .95, 1.1, .1);
+    for (const dy of [-.53, .53]) box(m.timber, a, y + bull + dy, d + .1, .95, .04, .14);
+    for (const side of [-1, 1]) box(m.timber, a + side * .455, y + bull, d + .1, .04, 1.1, .14);
+    for (const side of [-1, 1]) box(m.black, a + side * .345, y + bull, d + .148, .17, .72, .01);
+    box(m.bronze, a, y + .003, line, 1, .006, .04);
+    const size = 256, pixels = new Uint8Array(size * size * 4);
+    for (let py = 0; py < size; py++) for (let px = 0; px < size; px++) pixels.set(dartboardPixel(px, py, size, size), (py * size + px) * 4);
+    const texture = new THREE.DataTexture(pixels, size, size); texture.colorSpace = THREE.SRGBColorSpace; texture.needsUpdate = true;
+    const board = new THREE.Mesh(keep(new THREE.CircleGeometry(.2255, 64)), new THREE.MeshStandardMaterial({ name: 'ipic-dartboard', map: texture, roughness: .85, alphaTest: .5 }));
+    const backing = new THREE.Mesh(keep(new THREE.CircleGeometry(.29, 48)), m.black);
+    board.name = 'Dartboard'; backing.name = 'Dartboard surround';
+    board.position.set(a, y + bull, -d); backing.position.set(a, y + bull, -(d + .01));
+    const thrown = new THREE.InstancedMesh(keep(new THREE.CylinderGeometry(.0035, .0018, .12, 8).rotateX(Math.PI / 2).translate(0, 0, .06)),
+      new THREE.MeshStandardMaterial({ name: 'ipic-darts', color: '#d9c27a', metalness: .5, roughness: .4 }), 3);
+    Object.assign(thrown, { name: 'Darts in the board', count: 0 });
+    zone.add(backing, board, thrown);
+    const place = new THREE.Object3D();
+    return {
+      // Up to three darts as [x, y] in mm on the board (+x to a thrower's right, +y up).
+      show(points = []) {
+        thrown.count = 0;
+        for (const [x, py] of points.slice(-3)) {
+          place.position.set(a + x / 1000, y + bull + py / 1000, -d); place.updateMatrix();
+          thrown.setMatrixAt(thrown.count++, place.matrix);
+        }
+        thrown.instanceMatrix.needsUpdate = true; thrown.computeBoundingSphere();
+      },
+      count: () => thrown.count,
+      dispose() { texture.dispose(); board.material.dispose(); thrown.material.dispose(); thrown.dispose(); },
+    };
+  })();
 
   section('Cinema corridor');
   for (const f of room.fixtures.filter(f => f.kind === 'ipic-cinema-wall')) box(m.timber, f.a, 8.2, f.d, f.w, 4.4, f.l);
@@ -233,6 +272,8 @@ export function buildIpicInterior(room, options = {}) {
   // Loading failure remains observable by callers; attach a handler for callers
   // that only mount the production mesh, to avoid an unhandled rejection.
   root.userData.ready.catch(error => { root.userData.assetError = String(error); });
-  root.userData.dispose = () => { finishes.dispose(); geometry.forEach(g => g.dispose()); root.clear(); };
+  // The Tuck Room board, so the shared darts (#359; server/darts-games.js) can show a match.
+  root.userData.darts = darts;
+  root.userData.dispose = () => { darts.dispose(); finishes.dispose(); geometry.forEach(g => g.dispose()); root.clear(); };
   return root;
 }

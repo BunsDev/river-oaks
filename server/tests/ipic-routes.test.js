@@ -183,13 +183,13 @@ test('IPIC refuses false heights, solid shortcuts, teleports, a working lift and
   assert.equal(pose(-.6, 9).error, 'blocked', 'through the glass rail');
   assert.equal(pose(-4.85, 29).error, 'movement_too_fast', 'reception-to-auditorium teleport');
   assert.equal(t.command('visitor', { type: 'interiorLevel', portalId: 'ipic-lift' }).error, 'not_in_interior', 'the lift is decorative');
-  t.walk('visitor', route([-1.4, 9], [-.5, 25.45]).path);
-  // The lounge side of the cinema wall is 2.5 m from the first-row recliner.
+  t.walk('visitor', route([-1.4, 9], [-.8, 25.15]).path);
+  // The lounge side of the cinema wall is 2.9 m from the first-row recliner.
   assert.equal(t.command('visitor', { type: 'sit', buildId: 'bench:ipic-recliner-0-1', slot: 0 }).error, 'seat_out_of_reach', 'no seat through the wall');
   assert.equal(pose(-1, 26.4).error, 'blocked', 'through the cinema wall beside the doorway');
   assert.equal(t.command('visitor', { type: 'sit', buildId: 'bench:ipic-recliner-2-0', slot: 0 }).error, 'invalid_seat');
   assert.equal(t.command('visitor', { type: 'sit', buildId: 'bench:ipic-recliner-0-0', slot: 1 }).error, 'invalid_seat');
-  t.walk('visitor', route([-.5, 25.45], [-2.6, 28.9]).path);
+  t.walk('visitor', route([-.8, 25.15], [-2.6, 28.9]).path);
   assert.equal(pose(-2.06, 28.1).error, 'blocked', 'onto a recliner arm');
   assert.equal(pose(-2.6, 27.6).error, 'blocked', 'onto the recliner back');
   const [ax, an] = room.toWorld(-4.85, 29);
