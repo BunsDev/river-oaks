@@ -18,7 +18,10 @@ const ETRO_PODIUM = 8.2, ETRO_HEIGHT = 9.2, DIOR_PODIUM = 9.4, DIOR_HEIGHT = 13.
 // sky above it; the office tower rises east of it. The tower's podium cornice,
 // curtain-wall top and floor lines.
 export const WING_WIDTH = 17.6, WING_HEIGHT = 10.6;
-const PODIUM_TOP = 12.78, TOWER_TOP = 27.85, TOWER_FLOORS = [16.6, 20.45, 24.3];
+// The tower is raised to 33 m for Jevica's penthouse (#363): its curtain wall runs one
+// double-height band from the 24.3 m office floor to the top, with no line at the
+// 28.1 m mezzanine, which covers only the rear of the plan.
+const PODIUM_TOP = 12.78, TOWER_TOP = 32.85, TOWER_FLOORS = [16.6, 20.45, 24.3];
 // The podium's second storey: windows from 6.9 m (Davidoff) or 6.0 m (the gym) to
 // 11 m, then the stone band to the cornice.
 const UPPER_TOP = 11.0, GYM_WINDOW = [6.9, 10.9];
@@ -342,12 +345,12 @@ export function blockFacades({ world, m, keep, surface, glazing, sign, box, shee
     for (const h of TOWER_FLOORS) box(f, n.royalFrame, s0 - 0.02, s1 + 0.02, h - 0.07, h + 0.07, 0, 0.12);
     box(f, n.royalFrame, s0 - 0.18, s1 + 0.18, TOWER_TOP, TOWER_TOP + 0.3, -0.05, 0.2);
   }
-  // U.S. Capital Advisors' crest and serif name at the top of the curtain wall.
+  // U.S. Capital Advisors' crest and serif name at the top of the curtain wall, moving with it.
   function capitalSign(f, s, width) {
-    const crest = s - width / 2 - 0.7;
-    box(f, n.whiteMetal, crest - 0.38, crest + 0.38, 25.95, 26.9, 0.16, 0.24);
-    for (const c of [crest - 0.16, crest, crest + 0.16]) box(f, n.royalFrame, c - 0.03, c + 0.03, 26.15, 26.6, 0.24, 0.26);
-    letter('U.S.Capital Advisors', { family: '"Trajan Pro", "Times New Roman", Georgia, serif', weight: 600, color: '#f6f7fb', spacing: 0.01, emissive: 0.15 }, f, s, 26.42, 0.17, width, 0.95);
+    const crest = s - width / 2 - 0.7, top = TOWER_TOP;
+    box(f, n.whiteMetal, crest - 0.38, crest + 0.38, top - 1.9, top - 0.95, 0.16, 0.24);
+    for (const c of [crest - 0.16, crest, crest + 0.16]) box(f, n.royalFrame, c - 0.03, c + 0.03, top - 1.7, top - 1.25, 0.24, 0.26);
+    letter('U.S.Capital Advisors', { family: '"Trajan Pro", "Times New Roman", Georgia, serif', weight: 600, color: '#f6f7fb', spacing: 0.01, emissive: 0.15 }, f, s, top - 1.43, 0.17, width, 0.95);
   }
   // A deep dark-bronze soffit over the gym's shop glass: fascia, fans, downlights.
   // Its underside stays above the street lamps on the narrow pavements (5.14 m).

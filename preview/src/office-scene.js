@@ -8,7 +8,7 @@ import { arrivalBehindGlass, buildOfficeArrival } from './office-arrival-archite
 import { createOfficeWorldScene } from './office-world-scene.js';
 import { officePeerVisible } from './office-world-presentation.js';
 import { buildOfficeGeometry } from './office-penthouse-graybox.js';
-import { OFFICE_EYE_HEIGHT, OFFICE_LAYOUT_LEGACY, OFFICE_SEATED_EYE_HEIGHT, officeLayout, officeLevelElevation, officeSeatedPose, officeView } from './office-layouts.js';
+import { OFFICE_EYE_HEIGHT, OFFICE_LAYOUT_LEGACY, OFFICE_SEATED_EYE_HEIGHT, officeElevationAt, officeLayout, officeLevelElevation, officeSeatedPose, officeView } from './office-layouts.js';
 
 // Keep the eye clear when residents share the arrival point or pass each other.
 export const officePlayerVisible=officePeerVisible;
@@ -35,7 +35,7 @@ export function createOfficeScene({renderer,host,self,players,reducedMotion=fals
   let started=null,skipped=reducedMotion,lastPosition=[...OFFICE_SPAWN],levelId=self.office?.levelId??null;
   function render(now,position,yaw,allPlayers,place={}) {
     if(disposed)return null;
-    levelId=place.levelId??levelId;const floor=officeLevelElevation(layout,levelId)??0;
+    levelId=place.levelId??levelId;const floor=officeElevationAt(layout,levelId,position)??0;
     const ready=actors.stats().some(a=>a.id===self.id&&a.ready);
     if(started===null&&ready)started=now;
     const elapsed=started===null?0:(now-started)/1000,frame=elevatorFrame(elapsed,{reducedMotion:skipped});

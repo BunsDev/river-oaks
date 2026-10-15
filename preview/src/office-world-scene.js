@@ -5,7 +5,7 @@ import { buildWorkplaceOffice } from './workplace-office.js';
 import { createRemotePlayers } from './remote-players.js';
 import { borrowOfficePresentation, officeStreetApproach, createOfficeArrivalClock, officePeerVisible } from './office-world-presentation.js';
 import { buildOfficeGeometry } from './office-penthouse-graybox.js';
-import { OFFICE_EYE_HEIGHT, OFFICE_LAYOUT_LEGACY, OFFICE_SEATED_EYE_HEIGHT, officeLayout, officeLevelElevation, officeSeatedPose, officeView } from './office-layouts.js';
+import { OFFICE_EYE_HEIGHT, OFFICE_LAYOUT_LEGACY, OFFICE_SEATED_EYE_HEIGHT, officeElevationAt, officeLayout, officeLevelElevation, officeSeatedPose, officeView } from './office-layouts.js';
 import { createVisitSkyline } from './office-skyline.js';
 import { arrivalBehindGlass } from './office-arrival-architecture.js';
 
@@ -92,7 +92,7 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
     return {prepare,
       render(now,nextPosition,nextYaw,players,place={}){
         if(disposed)return null;position=[...nextPosition];yaw=nextYaw;
-        levelId=place.levelId??levelId;floor=layout?officeLevelElevation(layout,levelId)??0:0;eye=place.seatId?OFFICE_SEATED_EYE_HEIGHT:OFFICE_EYE_HEIGHT;
+        levelId=place.levelId??levelId;floor=layout?officeElevationAt(layout,levelId,position)??0:0;eye=place.seatId?OFFICE_SEATED_EYE_HEIGHT:OFFICE_EYE_HEIGHT;
         viewId=place.viewId??null;seatId=place.seatId??null;
         if(lastNow!==now)prepare(now);
         if(current.done){placeCamera();view.position.applyMatrix4(street.frame);view.position.y+=ARRIVAL.officeElevation;view.quaternion.premultiply(worldRotation);lease.camera(view);}

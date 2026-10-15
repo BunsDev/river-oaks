@@ -71,6 +71,15 @@ REFERENCE_HEIGHTS = {
     "878472795": 23.5,
     "878472797": 23.5,
 }
+# Heights authored beyond the photographs, with their own source. The Equinox tower
+# is raised 5 m so Jevica's penthouse office (24.3 m floor, 7.6 m clear) fits
+# inside it (#363, Val's decision of 2026-10-14); the photographs show 28 m.
+AUTHORED_HEIGHTS = {
+    "625330785": (
+        33.0,
+        "authored 5 m above the photographed 28 m to fit the penthouse office (#363)",
+    ),
+}
 DISPLAY = {
     "Diptypque": "Diptyque",
     "de Bouille": "de Boulle",
@@ -137,6 +146,9 @@ def build():
             reference = "height" not in tags and REFERENCE_HEIGHTS.get(element.get("id"))
             if reference:
                 height = reference
+            authored = "height" not in tags and AUTHORED_HEIGHTS.get(element.get("id"))
+            if authored:
+                height = authored[0]
             bounds = polygon.bounds
             building = {
                 "id": f"osm-way-{element.get('id')}",
@@ -147,6 +159,8 @@ def build():
                 "kind": tags["building"],
                 "height_source": "OSM height"
                 if "height" in tags
+                else authored[1]
+                if authored
                 else "street-level reference photographs (2024-2025), estimated"
                 if reference
                 else "estimated from tagged/default levels",
