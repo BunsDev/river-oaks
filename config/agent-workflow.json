@@ -72,6 +72,11 @@
     ],
     "build": [
       "build"
+    ],
+    "desktop-package": [
+      "desktop-tests",
+      "desktop-package",
+      "desktop-package-check"
     ]
   },
   "tasks": [
@@ -267,6 +272,22 @@
       ],
       "browser": true,
       "timeoutMs": 1200000
+    },
+    {
+      "id": "desktop-package",
+      "command": [
+        "pnpm",
+        "run",
+        "desktop:package"
+      ]
+    },
+    {
+      "id": "desktop-package-check",
+      "command": [
+        "pnpm",
+        "run",
+        "desktop:package:check"
+      ]
     }
   ]
 }

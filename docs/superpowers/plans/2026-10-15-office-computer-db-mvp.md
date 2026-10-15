@@ -88,3 +88,5 @@ Next delivery step requires the user's separate authorization under the attached
 
 ## Authorized delivery
 Val authorized commit, push and merge to main in the follow-up request. The reviewed source patch is unchanged from the passing core run. Refreshed origin; current main adds unrelated desktop/GPU tooling and register work with no shared feature paths. Commit the verified patch, then use the repository landing queue to integrate current main and require hosted checks on the resulting head.
+
+Delivery progress: signed source commit `b49fe5163899481911ef3a26e7f4b358c9bfe1b9` pushed in [PR #390](https://github.com/BunsDev/river-oaks/pull/390). Integrated `origin/main` at `d2ea93c34137651b21e497ac519805fd403ba93f`; the sole conflict was the generated plans index, regenerated through `pnpm run plans:index`. `pnpm run verify` passed on the integrated tree (`/tmp/office-integrated-core.log`, core receipt); no application-code conflict. Hosted CI remains the next merge gate.
