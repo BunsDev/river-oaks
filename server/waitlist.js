@@ -73,8 +73,10 @@ export async function createFileWaitlist(path, { admins = [], now = Date.now, au
     await rename(`${path}.tmp`, path);
     records = next; audit = nextAudit; invites = nextInvites;
   };
+  // Starter invitations go to accounts approved from the waitlist. An account that joined with an
+  // invitation code (record.inviteId) gets none, then or on a later re-approval: the referral decay.
   const grant = (record, nextInvites, actorId) => {
-    if (record.invitesGrantedAt) return;
+    if (record.invitesGrantedAt || record.inviteId) return;
     if (nextInvites.size + 2 > 50000) throw new Error('Invitation capacity reached');
     for (let i = 0; i < 2; i++) { const invite = newInvite(record.userId, actorId, now()); nextInvites.set(invite.id, invite); }
     record.invitesGrantedAt = new Date(now()).toISOString();
@@ -213,7 +215,7 @@ export async function createFileWaitlist(path, { admins = [], now = Date.now, au
         const at = new Date(now()).toISOString();
         const record = { ...previous, status: 'approved', decidedAt: at, decidedBy: invite.ownerId, inviteId: invite.id };
         const next = new Map(records), nextInvites = new Map(invites);
-        grant(record, nextInvites, identity.userId); next.set(record.userId, record);
+        next.set(record.userId, record);
         nextInvites.set(invite.id, { ...invite, status: 'redeemed', redeemedBy: record.userId, redeemedAt: at });
         await persist(next, [...audit, { action: 'invite-redeemed', inviteId: invite.id, userId: record.userId, actorId: record.userId, at }], nextInvites);
         return { ok: true };
@@ -330,7 +332,8 @@ export function createRedisWaitlist({ redis, prefix, admins = [], now = Date.now
     const raw = await redis.eval(INVITE_TRANSACTION, 5, users, audit, invites, ownerIndex, `${prefix}:waitlist:invites:pruned`, JSON.stringify({
       ...payload, indexOwner, capacity: inviteCapacity, retention: INVITE_RETENTION,
       now: time, at: new Date(time).toISOString(), admins: Object.fromEntries(admins.map(id => [id, true])),
-      starter: payload.userId && payload.op !== 'list-owner' ? [newInvite(payload.userId, payload.actorId ?? payload.userId, time), newInvite(payload.userId, payload.actorId ?? payload.userId, time)] : [],
+      // Only an approval can grant starter codes (never a redeem: the referral decay).
+      starter: payload.op === 'decide' && payload.approved ? [newInvite(payload.userId, payload.actorId ?? payload.userId, time), newInvite(payload.userId, payload.actorId ?? payload.userId, time)] : [],
     }));
     return raw ? JSON.parse(raw) : null;
   };

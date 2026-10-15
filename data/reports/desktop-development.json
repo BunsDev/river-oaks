@@ -1,5 +1,6 @@
 {
   "mode": "development",
+  "software": false,
   "checks": [
     "game assets and playable character loaded",
     "Palo Alto street surfaces loaded with clear-path dimensions",
@@ -15,7 +16,7 @@
     "external navigation blocked",
     "renderer crash recovers to playable game"
   ],
-  "readyMs": 42423,
+  "readyMs": 46776,
   "assets": {
     "loaded": 102,
     "total": 102,
@@ -47,27 +48,35 @@
       "name": "NotAllowedError"
     }
   },
+  "walk": {
+    "metres": 1.8983316761700735,
+    "game": 1.205200000000004,
+    "frames": 35,
+    "longest": 0.10819999999999709,
+    "wall": 1.234699999976161
+  },
   "sharedTown": true,
   "performance": {
-    "samples": 388,
-    "medianMs": 25,
-    "p95Ms": 29.69999999999709,
-    "meanFps": 38.71946351588694,
+    "samples": 312,
+    "medianMs": 33,
+    "p95Ms": 45.70000000000073,
+    "meanFps": 31.252817261171383,
     "canvas": [
       2560,
       1536
     ],
     "quality": {
       "mode": "auto",
-      "scale": 0.61,
-      "occlusion": true,
-      "fps": 39
+      "scale": 0.6,
+      "occlusion": false,
+      "fps": 37,
+      "tailShedding": false
     },
     "renderer": {
-      "calls": 1470,
-      "triangles": 5290466,
-      "geometries": 439,
-      "textures": 152
+      "calls": 1013,
+      "triangles": 3787798,
+      "geometries": 466,
+      "textures": 149
     }
   },
   "gpu": {
