@@ -58,6 +58,14 @@ export const HOUSE_LIGHTS_DIMMED = 0.25;
 export const houseLightTarget = ({ status, inside } = {}) => (inside && status === 'playing' ? HOUSE_LIGHTS_DIMMED : 1);
 export const nextHouseLight = (level, target, seconds) => target + (level - target) * Math.exp(-Math.max(0, seconds) / 0.45);
 
+// The walking card (Stand up, More) sits below the panel; its height changes with the voice row and
+// notices, and each breakpoint moves it. The panel's bottom edge stays this far up the viewport, so
+// Stand up is never under it. null when the card is not on screen: the stylesheet's offset applies.
+export function panelClearance(card, viewportHeight, gap = 8) {
+  if (!card || !(card.width > 0) || !(card.height > 0)) return null;
+  return Math.max(0, Math.ceil(viewportHeight - card.top + gap));
+}
+
 // getVenue() → { active: inside the IPIC room, auditorium: within the auditorium's walls }.
 export function createIpicScreening({ host, THREE, getMultiplayer, getVenue, getScreen, venueId = 'ipic', now = () => performance.now(), doc = document }) {
   let session = null, generation = 0, houseLights = 1, lightsAt = null;
@@ -179,6 +187,15 @@ export function createIpicScreening({ host, THREE, getMultiplayer, getVenue, get
     if (state.caption.textContent !== text) state.caption.textContent = text;
     state.caption.hidden = !text;
   }
+  function clearWalkingCard(state) {
+    const card = doc.querySelector?.('#walking-hud .walking-console'), view = doc.defaultView;
+    const shown = card && view && view.getComputedStyle(card).visibility !== 'hidden';
+    const px = shown ? panelClearance(card.getBoundingClientRect(), view.innerHeight) : null, value = px === null ? '' : `${px}px`;
+    if (state.clearance === value) return;
+    state.clearance = value;
+    if (value) state.panel.style.setProperty('--ipic-clear', value); else state.panel.style.removeProperty('--ipic-clear');
+  }
+
   function render(state, force = false) {
     const venue = getVenue(), stats = state.player.stats();
     filmText(state, stats.mediaId);
@@ -220,6 +237,7 @@ export function createIpicScreening({ host, THREE, getMultiplayer, getVenue, get
       const state = session; if (state.stopped) return;
       if (now() - state.syncAt > 15_000) void sync(state);
       state.player.tick(); attach(state); render(state); showCaption(state);
+      if (!(at - state.clearedAt < 250)) { state.clearedAt = at; clearWalkingCard(state); }
     },
     inspect() {
       const state = session; if (!state || state.stopped) return { active: false, stopped: Boolean(state?.stopped) };

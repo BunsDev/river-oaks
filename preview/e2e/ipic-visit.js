@@ -74,14 +74,38 @@ async page => {
   const seatedHud = await hud();
   check(seatedHud.theater && !seatedHud.dock && !seatedHud.chat && /Stand up/.test(seatedHud.stand ?? ''), `Seated theater mode: ${JSON.stringify(seatedHud)}`);
   checks.push('seated: the dock and town chat step aside, Stand up stays');
-  await page.locator('#canvas-host').focus(); await page.keyboard.press('KeyZ');
+  // Stand up must be visible, topmost at its centre and clear of the film panel, on desktop and on a
+  // phone, where the open town chat hides the walking card unless seated mode brings it back.
+  const standReach = () => page.evaluate(() => {
+    const stand = document.querySelector('#walking-interact'), card = document.querySelector('#walking-hud .walking-console'), panel = document.querySelector('#ipic-screening');
+    const r = stand.getBoundingClientRect(), top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+    const a = panel && !panel.hidden ? panel.getBoundingClientRect() : null, b = card.getBoundingClientRect();
+    const overlap = a ? Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top)) * (Math.min(a.right, b.right) > Math.max(a.left, b.left) ? 1 : 0) : 0;
+    return { visible: getComputedStyle(stand).visibility === 'visible' && r.height > 0, onScreen: r.top >= 0 && r.bottom <= innerHeight && r.left >= 0 && r.right <= innerWidth,
+      topmost: Boolean(top) && (top === stand || stand.contains(top)), coveredBy: top && top !== stand && !stand.contains(top) ? top.closest('[id]')?.id ?? null : null, panel: Boolean(a), overlap: Math.round(overlap), viewport: [innerWidth, innerHeight] };
+  });
+  // Start the film from the seat (the runner grants this resident IPIC hosting), so its panel is up.
+  await page.waitForFunction(() => !document.querySelector('#ipic-screening [data-control="host-start"]')?.hidden);
+  await page.locator('#ipic-screening [data-control="host-start"]').click();
+  await page.waitForFunction(() => window.__riverScreening?.()?.state === 'playing');
+  await page.waitForTimeout(600);
+  const desktopReach = await standReach();
+  check(desktopReach.visible && desktopReach.onScreen && desktopReach.topmost && desktopReach.panel && desktopReach.overlap === 0, `Seated, Stand up is reachable and clear of the film panel: ${JSON.stringify(desktopReach)}`);
+  const desktopViewport = page.viewportSize();
+  await page.setViewportSize({ width: 390, height: 844 }); await page.waitForTimeout(800);
+  const phoneReach = await standReach();
+  check(phoneReach.visible && phoneReach.onScreen && phoneReach.topmost && phoneReach.panel && phoneReach.overlap === 0, `Seated on a 390 px phone, Stand up is reachable and clear of the film panel: ${JSON.stringify(phoneReach)}`);
+  checks.push('seated: Stand up is visible, topmost and clear of the film panel at 1280 and 390 px');
+  // A phone has no Z: tap Stand up. Z standing is covered by the office and plaza journeys.
+  await page.locator('#walking-interact').click();
   await page.waitForFunction(() => !window.__riverCarriage().pose.sitting);
+  await page.setViewportSize(desktopViewport); await page.waitForTimeout(400);
   check(await page.evaluate(() => window.__riverCarriage().camera.view) === 'third-person', 'Standing restores the walking camera');
   // The HUD repaints on its next pass (every 150 ms); a slow software frame is allowed 10 s.
   await page.waitForFunction(() => !document.body.classList.contains('theater-seated'), null, { timeout: 10000 }).catch(() => {});
   const stoodHud = await hud();
   check(!stoodHud.theater && stoodHud.dock && stoodHud.chat, `Standing brings the HUD back: ${JSON.stringify(stoodHud)}`);
-  checks.push('stood with keyboard interaction; the walking camera returned');
+  checks.push('stood with a tap on Stand up at 390 px; the walking camera returned');
   // Arms and back box each cushion in, so leave forward past its footrest; the front row then
   // goes round by the left aisle, since the gaps between its seats are narrower than a body.
   const [row, column] = recliner.slice(-3).split('-').map(Number), a = [-2.6, -.6, 1.4, 3.4][column], d = [28, 31][row];

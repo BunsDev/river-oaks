@@ -1,5 +1,5 @@
 /* IPIC screening panel (#367): a compact overlay that never covers stand or exit controls. */
-.ipic-screening{position:absolute;left:0;right:0;margin-inline:auto;width:fit-content;bottom:148px;z-index:4;display:flex;flex-direction:column;gap:8px;max-width:min(560px,calc(100% - 32px));box-sizing:border-box;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:color-mix(in srgb,var(--paper) 92%,transparent);color:var(--ink);box-shadow:0 10px 30px #0b291522;font-size:13px;backdrop-filter:blur(8px)}
+.ipic-screening{position:absolute;left:0;right:0;margin-inline:auto;width:fit-content;bottom:max(148px,var(--ipic-clear,0px));z-index:4;display:flex;flex-direction:column;gap:8px;max-width:min(560px,calc(100% - 32px));box-sizing:border-box;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:color-mix(in srgb,var(--paper) 92%,transparent);color:var(--ink);box-shadow:0 10px 30px #0b291522;font-size:13px;backdrop-filter:blur(8px)}
 .ipic-screening[hidden],.ipic-screening [hidden]{display:none!important}
 /* The walking console's More actions (Step outside among them) open beneath this panel's layer, so
    the panel steps aside while More is open and returns when it closes; the film keeps playing. */
@@ -14,16 +14,20 @@
 .ipic-screening-caption{margin:0;padding:6px 12px;border-radius:8px;background:#000000d9;color:#fff;font-size:15px;line-height:1.4;text-align:center;white-space:pre-line}
 .ipic-screening-transcript{max-height:140px;overflow:auto;border-top:1px solid var(--line);padding-top:6px}
 .ipic-screening-transcript p{margin:4px 0}
-@media(max-width:420px){.ipic-screening{bottom:156px;padding:10px}.ipic-screening button{padding:8px 10px}}
+@media(max-width:420px){.ipic-screening{bottom:max(156px,var(--ipic-clear,0px));padding:10px}.ipic-screening button{padding:8px 10px}}
 /* On narrow screens the open play dock is a near full-height sheet (z-index 5): keep the film's own
    sound, volume and caption controls above it, below the greetings and banner. */
 @media(max-width:700px){.ipic-screening{z-index:6}}
 @media(prefers-reduced-motion:reduce){.ipic-screening{backdrop-filter:none}}
 /* Seated in a cinema recliner (walking-ui's theater-seated): the film comes first. The play dock,
    town chat, the idle greeting card and the walking console's other actions step aside and return
-   on standing; an invitation and Stand up stay. The panel turns compact and dark, the captions larger. */
+   on standing; an invitation and Stand up stay. The panel turns compact and dark, the captions larger,
+   and sits just above the walking card (--ipic-clear, measured by ipic-screening-ui.js). */
 body.theater-seated .visit-tools,body.theater-seated .town-chat-dock,body.theater-seated .nearby-greetings:has(#greeting-person:not([hidden])),
 body.theater-seated #walking-hud :is(#walking-meet-nearby,#walking-talk,#walking-play){visibility:hidden}
-body.theater-seated .ipic-screening{bottom:96px;padding:8px 10px;gap:6px;background:color-mix(in srgb,#120d0a 80%,transparent);color:#f4ece4;border-color:#ffffff1f;box-shadow:0 10px 30px #00000055}
+body.theater-seated .ipic-screening{bottom:var(--ipic-clear,96px);padding:8px 10px;gap:6px;background:color-mix(in srgb,#120d0a 80%,transparent);color:#f4ece4;border-color:#ffffff1f;box-shadow:0 10px 30px #00000055}
+/* On phones an open town chat or play dock hides the walking card (game-hud.css, visual-finish.css).
+   Seated, both are out of sight, so the card returns: a phone has no Z key, and Stand up is its way out. */
+body.theater-seated:has(.town-chat-dock[open],.visit-tools[open]) .walking-console{visibility:visible}
 body.theater-seated .ipic-screening-status{opacity:.8}
 body.theater-seated .ipic-screening-caption{font-size:17px}
