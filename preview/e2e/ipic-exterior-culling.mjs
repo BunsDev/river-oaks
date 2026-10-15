@@ -51,6 +51,12 @@ try {
   await page.locator('#enter-destination').click();
   await page.waitForFunction(() => document.querySelector('#walking-hud')?.dataset.inside === 'osm-node-8172494964');
   await page.locator('#panel-toggle').click();
+  // The first-visit welcome can open a moment after entry and close by itself; under load it
+  // once covered the first pose's culled capture and was gone for the comparison. Dismiss it.
+  if (await page.locator('.store-intro').waitFor({ state: 'visible', timeout: 8000 }).then(() => true, () => false)) {
+    await page.locator('.store-intro button').click();
+    await page.locator('.store-intro').waitFor({ state: 'hidden' });
+  }
   const hideUi = () => page.evaluate(() => { document.body.classList.add('clear-view'); if (!document.querySelector('#cull-hide')) { const style = document.createElement('style'); style.id = 'cull-hide'; style.textContent = '#ipic-screening,.nearby-greetings,.walking-console{visibility:hidden!important}'; document.head.append(style); } });
   await hideUi();
 
