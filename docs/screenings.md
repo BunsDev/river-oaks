@@ -119,7 +119,8 @@ second interior or renderer is built.
   the shared film. **Play film** answers a refused autoplay, **Retry** reloads after an
   error, and **Stop watching** releases the film locally. While the walking console's
   **More** actions are open, the panel steps aside, so **Step outside** stays reachable on
-  narrow screens; it returns when More closes.
+  narrow screens; it returns when More closes. On narrow screens the panel also stays above an
+  open play dock, so its sound and caption controls remain reachable.
 - **Sound, captions and transcript.** The film starts muted. **Sound on** is the viewer's
   choice and plays only inside the auditorium; the lounge and the street stay silent.
   Captions are on by default: the panel shows the active cue, because the film reaches

@@ -15,4 +15,7 @@
 .ipic-screening-transcript{max-height:140px;overflow:auto;border-top:1px solid var(--line);padding-top:6px}
 .ipic-screening-transcript p{margin:4px 0}
 @media(max-width:420px){.ipic-screening{bottom:156px;padding:10px}.ipic-screening button{padding:8px 10px}}
+/* On narrow screens the open play dock is a near full-height sheet (z-index 5): keep the film's own
+   sound, volume and caption controls above it, below the greetings and banner. */
+@media(max-width:700px){.ipic-screening{z-index:6}}
 @media(prefers-reduced-motion:reduce){.ipic-screening{backdrop-filter:none}}
