@@ -2,7 +2,7 @@
 
 Objective: the Desktop workflow's macOS leg fails "W moves the player" intermittently (runs 38659435397 and 38673593628, each passing on one rerun). Make the check measure the walk itself, with the same 0.5 m threshold.
 
-Branch and worktree: `fix/desktop-e2e-walk-game-time-20261015` in `../river-oaks-desktop-walk-check-20261015`, from `origin/main` at `c1cfd584`. Register task: `desktop-e2e-walk-game-time`. Owner: river-oaks-27 (session 16ffadb4).
+Branch and worktree: `fix/desktop-e2e-walk-game-time-20261015` in `../river-oaks-desktop-walk-check-20261015`, from `origin/main` at `c1cfd584`. Register task: `desktop-e2e-walk-game-time`. Owner: river-oaks-27 (session 16ffadb4), then river-oaks-80 (session 80241f07) for landing.
 
 Files owned: `desktop/e2e.js` (keyboard movement check), this ledger.
 
@@ -23,8 +23,12 @@ The check holds W until the page has seen 1.2 s of game time, with each frame in
 | `node --check desktop/e2e.js` | OK |
 | `pnpm run test:desktop:e2e --dev` (macOS arm64, load about 110) | Passed 13 of 13; walk 1.73 m over 1.21 s of game time, 52 frames in 1.21 s, longest frame 0.033 s |
 | `pnpm run verify` (core) | Passed: scripts 95, preview 3,052 with 1 skip, server 508 with 144 Redis skips (no `REDIS_URL`), desktop 66, pytest 141 |
+| Desktop 38676456004 on `a4897349` (PR #392), attempt 1 | ubuntu-latest and windows-latest passed. macOS walked 2.03 m over 1.25 s of game time (20 frames, longest 0.10 s), then failed the separate "render loop keeps advancing" check at 7.9 fps mean (80 frames in 10 s; the check needs more than 100) |
+| Desktop 38676456004, attempt 2 | Passed on all three runners. macOS walked 1.93 m over 1.21 s of game time across a 0.50 s frame freeze (16 frames, 2.10 s of wall time); render loop 16.9 fps |
+| Verify 38676456012 on `a4897349` (PR #392) | Passed: verify (3.11), verify (3.13), preview |
 
 ## Gaps and next step
 
-- One local run is not flake proof; the Desktop runs on the PR and later macOS runs are. If the check fails again, its message distinguishes a stall from missing input.
-- Next: PR, Desktop run. Merging needs Val's authorization.
+- The attempt-2 freeze is the stall the old wall-clock hold could not survive. Two hosted macOS passes are not flake proof; later macOS runs are. If the check fails again, its message distinguishes a stall from missing input.
+- The render-loop floor (more than 100 frames in 10 s) failed once on a slow macOS runner. It is unchanged here; lowering it is Val's decision.
+- Next: Val authorized the merge on 2026-10-15. Land with `pnpm run land 392` after #391, record the merge in the register, then retire the worktree.
