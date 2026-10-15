@@ -236,18 +236,22 @@ async (host, viewer, tools) => {
     const captions = await pressed('captions'); await click('captions');
     check(await pressed('captions') !== captions, `${width} px: a pointer click toggles captions`);
     await click('captions');
-    const sound = await pressed('sound'); await click('sound');
-    check(await pressed('sound') !== sound, `${width} px: a pointer click toggles sound`);
-    await click('sound');
+    // Sound plays only inside the auditorium, so its control is disabled in the reception and lounge.
+    const soundEnabled = !(await viewer.locator('#ipic-screening [data-control="sound"]').isDisabled());
+    if (soundEnabled) {
+      const sound = await pressed('sound'); await click('sound');
+      check(await pressed('sound') !== sound, `${width} px: a pointer click toggles sound`);
+      await click('sound');
+    }
     const focus = await viewer.evaluate(() => {
       const control = document.querySelector('#ipic-screening [data-control="captions"]'); control.focus({ focusVisible: true });
       const style = getComputedStyle(control);
       return { focused: document.activeElement === control, outline: style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) > 0, ring: style.boxShadow !== 'none' };
     });
     check(focus.focused && (focus.outline || focus.ring), `${width} px: keyboard focus on a control is visible: ${JSON.stringify(focus)}`);
-    narrow[width] = { views, focus };
+    narrow[width] = { views, focus, soundEnabled };
   }
-  checks.push('390 and 320 px: with the banner and the dock closed or open, every panel control and Step outside is on screen and topmost; pointer clicks toggle captions and sound; focus is visible');
+  checks.push('390 and 320 px: with the banner and the dock closed or open, every panel control and Step outside is on screen and topmost; pointer clicks toggle captions, and sound where it is enabled (inside the auditorium); focus is visible');
   await viewer.setViewportSize({ width: 1280, height: 800 });
   const stopped = await viewer.evaluate(() => window.__riverScreening().state);
   await viewer.locator('#ipic-screening [data-control="stop-watching"]').click();
