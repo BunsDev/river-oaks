@@ -4,7 +4,7 @@ import { BACKGAMMON, CHESS_CELL_M, DARTS, DOMINO, GO, JENGA, MANCALA, STAR, star
 import { startGame as backgammonStart } from './backgammon-rules.js';
 import { startTower } from './jenga-rules.js';
 import { startGame as startXiangqi } from './xiangqi-rules.js';
-import { scoreAt } from './darts-rules.js';
+import { dartboardPixel } from './dartboard-texture.js';
 import { HOLES, MARBLES, startGame as startStar } from './chinese-checkers-rules.js';
 import { startGame as mancalaStart } from './mancala-rules.js';
 import { GLASS_HEIGHT, TABLE as PONG_TABLE, glassAt } from './wine-pong-rules.js';
@@ -971,14 +971,7 @@ export function buildPlazaSalon(world) {
     const wood = new THREE.MeshStandardMaterial({ color: '#2a211b', roughness: 0.7 });
     const post = new THREE.Mesh(unit.box, wood); post.position.set(x, y + 1.0, z); post.scale.set(0.12, 2.0, 0.12); post.castShadow = post.receiveShadow = true;
     const back = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.03, 40).rotateX(Math.PI / 2), wood);
-    const face = dataTexture(256, (px, py, w, h) => {
-      const r = DARTS.radius * 1000, mx = ((px + 0.5) / w * 2 - 1) * r, my = ((py + 0.5) / h * 2 - 1) * r, hit = scoreAt([mx, my]), dist = Math.hypot(mx, my);
-      if (dist > 170) return dist > r ? [0, 0, 0, 0] : [24, 22, 21, 255];
-      if (hit.number === 25) return hit.value === 50 ? [176, 32, 38, 255] : [32, 120, 64, 255];
-      const dark = [20, 18, 13, 10, 2, 3, 7, 8, 14, 12].includes(hit.number);
-      if (hit.multiplier === 1) return dark ? [28, 26, 24, 255] : [236, 222, 190, 255];
-      return dark ? [176, 32, 38, 255] : [32, 120, 64, 255];
-    }, { repeat: false });
+    const face = dataTexture(256, (px, py, w, h) => dartboardPixel(px, py, w, h, DARTS.radius * 1000), { repeat: false });
     const disc = new THREE.Mesh(new THREE.CircleGeometry(DARTS.radius, 64), new THREE.MeshStandardMaterial({ map: face, roughness: 0.85, alphaTest: 0.5 }));
     const holder = new THREE.Group(); holder.name = 'Dartboard'; holder.position.set(x, y + DARTS.bull, z); holder.rotation.y = yaw;
     back.position.set(0, 0, 0.015); disc.position.set(0, 0, 0.032);
