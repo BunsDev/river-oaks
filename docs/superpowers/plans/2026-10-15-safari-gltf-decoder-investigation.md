@@ -198,9 +198,12 @@ asset readiness, WebContent process identity and exact source revision.
   suites passed 9/9. `pnpm run verify` passed after this change and the
   generated plan index update; `.runtime/agent/core.json` is the receipt.
   A physical error receipt is pending.
+- Signed commit `2e4350600cdf20a308c67d77062360df9c2e0fef` is on draft
+  PR #411. Hosted checks on its final head remain pending.
 
-**Next action:** Deliver the fixture-only error receipt through exact-head
-hosted checks, then correlate Val's visible state with the frame receipt and repeat with only
+**Next action:** Review PR #411's exact-head hosted checks and land the
+fixture-only error receipt, then correlate Val's visible state with the frame
+receipt and repeat with only
 one Safari test tab on a quiet host. Obtain the normal route's
 WebKit exception and a controlled same-device comparison. Keep the scoped
 decoder helper experimental until the cause is demonstrated; the physical

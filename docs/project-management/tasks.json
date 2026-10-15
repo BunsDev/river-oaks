@@ -9526,8 +9526,8 @@
       ],
       "owner": "codex-root-safari-gltf-decoder-investigation-20261015",
       "leaseUntil": "2026-10-15T10:47:23.000Z",
-      "updatedAt": "2026-10-15T09:06:26.000Z",
-      "nextAction": "The private fixture's opt-in redacted error receipt passes focused suites 9/9 and the core gate. Deliver it through exact-head hosted checks, then repeat a one-tab normal/scoped Safari comparison when Val clears old tabs. Keep production decoding unchanged until the cause is demonstrated.",
+      "updatedAt": "2026-10-15T09:07:20.000Z",
+      "nextAction": "Draft PR #411 at 2e43506 adds the opt-in redacted error receipt; focused suites 9/9 and core passed. Review exact-head hosted checks and land, then repeat a one-tab normal/scoped Safari comparison when Val clears old tabs. Keep production decoding unchanged.",
       "ledger": "docs/superpowers/plans/2026-10-15-safari-gltf-decoder-investigation.md",
       "requiredChecks": [
         "Focused decoder selection regression",
@@ -9547,7 +9547,7 @@
       ],
       "parent": "procedural-gpu-acceptance",
       "related": "ios-device-feasibility #309; preserve its dirty worktree and do not modify owned files",
-      "pr": 409,
+      "pr": 411,
       "evidence": [
         {
           "pr": 401,
