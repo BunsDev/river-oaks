@@ -9567,8 +9567,8 @@
       ],
       "owner": "codex-root-procedural-gpu-matrix-harness",
       "leaseUntil": "2026-10-15T03:52:32.496Z",
-      "updatedAt": "2026-10-15T02:25:00.203Z",
-      "nextAction": "Commit verified harness, open a focused PR, and inspect exact-head hosted preview; then prepare test-only iPhone Safari access for the GPU matrix.",
+      "updatedAt": "2026-10-15T02:25:57.921Z",
+      "nextAction": "Watch exact-head hosted preview on draft PR #389, mark ready when passing, and land through the queue; then prepare test-only iPhone Safari access for the GPU matrix.",
       "ledger": "docs/superpowers/plans/2026-10-15-procedural-gpu-matrix-harness.md",
       "requiredChecks": [
         "Focused journey with AO tail off and on",
@@ -9583,7 +9583,8 @@
         "docs/project-management/tasks.json (this task only)"
       ],
       "parent": "procedural-gpu-acceptance",
-      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-procedural-gpu-matrix-harness-20261015"
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-procedural-gpu-matrix-harness-20261015",
+      "pr": 389
     }
   ]
 }

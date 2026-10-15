@@ -11,6 +11,7 @@ replace target-device runs or Val's live visual and accessibility review.
 
 - Task: `procedural-gpu-matrix-harness`
 - Branch: `test/procedural-gpu-matrix-harness-20261015`
+- Draft PR: [#389](https://github.com/BunsDev/river-oaks/pull/389)
 - Files: `preview/e2e/generated-gallery-cycle-soak.js`, the GPU acceptance plan,
   and this ledger.
 
@@ -40,6 +41,7 @@ test-only phone access path before that row can be measured.
 
 ## Next step
 
-Review the final diff, commit and prepare a PR. Then create the dedicated
-test-only phone access path and resume the physical device matrix in the
-existing `procedural-gpu-acceptance` task.
+Watch exact-head hosted preview for PR #389, mark it ready when passing, and
+land through the protected queue. Then create the dedicated test-only phone
+access path and resume the physical device matrix in the existing
+`procedural-gpu-acceptance` task.
