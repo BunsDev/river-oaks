@@ -11,11 +11,20 @@ export const SCREENING_VENUES = freeze({
   ipic: freeze({ id: 'ipic', interior: IPIC_INTERIOR, label: 'IPIC auditorium' }),
 });
 
-// Allowlisted media. The server takes the duration from here; files, sources and
-// captions are bundled with the client player (#367). The fixture is a labelled test
-// clip, never the approved short (#365).
+// Allowlisted media. The server takes only the id and duration from here; the client plays
+// the bundled sources (preview/public/assets/ipic/screening, hashes in its sources.json).
+// The fixture is a labelled synthetic test clip, never the approved short (#365).
+const FIXTURE_TEXT = ['Fixture clip: a test pattern for shared playback.', 'A tone sounds once each second.', 'This is not the IPIC screening short.'];
 export const SCREENING_MEDIA = freeze({
-  'ipic-fixture-v1': freeze({ id: 'ipic-fixture-v1', venues: freeze(['ipic']), durationMs: 12_000, label: 'Fixture clip (test pattern)', fixture: true }),
+  'ipic-fixture-v1': freeze({
+    id: 'ipic-fixture-v1', venues: freeze(['ipic']), durationMs: 30_000, label: 'Fixture clip (test pattern)', fixture: true,
+    sources: freeze([
+      freeze({ src: '/assets/ipic/screening/fixture-v1.webm', type: 'video/webm; codecs="vp9, opus"' }),
+      freeze({ src: '/assets/ipic/screening/fixture-v1.mp4', type: 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"' }),
+    ]),
+    captions: freeze({ src: '/assets/ipic/screening/fixture-v1.en.vtt', srclang: 'en', label: 'English' }),
+    transcript: freeze(FIXTURE_TEXT),
+  }),
 });
 
 export const SCREENING_STATUSES = freeze(['stopped', 'playing', 'paused', 'ended']);

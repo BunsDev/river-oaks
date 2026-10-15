@@ -1,4 +1,7 @@
 import { createOfficeUI } from './office-ui.js';
+import { createIpicScreening } from './ipic-screening-ui.js';
+import { IPIC_INTERIOR } from './ipic-plan.js';
+import './ipic-screening.css';
 import { officeLobbyGroundCutout } from './office-contract.js';
 import { captureOfficeStreet } from './office-world-presentation.js';
 import { createStoreIntros } from './store-intro-ui.js';
@@ -131,7 +134,7 @@ let pendingSharedPlace = null, sharedPlaceInFlight = false;
 let worldPortal = null;
 let worldRegionSha256 = null;
 let landmarkAccountId = null;
-let playerAvatar, officeUI;
+let playerAvatar, officeUI, ipicScreening;
 let multiplayer, remotePlayers, buildLayer, buildControls, seatingControls, seatAndWater;
 let plazaSalon = null, plazaGames = null, plazaDominoes = null, plazaHearts = null, plazaBackgammon = null, cafeGame = 'dominoes', plazaStage = null, plazaBicycle = null, cyclingBoard = null;
 let plazaJenga = null, plazaYacht = null, benchGame = 'jenga';
@@ -369,6 +372,14 @@ function initializeRenderer() {
   visitTools.append($('.player-controls'), cyclingBoard.panel, ...(buildControls ? [buildControls.panel] : []));
   officeUI=createOfficeUI({host,panelHost:visitTools,renderer,getWorld:()=>world,getMultiplayer:()=>multiplayer,walking,
     captureStreet:()=>captureOfficeStreet({scene,camera,pipeline,lights:storeLights,avatar:playerAvatar,lobby:buildingMesh?.userData.officeArrival,world,getWorld:()=>world,pose:walking?.getPose()})});
+  // IPIC screenings (#367): the town's timeline on the existing screen, while the player is inside IPIC.
+  // Mounted on the viewport, not the canvas host: walking takes pointer capture on the canvas host.
+  ipicScreening??=createIpicScreening({host:host.parentElement??host,THREE,getMultiplayer:()=>multiplayer,getScreen:()=>buildingMesh?.userData.interiors?.userData.screens?.[0]??null,
+    getVenue:()=>{
+      const pose=walking?.getPose(),room=pose&&!officeUI?.active?walking?.environment?.roomAt(pose.position[0],pose.position[2]):null;
+      if(room?.interior!==IPIC_INTERIOR)return {active:false,auditorium:false};
+      return {active:true,auditorium:room.toLocal(pose.position[0],-pose.position[2])[1]>=26};
+    }});
   // Bird cams: Jev flies a few birds over the district; ride along or take over.
   birdCams = createBirdCams({ scene, camera, host, getEnvironment: () => world && walking?.active ? birdFlightEnvironment() : null, getInterests: birdInterests, getPathHints: () => world?.birdPathHints ?? {} });
   birdCamsUI = createBirdCamsUI(birdCams);
@@ -449,7 +460,7 @@ function startMultiplayer() {
     getOwnerHomes: () => world?.stores.filter(store => store.category === 'home' && store.access === 'owner') ?? [],
     getRegionSha256: () => worldRegionSha256,
     onHomeAccess: () => districtUI?.refreshAccess(),
-    onSnapshot: snapshot => { if (world) community.applyRemote(snapshot);buildLayer?.sync(snapshot.builds??[]);plazaSalon?.userData.rack?.setTaken(snapshot.cycling?.taken ?? []); },
+    onSnapshot: snapshot => { ipicScreening?.onSnapshot(snapshot); if (world) community.applyRemote(snapshot);buildLayer?.sync(snapshot.builds??[]);plazaSalon?.userData.rack?.setTaken(snapshot.cycling?.taken ?? []); },
     onCorrection: player => { if (world && player) { walking.applyServerPose(player); plazaBicycle?.sync(); } },
     onPlayers: (players, selfId) => {
       host.dataset.multiplayer = players.length ? 'joined' : 'disconnected';
@@ -559,7 +570,7 @@ function populateWorld(data) {
     worldGroup.remove(buildingMesh);
     buildingMesh?.userData.dispose?.();
     worldGroup.remove(interiorsLayer);
-    storePeople?.userData.dispose?.(); storePeople = null; interiorsLayer = null;
+    ipicScreening?.dispose(); storePeople?.userData.dispose?.(); storePeople = null; interiorsLayer = null;
     plazaSalon?.userData.rack?.dispose();
     worldGroup.traverse((item) => {
       item.userData.cancelLandscapeLoad?.();
@@ -902,6 +913,7 @@ function render(now) {
     // The office presentation also calls this pipeline; clear a previous
     // gallery mask before either render path runs.
     pipeline.setOcclusionExteriorMask(generatedRoomActive ? worldGroup : null, interiorsLayer);
+    ipicScreening?.update();
     if (!officeUI?.update(now, delta)) {
       if (generatedRoomActive && canCullExterior(camera, currentRoom))
         renderWithoutExterior(worldGroup, interiorsLayer, () => pipeline.render(delta));
@@ -1206,6 +1218,9 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
     goTo(x, north) { return goToPlace({ kind: 'landmark', name: 'Spot', position: [x, north] }); },
   } : null;
   window.__riverVoice = () => multiplayer?.voice.debug() ?? null;
+  window.__riverScreening = () => ipicScreening?.inspect() ?? null;
+  // Development-only: send a raw command, as a modified client could, to prove the server refuses it.
+  window.__riverMultiplayerCommand = message => multiplayer?.command(message);
   window.__riverMultiplayer = () => ({ connected: multiplayer?.connected ?? false, selfId: multiplayer?.identity?.id, snapshot: multiplayer?.snapshot, remotes: remotePlayers?.stats(), voice: multiplayer?.voice.debug() ?? null,creations:buildLayer?.stats(),birds:birdCams?.state,builder:buildControls?{...buildControls.builder,ghost:buildLayer?.ghost?{position:buildLayer.ghost.position.toArray(),visible:buildLayer.ghost.visible}:null,hint:document.querySelector('#build-hint')?.textContent,valid:document.querySelector('#build-hint')?.dataset.valid}:null });
   window.__riverPlayerAttention=()=>{
     const rig=playerAvatar?.rig;if(!rig)return null;

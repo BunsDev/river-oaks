@@ -31,7 +31,7 @@ import { createVoiceRoutes } from './voice-routes.js';
 import { createRideFlush } from './ride-flush.js';
 import { createCyclingLeaderboard } from './cycling-api.js';
 
-const types = { '.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.glb':'model/gltf-binary','.hdr':'application/octet-stream','.svg':'image/svg+xml','.woff2':'font/woff2' };
+const types = { '.webm':'video/webm','.mp4':'video/mp4','.vtt':'text/vtt; charset=utf-8','.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.glb':'model/gltf-binary','.hdr':'application/octet-stream','.svg':'image/svg+xml','.woff2':'font/woff2' };
 const equal = (a,b) => typeof a==='string' && typeof b==='string' && Buffer.byteLength(a)===Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a),Buffer.from(b));
 const json = (res,status,value) => { res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(value)); };
 export function createGameServer({ debugReports = createMemoryDebugReports(), auth, world, worldTitle = world.title, landmarks, social = null, groups = null, profiles = null, events = null, workplace = null, officeDesk = createMemoryOfficeDesk(), officeWorkspaces = createMemoryOfficeWorkspaces(), avatarPreferences = null, presence = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, regionSha256 = null, onBan = null, origin, staticRoot, moderation, waitlist, waitlistAdmins = [], moderators = [], trustedProxyIPs = [], now = Date.now, onMove = null, voice = null, voiceReconcileMs = 1000, departureGraceMs = 30000, cyclingMiles = null, cyclingFlushMs = 30000 }) {
@@ -286,6 +286,16 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
       res.setHeader('Content-Type',types[extname(path)]??'application/octet-stream');
       res.setHeader('Cache-Control',protectedAsset?'private, no-store':extname(path)==='.html'?'no-cache':'public, max-age=300');
       if(protectedAsset)res.setHeader('Vary','Cookie');
+      // One byte range (media seeking, and Safari's video probe); several ranges get the whole file.
+      res.setHeader('Accept-Ranges','bytes');
+      const range=/^bytes=(\d*)-(\d*)$/.exec(req.headers.range??'');
+      if(range&&(range[1]||range[2])){
+        const start=range[1]?Number(range[1]):Math.max(0,info.size-Number(range[2])),end=range[1]&&range[2]?Math.min(Number(range[2]),info.size-1):info.size-1;
+        if(!(start<=end&&start<info.size)){res.writeHead(416,{'Content-Range':`bytes */${info.size}`});return res.end();}
+        res.writeHead(206,{'Content-Range':`bytes ${start}-${end}/${info.size}`,'Content-Length':end-start+1});
+        if(req.method==='HEAD')return res.end();
+        createReadStream(path,{start,end}).on('error',()=>res.destroy()).pipe(res);return;
+      }
       res.setHeader('Content-Length',info.size);
       if(req.method==='HEAD')return res.end();
       createReadStream(path).on('error',()=>res.destroy()).pipe(res);
