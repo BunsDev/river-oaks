@@ -6,6 +6,7 @@ import { chromium } from 'playwright';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { startBrowserFixture } from './fixture-server.js';
 import { holdBrowserLock } from '../../scripts/browser-lock.mjs';
+import { loadavg } from 'node:os';
 
 // Counts what the page creates, without changing what it does: media elements it plays or
 // creates, AudioContexts, live intervals and pending timeouts, and play() calls.
@@ -63,11 +64,11 @@ try {
   const started = Date.now();
   try {
     const result = await eval(`(${source})`)(host, viewer, tools);
-    await writeFile('output/playwright/ipic/screening-soak.json', JSON.stringify({ status: 'passed', browser: await browser.version(), durationMs: Date.now() - started, ...result }, null, 2));
+    await writeFile('output/playwright/ipic/screening-soak.json', JSON.stringify({ status: 'passed', loadAverage: loadavg().map(n => Number(n.toFixed(1))), browser: await browser.version(), durationMs: Date.now() - started, ...result }, null, 2));
     console.log(JSON.stringify({ checks: result.checks, convergedAfterMs: result.cycles.map(item => item.convergedAfterMs), growth: Object.fromEntries(Object.entries(result.growth).map(([key, value]) => [key, [value.baseline, value.last]])) }));
   } catch (error) {
     await Promise.all([host.screenshot({ path: 'output/playwright/ipic/soak-host-failure.png' }), viewer.screenshot({ path: 'output/playwright/ipic/soak-viewer-failure.png' })].map(p => p.catch(() => {})));
-    await writeFile('output/playwright/ipic/screening-soak.json', JSON.stringify({ status: 'failed', durationMs: Date.now() - started, error: error.stack }, null, 2));
+    await writeFile('output/playwright/ipic/screening-soak.json', JSON.stringify({ status: 'failed', loadAverage: loadavg().map(n => Number(n.toFixed(1))), durationMs: Date.now() - started, error: error.stack }, null, 2));
     throw error;
   }
 } finally { await browser?.close(); await fixture?.close(); release(); }
