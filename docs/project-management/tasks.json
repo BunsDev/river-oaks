@@ -10910,8 +10910,8 @@
         "feat/green-roofs-20261015"
       ],
       "owner": "codex:green-roofs-20261015",
-      "updatedAt": "2026-10-15T19:23:30.634352+00:00",
-      "nextAction": "Full18-component local gate passed at9a4404da with final spatial startup parity; all13 experience/21 shared/IPIC passed. Integrated main2d7a1ef3; affected41 tests and build passed. Metal v10/town evidence retained with exact source limits. Commit/push verified follow-up, await exact-head hosted CI, then pnpm land449; mark delivered only with merge proof.",
+      "updatedAt": "2026-10-15T19:40:15.925333+00:00",
+      "nextAction": "Signed19cf13ee all16 hosted checks passed; prior queue refused stale main. Integrated ec036956 (Studio/voice main) with repo task merge driver; final combined pnpm verify core passed. Commit/push signed final merge, re-enter pnpm land449, await exact-head hosted checks and actual merge proof. Full18-component pass9a4404da and Metal evidence retain recorded scope.",
       "ledger": "docs/superpowers/plans/2026-10-15-green-roofs.md",
       "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-green-roofs",
       "filesOwned": [
@@ -10959,6 +10959,36 @@
       ],
       "pr": 449,
       "leaseUntil": "2026-10-15T22:23:30.634352+00:00"
+    },
+    {
+      "id": "studio-acceptance-417",
+      "title": "#417 Garden Office pilot acceptance (coding scope): review profile, full Studio journey, warm-up plus ten-cycle resource soak, late/missing asset recovery, real-GPU measurements, keyboard and layout checks",
+      "status": "active",
+      "branches": [
+        "test/studio-acceptance-417-20261015"
+      ],
+      "owner": "claude:river-oaks-safe-edits (e9aa0185)",
+      "updatedAt": "2026-10-15T18:22:32.901Z",
+      "leaseUntil": "2026-10-15T20:22:32.901Z",
+      "nextAction": "Soak: no unexplained growth (70 cycles; heap growth was undo history, capped at 80, shown by 40-to-70 snapshots). Journey passed 13 checks with a walked tour of all four destinations. Queued on the browser lock: late/missing texture scenario, then the Studio frame-timing profile. Next: keyboard, focus, reduced motion and 320/390 px checks; occupied-use captures.",
+      "ledger": "docs/superpowers/plans/2026-10-15-studio-pilot-acceptance.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-studio-acceptance-417",
+      "issue": 417,
+      "filesOwned": [
+        "preview/e2e/ (new Studio acceptance scenario only)",
+        "preview/src/studio/viewport.js (opt-in diagnostics, measured lifecycle fixes only)",
+        "preview/src/studio/scene.js (measured lifecycle fixes only)",
+        "preview/tests/studio-*.test.js (acceptance regressions)",
+        "docs/world-studio.md",
+        "docs/superpowers/plans/2026-10-15-studio-pilot-acceptance.md"
+      ],
+      "requiredChecks": [
+        "node --test preview/tests/studio-*.test.js server/tests/studio-assets.test.js",
+        "pnpm run test:experience world-studio",
+        "the new soak scenario (warm-up plus ten cycles)",
+        "node desktop/studio-e2e.js",
+        "pnpm run verify"
+      ]
     }
   ]
 }

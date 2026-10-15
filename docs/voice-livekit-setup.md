@@ -82,7 +82,8 @@ values.
 2. Write the measured results into `data/reports/voice-revocation.json`: the
    time from a leave or revoke to the peer being removed. The targets are
    about 2 s with a live lease holder and up to about 127 s with no instance
-   alive for the world. Add a dated section to the voice plan listing the
+   alive for the world. A lease left behind by a replaced connection (another tab) is
+   revoked after the 3 s hand-over grace, so measure about 5 s for that case. Add a dated section to the voice plan listing the
    environment used, the account types, what was heard and the room names
    seen. The report must not contain the key, the secret or the project host.
 3. Open a pull request with that evidence and land it with

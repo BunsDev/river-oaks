@@ -253,7 +253,8 @@ Disconnects have a thirty-second reconnect grace (`LEAVE_GRACE_MS` in `server/re
 - **Planned moves.** The hosted function ends each request at 300 s (`vercel.json`), so the town retires every socket at 270 s (`connectionLifetime`). It sends `{type:'rotate', closeInMs}` 15 s first (`server/connection-close.js`).
   - The page lets its commands in flight finish, holds new ones, and opens a fresh socket with a fresh ticket.
   - It switches over on that socket's first snapshot, then sends the held commands.
-  - The town replaces the old connection without the player leaving, and voice takes a lease for the new connection with the microphone kept.
+  - The town replaces the old connection without the player leaving.
+  - **Voice stays in the room.** The notice names the connection being left, and the fresh socket presents it (`continues`). The voice lease, fenced to its connection id, moves to the new connection (`continueConnection` in `server/voice.js`), and the page renews without rejoining. Only that page knows the id, so another tab cannot claim the lease. A lease left naming another connection (a new tab, or a page that died) is revoked once a 3 s grace runs out (`VOICE_MOVE_GRACE_MS`).
   - Without a replacement, the old socket closes with 4010, and the page reconnects as usual.
 - **Updates.** A server replaced by an update closes its sockets with 1012 ("River Oaks is updating."). The page says the world is improving and rejoins by itself. A new world or client version (4000, or the ticket's 426) says the world has been improved and offers Refresh.
 - **Dead sockets.** The town sends a snapshot every 200 ms. A visible page that hears none for 8 s drops the socket and reconnects (`preview/src/connection-policy.js`). Retries back off to 30 s with jitter, and the `online` event or a return to view retries at once.

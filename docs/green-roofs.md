@@ -180,3 +180,10 @@ line in main.js, so v10 is evidence of its recorded revision. Earlier v7/v9 runs
 remain historical evidence with their recorded scope. Native Unreal, live auth,
 human accessibility, user visual approval and sustained/mobile GPU certification
 remain outside these checks.
+
+Final queue refresh: main ec036956 (Studio acceptance and voice continuity) was
+integrated after all16 hosted checks passed on19cf13ee. The combined tree passed
+`pnpm run verify` core; receipt `.runtime/green-roofs-final-main-core-passed.json`.
+The earlier full/Metal evidence retains its recorded scope. Final merged-head
+hosted CI and actual PR merge remain separate delivery evidence in the live task
+register.

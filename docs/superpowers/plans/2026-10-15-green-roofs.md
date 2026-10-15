@@ -264,3 +264,10 @@ Read world direction and remaining architecture/landscape/flight seams. Establis
 - Product v10 source hashes were verified against9a4404da before integration; incoming main changes main.js IPIC house-light intensity, so earlier native captures retain their recorded scope. No fresh native or deployment claim.
 - `project:check --tasks <primary>/docs/project-management/tasks.json` reports unrelated expired leases/pending retirements/unregistered detached worktrees; not a clean repository lifecycle check. Other sessions' state preserved.
 - Ready for signed verified follow-up commit/push and exact-head hosted CI. PR449 remains draft until body/evidence updated and landing queue owns final main refresh/merge. Do not mark delivered until actual merge SHA is confirmed on main.
+
+### Final queue main refresh
+
+- Signed19cf13ee pushed and all16 exact-head hosted checks passed. Queue correctly refused when newer main required local task-register reconciliation; no override used.
+- Integrated main ec036956 after preceding PR454 merged, retaining Studio acceptance/material placeholder handling and voice continuity. Repo merge driver reconciled task entries; no manual product conflict. Removed one extra incoming test EOF blank line for diff-check.
+- `pnpm run verify` passed across the final combined tree (receipt `.runtime/green-roofs-final-main-core-passed.json`); this core run does not replace the earlier full/Redis/native recorded scope. Full receipt and native source provenance remain unchanged.
+- Final signed merge push must receive exact-head hosted CI before pnpm land449 can merge. Actual delivery status is recorded in the primary live task register only after merge proof.
