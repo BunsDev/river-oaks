@@ -30,7 +30,7 @@ export function officeSkylineSize({ scale = 1, maxCubemapSize = Infinity } = {})
 // inside it (the mapped tower is not yet raised to the penthouse): its facade instances by
 // building index, its massing by building id, and anything else standing in its footprint
 // (`hostRing`, [x, z] world corners, with a 1 m margin), such as a rooftop ornament.
-const MARGIN = 1;
+const MARGIN = 1, IDENTITY = new THREE.Matrix4();
 function insideRing(ring, x, z) {
   let inside = false;
   for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
@@ -49,25 +49,35 @@ function insideRing(ring, x, z) {
 export function createOfficeSkyline({ renderer, scene, eye, floorY, hostBuildingIndex = -1, hostBuildingId = null, hostRing = null, hide = [], size = 1024, far = 6000, now = () => performance.now() }) {
   const target = new THREE.WebGLCubeRenderTarget(size, { type: THREE.HalfFloatType });
   target.texture.name = 'office-skyline';
-  const stats = { state: 'pending', size, bytes: size * size * 6 * (8 + 4), submitMs: null, ms: null, hiddenInstances: 0, hiddenMeshes: 0 };
+  const stats = { state: 'pending', size, bytes: size * size * 6 * (8 + 4), traverseMs: null, submitMs: null, ms: null, newPrograms: null, hiddenInstances: 0, hiddenMeshes: 0 };
+  const round = ms => Math.round(ms * 10) / 10;
   let attempted = false, disposed = false, saved = null;
   const ringBounds = hostRing?.length > 2 ? hostRing.reduce((b, [x, z]) => [Math.min(b[0], x), Math.max(b[1], x), Math.min(b[2], z), Math.max(b[3], z)], [Infinity, -Infinity, Infinity, -Infinity]) : null;
   const inFootprint = (x, z) => Boolean(ringBounds) && insideRing(hostRing, x, z);
 
-  // Host instances that reach above the office floor, as [mesh, index, matrix].
+  // Host instances that reach above the office floor, as [mesh, index, matrix]. Most of the
+  // district is rejected from each instance's translation and bounding reach alone; only
+  // candidates get an exact box.
   function hostInstances() {
     const found = [], box = new THREE.Box3(), matrix = new THREE.Matrix4(), centre = new THREE.Vector3();
     if (hostBuildingIndex < 0 && !ringBounds) return found;
     scene.traverseVisible(object => {
       if (!object.isInstancedMesh) return;
-      const indices = object.userData.buildingIndices;
-      if (!object.geometry.boundingBox) object.geometry.computeBoundingBox();
+      const indices = object.userData.buildingIndices, geometry = object.geometry, world = object.matrixWorld, e = object.instanceMatrix.array;
+      if (!geometry.boundingSphere) geometry.computeBoundingSphere();
+      if (!geometry.boundingBox) geometry.computeBoundingBox();
+      const radius = geometry.boundingSphere.radius + geometry.boundingSphere.center.length(), plain = world.equals(IDENTITY);
       for (let i = 0; i < object.count; i++) {
+        const o = i * 16, reach = radius * Math.max(Math.hypot(e[o], e[o + 1], e[o + 2]), Math.hypot(e[o + 4], e[o + 5], e[o + 6]), Math.hypot(e[o + 8], e[o + 9], e[o + 10]));
+        centre.set(e[o + 12], e[o + 13], e[o + 14]); if (!plain) centre.applyMatrix4(world);
+        if (centre.y + reach <= floorY + 0.05) continue;
+        const indexed = hostBuildingIndex >= 0 && indices?.[i] === hostBuildingIndex;
+        if (!indexed && (!ringBounds || centre.x + reach < ringBounds[0] - MARGIN || centre.x - reach > ringBounds[1] + MARGIN || centre.z + reach < ringBounds[2] - MARGIN || centre.z - reach > ringBounds[3] + MARGIN)) continue;
         object.getMatrixAt(i, matrix);
-        box.copy(object.geometry.boundingBox).applyMatrix4(matrix).applyMatrix4(object.matrixWorld);
+        box.copy(geometry.boundingBox).applyMatrix4(matrix).applyMatrix4(world);
         if (box.max.y <= floorY + 0.05) continue;
         box.getCenter(centre);
-        if ((hostBuildingIndex >= 0 && indices?.[i] === hostBuildingIndex) || inFootprint(centre.x, centre.z)) found.push([object, i, matrix.clone()]);
+        if (indexed || inFootprint(centre.x, centre.z)) found.push([object, i, matrix.clone()]);
       }
     });
     return found;
@@ -89,16 +99,18 @@ export function createOfficeSkyline({ renderer, scene, eye, floorY, hostBuilding
   return {
     get texture() { return target.texture; },
     get stats() { return { ...stats }; },
+    get pending() { return !attempted && !disposed; },
     // Capture once per visit, while the district is still drawn. Returns whether the
     // backdrop is now showing; a second call, or a call after dispose, does nothing.
     capture() {
       if (attempted || disposed) return false;
       attempted = true;
-      const instances = hostInstances(), masses = hostMeshes(), zero = new THREE.Matrix4().makeScale(0, 0, 0);
+      const started = now(), instances = hostInstances(), masses = hostMeshes(), zero = new THREE.Matrix4().makeScale(0, 0, 0);
+      stats.traverseMs = round(now() - started);
       const hidden = [...hide, ...masses].filter(Boolean).map(object => [object, object.visible]);
       const meshes = new Set(instances.map(([mesh]) => mesh));
       const autoClear = renderer.autoClear, shadows = renderer.shadowMap.autoUpdate, shadowNeeds = renderer.shadowMap.needsUpdate;
-      const started = now();
+      const submitted = now(), programs = renderer.info?.programs?.length ?? 0;
       try {
         for (const [object] of hidden) object.visible = false;
         for (const [mesh, index] of instances) mesh.setMatrixAt(index, zero);
@@ -108,10 +120,10 @@ export function createOfficeSkyline({ renderer, scene, eye, floorY, hostBuilding
         const camera = new THREE.CubeCamera(NEAR, far, target);
         camera.position.copy(eye); camera.updateMatrixWorld();
         camera.update(renderer, scene);
-        // Submission on the CPU, then the whole capture once the GPU has finished it.
-        stats.submitMs = Math.round((now() - started) * 10) / 10;
-        renderer.getContext?.().finish?.();
-        stats.ms = Math.round((now() - started) * 10) / 10;
+        // CPU time to submit the six faces (the GPU is never waited on), and the shader
+        // programs first compiled for them.
+        stats.submitMs = round(now() - submitted);
+        stats.newPrograms = (renderer.info?.programs?.length ?? 0) - programs;
       } catch (error) {
         stats.state = 'failed'; stats.error = error.message;
         return false;
@@ -121,6 +133,7 @@ export function createOfficeSkyline({ renderer, scene, eye, floorY, hostBuilding
         for (const [object, visible] of hidden) object.visible = visible;
         renderer.autoClear = autoClear; renderer.shadowMap.autoUpdate = shadows; renderer.shadowMap.needsUpdate = shadowNeeds;
       }
+      stats.ms = round(now() - started);
       stats.state = 'captured'; stats.hiddenInstances = instances.length; stats.hiddenMeshes = masses.length;
       saved = { background: scene.background, intensity: scene.backgroundIntensity, blurriness: scene.backgroundBlurriness, rotation: scene.backgroundRotation?.clone() };
       // The faces already hold the sky at its intensity; show them as captured.

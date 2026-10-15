@@ -15,8 +15,10 @@ function fakeRenderer(onRender = () => {}) {
     shadowMap: { autoUpdate: true, needsUpdate: false }, renders: [],
     getRenderTarget: () => target, getActiveCubeFace: () => face, getActiveMipmapLevel: () => 0,
     setRenderTarget(next, nextFace = 0) { target = next; face = nextFace; },
-    render(scene, camera) { this.renders.push({ face, target, autoClear: this.autoClear, shadows: this.shadowMap.autoUpdate }); onRender(scene, camera); },
-    getContext: () => ({ finish() {} }),
+    // The first face compiles one shader program; a capture must never wait on the GPU.
+    info: { programs: [] }, finished: 0,
+    render(scene, camera) { if (!this.renders.length) this.info.programs.push({}); this.renders.push({ face, target, autoClear: this.autoClear, shadows: this.shadowMap.autoUpdate }); onRender(scene, camera); },
+    getContext() { return { finish: () => { this.finished++; } }; },
   };
 }
 
@@ -73,6 +75,11 @@ test('the penthouse captures the district once, without the host tower, the stag
   assert.equal(skyline.capture(), false, 'a second request does not capture again');
   assert.equal(renderer.renders.length, 6);
   assert.equal(skyline.stats.state, 'captured'); assert.equal(skyline.stats.size, 16); assert.equal(skyline.stats.hiddenInstances, 1);
+  assert.equal(renderer.finished, 0, 'the capture never stalls on the GPU');
+  assert.equal(skyline.stats.newPrograms, 1, 'programs first compiled for the faces are counted');
+  for (const key of ['traverseMs', 'submitMs', 'ms']) assert.ok(skyline.stats[key] >= 0, key);
+  assert.ok(skyline.stats.ms >= skyline.stats.traverseMs + skyline.stats.submitMs - 0.2, 'the total includes the host search');
+  assert.equal(skyline.pending, false);
   assert.equal(skyline.stats.bytes, 16 * 16 * 6 * 12);
   skyline.dispose();
   assert.equal(f.scene.background, f.background); assert.equal(f.scene.backgroundIntensity, 0.7); assert.equal(f.scene.backgroundBlurriness, 0.2);
@@ -132,9 +139,11 @@ function street({ layout, skyline = { size: 16 } }) {
   body.position.set(-2742, 18.4, 1378);
   const background = new THREE.Color('#99bbdd'); scene.background = background; scene.backgroundIntensity = 0.7;
   const avatar = { object: body, ready: true, setPresentation(value) { this.presentation = value; } }, lobby = { object, setEntryOpen() {}, update() {} };
-  const seen = [], renderer = fakeRenderer(() => seen.push({ district: districtGroup.visible, body: body.visible, lobby: object.visible }));
-  const captured = captureOfficeStreet({ scene, camera, pipeline: { render() {} }, renderer, skyline, avatar, lobby, world: { buildings: [] }, pose: { position: [-2742, 20.08, 1378], velocity: [0, 0] } });
-  return { scene, districtGroup, background, renderer, seen, captured, self: { id: 'self', office: { id: 'jevica-office', layout, levelId: 'jevica-office/l0' } } };
+  // One light of the district's fixed pool, lighting a shop near the lobby.
+  const lamp = new THREE.PointLight('#ffd9ae', 10, 10, 2); lamp.position.set(-2745, 20, 1390); scene.add(lamp);
+  const seen = [], renderer = fakeRenderer(() => seen.push({ district: districtGroup.visible, body: body.visible, lobby: object.visible, lamp: lamp.intensity, lampAt: lamp.position.clone() }));
+  const captured = captureOfficeStreet({ scene, camera, pipeline: { render() {} }, renderer, skyline, lights: [lamp], avatar, lobby, world: { buildings: [] }, pose: { position: [-2742, 20.08, 1378], velocity: [0, 0] } });
+  return { scene, districtGroup, background, renderer, seen, lamp, captured, self: { id: 'self', office: { id: 'jevica-office', layout, levelId: 'jevica-office/l0' } } };
 }
 function visit(t, s) {
   const previous = globalThis.document, element = () => ({ style: {}, classList: {}, append() {}, setAttribute() {}, remove() {} });
@@ -153,6 +162,8 @@ test('a penthouse visit captures while the doors close, before the district is h
   assert.equal(s.renderer.renders.length, 6, 'one capture during the arrival');
   assert.ok(s.seen.every(face => face.district && !face.body && !face.lobby), 'the faces see the district, never the visitor or the cabin');
   assert.equal(s.captured.lobby.object.visible, true, 'the cabin is shown again after the capture');
+  assert.ok(s.seen.every(face => face.lamp === 10 && face.lampAt.distanceTo(new THREE.Vector3(-2745, 20, 1390)) < 1e-9), 'the faces see the street lit by its own pool, not the cabin lights');
+  assert.notEqual(s.lamp.intensity, 10, 'the pool goes back to lighting the cabin right after');
   assert.ok(['closing', 'ascending'].includes(v.phases.at(-1)), `captured as the doors close, not later: ${v.phases.at(-1)}`);
   assert.equal(s.districtGroup.visible, false, 'the district is hidden right after');
   assert.equal(s.scene.background.isTexture, true);

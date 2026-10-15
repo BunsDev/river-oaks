@@ -44,9 +44,10 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
       const height=ARRIVAL.officeElevation*ascent;
       stage.position.copy(basePosition);stage.position.y+=height;
       worldLights.forEach((light,i)=>{light.position.copy(lights[i].position).applyMatrix4(street.frame);light.position.y+=height;});
-      lease.lights(worldLights,skipped?1:ease(elapsed/.8));
+      const lightBlend=skipped?1:ease(elapsed/.8);lease.lights(worldLights,lightBlend);
       const inside=!entering&&(skipped||time>=ARRIVAL.closingEnd);
-      if(inside)skyline?.capture();
+      // The capture sees the street's own lighting, not the cabin's (office-skyline.js).
+      if(inside&&skyline?.pending){lease.lights(worldLights,0);skyline.capture();lease.lights(worldLights,lightBlend);}
       lease.inside(inside);
       office.object.visible=!entering&&['opening','arriving','office'].includes(frame.phase);
       street.lobby.setEntryOpen(entering?ease(elapsed/.8):1);
