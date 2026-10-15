@@ -5,10 +5,10 @@ import { register } from 'node:module';
 register(`data:text/javascript,${encodeURIComponent("export async function load(url, context, next) { return url.endsWith('.css') ? {format:'module',source:'',shortCircuit:true} : next(url,context); }")}`,import.meta.url);
 const {createOfficeUI}=await import('../src/office-ui.js');
 const {officesFor}=await import('../src/office-contract.js');
-const {officeLayout,officeTransition}=await import('../src/office-layouts.js');
+const {OFFICE_OCCUPIED_CLEARANCE,officeLayout,officeSeat,officeTransition}=await import('../src/office-layouts.js');
 const data=JSON.parse(readFileSync(new URL('../public/data/district.json',import.meta.url)));
 const tick=()=>new Promise(resolve=>setImmediate(resolve));
-function setup(t,{access='owner',sceneError=false,listPending=null,leavePending=null,renderPhase='office',captureStreet=()=>null,workspaces=null,layout=null,startAt=null,transitionPending=null}={}){
+function setup(t,{access='owner',sceneError=false,listPending=null,leavePending=null,renderPhase='office',captureStreet=()=>null,workspaces=null,layout=null,startAt=null,transitionPending=null,seatPending=null}={}){
  class Element {
   constructor(tag){this.tagName=tag;this.children=[];this.dataset={};this.events={};this.attributes={};this.textContent='';this.value='';this.hidden=false;this.open=false;this.classList={add(){},remove(){}};}
   append(...items){for(const i of items){i.remove();i.parent=this;this.children.push(i);}}
@@ -33,7 +33,9 @@ function setup(t,{access='owner',sceneError=false,listPending=null,leavePending=
  const player={id:'owner',name:'Jevica',position:[...officesFor(data)[0].entrance,0],office:null};
  const calls=[],voiceCalls=[],scenes=[],prepared=[],renders=[];let pending=null,disposed=0;
  const mp={connected:true,identity:{id:'owner'},snapshot:{players:[player]},voice:{state:{available:true,status:'joined',mic:'off',pushToTalk:false},toggleJoin(){voiceCalls.push('join');},toggleMic(){voiceCalls.push('mic');},setTransmit(v){voiceCalls.push(v);}},async command(m){calls.push(m);if(m.action==='list'){if(listPending)await listPending;return {ok:true,offices:[{...officesFor(data)[0],access,requested:false,guests:[],requests:[]}]};}if(m.action==='enter'){if(pending)return pending;player.office=layout?{id:m.officeId,layout,levelId:'jevica-office/l0',elevation:0,position:startAt??officeLayout(layout).spawn.position,yaw:0}:{id:m.officeId,position:[0,1.25],yaw:0};}
- if(m.action==='transition'){if(transitionPending)await transitionPending;const moved=officeTransition(officeLayout(player.office.layout),player.office,m.portalId);if(!moved.ok)return moved;player.office={...player.office,levelId:moved.levelId,position:moved.position,elevation:moved.elevation};return {ok:true,office:player.office};}if(m.action==='leave'){if(leavePending)await leavePending;player.office=null;}return {ok:true};}};
+ if(m.action==='transition'){if(transitionPending)await transitionPending;const moved=officeTransition(officeLayout(player.office.layout),player.office,m.portalId);if(!moved.ok)return moved;player.office={...player.office,levelId:moved.levelId,position:moved.position,elevation:moved.elevation};return {ok:true,office:player.office};}
+ if(m.action==='sit'){if(seatPending)await seatPending;const seat=officeSeat(officeLayout(player.office?.layout),m.seatId);if(!player.office||!seat)return {ok:false,error:'invalid_office_seat'};player.office={...player.office,position:[...seat.position],yaw:seat.facing,seat:{id:seat.id}};return {ok:true,office:player.office};}
+ if(m.action==='stand'){const seat=officeSeat(officeLayout(player.office.layout),player.office.seat?.id);if(!seat)return {ok:false,error:'office_not_seated'};const {seat:_,...standing}=player.office;player.office={...standing,position:[...seat.stand]};return {ok:true,office:player.office};}if(m.action==='leave'){if(leavePending)await leavePending;player.office=null;}return {ok:true};}};
  if(workspaces)mp.officeDeskRequest=async(action,data)=>{calls.push({api:action,...data});if(action==='workspace/provision')return {ok:true,workspace:workspaces[0]};if(action==='workspace/list')return {ok:true,workspaces};if(action==='workspace/accept'){workspaces.find(w=>w.id===data.workspaceId).role='accepted';return {ok:true};}return {ok:true};};
  const walking={halt(){},getPosition:()=>player.position,getPose:()=>({altitude:0}),riding:false};
  const ui=createOfficeUI({host,panelHost,renderer:{},getWorld:()=>data,getMultiplayer:()=>mp,walking,captureStreet,createScene(options){scenes.push(options);if(sceneError)throw new Error('GPU unavailable');return {prepare:now=>prepared.push(now),render:(...args)=>{renders.push(args);return {phase:renderPhase,done:renderPhase==='office'};},skip(){},dispose(){disposed++;}};}});
@@ -207,4 +209,62 @@ test('a transition answered after the visit closed changes nothing',async t=>{
  assert.equal(f.calls.filter(c=>c.action==='transition').length,1,'one transition at a time');
  f.player.office=null;f.ui.sync([f.player],f.player.id);assert.equal(f.ui.active,false);
  resolve();await tick();await tick();assert.equal(f.ui.active,false);assert.equal(f.ui.pose,null);
+});
+test('at a desk chair\'s stand point Z sits; seated, walking stops, the eye lowers and the desk is offered; Z stands back up',async t=>{
+ const chair=officeSeat(officeLayout('office-penthouse-1'),'desk-a1-chair');
+ const f=setup(t,{layout:'office-penthouse-1',startAt:chair.stand});f.ui.update(6000,.016);await tick();f.find('office-enter').emit('click');await tick();
+ f.ui.update(6100,.016);assert.equal(f.find('office-seat').hidden,false);assert.match(f.find('office-seat').textContent,/Sit down · Z/);
+ f.find('office-visit').emit('keydown',{code:'KeyZ'});await tick();await tick();
+ const sit=f.calls.find(c=>c.action==='sit');assert.deepEqual([sit.seatId,sit.layout,Object.keys(sit).sort()],[chair.id,'office-penthouse-1',['action','layout','officeId','seatId','type']]);
+ f.ui.update(6200,.016);
+ assert.deepEqual(f.ui.pose.position.map(v=>Math.round(v*100)/100),[3.65,1.2,-5.6],'seated eye at the plan seat');
+ assert.match(f.find('office-seat').textContent,/Stand up · Z/);assert.equal(f.find('office-desk-nearby').hidden,false,'a desk chair offers its desk');
+ assert.deepEqual(f.renders.at(-1)[4],{layoutId:'office-penthouse-1',levelId:'jevica-office/l0',seatId:chair.id});
+ const moves=f.calls.filter(c=>c.action==='move').length;
+ f.find('office-visit').emit('keydown',{code:'KeyW'});f.ui.update(6500,.1);f.ui.update(6800,.1);await tick();f.find('office-visit').emit('keyup',{code:'KeyW'});
+ assert.equal(f.calls.filter(c=>c.action==='move').length,moves,'seated visitors send no moves');
+ assert.deepEqual(f.ui.pose.position.map(v=>Math.round(v*100)/100),[3.65,1.2,-5.6]);
+ f.find('office-seat').emit('click');await tick();await tick();f.ui.update(7000,.016);
+ assert.ok(f.calls.some(c=>c.action==='stand'&&c.layout==='office-penthouse-1'));
+ assert.deepEqual(f.ui.pose.position.map(v=>Math.round(v*100)/100),[3.65,1.68,-3.55],'standing returns to the stand point');
+ assert.match(f.find('office-seat').textContent,/Sit down · Z/);
+});
+test('a sit answered after the visit closed changes nothing',async t=>{
+ let resolve;const seatPending=new Promise(r=>{resolve=r;}),chair=officeSeat(officeLayout('office-penthouse-1'),'desk-a1-chair');
+ const f=setup(t,{layout:'office-penthouse-1',startAt:chair.stand,seatPending});f.ui.update(6000,.016);await tick();f.find('office-enter').emit('click');await tick();f.ui.update(6100,.016);
+ f.find('office-seat').emit('click');await tick();f.find('office-seat').emit('click');await tick();
+ assert.equal(f.calls.filter(c=>c.action==='sit').length,1,'one seat command at a time');
+ const visit=f.player.office;f.player.office=null;f.ui.sync([f.player],f.player.id);assert.equal(f.ui.active,false);
+ f.player.office=visit;resolve();await tick();await tick();assert.equal(f.ui.pose,null,'the late reply does not reopen or reseat');
+});
+test('a peer\'s occupied seat is collision for prediction, and the server\'s seat is adopted from snapshots',async t=>{
+ const layout=officeLayout('office-penthouse-1'),taken=officeSeat(layout,'desk-a2-chair');
+ // Beside the chair's stand point, clear of it and of the seated envelope: what the server allows.
+ const f=setup(t,{layout:'office-penthouse-1',startAt:[taken.position[0]+0.9,2.6]});
+ f.mp.snapshot.players.push({id:'guest',name:'Guest',office:{id:'jevica-office',layout:layout.id,levelId:'jevica-office/l0',elevation:0,position:[...taken.position],yaw:taken.facing,seat:{id:taken.id}}});
+ f.ui.update(6000,.016);await tick();f.find('office-enter').emit('click');await tick();f.ui.update(6100,.016);
+ f.find('office-visit').emit('keydown',{code:'KeyW'});for(let i=0;i<8;i++)f.ui.update(6200+i*100,.1);f.find('office-visit').emit('keyup',{code:'KeyW'});
+ const edge=taken.position[1]-Math.sqrt(OFFICE_OCCUPIED_CLEARANCE**2-0.9**2);
+ assert.ok(-f.ui.pose.position[2]<=edge+1e-9,`stopped outside the seated envelope at d ${-f.ui.pose.position[2]}`);
+ assert.ok(-f.ui.pose.position[2]>edge-0.3,'still walked up to it');
+ // A seat the server gives this visit (another tab, a restore) is adopted, and its release too.
+ const own=officeSeat(layout,'desk-a1-chair');f.player.office={...f.player.office,position:[...own.position],yaw:own.facing,seat:{id:own.id}};
+ f.ui.sync(f.mp.snapshot.players,f.player.id);f.ui.update(7100,.016);
+ assert.deepEqual(f.ui.pose.position.map(v=>Math.round(v*100)/100),[3.65,1.2,-5.6]);assert.match(f.find('office-seat').textContent,/Stand up/);
+ const {seat:_,...standing}=f.player.office;f.player.office={...standing,position:[...own.stand]};
+ f.ui.sync(f.mp.snapshot.players,f.player.id);f.ui.update(7200,.016);
+ assert.deepEqual(f.ui.pose.position.map(v=>Math.round(v*100)/100),[3.65,1.68,-3.55]);
+});
+test('the legacy room offers no seat control',async t=>{
+ const f=setup(t,{startAt:[-2.05,2.2]});f.ui.update(6000,.016);await tick();f.find('office-enter').emit('click');await tick();
+ f.ui.update(6100,.016);assert.equal(f.find('office-seat').hidden,true);
+ f.find('office-visit').emit('keydown',{code:'KeyZ'});await tick();assert.equal(f.calls.some(c=>c.action==='sit'),false);
+});
+test('an occupied chair shows Seat taken instead of offering to sit',async t=>{
+ const layout=officeLayout('office-penthouse-1'),taken=officeSeat(layout,'desk-a1-chair');
+ const f=setup(t,{layout:'office-penthouse-1',startAt:[taken.stand[0]+1,taken.stand[1]-0.5]});
+ f.mp.snapshot.players.push({id:'guest',name:'Guest',office:{id:'jevica-office',layout:layout.id,levelId:'jevica-office/l0',elevation:0,position:[...taken.position],yaw:taken.facing,seat:{id:taken.id}}});
+ f.ui.update(6000,.016);await tick();f.find('office-enter').emit('click');await tick();f.ui.update(6100,.016);
+ assert.equal(f.find('office-seat').hidden,false);assert.equal(f.find('office-seat').textContent,'Seat taken');assert.equal(f.find('office-seat').disabled,true);
+ f.find('office-visit').emit('keydown',{code:'KeyZ'});await tick();assert.equal(f.calls.some(c=>c.action==='sit'),false,'Z does not send a claim for a taken chair');
 });

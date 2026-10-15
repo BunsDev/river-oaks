@@ -59,4 +59,6 @@
 #office-desk-open { background:#dce6d1; color:#243f30; border-color:#c0cdb5; }
 /* Stairs and lift (#361): above the movement pad, clear of the header and the desk prompt. */
 #office-level { position:absolute; right:20px; bottom:200px; background:#f5f3e8; color:#2e4d3c; border-color:#d2d9c4; box-shadow:0 4px 20px #0003; }
-@media (max-width:600px) { #office-desk-nearby { left:10px; bottom:max(178px,calc(env(safe-area-inset-bottom) + 102px)); } #office-level { right:10px; bottom:max(200px,calc(env(safe-area-inset-bottom) + 124px)); } }
+/* Chairs (#363): above the desk prompt, which shows beside it at a desk chair. */
+#office-seat { position:absolute; left:20px; bottom:156px; background:#f5f3e8; color:#2e4d3c; border-color:#d2d9c4; box-shadow:0 4px 20px #0003; }
+@media (max-width:600px) { #office-desk-nearby { left:10px; bottom:max(178px,calc(env(safe-area-inset-bottom) + 102px)); } #office-level { right:10px; bottom:max(200px,calc(env(safe-area-inset-bottom) + 124px)); } #office-seat { left:10px; bottom:max(234px,calc(env(safe-area-inset-bottom) + 158px)); } }

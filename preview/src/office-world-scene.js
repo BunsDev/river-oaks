@@ -5,7 +5,7 @@ import { buildWorkplaceOffice } from './workplace-office.js';
 import { createRemotePlayers } from './remote-players.js';
 import { borrowOfficePresentation, officeStreetApproach, createOfficeArrivalClock, officePeerVisible } from './office-world-presentation.js';
 import { buildOfficeGeometry } from './office-penthouse-graybox.js';
-import { OFFICE_LAYOUT_LEGACY, officeLayout, officeLevelElevation } from './office-layouts.js';
+import { OFFICE_EYE_HEIGHT, OFFICE_LAYOUT_LEGACY, OFFICE_SEATED_EYE_HEIGHT, officeLayout, officeLevelElevation, officeSeatedPose } from './office-layouts.js';
 import { createVisitSkyline } from './office-skyline.js';
 import { arrivalBehindGlass } from './office-arrival-architecture.js';
 
@@ -15,7 +15,7 @@ import { arrivalBehindGlass } from './office-arrival-architecture.js';
 export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
   const lease=borrowOfficePresentation(street),approach=officeStreetApproach(street),stage=lease.stage,clock=createOfficeArrivalClock();
   let office,actors,disposed=false,started=null,skipped=reducedMotion,lastNow=null,lastBody=null,distance=street.startPose.distance;
-  let position=[...OFFICE_SPAWN],yaw=0,current=null,levelId=self.office?.levelId??null,floor=0;
+  let position=[...OFFICE_SPAWN],yaw=0,current=null,levelId=self.office?.levelId??null,floor=0,eye=OFFICE_EYE_HEIGHT;
   const layoutId=self.office?.layout??OFFICE_LAYOUT_LEGACY,layout=officeLayout(layoutId);
   // A glazed layout would show the borrowed cabin and lobby through its front glass once arrived.
   const glass=arrivalBehindGlass(street.lobby,layoutId!==OFFICE_LAYOUT_LEGACY);
@@ -62,7 +62,7 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
       if(entering){
         const start=approach.at(elapsed,aspect);body=start.player;view.position.copy(start.camera);view.quaternion.copy(start.quaternion);view.fov=start.fov;
       }else if(frame.done){
-        body=point.set(position[0],floor,-position[1]);view.position.set(position[0],1.68+floor,-position[1]);view.rotation.set(0,yaw,0,'YXZ');view.fov=62;
+        body=point.set(position[0],floor,-position[1]);view.position.set(position[0],eye+floor,-position[1]);view.rotation.set(0,yaw,0,'YXZ');view.fov=62;
       }else{
         body=point.set(frame.position[0],0,-frame.position[1]);const path=arrivalCamera(time,{aspect});view.position.fromArray(path.position);view.lookAt(...path.target);view.fov=path.verticalFov;
       }
@@ -82,12 +82,15 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
     return {prepare,
       render(now,nextPosition,nextYaw,players,place={}){
         if(disposed)return null;position=[...nextPosition];yaw=nextYaw;
-        levelId=place.levelId??levelId;floor=layout?officeLevelElevation(layout,levelId)??0:0;
+        levelId=place.levelId??levelId;floor=layout?officeLevelElevation(layout,levelId)??0:0;eye=place.seatId?OFFICE_SEATED_EYE_HEIGHT:OFFICE_EYE_HEIGHT;
         if(lastNow!==now)prepare(now);
-        if(current.done){view.position.set(position[0],1.68+floor,-position[1]).applyMatrix4(street.frame);view.position.y+=ARRIVAL.officeElevation;view.rotation.set(0,yaw,0,'YXZ');view.quaternion.premultiply(worldRotation);lease.camera(view);}
+        if(current.done){view.position.set(position[0],eye+floor,-position[1]).applyMatrix4(street.frame);view.position.y+=ARRIVAL.officeElevation;view.rotation.set(0,yaw,0,'YXZ');view.quaternion.premultiply(worldRotation);lease.camera(view);}
+        const turn=Math.atan2(street.frame.elements[8],street.frame.elements[10]);
         actors.sync(players.filter(p=>p.id!==self.id&&p.office?.id===self.office.id).map(p=>{
           const v=new THREE.Vector3(p.office.position[0],p.office.elevation??0,-p.office.position[1]).applyMatrix4(street.frame);v.y+=ARRIVAL.officeElevation;
-          return {...p,position:[v.x,-v.z,v.y],yaw:p.office.yaw+Math.atan2(street.frame.elements[8],street.frame.elements[10]),altitude:0,vehicle:null,sitting:null,interaction:null};
+          // A claimed seat (#363) poses the peer on it, turned with the office into the street frame.
+          const seated=layout?officeSeatedPose(layout,p.office):null;
+          return {...p,position:[v.x,-v.z,v.y],yaw:p.office.yaw+turn,altitude:0,vehicle:null,sitting:seated?{...seated,yaw:seated.yaw+turn}:null,interaction:null};
         }),null);
         actors.update(now,street.camera);office.update?.(now/1000);lease.render(1/60);return current;
       },

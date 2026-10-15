@@ -8,7 +8,7 @@ import { arrivalBehindGlass, buildOfficeArrival } from './office-arrival-archite
 import { createOfficeWorldScene } from './office-world-scene.js';
 import { officePeerVisible } from './office-world-presentation.js';
 import { buildOfficeGeometry } from './office-penthouse-graybox.js';
-import { OFFICE_LAYOUT_LEGACY, officeLayout, officeLevelElevation } from './office-layouts.js';
+import { OFFICE_EYE_HEIGHT, OFFICE_LAYOUT_LEGACY, OFFICE_SEATED_EYE_HEIGHT, officeLayout, officeLevelElevation, officeSeatedPose } from './office-layouts.js';
 
 // Keep the eye clear when residents share the arrival point or pass each other.
 export const officePlayerVisible=officePeerVisible;
@@ -42,7 +42,7 @@ export function createOfficeScene({renderer,host,self,players,reducedMotion=fals
     const walking=frame.done,at=walking?position:frame.position;firstPerson=walking;
     lastPosition=[...at];
     const activePlayers=allPlayers.filter(p=>p.office?.id===self.office.id);
-    actors.sync(activePlayers.map(p=>({...p,position:p.id===self.id?[...at,walking?floor:0]:[...p.office.position,p.office.elevation??0],yaw:p.id===self.id?(walking?yaw:0):p.office.yaw,altitude:0,vehicle:null,sitting:null,interaction:null})),null);
+    actors.sync(activePlayers.map(p=>({...p,position:p.id===self.id?[...at,walking?floor:0]:[...p.office.position,p.office.elevation??0],yaw:p.id===self.id?(walking?yaw:0):p.office.yaw,altitude:0,vehicle:null,sitting:p.id===self.id?null:officeSeatedPose(layout,p.office),interaction:null})),null);
     lift.update(frame);glass.update(frame);
     office.object.visible=walking||['opening','arriving'].includes(frame.phase);
     if(!walking){
@@ -52,7 +52,7 @@ export function createOfficeScene({renderer,host,self,players,reducedMotion=fals
       firstPerson=frame.phase==='arriving'&&Math.hypot(camera.position.x-at[0],camera.position.z+at[1])<.95;
     }else{
       // First person keeps the camera inside the room walls.
-      camera.position.set(position[0],1.68+floor,-position[1]);
+      camera.position.set(position[0],(place.seatId?OFFICE_SEATED_EYE_HEIGHT:OFFICE_EYE_HEIGHT)+floor,-position[1]);
       camera.rotation.set(0,yaw,0,'YXZ');
     }
     camera.aspect=host.clientWidth/Math.max(1,host.clientHeight);camera.updateProjectionMatrix();
