@@ -1,0 +1,256 @@
+# Office + IPIC #360, design-side baseline packet (2026-10-14)
+
+Objective: deliver the design half of the #360 G0/G1 packet under
+`docs/design/office-ipic/`: a reconciled source index with hashes and approval
+state, an asset manifest with budgets and axes, a brief that separates observed,
+inferred and proposed geometry, and a review matrix with owners. No layout
+activation, no asset import, no provider call.
+
+Task `office-ipic-baseline-360`, owner `claude:river-oaks-fable (aa2272b7)`.
+Worktree `../river-oaks-office-ipic-baseline-20261014`, branch
+`docs/office-ipic-baseline-20261014` from `origin/main` `489a60e4`.
+
+Split agreed 2026-10-14 ~19:50Z with session river-oaks-dc, which also holds
+#360 by a /goal: this branch owns the design side (D0/D1); river-oaks-dc owns the
+engineering side (C0/C1) on `docs/office-ipic-engineering-baseline-20261014`:
+baseline check counts, envelope measurement, physical-fit analysis,
+`layout-contract.json`, `camera-manifest.json` and their validator, under task
+`office-ipic-engineering-baseline`. Neither branch edits the other's files.
+
+Files owned here:
+
+- `docs/design/office-ipic/brief.md`, `review-matrix.md`
+- `docs/design/office-ipic/reference-index.json`, `asset-manifest.json` (generated)
+- `scripts/office-ipic-reference-index.mjs` (generator and validators)
+- `scripts/tests/office-ipic-references.test.js`
+- this ledger and the task entry in `docs/project-management/tasks.json`
+
+## Baseline evidence read
+
+- `docs/offices.md`, `docs/ipic-interior.md`, `preview/src/office-contract.js`,
+  `workplace-room.js`, `office-scene.js`, `office-arrival-model.js`,
+  `office-desk-contract.js`, `workplace-contract.js`, `ipic-plan.js`,
+  `server/offices.js`, `store-rooms.js` transforms; the IPIC review receipts.
+- Kit at `~/Downloads/jevica-office-kit` (71/71 checksums verified), the top-level
+  production guide, walkthrough and zip (72 entries), and Cody's scale review at
+  `~/Downloads/jevica-office-scale-review` (assessment, library revisions 1–3,
+  passing-bay check, 19 captures). Hashes, sizes and mtimes recorded in
+  `reference-index.json`.
+- Blob drift since the kit's receipts: `workplace-room.js` and `server/offices.js`
+  unchanged; `office-contract.js`, `office-scene.js`, `package.json` changed.
+- Searched for `typesafe-place-coding-familiar-handoff.md` and
+  `typesafe-place-design-familiar-handoff.md`: `git ls-files`, repository grep,
+  `mdfind` over the home folder. Not found; recorded as missing entries.
+- Draft PR bodies #349–#358 read for keep/reuse/avoid; recorded in the brief.
+
+## Checks
+
+| Command | Result |
+| --- | --- |
+| `node scripts/office-ipic-reference-index.mjs --write --kit … --scale-review … --loose …` | 147 references, 53 assets at `489a60e4` |
+| `node scripts/office-ipic-reference-index.mjs --check` | 0 problems, 0 drifted |
+| `node --test scripts/tests/office-ipic-references.test.js` | 6 pass, 0 fail, 0 skipped |
+| `RIVER_OAKS_E2E_REPORT=office-ipic-baseline-captures.json pnpm run test:experience office-arrival-visual office-visit` at `7feef523` | both passed; 12 screenshots, Metal ANGLE on Apple M3 Max, 1440 × 1000 |
+| `RIVER_OAKS_E2E_REPORT=office-ipic-baseline-captures-desk.json pnpm run test:experience office-desk` | passed; 4 screenshots |
+| `pnpm run verify` (core) at `489a60e4` + this patch | passed: agent 82/82, preview 3,012 pass / 1 existing skip, server 486 pass / 140 Redis skips (core permits them), desktop 54/54, Python 141 passed; receipt `.runtime/agent/core.json` |
+
+The validator is behavioural: scratch repository and scratch kit fixtures, a
+tampered kit file, duplicate ids, a short revision, a wrong axis convention, an
+unlisted repository path, a dangling asset reference, inverted bounds, an
+over-budget proxy, and a later edit to a referenced file (drift, not failure).
+
+## Gaps and skips
+
+- Baseline captures: eight office views O0–O3 with the player avatar on real
+  materials are in `docs/design/office-ipic/captures/` with `receipt.json`
+  (journeys passed at `7feef523`; reports committed under `data/reports/`).
+  Focused office/IPIC check counts, envelope re-measurement and the physical-fit
+  analysis are on the engineering branch (#381). No O4 until a penthouse exists.
+- No kit bytes imported; the public repository would publish generated images
+  without recorded approval (decision for Val).
+- No human visual, target-device, native or live-auth evidence. Core verify
+  excludes Redis and browser profiles.
+
+## Decisions for Val
+
+Answered by Val on 2026-10-14 (about 23:30Z), recorded in
+`docs/design/office-ipic/brief.md` "Decisions":
+
+- Physical fit (2 below): raise the modelled building if feasible. Feasible;
+  target 33.0 m building, `TOWER_TOP` 32.85 m, floor unchanged at 24.3 m, plus a
+  fourth checkpoint migration. Implementation belongs to #361.
+- Mezzanine (3 below): library revision 3 approved; coordinates in the brief.
+- Count cap (6 below): cancel as needed. Applied once the register validates
+  again (another session is repairing a rolled-back register at 23:35Z).
+- Kit import (1 below): Val asked what the kit holds; answered in the #360
+  comment with a recommendation; still open.
+
+The original questions, kept for the record:
+
+1. Kit import: copy the kit bytes into the public repository (all 19 MB, or
+   `layout.json`, `asset-manifest.json` and the GLBs only), or keep them external
+   and indexed by hash as `reference-index.json` does now. The kit's README records
+   your approved direction but no approval to publish those bytes.
+2. Physical fit: the kit's 7.6 m clear main volume above the 24.3 m lift rise
+   exceeds the mapped building's estimated height. The measurement and options are
+   in the engineering packet (#381, `layout-contract.json`). G1 cannot close
+   without this answer.
+3. Mezzanine programme: adopt Cody's library revision 3 (two reading chairs at
+   d 18.3, bookcase-0 and the mezzanine table removed, east passing bay), or keep
+   the kit's library as drawn.
+4. IPIC lift: keep it decorative in this increment, or implement a fixed-endpoint,
+   server-validated reduced-motion route. A decorative door is not a usable route.
+5. Handoff briefs: `typesafe-place-coding-familiar-handoff.md` and
+   `typesafe-place-design-familiar-handoff.md` were not found in the repository
+   or on this machine. Supply them, or confirm #359 and its children are the record.
+6. Local count cap (task local-prune-20261013, retired after #375): at
+   2026-10-14T20:40Z the inventory shows 24 worktrees / 24 branches, 0
+   retire-eligible, 0 retire-candidate: 12 active checkouts owned by live sessions,
+   8 open draft PRs (#351–#358) with queued tasks, 3 parked queued/blocked tasks
+   owned by other sessions, and the primary. Ten-and-ten needs one of: authorize
+   `project:cancel` of the local checkouts of drafts #351–#358 once their tips are
+   confirmed pushed (the PRs stay reviewable from origin), or accept the cap as a
+   target for after those drafts land or close. Nothing is cancelled without that.
+   Concrete candidates at 2026-10-14T20:50Z (inventory r3, 23 / 23):
+   `feat/procedural-gallery-route-20261014` is now zero-commit, its tip
+   `f0a55434` is on `main` through #349's integration merge, its task
+   `procedural-gallery-vertical-route` is queued with no owner and no PR of its
+   own; `project:prune` refuses it (no exact merged PR head) and `project:cancel`
+   needs a stated staleness window, so it needs an explicit yes.
+   `perf/procedural-gallery-ao-sampling-20261014` (trial outcome recorded, no PR,
+   queued, no owner) and `feat/voice-acceptance-20261013` (blocked task owned by
+   cody) are distinct unfinished work and need their owners or you.
+   Dry runs at 2026-10-14T21:10Z (nothing applied): `project:prune --cancel-stale
+   --branch feat/procedural-gallery-route-20261014 --expected-head
+   f0a55434e1cd43a1e3b34e894a615b8460854d61` reports eligible under the default
+   12-hour rule (latest touch 2026-10-14T01:08Z, no blockers); the same for
+   `perf/procedural-gallery-ao-sampling-20261014` at `05ddd067…` is blocked
+   `touched-within-cutoff` (09:43Z). A yes on the first lets any session run that
+   command with `--apply` for 22 / 22; the eight draft checkouts (#351–#358) and
+   the twelve owned active ones remain, so ten-and-ten still needs the broader
+   answer above.
+   Applied at 2026-10-14T21:40Z: `feat/procedural-gallery-route-20261014` cancelled
+   through the guarded path (fresh dry run eligible, no process in the worktree,
+   task queued with no owner, tip on `main`): status `cancelled-local`, manifest
+   `~/worktree-backups/river-oaks/cancel-stale-dufthR/manifest.json`, archive tag
+   `archive/worktree-prune/311aa502-5ba9-4895-a742-787ab47084f6`; the task
+   `procedural-gallery-vertical-route` now says restore before resuming. Remote
+   branch untouched. Count 22 / 22.
+   Retired through `project:prune` as the interiors stack landed and its tasks were
+   released (each: evidence from `.runtime`, `output/playwright` and
+   `data/generated` archived with a hash manifest under
+   `~/worktree-backups/river-oaks/local-evidence-<slug>-20261014/`, regenerable
+   caches removed, fresh retirement record, dry run eligible, `--apply` returned
+   `retired`): `feat/procedural-level-streaming-20261014` (#350, retirement-KpJYYo),
+   `perf/procedural-pilot-render-20261014` (#351, retirement-0bMJhS),
+   `fix/procedural-private-level-revocation-20261014` (#352, retirement-pdX5dd),
+   `perf/procedural-gallery-cycle-soak-20261014` (#353, retirement-0PK3tS),
+   `perf/procedural-ao-tail-20261014` (#354, retirement-B68qkm),
+   `fix/procedural-interior-ring-validity-20261014` (#355, retirement-SSaIs2),
+   `perf/procedural-gallery-ao-buffer-20261014` (#356, retirement-L1eW58),
+   `docs/procedural-creator-interiors-20261014` (#357, retirement-uT7833),
+   `perf/procedural-gallery-ao-mask-20261014` (#358, retirement-zJskE1).
+   Count 13 / 13 at 2026-10-14T23:05Z (from 25 / 24 at this session's peak).
+   What remains above ten, at 23:05Z: the primary; two #360 packet branches
+   (this one, #380, and river-oaks-dc's #381); seven checkouts with a live owner
+   (#376 release, #377 and #379 desktop, #382 contact shading, #309 iOS, the
+   shared-dominoes sheet, and #349's integration branch, merged but not yet
+   released by its codex landing session, whose lease lapsed at 22:23Z);
+   `fix/rider-performance-contact-20261013` (codex owner, lease expired
+   2026-10-13, dirty worktree); `feat/voice-acceptance-20261013` (blocked task
+   owned by cody); `perf/procedural-gallery-ao-sampling-20261014` (queued, no
+   owner, one commit not on main, so distinct unfinished work). Reaching ten
+   needs three of: #349's owner releasing its branch (then it retires like the
+   rest), #380 and #381 landing, or your yes to cancel the AO-sampling trial
+   branch or reclaim the expired codex rider checkout.
+
+   **Reached ten, 2026-10-14T23:44Z.** Val answered "cancel if need be". After
+   river-oaks-b7 repaired the register (a codex write had left #349's entry
+   active with no owner, and GitHub Desktop pulls of the primary had rolled back
+   seven retirement records, since restored), the remaining work ran through the
+   guarded tools, archive first:
+   - cancelled `perf/procedural-gallery-ao-sampling-20261014` (cancel-stale-YWFhGa),
+     `fix/rider-performance-contact-20261013` (cancel-stale-3c2tGJ; its 20
+     uncommitted codex edits are in the archive) and `feat/voice-acceptance-20261013`
+     (cancel-stale-FmCCfR; pushed, remote branch untouched);
+   - retired `docs/procedural-multilevel-interiors-20261013` (#349,
+     retirement-Cymdje) and `perf/procedural-gallery-contact-shading-20261014`
+     (#382, retirement-xkcN8s). For #382 the 103 pilot screenshots its handoff
+     asked to keep, and the `dump.rdb` of an orphaned disposable test Redis on
+     127.0.0.1:16399 (no clients, parent launchd, stopped with `SHUTDOWN SAVE`), are
+     in `local-evidence-gallery-contact-shading-20261014`.
+   Count 10 worktrees / 10 branches: primary, #380, #381, #376 release, #377 and
+   #379 desktop, #309 iOS, the shared-dominoes sheet, and river-oaks-b7's two fix
+   branches. b7 was asked to open its third fix only after one of those retires. #355–#358 follow the same path once their owners land and
+   release them; the eleven active checkouts stay with their sessions.
+
+## Round end (2026-10-14T20:40Z)
+
+HEAD `9825dfb3` on `docs/office-ipic-baseline-20261014`, worktree
+`../river-oaks-office-ipic-baseline-20261014`, draft PR #380: all 16 hosted checks
+green, mergeable clean, not merged. Engineering packet: draft PR #381
+(`docs/office-ipic-engineering-baseline-20261014`, river-oaks-dc). Commands and
+counts are in the Checks table above; `node scripts/project-inventory.mjs
+--no-fetch` from the primary gave the counts in decision 6. Standing report:
+#351–#358 mergeable and untouched, #349 moved by its codex owner, #350 stacked on
+it and conflicting (owned, in progress), #309 dirty with an expired codex lease.
+Skips: Redis (140 in core, permitted), browser, native, live auth.
+
+After #349 merged (de0b64a9) the branch merged main again (d3c8683e, plans index
+regenerated). The packet check now reports one drift: `docs/offices.md` changed
+since `489a60e4`; the packet records the pre-#349 office documentation, and the
+next reconciliation should re-read it. #349 leaving draft is a change in the
+keep/reuse table's premise: its level/portal schema is now on `main`.
+
+## Round end (2026-10-14T23:58Z)
+
+- Branch `docs/office-ipic-baseline-20261014`, worktree
+  `../river-oaks-office-ipic-baseline-20261014`, draft PR #380. Head `bfff7a30`
+  passed all 16 hosted checks and is mergeable clean; main unchanged since.
+- Packet checks: `node scripts/office-ipic-reference-index.mjs --check` 147
+  references, 53 assets, 0 problems, 1 drift (`docs/offices.md`, changed by #349);
+  `node --test scripts/tests/office-ipic-references.test.js` 6 pass, 0 fail,
+  0 skipped. Captures: three office journeys passed at `7feef523`.
+- Local count: 10 worktrees / 10 branches since 23:44Z (peak 25 / 24 today).
+  Register validates (`project:check` exit 1, gaps only).
+- Issue #360: 10 of 12 boxes ticked. Val's fit and mezzanine decisions are in the
+  brief. A direct message to river-oaks-dc expired unapproved (that session holds
+  peer messages), so the same decisions were posted on #381 for its contract
+  (comment 6181015788). #381 is owned by `office-ipic-engineering-baseline`,
+  lease to 2026-10-15T00:23Z, marked ready for review; its contract still lists
+  both decisions as open. The last two boxes (G1 review, implement without
+  guessing) close once #381 records them.
+- Standing: #349–#358 and #382 landed by their codex owners; this session merged
+  nothing. #309 is dirty; its codex lease expired 2026-10-13 but `DTService`
+  runs in its worktree, so it was left alone.
+- Commits after the model change carry `Coven-Harness: claude-code /
+  claude-opus-5-5`; no model co-author line.
+- Still open for Val: kit import (recommendation in the brief), IPIC lift,
+  the two missing handoff briefs.
+- 2026-10-15T00:45Z: #381 was unchanged and its lease had lapsed at 00:23Z, so
+  the two decisions were proposed for the contract as draft #388, stacked on
+  #381's branch (`fit.decision`, `mezzanineProgramme`, both decisions `decided`,
+  a validator rule with a failing-case test; contract tests 8/8, core verify
+  passed). G1 closes when #381 takes #388 and the engineer side records agreement
+  in `review-matrix.md`. Local count 10 / 10 including the #388 worktree.
+
+## Handoff to river-oaks-1b (2026-10-15T03:39Z)
+
+Val's goal of 2026-10-15 gave the #360 close-out to river-oaks-1b, which claimed
+this released task, #381 (`office-ipic-engineering-baseline`, river-oaks-dc's lease
+expired) and #388 in the live register with the handoffs recorded there.
+
+- #388 was marked ready and landed into #381's branch with `pnpm run land 388`
+  (11 checks green, merge `cbe393b8`). #381's contract now records both decisions.
+- `main` at `c1cfd584` merged here as `dace7b1a`; the plans index was the only
+  conflict.
+- `review-matrix.md` gains the engineering side's G1 agreement with its
+  cross-check, and the brief's note that the contract still lists the decisions as
+  open is replaced by the #388 reference. The cross-check table is in the
+  engineering ledger, "Takeover and G1".
+
+## Next
+
+Mark #380 ready and land it with `pnpm run land 380 --owner river-oaks-1b` after
+#381; tick #360's last two boxes; retire this branch with `project:prune`. Still
+open for Val: kit import (R19), the missing briefs (R24), and IPIC step-free access.

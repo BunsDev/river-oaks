@@ -4,14 +4,17 @@
 
 Each plan is a task ledger. Status comes from the task register, where the primary checkout's live copy can be newer than the committed one. Plans from before the register are listed as historical: their own text is the record of what was delivered.
 
-## Active and blocked (9)
+## Active and blocked (12)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
 | [2026-10-15-procedural-phone-gpu-fixture](2026-10-15-procedural-phone-gpu-fixture.md)<br>Procedural gallery phone GPU fixture | `procedural-phone-gpu-fixture` | active | #393 | 2026-10-15 |
+| [2026-10-15-office-ipic-contract-decisions](2026-10-15-office-ipic-contract-decisions.md)<br>Office + IPIC #360: record Val's decisions in the layout contract (2026-10-15) | `office-ipic-contract-decisions` | active | #388 | 2026-10-15 |
 | [2026-10-15-office-computer-db-mvp](2026-10-15-office-computer-db-mvp.md)<br>Office computer database MVP | `office-computer-db-mvp` | active | — | 2026-10-15 |
 | [2026-10-14-shared-dominoes](2026-10-14-shared-dominoes.md)<br>Shared Dominoes Implementation Plan (PR 1: the town holds the round) | `shared-dominoes-sheet` | active | — | 2026-10-14 |
 | [2026-10-14-procedural-gpu-acceptance](2026-10-14-procedural-gpu-acceptance.md)<br>Procedural interiors: physical GPU acceptance plan | `procedural-gpu-acceptance` | queued | — | 2026-10-15 |
+| [2026-10-14-office-ipic-engineering-baseline](2026-10-14-office-ipic-engineering-baseline.md)<br>Office + IPIC #360, engineering half: baseline and executable layout contract | `office-ipic-engineering-baseline` | active | #381 | 2026-10-15 |
+| [2026-10-14-office-ipic-baseline](2026-10-14-office-ipic-baseline.md)<br>Office + IPIC #360, design-side baseline packet (2026-10-14) | `office-ipic-baseline-360` | active | #380 | 2026-10-15 |
 | [2026-10-14-gallery-vertical-route](2026-10-14-gallery-vertical-route.md)<br>Gallery vertical-route visual integration | `procedural-gallery-vertical-route` | queued | — | 2026-10-14 |
 | [2026-10-14-desktop-package-matrix](2026-10-14-desktop-package-matrix.md)<br>Desktop packaging build matrix (#371), 2026-10-14 | `desktop-package-matrix` | active | #377 | 2026-10-15 |
 | [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `shared-voice-acceptance` | queued | — | 2026-10-15 |

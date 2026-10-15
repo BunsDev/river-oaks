@@ -1,0 +1,241 @@
+{
+  "createdAt": "2026-10-14T22:12:27.959Z",
+  "results": [
+    {
+      "name": "office-arrival-visual",
+      "status": "passed",
+      "seconds": 15.123,
+      "result": {
+        "stage": "refined",
+        "stations": {
+          "units": "east/north/up metres; heights above frontage",
+          "verticalFov": 62,
+          "views": {
+            "approach": {
+              "camera": [
+                -2749.616761687953,
+                -1371.0677929195365,
+                1.68
+              ],
+              "target": [
+                -2741.730813580961,
+                -1383.1430495401567,
+                2.5
+              ]
+            },
+            "facade": {
+              "label": "EQUINOX ENTRANCE AND OFFICE LOBBY · STREET VIEW 2023",
+              "camera": [
+                -2730.05,
+                -1373.85,
+                2.2
+              ],
+              "target": [
+                -2734.4,
+                -1391.4,
+                10.8
+              ],
+              "fov": 87.4
+            },
+            "entrance": {
+              "camera": [
+                -2741.6739671670844,
+                -1377.1433188390977,
+                1.68
+              ],
+              "target": [
+                -2741.7431303039675,
+                -1384.4429911920527,
+                2.1
+              ]
+            }
+          }
+        },
+        "captures": [
+          "output/playwright/office-arrival-refined-approach.png",
+          "output/playwright/office-arrival-refined-facade.png",
+          "output/playwright/office-arrival-refined-entrance.png",
+          "output/playwright/office-arrival-refined-lobby.png",
+          "output/playwright/office-arrival-refined-boarding.png",
+          "output/playwright/office-arrival-refined-cabin.png",
+          "output/playwright/office-arrival-refined-reveal.png",
+          "output/playwright/office-arrival-refined-office.png"
+        ],
+        "metrics": [
+          {
+            "name": "approach",
+            "viewport": [
+              1440,
+              1000
+            ],
+            "pixelRatio": 1,
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+            "draws": 559,
+            "triangles": 1892024,
+            "memory": {
+              "geometries": 153,
+              "textures": 41
+            },
+            "heap": {
+              "used": 148000000,
+              "total": 199000000
+            },
+            "renderSubmissionMs": {
+              "median": 2,
+              "p95": 2.3000000715255737
+            },
+            "frameIntervalMs": {
+              "median": 16.699999999999818,
+              "p95": 16.799999999999727
+            },
+            "sampleFrames": 60,
+            "resourceBytes": 24435880,
+            "scope": "Local Chromium fixture, CPU render submission and rAF intervals; not isolated GPU timing or physical-device acceptance"
+          },
+          {
+            "name": "facade",
+            "viewport": [
+              1440,
+              1000
+            ],
+            "pixelRatio": 1,
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+            "draws": 537,
+            "triangles": 1902644,
+            "memory": {
+              "geometries": 153,
+              "textures": 41
+            },
+            "heap": {
+              "used": 148000000,
+              "total": 199000000
+            },
+            "renderSubmissionMs": {
+              "median": 2.100000023841858,
+              "p95": 2.399999976158142
+            },
+            "frameIntervalMs": {
+              "median": 16.699999999999818,
+              "p95": 16.699999999999818
+            },
+            "sampleFrames": 60,
+            "resourceBytes": 24435880,
+            "scope": "Local Chromium fixture, CPU render submission and rAF intervals; not isolated GPU timing or physical-device acceptance"
+          },
+          {
+            "name": "entrance",
+            "viewport": [
+              1440,
+              1000
+            ],
+            "pixelRatio": 1,
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+            "draws": 527,
+            "triangles": 1875068,
+            "memory": {
+              "geometries": 153,
+              "textures": 41
+            },
+            "heap": {
+              "used": 148000000,
+              "total": 199000000
+            },
+            "renderSubmissionMs": {
+              "median": 2.200000047683716,
+              "p95": 5.399999976158142
+            },
+            "frameIntervalMs": {
+              "median": 16.699999999999818,
+              "p95": 16.700000000000728
+            },
+            "sampleFrames": 60,
+            "resourceBytes": 24435880,
+            "scope": "Local Chromium fixture, CPU render submission and rAF intervals; not isolated GPU timing or physical-device acceptance"
+          },
+          {
+            "name": "cabin",
+            "viewport": [
+              1440,
+              1000
+            ],
+            "pixelRatio": 1,
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+            "draws": 48,
+            "triangles": 255822,
+            "memory": {
+              "geometries": 21,
+              "textures": 25
+            },
+            "heap": {
+              "used": 148000000,
+              "total": 199000000
+            },
+            "renderSubmissionMs": {
+              "median": 2.700000047683716,
+              "p95": 3.399999976158142
+            },
+            "frameIntervalMs": {
+              "median": 16.699999999999818,
+              "p95": 16.700000000000728
+            },
+            "sampleFrames": 60,
+            "resourceBytes": 15932470,
+            "scope": "Local Chromium fixture, CPU render submission and rAF intervals; not isolated GPU timing or physical-device acceptance"
+          },
+          {
+            "name": "office",
+            "viewport": [
+              1440,
+              1000
+            ],
+            "pixelRatio": 1,
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+            "draws": 95,
+            "triangles": 14813,
+            "memory": {
+              "geometries": 44,
+              "textures": 31
+            },
+            "heap": {
+              "used": 148000000,
+              "total": 199000000
+            },
+            "renderSubmissionMs": {
+              "median": 0.6000000238418579,
+              "p95": 0.7000000476837158
+            },
+            "frameIntervalMs": {
+              "median": 16.699999999999818,
+              "p95": 16.800000000000182
+            },
+            "sampleFrames": 60,
+            "resourceBytes": 15932470,
+            "scope": "Local Chromium fixture, CPU render submission and rAF intervals; not isolated GPU timing or physical-device acceptance"
+          }
+        ],
+        "errors": [],
+        "limits": "Presentation views. Normal input, auth, departure and responsive HUD are verified by separate journeys."
+      }
+    },
+    {
+      "name": "office-visit",
+      "status": "passed",
+      "seconds": 74.498,
+      "result": {
+        "checks": [
+          "All elevator phases render before walking begins",
+          "F at the lobby boards the elevator, rides upstairs and releases walking",
+          "W moves the player into the office",
+          "The back wall and storage stop movement",
+          "Leaving returns focus to the street",
+          "Reduced motion enters without the elevator camera motion",
+          "An uninvited guest cannot board",
+          "Jevica accepts the visit request from her office and the guest enters",
+          "Revocation returns the guest to the lobby immediately",
+          "Revocation during boarding ends the authoritative visit and restores street controls",
+          "No guest browser errors: "
+        ]
+      }
+    }
+  ]
+}
