@@ -60,7 +60,11 @@ Each visit records the layout and the floor the server admitted it to (`preview/
 - **Checkpoints.** Version 10 stores `layout` and `levelId` with each visit. Visits from versions 6–9 were in the legacy room and upgrade to it. A malformed layout, floor or position refuses the restore. A well-formed visit on a layout the server no longer serves for that office ends safely; grants, requests and desks stay. Switching the option back to the legacy room is the rollback.
 
 
-The penthouse is not active anywhere by default. Raising the mapped building to fit it, furniture collision beyond the desk chairs, and its rendering are later steps (#361's second pull request, #362, #363).
+- **In the browser.** Within reach of the stair foot or the lift, **Take the stairs up · Q** (or down, or **Use the lift · Q**) appears; it sends the transition and adopts the floor the server answers with. Moves carry the layout and floor; a reply that arrives after the visit closed changes nothing. The first-person eye and avatars stand at the server-derived floor elevation, and a visitor on the other floor stays visible even directly above or below. Until #362's assets arrive, the penthouse is a graybox drawn from the same plan (`preview/src/office-penthouse-graybox.js`); an unknown layout refuses to render rather than show another plan's geometry.
+
+To see it locally, run `node preview/e2e/office-penthouse-runner.mjs`: the loopback fixture serves the penthouse, and the owner takes the stairs to the mezzanine.
+
+The penthouse is not active anywhere by default. Raising the mapped building to fit it, furniture collision beyond the desk chairs, and final art are later steps (#362, #363).
 
 ## Operating office storage
 

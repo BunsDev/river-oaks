@@ -4,6 +4,8 @@ import { OFFICE_ROOM, OFFICE_SPAWN } from './office-contract.js';
 import { buildWorkplaceOffice } from './workplace-office.js';
 import { createRemotePlayers } from './remote-players.js';
 import { borrowOfficePresentation, officeStreetApproach, createOfficeArrivalClock, officePeerVisible } from './office-world-presentation.js';
+import { buildOfficeGeometry } from './office-penthouse-graybox.js';
+import { OFFICE_LAYOUT_LEGACY, officeLayout, officeLevelElevation } from './office-layouts.js';
 
 // The street, car and office share one scene/camera/composer. Once both car
 // doors close the outside district is occluded and can stop drawing. The same
@@ -11,11 +13,12 @@ import { borrowOfficePresentation, officeStreetApproach, createOfficeArrivalCloc
 export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
   const lease=borrowOfficePresentation(street),approach=officeStreetApproach(street),stage=lease.stage,clock=createOfficeArrivalClock();
   let office,actors,disposed=false,started=null,skipped=reducedMotion,lastNow=null,lastBody=null,distance=street.startPose.distance;
-  let position=[...OFFICE_SPAWN],yaw=0,current=null;
+  let position=[...OFFICE_SPAWN],yaw=0,current=null,levelId=self.office?.levelId??null,floor=0;
+  const layoutId=self.office?.layout??OFFICE_LAYOUT_LEGACY,layout=officeLayout(layoutId);
   const peerRoot=new THREE.Group();street.scene.add(peerRoot);lease.allow(peerRoot);
   const dispose=()=>{if(disposed)return;disposed=true;actors?.dispose();peerRoot.removeFromParent();office?.dispose();lease.dispose();};
   try{
-    office=buildWorkplaceOffice(THREE,OFFICE_ROOM);stage.add(office.object);office.object.visible=false;
+    office=buildOfficeGeometry(THREE,layoutId,{buildLegacy:()=>buildWorkplaceOffice(THREE,OFFICE_ROOM)});stage.add(office.object);office.object.visible=false;
     const lights=[2,-3].map((z,i)=>({position:new THREE.Vector3(0,2.9,z),color:new THREE.Color('#fff1df'),intensity:i?65:45,distance:i?10:7,decay:2}));
     // Preserve the office's authored lighting using the existing world pool.
     // Detached owned light objects have no GPU resources to dispose.
@@ -23,7 +26,7 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
       lights.push({position:light.position.clone(),color:light.color.clone(),intensity:light.intensity,distance:light.distance,decay:light.decay});light.removeFromParent();
     }
     const worldLights=lights.map(light=>({...light,position:light.position.clone()}));
-    actors=createRemotePlayers(peerRoot,host,{snapInitialHeading:true,isVisible:p=>current?.done&&officePeerVisible({...p,position:p.office.position},self.id,position,true)});
+    actors=createRemotePlayers(peerRoot,host,{snapInitialHeading:true,isVisible:p=>current?.done&&officePeerVisible({...p,position:p.office.position},self.id,position,true,levelId)});
     const view=street.startCamera.clone(),localView=new THREE.PerspectiveCamera(),worldRotation=new THREE.Quaternion().setFromRotationMatrix(street.frame);
     const basePosition=new THREE.Vector3().setFromMatrixPosition(street.frame),point=new THREE.Vector3(),worldBody=new THREE.Vector3();
     function prepare(now){
@@ -47,7 +50,7 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
       if(entering){
         const start=approach.at(elapsed,aspect);body=start.player;view.position.copy(start.camera);view.quaternion.copy(start.quaternion);view.fov=start.fov;
       }else if(frame.done){
-        body=point.set(position[0],0,-position[1]);view.position.set(position[0],1.68,-position[1]);view.rotation.set(0,yaw,0,'YXZ');view.fov=62;
+        body=point.set(position[0],floor,-position[1]);view.position.set(position[0],1.68+floor,-position[1]);view.rotation.set(0,yaw,0,'YXZ');view.fov=62;
       }else{
         body=point.set(frame.position[0],0,-frame.position[1]);const path=arrivalCamera(time,{aspect});view.position.fromArray(path.position);view.lookAt(...path.target);view.fov=path.verticalFov;
       }
@@ -65,12 +68,13 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
       current.position=[body.x,-body.z];
     }
     return {prepare,
-      render(now,nextPosition,nextYaw,players){
+      render(now,nextPosition,nextYaw,players,place={}){
         if(disposed)return null;position=[...nextPosition];yaw=nextYaw;
+        levelId=place.levelId??levelId;floor=layout?officeLevelElevation(layout,levelId)??0:0;
         if(lastNow!==now)prepare(now);
-        if(current.done){view.position.set(position[0],1.68,-position[1]).applyMatrix4(street.frame);view.position.y+=ARRIVAL.officeElevation;view.rotation.set(0,yaw,0,'YXZ');view.quaternion.premultiply(worldRotation);lease.camera(view);}
+        if(current.done){view.position.set(position[0],1.68+floor,-position[1]).applyMatrix4(street.frame);view.position.y+=ARRIVAL.officeElevation;view.rotation.set(0,yaw,0,'YXZ');view.quaternion.premultiply(worldRotation);lease.camera(view);}
         actors.sync(players.filter(p=>p.id!==self.id&&p.office?.id===self.office.id).map(p=>{
-          const v=new THREE.Vector3(p.office.position[0],0,-p.office.position[1]).applyMatrix4(street.frame);v.y+=ARRIVAL.officeElevation;
+          const v=new THREE.Vector3(p.office.position[0],p.office.elevation??0,-p.office.position[1]).applyMatrix4(street.frame);v.y+=ARRIVAL.officeElevation;
           return {...p,position:[v.x,-v.z,v.y],yaw:p.office.yaw+Math.atan2(street.frame.elements[8],street.frame.elements[10]),altitude:0,vehicle:null,sitting:null,interaction:null};
         }),null);
         actors.update(now,street.camera);office.update?.(now/1000);lease.render(1/60);return current;

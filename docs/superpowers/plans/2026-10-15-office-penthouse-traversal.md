@@ -75,6 +75,20 @@ All work so far is in a scratch copy of `main` at `a714a8a5` with #366's patch a
 | PR A + PR B together: `node --test preview/tests/office-*.test.js preview/tests/workplace-office.test.js` | 75 of 75 |
 | PR A + PR B together: `node --test preview/tests/*.test.js` | 3076 pass, 1 existing skip, 0 fail |
 
+## PR B checks
+
+PR B worktree `../river-oaks-office-penthouse-client-20261015` on `main` `0a74d0c3`, which includes PR A.
+
+| Command | Result |
+| --- | --- |
+| `node --test preview/tests/office-*.test.js preview/tests/workplace-office.test.js` | 75 of 75 |
+| `node preview/e2e/office-penthouse-runner.mjs`, run 1 | failed: **Take the stairs up** appeared at the stair foot, but the dialog header covered the new button (a pointer could not press it; Q worked). Fixed in `office.css`: the button sits above the movement pad. |
+| run 2 (Chromium, SwiftShader) | **passed**: the server admitted `office-penthouse-1` on `jevica-office/l0`; the visitor walked to the stair foot by pointer steering and W; **Take the stairs up** pressed; the server landed the visitor at the stair head on `jevica-office/l1`; the first-person eye rose 3.800 m; no page errors. Captures and report in `~/worktree-backups/river-oaks/office-penthouse-traversal-361-prB-evidence-20261015/`. |
+| `pnpm run test:experience office-visit` (legacy regression, after the CSS fix) | passed, all 13 checks: elevator phases, walking, walls, reduced motion, guest refused, request accepted, revocation, revocation during boarding. The tracked `data/reports/experience.json` it rewrote is restored, with a copy kept with the evidence. |
+| `pnpm run verify` (core), before the CSS-only fix | passed: agent 109/109, preview 3076 pass + 1 existing skip, server 526 pass + 147 Redis skips, desktop 69/69, build, Python 141, secrets |
+
+Not covered: real-GPU visuals (the graybox renders flat in SwiftShader), touch devices, and a two-browser penthouse run (the two-client floor case is covered over real WebSockets in PR A).
+
 ## Decisions for Val
 
 1. **Building raise deploy.** The 33 m raise (your fit decision) changes the world fingerprint, and the production town's checkpoint migrates on that deploy. It is held for the activation step. Say when that deploy is authorized.
@@ -82,4 +96,4 @@ All work so far is in a scratch copy of `main` at `a714a8a5` with #366's patch a
 
 ## Next action
 
-Land PR A with `pnpm run land <pr> --owner river-oaks-1b`; then PR B (client) from a fresh worktree.
+PR A landed as #396. Land PR B with `pnpm run land <pr> --owner river-oaks-1b`, then close #361 with evidence.
