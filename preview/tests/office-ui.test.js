@@ -295,3 +295,17 @@ test('the legacy room has no view control',async t=>{
  assert.equal(f.find('office-view').hidden,true);f.find('office-visit').emit('keydown',{code:'KeyV'});f.ui.update(6200,.016);
  assert.equal(f.renders.at(-1)[4]?.viewId,undefined);
 });
+test('choosing a view with the pointer returns keys to the office; the touch pad and an unexpected dialog close return to walking',async t=>{
+ const f=setup(t,{layout:'office-penthouse-1'});f.ui.update(6000,.016);await tick();f.find('office-enter').emit('click');await tick();f.ui.update(6100,.016);
+ const select=f.find('office-view'),dialog=f.find('office-visit');
+ select.focus();select.value='overview';select.emit('change');f.ui.update(6200,.016);
+ assert.equal(document.activeElement,dialog,'focus goes back to the office so V, WASD and Escape keep working');
+ assert.equal(f.renders.at(-1)[4].viewId,'overview');
+ const forward=f.find('office-visit').children.find(c=>c.className==='office-pad').children.find(b=>b.dataset.officeKey==='KeyW');
+ forward.emit('pointerdown',{pointerId:1});f.ui.update(6300,.1);forward.emit('pointerup');
+ assert.equal(f.renders.at(-1)[4].viewId,undefined,'the touch pad returns to walking');
+ f.find('office-visit').emit('keydown',{code:'KeyV'});f.ui.update(6400,.016);assert.equal(f.renders.at(-1)[4].viewId,'overview');
+ // Chrome may close a modal dialog on a second Escape without a cancel event: treat it as leaving.
+ dialog.open=false;dialog.emit('close');await tick();await tick();
+ assert.ok(f.calls.some(c=>c.action==='leave'),'an unexpected close leaves the office');assert.equal(f.ui.active,false);
+});

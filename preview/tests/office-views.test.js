@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { AVATAR_ENVELOPE } from '../src/workplace-room.js';
-import { OFFICE_LAYOUT_LEGACY, OFFICE_LAYOUT_PENTHOUSE, officeLayout, officeView, officeViews } from '../src/office-layouts.js';
+import { OFFICE_LAYOUT_LEGACY, OFFICE_LAYOUT_PENTHOUSE, officeLayout, officeSeats, officeView, officeViews } from '../src/office-layouts.js';
 
 // #363 bounded views: fixed camera eye/target pairs in the office frame ([x, height above the
 // level's floor, d]). They move only the camera, so they need only stay inside the shell.
@@ -29,6 +29,17 @@ test('every view\'s eye stays inside its floor: within the bounds and headroom, 
     for (const o of level.obstacles) assert.ok(x < o.x0 - 0.2 || x > o.x1 + 0.2 || d < o.d0 - 0.2 || d > o.d1 + 0.2, `${view.id} eye is clear of ${o.id}`);
     for (const chair of level.chairs) assert.ok(Math.hypot(x - chair.position[0], d - chair.position[1]) > 0.6, `${view.id} eye is clear of ${chair.id}`);
     assert.ok(Math.hypot(...view.target.map((n, i) => n - view.eye[i])) > 3, `${view.id} looks somewhere`);
+    // Views draw the visitor's own body, so an eye at standing height keeps away from where people
+    // arrive or stand: the spawn, stair and lift landings, anchors and seat stand points.
+    if (h < 3) {
+      const places = [
+        ...(level.id === penthouse.spawn.levelId ? [['spawn', penthouse.spawn.position]] : []),
+        ...level.portals.filter(item => item.kind !== 'entrance').map(item => [item.id, item.position]),
+        ...penthouse.anchors.filter(item => item.levelId === level.id).map(item => [item.id, item.position]),
+        ...officeSeats(penthouse).filter(item => item.levelId === level.id).map(item => [`${item.id} stand`, item.stand]),
+      ];
+      for (const [name, [px, pd]] of places) assert.ok(Math.hypot(x - px, d - pd) >= 1.5, `${view.id} eye is clear of ${name}`);
+    }
     assert.equal(typeof view.label, 'string');
   }
   assert.ok(AVATAR_ENVELOPE.height < penthouse.levels[0].clearHeight);

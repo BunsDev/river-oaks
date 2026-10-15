@@ -125,9 +125,9 @@ const penthouse = {
   // inside the shell. They move only the camera, never the visitor.
   views: [
     { id: 'overview', label: 'Overview', levelId: L0, eye: [13.6, 6.4, 1.2], target: [-6, 1, 12] },
-    { id: 'main-floor', label: 'Main floor', levelId: L0, eye: [0, 1.65, 0.8], target: [0, 1.3, 12] },
+    { id: 'main-floor', label: 'Main floor', levelId: L0, eye: [-8, 1.7, 1.5], target: [5, 1.2, 12] },
     { id: 'workstations', label: 'Workstations', levelId: L0, eye: [9, 2.4, 1.8], target: [4.5, 0.8, 7.5] },
-    { id: 'library', label: 'Library', levelId: L1, eye: [11.8, 1.65, 15.2], target: [0, 1.2, 18.6] },
+    { id: 'library', label: 'Library', levelId: L1, eye: [13.5, 2.2, 19.2], target: [-6, 1, 17.5] },
     { id: 'terrace', label: 'Terrace', levelId: L0, eye: [-16, 1.8, 17.5], target: [-30, 1, 4] },
   ],
 };

@@ -51,7 +51,8 @@ export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,
   const seatButton=button('Sit down · Z','office-seat',()=>void toggleSeat());seatButton.hidden=true;dialog.append(seatButton);
   // Views (#363) move only this visitor's camera: no command, no position, no collision.
   const viewSelect=el('select');viewSelect.id='office-view';viewSelect.setAttribute('aria-label','Office view');viewSelect.hidden=true;
-  viewSelect.addEventListener('change',()=>setView(viewSelect.value||null),{signal});
+  // Choosing with the pointer hands focus back to the office, so V, WASD and Escape keep working.
+  viewSelect.addEventListener('change',()=>{setView(viewSelect.value||null);dialog.focus({preventScroll:true});},{signal});
   const identity=el('div',null,'office-identity'),eyebrow=el('span','RIVER OAKS · PRIVATE OFFICES','office-eyebrow');identity.append(eyebrow,heading,label);
   const actions=el('div',null,'office-actions');actions.append(skip,deskButton,viewSelect,accessButton,voiceJoin,voiceMic,exit);header.append(identity,actions);
   const journey=el('div',null,'office-journey');journey.setAttribute('aria-hidden','true');
@@ -62,7 +63,7 @@ export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,
   dialog.append(header,journey,help,pad);document.body.append(dialog);
   const headerSize=typeof ResizeObserver==='function'?new ResizeObserver(()=>dialog.style.setProperty('--office-header-bottom',`${Math.ceil(header.getBoundingClientRect().bottom)+10}px`)):null;
   headerSize?.observe(header);
-  const keys=new Set();let view=null,position=[...OFFICE_SPAWN],yaw=0,layoutId=OFFICE_LAYOUT_LEGACY,levelId=null,levelPending=false,seatId=null,seatPending=false,viewId=null,phase='closed',busy=false,entryAttempt=null,cancelledEntry=null,movePending=false,lastMove=0,lastPoll=0,polling=null,failedOffice=null,epoch=0,currentOffice=null,owned=false,lastState='',disposed=false,accountKey='',openedAt=0,selectedOffice=null,workspaceList=[];
+  const keys=new Set();let view=null,position=[...OFFICE_SPAWN],yaw=0,layoutId=OFFICE_LAYOUT_LEGACY,levelId=null,levelPending=false,seatId=null,seatPending=false,viewId=null,closing=false,phase='closed',busy=false,entryAttempt=null,cancelledEntry=null,movePending=false,lastMove=0,lastPoll=0,polling=null,failedOffice=null,epoch=0,currentOffice=null,owned=false,lastState='',disposed=false,accountKey='',openedAt=0,selectedOffice=null,workspaceList=[];
   const catalog=()=>officesFor(getWorld()??{}),mp=()=>getMultiplayer();
   const self=()=>mp()?.snapshot?.players.find(p=>p.id===mp()?.identity?.id);
   accountKey=`${mp()?.identity?.id??''}:${Boolean(self())}`;
@@ -149,7 +150,7 @@ export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,
   function setView(id){
     if(phase!=='office'||!view||desk?.active)return;
     viewId=officeView(layout(),id)?.id??null;viewSelect.value=viewId??'';keys.clear();
-    help.textContent=viewId?`${officeView(layout(),viewId).label} view · V for the next · Escape or WASD to walk`:WALKING_HELP;
+    help.textContent=viewId?`${officeView(layout(),viewId).label} view · V for the next · Escape, WASD or the pad to walk`:WALKING_HELP;
   }
   const cycleView=()=>{const ids=officeViews(layout()).map(item=>item.id);setView(viewId?ids[ids.indexOf(viewId)+1]??null:ids[0]??null);};
   async function toggleSeat(){
@@ -173,7 +174,7 @@ export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,
     if(r.ok&&r.office){levelId=r.office.levelId;position=[...r.office.position];label.textContent=layout().levels.find(l=>l.id===levelId)?.index?'Mezzanine · Library':'Main floor';}
     else label.textContent=messages[r.error]??r.message??'That way is not available right now.';
   }
-  function close(){desk?.suspend();epoch++;levelPending=false;seatPending=false;seatId=null;viewId=null;viewSelect.value='';help.textContent=WALKING_HELP;mp()?.voice?.setTransmit(false);view?.dispose();view=null;keys.clear();phase='closed';movePending=false;panel.append(management);management.hidden=false;dialog.close();document.body.classList.remove('visiting-office');walking.halt();host.focus({preventScroll:true});}
+  function close(){desk?.suspend();epoch++;levelPending=false;seatPending=false;seatId=null;viewId=null;viewSelect.value='';help.textContent=WALKING_HELP;mp()?.voice?.setTransmit(false);view?.dispose();view=null;keys.clear();phase='closed';movePending=false;panel.append(management);management.hidden=false;closing=true;dialog.close();closing=false;document.body.classList.remove('visiting-office');walking.halt();host.focus({preventScroll:true});}
   const sameAccount=attempt=>mp()===attempt.client&&mp()?.connected&&mp()?.identity?.id===attempt.account;
   async function finishCancellation(attempt){
     if(!attempt||attempt.cleanupPending||!sameAccount(attempt))return;
@@ -212,6 +213,9 @@ export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,
   }
   // Escape leaves a view before it leaves the office.
   dialog.addEventListener('cancel',e=>{e.preventDefault();if(viewId){setView(null);return;}void leaveOffice();},{signal});
+  // A browser may close the modal on a second Escape without a cancel event. Keep the dialog
+  // and the visit consistent: reopen it and leave properly.
+  dialog.addEventListener('close',()=>{if(!view||closing)return;dialog.showModal();void leaveOffice();},{signal});
   const typing=e=>e.target.closest('input,select,textarea,button');
   dialog.addEventListener('keydown',e=>{if(desk?.active||typing(e)||e.metaKey||e.ctrlKey||e.altKey)return;if(e.code==='KeyE'&&!e.repeat){e.preventDefault();openDesk();return;}if(e.code==='KeyQ'&&!e.repeat){e.preventDefault();void changeLevel();return;}if(e.code==='KeyZ'&&!e.repeat){e.preventDefault();void toggleSeat();return;}if(e.code==='KeyV'&&!e.repeat){e.preventDefault();cycleView();return;}if(e.code==='KeyY'&&!e.repeat){e.preventDefault();void mp()?.voice?.toggleJoin();}if(e.code==='KeyM'){e.preventDefault();const v=mp()?.voice;if(v?.state.pushToTalk)v.setTransmit(true);else if(!e.repeat)void v?.toggleMic();}if(['KeyW','KeyA','KeyS','KeyD','ArrowLeft','ArrowRight'].includes(e.code)){e.preventDefault();if(viewId)setView(null);keys.add(e.code);}},{signal});
   dialog.addEventListener('keyup',e=>{keys.delete(e.code);if(e.code==='KeyM')mp()?.voice?.setTransmit(false);},{signal});
@@ -221,9 +225,9 @@ export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,
   for(const event of ['pointerup','pointercancel','lostpointercapture'])dialog.addEventListener(event,()=>{drag=null;},{signal});
   for(const [key,text]of [['KeyW','Forward'],['KeyA','Left'],['KeyS','Back'],['KeyD','Right'],['ArrowLeft','Turn left'],['ArrowRight','Turn right']]){
     const b=button(text,null,()=>{});b.dataset.officeKey=key;pad.append(b);
-    b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);keys.add(key);},{signal});
+    b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);if(viewId)setView(null);keys.add(key);},{signal});
     for(const event of ['pointerup','pointercancel','lostpointercapture','blur'])b.addEventListener(event,()=>keys.delete(key),{signal});
-    b.addEventListener('keydown',e=>{if(['Enter','Space'].includes(e.code)){e.preventDefault();keys.add(key);}},{signal});b.addEventListener('keyup',()=>keys.delete(key),{signal});
+    b.addEventListener('keydown',e=>{if(['Enter','Space'].includes(e.code)){e.preventDefault();if(viewId)setView(null);keys.add(key);}},{signal});b.addEventListener('keyup',()=>keys.delete(key),{signal});
   }
   window.addEventListener('blur',()=>keys.clear(),{signal});document.addEventListener('visibilitychange',()=>{if(document.hidden)keys.clear();},{signal});
   host.addEventListener('keydown',e=>{if(e.code==='KeyF'&&!e.repeat&&!e.metaKey&&!e.ctrlKey&&!e.altKey&&near()&&!view&&!e.target.closest('input,textarea,select,button')){e.preventDefault();e.stopImmediatePropagation();void enterOffice();}},{capture:true,signal});

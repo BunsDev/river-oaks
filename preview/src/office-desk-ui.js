@@ -22,7 +22,7 @@ export function createOfficeDeskUI({getMultiplayer,getWorkspace=()=>null,onClose
  </main></div><footer class="desk-footer"><p id="desk-save-status" tabindex="-1" role="status" aria-live="polite">Ready when you are</p><div><button type="button" id="desk-export" class="desk-text-button">Download</button><button type="button" id="desk-save" class="desk-secondary">Save</button><button type="button" id="desk-finish" class="desk-primary">Mark complete <span aria-hidden="true">✓</span></button></div></footer>`;
  document.body.append(dialog);
  const $=id=>dialog.querySelector(`#desk-${id}`),listen=(id,fn)=>$(id).addEventListener('click',fn,{signal});
- let sceneTask=null;const NOTES_HINT=$('notes').placeholder,SCENE_HINT='Three lines: who is there, where they are, and what happens next.';
+ let sceneTask=null;const TITLE_HINT=$('title').placeholder,NOTES_HINT=$('notes').placeholder,SCENE_HINT='Three lines: who is there, where they are, and what happens next.';
  let disposed=false,timer=null,renderedTask=null,listKey='',linkKey='',confirmAction=null,returnFocus=null,lastError=null,scope='private',deskWorkspace=null;
  function fitTitle(){if($('editor').hidden)return;$('title').style.height='0px';$('title').style.height=`${$('title').scrollHeight}px`;}
  window.addEventListener('resize',fitTitle,{signal});
@@ -51,7 +51,7 @@ export function createOfficeDeskUI({getMultiplayer,getWorkspace=()=>null,onClose
   $('notice').hidden=!s.error;$('error').textContent=messages[s.error]??'Your desk couldn’t connect. Your draft is kept here. Try again.';
   $('reload').hidden=s.error!=='desk_conflict';$('retry').hidden=s.error==='desk_conflict';$('rescue').hidden=!t;
   if(t){
-   const switched=renderedTask!==t.id;$('notes').placeholder=t.id===sceneTask?SCENE_HINT:NOTES_HINT;
+   const switched=renderedTask!==t.id;$('notes').placeholder=t.id===sceneTask?SCENE_HINT:NOTES_HINT;$('title').placeholder=t.id===sceneTask?'Scene idea':TITLE_HINT;
    for(const field of ['title','notes','result'])if(switched||document.activeElement!==$(field))$(field).value=t[field];
    renderedTask=t.id;$('task-state').textContent=t.status==='done'?'COMPLETED':'IN PROGRESS';$('task-state').dataset.complete=String(t.status==='done');
    $('notes-count').textContent=`${t.notes.length.toLocaleString()} / 4,000`;$('result-count').textContent=`${t.result.length.toLocaleString()} / 8,000`;
@@ -88,11 +88,17 @@ export function createOfficeDeskUI({getMultiplayer,getWorkspace=()=>null,onClose
  function download(){const t=model.state.task;if(!t)return;const lines=[`# ${t.title||'Untitled task'}`,'',`Status: ${t.status==='done'?'Completed':'In progress'}`,'','## Notes',t.notes,'','## Files & links',...t.links.map(l=>`${l.label}: ${l.url}`),'','## Result',t.result,''];const url=URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/plain;charset=utf-8'}));const a=node('a');a.href=url;a.download=(t.title.replace(/[^a-z0-9_-]+/gi,'-').slice(0,70)||'desk-task')+'.txt';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
  function close(){clearTimeout(timer);hideConfirm();dialog.close();returnFocus?.isConnected&&returnFocus.focus({preventScroll:true});onClose();}
  async function requestClose(){clearTimeout(timer);const s=model.state;if(s.busy){confirm('A change is in progress. Wait for it to finish before closing your desk.','Stay at desk',hideConfirm);return;}if(s.dirty&&!await model.save()){confirm('This draft isn’t saved yet. Keep editing, or close the desk and keep it here until you return.','Close and keep draft',close);return;}close();}
- for(const field of ['title','notes','result'])$(field).addEventListener('input',()=>{if(field==='title')$(field).value=$(field).value.replace(/[\r\n]/g,' ');model.edit({[field]:$(field).value});},{signal});
+ for(const field of ['title','notes','result'])$(field).addEventListener('input',()=>{
+  if(field==='title')$(field).value=$(field).value.replace(/[\r\n]/g,' ');
+  const values={[field]:$(field).value},t=model.state.task;
+  if(field==='notes'&&t?.id===sceneTask&&!t.title.trim()){values.title='Scene idea';$('title').value='Scene idea';}
+  model.edit(values);
+ },{signal});
  $('title').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('notes').focus();}},{signal});
  async function newTask(){if(await model.create()){hideConfirm();$('link-form').hidden=true;$('title').focus();}}
- // An optional prompt (#363): a private task named Scene idea, with a three-line hint. Nothing is shared or published.
- async function sceneIdea(){if(scope==='shared'||!await model.create())return;sceneTask=model.state.task?.id??null;model.edit({title:'Scene idea'});hideConfirm();$('link-form').hidden=true;$('notes').focus();}
+ // An optional prompt (#363): a private task with a three-line hint, named Scene idea once the
+ // visitor writes, so a click alone saves nothing. Nothing is shared or published.
+ async function sceneIdea(){if(scope==='shared'||!await model.create())return;sceneTask=model.state.task?.id??null;hideConfirm();$('link-form').hidden=true;render();$('notes').focus();}
  listen('scene',()=>void sceneIdea());
  listen('new',newTask);listen('start',newTask);listen('save',()=>void model.save());listen('finish',()=>void model.finish());listen('close',()=>void requestClose());
  listen('scope-private',()=>void switchScope('private'));listen('scope-shared',()=>void switchScope('shared'));
