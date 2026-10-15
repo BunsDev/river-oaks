@@ -49,7 +49,10 @@ from the viewing camera while low fields remain. The final native-browser captur
 
 ## Live office outlook
 
-The default terrace office now renders the real district using its existing
+On a phone or tablet (a coarse pointer), or at a reduced render scale, the
+terrace office keeps the bounded one-time snapshot instead, at the 512-face
+size (`officeOutlookFor` in `office-skyline.js`; Val, 2026-10-15). Elsewhere,
+the default terrace office now renders the real district using its existing
 scene/camera/pipeline. Walking and bounded views have positional parallax; world
 time and lighting remain current. No cubemap is allocated and no six-face capture
 runs in the product live path. The original snapshot diagnostic utility remains

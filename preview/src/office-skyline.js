@@ -27,6 +27,13 @@ export function officeSkylineSize({ scale = 1, coarsePointer = false, maxCubemap
   return Math.min(coarsePointer || scale < 0.75 ? 512 : 1024, maxCubemapSize, maxTextureSize);
 }
 
+// Which outlook a terrace office draws (Val, 2026-10-15): a phone or tablet (coarse pointer) or a
+// reduced render scale keeps the bounded one-time snapshot at officeSkylineSize; other devices draw
+// the live district. Chosen once, when a visit starts.
+export function officeOutlookFor({ scale = 1, coarsePointer = false, maxCubemapSize = Infinity, maxTextureSize = Infinity } = {}) {
+  return coarsePointer || scale < 0.75 ? { mode: 'snapshot', size: officeSkylineSize({ scale, coarsePointer, maxCubemapSize, maxTextureSize }) } : { mode: 'live' };
+}
+
 // The six faces as three.js CubeCamera draws them for WebGL (cameras/CubeCamera.js), in cube
 // face order +x, -x, +y, -y, +z, -z: the direction each looks along and its up vector, through
 // a 90-degree camera whose negative field of view (CubeCamera's own) mirrors it into the cube

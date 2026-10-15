@@ -4,6 +4,7 @@ import { IPIC_DARTS, IPIC_INTERIOR, atIpicDartsLine } from './ipic-plan.js';
 import './ipic-screening.css';
 import { officeLobbyGroundCutout } from './office-contract.js';
 import { captureOfficeStreet } from './office-world-presentation.js';
+import { officeOutlookFor } from './office-skyline.js';
 import { createStoreIntros } from './store-intro-ui.js';
 import {treeFlightEnvironment} from './tree-flight.js';
 import { buildRoads } from './street-roads.js';
@@ -424,7 +425,7 @@ function initializeRenderer() {
   if (creationToolsEnabled) buildControls=createSharedBuildControls({getPose:()=>walking?.getPose(),isBuildableRoom:id=>world?.stores.some(store=>store.id===id && store.category==='home'),onBuilderChange:builder=>{builderAim='';if(!builder.active)buildLayer?.setGhost(null);},request:message=>multiplayer?.command(message)??Promise.resolve({ok:false,message:'Join the town before building.'})});
   visitTools.append($('.player-controls'), cyclingBoard.panel, ...(buildControls ? [buildControls.panel] : []));
   officeUI=createOfficeUI({host,panelHost:visitTools,renderer,getWorld:()=>world,getMultiplayer:()=>multiplayer,walking,
-    captureStreet:()=>captureOfficeStreet({scene,camera,pipeline,renderer,architecture:buildingMesh,skyline:officeSkylineOff||softwareAcceptance?null:{mode:'live'},lights:storeLights,avatar:playerAvatar,lobby:buildingMesh?.userData.officeArrival,world,getWorld:()=>world,pose:walking?.getPose()})});
+    captureStreet:()=>captureOfficeStreet({scene,camera,pipeline,renderer,architecture:buildingMesh,skyline:officeSkylineOff||softwareAcceptance?null:officeOutlookFor({scale:quality?.stats.scale,coarsePointer:window.matchMedia('(pointer: coarse)').matches,maxCubemapSize:renderer.capabilities.maxCubemapSize,maxTextureSize:renderer.capabilities.maxTextureSize}),lights:storeLights,avatar:playerAvatar,lobby:buildingMesh?.userData.officeArrival,world,getWorld:()=>world,pose:walking?.getPose()})});
   // IPIC screenings (#367): the town's timeline on the existing screen, while the player is inside IPIC.
   // Mounted on the viewport, not the canvas host: walking takes pointer capture on the canvas host.
   ipicScreening??=createIpicScreening({host:host.parentElement??host,THREE,getMultiplayer:()=>multiplayer,getScreen:()=>buildingMesh?.userData.interiors?.userData.screens?.[0]??null,
