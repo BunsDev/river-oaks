@@ -7,6 +7,7 @@ import { FuseState, FuseV1Options, FuseVersion } from '@electron/fuses';
 import { DESKTOP_FUSES } from '../fuses.js';
 import { DESKTOP_FILES, DESKTOP_SHARED_FILES } from '../package-files.js';
 import { expectedAsarFiles, fuseDrift, listAsar, packagedPaths } from '../package-check.js';
+import { packagedBinary } from '../package-options.js';
 
 // Builds an asar the way @electron/asar frames it: a size pickle, then a header
 // pickle holding the JSON directory, then the file contents.
@@ -65,13 +66,19 @@ test('a flipped, missing, undecided or differently versioned fuse is drift', () 
 });
 
 test('the packaged paths follow desktop/package.js on each platform', () => {
-  const mac = packagedPaths('/r', 'darwin', 'arm64');
+  // join() uses the host separator; compare with forward slashes on every host.
+  const posix = paths => Object.fromEntries(Object.entries(paths).map(([key, path]) => [key, path.replaceAll('\\', '/')]));
+  for (const [platform, arch] of [['darwin', 'arm64'], ['win32', 'x64'], ['linux', 'x64']]) {
+    const paths = packagedPaths('/r', platform, arch);
+    assert.equal(paths.binary, packagedBinary(paths.dir, platform), `${platform} checks the binary package.js fuses`);
+  }
+  const mac = posix(packagedPaths('/r', 'darwin', 'arm64'));
   assert.equal(mac.binary, '/r/dist/desktop/TypeSafe Place-darwin-arm64/TypeSafe Place.app');
   assert.equal(mac.asar, '/r/dist/desktop/TypeSafe Place-darwin-arm64/TypeSafe Place.app/Contents/Resources/app.asar');
-  const win = packagedPaths('/r', 'win32', 'x64');
+  const win = posix(packagedPaths('/r', 'win32', 'x64'));
   assert.equal(win.binary, '/r/dist/desktop/TypeSafe Place-win32-x64/TypeSafe Place.exe');
   assert.equal(win.asar, '/r/dist/desktop/TypeSafe Place-win32-x64/resources/app.asar');
-  const linux = packagedPaths('/r', 'linux', 'x64');
-  assert.equal(linux.binary, '/r/dist/desktop/TypeSafe Place-linux-x64/TypeSafe Place');
+  const linux = posix(packagedPaths('/r', 'linux', 'x64'));
+  assert.equal(linux.binary, '/r/dist/desktop/TypeSafe Place-linux-x64/typesafe-place');
   assert.equal(linux.asar, '/r/dist/desktop/TypeSafe Place-linux-x64/resources/app.asar');
 });

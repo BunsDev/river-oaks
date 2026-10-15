@@ -1,6 +1,8 @@
 import { getCurrentFuseWire, FuseState, FuseV1Options } from '@electron/fuses';
 import { DESKTOP_FUSES } from './fuses.js';
 import { DESKTOP_FILES, DESKTOP_SHARED_FILES } from './package-files.js';
+import { packagedBinary } from './package-options.js';
+import { APP_NAME } from './identity.js';
 import { open } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -10,9 +12,11 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 // files. Run after `pnpm run desktop:package` on the same host (CI does this on
 // every platform in .github/workflows/desktop.yml).
 
+// The packager names its output `<name>-<platform>-<arch>`, and package.js flips
+// the fuses in packagedBinary(), so the check reads the same binary it wrote.
 export function packagedPaths(root, platform = process.platform, arch = process.arch) {
-  const dir = join(root, 'dist/desktop', `TypeSafe Place-${platform}-${arch}`);
-  const binary = platform === 'darwin' ? join(dir, 'TypeSafe Place.app') : join(dir, platform === 'win32' ? 'TypeSafe Place.exe' : 'TypeSafe Place');
+  const dir = join(root, 'dist/desktop', `${APP_NAME}-${platform}-${arch}`);
+  const binary = packagedBinary(dir, platform);
   const asar = platform === 'darwin' ? join(binary, 'Contents/Resources/app.asar') : join(dir, 'resources/app.asar');
   return { dir, binary, asar };
 }
