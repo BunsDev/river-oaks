@@ -1,7 +1,7 @@
 async page => {
   // Penthouse smoke (#361, #363): the fixture serves Jevica's office on layout office-penthouse-1.
   // The owner arrives, sees the graybox drawn from the plan, sits at creative desk 01's chair
-  // and stands again (#363 seat claims), walks to the stair foot, takes the stairs with the
+  // and stands again (#363 seat claims), looks through the five bounded views, walks to the stair foot, takes the stairs with the
   // level control and stands on the mezzanine at +3.8 m.
   // Software rendering; not visual or device acceptance.
   const checks = [], errors = [];
@@ -80,6 +80,22 @@ async page => {
   check(stood.position[0] === chair.stand[0] && stood.position[1] === chair.stand[1], `standing returned to the chair's approach: ${JSON.stringify(stood.position)}`);
   await page.waitForTimeout(300); at = await position();
 
+  // #363 views: V visits each fixed view; only the camera moves, and Escape returns to walking.
+  const camera = async () => (await page.evaluate(() => window.__riverOffice())).camera.position;
+  const walkingCamera = await camera(), beforeViews = await visit(), views = {};
+  for (const id of ['overview', 'main-floor', 'workstations', 'library', 'terrace']) {
+    await dialog.focus(); await page.keyboard.press('KeyV'); await page.waitForTimeout(400);
+    check(await page.locator('#office-view').inputValue() === id, `V selects the ${id} view`);
+    views[id] = await camera();
+    await page.screenshot({ path: `output/playwright/office-penthouse-view-${id}.png` });
+  }
+  check(new Set(Object.values(views).map(p => p.map(n => n.toFixed(2)).join())).size === 5, 'each view places the camera somewhere different');
+  check(JSON.stringify((await visit()).position) === JSON.stringify(beforeViews.position), 'views leave the server position unchanged');
+  await dialog.focus(); await page.keyboard.press('Escape'); await page.waitForTimeout(400);
+  check(await dialog.evaluate(d => d.open) && await page.locator('#office-view').inputValue() === '', 'Escape returns to walking without leaving the office');
+  const back = await camera();
+  check(back.every((n, i) => Math.abs(n - walkingCamera[i]) < 1e-3), `the walking camera returns exactly: ${JSON.stringify([walkingCamera, back])}`);
+
   const target = [11.8, 4.5];
   await walkTo(target, 'the stair foot');
   await page.waitForFunction(() => !document.querySelector('#office-level')?.hidden);
@@ -94,5 +110,5 @@ async page => {
   await page.locator('#office-exit').click();
   await page.waitForFunction(() => !document.querySelector('#office-visit').open);
   check(!errors.length, `no page errors: ${errors.join('; ')}`);
-  return { checks, errors, start, seated, stood, seatedEyeDrop: standingEye - seatedEye, upstairs, eyeRise: eye1 - eye0, rendering: 'Software fixture; graybox from the plan, not final art' };
+  return { checks, errors, start, seated, stood, seatedEyeDrop: standingEye - seatedEye, views, upstairs, eyeRise: eye1 - eye0, rendering: 'Software fixture; graybox from the plan, not final art' };
 }

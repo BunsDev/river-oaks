@@ -8,7 +8,7 @@ import { buildOfficeArrival } from './office-arrival-architecture.js';
 import { createOfficeWorldScene } from './office-world-scene.js';
 import { officePeerVisible } from './office-world-presentation.js';
 import { buildOfficeGeometry } from './office-penthouse-graybox.js';
-import { OFFICE_EYE_HEIGHT, OFFICE_LAYOUT_LEGACY, OFFICE_SEATED_EYE_HEIGHT, officeLayout, officeLevelElevation, officeSeatedPose } from './office-layouts.js';
+import { OFFICE_EYE_HEIGHT, OFFICE_LAYOUT_LEGACY, OFFICE_SEATED_EYE_HEIGHT, officeLayout, officeLevelElevation, officeSeatedPose, officeView } from './office-layouts.js';
 
 // Keep the eye clear when residents share the arrival point or pass each other.
 export const officePlayerVisible=officePeerVisible;
@@ -37,10 +37,11 @@ export function createOfficeScene({renderer,host,self,players,reducedMotion=fals
     const ready=actors.stats().some(a=>a.id===self.id&&a.ready);
     if(started===null&&ready)started=now;
     const elapsed=started===null?0:(now-started)/1000,frame=elevatorFrame(elapsed,{reducedMotion:skipped});
-    const walking=frame.done,at=walking?position:frame.position;firstPerson=walking;
+    // A view (#363) moves only the camera to its fixed eye, and shows the visitor's own body.
+    const walking=frame.done,at=walking?position:frame.position,fixed=walking&&place.viewId?officeView(layout,place.viewId):null;firstPerson=walking&&!fixed;
     lastPosition=[...at];
     const activePlayers=allPlayers.filter(p=>p.office?.id===self.office.id);
-    actors.sync(activePlayers.map(p=>({...p,position:p.id===self.id?[...at,walking?floor:0]:[...p.office.position,p.office.elevation??0],yaw:p.id===self.id?(walking?yaw:0):p.office.yaw,altitude:0,vehicle:null,sitting:p.id===self.id?null:officeSeatedPose(layout,p.office),interaction:null})),null);
+    actors.sync(activePlayers.map(p=>({...p,position:p.id===self.id?[...at,walking?floor:0]:[...p.office.position,p.office.elevation??0],yaw:p.id===self.id?(walking?yaw:0):p.office.yaw,altitude:0,vehicle:null,sitting:p.id===self.id?(place.seatId?officeSeatedPose(layout,{seat:{id:place.seatId},levelId}):null):officeSeatedPose(layout,p.office),interaction:null})),null);
     lift.update(frame);
     office.object.visible=walking||['opening','arriving'].includes(frame.phase);
     if(!walking){
@@ -48,6 +49,9 @@ export function createOfficeScene({renderer,host,self,players,reducedMotion=fals
       camera.position.fromArray(path.position);camera.lookAt(...path.target);
       // Entering first person must not put the eye inside the local head/body.
       firstPerson=frame.phase==='arriving'&&Math.hypot(camera.position.x-at[0],camera.position.z+at[1])<.95;
+    }else if(fixed){
+      const base=officeLevelElevation(layout,fixed.levelId)??0;
+      camera.position.set(fixed.eye[0],fixed.eye[1]+base,-fixed.eye[2]);camera.lookAt(fixed.target[0],fixed.target[1]+base,-fixed.target[2]);
     }else{
       // First person keeps the camera inside the room walls.
       camera.position.set(position[0],(place.seatId?OFFICE_SEATED_EYE_HEIGHT:OFFICE_EYE_HEIGHT)+floor,-position[1]);

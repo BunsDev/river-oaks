@@ -268,3 +268,30 @@ test('an occupied chair shows Seat taken instead of offering to sit',async t=>{
  assert.equal(f.find('office-seat').hidden,false);assert.equal(f.find('office-seat').textContent,'Seat taken');assert.equal(f.find('office-seat').disabled,true);
  f.find('office-visit').emit('keydown',{code:'KeyZ'});await tick();assert.equal(f.calls.some(c=>c.action==='sit'),false,'Z does not send a claim for a taken chair');
 });
+test('V cycles bounded views that move only the camera; Escape and walking keys return to walking',async t=>{
+ const f=setup(t,{layout:'office-penthouse-1'});f.ui.update(6000,.016);await tick();f.find('office-enter').emit('click');await tick();f.ui.update(6100,.016);
+ const select=f.find('office-view');assert.equal(select.hidden,false);
+ assert.deepEqual(select.children.map(option=>option.value),['','overview','main-floor','workstations','library','terrace']);
+ const before=[...f.ui.pose.position],moves=()=>f.calls.filter(c=>c.action==='move').length;
+ f.find('office-visit').emit('keydown',{code:'KeyV'});f.ui.update(6200,.016);
+ assert.deepEqual(f.renders.at(-1)[4],{layoutId:'office-penthouse-1',levelId:'jevica-office/l0',viewId:'overview'});assert.equal(select.value,'overview');
+ const sent=moves();for(let i=0;i<5;i++)f.ui.update(6400+i*250,.1);await tick();
+ assert.equal(moves(),sent,'a view sends no moves');assert.deepEqual(f.ui.pose.position,before,'a view leaves the visitor where they stand');
+ f.find('office-visit').emit('keydown',{code:'KeyV'});f.ui.update(7800,.016);assert.equal(f.renders.at(-1)[4].viewId,'main-floor');
+ let escaped=false;f.find('office-visit').emit('cancel',{preventDefault(){escaped=true;}});await tick();f.ui.update(7900,.016);
+ assert.ok(escaped);assert.equal(f.renders.at(-1)[4].viewId,undefined,'Escape returns to walking');assert.equal(f.ui.active,true,'and does not leave the office');
+ assert.equal(f.calls.some(c=>c.action==='leave'),false);
+ select.value='library';select.emit('change');f.ui.update(8000,.016);assert.equal(f.renders.at(-1)[4].viewId,'library','the select chooses a view');
+ f.find('office-visit').emit('keydown',{code:'KeyW'});f.ui.update(8100,.1);f.ui.update(8400,.1);await tick();f.find('office-visit').emit('keyup',{code:'KeyW'});
+ assert.equal(f.renders.at(-1)[4].viewId,undefined,'a walking key returns to walking');assert.ok(f.ui.pose.position[2]<before[2],'and walks');
+ for(let i=0;i<5;i++)f.find('office-visit').emit('keydown',{code:'KeyV'});f.ui.update(8600,.016);assert.equal(f.renders.at(-1)[4].viewId,'terrace');
+ f.find('office-visit').emit('keydown',{code:'KeyV'});f.ui.update(8700,.016);assert.equal(f.renders.at(-1)[4].viewId,undefined,'the cycle ends back at walking');
+ f.find('office-visit').emit('keydown',{code:'KeyV'});f.ui.update(8800,.016);
+ f.find('office-exit').emit('click');await tick();await tick();assert.equal(f.ui.active,false);
+ f.find('office-enter').emit('click');await tick();f.ui.update(9000,.016);assert.equal(f.renders.at(-1)[4].viewId,undefined,'a new visit starts walking');
+});
+test('the legacy room has no view control',async t=>{
+ const f=setup(t);f.ui.update(6000,.016);await tick();f.find('office-enter').emit('click');await tick();f.ui.update(6100,.016);
+ assert.equal(f.find('office-view').hidden,true);f.find('office-visit').emit('keydown',{code:'KeyV'});f.ui.update(6200,.016);
+ assert.equal(f.renders.at(-1)[4]?.viewId,undefined);
+});
