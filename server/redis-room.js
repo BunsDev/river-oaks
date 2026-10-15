@@ -12,6 +12,12 @@ import { placesOf } from '../preview/src/places.js';
 import { createRideFlush } from './ride-flush.js';
 
 const LEASE_MS=5000, REPLY_MS=15000, REQUEST_MS=7000, TICK_MS=200;
+// A player whose socket left (or whose edge stopped reporting) keeps their place, seat and
+// hosting this long, so a reconnect on a slow network resumes instead of starting over.
+export const LEAVE_GRACE_MS=30_000;
+// An edge that stops reporting a connection (it crashed or lost Redis) is given longer than a
+// clean leave: its players reconnect elsewhere within the grace either way.
+export const HEARTBEAT_TIMEOUT_MS=40_000;
 const MAX_QUEUE=4096, BATCH_SIZE=256, MAX_BYTES=16*1024*1024;
 const ENQUEUE=`
   if redis.call('LLEN',KEYS[1]) >= tonumber(ARGV[1]) then return 0 end
@@ -178,7 +184,7 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
     const remove=userId=>{connections.delete(userId);world.leave(userId);removedUsers.push(userId);};
     const presence=await Promise.all([...connections.values()].map(async connection=>({connection,authorized:await allowed(connection.identity)})));
     for(const {connection,authorized} of presence) {
-      if(!authorized || time-connection.identity.expiresAt>=10000 || connection.leftAt!==null && time-connection.leftAt>=10000 || time-connection.lastSeen>=20000) remove(connection.identity.userId);
+      if(!authorized || time-connection.identity.expiresAt>=10000 || connection.leftAt!==null && time-connection.leftAt>=LEAVE_GRACE_MS || time-connection.lastSeen>=HEARTBEAT_TIMEOUT_MS) remove(connection.identity.userId);
     }
     // Real clocks govern cooldowns/presence; simulation never catches up offline.
     if(connections.size)world.step(previous?Math.min(0.25,Math.max(0,(time-previous.lastTick)/1000)):0);

@@ -680,11 +680,20 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       && distance(item.position,portal.position)<0.01);
     if(!destination || destination.plan!==source.plan || !paired)return reject('invalid_level_portal');
     const targetEnvironment=environmentForLevel(destination.level.id);
-    const [east,north]=paired.position;
-    if(!targetEnvironment.isFree(east,-north)
-      || targetEnvironment.roomAt(east,-north)?.planId!==destination.level.id
-      || [...players.values()].some(other=>other!==player && other.levelId===destination.level.id
-        && distance(other.position,paired.position)<0.7))return reject('level_landing_blocked');
+    const onLevel=([x,n])=>targetEnvironment.isFree(x,-n) && targetEnvironment.roomAt(x,-n)?.planId===destination.level.id;
+    if(!onLevel(paired.position))return reject('level_landing_blocked');
+    // Someone on the landing never keeps a visitor off a floor: arrive at the nearest clear spot
+    // beside them, reachable from the landing; with nowhere clear, at the landing itself.
+    const bodies=[...players.values()].filter(other=>other!==player && other.levelId===destination.level.id).map(other=>other.position);
+    const clearOfBodies=p=>bodies.every(body=>distance(body,p)>=0.7);
+    const reachable=p=>{const steps=Math.ceil(distance(paired.position,p)/.15);for(let i=1;i<=steps;i++){const t=i/steps;if(!onLevel([paired.position[0]+(p[0]-paired.position[0])*t,paired.position[1]+(p[1]-paired.position[1])*t]))return false;}return true;};
+    let arrival=[...paired.position];
+    if(!clearOfBodies(arrival))
+      search: for(const radius of [0.8,1.1,1.4,1.8,2.2])for(let i=0;i<16;i++){
+        const angle=i*Math.PI/8,p=[paired.position[0]+Math.cos(angle)*radius,paired.position[1]+Math.sin(angle)*radius];
+        if(clearOfBodies(p) && onLevel(p) && reachable(p)){arrival=p;break search;}
+      }
+    const [east,north]=arrival;
     interactions.cancel(player.id);focus.delete(player.id);
     Object.assign(player,{position:[east,north,destination.level.floorElevation],buildingId:destination.plan.buildingId,
       levelId:destination.level.id,altitude:0,vehicle:null,poseAt:time,moveBudget:0.1,liftBudget:0.1});
