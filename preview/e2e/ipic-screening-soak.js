@@ -214,12 +214,16 @@ async (host, viewer, tools) => {
         const viaMore = Boolean(more?.contains(button)); if (viaMore) more.open = true;
         await new Promise(resolve => setTimeout(resolve, 400));
         const r = button.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2, top = document.elementFromPoint(x, y);
+        const panel = document.querySelector('#ipic-screening'), panelShown = () => getComputedStyle(panel).visibility === 'visible';
         const result = { chatWasOpen, viaMore, label: button.textContent.trim(), inView: x >= 0 && x <= innerWidth && y >= 0 && y <= innerHeight,
-          reachable: Boolean(top && (top === button || button.contains(top))), coveredBy: top && !(top === button || button.contains(top)) ? (top.closest('[class]')?.className ?? top.tagName) : null, rect: [r.left, r.top, r.width, r.height].map(Math.round) };
+          reachable: Boolean(top && (top === button || button.contains(top))), coveredBy: top && !(top === button || button.contains(top)) ? (top.closest('[class]')?.className ?? top.tagName) : null, rect: [r.left, r.top, r.width, r.height].map(Math.round),
+          panelShownWithMore: panelShown() };
         if (viaMore) more.open = false; if (chat) chat.open = chatWasOpen;
+        await new Promise(resolve => setTimeout(resolve, 200));
+        result.panelBack = panelShown();
         return result;
       });
-      check(exit.inView && exit.reachable && /Step outside/.test(exit.label), `${width} px, dock ${dockOpen ? 'open' : 'closed'}: Step outside is reachable with Town chat collapsed: ${JSON.stringify(exit)}`);
+      check(exit.inView && exit.reachable && /Step outside/.test(exit.label) && exit.panelBack, `${width} px, dock ${dockOpen ? 'open' : 'closed'}: Step outside is reachable with Town chat collapsed, and the panel returns when More closes: ${JSON.stringify(exit)}`);
       hits.push({ control: 'walking-enter', ...exit });
       views[dockOpen ? 'dockOpen' : 'dockClosed'] = hits;
       await viewer.screenshot({ path: `output/playwright/ipic/soak-${width}-dock-${dockOpen ? 'open' : 'closed'}.png` });
