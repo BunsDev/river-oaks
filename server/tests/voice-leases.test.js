@@ -121,6 +121,10 @@ test('memory and redis stores answer the same scripted sequence identically', li
     push(await leases.issue(lease('carol', 'c1', 'osm-node-1', clock()), { maxLeases: 2 }));
     push(await leases.touch('alice', 'c1', clock() + VOICE_LEASE_TTL_MS));
     push(await leases.touch('alice', 'c9', clock() + VOICE_LEASE_TTL_MS));
+    push(await leases.move('alice', 'c9', 'c3'));
+    push(await leases.move('alice', 'c1', 'c3'));
+    push(await leases.touch('alice', 'c1', clock() + VOICE_LEASE_TTL_MS));
+    push(await leases.move('alice', 'c3', 'c1'));
     push(await leases.issue(lease('alice', 'c2', 'osm-node-1', clock())));
     push(await leases.release('bob', 'c2'));
     push(await leases.release('bob', 'c1'));

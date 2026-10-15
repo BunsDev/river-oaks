@@ -9,6 +9,7 @@ import { createWorkplaceUI } from './workplace-ui.js';
 import { accountName } from './resident-names.js';
 import { travelRefusal } from './travel-message.js';
 import { watchConnection } from './connection-deadline.js';
+import { CONNECTING, IMPROVED, UPDATING, closeNotice, createStalenessWatch, retryDelay } from './connection-policy.js';
 import { createVoiceChat } from './voice-chat.js';
 import { createVoiceUI } from './voice-ui.js';
 import { sharedVoicePreferences } from './voice-preferences.js';
@@ -111,7 +112,7 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
     request:(action,data={})=>api(`/api/workplace/${action}?world=${encodeURIComponent(worldId)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})}):null;
   panel.append(logout);
   const chatDock = createTownChatDock(chatSection);
-  const greetings=createGreetingsUI({host:document.querySelector('#viewport'),getTown:()=>({connected,selfId,snapshot:latestSnapshot}),getEnvironment,request:command});
+  const greetings=createGreetingsUI({host:document.querySelector('#viewport'),getTown:()=>({connected,selfId,snapshot:latestSnapshot}),getEnvironment,request:command,getPose});
   let activeGreeting=null;
   const latestPlayers=new Map();
   // Shared voice. Its requests go straight to fetch rather than api(): api()
@@ -181,79 +182,190 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
     }catch{ /* Reconnect and retry on the next refresh. */ }
   }
   const homeAccessTimer=setInterval(refreshHomeAccess,10_000);
-  const schedule=()=>{if(stopped||retryTimer)return;retryTimer=setTimeout(()=>{retryTimer=null;connect();},Math.min(30000,1000*2**Math.min(attempt++,5)));};
-  async function connect(){
-    if(stopped||connecting||connected)return;connecting=true;retry.hidden=true;login.hidden=true;
-    setStatus('Connecting to the town…');
-    try{
-      worldId=worldIdFromSearch(location.search);
-      const session=await api('/auth/session');
-      if(stopped)return;
-      if(!session.authenticated){identity=null;login.hidden=false;setStatus('Sign in to play.');connecting=false;return;}
-      identity=session.user;csrfToken=session.csrfToken;
-      const access=await api(`/api/multiplayer/ticket?world=${encodeURIComponent(worldId)}`,{method:'POST'});if(stopped)return;moderator=access.moderator;
-      if((access.worldId??DEFAULT_WORLD_ID)!==worldId || (access.protocolVersion??WORLD_PROTOCOL_VERSION)!==WORLD_PROTOCOL_VERSION){
-        const error=new Error('This world needs a newer client. Refresh the page to join.');error.status=426;throw error;
-      }
-      const url=new URL('/multiplayer',location.href);url.protocol=location.protocol==='https:'?'wss:':'ws:';url.searchParams.set('ticket',access.ticket);
-      url.searchParams.set('world',worldId);url.searchParams.set('protocol',String(WORLD_PROTOCOL_VERSION));
-      const ws=new WebSocket(url);socket=ws;
-      // Open quickly, then allow time for the first snapshot; a busy page keeps its connection.
-      const deadline=watchConnection(ws,{onExpire:()=>{if(socket===ws&&!connected)ws.close();}});connectionDeadline=deadline;
-      ws.addEventListener('open',()=>deadline.opened());
-      ws.addEventListener('message',event=>{
-        if(stopped||socket!==ws)return;
-        try{
-          const data=JSON.parse(event.data);
-          if(data.type==='snapshot'){
-            if(!validTownSnapshot(data,selfId)){notice.textContent='A town update could not be read.';ws.close(4002,'Invalid town snapshot');return;}
-            if((data.worldId??DEFAULT_WORLD_ID)!==worldId || (data.protocolVersion??WORLD_PROTOCOL_VERSION)!==WORLD_PROTOCOL_VERSION){ws.close(4000,'World version changed');return;}
-            if(getRegionSha256() && data.regionSha256 && data.regionSha256!==getRegionSha256()){reloadRegion();return;}
-            // The server checks every name; checking again here means no
-            // surface fed by a snapshot can show anyone but Jevica's accounts as Jevica.
-            if(Array.isArray(data.players))for(const player of data.players)player.name=accountName(player.id,player.name);
-            if(Array.isArray(data.chat))for(const entry of data.chat)entry.authorName=accountName(entry.authorId,entry.authorName);
-            if(Array.isArray(data.builds))for(const item of data.builds)item.ownerName=accountName(item.ownerId,item.ownerName);
-            selfId=data.selfId??selfId;latestSnapshot=data;
-            if(!connected){connected=true;connecting=false;attempt=0;deadline.stop();onCorrection(data.players.find(player=>player.id===selfId));setStatus('',false);social.refresh(true);groups?.refresh(true);void workplace?.refresh();void refreshHomeAccess();}
-            const self=data.players.find(player=>player.id===selfId);
-            if(self?.interaction?.id&&self.interaction.id!==activeGreeting)onCorrection(self);
-            activeGreeting=self?.interaction?.id??null;
-            onSnapshot(data);onPlayers(data.players,selfId);displayPlayers(data.players);displayChat(data.chat??[]);
-            voice.setAvailable(Boolean(data.voice?.available),self?.voice?.space??null);voice.sync(data.players,selfId);
-            chatInput.disabled=chatSend.disabled=false;gestureButtons.forEach(button=>button.disabled=false);
-          }else if(data.type==='result'){
-            if(data.correction)onCorrection(data.correction);
-            const request=pending.get(data.requestId);if(request){clearTimeout(request.timer);pending.delete(data.requestId);request.resolve(data);}
-          }
-        }catch{notice.textContent='A town update could not be read.';}
-      });
-      ws.addEventListener('close',event=>{
-        deadline.stop();if(lifetime.signal.aborted||socket!==ws)return;
-        socket=null;connected=false;connecting=false;latestSnapshot=null;homeAccess=[];onHomeAccess(homeAccess);social.refreshHomeAccess();chatInput.disabled=chatSend.disabled=true;gestureButtons.forEach(button=>button.disabled=true);clearPending();onPlayers([],selfId);
-        // Voice leases die with the connection; a non-terminal close rejoins voice with the town.
-        voice.onConnectionLost([4000,4003,4009].includes(event.code));
-        if(stopped)return;
-        if(event.code===4000 && event.reason==='World region updated.'){reloadRegion();return;}
-        const terminal=[4000,4003,4009].includes(event.code);
-        setStatus(event.code===4000?'This world changed. Refresh the page to join.':event.code===4003?'This account cannot join the town.':event.code===4009?'Your account joined from another tab.':'Connection lost. Rejoining the town…');retry.hidden=event.code===4000;
-        if(!terminal)schedule();
-      });
-      ws.addEventListener('error',()=>{if(!stopped&&socket===ws)status.textContent='The town connection is unavailable.';});
-    }catch(error){if(stopped)return;connecting=false;setStatus(error.message);retry.hidden=error.status===404||error.status===426;if(![403,404,426].includes(error.status))schedule();}
+  const staleness=createStalenessWatch();
+  let rotation=null,previousSocket=null,updating=false,halted=false;
+  // The gate's words follow the reason: an update says the world is improving.
+  const show=notice=>{
+    title.textContent=notice.title??CONNECTING.title;description.textContent=notice.description??CONNECTING.description;
+    retry.textContent=notice.refresh?'Refresh':'Try again';retry.dataset.action=notice.refresh?'refresh':'retry';
+    setStatus(notice.status);
+  };
+  const schedule=()=>{if(stopped||retryTimer)return;retryTimer=setTimeout(()=>{retryTimer=null;connect();},retryDelay(attempt++));};
+  // The session and a fresh ticket for one town socket.
+  async function townUrl(continues=null){
+    worldId=worldIdFromSearch(location.search);
+    const session=await api('/auth/session');
+    if(stopped)return null;
+    if(!session.authenticated){identity=null;return 'signed-out';}
+    identity=session.user;csrfToken=session.csrfToken;
+    const access=await api(`/api/multiplayer/ticket?world=${encodeURIComponent(worldId)}`,{method:'POST'});if(stopped)return null;moderator=access.moderator;
+    if((access.worldId??DEFAULT_WORLD_ID)!==worldId || (access.protocolVersion??WORLD_PROTOCOL_VERSION)!==WORLD_PROTOCOL_VERSION){
+      const error=new Error(IMPROVED.status);error.status=426;throw error;
+    }
+    const url=new URL('/multiplayer',location.href);url.protocol=location.protocol==='https:'?'wss:':'ws:';url.searchParams.set('ticket',access.ticket);
+    url.searchParams.set('world',worldId);url.searchParams.set('protocol',String(WORLD_PROTOCOL_VERSION));
+    // A fresh socket for a hand-over names the connection it continues, so voice can follow.
+    if(typeof continues==='string'&&continues)url.searchParams.set('continues',continues);
+    return url;
   }
+  async function connect(){
+    if(stopped||connecting||connected)return;connecting=true;halted=false;retry.hidden=true;login.hidden=true;
+    show(updating?UPDATING:CONNECTING);
+    try{
+      const url=await townUrl();
+      if(!url)return;
+      if(url==='signed-out'){login.hidden=false;halted=true;show({...CONNECTING,status:'Sign in to play.'});connecting=false;return;}
+      openSocket(url);
+    }catch(error){
+      if(stopped)return;connecting=false;
+      if(error.status===426){updating=false;halted=true;show(IMPROVED);retry.hidden=false;return;}
+      // While an update lands the town answers slowly or not at all; keep saying so.
+      show(updating&&![403,404].includes(error.status)?UPDATING:{...CONNECTING,status:error.message});
+      retry.hidden=error.status===404;
+      if([403,404].includes(error.status))halted=true;else schedule();
+    }
+  }
+  // One town socket. A replacement (`from`: the socket it replaces) takes over on its first good snapshot.
+  function openSocket(url,from=null){
+    const ws=new WebSocket(url);if(!from)socket=ws;
+    // Open quickly, then allow time for the first snapshot; a busy page keeps its connection.
+    const deadline=watchConnection(ws,{onExpire:()=>{if(from?rotation?.ws===ws:socket===ws&&!connected)ws.close();}});
+    if(!from)connectionDeadline=deadline;
+    ws.addEventListener('open',()=>deadline.opened());
+    ws.addEventListener('message',event=>{
+      if(stopped||debugDeaf===ws)return;
+      try{
+        const data=JSON.parse(event.data);
+        // Results for commands sent just before a hand-over still arrive on the socket that carried them.
+        if(data.type==='result'){if(socket===ws||previousSocket===ws)settle(data);return;}
+        if(socket!==ws){
+          if(rotation?.ws!==ws||data.type!=='snapshot'||!validTownSnapshot(data,selfId))return;
+          promote(ws,deadline);
+        }
+        if(data.type==='snapshot')receive(ws,data,deadline);
+        else if(data.type==='rotate')void rotate(ws,data.connectionId);
+      }catch{notice.textContent='A town update could not be read.';}
+    });
+    ws.addEventListener('close',event=>{
+      deadline.stop();if(lifetime.signal.aborted)return;
+      if(previousSocket===ws)previousSocket=null;
+      if(rotation?.ws===ws){abandonRotation();return;}
+      if(socket!==ws)return;
+      // The replacement is on its way: this close is the planned one, not a loss.
+      if(rotation?.from===ws){rotation.fromClosed={code:event.code,reason:event.reason};return;}
+      lost(ws,event.code,event.reason);
+    });
+    ws.addEventListener('error',()=>{if(!stopped&&socket===ws&&!rotation)status.textContent='The town connection is unavailable.';});
+    return ws;
+  }
+  function receive(ws,data,deadline){
+    if(!validTownSnapshot(data,selfId)){notice.textContent='A town update could not be read.';ws.close(4002,'Invalid town snapshot');return;}
+    if((data.worldId??DEFAULT_WORLD_ID)!==worldId || (data.protocolVersion??WORLD_PROTOCOL_VERSION)!==WORLD_PROTOCOL_VERSION){ws.close(4000,'World version changed');return;}
+    if(getRegionSha256() && data.regionSha256 && data.regionSha256!==getRegionSha256()){reloadRegion();return;}
+    staleness.heard(performance.now());
+    // The server checks every name; checking again here means no
+    // surface fed by a snapshot can show anyone but Jevica's accounts as Jevica.
+    if(Array.isArray(data.players))for(const player of data.players)player.name=accountName(player.id,player.name);
+    if(Array.isArray(data.chat))for(const entry of data.chat)entry.authorName=accountName(entry.authorId,entry.authorName);
+    if(Array.isArray(data.builds))for(const item of data.builds)item.ownerName=accountName(item.ownerId,item.ownerName);
+    selfId=data.selfId??selfId;latestSnapshot=data;
+    if(!connected){connected=true;connecting=false;attempt=0;updating=false;deadline.stop();onCorrection(data.players.find(player=>player.id===selfId));title.textContent=CONNECTING.title;description.textContent=CONNECTING.description;setStatus('',false);social.refresh(true);groups?.refresh(true);void workplace?.refresh();void refreshHomeAccess();}
+    const self=data.players.find(player=>player.id===selfId);
+    if(self?.interaction?.id&&self.interaction.id!==activeGreeting)onCorrection(self);
+    activeGreeting=self?.interaction?.id??null;
+    onSnapshot(data);onPlayers(data.players,selfId);displayPlayers(data.players);displayChat(data.chat??[]);
+    voice.setAvailable(Boolean(data.voice?.available),self?.voice?.space??null);voice.sync(data.players,selfId);
+    chatInput.disabled=chatSend.disabled=false;gestureButtons.forEach(button=>button.disabled=false);
+  }
+  function settle(data){
+    if(data.correction)onCorrection(data.correction);
+    const request=pending.get(data.requestId);if(request){clearTimeout(request.timer);pending.delete(data.requestId);request.resolve(data);}
+  }
+  // The town retires each socket after a few minutes (the host's request limit) and warns
+  // first. The page moves to a fresh socket and nothing is dropped: commands already sent
+  // finish here, new ones wait for the fresh socket, and the player never leaves the town.
+  async function rotate(from,continues=null){
+    if(rotation||stopped||socket!==from)return;
+    const current=rotation={from,ws:null,fromClosed:null,queued:[]};
+    const until=performance.now()+3000;
+    while(pending.size&&performance.now()<until&&rotation===current)await new Promise(resolve=>setTimeout(resolve,100));
+    if(rotation!==current)return;
+    try{
+      const url=await townUrl(continues);
+      if(rotation!==current)return;
+      if(!url||url==='signed-out'){abandonRotation();return;}
+      current.ws=openSocket(url,from);
+    }catch{if(rotation===current)abandonRotation();}
+  }
+  function promote(ws,deadline){
+    const {from,queued}=rotation;rotation=null;
+    socket=ws;previousSocket=from;connectionDeadline?.stop();connectionDeadline=deadline;deadline.stop();rotations++;rotatedAt.push(Date.now());if(rotatedAt.length>20)rotatedAt.shift();
+    try{from.close(1000,'Moved to a fresh connection.');}catch{ /* already closing */ }
+    for(const item of queued)send(item);
+    voice.onConnectionChanged();
+  }
+  // No fresh socket after all: carry on with the old one, or reconnect if it is already gone.
+  function abandonRotation(){
+    const current=rotation;rotation=null;if(!current)return;
+    try{current.ws?.close();}catch{ /* never opened */ }
+    if(current.fromClosed&&socket===current.from)lost(current.from,current.fromClosed.code,current.fromClosed.reason);
+    else for(const item of current.queued)send(item);
+  }
+  function lost(ws,code,reason){
+    if(socket!==ws)return;
+    if(rotation){const {ws:replacement,queued}=rotation;rotation=null;try{replacement?.close();}catch{ /* never opened */ }for(const item of queued)item.resolve({ok:false,message:'Reconnect before taking an action.'});}
+    socket=null;previousSocket=null;connected=false;connecting=false;latestSnapshot=null;homeAccess=[];onHomeAccess(homeAccess);social.refreshHomeAccess();chatInput.disabled=chatSend.disabled=true;gestureButtons.forEach(button=>button.disabled=true);clearPending();onPlayers([],selfId);
+    const notice=closeNotice(code,reason);
+    // Voice leases die with the connection; a non-terminal close rejoins voice with the town.
+    voice.onConnectionLost(notice.terminal);
+    if(stopped)return;
+    if(code===4000 && reason==='World region updated.'){reloadRegion();return;}
+    updating=notice.kind==='updating';halted=notice.terminal;
+    show(notice);retry.hidden=false;
+    if(!notice.terminal)schedule();
+  }
+  // A socket can die without closing (a Wi-Fi switch, a laptop that slept, a router's idle
+  // timeout). The town sends a snapshot every 200 ms; a visible page that hears nothing moves on.
+  const watchdog=setInterval(()=>{
+    const now=performance.now();
+    if(stopped||!connected||!socket||document.visibilityState!=='visible'){staleness.resume(now);return;}
+    if(!staleness.stale(now))return;
+    const ws=socket;lost(ws,4901,'No town updates.');try{ws.close(4901,'No town updates.');}catch{ /* already closing */ }
+  },1000);
+  // Back online, or back in view: retry now instead of waiting out the backoff.
+  const resume=()=>{
+    staleness.resume(performance.now());
+    if(stopped||connected||connecting||halted||!retryTimer)return;
+    clearTimeout(retryTimer);retryTimer=null;connect();
+  };
+  window.addEventListener('online',resume,{signal:lifetime.signal});
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')resume();},{signal:lifetime.signal});
   function command(message){
-    if(stopped||!connected||socket?.readyState!==WebSocket.OPEN)return Promise.resolve({ok:false,message:'Reconnect before taking an action.'});
+    if(stopped||!connected)return Promise.resolve({ok:false,message:'Reconnect before taking an action.'});
     const requestId=String(++sequence);
     return new Promise((resolve,reject)=>{
-      const timer=setTimeout(()=>{pending.delete(requestId);reject(new Error('The town did not confirm this action. Please try again.'));},8000);
-      pending.set(requestId,{resolve,reject,timer});socket.send(JSON.stringify({...message,requestId}));
+      const item={message:{...message,requestId},requestId,resolve,reject};
+      if(rotation)rotation.queued.push(item);else send(item);
     });
   }
+  function send(item){
+    if(stopped||!connected||socket?.readyState!==WebSocket.OPEN){item.resolve({ok:false,message:'Reconnect before taking an action.'});return;}
+    const timer=setTimeout(()=>{pending.delete(item.requestId);item.reject(new Error('The town did not confirm this action. Please try again.'));},8000);
+    pending.set(item.requestId,{resolve:item.resolve,reject:item.reject,timer});socket.send(JSON.stringify(item.message));
+  }
+  // Development only: browser journeys play the losses this page must survive.
+  let debugDeaf=null,rotations=0;const rotatedAt=[];
+  if(import.meta.env.DEV)window.__riverConnection={
+    state:()=>({connected,connecting,rotating:Boolean(rotation),rotations,rotatedAt:[...rotatedAt],attempt,retryScheduled:Boolean(retryTimer),halted,updating,gate:!gate.hidden,title:title.textContent,status:status.textContent}),
+    // The socket stays open but nothing it carries is heard: a dead socket that never closed.
+    deafen(){debugDeaf=socket;},
+    // A close as the town or the network would deliver it, after `attempt` failed tries.
+    drop({code=1006,reason='',attempt:tries=null}={}){const ws=socket;if(!ws)return false;if(tries!==null)attempt=tries;lost(ws,code,reason);try{ws.close();}catch{ /* already closing */ }return true;},
+  };
   bindTownChatComposer({ form: chatForm, input: chatInput, send: chatSend, status: chatStatus,
     connected: () => connected, sendMessage: text => command({ type: 'chat', text }),
     onSent: () => chatDock.reveal(), signal: lifetime.signal });
-  retry.addEventListener('click',()=>{clearTimeout(retryTimer);retryTimer=null;connect();});
+  retry.addEventListener('click',()=>{if(retry.dataset.action==='refresh'){location.reload();return;}clearTimeout(retryTimer);retryTimer=null;connect();});
   const signOut=async()=>{
     logout.disabled=gateLogout.disabled=true;
     voice.leave('sign-out');
@@ -287,7 +399,8 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
     dispose(){
       if(lifetime.signal.aborted)return;
       voice.dispose();voiceUI.dispose();
-      stopped=true;lifetime.abort();clearTimeout(retryTimer);connectionDeadline?.stop();clearInterval(homeAccessTimer);
+      stopped=true;lifetime.abort();clearTimeout(retryTimer);connectionDeadline?.stop();clearInterval(homeAccessTimer);clearInterval(watchdog);
+      try{rotation?.ws?.close();}catch{ /* never opened */ }rotation=null;previousSocket=null;
       const current=socket;socket=null;connected=connecting=traveling=false;latestSnapshot=null;homeAccess=[];
       current?.close();clearPending();onPlayers([],selfId);onHomeAccess(homeAccess);
       identity=null;csrfToken=null;rows.clear();latestPlayers.clear();chatRows.clear();

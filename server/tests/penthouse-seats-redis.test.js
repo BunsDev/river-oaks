@@ -4,7 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { inflateSync } from 'node:zlib';
 import Redis from 'ioredis';
-import { createRedisRoom } from '../redis-room.js';
+import { LEAVE_GRACE_MS, createRedisRoom } from '../redis-room.js';
 import { OFFICE_LAYOUT_PENTHOUSE, officeLayout, officeSeat } from '../../preview/src/office-layouts.js';
 
 // #363: a seat claim is coordinator state. Two coordinators racing for one seat produce one
@@ -77,7 +77,7 @@ test('two coordinators racing for one office seat produce one winner, and the cl
 
   // Departure after the reconnect grace releases the claim with the visit.
   assert.equal((await replacement.request({ type: 'leave', userId: loser, connectionId: `${loser}-socket` })).ok, true);
-  time += 10_001; await new Promise(resolve => setTimeout(resolve, 250)); await replacement.tick(); // ticks are throttled to 200 ms of real time
+  time += LEAVE_GRACE_MS + 1; await new Promise(resolve => setTimeout(resolve, 250)); await replacement.tick(); // ticks are throttled to 200 ms of real time
   assert.equal(await seen(replacement, loser), null);
   await walk(replacement, winner, chair.stand);
   assert.equal((await office(replacement, winner, 'sit', { seatId: chair.id, layout })).ok, true, 'the departed visitor\'s seat is free');

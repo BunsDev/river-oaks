@@ -73,6 +73,19 @@ test('renew refreshes the lease and token; a replaced tab, another participant o
   assert.equal(f.allowCalls.length, 1, 'renewals do not spend the join budget');
 });
 
+test('a lease moves only from the connection it names, for its own account', async () => {
+  const f = fixture();
+  const joined = await f.voice.join({ userId: 'alice', worldId: 'river-oaks', connectionId: 'c1', space: 'outdoor' });
+  assert.equal(joined.ok, true);
+  assert.equal(await f.voice.continueConnection({ userId: 'alice', from: 'c9', to: 'c2' }), false, 'a connection the lease never had');
+  assert.equal(await f.voice.continueConnection({ userId: 'bob', from: 'c1', to: 'c2' }), false, 'another account');
+  assert.equal(await f.voice.continueConnection({ userId: 'alice', from: 'c1', to: 'c1' }), false, 'no move');
+  assert.equal(await f.voice.continueConnection({ userId: 'alice', from: 'c1', to: 'c2' }), true);
+  assert.equal(await f.voice.continueConnection({ userId: 'alice', from: 'c1', to: 'c3' }), false, 'once moved, the old connection holds nothing');
+  const renewed = await f.voice.renew({ userId: 'alice', worldId: 'river-oaks', connectionId: 'c2', space: 'outdoor', participantIdentity: joined.participantIdentity });
+  assert.equal(renewed.ok, true);
+});
+
 test('a space change on renew revokes the old lease, removes the participant and reports the new space', async () => {
   const f = fixture();
   const joined = await f.join('alice', 'c1', 'outdoor');

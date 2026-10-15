@@ -10205,18 +10205,20 @@
     },
     {
       "id": "safari-gltf-decoder-investigation",
-      "title": "Isolate physical iPhone Safari glTF image decode startup failure before procedural GPU acceptance",
+      "title": "Isolate and resolve physical iPhone Safari avatar glTF image decode startup failure before procedural GPU acceptance",
       "status": "active",
       "branches": [
         "test/safari-gltf-decoder-investigation-20261015",
         "test/safari-phone-frame-receipt-20261015",
-        "test/safari-phone-error-receipt-20261015"
+        "test/safari-phone-error-receipt-20261015",
+        "docs/safari-decoder-evidence-20261015",
+        "fix/safari-avatar-html-ios-20261015"
       ],
       "owner": "codex-root-safari-gltf-decoder-investigation-20261015",
-      "leaseUntil": "2026-10-15T10:47:23.000Z",
-      "updatedAt": "2026-10-15T09:07:20.000Z",
-      "nextAction": "Draft PR #411 at 2e43506 adds the opt-in redacted error receipt; focused suites 9/9 and core passed. Review exact-head hosted checks and land, then repeat a one-tab normal/scoped Safari comparison when Val clears old tabs. Keep production decoding unchanged.",
-      "ledger": "docs/superpowers/plans/2026-10-15-safari-gltf-decoder-investigation.md",
+      "leaseUntil": "2026-10-15T18:50:00.000Z",
+      "updatedAt": "2026-10-15T16:50:00.000Z",
+      "nextAction": "Draft PR #436 includes current main at 4ab01892; final local core passed and player-lifecycle browser journey passed. Two normal iPhone visits were playable. The refreshed full gate under isolated Redis stopped on an unrelated two-second desktop child timeout at host load above 90, while its owning suite passed 14/14 alone. Require PR #436 exact-head hosted preview/Vercel and current main before ready/merge. Quieter phone frame/portal timing and remaining GPU devices are separate acceptance work.",
+      "ledger": "docs/superpowers/plans/2026-10-15-ios-avatar-image-decoder-default.md",
       "requiredChecks": [
         "Focused decoder selection regression",
         "Physical iPhone Safari default and scoped decoder controls with fixture health and asset readiness",
@@ -10224,18 +10226,18 @@
         "Exact-head hosted preview before merge"
       ],
       "filesOwned": [
-        "preview/src/avatars.js (test-only decoder selection only)",
+        "preview/src/avatars.js (scoped iOS avatar decoder selection)",
         "preview/src/gltf-image-decoder.js",
         "preview/tests/gltf-image-decoder.test.js",
         "server/tests/phone-fixture-decoder.js (test-only control)",
         "server/tests/phone-fixture.test.js (fixture readiness regression)",
         "docs/superpowers/plans/README.md (generated plan index)",
         "docs/superpowers/plans/2026-10-15-safari-gltf-decoder-investigation.md",
+        "docs/superpowers/plans/2026-10-15-ios-avatar-image-decoder-default.md",
         "docs/project-management/tasks.json (this task only)"
       ],
       "parent": "procedural-gpu-acceptance",
       "related": "ios-device-feasibility #309; preserve its dirty worktree and do not modify owned files",
-      "pr": 411,
       "evidence": [
         {
           "pr": 401,
@@ -10255,6 +10257,37 @@
             "Focused decoder and fixture suites 8/8; pnpm run verify core passed after fixture change",
             "Hosted exact-head 16/16 check runs and Vercel status passed; merged by GitHub REST at 2026-10-15T08:47:09Z",
             "Physical bounded iPhone frame receipt and default-decoder root cause remain open"
+          ]
+        },
+        {
+          "pr": 411,
+          "reviewedHead": "4559778b4f3e48c4d73d25e73668c93accd1ba35",
+          "merge": "dda596c58477e646ea6ae636eba9ca708562b2a6",
+          "checks": [
+            "Focused decoder and fixture suites 9/9; plan index and pnpm run verify core passed after the final main refresh",
+            "Hosted exact-head 16/16 check runs including required preview and Vercel passed; merged through GitHub REST at 2026-10-15T10:13:05Z",
+            "Physical scoped avatar-only iPhone visit reported a playable view, one guest and three bounded diagnostic receipts with zero app or console errors; normal decoder root cause and GPU timing remain open",
+            "Post-merge full local gate passed at the same code head with isolated Redis, security and browser journeys, including creator four levels; preview suite retained one skip and one IPIC circulation TODO. Physical GPU and human accessibility remain open"
+          ]
+        },
+        {
+          "pr": 421,
+          "reviewedHead": "57445dfd21d4ca5af10c16d394e0164cde40ffbe",
+          "merge": "ff24fdcd40ba20025a2a4ebfad2a23e4361d8ccd",
+          "checks": [
+            "Evidence ledger and generated plan index published; local pnpm run verify core passed after the final main refresh",
+            "Hosted exact-head 15/15 check runs including required aggregate preview and Vercel passed; merged through GitHub REST at 2026-10-15T11:30:10Z",
+            "Physical scoped HTML avatar-decoder control was visible and playable after 30 seconds with zero app or console errors; normal-decoder comparison and full GPU acceptance remain open"
+          ]
+        },
+        {
+          "pr": 423,
+          "reviewedHead": "ddc5919eecb160ebec2ef4ade6d6ff5fac3af550",
+          "merge": "cd99570a6d1ff4171c83637744d38cc8131a2684",
+          "checks": [
+            "Published the fresh-port normal-decoder attempt as inconclusive; the fixture had zero reports and zero guests, so physical default-decoder recovery remains unverified",
+            "Local pnpm run verify core passed after the final main refresh; hosted exact-head checks including required preview passed after one unrelated email-access click timeout rerun; Vercel succeeded",
+            "Merged through GitHub REST at 2026-10-15T12:25:28Z"
           ]
         }
       ]
@@ -10868,6 +10901,36 @@
       ],
       "pr": null,
       "updatedAt": "2026-10-15T16:48:05.427Z"
+    },
+    {
+      "id": "studio-acceptance-417",
+      "title": "#417 Garden Office pilot acceptance (coding scope): review profile, full Studio journey, warm-up plus ten-cycle resource soak, late/missing asset recovery, real-GPU measurements, keyboard and layout checks",
+      "status": "active",
+      "branches": [
+        "test/studio-acceptance-417-20261015"
+      ],
+      "owner": "claude:river-oaks-safe-edits (e9aa0185)",
+      "updatedAt": "2026-10-15T18:22:32.901Z",
+      "leaseUntil": "2026-10-15T20:22:32.901Z",
+      "nextAction": "Soak: no unexplained growth (70 cycles; heap growth was undo history, capped at 80, shown by 40-to-70 snapshots). Journey passed 13 checks with a walked tour of all four destinations. Queued on the browser lock: late/missing texture scenario, then the Studio frame-timing profile. Next: keyboard, focus, reduced motion and 320/390 px checks; occupied-use captures.",
+      "ledger": "docs/superpowers/plans/2026-10-15-studio-pilot-acceptance.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-studio-acceptance-417",
+      "issue": 417,
+      "filesOwned": [
+        "preview/e2e/ (new Studio acceptance scenario only)",
+        "preview/src/studio/viewport.js (opt-in diagnostics, measured lifecycle fixes only)",
+        "preview/src/studio/scene.js (measured lifecycle fixes only)",
+        "preview/tests/studio-*.test.js (acceptance regressions)",
+        "docs/world-studio.md",
+        "docs/superpowers/plans/2026-10-15-studio-pilot-acceptance.md"
+      ],
+      "requiredChecks": [
+        "node --test preview/tests/studio-*.test.js server/tests/studio-assets.test.js",
+        "pnpm run test:experience world-studio",
+        "the new soak scenario (warm-up plus ten cycles)",
+        "node desktop/studio-e2e.js",
+        "pnpm run verify"
+      ]
     }
   ]
 }
