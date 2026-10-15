@@ -4,7 +4,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { deflateSync, inflateSync } from 'node:zlib';
 import Redis from 'ioredis';
-import { createRedisRoom } from '../redis-room.js';
+import { HEARTBEAT_TIMEOUT_MS, LEAVE_GRACE_MS, createRedisRoom } from '../redis-room.js';
 import { compileRegionPackage } from '../region-package.js';
 import { loadDistrictData } from '../district-data.js';
 import { beforeTowerRaise } from './district-history.js';
@@ -258,11 +258,13 @@ testRedis('authorization revocation and presence expiration remove residents and
   await f.join(room,'bob');
   assert.equal((await room.request({type:'leave',userId:'bob',connectionId:'bob-socket'})).ok,true);
   assert.equal((await room.read()).snapshot.players.length,1,'disconnect receives reconnect grace');
-  f.advance(10001);await delay(210);await room.tick();
+  f.advance(LEAVE_GRACE_MS-1000);await delay(210);await room.tick();
+  assert.equal((await room.read()).snapshot.players.length,1,'still held near the end of the grace');
+  f.advance(1001);await delay(210);await room.tick();
   assert.equal((await room.read()).snapshot.players.length,0);
-  await f.join(room,'carol');f.advance(19000);
+  await f.join(room,'carol');f.advance(HEARTBEAT_TIMEOUT_MS-1000);
   assert.equal((await room.request({type:'heartbeat',userId:'carol',connectionId:'carol-socket'})).ok,true);
-  f.advance(19000);await delay(210);await room.tick();
+  f.advance(HEARTBEAT_TIMEOUT_MS-1000);await delay(210);await room.tick();
   assert.equal((await room.read()).snapshot.players.length,1);
   f.advance(1001);await delay(210);await room.tick();
   assert.equal((await room.read()).snapshot.players.length,0);
@@ -413,7 +415,7 @@ testRedis('competing edges reserve one furniture slot and recover it through coo
   assert.equal((await f.command(replacement,other,intent)).ok,true);
   assert.equal((await replacement.request({type:'leave',userId:other,connectionId:`${other}-socket`})).ok,true);
   assert.equal((await f.command(replacement,'alice',intent)).error,'seat_occupied','reconnect grace retains the reservation');
-  f.advance(11000);await replacement.tick();
+  f.advance(LEAVE_GRACE_MS+1000);await replacement.tick();
   const released=await f.command(replacement,'alice',intent);assert.equal(released.ok,true,JSON.stringify(released));
 });
 
