@@ -80,10 +80,10 @@ asset readiness, WebContent process identity and exact source revision.
   report showed `Apple GPU`, viewport 440 × 796, 964 render calls, 107
   textures, assets 88/102 with zero failures, and the in-app loading overlay
   hidden. Its first scheduled report ran at 11.4 seconds, with assets 43/66
-  and 28 render calls. Val later answered “Town visible” to the question about
-  this visit, after Safari had been switched to the normal URL. Which page she
-  saw is being confirmed. The earlier loading-message observation remains a
-  distinct failed visit.
+  and 28 render calls. Val later answered “Town visible,” but could not tell
+  whether she saw this URL or the later normal URL. No single visit therefore
+  has both confirmed visual and telemetry evidence. The earlier loading-message
+  observation remains a distinct failed visit.
 - `uv sync --locked`, `pnpm run agent:doctor`, the focused decoder and phone
   fixture suites (7/7), `pnpm run plans:index --check`, and `pnpm run verify`
   passed. The core receipt is `.runtime/agent/core.json`. Project check
@@ -131,7 +131,7 @@ asset readiness, WebContent process identity and exact source revision.
   run. Browser coverage still did not start locally. A third full run should
   wait for the other active machine verification to finish.
 
-**Next action:** Pin Val's visible-town observation to the exact phone URL
-and obtain the normal route's WebKit exception. Keep the scoped
+**Next action:** Capture a new visible-town observation with its exact phone
+URL and obtain the normal route's WebKit exception. Keep the scoped
 decoder helper experimental until the cause is demonstrated; the physical
 default-decoder GPU row and broader archetype rollout remain open.
