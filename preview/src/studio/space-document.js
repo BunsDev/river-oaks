@@ -48,7 +48,7 @@ export function spaceItems(space) {
     ...space.objects.map(item=>({...item,type:'furnishing'})),
   ];
 }
-export function mutateSpace(space, op, id, patch = {}) {
+export function mutateSpace(space, op, id, patch = {}, { validateResult = true } = {}) {
   const next=structuredClone(space);
   if(!plain(patch))throw Error('Use object properties.');
   if(op==='update' && id==='@arrival'){
@@ -71,5 +71,15 @@ export function mutateSpace(space, op, id, patch = {}) {
     }else if(op==='remove')next.objects=next.objects.filter(item=>item.id!==id);
     else throw Error('Unsupported space edit.');
   }
-  return {value:validateSpace(next),id};
+  return {value:validateResult ? validateSpace(next) : next,id};
+}
+
+// Match Three's positive Y rotation, after converting scene Z back to north.
+export function buildSpaceWorld(space) {
+  const [west,south,east,north] = space.bounds_m;
+  const collisionPolygons = space.objects.filter(spaceObjectBlocks).map(spaceFootprint);
+  return {
+    bounds_m: [...space.bounds_m], terrain: { width: 2, height: 2, grid_origin_m: [west,south], spacing_m: [east-west,north-south], heights_m: [0,0,0,0] },
+    walkSurfaceOffset: 0, walkSpawn: [...space.spawn,0], collisionPolygons, buildings: [], stores: [],
+  };
 }

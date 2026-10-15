@@ -4,10 +4,11 @@
 
 Each plan is a task ledger. Status comes from the task register, where the primary checkout's live copy can be newer than the committed one. Plans from before the register are listed as historical: their own text is the record of what was delivered.
 
-## Active and blocked (21)
+## Active and blocked (22)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
+| [2026-10-15-studio-safe-edits](2026-10-15-studio-safe-edits.md)<br>World Studio safe edits (#414, parent #413) | `studio-safe-edits-414` | queued | #427 | 2026-10-15 |
 | [2026-10-15-studio-prompt-stdin](2026-10-15-studio-prompt-stdin.md)<br>Studio prompts on stdin (#370 finding), 2026-10-15 | `studio-prompt-stdin` | active | — | 2026-10-15 |
 | [2026-10-15-safari-gltf-decoder-investigation](2026-10-15-safari-gltf-decoder-investigation.md)<br>Physical Safari glTF decoder investigation | `safari-gltf-decoder-investigation` | active | #411 | 2026-10-15 |
 | [2026-10-15-procedural-phone-gpu-fixture](2026-10-15-procedural-phone-gpu-fixture.md)<br>Procedural gallery phone GPU fixture | `procedural-phone-gpu-fixture` | active | #393 | 2026-10-15 |
