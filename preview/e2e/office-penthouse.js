@@ -9,7 +9,20 @@ async page => {
   page.on('pageerror', error => errors.push(error.message));
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('http://127.0.0.1:5173/?motion-debug=1', { waitUntil: 'commit' });
-  await page.waitForFunction(() => document.querySelector('#canvas-host')?.dataset.playerReady === 'true', null, { timeout: 90000 });
+  // Setup, not an office assertion: the district data has a 20 s fetch deadline, which a loaded
+  // machine can miss. The page's own Reload world data is used once, and the receipt records it.
+  const reloads = [];
+  for (let attempt = 0; ; attempt++) {
+    const state = await page.waitForFunction(() => {
+      if (document.querySelector('#loading')?.classList.contains('error')) return 'error';
+      return document.querySelector('#canvas-host')?.dataset.playerReady === 'true' && document.querySelectorAll('#destination option').length > 1 && 'ready';
+    }, null, { timeout: 300000 }).then(handle => handle.jsonValue());
+    if (state === 'ready') break;
+    const detail = (await page.locator('#loading').textContent()).trim().slice(0, 160);
+    if (attempt > 0) throw new Error(`the district failed to load twice: ${detail}`);
+    reloads.push(detail);
+    await page.locator('#reload').evaluate(button => button.click());
+  }
   await page.locator('#office-lobby').waitFor({ state: 'attached', timeout: 15000 });
   await page.locator('#office-lobby').evaluate(button => button.click());
   await page.waitForFunction(() => document.querySelector('#office-enter')?.disabled === false);
@@ -112,5 +125,5 @@ async page => {
   await page.locator('#office-exit').click();
   await page.waitForFunction(() => !document.querySelector('#office-visit').open);
   check(!errors.length, `no page errors: ${errors.join('; ')}`);
-  return { checks, errors, start, seated, stood, seatedEyeDrop: standingEye - seatedEye, views, upstairs, eyeRise: eye1 - eye0, rendering: 'Software fixture; graybox from the plan, not final art' };
+  return { checks, errors, reloads, start, seated, stood, seatedEyeDrop: standingEye - seatedEye, views, upstairs, eyeRise: eye1 - eye0, rendering: 'Software fixture; graybox from the plan, not final art' };
 }

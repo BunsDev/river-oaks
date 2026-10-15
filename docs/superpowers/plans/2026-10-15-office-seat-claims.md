@@ -77,8 +77,11 @@ this branch, update that paragraph's "fenced at v10" to v11.
   Rollout-audit proof labels now say v11.
 - **Accepted as is:** a stale tick snapshot can briefly flip the client's seat state after a reply; the
   next snapshot corrects it, the same as the existing floor adoption.
-- **Deferred to merge time:** `docs/offices.md`'s checkpoint paragraph ("fenced at v10") is rewritten by
-  Codex's branch; reconcile it with whichever lands second.
+- **Deferred to merge time:** `docs/offices.md`'s checkpoint paragraph ("fenced at v10") and
+  `docs/screenings.md`'s Versions bullet (Codex's branch says "the current Redis writer generation is
+  `v10:`") are rewritten by `fix/office-world-lifecycle-reliability`; whichever lands second updates both to v11.
+- **Hosted CI:** all checks green on #400 at `7ba96bd0` (aggregate `preview`, shared and experience shards,
+  verify 3.11/3.13, CodeQL, dependency review).
 
 ## Gaps / next
 
