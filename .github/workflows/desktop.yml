@@ -94,6 +94,11 @@ jobs:
             export RIVER_OAKS_DESKTOP_SOFTWARE=1 LIBGL_ALWAYS_SOFTWARE=1 LP_NUM_THREADS=2
             ulimit -c 0
             xvfb-run -a bash -c 'openbox --sm-disable & sleep 1; exec pnpm run test:desktop:e2e --dev'
+          elif [ "$RUNNER_OS" = Windows ]; then
+            # No GPU: Chromium draws through Direct3D 11 on Microsoft's software
+            # rasterizer. Below 12.5 fps the game's 0.08 s frame step slows its
+            # clock, so the CPU scene budget keeps movement checks meaningful.
+            RIVER_OAKS_DESKTOP_SOFTWARE=1 pnpm run test:desktop:e2e --dev
           else
             pnpm run test:desktop:e2e --dev
           fi

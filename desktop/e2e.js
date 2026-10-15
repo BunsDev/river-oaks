@@ -10,9 +10,12 @@ import { createServer as createSocket } from 'node:net';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const profile = await mkdtemp(join(tmpdir(), 'river-oaks-e2e-'));
 const env = { ...process.env };
-// CPU rendering for Linux CI: Mesa under Xvfb with the same Chromium GL flags and
-// scene budget as the browser journeys (preview/e2e/shared-runner.js).
+// CPU rendering for CI runners, with the browser journeys' scene budget
+// (preview/e2e/shared-runner.js). Linux draws with Mesa under Xvfb and needs
+// ANGLE's GL backend and the journeys' Chromium flags; Windows runners draw with
+// ANGLE's default Direct3D 11 backend on Microsoft's software rasterizer.
 const software = process.env.RIVER_OAKS_DESKTOP_SOFTWARE === '1';
+const softwareFlags = software && process.platform === 'linux' ? ['--use-gl=angle', '--use-angle=gl', '--ignore-gpu-blocklist'] : [];
 let vite;
 if (process.argv.includes('--dev')) {
   const socket=createSocket();
@@ -51,7 +54,7 @@ const launchTimeout = Number(process.env.RIVER_OAKS_DESKTOP_LAUNCH_TIMEOUT ?? 30
 // the app path with the arguments after it, so pass the root without one.
 const appPath = resolvePath(root);
 const app = await electron.launch({ executablePath, args: [...(executablePath ? [] : [appPath]), `--user-data-dir=${profile}`, '--use-fake-device-for-media-stream',
-  ...(software ? ['--use-gl=angle', '--use-angle=gl', '--ignore-gpu-blocklist'] : [])], env, timeout: launchTimeout });
+  ...softwareFlags], env, timeout: launchTimeout });
 // The main process's own lines (renderer recovery, load failures) otherwise
 // stay in Playwright's buffer and only surface on a launch failure.
 for (const stream of ['stdout', 'stderr']) app.process()[stream]?.on('data', chunk => process.stderr.write(`[electron] ${chunk}`));
