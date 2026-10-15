@@ -213,3 +213,27 @@ complete dependency pinning/distribution provenance remains open and no addition
 license is inferred from the base files. The `.5m` position-morph and 4096 texture
 limits are integrity envelopes for this catalog, not interactive design controls
 or device performance promises.
+
+
+## Runtime pose diagnostics (#442, incomplete acceptance)
+
+Run `pnpm run test:experience character-poses` to capture the canonical rose/espresso
+Sable human and fox through idle, walk, run, sit and wave, plus fox prowl and lope.
+The fixture moves the root while updating planted contacts, uses the runtime seat
+height/hip offset and samples the actual visible skinned geometry and decoded
+textures. It saves front, side and rear views for each of the 12 poses, plus two
+seated overhead views. This is one phase per pose, not a whole animation-cycle test.
+
+The automated checks establish finite geometry, decoded textures, active beast
+locomotion and nonempty body probes. They do **not** establish visual acceptance.
+At render head `7c6facc5`, inspection finds a major seated skirt coverage defect
+for both supported Sable forms. Of 689 rest-covered body samples, 594 are uncovered
+from above and 418 from the front diagnostic camera. Counts describe the probe
+region and viewing direction, not a universal clipping metric or acceptance limit.
+The side garment cutout also needs authored-reference review.
+
+Stronger front weights and altered hems were investigated but failed runtime
+coverage or appearance review; none of those experimental garment changes are
+included. Resolve the seated fit using the actual runtime pose before accepting
+this matrix. Other wardrobes, wing/armor cases, continuous gait phases, pinned
+hero goldens, crowd/device budgets and human review remain open.

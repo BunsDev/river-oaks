@@ -345,3 +345,51 @@ goal task, archive history and active render branch at #462. No branches/checkou
 removed. Initial inventory31 branches/27 worktrees; final observed20/14 reflects
 other concurrent sessions, not cleanup by this task. Re-run reconciliation after
 this metadata correction; unrelated lease/retirement/missing-checkout gaps remain.
+
+## Pose-matrix continuation
+Prior goal turn made progress: signed/pushed #462 render, asset audit and focus
+fix; final core and targeted/browser checks passed. Revalidated clean checkout at
+7c6facc5, primary maina5697b57, 14 worktrees and live #462 draft. Hosted checks are
+in progress. Renewed all three owned stack records. No memory matches found.
+
+Objective: rendered canonical Sable human/fox idle/walk/run/sit/wave, plus fox
+prowl/lope, with front/profile/back views and decoded texture checks. Reuse the
+existing Jevica fixture and actual avatar.update movement/seat fields. Test/evidence
+files owned: preview/e2e/character-poses.js and fixtures/jevica.js. Detect and fix
+observed major intersections, retain explicit untested other wardrobe/forms.
+
+
+Pose diagnostic increment: actual moving roots, runtime seating, canonical colors,
+12 poses / 38 views, finite skinned geometry and decoded-texture checks. Final
+focused command `RIVER_OAKS_E2E_REPORT=character-poses-final.json node
+preview/e2e/experience-runner.js character-poses` passed29 checks in8.363s.
+Receipt preserved at `.runtime/character-studio/poses-final.json`. This is diagnostic
+success, NOT no-clipping acceptance: both Sable seated forms visibly fail garment
+coverage (594/689 above probes and418/689 front probes uncovered). Rendered front,
+side and overhead evidence agrees. Previous narrower thigh probes missed the
+center/pelvis and runtime pose, so they were insufficient.
+
+Investigated front/rear skin weights, broader rest-covered samples, shorter slit,
+hem length and central drape. Some synthetic probes passed while runtime probes or
+rendered views failed. Restored all production garment and unit-test experiments
+to HEAD; preserved experiments, logs/reports and images under
+`.runtime/character-studio/pose-fitting-experiments/`. No garment fix or visual
+acceptance is claimed. Review independently confirmed the seated defect. Keep the
+full #440–#444 objective active. Core verification and diagnostic-harness review
+are in progress. Hosted checks for pushed7c6facc5 now all succeed, including preview;
+that does not cover this uncommitted harness or prove visual acceptance.
+
+Next: deliver the reviewed diagnostic increment to #462; resolve seated Sable fit
+with actual runtime/body coverage and rendered review, then the remaining #442
+wardrobe/attachment, procedural provenance, pinned hero and measured crowd/device
+gates. Continue #443 persistence/publication/replication and #444 full journey
+acceptance against the validated contract/catalog, retaining those rendering gaps.
+
+
+Diagnostic-harness review found no blocker; fixture changes are opt-in and all
+experimental production garment changes remain restored. Final core command
+`pnpm run verify` passed: tooling117, preview3319 pass/1 existing skip/1 todo,
+server598 pass/153 Redis skips, desktop69, Python141/66 warnings. Build, lint,
+format, demo expected-status and secrets passed. Receipt:
+`.runtime/character-studio/pose-core.json`. No Redis/full gate, physical device,
+human accessibility, pinned-golden or production acceptance is claimed.
