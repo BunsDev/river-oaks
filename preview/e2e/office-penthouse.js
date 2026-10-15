@@ -112,6 +112,9 @@ async page => {
   const back = await camera();
   check(back.every((n, i) => Math.abs(n - walkingCamera[i]) < 1e-3), `the walking camera returns exactly: ${JSON.stringify([walkingCamera, back])}`);
 
+  // South of the desk row first, so no leg passes close to a chair while steering by drag.
+  await walkTo([3.65, 2.4], 'the aisle in front of the desks');
+  await walkTo([9.6, 2.4], 'the aisle east of the desks');
   const target = [11.8, 4.5];
   await walkTo(target, 'the stair foot');
   await page.waitForFunction(() => !document.querySelector('#office-level')?.hidden);
