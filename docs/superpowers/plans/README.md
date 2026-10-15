@@ -158,7 +158,7 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-11-delivered-source-retirement](2026-10-11-delivered-source-retirement.md)<br>Delivered source reconciliation | `reconcile-delivered-sources` | retired | — | 2026-10-11 |
 | [2026-10-11-ci-parallel-preview](2026-10-11-ci-parallel-preview.md)<br>Parallel preview check | `ci-parallel-preview` | retired | #252 | 2026-10-11 |
 
-## Historical, not in the register (87)
+## Historical, not in the register (88)
 
 | Plan | PRs mentioned |
 | --- | --- |
@@ -172,6 +172,7 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-15-office-ipic-perf](2026-10-15-office-ipic-perf.md)<br>#368 slice: Office + IPIC performance profile on this Mac (2026-10-15) | #368, #359, #407 |
 | [2026-10-15-office-ipic-journey](2026-10-15-office-ipic-journey.md)<br>#368 slice 2: two-account office + IPIC journey and rollback evidence | #368, #400, #361 |
 | [2026-10-15-office-fallback-lift-glass](2026-10-15-office-fallback-lift-glass.md)<br>Office: fallback scene lift behind the penthouse glass | #405, #408, #400 |
+| [2026-10-15-office-building-raise](2026-10-15-office-building-raise.md)<br>Office: raise the penthouse tower to 33 m | #363 |
 | [2026-10-15-ipic-screening-soak](2026-10-15-ipic-screening-soak.md)<br>#368 slice 1: IPIC screening catalog profile and ten-cycle soak | #368, #367, #365 |
 | [2026-10-15-ipic-screening-replay](2026-10-15-ipic-screening-replay.md)<br>#368 slice: stale and replayed playback in the two-browser screening journey (2026-10-15) | #368, #359, #406 |
 | [2026-10-15-ipic-route-evidence](2026-10-15-ipic-route-evidence.md)<br>IPIC #364: routes, seats, collision agreement, screen data and exports (2026-10-15) | #364, #359, #365 |

@@ -46,6 +46,13 @@ remain unchanged. The fixture-only override remains available for diagnosis.
   accessibility acceptance.
 - After merging `origin/main` at `873f750e`, `pnpm run verify` passed again on
   the integration branch. The same ignored core receipt records this run.
+- The `player-lifecycle` browser experience journey passed. After merging the
+  next `origin/main` at `7a3b8bcf`, the focused decoder and phone fixture suite
+  passed 11/11 again. A full gate attempt with isolated Redis reached desktop
+  tests and stopped when an unrelated skill-pack child process exceeded its
+  two-second timeout under a host load average above 90. The failing test is
+  `desktop/tests/studio-skill-pack.test.js`; its isolated rerun passed 14/14,
+  including the exact timeout case. This attempt is not a full-gate pass.
 - An isolated private fixture on port 5186 served this branch to the paired
   iPhone 16 Pro Max. The first `devicectl` Safari launch did not reach the
   fixture; a repeat launch did. Its normal URL had no decoder override. At
@@ -73,10 +80,11 @@ remain unchanged. The fixture-only override remains available for diagnosis.
 - Collect a quieter frame sample before evaluating mobile pacing.
 - Capture bounded phone frame and portal timing only after the normal route is
   stable. The five-device GPU matrix and human gallery review remain separate.
-- Run the remaining verification gates, then land a reviewed PR with exact-head
+- Resolve the full-gate result, then land draft PR #436 after exact-head
   hosted `preview` and Vercel checks. Preserve the
   old fixture worktree and its ignored receipts until evidence is archived.
 
-**Next action:** Run the browser experience journey and full gate, then verify
-the PR's exact-head hosted checks against current main.
+**Next action:** Push the refreshed branch, check PR #436's exact-head hosted
+results against current main, and retry the full local gate when host load
+permits.
 Phone portal and quieter frame timing remain open acceptance work.

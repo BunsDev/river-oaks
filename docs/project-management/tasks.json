@@ -10035,9 +10035,9 @@
         "fix/safari-avatar-html-ios-20261015"
       ],
       "owner": "codex-root-safari-gltf-decoder-investigation-20261015",
-      "leaseUntil": "2026-10-15T18:13:00.000Z",
-      "updatedAt": "2026-10-15T16:13:00.000Z",
-      "nextAction": "The targeted iOS avatar HTML-image default passes focused tests 11/11 and the core gate. Two patched normal iPhone visits paired Val's playable screen with 25-second ready receipts and one guest; the repeat's bounded frame sample was slow under high Mac load, so GPU pacing is open. Run browser experience and full gates, refresh main, then land an exact-head reviewed PR. Phone portal and quieter GPU pacing remain separate acceptance work.",
+      "leaseUntil": "2026-10-15T18:35:00.000Z",
+      "updatedAt": "2026-10-15T16:35:00.000Z",
+      "nextAction": "Draft PR #436 contains the scoped iOS avatar decoder default. Two normal iPhone visits were playable; focused tests 11/11, post-merge core at 873f750e, player-lifecycle browser journey, and isolated skill-pack tests 14/14 passed. A refreshed full gate at 7a3b8bcf stopped on the unrelated two-second skill-pack child timeout under host load above 90; retry when quiet. Update the PR to current main and require exact-head hosted preview/Vercel before ready/merge. Quieter phone frame/portal timing and remaining GPU devices are separate acceptance work.",
       "ledger": "docs/superpowers/plans/2026-10-15-ios-avatar-image-decoder-default.md",
       "requiredChecks": [
         "Focused decoder selection regression",
