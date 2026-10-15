@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { SCREENING_MEDIA } from '../src/screening-contract.js';
-import { screeningCommand, screeningControls, screeningStatusText } from '../src/ipic-screening-ui.js';
+import { panelClearance, screeningCommand, screeningControls, screeningStatusText } from '../src/ipic-screening-ui.js';
 
 const FILM = SCREENING_MEDIA['ipic-fixture-v1'];
 const shared = (status, more = {}) => ({ venueId: 'ipic', status, revision: 4, epoch: 'e1', mediaId: status === 'stopped' ? null : FILM.id, ...more });
@@ -45,4 +45,15 @@ test('host commands carry the current epoch, revision and one id per intent', ()
   // Starting from a stopped screen plays the venue's first film: the approved short (#365).
   assert.deepEqual(screeningCommand(shared('stopped'), 'start', 'op-abcdef13'), { type: 'screening', action: 'start', venueId: 'ipic', epoch: 'e1', expectedRevision: 4, operationId: 'op-abcdef13', mediaId: 'ipic-original-v1' });
   assert.equal(screeningCommand(view, 'seek', 'op-abcdef14'), null);
+});
+
+test('the panel clears the walking card, so Stand up stays reachable under it', () => {
+  // Measured seated in a recliner: the card is 94 px tall, 20 px up on desktop and 72 px up on a phone.
+  assert.equal(panelClearance({ top: 786, width: 310, height: 94 }, 900), 122);
+  assert.equal(panelClearance({ top: 678, width: 310, height: 94 }, 844), 174);
+  // A taller card (the voice row) lifts the panel with it.
+  assert.equal(panelClearance({ top: 640, width: 310, height: 132 }, 844), 212);
+  assert.equal(panelClearance({ top: 678.4, width: 310, height: 94 }, 844, 10), 176);
+  // No card on screen: the stylesheet's own offset applies.
+  for (const card of [null, undefined, { top: 0, width: 0, height: 0 }, { top: 500, width: 310, height: 0 }]) assert.equal(panelClearance(card, 844), null);
 });

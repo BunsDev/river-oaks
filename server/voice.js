@@ -9,6 +9,10 @@ import { createLiveKitClient, livekitConfigured } from './livekit-client.js';
 // so a stale tab cannot renew or release its successor's voice.
 export const VOICE_LEASE_TTL_MS = 45_000, VOICE_RENEW_MS = 15_000, VOICE_TOKEN_TTL_S = 60;
 export const VOICE_MAX_PER_SPACE = 32, VOICE_MAX_LEASES = 256, VOICE_DAILY_JOINS = 5000;
+// A page moving to a fresh town socket (server/connection-close.js) moves its lease to the new
+// connection within moments. Until then a lease naming another connection is kept; after this
+// long (another tab took over, or the page died) it is revoked.
+export const VOICE_MOVE_GRACE_MS = 3_000;
 export const OUTDOOR_SPACE = 'outdoor';
 const FAILURES_BEFORE_PAUSE = 3, PAUSE_MS = 60_000, MAX_READ = 64;
 // A player must sit in another space for this many reconciles (600 ms on the
@@ -81,6 +85,13 @@ export function createMemoryVoiceLeases({ now = Date.now } = {}) {
       records.delete(userId);
       return copyLease(record);
     },
+    async move(userId, fromConnectionId, toConnectionId) {
+      if (!validId(userId) || !validId(fromConnectionId) || !validId(toConnectionId)) throw new Error('Invalid voice lease');
+      const record = current(userId);
+      if (!record || record.connectionId !== fromConnectionId) return null;
+      record.connectionId = toConnectionId; record.revision += 1;
+      return copyLease(record);
+    },
     async revoke(userId) {
       if (!validId(userId)) throw new Error('Invalid voice lease');
       const record = current(userId);
@@ -121,6 +132,20 @@ lease.revision = lease.revision + 1
 local encoded = cjson.encode(lease)
 redis.call('SET', KEYS[1], encoded, 'PX', tonumber(ARGV[4]))
 redis.call('ZADD', KEYS[2], tonumber(ARGV[3]), ARGV[5])
+return encoded
+`;
+// Moves a live lease to the connection its page moved to, fenced by the one it left.
+const MOVE = `
+local old = redis.call('GET', KEYS[1])
+if not old then return false end
+local lease = cjson.decode(old)
+if lease.connectionId ~= ARGV[1] or tonumber(lease.expiresAt) <= tonumber(ARGV[3]) then return false end
+local ttl = redis.call('PTTL', KEYS[1])
+if ttl <= 0 then return false end
+lease.connectionId = ARGV[2]
+lease.revision = lease.revision + 1
+local encoded = cjson.encode(lease)
+redis.call('SET', KEYS[1], encoded, 'PX', ttl)
 return encoded
 `;
 const RELEASE = `
@@ -172,6 +197,10 @@ export function createRedisVoiceLeases({ redis, prefix, now = Date.now } = {}) {
       if (!validId(userId)) throw new Error('Invalid voice lease');
       return decode(await redis.eval(RELEASE, 2, key(userId), all, '', now(), hash(userId)));
     },
+    async move(userId, fromConnectionId, toConnectionId) {
+      if (!validId(userId) || !validId(fromConnectionId) || !validId(toConnectionId)) throw new Error('Invalid voice lease');
+      return decode(await redis.eval(MOVE, 1, key(userId), fromConnectionId, toConnectionId, now()));
+    },
     async getMany(ids) {
       const unique = idsForRead(ids);
       if (!unique.length) return new Map();
@@ -214,7 +243,7 @@ export function createVoiceService({ leases, livekit, namespace, allow, now = Da
     const task = remove(room, identity).finally(() => inFlight.delete(task));
     inFlight.add(task);
   };
-  const mismatches = new Map();
+  const mismatches = new Map(), moving = new Map();
   let sweepTimer = null;
   async function join({ userId, worldId, connectionId, space }) {
     if (!validId(userId) || !validId(connectionId)) return { ok: false, reason: 'stale_connection' };
@@ -269,6 +298,14 @@ export function createVoiceService({ leases, livekit, namespace, allow, now = Da
       return { ok: true, left: true };
     } catch { warn('voice_storage_unavailable'); return { ok: true, left: false }; }
   }
+  // The page moved to a fresh town socket and named the connection it left (only that page
+  // knows it): its lease follows, so voice carries on without rejoining. Fenced like every
+  // other lease mutation by the stored connection id.
+  async function continueConnection({ userId, from, to }) {
+    if (!validId(userId) || !validId(from) || !validId(to) || from === to) return false;
+    try { moving.delete(userId); return Boolean(await leases.move(userId, from, to)); }
+    catch { warn('voice_storage_unavailable'); return false; }
+  }
   async function revokeUser(userId) {
     if (!validId(userId)) return false;
     try {
@@ -287,7 +324,7 @@ export function createVoiceService({ leases, livekit, namespace, allow, now = Da
   async function reconcileWorld({ worldId, present, removed = [] }) {
     if (!Array.isArray(present) || !Array.isArray(removed) || present.some(item => !validId(item?.userId) || !validId(item?.connectionId))) throw new Error('Invalid voice presence');
     for (const userId of removed) {
-      mismatches.delete(userId);
+      mismatches.delete(userId); moving.delete(userId);
       if (!validId(userId)) continue;
       const lease = await leases.revoke(userId);
       if (lease) removeLater(lease.room, lease.participantIdentity);
@@ -297,14 +334,22 @@ export function createVoiceService({ leases, livekit, namespace, allow, now = Da
     const result = new Map();
     for (const { userId, connectionId, space } of present) {
       const lease = found.get(userId);
-      if (!lease) { mismatches.delete(userId); result.set(userId, null); continue; }
-      let revoke = lease.connectionId !== connectionId || lease.worldId !== worldId || space === null || space === undefined;
+      if (!lease) { mismatches.delete(userId); moving.delete(userId); result.set(userId, null); continue; }
+      let revoke = lease.worldId !== worldId || space === null || space === undefined;
+      // A lease naming another connection: a page mid hand-over is moving it here; anything
+      // else (another tab, a page that died) is revoked once the grace runs out.
+      if (!revoke && lease.connectionId !== connectionId) {
+        const since = moving.get(userId) ?? now();
+        moving.set(userId, since);
+        if (now() - since < VOICE_MOVE_GRACE_MS) { result.set(userId, lease.participantIdentity); continue; }
+        revoke = true;
+      } else moving.delete(userId);
       if (!revoke && space !== lease.space) {
         const count = (mismatches.get(userId) ?? 0) + 1;
         if (count >= SPACE_CHANGE_TICKS) revoke = true; else mismatches.set(userId, count);
       } else if (!revoke) mismatches.delete(userId);
       if (!revoke) { result.set(userId, lease.participantIdentity); continue; }
-      mismatches.delete(userId);
+      mismatches.delete(userId); moving.delete(userId);
       const gone = await leases.revoke(userId);
       if (gone) removeLater(gone.room, gone.participantIdentity);
       result.set(userId, null);
@@ -352,7 +397,7 @@ export function createVoiceService({ leases, livekit, namespace, allow, now = Da
     sweepTimer.unref?.();
   }
   return {
-    join, renew, leave, revokeUser, reconcileWorld, sweep, sweepEvery,
+    join, renew, leave, revokeUser, continueConnection, reconcileWorld, sweep, sweepEvery,
     status: () => ({ enabled: true, available: !paused(), renewMs }),
     close() { if (sweepTimer) clearInterval(sweepTimer); sweepTimer = null; },
   };

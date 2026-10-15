@@ -15,8 +15,22 @@ async page => {
   try{
     await ready(bob,'bob');
     const card=page.getByRole('region',{name:'Nearby greetings'}),other=bob.getByRole('region',{name:'Nearby greetings'});
-    await card.waitFor({state:'visible'});
-    check(await card.getByLabel('Greet someone nearby').inputValue()==='bob','Nearest person is selected without opening People');
+    // Greetings are intentional: nothing shows until you face someone; then E opens the menu.
+    const greet=async(tab,peerId)=>{
+      await tab.evaluate(id=>{const town=window.__riverMultiplayer(),peer=town.snapshot.players.find(p=>p.id===id);window.__riverSeatAndWater().face(peer.position[0],peer.position[1]);},peerId);
+      await tab.locator('.greeting-prompt').waitFor({state:'visible'});
+      await tab.locator('#canvas-host').focus();await tab.keyboard.press('KeyE');
+      await tab.getByRole('region',{name:'Nearby greetings'}).getByRole('button',{name:'Wave',exact:true}).waitFor();
+    };
+    await page.waitForFunction(()=>window.__riverMultiplayer().snapshot.players.length===2);
+    await page.waitForTimeout(600);
+    check(await card.isHidden()&&await page.locator('.greeting-prompt').isHidden(),'No greeting card or prompt until someone is faced');
+    await page.evaluate(()=>{const town=window.__riverMultiplayer(),peer=town.snapshot.players.find(p=>p.id==='bob');window.__riverSeatAndWater().face(peer.position[0],peer.position[1]);});
+    await page.locator('.greeting-prompt').waitFor({state:'visible'});
+    check(/Say hello to bob/.test(await page.locator('.greeting-prompt').textContent())&&await card.isHidden(),'Facing bob offers Say hello to bob, still without the menu');
+    await page.locator('#canvas-host').focus();await page.keyboard.press('KeyE');
+    await card.getByRole('button',{name:'Wave',exact:true}).waitFor();
+    check(/Say hello to bob/.test(await card.locator('strong').textContent()),'E opens the menu for the person faced');
     await card.getByRole('button',{name:'Shake hands',exact:true}).click();
     await other.getByRole('button',{name:'Accept',exact:true}).waitFor();
     check(await bob.evaluate(()=>window.__riverMultiplayer().snapshot.players.every(p=>p.gesture!=='handshake')),'Invitation leaves both avatars at rest until accepted');
@@ -31,7 +45,7 @@ async page => {
     check(facing>.95,'Local avatar turns toward their partner');
     await page.screenshot({path:'output/playwright/greetings-handshake.png'});
     await page.waitForFunction(()=>window.__riverMultiplayer().snapshot.players.every(p=>!p.interaction));
-    await card.getByRole('button',{name:'Dance together',exact:true}).click();
+    await greet(page,'bob');await card.getByRole('button',{name:'Dance together',exact:true}).click();
     await other.getByRole('button',{name:'Accept',exact:true}).click();
     await page.waitForFunction(()=>window.__riverMultiplayer().snapshot.players.every(p=>p.gesture==='dance'));
     const phases=await page.evaluate(()=>window.__riverMultiplayer().snapshot.players.map(p=>p.interaction.elapsed));
@@ -46,11 +60,11 @@ async page => {
     await page.waitForFunction(()=>window.__riverMultiplayer().snapshot.players.every(p=>!p.interaction));
     check(true,'Either participant can stop from mobile controls');
     await page.emulateMedia({reducedMotion:'reduce'});
-    await card.getByRole('button',{name:'Dance together',exact:true}).click();
+    await greet(page,'bob');await card.getByRole('button',{name:'Dance together',exact:true}).click();
     await other.getByRole('button',{name:'Decline',exact:true}).click();
     await page.waitForFunction(()=>window.__riverMultiplayer().snapshot.interactions.length===0);
     check(true,'Declining clears the invitation on both clients');
-    await card.getByRole('button',{name:'Dance together',exact:true}).click();
+    await greet(page,'bob');await card.getByRole('button',{name:'Dance together',exact:true}).click();
     await other.getByRole('button',{name:'Accept',exact:true}).click();
     await bob.waitForFunction(()=>window.__riverMultiplayer().snapshot.players.every(p=>p.gesture==='dance'));
     await bob.locator('#canvas-host').focus();await bob.keyboard.down('KeyW');

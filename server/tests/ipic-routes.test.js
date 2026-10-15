@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs';
 import Redis from 'ioredis';
 import { randomUUID } from 'node:crypto';
 import { createSharedWorld } from '../world.js';
-import { createRedisRoom } from '../redis-room.js';
+import { LEAVE_GRACE_MS, createRedisRoom } from '../redis-room.js';
 import { createWalkingEnvironment } from '../../preview/src/walking.js';
 import { AVATAR_ENVELOPE } from '../../preview/src/workplace-room.js';
 import { IPIC_SEATED_REACH, ipicClearance, ipicReachable, seatApproach, seatedFootprint, widestRoute } from '../../preview/src/ipic-circulation.js';
@@ -260,7 +260,7 @@ testRedis('two coordinators give one IPIC recliner to exactly one visitor and re
   const winnerRoom = winner === 'bob' ? first : second, loserRoom = winner === 'bob' ? second : first;
   assert.equal((await winnerRoom.request({ type: 'leave', userId: winner, connectionId: `${winner}-socket` })).ok, true);
   assert.equal((await send(loserRoom, loser, intent)).error, 'seat_occupied', 'reconnect grace keeps the seat');
-  time += 11000; await first.tick(); await second.tick();
+  time += LEAVE_GRACE_MS + 1000; await first.tick(); await second.tick();
   const taken = await send(loserRoom, loser, intent);
   assert.equal(taken.ok, true, JSON.stringify(taken));
 });

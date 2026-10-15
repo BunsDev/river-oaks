@@ -41,11 +41,17 @@ test('real SDK email login stays waitlisted until invite redemption unlocks a mu
   assert.equal(session.authenticated, true);
   const status = await (await fetch(base + '/api/waitlist/status', { headers: { cookie: sessionCookie } })).json();
   assert.equal(status.status, 'pending');
+  // The waiting page can say when this person joined the waitlist, and that they joined it, not by invitation.
+  assert.equal(status.invited, false);
+  assert.ok(!Number.isNaN(Date.parse(status.requestedAt)), 'the status says when the request was made');
   assert.equal((await post('/api/multiplayer/ticket', {}, sessionCookie, session.csrfToken)).status, 403);
   assert.equal((await post('/api/waitlist/invite-redeem', { code: invite.code }, sessionCookie, session.csrfToken)).status, 200);
   assert.equal((await post('/api/multiplayer/ticket', {}, sessionCookie, session.csrfToken)).status, 200);
+  const admitted = await (await fetch(base + '/api/waitlist/status', { headers: { cookie: sessionCookie } })).json();
+  assert.deepEqual([admitted.status, admitted.invited], ['approved', true], 'the status says this resident joined by invitation');
+  // Referral decay: someone who joined with an invitation code receives no codes of their own.
   const codes = await (await fetch(base + '/api/waitlist/invites', { headers: { cookie: sessionCookie } })).json();
-  assert.equal(codes.invites.length, 2);
+  assert.equal(codes.invites.length, 0);
 });
 
 test('invitation HTTP routes require a verified session, CSRF and administrator authority', async t => {
@@ -142,7 +148,7 @@ for (const backend of ['file', 'redis']) {
       store = await reopen();
     }
     const identity = userId => ({ userId, name: 'Resident', email: `${userId}@example.com` });
-    for (const user of ['owner', 'first', 'second', 'assigned', 'blocked']) await store.request(identity(user));
+    for (const user of ['owner', 'first', 'second', 'assigned', 'blocked', 'late']) await store.request(identity(user));
     assert.deepEqual(await store.listInvites({ userId: 'owner' }), []);
     await assert.rejects(store.issueInvite({ actorId: 'owner', ownerId: 'owner' }));
     await store.decide({ userId: 'owner', approved: true, actorId: 'admin' });
@@ -155,7 +161,17 @@ for (const backend of ['file', 'redis']) {
     assert.equal(outcomes.filter(r => r.ok).length, 1);
     const accepted = await store.isApproved('first') ? 'first' : 'second';
     const pending = accepted === 'first' ? 'second' : 'first';
-    assert.equal((await store.listInvites({ userId: accepted })).length, 2);
+    // Referral decay: an account that joined with an invitation code gets none of its own, even on a
+    // later re-approval. An admin may still give it one explicitly.
+    assert.equal((await store.listInvites({ userId: accepted })).length, 0, 'an invitee receives no starter invitations');
+    await store.decide({ userId: accepted, approved: true, actorId: 'admin' });
+    assert.equal((await store.listInvites({ userId: accepted })).length, 0, 'nor when an admin approves them again');
+    const given = await store.issueInvite({ actorId: 'admin', ownerId: accepted });
+    assert.deepEqual((await store.listInvites({ userId: accepted })).map(invite => invite.id), [given.id], 'an admin can still give an invitee one explicitly');
+    // A waitlist approval that follows a rejection is still a first approval: two codes.
+    await store.decide({ userId: 'late', approved: false, actorId: 'admin' });
+    await store.decide({ userId: 'late', approved: true, actorId: 'admin' });
+    assert.equal((await store.listInvites({ userId: 'late' })).length, 2, 'approval after a rejection grants starter codes');
     assert.equal(await store.isApproved(pending), false);
     await store.updateInvite({ actorId: 'admin', id: invites[1].id, assignedUserId: 'assigned' });
     assert.equal((await store.redeemInvite({ identity: identity(pending), code: invites[1].code })).ok, false);
@@ -185,3 +201,19 @@ for (const backend of ['file', 'redis']) {
     assert.deepEqual(await store.listInvites({ userId: pending }), []);
   });
 }
+
+test('redis: a full invitation table still admits a code holder, since redeeming grants no codes', { skip: !process.env.REDIS_URL }, async t => {
+  const redis = new Redis(process.env.REDIS_URL);
+  const prefix = `{invites-full:${randomUUID()}}`;
+  t.after(async () => { const keys = await redis.keys(`${prefix}:*`); if (keys.length) await redis.del(...keys); await redis.quit(); });
+  const store = createRedisWaitlist({ redis, prefix, admins: ['admin'], inviteCapacity: 3 });
+  const identity = userId => ({ userId, name: 'Resident', email: `${userId}@example.com` });
+  for (const user of ['owner', 'newcomer']) await store.request(identity(user));
+  await store.decide({ userId: 'owner', approved: true, actorId: 'admin' });
+  await store.issueInvite({ actorId: 'admin', ownerId: 'admin' });
+  await assert.rejects(store.issueInvite({ actorId: 'admin', ownerId: 'admin' }), /capacity/, 'the table is full');
+  const [code] = await store.listInvites({ userId: 'owner' });
+  assert.equal((await store.redeemInvite({ identity: identity('newcomer'), code: code.code })).ok, true);
+  assert.equal(await store.isApproved('newcomer'), true);
+  assert.deepEqual(await store.listInvites({ userId: 'newcomer' }), []);
+});

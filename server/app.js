@@ -30,11 +30,12 @@ import { securityHeaders } from './security-headers.js';
 import { createVoiceRoutes } from './voice-routes.js';
 import { createRideFlush } from './ride-flush.js';
 import { createCyclingLeaderboard } from './cycling-api.js';
+import { ROTATE_NOTICE_MS, UPDATE_CLOSE, closeForUpdate, continuedConnection, retireAfter, rotateNotice } from './connection-close.js';
 
 const types = { '.webm':'video/webm','.mp4':'video/mp4','.vtt':'text/vtt; charset=utf-8','.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.glb':'model/gltf-binary','.hdr':'application/octet-stream','.svg':'image/svg+xml','.woff2':'font/woff2' };
 const equal = (a,b) => typeof a==='string' && typeof b==='string' && Buffer.byteLength(a)===Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a),Buffer.from(b));
 const json = (res,status,value) => { res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(value)); };
-export function createGameServer({ debugReports = createMemoryDebugReports(), auth, world, worldTitle = world.title, landmarks, social = null, groups = null, profiles = null, events = null, workplace = null, officeDesk = createMemoryOfficeDesk(), officeWorkspaces = createMemoryOfficeWorkspaces(), avatarPreferences = null, presence = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, regionSha256 = null, onBan = null, origin, staticRoot, moderation, waitlist, waitlistAdmins = [], moderators = [], trustedProxyIPs = [], now = Date.now, onMove = null, voice = null, voiceReconcileMs = 1000, departureGraceMs = 30000, cyclingMiles = null, cyclingFlushMs = 30000 }) {
+export function createGameServer({ debugReports = createMemoryDebugReports(), auth, world, worldTitle = world.title, landmarks, social = null, groups = null, profiles = null, events = null, workplace = null, officeDesk = createMemoryOfficeDesk(), officeWorkspaces = createMemoryOfficeWorkspaces(), avatarPreferences = null, presence = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, regionSha256 = null, onBan = null, origin, staticRoot, moderation, waitlist, waitlistAdmins = [], moderators = [], trustedProxyIPs = [], now = Date.now, onMove = null, voice = null, voiceReconcileMs = 1000, departureGraceMs = 30000, connectionLifetime = 0, rotateNoticeMs = ROTATE_NOTICE_MS, cyclingMiles = null, cyclingFlushMs = 30000 }) {
   if (!waitlist) throw new Error('Waitlist is required');
   const worldId=validateWorldId(world.worldId??DEFAULT_WORLD_ID);
   const matchesWorld=url=>(url.searchParams.get('world')??(worldId===DEFAULT_WORLD_ID?DEFAULT_WORLD_ID:null))===worldId;
@@ -320,11 +321,12 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
       const key=url.searchParams.get('ticket'),ticket=tickets.get(key);
       if(!ticket || ticket.until<=now() || ticket.identity.sessionId!==identity.sessionId || ticket.identity.userId!==identity.userId)return reject(401);
       tickets.delete(key);
+      const continues=continuedConnection(url.searchParams.get('continues'));
       wss.handleUpgrade(req,socket,head,ws=>{
         let joinedHere=false;
         const token=randomUUID();
         void (async()=>{
-        if(stopped){ws.close(1012,'Town restarting');return;}
+        if(stopped){ws.close(UPDATE_CLOSE.code,UPDATE_CLOSE.reason);return;}
         if(avatarPreferences) {
           const preference=await avatarPreferences.initialize(identity.userId,world.accountAppearance(identity.userId));
           world.applyAccountAppearance(identity.userId,preference);
@@ -352,6 +354,10 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
         const old=connections.get(identity.userId);
         const connection={ws,identity,token,alive:true,pending:0};connections.set(identity.userId,connection);
         old?.ws.close(4009,'This account joined in another tab.');
+        // Off by default here; a host with a request limit sets it, and the page moves to a fresh socket first.
+        const retire=retireAfter(ws,connectionLifetime,{noticeMs:rotateNoticeMs,notify:()=>{if(connections.get(identity.userId)===connection)send(ws,rotateNotice(connectionLifetime,rotateNoticeMs,token));}});
+        // A page moving from another socket brings its voice lease along (voice.js continueConnection).
+        if(voice&&continues)void voice.continueConnection({userId:identity.userId,from:continues,to:token});
         ws.on('error',()=>{});ws.on('pong',()=>{connection.alive=true;});
         let messageQueue = Promise.resolve(),waitingPose=null;
         ws.on('message',(raw,isBinary)=>{
@@ -400,6 +406,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
           }).catch(()=>ws.close(1013,'Town temporarily unavailable.')).finally(()=>{if(!coalescible)connection.pending--;});
         });
         ws.on('close',()=>{
+          retire();
           if(connections.get(identity.userId)!==connection)return;
           connections.delete(identity.userId);
           if(presence)void presence.leave(identity.userId,token).catch(()=>{});
@@ -473,7 +480,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
     connections.clear();
     // The last rides, plus anything a running flush was still sending.
     if(rides){rides.drain();await rides.settle();}
-    for(const ws of wss.clients)ws.terminate();
+    await closeForUpdate(wss.clients);
     auth.close?.();wss.close();
     await new Promise(resolve=>server.close(resolve));
   }};
