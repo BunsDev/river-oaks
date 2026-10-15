@@ -3311,7 +3311,7 @@
           "reviewedHead": "444dd451312665b88a69756e282b8d968916e1e6",
           "merge": "e55c3866fcf8ec85090c22789fd5bc8ca5364a05",
           "tree": "6504df673f23e0b750f69c262664a1c83c5df1e6",
-          "checks": "All 17 hosted checks passed on 444dd45 (guard CLEAN, first attempt after a rebase onto #268; the earlier head lost a run to the known spatial-streets Hermès stall). Docs-only; project:status validated the register."
+          "checks": "All 17 hosted checks passed on 444dd45 (guard CLEAN, first attempt after a rebase onto #268; the earlier head lost a run to the known spatial-streets Herm\u00e8s stall). Docs-only; project:status validated the register."
         }
       ],
       "retirement": {
@@ -3334,7 +3334,7 @@
     },
     {
       "id": "plaza-salon",
-      "title": "Furnish the Dior-Toulouse plaza as a café and chess promenade (Val's reference set: curved bench, café armchairs, chess and timber tables, travertine planters, bronze lanterns, string lights)",
+      "title": "Furnish the Dior-Toulouse plaza as a caf\u00e9 and chess promenade (Val's reference set: curved bench, caf\u00e9 armchairs, chess and timber tables, travertine planters, bronze lanterns, string lights)",
       "status": "retired",
       "branches": [
         "feat/plaza-salon"
@@ -4287,7 +4287,7 @@
     },
     {
       "id": "plaza-games",
-      "title": "Playable games at the Dior–Toulouse plaza tables: solo chess first (X to play at a chess chair, local AI and pass-and-play, mirrored on the 3D board); later checkers, café cards/dominoes, more game tables, Jenga and wine pong",
+      "title": "Playable games at the Dior\u2013Toulouse plaza tables: solo chess first (X to play at a chess chair, local AI and pass-and-play, mirrored on the 3D board); later checkers, caf\u00e9 cards/dominoes, more game tables, Jenga and wine pong",
       "status": "retired",
       "branches": [
         "feat/plaza-chess-20261013"
@@ -4459,7 +4459,7 @@
     },
     {
       "id": "plaza-dominoes",
-      "title": "Dominoes at the plaza café table: double-six draw (2 players) and block (4 players) games against the plaza regulars, scored to 100, tiles mirrored on the round table",
+      "title": "Dominoes at the plaza caf\u00e9 table: double-six draw (2 players) and block (4 players) games against the plaza regulars, scored to 100, tiles mirrored on the round table",
       "status": "retired",
       "branches": [
         "feat/plaza-dominoes-20261013"
@@ -4473,8 +4473,8 @@
         "preview/src/dominoes-opponent.js",
         "preview/src/plaza-dominoes.js",
         "preview/src/plaza-dominoes.css",
-        "preview/src/plaza-salon.js (café table tiles)",
-        "preview/src/plaza-salon-plan.js (café seats)",
+        "preview/src/plaza-salon.js (caf\u00e9 table tiles)",
+        "preview/src/plaza-salon-plan.js (caf\u00e9 seats)",
         "preview/src/main.js (wiring)",
         "preview/e2e/plaza-dominoes.js"
       ],
@@ -4516,7 +4516,7 @@
     },
     {
       "id": "plaza-hearts",
-      "title": "Hearts at the plaza café table: four players (you and three plaza regulars), passing, tricks, shooting the moon, game to 100; cards mirrored on the round table",
+      "title": "Hearts at the plaza caf\u00e9 table: four players (you and three plaza regulars), passing, tricks, shooting the moon, game to 100; cards mirrored on the round table",
       "status": "retired",
       "branches": [
         "feat/plaza-hearts-20261013"
@@ -4530,8 +4530,8 @@
         "preview/src/hearts-opponent.js",
         "preview/src/plaza-hearts.js",
         "preview/src/plaza-hearts.css",
-        "preview/src/plaza-dominoes.js (café game switch)",
-        "preview/src/plaza-salon.js (café cards)",
+        "preview/src/plaza-dominoes.js (caf\u00e9 game switch)",
+        "preview/src/plaza-salon.js (caf\u00e9 cards)",
         "preview/e2e/plaza-hearts.js"
       ],
       "requiredChecks": [
@@ -5001,7 +5001,7 @@
           "reviewedHead": "3cdc45a91b7dcad603ea41685658bac309ec401a",
           "merge": "fb068e47b5a7a8f9aead367a98ccea170b85a330",
           "tree": "7885452832f54b9446adfdadcf1d9dddd355aaaa",
-          "checks": "https://github.com/BunsDev/river-oaks/actions/runs/38427259400 — all hosted Verify jobs including aggregate preview passed on the exact head; guard reported 17 successful checks and verified signatures. Local core 3747 passed / 1 existing skip; final-head office browser 9/9 passed (.runtime/office-final-head-experience.json)."
+          "checks": "https://github.com/BunsDev/river-oaks/actions/runs/38427259400 \u2014 all hosted Verify jobs including aggregate preview passed on the exact head; guard reported 17 successful checks and verified signatures. Local core 3747 passed / 1 existing skip; final-head office browser 9/9 passed (.runtime/office-final-head-experience.json)."
         }
       ],
       "retirement": {
@@ -5198,7 +5198,7 @@
       ],
       "owner": "codex-root-20261014-procedural-landing",
       "updatedAt": "2026-10-14T20:23:49.690Z",
-      "nextAction": "PR #349 landed on main at de0b64a after exact-head hosted preview and all checks. Continue #350–#358 then draft #382 in order; retain the overall goal active while pilot target-device timing and human acceptance remain open. Preserve local worktrees until retirement proof.",
+      "nextAction": "PR #349 landed on main at de0b64a after exact-head hosted preview and all checks. Continue #350\u2013#358 then draft #382 in order; retain the overall goal active while pilot target-device timing and human acceptance remain open. Preserve local worktrees until retirement proof.",
       "ledger": "docs/superpowers/plans/2026-10-13-procedural-interiors-implementation.md",
       "requiredChecks": [
         "Focused behavioral and cross-runtime tests for each phase",
@@ -6328,7 +6328,7 @@
     },
     {
       "id": "route-waypoint-clearance",
-      "title": "Keep navigation route waypoints clear of obstacles (spatial-streets Hermès stall)",
+      "title": "Keep navigation route waypoints clear of obstacles (spatial-streets Herm\u00e8s stall)",
       "status": "retired",
       "branches": [],
       "owner": null,
@@ -7315,7 +7315,7 @@
     },
     {
       "id": "plaza-spades",
-      "title": "Spades at the plaza café table: four players in two partnerships (you and a plaza regular against two regulars), bids, nil, bags, game to 500; cards mirrored on the round table",
+      "title": "Spades at the plaza caf\u00e9 table: four players in two partnerships (you and a plaza regular against two regulars), bids, nil, bags, game to 500; cards mirrored on the round table",
       "status": "retired",
       "branches": [
         "feat/plaza-spades-20261013"
@@ -7463,7 +7463,7 @@
     },
     {
       "id": "plaza-reversi",
-      "title": "Reversi at the plaza chess tables: a fourth game in the table-games sheet (8×8, place a disc on the clicked square, flips), against the plaza regular in a worker or pass-and-play; discs mirrored on the table",
+      "title": "Reversi at the plaza chess tables: a fourth game in the table-games sheet (8\u00d78, place a disc on the clicked square, flips), against the plaza regular in a worker or pass-and-play; discs mirrored on the table",
       "status": "retired",
       "branches": [
         "feat/plaza-reversi-20261013"
@@ -7510,7 +7510,7 @@
     },
     {
       "id": "plaza-go",
-      "title": "Go (9×9) at the plaza grove table (a Mancala/Go switch): captures, suicide, ko, passing, area scoring with komi; a Monte Carlo plaza regular in a worker or pass-and-play; stones mirrored on a goban",
+      "title": "Go (9\u00d79) at the plaza grove table (a Mancala/Go switch): captures, suicide, ko, passing, area scoring with komi; a Monte Carlo plaza regular in a worker or pass-and-play; stones mirrored on a goban",
       "status": "retired",
       "branches": [
         "feat/plaza-go-20261013"
@@ -7700,7 +7700,7 @@
     },
     {
       "id": "plaza-liars-dice",
-      "title": "Liar's dice at the plaza café table: you and three regulars, five dice under a cup each, bids and 'liar' calls, ones wild, lose a die per lost challenge; cups and dice mirrored on the round table; joins the café switch",
+      "title": "Liar's dice at the plaza caf\u00e9 table: you and three regulars, five dice under a cup each, bids and 'liar' calls, ones wild, lose a die per lost challenge; cups and dice mirrored on the round table; joins the caf\u00e9 switch",
       "status": "retired",
       "branches": [
         "feat/plaza-liars-dice-20261013"
@@ -8008,7 +8008,7 @@
     },
     {
       "id": "plaza-xiangqi",
-      "title": "Xiangqi (Chinese chess) at the plaza grove table (joins the Mancala/Go switch): 9×10 board with river and palaces, cannons, flying-general rule; a search-based plaza regular in a worker or pass-and-play; disc pieces mirrored in 3D",
+      "title": "Xiangqi (Chinese chess) at the plaza grove table (joins the Mancala/Go switch): 9\u00d710 board with river and palaces, cannons, flying-general rule; a search-based plaza regular in a worker or pass-and-play; disc pieces mirrored in 3D",
       "status": "retired",
       "branches": [
         "feat/plaza-xiangqi-20261013"
@@ -8757,7 +8757,7 @@
     },
     {
       "id": "shared-dominoes-server",
-      "title": "Shared dominoes, PR 1: the town deals and holds the café round (server module, hidden hands via command replies)",
+      "title": "Shared dominoes, PR 1: the town deals and holds the caf\u00e9 round (server module, hidden hands via command replies)",
       "status": "retired",
       "branches": [
         "feat/shared-dominoes-20261014"
@@ -8770,7 +8770,7 @@
         "server/tests/cafe-games.test.js",
         "server/world.js (tableGame routing, snapshot, checkpoint)",
         "server/recovery-diagnostics.js",
-        "docs/multiplayer.md (café games)"
+        "docs/multiplayer.md (caf\u00e9 games)"
       ],
       "requiredChecks": [
         "pnpm run test:server",
@@ -9021,6 +9021,55 @@
           ]
         }
       }
+    },
+    {
+      "id": "office-computer-db-mvp",
+      "title": "Resident-owned office computers with private and shared database tasks",
+      "status": "active",
+      "branches": [
+        "feat/office-computer-db-mvp"
+      ],
+      "owner": "codex-root-office-computer-db-mvp",
+      "updatedAt": "2026-10-15T02:42:50.281103+00:00",
+      "nextAction": "User authorized commit, push and merge to main. Commit verified MVP, open PR, land through CI and merge guard, reconcile delivery evidence; provide next long-running goal.",
+      "ledger": "docs/superpowers/plans/2026-10-15-office-computer-db-mvp.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-computer-db-mvp",
+      "filesOwned": [
+        "server/office-workspaces*.js",
+        "server/office-desk*.js",
+        "server/offices.js",
+        "server/world.js (office workspace wiring)",
+        "server/app.js (office routes)",
+        "server/distributed-app.js (office routes)",
+        "server/town.js (workspace store)",
+        "server/world-gateway.js (workspace store)",
+        "preview/src/office-*.js",
+        "preview/src/office-desk.css",
+        "server/tests/office*.test.js",
+        "preview/tests/office*.test.js",
+        "preview/e2e/office-desk.js",
+        "docs/offices.md",
+        "server/redis-room.js (workspace visit authorization and writer generation)",
+        "server/tests/redis-room.test.js (writer generation)",
+        "server/tests/creator-objects.test.js (checkpoint version)",
+        "server/tests/interactions.test.js (checkpoint version)",
+        "server/tests/seating.test.js (checkpoint version)",
+        "server/vercel-routing.js (workspace endpoint allowlist)",
+        "vercel.json (workspace endpoint rewrites)",
+        "server/tests/vercel-routing.test.js (workspace rewrites)",
+        "server/avatar-preferences.js (v8 checkpoint compatibility)",
+        "server/creator-rollout-audit.js (current writer/checkpoint generation)",
+        "preview/e2e/office-computer-shared.js",
+        "data/reports/office-computer*.json"
+      ],
+      "requiredChecks": [
+        "Focused memory and isolated Redis workspace/access/race tests",
+        "Office real HTTP/WebSocket regressions",
+        "Office browser journeys including narrow screen and keyboard",
+        "pnpm run verify",
+        "pnpm run verify full"
+      ],
+      "leaseUntil": "2026-10-15T04:42:50.281103+00:00"
     }
   ]
 }

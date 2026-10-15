@@ -1,0 +1,122 @@
+{
+  "createdAt": "2026-10-15T01:44:54.489431Z",
+  "branch": "feat/office-computer-db-mvp",
+  "base": "f72a89f8e7127104d0b5ccbc23617f030b5b0c66",
+  "dirty": true,
+  "core": "passed",
+  "fullProfile": "interrupted during shared; receipt remains failed",
+  "sharedCoverage": "21 of 21 journeys passed across resumed runs; not an uninterrupted full run",
+  "shared": {
+    "multiplayer-dev": {
+      "status": "passed",
+      "report": "data/reports/office-computer-full-shared.json",
+      "seconds": 109.262
+    },
+    "groups": {
+      "status": "passed",
+      "report": "data/reports/office-computer-full-shared.json",
+      "seconds": 42.679
+    },
+    "world-events": {
+      "status": "passed",
+      "report": "data/reports/office-computer-full-shared.json",
+      "seconds": 9.111
+    },
+    "rail-shared": {
+      "status": "passed",
+      "report": "data/reports/office-computer-full-shared.json",
+      "seconds": 6.303
+    },
+    "shared-seating": {
+      "status": "passed",
+      "report": "data/reports/office-computer-full-shared.json",
+      "seconds": 36.285
+    },
+    "world-boundary": {
+      "status": "passed",
+      "report": "data/reports/office-computer-full-shared.json",
+      "seconds": 17.81
+    },
+    "world-map": {
+      "status": "passed",
+      "report": "data/reports/office-computer-world-map.json",
+      "seconds": 50.783
+    },
+    "world-publish": {
+      "status": "passed",
+      "report": "data/reports/office-computer-shared-remaining.json",
+      "seconds": 73.222
+    },
+    "creator-generated-levels": {
+      "status": "passed",
+      "report": "data/reports/office-computer-shared-remaining.json",
+      "seconds": 35.719
+    },
+    "creator-four-levels": {
+      "status": "passed",
+      "report": "data/reports/office-computer-shared-remaining.json",
+      "seconds": 36.06
+    },
+    "access-gate": {
+      "status": "passed",
+      "report": "data/reports/office-computer-shared-remaining.json",
+      "seconds": 1.426
+    },
+    "connection-required": {
+      "status": "passed",
+      "report": "data/reports/office-computer-shared-remaining.json",
+      "seconds": 6.162
+    },
+    "multiplayer": {
+      "status": "passed",
+      "report": "data/reports/office-computer-shared-remaining.json",
+      "seconds": 92.254
+    },
+    "indoor-npcs": {
+      "status": "passed",
+      "report": "data/reports/office-computer-shared-remaining.json",
+      "seconds": 15.551
+    },
+    "multiplayer-exclusivity": {
+      "status": "passed",
+      "report": "data/reports/office-computer-multiplayer-exclusivity.json",
+      "seconds": 33.069
+    },
+    "vehicle-exit": {
+      "status": "passed",
+      "report": "data/reports/office-computer-vehicle-exit.json",
+      "seconds": 7.701
+    },
+    "multiplayer-gate": {
+      "status": "passed",
+      "report": "data/reports/office-computer-multiplayer-gate.json",
+      "seconds": 16.723
+    },
+    "resident-names": {
+      "status": "passed",
+      "report": "data/reports/office-computer-resident-names.json",
+      "seconds": 158.232
+    },
+    "sit-and-water": {
+      "status": "passed",
+      "report": "data/reports/office-computer-sit-and-water.json",
+      "seconds": 26.03
+    },
+    "greetings": {
+      "status": "passed",
+      "report": "data/reports/office-computer-greetings.json",
+      "seconds": 32.959
+    },
+    "creator-objects": {
+      "status": "passed",
+      "report": "data/reports/office-computer-creator.json",
+      "seconds": 33.12
+    }
+  },
+  "limitations": [
+    "synthetic local identities only",
+    "no hosted/live WorkOS acceptance",
+    "no human accessibility or target-device performance acceptance",
+    "uncommitted and undeployed"
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "createdAt": "2026-10-15T01:37:49.741Z",
+  "status": "passed",
+  "modes": [
+    "required"
+  ],
+  "rendering": "Full rendering",
+  "scope": "Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.",
+  "results": [
+    {
+      "name": "multiplayer-exclusivity",
+      "status": "passed",
+      "seconds": 33.069,
+      "result": {
+        "passed": true,
+        "guest": {
+          "appearance": "sable-human",
+          "jevicaHidden": true,
+          "flightHidden": true,
+          "garageHidden": true,
+          "companionHidden": true,
+          "carVisible": false,
+          "jevVisible": false
+        },
+        "privileged": {
+          "appearance": "jevica",
+          "jevicaVisible": true,
+          "garageVisible": true,
+          "companionVisible": true,
+          "carVisible": true,
+          "jevVisible": true
+        }
+      }
+    }
+  ],
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)"
+}

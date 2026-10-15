@@ -1,0 +1,36 @@
+{
+  "createdAt": "2026-10-15T01:38:54.630Z",
+  "status": "passed",
+  "modes": [
+    "required"
+  ],
+  "rendering": "Full rendering",
+  "scope": "Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.",
+  "results": [
+    {
+      "name": "multiplayer-gate",
+      "status": "passed",
+      "seconds": 16.723,
+      "result": {
+        "passed": true,
+        "checks": [
+          "Disconnected game is locked",
+          "Disconnect focuses the recovery dialog title",
+          "Authenticated recovery hides the sign-in link",
+          "Forward Tab reaches the first available recovery action",
+          "Shift+Tab reaches sign-out without entering the inert game",
+          "Tab wraps to the first recovery action",
+          "Successful retry restores movement focus",
+          "Mobile recovery dialog fits the viewport",
+          "Signed-out gate starts with accessible title focus",
+          "GitHub sign-in link is reachable by keyboard",
+          "Email sign-in field is reachable by keyboard",
+          "Email code button is reachable by keyboard",
+          "Anonymous gate exposes only supported sign-in methods"
+        ],
+        "errors": []
+      }
+    }
+  ],
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)"
+}
