@@ -70,10 +70,11 @@ async (host, viewer, tools) => {
       intervals: own.intervals, timeouts: own.timeouts, playCalls: own.playCalls };
   }
   // The fixture lasts 30 s. Before each entry the host restarts it unless enough remains for the
-  // last measured trip in plus 12 s, so the late join meets a running film; restarts are host
-  // actions, never the viewer's.
+  // last measured trip in plus 20 s (the 5 s convergence window, the attach and the counters), so
+  // the late join meets a film that is still running; when that is more than the fixture holds,
+  // the host restarts it just before the trip. Restarts are host actions, never the viewer's.
   const hostControl = async name => { await host.locator(`#ipic-screening [data-control="${name}"]`).click(); };
-  let lastTripS = 6;
+  let lastTripS = 15; // the first trip in loads the IPIC interior
   async function ensureRunning(minRemainingS = 18) {
     const s = await screening(host);
     if (s.sharedStatus === 'playing' && 30 - s.currentTime >= minRemainingS) return false;
@@ -90,7 +91,7 @@ async (host, viewer, tools) => {
   checks.push('host started the 30 s fixture inside IPIC');
 
   async function cycle(index) {
-    const restarted = await ensureRunning(Math.max(18, lastTripS + 12));
+    const restarted = await ensureRunning(Math.min(29.5, lastTripS + 20));
     const started = Date.now();
     await enterIpic(viewer);
     const entryMs = Date.now() - started; lastTripS = entryMs / 1000;
@@ -155,7 +156,7 @@ async (host, viewer, tools) => {
   checks.push('no growth in media, audio contexts, intervals, documents or renderer resources; no steady growth in DOM nodes, listeners or timeouts');
 
   // Narrow screens with the banner and dock present (#367): the viewer goes back in.
-  await ensureRunning(Math.max(18, lastTripS + 15));
+  await ensureRunning(Math.min(29.5, lastTripS + 20));
   await enterIpic(viewer);
   await viewer.waitForFunction(() => window.__riverScreening().state === 'playing', null, { timeout: 30000 });
   // Captions: the active cue is on screen in the panel, and the toggle hides and restores it.
