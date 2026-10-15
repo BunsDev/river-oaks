@@ -9241,13 +9241,13 @@
     {
       "id": "office-ipic-baseline-360",
       "title": "Office + IPIC #360 (design side, D0/D1): kit/reference inventory, brief, asset manifest and review matrix in docs/design/office-ipic",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "docs/office-ipic-baseline-20261014"
       ],
-      "owner": "claude:river-oaks-1b (f4107618)",
-      "updatedAt": "2026-10-15T03:43:33.020Z",
-      "nextAction": "main c1cfd584 merged (dace7b1a); engineering G1 agreement added to review-matrix.md, brief notes #388. Push, mark #380 ready, land after #381.",
+      "owner": null,
+      "updatedAt": "2026-10-15T04:11:09.286Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "filesOwned": [
         "docs/design/office-ipic/brief.md",
         "docs/design/office-ipic/reference-index.json",
@@ -9268,25 +9268,49 @@
       "ledger": "docs/superpowers/plans/2026-10-14-office-ipic-baseline.md",
       "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-ipic-baseline-20261014",
       "pr": 380,
-      "leaseUntil": "2026-10-15T05:43:33.020Z",
       "handoff": {
         "at": "2026-10-15T03:38:57.407Z",
         "from": null,
         "to": "claude:river-oaks-1b (f4107618)",
         "reason": "Released design packet task; Val's /goal of 2026-10-15 asks river-oaks-1b to mark #380 ready, land it and close #360."
+      },
+      "evidence": [
+        {
+          "pr": 380,
+          "reviewedHead": "99c8fea61500af720bc837c63f2babfc8384f5e6",
+          "merge": "a714a8a5038e10747ed53a117b1dc4703953a6a6",
+          "tree": "64375b6fa2f3d423adaeba4ffe059ef702ea6270",
+          "checks": "pnpm run land 380 (river-oaks-1b): Verify passed on 99c8fea6, merge guard CLEAN with 16 checks. With both packet halves present: contract + references tests 14/14, index check 0 problems (3 reported drifts)."
+        }
+      ],
+      "retirement": {
+        "head": "99c8fea61500af720bc837c63f2babfc8384f5e6",
+        "releasedAt": "2026-10-15T04:08:56.611Z",
+        "sessionsReviewedAt": "2026-10-15T04:08:56.611Z"
+      },
+      "retiredBranches": [
+        "docs/office-ipic-baseline-20261014"
+      ],
+      "archive": {
+        "docs/office-ipic-baseline-20261014": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-Ky3bfO/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-Ky3bfO/history.bundle",
+          "sha256": "35704c8e4d2adf3d085f836a1140b53ce790888160143a4d144a40322686f947",
+          "tag": "refs/tags/archive/worktree-prune/8cc6494f-cb14-40b4-b158-2e2ae2bbad20",
+          "head": "99c8fea61500af720bc837c63f2babfc8384f5e6"
+        }
       }
     },
     {
       "id": "office-ipic-engineering-baseline",
       "title": "Office + IPIC #360, engineering half: baseline checks, physical fit, keep/reuse against #349, and the executable layout/camera contract with its validator",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "docs/office-ipic-engineering-baseline-20261014"
       ],
-      "owner": "claude:river-oaks-1b (f4107618)",
-      "updatedAt": "2026-10-15T03:43:33.020Z",
-      "leaseUntil": "2026-10-15T05:43:33.020Z",
-      "nextAction": "#388 landed into this branch (merge cbe393b8); main c1cfd584 merged (f1a80496); core verify passed (agent 103/103, preview 3052+1 skip, server 508+144 Redis skips, desktop 66/66, python 141). Engineering G1 agreement in the ledger and review-matrix.md (#380). Push, then pnpm run land 381 --owner river-oaks-1b.",
+      "owner": null,
+      "updatedAt": "2026-10-15T04:10:42.578Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-ipic-engineering-20261014",
       "ledger": "docs/superpowers/plans/2026-10-14-office-ipic-engineering-baseline.md",
       "issue": 360,
@@ -9310,6 +9334,32 @@
         "from": "claude-code river-oaks-dc bc053eff",
         "to": "claude:river-oaks-1b (f4107618)",
         "reason": "Val's /goal of 2026-10-15 directs river-oaks-1b to take over #381 from the expired river-oaks-dc lease (expired 2026-10-15T00:23:26Z). river-oaks-dc is not in ListAgents; worktree clean and in sync with origin at 7c7f7368."
+      },
+      "evidence": [
+        {
+          "pr": 381,
+          "reviewedHead": "0862fd99472b43d2c13ee06eb762ec3f4dd2158d",
+          "merge": "44ecd9394dbba0ab07acb3e4424385a1a5fadb61",
+          "tree": "e9bfef85ac009c3aa9818b89ceae6ed4cbfbc127",
+          "checks": "pnpm run land 381 (river-oaks-1b): Verify passed on 0862fd99, merge guard CLEAN with 17 checks. Local core verify on the merged tree passed (agent 103/103, preview 3052+1 skip, server 508+144 Redis skips, desktop 66/66, python 141); contract tests 8/8; focused office/IPIC 86 tests, 82 pass, 4 Redis skips. Includes #388 (merge cbe393b8)."
+        }
+      ],
+      "retirement": {
+        "head": "0862fd99472b43d2c13ee06eb762ec3f4dd2158d",
+        "releasedAt": "2026-10-15T04:08:56.611Z",
+        "sessionsReviewedAt": "2026-10-15T04:08:56.611Z"
+      },
+      "retiredBranches": [
+        "docs/office-ipic-engineering-baseline-20261014"
+      ],
+      "archive": {
+        "docs/office-ipic-engineering-baseline-20261014": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-t8SuWk/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-t8SuWk/history.bundle",
+          "sha256": "28308374dbd829245b904fd4f452973c52485bfcc6c2e2bd88dd0c6c24dda4f9",
+          "tag": "refs/tags/archive/worktree-prune/ce6bb044-0c34-4d6c-8c73-be5d613ed9b5",
+          "head": "0862fd99472b43d2c13ee06eb762ec3f4dd2158d"
+        }
       }
     },
     {
@@ -9665,13 +9715,13 @@
     {
       "id": "office-computer-db-mvp",
       "title": "Resident-owned office computers with private and shared database tasks",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "feat/office-computer-db-mvp"
       ],
-      "owner": "codex-root-office-computer-db-mvp",
-      "updatedAt": "2026-10-15T02:42:50.281103+00:00",
-      "nextAction": "User authorized commit, push and merge to main. Commit verified MVP, open PR, land through CI and merge guard, reconcile delivery evidence; provide next long-running goal.",
+      "owner": null,
+      "updatedAt": "2026-10-15T04:12:56.219Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "ledger": "docs/superpowers/plans/2026-10-15-office-computer-db-mvp.md",
       "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-computer-db-mvp",
       "filesOwned": [
@@ -9709,18 +9759,45 @@
         "pnpm run verify",
         "pnpm run verify full"
       ],
-      "leaseUntil": "2026-10-15T04:42:50.281103+00:00"
+      "pr": 390,
+      "evidence": [
+        {
+          "pr": 390,
+          "reviewedHead": "7d05a210cc2862a19020f51f397ef83e1b215aaf",
+          "merge": "c1cfd5845f34594f94ec3a61d8c3043db2d8fb09",
+          "tree": "4d27e50644eb63193d6eb62d72d4be89973bc46e",
+          "checks": "Integrated pnpm run verify passed. Verify run 38672969450 passed; merge guard CLEAN, all 17 hosted checks passed. GitHub verified both signed commits. Prior full local run interrupted; split shared coverage retained."
+        }
+      ],
+      "retirement": {
+        "head": "7d05a210cc2862a19020f51f397ef83e1b215aaf",
+        "releasedAt": "2026-10-15T04:12:21.566Z",
+        "sessionsReviewedAt": "2026-10-15T04:12:21.566Z",
+        "by": "claude:river-oaks-1b (f4107618)"
+      },
+      "retiredBranches": [
+        "feat/office-computer-db-mvp"
+      ],
+      "archive": {
+        "feat/office-computer-db-mvp": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-2Ldox4/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-2Ldox4/history.bundle",
+          "sha256": "cf3fee478dd5b71970eb596d587afe6648707ba859063ae9e6a3747c2bed7771",
+          "tag": "refs/tags/archive/worktree-prune/fb6d85e5-1c21-4e79-ae6c-8271a75903f6",
+          "head": "7d05a210cc2862a19020f51f397ef83e1b215aaf"
+        }
+      }
     },
     {
       "id": "office-ipic-contract-decisions",
       "title": "Office + IPIC #360: record Val's fit and mezzanine decisions in layout-contract.json (stacked on #381)",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "docs/office-ipic-contract-decisions-20261015"
       ],
-      "owner": "claude:river-oaks-1b (f4107618)",
-      "updatedAt": "2026-10-15T03:43:33.020Z",
-      "nextAction": "PR #388 merged into docs/office-ipic-engineering-baseline-20261014 as cbe393b8 (land, 11 checks green). Retire with project:prune after #381 lands on main.",
+      "owner": null,
+      "updatedAt": "2026-10-15T04:09:44.845Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "filesOwned": [
         "docs/design/office-ipic/layout-contract.json (decisions, fit.decision, mezzanineProgramme only)",
         "scripts/office-ipic-contract.mjs (fit decision rule)",
@@ -9735,12 +9812,37 @@
       "ledger": "docs/superpowers/plans/2026-10-15-office-ipic-contract-decisions.md",
       "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-ipic-contract-decisions-20261015",
       "pr": 388,
-      "leaseUntil": "2026-10-15T05:43:33.020Z",
       "handoff": {
         "at": "2026-10-15T03:38:57.407Z",
         "from": null,
         "to": "claude:river-oaks-1b (f4107618)",
         "reason": "Released by session aa2272b7; Val's /goal of 2026-10-15 asks river-oaks-1b to merge draft #388 into #381."
+      },
+      "evidence": [
+        {
+          "pr": 388,
+          "reviewedHead": "43aaab77b1d193c70c6a275290e5b9276e051754",
+          "merge": "cbe393b8e98eca98dae661fc94ce74aaa7bd47fc",
+          "tree": "0242e74738661f097bdb5af413b761d169c917a0",
+          "checks": "pnpm run land 388 (river-oaks-1b) into docs/office-ipic-engineering-baseline-20261014: 11 checks green; merge cbe393b8 reached main through #381 (44ecd939)."
+        }
+      ],
+      "retirement": {
+        "head": "43aaab77b1d193c70c6a275290e5b9276e051754",
+        "releasedAt": "2026-10-15T04:08:56.611Z",
+        "sessionsReviewedAt": "2026-10-15T04:08:56.611Z"
+      },
+      "retiredBranches": [
+        "docs/office-ipic-contract-decisions-20261015"
+      ],
+      "archive": {
+        "docs/office-ipic-contract-decisions-20261015": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-XSPqFZ/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-XSPqFZ/history.bundle",
+          "sha256": "13e985dd54aab247b80fd167e92bfc8c686ecb2297caba22f1ec6878cede2ed2",
+          "tag": "refs/tags/archive/worktree-prune/ffb41f50-8c6a-4569-b458-821dcb540021",
+          "head": "43aaab77b1d193c70c6a275290e5b9276e051754"
+        }
       }
     },
     {
@@ -9784,16 +9886,15 @@
     {
       "id": "ipic-screening-authority-366",
       "title": "IPIC #366: authoritative screening timeline and host controls (server/screenings.js, preview/src/screening-contract.js) with fixture media, checkpoint v9",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "feat/ipic-screening-authority-20261015"
       ],
-      "owner": "claude:river-oaks-1b (f4107618)",
-      "leaseUntil": "2026-10-15T06:20:30.386Z",
-      "updatedAt": "2026-10-15T04:20:30.386Z",
+      "owner": null,
+      "updatedAt": "2026-10-15T04:38:42.883Z",
       "issue": 366,
       "ledger": "docs/superpowers/plans/2026-10-15-ipic-screening-authority.md",
-      "nextAction": "Core verify passed at a714a8a5 + patch (agent 109/109, preview 3056+1 skip, server 519+146 Redis skips, desktop 66/66, python 141); Redis-backed server run in progress. Commit signed, open PR, land with pnpm run land.",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "filesOwned": [
         "preview/src/screening-contract.js",
         "server/screenings.js",
@@ -9814,21 +9915,47 @@
         "pnpm run verify",
         "pnpm run verify full with isolated Redis"
       ],
-      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-ipic-screening-20261015"
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-ipic-screening-20261015",
+      "pr": 395,
+      "evidence": [
+        {
+          "pr": 395,
+          "reviewedHead": "5fd3e28ae75c3372e1a7abc6afeb0c015cf1094c",
+          "merge": "096a6cdd9cb1f3315cc745096fa90e2b9846758c",
+          "tree": "222d211f6840a2b28e91a7f0776ddecfd7f40d12",
+          "checks": "pnpm run land 395: Verify passed after one rerun of the known contextual-first-visit travel_cooldown flake; merge guard CLEAN, 17 checks. Local: core verify passed (agent 109/109, preview 3056+1 skip, server 519+146 Redis skips, desktop 66/66, python 141); isolated-Redis server suite 707/707, 0 skips."
+        }
+      ],
+      "retirement": {
+        "head": "5fd3e28ae75c3372e1a7abc6afeb0c015cf1094c",
+        "releasedAt": "2026-10-15T04:38:04.472Z",
+        "sessionsReviewedAt": "2026-10-15T04:38:04.472Z"
+      },
+      "retiredBranches": [
+        "feat/ipic-screening-authority-20261015"
+      ],
+      "archive": {
+        "feat/ipic-screening-authority-20261015": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-9iO54M/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-9iO54M/history.bundle",
+          "sha256": "897c58f139cd87cce6865fc8beeeeeb6d308ed6b7f01a0e083edf8916877464c",
+          "tag": "refs/tags/archive/worktree-prune/e57211d3-cdb0-4ba2-97f1-cb0bbeea9585",
+          "head": "5fd3e28ae75c3372e1a7abc6afeb0c015cf1094c"
+        }
+      }
     },
     {
       "id": "office-penthouse-traversal-361",
       "title": "Office #361: versioned penthouse layout (#349 level/portal shape, jevica-office/l<n>), server-validated levels and transitions, safe saved-visit migration; legacy office stays default",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "feat/office-penthouse-client-20261015"
       ],
-      "owner": "claude:river-oaks-1b (f4107618)",
-      "leaseUntil": "2026-10-15T07:18:55.576Z",
-      "updatedAt": "2026-10-15T05:18:55.576Z",
+      "owner": null,
+      "updatedAt": "2026-10-15T05:42:53.050Z",
       "issue": 361,
       "ledger": "docs/superpowers/plans/2026-10-15-office-penthouse-traversal.md",
-      "nextAction": "PR B verified: office preview 75/75, penthouse browser smoke passed (stairs to mezzanine, eye +3.800 m), legacy office-visit passed, core verify passed. Commit, PR, land, then close #361.",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "filesOwned": [
         "preview/src/office-layouts.js",
         "preview/tests/office-layouts.test.js",
@@ -9846,7 +9973,34 @@
         "pnpm run verify",
         "pnpm run verify full with isolated Redis"
       ],
-      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-penthouse-client-20261015"
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-penthouse-client-20261015",
+      "pr": 397,
+      "evidence": [
+        {
+          "pr": 397,
+          "reviewedHead": "778890738dfcbe73ef94f5f88092a13256be55d3",
+          "merge": "65feca351330262c3352e5107541816018d40d6a",
+          "tree": "e3e434dd52010f003d1df2258aa86c73cd47f7e7",
+          "checks": "pnpm run land 397: Verify passed, merge guard CLEAN, 17 checks. Local: office preview 75/75; focused 108/108 on the final merged tree; penthouse browser smoke passed (stairs to mezzanine, eye +3.800 m); legacy office-visit passed (13 checks); core verify passed (agent 109/109, preview 3076+1 skip, server 526+147 Redis skips, desktop 69/69, python 141). PR A is task office-penthouse-layout-361a (#396)."
+        }
+      ],
+      "retirement": {
+        "head": "778890738dfcbe73ef94f5f88092a13256be55d3",
+        "releasedAt": "2026-10-15T05:42:12.773Z",
+        "sessionsReviewedAt": "2026-10-15T05:42:12.773Z"
+      },
+      "retiredBranches": [
+        "feat/office-penthouse-client-20261015"
+      ],
+      "archive": {
+        "feat/office-penthouse-client-20261015": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-TKptjc/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-TKptjc/history.bundle",
+          "sha256": "7982b94eee15a85aaf3bee68bfe488b37e84b9209cdb6f154a600561d39e9ef1",
+          "tag": "refs/tags/archive/worktree-prune/aca4b339-e721-4d10-88b5-446ff4abf066",
+          "head": "778890738dfcbe73ef94f5f88092a13256be55d3"
+        }
+      }
     },
     {
       "id": "desktop-e2e-walk-game-time",
@@ -9960,16 +10114,15 @@
     {
       "id": "ipic-screening-playback-367",
       "title": "IPIC #367: synchronized client playback, accessible controls and media recovery against #366's contract, with a labelled local fixture clip",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "feat/ipic-screening-playback-20261015"
       ],
-      "owner": "claude:river-oaks-1b (f4107618)",
-      "leaseUntil": "2026-10-15T07:20:42.517Z",
-      "updatedAt": "2026-10-15T05:20:42.517Z",
+      "owner": null,
+      "updatedAt": "2026-10-15T05:33:26.619Z",
       "issue": 367,
       "ledger": "docs/superpowers/plans/2026-10-15-ipic-screening-playback.md",
-      "nextAction": "Two-browser journey passed twice (max spread 7 ms, pause 0 ms); core verify passed. Commit, merge main, PR, land after #397.",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "filesOwned": [
         "preview/src/ipic-screening.js",
         "preview/src/ipic-screening-ui.js",
@@ -9990,7 +10143,34 @@
         "pnpm run verify",
         "hosted Verify"
       ],
-      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-ipic-playback-20261015"
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-ipic-playback-20261015",
+      "pr": 398,
+      "evidence": [
+        {
+          "pr": 398,
+          "reviewedHead": "eaf9ebdc4fb98591484253df7d5256da4d09fb95",
+          "merge": "b4f4c430ad135bbdf94049e8b4a827032cd16eed",
+          "tree": "158f9d5c027f1bb0c64b9af9fcc0c6fc1bd0f874",
+          "checks": "pnpm run land 398: Verify passed, merge guard CLEAN, 17 checks. Local: focused 53/53 on the merged tree; core verify passed (agent 109/109, preview 3072+1 skip, server 520+146 Redis skips, desktop 69/69, python 141); two-browser journey passed twice (max spread 7 ms over 36 samples, pause 0 ms)."
+        }
+      ],
+      "retirement": {
+        "head": "eaf9ebdc4fb98591484253df7d5256da4d09fb95",
+        "releasedAt": "2026-10-15T05:32:45.230Z",
+        "sessionsReviewedAt": "2026-10-15T05:32:45.230Z"
+      },
+      "retiredBranches": [
+        "feat/ipic-screening-playback-20261015"
+      ],
+      "archive": {
+        "feat/ipic-screening-playback-20261015": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-x3nptd/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-x3nptd/history.bundle",
+          "sha256": "f577b5f270387dcfef42432498ff9e32dce4b324feb4b64372f69e757ccb9459",
+          "tag": "refs/tags/archive/worktree-prune/d79c2885-f423-4f36-8c2b-d1efe0ec2b0e",
+          "head": "eaf9ebdc4fb98591484253df7d5256da4d09fb95"
+        }
+      }
     },
     {
       "id": "office-skyline-prototype",
@@ -10203,6 +10383,491 @@
         "pnpm run build",
         "pnpm run verify"
       ]
+    },
+    {
+      "id": "ipic-route-evidence-364",
+      "title": "#364 IPIC route, seat and export evidence: measured body envelopes on both escalator lanes, lounge, auditorium, occupied seats and stand/return; height agreement, false-claim rejection, exclusive seat claims; screen bounds/sightlines for #365; export reproducibility; T1-T3 and five photo views",
+      "status": "retired",
+      "branches": [
+        "test/ipic-route-evidence-20261015"
+      ],
+      "owner": null,
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "ledger": "docs/superpowers/plans/2026-10-15-ipic-route-evidence.md",
+      "requiredChecks": [
+        "node --test preview/tests/ipic-*.test.js server/tests/ipic-interior.test.js (+ new route tests)",
+        "node scripts/export-ipic.mjs (Blender absent = recorded gap)",
+        "node preview/e2e/ipic-runner.mjs under the browser lock",
+        "pnpm run verify",
+        "hosted Verify via pnpm run land"
+      ],
+      "filesOwned": [
+        "preview/src/ipic-plan.js (IPIC_SCREEN, four colliders)",
+        "preview/src/ipic-interior.js (screen reads IPIC_SCREEN)",
+        "preview/src/ipic-circulation.js",
+        "preview/src/main.js (DEV render-audit view/release only)",
+        "scripts/ipic-review-data.mjs",
+        "docs/ipic-review/circulation.json",
+        "docs/ipic-review/screen.json",
+        "server/tests/ipic-routes.test.js",
+        "preview/tests/ipic-agreement.test.js",
+        "preview/tests/ipic-circulation.test.js",
+        "preview/e2e/ipic-photo-views.mjs",
+        "docs/design/office-ipic/captures/T*",
+        "docs/ipic-interior.md (#364 section)",
+        "docs/superpowers/plans/2026-10-15-ipic-route-evidence*",
+        "docs/project-management/tasks.json (own entry)"
+      ],
+      "pr": 402,
+      "updatedAt": "2026-10-15T09:25:58.284Z",
+      "evidence": [
+        {
+          "pr": 402,
+          "reviewedHead": "9b6e680e6991da7137d62eb9bd939abb6e146dc6",
+          "merge": "b5d99a13ced10748159f4c2184588fd336f7919c",
+          "tree": "a6dfdd40567e1dabed7c4309426d4027abadb791",
+          "checks": "Landed by claude:river-oaks-1b with pnpm run land 402 at 2026-10-15T09:25:04.000Z: guard read 17 checks green, CLEAN; merge tree equals head tree. Local: focused IPIC 56 pass/0 fail/2 todo; core verify passed at 083373ff; full server on throwaway Redis 730/729/0 skipped/1 todo; GLB geometry byte-identical on re-export; runtime T1-T3 captured on Metal."
+        }
+      ],
+      "retirement": {
+        "head": "9b6e680e6991da7137d62eb9bd939abb6e146dc6",
+        "releasedAt": "2026-10-15T09:25:04.000Z",
+        "sessionsReviewedAt": "2026-10-15T09:25:04.000Z"
+      },
+      "retiredBranches": [
+        "test/ipic-route-evidence-20261015"
+      ],
+      "archive": {
+        "test/ipic-route-evidence-20261015": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-h7wFIN/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-h7wFIN/history.bundle",
+          "sha256": "86c666d29bf4ccd293b2b876138a62faeccb889a032019c5531dc55f27335cf0",
+          "tag": "refs/tags/archive/worktree-prune/391e8c34-f2d8-4da1-a4fc-9c84ec8fb63f",
+          "head": "9b6e680e6991da7137d62eb9bd939abb6e146dc6"
+        }
+      }
+    },
+    {
+      "id": "ipic-tuck-room-darts",
+      "title": "Shared darts in the IPIC Tuck Room (Val, 2026-10-15): freestanding dart cabinet in the upper lounge below the floral artwork (lane a -0.5..0.7, oche d about 23.5), server-held 501 double-out matches at the line, live board for everyone in IPIC, practice vs a regular when alone",
+      "status": "retired",
+      "branches": [
+        "feat/ipic-tuck-room-darts-20261015"
+      ],
+      "owner": null,
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "ledger": "docs/superpowers/plans/2026-10-15-bar-games.md",
+      "requiredChecks": [
+        "focused server/preview darts tests",
+        "IPIC agreement/circulation tests stay green",
+        "pnpm run verify",
+        "hosted Verify via pnpm run land"
+      ],
+      "filesOwned": [
+        "server/darts-games.js",
+        "server/tests/darts-games.test.js",
+        "preview/src/ipic-plan.js (IPIC darts line + cabinet collider)",
+        "preview/src/ipic-interior.js (dart cabinet)",
+        "preview/src/plaza-darts.js (shared mode)",
+        "preview/src/dartboard-mesh.js",
+        "server/world.js (darts routing/snapshot/checkpoint hunks only, after Codex lands)",
+        "docs/superpowers/plans/2026-10-15-bar-games.md"
+      ],
+      "pr": 412,
+      "updatedAt": "2026-10-15T09:42:46.272Z",
+      "evidence": [
+        {
+          "pr": 412,
+          "reviewedHead": "2e2e9b3b17855985da99b1bf656dba4125272f4b",
+          "merge": "29cdff5de04c4c0a2a7cb6922b3b8511fd4173b9",
+          "tree": "1484112c13dfbdf0165cb78361b61c3b184d3d39",
+          "checks": "Val authorized landing ('Land both now', 2026-10-15 09:30Z). Landed by claude:river-oaks-1b with pnpm run land 412 at 2026-10-15T09:42:05.000Z: guard 17 checks green, CLEAN; merge tree equals head tree. Local: darts tests 11/11; core verify passed at 0c29a7b7; two-browser journey passed (6 checks); exports regenerated."
+        }
+      ],
+      "retirement": {
+        "head": "2e2e9b3b17855985da99b1bf656dba4125272f4b",
+        "releasedAt": "2026-10-15T09:42:05.000Z",
+        "sessionsReviewedAt": "2026-10-15T09:42:05.000Z"
+      },
+      "retiredBranches": [
+        "feat/ipic-tuck-room-darts-20261015"
+      ],
+      "archive": {
+        "feat/ipic-tuck-room-darts-20261015": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-oVjHBH/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-oVjHBH/history.bundle",
+          "sha256": "9c3276a79864300cca1df065facf163c495d447fa84c3500a394d17a26fa202c",
+          "tag": "refs/tags/archive/worktree-prune/ff92c4da-db76-4b5f-ace9-c02a54b3add4",
+          "head": "2e2e9b3b17855985da99b1bf656dba4125272f4b"
+        }
+      }
+    },
+    {
+      "id": "axe-darts-room",
+      "title": "New unbranded axe-and-darts room (Val, 2026-10-15): fictional walk-in game room with two caged axe-throwing lanes and shared matches; no real brand",
+      "status": "retired",
+      "branches": [
+        "feat/axe-darts-room-20261015"
+      ],
+      "owner": null,
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "ledger": "docs/superpowers/plans/2026-10-15-bar-games.md",
+      "requiredChecks": [
+        "focused server/preview tests",
+        "pnpm run verify",
+        "browser journey",
+        "hosted Verify via pnpm run land"
+      ],
+      "filesOwned": [
+        "preview/src/axe-rules.js",
+        "preview/src/venue-rooms.js",
+        "preview/src/axe-room-plan.js",
+        "preview/src/axe-room-interior.js",
+        "server/axe-games.js",
+        "server/tests/axe-*.test.js",
+        "preview/tests/axe-*.test.js",
+        "docs/superpowers/plans/2026-10-15-bar-games.md"
+      ],
+      "pr": 415,
+      "updatedAt": "2026-10-15T10:03:37.433Z",
+      "evidence": [
+        {
+          "pr": 415,
+          "reviewedHead": "67511537f14d9fecba056669923ab8a9a3b59011",
+          "merge": "a079271a79244a7fd5e75f384a4d0d055a6dc01e",
+          "tree": "7a3625a8e41cb21463cb2f0e9c692806e6577350",
+          "checks": "Val authorized landing ('Land both now', 2026-10-15 09:30Z). Landed by claude:river-oaks-1b with pnpm run land 415 at 2026-10-15T10:02:50.000Z: guard 17 checks green, CLEAN; merge tree equals head tree. Local: 22 focused tests; core verify passed at b8e0053c; full server on throwaway Redis 751/750/0 skipped/1 todo; two-browser journey passed (8 checks); Metal views V1-V4."
+        }
+      ],
+      "retirement": {
+        "head": "67511537f14d9fecba056669923ab8a9a3b59011",
+        "releasedAt": "2026-10-15T10:02:50.000Z",
+        "sessionsReviewedAt": "2026-10-15T10:02:50.000Z"
+      },
+      "retiredBranches": [
+        "feat/axe-darts-room-20261015"
+      ],
+      "archive": {
+        "feat/axe-darts-room-20261015": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-uH7E2S/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-uH7E2S/history.bundle",
+          "sha256": "f2db8db83f2e6bfb7e6b27bd3fb4b26973cd40080846fa82673ee9f926c55f9b",
+          "tag": "refs/tags/archive/worktree-prune/ce43e188-3a63-4a9e-9fdb-3b1e215f5853",
+          "head": "67511537f14d9fecba056669923ab8a9a3b59011"
+        }
+      }
+    },
+    {
+      "id": "ipic-sofa-stand",
+      "title": "IPIC lounge sofa traps its sitter (stand_blocked even when empty): authored stand-out points per sofa place, tried by the server's stand() before its radial search (#364 follow-up)",
+      "status": "retired",
+      "branches": [
+        "fix/ipic-sofa-stand-20261015"
+      ],
+      "owner": null,
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "ledger": "docs/superpowers/plans/2026-10-15-ipic-route-evidence.md",
+      "requiredChecks": [
+        "server/tests/ipic-routes.test.js",
+        "server/tests/seating.test.js",
+        "pnpm run verify",
+        "hosted Verify via pnpm run land"
+      ],
+      "filesOwned": [
+        "preview/src/ipic-plan.js (sofa stand points)",
+        "preview/src/world-interactions.js (resolveBenchSeat standAt)",
+        "server/world.js (stand: authored points first)",
+        "server/tests/ipic-routes.test.js"
+      ],
+      "pr": 419,
+      "updatedAt": "2026-10-15T09:54:24.107Z",
+      "evidence": [
+        {
+          "pr": 419,
+          "reviewedHead": "d0ce158ccefd5b61c33f5ad8f545b020c4eb9809",
+          "merge": "2ee629a093316e062c3d9a8fd5170ff2744f84ee",
+          "tree": "347833f1ec5905f10a9bbbdfc4748d5a9d34146a",
+          "checks": "Landed by claude:river-oaks-1b with pnpm run land 419 at 2026-10-15T09:53:02.000Z: guard 17 checks green, CLEAN; merge tree equals head tree. Local: regression failed first (stand_blocked) and passes; core verify passed; full server on throwaway Redis 740/740, 0 skipped, 0 todo."
+        }
+      ],
+      "retirement": {
+        "head": "d0ce158ccefd5b61c33f5ad8f545b020c4eb9809",
+        "releasedAt": "2026-10-15T09:53:02.000Z",
+        "sessionsReviewedAt": "2026-10-15T09:53:02.000Z"
+      },
+      "retiredBranches": [
+        "fix/ipic-sofa-stand-20261015"
+      ],
+      "archive": {
+        "fix/ipic-sofa-stand-20261015": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-dhVySZ/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-dhVySZ/history.bundle",
+          "sha256": "c1e036936decc5e970588b91e244489c090930b61dc433edb64e68e3e5a7c462",
+          "tag": "refs/tags/archive/worktree-prune/390b04f2-deb7-4372-9ba3-fae623c2012b",
+          "head": "d0ce158ccefd5b61c33f5ad8f545b020c4eb9809"
+        }
+      }
+    },
+    {
+      "id": "ipic-screening-replay-368",
+      "title": "#368 slice: stale and replayed playback commands in the two-browser screening journey (no viewer rewinds or jumps); transport-level coverage already on main (screenings-transport.test.js)",
+      "status": "retired",
+      "branches": [
+        "test/ipic-screening-replay-20261015"
+      ],
+      "owner": null,
+      "nextAction": "Preserve restoration archives; nothing left to deliver.",
+      "ledger": "docs/superpowers/plans/2026-10-15-ipic-screening-replay.md",
+      "requiredChecks": [
+        "node preview/e2e/ipic-screening-runner.mjs",
+        "pnpm run verify",
+        "hosted Verify via pnpm run land"
+      ],
+      "filesOwned": [
+        "preview/e2e/ipic-screening.js (stale/replayed step only)",
+        "docs/superpowers/plans/2026-10-15-ipic-screening-replay.md"
+      ],
+      "pr": 422,
+      "updatedAt": "2026-10-15T11:18:52.647Z",
+      "evidence": [
+        {
+          "pr": 422,
+          "reviewedHead": "508a846a31689aa46135608ea568f1db1be5bf1e",
+          "merge": "1cdfe2ba15b55102ff042540a1e8045de54a40cc",
+          "tree": "61ce496347344ecc5591f730a7ffc2e5a97d2fb3",
+          "checks": "Landed by claude:river-oaks-1b with pnpm run land 422 at 2026-10-15T11:17:01Z: guard 17 checks green, CLEAN; merge tree equals head tree. Local: two-browser journey run 2 passed 10/10 (new step: revision 4 on both pages, 3.15->5.17 s, 7-43 ms apart, three refusals as expected); mutation (revision fence !== to >) failed the step as intended; core verify passed (agent 109/109, preview 3177+1 skip+1 todo, server 572+148 Redis skips, desktop 69/69). Evidence copied to ~/worktree-backups/river-oaks/ipic-screening-replay-368-evidence-20261015/."
+        }
+      ],
+      "retirement": {
+        "head": "508a846a31689aa46135608ea568f1db1be5bf1e",
+        "releasedAt": "2026-10-15T11:17:52.000Z",
+        "sessionsReviewedAt": "2026-10-15T11:17:52.000Z"
+      },
+      "retiredBranches": [
+        "test/ipic-screening-replay-20261015"
+      ],
+      "archive": {
+        "test/ipic-screening-replay-20261015": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-Cg7eYm/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-Cg7eYm/history.bundle",
+          "sha256": "a9d58ea64814142825fe2cb01a7dc041d80a9cf84fafb41d4457791dd5dee511",
+          "tag": "refs/tags/archive/worktree-prune/8b86186a-642e-4def-aa8c-bc1b11e24bc2",
+          "head": "508a846a31689aa46135608ea568f1db1be5bf1e"
+        }
+      }
+    },
+    {
+      "id": "greetings-dock-overlap",
+      "title": "Phone HUD: the nearby greetings card covers the Play & rides toggle at <=700 px (found by #368's soak, #359 lead status item 5)",
+      "status": "retired",
+      "branches": [
+        "fix/greetings-dock-overlap-20261015"
+      ],
+      "owner": null,
+      "nextAction": "Preserve restoration archives; design review of the phone placement is optional (see ledger).",
+      "ledger": "docs/superpowers/plans/2026-10-15-greetings-dock-overlap.md",
+      "requiredChecks": [
+        "browser regression red on main, green after",
+        "pnpm run verify",
+        "hosted Verify via pnpm run land"
+      ],
+      "filesOwned": [
+        "preview/src/multiplayer.css (.nearby-greetings placement only)",
+        "preview/e2e/greetings-dock-overlap.js and runner (new)",
+        "docs/superpowers/plans/2026-10-15-greetings-dock-overlap.md"
+      ],
+      "pr": 425,
+      "updatedAt": "2026-10-15T12:15:04.077Z",
+      "evidence": [
+        {
+          "pr": 425,
+          "reviewedHead": "9fc5cb1e753cd7679746bdf650d89d1a150dd04d",
+          "merge": "5e2ed17a2ec66f9f1e054fa744a32102e5352893",
+          "tree": "9dbda27abba98f82e38204bab6e6f4f74662b963",
+          "checks": "Landed by claude:river-oaks-1b with pnpm run land 425 at 2026-10-15T12:13:49Z (land updated the branch to 9fc5cb1e, Verify passed): guard 17 checks green, CLEAN; merge tree equals head tree. Local: greetings-dock-runner failed on main with 13 problems and passed with the fix at nine sizes plus the invitation-over-open-dock case; experience greetings journey passed; core verify passed (agent 109/109, preview 3177+1 skip+1 todo, server 572+148 Redis skips, desktop 69/69). Evidence in ~/worktree-backups/river-oaks/greetings-dock-overlap-evidence-20261015/."
+        }
+      ],
+      "retirement": {
+        "head": "9fc5cb1e753cd7679746bdf650d89d1a150dd04d",
+        "releasedAt": "2026-10-15T12:14:26.000Z",
+        "sessionsReviewedAt": "2026-10-15T12:14:26.000Z"
+      },
+      "retiredBranches": [
+        "fix/greetings-dock-overlap-20261015"
+      ],
+      "archive": {
+        "fix/greetings-dock-overlap-20261015": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-1a0RKt/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-1a0RKt/history.bundle",
+          "sha256": "e7c5d85cba487e1a5e992aed94e84e6f1d83923dc3463fb28752aa04502e86f1",
+          "tag": "refs/tags/archive/worktree-prune/4c29cfed-9094-4e3a-af91-96cb88153448",
+          "head": "9fc5cb1e753cd7679746bdf650d89d1a150dd04d"
+        }
+      }
+    },
+    {
+      "id": "office-ipic-perf-368",
+      "title": "#368 slice: measure p50/p95 frame time, draw calls, triangles, GPU memory, load cost and playback drift for street, IPIC T1-T3 (film playing), penthouse and legacy office on this Mac (Metal, vsync off); provisional, not device limits",
+      "status": "retired",
+      "branches": [
+        "test/office-ipic-perf-20261015"
+      ],
+      "owner": null,
+      "nextAction": "Preserve restoration archives; budgets need named devices (Val); IPIC exterior culling is a candidate after the lane see-through art fix.",
+      "ledger": "docs/superpowers/plans/2026-10-15-office-ipic-perf.md",
+      "requiredChecks": [
+        "node preview/e2e/office-ipic-perf.mjs",
+        "pnpm run verify",
+        "hosted Verify via pnpm run land"
+      ],
+      "filesOwned": [
+        "preview/e2e/office-ipic-perf.mjs (new)",
+        "docs/superpowers/plans/2026-10-15-office-ipic-perf.md (+ receipt json)"
+      ],
+      "pr": 428,
+      "updatedAt": "2026-10-15T13:16:51.779Z",
+      "evidence": [
+        {
+          "pr": 428,
+          "reviewedHead": "382a569674823138a1c8845077ad7f67eb98bfb7",
+          "merge": "e5bb21d2725c4027ef15e6dcf09eb6cc2ab682c2",
+          "tree": "29b52215d9e97defea0bb2771a90854dc6ced76e",
+          "checks": "Landed by claude:river-oaks-1b with pnpm run land 428 at 2026-10-15T13:15:44Z (land updated the branch to 382a5696, Verify passed): guard 17 checks green, CLEAN; merge tree equals head tree. Local: office-ipic-perf runs 1-3 passed with no page errors (run 3 receipt committed); core verify passed (agent 109/109, preview 3192+1 skip+1 todo, server 572+148 Redis skips, desktop 69/69). Evidence in ~/worktree-backups/river-oaks/office-ipic-perf-368-evidence-20261015/."
+        }
+      ],
+      "retirement": {
+        "head": "382a569674823138a1c8845077ad7f67eb98bfb7",
+        "releasedAt": "2026-10-15T13:16:14.000Z",
+        "sessionsReviewedAt": "2026-10-15T13:16:14.000Z"
+      },
+      "retiredBranches": [
+        "test/office-ipic-perf-20261015"
+      ],
+      "archive": {
+        "test/office-ipic-perf-20261015": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-HCdAdi/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-HCdAdi/history.bundle",
+          "sha256": "8ca053b5f9565c9a618d5e9cf02846df90203ddf757e8d9db4fec37300a275dc",
+          "tag": "refs/tags/archive/worktree-prune/dfe729ed-f570-4f70-8f69-c90788a6c824",
+          "head": "382a569674823138a1c8845077ad7f67eb98bfb7"
+        }
+      }
+    },
+    {
+      "id": "ipic-exterior-culling",
+      "title": "IPIC auditorium exterior culling (perf finding from #428): drop the district while the camera is in the auditorium facing away from its partition; pixel-identical",
+      "status": "retired",
+      "branches": [
+        "exp/ipic-exterior-culling-20261015"
+      ],
+      "owner": null,
+      "nextAction": "Preserve restoration archives; nothing left to deliver.",
+      "ledger": "docs/superpowers/plans/2026-10-15-ipic-exterior-culling.md",
+      "requiredChecks": [
+        "pixel comparison at review poses",
+        "office-ipic-perf re-run",
+        "pnpm run verify",
+        "IPIC journeys"
+      ],
+      "filesOwned": [
+        "preview/src/interior-exterior-culling.js (IPIC predicate)",
+        "preview/src/main.js (render call site only)",
+        "new tests/e2e for IPIC culling"
+      ],
+      "pr": 431,
+      "updatedAt": "2026-10-15T14:34:15.951Z",
+      "evidence": [
+        {
+          "pr": 431,
+          "reviewedHead": "515ccadc25be7b988ace52676c1934bbe18f867a",
+          "merge": "a82e96e81fe3aa3e9793563f0416f0b367b5b620",
+          "tree": "4a323acbd1180c5dbd13563d553ef71399632965",
+          "checks": "Landed by claude:river-oaks-1b with pnpm run land 431 at 2026-10-15T14:32:52Z (land updated the branch to 515ccadc, Verify passed): guard 17 checks green, CLEAN; merge tree equals head tree. Local: ipic-exterior-culling runs 4-5 passed (every culled frame pixel-identical; seated 564->218 calls, 2.66M->0.36M triangles; seated p50 7.6->5.4 ms interleaved); unit 4/4, mutation fails 3/4; focused 41 pass + 1 todo; core verify passed (agent 109/109, preview 3207+1 skip+1 todo, server 580+149 Redis skips, desktop 69/69). Evidence in ~/worktree-backups/river-oaks/ipic-exterior-culling-evidence-20261015/."
+        }
+      ],
+      "retirement": {
+        "head": "515ccadc25be7b988ace52676c1934bbe18f867a",
+        "releasedAt": "2026-10-15T14:33:26.000Z",
+        "sessionsReviewedAt": "2026-10-15T14:33:26.000Z"
+      },
+      "retiredBranches": [
+        "exp/ipic-exterior-culling-20261015"
+      ],
+      "archive": {
+        "exp/ipic-exterior-culling-20261015": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-64eVAJ/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-64eVAJ/history.bundle",
+          "sha256": "6ff0695080e90595bccfa96868b6cf5ec01fa24820564ac4c4e24842973a10ae",
+          "tag": "refs/tags/archive/worktree-prune/d08ba9f9-79a6-4afa-8350-787acb635bf6",
+          "head": "515ccadc25be7b988ace52676c1934bbe18f867a"
+        }
+      }
+    },
+    {
+      "id": "ipic-auditorium-interiors",
+      "title": "IPIC auditorium perf round 2 (Val chose 2026-10-15): after #431, also skip what cannot be seen from the auditorium (other stores' interiors and people, town objects); pixel-identical or not shipped",
+      "status": "retired",
+      "branches": [
+        "perf/ipic-auditorium-interiors-20261015"
+      ],
+      "owner": null,
+      "nextAction": "Preserve restoration archives; nothing left to deliver.",
+      "ledger": "docs/superpowers/plans/2026-10-15-ipic-auditorium-interiors.md",
+      "requiredChecks": [
+        "pixel comparison (ipic-exterior-culling.mjs extended)",
+        "pnpm run verify",
+        "hosted Verify via pnpm run land"
+      ],
+      "filesOwned": [
+        "preview/src/interior-exterior-culling.js",
+        "preview/src/main.js (render call site only)",
+        "preview/e2e/ipic-exterior-culling.mjs",
+        "preview/tests/interior-exterior-culling.test.js"
+      ],
+      "pr": 435,
+      "updatedAt": "2026-10-15T16:42:25.582Z",
+      "evidence": [
+        {
+          "pr": 435,
+          "reviewedHead": "6984df50279967755fe35353e3d5eba0a8d94e8f",
+          "merge": "4ab018923bc350048b85cff1448cacb9747570bd",
+          "tree": "ec549e8355cba5615ec8bde4e0728bd8f72256b3",
+          "checks": "Landed by claude:river-oaks-1b with pnpm run land 435 at 2026-10-15T16:40:36Z (land updated the branch to 6984df50, Verify passed): guard 17 checks green, CLEAN; merge tree equals head tree. Local: ipic-exterior-culling run 3 passed (every culled pose pixel-identical; seated 555->99 calls, 2.66M->0.20M triangles; seated p50 9.2->5.9 ms interleaved); runs 1-2 failed only on test artefacts (doorway animation, late first-visit overlay), both fixed in the runner; unit 5/5; focused 43 pass + 1 todo; core verify passed (agent 111/111, preview 3246+1 skip+1 todo, server 581+149 Redis skips, desktop 69/69). Evidence in ~/worktree-backups/river-oaks/ipic-auditorium-interiors-evidence-20261015/."
+        }
+      ],
+      "retirement": {
+        "head": "6984df50279967755fe35353e3d5eba0a8d94e8f",
+        "releasedAt": "2026-10-15T16:41:38.000Z",
+        "sessionsReviewedAt": "2026-10-15T16:41:38.000Z"
+      },
+      "retiredBranches": [
+        "perf/ipic-auditorium-interiors-20261015"
+      ],
+      "archive": {
+        "perf/ipic-auditorium-interiors-20261015": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-1Fz50F/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-1Fz50F/history.bundle",
+          "sha256": "ec25ec976834cbcc5f806de8f9b09a92c7ef6b7af4004840e7ab741daf87a733",
+          "tag": "refs/tags/archive/worktree-prune/3c400526-df12-4598-bf20-23435081a760",
+          "head": "6984df50279967755fe35353e3d5eba0a8d94e8f"
+        }
+      }
+    },
+    {
+      "id": "register-sweep-20261015-1b",
+      "title": "Register sweep: commit claude:river-oaks-1b live entries to main (7 from the morning session: #360 baseline, contract decisions, office computer MVP, #366, #361, #367; 9 from today rounds)",
+      "status": "active",
+      "branches": [
+        "docs/register-sweep-20261015-1b"
+      ],
+      "owner": "claude:river-oaks-1b (b929a625)",
+      "leaseUntil": "2026-10-15T19:00:00.000Z",
+      "nextAction": "Copy the 13 live entries exactly into a branch from main, validate with project:check, PR, land.",
+      "filesOwned": [
+        "docs/project-management/tasks.json (the 13 named entries and this one only)"
+      ],
+      "pr": null,
+      "updatedAt": "2026-10-15T16:48:05.427Z"
     }
   ]
 }

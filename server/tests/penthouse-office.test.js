@@ -71,7 +71,7 @@ test('spoofed level, elevation, layout and oversized moves are refused without c
   assert.equal(move({ position: [0, 2, 3.8] }).error, 'office_blocked');
   assert.equal(move({ position: [Number.NaN, 2] }).error, 'office_blocked');
   assert.equal(move({ position: [0, 19] }).error, 'office_too_fast', 'the movement budget still applies');
-  assert.equal(move({ position: [11.8, 9] }).error, 'office_blocked', 'the stair is not walkable from the main floor');
+  assert.equal(move({ position: [10.5, 9] }).error, 'office_blocked', 'the stair\'s sides are never standing ground (walking it: penthouse-stairs.test.js)');
   assert.deepEqual(f.visit(owner), before);
 });
 

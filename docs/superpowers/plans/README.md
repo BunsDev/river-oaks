@@ -4,7 +4,7 @@
 
 Each plan is a task ledger. Status comes from the task register, where the primary checkout's live copy can be newer than the committed one. Plans from before the register are listed as historical: their own text is the record of what was delivered.
 
-## Active and blocked (23)
+## Active and blocked (16)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
@@ -14,18 +14,11 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-15-procedural-phone-gpu-fixture](2026-10-15-procedural-phone-gpu-fixture.md)<br>Procedural gallery phone GPU fixture | `procedural-phone-gpu-fixture` | active | #393 | 2026-10-15 |
 | [2026-10-15-office-world-lifecycle-reliability](2026-10-15-office-world-lifecycle-reliability.md)<br>Office world lifecycle reliability | `office-world-lifecycle-reliability` | active | — | 2026-10-15 |
 | [2026-10-15-office-skyline-prototype](2026-10-15-office-skyline-prototype.md)<br>Penthouse skyline prototype (#363 views, kit guide P26) | `office-skyline-prototype` | active | #408 | 2026-10-15 |
-| [2026-10-15-office-penthouse-traversal](2026-10-15-office-penthouse-traversal.md)<br>Office #361: versioned multilevel office traversal and safe visit migration (2026-10-15) | `office-penthouse-traversal-361` | active | — | 2026-10-15 |
-| [2026-10-15-office-ipic-contract-decisions](2026-10-15-office-ipic-contract-decisions.md)<br>Office + IPIC #360: record Val's decisions in the layout contract (2026-10-15) | `office-ipic-contract-decisions` | active | #388 | 2026-10-15 |
 | [2026-10-15-office-computer-reliability](2026-10-15-office-computer-reliability.md)<br>Office computer reliability | `office-computer-reliability` | active | #394 | 2026-10-15 |
-| [2026-10-15-office-computer-db-mvp](2026-10-15-office-computer-db-mvp.md)<br>Office computer database MVP | `office-computer-db-mvp` | active | — | 2026-10-15 |
-| [2026-10-15-ipic-screening-playback](2026-10-15-ipic-screening-playback.md)<br>IPIC #367: synchronized client playback, accessible controls and media recovery (2026-10-15) | `ipic-screening-playback-367` | active | — | 2026-10-15 |
-| [2026-10-15-ipic-screening-authority](2026-10-15-ipic-screening-authority.md)<br>IPIC #366: authoritative screening timeline and host controls (2026-10-15) | `ipic-screening-authority-366` | active | — | 2026-10-15 |
 | [2026-10-15-garden-office-pilot](2026-10-15-garden-office-pilot.md)<br>Garden Office realism pilot (#416, parent #413) | `garden-office-416` | active | — | 2026-10-15 |
 | [2026-10-15-desktop-e2e-walk-game-time](2026-10-15-desktop-e2e-walk-game-time.md)<br>Desktop e2e: the W walk over game time, 2026-10-15 | `desktop-e2e-walk-game-time` | active | — | 2026-10-15 |
 | [2026-10-14-shared-dominoes](2026-10-14-shared-dominoes.md)<br>Shared Dominoes Implementation Plan (PR 1: the town holds the round) | `shared-dominoes-sheet` | active | — | 2026-10-14 |
 | [2026-10-14-procedural-gpu-acceptance](2026-10-14-procedural-gpu-acceptance.md)<br>Procedural interiors: physical GPU acceptance plan | `procedural-gpu-acceptance` | queued | — | 2026-10-15 |
-| [2026-10-14-office-ipic-engineering-baseline](2026-10-14-office-ipic-engineering-baseline.md)<br>Office + IPIC #360, engineering half: baseline and executable layout contract | `office-ipic-engineering-baseline` | active | #381 | 2026-10-15 |
-| [2026-10-14-office-ipic-baseline](2026-10-14-office-ipic-baseline.md)<br>Office + IPIC #360, design-side baseline packet (2026-10-14) | `office-ipic-baseline-360` | active | #380 | 2026-10-15 |
 | [2026-10-14-gallery-vertical-route](2026-10-14-gallery-vertical-route.md)<br>Gallery vertical-route visual integration | `procedural-gallery-vertical-route` | queued | — | 2026-10-14 |
 | [2026-10-14-desktop-package-matrix](2026-10-14-desktop-package-matrix.md)<br>Desktop packaging build matrix (#371), 2026-10-14 | `desktop-package-matrix` | active | #377 | 2026-10-15 |
 | [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `shared-voice-acceptance` | queued | — | 2026-10-15 |
@@ -39,12 +32,26 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-14-desktop-platform-identity](2026-10-14-desktop-platform-identity.md)<br>Desktop cross-platform identity (#370) | `desktop-platform-identity` | delivered | #379 | 2026-10-14 |
 | [2026-10-11-pending-integration](2026-10-11-pending-integration.md)<br>Pending delivery integration | `primary-reconciliation` | delivered | — | 2026-10-11 |
 
-## Retired (115)
+## Retired (131)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
 | [2026-10-15-procedural-gpu-matrix-harness](2026-10-15-procedural-gpu-matrix-harness.md)<br>Procedural GPU matrix harness | `procedural-gpu-matrix-harness` | retired | #389 | 2026-10-15 |
+| [2026-10-15-office-penthouse-traversal](2026-10-15-office-penthouse-traversal.md)<br>Office #361: versioned multilevel office traversal and safe visit migration (2026-10-15) | `office-penthouse-traversal-361` | retired | #397 | 2026-10-15 |
 | [2026-10-15-office-penthouse-traversal](2026-10-15-office-penthouse-traversal.md)<br>Office #361: versioned multilevel office traversal and safe visit migration (2026-10-15) | `office-penthouse-layout-361a` | retired | #396 | 2026-10-15 |
+| [2026-10-15-office-ipic-perf](2026-10-15-office-ipic-perf.md)<br>#368 slice: Office + IPIC performance profile on this Mac (2026-10-15) | `office-ipic-perf-368` | retired | #428 | 2026-10-15 |
+| [2026-10-15-office-ipic-contract-decisions](2026-10-15-office-ipic-contract-decisions.md)<br>Office + IPIC #360: record Val's decisions in the layout contract (2026-10-15) | `office-ipic-contract-decisions` | retired | #388 | 2026-10-15 |
+| [2026-10-15-office-computer-db-mvp](2026-10-15-office-computer-db-mvp.md)<br>Office computer database MVP | `office-computer-db-mvp` | retired | #390 | 2026-10-15 |
+| [2026-10-15-ipic-screening-replay](2026-10-15-ipic-screening-replay.md)<br>#368 slice: stale and replayed playback in the two-browser screening journey (2026-10-15) | `ipic-screening-replay-368` | retired | #422 | 2026-10-15 |
+| [2026-10-15-ipic-screening-playback](2026-10-15-ipic-screening-playback.md)<br>IPIC #367: synchronized client playback, accessible controls and media recovery (2026-10-15) | `ipic-screening-playback-367` | retired | #398 | 2026-10-15 |
+| [2026-10-15-ipic-screening-authority](2026-10-15-ipic-screening-authority.md)<br>IPIC #366: authoritative screening timeline and host controls (2026-10-15) | `ipic-screening-authority-366` | retired | #395 | 2026-10-15 |
+| [2026-10-15-ipic-route-evidence](2026-10-15-ipic-route-evidence.md)<br>IPIC #364: routes, seats, collision agreement, screen data and exports (2026-10-15) | `ipic-route-evidence-364` | retired | #402 | 2026-10-15 |
+| [2026-10-15-ipic-route-evidence](2026-10-15-ipic-route-evidence.md)<br>IPIC #364: routes, seats, collision agreement, screen data and exports (2026-10-15) | `ipic-sofa-stand` | retired | #419 | 2026-10-15 |
+| [2026-10-15-ipic-exterior-culling](2026-10-15-ipic-exterior-culling.md)<br>IPIC auditorium: stop drawing the district while viewers face the screen (2026-10-15) | `ipic-exterior-culling` | retired | #431 | 2026-10-15 |
+| [2026-10-15-ipic-auditorium-interiors](2026-10-15-ipic-auditorium-interiors.md)<br>IPIC auditorium, round 2: draw only IPIC (2026-10-15) | `ipic-auditorium-interiors` | retired | #435 | 2026-10-15 |
+| [2026-10-15-greetings-dock-overlap](2026-10-15-greetings-dock-overlap.md)<br>Phone HUD: the greetings card covered Play & rides (2026-10-15) | `greetings-dock-overlap` | retired | #425 | 2026-10-15 |
+| [2026-10-15-bar-games](2026-10-15-bar-games.md)<br>Bar games: shared darts in the IPIC Tuck Room and an unbranded axe-and-darts room (2026-10-15) | `ipic-tuck-room-darts` | retired | #412 | 2026-10-15 |
+| [2026-10-15-bar-games](2026-10-15-bar-games.md)<br>Bar games: shared darts in the IPIC Tuck Room and an unbranded axe-and-darts room (2026-10-15) | `axe-darts-room` | retired | #415 | 2026-10-15 |
 | [2026-10-14-shared-dominoes](2026-10-14-shared-dominoes.md)<br>Shared Dominoes Implementation Plan (PR 1: the town holds the round) | `shared-dominoes-server` | retired | #374 | 2026-10-14 |
 | [2026-10-14-procedural-private-upper-revocation](2026-10-14-procedural-private-upper-revocation.md)<br>Generated private home upper-level access | `procedural-private-upper-revocation` | retired | #352 | 2026-10-14 |
 | [2026-10-14-procedural-pilot-frame-performance](2026-10-14-procedural-pilot-frame-performance.md)<br>Procedural gallery pilot frame performance | `procedural-pilot-frame-performance` | retired | #351 | 2026-10-14 |
@@ -58,6 +65,8 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-14-procedural-gallery-ao-mask](2026-10-14-procedural-gallery-ao-mask.md)<br>Gallery AO exterior geometry experiment | `procedural-gallery-ao-exterior-mask` | retired | #358 | 2026-10-14 |
 | [2026-10-14-procedural-gallery-ao-buffer](2026-10-14-procedural-gallery-ao-buffer.md)<br>Gallery ambient occlusion buffer experiment | `procedural-gallery-ao-buffer` | retired | #356 | 2026-10-14 |
 | [2026-10-14-procedural-creator-interior-docs](2026-10-14-procedural-creator-interior-docs.md)<br>Generated creator-region interior documentation | `procedural-creator-interior-docs` | retired | #357 | 2026-10-14 |
+| [2026-10-14-office-ipic-engineering-baseline](2026-10-14-office-ipic-engineering-baseline.md)<br>Office + IPIC #360, engineering half: baseline and executable layout contract | `office-ipic-engineering-baseline` | retired | #381 | 2026-10-15 |
+| [2026-10-14-office-ipic-baseline](2026-10-14-office-ipic-baseline.md)<br>Office + IPIC #360, design-side baseline packet (2026-10-14) | `office-ipic-baseline-360` | retired | #380 | 2026-10-15 |
 | [2026-10-14-level-aware-interior-streaming](2026-10-14-level-aware-interior-streaming.md)<br>Level-aware generated interior streaming | `procedural-level-aware-streaming` | retired | #350 | 2026-10-14 |
 | [2026-10-13-studio-spaces](2026-10-13-studio-spaces.md)<br>Furnished Studio spaces implementation plan | `studio-furnished-spaces` | retired | #316 | 2026-10-13 |
 | [2026-10-13-store-intro-cut-timing](2026-10-13-store-intro-cut-timing.md)<br>Sample the store intro's camera cut instead of timing it — 2026-10-13 | `store-intro-cut-timing` | retired | #301 | 2026-10-13 |
@@ -159,24 +168,21 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-11-delivered-source-retirement](2026-10-11-delivered-source-retirement.md)<br>Delivered source reconciliation | `reconcile-delivered-sources` | retired | — | 2026-10-11 |
 | [2026-10-11-ci-parallel-preview](2026-10-11-ci-parallel-preview.md)<br>Parallel preview check | `ci-parallel-preview` | retired | #252 | 2026-10-11 |
 
-## Historical, not in the register (84)
+## Historical, not in the register (81)
 
 | Plan | PRs mentioned |
 | --- | --- |
+| [2026-10-15-office-walkable-stairs](2026-10-15-office-walkable-stairs.md)<br>Office: walk the penthouse stair | #360, #430 |
 | [2026-10-15-office-views](2026-10-15-office-views.md)<br>#363 slice 2: bounded local office views | #363, #400 |
+| [2026-10-15-office-skyline-memory](2026-10-15-office-skyline-memory.md)<br>Penthouse skyline: resident memory for phones (#363) | #363, #408 |
 | [2026-10-15-office-seat-claims](2026-10-15-office-seat-claims.md)<br>#363 slice 1: penthouse seat claims and occupied-body clearance | #363, #361, #362 |
 | [2026-10-15-office-penthouse-glazing](2026-10-15-office-penthouse-glazing.md)<br>Penthouse graybox: glazed curtain wall | #363, #362, #351 |
 | [2026-10-15-office-kit-fit](2026-10-15-office-kit-fit.md)<br>#362: read-only desk fit check for the supplied kit | #362, #400, #363 |
-| [2026-10-15-office-ipic-perf](2026-10-15-office-ipic-perf.md)<br>#368 slice: Office + IPIC performance profile on this Mac (2026-10-15) | #368, #359, #407 |
 | [2026-10-15-office-ipic-journey](2026-10-15-office-ipic-journey.md)<br>#368 slice 2: two-account office + IPIC journey and rollback evidence | #368, #400, #361 |
 | [2026-10-15-office-fallback-lift-glass](2026-10-15-office-fallback-lift-glass.md)<br>Office: fallback scene lift behind the penthouse glass | #405, #408, #400 |
+| [2026-10-15-office-building-raise](2026-10-15-office-building-raise.md)<br>Office: raise the penthouse tower to 33 m | #363 |
 | [2026-10-15-ipic-screening-soak](2026-10-15-ipic-screening-soak.md)<br>#368 slice 1: IPIC screening catalog profile and ten-cycle soak | #368, #367, #365 |
-| [2026-10-15-ipic-screening-replay](2026-10-15-ipic-screening-replay.md)<br>#368 slice: stale and replayed playback in the two-browser screening journey (2026-10-15) | #368, #359, #406 |
-| [2026-10-15-ipic-route-evidence](2026-10-15-ipic-route-evidence.md)<br>IPIC #364: routes, seats, collision agreement, screen data and exports (2026-10-15) | #364, #359, #365 |
 | [2026-10-15-ipic-recliner-view](2026-10-15-ipic-recliner-view.md)<br>#368 T3 finding: a seated IPIC viewer sees the recliner, not the screen | #368, #359, #422 |
-| [2026-10-15-ipic-exterior-culling](2026-10-15-ipic-exterior-culling.md)<br>IPIC auditorium: stop drawing the district while viewers face the screen (2026-10-15) | #428, #364, #368 |
-| [2026-10-15-greetings-dock-overlap](2026-10-15-greetings-dock-overlap.md)<br>Phone HUD: the greetings card covered Play & rides (2026-10-15) | #368, #407, #359 |
-| [2026-10-15-bar-games](2026-10-15-bar-games.md)<br>Bar games: shared darts in the IPIC Tuck Room and an unbranded axe-and-darts room (2026-10-15) | #402, #364 |
 | [2026-10-13-stage-voice-carry](2026-10-13-stage-voice-carry.md)<br>A stage performer is heard across the plaza — 2026-10-13 | #311 |
 | [2026-10-13-procedural-multilevel-interiors](2026-10-13-procedural-multilevel-interiors.md)<br>Building-anchored procedural interiors and levels | — |
 | [2026-10-13-plaza-table-lessons](2026-10-13-plaza-table-lessons.md)<br>Guided first games at the plaza tables — 2026-10-13 | — |

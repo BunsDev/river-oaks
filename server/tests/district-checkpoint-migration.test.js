@@ -6,8 +6,10 @@ import { createSharedWorld } from '../world.js';
 import { recoverDistrictHeightCheckpoint } from '../district-checkpoint-migration.js';
 import { createWalkingEnvironment } from '../../preview/src/walking.js';
 import { JEVICA_ADMIN_USER_IDS } from '../admin.js';
+import { beforeTowerRaise } from './district-history.js';
 
-const data = JSON.parse(readFileSync(new URL('../../preview/public/data/district.json', import.meta.url)));
+// The district this migration targets is the one before the later penthouse tower raise.
+const data = beforeTowerRaise(JSON.parse(readFileSync(new URL('../../preview/public/data/district.json', import.meta.url))));
 data.vegetation = JSON.parse(readFileSync(new URL('../../preview/public/data/district-vegetation.json', import.meta.url)));
 // Historical values from 297d9bb^ and 9dd65d2^; fixtures use mapped IDs,
 // independently of the migration's implementation. Only heights changed.
