@@ -73,10 +73,12 @@ export function buildPenthouseOffice(THREE, layout) {
     box(`chair:${chair.id}`, `${chair.id} back`, { x0: x - 0.3, x1: x + 0.3, d0: d - 0.34, d1: d - 0.26 }, ground.floorElevation + height, ground.floorElevation + height + BACK, 'blush');
   }
 
-  // The mezzanine's glass guard runs its whole d 14 edge, with a bronze top rail.
+  // The mezzanine's glass guard runs its d 14 edge, with a bronze top rail, open where the stair arrives.
   const edge = upper.bounds;
-  box('guard', 'mezzanine guard', { x0: edge.x0, x1: edge.x1, d0: edge.d0 - 0.03, d1: edge.d0 + 0.03 }, upper.floorElevation, upper.floorElevation + 1.05, 'glass');
-  box('guard', 'mezzanine guard rail', { x0: edge.x0, x1: edge.x1, d0: edge.d0 - 0.05, d1: edge.d0 + 0.05 }, upper.floorElevation + 1.05, upper.floorElevation + 1.12, 'bronze');
+  for (const [x0, x1] of [[edge.x0, layout.stair.x[0]], [layout.stair.x[1], edge.x1]]) {
+    box('guard', 'mezzanine guard', { x0, x1, d0: edge.d0 - 0.03, d1: edge.d0 + 0.03 }, upper.floorElevation, upper.floorElevation + 1.05, 'glass');
+    box('guard', 'mezzanine guard rail', { x0, x1, d0: edge.d0 - 0.05, d1: edge.d0 + 0.05 }, upper.floorElevation + 1.05, upper.floorElevation + 1.12, 'bronze');
+  }
 
   // The lift is a fixed-endpoint transition: a platform at each floor and an overhead frame, nothing to walk into.
   for (const level of layout.levels) {

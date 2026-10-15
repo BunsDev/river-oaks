@@ -18,11 +18,39 @@ export function officeSkylineEye(layout) {
   return [(bounds.x0 + bounds.x1) / 2, ground.floorElevation + EYE, (bounds.d0 + bounds.d1) / 2];
 }
 
-// Face size: 1024 at full render scale, half when the render scale is reduced. (CPU
-// software acceptance takes no capture at all: six district views cost more than its
-// office smoke allows, and it leaves visual quality to GPU runs.)
-export function officeSkylineSize({ scale = 1, maxCubemapSize = Infinity } = {}) {
-  return Math.min(scale < 0.75 ? 512 : 1024, maxCubemapSize);
+// Face size: 512 on a touch-first device, phone or tablet (its primary pointer is coarse: the
+// query walking-ui.js shows the movement pad for), or when the render scale is reduced; 1024
+// otherwise. Never more than the device's cube or 2D texture limit: each face is drawn into a 2D
+// target first. (CPU software acceptance takes no capture at all: six district views cost more
+// than its office smoke allows, and it leaves visual quality to GPU runs.)
+export function officeSkylineSize({ scale = 1, coarsePointer = false, maxCubemapSize = Infinity, maxTextureSize = Infinity } = {}) {
+  return Math.min(coarsePointer || scale < 0.75 ? 512 : 1024, maxCubemapSize, maxTextureSize);
+}
+
+// The six faces as three.js CubeCamera draws them for WebGL (cameras/CubeCamera.js), in cube
+// face order +x, -x, +y, -y, +z, -z: the direction each looks along and its up vector, through
+// a 90-degree camera whose negative field of view (CubeCamera's own) mirrors it into the cube
+// map convention.
+const FACES = [[[1, 0, 0], [0, 1, 0]], [[-1, 0, 0], [0, 1, 0]], [[0, 1, 0], [0, 0, -1]], [[0, -1, 0], [0, 0, 1]], [[0, 0, 1], [0, 1, 0]], [[0, 0, -1], [0, 1, 0]]];
+const FACE_FOV = -90;
+// Copies a face texel for texel, unfiltered and unconverted, from the temporary 2D target into
+// the cube face bound for drawing. One copy serves every visit in the page, as three.js keeps
+// its own background meshes: disposing it made each later capture compile its program again
+// (about 35 ms more per capture on Metal ANGLE). Between captures it holds no texture.
+let copyPass = null;
+function faceCopy() {
+  if (!copyPass) {
+    const material = new THREE.ShaderMaterial({
+      name: 'office-skyline-face-copy', uniforms: { face: { value: null } },
+      vertexShader: 'void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }',
+      fragmentShader: 'uniform sampler2D face; void main() { gl_FragColor = texelFetch(face, ivec2(gl_FragCoord.xy), 0); }',
+      depthTest: false, depthWrite: false, blending: THREE.NoBlending, toneMapped: false,
+    });
+    const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material), scene = new THREE.Scene();
+    quad.frustumCulled = false; scene.add(quad);
+    copyPass = { scene, camera: new THREE.Camera(), source: material.uniforms.face };
+  }
+  return copyPass;
 }
 
 // `hide` is drawn neither in the capture nor changed afterwards. The eye stands inside the
@@ -50,10 +78,16 @@ function insideRing(ring, x, z, margin = MARGIN) {
   }
   return false;
 }
+// Memory: the backdrop keeps colour only, 6 x size^2 x 8 bytes (RGBA half float): 48 MiB at
+// 1024, 12 MiB at 512, for the visit. Each face is drawn, with depth, into one temporary 2D
+// target (size^2 x (8 + 4) bytes) and copied into its cube face; that target is released as soon
+// as the capture ends, so the depth never outlives it. `bytes` is what stays, `peakBytes` the
+// most held during the capture.
 export function createOfficeSkyline({ renderer, scene, eye, floorY, hostBuildingIndex = -1, hostBuildingId = null, hostRing = null, hide = [], size = 1024, far = 6000, now = () => performance.now() }) {
-  const target = new THREE.WebGLCubeRenderTarget(size, { type: THREE.HalfFloatType });
+  const target = new THREE.WebGLCubeRenderTarget(size, { type: THREE.HalfFloatType, depthBuffer: false });
   target.texture.name = 'office-skyline';
-  const stats = { state: 'pending', size, bytes: size * size * 6 * (8 + 4), traverseMs: null, submitMs: null, ms: null, newPrograms: null, hiddenInstances: 0, hiddenMeshes: 0 };
+  const colour = size * size * 6 * 8, face = size * size * (8 + 4);
+  const stats = { state: 'pending', size, bytes: colour, peakBytes: colour + face, traverseMs: null, submitMs: null, ms: null, newPrograms: null, hiddenInstances: 0, hiddenMeshes: 0 };
   const round = ms => Math.round(ms * 10) / 10;
   let attempted = false, disposed = false, saved = null;
   const ringBounds = hostRing?.length > 2 ? hostRing.reduce((b, [x, z]) => [Math.min(b[0], x), Math.max(b[1], x), Math.min(b[2], z), Math.max(b[3], z)], [Infinity, -Infinity, Infinity, -Infinity]) : null;
@@ -129,25 +163,40 @@ export function createOfficeSkyline({ renderer, scene, eye, floorY, hostBuilding
       stats.traverseMs = round(now() - started);
       const hidden = [...hide, ...masses].filter(Boolean).map(object => [object, object.visible]);
       const meshes = new Set(instances.map(([mesh]) => mesh));
-      const autoClear = renderer.autoClear, shadows = renderer.shadowMap.autoUpdate, shadowNeeds = renderer.shadowMap.needsUpdate;
+      const autoClear = renderer.autoClear, shadows = renderer.shadowMap.autoUpdate, shadowNeeds = renderer.shadowMap.needsUpdate, xr = renderer.xr.enabled;
+      const previous = [renderer.getRenderTarget(), renderer.getActiveCubeFace(), renderer.getActiveMipmapLevel()];
       const submitted = now(), programs = renderer.info?.programs?.length ?? 0;
+      let scratch = null, copy = null;
       try {
         for (const [object] of hidden) object.visible = false;
         for (const [mesh, index] of instances) mesh.setMatrixAt(index, zero);
         for (const mesh of meshes) mesh.instanceMatrix.needsUpdate = true;
         // Every face clears, and the sun's shadow maps from the last street frame are reused.
-        renderer.autoClear = true; renderer.shadowMap.autoUpdate = false; renderer.shadowMap.needsUpdate = false;
-        const camera = new THREE.CubeCamera(NEAR, far, target);
-        camera.position.copy(eye); camera.updateMatrixWorld();
-        camera.update(renderer, scene);
-        // CPU time to submit the six faces (the GPU is never waited on), and the shader
-        // programs first compiled for them.
+        renderer.autoClear = true; renderer.shadowMap.autoUpdate = false; renderer.shadowMap.needsUpdate = false; renderer.xr.enabled = false;
+        scratch = new THREE.WebGLRenderTarget(size, size, { type: THREE.HalfFloatType });
+        copy = faceCopy(); copy.source.value = scratch.texture;
+        const camera = new THREE.PerspectiveCamera(FACE_FOV, 1, NEAR, far);
+        FACES.forEach(([look, up], index) => {
+          // Turned at the origin, as CubeCamera turns its face cameras, then placed at the eye.
+          camera.position.set(0, 0, 0); camera.up.set(...up); camera.lookAt(...look);
+          camera.position.copy(eye); camera.updateMatrixWorld();
+          renderer.setRenderTarget(scratch); renderer.render(scene, camera);
+          renderer.setRenderTarget(target, index); renderer.render(copy.scene, copy.camera);
+        });
+        target.texture.needsPMREMUpdate = true;
+        // CPU time to submit the six faces and their copies (the GPU is never waited on), and
+        // the shader programs first compiled for them.
         stats.submitMs = round(now() - submitted);
         stats.newPrograms = (renderer.info?.programs?.length ?? 0) - programs;
       } catch (error) {
         stats.state = 'failed'; stats.error = error.message;
+        // Nothing is shown, so the cube is released now rather than at the end of the visit.
+        target.dispose();
         return false;
       } finally {
+        renderer.setRenderTarget(...previous); renderer.xr.enabled = xr;
+        if (copy) copy.source.value = null;
+        scratch?.dispose();
         for (const [mesh, index, matrix] of instances) mesh.setMatrixAt(index, matrix);
         for (const mesh of meshes) mesh.instanceMatrix.needsUpdate = true;
         for (const [object, visible] of hidden) object.visible = visible;

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import { readFileSync } from 'node:fs';
-import { IPIC_AUDITORIUM, canCullExterior, canCullIpicAuditorium, renderWithoutExterior } from '../src/interior-exterior-culling.js';
+import { IPIC_AUDITORIUM, canCullExterior, canCullIpicAuditorium, renderOnly, renderWithoutExterior } from '../src/interior-exterior-culling.js';
 import { createWalkingEnvironment } from '../src/walking.js';
 
 function cameraAt(position, look) {
@@ -45,6 +45,23 @@ test('one render hides only exterior children and restores all visibility on fai
   assert.equal(exterior.visible, true);
   assert.equal(interior.visible, true);
   assert.equal(userHidden.visible, false);
+});
+
+test('one render keeps only the named branches, opening the groups that hold them', () => {
+  // world > [district, layer > [interiors > [ipic, otherBatch], people > [ipicPeople, otherPeople], shell], userHidden]
+  const node = name => Object.assign(new THREE.Group(), { name });
+  const world = node('world'), district = node('district'), layer = node('layer'), interiors = node('interiors'), ipic = node('ipic'), otherBatch = node('other');
+  const people = node('people'), ipicPeople = node('ipic people'), otherPeople = node('other people'), shell = node('shell'), userHidden = node('user hidden');
+  userHidden.visible = false;
+  interiors.add(ipic, otherBatch); people.add(ipicPeople, otherPeople); layer.add(interiors, people, shell); world.add(district, layer, userHidden);
+  const all = [district, layer, interiors, ipic, otherBatch, people, ipicPeople, otherPeople, shell];
+  assert.throws(() => renderOnly(world, [ipic, ipicPeople], () => {
+    assert.deepEqual(all.filter(item => item.visible).map(item => item.name), ['layer', 'interiors', 'ipic', 'people', 'ipic people']);
+    assert.equal(userHidden.visible, false);
+    throw new Error('render failed');
+  }), /render failed/);
+  assert.ok(all.every(item => item.visible), 'every hidden branch is restored');
+  assert.equal(userHidden.visible, false, 'a branch hidden beforehand stays hidden');
 });
 
 // The real IPIC room, as the walking environment and the renderer see it.

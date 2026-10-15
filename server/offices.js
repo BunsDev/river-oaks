@@ -1,8 +1,8 @@
 import { officesFor, OFFICE_SPEED, officeFree } from '../preview/src/office-contract.js';
 import { AVATAR_ENVELOPE } from '../preview/src/workplace-room.js';
 import {
-  DEFAULT_OFFICE_LAYOUT, OFFICE_BODY_SPACING, OFFICE_LAYOUT_LEGACY, OFFICE_SEAT_REACH, officeLayout, officeLevelElevation, officeLevelFree,
-  officeLevelSegmentFree, officeSeat, officeTransition,
+  DEFAULT_OFFICE_LAYOUT, OFFICE_BODY_SPACING, OFFICE_LAYOUT_LEGACY, OFFICE_SEAT_REACH, officeLayout, officeLevelFree,
+  officeElevationAt, officeSeat, officeStandFree, officeTransition, officeWalk,
 } from '../preview/src/office-layouts.js';
 
 const fields=(v,keys)=>v&&typeof v==='object'&&!Array.isArray(v)&&Object.keys(v).every(k=>keys.includes(k));
@@ -26,7 +26,7 @@ export function createOffices({worldData,players,isAdmin,environment,changed,can
   const layoutFor=officeId=>workspaceId(officeId)?OFFICE_LAYOUT_LEGACY:configured;
   const access=(id,officeId)=>isAdmin(id)?'owner':grants.get(officeId)?.find(g=>g.userId===id)?.kind??null;
   const leave=id=>{const visit=visits.get(id),player=players.get(id);if(!visit)return;visits.delete(id);if(player){player.poseAt=visit.at;player.moveBudget=.1;player.liftBudget=.1;}changed();};
-  const publicVisit=id=>{const v=visits.get(id);return v?{id:v.id,layout:v.layout,levelId:v.levelId,elevation:officeLevelElevation(officeLayout(v.layout),v.levelId),position:[...v.position],yaw:v.yaw,...(v.seat?{seat:{id:v.seat.id}}:{})}:null;};
+  const publicVisit=id=>{const v=visits.get(id);return v?{id:v.id,layout:v.layout,levelId:v.levelId,elevation:officeElevationAt(officeLayout(v.layout),v.levelId,v.position),position:[...v.position],yaw:v.yaw,...(v.seat?{seat:{id:v.seat.id}}:{})}:null;};
   // Other visits in the same office and layout, and the plan seats they hold (#363).
   const companions=(id,visit)=>[...visits].filter(([other,v])=>other!==id&&v.id===visit.id&&v.layout===visit.layout).map(([,v])=>v);
   const occupiedBy=(id,visit)=>companions(id,visit).filter(v=>v.seat).map(v=>officeSeat(officeLayout(v.layout),v.seat.id)).filter(Boolean);
@@ -78,12 +78,15 @@ export function createOffices({worldData,players,isAdmin,environment,changed,can
       if(visit.seat)return fail('office_seated');
       // Other visitors' occupied seats are collision (office-layouts.js).
       const layout=officeLayout(visit.layout),occupied=occupiedBy(id,visit);
-      if(!Number.isFinite(m.yaw)||!officeLevelFree(layout,visit.levelId,m.position,occupied))return fail('office_blocked');
+      // The target must be standing ground on some floor; the walk below decides which (a stair
+      // walk can end on the other floor), and the client never names it.
+      if(!Number.isFinite(m.yaw)||!layout.levels.some(level=>officeStandFree(layout,level.id,m.position,occupied)))return fail('office_blocked');
       const budget=Math.min(1,visit.budget+Math.max(0,time-visit.at)/1000);
       const cost=Math.hypot(m.position[0]-visit.position[0],m.position[1]-visit.position[1])/OFFICE_SPEED;
       if(cost>budget+1e-8)return fail('office_too_fast');
-      if(!officeLevelSegmentFree(layout,visit.levelId,visit.position,m.position,occupied))return fail('office_blocked');
-      Object.assign(visit,{position:[...m.position],yaw:Math.atan2(Math.sin(m.yaw),Math.cos(m.yaw)),at:time,budget:budget-cost});changed();return {ok:true,office:publicVisit(id)};
+      const walked=officeWalk(layout,visit.levelId,visit.position,m.position,occupied);
+      if(!walked.ok)return fail('office_blocked');
+      Object.assign(visit,{levelId:walked.levelId,position:[...m.position],yaw:Math.atan2(Math.sin(m.yaw),Math.cos(m.yaw)),at:time,budget:budget-cost});changed();return {ok:true,office:publicVisit(id)};
     }
     if(m.action==='transition'){
       if(!visit||visit.id!==office.id)return fail('office_visit_required');
@@ -112,7 +115,7 @@ export function createOffices({worldData,players,isAdmin,environment,changed,can
         if(others.some(v=>v.seat?.id===seat.id))return fail('office_seat_occupied');
         // Nobody may stand where the taken seat will be collision: inside the seated envelope they
         // would be shut in, and beside the stand point they would keep the occupant seated.
-        if(others.some(v=>!v.seat&&!officeLevelFree(layout,visit.levelId,v.position,[seat])))return fail('office_seat_blocked');
+        if(others.some(v=>!v.seat&&!officeStandFree(layout,visit.levelId,v.position,[seat])))return fail('office_seat_blocked');
         Object.assign(visit,{seat:{id:seat.id},position:[...seat.position],yaw:seat.facing,at:time,budget:.1});changed();return {ok:true,office:publicVisit(id)};
       }
       if(!visit.seat)return fail('office_not_seated');
@@ -151,7 +154,7 @@ export function createOffices({worldData,players,isAdmin,environment,changed,can
       const r=AVATAR_ENVELOPE.turningRadius,{x0,x1,d0,d1}=level.bounds;
       return p[0]>=x0+r&&p[0]<=x1-r&&p[1]>=d0+r&&p[1]<=d1-r;
     };
-    const fits=v=>v.seat!==undefined||officeLevelFree(officeLayout(v.layout),v.levelId,v.position);
+    const fits=v=>v.seat!==undefined||officeStandFree(officeLayout(v.layout),v.levelId,v.position);
     const placed=v=>version>=10
       ?fields(v,['id','layout','levelId','position','yaw','at','budget',...(version>=11?['seat']:[])])&&Boolean(officeLayout(v.layout))
         &&(v.seat===undefined?onFloor(v):seated(v,officeLayout(v.layout)))
@@ -167,7 +170,7 @@ export function createOffices({worldData,players,isAdmin,environment,changed,can
       if(v?.seat!==undefined||!officeLayout(v?.layout))continue;
       const taken=saved.visits.filter(([,other])=>other?.seat&&other.id===v.id&&other.layout===v.layout).map(([,other])=>officeSeat(officeLayout(other.layout),other.seat?.id)).filter(Boolean);
       const layout=officeLayout(v.layout);
-      if(officeLevelFree(layout,v.levelId,v.position)&&!officeLevelFree(layout,v.levelId,v.position,taken))throw new Error('Invalid office visit beside an occupied seat');
+      if(officeStandFree(layout,v.levelId,v.position)&&!officeStandFree(layout,v.levelId,v.position,taken))throw new Error('Invalid office visit beside an occupied seat');
     }
     checkMap(saved.visits,nextPlayers.size,(id,v)=>nextPlayers.has(id)&&placed(v)&&(catalog.some(o=>o.id===v.id)||allowWorkspaces&&workspaceId(v.id))&&Number.isFinite(v.yaw)&&Number.isFinite(v.at)&&Number.isFinite(v.budget)&&v.budget>=0&&v.budget<=1&&(allowWorkspaces&&workspaceId(v.id)||isAdmin(id)||g.get(v.id)?.some(p=>p.userId===id)));
     const next=structuredClone(saved);

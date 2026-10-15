@@ -1,8 +1,8 @@
 import { createOfficeDeskUI } from './office-desk-ui.js';
 import { officesFor, OFFICE_SPEED, OFFICE_SPAWN } from './office-contract.js';
 import {
-  OFFICE_EYE_HEIGHT, OFFICE_LAYOUT_LEGACY, OFFICE_SEATED_EYE_HEIGHT, officeLayout, officeLevelElevation, officeNearbyPortal,
-  officeNearbySeat, officeSeat, officeView, officeViews, officeWorkstations, stepOfficeLevel,
+  OFFICE_EYE_HEIGHT, OFFICE_LAYOUT_LEGACY, OFFICE_SEATED_EYE_HEIGHT, officeLayout, officeNearbyPortal,
+  officeNearbySeat, officeSeat, officeView, officeViews, officeWorkstations, officeElevationAt, officeStep,
 } from './office-layouts.js';
 import { createOfficeScene } from './office-scene.js';
 import './office.css';
@@ -132,7 +132,7 @@ export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,
   async function action(name,data){if(busy||entryAttempt)return;busy=true;const r=await send(name,data);busy=false;if(disposed)return;if(r.ok){lastState='';await refresh();}else say(messages[r.error]??r.message);}
   function open(player,cinematic,street=captureStreet()){
     if(view||disposed)return;epoch++;walking.halt();position=[...player.office.position];yaw=player.office.yaw;phase='loading';
-    layoutId=officeLayout(player.office.layout)?player.office.layout:OFFICE_LAYOUT_LEGACY;levelId=player.office.levelId??officeLayout(layoutId).spawn.levelId;levelPending=false;
+    layoutId=officeLayout(player.office.layout)?player.office.layout:OFFICE_LAYOUT_LEGACY;levelId=heldLevelId=player.office.levelId??officeLayout(layoutId).spawn.levelId;levelPending=false;
     seatId=player.office.seat?.id??null;seatPending=false;viewId=null;help.textContent=WALKING_HELP;
     viewSelect.replaceChildren(...[{id:'',label:'Walking view'},...officeViews(officeLayout(layoutId))].map(item=>{const option=el('option',item.label);option.value=item.id;return option;}));viewSelect.value='';
     heading.textContent=player.office.id==='jevica-office'?'Jevica’s office':workspaceList.find(w=>w.id===player.office.id)?.ownerId===mp()?.identity?.id?'My office':'Shared office';
@@ -143,7 +143,7 @@ export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,
     try{view=createScene({renderer,host:dialog,self:player,players:mp().snapshot.players,reducedMotion:!cinematic||matchMedia('(prefers-reduced-motion: reduce)').matches,street});}
     catch{failedOffice=player.office.id;close();say('The office could not load. Please try again.');void send('leave');}
   }
-  const layout=()=>officeLayout(layoutId),elevation=()=>officeLevelElevation(layout(),levelId)??0;
+  const layout=()=>officeLayout(layoutId),elevation=()=>officeElevationAt(layout(),levelId,position)??0;
   // Seats other visitors hold are collision for prediction, as on the server.
   const occupied=()=>(mp()?.snapshot?.players??[]).filter(p=>p.id!==mp()?.identity?.id&&p.office?.seat&&p.office.id===self()?.office?.id&&p.office.layout===layoutId)
     .map(p=>officeSeat(layout(),p.office.seat.id)).filter(Boolean);
@@ -164,14 +164,17 @@ export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,
     else label.textContent=messages[r.error]??r.message??'That seat is not available right now.';
   }
   // Penthouse commands name the layout and floor they were computed on, so a stale one is refused.
-  const placement=()=>layoutId===OFFICE_LAYOUT_LEGACY?{}:{layout:layoutId,levelId};
+  // Walking the stair can change the predicted floor before the server has seen that move, so a
+  // move names the floor the server holds (where it starts) and adopts the floor it answers with.
+  let heldLevelId=null;
+  const placement=()=>layoutId===OFFICE_LAYOUT_LEGACY?{}:{layout:layoutId,levelId:heldLevelId??levelId};
   async function changeLevel(){
     if(levelPending||busy||phase!=='office'||!view||desk?.active)return;
     const portal=officeNearbyPortal(layout(),levelId,position);if(!portal)return;
     if(viewId)setView(null);levelPending=true;keys.clear();const token=epoch;
     const r=await send('transition',{portalId:portal.id,layout:layoutId});
     if(token!==epoch||disposed)return;levelPending=false;
-    if(r.ok&&r.office){levelId=r.office.levelId;position=[...r.office.position];label.textContent=layout().levels.find(l=>l.id===levelId)?.index?'Mezzanine · Library':'Main floor';}
+    if(r.ok&&r.office){levelId=heldLevelId=r.office.levelId;position=[...r.office.position];label.textContent=layout().levels.find(l=>l.id===levelId)?.index?'Mezzanine · Library':'Main floor';}
     else label.textContent=messages[r.error]??r.message??'That way is not available right now.';
   }
   function close(){desk?.suspend();epoch++;levelPending=false;seatPending=false;seatId=null;viewId=null;viewSelect.value='';help.textContent=WALKING_HELP;mp()?.voice?.setTransmit(false);view?.dispose();view=null;keys.clear();phase='closed';movePending=false;panel.append(management);management.hidden=false;closing=true;dialog.close();closing=false;document.body.classList.remove('visiting-office');walking.halt();host.focus({preventScroll:true});}
@@ -259,7 +262,7 @@ export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,
       // initiating command owns its cinematic until its acknowledgement arrives.
       else if(p?.office&&!view&&!busy&&!entryAttempt&&!cancelledEntry&&failedOffice!==p.office.id)open(p,false);
       // The server owns the floor: adopt a level it moved this visit to (another tab, a correction).
-      else if(view&&p?.office?.levelId&&p.office.levelId!==levelId&&!levelPending){levelId=p.office.levelId;position=[...p.office.position];}
+      else if(view&&p?.office?.levelId&&p.office.levelId!==(heldLevelId??levelId)&&!levelPending&&!movePending){levelId=heldLevelId=p.office.levelId;position=[...p.office.position];}
       // The server owns seats too: adopt a claim or release it made elsewhere (another tab, a restore, a correction).
       else if(view&&p?.office&&!seatPending&&(p.office.seat?.id??null)!==seatId){seatId=p.office.seat?.id??null;position=[...p.office.position];yaw=p.office.yaw;}
     },
@@ -276,8 +279,8 @@ export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,
         yaw+=((keys.has('ArrowLeft')?1:0)-(keys.has('ArrowRight')?1:0))*delta*1.6;
         let f=(keys.has('KeyW')?1:0)-(keys.has('KeyS')?1:0),s=(keys.has('KeyD')?1:0)-(keys.has('KeyA')?1:0);const l=Math.hypot(f,s)||1;f/=l;s/=l;
         // Seated visitors look around but do not walk; standing up is a server command.
-        const speed=seatId||seatPending||viewId?0:OFFICE_SPEED*delta;if(speed)position=stepOfficeLevel(layout(),levelId,position,(s*Math.cos(yaw)-f*Math.sin(yaw))*speed,(f*Math.cos(yaw)+s*Math.sin(yaw))*speed,occupied());
-        if(speed&&now-lastMove>=200&&!movePending&&!levelPending){lastMove=now;movePending=true;const token=epoch;void send('move',{position:[...position],yaw,...placement()}).then(r=>{if(token!==epoch||disposed)return;movePending=false;if(!r.ok){const p=self()?.office;if(p){position=[...p.position];yaw=p.yaw;levelId=p.levelId??levelId;}label.textContent=messages[r.error]??'Position corrected by the office.';}});}
+        const speed=seatId||seatPending||viewId?0:OFFICE_SPEED*delta;if(speed)({position,levelId}=officeStep(layout(),levelId,position,(s*Math.cos(yaw)-f*Math.sin(yaw))*speed,(f*Math.cos(yaw)+s*Math.sin(yaw))*speed,occupied()));
+        if(speed&&now-lastMove>=200&&!movePending&&!levelPending){lastMove=now;movePending=true;const token=epoch;void send('move',{position:[...position],yaw,...placement()}).then(r=>{if(token!==epoch||disposed)return;movePending=false;if(r.ok&&r.office)heldLevelId=r.office.levelId;if(!r.ok){const p=self()?.office;if(p){position=[...p.position];yaw=p.yaw;levelId=heldLevelId=p.levelId??levelId;}label.textContent=messages[r.error]??'Position corrected by the office.';}});}
       }
       const frame=view.render(now,position,yaw,mp().snapshot.players,{layoutId,levelId,...(seatId?{seatId}:{}),...(viewId?{viewId}:{})});if(!frame)return true;
       if(phase!==frame.phase){phase=frame.phase;dialog.dataset.phase=phase;label.textContent={loading:'Preparing your avatar · You can skip or return',lobby:'Welcome · Your elevator is ahead',boarding:'Boarding your elevator',closing:'Doors closing',ascending:'Going up',opening:'Level 6 · Doors opening',arriving:'Welcome to your office',office:'Level 6 · Your workspace'}[phase];}

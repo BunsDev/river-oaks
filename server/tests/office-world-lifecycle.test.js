@@ -210,7 +210,8 @@ test('supported district checkpoint recovery keeps configured office floors and 
   const { loadDistrictData } = await import('../district-data.js');
   const current = await loadDistrictData();
   // The exact supported pre-gallery revision exercises the chained recovery path.
-  const previous = { ...current }; delete previous.buildingInteriors;
+  const { beforeTowerRaise } = await import('./district-history.js');
+  const previous = beforeTowerRaise(current); delete previous.buildingInteriors;
   const f = await setup(t), config = { worldId: 'river-oaks', regionCatalog: null, regionSha256: null };
   let room = f.create({ ...config, worldData: previous });
   for (const user of ['owner', 'host']) assert.equal((await f.join(room, user)).ok, true);

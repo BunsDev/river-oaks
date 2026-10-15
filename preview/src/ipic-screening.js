@@ -45,7 +45,7 @@ export function createServerClock({ now = () => performance.now() } = {}) {
 // local states: idle (nothing showing), loading, ready, playing, buffering, paused, ended,
 // blocked (autoplay needs a gesture), error, unsupported (no playable source), disposed.
 export function createScreeningPlayer({ media: element, clock, onChange = () => {} }) {
-  let shared = null, mediaId = null, state = 'idle', generation = 0, playing = null, rate = 1, drift = 0;
+  let shared = null, mediaId = null, state = 'idle', generation = 0, playing = null, rate = 1, drift = 0, captions = false;
   const set = next => { if (state !== next) { state = next; onChange(stats()); } };
   const listeners = {
     playing: () => { if (shared?.status === 'playing' && !['blocked', 'error'].includes(state)) set('playing'); },
@@ -119,7 +119,14 @@ export function createScreeningPlayer({ media: element, clock, onChange = () => 
     retry() { if (!mediaId || state === 'disposed') return; generation++; load(mediaId); },
     setMuted(value) { element.muted = Boolean(value); },
     setVolume(value) { element.volume = Math.max(0, Math.min(1, Number(value) || 0)); },
-    setCaptions(on) { for (const track of element.textTracks ?? []) track.mode = on ? 'showing' : 'hidden'; },
+    // The video is never shown (its frames go to the screen texture), so a browser would draw cues
+    // nowhere. 'hidden' keeps them tracked for the panel's caption line; off stops tracking.
+    setCaptions(on) { captions = Boolean(on); for (const track of element.textTracks ?? []) track.mode = captions ? 'hidden' : 'disabled'; },
+    captionText() {
+      if (!captions || state === 'disposed') return '';
+      const track = [...(element.textTracks ?? [])].find(item => item.mode === 'hidden');
+      return [...(track?.activeCues ?? [])].map(cue => cue.text).join('\n');
+    },
     stats,
     dispose() {
       if (state === 'disposed') return;

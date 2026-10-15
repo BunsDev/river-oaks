@@ -46,12 +46,25 @@ export function canCullIpicAuditorium(camera, room) {
 // Visibility is scoped to one render. Layer toggles, shadows, and the next
 // camera pose keep their original visibility even if rendering throws.
 export function renderWithoutExterior(worldGroup, interiorsLayer, render) {
-  const outside = worldGroup.children.filter(child => child !== interiorsLayer);
-  const visible = outside.map(child => child.visible);
+  return renderOnly(worldGroup, [interiorsLayer], render);
+}
+
+// Hides everything under root except the kept objects, for one render: a branch
+// holding a kept object is opened, and any other visible branch is hidden whole.
+export function renderOnly(root, keep, render) {
+  const hidden = [];
+  const holds = (node, item) => { for (let at = item; at; at = at.parent) if (at === node) return true; return false; };
+  const visit = node => {
+    for (const child of node.children) {
+      if (!child.visible || keep.includes(child)) continue;
+      if (keep.some(item => holds(child, item))) visit(child);
+      else { child.visible = false; hidden.push(child); }
+    }
+  };
   try {
-    for (const child of outside) child.visible = false;
+    visit(root);
     return render();
   } finally {
-    outside.forEach((child, index) => { child.visible = visible[index]; });
+    for (const child of hidden) child.visible = true;
   }
 }

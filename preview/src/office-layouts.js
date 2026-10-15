@@ -6,7 +6,8 @@
 // metres above the office floor. Collision is per level, so floors that overlap in plan
 // (the mezzanine over the main floor) are told apart by the level the server admitted,
 // never by a height a client reports. Stairs and lift are fixed-endpoint transitions,
-// as #349's stairs are: entry within reach, a paired landing that must be free.
+// as #349's stairs are: entry within reach, a paired landing that must be free. The
+// penthouse stair can also be walked (officeWalk, below); the server derives the height.
 //
 // The penthouse carries only what the reviewed contract states: shell, levels, terrace
 // openings, stair, lift, anchors and the approved mezzanine programme. Of the supplied
@@ -211,6 +212,62 @@ export function stepOfficeLevel(layout, levelId, position, dx, dd, occupied = []
   let next = [...position];
   for (const delta of [[dx, 0], [0, dd]]) { const p = next.map((v, i) => v + delta[i]); if (officeLevelSegmentFree(layout, levelId, next, p, occupied)) next = p; }
   return next;
+}
+
+// Walking the penthouse stair (#363 follow-up). A lane down the stair's middle, a turning
+// radius clear of each side, belongs to the main floor's plan and runs one turning radius past
+// its foot and its head, where it meets the main floor and the mezzanine. The height on it comes
+// from the position along the run, through the tread nosings, so feet never sink into a tread.
+// A walk may change floor only where two surfaces meet at the same height, which keeps anyone
+// from stepping onto the flight from its side, off the mezzanine edge, or into the back of the
+// stair from under the mezzanine. The client never reports a height or chooses a floor.
+const STEP_HEIGHT = 0.25;
+// The stair belongs to the floor whose plan holds it (the main floor); its head meets the mezzanine.
+const stairLevel = layout => layout?.stair ? layout.levels.find(level => level.obstacles?.some(item => item.kind === 'stair')) ?? null : null;
+function onStair(layout, levelId, position) {
+  const stair = layout?.stair, r = AVATAR_ENVELOPE.turningRadius;
+  if (!stair || levelId !== stairLevel(layout)?.id || !point(position)) return false;
+  const [x, d] = position;
+  return x >= stair.x[0] + r && x <= stair.x[1] - r && d > stair.d[0] - r && d < stair.d[1] + r;
+}
+function stairHeight(layout, d) {
+  const { d: [d0, d1], rise, risers } = layout.stair, run = (d1 - d0) / risers;
+  return stairLevel(layout).floorElevation + Math.max(0, Math.min(rise, rise * (d - (d0 - run)) / (d1 - d0)));
+}
+// The height a visitor stands at: the stair's at that point of the run, else the floor's.
+export function officeElevationAt(layout, levelId, position) {
+  return onStair(layout, levelId, position) ? stairHeight(layout, position[1]) : officeLevelElevation(layout, levelId);
+}
+// Standing ground: the floor plan, or the stair for the floor it belongs to.
+export function officeStandFree(layout, levelId, position, occupied = []) {
+  return officeLevelFree(layout, levelId, position, occupied) || onStair(layout, levelId, position) && clearOf(levelId, position, occupied);
+}
+// A walk from one standing point to another, sampled every 0.1 m like officeLevelSegmentFree.
+// It ends on the floor it started on unless it crossed onto another at the same height.
+export function officeWalk(layout, levelId, from, to, occupied = []) {
+  const refused = { ok: false };
+  if (!layout?.stair) return officeLevelSegmentFree(layout, levelId, from, to, occupied) ? { ok: true, levelId } : refused;
+  if (!point(from) || !point(to) || !officeStandFree(layout, levelId, from, occupied)) return refused;
+  const steps = Math.ceil(Math.hypot(to[0] - from[0], to[1] - from[1]) / 0.1);
+  if (steps > MAX_SEGMENT_STEPS) return refused;
+  let level = levelId, height = officeElevationAt(layout, levelId, from);
+  for (let i = 1; i <= steps; i++) {
+    const p = from.map((n, j) => n + (to[j] - n) * i / steps);
+    const next = [level, ...layout.levels.map(item => item.id).filter(id => id !== level)]
+      .find(id => officeStandFree(layout, id, p, occupied) && Math.abs(officeElevationAt(layout, id, p) - height) <= STEP_HEIGHT);
+    if (!next) return refused;
+    level = next; height = officeElevationAt(layout, level, p);
+  }
+  return { ok: true, levelId: level };
+}
+// Client prediction with the server's rule: axis-separated sliding that may climb the stair.
+export function officeStep(layout, levelId, position, dx, dd, occupied = []) {
+  let at = { levelId, position: [...position] };
+  for (const delta of [[dx, 0], [0, dd]]) {
+    const p = at.position.map((v, i) => v + delta[i]), walked = officeWalk(layout, at.levelId, at.position, p, occupied);
+    if (walked.ok) at = { levelId: walked.levelId, position: p };
+  }
+  return at;
 }
 
 // The stair or lift a visitor on this floor can take from here, if any.

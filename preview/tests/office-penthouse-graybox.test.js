@@ -163,8 +163,9 @@ test('the curtain wall is two draws, glass handled like the district storefront 
   assert.equal(panes.material.depthWrite, false);
   assert.equal(panes.castShadow, false);
   // The opaque-walled graybox drew 53 meshes, and 60 once #400 added the desk and reading chairs
-  // (measured on its pre-glazing head d1266a15); glazing it must not cost more draws.
-  assert.ok(meshes(built.object).length <= 60, `graybox draw calls ${meshes(built.object).length}`);
+  // (measured on its pre-glazing head d1266a15); main's stair walk (bf6a7ad3) brought the glazed one
+  // to 60, and R19's three desks add one instanced draw. Glazing must not cost more draws than walls.
+  assert.ok(meshes(built.object).length <= 61, `graybox draw calls ${meshes(built.object).length}`);
   built.dispose();
 });
 
@@ -178,4 +179,22 @@ test('each visit renders the geometry of its own admitted layout, and an unknown
   penthouse.dispose();
   assert.throws(() => buildOfficeGeometry(THREE, 'office-penthouse-9', { buildLegacy }), /Unknown office layout/);
   assert.equal(legacy, 1, 'an unknown layout never falls back to the legacy room');
+});
+
+test('the mezzanine guard opens where the stair arrives, and nothing solid stands in a body walking the stair', async () => {
+  const { officeElevationAt } = await import('../src/office-layouts.js');
+  const built = buildPenthouseOffice(THREE, layout), all = parts(built.object), { stair } = layout;
+  const guard = all.filter(({ zone }) => zone === 'guard');
+  const lane = [stair.x[0] + AVATAR_ENVELOPE.turningRadius, stair.x[1] - AVATAR_ENVELOPE.turningRadius];
+  for (const x of [lane[0], (lane[0] + lane[1]) / 2, lane[1]]) {
+    assert.equal(guard.some(({ e }) => x >= e.x0 && x <= e.x1), false, `the guard leaves the stair head open at x ${x.toFixed(2)}`);
+  }
+  assert.ok(guard.some(({ e }) => e.x0 <= -14 && e.x1 >= stair.x[0] - 0.01) && guard.some(({ e }) => e.x0 <= stair.x[1] + 0.01 && e.x1 >= 14.9), 'and still runs either side of it');
+  const solids = all.filter(({ zone }) => !['floor', 'mezzanine'].includes(zone.split(':')[0]) && zone !== 'shell:ceiling').map(({ e }) => e);
+  for (let x = lane[0]; x <= lane[1] + 1e-9; x += 0.2) for (let d = stair.d[0] - 0.8; d <= stair.d[1] + 0.8; d += 0.05) {
+    const y0 = officeElevationAt(layout, 'jevica-office/l0', [x, d]) + 0.01, y1 = y0 + AVATAR_ENVELOPE.height;
+    const hit = solids.find(e => x >= e.x0 && x <= e.x1 && d >= e.d0 && d <= e.d1 && e.y1 > y0 && e.y0 < y1);
+    assert.equal(hit, undefined, `walking the stair at ${x.toFixed(2)},${d.toFixed(2)} meets a solid at ${hit?.y0?.toFixed(2)}-${hit?.y1?.toFixed(2)} m`);
+  }
+  built.dispose();
 });

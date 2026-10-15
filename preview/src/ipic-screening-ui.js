@@ -68,6 +68,8 @@ export function createIpicScreening({ host, THREE, getMultiplayer, getVenue, get
       video.append(track);
     }
     const panel = doc.createElement('section'), status = doc.createElement('p'), controls = doc.createElement('div'), transcript = doc.createElement('div');
+    // Captions: the active cue, shown here because the film reaches the screen only as texture frames.
+    const caption = doc.createElement('p'); caption.className = 'ipic-screening-caption'; caption.hidden = true;
     panel.id = 'ipic-screening'; panel.className = 'ipic-screening'; panel.setAttribute('aria-label', 'IPIC screening');
     status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite'); status.className = 'ipic-screening-status';
     transcript.className = 'ipic-screening-transcript'; transcript.hidden = true;
@@ -78,8 +80,8 @@ export function createIpicScreening({ host, THREE, getMultiplayer, getVenue, get
       if (id === 'volume') Object.assign(control, { type: 'range', min: '0', max: '1', step: '0.05', value: '0.8' }); else control.type = 'button';
       control.dataset.control = id; control.hidden = true; controls.append(control); buttons.set(id, control);
     }
-    panel.append(status, controls, transcript, video); host.append(panel);
-    const state = { token, clock, video, panel, status, transcript, buttons, view: null, canHost: false, sound: false, captions: true, texture: null, saved: null, lastRender: '', syncAt: -Infinity, message: '', busy: false };
+    panel.append(status, caption, controls, transcript, video); host.append(panel);
+    const state = { token, clock, video, panel, status, caption, transcript, buttons, view: null, canHost: false, sound: false, captions: true, texture: null, saved: null, lastRender: '', syncAt: -Infinity, message: '', busy: false, textFor: media?.id ?? null };
     state.player = createScreeningPlayer({ media: video, clock });
     state.player.setCaptions(true); state.player.setVolume(0.8);
     const listeners = [];
@@ -90,7 +92,7 @@ export function createIpicScreening({ host, THREE, getMultiplayer, getVenue, get
       else if (id === 'play-local') void state.player.unlock();
       else if (id === 'retry') state.player.retry();
       else if (id === 'sound') { state.sound = !state.sound; }
-      else if (id === 'captions') { state.captions = !state.captions; state.player.setCaptions(state.captions); }
+      else if (id === 'captions') { state.captions = !state.captions; state.player.setCaptions(state.captions); showCaption(state); }
       else if (id === 'transcript') { transcript.hidden = !transcript.hidden; }
       else if (id === 'stop-watching') { close(); session = { stopped: true, generation }; }
       render(state, true);
@@ -150,8 +152,30 @@ export function createIpicScreening({ host, THREE, getMultiplayer, getVenue, get
     state.texture?.dispose(); state.texture = null; state.saved = null;
   }
 
+  // Captions and transcript belong to the film actually playing: the venue's default until the
+  // shared film is another allowlisted one, which brings its own (#365 review).
+  function filmText(state, mediaId) {
+    const film = SCREENING_MEDIA[mediaId] ?? media;
+    if (!film || state.textFor === film.id) return;
+    state.textFor = film.id;
+    for (const track of state.video.querySelectorAll('track')) track.remove();
+    if (film.captions) {
+      const track = doc.createElement('track');
+      Object.assign(track, { kind: 'captions', src: film.captions.src, srclang: film.captions.srclang, label: film.captions.label, default: true });
+      state.video.append(track);
+    }
+    state.transcript.replaceChildren(...film.transcript.map(line => { const p = doc.createElement('p'); p.textContent = line; return p; }));
+    state.player.setCaptions(state.captions);
+  }
+  // The active cue, refreshed every frame and at once when Captions is toggled.
+  function showCaption(state) {
+    const text = state.player.captionText();
+    if (state.caption.textContent !== text) state.caption.textContent = text;
+    state.caption.hidden = !text;
+  }
   function render(state, force = false) {
     const venue = getVenue(), stats = state.player.stats();
+    filmText(state, stats.mediaId);
     state.video.muted = !(state.sound && venue.auditorium);
     const key = JSON.stringify([stats.state, stats.sharedStatus, state.view?.revision, state.canHost, state.sound, state.captions, venue.auditorium, state.message, state.transcript.hidden]);
     if (!force && key === state.lastRender) return;
@@ -187,7 +211,7 @@ export function createIpicScreening({ host, THREE, getMultiplayer, getVenue, get
       if (!session) open();
       const state = session; if (state.stopped) return;
       if (now() - state.syncAt > 15_000) void sync(state);
-      state.player.tick(); attach(state); render(state);
+      state.player.tick(); attach(state); render(state); showCaption(state);
     },
     inspect() {
       const state = session; if (!state || state.stopped) return { active: false, stopped: Boolean(state?.stopped) };

@@ -3,7 +3,7 @@
 // cap off, through the DEV-only render audit. Each space is measured from its own cold browser
 // context, so its street baseline and load cost are separate:
 //   ipic       street -> IPIC reception, mural, lounge, bar and auditorium (IPIC_CAMERAS),
-//              then the auditorium again with the fixture film playing (drift sampled);
+//              then the auditorium again with the venue's default film playing (the approved short since #365; drift sampled);
 //   penthouse  street -> owner's penthouse visit (RIVER_OAKS_OFFICE_LAYOUT=office-penthouse-1);
 //   legacy     street -> owner's legacy office visit (a second fixture, default layout).
 // Each view records three windows of rAF interval and render CPU time, renderer.info for the
@@ -198,7 +198,7 @@ try {
     browser: await browser.version(), renderer: gpu, args: ARGS, viewport: [VIEWPORT.width, VIEWPORT.height], pixelRatio: 1, quality: 'sharp', fov: FOV,
     windows: WINDOWS, framesPerWindow: FRAMES, loadAverage: { start: load[0], end: load[1] },
     profile: 'One shared macOS workstation under other sessions\' load; vsync and the frame cap off, so intervals are render cost, not display rate. renderer.info is the whole frame (main.js resets it once per frame), so draw calls and triangles include shadow, AO and composer passes. Transfer bytes are from the Vite dev server (unbundled, uncompressed modules); asset bytes are representative. One page, no other residents beyond fixture staff.',
-    limits: 'Provisional local evidence for #368, not accepted device budgets: no phone, Safari, iOS, Windows or Linux GPU; fixture film; graybox penthouse; no final art.',
+    limits: 'Provisional local evidence for #368, not accepted device budgets: no phone, Safari, iOS, Windows or Linux GPU; the venue\'s default film (the approved short since #365, 9-13 MB per format, so transfer exceeds the 0.9 MB fixture); graybox penthouse; no final art.',
     errors, spaces,
   };
   await writeFile(`${OUT}/receipt.json`, `${JSON.stringify(receipt, null, 2)}\n`);
