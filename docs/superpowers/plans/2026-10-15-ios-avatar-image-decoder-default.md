@@ -53,6 +53,8 @@ remain unchanged. The fixture-only override remains available for diagnosis.
   two-second timeout under a host load average above 90. The failing test is
   `desktop/tests/studio-skill-pack.test.js`; its isolated rerun passed 14/14,
   including the exact timeout case. This attempt is not a full-gate pass.
+- After merging `origin/main` at `4ab01892`, `pnpm run verify` passed the core
+  profile again. The ignored `.runtime/agent/core.json` records this run.
 - An isolated private fixture on port 5186 served this branch to the paired
   iPhone 16 Pro Max. The first `devicectl` Safari launch did not reach the
   fixture; a repeat launch did. Its normal URL had no decoder override. At
@@ -85,6 +87,6 @@ remain unchanged. The fixture-only override remains available for diagnosis.
   old fixture worktree and its ignored receipts until evidence is archived.
 
 **Next action:** Push the refreshed branch, check PR #436's exact-head hosted
-results against current main, and retry the full local gate when host load
-permits.
+results against current main, and retain the full local gate gap until a quiet
+retry passes.
 Phone portal and quieter frame timing remain open acceptance work.

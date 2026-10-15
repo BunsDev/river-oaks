@@ -10035,9 +10035,9 @@
         "fix/safari-avatar-html-ios-20261015"
       ],
       "owner": "codex-root-safari-gltf-decoder-investigation-20261015",
-      "leaseUntil": "2026-10-15T18:35:00.000Z",
-      "updatedAt": "2026-10-15T16:35:00.000Z",
-      "nextAction": "Draft PR #436 contains the scoped iOS avatar decoder default. Two normal iPhone visits were playable; focused tests 11/11, post-merge core at 873f750e, player-lifecycle browser journey, and isolated skill-pack tests 14/14 passed. A refreshed full gate at 7a3b8bcf stopped on the unrelated two-second skill-pack child timeout under host load above 90; retry when quiet. Update the PR to current main and require exact-head hosted preview/Vercel before ready/merge. Quieter phone frame/portal timing and remaining GPU devices are separate acceptance work.",
+      "leaseUntil": "2026-10-15T18:50:00.000Z",
+      "updatedAt": "2026-10-15T16:50:00.000Z",
+      "nextAction": "Draft PR #436 includes current main at 4ab01892; final local core passed and player-lifecycle browser journey passed. Two normal iPhone visits were playable. The refreshed full gate under isolated Redis stopped on an unrelated two-second desktop child timeout at host load above 90, while its owning suite passed 14/14 alone. Require PR #436 exact-head hosted preview/Vercel and current main before ready/merge. Quieter phone frame/portal timing and remaining GPU devices are separate acceptance work.",
       "ledger": "docs/superpowers/plans/2026-10-15-ios-avatar-image-decoder-default.md",
       "requiredChecks": [
         "Focused decoder selection regression",
