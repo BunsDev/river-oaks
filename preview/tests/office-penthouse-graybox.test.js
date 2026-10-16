@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { AVATAR_ENVELOPE } from '../src/workplace-room.js';
 import { OFFICE_LAYOUT_PENTHOUSE, officeLayout, officeLevelFree } from '../src/office-layouts.js';
 import { buildOfficeGeometry, buildPenthouseOffice, withoutLightGlints } from '../src/office-penthouse-graybox.js';
+import { OVERHEAD_CLEARANCE } from '../src/office-penthouse-furnishings.js';
 import { thinStorefrontGlass } from '../src/storefront-materials.js';
 import { atmosphereFor } from '../src/atmosphere.js';
 
@@ -14,7 +15,13 @@ const meshes = object => { const out = []; object.updateMatrixWorld(true); objec
 const planBox = box => ({ x0: box.min.x, x1: box.max.x, y0: box.min.y, y1: box.max.y, d0: -box.max.z, d1: -box.min.z });
 // Every drawn part with its own bounds and zone: a mesh, or each instance of an instanced mesh,
 // so batching never hides a part's position behind its batch's overall bounds.
+// A static batch of one-off furnishings counts each piece's vertex range as its own part.
 const parts = object => meshes(object).flatMap(mesh => {
+  if (mesh.userData.zoneRanges) return mesh.userData.zoneRanges.map(({ zone, id, start, count }) => {
+    const box = new THREE.Box3(), point = new THREE.Vector3(), position = mesh.geometry.attributes.position;
+    for (let i = start; i < start + count; i++) box.expandByPoint(point.fromBufferAttribute(position, i).applyMatrix4(mesh.matrixWorld));
+    return { mesh, name: `${mesh.name}[${id}]`, zone, e: planBox(box) };
+  });
   if (!mesh.isInstancedMesh) return [{ mesh, name: mesh.name, zone: mesh.userData.zone, e: planBox(new THREE.Box3().setFromObject(mesh)) }];
   if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox();
   const matrix = new THREE.Matrix4();
@@ -23,6 +30,21 @@ const parts = object => meshes(object).flatMap(mesh => {
     const box = mesh.geometry.boundingBox.clone().applyMatrix4(matrix.premultiply(mesh.matrixWorld));
     return { mesh, name: `${mesh.name}[${i}]`, zone: mesh.userData.zones?.[i] ?? mesh.userData.zone, e: planBox(box) };
   });
+});
+// Each triangle's plan bounds, per mesh or instance: merged art spans gaps a box test would close.
+const triangles = object => meshes(object).flatMap(mesh => {
+  const position = mesh.geometry.attributes.position, index = mesh.geometry.index, matrix = new THREE.Matrix4(), out = [];
+  const count = mesh.isInstancedMesh ? mesh.count : 1, corner = new THREE.Vector3();
+  for (let k = 0; k < count; k++) {
+    if (mesh.isInstancedMesh) { mesh.getMatrixAt(k, matrix); matrix.premultiply(mesh.matrixWorld); } else matrix.copy(mesh.matrixWorld);
+    const total = index ? index.count : position.count;
+    for (let i = 0; i < total; i += 3) {
+      const box = new THREE.Box3();
+      for (let j = 0; j < 3; j++) box.expandByPoint(corner.fromBufferAttribute(position, index ? index.getX(i + j) : i + j).applyMatrix4(matrix));
+      out.push({ mesh, zone: mesh.userData.zones?.[k] ?? mesh.userData.zone, e: planBox(box) });
+    }
+  }
+  return out;
 });
 const covers = (e, x, y, d, eps = 1e-6) => x >= e.x0 - eps && x <= e.x1 + eps && y >= e.y0 - eps && y <= e.y1 + eps && d >= e.d0 - eps && d <= e.d1 + eps;
 const transparent = part => [part.mesh.material].flat().some(material => material.transparent);
@@ -54,6 +76,16 @@ test('every graybox mesh is tagged with a plan zone and stays inside it', () => 
     } else if (kind === 'shell') {
       const b = l0.bounds, onEdge = e.x1 <= b.x0 + 0.2 || e.x0 >= b.x1 - 0.2 || e.d1 <= b.d0 + 0.2 || e.d0 >= b.d1 - 0.2 || e.y0 >= l0.clearHeight - 1e-6;
       assert.ok(onEdge, `${zone} ${name} sits on the perimeter or the ceiling`);
+    } else if (kind === 'rug') {
+      // Flat on its own floor, inside that level's bounds.
+      const level = layout.levels.find(item => inside(e, item.bounds) && Math.abs(e.y0 - item.floorElevation) < 1e-3);
+      assert.ok(level && e.y1 <= level.floorElevation + 0.02, `${zone} ${name}`);
+    } else if (kind === 'canopy' || kind === 'fixture') {
+      // Overhead art (the botanical canopy, pendants and their rods) over walkable floor: above the
+      // tallest body plus clearance, under the ceiling, inside the main room's glazing.
+      const level = e.d0 >= l1.bounds.d0 - 1e-6 && e.y0 >= l1.floorElevation ? l1 : l0;
+      assert.ok(e.y0 >= level.floorElevation + OVERHEAD_CLEARANCE - 1e-6 && e.y1 <= level.floorElevation + level.clearHeight + 1e-6 && inside(e, main), `${zone} ${name} ${JSON.stringify(e)}`);
+      if (kind === 'canopy') assert.ok(l0.obstacles.some(o => o.id === id), `${zone} grows from a planter on the plan`);
     } else if (kind === 'transom') {
       // Above the terrace portals, on the main room's terrace wall line, clear of the tallest body.
       assert.ok(e.x0 >= main.x0 - 0.2 && e.x1 <= main.x0 + 0.2 && e.y0 >= AVATAR_ENVELOPE.height + 0.3 && e.y1 <= l0.clearHeight + 1e-6, `${zone} ${name}`);
@@ -65,9 +97,9 @@ test('every graybox mesh is tagged with a plan zone and stays inside it', () => 
 test('the arrival doorway on the entrance wall stays open', () => {
   const built = buildPenthouseOffice(THREE, layout);
   const door = { x0: -0.85, x1: 0.85, d0: -0.2, d1: 0.2 };
-  for (const { name, zone, e } of parts(built.object)) {
+  for (const { mesh, zone, e } of triangles(built.object)) {
     const overlaps = e.x1 > door.x0 + 1e-6 && e.x0 < door.x1 - 1e-6 && e.d1 > door.d0 && e.d0 < door.d1 && e.y0 < 2.6 - 1e-6 && e.y1 > 0.01;
-    assert.equal(overlaps, false, `${zone} ${name} blocks the doorway`);
+    assert.equal(overlaps, false, `${zone} ${mesh.name} blocks the doorway`);
   }
   built.dispose();
 });
@@ -130,27 +162,27 @@ test('the terrace portals stay walkable at full body height under their transoms
   built.dispose();
 });
 
-test('the imported desks (R19) are one draw, each exactly on its plan footprint at its height', () => {
-  const built = buildPenthouseOffice(THREE, layout);
-  const desks = meshes(built.object).filter(mesh => mesh.name === 'desks');
-  assert.equal(desks.length, 1);
-  assert.ok(desks[0].isInstancedMesh && desks[0].count === 3);
-  const drawn = parts(built.object).filter(part => part.mesh === desks[0]);
+test('the imported desks (R19) are drawn on their exact plan footprints, their walnut tops at the plan height', () => {
+  const built = buildPenthouseOffice(THREE, layout), all = parts(built.object);
   for (const o of l0.obstacles.filter(item => item.kind === 'desk')) {
-    const part = drawn.find(item => item.zone === `obstacle:${o.id}`);
-    assert.ok(part, `${o.id} is drawn`);
-    for (const [a, b] of [[part.e.x0, o.x0], [part.e.x1, o.x1], [part.e.d0, o.d0], [part.e.d1, o.d1], [part.e.y0, l0.floorElevation], [part.e.y1, l0.floorElevation + o.height]])
-      assert.ok(Math.abs(a - b) < 1e-6, `${o.id}: ${a} vs ${b}`);
+    // The walnut top spans the whole footprint; displays and lamps stand on it inside the footprint.
+    const top = all.filter(part => part.zone === `obstacle:${o.id}` && part.mesh.material.name === 'wood' && part.e.y1 > l0.floorElevation + o.height - 0.01);
+    assert.equal(top.length, 1, `${o.id} has one walnut top`);
+    for (const [a, b] of [[top[0].e.x0, o.x0], [top[0].e.x1, o.x1], [top[0].e.d0, o.d0], [top[0].e.d1, o.d1], [top[0].e.y1, l0.floorElevation + o.height]])
+      assert.ok(Math.abs(a - b) < 1e-3, `${o.id}: ${a} vs ${b}`);
   }
+  // The two benches are one instanced draw per finish.
+  assert.ok(meshes(built.object).some(mesh => mesh.name === 'workbench:wood' && mesh.isInstancedMesh && mesh.count === 2));
   built.dispose();
 });
 
-test('disposing the graybox releases every instanced draw, desks and curtain wall included', () => {
-  const built = buildPenthouseOffice(THREE, layout), instanced = meshes(built.object).filter(mesh => mesh.isInstancedMesh), released = new Set();
-  assert.ok(instanced.length >= 3, 'the desks and both curtain-wall batches');
-  for (const mesh of instanced) mesh.addEventListener('dispose', () => released.add(mesh));
+test('disposing the graybox releases every instanced draw exactly once, furnishings and curtain wall included', () => {
+  const built = buildPenthouseOffice(THREE, layout), instanced = meshes(built.object).filter(mesh => mesh.isInstancedMesh), released = new Map();
+  assert.ok(instanced.length >= 20, 'the repeated furnishings and both curtain-wall batches');
+  for (const mesh of instanced) mesh.addEventListener('dispose', () => released.set(mesh, (released.get(mesh) ?? 0) + 1));
   built.dispose();
   assert.equal(released.size, instanced.length);
+  assert.deepEqual([...new Set(released.values())], [1], 'no draw is disposed twice');
 });
 
 test('the curtain wall is two draws, glass handled like the district storefront glazing', () => {
@@ -167,7 +199,9 @@ test('the curtain wall is two draws, glass handled like the district storefront 
   // The opaque-walled graybox drew 53 meshes, and 60 once #400 added the desk and reading chairs
   // (measured on its pre-glazing head d1266a15); main's stair walk (bf6a7ad3) brought the glazed one
   // to 60, and R19's three desks add one instanced draw. Glazing must not cost more draws than walls.
-  assert.ok(meshes(built.object).length <= 61, `graybox draw calls ${meshes(built.object).length}`);
+  // #362's furnished office measured 92: repeated pieces instanced, one-off pieces one static draw
+  // per finish and visibility group (the provisional office budget is 150).
+  assert.ok(meshes(built.object).length <= 92, `office draw calls ${meshes(built.object).length}`);
   built.dispose();
 });
 
@@ -233,7 +267,10 @@ test('the roof, solid walls, mezzanine, desks and bookcases shade the floors fro
     else assert.ok(mesh.receiveShadow, `${mesh.name} receives the sun's shadow`);
   }
   const casters = all.filter(mesh => mesh.castShadow).map(mesh => mesh.name);
-  for (const name of ['ceiling', 'back wall', 'arrival core west', 'arrival core east', 'mezzanine slab', 'desks', 'curtain wall frames', 'bookcase-1', 'bookcase-2']) assert.ok(casters.includes(name), name);
+  for (const name of ['ceiling', 'back wall', 'arrival core west', 'arrival core east', 'mezzanine slab', 'workbench:wood', 'curtain wall frames', 'bookcase:wood']) assert.ok(casters.includes(name), name);
+  // The executive desk's and meeting table's tops cast from the main floor's static batches.
+  const statics = all.filter(mesh => mesh.castShadow && mesh.userData.zoneRanges).flatMap(mesh => mesh.userData.zoneRanges.map(range => range.zone));
+  for (const zone of ['obstacle:executive-desk', 'obstacle:meeting-table']) assert.ok(statics.includes(zone), zone);
   assert.ok(casters.length <= 12, `the shadow pass stays small: ${casters.length} casters`);
   assert.ok(!casters.some(name => /stair tread|chair|lift/.test(name)), casters.join());
   built.dispose();
@@ -262,5 +299,9 @@ test('lamps hang clear of the ceiling and follow the time of day; the interior t
   assert.ok(noonSky > 0 && noonSky < atmosphereFor(12, 'clear').environmentIntensity * 0.6, 'the roof hides most of the sky indoors');
   assert.ok(floor.envMapIntensity < noonSky, 'and the sky dims with the day');
   assert.equal(terrace.envMap, null, 'the open terrace keeps the whole sky');
+  // So do the terrace's furnishings; the interior's take the same share as the floors.
+  const furnished = group => meshes(built.object.getObjectByName(`furnishings:${group}`)).map(mesh => mesh.material);
+  assert.ok(furnished('terrace').length && furnished('terrace').every(material => material.envMap === null), 'terrace furniture keeps the whole sky');
+  assert.ok(furnished('main-floor').every(material => material.envMap === environment && material.envMapIntensity === floor.envMapIntensity), 'interior furniture shares the roofed sky');
   built.dispose();
 });

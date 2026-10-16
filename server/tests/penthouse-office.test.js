@@ -93,6 +93,7 @@ test('the stair and lift move a visitor between floors only from their entry, an
   f.send(owner, 'invite', { peerId: 'guest' });
   f.enter('guest');
   f.walk('guest', [-8, 1.5]); // around the executive desk chair
+  f.walk('guest', [-7, 13.6]); // and east of the lounge (#362's furnishings are collision)
   f.walk('guest', anchor('lift-ground'));
   const guest = f.visit('guest'), host = f.visit(owner);
   assert.deepEqual(guest.position, host.position);
