@@ -543,3 +543,29 @@ review/up-to-date checks and authorized landing; task delivery/retirement is not
 claimed. Preserve this worktree and local evidence until the lifecycle gates pass.
 
 Independent design review JSON SHA-256: `7ba0e3adcd189a7118837681eca6b93375448453ca8ac0010d0700173a154b73`.
+
+### Authorized landing and shared-renderer integration
+
+Val authorized commit, push and merge of #459 on 2026-10-15 (local date).
+The serialized landing queue integrated main through #466 at GitHub-verified
+merge `231ca801d7612be49a65329cff820c33ff1c6ecd`. #466 changes shared slab/floor
+material behavior and counter construction as part of the House slice. The first
+focused integration run was **115 passed / 1 failed**: the existing catalog
+comparison correctly detected stale shared-renderer hashes. No behavior test failed.
+
+Regenerated the nine records using `node scripts/garden-office-manifest.mjs --write`
+and corrected desk texture metadata: #466 applies optional stone/paver texture
+maps only to floors, not slabs. Recorded nominal geometry, bounds, colliders and
+costs are unchanged. No production code change is introduced by this follow-up.
+`node --test preview/tests/studio-*.test.js server/tests/studio-assets.test.js`
+then passed **116/116**, no skips or TODOs. Logs: local
+`.runtime/garden-office-audit/landing-focused{,-before}.txt`.
+
+A fresh core run is queued through `browser-lock.mjs`; its result must be read
+from `landing-core.txt`, not inferred from the earlier core receipt. The exact-head
+hosted Verify/aggregate preview and signature/merge guards remain required.
+Earlier captures and independent design review retain their recorded source scope;
+they are not relabeled as fresh review of #466's inherited shared-surface changes.
+Preserve the worktree and local evidence after landing. #416's final checklist
+reconciliation should inspect that integration; #417's separate human/device and
+budget decisions are not prerequisites for the #416 source handoff.

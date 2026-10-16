@@ -24,7 +24,7 @@
         },
         {
           "file": "preview/src/studio/space-scene.js",
-          "sha256": "2fd6440f1eea7b8c9791ce4aec2916aa3a8761a05468047e62a1d9af1cb7e930"
+          "sha256": "fea421a21e5a90dfb4f2e5fd92187d0f3317ab93c5b6b56d8da5348bdc911b5f"
         },
         {
           "file": "preview/src/studio/space-document.js",
@@ -91,7 +91,7 @@
         "geometryBytes": 29640,
         "materials": 2,
         "texturesAtNominal": 0,
-        "textures": "No authored texture maps at the measured finish. Optional limestone/terracotta finishes reuse existing shared PBR textures; no transfer-byte measurement is claimed."
+        "textures": "No authored texture maps for this form; viewport reflections are shared and measured separately at runtime."
       },
       "stage": "procedural-pilot",
       "availability": "repository",
@@ -117,7 +117,7 @@
         },
         {
           "file": "preview/src/studio/space-scene.js",
-          "sha256": "2fd6440f1eea7b8c9791ce4aec2916aa3a8761a05468047e62a1d9af1cb7e930"
+          "sha256": "fea421a21e5a90dfb4f2e5fd92187d0f3317ab93c5b6b56d8da5348bdc911b5f"
         },
         {
           "file": "preview/src/studio/space-document.js",
@@ -211,7 +211,7 @@
         },
         {
           "file": "preview/src/studio/space-scene.js",
-          "sha256": "2fd6440f1eea7b8c9791ce4aec2916aa3a8761a05468047e62a1d9af1cb7e930"
+          "sha256": "fea421a21e5a90dfb4f2e5fd92187d0f3317ab93c5b6b56d8da5348bdc911b5f"
         },
         {
           "file": "preview/src/studio/space-document.js",
@@ -286,7 +286,7 @@
         },
         {
           "file": "preview/src/studio/space-scene.js",
-          "sha256": "2fd6440f1eea7b8c9791ce4aec2916aa3a8761a05468047e62a1d9af1cb7e930"
+          "sha256": "fea421a21e5a90dfb4f2e5fd92187d0f3317ab93c5b6b56d8da5348bdc911b5f"
         },
         {
           "file": "preview/src/studio/space-document.js",
@@ -362,7 +362,7 @@
         },
         {
           "file": "preview/src/studio/space-scene.js",
-          "sha256": "2fd6440f1eea7b8c9791ce4aec2916aa3a8761a05468047e62a1d9af1cb7e930"
+          "sha256": "fea421a21e5a90dfb4f2e5fd92187d0f3317ab93c5b6b56d8da5348bdc911b5f"
         },
         {
           "file": "preview/src/studio/space-document.js",
@@ -447,11 +447,11 @@
       "version": 1,
       "source": "procedural",
       "file": "preview/src/studio/space-scene.js",
-      "sha256": "2fd6440f1eea7b8c9791ce4aec2916aa3a8761a05468047e62a1d9af1cb7e930",
+      "sha256": "fea421a21e5a90dfb4f2e5fd92187d0f3317ab93c5b6b56d8da5348bdc911b5f",
       "sources": [
         {
           "file": "preview/src/studio/space-scene.js",
-          "sha256": "2fd6440f1eea7b8c9791ce4aec2916aa3a8761a05468047e62a1d9af1cb7e930"
+          "sha256": "fea421a21e5a90dfb4f2e5fd92187d0f3317ab93c5b6b56d8da5348bdc911b5f"
         },
         {
           "file": "preview/src/studio/space-document.js",
@@ -536,11 +536,11 @@
       "version": 1,
       "source": "procedural",
       "file": "preview/src/studio/space-scene.js",
-      "sha256": "2fd6440f1eea7b8c9791ce4aec2916aa3a8761a05468047e62a1d9af1cb7e930",
+      "sha256": "fea421a21e5a90dfb4f2e5fd92187d0f3317ab93c5b6b56d8da5348bdc911b5f",
       "sources": [
         {
           "file": "preview/src/studio/space-scene.js",
-          "sha256": "2fd6440f1eea7b8c9791ce4aec2916aa3a8761a05468047e62a1d9af1cb7e930"
+          "sha256": "fea421a21e5a90dfb4f2e5fd92187d0f3317ab93c5b6b56d8da5348bdc911b5f"
         },
         {
           "file": "preview/src/studio/space-document.js",
@@ -606,11 +606,11 @@
       "version": 1,
       "source": "procedural",
       "file": "preview/src/studio/space-scene.js",
-      "sha256": "2fd6440f1eea7b8c9791ce4aec2916aa3a8761a05468047e62a1d9af1cb7e930",
+      "sha256": "fea421a21e5a90dfb4f2e5fd92187d0f3317ab93c5b6b56d8da5348bdc911b5f",
       "sources": [
         {
           "file": "preview/src/studio/space-scene.js",
-          "sha256": "2fd6440f1eea7b8c9791ce4aec2916aa3a8761a05468047e62a1d9af1cb7e930"
+          "sha256": "fea421a21e5a90dfb4f2e5fd92187d0f3317ab93c5b6b56d8da5348bdc911b5f"
         },
         {
           "file": "preview/src/studio/space-document.js",
@@ -699,11 +699,11 @@
       "version": 1,
       "source": "procedural",
       "file": "preview/src/studio/space-scene.js",
-      "sha256": "2fd6440f1eea7b8c9791ce4aec2916aa3a8761a05468047e62a1d9af1cb7e930",
+      "sha256": "fea421a21e5a90dfb4f2e5fd92187d0f3317ab93c5b6b56d8da5348bdc911b5f",
       "sources": [
         {
           "file": "preview/src/studio/space-scene.js",
-          "sha256": "2fd6440f1eea7b8c9791ce4aec2916aa3a8761a05468047e62a1d9af1cb7e930"
+          "sha256": "fea421a21e5a90dfb4f2e5fd92187d0f3317ab93c5b6b56d8da5348bdc911b5f"
         },
         {
           "file": "preview/src/studio/space-document.js",

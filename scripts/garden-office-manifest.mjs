@@ -83,7 +83,7 @@ export async function measureForms() {
         footprintsAtNominal: buildSpaceWorld({ bounds_m: [-32,-32,32,32], spawn: [0,-5], objects: [item] }).collisionPolygons,
       },
       cost: { meshNodes, triangles, lineSets, geometries: geometries.size, geometryBytes, materials: materials.size, texturesAtNominal: 0,
-        textures: ['desk','floor'].includes(form.kind) ? 'No authored texture maps at the measured finish. Optional limestone/terracotta finishes reuse existing shared PBR textures; no transfer-byte measurement is claimed.' : 'No authored texture maps for this form; viewport reflections are shared and measured separately at runtime.' },
+        textures: form.kind === 'floor' ? 'No authored texture maps at the measured finish. Optional limestone/terracotta finishes reuse existing shared PBR textures; no transfer-byte measurement is claimed.' : 'No authored texture maps for this form; viewport reflections are shared and measured separately at runtime.' },
       stage: 'procedural-pilot', availability: 'repository',
       permission: form.permission ?? 'Original geometry authored in this repository for #416; no third-party source.' };
   });
