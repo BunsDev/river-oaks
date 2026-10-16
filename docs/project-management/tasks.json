@@ -11223,9 +11223,9 @@
         "feat/character-studio-persistence-20261015"
       ],
       "owner": "codex-character-studio-20261015",
-      "updatedAt": "2026-10-16T09:32:03.121333+00:00",
-      "leaseUntil": "2026-10-16T11:32:03.121333+00:00",
-      "nextAction": "Lyra layered drapes and pinned waist verified:28focused,3deterministicbakes,132wardroberows/757checks, unchangednative4K, core11/11,11frozenhashesmatch. Review rechecked waistbandfix. Signedcommit/push and updatePR464/#442 next, then Silvan/coat/continuousmotion and remaining440\u2013444acceptance. No merge/deploy; preserve checkout/evidence.",
+      "updatedAt": "2026-10-16T10:10:20.381375+00:00",
+      "leaseUntil": "2026-10-16T12:10:20.381375+00:00",
+      "nextAction": "Silvan verified increment ready for signed commit/push to PR464 and issue442 progress:38 focused,4 bakes,132 rows/765 checks, native4K zeroerror, core11/11,17 frozen hashes. Extend knee/calf and trouser-silhouette coverage next, then formal/noir coat panels and remaining440-444 acceptance. No merge/deploy; preserve checkout.",
       "filesOwned": [
         "server/character-store.js",
         "server/tests/character-store.test.js",
@@ -11347,7 +11347,16 @@
         "preview/src/lyra-drape-morph-data.js",
         "preview/src/lyra-drape-morph-receipt.json",
         "preview/tests/romance-look.test.js",
-        "preview/tests/drape-seat-bake.test.js"
+        "preview/tests/drape-seat-bake.test.js",
+        "preview/src/silvan-drape-geometry.js",
+        "preview/src/silvan-drape-morph-data.js",
+        "preview/src/silvan-drape-morph-receipt.json",
+        "scripts/bake-silvan-drapes.mjs",
+        "preview/tests/silvan-drape.test.js",
+        "preview/tests/helpers/garment-edges.js",
+        "preview/src/packed-morph-data.js",
+        "preview/tests/packed-morph-data.test.js",
+        "preview/tests/garment-edges.test.js"
       ],
       "requiredChecks": [
         "Memory and real isolated Redis store contract tests",

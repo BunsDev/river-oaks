@@ -741,8 +741,8 @@ and trim attachment (maximum seated surface offset 15.404 mm). Front/side/rear,
 overhead and sampled walking images were inspected. Faceted cloth edges and bulky
 sleeves remain art-quality work; this correction is not final costume approval.
 
-Visual findings still open: Silvan's long drapes intersect raised legs; formal/noir
-coat tails retain rigid panels. Lyra's correction below still needs cloth-quality
+Visual findings still open: formal/noir coat tails retain rigid panels. Silvan's
+correction is described below. Lyra's correction below still needs cloth-quality
 review. The full matrix is captured but has not received exhaustive visual approval.
 Continuous motion, complete attachment review and approved physical-device budgets
 remain open. Neutral Sable 4K references remain separate and must still pass unchanged.
@@ -766,3 +766,30 @@ The bake records maximum edge stretch 7.309 and minimum area ratio 0.0509; there
 is no approved cloth-quality threshold, and high stretch remains an art-quality
 limitation. Full rendered matrix and native 4K verification are recorded separately
 in the task ledger; passing contact tests alone is not visual acceptance.
+
+
+### Silvan fitted panels and gold details
+
+Both shipped Silvan rigs now skin all three drape panels and their hanging gold
+leaves/chains. Each panel has 925 vertices and 1,728 triangles, an increase of
+3,456 triangles across the three panels. Existing accessory draw caps remain 40
+for masculine and 55 for feminine. The masculine waist rises 4 cm to clear the suit
+hip; the feminine waist remains unchanged. All 37 top vertices per panel stay
+pinned to the pelvis. Materials, ownership and standing restoration are retained.
+
+`node scripts/bake-silvan-drapes.mjs --check` reproduces both rig-specific bakes;
+the adjacent receipt pins 18 inputs including both rig/license sources. The packed
+module stores lossless little-endian Float32 data and retains source-position and
+source-weight validation. Runtime uses existing GPU morph influences, with no
+per-frame fitting or collision queries. Gold details inherit interpolated cloth
+weights and deltas; weights are clamped and normalized offline.
+
+Real-rig tests cover all four upright appearances, seated contact, standing
+restoration, eight sampled moving walk/run phases, and ten symmetric/asymmetric
+bend combinations under translated/rotated/scaled roots. The three panels also
+use an edge-crossing probe against the actual upper thighs. Its synthetic test
+checks known crossings, clearance and short-edge skips. This does not establish
+whole-body containment, exhaustive triangle overlap or continuous-motion safety.
+Gold-to-cloth distance is unsigned; it does not prove the gold remains outside
+cloth. High edge stretch (7.402 maximum) and compressed rear folds remain
+cloth-quality limitations; final rendered acceptance is recorded in the ledger.

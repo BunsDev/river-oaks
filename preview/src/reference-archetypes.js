@@ -1,3 +1,5 @@
+import {SILVAN_DRAPES,silvanDrapes,createSilvanDrapeDetailGeometry} from './silvan-drape-geometry.js';
+import {SILVAN_DRAPE_MORPHS} from './silvan-drape-morph-data.js';
 import {createDrapeGeometry, LYRA_DRAPES} from './drape-geometry.js';
 import {LYRA_DRAPE_MORPHS} from './lyra-drape-morph-data.js';
 import { skinSkirt } from './skirt-skinning.js';
@@ -160,11 +162,12 @@ export function createReferenceStyle(avatar,appearance){
   // front (0) around the body, radii widen as it falls.
   function drape(parent,surface,recipe){
     const geometry=createDrapeGeometry(recipe),item=mesh(parent,geometry,surface);if(recipe.name)item.name=recipe.name;
-    const layer=LYRA_DRAPES.findIndex(part=>part.name===recipe.name);
-    if(layer<0)return item;
-    const fitted=skinSkirt(item,model.getObjectByName('Jevica'),{waist:recipe.top,hem:-.17});
-    attachments.add(fitted.group);lyraOutfit.splice(lyraOutfit.indexOf(item),1,fitted.mesh);
-    correctives.push(createSkirtSeatMorph(fitted.mesh,model,LYRA_DRAPE_MORPHS[layer]));
+    const lyra=LYRA_DRAPES.findIndex(part=>part.name===recipe.name),silvan=SILVAN_DRAPES.findIndex(part=>part.name===recipe.name);
+    if(lyra<0&&silvan<0)return item;
+    const body=appearance.character==='silvan'&&appearance.variant==='masculine'?'man-casualmale_casualsuit02':'Jevica';
+    const fitted=skinSkirt(item,model.getObjectByName(body),{waist:recipe.top,hem:-.17});
+    attachments.add(fitted.group);if(lyra>=0)lyraOutfit.splice(lyraOutfit.indexOf(item),1,fitted.mesh);
+    correctives.push(createSkirtSeatMorph(fitted.mesh,model,lyra>=0?LYRA_DRAPE_MORPHS[lyra]:SILVAN_DRAPE_MORPHS[appearance.variant][silvan]));
     return fitted.mesh;
   }
   function lyraLook(){
@@ -248,19 +251,14 @@ export function createReferenceStyle(avatar,appearance){
     }
     box(torso,olive,[0,-.03,.13],[.12,.26,.014],.006);
     if(!masculine){const seat=mesh(pelvis,new THREE.CylinderGeometry(.182,.17,.42,24),trousers,[0,-.13,0]);seat.scale.z=.84;}
-    drape(pelvis,linen,{from:.55,to:Math.PI*2-.55,length:.84,name:'Forest aristocrat drape'});
-    drape(pelvis,olive,{from:-.24,to:.24,length:.7,rx:.2,rz:.152,jag:.08,lobes:1});
-    drape(pelvis,olive,{from:Math.PI-.3,to:Math.PI+.3,length:.8,rx:.2,rz:.152,jag:.1,lobes:2});
-    for(let i=0;i<6;i++){const a=(i%2?.12:-.12),y=-.06-i*.1;leaf(pelvis,leafGold,[Math.sin(a)*.2,y,Math.cos(a)*.16+.004],.018,(i%2?.6:-.6),0);}
-    for(let i=0;i<10;i++){const a=(i%2?1:-1)*(.8+(i>>1)*.14),y=-.1-(i>>1)*.13;leaf(pelvis,leafGold,[Math.sin(a)*(.2+(i>>1)*.01),y,Math.cos(a)*(.15+(i>>1)*.008)],.017,(i%2?1:-1)*.5,0);}
+    for(const [i,recipe]of silvanDrapes(appearance.variant).entries())drape(pelvis,i===0?linen:olive,recipe);
     // Gold-leaf sash with hanging leaf chains.
     const sash=[];for(let i=0;i<=32;i++){const a=i/32*Math.PI*2;sash.push([Math.sin(a)*.18,.09,Math.cos(a)*.135]);}
     tube(pelvis,olive,sash,.019);
     for(let i=0;i<7;i++){const a=(i-3)*.2;leaf(pelvis,leafGold,[Math.sin(a)*.185,.095+(i%2)*.012,Math.cos(a)*.14+.012],.028,a*1.5+(i%2?.5:-.5),0);}
-    for(const [x,drop] of [[-.07,.26],[.0,.34],[.06,.22],[.11,.3]]){
-      tube(pelvis,leafGold,[[x,.08,.148],[x+.01,.08-drop*.5,.156],[x,.08-drop,.154]],.0021);
-      leaf(pelvis,leafGold,[x,.065-drop,.156],.019,0,0);
-    }
+    const detail=mesh(pelvis,createSilvanDrapeDetailGeometry(appearance.variant),leafGold);detail.name='Forest aristocrat drape gold';
+    const fittedDetail=skinSkirt(detail,model.getObjectByName(masculine?'man-casualmale_casualsuit02':'Jevica'),{waist:masculine?.13:.09,hem:-.17});
+    attachments.add(fittedDetail.group);correctives.push(createSkirtSeatMorph(fittedDetail.mesh,model,SILVAN_DRAPE_MORPHS[appearance.variant][3]));
     for(const side of ['l','r']){
       // Vine-wrapped bracers on the forearms; vines climb bare upper arms.
       const forearm=along(`lowerarm_${side}`,`hand_${side}`);

@@ -2,8 +2,8 @@ import * as THREE from 'three';
 
 // Fold the authored long surface over the lap, then enforce upper-thigh contact
 // offline. Animation keeps its skin weights and only applies the baked targets.
-export function prepareDrapeSeatFit(skirt, model, {layer = 0, waist = .11} = {}) {
-  const pelvis = model.getObjectByName('pelvis'), body = model.getObjectByName('Jevica');
+export function prepareDrapeSeatFit(skirt, model, {layer = 0, waist = .11, body = model.getObjectByName('Jevica')} = {}) {
+  const pelvis = model.getObjectByName('pelvis');
   model.updateWorldMatrix(true, true); model.updateMatrixWorld(true);
   const frame = new THREE.Matrix4().compose(pelvis.getWorldPosition(new THREE.Vector3()), model.getWorldQuaternion(new THREE.Quaternion()), model.getWorldScale(new THREE.Vector3()));
   const offset = pelvis.matrixWorld.clone().invert().multiply(frame), inverse = frame.clone().invert();
@@ -60,7 +60,7 @@ export function prepareDrapeSeatFit(skirt, model, {layer = 0, waist = .11} = {})
           ray.set(point.clone().addScaledVector(up,.6),down);ray.far=1.2;
           const hit = ray.intersectObject(collider,false)[0]; if (!hit) continue;
           const clearance = point.clone().sub(hit.point).dot(up); if (clearance >= .028) continue;
-          const movable = ids.map(i => authored[i].y < .085), denominator = bary.reduce((sum,w,j) => sum + (movable[j] ? w*w : 0), 0);
+          const movable = ids.map(i => authored[i].y < waist - 1e-5), denominator = bary.reduce((sum,w,j) => sum + (movable[j] ? w*w : 0), 0);
           if (!denominator) continue;
           ids.forEach((id,j) => {if (movable[j]) posed[id].addScaledVector(up,bary[j]*(.028-clearance)/denominator);});corrected++;
         }

@@ -1193,3 +1193,63 @@ remain open; no exhaustive matrix or continuousmotion approval. Evidence under
 prototype and waistband-red logs. Ready for signedcommit/push and PR464/#442
 progress update. No merge/deploy; preserve checkout. Next: Silvan long drapes,
 coat panels, continuous motion/attachments and full remaining440–444acceptance.
+
+Silvan continuation: prior turn progressed with signed/pushedd48b609d Lyra.
+CurrentCI3green/6running. Primary register renewed; reused owned checkout.
+Saved poses show both Silvan rigs' thighs through rigid3panel drapes. Fit all3
+panels and hanging gold details together with per-rig generated data; preserve
+standing recipes, materials and ownership. Actual contact/render/motion regression
+required; no completion or artapproval inferred from prior passing matrix.
+
+
+Silvan fitting investigation: the masculine collider must be the actual
+man-casualmale_casualsuit02 mesh; the base man-casual body has no thigh triangles.
+The original contact regression failed on both rigs. All three panels now use
+925 vertices each and per-rig offline corrections, with merged hanging gold
+leaves/chains transferring cloth weights and deltas. Masculine waist rises4cm;
+feminine keeps its original waist. Both forms retain standing restoration and
+owned GPU geometry. Main/front directional contact passes in the real seat pose;
+rear contact uses a separate all-panel edge-crossing probe, not a zero-sample pass.
+The first asymmetric regression failed masculine90-degree bends: a fixed.085
+movable-row cutoff incorrectly pinned the first row beneath the raised waist.
+Using the actual waist minus tolerance fixes that regression (focused3/3 including
+codec tests). Full seated/motion/asymmetric edge checks are running.
+Generated module reduced4,482,702 to1,426,959bytes using lossless little-endian
+Float32 base64; source position/weight validation remains intact. Codec tests cover
+round trips, optional weights, missing/truncated/nonfinite data. Receipt pins18
+inputs and both shipped rig/license sources. Gold offsets are unsigned nearest
+surface distances, not outward-side or complete collision proof. High stretch
+and final cloth appearance remain separate review gates. No commit yet.
+
+
+Final Silvan incremental verification passed: 38 focused tests; deterministic
+Silvan/Lyra/Vesper/Sable bakes; 132 wardrobe rows, 330 sampled phases, 1,012 views
+and 765 browser checks; pinned native 4K human/fox references have zero pixel
+differences. Core 11/11: tooling117, preview3390 passed/1 existing skip/1 TODO,
+server914 zero skips, desktop69, Python141 with66 warnings. Build/lint/demo/secrets
+pass; demo verification retains its expected exit2. All17 frozen source hashes
+match. Reviewer rechecked cleanup, codec, edge coverage counters and normalized
+weights with no remaining patch blocker. New synthetic edge test proves positive
+crossings and clearance, with skipped short segments counted separately.
+
+The original all-pose run passed6 real-rig pose/motion cases but its new receipt
+validation found tiny negative interpolated gold weights (about1e-18). Offline
+clamp/normalization fixes these; final full gate includes the fix. Lyra generated
+data stays identical; only Vesper trim weights change, maximum2.85e-8. Browser
+main/front contact counts per form are436/1622 masculine and313/843 feminine,
+all zero penetration; minima25.30mm masculine,16.50/25.27mm feminine. Actual sample
+counts differ slightly from unit probes (438/1622 masculine), both pass.
+
+Selected all-four-form seated front/side/rear, human overhead, feminine walk and
+both beast-prowl strips inspected. Lap coverage and attached gold improve. Stiff
+folds, knee openings, underlying trouser silhouettes, whole-leg/body collision,
+continuous motion and outward gold placement remain unapproved. Exact inspected
+files and limits: .runtime/character-studio/silvan-verification/verified-20261016/
+visual-review.json. All receipts/captures/red logs and frozen hashes retained
+there; earlier prototype captures are in the sibling prototype folder.
+Project check reports31 unrelated gaps and none for own task. Ready for signed
+commit/push and PR464/#442 progress. No merge/deploy or full issue completion.
+Next: inspect exact-head CI, extend actual contact/render evidence to Silvan's
+knee/calf and trouser silhouette, then formal/noir coat panels; continue remaining
+440-444 visual/device/usability/accessibility/live/release acceptance. Preserve
+checkout and all13 untracked reports; it is not eligible for retirement.
