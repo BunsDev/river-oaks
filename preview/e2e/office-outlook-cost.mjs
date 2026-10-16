@@ -18,6 +18,7 @@ import { holdBrowserLock } from '../../scripts/browser-lock.mjs';
 
 const args = process.argv.slice(2), option = (name, fallback) => { const i = args.indexOf(`--${name}`); return i >= 0 ? args.splice(i, 2)[1] : fallback; };
 const rounds = Number(option('rounds', 3)), cpu = Number(option('cpu', 4)), name = option('out', 'office-outlook-cost');
+const profile = args.includes('--profile') ? (args.splice(args.indexOf('--profile'), 1), true) : false;
 const arms = args.map(arg => { const [label, root] = arg.split('='); return { label, root: resolve(root) }; });
 if (arms.length < 2 || arms.some(arm => !arm.label || !arm.root)) throw new Error('Give at least two arms as <label>=<checkout>.');
 const output = `output/playwright/${name}`;
@@ -41,7 +42,7 @@ const glCounters = () => {
   globalThis.__glCost = counters;
 };
 
-async function session(browser, arm, origin) {
+async function session(browser, arm, origin, round) {
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
   await context.addCookies([{ name: 'fixture_session', value: 'owner', url: origin }]);
   await context.addInitScript(() => localStorage.setItem('river-oaks-graphics', 'smooth'));
@@ -88,10 +89,12 @@ async function session(browser, arm, origin) {
     };
     // The steady live outlook from a fixed view: frame interval, whole-frame CPU, draws, triangles
     // and bytes uploaded per frame.
+    // --profile: a CDP CPU profile of each view's sample, saved beside the receipt.
     const steady = async view => {
       await page.locator('#office-view').selectOption(view);
       await page.evaluate(async () => { for (let i = 0; i < 30; i++) await new Promise(requestAnimationFrame); });
-      return page.evaluate(async count => {
+      if (profile) { await cdp.send('Profiler.enable'); await cdp.send('Profiler.setSamplingInterval', { interval: 200 }); await cdp.send('Profiler.start'); }
+      const sampled = await page.evaluate(async count => {
         const audit = window.__riverRenderAudit, samples = []; audit.start();
         let bytes = window.__glCost.uploadBytes, uploads = window.__glCost.uploads;
         for (let i = 0; i < count; i++) {
@@ -102,7 +105,9 @@ async function session(browser, arm, origin) {
         }
         const { frames } = audit.stop();
         return { samples, frames, quality: audit.graphics().quality, outlook: window.__riverOffice()?.skyline ?? null, precompile: window.__riverOffice()?.precompile ?? null };
-      }, SAMPLE).then(({ samples, frames, quality, outlook, precompile }) => ({ view, precompile,
+      }, SAMPLE);
+      if (profile) await writeFile(`${output}/${arm.label}-${round}-${view}.cpuprofile`, JSON.stringify((await cdp.send('Profiler.stop')).profile));
+      return Promise.resolve(sampled).then(({ samples, frames, quality, outlook, precompile }) => ({ view, precompile,
         intervalMs: round1(median(frames.map(f => f.intervalMs))), intervalP95Ms: round1(quantile(frames.map(f => f.intervalMs), 0.95)),
         cpuMs: round1(median(frames.map(f => f.cpuMs))), calls: median(samples.map(s => s.calls)), triangles: median(samples.map(s => s.triangles)),
         uploadKiB: round1(median(samples.map(s => s.bytes)) / 1024), uploadsPerFrame: median(samples.map(s => s.uploads)),
@@ -138,7 +143,7 @@ try {
   browser = await chromium.launch({ headless: true, args: ['--use-angle=metal', '--ignore-gpu-blocklist', '--disable-gpu-vsync', '--disable-frame-rate-limit'] });
   for (let round = 0; round < rounds; round++) {
     for (const arm of round % 2 ? [...arms].reverse() : arms) {
-      const started = Date.now(), run = await session(browser, arm, arm.origin);
+      const started = Date.now(), run = await session(browser, arm, arm.origin, round);
       arm.runs.push({ round, load: loadavg().map(n => Number(n.toFixed(1))), seconds: Math.round((Date.now() - started) / 1000), ...run });
       console.log(JSON.stringify({ round, arm: arm.label, first: run.first, views: run.views.map(v => ({ view: v.view, intervalMs: v.intervalMs, cpuMs: v.cpuMs, calls: v.calls, uploadKiB: v.uploadKiB })), repeat: { longestMs: run.repeat.longestMs, links: run.repeat.links } }));
     }
