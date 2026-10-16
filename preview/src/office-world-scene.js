@@ -35,15 +35,26 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
     const skyline=createVisitSkyline(street,layout,[stage,street.lobby.object,street.avatar.object,peerRoot]);
     const worldLights=lights.map(light=>({...light,position:light.position.clone()}));
     // First entry (#449): in the live outlook the office's lamps join the scene's lights when it first
-    // shows, which changes the program of every lit material in view. Compile them while the arrival
-    // plays, with the office shown just for the call so its lamps count. A skipped arrival has nothing
-    // to hide that behind, so it holds on the street until they are ready, for at most three seconds.
-    let compiled=!street.renderer?.compileAsync,holdFrom=null;
-    if(!compiled){
-      const shown=office.object.visible;office.object.visible=true;
-      try{street.renderer.compileAsync(street.scene,street.camera).then(()=>{compiled=true;},()=>{compiled=true;});}catch{compiled=true;}
+    // shows, which changes the program of every lit material in view. Compile them during the arrival,
+    // a batch each frame sized to a few milliseconds, for the pipeline's scene pass, with the office
+    // shown just for each call so its lamps count. Only what is drawn is queued: the visible district
+    // and the office, one object per material and kind (instanced and skinned meshes are kinds of
+    // their own). A skipped arrival has nothing to hide that behind, so it holds on the street until
+    // they are ready, for at most three seconds.
+    const precompile=street.pipeline?.compileAsync?[]:null,kinds=new Set(),drawn=o=>(o.isMesh||o.isPoints||o.isLine||o.isSprite)&&o.material;
+    const enqueue=o=>{if(!drawn(o))return;const kind=[...[o.material].flat().map(m=>m.uuid),o.isInstancedMesh?'instanced':o.isSkinnedMesh?'skinned':o.isBatchedMesh?'batched':o.type,o.receiveShadow,!!o.instanceColor,!!o.geometry?.attributes?.color].join();if(!kinds.has(kind)){kinds.add(kind);precompile.push(o);}};
+    if(precompile){street.scene.traverseVisible(enqueue);office.object.traverse(enqueue);}
+    let compiling=0,batchSize=4,holdFrom=null;
+    const compiled=()=>!precompile?.length&&!compiling,settle=()=>{compiling--;};
+    const compileSome=()=>{
+      if(!precompile?.length)return;
+      const items=precompile.splice(-batchSize).filter(o=>o.parent),batch=new THREE.Object3D(),shown=office.object.visible,started=performance.now();
+      batch.traverse=visit=>items.forEach(visit);batch.traverseVisible=()=>{};
+      office.object.visible=true;compiling++;
+      try{street.pipeline.compileAsync(batch,street.camera,street.scene).then(settle,settle);}catch{settle();}
       finally{office.object.visible=shown;}
-    }
+      const spent=performance.now()-started;batchSize=spent<2?batchSize*2:spent>8?Math.max(1,batchSize>>1):batchSize;
+    };
     actors=createRemotePlayers(peerRoot,host,{snapInitialHeading:true,isVisible:p=>current?.done&&officePeerVisible({...p,position:p.office.position},self.id,position,!fixedView(),levelId)});
     const view=street.startCamera.clone(),localView=new THREE.PerspectiveCamera(),worldRotation=new THREE.Quaternion().setFromRotationMatrix(street.frame);
     const basePosition=new THREE.Vector3().setFromMatrixPosition(street.frame),point=new THREE.Vector3(),worldBody=new THREE.Vector3();
@@ -61,8 +72,9 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
       const ready=street.avatar.ready;
       if(started===null&&ready)started=now;
       const elapsed=clock.tick(now,ready),time=Math.max(0,elapsed-approach.duration);
-      if(skipped&&!compiled)holdFrom??=now;
-      const holding=skipped&&!compiled&&now-holdFrom<3000,entering=holding||!skipped&&elapsed<approach.duration;
+      compileSome();
+      if(skipped&&!compiled())holdFrom??=now;
+      const holding=skipped&&!compiled()&&now-holdFrom<3000,entering=holding||!skipped&&elapsed<approach.duration;
       const frame=arrivalFrame(time,{reducedMotion:skipped}),aspect=host.clientWidth/Math.max(1,host.clientHeight);
       current={...frame,phase:started===null&&!skipped?'loading':entering?'lobby':frame.phase,ready,progress:skipped?1:Math.min(1,elapsed/(approach.duration+ARRIVAL.duration))};
       const ascent=frame.done?1:ease((time-ARRIVAL.closingEnd)/(ARRIVAL.ascentEnd-ARRIVAL.closingEnd));

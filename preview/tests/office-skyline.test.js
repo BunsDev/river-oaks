@@ -391,27 +391,39 @@ test('phones and tablets keep the bounded snapshot outlook; other devices draw t
 // First entry (#449): the office's lamps change every lit material's program when it first shows.
 function compiling(s) {
   const calls = [], pending = [];
-  s.captured.renderer.compileAsync = (scene, camera) => {
-    const office = scene.getObjectByName('office:office-penthouse-1'); let lamps = 0;
-    scene.traverseVisible(node => { if (node.isPointLight && node.parent === office) lamps++; });
-    calls.push({ scene, camera, shown: office.visible, lamps });
+  s.captured.pipeline.compileAsync = (object, camera, target) => {
+    const office = target.getObjectByName('office:office-penthouse-1'), items = []; let lamps = 0;
+    target.traverseVisible(node => { if (node.isPointLight && node.parent === office) lamps++; });
+    object.traverse(node => items.push(node));
+    calls.push({ object, camera, target, shown: office.visible, lamps, items });
     return new Promise(resolve => pending.push(resolve));
   };
-  return { calls, finish: () => pending.forEach(resolve => resolve()) };
+  return { calls, finish: () => pending.splice(0).forEach(resolve => resolve()) };
 }
+const tick = () => new Promise(resolve => setImmediate(resolve));
 
-test('entering compiles the in-office programs with the lamps counted; a skipped arrival holds on the street until ready', async t => {
+test('entering compiles what the office will draw, with its lamps counted; a skipped arrival holds on the street until ready', async t => {
   const s = street({ layout: OFFICE_LAYOUT_PENTHOUSE, skyline: { mode: 'live' } }), c = compiling(s), v = visit(t, s);
   const office = s.scene.getObjectByName('office:office-penthouse-1');
-  assert.equal(c.calls.length, 1); assert.equal(c.calls[0].scene, s.scene); assert.equal(c.calls[0].camera, s.captured.camera);
-  assert.ok(c.calls[0].shown && c.calls[0].lamps === 5, `compiled with the office's five lamps in the scene: ${JSON.stringify(c.calls[0].lamps)}`);
-  assert.equal(office.visible, false, 'and hidden again right after the call');
-  v.scene.skip(); v.draw(0); v.draw(16); v.draw(1000);
-  assert.deepEqual(v.phases, ['lobby', 'lobby', 'lobby'], 'the cut waits on the street');
+  v.scene.skip();
+  for (let i = 0; i < 40; i++) v.draw(i * 16);
+  assert.ok(v.phases.every(phase => phase === 'lobby'), `the cut waits on the street: ${[...new Set(v.phases)]}`);
   assert.equal(office.visible, false); assert.equal(s.districtGroup.visible, true);
-  c.finish(); await new Promise(resolve => setImmediate(resolve));
-  v.draw(1016); assert.equal(v.phases.at(-1), 'office'); assert.equal(office.visible, true);
-  assert.equal(c.calls.length, 1, 'compiled once per visit');
+  assert.ok(c.calls.length > 1, 'the work is spread over several frames');
+  for (const call of c.calls) {
+    assert.equal(call.target, s.scene); assert.equal(call.camera, s.captured.camera);
+    assert.ok(call.shown && call.lamps === 5, `each call counts the office's five lamps: ${call.lamps}`);
+  }
+  const items = c.calls.flatMap(call => call.items);
+  assert.ok(items.every(item => item.isMesh && item.material), 'only drawn objects');
+  for (const name of ['ceiling', 'curtain wall panes', 'desks']) assert.ok(items.some(item => item.name === name), `the office's ${name}`);
+  const kinds = items.map(item => `${item.material.uuid}|${item.isInstancedMesh}|${item.type}|${item.receiveShadow}`);
+  assert.equal(new Set(kinds).size, kinds.length, 'each material and kind once');
+  assert.equal(office.visible, false, 'hidden again after every call');
+  c.finish(); await tick();
+  v.draw(1000); assert.equal(v.phases.at(-1), 'office'); assert.equal(office.visible, true);
+  const calls = c.calls.length; for (let i = 1; i <= 10; i++) v.draw(1000 + i * 16);
+  assert.equal(c.calls.length, calls, 'nothing more to compile once arrived');
 });
 
 test('a skipped arrival waits at most three seconds for compilation, and a played one never waits', t => {
