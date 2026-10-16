@@ -1,3 +1,4 @@
+import {createMemoryCharacterSelection,isCharacterSelection} from './character-selection.js';
 import { createCharacterRoutes } from './character-routes.js';
 import { createMemoryOfficeWorkspaces } from './office-workspaces.js';
 import { officeWorkspaceAction } from './office-workspaces-api.js';
@@ -69,6 +70,14 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
     if (req.headers.origin!==origin || !equal(req.headers['x-csrf-token'],identity.csrfToken)) {json(res,403,{error:'Invalid request origin or security token.'});return null;}
     return identity;
   };
+  const characterSelection=characters?.getSelection?createMemoryCharacterSelection({world:()=>world,store:characters,legacy:avatarPreferences,
+    authorized:async(userId,context)=>{
+      const connection=connections.get(userId);
+      if(!connection||connection.token!==context.connectionId||connection.identity.sessionId!==context.sessionId)return false;
+      const approved=await waitlist.isApproved(userId);
+      const active=!auth.isSessionActive||await auth.isSessionActive(userId,context.sessionId);
+      return approved&&active&&connections.get(userId)===connection&&connection.identity.expiresAt>now()&&!isBanned(userId);
+    }}):null;
   const handleCharacters=characters?createCharacterRoutes({store:characters,approvedIdentity,authorized,allowRead:characterReads,allowWrite:characterWrites}):null;
   const disconnectUser = (id, code=4003, reason='Session ended') => {
     for (const [key,ticket] of tickets) if (ticket.identity.userId===id) tickets.delete(key);
@@ -77,7 +86,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
     if(connection && presence)void presence.leave(id,connection.token).catch(()=>{});
     // Every kick (ban, approval ended, logout, another world) ends the account's voice too.
     if(voice)void voice.revokeUser(id).catch(()=>{});
-    connection?.ws.close(code,reason);world.leave(id);void flushRides();
+    connection?.ws.close(code,reason);world.leave(id);characterSelection?.forget(id);void flushRides();
   };
   const handleVoice=voice?createVoiceRoutes({voice,worldId,authorized,matchesWorld,allow:id=>voiceCalls(id),
     present:async identity=>{
@@ -331,7 +340,8 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
         const token=randomUUID();
         void (async()=>{
         if(stopped){ws.close(UPDATE_CLOSE.code,UPDATE_CLOSE.reason);return;}
-        if(avatarPreferences) {
+        if(characterSelection)await characterSelection.initialize(identity.userId,()=>!stopped&&ws.readyState===WebSocket.OPEN);
+        else if(avatarPreferences) {
           const preference=await avatarPreferences.initialize(identity.userId,world.accountAppearance(identity.userId));
           world.applyAccountAppearance(identity.userId,preference);
         }
@@ -395,11 +405,15 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
               if(!moderation || !reports(identity.userId) || !['disruption','harassment','cheating'].includes(message.reason) || !connections.has(message.playerId) || message.playerId===identity.userId)return send(ws,{type:'result',requestId:message.requestId,ok:false,message:'Report could not be submitted.'});
               moderation.report(identity.userId,message.playerId,message.reason).then(()=>send(ws,{type:'result',requestId:message.requestId,ok:true,message:'Report sent to the town moderators.'}),()=>send(ws,{type:'result',requestId:message.requestId,ok:false,message:'Report unavailable. Try again.'}));return;
             }
-            const {requestId,...command}=message;
+            const {requestId,selection,...command}=message;
+            if(selection!==undefined&&(!characterSelection||!isCharacterSelection(command)))return send(ws,{type:'result',requestId,ok:false,error:'invalid_character_operation'});
+            if(characterSelection?.hasPending(identity.userId))return send(ws,{type:'result',requestId,ok:false,error:'character_selection_pending'});
             const officeWorkspace=await workspaceContext(officeWorkspaces,identity.userId,command);
             if(connections.get(identity.userId)!==connection || ws.readyState!==WebSocket.OPEN)return;
-            const result=world.command(identity.userId,command,{officeWorkspace,sessionId:identity.sessionId??null});
-            if(result.ok && avatarPreferences && ['appearance','movement'].includes(command.type))
+            const result=characterSelection&&isCharacterSelection(command)
+              ?await characterSelection.command(identity.userId,command,selection,{connectionId:token,sessionId:identity.sessionId??null})
+              :world.command(identity.userId,command,{officeWorkspace,sessionId:identity.sessionId??null});
+            if(result.ok && !characterSelection && avatarPreferences && ['appearance','movement'].includes(command.type))
               await avatarPreferences.save(identity.userId,world.accountAppearance(identity.userId));
             if(result.ok && command.type==='uncycle')await flushRides();
             const earlyAck=result.ok && command.type==='travel' && requestId!==undefined;
@@ -414,8 +428,8 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
           if(connections.get(identity.userId)!==connection)return;
           connections.delete(identity.userId);
           if(presence)void presence.leave(identity.userId,token).catch(()=>{});
-          if(stopped){world.leave(identity.userId);void flushRides();return;}
-          const timer=setTimeout(()=>{departures.delete(identity.userId);world.leave(identity.userId);void flushRides();if(voice)void voice.revokeUser(identity.userId).catch(()=>{});},departureGraceMs);timer.unref();departures.set(identity.userId,timer);
+          if(stopped){world.leave(identity.userId);characterSelection?.forget(identity.userId);void flushRides();return;}
+          const timer=setTimeout(()=>{departures.delete(identity.userId);world.leave(identity.userId);characterSelection?.forget(identity.userId);void flushRides();if(voice)void voice.revokeUser(identity.userId).catch(()=>{});},departureGraceMs);timer.unref();departures.set(identity.userId,timer);
         });
         send(ws,{...snapshot(),selfId:identity.userId});
         })().catch(()=>{if(joinedHere)world.leave(identity.userId);if(presence)void presence.leave(identity.userId,token).catch(()=>{});ws.close(1013,'Town temporarily unavailable.');});
@@ -449,14 +463,21 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
     }
     for(const [key,ticket]of tickets)if(ticket.until<=now())tickets.delete(key);
   },30000);heartbeat.unref();
-  const avatarSync=avatarPreferences?setInterval(()=>{
+  const avatarSync=characterSelection||avatarPreferences?setInterval(()=>{
     for(const [userId,connection] of connections) {
+      if(characterSelection){void characterSelection.sync(userId,()=>connections.get(userId)===connection).catch(()=>connection.ws.close(1013,'Account appearance temporarily unavailable.'));continue;}
       void avatarPreferences.get(userId).then(preference=>{
         if(preference && connections.get(userId)===connection)world.applyAccountAppearance(userId,preference);
       }).catch(()=>connection.ws.close(1013,'Account appearance temporarily unavailable.'));
     }
   },5000):null;
   avatarSync?.unref();
+  let selectionRecovering=false;
+  const selectionRecovery=characterSelection?setInterval(()=>{
+    if(selectionRecovering)return;selectionRecovering=true;
+    void characterSelection.recover().finally(()=>{selectionRecovering=false;});
+  },200):null;
+  selectionRecovery?.unref();
   const rideFlush=cyclingMiles?setInterval(()=>{void flushRides();},cyclingFlushMs):null;
   rideFlush?.unref();
   // Shared voice: stamp each player's participant identity from its lease, and
@@ -474,9 +495,9 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
     departures.clear();tickets.clear();
     if(presence)for(const connection of connections.values())void presence.leave(connection.identity.userId,connection.token).catch(()=>{});
     for(const {ws} of connections.values())ws.close(4000,'World region updated.');
-    connections.clear();void flushRides();world=next;regionSha256=hash;
+    connections.clear();characterSelection?.clear();void flushRides();world=next;regionSha256=hash;
   },async close(){
-    stopped=true;clearInterval(officeSync);clearInterval(loop);clearInterval(heartbeat);clearInterval(avatarSync);clearInterval(voiceLoop);clearInterval(rideFlush);
+    stopped=true;clearInterval(officeSync);clearInterval(loop);clearInterval(heartbeat);clearInterval(avatarSync);clearInterval(selectionRecovery);clearInterval(voiceLoop);clearInterval(rideFlush);
     for(const [id,timer] of departures){clearTimeout(timer);world.leave(id);}
     departures.clear();tickets.clear();
     if(presence)await Promise.allSettled([...connections.values()].map(connection=>presence.leave(connection.identity.userId,connection.token)));

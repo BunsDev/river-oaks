@@ -141,3 +141,13 @@ test('Redis selected account revision survives room replacement; client-forged d
     assert.equal((await room.request({type:'heartbeat',userId:'alice',connectionId:'replacement'})).ok,true);
     assert.equal((await room.read()).snapshot.players.find(p=>p.id==='alice').character,undefined,'sync must not resurrect a cleared selection');
   });
+
+
+test('legacy default-world migration reads envelope3 and still rejects a different world',async()=>{
+  const world=createSharedWorld(data);world.join({userId:'alice',name:'Alice'});
+  assert.equal(world.command('alice',{type:'appearance',appearance:'woman-casual'}).ok,true);
+  const room={version:3,worldId:'river-oaks',checkpoint:world.checkpoint(),pendingSelections:[],selectionVersions:[]};
+  const redis={getBuffer:async()=>deflateSync(JSON.stringify(room))};
+  assert.equal((await legacyDefaultAppearance(redis,'{test}:state','alice')).appearance,'woman-casual');
+  room.worldId='foreign';await assert.rejects(legacyDefaultAppearance(redis,'{test}:state','alice'),/Invalid legacy/);
+});

@@ -73,7 +73,7 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
         :id===DEFAULT_WORLD_ID?worldData:{...worldData,title:meta?.title??worldData.title};
       const room=createRedisRoom({redis,prefix:roomPrefixFor(namespace,id),worldId:id,
         worldData:data,regionCatalog:meta?.template==='region-v1'?catalog:null,regionSha256:meta?.regionSha256,
-        avatarPreferences,voice,cyclingMiles,officeWorkspaces,screeningHosts,...(officeLayout?{officeLayout}:{}),
+        avatarPreferences,characters,voice,cyclingMiles,officeWorkspaces,screeningHosts,...(officeLayout?{officeLayout}:{}),
         ...(isAdmin?{isAdmin}:{}),
         authorize:async identity=>await auth.isSessionActive(identity.userId,identity.sessionId)
           && await waitlist.isApproved(identity.userId) && !(await security.isBanned(identity.userId))});

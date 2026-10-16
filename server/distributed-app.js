@@ -1,3 +1,4 @@
+import {isCharacterSelection} from './character-selection.js';
 import { createCharacterRoutes } from './character-routes.js';
 import { officeWorkspaceAction } from './office-workspaces-api.js';
 import { officeDeskAction, OFFICE_DESK_BODY_LIMIT } from './office-desk-api.js';
@@ -433,7 +434,8 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
             if (!(await ready) || ws.readyState !== WebSocket.OPEN) return;
             if (!(await security.allow('frames', identity.userId, 40, 1000))) { ws.close(4008, 'Too many messages.'); return; }
             if (identity.expiresAt <= now()) { ws.close(4001, 'Please sign in again.'); return; }
-            const { requestId, ...command } = message;
+            const { requestId, selection, ...command } = message;
+            if(selection!==undefined&&!isCharacterSelection(command)){send(ws,{type:'result',requestId,ok:false,error:'invalid_character_operation'});return;}
             if (command.type === 'report') {
               const view = await room.read();
               const self = view?.connections.find(item => item.userId === identity.userId);
@@ -446,7 +448,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
             }
             const resolved = await accountDesignCommand({ command, userId: identity.userId, connectionId, worldId,
               room, library: designLibrary, security, isAdmin });
-            const result = resolved.result ?? await room.request({ type: 'command', userId: identity.userId, connectionId, message: resolved.command });
+            const result = resolved.result ?? await room.request({ type: 'command', userId: identity.userId, connectionId, message: resolved.command, ...(selection!==undefined?{selection}:{}) });
             if (result.error === 'stale_connection') { ws.close(4009, 'This account joined in another tab.'); return; }
             const earlyAck = result.ok && command.type === 'travel' && requestId !== undefined;
             if (earlyAck) send(ws, { type: 'result', requestId, ...result });

@@ -338,7 +338,9 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       }
       if(characters&&selectionTypes.includes(operation.message.type)){
         try{
-          const selection=characterSelectionOperation(operation.userId,operation.message,operation.selection);
+          const metadata=operation.selection===undefined&&operation.message.type!=='character'
+            ?{expectedVersion:(await accountSelection(operation.userId)).version,requestId:queueId}:operation.selection;
+          const selection=characterSelectionOperation(operation.userId,operation.message,metadata);
           const pending=pendingSelections.get(operation.userId);
           if(pending){
             if(pending.operation.requestId===selection.requestId&&pending.operation.fingerprint!==selection.fingerprint)return rejected('character_request_reused');
@@ -347,7 +349,7 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
             if(pending.replyIds.length>=MAX_SELECTION_REPLIES)return rejected('character_selection_pending');
             pending.replyIds.push(queueId);return null;
           }
-          const replay=await characters.getSelectionResult(operation.userId,selection.command,operation.selection);
+          const replay=await characters.getSelectionResult(operation.userId,selection.command,metadata);
           if(replay)return selectionReply(operation.userId,replay);
           const current=await accountSelection(operation.userId);
           if(current.version!==selection.expectedVersion||current.version<(selectionVersions.get(operation.userId)??0))return rejected('character_selection_conflict');

@@ -380,3 +380,77 @@ Final core PASSED 2026-10-16T00:21:18.716Z to 2026-10-16T00:23:33.222Z. `node sc
 `pnpm run verify` passed all 11 core tasks with isolated Redis: tooling117; preview3319 passed,1 skip,1 todo; server858 passed with zero skips; desktop69; Python141 (66 warnings); build/lint/format/demo/secrets. Focused memory/Redis/HTTP tests passed61/61 with zero skips. Actual prior-v12/current-v13 coordinator audit passed8 checks. Independent review found no remaining blocker. The unchanged socket handover suite passed6/6 independently after an earlier observer assertion failed; the final core rerun also passed. No browser, native, live-auth, device or human acceptance is claimed for this increment.
 
 All changed source/test hashes stayed unchanged throughout final verification; coordinator/world hashes match the upgrade audit. Receipts: room-core.json/.log, room-focused.log, room-upgrade.json/.log, room-source-hashes.json, room-rotation.log in .runtime/character-studio. Red edge/region and failed pre-refinement core receipts retained separately. Ready for signed commit/push to draft464 and issue443 update. Remaining end-to-end goal is active; no merge/deployment or archive eligibility.
+
+
+Continuation after077d887a: prior turn PROGRESS, signed/pushed durable room intents, core858/zero skips, focused61 and actual writer audit8. Reused clean owned checkout;15 worktrees preserved. Next integrate both transports: memory preparation/CAS/projection with per-account pending fences and receipt-first uncertain-write recovery, explicit custom selection metadata, legacy command compatibility, envelope3 legacy migration, owner-scoped publication/rollback and selection reads. Publication must not equip. Verify real HTTP/WebSockets with two identities, reconnect/replacement, stale/foreign/forged inputs, backend failures and unchanged legacy authority before full browser gate. Original #440–#444 acceptance remains open.
+
+
+Both transports now route custom revision selection through canonical owner lookup
+and account CAS. Memory keeps uncertain intents fenced and recovers receipts;
+Redis uses the committed room intents. Explicit custom selection versions/IDs are
+separate from wire response IDs; legacy commands get server-generated metadata.
+HTTP publication/rollback use the existing approval/ban/Origin/CSRF and quota gates
+and never equip. Default-room migration reads envelope3. Initial focused real
+Redis run passed31/31. A new late-memory-read regression failed after replacement;
+world/connection checks fixed it. Memory shutdown/newer-choice regression passes.
+Full gate is queued/running on frozen source, including all character tests, the
+actual writer audit and pnpm run verify full with isolated Redis. No UI/rendered
+acceptance claim; remaining original scope is unchanged.
+
+Full-profile first run stopped at one stale geography probe: world-gateway.test.js
+created a default v12-only coordinator after the activated gateway wrote envelope3.
+Keep old writers fail-closed; update that probe to supply the current character
+store, preserving its stale-geography recovery purpose. Actual v12 rejection remains
+covered by the separate executable upgrade audit. Red receipt retained as
+transport-full-before-fixture.json/.log. Corrected final focused suite passed80/80,
+zero Redis skips; upgrade audit passed8. Final full gate is running on frozen source
+(tool session82727); poll that same process, never restart from a status timeout.
+
+Next client work after verified backend delivery: expose character HTTP operations
+through multiplayer-client's existing credential/CSRF request helper; keep stable
+operation IDs and expected account/selection versions across retries; retain edits
+through errors and make concurrent-save conflicts explicit. Extend the existing
+Studio footer with durable save and publish/equip states. Normalize loaded published
+looks to draft revision0 for editing. Bind the Studio baseline to the canonical
+selected definition rather than only appearanceId. Local player-avatar and remote-
+players currently ignore player.character: validate it against owner/appearance,
+apply independently owned materials for same-base changes, and fence stale loads,
+failures and disposal. Keep safe authored fallback while loading. Verify two-player
+rendered colors, reconnect, edit/republish, conflicts and asset failures through the
+real existing acceptance harness. These are unimplemented next actions, not evidence.
+
+2026-10-16 continuation: final backend full gate82727 remains active on frozen
+source; source hashes still match. Experience13 passed, shared journeys underway.
+Do not restart. New user request prioritizes expandable plaza game layout in a
+separate checkout; preserve this goal/worktree and finish the running gate.
+
+Next client implementation is STAGED ONLY under ignored
+.runtime/character-studio/client-next/ and has not altered verified application
+source. character-account tests18 pass (lost draft/publish/equip replies, concurrent
+edits, exact ID retries, request_timeout, HTTP429, real DOMException timeouts,
+disposal and malformed reads). Remote controller tests13 pass; new same-base color
+and late-load/departure regressions fail against old controller. Review found/fixed
+real TimeoutError numeric-code retry loss and Studio auto-close while replacing the
+local rig; canStayOpen now differs from entry readiness. Staged local avatar, UI,
+main/HTTP adapter, and shared browser journey need integration/verification.
+
+After backend commit: copy only intended staged files into preview src/tests/e2e,
+rewrite staging relative ../../../preview/src imports to normal source paths,
+rewrite test server import ../../../server to ../../server and local controller
+imports to ../src. Do not copy remote-players-before.test.js (red baseline),
+stage-ui.py (already-applied transform), or other scratch files. Update old Studio
+journey labels Keep draft=>Close studio and Discard changes=>Discard edits. Register
+new character-studio-shared journey in shared-runner and claim those files first.
+Run unit/build/core and locked real browser journeys; inspect screenshots. No
+rendered or local-avatar acceptance yet. Broader original #440-444 gaps unchanged.
+
+Final backend full gate PASSED, all18 tasks, 2026-10-16. Receipt transport-full.json/.log retained with transport-focused.log, transport-upgrade.log and actual experience/shared reports. Source hashes still match. Focused80, writer audit8, server868 zero skips; experience13, shared21 and IPIC12 passed. Generated tracked reports restored after retaining actual evidence. Backend remains uncommitted while latest user game-layout task proceeds; original durable goal UI status is paused. Do not represent staged client files as integrated.
+
+Resumed original durable goal after plaza-layout handoff. Previous goal turn made
+no Character Studio progress; revalidated the completed transport receipt and all
+11 source/test hashes rather than rerunning unchanged checks. Full profile passed
+18/18 tasks (00:39:18 to01:12:06 UTC), focused80 and actual writer audit8; no Redis
+skips. Deliver verified backend, then integrate staged client and two-player journey.
+Claims renewed and shared-runner/journey claimed. Full original acceptance remains
+open, especially seated Sable fit, UI/rendered persistence, fallback/lifecycle,
+goldens and target-device/human acceptance. No merge/deployment/archive eligibility.

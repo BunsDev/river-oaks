@@ -11223,9 +11223,9 @@
         "feat/character-studio-persistence-20261015"
       ],
       "owner": "codex-character-studio-20261015",
-      "updatedAt": "2026-10-16T00:24:14.100667+00:00",
-      "leaseUntil": "2026-10-16T02:24:14.100667+00:00",
-      "nextAction": "Durable optional room selection verified: core858 server/zero skips, focused61, actual v12/v13 writer audit8, review clear. Sign/push to draft464 and update issue443, then integrate standalone memory selection and gateway account migration, stable WebSocket request/version metadata, authenticated publication/equip, Studio UI/peer rendering and two-player journeys. Full acceptance and seated garment fit remain open; preserve worktree.",
+      "updatedAt": "2026-10-16T03:04:50.575861+00:00",
+      "leaseUntil": "2026-10-16T05:04:50.575861+00:00",
+      "nextAction": "Backend full verification finished: all18 tasks passed, focused80, writer audit8, server868 zero skips, experience13/shared21/screening12. Frozen source hashes revalidated on resume. Commit/push verified transport activation to draft464, update443; integrate staged durable save/wear UI and owned local/peer materials, run real two-player rendered acceptance. Full #440-444 scope remains active; no merge/deploy.",
       "filesOwned": [
         "server/character-store.js",
         "server/tests/character-store.test.js",
@@ -11255,7 +11255,24 @@
         "server/tests/penthouse-seats.test.js",
         "server/recovery-diagnostics.js",
         "server/tests/character-selection.test.js",
-        "server/tests/character-room.test.js"
+        "server/tests/character-room.test.js",
+        "server/character-selection.js",
+        "server/tests/character-selection-memory.test.js",
+        "server/tests/character-equip.test.js",
+        "server/tests/world-gateway.test.js",
+        "preview/src/character-account.js",
+        "preview/tests/character-account.test.js",
+        "preview/src/character-studio.js",
+        "preview/src/character-studio.css",
+        "preview/src/multiplayer-client.js",
+        "preview/src/main.js",
+        "preview/src/player-avatar.js",
+        "preview/src/remote-players.js",
+        "preview/src/character-selection-view.js",
+        "preview/tests/remote-players.test.js",
+        "preview/e2e/character-studio.js",
+        "preview/e2e/character-studio-shared.js",
+        "preview/e2e/shared-runner.js"
       ],
       "requiredChecks": [
         "Memory and real isolated Redis store contract tests",

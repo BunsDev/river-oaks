@@ -77,7 +77,7 @@ Colors touch tagged, avatar-owned materials only; teardown restores their origin
 values and disposes the preview. Late loads are discarded, including after close,
 and a stale failed load cannot drop a newer selection. The town renderer pauses
 drawing behind the Studio while authoritative world/network updates continue.
-Custom colors are not published or replicated yet; #443 supplies that boundary.
+The Studio editor still previews local edits. Server publication and selection now replicate validated definitions; connecting the editor and rendering those peer definitions remains part of #443.
 
 ## Components and delivery order
 1. #440: strict baseline contract, migration and actual human/beast rig fixtures;
@@ -239,7 +239,7 @@ this matrix. Other wardrobes, wing/armor cases, continuous gait phases, pinned
 hero goldens, crowd/device budgets and human review remain open.
 
 
-## Authoritative drafts (#443, publication integration pending)
+## Authoritative drafts and publication (#443)
 
 `server/character-store.js` implements the same state transitions for memory and
 Redis. The HTTP boundary supplies the authenticated owner ID; the store module
@@ -261,11 +261,14 @@ private records, leaving only a hashed owner key and minimal tombstone. Stale
 commands cannot recreate it. Tombstones require an explicit future lifecycle policy
 before reclaiming account slots; silently expiring them would reopen retry races.
 
-Both standalone and distributed servers expose `GET /api/character` and
-`PUT /api/character/draft` through existing session, approval and ban checks.
-Writes require exact Origin and CSRF authorization. The body contains exactly
-`definition`, `expectedVersion` and `requestId`, with JSON content type and a16KiB
-limit. The owner always comes from the session. Private no-store responses,
+Both standalone and distributed servers expose `GET /api/character`,
+`PUT /api/character/draft`, `POST /api/character/publish` and
+`POST /api/character/rollback` through existing session, approval and ban checks.
+Writes require exact Origin and CSRF authorization, JSON content type and a 16 KiB
+limit. Drafts contain exactly `definition`, `expectedVersion` and `requestId`;
+publication contains the version and request ID; rollback also contains `revision`.
+Reads return the private draft/publication state and the current selected account
+state, whose version is independent of draft/publication versions. The owner always comes from the session. Private no-store responses,
 per-owner quotas (120 reads and30 writes per minute), strict query fields and
 generic backend failures keep this boundary bounded. Conflicts return409; a retry
 with identical content returns its original receipt and the current account state.
@@ -275,14 +278,14 @@ cover memory and isolated Redis, concurrent edits, retry, owner separation,
 authorization, malformed/oversized input, write quotas and gateway replacement.
 Drafts remain absent from peer snapshots and do not change the current appearance.
 
-Account-deletion hooks, legacy preference migration, two-second world publication
-cooldown, peer replication and UI save/conflict behavior remain pending. Account preferences can now retain a validated selected definition, and checkpoint
-v12 preserves selected revisions. Store publication and rollback are
-internal operations only; no HTTP publication endpoint is enabled yet. These tests
-do not establish the create/save/join/peer/reconnect/edit/republish acceptance path.
+Publication and rollback create immutable revisions without equipping them. The
+server transport journey covers save, publish, equip, peer snapshot, gateway
+replacement/reconnect, edit and republish for both backends. It does not prove the
+Studio UI or rendered peer journey. Account-deletion lifecycle hooks, graceful
+corrupt/missing revision fallback and UI save/conflict behavior remain required.
 
 
-## Authoritative selection contract (#443, transport integration pending)
+## Authoritative selection contract (#443)
 
 The world accepts a `character` intent containing only an immutable revision
 number. A trusted server caller supplies the matching canonical definition in
@@ -306,11 +309,15 @@ write over or downgrade the new checkpoint. A feature rollback must retain the
 v12 reader/writer; deploying a v11 writer over v12 state fails closed. Invalid selected checkpoint records
 fail restoration without mutating the live room.
 
-This is an internal world/account contract. HTTP publication, trusted WebSocket
-revision resolution, durable account/room selection reconciliation and client
-rendering/UI remain required. Corrupt/stale revision fallback and asset-unavailable
-journeys must be proven across the integrated path before #443 acceptance. The
-currently exposed HTTP routes still read/save private drafts only.
+WebSocket custom selection uses `{type: 'character', revision, selection:
+{expectedVersion, requestId}}`, plus the existing response-correlation `requestId`.
+The selection ID is stable across retries and distinct from a socket's response
+sequence. The server resolves only the authenticated owner's immutable revision.
+Legacy appearance/movement commands can omit selection metadata; the server assigns
+an operation ID and current expected version to preserve existing controls. New
+clients can provide explicit metadata for conflict-aware legacy changes too.
+Corrupt/stale revision fallback and asset-unavailable journeys must still be proven
+across the integrated UI/rendering path before #443 acceptance.
 
 ### Atomic account selection store
 
@@ -336,7 +343,7 @@ their first draft (`version: 0`). Rollback must retain the v2 character-store co
 as well as the v12 world codec; an older character-store reader rejects v2 records.
 The existing Redis hash key remains stable for migration.
 
-### Durable room selection (optional coordinator mode)
+### Durable room selection
 
 Passing the character store to the Redis coordinator enables writer generation 13
 and room envelope 3. World checkpoint version 12 is unchanged. The coordinator
@@ -366,8 +373,19 @@ and replacement restoration. Rollback after activation must retain the generatio
 13/envelope 3 coordinator, version 12 world codec and version 2 character-store
 codec; an older coordinator rejects the new envelope.
 
-This mode is not yet enabled by the running gateway. The legacy avatar-preference
-service remains its account store. Gateway migration wiring, standalone memory
-transport integration, authenticated publication/equip routes, client version and
-request-ID handling, UI and peer-rendering journeys remain required. No new
-publication/equip endpoint is exposed by this increment.
+The running Redis gateway supplies the character store to this coordinator. Its
+conditional legacy import reads default-room envelopes 1–3 and validates the
+contained checkpoint before importing an authored preference. The standalone
+memory transport uses the same account CAS, world preparation and confirmed
+projection rules. It blocks competing commands while a write is uncertain and
+recovers receipts before retrying; shutdown cannot cancel an issued account write.
+A replacement server restores confirmed account state on join. Late memory reads
+are fenced by world and connection identity, and stale callbacks cannot overwrite
+a replacement world or a newer account selection.
+
+Server transport tests cover authenticated two-account publication/equip, peer
+snapshots, reconnect/replacement, edit/republish, rollback without implicit equip,
+foreign ownership, protected appearance and beast rules, cooldown, explicit stale
+versions and duplicate receipts. Studio client version/request-ID handling, save
+and conflict UX, peer rendering, asset fallback, deletion hooks and complete
+rendered two-player journeys remain required.
