@@ -1031,3 +1031,63 @@ followed the gate. Shared multiplayer browser journey was not rerun for this loc
 morph change; prior shared37 remains historical evidence. Full browser/native,
 live auth, approved devices and human acceptance are separate. Ready for signed
 commit/push to existing draft464; all five issues remain open.
+
+Hero regression continuation atd9dca2e5: previous turn made authoritative progress
+through signed/pushed seated correction and reviewable evidence; no blocking state.
+Resumed own worktree/register. Hosted CI currently6 passed/3 running; polling exact
+head. Current acceptance seam: native4K export only checks same-run repeatability,
+not persistent reference fidelity. Own scripts/character-hero-goldens.mjs,
+preview/audit/character-image-comparison.js, comparator tests, a dedicated minimal
+hero fixture and preview/e2e/goldens/character-hero reference directory.
+
+Implement explicit candidate recording and read-only reference checking, fixed
+human/fox rose/espresso definitions, actual native export, environment pins,
+source/asset hashes and deliberate reviewed reference promotion. No automatic
+updates, tolerance changes, environmental mismatch pass or broad release claim.
+Initial comparator import regression failed as expected;4 behavioral tests now
+pass for identical/rounding images, localized missing geometry, global color drift,
+invalid dimensions/buffers/limits/alpha and each environmental pin. Initial
+candidate repeated exactly; noticed default headless executable differs from the
+reported browser path, so force the actual pinned executable and record a fresh
+candidate before review. Retain first evidence as superseded, not final proof.
+
+Hero candidate review: initial capture used the headless default while hashing the
+full Chromium executable; superseded after forcing executablePath. First pinned
+run repeated exactly but failed a favicon404; fixture now uses an explicit data
+favicon and rejects HTTP/console errors. Final candidate74595 terminal0: three
+native4K captures/form, all channel differences zero. Its two PNG hashes exactly
+match the inspected native images. Sixty transitive source/fixture/dependency/rig
+entries are recorded. Promoted neutral human/fox references carry explicit review
+scope and limitations: canonical rose/espresso, visible head/hair/outfit/bag/shoes
+and fox head/tail; faceted trim/hem and stylized materials remain. This is current
+render regression acceptance, not final high-fidelity, wardrobe or device approval.
+
+Read-only review found a P2: generic/missing GPU metadata could match. Added a
+failing regression for matching null/empty/whitespace/NaN/Infinity pins, then typed
+nonempty/finite-positive validation. Fixture yieldsnull without unmasked identity;
+record and check both exit incompatible before capture. Reviewer rechecked and
+closed the finding; no other code blocker. Five comparator/reference tests pass.
+
+Fresh persistent check78541 terminal0, both reference comparisons exactly zero.
+Negative runner99037 has verified candidate rejection(exit1), wrong GPU(exit2,
+no captures), and swapped human PNG with recomputed checksum(pixel failure exit1,
+max channel236, mean3.01845,613324 changed pixels). Real Studio portrait journey15
+checks passed, including nativeGPU target/download, repeated zero-error capture,
+identity/stale encoding/reopening/unsupported hardware handling. Core gate remains
+in progress with isolatedRedis and9 frozen source/reference files. Evidence under
+.runtime/character-studio/hero-verification/verified-20261016/ plus hero-goldens/
+and the retained candidate directories. The skirt d9dca2e5 head now has all10 hosted
+checks green, including aggregatepreview; no merge/deploy.
+
+
+Final hero verification: runner99037 terminal0, all expected negative exits and
+portrait-browser15 passed; core11/11 passed with isolatedRedis (tooling117,
+preview3369 passed/1 existing skip/1TODO, server914 zero skips, desktop69,
+Python141/66warnings). All9 frozen new source/reference files match. Read-only
+review independently checked60 reference source hashes, dimensions/PNG hashes,
+canonical identities and5 comparator tests; no remaining blocker. No application
+source changed in this increment. Portable integrity checks run in core; the GPU
+reference command remains explicit and reports incompatibility off the pinned host.
+Candidate and fresh-reference reports copied into the verification directory.
+Ready for signed commit/push; full wardrobe/animation, final art quality, approved
+physical-device budgets and human/live acceptance remain open. Preserve worktree.

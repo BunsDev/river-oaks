@@ -11223,9 +11223,9 @@
         "feat/character-studio-persistence-20261015"
       ],
       "owner": "codex-character-studio-20261015",
-      "updatedAt": "2026-10-16T08:11:29.237375+00:00",
-      "leaseUntil": "2026-10-16T10:11:29.237375+00:00",
-      "nextAction": "Seated skirt corrective verified: focused10, pose31/editor21 browser checks, bake reproduction and core11 passed with isolated Redis; 14 frozen source hashes match. Commit/push to draft464 and update #442/#444; retain full wardrobe/animation, hero/device/performance and human/live acceptance gaps. No merge/deploy.",
+      "updatedAt": "2026-10-16T08:28:32.604729+00:00",
+      "leaseUntil": "2026-10-16T10:28:32.604729+00:00",
+      "nextAction": "Pinned hero regression increment verified: human/fox native4K candidate repeats and fresh reference match exactly; candidate/GPU/wrong-image rejection checks pass; portrait browser15, comparator5 and core11 with isolated Redis pass. Nine frozen files and60 reference source hashes match; review clear. Sign/push to draft464 and update #442/#444. Skirt d9dca2e5 all10 hosted checks green. Next full wardrobe/animation/art-quality and measured device/performance work; human/live release gates remain open. No merge/deploy.",
       "filesOwned": [
         "server/character-store.js",
         "server/tests/character-store.test.js",
@@ -11325,7 +11325,13 @@
         "scripts/lib/skirt-seat-fit.mjs",
         "preview/e2e/character-poses.js",
         "preview/tests/skirt-seat-bake.test.js",
-        "preview/src/skirt-seat-morph-receipt.json"
+        "preview/src/skirt-seat-morph-receipt.json",
+        "scripts/character-hero-goldens.mjs",
+        "preview/e2e/fixtures/character-hero-golden.html",
+        "preview/e2e/fixtures/character-hero-golden.js",
+        "preview/audit/character-image-comparison.js",
+        "preview/tests/character-image-comparison.test.js",
+        "preview/e2e/goldens/character-hero"
       ],
       "requiredChecks": [
         "Memory and real isolated Redis store contract tests",

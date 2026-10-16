@@ -209,16 +209,55 @@ hemisphere fill and rim. A 2048-pixel key shadow map grounds the model. The nati
 without resampling. Existing photo mode remains available independently.
 
 Sable's skirt now uses the body's existing pelvis/thigh skeleton and bind space.
-The waist stays at the pelvis and the hem follows the legs, preserving geometry
-counts, materials and cleanup. Actual human/fox rig fixtures probe covered upper
+The waist stays at the pelvis and the hem follows the legs, preserving the
+standing surface, materials and cleanup. The later seated corrective adds720
+triangles through exact subdivision, with no additional draw calls. Actual human/fox rig fixtures probe covered upper
 thighs through opposing strides and translated/rotated/scaled parents. This fixes
 the observed rigid-skirt intersection; it does not establish every animation,
 wardrobe or camera angle. The intentional hem slit is excluded from coverage probes.
 
-Current-machine captures repeat identically, but are not approved goldens. Named
-physical device targets, full animation/wardrobe compatibility, measured crowd
-budgets, complete procedural dependency provenance and shared custom colors remain
-open. Keep unsupported shape, skin, attachment and asset combinations unavailable.
+Reviewed native4K regression references now cover the neutral human and fox
+portraits on the pinned M3 Max/Chromium156 renderer (see below). They preserve the
+current authored rendering; final high-fidelity art approval, named release-device
+targets, full animation/wardrobe compatibility, measured crowd budgets and complete
+procedural distribution provenance remain open. Shared custom colors are covered
+by the later two-account journey. Keep unsupported shape, skin, attachment and
+asset combinations unavailable.
+
+## Pinned hero regression references (#442)
+
+`node scripts/character-hero-goldens.mjs --check preview/e2e/goldens/character-hero`
+compares fresh native3840×2160 human/fox exports with the reviewed PNGs and manifest
+in that directory. It uses the production hero/portrait path and exact canonical
+rose/espresso definitions. Three captures of each reference had zero pixel error;
+a fresh browser process also matched both references exactly.
+
+Pins include the actual launched Chromium executable SHA/version, Darwin kernel,
+architecture, unmasked GPU/vendor, WebGL/Three versions, DPR1, dimensions, sample
+count, garden-front-v1, ACES exposure1.1 and sRGB output. Missing GPU identity or a
+different pin exits2 (incompatible), never a pass. Image/integrity errors exit1.
+All references must pass maximum channel error2/255, mean error.01/255 and changed
+pixel fraction.001. The maximum catches localized defects that a background-heavy
+mean could hide. Tests exercise broad color drift, localized missing geometry,
+alpha/buffer/dimension errors, missing and malformed pins, native PNG integrity
+and canonical identity.
+
+`--record <new-directory>` creates an unreviewed candidate with three captures per
+form and repeat comparisons; it cannot overwrite an existing directory. Checking
+rejects candidates until rendered inspection and its limitations are recorded as
+an explicit reviewed reference. Checks never replace baseline bytes or thresholds.
+Sixty source/fixture/dependency/asset entries and both PNGs are hashed. Read the
+reference README for promotion steps and exact environment. Reports/current images
+are kept in fresh `.runtime/character-studio/hero-goldens/` directories.
+
+The review accepts these as a regression reference for neutral framing, identity,
+colors and currently visible attachments. Faceted garment trim/hem and stylized
+materials remain; these are not final art-quality approval, full wardrobe/animation
+coverage, approved release-device budgets or human acceptance. Core validates the
+reference files and comparator; pixel matching requires the separate pinned host
+command. A different CI GPU must report incompatibility rather than silently skip
+or regenerate. The Studio UI/download journey remains `pnpm run test:experience
+character-portrait`.
 
 ## Shipped asset compatibility audit (#442)
 
