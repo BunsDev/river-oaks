@@ -4,6 +4,7 @@ import { physicalSurface } from '../materials.js';
 import { thinStorefrontGlass } from '../storefront-materials.js';
 import { buildSpaceWorld } from './space-document.js';
 import { createFurnitureForms } from './space-furniture.js';
+import { createHomeForms } from './space-furniture-home.js';
 export { buildSpaceWorld } from './space-document.js';
 
 const FINISHES = {
@@ -12,6 +13,10 @@ const FINISHES = {
   fabric: ['#e6d8bd', 1, 0], sage: ['#83917d', .88, 0], brass: ['#bda36d', .28, .82],
   charcoal: ['#333833', .65, .08], white: ['#eeeae2', .36, 0],
 };
+// Floors repeat their texture at real unit sizes: about 24 cm herringbone brick and limestone
+// tiles in 30 cm rows (#418). A slab (table, desk or worktop) is one stone, never paving.
+const FLOOR_TILE_M = { limestone: 1.2, terracotta: 1 };
+const mm = value => Math.round(value * 1000);
 // Viewport light for furnished spaces: sun, sky fill and reflection-map intensity per preset.
 export const SPACE_LIGHT = {
   daylight: { sun: 2.5, sky: 1.7, reflections: .25 },
@@ -26,14 +31,15 @@ export function createSpaceScene(space, theme = 'light') {
     if (!geometries.has(name)) geometries.set(name,factory());
     return geometries.get(name);
   };
+  // surface is 'floor' for floor zones, 'slab' for tops and trays, or false.
   const finish = (name, surface = false, variant = '') => {
     const key = `${name}:${surface}:${variant}`;
     if (!materials.has(key)) {
       const [color,roughness,metalness] = FINISHES[name] ?? FINISHES.plaster;
       const options = { color,roughness,metalness };
       // Interior concrete is a polished slab; floors add its saw-cut joints as lines.
-      const material = surface && ['limestone','terracotta'].includes(name)
-        ? physicalSurface(name === 'limestone' ? 'stone' : 'paver', { ...options, tileSize: 2.4, normalScale: new THREE.Vector2(.22,.22), aoMapIntensity: .3, textureContrast: .5 })
+      const material = surface === 'floor' && Object.hasOwn(FLOOR_TILE_M, name)
+        ? physicalSurface(name === 'limestone' ? 'stone' : 'paver', { ...options, tileSize: FLOOR_TILE_M[name], normalScale: new THREE.Vector2(.22,.22), aoMapIntensity: .3, textureContrast: .5 })
         : new THREE.MeshStandardMaterial(surface && name === 'concrete' ? { ...options, color: '#96938b', roughness: .5 } : options);
       materials.set(key,material);
     }
@@ -47,6 +53,15 @@ export function createSpaceScene(space, theme = 'light') {
     if (!materials.has(key)) materials.set(key,new THREE.MeshStandardMaterial(options));
     return materials.get(key);
   };
+  // Woven cloth: matte, with the soft rim highlight (sheen) that separates fabric from plastic.
+  const textile = name => {
+    const key = `textile:${name}`;
+    if (!materials.has(key)) {
+      const color = new THREE.Color(name === 'linen' ? '#eeeae1' : (FINISHES[name] ?? FINISHES.fabric)[0]);
+      materials.set(key,new THREE.MeshPhysicalMaterial({ color, roughness:.9, metalness:0, sheen:1, sheenRoughness:.5, sheenColor:color.clone().lerp(new THREE.Color('#ffffff'),.4) }));
+    }
+    return materials.get(key);
+  };
   const boxGeometry = () => geometry('box',()=>new THREE.BoxGeometry(1,1,1));
   const roundGeometry = () => geometry('round',()=>new RoundedBoxGeometry(1,1,1,2,.08));
   const sphereGeometry = () => geometry('sphere',()=>new THREE.SphereGeometry(.5,16,10));
@@ -56,6 +71,14 @@ export function createSpaceScene(space, theme = 'light') {
     child.name = name;child.castShadow = !material.transparent;child.receiveShadow = true;parent.add(child);return child;
   };
   const box = (parent, material, size, position, name, rounded = false) => mesh(parent,rounded ? roundGeometry() : boxGeometry(),material,position,size,name);
+  // A rounded part placed in the root's unit frame but rounded in metres: the mesh cancels
+  // the root's scale, so a long run's doors and worktop keep crisp edges.
+  const trueRound = (root, material, size, position, name, radius) => {
+    const metres = size.map((value, axis) => Math.max(.002, value * root.scale.getComponent(axis)));
+    const edge = Math.min(radius, Math.min(...metres) / 2 - .0005);
+    const shape = geometry(`true-round:${metres.map(mm).join(':')}:${mm(edge)}`,()=>new RoundedBoxGeometry(...metres,2,edge));
+    return mesh(root,shape,material,position,[1/root.scale.x,1/root.scale.y,1/root.scale.z],name);
+  };
   const sphere = (parent, material, size, position, name) => mesh(parent,sphereGeometry(),material,position,size,name);
   const cylinder = (parent, material, size, position, name) => mesh(parent,cylinderGeometry(),material,position,size,name);
   const legs = (root, mat, top = .86, width = .06, inset = .4) => {
@@ -67,7 +90,7 @@ export function createSpaceScene(space, theme = 'light') {
     const doors=Math.max(1,Math.min(16,Math.ceil(root.scale.x/.65))),width=.98/doors,gap=Math.min(.01,.006/root.scale.x);
     for (let i=0;i<doors;i++) {
       const x=-.49+(i+.5)*width;
-      box(root,mat,[width-gap,height-.13,.035],[x,(height+.1)/2,.468],'Door',true);
+      trueRound(root,mat,[width-gap,height-.13,.035],[x,(height+.1)/2,.468],'Door',.004);
       box(root,finish('brass'),[Math.min(.018,.014/root.scale.x),.12,.028],[x+width*.32,height*.7,.495-.014],'Pull');
     }
   };
@@ -82,13 +105,13 @@ export function createSpaceScene(space, theme = 'light') {
       return shape;
     });
   };
-  const forms = createFurnitureForms({ geometry, mesh });
+  const forms = createFurnitureForms({ geometry, mesh }), home = createHomeForms({ geometry, mesh });
   let lamps = 0, floorIndex = 0;
   for (const object of space.objects) {
     const root = new THREE.Group();root.name = object.label;root.userData.studioId = object.id;root.userData.kind = object.kind;
     root.position.set(object.east,object.elevation,-object.north);root.scale.set(object.width,object.height,object.depth);root.rotation.y = object.yaw*Math.PI/180;
     group.add(root);items.set(object.id,root);
-    const mat = finish(object.finish,['floor','table','desk','shower'].includes(object.kind),object.kind === 'floor' ? object.id : '');
+    const mat = finish(object.finish,object.kind === 'floor' ? 'floor' : ['table','desk','shower'].includes(object.kind) && 'slab',object.kind === 'floor' ? object.id : '');
     const wood = () => finish(['oak','walnut'].includes(object.finish) ? object.finish : 'oak');
     switch (object.kind) {
       case 'wall': {
@@ -157,20 +180,11 @@ export function createSpaceScene(space, theme = 'light') {
         box(root,mat,[1,.09,1],[0,.955,0],'Tabletop',true);
         break;
       }
-      case 'bed': {
-        legs(root,wood(),.15,.055,.38);
-        box(root,wood(),[.96,.25,.94],[0,.265,.025],'Bed frame');
-        box(root,mat,[1,.92,.065],[0,.54,-.4675],'Headboard',true);
-        box(root,finish('white'),[.92,.25,.85],[0,.515,.05],'Mattress',true);
-        box(root,mat,[.925,.06,.59],[0,.67,.16],'Duvet',true);
-        for (const x of [-.235,.235]) box(root,finish('fabric'),[.41,.16,.22],[x,.71,-.275],'Pillow',true);
-        box(root,finish('sage'),[.92,.03,.2],[0,.715,.32],'Folded throw',true);
-        break;
-      }
+      case 'bed': home.bed(root,object,{ cover:textile(object.finish), linen:textile('linen'), timber:wood(), accent:textile(object.finish === 'sage' ? 'terracotta' : 'sage') }); break;
       case 'cabinet':
       case 'counter': {
         cabinet(root,mat,.92);
-        box(root,object.kind === 'counter' ? finish('limestone',true) : mat,[1,.08,1],[0,.96,0],'Countertop',true);
+        trueRound(root,object.kind === 'counter' ? finish('limestone','slab') : mat,[1,.08,1],[0,.96,0],'Countertop',.006);
         break;
       }
       case 'shelf': {
@@ -187,7 +201,7 @@ export function createSpaceScene(space, theme = 'light') {
       }
       case 'sink': {
         cabinet(root,mat,.56);
-        const stone = finish('limestone',true), metal = finish('brass');
+        const stone = finish('limestone','slab'), metal = finish('brass');
         box(root,mat,[.98,.2,.035],[0,.64,.47],'Basin fascia');
         for (const x of [-.47,.47]) box(root,mat,[.04,.2,.94],[x,.64,0],'Basin cabinet side');
         for (const x of [-.385,.385]) box(root,stone,[.23,.06,1],[x,.74,0],'Basin surround');
@@ -235,7 +249,7 @@ export function createSpaceScene(space, theme = 'light') {
         for (const x of [-.475,.475]) box(root,frame,[.05,1,.8],[x,.5,0],'Frame');
         for (const y of [.025,.975]) box(root,frame,[1,.05,.8],[0,y,0],'Frame');
         box(root,mat,[.56,.45,.03],[-.11,.53,.13],'Abstract field');
-        const disc = cylinder(root,finish('terracotta'),[.32,.03,.32],[.2,.61,.16],'Abstract circle');disc.rotation.x = Math.PI/2;
+        const disc = cylinder(root,special('typesafe-pink',{color:'#F486A1',roughness:.88}),[.32,.03,.32],[.2,.61,.16],'Abstract circle');disc.rotation.x = Math.PI/2;
         box(root,finish('sage'),[.75,.12,.035],[0,.23,.14],'Abstract horizon');
         break;
       }

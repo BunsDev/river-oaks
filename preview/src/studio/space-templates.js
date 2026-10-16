@@ -30,29 +30,38 @@ function builder(name, floorFinish='oak') {
 }
 function house(){
   const {space,add,floor,wall,chair,plant}=builder('Courtyard House');space.lighting='warm';
+  const stock=id=>space.objects.find(o=>o.id===id);
+  // The wet room is walled on the street sides; the east glazing serves the bedroom only.
+  Object.assign(stock('east-window'),{north:3,width:6});Object.assign(stock('entry-right'),{east:2,width:2});
+  Object.assign(stock('entry-plant'),{east:1.6,north:-5.4});Object.assign(stock('corner-plant'),{east:-7.45,north:-5.4});
   floor('bathroom-floor',5.5,-3,4.8,5.8,'limestone');
   floor('patio-floor',-4.5,-8,7,3.6,'terracotta');
   wall('bedroom-divider-north',0,4.65,.16,2.7);wall('bedroom-divider-south',0,.4,.16,1.2);
   wall('bathroom-north',5.5,0,5,.16);wall('bathroom-entry-south',3,-4.5,.16,3);wall('bathroom-entry-north',3,-.5,.16,1);
-  add('living-rug','rug',-4.5,-2.8,5.6,3.6,.035,'fabric');
-  add('living-sofa','sofa',-6.6,-2.3,2.5,1,.9,'fabric',90);
-  add('coffee-table','table',-4.5,-2.8,1.4,.75,.42,'walnut');
-  chair('living-armchair',-2.3,-4.4,-25,'sage');
+  wall('bathroom-east-wall',8,-3,.18,6);wall('bathroom-street-wall',5.5,-6,5,.16);
+  // The sofa backs onto the west wall, facing the coffee table and an armchair across it.
+  add('living-rug','rug',-4.5,-2.8,5.6,3.6,.012,'fabric');
+  add('living-sofa','sofa',-7.4,-2.3,2.5,1,.9,'fabric',90);
+  add('coffee-table','table',-6.1,-2.3,1.4,.75,.42,'walnut',90);
+  chair('living-armchair',-5,-2.3,-90,'sage');
   add('media-console','shelf',-4.5,.6,2.6,.4,.75,'walnut');
   add('living-art','art',-7.88,-2.3,1.5,.04,1,'sage',90,1.3);
-  add('kitchen-cabinets','cabinet',-5.85,5.5,2.8,.65,.9,'oak');add('kitchen-cabinets-east','cabinet',-2.15,5.5,2.8,.65,.9,'oak');
-  add('kitchen-sink','sink',-4,5.45,.9,.65,.98,'white');
+  // The sink's worktop (0.77 of its height) meets the 0.9 m cabinet worktops, fronts in line.
+  add('kitchen-cabinets','cabinet',-5.85,5.55,2.8,.65,.9,'oak');add('kitchen-cabinets-east','cabinet',-2.15,5.55,2.8,.65,.9,'oak');
+  add('kitchen-sink','sink',-4,5.55,.9,.65,1.17,'oak');
   add('refrigerator','appliance',-7.4,3.7,.7,.75,1.9,'charcoal');
   add('dining-table','table',-3.5,3,2,1,.76,'oak');
   chair('dining-chair-one',-4.1,2.1,180);chair('dining-chair-two',-2.9,2.1,180);chair('dining-chair-three',-4.1,3.9);chair('dining-chair-four',-2.9,3.9);
   add('dining-pendant','pendant',-3.5,3,1.3,.4,.35,'brass',0,2.3);
-  add('bedroom-rug','rug',5,3.5,4.6,4,.03,'fabric');
-  add('bed','bed',5,3.8,2,2.3,1.05,'fabric');
-  add('bedside-left','cabinet',3.45,4.6,.6,.55,.55,'walnut');add('bedside-right','cabinet',6.55,4.6,.6,.55,.55,'walnut');
-  add('wardrobe','cabinet',7.25,1.5,2.3,.6,2.3,'oak',-90);
-  add('bathroom-vanity','sink',6,-.6,1.7,.7,.9,'limestone');
-  add('toilet','toilet',4.25,-4.9,.6,.8,.8,'white');add('shower','shower',6.75,-4.8,1.5,1.6,2.2,'white');
-  add('patio-table','table',-5,-8,1,.8,.72,'limestone');chair('patio-chair-one',-6.1,-8,90,'sage');chair('patio-chair-two',-3.9,-8,-90,'sage');plant('patio-plant',-7,-9);
+  // The bed's headboard is on the north wall, a bedside table at each side of its head.
+  add('bedroom-rug','rug',5,3.5,4.6,4,.012,'fabric');
+  add('bed','bed',5,4.75,2,2.3,1.05,'fabric');
+  add('bedside-left','cabinet',3.65,5.6,.6,.55,.55,'walnut');add('bedside-right','cabinet',6.35,5.6,.6,.55,.55,'walnut');
+  add('wardrobe','cabinet',6.6,.4,2.3,.6,2.3,'oak',180);
+  add('bathroom-vanity','sink',6,-.45,1.7,.7,1.1,'limestone');
+  add('toilet','toilet',3.65,-5.5,.6,.8,.8,'white',180);add('shower','shower',7.1,-5.1,1.5,1.6,2.2,'white',180);
+  add('bathroom-light','pendant',5.5,-3,.4,.4,.3,'brass',0,2.35);
+  add('patio-table','table',-5,-8,1,.8,.72,'limestone');chair('patio-chair-one',-5.95,-8,90,'sage');chair('patio-chair-two',-4.05,-8,-90,'sage');plant('patio-plant',-7,-9);
   return space;
 }
 function office(){

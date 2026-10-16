@@ -58,9 +58,11 @@ test('hosted CI and an explicit opt-out skip the lock', async t => {
 // writes when it starts and ends; with the lock, the two intervals never overlap.
 test('two concurrent wrapped commands run one after the other', async t => {
   const dir = scratch(t), log = join(dir, 'log.txt');
-  const step = `require('fs').appendFileSync(${JSON.stringify(log)}, 'start ' + process.pid + '\\n'); setTimeout(() => require('fs').appendFileSync(${JSON.stringify(log)}, 'end ' + process.pid + '\\n'), 600);`;
+  // The log path reaches the child as an argument (`node -e` puts it in argv[1]),
+  // so no code is built from a path.
+  const step = "const fs = require('fs'), log = process.argv[1]; fs.appendFileSync(log, 'start ' + process.pid + '\\n'); setTimeout(() => fs.appendFileSync(log, 'end ' + process.pid + '\\n'), 600);";
   const run = () => new Promise((done, fail) => {
-    const child = spawn(process.execPath, [script, 'probe', '--', process.execPath, '-e', step], { env: { ...process.env, CI: '', RIVER_OAKS_BROWSER_LOCK: '', RIVER_OAKS_BROWSER_LOCK_HELD: '', RIVER_OAKS_BROWSER_LOCK_DIR: dir, RIVER_OAKS_BROWSER_LOCK_POLL: '50' }, stdio: 'ignore' });
+    const child = spawn(process.execPath, [script, 'probe', '--', process.execPath, '-e', step, log], { env: { ...process.env, CI: '', RIVER_OAKS_BROWSER_LOCK: '', RIVER_OAKS_BROWSER_LOCK_HELD: '', RIVER_OAKS_BROWSER_LOCK_DIR: dir, RIVER_OAKS_BROWSER_LOCK_POLL: '50' }, stdio: 'ignore' });
     child.on('error', fail); child.on('close', done);
   });
   const codes = await Promise.all([run(), run()]);

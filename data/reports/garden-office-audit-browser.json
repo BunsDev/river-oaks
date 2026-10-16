@@ -1,0 +1,359 @@
+{
+  "createdAt": "2026-10-15T20:24:13.378Z",
+  "results": [
+    {
+      "name": "studio-office-stations",
+      "status": "passed",
+      "seconds": 22.214,
+      "result": {
+        "passed": true,
+        "eyeHeightM": 1.68,
+        "viewport": [
+          1440,
+          1000
+        ],
+        "captures": [
+          {
+            "lighting": "daylight",
+            "station": "CAM-01-entry",
+            "at": [
+              0,
+              -8.5
+            ],
+            "look": [
+              0,
+              0
+            ],
+            "yaw": 0,
+            "path": "output/playwright/garden-office-daylight-CAM-01-entry.png"
+          },
+          {
+            "lighting": "daylight",
+            "station": "CAM-02-reception",
+            "at": [
+              0,
+              -4
+            ],
+            "look": [
+              -4,
+              -4.5
+            ],
+            "yaw": 1.6952,
+            "path": "output/playwright/garden-office-daylight-CAM-02-reception.png"
+          },
+          {
+            "lighting": "daylight",
+            "station": "CAM-03-workstation",
+            "at": [
+              -2,
+              1
+            ],
+            "look": [
+              -5.7,
+              -0.4
+            ],
+            "yaw": 1.9325,
+            "path": "output/playwright/garden-office-daylight-CAM-03-workstation.png"
+          },
+          {
+            "lighting": "daylight",
+            "station": "CAM-04-meeting",
+            "at": [
+              3,
+              1
+            ],
+            "look": [
+              5,
+              2.6
+            ],
+            "yaw": -0.8961,
+            "path": "output/playwright/garden-office-daylight-CAM-04-meeting.png"
+          },
+          {
+            "lighting": "daylight",
+            "station": "CAM-05-kitchenette",
+            "at": [
+              -1,
+              5
+            ],
+            "look": [
+              -5.2,
+              5.45
+            ],
+            "yaw": 1.4641,
+            "path": "output/playwright/garden-office-daylight-CAM-05-kitchenette.png"
+          },
+          {
+            "lighting": "daylight",
+            "station": "CAM-06-exit",
+            "at": [
+              0,
+              -4
+            ],
+            "look": [
+              0,
+              -8.5
+            ],
+            "yaw": -3.1416,
+            "path": "output/playwright/garden-office-daylight-CAM-06-exit.png"
+          },
+          {
+            "lighting": "warm",
+            "station": "CAM-01-entry",
+            "at": [
+              0,
+              -8.5
+            ],
+            "look": [
+              0,
+              0
+            ],
+            "yaw": 0,
+            "path": "output/playwright/garden-office-warm-CAM-01-entry.png"
+          },
+          {
+            "lighting": "warm",
+            "station": "CAM-02-reception",
+            "at": [
+              0,
+              -4
+            ],
+            "look": [
+              -4,
+              -4.5
+            ],
+            "yaw": 1.6952,
+            "path": "output/playwright/garden-office-warm-CAM-02-reception.png"
+          },
+          {
+            "lighting": "warm",
+            "station": "CAM-03-workstation",
+            "at": [
+              -2,
+              1
+            ],
+            "look": [
+              -5.7,
+              -0.4
+            ],
+            "yaw": 1.9325,
+            "path": "output/playwright/garden-office-warm-CAM-03-workstation.png"
+          },
+          {
+            "lighting": "warm",
+            "station": "CAM-04-meeting",
+            "at": [
+              3,
+              1
+            ],
+            "look": [
+              5,
+              2.6
+            ],
+            "yaw": -0.8961,
+            "path": "output/playwright/garden-office-warm-CAM-04-meeting.png"
+          },
+          {
+            "lighting": "warm",
+            "station": "CAM-05-kitchenette",
+            "at": [
+              -1,
+              5
+            ],
+            "look": [
+              -5.2,
+              5.45
+            ],
+            "yaw": 1.4641,
+            "path": "output/playwright/garden-office-warm-CAM-05-kitchenette.png"
+          },
+          {
+            "lighting": "warm",
+            "station": "CAM-06-exit",
+            "at": [
+              0,
+              -4
+            ],
+            "look": [
+              0,
+              -8.5
+            ],
+            "yaw": -3.1416,
+            "path": "output/playwright/garden-office-warm-CAM-06-exit.png"
+          },
+          {
+            "lighting": "evening",
+            "station": "CAM-01-entry",
+            "at": [
+              0,
+              -8.5
+            ],
+            "look": [
+              0,
+              0
+            ],
+            "yaw": 0,
+            "path": "output/playwright/garden-office-evening-CAM-01-entry.png"
+          },
+          {
+            "lighting": "evening",
+            "station": "CAM-02-reception",
+            "at": [
+              0,
+              -4
+            ],
+            "look": [
+              -4,
+              -4.5
+            ],
+            "yaw": 1.6952,
+            "path": "output/playwright/garden-office-evening-CAM-02-reception.png"
+          },
+          {
+            "lighting": "evening",
+            "station": "CAM-03-workstation",
+            "at": [
+              -2,
+              1
+            ],
+            "look": [
+              -5.7,
+              -0.4
+            ],
+            "yaw": 1.9325,
+            "path": "output/playwright/garden-office-evening-CAM-03-workstation.png"
+          },
+          {
+            "lighting": "evening",
+            "station": "CAM-04-meeting",
+            "at": [
+              3,
+              1
+            ],
+            "look": [
+              5,
+              2.6
+            ],
+            "yaw": -0.8961,
+            "path": "output/playwright/garden-office-evening-CAM-04-meeting.png"
+          },
+          {
+            "lighting": "evening",
+            "station": "CAM-05-kitchenette",
+            "at": [
+              -1,
+              5
+            ],
+            "look": [
+              -5.2,
+              5.45
+            ],
+            "yaw": 1.4641,
+            "path": "output/playwright/garden-office-evening-CAM-05-kitchenette.png"
+          },
+          {
+            "lighting": "evening",
+            "station": "CAM-06-exit",
+            "at": [
+              0,
+              -4
+            ],
+            "look": [
+              0,
+              -8.5
+            ],
+            "yaw": -3.1416,
+            "path": "output/playwright/garden-office-evening-CAM-06-exit.png"
+          }
+        ]
+      }
+    },
+    {
+      "name": "world-studio",
+      "status": "passed",
+      "seconds": 45.059,
+      "result": {
+        "passed": true,
+        "journey": "create-transform-undo-save-reopen-pick-export-import-walk-safe-edits-repair",
+        "errors": []
+      }
+    },
+    {
+      "name": "studio-pilot-journey",
+      "status": "passed",
+      "seconds": 64.062,
+      "result": {
+        "passed": true,
+        "checks": [
+          "Garden Office opens with its required routes passing",
+          "valid edit (desk finish) is accepted with routes passing",
+          "blocking the meeting room is refused with a finding",
+          "the refused move leaves the sofa where it was",
+          "undo restores the sofa",
+          "redo reapplies one edit",
+          "save keeps the office assessment context",
+          "reload reopens the saved draft and reassesses it",
+          "a stale tab cannot overwrite the newer saved draft",
+          "the other tab's save is kept",
+          "the saved layout assesses as passing",
+          "walked to all four required destinations and back to the arrival",
+          "returned to the editor after the walk"
+        ],
+        "tour": [
+          {
+            "target": "office-1",
+            "waypoints": 2,
+            "reached": [
+              0,
+              -4
+            ],
+            "home": [
+              0,
+              -8.4
+            ],
+            "seconds": 6.131
+          },
+          {
+            "target": "office-2",
+            "waypoints": 4,
+            "reached": [
+              -2,
+              1.1
+            ],
+            "home": [
+              0,
+              -8.5
+            ],
+            "seconds": 15.635
+          },
+          {
+            "target": "office-3",
+            "waypoints": 4,
+            "reached": [
+              2.9,
+              1
+            ],
+            "home": [
+              0,
+              -8.5
+            ],
+            "seconds": 18.15
+          },
+          {
+            "target": "office-4",
+            "waypoints": 2,
+            "reached": [
+              -1,
+              5
+            ],
+            "home": [
+              0,
+              -8.5
+            ],
+            "seconds": 20.375
+          }
+        ]
+      }
+    }
+  ]
+}
