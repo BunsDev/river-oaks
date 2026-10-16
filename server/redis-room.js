@@ -247,8 +247,16 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       selectionVersions.set(userId,preference.version);
       return player;
     };
+    const clearDeletedSelection=userId=>{
+      selectionVersions.delete(userId);
+      return world.applyAccountAppearance(userId,{appearance:defaultAppearanceFor(userId),movement:'upright'});
+    };
     const syncAccount=async userId=>{
-      if(characters){if(!pendingSelections.has(userId))projectSelection(userId,await accountSelection(userId));return;}
+      if(characters){
+        if(!pendingSelections.has(userId))try{projectSelection(userId,await accountSelection(userId));}
+        catch(error){if(error.code==='character_account_deleted')clearDeletedSelection(userId);else throw error;}
+        return;
+      }
       if(!avatarPreferences)return;
       const preference=await avatarPreferences.get(userId)
         ?? await avatarPreferences.initialize(userId,world.accountAppearance(userId));
@@ -275,8 +283,7 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
         if(!terminalSelectionErrors.has(error.code))continue;
         result=rejected(error.code);
         if(error.code==='character_account_deleted'){
-          world.applyAccountAppearance(intent.userId,{appearance:defaultAppearanceFor(intent.userId),movement:'upright'});
-          selectionVersions.delete(intent.userId);
+          clearDeletedSelection(intent.userId);
         }else try{projectSelection(intent.userId,await characters.getSelection(intent.userId));}catch{ /* Next heartbeat retries account sync. */ }
       }
       if(result){pendingSelections.delete(intent.userId);for(const id of intent.replyIds)replies.push({key:`${tag}:reply:${id}`,result});}
@@ -316,7 +323,10 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
               const preference=await avatarPreferences.initialize(operation.identity.userId,world.accountAppearance(operation.identity.userId));
               result.player=world.applyAccountAppearance(operation.identity.userId,preference);
             }
-          } catch {console.warn(JSON.stringify({event:'room_appearance_unavailable',worldId}));}
+          } catch(error) {
+            if(characters&&error.code==='character_account_deleted')result.player=clearDeletedSelection(operation.identity.userId);
+            else console.warn(JSON.stringify({event:'room_appearance_unavailable',worldId}));
+          }
         }
         if(result.ok)await reconcileOfficeVisit(world,officeWorkspaces,operation.identity.userId);
         if(result.ok)connections.set(operation.identity.userId,{identity:operation.identity,connectionId:operation.connectionId,lastSeen:time,leftAt:null});

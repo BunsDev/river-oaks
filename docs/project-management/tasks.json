@@ -11223,9 +11223,9 @@
         "feat/character-studio-persistence-20261015"
       ],
       "owner": "codex-character-studio-20261015",
-      "updatedAt": "2026-10-16T03:04:50.575861+00:00",
-      "leaseUntil": "2026-10-16T05:04:50.575861+00:00",
-      "nextAction": "Backend full verification finished: all18 tasks passed, focused80, writer audit8, server868 zero skips, experience13/shared21/screening12. Frozen source hashes revalidated on resume. Commit/push verified transport activation to draft464, update443; integrate staged durable save/wear UI and owned local/peer materials, run real two-player rendered acceptance. Full #440-444 scope remains active; no merge/deploy.",
+      "updatedAt": "2026-10-16T04:54:50.405733+00:00",
+      "leaseUntil": "2026-10-16T06:12:15.060726+00:00",
+      "nextAction": "Full62112 terminal0: all18 tasks passed,873 server zero skips,3350 preview pass/1 skip/1 TODO; frozen25 hashes match, receipts/logs preserved client-followup-full*. Await live queued reopen red76928 (3 jobs ahead), then guarded refresh fix and reviewed regressions; rerun shared/editor/core before client commit/PR464 update. Rollout staged7 transport/23 account tests, integrate later. New body-envelope garment prototype rejected on19x seam stretch/triangle collapse; no garment source changes. Production deletion hook/device/human gates remain open.",
       "filesOwned": [
         "server/character-store.js",
         "server/tests/character-store.test.js",
@@ -11272,7 +11272,22 @@
         "preview/tests/remote-players.test.js",
         "preview/e2e/character-studio.js",
         "preview/e2e/character-studio-shared.js",
-        "preview/e2e/shared-runner.js"
+        "preview/e2e/shared-runner.js",
+        "server/tests/browser-fixture.js",
+        "preview/vite.config.js",
+        "server/vercel-routing.js",
+        "server/tests/vercel-routing.test.js",
+        "vercel.json",
+        "preview/src/character-studio-materials.js",
+        "preview/tests/character-selection-view.test.js",
+        "preview/src/avatar-placeholder.js",
+        ".env.example",
+        "server/character-rollout.js",
+        "server/redis-backend.js",
+        "preview/e2e/fixture-server.js",
+        "preview/e2e/experience-runner.js",
+        "preview/e2e/character-studio-disabled.js",
+        "preview/e2e/character-studio-paused.js"
       ],
       "requiredChecks": [
         "Memory and real isolated Redis store contract tests",

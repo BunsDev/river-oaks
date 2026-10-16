@@ -199,3 +199,34 @@ test('Redis region revision clears projection versions and restores the selected
  const joined=await f.join(replacement);assert.equal(joined.ok,true);assert.equal(joined.player.character.palette,'rose');
  assert.equal((await f.store.getSelection('alice')).version,2);
 });
+
+for(const transition of ['heartbeat','checkpoint rejoin'])test(`Redis removes a deleted custom character on ${transition}`,options,async t=>{
+ const f=await fixture(t);let room=f.create();await f.join(room);await f.publish();
+ const id=await f.enqueue({type:'character',revision:1});await f.tick(room);await f.tick(room);
+ assert.equal((await f.reply(id)).ok,true);assert.equal((await room.read()).snapshot.players[0].character.palette,'rose');
+ await f.store.deleteAccount('alice');
+ if(transition==='heartbeat')await room.request({type:'heartbeat',userId:'alice',connectionId:'alice-socket'});
+ else{await room.close();room=f.create();await f.join(room);}
+ const player=(await room.read()).snapshot.players.find(player=>player.id==='alice');
+ assert.equal(player?.character,undefined,'deleted customization must not survive in a room projection');
+ assert.equal(await f.store.getSelection('alice'),null,'room recovery cannot recreate the tombstoned selection');
+ assert.equal((await f.stored()).selectionVersions.some(([id])=>id==='alice'),false,'deleted version is removed from the durable room');
+ const replay=await room.request({type:'command',userId:'alice',connectionId:'alice-socket',message:{type:'character',revision:1},selection:{expectedVersion:1,requestId:'equip'}});
+ assert.equal(replay.error,'character_account_deleted','old receipts cannot re-equip deleted revisions');
+ await room.close();room=f.create();await f.join(room);
+ assert.equal((await room.read()).snapshot.players[0].character,undefined,'a further coordinator reload cannot restore deleted customization');
+});
+
+test('Redis retries deleted-character cleanup after a lost room lease without reviving the revision',options,async t=>{
+ const f=await fixture(t);let refuse=false;
+ const client=new Proxy(f.redis,{get(target,key){if(key==='eval')return async(script,...args)=>{
+  if(refuse&&script.startsWith('-- COMMIT_ROOM')){refuse=false;await target.set(`${f.prefix}:lease`,'v99:fixture');return 0;}return target.eval(script,...args);};
+  const value=target[key];return typeof value==='function'?value.bind(target):value;}});
+ const room=f.create({redis:client});await f.join(room);await f.publish();const equip=await f.enqueue({type:'character',revision:1});await f.tick(room);await f.tick(room);
+ assert.equal((await f.reply(equip)).ok,true);await f.store.deleteAccount('alice');
+ const heartbeat=await f.enqueue({},undefined,f.prefix,{type:'heartbeat'});refuse=true;await f.tick(room);
+ assert.equal(await f.reply(heartbeat),null);assert.equal((await room.read()).snapshot.players[0].character.palette,'rose','uncommitted cleanup is not reported as durable');
+ await room.close();await f.redis.del(`${f.prefix}:lease`);const replacement=f.create();await f.tick(replacement);
+ assert.equal((await f.reply(heartbeat)).ok,true);assert.equal((await replacement.read()).snapshot.players[0].character,undefined);
+ assert.equal(await f.store.getSelection('alice'),null);
+});

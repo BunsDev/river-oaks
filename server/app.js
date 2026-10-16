@@ -465,7 +465,14 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
   },30000);heartbeat.unref();
   const avatarSync=characterSelection||avatarPreferences?setInterval(()=>{
     for(const [userId,connection] of connections) {
-      if(characterSelection){void characterSelection.sync(userId,()=>connections.get(userId)===connection).catch(()=>connection.ws.close(1013,'Account appearance temporarily unavailable.'));continue;}
+      if(characterSelection){
+        void characterSelection.sync(userId,()=>connections.get(userId)===connection).catch(error=>{
+          if(connections.get(userId)!==connection)return;
+          if(error.code==='character_account_deleted')disconnectUser(userId,4003,'Character account deleted.');
+          else connection.ws.close(1013,'Account appearance temporarily unavailable.');
+        });
+        continue;
+      }
       void avatarPreferences.get(userId).then(preference=>{
         if(preference && connections.get(userId)===connection)world.applyAccountAppearance(userId,preference);
       }).catch(()=>connection.ws.close(1013,'Account appearance temporarily unavailable.'));

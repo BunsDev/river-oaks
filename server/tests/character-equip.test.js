@@ -105,3 +105,22 @@ test('publication rejects forged owner fields, stale versions, invalid rollback 
  assert.equal((await f.request('alice','/api/character/publish',operation)).status,200);
  assert.equal((await f.state('alice')).character.published.revision,1);
 });
+
+
+test('memory: deleting an idle character account removes its peer projection without reconnect grace',{timeout:15000},async t=>{
+ const f=await fixture('memory',t),definition=customizedCharacterDefinition('alice','sable-human',{palette:'rose'});
+ assert.equal((await f.request('alice','/api/character/draft',{definition,expectedVersion:0,requestId:'delete-draft'})).status,200);
+ assert.equal((await f.request('alice','/api/character/publish',{expectedVersion:1,requestId:'delete-publish'})).status,200);
+ const a=await f.open('alice'),b=await f.open('bob');
+ assert.equal((await a.command({type:'character',revision:1},{expectedVersion:1,requestId:'delete-equip'})).ok,true);
+ await b.until(frame=>frame.type==='snapshot'&&frame.players.some(p=>p.id==='alice'&&p.character?.palette==='rose'));
+ const disconnected=new Promise(resolve=>a.ws.once('close',(code)=>resolve(code)));
+ await f.characters.deleteAccount('alice');
+ await disconnected;
+ b.frames.length=0;
+ const after=await b.until(frame=>frame.type==='snapshot');
+ assert.equal(after.players.some(p=>p.id==='alice'),false,'deleted custom projection must not survive the disconnect grace period');
+ const deleted=await f.state('alice');assert.equal(deleted.character.deleted,true);assert.equal(deleted.character.draft,null);assert.equal(deleted.character.published,null);assert.equal(deleted.selection,null);
+ assert.equal((await f.request('alice','/api/character/draft',{definition,expectedVersion:0,requestId:'delete-recreate'})).status,410);
+ assert.equal((await f.state('bob')).character.draft,null,'other accounts remain available');
+});

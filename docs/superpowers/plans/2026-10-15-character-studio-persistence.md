@@ -454,3 +454,233 @@ skips. Deliver verified backend, then integrate staged client and two-player jou
 Claims renewed and shared-runner/journey claimed. Full original acceptance remains
 open, especially seated Sable fit, UI/rendered persistence, fallback/lifecycle,
 goldens and target-device/human acceptance. No merge/deployment/archive eligibility.
+
+Backend signed/pushed d26762e7 to draft464; issue443 comment6207113740 records
+full18/focused80/audit8 evidence and remaining scope. Client is now integrated
+into source: account workflow, save/wear/conflict UI, canonical local/peer materials,
+Vite and hosted routes, authenticated browser fixture and shared journey. Tests
+reproduced malformed acknowledgement retry loss and missing hosted routing; fixes
+pass focused tests. Independent read-only review found no blocker. Browser session
+87477 queues build, shared character-studio-shared and editor character-studio on
+frozen source (client-source-hashes.json). Actual material colors are asserted for
+local and peer rigs; screenshots frame the worn peer. No browser success claimed
+until results and visual inspection; asset failures and broader acceptance remain.
+
+Focused command `node --test preview/tests/character-account.test.js
+preview/tests/remote-players.test.js preview/tests/character-studio*.test.js
+server/tests/vercel-routing.test.js` passed49/49, zero skips. Malformed partial
+publication receipt regression also failed before the metadata fix and now passes.
+Read-only review confirms the corrected retry and route boundaries, no new blocker.
+Browser session87477 and isolated-Redis core session2140 are live queued processes
+behind other owners; poll those same handles. They have not run yet. Preserve
+source freeze and client-source-hashes.json. No client commit until gates pass.
+
+2026-10-16 recovery: browser87477 and core2140 exited1 after reaching their turn.
+The checkout node_modules directory was missing: build could not find Vite and
+three tooling tests could not import dependencies. No application regression is
+proven by these failures. Retained client-missing-deps-build.log, core.log and
+core.json under .runtime/character-studio. Frozen dependency install session89502
+is live in the shared queue; do not restart it. Source manifest remains unchanged.
+
+Reviewed live #440–444 acceptance and confirmed draft464 still at d26762e7.
+Documented novice usability tasks and pass criteria before any human trial; no
+participant results or device approval claimed. Traced missing-assets fallback:
+remote replacement preserves an old rig, but an initial failure leaves no body.
+Staged a behavioral regression under .runtime/character-studio/remote-placeholder-
+regression.txt for pending/failed/retried loads and resource disposal. It is not
+integrated or executed; implement the fallback after validating this client slice.
+
+Re-ran dependency-free `node --test preview/tests/character-account.test.js server/tests/vercel-routing.test.js`:28/28 pass, zero skips. All19 source hashes match the frozen client manifest. Dependency restore89502 remains live, now first queued after the active IPIC soak; sequential doctor/browser/core runner prepared, not started.
+
+Dependency restoration89502 completed exit0 (`pnpm install --frozen-lockfile`).
+New selection-view behavioral tests verify owned canonical revisions, safe defaults
+for missing/unpublished/corrupt/foreign/unavailable catalog data and protected
+identity migration. Combined pure account/selection/routing suite32/32 passes with
+zero skips. Manifest now freezes20 client source/test files. Sequential
+run-client-validation.py is queued for doctor/build/shared/editor/core.
+
+Additional #443 investigation: Redis join catches character-account initialization
+errors after world.join has read checkpoint appearance. A deleted account may keep
+its previous custom projection; idle heartbeat also throws before clearing it.
+No defect claim until a real Redis deletion/checkpoint-rejoin regression runs.
+Existing pending-intent deletion test is narrower. Keep this next action separate
+from the frozen client verification. Named device targets requested from Val; no
+approval or human acceptance inferred while awaiting a reply.
+
+Client validation session8996 is live queued: doctor/build/shared/editor/core via
+run-client-validation.py. Separate immediate doctor passed after dependency
+restoration. Focused restored account, selection-view, remote, editor, materials and
+routing suite51/51 passes (loading suite remains covered by upcoming core).
+
+STAGED ONLY follow-ups under .runtime/character-studio, not application edits:
+- avatar-placeholder.js + remote-players-placeholder.js: first asset pending/failure
+  keeps a visible asset-independent presence marker, readiness false; successful
+  canonical load replaces it, departure/teardown disposes once. Behavioral red
+  reproduced empty peer body. All16 remote tests pass including movement/culling.
+- redis-room-deletion.js: terminal tombstone clears room appearance and selected
+  version on heartbeat/rejoin, including checkpoint restoration, without changing
+  account tombstone or authorization. Two real Redis red cases retained; all17
+  room tests pass with zero skips, including lease-loss cleanup recovery, old
+  receipt rejection and a further coordinator reload.
+- character-studio-shared-fallback.js: additional fresh-peer asset failure/recovery
+  screenshot scenario prepared, NOT RUN.
+Read-only review found no blocker; suggested pending movement/culling and lease-loss
+  deletion cases were added and passed. Idle memory-transport deletion acceptance
+  still needs the real connection path (current sync closes on account errors).
+
+Preserve source freeze until8996 finishes. followup-source-hashes.json records both
+base and staged file hashes. Integrate only after comparing with any intervening
+client corrections: staged browser controller imports ../../preview/src become ./;
+staged remote tests restore ../src and the live controller import. Staged Redis
+module ../../server becomes ./ and ../../preview becomes ../preview; its tests
+restore ../ server imports and live redis-room.js. Merge the extra browser failure
+scenario with fixes from the first actual client journey. Do not count staged
+unit/Redis tests as application, rendered or full-profile acceptance. No new commit.
+
+Issue443 progress recorded at https://github.com/BunsDev/river-oaks/issues/443#issuecomment-6207699788 with explicit staged/uncommitted limits. Client validation8996 remains live queued; poll this handle, not old terminal87477/2140 or restored install89502.
+
+Continuation: prior turn was progress (dependency recovery, new fallback tests,
+reviewed staged peer/deletion fixes and issue update). Session8996 remains a live
+queued process;20 client source hashes still match. No client gate restarted.
+
+Independent #442 diagnostic: seat-ring-diagnostic.mjs/json records actual runtime
+skirt rows. Front waist y=.705, middle rows .640/.629, hem .697: intermediate
+weighted rows collapse below the posed body before rising at the hem. Staged
+seat-fold-prototype.mjs uses an explicit flat lap and lowered front fold; actual
+front-camera rays expose0/673 sampled points, overhead552/673 (open waist and
+self-occlusion are not accounted for, so these counts are not visual acceptance).
+No garment source was changed or fix accepted.
+
+Prepared seat-fold-browser.mjs using the real authorized fixture/renderer. The
+existing queued run-client-validation.py now captures this separate static
+diagnostic AFTER its unchanged doctor/build/shared/editor/core gates. It writes
+seat-fold-browser.json and character-seat-baseline[-above].png /
+character-seat-fold-prototype[-above].png. Inspect all four actual captures before
+any garment decision; the prototype has no motion integration. Diagnostic status
+is printed separately and is not a production acceptance gate. No additional
+browser queue or source mutation. Poll session8996.
+
+
+Validation8996 completed: doctor/build0, shared1, editor0, core0; separate seated
+render diagnostic0. Core11/11 tasks passed; editor21 checks passed with actual
+desktop/phone screenshots inspected. Shared stopped at ambiguous data-character
+locator (Sable button plus wardrobe cache attribute); preserved failed report/log
+and editor/core receipts under client-*-first / client-shared-before-selector.
+Button-scoped roster/test selectors fix ambiguity and avoid aria-pressed on select.
+
+Integrated reviewed placeholder + Redis deletion patches after verifying all frozen
+and staged hashes. New memory idle-deletion transport case reproduced old custom
+avatar persisting through30s reconnect grace after socket closure. Terminal deletion
+now calls current-connection-fenced disconnectUser; transient errors keep1013.
+Staged4 memory transport tests passed, including peer removal, erased read state,
+recreation denied and other account availability. Integrated focused client54/54
+passes zero skips. Follow-up source manifest freezes25 files. Review requested.
+Next queued runner: isolated Redis room/equip/memoryselection tests, build/shared/
+editor, then full profile only if those pass. Do not mutate source while running.
+
+Actual baseline/prototype seated captures inspected front/side/rear/above. Prototype
+rejected: knee intersections, box-like silhouette and waist discontinuity despite
+front0/673 ray misses. No garment source integrated. #442 remains open; geometric
+coverage counts are insufficient visual acceptance. All four captures retained.
+
+Follow-up validation session62112 is confirmed live, queued behind5 local browser
+runs. Poll this handle; old8996 is terminal. Read-only review found no blocker in
+integrated deletion/current-connection fencing, placeholder, Redis and selector
+changes. First core evidence counts: tooling117, preview3347 pass/1 existing skip/
+1 existing todo, server869 zero skips, desktop69, Python141 (66 warnings).
+These precede integrated follow-ups; do not report them as the new full gate.
+No new commit; preserved dirty checkout and full #440–444 acceptance scope.
+
+
+Continuation classified as progress: integrated transport27/27 passes with isolated
+Redis and zero skips; shared17 checks and editor21 checks pass. Actual saved Studio,
+peer rose/midnight, initial asset-failure marker and recovered Rowan screenshots
+inspected. Receipt copies client-followup-{transport,shared,editor} retained.
+Session62112 remains confirmed live and now runs full verification; no source
+changes,25 frozen hashes match. Do not integrate staged rollout until this gate
+finishes and the verified client increment is committed/reviewable.
+
+STAGED #444 rollout follow-up in .runtime/character-studio/rollout:
+- Explicit production RIVER_OAKS_CHARACTER_STUDIO=1 and browser
+  VITE_CHARACTER_STUDIO=true; disabled server preserves reads, selected identity,
+  reconnect, legacy appearance/movement, pending recovery and codecs. HTTP new
+  draft/publish/rollback and new custom equips stop. Fixtures explicitly opt in.
+- Real memory red showed ignored flag accepted a save. Staged7 real memory/Redis
+  transport cases pass no skips, including disable/reconnect/blocked writes,
+  authentication/rate budgets/reenable and exact pre-disable equip receipt replay.
+- Review found paused WS rejection cleared the client's uncertain journal while
+  server recovery could still finish. Added real client red, made paused result
+  retryable, and allowed only exact existing receipts through normal authenticated
+  recovery. Monotonic versions fence receipt-eviction races from new CAS writes.
+  Staged23 account tests pass; second read-only review found no remaining blocker.
+- source-hashes.json and wiring-hashes.json identify bases/staged copies. All staged
+  JavaScript passes node --check. Two actual disabled/paused browser journeys and
+  their experience-runner fixture options are prepared but NOT RUN/integrated.
+- Integration must reverse staged import paths carefully and preserve intervening
+  fixes. New helper belongs server/character-rollout.js; account test append belongs
+  existing preview/tests/character-account.test.js. Rollout test additions belong
+  server/tests/character-equip.test.js. New files are claimed; preserve other tasks.
+No release flag is active in application source yet. No new commit/merge/deploy.
+
+
+Review follow-up: reopening Studio after wearing Rose, closing and selecting Rowan
+through the legacy picker retains Rose edits but incorrectly keeps stale account
+selection, claims Rose is worn and disables Wear. Staged guarded account refresh
+on reopen preserves busy actions and uncertain retry journals. Actual shared
+journey regression and standalone fixture runner are prepared under
+.runtime/character-studio/reopen; not yet executed or integrated. Current62112
+full source remains frozen. After terminal receipt, reproduce red, integrate fix,
+rerun shared/editor/core and review before committing the client increment.
+Production deletion trigger choice and target device question remain unanswered.
+
+
+Reopen fix received read-only review: no further lifecycle blocker found. Added
+close/reopen during lost-save regression to protect retained edits and uncertain
+retry identity. Red browser runner76928 queued behind the active full gate and
+other local owners; preserve its queue position and do not bypass the lock.
+
+Garment architecture review recommends an owned pose-space corrective after final
+IK, driven by bilateral hip flexion and fitted against body geometry, with fixed
+waist and seam/triangle constraints. No production garment mutation. New offline
+seat-corrective-baseline.mjs/.json completed at seat heights0.45/0.55/0.65m.
+All three actual final poses have90-degree hip flexion and equivalent deformation:
+minimum triangle area ratio0.0792, edge length ratio0.1103–1.7282, waist displacement
+below2e-10m. Of673 initially front-covered samples,418 front and578 overhead
+probes are unoccluded. These directional probes are not complete body collision
+or visible-exposure metrics. Need fitted target, collision/seam diagnostics,
+intermediate flexion and locomotion controls, then actual multi-view inspection.
+
+
+Isolated seat-contact-prototype.mjs completed (no production changes). It
+subdivides the authored garment to1353 vertices and solves edge constraints against
+a convex envelope of21407 actual posed body samples. Although non-waist contact
+violations fall851→0, maximum edge ratio grows2.019→19.397 and minimum triangle
+area ratio falls0.0518→0.00580; maximum correction0.2864m, waist displacement0.
+Front probes miss673/673. Reject this target on geometry before browser review.
+A whole-region convex envelope plus directional projection is not a valid fitted
+seated corrective; contact success alone hides severe topology/shape failures.
+Retained seat-contact-prototype.json and seat-contact-target.json as failed
+experiment evidence. No acceptance threshold relaxed; no application integration.
+Next garment work needs a locally fitted pose target with surface and seam
+constraints; avoid repeating analytic folds or treating convex contact as fit.
+
+
+Full62112 terminal0: pnpm run verify full passed all18 tasks with isolated Redis.
+Counts: tooling117; preview3350 pass/1 existing skip/1 existing TODO; server873
+pass with zero skips; desktop69; Python141 pass/66 warnings. All13 experience
+journeys, all shared modes including Character Studio, security/reflections and
+IPIC screening passed. Frozen25 source hashes still match. Preserved full receipt,
+log, experience/shared reports and screening report as client-followup-full* in
+.runtime/character-studio. Reopen P2 remains staged, so this is the baseline gate
+before that fix, not acceptance of corrected reopen behavior. Red76928 is live
+and queued behind3 local browser runs. No new commit. project:check failed only
+on separately owned reconciliation/retirement/stash/path debt; preserved its log.
+
+
+Delivery boundary: the four-file account-deletion fix is independent of the
+uncommitted Studio client. Its exact memory/Redis source passed focused27/27
+(no skips) and the integrated full18-task gate above, and read-only review found
+no blocker. Deliver this server-only increment while the separately reviewed
+client reopen regression waits; client/editor/routing changes remain uncommitted.
+The full receipt records the larger dirty integration tree, not the isolated
+server commit. Production deletion-trigger integration remains outstanding.
