@@ -1,7 +1,8 @@
-async page => {
+async (page, { neutralDiagnostic = false, occupiedChairs = [], capturePrefix = process.env.RIVER_OAKS_GARDEN_CAPTURE_PREFIX ?? 'garden-office' } = {}) => {
   // Matched player-height captures of the Garden Office template (#416 baseline and
   // after-views). Each station stands on a required route target from the office
-  // profile and looks at that target's role object; entry and exit use the arrival.
+  // profile and looks at that target's role object; entry uses arrival, while exit
+  // looks back toward arrival from reception.
   // Positions are (east, north) metres; yaw follows walking.js (0 faces north).
   const origin = 'http://127.0.0.1:5173', errors = [], captures = [];
   page.on('pageerror', error => errors.push(error.message));
@@ -13,7 +14,7 @@ async page => {
     { id: 'CAM-05-kitchenette', at: [-1, 5], look: [-5.2, 5.45] },
     { id: 'CAM-06-exit', at: [0, -4], look: [0, -8.5] },
   ];
-  const lightings = ['daylight', 'warm', 'evening'];
+  const lightings = neutralDiagnostic ? ['daylight'] : ['daylight', 'warm', 'evening'];
   const yawFor = ([e, n], [le, ln]) => Math.atan2(-(le - e), ln - n);
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto(`${origin}/studio.html`);
@@ -28,6 +29,13 @@ async page => {
   const property = async (name, value) => {
     const input = page.getByLabel(name, { exact: true }); await input.fill(String(value)); await input.press('Tab'); await settle();
   };
+  for (const chair of occupiedChairs) {
+    await page.locator(`[data-item="${chair.id}"]`).click();
+    for (const [label, value] of [['East (m)', chair.east], ['North (m)', chair.north], ['Depth (m)', chair.depth]]) {
+      await property(label, value);
+      if (Math.abs(Number(await page.getByLabel(label, { exact: true }).inputValue()) - value) > 1e-6) throw Error(`Occupied chair edit rejected: ${chair.id} ${label}`);
+    }
+  }
   for (const lighting of lightings) {
     await page.locator('[data-item="@environment"]').click();
     await page.getByRole('combobox', { name: 'Lighting', exact: true }).selectOption(lighting); await settle();
@@ -44,9 +52,11 @@ async page => {
       await page.mouse.move(x, y); await page.mouse.down();
       for (let step = 1; step <= 8; step++) await page.mouse.move(x + dx * step / 8, y);
       await page.mouse.up(); await page.waitForTimeout(400);
-      const path = `output/playwright/garden-office-${lighting}-${station.id}.png`;
+      const diagnostic = neutralDiagnostic ? await page.locator('#studio-viewport').getAttribute('data-neutral-diagnostic') : null;
+      if (neutralDiagnostic && !diagnostic) throw Error('Neutral diagnostic light override was not applied');
+      const path = `output/playwright/${capturePrefix}-${neutralDiagnostic ? 'neutral-diagnostic' : lighting}${occupiedChairs.length ? '-occupied' : ''}-${station.id}.png`;
       await page.locator('#studio-viewport').screenshot({ path });
-      captures.push({ lighting, station: station.id, at: station.at, look: station.look, yaw: +yaw.toFixed(4), path });
+      captures.push({ lighting, ...(diagnostic ? { neutralDiagnostic: JSON.parse(diagnostic) } : {}), ...(occupiedChairs.length ? { occupiedChairs } : {}), station: station.id, at: station.at, look: station.look, yaw: +yaw.toFixed(4), path });
       await page.getByRole('button', { name: 'Return to editor', exact: true }).click();
       await page.waitForSelector('body[data-mode="edit"]');
     }

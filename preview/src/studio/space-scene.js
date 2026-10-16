@@ -249,7 +249,7 @@ export function createSpaceScene(space, theme = 'light') {
         for (const x of [-.475,.475]) box(root,frame,[.05,1,.8],[x,.5,0],'Frame');
         for (const y of [.025,.975]) box(root,frame,[1,.05,.8],[0,y,0],'Frame');
         box(root,mat,[.56,.45,.03],[-.11,.53,.13],'Abstract field');
-        const disc = cylinder(root,finish('terracotta'),[.32,.03,.32],[.2,.61,.16],'Abstract circle');disc.rotation.x = Math.PI/2;
+        const disc = cylinder(root,special('typesafe-pink',{color:'#F486A1',roughness:.88}),[.32,.03,.32],[.2,.61,.16],'Abstract circle');disc.rotation.x = Math.PI/2;
         box(root,finish('sage'),[.75,.12,.035],[0,.23,.14],'Abstract horizon');
         break;
       }
