@@ -81,6 +81,8 @@ the House slice's evidence folder:
 | `STUDIO_TEMPLATE=boutique pnpm run test:experience studio-template-journey` | passed, 13 checks |
 | `studio-template-stations` | Boutique and office after, 3 presets each, 0 page errors |
 | `pnpm run verify` (core) | passed, 11/11 tasks. agent 112/112; preview 3,337/3,339 (1 skipped); server 599/753 (154 skipped); desktop 69/69; pytest 141; build, lint, demo and secrets passed |
+| After the mirror reflection change: Studio tests, Boutique journey, `world-studio` journey | 115/115; 13 checks; passed |
+| After merging main (`be38c507`, including #459's Garden Office records and the v0.2.1 release) | Garden Office records failed only on `space-scene.js` source hashes, which were refreshed. Studio tests 124/124. `pnpm run verify` passed: agent 112/112; preview 3,357/3,358 (1 skipped); server 599/753 (154 skipped); desktop 76/76; pytest 141. A first run failed `desktop/tests/sign.test.js` because the worktree predated the merge's new `@electron/osx-sign` dependency; `pnpm install --frozen-lockfile` fixed it |
 
 **Boutique journey:**
 - The checkout plant moved into fitting room one's entry is refused with a finding naming that
