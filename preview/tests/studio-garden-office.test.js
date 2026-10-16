@@ -12,6 +12,16 @@ const space = objects => ({ schema_version: 1, document_type: 'studio-space', na
 const sizes = [[1.8,.8,.76],[1.2,.6,.72],[.6,.65,.85],[2.4,1,.9]];
 
 const meshesOf = root => { const list = []; root.traverse(child => { if (child.isMesh) list.push(child); }); return list; };
+
+test('Garden Office uses restrained TypeSafe Place pink in the existing wall-art detail', () => {
+  const office = createSpace('office'), scene = createSpaceScene(office);
+  try {
+    const circle = scene.items.get('reception-art').getObjectByName('Abstract circle');
+    assert.equal(circle.material.color.getHexString(), 'f486a1');
+    const pot = scene.items.get('meeting-plant').getObjectByName('Planter');
+    assert.equal(pot.material.color.getHexString(), 'b76e50', 'pots retain terracotta');
+  } finally { disposeStudioScene(scene.group); }
+});
 // Bounds of named parts in the object's own frame, in metres (root scale removed).
 function metricBounds(root, item, name) {
   const unscaled = new THREE.Matrix4().compose(root.position, root.quaternion, new THREE.Vector3(1,1,1)).invert();
@@ -197,7 +207,7 @@ test('pilot records include glazing and finishes with actual collision dispositi
   const { measureForms } = await import('../../scripts/garden-office-manifest.mjs');
   const { buildSpaceWorld } = await import('../src/studio/space-document.js');
   const records = await measureForms();
-  for (const kind of ['desk','chair','pendant','plant','glazing','floor','wall']) assert.ok(records.some(r => r.kind === kind), `${kind} is recorded`);
+  for (const kind of ['desk','chair','pendant','plant','glazing','floor','wall','art']) assert.ok(records.some(r => r.kind === kind), `${kind} is recorded`);
   for (const record of records) {
     const item = object(record.kind, record.nominal);
     assert.deepEqual(record.collision.footprintsAtNominal, buildSpaceWorld(space([item])).collisionPolygons);

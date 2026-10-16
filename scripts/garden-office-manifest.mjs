@@ -38,6 +38,11 @@ export const FORMS = [
   { id: 'studio-wall-plaster', kind: 'wall', file: sceneFile, nominal: { width: 16.2, depth: .18, height: 3.1 }, finish: 'plaster',
     resize: 'Any valid v1 size; skirting at most 90 mm high.',
     materialSlots: { wall: 'plaster #e5dfd2, roughness 0.92', skirting: 'white' }, approach: 'Solid wall; entrances are gaps between separate wall elements.' },
+  { id: 'studio-art-abstract-pink', kind: 'art', file: sceneFile, nominal: { width: 1.3, depth: .05, height: .9 }, finish: 'sage',
+    resize: 'Existing v1 proportional scaling; frame and abstract detail proportions follow width, depth and height.',
+    materialSlots: { canvas: 'fabric', frame: 'walnut', field: 'object finish', circle: 'TypeSafe Place pink #F486A1, roughness 0.88', horizon: 'sage' },
+    approach: 'Nonblocking wall decoration; the shared art detail uses this accent in every template.',
+    permission: 'Existing repository-authored abstract art geometry, with the #416 TypeSafe Place accent revision; no third-party asset source.' },
 ];
 
 // `|| 0` turns -0 into 0, which is what JSON stores.
@@ -74,12 +79,13 @@ export async function measureForms() {
       bounds: [box.min.toArray().map(round), box.max.toArray().map(round)],
       axes: 'object frame at yaw 0: x east / y up / z south; pivot at the footprint centre and base elevation (floor surfaces extend below their pivot)',
       collision: {
-        rule: ['floor','pendant'].includes(form.kind) ? 'Nonblocking v1 kind at every elevation.' : 'v1 footprint rectangle (width × depth); blocks walking when elevation < 1.8 m and the top is above 0.25 m.',
+        rule: ['floor','pendant','art'].includes(form.kind) ? 'Nonblocking v1 kind at every elevation.' : 'v1 footprint rectangle (width × depth); blocks walking when elevation < 1.8 m and the top is above 0.25 m.',
         footprintsAtNominal: buildSpaceWorld({ bounds_m: [-32,-32,32,32], spawn: [0,-5], objects: [item] }).collisionPolygons,
       },
-      cost: { meshNodes, triangles, lineSets, geometries: geometries.size, geometryBytes, materials: materials.size, texturesAtNominal: 0, textures: 'No textures at the measured finish. Optional limestone/terracotta finishes reuse the existing shared PBR set; runtime transfer is measured separately.' },
+      cost: { meshNodes, triangles, lineSets, geometries: geometries.size, geometryBytes, materials: materials.size, texturesAtNominal: 0,
+        textures: ['desk','floor'].includes(form.kind) ? 'No authored texture maps at the measured finish. Optional limestone/terracotta finishes reuse existing shared PBR textures; no transfer-byte measurement is claimed.' : 'No authored texture maps for this form; viewport reflections are shared and measured separately at runtime.' },
       stage: 'procedural-pilot', availability: 'repository',
-      permission: 'Original geometry authored in this repository for #416; no third-party source.' };
+      permission: form.permission ?? 'Original geometry authored in this repository for #416; no third-party source.' };
   });
 }
 

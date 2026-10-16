@@ -1,7 +1,8 @@
-async (page, { neutralDiagnostic = false, occupiedChairs = [] } = {}) => {
+async (page, { neutralDiagnostic = false, occupiedChairs = [], capturePrefix = process.env.RIVER_OAKS_GARDEN_CAPTURE_PREFIX ?? 'garden-office' } = {}) => {
   // Matched player-height captures of the Garden Office template (#416 baseline and
   // after-views). Each station stands on a required route target from the office
-  // profile and looks at that target's role object; entry and exit use the arrival.
+  // profile and looks at that target's role object; entry uses arrival, while exit
+  // looks back toward arrival from reception.
   // Positions are (east, north) metres; yaw follows walking.js (0 faces north).
   const origin = 'http://127.0.0.1:5173', errors = [], captures = [];
   page.on('pageerror', error => errors.push(error.message));
@@ -53,7 +54,7 @@ async (page, { neutralDiagnostic = false, occupiedChairs = [] } = {}) => {
       await page.mouse.up(); await page.waitForTimeout(400);
       const diagnostic = neutralDiagnostic ? await page.locator('#studio-viewport').getAttribute('data-neutral-diagnostic') : null;
       if (neutralDiagnostic && !diagnostic) throw Error('Neutral diagnostic light override was not applied');
-      const path = `output/playwright/garden-office-${neutralDiagnostic ? 'neutral-diagnostic' : lighting}${occupiedChairs.length ? '-occupied' : ''}-${station.id}.png`;
+      const path = `output/playwright/${capturePrefix}-${neutralDiagnostic ? 'neutral-diagnostic' : lighting}${occupiedChairs.length ? '-occupied' : ''}-${station.id}.png`;
       await page.locator('#studio-viewport').screenshot({ path });
       captures.push({ lighting, ...(diagnostic ? { neutralDiagnostic: JSON.parse(diagnostic) } : {}), ...(occupiedChairs.length ? { occupiedChairs } : {}), station: station.id, at: station.at, look: station.look, yaw: +yaw.toFixed(4), path });
       await page.getByRole('button', { name: 'Return to editor', exact: true }).click();

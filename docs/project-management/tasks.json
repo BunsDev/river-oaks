@@ -10399,8 +10399,8 @@
         "test/garden-office-416-audit-20261015"
       ],
       "owner": "codex-root-garden-office-audit-20261015",
-      "updatedAt": "2026-10-15T20:57:05.686880+00:00",
-      "nextAction": "Draft #459: add verified neutral-light/occupied-chair diagnostic (12 captures, original renderer restored), then hand off to #417. Await Val visual/profile decision; hosted review remains separate, no merge authorized.",
+      "updatedAt": "2026-10-16T00:02:30.680600+00:00",
+      "nextAction": "Source-handoff scope complete after independent visual/profile review and required pink correction. Final core11/11 (4245 pass154skip1TODO), focused106, final30 captures pass. Update draft#459/#417 handoff; remaining task gate is ordinary PR review/up-to-date checks and separately authorized landing, not Val-personal visual approval. Preserve worktree/evidence.",
       "ledger": "docs/superpowers/plans/2026-10-15-garden-office-pilot.md",
       "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-garden-office-audit",
       "issue": 416,
@@ -10410,7 +10410,8 @@
         "preview/tests/studio-garden-office.test.js (only concrete uncovered pilot regressions)",
         "preview/src/studio/space-furniture.js (valid v1 bounds only)",
         "scripts/garden-office-manifest.mjs (pilot contract accuracy/completeness)",
-        "preview/e2e/studio-office-{stations,neutral}.js (neutral diagnostic evidence only)"
+        "preview/e2e/studio-office-{stations,neutral}.js (neutral diagnostic evidence only)",
+        "preview/src/studio/space-scene.js (existing art circle material only)"
       ],
       "requiredChecks": [
         "node --test preview/tests/studio-*.test.js server/tests/studio-assets.test.js",
@@ -10449,7 +10450,7 @@
           "head": "c83532f2a264743de042bd06562641567d813043"
         }
       },
-      "leaseUntil": "2026-10-15T22:41:42.300950+00:00",
+      "leaseUntil": "2026-10-16T01:51:25.163814+00:00",
       "previousPr": 439,
       "pr": 459
     },

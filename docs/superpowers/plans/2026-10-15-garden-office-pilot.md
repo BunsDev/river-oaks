@@ -444,3 +444,102 @@ Capture filenames use `garden-office-neutral-diagnostic[-occupied]-CAM-0N-*.png`
 Their SHA-256 values and harness hashes are appended to the local
 `.runtime/garden-office-audit/evidence-manifest.json`; the paired review HTML now
 includes both neutral conditions. No original captures were overwritten.
+
+
+### Resumed completion audit: review ownership correction
+
+Earlier continuation notes incorrectly treated #416's design review as requiring
+Val personally. The #414 handoff in #413 requires **design-reviewer confirmation**
+of destinations, and #416 assigns visual review to that role. Neither instruction
+names Val as the required reviewer for this source handoff. The goal explicitly
+excludes waiting for #417's final approval. An independent agent design review is
+therefore being completed against the actual images and destination purposes;
+it must not be presented as Val's approval or human/device acceptance.
+
+At `3deaa1c6104919217bf43d01bd6b430035fd5d4f`, all 16 GitHub check runs, including
+aggregate `preview`, passed. The branch remains behind main; up-to-date merge
+checks and authorization are still required before landing. This goal authorizes
+source/evidence handoff, not merge or retirement.
+
+| Requirement | Current evidence | Scope |
+| --- | --- | --- |
+| Actual pilot family, glazing, finishes, light and planting | Merged #439 source plus #459 bounds corrections; baseline/current PNGs; eight asset records | Original procedural assets behind existing v1 kinds, no GLB export required by recorded decision |
+| Asset metadata and visible/collision dimensions | Source/dependency hashes, measured bounds/costs, 4,000-case independent review and four workstation approach regressions | No controller shrink or new persisted fields |
+| Legacy and negative compatibility | 105 focused tests; strict unknown field/version/kind/finish, malformed/oversized data, saved draft/history recovery | No conversion needed; plain import honestly lacks assessment provenance |
+| Existing renderer, transaction and host integration | Exact interface hashes above; 13-check browser journey; 11/11 development Electron; build/core receipts | No new desktop import or context field; provider-free fixture path |
+| Actual views and representative chair use | 18 ordinary and 12 neutral diagnostic views, nine pulled-back chairs, restored renderer response verified | Capture inspection is distinct from human accessibility and device approval |
+| Reproducible evidence and acceptance handoff | This ledger, committed browser/soak/neutral receipts, #459 and #417 comment6202142894 | Local PNGs and detailed logs retained; no kit publication or manual deployment |
+
+
+### Final design correction and disposition
+
+Independent agent design reviewer inspected 40 original/current images and
+confirmed all five profile-v1 destinations, but correctly rejected the missing
+explicit TypeSafe Place pink accent. No prior palette exception existed. The
+small existing art circle now uses authored `#F486A1`, roughness 0.88; pots remain
+terracotta. This changes the **shared art-detail default across templates** and
+old saved v1 art, not the serialized finish enum or geometry. #418 retains broader
+other-template acceptance. The ninth catalog record, `studio-art-abstract-pink`
+v1, documents this scope, proportional resizing, nonblocking status and costs.
+Texture metadata now distinguishes optional desk/floor PBR maps from forms with
+no authored texture maps; no texture transfer-byte measurement is claimed.
+
+The material regression failed before the correction (`pink-red.txt`) and passes
+after it. Focused Studio/asset suite: **106 passed, 0 failed/skipped/TODO**. After
+the metadata wording correction, the Garden Office suite passed **19/19** again.
+Camera comment corrected: CAM-06 stands at reception `(0,-4)` and looks at exit
+`(0,-8.5)`; it does not stand at the arrival. No route/profile changed.
+
+Fresh command:
+`RIVER_OAKS_GARDEN_CAPTURE_PREFIX=garden-office-pink RIVER_OAKS_E2E_REPORT=garden-office-pink-browser.json pnpm run test:experience studio-office-stations studio-office-neutral`.
+Both passed: **18 preset captures / 19.422 s**, **12 neutral captures / 18.081 s**,
+including occupied chairs and original renderer response restoration. Old PNGs
+remain intact. Receipt: `data/reports/garden-office-pink-browser.json`; exact source
+and 30 capture hashes: `.runtime/garden-office-audit/pink-evidence-manifest.json`.
+
+**Independent design disposition: accepted for scoped source handoff.** Reviewer
+inspected eleven corrected runtime PNGs: reception/workstation under all five
+lighting/occupancy conditions and neutral meeting as the pot-color control.
+The small pink circle remains restrained and legible; no new major visual defect
+was observed. The reviewer reran 19/19 pilot tests. Full review and exact hashes:
+`.runtime/garden-office-audit/design-review.{md,json}`, with the original finding
+and follow-up both preserved. This is agent design review, not Val impersonation.
+
+| Profile-v1 destination | Confirmed design purpose | Limit |
+| --- | --- | --- |
+| Arrival/exit `(0,-8.5)` | Existing 2 m gap connects exterior start/return to central aisle | Bare exterior is retained D9 |
+| Reception `(0,-4)` | Reception/waiting area and office junction | Area access, about 4 m from counter, not service/reach certification |
+| Work area `(-2,1)` | Entry to the four-workstation zone | Four separate side-approach regressions supplement it |
+| Meeting `(3,1)` | Beyond west glazing opening inside meeting zone | Glazing is solid; authored gap provides connection |
+| Kitchenette `(-1,5)` | Open north service aisle alongside cabinets | Area access, about 4.2 m from sink, not sink-use certification |
+
+The reviewer separately reconstructed occupied chairs and obtained passed return
+routes to all targets with the unchanged 0.35 m controller. D7 open roof/visible
+canopy fixings and D9 bare exterior remain conspicuous but do not block this
+interior-family slice; older counter/table forms and stylized plants are recorded
+polish limits. No required design correction remains. #417 owns human/device,
+packaging/live-auth and sustained performance/budget decisions.
+
+Updated CPU scene cost (`pink-cost.json`): **40 objects, 326 meshes, 24,318
+triangles, 2 line sets, 25 geometries, 23 materials, 236,468 geometry-array bytes**.
+The accent adds exactly one material; mesh-only materials are now 21. Geometry,
+controller and collision costs are unchanged. Earlier ten-cycle and Electron
+receipts precede this color-only follow-up and are retained with that scope.
+Final standard core gate passed **11/11 tasks**, invoked under the local work
+queue as `node scripts/browser-lock.mjs garden-office-pink-core -- pnpm run verify`.
+Counts: tooling 112, preview 3,325 / 1 skipped / 1 TODO, server 598 / 153 Redis
+skips, desktop 69, Python 141. Total **4,245 passed / 154 skipped / 1 TODO**.
+Build, Python lint/format, fixture demo, expected-exit-2 demo verifier and secrets
+scan passed. Immutable receipt: `pink-core-receipt.json`; output: `pink-core.txt`.
+The final metadata-only wording was separately checked by the final 19/19 suite.
+The earlier failed run remains in `core-final.txt`; `.runtime/agent/core.json` is a
+rolling runner receipt and now contains this successful final run.
+
+**Source-handoff completion:** actual source/assets, contract, compatibility,
+runtime views, occupied-use checks, exact interfaces and independent design review
+are complete for this requested slice. No Val-personal-approval requirement is
+added. Continue #417 acceptance independently. PR #459 still needs ordinary hosted
+review/up-to-date checks and authorized landing; task delivery/retirement is not
+claimed. Preserve this worktree and local evidence until the lifecycle gates pass.
+
+Independent design review JSON SHA-256: `7ba0e3adcd189a7118837681eca6b93375448453ca8ac0010d0700173a154b73`.
