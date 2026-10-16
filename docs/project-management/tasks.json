@@ -11247,6 +11247,29 @@
       ],
       "nextAction": "Update the readiness ledger's tag section for the published release; copy release-0-2-0-readiness, register-sweep-20261015-1b2, release-0-2-0-tag and this entry onto main's register; PR and land.",
       "updatedAt": "2026-10-15T20:08:36.760Z"
+    },
+    {
+      "id": "plaza-game-layout-20261015",
+      "title": "Expandable plaza boards and clear game selection",
+      "status": "active",
+      "branches": [
+        "feat/plaza-game-layout-20261015"
+      ],
+      "owner": "codex-plaza-game-layout-20261015",
+      "updatedAt": "2026-10-16T01:24:39.816625+00:00",
+      "leaseUntil": "2026-10-16T03:12:01.564823+00:00",
+      "nextAction": "Verified: core11 tasks with isolated Redis, browser layout31/Morris15/guide22 and visual inspection pass. Sign and push reviewable PR; no merge/deploy authorized. Preserve checkout and retained screenshots/receipts.",
+      "filesOwned": [
+        "preview/src/plaza-table-games.js",
+        "preview/src/plaza-table-games.css",
+        "preview/e2e/plaza-game-layout.js",
+        "docs/superpowers/plans/2026-10-15-plaza-game-layout.md"
+      ],
+      "requiredChecks": [
+        "pnpm run verify",
+        "Focused game layout browser journey with desktop expanded, narrow and keyboard checks"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-15-plaza-game-layout.md"
     }
   ]
 }
