@@ -1,3 +1,4 @@
+import {observeCharacterEquip} from './character-metrics-equip.js';
 import {characterSelectionGate} from './character-rollout.js';
 import {createMemoryCharacterSelection,isCharacterSelection} from './character-selection.js';
 import { createCharacterRoutes } from './character-routes.js';
@@ -38,7 +39,7 @@ import { ROTATE_NOTICE_MS, UPDATE_CLOSE, closeForUpdate, continuedConnection, re
 const types = { '.webm':'video/webm','.mp4':'video/mp4','.vtt':'text/vtt; charset=utf-8','.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.glb':'model/gltf-binary','.hdr':'application/octet-stream','.svg':'image/svg+xml','.woff2':'font/woff2' };
 const equal = (a,b) => typeof a==='string' && typeof b==='string' && Buffer.byteLength(a)===Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a),Buffer.from(b));
 const json = (res,status,value) => { res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(value)); };
-export function createGameServer({ debugReports = createMemoryDebugReports(), auth, world, worldTitle = world.title, landmarks, social = null, groups = null, profiles = null, events = null, workplace = null, officeDesk = createMemoryOfficeDesk(), officeWorkspaces = createMemoryOfficeWorkspaces(), avatarPreferences = null, characters = null, characterStudioEnabled = true, presence = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, regionSha256 = null, onBan = null, origin, staticRoot, moderation, waitlist, waitlistAdmins = [], moderators = [], trustedProxyIPs = [], now = Date.now, onMove = null, voice = null, voiceReconcileMs = 1000, departureGraceMs = 30000, connectionLifetime = 0, rotateNoticeMs = ROTATE_NOTICE_MS, cyclingMiles = null, cyclingFlushMs = 30000 }) {
+export function createGameServer({ debugReports = createMemoryDebugReports(), auth, world, worldTitle = world.title, landmarks, social = null, groups = null, profiles = null, events = null, workplace = null, officeDesk = createMemoryOfficeDesk(), officeWorkspaces = createMemoryOfficeWorkspaces(), avatarPreferences = null, characters = null, characterStudioEnabled = true, characterMetrics = null, presence = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, regionSha256 = null, onBan = null, origin, staticRoot, moderation, waitlist, waitlistAdmins = [], moderators = [], trustedProxyIPs = [], now = Date.now, onMove = null, voice = null, voiceReconcileMs = 1000, departureGraceMs = 30000, connectionLifetime = 0, rotateNoticeMs = ROTATE_NOTICE_MS, cyclingMiles = null, cyclingFlushMs = 30000 }) {
   if (!waitlist) throw new Error('Waitlist is required');
   const worldId=validateWorldId(world.worldId??DEFAULT_WORLD_ID);
   const matchesWorld=url=>(url.searchParams.get('world')??(worldId===DEFAULT_WORLD_ID?DEFAULT_WORLD_ID:null))===worldId;
@@ -79,7 +80,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
       const active=!auth.isSessionActive||await auth.isSessionActive(userId,context.sessionId);
       return approved&&active&&connections.get(userId)===connection&&connection.identity.expiresAt>now()&&!isBanned(userId);
     }}):null;
-  const handleCharacters=characters?createCharacterRoutes({enabled:characterStudioEnabled,store:characters,approvedIdentity,authorized,allowRead:characterReads,allowWrite:characterWrites}):null;
+  const handleCharacters=characters?createCharacterRoutes({metrics:characterMetrics,enabled:characterStudioEnabled,store:characters,approvedIdentity,authorized,allowRead:characterReads,allowWrite:characterWrites}):null;
   const disconnectUser = (id, code=4003, reason='Session ended') => {
     for (const [key,ticket] of tickets) if (ticket.identity.userId===id) tickets.delete(key);
     clearTimeout(departures.get(id)); departures.delete(id);
@@ -399,6 +400,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
           try { approved = await waitlist.isApproved(identity.userId); } catch { /* Storage fails closed. */ }
           if(connections.get(identity.userId)!==connection || ws.readyState!==WebSocket.OPEN)return;
           if(identity.expiresAt<=now() || isBanned(identity.userId) || !approved)return disconnectUser(identity.userId,4001,'Please sign in again.');
+          let equipObservation=null;
           try {
             const message=slot.message;
             if(!message)throw new Error('Invalid');
@@ -407,15 +409,17 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
               moderation.report(identity.userId,message.playerId,message.reason).then(()=>send(ws,{type:'result',requestId:message.requestId,ok:true,message:'Report sent to the town moderators.'}),()=>send(ws,{type:'result',requestId:message.requestId,ok:false,message:'Report unavailable. Try again.'}));return;
             }
             const {requestId,selection,...command}=message;
+            if(command.type==='character'||selection!==undefined)equipObservation=observeCharacterEquip(characterMetrics);
             const studioGate=await characterSelectionGate({enabled:characterStudioEnabled,store:characters,userId:identity.userId,command,selection});
-            if(studioGate){send(ws,{type:'result',requestId,...studioGate});return;}
-            if(selection!==undefined&&(!characterSelection||!isCharacterSelection(command)))return send(ws,{type:'result',requestId,ok:false,error:'invalid_character_operation'});
-            if(characterSelection?.hasPending(identity.userId))return send(ws,{type:'result',requestId,ok:false,error:'character_selection_pending'});
+            if(studioGate){equipObservation?.result(studioGate);send(ws,{type:'result',requestId,...studioGate});return;}
+            if(selection!==undefined&&(!characterSelection||!isCharacterSelection(command))){const result={ok:false,error:'invalid_character_operation'};equipObservation?.result(result);return send(ws,{type:'result',requestId,...result});}
+            if(characterSelection?.hasPending(identity.userId)){const result={ok:false,error:'character_selection_pending'};equipObservation?.result(result);return send(ws,{type:'result',requestId,...result});}
             const officeWorkspace=await workspaceContext(officeWorkspaces,identity.userId,command);
-            if(connections.get(identity.userId)!==connection || ws.readyState!==WebSocket.OPEN)return;
+            if(connections.get(identity.userId)!==connection || ws.readyState!==WebSocket.OPEN){equipObservation?.aborted();return;}
             const result=characterSelection&&isCharacterSelection(command)
               ?await characterSelection.command(identity.userId,command,selection,{connectionId:token,sessionId:identity.sessionId??null})
               :world.command(identity.userId,command,{officeWorkspace,sessionId:identity.sessionId??null});
+            equipObservation?.result(result);
             if(result.ok && !characterSelection && avatarPreferences && ['appearance','movement'].includes(command.type))
               await avatarPreferences.save(identity.userId,world.accountAppearance(identity.userId));
             if(result.ok && command.type==='uncycle')await flushRides();
@@ -423,7 +427,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
             if(earlyAck)send(ws,{type:'result',requestId,...result});
             if(result.ok && command.type!=='pose' && command.type!=='inventory')send(ws,snapshot());
             if(!earlyAck && (requestId!==undefined || !result.ok))send(ws,{type:'result',requestId,...result});
-          } catch {send(ws,{type:'result',ok:false,message:'Invalid game command.'});}
+          } catch {equipObservation?.unavailable();send(ws,{type:'result',ok:false,message:'Invalid game command.'});}
           }).catch(()=>ws.close(1013,'Town temporarily unavailable.')).finally(()=>{if(!coalescible)connection.pending--;});
         });
         ws.on('close',()=>{

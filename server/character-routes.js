@@ -1,3 +1,4 @@
+import {observeCharacterResponse} from './character-metrics-http.js';
 const MAX_BODY=16*1024;
 const json=(res,status,value)=>{
   res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'private, no-store',Vary:'Cookie'});
@@ -22,12 +23,13 @@ async function readBody(req,fields){
 
 // Publication creates immutable owner revisions without equipping them. Selection
 // remains a connection-authorized world command with its own version and receipt.
-export function createCharacterRoutes({enabled=true,store,approvedIdentity,authorized,allowRead,allowWrite}){
+export function createCharacterRoutes({enabled=true,metrics=null,store,approvedIdentity,authorized,allowRead,allowWrite}){
   if(!store?.get||!store?.saveDraft||![approvedIdentity,authorized,allowRead,allowWrite].every(fn=>typeof fn==='function'))throw new TypeError('Invalid character routes');
   return async(req,res,path)=>{
-    const routes={'/api/character':{method:'GET'},'/api/character/draft':{method:'PUT',fields:['definition','expectedVersion','requestId']},
-      '/api/character/publish':{method:'POST',fields:['expectedVersion','requestId']},'/api/character/rollback':{method:'POST',fields:['revision','expectedVersion','requestId']}};
+    const routes={'/api/character':{method:'GET',operation:'read'},'/api/character/draft':{method:'PUT',operation:'save',fields:['definition','expectedVersion','requestId']},
+      '/api/character/publish':{method:'POST',operation:'publish',fields:['expectedVersion','requestId']},'/api/character/rollback':{method:'POST',operation:'rollback',fields:['revision','expectedVersion','requestId']}};
     const route=routes[path];if(!route)return false;
+    const observation=metrics?observeCharacterResponse(res,route.operation,metrics):null;
     const reading=path==='/api/character',method=route.method;
     if(req.method!==method){json(res,405,{error:'character_method_not_allowed'});return true;}
     const identity=await (reading?approvedIdentity:authorized)(req,res);
@@ -35,7 +37,7 @@ export function createCharacterRoutes({enabled=true,store,approvedIdentity,autho
     const query=new URL(req.url,'http://localhost').searchParams;
     if([...query.keys()].some(key=>key!=='world')||query.getAll('world').length>1){json(res,400,{error:'invalid_character_request'});return true;}
     if(!await (reading?allowRead:allowWrite)(identity.userId)){json(res,429,{error:'character_rate_limited'});return true;}
-    if(!reading&&enabled!==true){json(res,503,{error:'character_studio_disabled'});return true;}
+    if(!reading&&enabled!==true){observation?.outcome('paused');json(res,503,{error:'character_studio_disabled'});return true;}
     let body;
     if(!reading){
       if(req.headers['content-type']?.split(';')[0].trim().toLowerCase()!=='application/json'){json(res,415,{error:'character_json_required'});return true;}

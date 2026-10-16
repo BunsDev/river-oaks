@@ -1,3 +1,4 @@
+import {observeCharacterEquip} from './character-metrics-equip.js';
 import {characterSelectionGate} from './character-rollout.js';
 import {isCharacterSelection} from './character-selection.js';
 import { createCharacterRoutes } from './character-routes.js';
@@ -42,7 +43,7 @@ const json = (res, status, value) => {
 };
 
 /** HTTP/WS edge for a durable room. No instance owns canonical game or auth state. */
-export function createDistributedServer({ auth, room, worldTitle, security, waitlist, waitlistAdmins = [], debugReports = null, landmarks, social = null, groups = null, profiles = null, characters = null, characterStudioEnabled = true, events = null, workplace = null, officeDesk = null, officeWorkspaces = null, workplaceCronSecret = null, presence = null, designLibrary = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
+export function createDistributedServer({ auth, room, worldTitle, security, waitlist, waitlistAdmins = [], debugReports = null, landmarks, social = null, groups = null, profiles = null, characters = null, characterStudioEnabled = true, characterMetrics = null, events = null, workplace = null, officeDesk = null, officeWorkspaces = null, workplaceCronSecret = null, presence = null, designLibrary = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
   trustedProxyIPs = [], address = createClientAddress(trustedProxyIPs), now = Date.now,
   connectionLifetime = 270_000, rotateNoticeMs = ROTATE_NOTICE_MS, assetGateSecret = null, heartbeatMs = 5000, onMove = null, voice = null, voiceCronSecret = null,
   // cyclingMiles: accepted for the leaderboard route (PR 2); the room owner flushes rides.
@@ -77,7 +78,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
     }
     return identity;
   };
-  const handleCharacters=characters?createCharacterRoutes({enabled:characterStudioEnabled,store:characters,approvedIdentity,authorized,
+  const handleCharacters=characters?createCharacterRoutes({metrics:characterMetrics,enabled:characterStudioEnabled,store:characters,approvedIdentity,authorized,
     allowRead:id=>security.allow('character-read',id,120,60000),allowWrite:id=>security.allow('character-write',id,30,60000)}):null;
   async function body(req,max=4096) {
     let size = 0; const chunks = [];
@@ -429,6 +430,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
           const slot = { message };
           if (coalescible) waitingPose = slot;
           else { waitingPose = null; connection.pending++; }
+          let equipObservation=null;
           queue = queue.then(async () => {
             if (waitingPose === slot) waitingPose = null;
             const message = slot.message;
@@ -436,9 +438,10 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
             if (!(await security.allow('frames', identity.userId, 40, 1000))) { ws.close(4008, 'Too many messages.'); return; }
             if (identity.expiresAt <= now()) { ws.close(4001, 'Please sign in again.'); return; }
             const { requestId, selection, ...command } = message;
+            if(command.type==='character'||selection!==undefined)equipObservation=observeCharacterEquip(characterMetrics);
             const studioGate=await characterSelectionGate({enabled:characterStudioEnabled,store:characters,userId:identity.userId,command,selection});
-            if(studioGate){send(ws,{type:'result',requestId,...studioGate});return;}
-            if(selection!==undefined&&!isCharacterSelection(command)){send(ws,{type:'result',requestId,ok:false,error:'invalid_character_operation'});return;}
+            if(studioGate){equipObservation?.result(studioGate);send(ws,{type:'result',requestId,...studioGate});return;}
+            if(selection!==undefined&&!isCharacterSelection(command)){const result={ok:false,error:'invalid_character_operation'};equipObservation?.result(result);send(ws,{type:'result',requestId,...result});return;}
             if (command.type === 'report') {
               const view = await room.read();
               const self = view?.connections.find(item => item.userId === identity.userId);
@@ -452,6 +455,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
             const resolved = await accountDesignCommand({ command, userId: identity.userId, connectionId, worldId,
               room, library: designLibrary, security, isAdmin });
             const result = resolved.result ?? await room.request({ type: 'command', userId: identity.userId, connectionId, message: resolved.command, ...(selection!==undefined?{selection}:{}) });
+            equipObservation?.result(result);
             if (result.error === 'stale_connection') { ws.close(4009, 'This account joined in another tab.'); return; }
             const earlyAck = result.ok && command.type === 'travel' && requestId !== undefined;
             if (earlyAck) send(ws, { type: 'result', requestId, ...result });
@@ -459,7 +463,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
             // 200 ms tick, instead of a full rebroadcast per command.
             if (result.ok && command.type !== 'pose' && command.type !== 'inventory') publish(await room.read(), connection);
             if (!earlyAck && (requestId !== undefined || !result.ok)) send(ws, { type: 'result', requestId, ...result });
-          }).catch(() => { ws.close(1013, 'Town temporarily unavailable.'); }).finally(() => { if (!coalescible) connection.pending--; });
+          }).catch(() => { equipObservation?.unavailable();ws.close(1013, 'Town temporarily unavailable.'); }).finally(() => { if (!coalescible) connection.pending--; });
         });
         ws.on('close', () => {
           retire(); connections.delete(connectionId);

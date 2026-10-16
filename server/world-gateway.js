@@ -1,3 +1,4 @@
+import {createCharacterMetrics} from './character-metrics.js';
 import { createRedisCharacterStore } from './character-store.js';
 import { createRedisOfficeWorkspaces } from './office-workspaces.js';
 import { createRedisOfficeDesk } from './office-desk.js';
@@ -24,7 +25,7 @@ import { createRedisCyclingMiles } from './cycling-miles.js';
 
 /** Routes a single HTTP origin to persistent world rooms with shared auth. */
 export function createWorldGateway({redis,namespace,worldData,auth,security,waitlist,waitlistAdmins=[],origin,configuredWorldId=DEFAULT_WORLD_ID,
-  characterStudioEnabled=true,moderators=[],trustedProxyIPs=[],address,isAdmin,handleRequest,workplaceEnabled=false,workplaceSweep=false,workplaceCronSecret=null,assetGateSecret=null,voice=null,voiceCronSecret=null,screeningHosts=[],officeLayout,connectionLifetime,rotateNoticeMs}={}) {
+  characterStudioEnabled=true,characterMetrics=null,characterMetricsEnabled=false,moderators=[],trustedProxyIPs=[],address,isAdmin,handleRequest,workplaceEnabled=false,workplaceSweep=false,workplaceCronSecret=null,assetGateSecret=null,voice=null,voiceCronSecret=null,screeningHosts=[],officeLayout,connectionLifetime,rotateNoticeMs}={}) {
   if (!waitlist) throw new Error('Waitlist is required');
   validateWorldId(configuredWorldId);
   const prefix=`{${namespace}}`,catalog=createRedisWorldCatalog({redis,prefix}),social=createRedisSocial({redis,prefix}),groups=createRedisGroups({redis,prefix}),profiles=createRedisProfiles({redis,prefix}),events=createRedisEvents({redis,prefix}),debugReports=createRedisDebugReports({redis,prefix}),presence=createRedisPresence({redis,prefix});
@@ -79,7 +80,7 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
         authorize:async identity=>await auth.isSessionActive(identity.userId,identity.sessionId)
           && await waitlist.isApproved(identity.userId) && !(await security.isBanned(identity.userId))});
       const landmarks=createWorldLandmarks({catalog,storeFor:landmarkStoreFor,worldId:id,worldTitle:meta?.title??data.title});
-      const game=createDistributedServer({characterStudioEnabled,assetGateSecret,auth:sharedAuth,room,worldTitle:meta?.title??data.title,security,waitlist,waitlistAdmins,debugReports,landmarks,social,groups,profiles,characters,events,workplace,officeDesk,officeWorkspaces,workplaceCronSecret,presence,designLibrary,cyclingMiles,worldDirectory,origin,moderators,trustedProxyIPs,voice,voiceCronSecret,
+      const game=createDistributedServer({characterMetrics:metrics,characterStudioEnabled,assetGateSecret,auth:sharedAuth,room,worldTitle:meta?.title??data.title,security,waitlist,waitlistAdmins,debugReports,landmarks,social,groups,profiles,characters,events,workplace,officeDesk,officeWorkspaces,workplaceCronSecret,presence,designLibrary,cyclingMiles,worldDirectory,origin,moderators,trustedProxyIPs,voice,voiceCronSecret,
         ...(address?{address}:{}),...(isAdmin?{isAdmin}:{}),...(connectionLifetime?{connectionLifetime}:{}),...(rotateNoticeMs?{rotateNoticeMs}:{}),...(id===configuredWorldId?{worldCatalog:catalog}:{}),
         ...(id===configuredWorldId?{onApplyRegion:async (regionId,expectedDraftVersion,actorId)=>{
           const target=await worldFor(regionId);
@@ -101,13 +102,16 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
   const routerAddress=address??createClientAddress(trustedProxyIPs),localGate=createRateLimiter(1000,60_000);
   const admit=req=>{const ip=rateLimitKey(routerAddress(req));return localGate(ip)&&security.allow('access',ip,1000,60_000);};
   const router=createWorldRouter({worldFor,configuredWorldId,handleRequest,admit});
+  const metrics=characterMetrics??createCharacterMetrics({enabled:characterMetricsEnabled});
   return {server:router.server,catalog,worldFor,async disconnectUser(userId,sessionId) {
     const results=await Promise.all([...worlds.values()].map(({game})=>game.disconnectUser(userId,sessionId)));
     if(results.some(result=>result?.ok!==true))throw new Error('Account disconnect incomplete');
   },async close() {
+    try{
     closed=true;workplace?.close();
     await Promise.allSettled([...pending.values()]);
     for(const {game,room} of worlds.values()){await game.close();await room.close();}
     await router.close();
+    }finally{if(!characterMetrics)metrics.close();}
   }};
 }

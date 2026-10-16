@@ -65,6 +65,7 @@ export async function createRedisBackend(env = process.env) {
       moderators: (env.MODERATOR_USER_IDS ?? '').split(',').map(id => id.trim()).filter(Boolean),
       trustedProxyIPs: (env.TRUSTED_PROXY_IPS ?? '').split(',').map(ip => ip.trim()).filter(Boolean),
       ...(env.VERCEL === '1' ? { address: vercelClientAddress } : {}),
+      characterMetricsEnabled:env.RIVER_OAKS_CHARACTER_STUDIO_METRICS==='1',
       characterStudioEnabled: env.RIVER_OAKS_CHARACTER_STUDIO === '1',
       workplaceEnabled: env.RIVER_OAKS_WORKPLACE === '1',
       // Venue hosts are explicit grants; none configured means no one can control a screening.

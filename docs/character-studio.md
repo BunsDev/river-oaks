@@ -561,11 +561,35 @@ reference images or unsanitized browser recordings. No reference-image upload or
 AI generation path is part of this release. Existing acceptance receipts use local
 fixture identities and must not be confused with production usage telemetry.
 
-Production aggregate telemetry is still outstanding: define a bounded allowlist
-of operation/result counters and timing buckets before instrumentation. Exclude
-user/request/world IDs, definitions, palettes, raw errors, images and free text;
-do not add an unbounded event log or a new external analytics provider implicitly.
-Usability thresholds and device performance require their separate recorded trials.
+Optional server-only telemetry is enabled strictly by
+`RIVER_OAKS_CHARACTER_STUDIO_METRICS=1`; absent and other values keep it silent.
+The town/gateway emits aggregate JSON to its existing process log once per minute
+and on orderly shutdown. It does not add an endpoint or external analytics vendor.
+Studio pause does not disable counts of paused attempts.
+
+The fixed operations are read/save/publish/rollback/equip. Fixed outcomes are
+success/rejected/conflict/paused/unavailable/aborted. Elapsed-time buckets are
+at most100ms,500ms,2000ms, or greater than2000ms. The collector has120 saturating
+integer counters (maximum2147483647 each), resets after emission and retains no
+per-account data. No user/request/world IDs, definitions, palettes, raw errors,
+images, cookies, URLs or free text enter the aggregate. A response finishing and
+then closing contributes one observation. Known policy denials count as rejected;
+unknown failures count as unavailable without serializing their cause.
+
+These are process-local attempt counts, not unique actions, users, durable receipts,
+or end-to-end player latency. Repeated recovery attempts can contribute multiple
+counts. HTTP timing begins after exact route matching; equip timing begins after
+transport admission and before the rollout/selection operation. Shutdown or runtime
+suspension can lose unflushed counters; serverless instances may freeze before the
+minute timer runs. Emission is best effort with no retry queue and sink failures
+cannot reject gameplay. Use existing durable receipts for correctness decisions.
+
+The town/gateway closes its owned collector after closing its worlds. A caller
+injecting a collector owns its lifetime; gateway replacement must not close it.
+Local tests cover fixed dimensions, privacy, duplicate terminal events, aborts,
+policy classification, failing sinks, real memory/Redis transports, strict factory
+opt-in and shutdown. Hosted log retention, operational monitoring and production
+activation remain separate acceptance. Usability/device gates still require trials.
 
 
 ### Custom-character crowd diagnostic (2026-10-16)

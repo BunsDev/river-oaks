@@ -858,3 +858,29 @@ payload log. Memory/Redis production-factory and transport tests4/4 pass without
 skips in addition to9 focused tests. Gateway replacement retains the injected
 collector and records paused attempts after replacement. No production telemetry
 integration yet; do not rerun old staged generators over lifecycle changes.
+
+
+Rollout51c5a6bcbf38c5e7a3a73f8a4e6f505c414beee7 signed/pushed to draft464;
+PR description and issue444 updated. Current continuation rechecked exact remote
+head, clean tracked state and existing ownership; previous turn was progress.
+Telemetry15-file candidate normalized imports and diff reviewed against current
+rollout/deletion. Integrated strict server-only opt-in, fixed aggregate counters,
+HTTP/equip observations and owned/injected collector lifecycle. Additional malformed
+selection/owner/definition classification regression failed before adding actual
+policy codes, then passed. No request payloads or IDs enter metrics.
+Focused integrated61848 now runs13 metrics plus7 equip and4 deletion-factory tests
+with isolated Redis. Update source hashes after docs/env config; run core and
+shared browser gate before commit. All visual/device/human gaps remain open.
+
+
+Metrics verification recovered at continuation: previous goal work made concrete
+progress by integrating and verifying metrics; intervening plaza work is separate.
+Frozen16 source hashes still match the actual integrated files. Focused24 tests
+passed with no skips; shared Character Studio37 checks passed. Core54204 terminal0
+at06:42:53Z: all11 tasks passed, tooling117, preview3351 with1 existing skip/1TODO,
+server914 with zero skips, desktop69, Python141/66warnings. Independent integrated
+review found no blocker. Receipts/logs/hashes preserved in metrics/verified-20261016.
+Rollout51c5a6bc has all10 hosted checks green. Sign/push the telemetry increment
+and update issue444; then fix demonstrated crowd nameplate overlap while preserving
+avatar visibility. Seated garment, full visual matrix, device/performance, human
+acceptance and production/provider activation remain open.

@@ -1,3 +1,4 @@
+import {createCharacterMetrics} from './character-metrics.js';
 import { createWorkOSDeletionHandler } from './workos-deletion.js';
 import { createMemoryCharacterStore } from './character-store.js';
 import { createMemoryOfficeWorkspaces } from './office-workspaces.js';
@@ -113,7 +114,7 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
       const worldData=meta?.template==='region-v1'?await catalog.getRegion(id)
         :id===DEFAULT_WORLD_ID?data:{...data,title:meta?.title??data.title};
       const world=createSharedWorld(worldData,mode==='local'?{isAdmin:auth.isAdmin,worldId:id,screeningHosts,officeLayout}:{worldId:id,screeningHosts,officeLayout});
-      const game=createGameServer({characterStudioEnabled:env.RIVER_OAKS_CHARACTER_STUDIO==='1',auth:sharedAuth,world,worldTitle:meta?.title??worldData.title,waitlist,waitlistAdmins:admins,debugReports,landmarks:createWorldLandmarks({catalog,storeFor:landmarkStoreFor,worldId:id,worldTitle:meta?.title??worldData.title}),social,groups,profiles,events,workplace,officeDesk,officeWorkspaces,avatarPreferences,characters,cyclingMiles,presence,worldDirectory,moderation,origin,staticRoot,
+      const game=createGameServer({characterMetrics,characterStudioEnabled:env.RIVER_OAKS_CHARACTER_STUDIO==='1',auth:sharedAuth,world,worldTitle:meta?.title??worldData.title,waitlist,waitlistAdmins:admins,debugReports,landmarks:createWorldLandmarks({catalog,storeFor:landmarkStoreFor,worldId:id,worldTitle:meta?.title??worldData.title}),social,groups,profiles,events,workplace,officeDesk,officeWorkspaces,avatarPreferences,characters,cyclingMiles,presence,worldDirectory,moderation,origin,staticRoot,
         ...(id===worldId?{worldCatalog:catalog}:{}),...(mode==='local'?{isAdmin:auth.isAdmin}:{}),
         ...(id===worldId?{onApplyRegion:applyRegion}:{}),regionSha256:meta?.regionSha256,
         onBan:userId=>{for(const [otherId,other] of games)if(otherId!==id)other.game.disconnectUser(userId,4003,'This account cannot join the town.');},
@@ -130,14 +131,17 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
     onDelete:async id=>{await characters.deleteAccount(id);await auth.revokeUser(id);}});
   const handleRequest=async(req,res)=>await deletionRequest(req,res)||await chauffeurRequest(req,res);
   const router=createWorldRouter({worldFor,configuredWorldId:worldId,handleRequest});
+  const characterMetrics=createCharacterMetrics({enabled:env.RIVER_OAKS_CHARACTER_STUDIO_METRICS==='1'});
   return {server:router.server,auth:mode,origin,worldId,catalog,worldFor,close(){
     if(closing)return closing;
     closed=true;workplace?.close();voice?.close();
     closing=(async()=>{
+      try{
       await Promise.allSettled([...pending.values()]);
       for(const {game} of games.values())await game.close();
       games.clear();landmarkStores.clear();
       await router.close();auth.close();
+      }finally{characterMetrics.close();}
     })();
     return closing;
   }};
