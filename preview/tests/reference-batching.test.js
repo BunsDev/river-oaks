@@ -60,7 +60,7 @@ test('shipped reference looks retain their intended surfaces while bounding acce
   const cases = [
     ['sable-human', 10600, 20], ['woman-casual', 10600, 20],
     ['rowan-human', 7644, 20], ['man-casual', 7644, 20],
-    ['woman-tailored', 7812, 20], ['vesper-beast', 7812, 20],
+    ['woman-tailored', 8532, 20], ['vesper-beast', 8532, 20],
     ['man-tailored', 9908, 20], ['midnight-host-wolf', 9908, 20],
     ['lyra-human', 6336, 19], ['woman-daywear', 6336, 19],
     ['man-workwear', 13140, 20], ['kai-formal-beast', 13140, 20],

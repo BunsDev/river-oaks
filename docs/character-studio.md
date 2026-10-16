@@ -707,3 +707,42 @@ desktop frame gate. Next measure main-thread call costs separately from frame
 timing before choosing a performance change. This repeat and the earlier varying
 8-player result do not establish a stable scaling curve. Evidence and source
 hashes: `.runtime/character-studio/labels/verified-20261016/`.
+
+
+### Authored wardrobe matrix and Vesper wrap
+
+`pnpm run test:experience character-wardrobe` generates coverage from all 22 shipped
+appearances: idle, walk, run, sit and wave, plus prowl/lope for the 11 beast forms.
+Restricted Jevica is rendered only in the existing isolated model fixture; this
+adds no account permission. Independent wings, armor and arbitrary morph/hair-mesh
+combinations remain unavailable and are listed as exclusions.
+
+The 132 cases capture 330 phases and 1,012 views (front/side/rear plus seated overhead).
+Moving cases use frames 144, 151, 163 and 181 after real root travel. Equal 15-frame
+intervals aliased Jevica's running gait; the uneven sequence verifies actual foot
+motion. Canvas PNG serialization preserves all four rows instead of clipping them
+to the fixture viewport. Checks cover rig identity, finite visible/skinned/instanced
+geometry, decoded textures, nonempty rendered views, active beast motion and runtime
+errors. These structural checks do not establish garment quality or continuous-cycle
+collision freedom. Images and metrics remain local generated evidence.
+
+The matrix exposed Vesper's rigid pelvis-mounted wrap. Both forms failed 225 of 303
+upper-thigh surface probes while seated. The wrap now shares the body's skeleton
+and has its own unslit garment corrective; the decorative trim receives interpolated
+cloth weights and deltas baked offline. Runtime updates only morph influences.
+`node scripts/bake-vesper-skirt.mjs --check` reproduces the data and provenance receipt.
+The garment adds 720 triangles; the existing accessory draw cap and exactly-once
+resource disposal remain covered. The trim keeps its authored 264 vertices.
+
+Both Vesper forms now clear 1,002 seated contact samples, with 18.429 mm minimum
+clearance in the browser fixture. Real-rig regressions also cover opposing walking
+strides, symmetric/asymmetric bends under transformed roots, standing restoration
+and trim attachment (maximum seated surface offset 15.404 mm). Front/side/rear,
+overhead and sampled walking images were inspected. Faceted cloth edges and bulky
+sleeves remain art-quality work; this correction is not final costume approval.
+
+Visual findings still open: Lyra's seated velvet/sheers stay vertical through the
+lap; Silvan's long drapes intersect raised legs; formal/noir coat tails retain rigid
+panels. The full matrix is captured but has not received exhaustive visual approval.
+Continuous motion, complete attachment review and approved physical-device budgets
+remain open. Neutral Sable 4K references remain separate and must still pass unchanged.

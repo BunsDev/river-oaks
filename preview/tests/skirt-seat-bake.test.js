@@ -40,3 +40,22 @@ test('subdivision preserves the authored rest surface and does not mutate anothe
     assert.deepEqual(original.attributes.position.array, sourcePositions);
   } finally { original.dispose(); geometry.dispose(); }
 });
+
+
+test('Vesper garment and trim preserve the pinned source receipt and valid joint weights', async () => {
+  const root = new URL('../../', import.meta.url);
+  const {VESPER_SKIRT_MORPH, VESPER_TRIM_MORPH} = await import('../src/vesper-skirt-morph-data.js');
+  const receipt = JSON.parse(await readFile(new URL('preview/src/vesper-skirt-morph-receipt.json', root), 'utf8'));
+  const hash = bytes => createHash('sha256').update(bytes).digest('hex');
+  for (const [path, expected] of Object.entries(receipt.inputs)) assert.equal(hash(await readFile(new URL(path, root))), expected, path);
+  assert.equal(hash(await readFile(new URL('preview/src/vesper-skirt-morph-data.js', root))), receipt.outputSha256);
+  for (const data of [VESPER_SKIRT_MORPH, VESPER_TRIM_MORPH]) {
+    assert(data.positionDelta.every(value => Number.isFinite(value) && Math.abs(value) < .25));
+    assert(data.normalDelta.every(value => Number.isFinite(value) && Math.abs(value) <= 2));
+  }
+  for (let i = 0; i < VESPER_TRIM_MORPH.fittedWeights.length; i += 4) {
+    const weights = VESPER_TRIM_MORPH.fittedWeights.slice(i, i + 4);
+    assert(weights.every(value => value >= 0 && value <= 1));
+    assert(Math.abs(weights.reduce((sum, value) => sum + value, 0) - 1) < 1e-6);
+  }
+});

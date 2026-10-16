@@ -9,10 +9,10 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { loadResidentAvatar } from '../src/avatars.js';
 import { skirtContactFixture } from './helpers/skirt-contact.js';
 
-for(const appearanceId of ['sable-human','woman-casual'])test(`${appearanceId}: skirt covers actual upper thighs through opposing walking strides`,async()=>{
+for(const appearanceId of ['sable-human','woman-casual','woman-tailored','vesper-beast'])test(`${appearanceId}: skirt covers actual upper thighs through opposing walking strides`,async()=>{
   const source=await loadCharacterRig('jevica'),avatar=instantiateAvatar(source,{targetHeight:1.685,id:'skirt-fixture'});
   const root=new THREE.Group();root.add(avatar.model);
-  const look=createReferenceStyle(avatar,sharedAppearance(appearanceId)),model=avatar.model,body=model.getObjectByName('Jevica'),skirt=model.getObjectByName('Sable ivory mini dress');
+  const look=createReferenceStyle(avatar,sharedAppearance(appearanceId)),model=avatar.model,body=model.getObjectByName('Jevica'),skirt=model.getObjectByName('Sable ivory mini dress')??model.getObjectByName('Vesper velvet wrap skirt');
   const point=new THREE.Vector3(),candidates=[];
   model.updateMatrixWorld(true);const pelvis=model.getObjectByName('pelvis');
   const restInverse=new THREE.Matrix4().compose(pelvis.getWorldPosition(new THREE.Vector3()),model.getWorldQuaternion(new THREE.Quaternion()),model.getWorldScale(new THREE.Vector3())).invert();
@@ -38,11 +38,11 @@ for(const appearanceId of ['sable-human','woman-casual'])test(`${appearanceId}: 
   }finally{look.dispose();avatar.dispose();}
 });
 
-test('the skirt corrective follows symmetric and asymmetric bends under transformed roots', async () => {
+for (const appearanceId of ['sable-human', 'woman-tailored']) test(`${appearanceId}: the skirt corrective follows symmetric and asymmetric bends under transformed roots`, async () => {
   const source = await loadCharacterRig('jevica'), avatar = instantiateAvatar(source, {targetHeight: 1.685, id: 'skirt-bends'});
   const root = new THREE.Group(); root.add(avatar.model);
-  const look = createReferenceStyle(avatar, sharedAppearance('sable-human'));
-  const model = avatar.model, body = model.getObjectByName('Jevica'), skirt = model.getObjectByName('Sable ivory mini dress');
+  const look = createReferenceStyle(avatar, sharedAppearance(appearanceId));
+  const model = avatar.model, body = model.getObjectByName('Jevica'), skirt = model.getObjectByName('Sable ivory mini dress') ?? model.getObjectByName('Vesper velvet wrap skirt');
   const contact = skirtContactFixture(model, body, skirt), originals = skirt.geometry.attributes.position.array.slice(), failures = [];
   try {
     for (const [left, right] of [[0, 0], [20, 20], [40, 40], [60, 60], [90, 90], [60, 90], [90, 60], [45, 90], [90, 45], [30, 90], [90, 30]]) {
@@ -61,7 +61,7 @@ test('the skirt corrective follows symmetric and asymmetric bends under transfor
   } finally { contact.dispose(); look.dispose(); avatar.dispose(); }
 });
 
-for (const appearanceId of ['sable-human', 'woman-casual']) test(`${appearanceId}: the runtime seated skirt clears the actual upper thighs and restores standing`, async t => {
+for (const appearanceId of ['sable-human', 'woman-casual', 'woman-tailored', 'vesper-beast']) test(`${appearanceId}: the runtime seated skirt clears the actual upper thighs and restores standing`, async t => {
   const source = await loadCharacterRig('jevica'), previousLoad = GLTFLoader.prototype.loadAsync;
   const previousWindow = globalThis.window, previousDocument = globalThis.document;
   GLTFLoader.prototype.loadAsync = async () => ({scene: source.scene});
@@ -69,7 +69,7 @@ for (const appearanceId of ['sable-human', 'woman-casual']) test(`${appearanceId
   globalThis.document = {createElement: () => ({getContext: () => new Proxy({}, {get: () => () => {}})})};
   t.after(() => { GLTFLoader.prototype.loadAsync = previousLoad; globalThis.window = previousWindow; globalThis.document = previousDocument; });
   const avatar = await loadResidentAvatar(4, 'remote-skirt-test', 'jevica', {folk: false, appearanceId, faceRecipe: {}});
-  const model = avatar.rig.model, skirt = model.getObjectByName('Sable ivory mini dress'), body = model.getObjectByName('Jevica');
+  const model = avatar.rig.model, skirt = model.getObjectByName('Sable ivory mini dress') ?? model.getObjectByName('Vesper velvet wrap skirt'), body = model.getObjectByName('Jevica');
   const contact = skirtContactFixture(model, body, skirt);
   try {
     avatar.object.position.y = .55 - avatar.rig.hipHeight + .025;
@@ -78,8 +78,27 @@ for (const appearanceId of ['sable-human', 'woman-casual']) test(`${appearanceId
     const result = contact.sample();
     assert(result.tested > 200, 'a substantial front garment surface was tested');
     assert.equal(result.penetrating, 0, `seated garment crosses the upper thighs: ${JSON.stringify(result)}`);
+    const trim = model.getObjectByName('Vesper wrap trim');
+    if (['woman-tailored', 'vesper-beast'].includes(appearanceId)) assert(trim?.isSkinnedMesh, 'Vesper keeps her fitted decorative trim');
+    if (trim) {
+      assert.equal(trim.skeleton, skirt.skeleton, 'detail shares the garment skeleton');
+      assert.equal(trim.morphTargetInfluences.length, 2);
+      const vertices = Array.from({length: skirt.geometry.attributes.position.count}, (_, i) => skirt.getVertexPosition(i, new THREE.Vector3()).applyMatrix4(skirt.matrixWorld));
+      const triangles = Array.from({length: skirt.geometry.index.count / 3}, (_, n) => new THREE.Triangle(...[0, 1, 2].map(c => vertices[skirt.geometry.index.getX(n * 3 + c)])));
+      const point = new THREE.Vector3(), closest = new THREE.Vector3();
+      let maximumGap = 0;
+      for (let i = 0; i < trim.geometry.attributes.position.count; i++) {
+        trim.getVertexPosition(i, point).applyMatrix4(trim.matrixWorld);
+        let distance = Infinity;
+        for (const triangle of triangles) distance = Math.min(distance, triangle.closestPointToPoint(point, closest).distanceTo(point));
+        maximumGap = Math.max(maximumGap, distance);
+      }
+      assert(maximumGap < .03, `wrap trim detached from seated cloth: ${maximumGap}m`);
+      t.diagnostic(`Seated trim maximum surface offset: ${maximumGap}m`);
+    }
     avatar.object.position.y = 0;
     avatar.update(1000, 'continue', false, {speed: 0, distance: 0}, () => 0);
+    if (trim) assert(trim.morphTargetInfluences.every(value => value === 0), 'standing restores the decorative trim');
     assert(skirt.morphTargetInfluences.every(value => value === 0), 'standing restores the authored garment');
   } finally { contact.dispose(); avatar.dispose(); }
 });

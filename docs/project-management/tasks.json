@@ -11223,9 +11223,9 @@
         "feat/character-studio-persistence-20261015"
       ],
       "owner": "codex-character-studio-20261015",
-      "updatedAt": "2026-10-16T08:28:32.604729+00:00",
-      "leaseUntil": "2026-10-16T10:28:32.604729+00:00",
-      "nextAction": "Pinned hero regression increment verified: human/fox native4K candidate repeats and fresh reference match exactly; candidate/GPU/wrong-image rejection checks pass; portrait browser15, comparator5 and core11 with isolated Redis pass. Nine frozen files and60 reference source hashes match; review clear. Sign/push to draft464 and update #442/#444. Skirt d9dca2e5 all10 hosted checks green. Next full wardrobe/animation/art-quality and measured device/performance work; human/live release gates remain open. No merge/deploy.",
+      "updatedAt": "2026-10-16T08:57:35.208388+00:00",
+      "leaseUntil": "2026-10-16T10:46:58.675864+00:00",
+      "nextAction": "Vesper seated skirt/trim fix and132-row wardrobe audit verified:17focused tests,2deterministic bakes,751browser checks,unchanged4K references with zero pixels different,core11/11 with isolatedRedis. Independent review clear. Sign/push increment and update PR464/issue442; then repair Lyra/Silvan seated drapes and rigid coat tails, retaining full continuous/device/human/live acceptance gaps.",
       "filesOwned": [
         "server/character-store.js",
         "server/tests/character-store.test.js",
@@ -11331,7 +11331,15 @@
         "preview/e2e/fixtures/character-hero-golden.js",
         "preview/audit/character-image-comparison.js",
         "preview/tests/character-image-comparison.test.js",
-        "preview/e2e/goldens/character-hero"
+        "preview/e2e/goldens/character-hero",
+        "preview/e2e/character-wardrobe.js",
+        "preview/audit/character-wardrobe-matrix.js",
+        "preview/tests/character-wardrobe-matrix.test.js",
+        "preview/src/vesper-skirt-geometry.js",
+        "preview/src/vesper-skirt-morph-data.js",
+        "preview/src/vesper-skirt-morph-receipt.json",
+        "scripts/bake-vesper-skirt.mjs",
+        "scripts/lib/skirt-detail-fit.mjs"
       ],
       "requiredChecks": [
         "Memory and real isolated Redis store contract tests",

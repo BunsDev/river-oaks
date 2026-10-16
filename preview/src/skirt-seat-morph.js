@@ -4,8 +4,8 @@ import { SKIRT_SEAT_MORPH } from './skirt-seat-morph-data.js';
 
 // Contact fitting is baked offline. Runtime changes only GPU morph influences;
 // the existing skirt geometry, skeleton, material and disposal owner stay intact.
-export function createSkirtSeatMorph(skirt, model) {
-  const geometry = skirt.geometry, data = SKIRT_SEAT_MORPH;
+export function createSkirtSeatMorph(skirt, model, data = SKIRT_SEAT_MORPH) {
+  const geometry = skirt.geometry;
   for (const [name, expected] of [['position', data.sourcePositions], ['skinWeight', data.sourceWeights]]) {
     const actual = geometry.attributes[name].array;
     if (actual.length !== expected.length || actual.some((value, i) => Math.abs(value - expected[i]) > 1e-5)) throw new TypeError('Seated skirt bake does not match the authored garment');
@@ -16,7 +16,10 @@ export function createSkirtSeatMorph(skirt, model) {
   model.updateWorldMatrix(true, true);
   const frame = new THREE.Matrix4().compose(pelvis.getWorldPosition(new THREE.Vector3()), model.getWorldQuaternion(new THREE.Quaternion()), model.getWorldScale(new THREE.Vector3()));
   const toAuthored = new THREE.Matrix3().setFromMatrix4(frame.invert().multiply(pelvis.matrixWorld));
-  subdivideSkirtGeometry(geometry);
+  if (data.subdivide !== false) subdivideSkirtGeometry(geometry);
+  // Details use the cloth's interpolated joint weights, baked offline together
+  // with their corrective so trim cannot lag behind the garment it decorates.
+  if (data.fittedWeights) geometry.attributes.skinWeight.array.set(data.fittedWeights);
   if (geometry.attributes.position.array.length !== data.positionDelta.length || data.normalDelta.length !== data.positionDelta.length) throw new TypeError('Seated skirt topology differs from its bake');
   geometry.morphTargetsRelative = true;
   // Split the full seated shape using the garment's existing thigh weights.

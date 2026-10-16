@@ -1091,3 +1091,65 @@ reference command remains explicit and reports incompatibility off the pinned ho
 Candidate and fresh-reference reports copied into the verification directory.
 Ready for signed commit/push; full wardrobe/animation, final art quality, approved
 physical-device budgets and human/live acceptance remain open. Preserve worktree.
+
+Wardrobe continuation at789d9ff4: previous turn made progress with signed/pushed
+persistent4K reference checks. Resumed own task/worktree; hosted head3green/6running.
+Expand render evidence from two Sable looks to all22 authored catalog appearances,
+including restricted Jevica only in the isolated model fixture (no account changes
+or authorization bypass). Matrix owns audit config, portable coverage test and
+character-wardrobe browser harness. Existing independent wing/armor/morph/hair
+combinations remain unavailable and explicitly excluded, not counted as accepted.
+
+132 appearance/pose rows: idle/walk/run/sit/wave for each, plus prowl/lope for each
+beast. Moving rows render four phases at2.4/2.65/2.9/3.15seconds after real root
+travel, with advancing-feet assertions; this does not assume a fixed gait cycle.
+Capture actual finite visible vertex/instance bounds, decoded texture dimensions,
+rig identity and active beast motion. Render front/side/rear at every phase and
+seated overhead. Catalog-generated rows prevent future variants from silently
+missing coverage. No collision/visual/device acceptance is inferred from these
+checks; inspect captures and fix demonstrated defects next. Focused coverage test
+passes; browser73888 is active, partial progress retained under
+.runtime/character-studio/wardrobe/progress.json and source-hashes.json.
+
+
+Wardrobe/Vesper continuation: prior plaza-status turn made no Character Studio
+progress. Revalidated brief, owned checkout, primary register and live head789d9ff4;
+all10 hosted checks now pass. Old wardrobe53622 handle is absent; its terminal
+passed report/log proves completion. Uniform15-frame snapshots reproduced a gait
+sampling alias, corrected to144/151/163/181. First captures clipped below the
+viewport; canvas serialization fixes the evidence. Original failure receipts and
+pre-Vesper captures retained in .runtime/character-studio/wardrobe/before-vesper.
+
+Actual visual review identified Vesper225/303 seated thigh penetrations in both
+forms, Lyra rigid drapes, Silvan raised-leg/drape intersection and rigid coat tails.
+Implemented Vesper's own unslit bake plus offline barycentric transfer for wrap trim.
+No runtime triangle searches/raycasts; same skin/material/geometry ownership,
+720 extra garment triangles,264 trim vertices. Existing Sable data stays unchanged.
+Source receipt pins15 inputs and deterministic output. New real-rig Vesper test
+failed before the fix and passes after it; bothforms1002 browsercontact samples,
+zero penetration,min18.429mm. Standing restores both garment and trim; walking,
+asymmetric/transformed bends pass. Maximum seated trim offset15.404mm.
+
+Initial updated browser passed132rows/330phases/1012views/751checks. Reviewed Vesper
+seated3views, overheadpanther and all4 walkingphases; broader matrix not artapproved.
+Reviewer requested explicit garment/trimpresence to prevent conditional-skip false
+positives; fixed in browser and regression. Final frozen core/browser/golden checks
+pending. No commit yet; whole goal remains open. Lyra/Silvan/coat/continuouscycle,
+physicaldevice/human/liveacceptance remain required follow-up.
+
+
+Final Vesper verification passed on13 frozen source files. Core11/11:
+tooling117, preview3376 passed/1 existing skip/1 TODO, server914 zero skips,
+desktop69, Python141/66warnings; build/lint/demo/secrets pass (demo verification
+expected exit2). Focused17/17; deterministic Vesper and Sable bakes pass. Wardrobe
+132rows/330phases/1012views/751checks pass with required Vesper garment/trim presence.
+Pinned native4K human/fox references are unchanged with zero pixel error. Selected
+Vesper seated/overhead/walk/run/wave/prowl images inspected; not exhaustive matrix
+artapproval. Reviewer rechecked both presence assertions, with no remainingblocker.
+Receipts, frozen hashes, captures and exact visual-review scope retained in
+.runtime/character-studio/vesper-verification/verified-20261016; red regression in
+/tmp/river-vesper-red.log and original captures underwardrobe/before-vesper.
+Project check reports32 unrelated gaps, none for ownpersistence task. Ready for
+signedcommit/push and issueprogress; no merge/deploy. Preserve checkout and all
+untrackedreports. Next executable: fit Lyra's long seated drapes and validate the
+hem/trim through real motion; Silvan/coat and broader visual/device/human gates remain.

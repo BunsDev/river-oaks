@@ -1,6 +1,8 @@
 import { skinSkirt } from './skirt-skinning.js';
 import { createDressSkirtGeometry } from './skirt-geometry.js';
 import { createSkirtSeatMorph } from './skirt-seat-morph.js';
+import { createVesperTrimGeometry } from './vesper-skirt-geometry.js';
+import { VESPER_SKIRT_MORPH, VESPER_TRIM_MORPH } from './vesper-skirt-morph-data.js';
 import {measureLimbProfile,limbSurfacePoint} from './limb-fit.js';
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
@@ -53,12 +55,14 @@ export function createReferenceStyle(avatar,appearance){
     if(appearance.character==='sable')surface.userData.characterSlot='outfit';
     const geometry=createDressSkirtGeometry({slit});
     const skirt=mesh(pelvis,geometry,surface);skirt.name=wrap?'Vesper velvet wrap skirt':'Sable ivory mini dress';
-    if(appearance.character==='sable'){
+    if(appearance.character==='sable'||appearance.character==='vesper'){
       const fitted=skinSkirt(skirt,model.getObjectByName('Jevica'));attachments.add(fitted.group);
-      correctives.push(createSkirtSeatMorph(fitted.mesh,model));
+      correctives.push(createSkirtSeatMorph(fitted.mesh,model,wrap?VESPER_SKIRT_MORPH:undefined));
     }
     if(wrap){
-      tube(pelvis,material('#8d3b52',{roughness:.82}),[[-.18,.015,.085],[-.10,-.035,.14],[.02,-.10,.151],[.16,-.16,.10]],.009);
+      const trim=mesh(pelvis,createVesperTrimGeometry(),material('#8d3b52',{roughness:.82}));trim.name='Vesper wrap trim';
+      const fitted=skinSkirt(trim,model.getObjectByName('Jevica'));attachments.add(fitted.group);
+      correctives.push(createSkirtSeatMorph(fitted.mesh,model,VESPER_TRIM_MORPH));
     }else{
       const belt=material('#eee1d4',{roughness:.46});
       if(appearance.character==='sable')belt.userData.characterSlot='outfit';
