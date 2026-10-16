@@ -36,24 +36,26 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
     const worldLights=lights.map(light=>({...light,position:light.position.clone()}));
     // First entry (#449): in the live outlook the office's lamps join the scene's lights when it first
     // shows, which changes the program of every lit material in view. Compile them during the arrival,
-    // a batch each frame sized to a few milliseconds, for the pipeline's scene pass, with the office
-    // shown just for each call so its lamps count. Only what is drawn is queued: the visible district
+    // one batch a frame, for the pipeline's scene pass, with the office shown just for each call so its
+    // lamps count. Only what is drawn is queued: the visible district
     // and the office, one object per material and kind (instanced and skinned meshes are kinds of
     // their own). A skipped arrival has nothing to hide that behind, so it holds on the street until
     // they are ready, for at most three seconds.
     const precompile=street.pipeline?.compileAsync?[]:null,kinds=new Set(),drawn=o=>(o.isMesh||o.isPoints||o.isLine||o.isSprite)&&o.material;
     const enqueue=o=>{if(!drawn(o))return;const kind=[...[o.material].flat().map(m=>m.uuid),o.isInstancedMesh?'instanced':o.isSkinnedMesh?'skinned':o.isBatchedMesh?'batched':o.type,o.receiveShadow,!!o.instanceColor,!!o.geometry?.attributes?.color].join();if(!kinds.has(kind)){kinds.add(kind);precompile.push(o);}};
     if(precompile){street.scene.traverseVisible(enqueue);office.object.traverse(enqueue);}
-    let compiling=0,batchSize=4,holdFrom=null;
+    const queued=precompile?.length??0;let compiling=0,batches=0,batchSize=8,holdFrom=null;
     const compiled=()=>!precompile?.length&&!compiling,settle=()=>{compiling--;};
     const compileSome=()=>{
       if(!precompile?.length)return;
       const items=precompile.splice(-batchSize).filter(o=>o.parent),batch=new THREE.Object3D(),shown=office.object.visible,started=performance.now();
       batch.traverse=visit=>items.forEach(visit);batch.traverseVisible=()=>{};
-      office.object.visible=true;compiling++;
+      office.object.visible=true;compiling++;batches++;
       try{street.pipeline.compileAsync(batch,street.camera,street.scene).then(settle,settle);}catch{settle();}
       finally{office.object.visible=shown;}
-      const spent=performance.now()-started;batchSize=spent<2?batchSize*2:spent>8?Math.max(1,batchSize>>1):batchSize;
+      // Each call also walks the scene for its lights, a fixed cost; size batches past it so the queue
+      // drains during the arrival rather than one object a frame.
+      const spent=performance.now()-started;batchSize=spent<12?batchSize*2:spent>32?Math.max(8,batchSize>>1):batchSize;
     };
     actors=createRemotePlayers(peerRoot,host,{snapInitialHeading:true,isVisible:p=>current?.done&&officePeerVisible({...p,position:p.office.position},self.id,position,!fixedView(),levelId)});
     const view=street.startCamera.clone(),localView=new THREE.PerspectiveCamera(),worldRotation=new THREE.Quaternion().setFromRotationMatrix(street.frame);
@@ -133,7 +135,7 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
         return current;
       },
       skip(){skipped=true;},get position(){return current?.position??position;},
-      inspect(){return {camera:{position:street.camera.position.toArray(),quaternion:street.camera.quaternion.toArray(),verticalFov:street.camera.fov},actors:actors.stats(),duration:approach.duration+ARRIVAL.duration,dimensions:ARRIVAL,presentation:'shared-world',skyline:skyline?.stats??null,elevation:stage.position.y-basePosition.y,phase:current?.phase,progress:current?.progress,skipped,avatar:street.avatar.object.position.toArray(),
+      inspect(){return {camera:{position:street.camera.position.toArray(),quaternion:street.camera.quaternion.toArray(),verticalFov:street.camera.fov},actors:actors.stats(),duration:approach.duration+ARRIVAL.duration,dimensions:ARRIVAL,presentation:'shared-world',skyline:skyline?.stats??null,precompile:precompile&&{queued,remaining:precompile.length,compiling,batches},elevation:stage.position.y-basePosition.y,phase:current?.phase,progress:current?.progress,skipped,avatar:street.avatar.object.position.toArray(),
         // The rendered shoes' world height: where the body is drawn, not only where it is placed.
         shoes:['foot_l','foot_r'].map(name=>street.avatar.object.getObjectByName(name)?.getWorldPosition(new THREE.Vector3()).y??null)};},
       dispose(){skyline?.dispose();dispose();},

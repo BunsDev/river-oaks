@@ -79,11 +79,12 @@ async function session(browser, arm, origin) {
       await page.locator('#canvas-host').focus(); await page.keyboard.press('KeyF');
       await recording;
       const record = await page.evaluate(() => { const r = window.__entryRecord; delete window.__entryRecord; return r.frames; });
+      const precompile = await page.evaluate(() => window.__riverOffice()?.precompile ?? null);
       const ms = record.map(f => f.ms), shown = record.findIndex(f => ['opening', 'arriving', 'office'].includes(f.phase));
       return { label, frames: record.length, seconds: round1(ms.reduce((a, b) => a + b, 0) / 1000), longestMs: round1(Math.max(...ms)),
         over50: ms.filter(v => v > 50).length, over100: ms.filter(v => v > 100).length, links: record.reduce((a, f) => a + f.links, 0),
         linksAtShow: shown >= 0 ? record.slice(shown, shown + 3).reduce((a, f) => a + f.links, 0) : null,
-        showMs: shown >= 0 ? round1(Math.max(...ms.slice(shown, shown + 3))) : null };
+        showMs: shown >= 0 ? round1(Math.max(...ms.slice(shown, shown + 3))) : null, precompile };
     };
     // The steady live outlook from a fixed view: frame interval, whole-frame CPU, draws, triangles
     // and bytes uploaded per frame.
@@ -100,8 +101,8 @@ async function session(browser, arm, origin) {
           bytes = window.__glCost.uploadBytes; uploads = window.__glCost.uploads;
         }
         const { frames } = audit.stop();
-        return { samples, frames, quality: audit.graphics().quality, outlook: window.__riverOffice()?.skyline ?? null };
-      }, SAMPLE).then(({ samples, frames, quality, outlook }) => ({ view,
+        return { samples, frames, quality: audit.graphics().quality, outlook: window.__riverOffice()?.skyline ?? null, precompile: window.__riverOffice()?.precompile ?? null };
+      }, SAMPLE).then(({ samples, frames, quality, outlook, precompile }) => ({ view, precompile,
         intervalMs: round1(median(frames.map(f => f.intervalMs))), intervalP95Ms: round1(quantile(frames.map(f => f.intervalMs), 0.95)),
         cpuMs: round1(median(frames.map(f => f.cpuMs))), calls: median(samples.map(s => s.calls)), triangles: median(samples.map(s => s.triangles)),
         uploadKiB: round1(median(samples.map(s => s.bytes)) / 1024), uploadsPerFrame: median(samples.map(s => s.uploads)),

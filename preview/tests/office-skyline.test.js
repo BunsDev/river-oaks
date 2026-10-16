@@ -420,7 +420,10 @@ test('entering compiles what the office will draw, with its lamps counted; a ski
   const kinds = items.map(item => `${item.material.uuid}|${item.isInstancedMesh}|${item.type}|${item.receiveShadow}`);
   assert.equal(new Set(kinds).size, kinds.length, 'each material and kind once');
   assert.equal(office.visible, false, 'hidden again after every call');
+  const progress = v.scene.inspect().precompile;
+  assert.deepEqual({ queued: progress.queued, remaining: progress.remaining, batches: progress.batches }, { queued: items.length, remaining: 0, batches: c.calls.length }, 'the visit reports its progress');
   c.finish(); await tick();
+  assert.equal(v.scene.inspect().precompile.compiling, 0);
   v.draw(1000); assert.equal(v.phases.at(-1), 'office'); assert.equal(office.visible, true);
   const calls = c.calls.length; for (let i = 1; i <= 10; i++) v.draw(1000 + i * 16);
   assert.equal(c.calls.length, calls, 'nothing more to compile once arrived');
