@@ -5,7 +5,9 @@ export const IPIC_INTERIOR = 'ipic-photo-v1';
 export const isIpicStore = store => store.name === 'IPIC Theaters' && store.building_id === 'osm-way-625330798';
 export const IPIC_FLIGHTS = Object.freeze([{ start: 6, end: 12, base: 0 }, { start: 14, end: 20, base: 3 }]);
 export const IPIC_ESCALATOR = Object.freeze({ lanes: [-1.4, 1.4], railOffset: .91, railWidth: .11, treadWidth: 1.5 });
-export const IPIC_PLANTERS = Object.freeze([[-4.8, 0, 1.6, 1.8], [5.7, 0, 1.6, 1.8], [-5.6, 6, 25.4, 1.5], [1, 6, 25.4, 1.5]]);
+// The upper-lounge planter at a = -5.65 was moved 5 cm west (Val, 2026-10-15) so the passage between it
+// and the sofa's west arm, the only way from the lounge to the auditorium, admits the widest accepted body.
+export const IPIC_PLANTERS = Object.freeze([[-4.8, 0, 1.6, 1.8], [5.7, 0, 1.6, 1.8], [-5.65, 6, 25.4, 1.5], [1, 6, 25.4, 1.5]]);
 export const IPIC_SOFA_ARMS = Object.freeze([-4.26, -1.37]);
 // The auditorium screen, independent of what plays on it (#364/#365): centre
 // across the room (a) and above the auditorium floor (y), plane depth (d) and
@@ -77,15 +79,21 @@ export function configureIpicRoom(room) {
   // place names where its sitter steps out: past the arm at that place's end.
   room.ipicSeats = [
     ...[0, 1].map(slot => ({ key: 'lounge-sofa', slot, a: -3.25 + slot * .85, d: 24.8, yaw: Math.PI, height: .49, kind: 'seat', stand: slot ? [-.75, 24.3] : [-4.95, 24.3] })),
-    ...[28, 31].flatMap((d, row) => [-2.6, -.6, 1.4, 3.4].map((a, col) => ({ key: `recliner-${row}-${col}`, slot: 0, a, d, yaw: 0, height: .53, kind: 'armchair' }))),
+    // A recliner is boxed in by its back, arms, base and footrest, so its sitter stands into the aisle in
+    // front of the footrest, which is also where a visitor (or a townsperson) approaches it from. At
+    // d + 1.4 the spot is 0.45 m from the footrest and from the back row's seated bodies.
+    ...[28, 31].flatMap((d, row) => [-2.6, -.6, 1.4, 3.4].map((a, col) => ({ key: `recliner-${row}-${col}`, slot: 0, a, d, yaw: 0, height: .53, kind: 'armchair', stand: [a, d + 1.4], approach: [a, d + 1.4] }))),
   ];
-  // Collision covers the backs and arms. Cushion centres remain valid for the
-  // existing server sit/stand protocol; no special bypass or client authority.
+  // Collision covers the backs and arms, and each recliner's base ends and raised footrest as drawn by
+  // recliner() in ipic-interior.js (Val, 2026-10-15). Cushion centres stay more than a body radius
+  // (0.35 m) from every box, so the server sit/stand protocol needs no bypass or client authority.
   for (const seat of room.ipicSeats) {
     const back = seat.d + (seat.key === 'lounge-sofa' ? .45 : -.48);
     block('ipic-seat-back', seat.a, back, .98, .18, 6, 1.1);
-    if (seat.key.startsWith('recliner')) for (const side of [-1, 1]) {
-      block('ipic-seat-arm', seat.a + side * .54, seat.d, .22, 1.05, 6, .905);
+    if (seat.key.startsWith('recliner')) {
+      for (const side of [-1, 1]) block('ipic-seat-arm', seat.a + side * .54, seat.d, .22, 1.05, 6, .905);
+      for (const end of [-1, 1]) block('ipic-recliner-base', seat.a, seat.d + end * .6125, 1.15, .175, 6, .34);
+      block('ipic-recliner-footrest', seat.a, seat.d + .72, .82, .468, 6, .49);
     }
   }
   for (const a of IPIC_SOFA_ARMS) block('ipic-seat-arm', a, 24.8, .19, .95, 6, 1);
@@ -114,7 +122,7 @@ export function ipicSeatSites(rooms) {
     const eyePitch = seat.key.startsWith('recliner') ? Math.atan2(IPIC_SCREEN.y - seat.height - .65, IPIC_SCREEN.d - seat.d) : null;
     return { id: `${buildId}:${seat.slot}`, buildId, slot: seat.slot, kind: seat.kind, storeId: room.storeId,
       title: seat.key === 'lounge-sofa' ? 'IPIC lounge sofa' : 'IPIC theater recliner',
-      x, north, heading: yaw, height: seat.height, approach: [x + Math.sin(yaw) * .9, north - Math.cos(yaw) * .9],
+      x, north, heading: yaw, height: seat.height, approach: seat.approach ? room.toWorld(...seat.approach) : [x + Math.sin(yaw) * .9, north - Math.cos(yaw) * .9],
       ...(seat.stand ? { standAt: [room.toWorld(...seat.stand)] } : {}), ...(eyePitch === null ? {} : { eyePitch }) };
   }));
 }

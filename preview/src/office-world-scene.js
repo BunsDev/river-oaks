@@ -86,7 +86,9 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
       const firstPerson=frame.done&&!fixedView()||(!entering&&frame.phase==='arriving'&&localView.position.distanceTo(body)<1.9);
       const seated=frame.done&&seatId&&layout?officeSeatedPose(layout,{seat:{id:seatId},levelId}):null;
       const ground=worldBody.y;
-      street.avatar.setPresentation({...street.startPose,position:[worldBody.x,ground+1.68,worldBody.z],ground,groundAt:()=>ground,altitude:0,flying:false,landing:false,riding:null,sitting:seated?{buildId:'office',slot:0,height:seated.height,yaw:seated.yaw+turn}:null,roomId:'authorized-office',showBody:!firstPerson&&(entering?street.startPose.showBody:true),speed,velocity:delta?[dx/delta,dz/delta]:[0,0],distance,heading:Math.hypot(dx,dz)>.0001?Math.atan2(dx,dz):undefined});
+      // The car floor carries the body (foot-placement.js `platform`): read as a curb step,
+      // each frame of the climb left the body and shoes behind, sinking out through the floor.
+      street.avatar.setPresentation({...street.startPose,position:[worldBody.x,ground+1.68,worldBody.z],ground,groundAt:()=>ground,platform:stage.position.toArray(),altitude:0,flying:false,landing:false,riding:null,sitting:seated?{buildId:'office',slot:0,height:seated.height,yaw:seated.yaw+turn}:null,roomId:'authorized-office',showBody:!firstPerson&&(entering?street.startPose.showBody:true),speed,velocity:delta?[dx/delta,dz/delta]:[0,0],distance,heading:Math.hypot(dx,dz)>.0001?Math.atan2(dx,dz):undefined});
       lastNow=now;lastBody=worldBody.clone();
       current.position=[body.x,-body.z];
     }
@@ -108,7 +110,9 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
         return current;
       },
       skip(){skipped=true;},get position(){return current?.position??position;},
-      inspect(){return {camera:{position:street.camera.position.toArray(),quaternion:street.camera.quaternion.toArray(),verticalFov:street.camera.fov},actors:actors.stats(),duration:approach.duration+ARRIVAL.duration,dimensions:ARRIVAL,presentation:'shared-world',skyline:skyline?.stats??null,elevation:stage.position.y-basePosition.y,phase:current?.phase,progress:current?.progress,skipped,avatar:street.avatar.object.position.toArray()};},
+      inspect(){return {camera:{position:street.camera.position.toArray(),quaternion:street.camera.quaternion.toArray(),verticalFov:street.camera.fov},actors:actors.stats(),duration:approach.duration+ARRIVAL.duration,dimensions:ARRIVAL,presentation:'shared-world',skyline:skyline?.stats??null,elevation:stage.position.y-basePosition.y,phase:current?.phase,progress:current?.progress,skipped,avatar:street.avatar.object.position.toArray(),
+        // The rendered shoes' world height: where the body is drawn, not only where it is placed.
+        shoes:['foot_l','foot_r'].map(name=>street.avatar.object.getObjectByName(name)?.getWorldPosition(new THREE.Vector3()).y??null)};},
       dispose(){skyline?.dispose();dispose();},
     };
   }catch(error){dispose();throw error;}

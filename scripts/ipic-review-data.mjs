@@ -6,15 +6,18 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { createWalkingEnvironment } from '../preview/src/walking.js';
 import { AVATAR_ENVELOPE } from '../preview/src/workplace-room.js';
 import { IPIC_INTERIOR, IPIC_SCREEN } from '../preview/src/ipic-plan.js';
-import { IPIC_SEATED_REACH, ipicBottleneck, ipicClearance, largestCircle, seatApproach, seatedFootprint } from '../preview/src/ipic-circulation.js';
+import { IPIC_SEATED_REACH, ipicBottleneck, ipicClearance, ipicReachable, largestCircle, seatApproach, seatedFootprint } from '../preview/src/ipic-circulation.js';
+import { SEAT_REACH } from '../preview/src/shared-seating.js';
 
 const root = new URL('../', import.meta.url);
 const STEP = .05, round = (n, places = 3) => +n.toFixed(places);
 // The game's seated eye: cushion height plus 0.69 m (store-encounters.js).
 const SEATED_EYE = .69;
+// The widest walking (posed) body measured on 2026-10-15 (docs/superpowers/plans/2026-10-15-ipic-route-evidence.md).
+const WIDEST_POSED_BODY = .8;
 
 export function ipicReviewData(world = JSON.parse(readFileSync(new URL('preview/public/data/district.json', root)))) {
-  const room = createWalkingEnvironment(world).rooms.find(r => r.interior === IPIC_INTERIOR);
+  const env = createWalkingEnvironment(world), room = env.rooms.find(r => r.interior === IPIC_INTERIOR);
   const footprints = except => room.ipicSeats.filter(s => s !== except).map(s => seatedFootprint(s, IPIC_SEATED_REACH));
   const nearest = point => {
     let best = { kind: 'wall', clearance: ipicClearance({ ...room, obstacles: [] }, point) };
@@ -41,7 +44,28 @@ export function ipicReviewData(world = JSON.parse(readFileSync(new URL('preview/
   // The narrowest public passage, measured from the two boxes that form it.
   const planter = room.fixtures.findIndex(f => f.kind === 'ipic-planter' && f.a < -5 && f.y === 6);
   const arm = room.fixtures.findIndex(f => f.kind === 'ipic-seat-arm' && f.a < -4 && f.d < 25);
-  const pinch = { between: ['ipic-planter (-5.6, 25.4)', 'west lounge-sofa arm (-4.26, 24.8)'], widthM: round(room.obstacles[arm].a0 - room.obstacles[planter].a1, 3) };
+  const pinch = { between: [`ipic-planter (${room.fixtures[planter].a}, ${room.fixtures[planter].d})`, 'west lounge-sofa arm (-4.26, 24.8)'], widthM: round(room.obstacles[arm].a0 - room.obstacles[planter].a1, 3) };
+  // Where the widest accepted body sits each recliner from, with the other nine seats held: the
+  // nearest spot it can walk to from the doorway that is within the server's sit reach (SEAT_REACH,
+  // flat distance) and sees the cushion as the server's sit check does (eye 1.68 m, cushion + 0.6 m).
+  const world3 = ([a, d], above) => { const [x, n] = room.toWorld(a, d); return [x, n, room.floor + 6 + above]; };
+  const reclinerSitSpots = room.ipicSeats.filter(s => s.key.startsWith('recliner')).map(seat => {
+    const blockers = footprints(seat), reachable = ipicReachable(room, doorway, { radius: AVATAR_ENVELOPE.bodyHalfWidth, blockers, step: .1 });
+    const cushion = world3([seat.a, seat.d], seat.height + .6), candidates = [];
+    for (let a = seat.a - SEAT_REACH; a <= seat.a + SEAT_REACH; a += .1) for (let d = seat.d - SEAT_REACH; d <= seat.d + SEAT_REACH; d += .1) {
+      const distance = Math.hypot(a - seat.a, d - seat.d);
+      if (distance <= SEAT_REACH && d >= 26.1 && reachable([a, d])) candidates.push({ at: [a, d], distance });
+    }
+    const spot = candidates.sort((x, y) => x.distance - y.distance).find(c => env.hasSightLine(world3(c.at, 1.68), cushion));
+    return { seat: seat.key, otherSeatsOccupied: blockers.length, widestAcceptedBody: Boolean(spot), sightLine: Boolean(spot),
+      sitSpot: spot ? spot.at.map(v => round(v, 2)) : null, sitDistanceM: spot ? round(spot.distance, 2) : null };
+  });
+  // In front of the first row, between its footrests and the back row's seated bodies.
+  const footrestFront = Math.max(...room.fixtures.filter(f => f.kind === 'ipic-recliner-footrest' && f.d < 29.5).map(f => f.d + f.l / 2));
+  const backRowReach = Math.min(...room.ipicSeats.filter(s => s.key.startsWith('recliner-1-')).map(s => s.d - IPIC_SEATED_REACH.back));
+  const frontRowAisle = { between: ['front-row footrests', 'back-row seated bodies'], widthM: round(backRowReach - footrestFront, 3),
+    widestAcceptedBodyM: round(2 * AVATAR_ENVELOPE.bodyHalfWidth, 3), clearsWidestAcceptedBody: backRowReach - footrestFront >= 2 * AVATAR_ENVELOPE.bodyHalfWidth,
+    widestPosedBodyM: WIDEST_POSED_BODY, accepted: 'Val, 2026-10-15: footrest and base colliders follow the art' };
   const occupied = room.ipicSeats.map(s => seatedFootprint(s, IPIC_SEATED_REACH));
   const turning = Object.entries({ reception: [0, 5.9], 'mural landing': [12.1, 13.9], 'upper lounge': [20.1, 25.9], auditorium: [26.1, 33.9] })
     .map(([zone, band]) => { const c = largestCircle(room, band, { step: STEP, blockers: occupied }); return { zone, radiusM: round(c.clearance, 2), at: c.at.map(v => round(v, 2)) }; });
@@ -52,7 +76,7 @@ export function ipicReviewData(world = JSON.parse(readFileSync(new URL('preview/
       accepted: { ...AVATAR_ENVELOPE, source: 'preview/src/workplace-room.js AVATAR_ENVELOPE (2026-10-11, bind-pose bounds)' },
       seatedReach: { ...IPIC_SEATED_REACH, source: 'docs/superpowers/plans/2026-10-15-ipic-route-evidence/seated-extents.json' },
     },
-    trips, narrowestPublicPassage: { ...pinch, widestAcceptedBodyM: round(2 * AVATAR_ENVELOPE.bodyHalfWidth, 3), clears: pinch.widthM >= 2 * AVATAR_ENVELOPE.bodyHalfWidth },
+    trips, reclinerSitSpots, frontRowAisle, narrowestPublicPassage: { ...pinch, widestAcceptedBodyM: round(2 * AVATAR_ENVELOPE.bodyHalfWidth, 3), clears: pinch.widthM >= 2 * AVATAR_ENVELOPE.bodyHalfWidth },
     turningCircles: turning.map(t => ({ ...t, clearsLongestTurningBody: t.radiusM >= AVATAR_ENVELOPE.turningRadius })),
   };
   const screen = IPIC_SCREEN, floor = 6, left = screen.a - screen.width / 2, right = screen.a + screen.width / 2;
