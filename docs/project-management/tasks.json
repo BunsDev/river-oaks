@@ -11223,9 +11223,9 @@
         "feat/character-studio-persistence-20261015"
       ],
       "owner": "codex-character-studio-20261015",
-      "updatedAt": "2026-10-16T05:40:31.688448+00:00",
-      "leaseUntil": "2026-10-16T07:40:31.688448+00:00",
-      "nextAction": "Verification66307 passed shared37/editor21/core11 with isolated Redis (server873 no skips); corrected captures inspected and frozen25 hashes match. Preserve client-verified-20261016 evidence, sign/commit/push verified client increment to draft464 and refresh review/CI. Deletion auth/webhook staged78 tests pass zero skips; seven wiring files staged only, need real end-to-end signed webhook/session/peer proof before integration. Rollout remains staged; seated garment, human/device and release acceptance remain open.",
+      "updatedAt": "2026-10-16T06:20:55.214029+00:00",
+      "leaseUntil": "2026-10-16T08:20:55.214029+00:00",
+      "nextAction": "Deletion full77638 terminal0: all18 tasks passed,899 server tests zero skips,13 experience/22 shared journeys plus screening. Frozen15 source hashes match; receipts retained deletion-hook/full-verified-20261016. Commit/push reviewed deletion increment to draft464. Crowd68651 terminal1 before rendering (invalid fixture walk); corrected upright run30680 live under browser lock, no performance claim. Rollout staged7 transports pass; telemetry staged9 tests plus2 real memory/Redis accounting pass, review found no wiring blocker; collector factory enable/lifecycle still open. Full visual/device/human acceptance remains open.",
       "filesOwned": [
         "server/character-store.js",
         "server/tests/character-store.test.js",
@@ -11293,7 +11293,9 @@
         "server/tests/auth.test.js",
         "server/tests/redis-auth.test.js",
         "server/workos-deletion.js",
-        "server/tests/workos-deletion.test.js"
+        "server/tests/workos-deletion.test.js",
+        "server/tests/character-account-deletion.test.js",
+        "server/tests/character-deletion-factories.test.js"
       ],
       "requiredChecks": [
         "Memory and real isolated Redis store contract tests",

@@ -1,3 +1,6 @@
+import { createRedisCharacterStore } from './character-store.js';
+import { accountPrefixFor } from './world-keys.js';
+import { createWorkOSDeletionHandler } from './workos-deletion.js';
 import { createChauffeurRoute, chauffeurDailyLimit } from './chauffeur.js';
 import Redis from 'ioredis';
 import { loadDistrictData } from './district-data.js';
@@ -41,15 +44,19 @@ export async function createRedisBackend(env = process.env) {
     if (!/^[A-Za-z0-9:_-]{1,120}$/.test(accessNamespace)
       || env.VERCEL_ENV && env.VERCEL_ENV !== 'production' && accessNamespace === 'river-oaks:production:access:v1') throw new Error('Invalid waitlist namespace');
     const waitlist = createRedisWaitlist({ redis, prefix: `{${accessNamespace}}`, admins });
+    const characters=createRedisCharacterStore({redis,prefix:accountPrefixFor(namespace)});
     let gateway;
-    const auth = createRedisAuth({ redis, prefix, origin,
+    const auth = createRedisAuth({ redis, prefix, origin, accountActive: async id => !(await characters.get(id)).deleted,
       apiKey: env.WORKOS_API_KEY, clientId: env.WORKOS_CLIENT_ID, cookiePassword: env.WORKOS_COOKIE_PASSWORD,
       githubToken: env.GITHUB_TOKEN || null, returnPath: env.AUTH_RETURN_PATH,
       onLogout: (userId, sessionId) => gateway.disconnectUser(userId, sessionId), magic: magicOptions(env, origin),
       usernameOf: userId => waitlist.usernameOf(userId),
     });
     // Redis counts the daily budget in UTC-day windows across every gateway.
-    const handleRequest = createChauffeurRoute({auth,security,waitlist,origin,apiKey:env.TYPESAFE_API_KEY,model:env.JEV_AUTO_MODEL,dailyLimit:chauffeurDailyLimit(env)});
+    const chauffeurRequest = createChauffeurRoute({auth,security,waitlist,origin,apiKey:env.TYPESAFE_API_KEY,model:env.JEV_AUTO_MODEL,dailyLimit:chauffeurDailyLimit(env)});
+    const deletionRequest=createWorkOSDeletionHandler({secret:env.WORKOS_WEBHOOK_SECRET||null,
+      onDelete:async id=>{await characters.deleteAccount(id);await auth.revokeUser(id);}});
+    const handleRequest=async(req,res)=>await deletionRequest(req,res)||await chauffeurRequest(req,res);
     // Shared voice rooms and the daily join budget count across every gateway of this namespace.
     // A long-lived gateway sweeps orphaned voice participants on a timer; on
     // Vercel the per-minute cron (/api/voice-sweep) does it.

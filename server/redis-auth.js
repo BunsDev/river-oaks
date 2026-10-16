@@ -62,7 +62,18 @@ end
 local function allowedCookie(record, hash)
   return hash == record.cookieHash or (hash == record.previousHash and record.previousUntil > time)
 end
-if p.op == 'state-put' then
+if p.op == 'user-delete' then
+  local owned = redis.call('HGET', KEYS[6], p.userId)
+  if owned then
+    for _, id in ipairs(cjson.decode(owned)) do
+      local raw = redis.call('HGET', KEYS[3], id)
+      local record = raw and cjson.decode(raw) or nil
+      if record and record.userId == p.userId then removeSession(id, record) end
+    end
+  end
+  redis.call('HDEL', KEYS[6], p.userId)
+  return 'ok'
+elseif p.op == 'state-put' then
   if redis.call('HEXISTS', KEYS[1], p.id) == 1 then return false end
   -- A full table gives up the pending sign-in closest to expiring instead of
   -- refusing everyone, so a flood from many addresses cannot lock out sign-in.
@@ -192,7 +203,7 @@ function json(res, status, value) {
 }
 
 /** Durable auth only. The caller owns Redis and cross-instance WS invalidation. */
-export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePassword, origin, returnPath = '/', workos, githubToken = null, githubFetch = fetch, now = Date.now, onLogout = () => {}, usernameOf = async () => null, magic = {} } = {}) {
+export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePassword, origin, returnPath = '/', workos, githubToken = null, githubFetch = fetch, now = Date.now, onLogout = () => {}, usernameOf = async () => null, accountActive = async () => true, magic = {} } = {}) {
   let base;
   try {
     const parsed = new URL(origin), local = ['localhost', '127.0.0.1', '[::1]'].includes(parsed.hostname);
@@ -262,8 +273,10 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
       if (verified.authenticated) {
         const user = identity(verified, record);
         if (!user || !enabled || !await active(record, hash)) return null;
+        const namedUser=await withUsername(await named(user,record));
+        if(!enabled||!await accountActive(record.userId)||!await active(record,hash))return null;
         if (res && sealed !== presented) setCookie(res, SESSION_COOKIE, sealed, Math.floor((record.expiresAt - now()) / 1000));
-        return withUsername(await named(user, record));
+        return namedUser;
       }
       if (!res || verified.reason !== 'invalid_jwt') return null;
       const owner = token();
@@ -281,8 +294,10 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
         const committed = decode(await transaction({ op: 'refresh-commit', ...binding(record), hash: record.cookieHash, owner,
           nextHash: digest(refreshed.sealedSession), sealedSession: refreshed.sealedSession, grace: COOKIE_GRACE }));
         if (!committed || !enabled || !await active(committed, committed.cookieHash)) return null;
+        const namedUser=await withUsername(await named(user,committed));
+        if(!enabled||!await accountActive(committed.userId)||!await active(committed,committed.cookieHash))return null;
         setCookie(res, SESSION_COOKIE, refreshed.sealedSession, Math.floor((record.expiresAt - now()) / 1000));
-        return withUsername(await named(user, committed));
+        return namedUser;
       } finally {
         await transaction({ op: 'refresh-release', ...binding(record), owner });
       }
@@ -300,6 +315,7 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
       logSessionRejection(verified, {}, clientId, now());
       json(res, 403, { error: 'invalid_session' }); return;
     }
+    if(!await accountActive(verified.user.id)){json(res,403,{error:'account_unavailable'});return true;}
     const record = { sessionId: verified.sessionId, userId: verified.user.id, authMethod: provider,
       generation: token(), csrfToken: token(), cookieHash: digest(result.sealedSession),
       sealedSession: result.sealedSession, expiresAt: now() + SESSION_TTL };
@@ -313,6 +329,7 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
     Object.assign(record, { githubId, login });
     if (!enabled) throw new Error('Auth closed');
     if (!await transaction({ op: 'session-put', record, ttl: SESSION_TTL })) { json(res, 503, { error: 'auth_busy' }); return; }
+    if(!enabled||!await accountActive(record.userId)){await transaction({op:'delete',...binding(record),hash:record.cookieHash});json(res,403,{error:'account_unavailable'});return true;}
     setCookie(res, SESSION_COOKIE, result.sealedSession, SESSION_TTL / 1000);
     if (asJson) json(res, 200, { authenticated: true, redirectTo: returnPath });
     else { res.writeHead(302, { Location: returnPath }); res.end(); }
@@ -418,6 +435,7 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
           logSessionRejection(verified, {}, clientId, now());
           json(res, 403, { error: 'invalid_session' }); return true;
         }
+        if(!await accountActive(verified.user.id)){json(res,403,{error:'account_unavailable'});return true;}
         const record = { sessionId: verified.sessionId, userId: verified.user.id, authMethod: result.authenticationMethod,
           generation: token(), csrfToken: token(), cookieHash: digest(result.sealedSession),
           sealedSession: result.sealedSession, expiresAt: now() + SESSION_TTL };
@@ -429,6 +447,7 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
           ? await github.resolve({ userId: record.userId, oauthAccessToken: result.oauthTokens?.accessToken }) : {};
         Object.assign(record, { githubId, login });
         if (!await transaction({ op: 'session-put', record, ttl: SESSION_TTL })) { json(res, 503, { error: 'auth_busy' }); return true; }
+        if(!enabled||!await accountActive(record.userId)){await transaction({op:'delete',...binding(record),hash:record.cookieHash});json(res,403,{error:'account_unavailable'});return true;}
         setCookie(res, SESSION_COOKIE, result.sealedSession, SESSION_TTL / 1000);
         json(res, 200, { authenticated: true });
       } else if (path === '/auth/session') {
@@ -464,7 +483,13 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
     },
     async isSessionActive(userId, sessionId) {
       if (!enabled || !validId(userId) || !validId(sessionId)) return false;
-      try { return Boolean(await transaction({ op: 'active', userId, sessionId })); } catch { return false; }
+      try { return await accountActive(userId)&&Boolean(await transaction({ op: 'active', userId, sessionId })); } catch { return false; }
+    },
+    async revokeUser(userId){
+      if(!validId(userId))throw new TypeError('Invalid account');
+      await transaction({op:'user-delete',userId});
+      // A duplicate delivery must retry a failed cross-world disconnect too.
+      await onLogout(userId);
     },
     close() { enabled = false; },
   };

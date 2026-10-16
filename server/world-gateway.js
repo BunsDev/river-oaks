@@ -51,7 +51,8 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
     if(!landmarkStores.has(id))landmarkStores.set(id,createRedisLandmarks({redis,prefix:accountPrefixFor(namespace,id)}));
     return landmarkStores.get(id);
   };
-  const sharedAuth={handle:(...args)=>auth.handle(...args),authenticate:(...args)=>auth.authenticate(...args),close:()=>{}};
+  const sharedAuth={handle:(...args)=>auth.handle(...args),authenticate:(...args)=>auth.authenticate(...args),
+    isSessionActive:(...args)=>auth.isSessionActive(...args),close:()=>{}};
   const worldDirectory=async()=>{
     const entries=await catalog.list();
     const counts=await Promise.all(entries.map(entry=>redis.get(populationKeyFor(namespace,entry.id))));
@@ -101,7 +102,8 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
   const admit=req=>{const ip=rateLimitKey(routerAddress(req));return localGate(ip)&&security.allow('access',ip,1000,60_000);};
   const router=createWorldRouter({worldFor,configuredWorldId,handleRequest,admit});
   return {server:router.server,catalog,worldFor,async disconnectUser(userId,sessionId) {
-    await Promise.all([...worlds.values()].map(({game})=>game.disconnectUser(userId,sessionId)));
+    const results=await Promise.all([...worlds.values()].map(({game})=>game.disconnectUser(userId,sessionId)));
+    if(results.some(result=>result?.ok!==true))throw new Error('Account disconnect incomplete');
   },async close() {
     closed=true;workplace?.close();
     await Promise.allSettled([...pending.values()]);

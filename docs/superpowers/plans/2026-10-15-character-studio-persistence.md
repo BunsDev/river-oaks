@@ -760,3 +760,60 @@ covered. Seven production wiring files are staged against their current bases,
 not integrated. Still require real signed webhook to session revocation and peer
 disconnect, factory wiring verification and subsequent gates. Rollout pause/disable
 work remains separately staged. No provider calls or new auth schema.
+
+
+Client49d1475a16839d8944ef5002cc0b5c29b422d30e signed/pushed to draft464;
+SSH signature and attribution checks passed, remote head confirmed. PR description
+and issue443 progress updated. Hosted checks are running; no merge/deployment.
+
+Deletion hook integrated after reviewed staging. Real composed memory red proves
+a signed erasure previously left issued sessions authenticated; now green. The
+real Redis journey exposed resolved kick failures being discarded by the gateway
+(200 instead of503). Review confirmed; gateway now rejects unsuccessful kick
+results and the duplicate-delivery test retries real cleanup. Final focused
+integrated suite90/90 passed, zero skips, with isolated Redis. Production factory
+tests exercise standalone removal, disabled/local-fixture routes, Redis account
+namespace and hosted rewrite. Credentials remain absent; all provider identities
+are fixtures. Pending full/core gate before committing this increment.
+
+
+Deletion full77638 live under browser lock with isolated Redis; server899 zero
+skips and13 experience journeys passed, shared journeys running. Frozen source
+hashes still match. Client49d1475a has all10 hosted checks passed, including
+aggregate preview; issue443 updated. No deletion commit until full gate terminal.
+
+Separate preparations: rollout staged copies rebased onto deletion auth/kick
+wiring and corrected deletion-test causality;7 real memory/Redis tests pass.
+Metrics staged under .runtime/character-studio/metrics: fixed operation/outcome
+and timing-bucket aggregates, disabled by default, no caller payload/ID storage.
+Review found async sink rejection; reproduced then fixed.5 tests pass including
+real HTTP success/conflict/paused/abort accounting; production wiring remains open.
+Additional raw-socket aborted-webhook diagnostic passes without invoking deletion
+or crashing the handler; production source was unchanged.
+
+Custom crowd diagnostic68651 queued after full: adapted existing rendered
+multiplayer audit, canonical viewer and alternating Sable human/fox peer revisions,
+HTTP save/publish and WS equip, actual material-color checks.1/8/16 players,30s
+measurement plus10s warmup per tier; desktop and phone viewport on this host GPU.
+Reviewer confirmed fixture/reconnect/teardown, and its output default was changed
+to a dedicated ignored receipt. This is not a physical-phone or approved-device
+performance gate. Source and full verification remain frozen while these run.
+
+
+Deletion full77638 terminal0 at2026-10-16T06:19:48Z: all18 tasks passed.
+Tooling117, preview3350 with1 existing skip/1 existing TODO, server899 zero
+skips, desktop69, Python141; dependency audit/history/security/reflections,
+13 experience and22 shared journeys including Character Studio, and IPIC
+screening all passed. All15 frozen source hashes match. Receipts/logs/reports
+preserved under deletion-hook/full-verified-20261016; generated tracked reports
+restored. Reviewed deletion increment is ready for signed commit to draft464.
+Live provider delivery and production configuration remain unverified.
+
+Crowd68651 terminal1 before rendering: fixture used invalid movement walk.
+Preserved failed log/script under crowd; corrected to canonical upright and
+started30680 under the browser lock. No performance measurements yet.
+Telemetry staged9 tests pass, including regression for actual policy denials
+previously misclassified as outages; two real memory/Redis HTTP+WS accounting
+tests pass without skips. Read-only review found no staged wiring blocker;
+production collector environment/lifecycle wiring remains open. Source edits
+remain frozen during the corrected crowd run. No merge or deployment.

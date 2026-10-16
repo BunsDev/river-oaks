@@ -319,8 +319,8 @@ Drafts remain absent from peer snapshots and do not change the current appearanc
 Publication and rollback create immutable revisions without equipping them. The
 server transport journey covers save, publish, equip, peer snapshot, gateway
 replacement/reconnect, edit and republish for both backends. It does not prove the
-Studio UI or rendered peer journey. Account-deletion lifecycle hooks, graceful
-corrupt/missing revision fallback and UI save/conflict behavior remain required.
+Studio UI or rendered peer journey; those are covered separately below. Complete
+corrupt/missing revision fallback and release acceptance remain open.
 
 
 ## Authoritative selection contract (#443)
@@ -426,7 +426,8 @@ snapshots, reconnect/replacement, edit/republish, rollback without implicit equi
 foreign ownership, protected appearance and beast rules, cooldown, explicit stale
 versions and duplicate receipts. The integrated client and two-player journey now exercise version/request-ID
 handling, save/conflict recovery, peer rendering and asset fallback. The production
-account-deletion lifecycle hook and remaining release acceptance still need proof.
+account-deletion lifecycle hook is integrated with local fixture proof below;
+hosted activation and remaining release acceptance still need proof.
 
 
 ### Studio account workflow and rendered identity
@@ -463,6 +464,46 @@ acceptance, not live WorkOS, physical device or human accessibility acceptance.
 Idle memory account deletion now removes its peer projection without reconnect
 grace. Redis deletion clears custom state and projected versions on heartbeat and
 checkpoint rejoin, including lease-loss recovery. These are store/transport tests;
-the production account-deletion lifecycle hook remains outstanding. Current exact
+the production account-deletion lifecycle hook now has local integration proof
+but still needs hosted acceptance. Current exact
 test counts, completed full-profile receipt and later reopen verification belong
 in the task ledger.
+
+
+### Signed account deletion
+
+The optional `POST /api/workos/events` route accepts WorkOS AuthKit `user.deleted`
+events. Configure the environment-specific signing secret as server-only
+`WORKOS_WEBHOOK_SECRET`; it is not the API key or cookie password. Without that
+secret the route stays closed. Local development identity mode never enables it.
+Deployment and provider configuration have not been performed.
+
+The handler verifies the exact raw request body using the WorkOS signature header,
+checks the millisecond timestamp within five minutes, and validates the event and
+AuthKit user identifier before deletion. JSON bodies are limited to256KiB and
+five seconds, with at most eight pending deliveries per process. It rejects query
+parameters, unsupported content types and ambiguous signatures. See the
+[WorkOS webhook contract](https://workos.com/docs/events/data-syncing/webhooks).
+No event body, credentials or private account fields are logged.
+
+An authenticated deletion first erases private character drafts, immutable
+revisions and selection state into the existing character tombstone, then revokes
+all local auth sessions for that user and requests disconnects from loaded worlds.
+Redis gateways share the durable tombstone and auth namespace; other active room
+leaders also consult session validity in their commit loop. This does not claim
+erasure of unrelated profile, social or workplace data. Memory-town state remains
+process-local, while the hosted Redis tombstone survives gateway replacement.
+
+A successful response follows completed storage/session cleanup and successful
+disconnect requests. Any storage error, thrown cleanup error or refused/pending
+Redis kick returns generic503. Duplicate events repeat session/disconnect cleanup
+even when the tombstone and session removals already exist. The tombstone rejects
+future sign-ins and late sign-in, refresh, username lookup or desktop-exchange
+responses. Do not remove it or restore pre-deletion records to resolve a retry.
+
+Local verification covers signed raw-body tampering, stale/future signatures,
+bounded input/concurrency, two-session revocation, another account remaining
+intact, retry after cleanup failure, failed durable kick results, actual peer
+disappearance, delayed auth races, and both production factory routes. Tests use
+local provider adapters; existing SDK boundary suites independently exercise real
+SDK JWT/JWKS verification. These do not establish live WorkOS or hosted delivery.

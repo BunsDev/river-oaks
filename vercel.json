@@ -82,6 +82,7 @@
     }
   ],
   "rewrites": [
+    { "source": "/api/workos/events", "destination": "/api/server?_river_path=/api/workos/events" },
     { "source": "/api/chauffeur", "destination": "/api/server?_river_path=/api/chauffeur" },
     {
       "source": "/auth/login",
