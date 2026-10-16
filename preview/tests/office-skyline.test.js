@@ -326,14 +326,45 @@ test('live skyline draws current district without a cubemap, filters host only d
   const skyline = createOfficeSkyline({ mode: 'live', hostRoot: f.group, renderer, scene: f.scene, eye: new THREE.Vector3(0,f.floorY+1.68,0), floorY:f.floorY, hostBuildingIndex:0,hostBuildingId:'host',hide:[f.stage] });
   assert.equal(skyline.texture, null); assert.equal(skyline.stats.bytes,0);
   const actor = new THREE.Mesh(new THREE.BoxGeometry(1,2,1),new THREE.MeshStandardMaterial());actor.position.set(0,f.floorY+2,0);f.scene.add(actor);f.scene.updateMatrixWorld(true);
-  const draw = () => { assert.equal(actor.visible,true,'live filtering never adopts moving actors');assert.equal(scaleOf(f.mesh,0),0);assert.ok(scaleOf(f.mesh,2)>0);assert.equal(f.mass.visible,false);assert.equal(roof.visible,true);assert.equal(f.stage.visible,true); };
-  skyline.render(draw);assert.ok(scaleOf(f.mesh,0)>0);assert.equal(f.mass.visible,true);
+  const standIns = () => f.group.children.filter(node => node.userData.officeOutlookStandIn);
+  const draw = () => {
+    assert.equal(actor.visible,true,'live filtering never adopts moving actors');
+    const [copy] = standIns();
+    assert.equal(f.mesh.visible,false,'the host mesh is out of the draw');
+    assert.ok(copy?.visible && copy.geometry === f.mesh.geometry && copy.material === f.mesh.material, 'its stand-in draws the same geometry and material');
+    assert.equal(copy.count,2,'without the host instance above the floor');
+    assert.deepEqual([0,1].map(i => scaleOf(copy,i)),[scaleOf(f.mesh,1),scaleOf(f.mesh,2)],'keeping the podium band and the neighbour');
+    assert.equal(f.mass.visible,false);assert.equal(roof.visible,true);assert.equal(f.stage.visible,true);
+  };
+  const versions = () => [f.mesh.instanceMatrix.version, standIns()[0]?.instanceMatrix.version];
+  skyline.render(draw);
+  assert.ok(scaleOf(f.mesh,0)>0 && f.mesh.visible && !standIns()[0].visible && f.mass.visible, 'between draws the district is untouched');
+  const after = versions();
   actor.position.x=50;actor.updateMatrixWorld(true);
-  const dusk = new THREE.Color('#443344');f.scene.background=dusk;skyline.render(()=>{draw();assert.equal(f.scene.background,dusk);});
+  const dusk = new THREE.Color('#443344');f.scene.background=dusk;
+  for (let i = 0; i < 5; i++) skyline.render(()=>{draw();assert.equal(f.scene.background,dusk);});
+  assert.deepEqual(versions(), after, 'no instance data is written again frame after frame');
+  assert.equal(standIns().length,1,'one stand-in per host mesh for the visit');
   assert.throws(()=>skyline.render(()=>{draw();throw new Error('draw failed');}),/draw failed/);
-  assert.ok(scaleOf(f.mesh,0)>0);assert.equal(f.mass.visible,true);assert.equal(f.scene.background,dusk);
+  assert.ok(scaleOf(f.mesh,0)>0);assert.equal(f.mesh.visible,true);assert.equal(standIns()[0].visible,false);assert.equal(f.mass.visible,true);assert.equal(f.scene.background,dusk);
   assert.equal(renderer.renders.length,0,'no six-face renderer submissions');assert.equal(skyline.stats.state,'live');
+  let released = 0; standIns()[0].addEventListener('dispose', () => released++);
   skyline.dispose();skyline.dispose();assert.equal(skyline.render(()=>assert.fail('disposed view draws')),false);
+  assert.equal(standIns().length,0,'leaving removes the stand-ins');assert.equal(released,1,'and frees their instance buffers');
+  assert.equal(f.mesh.visible,true);assert.ok(scaleOf(f.mesh,0)>0);
+});
+
+test('a host mesh whose instances change during the visit gets a fresh stand-in', () => {
+  const f = district(), skyline = createOfficeSkyline({ mode: 'live', hostRoot: f.group, renderer: fakeRenderer(), scene: f.scene, eye: new THREE.Vector3(0,f.floorY+1.68,0), floorY:f.floorY, hostBuildingIndex:0,hostBuildingId:'host',hide:[f.stage] });
+  const standIns = () => f.group.children.filter(node => node.userData.officeOutlookStandIn);
+  skyline.render(() => {}); const first = standIns()[0];
+  const moved = new THREE.Matrix4().makeTranslation(60, f.floorY - 10, 0); f.mesh.setMatrixAt(2, moved); f.mesh.instanceMatrix.needsUpdate = true;
+  skyline.render(() => {
+    const [copy] = standIns(), m = new THREE.Matrix4(); copy.getMatrixAt(1, m);
+    assert.notEqual(copy, first); assert.equal(standIns().length, 1); assert.equal(first.parent, null, 'the old stand-in is released');
+    assert.ok(new THREE.Vector3().setFromMatrixPosition(m).distanceTo(new THREE.Vector3(60, f.floorY - 10, 0)) < 1e-9, 'the new one carries the moved neighbour');
+  });
+  skyline.dispose();
 });
 
 test('live office keeps exterior current, moves the actual viewpoint and restores street presentation', t => {
@@ -355,4 +386,40 @@ test('phones and tablets keep the bounded snapshot outlook; other devices draw t
   assert.deepEqual(officeOutlookFor({ coarsePointer: true, scale: 1, maxCubemapSize: 256 }), { mode: 'snapshot', size: 256 }, 'within the device limits');
   assert.deepEqual(officeOutlookFor({ coarsePointer: false, scale: 1 }), { mode: 'live' }, 'a full-scale fine-pointer device draws the live district');
   assert.deepEqual(officeOutlookFor(), { mode: 'live' });
+});
+
+// First entry (#449): the office's lamps change every lit material's program when it first shows.
+function compiling(s) {
+  const calls = [], pending = [];
+  s.captured.renderer.compileAsync = (scene, camera) => {
+    const office = scene.getObjectByName('office:office-penthouse-1'); let lamps = 0;
+    scene.traverseVisible(node => { if (node.isPointLight && node.parent === office) lamps++; });
+    calls.push({ scene, camera, shown: office.visible, lamps });
+    return new Promise(resolve => pending.push(resolve));
+  };
+  return { calls, finish: () => pending.forEach(resolve => resolve()) };
+}
+
+test('entering compiles the in-office programs with the lamps counted; a skipped arrival holds on the street until ready', async t => {
+  const s = street({ layout: OFFICE_LAYOUT_PENTHOUSE, skyline: { mode: 'live' } }), c = compiling(s), v = visit(t, s);
+  const office = s.scene.getObjectByName('office:office-penthouse-1');
+  assert.equal(c.calls.length, 1); assert.equal(c.calls[0].scene, s.scene); assert.equal(c.calls[0].camera, s.captured.camera);
+  assert.ok(c.calls[0].shown && c.calls[0].lamps === 5, `compiled with the office's five lamps in the scene: ${JSON.stringify(c.calls[0].lamps)}`);
+  assert.equal(office.visible, false, 'and hidden again right after the call');
+  v.scene.skip(); v.draw(0); v.draw(16); v.draw(1000);
+  assert.deepEqual(v.phases, ['lobby', 'lobby', 'lobby'], 'the cut waits on the street');
+  assert.equal(office.visible, false); assert.equal(s.districtGroup.visible, true);
+  c.finish(); await new Promise(resolve => setImmediate(resolve));
+  v.draw(1016); assert.equal(v.phases.at(-1), 'office'); assert.equal(office.visible, true);
+  assert.equal(c.calls.length, 1, 'compiled once per visit');
+});
+
+test('a skipped arrival waits at most three seconds for compilation, and a played one never waits', t => {
+  const held = street({ layout: OFFICE_LAYOUT_PENTHOUSE, skyline: { mode: 'live' } }); compiling(held);
+  const v = visit(t, held); v.scene.skip(); v.draw(0); v.draw(2990);
+  assert.equal(v.phases.at(-1), 'lobby'); v.draw(3010); assert.equal(v.phases.at(-1), 'office');
+  const played = street({ layout: OFFICE_LAYOUT_PENTHOUSE, skyline: { mode: 'live' } }); compiling(played);
+  const w = visit(t, played); w.draw(0);
+  for (let i = 1; i <= 1500; i++) w.draw(i * 1000 / 60);
+  assert.equal(w.phases.at(-1), 'office', 'the arrival plays out while programs compile');
 });

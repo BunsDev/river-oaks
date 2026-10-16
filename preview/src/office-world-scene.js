@@ -34,6 +34,16 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
     // It changes the scene only once captured, so it is released with the visit's own dispose below.
     const skyline=createVisitSkyline(street,layout,[stage,street.lobby.object,street.avatar.object,peerRoot]);
     const worldLights=lights.map(light=>({...light,position:light.position.clone()}));
+    // First entry (#449): in the live outlook the office's lamps join the scene's lights when it first
+    // shows, which changes the program of every lit material in view. Compile them while the arrival
+    // plays, with the office shown just for the call so its lamps count. A skipped arrival has nothing
+    // to hide that behind, so it holds on the street until they are ready, for at most three seconds.
+    let compiled=!street.renderer?.compileAsync,holdFrom=null;
+    if(!compiled){
+      const shown=office.object.visible;office.object.visible=true;
+      try{street.renderer.compileAsync(street.scene,street.camera).then(()=>{compiled=true;},()=>{compiled=true;});}catch{compiled=true;}
+      finally{office.object.visible=shown;}
+    }
     actors=createRemotePlayers(peerRoot,host,{snapInitialHeading:true,isVisible:p=>current?.done&&officePeerVisible({...p,position:p.office.position},self.id,position,!fixedView(),levelId)});
     const view=street.startCamera.clone(),localView=new THREE.PerspectiveCamera(),worldRotation=new THREE.Quaternion().setFromRotationMatrix(street.frame);
     const basePosition=new THREE.Vector3().setFromMatrixPosition(street.frame),point=new THREE.Vector3(),worldBody=new THREE.Vector3();
@@ -51,7 +61,8 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
       const ready=street.avatar.ready;
       if(started===null&&ready)started=now;
       const elapsed=clock.tick(now,ready),time=Math.max(0,elapsed-approach.duration);
-      const entering=!skipped&&elapsed<approach.duration;
+      if(skipped&&!compiled)holdFrom??=now;
+      const holding=skipped&&!compiled&&now-holdFrom<3000,entering=holding||!skipped&&elapsed<approach.duration;
       const frame=arrivalFrame(time,{reducedMotion:skipped}),aspect=host.clientWidth/Math.max(1,host.clientHeight);
       current={...frame,phase:started===null&&!skipped?'loading':entering?'lobby':frame.phase,ready,progress:skipped?1:Math.min(1,elapsed/(approach.duration+ARRIVAL.duration))};
       const ascent=frame.done?1:ease((time-ARRIVAL.closingEnd)/(ARRIVAL.ascentEnd-ARRIVAL.closingEnd));
@@ -70,7 +81,7 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
       glass.update(frame);
       let body;
       if(entering){
-        const start=approach.at(elapsed,aspect);body=start.player;view.position.copy(start.camera);view.quaternion.copy(start.quaternion);view.fov=start.fov;
+        const start=approach.at(holding?0:elapsed,aspect);body=start.player;view.position.copy(start.camera);view.quaternion.copy(start.quaternion);view.fov=start.fov;
       }else if(frame.done){
         body=point.set(position[0],floor,-position[1]);placeCamera();
       }else{
