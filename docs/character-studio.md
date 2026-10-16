@@ -741,8 +741,28 @@ and trim attachment (maximum seated surface offset 15.404 mm). Front/side/rear,
 overhead and sampled walking images were inspected. Faceted cloth edges and bulky
 sleeves remain art-quality work; this correction is not final costume approval.
 
-Visual findings still open: Lyra's seated velvet/sheers stay vertical through the
-lap; Silvan's long drapes intersect raised legs; formal/noir coat tails retain rigid
-panels. The full matrix is captured but has not received exhaustive visual approval.
+Visual findings still open: Silvan's long drapes intersect raised legs; formal/noir
+coat tails retain rigid panels. Lyra's correction below still needs cloth-quality
+review. The full matrix is captured but has not received exhaustive visual approval.
 Continuous motion, complete attachment review and approved physical-device budgets
 remain open. Neutral Sable 4K references remain separate and must still pass unchanged.
+
+### Lyra layered drapes
+
+Lyra's opaque wrap and sheer train now use the shipped body skeleton and separate
+seated correctives. The original standing recipe, materials, texture and beast
+visibility remain intact. Both layers have 925 vertices and 1,728 triangles; the
+combined increase is 2,304 triangles, with the existing 19 accessory draw cap.
+Runtime changes only two GPU morph influences per layer. Offline fitting is
+reproduced by `node scripts/bake-lyra-drapes.mjs --check`; the receipt pins 13 inputs
+and the generated output. No runtime raycasts or geometry edits are introduced.
+
+Real-rig tests cover both upright forms, all 37 waistband vertices per layer,
+rear coverage, sampled moving walk/run phases, transformed/asymmetric bends and
+standing restoration. Each form clears 771 opaque-body and 523 sheer-body samples
+(minimum clearance 25.8 and 12.2 mm), plus 1,167 layer samples (minimum 6.07 mm).
+These are directional upper-thigh/lap checks, not whole-body collision proof.
+The bake records maximum edge stretch 7.309 and minimum area ratio 0.0509; there
+is no approved cloth-quality threshold, and high stretch remains an art-quality
+limitation. Full rendered matrix and native 4K verification are recorded separately
+in the task ledger; passing contact tests alone is not visual acceptance.

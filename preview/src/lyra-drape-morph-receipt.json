@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "provenance": "Repository-authored drape shapes; shipped rig source/license in jevica.sources.json.",
+  "command": "node scripts/bake-lyra-drapes.mjs --check",
+  "inputs": {
+    "pnpm-lock.yaml": "038d8d726a18c114350298c2a4ec89ef0cbc040aac1459ca60c1f866d7a5c0d9",
+    "preview/public/assets/characters/jevica.glb": "722b96e2fd77b36c85ec01c1594a35e3f3f39b5ec76dfc3c9a351ef1eb4f117a",
+    "preview/public/assets/characters/jevica.sources.json": "104ce65388e02ad9e08730334083f297269faf74341b0685ed6eac36bfb9e1a3",
+    "preview/src/avatars.js": "1640d11d5712a07b9c61fda3a6169769875ee62edb7c2498fe64ddd1ed806ee9",
+    "preview/src/foot-placement.js": "fbf9ddb600a0d9470ca9e7eb58d73e9f13d7e39103852357c3eb0e06cdc98eb3",
+    "preview/src/foot-roll.js": "4ab749ab51cc9e6bdd5265d638068c276c9fbd1d9b0c5cfb497b5215e5bd29bb",
+    "preview/src/sole-support.js": "1d77dad5449799032809f815298af1acb01fffdaa54371aa71a4601a3794d18f",
+    "preview/src/drape-geometry.js": "3c2502033b43e2c73061b8e9285b42f676b463994428eb419b36c3602619aa61",
+    "preview/src/skirt-skinning.js": "414fa6b5277c4798198b26f4b1c1c2f355e62c27748db157c9334b4e5515c0e5",
+    "preview/tests/helpers/character-rig.js": "879b137a09b0bd35e9c32c7ffe57491f299207244f94a6e3cc8c5d71c667f7be",
+    "preview/tests/helpers/skirt-contact.js": "a8c5f038a5901743e0280875fca318ced18fecdb2ca633b7bb6aca905dd5feb7",
+    "scripts/lib/drape-seat-fit.mjs": "bd69d0743f2f61caa57c065a7a01ef8cb54e6d7643af94fc68630bbd3644d213",
+    "scripts/bake-lyra-drapes.mjs": "e7f96a08ef546854b2fbb34918e12d15f17602f62a06b1c66e11d5f965070b25"
+  },
+  "outputSha256": "9dce1e5ce7e5ec1df8d1759ba4d97daf3d74ca0680fe476c6cd113f959ccae64",
+  "diagnostics": [
+    {
+      "failures": [],
+      "maxReconstruction": 5.130181647856404e-8,
+      "maximumStretch": 7.3090633456898075,
+      "minimumAreaRatio": 0.05087721552024182,
+      "corrected": 4,
+      "vertices": 925,
+      "scope": "Offline front-lap fit; rendered layers, other poses and continuous motion require separate evidence.",
+      "tested": 771,
+      "penetrating": 0,
+      "minimumClearance": 0.02580047393135464
+    },
+    {
+      "failures": [],
+      "maxReconstruction": 4.770588482117654e-8,
+      "maximumStretch": 7.001917742000026,
+      "minimumAreaRatio": 0.10066244154470096,
+      "corrected": 12,
+      "vertices": 925,
+      "scope": "Offline front-lap fit; rendered layers, other poses and continuous motion require separate evidence.",
+      "tested": 523,
+      "penetrating": 0,
+      "minimumClearance": 0.012209154664093403
+    }
+  ]
+}

@@ -11223,9 +11223,9 @@
         "feat/character-studio-persistence-20261015"
       ],
       "owner": "codex-character-studio-20261015",
-      "updatedAt": "2026-10-16T08:57:35.208388+00:00",
-      "leaseUntil": "2026-10-16T10:46:58.675864+00:00",
-      "nextAction": "Vesper seated skirt/trim fix and132-row wardrobe audit verified:17focused tests,2deterministic bakes,751browser checks,unchanged4K references with zero pixels different,core11/11 with isolatedRedis. Independent review clear. Sign/push increment and update PR464/issue442; then repair Lyra/Silvan seated drapes and rigid coat tails, retaining full continuous/device/human/live acceptance gaps.",
+      "updatedAt": "2026-10-16T09:32:03.121333+00:00",
+      "leaseUntil": "2026-10-16T11:32:03.121333+00:00",
+      "nextAction": "Lyra layered drapes and pinned waist verified:28focused,3deterministicbakes,132wardroberows/757checks, unchangednative4K, core11/11,11frozenhashesmatch. Review rechecked waistbandfix. Signedcommit/push and updatePR464/#442 next, then Silvan/coat/continuousmotion and remaining440\u2013444acceptance. No merge/deploy; preserve checkout/evidence.",
       "filesOwned": [
         "server/character-store.js",
         "server/tests/character-store.test.js",
@@ -11339,7 +11339,15 @@
         "preview/src/vesper-skirt-morph-data.js",
         "preview/src/vesper-skirt-morph-receipt.json",
         "scripts/bake-vesper-skirt.mjs",
-        "scripts/lib/skirt-detail-fit.mjs"
+        "scripts/lib/skirt-detail-fit.mjs",
+        "preview/src/drape-geometry.js",
+        "preview/tests/drape-skinning.test.js",
+        "scripts/lib/drape-seat-fit.mjs",
+        "scripts/bake-lyra-drapes.mjs",
+        "preview/src/lyra-drape-morph-data.js",
+        "preview/src/lyra-drape-morph-receipt.json",
+        "preview/tests/romance-look.test.js",
+        "preview/tests/drape-seat-bake.test.js"
       ],
       "requiredChecks": [
         "Memory and real isolated Redis store contract tests",

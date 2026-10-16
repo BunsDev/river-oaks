@@ -40,10 +40,14 @@ async page => {
         const canvas = document.createElement('canvas'); canvas.id = 'wardrobe-strip'; canvas.width = 1260; canvas.height = 680 * row.frames.length;
         const ctx = canvas.getContext('2d'); ctx.fillStyle = '#eeeae5'; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.font = '14px sans-serif'; ctx.textAlign = 'center';
         const seated = row.pose === 'sit', snapshots = [];
-        const skirt = f.avatar.rig.model.getObjectByName('Vesper velvet wrap skirt');
+        const skirt = f.avatar.rig.model.getObjectByName('Vesper velvet wrap skirt') ?? f.avatar.rig.model.getObjectByName('Lyra velvet wrap');
+        const train = f.avatar.rig.model.getObjectByName('Lyra spotted sheer train');
+        if (row.character === 'lyra' && (!skirt?.isSkinnedMesh || !train?.isSkinnedMesh)) throw new Error('Lyra requires both fitted drape layers');
         if (row.character === 'vesper' && (!skirt?.isSkinnedMesh || !f.avatar.rig.model.getObjectByName('Vesper wrap trim')?.isSkinnedMesh)) throw new Error('Vesper requires the fitted wrap and its trim');
         const {skirtContactFixture} = await import('/tests/helpers/skirt-contact.js');
         const contact = seated && skirt ? skirtContactFixture(f.avatar.rig.model, f.avatar.rig.model.getObjectByName('Jevica'), skirt) : null;
+        const trainContact = seated && train ? skirtContactFixture(f.avatar.rig.model, f.avatar.rig.model.getObjectByName('Jevica'), train) : null;
+        const layerContact = seated && train ? skirtContactFixture(f.avatar.rig.model, skirt, train) : null;
         f.avatar.object.position.y = seated ? .55 - f.avatar.rig.hipHeight + .025 : 0;
         const point = new THREE.Vector3(), instance = new THREE.Matrix4(), transform = new THREE.Matrix4();
         for (let frame = 0; frame <= row.frames.at(-1); frame++) {
@@ -92,8 +96,8 @@ async page => {
         }
         f.renderer.domElement.style.display = 'none'; document.body.append(canvas);
         const gl = f.renderer.getContext(), debug = gl.getExtension('WEBGL_debug_renderer_info');
-        const thighContact = contact?.sample() ?? null; contact?.dispose();
-        return {thighContact, appearanceId: row.appearanceId, pose: row.pose, rig: f.avatar.profile, snapshots,
+        const thighContact = contact?.sample() ?? null, sheerContact = trainContact?.sample() ?? null, layersContact = layerContact?.sample() ?? null; contact?.dispose(); trainContact?.dispose(); layerContact?.dispose();
+        return {thighContact, sheerContact, layersContact, appearanceId: row.appearanceId, pose: row.pose, rig: f.avatar.profile, snapshots,
           renderer: debug ? gl.getParameter(debug.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER), userAgent: navigator.userAgent};
       }, row);
       samples.push(result);
@@ -105,7 +109,11 @@ async page => {
       check(result.snapshots.every(s => s.finite && s.meshes > 0 && s.vertices > 0 && s.bounds.max.every((v, i) => v - s.bounds.min[i] < 10)), `${appearanceId}/${pose}: finite bounded visible geometry including instances`);
       check(result.snapshots.every(s => s.decoded.length > 0 && s.decoded.every(t => t.width > 0 && t.height > 0)), `${appearanceId}/${pose}: material textures decoded`);
       check(result.snapshots.every(s => s.render.length === 3 && s.render.every(r => r.calls > 0 && r.triangles > 0)), `${appearanceId}/${pose}: all views rendered geometry`);
-      if (row.character === 'vesper' && pose === 'sit') check(result.thighContact?.tested > 200 && result.thighContact.penetrating === 0, `${appearanceId}/${pose}: seated wrap clears sampled upper thighs`);
+      if (['vesper', 'lyra'].includes(row.character) && pose === 'sit') check(result.thighContact?.tested > 200 && result.thighContact.penetrating === 0, `${appearanceId}/${pose}: seated wrap clears sampled upper thighs`);
+      if (row.character === 'lyra' && pose === 'sit') {
+        check(result.sheerContact?.tested > 200 && result.sheerContact.penetrating === 0, `${appearanceId}/${pose}: sheer train clears sampled upper thighs`);
+        check(result.layersContact?.tested > 100 && result.layersContact.penetrating === 0, `${appearanceId}/${pose}: sheer train clears the opaque lap`);
+      }
       if (row.beast) check(result.snapshots.every(s => s.beastWeight > .95), `${appearanceId}/${pose}: beast locomotion active`);
       if (row.speed) {
         const first = result.snapshots[0].feet;

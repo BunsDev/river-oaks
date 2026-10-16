@@ -1153,3 +1153,43 @@ Project check reports32 unrelated gaps, none for ownpersistence task. Ready for
 signedcommit/push and issueprogress; no merge/deploy. Preserve checkout and all
 untrackedreports. Next executable: fit Lyra's long seated drapes and validate the
 hem/trim through real motion; Silvan/coat and broader visual/device/human gates remain.
+
+
+Lyra continuation at5e46402c: prior turn progressed with signed/pushed Vesper fix.
+Rechecked brief, worktrees, live ownership and PR. Hosted8green/1running. Resumed
+Lyra's opaque wrap and sheer train: real-rig regression fails566/632 front-lap
+samples in bothforms. First offline fold passed contact after freeing the lower
+waist row, but rendered rear exposure, sharp lap folds and walking knee clipping
+made it unacceptable. Preserved candidate evidence under.runtime/character-studio/
+lyra/prototype-one; do not claim quality from that passing structural run.
+Second candidate preserves rear drape, uses a smooth lap-to-knee profile and
+stronger upper-thigh weights, with24 vertical rows perlayer. Offline fit needsno
+contact pushes;770opaque/522sheer samples clear. Runtime/render/motion checks next.
+Source changes: shared original drape recipe, offlinefitter/baker/generatedreceipt,
+reference integration retaining bothlayers and Lyra beastvisibility, realrigtests.
+No paidgeneration/newassets. Fullgoal remains active; no commit yet.
+
+Lyra waistband review: actual renderer traversal reproduced36.555mm sheer-waist
+displacement. Fitter now takes each authored waist and fades both fold and8mm
+layer separation from that height. Both generated top rows have zero position
+delta; real-rig test checks37vertices/layer against pelvis-relative seated rest.
+Reviewer rechecked source/generated receipt with no remainingfinding. Focused14/14
+pass including both forms, layer/body contact, rear coverage, sampled walk/run,
+asymmetric/transformed roots, standing restoration, geometry/disposal/provenance.
+Full frozen wardrobe/native4K/core gate starts now; no commit yet. High stretch
+(max7.309x) is recorded as an art-quality limitation, not approved cloth realism.
+
+Final Lyra frozen verification passed:28focusedtests; deterministic Lyra/Vesper/
+Sable bakes;132wardroberows/330phases/1012views/757checks; native4K human/fox
+references unchanged with zero pixel error; core11/11 with isolatedRedis.
+Core counts: tooling117, preview3380passed/1existingskip/1TODO, server914zeroskips,
+desktop69, Python141/66warnings. All11frozen sourcehashes match. Browser Lyra
+contacts per form:768opaque/523sheer/1164layers, zero penetrations; minimum25.8/
+12.2/6.07mm. Exact unit/browser samples differ slightly but both report actual
+counts. Selected seated3views+overheadbothforms and humanwalk/run/wave+beastprowl
+inspected. Stiff/faceted fabric, high stretch and broader art/foot/contact quality
+remain open; no exhaustive matrix or continuousmotion approval. Evidence under
+.runtime/character-studio/lyra-verification/verified-20261016 including rejected
+prototype and waistband-red logs. Ready for signedcommit/push and PR464/#442
+progress update. No merge/deploy; preserve checkout. Next: Silvan long drapes,
+coat panels, continuous motion/attachments and full remaining440–444acceptance.

@@ -1,3 +1,5 @@
+import {createDrapeGeometry, LYRA_DRAPES} from './drape-geometry.js';
+import {LYRA_DRAPE_MORPHS} from './lyra-drape-morph-data.js';
 import { skinSkirt } from './skirt-skinning.js';
 import { createDressSkirtGeometry } from './skirt-geometry.js';
 import { createSkirtSeatMorph } from './skirt-seat-morph.js';
@@ -156,16 +158,14 @@ export function createReferenceStyle(avatar,appearance){
   }
   // An open drape around the hips with a handkerchief hem: angles run from the
   // front (0) around the body, radii widen as it falls.
-  function drape(parent,surface,{from,to,top=.09,length=.8,rx=.19,rz=.14,flare=.08,jag=.16,lobes=5,name}){
-    const columns=36,rows=8,vertices=[],uv=[],indices=[];
-    for(let r=0;r<=rows;r++)for(let c=0;c<=columns;c++){
-      const u=c/columns,a=from+(to-from)*u,depth=r/rows,hem=1-jag*Math.abs(Math.sin(u*Math.PI*lobes));
-      const y=top-length*depth*hem,spread=1+flare*depth/.19;
-      vertices.push(Math.sin(a)*rx*spread,y,Math.cos(a)*rz*spread);uv.push(u,depth);
-      if(r<rows&&c<columns){const n=r*(columns+1)+c;indices.push(n,n+columns+1,n+1,n+1,n+columns+1,n+columns+2);}
-    }
-    const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));geometry.setIndex(indices);geometry.computeVertexNormals();
-    const item=mesh(parent,geometry,surface);if(name)item.name=name;return item;
+  function drape(parent,surface,recipe){
+    const geometry=createDrapeGeometry(recipe),item=mesh(parent,geometry,surface);if(recipe.name)item.name=recipe.name;
+    const layer=LYRA_DRAPES.findIndex(part=>part.name===recipe.name);
+    if(layer<0)return item;
+    const fitted=skinSkirt(item,model.getObjectByName('Jevica'),{waist:recipe.top,hem:-.17});
+    attachments.add(fitted.group);lyraOutfit.splice(lyraOutfit.indexOf(item),1,fitted.mesh);
+    correctives.push(createSkirtSeatMorph(fitted.mesh,model,LYRA_DRAPE_MORPHS[layer]));
+    return fitted.mesh;
   }
   function lyraLook(){
     // The supplied three views share one chestnut hairstyle and mauve outfit.
@@ -176,7 +176,7 @@ export function createReferenceStyle(avatar,appearance){
     const fold=material('#9b6476',{roughness:.82,sheen:.8,sheenColor:new THREE.Color('#d5a0ac'),side:THREE.DoubleSide});
     for(const side of [-1,1])tube(torso,fold,[[side*.13,.26,.06],[side*.12,.19,.13],[0,.13,.15]],.004);
     // Opaque velvet wraps all the way around; the sheer train is an overlay.
-    drape(pelvis,velvet,{from:-.45,to:Math.PI*2-.45,top:.11,length:.67,rx:.19,rz:.14,flare:.045,jag:.12,lobes:2,name:'Lyra velvet wrap'});
+    drape(pelvis,velvet,LYRA_DRAPES[0]);
     const pixels=new Uint8Array(256*256*4);
     for(let y=0;y<256;y++)for(let x=0;x<256;x++){
       const cellX=Math.floor(x/25),cellY=Math.floor(y/29),seed=(Math.imul(cellX+3,73856093)^Math.imul(cellY+7,19349663))>>>0;
@@ -187,7 +187,7 @@ export function createReferenceStyle(avatar,appearance){
     const sheerTexture=new THREE.DataTexture(pixels,256,256,THREE.RGBAFormat);
     sheerTexture.colorSpace=THREE.SRGBColorSpace;sheerTexture.wrapS=THREE.RepeatWrapping;sheerTexture.needsUpdate=true;textures.add(sheerTexture);
     const sheer=material('#d8a6b3',{map:sheerTexture,roughness:.92,transparent:true,opacity:.74,depthWrite:false,side:THREE.DoubleSide});
-    drape(pelvis,sheer,{from:.22,to:Math.PI*2-.22,top:.09,length:.86,rx:.19,rz:.14,flare:.1,jag:.26,lobes:3,name:'Lyra spotted sheer train'});
+    drape(pelvis,sheer,LYRA_DRAPES[1]);
     const jewel=mesh(pelvis,new THREE.TorusGeometry(.022,.005,9,28),gold,[.18,.075,.13]);jewel.rotation.y=.3;
     ball(pelvis,fold,[.18,.075,.135],[.012,.016,.006]);
     shoulderBag({color:'#704753'});boots('#704753');

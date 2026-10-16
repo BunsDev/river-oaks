@@ -62,7 +62,7 @@ test('shipped reference looks retain their intended surfaces while bounding acce
     ['rowan-human', 7644, 20], ['man-casual', 7644, 20],
     ['woman-tailored', 8532, 20], ['vesper-beast', 8532, 20],
     ['man-tailored', 9908, 20], ['midnight-host-wolf', 9908, 20],
-    ['lyra-human', 6336, 19], ['woman-daywear', 6336, 19],
+    ['lyra-human', 8640, 19], ['woman-daywear', 8640, 19],
     ['man-workwear', 13140, 20], ['kai-formal-beast', 13140, 20],
     ['kai-explorer', 9020, 20], ['kai-explorer-beast', 9020, 20],
     ['kai-noir', 14484, 20], ['kai-noir-beast', 14484, 20],
