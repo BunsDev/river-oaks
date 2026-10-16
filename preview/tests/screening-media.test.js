@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { SCREENING_MEDIA } from '../src/screening-contract.js';
+import { keyframeTimes } from '../../scripts/media-keyframes.mjs';
 
 // Every allowlisted film is bundled exactly as its manifest records (#365, #367): the server takes
 // durationMs only from the allowlist, so it must match the files, and captions carry the film.
@@ -45,3 +46,21 @@ test('the caption parser reads cue text only, whatever the cue ids and comment b
   assert.deepEqual(cueText(vtt), ['1999', 'Two lines, one cue.']);
 });
 
+// A seek decodes from the keyframe before its target. The approved short was first published with
+// keyframes up to 6 s apart, so a loaded viewer's seek froze the film for over a second; an A/B
+// (2026-10-16) with a keyframe every second removed every post-convergence spike.
+test('the keyframe reader agrees with ffprobe on the bundled fixture', () => {
+  const read = name => keyframeTimes(readFileSync(new URL(`preview/public/assets/ipic/screening/${name}`, root)), name.split('.').pop());
+  assert.deepEqual([read('fixture-v1.webm').length, read('fixture-v1.mp4').length], [6, 3]);
+  assert.equal(read('fixture-v1.webm')[0], 0);
+});
+
+test('every approved film has a keyframe at least every second in each format', () => {
+  for (const entry of manifest.media.filter(item => !item.fixture)) {
+    for (const file of entry.files.filter(f => /\.(webm|mp4)$/.test(f.path))) {
+      const times = keyframeTimes(readFileSync(new URL(file.path, root)), file.path.split('.').pop());
+      const gaps = times.slice(1).map((t, i) => t - times[i]);
+      assert.ok(times[0] < 1 && Math.max(...gaps) <= 1050, `${file.path}: ${times.length} keyframes, widest gap ${Math.round(Math.max(...gaps))} ms`);
+    }
+  }
+});
