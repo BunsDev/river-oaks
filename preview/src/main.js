@@ -1,5 +1,4 @@
 import { createCharacterStudio } from './character-studio.js';
-import { migrateCharacterAppearance } from './character-definition.js';
 import { createOfficeUI } from './office-ui.js';
 import { createIpicScreening } from './ipic-screening-ui.js';
 import { IPIC_DARTS, IPIC_INTERIOR, atIpicDartsLine } from './ipic-plan.js';
@@ -289,8 +288,11 @@ function initializeRenderer() {
     requestVehicleExit: position => multiplayer.travel({position:[position[0],-position[2]]}),
     getPortrait: id => portraits.portrait(id) });
   characterStudio = createCharacterStudio({ownerId:document.body.dataset.accountId,
-    getDefinition:()=>migrateCharacterAppearance(document.body.dataset.accountId,playerAvatar.appearance),
-    canOpen:()=>Boolean(playerAvatar?.ready&&!loading&&!multiplayer?.traveling&&!photoMode?.active&&!officeUI?.active),
+    getDefinition:()=>playerAvatar.definition,
+    accountTransport:{read:()=>multiplayer.characterRequest('read'),write:(action,body)=>multiplayer.characterRequest(action,body),
+      select:(command,selection)=>multiplayer.command({...command,selection})},
+    canOpen:()=>Boolean(multiplayer?.connected&&playerAvatar?.ready&&!loading&&!multiplayer?.traveling&&!photoMode?.active&&!officeUI?.active),
+    canStayOpen:()=>Boolean(multiplayer?.connected&&!loading&&!multiplayer?.traveling&&!photoMode?.active&&!officeUI?.active),
     onOpen:()=>walking.halt(),reducedMotion});
   document.querySelector('.character-picker').before(characterStudio.trigger);
   seatAndWater = createSeatAndWater({ walking, playerAvatar, getLocals: () => community.state?.locals, getMultiplayer: () => multiplayer, isBusy: () => seatingControls?.busy() ?? false });
@@ -1303,7 +1305,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
   window.__riverScreening = () => ipicScreening?.inspect() ?? null;
   // Development-only: send a raw command, as a modified client could, to prove the server refuses it.
   window.__riverMultiplayerCommand = message => multiplayer?.command(message);
-  window.__riverMultiplayer = () => ({ connected: multiplayer?.connected ?? false, selfId: multiplayer?.identity?.id, snapshot: multiplayer?.snapshot, remotes: remotePlayers?.stats(), voice: multiplayer?.voice.debug() ?? null,creations:buildLayer?.stats(),birds:birdCams?.state,builder:buildControls?{...buildControls.builder,ghost:buildLayer?.ghost?{position:buildLayer.ghost.position.toArray(),visible:buildLayer.ghost.visible}:null,hint:document.querySelector('#build-hint')?.textContent,valid:document.querySelector('#build-hint')?.dataset.valid}:null });
+  window.__riverMultiplayer = () => ({ connected: multiplayer?.connected ?? false, selfId: multiplayer?.identity?.id, snapshot: multiplayer?.snapshot, remotes: remotePlayers?.stats(), selfMaterials:playerAvatar?.materials, voice: multiplayer?.voice.debug() ?? null,creations:buildLayer?.stats(),birds:birdCams?.state,builder:buildControls?{...buildControls.builder,ghost:buildLayer?.ghost?{position:buildLayer.ghost.position.toArray(),visible:buildLayer.ghost.visible}:null,hint:document.querySelector('#build-hint')?.textContent,valid:document.querySelector('#build-hint')?.dataset.valid}:null });
   window.__riverPlayerAttention=()=>{
     const rig=playerAvatar?.rig;if(!rig)return null;
     rig.model.updateWorldMatrix(true,true);

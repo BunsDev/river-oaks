@@ -1,3 +1,5 @@
+import { selectedCharacterFor } from './character-selection-view.js';
+import { createCharacterMaterials } from './character-studio-materials.js';
 import { migrateCharacterAppearance, characterAppearanceFor } from './character-definition.js';
 import { createPlayerAttention } from './player-attention.js';
 import { createPlayerCostume } from './player-costume.js';
@@ -8,7 +10,7 @@ import * as THREE from 'three';
 import { AVATAR_PROFILES, loadResidentAvatar } from './avatars.js';
 import { turnToward } from './gait.js';
 import { VISITOR_FORMS } from './visitor-persona.js';
-import { APPEARANCE_COOLDOWN_MS, CHARACTERS, appearanceFor, canFlyAs, canUseAppearance, defaultAppearanceFor, isJevicaOwner, permittedAppearance, sharedAppearance, sharedCharacter } from './shared-appearances.js';
+import { APPEARANCE_COOLDOWN_MS, CHARACTERS, appearanceFor, canFlyAs, canUseAppearance, defaultAppearanceFor, isJevicaOwner, sharedAppearance, sharedCharacter } from './shared-appearances.js';
 import './player-avatar.css';
 import { isGameplayKey } from './keyboard-input.js';
 
@@ -111,6 +113,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     host.dataset.companion=JSON.stringify(value);
   });
   const identity = VISITOR_FORMS[0], form = identity.id;
+  let colors=null,selectedDefinition=migrateCharacterAppearance(userId,defaultAppearanceFor(userId)),definitionKey=JSON.stringify(selectedDefinition);
   let avatar = null, outfit = null, vehicle = null, version = 0, previous = null, disposed = false, castUntil = 0,presentation=null;
   // Watering: until when, and the planter the body turns toward (scene coordinates).
   let waterUntil = 0, waterTarget = null;
@@ -151,8 +154,11 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
   };
   const applySharedPlayer=player=>{
     sharedMovement=player.movement==='beast'?'beast':'upright';
-    const confirmed=permittedAppearance(userId,player.appearance);
+    const definition=selectedCharacterFor(player,userId),key=JSON.stringify(definition),changed=key!==definitionKey;
+    selectedDefinition=definition;definitionKey=key;
+    const confirmed=definition.appearanceId;
     if(confirmed!==appearance){appearance=confirmed;syncPicker();load();return true;}
+    if(changed&&loadedAppearance===appearance)colors?.apply(selectedDefinition);
     syncPicker();return false;
   };
   // The town takes one appearance change every two seconds. Picking a person
@@ -163,7 +169,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
   const flushAppearance=async()=>{
     clearTimeout(flushTimer);
     if(disposed||sending||!wanted)return;
-    if(wanted===appearance){
+    if(wanted===appearance&&selectedDefinition.revision===0){
       wanted=null;picker.removeAttribute('aria-busy');
       if(status.textContent==='Saving character…')status.textContent='';
       syncPicker();return;
@@ -188,7 +194,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     if(disposed)return;
     const next=sharedAppearance(id)?.id;
     if(!next||!canUseAppearance(userId,next)){syncPicker();return;}
-    if(next!==appearance&&walking.getPose?.()?.flying){
+    if((next!==appearance||selectedDefinition.revision>0)&&walking.getPose?.()?.flying){
       const message='Land before changing character or form.';status.textContent=message;walking.notify?.(message);syncPicker();return;
     }
     wanted=next;picker.setAttribute('aria-busy','true');status.textContent='Saving character…';syncPicker();
@@ -246,9 +252,9 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     const generation = ++version;
     panel.setAttribute('aria-busy', 'true');status.textContent = 'Loading appearance…';
     host.dataset.playerReady = 'false';
-    let next, nextOutfit, nextVehicle;
+    let next, nextOutfit, nextVehicle,nextColors;
     try {
-      const definition=migrateCharacterAppearance(userId,appearance);
+      const definition=selectedDefinition;
       const chosenProfile=definition.appearanceId,character=characterAppearanceFor(definition,userId),rigProfile=definition.rig;
       const portrait = new Image();
       let portraitReady=Promise.resolve(false);
@@ -267,10 +273,11 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
         dispose(){},
       };
       nextVehicle = createFlightVehicle(form);
+      nextColors=createCharacterMaterials(next.object);nextColors.apply(selectedDefinition);
       const firstLoad=!avatar;
-      outfit?.dispose();vehicle?.dispose();avatar?.dispose();holder.clear();avatar = next;outfit = nextOutfit;vehicle = nextVehicle;holder.add(avatar.object,vehicle.object);
+      colors?.dispose();outfit?.dispose();vehicle?.dispose();avatar?.dispose();holder.clear();colors=nextColors;avatar = next;outfit = nextOutfit;vehicle = nextVehicle;holder.add(avatar.object,vehicle.object);
       loadedAppearance=chosenProfile;
-      next = nextOutfit = nextVehicle = null;
+      next = nextOutfit = nextVehicle = nextColors = null;
       if(firstLoad)toggleCamera(true);
       panel.dataset.form = form;
       panel.querySelector('#player-name').textContent = sharedName??character.name;
@@ -293,7 +300,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
       host.dataset.playerForm = form;host.dataset.playerAppearance=chosenProfile;host.dataset.playerAppearanceForm=character.form;host.dataset.playerReady = 'true';
       listeners.forEach(listener => listener(form));
     } catch {
-      nextOutfit?.dispose();nextVehicle?.dispose();next?.dispose();
+      nextColors?.dispose();nextOutfit?.dispose();nextVehicle?.dispose();next?.dispose();
       if (generation === version) {host.dataset.playerReady=String(Boolean(avatar));status.textContent = 'Appearance could not load. Try another choice.';}
     }
     finally {if (generation === version) panel.setAttribute('aria-busy', 'false');}
@@ -316,6 +323,8 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
       if(!applySharedPlayer(player))panel.querySelector('#player-description').textContent=sharedAppearance(appearance).description;
     },
     get appearance(){return appearance;},
+    get definition(){return structuredClone(selectedDefinition);},
+    get materials(){return colors?.inspect()??[];},
     get movement(){return movement;},
     // The loaded avatar, for a studio portrait of the given appearance only.
     portraitSubject(id){return avatar&&loadedAppearance===id&&id===appearance?avatar.object:null;},
@@ -393,7 +402,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     dispose() {
       if(disposed)return;
       disposed=true;version++;lifetime.abort();clearTimeout(flushTimer);wanted=null;
-      removeCompanionListener();listeners.clear();carriage.dispose();outfit?.dispose();vehicle?.dispose();avatar?.dispose();
+      removeCompanionListener();listeners.clear();carriage.dispose();colors?.dispose();outfit?.dispose();vehicle?.dispose();avatar?.dispose();
       outfit=vehicle=avatar=null;holder.clear();holder.removeFromParent();panel.remove();
     },
   };

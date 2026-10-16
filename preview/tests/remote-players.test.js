@@ -10,10 +10,11 @@ function load(url, context, nextLoad) {
     import * as THREE from 'three';
     export const AVATAR_PROFILES=['woman-casual','man-casual','woman-tailored','man-tailored','woman-daywear','man-workwear'];
     export async function loadResidentAvatar(_index, _id, profile, options) {
-      globalThis.__remoteAvatarAttempts?.push(options?.appearanceId);
+      globalThis.__remoteAvatarAttempts?.push(options?.appearanceId);await globalThis.__remoteAvatarGate?.(options?.appearanceId);
       if(globalThis.__remoteFailOnce===options?.appearanceId){globalThis.__remoteFailOnce=null;throw new Error('temporary asset failure');}
       const object = new THREE.Group(); object.userData.frames = []; object.userData.profile = profile; object.userData.appearance = options?.appearanceId; object.userData.suspends = 0;
-      return { object, rig:{hipHeight:.9}, update(_now, action, _speaking, motion) { object.userData.frames.push({...motion,action}); }, suspend() { object.userData.suspends++; }, dispose() {} };
+      const material=new THREE.MeshStandardMaterial({color:'#123456'});material.userData.characterSlot='outfit';object.add(new THREE.Mesh(new THREE.BoxGeometry(),material));
+      return { object, rig:{hipHeight:.9}, update(_now, action, _speaking, motion) { object.userData.frames.push({...motion,action}); }, suspend() { object.userData.suspends++; }, dispose() { object.userData.disposed=true; } };
     }` };
   if (url.endsWith('/player-costume.js')) return { format: 'module', shortCircuit: true, source: 'export function createPlayerCostume() { return { update() {}, dispose() {} }; }' };
   if (url.endsWith('/flight-vehicles.js')) return { format: 'module', shortCircuit: true, source: "import * as THREE from 'three'; export function createFlightVehicle() { return { object: new THREE.Group(), dispose() {} }; }" };
@@ -232,4 +233,88 @@ test('speaking residents get a nameplate marker and the speaker cadence, set at 
     assert.deepEqual(speakingFlags().sort(), ['early', 'peer']);
     players.dispose();
   } finally { globalThis.document = previousDocument; }
+});
+const {customizedCharacterDefinition}=await import('../src/character-customization.js');
+const {CHARACTER_PALETTES}=await import('../src/character-customization.js');
+const custom=(palette,revision=1)=>customizedCharacterDefinition('peer','sable-human',{palette,revision});
+const peerLook=character=>({id:'peer',name:'Peer',position:[0,0,0],altitude:0,yaw:0,appearance:'sable-human',character});
+const settle=()=>new Promise(resolve=>setImmediate(resolve));
+test('same-base published revisions recolor the existing peer rig and restore authored fallback',async()=>{
+ const previousDocument=globalThis.document;globalThis.document={createElement:()=>new Element()};
+ try{
+  const scene=new THREE.Scene(),players=createRemotePlayers(scene,new Element());
+  players.sync([peerLook(custom('rose'))],'self');await settle();const root=scene.children[0].children[0],material=root.children[0].material;
+  assert.equal(material.color.getHex(),new THREE.Color(CHARACTER_PALETTES.rose.color).getHex());
+  players.sync([peerLook(custom('midnight',2))],'self');await settle();assert.equal(scene.children[0].children[0],root);
+  assert.equal(material.color.getHex(),new THREE.Color(CHARACTER_PALETTES.midnight.color).getHex());assert.equal(players.stats()[0].character.revision,2);
+  players.sync([peerLook({...custom('rose'),ownerId:'someone-else'})],'self');assert.equal(material.color.getHex(),0x123456);
+  assert.equal(players.stats()[0].character.revision,0);
+  players.dispose();assert.equal(root.userData.disposed,true);assert.equal(material.color.getHex(),0x123456);
+ }finally{globalThis.document=previousDocument;}
+});
+test('an in-flight peer rig uses the latest same-base revision and never revives a departed player',async()=>{
+ const previousDocument=globalThis.document;globalThis.document={createElement:()=>new Element()};let release;
+ globalThis.__remoteAvatarGate=()=>new Promise(resolve=>{release=resolve;});
+ try{
+  const scene=new THREE.Scene(),players=createRemotePlayers(scene,new Element());
+  players.sync([peerLook(custom('rose'))],'self');players.sync([peerLook(custom('midnight',2))],'self');release();await settle();
+  assert.equal(players.stats()[0].character.palette,'midnight');assert.equal(scene.children[0].children[0].children[0].material.color.getHex(),new THREE.Color(CHARACTER_PALETTES.midnight.color).getHex());
+  players.dispose();const gone=createRemotePlayers(scene,new Element());gone.sync([peerLook(custom('rose'))],'self');gone.dispose();release();await settle();assert.equal(scene.children.length,0);
+ }finally{delete globalThis.__remoteAvatarGate;globalThis.document=previousDocument;}
+});
+
+test('a newly joined peer remains visible through first asset failure and retry',async()=>{
+ const previousDocument=globalThis.document;globalThis.document={createElement:()=>new Element()};
+ let time=0,release;globalThis.__remoteAvatarGate=()=>new Promise(resolve=>{release=resolve;});
+ globalThis.__remoteFailOnce='sable-human';globalThis.__remoteAvatarAttempts=[];
+ let players;
+ try{
+  const scene=new THREE.Scene();players=createRemotePlayers(scene,new Element(),{now:()=>time});
+  players.sync([peerLook(custom('rose'))],'self');
+  const holder=scene.children[0],placeholder=holder.children[0];
+  assert.ok(placeholder,'a peer has a visible body before an asset request settles');
+  const bounds=new THREE.Box3().setFromObject(placeholder);
+  assert.ok(!bounds.isEmpty()&&bounds.max.y-bounds.min.y>1,'fallback has a human-scale silhouette');
+  assert.equal(players.stats()[0].ready,false);assert.equal(players.stats()[0].fallback,true);
+  const resources=new Map();placeholder.traverse(mesh=>{if(mesh.isMesh)for(const item of [mesh.geometry,...[mesh.material].flat()])resources.set(item,0);});
+  for(const resource of resources.keys())resource.addEventListener('dispose',()=>resources.set(resource,resources.get(resource)+1));
+  release();await settle();assert.equal(placeholder.parent,holder,'failed initial load retains fallback');
+  players.sync([peerLook(custom('midnight',2))],'self');assert.equal(globalThis.__remoteAvatarAttempts.length,1,'failed loads back off');
+  time=2000;players.sync([peerLook(custom('midnight',2))],'self');release();await settle();
+  assert.equal(players.stats()[0].ready,true);assert.equal(players.stats()[0].fallback,false);
+  assert.equal(players.stats()[0].character.palette,'midnight');assert.equal(placeholder.parent,null);
+  assert.ok([...resources.values()].every(count=>count===1),'replacing a fallback releases each owned resource once');
+ }finally{players?.dispose();delete globalThis.__remoteAvatarGate;delete globalThis.__remoteFailOnce;delete globalThis.__remoteAvatarAttempts;globalThis.document=previousDocument;}
+});
+
+test('pending fallback resources are released on departure and layer teardown',async()=>{
+ const previousDocument=globalThis.document;globalThis.document={createElement:()=>new Element()};let release;
+ globalThis.__remoteAvatarGate=()=>new Promise(resolve=>{release=resolve;});
+ try{
+  for(const action of ['leave','dispose']){
+   const scene=new THREE.Scene(),players=createRemotePlayers(scene,new Element());
+   players.sync([peerLook(custom('rose'))],'self');const resources=new Map();
+   scene.children[0].children[0].traverse(mesh=>{if(mesh.isMesh)for(const item of [mesh.geometry,...[mesh.material].flat()])resources.set(item,0);});
+   for(const resource of resources.keys())resource.addEventListener('dispose',()=>resources.set(resource,resources.get(resource)+1));
+   if(action==='leave')players.sync([],'self');else players.dispose();
+   release();await settle();players.dispose();
+   assert.equal(scene.children.length,0,'a late rig cannot resurrect the departed peer');
+   assert.ok(resources.size>0&&[...resources.values()].every(count=>count===1),`${action} disposes fallback resources exactly once`);
+  }
+ }finally{delete globalThis.__remoteAvatarGate;globalThis.document=previousDocument;}
+});
+
+test('a pending placeholder follows the peer position and existing visibility rules',async()=>{
+ const previousDocument=globalThis.document;globalThis.document={createElement:()=>new Element()};let release,visible=true,players;
+ globalThis.__remoteAvatarGate=()=>new Promise(resolve=>{release=resolve;});
+ try{
+  const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera();players=createRemotePlayers(scene,new Element(),{isVisible:()=>visible});
+  players.sync([peerLook(custom('rose'))],'self');const holder=scene.children[0],placeholder=holder.children[0];
+  players.sync([{...peerLook(custom('rose')),position:[12,3,.5],altitude:1}],'self');players.update(0,camera);
+  assert.deepEqual(holder.position.toArray(),[12,1.5,-3]);assert.equal(holder.visible,true);assert.equal(players.stats()[0].ready,false);
+  camera.position.set(200,0,0);players.update(16,camera);assert.equal(holder.visible,false);
+  camera.position.set(12,2,0);players.update(32,camera);assert.equal(holder.visible,true);
+  visible=false;players.update(48,camera);assert.equal(holder.visible,false);assert.equal(holder.children[0],placeholder);
+  players.dispose();release();await settle();
+ }finally{players?.dispose();delete globalThis.__remoteAvatarGate;globalThis.document=previousDocument;}
 });

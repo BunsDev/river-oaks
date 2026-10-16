@@ -684,3 +684,79 @@ no blocker. Deliver this server-only increment while the separately reviewed
 client reopen regression waits; client/editor/routing changes remain uncommitted.
 The full receipt records the larger dirty integration tree, not the isolated
 server commit. Production deletion-trigger integration remains outstanding.
+
+Server-only deletion increment signed and pushed:32e2b61d7d51817d36dd9c62e0c8fbd99d15e448,
+draftPR464 remote head verified. SSH signature passed; forbidden tool-author
+trailer check printed nothing. Client remains dirty/uncommitted; reopen regression
+76928 queued. Prepared run-reopen-verification.py for shared/editor/core with
+isolated Redis after fixing the reproduced bug. No merge/deployment/retirement.
+
+
+Reopen red76928 terminal1 at the intended assertion: Wear remains disabled after
+wearRose→close→legacyRowan→reopen. Inspected actual failure screenshot: retained
+Rose preview and false currently-worn status. Preserved browser-red.json/.log.
+Verified staged base hashes and integrated the reviewed guarded account refresh
+and shared regressions, including uncertain-save close/reopen. Added a capture
+of the corrected ready-to-rewear state. integrated-source-hashes.json freezes25
+files for subsequent shared/editor/core verification. No rollback flags integrated.
+
+
+Reopen verification16988 terminal1: shared25 and editor21 passed. Corrected
+ready-to-rewear capture inspected previously. Core passed tooling117 and preview3350
+(with existing skip/TODO), then server872/873: deletion test read an older snapshot
+in flight on Bob after Alice close. World leave is synchronous; changed regression
+to assert close4003 and await a snapshot without Alice within3s, well below30s
+reconnect grace. Focused memory regression passes. Previous receipts/logs preserved
+in reopen/first-verification. Full core has not passed this revised source.
+
+Review found reopening during pending read/save can still retain old selection.
+Deferred refresh is staged and reviewed under reopen-deferred. Red44672 exited1
+on a request interception lifecycle failure (Route is already handled), with no
+product-race evidence. The helper now awaits its held response fulfillment before
+unrouting and captures routing errors. Corrected real-browser red63019 queued;
+production UI remains unchanged until reproduction. No client commit yet.
+
+Deletion test causality verified: focused memory1/1 and isolated memory/Redis
+transports27/27 passed with zero skips. Ignored runtime mutation fixture restoring
+prior socket-close-only behavior fails at the bounded disappearance assertion
+(Frame timeout after3s); production source untouched. Test review found no blocker.
+Evidence retained under deletion-causal. Deferred helper also attaches its capture
+rejection handler immediately and cleans held requests on failure; prevents a
+slow locator from producing an unhandled rejection before the intended assertion.
+
+Deferred red63019 terminal1 with BOTH intended failures: delayed save and delayed
+read each leave the retained Rose look falsely marked worn and Wear disabled after
+legacy Rowan selection and reopen. Both actual captures inspected. Preserved red
+results/log, verified staged base hashes, then integrated the reviewed deferred
+refresh and real delayed read/save regressions. Refresh waits for a pending action
+to settle and preserves uncertain retry identity; a microtask runs after the account
+controller releases its busy guard. Added corrected-state screenshots. Frozen25
+source hashes retained at reopen-deferred/integrated-source-hashes.json.
+
+Verification66307 is live, queued under the shared browser lock with isolated Redis
+for shared/editor/core. Final read-only review found no remaining blocker. Frozen25
+source hashes match after review. Existing server32e2b61d now has all10 hosted checks
+successful, including aggregate preview; client remains uncommitted. Rollout's
+staged paused-message UI was rebased onto deferred refresh so later integration
+cannot overwrite it; prior staged copy/manifests retained in before-deferred-refresh.
+Do not restart66307 on observation timeout or edit its source until terminal.
+
+
+Verification66307 terminal0 at 2026-10-16T05:39:34Z: shared37 and editor21
+checks passed; core11 tasks passed with isolated Redis. Tooling117, preview3350
+passed with1 existing skip/1 existing TODO, server873 zero skips, desktop69,
+Python141/66warnings. Both delayed-save/read corrected captures inspected: retained
+Rose look, accurate saved/unsaved state, Wear enabled after legacy selection.
+All25 frozen source hashes match. Evidence preserved under
+.runtime/character-studio/client-verified-20261016. Earlier full18-task gate is
+separate baseline evidence; later reopen changes have focused browser plus core
+coverage. Independent review found no blocker. Commit this client increment to
+draft464; no merge, deployment, human/device or production acceptance claimed.
+
+Production account deletion work remains staged only under deletion-hook. Signed
+raw-body webhook and durable-tombstone auth revocation tests passed78/78 with
+isolated Redis, zero skips; retries and late login/refresh/desktop exchange are
+covered. Seven production wiring files are staged against their current bases,
+not integrated. Still require real signed webhook to session revocation and peer
+disconnect, factory wiring verification and subsequent gates. Rollout pause/disable
+work remains separately staged. No provider calls or new auth schema.

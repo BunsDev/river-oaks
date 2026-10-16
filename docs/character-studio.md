@@ -1,6 +1,7 @@
 # Character Studio architecture decision (#440)
 
-Status: contract in draft PR #457; editor in draft PR #461; render increment under verification.
+Status: draft stack #457 (contract), #461 (editor), #462 (render), and #464
+(persistence and client integration). The integrated local full gate passed; the subsequent client reopen regressions, editor journey and core gate also passed. Release acceptance remains in progress.
 This is the first increment of #440–#444, not a shipped Studio.
 
 ## Decision and evidence
@@ -16,7 +17,9 @@ skeletons within each clone. `player-avatar.js` now resolves the versioned
 contract before loading the same rig and look. No appearance IDs change.
 `server/avatar-preferences.js` stores account appearance/movement versions;
 `server/redis-room.js` reconciles account preferences on join and heartbeat.
-These remain authoritative. The new contract is not yet a persisted record.
+These remain authoritative. The owner-scoped character store now persists private
+drafts, immutable published revisions and selected account state; see the transport
+and migration details below.
 
 The Deep Research report was not provided or located. No conclusions here are
 attributed to it. Existing code and asset receipts are the evidence available.
@@ -34,7 +37,7 @@ No paid calls, model downloads or production writes are required or performed.
 A definition has `schemaVersion:1`, authenticated `ownerId`, nonnegative safe
 integer `revision`, canonical `appearanceId`, rig, human/beast form, parameters,
 palette, hair, outfit, attachments, pinned assets and authored provenance.
-Revision zero represents a migrated base. Publication will allocate revisions on
+Revision zero represents a migrated base. Publication allocates revisions on
 the server; passing structural validation does not establish freshness or ownership
 of a stored revision. The endpoint must supply ownerId from authentication.
 
@@ -52,10 +55,9 @@ not a claim that every historical source receipt hash has been refreshed.
 
 On old account/checkpoint reads, `migrateCharacterAppearance` resolves retired
 aliases and permission-safe defaults through existing policy. Strict publication
-rejects aliases and malformed data. Never rewrite or delete old IDs. Existing
-account records and checkpoint schemas stay unchanged in this increment. Before
-#443 switches writes, implement dual reads, validated drafts, immutable revisions,
-CAS conflicts and rollback tests in both memory and Redis implementations.
+rejects aliases and malformed data. Never rewrite or delete old IDs. The contract-only increment preserved old account/checkpoint schemas. The #443
+implementation adds dual reads, validated drafts, immutable revisions, CAS
+conflicts and rollback tests in memory and Redis, with explicit codec floors below.
 
 Appearance cannot grant flight, speed, admin access or companion privileges.
 Continue using server confirmed appearance/movement, Jevica ownership and existing
@@ -77,7 +79,7 @@ Colors touch tagged, avatar-owned materials only; teardown restores their origin
 values and disposes the preview. Late loads are discarded, including after close,
 and a stale failed load cannot drop a newer selection. The town renderer pauses
 drawing behind the Studio while authoritative world/network updates continue.
-The Studio editor still previews local edits. Server publication and selection now replicate validated definitions; connecting the editor and rendering those peer definitions remains part of #443.
+The Studio editor stages local edits and offers private Save draft and Wear in town actions. Server publication and selection replicate validated definitions; the integrated client applies their owned materials to local and peer rigs. The two-account save/wear journey and actual peer material checks pass locally; the complete visual, device and human acceptance matrix remains open.
 
 ## Components and delivery order
 1. #440: strict baseline contract, migration and actual human/beast rig fixtures;
@@ -117,6 +119,42 @@ attachments or broken skinning in idle/walk/run/sit/emote and beast prowl/lope.
 Node rig tests retain actual geometry, skin weights and skeletons but omit image
 decoding, so they establish neither texture nor rendered visual acceptance.
 Human keyboard/VoiceOver review and novice usability remain explicit human gates.
+
+## Usability trial protocol (#444, not yet run)
+
+Use the verified local two-account fixture, a fresh account and no saved favorites.
+Recruit five people unfamiliar with the Studio; record desktop or touch input and
+any assistive technology separately. Do not count the implementer or browser
+automation as a novice session. Explain the goal, not the controls, and do not coach
+until a participant asks for help or is stuck for 60 seconds. Record that assistance.
+
+Give each participant the same tasks:
+
+1. Open Studio from People, choose a character and make a variation they like.
+2. Undo a change, compare with the starting look, and save the draft.
+3. Wear it in town and confirm that a second player sees the same look.
+4. Reconnect, change the look again, and wear the new version.
+5. Recover an unsaved edit after a simulated failed save, then create a second
+   variation using any creative tools they discover.
+
+Record elapsed time from opening People to the first successful Wear, completion
+of each task, help requests, mistaken actions, recovery attempts, and whether the
+participant can explain Save draft versus Wear in town. Ask for satisfaction on a
+1–5 scale and whether they would make another look. Store anonymous participant
+codes and observations, not account identifiers, reference images or recordings
+without consent. Record the exact commit, browser/device and fixture configuration.
+
+Set these criteria before the first session: at least four of five participants
+complete tasks 1–4 without coaching within five minutes to first Wear; all five
+recover their edit without data loss; at least four distinguish private save from
+shared wear and create a second distinct variation without help; median satisfaction
+is at least 4/5. Any identity leak, permission bypass or lost saved work fails the
+gate regardless of totals. A failed criterion requires a documented fix and a new
+trial with unfamiliar participants; do not retrospectively lower the threshold.
+
+These are preregistered trial criteria, not results or device approval. Physical
+touch, keyboard-only and VoiceOver acceptance remain separate recorded sessions.
+The trial cannot establish the visual/animation matrix or crowd/GPU budgets above.
 
 ## Verification evidence
 See the task ledger for exact commands/results. Baseline fixtures exercise the
@@ -386,6 +424,45 @@ a replacement world or a newer account selection.
 Server transport tests cover authenticated two-account publication/equip, peer
 snapshots, reconnect/replacement, edit/republish, rollback without implicit equip,
 foreign ownership, protected appearance and beast rules, cooldown, explicit stale
-versions and duplicate receipts. Studio client version/request-ID handling, save
-and conflict UX, peer rendering, asset fallback, deletion hooks and complete
-rendered two-player journeys remain required.
+versions and duplicate receipts. The integrated client and two-player journey now exercise version/request-ID
+handling, save/conflict recovery, peer rendering and asset fallback. The production
+account-deletion lifecycle hook and remaining release acceptance still need proof.
+
+
+### Studio account workflow and rendered identity
+
+`character-account.js` captures the submitted definition and keeps operation IDs
+and expected versions through save, publication and equip. A lost, timed-out or
+malformed acknowledgement retains the same operation for receipt recovery. A
+confirmed concurrent edit becomes an explicit conflict; checking the saved
+account does not replace local edits. Loading its draft is a separate action.
+Closing the Studio retains edits and an uncertain operation in this tab.
+
+The footer distinguishes private saved state from the confirmed worn revision.
+Wear in town saves if needed, publishes if needed, then requests authoritative
+selection and checks the resulting account state. It cannot publish another
+editor's newer draft or replay an old selection over a newer choice. The modal
+stays open while the local avatar asset is replaced.
+
+`character-selection-view.js` accepts only a canonical owned revision matching
+the permitted appearance. Local and remote renderers apply palette/hair to their
+independently owned material slots, including same-base revisions and late asset
+loads. Malformed or foreign definitions use authored appearance. Vite and Vercel
+forward the four exact account routes through existing authorization; the shared
+browser fixture uses the real memory character store. Read-only development
+material diagnostics inspect actual loaded colors for browser assertions.
+
+The two-account browser journey passes save/wear, actual local/peer material
+colors, reconnect, edit/republish, a lost save reply, concurrent-edit recovery, and
+base replacement without closing Studio. Blocking the peer's initial GLB request
+keeps an asset-independent presence marker visible; restoring the request replaces
+it with the canonical avatar without reconnecting. Saved, peer, fallback and
+recovery captures were inspected on the local Metal renderer. This is fixture
+acceptance, not live WorkOS, physical device or human accessibility acceptance.
+
+Idle memory account deletion now removes its peer projection without reconnect
+grace. Redis deletion clears custom state and projected versions on heartbeat and
+checkpoint rejoin, including lease-loss recovery. These are store/transport tests;
+the production account-deletion lifecycle hook remains outstanding. Current exact
+test counts, completed full-profile receipt and later reopen verification belong
+in the task ledger.

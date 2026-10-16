@@ -30,7 +30,7 @@ async function fixture(mode,t,{wrapStore=store=>store}={}){
   const ticket=await request(user,'/api/multiplayer/ticket',{});assert.equal(ticket.status,200);
   const ws=new WebSocket(`${base.replace('http:','ws:')}/multiplayer?ticket=${(await ticket.json()).ticket}&world=river-oaks&protocol=3`,{headers:headers(user)});sockets.push(ws);
   const frames=[];let seq=0;ws.on('message',raw=>frames.push(JSON.parse(raw)));
-  const until=async predicate=>{const end=Date.now()+10000;while(Date.now()<end){const found=frames.find(predicate);if(found)return found;await pause(20);}throw new Error('Frame timeout');};
+  const until=async (predicate,timeout=10000)=>{const end=Date.now()+timeout;while(Date.now()<end){const found=frames.find(predicate);if(found)return found;await pause(20);}throw new Error('Frame timeout');};
   await until(frame=>frame.type==='snapshot');
   return {ws,frames,until,command:async(message,selection)=>{const requestId=String(++seq);ws.send(JSON.stringify({...message,...(selection===undefined?{}:{selection}),requestId}));return until(frame=>frame.type==='result'&&frame.requestId===requestId);}};
  };
@@ -116,9 +116,11 @@ test('memory: deleting an idle character account removes its peer projection wit
  await b.until(frame=>frame.type==='snapshot'&&frame.players.some(p=>p.id==='alice'&&p.character?.palette==='rose'));
  const disconnected=new Promise(resolve=>a.ws.once('close',(code)=>resolve(code)));
  await f.characters.deleteAccount('alice');
- await disconnected;
+ assert.equal(await disconnected,4003);
  b.frames.length=0;
- const after=await b.until(frame=>frame.type==='snapshot');
+ // Alice's close and Bob's snapshots arrive over separate sockets. An older
+ // snapshot may still be in flight; require disappearance well before the 30s grace.
+ const after=await b.until(frame=>frame.type==='snapshot'&&!frame.players.some(p=>p.id==='alice'),3000);
  assert.equal(after.players.some(p=>p.id==='alice'),false,'deleted custom projection must not survive the disconnect grace period');
  const deleted=await f.state('alice');assert.equal(deleted.character.deleted,true);assert.equal(deleted.character.draft,null);assert.equal(deleted.character.published,null);assert.equal(deleted.selection,null);
  assert.equal((await f.request('alice','/api/character/draft',{definition,expectedVersion:0,requestId:'delete-recreate'})).status,410);

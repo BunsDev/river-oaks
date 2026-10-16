@@ -1,3 +1,6 @@
+import { createAvatarPlaceholder } from './avatar-placeholder.js';
+import { selectedCharacterFor } from './character-selection-view.js';
+import { createCharacterMaterials } from './character-studio-materials.js';
 import * as THREE from 'three';
 import { AVATAR_PROFILES, loadResidentAvatar } from './avatars.js';
 import { createPlayerCostume } from './player-costume.js';
@@ -14,7 +17,7 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
   const speaking=new Set();
   let disposed=false,previous=null;
   const next=new THREE.Vector3(),before=new THREE.Vector3(),point=new THREE.Vector3();
-  const remove=entry=>{entry.removed=true;entry.version++;entry.outfit?.dispose();entry.vehicle?.dispose();entry.road?.dispose();entry.avatar?.dispose();entry.holder.removeFromParent();entry.label.remove();};
+  const remove=entry=>{entry.removed=true;entry.version++;entry.placeholder?.dispose();entry.colors?.dispose();entry.outfit?.dispose();entry.vehicle?.dispose();entry.road?.dispose();entry.avatar?.dispose();entry.holder.removeFromParent();entry.label.remove();};
   const syncRoad=(entry,kind)=>{
     const selected=vehicleKind(kind);
     if(entry.road?.spec.kind===selected)return;
@@ -32,6 +35,10 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
       entry.requestedAppearance=appearance;entry.failures=0;entry.retryAt=0;
       if(entry.pendingAppearance&&entry.pendingAppearance!==appearance){entry.pendingAppearance=null;entry.version++;}
     }
+    if(entry.loadedAppearance===appearance){
+      const definition=selectedCharacterFor(player);const key=JSON.stringify(definition);
+      if(key!==entry.definitionKey){entry.colors?.apply(definition);entry.definitionKey=key;entry.definition=definition;}
+    }
     if(entry.pendingAppearance===appearance||entry.loadedAppearance===appearance)return;
     if(now()<entry.retryAt)return;
     entry.pendingAppearance=appearance;const version=++entry.version;
@@ -40,11 +47,12 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
       if(disposed||entry.removed||entry.version!==version){avatar.dispose();return;}
       const outfit=sharedAppearance(appearance).costume==='jevica'?createPlayerCostume(avatar,'jevica'):{update(){},dispose(){}};
       const vehicle=createFlightVehicle('jevica');
-      entry.outfit?.dispose();entry.vehicle?.dispose();entry.avatar?.dispose();entry.holder.clear();
+      entry.placeholder?.dispose();entry.placeholder=null;entry.colors?.dispose();entry.outfit?.dispose();entry.vehicle?.dispose();entry.avatar?.dispose();entry.holder.clear();
       entry.avatar=avatar;entry.outfit=outfit;entry.vehicle=vehicle;entry.holder.add(avatar.object,vehicle.object);
       if(entry.road)entry.holder.add(entry.road.object);
+      entry.colors=createCharacterMaterials(avatar.object);entry.definition=selectedCharacterFor(entry.target);entry.definitionKey=JSON.stringify(entry.definition);entry.colors.apply(entry.definition);
       entry.loadedAppearance=appearance;entry.pendingAppearance=null;entry.failures=0;entry.retryAt=0;
-      entry.label.textContent=player.name;
+      entry.label.textContent=entry.target.name;
     }).catch(()=>{if(entry.version===version){entry.pendingAppearance=null;entry.failures++;entry.retryAt=now()+Math.min(30000,1000*2**entry.failures);entry.label.textContent=player.name+' · avatar unavailable';}});
   };
   return {
@@ -62,7 +70,7 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
     });},
     stats(){return [...entries].map(([id,entry])=>{
       const arm=entry.avatar?.rig?.model?.getObjectByName('upperarm_r'),rest=arm&&entry.avatar.rig.rest.get(arm);
-      return {id,ready:Boolean(entry.avatar),appearance:entry.loadedAppearance,movement:entry.target.movement??'upright',gesture:entry.target.gesture??null,rightArmMotion:rest?arm.quaternion.angleTo(rest):0,beastMotion:entry.avatar?.beastMotion??0,vehicle:entry.road?.spec.kind??null,roadVisible:Boolean(entry.road?.object.visible),riderSeated:Boolean(entry.riderSeated),sitting:entry.target.sitting??null,watering:Boolean(entry.avatar?.object.getObjectByName('Watering can')?.visible),heading:entry.holder.rotation.y,position:entry.holder.position.toArray()};
+      return {id,ready:Boolean(entry.avatar),fallback:Boolean(entry.placeholder),appearance:entry.loadedAppearance,character:entry.definition?structuredClone(entry.definition):null,materials:entry.colors?.inspect()??[],movement:entry.target.movement??'upright',gesture:entry.target.gesture??null,rightArmMotion:rest?arm.quaternion.angleTo(rest):0,beastMotion:entry.avatar?.beastMotion??0,vehicle:entry.road?.spec.kind??null,roadVisible:Boolean(entry.road?.object.visible),riderSeated:Boolean(entry.riderSeated),sitting:entry.target.sitting??null,watering:Boolean(entry.avatar?.object.getObjectByName('Watering can')?.visible),heading:entry.holder.rotation.y,position:entry.holder.position.toArray()};
     });},
     sync(players,selfId){
       if(disposed)return;
@@ -74,10 +82,11 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
           const holder=new THREE.Group(),label=document.createElement('span');label.className='remote-player-label';label.setAttribute('data-peer-id',player.id);label.textContent=player.name;labels.append(label);scene.add(holder);
           holder.position.set(player.position[0],player.position[2]+player.altitude,-player.position[1]);
           if(snapInitialHeading)holder.rotation.y=player.yaw+Math.PI;
-          entry={holder,label,target:player,removed:false,distance:0,version:0,loadedAppearance:null,pendingAppearance:null,requestedAppearance:null,failures:0,retryAt:0};entries.set(player.id,entry);
+          const placeholder=createAvatarPlaceholder();holder.add(placeholder.object);
+          entry={holder,label,placeholder,target:player,removed:false,distance:0,version:0,loadedAppearance:null,pendingAppearance:null,requestedAppearance:null,failures:0,retryAt:0};entries.set(player.id,entry);
           if(speaking.has(player.id))label.dataset.speaking='true';
         }
-        entry.target=player;entry.syncedAt=performance.now();entry.label.textContent=player.name;syncRoad(entry,player.vehicle);loadAppearance(entry,player);
+        entry.target=player;entry.syncedAt=performance.now();entry.label.textContent=player.name+(entry.failures?' · avatar unavailable':entry.avatar?'':' · loading avatar');syncRoad(entry,player.vehicle);loadAppearance(entry,player);
       }
     },
     update(now,camera){

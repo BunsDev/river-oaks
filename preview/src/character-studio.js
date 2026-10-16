@@ -1,3 +1,4 @@
+import { createCharacterAccount } from './character-account.js';
 import { createCharacterDraft } from './character-studio-state.js';
 import { createCharacterPreview } from './character-studio-preview.js';
 import { CHARACTER_PALETTES, CHARACTER_HAIR, supportsCharacterColors } from './character-customization.js';
@@ -5,7 +6,7 @@ import { validateCharacterDefinition } from './character-definition.js';
 import { CHARACTERS, appearanceFor, canUseAppearance, sharedAppearance, sharedCharacter } from './shared-appearances.js';
 import './character-studio.css';
 
-export function createCharacterStudio({ownerId,getDefinition,canOpen=()=>true,onOpen=()=>{},reducedMotion=false}){
+export function createCharacterStudio({ownerId,getDefinition,accountTransport=null,canOpen=()=>true,canStayOpen=canOpen,onOpen=()=>{},reducedMotion=false}){
   const trigger=document.createElement('button');trigger.type='button';trigger.className='character-studio-trigger';trigger.textContent='Open character studio';trigger.setAttribute('aria-haspopup','dialog');
   const dialog=document.createElement('dialog');dialog.className='character-studio';dialog.setAttribute('aria-labelledby','character-studio-title');
   dialog.innerHTML=`<header class="cs-header"><div><p class="cs-eyebrow">TypeSafe Place · Atelier</p><h2 id="character-studio-title">Character studio</h2></div><button type="button" data-close aria-label="Close character studio">✕</button></header>
@@ -22,7 +23,7 @@ export function createCharacterStudio({ownerId,getDefinition,canOpen=()=>true,on
       <div class="cs-favorites"><button type="button" data-favorite>Favorite this look</button><label class="sr-only" for="cs-favorites">Favorite looks</label><select id="cs-favorites"><option value="">Your favorites</option></select><button type="button" data-remove-favorite disabled>Remove favorite</button></div>
       <div class="cs-portrait"><button type="button" data-portrait>Create 4K portrait</button><a data-download hidden>Download PNG</a><p>Front pose · Garden daylight · 3840 × 2160</p></div>
       <p class="cs-status" role="status" aria-live="polite"></p></section></div>
-    <footer class="cs-footer"><p>Drafts stay in this tab. Favorites stay on this device.<br>Your town appearance changes only when publishing is available.</p><div><button type="button" data-cancel>Discard changes</button><button type="button" data-keep>Keep draft</button></div></footer>`;
+    <footer class="cs-footer"><div class="cs-account"><p data-account-status role="status" aria-live="polite">Connecting to your saved looks…</p><p>Save a private draft, or wear this look for others in town to see. Favorites stay on this device.</p><div class="cs-account-recovery"><button type="button" data-retry hidden>Retry</button><button type="button" data-refresh hidden>Check saved account</button><button type="button" data-load-draft hidden>Use saved draft</button></div></div><div class="cs-save-actions"><button type="button" data-cancel>Discard edits</button><button type="button" data-save disabled>Save draft</button><button type="button" data-wear disabled>Wear in town</button><button type="button" data-keep>Close studio</button></div></footer>`;
   document.body.append(dialog);
   const $=selector=>dialog.querySelector(selector),status=$('.cs-status'),stage=$('.cs-preview');
   let draft=null,preview=null,retained=null,baseline=null,comparing=false,spinning=false,returnFocus=null,closed=false;
@@ -30,7 +31,9 @@ export function createCharacterStudio({ownerId,getDefinition,canOpen=()=>true,on
   const releasePortrait=()=>{portraitGeneration++;if(portraitURL)URL.revokeObjectURL(portraitURL);portraitURL=null;$('[data-download]').hidden=true;$('[data-download]').removeAttribute('href');$('[data-portrait]').disabled=portraitPending||stage.dataset.ready!=='true';};
   let favorites=[],storageUnavailable=false;const storageKey=`river-oaks-character-favorites-v2:${encodeURIComponent(ownerId)}`;
   const valid=value=>validateCharacterDefinition(value,{ownerId}).ok;
-  const readFavorites=()=>{if(storageUnavailable)return;try{const saved=JSON.parse(localStorage.getItem(storageKey)??'[]');favorites=Array.isArray(saved)?saved.filter(valid).slice(0,8):[];}catch{storageUnavailable=true;}};
+  const editable=value=>({...value,revision:0});
+  const sameLook=(a,b)=>Boolean(a&&b)&&JSON.stringify(editable(a))===JSON.stringify(editable(b));
+  const readFavorites=()=>{if(storageUnavailable)return;try{const saved=JSON.parse(localStorage.getItem(storageKey)??'[]');favorites=Array.isArray(saved)?saved.filter(valid).slice(0,8).map(editable):[];}catch{storageUnavailable=true;}};
   const saveFavorites=()=>{try{localStorage.setItem(storageKey,JSON.stringify(favorites));return true;}catch{storageUnavailable=true;status.textContent='Device storage is unavailable. Favorites will last for this visit only.';return false;}};
   const showFavorites=()=>{$('#cs-favorites').replaceChildren(new Option('Your favorites',''),...favorites.map((value,index)=>new Option(`${sharedAppearance(value.appearanceId).name} · ${value.form} · ${CHARACTER_PALETTES[value.palette].label}`,String(index))));$('[data-remove-favorite]').disabled=true;};
   const setStatus=state=>{$('[data-portrait]').disabled=state!=='ready'||portraitPending;status.textContent=state==='loading'?'Preparing your look…':state==='error'?'The preview could not load. Choose a character to try again.':'Preview ready. Your town appearance is unchanged.';};
@@ -38,7 +41,7 @@ export function createCharacterStudio({ownerId,getDefinition,canOpen=()=>true,on
     if(!draft||!dialog.open)return;
     const value=draft.value,shown=comparing?draft.original:value,key=JSON.stringify(shown);if(portraitKey!==key){releasePortrait();portraitKey=key;}
     const look=sharedAppearance(value.appearanceId),person=sharedCharacter(look.character),colors=supportsCharacterColors(value.appearanceId);
-    for(const button of dialog.querySelectorAll('[data-character]'))button.setAttribute('aria-pressed',String(button.dataset.character===person.id));
+    for(const button of dialog.querySelectorAll('button[data-character]'))button.setAttribute('aria-pressed',String(button.dataset.character===person.id));
     $('[name=form]').value=look.form;
     const variants=$('[name=variant]');if(variants.dataset.character!==person.id){variants.replaceChildren(...person.variants.map(v=>new Option(v.label,v.id)));variants.dataset.character=person.id;}
     variants.value=look.variant;variants.disabled=person.variants.length<2;
@@ -49,19 +52,56 @@ export function createCharacterStudio({ownerId,getDefinition,canOpen=()=>true,on
     $('[data-compare]').setAttribute('aria-pressed',String(comparing));$('[data-comparing]').hidden=!comparing;
     $('[data-look]').textContent=sharedAppearance(shown.appearanceId).label;
     dialog.dataset.appearance=value.appearanceId;dialog.dataset.palette=value.palette;dialog.dataset.hair=value.hair;
-    preview?.setDefinition(shown);
+    preview?.setDefinition(shown);renderAccount();
   };
   const change=patch=>{try{draft.change(patch);comparing=false;render();}catch{status.textContent='That combination is not available. Choose one of the fitted options.';}};
+  let accountState={phase:'idle',character:null,selection:null,canRetry:false,error:null};
+  const renderAccount=()=>{
+    const state=accountState,busy=['loading','saving','publishing','equipping'].includes(state.phase),value=draft?.value;
+    const saved=sameLook(value,state.character?.draft),worn=sameLook(value,state.selection?.character);
+    const messages={idle:'Connecting to your saved looks…',loading:'Checking your saved looks…',saving:'Saving your private draft…',publishing:'Preparing your look for town…',equipping:'Waiting for the town to confirm your look…',
+      conflict:'Your account changed elsewhere. Your edits are still here. Check the saved account before choosing what to save.',
+      error:state.error==='appearance_cooldown'?'Your draft is saved. Wait a moment, then retry wearing it.':state.canRetry?'The action is not confirmed. Your edits are safe here. Retry to check the same action.':'Your account could not be updated. Your edits are safe here. Check the saved account to try again.',
+      ready:worn?'You are wearing this look in town.':saved?'Private draft saved. Wear it when you are ready.':'You have unsaved edits. Your town appearance is unchanged.'};
+    $('[data-account-status]').textContent=accountTransport?messages[state.phase]:'Saved looks are unavailable. Your edits stay in this tab.';
+    dialog.dataset.accountPhase=state.phase;
+    $('[data-save]').disabled=!accountTransport||busy||state.phase!=='ready'||saved;
+    $('[data-wear]').disabled=!accountTransport||busy||state.phase!=='ready'||!state.selection||worn;
+    $('[data-retry]').hidden=!state.canRetry;
+    $('[data-refresh]').hidden=!accountTransport||state.canRetry||!['error','conflict'].includes(state.phase);
+    $('[data-load-draft]').hidden=!state.character?.draft||saved||busy||state.canRetry;
+    $('[data-cancel]').disabled=busy||state.canRetry;
+  };
+  let refreshOnOpen=false,refreshQueued=false;
+  const account=accountTransport?createCharacterAccount({ownerId,...accountTransport,onChange:state=>{accountState=state;renderAccount();refreshAccount();}}):null;
+  const accountAction=action=>{action().catch(()=>{});};
+  function refreshAccount(){
+    if(!account||!dialog.open||!refreshOnOpen||refreshQueued||accountState.canRetry||['loading','saving','publishing','equipping'].includes(accountState.phase))return;
+    refreshQueued=true;
+    // Controller notifications precede its finally block releasing the busy guard.
+    queueMicrotask(()=>{
+      refreshQueued=false;
+      if(closed||!dialog.open||!refreshOnOpen||accountState.canRetry||['loading','saving','publishing','equipping'].includes(accountState.phase))return;
+      refreshOnOpen=false;accountAction(()=>account.load());
+    });
+  }
+  $('[data-save]').addEventListener('click',()=>accountAction(()=>account.save(draft.value)));
+  $('[data-wear]').addEventListener('click',()=>accountAction(()=>account.wear(draft.value)));
+  $('[data-retry]').addEventListener('click',()=>accountAction(()=>account.retry()));
+  $('[data-refresh]').addEventListener('click',()=>accountAction(()=>account.load()));
+  $('[data-load-draft]').addEventListener('click',()=>{draft.restore(editable(accountState.character.draft));comparing=false;render();});
   function open(){
     if(closed||dialog.open||!canOpen()||document.querySelector('dialog[open]'))return;
     const confirmed=getDefinition();if(!valid(confirmed))return;
-    if(baseline!==confirmed.appearanceId){retained=null;baseline=confirmed.appearanceId;}
-    draft=createCharacterDraft({ownerId,definition:retained??confirmed});comparing=false;spinning=false;
+    const confirmedDraft=editable(confirmed);
+    if(retained&&sameLook(retained,baseline))retained=null;baseline=confirmedDraft;
+    draft=createCharacterDraft({ownerId,definition:retained??confirmedDraft});comparing=false;spinning=false;
     returnFocus=document.activeElement;onOpen();dialog.showModal();readFavorites();showFavorites();
     $('[name=pose]').value='idle';$('[name=pose]').disabled=reducedMotion;$('[data-turntable]').disabled=reducedMotion;$('[data-turntable]').setAttribute('aria-pressed','false');$('#cs-yaw').value='0';
     $('[name=framing]').value='full';$('[name=lighting]').value='day';
     try{preview=createCharacterPreview({host:stage,ownerId,reducedMotion,onStatus:setStatus});render();}
     catch{setStatus('error');}
+    renderAccount();refreshOnOpen=true;refreshAccount();
     $('[data-close]').focus();
   }
   const close=keep=>{if(!dialog.open)return;retained=keep?draft.value:draft.original;dialog.close();};
@@ -90,11 +130,11 @@ export function createCharacterStudio({ownerId,getDefinition,canOpen=()=>true,on
   $('[data-undo]').addEventListener('click',()=>{draft.undo();comparing=false;render();});$('[data-redo]').addEventListener('click',()=>{draft.redo();comparing=false;render();});
   $('[data-compare]').addEventListener('click',()=>{comparing=!comparing;render();});$('[data-random]').addEventListener('click',()=>{draft.randomize();comparing=false;render();});
   $('[data-favorite]').addEventListener('click',()=>{const value=draft.value;if(favorites.some(item=>JSON.stringify(item)===JSON.stringify(value))){status.textContent='This look is already a favorite.';return;}if(favorites.length>=8){status.textContent='Your eight favorites are full. Remove one to make room.';return;}favorites.push(value);if(saveFavorites())status.textContent='Favorite saved on this device.';showFavorites();});
-  $('#cs-favorites').addEventListener('change',event=>{const index=event.target.value;if(index==='')return;try{draft.restore(favorites[Number(index)]);comparing=false;render();$('[data-remove-favorite]').disabled=false;}catch{status.textContent='That favorite is no longer compatible.';}});
+  $('#cs-favorites').addEventListener('change',event=>{const index=event.target.value;if(index==='')return;try{draft.restore(editable(favorites[Number(index)]));comparing=false;render();$('[data-remove-favorite]').disabled=false;}catch{status.textContent='That favorite is no longer compatible.';}});
   $('[data-remove-favorite]').addEventListener('click',()=>{const index=$('#cs-favorites').value;if(index==='')return;favorites.splice(Number(index),1);saveFavorites();showFavorites();});
   for(const name of ['pose','framing','lighting'])$(`[name=${name}]`).addEventListener('change',event=>preview?.setView({[name]:event.target.value}));
   $('#cs-yaw').addEventListener('input',event=>{spinning=false;$('[data-turntable]').setAttribute('aria-pressed','false');preview?.setView({yaw:Number(event.target.value),turntable:false});});
   $('[data-turntable]').addEventListener('click',()=>{spinning=!spinning;$('[data-turntable]').setAttribute('aria-pressed',String(spinning));preview?.setView({turntable:spinning});});
   dialog.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='z'&&!event.target.matches('input,select,textarea')){event.preventDefault();event.shiftKey?draft.redo():draft.undo();comparing=false;render();}});
-  return {trigger,open,get active(){return dialog.open;},update(){trigger.disabled=!canOpen();if(dialog.open&&!canOpen())close(true);},dispose(){close(false);closed=true;preview?.dispose();dialog.remove();trigger.remove();}};
+  return {trigger,open,get active(){return dialog.open;},update(){trigger.disabled=!canOpen();if(dialog.open&&!canStayOpen())close(true);},dispose(){close(false);closed=true;account?.dispose();preview?.dispose();dialog.remove();trigger.remove();}};
 }

@@ -13,6 +13,7 @@ export function createCharacterMaterials(root){
   const restore=()=>{for(const [material,saved] of materials){material.color.copy(saved.color);if(saved.sheen)material.sheenColor.copy(saved.sheen);}};
   return {
     slots:{outfit:[...materials.values()].filter(x=>x.slot==='outfit').length,hair:[...materials.values()].filter(x=>x.slot==='hair').length},
+    inspect:()=>[...materials].map(([material,saved])=>({slot:saved.slot,color:material.color.getHexString()})),
     apply(definition){
       if(!validateCharacterDefinition(definition,{ownerId:definition?.ownerId}).ok)throw new TypeError('Invalid character definition');
       restore();
