@@ -121,6 +121,11 @@ export function createSpaceScene(space, theme = 'light') {
         break;
       }
       case 'glazing': {
+        // Deep raised glazing standing on a counter is a glass display case.
+        if (object.elevation > 0 && object.depth > .3) {
+          home.displayCase(root,object,mat,glass(),[['#c98a4b',.7],['#e9d5aa',.8],['#6e4330',.6]].map(([color,roughness])=>special(`pastry:${color}`,{ color,roughness })));
+          break;
+        }
         // Thin raised glazing (a fitting-room or wall mirror) is silvered; other glazing is glass.
         const mirror = object.elevation > 0 && object.depth <= .06 && object.height >= .8;
         if (mirror) {
@@ -182,11 +187,7 @@ export function createSpaceScene(space, theme = 'light') {
       }
       case 'chair': forms.chair(root,object,mat,wood()); break;
       case 'desk': forms.desk(root,object,mat,finish('charcoal')); break;
-      case 'table': {
-        legs(root,wood(),.91,.055,.4);
-        box(root,mat,[1,.09,1],[0,.955,0],'Tabletop',true);
-        break;
-      }
+      case 'table': home.table(root,object,mat,wood()); break;
       case 'bed': home.bed(root,object,{ cover:textile(object.finish), linen:textile('linen'), timber:wood(), accent:textile(object.finish === 'sage' ? 'terracotta' : 'sage') }); break;
       case 'cabinet':
       case 'counter': {

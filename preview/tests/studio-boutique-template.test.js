@@ -33,11 +33,12 @@ test('Atelier Boutique keeps its program, route roles and passing required route
 });
 
 // Raised furnishings stand on something: their base meets the top of an object below.
-// Pendants hang, wall art and mirrors hang on walls, glazing is architecture.
+// Pendants hang, wall art and mirrors hang on walls, and glazing is architecture except a
+// raised display case (deeper than 0.3 m), which stands on its counter.
 test('every raised furnishing in a stock template rests on the one below it', () => {
-  for (const id of ['house', 'office', 'boutique']) {
+  for (const id of ['house', 'office', 'boutique', 'cafe']) {
     const space = createSpace(id);
-    for (const o of space.objects.filter(o => o.elevation > 0 && !['pendant', 'art', 'glazing'].includes(o.kind))) {
+    for (const o of space.objects.filter(o => o.elevation > 0 && !['pendant', 'art'].includes(o.kind) && (o.kind !== 'glazing' || o.depth > .3))) {
       const support = space.objects.filter(s => s !== o && s.elevation + s.height <= o.elevation + .03 && distanceTo(s, [o.east, o.north]) === 0)
         .sort((a, b) => (b.elevation + b.height) - (a.elevation + a.height))[0];
       assert.ok(support, `${id}: ${o.id} has nothing under it`);
