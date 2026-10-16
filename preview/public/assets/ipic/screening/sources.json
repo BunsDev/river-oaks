@@ -26,15 +26,15 @@
         {
           "path": "preview/public/assets/ipic/screening/ipic-original-v1.webm",
           "type": "video/webm; codecs=\"vp9, opus\"",
-          "bytes": 9283827,
-          "sha256": "ec1cf538dea2cb42984c47ccab35d7a2d93afc5528635f0e86da264b74313ff9",
+          "bytes": 9289288,
+          "sha256": "d81ffef9345b2fa29a037b8170f7ed72642ab52227121c9ef5946d8812b8d780",
           "durationMs": 52563
         },
         {
           "path": "preview/public/assets/ipic/screening/ipic-original-v1.mp4",
           "type": "video/mp4; codecs=\"avc1.4D401F, mp4a.40.2\"",
-          "bytes": 13395283,
-          "sha256": "4ff75438b9e8a5d165fbd8952b6518ad92743e235ababe1288431f093d832faf",
+          "bytes": 13313704,
+          "sha256": "2ddbb16b91e05c2a80d2a85c59945b267e1113414c82b9b2ee7e20dadbde5541",
           "durationMs": 52555
         },
         {
@@ -49,7 +49,8 @@
           "bytes": 93773,
           "sha256": "85e4f31b273c572644f0fe795dcd844ea4fb0cef86dee4aa0657caf8001ac94a"
         }
-      ]
+      ],
+      "encoding": "2026-10-16: the WebM and MP4 were re-encoded from the same capture and cut (scripts/ipic-short/cut.mjs) with a keyframe every second, approved by Val. Captions, transcript, poster and duration are unchanged; the first encode had keyframes up to 6 s apart, which froze loaded viewers on seek."
     },
     {
       "id": "ipic-fixture-v1",

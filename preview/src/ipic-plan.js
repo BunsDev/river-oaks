@@ -21,7 +21,8 @@ export const IPIC_DARTS = Object.freeze({ id: 'ipic-tuck-room', a: .1, face: 25.
   area: Object.freeze({ a: Object.freeze([-.2, 1.1]), d: Object.freeze([22.2, 23.23]) }) });
 export const atIpicDartsLine = ([a, d]) => a >= IPIC_DARTS.area.a[0] && a <= IPIC_DARTS.area.a[1] && d >= IPIC_DARTS.area.d[0] && d <= IPIC_DARTS.area.d[1];
 export const IPIC_CAMERAS = Object.freeze([
-  { name: 'reception', eye: [0, 1.65, 1], target: [2, 1.5, 5.7], photo: 'IMG_9738.jpg' },
+  // From in front of the desk's west end, as IMG_9738 was taken (review P7).
+  { name: 'reception', eye: [1.4, 1.55, .6], target: [3.6, 1.4, 3.6], photo: 'IMG_9738.jpg' },
   { name: 'mural', eye: [-1.4, 4.6, 11.7], target: [3, 4.65, 13.65], photo: 'IMG_9771.jpg' },
   { name: 'lounge', eye: [-1.6, 7.65, 20.4], target: [-2.1, 7.1, 24], photo: 'IMG_9758.jpg' },
   { name: 'bar', eye: [-.8, 7.65, 24.8], target: [4.5, 7.7, 22.8], photo: 'IMG_9756.jpg' },

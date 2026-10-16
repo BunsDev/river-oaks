@@ -51,6 +51,12 @@ run. Floor textures repeat at real unit sizes: terracotta is herringbone brick a
 surrounds are one slab, never paving. A sink's worktop is at 0.77 of its height, so a
 1.17 m sink meets 0.9 m kitchen cabinets.
 
+Shelving is drawn at true size too: thin boards about 36 cm apart over a recessed kick,
+bays at most 0.9 m wide, with folded garments and lidded boxes on some shelves. A few
+variants come from finish and proportions rather than new fields. A cabinet in limestone,
+concrete or terracotta is a solid display plinth. Raised glazing no deeper than 6 cm and
+at least 0.8 m tall is a silvered mirror. The other glazing stays clear glass.
+
 Space files use `document_type: "studio-space"`, are limited to 128 KiB and 160
 objects, and export as `world-studio-space.json`. Save, reopen, import and undo work
 as for regions. They are private Studio documents; the shared-world region
