@@ -119,7 +119,7 @@ test('enclosed arrival walls remain opaque near the camera while street facades 
   cabin.dispose();facade.dispose();
 });
 test('seated peers render on their plan seat facing its desk, and a seated visitor\'s eye drops to the seated height',t=>{
-  const previous=globalThis.document,element=()=>({style:{},classList:{},append(){},setAttribute(){},remove(){}});
+  const previous=globalThis.document,element=()=>({style:{},classList:{},append(){},setAttribute(){},remove(){},getBoundingClientRect(){return {width:110,height:26};}});
   globalThis.document={createElement:element};t.after(()=>{globalThis.document=previous;});
   const f=fixture();f.avatar.ready=true;
   const place={layoutId:'office-penthouse-1',levelId:'jevica-office/l0'};
@@ -128,7 +128,8 @@ test('seated peers render on their plan seat facing its desk, and a seated visit
   const guest={id:'guest',name:'Guest',office:{id:'jevica-office',layout:'office-penthouse-1',levelId:'jevica-office/l0',elevation:0,position:[3.65,5.6],yaw:0,seat:{id:'desk-a1-chair'}}};
   visit.prepare(0);visit.render(0,[3.65,3.55],0,[guest],place);
   const turn=Math.atan2(f.street.frame.elements[8],f.street.frame.elements[10]);
-  const seated=visit.inspect().actors.find(actor=>actor.id==='guest').sitting;
+  const peer=visit.inspect().actors.find(actor=>actor.id==='guest'),seated=peer.sitting;
+  assert.equal(peer.onScreen,true);assert.equal(peer.labelVisible,true,'an isolated seated peer keeps a readable nameplate');
   assert.equal(seated.height,0.5);
   assert.ok(Math.abs(Math.atan2(Math.sin(seated.yaw-(Math.PI+turn)),Math.cos(seated.yaw-(Math.PI+turn))))<1e-9,'faces the desk at +d');
   visit.render(16,[3.65,3.55],0,[{...guest,office:{...guest.office,position:[3.65,3.55],seat:undefined}}],place);

@@ -884,3 +884,28 @@ Rollout51c5a6bc has all10 hosted checks green. Sign/push the telemetry increment
 and update issue444; then fix demonstrated crowd nameplate overlap while preserving
 avatar visibility. Seated garment, full visual matrix, device/performance, human
 acceptance and production/provider activation remain open.
+
+
+Telemetry9b1bbb18 signed/pushed to draft464, PR and issue444 progress updated;
+all10 exact-head hosted checks passed. Crowd label fix followed the measured
+overlap defect. Controller regression failed3 visible overlapping names versus1;
+implemented measured label packing with speaker/nearby priority, stable distance
+preference, cached dimensions and invalidation/disposal. All avatars remain visible;
+audit checks every anchor independently plus label containment/non-overlap.
+Read-only review found no blocker.
+
+Labels35870 completed six crowd samples and shared37 checks, then core stopped on
+an office test fake DOM missing getBoundingClientRect. Retained failed receipt/log.
+Added the fixture method and an isolated seated-peer visibility assertion;32 focused
+tests passed without skips. Production source and six rendered samples unchanged.
+Core23830 recheck passed11/11 with isolated Redis; frozen8 source hashes match.
+Crowd19 source hashes also match; actual desktop/phone16 captures inspected.
+Desktop8/16 retain3/7 readable labels, phone8/16 retain2/4, all peer anchors and
+canonical materials preserved. Frame p95 remains33.4ms; desktop16 CPU31.7ms,
+phone16 CPU31.6ms. This is not performance/device acceptance. Receipts under
+labels/verified-20261016. Next: signed label commit, update issue444, and separate
+CPU profile at16 peers before performance changes. Staged profiler labels/cpu-profile.mjs
+has not run; do not treat it as evidence. All garment/hero/device/human gaps remain.
+
+Final label core counts: tooling117, preview3356 passed/1 existing skip/1TODO,
+server914 zero skips, desktop69, Python141/66warnings;11 tasks passed.

@@ -11223,9 +11223,9 @@
         "feat/character-studio-persistence-20261015"
       ],
       "owner": "codex-character-studio-20261015",
-      "updatedAt": "2026-10-16T06:52:02.016379+00:00",
-      "leaseUntil": "2026-10-16T08:52:02.016379+00:00",
-      "nextAction": "Metrics integrated and verified: frozen16 hashes match, focused24 no skips, shared37, core11/11 with914 server tests no skips. Commit/push reviewed telemetry to draft464, update issue444, then address demonstrated crowd nameplate overlap. Rollout51c5a6bc all10 hosted checks pass. Full visual/device/human/performance acceptance remains open; no merge/deploy.",
+      "updatedAt": "2026-10-16T07:08:59.190116+00:00",
+      "leaseUntil": "2026-10-16T09:08:59.190116+00:00",
+      "nextAction": "Label fix verified: focused32, crowd6 samples, shared37 and core11/11 pass; frozen8 files and crowd19 hashes match; desktop/phone screenshots inspected. Sign/push label increment to draft464, update issue444, then run staged16-player CPU profiler to resolve remaining frame budget. Telemetry9b1bbb18 all10 hosted checks green. Garment/hero/device/human acceptance remains open; no merge/deploy.",
       "filesOwned": [
         "server/character-store.js",
         "server/tests/character-store.test.js",
@@ -11304,7 +11304,12 @@
         "server/tests/character-metrics-equip.test.js",
         "server/tests/character-metrics-routes.test.js",
         "server/tests/character-metrics-transport.test.js",
-        "server/tests/character-metrics-factories.test.js"
+        "server/tests/character-metrics-factories.test.js",
+        "preview/src/peer-label-layout.js",
+        "preview/tests/peer-label-layout.test.js",
+        "preview/src/multiplayer.css",
+        "preview/audit/rendered-multiplayer.js",
+        "preview/tests/office-world-presentation.test.js"
       ],
       "requiredChecks": [
         "Memory and real isolated Redis store contract tests",

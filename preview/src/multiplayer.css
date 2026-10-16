@@ -107,7 +107,7 @@
 .multiplayer-profile-form input, .multiplayer-profile-form textarea { width: 100%; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); font: inherit; }
 .multiplayer-profile-status { min-height: 1.4em; }
 .remote-player-labels { pointer-events: none; position: absolute; inset: 0; overflow: hidden; z-index: 3; }
-.remote-player-label { position: absolute; top: 0; left: 0; padding: 4px 9px; border-radius: 20px; background: #372534d9; color: white; font-size: 12px; }
+.remote-player-label { box-sizing: border-box; max-width: min(240px, calc(100% - 8px)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; position: absolute; top: 0; left: 0; padding: 4px 9px; border-radius: 20px; background: #372534d9; color: white; font-size: 12px; }
 
 /* A quiet, compact social card in both exploration and walking rails. */
 :root[data-theme] .multiplayer-roster {

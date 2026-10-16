@@ -231,11 +231,19 @@ try {
       }
       const measuredSeconds = (performance.now() - measurementStart) / 1000;
       const sample = await page.evaluate(() => ({ timing: window.__riverRenderAudit.stop(), transport: window.__auditTransport.stop(), graphics: window.__riverRenderAudit.graphics(),
-        onScreenPeers: [...document.querySelectorAll('.remote-player-label')].filter(label => !label.hidden).length,
+        onScreenPeers: window.__riverMultiplayer().remotes.filter(peer => peer.onScreen).length,
+        labelViewport: (()=>{const r=document.querySelector('.remote-player-labels').getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,bottom:r.bottom};})(),
+        labels: [...document.querySelectorAll('.remote-player-label')].filter(label => !label.hidden).map(label => { const r=label.getBoundingClientRect(); return {id:label.dataset.peerId,left:r.left,right:r.right,top:r.top,bottom:r.bottom}; }),
         peers: window.__riverMultiplayer().remotes, npcs: window.__riverMultiplayer().snapshot.locals.length, visibility: document.visibilityState }));
       report.lastSample = sample;
       assert.equal(sample.timing.overflow, false); assert.equal(sample.visibility, 'visible');
       assert.equal(sample.onScreenPeers, count - 1, 'All peer landmarks must fit in the crowd view');
+      if(count>1)assert.ok(sample.labels.length>0,'A crowd retains readable nameplates');
+      for(const label of sample.labels)assert.ok(label.left>=sample.labelViewport.left&&label.right<=sample.labelViewport.right&&label.top>=sample.labelViewport.top&&label.bottom<=sample.labelViewport.bottom,'Visible names fit within the label viewport');
+      for(let i=0;i<sample.labels.length;i++)for(let j=i+1;j<sample.labels.length;j++){
+        const a=sample.labels[i],b=sample.labels[j];
+        assert.ok(a.right<=b.left||b.right<=a.left||a.bottom<=b.top||b.bottom<=a.top,'Visible nameplates must not overlap');
+      }
       assert.equal(sample.peers.length, count - 1); assert.ok(sample.peers.every(peer => peer.ready));
       assert.equal(sample.transport.closes, 0); assert.deepEqual(sample.transport.rejections, []); assert.equal(sample.transport.pending, 0);
       assert.equal(sample.npcs, 98); assert.ok(sample.graphics.render.calls > 0);
@@ -245,7 +253,7 @@ try {
         frame: distribution(sample.timing.frames.map(frame => frame.intervalMs)), cpuSubmission: distribution(sample.timing.frames.map(frame => frame.cpuMs)),
         framesOver33Ms: sample.timing.frames.filter(frame => frame.intervalMs > 33.34).length, framesOver50Ms: sample.timing.frames.filter(frame => frame.intervalMs > 50).length,
         snapshots: sample.transport.snapshots, snapshotGap: distribution(sample.transport.gaps), decodedSnapshotBytesPerSecond: Math.round(sample.transport.bytes / measuredSeconds),
-        gestureAck: distribution(sample.transport.commands), loadedPeers: sample.peers.length, onScreenPeers: sample.onScreenPeers,
+        gestureAck: distribution(sample.transport.commands), loadedPeers: sample.peers.length, onScreenPeers: sample.onScreenPeers, visibleLabels: sample.labels.length,
         graphicsBefore: before, graphicsAfter: sample.graphics, assets: JSON.parse(assetState), actorCorrections: [...actors.values()].reduce((sum, actor) => sum + actor.corrections, 0) };
       // Reconnect a peer in the room at capacity. Preserve its authenticated ID,
       // and wait for the same loaded roster rather than counting socket opens.
@@ -256,7 +264,7 @@ try {
         row.reconnectMs = Math.round(performance.now() - start);
       }
       assert.deepEqual(errors, []); delete report.lastSample; report.results.push(row); await flush();
-      console.log(`${profile.name} ${count}: frame p95 ${row.frame.p95Ms} ms; snapshot p95 ${row.snapshotGap.p95Ms} ms; ${row.onScreenPeers}/${row.loadedPeers} peer labels in view`);
+      console.log(`${profile.name} ${count}: frame p95 ${row.frame.p95Ms} ms; snapshot p95 ${row.snapshotGap.p95Ms} ms; ${row.onScreenPeers}/${row.loadedPeers} peer anchors and ${row.visibleLabels} readable labels in view`);
     }
     clearInterval(movementTimer); clearInterval(gestureTimer); movementTimer = gestureTimer = null;
     const departureStart = performance.now();

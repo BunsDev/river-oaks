@@ -626,3 +626,27 @@ prove garment deformation or the full animation matrix.
 Receipt, frozen script/input hashes and inspected captures are retained locally in
 `.runtime/character-studio/crowd/`. Earlier fixture failures are preserved separately;
 only the corrected six-row run supplies these measurements. No release acceptance.
+
+
+## Crowd nameplate follow-up (2026-10-16)
+
+Crowded names now use measured text bounds, prioritize speakers and nearby peers,
+and suppress overlapping nameplates. Existing visible names receive a one-metre
+distance preference to limit flicker. Avatars and the People roster stay intact;
+long labels ellipsize within the viewport. Measurements are cached until the name,
+viewport or loaded fonts change. The render audit independently records all peer
+anchors and tests visible-label containment and non-overlap.
+
+A repeat of the six custom-character samples (same Chromium 156.0.8078.4, M3 Max
+Metal, sharp quality, 30-second samples/10-second warmups, 98 NPCs) passed roster,
+canonical materials, all-peer anchors, loading, reconnect and departure cleanup.
+At desktop 8/16 players, 3/7 non-overlapping labels remained; at phone viewport
+8/16 players, 2/4 remained. Both 16-player captures were inspected. The phone
+viewport still runs on the host GPU and is not physical-device acceptance.
+
+All six frame p95 values were 33.4 ms. Desktop 16 CPU submission p95 was 31.7 ms and
+phone viewport 16 was 31.6 ms. This fixes crowd readability, not the proposed 16.7 ms
+desktop frame gate. Next measure main-thread call costs separately from frame
+timing before choosing a performance change. This repeat and the earlier varying
+8-player result do not establish a stable scaling curve. Evidence and source
+hashes: `.runtime/character-studio/labels/verified-20261016/`.

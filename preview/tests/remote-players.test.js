@@ -27,6 +27,8 @@ const ownerId = JEVICA_OWNER_USER_IDS[0];
 
 class Element {
   style = {};
+  dataset = {};
+  getBoundingClientRect() { return {width:110,height:26}; }
   clientWidth = 800;
   clientHeight = 600;
   setAttribute() {}
@@ -317,4 +319,30 @@ test('a pending placeholder follows the peer position and existing visibility ru
   visible=false;players.update(48,camera);assert.equal(holder.visible,false);assert.equal(holder.children[0],placeholder);
   players.dispose();release();await settle();
  }finally{players?.dispose();delete globalThis.__remoteAvatarGate;globalThis.document=previousDocument;}
+});
+
+
+test('crowd names avoid overlap while all avatar anchors remain visible and text measures are cached',async()=>{
+ const previousDocument=globalThis.document;let measurements=0,fontChanged;const labels=[];
+ class Label extends Element {getBoundingClientRect(){measurements++;return {width:110,height:26};}}
+ const fonts={addEventListener(name,listener){assert.equal(name,'loadingdone');fontChanged=listener;},removeEventListener(name,listener){assert.equal(name,'loadingdone');assert.equal(listener,fontChanged);fontChanged=null;}};
+ globalThis.document={fonts,createElement(){const label=new Label();labels.push(label);return label;}};
+ let players;
+ try{
+  const scene=new THREE.Scene(),host=new Element(),camera=new THREE.PerspectiveCamera(50,800/600,.1,200);camera.position.set(0,2,10);camera.lookAt(0,2,0);camera.updateMatrixWorld();
+  const peers=['a','b','c'].map((id,i)=>({id,name:'Peer '+id,position:[i*.02,0,0],altitude:0,yaw:0,appearance:'sable-human'}));
+  players=createRemotePlayers(scene,host);players.sync(peers,'self');await settle();players.update(0,camera);
+  assert.equal(labels.slice(1).filter(label=>!label.hidden).length,1,'overlapping names must not all draw');
+  assert.equal(players.stats().filter(p=>p.onScreen).length,3);
+  assert.equal(players.stats().filter(p=>p.labelVisible).length,1);assert(scene.children.every(h=>h.visible));
+  assert.equal(measurements,3);
+  for(let frame=1;frame<=60;frame++){players.sync(peers,'self');players.update(frame*16,camera);}
+  assert.equal(measurements,3,'unchanged snapshots and frames do not remeasure text');
+  players.setSpeaking(['c']);players.update(1000,camera);assert.equal(players.stats().find(p=>p.labelVisible).id,'c');assert.equal(measurements,3);
+  peers[2]={...peers[2],name:'Renamed peer'};players.sync(peers,'self');players.update(1016,camera);assert.equal(measurements,4,'only changed text invalidates its size');
+  host.clientWidth=390;players.update(1032,camera);assert.equal(measurements,7,'viewport changes invalidate cached bounds');
+  fontChanged();players.update(1048,camera);assert.equal(measurements,10,'loaded fonts invalidate cached bounds');
+  players.sync([peers[0]],'self');players.update(1064,camera);assert.equal(players.stats().length,1);assert.equal(players.stats()[0].labelVisible,true);
+  players.dispose();assert.equal(fontChanged,null,'dispose removes font listener');
+ }finally{players?.dispose();globalThis.document=previousDocument;}
 });
