@@ -11223,9 +11223,9 @@
         "feat/character-studio-persistence-20261015"
       ],
       "owner": "codex-character-studio-20261015",
-      "updatedAt": "2026-10-16T07:08:59.190116+00:00",
-      "leaseUntil": "2026-10-16T09:08:59.190116+00:00",
-      "nextAction": "Label fix verified: focused32, crowd6 samples, shared37 and core11/11 pass; frozen8 files and crowd19 hashes match; desktop/phone screenshots inspected. Sign/push label increment to draft464, update issue444, then run staged16-player CPU profiler to resolve remaining frame budget. Telemetry9b1bbb18 all10 hosted checks green. Garment/hero/device/human acceptance remains open; no merge/deploy.",
+      "updatedAt": "2026-10-16T07:27:18.102847+00:00",
+      "leaseUntil": "2026-10-16T09:27:18.102847+00:00",
+      "nextAction": "Office visibility performance patch verified: focused37, office11 browser checks, two16-player profile samples and two30-second crowd repeats, core11/11 with isolated Redis. Profile office cost fell6.57% to0.029% desktop and4.8% to0.343% phone viewport; overall framep95 still33.4ms. Sign/push reviewed patch to draft464, update issue444, then use offline avatar draw inventory to select rendering improvement. Seated garment, hero/wardrobe matrix, target-device and human acceptance remain open. No merge/deploy authorization.",
       "filesOwned": [
         "server/character-store.js",
         "server/tests/character-store.test.js",
@@ -11309,7 +11309,9 @@
         "preview/tests/peer-label-layout.test.js",
         "preview/src/multiplayer.css",
         "preview/audit/rendered-multiplayer.js",
-        "preview/tests/office-world-presentation.test.js"
+        "preview/tests/office-world-presentation.test.js",
+        "preview/src/office-ui.js",
+        "preview/tests/office-ui.test.js"
       ],
       "requiredChecks": [
         "Memory and real isolated Redis store contract tests",

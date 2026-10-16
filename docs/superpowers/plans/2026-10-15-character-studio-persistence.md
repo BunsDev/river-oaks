@@ -909,3 +909,37 @@ has not run; do not treat it as evidence. All garment/hero/device/human gaps rem
 
 Final label core counts: tooling117, preview3356 passed/1 existing skip/1TODO,
 server914 zero skips, desktop69, Python141/66warnings;11 tasks passed.
+
+
+Continuation at335a13c1: previous goal turn made progress through signed telemetry
+and label delivery plus two16-player CPU profiles. No local handles remain live.
+Profile source19 hashes matched; renderer pipeline inclusive sampled time was
+74.95% desktop/77.42% phone, office panel checkVisibility6.57%/4.8%. Shorter frame
+samples varied; no new performance acceptance. Own office-ui.js and its tests for
+the measured fix. Separate250ms panel-visibility eligibility checks from5-second
+request polling, retain immediate nearby/visit paths and hidden/disconnected gates.
+Add behavioral call-count/responsiveness regression, actual office browser flow,
+core and repeated crowd/profile measurements before claiming improvement.
+
+
+Office polling verification completed with all4 runner stages passing; session11037
+terminal0. Three behavioral regressions failed before the change, then focused37
+passed; read-only review found no blocker. Office-visit11 browser checks passed,
+including reduced motion, access denial and revocation. Core11/11: tooling117,
+preview3359 passed/1 existing skip/1TODO, server914 zero skips, desktop69,
+Python141/66warnings. Frozen5 patch/script hashes and both20-file profile/crowd
+source maps match. Receipts, logs and profiles retained under
+.runtime/character-studio/office-poll/verified-20261016.
+
+Measured office native checkVisibility sampled self time fell6.57% to0.029%
+desktop and4.8% to0.343% phone viewport. Browser counters obey the250ms bound.
+The30-second repeats still have framep95=33.4ms; CPUsubmissionp95=30.1ms desktop
+and29.6ms phone viewport. This proves removal of repeated office layout reads,
+not overall target-device acceptance.15/15 peer anchors,8/4 readable labels,
+material identity, transport/reconnect and cleanup remain verified. No visual change.
+
+Offline avatar inventory completed: Sable human20 visible meshes/13 materials/
+115196 triangles; woman-casual resolved Sable beast48/28/202382. Textures were
+stubbed, so this is topology evidence only. Existing reference accessories already
+batch by attachment/material. Inspect full-avatar draw costs before choosing the
+next rendering optimization; preserve canonical identity and animation.
