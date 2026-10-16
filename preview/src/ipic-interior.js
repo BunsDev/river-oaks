@@ -1,7 +1,10 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
-import { createIpicMaterials } from './ipic-materials.js';
+import { createIpicMaterials, districtSignLayout } from './ipic-materials.js';
+
+// Where the upper lounge's carpet meets the Tuck Room's boards, west of the bar stools (a = 3.4).
+const TUCK_ROOM_EDGE = 2.65;
 import { IPIC_DARTS, IPIC_ESCALATOR, IPIC_FLIGHTS, IPIC_INTERIOR, IPIC_PLANTERS, IPIC_SCREEN, IPIC_SOFA_ARMS } from './ipic-plan.js';
 import { dartboardPixel } from './dartboard-texture.js';
 
@@ -98,7 +101,7 @@ export function buildIpicInterior(room, options = {}) {
   soft(m.bronze, 3.4, .12, 3.5, 3.55, .24, .82);
   soft(m.marble, 3.4, .58, 3.5, 3.6, .96, .85);
   for (let a = 1.3; a < 5.8; a += .09) box(m.plaster, a, 1.95, 5.65, .025, 3.7, .1);
-  label('RIVER OAKS DISTRICT', 3.4, 2.1, 5.56, 3.25, .5);
+  label('RIVER OAKS DISTRICT', 3.4, 2.1, 5.56, 3.25, .5, { layout: districtSignLayout, background: '#141210', color: '#ece5d6' });
   rod(m.bronze, [1.5, 3.2, 3.5], [5.2, 3.2, 3.5], .018);
   for (let a = 1.6; a < 5.2; a += .22) box(m.glow, a, 3.17, 3.5, .12, .025, .055);
   for (const p of IPIC_PLANTERS.filter(p => p[1] === 0)) planter(...p);
@@ -111,6 +114,10 @@ export function buildIpicInterior(room, options = {}) {
   label('IPIC & THE TUCK ROOM  ↗', -3.3, 2.45, 5.92, 3.8, .5);
 
   section('Escalators');
+  // The runs share the ceilings of the floors they rise to (the mural landing's, then the upper
+  // lounge's), so the atrium is closed overhead: from the landing the district's sky showed through
+  // both runs (docs/ipic-review/photo-review.md, P1; IMG_9771 shows a closed ceiling).
+  ceiling(6, 12, 6.7, m.plaster); ceiling(14, 20, 10.3, m.plaster);
   for (const f of IPIC_FLIGHTS) {
     const length = f.end - f.start, pitch = Math.atan2(3, length);
     for (const a of IPIC_ESCALATOR.lanes) {
@@ -147,7 +154,8 @@ export function buildIpicInterior(room, options = {}) {
     [[.245, .298], [.875, .312], [.246, .70], [.86, .702]]);
   for (const a of [-2, .5, 3.8]) downlight(a, 6.58, 12.7);
 
-  section('Upper lounge'); floor(m.carpet, 20, 26, 6); ceiling(20, 26, 10.3);
+  // The lounge is carpeted as far as the Tuck Room, whose bar stands on boards (IMG_9756; review P12).
+  section('Upper lounge'); box(m.carpet, (room.aMin + TUCK_ROOM_EDGE) / 2, 6 - .12, 23, TUCK_ROOM_EDGE - room.aMin, .24, 6); ceiling(20, 26, 10.3);
   for (const a of [room.aMin, room.aMax]) box(m.timber, a, 8.15, 23, .15, 4.3, 6);
   for (const d of [20.2, 25.7]) box(m.timber, room.center, 9.9, d, room.width, .52, .42);
   soft(m.sofa, -2.82, 6.4, 24.8, 3, .36, .95);
@@ -155,7 +163,7 @@ export function buildIpicInterior(room, options = {}) {
   for (const a of IPIC_SOFA_ARMS) soft(m.sofa, a, 6.67, 24.8, .19, .66, .95);
   for (const a of [-3.7, -1.95]) soft(m.pillow, a, 6.94, 25.05, .58, .52, .13, { roll: a < -3 ? -.12 : .13 });
   soft(m.leather, -2.82, 6.78, 25.05, .58, .25, .13);
-  box(m.timber, -2.8, 6.4, 23.3, 1.5, .075, .9, { shape: cylinder });
+  box(m.sunburst, -2.8, 6.4, 23.3, 1.5, .075, .9, { shape: cylinder });
   for (const a of [-3.3, -2.3]) rod(m.black, [a, 6, 23.3], [a, 6.38, 23.3], .025);
   tub(-4.3, 6, 22.4, -.6); tub(-1.05, 6, 22.6, .6);
   for (const [a, d, size] of [[-3, 22, 1.1], [-1, 23, .8], [-4.6, 24, .9], [1, 21, .7]]) pendant(a, 8.85, d, size);
@@ -168,6 +176,7 @@ export function buildIpicInterior(room, options = {}) {
   for (const p of IPIC_PLANTERS.filter(p => p[1] === 6)) planter(...p);
 
   section('Tuck Room');
+  box(m.barFloor, (TUCK_ROOM_EDGE + room.aMax) / 2, 6 - .12, 23, room.aMax - TUCK_ROOM_EDGE, .24, 6);
   box(m.timber, 4.45, 6.51, 23, 1.1, 1.02, 4.2);
   box(m.marble, 4.45, 7.08, 23, 1.2, .1, 4.25);
   box(m.red, 6.1, 7.9, 23, .1, 2.8, 4.8);
@@ -237,7 +246,7 @@ export function buildIpicInterior(room, options = {}) {
   box(m.black, 5.4, 7.5, 25.86, 1.35, .85, .05);
   box(m.marble, 5.4, 7.06, 25.62, 1.5, .055, .45);
 
-  section('Auditorium'); floor(m.black, 26, 34, 6); ceiling(26, 34, 10.4, m.black);
+  section('Auditorium'); floor(m.confetti, 26, 34, 6); ceiling(26, 34, 10.4, m.black);
   for (const a of [room.aMin, room.aMax]) box(m.black, a, 8.2, 30, .18, 4.4, 8);
   box(m.black, room.center, 8.2, 33.92, room.width, 4.4, .16);
   panel(m.screen, IPIC_SCREEN.a, 6 + IPIC_SCREEN.y, IPIC_SCREEN.d, IPIC_SCREEN.width, IPIC_SCREEN.height);

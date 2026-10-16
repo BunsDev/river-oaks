@@ -104,7 +104,8 @@ try {
   await Promise.all([alice, owner].map(page => page.evaluate(() => { document.body.classList.remove('clear-view'); document.querySelector('#photo-views-hide')?.remove(); })));
   const graphics = await alice.evaluate(() => window.__riverRenderAudit.graphics());
   const head = execFileSync('git', ['rev-parse', 'HEAD']).toString().trim();
-  const dirty = execFileSync('git', ['diff', 'HEAD', '--binary']);
+  // Source changes only: this run's own captures are excluded (their binary diff overflowed the buffer).
+  const dirty = execFileSync('git', ['diff', 'HEAD', '--binary', '--', '.', ':(exclude)docs/design/office-ipic/captures'], { maxBuffer: 1 << 30 });
   const receipt = {
     packet: 'office-ipic', runner: 'node preview/e2e/ipic-photo-views.mjs', capturedAt: new Date().toISOString(),
     sourceRevision: head, dirtyPatchSha256: dirty.length ? createHash('sha256').update(dirty).digest('hex') : null,

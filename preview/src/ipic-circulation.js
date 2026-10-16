@@ -39,7 +39,7 @@ export function seatedFootprint(seat, { side, front, back }) {
 
 // The point 0.9 m in front of a seat, where the client walks a sitter to
 // (ipicSeatSites' approach).
-export const seatApproach = seat => [seat.a, seat.d + (Math.cos(seat.yaw) >= 0 ? .9 : -.9)];
+export const seatApproach = seat => seat.approach ?? [seat.a, seat.d + (Math.cos(seat.yaw) >= 0 ? .9 : -.9)];
 
 const MOVES = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
 

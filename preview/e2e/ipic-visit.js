@@ -106,10 +106,11 @@ async page => {
   const stoodHud = await hud();
   check(!stoodHud.theater && stoodHud.dock && stoodHud.chat, `Standing brings the HUD back: ${JSON.stringify(stoodHud)}`);
   checks.push('stood with a tap on Stand up at 390 px; the walking camera returned');
-  // Arms and back box each cushion in, so leave forward past its footrest; the front row then
-  // goes round by the left aisle, since the gaps between its seats are narrower than a body.
+  // Back, arms, base and footrest box each cushion in, so standing puts the sitter in the aisle in
+  // front of the footrest (d + 1.4); the front row then goes round by the left aisle, since the gaps
+  // between its seats are narrower than a body.
   const [row, column] = recliner.slice(-3).split('-').map(Number), a = [-2.6, -.6, 1.4, 3.4][column], d = [28, 31][row];
-  for (const p of [[a, d + .9], ...(row ? [[-4.85, d + .9]] : []), [-4.85, 29.65]]) await walk(...p);
+  for (const p of [[a, d + 1.4], ...(row ? [[-4.85, d + 1.4]] : []), [-4.85, 29.65]]) await walk(...p);
   for (const p of [[-4.85,29.65],[-4.85,24.7],[-5.55,24.7],[-5.55,20.7],[-1.4,20.7],[-1.4,4.8],[0,1],[0,-1.8]]) await walk(...p);
   check(!(await pose()).roomId, 'Walked back onto the street');
   checks.push('walked downstairs and exited onto street');
