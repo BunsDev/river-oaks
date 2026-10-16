@@ -42,6 +42,15 @@ cost, are in `docs/design/garden-office/asset-manifest.json`; refresh them with
 `node scripts/garden-office-manifest.mjs --write` after reviewing a change to
 `space-furniture.js`.
 
+The bed is drawn at true size as well: a timber frame, an upholstered headboard, a
+mattress, a duvet that hangs over the sides and foot, a folded sheet, two pillows and a
+throw, all in a soft textile finish that stays inside the bed's footprint at any size.
+Cabinet, counter and sink doors and worktops keep crisp true-size edges however long the
+run. Floor textures repeat at real unit sizes: terracotta is herringbone brick about
+24 cm long and limestone is laid in 30 cm rows. Stone tables, worktops and basin
+surrounds are one slab, never paving. A sink's worktop is at 0.77 of its height, so a
+1.17 m sink meets 0.9 m kitchen cabinets.
+
 Space files use `document_type: "studio-space"`, are limited to 128 KiB and 160
 objects, and export as `world-studio-space.json`. Save, reopen, import and undo work
 as for regions. They are private Studio documents; the shared-world region
@@ -185,6 +194,16 @@ RIVER_OAKS_E2E_REPORT=garden-office-stations.json pnpm run test:experience studi
 ```
 
 It writes `output/playwright/garden-office-<preset>-CAM-0N-<station>.png`.
+`studio-template-stations` does the same for any template, from its route profile:
+the entry, each required destination facing the furnishing it serves, and the exit.
+
+```sh
+STUDIO_TEMPLATE=house STUDIO_CAPTURE_TAG=review pnpm run test:experience studio-template-stations
+STUDIO_TEMPLATE=house pnpm run test:experience studio-template-journey   # the pilot journey for House or Garden Office
+STUDIO_TEMPLATE=house node preview/e2e/studio-pilot-perf.mjs            # frame times for House
+```
+
+Captures go to `output/playwright/studio-<template>-<tag>-<preset>-CAM-0N-<station>.png`.
 
 Pilot acceptance (#417) reuses four more checks against Garden Office:
 
