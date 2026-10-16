@@ -58,7 +58,7 @@ test('selective bone batching preserves surfaces and leaves independently contro
 
 test('shipped reference looks retain their intended surfaces while bounding accessory draws in both forms', async () => {
   const cases = [
-    ['sable-human', 9880, 20], ['woman-casual', 9880, 20],
+    ['sable-human', 10600, 20], ['woman-casual', 10600, 20],
     ['rowan-human', 7644, 20], ['man-casual', 7644, 20],
     ['woman-tailored', 7812, 20], ['vesper-beast', 7812, 20],
     ['man-tailored', 9908, 20], ['midnight-host-wolf', 9908, 20],

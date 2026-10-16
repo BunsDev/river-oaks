@@ -943,3 +943,91 @@ Offline avatar inventory completed: Sable human20 visible meshes/13 materials/
 stubbed, so this is topology evidence only. Existing reference accessories already
 batch by attachment/material. Inspect full-avatar draw costs before choosing the
 next rendering optimization; preserve canonical identity and animation.
+
+
+Office86cde3b03019abeb368d8a17578bfefdcbd57de5 signed and pushed to draft464;
+all10 exact-head hosted checks passed, including aggregate preview. Own issue444
+progress comment and PR updated. All local office/profile/core handles terminal0.
+
+Seated garment work continues only in ignored diagnostics; no production geometry
+change yet. Static drape/lip experiments and the first final-pose corrective still
+intersected thighs; retained as rejected evidence. Fitting front vertices against
+the actual posed upper-thigh surface and constraining triangle interiors produced
+a relative morph reproducing the fitted pose within6.1e-9m. An initial activation
+onset .8rad failed40/50-degree probes; .4 to1.4rad removes those intersections.
+
+Latest prototype v5 subdivides each authored triangle into four (567 vertices,960
+triangles) to preserve the standing surface, UVs and interpolated weights/normals.
+At bend0/20/40/50/60/70/80/90, sampled front garment triangle centers and edge
+midpoints have zero penetrations; minimum tested clearance is4.65mm at60 degrees
+and7.64mm at90. Full seated minimum triangle area ratio .502; max edge stretch
+2.524 remains an unapproved deformation-quality metric. These probes only cover
+the front garment against a selected upper-thigh collider, not full collision or
+all wardrobe/pose acceptance. Earlier dense-strip prototype waist drift<2e-10m.
+Do not infer physical-device, other-form or continuous asymmetric gait acceptance.
+
+Evidence: .runtime/character-studio/seat-morph-subdivision-proof.json and target.json;
+source hashes in seat-morph-source-hashes.json. Generation helpers remain diagnostics
+with texture stubs and expensive offline contact fitting. Never move raycasting or
+iterative fitting into the frame loop. A relative GPU morph is the intended runtime
+path; final integration still needs behavioral regressions, disposal and render
+verification. Prototype browser captures at40/50/60/90 are a separate inspection.
+
+Next implementation: make a reproducible pinned corrective bake with asset/source
+receipt, preserve exact rest topology through triangle subdivision, install bounded
+position/normal morph attributes on the existing skirt/skeleton, and drive only
+the influence from bilateral hip flexion. Forward reference.update in human and
+Sable look updates (currently missing), preserving Lyra behavior. Use thigh/calf
+local transforms in the authored pelvis frame to avoid per-frame world traversal.
+Test both forms, standing/walk restoration, asymmetric bends, transformed roots,
+actual seat IK, source immutability and disposal before core/browser acceptance.
+Reference accessory count9880 will increase by720 triangles; draw count is unchanged.
+Do not publish the prototype as an accepted garment fix.
+
+Exact v5 browser93244 terminal0 with no page errors. Inspected50-degree front/side/rear and90-degree front/side/rear/above captures. The lap now has continuous fabric in the overhead view; the short hem/slit and torso side cutout remain visible and are not full wardrobe acceptance. All prototype hashes still match; capture/report hashes added. No local process remains live. Next is implementation plus regression coverage, not another unbounded fitting search.
+
+
+Seated garment integration, 2026-10-16 continuation at86cde3b0:
+- Reused the owned persistence worktree and live register. Added shared authored
+  skirt geometry, offline pinned bake/receipt, two relative GPU position/normal
+  targets, and update forwarding for human and Sable forms. Existing geometry,
+  skeleton/material ownership and draw count are retained; +720 triangles.
+- The original runtime regression failed both forms (143 penetrating samples,
+  worst43mm). A single bilateral minimum influence failed asymmetric60/90 bends.
+  Split targets by existing thigh skin weights; each follows its own flexion,
+  with bilateral walking gate. Refined offline clearance to28mm vertices/20mm
+  triangle interiors. No per-frame contact solver or geometry mutation.
+- Test fixture corrections: update attached bind inverses after root transforms;
+  filter thigh skin by joint weights so hands at hip height are excluded. Actual
+  test failures remain in /tmp/river-studio-skirt-*.log and are not passing proof.
+- Focused10/10 passed: both-form walking/seat/restoration, symmetric0/20/40/60/90
+  and asymmetric30/90,45/90,60/90 both directions under transformed roots, exact
+  rest subdivision, source receipt and existing accessory/disposal suite.
+- Browser character-poses31 and character-studio21 passed; actual seated contact
+  has1006 samples/form, zero penetrations, minimum18.429mm. Inspected both seated
+  forms, human walking and fox prowl/lope. Prescribed asymmetric geometry captures
+  at30/90 and60/90 both ways show continuous drape without a visible normal seam;
+  these use explicit influences and do not prove the runtime angle driver. Lower
+  feet intersect the floor in the prescribed diagnostic because seat root height
+  is retained; it is a garment-only inspection, not grounded-pose acceptance.
+- Read-only reviewer independently verified split reconstruction errors below
+  7.5e-9 positions/3.0e-8 normals, nondegenerate blended normals (min length.790),
+  shared skeleton and exactly-once skirt geometry disposal. No blocking finding.
+- Bake --check passed; core gate is running with disposable isolated Redis and
+  frozen14 source/test hashes. Receipt/log path:
+  .runtime/character-studio/skirt-integration/verified-20261016/.
+- Full wardrobe/animation, approved deformation thresholds (bake max edge stretch
+  3.346), authored cutout review, hero goldens, device/performance and human/live
+  acceptance remain open. No merge/deploy. Do not mark the full goal complete.
+
+
+Final skirt gate: runner85456 terminal0. Bake --check reproduces exact output and
+receipt; core11/11 passed with isolated Redis: tooling117, preview3364 passed with
+1 existing skip/1TODO, server914 zero skips, desktop69, Python141/66warnings. All14
+frozen source/test hashes match. Browser49910 and asymmetric49884 terminal0;
+52 browser assertions total,22 capture files and evidence hashes preserved under
+.runtime/character-studio/skirt-integration/verified-20261016/. No source change
+followed the gate. Shared multiplayer browser journey was not rerun for this local
+morph change; prior shared37 remains historical evidence. Full browser/native,
+live auth, approved devices and human acceptance are separate. Ready for signed
+commit/push to existing draft464; all five issues remain open.

@@ -183,6 +183,7 @@ export function createSableLook(avatar, root, appearance) {
   return {
     beast:true,
     update(now,{reducedMotion=false,blink={left:0,right:0},gaze=[],motion=null}={}){
+      reference.update?.(motion);
       tail.quaternion.copy(tailRest);
       const pose=carriage.pose(now,{reducedMotion,motion});
       if(!reducedMotion){tail.rotateY(pose.yaw);if(pose.pitch)tail.rotateX(pose.pitch);}

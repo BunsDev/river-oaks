@@ -1,4 +1,6 @@
 import { skinSkirt } from './skirt-skinning.js';
+import { createDressSkirtGeometry } from './skirt-geometry.js';
+import { createSkirtSeatMorph } from './skirt-seat-morph.js';
 import {measureLimbProfile,limbSurfacePoint} from './limb-fit.js';
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
@@ -9,7 +11,7 @@ import { batchCostumeAttachments } from './costume-batching.js';
 // Each piece follows a bone, so walking, gestures, and remote animation still work.
 export function createReferenceStyle(avatar,appearance){
   if(!['sable','rowan','vesper','aurel','kai','silvan','lyra'].includes(appearance?.character))return {dispose(){}};
-  const resources=new Set(),materials=new Set(),textures=new Set(),attachments=new Set(),lyraOutfit=[],model=avatar.model;
+  const resources=new Set(),materials=new Set(),textures=new Set(),attachments=new Set(),correctives=[],lyraOutfit=[],model=avatar.model;
   let trackLyraOutfit=false;
   const material=(color,options={})=>{const value=new THREE.MeshPhysicalMaterial({color,roughness:.6,...options});materials.add(value);return value;};
   const mesh=(parent,geometry,surface,position=[0,0,0],scale=[1,1,1])=>{
@@ -49,21 +51,12 @@ export function createReferenceStyle(avatar,appearance){
   function dressSkirt(color,{wrap=false,slit=false}={}){
     const surface=material(color,wrap?{roughness:.9,sheen:1,sheenColor:new THREE.Color('#a94d68'),side:THREE.DoubleSide}:{roughness:.46,sheen:.32,side:THREE.DoubleSide});
     if(appearance.character==='sable')surface.userData.characterSlot='outfit';
-    const levels=[[-.17,.218,.145],[-.07,.216,.145],[.025,.202,.135],[.105,.161,.11]],segments=40,vertices=[],uv=[],indices=[];
-    for(let layer=0;layer<levels.length;layer++){
-      const [y,rx,rz]=levels[layer];
-      for(let i=0;i<=segments;i++){
-        const a=i/segments*Math.PI*2;
-        const hem=slit&&layer===0?Math.max(0,1-Math.abs(i-4)/2)*.085:0;
-        vertices.push(Math.sin(a)*rx,y+hem,Math.cos(a)*rz);uv.push(i/segments,layer/(levels.length-1));
-        if(layer<levels.length-1&&i<segments){
-          const n=layer*(segments+1)+i;indices.push(n,n+1,n+segments+1,n+1,n+segments+2,n+segments+1);
-        }
-      }
-    }
-    const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));geometry.setIndex(indices);geometry.computeVertexNormals();
+    const geometry=createDressSkirtGeometry({slit});
     const skirt=mesh(pelvis,geometry,surface);skirt.name=wrap?'Vesper velvet wrap skirt':'Sable ivory mini dress';
-    if(appearance.character==='sable')attachments.add(skinSkirt(skirt,model.getObjectByName('Jevica')).group);
+    if(appearance.character==='sable'){
+      const fitted=skinSkirt(skirt,model.getObjectByName('Jevica'));attachments.add(fitted.group);
+      correctives.push(createSkirtSeatMorph(fitted.mesh,model));
+    }
     if(wrap){
       tube(pelvis,material('#8d3b52',{roughness:.82}),[[-.18,.015,.085],[-.10,-.035,.14],[.02,-.10,.151],[.16,-.16,.10]],.009);
     }else{
@@ -382,8 +375,8 @@ export function createReferenceStyle(avatar,appearance){
     if(item.isMesh&&item.material?.name==='female_casualsuit02')sourceClothes.push(item);
   });
   return {
-    update(motion){if(appearance.character!=='lyra'||appearance.form!=='beast')return;const dressed=!motion?.beast;
+    update(motion){for(const update of correctives)update();if(appearance.character!=='lyra'||appearance.form!=='beast')return;const dressed=!motion?.beast;
       for(const item of [...lyraOutfit,...sourceClothes])item.visible=dressed;},
-    dispose(){for(const item of attachments)item.removeFromParent();for(const geometry of resources)geometry.dispose();for(const surface of materials)surface.dispose();for(const texture of textures)texture.dispose();},
+    dispose(){correctives.length=0;for(const item of attachments)item.removeFromParent();for(const geometry of resources)geometry.dispose();for(const surface of materials)surface.dispose();for(const texture of textures)texture.dispose();},
   };
 }

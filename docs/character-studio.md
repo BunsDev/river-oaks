@@ -263,18 +263,36 @@ textures. It saves front, side and rear views for each of the 12 poses, plus two
 seated overhead views. This is one phase per pose, not a whole animation-cycle test.
 
 The automated checks establish finite geometry, decoded textures, active beast
-locomotion and nonempty body probes. They do **not** establish visual acceptance.
-At render head `7c6facc5`, inspection finds a major seated skirt coverage defect
-for both supported Sable forms. Of 689 rest-covered body samples, 594 are uncovered
-from above and 418 from the front diagnostic camera. Counts describe the probe
-region and viewing direction, not a universal clipping metric or acceptance limit.
-The side garment cutout also needs authored-reference review.
+locomotion and sampled front-garment clearance against the actual upper thighs.
+They do **not** establish whole-body collision or visual acceptance. At render
+head `7c6facc5`, the seated skirt exposed the central upper thighs in both forms.
+That failure is retained as baseline evidence.
 
-Stronger front weights and altered hems were investigated but failed runtime
-coverage or appearance review; none of those experimental garment changes are
-included. Resolve the seated fit using the actual runtime pose before accepting
-this matrix. Other wardrobes, wing/armor cases, continuous gait phases, pinned
-hero goldens, crowd/device budgets and human review remain open.
+The seated corrective now subdivides each authored skirt triangle into four,
+preserving its rest surface and UV seam. The 567-vertex, 960-triangle garment uses
+the existing skeleton and material. Two relative position/normal morphs follow
+left/right hip flexion independently, with a bilateral gate that leaves opposing
+walking strides unchanged. Runtime work changes only two morph weights; contact
+fitting and triangle constraints run offline.
+
+Reproduce the pinned bake with `node scripts/bake-skirt-seat-morph.mjs --check`.
+After an intentional source/rig change, inspect and regenerate with `--write`.
+The adjacent source receipt hashes the rig, provenance file, authored geometry,
+pose dependencies and generator. It reports deformation diagnostics, including
+maximum edge stretch 3.346; this is not an approved cloth-quality threshold.
+
+Focused regressions cover both forms, actual seated IK, symmetric bends through
+90 degrees, asymmetric 30/90, 45/90 and 60/90 bends in both directions, transformed
+roots, standing restoration, source immutability and disposal. The browser's
+seated contact probe checks 1,006 front triangle center/edge samples per form:
+zero penetrations and 18.4 mm minimum clearance in that pose. The original body-ray
+counts remain diagnostics, not universal clipping metrics. Inspected seated
+front/side/rear/overhead views show continuous lap fabric; the short hem/slit and
+side torso cutout remain visible. Those authored details still need reference review.
+
+Other wardrobes, wing/armor cases, continuous gait phases, pinned hero goldens,
+crowd/device budgets and human review remain open. Prescribed asymmetric captures
+inspect silhouette and normal blending separately from runtime pose integration.
 
 
 ## Authoritative drafts and publication (#443)
