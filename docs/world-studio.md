@@ -225,6 +225,10 @@ pnpm run test:experience studio-pilot-a11y      # 320/390 px layouts, keyboard-o
 node preview/e2e/studio-pilot-perf.mjs          # vsync-off frame times, load and transfer
 ```
 
+`STUDIO_TEMPLATE=house` (or `boutique`, `cafe`) runs the soak and the texture check
+against another template. The texture check then measures a textured floor, because stone
+worktops are plain slabs and Garden Office has no textured surface left.
+
 The soak samples renderer counts from the viewport's `data-render-stats` (the game's
 format plus `programs`) and heap, listeners and DOM nodes from Chromium after a
 forced garbage collection. Persistent by design: the shared PBR texture cache, one
