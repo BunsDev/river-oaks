@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import { AVATAR_ENVELOPE } from '../src/workplace-room.js';
 import { OFFICE_LAYOUT_PENTHOUSE, officeLayout, officeLevelFree } from '../src/office-layouts.js';
-import { buildOfficeGeometry, buildPenthouseOffice } from '../src/office-penthouse-graybox.js';
+import { buildOfficeGeometry, buildPenthouseOffice, withoutLightGlints } from '../src/office-penthouse-graybox.js';
+import { thinStorefrontGlass } from '../src/storefront-materials.js';
+import { atmosphereFor } from '../src/atmosphere.js';
 
 const layout = officeLayout(OFFICE_LAYOUT_PENTHOUSE);
 const [l0, l1] = layout.levels;
@@ -196,5 +198,69 @@ test('the mezzanine guard opens where the stair arrives, and nothing solid stand
     const hit = solids.find(e => x >= e.x0 && x <= e.x1 && d >= e.d0 && d <= e.d1 && e.y1 > y0 && e.y0 < y1);
     assert.equal(hit, undefined, `walking the stair at ${x.toFixed(2)},${d.toFixed(2)} meets a solid at ${hit?.y0?.toFixed(2)}-${hit?.y1?.toFixed(2)} m`);
   }
+  built.dispose();
+});
+
+// Lighting pass: glints, sun shadows and the time of day.
+const compiled = material => {
+  const shader = { vertexShader: THREE.ShaderLib.physical.vertexShader, fragmentShader: THREE.ShaderLib.physical.fragmentShader, uniforms: {} };
+  material.onBeforeCompile(shader, null);
+  return shader.fragmentShader;
+};
+
+test('the penthouse glass reflects the sky but shows no lamp or sun glint; storefront glass is unchanged', () => {
+  const built = buildPenthouseOffice(THREE, layout);
+  const glass = [...new Set(meshes(built.object).filter(mesh => mesh.material.transparent).map(mesh => mesh.material))];
+  assert.equal(glass.length, 2, 'curtain wall panes and the guard and rail glass');
+  for (const material of glass) {
+    const source = compiled(material);
+    assert.match(source, /#include <aomap_fragment>\n\treflectedLight\.directSpecular = vec3\( 0\.0 \);/, 'direct highlights are dropped after occlusion, before the light is summed');
+    assert.ok(source.indexOf('directSpecular = vec3( 0.0 )') < source.indexOf('vec3 totalSpecular'), 'before the specular total');
+    assert.ok(material.customProgramCacheKey().endsWith('|without-light-glints'));
+  }
+  const panes = glass.find(material => material.userData.thinStorefrontGlass), storefront = thinStorefrontGlass();
+  assert.match(compiled(panes), /diffuseColor\.a = 0\.04/, 'the thin-glass Fresnel alpha still applies');
+  assert.doesNotMatch(compiled(storefront), /directSpecular = vec3/, 'district storefronts keep their highlights');
+  assert.notEqual(panes.customProgramCacheKey(), storefront.customProgramCacheKey());
+  assert.equal(withoutLightGlints(new THREE.MeshStandardMaterial()).customProgramCacheKey().endsWith('|without-light-glints'), true);
+  built.dispose();
+});
+
+test('the roof, solid walls, mezzanine, desks and bookcases shade the floors from the sun; glass casts nothing', () => {
+  const built = buildPenthouseOffice(THREE, layout), all = meshes(built.object);
+  for (const mesh of all) {
+    if (mesh.material.transparent) assert.ok(!mesh.castShadow && !mesh.receiveShadow, `${mesh.name} glass`);
+    else assert.ok(mesh.receiveShadow, `${mesh.name} receives the sun's shadow`);
+  }
+  const casters = all.filter(mesh => mesh.castShadow).map(mesh => mesh.name);
+  for (const name of ['ceiling', 'back wall', 'arrival core west', 'arrival core east', 'mezzanine slab', 'desks', 'curtain wall frames', 'bookcase-1', 'bookcase-2']) assert.ok(casters.includes(name), name);
+  assert.ok(casters.length <= 12, `the shadow pass stays small: ${casters.length} casters`);
+  assert.ok(!casters.some(name => /stair tread|chair|lift/.test(name)), casters.join());
+  built.dispose();
+});
+
+test('lamps hang clear of the ceiling and follow the time of day; the interior takes a share of the sky', () => {
+  const built = buildPenthouseOffice(THREE, layout), lamps = built.lights;
+  assert.equal(lamps.length, 5, 'the five lamps the shared light pool and the phone path expect');
+  for (const lamp of lamps) {
+    const level = lamp.position.y >= l1.floorElevation + 1 && -lamp.position.z >= l1.bounds.d0 ? l1 : l0;
+    const ceiling = level.floorElevation + level.clearHeight;
+    assert.ok(ceiling - lamp.position.y >= 1.8, `a lamp ${(ceiling - lamp.position.y).toFixed(2)} m below its ceiling would hot-spot it`);
+    assert.ok(lamp.position.y - level.floorElevation >= 1.5, 'above head height');
+  }
+  const environment = new THREE.Texture(), floor = meshes(built.object).find(mesh => mesh.name === 'primary floor').material;
+  const terrace = meshes(built.object).find(mesh => mesh.name === 'terrace floor').material;
+  built.relight(atmosphereFor(12, 'clear'), environment);
+  const noon = lamps.map(lamp => ({ intensity: lamp.intensity, color: lamp.color.clone() })), noonSky = floor.envMapIntensity;
+  built.relight(atmosphereFor(18.75, 'clear'), environment);
+  lamps.forEach((lamp, i) => {
+    assert.ok(lamp.intensity > noon[i].intensity * 1.4, 'the lamps come up toward dusk');
+    assert.ok(lamp.color.r - lamp.color.b > noon[i].color.r - noon[i].color.b + 0.1, 'and warm');
+  });
+  assert.ok(noon[0].color.r - noon[0].color.b < 0.25, 'midday lamps stay a neutral white');
+  assert.equal(floor.envMap, environment);
+  assert.ok(noonSky > 0 && noonSky < atmosphereFor(12, 'clear').environmentIntensity * 0.6, 'the roof hides most of the sky indoors');
+  assert.ok(floor.envMapIntensity < noonSky, 'and the sky dims with the day');
+  assert.equal(terrace.envMap, null, 'the open terrace keeps the whole sky');
   built.dispose();
 });
