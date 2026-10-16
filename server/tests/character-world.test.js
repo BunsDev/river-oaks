@@ -120,3 +120,19 @@ test('publishing does not equip a look; resolving and accepting it changes only 
   assert.deepEqual(f.world.snapshot().players[0].character,(await store.get('alice')).published);
   assert.equal(f.world.snapshot().players[1].character,undefined);
 });
+
+test('selection preparation preserves appearance until confirmed projection and charges cooldown once',()=>{
+  const f=fixture(),look=definition();
+  assert.equal(typeof f.world.prepareAccountSelection,'function');
+  const before=f.world.snapshot().players.find(p=>p.id==='alice');
+  const prepared=f.world.prepareAccountSelection('alice',{type:'character',revision:1},{characterDefinition:look});
+  assert.equal(prepared.ok,true);
+  assert.deepEqual(f.world.snapshot().players.find(p=>p.id==='alice'),before);
+  const selected={appearance:look.appearanceId,movement:'upright',character:look,version:2};
+  const projected=f.world.commitAccountSelection('alice',selected,{appearanceChanged:true});
+  assert.equal(projected.character.palette,'rose');
+  assert.equal(f.world.command('alice',{type:'appearance',appearance:'woman-casual'}).error,'appearance_cooldown');
+  f.advance();
+  assert.equal(f.world.prepareAccountSelection('alice',{type:'movement',movement:'beast'}).error,'beast_form_required');
+  assert.equal(f.world.prepareAccountSelection('alice',{type:'pose',position:[0,0,0],yaw:0}).error,'invalid_command');
+});

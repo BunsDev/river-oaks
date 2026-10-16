@@ -326,3 +326,57 @@ Final core PASSED 2026-10-15T23:49:59.733Z to 2026-10-15T23:52:37.024Z. `node sc
 Current verification: `pnpm run verify` passed all 11 core tasks with isolated Redis: tooling 117; preview 3319 passed, 1 skip, 1 todo; server 842 passed with zero skips; desktop 69; Python 141 (66 warnings); build/lint/format/demo/working-tree secrets. Focused memory/Redis/HTTP checks passed 38/38 with zero skips; actual prior/current codec audit passed four checks. Independent review found no blocker. This run does not include browser, native, live-auth, device or human acceptance.
 
 All changed source/test hashes stayed unchanged during the final run. Receipts: selection-core.json/.log, selection-focused.log, selection-upgrade.json/.log and selection-source-hashes.json in .runtime/character-studio. Previous full-browser receipt remains scoped to f1db4d5c. Ready for signed commit/push and issue443 update, then durable room-intent implementation.
+
+
+Continuation after 50c626b8: previous turn PROGRESS (signed/pushed atomic selection store, core842/zero Redis skips, focused38 and actual codec audit4; issue443 comment6204746917). Clean owned checkout reused; now15 worktrees, unrelated primary register edits preserved. Next implement optional selection-aware Redis coordinator: writer13/envelope3 with bounded durable pending intents. Prepare validates world authority without changing selected look, first fenced commit persists intent, next tick executes account CAS, final fenced commit projects confirmed current selection and replies. Only previously committed intents may call account mutation. Pending accounts reject further gameplay commands until resolved; heartbeats must not overwrite pending state. Retry lookup precedes cooldown checks; conditional legacy initialization seeds selected account once. Test before/after-CAS failures, replacement, duplicates, cross-world conflicts, deletion/auth/cooldown and malformed recovery. Gateway and memory transport activation remain required subsequent integration; no scope reduction.
+
+
+Optional Redis room selection implementation: writer13/envelope3 durably prepares
+bounded intents before account CAS, then projects confirmed selection and replies
+through the fenced room commit. World preparation preserves appearance/cooldown;
+receipt-first replay, current account version projection, authorization/deletion,
+departure and uncertain-backend recovery are covered. Existing per-room cooldown
+policy is preserved; no account-wide cooldown claim. Gateway remains unactivated.
+
+Focused real Redis run passed42/42, zero skips. Three added edge regressions first
+failed for duplicate queue IDs poisoning recovery, a stale account read omitting
+the joined player, and a selection-version entry outside the roster. Fixes passed
+all three; red receipt room-edge-red.log retained. Actual baseline50c626b8 v12/new
+v13 audit passed8 checks, including old writer fencing and pending-intent recovery.
+Core gate now running with isolated Redis on frozen source. Remaining gateway,
+memory transport, publication, UI, peer, visual and full acceptance scope is open.
+
+Final review found a geography-revision interaction: the migrated world clears
+players/connections but retained projection versions. The new roster check then
+rejects the following checkpoint. Add enabled-room revise/tick/replacement/rejoin
+coverage and clear projection versions with the roster. The initial core run
+failed an unchanged socket handover observer assertion (856/857 server tests,
+zero skips); retain room-core-before-refinement.json/.log and rerun that test in
+isolation, then the complete gate after the region fix. No success claim yet.
+
+Next transport design to implement and verify (not current behavior): carry a
+separate selection operation {expectedVersion,requestId} beside WebSocket command
+metadata, keeping stable idempotency IDs distinct from per-connection response
+sequence IDs. Expose current self selection version through authenticated state;
+never derive ownership from client fields. Add memory preparation/account-CAS/
+confirmed projection with pending-account fencing and uncertain-write receipt
+recovery before gateway activation. Preserve legacy authored-look migration,
+including envelope3 default-room checkpoints. Publication is an authenticated
+owner-scoped store operation and does not equip; equip resolves the immutable
+owner revision through the world authority checks. Real HTTP/WebSocket tests must
+cover both backends and two accounts before a browser UI enables the flow.
+
+
+Region regression reproduced the orphan projection map after a successful revise;
+clearing selectionVersions with connections fixes the owning path. Review confirmed
+the change and found no further blocker. The unchanged socket rotation suite passed
+6/6 independently with isolated Redis (room-rotation.log). The final full core
+rerun remains queued behind shared local rendering work; no source changes during
+that run. Keep failed/pre-refinement receipts distinct from final verification.
+
+
+Final core PASSED 2026-10-16T00:21:18.716Z to 2026-10-16T00:23:33.222Z. `node scripts/browser-lock.mjs 'character room final verification after geography fix' -- python3 .runtime/character-studio/run-room-final.py` ran focused tests, actual writer audit and `pnpm run verify` against isolated loopback Redis and stopped its own service.
+
+`pnpm run verify` passed all 11 core tasks with isolated Redis: tooling117; preview3319 passed,1 skip,1 todo; server858 passed with zero skips; desktop69; Python141 (66 warnings); build/lint/format/demo/secrets. Focused memory/Redis/HTTP tests passed61/61 with zero skips. Actual prior-v12/current-v13 coordinator audit passed8 checks. Independent review found no remaining blocker. The unchanged socket handover suite passed6/6 independently after an earlier observer assertion failed; the final core rerun also passed. No browser, native, live-auth, device or human acceptance is claimed for this increment.
+
+All changed source/test hashes stayed unchanged throughout final verification; coordinator/world hashes match the upgrade audit. Receipts: room-core.json/.log, room-focused.log, room-upgrade.json/.log, room-source-hashes.json, room-rotation.log in .runtime/character-studio. Red edge/region and failed pre-refinement core receipts retained separately. Ready for signed commit/push to draft464 and issue443 update. Remaining end-to-end goal is active; no merge/deployment or archive eligibility.

@@ -79,6 +79,22 @@ function selectionCommand(command,ownerId){
   fail('invalid_character_selection');
 }
 
+export function characterSelectionOperation(ownerId,command,options){
+  checkOwner(ownerId);
+  const payload=selectionCommand(command,ownerId);
+  if(!exact(options,['expectedVersion','requestId'])||!version(options.expectedVersion)||!requestId(options.requestId))fail('invalid_character_operation');
+  const {expectedVersion,requestId:id}=options;
+  return {command:payload,expectedVersion,requestId:id,fingerprint:hash(JSON.stringify({payload,expectedVersion}))};
+}
+
+function selectionResult(state,operation){
+  if(state.deleted)fail('character_account_deleted');
+  const receipt=state.selectionReceipts.find(item=>item.id===operation.requestId);
+  if(!receipt)return null;
+  if(receipt.fingerprint!==operation.fingerprint)fail('character_request_reused');
+  return {selection:selected(state),appliedVersion:receipt.appliedVersion};
+}
+
 function initialSelection(state,value,ownerId){
   if(!object(value)||Object.keys(value).some(key=>!['appearance','movement','character','version'].includes(key))
     ||!MOVEMENTS.includes(value.movement)||value.version!==undefined&&(!version(value.version)||value.version<1))fail('invalid_character_selection');
@@ -148,11 +164,10 @@ function createStore(storage){
     checkOwner(ownerId);
     const id=hash(ownerId);
     // Capture caller-owned values before awaiting storage.
-    payload=initialize?payload:selectionCommand(payload,ownerId);
+    const operation=initialize?null:characterSelectionOperation(ownerId,payload,options);
+    payload=initialize?payload:operation.command;
     payload=structuredClone(payload);
-    if(!initialize&&(!exact(options,['expectedVersion','requestId'])||!version(options.expectedVersion)||!requestId(options.requestId)))fail('invalid_character_operation');
-    const expectedVersion=options?.expectedVersion,request=options?.requestId;
-    const fingerprint=initialize?null:hash(JSON.stringify({payload,expectedVersion}));
+    const expectedVersion=operation?.expectedVersion,request=operation?.requestId,fingerprint=operation?.fingerprint;
     for(let attempt=0;attempt<8;attempt++){
       const old=await storage.get(id),state=decode(old,ownerId);
       if(state.deleted)fail('character_account_deleted');
@@ -161,11 +176,8 @@ function createStore(storage){
         if(state.selection)return selected(state);
         state.selection=initialSelection(state,payload,ownerId);
       }else{
-        const prior=state.selectionReceipts.find(item=>item.id===request);
-        if(prior){
-          if(prior.fingerprint!==fingerprint)fail('character_request_reused');
-          return {selection:selected(state),appliedVersion:prior.appliedVersion};
-        }
+        const prior=selectionResult(state,operation);
+        if(prior)return prior;
         if(!state.selection)fail('character_selection_missing');
         if(state.selection.version!==expectedVersion)fail('character_selection_conflict');
         if(state.selection.version===Number.MAX_SAFE_INTEGER)fail('character_version_capacity');
@@ -190,6 +202,10 @@ function createStore(storage){
   return {
     async get(ownerId){return snapshot(await read(ownerId));},
     async getSelection(ownerId){return selected(await read(ownerId));},
+    async getSelectionResult(ownerId,command,options){
+      const operation=characterSelectionOperation(ownerId,command,options);
+      return selectionResult(await read(ownerId),operation);
+    },
     initializeSelection:(ownerId,preference)=>mutateSelection(ownerId,preference,null,true),
     changeSelection:(ownerId,command,options)=>mutateSelection(ownerId,command,options),
     async getRevision(ownerId,revision){

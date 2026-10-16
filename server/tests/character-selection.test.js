@@ -202,3 +202,18 @@ test('Redis rejects an unversioned private draft in a selection-only record',{sk
   await redis.hset(key,id,JSON.stringify(raw));
   await assert.rejects(store.get('alice'),code('invalid_character_record'));
 });
+
+test('receipt lookup is read-only and resolves committed retries before world cooldown validation',async()=>{
+  const store=createMemoryCharacterStore();await publish(store);await store.initializeSelection('alice',legacy);
+  assert.equal(typeof store.getSelectionResult,'function');
+  const command={type:'character',revision:1},options={expectedVersion:1,requestId:'receipt'};
+  assert.equal(await store.getSelectionResult('alice',command,options),null);
+  assert.equal((await store.getSelection('alice')).version,1);
+  await store.changeSelection('alice',command,options);
+  await change(store,'appearance',{appearance:'woman-casual'},2,'newer');
+  const result=await store.getSelectionResult('alice',{revision:1,type:'character'},options);
+  assert.equal(result.appliedVersion,2);assert.equal(result.selection.version,3);assert.equal(result.selection.appearance,'woman-casual');
+  await assert.rejects(store.getSelectionResult('alice',{type:'movement',movement:'beast'},options),code('character_request_reused'));
+  await store.deleteAccount('alice');
+  await assert.rejects(store.getSelectionResult('alice',command,options),code('character_account_deleted'));
+});

@@ -336,8 +336,38 @@ their first draft (`version: 0`). Rollback must retain the v2 character-store co
 as well as the v12 world codec; an older character-store reader rejects v2 records.
 The existing Redis hash key remains stable for migration.
 
-This is a trusted storage API. Room connection/flight/cooldown validation, durable
-pending intents, account-store migration wiring, confirmed room projection and
-transport authorization still have to be integrated before enabling custom equip.
-The legacy avatar-preference service remains the running transport's account store
-until that integration is complete. No publication/equip endpoint is enabled here.
+### Durable room selection (optional coordinator mode)
+
+Passing the character store to the Redis coordinator enables writer generation 13
+and room envelope 3. World checkpoint version 12 is unchanged. The coordinator
+validates connection, session, permissions, flight, beast movement and the existing
+per-room two-second appearance cooldown before persisting a bounded pending intent.
+Preparation consumes the ordinary command budget but changes neither the selected
+look nor its cooldown. Only an intent loaded from a previous fenced room commit
+may execute the account CAS. A second fenced commit projects the confirmed account
+selection, charges the cooldown when the look changes, removes the intent and
+acknowledges the request.
+
+A backend failure retains the old view and pending intent for retry. Gameplay
+commands from that account wait while an intent is pending. Receipt lookup precedes
+cooldown validation, so a lost acknowledgement or lease cannot re-equip an older
+look. Unapplied intents recheck their originating connection, session and expiry;
+already-applied receipts can finish after departure without recreating a player.
+Conflicts, deletion and invalid records reject definitively. Evicted receipts fail
+with a version conflict and preserve the latest selection. Stored account versions
+prevent stale reads from regressing the room or its join response.
+
+Pending intents and projected account versions each have a 64-entry bound; a
+pending account has at most eight distinct reply attachments. Restore validates
+canonical fingerprints, identities, timestamps, reply uniqueness and roster
+membership. Region replacement waits for pending selections. An actual v12/v13
+coordinator audit covers preemption, old-writer fencing, pending-intent recovery
+and replacement restoration. Rollback after activation must retain the generation
+13/envelope 3 coordinator, version 12 world codec and version 2 character-store
+codec; an older coordinator rejects the new envelope.
+
+This mode is not yet enabled by the running gateway. The legacy avatar-preference
+service remains its account store. Gateway migration wiring, standalone memory
+transport integration, authenticated publication/equip routes, client version and
+request-ID handling, UI and peer-rendering journeys remain required. No new
+publication/equip endpoint is exposed by this increment.

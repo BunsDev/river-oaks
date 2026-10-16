@@ -705,10 +705,11 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     revision++;
     return {ok:true,player:publicPlayer(player)};
   }
-  function command(userId, message, {officeWorkspace=null,sessionId=null,characterDefinition=null}={}) {
+  function command(userId, message, {officeWorkspace=null,sessionId=null,characterDefinition=null,prepareSelection=false}={}) {
     const player=players.get(userId);
     if (!player) return reject('not_joined');
     if (!message || typeof message!=='object' || Array.isArray(message)) return reject('invalid_command');
+    if(prepareSelection&&!['appearance','character','movement'].includes(message.type))return reject('invalid_command');
     const ledger=ledgers.get(userId),time=now();
     ledger.seen=time;
     if(offices.has(userId) && !['office','chat'].includes(message.type))return reject('leave_office_first');
@@ -772,6 +773,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       if (player.appearance===chosen.id && JSON.stringify(characterByUser.get(userId)??null)===JSON.stringify(character)) return {ok:true,player:publicPlayer(player)};
       if (player.altitude>0) return reject('land_before_appearance','Land before changing character or form.');
       if (time-ledger.appearanceAt<APPEARANCE_COOLDOWN_MS) return reject('appearance_cooldown','Wait a moment before changing appearance again.');
+      if(prepareSelection)return {ok:true,player:publicPlayer(player)};
       interactions.cancel(player.id);
       player.appearance=chosen.id;ledger.appearanceAt=time;
       if(character)characterByUser.set(userId,character);else characterByUser.delete(userId);
@@ -782,6 +784,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       if (!fields(message,['type','movement']) || !MOVEMENTS.includes(message.movement)) return reject('invalid_movement');
       if (message.movement==='beast' && !isBeastAppearance(player.appearance)) return reject('beast_form_required','Choose a beast form before moving like one.');
       if ((movementByUser.get(userId)??'upright')===message.movement) return {ok:true,player:publicPlayer(player)};
+      if(prepareSelection)return {ok:true,player:publicPlayer(player)};
       interactions.cancel(player.id);
       if (message.movement==='beast') movementByUser.set(userId,'beast'); else movementByUser.delete(userId);
       revision++;
@@ -1288,11 +1291,23 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       poseAt:now(),moveBudget:.1,liftBudget:.1,gesture:null,gestureUntil:0});
     focus.clear();voiceIdentities.clear();chat.length=0;builds.clear();syncColliders();life=createResidentLife(worldData,state);elapsed=0;revision++;
   }
+  // Preparation consumes the ordinary command budget, but never changes a look
+  // or its cooldown. The coordinator persists the intent before account CAS.
+  const prepareAccountSelection=(userId,message,context={})=>command(userId,message,{...context,prepareSelection:true});
+  function commitAccountSelection(userId,preference,{appearanceChanged=false}={}){
+    const before=accountAppearance(userId);
+    const player=applyAccountAppearance(userId,preference);
+    if(JSON.stringify(before)!==JSON.stringify(accountAppearance(userId))){
+      interactions.cancel(userId);
+      if(appearanceChanged&&ledgers.has(userId))ledgers.get(userId).appearanceAt=now();
+    }
+    return players.has(userId)?publicPlayer(players.get(userId)):player;
+  }
   const resolvePlace = placeId => placesOf(worldData).find(place=>place.id===placeId)??null;
   const listPlaces = () => placesOf(worldData);
   return {worldId,join,rename,leave,command,step,snapshot,checkpoint,restore,reset,
     // Frames carry the clock that anchors screenings (screenings.js), stamped by the transport.
-    serverTime:()=>now(),officeVisit:offices.publicVisit,endOfficeVisit:offices.leave,accountAppearance,applyAccountAppearance,resolvePlace,listPlaces,voiceSpaceOf,setVoice,drainRides,players,state};
+    serverTime:()=>now(),officeVisit:offices.publicVisit,endOfficeVisit:offices.leave,accountAppearance,applyAccountAppearance,prepareAccountSelection,commitAccountSelection,resolvePlace,listPlaces,voiceSpaceOf,setVoice,drainRides,players,state};
 }
 
 /** Validate an old room, then transfer durable account and creation state to a new geography. */
