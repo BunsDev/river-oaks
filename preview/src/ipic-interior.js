@@ -111,6 +111,10 @@ export function buildIpicInterior(room, options = {}) {
   label('IPIC & THE TUCK ROOM  ↗', -3.3, 2.45, 5.92, 3.8, .5);
 
   section('Escalators');
+  // The runs share the ceilings of the floors they rise to (the mural landing's, then the upper
+  // lounge's), so the atrium is closed overhead: from the landing the district's sky showed through
+  // both runs (docs/ipic-review/photo-review.md, P1; IMG_9771 shows a closed ceiling).
+  ceiling(6, 12, 6.7, m.plaster); ceiling(14, 20, 10.3, m.plaster);
   for (const f of IPIC_FLIGHTS) {
     const length = f.end - f.start, pitch = Math.atan2(3, length);
     for (const a of IPIC_ESCALATOR.lanes) {

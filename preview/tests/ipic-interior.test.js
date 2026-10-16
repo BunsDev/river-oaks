@@ -31,6 +31,17 @@ test('railings, furniture arms and planters block bodies while cushion centers s
   for (const seat of room.ipicSeats) assert.ok(environment.isFree(...at(seat.a, seat.d)), `seat ${seat.key}:${seat.slot} is blocked`);
 });
 
+// Val, 2026-10-15: recliner bases and footrests collide as drawn (ipic-interior.js recliner()), so a
+// walker no longer passes through them; each sitter stands into the aisle in front of the footrest.
+test('recliner bases and footrests block bodies, and each recliner names a free stand spot', () => {
+  for (const seat of room.ipicSeats.filter(s => s.key.startsWith('recliner'))) {
+    assert.equal(environment.isFree(...at(seat.a, seat.d + 1.15)), false, `walkable just past ${seat.key}'s footrest`);
+    assert.equal(environment.isFree(...at(seat.a, seat.d - .95)), false, `walkable just behind ${seat.key}'s base`);
+    assert.ok(Array.isArray(seat.stand), `${seat.key} names no stand spot`);
+    assert.ok(seat.stand[1] > seat.d + 1.1 && environment.isFree(...at(...seat.stand)), `${seat.key} stand spot ${seat.stand}`);
+  }
+});
+
 test('walking reaches upper floor and returns to street without a teleport or floor snap', () => {
   const state = createWalkingState(environment, room.toWorld(0, 1));
   const visit = [[-1.4, 4.8], [-1.4, 20.7], [-5.55, 20.7], [-5.55, 24.7], [-4.85, 24.7], [-4.85, 31.5], [-4.85, 24.7], [-5.55, 24.7], [-5.55, 20.7], [-1.4, 20.7], [-1.4, 4.8], [0, 1], [0, -1.8]];

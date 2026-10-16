@@ -68,8 +68,8 @@
         26.6
       ],
       "otherSeatsOccupied": 0,
-      "widthM": 0.99,
-      "widestAcceptedBody": false,
+      "widthM": 1.02,
+      "widestAcceptedBody": true,
       "serverBody": true,
       "endClearanceM": 0.91,
       "endNearest": "ipic-aisle-rail"
@@ -82,14 +82,14 @@
       ],
       "to": [
         -2.6,
-        28.9
+        29.4
       ],
       "otherSeatsOccupied": 9,
-      "widthM": 1.14,
-      "widestAcceptedBody": true,
+      "widthM": 0.89,
+      "widestAcceptedBody": false,
       "serverBody": true,
-      "endClearanceM": 0.57,
-      "endNearest": "ipic-seat-arm"
+      "endClearanceM": 0.45,
+      "endNearest": "ipic-recliner-footrest"
     },
     {
       "name": "doorway to recliner-0-1 approach",
@@ -99,14 +99,14 @@
       ],
       "to": [
         -0.6,
-        28.9
+        29.4
       ],
       "otherSeatsOccupied": 9,
-      "widthM": 1.14,
-      "widestAcceptedBody": true,
+      "widthM": 0.89,
+      "widestAcceptedBody": false,
       "serverBody": true,
-      "endClearanceM": 0.57,
-      "endNearest": "ipic-seat-arm"
+      "endClearanceM": 0.45,
+      "endNearest": "ipic-recliner-footrest"
     },
     {
       "name": "doorway to recliner-0-2 approach",
@@ -116,14 +116,14 @@
       ],
       "to": [
         1.4,
-        28.9
+        29.4
       ],
       "otherSeatsOccupied": 9,
-      "widthM": 1.14,
-      "widestAcceptedBody": true,
+      "widthM": 0.89,
+      "widestAcceptedBody": false,
       "serverBody": true,
-      "endClearanceM": 0.57,
-      "endNearest": "ipic-seat-arm"
+      "endClearanceM": 0.45,
+      "endNearest": "ipic-recliner-footrest"
     },
     {
       "name": "doorway to recliner-0-3 approach",
@@ -133,14 +133,14 @@
       ],
       "to": [
         3.4,
-        28.9
+        29.4
       ],
       "otherSeatsOccupied": 9,
-      "widthM": 1.14,
-      "widestAcceptedBody": true,
+      "widthM": 0.89,
+      "widestAcceptedBody": false,
       "serverBody": true,
-      "endClearanceM": 0.57,
-      "endNearest": "ipic-seat-arm"
+      "endClearanceM": 0.45,
+      "endNearest": "ipic-recliner-footrest"
     },
     {
       "name": "doorway to recliner-1-0 approach",
@@ -150,14 +150,14 @@
       ],
       "to": [
         -2.6,
-        31.9
+        32.4
       ],
       "otherSeatsOccupied": 9,
-      "widthM": 1.14,
-      "widestAcceptedBody": true,
+      "widthM": 0.89,
+      "widestAcceptedBody": false,
       "serverBody": true,
-      "endClearanceM": 0.57,
-      "endNearest": "ipic-seat-arm"
+      "endClearanceM": 0.45,
+      "endNearest": "ipic-recliner-footrest"
     },
     {
       "name": "doorway to recliner-1-1 approach",
@@ -167,14 +167,14 @@
       ],
       "to": [
         -0.6,
-        31.9
+        32.4
       ],
       "otherSeatsOccupied": 9,
-      "widthM": 1.14,
-      "widestAcceptedBody": true,
+      "widthM": 0.89,
+      "widestAcceptedBody": false,
       "serverBody": true,
-      "endClearanceM": 0.57,
-      "endNearest": "ipic-seat-arm"
+      "endClearanceM": 0.45,
+      "endNearest": "ipic-recliner-footrest"
     },
     {
       "name": "doorway to recliner-1-2 approach",
@@ -184,14 +184,14 @@
       ],
       "to": [
         1.4,
-        31.9
+        32.4
       ],
       "otherSeatsOccupied": 9,
-      "widthM": 1.14,
-      "widestAcceptedBody": true,
+      "widthM": 0.89,
+      "widestAcceptedBody": false,
       "serverBody": true,
-      "endClearanceM": 0.57,
-      "endNearest": "ipic-seat-arm"
+      "endClearanceM": 0.45,
+      "endNearest": "ipic-recliner-footrest"
     },
     {
       "name": "doorway to recliner-1-3 approach",
@@ -201,14 +201,14 @@
       ],
       "to": [
         3.4,
-        31.9
+        32.4
       ],
       "otherSeatsOccupied": 9,
-      "widthM": 1.14,
-      "widestAcceptedBody": true,
+      "widthM": 0.89,
+      "widestAcceptedBody": false,
       "serverBody": true,
-      "endClearanceM": 0.57,
-      "endNearest": "ipic-seat-arm"
+      "endClearanceM": 0.45,
+      "endNearest": "ipic-recliner-footrest"
     },
     {
       "name": "lane top to lounge-sofa:0 approach",
@@ -245,14 +245,115 @@
       "endNearest": "ipic-coffee-table"
     }
   ],
+  "reclinerSitSpots": [
+    {
+      "seat": "recliner-0-0",
+      "otherSeatsOccupied": 9,
+      "widestAcceptedBody": true,
+      "sightLine": true,
+      "sitSpot": [
+        -3.8,
+        28
+      ],
+      "sitDistanceM": 1.2
+    },
+    {
+      "seat": "recliner-0-1",
+      "otherSeatsOccupied": 9,
+      "widestAcceptedBody": true,
+      "sightLine": true,
+      "sitSpot": [
+        -3.4,
+        29.3
+      ],
+      "sitDistanceM": 3.09
+    },
+    {
+      "seat": "recliner-0-2",
+      "otherSeatsOccupied": 9,
+      "widestAcceptedBody": true,
+      "sightLine": true,
+      "sitSpot": [
+        4.2,
+        29.3
+      ],
+      "sitDistanceM": 3.09
+    },
+    {
+      "seat": "recliner-0-3",
+      "otherSeatsOccupied": 9,
+      "widestAcceptedBody": true,
+      "sightLine": true,
+      "sitSpot": [
+        4.6,
+        28
+      ],
+      "sitDistanceM": 1.2
+    },
+    {
+      "seat": "recliner-1-0",
+      "otherSeatsOccupied": 9,
+      "widestAcceptedBody": true,
+      "sightLine": true,
+      "sitSpot": [
+        -3.8,
+        31
+      ],
+      "sitDistanceM": 1.2
+    },
+    {
+      "seat": "recliner-1-1",
+      "otherSeatsOccupied": 9,
+      "widestAcceptedBody": true,
+      "sightLine": true,
+      "sitSpot": [
+        -1.6,
+        32
+      ],
+      "sitDistanceM": 1.41
+    },
+    {
+      "seat": "recliner-1-2",
+      "otherSeatsOccupied": 9,
+      "widestAcceptedBody": true,
+      "sightLine": true,
+      "sitSpot": [
+        0.4,
+        32
+      ],
+      "sitDistanceM": 1.41
+    },
+    {
+      "seat": "recliner-1-3",
+      "otherSeatsOccupied": 9,
+      "widestAcceptedBody": true,
+      "sightLine": true,
+      "sitSpot": [
+        4.6,
+        31
+      ],
+      "sitDistanceM": 1.2
+    }
+  ],
+  "frontRowAisle": {
+    "between": [
+      "front-row footrests",
+      "back-row seated bodies"
+    ],
+    "widthM": 0.891,
+    "widestAcceptedBodyM": 1.01,
+    "clearsWidestAcceptedBody": false,
+    "widestPosedBodyM": 0.8,
+    "accepted": "Val, 2026-10-15: footrest and base colliders follow the art"
+  },
   "narrowestPublicPassage": {
     "between": [
-      "ipic-planter (-5.6, 25.4)",
+      "ipic-planter (-5.65, 25.4)",
       "west lounge-sofa arm (-4.26, 24.8)"
     ],
-    "widthM": 1.005,
+    "widthM": 1.055,
     "widestAcceptedBodyM": 1.01,
-    "clears": false
+    "clears": true
   },
   "turningCircles": [
     {
@@ -284,10 +385,10 @@
     },
     {
       "zone": "auditorium",
-      "radiusM": 1.5,
+      "radiusM": 1.48,
       "at": [
-        5.2,
-        32.5
+        5.25,
+        32.45
       ],
       "clearsLongestTurningBody": true
     }
