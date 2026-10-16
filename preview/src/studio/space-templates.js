@@ -117,17 +117,21 @@ function boutique(){
 function cafe(){
   const {space,add,floor,chair,plant}=builder('Corner Café','terracotta');space.lighting='warm';
   floor('terrace-floor',4.6,-8,6.6,3.6,'limestone');floor('preparation-floor',0,4.5,15.7,2.6,'concrete');
-  add('service-counter-left','counter',-4.6,2.6,5.6,.8,1.05,'oak');add('service-counter-right','counter',4.6,2.6,5.6,.8,1.05,'oak');
-  add('prep-cabinets','cabinet',-4.525,5.5,1.95,.65,.92,'charcoal');add('prep-cabinets-east','cabinet',1.525,5.5,7.95,.65,.92,'charcoal');add('prep-sink','sink',-3,5.45,1.1,.65,.97,'white');
-  add('coffee-machine','appliance',4.8,2.6,1,.6,.6,'charcoal',0,1.07);
-  add('pastry-display','glazing',-4.5,2.6,1.8,.65,.55,'brass',0,1.07);
+  // The service counters' doors and the espresso machine's group heads face the staff side;
+  // customers see closed counter fronts.
+  add('service-counter-left','counter',-4.6,2.6,5.6,.8,1.05,'oak',180);add('service-counter-right','counter',4.6,2.6,5.6,.8,1.05,'oak',180);
+  // The prep sink's worktop (0.77 of its height) meets the 0.92 m cabinets, fronts in line.
+  add('prep-cabinets','cabinet',-4.525,5.5,1.95,.65,.92,'charcoal');add('prep-cabinets-east','cabinet',1.525,5.5,7.95,.65,.92,'charcoal');add('prep-sink','sink',-3,5.5,1.1,.65,1.195,'white');
+  // A two-group espresso machine and a glass pastry case stand on the counter tops.
+  add('coffee-machine','appliance',4.8,2.6,.8,.55,.5,'charcoal',180,1.05);
+  add('pastry-display','glazing',-4.5,2.6,1.8,.65,.55,'brass',0,1.05);
   for(const [i,x,y] of [[1,-5.8,-3.8],[2,-2.6,-.1],[3,5.5,-3.8],[4,4.6,-.1]]){
     add(`cafe-table-${i}`,'table',x,y,1.05,.8,.74,'walnut');chair(`cafe-chair-${i}-a`,x-.95,y,90,'sage');chair(`cafe-chair-${i}-b`,x+.95,y,-90,'sage');
-    add(`table-vase-${i}`,'plant',x,y,.2,.2,.3,'sage',0,.75);
+    add(`table-vase-${i}`,'plant',x,y,.2,.2,.3,'sage',0,.74);
   }
   add('terrace-table','table',5.5,-8,1,.8,.74,'limestone');chair('terrace-chair-a',4.5,-8,90,'sage');chair('terrace-chair-b',6.5,-8,-90,'sage');
   add('counter-pendant-one','pendant',-4.6,2.6,1.2,.4,.35,'brass',0,2.3);add('counter-pendant-two','pendant',4.6,2.6,1.2,.4,.35,'brass',0,2.3);
-  add('menu-art','art',0,5.88,2.3,.04,1,'charcoal',0,1.4);plant('terrace-planter',7.4,-9);return space;
+  add('menu-art','art',0,5.88,2.3,.04,1,'charcoal',0,1.4);plant('terrace-planter',7.4,-9);plant('terrace-planter-west',1.8,-9.3);return space;
 }
 const factories={house,office,boutique,cafe};
 export function createSpace(id){if(!Object.hasOwn(factories,id))throw Error('Choose a known space template.');return factories[id]();}
