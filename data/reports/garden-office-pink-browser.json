@@ -1,0 +1,1250 @@
+{
+  "createdAt": "2026-10-15T23:57:44.078Z",
+  "results": [
+    {
+      "name": "studio-office-stations",
+      "status": "passed",
+      "seconds": 19.422,
+      "result": {
+        "passed": true,
+        "eyeHeightM": 1.68,
+        "viewport": [
+          1440,
+          1000
+        ],
+        "captures": [
+          {
+            "lighting": "daylight",
+            "station": "CAM-01-entry",
+            "at": [
+              0,
+              -8.5
+            ],
+            "look": [
+              0,
+              0
+            ],
+            "yaw": 0,
+            "path": "output/playwright/garden-office-pink-daylight-CAM-01-entry.png"
+          },
+          {
+            "lighting": "daylight",
+            "station": "CAM-02-reception",
+            "at": [
+              0,
+              -4
+            ],
+            "look": [
+              -4,
+              -4.5
+            ],
+            "yaw": 1.6952,
+            "path": "output/playwright/garden-office-pink-daylight-CAM-02-reception.png"
+          },
+          {
+            "lighting": "daylight",
+            "station": "CAM-03-workstation",
+            "at": [
+              -2,
+              1
+            ],
+            "look": [
+              -5.7,
+              -0.4
+            ],
+            "yaw": 1.9325,
+            "path": "output/playwright/garden-office-pink-daylight-CAM-03-workstation.png"
+          },
+          {
+            "lighting": "daylight",
+            "station": "CAM-04-meeting",
+            "at": [
+              3,
+              1
+            ],
+            "look": [
+              5,
+              2.6
+            ],
+            "yaw": -0.8961,
+            "path": "output/playwright/garden-office-pink-daylight-CAM-04-meeting.png"
+          },
+          {
+            "lighting": "daylight",
+            "station": "CAM-05-kitchenette",
+            "at": [
+              -1,
+              5
+            ],
+            "look": [
+              -5.2,
+              5.45
+            ],
+            "yaw": 1.4641,
+            "path": "output/playwright/garden-office-pink-daylight-CAM-05-kitchenette.png"
+          },
+          {
+            "lighting": "daylight",
+            "station": "CAM-06-exit",
+            "at": [
+              0,
+              -4
+            ],
+            "look": [
+              0,
+              -8.5
+            ],
+            "yaw": -3.1416,
+            "path": "output/playwright/garden-office-pink-daylight-CAM-06-exit.png"
+          },
+          {
+            "lighting": "warm",
+            "station": "CAM-01-entry",
+            "at": [
+              0,
+              -8.5
+            ],
+            "look": [
+              0,
+              0
+            ],
+            "yaw": 0,
+            "path": "output/playwright/garden-office-pink-warm-CAM-01-entry.png"
+          },
+          {
+            "lighting": "warm",
+            "station": "CAM-02-reception",
+            "at": [
+              0,
+              -4
+            ],
+            "look": [
+              -4,
+              -4.5
+            ],
+            "yaw": 1.6952,
+            "path": "output/playwright/garden-office-pink-warm-CAM-02-reception.png"
+          },
+          {
+            "lighting": "warm",
+            "station": "CAM-03-workstation",
+            "at": [
+              -2,
+              1
+            ],
+            "look": [
+              -5.7,
+              -0.4
+            ],
+            "yaw": 1.9325,
+            "path": "output/playwright/garden-office-pink-warm-CAM-03-workstation.png"
+          },
+          {
+            "lighting": "warm",
+            "station": "CAM-04-meeting",
+            "at": [
+              3,
+              1
+            ],
+            "look": [
+              5,
+              2.6
+            ],
+            "yaw": -0.8961,
+            "path": "output/playwright/garden-office-pink-warm-CAM-04-meeting.png"
+          },
+          {
+            "lighting": "warm",
+            "station": "CAM-05-kitchenette",
+            "at": [
+              -1,
+              5
+            ],
+            "look": [
+              -5.2,
+              5.45
+            ],
+            "yaw": 1.4641,
+            "path": "output/playwright/garden-office-pink-warm-CAM-05-kitchenette.png"
+          },
+          {
+            "lighting": "warm",
+            "station": "CAM-06-exit",
+            "at": [
+              0,
+              -4
+            ],
+            "look": [
+              0,
+              -8.5
+            ],
+            "yaw": -3.1416,
+            "path": "output/playwright/garden-office-pink-warm-CAM-06-exit.png"
+          },
+          {
+            "lighting": "evening",
+            "station": "CAM-01-entry",
+            "at": [
+              0,
+              -8.5
+            ],
+            "look": [
+              0,
+              0
+            ],
+            "yaw": 0,
+            "path": "output/playwright/garden-office-pink-evening-CAM-01-entry.png"
+          },
+          {
+            "lighting": "evening",
+            "station": "CAM-02-reception",
+            "at": [
+              0,
+              -4
+            ],
+            "look": [
+              -4,
+              -4.5
+            ],
+            "yaw": 1.6952,
+            "path": "output/playwright/garden-office-pink-evening-CAM-02-reception.png"
+          },
+          {
+            "lighting": "evening",
+            "station": "CAM-03-workstation",
+            "at": [
+              -2,
+              1
+            ],
+            "look": [
+              -5.7,
+              -0.4
+            ],
+            "yaw": 1.9325,
+            "path": "output/playwright/garden-office-pink-evening-CAM-03-workstation.png"
+          },
+          {
+            "lighting": "evening",
+            "station": "CAM-04-meeting",
+            "at": [
+              3,
+              1
+            ],
+            "look": [
+              5,
+              2.6
+            ],
+            "yaw": -0.8961,
+            "path": "output/playwright/garden-office-pink-evening-CAM-04-meeting.png"
+          },
+          {
+            "lighting": "evening",
+            "station": "CAM-05-kitchenette",
+            "at": [
+              -1,
+              5
+            ],
+            "look": [
+              -5.2,
+              5.45
+            ],
+            "yaw": 1.4641,
+            "path": "output/playwright/garden-office-pink-evening-CAM-05-kitchenette.png"
+          },
+          {
+            "lighting": "evening",
+            "station": "CAM-06-exit",
+            "at": [
+              0,
+              -4
+            ],
+            "look": [
+              0,
+              -8.5
+            ],
+            "yaw": -3.1416,
+            "path": "output/playwright/garden-office-pink-evening-CAM-06-exit.png"
+          }
+        ]
+      }
+    },
+    {
+      "name": "studio-office-neutral",
+      "status": "passed",
+      "seconds": 18.081,
+      "result": {
+        "passed": true,
+        "eyeHeightM": 1.68,
+        "viewport": [
+          1440,
+          1000
+        ],
+        "captures": [
+          {
+            "lighting": "daylight",
+            "neutralDiagnostic": {
+              "lights": [
+                {
+                  "type": "HemisphereLight",
+                  "color": "ffffff",
+                  "intensity": 1.7,
+                  "ground": "888888"
+                },
+                {
+                  "type": "DirectionalLight",
+                  "color": "ffffff",
+                  "intensity": 2.5
+                },
+                {
+                  "type": "PointLight",
+                  "color": "ffffff",
+                  "intensity": 5
+                },
+                {
+                  "type": "PointLight",
+                  "color": "ffffff",
+                  "intensity": 5
+                },
+                {
+                  "type": "PointLight",
+                  "color": "ffffff",
+                  "intensity": 5
+                },
+                {
+                  "type": "HemisphereLight",
+                  "color": "ffffff",
+                  "intensity": 0.35,
+                  "ground": "888888"
+                }
+              ],
+              "exposure": 1,
+              "reflections": 0.25
+            },
+            "station": "CAM-01-entry",
+            "at": [
+              0,
+              -8.5
+            ],
+            "look": [
+              0,
+              0
+            ],
+            "yaw": 0,
+            "path": "output/playwright/garden-office-pink-neutral-diagnostic-CAM-01-entry.png"
+          },
+          {
+            "lighting": "daylight",
+            "neutralDiagnostic": {
+              "lights": [
+                {
+                  "type": "HemisphereLight",
+                  "color": "ffffff",
+                  "intensity": 1.7,
+                  "ground": "888888"
+                },
+                {
+                  "type": "DirectionalLight",
+                  "color": "ffffff",
+                  "intensity": 2.5
+                },
+                {
+                  "type": "PointLight",
+                  "color": "ffffff",
+                  "intensity": 5
+                },
+                {
+                  "type": "PointLight",
+                  "color": "ffffff",
+                  "intensity": 5
+                },
+                {
+                  "type": "PointLight",
+                  "color": "ffffff",
+                  "intensity": 5
+                },
+                {
+                  "type": "HemisphereLight",
+                  "color": "ffffff",
+                  "intensity": 0.35,
+                  "ground": "888888"
+                }
+              ],
+              "exposure": 1,
+              "reflections": 0.25
+            },
+            "station": "CAM-02-reception",
+            "at": [
+              0,
+              -4
+            ],
+            "look": [
+              -4,
+              -4.5
+            ],
+            "yaw": 1.6952,
+            "path": "output/playwright/garden-office-pink-neutral-diagnostic-CAM-02-reception.png"
+          },
+          {
+            "lighting": "daylight",
+            "neutralDiagnostic": {
+              "lights": [
+                {
+                  "type": "HemisphereLight",
+                  "color": "ffffff",
+                  "intensity": 1.7,
+                  "ground": "888888"
+                },
+                {
+                  "type": "DirectionalLight",
+                  "color": "ffffff",
+                  "intensity": 2.5
+                },
+                {
+                  "type": "PointLight",
+                  "color": "ffffff",
+                  "intensity": 5
+                },
+                {
+                  "type": "PointLight",
+                  "color": "ffffff",
+                  "intensity": 5
+                },
+                {
+                  "type": "PointLight",
+                  "color": "ffffff",
+                  "intensity": 5
+                },
+                {
+                  "type": "HemisphereLight",
+                  "color": "ffffff",
+                  "intensity": 0.35,
+                  "ground": "888888"
+                }
+              ],
+              "exposure": 1,
+              "reflections": 0.25
+            },
+            "station": "CAM-03-workstation",
+            "at": [
+              -2,
+              1
+            ],
+            "look": [
+              -5.7,
+              -0.4
+            ],
+            "yaw": 1.9325,
+            "path": "output/playwright/garden-office-pink-neutral-diagnostic-CAM-03-workstation.png"
+          },
+          {
+            "lighting": "daylight",
+            "neutralDiagnostic": {
+              "lights": [
+                {
+                  "type": "HemisphereLight",
+                  "color": "ffffff",
+                  "intensity": 1.7,
+                  "ground": "888888"
+                },
+                {
+                  "type": "DirectionalLight",
+                  "color": "ffffff",
+                  "intensity": 2.5
+                },
+                {
+                  "type": "PointLight",
+                  "color": "ffffff",
+                  "intensity": 5
+                },
+                {
+                  "type": "PointLight",
+                  "color": "ffffff",
+                  "intensity": 5
+                },
+                {
+                  "type": "PointLight",
+                  "color": "ffffff",
+                  "intensity": 5
+                },
+                {
+                  "type": "HemisphereLight",
+                  "color": "ffffff",
+                  "intensity": 0.35,
+                  "ground": "888888"
+                }
+              ],
+              "exposure": 1,
+              "reflections": 0.25
+            },
+            "station": "CAM-04-meeting",
+            "at": [
+              3,
+              1
+            ],
+            "look": [
+              5,
+              2.6
+            ],
+            "yaw": -0.8961,
+            "path": "output/playwright/garden-office-pink-neutral-diagnostic-CAM-04-meeting.png"
+          },
+          {
+            "lighting": "daylight",
+            "neutralDiagnostic": {
+              "lights": [
+                {
+                  "type": "HemisphereLight",
+                  "color": "ffffff",
+                  "intensity": 1.7,
+                  "ground": "888888"
+                },
+                {
+                  "type": "DirectionalLight",
+                  "color": "ffffff",
+                  "intensity": 2.5
+                },
+                {
+                  "type": "PointLight",
+                  "color": "ffffff",
+                  "intensity": 5
+                },
+                {
+                  "type": "PointLight",
+                  "color": "ffffff",
+                  "intensity": 5
+                },
+                {
+                  "type": "PointLight",
+                  "color": "ffffff",
+                  "intensity": 5
+                },
+                {
+                  "type": "HemisphereLight",
+                  "color": "ffffff",
+                  "intensity": 0.35,
+                  "ground": "888888"
+                }
+              ],
+              "exposure": 1,
+              "reflections": 0.25
+            },
+            "station": "CAM-05-kitchenette",
+            "at": [
+              -1,
+              5
+            ],
+            "look": [
+              -5.2,
+              5.45
+            ],
+            "yaw": 1.4641,
+            "path": "output/playwright/garden-office-pink-neutral-diagnostic-CAM-05-kitchenette.png"
+          },
+          {
+            "lighting": "daylight",
+            "neutralDiagnostic": {
+              "lights": [
+                {
+                  "type": "HemisphereLight",
+                  "color": "ffffff",
+                  "intensity": 1.7,
+                  "ground": "888888"
+                },
+                {
+                  "type": "DirectionalLight",
+                  "color": "ffffff",
+                  "intensity": 2.5
+                },
+                {
+                  "type": "PointLight",
+                  "color": "ffffff",
+                  "intensity": 5
+                },
+                {
+                  "type": "PointLight",
+                  "color": "ffffff",
+                  "intensity": 5
+                },
+                {
+                  "type": "PointLight",
+                  "color": "ffffff",
+                  "intensity": 5
+                },
+                {
+                  "type": "HemisphereLight",
+                  "color": "ffffff",
+                  "intensity": 0.35,
+                  "ground": "888888"
+                }
+              ],
+              "exposure": 1,
+              "reflections": 0.25
+            },
+            "station": "CAM-06-exit",
+            "at": [
+              0,
+              -4
+            ],
+            "look": [
+              0,
+              -8.5
+            ],
+            "yaw": -3.1416,
+            "path": "output/playwright/garden-office-pink-neutral-diagnostic-CAM-06-exit.png"
+          },
+          {
+            "lighting": "daylight",
+            "neutralDiagnostic": {
+              "lights": [
+                {
+                  "type": "HemisphereLight",
+                  "color": "ffffff",
+                  "intensity": 1.7,
+                  "ground": "888888"
+                },
+                {
+                  "type": "DirectionalLight",
+                  "color": "ffffff",
+                  "intensity": 2.5
+                },
+                {
+                  "type": "PointLight",
+                  "color": "ffffff",
+                  "intensity": 5
+                },
+                {
+                  "type": "PointLight",
+                  "color": "ffffff",
+                  "intensity": 5
+                },
+                {
+                  "type": "PointLight",
+                  "color": "ffffff",
+                  "intensity": 5
+                },
+                {
+                  "type": "HemisphereLight",
+                  "color": "ffffff",
+                  "intensity": 0.35,
+                  "ground": "888888"
+                }
+              ],
+              "exposure": 1,
+              "reflections": 0.25
+            },
+            "occupiedChairs": [
+              {
+                "id": "reception-chair",
+                "east": -4,
+                "north": -3,
+                "depth": 0.75
+              },
+              {
+                "id": "work-chair-1",
+                "east": -5.7,
+                "north": -1.7999999999999998,
+                "depth": 0.75
+              },
+              {
+                "id": "work-chair-2",
+                "east": -2.7,
+                "north": -1.7999999999999998,
+                "depth": 0.75
+              },
+              {
+                "id": "work-chair-3",
+                "east": -5.7,
+                "north": 1.5,
+                "depth": 0.75
+              },
+              {
+                "id": "work-chair-4",
+                "east": -2.7,
+                "north": 1.5,
+                "depth": 0.75
+              },
+              {
+                "id": "meeting-chair-1",
+                "east": 3,
+                "north": 2,
+                "depth": 0.75
+              },
+              {
+                "id": "meeting-chair-2",
+                "east": 3,
+                "north": 3.2,
+                "depth": 0.75
+              },
+              {
+                "id": "meeting-chair-3",
+                "east": 7,
+                "north": 2,
+                "depth": 0.75
+              },
+              {
+                "id": "meeting-chair-4",
+                "east": 7,
+                "north": 3.2,
+                "depth": 0.75
+              }
+            ],
+            "station": "CAM-01-entry",
+            "at": [
+              0,
+              -8.5
+            ],
+            "look": [
+              0,
+              0
+            ],
+            "yaw": 0,
+            "path": "output/playwright/garden-office-pink-neutral-diagnostic-occupied-CAM-01-entry.png"
+          },
+          {
+            "lighting": "daylight",
+            "neutralDiagnostic": {
+              "lights": [
+                {
+                  "type": "HemisphereLight",
+                  "color": "ffffff",
+                  "intensity": 1.7,
+                  "ground": "888888"
+                },
+                {
+                  "type": "DirectionalLight",
+                  "color": "ffffff",
+                  "intensity": 2.5
+                },
+                {
+                  "type": "PointLight",
+                  "color": "ffffff",
+                  "intensity": 5
+                },
+                {
+                  "type": "PointLight",
+                  "color": "ffffff",
+                  "intensity": 5
+                },
+                {
+                  "type": "PointLight",
+                  "color": "ffffff",
+                  "intensity": 5
+                },
+                {
+                  "type": "HemisphereLight",
+                  "color": "ffffff",
+                  "intensity": 0.35,
+                  "ground": "888888"
+                }
+              ],
+              "exposure": 1,
+              "reflections": 0.25
+            },
+            "occupiedChairs": [
+              {
+                "id": "reception-chair",
+                "east": -4,
+                "north": -3,
+                "depth": 0.75
+              },
+              {
+                "id": "work-chair-1",
+                "east": -5.7,
+                "north": -1.7999999999999998,
+                "depth": 0.75
+              },
+              {
+                "id": "work-chair-2",
+                "east": -2.7,
+                "north": -1.7999999999999998,
+                "depth": 0.75
+              },
+              {
+                "id": "work-chair-3",
+                "east": -5.7,
+                "north": 1.5,
+                "depth": 0.75
+              },
+              {
+                "id": "work-chair-4",
+                "east": -2.7,
+                "north": 1.5,
+                "depth": 0.75
+              },
+              {
+                "id": "meeting-chair-1",
+                "east": 3,
+                "north": 2,
+                "depth": 0.75
+              },
+              {
+                "id": "meeting-chair-2",
+                "east": 3,
+                "north": 3.2,
+                "depth": 0.75
+              },
+              {
+                "id": "meeting-chair-3",
+                "east": 7,
+                "north": 2,
+                "depth": 0.75
+              },
+              {
+                "id": "meeting-chair-4",
+                "east": 7,
+                "north": 3.2,
+                "depth": 0.75
+              }
+            ],
+            "station": "CAM-02-reception",
+            "at": [
+              0,
+              -4
+            ],
+            "look": [
+              -4,
+              -4.5
+            ],
+            "yaw": 1.6952,
+            "path": "output/playwright/garden-office-pink-neutral-diagnostic-occupied-CAM-02-reception.png"
+          },
+          {
+            "lighting": "daylight",
+            "neutralDiagnostic": {
+              "lights": [
+                {
+                  "type": "HemisphereLight",
+                  "color": "ffffff",
+                  "intensity": 1.7,
+                  "ground": "888888"
+                },
+                {
+                  "type": "DirectionalLight",
+                  "color": "ffffff",
+                  "intensity": 2.5
+                },
+                {
+                  "type": "PointLight",
+                  "color": "ffffff",
+                  "intensity": 5
+                },
+                {
+                  "type": "PointLight",
+                  "color": "ffffff",
+                  "intensity": 5
+                },
+                {
+                  "type": "PointLight",
+                  "color": "ffffff",
+                  "intensity": 5
+                },
+                {
+                  "type": "HemisphereLight",
+                  "color": "ffffff",
+                  "intensity": 0.35,
+                  "ground": "888888"
+                }
+              ],
+              "exposure": 1,
+              "reflections": 0.25
+            },
+            "occupiedChairs": [
+              {
+                "id": "reception-chair",
+                "east": -4,
+                "north": -3,
+                "depth": 0.75
+              },
+              {
+                "id": "work-chair-1",
+                "east": -5.7,
+                "north": -1.7999999999999998,
+                "depth": 0.75
+              },
+              {
+                "id": "work-chair-2",
+                "east": -2.7,
+                "north": -1.7999999999999998,
+                "depth": 0.75
+              },
+              {
+                "id": "work-chair-3",
+                "east": -5.7,
+                "north": 1.5,
+                "depth": 0.75
+              },
+              {
+                "id": "work-chair-4",
+                "east": -2.7,
+                "north": 1.5,
+                "depth": 0.75
+              },
+              {
+                "id": "meeting-chair-1",
+                "east": 3,
+                "north": 2,
+                "depth": 0.75
+              },
+              {
+                "id": "meeting-chair-2",
+                "east": 3,
+                "north": 3.2,
+                "depth": 0.75
+              },
+              {
+                "id": "meeting-chair-3",
+                "east": 7,
+                "north": 2,
+                "depth": 0.75
+              },
+              {
+                "id": "meeting-chair-4",
+                "east": 7,
+                "north": 3.2,
+                "depth": 0.75
+              }
+            ],
+            "station": "CAM-03-workstation",
+            "at": [
+              -2,
+              1
+            ],
+            "look": [
+              -5.7,
+              -0.4
+            ],
+            "yaw": 1.9325,
+            "path": "output/playwright/garden-office-pink-neutral-diagnostic-occupied-CAM-03-workstation.png"
+          },
+          {
+            "lighting": "daylight",
+            "neutralDiagnostic": {
+              "lights": [
+                {
+                  "type": "HemisphereLight",
+                  "color": "ffffff",
+                  "intensity": 1.7,
+                  "ground": "888888"
+                },
+                {
+                  "type": "DirectionalLight",
+                  "color": "ffffff",
+                  "intensity": 2.5
+                },
+                {
+                  "type": "PointLight",
+                  "color": "ffffff",
+                  "intensity": 5
+                },
+                {
+                  "type": "PointLight",
+                  "color": "ffffff",
+                  "intensity": 5
+                },
+                {
+                  "type": "PointLight",
+                  "color": "ffffff",
+                  "intensity": 5
+                },
+                {
+                  "type": "HemisphereLight",
+                  "color": "ffffff",
+                  "intensity": 0.35,
+                  "ground": "888888"
+                }
+              ],
+              "exposure": 1,
+              "reflections": 0.25
+            },
+            "occupiedChairs": [
+              {
+                "id": "reception-chair",
+                "east": -4,
+                "north": -3,
+                "depth": 0.75
+              },
+              {
+                "id": "work-chair-1",
+                "east": -5.7,
+                "north": -1.7999999999999998,
+                "depth": 0.75
+              },
+              {
+                "id": "work-chair-2",
+                "east": -2.7,
+                "north": -1.7999999999999998,
+                "depth": 0.75
+              },
+              {
+                "id": "work-chair-3",
+                "east": -5.7,
+                "north": 1.5,
+                "depth": 0.75
+              },
+              {
+                "id": "work-chair-4",
+                "east": -2.7,
+                "north": 1.5,
+                "depth": 0.75
+              },
+              {
+                "id": "meeting-chair-1",
+                "east": 3,
+                "north": 2,
+                "depth": 0.75
+              },
+              {
+                "id": "meeting-chair-2",
+                "east": 3,
+                "north": 3.2,
+                "depth": 0.75
+              },
+              {
+                "id": "meeting-chair-3",
+                "east": 7,
+                "north": 2,
+                "depth": 0.75
+              },
+              {
+                "id": "meeting-chair-4",
+                "east": 7,
+                "north": 3.2,
+                "depth": 0.75
+              }
+            ],
+            "station": "CAM-04-meeting",
+            "at": [
+              3,
+              1
+            ],
+            "look": [
+              5,
+              2.6
+            ],
+            "yaw": -0.8961,
+            "path": "output/playwright/garden-office-pink-neutral-diagnostic-occupied-CAM-04-meeting.png"
+          },
+          {
+            "lighting": "daylight",
+            "neutralDiagnostic": {
+              "lights": [
+                {
+                  "type": "HemisphereLight",
+                  "color": "ffffff",
+                  "intensity": 1.7,
+                  "ground": "888888"
+                },
+                {
+                  "type": "DirectionalLight",
+                  "color": "ffffff",
+                  "intensity": 2.5
+                },
+                {
+                  "type": "PointLight",
+                  "color": "ffffff",
+                  "intensity": 5
+                },
+                {
+                  "type": "PointLight",
+                  "color": "ffffff",
+                  "intensity": 5
+                },
+                {
+                  "type": "PointLight",
+                  "color": "ffffff",
+                  "intensity": 5
+                },
+                {
+                  "type": "HemisphereLight",
+                  "color": "ffffff",
+                  "intensity": 0.35,
+                  "ground": "888888"
+                }
+              ],
+              "exposure": 1,
+              "reflections": 0.25
+            },
+            "occupiedChairs": [
+              {
+                "id": "reception-chair",
+                "east": -4,
+                "north": -3,
+                "depth": 0.75
+              },
+              {
+                "id": "work-chair-1",
+                "east": -5.7,
+                "north": -1.7999999999999998,
+                "depth": 0.75
+              },
+              {
+                "id": "work-chair-2",
+                "east": -2.7,
+                "north": -1.7999999999999998,
+                "depth": 0.75
+              },
+              {
+                "id": "work-chair-3",
+                "east": -5.7,
+                "north": 1.5,
+                "depth": 0.75
+              },
+              {
+                "id": "work-chair-4",
+                "east": -2.7,
+                "north": 1.5,
+                "depth": 0.75
+              },
+              {
+                "id": "meeting-chair-1",
+                "east": 3,
+                "north": 2,
+                "depth": 0.75
+              },
+              {
+                "id": "meeting-chair-2",
+                "east": 3,
+                "north": 3.2,
+                "depth": 0.75
+              },
+              {
+                "id": "meeting-chair-3",
+                "east": 7,
+                "north": 2,
+                "depth": 0.75
+              },
+              {
+                "id": "meeting-chair-4",
+                "east": 7,
+                "north": 3.2,
+                "depth": 0.75
+              }
+            ],
+            "station": "CAM-05-kitchenette",
+            "at": [
+              -1,
+              5
+            ],
+            "look": [
+              -5.2,
+              5.45
+            ],
+            "yaw": 1.4641,
+            "path": "output/playwright/garden-office-pink-neutral-diagnostic-occupied-CAM-05-kitchenette.png"
+          },
+          {
+            "lighting": "daylight",
+            "neutralDiagnostic": {
+              "lights": [
+                {
+                  "type": "HemisphereLight",
+                  "color": "ffffff",
+                  "intensity": 1.7,
+                  "ground": "888888"
+                },
+                {
+                  "type": "DirectionalLight",
+                  "color": "ffffff",
+                  "intensity": 2.5
+                },
+                {
+                  "type": "PointLight",
+                  "color": "ffffff",
+                  "intensity": 5
+                },
+                {
+                  "type": "PointLight",
+                  "color": "ffffff",
+                  "intensity": 5
+                },
+                {
+                  "type": "PointLight",
+                  "color": "ffffff",
+                  "intensity": 5
+                },
+                {
+                  "type": "HemisphereLight",
+                  "color": "ffffff",
+                  "intensity": 0.35,
+                  "ground": "888888"
+                }
+              ],
+              "exposure": 1,
+              "reflections": 0.25
+            },
+            "occupiedChairs": [
+              {
+                "id": "reception-chair",
+                "east": -4,
+                "north": -3,
+                "depth": 0.75
+              },
+              {
+                "id": "work-chair-1",
+                "east": -5.7,
+                "north": -1.7999999999999998,
+                "depth": 0.75
+              },
+              {
+                "id": "work-chair-2",
+                "east": -2.7,
+                "north": -1.7999999999999998,
+                "depth": 0.75
+              },
+              {
+                "id": "work-chair-3",
+                "east": -5.7,
+                "north": 1.5,
+                "depth": 0.75
+              },
+              {
+                "id": "work-chair-4",
+                "east": -2.7,
+                "north": 1.5,
+                "depth": 0.75
+              },
+              {
+                "id": "meeting-chair-1",
+                "east": 3,
+                "north": 2,
+                "depth": 0.75
+              },
+              {
+                "id": "meeting-chair-2",
+                "east": 3,
+                "north": 3.2,
+                "depth": 0.75
+              },
+              {
+                "id": "meeting-chair-3",
+                "east": 7,
+                "north": 2,
+                "depth": 0.75
+              },
+              {
+                "id": "meeting-chair-4",
+                "east": 7,
+                "north": 3.2,
+                "depth": 0.75
+              }
+            ],
+            "station": "CAM-06-exit",
+            "at": [
+              0,
+              -4
+            ],
+            "look": [
+              0,
+              -8.5
+            ],
+            "yaw": -3.1416,
+            "path": "output/playwright/garden-office-pink-neutral-diagnostic-occupied-CAM-06-exit.png"
+          }
+        ],
+        "sourceSha256": "3deaad24d77ee58c69d05975b9a44b8983f8f39a4e93298dc8358ada6ff34bd6",
+        "restored": true,
+        "scope": "Response-only neutral lighting diagnostic over the daylight preset; materials and emissive colors unchanged. Not a saved v1 lighting option or human design approval."
+      }
+    }
+  ]
+}

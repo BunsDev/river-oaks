@@ -7,16 +7,40 @@
     {
       "id": "studio-desk-workstation",
       "kind": "desk",
-      "resize": "Any v1 width, depth and height. Top 25 mm, legs 40 mm square and rails keep metric sections; a back modesty panel appears when the legs exceed 0.45 m.",
+      "resize": "Any v1 width, depth and height. Top up to 25 mm, legs up to 40 mm square and rails keep metric sections (reduced only to fit small dimensions); a back modesty panel appears when the legs exceed 0.45 m.",
       "materialSlots": {
         "top": "object finish",
         "frame": "charcoal"
       },
       "approach": "Seated side is the local +z edge; the office places each chair 1 m south of its desk.",
-      "version": 1,
+      "version": 2,
       "source": "procedural",
       "file": "preview/src/studio/space-furniture.js",
-      "sha256": "09feb1b2f4492ed9e723924f7e048d74a06b39df7fc9879c744fc5392166e183",
+      "sha256": "29532720e36618eee84955a9046e5da614afba5f214d8fffc76f220e82c20219",
+      "sources": [
+        {
+          "file": "preview/src/studio/space-furniture.js",
+          "sha256": "29532720e36618eee84955a9046e5da614afba5f214d8fffc76f220e82c20219"
+        },
+        {
+          "file": "preview/src/studio/space-scene.js",
+          "sha256": "fea421a21e5a90dfb4f2e5fd92187d0f3317ab93c5b6b56d8da5348bdc911b5f"
+        },
+        {
+          "file": "preview/src/studio/space-document.js",
+          "sha256": "2c0e8cb5b0bdbbcb56ea489ecd339ec22abf5fac1bf56da68a25adb71bc24794"
+        },
+        {
+          "file": "preview/src/materials.js",
+          "sha256": "7a1b8f570978c3f3bbb11cda25a6ef166349aa4b65ff820a977406fee7819867"
+        },
+        {
+          "file": "preview/src/storefront-materials.js",
+          "sha256": "288aa4db92e966efe90691b7fd3f3c80177eecbcfd87fe78d025b58d081d75cb"
+        }
+      ],
+      "export": null,
+      "units": "metres",
       "nominal": {
         "width": 1.8,
         "depth": 0.8,
@@ -35,12 +59,39 @@
           0.4
         ]
       ],
-      "axes": "object frame at yaw 0: x east / y up / z south; pivot at the floor centre of the footprint",
-      "collision": "v1 footprint rectangle (width × depth); blocks walking when elevation < 1.8 m and the top is above 0.25 m",
+      "axes": "object frame at yaw 0: x east / y up / z south; pivot at the footprint centre and base elevation (floor surfaces extend below their pivot)",
+      "collision": {
+        "rule": "v1 footprint rectangle (width × depth); blocks walking when elevation < 1.8 m and the top is above 0.25 m.",
+        "footprintsAtNominal": [
+          [
+            [
+              -0.9,
+              -0.4
+            ],
+            [
+              0.9,
+              -0.4
+            ],
+            [
+              0.9,
+              0.4
+            ],
+            [
+              -0.9,
+              0.4
+            ]
+          ]
+        ]
+      },
       "cost": {
         "meshNodes": 8,
         "triangles": 384,
-        "textures": "none of its own; stone finishes reuse the shared PBR set"
+        "lineSets": 0,
+        "geometries": 2,
+        "geometryBytes": 29640,
+        "materials": 2,
+        "texturesAtNominal": 0,
+        "textures": "No authored texture maps for this form; viewport reflections are shared and measured separately at runtime."
       },
       "stage": "procedural-pilot",
       "availability": "repository",
@@ -49,16 +100,40 @@
     {
       "id": "studio-chair-side",
       "kind": "chair",
-      "resize": "Any v1 size. Seat height is min(0.47 m, 55% of height); legs keep a 17 mm turned section; the back leans 8° and stays inside the footprint; no back below 8 cm.",
+      "resize": "Any v1 size. Seat height is min(0.47 m, 55% of height); legs keep a 17 mm top radius; the back leans up to 8° (reduced for narrow footprints) and stays inside the footprint; no back below 8 cm.",
       "materialSlots": {
         "upholstery": "object finish",
         "timber": "oak, or walnut when the finish is walnut"
       },
       "approach": "Sitter enters from the local +z edge; the back is the local -z edge.",
-      "version": 1,
+      "version": 2,
       "source": "procedural",
       "file": "preview/src/studio/space-furniture.js",
-      "sha256": "09feb1b2f4492ed9e723924f7e048d74a06b39df7fc9879c744fc5392166e183",
+      "sha256": "29532720e36618eee84955a9046e5da614afba5f214d8fffc76f220e82c20219",
+      "sources": [
+        {
+          "file": "preview/src/studio/space-furniture.js",
+          "sha256": "29532720e36618eee84955a9046e5da614afba5f214d8fffc76f220e82c20219"
+        },
+        {
+          "file": "preview/src/studio/space-scene.js",
+          "sha256": "fea421a21e5a90dfb4f2e5fd92187d0f3317ab93c5b6b56d8da5348bdc911b5f"
+        },
+        {
+          "file": "preview/src/studio/space-document.js",
+          "sha256": "2c0e8cb5b0bdbbcb56ea489ecd339ec22abf5fac1bf56da68a25adb71bc24794"
+        },
+        {
+          "file": "preview/src/materials.js",
+          "sha256": "7a1b8f570978c3f3bbb11cda25a6ef166349aa4b65ff820a977406fee7819867"
+        },
+        {
+          "file": "preview/src/storefront-materials.js",
+          "sha256": "288aa4db92e966efe90691b7fd3f3c80177eecbcfd87fe78d025b58d081d75cb"
+        }
+      ],
+      "export": null,
+      "units": "metres",
       "nominal": {
         "width": 0.6,
         "depth": 0.65,
@@ -77,12 +152,39 @@
           0.315
         ]
       ],
-      "axes": "object frame at yaw 0: x east / y up / z south; pivot at the floor centre of the footprint",
-      "collision": "v1 footprint rectangle (width × depth); blocks walking when elevation < 1.8 m and the top is above 0.25 m",
+      "axes": "object frame at yaw 0: x east / y up / z south; pivot at the footprint centre and base elevation (floor surfaces extend below their pivot)",
+      "collision": {
+        "rule": "v1 footprint rectangle (width × depth); blocks walking when elevation < 1.8 m and the top is above 0.25 m.",
+        "footprintsAtNominal": [
+          [
+            [
+              -0.3,
+              -0.325
+            ],
+            [
+              0.3,
+              -0.325
+            ],
+            [
+              0.3,
+              0.325
+            ],
+            [
+              -0.3,
+              0.325
+            ]
+          ]
+        ]
+      },
       "cost": {
         "meshNodes": 9,
         "triangles": 828,
-        "textures": "none of its own; stone finishes reuse the shared PBR set"
+        "lineSets": 0,
+        "geometries": 4,
+        "geometryBytes": 61160,
+        "materials": 2,
+        "texturesAtNominal": 0,
+        "textures": "No authored texture maps for this form; viewport reflections are shared and measured separately at runtime."
       },
       "stage": "procedural-pilot",
       "availability": "repository",
@@ -98,10 +200,34 @@
         "diffuser": "shared emissive lamp"
       },
       "approach": "Overhead; does not block walking.",
-      "version": 1,
+      "version": 2,
       "source": "procedural",
       "file": "preview/src/studio/space-furniture.js",
-      "sha256": "09feb1b2f4492ed9e723924f7e048d74a06b39df7fc9879c744fc5392166e183",
+      "sha256": "29532720e36618eee84955a9046e5da614afba5f214d8fffc76f220e82c20219",
+      "sources": [
+        {
+          "file": "preview/src/studio/space-furniture.js",
+          "sha256": "29532720e36618eee84955a9046e5da614afba5f214d8fffc76f220e82c20219"
+        },
+        {
+          "file": "preview/src/studio/space-scene.js",
+          "sha256": "fea421a21e5a90dfb4f2e5fd92187d0f3317ab93c5b6b56d8da5348bdc911b5f"
+        },
+        {
+          "file": "preview/src/studio/space-document.js",
+          "sha256": "2c0e8cb5b0bdbbcb56ea489ecd339ec22abf5fac1bf56da68a25adb71bc24794"
+        },
+        {
+          "file": "preview/src/materials.js",
+          "sha256": "7a1b8f570978c3f3bbb11cda25a6ef166349aa4b65ff820a977406fee7819867"
+        },
+        {
+          "file": "preview/src/storefront-materials.js",
+          "sha256": "288aa4db92e966efe90691b7fd3f3c80177eecbcfd87fe78d025b58d081d75cb"
+        }
+      ],
+      "export": null,
+      "units": "metres",
       "nominal": {
         "width": 2.4,
         "depth": 0.22,
@@ -120,12 +246,20 @@
           0.04
         ]
       ],
-      "axes": "object frame at yaw 0: x east / y up / z south; pivot at the floor centre of the footprint",
-      "collision": "v1 footprint rectangle (width × depth); blocks walking when elevation < 1.8 m and the top is above 0.25 m",
+      "axes": "object frame at yaw 0: x east / y up / z south; pivot at the footprint centre and base elevation (floor surfaces extend below their pivot)",
+      "collision": {
+        "rule": "Nonblocking v1 kind at every elevation.",
+        "footprintsAtNominal": []
+      },
       "cost": {
         "meshNodes": 6,
         "triangles": 504,
-        "textures": "none of its own; stone finishes reuse the shared PBR set"
+        "lineSets": 0,
+        "geometries": 4,
+        "geometryBytes": 35080,
+        "materials": 3,
+        "texturesAtNominal": 0,
+        "textures": "No authored texture maps for this form; viewport reflections are shared and measured separately at runtime."
       },
       "stage": "procedural-pilot",
       "availability": "repository",
@@ -141,10 +275,34 @@
         "diffuser": "shared emissive lamp"
       },
       "approach": "Overhead; does not block walking.",
-      "version": 1,
+      "version": 2,
       "source": "procedural",
       "file": "preview/src/studio/space-furniture.js",
-      "sha256": "09feb1b2f4492ed9e723924f7e048d74a06b39df7fc9879c744fc5392166e183",
+      "sha256": "29532720e36618eee84955a9046e5da614afba5f214d8fffc76f220e82c20219",
+      "sources": [
+        {
+          "file": "preview/src/studio/space-furniture.js",
+          "sha256": "29532720e36618eee84955a9046e5da614afba5f214d8fffc76f220e82c20219"
+        },
+        {
+          "file": "preview/src/studio/space-scene.js",
+          "sha256": "fea421a21e5a90dfb4f2e5fd92187d0f3317ab93c5b6b56d8da5348bdc911b5f"
+        },
+        {
+          "file": "preview/src/studio/space-document.js",
+          "sha256": "2c0e8cb5b0bdbbcb56ea489ecd339ec22abf5fac1bf56da68a25adb71bc24794"
+        },
+        {
+          "file": "preview/src/materials.js",
+          "sha256": "7a1b8f570978c3f3bbb11cda25a6ef166349aa4b65ff820a977406fee7819867"
+        },
+        {
+          "file": "preview/src/storefront-materials.js",
+          "sha256": "288aa4db92e966efe90691b7fd3f3c80177eecbcfd87fe78d025b58d081d75cb"
+        }
+      ],
+      "export": null,
+      "units": "metres",
       "nominal": {
         "width": 0.45,
         "depth": 0.45,
@@ -163,12 +321,20 @@
           0.214
         ]
       ],
-      "axes": "object frame at yaw 0: x east / y up / z south; pivot at the floor centre of the footprint",
-      "collision": "v1 footprint rectangle (width × depth); blocks walking when elevation < 1.8 m and the top is above 0.25 m",
+      "axes": "object frame at yaw 0: x east / y up / z south; pivot at the footprint centre and base elevation (floor surfaces extend below their pivot)",
+      "collision": {
+        "rule": "Nonblocking v1 kind at every elevation.",
+        "footprintsAtNominal": []
+      },
       "cost": {
         "meshNodes": 4,
         "triangles": 200,
-        "textures": "none of its own; stone finishes reuse the shared PBR set"
+        "lineSets": 0,
+        "geometries": 4,
+        "geometryBytes": 10352,
+        "materials": 3,
+        "texturesAtNominal": 0,
+        "textures": "No authored texture maps for this form; viewport reflections are shared and measured separately at runtime."
       },
       "stage": "procedural-pilot",
       "availability": "repository",
@@ -185,10 +351,34 @@
         "foliage": "shared double-sided leaf green"
       },
       "approach": "Blocks walking like other furniture when standing on the floor.",
-      "version": 1,
+      "version": 2,
       "source": "procedural",
       "file": "preview/src/studio/space-furniture.js",
-      "sha256": "09feb1b2f4492ed9e723924f7e048d74a06b39df7fc9879c744fc5392166e183",
+      "sha256": "29532720e36618eee84955a9046e5da614afba5f214d8fffc76f220e82c20219",
+      "sources": [
+        {
+          "file": "preview/src/studio/space-furniture.js",
+          "sha256": "29532720e36618eee84955a9046e5da614afba5f214d8fffc76f220e82c20219"
+        },
+        {
+          "file": "preview/src/studio/space-scene.js",
+          "sha256": "fea421a21e5a90dfb4f2e5fd92187d0f3317ab93c5b6b56d8da5348bdc911b5f"
+        },
+        {
+          "file": "preview/src/studio/space-document.js",
+          "sha256": "2c0e8cb5b0bdbbcb56ea489ecd339ec22abf5fac1bf56da68a25adb71bc24794"
+        },
+        {
+          "file": "preview/src/materials.js",
+          "sha256": "7a1b8f570978c3f3bbb11cda25a6ef166349aa4b65ff820a977406fee7819867"
+        },
+        {
+          "file": "preview/src/storefront-materials.js",
+          "sha256": "288aa4db92e966efe90691b7fd3f3c80177eecbcfd87fe78d025b58d081d75cb"
+        }
+      ],
+      "export": null,
+      "units": "metres",
       "nominal": {
         "width": 0.55,
         "depth": 0.55,
@@ -207,16 +397,364 @@
           0.237
         ]
       ],
-      "axes": "object frame at yaw 0: x east / y up / z south; pivot at the floor centre of the footprint",
-      "collision": "v1 footprint rectangle (width × depth); blocks walking when elevation < 1.8 m and the top is above 0.25 m",
+      "axes": "object frame at yaw 0: x east / y up / z south; pivot at the footprint centre and base elevation (floor surfaces extend below their pivot)",
+      "collision": {
+        "rule": "v1 footprint rectangle (width × depth); blocks walking when elevation < 1.8 m and the top is above 0.25 m.",
+        "footprintsAtNominal": [
+          [
+            [
+              -0.275,
+              -0.275
+            ],
+            [
+              0.275,
+              -0.275
+            ],
+            [
+              0.275,
+              0.275
+            ],
+            [
+              -0.275,
+              0.275
+            ]
+          ]
+        ]
+      },
       "cost": {
         "meshNodes": 9,
         "triangles": 696,
-        "textures": "none of its own; stone finishes reuse the shared PBR set"
+        "lineSets": 0,
+        "geometries": 9,
+        "geometryBytes": 44832,
+        "materials": 3,
+        "texturesAtNominal": 0,
+        "textures": "No authored texture maps for this form; viewport reflections are shared and measured separately at runtime."
       },
       "stage": "procedural-pilot",
       "availability": "repository",
       "permission": "Original geometry authored in this repository for #416; no third-party source."
+    },
+    {
+      "id": "studio-glazing-framed",
+      "kind": "glazing",
+      "resize": "Any valid v1 size; 55 mm maximum stiles/rails, mullions at at most 1.6 m intervals. Floor-standing glazing at least 2 m high has an 80 mm base shoe.",
+      "materialSlots": {
+        "frame": "object finish",
+        "pane": "shared thin storefront glass"
+      },
+      "approach": "Solid partition. Use the authored door gaps; glazing is not a portal.",
+      "version": 1,
+      "source": "procedural",
+      "file": "preview/src/studio/space-scene.js",
+      "sha256": "fea421a21e5a90dfb4f2e5fd92187d0f3317ab93c5b6b56d8da5348bdc911b5f",
+      "sources": [
+        {
+          "file": "preview/src/studio/space-scene.js",
+          "sha256": "fea421a21e5a90dfb4f2e5fd92187d0f3317ab93c5b6b56d8da5348bdc911b5f"
+        },
+        {
+          "file": "preview/src/studio/space-document.js",
+          "sha256": "2c0e8cb5b0bdbbcb56ea489ecd339ec22abf5fac1bf56da68a25adb71bc24794"
+        },
+        {
+          "file": "preview/src/materials.js",
+          "sha256": "7a1b8f570978c3f3bbb11cda25a6ef166349aa4b65ff820a977406fee7819867"
+        },
+        {
+          "file": "preview/src/storefront-materials.js",
+          "sha256": "288aa4db92e966efe90691b7fd3f3c80177eecbcfd87fe78d025b58d081d75cb"
+        }
+      ],
+      "export": null,
+      "units": "metres",
+      "nominal": {
+        "width": 4.2,
+        "depth": 0.1,
+        "height": 3.1
+      },
+      "finishUsedForMeasure": "charcoal",
+      "bounds": [
+        [
+          -2.1,
+          0,
+          -0.05
+        ],
+        [
+          2.1,
+          3.1,
+          0.05
+        ]
+      ],
+      "axes": "object frame at yaw 0: x east / y up / z south; pivot at the footprint centre and base elevation (floor surfaces extend below their pivot)",
+      "collision": {
+        "rule": "v1 footprint rectangle (width × depth); blocks walking when elevation < 1.8 m and the top is above 0.25 m.",
+        "footprintsAtNominal": [
+          [
+            [
+              -2.1,
+              -0.05
+            ],
+            [
+              2.1,
+              -0.05
+            ],
+            [
+              2.1,
+              0.05
+            ],
+            [
+              -2.1,
+              0.05
+            ]
+          ]
+        ]
+      },
+      "cost": {
+        "meshNodes": 7,
+        "triangles": 84,
+        "lineSets": 0,
+        "geometries": 1,
+        "geometryBytes": 840,
+        "materials": 2,
+        "texturesAtNominal": 0,
+        "textures": "No authored texture maps for this form; viewport reflections are shared and measured separately at runtime."
+      },
+      "stage": "procedural-pilot",
+      "availability": "repository",
+      "permission": "Original geometry authored in this repository for #416; no third-party source."
+    },
+    {
+      "id": "studio-floor-concrete",
+      "kind": "floor",
+      "resize": "Any valid v1 size; slab ends at elevation, control joints every 4 m.",
+      "materialSlots": {
+        "surface": "polished concrete #96938b, roughness 0.5",
+        "joints": "#7f7c74, opacity 0.35"
+      },
+      "approach": "Walk surface at the room datum; does not obstruct routes.",
+      "version": 1,
+      "source": "procedural",
+      "file": "preview/src/studio/space-scene.js",
+      "sha256": "fea421a21e5a90dfb4f2e5fd92187d0f3317ab93c5b6b56d8da5348bdc911b5f",
+      "sources": [
+        {
+          "file": "preview/src/studio/space-scene.js",
+          "sha256": "fea421a21e5a90dfb4f2e5fd92187d0f3317ab93c5b6b56d8da5348bdc911b5f"
+        },
+        {
+          "file": "preview/src/studio/space-document.js",
+          "sha256": "2c0e8cb5b0bdbbcb56ea489ecd339ec22abf5fac1bf56da68a25adb71bc24794"
+        },
+        {
+          "file": "preview/src/materials.js",
+          "sha256": "7a1b8f570978c3f3bbb11cda25a6ef166349aa4b65ff820a977406fee7819867"
+        },
+        {
+          "file": "preview/src/storefront-materials.js",
+          "sha256": "288aa4db92e966efe90691b7fd3f3c80177eecbcfd87fe78d025b58d081d75cb"
+        }
+      ],
+      "export": null,
+      "units": "metres",
+      "nominal": {
+        "width": 16,
+        "depth": 12,
+        "height": 0.025
+      },
+      "finishUsedForMeasure": "concrete",
+      "bounds": [
+        [
+          -8,
+          -0.025,
+          -6
+        ],
+        [
+          8,
+          0,
+          6
+        ]
+      ],
+      "axes": "object frame at yaw 0: x east / y up / z south; pivot at the footprint centre and base elevation (floor surfaces extend below their pivot)",
+      "collision": {
+        "rule": "Nonblocking v1 kind at every elevation.",
+        "footprintsAtNominal": []
+      },
+      "cost": {
+        "meshNodes": 1,
+        "triangles": 12,
+        "lineSets": 1,
+        "geometries": 2,
+        "geometryBytes": 984,
+        "materials": 2,
+        "texturesAtNominal": 0,
+        "textures": "No authored texture maps at the measured finish. Optional limestone/terracotta finishes reuse existing shared PBR textures; no transfer-byte measurement is claimed."
+      },
+      "stage": "procedural-pilot",
+      "availability": "repository",
+      "permission": "Original geometry authored in this repository for #416; no third-party source."
+    },
+    {
+      "id": "studio-wall-plaster",
+      "kind": "wall",
+      "resize": "Any valid v1 size; skirting at most 90 mm high.",
+      "materialSlots": {
+        "wall": "plaster #e5dfd2, roughness 0.92",
+        "skirting": "white"
+      },
+      "approach": "Solid wall; entrances are gaps between separate wall elements.",
+      "version": 1,
+      "source": "procedural",
+      "file": "preview/src/studio/space-scene.js",
+      "sha256": "fea421a21e5a90dfb4f2e5fd92187d0f3317ab93c5b6b56d8da5348bdc911b5f",
+      "sources": [
+        {
+          "file": "preview/src/studio/space-scene.js",
+          "sha256": "fea421a21e5a90dfb4f2e5fd92187d0f3317ab93c5b6b56d8da5348bdc911b5f"
+        },
+        {
+          "file": "preview/src/studio/space-document.js",
+          "sha256": "2c0e8cb5b0bdbbcb56ea489ecd339ec22abf5fac1bf56da68a25adb71bc24794"
+        },
+        {
+          "file": "preview/src/materials.js",
+          "sha256": "7a1b8f570978c3f3bbb11cda25a6ef166349aa4b65ff820a977406fee7819867"
+        },
+        {
+          "file": "preview/src/storefront-materials.js",
+          "sha256": "288aa4db92e966efe90691b7fd3f3c80177eecbcfd87fe78d025b58d081d75cb"
+        }
+      ],
+      "export": null,
+      "units": "metres",
+      "nominal": {
+        "width": 16.2,
+        "depth": 0.18,
+        "height": 3.1
+      },
+      "finishUsedForMeasure": "plaster",
+      "bounds": [
+        [
+          -8.1,
+          0,
+          -0.09
+        ],
+        [
+          8.1,
+          3.1,
+          0.09
+        ]
+      ],
+      "axes": "object frame at yaw 0: x east / y up / z south; pivot at the footprint centre and base elevation (floor surfaces extend below their pivot)",
+      "collision": {
+        "rule": "v1 footprint rectangle (width × depth); blocks walking when elevation < 1.8 m and the top is above 0.25 m.",
+        "footprintsAtNominal": [
+          [
+            [
+              -8.1,
+              -0.09
+            ],
+            [
+              8.1,
+              -0.09
+            ],
+            [
+              8.1,
+              0.09
+            ],
+            [
+              -8.1,
+              0.09
+            ]
+          ]
+        ]
+      },
+      "cost": {
+        "meshNodes": 3,
+        "triangles": 36,
+        "lineSets": 0,
+        "geometries": 1,
+        "geometryBytes": 840,
+        "materials": 2,
+        "texturesAtNominal": 0,
+        "textures": "No authored texture maps for this form; viewport reflections are shared and measured separately at runtime."
+      },
+      "stage": "procedural-pilot",
+      "availability": "repository",
+      "permission": "Original geometry authored in this repository for #416; no third-party source."
+    },
+    {
+      "id": "studio-art-abstract-pink",
+      "kind": "art",
+      "resize": "Existing v1 proportional scaling; frame and abstract detail proportions follow width, depth and height.",
+      "materialSlots": {
+        "canvas": "fabric",
+        "frame": "walnut",
+        "field": "object finish",
+        "circle": "TypeSafe Place pink #F486A1, roughness 0.88",
+        "horizon": "sage"
+      },
+      "approach": "Nonblocking wall decoration; the shared art detail uses this accent in every template.",
+      "permission": "Existing repository-authored abstract art geometry, with the #416 TypeSafe Place accent revision; no third-party asset source.",
+      "version": 1,
+      "source": "procedural",
+      "file": "preview/src/studio/space-scene.js",
+      "sha256": "fea421a21e5a90dfb4f2e5fd92187d0f3317ab93c5b6b56d8da5348bdc911b5f",
+      "sources": [
+        {
+          "file": "preview/src/studio/space-scene.js",
+          "sha256": "fea421a21e5a90dfb4f2e5fd92187d0f3317ab93c5b6b56d8da5348bdc911b5f"
+        },
+        {
+          "file": "preview/src/studio/space-document.js",
+          "sha256": "2c0e8cb5b0bdbbcb56ea489ecd339ec22abf5fac1bf56da68a25adb71bc24794"
+        },
+        {
+          "file": "preview/src/materials.js",
+          "sha256": "7a1b8f570978c3f3bbb11cda25a6ef166349aa4b65ff820a977406fee7819867"
+        },
+        {
+          "file": "preview/src/storefront-materials.js",
+          "sha256": "288aa4db92e966efe90691b7fd3f3c80177eecbcfd87fe78d025b58d081d75cb"
+        }
+      ],
+      "export": null,
+      "units": "metres",
+      "nominal": {
+        "width": 1.3,
+        "depth": 0.05,
+        "height": 0.9
+      },
+      "finishUsedForMeasure": "sage",
+      "bounds": [
+        [
+          -0.65,
+          0,
+          -0.02
+        ],
+        [
+          0.65,
+          0.9,
+          0.02
+        ]
+      ],
+      "axes": "object frame at yaw 0: x east / y up / z south; pivot at the footprint centre and base elevation (floor surfaces extend below their pivot)",
+      "collision": {
+        "rule": "Nonblocking v1 kind at every elevation.",
+        "footprintsAtNominal": []
+      },
+      "cost": {
+        "meshNodes": 8,
+        "triangles": 164,
+        "lineSets": 0,
+        "geometries": 2,
+        "geometryBytes": 5288,
+        "materials": 4,
+        "texturesAtNominal": 0,
+        "textures": "No authored texture maps for this form; viewport reflections are shared and measured separately at runtime."
+      },
+      "stage": "procedural-pilot",
+      "availability": "repository"
     }
   ]
 }
