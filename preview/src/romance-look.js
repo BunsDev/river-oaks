@@ -265,5 +265,5 @@ export function createRomanceLook(avatar,root,appearance) {
     const trim=mat(style.trim,{metalness:.65,roughness:.28});
     for(const side of [-1,1])ball(earrings,trim,[side*.087,.035,.018],[.005,.012,.005]);
   }
-  return {beast:false,update(){},dispose(){reference.dispose();earrings?.removeFromParent();group.removeFromParent();for(const geometry of resources)geometry.dispose();for(const material of materials)material.dispose();}};
+  return {beast:false,update(){reference.update?.();},dispose(){reference.dispose();earrings?.removeFromParent();group.removeFromParent();for(const geometry of resources)geometry.dispose();for(const material of materials)material.dispose();}};
 }

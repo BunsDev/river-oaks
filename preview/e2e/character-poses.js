@@ -13,6 +13,8 @@ async page=>{
         f.renderer.setSize(420,640);f.camera.aspect=420/640;f.camera.updateProjectionMatrix();
         const body=f.avatar.rig.model.getObjectByName('Jevica'),skirt=f.avatar.rig.model.getObjectByName('Sable ivory mini dress'),covered=[];
         f.scene.updateMatrixWorld(true);
+        const {skirtContactFixture}=await import('/tests/helpers/skirt-contact.js');
+        const contact=seat?skirtContactFixture(f.avatar.rig.model,body,skirt):null;
         const model=f.avatar.rig.model,pelvis=model.getObjectByName('pelvis'),restInverse=new THREE.Matrix4().compose(pelvis.getWorldPosition(new THREE.Vector3()),model.getWorldQuaternion(new THREE.Quaternion()),model.getWorldScale(new THREE.Vector3())).invert(),probe=new THREE.Vector3();
         for(let i=0;seat&&i<body.geometry.attributes.position.count;i++){
           body.getVertexPosition(i,probe).applyMatrix4(body.matrixWorld);const rest=probe.clone().applyMatrix4(restInverse);
@@ -44,15 +46,16 @@ async page=>{
         f.renderer.domElement.style.display='none';document.body.append(canvas);
         const gl=f.renderer.getContext(),debug=gl.getExtension('WEBGL_debug_renderer_info');
         let exposed=0,frontExposed=0;if(seat){skirt.computeBoundingSphere();for(const i of covered){body.getVertexPosition(i,probe).applyMatrix4(body.matrixWorld);const eye=new THREE.Vector3(0,1.05,3.8);if(!new THREE.Raycaster(eye,probe.clone().sub(eye).normalize(),0,eye.distanceTo(probe)+.002).intersectObject(skirt,false).length)frontExposed++;if(!new THREE.Raycaster(probe.clone().add(new THREE.Vector3(0,1,0)),new THREE.Vector3(0,-1,0),0,1.002).intersectObject(skirt,false).length)exposed++;}}
-        return {seatCoverage:seat?{exposedFromAbove:exposed,exposedFromFront:frontExposed,samples:covered.length}:null,appearanceId,pose,speed,beastWeight:f.avatar.beastMotion,meshes,materials:materials.size,decoded,finite,bounds:{min,max},render,userAgent:navigator.userAgent,renderer:debug?gl.getParameter(debug.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER)};
+        const thighContact=contact?.sample()??null;contact?.dispose();
+        return {thighContact,seatCoverage:seat?{exposedFromAbove:exposed,exposedFromFront:frontExposed,samples:covered.length}:null,appearanceId,pose,speed,beastWeight:f.avatar.beastMotion,meshes,materials:materials.size,decoded,finite,bounds:{min,max},render,userAgent:navigator.userAgent,renderer:debug?gl.getParameter(debug.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER)};
       },{appearanceId,pose});
       check(result.finite&&result.meshes>0,`${appearanceId}/${pose}: actual skinned mesh coordinates are finite`);
       check(result.decoded.length>0&&result.decoded.every(t=>t.width>0&&t.height>0),`${appearanceId}/${pose}: all visible material textures decoded`);
-      if(pose==='sit')check(result.seatCoverage.samples>100,`${appearanceId}/${pose}: nonempty actual-body coverage diagnostic`);
+      if(pose==='sit'){check(result.seatCoverage.samples>100,`${appearanceId}/${pose}: nonempty actual-body coverage diagnostic`);check(result.thighContact.tested>200&&result.thighContact.penetrating===0,`${appearanceId}/${pose}: front garment clears sampled upper-thigh surface`);}
       if(['prowl','lope'].includes(pose))check(result.beastWeight>.95,`${appearanceId}/${pose}: beast locomotion is fully active`);
       await page.locator('#character-pose-strip').screenshot({path:`output/playwright/character-poses-${appearanceId}-${pose}.png`});samples.push(result);if(pose==='sit')await page.locator('#seat-overhead').screenshot({path:`output/playwright/character-poses-${appearanceId}-sit-above.png`});
     }
   }
   check(errors.length===0,`No runtime errors: ${errors.join('; ')}`);
-  return {passed:true,checks,samples,scope:'Finite real-rig poses and decoded textures; 36 front/side/rear views and two seated overhead views for inspection. Seat ray counts are diagnostics, not assertions of visual acceptance. Known seated Sable garment coverage failure remains open; other wardrobe, gait-cycle phases, performance and human acceptance are not covered.'};
+  return {passed:true,checks,samples,scope:'Finite real-rig poses and decoded textures; 36 front/side/rear views and two seated overhead views for inspection. Seated front garment contact samples clear the selected upper-thigh surface. Original body-ray counts remain diagnostics. Whole-body collision, other wardrobe, gait-cycle phases, performance and human acceptance are not covered.'};
 }

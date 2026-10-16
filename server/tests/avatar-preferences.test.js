@@ -80,3 +80,74 @@ test('Redis account preference seeds from the signed default-world checkpoint an
     assert.deepEqual(await second.save('alice',{appearance:'sable-human',movement:'beast'}),
       {appearance:'sable-human',movement:'beast',version:2});
   });
+
+for(const backend of ['memory','redis'])test(`${backend}: selected character revisions persist with the account without losing legacy preferences`,{skip:backend==='redis'&&!process.env.REDIS_URL},async t=>{
+  const {customizedCharacterDefinition}=await import('../../preview/src/character-customization.js');
+  const character=customizedCharacterDefinition('alice','sable-human',{revision:1,palette:'rose',hair:'espresso'});
+  let preferences,redis,prefix;
+  if(backend==='memory')preferences=createMemoryAvatarPreferences();
+  else{
+    redis=new Redis(process.env.REDIS_URL);redis.on('error',()=>{});prefix=`{river-oaks:character-preference:${randomUUID()}}`;
+    t.after(async()=>{const keys=await redis.keys(`${prefix}:*`);if(keys.length)await redis.del(...keys);await redis.quit();});
+    preferences=createRedisAvatarPreferences({redis,prefix});
+  }
+  const selected={appearance:'sable-human',movement:'upright',character};
+  const saved=await preferences.initialize('alice',selected);assert.deepEqual(saved,{...selected,version:1});
+  saved.character.palette='lagoon';assert.equal((await preferences.get('alice')).character.palette,'rose');
+  assert.equal((await preferences.save('alice',selected)).version,1,'same revision and definition is idempotent');
+  const moved=await preferences.save('alice',{...selected,movement:'beast'});assert.equal(moved.version,2);assert.deepEqual(moved.character,character);
+  const revised=await preferences.save('alice',{...selected,character:{...character,revision:2,palette:'midnight'}});
+  assert.equal(revised.version,3);assert.equal(revised.character.palette,'midnight');
+  assert.deepEqual(await preferences.initialize('alice',{appearance:'woman-casual',movement:'beast'}),revised,'arrival never overwrites the selected revision');
+  if(redis){preferences=createRedisAvatarPreferences({redis,prefix});assert.deepEqual(await preferences.get('alice'),revised);}
+  for(const malformed of [{...character,ownerId:'bob'},{...character,revision:0},{...character,flight:true},null])
+    await assert.rejects(preferences.save('alice',{...selected,character:malformed}),/Invalid account character/);
+  await assert.rejects(preferences.save('alice',{...selected,appearance:'woman-casual'}),/Invalid account character/);
+  assert.deepEqual(await preferences.save('alice',{appearance:'sable-human',movement:'upright'}),{appearance:'sable-human',movement:'upright',version:4},'legacy selection explicitly clears custom state');
+});
+
+test('legacy default-world migration retains a validated selected revision and rejects a corrupt one',async()=>{
+  const {customizedCharacterDefinition}=await import('../../preview/src/character-customization.js');
+  const world=createSharedWorld(data);world.join({userId:'alice',name:'Alice'});
+  const character=customizedCharacterDefinition('alice','sable-human',{revision:1,palette:'rose',hair:'espresso'});
+  world.command('alice',{type:'character',revision:1},{characterDefinition:character});
+  const saved=world.checkpoint();
+  const read=()=>legacyDefaultAppearance({getBuffer:async()=>deflateSync(JSON.stringify({version:2,worldId:'river-oaks',checkpoint:saved}))},'{test}:state','alice');
+  assert.deepEqual(await read(),{appearance:'sable-human',movement:'upright',character});
+  saved.payload.characters[0][1].ownerId='bob';const {checksum:_,...envelope}=saved;saved.checksum=createHash('sha256').update(JSON.stringify(envelope)).digest('hex');
+  await assert.rejects(read(),/Invalid account character/);
+});
+
+test('Redis selected account revision survives room replacement; client-forged definitions cannot select it and legacy choices clear it',
+  {skip:!process.env.REDIS_URL,timeout:15000},async t=>{
+    const {customizedCharacterDefinition}=await import('../../preview/src/character-customization.js');
+    const redis=new Redis(process.env.REDIS_URL);redis.on('error',()=>{});
+    const namespace=`river-oaks:character-room:${randomUUID()}`,prefix=`{${namespace}}`,rooms=[];
+    const preferences=createRedisAvatarPreferences({redis,prefix});
+    const character=customizedCharacterDefinition('alice','sable-human',{revision:1,palette:'rose',hair:'espresso'});
+    await preferences.initialize('alice',{appearance:'sable-human',movement:'upright',character});
+    const create=()=>{const room=createRedisRoom({redis,prefix,worldData:data,avatarPreferences:preferences,authorize:async()=>true});rooms.push(room);return room;};
+    t.after(async()=>{await Promise.all(rooms.map(room=>room.close()));const keys=await redis.keys(`*${namespace}*`);if(keys.length)await redis.del(...keys);await redis.quit();});
+    const join=(room,id,connectionId=id)=>room.request({type:'join',identity:{userId:id,name:id,sessionId:id,expiresAt:Date.now()+60000},connectionId});
+    let room=create();assert.equal((await join(room,'alice')).ok,true);assert.equal((await join(room,'bob')).ok,true);
+    const snapshot=(await room.read()).snapshot;
+    assert.deepEqual(snapshot.players.find(p=>p.id==='alice').character,character);
+    assert.equal(snapshot.players.find(p=>p.id==='bob').character,undefined);
+    assert.equal((await room.request({type:'command',userId:'bob',connectionId:'bob',message:{type:'character',revision:1,characterDefinition:character}})).error,'invalid_character');
+    await room.close();room=create();assert.equal((await join(room,'alice','replacement')).ok,true);
+    assert.deepEqual((await room.read()).snapshot.players.find(p=>p.id==='alice').character,character);
+    assert.equal((await room.request({type:'command',userId:'alice',connectionId:'replacement',message:{type:'appearance',appearance:'sable-human'}})).ok,true);
+    assert.equal((await preferences.get('alice')).character,undefined);
+    assert.equal((await room.request({type:'heartbeat',userId:'alice',connectionId:'replacement'})).ok,true);
+    assert.equal((await room.read()).snapshot.players.find(p=>p.id==='alice').character,undefined,'sync must not resurrect a cleared selection');
+  });
+
+
+test('legacy default-world migration reads envelope3 and still rejects a different world',async()=>{
+  const world=createSharedWorld(data);world.join({userId:'alice',name:'Alice'});
+  assert.equal(world.command('alice',{type:'appearance',appearance:'woman-casual'}).ok,true);
+  const room={version:3,worldId:'river-oaks',checkpoint:world.checkpoint(),pendingSelections:[],selectionVersions:[]};
+  const redis={getBuffer:async()=>deflateSync(JSON.stringify(room))};
+  assert.equal((await legacyDefaultAppearance(redis,'{test}:state','alice')).appearance,'woman-casual');
+  room.worldId='foreign';await assert.rejects(legacyDefaultAppearance(redis,'{test}:state','alice'),/Invalid legacy/);
+});

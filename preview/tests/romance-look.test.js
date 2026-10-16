@@ -102,11 +102,12 @@ test('Lyra has opaque coverage around her hips in both upright forms',async()=>{
       assert.equal(wrap.material.transparent,false);
       assert.equal(wrap.material.opacity,1);
       // Cast through the actual indexed geometry, including the back and seam.
-      wrap.updateMatrixWorld(true);
+      avatar.model.updateMatrixWorld(true);
+      const frame=new THREE.Matrix4().compose(avatar.model.getObjectByName('pelvis').getWorldPosition(new THREE.Vector3()),avatar.model.getWorldQuaternion(new THREE.Quaternion()),avatar.model.getWorldScale(new THREE.Vector3()));
       for(let i=0;i<72;i++){
         const angle=i/72*Math.PI*2,origin=new THREE.Vector3(Math.sin(angle)*.5,-.08,Math.cos(angle)*.5);
         const target=new THREE.Vector3(0,-.08,0);
-        wrap.localToWorld(origin);wrap.localToWorld(target);
+        origin.applyMatrix4(frame);target.applyMatrix4(frame);
         const ray=new THREE.Raycaster(origin,target.sub(origin).normalize());
         assert.ok(ray.intersectObject(wrap).length,profile+': opaque hip coverage at angle '+angle);
       }

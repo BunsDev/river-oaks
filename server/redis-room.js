@@ -1,4 +1,6 @@
 import { workspaceContext, reconcileOfficeVisit, reconcileOfficeVisits } from './office-workspace-visits.js';
+import { characterSelectionOperation } from './character-store.js';
+import { defaultAppearanceFor } from '../preview/src/shared-appearances.js';
 import { randomUUID } from 'node:crypto';
 import { deflateSync, inflateSync } from 'node:zlib';
 import { createSharedWorld, migrateWorldCheckpoint } from './world.js';
@@ -19,6 +21,11 @@ export const LEAVE_GRACE_MS=30_000;
 // clean leave: its players reconnect elsewhere within the grace either way.
 export const HEARTBEAT_TIMEOUT_MS=40_000;
 const MAX_QUEUE=4096, BATCH_SIZE=256, MAX_BYTES=16*1024*1024;
+const MAX_SELECTIONS=64,MAX_SELECTION_REPLIES=8;
+const selectionTypes=['appearance','character','movement'];
+const terminalSelectionErrors=new Set(['character_selection_conflict','character_request_reused','character_account_deleted',
+  'character_revision_missing','character_selection_missing','character_version_capacity','character_record_capacity',
+  'character_account_capacity','invalid_character_selection','invalid_character_operation','invalid_character_owner','invalid_character_record']);
 const ENQUEUE=`
   if redis.call('LLEN',KEYS[1]) >= tonumber(ARGV[1]) then return 0 end
   redis.call('RPUSH',KEYS[1],ARGV[2])
@@ -94,19 +101,48 @@ function validOperation(operation) {
     && (operation.type!=='command' || record(operation.message));
 }
 
+function restoreSelections(previous,enabled){
+  const pending=new Map(),versions=new Map(),replies=new Set();
+  if(previous?.version!==3)return {pending,versions};
+  const fail=()=>{throw new Error('Invalid durable character selection');};
+  if(!enabled||!Array.isArray(previous.pendingSelections)||previous.pendingSelections.length>MAX_SELECTIONS
+    ||!Array.isArray(previous.selectionVersions)||previous.selectionVersions.length>MAX_SELECTIONS)fail();
+  for(const value of previous.pendingSelections){
+    if(!record(value)||Object.keys(value).length!==7||!id(value.userId)||pending.has(value.userId)
+      ||!id(value.connectionId)||!validIdentity(value.identity)||value.identity.userId!==value.userId
+      ||!Number.isFinite(value.preparedAt)||value.preparedAt<0||value.preparedAt>previous.lastTick
+      ||typeof value.appearanceChanged!=='boolean'||!record(value.operation)||Object.keys(value.operation).length!==4
+      ||!Array.isArray(value.replyIds)||!value.replyIds.length||value.replyIds.length>MAX_SELECTION_REPLIES)fail();
+    let operation;
+    try{operation=characterSelectionOperation(value.userId,value.operation.command,
+      {expectedVersion:value.operation.expectedVersion,requestId:value.operation.requestId});}catch{fail();}
+    if(operation.fingerprint!==value.operation.fingerprint)fail();
+    for(const reply of value.replyIds){if(typeof reply!=='string'||!/^[a-f0-9-]{36}$/.test(reply)||replies.has(reply))fail();replies.add(reply);}
+    pending.set(value.userId,structuredClone({...value,operation}));
+  }
+  for(const entry of previous.selectionVersions){
+    if(!Array.isArray(entry)||entry.length!==2||!id(entry[0])||versions.has(entry[0])
+      ||!Number.isSafeInteger(entry[1])||entry[1]<1)fail();
+    versions.set(...entry);
+  }
+  return {pending,versions};
+}
+
 /** Private room coordinator. Authentication and connection IDs come from the server. */
-export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID,now=Date.now,authorize,isAdmin=isJevicaAdmin,regionCatalog=null,regionSha256=null,avatarPreferences=null,voice=null,cyclingMiles=null,officeWorkspaces=null,screeningHosts=[],officeLayout}) {
+export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID,now=Date.now,authorize,isAdmin=isJevicaAdmin,regionCatalog=null,regionSha256=null,avatarPreferences=null,characters=null,voice=null,cyclingMiles=null,officeWorkspaces=null,screeningHosts=[],officeLayout}) {
   if(!redis || typeof authorize!=='function' || typeof prefix!=='string' || !prefix || prefix.length>180) throw new Error('Invalid room configuration');
   validateWorldId(worldId);
+  if(characters&&!['getSelection','initializeSelection','getSelectionResult','changeSelection','getRevision'].every(key=>typeof characters[key]==='function'))throw new Error('Invalid character selection store');
   const tag=prefix.includes('{')?prefix:`{${prefix}}`;
   // The tick merges each commit's drain by hand (see runTick), so no world getter.
   const rides=cyclingMiles?createRideFlush({world:()=>null,store:cyclingMiles,warn:detail=>console.warn(JSON.stringify({...detail,worldId}))}):null;
   if(!/^\{[^{}]+\}$/.test(tag))throw new Error('Room prefix must be one Redis hash tag');
   const keys={lease:`${tag}:lease`,state:`${tag}:state`,view:`${tag}:view`,queue:`${tag}:queue`,population:`${tag}:population`};
-  // Monotonic writer generation: checkpoint v11 adds office seat claims (v10 office visit layouts
+  // Monotonic writer generation: checkpoint v12 adds selected character revisions (v11 office seat claims, v10 office visit layouts
   // and levels, v9 venue screenings, v8 resident-owned workspace visits). A newer writer
   // atomically fences an older lease; peers/future generations retain it.
-  const token=`v11:${randomUUID()}`;
+  // Selection-aware rooms additionally require durable envelope v3 intents.
+  const token=`v${characters?13:12}:${randomUUID()}`;
   // Every replacement and recovery probe uses this coordinator's current configuration.
   const worldOptions={now,isAdmin,worldId,screeningHosts,officeLayout};
   let closed=false,pendingTick=null,lastAttempt=-Infinity,lastView=null,cached=null;
@@ -140,7 +176,7 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
     let districtMigration = null;
     if(!cached && previous) {
       let checkpointReason = 'unknown';
-      if(!record(previous) || !(previous.version===1 && worldId===DEFAULT_WORLD_ID || previous.version===2 && previous.worldId===worldId)
+      if(!record(previous) || !(previous.version===1 && worldId===DEFAULT_WORLD_ID || [2,...(characters?[3]:[])].includes(previous.version) && previous.worldId===worldId)
         || !Number.isSafeInteger(previous.revision) || previous.revision<0
         || (previous.regionSha256!==undefined && (worldId===DEFAULT_WORLD_ID || !/^[a-f0-9]{64}$/.test(previous.regionSha256)))
         || !Number.isFinite(previous.lastTick) || !Array.isArray(previous.connections)) {
@@ -172,6 +208,8 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       }
       if(connections.size!==world.players.size)throw new Error('Invalid durable town roster');
     }
+    const {pending:pendingSelections,versions:selectionVersions}=restoreSelections(previous,Boolean(characters));
+    for(const userId of selectionVersions.keys())if(!world.players.has(userId))throw new Error('Invalid durable character selection');
     // Cache only within this commit: presence and queued commands share current
     // ban/session checks, while the next tick observes revocation immediately.
     const authorizations=new Map();
@@ -181,7 +219,7 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       return authorizations.get(key);
     };
     const removedUsers=[];
-    const remove=userId=>{connections.delete(userId);world.leave(userId);removedUsers.push(userId);};
+    const remove=userId=>{connections.delete(userId);selectionVersions.delete(userId);world.leave(userId);removedUsers.push(userId);};
     const presence=await Promise.all([...connections.values()].map(async connection=>({connection,authorized:await allowed(connection.identity)})));
     for(const {connection,authorized} of presence) {
       if(!authorized || time-connection.identity.expiresAt>=10000 || connection.leftAt!==null && time-connection.leftAt>=LEAVE_GRACE_MS || time-connection.lastSeen>=HEARTBEAT_TIMEOUT_MS) remove(connection.identity.userId);
@@ -194,15 +232,66 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
     // the previous checkpoint, which the next owner loads, still holds it.
     const drained=rides?world.drainRides():[];
     let revisionUpdate=null;
+    const replies=[];
+    const accountSelection=async userId=>{
+      const current=await characters.getSelection(userId);
+      if(current)return current;
+      const local=world.accountAppearance(userId);
+      const legacy=avatarPreferences?(await avatarPreferences.get(userId)??await avatarPreferences.initialize(userId,local)):local;
+      return characters.initializeSelection(userId,legacy);
+    };
+    const projectSelection=(userId,preference,appearanceChanged=false)=>{
+      if(!preference||!world.players.has(userId))return;
+      if(preference.version<(selectionVersions.get(userId)??0))return world.applyAccountAppearance(userId,world.accountAppearance(userId));
+      const player=world.commitAccountSelection(userId,preference,{appearanceChanged});
+      selectionVersions.set(userId,preference.version);
+      return player;
+    };
+    const clearDeletedSelection=userId=>{
+      selectionVersions.delete(userId);
+      return world.applyAccountAppearance(userId,{appearance:defaultAppearanceFor(userId),movement:'upright'});
+    };
     const syncAccount=async userId=>{
+      if(characters){
+        if(!pendingSelections.has(userId))try{projectSelection(userId,await accountSelection(userId));}
+        catch(error){if(error.code==='character_account_deleted')clearDeletedSelection(userId);else throw error;}
+        return;
+      }
       if(!avatarPreferences)return;
       const preference=await avatarPreferences.get(userId)
         ?? await avatarPreferences.initialize(userId,world.accountAppearance(userId));
       world.applyAccountAppearance(userId,preference);
     };
-    async function apply(operation) {
+    const selectionReply=(userId,result,appearanceChanged=false)=>{
+      const player=projectSelection(userId,result.selection,appearanceChanged);
+      return {ok:true,appliedVersion:result.appliedVersion,selectionVersion:Math.max(result.selection.version,selectionVersions.get(userId)??0),...(player?{player}:{})};
+    };
+    // Only intents read from the previous fenced commit may mutate accounts.
+    // A lost reply/lease is recovered by the same durable account receipt.
+    for(const intent of pendingSelections.values()){
+      let result;
+      const opts={expectedVersion:intent.operation.expectedVersion,requestId:intent.operation.requestId};
+      try{
+        let applied=await characters.getSelectionResult(intent.userId,intent.operation.command,opts);
+        if(!applied){
+          const connection=connections.get(intent.userId);
+          if(!connection||connection.connectionId!==intent.connectionId||intent.identity.expiresAt<=time||!await allowed(intent.identity))result=rejected('session_invalid');
+          else applied=await characters.changeSelection(intent.userId,intent.operation.command,opts);
+        }
+        if(applied)result=selectionReply(intent.userId,applied,intent.appearanceChanged);
+      }catch(error){
+        if(!terminalSelectionErrors.has(error.code))continue;
+        result=rejected(error.code);
+        if(error.code==='character_account_deleted'){
+          clearDeletedSelection(intent.userId);
+        }else try{projectSelection(intent.userId,await characters.getSelection(intent.userId));}catch{ /* Next heartbeat retries account sync. */ }
+      }
+      if(result){pendingSelections.delete(intent.userId);for(const id of intent.replyIds)replies.push({key:`${tag}:reply:${id}`,result});}
+    }
+    async function apply(operation,queueId) {
       if(!validOperation(operation))return rejected('invalid_operation');
       if(operation.type==='revise') {
+        if(pendingSelections.size)return rejected('world_busy');
         if(!regionCatalog || !isAdmin(operation.actorId) || revisionUpdate)return rejected('admin_only');
         const candidate=await regionCatalog.revisionCandidate(worldId,operation.expectedDraftVersion);
         if(!candidate.ok)return rejected(candidate.reason);
@@ -214,23 +303,30 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
         if(!next.restore(migrated.checkpoint).ok)return rejected('incompatible_region');
         if(rides)drained.push(...world.drainRides());
         world=next;currentData=candidate.worldData;currentHash=candidate.world.regionSha256;
-        connections.clear();revisionUpdate=candidate;
+        connections.clear();selectionVersions.clear();revisionUpdate=candidate;
         return {ok:true,world:candidate.world,disconnectedPlayers:migrated.disconnectedPlayers,
           clearedWishes:migrated.clearedWishes};
       }
       if(operation.type==='join') {
+        if(pendingSelections.has(operation.identity.userId))return rejected('character_selection_pending');
         if(operation.identity.expiresAt<=time || !await allowed(operation.identity))return rejected('session_invalid');
         let result;
         if(world.players.has(operation.identity.userId)) {
           result={ok:true,player:world.rename(operation.identity)};
         } else result=world.join(operation.identity);
-        if(result.ok && avatarPreferences) {
+        if(result.ok && (avatarPreferences||characters)) {
           // A full or broken appearance store (or a look removed from the catalog)
           // must not keep anyone out of the town: they keep the default look.
           try {
-            const preference=await avatarPreferences.initialize(operation.identity.userId,world.accountAppearance(operation.identity.userId));
-            result.player=world.applyAccountAppearance(operation.identity.userId,preference);
-          } catch {console.warn(JSON.stringify({event:'room_appearance_unavailable',worldId}));}
+            if(characters)result.player=projectSelection(operation.identity.userId,await accountSelection(operation.identity.userId));
+            else{
+              const preference=await avatarPreferences.initialize(operation.identity.userId,world.accountAppearance(operation.identity.userId));
+              result.player=world.applyAccountAppearance(operation.identity.userId,preference);
+            }
+          } catch(error) {
+            if(characters&&error.code==='character_account_deleted')result.player=clearDeletedSelection(operation.identity.userId);
+            else console.warn(JSON.stringify({event:'room_appearance_unavailable',worldId}));
+          }
         }
         if(result.ok)await reconcileOfficeVisit(world,officeWorkspaces,operation.identity.userId);
         if(result.ok)connections.set(operation.identity.userId,{identity:operation.identity,connectionId:operation.connectionId,lastSeen:time,leftAt:null});
@@ -250,6 +346,38 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
         await syncAccount(operation.userId);
         return {ok:true};
       }
+      if(characters&&selectionTypes.includes(operation.message.type)){
+        try{
+          const metadata=operation.selection===undefined&&operation.message.type!=='character'
+            ?{expectedVersion:(await accountSelection(operation.userId)).version,requestId:queueId}:operation.selection;
+          const selection=characterSelectionOperation(operation.userId,operation.message,metadata);
+          const pending=pendingSelections.get(operation.userId);
+          if(pending){
+            if(pending.operation.requestId===selection.requestId&&pending.operation.fingerprint!==selection.fingerprint)return rejected('character_request_reused');
+            if(pending.operation.requestId!==selection.requestId)return rejected('character_selection_pending');
+            if(pending.replyIds.includes(queueId))return null;
+            if(pending.replyIds.length>=MAX_SELECTION_REPLIES)return rejected('character_selection_pending');
+            pending.replyIds.push(queueId);return null;
+          }
+          const replay=await characters.getSelectionResult(operation.userId,selection.command,metadata);
+          if(replay)return selectionReply(operation.userId,replay);
+          const current=await accountSelection(operation.userId);
+          if(current.version!==selection.expectedVersion||current.version<(selectionVersions.get(operation.userId)??0))return rejected('character_selection_conflict');
+          projectSelection(operation.userId,current);
+          const definition=selection.command.type==='character'?await characters.getRevision(operation.userId,selection.command.revision):null;
+          if(selection.command.type==='character'&&!definition)return rejected('character_revision_missing');
+          const prepared=world.prepareAccountSelection(operation.userId,selection.command,{characterDefinition:definition});
+          if(!prepared.ok)return prepared;
+          if(pendingSelections.size>=MAX_SELECTIONS)return rejected('character_selection_pending');
+          const appearanceChanged=selection.command.type==='character'?current.character?.revision!==selection.command.revision
+            :selection.command.type==='appearance'&&(current.appearance!==selection.command.appearance||Boolean(current.character));
+          const {userId,name,sessionId,expiresAt}=connection.identity;
+          pendingSelections.set(operation.userId,{userId,connectionId:operation.connectionId,identity:{userId,name,sessionId,expiresAt},
+            operation:selection,preparedAt:time,appearanceChanged,replyIds:[queueId]});
+          return null;
+        }catch(error){return rejected(terminalSelectionErrors.has(error.code)?error.code:'character_unavailable');}
+      }
+      if(pendingSelections.has(operation.userId))return rejected('character_selection_pending');
       if(avatarPreferences && ['appearance','movement'].includes(operation.message.type))
         await syncAccount(operation.userId);
       const officeWorkspace=await workspaceContext(officeWorkspaces,operation.userId,operation.message);
@@ -258,7 +386,6 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
         await avatarPreferences.save(operation.userId,world.accountAppearance(operation.userId));
       return result;
     }
-    const replies=[];
     // Each operation is isolated. A throw used to abort the tick before the
     // commit trimmed the queue, so the same entry re-threw on every later tick
     // and the world froze. Now it fails alone: a malformed entry is dropped
@@ -273,13 +400,13 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       const operation=entry.operation, joining=operation?.type==='join' ? operation.identity?.userId : null;
       const wasPlaying=joining ? world.players.has(joining) : false;
       let result;
-      try {result=await apply(operation);}
+      try {result=await apply(operation,entry.id);}
       catch {
         if(joining && !wasPlaying && connections.get(joining)?.connectionId!==operation.connectionId)world.leave(joining);
         console.warn(JSON.stringify({event:'room_operation_failed',worldId,type:operation?.type??null}));
         result=rejected('operation_failed');
       }
-      replies.push({key:`${tag}:reply:${entry.id}`,result});
+      if(result!==null)replies.push({key:`${tag}:reply:${entry.id}`,result});
     }
     let officeCheckedAt=cached?.officeCheckedAt??-Infinity;
     if(time-officeCheckedAt>=5000){await reconcileOfficeVisits(world,officeWorkspaces);officeCheckedAt=time;}
@@ -299,7 +426,8 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
     const revision=(previous?.revision??0)+1;
     const snapshot={...world.snapshot(),serverTimeMs:time};if(currentHash)snapshot.regionSha256=currentHash;
     const view={worldId,snapshot,connections:[...connections.values()].map(({identity,connectionId})=>({userId:identity.userId,connectionId,sessionId:identity.sessionId,expiresAt:identity.expiresAt})),revision};
-    const checkpoint={version:2,worldId,revision,lastTick:time,connections:[...connections.values()],checkpoint:world.checkpoint(),
+    const checkpoint={version:characters?3:2,worldId,revision,lastTick:time,connections:[...connections.values()],checkpoint:world.checkpoint(),
+      ...(characters?{pendingSelections:[...pendingSelections.values()],selectionVersions:[...selectionVersions]}:{}),
       ...(previous?.regionSha256||revisionUpdate?{regionSha256:currentHash}:{})};
     const revisionKeys=revisionUpdate?['catalog','region','draft','history'].map(key=>revisionUpdate.keys[key]):[];
     const visitors=[...connections.values()].filter(connection=>connection.leftAt===null).length;

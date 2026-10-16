@@ -145,7 +145,7 @@ test('checkpoints keep the floor; older checkpoints migrate to the legacy room; 
   f.walk(owner, anchor('stairs-bottom'));
   f.send(owner, 'transition', { portalId: portal(L0, 'stairs'), layout: OFFICE_LAYOUT_PENTHOUSE });
   const saved = f.world.checkpoint();
-  assert.equal(saved.version, 11);
+  assert.equal(saved.version, 12);
   const restored = setup({ restore: saved });
   assert.deepEqual([restored.visit(owner).levelId, restored.visit(owner).elevation], [L1, 3.8]);
 

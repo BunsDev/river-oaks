@@ -58,16 +58,16 @@ test('selective bone batching preserves surfaces and leaves independently contro
 
 test('shipped reference looks retain their intended surfaces while bounding accessory draws in both forms', async () => {
   const cases = [
-    ['sable-human', 9880, 20], ['woman-casual', 9880, 20],
+    ['sable-human', 10600, 20], ['woman-casual', 10600, 20],
     ['rowan-human', 7644, 20], ['man-casual', 7644, 20],
-    ['woman-tailored', 7812, 20], ['vesper-beast', 7812, 20],
+    ['woman-tailored', 8532, 20], ['vesper-beast', 8532, 20],
     ['man-tailored', 9908, 20], ['midnight-host-wolf', 9908, 20],
-    ['lyra-human', 6336, 19], ['woman-daywear', 6336, 19],
+    ['lyra-human', 8640, 19], ['woman-daywear', 8640, 19],
     ['man-workwear', 13140, 20], ['kai-formal-beast', 13140, 20],
     ['kai-explorer', 9020, 20], ['kai-explorer-beast', 9020, 20],
     ['kai-noir', 14484, 20], ['kai-noir-beast', 14484, 20],
-    ['forest-aristocrat', 152400, 40], ['forest-aristocrat-beast', 152400, 40],
-    ['forest-aristocrat-feminine', 171184, 55], ['forest-aristocrat-feminine-beast', 171184, 55],
+    ['forest-aristocrat', 155856, 40], ['forest-aristocrat-beast', 155856, 40],
+    ['forest-aristocrat-feminine', 183068, 55], ['forest-aristocrat-feminine-beast', 183068, 55],
   ];
   for (const [id, triangles, maxDraws] of cases) {
     const appearance = sharedAppearance(id), source = await loadCharacterRig(appearance.rig);

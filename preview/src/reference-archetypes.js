@@ -1,4 +1,13 @@
+import {createSilvanTrousers} from './silvan-trousers.js';
+import {SILVAN_DRAPES,silvanDrapes,silvanWaist,createSilvanDrapeDetailGeometry} from './silvan-drape-geometry.js';
+import {SILVAN_DRAPE_MORPHS} from './silvan-drape-morph-data.js';
+import {createDrapeGeometry, LYRA_DRAPES} from './drape-geometry.js';
+import {LYRA_DRAPE_MORPHS} from './lyra-drape-morph-data.js';
 import { skinSkirt } from './skirt-skinning.js';
+import { createDressSkirtGeometry } from './skirt-geometry.js';
+import { createSkirtSeatMorph } from './skirt-seat-morph.js';
+import { createVesperTrimGeometry } from './vesper-skirt-geometry.js';
+import { VESPER_SKIRT_MORPH, VESPER_TRIM_MORPH } from './vesper-skirt-morph-data.js';
 import {measureLimbProfile,limbSurfacePoint} from './limb-fit.js';
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
@@ -9,7 +18,7 @@ import { batchCostumeAttachments } from './costume-batching.js';
 // Each piece follows a bone, so walking, gestures, and remote animation still work.
 export function createReferenceStyle(avatar,appearance){
   if(!['sable','rowan','vesper','aurel','kai','silvan','lyra'].includes(appearance?.character))return {dispose(){}};
-  const resources=new Set(),materials=new Set(),textures=new Set(),attachments=new Set(),lyraOutfit=[],model=avatar.model;
+  const resources=new Set(),materials=new Set(),textures=new Set(),attachments=new Set(),correctives=[],lyraOutfit=[],model=avatar.model;
   let trackLyraOutfit=false;
   const material=(color,options={})=>{const value=new THREE.MeshPhysicalMaterial({color,roughness:.6,...options});materials.add(value);return value;};
   const mesh=(parent,geometry,surface,position=[0,0,0],scale=[1,1,1])=>{
@@ -49,23 +58,16 @@ export function createReferenceStyle(avatar,appearance){
   function dressSkirt(color,{wrap=false,slit=false}={}){
     const surface=material(color,wrap?{roughness:.9,sheen:1,sheenColor:new THREE.Color('#a94d68'),side:THREE.DoubleSide}:{roughness:.46,sheen:.32,side:THREE.DoubleSide});
     if(appearance.character==='sable')surface.userData.characterSlot='outfit';
-    const levels=[[-.17,.218,.145],[-.07,.216,.145],[.025,.202,.135],[.105,.161,.11]],segments=40,vertices=[],uv=[],indices=[];
-    for(let layer=0;layer<levels.length;layer++){
-      const [y,rx,rz]=levels[layer];
-      for(let i=0;i<=segments;i++){
-        const a=i/segments*Math.PI*2;
-        const hem=slit&&layer===0?Math.max(0,1-Math.abs(i-4)/2)*.085:0;
-        vertices.push(Math.sin(a)*rx,y+hem,Math.cos(a)*rz);uv.push(i/segments,layer/(levels.length-1));
-        if(layer<levels.length-1&&i<segments){
-          const n=layer*(segments+1)+i;indices.push(n,n+1,n+segments+1,n+1,n+segments+2,n+segments+1);
-        }
-      }
-    }
-    const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));geometry.setIndex(indices);geometry.computeVertexNormals();
+    const geometry=createDressSkirtGeometry({slit});
     const skirt=mesh(pelvis,geometry,surface);skirt.name=wrap?'Vesper velvet wrap skirt':'Sable ivory mini dress';
-    if(appearance.character==='sable')attachments.add(skinSkirt(skirt,model.getObjectByName('Jevica')).group);
+    if(appearance.character==='sable'||appearance.character==='vesper'){
+      const fitted=skinSkirt(skirt,model.getObjectByName('Jevica'));attachments.add(fitted.group);
+      correctives.push(createSkirtSeatMorph(fitted.mesh,model,wrap?VESPER_SKIRT_MORPH:undefined));
+    }
     if(wrap){
-      tube(pelvis,material('#8d3b52',{roughness:.82}),[[-.18,.015,.085],[-.10,-.035,.14],[.02,-.10,.151],[.16,-.16,.10]],.009);
+      const trim=mesh(pelvis,createVesperTrimGeometry(),material('#8d3b52',{roughness:.82}));trim.name='Vesper wrap trim';
+      const fitted=skinSkirt(trim,model.getObjectByName('Jevica'));attachments.add(fitted.group);
+      correctives.push(createSkirtSeatMorph(fitted.mesh,model,VESPER_TRIM_MORPH));
     }else{
       const belt=material('#eee1d4',{roughness:.46});
       if(appearance.character==='sable')belt.userData.characterSlot='outfit';
@@ -159,16 +161,15 @@ export function createReferenceStyle(avatar,appearance){
   }
   // An open drape around the hips with a handkerchief hem: angles run from the
   // front (0) around the body, radii widen as it falls.
-  function drape(parent,surface,{from,to,top=.09,length=.8,rx=.19,rz=.14,flare=.08,jag=.16,lobes=5,name}){
-    const columns=36,rows=8,vertices=[],uv=[],indices=[];
-    for(let r=0;r<=rows;r++)for(let c=0;c<=columns;c++){
-      const u=c/columns,a=from+(to-from)*u,depth=r/rows,hem=1-jag*Math.abs(Math.sin(u*Math.PI*lobes));
-      const y=top-length*depth*hem,spread=1+flare*depth/.19;
-      vertices.push(Math.sin(a)*rx*spread,y,Math.cos(a)*rz*spread);uv.push(u,depth);
-      if(r<rows&&c<columns){const n=r*(columns+1)+c;indices.push(n,n+columns+1,n+1,n+1,n+columns+1,n+columns+2);}
-    }
-    const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));geometry.setIndex(indices);geometry.computeVertexNormals();
-    const item=mesh(parent,geometry,surface);if(name)item.name=name;return item;
+  function drape(parent,surface,recipe){
+    const geometry=createDrapeGeometry(recipe),item=mesh(parent,geometry,surface);if(recipe.name)item.name=recipe.name;
+    const lyra=LYRA_DRAPES.findIndex(part=>part.name===recipe.name),silvan=SILVAN_DRAPES.findIndex(part=>part.name===recipe.name);
+    if(lyra<0&&silvan<0)return item;
+    const body=appearance.character==='silvan'&&appearance.variant==='masculine'?'man-casualmale_casualsuit02':'Jevica';
+    const fitted=skinSkirt(item,model.getObjectByName(body),{waist:recipe.top,hem:-.17});
+    attachments.add(fitted.group);if(lyra>=0)lyraOutfit.splice(lyraOutfit.indexOf(item),1,fitted.mesh);
+    correctives.push(createSkirtSeatMorph(fitted.mesh,model,lyra>=0?LYRA_DRAPE_MORPHS[lyra]:SILVAN_DRAPE_MORPHS[appearance.variant][silvan]));
+    return fitted.mesh;
   }
   function lyraLook(){
     // The supplied three views share one chestnut hairstyle and mauve outfit.
@@ -179,7 +180,7 @@ export function createReferenceStyle(avatar,appearance){
     const fold=material('#9b6476',{roughness:.82,sheen:.8,sheenColor:new THREE.Color('#d5a0ac'),side:THREE.DoubleSide});
     for(const side of [-1,1])tube(torso,fold,[[side*.13,.26,.06],[side*.12,.19,.13],[0,.13,.15]],.004);
     // Opaque velvet wraps all the way around; the sheer train is an overlay.
-    drape(pelvis,velvet,{from:-.45,to:Math.PI*2-.45,top:.11,length:.67,rx:.19,rz:.14,flare:.045,jag:.12,lobes:2,name:'Lyra velvet wrap'});
+    drape(pelvis,velvet,LYRA_DRAPES[0]);
     const pixels=new Uint8Array(256*256*4);
     for(let y=0;y<256;y++)for(let x=0;x<256;x++){
       const cellX=Math.floor(x/25),cellY=Math.floor(y/29),seed=(Math.imul(cellX+3,73856093)^Math.imul(cellY+7,19349663))>>>0;
@@ -190,7 +191,7 @@ export function createReferenceStyle(avatar,appearance){
     const sheerTexture=new THREE.DataTexture(pixels,256,256,THREE.RGBAFormat);
     sheerTexture.colorSpace=THREE.SRGBColorSpace;sheerTexture.wrapS=THREE.RepeatWrapping;sheerTexture.needsUpdate=true;textures.add(sheerTexture);
     const sheer=material('#d8a6b3',{map:sheerTexture,roughness:.92,transparent:true,opacity:.74,depthWrite:false,side:THREE.DoubleSide});
-    drape(pelvis,sheer,{from:.22,to:Math.PI*2-.22,top:.09,length:.86,rx:.19,rz:.14,flare:.1,jag:.26,lobes:3,name:'Lyra spotted sheer train'});
+    drape(pelvis,sheer,LYRA_DRAPES[1]);
     const jewel=mesh(pelvis,new THREE.TorusGeometry(.022,.005,9,28),gold,[.18,.075,.13]);jewel.rotation.y=.3;
     ball(pelvis,fold,[.18,.075,.135],[.012,.016,.006]);
     shoulderBag({color:'#704753'});boots('#704753');
@@ -250,20 +251,15 @@ export function createReferenceStyle(avatar,appearance){
       for(let i=0;i<(masculine?5:3);i++)leaf(torso,leafGold,[side*(.13+i*.006),.25-i*.07,.15],.015,side*.4,0);
     }
     box(torso,olive,[0,-.03,.13],[.12,.26,.014],.006);
-    if(!masculine){const seat=mesh(pelvis,new THREE.CylinderGeometry(.182,.17,.42,24),trousers,[0,-.13,0]);seat.scale.z=.84;}
-    drape(pelvis,linen,{from:.55,to:Math.PI*2-.55,length:.84,name:'Forest aristocrat drape'});
-    drape(pelvis,olive,{from:-.24,to:.24,length:.7,rx:.2,rz:.152,jag:.08,lobes:1});
-    drape(pelvis,olive,{from:Math.PI-.3,to:Math.PI+.3,length:.8,rx:.2,rz:.152,jag:.1,lobes:2});
-    for(let i=0;i<6;i++){const a=(i%2?.12:-.12),y=-.06-i*.1;leaf(pelvis,leafGold,[Math.sin(a)*.2,y,Math.cos(a)*.16+.004],.018,(i%2?.6:-.6),0);}
-    for(let i=0;i<10;i++){const a=(i%2?1:-1)*(.8+(i>>1)*.14),y=-.1-(i>>1)*.13;leaf(pelvis,leafGold,[Math.sin(a)*(.2+(i>>1)*.01),y,Math.cos(a)*(.15+(i>>1)*.008)],.017,(i%2?1:-1)*.5,0);}
+    if(!masculine){const fitted=createSilvanTrousers(model.getObjectByName('Jevica'),model,trousers);attachments.add(fitted.group);resources.add(fitted.mesh.geometry);}
+    for(const [i,recipe]of silvanDrapes(appearance.variant).entries())drape(pelvis,i===0?linen:olive,recipe);
     // Gold-leaf sash with hanging leaf chains.
     const sash=[];for(let i=0;i<=32;i++){const a=i/32*Math.PI*2;sash.push([Math.sin(a)*.18,.09,Math.cos(a)*.135]);}
     tube(pelvis,olive,sash,.019);
     for(let i=0;i<7;i++){const a=(i-3)*.2;leaf(pelvis,leafGold,[Math.sin(a)*.185,.095+(i%2)*.012,Math.cos(a)*.14+.012],.028,a*1.5+(i%2?.5:-.5),0);}
-    for(const [x,drop] of [[-.07,.26],[.0,.34],[.06,.22],[.11,.3]]){
-      tube(pelvis,leafGold,[[x,.08,.148],[x+.01,.08-drop*.5,.156],[x,.08-drop,.154]],.0021);
-      leaf(pelvis,leafGold,[x,.065-drop,.156],.019,0,0);
-    }
+    const detail=mesh(pelvis,createSilvanDrapeDetailGeometry(appearance.variant),leafGold);detail.name='Forest aristocrat drape gold';
+    const fittedDetail=skinSkirt(detail,model.getObjectByName(masculine?'man-casualmale_casualsuit02':'Jevica'),{waist:silvanWaist(appearance.variant),hem:-.17});
+    attachments.add(fittedDetail.group);correctives.push(createSkirtSeatMorph(fittedDetail.mesh,model,SILVAN_DRAPE_MORPHS[appearance.variant][3]));
     for(const side of ['l','r']){
       // Vine-wrapped bracers on the forearms; vines climb bare upper arms.
       const forearm=along(`lowerarm_${side}`,`hand_${side}`);
@@ -275,15 +271,11 @@ export function createReferenceStyle(avatar,appearance){
       if(!masculine){
         const upper=along(`upperarm_${side}`,`lowerarm_${side}`);
         if(upper)spiralVine(upper,.043,.1,1,{turns:1.8,stem,foliage,leaves:7,flowers:1,fit:true});
-        // Cream linen trousers under the drape.
-        const thigh=along(`thigh_${side}`,`calf_${side}`);
-        if(thigh){const length=thigh.userData.length,leg=mesh(thigh,new THREE.CylinderGeometry(.08,.132,length*1.08,18),trousers,[0,length*.5,0]);leg.scale.z=1;}
       }
       // Tall vine-bound boots: a fitted shaft to the knee and a block heel.
       const shin=along(`calf_${side}`,`foot_${side}`);
       if(shin){
-        const length=shin.userData.length,shaft=mesh(shin,new THREE.CylinderGeometry(.062,.05,length*.92,16),bootLeather,[0,length*.5,0]);shaft.scale.z=.92;
-        if(!masculine)mesh(shin,new THREE.CylinderGeometry(.066,.068,length*.12,16),trousers,[0,length*.02,0]);
+        const length=shin.userData.length,shaft=mesh(shin,new THREE.CylinderGeometry(.062,.05,length*.92,16),bootLeather,[0,length*.5,0]);shaft.scale.z=.92;shaft.name=`Forest aristocrat boot shaft ${side}`;
         spiralVine(shin,.066,.1,.92,{turns:2.6,stem:leafGold,foliage:leafGold,leaves:9});
         spiralVine(shin,.07,.16,.86,{turns:2,stem,foliage,leaves:6});
       }
@@ -382,8 +374,8 @@ export function createReferenceStyle(avatar,appearance){
     if(item.isMesh&&item.material?.name==='female_casualsuit02')sourceClothes.push(item);
   });
   return {
-    update(motion){if(appearance.character!=='lyra'||appearance.form!=='beast')return;const dressed=!motion?.beast;
+    update(motion){for(const update of correctives)update();if(appearance.character!=='lyra'||appearance.form!=='beast')return;const dressed=!motion?.beast;
       for(const item of [...lyraOutfit,...sourceClothes])item.visible=dressed;},
-    dispose(){for(const item of attachments)item.removeFromParent();for(const geometry of resources)geometry.dispose();for(const surface of materials)surface.dispose();for(const texture of textures)texture.dispose();},
+    dispose(){correctives.length=0;for(const item of attachments)item.removeFromParent();for(const geometry of resources)geometry.dispose();for(const surface of materials)surface.dispose();for(const texture of textures)texture.dispose();},
   };
 }

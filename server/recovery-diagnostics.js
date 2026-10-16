@@ -2,7 +2,7 @@
 const messages = new Set([
   'Active visit on retired resident', 'Cannot recover enclosed resident',
   'Invalid appearances', 'Invalid build', 'Invalid build owner limit', 'Invalid builds',
-  'Invalid cafe game', 'Invalid chat', 'Invalid clocks', 'Invalid community', 'Invalid cycling slot', 'Invalid entry', 'Invalid envelope',
+  'Invalid cafe game', 'Invalid characters', 'Invalid chat', 'Invalid clocks', 'Invalid community', 'Invalid cycling slot', 'Invalid entry', 'Invalid envelope',
   'Invalid focus', 'Invalid inventory', 'Invalid legacy checkpoint', 'Invalid map',
   'Invalid player appearance', 'Invalid player position', 'Invalid players',
   'Invalid population migration', 'Invalid private home', 'Invalid private home exit',

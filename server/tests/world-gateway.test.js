@@ -6,9 +6,10 @@ import Redis from 'ioredis';
 import { WebSocket } from 'ws';
 import { createWorldGateway } from '../world-gateway.js';
 import { createRedisRoom } from '../redis-room.js';
+import { createRedisCharacterStore } from '../character-store.js';
 import { createRedisSecurity } from '../redis-security.js';
 import { JEVICA_ADMIN_USER_IDS } from '../admin.js';
-import { roomPrefixFor } from '../world-keys.js';
+import { roomPrefixFor, accountPrefixFor } from '../world-keys.js';
 import { approvedWaitlist } from './waitlist-fixture.js';
 
 test('Jevica publishes a second world that survives gateway replacement', {skip:!process.env.REDIS_URL,timeout:60_000},async t=>{
@@ -167,6 +168,7 @@ test('Jevica publishes a second world that survives gateway replacement', {skip:
   await gateway.close();
   const staleRoom=createRedisRoom({redis,prefix:roomPrefixFor(namespace,'moon-garden'),worldId:'moon-garden',
     worldData:publishedData.world,regionSha256:oldHash,regionCatalog:gateway.catalog,
+    characters:createRedisCharacterStore({redis,prefix:accountPrefixFor(namespace)}),
     authorize:async()=>true,isAdmin:id=>id===admin});
   assert.equal((await staleRoom.tick()).snapshot.regionSha256,live.regionSha256);
   await staleRoom.close();

@@ -63,7 +63,7 @@ export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,
   dialog.append(header,journey,help,pad);document.body.append(dialog);
   const headerSize=typeof ResizeObserver==='function'?new ResizeObserver(()=>dialog.style.setProperty('--office-header-bottom',`${Math.ceil(header.getBoundingClientRect().bottom)+10}px`)):null;
   headerSize?.observe(header);
-  const keys=new Set();let view=null,position=[...OFFICE_SPAWN],yaw=0,layoutId=OFFICE_LAYOUT_LEGACY,levelId=null,levelPending=false,seatId=null,seatPending=false,viewId=null,closing=false,phase='closed',busy=false,entryAttempt=null,cancelledEntry=null,movePending=false,lastMove=0,lastPoll=0,polling=null,failedOffice=null,epoch=0,currentOffice=null,owned=false,lastState='',disposed=false,accountKey='',openedAt=0,selectedOffice=null,workspaceList=[];
+  const keys=new Set();let view=null,position=[...OFFICE_SPAWN],yaw=0,layoutId=OFFICE_LAYOUT_LEGACY,levelId=null,levelPending=false,seatId=null,seatPending=false,viewId=null,closing=false,phase='closed',busy=false,entryAttempt=null,cancelledEntry=null,movePending=false,lastMove=0,lastPoll=0,lastPanelCheck=-Infinity,polling=null,failedOffice=null,epoch=0,currentOffice=null,owned=false,lastState='',disposed=false,accountKey='',openedAt=0,selectedOffice=null,workspaceList=[];
   const catalog=()=>officesFor(getWorld()??{}),mp=()=>getMultiplayer();
   const self=()=>mp()?.snapshot?.players.find(p=>p.id===mp()?.identity?.id);
   accountKey=`${mp()?.identity?.id??''}:${Boolean(self())}`;
@@ -251,7 +251,7 @@ export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,
           // cancellation intention, but fence cleanup from the old connection.
           cancelledEntry={...cancelledEntry,client:mp(),cleanupPending:false,cleanupStarted:false,leaveConfirmed:false};
         }
-        retryCancel.hidden=!cancelledEntry;busy=false;polling=null;currentOffice=null;owned=false;lastState='';management.replaceChildren();accessButton.hidden=true;lastPoll=0;if(guestPrompt.open)guestPrompt.close();
+        retryCancel.hidden=!cancelledEntry;busy=false;polling=null;currentOffice=null;owned=false;lastState='';management.replaceChildren();accessButton.hidden=true;lastPoll=0;lastPanelCheck=-Infinity;if(guestPrompt.open)guestPrompt.close();
       }
       if(cancelledEntry&&p&&mp()?.connected&&!cancelledEntry.cleanupStarted){cancelledEntry.client=mp();void finishCancellation(cancelledEntry);}
       if(p&&!p.office&&mp()?.connected)desk?.revokeShared?.();
@@ -269,7 +269,13 @@ export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,
     update(now,delta){
       panel.hidden=!catalog().length;const at=near(),connected=mp()?.connected;
       nearby.textContent=cancelledEntry?'Finish cancelling entry · F':currentOffice?.access?'Offices · Level 6 · F':currentOffice?.requested?'Office visit pending · F':'Request office visit · F';nearby.hidden=Boolean(view)||Boolean(entryAttempt&&!entryAttempt.cancelled)||!at||!connected;enter.disabled=!connected||!at||busy||Boolean(entryAttempt)||Boolean(cancelledEntry)||!currentOffice?.access;
-      if(connected&&!document.hidden&&(at||view||guestPrompt.open||entryAttempt||panel.checkVisibility?.())&&now-lastPoll>5000){lastPoll=now;void refresh();}
+      if(connected&&!document.hidden&&now-lastPoll>5000){
+        let interested=at||view||guestPrompt.open||entryAttempt;
+        // A hidden panel never advances lastPoll. Bound its layout read separately
+        // while nearby visitors and active visits retain immediate eligibility.
+        if(!interested&&now-lastPanelCheck>=250){lastPanelCheck=now;interested=panel.checkVisibility?.();}
+        if(interested){lastPoll=now;void refresh();}
+      }
       if(!view)return false;
       if(!connected||!self()?.office){close();return false;}
       if(document.hidden){keys.clear();return true;}

@@ -3,6 +3,17 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { normalizeVercelRoute, vercelClientAddress } from '../vercel-routing.js';
 
+test('character account operations retain world routing through hosted rewrites',()=>{
+ const config=JSON.parse(readFileSync(new URL('../../vercel.json',import.meta.url)));
+ for(const path of ['/api/character','/api/character/draft','/api/character/publish','/api/character/rollback']){
+  const rewrite=config.rewrites.find(item=>item.source===path);assert.ok(rewrite,`missing rewrite for ${path}`);
+  assert.equal(normalizeVercelRoute(path),path);
+  assert.equal(normalizeVercelRoute(`${rewrite.destination}&world=moon-garden`),`${path}?world=moon-garden`);
+ }
+ assert.equal(normalizeVercelRoute('/api/server?_river_path=/api/character/admin'),'/not-found');
+ assert.equal(normalizeVercelRoute('/api/server?_river_path=/api/character&_river_path=/auth/logout'),'/not-found');
+});
+
 test('rewritten routes retain OAuth/socket parameters without accepting arbitrary paths', () => {
   assert.equal(normalizeVercelRoute('/api/server?_river_path=/auth/callback&code=abc&state=xyz'), '/auth/callback?code=abc&state=xyz');
   assert.equal(normalizeVercelRoute('/api/server?_river_path=/auth/verify'), '/auth/verify');

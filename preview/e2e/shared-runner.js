@@ -56,6 +56,8 @@ async function start(mode, ports) {
   const ready = development ? 'Shared town: local development identities' : 'Multiplayer browser fixture:';
   const env = { ...process.env, RIVER_OAKS_TEST_CREATOR:mode==='creator'?'1':'0', NODE_ENV: 'development', VERCEL: '', VITE_SHARED_SOFTWARE_RENDERING: softwareRendering ? '1' : '', RIVER_OAKS_ACCEPTANCE_FIXTURE: '1', RIVER_OAKS_DEV_AUTH: 'local', RIVER_OAKS_DEV_TOWN: development ? 'on' : 'off', WORLD_ID: mode==='development-world'?'garden-2':'river-oaks', RIVER_OAKS_TEST_WEB_PORT: String(ports.web), RIVER_OAKS_DEV_TOWN_PORT: String(ports.town), MODERATION_FILE: join(temporary, 'moderation.json'), WAITLIST_FILE: join(temporary, 'waitlist.json') };
   // Creation journeys explicitly opt in; the flag journey checks the default off.
+  env.RIVER_OAKS_CHARACTER_STUDIO=process.env.RIVER_OAKS_CHARACTER_STUDIO??'1';
+  env.VITE_CHARACTER_STUDIO=process.env.VITE_CHARACTER_STUDIO??'true';
   env.VITE_CREATION_TOOLS = process.env.VITE_CREATION_TOOLS ?? (['development', 'development-publish', 'creator'].includes(mode) && selectedJourney !== 'creation-tools' ? 'true' : 'false');
   creationToolsEnabled = env.VITE_CREATION_TOOLS === 'true';
   // The creation flag journey keeps world browsing on to check publishing independently.
@@ -107,13 +109,13 @@ try {
     const town = await freePort(used);
     const ports = { web, town };
     await start(mode, ports);
-    const names=mode==='development'?(selectedJourney==='creation-tools'?['creation-tools']:['multiplayer-dev','groups','world-events','rail-shared','shared-seating']):mode==='development-world'?['world-boundary','world-map']:mode==='development-publish'?['world-publish','creator-generated-levels','creator-four-levels']:mode==='creator'?['creator-objects']:[...(selectedJourney==='storefront-threshold'?['storefront-threshold']:[]),...(selectedJourney==='generated-gallery-shared'?['generated-gallery-shared']:[]),'access-gate','connection-required','multiplayer','indoor-npcs','multiplayer-exclusivity','vehicle-exit','multiplayer-gate','resident-names','sit-and-water','greetings'];
+    const names=mode==='development'?(selectedJourney==='creation-tools'?['creation-tools']:['multiplayer-dev','groups','world-events','rail-shared','shared-seating']):mode==='development-world'?['world-boundary','world-map']:mode==='development-publish'?['world-publish','creator-generated-levels','creator-four-levels']:mode==='creator'?['creator-objects']:[...(selectedJourney==='storefront-threshold'?['storefront-threshold']:[]),...(selectedJourney==='generated-gallery-shared'?['generated-gallery-shared']:[]),'access-gate','connection-required','multiplayer','indoor-npcs','multiplayer-exclusivity','vehicle-exit','multiplayer-gate','resident-names','sit-and-water','greetings','character-studio-shared'];
     for (const name of names) {
       if (selectedJourney && name !== selectedJourney) continue;
       interruption.signal.throwIfAborted();
       // These journeys require their initial town layout or a fresh development owner.
       // Closing browser contexts does not reset simulation, ledgers or creations.
-      if (['shared-seating', 'vehicle-exit', 'greetings', 'creator-generated-levels', 'creator-four-levels'].includes(name) && !selectedJourney) { await stop(); await start(mode, ports); }
+      if (['shared-seating', 'vehicle-exit', 'greetings', 'character-studio-shared', 'creator-generated-levels', 'creator-four-levels'].includes(name) && !selectedJourney) { await stop(); await start(mode, ports); }
       const context = await browser.newContext(), page = await context.newPage(), started = Date.now();
       page.setDefaultTimeout(60000);
       const pageErrors = [];

@@ -170,6 +170,38 @@ test('office discovery stays idle away from the lobby and resumes when needed',a
  assert.ok(f.calls.some(c=>c.api==='workspace/list'));
 });
 
+test('idle office discovery bounds DOM visibility checks independently of network polling',async t=>{
+ const f=setup(t,{workspaces:[]});f.player.position=[9999,9999];
+ const panel=f.find('office-personal').parent;let measurements=0;
+ panel.checkVisibility=()=>{measurements++;return Boolean(panel.visible);};
+ for(let frame=0;frame<300;frame++)f.ui.update(6000+frame*1000/60,1/60);
+ await tick();assert.equal(f.calls.length,0,'an idle hidden panel sends no requests');
+ assert(measurements>0&&measurements<=20,`visibility checked ${measurements} times in five seconds`);
+});
+
+test('panel discovery responds within a quarter second and keeps its five-second request interval',async t=>{
+ const f=setup(t,{workspaces:[]});f.player.position=[9999,9999];
+ const panel=f.find('office-personal').parent;let measurements=0;
+ panel.checkVisibility=()=>{measurements++;return Boolean(panel.visible);};
+ f.ui.update(6000,.016);panel.visible=true;f.ui.update(6001,.016);f.ui.update(6249,.016);await tick();
+ assert.equal(measurements,1);assert.equal(f.calls.length,0);
+ f.ui.update(6250,.016);await tick();assert(f.calls.some(c=>c.api==='workspace/list'));
+ const requests=f.calls.length;f.ui.update(11250,.016);await tick();assert.equal(f.calls.length,requests);assert.equal(measurements,2,'poll cooldown avoids layout reads');
+ f.ui.update(11251,.016);await tick();assert(f.calls.length>requests);assert.equal(measurements,3);
+});
+
+test('nearby discovery bypasses panel sampling while hidden and disconnected frames do no layout work',async t=>{
+ const f=setup(t,{workspaces:[]});f.player.position=[9999,9999];
+ const panel=f.find('office-personal').parent;let measurements=0;
+ panel.checkVisibility=()=>{measurements++;return false;};
+ f.ui.update(6000,.016);assert.equal(measurements,1);
+ document.hidden=true;f.ui.update(7000,.016);document.hidden=false;f.mp.connected=false;f.ui.update(8000,.016);
+ assert.equal(measurements,1);assert.equal(f.calls.length,0);
+ f.mp.connected=true;f.ui.update(9000,.016);assert.equal(measurements,2);
+ f.player.position=[...officesFor(data)[0].entrance,0];f.ui.update(9001,.016);await tick();
+ assert(f.calls.some(c=>c.api==='workspace/list'),'approaching a lobby does not wait for the panel check');assert.equal(measurements,2);
+});
+
 test('an open office panel refreshes invitations even away from the lobby',async t=>{
  const f=setup(t,{workspaces:[]});f.player.position=[9999,9999];
  f.find('office-personal').parent.visible=true;f.ui.update(6000,.016);await tick();
