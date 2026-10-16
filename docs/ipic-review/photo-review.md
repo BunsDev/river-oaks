@@ -23,19 +23,19 @@ auditorium layout was inferred from three photos, so differences there are expec
 | P2 | T2a mural / IMG_9771 | The mural is on a freestanding panel seen nearly edge-on; the view frames a stair wall | The mural fills a recessed bay at the landing, flanked by stacked stone, seen head-on | S1 | design + eng | Re-place the mural on the landing's end wall and re-aim the `mural` camera |
 | P3 | T1 reception / IMG_9738 | A single-height block desk | A long two-level desk: a raised marble transaction ledge with curved ends over a lower counter | S2 | design | A two-level desk form in the master |
 | P4 | T1 reception / IMG_9738 | Dark, widely spaced slats | Close warm light-oak flutes with a lit cove above | S2 | design | Flute spacing, tone and a cove light |
-| P5 | T1 reception / IMG_9738 | "RIVER OAKS DISTRICT" on one line | "RIVER OAKS" stacked small beside a large "DISTRICT" on a black rounded panel | S3 | eng | Sign layout (signage is in Val's #365 approval) |
+| P5 | T1 reception / IMG_9738 | "RIVER OAKS DISTRICT" on one line | "RIVER OAKS" stacked small beside a large "DISTRICT" on a black rounded panel | S3 | eng | **Fixed 2026-10-16 (`3028b138`):** RIVER over OAKS, small and letterspaced, beside a large DISTRICT (`districtSignLayout`) |
 | P6 | T1 reception / IMG_9738 | Bright white tiles with dark joints; flat dark ceiling; ceiling spot track | Warm large-format stone floor; coffered ceiling; a low linear pendant of cylinders | S2 | design | Floor material, coffer and pendant |
-| P7 | T1 reception / IMG_9738 | The camera frames the escalators | The photo faces the desk from the front left | S3 | eng | Re-aim the `reception` camera to the photo's viewpoint |
+| P7 | T1 reception / IMG_9738 | The camera frames the escalators | The photo faces the desk from the front left | S3 | eng | **Fixed (`3028b138`):** the camera now stands in front of the desk's west end; the photo was taken from slightly farther back |
 | P8 | T2b lounge / IMG_9758 | Coil-wire pendants | Elongated woven rattan cocoon pendants | S2 | design | Pendant form |
-| P9 | T2b lounge / IMG_9758 | A round plain coffee table | An oval table with a radial sunburst wood top | S2 | eng | Oval form and radial timber texture from the photo |
+| P9 | T2b lounge / IMG_9758 | A plain-grained coffee-table top (the table is already oval, 1.5 × 0.9 m; it looked round from the camera) | An oval table with a radial sunburst wood top | S2 | eng | **Fixed (`3028b138`):** a radial sunburst timber top |
 | P10 | T2b lounge / IMG_9758 | Boxy tan chairs | Rounded cognac barrel tub chairs | S2 | design | Barrel chair form |
 | P11 | T2b lounge / IMG_9758 | The script wall ("…rest of my Life.") is on the left; behind the sofa is the floral mural and the "THEATER 1" sign | The script is on the right wall; behind the sofa the lounge opens to the Tuck Room bar and daylight windows, under a laser-cut timber screen | S1 | design | Check the lounge orientation against the plan; the view may be mirrored |
-| P12 | T2b, T2c / IMG_9758, IMG_9756 | High-contrast red and black concentric carpet everywhere, the bar included | A dark patterned carpet in the lounge and a timber floor in the bar | S2 | eng | A darker carpet; timber flooring in the Tuck Room |
+| P12 | T2b, T2c / IMG_9758, IMG_9756 | High-contrast red and black concentric carpet everywhere, the bar included | A dark patterned carpet in the lounge and a timber floor in the bar | S2 | eng | **Fixed (`3028b138`):** a darker, rust-on-brown lounge carpet (`IPIC_LOUNGE_CARPET`) and boards in the Tuck Room from a = 2.65. The carpet's rings are still larger and bolder than the photo's, and the boards a shade lighter: design |
 | P13 | T2c bar / IMG_9756 | A wall-backed counter with backless stools | An island bar under a suspended rack with plants and glassware; stools with backs | S2 | design | An island bar with an overhead rack |
 | P14 | T2c bar / IMG_9756 | Blocky green boxes; low-poly leaves in the foreground | Dense trailing pothos from the beams | S2 | design | Foliage cards or instanced trailing plants |
 | P15 | T3 auditorium / IMG_9767 | A flat floor | Stadium risers, with lit steps and a handrail down the side aisle | S1 | design + eng | Risers would change seat heights, sightlines, routes and support (needs Val) |
 | P16 | T3 auditorium / IMG_9767 | The screen spans about a third of the front wall | The screen spans nearly the full wall | S2 | design + eng | Screen size; changes `IPIC_SCREEN` and #365's sightline data |
-| P17 | T3 auditorium / IMG_9767 | A plain grey floor | A dark carpet with an orange confetti pattern | S3 | eng | A carpet texture |
+| P17 | T3 auditorium / IMG_9767 | A plain grey floor | A dark carpet with an orange confetti pattern | S3 | eng | **Fixed (`3028b138`):** a dark carpet with orange and rust flecks |
 | P18 | T2a mural / IMG_9771 | Past the freestanding mural panel and under the first run, the street, its storefronts and its ground show (the district through the lane gap) | The landing is walled in; nothing outside shows | S1 | eng + design | Close the landing's far wall and the space under the first run, then re-check the exterior-culling views (#431) |
 
 **Not judged here:** lighting levels, which depend on the capture exposure and differ between a phone camera and the
@@ -44,3 +44,6 @@ rendering.
 
 **P1, rechecked in-world:** the T2a recapture on Metal at the fix shows the ceiling closing both runs where the
 sky was. It also showed P18, which the earlier frame had hidden behind the sky.
+
+**P5, P7, P9, P12 and P17, rechecked (2026-10-16):** Val chose these five. They were compared again in the
+export's review views and the Metal recapture at `3028b138` (the captures in `docs/design/office-ipic/captures/`).
