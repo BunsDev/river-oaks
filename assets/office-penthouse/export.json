@@ -1,0 +1,1674 @@
+{
+  "status": "passed",
+  "mode": "export",
+  "label": "asset preview (fixture lighting), not runtime",
+  "browser": "156.0.8078.4",
+  "loadAverage": [
+    12.7,
+    12.7,
+    12.3
+  ],
+  "viewport": [
+    1440,
+    900
+  ],
+  "views": [
+    {
+      "view": "O1",
+      "time": "day",
+      "hour": 12,
+      "file": "docs/design/office-ipic/captures/penthouse/asset-preview/O1-day.jpg",
+      "buildMs": 74,
+      "calls": 73,
+      "triangles": 91144,
+      "textures": 8,
+      "geometries": 75,
+      "error": 0
+    },
+    {
+      "view": "O2",
+      "time": "day",
+      "hour": 12,
+      "file": "docs/design/office-ipic/captures/penthouse/asset-preview/O2-day.jpg",
+      "buildMs": 74,
+      "calls": 90,
+      "triangles": 84916,
+      "textures": 8,
+      "geometries": 99,
+      "error": 0
+    },
+    {
+      "view": "O3",
+      "time": "day",
+      "hour": 12,
+      "file": "docs/design/office-ipic/captures/penthouse/asset-preview/O3-day.jpg",
+      "buildMs": 74,
+      "calls": 59,
+      "triangles": 74872,
+      "textures": 8,
+      "geometries": 99,
+      "error": 0
+    },
+    {
+      "view": "O4",
+      "time": "day",
+      "hour": 12,
+      "file": "docs/design/office-ipic/captures/penthouse/asset-preview/O4-day.jpg",
+      "buildMs": 74,
+      "calls": 76,
+      "triangles": 92112,
+      "textures": 8,
+      "geometries": 103,
+      "error": 0
+    },
+    {
+      "view": "O4-terrace",
+      "time": "day",
+      "hour": 12,
+      "file": "docs/design/office-ipic/captures/penthouse/asset-preview/O4-terrace-day.jpg",
+      "buildMs": 74,
+      "calls": 44,
+      "triangles": 27812,
+      "textures": 8,
+      "geometries": 103,
+      "error": 0
+    },
+    {
+      "view": "plan",
+      "time": "day",
+      "hour": 12,
+      "file": "docs/design/office-ipic/captures/penthouse/asset-preview/plan-day.jpg",
+      "buildMs": 74,
+      "calls": 98,
+      "triangles": 92376,
+      "textures": 8,
+      "geometries": 103,
+      "error": 0
+    },
+    {
+      "view": "O1",
+      "time": "evening",
+      "hour": 18.75,
+      "file": "docs/design/office-ipic/captures/penthouse/asset-preview/O1-evening.jpg",
+      "buildMs": 74,
+      "calls": 73,
+      "triangles": 91144,
+      "textures": 8,
+      "geometries": 103,
+      "error": 0
+    },
+    {
+      "view": "O2",
+      "time": "evening",
+      "hour": 18.75,
+      "file": "docs/design/office-ipic/captures/penthouse/asset-preview/O2-evening.jpg",
+      "buildMs": 74,
+      "calls": 90,
+      "triangles": 84916,
+      "textures": 8,
+      "geometries": 103,
+      "error": 0
+    },
+    {
+      "view": "O3",
+      "time": "evening",
+      "hour": 18.75,
+      "file": "docs/design/office-ipic/captures/penthouse/asset-preview/O3-evening.jpg",
+      "buildMs": 74,
+      "calls": 59,
+      "triangles": 74872,
+      "textures": 8,
+      "geometries": 103,
+      "error": 0
+    },
+    {
+      "view": "O4",
+      "time": "evening",
+      "hour": 18.75,
+      "file": "docs/design/office-ipic/captures/penthouse/asset-preview/O4-evening.jpg",
+      "buildMs": 74,
+      "calls": 76,
+      "triangles": 92112,
+      "textures": 8,
+      "geometries": 103,
+      "error": 0
+    },
+    {
+      "view": "O4-terrace",
+      "time": "evening",
+      "hour": 18.75,
+      "file": "docs/design/office-ipic/captures/penthouse/asset-preview/O4-terrace-evening.jpg",
+      "buildMs": 74,
+      "calls": 44,
+      "triangles": 27812,
+      "textures": 8,
+      "geometries": 103,
+      "error": 0
+    },
+    {
+      "view": "plan",
+      "time": "evening",
+      "hour": 18.75,
+      "file": "docs/design/office-ipic/captures/penthouse/asset-preview/plan-evening.jpg",
+      "buildMs": 74,
+      "calls": 98,
+      "triangles": 92376,
+      "textures": 8,
+      "geometries": 103,
+      "error": 0
+    }
+  ],
+  "exports": [
+    {
+      "id": "executive-desk",
+      "file": "assets/office-penthouse/models/executive-desk.glb",
+      "bytes": 409768,
+      "sha256": "ae6a72643f92997a82851d2b07ed53ba6a78c372899c01dd08be01c98865e6c9",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "executive-desk",
+          "LOD0",
+          "executive-desk_LOD0wood",
+          "executive-desk_LOD0bronze",
+          "executive-desk_LOD0rose-stone",
+          "executive-desk_LOD0objects",
+          "executive-desk_LOD0shade",
+          "LOD1",
+          "executive-desk_LOD1wood",
+          "executive-desk_LOD1bronze",
+          "executive-desk_LOD1rose-stone",
+          "executive-desk_LOD1objects",
+          "executive-desk_LOD1shade",
+          "COL_executive-desk"
+        ],
+        "meshes": 10,
+        "triangles": 5460,
+        "materials": [
+          "bronze",
+          "objects",
+          "rose-stone",
+          "shade",
+          "wood"
+        ],
+        "textures": [
+          [
+            512,
+            512
+          ],
+          [
+            512,
+            512
+          ]
+        ],
+        "bounds": [
+          [
+            -2,
+            2.2351741291171123e-10,
+            -0.800000011920929
+          ],
+          [
+            2,
+            1.2000000476837158,
+            0.800000011920929
+          ]
+        ],
+        "missingTextures": []
+      }
+    },
+    {
+      "id": "workbench",
+      "file": "assets/office-penthouse/models/workbench.glb",
+      "bytes": 290468,
+      "sha256": "3ccd765cd11aefdf32da449fc11b0d8fec77de416813df2fac202e290e13db81",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "workbench",
+          "LOD0",
+          "workbench_LOD0wood",
+          "workbench_LOD0bronze",
+          "workbench_LOD0objects",
+          "LOD1",
+          "workbench_LOD1wood",
+          "workbench_LOD1bronze",
+          "workbench_LOD1objects",
+          "COL_workbench"
+        ],
+        "meshes": 6,
+        "triangles": 3240,
+        "materials": [
+          "bronze",
+          "objects",
+          "wood"
+        ],
+        "textures": [
+          [
+            512,
+            512
+          ]
+        ],
+        "bounds": [
+          [
+            -2.5999999046325684,
+            -1.4305114426349519e-8,
+            -0.6000000238418579
+          ],
+          [
+            2.5999999046325684,
+            0.8500000238418579,
+            0.6000000238418579
+          ]
+        ],
+        "missingTextures": []
+      }
+    },
+    {
+      "id": "display",
+      "file": "assets/office-penthouse/models/display.glb",
+      "bytes": 34236,
+      "sha256": "7be346dde3923085e87af2e3d24857370ab6fdc04492d0054cd84d106e2362f9",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "display",
+          "LOD0",
+          "display_LOD0bronze",
+          "display_LOD0graphite",
+          "display_LOD0SCREEN_DYNAMIC",
+          "LOD1",
+          "display_LOD1bronze",
+          "display_LOD1graphite",
+          "display_LOD1SCREEN_DYNAMIC",
+          "COL_display",
+          "SCREEN"
+        ],
+        "meshes": 6,
+        "triangles": 480,
+        "materials": [
+          "SCREEN_DYNAMIC",
+          "bronze",
+          "graphite"
+        ],
+        "textures": [],
+        "bounds": [
+          [
+            -0.3100000023841858,
+            -5.215406578829018e-11,
+            -0.10000000149011612
+          ],
+          [
+            0.3100000023841858,
+            0.48500001430511475,
+            0.05999999865889549
+          ]
+        ],
+        "missingTextures": []
+      }
+    },
+    {
+      "id": "task-chair",
+      "file": "assets/office-penthouse/models/task-chair.glb",
+      "bytes": 154016,
+      "sha256": "b34f4a724f93ed8e0d12236d57061c2a6ad23889fd3b747f068376f181abf2a2",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "task-chair",
+          "LOD0",
+          "task-chair_LOD0graphite",
+          "task-chair_LOD0upholstery",
+          "LOD1",
+          "task-chair_LOD1graphite",
+          "task-chair_LOD1upholstery",
+          "COL_task-chair"
+        ],
+        "meshes": 4,
+        "triangles": 3208,
+        "materials": [
+          "graphite",
+          "upholstery"
+        ],
+        "textures": [],
+        "bounds": [
+          [
+            -0.30180639028549194,
+            -5.364417798858767e-10,
+            -0.31472745537757874
+          ],
+          [
+            0.30180639028549194,
+            1.038214087486267,
+            0.29049840569496155
+          ]
+        ],
+        "missingTextures": []
+      }
+    },
+    {
+      "id": "executive-chair",
+      "file": "assets/office-penthouse/models/executive-chair.glb",
+      "bytes": 156688,
+      "sha256": "f3802a5687ede9a1f2f4c880d3d7f18e8fa2af3ca31bed12b4c5342196427170",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "executive-chair",
+          "LOD0",
+          "executive-chair_LOD0bronze",
+          "executive-chair_LOD0graphite",
+          "executive-chair_LOD0upholstery",
+          "LOD1",
+          "executive-chair_LOD1bronze",
+          "executive-chair_LOD1graphite",
+          "executive-chair_LOD1upholstery",
+          "COL_executive-chair"
+        ],
+        "meshes": 6,
+        "triangles": 3208,
+        "materials": [
+          "bronze",
+          "graphite",
+          "upholstery"
+        ],
+        "textures": [],
+        "bounds": [
+          [
+            -0.3199999928474426,
+            -5.364417798858767e-10,
+            -0.31472745537757874
+          ],
+          [
+            0.3199999928474426,
+            1.2574230432510376,
+            0.3236667513847351
+          ]
+        ],
+        "missingTextures": []
+      }
+    },
+    {
+      "id": "lounge-sofa",
+      "file": "assets/office-penthouse/models/lounge-sofa.glb",
+      "bytes": 307476,
+      "sha256": "54e6185c1e80afcb5a7460344bd1e3fb91caa35c8a28de326846c1e271ef989a",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "lounge-sofa",
+          "LOD0",
+          "lounge-sofa_LOD0wood",
+          "lounge-sofa_LOD0upholstery",
+          "LOD1",
+          "lounge-sofa_LOD1wood",
+          "lounge-sofa_LOD1upholstery",
+          "COL_lounge-sofa",
+          "SEAT_1",
+          "SEAT_2"
+        ],
+        "meshes": 4,
+        "triangles": 7176,
+        "materials": [
+          "upholstery",
+          "wood"
+        ],
+        "textures": [
+          [
+            512,
+            512
+          ]
+        ],
+        "bounds": [
+          [
+            -1.399999976158142,
+            -7.450580707946131e-10,
+            -0.5
+          ],
+          [
+            1.399999976158142,
+            0.8706619739532471,
+            0.5
+          ]
+        ],
+        "missingTextures": []
+      }
+    },
+    {
+      "id": "lounge-chair",
+      "file": "assets/office-penthouse/models/lounge-chair.glb",
+      "bytes": 145200,
+      "sha256": "2e8d96fa2f13f1ad19da7ff95a5e7c2ec9f0b923286583c6ae969d2ef97e7651",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "lounge-chair",
+          "LOD0",
+          "lounge-chair_LOD0bronze",
+          "lounge-chair_LOD0upholstery",
+          "LOD1",
+          "lounge-chair_LOD1bronze",
+          "lounge-chair_LOD1upholstery",
+          "COL_lounge-chair",
+          "SEAT"
+        ],
+        "meshes": 4,
+        "triangles": 2088,
+        "materials": [
+          "bronze",
+          "upholstery"
+        ],
+        "textures": [],
+        "bounds": [
+          [
+            -0.419327974319458,
+            0,
+            -0.3799999952316284
+          ],
+          [
+            0.419327974319458,
+            0.6599999666213989,
+            0.4201570451259613
+          ]
+        ],
+        "missingTextures": []
+      }
+    },
+    {
+      "id": "lounge-table",
+      "file": "assets/office-penthouse/models/lounge-table.glb",
+      "bytes": 286460,
+      "sha256": "4e25b165c6b2b0ec1747a023eecc9f6782712ce63dd9aa5f1397e48cf1d9e806",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "lounge-table",
+          "LOD0",
+          "lounge-table_LOD0rose-stone",
+          "lounge-table_LOD0bronze",
+          "lounge-table_LOD0objects",
+          "LOD1",
+          "lounge-table_LOD1rose-stone",
+          "lounge-table_LOD1bronze",
+          "lounge-table_LOD1objects",
+          "COL_lounge-table"
+        ],
+        "meshes": 6,
+        "triangles": 3568,
+        "materials": [
+          "bronze",
+          "objects",
+          "rose-stone"
+        ],
+        "textures": [
+          [
+            512,
+            512
+          ]
+        ],
+        "bounds": [
+          [
+            -0.7000061869621277,
+            -1.2858790628655282e-17,
+            -0.4000000059604645
+          ],
+          [
+            0.7000061869621277,
+            0.45500001311302185,
+            0.4000000059604645
+          ]
+        ],
+        "missingTextures": []
+      }
+    },
+    {
+      "id": "botanical-tree",
+      "file": "assets/office-penthouse/models/botanical-tree.glb",
+      "bytes": 747788,
+      "sha256": "631bb09fa06eafc23f33507ae5a00f4c63a239dec87224934d4f98213fa53d74",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "botanical-tree",
+          "LOD0",
+          "botanical-tree_LOD0travertine",
+          "botanical-tree_LOD0organic",
+          "botanical-tree_LOD0organiccanopy",
+          "botanical-tree_LOD0foliagecanopy",
+          "botanical-tree_LOD0foliage",
+          "LOD1",
+          "botanical-tree_LOD1travertine",
+          "botanical-tree_LOD1organic",
+          "botanical-tree_LOD1organiccanopy",
+          "botanical-tree_LOD1foliagecanopy",
+          "botanical-tree_LOD1foliage",
+          "COL_botanical-tree"
+        ],
+        "meshes": 10,
+        "triangles": 7824,
+        "materials": [
+          "foliage",
+          "organic",
+          "travertine"
+        ],
+        "textures": [
+          [
+            512,
+            512
+          ]
+        ],
+        "bounds": [
+          [
+            -0.75083988904953,
+            0,
+            -1.003214716911316
+          ],
+          [
+            1.4947024583816528,
+            5.0629377365112305,
+            1.1968843936920166
+          ]
+        ],
+        "missingTextures": []
+      }
+    },
+    {
+      "id": "back-console",
+      "file": "assets/office-penthouse/models/back-console.glb",
+      "bytes": 241992,
+      "sha256": "dc25838ba10e14296437157f6a130c2fedc5057917b7eeb43169bc35c049d146",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "back-console",
+          "LOD0",
+          "back-console_LOD0bronze",
+          "back-console_LOD0wood",
+          "back-console_LOD0travertine",
+          "back-console_LOD0objects",
+          "LOD1",
+          "back-console_LOD1bronze",
+          "back-console_LOD1wood",
+          "back-console_LOD1travertine",
+          "back-console_LOD1objects",
+          "COL_back-console"
+        ],
+        "meshes": 8,
+        "triangles": 3084,
+        "materials": [
+          "bronze",
+          "objects",
+          "travertine",
+          "wood"
+        ],
+        "textures": [
+          [
+            512,
+            512
+          ],
+          [
+            512,
+            512
+          ]
+        ],
+        "bounds": [
+          [
+            -3.5,
+            -1.7881393032936899e-9,
+            -0.25
+          ],
+          [
+            3.5,
+            1.2200000286102295,
+            0.25
+          ]
+        ],
+        "missingTextures": []
+      }
+    },
+    {
+      "id": "meeting-table",
+      "file": "assets/office-penthouse/models/meeting-table.glb",
+      "bytes": 342028,
+      "sha256": "e57de4135e4f7ca111fdf4d92272a9b6b452d1d14d44a82aa6e72602e94b59d3",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "meeting-table",
+          "LOD0",
+          "meeting-table_LOD0travertine",
+          "meeting-table_LOD0wood",
+          "meeting-table_LOD0bronze",
+          "meeting-table_LOD0objects",
+          "LOD1",
+          "meeting-table_LOD1travertine",
+          "meeting-table_LOD1wood",
+          "meeting-table_LOD1bronze",
+          "meeting-table_LOD1objects",
+          "COL_meeting-table"
+        ],
+        "meshes": 8,
+        "triangles": 3424,
+        "materials": [
+          "bronze",
+          "objects",
+          "travertine",
+          "wood"
+        ],
+        "textures": [
+          [
+            512,
+            512
+          ],
+          [
+            512,
+            512
+          ]
+        ],
+        "bounds": [
+          [
+            -1.600000023841858,
+            2.2351741291171123e-10,
+            -0.6000000238418579
+          ],
+          [
+            1.600000023841858,
+            0.8100000023841858,
+            0.6000000238418579
+          ]
+        ],
+        "missingTextures": []
+      }
+    },
+    {
+      "id": "meeting-chair",
+      "file": "assets/office-penthouse/models/meeting-chair.glb",
+      "bytes": 114476,
+      "sha256": "4f70a9e33c034804d54a1808e11ba40916ba58f1fe8c396752d769ef69beb95f",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "meeting-chair",
+          "LOD0",
+          "meeting-chair_LOD0wood",
+          "meeting-chair_LOD0upholstery",
+          "LOD1",
+          "meeting-chair_LOD1wood",
+          "meeting-chair_LOD1upholstery",
+          "COL_meeting-chair"
+        ],
+        "meshes": 4,
+        "triangles": 1696,
+        "materials": [
+          "upholstery",
+          "wood"
+        ],
+        "textures": [
+          [
+            512,
+            512
+          ]
+        ],
+        "bounds": [
+          [
+            -0.25,
+            1.19209286886246e-9,
+            -0.23999999463558197
+          ],
+          [
+            0.25,
+            0.8692606091499329,
+            0.2723642587661743
+          ]
+        ],
+        "missingTextures": []
+      }
+    },
+    {
+      "id": "terrace-planter",
+      "file": "assets/office-penthouse/models/terrace-planter.glb",
+      "bytes": 220716,
+      "sha256": "ab950f8d4f4b04f7a83f41b9558dd8d0f97b931c822bbb6b99c42246cdd4d6c2",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "terrace-planter",
+          "LOD0",
+          "terrace-planter_LOD0travertine",
+          "terrace-planter_LOD0organic",
+          "terrace-planter_LOD0foliage",
+          "LOD1",
+          "terrace-planter_LOD1travertine",
+          "terrace-planter_LOD1organic",
+          "terrace-planter_LOD1foliage",
+          "COL_terrace-planter"
+        ],
+        "meshes": 6,
+        "triangles": 2468,
+        "materials": [
+          "foliage",
+          "organic",
+          "travertine"
+        ],
+        "textures": [
+          [
+            512,
+            512
+          ]
+        ],
+        "bounds": [
+          [
+            -0.30000001192092896,
+            -1.1920929132713809e-8,
+            -2.700000047683716
+          ],
+          [
+            0.30000001192092896,
+            1.3460235595703125,
+            2.700000047683716
+          ]
+        ],
+        "missingTextures": []
+      }
+    },
+    {
+      "id": "terrace-lounger",
+      "file": "assets/office-penthouse/models/terrace-lounger.glb",
+      "bytes": 153404,
+      "sha256": "c4017171d8c8b0f8774696df97df91b3cac624184c8c5e2ec6a1c9cf03e3682d",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "terrace-lounger",
+          "LOD0",
+          "terrace-lounger_LOD0wood",
+          "terrace-lounger_LOD0upholstery",
+          "LOD1",
+          "terrace-lounger_LOD1wood",
+          "terrace-lounger_LOD1upholstery",
+          "COL_terrace-lounger"
+        ],
+        "meshes": 4,
+        "triangles": 2256,
+        "materials": [
+          "upholstery",
+          "wood"
+        ],
+        "textures": [
+          [
+            512,
+            512
+          ]
+        ],
+        "bounds": [
+          [
+            -0.3700000047683716,
+            4.76837147544984e-9,
+            -1
+          ],
+          [
+            0.3700000047683716,
+            0.7222036123275757,
+            1
+          ]
+        ],
+        "missingTextures": []
+      }
+    },
+    {
+      "id": "terrace-side-table",
+      "file": "assets/office-penthouse/models/terrace-side-table.glb",
+      "bytes": 83152,
+      "sha256": "37af9c5aa2e640050210624e645709f88595203fca4f0e9c17c83e693958c17e",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "terrace-side-table",
+          "LOD0",
+          "terrace-side-table_LOD0travertine",
+          "LOD1",
+          "terrace-side-table_LOD1travertine",
+          "COL_terrace-side-table"
+        ],
+        "meshes": 2,
+        "triangles": 440,
+        "materials": [
+          "travertine"
+        ],
+        "textures": [
+          [
+            512,
+            512
+          ]
+        ],
+        "bounds": [
+          [
+            -0.1899999976158142,
+            0,
+            -0.1899999976158142
+          ],
+          [
+            0.1899999976158142,
+            0.44999998807907104,
+            0.1899999976158142
+          ]
+        ],
+        "missingTextures": []
+      }
+    },
+    {
+      "id": "bistro-table",
+      "file": "assets/office-penthouse/models/bistro-table.glb",
+      "bytes": 102820,
+      "sha256": "a178970cabf2a1a9fadd4a754ca8863cddba616285f1d327d207a736d6c233ed",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "bistro-table",
+          "LOD0",
+          "bistro-table_LOD0bronze",
+          "bistro-table_LOD0travertine",
+          "LOD1",
+          "bistro-table_LOD1bronze",
+          "bistro-table_LOD1travertine",
+          "COL_bistro-table"
+        ],
+        "meshes": 4,
+        "triangles": 696,
+        "materials": [
+          "bronze",
+          "travertine"
+        ],
+        "textures": [
+          [
+            512,
+            512
+          ]
+        ],
+        "bounds": [
+          [
+            -0.38999998569488525,
+            0,
+            -0.38999998569488525
+          ],
+          [
+            0.38999998569488525,
+            0.7400000095367432,
+            0.38999998569488525
+          ]
+        ],
+        "missingTextures": []
+      }
+    },
+    {
+      "id": "bistro-chair",
+      "file": "assets/office-penthouse/models/bistro-chair.glb",
+      "bytes": 81956,
+      "sha256": "8474523970c1bf647a6c90cfd4195796b9922481fcb784ed90c96b33916a44cc",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "bistro-chair",
+          "LOD0",
+          "bistro-chair_LOD0bronze",
+          "bistro-chair_LOD0wood",
+          "LOD1",
+          "bistro-chair_LOD1bronze",
+          "bistro-chair_LOD1wood",
+          "COL_bistro-chair"
+        ],
+        "meshes": 4,
+        "triangles": 552,
+        "materials": [
+          "bronze",
+          "wood"
+        ],
+        "textures": [
+          [
+            512,
+            512
+          ]
+        ],
+        "bounds": [
+          [
+            -0.2199999988079071,
+            5.9604645663569045e-9,
+            -0.21199999749660492
+          ],
+          [
+            0.2199999988079071,
+            0.8500000238418579,
+            0.22200000286102295
+          ]
+        ],
+        "missingTextures": []
+      }
+    },
+    {
+      "id": "reading-chair",
+      "file": "assets/office-penthouse/models/reading-chair.glb",
+      "bytes": 211532,
+      "sha256": "54bb777889cc4aa940d81373a524a4f18d4517d2cd66e3bef8d0ef0bb6e9a931",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "reading-chair",
+          "LOD0",
+          "reading-chair_LOD0wood",
+          "reading-chair_LOD0upholstery",
+          "LOD1",
+          "reading-chair_LOD1wood",
+          "reading-chair_LOD1upholstery",
+          "COL_reading-chair"
+        ],
+        "meshes": 4,
+        "triangles": 4432,
+        "materials": [
+          "upholstery",
+          "wood"
+        ],
+        "textures": [
+          [
+            512,
+            512
+          ]
+        ],
+        "bounds": [
+          [
+            -0.47999998927116394,
+            1.3411045607369942e-9,
+            -0.4699999988079071
+          ],
+          [
+            0.47999998927116394,
+            0.9446244835853577,
+            0.4979695975780487
+          ]
+        ],
+        "missingTextures": []
+      }
+    },
+    {
+      "id": "reading-side-table",
+      "file": "assets/office-penthouse/models/reading-side-table.glb",
+      "bytes": 80816,
+      "sha256": "8a7bb51cd64d2111c0732bf9a28fdbaca899ebabe1eb7892de5b62fd9db5655c",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "reading-side-table",
+          "LOD0",
+          "reading-side-table_LOD0bronze",
+          "reading-side-table_LOD0rose-stone",
+          "reading-side-table_LOD0objects",
+          "reading-side-table_LOD0shade",
+          "LOD1",
+          "reading-side-table_LOD1bronze",
+          "reading-side-table_LOD1rose-stone",
+          "reading-side-table_LOD1objects",
+          "reading-side-table_LOD1shade",
+          "COL_reading-side-table"
+        ],
+        "meshes": 8,
+        "triangles": 1152,
+        "materials": [
+          "bronze",
+          "objects",
+          "rose-stone",
+          "shade"
+        ],
+        "textures": [
+          [
+            512,
+            512
+          ]
+        ],
+        "bounds": [
+          [
+            -0.23999999463558197,
+            0,
+            -0.23999999463558197
+          ],
+          [
+            0.23999999463558197,
+            1.0099999904632568,
+            0.23999999463558197
+          ]
+        ],
+        "missingTextures": []
+      }
+    },
+    {
+      "id": "bookcase",
+      "file": "assets/office-penthouse/models/bookcase.glb",
+      "bytes": 736616,
+      "sha256": "40181376069dfdfec921cc628200073fb2753bc52126130bde8c2bcce9317f83",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "bookcase",
+          "LOD0",
+          "bookcase_LOD0wood",
+          "bookcase_LOD0bronze",
+          "bookcase_LOD0objects",
+          "LOD1",
+          "bookcase_LOD1wood",
+          "bookcase_LOD1bronze",
+          "bookcase_LOD1objects",
+          "COL_bookcase"
+        ],
+        "meshes": 6,
+        "triangles": 7592,
+        "materials": [
+          "bronze",
+          "objects",
+          "wood"
+        ],
+        "textures": [
+          [
+            512,
+            512
+          ]
+        ],
+        "bounds": [
+          [
+            -2.700000047683716,
+            -7.450580707946131e-10,
+            -0.30000001192092896
+          ],
+          [
+            2.700000047683716,
+            2.5999999046325684,
+            0.30000001192092896
+          ]
+        ],
+        "missingTextures": []
+      }
+    },
+    {
+      "id": "arrival-cladding",
+      "file": "assets/office-penthouse/models/arrival-cladding.glb",
+      "bytes": 56468,
+      "sha256": "be1c7f8255be204f7cfb0816266da91a8faf4b5cf6bda072083d9c225328d72c",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "arrival-cladding",
+          "LOD0",
+          "arrival-cladding_LOD0rose-stone",
+          "arrival-cladding_LOD0bronze",
+          "LOD1",
+          "arrival-cladding_LOD1rose-stone",
+          "arrival-cladding_LOD1bronze",
+          "COL_arrival-cladding"
+        ],
+        "meshes": 4,
+        "triangles": 384,
+        "materials": [
+          "bronze",
+          "rose-stone"
+        ],
+        "textures": [
+          [
+            512,
+            512
+          ]
+        ],
+        "bounds": [
+          [
+            -3,
+            -3.33786012163273e-8,
+            -0.05999999865889549
+          ],
+          [
+            3,
+            7.599999904632568,
+            9.238719789195216e-10
+          ]
+        ],
+        "missingTextures": []
+      }
+    },
+    {
+      "id": "back-panelling",
+      "file": "assets/office-penthouse/models/back-panelling.glb",
+      "bytes": 158508,
+      "sha256": "a759611616f90bc4b4648e2c6cf3b9e6b0e6819932787d65417f8e5ba51bda30",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "back-panelling",
+          "LOD0",
+          "back-panelling_LOD0wood",
+          "back-panelling_LOD0bronze",
+          "LOD1",
+          "back-panelling_LOD1wood",
+          "back-panelling_LOD1bronze",
+          "COL_back-panelling"
+        ],
+        "meshes": 4,
+        "triangles": 1248,
+        "materials": [
+          "bronze",
+          "wood"
+        ],
+        "textures": [
+          [
+            512,
+            512
+          ]
+        ],
+        "bounds": [
+          [
+            -15,
+            8.940696516468449e-10,
+            -0.03400000184774399
+          ],
+          [
+            15,
+            3.2799999713897705,
+            9.238719789195216e-10
+          ]
+        ],
+        "missingTextures": []
+      }
+    },
+    {
+      "id": "library-panel",
+      "file": "assets/office-penthouse/models/library-panel.glb",
+      "bytes": 228268,
+      "sha256": "337ef6b355adbfeed76a6dc304eb736188fcaacd852730b2259a001ed25df222",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "library-panel",
+          "LOD0",
+          "library-panel_LOD0wood",
+          "library-panel_LOD0bronze",
+          "LOD1",
+          "library-panel_LOD1wood",
+          "library-panel_LOD1bronze",
+          "COL_library-panel"
+        ],
+        "meshes": 4,
+        "triangles": 2688,
+        "materials": [
+          "bronze",
+          "wood"
+        ],
+        "textures": [
+          [
+            512,
+            512
+          ]
+        ],
+        "bounds": [
+          [
+            -3.25,
+            0.2849999964237213,
+            -0.05000000074505806
+          ],
+          [
+            3.25,
+            3.315000057220459,
+            3.7252903539730653e-10
+          ]
+        ],
+        "missingTextures": []
+      }
+    },
+    {
+      "id": "rug",
+      "file": "assets/office-penthouse/models/rug.glb",
+      "bytes": 9128,
+      "sha256": "6b8d19b2799073b8970c0d1985db03638264f1b318aefd290ea0b69aaeaf3153",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "rug",
+          "LOD0",
+          "rug_LOD0wool",
+          "LOD1",
+          "rug_LOD1wool",
+          "COL_rug"
+        ],
+        "meshes": 2,
+        "triangles": 48,
+        "materials": [
+          "wool"
+        ],
+        "textures": [],
+        "bounds": [
+          [
+            -0.5,
+            -2.607703289414509e-11,
+            -0.5
+          ],
+          [
+            0.5,
+            0.009999999776482582,
+            0.5
+          ]
+        ],
+        "missingTextures": []
+      }
+    },
+    {
+      "id": "pendant",
+      "file": "assets/office-penthouse/models/pendant.glb",
+      "bytes": 88112,
+      "sha256": "969199aaf1a3021135c620aafe06d92296efea20b8875ccbd5dbb4441c6a147e",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "pendant",
+          "LOD0",
+          "pendant_LOD0shade",
+          "pendant_LOD0bronze",
+          "LOD1",
+          "pendant_LOD1shade",
+          "pendant_LOD1bronze",
+          "COL_pendant"
+        ],
+        "meshes": 4,
+        "triangles": 1776,
+        "materials": [
+          "bronze",
+          "shade"
+        ],
+        "textures": [],
+        "bounds": [
+          [
+            -0.46000000834465027,
+            -0.20692820847034454,
+            -0.46000000834465027
+          ],
+          [
+            0.46000000834465027,
+            0.20999999344348907,
+            0.46000000834465027
+          ]
+        ],
+        "missingTextures": []
+      }
+    },
+    {
+      "id": "texture-travertine",
+      "file": "assets/office-penthouse/textures/travertine.jpg",
+      "bytes": 60973,
+      "sha256": "ec7b4f728bbb4776b99d3386f7d164af92eaf40f41b9330d9a116be7a588dc33"
+    },
+    {
+      "id": "texture-rose-stone",
+      "file": "assets/office-penthouse/textures/rose-stone.jpg",
+      "bytes": 17101,
+      "sha256": "ad908b62f70def27fb06d88577514815ed72c8816c0892025b27049718e8cc28"
+    },
+    {
+      "id": "texture-wood",
+      "file": "assets/office-penthouse/textures/wood.jpg",
+      "bytes": 33818,
+      "sha256": "00d5ac155f5cf679282fea05c38dd503a9abc9a13cddf35ae433f254afe6d88b"
+    },
+    {
+      "id": "office-penthouse",
+      "file": "assets/office-penthouse/office-penthouse.glb",
+      "bytes": 3384380,
+      "sha256": "a7850dbff5541d73f4341487269bb04b205d38c4245865f9d9547859940e764a",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "office-penthouse",
+          "shell",
+          "primary_floor",
+          "terrace_floor",
+          "mezzanine_slab",
+          "stair_tread_1",
+          "stair_tread_2",
+          "stair_tread_3",
+          "stair_tread_4",
+          "stair_tread_5",
+          "stair_tread_6",
+          "stair_tread_7",
+          "stair_tread_8",
+          "stair_tread_9",
+          "stair_tread_10",
+          "stair_tread_11",
+          "stair_tread_12",
+          "stair_tread_13",
+          "stair_tread_14",
+          "stair_tread_15",
+          "stair_tread_16",
+          "stair_tread_17",
+          "stair_tread_18",
+          "stair_tread_19",
+          "stair_tread_20",
+          "stair_tread_21",
+          "stair_tread_22",
+          "mezzanine_guard",
+          "mezzanine_guard_rail",
+          "mezzanine_guard_1",
+          "mezzanine_guard_rail_1",
+          "lift_platform_jevica-officel0",
+          "lift_frame_jevica-officel0",
+          "lift_platform_jevica-officel1",
+          "lift_frame_jevica-officel1",
+          "arrival_core_west",
+          "arrival_core_east",
+          "entrance_header",
+          "back_wall",
+          "terrace_rail_south",
+          "terrace_rail_west",
+          "terrace_rail_north",
+          "ceiling",
+          "light_0",
+          "light_1",
+          "light_2",
+          "light_3",
+          "light_4",
+          "curtain_wall_panes",
+          "curtain_wall_frames",
+          "office-furnishings",
+          "furnishingsmain-floor",
+          "executive-desk",
+          "executive-deskwood",
+          "executive-deskbronze",
+          "executive-deskrose-stone",
+          "executive-deskobjects",
+          "executive-deskshade",
+          "bench-a",
+          "bench-awood",
+          "bench-abronze",
+          "bench-aobjects",
+          "bench-b",
+          "bench-bwood",
+          "bench-bbronze",
+          "bench-bobjects",
+          "lounge-sofa",
+          "lounge-sofawood",
+          "lounge-sofaupholstery",
+          "SEAT_1lounge-sofa",
+          "SEAT_2lounge-sofa",
+          "lounge-chair-a",
+          "lounge-chair-abronze",
+          "lounge-chair-aupholstery",
+          "SEATlounge-chair-a",
+          "lounge-chair-b",
+          "lounge-chair-bbronze",
+          "lounge-chair-bupholstery",
+          "SEATlounge-chair-b",
+          "lounge-table",
+          "lounge-tablerose-stone",
+          "lounge-tablebronze",
+          "lounge-tableobjects",
+          "botanical-planter",
+          "botanical-plantertravertine",
+          "botanical-planterorganic",
+          "botanical-planterorganic_1",
+          "botanical-planterfoliage",
+          "botanical-planterfoliage_1",
+          "back-console",
+          "back-consolebronze",
+          "back-consolewood",
+          "back-consoletravertine",
+          "back-consoleobjects",
+          "meeting-table",
+          "meeting-tabletravertine",
+          "meeting-tablewood",
+          "meeting-tablebronze",
+          "meeting-tableobjects",
+          "meeting-chair-1",
+          "meeting-chair-1wood",
+          "meeting-chair-1upholstery",
+          "meeting-chair-2",
+          "meeting-chair-2wood",
+          "meeting-chair-2upholstery",
+          "meeting-chair-3",
+          "meeting-chair-3wood",
+          "meeting-chair-3upholstery",
+          "meeting-chair-4",
+          "meeting-chair-4wood",
+          "meeting-chair-4upholstery",
+          "meeting-chair-5",
+          "meeting-chair-5wood",
+          "meeting-chair-5upholstery",
+          "meeting-chair-6",
+          "meeting-chair-6wood",
+          "meeting-chair-6upholstery",
+          "desk-executive-chair",
+          "desk-executive-chairbronze",
+          "desk-executive-chairgraphite",
+          "desk-executive-chairupholstery",
+          "desk-a1-chair",
+          "desk-a1-chairgraphite",
+          "desk-a1-chairupholstery",
+          "desk-a2-chair",
+          "desk-a2-chairgraphite",
+          "desk-a2-chairupholstery",
+          "desk-b1-chair",
+          "desk-b1-chairgraphite",
+          "desk-b1-chairupholstery",
+          "desk-b2-chair",
+          "desk-b2-chairgraphite",
+          "desk-b2-chairupholstery",
+          "desk-executive-display-1",
+          "desk-executive-display-1bronze",
+          "desk-executive-display-1graphite",
+          "desk-executive-display-1SCREEN_DYNAMIC",
+          "SCREENdesk-executive-display-1",
+          "desk-executive-display-2",
+          "desk-executive-display-2bronze",
+          "desk-executive-display-2graphite",
+          "desk-executive-display-2SCREEN_DYNAMIC",
+          "SCREENdesk-executive-display-2",
+          "desk-executive-display-3",
+          "desk-executive-display-3bronze",
+          "desk-executive-display-3graphite",
+          "desk-executive-display-3SCREEN_DYNAMIC",
+          "SCREENdesk-executive-display-3",
+          "desk-a1-display-1",
+          "desk-a1-display-1bronze",
+          "desk-a1-display-1graphite",
+          "desk-a1-display-1SCREEN_DYNAMIC",
+          "SCREENdesk-a1-display-1",
+          "desk-a1-display-2",
+          "desk-a1-display-2bronze",
+          "desk-a1-display-2graphite",
+          "desk-a1-display-2SCREEN_DYNAMIC",
+          "SCREENdesk-a1-display-2",
+          "desk-a2-display-1",
+          "desk-a2-display-1bronze",
+          "desk-a2-display-1graphite",
+          "desk-a2-display-1SCREEN_DYNAMIC",
+          "SCREENdesk-a2-display-1",
+          "desk-a2-display-2",
+          "desk-a2-display-2bronze",
+          "desk-a2-display-2graphite",
+          "desk-a2-display-2SCREEN_DYNAMIC",
+          "SCREENdesk-a2-display-2",
+          "desk-b1-display-1",
+          "desk-b1-display-1bronze",
+          "desk-b1-display-1graphite",
+          "desk-b1-display-1SCREEN_DYNAMIC",
+          "SCREENdesk-b1-display-1",
+          "desk-b1-display-2",
+          "desk-b1-display-2bronze",
+          "desk-b1-display-2graphite",
+          "desk-b1-display-2SCREEN_DYNAMIC",
+          "SCREENdesk-b1-display-2",
+          "desk-b2-display-1",
+          "desk-b2-display-1bronze",
+          "desk-b2-display-1graphite",
+          "desk-b2-display-1SCREEN_DYNAMIC",
+          "SCREENdesk-b2-display-1",
+          "desk-b2-display-2",
+          "desk-b2-display-2bronze",
+          "desk-b2-display-2graphite",
+          "desk-b2-display-2SCREEN_DYNAMIC",
+          "SCREENdesk-b2-display-2",
+          "arrival-cladding",
+          "arrival-claddingrose-stone",
+          "arrival-claddingbronze",
+          "back-panelling",
+          "back-panellingwood",
+          "back-panellingbronze",
+          "rug-lounge",
+          "rug-loungewool",
+          "rug-meeting",
+          "rug-meetingwool",
+          "pendant-1",
+          "pendant-1shade",
+          "pendant-1bronze",
+          "pendant-1rod",
+          "pendant-2",
+          "pendant-2shade",
+          "pendant-2bronze",
+          "pendant-2rod",
+          "pendant-3",
+          "pendant-3shade",
+          "pendant-3bronze",
+          "pendant-3rod",
+          "pendant-4",
+          "pendant-4shade",
+          "pendant-4bronze",
+          "pendant-4rod",
+          "furnishingsterrace",
+          "terrace-planter-south",
+          "terrace-planter-southtravertine",
+          "terrace-planter-southorganic",
+          "terrace-planter-southfoliage",
+          "terrace-planter-north",
+          "terrace-planter-northtravertine",
+          "terrace-planter-northorganic",
+          "terrace-planter-northfoliage",
+          "terrace-lounger-a",
+          "terrace-lounger-awood",
+          "terrace-lounger-aupholstery",
+          "terrace-lounger-b",
+          "terrace-lounger-bwood",
+          "terrace-lounger-bupholstery",
+          "terrace-side-table",
+          "terrace-side-tabletravertine",
+          "terrace-bistro-table",
+          "terrace-bistro-tablebronze",
+          "terrace-bistro-tabletravertine",
+          "terrace-bistro-chair-a",
+          "terrace-bistro-chair-abronze",
+          "terrace-bistro-chair-awood",
+          "terrace-bistro-chair-b",
+          "terrace-bistro-chair-bbronze",
+          "terrace-bistro-chair-bwood",
+          "furnishingsmezzanine",
+          "reading-chair-a",
+          "reading-chair-awood",
+          "reading-chair-aupholstery",
+          "reading-chair-b",
+          "reading-chair-bwood",
+          "reading-chair-bupholstery",
+          "reading-side-table",
+          "reading-side-tablebronze",
+          "reading-side-tablerose-stone",
+          "reading-side-tableobjects",
+          "reading-side-tableshade",
+          "bookcase-1",
+          "bookcase-1wood",
+          "bookcase-1bronze",
+          "bookcase-1objects",
+          "bookcase-2",
+          "bookcase-2wood",
+          "bookcase-2bronze",
+          "bookcase-2objects",
+          "library-panel",
+          "library-panelwood",
+          "library-panelbronze",
+          "rug-library",
+          "rug-librarywool",
+          "collision",
+          "COL_executive-desk",
+          "COL_bench-a",
+          "COL_bench-b",
+          "COL_lounge-sofa",
+          "COL_lounge-table",
+          "COL_lounge-chair-a",
+          "COL_lounge-chair-b",
+          "COL_botanical-planter",
+          "COL_back-console",
+          "COL_meeting-table",
+          "COL_meeting-chair-1",
+          "COL_meeting-chair-4",
+          "COL_meeting-chair-2",
+          "COL_meeting-chair-5",
+          "COL_meeting-chair-3",
+          "COL_meeting-chair-6",
+          "COL_terrace-planter-south",
+          "COL_terrace-planter-north",
+          "COL_terrace-lounger-a",
+          "COL_terrace-lounger-b",
+          "COL_terrace-side-table",
+          "COL_terrace-bistro-table",
+          "COL_terrace-bistro-chair-a",
+          "COL_terrace-bistro-chair-b",
+          "COL_reading-chair-a",
+          "COL_reading-chair-b",
+          "COL_reading-side-table",
+          "COL_bookcase-1",
+          "COL_bookcase-2",
+          "COL_desk-executive-chair",
+          "COL_desk-a1-chair",
+          "COL_desk-a2-chair",
+          "COL_desk-b1-chair",
+          "COL_desk-b2-chair"
+        ],
+        "meshes": 184,
+        "triangles": 87136,
+        "materials": [
+          "",
+          "SCREEN_DYNAMIC",
+          "bronze",
+          "foliage",
+          "graphite",
+          "objects",
+          "organic",
+          "rose-stone",
+          "shade",
+          "travertine",
+          "upholstery",
+          "wood",
+          "wool"
+        ],
+        "textures": [
+          [
+            512,
+            512
+          ],
+          [
+            512,
+            512
+          ],
+          [
+            512,
+            512
+          ]
+        ],
+        "bounds": [
+          [
+            -23.200000001490118,
+            -0.10000000074505806,
+            -20.200000001490118
+          ],
+          [
+            15.15000057220459,
+            7.750000002980232,
+            0.20000000149011612
+          ]
+        ],
+        "missingTextures": []
+      }
+    }
+  ],
+  "sources": {
+    "preview/src/office-penthouse-furnishings.js": "099b531fc212932c09b9bdcab83851a9c66a6f7177e3f24021189a3a0d97c6d3",
+    "preview/src/office-penthouse-graybox.js": "12ab50d3098edbc8c2ca8bbcd9e40d8f4475a5b88c2a6d1ee4631c50512d6029",
+    "preview/src/office-layouts.js": "42b4ae145e37c6b5eb671b474e9bf57c7c1f209e8e6040162ae760957a56b476",
+    "preview/e2e/fixtures/office-penthouse.js": "56f9a2159628a97ea1fc907c9eb1686c4e5bef18a1d3fdd216ae6b5c39137aa7"
+  }
+}

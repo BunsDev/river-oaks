@@ -87,7 +87,7 @@ test('sitting is refused out of reach, on the other floor, for unknown seats, st
   assert.equal(f.stand(owner, { layout: 'office-penthouse-9' }).error, 'office_layout_stale');
   assert.deepEqual(f.visit(owner), before);
   // The reading chairs are upstairs: standing under them on the main floor reaches nothing.
-  f.walk(owner, [-8, 3], seat('reading-chair-a').stand);
+  f.walk(owner, [-8, 3], [-7, 13.6], seat('reading-chair-a').stand); // east of the lounge furniture
   assert.equal(f.sit(owner, 'reading-chair-a').error, 'office_seat_out_of_reach');
   assert.equal(f.send('guest', 'sit', { officeId, seatId: 'desk-a1-chair', layout }).error, 'office_permission_required', 'no visit, no seat');
 });
