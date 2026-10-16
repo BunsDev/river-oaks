@@ -115,6 +115,8 @@ export function createStudioViewport(host,{onSelect,onTransform,onPosition,onExi
       if(space&&!reflections){const pmrem=new THREE.PMREMGenerator(renderer),room=new RoomEnvironment();try{reflections=pmrem.fromScene(room);}finally{room.dispose();pmrem.dispose();}}
       scene.environment=light?reflections.texture:null;
       scene.environmentIntensity=light?light.reflections:1;
+      // Other finishes keep the preset's faint reflections; a mirror reflects the room fully.
+      if(light)content.group.traverse(child=>{const m=child.material;if(m?.userData?.mirror&&m.envMap!==reflections.texture){m.envMap=reflections.texture;m.envMapIntensity=Math.min(1,light.reflections*4);m.needsUpdate=true;}});
       sky.intensity=light?light.sky:2.5;
       sun.target.position.copy(center);sun.position.copy(center).add(new THREE.Vector3(.5,1,.4).multiplyScalar(span));
       Object.assign(sun.shadow.camera,{left:-span/2,right:span/2,top:span/2,bottom:-span/2,far:span*3});sun.shadow.camera.updateProjectionMatrix();

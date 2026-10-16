@@ -50,5 +50,33 @@ export function createHomeForms({ geometry, mesh }) {
       const throwDepth = Math.min(.5, (end - start) * .4);
       block(group, accent, [0, mattressTop + (loft + .012 - drape * .7) / 2, end - throwDepth / 2 - .02], [Math.min(frameWidth, cloth + .006), loft + .012 + drape * .7, throwDepth], 'Throw', .02);
     },
+    // Open shelving with a back on the local -z edge: 25 mm sides, 22 mm boards about 36 cm
+    // apart above a recessed kick, bays at most 0.9 m wide. A third of the bay spaces hold two
+    // folded garments, a third a lidded box, the rest stay open; all are sized in metres.
+    shelf(root, item, carcass, kick, textiles) {
+      const group = metric(root, item), { width: W, depth: D, height: H } = item;
+      const side = Math.min(.025, W / 10), board = Math.min(.022, H / 12), back = Math.min(.009, D / 10);
+      const plinth = Math.min(.06, H * .08), inner = W - 2 * side, bays = Math.max(1, Math.ceil(inner / .9)), bay = (inner - (bays - 1) * board) / bays;
+      const usable = H - plinth - board, levels = Math.max(1, Math.round(usable / .36)), pitch = usable / levels;
+      for (const sx of [-1, 1]) block(group, carcass, [sx * (W / 2 - side / 2), H / 2, 0], [side, H, D], 'Side panel');
+      block(group, carcass, [0, H - board / 2, 0], [inner, board, D], 'Top');
+      block(group, carcass, [0, H / 2, -D / 2 + back / 2], [inner, H - board, back], 'Back panel');
+      block(group, kick, [0, plinth / 2, .01], [inner, plinth, D - back - .02], 'Recessed kick');
+      for (let index = 1; index < bays; index++) block(group, carcass, [-inner / 2 + index * (bay + board) - board / 2, (plinth + H - board) / 2, back / 2], [board, H - plinth - board, D - back], 'Shelf divider');
+      const clear = pitch - board, deep = D - back - .04, front = back / 2 + .01;
+      for (let level = 0; level < levels; level++) {
+        const base = plinth + level * pitch;
+        block(group, carcass, [0, base + board / 2, back / 2], [inner, board, D - back], 'Shelf');
+        for (let index = 0; index < bays; index++) {
+          const x = -inner / 2 + index * (bay + board) + bay / 2, slot = (level * 2 + index) % 3;
+          if (slot === 0 && clear > .08 && bay > .2 && deep > .15) for (let fold = 0; fold < Math.min(2, Math.floor((clear - .04) / .05)); fold++)
+            block(group, textiles[(level + index + fold) % textiles.length], [x - bay * .1, base + board + .025 + fold * .05, front], [Math.min(.32, bay * .6), .048, Math.min(.26, deep)], 'Folded stack', .012);
+          else if (slot === 1 && clear > .12 && bay > .2 && deep > .15) {
+            const tall = Math.min(.16, clear - .04);
+            block(group, textiles[(level + index) % textiles.length], [x + bay * .15, base + board + tall / 2, front], [Math.min(.24, bay * .45), tall, Math.min(.2, deep)], 'Lidded box');
+          }
+        }
+      }
+    },
   };
 }
