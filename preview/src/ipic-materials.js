@@ -1,5 +1,23 @@
 import * as THREE from 'three';
 
+// The lounge carpet's palette, from IMG_9758: a dark ground with a restrained rust swirl (photo
+// review P12; the first pass was a saturated red-on-black that read brighter than the room).
+export const IPIC_LOUNGE_CARPET = Object.freeze({ base: Object.freeze([34, 26, 24]), pattern: Object.freeze([92, 48, 40]) });
+
+// The reception sign as photographed (IMG_9738, review P5): RIVER over OAKS, small and letterspaced,
+// beside a large DISTRICT. Centre-aligned runs in canvas pixels for a w x h sign face.
+export function districtSignLayout(w, h) {
+  const small = Math.round(h * .19), large = Math.round(h * .46), left = Math.round(w * .2);
+  return [
+    { text: 'RIVER', x: left, y: Math.round(h * .38), size: small, spacing: .18 },
+    { text: 'OAKS', x: left, y: Math.round(h * .62), size: small, spacing: .18 },
+    { text: 'DISTRICT', x: Math.round(w * .6), y: Math.round(h * .52), size: large, spacing: .06 },
+  ];
+}
+
+// A small deterministic generator, so painted textures (and so GLB exports) are reproducible.
+const seeded = seed => () => { seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+
 // Authored procedural finishes approximate photographed materials; artwork uses
 // untouched source photos sampled by mesh UVs, not AI-redrawn replacements.
 export function createIpicMaterials({ textures = typeof document !== 'undefined' } = {}) {
@@ -30,12 +48,42 @@ export function createIpicMaterials({ textures = typeof document !== 'undefined'
       const u = x / w, v = y / h;
       const dx = Math.sin(Math.PI * (u - .4)), dy = Math.sin(Math.PI * (v - .55));
       const grain = Math.sin(100 * Math.sqrt(dx * dx * .52 + dy * dy) + 4 * Math.sin(u * 6.28));
-      const stripe = Math.max(0, Math.min(1, (grain + .1) * 3));
-      const noise = .97 + .03 * Math.sin(x * 53 + y * 71), i = (y * w + x) * 4;
-      pixels.data.set([(54 + stripe * 99) * noise, (34 + stripe * 15) * noise, (27 + stripe * 6) * noise, 255], i);
+      const stripe = Math.max(0, Math.min(1, (grain - .2) * 3));
+      const noise = .97 + .03 * Math.sin(x * 53 + y * 71), i = (y * w + x) * 4, [b, p] = [IPIC_LOUNGE_CARPET.base, IPIC_LOUNGE_CARPET.pattern];
+      pixels.data.set([0, 1, 2].map(k => (b[k] + stripe * (p[k] - b[k])) * noise).concat(255), i);
     }
     c.putImageData(pixels, 0, 0);
   });
+  // Photo review P9 (IMG_9758): the coffee table's top is book-matched timber radiating from the centre.
+  const sunburst = canvas(512, 512, (c, w, h) => {
+    const cx = w / 2, cy = h / 2, segments = 16;
+    for (let i = 0; i < segments; i++) {
+      c.fillStyle = i % 2 ? '#8a6542' : '#a57c52';
+      c.beginPath(); c.moveTo(cx, cy); c.arc(cx, cy, w, i * 2 * Math.PI / segments, (i + 1) * 2 * Math.PI / segments); c.closePath(); c.fill();
+    }
+    c.strokeStyle = '#4f382433'; c.lineWidth = 1;
+    for (let r = 12; r < w; r += 9) { c.beginPath(); c.arc(cx, cy, r, 0, 2 * Math.PI); c.stroke(); }
+  });
+  // Photo review P12 (IMG_9756): the Tuck Room's floor is mid-brown boards.
+  const planks = canvas(512, 512, (c, w, h) => {
+    const rand = seeded(9756), board = h / 8;
+    for (let row = 0; row < 8; row++) for (let x = -(row % 2) * w / 3; x < w; x += w / 1.5) {
+      const tone = 92 + Math.floor(rand() * 26);
+      c.fillStyle = `rgb(${tone}, ${Math.floor(tone * .74)}, ${Math.floor(tone * .55)})`; c.fillRect(x, row * board, w / 1.5 - 2, board - 2);
+    }
+    c.fillStyle = '#2b201833'; for (let i = 0; i < 260; i++) c.fillRect(rand() * w, rand() * h, 30 + rand() * 60, 1);
+  });
+  // Photo review P17 (IMG_9767): the auditorium's dark carpet scattered with orange and rust flecks.
+  const confetti = canvas(512, 512, (c, w, h) => {
+    const rand = seeded(9767);
+    c.fillStyle = '#1e1b22'; c.fillRect(0, 0, w, h);
+    for (let i = 0; i < 420; i++) {
+      c.strokeStyle = ['#d46a2a', '#b8462a', '#8a3b2b', '#e08a3c'][i % 4]; c.lineWidth = 2 + rand() * 2;
+      const x = rand() * w, y = rand() * h, a = rand() * Math.PI;
+      c.beginPath(); c.moveTo(x, y); c.quadraticCurveTo(x + 6 * Math.cos(a + 1), y + 6 * Math.sin(a + 1), x + 12 * Math.cos(a), y + 12 * Math.sin(a)); c.stroke();
+    }
+  });
+  if (confetti) confetti.repeat.set(6, 4.5);
   const marble = canvas(512, 512, (c, w, h) => {
     c.fillStyle = '#d8d4c8'; c.fillRect(0, 0, w, h);
     for (let i = 0; i < 24; i++) {
@@ -45,6 +93,9 @@ export function createIpicMaterials({ textures = typeof document !== 'undefined'
   });
   const m = {
     timber: material('weathered-timber', '#ffffff', { map: grain, bumpMap: grain, bumpScale: .012, roughness: .84 }),
+    sunburst: material('sunburst-timber', '#ffffff', { map: sunburst, roughness: .55 }),
+    barFloor: material('bar-floor-timber', '#ffffff', { map: planks, roughness: .62 }),
+    confetti: material('confetti-carpet', '#ffffff', { map: confetti, roughness: 1 }),
     carpet: material('red-swirl-carpet', '#ffffff', { map: carpet, bumpMap: carpet, bumpScale: .007, roughness: 1 }),
     marble: material('veined-marble', '#ffffff', { map: marble, roughness: .27 }),
     stone: material('taupe-stacked-stone', '#685747'), plaster: material('warm-plaster', '#b6ab98'),
@@ -59,11 +110,19 @@ export function createIpicMaterials({ textures = typeof document !== 'undefined'
     glow: material('warm-lamp', '#ffe7ac', { emissive: '#ffd494', emissiveIntensity: 2.2 }),
     screen: material('cinema-screen', '#acb3d6', { emissive: '#747fad', emissiveIntensity: .6, roughness: 1 }),
   };
-  if (!textures) { m.timber.color.set('#5d4939'); m.carpet.color.set('#9e3425'); m.marble.color.set('#d8d4c8'); }
-  const label = (name, lines, { background = '#211d18', color = '#e4d9bd', width = 1024, height = 256, font = 'sans-serif' } = {}) => {
+  if (!textures) {
+    m.timber.color.set('#5d4939'); m.carpet.color.set('#3c2a25'); m.marble.color.set('#d8d4c8');
+    m.sunburst.color.set('#97704a'); m.barFloor.color.set('#6c513b'); m.confetti.color.set('#231d24');
+  }
+  const label = (name, lines, { background = '#211d18', color = '#e4d9bd', width = 1024, height = 256, font = 'sans-serif', layout = null } = {}) => {
     const map = canvas(width, height, (c, w, h) => {
       c.fillStyle = background; c.fillRect(0, 0, w, h); c.fillStyle = color;
-      c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `500 ${Math.floor(h / (lines.length * 1.8))}px ${font}`;
+      c.textAlign = 'center'; c.textBaseline = 'middle';
+      if (layout) {
+        for (const run of layout(w, h)) { c.font = `500 ${run.size}px ${font}`; c.letterSpacing = `${run.size * (run.spacing ?? 0)}px`; c.fillText(run.text, run.x, run.y, w * .92); }
+        return;
+      }
+      c.font = `500 ${Math.floor(h / (lines.length * 1.8))}px ${font}`;
       lines.forEach((line, i) => c.fillText(line, w / 2, h * (i + .5) / lines.length, w * .92));
     });
     return material(name, textures ? '#ffffff' : background, { map, roughness: .85 });
