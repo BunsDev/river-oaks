@@ -7,9 +7,10 @@ export const SILVAN_DRAPES = Object.freeze([
   {from:Math.PI-.3,to:Math.PI+.3,top:.09,length:.8,rx:.2,rz:.152,jag:.1,lobes:2,rows:24,name:'Forest aristocrat rear panel'},
 ]);
 
-// Raise the masculine rim 4 cm to clear the seated suit hip while keeping it
-// attached to the pelvis; the feminine rig retains its authored waist.
-export const silvanDrapes = variant => SILVAN_DRAPES.map(recipe => ({...recipe, top:variant==='masculine'?.13:recipe.top}));
+// Keep the rim above the seated suit or fitted linen hip. The feminine
+// layer needs 2 cm more rise to clear the continuous trousers at deep bends.
+export const silvanWaist = variant => variant==='masculine'?.13:.11;
+export const silvanDrapes = variant => SILVAN_DRAPES.map(recipe => ({...recipe, top:silvanWaist(variant)}));
 
 // Original hanging gold leaves and chains, merged in the authored pelvis frame
 // so their baked cloth attachment shares one owned geometry and material.
@@ -27,5 +28,5 @@ export function createSilvanDrapeDetailGeometry(variant){
     pieces.push(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points),24,.0021,7,false));
     leaf([x,.065-drop,.156],.019);
   }
-  const geometry=mergeGeometries(pieces);for(const piece of pieces)piece.dispose();if(variant==='masculine')geometry.translate(0,.04,0);return geometry;
+  const geometry=mergeGeometries(pieces);for(const piece of pieces)piece.dispose();geometry.translate(0,silvanWaist(variant)-.09,0);return geometry;
 }

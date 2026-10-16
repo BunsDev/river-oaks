@@ -1253,3 +1253,124 @@ Next: inspect exact-head CI, extend actual contact/render evidence to Silvan's
 knee/calf and trouser silhouette, then formal/noir coat panels; continue remaining
 440-444 visual/device/usability/accessibility/live/release acceptance. Preserve
 checkout and all13 untracked reports; it is not eligible for retirement.
+
+
+Silvan knee continuation at25e65623: prior turn progressed with signed/pushed lap
+fit. Both feminine forms use disconnected rigid hip/thigh/cuff cylinders. New
+actual knee coverage regression (2,132 body triangles, leg-weight filter,
+double-sided clothing collider) fails338 standing and202 at90-degree bend.
+Candidate continuous linen shell derives from shipped CC0Jevica lower-body
+surface with8mm offset and existing skinweights, replacing5cylinders. Selected
+six-row browser prototype shows closed front-knee holes and removes cylinder
+silhouettes. All standing knee rays covered, but114 rays at90degrees remain
+uncovered within8cm. Diagnostic finds68 hit other body surfaces within8cm;
+first failing triangle has corresponding cloth centroid6mm outward. Investigate
+concave-fold/self-occlusion semantics before interpreting remaining rays; no
+weakened pass or final acceptance. Reviewer checking helper and candidate.
+Source/tests uncommitted; no merge/deploy. Evidence .runtime/character-studio/
+silvan-legs. Full440-444 goal remains active.
+
+
+Silvan trousers resumption: the preceding plaza status-only turn made no progress
+on this goal. Polled existing focused handle53935 to terminal exit1, preserving
+its red log. At12mm offset, sampled visible knee coverage passed but all-panel
+edge checks found9 intersections at the fixed waist in90-degree bends. A3mm
+upper taper still crossed5 edges; it was diagnostic only and is not in production.
+Exterior rim rays measured maximum10.97mm of trouser surface above the pinned
+rim. The feminine rim now rises20mm (.09 to.11), with hanging gold translated
+and its deterministic bake regenerated. Keep the continuous12mm linen shell.
+
+The original synthetic quarter-torus had open ends; the left exterior camera
+could see its inner body through an end. A closed torus passes intact-shell and
+removed-patch assertions and gives identical chunked/nonchunked results. Actual
+rig removed-knee-patch, transformed-root and source/rest-buffer checks added.
+Reviewer found source snapshots were taken after fitting; move them before fit
+once running focused gate67327 terminates. Source remains frozen for that gate.
+Browser diagnostic98058 is queued for both feminine forms/all scheduled poses,
+with sampled knee coverage and outer-layer edge checks per captured phase.
+No pass or final art claim yet. Latest pushed25e65623 has all10 hosted checks
+passing. Project reconciliation31 unrelated gaps, none for own task. Full440-444
+scope re-read and remains open; no merge/deploy authorization or claim.
+
+
+Focused67327 passed14/14 after the raised-rim bake. Source immutability snapshots
+now precede fitting, addressing review feedback; that change awaits final rerun.
+Browser98058 found low-rear walking rays through open cuffs when checking linen
+alone. Actual-runtime diagnostic shows the named boot shafts occlude these rays;
+coverage now checks the visible outfit (linen plus both shafts), with an actual
+removed-knee-patch control including boots. Browser78548 passed both upright
+forms' idle/walk/run/sit/wave but failed beast prowl:3 uncovered low-rear samples
+atframe144 and10 main-drape/trouser edge crossings atframe163. No commit or
+complete-browser claim. Silvan sitting/walk/prowl captures inspected: front knee
+coverage improved; lower calf/boot and outer-cloth quality remain unapproved.
+
+Exact runtime diagnostic reproduces prowl. A3mm upper fit transitioning smoothly
+to12mm at the knee removes all10 layer crossings; the actual body has0 crossings
+in both versions. Double-sided fabric does not remove the3 cuff rays, so material
+sidedness is unchanged. Candidate now extends the cuff6cm lower inside the boot
+and applies the tested upper taper; process62162 checks all4 prowl phases.
+Visibility review also found a false-positive path: hidden garment meshes or
+ancestors could satisfy the probe. Added a red synthetic regression and filter
+at each sample; it now passes. Frozen final core/browser/bake/hero verification
+still required after the candidate converges. Evidence is retained under
+.runtime/character-studio/silvan-legs; no full440-444 completion claim.
+
+
+Candidate convergence: process62162 completed with0 exposed samples and0 outer
+layer/body edge crossings in all4 prowl phases. Permanent actual-runtime test
+covers the previously failing frames144/163 and now explicitly requires beast
+motion>.95. Focused4931 passed7 tests; only the intentional geometry snapshot
+failed (183068 actual versus182498 before the cuff extension). Expected counts
+now183068 in both feminine bundles:8796 trouser triangles replace368, net+8428.
+Doctor51507 passed. Browser8211 is running the complete12-row feminine subset.
+Reviewer found no production blocker after taper/cuff and visibility fixes.
+Current source still needs the frozen full focused/bake/browser/hero/core gates.
+Issue442 existing progress comment updated with exact published-head10greenCI,
+uncommitted candidate evidence, failures and next actions. No new issue/PR or
+merge/deploy; PR464 remains the authorized reviewable integration destination.
+
+
+Final candidate subset8211 passed12rows/30phases/97checks, zero runtime errors.
+Reviewed candidate seated overhead and beast lope front/side/rear strips: knee
+openings close and linen overlaps boots. Stiff drape folds/transparency and broader
+calf/cloth art quality remain open, with no whole-leg/continuous-motion approval.
+Candidate captures/reports and temporary diagnostic journeys archived under
+.runtime/character-studio/silvan-legs; removed temporary test/browser files from
+source tree and restored tracked experience.json after preserving its evidence.
+
+Full frozen verification now running as handle82784, browser-lock label
+silvan-trousers-verification. Wrapper .runtime/character-studio/silvan-legs/verify.py
+writes verified-20261016: focused43, four deterministic bakes, full132-row wardrobe,
+pinned native4K references, core with isolated Redis, frozen source hashes.
+Poll82784, do not restart merely on timeout and do not edit source during gates.
+After passing, inspect final captures, complete bounded review/docs, sync only own
+primary task entry, sign/push PR464 and update442 with exact final evidence.
+Current source remains uncommitted; this checkout is not eligible for retirement.
+
+
+Verification continuation: prior turn progressed with measured cuff/upper-thigh
+repairs, permanent regressions and the passed97-check rendered subset. Re-read
+brief and current tree; polled existing82784 live. Frozen focused43/43 passed;
+all four deterministic bakes passed. Full132-row wardrobe capture now running;
+hero/core and final hash check follow within the same wrapper. Latest project
+check31 unrelated gaps, none own. No source changes during frozen verification.
+
+
+Final frozen verification82784 passed:43 focused tests; Silvan/Lyra/Vesper/Sable
+deterministic bakes;132 wardrobe rows/330 phases/1012 views/789 browser checks;
+pinned native3840x2160 Sable human/fox comparisons with zero pixel differences.
+All30 feminine Silvan phases have6610-9469 visible knee samples, zero uncovered,
+and zero tested trouser-layer edge crossings. Core11/11 with isolated Redis:
+tooling117, preview3395 passed/1 existing skip/1 TODO, server914 zero skips,
+desktop69, Python141 passed/66 warnings. Build/lint/demo/secrets pass; demo retains
+expected verification exit2. All12 frozen source hashes match. No new source
+changes after the gate. Full evidence under .runtime/character-studio/silvan-legs/
+verified-20261016, including exact selected final visual-review scope.
+
+Final inspected feminine seated front/side/rear and beast prowl strips show closed
+knees and continuous linen; masculine seated silhouette remains consistent.
+Outer cloth folds/transparency, calf/boot fit, exhaustive collision and continuous
+motion remain unapproved. Review found no production blocker; its source-snapshot,
+visibility and beast-motion guard requests are in the passed gate. Ready for
+signed commit/push to existing PR464 and exact-head CI; no merge/deploy or claim
+that issues440-444 are complete. Preserve checkout and evidence for further work.

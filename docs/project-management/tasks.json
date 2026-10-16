@@ -11223,9 +11223,9 @@
         "feat/character-studio-persistence-20261015"
       ],
       "owner": "codex-character-studio-20261015",
-      "updatedAt": "2026-10-16T10:10:20.381375+00:00",
-      "leaseUntil": "2026-10-16T12:10:20.381375+00:00",
-      "nextAction": "Silvan verified increment ready for signed commit/push to PR464 and issue442 progress:38 focused,4 bakes,132 rows/765 checks, native4K zeroerror, core11/11,17 frozen hashes. Extend knee/calf and trouser-silhouette coverage next, then formal/noir coat panels and remaining440-444 acceptance. No merge/deploy; preserve checkout.",
+      "updatedAt": "2026-10-16T11:01:52.055991+00:00",
+      "leaseUntil": "2026-10-16T13:01:52.055991+00:00",
+      "nextAction": "Silvan trousers verified: focused43, four bakes, full132-row/330-phase/789-check wardrobe, native4K zero differences, core11/11 with isolated Redis, all12 frozen source hashes match. Commit/sign/push verified increment to PR464 and update442 with exact head/CI; next inspect calf/boot and outer-cloth quality, formal/noir coat panels, then remaining440-444 acceptance. No merge/deploy; preserve checkout and13untracked reports.",
       "filesOwned": [
         "server/character-store.js",
         "server/tests/character-store.test.js",
@@ -11356,7 +11356,12 @@
         "preview/tests/helpers/garment-edges.js",
         "preview/src/packed-morph-data.js",
         "preview/tests/packed-morph-data.test.js",
-        "preview/tests/garment-edges.test.js"
+        "preview/tests/garment-edges.test.js",
+        "preview/tests/silvan-trousers.test.js",
+        "preview/tests/helpers/body-coverage.js",
+        "preview/src/silvan-trousers.js",
+        "preview/tests/body-coverage.test.js",
+        "preview/tests/silvan-trousers-motion.test.js"
       ],
       "requiredChecks": [
         "Memory and real isolated Redis store contract tests",

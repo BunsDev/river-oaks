@@ -774,8 +774,8 @@ Both shipped Silvan rigs now skin all three drape panels and their hanging gold
 leaves/chains. Each panel has 925 vertices and 1,728 triangles, an increase of
 3,456 triangles across the three panels. Existing accessory draw caps remain 40
 for masculine and 55 for feminine. The masculine waist rises 4 cm to clear the suit
-hip; the feminine waist remains unchanged. All 37 top vertices per panel stay
-pinned to the pelvis. Materials, ownership and standing restoration are retained.
+hip; the feminine waist rises 2 cm to clear the fitted linen hip. All 37 top
+vertices per panel stay pinned to the pelvis. Materials, ownership and standing restoration are retained.
 
 `node scripts/bake-silvan-drapes.mjs --check` reproduces both rig-specific bakes;
 the adjacent receipt pins 18 inputs including both rig/license sources. The packed
@@ -793,3 +793,33 @@ whole-body containment, exhaustive triangle overlap or continuous-motion safety.
 Gold-to-cloth distance is unsigned; it does not prove the gold remains outside
 cloth. High edge stretch (7.402 maximum) and compressed rear folds remain
 cloth-quality limitations; final rendered acceptance is recorded in the ledger.
+
+
+### Silvan continuous linen trousers
+
+The feminine human and beast bundles replace five rigid hip/thigh/cuff pieces
+with one owned skinned surface derived from the shipped CC0 Jevica lower body.
+`preview/src/silvan-trousers.js` retains the source bind matrix, skeleton and skin
+weights, adding 3 mm of upper-thigh clearance, smoothly increasing to 12 mm at
+the knee, in the authored pelvis frame. Its cuff overlaps the boot farther down the calf.
+Source geometry stays intact. The mesh has 8,796 triangles; replacing
+368 cylinder triangles adds 8,428 accessory triangles, for 183,068 total in each
+feminine bundle. The 55-draw accessory cap is unchanged. There is no per-frame
+fitting, extra texture, download or external generation service. The source and
+license receipt remains `preview/public/assets/characters/jevica.sources.json`.
+
+The feminine drape rim and hanging gold rise 2 cm together: the former fixed rim
+sat about 11 mm below the trouser surface at a 90-degree bend. Both rigs retain
+pinned waist vertices and offline GPU morphs. The full bake command above covers
+the changed feminine drape and gold data.
+
+Coverage tests cast from ten exterior views toward about 2,100 real knee triangles,
+compare first hits using actual material sidedness, and report occluded samples
+separately. Five symmetric/asymmetric bends run under transformed roots for both
+forms. A closed synthetic bent shell checks intact coverage, a removed patch and
+spatial-chunk parity; an actual-rig removed knee patch provides a second negative
+control. The wardrobe browser journey checks sampled knee coverage by trousers
+and the two boot shafts, and outer layer edges at each captured feminine Silvan animation phase. These establish
+sampled visibility and edge clearance, not whole-leg containment, every camera,
+continuous-motion safety or final cloth quality. Current verification and rendered
+review status are recorded in the task ledger.

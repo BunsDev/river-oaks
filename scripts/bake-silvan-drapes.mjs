@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
-import {silvanDrapes,createSilvanDrapeDetailGeometry} from '../preview/src/silvan-drape-geometry.js';
+import {silvanDrapes,silvanWaist,createSilvanDrapeDetailGeometry} from '../preview/src/silvan-drape-geometry.js';
 import {bakeSkirtDetail} from './lib/skirt-detail-fit.mjs';
 import {createHash} from 'node:crypto';
 import {readFile,writeFile} from 'node:fs/promises';
@@ -34,7 +34,7 @@ try {
   }
   const detailGeometry=createSilvanDrapeDetailGeometry(variant),detailMaterial=new THREE.MeshBasicMaterial({side:THREE.DoubleSide});
   const rawDetail=new THREE.Mesh(detailGeometry,detailMaterial);attachment.add(rawDetail);
-  const detail=skinSkirt(rawDetail,model.getObjectByName(bodyName),{waist:variant==='masculine'?.13:.09,hem:-.17});
+  const detail=skinSkirt(rawDetail,model.getObjectByName(bodyName),{waist:silvanWaist(variant),hem:-.17});
   detailPart={geometry:detailGeometry,material:detailMaterial,group:detail.group};
   avatar.object.position.y=.55-avatar.rig.hipHeight+.025;
   for(let frame=0;frame<=144;frame++)avatar.update(frame*1000/60,'continue',false,{speed:0,distance:0,riding:true,ridingKind:'seat',seatToFloor:.55},()=>0);

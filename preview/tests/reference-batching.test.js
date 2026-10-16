@@ -67,7 +67,7 @@ test('shipped reference looks retain their intended surfaces while bounding acce
     ['kai-explorer', 9020, 20], ['kai-explorer-beast', 9020, 20],
     ['kai-noir', 14484, 20], ['kai-noir-beast', 14484, 20],
     ['forest-aristocrat', 155856, 40], ['forest-aristocrat-beast', 155856, 40],
-    ['forest-aristocrat-feminine', 174640, 55], ['forest-aristocrat-feminine-beast', 174640, 55],
+    ['forest-aristocrat-feminine', 183068, 55], ['forest-aristocrat-feminine-beast', 183068, 55],
   ];
   for (const [id, triangles, maxDraws] of cases) {
     const appearance = sharedAppearance(id), source = await loadCharacterRig(appearance.rig);

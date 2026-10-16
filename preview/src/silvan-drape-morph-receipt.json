@@ -11,7 +11,7 @@
     "preview/src/foot-roll.js": "4ab749ab51cc9e6bdd5265d638068c276c9fbd1d9b0c5cfb497b5215e5bd29bb",
     "preview/src/sole-support.js": "1d77dad5449799032809f815298af1acb01fffdaa54371aa71a4601a3794d18f",
     "preview/src/drape-geometry.js": "3c2502033b43e2c73061b8e9285b42f676b463994428eb419b36c3602619aa61",
-    "preview/src/silvan-drape-geometry.js": "4615cb8a695e2558e170e964f4617d11cac91cc4900093897a5de17133b497c7",
+    "preview/src/silvan-drape-geometry.js": "cbfd10c2f97f205ace8d59e4af3dd35a0a6981e48ad6c10c20fe63704212b8d9",
     "preview/src/packed-morph-data.js": "36b4a1ce66ec4135a8349897da1f309bc180815d3ef31719948736abc65d14c4",
     "scripts/lib/skirt-detail-fit.mjs": "0b9860411d4eabd17936c13e38a0fd3b33f87bd5c99c30f8374f8c3dd85b1b93",
     "preview/public/assets/characters/man-casual.glb": "e7ac712585ba2d4558092b67ccf30e67d29843a9a81c4ca00384200f69588684",
@@ -20,9 +20,9 @@
     "preview/tests/helpers/character-rig.js": "879b137a09b0bd35e9c32c7ffe57491f299207244f94a6e3cc8c5d71c667f7be",
     "preview/tests/helpers/skirt-contact.js": "a8c5f038a5901743e0280875fca318ced18fecdb2ca633b7bb6aca905dd5feb7",
     "scripts/lib/drape-seat-fit.mjs": "21170cf8edfef8483927b9eca4b8bf727f22eeebeed4ae1807811113b2c84524",
-    "scripts/bake-silvan-drapes.mjs": "a14cb64641e4d1ad084a64846c2e21ff0ec7cb78b0007e36113fa7239c577c1c"
+    "scripts/bake-silvan-drapes.mjs": "8c29c3b5e424ca2d939ec9085e9becd850ad1bce27df7e80e3ff54980a51963f"
   },
-  "outputSha256": "bb73f2beb703e5a13ef90815ff78eb76e8531e62f2e7382090958b6bb8a41450",
+  "outputSha256": "a63cc845595955cec937f50964bd2f3c648b4268f26642d53a0f557e535f94a5",
   "diagnostics": {
     "masculine": [
       {
@@ -69,33 +69,33 @@
     "feminine": [
       {
         "failures": [],
-        "maxReconstruction": 4.683827652987524e-8,
-        "maximumStretch": 7.401751924332233,
-        "minimumAreaRatio": 0.07612589403224795,
-        "corrected": 4,
-        "vertices": 925,
-        "scope": "Offline front-lap fit; rendered layers, other poses and continuous motion require separate evidence.",
-        "tested": 313,
-        "penetrating": 0,
-        "minimumClearance": 0.016497816276921456
-      },
-      {
-        "failures": [],
-        "maxReconstruction": 4.610819584517345e-8,
-        "maximumStretch": 2.0607826223634076,
-        "minimumAreaRatio": 0.8451812510673715,
+        "maxReconstruction": 4.586549591565037e-8,
+        "maximumStretch": 7.401751831689131,
+        "minimumAreaRatio": 0.07612590675204921,
         "corrected": 0,
         "vertices": 925,
         "scope": "Offline front-lap fit; rendered layers, other poses and continuous motion require separate evidence.",
-        "tested": 843,
+        "tested": 331,
         "penetrating": 0,
-        "minimumClearance": 0.025269050413938295
+        "minimumClearance": 0.031881748484310975
       },
       {
         "failures": [],
-        "maxReconstruction": 4.412552999602675e-8,
-        "maximumStretch": 1.000000000000013,
-        "minimumAreaRatio": 0.07775759808650919,
+        "maxReconstruction": 4.5595479833697766e-8,
+        "maximumStretch": 1.5880926121712948,
+        "minimumAreaRatio": 0.6292497046611648,
+        "corrected": 0,
+        "vertices": 925,
+        "scope": "Offline front-lap fit; rendered layers, other poses and continuous motion require separate evidence.",
+        "tested": 965,
+        "penetrating": 0,
+        "minimumClearance": 0.03913014135659407
+      },
+      {
+        "failures": [],
+        "maxReconstruction": 4.3085457901453936e-8,
+        "maximumStretch": 1.0000000000000207,
+        "minimumAreaRatio": 0.07775756271096178,
         "corrected": 0,
         "vertices": 925,
         "scope": "Offline front-lap fit; rendered layers, other poses and continuous motion require separate evidence.",
@@ -104,7 +104,7 @@
         "minimumClearance": null
       },
       {
-        "maximumDetailOffset": 0.05386065142446831,
+        "maximumDetailOffset": 0.05386065906425555,
         "vertices": 5740
       }
     ]

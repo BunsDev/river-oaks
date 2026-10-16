@@ -44,6 +44,14 @@ async page => {
         const frontPanel = f.avatar.rig.model.getObjectByName('Forest aristocrat front panel');
         if(row.character==='silvan'&&(!skirt?.isSkinnedMesh||!frontPanel?.isSkinnedMesh||!f.avatar.rig.model.getObjectByName('Forest aristocrat rear panel')?.isSkinnedMesh||!f.avatar.rig.model.getObjectByName('Forest aristocrat drape gold')?.isSkinnedMesh))throw new Error('Silvan requires all three fitted panels and their gold details');
         const body=f.avatar.rig.model.getObjectByName(row.character==='silvan'&&row.variant==='masculine'?'man-casualmale_casualsuit02':'Jevica');
+        const trousers=row.character==='silvan'&&row.variant==='feminine'?f.avatar.rig.model.getObjectByName('Forest aristocrat linen trousers'):null;
+        if(row.character==='silvan'&&row.variant==='feminine'&&!trousers?.isSkinnedMesh)throw new Error('Silvan requires continuous skinned linen trousers');
+        const {bodyCoverageFixture}=await import('/tests/helpers/body-coverage.js');
+        const {garmentEdgeFixture}=await import('/tests/helpers/garment-edges.js');
+        const boots=trousers?['l','r'].map(side=>f.avatar.rig.model.getObjectByName(`Forest aristocrat boot shaft ${side}`)):[];
+        if(boots.some(boot=>!boot?.isMesh||!boot.visible))throw new Error('Silvan requires both visible boot shafts');
+        const kneeCoverage=trousers?bodyCoverageFixture(f.avatar.rig.model,body,[trousers,...boots],{bottom:-.43,top:-.31}):null;
+        const trouserLayers=trousers?garmentEdgeFixture(f.avatar.rig.model,trousers,[skirt,frontPanel,f.avatar.rig.model.getObjectByName('Forest aristocrat rear panel')]):null;
         const train = f.avatar.rig.model.getObjectByName('Lyra spotted sheer train');
         if (row.character === 'lyra' && (!skirt?.isSkinnedMesh || !train?.isSkinnedMesh)) throw new Error('Lyra requires both fitted drape layers');
         if (row.character === 'vesper' && (!skirt?.isSkinnedMesh || !f.avatar.rig.model.getObjectByName('Vesper wrap trim')?.isSkinnedMesh)) throw new Error('Vesper requires the fitted wrap and its trim');
@@ -94,12 +102,13 @@ async page => {
             const above = document.createElement('canvas'); above.id = 'wardrobe-above'; above.width = 420; above.height = 640;
             above.getContext('2d').drawImage(f.renderer.domElement, 0, 0); document.body.append(above);
           }
-          snapshots.push({frame, seconds: time / 1000, finite, meshes, vertices, materials: materials.size, bounds: {min, max}, feet,
+          snapshots.push({kneeCoverage:kneeCoverage?.sample()??null,trouserLayers:trouserLayers?.sample()??null,frame, seconds: time / 1000, finite, meshes, vertices, materials: materials.size, bounds: {min, max}, feet,
             decoded: [...textures].map(texture => ({name: texture.name, width: texture.image?.width, height: texture.image?.height})), beastWeight: f.avatar.beastMotion, render});
           f.avatar.object.position.z = distance;
         }
         f.renderer.domElement.style.display = 'none'; document.body.append(canvas);
         const gl = f.renderer.getContext(), debug = gl.getExtension('WEBGL_debug_renderer_info');
+        trouserLayers?.dispose();
         const frontPanelContact=frontContact?.sample()??null;frontContact?.dispose();
         const thighContact = contact?.sample() ?? null, sheerContact = trainContact?.sample() ?? null, layersContact = layerContact?.sample() ?? null; contact?.dispose(); trainContact?.dispose(); layerContact?.dispose();
         return {frontPanelContact, thighContact, sheerContact, layersContact, appearanceId: row.appearanceId, pose: row.pose, rig: f.avatar.profile, snapshots,
@@ -114,6 +123,10 @@ async page => {
       check(result.snapshots.every(s => s.finite && s.meshes > 0 && s.vertices > 0 && s.bounds.max.every((v, i) => v - s.bounds.min[i] < 10)), `${appearanceId}/${pose}: finite bounded visible geometry including instances`);
       check(result.snapshots.every(s => s.decoded.length > 0 && s.decoded.every(t => t.width > 0 && t.height > 0)), `${appearanceId}/${pose}: material textures decoded`);
       check(result.snapshots.every(s => s.render.length === 3 && s.render.every(r => r.calls > 0 && r.triangles > 0)), `${appearanceId}/${pose}: all views rendered geometry`);
+      if(row.character==='silvan'&&row.variant==='feminine'){
+        check(result.snapshots.every(s=>s.kneeCoverage?.tested>1000&&s.kneeCoverage.uncovered===0),`${appearanceId}/${pose}: linen and boots cover sampled visible knees in every captured phase`);
+        check(result.snapshots.every(s=>s.trouserLayers?.every(layer=>layer.testedEdges>0&&layer.crossings===0)),`${appearanceId}/${pose}: outer drapes clear the linen layer`);
+      }
       if(row.character==='silvan'&&pose==='sit'){
         check(result.thighContact?.tested>100&&result.thighContact.penetrating===0,`${appearanceId}/${pose}: drape clears rendered upper thighs`);
         check(result.frontPanelContact?.tested>100&&result.frontPanelContact.penetrating===0,`${appearanceId}/${pose}: front panel clears rendered upper thighs`);
@@ -134,5 +147,5 @@ async page => {
   }
   check(errors.length === 0, `No runtime errors: ${errors.join('; ')}`); await progress('passed');
   return {passed: true, checks, samples, exclusions, visualReview: 'pending',
-    scope: 'All authored bundles, fixed poses and four sampled phases per moving gait. Actual geometry, instances, texture decode and advancing feet are checked. Captures require visual review; no automatic garment collision, attachment quality, continuous-cycle, approved-device or human acceptance claim.'};
+    scope: 'All authored bundles, fixed poses and four sampled phases per moving gait. Actual geometry, instances, texture decode and advancing feet are checked. Named seated drapes have directional contact checks; feminine Silvan also has sampled knee visibility and layer-edge checks. Captures require visual review; no exhaustive collision, attachment quality, continuous-cycle, approved-device or human acceptance claim.'};
 }

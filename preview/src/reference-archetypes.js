@@ -1,4 +1,5 @@
-import {SILVAN_DRAPES,silvanDrapes,createSilvanDrapeDetailGeometry} from './silvan-drape-geometry.js';
+import {createSilvanTrousers} from './silvan-trousers.js';
+import {SILVAN_DRAPES,silvanDrapes,silvanWaist,createSilvanDrapeDetailGeometry} from './silvan-drape-geometry.js';
 import {SILVAN_DRAPE_MORPHS} from './silvan-drape-morph-data.js';
 import {createDrapeGeometry, LYRA_DRAPES} from './drape-geometry.js';
 import {LYRA_DRAPE_MORPHS} from './lyra-drape-morph-data.js';
@@ -250,14 +251,14 @@ export function createReferenceStyle(avatar,appearance){
       for(let i=0;i<(masculine?5:3);i++)leaf(torso,leafGold,[side*(.13+i*.006),.25-i*.07,.15],.015,side*.4,0);
     }
     box(torso,olive,[0,-.03,.13],[.12,.26,.014],.006);
-    if(!masculine){const seat=mesh(pelvis,new THREE.CylinderGeometry(.182,.17,.42,24),trousers,[0,-.13,0]);seat.scale.z=.84;}
+    if(!masculine){const fitted=createSilvanTrousers(model.getObjectByName('Jevica'),model,trousers);attachments.add(fitted.group);resources.add(fitted.mesh.geometry);}
     for(const [i,recipe]of silvanDrapes(appearance.variant).entries())drape(pelvis,i===0?linen:olive,recipe);
     // Gold-leaf sash with hanging leaf chains.
     const sash=[];for(let i=0;i<=32;i++){const a=i/32*Math.PI*2;sash.push([Math.sin(a)*.18,.09,Math.cos(a)*.135]);}
     tube(pelvis,olive,sash,.019);
     for(let i=0;i<7;i++){const a=(i-3)*.2;leaf(pelvis,leafGold,[Math.sin(a)*.185,.095+(i%2)*.012,Math.cos(a)*.14+.012],.028,a*1.5+(i%2?.5:-.5),0);}
     const detail=mesh(pelvis,createSilvanDrapeDetailGeometry(appearance.variant),leafGold);detail.name='Forest aristocrat drape gold';
-    const fittedDetail=skinSkirt(detail,model.getObjectByName(masculine?'man-casualmale_casualsuit02':'Jevica'),{waist:masculine?.13:.09,hem:-.17});
+    const fittedDetail=skinSkirt(detail,model.getObjectByName(masculine?'man-casualmale_casualsuit02':'Jevica'),{waist:silvanWaist(appearance.variant),hem:-.17});
     attachments.add(fittedDetail.group);correctives.push(createSkirtSeatMorph(fittedDetail.mesh,model,SILVAN_DRAPE_MORPHS[appearance.variant][3]));
     for(const side of ['l','r']){
       // Vine-wrapped bracers on the forearms; vines climb bare upper arms.
@@ -270,15 +271,11 @@ export function createReferenceStyle(avatar,appearance){
       if(!masculine){
         const upper=along(`upperarm_${side}`,`lowerarm_${side}`);
         if(upper)spiralVine(upper,.043,.1,1,{turns:1.8,stem,foliage,leaves:7,flowers:1,fit:true});
-        // Cream linen trousers under the drape.
-        const thigh=along(`thigh_${side}`,`calf_${side}`);
-        if(thigh){const length=thigh.userData.length,leg=mesh(thigh,new THREE.CylinderGeometry(.08,.132,length*1.08,18),trousers,[0,length*.5,0]);leg.scale.z=1;}
       }
       // Tall vine-bound boots: a fitted shaft to the knee and a block heel.
       const shin=along(`calf_${side}`,`foot_${side}`);
       if(shin){
-        const length=shin.userData.length,shaft=mesh(shin,new THREE.CylinderGeometry(.062,.05,length*.92,16),bootLeather,[0,length*.5,0]);shaft.scale.z=.92;
-        if(!masculine)mesh(shin,new THREE.CylinderGeometry(.066,.068,length*.12,16),trousers,[0,length*.02,0]);
+        const length=shin.userData.length,shaft=mesh(shin,new THREE.CylinderGeometry(.062,.05,length*.92,16),bootLeather,[0,length*.5,0]);shaft.scale.z=.92;shaft.name=`Forest aristocrat boot shaft ${side}`;
         spiralVine(shin,.066,.1,.92,{turns:2.6,stem:leafGold,foliage:leafGold,leaves:9});
         spiralVine(shin,.07,.16,.86,{turns:2,stem,foliage,leaves:6});
       }
