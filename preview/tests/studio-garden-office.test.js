@@ -79,6 +79,24 @@ test('Garden Office keeps its required routes with the new family and lighting',
   assert.equal(result.status, 'passed', JSON.stringify(result.findings));
 });
 
+test('Garden Office kitchenette basin surround meets the adjacent cabinet worktops', () => {
+  const office = createSpace('office'), scene = createSpaceScene(office);
+  scene.group.updateMatrixWorld(true);
+  try {
+    const sink = office.objects.find(item => item.id === 'kitchenette-sink');
+    const cabinets = office.objects.filter(item => item.id.startsWith('kitchenette-cabinets'));
+    const surround = scene.items.get(sink.id).children.filter(child => child.name === 'Basin surround');
+    assert.equal(surround.length, 4, 'the basin has a complete stone surround');
+    const sinkTop = Math.max(...surround.map(mesh => new THREE.Box3().setFromObject(mesh).max.y));
+    for (const cabinet of cabinets) {
+      const worktop = scene.items.get(cabinet.id).getObjectByName('Countertop');
+      const cabinetTop = new THREE.Box3().setFromObject(worktop).max.y;
+      assert.ok(Math.abs(sinkTop - cabinetTop) < .005, `${sink.id} top ${sinkTop} m differs from ${cabinet.id} top ${cabinetTop} m`);
+      assert.equal(sink.north + sink.depth / 2, cabinet.north + cabinet.depth / 2, 'worktop fronts align');
+    }
+  } finally { disposeStudioScene(scene.group); }
+});
+
 test('Garden Office catalog records match the forms the renderer draws', async () => {
   const { readFile } = await import('node:fs/promises');
   const manifest = JSON.parse(await readFile(new URL('../../docs/design/garden-office/asset-manifest.json', import.meta.url), 'utf8'));
