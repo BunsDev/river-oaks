@@ -21,8 +21,11 @@ const log = join(dir, 'pass'), twoPass = (video, audio, out) => {
   run('ffmpeg', [...common, ...video, '-pass', '1', '-passlogfile', log, '-an', '-f', 'null', '/dev/null']);
   run('ffmpeg', [...common, ...video, '-pass', '2', '-passlogfile', log, ...audio, out]);
 };
-twoPass(['-c:v', 'libvpx-vp9', '-b:v', '1500k', '-row-mt', '1', '-deadline', 'good'], ['-c:a', 'libopus', '-b:a', '96k'], join(dir, `${id}.webm`));
-twoPass(['-c:v', 'libx264', '-profile:v', 'main', '-pix_fmt', 'yuv420p', '-b:v', '2000k'], ['-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart'], join(dir, `${id}.mp4`));
+// A keyframe every second (24 frames): a viewer's seek decodes from the keyframe before its target,
+// and the first cut's encoder defaults (up to 6 s apart) froze loaded viewers for over a second.
+const KEYFRAMES = ['-g', '24', '-keyint_min', '24'];
+twoPass(['-c:v', 'libvpx-vp9', '-b:v', '1500k', '-row-mt', '1', '-deadline', 'good', ...KEYFRAMES], ['-c:a', 'libopus', '-b:a', '96k'], join(dir, `${id}.webm`));
+twoPass(['-c:v', 'libx264', '-profile:v', 'main', '-pix_fmt', 'yuv420p', '-b:v', '2000k', ...KEYFRAMES, '-sc_threshold', '0'], ['-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart'], join(dir, `${id}.mp4`));
 for (const name of readdirSync(dir)) if (name.startsWith('pass')) rmSync(join(dir, name));
 // Captions and transcript follow the cut's own timeline.
 let at = 0; const cue = s => new Date(s * 1000).toISOString().slice(11, 23);

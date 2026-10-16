@@ -55,3 +55,19 @@ inspected; final header retains guide/close spacing. Receipts core.json/.log,
 browser.json/.log, source-hashes.json and failed-before-fix report retained under
 .runtime/plaza-game-layout. No human accessibility, physical device, merge or
 deployment acceptance. Ready for signed commit and reviewable PR; preserve checkout.
+
+2026-10-16 continuation: draft PR #468 opened at signed c7ad1a65. Its 16 hosted
+checks passed. GitHub later reported a task-register conflict as main advanced.
+Merged origin/main a00a4d19 locally with the repository register driver; all other
+task entries match main exactly and all three game source hashes remain unchanged.
+Reinstalled frozen dependencies and agent:doctor passed. Reverified the integrated
+tree before committing: core 11/11, tooling112, preview3367 passed/1 existing skip,
+server795 with zero skips, desktop76, Python141 passed/66 warnings. Build, lint,
+demo (expected verification exit2) and secrets passed. The layout31, Morris15 and
+Salon Guide22 browser checks all passed; fresh expanded desktop and phone captures
+were visually inspected. Receipts and captures are retained under
+.runtime/plaza-game-layout/main-refresh-20261016. The core receipt records the
+pre-merge HEAD and dirty integration tree; integration.json records both parents.
+Push the signed integration commit for renewed hosted checks and maintainer review.
+No merge, deployment, human accessibility or physical-device acceptance. Preserve
+the checkout and local evidence until delivery and guarded retirement.

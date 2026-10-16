@@ -4,39 +4,39 @@
   "views": [
     {
       "name": "reception",
-      "calls": 62,
-      "triangles": 133686,
+      "calls": 57,
+      "triangles": 132060,
       "error": 0,
-      "textures": 13
+      "textures": 15
     },
     {
       "name": "mural",
-      "calls": 34,
-      "triangles": 69898,
+      "calls": 36,
+      "triangles": 69846,
       "error": 0,
-      "textures": 13
+      "textures": 15
     },
     {
       "name": "lounge",
-      "calls": 30,
-      "triangles": 97556,
+      "calls": 33,
+      "triangles": 97568,
       "error": 0,
-      "textures": 13
+      "textures": 15
     },
     {
       "name": "bar",
-      "calls": 38,
-      "triangles": 112896,
+      "calls": 40,
+      "triangles": 112844,
       "error": 0,
-      "textures": 13
+      "textures": 15
     },
     {
       "name": "auditorium",
-      "calls": 12,
-      "triangles": 56060,
+      "calls": 13,
+      "triangles": 55996,
       "error": 0,
-      "textures": 13
+      "textures": 15
     }
   ],
-  "glbBytes": 13677540
+  "glbBytes": 13927304
 }

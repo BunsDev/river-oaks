@@ -1,0 +1,93 @@
+{
+  "createdAt": "2026-10-16T01:51:22.829Z",
+  "results": [
+    {
+      "name": "studio-pilot-journey",
+      "status": "passed",
+      "seconds": 58.873,
+      "result": {
+        "passed": true,
+        "checks": [
+          "Garden Office opens with its required routes passing",
+          "valid edit (desk finish) is accepted with routes passing",
+          "blocking the meeting room is refused with a finding",
+          "the refused move leaves the sofa where it was",
+          "moving the sofa clear repairs the layout",
+          "undo restores the sofa",
+          "redo reapplies one edit",
+          "save keeps the office assessment context",
+          "reload reopens the saved draft and reassesses it",
+          "a stale tab cannot overwrite the newer saved draft",
+          "the other tab's save is kept",
+          "the saved layout assesses as passing",
+          "walked to all four required destinations and back to the arrival",
+          "returned to the editor after the walk"
+        ],
+        "tour": [
+          {
+            "target": "office-1",
+            "waypoints": 2,
+            "reached": [
+              0,
+              -4
+            ],
+            "home": [
+              0,
+              -8.5
+            ],
+            "seconds": 6.107
+          },
+          {
+            "target": "office-2",
+            "waypoints": 4,
+            "reached": [
+              -1.9,
+              1.1
+            ],
+            "home": [
+              0,
+              -8.5
+            ],
+            "seconds": 14.674
+          },
+          {
+            "target": "office-3",
+            "waypoints": 4,
+            "reached": [
+              3,
+              1
+            ],
+            "home": [
+              0,
+              -8.5
+            ],
+            "seconds": 15.319
+          },
+          {
+            "target": "office-4",
+            "waypoints": 2,
+            "reached": [
+              -1,
+              5
+            ],
+            "home": [
+              0,
+              -8.5
+            ],
+            "seconds": 19.008
+          }
+        ]
+      }
+    },
+    {
+      "name": "world-studio",
+      "status": "passed",
+      "seconds": 28.473,
+      "result": {
+        "passed": true,
+        "journey": "create-transform-undo-save-reopen-pick-export-import-walk-safe-edits-repair",
+        "errors": []
+      }
+    }
+  ]
+}

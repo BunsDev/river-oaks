@@ -30,29 +30,38 @@ function builder(name, floorFinish='oak') {
 }
 function house(){
   const {space,add,floor,wall,chair,plant}=builder('Courtyard House');space.lighting='warm';
+  const stock=id=>space.objects.find(o=>o.id===id);
+  // The wet room is walled on the street sides; the east glazing serves the bedroom only.
+  Object.assign(stock('east-window'),{north:3,width:6});Object.assign(stock('entry-right'),{east:2,width:2});
+  Object.assign(stock('entry-plant'),{east:1.6,north:-5.4});Object.assign(stock('corner-plant'),{east:-7.45,north:-5.4});
   floor('bathroom-floor',5.5,-3,4.8,5.8,'limestone');
   floor('patio-floor',-4.5,-8,7,3.6,'terracotta');
   wall('bedroom-divider-north',0,4.65,.16,2.7);wall('bedroom-divider-south',0,.4,.16,1.2);
   wall('bathroom-north',5.5,0,5,.16);wall('bathroom-entry-south',3,-4.5,.16,3);wall('bathroom-entry-north',3,-.5,.16,1);
-  add('living-rug','rug',-4.5,-2.8,5.6,3.6,.035,'fabric');
-  add('living-sofa','sofa',-6.6,-2.3,2.5,1,.9,'fabric',90);
-  add('coffee-table','table',-4.5,-2.8,1.4,.75,.42,'walnut');
-  chair('living-armchair',-2.3,-4.4,-25,'sage');
+  wall('bathroom-east-wall',8,-3,.18,6);wall('bathroom-street-wall',5.5,-6,5,.16);
+  // The sofa backs onto the west wall, facing the coffee table and an armchair across it.
+  add('living-rug','rug',-4.5,-2.8,5.6,3.6,.012,'fabric');
+  add('living-sofa','sofa',-7.4,-2.3,2.5,1,.9,'fabric',90);
+  add('coffee-table','table',-6.1,-2.3,1.4,.75,.42,'walnut',90);
+  chair('living-armchair',-5,-2.3,-90,'sage');
   add('media-console','shelf',-4.5,.6,2.6,.4,.75,'walnut');
   add('living-art','art',-7.88,-2.3,1.5,.04,1,'sage',90,1.3);
-  add('kitchen-cabinets','cabinet',-5.85,5.5,2.8,.65,.9,'oak');add('kitchen-cabinets-east','cabinet',-2.15,5.5,2.8,.65,.9,'oak');
-  add('kitchen-sink','sink',-4,5.45,.9,.65,.98,'white');
+  // The sink's worktop (0.77 of its height) meets the 0.9 m cabinet worktops, fronts in line.
+  add('kitchen-cabinets','cabinet',-5.85,5.55,2.8,.65,.9,'oak');add('kitchen-cabinets-east','cabinet',-2.15,5.55,2.8,.65,.9,'oak');
+  add('kitchen-sink','sink',-4,5.55,.9,.65,1.17,'oak');
   add('refrigerator','appliance',-7.4,3.7,.7,.75,1.9,'charcoal');
   add('dining-table','table',-3.5,3,2,1,.76,'oak');
   chair('dining-chair-one',-4.1,2.1,180);chair('dining-chair-two',-2.9,2.1,180);chair('dining-chair-three',-4.1,3.9);chair('dining-chair-four',-2.9,3.9);
   add('dining-pendant','pendant',-3.5,3,1.3,.4,.35,'brass',0,2.3);
-  add('bedroom-rug','rug',5,3.5,4.6,4,.03,'fabric');
-  add('bed','bed',5,3.8,2,2.3,1.05,'fabric');
-  add('bedside-left','cabinet',3.45,4.6,.6,.55,.55,'walnut');add('bedside-right','cabinet',6.55,4.6,.6,.55,.55,'walnut');
-  add('wardrobe','cabinet',7.25,1.5,2.3,.6,2.3,'oak',-90);
-  add('bathroom-vanity','sink',6,-.6,1.7,.7,.9,'limestone');
-  add('toilet','toilet',4.25,-4.9,.6,.8,.8,'white');add('shower','shower',6.75,-4.8,1.5,1.6,2.2,'white');
-  add('patio-table','table',-5,-8,1,.8,.72,'limestone');chair('patio-chair-one',-6.1,-8,90,'sage');chair('patio-chair-two',-3.9,-8,-90,'sage');plant('patio-plant',-7,-9);
+  // The bed's headboard is on the north wall, a bedside table at each side of its head.
+  add('bedroom-rug','rug',5,3.5,4.6,4,.012,'fabric');
+  add('bed','bed',5,4.75,2,2.3,1.05,'fabric');
+  add('bedside-left','cabinet',3.65,5.6,.6,.55,.55,'walnut');add('bedside-right','cabinet',6.35,5.6,.6,.55,.55,'walnut');
+  add('wardrobe','cabinet',6.6,.4,2.3,.6,2.3,'oak',180);
+  add('bathroom-vanity','sink',6,-.45,1.7,.7,1.1,'limestone');
+  add('toilet','toilet',3.65,-5.5,.6,.8,.8,'white',180);add('shower','shower',7.1,-5.1,1.5,1.6,2.2,'white',180);
+  add('bathroom-light','pendant',5.5,-3,.4,.4,.3,'brass',0,2.35);
+  add('patio-table','table',-5,-8,1,.8,.72,'limestone');chair('patio-chair-one',-5.95,-8,90,'sage');chair('patio-chair-two',-4.05,-8,-90,'sage');plant('patio-plant',-7,-9);
   return space;
 }
 function office(){
@@ -70,7 +79,9 @@ function office(){
   add('meeting-table','table',5,2.6,2.2,1.2,.76,'walnut');
   for(const [i,x,y,a] of [[1,3.4,2,90],[2,3.4,3.2,90],[3,6.6,2,-90],[4,6.6,3.2,-90]])chair(`meeting-chair-${i}`,x,y,a,'sage');
   add('meeting-pendant','pendant',5,2.6,1.8,.35,.3,'brass',0,2.4);
-  add('kitchenette-cabinets','cabinet',-5.925,5.5,.65,.65,.9,'white');add('kitchenette-cabinets-east','cabinet',-3.275,5.5,3.05,.65,.9,'white');add('kitchenette-sink','sink',-5.2,5.45,.8,.65,.95,'white');
+  // The sink surround is 77% of its object height: 1.17 m meets the 0.9 m
+  // cabinet worktops, with the front edges on the same line.
+  add('kitchenette-cabinets','cabinet',-5.925,5.5,.65,.65,.9,'white');add('kitchenette-cabinets-east','cabinet',-3.275,5.5,3.05,.65,.9,'white');add('kitchenette-sink','sink',-5.2,5.5,.8,.65,1.17,'white');
   add('office-storage','shelf',-7.5,1.5,2.4,.6,1.8,'oak',90);
   add('reception-art','art',-7.87,-4,1.3,.05,.9,'sage',90,1.4);plant('meeting-plant',7,5);plant('work-plant',.7,4.8);
   // Slim charcoal frames give the workplace glass a clear outline; terracotta pots
@@ -80,37 +91,47 @@ function office(){
 }
 function boutique(){
   const {space,add,floor,wall,chair,plant}=builder('Atelier Boutique','limestone');space.lighting='warm';
+  // The street front is the south glazing; the east side is a solid wall behind the
+  // displays and fitting rooms, glazed only by the front corner.
+  Object.assign(space.objects.find(o=>o.id==='east-window'),{north:-4.6,width:2.8});
+  wall('east-wall',8,1.4,.18,9.2);
   floor('fitting-floor',5.35,4.4,5.1,2.8,'oak');
   wall('fitting-divider',5.2,4.5,.14,3);wall('fitting-west',2.7,4.5,.14,3);
   // Open 1.5m fitting-room entries face the sales floor.
   wall('fitting-front-one',3,3,.6,.12);wall('fitting-front-two',5.2,3,.8,.12);wall('fitting-front-three',7.6,3,.6,.12);
+  // One family: walnut displays and checkout, limestone tables and plinths, brass fittings.
   add('checkout','counter',-4,4.3,2.8,.85,1.05,'walnut');
-  add('checkout-storage','cabinet',-4,5.5,3.2,.55,1.8,'oak');
+  add('checkout-storage','cabinet',-4,5.6,3.2,.55,1.8,'walnut');
   add('display-table-one','table',-3,-.7,2,1.1,.78,'limestone');add('display-table-two','table',3,-.7,2,1.1,.78,'walnut');
-  add('display-product-one','plant',-3,-.7,.4,.4,.6,'sage',0,.8);add('display-product-two','cabinet',3,-.7,.55,.55,.3,'terracotta',0,.8);
-  for(let i=0;i<3;i++)add(`wall-display-${i+1}`,'shelf',-7.4,-2.5+i*2.3,1.6,.7,2.1,'oak',90);
-  for(let i=0;i<2;i++)add(`east-display-${i+1}`,'shelf',7.4,-2+i*2.7,1.7,.7,1.65,'walnut',-90);
+  add('display-product-one','plant',-3,-.7,.4,.4,.6,'sage',0,.78);add('display-product-two','cabinet',3,-.7,.55,.55,.3,'terracotta',0,.78);
+  for(let i=0;i<3;i++)add(`wall-display-${i+1}`,'shelf',-7.55,-2.5+i*2.3,1.6,.7,2.1,'walnut',90);
+  for(let i=0;i<2;i++)add(`east-display-${i+1}`,'shelf',7.55,-2+i*2.7,1.7,.7,1.65,'walnut',-90);
   add('window-plinth-one','cabinet',-4.5,-5,1.5,.8,.55,'limestone');add('window-plinth-two','cabinet',4.5,-5,1.5,.8,.55,'limestone');
-  add('window-art-one','art',-4.5,-5,.55,.08,.8,'terracotta',0,.56);add('window-art-two','art',4.5,-5,.55,.08,.8,'sage',0,.56);
+  add('window-art-one','art',-4.5,-5,.55,.08,.8,'terracotta',0,.55);add('window-art-two','art',4.5,-5,.55,.08,.8,'sage',0,.55);
   chair('fitting-chair-one',4.2,5.3,0,'fabric');chair('fitting-chair-two',6.65,5.3,0,'fabric');
   add('fitting-mirror-one','glazing',4,5.85,1.2,.05,1.7,'brass',0,.5);add('fitting-mirror-two','glazing',6.6,5.85,1.2,.05,1.7,'brass',0,.5);
   add('display-pendant-one','pendant',-3,-.7,1,.4,.3,'brass',0,2.4);add('display-pendant-two','pendant',3,-.7,1,.4,.3,'brass',0,2.4);
+  add('checkout-pendant','pendant',-4,4.3,2.4,.22,.3,'brass',0,2.4);
   plant('checkout-plant',-1.5,5);return space;
 }
 function cafe(){
   const {space,add,floor,chair,plant}=builder('Corner Café','terracotta');space.lighting='warm';
   floor('terrace-floor',4.6,-8,6.6,3.6,'limestone');floor('preparation-floor',0,4.5,15.7,2.6,'concrete');
-  add('service-counter-left','counter',-4.6,2.6,5.6,.8,1.05,'oak');add('service-counter-right','counter',4.6,2.6,5.6,.8,1.05,'oak');
-  add('prep-cabinets','cabinet',-4.525,5.5,1.95,.65,.92,'charcoal');add('prep-cabinets-east','cabinet',1.525,5.5,7.95,.65,.92,'charcoal');add('prep-sink','sink',-3,5.45,1.1,.65,.97,'white');
-  add('coffee-machine','appliance',4.8,2.6,1,.6,.6,'charcoal',0,1.07);
-  add('pastry-display','glazing',-4.5,2.6,1.8,.65,.55,'brass',0,1.07);
+  // The service counters' doors and the espresso machine's group heads face the staff side;
+  // customers see closed counter fronts.
+  add('service-counter-left','counter',-4.6,2.6,5.6,.8,1.05,'oak',180);add('service-counter-right','counter',4.6,2.6,5.6,.8,1.05,'oak',180);
+  // The prep sink's worktop (0.77 of its height) meets the 0.92 m cabinets, fronts in line.
+  add('prep-cabinets','cabinet',-4.525,5.5,1.95,.65,.92,'charcoal');add('prep-cabinets-east','cabinet',1.525,5.5,7.95,.65,.92,'charcoal');add('prep-sink','sink',-3,5.5,1.1,.65,1.195,'white');
+  // A two-group espresso machine and a glass pastry case stand on the counter tops.
+  add('coffee-machine','appliance',4.8,2.6,.8,.55,.5,'charcoal',180,1.05);
+  add('pastry-display','glazing',-4.5,2.6,1.8,.65,.55,'brass',0,1.05);
   for(const [i,x,y] of [[1,-5.8,-3.8],[2,-2.6,-.1],[3,5.5,-3.8],[4,4.6,-.1]]){
     add(`cafe-table-${i}`,'table',x,y,1.05,.8,.74,'walnut');chair(`cafe-chair-${i}-a`,x-.95,y,90,'sage');chair(`cafe-chair-${i}-b`,x+.95,y,-90,'sage');
-    add(`table-vase-${i}`,'plant',x,y,.2,.2,.3,'sage',0,.75);
+    add(`table-vase-${i}`,'plant',x,y,.2,.2,.3,'sage',0,.74);
   }
   add('terrace-table','table',5.5,-8,1,.8,.74,'limestone');chair('terrace-chair-a',4.5,-8,90,'sage');chair('terrace-chair-b',6.5,-8,-90,'sage');
   add('counter-pendant-one','pendant',-4.6,2.6,1.2,.4,.35,'brass',0,2.3);add('counter-pendant-two','pendant',4.6,2.6,1.2,.4,.35,'brass',0,2.3);
-  add('menu-art','art',0,5.88,2.3,.04,1,'charcoal',0,1.4);plant('terrace-planter',7.4,-9);return space;
+  add('menu-art','art',0,5.88,2.3,.04,1,'charcoal',0,1.4);plant('terrace-planter',7.4,-9);plant('terrace-planter-west',1.8,-9.3);return space;
 }
 const factories={house,office,boutique,cafe};
 export function createSpace(id){if(!Object.hasOwn(factories,id))throw Error('Choose a known space template.');return factories[id]();}
