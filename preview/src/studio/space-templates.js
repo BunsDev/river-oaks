@@ -89,21 +89,27 @@ function office(){
 }
 function boutique(){
   const {space,add,floor,wall,chair,plant}=builder('Atelier Boutique','limestone');space.lighting='warm';
+  // The street front is the south glazing; the east side is a solid wall behind the
+  // displays and fitting rooms, glazed only by the front corner.
+  Object.assign(space.objects.find(o=>o.id==='east-window'),{north:-4.6,width:2.8});
+  wall('east-wall',8,1.4,.18,9.2);
   floor('fitting-floor',5.35,4.4,5.1,2.8,'oak');
   wall('fitting-divider',5.2,4.5,.14,3);wall('fitting-west',2.7,4.5,.14,3);
   // Open 1.5m fitting-room entries face the sales floor.
   wall('fitting-front-one',3,3,.6,.12);wall('fitting-front-two',5.2,3,.8,.12);wall('fitting-front-three',7.6,3,.6,.12);
+  // One family: walnut displays and checkout, limestone tables and plinths, brass fittings.
   add('checkout','counter',-4,4.3,2.8,.85,1.05,'walnut');
-  add('checkout-storage','cabinet',-4,5.5,3.2,.55,1.8,'oak');
+  add('checkout-storage','cabinet',-4,5.6,3.2,.55,1.8,'walnut');
   add('display-table-one','table',-3,-.7,2,1.1,.78,'limestone');add('display-table-two','table',3,-.7,2,1.1,.78,'walnut');
-  add('display-product-one','plant',-3,-.7,.4,.4,.6,'sage',0,.8);add('display-product-two','cabinet',3,-.7,.55,.55,.3,'terracotta',0,.8);
-  for(let i=0;i<3;i++)add(`wall-display-${i+1}`,'shelf',-7.4,-2.5+i*2.3,1.6,.7,2.1,'oak',90);
-  for(let i=0;i<2;i++)add(`east-display-${i+1}`,'shelf',7.4,-2+i*2.7,1.7,.7,1.65,'walnut',-90);
+  add('display-product-one','plant',-3,-.7,.4,.4,.6,'sage',0,.78);add('display-product-two','cabinet',3,-.7,.55,.55,.3,'terracotta',0,.78);
+  for(let i=0;i<3;i++)add(`wall-display-${i+1}`,'shelf',-7.55,-2.5+i*2.3,1.6,.7,2.1,'walnut',90);
+  for(let i=0;i<2;i++)add(`east-display-${i+1}`,'shelf',7.55,-2+i*2.7,1.7,.7,1.65,'walnut',-90);
   add('window-plinth-one','cabinet',-4.5,-5,1.5,.8,.55,'limestone');add('window-plinth-two','cabinet',4.5,-5,1.5,.8,.55,'limestone');
-  add('window-art-one','art',-4.5,-5,.55,.08,.8,'terracotta',0,.56);add('window-art-two','art',4.5,-5,.55,.08,.8,'sage',0,.56);
+  add('window-art-one','art',-4.5,-5,.55,.08,.8,'terracotta',0,.55);add('window-art-two','art',4.5,-5,.55,.08,.8,'sage',0,.55);
   chair('fitting-chair-one',4.2,5.3,0,'fabric');chair('fitting-chair-two',6.65,5.3,0,'fabric');
   add('fitting-mirror-one','glazing',4,5.85,1.2,.05,1.7,'brass',0,.5);add('fitting-mirror-two','glazing',6.6,5.85,1.2,.05,1.7,'brass',0,.5);
   add('display-pendant-one','pendant',-3,-.7,1,.4,.3,'brass',0,2.4);add('display-pendant-two','pendant',3,-.7,1,.4,.3,'brass',0,2.4);
+  add('checkout-pendant','pendant',-4,4.3,2.4,.22,.3,'brass',0,2.4);
   plant('checkout-plant',-1.5,5);return space;
 }
 function cafe(){

@@ -14,6 +14,7 @@ async page => {
   const SETTINGS = {
     office: { edit: ['work-desk-2', 'walnut', 'oak'], block: ['waiting-sofa', [['Width (m)', .8], ['Depth (m)', 1.8], ['North (m)', .9], ['East (m)', 2]], 'meeting room'], tabs: ['work-desk-3', 'work-desk-4'] },
     house: { edit: ['dining-table', 'walnut', 'oak'], block: ['coffee-table', [['East (m)', 3.5]], 'bathroom'], tabs: ['kitchen-cabinets', 'kitchen-cabinets-east'] },
+    boutique: { edit: ['display-table-two', 'oak', 'walnut'], block: ['checkout-plant', [['North (m)', 3], ['East (m)', 4.05]], 'fitting room one'], tabs: ['display-table-one', 'window-plinth-two'] },
   };
   const templateId = process.env.STUDIO_TEMPLATE ?? 'house', settings = SETTINGS[templateId];
   if (!settings) throw Error(`No journey settings for ${templateId}`);
