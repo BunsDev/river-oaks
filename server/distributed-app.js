@@ -1,3 +1,4 @@
+import {characterSelectionGate} from './character-rollout.js';
 import {isCharacterSelection} from './character-selection.js';
 import { createCharacterRoutes } from './character-routes.js';
 import { officeWorkspaceAction } from './office-workspaces-api.js';
@@ -41,7 +42,7 @@ const json = (res, status, value) => {
 };
 
 /** HTTP/WS edge for a durable room. No instance owns canonical game or auth state. */
-export function createDistributedServer({ auth, room, worldTitle, security, waitlist, waitlistAdmins = [], debugReports = null, landmarks, social = null, groups = null, profiles = null, characters = null, events = null, workplace = null, officeDesk = null, officeWorkspaces = null, workplaceCronSecret = null, presence = null, designLibrary = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
+export function createDistributedServer({ auth, room, worldTitle, security, waitlist, waitlistAdmins = [], debugReports = null, landmarks, social = null, groups = null, profiles = null, characters = null, characterStudioEnabled = true, events = null, workplace = null, officeDesk = null, officeWorkspaces = null, workplaceCronSecret = null, presence = null, designLibrary = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
   trustedProxyIPs = [], address = createClientAddress(trustedProxyIPs), now = Date.now,
   connectionLifetime = 270_000, rotateNoticeMs = ROTATE_NOTICE_MS, assetGateSecret = null, heartbeatMs = 5000, onMove = null, voice = null, voiceCronSecret = null,
   // cyclingMiles: accepted for the leaderboard route (PR 2); the room owner flushes rides.
@@ -76,7 +77,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
     }
     return identity;
   };
-  const handleCharacters=characters?createCharacterRoutes({store:characters,approvedIdentity,authorized,
+  const handleCharacters=characters?createCharacterRoutes({enabled:characterStudioEnabled,store:characters,approvedIdentity,authorized,
     allowRead:id=>security.allow('character-read',id,120,60000),allowWrite:id=>security.allow('character-write',id,30,60000)}):null;
   async function body(req,max=4096) {
     let size = 0; const chunks = [];
@@ -435,6 +436,8 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
             if (!(await security.allow('frames', identity.userId, 40, 1000))) { ws.close(4008, 'Too many messages.'); return; }
             if (identity.expiresAt <= now()) { ws.close(4001, 'Please sign in again.'); return; }
             const { requestId, selection, ...command } = message;
+            const studioGate=await characterSelectionGate({enabled:characterStudioEnabled,store:characters,userId:identity.userId,command,selection});
+            if(studioGate){send(ws,{type:'result',requestId,...studioGate});return;}
             if(selection!==undefined&&!isCharacterSelection(command)){send(ws,{type:'result',requestId,ok:false,error:'invalid_character_operation'});return;}
             if (command.type === 'report') {
               const view = await room.read();

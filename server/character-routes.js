@@ -22,7 +22,7 @@ async function readBody(req,fields){
 
 // Publication creates immutable owner revisions without equipping them. Selection
 // remains a connection-authorized world command with its own version and receipt.
-export function createCharacterRoutes({store,approvedIdentity,authorized,allowRead,allowWrite}){
+export function createCharacterRoutes({enabled=true,store,approvedIdentity,authorized,allowRead,allowWrite}){
   if(!store?.get||!store?.saveDraft||![approvedIdentity,authorized,allowRead,allowWrite].every(fn=>typeof fn==='function'))throw new TypeError('Invalid character routes');
   return async(req,res,path)=>{
     const routes={'/api/character':{method:'GET'},'/api/character/draft':{method:'PUT',fields:['definition','expectedVersion','requestId']},
@@ -35,6 +35,7 @@ export function createCharacterRoutes({store,approvedIdentity,authorized,allowRe
     const query=new URL(req.url,'http://localhost').searchParams;
     if([...query.keys()].some(key=>key!=='world')||query.getAll('world').length>1){json(res,400,{error:'invalid_character_request'});return true;}
     if(!await (reading?allowRead:allowWrite)(identity.userId)){json(res,429,{error:'character_rate_limited'});return true;}
+    if(!reading&&enabled!==true){json(res,503,{error:'character_studio_disabled'});return true;}
     let body;
     if(!reading){
       if(req.headers['content-type']?.split(';')[0].trim().toLowerCase()!=='application/json'){json(res,415,{error:'character_json_required'});return true;}

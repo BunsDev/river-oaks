@@ -61,7 +61,7 @@ export function createCharacterStudio({ownerId,getDefinition,accountTransport=nu
     const saved=sameLook(value,state.character?.draft),worn=sameLook(value,state.selection?.character);
     const messages={idle:'Connecting to your saved looks…',loading:'Checking your saved looks…',saving:'Saving your private draft…',publishing:'Preparing your look for town…',equipping:'Waiting for the town to confirm your look…',
       conflict:'Your account changed elsewhere. Your edits are still here. Check the saved account before choosing what to save.',
-      error:state.error==='appearance_cooldown'?'Your draft is saved. Wait a moment, then retry wearing it.':state.canRetry?'The action is not confirmed. Your edits are safe here. Retry to check the same action.':'Your account could not be updated. Your edits are safe here. Check the saved account to try again.',
+      error:state.error==='character_studio_disabled'?'Character Studio is paused. Your saved looks and local edits are safe.':state.error==='appearance_cooldown'?'Your draft is saved. Wait a moment, then retry wearing it.':state.canRetry?'The action is not confirmed. Your edits are safe here. Retry to check the same action.':'Your account could not be updated. Your edits are safe here. Check the saved account to try again.',
       ready:worn?'You are wearing this look in town.':saved?'Private draft saved. Wear it when you are ready.':'You have unsaved edits. Your town appearance is unchanged.'};
     $('[data-account-status]').textContent=accountTransport?messages[state.phase]:'Saved looks are unavailable. Your edits stay in this tab.';
     dialog.dataset.accountPhase=state.phase;

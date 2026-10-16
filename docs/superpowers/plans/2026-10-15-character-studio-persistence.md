@@ -817,3 +817,44 @@ previously misclassified as outages; two real memory/Redis HTTP+WS accounting
 tests pass without skips. Read-only review found no staged wiring blocker;
 production collector environment/lifecycle wiring remains open. Source edits
 remain frozen during the corrected crowd run. No merge or deployment.
+
+
+Deletion d4301110cc0af2e28424db625c12f78557b49970 signed and pushed to
+#464; signature/attribution and remote head verified. PR description and existing
+issue443 progress updated with full18 evidence; exact-head hosted checks running.
+
+Crowd30680 terminal1 after desktop1: unsupported fixture ID sable-fox. Canonical
+fox ID is woman-casual. Preserved both failed fixtures, added definition preflight
+and verified draft/publication/selection for both forms before rerunning72299.
+Run72299 terminal0 with six samples; source hashes match d4301110 before integration.
+Desktop1/8/16 p95=33.4/16.8/33.4ms; same-host phone viewport=33.3/16.7/33.4ms.
+No desktop performance acceptance; physical devices remain untested. Desktop/phone
+16-player captures inspected: material identity visible, overlapping name labels
+obscure crowd. Full receipt/script/captures/findings retained under crowd.
+
+Rollout integrated after all measurement handles terminal and19-target dry-run
+hash validation. Reviewed gate preserves deletion wiring and accepted receipt
+recovery, defaults production enablement off, and keeps legacy/read/render paths.
+Actual integrated account23/23 and memory/Redis transport7/7 pass, zero skips.
+Integrated source hashes frozen in rollout/integrated-source-hashes.json.
+Live14376 runs shared Character Studio, disabled/paused/editor browser journeys
+and core with isolated Redis under the shared browser lock. No rollout commit
+before verification. Telemetry remains staged separately, including reviewed
+HTTP/WS accounting; collector production opt-in/lifecycle remains outstanding.
+
+
+Rollout14376 terminal0 at2026-10-16T06:33:59Z: shared37 checks;
+disabled6/paused6/editor21 checks; core11 tasks passed with isolated Redis.
+Tooling117, preview3351 with1 existing skip/1TODO, server901 zero skips,
+desktop69, Python141/66warnings. All19 source hashes match. Actual disabled
+capture preserves authored picker with no Studio entry; paused capture retains
+Rose and clearly explains saved/local edits are safe with Retry. Evidence retained
+rollout/verified-20261016. Ready for signed rollout commit to draft464.
+Deletion d4301110 now has all10 hosted checks green including aggregate preview.
+
+Telemetry factory lifecycle is staged and reviewed: strict env1 opt-in, collector
+owned by town/gateway unless caller injects it, flush on close/failure, no per-request
+payload log. Memory/Redis production-factory and transport tests4/4 pass without
+skips in addition to9 focused tests. Gateway replacement retains the injected
+collector and records paused attempts after replacement. No production telemetry
+integration yet; do not rerun old staged generators over lifecycle changes.

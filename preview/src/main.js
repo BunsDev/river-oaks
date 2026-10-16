@@ -287,14 +287,16 @@ function initializeRenderer() {
     },
     requestVehicleExit: position => multiplayer.travel({position:[position[0],-position[2]]}),
     getPortrait: id => portraits.portrait(id) });
-  characterStudio = createCharacterStudio({ownerId:document.body.dataset.accountId,
-    getDefinition:()=>playerAvatar.definition,
-    accountTransport:{read:()=>multiplayer.characterRequest('read'),write:(action,body)=>multiplayer.characterRequest(action,body),
-      select:(command,selection)=>multiplayer.command({...command,selection})},
-    canOpen:()=>Boolean(multiplayer?.connected&&playerAvatar?.ready&&!loading&&!multiplayer?.traveling&&!photoMode?.active&&!officeUI?.active),
-    canStayOpen:()=>Boolean(multiplayer?.connected&&!loading&&!multiplayer?.traveling&&!photoMode?.active&&!officeUI?.active),
-    onOpen:()=>walking.halt(),reducedMotion});
-  document.querySelector('.character-picker').before(characterStudio.trigger);
+  if(import.meta.env.VITE_CHARACTER_STUDIO==='true'){
+    characterStudio = createCharacterStudio({ownerId:document.body.dataset.accountId,
+      getDefinition:()=>playerAvatar.definition,
+      accountTransport:{read:()=>multiplayer.characterRequest('read'),write:(action,body)=>multiplayer.characterRequest(action,body),
+        select:(command,selection)=>multiplayer.command({...command,selection})},
+      canOpen:()=>Boolean(multiplayer?.connected&&playerAvatar?.ready&&!loading&&!multiplayer?.traveling&&!photoMode?.active&&!officeUI?.active),
+      canStayOpen:()=>Boolean(multiplayer?.connected&&!loading&&!multiplayer?.traveling&&!photoMode?.active&&!officeUI?.active),
+      onOpen:()=>walking.halt(),reducedMotion});
+    document.querySelector('.character-picker').before(characterStudio.trigger);
+  }
   seatAndWater = createSeatAndWater({ walking, playerAvatar, getLocals: () => community.state?.locals, getMultiplayer: () => multiplayer, isBusy: () => seatingControls?.busy() ?? false });
   // Seated at a plaza chess table, X plays chess, checkers or Connect Four; the table mirrors the game.
   plazaGames = createPlazaTableGames({ getMirror: () => plazaSalon?.userData.chess ?? null, getFourMirror: () => plazaSalon?.userData.connectFour ?? null, getMorrisMirror: () => plazaSalon?.userData.morris ?? null, getSeat: () => seatAtTable(walking?.getPose()),

@@ -5,7 +5,7 @@ const clone=value=>structuredClone(value);
 const version=value=>Number.isSafeInteger(value)&&value>=0;
 const failure=code=>Object.assign(new Error(code),{code});
 const conflicts=new Set(['character_conflict','character_selection_conflict','character_request_reused']);
-const retryable=new Set(['character_unavailable','character_selection_pending','appearance_cooldown','rate_limited','character_rate_limited','request_timeout','character_response_invalid']);
+const retryable=new Set(['character_unavailable','character_studio_disabled','character_selection_pending','appearance_cooldown','rate_limited','character_rate_limited','request_timeout','character_response_invalid']);
 // An unreadable acknowledgement cannot prove whether the mutation committed.
 // Retain its identity and recover the receipt instead of starting a fresh write.
 const acknowledgement=parse=>{try{return parse();}catch(error){if(error.code==='character_account_deleted')throw error;throw failure('character_response_invalid');}};

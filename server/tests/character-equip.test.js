@@ -15,12 +15,12 @@ const data={scene:'district',bounds_m:[-30,-30,30,30],walkSpawn:[-12,0,0],collis
 const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function fixture(mode,t,{wrapStore=store=>store}={}){
  const origin='http://127.0.0.1',namespace=`character-equip:${randomUUID()}`,sockets=[],characters=createMemoryCharacterStore(),avatarPreferences=createMemoryAvatarPreferences();
- let approved=true,banned=false,redis,security,app;
+ let approved=true,banned=false,redis,security,app,studioEnabled=true;
  const auth={handle:async()=>false,close(){},isSessionActive:async()=>true,authenticate:async req=>{const userId=req.headers.cookie?.match(/fixture=(alice|bob)/)?.[1];return userId?{userId,name:userId,sessionId:userId,csrfToken:'fixture-csrf',expiresAt:Date.now()+120000}:null;}};
  const waitlist={...approvedWaitlist,isApproved:async()=>approved};
  if(mode==='redis'){redis=new Redis(process.env.REDIS_URL);redis.on('error',()=>{});security=createRedisSecurity({redis,prefix:`{${namespace}}`});}
- const create=()=>mode==='redis'?createWorldGateway({redis,namespace,worldData:data,auth,security:{...security,isBanned:async()=>banned},waitlist,origin})
-  :createGameServer({world:createSharedWorld(data),auth,waitlist,origin,characters:wrapStore(characters),avatarPreferences,moderation:{isBanned:()=>banned},staticRoot:'/nonexistent'});
+ const create=()=>mode==='redis'?createWorldGateway({characterStudioEnabled:studioEnabled,redis,namespace,worldData:data,auth,security:{...security,isBanned:async()=>banned},waitlist,origin})
+  :createGameServer({characterStudioEnabled:studioEnabled,world:createSharedWorld(data),auth,waitlist,origin,characters:wrapStore(characters),avatarPreferences,moderation:{isBanned:()=>banned},staticRoot:'/nonexistent'});
  let base;const listen=async()=>{app=create();await new Promise(resolve=>app.server.listen(0,'127.0.0.1',resolve));base=`http://127.0.0.1:${app.server.address().port}`;};await listen();
  t.after(async()=>{for(const ws of sockets)ws.terminate();await app.close();security?.close();if(redis){const keys=await redis.keys(`*${namespace}*`);if(keys.length)await redis.del(...keys);await redis.quit();}});
  const headers=user=>({Origin:origin,Cookie:`fixture=${user}`,'X-CSRF-Token':'fixture-csrf','Content-Type':'application/json'});
@@ -34,7 +34,7 @@ async function fixture(mode,t,{wrapStore=store=>store}={}){
   await until(frame=>frame.type==='snapshot');
   return {ws,frames,until,command:async(message,selection)=>{const requestId=String(++seq);ws.send(JSON.stringify({...message,...(selection===undefined?{}:{selection}),requestId}));return until(frame=>frame.type==='result'&&frame.requestId===requestId);}};
  };
- return {request,state,open,characters,setApproved:v=>{approved=v;},setBanned:v=>{banned=v;},replace:async()=>{for(const ws of sockets)ws.terminate();await app.close();await listen();}};
+ return {request,state,open,characters,setStudioEnabled:value=>{studioEnabled=value;},setApproved:v=>{approved=v;},setBanned:v=>{banned=v;},replace:async()=>{for(const ws of sockets)ws.terminate();await app.close();await listen();}};
 }
 for(const mode of ['memory','redis'])test(`${mode}: publish, equip, peer, reconnect and republish use authenticated authoritative transports`,{skip:mode==='redis'&&!process.env.REDIS_URL,timeout:60000},async t=>{
  const f=await fixture(mode,t),definition=customizedCharacterDefinition('alice','sable-human',{palette:'rose'});
@@ -125,4 +125,44 @@ test('memory: deleting an idle character account removes its peer projection wit
  const deleted=await f.state('alice');assert.equal(deleted.character.deleted,true);assert.equal(deleted.character.draft,null);assert.equal(deleted.character.published,null);assert.equal(deleted.selection,null);
  assert.equal((await f.request('alice','/api/character/draft',{definition,expectedVersion:0,requestId:'delete-recreate'})).status,410);
  assert.equal((await f.state('bob')).character.draft,null,'other accounts remain available');
+});
+
+for(const mode of ['memory','redis'])test(`${mode}: Studio rollout stops new writes and custom equips while retaining saved identity`,{skip:mode==='redis'&&!process.env.REDIS_URL,timeout:30000},async t=>{
+ const f=await fixture(mode,t),definition=customizedCharacterDefinition('alice','sable-human',{palette:'rose'});
+ const draft={definition,expectedVersion:0,requestId:'rollout-draft'};
+ assert.equal((await f.request('alice','/api/character/draft',draft)).status,200);
+ assert.equal((await f.request('alice','/api/character/publish',{expectedVersion:1,requestId:'rollout-publish'})).status,200);
+ const a=await f.open('alice');
+ assert.equal((await a.command({type:'character',revision:1},{expectedVersion:1,requestId:'rollout-equip'})).ok,true);
+ const saved=await f.state('alice');
+ f.setStudioEnabled(false);await f.replace();
+ const back=await f.open('alice'),peer=await f.open('bob');
+ assert.equal(back.frames.find(frame=>frame.type==='snapshot').players.find(p=>p.id==='alice').character.palette,'rose');
+ await peer.until(frame=>frame.type==='snapshot'&&frame.players.some(p=>p.id==='alice'&&p.character?.palette==='rose'));
+ assert.deepEqual(await f.state('alice'),saved,'Disabling writes preserves stored records and selected identity');
+ const recovered=await back.command({type:'character',revision:1},{expectedVersion:1,requestId:'rollout-equip'});
+ assert.equal(recovered.ok,true,'An exact pre-disable equip receipt remains recoverable after reconnect');assert.equal(recovered.appliedVersion,2);assert.equal(recovered.selectionVersion,2);
+ for(const [path,body]of [
+  ['/api/character/draft',{definition:{...definition,palette:'midnight'},expectedVersion:2,requestId:'rollout-blocked-draft'}],
+  ['/api/character/publish',{expectedVersion:2,requestId:'rollout-blocked-publish'}],
+  ['/api/character/rollback',{revision:1,expectedVersion:2,requestId:'rollout-blocked-rollback'}],
+  ['/api/character/draft',draft],
+ ]){
+  const response=await f.request('alice',path,body);assert.equal(response.status,503,path);assert.deepEqual(await response.json(),{error:'character_studio_disabled'});
+ }
+ assert.equal((await back.command({type:'character',revision:1},{expectedVersion:2,requestId:'rollout-blocked-equip'})).error,'character_studio_disabled');
+ assert.deepEqual(await f.state('alice'),saved,'Blocked operations must not create receipts or advance versions');
+ assert.equal((await f.request('missing','/api/character/draft',draft)).status,401);
+ assert.equal((await f.request('alice','/api/character/draft',draft,{'X-CSRF-Token':'wrong'})).status,403);
+ await pause(2050);
+ assert.equal((await back.command({type:'appearance',appearance:'woman-casual'})).ok,true,'Existing authored appearance controls remain available');
+ f.setStudioEnabled(true);await f.replace();
+ assert.equal((await f.state('alice')).character.published.palette,'rose');
+ assert.equal((await f.request('alice','/api/character/draft',{definition:{...definition,palette:'midnight'},expectedVersion:2,requestId:'rollout-resume'})).status,200);
+ assert.equal((await f.request('alice','/api/character/publish',{expectedVersion:3,requestId:'rollout-republish'})).status,200);
+ assert.equal((await f.state('alice')).character.published.revision,2);
+ f.setStudioEnabled(false);await f.replace();
+ const statuses=[];for(let i=0;i<32;i++)statuses.push((await f.request('bob','/api/character/draft',{definition:customizedCharacterDefinition('bob','sable-human'),expectedVersion:0,requestId:'blocked-budget'})).status);
+ assert.ok(statuses.includes(429),'Disabling Studio retains per-owner request budgets');
+ assert.ok(statuses.every(status=>[503,429].includes(status)));
 });

@@ -142,3 +142,22 @@ test('partial publication receipt keeps its identity when revision metadata is a
  await model.load();await assert.rejects(model.wear(draft('rose')));assert.equal(model.state.canRetry,true);
  await model.retry();assert.deepEqual(publications[1],publications[0]);assert.equal((await f.store.get(owner)).published.revision,1);
 });
+
+test('pausing Studio retains an uncertain equip until its committed receipt is available',async()=>{
+ const f=await fixture(),attempts=[];let stage=0;
+ const model=createCharacterAccount({ownerId:owner,read:f.read,write:f.write,select:async(command,selection)=>{
+  attempts.push(structuredClone({command,selection}));stage++;
+  if(stage===1)return {ok:false,error:'request_timeout'};
+  if(stage===2)return {ok:false,error:'character_studio_disabled'};
+  return f.select(command,selection);
+ },operationId:()=>`paused-${f.calls.length}`});
+ await model.load();await assert.rejects(model.wear(draft('rose')));assert.equal(model.state.canRetry,true);
+ await assert.rejects(model.retry(),error=>error.code==='character_studio_disabled');
+ assert.equal(model.state.canRetry,true,'A paused result cannot prove a previous equip did not commit');
+ await assert.rejects(model.load(),error=>error.code==='character_retry_required');
+ await assert.rejects(model.wear(draft('midnight')),error=>error.code==='character_retry_required');
+ await f.store.changeSelection(owner,attempts[0].command,attempts[0].selection);
+ await model.retry();assert.equal(model.state.phase,'ready');
+ assert.deepEqual(attempts[1],attempts[0]);assert.deepEqual(attempts[2],attempts[0]);
+ assert.equal(model.state.selection.version,2);assert.equal(model.state.character.published.revision,1);
+});

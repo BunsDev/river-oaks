@@ -507,3 +507,98 @@ intact, retry after cleanup failure, failed durable kick results, actual peer
 disappearance, delayed auth races, and both production factory routes. Tests use
 local provider adapters; existing SDK boundary suites independently exercise real
 SDK JWT/JWKS verification. These do not establish live WorkOS or hosted delivery.
+
+
+## Rollout and support (#444)
+
+This runbook accompanies the rollout implementation. Keep release disabled until
+its transport, paused/disabled browser journeys and approved acceptance gates pass.
+A local passing run does not authorize enabling production.
+
+The server enables new Studio mutations and custom equips only when
+`RIVER_OAKS_CHARACTER_STUDIO=1`. The browser exposes the editor only when
+`VITE_CHARACTER_STUDIO=true`; changing this build-time value requires a new client
+build. Missing, false or unrecognized values leave the respective feature off.
+Fixture opt-ins are test configuration, never authentication exceptions.
+
+Pause new server writes first if a release must be stopped. Previously selected
+looks still render and reconnect; ordinary authored appearance/movement controls
+remain available. Draft/publication/rollback writes receive
+`character_studio_disabled`. New custom equips stop, while an exact stored equip
+receipt can still pass through authenticated recovery. Accepted pending operations
+may finish during a pause. Clients retain uncertain operations and their stable
+request IDs so retry cannot create a second operation. Hiding the editor is a
+separate client release; it cannot undo a server operation already accepted.
+
+A feature pause must retain writer generation13/envelope3, world codec12 and
+character-store codec2. Never roll back to an older reader/writer, delete a saved
+revision, clear request receipts, remove tombstones or reset account versions as a
+support fix. Reenable with the same compatible implementation after the failure is
+resolved and recovery tests pass. Check saved account state before a fresh edit.
+
+Support behavior:
+
+- Save draft is private. Wear publishes and selects the validated look for town.
+  A published revision alone does not establish that the town selected it.
+- A lost response or paused write retains Retry for the same action. Keep the tab
+  available until the action is confirmed. A full reload cannot preserve unsaved
+  local edits or the in-memory retry journal; favorites on that device are separate.
+- A version conflict preserves visible local edits. Check saved account refreshes
+  authoritative state; Use saved draft is an explicit replacement of the local
+  edit. Do not automatically overwrite another editor's draft.
+- An initial peer asset failure shows a neutral fallback and retries loading the
+  canonical revision. A fallback does not change the stored look or its owner.
+- Account erasure uses a durable tombstone and rejects recreation/replayed writes.
+  The signed `/api/workos/events` hook performs character erasure, session
+  revocation and peer disconnect. Keep the hook configured and active during a
+  Studio pause; local fixture tests do not prove live provider delivery. Configure
+  and verify the provider subscription separately before production acceptance.
+
+For a support report, request the release revision, browser/device, action name,
+fixed error category, approximate time and whether the local draft is still shown.
+Do not request cookies, tokens, complete API payloads, account identifiers, private
+reference images or unsanitized browser recordings. No reference-image upload or
+AI generation path is part of this release. Existing acceptance receipts use local
+fixture identities and must not be confused with production usage telemetry.
+
+Production aggregate telemetry is still outstanding: define a bounded allowlist
+of operation/result counters and timing buckets before instrumentation. Exclude
+user/request/world IDs, definitions, palettes, raw errors, images and free text;
+do not add an unbounded event log or a new external analytics provider implicitly.
+Usability thresholds and device performance require their separate recorded trials.
+
+
+### Custom-character crowd diagnostic (2026-10-16)
+
+At `d4301110`, Chromium156.0.8078.4 on Apple M3 Max/ANGLE Metal measured
+30 seconds after10 seconds warmup per tier with sharp quality,98 NPCs and the
+listed total player count. The viewer used Sable human Rose; peers alternated
+human Rose and fox Midnight. Server publication/equip and actual material-color
+checks established canonical identity before measurement.
+
+| Viewport | Players | Frame p95 (ms) | CPU submission p95 (ms) | Draw calls | Triangles |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| desktop | 1 | 33.4 | 11.4 | 1604 | 5246962 |
+| desktop | 8 | 16.8 | 16.3 | 2282 | 8378714 |
+| desktop | 16 | 33.4 | 32.4 | 3116 | 12193278 |
+| phone-viewport | 1 | 33.3 | 8.9 | 1249 | 4204713 |
+| phone-viewport | 8 | 16.7 | 16 | 1940 | 7426312 |
+| phone-viewport | 16 | 33.4 | 32 | 2760 | 11207145 |
+
+Desktop was1280x800 DPR1; phone viewport390x844 DPR2 used the same host GPU.
+This does not prove physical-phone performance or approved-device acceptance.
+The proposed16.7ms desktop p95 target did not pass. Non-monotonic frame intervals
+need repeated pinned runs before inferring a scaling curve. Draw/triangle totals
+include the environment and NPCs; they are not isolated custom-avatar costs.
+
+All six harness rows passed roster/material/asset, command, reconnect and cleanup
+assertions. Peer reconnect was34–149ms; ordinary departure converged after the
+existing30-second grace. This uses loopback memory authority, not Redis or hosted
+network conditions. The actual desktop/phone16-player screenshots show overlapping
+name labels obscuring the crowd, especially on the narrow viewport. Label readability,
+frame cost and approved-device measurements remain open. Distant crowd views cannot
+prove garment deformation or the full animation matrix.
+
+Receipt, frozen script/input hashes and inspected captures are retained locally in
+`.runtime/character-studio/crowd/`. Earlier fixture failures are preserved separately;
+only the corrected six-row run supplies these measurements. No release acceptance.

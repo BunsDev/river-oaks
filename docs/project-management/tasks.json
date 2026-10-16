@@ -11223,9 +11223,9 @@
         "feat/character-studio-persistence-20261015"
       ],
       "owner": "codex-character-studio-20261015",
-      "updatedAt": "2026-10-16T06:20:55.214029+00:00",
-      "leaseUntil": "2026-10-16T08:20:55.214029+00:00",
-      "nextAction": "Deletion full77638 terminal0: all18 tasks passed,899 server tests zero skips,13 experience/22 shared journeys plus screening. Frozen15 source hashes match; receipts retained deletion-hook/full-verified-20261016. Commit/push reviewed deletion increment to draft464. Crowd68651 terminal1 before rendering (invalid fixture walk); corrected upright run30680 live under browser lock, no performance claim. Rollout staged7 transports pass; telemetry staged9 tests plus2 real memory/Redis accounting pass, review found no wiring blocker; collector factory enable/lifecycle still open. Full visual/device/human acceptance remains open.",
+      "updatedAt": "2026-10-16T06:34:48.540586+00:00",
+      "leaseUntil": "2026-10-16T08:34:48.540586+00:00",
+      "nextAction": "Rollout14376 terminal0: shared37/editor33/core11 pass; server901 no skips, preview3351 with existing1 skip/1TODO. Frozen19 hashes match and disabled/paused captures inspected; evidence rollout/verified-20261016. Commit/push verified rollout increment to draft464. Deletion d4301110 has all10 hosted checks green. Crowd72299 six-row diagnostic retained: desktop target not met and name-label overlap visible; approved device/garment/hero/human acceptance open. Telemetry remains staged with9 focused+4 factory/transport tests passing and review no blocker; next integrate strict opt-in and lifecycle, run focused/core gates. No merge or deployment.",
       "filesOwned": [
         "server/character-store.js",
         "server/tests/character-store.test.js",
