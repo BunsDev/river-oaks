@@ -11,6 +11,7 @@ import { validateSpace } from '../src/studio/space-document.js';
 const PEOPLE = {
   office: [['visitor-at-reception', -4, -5.25], ['person-at-sink', -5.2, 4.75]],
   house: [['person-at-kitchen-sink', -4, 4.95], ['person-at-vanity', 6, -1.05]],
+  boutique: [['customer-at-checkout', -5, 3.55], ['staff-behind-checkout', -4, 5.02]],
 };
 function occupied(space, pushBack, people) {
   for (const item of space.objects.filter(object => object.kind === 'chair')) {
@@ -23,7 +24,7 @@ function occupied(space, pushBack, people) {
   return validateSpace(space);
 }
 
-for (const [templateId, name, destinations] of [['office', 'Garden Office', 4], ['house', 'Courtyard House', 5]])
+for (const [templateId, name, destinations] of [['office', 'Garden Office', 4], ['house', 'Courtyard House', 5], ['boutique', 'Atelier Boutique', 4]])
   test(`${name} required routes stay passable with every seat occupied and people at its counters`, () => {
     for (const pushBack of [.25, .4]) {
       const result = assessSpace(occupied(createSpace(templateId), pushBack, PEOPLE[templateId]), spaceAssessmentContext(templateId));
