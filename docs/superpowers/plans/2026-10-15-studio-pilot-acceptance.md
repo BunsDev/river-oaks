@@ -661,11 +661,18 @@ Engineering inspection (not an independent design review):
   - and the restrained `#F486A1` art accent.
 
   Every station shows the same positions and room plan.
-- **#416 reviewed → current.** The only visible change is the shelving. It went from a deep
-  single-bay case with thick boards to the shared two-bay shelving with thin boards at a real
-  shelf pitch, with books, which arrived with #474. Desks, chairs, lights, art, floor, glazing
-  and the kitchenette (sink seated in its worktop, CAM-11) are unchanged. The reception counter
-  is the plain slab since #466.
+- **#416 reviewed → current.** Two pieces changed, both from shared furniture families:
+  - **Shelving (#474):** from a deep single-bay case with thick boards to the two-bay shelving
+    with thin boards at a real shelf pitch, with books. Seen at CAM-03/07/08/09, and at the
+    frame edge in CAM-05/10.
+  - **Meeting table (#476, `4b529e5c`):** from a thick rounded slab on inset legs to a 30 mm
+    square-cornered walnut top on corner legs with aprons. Same position and size; seen at
+    CAM-04 and through the glass at CAM-01.
+
+  My first inspection missed the table, whose mean difference is small (0.4–0.6); the
+  independent review below caught it. Desks, chairs, lights, art, floor, glazing and the
+  kitchenette (sink seated in its worktop, CAM-11) are unchanged. The reception counter is the
+  plain slab since #466.
 - **Scale and contact:** desks, chairs and shelving rest on the floor with contact shadows in
   every preset.
 - **Glass:** the meeting-room partitions read as glass with charcoal mullions. Plants and
@@ -676,14 +683,31 @@ Engineering inspection (not an independent design review):
 - **Exit wayfinding:** CAM-06 still faces a blank wall. The walked journey proves the exit is
   reachable, not that a new visitor finds it.
 
-Disposition: no new visual blocker found by engineering inspection. Remaining visual review
-items: the design reviewer's look at the office shelving change, and D7/D9 (known limits from
-#416).
+**Independent agent design review (2026-10-18, revision `1221547e`): accept with notes.**
+A separate agent with fresh, read-only context reviewed all 88 current captures against all 88
+`review2` captures and the pre-pilot set, with its own pixel differences and close-ups. Its
+report is local at `.runtime/acceptance/design-review-417-1221547e.md`. This is agent review,
+not Val's approval or human/device acceptance.
+- **Changes:** it found no design fix needed, the table change above (F1), and that the
+  shelving and table improve on #416 (thin boards at real pitch, oak and charcoal matching the
+  desk family, clean floor contact).
+- **Unchanged, passes:** glazing, glass sorting, preset response, the pink accent only on the
+  reception art, the sink fit and occupied-use readability.
+- **Optional notes, no fix required:**
+  - F4: the shelving's kick is only about 4.5 mm deep;
+  - F5: the shelf contents come from the boutique fill, with no upright spines;
+  - F6/F7: faint shadow speckle and a 1 px table-edge alias, visible only zoomed in;
+  - F8: the four meeting chairs sit off the table ends on its long-edge lines (north 2.0/3.2,
+    `space-templates.js:79-80`), about 8 cm from the new corner legs, which no capture shows as
+    a clash.
+
+  F8 is a question about the approved plan, not a measured defect, so it isn't changed here.
+  D7/D9 remain known limits from #416.
 
 ### Decision
 
 **Engineering: continue with Garden Office as the local-template baseline, on the scoped
-desktop profile, at `ae3173cb`.**
+desktop profile, at the final revision `1221547e` (below).**
 - The edit/refusal/repair/undo/save/reopen/stale-tab/walk/exit journey passes on the real GPU,
   as does development Electron.
 - Ten post-warm-up cycles hold every renderer, DOM, listener, worker, timer and pending-load
@@ -697,10 +721,10 @@ Still open, by owner:
 
 - **Val (human review):** VoiceOver, keyboard-only, physical touch and uncoached use, including
   exit wayfinding and the touch-walk limit above. #417 stays open until these are recorded.
-- **Design reviewer:** the Garden Office as it now renders differs from the #416-reviewed set
-  only in its shelving (see the paired captures). That shelving family arrived with #474 and was
-  accepted for Boutique/House/Café on 2026-10-17, but hasn't been looked at in the office.
-  D7 (open roof) and D9 (bare exterior) remain known limits from #416.
+- **Design:** the independent agent review accepted the office's shelving (#474) and meeting
+  table (#476) changes with notes. Its optional notes F4, F5 and F8 (chair placement against
+  the new corner legs) are for Val or a design follow-up to take or leave. D7 (open roof) and
+  D9 (bare exterior) remain known limits from #416.
 - **Not run, not claimed:** physical devices (#289), packaged Electron (out of scope per Val),
   other GPUs, software rendering, isolated Redis/full (no server or shared code changed),
   production.
@@ -725,12 +749,47 @@ Still open, by owner:
   - `check_secrets.py --all`: no leaks.
 
   Logs are in `.runtime/acceptance/verify*-ae3173cb.log` and `verify-{server,desktop,build,python}.log`.
-- **Not run:** isolated Redis/full (no server, shared-state or game code changed), hosted CI
-  (runs on the PR), physical devices, packaged Electron.
+- **Third attempt** at `1221547e`, under the browser lock (which holds back other sessions'
+  browser runs, but not their Rust builds or servers): the same single failure at load 41–102.
+  That test can't pass in the full parallel suite while this machine is that loaded. Its
+  threshold is not this task's to change, so it is reported, not edited.
+- **Not run:** isolated Redis/full (no server, shared-state or game code changed), physical
+  devices, packaged Electron. Hosted CI runs the core gate on the PR head.
+
+### Final revision: everything at `1221547e`
+
+The receipts above span `b0e2d78a` (scenarios), `ae3173cb` (soak with GPU memory) and their app
+code `dd9b61ee`. To put every check on one revision, origin/main (#492, an office journey script
+only) was merged with a signed merge as `1221547e`, and everything was rerun there on a clean
+tree. Machine conditions were poor: load averages of 75–237 from other sessions' Rust builds and
+Next.js servers, and the disk filled once at 10:46Z. The perf and Electron runs that hit ENOSPC
+were rerun once space returned (16–20 GB), and their failed starts are environment failures, not
+findings.
+
+| Check | Result at `1221547e` | Receipt |
+| --- | --- | --- |
+| 8 browser scenarios (journey 14 checks, soak 1 + 10, office assets, a11y 19 checks, 88 captures) | all passed | `data/reports/studio-417-1221547e-scenarios.json` |
+| `studio-pilot-assets` House / Boutique / Café | passed: 81/111/111/81/81, 154/184/184/154/154, 82/112/112/82/82 | `studio-417-1221547e-assets-*.json` |
+| Office assets (normal/missing/loading/loaded/replaced) | 186/200/200/186/186 | scenarios receipt |
+| Metal profile | whole scene p50/p95/p99 2.4/8.6/9.6 ms at load 123–176; stations p95 2.7–5.7 ms; 688 calls, 53,076 triangles; cold ready 974 ms, cold open/routes 658/761 ms, warm 307/389 ms | `studio-417-1221547e-perf.json` |
+| Development Electron | 11/11 | `studio-417-1221547e-desktop.json` |
+| Focused Studio/asset tests | 132/132 | `.runtime/acceptance/focused-1221547e.log` |
+| Core `pnpm run verify` (under the browser lock) | agent 116/116, then preview-tests stopped the gate at 3,410 passed / 1 failed / 1 skipped: the same penthouse idle-slice wall-clock test, at load 41–102. A third local attempt; see Gates. The single-run gate on a clean machine is hosted CI's `verify` jobs on the PR head. | `.runtime/acceptance/core-1221547e.log` |
+
+The soak at `1221547e` repeats the counts of record:
+- **Constant:** office 688 / 53,076 / 35 / 27 / 10 / 2 / 6 / 157 / 925 / 1, and pending 0/0/0,
+  in every post-warm-up cycle.
+- **After replacement:** listeners and DOM nodes dip in some samples (168 → 164; 1,022 → 992 or
+  990) and never grow.
+- **Metal memory:** read 82–129 MiB with the office open and 74–114 MiB after replacement, with
+  no trend. This run had swap nearly full, so the reading included compressed and swapped pages.
+  The calm-machine run at `ae3173cb` (same app code) read 73–83 MiB.
+
+The p95 under that load is still about half of Val's 16.7 ms budget.
 
 ### Handoff to local rollout
 
-The accepted engineering profile is the one above: MacBook Pro M3 Max, Chromium 156 with ANGLE
+The accepted engineering profile is the one above, at `1221547e`: MacBook Pro M3 Max, Chromium 156 with ANGLE
 Metal on the real GPU, 1440 × 1000 at DPR 1, vsync off for timing; development Electron 44.7.0.
 Val's budget (p95 < 16.7 ms) applies there only. The reusable acceptance check, per template:
 
@@ -742,13 +801,14 @@ pnpm run test:experience studio-pilot-journey studio-pilot-a11y                 
 node desktop/studio-e2e.js
 ```
 
-House, Boutique and Café already pass the stricter texture check on this revision. Receipts in
-`data/reports/`:
-- `studio-417-b0e2d78a-scenarios.json` (8 browser scenarios);
-- `studio-417-b0e2d78a-assets-{house,boutique,cafe}.json`;
-- `studio-417-b0e2d78a-perf.json` (Metal profile);
-- `studio-417-b0e2d78a-desktop.json` (Electron);
-- `studio-417-ae3173cb-soak.json` and `studio-417-ae3173cb-soak-30.json`.
+House, Boutique and Café already pass the stricter texture check on this revision. Receipts of
+record, in `data/reports/`:
+- `studio-417-1221547e-{scenarios,assets-house,assets-boutique,assets-cafe,perf,desktop}.json`,
+  at the final revision;
+- `studio-417-ae3173cb-soak.json` and `-soak-30.json`, the calm-machine soaks with GPU memory
+  (same app code).
+
+The `b0e2d78a` receipts are the first exact-revision run, kept for comparison.
 
 Pre-commit runs, mutated-loader runs and captures stay local under `.runtime/acceptance/` and
 `output/playwright/`.
@@ -758,7 +818,7 @@ Pre-commit runs, mutated-loader runs and captures stay local under `.runtime/acc
 | Item | Owner | Next action |
 | --- | --- | --- |
 | VoiceOver, keyboard-only, physical touch, uncoached use and exit wayfinding | Val | Work through the #417 checklist and record pass/fail with device details; decide on touch walking |
-| Garden Office shelving change since #416 review | Design reviewer | Look at the CAM-03/07/08/09 pairs and accept or ask for a fix |
+| Optional design notes F4/F5/F8 (shelf kick, shelf fill, meeting chairs at the new corner legs) | Val / design follow-up | Take or leave; F8 would move chairs or change the shared table, so it needs a plan decision |
 | Draft PR and hosted checks | this task | Watch the PR's checks; merging needs Val's say-so |
 | Codex's refresh worktree `river-oaks-studio-acceptance-refresh` | Val / register | Keep as history until this PR lands; its receipts are superseded, not deleted |
 | Physical iOS | #289 | Not started here |
