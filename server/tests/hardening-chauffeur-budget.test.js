@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { randomUUID } from 'node:crypto';
 import Redis from 'ioredis';
-import { createChauffeurRoute, createLocalChauffeurSecurity } from '../chauffeur.js';
+import { JEV_AUTO_MODEL, createChauffeurRoute, createLocalChauffeurSecurity } from '../chauffeur.js';
 import { createRedisSecurity } from '../redis-security.js';
 import policy from '../../src/river_oaks/chauffeur-policy.json' with { type: 'json' };
 
@@ -33,7 +33,7 @@ async function fixture(t, makeSecurity, {dailyLimit, fail = () => false}) {
       providerCalls++;
       if (fail()) return {ok: false, json: async () => ({})};
       const choices = JSON.parse(options.body).questions.next_action.criteria;
-      return {ok: true, json: async () => ({model: 'jev-1.13.0', answers: {next_action: {type: 'choice', choice: 'cruise', confidence: .9, probabilities: Object.fromEntries(Object.keys(choices).map(key => [key, Number(key === 'cruise')]))}}})};
+      return {ok: true, json: async () => ({model: JEV_AUTO_MODEL, answers: {next_action: {type: 'choice', choice: 'cruise', confidence: .9, probabilities: Object.fromEntries(Object.keys(choices).map(key => [key, Number(key === 'cruise')]))}}})};
     }});
   const server = createServer(async (req, res) => { if (!await handler(req, res)) res.writeHead(404).end(); });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));

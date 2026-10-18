@@ -128,7 +128,7 @@ function restoreSelections(previous,enabled){
 }
 
 /** Private room coordinator. Authentication and connection IDs come from the server. */
-export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID,now=Date.now,authorize,isAdmin=isJevicaAdmin,regionCatalog=null,regionSha256=null,avatarPreferences=null,characters=null,voice=null,cyclingMiles=null,screeningHosts=[],officeLayout}) {
+export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID,now=Date.now,authorize,isAdmin=isJevicaAdmin,regionCatalog=null,regionSha256=null,avatarPreferences=null,characters=null,voice=null,cyclingMiles=null,screeningHosts=[],officeLayout,campusOperators=[]}) {
   if(!redis || typeof authorize!=='function' || typeof prefix!=='string' || !prefix || prefix.length>180) throw new Error('Invalid room configuration');
   validateWorldId(worldId);
   if(characters&&!['getSelection','initializeSelection','getSelectionResult','changeSelection','getRevision'].every(key=>typeof characters[key]==='function'))throw new Error('Invalid character selection store');
@@ -137,13 +137,14 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
   const rides=cyclingMiles?createRideFlush({world:()=>null,store:cyclingMiles,warn:detail=>console.warn(JSON.stringify({...detail,worldId}))}):null;
   if(!/^\{[^{}]+\}$/.test(tag))throw new Error('Room prefix must be one Redis hash tag');
   const keys={lease:`${tag}:lease`,state:`${tag}:state`,view:`${tag}:view`,queue:`${tag}:queue`,population:`${tag}:population`};
-  // Monotonic writer generation: checkpoint v12 adds selected character revisions (v11 office seat claims, v10 office visit layouts
-  // and levels, v9 venue screenings, v8 resident-owned workspace visits). A newer writer
-  // atomically fences an older lease; peers/future generations retain it.
-  // Selection-aware rooms additionally require durable envelope v3 intents.
-  const token=`v${characters?13:12}:${randomUUID()}`;
+  // Monotonic writer generation: checkpoint v13 adds garden campus leases (v12 selected character
+  // revisions, v11 office seat claims, v10 office visit layouts and levels, v9 venue screenings,
+  // v8 resident-owned workspace visits). A newer writer atomically fences an older lease;
+  // peers/future generations retain it. The generation is the checkpoint version, one more for
+  // selection-aware rooms, which additionally require durable envelope v3 intents.
+  const token=`v${characters?14:13}:${randomUUID()}`;
   // Every replacement and recovery probe uses this coordinator's current configuration.
-  const worldOptions={now,isAdmin,worldId,screeningHosts,officeLayout};
+  const worldOptions={now,isAdmin,worldId,screeningHosts,officeLayout,campusOperators};
   let closed=false,pendingTick=null,lastAttempt=-Infinity,lastView=null,cached=null;
   async function read() {
     const buffer=await redis.getBuffer(keys.view);
