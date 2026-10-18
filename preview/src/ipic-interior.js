@@ -71,7 +71,11 @@ export function buildIpicInterior(room, options = {}) {
     for (let i = 0; i < 10; i++) {
       const angle = i * 2.4, top = y + .5 + height * (.65 + .3 * Math.sin(i));
       rod(m.timber, [a, y + .4, d], [a + Math.cos(angle) * .22, top, d + Math.sin(angle) * .22], .01);
-      soft(m.leaf, a + Math.cos(angle) * .25, top - .1, d + Math.sin(angle) * .25, .16, .65, .07, { roll: Math.cos(angle) * .6, yaw: angle });
+      // Broad leaves along the upper half of each stem (photo review P14 named the slab leaves these replace).
+      for (let k = 0; k < 4; k++) {
+        const t = .5 + .16 * k, x = a + Math.cos(angle) * .2 * t, z = d + Math.sin(angle) * .2 * t, h = y + .4 + (top - y - .4) * t;
+        box(m.leaf, x, h, z, 2.4, 2.4, 2.4, { shape: leafCard, yaw: angle + (k % 2 ? .8 : -.8), pitch: -.35 - .2 * Math.sin(i * 3 + k), roll: .4 * Math.sin(i + k) });
+      }
     }
   }
   // An elongated woven cocoon (photo review P8, IMG_9758): a closed rattan shell ribbed by its weave, open

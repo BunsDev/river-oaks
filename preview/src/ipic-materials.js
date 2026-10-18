@@ -114,7 +114,7 @@ export function createIpicMaterials({ textures = typeof document !== 'undefined'
     leather: material('cognac-leather', '#805032', { roughness: .46 }),
     rattan: material('woven-rattan', '#8c5a2c', { emissive: '#5a2a0a', emissiveIntensity: .45, roughness: .85, side: THREE.DoubleSide }),
     sofa: material('olive-brown-sofa', '#504638', { roughness: .95 }), pillow: material('oatmeal-pillows', '#b1a086'),
-    leaf: material('hanging-greenery', '#354931'), red: material('burgundy-booths', '#692b2f'),
+    leaf: material('hanging-greenery', '#354931', { side: THREE.DoubleSide }), red: material('burgundy-booths', '#692b2f'),
     // The Tuck Room from IMG_9756 and IMG_9757 (photo review P13, P14).
     pothos: material('pothos', '#4c7337', { roughness: .8, side: THREE.DoubleSide }),
     steel: material('black-steel', '#1e1d1b', { metalness: .55, roughness: .45 }),
