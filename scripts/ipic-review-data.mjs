@@ -41,10 +41,10 @@ export function ipicReviewData(world = JSON.parse(readFileSync(new URL('preview/
     ...room.ipicSeats.filter(s => s.key.startsWith('recliner')).map(s => trip(`doorway to ${s.key} approach`, doorway, seatApproach(s), footprints(s))),
     ...room.ipicSeats.filter(s => s.key === 'lounge-sofa').map(s => trip(`lane top to lounge-sofa:${s.slot} approach`, laneTop, seatApproach(s), footprints(s))),
   ];
-  // The narrowest public passage, measured from the two boxes that form it.
-  const planter = room.fixtures.findIndex(f => f.kind === 'ipic-planter' && f.a < -5 && f.y === 6);
-  const arm = room.fixtures.findIndex(f => f.kind === 'ipic-seat-arm' && f.a < -4 && f.d < 25);
-  const pinch = { between: [`ipic-planter (${room.fixtures[planter].a}, ${room.fixtures[planter].d})`, 'west lounge-sofa arm (-4.26, 24.8)'], widthM: round(room.obstacles[arm].a0 - room.obstacles[planter].a1, 3) };
+  // The narrowest public passage: the tightest of the trips every visitor makes (street door to either lane
+  // top, lane top to the auditorium). Until the sofa moved (2026-10-18) it was the gap between the lounge
+  // planter and the sofa's west arm.
+  const narrowest = trips.slice(0, 3).reduce((x, y) => (y.widthM < x.widthM ? y : x));
   // Where the widest accepted body sits each recliner from, with the other nine seats held: the
   // nearest spot it can walk to from the doorway that is within the server's sit reach (SEAT_REACH,
   // flat distance) and sees the cushion as the server's sit check does (eye 1.68 m, cushion + 0.6 m).
@@ -76,7 +76,7 @@ export function ipicReviewData(world = JSON.parse(readFileSync(new URL('preview/
       accepted: { ...AVATAR_ENVELOPE, source: 'preview/src/workplace-room.js AVATAR_ENVELOPE (2026-10-11, bind-pose bounds)' },
       seatedReach: { ...IPIC_SEATED_REACH, source: 'docs/superpowers/plans/2026-10-15-ipic-route-evidence/seated-extents.json' },
     },
-    trips, reclinerSitSpots, frontRowAisle, narrowestPublicPassage: { ...pinch, widestAcceptedBodyM: round(2 * AVATAR_ENVELOPE.bodyHalfWidth, 3), clears: pinch.widthM >= 2 * AVATAR_ENVELOPE.bodyHalfWidth },
+    trips, reclinerSitSpots, frontRowAisle, narrowestPublicPassage: { trip: narrowest.name, widthM: narrowest.widthM, widestAcceptedBodyM: round(2 * AVATAR_ENVELOPE.bodyHalfWidth, 3), clears: narrowest.widestAcceptedBody },
     turningCircles: turning.map(t => ({ ...t, clearsLongestTurningBody: t.radiusM >= AVATAR_ENVELOPE.turningRadius })),
   };
   const screen = IPIC_SCREEN, floor = 6, left = screen.a - screen.width / 2, right = screen.a + screen.width / 2;

@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 
-// The lounge carpet's palette, from IMG_9758: a dark ground with a restrained rust swirl (photo
-// review P12; the first pass was a saturated red-on-black that read brighter than the room).
-export const IPIC_LOUNGE_CARPET = Object.freeze({ base: Object.freeze([34, 26, 24]), pattern: Object.freeze([92, 48, 40]) });
+// The lounge carpet's palette (photo review P12): a bold orange-red ground with fine dark swirl lines, as
+// sampled from IMG_9753-9755. It was darkened on 2026-10-17 after IMG_9758 alone, which is underexposed.
+export const IPIC_LOUNGE_CARPET = Object.freeze({ base: Object.freeze([204, 66, 42]), pattern: Object.freeze([84, 30, 22]) });
 
 // The reception sign as photographed (IMG_9738, review P5): RIVER over OAKS, small and letterspaced,
 // beside a large DISTRICT. Centre-aligned runs in canvas pixels for a w x h sign face.
@@ -45,10 +45,11 @@ export function createIpicMaterials({ textures = typeof document !== 'undefined'
   const carpet = canvas(512, 512, (c, w, h) => {
     const pixels = c.createImageData(w, h);
     for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-      const u = x / w, v = y / h;
-      const dx = Math.sin(Math.PI * (u - .4)), dy = Math.sin(Math.PI * (v - .55));
-      const grain = Math.sin(100 * Math.sqrt(dx * dx * .52 + dy * dy) + 4 * Math.sin(u * 6.28));
-      const stripe = Math.max(0, Math.min(1, (grain - .2) * 3));
+      // Fine dark lines along the contours of a smooth field that tiles; they swirl round its eddies. At
+      // the lounge's 3 m tile they lie about 10 cm apart, as in IMG_9754.
+      const u = 2 * Math.PI * x / w, v = 2 * Math.PI * y / h;
+      const field = .9 * Math.sin(u + .7) + .8 * Math.cos(v) + .6 * Math.sin(u - v + 1.3) + .35 * Math.cos(2 * u + v);
+      const stripe = Math.max(0, Math.min(1, (Math.sin(40 * field) - .6) * 4));
       const noise = .97 + .03 * Math.sin(x * 53 + y * 71), i = (y * w + x) * 4, [b, p] = [IPIC_LOUNGE_CARPET.base, IPIC_LOUNGE_CARPET.pattern];
       pixels.data.set([0, 1, 2].map(k => (b[k] + stripe * (p[k] - b[k])) * noise).concat(255), i);
     }
@@ -84,6 +85,7 @@ export function createIpicMaterials({ textures = typeof document !== 'undefined'
     }
   });
   if (confetti) confetti.repeat.set(6, 4.5);
+  if (carpet) carpet.repeat.set(3, 2);
   const marble = canvas(512, 512, (c, w, h) => {
     c.fillStyle = '#d8d4c8'; c.fillRect(0, 0, w, h);
     for (let i = 0; i < 24; i++) {
@@ -110,13 +112,14 @@ export function createIpicMaterials({ textures = typeof document !== 'undefined'
     black: material('black-rubber', '#171714', { roughness: .9 }), yellow: material('step-safety-edge', '#c1a549'),
     glass: material('smoked-glass', '#869a96', { transparent: true, opacity: .22, metalness: .1, roughness: .13, depthWrite: false, side: THREE.DoubleSide }),
     leather: material('cognac-leather', '#805032', { roughness: .46 }),
+    rattan: material('woven-rattan', '#8c5a2c', { emissive: '#5a2a0a', emissiveIntensity: .45, roughness: .85, side: THREE.DoubleSide }),
     sofa: material('olive-brown-sofa', '#504638', { roughness: .95 }), pillow: material('oatmeal-pillows', '#b1a086'),
     leaf: material('hanging-greenery', '#354931'), red: material('burgundy-booths', '#692b2f'),
     glow: material('warm-lamp', '#ffe7ac', { emissive: '#ffd494', emissiveIntensity: 2.2 }),
     screen: material('cinema-screen', '#acb3d6', { emissive: '#747fad', emissiveIntensity: .6, roughness: 1 }),
   };
   if (!textures) {
-    m.timber.color.set('#5d4939'); m.carpet.color.set('#3c2a25'); m.marble.color.set('#d8d4c8');
+    m.timber.color.set('#5d4939'); m.carpet.color.set('#ae3925'); m.marble.color.set('#d8d4c8');
     m.sunburst.color.set('#97704a'); m.barFloor.color.set('#6c513b'); m.confetti.color.set('#231d24');
   }
   const label = (name, lines, { background = '#211d18', color = '#e4d9bd', width = 1024, height = 256, font = 'sans-serif', layout = null } = {}) => {

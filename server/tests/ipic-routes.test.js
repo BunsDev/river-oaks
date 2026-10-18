@@ -154,8 +154,9 @@ test('both lounge sofa places are reached, held exclusively, stood from and left
   }
 });
 
-// The sofa's arms, back and coffee table leave no straight clear path for the server's
-// radial stand search, so each place names where its sitter steps out (ipic-plan.js).
+// The sofa's back, arms and coffee table leave no straight clear path for the server's radial
+// stand search, so each place names where its sitter steps out (ipic-plan.js): the open floor
+// at that place's front corner, beside the table, since the arms meet the wall and the escalator.
 test('standing from either sofa place in an empty lounge steps out beside the sofa onto open floor', () => {
   for (const seat of room.ipicSeats.filter(s => s.key === 'lounge-sofa')) {
     const t = town();
@@ -166,7 +167,7 @@ test('standing from either sofa place in an empty lounge steps out beside the so
     const stood = t.command('walker', { type: 'stand' });
     assert.equal(stood.ok, true, `${seat.slot}: ${stood.error}`);
     const [a, d] = local(stood.player.position);
-    assert.ok(serverFree([a, d]) && d > 23.5 && d < 25.3 && Math.abs(a - seat.a) < 2.2, `slot ${seat.slot} stood at ${a.toFixed(2)},${d.toFixed(2)}`);
+    assert.ok(serverFree([a, d]) && d > seat.d && d < seat.d + 1.2 && Math.abs(a - seat.a) < 1.6, `slot ${seat.slot} stood at ${a.toFixed(2)},${d.toFixed(2)}`);
     t.walk('walker', route([a, d], DOOR).path);
   }
 });

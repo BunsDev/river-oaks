@@ -82,7 +82,7 @@ try {
 
   // Alice goes ahead to a front-row recliner; the screen stays idle (no fixture on screen).
   await enterIpic(alice);
-  await walk(alice, [[-1.4, 4.8], [-1.4, 20.7], [-5.55, 20.7], [-5.55, 24.7], [-4.85, 24.7], [-4.85, 29.65], [-1.6, 29.65]]);
+  await walk(alice, [[-1.4, 4.8], [-1.4, 20.7], [-1.4, 24.5], [-4.85, 24.5], [-4.85, 29.65], [-1.6, 29.65]]);
   await alice.locator('#nearby-seat').selectOption(`${SEAT}:0`); await alice.locator('#seat-sit').click();
   await alice.waitForFunction(seat => window.__riverCarriage().pose.sitting?.buildId === seat, SEAT);
 

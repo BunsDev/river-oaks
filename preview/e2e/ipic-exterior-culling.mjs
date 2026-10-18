@@ -96,7 +96,7 @@ try {
   await page.evaluate(() => window.__riverRenderAudit.release());
 
   // alice's own camera, seated in a front-row recliner (the walk of preview/e2e/ipic-visit.js).
-  for (const [a, d] of [[-1.4, 4.8], [-1.4, 20.7], [-5.55, 20.7], [-5.55, 24.7], [-4.85, 24.7], [-4.85, 29.65], [-1.6, 29.65]]) {
+  for (const [a, d] of [[-1.4, 4.8], [-1.4, 20.7], [-1.4, 24.5], [-4.85, 24.5], [-4.85, 29.65], [-1.6, 29.65]]) {
     const target = world(a, d), deadline = Date.now() + 120000;
     await page.locator('#canvas-host').focus();
     let distance = Infinity;
