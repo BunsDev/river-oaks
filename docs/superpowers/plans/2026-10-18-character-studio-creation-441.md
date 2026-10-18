@@ -158,6 +158,15 @@ passed with 27 checks in 73 s (`.runtime/cs441/worlds-run.json`).
   (`.runtime/cs441/phone-run.json`). Two new phone checks cover preview visibility
   and focus not obscured. Unit 58/58. `pnpm run build` passed.
 
+## Round 3: preview label and shortcut hints (2026-10-18)
+
+- The preview canvas (`role=img`) is labelled with the look it shows ("Live
+  preview: Sable, Humanoid form, Rose silk dress, Espresso hair"), or "Original
+  look: …" during before/after. It used to read a static "Live character preview".
+- Undo and Redo declare `aria-keyshortcuts` (Control or Meta+Z, plus Shift for Redo).
+- `character-studio` journey: passed, 33 checks in 87 s (`.runtime/cs441/a11y-run.json`).
+  Unit 58/58.
+
 ## Gaps and next steps
 
 Not claimed: human keyboard, VoiceOver or novice acceptance (#444 protocol),

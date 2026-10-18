@@ -24,7 +24,7 @@ export function createCharacterStudio({ownerId,getDefinition,accountTransport=nu
         <fieldset data-hair><legend>Hair color</legend><div class="cs-swatches">${Object.entries(CHARACTER_HAIR).map(([id,item])=>`<label class="cs-swatch" data-hair="${id}" title="${item.label}" style="--cs-swatch:${item.color}"><input type="radio" name="cs-hair" value="${id}" aria-label="${item.label}"></label>`).join('')}</div><p data-hair-name></p></fieldset></div>
         <p class="cs-help" data-compatibility></p></fieldset>
       <p class="sr-only" data-cs-announce aria-live="polite"></p>
-      <div class="cs-edit-tools"><button type="button" data-undo>Undo</button><button type="button" data-redo>Redo</button><button type="button" data-compare aria-pressed="false">Before / after</button><button type="button" data-remix>Remix</button><button type="button" data-random>Surprise me</button></div>
+      <div class="cs-edit-tools"><button type="button" data-undo aria-keyshortcuts="Control+Z Meta+Z">Undo</button><button type="button" data-redo aria-keyshortcuts="Control+Shift+Z Meta+Shift+Z">Redo</button><button type="button" data-compare aria-pressed="false">Before / after</button><button type="button" data-remix>Remix</button><button type="button" data-random>Surprise me</button></div>
       <div class="cs-favorites"><button type="button" data-favorite>Favorite this look</button><label class="sr-only" for="cs-favorites">Favorite looks</label><select id="cs-favorites"><option value="">Your favorites</option></select><button type="button" data-remove-favorite disabled>Remove favorite</button></div>
       <div class="cs-portrait"><button type="button" data-portrait>Create 4K portrait</button><a data-download hidden>Download PNG</a><p>Front pose · Garden daylight · 3840 × 2160</p></div>
       <p class="cs-status" role="status" aria-live="polite"></p></section></div>
@@ -65,6 +65,8 @@ export function createCharacterStudio({ownerId,getDefinition,accountTransport=nu
     $('[data-compare]').setAttribute('aria-pressed',String(comparing));$('[data-comparing]').hidden=!comparing;
     $('[data-look]').textContent=sharedAppearance(shown.appearanceId).label;
     dialog.dataset.appearance=value.appearanceId;dialog.dataset.palette=value.palette;dialog.dataset.hair=value.hair;
+    // The preview image names the look it shows, including the original during before/after.
+    stage.querySelector('canvas')?.setAttribute('aria-label',`${comparing?'Original look':'Live preview'}: ${describeLook(shown)}`);
     preview?.setDefinition(shown);renderAccount();
   };
   const change=patch=>{try{draft.change(patch);comparing=false;}catch{status.textContent='That combination is not available. Choose one of the fitted options.';}render();};

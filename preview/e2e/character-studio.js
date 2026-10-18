@@ -24,7 +24,9 @@ async page => {
   check(await dialog.getAttribute('data-palette')==='rose'&&await dialog.getAttribute('data-hair')==='espresso','Dress and hair changes form a distinct validated draft');
   await dialog.getByRole('button',{name:'Undo',exact:true}).click();check(await dialog.getAttribute('data-hair')==='authored','Undo restores the previous hair');
   await dialog.getByRole('button',{name:'Redo',exact:true}).click();check(await dialog.getAttribute('data-hair')==='espresso','Redo restores the edit');
+  check(await dialog.getByRole('img',{name:'Live preview: Sable, Humanoid form, Rose silk dress, Espresso hair'}).isVisible()&&await dialog.getByRole('button',{name:'Undo',exact:true}).getAttribute('aria-keyshortcuts')==='Control+Z Meta+Z','The preview image names the staged look and Undo advertises its shortcut');
   await dialog.getByRole('button',{name:'Before / after',exact:true}).click();check(await dialog.locator('[data-comparing]').isVisible(),'Comparison shows the original');
+  check(await dialog.getByRole('img',{name:/^Original look: /}).isVisible(),'The preview image names the original during comparison');
   await dialog.getByRole('button',{name:'Before / after',exact:true}).click();await ready('sable-human');
   await dialog.locator('[name=framing]').selectOption('portrait');await page.screenshot({path:'output/playwright/character-studio-portrait.png'});
   await dialog.locator('[name=framing]').selectOption('full');await dialog.locator('.cs-controls').evaluate(n=>n.scrollTop=0);await page.screenshot({path:'output/playwright/character-studio-desktop.png'});
