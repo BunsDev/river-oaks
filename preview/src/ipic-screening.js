@@ -189,6 +189,9 @@ export function createScreeningPlayer({ media: element, clock, onChange = () => 
         // Pause also aborts a play() that has not resolved yet.
         if (!element.paused || playing) element.pause();
         if (Math.abs(drift) > 50) { element.currentTime = at / 1000; drift = 0; }
+        // Until a frame has decoded this viewer is still loading, whatever the room's status, so a load
+        // that never arrives is reported stalled rather than shown as paused forever.
+        if (state === 'loading' && !(element.readyState >= 2)) return;
         set(status === 'ended' ? 'ended' : status === 'paused' ? 'paused' : 'ready');
       }
     },
