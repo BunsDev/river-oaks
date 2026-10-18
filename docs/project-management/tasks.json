@@ -11689,6 +11689,44 @@
       "nextAction": "Commit release results and the register entries; land; retire.",
       "pr": null,
       "updatedAt": "2026-10-16T01:56:03.947Z"
+    },
+    {
+      "id": "turning-20261018-cody",
+      "title": "Coordinate planted feet and knees during stationary and walking turns",
+      "status": "active",
+      "branches": [
+        "fix/turning-foot-placement-20261018"
+      ],
+      "owner": "cody:turning-office-20261018",
+      "leaseUntil": "2026-10-18T21:00:51.540812+00:00",
+      "updatedAt": "2026-10-18T19:00:51.540812+00:00",
+      "nextAction": "Commit verified patch, open PR, await exact-head CI and land through the repository queue.",
+      "ledger": "docs/superpowers/plans/2026-10-18-turning.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-turning-20261018",
+      "filesOwned": [
+        "data/reports/turning-core-20261018.json",
+        "data/reports/turning-browser-20261018.json",
+        "docs/project-management/tasks.json",
+        "docs/superpowers/plans/2026-10-18-turning.md",
+        "preview/e2e/turning-regression.mjs",
+        "preview/src/coat-tail-morph-receipt.json",
+        "preview/src/foot-placement.js",
+        "preview/src/lyra-drape-morph-receipt.json",
+        "preview/src/silvan-drape-morph-receipt.json",
+        "preview/src/skirt-seat-morph-receipt.json",
+        "preview/src/vesper-skirt-morph-receipt.json",
+        "preview/tests/foot-placement.test.js"
+      ],
+      "requiredChecks": [
+        "Focused behavioral regressions",
+        "pnpm run verify",
+        "Browser acceptance"
+      ],
+      "verification": {
+        "focused": "20 motion tests plus 4 curb tests passed; five garment validators passed",
+        "core": "All core task coverage passed with bounded concurrency and documented retries; 204 Redis and 1 unrelated client skips. See data/reports/turning-core-20261018.json.",
+        "browser": "Passed seven-rig before/after stationary/slow/normal sharp turns; data/reports/turning-browser-20261018.json."
+      }
     }
   ]
 }
