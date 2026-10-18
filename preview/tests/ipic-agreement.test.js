@@ -130,8 +130,6 @@ const DRAWN_WITHOUT_COLLISION = [
   { mesh: 'Auditorium: ipic-black-rubber', a: [-2.7, 3.5], d: [27.95, 31.05], closest: 0, why: 'recliner bases under the cushion centres (seat zone)' },
   { mesh: 'Upper lounge: ipic-olive-brown-sofa', a: [-3.85, -2], d: [24.2, 24.8], closest: 0, why: 'sofa cushions (seat zone)' },
   { mesh: 'Auditorium: ipic-weathered-timber', a: [4.4, 4.5], d: [27.7, 31.6], closest: .17, why: 'recliner side tables' },
-  { mesh: 'Reception: ipic-warm-plaster', a: [.9, 1.75], d: [5.45, 6.05], closest: .05, why: 'the fluted reception backing is drawn across the right escalator entrance' },
-  { mesh: 'Reception: ipic-RIVER OAKS DISTRICT', a: [1.65, 5], d: [5.2, 5.55], closest: .05, why: 'the reception sign on that backing, at head height over the entrance' },
   { mesh: 'Escalators: ipic-smoked-glass', a: [-2.35, 2.5], d: [5.45, 20.55], closest: .27, why: 'pitched glass balustrades overhang their rail colliders at the lane ends' },
   { mesh: 'Escalators: ipic-taupe-stacked-stone', a: [-2.85, 3], d: [12.45, 20.55], closest: .27, why: 'split-face stone courses run past the flight walls onto the landing' },
   { mesh: 'Upper lounge: ipic-cognac-leather', a: [-4.6, -1], d: [21.7, 23.3], closest: .29, why: 'tub chair shells overhang their colliders' },

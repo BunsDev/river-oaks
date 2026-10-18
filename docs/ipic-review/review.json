@@ -4,8 +4,8 @@
   "views": [
     {
       "name": "reception",
-      "calls": 58,
-      "triangles": 132204,
+      "calls": 59,
+      "triangles": 133180,
       "error": 0,
       "textures": 15
     },
@@ -38,5 +38,5 @@
       "textures": 15
     }
   ],
-  "glbBytes": 13938332
+  "glbBytes": 13968224
 }
