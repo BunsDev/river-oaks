@@ -23,6 +23,10 @@ Each item has a regression that failed on main; output saved with this session's
 6. **Mattes came from the film.** Clamped texture edges smeared the film's own edge pixels across the screen; only
    the bundled films' baked black border made them look black.
 7. **Diagnostics hid seeks.** `driftMs` is zeroed after a seek request, and nothing reported presented frames.
+8. **A paused film that never loads looked paused forever** (found by the first `ipic-screen-runner` run). When
+   joining a paused film, the local state went straight to `paused` before any frame had decoded. A load that
+   never arrived was never reported, and the viewer saw nothing and had no Retry. The player now stays `loading`
+   until a frame decodes, so the stall limit applies. A regression covers it.
 
 ## Change
 
@@ -64,11 +68,12 @@ Each item has a regression that failed on main; output saved with this session's
 | `node --test preview/tests/ipic-screening.test.js` on main `153471bc` with the new regressions | 8 of 24 failed (switch fence, fallback ×2, network, abort, stall, autoplay reason, presented frames) |
 | `node --test preview/tests/ipic-screening-screen.test.js` on main | Failed: no binding module |
 | Same, on the branch | 24/24 and 4/4; all screening unit tests 37/37 |
-| `node preview/e2e/ipic-screen-runner.mjs` (Metal) | Pending: queued behind other sessions' browser runs |
-| `node preview/e2e/ipic-screening-runner.mjs` (branch) | Pending |
+| `node preview/e2e/ipic-screen-runner.mjs` (Metal), run 1 | Failed at its first step (stalled load on a paused film): item 8 above, a real defect, now fixed |
+| In-world, seated eye of recliner 1-1, Metal ANGLE, real pipeline (scratch `world-screen-runner.mjs`) | Branch `e602cdcc`: after Stop the screen is idle (its own material, not attached); switching to the fixture, 0 of 44 frames showed a frame while loading. Main `153471bc`: after Stop the screen stayed attached on a frame of the short, and 3 of 4 logged switch frames showed the old film while the new loaded |
+| `node preview/e2e/ipic-screening-runner.mjs` (branch), run 1 | Not run: the disk filled (ENOSPC on the shared browser-lock file) |
 | Same journey on main (scratch runner, main's code) | Pending: expected to fail at "a stopped film leaves the screen idle" |
 | In-world seated-eye capture | Pending |
-| `pnpm run verify` | Pending |
+| `pnpm run verify` at `3c440796` | Agent 121/121; preview 3,538/3,540 (one existing skip; one failure is the pre-existing `office-penthouse-furnishings` "short idle slices" 40 ms budget at load 50–100, which fails alone on main too: 200.7 ms on main, 115.2 ms on the branch). The remaining stages, run with `node scripts/agent.mjs verify`: server 668 + 204 Redis skips, desktop 76/76, build, python 141, security: all passed |
 
 ## Gaps and owners
 

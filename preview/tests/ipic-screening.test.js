@@ -168,6 +168,7 @@ test('a shared pause that aborts a pending play is not an error', async () => {
   const media = fakeMedia({ play: () => new Promise(r => { resolve = r; }) });
   const f = setup({ media, offset: 51_000 });
   f.player.apply(view()); f.player.tick();
+  f.media.readyState = 4; // its first frame has decoded; the play() is still pending
   f.player.apply(view({ status: 'paused', revision: 2, positionMs: 1000, anchorServerTimeMs: 101_000 })); f.player.tick();
   assert.equal(media.attempt.aborted, true, 'the shared pause aborts the pending play at once');
   resolve(); await tick(); await tick();
@@ -368,4 +369,16 @@ test('a film this version does not know releases the previous film and says so (
     'the previous film is not played under the new film’s timeline');
   f.player.apply(filmView(ORIGINAL, { screeningId: 'ipic-e1-3', revision: 5 }));
   assert.deepEqual([f.player.stats().state, f.player.stats().failure], ['loading', null], 'a known film loads again');
+});
+
+test('joining a paused film that never loads is reported stalled too, not shown as paused forever', async () => {
+  const { SCREENING_LOAD } = await import('../src/ipic-screening.js');
+  const f = setup({ offset: 53_000 });
+  f.player.apply(filmView(ORIGINAL, { status: 'paused', positionMs: 2000, anchorServerTimeMs: 102_000 }));
+  f.media.readyState = 0; f.player.tick();
+  assert.equal(f.player.stats().state, 'loading', 'no frame decoded yet: still loading, though the room is paused');
+  f.local.now += SCREENING_LOAD.stallMs + 1; f.player.tick();
+  assert.deepEqual([f.player.stats().state, f.player.stats().failure], ['error', 'stalled']);
+  f.player.retry(); f.media.readyState = 4; f.media.emit('canplay'); f.player.tick();
+  assert.deepEqual([f.player.stats().state, f.media.paused], ['paused', true], 'once a frame decodes, it shows the paused frame');
 });
