@@ -315,6 +315,36 @@ fixture configuration.
 - Still open for art review: the tails' flat front panels (a bake input) and the
   box lapels.
 
+## Round 9: chest tailoring on the chest (2026-10-18)
+
+- Close-ups (`.runtime/cs441/chest-sheet.png` before, `chest2-sheet.png` after)
+  showed three problems:
+  - Kai's waistcoat and Aurel's shirt were flat boxes whose tops stood off the
+    receding upper chest as slabs.
+  - The lapels were thick flaps.
+  - Kai's embroidery points sat at a fixed depth (z 0.181) across x ±0.2 m, so at
+    the sides they hung in the air beside the arms: detached attachments, in all
+    three Kai outfits including explorer.
+  - Also, Aurel's buttons had been 2 cm inside the chest, so they were never visible.
+- First attempts were wrong. A measured table, then vertex-window sampling,
+  either sank or floated pieces at the chest's edge, because the surface falls
+  2–3 cm within a centimetre there and suit vertices are about 3 cm apart
+  vertically.
+- Fix: `measureChestFront` rasterizes the suit's skinned triangles into a 5 mm
+  front-depth grid in the torso frame, once per avatar (1–4 ms median). The
+  pieces now on that surface: a V-necked waistcoat, a curved shirt and vest,
+  tapered lapels, and embroidery, brocade, buttons and chain.
+- Checks:
+  - `chest-tailoring.test.js` (4 looks) raycasts the skinned suit independently.
+    Each chest vertex must be no more than 4 mm inside and no more than 3.5 cm in
+    front. Negative controls fail as expected: panels sunk 1.2 cm are caught as
+    inside, and stars lifted 6 cm as floating.
+  - Related suites 128/128. Full preview suite 3452 of 3454 passed, with the
+    existing 1 skip and 1 todo.
+  - Triangles fall: Aurel 10,200, Kai formal 13,872, noir 15,216. Draws ≤ 17.
+  - Journeys run with the browser lock bypassed at Val's request: character-studio 44 checks in 127 s; character-wardrobe 877 checks in 301 s
+    (`.runtime/cs441/chest-journeys.json`). Close-ups are inspected in `chest2-sheet.png`.
+
 ## Gaps and next steps
 
 Not claimed: human keyboard, VoiceOver or novice acceptance (#444 protocol),

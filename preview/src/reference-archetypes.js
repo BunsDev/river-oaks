@@ -2,6 +2,37 @@ import {fitBootTrousers} from './boot-fitting.js';
 import {createSilvanTrousers} from './silvan-trousers.js';
 import {createCoatTailGeometry,COAT_TAIL_NAME} from './coat-tail-geometry.js';
 import {createCoatBackGeometry,skinCoatBack,COAT_BACK_NAME} from './coat-back.js';
+
+// The front-most surface of the worn suit in a torso attachment frame: its
+// triangles are rasterized once into a 5 mm depth grid, as a ray from the front
+// would see them, so chest tailoring and embroidery lie on the chest instead of
+// standing off it or sinking into it, even where the chest falls away at its edge.
+export function measureChestFront(body,frame){
+  if(!body?.isSkinnedMesh||!body.geometry.index)throw new TypeError('Chest tailoring requires a skinned, indexed body');
+  const step=.005,x0=-.18,y0=-.24,columns=73,rows=105,grid=new Float32Array(columns*rows).fill(-Infinity);
+  body.updateWorldMatrix(true,false);frame.updateWorldMatrix(true,false);
+  const toFrame=frame.matrixWorld.clone().invert().multiply(body.matrixWorld),position=body.geometry.attributes.position,index=body.geometry.index;
+  const points=Array.from({length:position.count},(_,i)=>body.getVertexPosition(i,new THREE.Vector3()).applyMatrix4(toFrame));
+  for(let t=0;t<index.count;t+=3){
+    const a=points[index.getX(t)],b=points[index.getX(t+1)],c=points[index.getX(t+2)];
+    const area=(b.x-a.x)*(c.y-a.y)-(c.x-a.x)*(b.y-a.y);if(Math.abs(area)<1e-12)continue;
+    const minX=Math.max(0,Math.ceil((Math.min(a.x,b.x,c.x)-x0)/step)),maxX=Math.min(columns-1,Math.floor((Math.max(a.x,b.x,c.x)-x0)/step));
+    const minY=Math.max(0,Math.ceil((Math.min(a.y,b.y,c.y)-y0)/step)),maxY=Math.min(rows-1,Math.floor((Math.max(a.y,b.y,c.y)-y0)/step));
+    for(let gy=minY;gy<=maxY;gy++)for(let gx=minX;gx<=maxX;gx++){
+      const x=x0+gx*step,y=y0+gy*step;
+      const u=((b.x-x)*(c.y-y)-(c.x-x)*(b.y-y))/area,v=((c.x-x)*(a.y-y)-(a.x-x)*(c.y-y))/area,w=1-u-v;
+      if(u<-1e-9||v<-1e-9||w<-1e-9)continue;
+      const z=u*a.z+v*b.z+w*c.z,cell=gy*columns+gx;if(z>grid[cell])grid[cell]=z;
+    }
+  }
+  return (x,y)=>{
+    const gx=Math.min(columns-1.001,Math.max(0,(x-x0)/step)),gy=Math.min(rows-1.001,Math.max(0,(y-y0)/step)),i=Math.floor(gx),j=Math.floor(gy),u=gx-i,v=gy-j;
+    const cells=[[i,j,(1-u)*(1-v)],[i+1,j,u*(1-v)],[i,j+1,(1-u)*v],[i+1,j+1,u*v]].filter(([a,b])=>grid[b*columns+a]>-Infinity);
+    if(!cells.length)throw new RangeError('Chest tailoring lies outside the measured suit');
+    const weight=cells.reduce((sum,cell)=>sum+cell[2],0);
+    return weight>0?cells.reduce((sum,[a,b,k])=>sum+grid[b*columns+a]*k,0)/weight:Math.max(...cells.map(([a,b])=>grid[b*columns+a]));
+  };
+}
 import {skinCoatTails} from './coat-tail-skinning.js';
 import {COAT_TAIL_MORPHS} from './coat-tail-morph-data.js';
 import {SILVAN_DRAPES,silvanDrapes,silvanWaist,createSilvanDrapeDetailGeometry} from './silvan-drape-geometry.js';
@@ -33,6 +64,24 @@ export function createReferenceStyle(avatar,appearance){
   const ball=(parent,surface,position,scale)=>mesh(parent,new THREE.SphereGeometry(1,18,12),surface,position,scale);
   const box=(parent,surface,position,size,bevel=.012)=>mesh(parent,new RoundedBoxGeometry(...size,2,bevel),surface,position);
   const tube=(parent,surface,points,radius=.008)=>mesh(parent,new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points.map(point=>new THREE.Vector3(...point))),Math.max(12,points.length*8),radius,7,false),surface);
+  // A cloth panel laid on the chest; outline maps the unit square to chest x/y.
+  const chestPanel=(surface,outline,{offset=.008,columns=8,rows=10}={})=>{
+    const vertices=[],uv=[],indices=[];
+    for(let r=0;r<=rows;r++)for(let c=0;c<=columns;c++){const [x,y]=outline(c/columns,r/rows);vertices.push(x,y,chestFront(x,y)+offset);uv.push(c/columns,r/rows);}
+    for(let r=0;r<rows;r++)for(let c=0;c<columns;c++){const n=r*(columns+1)+c;indices.push(n,n+1,n+columns+1,n+1,n+columns+2,n+columns+1);}
+    const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));
+    geometry.setIndex(indices);geometry.computeVertexNormals();
+    // Mirrored outlines reverse the winding; keep the cloth facing out.
+    if(geometry.attributes.normal.getZ(0)<0){for(let i=0;i<indices.length;i+=3)[indices[i+1],indices[i+2]]=[indices[i+2],indices[i+1]];geometry.setIndex(indices);geometry.computeVertexNormals();}
+    return mesh(torso,geometry,surface);
+  };
+  // Lapels taper from the collar and lie over the waistcoat or shirt.
+  const lapel=(surface,side,offset)=>chestPanel(surface,(u,v)=>{
+    const t=[side*.075,.245],b=[side*.125,-.04],length=Math.hypot(b[0]-t[0],b[1]-t[1]),dx=(b[0]-t[0])/length,dy=(b[1]-t[1])/length,width=(.035+.02*v)*(u-.5);
+    return [t[0]+(b[0]-t[0])*v-dy*width,t[1]+(b[1]-t[1])*v+dx*width];
+  },{offset,columns:2,rows:8});
+  let chest=null;const chestFront=(x,y)=>(chest??=measureChestFront(model.getObjectByName('man-casualmale_casualsuit02'),torso))(x,y);
+  const onChest=(x,y,lift)=>[x,y,chestFront(x,y)+lift];
   const aligned=name=>{
     const bone=model.getObjectByName(name);if(!bone)return null;
     model.updateMatrixWorld(true);
@@ -336,11 +385,10 @@ export function createReferenceStyle(avatar,appearance){
     const cloth=material(base,{roughness:formal?.67:.86,sheen:.42,sheenColor:new THREE.Color(formal?'#fff1d7':'#6c5b5d')}),
       secondary=material(formal?'#302c35':explorer?'#817766':'#302b31',{roughness:.8}),
       starlight=material('#c9a760',{metalness:.81,roughness:.26});
-    if(!explorer)box(torso,secondary,[0,.03,.128],[.24,.44,.026],.012);
+    // A V-necked waistcoat and lapels that follow the chest (they were flat boxes).
+    if(!explorer)chestPanel(secondary,(u,v)=>{const x=-.12+.24*u,top=.25-.08*(1-Math.abs(2*u-1));return [x,-.19+(top+.19)*v];});
     if(!explorer){
-      for(const side of [-1,1]){
-        const lapel=box(torso,cloth,[side*.12,.1,.138],[.07,.27,.022],.01);lapel.rotation.z=side*.2;
-      }
+      for(const side of [-1,1])lapel(cloth,side,.012);
       coatTails(cloth);boots(formal?'#b4a998':'#1c1a1d',{rugged:!formal});
     }else{
       shoulderBag({color:'#4d3c32',side:-1,large:true});boots('#252328',{rugged:true});
@@ -348,26 +396,28 @@ export function createReferenceStyle(avatar,appearance){
     // Embroidered points and narrow orbit lines match the supplied celestial motifs.
     const parent=torso;
     for(let i=0;i<(explorer?8:14);i++){
-      const x=((i*7)%13-6)*.033,y=.30-((i*11)%17)*.026,z=.181;
+      // Within the chest and on its surface: wider points floated beside the arms.
+      const x=((i*7)%13-6)*.018,y=.215-((i*11)%17)*.017,z=chestFront(x,y)+(explorer?.01:.016);
       ball(parent,starlight,[x,y,z],[i%4===0?.006:.003,.0018,.0017]);
       if(i%4===0){tube(parent,starlight,[[x-.014,y,z],[x+.014,y,z]],.0016);tube(parent,starlight,[[x,y-.017,z],[x,y+.017,z]],.0016);}
     }
     if(!explorer){
-      for(const side of [-1,1])for(let i=0;i<3;i++)ball(torso,starlight,[side*(.14+i*.015),.26-i*.09,.176],[.003,.004,.002]);
+      for(const side of [-1,1])for(let i=0;i<3;i++)ball(torso,starlight,onChest(side*(.12+i*.01),.22-i*.09,.016),[.003,.004,.002]);
     }
   }else{
     const coat=material('#211d20',{roughness:.86,sheen:.52,sheenColor:new THREE.Color('#6b5154')}),
       vest=material('#382b30',{roughness:.77,sheen:.65,sheenColor:new THREE.Color('#937873')}),
       shirt=material('#201b1d',{roughness:.89}),silver=material('#b6aaa0',{metalness:.83,roughness:.23});
-    box(torso,shirt,[0,.16,.128],[.225,.29,.026],.013);
+    // Shirt, waistcoat panels and lapels follow the chest (they were flat boxes).
+    chestPanel(shirt,(u,v)=>[-.1125+.225*u,.015+.235*v]);
     for(const side of [-1,1]){
-      const lapel=box(torso,coat,[side*.12,.1,.138],[.07,.27,.022],.01);lapel.rotation.z=side*.2;
-      const vestPanel=box(torso,vest,[side*.06,-.01,.134],[.1,.26,.016],.008);vestPanel.rotation.z=-side*.09;
+      lapel(coat,side,.014);
+      chestPanel(vest,(u,v)=>{const y=-.14+.26*v;return [side*(.012+.098*u+.09*(y+.01)*-.5),y];},{offset:.011,columns:4});
       // A few restrained brocade lines read at conversation distance.
-      for(let i=0;i<3;i++)tube(torso,darkGold,[[side*(.11+i*.01),.2,.151],[side*(.13+i*.008),.1,.152],[side*(.12+i*.011),-.01,.149]],.0016);
+      for(let i=0;i<3;i++)tube(torso,darkGold,[onChest(side*(.09+i*.01),.2,.016),onChest(side*(.105+i*.008),.1,.016),onChest(side*(.095+i*.009),-.01,.014)],.0016);
     }
-    for(let i=0;i<4;i++)ball(torso,darkGold,[0,.1-i*.065,.145],[.006,.006,.004]);
-    tube(torso,silver,[[.015,-.06,.146],[.08,-.1,.14],[.15,-.075,.11]],.0026);
+    for(let i=0;i<4;i++)ball(torso,darkGold,onChest(0,.1-i*.065,.015),[.006,.006,.004]);
+    tube(torso,silver,[onChest(.015,-.06,.014),onChest(.08,-.1,.014),onChest(.13,-.075,.015)],.0026);
     box(pelvis,leather,[0,.09,.137],[.31,.029,.016],.005);
     box(pelvis,silver,[0,.09,.149],[.037,.036,.009],.005);
     coatTails(coat);boots('#1c1a1d',{rugged:true});

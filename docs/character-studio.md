@@ -889,7 +889,20 @@ unchanged. `coat-back.test.js` checks the six coat looks: skeleton binding,
 normalized weights, overlap with the waist ring, and staying behind the actual back
 at rest and with the spine bent ±0.18 rad. A negative control with the panel moved
 inside the back fails the check. Each look adds one draw, still within its
-20-draw cap. Flat front tail panels and box lapels remain open for art review.
+20-draw cap. Flat front tail panels remain open for art review.
+
+Kai's and Aurel's chest pieces were flat rounded boxes. The flat fronts stood
+off the receding upper chest as slabs, and Kai's embroidery points sat at a fixed
+depth that left them hanging in the air beside the arms. Those pieces now lie on
+the suit's front-most surface (`measureChestFront`). It rasterizes the suit's
+triangles into a 5 mm depth grid in the torso frame, once per avatar, in 1–4 ms.
+They are a V-necked waistcoat, a curved shirt and vest panels, tapered lapels,
+and embroidery, brocade, buttons and chain seated on the chest. Aurel's buttons
+had been 2 cm inside the chest, so they were never visible. `chest-tailoring.test.js`
+raycasts the skinned suit independently and requires every chest vertex of the
+Kai formal, noir and explorer looks and Aurel to sit no more than 4 mm inside
+it and no more than 3.5 cm in front of it, allowing for layered pieces. Negative controls with sunk panels or lifted stars fail.
+The pieces use fewer triangles than the boxes they replace.
 
 ### Peer revision fallback and recovery
 
