@@ -115,10 +115,11 @@ Results:
 | Trip | Width | Accepted body |
 | --- | --- | --- |
 | Street door to the top of either escalator lane | 1.70 m (the door) | fits; lanes are 1.71 m between glass rails |
-| Lane top to inside the auditorium doorway | 1.055 m (planter at −5.65, 25.4 to the sofa's west arm) | fits (the planter moved 5 cm west, Val, 2026-10-15) |
+| Lane top to inside the auditorium doorway | 1.60 m (until 2026-10-18, 1.055 m between the planter at −5.65, 25.4 and the sofa's west arm) | fits; the sofa now backs onto the west guardrail |
+| Lane top to either sofa place's approach (its front corner beside the table), other seats occupied | 1.09 m | fits (0.3 m before the sofa moved) |
 | Doorway to each of the 8 recliner approaches (d + 1.4, in front of the footrest), other 9 seats occupied | 0.89 m | the server body fits; the widest accepted body reaches a sit spot within the 3.6 m sit reach for every recliner (1.2–3.09 m away) |
 | Front-row aisle with the back row seated | 0.891 m (footrests to the back row's seated bodies) | below 1.01 m, above the widest posed body (0.80 m); accepted by Val, 2026-10-15 |
-| Turning circles: reception, landing, lounge, auditorium, every seat occupied | 3.05, 1.31, 1.85, 1.50 m radius | fit (0.888 m needed) |
+| Turning circles: reception, landing, lounge, auditorium, every seat occupied | 3.05, 1.31, 2.66, 1.48 m radius | fit (0.888 m needed) |
 
 The server walks these routes in `server/tests/ipic-routes.test.js`. It covers:
 
@@ -142,11 +143,13 @@ collide; none is on a public route.
 **Open defects**, kept as a `todo` test or recorded allowances:
 
 1. ~~**The lounge sofa traps its sitter.**~~ Fixed: each sofa place names where its sitter
-   steps out, past the arm at its end (`ipic-plan.js` `stand`). The server's `stand()` tries
+   steps out and is approached from (`ipic-plan.js` `stand`, `approach`): since the sofa backs
+   onto the west guardrail (2026-10-18), the open floor at its front corner beside the table. The server's `stand()` tries
    that spot, with the usual destination checks, before its radial search, which never
    finds a straight clear path out of the sofa.
 2. ~~**The lounge-to-auditorium passage** was 1.005 m against the 1.01 m accepted body.~~
-   Fixed (Val, 2026-10-15): the lounge planter moved 5 cm west; the passage is 1.055 m.
+   Fixed (Val, 2026-10-15): the lounge planter moved 5 cm west; the passage is 1.055 m. Since
+   the sofa moved (2026-10-18) the route runs along a = −1.4 and is 1.6 m wide.
 3. ~~**Recliner footrests and base ends had no collision.**~~ Fixed (Val, 2026-10-15): they
    collide as drawn (`ipic-recliner-base`, `ipic-recliner-footrest` in `ipic-plan.js`).
    Each recliner names a stand spot and approach at d + 1.4, in the aisle in front of the
@@ -168,18 +171,22 @@ collide; none is on a public route.
 
 **Runtime against the photos** (2026-10-15): `docs/ipic-review/photo-review.md` compares
 T1–T3 with the photos they are indexed to and lists 18 differences by photo ID, severity
-and owner. P1 (open sky), P5 (sign), P7 (reception view), P9 (coffee table), P12 (lounge carpet
-and bar floor) and P17 (auditorium carpet) are fixed; the other 12, P18 (the street showing
-past the mural panel) included, are art direction or layout work tracked on #359.
+and owner. P1 (open sky), P3, P4 and P6 (the reception), P5 (sign), P7 (reception view), P8,
+P9, P10 and P11 (the lounge group), P12 (lounge carpet and bar floor), P13 and P14 (the Tuck
+Room's island bar, rack and pothos), P15 and P16 (the auditorium's risers and screen), P17
+(auditorium carpet) and P18 (the walled-in landing) are fixed, and P2 (the mural, kept large in
+its bay) is resolved as Val chose. All 18 are now fixed or resolved.
 
 **Screen** (`IPIC_SCREEN` in `ipic-plan.js`, used by the renderer and the data):
 
-- Size and place: 9.8 × 3.25 m (3.015:1), centred 2.5 m above the auditorium floor,
-  0.875–4.125 m.
-- **Back row.** Sees the screen only above 2.01 m over the front-row headrests, so
-  the bottom 35 % is hidden: anything burned into the picture belongs in the top 65 %.
-- **Front row.** 2.79 m from the screen: it spans 104–119° across, and the top edge
-  is 46° up.
+- Size and place: 12.1 × 3.6 m (3.36:1), centred 2.45 m above the front-row floor,
+  0.65–4.25 m (P16, 2026-10-18; it was 9.8 × 3.25 m). Films keep their aspect, so the
+  approved 16:9 short is pillarboxed.
+- **Back row.** It sits on the 0.4 m riser (P15; `IPIC_RISER`) and sees the screen above
+  1.44 m over the front-row headrests, so the bottom 22 % is hidden (35 % before the
+  risers): anything burned into the picture belongs in the top 78 %.
+- **Front row.** 2.79 m from the screen: it spans 120–130° across, and the top edge
+  is 47° up.
 - Seated eye: cushion + 0.69 m. Seated avatars in front are not modelled.
 - The player's captions are a WebVTT track, not burned in.
 

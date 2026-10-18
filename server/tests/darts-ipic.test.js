@@ -59,7 +59,7 @@ test('two visitors at the Tuck Room line play a shared match everyone can see', 
   assert.equal(t.darts('alice', { action: 'throw', aim: [0, 0], point: [0, 0] }).error, 'invalid_darts', 'no client landing points');
 });
 
-test('a darts match survives a checkpoint and ends when a player walks off or sits down', () => {
+test('a darts match survives a checkpoint and ends when a player walks off or goes to sit down', () => {
   const t = town();
   t.enter('alice', [.1, 22.8]); t.enter('bob', [.9, 22.5]);
   t.darts('alice', { action: 'invite', peerId: 'bob' }); t.darts('bob', { action: 'accept' });
@@ -73,12 +73,14 @@ test('a darts match survives a checkpoint and ends when a player walks off or si
   assert.deepEqual(u.line().result, { winner: 0, reason: 'left the line' });
   u.walkTo('alice', [-.5, 21.5]); u.world.step(.1);
   assert.equal(u.line(), null, 'the line clears when everyone has gone');
-  // Sitting down on a lounge seat also leaves the line.
+  // Going to sit on a lounge seat also leaves the line. Since the sofa moved to back onto the west
+  // guardrail (2026-10-18) no seat is in sit reach of the line, so the player walks to the sofa first;
+  // with nobody left at the line, the ended match clears at once, and a seated player cannot throw.
   u.walkTo('alice', [.1, 22.8]);
   assert.equal(u.darts('alice', { action: 'practice' }).ok, true);
   assert.deepEqual(u.line().players, ['alice', 'regular']);
-  // The lounge sofa is in reach (3.2 m) and in sight from the line. With nobody left
-  // at the line, the ended match clears at once.
+  u.walkTo('alice', [-2.6, 21.6]); u.world.step(.1);
+  assert.equal(u.line(), null);
   assert.equal(u.command('alice', { type: 'sit', buildId: 'bench:ipic-lounge-sofa', slot: 1 }).ok, true);
   u.world.step(.1);
   assert.equal(u.line(), null);

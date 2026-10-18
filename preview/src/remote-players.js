@@ -1,3 +1,7 @@
+import { layoutPeerLabels } from './peer-label-layout.js';
+import { createAvatarPlaceholder } from './avatar-placeholder.js';
+import { selectedCharacterFor } from './character-selection-view.js';
+import { createCharacterMaterials } from './character-studio-materials.js';
 import * as THREE from 'three';
 import { AVATAR_PROFILES, loadResidentAvatar } from './avatars.js';
 import { createPlayerCostume } from './player-costume.js';
@@ -5,16 +9,19 @@ import { createFlightVehicle } from './flight-vehicles.js';
 import { createRoadVehicle } from './road-vehicles.js';
 import { VEHICLES, vehicleKind } from './vehicle-config.js';
 import { permittedAppearance, sharedAppearance } from './shared-appearances.js';
-import { traversalForAppearance } from './beast-traversal.js';
 
 export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=>true,snapInitialHeading=false}={}){
   const entries=new Map(),labels=document.createElement('div');labels.className='remote-player-labels';labels.setAttribute('aria-hidden','true');host.append(labels);
   // Who is talking on shared voice right now: a ring on the nameplate and the
   // speaker cadence in conversation-motion. Set at event time, read per frame.
   const speaking=new Set();
-  let disposed=false,previous=null;
+  let disposed=false,previous=null,labelWidth=0,labelHeight=0;
+  const fonts=document.fonts;
+  const invalidateLabelSizes=()=>{for(const entry of entries.values())entry.labelSize=null;};
+  fonts?.addEventListener('loadingdone',invalidateLabelSizes);
+  const setLabelText=(entry,text)=>{if(entry.label.textContent!==text){entry.label.textContent=text;entry.labelSize=null;}};
   const next=new THREE.Vector3(),before=new THREE.Vector3(),point=new THREE.Vector3();
-  const remove=entry=>{entry.removed=true;entry.version++;entry.outfit?.dispose();entry.vehicle?.dispose();entry.road?.dispose();entry.avatar?.dispose();entry.holder.removeFromParent();entry.label.remove();};
+  const remove=entry=>{entry.removed=true;entry.version++;entry.placeholder?.dispose();entry.colors?.dispose();entry.outfit?.dispose();entry.vehicle?.dispose();entry.road?.dispose();entry.avatar?.dispose();entry.holder.removeFromParent();entry.label.remove();};
   const syncRoad=(entry,kind)=>{
     const selected=vehicleKind(kind);
     if(entry.road?.spec.kind===selected)return;
@@ -32,6 +39,10 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
       entry.requestedAppearance=appearance;entry.failures=0;entry.retryAt=0;
       if(entry.pendingAppearance&&entry.pendingAppearance!==appearance){entry.pendingAppearance=null;entry.version++;}
     }
+    if(entry.loadedAppearance===appearance){
+      const definition=selectedCharacterFor(player);const key=JSON.stringify(definition);
+      if(key!==entry.definitionKey){entry.colors?.apply(definition);entry.definitionKey=key;entry.definition=definition;}
+    }
     if(entry.pendingAppearance===appearance||entry.loadedAppearance===appearance)return;
     if(now()<entry.retryAt)return;
     entry.pendingAppearance=appearance;const version=++entry.version;
@@ -40,12 +51,13 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
       if(disposed||entry.removed||entry.version!==version){avatar.dispose();return;}
       const outfit=sharedAppearance(appearance).costume==='jevica'?createPlayerCostume(avatar,'jevica'):{update(){},dispose(){}};
       const vehicle=createFlightVehicle('jevica');
-      entry.outfit?.dispose();entry.vehicle?.dispose();entry.avatar?.dispose();entry.holder.clear();
+      entry.placeholder?.dispose();entry.placeholder=null;entry.colors?.dispose();entry.outfit?.dispose();entry.vehicle?.dispose();entry.avatar?.dispose();entry.holder.clear();
       entry.avatar=avatar;entry.outfit=outfit;entry.vehicle=vehicle;entry.holder.add(avatar.object,vehicle.object);
       if(entry.road)entry.holder.add(entry.road.object);
+      entry.colors=createCharacterMaterials(avatar.object);entry.definition=selectedCharacterFor(entry.target);entry.definitionKey=JSON.stringify(entry.definition);entry.colors.apply(entry.definition);
       entry.loadedAppearance=appearance;entry.pendingAppearance=null;entry.failures=0;entry.retryAt=0;
-      entry.label.textContent=player.name;
-    }).catch(()=>{if(entry.version===version){entry.pendingAppearance=null;entry.failures++;entry.retryAt=now()+Math.min(30000,1000*2**entry.failures);entry.label.textContent=player.name+' · avatar unavailable';}});
+      setLabelText(entry,entry.target.name);
+    }).catch(()=>{if(entry.version===version){entry.pendingAppearance=null;entry.failures++;entry.retryAt=now()+Math.min(30000,1000*2**entry.failures);setLabelText(entry,entry.target.name+' · avatar unavailable');}});
   };
   return {
     // Explicit inspection only: skinning every vertex is too expensive for the
@@ -62,7 +74,7 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
     });},
     stats(){return [...entries].map(([id,entry])=>{
       const arm=entry.avatar?.rig?.model?.getObjectByName('upperarm_r'),rest=arm&&entry.avatar.rig.rest.get(arm);
-      return {id,ready:Boolean(entry.avatar),appearance:entry.loadedAppearance,movement:entry.target.movement??'upright',gesture:entry.target.gesture??null,rightArmMotion:rest?arm.quaternion.angleTo(rest):0,beastMotion:entry.avatar?.beastMotion??0,vehicle:entry.road?.spec.kind??null,roadVisible:Boolean(entry.road?.object.visible),riderSeated:Boolean(entry.riderSeated),sitting:entry.target.sitting??null,watering:Boolean(entry.avatar?.object.getObjectByName('Watering can')?.visible),heading:entry.holder.rotation.y,position:entry.holder.position.toArray()};
+      return {id,onScreen:Boolean(entry.onScreen),labelVisible:Boolean(entry.labelVisible),ready:Boolean(entry.avatar),fallback:Boolean(entry.placeholder),appearance:entry.loadedAppearance,character:entry.definition?structuredClone(entry.definition):null,materials:entry.colors?.inspect()??[],movement:entry.target.movement??'upright',gesture:entry.target.gesture??null,rightArmMotion:rest?arm.quaternion.angleTo(rest):0,vehicle:entry.road?.spec.kind??null,roadVisible:Boolean(entry.road?.object.visible),riderSeated:Boolean(entry.riderSeated),sitting:entry.target.sitting??null,watering:Boolean(entry.avatar?.object.getObjectByName('Watering can')?.visible),heading:entry.holder.rotation.y,position:entry.holder.position.toArray()};
     });},
     sync(players,selfId){
       if(disposed)return;
@@ -74,18 +86,21 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
           const holder=new THREE.Group(),label=document.createElement('span');label.className='remote-player-label';label.setAttribute('data-peer-id',player.id);label.textContent=player.name;labels.append(label);scene.add(holder);
           holder.position.set(player.position[0],player.position[2]+player.altitude,-player.position[1]);
           if(snapInitialHeading)holder.rotation.y=player.yaw+Math.PI;
-          entry={holder,label,target:player,removed:false,distance:0,version:0,loadedAppearance:null,pendingAppearance:null,requestedAppearance:null,failures:0,retryAt:0};entries.set(player.id,entry);
+          const placeholder=createAvatarPlaceholder();holder.add(placeholder.object);
+          entry={holder,label,placeholder,target:player,removed:false,distance:0,version:0,loadedAppearance:null,pendingAppearance:null,requestedAppearance:null,failures:0,retryAt:0};entries.set(player.id,entry);
           if(speaking.has(player.id))label.dataset.speaking='true';
         }
-        entry.target=player;entry.syncedAt=performance.now();entry.label.textContent=player.name;syncRoad(entry,player.vehicle);loadAppearance(entry,player);
+        entry.target=player;entry.syncedAt=performance.now();setLabelText(entry,player.name+(entry.failures?' · avatar unavailable':entry.avatar?'':' · loading avatar'));syncRoad(entry,player.vehicle);loadAppearance(entry,player);
       }
     },
     update(now,camera){
       if(disposed)return;
       const width=host.clientWidth,height=host.clientHeight;
+      if(width!==labelWidth||height!==labelHeight){invalidateLabelSizes();labelWidth=width;labelHeight=height;}
+      const candidates=[],dirty=[];
       const delta=previous===null?0:Math.min(0.1,(now-previous)/1000);previous=now;
       for(const entry of entries.values()){
-        const {holder,target,avatar,label}=entry;next.set(target.position[0],target.position[2]+target.altitude,-target.position[1]);
+        const {holder,target,avatar}=entry;next.set(target.position[0],target.position[2]+target.altitude,-target.position[1]);
         before.copy(holder.position);if(target.sitting || entry.wasSitting || holder.position.distanceTo(next)>8)holder.position.copy(next);else holder.position.lerp(next,1-Math.exp(-12*delta));
         const moved=holder.position.distanceTo(before);entry.distance+=moved;
         // Face the way they walk, as the local avatar does; a player standing
@@ -106,12 +121,11 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
         entry.riderSeated=false;
         if(avatar&&!holder.visible)avatar.suspend();
         if(avatar&&holder.visible){
-          const beast=target.movement==='beast'?traversalForAppearance(target.appearance):null;
           const ride=entry.road?.spec,seat=target.sitting,seated=Boolean(ride||seat);
           const speed=delta?Math.hypot(dx,dz)/delta:0;
           avatar.object.position.set(0,seat?seat.height-avatar.rig.hipHeight+.025:ride?ride.passengerSeat[1]-avatar.rig.hipHeight+.025:0,0);
           avatar.object.rotation.y=ride?-Math.PI/2:0;
-          avatar.update(now,!ride&&target.altitude<=0.1?(target.gesture??'continue'):'continue',speaking.has(target.id),{speed:seated?0:Math.min(beast?.sprint??3.4,delta?moved/delta:0),flightSpeed:speed,distance:entry.distance,flying:!seated&&target.altitude>0.1,riding:seated,ridingKind:seat?'seat':ride?.kind,seatToFloor:seat?seat.height:ride?ride.passengerSeat[1]-ride.passengerFloor:undefined,vehicle:'jevica',beast:Boolean(beast),handshakeTarget:target.interaction?.kind==='handshake'?target.interaction.target:undefined,gestureTime:target.interaction?target.interaction.elapsed+Math.max(0,now-entry.syncedAt)/1000:undefined},()=>holder.position.y);
+          avatar.update(now,!ride&&target.altitude<=0.1?(target.gesture??'continue'):'continue',speaking.has(target.id),{speed:seated?0:Math.min(3.4,delta?moved/delta:0),flightSpeed:speed,distance:entry.distance,flying:!seated&&target.altitude>0.1,riding:seated,ridingKind:seat?'seat':ride?.kind,seatToFloor:seat?seat.height:ride?ride.passengerSeat[1]-ride.passengerFloor:undefined,vehicle:'jevica',handshakeTarget:target.interaction?.kind==='handshake'?target.interaction.target:undefined,gestureTime:target.interaction?target.interaction.elapsed+Math.max(0,now-entry.syncedAt)/1000:undefined},()=>holder.position.y);
           entry.riderSeated=seated;
           entry.outfit.update(!seated&&target.altitude>0.1,now,seated);entry.vehicle.object.visible=!seated&&target.altitude>0.1;
           if(entry.road){
@@ -121,8 +135,22 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
           }
         }
         entry.wasSitting=Boolean(target.sitting);
-        point.copy(holder.position);point.y+=target.sitting?1.75:2.2;point.project(camera);label.hidden=!holder.visible||point.z<-1||point.z>1||Math.abs(point.x)>1||Math.abs(point.y)>1;
-        if(!label.hidden)label.style.transform=`translate(${(point.x+1)*width/2}px,${(1-point.y)*height/2}px) translate(-50%,-100%)`;
+        point.copy(holder.position);point.y+=target.sitting?1.75:2.2;point.project(camera);
+        entry.onScreen=holder.visible&&point.z>=-1&&point.z<=1&&Math.abs(point.x)<=1&&Math.abs(point.y)<=1;
+        if(entry.onScreen){
+          candidates.push({id:target.id,x:(point.x+1)*width/2,y:(1-point.y)*height/2,distance:holder.position.distanceTo(camera.position),speaking:speaking.has(target.id),wasVisible:entry.labelVisible});
+          if(!entry.labelSize)dirty.push(entry);
+        }
+      }
+      // Batch layout writes before reads. Stable names need no DOM measurement in
+      // subsequent frames; font completion, viewport changes and new text invalidate.
+      for(const entry of dirty)entry.label.hidden=false;
+      for(const entry of dirty){const box=entry.label.getBoundingClientRect();if(box.width>0&&box.height>0)entry.labelSize={width:Math.ceil(box.width),height:Math.ceil(box.height)};}
+      const placements=layoutPeerLabels(candidates.map(candidate=>({...candidate,...entries.get(candidate.id).labelSize})),{width,height});
+      const placed=new Map(placements.map(box=>[box.id,box]));
+      for(const [id,entry] of entries){
+        const box=placed.get(id);entry.labelVisible=Boolean(box);entry.label.hidden=!box;
+        if(box)entry.label.style.transform=`translate(${box.x}px,${box.y}px) translate(-50%,-100%)`;
       }
     },
     setSpeaking(ids){
@@ -130,6 +158,6 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
       speaking.clear();for(const id of ids??[])speaking.add(id);
       for(const [id,entry] of entries){const on=String(speaking.has(id));if(entry.label.dataset.speaking!==on)entry.label.dataset.speaking=on;}
     },
-    dispose(){disposed=true;for(const entry of entries.values())remove(entry);entries.clear();labels.remove();},
+    dispose(){if(disposed)return;disposed=true;fonts?.removeEventListener('loadingdone',invalidateLabelSizes);for(const entry of entries.values())remove(entry);entries.clear();labels.remove();},
   };
 }

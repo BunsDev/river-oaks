@@ -5,6 +5,7 @@ import { createOfficeSkyline, officeSkylineEye, officeSkylineSize } from '../src
 import { captureOfficeStreet } from '../src/office-world-presentation.js';
 import { createOfficeWorldScene } from '../src/office-world-scene.js';
 import { officeLayout, OFFICE_LAYOUT_LEGACY, OFFICE_LAYOUT_PENTHOUSE } from '../src/office-layouts.js';
+import { atmosphereFor } from '../src/atmosphere.js';
 
 // A renderer that records every draw: enough of the WebGLRenderer surface for the capture,
 // with no GPU. `onRender` sees each district face (drawn into the capture's temporary 2D
@@ -416,8 +417,13 @@ test('entering compiles what the office will draw, with its lamps counted; a ski
   }
   const items = c.calls.flatMap(call => call.items);
   assert.ok(items.every(item => item.isMesh && item.material), 'only drawn objects');
-  for (const name of ['ceiling', 'curtain wall panes', 'desks']) assert.ok(items.some(item => item.name === name), `the office's ${name}`);
-  const kinds = items.map(item => `${item.material.uuid}|${item.isInstancedMesh}|${item.type}|${item.receiveShadow}`);
+  for (const name of ['ceiling', 'curtain wall panes']) assert.ok(items.some(item => item.name === name), `the office's ${name}`);
+  // Main replaced the graybox desks with furnished meshes; their programs must still be queued.
+  const furniture = [];
+  office.traverse(node => { if (node.isMesh && (node.userData.assets?.length || node.userData.ids?.length)) furniture.push(node); });
+  assert.ok(furniture.length > 0, 'the office has furnished meshes');
+  for (const mesh of furniture) assert.ok(items.some(item => item.material === mesh.material && !!item.isInstancedMesh === !!mesh.isInstancedMesh && item.receiveShadow === mesh.receiveShadow), `furnished program: ${mesh.name}`);
+  const kinds = items.map(item => `${item.material.uuid}|${item.isInstancedMesh}|${item.type}|${item.receiveShadow}|${!!item.instanceColor}|${!!item.geometry?.attributes?.color}`);
   assert.equal(new Set(kinds).size, kinds.length, 'each material and kind once');
   assert.equal(office.visible, false, 'hidden again after every call');
   const progress = v.scene.inspect().precompile;
@@ -437,4 +443,27 @@ test('a skipped arrival waits at most three seconds for compilation, and a playe
   const w = visit(t, played); w.draw(0);
   for (let i = 1; i <= 1500; i++) w.draw(i * 1000 / 60);
   assert.equal(w.phases.at(-1), 'office', 'the arrival plays out while programs compile');
+});
+
+test('office lamps follow the street clock during a visit, live and through the phone light pool', t => {
+  for (const skyline of [{ mode: 'live' }, { size: 16 }]) {
+    const s = street({ layout: OFFICE_LAYOUT_PENTHOUSE, skyline });
+    // A pool large enough for the cabin's two lights and the office's five, as in main.js.
+    for (let i = 0; i < 7; i++) { const lamp = new THREE.PointLight('#ffffff', 0, 10, 2); s.scene.add(lamp); s.captured.lights.push(lamp); }
+    let hour = 12; s.captured.atmosphere = () => atmosphereFor(hour, 'clear');
+    const v = visit(t, s), count = () => { let n = 0; s.scene.traverseVisible(node => { if (node.isLight) n++; }); return n; };
+    v.scene.skip(); v.draw(0); v.draw(16);
+    const office = s.scene.getObjectByName('office:office-penthouse-1');
+    const lamps = skyline.mode === 'live' ? office.children.filter(node => node.isPointLight) : s.captured.lights.slice(2, 7);
+    assert.equal(lamps.length, 5, skyline.mode ?? 'snapshot');
+    if (!skyline.mode) assert.equal(office.children.some(node => node.isPointLight), false, 'the phone path adds no lights to the scene');
+    const noon = lamps.map(lamp => ({ intensity: lamp.intensity, warmth: lamp.color.r - lamp.color.b })), lights = count();
+    hour = 18.75; v.draw(32); v.draw(48);
+    lamps.forEach((lamp, i) => {
+      assert.ok(lamp.intensity > noon[i].intensity * 1.4, `${skyline.mode ?? 'snapshot'} lamp ${i} comes up at dusk`);
+      assert.ok(lamp.color.r - lamp.color.b > noon[i].warmth + 0.1, 'and warms');
+    });
+    assert.equal(count(), lights, 'the time of day never changes the number of lights');
+    v.scene.dispose();
+  }
 });

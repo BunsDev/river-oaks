@@ -121,3 +121,25 @@ office never draws; they compile in parallel during the arrival and cost nothing
 ## Next
 
 PR and hosted CI. Landing waits for Val, after #473 (they meet in `docs/offices.md` and the end of `office-skyline.test.js`).
+
+## Authorized landing, 2026-10-18
+
+Val authorized merging #448, #477, #468 and #484 and pruning their delivered
+worktrees. Landing owner: `codex-pr-448-477-468-484`.
+
+Merged current `origin/main` into this checkout without committing yet. Resolved
+`docs/offices.md` by retaining the stand-in/precompile description and main's
+time-of-day lamp behavior. Retained both appended test groups in
+`preview/tests/office-skyline.test.js`. No performance claims were refreshed.
+
+Verification is running: focused office/render-pipeline tests and `pnpm run verify`.
+Logs: `/tmp/river-oaks-477-focused.log` and `/tmp/river-oaks-477-core.log`.
+Next: inspect results, fix any integration regression, then sign and push the
+merge and use the shared landing queue. Hosted CI and retirement remain pending.
+
+Focused integration result: 159/159 passed. The initial failure expected the old
+`desks` graybox mesh, removed by main's #362 furnishing package. The regression
+now requires the furnished meshes' programs and distinguishes vertex/instance
+color variants when checking uniqueness. No renderer behavior changed for this
+adjustment. The first core run started before this correction and must be followed
+by a fresh preview gate; it is still running under the agent runner.

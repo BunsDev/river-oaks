@@ -569,3 +569,151 @@ they are not relabeled as fresh review of #466's inherited shared-surface change
 Preserve the worktree and local evidence after landing. #416's final checklist
 reconciliation should inspect that integration; #417's separate human/device and
 budget decisions are not prerequisites for the #416 source handoff.
+
+### Current-main reconciliation (2026-10-16, in progress)
+
+Owner `codex:garden-office-416-reconcile-20261015`; branch
+`fix/garden-office-416-reconcile-20261015` in the existing Garden Office audit
+worktree, created from `origin/main` `c644d05c4b372b8ebec4c81d59a5f1fc1df2c737`.
+The primary checkout's live task register is the only coordination edit there;
+its other task changes belong to concurrent sessions. Scope is the existing
+Garden Office recipe, its focused regression, current-source captures, this
+ledger and issue evidence. #417 human/device/budget decisions remain separate.
+
+Source SHA-256 at pickup: `space-furniture.js` `29532720e36618eee84955a9046e5da614afba5f214d8fffc76f220e82c20219`,
+`space-scene.js` `fea421a21e5a90dfb4f2e5fd92187d0f3317ab93c5b6b56d8da5348bdc911b5f`,
+`space-templates.js` `2b6d4144d1b348f19a0a22a42a1470b8e2b17f263135b3514f7d08a9f87a7ab5`,
+`viewport.js` `e8133ee29a53a9360a6dd487281bbb38660bc7d1893fd4f65819487f04282a87`.
+The nine manifest renderer hashes currently match these source files; the
+full measured-record comparison passes in the focused suite. `pnpm run --silent
+agent:doctor` passed all six prerequisite presence checks. The existing Garden
+Office and occupied-use suites passed 21/21, with no skips.
+
+Reproduced kitchenette defect on this main: `kitchenette-sink` is 0.95 m high,
+making the rendered basin surround top 0.7315 m, below both 0.9 m cabinet
+worktops. Its centre north 5.45 m also offsets the worktop front 0.05 m from
+their north 5.5 m line. The new rendered-geometry regression fails before any
+recipe correction (`node --test --test-name-pattern='Garden Office kitchenette'
+preview/tests/studio-garden-office.test.js`: 0/1, top mismatch). The #466 PR
+already identified this as remaining #416 work. Current-source matched capture
+is queued under the repository browser lock before changing the recipe.
+
+Current-main baseline command:
+`RIVER_OAKS_GARDEN_CAPTURE_PREFIX=garden-office-c644-before
+RIVER_OAKS_E2E_REPORT=garden-office-c644-before.json pnpm run test:experience
+studio-office-stations studio-office-neutral`. Both journeys passed, 18 shipped
+preset and 12 neutral views (six occupied), zero page errors, before the recipe
+change. The response-only neutral diagnostic restored its original viewport
+source SHA-256 `3deaad24d77ee58c69d05975b9a44b8983f8f39a4e93298dc8358ada6ff34bd6`.
+Receipt is local `data/reports/garden-office-c644-before.json`; PNGs are under
+`output/playwright/garden-office-c644-before-*`.
+
+Changed only the office sink's recipe to height 1.17 m and north 5.5 m, matching
+the existing House sink convention without changing the renderer or v1 fields.
+The rendered-geometry regression now passes; the Garden Office/occupied tests
+pass 22/22, and the full focused Studio/asset suite passes **117/117**, no skips.
+`git diff --check` passed. The published whole-room mesh/triangle count remains
+40 objects / 326 meshes / 24,318 triangles on current source; the direct renderer
+scan also found 2 line sets, 32 distinct geometry objects, 23 materials and
+438,068 bytes of distinct geometry arrays before the recipe change. This is
+CPU construction accounting, not a GPU budget decision.
+
+Next: capture and review same-station neutral/daylight/warm/evening empty and
+representative occupied views after the change. Audit the full #416 checklist
+against same-revision manifest, collision, journey and host evidence before
+claiming completion.
+
+Current-main source and compatibility checks (post-recipe correction):
+
+- `space-templates.js` SHA-256 `490a000c07b5a732d47d2b0baafcc81a00490be0591d866ec0d70f3834dc36e3`;
+  `space-furniture.js` `29532720e36618eee84955a9046e5da614afba5f214d8fffc76f220e82c20219`;
+  `space-scene.js` `fea421a21e5a90dfb4f2e5fd92187d0f3317ab93c5b6b56d8da5348bdc911b5f`;
+  `viewport.js` `e8133ee29a53a9360a6dd487281bbb38660bc7d1893fd4f65819487f04282a87`.
+  Catalog file SHA-256 `f2374ae0c5665aae4e5767a413e421e30ac54b74483324756a46cded05224f44`.
+- The nine catalog records retain exact renderer dependencies, bounds, collider,
+  resize, material and source/permission metadata; `Garden Office catalog records
+  match the forms the renderer draws` compares them against the current renderer.
+  No GLB or v2 document field is introduced; the old v1 recovery/negative-import
+  tests continue to run. Renderer has 40 objects, 326 meshes, 2 line sets,
+  24,318 triangles, 32 distinct geometry objects, 23 materials and 438,068 bytes
+  of distinct geometry arrays at the nominal office size. No GPU or device
+  budget is inferred from these figures.
+- `node --test preview/tests/studio-*.test.js server/tests/studio-assets.test.js`:
+  **117 passed, 0 failed/skipped/TODO**. Includes measured sink fit, nine-record
+  manifest comparison, valid/invalid v1 data and four empty/occupied chair-side
+  approaches. `pnpm run verify` **11/11 core tasks passed** at base
+  `c644d05c4b372b8ebec4c81d59a5f1fc1df2c737`, finished
+  `2026-10-16T01:54:06Z`; receipt `.runtime/agent/core.json`. This includes
+  desktop units, build, Python checks and the expected-exit-2 synthetic demo
+  verifier. Redis, browser and device coverage are outside core.
+- `RIVER_OAKS_E2E_REPORT=garden-office-c644-journey.json pnpm run
+  test:experience studio-pilot-journey world-studio`: both passed. Pilot has 14
+  checks, including blocked edit refusal, a succeeding repair, undo/redo,
+  save/reopen, stale-tab protection, actual walk to/from reception/work/meeting/
+  kitchenette, and return to editor. `world-studio` passed its independent
+  create/edit/export/import/walk route. Development Electron:
+  `node scripts/browser-lock.mjs garden-office-416-electron -- node
+  desktop/studio-e2e.js` **11/11**. No packaged/live-auth claim.
+- `git diff --check` and `node --check` on both capture harnesses and the pilot
+  journey passed. The baseline report SHA-256 is
+  `6b5de63bf375d15652a1188503b16fc2b2684e64b9cfb4f71a28a4042d4a6272`;
+  journey report SHA-256 is
+  `33ce94c59feb8380809e5a9e0d5e4f0f6f007d941666eb75c29a84c5482994a9`.
+
+The final current-source review set and independent design-review disposition
+remain pending; do not check the issue or mark the task delivered on these
+automated results alone.
+
+Final current-source capture command:
+`RIVER_OAKS_GARDEN_CAPTURE_PREFIX=garden-office-c644-review2
+RIVER_OAKS_E2E_REPORT=garden-office-c644-review2.json pnpm run
+test:experience studio-office-stations studio-office-occupied
+studio-office-neutral`. All three journeys passed, with **33 shipped empty +
+33 shipped chair-use + 22 neutral diagnostic** screenshots at 1440×1000 and
+1.68 m eye height, zero page errors. The nine-chair fixture pulls each seat
+back 0.4 m and deepens it to at least 0.75 m; it is not a seated-avatar or
+multiplayer acceptance. The neutral override is response-only, restores the
+original viewport response and does not become a saved lighting option. Original
+six camera positions/looks/yaws match the 30 before-fix captures exactly; five
+additional views cover the four workstation approaches and a close sink junction.
+The receipt SHA-256 is
+`2a7b498d859cd4b16fb06bf94b1c37f81f0e3e81d1ef536e3bf3b0b57d405fab`;
+PNG files are local-only under `output/playwright/garden-office-c644-review2-*`.
+CAM-11 neutral PNG SHA-256 is
+`2ed3a765f83823199ddd7bff2e9a81299882448d765a9b27ddd78cccfdc61935`.
+
+Local image inspection: CAM-07–10 visibly show each desk/chair approach with
+grounded oak/charcoal frames, floor contact and the pulled-back-chair variant;
+CAM-11 visibly shows the sink surround meeting the white worktops. Reception
+glazing and pink art remain legible in evening. This is visual inspection of
+the rendered runtime, not proof of a human/device accessibility outcome. Final
+independent review is recorded separately below.
+
+Independent design reviewer disposition on this current shared #466 renderer:
+**accepted for scoped #416 art/source handoff, no required visual fix remains**.
+The reviewer inspected CAM-07–10 under neutral empty/occupied plus shipped
+daylight/warm/evening samples; each shows a distinct chair-use state, desk
+front/legs, floor contact and side approach without visible chair/desk
+intersection. CAM-01/02/04/05 retain coherent entry, reception, meeting and
+kitchenette views. CAM-11 neutral/evening occupied confirms sink/worktop height
+and front-line continuity. The calculated surround top is 1.17 × 0.77 =
+0.9009 m against 0.9 m cabinets. CAM-06 still looks into a bare exterior (D9),
+and the open roof D7 remains; neither is claimed as a resolved presentation
+feature. The independent image review does not certify collision, GPU budget,
+physical device, human accessibility or #417 acceptance; those have separate
+owners/evidence.
+
+Issue #416 work/acceptance reconciliation before delivery:
+
+| Requirement | Current-revision evidence and boundary |
+| --- | --- |
+| Reference and coherent materials | Merged pilot source/manifest, TypeSafe Place pink art, current-main matched 30 baseline / 88 corrected views, independent review above |
+| Desk/chair family, glazing, light and plants | Original procedural v1 renderer and nine records from #439/#459; current #466 integrated captures; no placeholder mesh or unrelated kit |
+| Catalog, bounds, permissions and cost | Nine manifest records match renderer; source hashes and 40-object/24,318-triangle scan above; procedural source means no GLB export/reimport operation |
+| Persistence and recovery | Existing v1 kinds/finishes and strict negative-import tests; no new fields or v2 conversion; failed imports and stale edits preserve the draft |
+| Renderer, colliders, approaches | Visible geometry/collision regressions including four workstation side approaches with empty/pulled-back chairs, unchanged 0.35 m controller |
+| Browser and desktop lifecycle | Current-source pilot journey 14 checks, world-studio journey, development Electron 11/11, core 11/11 including build/desktop units |
+| Visual/circulation and handoff | Current-source neutral/shipped/occupied review accepted in browser scope; D7/D9, Redis/full browser/device/human/GPU-budget and #417 remain explicit limits |
+
+Do not mark delivered solely from this local table: signed PR, exact-head CI,
+reviewed serialized landing and merge evidence are still required.

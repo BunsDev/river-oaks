@@ -9,7 +9,7 @@ import { STATION_IDS } from './workplace-contract.js';
 export const FIXTURE_SITE = Object.freeze({id: 'coworking-studio-fixture', label: 'Coworking studio (fixture)'});
 // Measured from all 22 shared appearances (docs/level-design/workplace-coworking-fixture/avatar-envelope.json):
 // widest body, longest turning body, tallest standing look, and the widest seated
-// footprint from the seat origin (tails and legs included; the beast looks set it).
+// footprint from the seat origin (clothing and legs included).
 export const AVATAR_ENVELOPE = Object.freeze({bodyHalfWidth: 0.505, turningRadius: 0.888, height: 2.45, seatedRadius: 1.27});
 // Clearance above the tallest look under the door header.
 const HEADROOM = 0.1;

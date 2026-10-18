@@ -1,0 +1,33 @@
+{
+  "createdAt": "2026-10-18T09:53:10.778Z",
+  "status": "failed",
+  "modes": [
+    "development-publish"
+  ],
+  "rendering": "Full rendering",
+  "scope": "Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.",
+  "results": [
+    {
+      "name": "creator-street-crossing",
+      "status": "failed",
+      "seconds": 34.012,
+      "error": "Error: The walk stopped at [0,1.8798375089969266,30.590620959755274] on the way to [0,-27]\n    at move (preview/e2e/creator-street-crossing.js:40:13)\n    at async eval (preview/e2e/creator-street-crossing.js:61:3)\n    at async file:///Users/buns/Documents/GitHub/BunsDev/river-oaks-street-ground-491/preview/e2e/shared-runner.js:127:18",
+      "pageErrors": [],
+      "diagnostics": [
+        {
+          "url": "http://127.0.0.1:54817/?world=street-walk&motion-debug=1",
+          "mode": "joined",
+          "ready": "true",
+          "appearance": "sable-human",
+          "assets": "{\"loaded\":81,\"total\":81,\"failed\":0,\"done\":true}",
+          "town": "",
+          "player": "",
+          "places": "",
+          "landmarkCount": 0,
+          "connected": true
+        }
+      ]
+    }
+  ],
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)"
+}

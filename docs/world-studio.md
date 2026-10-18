@@ -51,6 +51,16 @@ run. Floor textures repeat at real unit sizes: terracotta is herringbone brick a
 surrounds are one slab, never paving. A sink's worktop is at 0.77 of its height, so a
 1.17 m sink meets 0.9 m kitchen cabinets.
 
+Shelving is drawn at true size too: thin boards about 36 cm apart over a recessed kick,
+bays at most 0.9 m wide, with folded garments and lidded boxes on some shelves. A few
+variants come from finish and proportions rather than new fields. A cabinet in limestone,
+concrete or terracotta is a solid display plinth. Raised glazing no deeper than 6 cm and
+at least 0.8 m tall is a silvered mirror. Raised glazing deeper than 0.3 m, standing on a
+counter, is a glass display case with a shelf and pastries. The other glazing stays clear
+glass. Tables share the desk family: a 30 mm top on 45 mm legs with aprons, true-size at
+any length. A cabinet, counter or appliance shows its doors and controls on its front, so
+turn a service counter 180° to give customers a closed front.
+
 Space files use `document_type: "studio-space"`, are limited to 128 KiB and 160
 objects, and export as `world-studio-space.json`. Save, reopen, import and undo work
 as for regions. They are private Studio documents; the shared-world region
@@ -215,11 +225,22 @@ pnpm run test:experience studio-pilot-a11y      # 320/390 px layouts, keyboard-o
 node preview/e2e/studio-pilot-perf.mjs          # vsync-off frame times, load and transfer
 ```
 
+`STUDIO_TEMPLATE=house` (or `boutique`, `cafe`) runs the soak and the texture check
+against another template. The texture check measures a textured floor, because stone
+worktops are plain slabs. Garden Office has no textured surface left, so its case first
+changes the meeting-room floor to limestone. Each case must show the texture (a blocked
+texture reads differently), and once its requests finish the floor must match the normal
+reading within 3 levels.
+
 The soak samples renderer counts from the viewport's `data-render-stats` (the game's
-format plus `programs`) and heap, listeners and DOM nodes from Chromium after a
-forced garbage collection. Persistent by design: the shared PBR texture cache, one
-reflection map, compiled shader programs and up to 80 undo steps. The performance
-profile writes `.runtime/acceptance/perf/receipt.json`.
+format plus `programs`, distinct scene `materials` and the viewport's own `renderTargets`),
+heap, listeners and DOM nodes from Chromium after a forced garbage collection, and
+pending loads: material image requests, live route-assessment workers and pending
+timeouts. Persistent by design: the shared PBR texture cache, one reflection map, the
+shadow map, compiled shader programs and up to 80 undo steps. The performance profile
+writes `.runtime/acceptance/perf/receipt.json`. On macOS the soak and the profile also
+record the GPU process's physical footprint and its Metal share, per sample or phase
+(unified memory, so a trend rather than a per-resource VRAM figure).
 
 ## World Designer
 
