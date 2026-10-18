@@ -10,12 +10,17 @@ async page => {
  const title=tab=>tab.locator('.walking-title strong').textContent();
  const press=async(tab,key)=>{await tab.locator('#canvas-host').focus();await tab.keyboard.press(key);};
  const click=async(tab,selector,text)=>{const target=text?tab.locator(selector,{hasText:text}).first():tab.locator(selector).first();await target.waitFor({state:'attached'});await target.evaluate(n=>n.click());};
+ // Inside means the HUD's room marker, not the title: the street title at the door also names Grove Offices.
+ const hall='campus:T1-F1-hall',inside=(tab,timeout=30000)=>tab.waitForFunction(id=>document.querySelector('#walking-hud')?.dataset.inside===id,hall,{timeout});
  const intoHall=async tab=>{
   await click(tab,'#campus-panel button','Go to the Grove Offices hall');
   await tab.waitForFunction(()=>/Grove Offices hall/.test(document.querySelector('#campus-panel [role=status]')?.textContent??''),null,{timeout:30000});
-  await tab.waitForFunction(()=>!document.querySelector('#walking-enter')?.hidden,null,{timeout:30000});
-  await press(tab,'KeyF');
-  await tab.waitForFunction(()=>/Grove Offices/.test(document.querySelector('.walking-title strong')?.textContent??''),null,{timeout:30000});
+  // A software-rendered runner can drop the first press while arrival settles; the door prompt stays, so ask again.
+  for(let attempt=0;;attempt++){
+   await tab.waitForFunction(()=>{const n=document.querySelector('#walking-enter');return n&&!n.hidden&&!n.disabled&&/Step inside Grove Offices/.test(n.textContent);},null,{timeout:30000});
+   await tab.locator('#walking-enter').evaluate(n=>n.click());
+   try{await inside(tab,10000);break;}catch(error){if(attempt===2)throw error;}
+  }
  };
  const sitAndOpenDesk=async tab=>{
   await tab.waitForFunction(()=>/Sit down/.test(document.querySelector('#walking-interact')?.textContent??'')&&!document.querySelector('#walking-interact').hidden,null,{timeout:30000});
@@ -87,7 +92,7 @@ async page => {
  check(await page.locator('#walking-play').evaluate(n=>n.hidden||!/Use this desk/.test(n.textContent)),'Standing up removes the desk action');
  check(await deskRead(page)===403,'Standing up closes the desk route');
  await page.reload({waitUntil:'commit'});await ready(page);
- await page.waitForFunction(()=>/Grove Offices/.test(document.querySelector('.walking-title strong')?.textContent??''),null,{timeout:30000});
+ await inside(page);
  await sitAndOpenDesk(page);
  check(await page.locator('#desk-title').inputValue()==='Atelier launch plan','Reloading and returning to a workstation recovers the saved work');
  await page.locator('#desk-close').click();
