@@ -167,6 +167,30 @@ passed with 27 checks in 73 s (`.runtime/cs441/worlds-run.json`).
 - `character-studio` journey: passed, 33 checks in 87 s (`.runtime/cs441/a11y-run.json`).
   Unit 58/58.
 
+## Round 4: automated accessibility audit and a keyboard-only path (2026-10-18)
+
+- axe-core 4.10.3, injected for the audit only and not added to the repo
+  (`.runtime/cs441/axe.mjs`, `.runtime/cs441/axe-report.json`). It ran over
+  `.character-studio` with the wcag2a, wcag2aa, wcag21a, wcag21aa, wcag22aa and
+  best-practice rule sets, in six states: open as Jevica, Sable edited, and Kai
+  comparing, each on desktop 1440×1000 and phone 390×844. **0 violations**
+  (28–29 rules passed per state). The only incomplete rule was color-contrast:
+  the modal sits over a blurred backdrop, so axe could not resolve backgrounds.
+- Contrast measured directly (`.runtime/cs441/axe2.mjs`): every text style is at or
+  above 4.5:1. Lowest: summary title and small species line 4.55; help,
+  color-name, footer and portrait text 4.85; eyebrow 5.0; summary description
+  5.02; status 5.34. Legends and roster names 10.17.
+- A keyboard-only path was added to the editor journey. Enter on the Studio entry
+  opens it. Tab reaches the character group, where arrows pick Sable; then form,
+  where arrows pick the fox; then dress and hair colors. Ctrl+Z and Ctrl+Shift+Z
+  work. Tab reaches Save draft, and Enter saves it ("Private draft saved").
+  Escape closes and returns focus to the entry. No pointer events are used.
+  `character-studio` passed with 43 checks in 132 s (`.runtime/cs441/keys-run.json`).
+- The hosted preview cannot be used for human or device sessions. The Preview
+  environment does not define `VITE_CHARACTER_STUDIO` (checked by name only), so
+  preview builds omit the Studio. The local fixture issues loopback-only
+  identities, so a physical phone cannot sign in to it.
+
 ## Gaps and next steps
 
 Not claimed: human keyboard, VoiceOver or novice acceptance (#444 protocol),

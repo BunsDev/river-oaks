@@ -53,6 +53,31 @@ async page => {
   check(await dialog.getAttribute('data-appearance')!=='kai-noir'&&(await dialog.getAttribute('data-appearance')).match(/kai|man-workwear/)&&/^Remix: Kai/.test(await dialog.locator('[data-cs-announce]').evaluate(n=>new Promise(r=>requestAnimationFrame(()=>r(n.textContent))))),'Remix varies the current character and announces the result');
   await dialog.getByRole('button',{name:'Surprise me',exact:true}).click();check(await dialog.getAttribute('data-appearance'),'Curated randomize produces a valid choice');
   await page.keyboard.press('Escape');check(!await dialog.isVisible(),'Escape closes the Studio');check(await page.getByRole('button',{name:'Open character studio',exact:true}).evaluate(n=>n===document.activeElement),'Closing restores focus to the entry');
+  // Keyboard only, from the Studio entry to a saved draft: no pointer events.
+  const keys=await page.context().browser().newContext({viewport:{width:1440,height:1000},reducedMotion:'reduce'});
+  try{
+    await keys.addCookies(await page.context().cookies());const board=await keys.newPage();board.setDefaultTimeout(60000);board.on('pageerror',e=>errors.push(e.message));await board.goto(page.url());
+    await board.locator('#loading').waitFor({state:'hidden'});await board.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerReady==='true');
+    if(!await board.locator('.visit-tools').evaluate(n=>n.open)){await board.locator('.visit-tools-toggle').focus();await board.keyboard.press('Enter');}
+    await board.getByRole('button',{name:'Open character studio',exact:true}).focus();await board.keyboard.press('Enter');
+    const studio=board.locator('.character-studio');await board.waitForFunction(()=>document.querySelector('.character-studio[open]')?.dataset.accountPhase==='ready'&&document.querySelector('.cs-preview').dataset.ready==='true');
+    const tabTo=async name=>{for(let i=0;i<40;i++){await board.keyboard.press('Tab');if(await board.evaluate(name=>document.activeElement.name===name||document.activeElement.matches(name),name))return true;}return false;};
+    const settled=id=>board.waitForFunction(id=>{const el=document.querySelector('.cs-preview');return el.dataset.ready==='true'&&el.dataset.appearance===id;},id);
+    check(await tabTo('cs-character'),'Keyboard reaches the character choices');
+    const start=await studio.getAttribute('data-appearance');
+    while(await studio.getAttribute('data-appearance')!=='sable-human'){await board.keyboard.press('ArrowRight');if(await studio.getAttribute('data-appearance')===start)break;}
+    await settled('sable-human');
+    check(await tabTo('cs-form'),'Keyboard reaches the form choice');await board.keyboard.press('ArrowRight');await settled('woman-casual');
+    check(await tabTo('cs-palette'),'Keyboard reaches dress colors');await board.keyboard.press('ArrowRight');
+    check(await tabTo('cs-hair'),'Keyboard reaches hair colors');await board.keyboard.press('ArrowRight');
+    check(await studio.getAttribute('data-palette')==='rose'&&await studio.getAttribute('data-hair')==='espresso','Keyboard alone creates a distinct fox variation');
+    await board.keyboard.press('Control+z');check(await studio.getAttribute('data-hair')==='authored','The undo shortcut works from the keyboard path');
+    await board.keyboard.press('Control+Shift+z');check(await studio.getAttribute('data-hair')==='espresso','The redo shortcut works from the keyboard path');
+    check(await tabTo('[data-save]'),'Keyboard reaches Save draft');await board.keyboard.press('Enter');
+    await board.waitForFunction(()=>/Private draft saved/.test(document.querySelector('.character-studio [data-account-status]').textContent));
+    check(true,'Keyboard saves the draft privately');
+    await board.keyboard.press('Escape');check(!await studio.evaluate(n=>n.open)&&await board.getByRole('button',{name:'Open character studio',exact:true}).evaluate(n=>n===document.activeElement),'Escape closes the keyboard session and returns focus to the entry');
+  }finally{await keys.close();}
   // Real touch context, same existing authenticated fixture cookie.
   const touch=await page.context().browser().newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true,reducedMotion:'reduce'});
   try{
