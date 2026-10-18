@@ -41,6 +41,16 @@ async page => {
  await page.locator('#campus-dialog .campus-units li',{hasText:'T1-201'}).getByRole('button',{name:'Ask for this suite'}).click();
  await page.waitForFunction(()=>/Asked for suite T1-201/.test(document.querySelector('#campus-dialog .campus-status')?.textContent??''));
  check(await page.locator('#campus-dialog .campus-units li',{hasText:'T1-201'}).locator('.campus-chip').textContent()==='You asked','A request is shown as asked, not admitted');
+ // Movement keys typed inside the open dialog never walk the resident.
+ const before=await page.evaluate(()=>document.querySelector('#canvas-host')?.dataset.position??document.body.textContent.match(/(\d+) m walked/)?.[1]);
+ await page.keyboard.down('KeyW');await page.waitForTimeout(500);await page.keyboard.up('KeyW');
+ check(await page.evaluate(()=>document.querySelector('#canvas-host')?.dataset.position??document.body.textContent.match(/(\d+) m walked/)?.[1])===before,'Walking keys inside the dialog do not move the resident');
+ // A phone-width dialog stays contained, with touch-sized controls.
+ await page.setViewportSize({width:390,height:844});
+ check(await page.locator('#campus-dialog').evaluate(n=>n.scrollWidth<=n.clientWidth+1&&n.getBoundingClientRect().right<=innerWidth),'The dialog fits a phone width without horizontal overflow');
+ check(await page.locator('#campus-dialog button:visible').evaluateAll(nodes=>nodes.every(n=>n.getBoundingClientRect().height>=43)),'Dialog actions keep touch-sized targets on a phone');
+ await page.screenshot({path:'output/playwright/garden-campus-dialog-phone.png'});
+ await page.setViewportSize({width:1440,height:1000});
  await page.keyboard.press('Escape');await page.waitForFunction(()=>!document.querySelector('#campus-dialog').open);
  check(await page.locator('#canvas-host').evaluate(n=>n===document.activeElement),'Escape closes the dialog and returns focus to the world');
 
@@ -58,6 +68,7 @@ async page => {
  await page.locator('#campus-dialog .campus-row',{hasText:'T1-201'}).getByRole('button',{name:'Accept'}).click();
  await page.waitForFunction(()=>/Lease accepted/.test(document.querySelector('#campus-dialog .campus-status')?.textContent??''));
  check(await page.locator('#campus-dialog .campus-units li',{hasText:'T1-201'}).locator('.campus-chip').textContent()==='Your suite','The accepted lease makes T1-201 the resident’s suite');
+ check(await page.locator('#campus-dialog .campus-row',{hasText:'T1-201'}).count()===1,'The answered request is closed: only the lease remains');
  check(/Grove Offices \(T1\), Floor 2/.test(await page.locator('#campus-dialog .campus-row',{hasText:'T1-201'}).textContent()),'The lease explains how to reach the suite');
  await page.screenshot({path:'output/playwright/garden-campus-lease.png'});
  await page.keyboard.press('Escape');await page.waitForFunction(()=>!document.querySelector('#campus-dialog').open);

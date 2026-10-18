@@ -35,17 +35,19 @@ export function createGardenCampusUI({ host, panelHost, getWorld, getMultiplayer
   dialog.append(heading, label, status, retry, body, close);document.body.append(dialog);
   dialog.addEventListener('close', () => host.focus({ preventScroll: true }), { signal });
 
-  let commands = null, worldId = null, last = null, serverNow = Date.now(), busy = false;
+  let commands = null, worldId = null, last = null, serverNow = Date.now(), listedAt = Date.now(), busy = false, lastAnswer = null, sent = [];
+  // The server's clock now, from its last answer: dates the dialog proposes stay valid however long it stays open.
+  const serverClock = () => serverNow + (Date.now() - listedAt);
   const ensureCommands = () => {
     const id = mp()?.snapshot?.worldId ?? 'river-oaks';
-    if (!commands || worldId !== id) { worldId = id;commands = createCampusCommands({ worldId: id, send: message => mp().command(message) }); }
+    if (!commands || worldId !== id) { worldId = id;commands = createCampusCommands({ worldId: id, send: message => { if (import.meta.env.DEV) sent.push(message);return mp().command(message); } }); }
     return commands;
   };
   const residents = () => (mp()?.snapshot?.players ?? []).filter(player => player.id !== mp()?.identity?.id).map(player => ({ id: player.id, name: player.name }));
   async function refresh() {
     const answer = await ensureCommands().list().catch(error => ({ ok: false, message: error.message }));
     if (!answer?.ok) { status.textContent = answer?.message ?? 'The campus directory is unavailable.';return; }
-    serverNow = answer.serverTimeMs ?? Date.now();render(campusDirectory(answer.campus, { now: serverNow }));
+    serverNow = answer.serverTimeMs ?? Date.now();listedAt = Date.now();lastAnswer = answer.campus;render(campusDirectory(answer.campus, { now: serverNow }));
   }
   async function act(fn, done) {
     if (busy) return;busy = true;retry.hidden = true;status.textContent = 'Sending…';
@@ -60,14 +62,14 @@ export function createGardenCampusUI({ host, panelHost, getWorld, getMultiplayer
     if (!mp()?.connected) { say.textContent = 'Join the town to see the suites.';return; }
     dialog.showModal();status.textContent = 'Opening the directory…';await refresh();heading.focus?.();
   }
-  const termPicker = (start = serverNow) => {
+  const termPicker = (start = serverClock()) => {
     const wrap = el('span', null, 'campus-term'), from = el('input'), days = el('select');
     from.type = 'date';from.value = new Date(start).toISOString().slice(0, 10);from.setAttribute('aria-label', 'Start date');
     for (const n of [7, 30, 90]) { const option = el('option', `${n} days`);option.value = String(n);days.append(option); }
     days.value = '30';days.setAttribute('aria-label', 'Length');wrap.append(from, days);
     const read = () => {
       // Today means now (a lease may start up to five minutes back); a later day starts at its morning.
-      const picked = Date.parse(`${from.value}T00:00:00Z`), startsAt = picked <= serverNow ? serverNow : picked;
+      const now = serverClock(), picked = Date.parse(`${from.value}T00:00:00Z`), startsAt = picked <= now ? now : picked;
       return { startsAt, endsAt: startsAt + Number(days.value) * DAY };
     };
     return { wrap, read };
@@ -109,7 +111,7 @@ export function createGardenCampusUI({ host, panelHost, getWorld, getMultiplayer
       const manage = el('section', null, 'campus-section');manage.append(el('h3', 'Manage the campus'));
       for (const request of view.manage.requests) {
         const row = el('div', null, 'campus-row');row.append(el('strong', `Suite ${request.number}`), el('span', `${request.name} asked · ${request.term}`));
-        row.append(button('Offer these dates', () => act(() => commands.issue({ unitId: request.unitId, tenantId: request.userId, startsAt: Math.max(request.startsAt, serverNow), endsAt: request.endsAt, requestId: request.id }), 'Offer sent')),
+        row.append(button('Offer these dates', () => act(() => commands.issue({ unitId: request.unitId, tenantId: request.userId, startsAt: Math.max(request.startsAt, serverClock()), endsAt: request.endsAt, requestId: request.id }), 'Offer sent')),
           button('Decline', () => act(() => commands.decline(request), 'Request declined'), 'campus-secondary'));
         manage.append(row);
       }
@@ -152,17 +154,22 @@ export function createGardenCampusUI({ host, panelHost, getWorld, getMultiplayer
   }
 
   // The desk at a campus workstation: only while the server reports this player there.
-  let desk = null, deskAccount = null, seated = false;
+  let desk = null, deskAccount = null, seated = false, lastLeased = null;
   const openDesk = () => {
     if (!seated) return;
     desk ??= createOfficeDeskUI({ getMultiplayer: mp, onClose: () => host.focus({ preventScroll: true }) });
     deskAccount = mp()?.identity?.id;void desk.open();
   };
+  // Browser journeys read what the dialog last listed and sent (development only).
+  if (import.meta.env.DEV) window.__riverCampus = () => ({ campus: lastAnswer, sent: sent.map(message => ({ ...message })) });
   const playProvider = { interaction: () => seated && !desk?.active ? { kind: 'campus-desk', label: 'Use this desk', run: openDesk } : null };
   return {
     playProvider,
     setWorld(world) { panel.hidden = !world?.gardenCampus;if (!world?.gardenCampus && dialog.open) dialog.close(); },
     onSnapshot(snapshot) {
+      // Another resident's lease changes what is available: an open directory lists again.
+      const leased = JSON.stringify(snapshot?.campus?.leased ?? null);
+      if (leased !== lastLeased) { lastLeased = leased;if (dialog.open && !busy) void refresh(); }
       const self = snapshot?.players?.find(player => player.id === mp()?.identity?.id);
       const was = seated;seated = self?.campusWorkstation === true;
       // Standing up, or losing the seat, puts the desk away; the draft stays in this page.
