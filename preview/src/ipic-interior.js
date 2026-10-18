@@ -5,7 +5,7 @@ import { createIpicMaterials, districtSignLayout } from './ipic-materials.js';
 
 // Where the upper lounge's carpet meets the Tuck Room's boards, west of the bar stools (a = 3.4).
 const TUCK_ROOM_EDGE = 2.65;
-import { IPIC_DARTS, IPIC_ESCALATOR, IPIC_FLIGHTS, IPIC_INTERIOR, IPIC_PLANTERS, IPIC_SCREEN, IPIC_SOFA_ARMS, IPIC_SOFA_D } from './ipic-plan.js';
+import { IPIC_BACK_BAR, IPIC_BAR, IPIC_DARTS, IPIC_ESCALATOR, IPIC_FLIGHTS, IPIC_INTERIOR, IPIC_PLANTERS, IPIC_SCREEN, IPIC_SOFA_ARMS, IPIC_SOFA_D } from './ipic-plan.js';
 import { dartboardPixel } from './dartboard-texture.js';
 
 // Editable metre-scale scene. Local +X=across frontage, -Z=into the venue,
@@ -24,6 +24,12 @@ export function buildIpicInterior(room, options = {}) {
   const plane = keep(new THREE.PlaneGeometry(1, 1));
   // A barrel tub chair's shell (photo review P10, IMG_9758): it wraps three quarters of the way round and
   // opens towards -d at yaw 0.
+  // A pothos leaf, pointed at its tip, and an upright wine glass with its foot at the origin.
+  const leafCard = keep(new THREE.ShapeGeometry(new THREE.Shape().moveTo(0, 0).quadraticCurveTo(.07, .025, 0, .11).quadraticCurveTo(-.07, .025, 0, 0), 3));
+  const stemGlass = keep(new THREE.LatheGeometry([[0,0],[.035,0],[.035,.005],[.004,.01],[.004,.09],[.02,.1],[.045,.15],[.04,.21],[.036,.215]].map(p => new THREE.Vector2(...p)), 10));
+  // Seeded, so every export places the leaves the same way.
+  let seed = 9757;
+  const random = () => { seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
   const barrelShell = keep(new THREE.LatheGeometry([[.34,.28],[.39,.46],[.41,.8],[.385,.9],[.33,.9],[.3,.78],[.28,.46]].map(p => new THREE.Vector2(...p)), 36, Math.PI / 4, Math.PI * 1.5));
   const matrix = new THREE.Matrix4(), quaternion = new THREE.Quaternion(), euler = new THREE.Euler();
   let zone;
@@ -65,7 +71,11 @@ export function buildIpicInterior(room, options = {}) {
     for (let i = 0; i < 10; i++) {
       const angle = i * 2.4, top = y + .5 + height * (.65 + .3 * Math.sin(i));
       rod(m.timber, [a, y + .4, d], [a + Math.cos(angle) * .22, top, d + Math.sin(angle) * .22], .01);
-      soft(m.leaf, a + Math.cos(angle) * .25, top - .1, d + Math.sin(angle) * .25, .16, .65, .07, { roll: Math.cos(angle) * .6, yaw: angle });
+      // Broad leaves along the upper half of each stem (photo review P14 named the slab leaves these replace).
+      for (let k = 0; k < 4; k++) {
+        const t = .5 + .16 * k, x = a + Math.cos(angle) * .2 * t, z = d + Math.sin(angle) * .2 * t, h = y + .4 + (top - y - .4) * t;
+        box(m.leaf, x, h, z, 2.4, 2.4, 2.4, { shape: leafCard, yaw: angle + (k % 2 ? .8 : -.8), pitch: -.35 - .2 * Math.sin(i * 3 + k), roll: .4 * Math.sin(i + k) });
+      }
     }
   }
   // An elongated woven cocoon (photo review P8, IMG_9758): a closed rattan shell ribbed by its weave, open
@@ -210,24 +220,79 @@ export function buildIpicInterior(room, options = {}) {
 
   section('Tuck Room');
   box(m.barFloor, (TUCK_ROOM_EDGE + room.aMax) / 2, 6 - .12, 23, room.aMax - TUCK_ROOM_EDGE, .24, 6);
-  box(m.timber, 4.45, 6.51, 23, 1.1, 1.02, 4.2);
-  box(m.marble, 4.45, 7.08, 23, 1.2, .1, 4.25);
-  box(m.red, 6.1, 7.9, 23, .1, 2.8, 4.8);
-  for (const y of [7.2, 8, 8.8]) box(m.timber, 5.95, y, 23, .55, .1, 4.7);
-  for (let i = 0; i < 26; i++) {
-    const d = 20.95 + (i % 13) * .33, y = i < 13 ? 7.4 : 8.25;
-    box(i % 3 ? m.leaf : m.bronze, 5.84, y, d, .08, .32 + (i % 3) * .04, .08, { shape: cylinder });
+  // The island bar (P13, IMG_9756): a counter ringing a lower service well, open at its south-east corner
+  // for the bartender, with an aisle behind it to the back bar.
+  const bar = IPIC_BAR, rim = .5, west = bar.a - bar.w / 2 + .05, east = bar.a + bar.w / 2 - .05;
+  const north = bar.d - bar.l / 2 + .05, south = bar.d + bar.l / 2 - .05;
+  const runs = [[west + rim / 2, bar.d, rim, south - north], [east - rim / 2, bar.d - .3, rim, south - north - .6],
+    [bar.a, north + rim / 2, east - west - 2 * rim, rim], [bar.a, south - rim / 2, east - west - 2 * rim, rim]];
+  for (const [a, d, w, l] of runs) {
+    box(m.timber, a, 6.51, d, w, 1.02, l);
+    box(m.marble, a, 7.08, d, w + (a === bar.a ? 0 : .1), .1, l + (a === bar.a ? .1 : 0));
+  }
+  box(m.black, bar.a, 6.03, bar.d, east - west - 2 * rim, .06, south - north - 2 * rim);
+  // The back bar: two wine fridges with shelves of bottles between and above them, on a burgundy wall.
+  box(m.red, room.aMax - .05, 7.9, 23, .1, 2.8, 4.8);
+  const backA = (IPIC_BACK_BAR + room.aMax) / 2 + .005, backW = room.aMax - IPIC_BACK_BAR - .02;
+  for (const d of [21.35, 24.65]) {
+    box(m.black, backA, 6.95, d, backW, 1.9, 1.4);
+    box(m.fridge, IPIC_BACK_BAR + .015, 6.95, d, .01, 1.72, 1.24);
+    for (let y = 6.3; y < 7.8; y += .2) box(m.black, IPIC_BACK_BAR + .022, y, d, .01, .012, 1.24);
+  }
+  for (const y of [7.2, 8, 8.8]) box(m.timber, backA, y, 23, backW, .06, y > 8.5 ? 4.7 : 1.85);
+  for (let i = 0; i < 30; i++) {
+    const d = 22.2 + (i % 10) * .18, y = [7.4, 8.2, 9][Math.floor(i / 10)];
+    box(i % 3 ? m.leaf : m.bronze, IPIC_BACK_BAR + .2, y, d, .07, .3 + (i % 3) * .04, .07, { shape: cylinder });
+  }
+  // The rack over the island (P13): two tiers of black steel hung from the ceiling, wine glasses hanging
+  // upside down from the lower tier and troughs of plants on the upper one.
+  const rails = [bar.a - .45, bar.a + .45], ends = [bar.d - 1.6, bar.d + 1.6];
+  for (const y of [8.85, 9.15]) {
+    for (const a of rails) box(m.steel, a, y, bar.d, .05, .05, ends[1] - ends[0]);
+    for (let d = ends[0]; d <= ends[1] + 1e-9; d += (ends[1] - ends[0]) / 3) box(m.steel, bar.a, y, d, .95, .04, .05);
+  }
+  for (const a of rails) for (const d of ends) rod(m.steel, [a, 8.85, d], [a, 10.3, d], .012);
+  for (const a of [bar.a - .35, bar.a + .35]) for (let k = 0; k < 31; k++) {
+    const d = ends[0] + .1 + k * .1;
+    box(m.steel, a, 8.84, d, .04, .02, .1);
+    box(m.stemware, a, 8.825, d, 1, 1, 1, { shape: stemGlass, pitch: Math.PI });
+  }
+  for (let d = ends[0] + .4; d < ends[1]; d += .8) {
+    box(m.steel, bar.a, 9.23, d, .7, .12, .62);
+    for (let k = 0; k < 60; k++) {
+      const t = random() * Math.PI * 2, r = .38 * Math.sqrt(random());
+      box(m.pothos, bar.a + Math.cos(t) * r, 9.3 + .14 * random(), d + Math.sin(t) * r, 1.5, 1.5, 1.5,
+        { shape: leafCard, pitch: -1.57 + .9 * (random() - .5), roll: random() * 6.28 });
+    }
   }
   for (const d of [21.5, 22.7, 23.9]) {
     soft(m.leather, 3.4, 6.78, d, .5, .13, .5); soft(m.leather, 3.13, 7.12, d, .12, .6, .5);
     rod(m.black, [3.4, 6, d], [3.4, 6.74, d], .035);
     box(m.black, 3.4, 6.02, d, .4, .04, .4, { shape: cylinder });
   }
-  for (const a of [3.5, 5.3]) rod(m.black, [a, 9.8, 20.8], [a, 9.8, 25.2], .035);
-  for (let d = 20.9; d < 25.1; d += .35) {
-    soft(m.leaf, 4.5 + .6 * Math.sin(d * 12), 9.7, d, .8, .2, .5);
-    rod(m.bronze, [4.6, 9.45, d], [4.6, 9.1, d], .015);
-    box(m.glass, 4.6, 9.08, d, .14, .18, .14, { shape: sphere });
+  // Trailing pothos (P14, IMG_9757): timber beams across the room under a dense canopy, strands hanging
+  // from each, and a string of lamps along every beam. No leaf over the floor hangs below 2.45 m, the
+  // tallest accepted body; over the island the strands stop above the rack's plants.
+  const beams = [20.5, 21.6, 22.7, 23.8, 24.9], top = 9.95, lowest = 6 + 2.45;
+  for (const d of beams) {
+    box(m.timber, (TUCK_ROOM_EDGE + room.aMax) / 2, top, d, room.aMax - TUCK_ROOM_EDGE - .1, .25, .22);
+    rod(m.black, [TUCK_ROOM_EDGE + .1, 9.8, d + .13], [room.aMax - .1, 9.8, d + .13], .006);
+    for (let a = TUCK_ROOM_EDGE + .3; a < room.aMax - .1; a += .5) box(m.glow, a, 9.76, d + .13, .07, .07, .07, { shape: sphere });
+  }
+  for (const a of [TUCK_ROOM_EDGE + .2, room.aMax - .25]) box(m.timber, a, top + .02, 22.7, .2, .22, 5.3);
+  for (let i = 0; i < 1600; i++) {
+    const a = TUCK_ROOM_EDGE + .1 + random() * (room.aMax - TUCK_ROOM_EDGE - .2), d = 20.2 + random() * 5.5;
+    // Turned within its own plane (roll) before it is tipped, so it lies nearly flat whichever way it points.
+    box(m.pothos, a, 9.78 + .1 * random(), d, 1.3, 1.3, 1.3, { shape: leafCard, pitch: -1.57 + .7 * (random() - .5), roll: random() * 6.28 });
+  }
+  for (const d of beams) for (let a = TUCK_ROOM_EDGE + .15; a < room.aMax - .1; a += .13) {
+    const overBar = Math.abs(a - bar.a) < bar.w / 2 + .3 && Math.abs(d - bar.d) < bar.l / 2 + .3;
+    const base = top - .14, end = Math.max(overBar ? 9.45 : lowest + .03, base - .35 - 1.1 * random()), sway = .25 * (random() - .5);
+    for (let y = base, k = 0; y > end; y -= .07, k++) {
+      const t = (base - y) / (base - end + 1e-9);
+      box(m.pothos, a + .03 * Math.sin(k * 2.1), y, d + (k % 2 ? .05 : -.05) + sway * t, 1, 1, 1,
+        { shape: leafCard, yaw: random() * 6.28, pitch: -.4 - .7 * random(), roll: (random() - .5) * .8 });
+    }
   }
   label('THE TUCK ROOM', 4.9, 9, 25.65, 2.5, .43);
   // The dart cabinet (Val, 2026-10-15): a freestanding pub cabinet in front of the

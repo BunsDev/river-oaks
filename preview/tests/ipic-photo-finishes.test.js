@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import * as THREE from 'three';
 import { createWalkingEnvironment } from '../src/walking.js';
+import { AVATAR_ENVELOPE } from '../src/workplace-room.js';
 import { buildIpicInterior } from '../src/ipic-interior.js';
 import { IPIC_CAMERAS, ipicFloor } from '../src/ipic-plan.js';
 import { IPIC_LOUNGE_CARPET, districtSignLayout } from '../src/ipic-materials.js';
@@ -119,4 +120,52 @@ test('P8: the lounge pendants are closed woven cocoons', () => {
     for (const dy of [-.25, 0, .25]) for (let k = 0; k < 8; k++) { const t = k * Math.PI / 4; rays++; const hit = hitFrom(at(a, y + dy, d), [Math.cos(t), 0, Math.sin(t)]); if (hit && hit.distance < .5 && hit.object.name === 'Upper lounge: ipic-woven-rattan') hits++; }
     assert.ok(hits / rays >= .75, `${a},${d}: the weave closes ${hits} of ${rays} sight lines`);
   }
+});
+
+// Tuck Room against IMG_9756 and IMG_9757 (photo review P13, P14; Val, 2026-10-18).
+const fixture = kind => room.fixtures.find(f => f.kind === kind);
+const over = (f, a, d, margin = 0) => Math.abs(a - f.a) <= f.w / 2 + margin && Math.abs(d - f.d) <= f.l / 2 + margin;
+
+test('P13: the bar is an island, ringed by its counter, with room to walk behind it', () => {
+  const bar = fixture('ipic-bar'), back = fixture('ipic-bar-shelves');
+  const behind = bar.a + bar.w / 2, wall = back.a - back.w / 2;
+  assert.ok(wall - behind >= .75, `the aisle behind the island is ${(wall - behind).toFixed(2)} m`);
+  // From that aisle the island's back is counter, not wall.
+  assert.match(hitFrom(at((behind + wall) / 2, 6.6, bar.d), [-1, 0, 0])?.object.name ?? '', /^Tuck Room: ipic-(weathered-timber|veined-marble)$/);
+  // The counter top rings a lower service well.
+  const well = hitFrom(at(bar.a, 7.3, bar.d), [0, -1, 0]), rim = hitFrom(at(bar.a - bar.w / 2 + .15, 7.3, bar.d), [0, -1, 0]);
+  assert.equal(rim?.object.name, 'Tuck Room: ipic-veined-marble');
+  assert.ok(well && well.point.y < rim.point.y - .1, `well ${well?.point.y} under rim ${rim?.point.y}`);
+});
+
+test('P13: a black steel rack hangs over the island, glassware below it and plants on it', () => {
+  const bar = fixture('ipic-bar'), seen = new Map();
+  for (let a = bar.a - bar.w / 2 + .05; a < bar.a + bar.w / 2; a += .05) for (let d = bar.d - bar.l / 2 + .05; d < bar.d + bar.l / 2; d += .05) {
+    const hit = hitFrom(at(a, 7.3, d), [0, 1, 0]);
+    if (hit) seen.set(hit.object.name, Math.min(seen.get(hit.object.name) ?? Infinity, hit.point.y));
+  }
+  for (const name of ['Tuck Room: ipic-stemware', 'Tuck Room: ipic-black-steel']) assert.ok(seen.get(name) < 9.2, `${name}: ${seen.get(name)} (${[...seen.keys()]})`);
+  // Plants sit on the rack: looking down onto it from under the beams meets greenery.
+  let planted = 0;
+  for (let d = bar.d - bar.l / 2 + .2; d < bar.d + bar.l / 2; d += .2) if (/Tuck Room: ipic-(pothos|hanging-greenery)/.test(hitFrom(at(bar.a, 9.5, d), [0, -1, 0])?.object.name ?? '')) planted++;
+  assert.ok(planted >= 6, `${planted} plants seen on the rack`);
+});
+
+test('P14: dense pothos trails from timber beams, all of it above the tallest accepted body', () => {
+  const bar = fixture('ipic-bar');
+  let leafy = 0, rays = 0;
+  for (let a = 2.9; a <= 6.1; a += .2) for (let d = 20.3; d <= 25.3; d += .25) {
+    if (over(bar, a, d, .3)) continue;
+    rays++;
+    if (hitFrom(at(a, 8.2, d), [0, 1, 0])?.object.name === 'Tuck Room: ipic-pothos') leafy++;
+  }
+  assert.ok(leafy / rays >= .4, `pothos covers ${leafy} of ${rays} upward views`);
+  const pothos = meshes.find(item => item.name === 'Tuck Room: ipic-pothos'), v = new THREE.Vector3();
+  const position = pothos.geometry.attributes.position;
+  let lowest = Infinity;
+  for (let i = 0; i < position.count; i++) {
+    v.fromBufferAttribute(position, i).applyMatrix4(pothos.matrixWorld);
+    if (!over(bar, v.x, -v.z)) lowest = Math.min(lowest, v.y);
+  }
+  assert.ok(lowest >= 6 + AVATAR_ENVELOPE.height, `the lowest leaf over walkable floor is at ${lowest.toFixed(2)}`);
 });

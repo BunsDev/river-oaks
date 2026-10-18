@@ -12,6 +12,10 @@ export const IPIC_PLANTERS = Object.freeze([[-4.8, 0, 1.6, 1.8], [5.7, 0, 1.6, 1
 // IMG_9758 (photo review P11; Val, 2026-10-18): its seat line and the centres of its two arms.
 export const IPIC_SOFA_D = 20.6;
 export const IPIC_SOFA_ARMS = Object.freeze([-5.35, -2.85]);
+// The Tuck Room's island bar, as in IMG_9756 (photo review P13; Val, 2026-10-18): its counter top's
+// extent, which its collider follows. The back bar starts at a = IPIC_BACK_BAR, leaving an aisle behind.
+export const IPIC_BAR = Object.freeze({ a: 4.6, d: 23, w: 1.6, l: 3.9 });
+export const IPIC_BACK_BAR = 6.28;
 // The auditorium screen, independent of what plays on it (#364/#365): centre
 // across the room (a) and above the auditorium floor (y), plane depth (d) and
 // size in metres, about 3:1. A film fits inside it; see ipic-screening.js.
@@ -67,11 +71,11 @@ export function configureIpicRoom(room) {
     block('ipic-side-wall', (room.aMax + 2.65) / 2, d, room.aMax - 2.65, length, flight.base, 6.2);
   }
   block('ipic-mural-wall', 4.7, 13.72, 3.4, .15, 3, 3.2);
-  block('ipic-bar', 4.45, 23, 1.1, 4.2, 6, 1.1);
+  block('ipic-bar', IPIC_BAR.a, IPIC_BAR.d, IPIC_BAR.w, IPIC_BAR.l, 6, 1.1);
   // Solid parts that were drawn without collision (#364): the Tuck Room back
   // shelving and wall, the IPIC Express counter, the decorative lift front and
   // the auditorium's aisle handrail. Each sits off every public route.
-  block('ipic-bar-shelves', (5.675 + room.aMax) / 2, 23, room.aMax - 5.675, 4.8, 6, 3.3);
+  block('ipic-bar-shelves', (IPIC_BACK_BAR + room.aMax) / 2, 23, room.aMax - IPIC_BACK_BAR, 4.8, 6, 3.3);
   block('ipic-express-counter', 5.4, 25.62, 1.5, .45, 6, 1.1);
   block('ipic-lift-front', 5.3, 5.85, 1.85, .2, 0, 2.8);
   block('ipic-aisle-rail', -5.55, 30, .05, 6.05, 6, .92);
