@@ -10457,6 +10457,43 @@
       "pr": 427
     },
     {
+      "id": "wine-pong-dynamic-throw-20261015",
+      "title": "Review and improve wine pong stance, release animation, and table views",
+      "status": "active",
+      "branches": [
+        "feat/wine-pong-dynamic-throw-20261015"
+      ],
+      "owner": "codex-root-wine-pong-dynamic-throw-20261015",
+      "leaseUntil": "2026-10-15T18:50:00.000Z",
+      "updatedAt": "2026-10-15T17:47:00.000Z",
+      "nextAction": "Review draft PR #448 and its exact-head checks; keep camera occlusion, touch target selection, audio, and human play/accessibility acceptance as follow-up before declaring the experience complete.",
+      "ledger": "docs/superpowers/plans/2026-10-15-wine-pong-dynamic-throw-review.md",
+      "requiredChecks": [
+        "Position-aware aim/landing/replay behavioral tests",
+        "Plaza wine pong browser journey with view and animation review",
+        "pnpm run verify",
+        "Exact-head hosted preview before merge"
+      ],
+      "filesOwned": [
+        "preview/src/wine-pong-rules.js",
+        "preview/src/plaza-wine-pong.js",
+        "preview/src/plaza-wine-pong.css",
+        "preview/src/plaza-salon-plan.js (wine pong geometry)",
+        "preview/src/plaza-salon.js (wine pong table mirror)",
+        "preview/tests/wine-pong.test.js",
+        "preview/e2e/plaza-wine-pong.js",
+        "docs/superpowers/plans/2026-10-15-wine-pong-dynamic-throw-review.md",
+        "docs/superpowers/plans/README.md (generated index)",
+        "docs/project-management/tasks.json (this task only)",
+        "preview/src/main.js (wine pong camera callback)",
+        "docs/multiplayer.md (wine pong play instructions)",
+        "preview/src/player-avatar.js (wine pong throw action)",
+        "preview/src/resident-gestures.js (wine pong throw pose)",
+        "preview/tests/resident-gestures.test.js (throw pose regression)"
+      ],
+      "pr": 448
+    },
+    {
       "id": "garden-office-416",
       "title": "#416 Garden Office realism pilot (coding scope): one desk/chair family, glazing, finishes, light/planting sample, catalog records and compatibility on the #414 interface",
       "status": "blocked",
@@ -11561,6 +11598,30 @@
       ],
       "nextAction": "Update the readiness ledger's tag section for the published release; copy release-0-2-0-readiness, register-sweep-20261015-1b2, release-0-2-0-tag and this entry onto main's register; PR and land.",
       "updatedAt": "2026-10-15T20:08:36.760Z"
+    },
+    {
+      "id": "plaza-game-layout-20261015",
+      "title": "Expandable plaza boards and clear game selection",
+      "status": "active",
+      "branches": [
+        "feat/plaza-game-layout-20261015"
+      ],
+      "owner": "codex-plaza-game-layout-20261015",
+      "updatedAt": "2026-10-16T06:50:27.571433+00:00",
+      "leaseUntil": "2026-10-16T08:50:27.571433+00:00",
+      "nextAction": "Verified main a00a4d19 integration for draft PR #468: core11/11, browser68 checks, unchanged game hashes; all other tasks match main. Push signed integration commit and inspect hosted checks. No merge or deployment authorized; preserve worktree and evidence. Human accessibility and physical-device acceptance remain unverified.",
+      "filesOwned": [
+        "preview/src/plaza-table-games.js",
+        "preview/src/plaza-table-games.css",
+        "preview/e2e/plaza-game-layout.js",
+        "docs/superpowers/plans/2026-10-15-plaza-game-layout.md"
+      ],
+      "requiredChecks": [
+        "pnpm run verify",
+        "Focused game layout browser journey with desktop expanded, narrow and keyboard checks"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-15-plaza-game-layout.md",
+      "pr": 468
     },
     {
       "id": "release-0-2-1-signed",
