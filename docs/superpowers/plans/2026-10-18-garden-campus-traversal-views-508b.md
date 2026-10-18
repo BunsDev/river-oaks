@@ -74,12 +74,32 @@ See the #505 tracker, "#508 slice (b) plan":
 
 ## Evidence
 
-- `node --test preview/tests/garden-campus-circulation-views.test.js`: 3/3 at the first commit.
+- `node --test preview/tests/garden-campus-circulation-views.test.js`: 3/3 at `706429f1`.
+  On the candidate `d8fe456a`, the circulation and #511 finish tests pass 12/12.
+- **Render.** `node preview/e2e/garden-campus-views.mjs gardens circulation` on the #512
+  candidate `d8fe456a`:
+  - candidate contents: #507 `086c197e`, #509, #510 `465785d2`, #511 `b73cf65a` and this slice;
+  - setup: M3 Max, ANGLE Metal, 1280×800, Smooth, 15:00, interface hidden, under the browser
+    lock, host load ~40;
+  - result: 14 views passed with no page errors. Outputs are
+    `docs/design/garden-campus/circulation/sheet-day.jpg` (each render beside its plan crop)
+    and `views-2026-10-18.json` (poses, draw calls, triangles, frame times).
+
+## Findings from the views (for #508, river-oaks-c5)
+
+1. **Galleries are not separated from the suites.** All three Floor 4 galleries render without
+   the gallery or spine walls and the closed suite door frames. #510's suite desks read as one
+   open floor with the public gallery. This is the agreed #508 scope (circulation walls and
+   suite door frames). It blocks release: until it lands, the campus shows private suites as
+   open public space.
+2. **The ceiling is dark.** Gallery ceilings render as an unlit dark slab underside. That is
+   finish scope; the gallery and landing finishes are c5's.
+3. Skywalks, terraces and roofs read as #511 finished them: planted troughs, glass guards,
+   timber decks and headhouses. The plan crops place every camera on its surface.
 
 ## Next action
 
-Merge this branch into the #512 candidate and run
-`node preview/e2e/garden-campus-views.mjs gardens circulation` under the browser lock.
-Commit the sheet and receipt, and review them against the plans. #511's sheets cover the
-unoccupied finish from a distance; these cover where a resident stands. Rerun after #508's
-gallery finishes land.
+1. When #508's first push lands, merge c5's branch here and build the two-player
+   journey against its protocol.
+2. Re-render the circulation set once #508's gallery walls, suite door frames and finishes
+   land, and confirm findings 1 and 2 are closed.
