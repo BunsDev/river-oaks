@@ -375,6 +375,45 @@ limits are integrity envelopes for this catalog, not interactive design controls
 or device performance promises.
 
 
+### Provenance of each exposed look (2026-10-18)
+
+The human-only catalog has 11 looks, built on three pinned rigs. `CHARACTER_ASSETS`
+in `character-assets.js` pins each rig's bytes and SHA-256 and points to its source
+receipt. `character-definition.test.js` refuses a look whose rig is not pinned,
+and `scripts/tests/character-assets-audit.test.js` fails a changed hash or an
+unlicensed or mismatched receipt.
+
+| Look | Rig (SHA-256 prefix) | Generator | License (receipt) | Source assets in the rig |
+| --- | --- | --- | --- | --- |
+| jevica, sable-human, woman-tailored, lyra-human, forest-aristocrat-feminine | jevica (`722b96e2fd77`) | MPFB 2.0.17 / Blender 4.5.3 LTS | CC0-1.0 (`jevica.sources.json`) | skin young_asian_female, hair long01, eyes high-poly, eyelashes01, eyebrow001; original fitted shell |
+| rowan-human | man-tailored (`ae3834fbc9d9`) | MPFB 2.0.17 / Blender 5.2.1 LTS | CC0-1.0 (`sources.json`) | middleage_african_male, male_elegantsuit01, short04, shoes03 |
+| man-tailored, man-workwear, kai-explorer, kai-noir, forest-aristocrat | man-casual (`e7ac712585ba`) | MPFB 2.0.17 / Blender 5.2.1 LTS | CC0-1.0 (`sources.json`) | young_caucasian_male, male_casualsuit02, short01, shoes01 |
+
+The source assets are MakeHuman's CC0 system assets. Their credits are in
+`preview/public/assets/characters/README.md` and `LICENSE-CC0.md`. MPFB itself is a
+GPL build tool and is not shipped.
+
+Everything else a look wears is authored in this repository: no third-party
+garment, hair or texture asset is loaded for these looks.
+
+- **Jevica:** `player-costume.js` → `jevica-costume.js`, with `jevica-drape.js`,
+  `jevica-embroidery.js`, `bodice-fitting.js` and `riding-clothes.js`.
+- **The other ten:** `romance-look.js` → `reference-archetypes.js`.
+- **Baked deformation data** carries its own receipt, which hashes the authored
+  inputs, the rig and the generator, and states its provenance:
+
+  | Bake receipt | Looks |
+  | --- | --- |
+  | `coat-tail-morph-receipt.json` | man-tailored, man-workwear, kai-noir |
+  | `lyra-drape-morph-receipt.json` | lyra-human |
+  | `silvan-drape-morph-receipt.json` | forest-aristocrat, forest-aristocrat-feminine |
+  | `skirt-seat-morph-receipt.json` | sable-human |
+  | `vesper-skirt-morph-receipt.json` | woman-tailored |
+
+This covers the shipped catalog's assets and their licenses. It doesn't cover
+npm dependency licenses (three.js and others), which are pinned in
+`pnpm-lock.yaml` and reviewed by the dependency-review check, not here.
+
 ## Runtime pose diagnostics (#442, incomplete acceptance)
 
 Run `pnpm run test:experience character-poses` to capture the canonical rose/espresso
