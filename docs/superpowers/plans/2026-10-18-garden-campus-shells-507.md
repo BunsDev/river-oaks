@@ -86,6 +86,50 @@ campus.
 - Focused existing suites (debug-geometry, district, garden-campus-layout, places,
   room-ground-clip, store-rooms, venue-rooms, walking, world-surface): 58/58.
 
+## Browser views (local, at `0eb42839`)
+
+`node preview/e2e/garden-campus-views.mjs both` uses #506's five contract cameras: garage
+(default) against the campus revision on this Mac (Apple M3 Max, ANGLE Metal, 1280×800,
+`smooth` preset, sun hour 15). Load was about 31–35 (1 min) and 72–92 (5/15 min).
+Screenshots are in `output/playwright/garden-campus-views/`; they are local and not
+committed.
+
+What the screenshots show:
+
+- **Aerial:** the garage is gone. Three stepped towers stand in its parcel with terrace
+  decks and guards, headhouses, the green-roofed café, the pool, paths and the planted
+  platform. The neighbouring buildings and streets are unchanged.
+- **Street under B12:** the 23 m skywalk spans above the P2 cross-route from the T1 to the
+  T2 facade, and the street walker's camera is on the ground.
+- **Floor 4 on B12:** the deck runs between planted edge zones and glass guards to T2's
+  open 3 m south portal.
+
+| Camera | Revision | Draw calls | Triangles |
+| --- | --- | --- | --- |
+| 01-southeast-aerial | garage | 1355 | 4017928 |
+| 02-street-under-b12 | garage | 1042 | 3530544 |
+| 03-floor4-bridge-walk | garage | 562 | 2337989 |
+| 04-northwest-high-oblique | garage | 1232 | 3693091 |
+| 05-office-terrace-outlook | garage | 1022 | 3230036 |
+| 01-southeast-aerial | gardens | 1367 | 3988312 |
+| 02-street-under-b12 | gardens | 1059 | 3513484 |
+| 03-floor4-bridge-walk | gardens | 579 | 2320929 |
+| 04-northwest-high-oblique | gardens | 1244 | 3663475 |
+| 05-office-terrace-outlook | gardens | 1040 | 3212988 |
+
+Every view adds 12–18 draw calls and about 17,000–30,000 fewer triangles than the garage.
+The garage's roof plant and mass go, and the instanced shells come in.
+
+## Hosted CI
+
+- PR #523 at `0eb42839`: every reported check passed (read over REST at about 17:05Z).
+  That covers the aggregate `preview`, `preview checks` (pnpm test and the Redis server
+  suite), `preview experience (places)`, `preview experience (streets)`,
+  `preview shared (development)`, `preview shared (required)`,
+  `preview shared (worlds-and-creator)`, `verify (3.11)`, `verify (3.13)` and
+  `dependency-review`.
+- The penthouse idle-slice test that failed locally at load 145 or more passes there.
+
 ## Gaps and owners
 
 - Upper-level movement, portals and gallery rendering: #508, river-oaks-c5.
@@ -93,8 +137,8 @@ campus.
 - Finishes, planting, lighting and resource budgets: #511.
 - The garage → campus checkpoint migration and rollback matrix: #512. Today a garage
   checkpoint fails closed against the campus, by test.
-- Browser/visual evidence on the actual district with the campus revision: still to
-  capture.
+- Frame timing per view: the first capture's script read the render audit's records
+  wrongly. It is fixed for the next run; frame budgets are #511's measurement.
 
 ## Next action
 
