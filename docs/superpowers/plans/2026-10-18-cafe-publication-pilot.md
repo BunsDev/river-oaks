@@ -379,12 +379,43 @@ issue.
   `preview`. The `creator-approved-cafe` journey passed on Linux software rendering in
   `preview shared (worlds-and-creator)` in 2 min 48 s, run 39108965475.
 
+## Clean gate run
+
+`pnpm run verify` (core) passed in one run on `cfbb7ba0` with a clean tree, 09:28–09:32Z
+(receipt `.runtime/agent/core.json`). All 11 tasks passed:
+
+| Task | Result |
+| --- | --- |
+| Agent | 116/116 |
+| Preview | 3,406/3,407, 0 failed, 1 skipped |
+| Server | 608 passed, 157 Redis skips (no `REDIS_URL` in core) |
+| Desktop | 76/76 |
+| Build | passed |
+| Python | lint, format and tests passed |
+| Demo and demo-verify | passed |
+| Secrets | passed |
+
+## Decisions (Val, 2026-10-18)
+
+- **#489:** stays a draft. The pilot ends as a reviewed local pilot; landing is a later
+  decision.
+- **Production:** activation beyond local fixtures and revocation semantics are deferred,
+  with no follow-up issue for now.
+- **Street defect:** filed as #491.
+- **Human review:** VoiceOver, touch, uncoached use, phones, other GPUs and packaged
+  builds are tracked under #417.
+- **Verification accepted as recorded:**
+  - every `verify full` stage passed on `cfbb7ba0` in its own run;
+  - core passed in one clean run;
+  - hosted CI passed 17/17.
+  - A second single `verify full` attempt (09:35Z) again stopped only at the penthouse
+    idle-slice test, at 253.2 ms under load average 104. Base fails that test too under
+    load.
+
 ## Next step
 
-1. **Review:** draft PR #489 is pushed with Val's approval; merging and deploying are
-   not granted.
-2. **Val:** decide whether approved spaces may ever be activated outside local fixtures,
-   and what revocation means for a world already showing one.
+1. **If Val decides to land #489:** update it from `main`, then `pnpm run land 489`.
+   Merging and deploying are not granted by the pilot.
 3. **Separate issue:** the creator-street ground mismatch above.
 4. **Optional:** `pnpm run verify full` (Redis, audit, history scan and every browser
    journey) on an unloaded machine.
