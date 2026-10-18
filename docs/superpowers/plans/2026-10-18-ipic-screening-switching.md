@@ -80,8 +80,9 @@ Each item has a regression that failed on main; output saved with this session's
 | Colour, the same run (16:9 test film, paused, square-on view) | Screen against the direct frame: black 0 → 0; grey 128 → 143; white 255 → 227. Identical with house lights at 1 and 0.25: the film is not lit twice. The difference is the game's global ACES tone mapping (exposure 0.95) on the screen's emission. Black is exact and white is not washed out, so no screen-specific change was made; a renderer-wide change is out of scope. For design review |
 | In-world, seated eye of recliner 1-1, Metal ANGLE, real pipeline (scratch `world-screen-runner.mjs`) | Branch `e602cdcc`: after Stop the screen is idle (its own material, not attached); switching to the fixture, 0 of 44 frames showed a frame while loading. Main `153471bc`: after Stop the screen stayed attached on a frame of the short, and 3 of 4 logged switch frames showed the old film while the new loaded |
 | `node preview/e2e/ipic-screening-runner.mjs` (branch), run 1 | Not run: the disk filled (ENOSPC on the shared browser-lock file) |
-| Same journey on main (scratch runner, main's code) | Pending: expected to fail at "a stopped film leaves the screen idle" |
-| In-world seated-eye capture | Pending |
+| Same journey on main (scratch runner, main's code) | **Failed** at "a stopped film leaves the screen idle": `{state: idle, attached: true}`, the short's last frame kept after Stop |
+| Hosted CI at `6eee1ce9` (Linux, Mesa) | All checks green. The two-browser journey: Stop leaves the screen idle, and the fixture (640×360) replaced the short (1280×720) with its own texture, with no stale frame in 64 rendered frames |
+| Integrated soak (#520 `2df7a0a8`: #498 + #499 + #500 + #502), `node preview/e2e/ipic-screening-soak-runner.mjs 10`, 17:15–17:20Z, load 29–53, SwiftShader | **Passed.** Warm-up plus 10 cycles, each changing the film from the short to the fixture: its own 640×360 texture on screen in 1.1–4.1 s; 11/11 late joins within 500 ms in 3–9 ms; presented frames 8–34 ms apart; no growth in media elements, audio contexts, textures or geometries. Main's baseline soak (one film): 11/11 |
 | `pnpm run verify` at `3c440796` | Agent 121/121; preview 3,538/3,540 (one existing skip; one failure is the pre-existing `office-penthouse-furnishings` "short idle slices" 40 ms budget at load 50–100, which fails alone on main too: 200.7 ms on main, 115.2 ms on the branch). The remaining stages, run with `node scripts/agent.mjs verify`: server 668 + 204 Redis skips, desktop 76/76, build, python 141, security: all passed |
 
 ## Gaps and owners
@@ -92,5 +93,6 @@ Each item has a regression that failed on main; output saved with this session's
 
 ## Next step
 
-Read the queued browser results, inspect the auditorium screen at player height in the game, run `pnpm run verify`,
-then commit (signed) and open the PR.
+Done: browser results, the in-world screen at player height, `pnpm run verify`, signed commits and draft PR #513
+(hosted CI green). Remaining: Val's approval, then `pnpm run land 513` before #514, #515 and #520. Device rows
+(Safari/iOS, other GPUs) and the colour design review stay with Val under #502.
