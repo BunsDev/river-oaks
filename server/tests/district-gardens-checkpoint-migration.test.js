@@ -17,6 +17,7 @@ import { createWalkingEnvironment } from '../../preview/src/walking.js';
 import { DISTRICT_REVISION_GARDENS, attachGardenCampus } from '../../preview/src/garden-campus-district.js';
 import { campusToSource, sourceToCampus } from '../../shared/garden-campus-layout.js';
 import { beforeTowerRaise } from './district-history.js';
+import { createCampusCommands } from '../../preview/src/garden-campus-model.js';
 
 const hash = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const resign = checkpoint => { const { checksum: _checksum, ...envelope } = checkpoint;return { ...envelope, checksum: hash(envelope) }; };
@@ -103,6 +104,39 @@ test('the switch refuses other worlds, another campus revision, corruption and l
   assert.equal(attempt(foreign.checkpoint(), garage).ok, false);
   // The campus overlay itself is what makes the forward target; a stray copy is refused.
   assert.throws(() => attachGardenCampus(gardens));
+});
+
+test('a configuration rollback keeps every lease inert, byte for byte, and switching back honours it', async () => {
+  let time = Date.UTC(2026, 9, 18, 12);
+  const options = { now: () => time, campusOperators: ['operator'] };
+  const campus = createSharedWorld(gardens, options);
+  for (const id of ['operator', 'alice']) assert.equal(campus.join({ userId: id, name: id }).ok, true);
+  const client = id => createCampusCommands({ worldId: 'river-oaks', send: async message => { time += 500;return campus.command(id, message); } });
+  const offered = await client('operator').issue({ unitId: 'T1-F2-W-S', tenantId: 'alice', startsAt: time, endsAt: time + 7 * 86_400_000 });
+  assert.equal(offered.ok, true, offered.message);
+  assert.equal((await client('alice').accept(offered.lease)).ok, true);
+  assert.equal(campus.campusSuiteAccess('alice', 'T1-F2-W-S').role, 'tenant');
+  const saved = campus.checkpoint();
+  // Roll back to the garage: the lease section rides along untouched and grants nothing.
+  const rolled = recoverDistrictGardensCheckpoint({ worldData: garage, checkpoint: saved, ...options });
+  assert.equal(rolled.ok, true, rolled.error);
+  assert.deepEqual(rolled.checkpoint.payload.campus, saved.payload.campus);
+  const inert = createSharedWorld(garage, options);
+  assert.deepEqual(inert.restore(rolled.checkpoint), { ok: true });
+  assert.equal(inert.campusSuiteAccess('alice', 'T1-F2-W-S').reason, 'campus_unavailable');
+  assert.equal(inert.command('alice', { type: 'campus', action: 'list' }).error, 'campus_unavailable');
+  time += 86_400_000;inert.step?.(0.1);
+  assert.deepEqual(inert.checkpoint().payload.campus, saved.payload.campus, 'nothing expires or changes while the campus is absent');
+  // Switching the campus back on honours the lease.
+  const back = recoverDistrictGardensCheckpoint({ worldData: gardens, checkpoint: inert.checkpoint(), ...options });
+  assert.equal(back.ok, true, back.error);
+  const again = createSharedWorld(gardens, options);
+  assert.deepEqual(again.restore(back.checkpoint), { ok: true });
+  assert.equal(again.campusSuiteAccess('alice', 'T1-F2-W-S').role, 'tenant');
+  // A lease that ended while the campus was away admits nobody once it returns.
+  time += 30 * 86_400_000;
+  const late = createSharedWorld(gardens, options);late.restore(back.checkpoint);late.step?.(0.1);
+  assert.equal(late.campusSuiteAccess('alice', 'T1-F2-W-S').ok, false);
 });
 
 const testRedis = (name, fn) => test(name, { skip: !process.env.REDIS_URL }, fn);
