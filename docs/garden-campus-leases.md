@@ -58,7 +58,7 @@ landing lies on public support and every door's inside point lies in its suite.
 
 | Record | States | How it moves |
 | --- | --- | --- |
-| Request | `pending` → `offered`, `declined`, `cancelled`, `expired`, `retired` | A resident asks for a suite with dates. An operator answers by offering a lease (`requestId`) or declining. The resident can cancel. A request lapses after 14 days. |
+| Request | `pending` → `offered`, `declined`, `cancelled`, `expired`, `retired` | A resident asks for a suite with dates. An operator answers by offering a lease (`leaseRequestId`) or declining. The resident can cancel. A request lapses after 14 days. |
 | Lease | `offered` → `active`, or ended: `declined`, `withdrawn`, `superseded`, `offer_expired`, `retired` | An operator offers a lease to an account, with or without a request. The tenant accepts it or declines it (`release`). The operator can withdraw it (`revoke`). An offer lapses after 7 days, or at the end of its term if that comes first. When another offer for the suite is accepted, the rest are `superseded`. |
 | Lease | `active` → ended: `released`, `revoked`, `expired`, `retired` | The tenant releases it, the operator revokes it, or the term ends. The operator can renew an active lease, which only extends its end. |
 
@@ -88,14 +88,18 @@ command.
 | --- | --- | --- |
 | `list` | anyone | none (and no common fields) |
 | `request` | resident | `unitId, startsAt, endsAt` |
-| `cancel` | requester | `requestId` |
-| `decline` | operator | `requestId` |
-| `issue` | operator | `unitId, tenantId, startsAt, endsAt`, optional `requestId` |
+| `cancel` | requester | `leaseRequestId` |
+| `decline` | operator | `leaseRequestId` |
+| `issue` | operator | `unitId, tenantId, startsAt, endsAt`, optional `leaseRequestId` |
 | `accept`, `release` | tenant | `leaseId, expectedVersion` |
 | `renew` | operator | `leaseId, expectedVersion, endsAt` |
 | `revoke` | operator | `leaseId, expectedVersion` |
 | `grant` | tenant | `leaseId, expectedVersion, peerId` |
 | `ungrant` | tenant, or the guest themselves | `leaseId, expectedVersion, peerId` |
+
+A request is named by `leaseRequestId`, never `requestId`. The transports use a
+top-level `requestId` to route each reply and remove it before the world sees the
+command, so replies keep that id.
 
 Every action except `list` also carries the common fields:
 
