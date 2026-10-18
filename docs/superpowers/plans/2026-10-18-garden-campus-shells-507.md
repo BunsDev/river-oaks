@@ -130,6 +130,64 @@ The garage's roof plant and mass go, and the instanced shells come in.
   `dependency-review`.
 - The penthouse idle-slice test that failed locally at load 145 or more passes there.
 
+### Desktop macOS e2e ("W moves the player: 0.00 m"): runner timing that main shares
+
+The Desktop workflow's macOS job failed on most campus heads checked (`3e58f384`,
+`465785d2`, `60ebf88c`, `1e6d32d7`, `0b833b31`) at the walk check. Ubuntu and Windows
+passed everywhere. It was bisected on push-only, throwaway `diag/desktop-mac-*` branches.
+They ran macOS only, logged the town socket's life, renderer long tasks over 2 s and the
+server heartbeat's terminations, and ran 3 attempts per variant.
+
+- **Round two (runs 39173762547 and 39173766491, and the two #507 halves):**
+  - main 2/3 passed;
+  - #507 2/3 passed;
+  - #507 with main's client, and #507 with main's server, passed every attempt that ran.
+  - Both failures are the same step.
+- **Mechanism (in every run, passes included):**
+  1. While loading, the renderer blocks for 20–28 s. The town socket's handshake completes
+     inside that block, so the page never answers the server's 30 s heartbeat ping
+     (`server/app.js`), and the server terminates the socket.
+  2. The page sees the 1006 close 11–28 s after the terminate, because its main thread is
+     still busy. `lost()` opens the gate, which takes
+     focus and clears the held key.
+  3. The rejoin's `onCorrection` puts the player back at the server's pose.
+  4. A run fails when this lands inside the 1.2 s W hold. Main's attempt 1 closed at 76.4 s
+     and reopened at 77.2 s; #507's attempt 3 at 87.9 s and 88.6 s. A run passes when the
+     rejoin finishes before the hold, as at 71.3 s and 72.6 s.
+  - The earlier suspect, the 8 s staleness watchdog (4901), never fired.
+- **Fix (harness only, `desktop/e2e.js`):**
+  - The hold watches `#canvas-host[data-multiplayer]` from before W goes down until the
+    distance is read, starting from the state it finds.
+  - A hold that walked 0.5 m or less while the town was away, at its start or during it,
+    is repeated once the town is `joined` again, at most twice.
+  - A hold with the town joined throughout still has to walk more than 0.5 m.
+  - The receipt records the repeated holds (`report.walk.repeated`).
+- **Proof (round three, `diag/desktop-mac-{nofix-forced,fix-forced,fix}`):**
+  - A diag-only hook drops every town socket from the server the moment W first goes down.
+  - `nofix-forced` (run 39174839205, the old harness) failed 3/3 at 0.00 m. The hook found
+    no socket each time: the heartbeat had already dropped the town. The page processed the
+    close as loading finished (77.8 s, 90.6 s and 74.4 s), the hold began about 0.2 s later,
+    and the rejoin opened inside it (78.5 s, 91.7 s and 75.4 s). The natural rate on a
+    campus head is therefore well above round two's 1 in 3.
+  - `fix` (run 39175116721, this harness on `522f39b1`) passed 3/3. Those runners opened
+    the socket early (14–33 s), so the heartbeat never fired and no hold was repeated.
+  - `fix-forced` (run 39175120310) passed the walk check 3/3, and each attempt repeated
+    its first hold:
+    - two natural drops: 0 m at `disconnected → joined`, then 1.74 m and 1.87 m;
+    - the hook dropping a live socket: 0.03 m at `joined → disconnected → joined`, then
+      1.72 m.
+    Two of the three attempts finished the suite.
+  - **Residual (not fixed here):** on the slowest runner (ready after 108.7 s), the
+    reloaded page's socket was also dropped by the heartbeat. The gate closes an open
+    settings dialog when it locks (`multiplayer-client.js:75`), so the post-reload
+    `#settings-dialog .settings-header button` click timed out after 120 s. That is 1 in 15
+    logged attempts, the same root cause at a later step. `land`'s one rerun covers it; the
+    product follow-up below removes it.
+- **Product follow-up (not changed here):** a client whose renderer blocks for over 30 s
+  right after the handshake is dropped by the heartbeat and rejoins. This belongs to the
+  connection-continuity owner (#447's heartbeat and grace policy), for example with a
+  two-strike heartbeat. It is not part of the campus package.
+
 ## Found downstream
 
 - **Halls and café had no room summary (found by #510's hosted journey, run 39154402265).**
@@ -186,6 +244,11 @@ The garage's roof plant and mass go, and the instanced shells come in.
 
 ## Next action
 
-Full preview/server suites, then a signed commit, then send the SHA to river-oaks-c5 for
-#508. After that, browser capture with `RIVER_OAKS_DISTRICT_REVISION=river-oaks-gardens-3`,
-the core verify, push and draft PR.
+After main `9582091f` was merged (`522f39b1`), the campus suites and #534's render-audit and
+remote-player tests pass 66/67, with the Redis transport case skipped without
+`REDIS_URL`. Next:
+
+1. Push the harness fix.
+2. Get the head's preview shards and its macOS desktop job green.
+3. Hand the verified head SHA to river-oaks-b5, which lands the stack (Val's decision):
+   #523 → #537 → #528 → #527 → #525.
