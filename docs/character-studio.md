@@ -83,6 +83,9 @@ swatches. A polite live region announces undo, redo, Surprise me, favorites and
 before/after. Ctrl/Cmd+Z works while a choice has focus. Remix varies only the
 current character's validated forms, wardrobes and colors. Surprise me picks any
 permitted look. Both always stage a look different from the current one.
+On phones the preview is sticky above the steps, so a change is visible while
+it is made. View labels stay in the accessibility tree, and scroll padding keeps
+a focused choice from landing under the preview.
 
 V2 adds allowlisted dress and hair colors for Sable human and fox. Other looks
 retain authored colors with explicit compatibility feedback. V1 remains readable.

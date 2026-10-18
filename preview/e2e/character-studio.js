@@ -61,9 +61,14 @@ async page => {
     const mobile=phone.getByRole('dialog',{name:'Character studio'});await mobile.locator('[data-character=sable]').tap();
     await phone.waitForFunction(()=>document.querySelector('.cs-preview').dataset.appearance==='sable-human'&&document.querySelector('.cs-preview').dataset.ready==='true');
     await mobile.getByRole('radio',{name:'Botanical',exact:true}).tap();check(await mobile.getAttribute('data-palette')==='botanical','Touch editing changes the draft');
+    const phoneView=await phone.evaluate(()=>{const preview=document.querySelector('.cs-preview').getBoundingClientRect(),footer=document.querySelector('.cs-footer').getBoundingClientRect(),swatch=document.querySelector('.character-studio [data-palette=botanical]').getBoundingClientRect();
+      return {preview:Math.min(preview.bottom,footer.top)-Math.max(preview.top,0),swatch:swatch.top>=0&&swatch.bottom<=footer.top};});
+    check(phoneView.swatch&&phoneView.preview>=150,`Phone keeps the live preview in view beside the color choices (${Math.round(phoneView.preview)} px)`);
+    await mobile.locator('.cs-workspace').evaluate(n=>n.scrollTop=n.scrollHeight);await mobile.locator('input[name=cs-character]:checked').focus();
+    check(await phone.evaluate(()=>document.activeElement.getBoundingClientRect().top>=document.querySelector('.cs-stage').getBoundingClientRect().bottom),'A focused choice is never hidden under the sticky preview');
     check(await mobile.evaluate(n=>n.scrollWidth<=n.clientWidth),'Phone dialog has no horizontal overflow');
     await mobile.locator('.cs-workspace').evaluate(n=>n.scrollTop=0);await phone.screenshot({path:'output/playwright/character-studio-phone.png'});
-    await mobile.getByRole('button',{name:'Close studio',exact:true}).tap();
+    await mobile.getByRole('button',{name:'Close character studio',exact:true}).tap();
   }finally{await touch.close();}
   const animated=await page.context().browser().newContext({viewport:{width:1440,height:1000},reducedMotion:'no-preference'});
   try{

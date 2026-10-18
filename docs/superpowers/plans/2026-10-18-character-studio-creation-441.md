@@ -138,6 +138,26 @@ and its selectors were moved to the radio groups. After the merge: unit 58/58, a
 `RIVER_OAKS_SHARED_JOURNEY=character-studio-worlds pnpm run test:shared development-world`
 passed with 27 checks in 73 s (`.runtime/cs441/worlds-run.json`).
 
+## Round 2: phone layout (2026-10-18)
+
+- Measured before the change (`.runtime/cs441/phone.mjs`): with the dress swatches
+  on screen, **0 px** of the preview was visible on 390×844 or 375×667. The
+  390 px stage scrolled away with the controls.
+- Change, phones only (≤700 px): the stage is sticky with
+  `--cs-stage-h: clamp(230px, 40dvh, 340px)`. View, Light and Pose share one
+  row; their labels stay in the accessibility tree. The Rotate label is
+  visually hidden. The header is compact. The footer drops its duplicate
+  "Close studio", since the header ✕ also closes and keeps edits. The workspace
+  gets `scroll-padding-top` equal to the stage height.
+- After: 234 px of preview at 390×844 and 163 px at 375×667, beside the swatches.
+  Focus probe (`.runtime/cs441/focusprobe.mjs`): after scrolling to the bottom,
+  focusing the selected character puts it at 527 px, below the stage's bottom edge
+  at 403 px. With scroll padding removed it lands at 358 px, under the stage, so
+  the journey check can fail.
+- `character-studio` journey: 31 checks passed in 97 s
+  (`.runtime/cs441/phone-run.json`). Two new phone checks cover preview visibility
+  and focus not obscured. Unit 58/58. `pnpm run build` passed.
+
 ## Gaps and next steps
 
 Not claimed: human keyboard, VoiceOver or novice acceptance (#444 protocol),
