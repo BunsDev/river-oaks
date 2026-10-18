@@ -12,6 +12,14 @@ async page => {
  const click=async(tab,selector,text)=>{const target=text?tab.locator(selector,{hasText:text}).first():tab.locator(selector).first();await target.waitFor({state:'attached'});await target.evaluate(n=>n.click());};
  // Inside means the HUD's room marker, not the title: the street title at the door also names Grove Offices.
  const hall='campus:T1-F1-hall',inside=(tab,timeout=30000)=>tab.waitForFunction(id=>document.querySelector('#walking-hud')?.dataset.inside===id,hall,{timeout});
+ // Travel requests and their answers per tab, reported if the hall entry fails: the hosted
+ // runner is this journey's only browser evidence while local runs wait on load.
+ const travels=new Map(),watchTravel=tab=>{const log=[],ids=new Set();travels.set(tab,log);
+  tab.on('websocket',ws=>{
+   ws.on('framesent',frame=>{try{const m=JSON.parse(frame.payload);if(m.type==='travel'){ids.add(m.requestId);log.push(`sent ${JSON.stringify(m)}`);}}catch{}});
+   ws.on('framereceived',frame=>{if(typeof frame.payload!=='string'||!frame.payload.includes('"result"'))return;try{const m=JSON.parse(frame.payload);if(ids.has(m.requestId))log.push(`got ${JSON.stringify({ok:m.ok,error:m.error,code:m.code,message:m.message,position:m.player?.position})}`);}catch{}});
+  });};
+ watchTravel(page);
  const intoHall=async tab=>{
   await click(tab,'#campus-panel button','Go to the Grove Offices hall');
   await tab.waitForFunction(()=>/Grove Offices hall/.test(document.querySelector('#campus-panel [role=status]')?.textContent??''),null,{timeout:30000});
@@ -19,7 +27,11 @@ async page => {
   for(let attempt=0;;attempt++){
    await tab.waitForFunction(()=>{const n=document.querySelector('#walking-enter');return n&&!n.hidden&&!n.disabled&&/Step inside Grove Offices/.test(n.textContent);},null,{timeout:30000});
    await tab.locator('#walking-enter').evaluate(n=>n.click());
-   try{await inside(tab,10000);break;}catch(error){if(attempt===2)throw error;}
+   try{await inside(tab,10000);break;}catch(error){
+    if(attempt<2)continue;
+    const hud=await tab.evaluate(()=>({notice:document.querySelector('#walking-notice')?.textContent,position:document.querySelector('#walking-hud')?.dataset.position,enter:document.querySelector('#walking-enter')?.textContent,status:document.querySelector('#campus-panel [role=status]')?.textContent}));
+    throw new Error(`The hall door did not let the resident in: ${JSON.stringify(hud)}; travel: ${(travels.get(tab)??[]).slice(-8).join(' | ')}`);
+   }
   }
  };
  const sitAndOpenDesk=async tab=>{
@@ -99,7 +111,7 @@ async page => {
 
  // A second resident at the next chair has only his own desk.
  const guestContext=await browser.newContext({viewport:{width:1280,height:900}});await guestContext.addCookies([{name:'fixture_session',value:'alice',url:origin}]);
- const guest=await guestContext.newPage();guest.setDefaultTimeout(60000);
+ const guest=await guestContext.newPage();guest.setDefaultTimeout(60000);watchTravel(guest);
  await guest.goto(`${origin}/?motion-debug=1`,{waitUntil:'commit'});await ready(guest);
  await intoHall(guest);
  await guest.locator('#canvas-host').focus();await guest.keyboard.down('KeyD');await guest.waitForTimeout(450);await guest.keyboard.up('KeyD');
