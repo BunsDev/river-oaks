@@ -39,7 +39,7 @@ async page => {
   try {
     await guest.goto(page.url(),{waitUntil:'commit'});
     await guest.waitForFunction(()=>window.__riverMultiplayer?.().connected&&document.querySelector('#canvas-host')?.dataset.playerReady==='true',null,{timeout:90000});
-    await guest.locator('#office-request').waitFor({state:'attached'});
+    await guest.locator('#office-lobby').waitFor({state:'attached'});
     const entrance=await guest.evaluate(async()=>{const {officesFor}=await import('/src/office-contract.js');return officesFor(await(await fetch('/data/district.json')).json())[0].entrance;});
     await guest.locator('#office-lobby').evaluate(b=>b.click());
     await guest.locator('#office-nearby').waitFor({state:'visible'});
@@ -47,16 +47,15 @@ async page => {
     check(await guest.locator('#office-enter').isDisabled(),'An uninvited guest cannot board');
     await guest.locator('#canvas-host').focus();await guest.keyboard.press('KeyF');
     await guest.locator('#office-request-dialog[open]').waitFor();
-    await guest.locator('#office-request-send').click();
     await page.locator('#office-enter').click();
     await page.waitForFunction(()=>document.querySelector('#office-visit')?.open&&document.querySelector('#office-visit').dataset.phase==='office',null,{timeout:60000});
     await page.locator('#office-access').click();
-    await page.locator('#office-management button').filter({hasText:'Accept'}).waitFor({timeout:15000});
-    await page.locator('#office-management button').filter({hasText:'Accept'}).click();
+    await page.locator('#office-management button').filter({hasText:'Invite resident'}).waitFor({timeout:15000});
+    await page.locator('#office-management button').filter({hasText:'Invite resident'}).click();
     await guest.waitForFunction(()=>document.querySelector('#office-enter')?.disabled===false,null,{timeout:15000});
     await guest.locator('#office-enter').click();
     await guest.waitForFunction(()=>document.querySelector('#office-visit')?.open&&document.querySelector('#office-visit').dataset.phase==='office',null,{timeout:60000});
-    check(true,'Jevica accepts the visit request from her office and the guest enters');
+    check(true,'Jevica invites the visitor from her office and the guest enters');
     await guest.screenshot({path:'output/playwright/office-guest.png'});
     await page.locator('#office-management button').filter({hasText:'Revoke access'}).click();
     await guest.waitForFunction(()=>!document.querySelector('#office-visit').open);

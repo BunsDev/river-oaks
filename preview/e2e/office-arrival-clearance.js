@@ -5,7 +5,7 @@ async page => {
   await page.setViewportSize({width:1024,height:900});
   await page.goto('http://127.0.0.1:5173/e2e/fixtures/office-elevator.html');
   await page.waitForFunction(()=>window.officeFixture?.frames.at(-1)?.ready,null,{timeout:90000});
-  const looks=await page.evaluate(()=>window.officeFixture.appearances.flatMap(a=>(a.form==='beast'?['upright','beast']:['upright']).map(movement=>({appearance:a.id,movement}))));
+  const looks=await page.evaluate(()=>window.officeFixture.appearances.flatMap(a=>['upright'].map(movement=>({appearance:a.id,movement}))));
   for(const look of looks){
     await page.evaluate(({appearance,movement})=>window.officeFixture.reset(appearance,movement),look);
     await page.waitForFunction(()=>window.officeFixture.frames.at(-1)?.ready,null,{timeout:90000});
@@ -22,7 +22,6 @@ async page => {
         if(![...box.min,...box.max].every(Number.isFinite)){failures.push({time,error:'nonfinite bounds'});continue;}
         const actor=inspected.actors.find(actor=>actor.id===f.self.id);
         if(actor.appearance!==f.self.appearance||actor.movement!==f.self.movement)failures.push({time,error:'wrong loaded appearance or movement',actor});
-        if(time>1&&f.self.movement==='beast'&&actor.beastMotion<.95)failures.push({time,error:'beast posture did not animate',beastMotion:actor.beastMotion});
         box.min.forEach((v,j)=>envelope.min[j]=Math.min(envelope.min[j],v-actor.position[j]));
         box.max.forEach((v,j)=>envelope.max[j]=Math.max(envelope.max[j],v-actor.position[j]));
         for(const [name,z] of [['rear',4],['front',a.frontPortalZ]])if(box.min[2]<=z+.12&&box.max[2]>=z-.12){

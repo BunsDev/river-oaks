@@ -8,9 +8,10 @@
     "kit:model": 22,
     "kit:texture": 15,
     "kit:reference-image": 9,
-    "repo:model": 4,
+    "repo:model": 31,
     "repo:reference-image": 2,
-    "repo:data": 1
+    "repo:data": 2,
+    "repo:texture": 3
   },
   "assets": [
     {
@@ -997,6 +998,3480 @@
       "sha256": null,
       "availability": "committed",
       "note": "User supplied for this recreation. Underlying venue artwork and marks remain their owners’; no CC0 or third-party redistribution license asserted."
+    },
+    {
+      "id": "repo-penthouse-executive-desk",
+      "kind": "model",
+      "file": "assets/office-penthouse/models/executive-desk.glb",
+      "bytes": 409768,
+      "sha256": "ae6a72643f92997a82851d2b07ed53ba6a78c372899c01dd08be01c98865e6c9",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "executive-desk",
+          "LOD0",
+          "executive-desk_LOD0wood",
+          "executive-desk_LOD0bronze",
+          "executive-desk_LOD0rose-stone",
+          "executive-desk_LOD0objects",
+          "executive-desk_LOD0shade",
+          "LOD1",
+          "executive-desk_LOD1wood",
+          "executive-desk_LOD1bronze",
+          "executive-desk_LOD1rose-stone",
+          "executive-desk_LOD1objects",
+          "executive-desk_LOD1shade",
+          "COL_executive-desk"
+        ],
+        "meshes": 10,
+        "triangles": 5460,
+        "materials": [
+          "bronze",
+          "objects",
+          "rose-stone",
+          "shade",
+          "wood"
+        ],
+        "textures": [
+          [
+            512,
+            512
+          ],
+          [
+            512,
+            512
+          ]
+        ],
+        "bounds": [
+          [
+            -2,
+            2.2351741291171123e-10,
+            -0.800000011920929
+          ],
+          [
+            2,
+            1.2000000476837158,
+            0.800000011920929
+          ]
+        ],
+        "missingTextures": []
+      },
+      "source": "repo",
+      "reference": null,
+      "axes": "x east / y up / z south",
+      "availability": "committed",
+      "package": "office-penthouse",
+      "version": 1,
+      "layout": "office-penthouse-1",
+      "layoutVersion": "office-ipic-baseline-1",
+      "planDigest": "d91c8f172256deee6da29bcd68356b3a83604e5b649e1575bebb49bf8ab2784a",
+      "provenance": "Original procedural geometry and seeded-noise surfaces authored in preview/src/office-penthouse-furnishings.js for #362. No kit art or kit bytes: the desk footprints are the kit’s measured colliders as numbers only (R19, Val, 2026-10-15). No generated or purchased imagery.",
+      "license": "Original work for this repository; no separate license file (the repository has none)",
+      "owner": "design: river-oaks-1b (#362); integration: preview/src/office-penthouse-graybox.js",
+      "triangles": 3252,
+      "meshNodes": 5,
+      "bounds": [
+        [
+          -2,
+          0,
+          -0.8
+        ],
+        [
+          2,
+          1.2,
+          0.8
+        ]
+      ],
+      "stage": "asset-package",
+      "targetDimensions": "4 × 1.6 × 0.76 m (x × d × h)",
+      "lod0Target": 12000,
+      "note": "Executive desk",
+      "programme": "work",
+      "status": "proposed: original art awaiting design review",
+      "pivot": "centre of the floor footprint at floor contact; front +d (seating) or toward -d (displays)",
+      "lods": [
+        {
+          "level": 0,
+          "node": "LOD0",
+          "triangles": 3252
+        },
+        {
+          "level": 1,
+          "node": "LOD1",
+          "triangles": 2208
+        }
+      ],
+      "materials": [
+        "bronze",
+        "objects",
+        "rose-stone",
+        "shade",
+        "wood"
+      ],
+      "textures": [
+        {
+          "id": "repo-penthouse-texture-rose-stone",
+          "colorSpace": "sRGB",
+          "size": [
+            512,
+            512
+          ],
+          "tileMetres": 1.6
+        },
+        {
+          "id": "repo-penthouse-texture-wood",
+          "colorSpace": "sRGB",
+          "size": [
+            512,
+            512
+          ],
+          "tileMetres": 0.9
+        }
+      ],
+      "collision": {
+        "proxy": "COL_executive-desk",
+        "plan": [
+          "obstacle:executive-desk"
+        ]
+      },
+      "anchors": [],
+      "seatHeight": null,
+      "placements": [
+        "executive-desk"
+      ]
+    },
+    {
+      "id": "repo-penthouse-workbench",
+      "kind": "model",
+      "file": "assets/office-penthouse/models/workbench.glb",
+      "bytes": 290468,
+      "sha256": "3ccd765cd11aefdf32da449fc11b0d8fec77de416813df2fac202e290e13db81",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "workbench",
+          "LOD0",
+          "workbench_LOD0wood",
+          "workbench_LOD0bronze",
+          "workbench_LOD0objects",
+          "LOD1",
+          "workbench_LOD1wood",
+          "workbench_LOD1bronze",
+          "workbench_LOD1objects",
+          "COL_workbench"
+        ],
+        "meshes": 6,
+        "triangles": 3240,
+        "materials": [
+          "bronze",
+          "objects",
+          "wood"
+        ],
+        "textures": [
+          [
+            512,
+            512
+          ]
+        ],
+        "bounds": [
+          [
+            -2.5999999046325684,
+            -1.4305114426349519e-8,
+            -0.6000000238418579
+          ],
+          [
+            2.5999999046325684,
+            0.8500000238418579,
+            0.6000000238418579
+          ]
+        ],
+        "missingTextures": []
+      },
+      "source": "repo",
+      "reference": null,
+      "axes": "x east / y up / z south",
+      "availability": "committed",
+      "package": "office-penthouse",
+      "version": 1,
+      "layout": "office-penthouse-1",
+      "layoutVersion": "office-ipic-baseline-1",
+      "planDigest": "d91c8f172256deee6da29bcd68356b3a83604e5b649e1575bebb49bf8ab2784a",
+      "provenance": "Original procedural geometry and seeded-noise surfaces authored in preview/src/office-penthouse-furnishings.js for #362. No kit art or kit bytes: the desk footprints are the kit’s measured colliders as numbers only (R19, Val, 2026-10-15). No generated or purchased imagery.",
+      "license": "Original work for this repository; no separate license file (the repository has none)",
+      "owner": "design: river-oaks-1b (#362); integration: preview/src/office-penthouse-graybox.js",
+      "triangles": 1620,
+      "meshNodes": 3,
+      "bounds": [
+        [
+          -2.6,
+          0,
+          -0.6
+        ],
+        [
+          2.6,
+          0.85,
+          0.6
+        ]
+      ],
+      "stage": "asset-package",
+      "targetDimensions": "5.2 × 1.2 × 0.76 m (x × d × h)",
+      "lod0Target": 12000,
+      "note": "Workbench (two stations)",
+      "programme": "work",
+      "status": "proposed: original art awaiting design review",
+      "pivot": "centre of the floor footprint at floor contact; front +d (seating) or toward -d (displays)",
+      "lods": [
+        {
+          "level": 0,
+          "node": "LOD0",
+          "triangles": 1620
+        },
+        {
+          "level": 1,
+          "node": "LOD1",
+          "triangles": 1620
+        }
+      ],
+      "materials": [
+        "bronze",
+        "objects",
+        "wood"
+      ],
+      "textures": [
+        {
+          "id": "repo-penthouse-texture-wood",
+          "colorSpace": "sRGB",
+          "size": [
+            512,
+            512
+          ],
+          "tileMetres": 0.9
+        }
+      ],
+      "collision": {
+        "proxy": "COL_workbench",
+        "plan": [
+          "obstacle:bench-a",
+          "obstacle:bench-b"
+        ]
+      },
+      "anchors": [],
+      "seatHeight": null,
+      "placements": [
+        "bench-a",
+        "bench-b"
+      ]
+    },
+    {
+      "id": "repo-penthouse-display",
+      "kind": "model",
+      "file": "assets/office-penthouse/models/display.glb",
+      "bytes": 34236,
+      "sha256": "7be346dde3923085e87af2e3d24857370ab6fdc04492d0054cd84d106e2362f9",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "display",
+          "LOD0",
+          "display_LOD0bronze",
+          "display_LOD0graphite",
+          "display_LOD0SCREEN_DYNAMIC",
+          "LOD1",
+          "display_LOD1bronze",
+          "display_LOD1graphite",
+          "display_LOD1SCREEN_DYNAMIC",
+          "COL_display",
+          "SCREEN"
+        ],
+        "meshes": 6,
+        "triangles": 480,
+        "materials": [
+          "SCREEN_DYNAMIC",
+          "bronze",
+          "graphite"
+        ],
+        "textures": [],
+        "bounds": [
+          [
+            -0.3100000023841858,
+            -5.215406578829018e-11,
+            -0.10000000149011612
+          ],
+          [
+            0.3100000023841858,
+            0.48500001430511475,
+            0.05999999865889549
+          ]
+        ],
+        "missingTextures": []
+      },
+      "source": "repo",
+      "reference": null,
+      "axes": "x east / y up / z south",
+      "availability": "committed",
+      "package": "office-penthouse",
+      "version": 1,
+      "layout": "office-penthouse-1",
+      "layoutVersion": "office-ipic-baseline-1",
+      "planDigest": "d91c8f172256deee6da29bcd68356b3a83604e5b649e1575bebb49bf8ab2784a",
+      "provenance": "Original procedural geometry and seeded-noise surfaces authored in preview/src/office-penthouse-furnishings.js for #362. No kit art or kit bytes: the desk footprints are the kit’s measured colliders as numbers only (R19, Val, 2026-10-15). No generated or purchased imagery.",
+      "license": "Original work for this repository; no separate license file (the repository has none)",
+      "owner": "design: river-oaks-1b (#362); integration: preview/src/office-penthouse-graybox.js",
+      "triangles": 240,
+      "meshNodes": 3,
+      "bounds": [
+        [
+          -0.31,
+          0,
+          -0.1
+        ],
+        [
+          0.31,
+          0.485,
+          0.06
+        ]
+      ],
+      "stage": "asset-package",
+      "targetDimensions": "0.62 × 0.2 × 0.47 m (x × d × h)",
+      "lod0Target": 12000,
+      "note": "Display (SCREEN_DYNAMIC)",
+      "programme": "work",
+      "status": "proposed: original art awaiting design review",
+      "pivot": "centre of the floor footprint at floor contact; front +d (seating) or toward -d (displays)",
+      "lods": [
+        {
+          "level": 0,
+          "node": "LOD0",
+          "triangles": 240
+        },
+        {
+          "level": 1,
+          "node": "LOD1",
+          "triangles": 240
+        }
+      ],
+      "materials": [
+        "SCREEN_DYNAMIC",
+        "bronze",
+        "graphite"
+      ],
+      "textures": [],
+      "collision": {
+        "proxy": "COL_display",
+        "plan": [
+          "obstacle:executive-desk",
+          "obstacle:executive-desk",
+          "obstacle:executive-desk",
+          "obstacle:bench-a",
+          "obstacle:bench-a",
+          "obstacle:bench-a",
+          "obstacle:bench-a",
+          "obstacle:bench-b",
+          "obstacle:bench-b",
+          "obstacle:bench-b",
+          "obstacle:bench-b"
+        ]
+      },
+      "anchors": [
+        "SCREEN"
+      ],
+      "seatHeight": null,
+      "placements": [
+        "desk-executive-display-1",
+        "desk-executive-display-2",
+        "desk-executive-display-3",
+        "desk-a1-display-1",
+        "desk-a1-display-2",
+        "desk-a2-display-1",
+        "desk-a2-display-2",
+        "desk-b1-display-1",
+        "desk-b1-display-2",
+        "desk-b2-display-1",
+        "desk-b2-display-2"
+      ]
+    },
+    {
+      "id": "repo-penthouse-task-chair",
+      "kind": "model",
+      "file": "assets/office-penthouse/models/task-chair.glb",
+      "bytes": 154016,
+      "sha256": "b34f4a724f93ed8e0d12236d57061c2a6ad23889fd3b747f068376f181abf2a2",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "task-chair",
+          "LOD0",
+          "task-chair_LOD0graphite",
+          "task-chair_LOD0upholstery",
+          "LOD1",
+          "task-chair_LOD1graphite",
+          "task-chair_LOD1upholstery",
+          "COL_task-chair"
+        ],
+        "meshes": 4,
+        "triangles": 3208,
+        "materials": [
+          "graphite",
+          "upholstery"
+        ],
+        "textures": [],
+        "bounds": [
+          [
+            -0.30180639028549194,
+            -5.364417798858767e-10,
+            -0.31472745537757874
+          ],
+          [
+            0.30180639028549194,
+            1.038214087486267,
+            0.29049840569496155
+          ]
+        ],
+        "missingTextures": []
+      },
+      "source": "repo",
+      "reference": null,
+      "axes": "x east / y up / z south",
+      "availability": "committed",
+      "package": "office-penthouse",
+      "version": 1,
+      "layout": "office-penthouse-1",
+      "layoutVersion": "office-ipic-baseline-1",
+      "planDigest": "d91c8f172256deee6da29bcd68356b3a83604e5b649e1575bebb49bf8ab2784a",
+      "provenance": "Original procedural geometry and seeded-noise surfaces authored in preview/src/office-penthouse-furnishings.js for #362. No kit art or kit bytes: the desk footprints are the kit’s measured colliders as numbers only (R19, Val, 2026-10-15). No generated or purchased imagery.",
+      "license": "Original work for this repository; no separate license file (the repository has none)",
+      "owner": "design: river-oaks-1b (#362); integration: preview/src/office-penthouse-graybox.js",
+      "triangles": 2360,
+      "meshNodes": 2,
+      "bounds": [
+        [
+          -0.3018,
+          0,
+          -0.3147
+        ],
+        [
+          0.3018,
+          1.0382,
+          0.2905
+        ]
+      ],
+      "stage": "asset-package",
+      "targetDimensions": "0.9 × 0.9 × 1.05 m (x × d × h)",
+      "lod0Target": 12000,
+      "note": "Task chair",
+      "programme": "work",
+      "status": "proposed: original art awaiting design review",
+      "pivot": "centre of the floor footprint at floor contact; front +d (seating) or toward -d (displays)",
+      "lods": [
+        {
+          "level": 0,
+          "node": "LOD0",
+          "triangles": 2360
+        },
+        {
+          "level": 1,
+          "node": "LOD1",
+          "triangles": 848
+        }
+      ],
+      "materials": [
+        "graphite",
+        "upholstery"
+      ],
+      "textures": [],
+      "collision": {
+        "proxy": "COL_task-chair",
+        "plan": [
+          "chair:desk-a1-chair",
+          "chair:desk-a2-chair",
+          "chair:desk-b1-chair",
+          "chair:desk-b2-chair"
+        ]
+      },
+      "anchors": [],
+      "seatHeight": 0.5,
+      "placements": [
+        "desk-a1-chair",
+        "desk-a2-chair",
+        "desk-b1-chair",
+        "desk-b2-chair"
+      ]
+    },
+    {
+      "id": "repo-penthouse-executive-chair",
+      "kind": "model",
+      "file": "assets/office-penthouse/models/executive-chair.glb",
+      "bytes": 156688,
+      "sha256": "f3802a5687ede9a1f2f4c880d3d7f18e8fa2af3ca31bed12b4c5342196427170",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "executive-chair",
+          "LOD0",
+          "executive-chair_LOD0bronze",
+          "executive-chair_LOD0graphite",
+          "executive-chair_LOD0upholstery",
+          "LOD1",
+          "executive-chair_LOD1bronze",
+          "executive-chair_LOD1graphite",
+          "executive-chair_LOD1upholstery",
+          "COL_executive-chair"
+        ],
+        "meshes": 6,
+        "triangles": 3208,
+        "materials": [
+          "bronze",
+          "graphite",
+          "upholstery"
+        ],
+        "textures": [],
+        "bounds": [
+          [
+            -0.3199999928474426,
+            -5.364417798858767e-10,
+            -0.31472745537757874
+          ],
+          [
+            0.3199999928474426,
+            1.2574230432510376,
+            0.3236667513847351
+          ]
+        ],
+        "missingTextures": []
+      },
+      "source": "repo",
+      "reference": null,
+      "axes": "x east / y up / z south",
+      "availability": "committed",
+      "package": "office-penthouse",
+      "version": 1,
+      "layout": "office-penthouse-1",
+      "layoutVersion": "office-ipic-baseline-1",
+      "planDigest": "d91c8f172256deee6da29bcd68356b3a83604e5b649e1575bebb49bf8ab2784a",
+      "provenance": "Original procedural geometry and seeded-noise surfaces authored in preview/src/office-penthouse-furnishings.js for #362. No kit art or kit bytes: the desk footprints are the kit’s measured colliders as numbers only (R19, Val, 2026-10-15). No generated or purchased imagery.",
+      "license": "Original work for this repository; no separate license file (the repository has none)",
+      "owner": "design: river-oaks-1b (#362); integration: preview/src/office-penthouse-graybox.js",
+      "triangles": 2360,
+      "meshNodes": 3,
+      "bounds": [
+        [
+          -0.32,
+          0,
+          -0.3147
+        ],
+        [
+          0.32,
+          1.2574,
+          0.3237
+        ]
+      ],
+      "stage": "asset-package",
+      "targetDimensions": "0.9 × 0.9 × 1.26 m (x × d × h)",
+      "lod0Target": 12000,
+      "note": "Executive chair",
+      "programme": "work",
+      "status": "proposed: original art awaiting design review",
+      "pivot": "centre of the floor footprint at floor contact; front +d (seating) or toward -d (displays)",
+      "lods": [
+        {
+          "level": 0,
+          "node": "LOD0",
+          "triangles": 2360
+        },
+        {
+          "level": 1,
+          "node": "LOD1",
+          "triangles": 848
+        }
+      ],
+      "materials": [
+        "bronze",
+        "graphite",
+        "upholstery"
+      ],
+      "textures": [],
+      "collision": {
+        "proxy": "COL_executive-chair",
+        "plan": [
+          "chair:desk-executive-chair"
+        ]
+      },
+      "anchors": [],
+      "seatHeight": 0.5,
+      "placements": [
+        "desk-executive-chair"
+      ]
+    },
+    {
+      "id": "repo-penthouse-lounge-sofa",
+      "kind": "model",
+      "file": "assets/office-penthouse/models/lounge-sofa.glb",
+      "bytes": 307476,
+      "sha256": "54e6185c1e80afcb5a7460344bd1e3fb91caa35c8a28de326846c1e271ef989a",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "lounge-sofa",
+          "LOD0",
+          "lounge-sofa_LOD0wood",
+          "lounge-sofa_LOD0upholstery",
+          "LOD1",
+          "lounge-sofa_LOD1wood",
+          "lounge-sofa_LOD1upholstery",
+          "COL_lounge-sofa",
+          "SEAT_1",
+          "SEAT_2"
+        ],
+        "meshes": 4,
+        "triangles": 7176,
+        "materials": [
+          "upholstery",
+          "wood"
+        ],
+        "textures": [
+          [
+            512,
+            512
+          ]
+        ],
+        "bounds": [
+          [
+            -1.399999976158142,
+            -7.450580707946131e-10,
+            -0.5
+          ],
+          [
+            1.399999976158142,
+            0.8706619739532471,
+            0.5
+          ]
+        ],
+        "missingTextures": []
+      },
+      "source": "repo",
+      "reference": null,
+      "axes": "x east / y up / z south",
+      "availability": "committed",
+      "package": "office-penthouse",
+      "version": 1,
+      "layout": "office-penthouse-1",
+      "layoutVersion": "office-ipic-baseline-1",
+      "planDigest": "d91c8f172256deee6da29bcd68356b3a83604e5b649e1575bebb49bf8ab2784a",
+      "provenance": "Original procedural geometry and seeded-noise surfaces authored in preview/src/office-penthouse-furnishings.js for #362. No kit art or kit bytes: the desk footprints are the kit’s measured colliders as numbers only (R19, Val, 2026-10-15). No generated or purchased imagery.",
+      "license": "Original work for this repository; no separate license file (the repository has none)",
+      "owner": "design: river-oaks-1b (#362); integration: preview/src/office-penthouse-graybox.js",
+      "triangles": 5988,
+      "meshNodes": 2,
+      "bounds": [
+        [
+          -1.4,
+          0,
+          -0.5
+        ],
+        [
+          1.4,
+          0.8707,
+          0.5
+        ]
+      ],
+      "stage": "asset-package",
+      "targetDimensions": "2.8 × 1 × 0.83 m (x × d × h)",
+      "lod0Target": 12000,
+      "note": "Lounge sofa",
+      "programme": "hosting",
+      "status": "proposed: original art awaiting design review",
+      "pivot": "centre of the floor footprint at floor contact; front +d (seating) or toward -d (displays)",
+      "lods": [
+        {
+          "level": 0,
+          "node": "LOD0",
+          "triangles": 5988
+        },
+        {
+          "level": 1,
+          "node": "LOD1",
+          "triangles": 1188
+        }
+      ],
+      "materials": [
+        "upholstery",
+        "wood"
+      ],
+      "textures": [
+        {
+          "id": "repo-penthouse-texture-wood",
+          "colorSpace": "sRGB",
+          "size": [
+            512,
+            512
+          ],
+          "tileMetres": 0.9
+        }
+      ],
+      "collision": {
+        "proxy": "COL_lounge-sofa",
+        "plan": [
+          "obstacle:lounge-sofa"
+        ]
+      },
+      "anchors": [
+        "SEAT_1",
+        "SEAT_2"
+      ],
+      "seatHeight": 0.46,
+      "placements": [
+        "lounge-sofa"
+      ]
+    },
+    {
+      "id": "repo-penthouse-lounge-chair",
+      "kind": "model",
+      "file": "assets/office-penthouse/models/lounge-chair.glb",
+      "bytes": 145200,
+      "sha256": "2e8d96fa2f13f1ad19da7ff95a5e7c2ec9f0b923286583c6ae969d2ef97e7651",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "lounge-chair",
+          "LOD0",
+          "lounge-chair_LOD0bronze",
+          "lounge-chair_LOD0upholstery",
+          "LOD1",
+          "lounge-chair_LOD1bronze",
+          "lounge-chair_LOD1upholstery",
+          "COL_lounge-chair",
+          "SEAT"
+        ],
+        "meshes": 4,
+        "triangles": 2088,
+        "materials": [
+          "bronze",
+          "upholstery"
+        ],
+        "textures": [],
+        "bounds": [
+          [
+            -0.419327974319458,
+            0,
+            -0.3799999952316284
+          ],
+          [
+            0.419327974319458,
+            0.6599999666213989,
+            0.4201570451259613
+          ]
+        ],
+        "missingTextures": []
+      },
+      "source": "repo",
+      "reference": null,
+      "axes": "x east / y up / z south",
+      "availability": "committed",
+      "package": "office-penthouse",
+      "version": 1,
+      "layout": "office-penthouse-1",
+      "layoutVersion": "office-ipic-baseline-1",
+      "planDigest": "d91c8f172256deee6da29bcd68356b3a83604e5b649e1575bebb49bf8ab2784a",
+      "provenance": "Original procedural geometry and seeded-noise surfaces authored in preview/src/office-penthouse-furnishings.js for #362. No kit art or kit bytes: the desk footprints are the kit’s measured colliders as numbers only (R19, Val, 2026-10-15). No generated or purchased imagery.",
+      "license": "Original work for this repository; no separate license file (the repository has none)",
+      "owner": "design: river-oaks-1b (#362); integration: preview/src/office-penthouse-graybox.js",
+      "triangles": 1300,
+      "meshNodes": 2,
+      "bounds": [
+        [
+          -0.4193,
+          0,
+          -0.38
+        ],
+        [
+          0.4193,
+          0.66,
+          0.4202
+        ]
+      ],
+      "stage": "asset-package",
+      "targetDimensions": "0.85 × 0.85 × 0.66 m (x × d × h)",
+      "lod0Target": 12000,
+      "note": "Lounge chair",
+      "programme": "hosting",
+      "status": "proposed: original art awaiting design review",
+      "pivot": "centre of the floor footprint at floor contact; front +d (seating) or toward -d (displays)",
+      "lods": [
+        {
+          "level": 0,
+          "node": "LOD0",
+          "triangles": 1300
+        },
+        {
+          "level": 1,
+          "node": "LOD1",
+          "triangles": 788
+        }
+      ],
+      "materials": [
+        "bronze",
+        "upholstery"
+      ],
+      "textures": [],
+      "collision": {
+        "proxy": "COL_lounge-chair",
+        "plan": [
+          "obstacle:lounge-chair-a",
+          "obstacle:lounge-chair-b"
+        ]
+      },
+      "anchors": [
+        "SEAT"
+      ],
+      "seatHeight": 0.44,
+      "placements": [
+        "lounge-chair-a",
+        "lounge-chair-b"
+      ]
+    },
+    {
+      "id": "repo-penthouse-lounge-table",
+      "kind": "model",
+      "file": "assets/office-penthouse/models/lounge-table.glb",
+      "bytes": 286460,
+      "sha256": "4e25b165c6b2b0ec1747a023eecc9f6782712ce63dd9aa5f1397e48cf1d9e806",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "lounge-table",
+          "LOD0",
+          "lounge-table_LOD0rose-stone",
+          "lounge-table_LOD0bronze",
+          "lounge-table_LOD0objects",
+          "LOD1",
+          "lounge-table_LOD1rose-stone",
+          "lounge-table_LOD1bronze",
+          "lounge-table_LOD1objects",
+          "COL_lounge-table"
+        ],
+        "meshes": 6,
+        "triangles": 3568,
+        "materials": [
+          "bronze",
+          "objects",
+          "rose-stone"
+        ],
+        "textures": [
+          [
+            512,
+            512
+          ]
+        ],
+        "bounds": [
+          [
+            -0.7000061869621277,
+            -1.2858790628655282e-17,
+            -0.4000000059604645
+          ],
+          [
+            0.7000061869621277,
+            0.45500001311302185,
+            0.4000000059604645
+          ]
+        ],
+        "missingTextures": []
+      },
+      "source": "repo",
+      "reference": null,
+      "axes": "x east / y up / z south",
+      "availability": "committed",
+      "package": "office-penthouse",
+      "version": 1,
+      "layout": "office-penthouse-1",
+      "layoutVersion": "office-ipic-baseline-1",
+      "planDigest": "d91c8f172256deee6da29bcd68356b3a83604e5b649e1575bebb49bf8ab2784a",
+      "provenance": "Original procedural geometry and seeded-noise surfaces authored in preview/src/office-penthouse-furnishings.js for #362. No kit art or kit bytes: the desk footprints are the kit’s measured colliders as numbers only (R19, Val, 2026-10-15). No generated or purchased imagery.",
+      "license": "Original work for this repository; no separate license file (the repository has none)",
+      "owner": "design: river-oaks-1b (#362); integration: preview/src/office-penthouse-graybox.js",
+      "triangles": 1904,
+      "meshNodes": 3,
+      "bounds": [
+        [
+          -0.7,
+          0,
+          -0.4
+        ],
+        [
+          0.7,
+          0.455,
+          0.4
+        ]
+      ],
+      "stage": "asset-package",
+      "targetDimensions": "1.4 × 0.8 × 0.38 m (x × d × h)",
+      "lod0Target": 12000,
+      "note": "Lounge table (rose stone)",
+      "programme": "hosting",
+      "status": "proposed: original art awaiting design review",
+      "pivot": "centre of the floor footprint at floor contact; front +d (seating) or toward -d (displays)",
+      "lods": [
+        {
+          "level": 0,
+          "node": "LOD0",
+          "triangles": 1904
+        },
+        {
+          "level": 1,
+          "node": "LOD1",
+          "triangles": 1664
+        }
+      ],
+      "materials": [
+        "bronze",
+        "objects",
+        "rose-stone"
+      ],
+      "textures": [
+        {
+          "id": "repo-penthouse-texture-rose-stone",
+          "colorSpace": "sRGB",
+          "size": [
+            512,
+            512
+          ],
+          "tileMetres": 1.6
+        }
+      ],
+      "collision": {
+        "proxy": "COL_lounge-table",
+        "plan": [
+          "obstacle:lounge-table"
+        ]
+      },
+      "anchors": [],
+      "seatHeight": null,
+      "placements": [
+        "lounge-table"
+      ]
+    },
+    {
+      "id": "repo-penthouse-botanical-tree",
+      "kind": "model",
+      "file": "assets/office-penthouse/models/botanical-tree.glb",
+      "bytes": 747788,
+      "sha256": "631bb09fa06eafc23f33507ae5a00f4c63a239dec87224934d4f98213fa53d74",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "botanical-tree",
+          "LOD0",
+          "botanical-tree_LOD0travertine",
+          "botanical-tree_LOD0organic",
+          "botanical-tree_LOD0organiccanopy",
+          "botanical-tree_LOD0foliagecanopy",
+          "botanical-tree_LOD0foliage",
+          "LOD1",
+          "botanical-tree_LOD1travertine",
+          "botanical-tree_LOD1organic",
+          "botanical-tree_LOD1organiccanopy",
+          "botanical-tree_LOD1foliagecanopy",
+          "botanical-tree_LOD1foliage",
+          "COL_botanical-tree"
+        ],
+        "meshes": 10,
+        "triangles": 7824,
+        "materials": [
+          "foliage",
+          "organic",
+          "travertine"
+        ],
+        "textures": [
+          [
+            512,
+            512
+          ]
+        ],
+        "bounds": [
+          [
+            -0.75083988904953,
+            0,
+            -1.003214716911316
+          ],
+          [
+            1.4947024583816528,
+            5.0629377365112305,
+            1.1968843936920166
+          ]
+        ],
+        "missingTextures": []
+      },
+      "source": "repo",
+      "reference": null,
+      "axes": "x east / y up / z south",
+      "availability": "committed",
+      "package": "office-penthouse",
+      "version": 1,
+      "layout": "office-penthouse-1",
+      "layoutVersion": "office-ipic-baseline-1",
+      "planDigest": "d91c8f172256deee6da29bcd68356b3a83604e5b649e1575bebb49bf8ab2784a",
+      "provenance": "Original procedural geometry and seeded-noise surfaces authored in preview/src/office-penthouse-furnishings.js for #362. No kit art or kit bytes: the desk footprints are the kit’s measured colliders as numbers only (R19, Val, 2026-10-15). No generated or purchased imagery.",
+      "license": "Original work for this repository; no separate license file (the repository has none)",
+      "owner": "design: river-oaks-1b (#362); integration: preview/src/office-penthouse-graybox.js",
+      "triangles": 5792,
+      "meshNodes": 5,
+      "bounds": [
+        [
+          -0.7508,
+          0,
+          -1.0032
+        ],
+        [
+          1.4479,
+          5.0629,
+          1.1969
+        ]
+      ],
+      "stage": "asset-package",
+      "targetDimensions": "1.2 × 1.2 × 0.7 m (x × d × h)",
+      "lod0Target": 12000,
+      "note": "Botanical focal point (tree in a travertine planter)",
+      "programme": "botanical",
+      "status": "proposed: original art awaiting design review",
+      "pivot": "centre of the floor footprint at floor contact; front +d (seating) or toward -d (displays)",
+      "lods": [
+        {
+          "level": 0,
+          "node": "LOD0",
+          "triangles": 5792
+        },
+        {
+          "level": 1,
+          "node": "LOD1",
+          "triangles": 2032
+        }
+      ],
+      "materials": [
+        "foliage",
+        "organic",
+        "travertine"
+      ],
+      "textures": [
+        {
+          "id": "repo-penthouse-texture-travertine",
+          "colorSpace": "sRGB",
+          "size": [
+            512,
+            512
+          ],
+          "tileMetres": 1.2
+        }
+      ],
+      "collision": {
+        "proxy": "COL_botanical-tree",
+        "plan": [
+          "obstacle:botanical-planter"
+        ]
+      },
+      "anchors": [],
+      "seatHeight": null,
+      "placements": [
+        "botanical-planter"
+      ]
+    },
+    {
+      "id": "repo-penthouse-back-console",
+      "kind": "model",
+      "file": "assets/office-penthouse/models/back-console.glb",
+      "bytes": 241992,
+      "sha256": "dc25838ba10e14296437157f6a130c2fedc5057917b7eeb43169bc35c049d146",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "back-console",
+          "LOD0",
+          "back-console_LOD0bronze",
+          "back-console_LOD0wood",
+          "back-console_LOD0travertine",
+          "back-console_LOD0objects",
+          "LOD1",
+          "back-console_LOD1bronze",
+          "back-console_LOD1wood",
+          "back-console_LOD1travertine",
+          "back-console_LOD1objects",
+          "COL_back-console"
+        ],
+        "meshes": 8,
+        "triangles": 3084,
+        "materials": [
+          "bronze",
+          "objects",
+          "travertine",
+          "wood"
+        ],
+        "textures": [
+          [
+            512,
+            512
+          ],
+          [
+            512,
+            512
+          ]
+        ],
+        "bounds": [
+          [
+            -3.5,
+            -1.7881393032936899e-9,
+            -0.25
+          ],
+          [
+            3.5,
+            1.2200000286102295,
+            0.25
+          ]
+        ],
+        "missingTextures": []
+      },
+      "source": "repo",
+      "reference": null,
+      "axes": "x east / y up / z south",
+      "availability": "committed",
+      "package": "office-penthouse",
+      "version": 1,
+      "layout": "office-penthouse-1",
+      "layoutVersion": "office-ipic-baseline-1",
+      "planDigest": "d91c8f172256deee6da29bcd68356b3a83604e5b649e1575bebb49bf8ab2784a",
+      "provenance": "Original procedural geometry and seeded-noise surfaces authored in preview/src/office-penthouse-furnishings.js for #362. No kit art or kit bytes: the desk footprints are the kit’s measured colliders as numbers only (R19, Val, 2026-10-15). No generated or purchased imagery.",
+      "license": "Original work for this repository; no separate license file (the repository has none)",
+      "owner": "design: river-oaks-1b (#362); integration: preview/src/office-penthouse-graybox.js",
+      "triangles": 1932,
+      "meshNodes": 4,
+      "bounds": [
+        [
+          -3.5,
+          0,
+          -0.25
+        ],
+        [
+          3.5,
+          1.22,
+          0.25
+        ]
+      ],
+      "stage": "asset-package",
+      "targetDimensions": "7 × 0.5 × 0.8 m (x × d × h)",
+      "lod0Target": 12000,
+      "note": "Back console",
+      "programme": "hosting",
+      "status": "proposed: original art awaiting design review",
+      "pivot": "centre of the floor footprint at floor contact; front +d (seating) or toward -d (displays)",
+      "lods": [
+        {
+          "level": 0,
+          "node": "LOD0",
+          "triangles": 1932
+        },
+        {
+          "level": 1,
+          "node": "LOD1",
+          "triangles": 1152
+        }
+      ],
+      "materials": [
+        "bronze",
+        "objects",
+        "travertine",
+        "wood"
+      ],
+      "textures": [
+        {
+          "id": "repo-penthouse-texture-travertine",
+          "colorSpace": "sRGB",
+          "size": [
+            512,
+            512
+          ],
+          "tileMetres": 1.2
+        },
+        {
+          "id": "repo-penthouse-texture-wood",
+          "colorSpace": "sRGB",
+          "size": [
+            512,
+            512
+          ],
+          "tileMetres": 0.9
+        }
+      ],
+      "collision": {
+        "proxy": "COL_back-console",
+        "plan": [
+          "obstacle:back-console"
+        ]
+      },
+      "anchors": [],
+      "seatHeight": null,
+      "placements": [
+        "back-console"
+      ]
+    },
+    {
+      "id": "repo-penthouse-meeting-table",
+      "kind": "model",
+      "file": "assets/office-penthouse/models/meeting-table.glb",
+      "bytes": 342028,
+      "sha256": "e57de4135e4f7ca111fdf4d92272a9b6b452d1d14d44a82aa6e72602e94b59d3",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "meeting-table",
+          "LOD0",
+          "meeting-table_LOD0travertine",
+          "meeting-table_LOD0wood",
+          "meeting-table_LOD0bronze",
+          "meeting-table_LOD0objects",
+          "LOD1",
+          "meeting-table_LOD1travertine",
+          "meeting-table_LOD1wood",
+          "meeting-table_LOD1bronze",
+          "meeting-table_LOD1objects",
+          "COL_meeting-table"
+        ],
+        "meshes": 8,
+        "triangles": 3424,
+        "materials": [
+          "bronze",
+          "objects",
+          "travertine",
+          "wood"
+        ],
+        "textures": [
+          [
+            512,
+            512
+          ],
+          [
+            512,
+            512
+          ]
+        ],
+        "bounds": [
+          [
+            -1.600000023841858,
+            2.2351741291171123e-10,
+            -0.6000000238418579
+          ],
+          [
+            1.600000023841858,
+            0.8100000023841858,
+            0.6000000238418579
+          ]
+        ],
+        "missingTextures": []
+      },
+      "source": "repo",
+      "reference": null,
+      "axes": "x east / y up / z south",
+      "availability": "committed",
+      "package": "office-penthouse",
+      "version": 1,
+      "layout": "office-penthouse-1",
+      "layoutVersion": "office-ipic-baseline-1",
+      "planDigest": "d91c8f172256deee6da29bcd68356b3a83604e5b649e1575bebb49bf8ab2784a",
+      "provenance": "Original procedural geometry and seeded-noise surfaces authored in preview/src/office-penthouse-furnishings.js for #362. No kit art or kit bytes: the desk footprints are the kit’s measured colliders as numbers only (R19, Val, 2026-10-15). No generated or purchased imagery.",
+      "license": "Original work for this repository; no separate license file (the repository has none)",
+      "owner": "design: river-oaks-1b (#362); integration: preview/src/office-penthouse-graybox.js",
+      "triangles": 1832,
+      "meshNodes": 4,
+      "bounds": [
+        [
+          -1.6,
+          0,
+          -0.6
+        ],
+        [
+          1.6,
+          0.81,
+          0.6
+        ]
+      ],
+      "stage": "asset-package",
+      "targetDimensions": "3.2 × 1.2 × 0.75 m (x × d × h)",
+      "lod0Target": 12000,
+      "note": "Meeting table",
+      "programme": "work",
+      "status": "proposed: original art awaiting design review",
+      "pivot": "centre of the floor footprint at floor contact; front +d (seating) or toward -d (displays)",
+      "lods": [
+        {
+          "level": 0,
+          "node": "LOD0",
+          "triangles": 1832
+        },
+        {
+          "level": 1,
+          "node": "LOD1",
+          "triangles": 1592
+        }
+      ],
+      "materials": [
+        "bronze",
+        "objects",
+        "travertine",
+        "wood"
+      ],
+      "textures": [
+        {
+          "id": "repo-penthouse-texture-travertine",
+          "colorSpace": "sRGB",
+          "size": [
+            512,
+            512
+          ],
+          "tileMetres": 1.2
+        },
+        {
+          "id": "repo-penthouse-texture-wood",
+          "colorSpace": "sRGB",
+          "size": [
+            512,
+            512
+          ],
+          "tileMetres": 0.9
+        }
+      ],
+      "collision": {
+        "proxy": "COL_meeting-table",
+        "plan": [
+          "obstacle:meeting-table"
+        ]
+      },
+      "anchors": [],
+      "seatHeight": null,
+      "placements": [
+        "meeting-table"
+      ]
+    },
+    {
+      "id": "repo-penthouse-meeting-chair",
+      "kind": "model",
+      "file": "assets/office-penthouse/models/meeting-chair.glb",
+      "bytes": 114476,
+      "sha256": "4f70a9e33c034804d54a1808e11ba40916ba58f1fe8c396752d769ef69beb95f",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "meeting-chair",
+          "LOD0",
+          "meeting-chair_LOD0wood",
+          "meeting-chair_LOD0upholstery",
+          "LOD1",
+          "meeting-chair_LOD1wood",
+          "meeting-chair_LOD1upholstery",
+          "COL_meeting-chair"
+        ],
+        "meshes": 4,
+        "triangles": 1696,
+        "materials": [
+          "upholstery",
+          "wood"
+        ],
+        "textures": [
+          [
+            512,
+            512
+          ]
+        ],
+        "bounds": [
+          [
+            -0.25,
+            1.19209286886246e-9,
+            -0.23999999463558197
+          ],
+          [
+            0.25,
+            0.8692606091499329,
+            0.2723642587661743
+          ]
+        ],
+        "missingTextures": []
+      },
+      "source": "repo",
+      "reference": null,
+      "axes": "x east / y up / z south",
+      "availability": "committed",
+      "package": "office-penthouse",
+      "version": 1,
+      "layout": "office-penthouse-1",
+      "layoutVersion": "office-ipic-baseline-1",
+      "planDigest": "d91c8f172256deee6da29bcd68356b3a83604e5b649e1575bebb49bf8ab2784a",
+      "provenance": "Original procedural geometry and seeded-noise surfaces authored in preview/src/office-penthouse-furnishings.js for #362. No kit art or kit bytes: the desk footprints are the kit’s measured colliders as numbers only (R19, Val, 2026-10-15). No generated or purchased imagery.",
+      "license": "Original work for this repository; no separate license file (the repository has none)",
+      "owner": "design: river-oaks-1b (#362); integration: preview/src/office-penthouse-graybox.js",
+      "triangles": 1360,
+      "meshNodes": 2,
+      "bounds": [
+        [
+          -0.25,
+          0,
+          -0.24
+        ],
+        [
+          0.25,
+          0.8693,
+          0.2724
+        ]
+      ],
+      "stage": "asset-package",
+      "targetDimensions": "0.56 × 0.56 × 0.85 m (x × d × h)",
+      "lod0Target": 12000,
+      "note": "Meeting chair",
+      "programme": "work",
+      "status": "proposed: original art awaiting design review",
+      "pivot": "centre of the floor footprint at floor contact; front +d (seating) or toward -d (displays)",
+      "lods": [
+        {
+          "level": 0,
+          "node": "LOD0",
+          "triangles": 1360
+        },
+        {
+          "level": 1,
+          "node": "LOD1",
+          "triangles": 336
+        }
+      ],
+      "materials": [
+        "upholstery",
+        "wood"
+      ],
+      "textures": [
+        {
+          "id": "repo-penthouse-texture-wood",
+          "colorSpace": "sRGB",
+          "size": [
+            512,
+            512
+          ],
+          "tileMetres": 0.9
+        }
+      ],
+      "collision": {
+        "proxy": "COL_meeting-chair",
+        "plan": [
+          "obstacle:meeting-chair-1",
+          "obstacle:meeting-chair-2",
+          "obstacle:meeting-chair-3",
+          "obstacle:meeting-chair-4",
+          "obstacle:meeting-chair-5",
+          "obstacle:meeting-chair-6"
+        ]
+      },
+      "anchors": [],
+      "seatHeight": 0.5,
+      "placements": [
+        "meeting-chair-1",
+        "meeting-chair-2",
+        "meeting-chair-3",
+        "meeting-chair-4",
+        "meeting-chair-5",
+        "meeting-chair-6"
+      ]
+    },
+    {
+      "id": "repo-penthouse-terrace-planter",
+      "kind": "model",
+      "file": "assets/office-penthouse/models/terrace-planter.glb",
+      "bytes": 220716,
+      "sha256": "ab950f8d4f4b04f7a83f41b9558dd8d0f97b931c822bbb6b99c42246cdd4d6c2",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "terrace-planter",
+          "LOD0",
+          "terrace-planter_LOD0travertine",
+          "terrace-planter_LOD0organic",
+          "terrace-planter_LOD0foliage",
+          "LOD1",
+          "terrace-planter_LOD1travertine",
+          "terrace-planter_LOD1organic",
+          "terrace-planter_LOD1foliage",
+          "COL_terrace-planter"
+        ],
+        "meshes": 6,
+        "triangles": 2468,
+        "materials": [
+          "foliage",
+          "organic",
+          "travertine"
+        ],
+        "textures": [
+          [
+            512,
+            512
+          ]
+        ],
+        "bounds": [
+          [
+            -0.30000001192092896,
+            -1.1920929132713809e-8,
+            -2.700000047683716
+          ],
+          [
+            0.30000001192092896,
+            1.3460235595703125,
+            2.700000047683716
+          ]
+        ],
+        "missingTextures": []
+      },
+      "source": "repo",
+      "reference": null,
+      "axes": "x east / y up / z south",
+      "availability": "committed",
+      "package": "office-penthouse",
+      "version": 1,
+      "layout": "office-penthouse-1",
+      "layoutVersion": "office-ipic-baseline-1",
+      "planDigest": "d91c8f172256deee6da29bcd68356b3a83604e5b649e1575bebb49bf8ab2784a",
+      "provenance": "Original procedural geometry and seeded-noise surfaces authored in preview/src/office-penthouse-furnishings.js for #362. No kit art or kit bytes: the desk footprints are the kit’s measured colliders as numbers only (R19, Val, 2026-10-15). No generated or purchased imagery.",
+      "license": "Original work for this repository; no separate license file (the repository has none)",
+      "owner": "design: river-oaks-1b (#362); integration: preview/src/office-penthouse-graybox.js",
+      "triangles": 1868,
+      "meshNodes": 3,
+      "bounds": [
+        [
+          -0.3,
+          0,
+          -2.7
+        ],
+        [
+          0.3,
+          1.346,
+          2.7
+        ]
+      ],
+      "stage": "asset-package",
+      "targetDimensions": "0.6 × 5.4 × 0.6 m (x × d × h)",
+      "lod0Target": 12000,
+      "note": "Terrace planter (grasses and box)",
+      "programme": "terrace",
+      "status": "proposed: original art awaiting design review",
+      "pivot": "centre of the floor footprint at floor contact; front +d (seating) or toward -d (displays)",
+      "lods": [
+        {
+          "level": 0,
+          "node": "LOD0",
+          "triangles": 1868
+        },
+        {
+          "level": 1,
+          "node": "LOD1",
+          "triangles": 600
+        }
+      ],
+      "materials": [
+        "foliage",
+        "organic",
+        "travertine"
+      ],
+      "textures": [
+        {
+          "id": "repo-penthouse-texture-travertine",
+          "colorSpace": "sRGB",
+          "size": [
+            512,
+            512
+          ],
+          "tileMetres": 1.2
+        }
+      ],
+      "collision": {
+        "proxy": "COL_terrace-planter",
+        "plan": [
+          "obstacle:terrace-planter-south",
+          "obstacle:terrace-planter-north"
+        ]
+      },
+      "anchors": [],
+      "seatHeight": null,
+      "placements": [
+        "terrace-planter-south",
+        "terrace-planter-north"
+      ]
+    },
+    {
+      "id": "repo-penthouse-terrace-lounger",
+      "kind": "model",
+      "file": "assets/office-penthouse/models/terrace-lounger.glb",
+      "bytes": 153404,
+      "sha256": "c4017171d8c8b0f8774696df97df91b3cac624184c8c5e2ec6a1c9cf03e3682d",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "terrace-lounger",
+          "LOD0",
+          "terrace-lounger_LOD0wood",
+          "terrace-lounger_LOD0upholstery",
+          "LOD1",
+          "terrace-lounger_LOD1wood",
+          "terrace-lounger_LOD1upholstery",
+          "COL_terrace-lounger"
+        ],
+        "meshes": 4,
+        "triangles": 2256,
+        "materials": [
+          "upholstery",
+          "wood"
+        ],
+        "textures": [
+          [
+            512,
+            512
+          ]
+        ],
+        "bounds": [
+          [
+            -0.3700000047683716,
+            4.76837147544984e-9,
+            -1
+          ],
+          [
+            0.3700000047683716,
+            0.7222036123275757,
+            1
+          ]
+        ],
+        "missingTextures": []
+      },
+      "source": "repo",
+      "reference": null,
+      "axes": "x east / y up / z south",
+      "availability": "committed",
+      "package": "office-penthouse",
+      "version": 1,
+      "layout": "office-penthouse-1",
+      "layoutVersion": "office-ipic-baseline-1",
+      "planDigest": "d91c8f172256deee6da29bcd68356b3a83604e5b649e1575bebb49bf8ab2784a",
+      "provenance": "Original procedural geometry and seeded-noise surfaces authored in preview/src/office-penthouse-furnishings.js for #362. No kit art or kit bytes: the desk footprints are the kit’s measured colliders as numbers only (R19, Val, 2026-10-15). No generated or purchased imagery.",
+      "license": "Original work for this repository; no separate license file (the repository has none)",
+      "owner": "design: river-oaks-1b (#362); integration: preview/src/office-penthouse-graybox.js",
+      "triangles": 1128,
+      "meshNodes": 2,
+      "bounds": [
+        [
+          -0.37,
+          0,
+          -1
+        ],
+        [
+          0.37,
+          0.7222,
+          1
+        ]
+      ],
+      "stage": "asset-package",
+      "targetDimensions": "0.75 × 2 × 0.75 m (x × d × h)",
+      "lod0Target": 12000,
+      "note": "Terrace lounger",
+      "programme": "terrace",
+      "status": "proposed: original art awaiting design review",
+      "pivot": "centre of the floor footprint at floor contact; front +d (seating) or toward -d (displays)",
+      "lods": [
+        {
+          "level": 0,
+          "node": "LOD0",
+          "triangles": 1128
+        },
+        {
+          "level": 1,
+          "node": "LOD1",
+          "triangles": 1128
+        }
+      ],
+      "materials": [
+        "upholstery",
+        "wood"
+      ],
+      "textures": [
+        {
+          "id": "repo-penthouse-texture-wood",
+          "colorSpace": "sRGB",
+          "size": [
+            512,
+            512
+          ],
+          "tileMetres": 0.9
+        }
+      ],
+      "collision": {
+        "proxy": "COL_terrace-lounger",
+        "plan": [
+          "obstacle:terrace-lounger-a",
+          "obstacle:terrace-lounger-b"
+        ]
+      },
+      "anchors": [],
+      "seatHeight": null,
+      "placements": [
+        "terrace-lounger-a",
+        "terrace-lounger-b"
+      ]
+    },
+    {
+      "id": "repo-penthouse-terrace-side-table",
+      "kind": "model",
+      "file": "assets/office-penthouse/models/terrace-side-table.glb",
+      "bytes": 83152,
+      "sha256": "37af9c5aa2e640050210624e645709f88595203fca4f0e9c17c83e693958c17e",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "terrace-side-table",
+          "LOD0",
+          "terrace-side-table_LOD0travertine",
+          "LOD1",
+          "terrace-side-table_LOD1travertine",
+          "COL_terrace-side-table"
+        ],
+        "meshes": 2,
+        "triangles": 440,
+        "materials": [
+          "travertine"
+        ],
+        "textures": [
+          [
+            512,
+            512
+          ]
+        ],
+        "bounds": [
+          [
+            -0.1899999976158142,
+            0,
+            -0.1899999976158142
+          ],
+          [
+            0.1899999976158142,
+            0.44999998807907104,
+            0.1899999976158142
+          ]
+        ],
+        "missingTextures": []
+      },
+      "source": "repo",
+      "reference": null,
+      "axes": "x east / y up / z south",
+      "availability": "committed",
+      "package": "office-penthouse",
+      "version": 1,
+      "layout": "office-penthouse-1",
+      "layoutVersion": "office-ipic-baseline-1",
+      "planDigest": "d91c8f172256deee6da29bcd68356b3a83604e5b649e1575bebb49bf8ab2784a",
+      "provenance": "Original procedural geometry and seeded-noise surfaces authored in preview/src/office-penthouse-furnishings.js for #362. No kit art or kit bytes: the desk footprints are the kit’s measured colliders as numbers only (R19, Val, 2026-10-15). No generated or purchased imagery.",
+      "license": "Original work for this repository; no separate license file (the repository has none)",
+      "owner": "design: river-oaks-1b (#362); integration: preview/src/office-penthouse-graybox.js",
+      "triangles": 320,
+      "meshNodes": 1,
+      "bounds": [
+        [
+          -0.19,
+          0,
+          -0.19
+        ],
+        [
+          0.19,
+          0.45,
+          0.19
+        ]
+      ],
+      "stage": "asset-package",
+      "targetDimensions": "0.4 × 0.4 × 0.45 m (x × d × h)",
+      "lod0Target": 12000,
+      "note": "Terrace side table",
+      "programme": "terrace",
+      "status": "proposed: original art awaiting design review",
+      "pivot": "centre of the floor footprint at floor contact; front +d (seating) or toward -d (displays)",
+      "lods": [
+        {
+          "level": 0,
+          "node": "LOD0",
+          "triangles": 320
+        },
+        {
+          "level": 1,
+          "node": "LOD1",
+          "triangles": 120
+        }
+      ],
+      "materials": [
+        "travertine"
+      ],
+      "textures": [
+        {
+          "id": "repo-penthouse-texture-travertine",
+          "colorSpace": "sRGB",
+          "size": [
+            512,
+            512
+          ],
+          "tileMetres": 1.2
+        }
+      ],
+      "collision": {
+        "proxy": "COL_terrace-side-table",
+        "plan": [
+          "obstacle:terrace-side-table"
+        ]
+      },
+      "anchors": [],
+      "seatHeight": null,
+      "placements": [
+        "terrace-side-table"
+      ]
+    },
+    {
+      "id": "repo-penthouse-bistro-table",
+      "kind": "model",
+      "file": "assets/office-penthouse/models/bistro-table.glb",
+      "bytes": 102820,
+      "sha256": "a178970cabf2a1a9fadd4a754ca8863cddba616285f1d327d207a736d6c233ed",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "bistro-table",
+          "LOD0",
+          "bistro-table_LOD0bronze",
+          "bistro-table_LOD0travertine",
+          "LOD1",
+          "bistro-table_LOD1bronze",
+          "bistro-table_LOD1travertine",
+          "COL_bistro-table"
+        ],
+        "meshes": 4,
+        "triangles": 696,
+        "materials": [
+          "bronze",
+          "travertine"
+        ],
+        "textures": [
+          [
+            512,
+            512
+          ]
+        ],
+        "bounds": [
+          [
+            -0.38999998569488525,
+            0,
+            -0.38999998569488525
+          ],
+          [
+            0.38999998569488525,
+            0.7400000095367432,
+            0.38999998569488525
+          ]
+        ],
+        "missingTextures": []
+      },
+      "source": "repo",
+      "reference": null,
+      "axes": "x east / y up / z south",
+      "availability": "committed",
+      "package": "office-penthouse",
+      "version": 1,
+      "layout": "office-penthouse-1",
+      "layoutVersion": "office-ipic-baseline-1",
+      "planDigest": "d91c8f172256deee6da29bcd68356b3a83604e5b649e1575bebb49bf8ab2784a",
+      "provenance": "Original procedural geometry and seeded-noise surfaces authored in preview/src/office-penthouse-furnishings.js for #362. No kit art or kit bytes: the desk footprints are the kit’s measured colliders as numbers only (R19, Val, 2026-10-15). No generated or purchased imagery.",
+      "license": "Original work for this repository; no separate license file (the repository has none)",
+      "owner": "design: river-oaks-1b (#362); integration: preview/src/office-penthouse-graybox.js",
+      "triangles": 512,
+      "meshNodes": 2,
+      "bounds": [
+        [
+          -0.39,
+          0,
+          -0.39
+        ],
+        [
+          0.39,
+          0.74,
+          0.39
+        ]
+      ],
+      "stage": "asset-package",
+      "targetDimensions": "0.8 × 0.8 × 0.74 m (x × d × h)",
+      "lod0Target": 12000,
+      "note": "Terrace bistro table",
+      "programme": "terrace",
+      "status": "proposed: original art awaiting design review",
+      "pivot": "centre of the floor footprint at floor contact; front +d (seating) or toward -d (displays)",
+      "lods": [
+        {
+          "level": 0,
+          "node": "LOD0",
+          "triangles": 512
+        },
+        {
+          "level": 1,
+          "node": "LOD1",
+          "triangles": 184
+        }
+      ],
+      "materials": [
+        "bronze",
+        "travertine"
+      ],
+      "textures": [
+        {
+          "id": "repo-penthouse-texture-travertine",
+          "colorSpace": "sRGB",
+          "size": [
+            512,
+            512
+          ],
+          "tileMetres": 1.2
+        }
+      ],
+      "collision": {
+        "proxy": "COL_bistro-table",
+        "plan": [
+          "obstacle:terrace-bistro-table"
+        ]
+      },
+      "anchors": [],
+      "seatHeight": null,
+      "placements": [
+        "terrace-bistro-table"
+      ]
+    },
+    {
+      "id": "repo-penthouse-bistro-chair",
+      "kind": "model",
+      "file": "assets/office-penthouse/models/bistro-chair.glb",
+      "bytes": 81956,
+      "sha256": "8474523970c1bf647a6c90cfd4195796b9922481fcb784ed90c96b33916a44cc",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "bistro-chair",
+          "LOD0",
+          "bistro-chair_LOD0bronze",
+          "bistro-chair_LOD0wood",
+          "LOD1",
+          "bistro-chair_LOD1bronze",
+          "bistro-chair_LOD1wood",
+          "COL_bistro-chair"
+        ],
+        "meshes": 4,
+        "triangles": 552,
+        "materials": [
+          "bronze",
+          "wood"
+        ],
+        "textures": [
+          [
+            512,
+            512
+          ]
+        ],
+        "bounds": [
+          [
+            -0.2199999988079071,
+            5.9604645663569045e-9,
+            -0.21199999749660492
+          ],
+          [
+            0.2199999988079071,
+            0.8500000238418579,
+            0.22200000286102295
+          ]
+        ],
+        "missingTextures": []
+      },
+      "source": "repo",
+      "reference": null,
+      "axes": "x east / y up / z south",
+      "availability": "committed",
+      "package": "office-penthouse",
+      "version": 1,
+      "layout": "office-penthouse-1",
+      "layoutVersion": "office-ipic-baseline-1",
+      "planDigest": "d91c8f172256deee6da29bcd68356b3a83604e5b649e1575bebb49bf8ab2784a",
+      "provenance": "Original procedural geometry and seeded-noise surfaces authored in preview/src/office-penthouse-furnishings.js for #362. No kit art or kit bytes: the desk footprints are the kit’s measured colliders as numbers only (R19, Val, 2026-10-15). No generated or purchased imagery.",
+      "license": "Original work for this repository; no separate license file (the repository has none)",
+      "owner": "design: river-oaks-1b (#362); integration: preview/src/office-penthouse-graybox.js",
+      "triangles": 324,
+      "meshNodes": 2,
+      "bounds": [
+        [
+          -0.22,
+          0,
+          -0.212
+        ],
+        [
+          0.22,
+          0.85,
+          0.222
+        ]
+      ],
+      "stage": "asset-package",
+      "targetDimensions": "0.5 × 0.5 × 0.85 m (x × d × h)",
+      "lod0Target": 12000,
+      "note": "Terrace bistro chair",
+      "programme": "terrace",
+      "status": "proposed: original art awaiting design review",
+      "pivot": "centre of the floor footprint at floor contact; front +d (seating) or toward -d (displays)",
+      "lods": [
+        {
+          "level": 0,
+          "node": "LOD0",
+          "triangles": 324
+        },
+        {
+          "level": 1,
+          "node": "LOD1",
+          "triangles": 228
+        }
+      ],
+      "materials": [
+        "bronze",
+        "wood"
+      ],
+      "textures": [
+        {
+          "id": "repo-penthouse-texture-wood",
+          "colorSpace": "sRGB",
+          "size": [
+            512,
+            512
+          ],
+          "tileMetres": 0.9
+        }
+      ],
+      "collision": {
+        "proxy": "COL_bistro-chair",
+        "plan": [
+          "obstacle:terrace-bistro-chair-a",
+          "obstacle:terrace-bistro-chair-b"
+        ]
+      },
+      "anchors": [],
+      "seatHeight": 0.47,
+      "placements": [
+        "terrace-bistro-chair-a",
+        "terrace-bistro-chair-b"
+      ]
+    },
+    {
+      "id": "repo-penthouse-reading-chair",
+      "kind": "model",
+      "file": "assets/office-penthouse/models/reading-chair.glb",
+      "bytes": 211532,
+      "sha256": "54bb777889cc4aa940d81373a524a4f18d4517d2cd66e3bef8d0ef0bb6e9a931",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "reading-chair",
+          "LOD0",
+          "reading-chair_LOD0wood",
+          "reading-chair_LOD0upholstery",
+          "LOD1",
+          "reading-chair_LOD1wood",
+          "reading-chair_LOD1upholstery",
+          "COL_reading-chair"
+        ],
+        "meshes": 4,
+        "triangles": 4432,
+        "materials": [
+          "upholstery",
+          "wood"
+        ],
+        "textures": [
+          [
+            512,
+            512
+          ]
+        ],
+        "bounds": [
+          [
+            -0.47999998927116394,
+            1.3411045607369942e-9,
+            -0.4699999988079071
+          ],
+          [
+            0.47999998927116394,
+            0.9446244835853577,
+            0.4979695975780487
+          ]
+        ],
+        "missingTextures": []
+      },
+      "source": "repo",
+      "reference": null,
+      "axes": "x east / y up / z south",
+      "availability": "committed",
+      "package": "office-penthouse",
+      "version": 1,
+      "layout": "office-penthouse-1",
+      "layoutVersion": "office-ipic-baseline-1",
+      "planDigest": "d91c8f172256deee6da29bcd68356b3a83604e5b649e1575bebb49bf8ab2784a",
+      "provenance": "Original procedural geometry and seeded-noise surfaces authored in preview/src/office-penthouse-furnishings.js for #362. No kit art or kit bytes: the desk footprints are the kit’s measured colliders as numbers only (R19, Val, 2026-10-15). No generated or purchased imagery.",
+      "license": "Original work for this repository; no separate license file (the repository has none)",
+      "owner": "design: river-oaks-1b (#362); integration: preview/src/office-penthouse-graybox.js",
+      "triangles": 3688,
+      "meshNodes": 2,
+      "bounds": [
+        [
+          -0.48,
+          0,
+          -0.47
+        ],
+        [
+          0.48,
+          0.9446,
+          0.498
+        ]
+      ],
+      "stage": "asset-package",
+      "targetDimensions": "1 × 1 × 0.95 m (x × d × h)",
+      "lod0Target": 12000,
+      "note": "Library reading chair",
+      "programme": "library",
+      "status": "proposed: original art awaiting design review",
+      "pivot": "centre of the floor footprint at floor contact; front +d (seating) or toward -d (displays)",
+      "lods": [
+        {
+          "level": 0,
+          "node": "LOD0",
+          "triangles": 3688
+        },
+        {
+          "level": 1,
+          "node": "LOD1",
+          "triangles": 744
+        }
+      ],
+      "materials": [
+        "upholstery",
+        "wood"
+      ],
+      "textures": [
+        {
+          "id": "repo-penthouse-texture-wood",
+          "colorSpace": "sRGB",
+          "size": [
+            512,
+            512
+          ],
+          "tileMetres": 0.9
+        }
+      ],
+      "collision": {
+        "proxy": "COL_reading-chair",
+        "plan": [
+          "obstacle:reading-chair-a",
+          "obstacle:reading-chair-b"
+        ]
+      },
+      "anchors": [],
+      "seatHeight": 0.5,
+      "placements": [
+        "reading-chair-a",
+        "reading-chair-b"
+      ]
+    },
+    {
+      "id": "repo-penthouse-reading-side-table",
+      "kind": "model",
+      "file": "assets/office-penthouse/models/reading-side-table.glb",
+      "bytes": 80816,
+      "sha256": "8a7bb51cd64d2111c0732bf9a28fdbaca899ebabe1eb7892de5b62fd9db5655c",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "reading-side-table",
+          "LOD0",
+          "reading-side-table_LOD0bronze",
+          "reading-side-table_LOD0rose-stone",
+          "reading-side-table_LOD0objects",
+          "reading-side-table_LOD0shade",
+          "LOD1",
+          "reading-side-table_LOD1bronze",
+          "reading-side-table_LOD1rose-stone",
+          "reading-side-table_LOD1objects",
+          "reading-side-table_LOD1shade",
+          "COL_reading-side-table"
+        ],
+        "meshes": 8,
+        "triangles": 1152,
+        "materials": [
+          "bronze",
+          "objects",
+          "rose-stone",
+          "shade"
+        ],
+        "textures": [
+          [
+            512,
+            512
+          ]
+        ],
+        "bounds": [
+          [
+            -0.23999999463558197,
+            0,
+            -0.23999999463558197
+          ],
+          [
+            0.23999999463558197,
+            1.0099999904632568,
+            0.23999999463558197
+          ]
+        ],
+        "missingTextures": []
+      },
+      "source": "repo",
+      "reference": null,
+      "axes": "x east / y up / z south",
+      "availability": "committed",
+      "package": "office-penthouse",
+      "version": 1,
+      "layout": "office-penthouse-1",
+      "layoutVersion": "office-ipic-baseline-1",
+      "planDigest": "d91c8f172256deee6da29bcd68356b3a83604e5b649e1575bebb49bf8ab2784a",
+      "provenance": "Original procedural geometry and seeded-noise surfaces authored in preview/src/office-penthouse-furnishings.js for #362. No kit art or kit bytes: the desk footprints are the kit’s measured colliders as numbers only (R19, Val, 2026-10-15). No generated or purchased imagery.",
+      "license": "Original work for this repository; no separate license file (the repository has none)",
+      "owner": "design: river-oaks-1b (#362); integration: preview/src/office-penthouse-graybox.js",
+      "triangles": 832,
+      "meshNodes": 4,
+      "bounds": [
+        [
+          -0.24,
+          0,
+          -0.24
+        ],
+        [
+          0.24,
+          1.01,
+          0.24
+        ]
+      ],
+      "stage": "asset-package",
+      "targetDimensions": "0.5 × 0.5 × 1.02 m (x × d × h)",
+      "lod0Target": 12000,
+      "note": "Library side table and lamp",
+      "programme": "library",
+      "status": "proposed: original art awaiting design review",
+      "pivot": "centre of the floor footprint at floor contact; front +d (seating) or toward -d (displays)",
+      "lods": [
+        {
+          "level": 0,
+          "node": "LOD0",
+          "triangles": 832
+        },
+        {
+          "level": 1,
+          "node": "LOD1",
+          "triangles": 320
+        }
+      ],
+      "materials": [
+        "bronze",
+        "objects",
+        "rose-stone",
+        "shade"
+      ],
+      "textures": [
+        {
+          "id": "repo-penthouse-texture-rose-stone",
+          "colorSpace": "sRGB",
+          "size": [
+            512,
+            512
+          ],
+          "tileMetres": 1.6
+        }
+      ],
+      "collision": {
+        "proxy": "COL_reading-side-table",
+        "plan": [
+          "obstacle:reading-side-table"
+        ]
+      },
+      "anchors": [],
+      "seatHeight": null,
+      "placements": [
+        "reading-side-table"
+      ]
+    },
+    {
+      "id": "repo-penthouse-bookcase",
+      "kind": "model",
+      "file": "assets/office-penthouse/models/bookcase.glb",
+      "bytes": 736616,
+      "sha256": "40181376069dfdfec921cc628200073fb2753bc52126130bde8c2bcce9317f83",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "bookcase",
+          "LOD0",
+          "bookcase_LOD0wood",
+          "bookcase_LOD0bronze",
+          "bookcase_LOD0objects",
+          "LOD1",
+          "bookcase_LOD1wood",
+          "bookcase_LOD1bronze",
+          "bookcase_LOD1objects",
+          "COL_bookcase"
+        ],
+        "meshes": 6,
+        "triangles": 7592,
+        "materials": [
+          "bronze",
+          "objects",
+          "wood"
+        ],
+        "textures": [
+          [
+            512,
+            512
+          ]
+        ],
+        "bounds": [
+          [
+            -2.700000047683716,
+            -7.450580707946131e-10,
+            -0.30000001192092896
+          ],
+          [
+            2.700000047683716,
+            2.5999999046325684,
+            0.30000001192092896
+          ]
+        ],
+        "missingTextures": []
+      },
+      "source": "repo",
+      "reference": null,
+      "axes": "x east / y up / z south",
+      "availability": "committed",
+      "package": "office-penthouse",
+      "version": 1,
+      "layout": "office-penthouse-1",
+      "layoutVersion": "office-ipic-baseline-1",
+      "planDigest": "d91c8f172256deee6da29bcd68356b3a83604e5b649e1575bebb49bf8ab2784a",
+      "provenance": "Original procedural geometry and seeded-noise surfaces authored in preview/src/office-penthouse-furnishings.js for #362. No kit art or kit bytes: the desk footprints are the kit’s measured colliders as numbers only (R19, Val, 2026-10-15). No generated or purchased imagery.",
+      "license": "Original work for this repository; no separate license file (the repository has none)",
+      "owner": "design: river-oaks-1b (#362); integration: preview/src/office-penthouse-graybox.js",
+      "triangles": 6180,
+      "meshNodes": 3,
+      "bounds": [
+        [
+          -2.7,
+          0,
+          -0.3
+        ],
+        [
+          2.7,
+          2.6,
+          0.3
+        ]
+      ],
+      "stage": "asset-package",
+      "targetDimensions": "5.4 × 0.6 × 2.6 m (x × d × h)",
+      "lod0Target": 12000,
+      "note": "Library bookcase",
+      "programme": "library",
+      "status": "proposed: original art awaiting design review",
+      "pivot": "centre of the floor footprint at floor contact; front +d (seating) or toward -d (displays)",
+      "lods": [
+        {
+          "level": 0,
+          "node": "LOD0",
+          "triangles": 6180
+        },
+        {
+          "level": 1,
+          "node": "LOD1",
+          "triangles": 1412
+        }
+      ],
+      "materials": [
+        "bronze",
+        "objects",
+        "wood"
+      ],
+      "textures": [
+        {
+          "id": "repo-penthouse-texture-wood",
+          "colorSpace": "sRGB",
+          "size": [
+            512,
+            512
+          ],
+          "tileMetres": 0.9
+        }
+      ],
+      "collision": {
+        "proxy": "COL_bookcase",
+        "plan": [
+          "obstacle:bookcase-1",
+          "obstacle:bookcase-2"
+        ]
+      },
+      "anchors": [],
+      "seatHeight": null,
+      "placements": [
+        "bookcase-1",
+        "bookcase-2"
+      ]
+    },
+    {
+      "id": "repo-penthouse-arrival-cladding",
+      "kind": "model",
+      "file": "assets/office-penthouse/models/arrival-cladding.glb",
+      "bytes": 56468,
+      "sha256": "be1c7f8255be204f7cfb0816266da91a8faf4b5cf6bda072083d9c225328d72c",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "arrival-cladding",
+          "LOD0",
+          "arrival-cladding_LOD0rose-stone",
+          "arrival-cladding_LOD0bronze",
+          "LOD1",
+          "arrival-cladding_LOD1rose-stone",
+          "arrival-cladding_LOD1bronze",
+          "COL_arrival-cladding"
+        ],
+        "meshes": 4,
+        "triangles": 384,
+        "materials": [
+          "bronze",
+          "rose-stone"
+        ],
+        "textures": [
+          [
+            512,
+            512
+          ]
+        ],
+        "bounds": [
+          [
+            -3,
+            -3.33786012163273e-8,
+            -0.05999999865889549
+          ],
+          [
+            3,
+            7.599999904632568,
+            9.238719789195216e-10
+          ]
+        ],
+        "missingTextures": []
+      },
+      "source": "repo",
+      "reference": null,
+      "axes": "x east / y up / z south",
+      "availability": "committed",
+      "package": "office-penthouse",
+      "version": 1,
+      "layout": "office-penthouse-1",
+      "layoutVersion": "office-ipic-baseline-1",
+      "planDigest": "d91c8f172256deee6da29bcd68356b3a83604e5b649e1575bebb49bf8ab2784a",
+      "provenance": "Original procedural geometry and seeded-noise surfaces authored in preview/src/office-penthouse-furnishings.js for #362. No kit art or kit bytes: the desk footprints are the kit’s measured colliders as numbers only (R19, Val, 2026-10-15). No generated or purchased imagery.",
+      "license": "Original work for this repository; no separate license file (the repository has none)",
+      "owner": "design: river-oaks-1b (#362); integration: preview/src/office-penthouse-graybox.js",
+      "triangles": 192,
+      "meshNodes": 2,
+      "bounds": [
+        [
+          -3,
+          0,
+          -0.06
+        ],
+        [
+          3,
+          7.6,
+          0
+        ]
+      ],
+      "stage": "asset-package",
+      "targetDimensions": "6 × 0.07 × 7.6 m (x × d × h)",
+      "lod0Target": 12000,
+      "note": "Arrival wall: rose-stone cladding and bronze door surround",
+      "programme": "arrival",
+      "status": "proposed: original art awaiting design review",
+      "pivot": "wall face at floor level, front +d",
+      "lods": [
+        {
+          "level": 0,
+          "node": "LOD0",
+          "triangles": 192
+        },
+        {
+          "level": 1,
+          "node": "LOD1",
+          "triangles": 192
+        }
+      ],
+      "materials": [
+        "bronze",
+        "rose-stone"
+      ],
+      "textures": [
+        {
+          "id": "repo-penthouse-texture-rose-stone",
+          "colorSpace": "sRGB",
+          "size": [
+            512,
+            512
+          ],
+          "tileMetres": 1.6
+        }
+      ],
+      "collision": {
+        "proxy": "COL_arrival-cladding",
+        "plan": []
+      },
+      "anchors": [],
+      "seatHeight": null,
+      "placements": [
+        "arrival-cladding"
+      ]
+    },
+    {
+      "id": "repo-penthouse-back-panelling",
+      "kind": "model",
+      "file": "assets/office-penthouse/models/back-panelling.glb",
+      "bytes": 158508,
+      "sha256": "a759611616f90bc4b4648e2c6cf3b9e6b0e6819932787d65417f8e5ba51bda30",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "back-panelling",
+          "LOD0",
+          "back-panelling_LOD0wood",
+          "back-panelling_LOD0bronze",
+          "LOD1",
+          "back-panelling_LOD1wood",
+          "back-panelling_LOD1bronze",
+          "COL_back-panelling"
+        ],
+        "meshes": 4,
+        "triangles": 1248,
+        "materials": [
+          "bronze",
+          "wood"
+        ],
+        "textures": [
+          [
+            512,
+            512
+          ]
+        ],
+        "bounds": [
+          [
+            -15,
+            8.940696516468449e-10,
+            -0.03400000184774399
+          ],
+          [
+            15,
+            3.2799999713897705,
+            9.238719789195216e-10
+          ]
+        ],
+        "missingTextures": []
+      },
+      "source": "repo",
+      "reference": null,
+      "axes": "x east / y up / z south",
+      "availability": "committed",
+      "package": "office-penthouse",
+      "version": 1,
+      "layout": "office-penthouse-1",
+      "layoutVersion": "office-ipic-baseline-1",
+      "planDigest": "d91c8f172256deee6da29bcd68356b3a83604e5b649e1575bebb49bf8ab2784a",
+      "provenance": "Original procedural geometry and seeded-noise surfaces authored in preview/src/office-penthouse-furnishings.js for #362. No kit art or kit bytes: the desk footprints are the kit’s measured colliders as numbers only (R19, Val, 2026-10-15). No generated or purchased imagery.",
+      "license": "Original work for this repository; no separate license file (the repository has none)",
+      "owner": "design: river-oaks-1b (#362); integration: preview/src/office-penthouse-graybox.js",
+      "triangles": 624,
+      "meshNodes": 2,
+      "bounds": [
+        [
+          -15,
+          0,
+          -0.034
+        ],
+        [
+          15,
+          3.28,
+          0
+        ]
+      ],
+      "stage": "asset-package",
+      "targetDimensions": "30 × 0.04 × 3.3 m (x × d × h)",
+      "lod0Target": 12000,
+      "note": "Back wall under the mezzanine: walnut panelling with bronze reveals",
+      "programme": "hosting",
+      "status": "proposed: original art awaiting design review",
+      "pivot": "wall face at floor level, front +d",
+      "lods": [
+        {
+          "level": 0,
+          "node": "LOD0",
+          "triangles": 624
+        },
+        {
+          "level": 1,
+          "node": "LOD1",
+          "triangles": 624
+        }
+      ],
+      "materials": [
+        "bronze",
+        "wood"
+      ],
+      "textures": [
+        {
+          "id": "repo-penthouse-texture-wood",
+          "colorSpace": "sRGB",
+          "size": [
+            512,
+            512
+          ],
+          "tileMetres": 0.9
+        }
+      ],
+      "collision": {
+        "proxy": "COL_back-panelling",
+        "plan": []
+      },
+      "anchors": [],
+      "seatHeight": null,
+      "placements": [
+        "back-panelling"
+      ]
+    },
+    {
+      "id": "repo-penthouse-library-panel",
+      "kind": "model",
+      "file": "assets/office-penthouse/models/library-panel.glb",
+      "bytes": 228268,
+      "sha256": "337ef6b355adbfeed76a6dc304eb736188fcaacd852730b2259a001ed25df222",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "library-panel",
+          "LOD0",
+          "library-panel_LOD0wood",
+          "library-panel_LOD0bronze",
+          "LOD1",
+          "library-panel_LOD1wood",
+          "library-panel_LOD1bronze",
+          "COL_library-panel"
+        ],
+        "meshes": 4,
+        "triangles": 2688,
+        "materials": [
+          "bronze",
+          "wood"
+        ],
+        "textures": [
+          [
+            512,
+            512
+          ]
+        ],
+        "bounds": [
+          [
+            -3.25,
+            0.2849999964237213,
+            -0.05000000074505806
+          ],
+          [
+            3.25,
+            3.315000057220459,
+            3.7252903539730653e-10
+          ]
+        ],
+        "missingTextures": []
+      },
+      "source": "repo",
+      "reference": null,
+      "axes": "x east / y up / z south",
+      "availability": "committed",
+      "package": "office-penthouse",
+      "version": 1,
+      "layout": "office-penthouse-1",
+      "layoutVersion": "office-ipic-baseline-1",
+      "planDigest": "d91c8f172256deee6da29bcd68356b3a83604e5b649e1575bebb49bf8ab2784a",
+      "provenance": "Original procedural geometry and seeded-noise surfaces authored in preview/src/office-penthouse-furnishings.js for #362. No kit art or kit bytes: the desk footprints are the kit’s measured colliders as numbers only (R19, Val, 2026-10-15). No generated or purchased imagery.",
+      "license": "Original work for this repository; no separate license file (the repository has none)",
+      "owner": "design: river-oaks-1b (#362); integration: preview/src/office-penthouse-graybox.js",
+      "triangles": 2628,
+      "meshNodes": 2,
+      "bounds": [
+        [
+          -3.25,
+          0.285,
+          -0.05
+        ],
+        [
+          3.25,
+          3.315,
+          0
+        ]
+      ],
+      "stage": "asset-package",
+      "targetDimensions": "6.5 × 0.06 × 3.3 m (x × d × h)",
+      "lod0Target": 12000,
+      "note": "Library backdrop: fluted walnut panel",
+      "programme": "library",
+      "status": "proposed: original art awaiting design review",
+      "pivot": "wall face at floor level, front +d",
+      "lods": [
+        {
+          "level": 0,
+          "node": "LOD0",
+          "triangles": 2628
+        },
+        {
+          "level": 1,
+          "node": "LOD1",
+          "triangles": 60
+        }
+      ],
+      "materials": [
+        "bronze",
+        "wood"
+      ],
+      "textures": [
+        {
+          "id": "repo-penthouse-texture-wood",
+          "colorSpace": "sRGB",
+          "size": [
+            512,
+            512
+          ],
+          "tileMetres": 0.9
+        }
+      ],
+      "collision": {
+        "proxy": "COL_library-panel",
+        "plan": []
+      },
+      "anchors": [],
+      "seatHeight": null,
+      "placements": [
+        "library-panel"
+      ]
+    },
+    {
+      "id": "repo-penthouse-rug",
+      "kind": "model",
+      "file": "assets/office-penthouse/models/rug.glb",
+      "bytes": 9128,
+      "sha256": "6b8d19b2799073b8970c0d1985db03638264f1b318aefd290ea0b69aaeaf3153",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "rug",
+          "LOD0",
+          "rug_LOD0wool",
+          "LOD1",
+          "rug_LOD1wool",
+          "COL_rug"
+        ],
+        "meshes": 2,
+        "triangles": 48,
+        "materials": [
+          "wool"
+        ],
+        "textures": [],
+        "bounds": [
+          [
+            -0.5,
+            -2.607703289414509e-11,
+            -0.5
+          ],
+          [
+            0.5,
+            0.009999999776482582,
+            0.5
+          ]
+        ],
+        "missingTextures": []
+      },
+      "source": "repo",
+      "reference": null,
+      "axes": "x east / y up / z south",
+      "availability": "committed",
+      "package": "office-penthouse",
+      "version": 1,
+      "layout": "office-penthouse-1",
+      "layoutVersion": "office-ipic-baseline-1",
+      "planDigest": "d91c8f172256deee6da29bcd68356b3a83604e5b649e1575bebb49bf8ab2784a",
+      "provenance": "Original procedural geometry and seeded-noise surfaces authored in preview/src/office-penthouse-furnishings.js for #362. No kit art or kit bytes: the desk footprints are the kit’s measured colliders as numbers only (R19, Val, 2026-10-15). No generated or purchased imagery.",
+      "license": "Original work for this repository; no separate license file (the repository has none)",
+      "owner": "design: river-oaks-1b (#362); integration: preview/src/office-penthouse-graybox.js",
+      "triangles": 24,
+      "meshNodes": 1,
+      "bounds": [
+        [
+          -0.5,
+          0,
+          -0.5
+        ],
+        [
+          0.5,
+          0.01,
+          0.5
+        ]
+      ],
+      "stage": "asset-package",
+      "targetDimensions": "1 × 1 × 0.01 m (x × d × h)",
+      "lod0Target": 12000,
+      "note": "Rug",
+      "programme": "shared",
+      "status": "proposed: original art awaiting design review",
+      "pivot": "centre of the floor footprint at floor contact; front +d (seating) or toward -d (displays)",
+      "lods": [
+        {
+          "level": 0,
+          "node": "LOD0",
+          "triangles": 24
+        },
+        {
+          "level": 1,
+          "node": "LOD1",
+          "triangles": 24
+        }
+      ],
+      "materials": [
+        "wool"
+      ],
+      "textures": [],
+      "collision": {
+        "proxy": "COL_rug",
+        "plan": []
+      },
+      "anchors": [],
+      "seatHeight": null,
+      "placements": [
+        "rug-lounge",
+        "rug-meeting",
+        "rug-library"
+      ]
+    },
+    {
+      "id": "repo-penthouse-pendant",
+      "kind": "model",
+      "file": "assets/office-penthouse/models/pendant.glb",
+      "bytes": 88112,
+      "sha256": "969199aaf1a3021135c620aafe06d92296efea20b8875ccbd5dbb4441c6a147e",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "pendant",
+          "LOD0",
+          "pendant_LOD0shade",
+          "pendant_LOD0bronze",
+          "LOD1",
+          "pendant_LOD1shade",
+          "pendant_LOD1bronze",
+          "COL_pendant"
+        ],
+        "meshes": 4,
+        "triangles": 1776,
+        "materials": [
+          "bronze",
+          "shade"
+        ],
+        "textures": [],
+        "bounds": [
+          [
+            -0.46000000834465027,
+            -0.20692820847034454,
+            -0.46000000834465027
+          ],
+          [
+            0.46000000834465027,
+            0.20999999344348907,
+            0.46000000834465027
+          ]
+        ],
+        "missingTextures": []
+      },
+      "source": "repo",
+      "reference": null,
+      "axes": "x east / y up / z south",
+      "availability": "committed",
+      "package": "office-penthouse",
+      "version": 1,
+      "layout": "office-penthouse-1",
+      "layoutVersion": "office-ipic-baseline-1",
+      "planDigest": "d91c8f172256deee6da29bcd68356b3a83604e5b649e1575bebb49bf8ab2784a",
+      "provenance": "Original procedural geometry and seeded-noise surfaces authored in preview/src/office-penthouse-furnishings.js for #362. No kit art or kit bytes: the desk footprints are the kit’s measured colliders as numbers only (R19, Val, 2026-10-15). No generated or purchased imagery.",
+      "license": "Original work for this repository; no separate license file (the repository has none)",
+      "owner": "design: river-oaks-1b (#362); integration: preview/src/office-penthouse-graybox.js",
+      "triangles": 1296,
+      "meshNodes": 2,
+      "bounds": [
+        [
+          -0.46,
+          -0.2069,
+          -0.46
+        ],
+        [
+          0.46,
+          0.21,
+          0.46
+        ]
+      ],
+      "stage": "asset-package",
+      "targetDimensions": "0.9 × 0.9 × 0.42 m (x × d × h)",
+      "lod0Target": 12000,
+      "note": "Pendant drum light",
+      "programme": "shared",
+      "status": "proposed: original art awaiting design review",
+      "pivot": "drum centre",
+      "lods": [
+        {
+          "level": 0,
+          "node": "LOD0",
+          "triangles": 1296
+        },
+        {
+          "level": 1,
+          "node": "LOD1",
+          "triangles": 480
+        }
+      ],
+      "materials": [
+        "bronze",
+        "shade"
+      ],
+      "textures": [],
+      "collision": {
+        "proxy": "COL_pendant",
+        "plan": []
+      },
+      "anchors": [],
+      "seatHeight": null,
+      "placements": []
+    },
+    {
+      "id": "repo-penthouse-office-penthouse-glb",
+      "kind": "model",
+      "file": "assets/office-penthouse/office-penthouse.glb",
+      "bytes": 3384380,
+      "sha256": "a7850dbff5541d73f4341487269bb04b205d38c4245865f9d9547859940e764a",
+      "reimport": {
+        "nodes": [
+          "AuxScene",
+          "office-penthouse",
+          "shell",
+          "primary_floor",
+          "terrace_floor",
+          "mezzanine_slab",
+          "stair_tread_1",
+          "stair_tread_2",
+          "stair_tread_3",
+          "stair_tread_4",
+          "stair_tread_5",
+          "stair_tread_6",
+          "stair_tread_7",
+          "stair_tread_8",
+          "stair_tread_9",
+          "stair_tread_10",
+          "stair_tread_11",
+          "stair_tread_12",
+          "stair_tread_13",
+          "stair_tread_14",
+          "stair_tread_15",
+          "stair_tread_16",
+          "stair_tread_17",
+          "stair_tread_18",
+          "stair_tread_19",
+          "stair_tread_20",
+          "stair_tread_21",
+          "stair_tread_22",
+          "mezzanine_guard",
+          "mezzanine_guard_rail",
+          "mezzanine_guard_1",
+          "mezzanine_guard_rail_1",
+          "lift_platform_jevica-officel0",
+          "lift_frame_jevica-officel0",
+          "lift_platform_jevica-officel1",
+          "lift_frame_jevica-officel1",
+          "arrival_core_west",
+          "arrival_core_east",
+          "entrance_header",
+          "back_wall",
+          "terrace_rail_south",
+          "terrace_rail_west",
+          "terrace_rail_north",
+          "ceiling",
+          "light_0",
+          "light_1",
+          "light_2",
+          "light_3",
+          "light_4",
+          "curtain_wall_panes",
+          "curtain_wall_frames",
+          "office-furnishings",
+          "furnishingsmain-floor",
+          "executive-desk",
+          "executive-deskwood",
+          "executive-deskbronze",
+          "executive-deskrose-stone",
+          "executive-deskobjects",
+          "executive-deskshade",
+          "bench-a",
+          "bench-awood",
+          "bench-abronze",
+          "bench-aobjects",
+          "bench-b",
+          "bench-bwood",
+          "bench-bbronze",
+          "bench-bobjects",
+          "lounge-sofa",
+          "lounge-sofawood",
+          "lounge-sofaupholstery",
+          "SEAT_1lounge-sofa",
+          "SEAT_2lounge-sofa",
+          "lounge-chair-a",
+          "lounge-chair-abronze",
+          "lounge-chair-aupholstery",
+          "SEATlounge-chair-a",
+          "lounge-chair-b",
+          "lounge-chair-bbronze",
+          "lounge-chair-bupholstery",
+          "SEATlounge-chair-b",
+          "lounge-table",
+          "lounge-tablerose-stone",
+          "lounge-tablebronze",
+          "lounge-tableobjects",
+          "botanical-planter",
+          "botanical-plantertravertine",
+          "botanical-planterorganic",
+          "botanical-planterorganic_1",
+          "botanical-planterfoliage",
+          "botanical-planterfoliage_1",
+          "back-console",
+          "back-consolebronze",
+          "back-consolewood",
+          "back-consoletravertine",
+          "back-consoleobjects",
+          "meeting-table",
+          "meeting-tabletravertine",
+          "meeting-tablewood",
+          "meeting-tablebronze",
+          "meeting-tableobjects",
+          "meeting-chair-1",
+          "meeting-chair-1wood",
+          "meeting-chair-1upholstery",
+          "meeting-chair-2",
+          "meeting-chair-2wood",
+          "meeting-chair-2upholstery",
+          "meeting-chair-3",
+          "meeting-chair-3wood",
+          "meeting-chair-3upholstery",
+          "meeting-chair-4",
+          "meeting-chair-4wood",
+          "meeting-chair-4upholstery",
+          "meeting-chair-5",
+          "meeting-chair-5wood",
+          "meeting-chair-5upholstery",
+          "meeting-chair-6",
+          "meeting-chair-6wood",
+          "meeting-chair-6upholstery",
+          "desk-executive-chair",
+          "desk-executive-chairbronze",
+          "desk-executive-chairgraphite",
+          "desk-executive-chairupholstery",
+          "desk-a1-chair",
+          "desk-a1-chairgraphite",
+          "desk-a1-chairupholstery",
+          "desk-a2-chair",
+          "desk-a2-chairgraphite",
+          "desk-a2-chairupholstery",
+          "desk-b1-chair",
+          "desk-b1-chairgraphite",
+          "desk-b1-chairupholstery",
+          "desk-b2-chair",
+          "desk-b2-chairgraphite",
+          "desk-b2-chairupholstery",
+          "desk-executive-display-1",
+          "desk-executive-display-1bronze",
+          "desk-executive-display-1graphite",
+          "desk-executive-display-1SCREEN_DYNAMIC",
+          "SCREENdesk-executive-display-1",
+          "desk-executive-display-2",
+          "desk-executive-display-2bronze",
+          "desk-executive-display-2graphite",
+          "desk-executive-display-2SCREEN_DYNAMIC",
+          "SCREENdesk-executive-display-2",
+          "desk-executive-display-3",
+          "desk-executive-display-3bronze",
+          "desk-executive-display-3graphite",
+          "desk-executive-display-3SCREEN_DYNAMIC",
+          "SCREENdesk-executive-display-3",
+          "desk-a1-display-1",
+          "desk-a1-display-1bronze",
+          "desk-a1-display-1graphite",
+          "desk-a1-display-1SCREEN_DYNAMIC",
+          "SCREENdesk-a1-display-1",
+          "desk-a1-display-2",
+          "desk-a1-display-2bronze",
+          "desk-a1-display-2graphite",
+          "desk-a1-display-2SCREEN_DYNAMIC",
+          "SCREENdesk-a1-display-2",
+          "desk-a2-display-1",
+          "desk-a2-display-1bronze",
+          "desk-a2-display-1graphite",
+          "desk-a2-display-1SCREEN_DYNAMIC",
+          "SCREENdesk-a2-display-1",
+          "desk-a2-display-2",
+          "desk-a2-display-2bronze",
+          "desk-a2-display-2graphite",
+          "desk-a2-display-2SCREEN_DYNAMIC",
+          "SCREENdesk-a2-display-2",
+          "desk-b1-display-1",
+          "desk-b1-display-1bronze",
+          "desk-b1-display-1graphite",
+          "desk-b1-display-1SCREEN_DYNAMIC",
+          "SCREENdesk-b1-display-1",
+          "desk-b1-display-2",
+          "desk-b1-display-2bronze",
+          "desk-b1-display-2graphite",
+          "desk-b1-display-2SCREEN_DYNAMIC",
+          "SCREENdesk-b1-display-2",
+          "desk-b2-display-1",
+          "desk-b2-display-1bronze",
+          "desk-b2-display-1graphite",
+          "desk-b2-display-1SCREEN_DYNAMIC",
+          "SCREENdesk-b2-display-1",
+          "desk-b2-display-2",
+          "desk-b2-display-2bronze",
+          "desk-b2-display-2graphite",
+          "desk-b2-display-2SCREEN_DYNAMIC",
+          "SCREENdesk-b2-display-2",
+          "arrival-cladding",
+          "arrival-claddingrose-stone",
+          "arrival-claddingbronze",
+          "back-panelling",
+          "back-panellingwood",
+          "back-panellingbronze",
+          "rug-lounge",
+          "rug-loungewool",
+          "rug-meeting",
+          "rug-meetingwool",
+          "pendant-1",
+          "pendant-1shade",
+          "pendant-1bronze",
+          "pendant-1rod",
+          "pendant-2",
+          "pendant-2shade",
+          "pendant-2bronze",
+          "pendant-2rod",
+          "pendant-3",
+          "pendant-3shade",
+          "pendant-3bronze",
+          "pendant-3rod",
+          "pendant-4",
+          "pendant-4shade",
+          "pendant-4bronze",
+          "pendant-4rod",
+          "furnishingsterrace",
+          "terrace-planter-south",
+          "terrace-planter-southtravertine",
+          "terrace-planter-southorganic",
+          "terrace-planter-southfoliage",
+          "terrace-planter-north",
+          "terrace-planter-northtravertine",
+          "terrace-planter-northorganic",
+          "terrace-planter-northfoliage",
+          "terrace-lounger-a",
+          "terrace-lounger-awood",
+          "terrace-lounger-aupholstery",
+          "terrace-lounger-b",
+          "terrace-lounger-bwood",
+          "terrace-lounger-bupholstery",
+          "terrace-side-table",
+          "terrace-side-tabletravertine",
+          "terrace-bistro-table",
+          "terrace-bistro-tablebronze",
+          "terrace-bistro-tabletravertine",
+          "terrace-bistro-chair-a",
+          "terrace-bistro-chair-abronze",
+          "terrace-bistro-chair-awood",
+          "terrace-bistro-chair-b",
+          "terrace-bistro-chair-bbronze",
+          "terrace-bistro-chair-bwood",
+          "furnishingsmezzanine",
+          "reading-chair-a",
+          "reading-chair-awood",
+          "reading-chair-aupholstery",
+          "reading-chair-b",
+          "reading-chair-bwood",
+          "reading-chair-bupholstery",
+          "reading-side-table",
+          "reading-side-tablebronze",
+          "reading-side-tablerose-stone",
+          "reading-side-tableobjects",
+          "reading-side-tableshade",
+          "bookcase-1",
+          "bookcase-1wood",
+          "bookcase-1bronze",
+          "bookcase-1objects",
+          "bookcase-2",
+          "bookcase-2wood",
+          "bookcase-2bronze",
+          "bookcase-2objects",
+          "library-panel",
+          "library-panelwood",
+          "library-panelbronze",
+          "rug-library",
+          "rug-librarywool",
+          "collision",
+          "COL_executive-desk",
+          "COL_bench-a",
+          "COL_bench-b",
+          "COL_lounge-sofa",
+          "COL_lounge-table",
+          "COL_lounge-chair-a",
+          "COL_lounge-chair-b",
+          "COL_botanical-planter",
+          "COL_back-console",
+          "COL_meeting-table",
+          "COL_meeting-chair-1",
+          "COL_meeting-chair-4",
+          "COL_meeting-chair-2",
+          "COL_meeting-chair-5",
+          "COL_meeting-chair-3",
+          "COL_meeting-chair-6",
+          "COL_terrace-planter-south",
+          "COL_terrace-planter-north",
+          "COL_terrace-lounger-a",
+          "COL_terrace-lounger-b",
+          "COL_terrace-side-table",
+          "COL_terrace-bistro-table",
+          "COL_terrace-bistro-chair-a",
+          "COL_terrace-bistro-chair-b",
+          "COL_reading-chair-a",
+          "COL_reading-chair-b",
+          "COL_reading-side-table",
+          "COL_bookcase-1",
+          "COL_bookcase-2",
+          "COL_desk-executive-chair",
+          "COL_desk-a1-chair",
+          "COL_desk-a2-chair",
+          "COL_desk-b1-chair",
+          "COL_desk-b2-chair"
+        ],
+        "meshes": 184,
+        "triangles": 87136,
+        "materials": [
+          "",
+          "SCREEN_DYNAMIC",
+          "bronze",
+          "foliage",
+          "graphite",
+          "objects",
+          "organic",
+          "rose-stone",
+          "shade",
+          "travertine",
+          "upholstery",
+          "wood",
+          "wool"
+        ],
+        "textures": [
+          [
+            512,
+            512
+          ],
+          [
+            512,
+            512
+          ],
+          [
+            512,
+            512
+          ]
+        ],
+        "bounds": [
+          [
+            -23.200000001490118,
+            -0.10000000074505806,
+            -20.200000001490118
+          ],
+          [
+            15.15000057220459,
+            7.750000002980232,
+            0.20000000149011612
+          ]
+        ],
+        "missingTextures": []
+      },
+      "source": "repo",
+      "reference": null,
+      "axes": "x east / y up / z south",
+      "availability": "committed",
+      "package": "office-penthouse",
+      "version": 1,
+      "layout": "office-penthouse-1",
+      "layoutVersion": "office-ipic-baseline-1",
+      "planDigest": "d91c8f172256deee6da29bcd68356b3a83604e5b649e1575bebb49bf8ab2784a",
+      "provenance": "Original procedural geometry and seeded-noise surfaces authored in preview/src/office-penthouse-furnishings.js for #362. No kit art or kit bytes: the desk footprints are the kit’s measured colliders as numbers only (R19, Val, 2026-10-15). No generated or purchased imagery.",
+      "license": "Original work for this repository; no separate license file (the repository has none)",
+      "owner": "design: river-oaks-1b (#362); integration: preview/src/office-penthouse-graybox.js",
+      "triangles": 87136,
+      "meshNodes": 184,
+      "bounds": [
+        [
+          -23.2,
+          -0.1,
+          -20.2
+        ],
+        [
+          15.15,
+          7.75,
+          0.2
+        ]
+      ],
+      "stage": "asset-package",
+      "targetDimensions": "38 × 20 × 7.6 m (main floor, terrace, mezzanine)",
+      "lod0Target": null,
+      "note": "The placed office: shell and every furnishing as its own named node, COL_<id> collision proxies on the plan footprints, SEAT and SCREEN anchors, the lamps as punctual lights",
+      "status": "proposed: original art awaiting design review",
+      "pivot": "office origin: the entrance centre at floor level"
+    },
+    {
+      "id": "repo-penthouse-office-penthouse-blend",
+      "kind": "model",
+      "file": "assets/office-penthouse/office-penthouse.blend",
+      "bytes": 1636232,
+      "sha256": "c7e1fb86639d6f2865b13400de6e8fb0103aa722697550a2de8ddbca45b33923",
+      "source": "repo",
+      "reference": null,
+      "axes": "Blender Z up; +Y = d (into the office)",
+      "availability": "committed",
+      "package": "office-penthouse",
+      "version": 1,
+      "layout": "office-penthouse-1",
+      "layoutVersion": "office-ipic-baseline-1",
+      "planDigest": "d91c8f172256deee6da29bcd68356b3a83604e5b649e1575bebb49bf8ab2784a",
+      "provenance": "Original procedural geometry and seeded-noise surfaces authored in preview/src/office-penthouse-furnishings.js for #362. No kit art or kit bytes: the desk footprints are the kit’s measured colliders as numbers only (R19, Val, 2026-10-15). No generated or purchased imagery.",
+      "license": "Original work for this repository; no separate license file (the repository has none)",
+      "owner": "design: river-oaks-1b (#362); integration: preview/src/office-penthouse-graybox.js",
+      "triangles": 85960,
+      "meshNodes": 184,
+      "bounds": null,
+      "stage": "editable-source",
+      "targetDimensions": null,
+      "lod0Target": null,
+      "note": "Editable Blender project imported from the placed GLB (5.2.2 LTS); collections per visibility group, COL_ proxies wire-only, review cameras O1-O4",
+      "status": "proposed: original art awaiting design review",
+      "pivot": "office origin"
+    },
+    {
+      "id": "repo-penthouse-texture-travertine",
+      "kind": "texture",
+      "file": "assets/office-penthouse/textures/travertine.jpg",
+      "bytes": 60973,
+      "sha256": "ec7b4f728bbb4776b99d3386f7d164af92eaf40f41b9330d9a116be7a588dc33",
+      "reimport": null,
+      "source": "repo",
+      "reference": null,
+      "axes": null,
+      "availability": "committed",
+      "package": "office-penthouse",
+      "version": 1,
+      "layout": "office-penthouse-1",
+      "layoutVersion": "office-ipic-baseline-1",
+      "planDigest": "d91c8f172256deee6da29bcd68356b3a83604e5b649e1575bebb49bf8ab2784a",
+      "provenance": "Original procedural geometry and seeded-noise surfaces authored in preview/src/office-penthouse-furnishings.js for #362. No kit art or kit bytes: the desk footprints are the kit’s measured colliders as numbers only (R19, Val, 2026-10-15). No generated or purchased imagery.",
+      "license": "Original work for this repository; no separate license file (the repository has none)",
+      "owner": "design: river-oaks-1b (#362); integration: preview/src/office-penthouse-graybox.js",
+      "colorSpace": "sRGB",
+      "size": [
+        512,
+        512
+      ],
+      "note": "Shared travertine surface: seeded tileable noise, JPEG, embedded in the GLBs"
+    },
+    {
+      "id": "repo-penthouse-texture-rose-stone",
+      "kind": "texture",
+      "file": "assets/office-penthouse/textures/rose-stone.jpg",
+      "bytes": 17101,
+      "sha256": "ad908b62f70def27fb06d88577514815ed72c8816c0892025b27049718e8cc28",
+      "reimport": null,
+      "source": "repo",
+      "reference": null,
+      "axes": null,
+      "availability": "committed",
+      "package": "office-penthouse",
+      "version": 1,
+      "layout": "office-penthouse-1",
+      "layoutVersion": "office-ipic-baseline-1",
+      "planDigest": "d91c8f172256deee6da29bcd68356b3a83604e5b649e1575bebb49bf8ab2784a",
+      "provenance": "Original procedural geometry and seeded-noise surfaces authored in preview/src/office-penthouse-furnishings.js for #362. No kit art or kit bytes: the desk footprints are the kit’s measured colliders as numbers only (R19, Val, 2026-10-15). No generated or purchased imagery.",
+      "license": "Original work for this repository; no separate license file (the repository has none)",
+      "owner": "design: river-oaks-1b (#362); integration: preview/src/office-penthouse-graybox.js",
+      "colorSpace": "sRGB",
+      "size": [
+        512,
+        512
+      ],
+      "note": "Shared rose-stone surface: seeded tileable noise, JPEG, embedded in the GLBs"
+    },
+    {
+      "id": "repo-penthouse-texture-wood",
+      "kind": "texture",
+      "file": "assets/office-penthouse/textures/wood.jpg",
+      "bytes": 33818,
+      "sha256": "00d5ac155f5cf679282fea05c38dd503a9abc9a13cddf35ae433f254afe6d88b",
+      "reimport": null,
+      "source": "repo",
+      "reference": null,
+      "axes": null,
+      "availability": "committed",
+      "package": "office-penthouse",
+      "version": 1,
+      "layout": "office-penthouse-1",
+      "layoutVersion": "office-ipic-baseline-1",
+      "planDigest": "d91c8f172256deee6da29bcd68356b3a83604e5b649e1575bebb49bf8ab2784a",
+      "provenance": "Original procedural geometry and seeded-noise surfaces authored in preview/src/office-penthouse-furnishings.js for #362. No kit art or kit bytes: the desk footprints are the kit’s measured colliders as numbers only (R19, Val, 2026-10-15). No generated or purchased imagery.",
+      "license": "Original work for this repository; no separate license file (the repository has none)",
+      "owner": "design: river-oaks-1b (#362); integration: preview/src/office-penthouse-graybox.js",
+      "colorSpace": "sRGB",
+      "size": [
+        512,
+        512
+      ],
+      "note": "Shared wood surface: seeded tileable noise, JPEG, embedded in the GLBs"
+    },
+    {
+      "id": "repo-penthouse-materials",
+      "kind": "data",
+      "file": "assets/office-penthouse/materials.json",
+      "bytes": 1564,
+      "sha256": "c348d493615abc67216a2599e330e1115c38a2bf52a12629044a68835307d0d7",
+      "source": "repo",
+      "reference": null,
+      "axes": null,
+      "availability": "committed",
+      "package": "office-penthouse",
+      "version": 1,
+      "layout": "office-penthouse-1",
+      "layoutVersion": "office-ipic-baseline-1",
+      "planDigest": "d91c8f172256deee6da29bcd68356b3a83604e5b649e1575bebb49bf8ab2784a",
+      "provenance": "Original procedural geometry and seeded-noise surfaces authored in preview/src/office-penthouse-furnishings.js for #362. No kit art or kit bytes: the desk footprints are the kit’s measured colliders as numbers only (R19, Val, 2026-10-15). No generated or purchased imagery.",
+      "license": "Original work for this repository; no separate license file (the repository has none)",
+      "owner": "design: river-oaks-1b (#362); integration: preview/src/office-penthouse-graybox.js",
+      "note": "One material per finish with its PBR parameters, tint rule and surface"
     }
   ]
 }

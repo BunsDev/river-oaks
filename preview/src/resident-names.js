@@ -87,3 +87,12 @@ export function usernameProblem(name) {
   return null;
 }
 export const validUsername = name => usernameProblem(name) === null;
+
+// A name chosen now (by a resident, an approver or a default) also needs at least 4
+// letters A–Z in either case; digits and - _ . do not count, even where usernameKey
+// reads a digit as a letter. Names chosen before this rule still pass validUsername,
+// so residents who have one keep it.
+export function usernameChoiceProblem(name) {
+  return usernameProblem(name) ?? ((name.match(/[A-Za-z]/g) ?? []).length < 4 ? 'Use at least 4 letters; digits and - _ . do not count.' : null);
+}
+export const validNewUsername = name => usernameChoiceProblem(name) === null;

@@ -15,7 +15,6 @@ async page => {
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='true')await page.locator('#panel-toggle').click();
   check(await page.locator('.character-picker').isVisible(),'Authenticated character picker is available');
   check(await page.locator('.character-option[data-option=variant]').isHidden(),'A person with one style shows no style switch');
-  check(await page.locator('#player-beast-movement').isHidden(),'The humanoid default offers no beast movement');
   // Person, then style (where there is more than one), then form: each triple is one look.
   const choose=async (character,variant,form)=>{
     const settled=async expected=>page.waitForFunction(async expected=>{
@@ -29,38 +28,24 @@ async page => {
       await page.locator(`input[name=player-variant][value=${variant}]`).check();
       await settled({character,variant});
     }
-    await page.locator(`input[name=player-form][value=${form}]`).check();
     await settled({character,form});
   };
   const looks=[
-    ['jevica-beast','jevica','signature','beast','Rose enchantress · beast',null],
-    ['sable-human','sable','signature','human','Fox charmer · humanoid',null],
-    ['woman-casual','sable','signature','beast','Fox charmer · beast','sable-fox-turnaround'],
-    ['rowan-human','rowan','signature','human','Wolf wanderer · humanoid',null],
-    ['man-casual','rowan','signature','beast','Wolf wanderer · beast','rowan-wolf-turnaround'],
-    ['woman-tailored','vesper','signature','human','Velvet confidante · humanoid','vesper-velvet-turnaround'],
-    ['vesper-beast','vesper','signature','beast','Velvet confidante · beast',null],
-    ['man-tailored','aurel','signature','human','Midnight host · humanoid','aurel-human'],
-    ['midnight-host-wolf','aurel','signature','beast','Midnight host · beast','aurel-wolf'],
-    ['lyra-human','lyra','signature','human','Lynx muse · humanoid','lyra-human'],
-    ['woman-daywear','lyra','signature','beast','Lynx muse · beast','lyra-lynx'],
-    ['man-workwear','kai','formal','human','Starlight maker · celestial formal · humanoid','kai-three-celestial-styles'],
-    ['kai-formal-beast','kai','formal','beast','Starlight maker · celestial formal · beast',null],
-    ['kai-explorer','kai','explorer','human','Starlight maker · explorer casual · humanoid','kai-three-celestial-styles'],
-    ['kai-explorer-beast','kai','explorer','beast','Starlight maker · explorer casual · beast',null],
-    ['kai-noir','kai','noir','human','Starlight maker · starlit noir · humanoid','kai-three-celestial-styles'],
-    ['kai-noir-beast','kai','noir','beast','Starlight maker · starlit noir · beast',null],
-    ['forest-aristocrat','silvan','masculine','human','Forest aristocrat · masculine · humanoid','forest-aristocrat-masculine'],
-    ['forest-aristocrat-beast','silvan','masculine','beast','Forest aristocrat · masculine · beast',null],
-    ['forest-aristocrat-feminine','silvan','feminine','human','Forest aristocrat · feminine · humanoid','forest-aristocrat-feminine'],
-    ['forest-aristocrat-feminine-beast','silvan','feminine','beast','Forest aristocrat · feminine · beast',null],
+    ['sable-human','sable','signature','human','City storyteller · human',null],
+    ['rowan-human','rowan','signature','human','City wanderer · human',null],
+    ['woman-tailored','vesper','signature','human','Velvet confidante · human','vesper-velvet-turnaround'],
+    ['man-tailored','aurel','signature','human','Midnight host · human','aurel-human'],
+    ['lyra-human','lyra','signature','human','Velvet muse · human','lyra-human'],
+    ['man-workwear','kai','formal','human','Starlight maker · celestial formal · human','kai-three-celestial-styles'],
+    ['kai-explorer','kai','explorer','human','Starlight maker · explorer casual · human','kai-three-celestial-styles'],
+    ['kai-noir','kai','noir','human','Starlight maker · starlit noir · human','kai-three-celestial-styles'],
+    ['forest-aristocrat','silvan','masculine','human','Forest aristocrat · masculine · human','forest-aristocrat-masculine'],
+    ['forest-aristocrat-feminine','silvan','feminine','human','Forest aristocrat · feminine · human','forest-aristocrat-feminine'],
   ];
   for(const [profile,character,variant,form,role,reference] of looks){
     await choose(character,variant,form);
     await page.waitForFunction(id=>{const host=document.querySelector('#canvas-host');return host.dataset.playerReady==='true'&&host.dataset.playerAppearance===id;},profile);
     check(await page.locator('#player-role').textContent()===role,`${profile}: identity and 3D appearance update`);
-    check(await page.locator(`input[name=player-character][value=${character}]`).isChecked()&&await page.locator(`input[name=player-form][value=${form}]`).isChecked(),`${profile}: the picker shows the person and form`);
-    check(await page.locator('#player-beast-movement').isVisible()===(form==='beast'),`${profile}: beast movement is offered only in a beast form`);
     check(await page.locator('#player-flight').isVisible()===(character==='jevica'),`${profile}: only Jevica is offered flight`);
     if(reference){
       check(await page.locator('.player-portrait img').isVisible(),`${profile}: reference portrait is visible`);
@@ -71,11 +56,9 @@ async page => {
     }
   }
   await page.reload();await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerReady==='true');
-  check(await page.locator('input[name=player-character][value=silvan]').isChecked()&&await page.locator('input[name=player-variant][value=feminine]').isChecked()&&await page.locator('input[name=player-form][value=beast]').isChecked(),'Person, style and form persist on the account');
   await page.evaluate(()=>localStorage.setItem('river-oaks-character','midnight-host-hybrid'));
   await page.reload();
-  await page.waitForFunction(()=>{const host=document.querySelector('#canvas-host');return host.dataset.playerReady==='true'&&host.dataset.playerAppearance==='forest-aristocrat-feminine-beast';});
-  check(await page.locator('input[name=player-character][value=silvan]').isChecked()&&await page.locator('input[name=player-form][value=beast]').isChecked(),'Legacy device appearance cannot replace the account profile');
+  await page.waitForFunction(()=>{const host=document.querySelector('#canvas-host');return host.dataset.playerReady==='true'&&host.dataset.playerAppearance==='forest-aristocrat-feminine';});
   await choose('jevica','signature','human');
   await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerReady==='true'&&document.querySelector('#canvas-host').dataset.playerAppearance==='jevica');
   for(const form of ['jevica']) {

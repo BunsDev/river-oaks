@@ -71,7 +71,10 @@ local function audit(event)
   redis.call('LPUSH', KEYS[2], cjson.encode(event))
   redis.call('LTRIM', KEYS[2], 0, 9999)
 end
+-- Starter invitations go to accounts approved from the waitlist. An account that joined with an
+-- invitation code (record.inviteId) gets none, then or on a later re-approval: the referral decay.
 local function grant(record)
+  if record.inviteId then return true end
   if not record.invitesGrantedAt then
     if not makeRoom(2) then return false end
     for _, invite in ipairs(p.starter) do saveInvite(invite) end
@@ -140,7 +143,6 @@ elseif p.op == 'redeem' then
   if invite.status ~= 'active' or invite.expires <= p.now or invite.ownerId == p.userId
     or not approved(invite.ownerId)
     or (invite.assignedUserId ~= cjson.null and invite.assignedUserId ~= p.userId) then return false end
-  if not grant(record) then return redis.error_reply('Invitation capacity reached') end
   invite.status = 'redeemed'; invite.redeemedBy = p.userId; invite.redeemedAt = p.at
   saveInvite(invite)
   record.status = 'approved'; record.decidedAt = p.at; record.decidedBy = invite.ownerId; record.inviteId = invite.id

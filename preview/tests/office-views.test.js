@@ -7,9 +7,9 @@ import { OFFICE_LAYOUT_LEGACY, OFFICE_LAYOUT_PENTHOUSE, officeLayout, officeSeat
 // level's floor, d]). They move only the camera, so they need only stay inside the shell.
 const legacy = officeLayout(OFFICE_LAYOUT_LEGACY), penthouse = officeLayout(OFFICE_LAYOUT_PENTHOUSE);
 
-test('the penthouse offers five named views; the legacy room offers none', () => {
+test('the penthouse offers six named views; the legacy room offers none', () => {
   assert.deepEqual(officeViews(legacy), []);
-  assert.deepEqual(officeViews(penthouse).map(view => view.id), ['overview', 'main-floor', 'workstations', 'library', 'terrace']);
+  assert.deepEqual(officeViews(penthouse).map(view => view.id), ['overview', 'main-floor', 'workstations', 'library', 'terrace', 'roof-gardens']);
   for (const view of officeViews(penthouse)) assert.equal(officeView(penthouse, view.id), view);
   assert.equal(officeView(penthouse, 'roof'), null);
   assert.equal(officeView(penthouse, '__proto__'), null);
@@ -43,4 +43,18 @@ test('every view\'s eye stays inside its floor: within the bounds and headroom, 
     assert.equal(typeof view.label, 'string');
   }
   assert.ok(AVATAR_ENVELOPE.height < penthouse.levels[0].clearHeight);
+});
+
+test('roof gardens outlook looks over the terrace parapet without moving the visitor', () => {
+  const view = officeView(penthouse, 'roof-gardens');
+  assert.ok(view, 'a supported roof outlook is available');
+  const terrace = penthouse.levels[0].rooms.find(room => room.kind === 'terrace');
+  const [x, h, d] = view.eye, [tx, th, td] = view.target;
+  assert.ok(x > terrace.x0 && x < terrace.x1 && d > terrace.d0 && d < terrace.d1);
+  // Cross the front parapet before the ray could enter the indoor room.
+  const t = (terrace.d0 - d) / (td - d);
+  assert.ok(t > 0 && t < 1);
+  assert.ok(x + (tx - x) * t < terrace.x1 - .3);
+  assert.ok(h + (th - h) * t > 1.2, 'eye ray clears the 1.2m parapet');
+  assert.ok(th < h && td < terrace.d0, 'look down toward the neighbouring roofs');
 });

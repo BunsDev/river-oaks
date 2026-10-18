@@ -80,11 +80,13 @@ test('two visitors can meet on the upper level without falling to the ground flo
     moveToStair(id);
   }
   assert.equal(world.command('alice', { type: 'interiorLevel', portalId: up.id }).ok, true);
-  assert.equal(world.command('bob', { type: 'interiorLevel', portalId: up.id }).error, 'level_landing_blocked');
+  // Alice stands on the landing; Bob is not kept downstairs (no barricades). He arrives beside her.
+  const climbed = world.command('bob', { type: 'interiorLevel', portalId: up.id });
+  assert.equal(climbed.ok, true, climbed.error);
+  const aliceAt = world.snapshot().players.find(player => player.id === 'alice').position;
+  assert.equal(climbed.player.levelId, upper.id);
+  assert.ok(Math.hypot(climbed.player.position[0] - aliceAt[0], climbed.player.position[1] - aliceAt[1]) >= 0.7, `beside alice: ${climbed.player.position}`);
   time += 1000;
-  assert.equal(world.command('alice', { type: 'pose', position: [up.position[0] - 1, up.position[1], upper.floorElevation],
-    yaw: 0, altitude: 0, levelId: upper.id }).ok, true);
-  assert.equal(world.command('bob', { type: 'interiorLevel', portalId: up.id }).ok, true);
   const invitation = world.command('alice', { type: 'interaction', action: 'invite', kind: 'handshake', peerId: 'bob' });
   assert.equal(invitation.ok, true);
   assert.equal(world.command('bob', { type: 'interaction', action: 'accept', id: invitation.interaction.id }).ok, true);

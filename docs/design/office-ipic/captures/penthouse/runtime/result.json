@@ -1,0 +1,527 @@
+{
+  "status": "passed",
+  "label": "runtime",
+  "kind": "runtime capture (game, live outlook, Metal ANGLE)",
+  "browser": "156.0.8078.4",
+  "loadAverage": [
+    11.6,
+    12.2,
+    12.2
+  ],
+  "durationMs": 54538,
+  "settings": {
+    "viewport": [
+      1440,
+      900
+    ],
+    "deviceScaleFactor": 1,
+    "graphics": "sharp",
+    "hours": {
+      "day": 12,
+      "evening": 18.75
+    },
+    "weather": "default"
+  },
+  "sources": {
+    "office-penthouse-furnishings.js": "099b531fc212932c09b9bdcab83851a9c66a6f7177e3f24021189a3a0d97c6d3",
+    "office-penthouse-graybox.js": "12ab50d3098edbc8c2ca8bbcd9e40d8f4475a5b88c2a6d1ee4631c50512d6029",
+    "office-world-scene.js": "19a0179c95135c4f550d262e369bcebe65786b8b839787e79800b093db9ace2e",
+    "office-layouts.js": "42b4ae145e37c6b5eb671b474e9bf57c7c1f209e8e6040162ae760957a56b476",
+    "atmosphere.js": "665f68386cbe0fce86e8928bf91b7f0b09cfd899135fefde1e9186cccb61d08b",
+    "main.js": "8cd5d0fc8eb5e3388f1f0d7b3d444bf8d77f3ed1459bce3e84c0c6d15a5441b0"
+  },
+  "checks": [
+    "the resident cannot board Jevica's office without access",
+    "a direct entry command is refused: {\"type\":\"result\",\"requestId\":\"3\",\"ok\":false,\"error\":\"office_permission_required\",\"message\":\"office_permission_required\"}",
+    "Jevica accepted the resident's request through the normal controls",
+    "both arrived on the penthouse main floor",
+    "both visitors see the live district outlook through the glass",
+    "the resident at creative desk 01: [3.483130422612536,3.4562792410775667]",
+    "the resident sits at creative desk 01: {\"type\":\"result\",\"requestId\":\"27\",\"ok\":true,\"office\":{\"id\":\"jevica-office\",\"layout\":\"office-penthouse-1\",\"levelId\":\"jevica-office/l0\",\"elevation\":0,\"position\":[3.65,5.6],\"yaw\":0,\"seat\":{\"id\":\"desk-a1-chair\"}}}",
+    "Jevica sees the resident seated",
+    "the fixed views: overview,main-floor,workstations,library,terrace,roof-gardens",
+    "selected the main-floor view",
+    "selected the workstations view",
+    "selected the library view",
+    "selected the terrace view",
+    "selected the overview view",
+    "selected the main-floor view",
+    "selected the workstations view",
+    "selected the library view",
+    "selected the terrace view",
+    "selected the overview view",
+    "Escape returns to walking",
+    "Jevica at the executive desk: [-2.854236607339595,4.354236436302744]",
+    "Jevica sits at the executive desk",
+    "Jevica stands up",
+    ""
+  ],
+  "errors": [],
+  "reloads": [],
+  "shots": [
+    {
+      "name": "O1-arrival-standing",
+      "who": "owner",
+      "time": "day",
+      "hour": 12,
+      "file": "docs/design/office-ipic/captures/penthouse/runtime/O1-arrival-standing-day.jpg",
+      "position": [
+        0,
+        1.5
+      ],
+      "levelId": "jevica-office/l0",
+      "seat": null,
+      "camera": {
+        "position": [
+          -2741.835032006401,
+          44.40881556406345,
+          1394.1425558254314
+        ],
+        "quaternion": [
+          0,
+          0.999988779147836,
+          0,
+          0.004737254312415346
+        ],
+        "verticalFov": 62
+      },
+      "view": null,
+      "skyline": "live"
+    },
+    {
+      "name": "O3-workstation-seated",
+      "who": "resident",
+      "time": "day",
+      "hour": 12,
+      "file": "docs/design/office-ipic/captures/penthouse/runtime/O3-workstation-seated-day.jpg",
+      "position": [
+        3.65,
+        5.6
+      ],
+      "levelId": "jevica-office/l0",
+      "seat": "desk-a1-chair",
+      "camera": {
+        "position": [
+          -2745.523713232361,
+          43.928815564063456,
+          1398.2077902360468
+        ],
+        "quaternion": [
+          0,
+          0.999988779147836,
+          0,
+          0.004737254312415346
+        ],
+        "verticalFov": 62
+      },
+      "view": null,
+      "skyline": "live"
+    },
+    {
+      "name": "O1-arrival-standing",
+      "who": "owner",
+      "time": "evening",
+      "hour": 18.75,
+      "file": "docs/design/office-ipic/captures/penthouse/runtime/O1-arrival-standing-evening.jpg",
+      "position": [
+        0,
+        1.5
+      ],
+      "levelId": "jevica-office/l0",
+      "seat": null,
+      "camera": {
+        "position": [
+          -2741.835032006401,
+          44.40881556406345,
+          1394.1425558254314
+        ],
+        "quaternion": [
+          0,
+          0.999988779147836,
+          0,
+          0.004737254312415346
+        ],
+        "verticalFov": 62
+      },
+      "view": null,
+      "skyline": "live"
+    },
+    {
+      "name": "O3-workstation-seated",
+      "who": "resident",
+      "time": "evening",
+      "hour": 18.75,
+      "file": "docs/design/office-ipic/captures/penthouse/runtime/O3-workstation-seated-evening.jpg",
+      "position": [
+        3.65,
+        5.6
+      ],
+      "levelId": "jevica-office/l0",
+      "seat": "desk-a1-chair",
+      "camera": {
+        "position": [
+          -2745.523713232361,
+          43.928815564063456,
+          1398.2077902360468
+        ],
+        "quaternion": [
+          0,
+          0.999988779147836,
+          0,
+          0.004737254312415346
+        ],
+        "verticalFov": 62
+      },
+      "view": null,
+      "skyline": "live"
+    },
+    {
+      "name": "O2-main-floor-view",
+      "who": "owner",
+      "time": "day",
+      "hour": 12,
+      "file": "docs/design/office-ipic/captures/penthouse/runtime/O2-main-floor-view-day.jpg",
+      "position": [
+        0,
+        1.5
+      ],
+      "levelId": "jevica-office/l0",
+      "seat": null,
+      "camera": {
+        "position": [
+          -2733.835391071656,
+          44.428815564063456,
+          1394.2183510439336
+        ],
+        "quaternion": [
+          -0.006510848450486357,
+          0.900159939308182,
+          0.01346374663965539,
+          0.4353026763570011
+        ],
+        "verticalFov": 62
+      },
+      "view": null,
+      "skyline": "live"
+    },
+    {
+      "name": "O3-workstations-view",
+      "who": "owner",
+      "time": "day",
+      "hour": 12,
+      "file": "docs/design/office-ipic/captures/penthouse/runtime/O3-workstations-view-day.jpg",
+      "position": [
+        0,
+        1.5
+      ],
+      "levelId": "jevica-office/l0",
+      "seat": null,
+      "camera": {
+        "position": [
+          -2750.8374703786835,
+          45.12881556406345,
+          1394.3572727396695
+        ],
+        "quaternion": [
+          0.035005471749723634,
+          0.9406775014873288,
+          0.10239622353651695,
+          -0.3215827553657003
+        ],
+        "verticalFov": 62
+      },
+      "view": null,
+      "skyline": "live"
+    },
+    {
+      "name": "O4-library-view",
+      "who": "owner",
+      "time": "day",
+      "hour": 12,
+      "file": "docs/design/office-ipic/captures/penthouse/runtime/O4-library-view-day.jpg",
+      "position": [
+        0,
+        1.5
+      ],
+      "levelId": "jevica-office/l0",
+      "seat": null,
+      "camera": {
+        "position": [
+          -2756.1869325428097,
+          48.928815564063456,
+          1410.107296693765
+        ],
+        "quaternion": [
+          0.023492993862253463,
+          0.7322554553871269,
+          0.025292591301963225,
+          -0.6801546236852407
+        ],
+        "verticalFov": 62
+      },
+      "view": null,
+      "skyline": "live"
+    },
+    {
+      "name": "O4-terrace-view",
+      "who": "owner",
+      "time": "day",
+      "hour": 12,
+      "file": "docs/design/office-ipic/captures/penthouse/runtime/O4-terrace-view-day.jpg",
+      "position": [
+        0,
+        1.5
+      ],
+      "levelId": "jevica-office/l0",
+      "seat": null,
+      "camera": {
+        "position": [
+          -2725.987340573915,
+          44.52881556406345,
+          1410.2934281319262
+        ],
+        "quaternion": [
+          0.018878796877488852,
+          0.3953375567511083,
+          0.008127463101974413,
+          -0.9183059139491856
+        ],
+        "verticalFov": 62
+      },
+      "view": null,
+      "skyline": "live"
+    },
+    {
+      "name": "overview",
+      "who": "owner",
+      "time": "day",
+      "hour": 12,
+      "file": "docs/design/office-ipic/captures/penthouse/runtime/overview-day.jpg",
+      "position": [
+        0,
+        1.5
+      ],
+      "levelId": "jevica-office/l0",
+      "seat": null,
+      "camera": {
+        "position": [
+          -2755.4315792747743,
+          49.12881556406346,
+          1393.7137174189247
+        ],
+        "quaternion": [
+          0.05959192669488437,
+          0.8573455535687337,
+          0.10197632170815325,
+          -0.5010072193687314
+        ],
+        "verticalFov": 62
+      },
+      "view": null,
+      "skyline": "live"
+    },
+    {
+      "name": "O2-main-floor-view",
+      "who": "owner",
+      "time": "evening",
+      "hour": 18.75,
+      "file": "docs/design/office-ipic/captures/penthouse/runtime/O2-main-floor-view-evening.jpg",
+      "position": [
+        0,
+        1.5
+      ],
+      "levelId": "jevica-office/l0",
+      "seat": null,
+      "camera": {
+        "position": [
+          -2733.835391071656,
+          44.428815564063456,
+          1394.2183510439336
+        ],
+        "quaternion": [
+          -0.006510848450486357,
+          0.900159939308182,
+          0.01346374663965539,
+          0.4353026763570011
+        ],
+        "verticalFov": 62
+      },
+      "view": null,
+      "skyline": "live"
+    },
+    {
+      "name": "O3-workstations-view",
+      "who": "owner",
+      "time": "evening",
+      "hour": 18.75,
+      "file": "docs/design/office-ipic/captures/penthouse/runtime/O3-workstations-view-evening.jpg",
+      "position": [
+        0,
+        1.5
+      ],
+      "levelId": "jevica-office/l0",
+      "seat": null,
+      "camera": {
+        "position": [
+          -2750.8374703786835,
+          45.12881556406345,
+          1394.3572727396695
+        ],
+        "quaternion": [
+          0.035005471749723634,
+          0.9406775014873288,
+          0.10239622353651695,
+          -0.3215827553657003
+        ],
+        "verticalFov": 62
+      },
+      "view": null,
+      "skyline": "live"
+    },
+    {
+      "name": "O4-library-view",
+      "who": "owner",
+      "time": "evening",
+      "hour": 18.75,
+      "file": "docs/design/office-ipic/captures/penthouse/runtime/O4-library-view-evening.jpg",
+      "position": [
+        0,
+        1.5
+      ],
+      "levelId": "jevica-office/l0",
+      "seat": null,
+      "camera": {
+        "position": [
+          -2756.1869325428097,
+          48.928815564063456,
+          1410.107296693765
+        ],
+        "quaternion": [
+          0.023492993862253463,
+          0.7322554553871269,
+          0.025292591301963225,
+          -0.6801546236852407
+        ],
+        "verticalFov": 62
+      },
+      "view": null,
+      "skyline": "live"
+    },
+    {
+      "name": "O4-terrace-view",
+      "who": "owner",
+      "time": "evening",
+      "hour": 18.75,
+      "file": "docs/design/office-ipic/captures/penthouse/runtime/O4-terrace-view-evening.jpg",
+      "position": [
+        0,
+        1.5
+      ],
+      "levelId": "jevica-office/l0",
+      "seat": null,
+      "camera": {
+        "position": [
+          -2725.987340573915,
+          44.52881556406345,
+          1410.2934281319262
+        ],
+        "quaternion": [
+          0.018878796877488852,
+          0.3953375567511083,
+          0.008127463101974413,
+          -0.9183059139491856
+        ],
+        "verticalFov": 62
+      },
+      "view": null,
+      "skyline": "live"
+    },
+    {
+      "name": "overview",
+      "who": "owner",
+      "time": "evening",
+      "hour": 18.75,
+      "file": "docs/design/office-ipic/captures/penthouse/runtime/overview-evening.jpg",
+      "position": [
+        0,
+        1.5
+      ],
+      "levelId": "jevica-office/l0",
+      "seat": null,
+      "camera": {
+        "position": [
+          -2755.4315792747743,
+          49.12881556406346,
+          1393.7137174189247
+        ],
+        "quaternion": [
+          0.05959192669488437,
+          0.8573455535687337,
+          0.10197632170815325,
+          -0.5010072193687314
+        ],
+        "verticalFov": 62
+      },
+      "view": null,
+      "skyline": "live"
+    },
+    {
+      "name": "O3-executive-seated",
+      "who": "owner",
+      "time": "day",
+      "hour": 12,
+      "file": "docs/design/office-ipic/captures/penthouse/runtime/O3-executive-seated-day.jpg",
+      "position": [
+        -3,
+        6.55
+      ],
+      "levelId": "jevica-office/l0",
+      "seat": "desk-executive-chair",
+      "camera": {
+        "position": [
+          -2738.883012387551,
+          43.928815564063456,
+          1399.2207523724276
+        ],
+        "quaternion": [
+          0,
+          0.999988779147836,
+          0,
+          0.004737254312415346
+        ],
+        "verticalFov": 62
+      },
+      "view": null,
+      "skyline": "live"
+    },
+    {
+      "name": "O3-executive-seated",
+      "who": "owner",
+      "time": "evening",
+      "hour": 18.75,
+      "file": "docs/design/office-ipic/captures/penthouse/runtime/O3-executive-seated-evening.jpg",
+      "position": [
+        -3,
+        6.55
+      ],
+      "levelId": "jevica-office/l0",
+      "seat": "desk-executive-chair",
+      "camera": {
+        "position": [
+          -2738.883012387551,
+          43.928815564063456,
+          1399.2207523724276
+        ],
+        "quaternion": [
+          0,
+          0.999988779147836,
+          0,
+          0.004737254312415346
+        ],
+        "verticalFov": 62
+      },
+      "view": null,
+      "skyline": "live"
+    }
+  ]
+}

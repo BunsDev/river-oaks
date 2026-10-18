@@ -70,7 +70,7 @@ export function createFootPlacement(model, root) {
     const roll=createFootRoll(foot,model.getObjectByName(`ball_${side}`),sole,toeWeights);
     return {side, index, thigh, calf, foot, sole, soleSources, roll, bindScale:foot.getWorldScale(new THREE.Vector3()).y, baseUpperLength:hip.distanceTo(knee), baseLowerLength:knee.distanceTo(ankle), upperLength:hip.distanceTo(knee), lowerLength:knee.distanceTo(ankle), rest, target:null, swing:null, lastPhase:0, contact:true};
   }).filter(Boolean);
-  let lastDistance = null, lastPosition = null, hasStepped = false, pelvisLower = 0, bodyHeight = 0, bodyRise = 0, bodyRootHeight = null;
+  let lastDistance = null, lastPosition = null, hasStepped = false, pelvisLower = 0, bodyHeight = 0, bodyRise = 0, bodyRootHeight = null, lastPlatform = null;
   const swingTravel = 0.38, reach = 0.25;
   return {
     legs,
@@ -85,6 +85,20 @@ export function createFootPlacement(model, root) {
       // Beast movement lengthens the stride into a lope; everyone else keeps 1.
       const stride = Number.isFinite(locomotion?.stride) ? clamp(locomotion.stride, 1, 1.6) : 1;
       const strideTravel = swingTravel*stride, strideReach = reach*stride;
+      // `locomotion.platform` is the world position of a moving floor the body stands on
+      // (the office lift car). Its travel carries the body, planted shoes and all: it is
+      // neither a navigation step for the height transfer below nor a relocation.
+      const platform = Array.isArray(locomotion?.platform) ? new THREE.Vector3().fromArray(locomotion.platform) : null;
+      if (platform && lastPlatform && lastPosition) {
+        const carried = platform.clone().sub(lastPlatform);
+        lastPosition.add(carried); bodyRootHeight += carried.y; bodyHeight += carried.y;
+        for (const leg of legs) {
+          leg.target?.add(carried);
+          if (leg.swing) { leg.swing.start.add(carried); leg.swing.end.add(carried); }
+          leg.roll?.carry(carried);
+        }
+      }
+      lastPlatform = platform;
       const reset = lastDistance === null || distance < lastDistance || lastPosition.distanceTo(origin) > 1;
       if(reset)pelvisLower=0;
       if(speed<=.03&&!legs.some(leg=>leg.swing))hasStepped=false;

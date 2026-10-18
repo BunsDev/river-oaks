@@ -4,7 +4,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { deflateSync, inflateSync } from 'node:zlib';
 import Redis from 'ioredis';
-import { createRedisRoom } from '../redis-room.js';
+import { HEARTBEAT_TIMEOUT_MS, LEAVE_GRACE_MS, createRedisRoom } from '../redis-room.js';
 import { compileRegionPackage } from '../region-package.js';
 import { loadDistrictData } from '../district-data.js';
 import { beforeTowerRaise } from './district-history.js';
@@ -258,11 +258,13 @@ testRedis('authorization revocation and presence expiration remove residents and
   await f.join(room,'bob');
   assert.equal((await room.request({type:'leave',userId:'bob',connectionId:'bob-socket'})).ok,true);
   assert.equal((await room.read()).snapshot.players.length,1,'disconnect receives reconnect grace');
-  f.advance(10001);await delay(210);await room.tick();
+  f.advance(LEAVE_GRACE_MS-1000);await delay(210);await room.tick();
+  assert.equal((await room.read()).snapshot.players.length,1,'still held near the end of the grace');
+  f.advance(1001);await delay(210);await room.tick();
   assert.equal((await room.read()).snapshot.players.length,0);
-  await f.join(room,'carol');f.advance(19000);
+  await f.join(room,'carol');f.advance(HEARTBEAT_TIMEOUT_MS-1000);
   assert.equal((await room.request({type:'heartbeat',userId:'carol',connectionId:'carol-socket'})).ok,true);
-  f.advance(19000);await delay(210);await room.tick();
+  f.advance(HEARTBEAT_TIMEOUT_MS-1000);await delay(210);await room.tick();
   assert.equal((await room.read()).snapshot.players.length,1);
   f.advance(1001);await delay(210);await room.tick();
   assert.equal((await room.read()).snapshot.players.length,0);
@@ -299,12 +301,12 @@ testRedis('lost lease cannot publish replies or trim queue; next leader replays 
   assert.equal(await f.redis.llen(`${f.prefix}:queue`),1);
   assert.deepEqual(await f.redis.getBuffer(`${f.prefix}:state`),stateBefore);
   assert.equal((await f.redis.keys(`${f.prefix}:reply:*`)).length,1,'only earlier committed join has a reply');
-  await f.redis.set(`${f.prefix}:lease`,'v11:different-leader','PX',5000);
+  await f.redis.set(`${f.prefix}:lease`,'v12:different-leader','PX',5000);
   release();await delay(250);
   assert.equal(await f.redis.llen(`${f.prefix}:queue`),1,'stale commit cannot trim pending operation');
   assert.deepEqual(await f.redis.getBuffer(`${f.prefix}:state`),stateBefore);
   await stalled.close();
-  assert.equal(await f.redis.get(`${f.prefix}:lease`),'v11:different-leader','close only releases its own lease');
+  assert.equal(await f.redis.get(`${f.prefix}:lease`),'v12:different-leader','close only releases its own lease');
   await f.redis.del(`${f.prefix}:lease`);
   const survivor=f.create();await survivor.tick();
   await request;
@@ -413,17 +415,17 @@ testRedis('competing edges reserve one furniture slot and recover it through coo
   assert.equal((await f.command(replacement,other,intent)).ok,true);
   assert.equal((await replacement.request({type:'leave',userId:other,connectionId:`${other}-socket`})).ok,true);
   assert.equal((await f.command(replacement,'alice',intent)).error,'seat_occupied','reconnect grace retains the reservation');
-  f.advance(11000);await replacement.tick();
+  f.advance(LEAVE_GRACE_MS+1000);await replacement.tick();
   const released=await f.command(replacement,'alice',intent);assert.equal(released.ok,true,JSON.stringify(released));
 });
 
 testRedis('an upgraded coordinator takes over an older lease without waiting for its TTL',async t=>{
-  const f=await setup(t),room=f.create(),key=`${f.prefix}:lease`,legacy=`v5:${randomUUID()}`;
+  const f=await setup(t),room=f.create(),key=`${f.prefix}:lease`,legacy=`v11:${randomUUID()}`;
   await f.redis.set(key,legacy,'PX',5000);
   await room.tick();
   const owner=await f.redis.get(key);
-  assert.notEqual(owner,legacy,'a pre-office writer cannot keep renewing the obsolete lease');
-  assert.match(owner,/^v11:/);
+  assert.notEqual(owner,legacy,'a pre-character writer cannot keep renewing the obsolete lease');
+  assert.match(owner,/^v12:/);
   assert.equal((await room.read()).snapshot.worldId,'river-oaks');
 });
 
@@ -440,7 +442,7 @@ testRedis('paired invitations and consent survive coordinator replacement with s
   assert.ok(players.every(p=>p.gesture==='dance'));
   assert.equal(players[0].interaction.elapsed,players[1].interaction.elapsed);
   const state=JSON.parse(inflateSync(await f.redis.getBuffer(`${f.prefix}:state`)).toString());
-  assert.equal(state.checkpoint.version,11);assert.equal(state.checkpoint.payload.interactions[0].status,'active');
+  assert.equal(state.checkpoint.version,12);assert.equal(state.checkpoint.payload.interactions[0].status,'active');
   await replacement.close();const last=f.create();
   assert.equal((await f.command(last,'alice',{type:'interaction',action:'cancel',id:invitation.interaction.id})).ok,true);
   assert.ok((await last.read()).snapshot.players.every(p=>p.gesture===null));

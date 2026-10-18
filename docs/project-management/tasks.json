@@ -9025,13 +9025,13 @@
     {
       "id": "release-0-2-0-readiness",
       "title": "Prepare TypeSafe Place 0.2.0 release candidate from verified procedural interior stack",
-      "status": "blocked",
+      "status": "retired",
       "branches": [
         "release/v0.2.0-20261014"
       ],
       "owner": null,
-      "updatedAt": "2026-10-15T00:28:34.282389+00:00",
-      "nextAction": "Prepared signed/pushed candidate 89d17cdcd65d61009ca7ba1d20c4c08e3043708f in draft PR #376, cut at main f72a89f8 including #379 desktop identity and #383 restore fix. Core 11/11 passed (95 tooling, 3045 preview + one existing skip, 682 Redis/server zero skips, 61 desktop, 141 Python); all 16 exact-head hosted checks passed. Final ad-hoc macOS arm64 package inspected, SHA-256 6557488c4da6f7af3b2c8b561ff9badb0ab7fda0c63e2d46e6023257c17542fa. Cloth contacts -21.1%, component CPU about -10%, sampled pixels/vertices identical. Release owner must schedule quiet-machine local shared/full rerun and 60 Hz acceptance: 0e15133 full passed 16/17 then shared reconnect timed out with host load 996.96. Complete live packaged auth, human accessibility, Developer ID/notarization and migration acceptance; obtain landing/publication authorization. Main 4966d99f now adds test-only #384; refresh via landing queue and require current-head checks before landing. Preserve worktree and archived artifacts; receipts in .runtime/release-0.2.0/candidate-handoff.json. Owned Redis stopped; no merge/publish performed.",
+      "updatedAt": "2026-10-15T20:05:11.761Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "ledger": "docs/superpowers/plans/2026-10-14-release-0.2.0-readiness.md",
       "requiredChecks": [
         "Review exact-head stacked PR checks and changes",
@@ -9052,7 +9052,33 @@
         "preview/e2e/gown-contact-samples.js"
       ],
       "pr": 376,
-      "previousOwner": "codex-resume-20261014-release-readiness"
+      "previousOwner": "codex-resume-20261014-release-readiness",
+      "evidence": [
+        {
+          "pr": 376,
+          "reviewedHead": "d7e8ea1d2ff8a8a54d1f53bcdcf77dd404e4422f",
+          "merge": "e87b458ec7883c2355c0f3e1028b07a65120355f",
+          "tree": "4b042e93144018fb58c08f8946b6f8f7824fc1b1",
+          "checks": "Landed by claude:river-oaks-1b with pnpm run land 376 at 2026-10-15T18:19:11Z after Val asked to take #376 through to merging (land updated the branch to d7e8ea1d; Verify passed; guard CLEAN). Refreshed head: cloth unit 3/3; gown-contact-samples, jevica-gown, jevica-waist passed; core verify passed (agent 111/111, preview 3268+1 skip+1 todo, server 590+150 Redis skips, desktop 69/69). Release notes and readiness addendum updated to main's content; generated plans index and register kept identical to main."
+        }
+      ],
+      "retirement": {
+        "head": "d7e8ea1d2ff8a8a54d1f53bcdcf77dd404e4422f",
+        "releasedAt": "2026-10-15T20:03:59.000Z",
+        "sessionsReviewedAt": "2026-10-15T20:03:59.000Z"
+      },
+      "retiredBranches": [
+        "release/v0.2.0-20261014"
+      ],
+      "archive": {
+        "release/v0.2.0-20261014": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-PqNQgF/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-PqNQgF/history.bundle",
+          "sha256": "8bbf15be36f774fe39c8c6d05dd255586c8618b63bee206bd58b52c051020d1f",
+          "tag": "refs/tags/archive/worktree-prune/4f9b3c42-3023-4ddc-912d-474b053eed7b",
+          "head": "d7e8ea1d2ff8a8a54d1f53bcdcf77dd404e4422f"
+        }
+      }
     },
     {
       "id": "shared-dominoes-server",
@@ -9364,14 +9390,51 @@
     },
     {
       "id": "cancelled-feat-character-studio-20261013",
-      "title": "Archived local feat/character-studio-20261013",
-      "status": "queued",
-      "branches": [],
-      "owner": null,
-      "updatedAt": "2026-10-14T19:54:03.182Z",
-      "nextAction": "Local feat/character-studio-20261013 archived under /Users/buns/worktree-backups/river-oaks/cancel-stale-SwztW4/manifest.json; restore it before resuming this task. Remote PR and branch, if any, remain unchanged.",
-      "filesOwned": [],
-      "requiredChecks": [],
+      "title": "TypeSafe Place Character Studio #440–#444",
+      "status": "active",
+      "branches": [
+        "feat/character-studio-render-20261015"
+      ],
+      "owner": "codex-character-studio-20261015",
+      "updatedAt": "2026-10-15T21:57:05.134413+00:00",
+      "nextAction": "Deliver reviewed pose diagnostic harness after core; seated Sable fit remains visually failed (594/689 above probes), experiments restored. Fix against runtime pose, then remaining #442 render/provenance/budgets and #443 persistence/#444 full acceptance. Existing7c6facc5 hosted checks pass; no merge/deploy.",
+      "filesOwned": [
+        "preview/src/character-definition.js",
+        "preview/tests/character-definition.test.js",
+        "docs/character-studio.md",
+        "docs/superpowers/plans/2026-10-15-character-studio.md",
+        "preview/src/character-assets.js",
+        "preview/src/player-avatar.js",
+        "preview/e2e/character-contract.js",
+        "preview/src/character-studio*",
+        "preview/src/character-customization.js",
+        "preview/src/reference-archetypes.js",
+        "preview/src/romance-look.js",
+        "preview/src/sable-look.js",
+        "preview/src/main.js",
+        "preview/tests/character-studio.test.js",
+        "preview/e2e/character-studio.js",
+        "preview/tests/character-studio*.test.js",
+        "preview/src/character-portrait.js",
+        "preview/tests/character-portrait.test.js",
+        "preview/src/character-hero.js",
+        "preview/src/skirt-skinning.js",
+        "preview/tests/skirt-skinning.test.js",
+        "preview/tests/character-hero.test.js",
+        "preview/e2e/character-portrait.js",
+        "scripts/character-assets-audit.mjs",
+        "scripts/tests/character-assets-audit.test.js",
+        "preview/src/character-compatibility.js",
+        "preview/tests/character-compatibility.test.js",
+        "preview/src/rail-navigation.js",
+        "preview/e2e/character-poses.js",
+        "preview/e2e/fixtures/jevica.js"
+      ],
+      "requiredChecks": [
+        "Focused contract and rig tests",
+        "pnpm run verify",
+        "Rendered human/beast fixture inspection"
+      ],
       "cancelledBranches": [
         "feat/character-studio-20261013"
       ],
@@ -9391,6 +9454,17 @@
             }
           ]
         }
+      },
+      "leaseUntil": "2026-10-15T23:57:05.134413+00:00",
+      "ledger": "docs/superpowers/plans/2026-10-15-character-studio.md",
+      "pr": 462,
+      "verification": {
+        "core": "catalog/focus patch b21bf7b8 passed; .runtime/character-studio/catalog-rail-core-final.json; preview1 skip1 todo, server153 Redis skips",
+        "focused": "13 native portrait/skirt/material tests plus16 catalog/contract/editor tests passed",
+        "browser": "15 final portrait checks,17 shared rail checks passed; editor21 and previous regressions253 passed; native human/fox PNGs and walking render inspected",
+        "review": "Portrait lifecycle, invalid transforms and character focus findings fixed, regression verified, re-reviewed without blocking findings",
+        "limitations": "Full Redis/native/crowd/physical-device/human acceptance and approved goldens remain open; #443 not implemented; hosted checks pending on current head",
+        "render": "PR #462 b21bf7b8: final core passed tooling117/preview3319/server598/desktop69/Python141; preview1 skip1 todo; server153 Redis skips. Portrait15/shared rail17/focused16 passed; real 4K and walk captures inspected."
       }
     },
     {
@@ -10205,18 +10279,20 @@
     },
     {
       "id": "safari-gltf-decoder-investigation",
-      "title": "Isolate physical iPhone Safari glTF image decode startup failure before procedural GPU acceptance",
+      "title": "Isolate and resolve physical iPhone Safari avatar glTF image decode startup failure before procedural GPU acceptance",
       "status": "active",
       "branches": [
         "test/safari-gltf-decoder-investigation-20261015",
         "test/safari-phone-frame-receipt-20261015",
-        "test/safari-phone-error-receipt-20261015"
+        "test/safari-phone-error-receipt-20261015",
+        "docs/safari-decoder-evidence-20261015",
+        "fix/safari-avatar-html-ios-20261015"
       ],
       "owner": "codex-root-safari-gltf-decoder-investigation-20261015",
-      "leaseUntil": "2026-10-15T10:47:23.000Z",
-      "updatedAt": "2026-10-15T09:07:20.000Z",
-      "nextAction": "Draft PR #411 at 2e43506 adds the opt-in redacted error receipt; focused suites 9/9 and core passed. Review exact-head hosted checks and land, then repeat a one-tab normal/scoped Safari comparison when Val clears old tabs. Keep production decoding unchanged.",
-      "ledger": "docs/superpowers/plans/2026-10-15-safari-gltf-decoder-investigation.md",
+      "leaseUntil": "2026-10-15T18:50:00.000Z",
+      "updatedAt": "2026-10-15T16:50:00.000Z",
+      "nextAction": "Draft PR #436 includes current main at 4ab01892; final local core passed and player-lifecycle browser journey passed. Two normal iPhone visits were playable. The refreshed full gate under isolated Redis stopped on an unrelated two-second desktop child timeout at host load above 90, while its owning suite passed 14/14 alone. Require PR #436 exact-head hosted preview/Vercel and current main before ready/merge. Quieter phone frame/portal timing and remaining GPU devices are separate acceptance work.",
+      "ledger": "docs/superpowers/plans/2026-10-15-ios-avatar-image-decoder-default.md",
       "requiredChecks": [
         "Focused decoder selection regression",
         "Physical iPhone Safari default and scoped decoder controls with fixture health and asset readiness",
@@ -10224,18 +10300,18 @@
         "Exact-head hosted preview before merge"
       ],
       "filesOwned": [
-        "preview/src/avatars.js (test-only decoder selection only)",
+        "preview/src/avatars.js (scoped iOS avatar decoder selection)",
         "preview/src/gltf-image-decoder.js",
         "preview/tests/gltf-image-decoder.test.js",
         "server/tests/phone-fixture-decoder.js (test-only control)",
         "server/tests/phone-fixture.test.js (fixture readiness regression)",
         "docs/superpowers/plans/README.md (generated plan index)",
         "docs/superpowers/plans/2026-10-15-safari-gltf-decoder-investigation.md",
+        "docs/superpowers/plans/2026-10-15-ios-avatar-image-decoder-default.md",
         "docs/project-management/tasks.json (this task only)"
       ],
       "parent": "procedural-gpu-acceptance",
       "related": "ios-device-feasibility #309; preserve its dirty worktree and do not modify owned files",
-      "pr": 411,
       "evidence": [
         {
           "pr": 401,
@@ -10255,6 +10331,37 @@
             "Focused decoder and fixture suites 8/8; pnpm run verify core passed after fixture change",
             "Hosted exact-head 16/16 check runs and Vercel status passed; merged by GitHub REST at 2026-10-15T08:47:09Z",
             "Physical bounded iPhone frame receipt and default-decoder root cause remain open"
+          ]
+        },
+        {
+          "pr": 411,
+          "reviewedHead": "4559778b4f3e48c4d73d25e73668c93accd1ba35",
+          "merge": "dda596c58477e646ea6ae636eba9ca708562b2a6",
+          "checks": [
+            "Focused decoder and fixture suites 9/9; plan index and pnpm run verify core passed after the final main refresh",
+            "Hosted exact-head 16/16 check runs including required preview and Vercel passed; merged through GitHub REST at 2026-10-15T10:13:05Z",
+            "Physical scoped avatar-only iPhone visit reported a playable view, one guest and three bounded diagnostic receipts with zero app or console errors; normal decoder root cause and GPU timing remain open",
+            "Post-merge full local gate passed at the same code head with isolated Redis, security and browser journeys, including creator four levels; preview suite retained one skip and one IPIC circulation TODO. Physical GPU and human accessibility remain open"
+          ]
+        },
+        {
+          "pr": 421,
+          "reviewedHead": "57445dfd21d4ca5af10c16d394e0164cde40ffbe",
+          "merge": "ff24fdcd40ba20025a2a4ebfad2a23e4361d8ccd",
+          "checks": [
+            "Evidence ledger and generated plan index published; local pnpm run verify core passed after the final main refresh",
+            "Hosted exact-head 15/15 check runs including required aggregate preview and Vercel passed; merged through GitHub REST at 2026-10-15T11:30:10Z",
+            "Physical scoped HTML avatar-decoder control was visible and playable after 30 seconds with zero app or console errors; normal-decoder comparison and full GPU acceptance remain open"
+          ]
+        },
+        {
+          "pr": 423,
+          "reviewedHead": "ddc5919eecb160ebec2ef4ade6d6ff5fac3af550",
+          "merge": "cd99570a6d1ff4171c83637744d38cc8131a2684",
+          "checks": [
+            "Published the fresh-port normal-decoder attempt as inconclusive; the fixture had zero reports and zero guests, so physical default-decoder recovery remains unverified",
+            "Local pnpm run verify core passed after the final main refresh; hosted exact-head checks including required preview passed after one unrelated email-access click timeout rerun; Vercel succeeded",
+            "Merged through GitHub REST at 2026-10-15T12:25:28Z"
           ]
         }
       ]
@@ -10389,28 +10496,24 @@
     {
       "id": "garden-office-416",
       "title": "#416 Garden Office realism pilot (coding scope): one desk/chair family, glazing, finishes, light/planting sample, catalog records and compatibility on the #414 interface",
-      "status": "active",
+      "status": "blocked",
       "branches": [
-        "feat/garden-office-416-20261015"
+        "test/garden-office-416-audit-20261015"
       ],
-      "owner": "claude:river-oaks-safe-edits (e9aa0185)",
-      "updatedAt": "2026-10-15T16:35:54.339Z",
-      "leaseUntil": "2026-10-15T18:35:54.339Z",
-      "nextAction": "Floor, glazing and calibrated light done (focused 95/0/0; captures on https://claude.ai/artifact/QxWWoXxB9DMotJyQr77Xpf). Next: planting sample, then desktop/browser/build/verify gates, signed commit and draft PR. No merge.",
+      "owner": "codex-root-garden-office-audit-20261015",
+      "updatedAt": "2026-10-16T00:02:30.680600+00:00",
+      "nextAction": "Source-handoff scope complete after independent visual/profile review and required pink correction. Final core11/11 (4245 pass154skip1TODO), focused106, final30 captures pass. Update draft#459/#417 handoff; remaining task gate is ordinary PR review/up-to-date checks and separately authorized landing, not Val-personal visual approval. Preserve worktree/evidence.",
       "ledger": "docs/superpowers/plans/2026-10-15-garden-office-pilot.md",
-      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-garden-office-416",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-garden-office-audit",
       "issue": 416,
       "filesOwned": [
-        "preview/src/studio/space-furniture.js (new: desk, chair, pendant forms)",
-        "preview/src/studio/space-scene.js (wiring for those forms)",
-        "preview/src/studio/space-templates.js (office recipe only)",
-        "preview/src/studio/viewport.js (furnished-space reflections and sky fill)",
-        "preview/tests/studio-garden-office.test.js (new)",
-        "preview/e2e/studio-office-stations.js (new capture journey)",
-        "scripts/garden-office-manifest.mjs (new)",
-        "docs/design/garden-office/ (new packet)",
-        "docs/world-studio.md",
-        "docs/superpowers/plans/2026-10-15-garden-office-pilot.md"
+        "docs/superpowers/plans/2026-10-15-garden-office-pilot.md (continuation audit)",
+        "docs/design/garden-office/ (only if audit exposes metadata gaps)",
+        "preview/tests/studio-garden-office.test.js (only concrete uncovered pilot regressions)",
+        "preview/src/studio/space-furniture.js (valid v1 bounds only)",
+        "scripts/garden-office-manifest.mjs (pilot contract accuracy/completeness)",
+        "preview/e2e/studio-office-{stations,neutral}.js (neutral diagnostic evidence only)",
+        "preview/src/studio/space-scene.js (existing art circle material only)"
       ],
       "requiredChecks": [
         "node --test preview/tests/studio-*.test.js server/tests/studio-assets.test.js",
@@ -10419,7 +10522,39 @@
         "node desktop/studio-e2e.js",
         "pnpm run build",
         "pnpm run verify"
-      ]
+      ],
+      "previousOwner": "claude:river-oaks-safe-edits (e9aa0185)",
+      "deliveryPr": 439,
+      "evidence": [
+        {
+          "pr": 439,
+          "reviewedHead": "c83532f2a264743de042bd06562641567d813043",
+          "merge": "05a5e9fe45ba5250678a08ed077245b52e077942",
+          "tree": "0d183fdbfd79058f22824ad43896786e2b3a1487",
+          "checks": "Landed by claude:river-oaks-safe-edits (e9aa0185) with pnpm run land 439 under Val's authorization at 2026-10-15T17:38:01Z: the lander updated the branch from main (c83532f2, GitHub-verified), Verify passed, guard read 17 checks green, CLEAN; merge tree equals head tree. Before landing: signed 3b67438d (pilot) and signed merge cf428566 (register conflict GitHub update-branch cannot resolve) with all 16 check runs and Vercel green. Local at 3b67438d: pnpm run verify 11/11 tasks, 4,160 passed / 150 skipped / 1 TODO; world-studio 29.068 s, 0 page errors; native Studio 11/11; focused 96/0/0. Ledger docs/superpowers/plans/2026-10-15-garden-office-pilot.md. #416 left open for design review and #417."
+        }
+      ],
+      "retirement": {
+        "head": "c83532f2a264743de042bd06562641567d813043",
+        "releasedAt": "2026-10-15T17:40:04.500Z",
+        "sessionsReviewedAt": "2026-10-15T17:40:04.500Z"
+      },
+      "evidenceArchive": "/Users/buns/worktree-backups/river-oaks/garden-office-416-evidence-20261015 (.runtime/garden-office: baseline and five after capture sets, cost and canopy-coverage measurements, red-test output, gate receipts; .runtime/agent; output/playwright)",
+      "retiredBranches": [
+        "feat/garden-office-416-20261015"
+      ],
+      "archive": {
+        "feat/garden-office-416-20261015": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-LEDVWb/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-LEDVWb/history.bundle",
+          "sha256": "4faeeda0c621d63c605570e1405e6e44aa8f703e2078924d917736252cba35ff",
+          "tag": "refs/tags/archive/worktree-prune/692d1f85-2662-4136-87aa-4ca358e0f394",
+          "head": "c83532f2a264743de042bd06562641567d813043"
+        }
+      },
+      "leaseUntil": "2026-10-16T01:51:25.163814+00:00",
+      "previousPr": 439,
+      "pr": 459
     },
     {
       "id": "ipic-route-evidence-364",
@@ -10893,18 +11028,643 @@
     {
       "id": "register-sweep-20261015-1b",
       "title": "Register sweep: commit claude:river-oaks-1b live entries to main (7 from the morning session: #360 baseline, contract decisions, office computer MVP, #366, #361, #367; 9 from today rounds)",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "docs/register-sweep-20261015-1b"
       ],
-      "owner": "claude:river-oaks-1b (b929a625)",
-      "leaseUntil": "2026-10-15T19:00:00.000Z",
-      "nextAction": "Copy the 13 live entries exactly into a branch from main, validate with project:check, PR, land.",
+      "owner": null,
+      "nextAction": "Preserve restoration archives; nothing left to deliver.",
       "filesOwned": [
         "docs/project-management/tasks.json (the 13 named entries and this one only)"
       ],
+      "pr": 438,
+      "updatedAt": "2026-10-15T19:37:36.932Z",
+      "evidence": [
+        {
+          "pr": 438,
+          "reviewedHead": "823f9aa6c0b01857db200f1640dfccce29116685",
+          "merge": "ee6a044a5781f358a65b8f1623a360fde9c6aa4b",
+          "tree": "e2855228446b9ed87b4cc3eef9d7a0d87d1fb450",
+          "checks": "Landed by claude:river-oaks-1b with pnpm run land 438 (Verify passed on 823f9aa; guard CLEAN; merge tree equals head tree). project:check on the swept file added no gaps and cleared 15 of main's."
+        }
+      ],
+      "retirement": {
+        "head": "823f9aa6c0b01857db200f1640dfccce29116685",
+        "releasedAt": "2026-10-15T18:31:18.000Z",
+        "sessionsReviewedAt": "2026-10-15T18:31:18.000Z"
+      },
+      "retiredBranches": [
+        "docs/register-sweep-20261015-1b"
+      ],
+      "archive": {
+        "docs/register-sweep-20261015-1b": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-OVdmf5/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-OVdmf5/history.bundle",
+          "sha256": "6f41cd1532d71723af0cbc60611fedf366e1c59202ddefb31529d8a68a138066",
+          "tag": "refs/tags/archive/worktree-prune/c1f18347-dc69-4ac8-bde3-7daa4eebc801",
+          "head": "823f9aa6c0b01857db200f1640dfccce29116685"
+        }
+      }
+    },
+    {
+      "id": "studio-acceptance-417",
+      "title": "#417 Garden Office pilot acceptance (coding scope): review profile, full Studio journey, warm-up plus ten-cycle resource soak, late/missing asset recovery, real-GPU measurements, keyboard and layout checks",
+      "status": "active",
+      "branches": [
+        "test/studio-acceptance-417-20261015"
+      ],
+      "owner": "claude:river-oaks-safe-edits (e9aa0185)",
+      "updatedAt": "2026-10-15T18:22:32.901Z",
+      "leaseUntil": "2026-10-15T20:22:32.901Z",
+      "nextAction": "Soak: no unexplained growth (70 cycles; heap growth was undo history, capped at 80, shown by 40-to-70 snapshots). Journey passed 13 checks with a walked tour of all four destinations. Queued on the browser lock: late/missing texture scenario, then the Studio frame-timing profile. Next: keyboard, focus, reduced motion and 320/390 px checks; occupied-use captures.",
+      "ledger": "docs/superpowers/plans/2026-10-15-studio-pilot-acceptance.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-studio-acceptance-417",
+      "issue": 417,
+      "filesOwned": [
+        "preview/e2e/ (new Studio acceptance scenario only)",
+        "preview/src/studio/viewport.js (opt-in diagnostics, measured lifecycle fixes only)",
+        "preview/src/studio/scene.js (measured lifecycle fixes only)",
+        "preview/tests/studio-*.test.js (acceptance regressions)",
+        "docs/world-studio.md",
+        "docs/superpowers/plans/2026-10-15-studio-pilot-acceptance.md"
+      ],
+      "requiredChecks": [
+        "node --test preview/tests/studio-*.test.js server/tests/studio-assets.test.js",
+        "pnpm run test:experience world-studio",
+        "the new soak scenario (warm-up plus ten cycles)",
+        "node desktop/studio-e2e.js",
+        "pnpm run verify"
+      ]
+    },
+    {
+      "id": "connection-continuity",
+      "title": "Players stay connected (Val, 2026-10-15): seamless 270 s rotation, dead-connection watchdog, online/visible reconnect + jitter, 30 s production grace, and update messaging that says the world is improving",
+      "status": "retired",
+      "branches": [
+        "fix/connection-continuity-20261015"
+      ],
+      "owner": null,
+      "nextAction": "Preserve restoration archives; nothing left to deliver.",
+      "ledger": "docs/superpowers/plans/2026-10-15-connection-continuity.md",
+      "requiredChecks": [
+        "new unit and transport tests red then green",
+        "connection-continuity browser journey",
+        "multiplayer and voice journeys",
+        "Redis server suite on throwaway Redis",
+        "pnpm run verify",
+        "hosted Verify via pnpm run land"
+      ],
+      "filesOwned": [
+        "preview/src/multiplayer-client.js",
+        "preview/src/connection-policy.js (new)",
+        "preview/src/voice-chat.js",
+        "server/distributed-app.js",
+        "server/app.js (connection lifetime + shutdown close only)",
+        "server/redis-room.js (leave grace)",
+        "server/world-gateway.js (option pass-through)",
+        "server/tests/browser-fixture.js (lifetime env)",
+        "tests and e2e for these"
+      ],
+      "pr": 447,
+      "updatedAt": "2026-10-15T18:31:05.764Z",
+      "evidence": [
+        {
+          "pr": 447,
+          "reviewedHead": "c5d7ca60c052e77295a9ae26d43c39672c4aeead",
+          "merge": "5bb0470d061c76c8d291624097954eb8eb32aa9e",
+          "tree": "60ff38f2415d473fd727119af72d7dd86a875b82",
+          "checks": "Landed by claude:river-oaks-1b with pnpm run land 447 at 2026-10-15T18:29Z (land updated the branch to c5d7ca60, Verify passed; guard CLEAN). Local: connection-continuity journey run 6 passed every check (5 hand-overs, no gate, bob never gone, quiet socket noticed 8.8 s, online 256 ms, update screens); mutation (ignore rotate) failed on the gate; connection-rotation 4/4 memory+Redis; full server suite on throwaway Redis 786/786; multiplayer-lifecycle, greetings, ipic-screening journeys passed; core verify passed (agent 111/111, preview 3265+1 skip, server 592+152 Redis skips, desktop 69/69). Evidence in ~/worktree-backups/river-oaks/connection-continuity-evidence-20261015/."
+        }
+      ],
+      "retirement": {
+        "head": "c5d7ca60c052e77295a9ae26d43c39672c4aeead",
+        "releasedAt": "2026-10-15T18:30:09.000Z",
+        "sessionsReviewedAt": "2026-10-15T18:30:09.000Z"
+      },
+      "retiredBranches": [
+        "fix/connection-continuity-20261015"
+      ],
+      "archive": {
+        "fix/connection-continuity-20261015": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-Cw3f1P/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-Cw3f1P/history.bundle",
+          "sha256": "319989475e71676f2267b99dda7dd5b5189ccaeca755bc2a32ae1aefdbc3a8cb",
+          "tag": "refs/tags/archive/worktree-prune/2061e65b-df24-4685-9ef9-400081d429fa",
+          "head": "c5d7ca60c052e77295a9ae26d43c39672c4aeead"
+        }
+      }
+    },
+    {
+      "id": "release-0-2-0-tag",
+      "title": "Cut the signed v0.2.0 tag on the 0.2.0 bump merge e87b458e (Val, 2026-10-15): fresh install, tests, desktop package and inspection; GitHub release publication only on a separate yes",
+      "status": "retired",
+      "branches": [],
+      "owner": null,
+      "nextAction": "Published: GitHub release v0.2.0 (https://github.com/BunsDev/river-oaks/releases/tag/v0.2.0, 2026-10-15T20:07:56Z, Latest) with TypeSafe-Place-0.2.0-macOS-arm64.zip (sha256 5c3ae6a4..., GitHub digest and re-download match) and SHA256SUMS, at Val's request. Ad-hoc signed only; Developer ID signing and notarization remain open.",
+      "filesOwned": [
+        "refs/tags/v0.2.0"
+      ],
+      "pr": 376,
+      "updatedAt": "2026-10-15T20:08:31.581Z",
+      "evidence": [
+        {
+          "pr": 376,
+          "reviewedHead": "d7e8ea1d2ff8a8a54d1f53bcdcf77dd404e4422f",
+          "merge": "e87b458ec7883c2355c0f3e1028b07a65120355f",
+          "tree": "4b042e93144018fb58c08f8946b6f8f7824fc1b1",
+          "checks": "Tag v0.2.0 (object 55eafd8d) -> e87b458e, git tag -v Good ED25519, GitHub verified=true. Release worktree at e87b458e with fresh pnpm install: test:desktop 69/69; desktop:package; desktop:package:check ok (exact ASAR allowlist, no fuse drift); codesign --verify --deep --strict valid; Info.plist 0.2.0, bundle id works.jev.river-oaks; ASAR package.json 0.2.0; desktop e2e --dev passed (status passed, 0 failed). TypeSafe-Place-0.2.0-macOS-arm64.zip 127,305,352 bytes, SHA-256 5c3ae6a4a450de18a03ed33d7a67573c9c96b6b2ee09df792e7b6f5cdd4c28b0, unzip -t clean."
+        }
+      ],
+      "retirement": {
+        "head": "e87b458ec7883c2355c0f3e1028b07a65120355f",
+        "releasedAt": "2026-10-15T19:00:18.000Z",
+        "sessionsReviewedAt": "2026-10-15T19:00:18.000Z"
+      },
+      "archive": {
+        "ref": "refs/tags/v0.2.0",
+        "sha": "e87b458ec7883c2355c0f3e1028b07a65120355f",
+        "tagObject": "55eafd8d",
+        "evidence": "/Users/buns/worktree-backups/river-oaks/release-v0.2.0-artifacts",
+        "note": "Detached worktree (no branch); its head is main history and the signed, pushed v0.2.0 tag. Restore with git worktree add --detach <path> v0.2.0. Ignored runtime, receipts and the packaged zip are in the evidence folder."
+      }
+    },
+    {
+      "id": "voice-continuity",
+      "title": "Voice survives the 270 s socket hand-over (Val, 2026-10-15): the replacement socket proves continuity with the old connection id, the server moves the voice lease (compare-and-swap) and reconcile allows a short grace, so voice need not rejoin",
+      "status": "retired",
+      "branches": [
+        "fix/voice-continuity-20261015"
+      ],
+      "owner": null,
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "filesOwned": [
+        "server/voice.js",
+        "server/voice-routes.js",
+        "server/app.js (voice continuity only)",
+        "server/distributed-app.js (voice continuity only)",
+        "server/connection-close.js",
+        "preview/src/multiplayer-client.js (continues param)",
+        "preview/src/voice-chat.js (onConnectionChanged)",
+        "tests for these"
+      ],
+      "pr": 454,
+      "updatedAt": "2026-10-15T19:36:23.286Z",
+      "evidence": [
+        {
+          "pr": 454,
+          "reviewedHead": "287c466fa2e0e0ba2d26be9a8ac3bb48bf53c7b7",
+          "merge": "ec03695650d6436f106d8c7bdb353e134d054523",
+          "tree": "44b3e4f56f7672c3b7441171fa1d6084f4e62f44",
+          "checks": "17 hosted checks green via pnpm run land 454. Local: voice-chat 19/19; voice server tests on throwaway Redis 48/48; connection-rotation 6/6 twice (voice carries on across a hand-over; control loses voice after the 3 s grace); mutation (no continueConnection) fails with no_lease; full Redis server suite 792/792 nothing skipped; connection-continuity journey passed (5 bracketed rotations, no gate); pnpm run verify core passed. Evidence archived in ~/worktree-backups/river-oaks/voice-continuity-evidence-20261015/."
+        }
+      ],
+      "retirement": {
+        "head": "287c466fa2e0e0ba2d26be9a8ac3bb48bf53c7b7",
+        "releasedAt": "2026-10-15T19:34:31.000Z",
+        "sessionsReviewedAt": "2026-10-15T19:34:31.000Z"
+      },
+      "retiredBranches": [
+        "fix/voice-continuity-20261015"
+      ],
+      "archive": {
+        "fix/voice-continuity-20261015": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-RnXb7j/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-RnXb7j/history.bundle",
+          "sha256": "25259849de41993c7188ebdb78d29aac401315c1c34a6cb99b0eeef9a10d6792",
+          "tag": "refs/tags/archive/worktree-prune/5b3d33d1-3d0f-4ce6-9047-2ea34f7295da",
+          "head": "287c466fa2e0e0ba2d26be9a8ac3bb48bf53c7b7"
+        }
+      }
+    },
+    {
+      "id": "register-sweep-20261015-1b2",
+      "title": "Commit river-oaks-1b's later register entries and record the v0.2.0 tag evidence",
+      "status": "retired",
+      "owner": null,
+      "branches": [
+        "docs/register-sweep-20261015-1b2"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-14-release-0.2.0-readiness.md",
+      "requiredChecks": [
+        "node scripts/project-status.mjs --check"
+      ],
+      "filesOwned": [
+        "docs/project-management/tasks.json (the named entries and this one only)",
+        "docs/superpowers/plans/2026-10-14-release-0.2.0-readiness.md",
+        "data/reports/desktop-development.json"
+      ],
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "updatedAt": "2026-10-15T19:57:28.909Z",
+      "pr": 455,
+      "evidence": [
+        {
+          "pr": 455,
+          "reviewedHead": "60bccd746e61dd27fc73f2bf973e2a2f9a8217d1",
+          "merge": "6dac1b21039f005788b8524a67c74b02bd71246d",
+          "tree": "bff2a2ce6aca0690e388ef700156aef562a0e0ef",
+          "checks": "Landed by claude:river-oaks-1b with pnpm run land 455 (branch updated to 60bccd74; 17 hosted checks; guard CLEAN; merge tree equals head tree). Both JSON files parse; project-status --check on the swept register cleared 2 of main's gaps and added only the accurate release-0-2-0-readiness pending-retirement gap."
+        }
+      ],
+      "retirement": {
+        "head": "60bccd746e61dd27fc73f2bf973e2a2f9a8217d1",
+        "releasedAt": "2026-10-15T19:56:46.000Z",
+        "sessionsReviewedAt": "2026-10-15T19:56:46.000Z"
+      },
+      "retiredBranches": [
+        "docs/register-sweep-20261015-1b2"
+      ],
+      "archive": {
+        "docs/register-sweep-20261015-1b2": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-Co6TTW/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-Co6TTW/history.bundle",
+          "sha256": "d0db1e1e5cbf688c19fbef42039545237a5fb9d994922869ebf1598f6d634034",
+          "tag": "refs/tags/archive/worktree-prune/e9c8ccfc-16c5-4aaf-bbf7-9a45f5df6461",
+          "head": "60bccd746e61dd27fc73f2bf973e2a2f9a8217d1"
+        }
+      }
+    },
+    {
+      "id": "character-studio-contract-20261015",
+      "title": "Character Studio contract PR #457",
+      "status": "active",
+      "branches": [
+        "feat/character-studio-contract-20261015"
+      ],
+      "owner": "codex-character-studio-20261015",
+      "updatedAt": "2026-10-15T21:57:05.134413+00:00",
+      "leaseUntil": "2026-10-15T23:57:05.134413+00:00",
+      "nextAction": "Preserve draft contract #457 at b6ef443e; review baseline/contract acceptance with render/editor stack. No merge authorization.",
+      "filesOwned": [],
+      "requiredChecks": [
+        "Focused contract and rig tests",
+        "pnpm run verify",
+        "Rendered human/beast fixture inspection"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-15-character-studio.md",
+      "pr": 457
+    },
+    {
+      "id": "character-studio-editor-20261015",
+      "title": "Character Studio editor PR #461",
+      "status": "active",
+      "branches": [
+        "feat/character-studio-editor-20261015"
+      ],
+      "owner": "codex-character-studio-20261015",
+      "updatedAt": "2026-10-15T21:57:05.134413+00:00",
+      "leaseUntil": "2026-10-15T23:57:05.134413+00:00",
+      "nextAction": "Preserve draft editor #461 at 93f29271; backport/reconcile selected-character focus correction from #462 before any future landing. No merge authorization.",
+      "filesOwned": [],
+      "requiredChecks": [
+        "Focused contract and rig tests",
+        "pnpm run verify",
+        "Rendered human/beast fixture inspection"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-15-character-studio.md",
+      "pr": 461
+    },
+    {
+      "id": "character-studio-persistence-20261015",
+      "title": "Character Studio #443 authoritative drafts and immutable revisions",
+      "status": "active",
+      "branches": [
+        "feat/character-studio-persistence-20261015"
+      ],
+      "owner": "codex-character-studio-20261015",
+      "updatedAt": "2026-10-18T06:40:52.314190+00:00",
+      "leaseUntil": "2026-10-18T08:40:52.314190+00:00",
+      "nextAction": "Boot fit final gates passed: focused21+ownership4,wardrobe877checks132rows330phases,core11withRedis,native4Kbothzero. Selected Rowan/Kai sit/run visually clear at cuffs,review no blockers. Ready signed commit/push464 then exacthead CI/issue update. Preserve userdev5028,reports and otherowners; no merge/deploy.",
+      "filesOwned": [
+        "server/character-store.js",
+        "server/tests/character-store.test.js",
+        "docs/character-studio.md",
+        "docs/superpowers/plans/2026-10-15-character-studio-persistence.md",
+        "server/character-routes.js",
+        "server/tests/character-transport.test.js",
+        "server/app.js",
+        "server/distributed-app.js",
+        "server/world-gateway.js",
+        "server/town.js",
+        "server/redis-security.js",
+        "server/world.js",
+        "server/redis-room.js",
+        "server/avatar-preferences.js",
+        "server/tests/character-world.test.js",
+        "server/tests/redis-room.test.js",
+        "server/tests/avatar-preferences.test.js",
+        "server/creator-rollout-audit.js",
+        "server/tests/seating.test.js",
+        "server/tests/creator-objects.test.js",
+        "server/tests/penthouse-office.test.js",
+        "server/tests/offices.test.js",
+        "server/tests/office-ipic-rollback.test.js",
+        "server/tests/interactions.test.js",
+        "server/tests/penthouse-seats-redis.test.js",
+        "server/tests/penthouse-seats.test.js",
+        "server/recovery-diagnostics.js",
+        "server/tests/character-selection.test.js",
+        "server/tests/character-room.test.js",
+        "server/character-selection.js",
+        "server/tests/character-selection-memory.test.js",
+        "server/tests/character-equip.test.js",
+        "server/tests/world-gateway.test.js",
+        "preview/src/character-account.js",
+        "preview/tests/character-account.test.js",
+        "preview/src/character-studio.js",
+        "preview/src/character-studio.css",
+        "preview/src/multiplayer-client.js",
+        "preview/src/main.js",
+        "preview/src/player-avatar.js",
+        "preview/src/remote-players.js",
+        "preview/src/character-selection-view.js",
+        "preview/tests/remote-players.test.js",
+        "preview/e2e/character-studio.js",
+        "preview/e2e/character-studio-shared.js",
+        "preview/e2e/shared-runner.js",
+        "server/tests/browser-fixture.js",
+        "preview/vite.config.js",
+        "server/vercel-routing.js",
+        "server/tests/vercel-routing.test.js",
+        "vercel.json",
+        "preview/src/character-studio-materials.js",
+        "preview/tests/character-selection-view.test.js",
+        "preview/src/avatar-placeholder.js",
+        ".env.example",
+        "server/character-rollout.js",
+        "server/redis-backend.js",
+        "preview/e2e/fixture-server.js",
+        "preview/e2e/experience-runner.js",
+        "preview/e2e/character-studio-disabled.js",
+        "preview/e2e/character-studio-paused.js",
+        "server/auth.js",
+        "server/redis-auth.js",
+        "server/tests/auth.test.js",
+        "server/tests/redis-auth.test.js",
+        "server/workos-deletion.js",
+        "server/tests/workos-deletion.test.js",
+        "server/tests/character-account-deletion.test.js",
+        "server/tests/character-deletion-factories.test.js",
+        "server/character-metrics.js",
+        "server/character-metrics-http.js",
+        "server/character-metrics-equip.js",
+        "server/tests/character-metrics.test.js",
+        "server/tests/character-metrics-http.test.js",
+        "server/tests/character-metrics-equip.test.js",
+        "server/tests/character-metrics-routes.test.js",
+        "server/tests/character-metrics-transport.test.js",
+        "server/tests/character-metrics-factories.test.js",
+        "preview/src/peer-label-layout.js",
+        "preview/tests/peer-label-layout.test.js",
+        "preview/src/multiplayer.css",
+        "preview/audit/rendered-multiplayer.js",
+        "preview/tests/office-world-presentation.test.js",
+        "preview/src/office-ui.js",
+        "preview/tests/office-ui.test.js",
+        "preview/src/skirt-geometry.js",
+        "preview/src/skirt-seat-morph.js",
+        "preview/src/skirt-seat-morph-data.js",
+        "preview/src/reference-archetypes.js",
+        "preview/src/romance-look.js",
+        "preview/src/sable-look.js",
+        "preview/tests/skirt-skinning.test.js",
+        "preview/tests/reference-batching.test.js",
+        "preview/tests/helpers/skirt-contact.js",
+        "scripts/bake-skirt-seat-morph.mjs",
+        "scripts/lib/skirt-seat-fit.mjs",
+        "preview/e2e/character-poses.js",
+        "preview/tests/skirt-seat-bake.test.js",
+        "preview/src/skirt-seat-morph-receipt.json",
+        "scripts/character-hero-goldens.mjs",
+        "preview/e2e/fixtures/character-hero-golden.html",
+        "preview/e2e/fixtures/character-hero-golden.js",
+        "preview/audit/character-image-comparison.js",
+        "preview/tests/character-image-comparison.test.js",
+        "preview/e2e/goldens/character-hero",
+        "preview/e2e/character-wardrobe.js",
+        "preview/audit/character-wardrobe-matrix.js",
+        "preview/tests/character-wardrobe-matrix.test.js",
+        "preview/src/vesper-skirt-geometry.js",
+        "preview/src/vesper-skirt-morph-data.js",
+        "preview/src/vesper-skirt-morph-receipt.json",
+        "scripts/bake-vesper-skirt.mjs",
+        "scripts/lib/skirt-detail-fit.mjs",
+        "preview/src/drape-geometry.js",
+        "preview/tests/drape-skinning.test.js",
+        "scripts/lib/drape-seat-fit.mjs",
+        "scripts/bake-lyra-drapes.mjs",
+        "preview/src/lyra-drape-morph-data.js",
+        "preview/src/lyra-drape-morph-receipt.json",
+        "preview/tests/romance-look.test.js",
+        "preview/tests/drape-seat-bake.test.js",
+        "preview/src/silvan-drape-geometry.js",
+        "preview/src/silvan-drape-morph-data.js",
+        "preview/src/silvan-drape-morph-receipt.json",
+        "scripts/bake-silvan-drapes.mjs",
+        "preview/tests/silvan-drape.test.js",
+        "preview/tests/helpers/garment-edges.js",
+        "preview/src/packed-morph-data.js",
+        "preview/tests/packed-morph-data.test.js",
+        "preview/tests/garment-edges.test.js",
+        "preview/tests/silvan-trousers.test.js",
+        "preview/tests/helpers/body-coverage.js",
+        "preview/src/silvan-trousers.js",
+        "preview/tests/body-coverage.test.js",
+        "preview/tests/silvan-trousers-motion.test.js",
+        "preview/src/coat-tail-geometry.js",
+        "preview/tests/coat-tails.test.js",
+        "scripts/bake-coat-tails.mjs",
+        "preview/src/coat-tail-morph-data.js",
+        "preview/src/coat-tail-morph-receipt.json",
+        "scripts/lib/coat-tail-fit.mjs",
+        "preview/src/coat-tail-skinning.js",
+        "preview/e2e/character-studio-worlds.js",
+        "preview/src/rigid-costume-batching.js",
+        "preview/tests/rigid-costume-batching.test.js",
+        "preview/src/rigid-accessory-pool.js",
+        "preview/tests/rigid-accessory-pool.test.js",
+        "preview/tests/reference-boots.test.js",
+        "preview/src/boot-fitting.js",
+        "preview/tests/boot-fitting.test.js"
+      ],
+      "requiredChecks": [
+        "Memory and real isolated Redis store contract tests",
+        "pnpm run verify",
+        "Authenticated HTTP/WebSocket and two-player journeys before integration acceptance"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-15-character-studio-persistence.md",
+      "pr": 464
+    },
+    {
+      "id": "human-only-characters-20261018",
+      "title": "Human-only characters and Jevica-only invited office",
+      "status": "active",
+      "branches": [
+        "feat/human-only-characters-20261018"
+      ],
+      "owner": "codex-human-only-20261018",
+      "updatedAt": "2026-10-18T11:08:37.944467Z",
+      "leaseUntil": "2026-10-18T13:08:37.944467Z",
+      "nextAction": "User authorized commit/push/merge. Verify complete controlled core gate, reconcile current main and inherited Studio stack, commit signed, open PR and land via protected queue.",
+      "filesOwned": [
+        "preview/src",
+        "preview/tests",
+        "preview/e2e",
+        "server",
+        "docs/character-studio.md",
+        "preview/public/assets/characters"
+      ],
+      "requiredChecks": [
+        "Focused migration and catalog regressions",
+        "pnpm run verify",
+        "Human character browser journey"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-18-human-only-characters.md",
+      "pr": 496
+    },
+    {
+      "id": "green-roofs-20261015",
+      "title": "Implement composed green roof scenery and verify office outlook, fit and rendering budgets",
+      "status": "active",
+      "branches": [
+        "feat/green-roofs-20261015"
+      ],
+      "owner": "codex:green-roofs-20261015",
+      "updatedAt": "2026-10-15T19:40:15.925333+00:00",
+      "nextAction": "Signed19cf13ee all16 hosted checks passed; prior queue refused stale main. Integrated ec036956 (Studio/voice main) with repo task merge driver; final combined pnpm verify core passed. Commit/push signed final merge, re-enter pnpm land449, await exact-head hosted checks and actual merge proof. Full18-component pass9a4404da and Metal evidence retain recorded scope.",
+      "ledger": "docs/superpowers/plans/2026-10-15-green-roofs.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-green-roofs",
+      "filesOwned": [
+        "preview/src/green-roofs.js (new)",
+        "preview/tests/green-roofs.test.js (new)",
+        "preview/src/district.js (roof integration only)",
+        "docs/vegetation.md (authored roof planting)",
+        "docs/superpowers/plans/2026-10-15-green-roofs.md",
+        "preview/e2e/green-roofs-webgl.js (new)",
+        "docs/green-roofs.md",
+        "preview/e2e/green-roofs-office.mjs (new)",
+        "preview/src/roof-field-boundaries.js (new)",
+        "preview/tests/roof-field-boundaries.test.js (new)",
+        "preview/src/roof-field-mesh.js (new)",
+        "preview/tests/roof-field-mesh.test.js (new)",
+        "preview/src/hermes-roof-surface.js (new)",
+        "preview/tests/hermes-roof-surface.test.js (new)",
+        "preview/src/reference-facades.js (pavilion helper replacement only)",
+        "preview/src/roof-grasses.js (new)",
+        "preview/tests/roof-grasses.test.js (new)",
+        "preview/e2e/green-roofs-town.mjs (new)",
+        "preview/src/office-layouts.js (roof-gardens view only)",
+        "preview/tests/office-views.test.js",
+        "preview/tests/office-ui.test.js",
+        "preview/e2e/office-penthouse.js",
+        "preview/e2e/office-penthouse-runner.mjs",
+        "docs/offices.md (bounded views)",
+        "preview/src/office-world-scene.js",
+        "preview/src/office-world-presentation.js",
+        "preview/src/office-skyline.js",
+        "preview/tests/office-skyline.test.js",
+        "preview/tests/office-world-presentation.test.js",
+        "preview/src/main.js (live office mode)",
+        "preview/e2e/spatial-circulation.js (startup fence and failure diagnostics)",
+        "preview/e2e/spatial-circulation.js (fixture readiness/diagnostics)"
+      ],
+      "requiredChecks": [
+        "deterministic containment, equipment and geometry regressions",
+        "office capture lifecycle and inclusion",
+        "pnpm run verify",
+        "matched daylight/dusk street/elevated captures and performance deltas",
+        "live current-light/parallax/actor-mask/lifecycle regressions",
+        "pnpm run verify full with owned isolated Redis",
+        "native live office routes, in-visit time change, fixed-view costs"
+      ],
+      "pr": 449,
+      "leaseUntil": "2026-10-15T22:23:30.634352+00:00"
+    },
+    {
+      "id": "release-0-2-0-published",
+      "title": "Record the published v0.2.0 GitHub release in the readiness ledger and register",
+      "status": "active",
+      "owner": "claude:river-oaks-1b (b929a625)",
+      "leaseUntil": "2026-10-15T22:08:36.000Z",
+      "branches": [
+        "docs/release-0-2-0-published-20261015"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-14-release-0.2.0-readiness.md",
+      "requiredChecks": [
+        "node scripts/project-status.mjs --check"
+      ],
+      "filesOwned": [
+        "docs/superpowers/plans/2026-10-14-release-0.2.0-readiness.md",
+        "docs/project-management/tasks.json (the named entries and this one only)"
+      ],
+      "nextAction": "Update the readiness ledger's tag section for the published release; copy release-0-2-0-readiness, register-sweep-20261015-1b2, release-0-2-0-tag and this entry onto main's register; PR and land.",
+      "updatedAt": "2026-10-15T20:08:36.760Z"
+    },
+    {
+      "id": "release-0-2-1-signed",
+      "title": "Release 0.2.1: Developer ID signed and notarized macOS build (Val, 2026-10-15: new 0.2.1 release, Soul Protocol LLC identity, notarytool keychain profile river-oaks-notary)",
+      "status": "delivered",
+      "owner": "claude:river-oaks-1b",
+      "leaseUntil": "2026-10-16T04:43:55.000Z",
+      "branches": [
+        "release/v0.2.1-20261015"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-15-release-0.2.1.md",
+      "requiredChecks": [
+        "pnpm run test:desktop",
+        "pnpm run verify",
+        "pnpm run desktop:package",
+        "pnpm run desktop:package:check",
+        "codesign --verify --deep --strict",
+        "spctl -a -t exec (Notarized Developer ID)"
+      ],
+      "filesOwned": [
+        "desktop/sign.js",
+        "desktop/entitlements.mac.plist",
+        "desktop/fuses.js",
+        "desktop/tests/sign.test.js",
+        "desktop/tests/fuses.test.js",
+        "package.json (version)",
+        "docs/releases/0.2.1.md",
+        "docs/desktop.md (signing section)",
+        "docs/superpowers/plans/2026-10-15-release-0.2.1.md",
+        "scripts/tests/browser-lock.test.js",
+        "refs/tags/v0.2.1",
+        "detached release worktree /Users/buns/Documents/GitHub/BunsDev/river-oaks-release-v0.2.1-tag"
+      ],
+      "nextAction": "Retire release/v0.2.1-20261015 and the detached tag worktree river-oaks-release-v0.2.1-tag (evidence in ~/worktree-backups/river-oaks/release-v0.2.1-artifacts).",
+      "pr": 467,
+      "updatedAt": "2026-10-16T01:56:03.906Z",
+      "evidence": [
+        {
+          "pr": 467,
+          "reviewedHead": "67c8913f1653b27f23e7ecf63d8f54866a70f612",
+          "merge": "19d112502a557b8b172e8449cac4d7bbe4510909",
+          "tree": "8f4c92c0baca4825cd58dd61e7a667c37dbf19c6",
+          "checks": "Landed by claude:river-oaks-1b with pnpm run land 467 (20 hosted checks green incl. CodeQL and desktop on macOS/Linux/Windows; guard CLEAN; merge tree equals head tree). Local: test:desktop 76/76, verify core passed, CodeQL suite 0 results. CodeQL alert #4 fixed on main at 19d11250 (2026-10-16T01:46:10Z); 0 open alerts. Release build at 19d11250 (head of main): test:desktop 76/76, package + package:check, desktop e2e 13/13; Developer ID signed (Soul Protocol LLC 9LR8Z8UQ9X, cert EE732DF3), notarization 055e4bd7-e036-4248-8a60-7e189fe692a0 Accepted, stapled, spctl Notarized Developer ID (also on unzipped quarantined copy). Signed tag v0.2.1 (object 0b5ba60e, GitHub verified) published 2026-10-16T01:55:24Z as Latest; zip sha256 fa5e7e2c digest and re-download match."
+        }
+      ]
+    },
+    {
+      "id": "release-0-2-1-published",
+      "title": "Record the published v0.2.1 release (signed, notarized) in the release ledger and register",
+      "status": "active",
+      "owner": "claude:river-oaks-1b",
+      "leaseUntil": "2026-10-16T03:56:03.000Z",
+      "branches": [
+        "docs/release-0-2-1-published-20261015"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-15-release-0.2.1.md",
+      "requiredChecks": [
+        "node scripts/project-status.mjs --check"
+      ],
+      "filesOwned": [
+        "docs/superpowers/plans/2026-10-15-release-0.2.1.md",
+        "data/reports/desktop-development.json (release e2e receipt)",
+        "docs/project-management/tasks.json (release-0-2-1-signed and this entry only)"
+      ],
+      "nextAction": "Commit release results and the register entries; land; retire.",
       "pr": null,
-      "updatedAt": "2026-10-15T16:48:05.427Z"
+      "updatedAt": "2026-10-16T01:56:03.947Z"
     }
   ]
 }

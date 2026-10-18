@@ -134,3 +134,19 @@ Draft PR: [#448](https://github.com/BunsDev/river-oaks/pull/448).
 position/gesture/view slice, then use a separate follow-up to clear the
 world-table camera and complete human play, touch and accessibility acceptance.
 Keep PR #436's iPhone landing separate.
+
+## Authorized landing integration, 2026-10-18
+
+Val authorized #448, #477, #468 and #484 through merge and worktree retirement.
+Owner: `codex-pr-448-477-468-484`. Merged `origin/main` without committing yet.
+Resolved player-avatar by retaining the throw animation, adding main's platform
+pose data and preserving main's human-only appearance behavior. Regenerated the
+plans index. Focused wine-pong, resident-gesture and salon checks are running;
+log `/tmp/river-oaks-448-focused.log`. Core and hosted verification, signed merge
+commit, landing and retirement remain pending. Preserve this unfinished merge.
+
+Integration checks: dependencies installed with the frozen lockfile; agent doctor
+passed. Focused wine-pong/gesture/salon tests passed 27/27, and
+`pnpm run test:experience plaza-wine-pong` passed. Receipt preserved at
+`.runtime/landing-448-experience.json`; the tracked historical report is unchanged.
+Core verification is still running; hosted exact-head CI remains a merge gate.

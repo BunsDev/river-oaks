@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { createSharedWorld } from '../world.js';
 import { createWalkingEnvironment } from '../../preview/src/walking.js';
 import { benchSeats } from '../../preview/src/world-interactions.js';
-import { IPIC_SCREEN } from '../../preview/src/ipic-plan.js';
+import { IPIC_SCREEN, ipicFloor } from '../../preview/src/ipic-plan.js';
 const data = JSON.parse(readFileSync(new URL('../../preview/public/data/district.json', import.meta.url)));
 const env = createWalkingEnvironment(data), room = env.rooms.find(r => r.interior);
 
@@ -28,17 +28,18 @@ function walk(f, a, d) {
   }
 }
 
-const route = [[-1.4, 4.8], [-1.4, 20.7], [-5.55, 20.7], [-5.55, 24.7], [-4.85, 24.7], [-4.85, 29]];
+const route = [[-1.4, 4.8], [-1.4, 20.7], [-1.4, 24.5], [-4.85, 24.5], [-4.85, 29]];
 
 test('shared visitor walks both flights, sits, stands, restores checkpoint, and returns', () => {
   let f = fixture();
   route.forEach(p => walk(f, ...p));
-  assert.equal(f.player().position[2], room.floor + 6);
+  // The route ends on the back row's riser (P15).
+  assert.equal(f.player().position[2], room.floor + ipicFloor(route.at(-1)[1]));
   const seat = benchSeats(data).find(s => s.buildId === 'bench:ipic-recliner-0-0');
   assert.ok(seat, 'auditorium has a shared seat');
   const seated = f.command({ type: 'sit', buildId: seat.buildId, slot: 0 });
   assert.equal(seated.ok, true, seated.error);
-  assert.equal(seated.player.position[2], room.floor + 6);
+  assert.equal(seated.player.position[2], room.floor + ipicFloor(28));
   assert.equal(f.command({ type: 'pose', position: [0, 0, 0], yaw: 0, altitude: 0 }).error, 'stand_before_moving');
   f.town.join({ userId: 'second-guest', name: 'Second visitor' });
   assert.equal(f.town.command('second-guest', { type: 'sit', buildId: seat.buildId, slot: 0 }).error, 'seat_occupied');
@@ -47,8 +48,8 @@ test('shared visitor walks both flights, sits, stands, restores checkpoint, and 
   assert.equal(f.town.command('second-guest', { type: 'sit', buildId: seat.buildId, slot: 0 }).error, 'seat_occupied');
   const stood = f.command({ type: 'stand' }); assert.equal(stood.ok, true, stood.error);
   // Reach the left aisle using the clear space in front of the first row.
-  walk(f, -4.85, 29.65); walk(f, -4.85, 24.7); walk(f, -5.55, 24.7);
-  walk(f, -5.55, 20.7); walk(f, -1.4, 20.7); walk(f, -1.4, 4.8); walk(f, 0, 1);
+  walk(f, -4.85, 29.65); walk(f, -4.85, 24.5); walk(f, -1.4, 24.5);
+  walk(f, -1.4, 20.7); walk(f, -1.4, 4.8); walk(f, 0, 1);
   assert.equal(f.command({ type: 'travel', storeId: room.storeId, mode: 'leave' }).ok, true);
   assert.equal(env.roomAt(f.player().position[0], -f.player().position[1]), null);
 });
@@ -61,7 +62,7 @@ test('recliner sitters see the screen from the seated eye; every other seat keep
   assert.equal(recliners.length, 8);
   for (const site of recliners) {
     const seat = room.ipicSeats.find(s => `bench:ipic-${s.key}` === site.buildId);
-    const aimed = seat.height + .65 + Math.tan(site.eyePitch) * (IPIC_SCREEN.d - seat.d);
+    const aimed = ipicFloor(seat.d) - 6 + seat.height + .65 + Math.tan(site.eyePitch) * (IPIC_SCREEN.d - seat.d);
     assert.ok(Math.abs(aimed - IPIC_SCREEN.y) < 1e-9, `${site.buildId} aims at the screen centre`);
   }
   const pitch = id => recliners.find(s => s.buildId === id).eyePitch;

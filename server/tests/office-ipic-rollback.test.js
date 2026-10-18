@@ -8,7 +8,7 @@ import { SCREENING_MEDIA } from '../../preview/src/screening-contract.js';
 import { OFFICE_LAYOUT_LEGACY, OFFICE_LAYOUT_PENTHOUSE, officeLayout, officeSeat } from '../../preview/src/office-layouts.js';
 
 // #368 rollback, in a disposable in-memory town: the feature is rolled back by keeping the current
-// compatible writer (checkpoint v11) and changing configuration, never by restoring older code.
+// compatible writer (checkpoint v12) and changing configuration, never by restoring older code.
 // The legacy office layout ends penthouse visits and their seat claims; removing the host grant
 // pauses the film where it was. Grants and pending requests stay. Desks and shared workspace
 // tasks live outside world checkpoints (docs/offices.md) and are not touched by this restore.
@@ -28,11 +28,11 @@ function town({ officeLayout: layout, hosts, restore, at = 1_000_000 }) {
   return { world, clock, send, office, screening, visit };
 }
 
-test('rolling back keeps the v11 writer: legacy layout ends seated penthouse visits, a removed host grant pauses the film, grants and requests stay', () => {
+test('rolling back keeps the v12 writer: legacy layout ends seated penthouse visits, a removed host grant pauses the film, invitations stay and requests remain disabled', () => {
   const live = town({ officeLayout: OFFICE_LAYOUT_PENTHOUSE, hosts: [{ venueId: 'ipic', userId: owner }] });
   for (const userId of [owner, 'guest', 'asker']) assert.ok(live.world.join({ userId, name: userId }).ok);
   assert.equal(live.office(owner, 'invite', { peerId: 'guest' }).ok, true);
-  assert.equal(live.office('asker', 'request').ok, true);
+  assert.equal(live.office('asker', 'request').ok, false);
   const entrance = live.office('guest', 'list').offices[0].entrance;
   assert.equal(live.send('guest', { type: 'travel', position: entrance }).ok, true);
   assert.equal(live.office('guest', 'enter').ok, true);
@@ -52,7 +52,7 @@ test('rolling back keeps the v11 writer: legacy layout ends seated penthouse vis
   assert.equal(live.send(owner, { type: 'screening', action: 'start', venueId: 'ipic', epoch: before.epoch, expectedRevision: before.revision, operationId: 'rollback-start-01', mediaId: FILM.id }).ok, true);
   live.clock.time += 4000; live.world.step(0.05);
   const saved = live.world.checkpoint(), playing = live.screening();
-  assert.equal(saved.version, 11);
+  assert.equal(saved.version, 12);
   assert.equal(playing.status, 'playing');
   assert.deepEqual(live.visit('guest').seat, { id: chair.id });
 
@@ -61,9 +61,9 @@ test('rolling back keeps the v11 writer: legacy layout ends seated penthouse vis
   assert.equal(back.visit('guest'), null, 'the penthouse visit and its seat claim ended');
   assert.equal(back.world.snapshot().players.find(player => player.id === 'guest')?.office ?? null, null);
   const restored = back.world.checkpoint();
-  assert.equal(restored.version, 11, 'the compatible writer is kept');
+  assert.equal(restored.version, 12, 'the compatible writer is kept');
   assert.deepEqual(restored.payload.offices.grants, saved.payload.offices.grants, 'grants stay');
-  assert.deepEqual(restored.payload.offices.requests, saved.payload.offices.requests, 'pending requests stay');
+  assert.deepEqual(restored.payload.offices.requests, [], 'retired requests are not restored');
   back.clock.time += 1000; back.world.step(0.05);
   const paused = back.screening();
   assert.equal(paused.status, 'paused', 'without a host grant the film pauses');

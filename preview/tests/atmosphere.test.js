@@ -23,3 +23,12 @@ test('the hour range keeps every quantity finite, positive and continuous', () =
   assert.ok(atmosphereFor(13, 'overcast').sunIntensity < atmosphereFor(13, 'clear').sunIntensity / 3);
   assert.ok(atmosphereFor(13, 'haze').fogDensity > atmosphereFor(13, 'clear').fogDensity * 2);
 });
+
+test('twilight is zero through the day and rises to one toward dawn and dusk', () => {
+  assert.equal(atmosphereFor(12, 'clear').twilight, 0);
+  assert.equal(atmosphereFor(15, 'overcast').twilight, 0);
+  assert.ok(atmosphereFor(18.5, 'clear').twilight > 0.7 && atmosphereFor(19, 'clear').twilight === 1);
+  assert.ok(atmosphereFor(7, 'clear').twilight === 1 && atmosphereFor(8, 'clear').twilight > 0);
+  let previous = 0;
+  for (let hour = 12; hour <= 19; hour += 0.25) { const { twilight } = atmosphereFor(hour, 'clear'); assert.ok(twilight >= previous && twilight - previous < 0.15, `smooth at ${hour}`); previous = twilight; }
+});

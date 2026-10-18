@@ -97,6 +97,24 @@ jobs:
           retention-days: 7
           path: output/playwright/security-*-failure.png
       - run: pnpm run test:reflections:webgl
+      - name: IPIC screening journey (two browsers, host controls, late join within 500 ms)
+        id: screening_browser
+        # The same Mesa path as the shared and security journeys. Val chose hosted coverage of the
+        # screening journey on 2026-10-18; the ten-cycle soak stays a local profile.
+        env:
+          RIVER_OAKS_SCREENING_SOFTWARE: '1'
+          LIBGL_ALWAYS_SOFTWARE: '1'
+          LP_NUM_THREADS: '2'
+        run: xvfb-run -a pnpm run test:screening
+      - name: Screening journey failure evidence
+        if: ${{ failure() && steps.screening_browser.outcome == 'failure' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: screening-browser-failure
+          retention-days: 7
+          path: |
+            output/playwright/ipic/screening.json
+            output/playwright/ipic/screening-*-failure.png
   preview-shared:
     name: preview shared (${{ matrix.shard.id }})
     runs-on: ubuntu-latest
@@ -169,7 +187,7 @@ jobs:
           - id: streets
             journeys: spatial-streets world-studio
           - id: places
-            journeys: contextual-first-visit store-intro photo-mode rail-navigation places-guide destination-minimap spatial-circulation office-desk office-computer-shared office-visit
+            journeys: contextual-first-visit store-intro photo-mode rail-navigation places-guide destination-minimap spatial-circulation office-desk office-visit office-lift-ride
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

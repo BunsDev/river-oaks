@@ -9,7 +9,14 @@ async page => {
   await peerContext.addCookies([{ name: 'fixture_session', value: 'bob', url: origin }]);
   const peer = await peerContext.newPage();
   peer.on('pageerror', error => errors.push(error.message));
-  const ready = p => p.waitForFunction(() => window.__riverMultiplayer?.().connected && document.querySelector('#canvas-host')?.dataset.playerReady === 'true');
+  // Admission/player setup can precede the first rendered frame and remaining
+  // asset initialization. Both pages use the runner's 60s startup budget; the
+  // independent peer otherwise retains Playwright's shorter 30s default.
+  const ready = p => p.waitForFunction(() => {
+    const host = document.querySelector('#canvas-host');
+    return window.__riverMultiplayer?.().connected && host?.dataset.playerReady === 'true'
+      && host.dataset.renderStats && JSON.parse(document.querySelector('#viewport')?.dataset.assetProgress ?? '{}').done === true;
+  }, null, { timeout: 60000 });
   try {
     await page.goto(`${origin}/?motion-debug=1`); await ready(page);
     await peer.goto(`${origin}/?motion-debug=1`); await ready(peer);
@@ -131,6 +138,6 @@ async page => {
       assets: document.querySelector('#viewport')?.dataset.assetProgress,
       status: document.querySelector('#multiplayer-status')?.textContent,
     })).catch(failure => ({ unavailable: failure.message }));
-    throw new Error(`${error.message}; peer: ${JSON.stringify(diagnostics)}`, { cause: error });
+    throw new Error(`${error.stack}; peer: ${JSON.stringify(diagnostics)}`, { cause: error });
   } finally { await peerContext.close(); }
 }

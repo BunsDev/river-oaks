@@ -246,7 +246,20 @@ The Redis backend stores OAuth state, email verification challenges, Magic Auth 
 
 One renewable Redis lease controls simulation writes. A fenced transaction commits the compressed world checkpoint, public snapshot, consumed operation batch, and command acknowledgments together. A replacement instance restores residents, wishes, movement budgets, cooldowns, and conversation holds. An expired lease cannot overwrite the replacement's state. The world pauses without players; it does not simulate all elapsed offline time.
 
-Disconnects have a ten-second reconnect grace. A new tab replaces the account's existing connection without clearing its wishes. An account is in one world at a time: joining another world closes the old socket with code 4009 ("joined another world"). Owner accounts are exempt, so they can edit one world while playing another. Logout and bans remove the player and owned wishes. The backend bounds command queues and coalesces waiting movement updates without reordering travel actions.
+Disconnects have a thirty-second reconnect grace (`LEAVE_GRACE_MS` in `server/redis-room.js`; the standalone server's `departureGraceMs`). An edge that stops reporting a connection is given forty seconds. A new tab replaces the account's existing connection without clearing its wishes. An account is in one world at a time: joining another world closes the old socket with code 4009 ("joined another world"). Owner accounts are exempt, so they can edit one world while playing another. Logout and bans remove the player and owned wishes. The backend bounds command queues and coalesces waiting movement updates without reordering travel actions.
+
+### Staying connected
+
+- **Planned moves.** The hosted function ends each request at 300 s (`vercel.json`), so the town retires every socket at 270 s (`connectionLifetime`). It sends `{type:'rotate', closeInMs}` 15 s first (`server/connection-close.js`).
+  - The page lets its commands in flight finish, holds new ones, and opens a fresh socket with a fresh ticket.
+  - It switches over on that socket's first snapshot, then sends the held commands.
+  - The town replaces the old connection without the player leaving.
+  - **Voice stays in the room.** The notice names the connection being left, and the fresh socket presents it (`continues`). The voice lease, fenced to its connection id, moves to the new connection (`continueConnection` in `server/voice.js`), and the page renews without rejoining. Only that page knows the id, so another tab cannot claim the lease. A lease left naming another connection (a new tab, or a page that died) is revoked once a 3 s grace runs out (`VOICE_MOVE_GRACE_MS`).
+  - Without a replacement, the old socket closes with 4010, and the page reconnects as usual.
+- **Updates.** A server replaced by an update closes its sockets with 1012 ("River Oaks is updating."). The page says the world is improving and rejoins by itself. A new world or client version (4000, or the ticket's 426) says the world has been improved and offers Refresh.
+- **Dead sockets.** The town sends a snapshot every 200 ms. A visible page that hears none for 8 s drops the socket and reconnects (`preview/src/connection-policy.js`). Retries back off to 30 s with jitter, and the `online` event or a return to view retries at once.
+- **Voice.** After a reconnect within 60 s, a microphone that was on comes back on.
+- **Proof.** `node preview/e2e/connection-continuity.mjs` exercises all of this in two browsers. `server/tests/connection-rotation.test.js` covers the server side in memory and on Redis.
 
 Vehicle exits use the server-checked travel command before completing the local
 dismount. This keeps the seat-to-ground transition from being rejected as an
@@ -403,6 +416,8 @@ Copy `.env.example` to `.env` if you don't already have a private environment fi
 | `TURNSTILE_SECRET_KEY`, `VITE_TURNSTILE_SITE_KEY` | Optional Cloudflare Turnstile on email sign-in; set both or neither |
 | `TYPESAFE_API_KEY`, `JEV_AUTO_MODEL`, `CHAUFFEUR_DAILY_LIMIT` | Hosted Jev driving: server-only key, model (default `jev-1.13.0`), and daily decision budget (default 6,000, max 10,000) |
 | `RIVER_OAKS_WORKPLACE` | Opt-in flag for the workplace test (with `VITE_WORKPLACE=true` in the client) |
+| `RIVER_OAKS_OFFICE_LAYOUT` | Jevica's office layout: unset or `office-legacy-1` (legacy room), or `office-penthouse-1`; personal workspaces stay legacy ([offices](offices.md)) |
+| `RIVER_OAKS_SCREENING_HOSTS` | IPIC screening hosts, `ipic:<userId>[@<ISO expiry>]`, comma-separated; unset means nobody can host ([screenings](screenings.md)) |
 
 Generate a cookie secret locally:
 
@@ -699,7 +714,7 @@ point. If that space is blocked, the visitor keeps the reservation and can use
 Places to travel elsewhere. Travel releases the seat. Revoking a private-home
 invitation moves the visitor outside and releases their seat.
 
-A connection can recover its seat within the normal ten-second reconnect grace.
+A connection can recover its seat within the normal thirty-second reconnect grace.
 After that grace, departure releases it. A compatible region revision keeps
 furniture but disconnects players, so it leaves no stale occupancy. Checkpoint
 recovery validates slots, unique occupancy and the exact furniture-derived pose.

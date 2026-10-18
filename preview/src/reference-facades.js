@@ -1,3 +1,4 @@
+import { hermesPavilionRing } from './hermes-roof-surface.js';
 import * as THREE from 'three';
 import { physicalSurface } from './materials.js';
 import { harryWinstonFacade } from './harry-winston-facade.js';
@@ -435,11 +436,8 @@ export function createReferenceFacades(world, { part, pane, plane, glass }) {
   }
   // The pavilion's own mass rises over its two-storey neighbours.
   function hermesPavilion(frontage) {
-    const { width, side, sideWidth, building } = frontage, f = frames.get(frontage), other = { edge: side, building };
-    const fromB = frontage.corner === side.b, g = frame(other, fromB ? side.length : 0, fromB ? -1 : 1, -1);
-    const point = ([e, h, z]) => new THREE.Vector2(e, -z);
-    const corner = point(f.at(0, 0)), along = point(f.at(width, 0)), across = point(g.at(sideWidth, 0));
-    const far = along.clone().add(across).sub(corner);
+    const { building } = frontage, f = frames.get(frontage);
+    const [corner, along, far, across] = hermesPavilionRing(frontage).slice(0, -1).map(p => new THREE.Vector2(...p));
     const shape = new THREE.Shape([corner, along, far, across]);
     const geometry = new THREE.ExtrudeGeometry(shape, { depth: 14.1 - 4.25, bevelEnabled: false, steps: 1, curveSegments: 1 }); geometry.rotateX(-Math.PI / 2); geometries.push(geometry);
     const mass = new THREE.Mesh(geometry, m.limestone); mass.position.y = f.base + 4.25; mass.castShadow = mass.receiveShadow = true; mass.userData.districtBuilding = building.id; group.add(mass);

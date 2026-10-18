@@ -71,7 +71,7 @@ try {
   }
   await Promise.all([enter(alice), enter(owner)]);
   await Promise.all([
-    walk(alice, [[-1.4, 4.8], [-1.4, 20.7], [-5.55, 20.7], [-5.55, 24.7], [-4.85, 24.7], [-4.85, 29.65], [-1.6, 29.65]]),
+    walk(alice, [[-1.4, 4.8], [-1.4, 20.7], [-1.4, 24.5], [-4.85, 24.5], [-4.85, 29.65], [-1.6, 29.65]]),
     walk(owner, [[1.4, 4.8], [1.4, 20.7], [2.3, 22.2]]),
   ]);
   await alice.locator('#nearby-seat').selectOption(`${SEAT}:0`);
@@ -104,7 +104,8 @@ try {
   await Promise.all([alice, owner].map(page => page.evaluate(() => { document.body.classList.remove('clear-view'); document.querySelector('#photo-views-hide')?.remove(); })));
   const graphics = await alice.evaluate(() => window.__riverRenderAudit.graphics());
   const head = execFileSync('git', ['rev-parse', 'HEAD']).toString().trim();
-  const dirty = execFileSync('git', ['diff', 'HEAD', '--binary']);
+  // Source changes only: this run's own captures are excluded (their binary diff overflowed the buffer).
+  const dirty = execFileSync('git', ['diff', 'HEAD', '--binary', '--', '.', ':(exclude)docs/design/office-ipic/captures'], { maxBuffer: 1 << 30 });
   const receipt = {
     packet: 'office-ipic', runner: 'node preview/e2e/ipic-photo-views.mjs', capturedAt: new Date().toISOString(),
     sourceRevision: head, dirtyPatchSha256: dirty.length ? createHash('sha256').update(dirty).digest('hex') : null,

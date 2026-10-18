@@ -2,13 +2,14 @@ import { mkdir, readFile, rename, writeFile, appendFile } from 'node:fs/promises
 import { dirname } from 'node:path';
 import { createHash } from 'node:crypto';
 import { newInvite, visibleInvite, inviteDigest, validInviteCode, validInviteId, INVITE_TRANSACTION, INVITE_CAPACITY, INVITE_RETENTION } from './invitations.js';
-import { usernameKey, usernameProblem, validUsername } from '../preview/src/resident-names.js';
+import { usernameChoiceProblem, usernameKey, usernameProblem, validNewUsername, validUsername } from '../preview/src/resident-names.js';
 import { generatedUsername } from '../preview/src/generated-username.js';
 
-// The username offered first: the verified GitHub login when it can be one,
-// otherwise a generated name. `attempt` moves past names already taken.
+// The username offered first: the verified GitHub login when it can be chosen now
+// (including the 4-letter minimum), otherwise a generated name. `attempt` moves past
+// names already taken.
 export const suggestedUsername = ({ login = null, userId, attempt = 0 }) =>
-  attempt === 0 && validUsername(login) ? login : generatedUsername(`${userId}:${attempt}`);
+  attempt === 0 && validNewUsername(login) ? login : generatedUsername(`${userId}:${attempt}`);
 
 const validId = value => typeof value === 'string' && value.length > 0 && value.length <= 100 && !/[\u0000-\u001f\u007f]/.test(value);
 const recordFor = (identity, admins, now, autoApprove = false) => ({
@@ -30,7 +31,7 @@ function defaultCandidates(identity) {
   const seen = new Set(), out = [];
   for (let attempt = 0; attempt < 8; attempt++) {
     const username = suggestedUsername({ login: loginOf(identity), userId: identity.userId, attempt }), key = usernameKey(username);
-    if (validUsername(username) && !seen.has(key)) { seen.add(key); out.push({ username, key }); }
+    if (validNewUsername(username) && !seen.has(key)) { seen.add(key); out.push({ username, key }); }
   }
   return out;
 }
@@ -72,8 +73,10 @@ export async function createFileWaitlist(path, { admins = [], now = Date.now, au
     await rename(`${path}.tmp`, path);
     records = next; audit = nextAudit; invites = nextInvites;
   };
+  // Starter invitations go to accounts approved from the waitlist. An account that joined with an
+  // invitation code (record.inviteId) gets none, then or on a later re-approval: the referral decay.
   const grant = (record, nextInvites, actorId) => {
-    if (record.invitesGrantedAt) return;
+    if (record.invitesGrantedAt || record.inviteId) return;
     if (nextInvites.size + 2 > 50000) throw new Error('Invitation capacity reached');
     for (let i = 0; i < 2; i++) { const invite = newInvite(record.userId, actorId, now()); nextInvites.set(invite.id, invite); }
     record.invitesGrantedAt = new Date(now()).toISOString();
@@ -130,6 +133,9 @@ export async function createFileWaitlist(path, { admins = [], now = Date.now, au
         if (!previous) return { ok: false, reason: 'missing' };
         if (previous.username === username) return { ok: true, record: previous };
         if (previous.status === 'approved' || (!admin && previous.status !== 'pending')) return { ok: false, reason: 'locked' };
+        // A new choice meets the 4-letter minimum; re-saving a kept shorter name returned above.
+        const choice = usernameChoiceProblem(username);
+        if (choice) return { ok: false, reason: 'invalid', message: choice };
         if (holder(key, userId)) return { ok: false, reason: 'taken' };
         const record = { ...previous, username, usernameKey: key, usernameBy: admin ? 'admin' : 'self' };
         const next = new Map(records); next.set(userId, record);
@@ -209,7 +215,7 @@ export async function createFileWaitlist(path, { admins = [], now = Date.now, au
         const at = new Date(now()).toISOString();
         const record = { ...previous, status: 'approved', decidedAt: at, decidedBy: invite.ownerId, inviteId: invite.id };
         const next = new Map(records), nextInvites = new Map(invites);
-        grant(record, nextInvites, identity.userId); next.set(record.userId, record);
+        next.set(record.userId, record);
         nextInvites.set(invite.id, { ...invite, status: 'redeemed', redeemedBy: record.userId, redeemedAt: at });
         await persist(next, [...audit, { action: 'invite-redeemed', inviteId: invite.id, userId: record.userId, actorId: record.userId, at }], nextInvites);
         return { ok: true };
@@ -326,7 +332,8 @@ export function createRedisWaitlist({ redis, prefix, admins = [], now = Date.now
     const raw = await redis.eval(INVITE_TRANSACTION, 5, users, audit, invites, ownerIndex, `${prefix}:waitlist:invites:pruned`, JSON.stringify({
       ...payload, indexOwner, capacity: inviteCapacity, retention: INVITE_RETENTION,
       now: time, at: new Date(time).toISOString(), admins: Object.fromEntries(admins.map(id => [id, true])),
-      starter: payload.userId && payload.op !== 'list-owner' ? [newInvite(payload.userId, payload.actorId ?? payload.userId, time), newInvite(payload.userId, payload.actorId ?? payload.userId, time)] : [],
+      // Only an approval can grant starter codes (never a redeem: the referral decay).
+      starter: payload.op === 'decide' && payload.approved ? [newInvite(payload.userId, payload.actorId ?? payload.userId, time), newInvite(payload.userId, payload.actorId ?? payload.userId, time)] : [],
     }));
     return raw ? JSON.parse(raw) : null;
   };
@@ -341,10 +348,16 @@ export function createRedisWaitlist({ redis, prefix, admins = [], now = Date.now
       return adminIds.has(identity.userId) ? { ...existing, status: 'approved' } : existing;
     },
     async setUsername({ userId, username, actorId }) {
-      const problem = usernameRequest({ userId, username, actorId }, adminIds);
+      const problem = usernameRequest({ userId, username, actorId }, adminIds), admin = adminIds.has(actorId);
       if (problem) return { ok: false, reason: 'invalid', message: problem };
+      // As in the file store: only a real new choice on a changeable request meets the
+      // 4-letter minimum; the script still decides missing, unchanged, locked and taken.
+      const current = JSON.parse(await redis.hget(users, userId) ?? 'null');
+      const changeable = current && current.username !== username && current.status !== 'approved' && (admin || current.status === 'pending');
+      const choice = changeable && usernameChoiceProblem(username);
+      if (choice) return { ok: false, reason: 'invalid', message: choice };
       const time = now(), result = JSON.parse(await redis.eval(SET_USERNAME, 3, users, usernames, audit, userId, username, usernameKey(username),
-        adminIds.has(actorId) ? '1' : '0', actorId, new Date(time).toISOString()));
+        admin ? '1' : '0', actorId, new Date(time).toISOString()));
       return result.record ? { ok: true, record: result.record } : { ok: false, reason: result.reason };
     },
     async usernameOf(userId) {

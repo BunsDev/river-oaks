@@ -41,9 +41,19 @@
       </aside>
       <div class="access-panel">
       <div class="access-card">
-        <span class="access-kicker">Step inside</span>
+        <span class="access-kicker" id="access-kicker">Step inside</span>
+        <ol id="access-journey" class="access-journey" role="list" aria-label="How joining works" hidden>
+          <li data-step="sign-in"><span>Sign in</span></li>
+          <li data-step="wait"><span>Get approved</span></li>
+          <li data-step="enter"><span>Enter</span></li>
+        </ol>
         <h1 id="access-title" tabindex="-1">Welcome to the district</h1>
         <p id="access-message" role="status">Checking your access…</p>
+        <div id="access-waiting" class="access-waiting" hidden>
+          <p class="access-waiting-head"><span class="access-waiting-dot" aria-hidden="true"></span>Waiting for approval</p>
+          <p>You don’t need to sign in again. Leave this page open and River Oaks opens by itself once you’re approved.</p>
+          <p class="access-waiting-aside">Closing it is fine too: your place is kept.</p>
+        </div>
         <div id="access-providers" class="access-actions" hidden>
           <a class="access-github" href="/auth/login?provider=github"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.87c-2.78.6-3.37-1.18-3.37-1.18-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.95 0-1.09.39-1.99 1.03-2.69-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02A9.58 9.58 0 0 1 12 6.79c.85 0 1.71.11 2.51.34 1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.6 1.03 2.69 0 3.85-2.34 4.7-4.57 4.94.36.31.68.92.68 1.85v2.77c0 .26.18.58.69.48A10 10 0 0 0 12 2Z"/></svg>Continue with GitHub</a>
           <div class="access-divider"><span>or continue with email</span></div>
@@ -60,23 +70,27 @@
           </form>
           <p id="access-email-status" role="status"></p>
         </div>
-        <form id="access-username-form" class="access-form access-username-form" hidden>
-          <label for="access-username">Your name in River Oaks</label>
-          <input id="access-username" name="username" type="text" autocomplete="nickname" autocapitalize="off" spellcheck="false" minlength="2" maxlength="39" required aria-describedby="access-username-help" />
-          <p id="access-username-help">Letters and digits, joined by single - _ or . The district team may adjust it before approving you.</p>
-          <div class="access-username-choices"><button id="access-username-github" type="button" hidden>Use my GitHub name</button><button id="access-username-suggest" type="button">Suggest another</button></div>
-          <button id="access-username-save" type="submit">Save name</button>
+        <form id="access-username-form" class="access-form access-section access-username-form" hidden>
+          <label for="access-username"><svg class="access-section-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4.5 20.5c.9-3.9 3.9-6 7.5-6s6.6 2.1 7.5 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Your name in River Oaks</label>
+          <p id="access-username-help">How other residents will know you. At least 4 letters; numbers are fine too, with words joined by a hyphen, underscore or dot. Capital and small letters count as the same name.</p>
+          <div class="access-field-row">
+            <input id="access-username" name="username" type="text" autocomplete="nickname" autocapitalize="off" spellcheck="false" minlength="4" maxlength="39" required aria-describedby="access-username-help" />
+            <button id="access-username-save" type="submit" disabled data-saved>Saved</button>
+          </div>
+          <div class="access-username-choices"><button id="access-username-github" type="button" hidden><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.87c-2.78.6-3.37-1.18-3.37-1.18-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.95 0-1.09.39-1.99 1.03-2.69-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02A9.58 9.58 0 0 1 12 6.79c.85 0 1.71.11 2.51.34 1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.6 1.03 2.69 0 3.85-2.34 4.7-4.57 4.94.36.31.68.92.68 1.85v2.77c0 .26.18.58.69.48A10 10 0 0 0 12 2Z"/></svg>Use my GitHub name</button><button id="access-username-suggest" type="button"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 3.5l1.6 4.4 4.4 1.6-4.4 1.6L12 15.5l-1.6-4.4L6 9.5l4.4-1.6zM18.5 14.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z" fill="currentColor"/></svg>Suggest another</button></div>
           <p id="access-username-status" role="status"></p>
         </form>
-        <form id="access-invite-form" class="access-form" hidden>
-          <label for="access-invite-code">Have an invite code?</label>
-          <input id="access-invite-code" name="invite" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="32" required placeholder="Your invite code" aria-describedby="access-invite-help" />
-          <p id="access-invite-help">Sign in first, then redeem your invite.</p>
-          <button id="access-invite-redeem" type="submit" disabled>Redeem invite and join</button>
+        <form id="access-invite-form" class="access-form access-section" hidden>
+          <label for="access-invite-code"><svg class="access-section-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 8.5V6.75c0-.69.56-1.25 1.25-1.25h14.5c.69 0 1.25.56 1.25 1.25V8.5a3.5 3.5 0 0 0 0 7v1.75c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25V15.5a3.5 3.5 0 0 0 0-7Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M14.5 6v2.5m0 3v1m0 3V18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Have an invitation code?</label>
+          <p id="access-invite-help">A member’s one-time code skips the waitlist. Sign in first to use one.</p>
+          <div class="access-field-row">
+            <input id="access-invite-code" name="invite" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="32" required placeholder="Paste a code" aria-describedby="access-invite-help" />
+            <button id="access-invite-redeem" type="submit" disabled>Use code</button>
+          </div>
           <p id="access-invite-status" role="status"></p>
         </form>
         <button id="access-retry" type="button" hidden>Try again</button>
-        <button id="access-gate-signout" type="button" hidden>Sign out</button>
+        <button id="access-gate-signout" class="access-quiet-button" type="button" hidden>Sign out</button>
       </div>
       <p class="access-footer">A place to explore, meet and make yourself at home. <button class="access-report-link" id="access-gate-report" type="button">Report a problem</button></p>
       </div>
@@ -84,7 +98,7 @@
     </section>
     <dialog id="access-invites" class="access-invites" aria-labelledby="access-invites-title">
       <h2 id="access-invites-title">Your invitations</h2>
-      <p>Each newly accepted member receives two single-use invites. They expire 30 days after they are issued.</p>
+      <p>Members approved from the waitlist receive two one-time invitation codes. Each lets one person skip the waitlist and expires 30 days after it’s made. Members who joined with a code don’t receive codes of their own.</p>
       <p id="access-invites-status" role="status"></p>
       <form id="access-invite-issue" class="access-form" hidden>
         <label for="access-invite-owner">Give an invitation to</label>

@@ -1,6 +1,6 @@
 {
   "name": "river-oaks-development-preview",
-  "version": "0.1.6",
+  "version": "0.2.1",
   "private": true,
   "type": "module",
   "engines": {
@@ -17,6 +17,7 @@
     "test:shared": "node preview/e2e/shared-runner.js",
     "test:security:e2e": "node scripts/browser-lock.mjs 'security browser tests' -- node --test preview/e2e/email-access.test.js preview/e2e/debug-readout.test.js",
     "test:reflections:webgl": "node scripts/browser-lock.mjs 'reflections' -- node preview/e2e/reflections-webgl.js",
+    "test:screening": "node preview/e2e/ipic-screening-runner.mjs",
     "test:trees:webgl": "node scripts/browser-lock.mjs 'landscape trees' -- node preview/e2e/landscape-trees.js",
     "assets:trees": "node scripts/prepare_ez_tree.js",
     "server": "node --env-file-if-exists=.env server/start.js",
@@ -28,6 +29,7 @@
     "desktop:start": "electron .",
     "desktop:package": "node desktop/package.js",
     "desktop:package:check": "node desktop/package-check.js",
+    "desktop:sign": "node desktop/sign.js",
     "test:desktop": "node --test desktop/tests/*.test.js",
     "test:desktop:e2e": "node desktop/e2e.js",
     "audit:multiplayer:render": "node preview/audit/rendered-multiplayer.js",
@@ -46,6 +48,7 @@
     "pretest:shared": "node scripts/enforce-pnpm.mjs",
     "pretest:security:e2e": "node scripts/enforce-pnpm.mjs",
     "pretest:reflections:webgl": "node scripts/enforce-pnpm.mjs",
+    "pretest:screening": "node scripts/enforce-pnpm.mjs",
     "pretest:trees:webgl": "node scripts/enforce-pnpm.mjs",
     "preassets:trees": "node scripts/enforce-pnpm.mjs",
     "preserver": "node scripts/enforce-pnpm.mjs",
@@ -57,6 +60,7 @@
     "predesktop:start": "node scripts/enforce-pnpm.mjs",
     "predesktop:package": "node scripts/enforce-pnpm.mjs",
     "predesktop:package:check": "node scripts/enforce-pnpm.mjs",
+    "predesktop:sign": "node scripts/enforce-pnpm.mjs",
     "pretest:desktop": "node scripts/enforce-pnpm.mjs",
     "pretest:desktop:e2e": "node scripts/enforce-pnpm.mjs",
     "preaudit:multiplayer:render": "node scripts/enforce-pnpm.mjs",
@@ -95,6 +99,7 @@
   "devDependencies": {
     "@dgreenheck/ez-tree": "1.1.0",
     "@electron/fuses": "2.1.3",
+    "@electron/osx-sign": "2.7.0",
     "@electron/packager": "20.3.0",
     "electron": "44.7.0",
     "playwright": "1.64.0",

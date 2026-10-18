@@ -56,18 +56,18 @@ test('selective bone batching preserves surfaces and leaves independently contro
   material.dispose(); transparent.material.dispose();
 });
 
-test('shipped reference looks retain their intended surfaces while bounding accessory draws in both forms', async () => {
+test('shipped reference looks retain their intended surfaces while bounding accessory draws on human characters', async () => {
   const cases = [
-    ['sable-human', 9880, 20], ['woman-casual', 9880, 20],
-    ['rowan-human', 7644, 20], ['man-casual', 7644, 20],
-    ['woman-tailored', 7812, 20], ['vesper-beast', 7812, 20],
-    ['man-tailored', 9908, 20], ['midnight-host-wolf', 9908, 20],
-    ['lyra-human', 6336, 19], ['woman-daywear', 6336, 19],
-    ['man-workwear', 13140, 20], ['kai-formal-beast', 13140, 20],
-    ['kai-explorer', 9020, 20], ['kai-explorer-beast', 9020, 20],
-    ['kai-noir', 14484, 20], ['kai-noir-beast', 14484, 20],
-    ['forest-aristocrat', 152400, 40], ['forest-aristocrat-beast', 152400, 40],
-    ['forest-aristocrat-feminine', 171184, 55], ['forest-aristocrat-feminine-beast', 171184, 55],
+    ['sable-human', 10600, 20],
+    ['rowan-human', 7644, 20],
+    ['woman-tailored', 8532, 20],
+    ['man-tailored', 10200, 20],
+    ['lyra-human', 8640, 19],
+    ['man-workwear', 13872, 20],
+    ['kai-explorer', 9020, 20],
+    ['kai-noir', 15216, 20],
+    ['forest-aristocrat', 155856, 40],
+    ['forest-aristocrat-feminine', 183068, 55],
   ];
   for (const [id, triangles, maxDraws] of cases) {
     const appearance = sharedAppearance(id), source = await loadCharacterRig(appearance.rig);
@@ -79,11 +79,6 @@ test('shipped reference looks retain their intended surfaces while bounding acce
     assert.ok(pieces.length <= maxDraws, `${id}: ${pieces.length} accessory draws exceeds ${maxDraws}`);
     const geometries = new Set(pieces.map(mesh => mesh.geometry)); let released = 0;
     for (const geometry of geometries) geometry.addEventListener('dispose', () => released++);
-    if (id === 'woman-daywear') {
-      look.update({ beast: true });
-      assert.ok(pieces.every(mesh => !mesh.visible), 'Lyra removes her outfit while prowling');
-      look.update({ beast: false }); assert.ok(pieces.every(mesh => mesh.visible));
-    }
     look.dispose(); assert.equal(released, geometries.size, id);
     assert.ok(pieces.every(mesh => mesh.parent?.parent === null), `${id}: attachment groups detach`);
     avatar.dispose();

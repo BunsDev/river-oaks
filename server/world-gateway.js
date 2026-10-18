@@ -1,4 +1,5 @@
-import { createRedisOfficeWorkspaces } from './office-workspaces.js';
+import {createCharacterMetrics} from './character-metrics.js';
+import { createRedisCharacterStore } from './character-store.js';
 import { createRedisOfficeDesk } from './office-desk.js';
 import { createClientAddress, rateLimitKey } from './client-address.js';
 import { createRateLimiter } from './rate-limit.js';
@@ -23,7 +24,7 @@ import { createRedisCyclingMiles } from './cycling-miles.js';
 
 /** Routes a single HTTP origin to persistent world rooms with shared auth. */
 export function createWorldGateway({redis,namespace,worldData,auth,security,waitlist,waitlistAdmins=[],origin,configuredWorldId=DEFAULT_WORLD_ID,
-  moderators=[],trustedProxyIPs=[],address,isAdmin,handleRequest,workplaceEnabled=false,workplaceSweep=false,workplaceCronSecret=null,assetGateSecret=null,voice=null,voiceCronSecret=null,screeningHosts=[],officeLayout}={}) {
+  characterStudioEnabled=true,characterMetrics=null,characterMetricsEnabled=false,moderators=[],trustedProxyIPs=[],address,isAdmin,handleRequest,workplaceEnabled=false,workplaceSweep=false,workplaceCronSecret=null,assetGateSecret=null,voice=null,voiceCronSecret=null,screeningHosts=[],officeLayout,connectionLifetime,rotateNoticeMs}={}) {
   if (!waitlist) throw new Error('Waitlist is required');
   validateWorldId(configuredWorldId);
   const prefix=`{${namespace}}`,catalog=createRedisWorldCatalog({redis,prefix}),social=createRedisSocial({redis,prefix}),groups=createRedisGroups({redis,prefix}),profiles=createRedisProfiles({redis,prefix}),events=createRedisEvents({redis,prefix}),debugReports=createRedisDebugReports({redis,prefix}),presence=createRedisPresence({redis,prefix});
@@ -33,10 +34,11 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
     // A long-lived gateway sweeps for tasks orphaned by another instance; on Vercel the
     // per-minute cron drain (/api/workplace-sweep) and owner reads advance them.
     sweepMs:workplaceSweep?5000:0}):null;
-  const officeDesk=createRedisOfficeDesk({redis,prefix}),officeWorkspaces=createRedisOfficeWorkspaces({redis,prefix});
+  const officeDesk=createRedisOfficeDesk({redis,prefix});
   const designLibrary=createRedisDesignLibrary({redis,prefix:accountPrefixFor(namespace)});
   // Lifetime cycling metres are one account total across every world.
   const cyclingMiles=createRedisCyclingMiles({redis,prefix:accountPrefixFor(namespace)});
+  const characters=createRedisCharacterStore({redis,prefix:accountPrefixFor(namespace)});
   const storedAppearance=createRedisAvatarPreferences({redis,prefix});
   const avatarPreferences={...storedAppearance,async initialize(userId,local) {
     const existing=await storedAppearance.get(userId);
@@ -49,7 +51,8 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
     if(!landmarkStores.has(id))landmarkStores.set(id,createRedisLandmarks({redis,prefix:accountPrefixFor(namespace,id)}));
     return landmarkStores.get(id);
   };
-  const sharedAuth={handle:(...args)=>auth.handle(...args),authenticate:(...args)=>auth.authenticate(...args),close:()=>{}};
+  const sharedAuth={handle:(...args)=>auth.handle(...args),authenticate:(...args)=>auth.authenticate(...args),
+    isSessionActive:(...args)=>auth.isSessionActive(...args),close:()=>{}};
   const worldDirectory=async()=>{
     const entries=await catalog.list();
     const counts=await Promise.all(entries.map(entry=>redis.get(populationKeyFor(namespace,entry.id))));
@@ -71,13 +74,13 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
         :id===DEFAULT_WORLD_ID?worldData:{...worldData,title:meta?.title??worldData.title};
       const room=createRedisRoom({redis,prefix:roomPrefixFor(namespace,id),worldId:id,
         worldData:data,regionCatalog:meta?.template==='region-v1'?catalog:null,regionSha256:meta?.regionSha256,
-        avatarPreferences,voice,cyclingMiles,officeWorkspaces,screeningHosts,...(officeLayout?{officeLayout}:{}),
+        avatarPreferences,characters,voice,cyclingMiles,screeningHosts,...(officeLayout?{officeLayout}:{}),
         ...(isAdmin?{isAdmin}:{}),
         authorize:async identity=>await auth.isSessionActive(identity.userId,identity.sessionId)
           && await waitlist.isApproved(identity.userId) && !(await security.isBanned(identity.userId))});
       const landmarks=createWorldLandmarks({catalog,storeFor:landmarkStoreFor,worldId:id,worldTitle:meta?.title??data.title});
-      const game=createDistributedServer({assetGateSecret,auth:sharedAuth,room,worldTitle:meta?.title??data.title,security,waitlist,waitlistAdmins,debugReports,landmarks,social,groups,profiles,events,workplace,officeDesk,officeWorkspaces,workplaceCronSecret,presence,designLibrary,cyclingMiles,worldDirectory,origin,moderators,trustedProxyIPs,voice,voiceCronSecret,
-        ...(address?{address}:{}),...(isAdmin?{isAdmin}:{}),...(id===configuredWorldId?{worldCatalog:catalog}:{}),
+      const game=createDistributedServer({characterMetrics:metrics,characterStudioEnabled,assetGateSecret,auth:sharedAuth,room,worldTitle:meta?.title??data.title,security,waitlist,waitlistAdmins,debugReports,landmarks,social,groups,profiles,characters,events,workplace,officeDesk,workplaceCronSecret,presence,designLibrary,cyclingMiles,worldDirectory,origin,moderators,trustedProxyIPs,voice,voiceCronSecret,
+        ...(address?{address}:{}),...(isAdmin?{isAdmin}:{}),...(connectionLifetime?{connectionLifetime}:{}),...(rotateNoticeMs?{rotateNoticeMs}:{}),...(id===configuredWorldId?{worldCatalog:catalog}:{}),
         ...(id===configuredWorldId?{onApplyRegion:async (regionId,expectedDraftVersion,actorId)=>{
           const target=await worldFor(regionId);
           if(!target || target.meta?.template!=='region-v1')return {ok:false,error:'missing'};
@@ -98,12 +101,16 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
   const routerAddress=address??createClientAddress(trustedProxyIPs),localGate=createRateLimiter(1000,60_000);
   const admit=req=>{const ip=rateLimitKey(routerAddress(req));return localGate(ip)&&security.allow('access',ip,1000,60_000);};
   const router=createWorldRouter({worldFor,configuredWorldId,handleRequest,admit});
+  const metrics=characterMetrics??createCharacterMetrics({enabled:characterMetricsEnabled});
   return {server:router.server,catalog,worldFor,async disconnectUser(userId,sessionId) {
-    await Promise.all([...worlds.values()].map(({game})=>game.disconnectUser(userId,sessionId)));
+    const results=await Promise.all([...worlds.values()].map(({game})=>game.disconnectUser(userId,sessionId)));
+    if(results.some(result=>result?.ok!==true))throw new Error('Account disconnect incomplete');
   },async close() {
+    try{
     closed=true;workplace?.close();
     await Promise.allSettled([...pending.values()]);
     for(const {game,room} of worlds.values()){await game.close();await room.close();}
     await router.close();
+    }finally{if(!characterMetrics)metrics.close();}
   }};
 }

@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { createSharedWorld } from '../world.js';
 import { JEVICA_ADMIN_USER_IDS } from '../admin.js';
-import { OFFICE_LAYOUT_LEGACY, OFFICE_LAYOUT_PENTHOUSE, officeLayout } from '../../preview/src/office-layouts.js';
+import { OFFICE_BODY_SPACING, OFFICE_LAYOUT_LEGACY, OFFICE_LAYOUT_PENTHOUSE, officeLayout, officeLevelFree } from '../../preview/src/office-layouts.js';
 
 const data = JSON.parse(readFileSync(new URL('../../preview/public/data/district.json', import.meta.url)));
 const owner = JEVICA_ADMIN_USER_IDS[0], officeId = 'jevica-office';
@@ -93,14 +93,39 @@ test('the stair and lift move a visitor between floors only from their entry, an
   f.send(owner, 'invite', { peerId: 'guest' });
   f.enter('guest');
   f.walk('guest', [-8, 1.5]); // around the executive desk chair
+  f.walk('guest', [-7, 13.6]); // and east of the lounge (#362's furnishings are collision)
   f.walk('guest', anchor('lift-ground'));
   const guest = f.visit('guest'), host = f.visit(owner);
   assert.deepEqual(guest.position, host.position);
   assert.deepEqual([guest.levelId, guest.elevation, host.levelId, host.elevation], [L0, 0, L1, 3.8]);
-  assert.equal(f.send(owner, 'transition', { portalId: portal(L1, 'lift'), layout: OFFICE_LAYOUT_PENTHOUSE }).error, 'office_landing_blocked', 'the lift does not land on the guest');
-  f.walk('guest', [-9, 17]);
+  // Someone standing at the landing never keeps another visitor off a floor (no barricades):
+  // the lift lands beside the guest, never on them, on a free spot of the main floor.
   const down = f.send(owner, 'transition', { portalId: portal(L1, 'lift'), layout: OFFICE_LAYOUT_PENTHOUSE });
-  assert.deepEqual([down.ok, down.office.levelId, down.office.elevation], [true, L0, 0]);
+  assert.deepEqual([down.ok, down.office.levelId, down.office.elevation], [true, L0, 0], down.error);
+  assert.ok(Math.hypot(down.office.position[0] - guest.position[0], down.office.position[1] - guest.position[1]) >= OFFICE_BODY_SPACING, `beside the guest: ${down.office.position}`);
+  assert.ok(officeLevelFree(penthouse, L0, down.office.position), 'on a free spot');
+});
+
+test('nobody can barricade a floor by standing on a landing: the stairs land beside them', () => {
+  const f = setup();
+  f.send(owner, 'invite', { peerId: 'guest' });
+  f.enter(owner); f.enter('guest');
+  for (const user of ['guest', owner]) f.walk(user, anchor('stairs-bottom'));
+  const up = f.send('guest', 'transition', { portalId: portal(L0, 'stairs'), layout: OFFICE_LAYOUT_PENTHOUSE });
+  assert.deepEqual([up.ok, up.office.position], [true, anchor('stairs-top')], up.error);
+  // The guest stays on the stair-top landing; the owner still gets up, beside them.
+  const climb = f.send(owner, 'transition', { portalId: portal(L0, 'stairs'), layout: OFFICE_LAYOUT_PENTHOUSE });
+  assert.equal(climb.ok, true, climb.error);
+  assert.equal(climb.office.levelId, L1);
+  assert.ok(Math.hypot(climb.office.position[0] - anchor('stairs-top')[0], climb.office.position[1] - anchor('stairs-top')[1]) >= OFFICE_BODY_SPACING, `beside the guest: ${climb.office.position}`);
+  assert.ok(officeLevelFree(penthouse, L1, climb.office.position), 'on a free spot of the mezzanine');
+  // And back down past a guest who moved onto the stair foot.
+  const back = f.send('guest', 'transition', { portalId: portal(L1, 'stairs'), layout: OFFICE_LAYOUT_PENTHOUSE });
+  assert.equal(back.ok, true, back.error);
+  f.walk(owner, anchor('stairs-top'));
+  const down = f.send(owner, 'transition', { portalId: portal(L1, 'stairs'), layout: OFFICE_LAYOUT_PENTHOUSE });
+  assert.equal(down.ok, true, down.error);
+  assert.ok(Math.hypot(down.office.position[0] - back.office.position[0], down.office.position[1] - back.office.position[1]) >= OFFICE_BODY_SPACING);
 });
 
 test('revocation during a climb ends the visit; a delayed transition or move cannot restore it', () => {
@@ -121,7 +146,7 @@ test('checkpoints keep the floor; older checkpoints migrate to the legacy room; 
   f.walk(owner, anchor('stairs-bottom'));
   f.send(owner, 'transition', { portalId: portal(L0, 'stairs'), layout: OFFICE_LAYOUT_PENTHOUSE });
   const saved = f.world.checkpoint();
-  assert.equal(saved.version, 11);
+  assert.equal(saved.version, 12);
   const restored = setup({ restore: saved });
   assert.deepEqual([restored.visit(owner).levelId, restored.visit(owner).elevation], [L1, 3.8]);
 

@@ -17,6 +17,7 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
   let office,actors,disposed=false,started=null,skipped=reducedMotion,lastNow=null,lastBody=null,distance=street.startPose.distance;
   let position=[...OFFICE_SPAWN],yaw=0,current=null,levelId=self.office?.levelId??null,floor=0,eye=OFFICE_EYE_HEIGHT,viewId=null,seatId=null;
   const layoutId=self.office?.layout??OFFICE_LAYOUT_LEGACY,layout=officeLayout(layoutId);
+  const live=street.skyline?.mode==='live'&&layout?.levels?.some(level=>level.rooms?.some(room=>room.kind==='terrace'));
   // A glazed layout would show the borrowed cabin and lobby through its front glass once arrived.
   const glass=arrivalBehindGlass(street.lobby,layoutId!==OFFICE_LAYOUT_LEGACY);
   const peerRoot=new THREE.Group();street.scene.add(peerRoot);lease.allow(peerRoot);
@@ -26,8 +27,9 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
     const lights=[2,-3].map((z,i)=>({position:new THREE.Vector3(0,2.9,z),color:new THREE.Color('#fff1df'),intensity:i?65:45,distance:i?10:7,decay:2}));
     // Preserve the office's authored lighting using the existing world pool.
     // Detached owned light objects have no GPU resources to dispose.
-    for(const light of [...office.object.children].filter(n=>n.isPointLight)){
-      lights.push({position:light.position.clone(),color:light.color.clone(),intensity:light.intensity,distance:light.distance,decay:light.decay});light.removeFromParent();
+    const authored=[...office.object.children].filter(n=>n.isPointLight);
+    for(const light of authored){
+      lights.push({position:light.position.clone(),color:light.color.clone(),intensity:light.intensity,distance:light.distance,decay:light.decay});if(!live)light.removeFromParent();
     }
     // A layout with an outside shows the district captured once as the doors close (office-skyline.js).
     // It changes the scene only once captured, so it is released with the visit's own dispose below.
@@ -56,12 +58,15 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
       const ascent=frame.done?1:ease((time-ARRIVAL.closingEnd)/(ARRIVAL.ascentEnd-ARRIVAL.closingEnd));
       const height=ARRIVAL.officeElevation*ascent;
       stage.position.copy(basePosition);stage.position.y+=height;
-      worldLights.forEach((light,i)=>{light.position.copy(lights[i].position).applyMatrix4(street.frame);light.position.y+=height;});
-      const lightBlend=skipped?1:ease(elapsed/.8);lease.lights(worldLights,lightBlend);
+      // The office lights follow the street's time of day; in the pool they carry it as well.
+      const atmosphere=street.atmosphere?.();
+      if(atmosphere&&office.relight){office.relight(atmosphere,street.scene.environment);authored.forEach((light,i)=>{lights[2+i].color.copy(light.color);lights[2+i].intensity=light.intensity;});}
+      worldLights.forEach((light,i)=>{light.position.copy(lights[i].position).applyMatrix4(street.frame);light.position.y+=height;light.color.copy(lights[i].color);light.intensity=lights[i].intensity;});
+      const lightBlend=skipped?1:ease(elapsed/.8);if(!live)lease.lights(worldLights,lightBlend);
       const inside=!entering&&(skipped||time>=ARRIVAL.closingEnd);
       // The capture sees the street's own lighting, not the cabin's (office-skyline.js).
       if(inside&&skyline?.pending){lease.lights(worldLights,0);skyline.capture();lease.lights(worldLights,lightBlend);}
-      lease.inside(inside);
+      lease.inside(inside&&!(live&&frame.done));
       office.object.visible=!entering&&['opening','arriving','office'].includes(frame.phase);
       street.lobby.setEntryOpen(entering?ease(elapsed/.8):1);
       street.lobby.update(entering?{phase:'idle',doors:0,floor:1}:frame);
@@ -85,7 +90,9 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
       const firstPerson=frame.done&&!fixedView()||(!entering&&frame.phase==='arriving'&&localView.position.distanceTo(body)<1.9);
       const seated=frame.done&&seatId&&layout?officeSeatedPose(layout,{seat:{id:seatId},levelId}):null;
       const ground=worldBody.y;
-      street.avatar.setPresentation({...street.startPose,position:[worldBody.x,ground+1.68,worldBody.z],ground,groundAt:()=>ground,altitude:0,flying:false,landing:false,riding:null,sitting:seated?{buildId:'office',slot:0,height:seated.height,yaw:seated.yaw+turn}:null,roomId:'authorized-office',showBody:!firstPerson&&(entering?street.startPose.showBody:true),speed,velocity:delta?[dx/delta,dz/delta]:[0,0],distance,heading:Math.hypot(dx,dz)>.0001?Math.atan2(dx,dz):undefined});
+      // The car floor carries the body (foot-placement.js `platform`): read as a curb step,
+      // each frame of the climb left the body and shoes behind, sinking out through the floor.
+      street.avatar.setPresentation({...street.startPose,position:[worldBody.x,ground+1.68,worldBody.z],ground,groundAt:()=>ground,platform:stage.position.toArray(),altitude:0,flying:false,landing:false,riding:null,sitting:seated?{buildId:'office',slot:0,height:seated.height,yaw:seated.yaw+turn}:null,roomId:'authorized-office',showBody:!firstPerson&&(entering?street.startPose.showBody:true),speed,velocity:delta?[dx/delta,dz/delta]:[0,0],distance,heading:Math.hypot(dx,dz)>.0001?Math.atan2(dx,dz):undefined});
       lastNow=now;lastBody=worldBody.clone();
       current.position=[body.x,-body.z];
     }
@@ -102,10 +109,14 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
           const seated=layout?officeSeatedPose(layout,p.office):null;
           return {...p,position:[v.x,-v.z,v.y],yaw:p.office.yaw+turn,altitude:0,vehicle:null,sitting:seated?{...seated,yaw:seated.yaw+turn}:null,interaction:null};
         }),null);
-        actors.update(now,street.camera);office.update?.(now/1000);lease.render(1/60);return current;
+        actors.update(now,street.camera);office.update?.(now/1000);
+        if(live&&current.done)skyline.render(()=>lease.render(1/60));else lease.render(1/60);
+        return current;
       },
       skip(){skipped=true;},get position(){return current?.position??position;},
-      inspect(){return {camera:{position:street.camera.position.toArray(),quaternion:street.camera.quaternion.toArray(),verticalFov:street.camera.fov},actors:actors.stats(),duration:approach.duration+ARRIVAL.duration,dimensions:ARRIVAL,presentation:'shared-world',skyline:skyline?.stats??null,elevation:stage.position.y-basePosition.y,phase:current?.phase,progress:current?.progress,skipped,avatar:street.avatar.object.position.toArray()};},
+      inspect(){return {camera:{position:street.camera.position.toArray(),quaternion:street.camera.quaternion.toArray(),verticalFov:street.camera.fov},actors:actors.stats(),duration:approach.duration+ARRIVAL.duration,dimensions:ARRIVAL,presentation:'shared-world',skyline:skyline?.stats??null,elevation:stage.position.y-basePosition.y,phase:current?.phase,progress:current?.progress,skipped,avatar:street.avatar.object.position.toArray(),
+        // The rendered shoes' world height: where the body is drawn, not only where it is placed.
+        shoes:['foot_l','foot_r'].map(name=>street.avatar.object.getObjectByName(name)?.getWorldPosition(new THREE.Vector3()).y??null)};},
       dispose(){skyline?.dispose();dispose();},
     };
   }catch(error){dispose();throw error;}
