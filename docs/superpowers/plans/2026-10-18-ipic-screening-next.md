@@ -69,8 +69,8 @@ not device evidence. Self-review is not independent review.
 | Truthful sound/volume; no audio after leaving | #500 | 4b | unit (slider only where volume works; refused-sound text) | pass (unit) | device rows |
 | Second approved film with dialogue and music | #501 | Val (media, approval) | intake tooling (unit) | **blocked** | Val's choice of source, voices, music and likeness |
 | Two films, two clients, late join, pause/resume/stop | #502 | 4b | Hosted journey (Mesa) on every head: two browsers, late join, pause, stop, the host choosing and starting a second film (the labelled fixture). Integrated soak: 11 late joins, each converged within 500 ms in 3–9 ms (worst spread after 15–283 ms) | pass with the fixture | The second **approved** film: blocked on #501 (Val) |
-| Host loss, stale or duplicate commands, competing hosts | #502 | 4b | Server unit tests: leaving town, walking out and a lapsed grant pause at the server position; two hosts racing (one wins, the other is stale). Hosted journey: a resent start applies once; stale revision, earlier epoch and reused operation id refused. New journey step: the host walks out mid-film and the viewer stops on the server's frame, with nobody promoted | stale/replay: pass; walk-out: pending | Run the extended journey |
-| Interrupted loads, offline, background/foreground | #502 | 4b | fixture-browser (#498): stall → Retry plays, offline → network → Retry plays, interrupted load quiet. New journey step (emulated: headless Chromium keeps background tabs visible, so the page is marked hidden and frozen 8 s with CDP `Page.setWebLifecycleState`), then shown: the film must find the room's time. Finding: disconnected beside a seat, `shared-seating-ui.js:51` throws every frame before the draw (seen in the 17:00Z #501 capture); the guard is in open PR #489 (`cafe-publication-pilot-420`), not duplicated | interrupted/offline: pass; background: pending | Run the extended journey; a phone lock is a device row (Val) |
+| Host loss, stale or duplicate commands, competing hosts | #502 | 4b | Server unit tests: leaving town, walking out and a lapsed grant pause at the server position; two hosts racing (one wins, the other is stale). Journey: a resent start applies once; stale revision, earlier epoch and reused operation id refused. Journey (local, SwiftShader, 18:33Z): the host walks out mid-film; the server paused at 10.571 s, the viewer's element paused at 10.571 s, no host controls, nobody promoted (also 19.662 s on the 17:39Z run) | pass | — |
+| Interrupted loads, offline, background/foreground | #502 | 4b | fixture-browser (#498): stall → Retry plays, offline → network → Retry plays, interrupted load quiet. Journey (emulated; headless Chromium keeps background tabs visible): the page marked hidden, its film paused as Safari pauses hidden media, its JavaScript frozen 8 s (CDP `Page.setWebLifecycleState`), then shown. The film had not moved while away; 254 ms after showing it had seeked, and its first **presented** frame (requestVideoFrameCallback) came 338 ms after showing, 59 ms from the room. Finding: disconnected beside a seat, `shared-seating-ui.js:51` throws every frame before the draw (seen in the 17:00Z #501 capture); the guard is in open PR #489, not duplicated | pass (emulated) | A phone lock and app switch are device rows (Val) |
 | Warm-up plus ten cycles of resources with a film change | #502 | 4b | Integrated soak on #520 `2df7a0a8` (#498 + #499 + #500 `b9d78b86` + #502), 17:15–17:20Z, load 29–53: warm-up plus 10 cycles, each changing the film from the short to the fixture (its own 640×360 texture on screen in 1.1–4.1 s). Startup per cycle: first presented frame 1.8–3.9 s after the trip in began (7.9 s on the cold first cycle). No growth in media elements, audio contexts, intervals, documents, textures or geometries; DOM nodes 5,923 → 5,941, listeners flat. Baseline on main: 11/11 with one film | pass | — |
 | Serving: MIME types and byte ranges on the intended path | #502 | 4b | Production, read-only, 2026-10-18 ~14:45Z: a 1 KB `Range` GET of each file on typesafe.place returned 206 with `accept-ranges: bytes`. Types: `video/mp4`, `video/webm`, `text/vtt; charset=utf-8`, `image/jpeg`. Total sizes match `sources.json`: 13,313,704; 9,289,288; 486; 93,773 | pass (types and ranges) | Val: the cache decision below |
 | Serving: caching | #502 | Val (decision) | The same responses: films and captions are `cache-control: private, no-store` with CDN `MISS`, because `vercel.json`'s non-image `/assets` rule (from #98, written for the gated `.js` and `.css`) also matches `.mp4`, `.webm` and `.vtt`. Every visit re-downloads 9–13 MB per film. The poster is `public, max-age=3600` | finding | Proposal below; production config, so Val decides |
@@ -124,6 +124,33 @@ note for each step. Screen recordings help.
   are validated from the allowlist, so a mismatch shows as a slightly wrong length, not a crash.
 - **Rollback.** Remove the rule and redeploy the same build.
 - **Needs:** a deployment, which is Val's go. Not part of this milestone's acceptance unless Val says so.
+
+## Release recommendation (2026-10-18, version-bound)
+
+- **Candidate:** the stack as it lands, in order: #513 (#498) → #514 (#499) → #515 (#500) → #520 (#502), each by
+  `pnpm run land <pr>`, which brings each branch up to date with main and waits for its required `preview` check.
+  The release is the main merge commit of #520. #516 (#501's tooling) lands independently; it adds no media.
+- **Readiness:** **engineering-ready on fixtures** once the remaining rows above pass (the extended journey and #500's
+  GPU rerun). **Not two-film experience-ready:** the second approved film (#501, Val) and the device and human rows
+  are open. **Not production-delivered:** nothing is merged or deployed.
+- **Authority still needed, all Val's:**
+  1. **Approval to land each PR.** Every merge to `main` deploys production within about 35 s, so landing is also the
+     production go. A pause between merges leaves production on a consistent intermediate build: each package is
+     compatible with the one before it.
+  2. **#501:** approval of the exact bytes, script, synthetic voices, likenesses and music; then its registration on
+     #499's branch (or a follow-up PR after #514 lands).
+  3. **The signed-in production host smoke:** the deployed Jevica grant (`ipic:user_01M402HKJYDTH1QJM5NAQDZ4HH`, no
+     expiry) is unchanged and not re-requested. The first signed-in Start in production, with a second account
+     watching, is Val's go only (device runs, step 5).
+  4. **The film cache proposal** (below): a production configuration change, separate from this release.
+- **Disposition of the signed-in host smoke:** not run. Prepared steps are in the device runs above. Nothing here
+  depends on it for engineering readiness; it is required for production-delivered.
+- **Compatible rollback:** revert the merge on main (a new deployment of a compatible current build). Keep every media
+  id and duration: `ipic-original-v1` and `ipic-fixture-v1` stay in `SCREENING_MEDIA`, and the server allowlist is
+  unchanged by this stack. Checkpoints stay v11, and timelines and receipts naming either film restore (server test on
+  #520). An older client meeting a newer film shows "needs a newer version", never another film's frames (#499).
+  Leaving the venue restores the screen's own material (#498). Do not redeploy a build from before #429, and never
+  edit production checkpoints.
 
 ## Boundaries
 
