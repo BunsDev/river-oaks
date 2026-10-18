@@ -55,7 +55,7 @@
 | GPU visit, reduced motion, `0adfc53e`, 18:30Z | **Passed, 11 checks:** the same framing, immediate |
 | In-world focus inspection, `0adfc53e`, 18:39Z (Metal, 1440 × 900, alice front 1-1, bob back 0-1) | Both fit: front 80° from 3.49 m (stepped back from 2.79 m), back 53.6° at its own 5.79 m; the film's lowest corner at NDC −0.255, above the panel's top at −0.306; all five raycasts on the screen; seats unchanged. Captures: the whole film with black mattes above the panel in both rows. Design note: in the back-row view, alice's nameplate floats over the film |
 | Lens shift through the pipeline (review) | The projection's off-centre term is set after `updateProjectionMatrix` each frame, with its inverse. Culling and raycasts use the matrices; GTAO copies `projectionMatrix` and its inverse on every render and never reads `fov`; bloom is screen-space. The next `updateProjectionMatrix` (focus ending) clears it |
-| `pnpm run verify` | Queued (chain14, after #501's retake) |
+| `pnpm run verify` at `00ac6408` (nice 19, 19:09–19:17Z, load 45–54) | **Passed.** Agent 121/121; preview 3,553/3,554 (one existing skip); server 670 with 204 Redis skips (covered by the isolated-Redis runs on #502); desktop 76/76; python 141; build and security passed. Receipt `.runtime/agent/core.json` |
 
 ## Gaps and owners
 
@@ -78,5 +78,6 @@ first-visit store intro before its reception check.
 
 ## Next step
 
-Rerun the GPU visit (both motion settings) and the in-world focus inspection on the band framing, run
-`pnpm run verify`, then commit, push and post the #500 handoff.
+Done: the GPU visits, the in-world band framing, `pnpm run verify`, and the handoff on #500. Remaining: Val's approval
+to land after #514 (`pnpm run land 515`), the device rows (Safari/iOS volume, gesture unlock, touch), VoiceOver and
+comfort review, and the listening review once #501's film is approved.
