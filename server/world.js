@@ -24,6 +24,7 @@ import { IPIC_DARTS, atIpicDartsLine } from '../preview/src/ipic-plan.js';
 import { createAxeGames } from './axe-games.js';
 import { AXE_LANES, AXE_ROOM_DARTS, AXE_ROOM_INTERIOR, atAxeLane, atAxeRoomDarts } from '../preview/src/axe-room-plan.js';
 import { isVenueRoom } from '../preview/src/venue-rooms.js';
+import { districtRevisionOf, isCampusRoom } from '../preview/src/garden-campus-district.js';
 import { createScreenings } from './screenings.js';
 import { SCREENING_VENUES } from '../preview/src/screening-contract.js';
 import { isJevicaAdmin } from './admin.js';
@@ -566,8 +567,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     const local = localById.get(message.localId);
     const peer = players.get(message.peerId);
     if(peer && offices.has(peer.id))return reject('office_permission_required');
-    // A code-only venue (venue-rooms.js) travels like a store, from its own facade.
-    const venue = environment.rooms.find(room=>room.storeId===message.storeId && isVenueRoom(room));
+    // A code-only venue (venue-rooms.js) or a Gardens hall travels like a store, from its own facade.
+    const venue = environment.rooms.find(room=>room.storeId===message.storeId && (isVenueRoom(room)||isCampusRoom(room)));
     const store = worldData.stores?.find(store=>store.id===message.storeId) ?? (venue ? { id:venue.storeId, name:venue.name, facade:venue.facade, outward:venue.outward } : undefined);
     const room = environment.rooms.find(room=>room.storeId===message.storeId);
     const place = (worldData.communityLocations ?? []).find(place=>place.id===message.placeId);
@@ -1304,7 +1305,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   const listPlaces = () => placesOf(worldData);
   return {worldId,join,rename,leave,command,step,snapshot,checkpoint,restore,reset,
     // Frames carry the clock that anchors screenings (screenings.js), stamped by the transport.
-    serverTime:()=>now(),officeVisit:offices.publicVisit,endOfficeVisit:offices.leave,accountAppearance,applyAccountAppearance,prepareAccountSelection,commitAccountSelection,resolvePlace,listPlaces,voiceSpaceOf,setVoice,drainRides,players,state};
+    serverTime:()=>now(),districtRevision:districtRevisionOf(worldData),officeVisit:offices.publicVisit,endOfficeVisit:offices.leave,accountAppearance,applyAccountAppearance,prepareAccountSelection,commitAccountSelection,resolvePlace,listPlaces,voiceSpaceOf,setVoice,drainRides,players,state};
 }
 
 /** Validate an old room, then transfer durable account and creation state to a new geography. */

@@ -8,6 +8,7 @@ import { recoverDistrictInteriorCheckpoint } from './district-interior-checkpoin
 import { recoverDistrictLevelsCheckpoint } from './district-level-checkpoint-migration.js';
 import { recoverDistrictTowerCheckpoint } from './district-tower-checkpoint-migration.js';
 import { isJevicaAdmin } from './admin.js';
+import { districtRevisionOf } from '../preview/src/garden-campus-district.js';
 import { DEFAULT_WORLD_ID, validateWorldId } from '../preview/src/world-contract.js';
 import { placesOf } from '../preview/src/places.js';
 import { createRideFlush } from './ride-flush.js';
@@ -419,7 +420,7 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       } catch {console.warn(JSON.stringify({event:'voice_reconcile_failed',worldId}));}
     }
     const revision=(previous?.revision??0)+1;
-    const snapshot={...world.snapshot(),serverTimeMs:time};if(currentHash)snapshot.regionSha256=currentHash;
+    const snapshot={...world.snapshot(),serverTimeMs:time};if(currentHash)snapshot.regionSha256=currentHash;if(world.districtRevision)snapshot.districtRevision=world.districtRevision;
     const view={worldId,snapshot,connections:[...connections.values()].map(({identity,connectionId})=>({userId:identity.userId,connectionId,sessionId:identity.sessionId,expiresAt:identity.expiresAt})),revision};
     const checkpoint={version:characters?3:2,worldId,revision,lastTick:time,connections:[...connections.values()],checkpoint:world.checkpoint(),
       ...(characters?{pendingSelections:[...pendingSelections.values()],selectionVersions:[...selectionVersions]}:{}),
@@ -492,5 +493,5 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
   async function resolvePlace(placeId) {
     return (await listPlaces()).find(place=>place.id===placeId)??null;
   }
-  return {worldId,request,tick,read,resolvePlace,listPlaces,close};
+  return {worldId,districtRevision:districtRevisionOf(worldData),request,tick,read,resolvePlace,listPlaces,close};
 }
