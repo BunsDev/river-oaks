@@ -722,9 +722,9 @@ Still open, by owner:
 - **Val (human review):** VoiceOver, keyboard-only, physical touch and uncoached use, including
   exit wayfinding and the touch-walk limit above. #417 stays open until these are recorded.
 - **Design:** the independent agent review accepted the office's shelving (#474) and meeting
-  table (#476) changes with notes. Its optional notes F4, F5 and F8 (chair placement against
-  the new corner legs) are for Val or a design follow-up to take or leave. D7 (open roof) and
-  D9 (bare exterior) remain known limits from #416.
+  table (#476) changes with notes. **Val, 2026-10-18:** keep the meeting chairs as they are
+  (F8), and accept the shelving's 4.5 mm base recess (F4) and boutique-style fill (F5) as is.
+  D7 (open roof) and D9 (bare exterior) remain known limits from #416.
 - **Not run, not claimed:** physical devices (#289), packaged Electron (out of scope per Val),
   other GPUs, software rendering, isolated Redis/full (no server or shared code changed),
   production.
@@ -819,7 +819,8 @@ started at 26. Other sessions pushed it to 62 during the run, and the gate stopp
 single test (agent 116/116, preview 3,410 passed / 1 failed / 1 skipped). That makes five local
 core attempts today, each stopped only by this test.
 
-**Disposition:** the core gate passed as one run of each hosted job at the PR head. Every local
+**Disposition (accepted by Val, 2026-10-18: hosted CI is the gate for this PR):** the core gate
+passed as one run of each hosted job at the PR head. Every local
 core task other than this test passed: agent and preview in each attempt, the rest one profile
 at a time, and the branch's full preview suite in A/B round 2. Re-running the whole local gate
 until the coin lands is not evidence of anything, so it stops here.
@@ -855,8 +856,8 @@ Pre-commit runs, mutated-loader runs and captures stay local under `.runtime/acc
 | Item | Owner | Next action |
 | --- | --- | --- |
 | VoiceOver, keyboard-only, physical touch, uncoached use and exit wayfinding | Val | Work through the #417 checklist and record pass/fail with device details; decide on touch walking |
-| Optional design notes F4/F5/F8 (shelf kick, shelf fill, meeting chairs at the new corner legs) | Val / design follow-up | Take or leave; F8 would move chairs or change the shared table, so it needs a plan decision |
-| Draft PR and hosted checks | this task | Watch the PR's checks; merging needs Val's say-so |
+| Design notes F4/F5/F8 | — | Val accepted all three as is on 2026-10-18; nothing to do |
+| PR #493 | this task | Val authorized landing on 2026-10-18; land with `pnpm run land 493` and record the merge |
 | Codex's refresh worktree `river-oaks-studio-acceptance-refresh` | Val / register | Keep as history until this PR lands; its receipts are superseded, not deleted |
 | Physical iOS | #289 | Not started here |
 
