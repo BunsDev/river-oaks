@@ -252,6 +252,9 @@ no shared scope to preserve.
   - Escape, keyboard isolation and focus;
   - 390 px and 320 px layouts.
 
+`RIVER_OAKS_EXPERIENCE_BROWSER=webkit` runs the same journey in Playwright's WebKit (Safari's
+engine on desktop). That is not iOS or a touch device.
+
 The fixture is not Computer. It proves Place's behavior against the contract, not
 Computer's hosting, authentication or sync. Both fixture servers run on `127.0.0.1`, and
 cookies ignore ports. The journey therefore cannot show that Place and Computer
