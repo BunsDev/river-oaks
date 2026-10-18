@@ -280,7 +280,8 @@
         "spatial-streets",
         "office-desk",
         "office-visit",
-        "office-computer-embed"
+        "office-computer-embed",
+        "garden-campus-office"
       ],
       "browser": true,
       "timeoutMs": 1200000

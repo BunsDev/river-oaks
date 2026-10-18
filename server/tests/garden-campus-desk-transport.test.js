@@ -93,3 +93,21 @@ test('the garage revision has no campus seats and no workstation', async () => {
   assert.equal(world.command('alice', seat('chair-1')).error, 'invalid_seat');
   assert.equal(world.campusWorkstation('alice'), false);
 });
+
+test('leaving the town ends the workstation; rejoining does not inherit the seat or the desk', async () => {
+  let time = 100000;
+  const world = createSharedWorld(gardens, { now: () => time }), command = (id, message) => { time += 2000;return world.command(id, message); };
+  world.join({ userId: 'alice', name: 'alice' });
+  assert.equal(command('alice', { type: 'travel', storeId: 'campus:T1-F1-hall', mode: 'enter' }).ok, true);
+  assert.equal(command('alice', seat('chair-2')).ok, true);
+  assert.equal(world.campusWorkstation('alice'), true);
+  assert.equal(world.snapshot().players.find(p => p.id === 'alice').campusWorkstation, true);
+  world.leave('alice');
+  assert.equal(world.campusWorkstation('alice'), false, 'gone with the player');
+  world.join({ userId: 'alice', name: 'alice' });time += 1000;
+  assert.equal(world.campusWorkstation('alice'), false, 'a rejoin starts standing');
+  // The freed chair is free for anyone.
+  world.join({ userId: 'bob', name: 'bob' });
+  assert.equal(command('bob', { type: 'travel', storeId: 'campus:T1-F1-hall', mode: 'enter' }).ok, true);
+  assert.equal(command('bob', seat('chair-2')).ok, true);
+});
