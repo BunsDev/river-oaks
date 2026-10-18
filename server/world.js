@@ -25,7 +25,7 @@ import { IPIC_DARTS, atIpicDartsLine } from '../preview/src/ipic-plan.js';
 import { createAxeGames } from './axe-games.js';
 import { AXE_LANES, AXE_ROOM_DARTS, AXE_ROOM_INTERIOR, atAxeLane, atAxeRoomDarts } from '../preview/src/axe-room-plan.js';
 import { isVenueRoom } from '../preview/src/venue-rooms.js';
-import { districtRevisionOf, isCampusRoom } from '../preview/src/garden-campus-district.js';
+import { districtRevisionOf, isCampusRoom, isCampusSeat } from '../preview/src/garden-campus-district.js';
 import { createScreenings } from './screenings.js';
 import { SCREENING_VENUES } from '../preview/src/screening-contract.js';
 import { isJevicaAdmin } from './admin.js';
@@ -151,10 +151,14 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   const screenings=createScreenings({players,grants:screeningHosts,changed:()=>revision++,
     inVenue:(player,venueId)=>!player.levelId && !offices.has(player.id)
       && environment.roomAt(player.position[0],-player.position[1])?.interior===SCREENING_VENUES[venueId]?.interior});
-  const publicPlayer = player => ({office:offices.publicVisit(player.id),interaction:interactions.publicFor(player),id:player.id,name:accountName(player.id,player.name),appearance:player.appearance,...(characterByUser.has(player.id)?{character:copy(characterByUser.get(player.id))}:{}),movement:movementOf(player),gesture:interactions.publicFor(player)?.kind??(player.gestureUntil>now()?player.gesture:null)??(player.performing?'perform':null),performing:Boolean(player.performing),canBuild:Boolean(isAdmin(player.id)),canGrantWishes:Boolean(isAdmin(player.id)),vehicle:player.vehicle??null,sitting:publicSeat(player),position:[...player.position],yaw:player.yaw,altitude:player.altitude,buildingId:player.buildingId??null,levelId:player.levelId??null,voice:{space:voiceSpaceOf(player.id),id:voiceIdentities.get(player.id)??null}});
+  const publicPlayer = player => ({office:offices.publicVisit(player.id),...(campusWorkstation(player)?{campusWorkstation:true}:{}),interaction:interactions.publicFor(player),id:player.id,name:accountName(player.id,player.name),appearance:player.appearance,...(characterByUser.has(player.id)?{character:copy(characterByUser.get(player.id))}:{}),movement:movementOf(player),gesture:interactions.publicFor(player)?.kind??(player.gestureUntil>now()?player.gesture:null)??(player.performing?'perform':null),performing:Boolean(player.performing),canBuild:Boolean(isAdmin(player.id)),canGrantWishes:Boolean(isAdmin(player.id)),vehicle:player.vehicle??null,sitting:publicSeat(player),position:[...player.position],yaw:player.yaw,altitude:player.altitude,buildingId:player.buildingId??null,levelId:player.levelId??null,voice:{space:voiceSpaceOf(player.id),id:voiceIdentities.get(player.id)??null}});
   // Seats are Jevica's garden seats and lounge chairs, and the two places on
   // every storefront bench ('bench:<store>', slots 0 and 1).
   const benches=benchSeats(worldData);
+  // The Gardens (#510): seated at a campus workstation, a resident may open their own private
+  // desk. Snapshots carry only that boolean; which seat and whose work stay private.
+  const campusWorkstations=new Set(benches.filter(seat=>isCampusSeat(seat.buildId)&&seat.workstation).map(seat=>seat.buildId));
+  const campusWorkstation=player=>Boolean(player?.sitting && campusWorkstations.has(player.sitting.buildId));
   // The plaza bike rack: a slot is held by at most one player (player.cycling),
   // exactly as a seat is. Metres ride on the player until the transport drains
   // them into the account store (drainRides), so a disconnect loses nothing.
@@ -1318,7 +1322,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   const listPlaces = () => placesOf(worldData);
   return {worldId,join,rename,leave,command,step,snapshot,checkpoint,restore,reset,
     // Frames carry the clock that anchors screenings (screenings.js), stamped by the transport.
-    serverTime:()=>now(),districtRevision:districtRevisionOf(worldData),officeVisit:offices.publicVisit,endOfficeVisit:offices.leave,
+    serverTime:()=>now(),districtRevision:districtRevisionOf(worldData),campusWorkstation:userId=>campusWorkstation(players.get(userId)),officeVisit:offices.publicVisit,endOfficeVisit:offices.leave,
     // The synchronous suite decision for #508 entry and #510 desk access (campus-leases.js).
     campusSuiteAccess:(userId,unitId)=>campus.suiteAccess(userId,unitId,now()),campusAccess:userId=>campus.entitlements(userId,now()),accountAppearance,applyAccountAppearance,prepareAccountSelection,commitAccountSelection,resolvePlace,listPlaces,voiceSpaceOf,setVoice,drainRides,players,state};
 }

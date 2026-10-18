@@ -11,6 +11,7 @@ import { createWalkingEnvironment } from '../src/walking.js';
 import { groundSurfaceHeight, registerGroundSurfaces } from '../src/world-surface.js';
 import { storeRoomsFor } from '../src/store-rooms.js';
 import { insideRoomFootprint } from '../src/room-ground-clip.js';
+import { campusFitout } from '../../shared/garden-campus-fitout.js';
 import { GARDEN_CAMPUS_LAYOUT as CAMPUS, campusLevels, campusToScene, campusToSource } from '../../shared/garden-campus-layout.js';
 
 const garage = await loadDistrictData();
@@ -144,7 +145,9 @@ test('the halls and café are walk-in street rooms through their east doors, wit
     assert.equal(street.roomAt(doorX, doorZ)?.storeId, room.storeId, `${room.name} door threshold`);
   }
   const t1 = rooms[0], tower = CAMPUS.towers[0];
-  assert.deepEqual(t1.obstacles.map(item => item.kind), ['lift', 'stair']);
+  // The core shafts, then the hall's measured furniture (#510 fit-out), and nothing else.
+  assert.deepEqual(t1.obstacles.slice(0, 2).map(item => item.kind), ['lift', 'stair']);
+  assert.deepEqual(t1.obstacles.slice(2).map(item => item.id), campusFitout().ground.find(room => room.roomId === 'T1-F1-hall').obstacles.map(item => item.id));
   // The street-environment door sits on the contract's entrance.
   const entrance = campusLevels()[0].openings.find(item => item.id === 'T1-F1/entrance');
   assert.ok(Math.hypot(...campusToSource(entrance.position).slice(0, 2).map((n, i) => n - t1.facade[i])) < 1e-9);

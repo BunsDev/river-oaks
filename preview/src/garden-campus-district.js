@@ -20,6 +20,7 @@
 import {
   GARDEN_CAMPUS_ID, GARDEN_CAMPUS_LAYOUT as CAMPUS, GARDEN_CAMPUS_VERSIONS, campusLevels, campusToSource, sourceToCampus, validateGardenCampus,
 } from '../../shared/garden-campus-layout.js';
+import { campusFitout } from '../../shared/garden-campus-fitout.js';
 
 export const DISTRICT_REVISION_GARAGE = 'river-oaks-garage-1';
 export const DISTRICT_REVISION_GARDENS = 'river-oaks-gardens-3';
@@ -177,18 +178,37 @@ const roomCache = new WeakMap();
 export function planCampusRooms(world, firstIndex = 0) {
   if (!world?.gardenCampus) return [];
   if (!roomCache.has(world)) {
+    // Each room's furniture (#510 fit-out) is collision; its chairs are seat sites (campusSeatSites).
+    const furniture = id => campusFitout().ground.find(room => room.roomId === id)?.obstacles ?? [];
     const halls = CAMPUS.towers.map(tower => {
       const floor = tower.levels[0], hall = floor.hall;
       return { id: hall.id, name: `${tower.name} · ${hall.use}`, use: hall.use, rect: hall.rect, door: hall.door.position, clear: HALL_CLEAR, part: tower.id,
-        obstacles: [{ ...tower.core.lift, kind: 'lift' }, { ...tower.core.stair, kind: 'stair' }] };
+        obstacles: [{ ...tower.core.lift, kind: 'lift' }, { ...tower.core.stair, kind: 'stair' }, ...furniture(hall.id)] };
     });
     const cafe = CAMPUS.groundBuildings.find(item => item.id === 'C');
-    const rooms = [...halls, { id: 'C-hall', name: cafe.name, use: 'Public social and work café', rect: cafe.rect, door: cafe.door, clear: CAFE_CLEAR, part: 'C', obstacles: [] }]
+    const rooms = [...halls, { id: 'C-hall', name: cafe.name, use: 'Public social and work café', rect: cafe.rect, door: cafe.door, clear: CAFE_CLEAR, part: 'C', obstacles: furniture('C-hall') }]
       .map((spec, offset) => groundRoom(world, firstIndex + offset, spec));
     roomCache.set(world, rooms);
   }
   return roomCache.get(world);
 }
+
+// The halls' and café's chairs as street seat sites (world-interactions benchSeats), in the
+// bench-place shape: `bench:campus-<seat>` slot 0. Workstation seats open the sitter's own
+// private desk (#510); residents may rest on any of them, as on any bench.
+export const CAMPUS_SEAT_PREFIX = 'bench:campus-';
+const seatBuildId = id => `${CAMPUS_SEAT_PREFIX}${id.replaceAll('/', '.')}`;
+export function campusSeatSites(world) {
+  if (!world?.gardenCampus) return [];
+  const rooms = new Map(planCampusRooms(world).map(room => [room.campus.surfaceId, room]));
+  return campusFitout().ground.flatMap(entry => entry.seats.map(seat => {
+    const room = rooms.get(entry.roomId), [x, north] = toSource(seat.position), facing = [seat.facing[0] * CAMPUS.frame.east[0] + seat.facing[1] * CAMPUS.frame.north[0],
+      seat.facing[0] * CAMPUS.frame.east[1] + seat.facing[1] * CAMPUS.frame.north[1]], buildId = seatBuildId(seat.id);
+    return { id: `${buildId}:0`, buildId, slot: 0, kind: seat.kind, storeId: room.storeId, title: seat.title, x, north, heading: Math.atan2(facing[0], -facing[1]),
+      height: seat.height, approach: toSource(seat.approach), workstation: seat.workstation ? seat.id : null };
+  }));
+}
+export const isCampusSeat = buildId => typeof buildId === 'string' && buildId.startsWith(CAMPUS_SEAT_PREFIX);
 
 // The halls and café as storefront sites, in the shape world.stores and venue door sites
 // have, so the directory lists them and travel enters or leaves them like any door.
