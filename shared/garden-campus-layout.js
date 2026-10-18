@@ -613,6 +613,8 @@ export function validateGardenCampus(layout = GARDEN_CAMPUS_LAYOUT, { district =
       const gallery = layout.towers.find(t => t.id === landing.tower).levels.find(l => l.level === PUBLIC_LEVEL).spine;
       if (!rectInside(landing.rect, gallery.rect)) fail('landing', landing.id, 'landing is not inside the public gallery');
       if (Math.abs(landing.rect[3] - landing.rect[1] - BRIDGE_DECK.landingDepth) > EPS) fail('landing', landing.id, 'landing is not 3 m deep');
+      const end = landing.tower === bridge.from.tower ? bridge.from : bridge.to, edge = end.side === 'north' ? landing.rect[3] : landing.rect[1];
+      if (Math.abs(edge - end.v) > EPS) fail('landing', landing.id, `landing does not meet the ${bridge.id} portal at v ${end.v}`);
     }
     // Clearance below: every lower surface the deck crosses keeps standing headroom.
     for (const level of campusLevels(layout)) for (const surface of level.surfaces) {
