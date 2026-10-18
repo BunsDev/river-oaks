@@ -5,6 +5,7 @@ import pytest
 from pydantic import ValidationError
 
 from river_oaks.chauffeur import ChauffeurEngine, ChauffeurSnapshot
+from river_oaks.jev import JEV_MODEL
 from river_oaks.service import create_app
 
 
@@ -51,7 +52,7 @@ async def test_provider_and_bridge_control_driving_without_exposing_keys():
         return httpx.Response(
             200,
             json={
-                "model": "jev-1.13.0",
+                "model": JEV_MODEL,
                 "answers": {
                     "next_action": {
                         "type": "choice",

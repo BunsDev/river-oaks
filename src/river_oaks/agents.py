@@ -11,6 +11,8 @@ from typing import Annotated, Literal
 import httpx
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from .jev import JEV_MODEL
+
 Finite = Annotated[float, Field(allow_inf_nan=False)]
 Identifier = Annotated[str, Field(min_length=1, max_length=64, pattern=r"^[A-Za-z0-9_.:-]+$")]
 ACTIONS = {
@@ -101,7 +103,7 @@ class DecisionEngine:
         self,
         client=None,
         api_key=None,
-        model="jev-1.13.0",
+        model=JEV_MODEL,
         batch_size=32,
         concurrency=4,
         deadline_s=0.75,
