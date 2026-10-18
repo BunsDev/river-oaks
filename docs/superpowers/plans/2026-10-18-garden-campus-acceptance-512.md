@@ -7,15 +7,15 @@ Parent tracker: #505. This branch becomes the integrated candidate: #507, then t
 
 ## Integrated inputs (by revision)
 
-Candidate head `284a5ca3` (PR #525), base main `97304fb7` (#486 Computer tab included).
+Candidate code head `f6311e65` (PR #525), base main `97304fb7` (#486 Computer tab included).
 
 | Package | Revision in this branch | Notes |
 | --- | --- | --- |
 | #506 contract | layout 3.2 (through #507 `40aec12a`) | PR #519 head `3fac6c32`, hosted 19/19 |
-| #507 shells, overlay, gate | `40aec12a` | detachGardenCampus restores the garage byte for byte |
+| #507 shells, overlay, gate | `086c197e` | detachGardenCampus restores the garage byte for byte; halls and café carry room summaries |
 | #508 upper circulation | **not yet** | not started; c5's queued goal, which Val starts |
 | #509 leases | `1d151a8d` | checkpoint v13, `payload.campus`, `campusServed`, `leaseRequestId` |
-| #510 resident journey | `835c0c44` | dialog, fit-out, public workstations, seat rules, `garden-campus-office` journey and its `campus` CI shard |
+| #510 resident journey | `5c13cdca` | dialog, fit-out, public workstations, seat rules, `garden-campus-office` journey and its `campus` CI shard |
 | #511 finish and rendering | not yet | `bb8cd938` pushed; PR after its core verify |
 
 ## Cutover and rollback (implemented)
@@ -62,9 +62,14 @@ chain:
   - every `preview/tests/garden-campus-*` and `server/tests/garden-campus-*` test, the
     `campus-leases*` transports and coordinators, and the office desk suites;
   - `scripts/tests/agent.test.js` (the experience profile lists `garden-campus-office`).
-- Hosted at `9838e159`: everything green except the `campus` shard (the journey stalled
-  at the hall door, fixed by #510 `835c0c44`) and Desktop macOS, which hit the known W-check
-  flake at the garage spawn. Re-running at `284a5ca3`.
+- Hosted at `9838e159`: everything green except the `campus` shard and Desktop macOS, which
+  hit the known W-check flake at the garage spawn.
+- The `campus` shard's stall at the hall door (#510 runs 39151750197, 39154402265) was a
+  #507 product bug. The campus ground rooms had no `summary`, so the Map's
+  `describeInterior` threw inside `enterStore` before any travel was sent. The same throw
+  broke the Map's destination list for a campus hall. Fixed at #507 `086c197e`, with a
+  regression. At `f6311e65`: campus, migration, room and walking suites 80/80. Hosted re-run
+  pending.
 - Earlier, at `936e4983`: hosted Desktop on all three runners green with the campus UI in.
 
 ## Gaps
