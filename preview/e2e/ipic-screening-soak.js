@@ -128,6 +128,9 @@ async (host, viewer, tools) => {
     // What each page actually presented over the window (requestVideoFrameCallback), not a requested
     // time: the viewer's frames must advance; the presented spread is recorded with its uncertainty.
     const [hostFrames, viewerFrames] = await Promise.all([tools.frames(host, joined), tools.frames(viewer, joined)]);
+    // Startup, apart from convergence: from the trip into IPIC to the viewer's playing state and its first presented frame.
+    const firstFrame = (await tools.frames(viewer, started)).samples[0] ?? null;
+    const startup = { tripMs: entryMs, toPlayingMs: joined - started, firstFrameMs: firstFrame ? Math.round(firstFrame.wallMs - started) : null };
     const pace = tools.framePace(viewerFrames.samples), presented = tools.presentedSpread(hostFrames.samples, viewerFrames.samples);
     check(viewerFrames.supported && pace.frames > 0 && pace.mediaPerWall > 0.5, `cycle ${index}: the viewer presented advancing frames in the window: ${JSON.stringify(pace)}`);
     // Sampled after the convergence window, so the GC and the wait below never eat into it. The
@@ -160,7 +163,7 @@ async (host, viewer, tools) => {
     check(hostAfter.epoch === beforeExit.epoch && hostAfter.mediaId === beforeExit.mediaId && (hostAfter.currentTime > beforeExit.currentTime || hostAfter.sharedStatus === 'ended'), `cycle ${index}: the viewer's entry and exit did not reset the host's film`);
     console.log(`cycle ${index}: ${lateJoin ? 'late join' : 'in-room start'} at ${late.currentTime.toFixed(2)} s after a ${entryMs} ms trip in, within 500 ms after ${converged} ms; after exit ${JSON.stringify(after)}`);
     return { cycle: index, restarted, lateJoin, entryMs, joinedAtS: Math.round(late.currentTime * 100) / 100, convergedAfterMs: converged, worstSpreadMs: Math.round(worst), viewerPositionS: Math.round(position * 100) / 100, inside, after,
-      film, presented: presented && { spreadMs: Math.round(presented.spreadMs), uncertaintyMs: Math.round(presented.uncertaintyMs), gapMs: Math.round(presented.gapMs) },
+      film, startup, presented: presented && { spreadMs: Math.round(presented.spreadMs), uncertaintyMs: Math.round(presented.uncertaintyMs), gapMs: Math.round(presented.gapMs) },
       viewerPace: { frames: pace.frames, fps: Math.round(pace.fps * 10) / 10, mediaPerWall: Math.round(pace.mediaPerWall * 100) / 100 }, hostPace: { fps: Math.round(tools.framePace(hostFrames.samples).fps * 10) / 10 }, raw };
   }
 
