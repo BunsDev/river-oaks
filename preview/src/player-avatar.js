@@ -112,7 +112,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
   let colors=null,selectedDefinition=migrateCharacterAppearance(userId,defaultAppearanceFor(userId)),definitionKey=JSON.stringify(selectedDefinition);
   let avatar = null, outfit = null, vehicle = null, version = 0, previous = null, disposed = false, castUntil = 0,presentation=null;
   // Watering: until when, and the planter the body turns toward (scene coordinates).
-  let waterUntil = 0, waterTarget = null;
+  let waterUntil = 0, waterTarget = null, throwStart = -Infinity;
   // Appearance and movement belong to the account and are confirmed by the town.
   let appearance=defaultAppearanceFor(userId),sharedName=null,sharedMovement='upright',sharedGesture=null,sharedInteraction=null,interactionAt=0,movement='upright',loadedAppearance=null,portraitWanted=null;
   // Shared play: a choice the town has not confirmed yet, shown in the picker meanwhile.
@@ -301,6 +301,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     get feet() {return avatar?.feet??[];},
     get attention() {return attention.pose;},
     cast(now) { castUntil = now + 520; },
+    throwBall(now) { throwStart = now; },
     water(now, target, duration) { waterUntil = now + duration; waterTarget = target; },
     get watering() { return performance.now() < waterUntil; },
     getWandTip(target) {return outfit?.getWandTip(target)??null;},
@@ -348,7 +349,8 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
         }
         if(!seated&&focus.facing!==null&&!sharedInteraction)holder.rotation.y=focus.facing;
         if(sharedInteraction&&!presentation&&!seated&&!pose.flying)holder.rotation.y=turnToward(holder.rotation.y,sharedInteraction.heading,previous===null?1:dt);
-        avatar.update(now, now < castUntil ? 'amazed' : watering ? 'water' : !pose.flying&&!pose.riding ? (sharedGesture??'continue') : 'continue', false, {speed:pose.flying||seated?0:pose.speed,flightSpeed:pose.flying?pose.speed:0,distance:pose.distance,platform:pose.platform,flying:pose.flying,riding:seated,ridingKind:pose.sitting?'seat':pose.riding?.kind,seatToFloor:pose.sitting?.height??pose.riding?.seatToFloor,vehicle:form,handshakeTarget:sharedInteraction?.kind==='handshake'?sharedInteraction.target:undefined,gestureTime:sharedInteraction?sharedInteraction.elapsed+Math.max(0,now-interactionAt)/1000:undefined}, pose.groundAt, focus.target, {conversing:focus.mode==='conversation'});outfit.update(pose.flying,now,seated);
+        const throwing = !seated && !pose.flying && now - throwStart < 850;
+        avatar.update(now, now < castUntil ? 'amazed' : throwing ? (now - throwStart < 180 ? 'throw-windup' : 'throw-release') : watering ? 'water' : !pose.flying&&!pose.riding ? (sharedGesture??'continue') : 'continue', false, {speed:pose.flying||seated?0:pose.speed,flightSpeed:pose.flying?pose.speed:0,distance:pose.distance,platform:pose.platform,flying:pose.flying,riding:seated,ridingKind:pose.sitting?'seat':pose.riding?.kind,seatToFloor:pose.sitting?.height??pose.riding?.seatToFloor,vehicle:form,handshakeTarget:sharedInteraction?.kind==='handshake'?sharedInteraction.target:undefined,gestureTime:sharedInteraction?sharedInteraction.elapsed+Math.max(0,now-interactionAt)/1000:undefined}, pose.groundAt, focus.target, {conversing:focus.mode==='conversation'});outfit.update(pose.flying,now,seated);
         outfit.updateOptics(camera,viewportHeight);
         if(portraitWanted&&getPortrait){
           const id=portraitWanted;portraitWanted=null;
