@@ -142,10 +142,29 @@ here and in #508's ledger.
   out; restore stands them. With an isolated Redis, the campus, lease, desk, room, walking,
   district, world and world-interactions suites pass 190/190.
 
+## Dialog answered before the list caught up (found at candidate `e9716e46`)
+
+- **What failed.** The hosted `campus` shard on #525 `e9716e46` (job 117820157741) failed
+  `garden-campus-office` at "A request is shown as asked, not admitted". The suite journey
+  passed. The failure screenshot shows the chip reading "You asked" once the page settled.
+- **Cause.** `act()` set the confirmation ("Asked for suite T1-201.") before
+  `await refresh()`. On a slow runner the dialog said the request was sent while T1-201's
+  row still showed "Available" with its "Ask for this suite" button, and the journey read the
+  row in that window.
+- **Fix (`preview/src/garden-campus-ui.js`).** `act()` now lists again before writing its
+  answer. `refresh()` reports whether it listed; if it could not, the answer keeps the
+  action's result and adds the directory's error.
+- **Regression.** `preview/tests/garden-campus-dialog.test.js` uses a small DOM double and
+  holds the second listing.
+  - While the listing is held, the dialog says "Sending…".
+  - Once it lands, the dialog says "Asked for suite T1-201." with the chip "You asked".
+  - A failed listing says both messages.
+  - Against the old `act()`, both tests fail with the CI symptom
+    `['Asked for suite T1-201.', 'Available']`.
+
 ## Still to do (in order)
 
-1. Keep the `campus` shard green on later heads; it passed end to end at `465785d2`.
-2. After #508: suite sit and stand through its hooks, `player.campusSeat` restore and
-   validation, the suite workstation flag with `campusSuiteAccess`, the eviction release,
-   and the journey's upstairs leg (enter the leased suite, a stranger refused).
-3. Integrate #511's finish PR when it opens; re-run the journey on that head.
+1. Get the `campus` shard and macOS desktop green on the head that carries this fix. The
+   macOS desktop job was green at `8f4a20ac`. Then hand the head SHA to river-oaks-b5; it
+   lands #527 after #537.
+2. When #537 lands (d8), merge main and re-run.
