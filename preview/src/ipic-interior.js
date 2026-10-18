@@ -94,16 +94,29 @@ export function buildIpicInterior(room, options = {}) {
     box(m.timber, a + .76, y + .8, d + .1, .23, .035, .44);
   }
 
-  section('Reception'); floor(m.tile, 0, 6, 0); ceiling(0, 6, 3.9, m.plaster);
+  // Reception from IMG_9738 (photo review P3, P4, P6; Val, 2026-10-18).
+  section('Reception'); floor(m.receptionStone, 0, 6, 0); ceiling(0, 6, 3.9, m.plaster);
   for (const a of [room.aMin, room.aMax]) box(a === room.aMin ? m.timber : m.plaster, a, 1.95, 3, .15, 3.9, 6);
-  for (let d = 0; d < 6; d += 1.2) box(m.grout, room.center, .006, d, room.width, .008, .008);
-  for (let a = room.aMin; a < room.aMax; a += 1.2) box(m.grout, a, .006, 3, .008, .008, 6);
+  // Large-format stone, its joints a shade darker than the stone rather than dark grout.
+  for (let d = 0; d < 6; d += 1.2) box(m.stoneJoint, room.center, .006, d, room.width, .008, .008);
+  for (let a = room.aMin; a < room.aMax; a += 1.2) box(m.stoneJoint, a, .006, 3, .008, .008, 6);
+  // A coffered ceiling: a dropped perimeter band, its inner edge lit as a cove.
+  for (const a of [room.aMin + .35, room.aMax - .35]) box(m.plaster, a, 3.7, 3, .7, .18, 6);
+  for (const d of [.35, 5.65]) box(m.plaster, room.center, 3.7, d, room.width, .18, .7);
+  for (const a of [room.aMin + .72, room.aMax - .72]) box(m.glow, a, 3.62, 3, .03, .02, 4.5);
+  // The desk steps down to a lower counter at its west end, inside the same footprint (and collider).
   soft(m.bronze, 3.4, .12, 3.5, 3.55, .24, .82);
-  soft(m.marble, 3.4, .58, 3.5, 3.6, .96, .85);
-  for (let a = 1.3; a < 5.8; a += .09) box(m.plaster, a, 1.95, 5.65, .025, 3.7, .1);
-  label('RIVER OAKS DISTRICT', 3.4, 2.1, 5.56, 3.25, .5, { layout: districtSignLayout, background: '#141210', color: '#ece5d6' });
-  rod(m.bronze, [1.5, 3.2, 3.5], [5.2, 3.2, 3.5], .018);
-  for (let a = 1.6; a < 5.2; a += .22) box(m.glow, a, 3.17, 3.5, .12, .025, .055);
+  soft(m.marble, 3.85, .58, 3.5, 2.7, .96, .85);
+  soft(m.marble, 2.05, .38, 3.5, .9, .76, .85);
+  // Close light-oak flutes behind the desk, lit along the top. They start east of the right
+  // escalator lane (0.545-2.255), which the old backing and sign had hung across.
+  for (let a = 2.45; a < 5.8; a += .06) box(m.lightOak, a, 1.8, 5.65, .045, 3.6, .1);
+  box(m.glow, 4.125, 3.57, 5.56, 3.35, .02, .04);
+  label('RIVER OAKS DISTRICT', 4.1, 2.1, 5.56, 3, .46, { layout: districtSignLayout, background: '#141210', color: '#ece5d6' });
+  // A low linear pendant over the desk: horizontal lamps on a bronze bar, hung from the ceiling.
+  rod(m.bronze, [1.9, 2.95, 3.5], [4.9, 2.95, 3.5], .018);
+  for (const a of [2.1, 4.7]) rod(m.bronze, [a, 2.95, 3.5], [a, 3.81, 3.5], .006);
+  for (let k = 0; k < 5; k++) box(m.glow, 2.15 + k * .625, 2.9, 3.5, .07, .26, .07, { shape: cylinder, roll: Math.PI / 2 });
   for (const p of IPIC_PLANTERS.filter(p => p[1] === 0)) planter(...p);
   label('TaxFree Shopping', room.aMin + .12, 1.9, 2.5, 1.8, .45, { yaw: Math.PI / 2 });
   for (let d = 1; d < 6; d += 2) for (const a of [-2.5, 1]) downlight(a, 3.77, d);

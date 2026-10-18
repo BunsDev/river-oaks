@@ -100,6 +100,9 @@ export function createIpicMaterials({ textures = typeof document !== 'undefined'
     marble: material('veined-marble', '#ffffff', { map: marble, roughness: .27 }),
     stone: material('taupe-stacked-stone', '#685747'), plaster: material('warm-plaster', '#b6ab98'),
     tile: material('limestone-tile', '#bdb5a4', { roughness: .43 }), grout: material('grout', '#696356'),
+    // Reception from IMG_9738 (photo review P4, P6): warm stone with quiet joints, light-oak flutes.
+    receptionStone: material('reception-stone', '#d3c5ad', { roughness: .5 }), stoneJoint: material('stone-joint', '#b9aa90'),
+    lightOak: material('light-oak', '#c8a577', { roughness: .62 }),
     bronze: material('bronze', '#a38758', { metalness: .83, roughness: .29 }),
     steel: material('escalator-steel', '#848984', { metalness: .8, roughness: .34 }),
     black: material('black-rubber', '#171714', { roughness: .9 }), yellow: material('step-safety-edge', '#c1a549'),
