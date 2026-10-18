@@ -624,10 +624,13 @@ bench. Rules: `preview/src/yacht-rules.js`.
 A long linen-topped wine pong table stands between the café and the north planters.
 Standing at either end, **Play wine pong** or **X** opens it. You play a plaza regular
 at the far end, or two players pass and play. Each side has six wine glasses racked
-at its own end. Stop the sweeping reticle once for the aim and once for the power;
-the ball flies over the real table. A ball can drop straight in, rattle off a rim and
+at its own end. Your standing point is the ball's release point; choose
+**Reposition** to walk along your end without losing the game, then press **X**
+again to resume. Stop the sweeping reticle once for the aim and once for the power;
+the ball flies over the real table. **Inspect rack** briefly magnifies the far
+glasses. A ball can drop straight in, rattle off a rim and
 in (or out), or bounce on the table and in. Two throws a turn, and sinking all six of
-the far glasses wins. A close-up of the far rack sits beside the table view. Rules:
+the far glasses wins. Rules:
 `preview/src/wine-pong-rules.js`.
 
 The wine pong table's switch also offers **Shuffleboard**, which puts the glasses away
@@ -716,16 +719,17 @@ After that grace, departure releases it. A compatible region revision keeps
 furniture but disconnects players, so it leaves no stale occupancy. Checkpoint
 recovery validates slots, unique occupancy and the exact furniture-derived pose.
 
-Private world checkpoints write version 11 and read valid versions 1 (original
-district only) through 11. Seat reservations require version 3 or later; custom
+Private world checkpoints write version 13 and read valid versions 1 (original
+district only) through 13. Seat reservations require version 3 or later; custom
 assemblies require version 4; paired interactions require version 5; office state
 requires version 6; explicit interior level occupancy requires version 7; personal
 workspace visits require version 8; venue screenings ([screenings](screenings.md))
 require version 9; office visit layouts and levels ([offices](offices.md)) require version 10; office
-seat claims require version 11. The
-current coordinator (writer generation `v11:`) atomically takes over older leases. Commit fencing prevents
+seat claims require version 11; selected character revisions require version 12;
+garden campus leases ([garden campus leases](garden-campus-leases.md)) require version 13. The
+current coordinator (writer generation `v13:`, or `v14:` with the character store) atomically takes over older leases. Commit fencing prevents
 an older writer from publishing or trimming commands. Do not roll back older
-code against version-11 checkpoints. Browser protocol 3 is required: older and
+code against version-13 checkpoints. Browser protocol 3 is required: older and
 unversioned clients must refresh
 before joining.
 This prevents older renderers from applying snapshots with unknown geometry.

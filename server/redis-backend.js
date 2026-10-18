@@ -12,6 +12,7 @@ import { createWorldGateway } from './world-gateway.js';
 import { parseScreeningHosts } from './screenings.js';
 import { configuredOfficeLayout } from './offices.js';
 import { configuredDistrictRevision } from '../preview/src/garden-campus-district.js';
+import { parseCampusOperators } from './campus-leases.js';
 import { vercelClientAddress } from './vercel-routing.js';
 import { DEFAULT_WORLD_ID, validateWorldId } from '../preview/src/world-contract.js';
 import { configureVoice, createRedisVoiceLeases } from './voice.js';
@@ -75,6 +76,8 @@ export async function createRedisBackend(env = process.env) {
       // Jevica's office layout; unset or unknown keeps the legacy room (the default and the rollback).
       officeLayout: configuredOfficeLayout(env.RIVER_OAKS_OFFICE_LAYOUT, { onInvalid: () => console.warn(JSON.stringify({ event: 'office_layout_ignored' })) }),
       screeningHosts: parseScreeningHosts(env.RIVER_OAKS_SCREENING_HOSTS, { onInvalid: () => console.warn(JSON.stringify({ event: 'screening_host_grant_ignored' })) }),
+      // Garden campus lease operators are explicit account ids; none configured keeps leasing closed.
+      campusOperators: parseCampusOperators(env.RIVER_OAKS_CAMPUS_OPERATOR_IDS, { onInvalid: () => console.warn(JSON.stringify({ event: 'campus_operator_ignored' })) }),
       workplaceSweep: env.VERCEL !== '1',
       // Vercel Cron sends it as a Bearer token; without it the sweep route stays closed.
       workplaceCronSecret: env.CRON_SECRET || null,
