@@ -21,6 +21,7 @@ import { warnIfSoftwareRendering } from './hardware-acceleration.js';
 import './hardware-acceleration.css';
 import { bindRenderVisibility } from './render-lifecycle.js';
 import { createRenderAudit } from './render-audit.js';
+import { createDrawCensus } from './draw-census.js';
 import { localToScene, terrainHeight } from './geometry.js';
 import { setupThemeControls } from './theme.js';
 import { configureMaterials, physicalSurface, loadEnvironment } from './materials.js';
@@ -129,6 +130,7 @@ const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matc
 const softwareAcceptance = import.meta.env.DEV && import.meta.env.VITE_SHARED_SOFTWARE_RENDERING === '1';
 const renderAudit = import.meta.env.DEV && new URLSearchParams(location.search).get('render-audit') === '1' ? createRenderAudit() : null;
 let exteriorCulling = true; // A development audit can switch it off to compare frames.
+let pendingDrawCensus = null; // A development audit attributes the next frame's draws.
 // Inside IPIC's auditorium, facing away from its only partition, nothing outdoors can be seen (#428),
 // nor any other store's interior or people (#431): the frame keeps only IPIC's own.
 function ipicAuditoriumCull() {
@@ -444,6 +446,8 @@ function initializeRenderer() {
   // IPIC screenings (#367): the town's timeline on the existing screen, while the player is inside IPIC.
   // Mounted on the viewport, not the canvas host: walking takes pointer capture on the canvas host.
   ipicScreening??=createIpicScreening({host:host.parentElement??host,THREE,getMultiplayer:()=>multiplayer,getScreen:()=>buildingMesh?.userData.interiors?.userData.screens?.[0]??null,
+    // A recliner that names an eye pitch faces the screen; focus frames the film from that row (#500).
+    getSeat:()=>{const pose=walking?.getPose();return pose?.sitting&&Number.isFinite(pose.sitting.eyePitch)?{eye:pose.position}:null;},input:host,reducedMotion,
     getVenue:()=>{
       const pose=walking?.getPose(),room=pose&&!officeUI?.active?walking?.environment?.roomAt(pose.position[0],pose.position[2]):null;
       if(room?.interior!==IPIC_INTERIOR)return {active:false,auditorium:false};
@@ -886,6 +890,7 @@ function followSunShadow() {
 function render(now) {
   noteFrame(now);
   const auditStart = renderAudit ? performance.now() : 0;
+  const drawCensus = pendingDrawCensus; pendingDrawCensus = null; drawCensus?.census.begin();
   clock.update();
   if (lastFrame !== null) quality.sample(now - lastFrame);
   lastFrame = now;
@@ -920,6 +925,7 @@ function render(now) {
   multiplayer?.update(now);
   officeUI?.prepare(now);
   seatingControls?.update(now);
+  ipicScreening?.applyCamera(camera);
   if (auditCamera) {
     camera.position.copy(auditCamera.position); camera.lookAt(auditCamera.target);
     if (auditCamera.fov && camera.fov !== auditCamera.fov) { camera.fov = auditCamera.fov; camera.updateProjectionMatrix(); }
@@ -982,6 +988,7 @@ function render(now) {
     lastRenderStats=now;
   }
   renderAudit?.frame(now, performance.now() - auditStart);
+  drawCensus?.resolve(drawCensus.census.end());
 }
 
 document.querySelectorAll('[data-layer]').forEach((input) => input.addEventListener('change', () => {
@@ -1143,6 +1150,9 @@ if (import.meta.env.DEV && renderAudit) {
   window.__riverRenderAudit = {
     start: () => renderAudit.start(), stop: () => renderAudit.stop(),
     exteriorCulling(enabled) { exteriorCulling = Boolean(enabled); },
+    avatarCulling(enabled) { remotePlayers?.setCulling(enabled); },
+    // Draws and submitted triangles for one frame, by pass and tagged owner.
+    drawCensus: () => new Promise(resolve => { pendingDrawCensus = { census: createDrawCensus(renderer, camera), resolve }; }),
     crowdView() {
       const players = multiplayer?.snapshot?.players ?? [];
       if (!players.length) throw new Error('Join the shared world before framing its crowd.');

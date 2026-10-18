@@ -16,7 +16,7 @@ import { isGameplayKey } from './keyboard-input.js';
 
 export function createPlayerAvatar({ scene, host, walking, userId, getLocals, getWorld, getConversation=()=>null, requestAppearance=()=>Promise.resolve({ok:false}), requestMovement=()=>Promise.resolve({ok:false}), requestVehicleExit=async()=>({ok:true}), requestChauffeur, getPortrait=null, reducedMotion }) {
   const lifetime = new AbortController();
-  const holder = new THREE.Group();holder.name = 'Player character';scene.add(holder);
+  const holder = new THREE.Group();holder.name = 'Player character';holder.userData.renderAuditOwner = 'player';scene.add(holder);
   const owner=isJevicaOwner(userId);
   let crewLocal=null;
   const crewLocals=()=>{

@@ -21,6 +21,8 @@ export const IPIC_BACK_BAR = 6.28;
 // size in metres, about 3:1. A film fits inside it; see ipic-screening.js.
 // The screen spans nearly the whole front wall, as in IMG_9767 (photo review P16; Val, 2026-10-18), within
 // the 4.4 m between floor and ceiling. Films keep their aspect on it (ipic-screening.js fitVideoToScreen).
+// The recliner rows' depths: the back row on the riser, then the front row.
+export const IPIC_RECLINER_ROWS = Object.freeze([28, 31]);
 export const IPIC_SCREEN = Object.freeze({ a: .3, y: 2.45, d: 33.79, width: 12.1, height: 3.6 });
 // Stadium risers (photo review P15, IMG_9767): the back row stands `rise` above the front row. The steps up
 // just inside the doorway and down both side aisles are continuous ramps underfoot, drawn as lit treads, like
@@ -113,7 +115,7 @@ export function configureIpicRoom(room) {
     // A recliner is boxed in by its back, arms, base and footrest, so its sitter stands into the aisle in
     // front of the footrest, which is also where a visitor (or a townsperson) approaches it from. At
     // d + 1.4 the spot is 0.45 m from the footrest and from the back row's seated bodies.
-    ...[28, 31].flatMap((d, row) => [-2.6, -.6, 1.4, 3.4].map((a, col) => ({ key: `recliner-${row}-${col}`, slot: 0, a, d, yaw: 0, height: .53, kind: 'armchair', stand: [a, d + 1.4], approach: [a, d + 1.4] }))),
+    ...IPIC_RECLINER_ROWS.flatMap((d, row) => [-2.6, -.6, 1.4, 3.4].map((a, col) => ({ key: `recliner-${row}-${col}`, slot: 0, a, d, yaw: 0, height: .53, kind: 'armchair', stand: [a, d + 1.4], approach: [a, d + 1.4] }))),
   ];
   // Collision covers the backs and arms, and each recliner's base ends and raised footrest as drawn by
   // recliner() in ipic-interior.js (Val, 2026-10-15). Cushion centres stay more than a body radius
