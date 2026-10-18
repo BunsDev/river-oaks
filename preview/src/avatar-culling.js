@@ -9,7 +9,28 @@ import * as THREE from 'three';
 // Fractions of the standing height: centre above the floor, and radius.
 export const FIGURE_SPHERE = Object.freeze({ center: .55, radius: .8 });
 
-const toLocal = new THREE.Matrix4();
+const toLocal = new THREE.Matrix4(), part = new THREE.Sphere(), step = new THREE.Vector3();
+
+// How far below a figure's floor its shadow is assumed to be caught. Lower
+// receivers (a street under a high terrace) are not covered.
+export const SHADOW_DROP = 4;
+
+// Could a figure, or its shadow, appear in view? The sphere (centre, radius) is
+// tested against the frustum, then swept along the light, travelling downward,
+// until it is SHADOW_DROP below the floor. Sub-spheres no wider than 1.5 radii
+// cover the sweep. With no light (no sun shadows), only the figure counts. A
+// light within about 1° of the horizon casts unbounded shadows: always in view.
+export function figureInView(frustum, center, radius, floor, light = null) {
+  if (frustum.intersectsSphere(part.set(center, radius))) return true;
+  if (!light) return false;
+  if (light.y > -.02) return true;
+  const length = (center.y + radius - floor + SHADOW_DROP) / -light.y, count = Math.ceil(length / radius);
+  step.copy(light).multiplyScalar(length / count);
+  part.radius = radius + length / count / 2;
+  part.center.copy(center).addScaledVector(step, -.5);
+  for (let i = 0; i < count; i++) if (frustum.intersectsSphere(part.set(part.center.add(step), part.radius))) return true;
+  return false;
+}
 
 // Standing height of a resident avatar: its rig's height at the scale it was
 // instantiated with.

@@ -112,6 +112,31 @@ test('remote skins cull by the whole figure, and the audit can switch that off f
   }finally{delete globalThis.__remoteSkins;globalThis.document=previousDocument;}
 });
 
+test('a peer out of view with its shadow skips every pass but keeps animating at a quarter rate',async()=>{
+  const previousDocument=globalThis.document;globalThis.document={createElement:()=>new Element()};
+  try{
+    let light=new THREE.Vector3(0,-1,1).normalize();
+    const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(60,1,.1,500),players=createRemotePlayers(scene,new Element(),{shadowDirection:()=>light});
+    camera.position.set(0,1.6,0);camera.lookAt(0,1.6,-10);
+    const peer=(id,north,vehicle=null)=>({id,name:id,position:[0,north,0],altitude:0,yaw:0,appearance:'sable-human',vehicle});
+    players.sync([peer('ahead',10),peer('behind',-1.5)],'self');
+    await new Promise(resolve=>setImmediate(resolve));
+    const [ahead,behind]=scene.children,rig=holder=>holder.children.find(child=>child.userData.frames);
+    for(let frame=0;frame<8;frame++)players.update(frame*16,camera);
+    assert.equal(ahead.visible,true);assert.equal(rig(ahead).userData.frames.length,8);
+    assert.equal(behind.visible,false,'figure and shadow are out of view');
+    assert.equal(rig(behind).userData.frames.length,2,'a hidden figure animates every fourth frame');
+    assert.equal(rig(behind).userData.suspends,0,'its clock keeps running');
+    light=new THREE.Vector3(0,-.5,-1).normalize();players.update(200,camera);
+    assert.equal(behind.visible,true,'its shadow now falls into view');
+    light=null;players.update(216,camera);assert.equal(behind.visible,false,'without sun shadows only the figure counts');
+    players.setFigureCulling(false);players.update(232,camera);assert.equal(behind.visible,true,'the audit switch restores it');
+    players.setFigureCulling(true);players.sync([peer('ahead',10),peer('behind',-1.5,'rolls')],'self');players.update(248,camera);
+    assert.equal(behind.visible,true,'a rider in a car is never culled by the figure sphere');
+    players.dispose();
+  }finally{globalThis.document=previousDocument;}
+});
+
 test('failed remote look keeps the loaded rig and retries after a bounded delay',async()=>{
   const previousDocument=globalThis.document;globalThis.document={createElement:()=>new Element()};
   globalThis.__remoteAvatarAttempts=[];globalThis.__remoteFailOnce='kai-noir';
