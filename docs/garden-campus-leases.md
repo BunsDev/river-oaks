@@ -47,7 +47,7 @@ the same on every gateway.
 ## Suites
 
 The rentable units are exactly #506's `campusUnitInventory()`: 43 suites,
-3,279.7 m² net, on floors 2 and above of T1, T2 and T3 (layout 3.0, units version
+3,279.7 m² net, on floors 2 and above of T1, T2 and T3 (layout 3.1 at this revision; leases check major versions only, units version
 1). Ids look like `T1-F2-W-S`, with display numbers like `T1-201`.
 `campusLeaseUnits()` adds each suite's level id (`garden-campus/l1`…), its door,
 and its **landing**: the point on the public spine just outside the door. The world
@@ -149,7 +149,9 @@ lease or overwriting a newer change (`campus_lease_stale`, `campus_lease_ended`,
   `campus_unavailable`, `campus_unknown_unit`, `campus_unit_not_leased`,
   `campus_lease_not_started`, `campus_lease_expired` and `campus_access_required`.
   Check it on every suite entry, desk open and desk write, inside the same
-  serialised world command or route as the action. Don't cache it.
+  serialised world command or route as the action. Don't cache it. Inside
+  `world.restore`, check a restored occupant against the state about to be
+  committed: `campus.suiteAccess(userId, unitId, now(), nextCampus)`.
 - `world.campusAccess(userId)` lists the suites an account may enter now.
 - When access ends, the module reports `{userId, role, unitId, leaseId, reason,
   landing}` for the tenant and every guest. The reason is `expired`, `revoked`,

@@ -306,6 +306,9 @@ test('v13 checkpoints restore leases, guests, requests and receipts; replays sur
   const next = fixture({ clock: f.state });
   assert.equal(next.world.restore(saved).ok, true);
   for (const id of [A, G, S, B]) assert.deepEqual(next.access(id, U1), f.access(id, U1), id);
+  // Before a restore commits, its validated state answers the same question.
+  const probe = createCampusLeases({ worldId: 'river-oaks', operators: [OP] }), restored = probe.validate(saved.payload.campus, 13, f.state.time);
+  assert.deepEqual([probe.suiteAccess(G, U1, f.state.time, restored).role, probe.suiteAccess(G, U1, f.state.time).reason], ['guest', 'campus_unit_not_leased']);
   assert.deepEqual(next.list(B).campus.requests.map(item => item.id), [asked.request.id]);
   assert.deepEqual(next.list(B).campus.leases.map(item => [item.id, item.status]), [[offer.lease.id, 'offered']]);
   const replay = next.send(A, retry);

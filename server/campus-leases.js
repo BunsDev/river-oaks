@@ -97,11 +97,12 @@ export function createCampusLeases({ enabled = true, worldId, operators = [], pl
   }
 
   // The access decision #508 (suite entry) and #510 (suite desk) consume. Only an active
-  // lease inside its dates admits, and only its tenant and the guests they named.
-  function suiteAccess(userId, unitId, time) {
+  // lease inside its dates admits, and only its tenant and the guests they named. A restore
+  // passes the state validate returned, to check restored occupants before it commits.
+  function suiteAccess(userId, unitId, time, restored = null) {
     if (!enabled) return { ok: false, reason: 'campus_unavailable' };
     if (!UNITS.has(unitId)) return { ok: false, reason: 'campus_unknown_unit' };
-    const lease = activeFor(unitId);
+    const lease = restored ? [...restored.leases.values()].find(item => item.unitId === unitId && item.status === 'active') ?? null : activeFor(unitId);
     if (!lease) return { ok: false, reason: 'campus_unit_not_leased' };
     if (time < lease.startsAt) return { ok: false, reason: 'campus_lease_not_started' };
     if (time >= lease.endsAt) return { ok: false, reason: 'campus_lease_expired' };
