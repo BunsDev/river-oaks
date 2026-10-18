@@ -1,0 +1,599 @@
+{
+  "createdAt": "2026-10-18T09:53:49.780Z",
+  "results": [
+    {
+      "name": "studio-pilot-soak",
+      "status": "passed",
+      "seconds": 56.259,
+      "result": {
+        "passed": true,
+        "templateId": "office",
+        "cycles": [
+          {
+            "cycle": 0,
+            "warmUp": true,
+            "seconds": 5.062,
+            "office": {
+              "calls": 688,
+              "triangles": 53076,
+              "geometries": 35,
+              "materials": 27,
+              "textures": 4,
+              "renderTargets": 2,
+              "programs": 6,
+              "listeners": 157,
+              "nodes": 917,
+              "heapMiB": 13.67,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 0,
+                "finished": 0,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 1,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 612.7,
+              "gpuMetalMiB": 42.3
+            },
+            "replaced": {
+              "calls": 700,
+              "triangles": 62136,
+              "geometries": 48,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 8,
+              "listeners": 168,
+              "nodes": 1022,
+              "heapMiB": 15.38,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 2,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 688.6,
+              "gpuMetalMiB": 100.4
+            }
+          },
+          {
+            "cycle": 1,
+            "warmUp": false,
+            "seconds": 5.102,
+            "office": {
+              "calls": 688,
+              "triangles": 53076,
+              "geometries": 35,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 6,
+              "listeners": 157,
+              "nodes": 925,
+              "heapMiB": 14.65,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 3,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 506.8,
+              "gpuMetalMiB": 78
+            },
+            "replaced": {
+              "calls": 700,
+              "triangles": 62136,
+              "geometries": 48,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 8,
+              "listeners": 168,
+              "nodes": 1022,
+              "heapMiB": 14.7,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 4,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 690.2,
+              "gpuMetalMiB": 99.9
+            }
+          },
+          {
+            "cycle": 2,
+            "warmUp": false,
+            "seconds": 5.103,
+            "office": {
+              "calls": 688,
+              "triangles": 53076,
+              "geometries": 35,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 6,
+              "listeners": 157,
+              "nodes": 925,
+              "heapMiB": 15.06,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 5,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 508.7,
+              "gpuMetalMiB": 82.2
+            },
+            "replaced": {
+              "calls": 700,
+              "triangles": 62136,
+              "geometries": 48,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 8,
+              "listeners": 168,
+              "nodes": 1022,
+              "heapMiB": 15.04,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 6,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 676,
+              "gpuMetalMiB": 89.4
+            }
+          },
+          {
+            "cycle": 3,
+            "warmUp": false,
+            "seconds": 5.04,
+            "office": {
+              "calls": 688,
+              "triangles": 53076,
+              "geometries": 35,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 6,
+              "listeners": 157,
+              "nodes": 925,
+              "heapMiB": 14.59,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 7,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 506,
+              "gpuMetalMiB": 79.2
+            },
+            "replaced": {
+              "calls": 700,
+              "triangles": 62136,
+              "geometries": 48,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 8,
+              "listeners": 168,
+              "nodes": 1022,
+              "heapMiB": 14.52,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 8,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 686.2,
+              "gpuMetalMiB": 98.8
+            }
+          },
+          {
+            "cycle": 4,
+            "warmUp": false,
+            "seconds": 5.085,
+            "office": {
+              "calls": 688,
+              "triangles": 53076,
+              "geometries": 35,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 6,
+              "listeners": 157,
+              "nodes": 925,
+              "heapMiB": 15.45,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 9,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 511,
+              "gpuMetalMiB": 83.4
+            },
+            "replaced": {
+              "calls": 700,
+              "triangles": 62136,
+              "geometries": 48,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 8,
+              "listeners": 168,
+              "nodes": 1022,
+              "heapMiB": 14.65,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 10,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 684.8,
+              "gpuMetalMiB": 96.8
+            }
+          },
+          {
+            "cycle": 5,
+            "warmUp": false,
+            "seconds": 5.135,
+            "office": {
+              "calls": 688,
+              "triangles": 53076,
+              "geometries": 35,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 6,
+              "listeners": 157,
+              "nodes": 925,
+              "heapMiB": 14.53,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 11,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 502.8,
+              "gpuMetalMiB": 82.1
+            },
+            "replaced": {
+              "calls": 700,
+              "triangles": 62136,
+              "geometries": 48,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 8,
+              "listeners": 168,
+              "nodes": 1022,
+              "heapMiB": 14.7,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 12,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 690.4,
+              "gpuMetalMiB": 101.1
+            }
+          },
+          {
+            "cycle": 6,
+            "warmUp": false,
+            "seconds": 5.041,
+            "office": {
+              "calls": 688,
+              "triangles": 53076,
+              "geometries": 35,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 6,
+              "listeners": 157,
+              "nodes": 925,
+              "heapMiB": 14.8,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 13,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 509,
+              "gpuMetalMiB": 79.4
+            },
+            "replaced": {
+              "calls": 700,
+              "triangles": 62136,
+              "geometries": 48,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 8,
+              "listeners": 168,
+              "nodes": 1022,
+              "heapMiB": 14.77,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 14,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 693.7,
+              "gpuMetalMiB": 103.4
+            }
+          },
+          {
+            "cycle": 7,
+            "warmUp": false,
+            "seconds": 5.101,
+            "office": {
+              "calls": 688,
+              "triangles": 53076,
+              "geometries": 35,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 6,
+              "listeners": 157,
+              "nodes": 925,
+              "heapMiB": 14.8,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 15,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 509.9,
+              "gpuMetalMiB": 79.3
+            },
+            "replaced": {
+              "calls": 700,
+              "triangles": 62136,
+              "geometries": 48,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 8,
+              "listeners": 168,
+              "nodes": 1022,
+              "heapMiB": 14.74,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 16,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 694.9,
+              "gpuMetalMiB": 101.9
+            }
+          },
+          {
+            "cycle": 8,
+            "warmUp": false,
+            "seconds": 5.066,
+            "office": {
+              "calls": 688,
+              "triangles": 53076,
+              "geometries": 35,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 6,
+              "listeners": 157,
+              "nodes": 925,
+              "heapMiB": 14.91,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 17,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 528.6,
+              "gpuMetalMiB": 75.9
+            },
+            "replaced": {
+              "calls": 700,
+              "triangles": 62136,
+              "geometries": 48,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 8,
+              "listeners": 168,
+              "nodes": 1022,
+              "heapMiB": 14.85,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 18,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 695.3,
+              "gpuMetalMiB": 101.9
+            }
+          },
+          {
+            "cycle": 9,
+            "warmUp": false,
+            "seconds": 5.08,
+            "office": {
+              "calls": 688,
+              "triangles": 53076,
+              "geometries": 35,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 6,
+              "listeners": 157,
+              "nodes": 925,
+              "heapMiB": 15.74,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 19,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 667.2,
+              "gpuMetalMiB": 73.3
+            },
+            "replaced": {
+              "calls": 700,
+              "triangles": 62136,
+              "geometries": 48,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 8,
+              "listeners": 168,
+              "nodes": 1022,
+              "heapMiB": 15.36,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 20,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 692.3,
+              "gpuMetalMiB": 98.8
+            }
+          },
+          {
+            "cycle": 10,
+            "warmUp": false,
+            "seconds": 5.096,
+            "office": {
+              "calls": 688,
+              "triangles": 53076,
+              "geometries": 35,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 6,
+              "listeners": 157,
+              "nodes": 925,
+              "heapMiB": 15.43,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 21,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 674.3,
+              "gpuMetalMiB": 78
+            },
+            "replaced": {
+              "calls": 700,
+              "triangles": 62136,
+              "geometries": 48,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 8,
+              "listeners": 168,
+              "nodes": 1022,
+              "heapMiB": 15.41,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 22,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 691.3,
+              "gpuMetalMiB": 97.4
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
