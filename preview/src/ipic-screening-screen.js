@@ -33,7 +33,15 @@ export function createScreenBinding({ THREE }) {
       customProgramCacheKey() { return `${cacheKey.call(this)}|ipic-screen-matte`; },
     });
     material.color.set('#ffffff'); material.emissive.set('#ffffff'); material.needsUpdate = true;
-    bound = { material, saved, texture, key, aspect: screen.aspect, width: video.videoWidth, height: video.videoHeight, fit };
+    bound = { material, saved, texture, key, aspect: screen.aspect, width: video.videoWidth, height: video.videoHeight, fit, frameAt: null };
+    upload(video);
+  }
+  // three.js uploads a VideoTexture when requestVideoFrameCallback fires. A paused element that has just
+  // loaded or seeked presents no new frame, so a viewer joining a paused film (or one whose autoplay was
+  // refused) would see an empty texture: upload its current frame when it binds and after each paused seek.
+  function upload(video) {
+    if (!bound || video.readyState < 2 || video.seeking || (!video.paused && bound.frameAt !== null) || bound.frameAt === video.currentTime) return;
+    bound.texture.needsUpdate = true; bound.frameAt = video.currentTime;
   }
   function release() {
     if (!bound) return;
@@ -49,7 +57,7 @@ export function createScreenBinding({ THREE }) {
     // its decoded size; a new key is a new texture and fit. Called every frame.
     sync({ screen, video, key, show }) {
       if (!show || !screen?.material || !(video?.videoWidth > 0 && video.videoHeight > 0)) return release();
-      if (bound?.key === key && bound.material === screen.material && bound.aspect === screen.aspect) return;
+      if (bound?.key === key && bound.material === screen.material && bound.aspect === screen.aspect) return upload(video);
       release(); bind(screen, video, key);
     },
     release,
