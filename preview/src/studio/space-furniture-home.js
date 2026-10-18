@@ -78,5 +78,34 @@ export function createHomeForms({ geometry, mesh }) {
         }
       }
     },
+    // One table family with the Garden Office desk: a 30 mm top with a 3 mm edge on 45 mm
+    // square legs set 5 cm in, joined by aprons under the top. Every template's tables use it.
+    table(root, item, top, timber) {
+      const group = metric(root, item), { width: W, depth: D, height: H } = item;
+      const thick = Math.min(.03, H * .08), leg = Math.min(.045, W / 8, D / 8), inset = Math.min(.05, W / 8, D / 8);
+      const legHeight = Math.max(.002, H - thick), apron = Math.min(.08, legHeight / 4), rail = Math.min(.018, leg / 2);
+      const x = W / 2 - inset - leg / 2, z = D / 2 - inset - leg / 2;
+      block(group, top, [0, H - thick / 2, 0], [W, thick, D], 'Tabletop', .003);
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) block(group, timber, [sx * x, legHeight / 2, sz * z], [leg, legHeight, leg], 'Leg');
+      for (const sz of [-1, 1]) block(group, timber, [0, legHeight - apron / 2, sz * (z + leg / 2 - rail / 2)], [2 * x - leg, apron, rail], 'Apron');
+      for (const sx of [-1, 1]) block(group, timber, [sx * (x + leg / 2 - rail / 2), legHeight - apron / 2, 0], [rail, apron, 2 * z - leg], 'Apron');
+    },
+    // A raised glass display case: a base in the object's finish, glass sides and top on slim
+    // corner posts, one glass shelf, and rows of pastries on the base and the shelf.
+    displayCase(root, item, frame, glass, pastries) {
+      const group = metric(root, item), { width: W, depth: D, height: H } = item;
+      const base = Math.min(.04, H / 8), post = Math.min(.015, W / 20, D / 20), pane = .006;
+      block(group, frame, [0, base / 2, 0], [W, base, D], 'Case base', .003);
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) block(group, frame, [sx * (W / 2 - post / 2), (base + H) / 2, sz * (D / 2 - post / 2)], [post, H - base, post], 'Case post');
+      for (const sz of [-1, 1]) block(group, glass, [0, (base + H) / 2, sz * (D / 2 - pane / 2)], [W - 2 * post, H - base, pane], 'Case glass');
+      for (const sx of [-1, 1]) block(group, glass, [sx * (W / 2 - pane / 2), (base + H) / 2, 0], [pane, H - base, D - 2 * post], 'Case glass');
+      block(group, glass, [0, H - pane / 2, 0], [W - 2 * post, pane, D - 2 * post], 'Case glass');
+      const shelf = base + (H - base) * .48;
+      block(group, glass, [0, shelf, 0], [W - 2 * post - .01, pane, D - 2 * post - .01], 'Display shelf');
+      // Four pastries a level, sized in metres and spaced along the case.
+      const count = Math.max(1, Math.min(4, Math.floor((W - .1) / .2))), size = [Math.min(.16, (W - .1) / count - .03), Math.min(.05, (H - base) * .2), Math.min(.12, D * .4)];
+      for (const [level, y] of [[0, base], [1, shelf + pane / 2]]) for (let index = 0; index < count; index++)
+        block(group, pastries[(index + level) % pastries.length], [-W / 2 + .05 + (index + .5) * (W - .1) / count, y + size[1] / 2, 0], size, 'Pastry', Math.min(.02, size[1] / 2.2));
+    },
   };
 }

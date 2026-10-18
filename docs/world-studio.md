@@ -55,7 +55,11 @@ Shelving is drawn at true size too: thin boards about 36 cm apart over a recesse
 bays at most 0.9 m wide, with folded garments and lidded boxes on some shelves. A few
 variants come from finish and proportions rather than new fields. A cabinet in limestone,
 concrete or terracotta is a solid display plinth. Raised glazing no deeper than 6 cm and
-at least 0.8 m tall is a silvered mirror. The other glazing stays clear glass.
+at least 0.8 m tall is a silvered mirror. Raised glazing deeper than 0.3 m, standing on a
+counter, is a glass display case with a shelf and pastries. The other glazing stays clear
+glass. Tables share the desk family: a 30 mm top on 45 mm legs with aprons, true-size at
+any length. A cabinet, counter or appliance shows its doors and controls on its front, so
+turn a service counter 180° to give customers a closed front.
 
 Space files use `document_type: "studio-space"`, are limited to 128 KiB and 160
 objects, and export as `world-studio-space.json`. Save, reopen, import and undo work
@@ -220,6 +224,10 @@ pnpm run test:experience studio-pilot-assets    # missing, late and replaced-whi
 pnpm run test:experience studio-pilot-a11y      # 320/390 px layouts, keyboard-only use, focus, reduced motion
 node preview/e2e/studio-pilot-perf.mjs          # vsync-off frame times, load and transfer
 ```
+
+`STUDIO_TEMPLATE=house` (or `boutique`, `cafe`) runs the soak and the texture check
+against another template. The texture check then measures a textured floor, because stone
+worktops are plain slabs and Garden Office has no textured surface left.
 
 The soak samples renderer counts from the viewport's `data-render-stats` (the game's
 format plus `programs`) and heap, listeners and DOM nodes from Chromium after a
