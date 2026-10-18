@@ -1,6 +1,7 @@
 // #417 Garden Office performance profile in World Studio, following office-ipic-perf.mjs:
 // vsync and the frame-rate limit are off, so frame intervals measure render cost.
 //   node preview/e2e/studio-pilot-perf.mjs   (writes .runtime/acceptance/perf/receipt.json)
+// STUDIO_TEMPLATE=house (or boutique, cafe) profiles another stock template (#418).
 // Measures cold page load, cold and warm template opens, transfer bytes, then three
 // windows of 180 frames for the overhead whole-scene view and each player-height station.
 import { chromium } from 'playwright';
@@ -9,24 +10,27 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { loadavg } from 'node:os';
 import { startBrowserFixture } from './fixture-server.js';
 import { holdBrowserLock } from '../../scripts/browser-lock.mjs';
+import { createSpace, spaceAssessmentContext, spaceRouteProfile, spaceTemplates } from '../src/studio/space-templates.js';
 
 const OUT = process.env.STUDIO_PERF_OUT ?? '.runtime/acceptance/perf';
 const VIEWPORT = { width: 1440, height: 1000 }, FRAMES = 180, WINDOWS = 3;
-// Same stations as studio-office-stations.js: stand on a profile target, face its role object.
-const STATIONS = [
-  { id: 'CAM-01-entry', at: [0, -8.5], look: [0, 0] },
-  { id: 'CAM-02-reception', at: [0, -4], look: [-4, -4.5] },
-  { id: 'CAM-03-workstation', at: [-2, 1], look: [-5.7, -.4] },
-  { id: 'CAM-04-meeting', at: [3, 1], look: [5, 2.6] },
-  { id: 'CAM-05-kitchenette', at: [-1, 5], look: [-5.2, 5.45] },
-  { id: 'CAM-06-exit', at: [0, -4], look: [0, -8.5] },
-];
+// Stations as in studio-template-stations.js (for the office, the studio-office-stations
+// views): the entry, each profile target facing its role object, and the exit.
+const TEMPLATE = process.env.STUDIO_TEMPLATE ?? 'office', NAME = spaceTemplates.find(t => t.id === TEMPLATE).name;
+const OTHER = spaceTemplates.find(t => t.id === (TEMPLATE === 'office' ? 'house' : 'office')).name;
+const STATIONS = (() => {
+  const stock = createSpace(TEMPLATE), profile = spaceRouteProfile(spaceAssessmentContext(TEMPLATE)), first = profile.targets[0];
+  const role = id => { const item = stock.objects.find(o => o.id === id);return [item.east, item.north]; };
+  return [{ id: 'CAM-01-entry', at: profile.exit, look: first.position },
+    ...profile.targets.map((t, i) => ({ id: `CAM-${String(i + 2).padStart(2, '0')}-${t.label.replace(/\s+/g, '-')}`, at: t.position, look: role(t.objectId) })),
+    { id: `CAM-${String(profile.targets.length + 2).padStart(2, '0')}-exit`, at: first.position, look: profile.exit }];
+})();
 const percentile = (values, p) => { const sorted = [...values].sort((a, b) => a - b); return sorted.length ? +sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * p))].toFixed(2) : null; };
 const git = args => execFileSync('git', args, { encoding: 'utf8' }).trim();
 
-const release = await holdBrowserLock('Studio Garden Office performance profile');
+const release = await holdBrowserLock(`Studio ${NAME} performance profile`);
 let browser, fixture;
-const errors = [], receipt = { createdAt: new Date().toISOString(), source: git(['rev-parse', 'HEAD']), dirty: git(['status', '--short']).split('\n').filter(Boolean),
+const errors = [], receipt = { createdAt: new Date().toISOString(), template: TEMPLATE, source: git(['rev-parse', 'HEAD']), dirty: git(['status', '--short']).split('\n').filter(Boolean),
   load: { start: loadavg().map(value => +value.toFixed(2)) }, method: 'Chromium headless, --use-angle=metal --disable-gpu-vsync --disable-frame-rate-limit, 1440×1000 at DPR 1; rAF intervals, three windows of 180 frames per view' };
 try {
   await mkdir(OUT, { recursive: true });
@@ -45,6 +49,16 @@ try {
   const stats = () => page.evaluate(() => JSON.parse(document.querySelector('#studio-viewport').dataset.renderStats ?? 'null'));
   const settle = () => page.waitForFunction(() => document.body.dataset.studioBusy !== 'true');
   const property = async (name, value) => { const input = page.getByLabel(name, { exact: true });await input.fill(String(value));await input.press('Tab');await settle(); };
+  // Studio refuses an arrival inside furniture; the corner between two stations can be inside it.
+  const placeArrival = async ([east, north]) => {
+    for (const order of [['East (m)', 'North (m)'], ['North (m)', 'East (m)']]) {
+      await page.locator('[data-item="@arrival"]').click();
+      for (const name of order) await property(name, name.startsWith('East') ? east : north);
+      const placed = await Promise.all(['East (m)', 'North (m)'].map(name => page.getByLabel(name, { exact: true }).inputValue()));
+      if (+placed[0] === east && +placed[1] === north) return;
+    }
+    throw Error(`Arrival could not be placed at ${east} E / ${north} N`);
+  };
   const open = async name => {
     const started = Date.now();
     await page.locator('#studio-templates').click();
@@ -75,16 +89,15 @@ try {
   receipt.coldStudioReadyMs = Date.now() - coldStart;
   receipt.renderer = await page.evaluate(() => { const gl = document.createElement('canvas').getContext('webgl2'), info = gl.getExtension('WEBGL_debug_renderer_info');return gl.getParameter(info.UNMASKED_RENDERER_WEBGL); });
   receipt.transferAtReady = await transfer();
-  receipt.coldOpen = await open('Garden Office');
+  receipt.coldOpen = await open(NAME);
   receipt.transferAfterOffice = await transfer();
-  await open('Courtyard House');
-  receipt.warmOpen = await open('Garden Office');
+  await open(OTHER);
+  receipt.warmOpen = await open(NAME);
   receipt.views = {};
   await page.getByRole('button', { name: 'Frame region', exact: true }).click();
   receipt.views['whole-scene-overhead'] = await measure();
   for (const station of STATIONS) {
-    await page.locator('[data-item="@arrival"]').click();
-    await property('East (m)', station.at[0]);await property('North (m)', station.at[1]);
+    await placeArrival(station.at);
     await page.getByRole('button', { name: 'Walk through', exact: true }).click();
     await page.waitForSelector('body[data-mode="walk"]');
     const readout = `${station.at[0].toFixed(1)} E / ${station.at[1].toFixed(1)} N`;

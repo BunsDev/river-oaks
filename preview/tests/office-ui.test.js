@@ -303,7 +303,7 @@ test('an occupied chair shows Seat taken instead of offering to sit',async t=>{
 test('V cycles bounded views that move only the camera; Escape and walking keys return to walking',async t=>{
  const f=setup(t,{layout:'office-penthouse-1'});f.ui.update(6000,.016);await tick();f.find('office-enter').emit('click');await tick();f.ui.update(6100,.016);
  const select=f.find('office-view');assert.equal(select.hidden,false);
- assert.deepEqual(select.children.map(option=>option.value),['','overview','main-floor','workstations','library','terrace']);
+ assert.deepEqual(select.children.map(option=>option.value),['','overview','main-floor','workstations','library','terrace','roof-gardens']);
  const before=[...f.ui.pose.position],moves=()=>f.calls.filter(c=>c.action==='move').length;
  f.find('office-visit').emit('keydown',{code:'KeyV'});f.ui.update(6200,.016);
  assert.deepEqual(f.renders.at(-1)[4],{layoutId:'office-penthouse-1',levelId:'jevica-office/l0',viewId:'overview'});assert.equal(select.value,'overview');
@@ -317,7 +317,8 @@ test('V cycles bounded views that move only the camera; Escape and walking keys 
  f.find('office-visit').emit('keydown',{code:'KeyW'});f.ui.update(8100,.1);f.ui.update(8400,.1);await tick();f.find('office-visit').emit('keyup',{code:'KeyW'});
  assert.equal(f.renders.at(-1)[4].viewId,undefined,'a walking key returns to walking');assert.ok(f.ui.pose.position[2]<before[2],'and walks');
  for(let i=0;i<5;i++)f.find('office-visit').emit('keydown',{code:'KeyV'});f.ui.update(8600,.016);assert.equal(f.renders.at(-1)[4].viewId,'terrace');
- f.find('office-visit').emit('keydown',{code:'KeyV'});f.ui.update(8700,.016);assert.equal(f.renders.at(-1)[4].viewId,undefined,'the cycle ends back at walking');
+ f.find('office-visit').emit('keydown',{code:'KeyV'});f.ui.update(8700,.016);assert.equal(f.renders.at(-1)[4].viewId,'roof-gardens','V reaches the roof outlook');
+ f.find('office-visit').emit('keydown',{code:'KeyV'});f.ui.update(8750,.016);assert.equal(f.renders.at(-1)[4].viewId,undefined,'the cycle ends back at walking');
  f.find('office-visit').emit('keydown',{code:'KeyV'});f.ui.update(8800,.016);
  f.find('office-exit').emit('click');await tick();await tick();assert.equal(f.ui.active,false);
  f.find('office-enter').emit('click');await tick();f.ui.update(9000,.016);assert.equal(f.renders.at(-1)[4].viewId,undefined,'a new visit starts walking');

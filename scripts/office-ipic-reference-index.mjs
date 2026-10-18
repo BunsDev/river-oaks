@@ -11,6 +11,7 @@ import { homedir } from 'node:os';
 import { basename, join, relative, resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
+import { OFFICE_LAYOUT_PENTHOUSE, officeLayout } from '../preview/src/office-layouts.js';
 
 export const PACKET = 'office-ipic';
 export const SCHEMA_VERSION = 1;
@@ -184,6 +185,76 @@ export function buildAssetManifest({ root, kitDir, entries, sourceRevision, now 
   return { packet: PACKET, schemaVersion: SCHEMA_VERSION, sourceRevision, reconciledAt: now.toISOString().replace(/\.\d{3}Z$/, 'Z'), threeAxes: THREE_AXES, counts: countBy(assets, a => `${a.source}:${a.kind}`), assets };
 }
 
+// #362's asset package (assets/office-penthouse/): Jevica's penthouse furnishings, original art
+// exported from their JS master by scripts/export-office-penthouse.mjs. The entries keep this
+// manifest's fields (id, kind, source, file, bytes, sha256, triangles, meshNodes, bounds, axes,
+// stage, targetDimensions, lod0Target, availability, note) and add the package's own: version,
+// programme, status, pivot, lods, materials, textures, collision, anchors, placements, the plan
+// they were built against (layout, layoutVersion, planDigest), provenance, license and owner.
+export const PENTHOUSE_PACKAGE = 'assets/office-penthouse';
+// Provisional per-asset LOD0 cap: the kit's largest per-asset target, not an accepted hardware limit.
+export const PENTHOUSE_LOD0_TARGET = 12000;
+const PENTHOUSE_PROVENANCE = 'Original procedural geometry and seeded-noise surfaces authored in preview/src/office-penthouse-furnishings.js for #362. No kit art or kit bytes: the desk footprints are the kit\u2019s measured colliders as numbers only (R19, Val, 2026-10-15). No generated or purchased imagery.';
+// The plan numbers the art stands on: floors, desk and furniture footprints, chairs, seats and the
+// stations whose displays it draws. A change to any of them makes the package stale until it is
+// re-exported; other plan edits (routes, views, portals) do not.
+export function penthousePlanDigest(layout = officeLayout(OFFICE_LAYOUT_PENTHOUSE)) {
+  const plan = {
+    levels: layout.levels.map(({ id, floorElevation, clearHeight, bounds, obstacles, chairs }) => ({ id, floorElevation, clearHeight, bounds, chairs, obstacles: obstacles.filter(o => o.kind === 'desk' || o.kind === 'furniture') })),
+    seats: layout.seats, stations: layout.anchors.filter(anchor => anchor.monitors).map(({ id, seat, monitors }) => ({ id, seat, monitors })),
+  };
+  return createHash('sha256').update(JSON.stringify(plan)).digest('hex');
+}
+const round = v => Math.round(v * 1e4) / 1e4;
+export async function penthousePackageAssets({ root }) {
+  const { PENTHOUSE_ASSETS, PENTHOUSE_FINISHES, PENTHOUSE_FURNISHINGS_VERSION, PENTHOUSE_SURFACE_SIZE, penthouseAssetParts, penthousePlacements } = await import('../preview/src/office-penthouse-furnishings.js');
+  const dir = join(root, PENTHOUSE_PACKAGE), read = name => JSON.parse(readFileSync(join(dir, name), 'utf8'));
+  const receipt = read('export.json'), blender = existsSync(join(dir, 'blender.json')) ? read('blender.json') : null;
+  const camera = JSON.parse(readFileSync(join(root, 'docs/design/office-ipic/camera-manifest.json'), 'utf8'));
+  const layout = officeLayout(OFFICE_LAYOUT_PENTHOUSE), placements = penthousePlacements(layout), planDigest = penthousePlanDigest(layout);
+  const exported = new Map(receipt.exports.map(e => [e.file, e]));
+  const shared = { source: 'repo', reference: null, axes: THREE_AXES, availability: 'committed', package: 'office-penthouse', version: PENTHOUSE_FURNISHINGS_VERSION,
+    layout: OFFICE_LAYOUT_PENTHOUSE, layoutVersion: camera.layoutVersion, planDigest, provenance: PENTHOUSE_PROVENANCE, license: 'Original work for this repository; no separate license file (the repository has none)', owner: 'design: river-oaks-1b (#362); integration: preview/src/office-penthouse-graybox.js' };
+  const file = path => { const e = exported.get(path); if (!e) throw new Error(`${path} is not in export.json`); return { file: path, bytes: e.bytes, sha256: e.sha256, reimport: e.reimport ?? null }; };
+  const assets = [];
+  for (const asset of PENTHOUSE_ASSETS) {
+    const lods = [0, 1].map(level => { const parts = penthouseAssetParts(asset.id, level); const triangles = parts.reduce((n, p) => n + p.geometry.attributes.position.count / 3, 0); return { parts, triangles }; });
+    const box = { min: [Infinity, Infinity, Infinity], max: [-Infinity, -Infinity, -Infinity] };
+    for (const part of lods[0].parts) { const b = part.geometry.boundingBox; ['x', 'y', 'z'].forEach((k, i) => { box.min[i] = Math.min(box.min[i], b.min[k]); box.max[i] = Math.max(box.max[i], b.max[k]); }); }
+    const finishes = [...new Set(lods[0].parts.map(p => p.finish))].sort(), where = placements.filter(p => p.asset === asset.id);
+    for (const lod of lods) for (const part of lod.parts) part.geometry.dispose();
+    assets.push({ id: `repo-penthouse-${asset.id}`, kind: 'model', ...file(`${PENTHOUSE_PACKAGE}/models/${asset.id}.glb`), ...shared,
+      triangles: lods[0].triangles, meshNodes: lods[0].parts.length, bounds: [box.min.map(round), box.max.map(round)], stage: 'asset-package',
+      targetDimensions: `${asset.size.join(' \u00d7 ')} m (x \u00d7 d \u00d7 h)`, lod0Target: PENTHOUSE_LOD0_TARGET,
+      note: asset.label, programme: asset.programme, status: 'proposed: original art awaiting design review',
+      pivot: asset.id === 'pendant' ? 'drum centre' : ['arrival-cladding', 'back-panelling', 'library-panel'].includes(asset.id) ? 'wall face at floor level, front +d' : 'centre of the floor footprint at floor contact; front +d (seating) or toward -d (displays)',
+      lods: lods.map((lod, level) => ({ level, node: `LOD${level}`, triangles: lod.triangles })),
+      materials: finishes, textures: finishes.filter(f => PENTHOUSE_FINISHES[f].surface).map(f => ({ id: `repo-penthouse-texture-${PENTHOUSE_FINISHES[f].surface}`, colorSpace: 'sRGB', size: [PENTHOUSE_SURFACE_SIZE, PENTHOUSE_SURFACE_SIZE], tileMetres: PENTHOUSE_FINISHES[f].tile })),
+      collision: { proxy: `COL_${asset.id}`, plan: where.filter(p => /^(obstacle|chair):/.test(p.zone)).map(p => p.zone) },
+      anchors: asset.anchors, seatHeight: asset.seatHeight, placements: where.map(p => p.id) });
+  }
+  const scene = file(`${PENTHOUSE_PACKAGE}/office-penthouse.glb`);
+  assets.push({ id: 'repo-penthouse-office-penthouse-glb', kind: 'model', ...scene, ...shared, triangles: scene.reimport?.triangles ?? null, meshNodes: scene.reimport?.meshes ?? null,
+    bounds: scene.reimport?.bounds?.map(v => v.map(round)) ?? null, stage: 'asset-package', targetDimensions: '38 \u00d7 20 \u00d7 7.6 m (main floor, terrace, mezzanine)', lod0Target: null,
+    note: 'The placed office: shell and every furnishing as its own named node, COL_<id> collision proxies on the plan footprints, SEAT and SCREEN anchors, the lamps as punctual lights', status: 'proposed: original art awaiting design review', pivot: 'office origin: the entrance centre at floor level' });
+  if (blender) {
+    const path = `${PENTHOUSE_PACKAGE}/office-penthouse.blend`, full = join(root, path);
+    if (existsSync(full)) assets.push({ id: 'repo-penthouse-office-penthouse-blend', kind: 'model', file: path, bytes: statSync(full).size, sha256: sha256(full), ...shared, axes: 'Blender Z up; +Y = d (into the office)',
+      triangles: blender.triangles, meshNodes: blender.meshes, bounds: null, stage: 'editable-source', targetDimensions: null, lod0Target: null,
+      note: `Editable Blender project imported from the placed GLB (${blender.blender}); collections per visibility group, COL_ proxies wire-only, review cameras O1-O4`, status: 'proposed: original art awaiting design review', pivot: 'office origin' });
+  }
+  for (const name of ['travertine', 'rose-stone', 'wood']) assets.push({ id: `repo-penthouse-texture-${name}`, kind: 'texture', ...file(`${PENTHOUSE_PACKAGE}/textures/${name}.jpg`), ...shared, axes: null,
+    colorSpace: 'sRGB', size: [PENTHOUSE_SURFACE_SIZE, PENTHOUSE_SURFACE_SIZE], note: `Shared ${name} surface: seeded tileable noise, JPEG, embedded in the GLBs` });
+  const materials = join(root, PENTHOUSE_PACKAGE, 'materials.json');
+  assets.push({ id: 'repo-penthouse-materials', kind: 'data', file: `${PENTHOUSE_PACKAGE}/materials.json`, bytes: statSync(materials).size, sha256: sha256(materials), ...shared, axes: null, note: 'One material per finish with its PBR parameters, tint rule and surface' });
+  return assets;
+}
+// Replaces the manifest's penthouse package entries, leaving the packet's own entries untouched.
+export function withPenthousePackage(manifest, assets) {
+  const kept = manifest.assets.filter(a => a.package !== 'office-penthouse'), all = [...kept, ...assets];
+  return { ...manifest, counts: countBy(all, a => `${a.source}:${a.kind}`), assets: all };
+}
+
 // Validation is behavioural: it reads the files the packet points at. It
 // returns hard problems (the packet is wrong) separately from drift (the
 // repository moved on since the packet was reconciled), so a later edit to a
@@ -254,7 +325,17 @@ export function validateAssetManifest(manifest, { root, referenceIndex }) {
     if (a.source === 'repo' && a.file && !a.count) {
       const full = join(root, a.file);
       if (!existsSync(full)) problems.push(`${tag}: ${a.file} is not in the repository`);
-      else if (a.sha256 && sha256(full) !== a.sha256) drift.push(`${tag}: ${a.file} changed since ${manifest.sourceRevision.slice(0, 7)}`);
+      // The penthouse package is exported and recorded together, so a mismatch is a stale record.
+      else if (a.sha256 && sha256(full) !== a.sha256) (a.package === 'office-penthouse' ? problems : drift).push(`${tag}: ${a.file} ${a.package === 'office-penthouse' ? 'differs from its recorded hash; re-export and rerun --write-penthouse' : `changed since ${manifest.sourceRevision.slice(0, 7)}`}`);
+    }
+    if (a.package === 'office-penthouse') {
+      if (a.layout !== OFFICE_LAYOUT_PENTHOUSE || a.planDigest !== penthousePlanDigest()) problems.push(`${tag}: built for another plan; re-export the package`);
+      if (a.kind === 'model' && a.stage === 'asset-package' && a.lods) {
+        if (!Number.isInteger(a.triangles) || a.triangles > a.lod0Target) problems.push(`${tag}: ${a.triangles} triangles exceed the LOD0 target ${a.lod0Target}`);
+        if (a.lods.length !== 2 || a.lods[1].triangles > a.lods[0].triangles) problems.push(`${tag}: LOD1 must not exceed LOD0`);
+        if (!a.collision?.proxy?.startsWith('COL_')) problems.push(`${tag}: no collision proxy`);
+      }
+      if (a.reimport?.missingTextures?.length) problems.push(`${tag}: textures missing on reimport`);
     }
   }
   return { problems, drift };
@@ -268,7 +349,7 @@ export function readPacket(dir) {
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   const args = process.argv.slice(2), values = {}, flags = new Set();
   for (let i = 0; i < args.length; i++) {
-    if (['--write', '--check'].includes(args[i])) { flags.add(args[i]); continue; }
+    if (['--write', '--check', '--write-penthouse'].includes(args[i])) { flags.add(args[i]); continue; }
     if (!['--repo', '--kit', '--scale-review', '--loose', '--out', '--revision'].includes(args[i]) || !args[i + 1]) throw new Error('Usage: office-ipic-reference-index [--check] [--write --kit <dir> --scale-review <dir> [--loose <file>]... [--revision <sha>]] [--repo <root>] [--out <dir>]');
     if (args[i] === '--loose') (values.loose ??= []).push(untilde(args[i + 1])); else values[args[i]] = args[i + 1];
     i++;
@@ -280,6 +361,11 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
     writeFileSync(join(out, 'reference-index.json'), JSON.stringify(packet.referenceIndex, null, 2) + '\n');
     writeFileSync(join(out, 'asset-manifest.json'), JSON.stringify(packet.assetManifest, null, 2) + '\n');
     process.stdout.write(`wrote ${packet.referenceIndex.entries.length} references and ${packet.assetManifest.assets.length} assets at ${sourceRevision.slice(0, 7)}\n`);
+  }
+  if (flags.has('--write-penthouse')) {
+    const assets = await penthousePackageAssets({ root }), current = readPacket(out).assetManifest;
+    writeFileSync(join(out, 'asset-manifest.json'), JSON.stringify(withPenthousePackage(current, assets), null, 2) + '\n');
+    process.stdout.write(`wrote ${assets.length} penthouse package entries\n`);
   }
   const { referenceIndex, assetManifest } = readPacket(out);
   const a = validateReferenceIndex(referenceIndex, { root }), b = validateAssetManifest(assetManifest, { root, referenceIndex });

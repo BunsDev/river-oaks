@@ -129,4 +129,3 @@ for (const handover of [true, false]) test(`memory: voice ${handover ? 'carries 
     assert.equal(livekit.called('removeParticipant').length, 1, 'the participant was removed');
   }
 });
-

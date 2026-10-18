@@ -1,10 +1,14 @@
 async page => {
   // #417 resource soak for the Garden Office pilot: one warm-up cycle plus ten more
-  // (or STUDIO_SOAK_CYCLES).
-  // Each cycle opens Garden Office, walks it, returns to the editor and replaces it with
-  // Courtyard House so the office scene is disposed. Samples follow a forced garbage
-  // collection: renderer counts from the viewport's render stats, and JS heap, event
-  // listeners and DOM nodes from Chromium's Performance domain.
+  // (or STUDIO_SOAK_CYCLES). STUDIO_TEMPLATE soaks another stock template (#418).
+  // Each cycle opens the template, walks it, returns to the editor and replaces it with
+  // another template (Courtyard House, or Garden Office when soaking House) so the scene
+  // is disposed. Samples follow a forced garbage collection: renderer counts from the
+  // viewport's render stats, and JS heap, event listeners and DOM nodes from Chromium's
+  // Performance domain.
+  const NAMES = { house: 'Courtyard House', office: 'Garden Office', boutique: 'Atelier Boutique', cafe: 'Corner Café' };
+  const templateId = process.env.STUDIO_TEMPLATE ?? 'office', subject = NAMES[templateId], other = templateId === 'house' ? NAMES.office : NAMES.house;
+  if (!subject) throw Error(`Unknown template ${templateId}`);
   const origin = 'http://127.0.0.1:5173', errors = [], cycles = [];
   page.on('pageerror', error => errors.push(error.message));
   page.on('dialog', dialog => dialog.accept());
@@ -55,15 +59,16 @@ async page => {
   };
   for (let cycle = 0; cycle <= total; cycle++) {
     const started = Date.now();
-    await open('Garden Office');
+    await open(subject);
     await page.locator('#studio-assessment-status').filter({ hasText: 'Required routes passed' }).waitFor();
     await walk();
-    const office = await sample();
-    await open('Courtyard House');
+    const opened = await sample();
+    await open(other);
     const replaced = await sample();
-    cycles.push({ cycle, warmUp: cycle === 0, seconds: (Date.now() - started) / 1000, office, replaced });
+    // `office` keeps the #417 receipt field name for the soaked template's sample.
+    cycles.push({ cycle, warmUp: cycle === 0, seconds: (Date.now() - started) / 1000, office: opened, replaced });
     if (snapshotAt.has(cycle)) await snapshot(cycle);
   }
   if (errors.length) throw Error(`Page errors: ${errors.join('; ')}`);
-  return { passed: true, cycles };
+  return { passed: true, templateId, cycles };
 }

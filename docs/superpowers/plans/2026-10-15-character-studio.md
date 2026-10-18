@@ -393,3 +393,22 @@ server598 pass/153 Redis skips, desktop69, Python141/66 warnings. Build, lint,
 format, demo expected-status and secrets passed. Receipt:
 `.runtime/character-studio/pose-core.json`. No Redis/full gate, physical device,
 human accessibility, pinned-golden or production acceptance is claimed.
+
+## Takeover for #440 (claude:river-oaks-1b, 2026-10-18)
+- **Ownership.** Val chose on 2026-10-18 to have this session take over #440 and #457. #461, #462 and #464 stay with Codex.
+  - The handoff is recorded on the live register task `character-studio-contract-20261015`, from `codex-character-studio-20261015`.
+  - Codex thread `01a14128` has been idle since 2026-10-18T01:38Z, and its #457 lease expired 2026-10-16T06:12Z.
+- **Rebase onto main.** `origin/main` (`c17f9f1c`, 83 commits ahead) was merged in with a signed merge, with no force-push and no rewrite, so the stacked drafts stay valid.
+  - Main had not changed any character GLB or the appearance catalog. Its only change in this PR's files was an unrelated `platform` argument in `player-avatar.js`.
+  - The PR no longer carries register or plans-index edits (main's copies kept), so a register change on `main` cannot make it dirty.
+- **Research.** No completed Character Studio report exists on this machine; only its prompt does (`4a4334e4…`). The prompt's ten sections are reconciled against code evidence in `docs/character-studio.md`.
+- **Handoff.** `docs/character-studio.md` now holds a handoff for #441–#443: the contract seam, extension rules and persistence requirements.
+- **Checks on the merged head:**
+  - `node --test preview/tests/character-definition.test.js preview/tests/beast-forms.test.js`: 14/14.
+  - `pnpm run test:experience character-contract player-forms beast-movement`: passed, with 4, 139 and 17 checks.
+- **Rendered baseline, unchanged:** human 16.7/33.3 ms and fox 16.7/33.4 ms (p50/p95, whole world at 1440×1000). Both captures were inspected.
+- The runner's tracked `data/reports/experience.json` rewrite was restored, not committed.
+- **`pnpm run verify` (core) on the merged head (receipt 2026-10-18T04:27:44Z): passed, all 11 steps.** Agent 116, preview 3398 (1 skip), server 599 (154 Redis skips), desktop 76, build, Python lint, format and tests, demo and secrets.
+  - A first run failed only `desktop/tests/sign.test.js`, with `Cannot find package '@electron/osx-sign'`.
+  - The worktree had been installed at #457's old base, before `main` added that dependency. A `pnpm install --frozen-lockfile` fixed it; it was not a code defect.
+- **Next:** Val's review of #457. Landing is not authorized yet.

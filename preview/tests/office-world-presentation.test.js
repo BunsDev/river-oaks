@@ -158,3 +158,8 @@ test('a view moves the camera to its fixed eye inside the office and shows the v
   visit.render(48,[3.65,3.55],0,[],place);
   near(new THREE.Vector3(...visit.inspect().camera.position),new THREE.Vector3(...walking),'leaving the view restores the walking camera');
 });
+test('opening live exterior restores only layers hidden by the cabin lease',()=>{
+ const f=fixture(),off=new THREE.Group();off.visible=false;f.scene.add(off);const lease=borrowOfficePresentation(f.street);
+ lease.inside(true);assert.equal(f.district.visible,false);lease.inside(false);assert.equal(f.district.visible,true);assert.equal(off.visible,false);
+ lease.render();assert.equal(f.district.visible,true);lease.dispose();
+});

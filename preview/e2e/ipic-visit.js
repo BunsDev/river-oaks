@@ -1,5 +1,6 @@
 async page => {
   const { openHudSpace } = await import('./hud-navigation.js');
+  const { ipicFloor } = await import('../src/ipic-plan.js');
   const check = (ok, message) => { if (!ok) throw new Error(message); };
   const errors = [], checks = [];
   page.on('pageerror', error => errors.push(error.message));
@@ -39,8 +40,9 @@ async page => {
   const atDoor = await hud();
   check(/Step outside/.test(atDoor.exit ?? ''), `Step outside is offered in reception: ${JSON.stringify(atDoor)}`);
   // Between the rows, beside recliners 0-1 and 1-1 (the T3 seat), as the screening journeys stand.
-  for (const p of [[-1.4,4.8],[-1.4,20.7],[-5.55,20.7],[-5.55,24.7],[-4.85,24.7],[-4.85,29],[-4.85,29.65],[-1.6,29.65]]) await walk(...p);
-  const top = await pose(); check(Math.abs(top.ground - plan.floor - 6) < .01, 'Shared player reached the upstairs auditorium');
+  for (const p of [[-1.4,4.8],[-1.4,20.7],[-1.4,24.5],[-4.85,24.5],[-4.85,29],[-4.85,29.65],[-1.6,29.65]]) await walk(...p);
+  // The walk ends on the back row's riser (P15), 0.4 m over the front row's floor.
+  const top = await pose(); check(Math.abs(top.ground - plan.floor - ipicFloor(29.65)) < .01, `Shared player reached the back row's riser in the upstairs auditorium: ${top.ground - plan.floor}`);
   const deep = await hud();
   check(deep.exit === null && deep.inside, `No Step outside in the auditorium: ${JSON.stringify(deep)}`);
   await page.locator('#canvas-host').focus(); await page.keyboard.press('KeyF'); await page.waitForTimeout(1500);
@@ -106,11 +108,12 @@ async page => {
   const stoodHud = await hud();
   check(!stoodHud.theater && stoodHud.dock && stoodHud.chat, `Standing brings the HUD back: ${JSON.stringify(stoodHud)}`);
   checks.push('stood with a tap on Stand up at 390 px; the walking camera returned');
-  // Arms and back box each cushion in, so leave forward past its footrest; the front row then
-  // goes round by the left aisle, since the gaps between its seats are narrower than a body.
+  // Back, arms, base and footrest box each cushion in, so standing puts the sitter in the aisle in
+  // front of the footrest (d + 1.4); the front row then goes round by the left aisle, since the gaps
+  // between its seats are narrower than a body.
   const [row, column] = recliner.slice(-3).split('-').map(Number), a = [-2.6, -.6, 1.4, 3.4][column], d = [28, 31][row];
-  for (const p of [[a, d + .9], ...(row ? [[-4.85, d + .9]] : []), [-4.85, 29.65]]) await walk(...p);
-  for (const p of [[-4.85,29.65],[-4.85,24.7],[-5.55,24.7],[-5.55,20.7],[-1.4,20.7],[-1.4,4.8],[0,1],[0,-1.8]]) await walk(...p);
+  for (const p of [[a, d + 1.4], ...(row ? [[-4.85, d + 1.4]] : []), [-4.85, 29.65]]) await walk(...p);
+  for (const p of [[-4.85,29.65],[-4.85,24.5],[-1.4,24.5],[-1.4,20.7],[-1.4,4.8],[0,1],[0,-1.8]]) await walk(...p);
   check(!(await pose()).roomId, 'Walked back onto the street');
   checks.push('walked downstairs and exited onto street');
   check(!errors.length, errors.join('; '));
