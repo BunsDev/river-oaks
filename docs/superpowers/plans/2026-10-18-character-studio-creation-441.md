@@ -378,6 +378,31 @@ fixture configuration.
 - `character-studio` 44 checks and `player-forms` 139 checks passed
   (`.runtime/cs441/rowan-journeys.json`).
 
+## Merge after the human-only Studio landed (2026-10-18)
+
+- #496 (human-only Character Studio) and #464 merged at 11:53Z. #496 carried
+  this branch through `7705cb25` to `main`, so #484 now adds only `a7d00be0`
+  (Rowan) and `abac94b4` (the chest fallback).
+- `fdefc2bf` merges `main` `153471bc`:
+  - `character-definition.js` takes `main`'s import.
+  - `reference-batching` keeps the human-only list, with Rowan at 6,416 vertices.
+  - Docs status rewritten.
+  - The five morph receipts are regenerated. They match `main`'s byte for byte
+    and every bake passes `--check`.
+- Checks on the merge, under load of 60–220:
+  - Focused tests 26/26.
+  - `pnpm run verify`: agent, build, Ruff, pytest, demo, demo verify (exit 2,
+    as expected) and secrets passed.
+    - Its one preview failure was the penthouse idle-slice timing test (85 ms).
+      Its file passes 15/15 alone.
+    - Server tests passed on rerun (668, 204 Redis skips). The first run had two
+      timing failures.
+    - Desktop tests 76/76 after reinstalling dependencies: `main` added
+      `@electron/osx-sign`.
+  - Journeys `character-studio`, `character-studio-disabled`,
+    `character-studio-paused` and `character-studio-layout` passed. The layout
+    journey passed on rerun; its first run caught the access gate still checking.
+
 ## Gaps and next steps
 
 Not claimed: human keyboard, VoiceOver or novice acceptance (#444 protocol),
