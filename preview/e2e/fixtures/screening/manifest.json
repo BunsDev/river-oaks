@@ -1,0 +1,79 @@
+{
+  "purpose": "Test-only sources for the IPIC screen (#498). Never in SCREENING_MEDIA, never public catalog films.",
+  "provenance": "Synthetic, generated locally by scripts/make-screening-test-sources.mjs with ffmpeg version 9.0.1 Copyright (c) 2000-2026 the FFmpeg developers: lavfi color and drawbox. No footage, audio, artwork or likeness.",
+  "license": "Original synthetic test signal; no third-party content.",
+  "layout": "mid grey field (#808080); 6 px edge in the film’s colour; white box at x 0.25–0.40, black box at x 0.60–0.75, both at y 0.375–0.625 of the frame",
+  "films": [
+    {
+      "id": "test-edge-4x3",
+      "width": 640,
+      "height": 480,
+      "edge": "red",
+      "files": [
+        {
+          "path": "preview/e2e/fixtures/screening/test-edge-4x3.mp4",
+          "src": "/e2e/fixtures/screening/test-edge-4x3.mp4",
+          "type": "video/mp4; codecs=\"avc1.42E01E\"",
+          "bytes": 8002,
+          "sha256": "e80eac33972cc70847ff0db1fc2a207541faac0d418d693b616ba52711a587cc",
+          "durationMs": 4000
+        }
+      ]
+    },
+    {
+      "id": "test-edge-16x9",
+      "width": 1280,
+      "height": 720,
+      "edge": "blue",
+      "files": [
+        {
+          "path": "preview/e2e/fixtures/screening/test-edge-16x9.mp4",
+          "src": "/e2e/fixtures/screening/test-edge-16x9.mp4",
+          "type": "video/mp4; codecs=\"avc1.42E01E\"",
+          "bytes": 15409,
+          "sha256": "16935c12b7f04b9cdd8bed16eabe3168241d153adc8e49182e46d8da1aec9721",
+          "durationMs": 4000
+        }
+      ]
+    },
+    {
+      "id": "test-edge-239",
+      "width": 1280,
+      "height": 536,
+      "edge": "lime",
+      "files": [
+        {
+          "path": "preview/e2e/fixtures/screening/test-edge-239.mp4",
+          "src": "/e2e/fixtures/screening/test-edge-239.mp4",
+          "type": "video/mp4; codecs=\"avc1.42E01E\"",
+          "bytes": 12832,
+          "sha256": "cca86230993adb4a3f432264e835cf4516e7fc923d17b9c5beaf7b7a02068fc8",
+          "durationMs": 4000
+        }
+      ]
+    },
+    {
+      "id": "test-edge-4x1",
+      "width": 1440,
+      "height": 360,
+      "edge": "magenta",
+      "files": [
+        {
+          "path": "preview/e2e/fixtures/screening/test-edge-4x1.mp4",
+          "src": "/e2e/fixtures/screening/test-edge-4x1.mp4",
+          "type": "video/mp4; codecs=\"avc1.42E01E\"",
+          "bytes": 10901,
+          "sha256": "e86119caa155649f206d008d951eb50cc870886789b13a5efa7e99e10d6bf088",
+          "durationMs": 4000
+        }
+      ]
+    }
+  ],
+  "broken": {
+    "path": "preview/e2e/fixtures/screening/test-not-a-film.webm",
+    "src": "/e2e/fixtures/screening/test-not-a-film.webm",
+    "type": "video/webm; codecs=\"vp9\"",
+    "bytes": 2112,
+    "sha256": "3bf352cb3714359d866cb3f24a6d400bf6856d3bc0fc67a304b9c8e19e89be29"
+  }
+}
