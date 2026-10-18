@@ -19,7 +19,7 @@ export const GARDEN_CAMPUS_ID = 'river-oaks-garden-campus';
 // units: suite identities and boundaries. Persisted positions, leases and level
 // state record {id, layout, floors, support, units} and must refuse or relocate
 // on any major mismatch (checkCampusCompatibility).
-export const GARDEN_CAMPUS_VERSIONS = Object.freeze({ schema: 1, layout: '3.0', floors: 1, support: 1, units: 1 });
+export const GARDEN_CAMPUS_VERSIONS = Object.freeze({ schema: 1, layout: '3.1', floors: 1, support: 1, units: 1 });
 
 // Conservative body envelope (preview/src/workplace-room.js AVATAR_ENVELOPE, kept
 // equal by a test) and the clearances derived from it. Remeasured against the
@@ -29,6 +29,10 @@ export const CAMPUS_HEADROOM = 0.3;
 export const CAMPUS_DOOR_WIDTH = 1.7; // 2 x store-rooms DOOR_HALF_WIDTH
 export const CAMPUS_PASSAGE_WIDTH = 1.8; // workplace-room CIRCULATION_WIDTH
 export const CAMPUS_SUITE_MIN_SIDE = 3.0;
+// Where a body stands to use a door or level portal: in front of its face, clear of
+// the face for the body half-width. The server lands a level change on the paired
+// portal and refuses a landing that is not free (world.js level_landing_blocked).
+export const CAMPUS_DOOR_SETBACK = 0.6;
 
 const SOURCE = {
   repository: 'BunsDev/river-oaks', commit: '153471bc2075e0d02e764a97b0a72129d6da5207',
@@ -138,13 +142,14 @@ function towerFloors(tower) {
 // The reserved 5 x 6 m core does not hold a walkable switchback stair as well as
 // the lift and a lobby meeting the 3 m spur (see CORE_DECISION), so stairs are
 // level-change portals, as in generated interiors, and the lift is the step-free route.
+// Each shaft door is on the lobby face; its portal is where a body stands in front of it.
 function coreParts(tower) {
-  const [u0, v0, u1, v1] = tower.core;
+  const [u0, v0, u1, v1] = tower.core, liftV = v0 + 1.3, stairV = (v0 + 2.6 + v1) / 2;
   return {
     rect: [...tower.core],
     lobby: { id: `${tower.id}-core-lobby`, rect: [11, v0, u1, v1], access: 'public' },
-    lift: { id: `${tower.id}-lift`, rect: [u0, v0, 11, v0 + 2.6], portal: [11, v0 + 1.3], kind: 'lift' },
-    stair: { id: `${tower.id}-stair`, rect: [u0, v0 + 2.6, 11, v1], portal: [11, (v0 + 2.6 + v1) / 2], kind: 'stairs', walkable: false },
+    lift: { id: `${tower.id}-lift`, rect: [u0, v0, 11, v0 + 2.6], door: [11, liftV], portal: [11 + CAMPUS_DOOR_SETBACK, liftV], kind: 'lift' },
+    stair: { id: `${tower.id}-stair`, rect: [u0, v0 + 2.6, 11, v1], door: [11, stairV], portal: [11 + CAMPUS_DOOR_SETBACK, stairV], kind: 'stairs', walkable: false },
   };
 }
 export const CORE_DECISION = Object.freeze({
@@ -186,7 +191,7 @@ function floorUnits(floor, tower, spine, passage) {
     const [s0, s1] = [Math.max(v0, spine.rect[1]), Math.min(v1, spine.rect[3])];
     if (s1 - s0 < CAMPUS_DOOR_WIDTH) { residual.push({ id: `${floor.id}-${candidate.side}`, rect: [...candidate.rect], reason: 'no door-width contact with public circulation' });continue; }
     const doorU = candidate.doorEdge === 'east' ? u1 : u0, doorV = round((s0 + s1) / 2);
-    const inward = candidate.doorEdge === 'east' ? -0.6 : 0.6;
+    const inward = candidate.doorEdge === 'east' ? -CAMPUS_DOOR_SETBACK : CAMPUS_DOOR_SETBACK;
     const desk = [round((u0 + u1) / 2), round((v0 + v1) / 2)];
     suites.push({ id: `${floor.id}-${candidate.side}`, number: `${tower.id}-${floor.level}${String(n++).padStart(2, '0')}`, tower: tower.id, level: floor.level, z: floor.z0,
       rect: [...candidate.rect], netArea: area(candidate.rect), access: 'private-suite',
@@ -201,7 +206,8 @@ function buildLayout() {
     const floors = towerFloors(tower), top = floors.at(-1), roofZ = top.z1;
     const core = coreParts(tower), headhouseTop = roofZ + ROOF_HEADHOUSE_HEIGHT;
     const roof = { id: `${tower.id}-roof`, z: roofZ, rect: [...top.rect], parapetTop: roofZ + PARAPET, access: 'public', use: 'planted shared roof garden',
-      headhouse: { id: `${tower.id}-headhouse`, rect: [...tower.core], z0: roofZ, z1: headhouseTop, door: [tower.core[2], (tower.core[1] + tower.core[3]) / 2] },
+      headhouse: { id: `${tower.id}-headhouse`, rect: [...tower.core], z0: roofZ, z1: headhouseTop, door: [tower.core[2], (tower.core[1] + tower.core[3]) / 2],
+        landing: [tower.core[2] + CAMPUS_DOOR_SETBACK, (tower.core[1] + tower.core[3]) / 2] },
       planting: { beds: [{ id: `${tower.id}-roof-bed-west`, rect: [top.rect[0] + ROOF_EDGE_ZONE, top.rect[1] + ROOF_EDGE_ZONE, top.rect[0] + ROOF_EDGE_ZONE + PLANTING.roofBedWidth, top.rect[3] - ROOF_EDGE_ZONE] }], maxTop: tower.capZ } };
     const levels = floors.map(floor => {
       const spine = floor.level === 1 ? null : spineFor(floor, tower);
@@ -325,6 +331,14 @@ function sharedEdge(a, b) {
   if (Math.abs(dv) < EPS && du > EPS) return du;
   return du > EPS && dv > EPS ? Math.min(du, dv) : 0;
 }
+// An opening of `width` centred at (u, v) lies on the edge two touching rects share.
+function onSharedEdge(a, b, [u, v], width) {
+  const du = Math.min(a[2], b[2]) - Math.max(a[0], b[0]), dv = Math.min(a[3], b[3]) - Math.max(a[1], b[1]);
+  const within = (at, line, centre, lo, hi) => Math.abs(at - line) < EPS && centre - width / 2 >= lo - EPS && centre + width / 2 <= hi + EPS;
+  if (Math.abs(du) < EPS && dv > EPS) return within(u, Math.max(a[0], b[0]), v, Math.max(a[1], b[1]), Math.min(a[3], b[3]));
+  if (Math.abs(dv) < EPS && du > EPS) return within(v, Math.max(a[1], b[1]), u, Math.max(a[0], b[0]), Math.min(a[2], b[2]));
+  return false;
+}
 
 // ---- Levels, surfaces and support (#508 consumes this) ----------------------
 // Campus levels are keyed by elevation across all three towers (agreed with the
@@ -394,8 +408,9 @@ export function campusLevels(layout = GARDEN_CAMPUS_LAYOUT) {
       for (const part of [tower.core.lift, tower.core.stair]) {
         const kind = part.kind, up = { id: `${floor.id}/${kind}-up`, kind, tower: tower.id, position: [...part.portal], toLevel: campusLevelId(toZ), toPortal: `${toFloor}/${kind}-down` };
         level.portals.push(up);
-        // Roof access emerges through the headhouse; without one there is no roof portal.
-        const arrive = next ? [...part.portal] : tower.roof.headhouse ? [...tower.roof.headhouse.door] : null;
+        // Roof access emerges through the headhouse door onto the landing outside it;
+        // without a headhouse there is no roof portal.
+        const arrive = next ? [...part.portal] : tower.roof.headhouse ? [...tower.roof.headhouse.landing] : null;
         if (!arrive) { level.portals.pop();continue; }
         at(toZ).portals.push({ id: `${toFloor}/${kind}-down`, kind, tower: tower.id, position: arrive, toLevel: level.id, toPortal: up.id });
       }
@@ -444,14 +459,22 @@ const span = surface => surface.rect ? (surface.rect[2] - surface.rect[0]) * (su
 // (inside a shaft, guard or planter, or off the level). There is deliberately no
 // lookup that returns the highest surface at a point.
 export function campusSupportAt(levelId, u, v, layout = GARDEN_CAMPUS_LAYOUT) {
-  const level = campusLevels(layout).find(item => item.id === levelId);
-  if (!level || !Number.isFinite(u) || !Number.isFinite(v) || insideObstacle(level, [u, v])) return null;
-  const surface = level.surfaces.filter(item => surfaceCovers(item, [u, v])).sort((a, b) => span(a) - span(b) || a.id.localeCompare(b.id))[0];
-  return surface ? { surfaceId: surface.id, kind: surface.kind, z: level.z, access: surface.access, levelId } : null;
+  const level = levelsFor(layout).find(item => item.id === levelId);
+  return level ? supportOn(level, u, v) : null;
 }
+// An authority asks for support on every step: the frozen published layout keeps one
+// private copy of its levels; any other layout is rebuilt, since callers edit clones.
+let publishedLevels = null;
+const levelsFor = layout => layout === GARDEN_CAMPUS_LAYOUT ? (publishedLevels ??= campusLevels(layout)) : campusLevels(layout);
+function supportOn(level, u, v) {
+  if (!Number.isFinite(u) || !Number.isFinite(v) || insideObstacle(level, [u, v])) return null;
+  const surface = level.surfaces.filter(item => surfaceCovers(item, [u, v])).sort((a, b) => span(a) - span(b) || a.id.localeCompare(b.id))[0];
+  return surface ? { surfaceId: surface.id, kind: surface.kind, z: level.z, access: surface.access, levelId: level.id } : null;
+}
+const rectDistance = ([u0, v0, u1, v1], [u, v]) => Math.hypot(Math.max(u0 - u, 0, u - u1), Math.max(v0 - v, 0, v - v1));
 // Every level that has a surface at (u, v): what is stacked here, lowest first.
 export function campusSurfacesAt(u, v, layout = GARDEN_CAMPUS_LAYOUT) {
-  return campusLevels(layout).map(level => campusSupportAt(level.id, u, v, layout)).filter(Boolean);
+  return levelsFor(layout).map(level => supportOn(level, u, v)).filter(Boolean);
 }
 
 // ---- Connection graph -------------------------------------------------------
@@ -494,9 +517,8 @@ export function campusGraph(layout = GARDEN_CAMPUS_LAYOUT) {
       edge(landing.id, portal.id, 'walk', portal.width);edge(portal.id, bridge.id, 'walk', portal.width);
     }
   }
-  // B12 lands on T2's z 13 terrace before the facade: a same-level junction.
-  for (const bridge of layout.bridges) for (const tower of layout.towers) for (const terrace of tower.terraces)
-    if (terrace.z === bridge.deckZ && terrace.parts.some(part => rectsOverlap(part, bridge.rect))) edge(bridge.id, terrace.id, 'walk', bridge.clearWidth);
+  // B12 crosses T2's z 13 terrace (v 90-93) inside its own edge guards, so the deck
+  // and that terrace do not join sideways: the terrace is reached by its door.
   return { nodes, edges };
 }
 export function campusRoute(from, to, { publicOnly = true, layout = GARDEN_CAMPUS_LAYOUT, walkOnly = false } = {}) {
@@ -657,8 +679,23 @@ export function validateGardenCampus(layout = GARDEN_CAMPUS_LAYOUT, { district =
     if (Math.abs(entry.threshold) > 0.1) fail('threshold', entry.id, `threshold ${entry.threshold} m needs a ramp`);
   }
   // Every advertised public roof and terrace is reached by a portal or a door; a
-  // terrace's parts join each other across a passable edge.
+  // terrace's parts join each other across a passable edge. Every door and portal
+  // sits on the boundary it joins, its whole width inside the shared edge, so a
+  // walker crosses a facade or a suite wall only where an opening is published.
+  const zones = new Map([...layout.paths.map(path => [path.id, path.rect]), ...layout.bridges.flatMap(bridge => [[bridge.id, bridge.clear], ...bridge.landings.map(landing => [landing.id, landing.rect])])]);
   for (const level of campusLevels(layout)) {
+    const rectOf = id => level.surfaces.find(item => item.id === id)?.rect ?? zones.get(id);
+    for (const opening of level.openings) {
+      const from = rectOf(opening.from), to = rectOf(opening.to);
+      if (!from || !to || !onSharedEdge(from, to, opening.position, opening.width)) fail('opening', opening.id, `not on the ${opening.from}/${opening.to} boundary across its ${opening.width} m width`);
+    }
+    // A body standing at a level portal, to use it or on arrival, is on public support
+    // and clear of every shaft, guard and planter.
+    for (const portal of level.portals) {
+      const blocking = level.obstacles.find(item => rectDistance(item.rect, portal.position) < CAMPUS_BODY.bodyHalfWidth - EPS);
+      if (supportOn(level, ...portal.position)?.access !== 'public') fail('portal', portal.id, 'portal stands off public support');
+      else if (blocking) fail('portal', portal.id, `a ${CAMPUS_BODY.bodyHalfWidth} m body at the portal overlaps ${blocking.id}`);
+    }
     for (const surface of level.surfaces.filter(item => item.kind === 'roof')) if (!surface.reachedBy.length) fail('reach', surface.id, 'public roof has no lift, stair or door reaching it');
     const terraces = new Map();
     for (const surface of level.surfaces.filter(item => item.kind === 'terrace')) terraces.set(surface.terrace, [...(terraces.get(surface.terrace) ?? []), surface]);
