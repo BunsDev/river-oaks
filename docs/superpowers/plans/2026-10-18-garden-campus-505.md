@@ -76,18 +76,18 @@ due about 15:50Z on `feat/garden-campus-contract-506-20261018`.
   - Every unit door names both the spine it opens from and the suite surface it opens
     into.
 
-## Package ownership and dependencies (as of 2026-10-18 19:00Z)
+## Package ownership and dependencies (as of 2026-10-18 21:15Z)
 
 | Package | Owner / task | Branch → PR | Delivered revision | Status |
 | --- | --- | --- | --- | --- |
-| #506 contract | river-oaks-c5 (1e70822d) / `garden-campus-contract-506` | → #519 (ready) | `3fac6c32`, layout 3.2 | hosted 19/19 green; BEHIND main (needs only an update before landing) |
-| #507 shells + ground | river-oaks-95 / `garden-campus-shells-507` | → #523 (draft, base #519) | `086c197e` (3.2, main `97304fb7`, room summaries) | green at `40aec12a`; `086c197e` fixes the hall-door bug #510's journey found; matched views captured |
-| #508 upper circulation | river-oaks-c5 / `garden-campus-traversal-508` | stacks on #507 `086c197e` | none | **Val started it at ~18:55Z.** c5 begins after its darts/wine-pong PR; first push will freeze the hooks. Slice (b) split to river-oaks-95 (below). |
-| #508 slice (b) | river-oaks-95 / `garden-campus-traversal-views-508b` | `test/garden-campus-traversal-journey-508-20261018`, stacked on c5's #508 branch | none | queued on #508's first push; built against that push's protocol only |
-| #509 leases | river-oaks-95 delegated agent / `garden-campus-leases-509` | → #522 (ready, base #519) | `1d151a8d`, checkpoint v13, `leaseRequestId` | hosted all green, CLEAN |
-| #510 resident journey | river-oaks-95 / `garden-campus-journey-510` | → #527 (draft, base #522) | `465785d2` (merges #507 `086c197e`) | **hosted `garden-campus-office` passed end to end, 21/21 checks** (run 39155567833); 126/126 focused tests; suite entry waits on #508 |
-| #511 finish + rendering | river-oaks-95 delegated agent / `garden-campus-finish-511` | → #528 (draft, base #507) | `6b8c51e6` (merges #507 `40aec12a`; taking `086c197e`) | 67 furnishings drawn once each; matched day/dusk sheets; resources vs garage: street +10% calls / +18% triangles, aerial +3%, +3–5 programs, no rebuild growth (M3 Max) |
-| #512 integration | river-oaks-95 / `garden-campus-acceptance-512` | → #525 (draft candidate) | `ac88b09a` (#507 `086c197e` + #509 `1d151a8d` + #510 `465785d2` + #511 `b73cf65a` + main `97304fb7`) | 175/175 integrated set; hosted `campus` shard passed (run 39155682472) |
+| #506 contract | river-oaks-c5 | #519 | **merged to main `ab0059fc`** (layout 3.2, Val-authorized land) | done |
+| #507 shells + ground | river-oaks-95 / `garden-campus-shells-507` | → #523 (draft, base main) | `3e58f384` (main `ab0059fc` + room summaries + suite walls/doors, opaque near the camera) | 60/60 focused |
+| #508 upper circulation | **river-oaks-95** (Val reassigned ~19:55Z; c5 stood down, no code) / `garden-campus-traversal-508` | → **#537** (draft, base #507) | `75f8e277` | campus floors on the interior-level machinery: lifts and stairs (`toPortal` pairing), facade glass, ceilings, fail-closed suite admission. Traversal 5/5, levels 5/5, transport memory+Redis, regression 154+49 |
+| #508 slice (b) | river-oaks-95 / `garden-campus-traversal-views-508b` | `test/garden-campus-traversal-journey-508-20261018` | `2c650446` | **browser journey passed locally end to end**: keyboard + phone touch, occupied landing, above/below B12, T2 roof, T3 stairs. 14 circulation views on the design plans |
+| #509 leases | river-oaks-d8 landing it (Val asked) | → #522 (base main) | `1d151a8d` + main | d8 is running the core gate, then `pnpm run land 522` |
+| #510 resident journey | river-oaks-95 / `garden-campus-journey-510` | → #527 (draft) | `60ebf88c` (+ #508) | suite seats on #509 leases: door, desk, workstation, eviction to the door landing, restore standing. 190/190. Hosted `garden-campus-office` green; `garden-campus-suite` journey queued locally |
+| #511 finish + rendering | river-oaks-95 (agent finished) / `garden-campus-finish-511` | → #528 (draft, base #507) | `eab230b9` | 39/39 |
+| #512 integration | river-oaks-95 / `garden-campus-acceptance-512` | → #525 (draft candidate) | `7d863b88` (local; #510 + #511 + slice (b)) | integrated suite running |
 
 ### #508 slice (b) plan (river-oaks-95; assigned by Val, agreed with c5)
 
@@ -257,7 +257,17 @@ one `{from:'gardens', to:'garage'}` log. Leases stay inert and desks are untouch
 - Val's visual review of matched views;
 - phone layouts and physical devices, which so far have only width emulation.
 
-## Next action
+## Decisions recorded 2026-10-18 evening
+
+- **Val:** "start #508 in river-oaks-c5"; then "take slice (b) yourself"; then "add the gallery
+  walls yourself, don't wait for c5"; then "Take #508 now" (river-oaks-95 owns #508).
+- **Same owner for #508 and #510**, so the two-owner seat hooks collapse into the existing seat
+  path (`campus-suite:` seats, `campusSit`/`campusStand`). `registerCampusLevelObstacles` is
+  kept for suite furniture.
+- **#509 lands before the rest** (river-oaks-d8, at Val's request). The v13 checkpoint effect
+  was flagged to d8 and Val.
+
+## Next action (superseded below)
 
 1. Get a green hosted `campus` shard on #527 `835c0c44` and #525 `284a5ca3`. The journey
    has not yet passed end to end anywhere, and local browser runs are blocked by machine
