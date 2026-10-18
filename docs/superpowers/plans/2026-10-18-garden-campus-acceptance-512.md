@@ -7,7 +7,7 @@ Parent tracker: #505. This branch becomes the integrated candidate: #507, then t
 
 ## Integrated inputs (by revision)
 
-Candidate code head `f6311e65` (PR #525), base main `97304fb7` (#486 Computer tab included).
+Candidate code head `57a99589` (PR #525), base main `97304fb7` (#486 Computer tab included).
 
 | Package | Revision in this branch | Notes |
 | --- | --- | --- |
@@ -15,8 +15,8 @@ Candidate code head `f6311e65` (PR #525), base main `97304fb7` (#486 Computer ta
 | #507 shells, overlay, gate | `086c197e` | detachGardenCampus restores the garage byte for byte; halls and café carry room summaries |
 | #508 upper circulation | **not yet** | not started; c5's queued goal, which Val starts |
 | #509 leases | `1d151a8d` | checkpoint v13, `payload.campus`, `campusServed`, `leaseRequestId` |
-| #510 resident journey | `5c13cdca` | dialog, fit-out, public workstations, seat rules, `garden-campus-office` journey and its `campus` CI shard |
-| #511 finish and rendering | not yet | `bb8cd938` pushed; PR after its core verify |
+| #510 resident journey | `465785d2` | dialog, fit-out, public workstations, seat rules, `garden-campus-office` journey and its `campus` CI shard |
+| #511 finish and rendering | `b73cf65a` (PR #528) | 67 furnishings drawn once each, storey bands 6/7/6, dusk glow; resources vs garage at street +10% calls / +18% triangles |
 
 ## Cutover and rollback (implemented)
 
@@ -50,11 +50,15 @@ chain:
 | Access loss | partial | #509 revoke/expiry; standing or leaving closes the desk (#510); suite eviction needs #508 |
 | Persistence/cutover | done for street and halls | garage ↔ Gardens recovery, older chain, epoch fence, refusals, Redis coordinator, leases inert across a configuration rollback; campus-level occupants need #508 |
 | Interaction/accessibility | partial | dialog: Escape and focus return, keys do not walk, phone-width containment and 43 px targets (emulated) |
-| Visual/resource | open | #511 |
+| Visual/resource | partial | #511 matched day/dusk sheets and the M3 Max A/B (#528); occupied-suite views need #508; Val's visual review open |
 | Optional Computer/paid mode | not claimed | Computer appears at a workstation exactly where #486 configures it; paid mode needs the #509 business decisions |
 
 ## Evidence
 
+- At `57a99589` (#510 `465785d2` and #511 `b73cf65a` merged), 2026-10-18 18:50Z, load ~60, with
+  an isolated Redis: 175/175. This is the integrated set below plus #511's
+  `garden-campus-finish` and the `shared-population`, `store-rooms`, `venue-rooms` and
+  `walking` suites.
 - At `284a5ca3` (2026-10-18 18:32Z, load ~55), with an isolated Redis
   (`REDIS_URL=redis://127.0.0.1:16507`, `--test-timeout=240000`): 145/145. The set is:
   - `district-gardens-checkpoint-migration` (6), `redis-room` and the tower, levels,
