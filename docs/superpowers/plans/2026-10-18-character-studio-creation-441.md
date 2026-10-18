@@ -214,6 +214,22 @@ passed with 27 checks in 73 s (`.runtime/cs441/worlds-run.json`).
   for each of the five variables, then delete the `river-oaks:preview:cs441:v1*`
   keys if the namespace is retired.
 
+## Round 6: pose matrix of every exposed look (2026-10-18)
+
+- `.runtime/cs441/poses.mjs` captured 22 looks (owner view) × 4 poses: idle
+  front, walk front, walk side (90°) and wave front. The captures came from the
+  Studio's own motion-enabled preview, on the tree with #464 merged through
+  `dd23161f`. 88 captures, 0 page errors. Contact sheets and raw captures:
+  `~/Documents/river-oaks-evidence/cs441-poses-20261018/`.
+- No major visible intersection for Jevica, Sable (human and fox), Rowan,
+  Vesper, Lyra or the four Silvan looks.
+- Open, in the #442 coat lane (reported in #442 comment 6247112528):
+  - Kai's celestial formal and noir coats render as flat rectangular panels and a
+    chest plate.
+  - Aurel's and Kai noir's walking coat backs are one flat sheet with a hard
+    waist edge, and a dark bar stands up behind the shoulder.
+  - No garment code was changed here. #441's pose criterion depends on that fix.
+
 ## Gaps and next steps
 
 Not claimed: human keyboard, VoiceOver or novice acceptance (#444 protocol),
