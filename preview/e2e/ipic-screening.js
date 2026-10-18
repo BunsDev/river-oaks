@@ -222,7 +222,7 @@ async (host, viewer) => {
     };
   });
   check(text.tracks.length === 1 && text.tracks[0] === '/assets/ipic/screening/fixture-v1.en.vtt' && text.transcript && !text.stale, `captions and transcript follow the playing film: ${JSON.stringify(text)}`);
-  checks.push('another film (the fixture, by command) brings its own captions and transcript');
+  checks.push('the film chosen in the chooser (the fixture) brings its own captions and transcript');
 
   await openHudSpace(viewer, 'explore-section');
   const other = await viewer.evaluate(() => [...document.querySelectorAll('#destination option')].map(option => option.textContent).find(label => label && label !== 'IPIC Theaters'));
