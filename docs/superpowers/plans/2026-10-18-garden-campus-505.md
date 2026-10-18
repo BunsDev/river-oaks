@@ -97,9 +97,17 @@ Landing (Val's decision, about 23:20Z):
 | #508 upper circulation | built by river-oaks-95; **river-oaks-d8 lands** / `garden-campus-traversal-508` (claimed by d8) | → **#537** (draft, base #507) | `75f8e277` | lifts and stairs (`toPortal` pairing), facade glass, ceilings, fail-closed suite admission. **d8's review found nothing blocking:** 133/133 (campus, interior-level, store-room, walking and world suites, isolated Redis); suite surface ids equal #509's 43 unit ids; `toPortal` pairing correct. UX note: a lift moves one floor per press |
 | #508 slice (b) | river-oaks-95 / `garden-campus-traversal-views-508b` | `test/garden-campus-traversal-journey-508-20261018` | `2c650446` | **browser journey passed locally end to end**: keyboard + phone touch, occupied landing, above/below B12, T2 roof, T3 stairs. 14 circulation views on the design plans; carried by #525 |
 | #509 leases | river-oaks-d8 | #522 | **merged to main `53fba3fa`** (23:15Z; 20 checks green, tree equal to the head `e7b98e42`) | delivered |
-| #510 resident journey | river-oaks-95 / `garden-campus-journey-510` | → #527 (draft, **base main**) | `8f4a20ac` (main `53fba3fa` + #507 `efb935cf`) | suite seats on #509 leases. Campus suites 80/80 with Redis; **macOS desktop green** at `8f4a20ac`; earlier hosted `garden-campus-suite` 10/10 (job 117798291819). Lands after #537 |
-| #511 finish + rendering | river-oaks-95 (agent-511) / `garden-campus-finish-511` | → #528 (draft, base #507) | `070d588b` (#507 `efb935cf`) | campus, render-audit and remote-player suites 76/76 with Redis. Lands right after #523 |
-| #512 integration | river-oaks-95 / `garden-campus-acceptance-512` | → #525 (draft candidate) | `e9716e46` (#510 `8f4a20ac` + #511 `070d588b`, so every package head and main `53fba3fa`) | 122/122 across 20 campus, interior and render suites with Redis. Previous full Verify green at `0b833b31` (run 39169199120). Lands last |
+| #510 resident journey | river-oaks-95 / `garden-campus-journey-510` | → #527 (draft, **base main**) | `79a5b580` (main `53fba3fa` + #507 `efb935cf` + the dialog fix below) | suite seats on #509 leases. Campus suites 82/82 with Redis. **Hosted at `79a5b580`: `preview` green, `campus` shard green, macOS desktop green.** The desktop job's first attempt failed after every check had passed: the runner's GPU process crashed on its own (`exit_code=6`, context lost), and three.js's 434 stale-object deletes after the restore tripped the console assertion. The rerun passed, and the same change was green on #525. Lands after #537 |
+| #511 finish + rendering | river-oaks-95 (agent-511) / `garden-campus-finish-511` | → #528 (draft, base #507) | `070d588b` (#507 `efb935cf`) | campus, render-audit and remote-player suites 76/76 with Redis. **Hosted `preview` green at `070d588b`.** Lands right after #523 |
+| #512 integration | river-oaks-95 / `garden-campus-acceptance-512` | → #525 (draft candidate) | `fa0e8410` (#510 `79a5b580` + #511 `070d588b`, so every package head and main `53fba3fa`) | 124/124 across 20 campus, interior and render suites with Redis. **Hosted at `fa0e8410`: `preview` green, both `campus` and `campus-traversal` shards green, macOS desktop green.** Lands last |
+
+**Found at candidate `e9716e46`, fixed at its owner (#510 `79a5b580`).** The hosted `campus`
+shard failed `garden-campus-office` at "A request is shown as asked, not admitted" (job
+117820157741). The dialog's `act()` wrote "Asked for suite T1-201." before the directory had
+listed again. On a slow runner the confirmation sat beside a row still showing "Available"
+with its "Ask for this suite" button. `act()` now lists first, then answers. The DOM-double
+regression `preview/tests/garden-campus-dialog.test.js` fails against the old code with the
+CI symptom.
 
 ### #508 slice (b) plan (river-oaks-95; assigned by Val, agreed with c5)
 
@@ -305,11 +313,12 @@ ledger, section "Desktop macOS e2e".
 - #512's candidate runs all three two-account journeys green on hosted CI at `0b833b31`.
 - The gallery walls and suite doors are in, opaque at any camera distance.
 
-## Next action (2026-10-18 23:40Z)
+## Next action (2026-10-19 00:05Z)
 
-1. Hosted CI is running on #527 `8f4a20ac`, #528 `070d588b` and #525 `e9716e46`. When each
-   head's preview shards and macOS desktop job are green, hand its SHA to river-oaks-b5.
-   It won't queue a PR before then, and checks base and head first.
+1. #527 `79a5b580`, #528 `070d588b` and #525 `fa0e8410` are green on hosted CI, but none can
+   be handed to river-oaks-b5 yet. Each needs main merged after its dependency lands, and a
+   fresh green run. b5 won't queue a PR before then, and checks base and head first.
+   d8 has #523 at `58424e5b` and #537 at `fd498463`.
 2. When d8 reports #523's merge SHA:
    - GitHub retargets #528 to main;
    - merge main into #528 and re-run its CI;
