@@ -1,4 +1,4 @@
-import { CHARACTER_ASSETS } from './character-assets.js';
+import { characterAssetFor } from './character-assets.js';
 import { canUseAppearance, permittedAppearance, sharedAppearance } from './shared-appearances.js';
 
 export const CHARACTER_SCHEMA_VERSION = 1;
@@ -16,7 +16,7 @@ export function characterDefinitionFor(ownerId, appearanceId, { revision = 0 } =
     schemaVersion: CHARACTER_SCHEMA_VERSION, ownerId, revision,
     appearanceId: look.id, rig: look.rig ?? look.id, form: look.form,
     parameters: {}, palette: 'authored', hair: 'authored', outfit: look.id,
-    attachments: [], assets: [{ ...CHARACTER_ASSETS[look.rig ?? look.id] }], provenance: { kind: 'authored', catalog: 'river-oaks-looks-v1' },
+    attachments: [], assets: [characterAssetFor(look.rig ?? look.id)], provenance: { kind: 'authored', catalog: 'river-oaks-looks-v1' },
   };
 }
 

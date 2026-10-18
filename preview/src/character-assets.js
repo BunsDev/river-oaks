@@ -19,3 +19,10 @@ export const CHARACTER_ASSETS = Object.freeze({
     "receipt": "/assets/characters/sources.json"
   }
 });
+
+// A definition may only reference a rig pinned above. An unpinned rig is refused
+// rather than published with an empty asset record.
+export function characterAssetFor(rig) {
+  if (typeof rig !== 'string' || !Object.hasOwn(CHARACTER_ASSETS, rig)) throw new TypeError('Unpinned character rig');
+  return { ...CHARACTER_ASSETS[rig] };
+}
