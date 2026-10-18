@@ -11722,6 +11722,28 @@
         "preview/tests/resident-gestures.test.js (throw pose regression)"
       ],
       "pr": 448
+    },
+    {
+      "id": "character-studio-441-integration",
+      "title": "#441 remaining acceptance and validated realistic human integration",
+      "status": "active",
+      "branches": [
+        "docs/character-studio-441-integration-20261018"
+      ],
+      "owner": "codex-441-goal-20261018",
+      "updatedAt": "2026-10-18T18:53:14.310098+00:00",
+      "leaseUntil": "2026-10-18T20:53:14.310098+00:00",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-441-integration",
+      "ledger": "docs/superpowers/plans/2026-10-18-character-studio-441-integration.md",
+      "filesOwned": [
+        "docs/superpowers/plans/2026-10-18-character-studio-441-integration.md"
+      ],
+      "requiredChecks": [
+        "Focused character contract and guide tests",
+        "git diff --check",
+        "project:check against primary live register"
+      ],
+      "nextAction": "Reconcile current acceptance and concrete #517 contract dependency; await genuine P4/P5 results without taking over novice-trial owner or PR504."
     }
   ]
 }
