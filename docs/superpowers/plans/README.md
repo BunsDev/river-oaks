@@ -185,7 +185,7 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-11-delivered-source-retirement](2026-10-11-delivered-source-retirement.md)<br>Delivered source reconciliation | `reconcile-delivered-sources` | retired | — | 2026-10-11 |
 | [2026-10-11-ci-parallel-preview](2026-10-11-ci-parallel-preview.md)<br>Parallel preview check | `ci-parallel-preview` | retired | #252 | 2026-10-11 |
 
-## Historical, not in the register (116)
+## Historical, not in the register (120)
 
 | Plan | PRs mentioned |
 | --- | --- |
@@ -193,7 +193,10 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-18-throw-followups](2026-10-18-throw-followups.md)<br>Throw follow-ups: shuffleboard and axes, sounds, a dart flight | #535, #519 |
 | [2026-10-18-office-computer-embed](2026-10-18-office-computer-embed.md)<br>#486 Office desk: Tasks and Computer (Place side) | #486, #487, #33 |
 | [2026-10-18-ipic-tuck-room-photo](2026-10-18-ipic-tuck-room-photo.md)<br>IPIC Tuck Room from IMG_9756–9757 (photo review P13, P14) | — |
+| [2026-10-18-ipic-screening-viewing](2026-10-18-ipic-screening-viewing.md)<br>IPIC screening: screen-focused viewing, Join screening and truthful sound (#500) | #500, #497, #499 |
+| [2026-10-18-ipic-screening-switching](2026-10-18-ipic-screening-switching.md)<br>IPIC screening: film switching, mattes and source recovery (#498) | #498, #497, #359 |
 | [2026-10-18-ipic-screening-hosted-ci](2026-10-18-ipic-screening-hosted-ci.md)<br>Hosted CI runs the IPIC screening journey | — |
+| [2026-10-18-ipic-screening-chooser](2026-10-18-ipic-screening-chooser.md)<br>IPIC screening: an approved-film chooser for the host (#499) | #499, #497, #498 |
 | [2026-10-18-ipic-reception-photo](2026-10-18-ipic-reception-photo.md)<br>IPIC reception from IMG_9738 (photo review P3, P4, P6) | — |
 | [2026-10-18-ipic-mural-bay](2026-10-18-ipic-mural-bay.md)<br>IPIC: the walled-in mural landing (photo review P18, P2) | — |
 | [2026-10-18-ipic-lounge-photo](2026-10-18-ipic-lounge-photo.md)<br>IPIC lounge from IMG_9752–9758 (photo review P8, P10, P11, P12) | #469 |
@@ -201,6 +204,7 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-18-garden-campus-contract](2026-10-18-garden-campus-contract.md)<br>#506 Garden campus: measured campus, floor and connection contract | #506, #505, #507 |
 | [2026-10-18-creator-street-ground](2026-10-18-creator-street-ground.md)<br>#491: walk across creator-region streets (2026-10-18) | #491, #420, #108 |
 | [2026-10-18-character-studio-creation-441](2026-10-18-character-studio-creation-441.md)<br>Character Studio #441: guided creation flow | #441, #464, #461 |
+| [2026-10-18-avatar-crowd-cost-442](2026-10-18-avatar-crowd-cost-442.md)<br>Avatar crowd cost (#442) | #442, #504, #462 |
 | [2026-10-16-studio-template-acceptance](2026-10-16-studio-template-acceptance.md)<br>#418 acceptance: soak and late/missing textures for every template (2026-10-16) | #418, #417, #466 |
 | [2026-10-16-office-penthouse-art](2026-10-16-office-penthouse-art.md)<br>#362: Jevica's penthouse asset package (original art, exports, reviews) | #362, #473, #359 |
 | [2026-10-16-ipic-short-keyframes](2026-10-16-ipic-short-keyframes.md)<br>IPIC short: a keyframe every second | #365, #368, #447 |
