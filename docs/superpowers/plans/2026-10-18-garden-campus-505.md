@@ -254,6 +254,20 @@ one `{from:'gardens', to:'garage'}` log. Leases stay inert and desks are untouch
 - Val's visual review of the matched views (`docs/design/garden-campus/finish/`,
   `docs/design/garden-campus/circulation/sheet-day.jpg`, `docs/design/garden-campus/traversal/`).
 - Physical phones and target-GPU or mobile resource budgets are unmeasured; touch is emulated.
+- **The Desktop workflow's macOS e2e fails on every campus head checked since #507**
+  (`3e58f384`, `465785d2`, `60ebf88c`, `1e6d32d7` ×2, candidate `0b833b31`). Main `ab0059fc`
+  passes. Ubuntu and Windows pass everywhere.
+  - **Signature:** the town socket drops at readiness (`[vite] ws proxy error: write EPIPE`
+    4–18 s before the walk check), then "W moves the player: 0.00 m" at the spawn
+    `[-2765.32, 20.14, 1295.06]`. That is the same signature as the pre-campus macOS
+    W-check flake (2 in ~11 on #377).
+  - **What it is not:** the district check (`null`/`null` on the garage). A local Chromium
+    probe of #507 on a fast Mac shows no socket close.
+  - **Suspect:** the 8 s staleness watchdog (code 4901) on a runner that takes 65–88 s to
+    ready.
+  - **Next:** main's run and the candidate's are re-running (22:15Z) to measure. If main stays
+    green, bisect #507's client diff on a push-only `diag/` workflow that logs the close code.
+    Desktop is not the merge gate (`preview` is), but landing #523 would carry this onto main.
 - The commercial decisions below.
 
 **Closed since the last revision:**
