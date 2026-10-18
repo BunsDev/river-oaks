@@ -16,7 +16,7 @@ export function createCharacterStudio({ownerId,getDefinition,accountTransport=nu
       <div class="cs-rotation"><label for="cs-yaw">Rotate</label><input id="cs-yaw" type="range" min="-180" max="180" value="0" step="1"><button type="button" data-turntable aria-pressed="false">Turntable</button></div></section>
     <section class="cs-controls" aria-label="Customize character"><p class="cs-intro">Start with someone you love. Make the look yours.</p>
       <fieldset class="cs-step"><legend><span class="cs-step-mark" aria-hidden="true">1</span>Choose a character</legend><div class="cs-roster">${studioRoster(ownerId).map(person=>`<label class="cs-chip" data-character="${person.id}" title="${person.name} · ${person.title}" style="--cs-accent:${person.accent}"><input type="radio" name="cs-character" value="${person.id}"><span class="cs-mark" aria-hidden="true">${person.name[0]}</span><span>${person.name}</span></label>`).join('')}</div>
-        <div class="cs-summary"><p><strong data-cs-summary-name></strong><span data-cs-summary-title></span></p><p class="cs-summary-description" data-cs-summary-description></p><p class="cs-summary-options" data-cs-summary-options></p></div></fieldset>
+        <div class="cs-summary"><p><strong data-cs-summary-name></strong><span data-cs-summary-title></span></p><p class="cs-summary-description" data-cs-summary-description></p><p class="cs-summary-edit" data-cs-summary-edit hidden></p><p class="cs-summary-options" data-cs-summary-options></p></div></fieldset>
       <fieldset class="cs-step"><legend><span class="cs-step-mark" aria-hidden="true">2</span>Choose a form</legend><div class="cs-segments"><label><input type="radio" name="cs-form" value="human"><span>Humanoid</span></label><label><input type="radio" name="cs-form" value="beast"><span>Beast<small data-cs-species></small></span></label></div>
         <fieldset class="cs-wardrobe" data-cs-wardrobe hidden><legend>Wardrobe</legend><div class="cs-segments" data-cs-variants></div></fieldset></fieldset>
       <fieldset class="cs-step"><legend><span class="cs-step-mark" aria-hidden="true">3</span>Add color</legend><div class="cs-colors" data-cs-colors>
@@ -57,7 +57,10 @@ export function createCharacterStudio({ownerId,getDefinition,accountTransport=nu
     for(const input of dialog.querySelectorAll('.cs-controls input[type=radio]'))input.checked=input.value===selected[input.name];
     $('[data-cs-species]').textContent=person.species;$('[data-remix]').textContent=`Remix ${person.name}`;
     $('[data-cs-summary-name]').textContent=person.name;$('[data-cs-summary-title]').textContent=person.title;
-    $('[data-cs-summary-description]').textContent=choices.description;$('[data-cs-summary-options]').textContent=choices.summary;
+    $('[data-cs-summary-description]').textContent=choices.description;
+    // The authored description names the original colors; say so once they change.
+    const recolored=colors&&(value.palette!=='authored'||value.hair!=='authored');$('[data-cs-summary-edit]').hidden=!recolored;
+    $('[data-cs-summary-edit]').textContent=recolored?`Your colors: ${CHARACTER_PALETTES[value.palette].label} dress, ${CHARACTER_HAIR[value.hair].label} hair.`:'';$('[data-cs-summary-options]').textContent=choices.summary;
     $('[data-cs-colors]').hidden=!colors;
     $('[data-palette-name]').textContent=colors?CHARACTER_PALETTES[value.palette].label:'';$('[data-hair-name]').textContent=colors?CHARACTER_HAIR[value.hair].label:'';
     $('[data-compatibility]').textContent=colors?'Colors are fitted to Sable’s human and fox looks. Shape, skin and accessories keep their authored fit.':`${person.name}’s colors stay as designed for now. Choose Sable to try dress and hair colors.`;

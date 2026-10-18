@@ -22,6 +22,7 @@ async page => {
   check(await dialog.getAttribute('data-palette')==='rose','Arrow keys move through a color group');
   await dialog.getByRole('radio',{name:'Espresso',exact:true}).click();
   check(await dialog.getAttribute('data-palette')==='rose'&&await dialog.getAttribute('data-hair')==='espresso','Dress and hair changes form a distinct validated draft');
+  check(await dialog.locator('[data-cs-summary-edit]').innerText()==='Your colors: Rose silk dress, Espresso hair.','The summary names the edited colors instead of contradicting the preview');
   await dialog.getByRole('button',{name:'Undo',exact:true}).click();check(await dialog.getAttribute('data-hair')==='authored','Undo restores the previous hair');
   await dialog.getByRole('button',{name:'Redo',exact:true}).click();check(await dialog.getAttribute('data-hair')==='espresso','Redo restores the edit');
   check(await dialog.getByRole('img',{name:'Live preview: Sable, Humanoid form, Rose silk dress, Espresso hair'}).isVisible()&&await dialog.getByRole('button',{name:'Undo',exact:true}).getAttribute('aria-keyshortcuts')==='Control+Z Meta+Z','The preview image names the staged look and Undo advertises its shortcut');

@@ -230,6 +230,19 @@ passed with 27 checks in 73 s (`.runtime/cs441/worlds-run.json`).
     waist edge, and a dark bar stands up behind the shoulder.
   - No garment code was changed here. #441's pose criterion depends on that fix.
 
+## Round 7: the summary names edited colors; the Wave pose checked (2026-10-18)
+
+- After a recolor, the summary card still said "an ivory city dress" beside a rose
+  preview. It now adds "Your colors: Rose silk dress, Espresso hair." whenever the
+  colors differ from the authored ones. `character-studio` passed with
+  44 checks in 141 s (`.runtime/cs441/summary-run.json`). Unit 58/58.
+- The preview's Wave pose, captured every 400 ms for about 4 s
+  (`.runtime/cs441/wave-strip.png`), holds the right hand near the chest with
+  only a small forearm wiggle. It is the town's own `'wave'` gesture
+  (`resident-gestures.js`), so the Studio shows what other players see when
+  you wave. Its look belongs to the motion system, not #441, and the label is
+  unchanged.
+
 ## Gaps and next steps
 
 Not claimed: human keyboard, VoiceOver or novice acceptance (#444 protocol),
