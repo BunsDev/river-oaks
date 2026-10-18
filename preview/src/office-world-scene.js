@@ -27,7 +27,8 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
     const lights=[2,-3].map((z,i)=>({position:new THREE.Vector3(0,2.9,z),color:new THREE.Color('#fff1df'),intensity:i?65:45,distance:i?10:7,decay:2}));
     // Preserve the office's authored lighting using the existing world pool.
     // Detached owned light objects have no GPU resources to dispose.
-    for(const light of [...office.object.children].filter(n=>n.isPointLight)){
+    const authored=[...office.object.children].filter(n=>n.isPointLight);
+    for(const light of authored){
       lights.push({position:light.position.clone(),color:light.color.clone(),intensity:light.intensity,distance:light.distance,decay:light.decay});if(!live)light.removeFromParent();
     }
     // A layout with an outside shows the district captured once as the doors close (office-skyline.js).
@@ -57,7 +58,10 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
       const ascent=frame.done?1:ease((time-ARRIVAL.closingEnd)/(ARRIVAL.ascentEnd-ARRIVAL.closingEnd));
       const height=ARRIVAL.officeElevation*ascent;
       stage.position.copy(basePosition);stage.position.y+=height;
-      worldLights.forEach((light,i)=>{light.position.copy(lights[i].position).applyMatrix4(street.frame);light.position.y+=height;});
+      // The office lights follow the street's time of day; in the pool they carry it as well.
+      const atmosphere=street.atmosphere?.();
+      if(atmosphere&&office.relight){office.relight(atmosphere,street.scene.environment);authored.forEach((light,i)=>{lights[2+i].color.copy(light.color);lights[2+i].intensity=light.intensity;});}
+      worldLights.forEach((light,i)=>{light.position.copy(lights[i].position).applyMatrix4(street.frame);light.position.y+=height;light.color.copy(lights[i].color);light.intensity=lights[i].intensity;});
       const lightBlend=skipped?1:ease(elapsed/.8);if(!live)lease.lights(worldLights,lightBlend);
       const inside=!entering&&(skipped||time>=ARRIVAL.closingEnd);
       // The capture sees the street's own lighting, not the cabin's (office-skyline.js).
