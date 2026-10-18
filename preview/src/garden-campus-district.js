@@ -53,8 +53,10 @@ const toSource = ([u, v]) => campusToSource([u, v]).slice(0, 2);
 const ringOf = ([u0, v0, u1, v1]) => [[u0, v0], [u1, v0], [u1, v1], [u0, v1], [u0, v0]].map(toSource);
 const sameRing = (a, b) => a?.length === b?.length && a.every((p, i) => p[0] === b[i][0] && p[1] === b[i][1]);
 const centreOf = ([u0, v0, u1, v1]) => toSource([(u0 + u1) / 2, (v0 + v1) / 2]);
-// The pergola's posts are #506's authoritative ground obstacles (l0, kind 'post').
-const pergolaPosts = () => campusLevels(CAMPUS)[0].obstacles.filter(item => item.kind === 'post').map(item => ({ id: item.id, rect: [...item.rect] }));
+// #506's authoritative ground obstacles (l0: the pergola posts, and any planted pit or
+// object the contract adds), except those inside a tower plate, which is solid already.
+const plateOf = rect => CAMPUS.towers.some(tower => { const [u0, v0, u1, v1] = tower.tiers[0].rect;return rect[0] >= u0 && rect[1] >= v0 && rect[2] <= u1 && rect[3] <= v1; });
+const groundObstacles = () => campusLevels(CAMPUS)[0].obstacles.filter(item => !plateOf(item.rect)).map(item => ({ id: item.id, rect: [...item.rect] }));
 
 /** The ground-standing campus volumes, in source coordinates, as district buildings. */
 function campusBuildings() {
@@ -73,12 +75,12 @@ function campusBuildings() {
   ];
 }
 
-/** Collision on the street: solid ground plates, the café, the pool and the pergola posts. */
+/** Collision on the street: solid ground plates, the café, the pool and the contract's l0 obstacles. */
 export function campusCollisionRects() {
   return [
     ...CAMPUS.towers.map(tower => ({ id: `${tower.id}/plate`, rect: [...tower.tiers[0].rect] })),
     ...CAMPUS.groundBuildings.filter(item => !item.walkableBelow).map(item => ({ id: `${item.id}/plate`, rect: [...item.rect] })),
-    ...pergolaPosts(),
+    ...groundObstacles(),
   ];
 }
 
