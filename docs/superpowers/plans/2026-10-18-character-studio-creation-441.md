@@ -363,6 +363,70 @@ fixture configuration.
   toward the hem. Broad waist-level tail panels remain a matter for final art
   approval.
 
+## Round 11: Rowan's chest tailoring (2026-10-18)
+
+- The chest test, pointed at Rowan, found his flat shirt box 1.8 cm inside the
+  chest at the collar. Rowan uses the `man-tailored` rig, whose suit is
+  `man-tailoredmale_elegantsuit01`, so the measurement now finds whichever suit
+  the rig has.
+- His shirt, lapels, pocket flaps (moved 2 cm inward, where the narrower suit
+  front exists) and buttons now lie on the chest. `chest-tailoring.test.js`
+  covers rowan-human and man-casual: 6/6 looks. Rowan triangles 7,644 → 6,416,
+  14 draws.
+- Related suites 128/128. Full preview suite 3454 of 3456 passed, with the
+  existing 1 skip and 1 todo. Close-ups: `.runtime/cs441/rowan-after-sheet.png`.
+- `character-studio` 44 checks and `player-forms` 139 checks passed
+  (`.runtime/cs441/rowan-journeys.json`).
+
+## Merge after the human-only Studio landed (2026-10-18)
+
+- #496 (human-only Character Studio) and #464 merged at 11:53Z. #496 carried
+  this branch through `7705cb25` to `main`, so #484 now adds only `a7d00be0`
+  (Rowan) and `abac94b4` (the chest fallback).
+- `fdefc2bf` merges `main` `153471bc`:
+  - `character-definition.js` takes `main`'s import.
+  - `reference-batching` keeps the human-only list, with Rowan at 6,416 vertices.
+  - Docs status rewritten.
+  - The five morph receipts are regenerated. They match `main`'s byte for byte
+    and every bake passes `--check`.
+- Checks on the merge, under load of 60–220:
+  - Focused tests 26/26.
+  - `pnpm run verify`: agent, build, Ruff, pytest, demo, demo verify (exit 2,
+    as expected) and secrets passed.
+    - Its one preview failure was the penthouse idle-slice timing test (85 ms).
+      Its file passes 15/15 alone.
+    - Server tests passed on rerun (668, 204 Redis skips). The first run had two
+      timing failures.
+    - Desktop tests 76/76 after reinstalling dependencies: `main` added
+      `@electron/osx-sign`.
+  - Journeys `character-studio`, `character-studio-disabled`,
+    `character-studio-paused` and `character-studio-layout` passed. The layout
+    journey passed on rerun; its first run caught the access gate still checking.
+
+## Round 12: Val's device, keyboard and VoiceOver session (2026-10-18)
+
+- Setup:
+  - Code: `a0949092`.
+  - Server: the local acceptance fixture at `127.0.0.1:5196`, with the Studio on
+    and loopback dev identities. Its town server was restarted on the merged code.
+  - Devices: Safari 27.0 on macOS 26.7.1, and the iPhone 16 Pro simulator (iOS
+    26.5), whose Safari counts as loopback and signs in through the same fixture.
+- Val's results, from a checklist mapped to the acceptance criteria:
+  - **A. Keyboard only: pass.** Tab to "Open character studio", arrows through
+    character, dress and hair, Cmd+Z and Cmd+Shift+Z, Save draft by Tab and
+    Enter, then Escape back to the entry.
+  - **B. VoiceOver on macOS, same path: pass.** Steps, groups, selected state,
+    the live preview's look name and the save are announced.
+  - **C. Reduce motion: pass.** The Studio works without animated transitions.
+  - **D. Phone layout and touch in the simulator: pass.** Tapping changes the
+    look, the preview stays in view, and cancel or undo restores the start.
+  - **E. Novice self-check: pass.** Val made a distinctive look of their own in
+    about 3 minutes, with no upload or prompt. Val built the Studio, so this is not
+    a novice result.
+- Not covered: a physical phone, VoiceOver on iOS, and the five-person novice
+  trial (#444 protocol). A physical phone needs a sign-in-capable branch
+  preview; its variables were removed at Val's request.
+
 ## Gaps and next steps
 
 Not claimed: human keyboard, VoiceOver or novice acceptance (#444 protocol),

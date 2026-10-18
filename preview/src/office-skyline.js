@@ -160,10 +160,27 @@ export function createOfficeSkyline({ mode = 'snapshot', hostRoot = null, render
     return found;
   }
 
-  // District architecture is fixed for a visit. Classify once; only the selected
-  // instance matrices are saved/masked/restored around each normal pipeline draw.
+  // District architecture is fixed for a visit. Classify it once, then give each host mesh a
+  // stand-in holding only its unmasked instances: the same geometry and material, so the same
+  // programs. Each ordinary draw shows the stand-ins in the host meshes' place and swaps them back
+  // after, so no instance data is uploaded again frame after frame, and every other render (the
+  // storefront reflection probe) and raycast between draws still sees the district as it is. A host
+  // mesh whose instances change during the visit gets a fresh stand-in.
   let liveMask = null;
-  const zero = new THREE.Matrix4().makeScale(0, 0, 0);
+  const standIn = (mesh, hidden) => {
+    const keep = [], matrix = new THREE.Matrix4(), color = new THREE.Color();
+    for (let i = 0; i < mesh.count; i++) if (!hidden.has(i)) keep.push(i);
+    const copy = new THREE.InstancedMesh(mesh.geometry, mesh.material, Math.max(1, keep.length));
+    keep.forEach((index, slot) => { mesh.getMatrixAt(index, matrix); copy.setMatrixAt(slot, matrix); if (mesh.instanceColor) { mesh.getColorAt(index, color); copy.setColorAt(slot, color); } });
+    copy.count = keep.length; copy.matrixAutoUpdate = mesh.matrixAutoUpdate; copy.matrix.copy(mesh.matrix);
+    copy.position.copy(mesh.position); copy.quaternion.copy(mesh.quaternion); copy.scale.copy(mesh.scale); copy.layers.mask = mesh.layers.mask;
+    Object.assign(copy, { name: `${mesh.name} (office outlook)`, visible: false, castShadow: mesh.castShadow, receiveShadow: mesh.receiveShadow, frustumCulled: mesh.frustumCulled, renderOrder: mesh.renderOrder, onBeforeRender: mesh.onBeforeRender, onAfterRender: mesh.onAfterRender });
+    copy.userData.officeOutlookStandIn = true; copy.computeBoundingSphere(); copy.computeBoundingBox();
+    mesh.parent.add(copy); copy.updateMatrixWorld(true);
+    return { mesh, hidden, copy, version: mesh.instanceMatrix.version, colors: mesh.instanceColor?.version };
+  };
+  const release = ({ copy }) => { copy.removeFromParent(); copy.dispose(); };
+  const current = swap => swap.version === swap.mesh.instanceMatrix.version && swap.colors === swap.mesh.instanceColor?.version;
   return {
     get texture() { return target?.texture ?? null; },
     render(draw) {
@@ -171,23 +188,22 @@ export function createOfficeSkyline({ mode = 'snapshot', hostRoot = null, render
       if (!liveMask) {
         const started = now();
         scene.updateMatrixWorld(true);
-        const instances = hostInstances(), masses = hostMeshes();
-        liveMask = { instances, masses, meshes: new Set(instances.map(([mesh]) => mesh)) };
+        const instances = hostInstances(), masses = hostMeshes(), byMesh = new Map();
+        for (const [mesh, index] of instances) if (mesh.parent) byMesh.set(mesh, (byMesh.get(mesh) ?? new Set()).add(index));
+        liveMask = { masses, swaps: [...byMesh].map(([mesh, hidden]) => standIn(mesh, hidden)) };
         stats.traverseMs = round(now() - started);
         stats.hiddenInstances = instances.length; stats.hiddenMeshes = masses.length;
       }
-      const { instances, masses, meshes } = liveMask;
-      const visible = masses.map(object => object.visible), started = now();
+      liveMask.swaps = liveMask.swaps.map(swap => current(swap) || !swap.mesh.parent ? swap : (release(swap), standIn(swap.mesh, swap.hidden)));
+      const { swaps, masses } = liveMask, hosts = swaps.map(({ mesh }) => mesh.visible), visible = masses.map(object => object.visible), started = now();
       try {
-        for (const [mesh, index, matrix] of instances) { mesh.getMatrixAt(index, matrix); mesh.setMatrixAt(index, zero); }
-        for (const mesh of meshes) mesh.instanceMatrix.needsUpdate = true;
+        swaps.forEach(({ mesh, copy }, index) => { copy.visible = hosts[index]; mesh.visible = false; });
         for (const object of masses) object.visible = false;
         draw(); stats.frames++; stats.state = 'live';
         stats.lastRenderMs = round(now() - started);
         return true;
       } finally {
-        for (const [mesh, index, matrix] of instances) mesh.setMatrixAt(index, matrix);
-        for (const mesh of meshes) mesh.instanceMatrix.needsUpdate = true;
+        swaps.forEach(({ mesh, copy }, index) => { mesh.visible = hosts[index]; copy.visible = false; });
         masses.forEach((object, index) => { object.visible = visible[index]; });
       }
     },
@@ -256,7 +272,7 @@ export function createOfficeSkyline({ mode = 'snapshot', hostRoot = null, render
         scene.background = saved.background; scene.backgroundIntensity = saved.intensity; scene.backgroundBlurriness = saved.blurriness;
         if (saved.rotation) scene.backgroundRotation.copy(saved.rotation);
       }
-      target?.dispose(); liveMask = null;
+      target?.dispose(); liveMask?.swaps.forEach(release); liveMask = null;
     },
   };
 }

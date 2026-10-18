@@ -2,11 +2,13 @@
    as rims with a pour of red (your own rack muted), the reticle's aim line and power
    target, the last landing, and the ball in flight. */
 .wine-pong-panel .wine-pong-body { display: flex; flex-direction: column; gap: 12px; }
+@media (min-width: 761px) { .wine-pong-panel { inset: 76px auto auto 20px; width: min(440px, calc(100vw - 40px)); } }
 .wine-pong-panel .wine-pong-scores { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
 .wine-pong-panel .wine-pong-scores li { padding: 4px 10px; border-radius: 999px; background: var(--hud-tile); color: var(--ink); font-size: 12px; font-weight: 650; }
 .wine-pong-panel .wine-pong-views { display: flex; gap: 18px; align-items: flex-start; justify-content: center; }
 .wine-pong-panel .wine-pong-table { display: block; flex: 0 0 auto; width: auto; height: min(50vh, 440px); }
-.wine-pong-panel .wine-pong-zoom { display: block; flex: 0 1 auto; width: min(100%, 300px); height: auto; }
+.wine-pong-panel .wine-pong-zoom { display: block; flex: 0 1 280px; width: min(100%, 280px); height: 220px; }
+.wine-pong-panel .wine-pong-zoom[hidden] { display: none; }
 @media (max-width: 520px) { .wine-pong-panel .wine-pong-table { height: min(40vh, 300px); } }
 .wine-pong-panel .pong-cloth { fill: #f3eee4; stroke: #c9bfae; stroke-width: 1.5; }
 .wine-pong-panel .pong-centre { stroke: #d8cfbf; stroke-width: 1; stroke-dasharray: 4 4; }
