@@ -876,6 +876,44 @@ are host-GPU measurements, not approved-device budgets. Evidence:
 `.runtime/crowd-442/` in the task worktree.
 
 
+**Figures out of view with their shadows.** Mesh culling still drew the shadows
+of peers behind the camera: the sun's shadow map covers at least 36 m around it.
+`figureInView` now also asks whether the figure's shadow could reach the view.
+It sweeps the figure sphere along the sun direction until the sphere is
+`SHADOW_DROP` (4 m) below the figure's floor, in sub-spheres no wider than 1.5
+radii, and tests each against the camera frustum. A peer whose figure and sweep
+both miss the view gets `holder.visible = false`, so it skips every pass. It
+keeps animating at a quarter rate and is never suspended, so its pose is at most
+three frames old when it turns back into view; the reappearing frame updates
+before rendering.
+
+Only the town's main view passes a sun direction, and only while sun shadows
+render. Without one, only the figure counts. The office scenes keep their
+existing gates. Riders in a car and flying peers are never figure-culled,
+because the vehicle extends past the figure sphere. Shadows on receivers more
+than 4 m below the figure's floor are not covered, such as a street below a
+high terrace; within that, the test is conservative. A seeded property test
+marches 48 sampled figure points per hidden case along the light to the shadow
+floor, and finds no point in view in 300 random views, figures and sun
+directions. A version that ignores shadows fails it at case 46.
+
+Eight-segment A/B at 16 players (`fig-away.json`, `fig-player.json`; load 34–64;
+mesh culling on in both arms). Values are segment means, in ms:
+
+| View | Viewport | Remote draws, off → on | Remote shadow draws, off → on | CPU p50, off → on | Frame p50, off → on | Frames in 40 s |
+| --- | --- | --- | --- | --- | --- | --- |
+| away | desktop | 478–494 → 286–300 | 396 → 204 | 13.5 → 12.0 | 15.6 → 14.1 | 2,489 → 2,732 |
+| away | phone viewport | 451–465 → 221–254 | 396 → 166–185 | 14.3 → 11.8 | 16.0 → 13.6 | 2,468 → 2,902 |
+| player | desktop | 1,154–1,176 → 1,154–1,176 | 396 → 396 | 16.8 → 17.2 | 19.8 → 20.1 | 2,013 → 1,983 |
+| player | phone viewport | 884–942 → 863–924 | 396 → 377–396 | 15.4 → 15.4 | 17.2 → 17.0 | 2,275 → 2,299 |
+
+In the away view, every figure-culling segment was faster than every segment
+without it. In the desktop player view, nothing is culled: the two peers off screen
+still have shadows that can reach the view, so both arms draw the same work,
+and the 0.3–0.4 ms difference is within this machine's noise. On the narrow
+phone viewport, 8 peers are off screen, and only one at a time sometimes loses its
+shadow draws (377 of 396 in three of four segments).
+
 ### Authored wardrobe matrix and Vesper wrap
 
 `pnpm run test:experience character-wardrobe` generates coverage from all 22 shipped
