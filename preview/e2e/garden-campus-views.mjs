@@ -48,7 +48,8 @@ try {
         });
         const name = `${revision}-${view.id}`;
         await page.screenshot({ path: `${output}/${name}.png` });
-        const sorted = [...metrics.frames].sort((a, b) => a - b), p = q => sorted[Math.min(sorted.length - 1, Math.floor(q * sorted.length))];
+        // Frame intervals (ms) from the render audit's {intervalMs, cpuMs} records.
+        const sorted = metrics.frames.map(frame => frame.intervalMs).sort((a, b) => a - b), p = q => sorted[Math.min(sorted.length - 1, Math.floor(q * sorted.length))];
         reports.push({ name, revision, camera: view.id, pose, renderer: metrics.renderer, calls: metrics.render.calls, triangles: metrics.render.triangles,
           memory: metrics.memory, frameP50: p(0.5), frameP95: p(0.95), samples: sorted.length, hostLoad: loadavg().map(n => Number(n.toFixed(1))) });
         console.log(JSON.stringify(reports.at(-1)));

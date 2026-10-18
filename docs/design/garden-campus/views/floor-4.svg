@@ -92,23 +92,23 @@
 <circle cx="136" cy="569.8" r="4" fill="#c0392b"/>
 <circle cx="136" cy="431.8" r="4" fill="#c0392b"/>
 <circle cx="136" cy="341.8" r="4" fill="#c0392b"/>
-<rect x="103" y="787" width="6" height="6" fill="#2f5d8e"/>
-<rect x="103" y="769" width="6" height="6" fill="#6b4f8e"/>
-<rect x="103" y="787" width="6" height="6" fill="#2f5d8e"/>
-<rect x="103" y="769" width="6" height="6" fill="#6b4f8e"/>
-<rect x="103" y="517" width="6" height="6" fill="#2f5d8e"/>
-<rect x="103" y="499" width="6" height="6" fill="#6b4f8e"/>
-<rect x="103" y="517" width="6" height="6" fill="#2f5d8e"/>
-<rect x="103" y="499" width="6" height="6" fill="#6b4f8e"/>
-<rect x="103" y="301" width="6" height="6" fill="#2f5d8e"/>
-<rect x="103" y="283" width="6" height="6" fill="#6b4f8e"/>
-<rect x="103" y="301" width="6" height="6" fill="#2f5d8e"/>
-<rect x="103" y="283" width="6" height="6" fill="#6b4f8e"/>
+<rect x="106.6" y="787" width="6" height="6" fill="#2f5d8e"/>
+<rect x="106.6" y="769" width="6" height="6" fill="#6b4f8e"/>
+<rect x="106.6" y="787" width="6" height="6" fill="#2f5d8e"/>
+<rect x="106.6" y="769" width="6" height="6" fill="#6b4f8e"/>
+<rect x="106.6" y="517" width="6" height="6" fill="#2f5d8e"/>
+<rect x="106.6" y="499" width="6" height="6" fill="#6b4f8e"/>
+<rect x="106.6" y="517" width="6" height="6" fill="#2f5d8e"/>
+<rect x="106.6" y="499" width="6" height="6" fill="#6b4f8e"/>
+<rect x="106.6" y="301" width="6" height="6" fill="#2f5d8e"/>
+<rect x="106.6" y="283" width="6" height="6" fill="#6b4f8e"/>
+<rect x="106.6" y="301" width="6" height="6" fill="#2f5d8e"/>
+<rect x="106.6" y="283" width="6" height="6" fill="#6b4f8e"/>
 <text x="72" y="772.3" font-size="10" text-anchor="end">T1-F4</text>
 <text x="72" y="500.8" font-size="10" text-anchor="end">T2-F4</text>
 <text x="72" y="284.8" font-size="10" text-anchor="end">T3-F4</text>
 <text x="288" y="60" font-size="10" text-anchor="start">The Gardens: Floor 4 (z 13, garden-campus/l3)</text>
-<text x="288" y="74" font-size="10" text-anchor="start">layout 3.0, support 1</text>
+<text x="288" y="74" font-size="10" text-anchor="start">layout 3.1, support 1</text>
 <text x="288" y="88" font-size="10" text-anchor="start"></text>
 <text x="288" y="102" font-size="10" text-anchor="start">orange: public gallery, spur, lobby, passage, deck</text>
 <text x="288" y="116" font-size="10" text-anchor="start">red dashes: 3 m bridge landings (keep clear)</text>

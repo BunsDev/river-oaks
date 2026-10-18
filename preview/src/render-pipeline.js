@@ -128,6 +128,12 @@ export function createRenderPipeline(renderer, scene, camera, { samples = 4, blo
     },
     get stats() { return { samples: target.samples, ao: occlusion.enabled, bloom: bloom.enabled, renderScale, aoScale: aoResolutionScale(size.width * size.pixelRatio * renderScale, size.height * size.pixelRatio * renderScale), transmissionScale:renderer.transmissionResolutionScale }; },
     render(delta) { if(sized)composeFrame(() => composer.render(delta)); },
+    // Programs for the scene pass. It draws into a half-float target, so its materials compile
+    // without tone mapping; compiling against the screen would build variants it never uses.
+    compileAsync(object, camera, targetScene) {
+      const previous = renderer.getRenderTarget(); renderer.setRenderTarget(target);
+      try { return renderer.compileAsync(object, camera, targetScene); } finally { renderer.setRenderTarget(previous); }
+    },
     dispose() { aoExteriorRoot = aoInteriorLayer = null; occlusion.dispose(); bloom.dispose(); output.dispose(); render.dispose(); composer.dispose(); },
   };
 }
