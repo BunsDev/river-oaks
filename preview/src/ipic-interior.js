@@ -68,16 +68,14 @@ export function buildIpicInterior(room, options = {}) {
       soft(m.leaf, a + Math.cos(angle) * .25, top - .1, d + Math.sin(angle) * .25, .16, .65, .07, { roll: Math.cos(angle) * .6, yaw: angle });
     }
   }
-  // An elongated woven cocoon (photo review P8, IMG_9758): a closed rattan shell banded by its weave, open
-  // at the bottom where the lamp shines through. Centred on y, it is 1.05 m tall at size 1.
+  // An elongated woven cocoon (photo review P8, IMG_9758): a closed rattan shell ribbed by its weave, open
+  // at the bottom where the lamp shines through. Centred on y, it is 1.15 m tall at size 1.
   function cocoon(a, y, d, size = 1) {
-    const height = 1.05 * size, radius = .3 * size, at = t => radius * Math.sin(Math.PI * t) ** .75;
-    const shell = keep(new THREE.LatheGeometry(Array.from({ length: 19 }, (_, i) => { const t = .1 + .9 * i / 18; return new THREE.Vector2(at(t), (t - .5) * height); }), 24));
-    box(m.rattan, a, y, d, 1, 1, 1, { shape: shell });
-    for (let k = 1; k < 8; k++) {
-      const t = .1 + .9 * k / 8, band = keep(new THREE.TorusGeometry(at(t) + .006, .011 * size, 4, 24));
-      box(m.timber, a, y + (t - .5) * height, d, 1, 1, 1, { shape: band, pitch: Math.PI / 2 });
-    }
+    const height = 1.15 * size, radius = .24 * size, at = t => radius * Math.sin(Math.PI * t) ** .75;
+    const profile = scale => Array.from({ length: 19 }, (_, i) => { const t = .1 + .9 * i / 18; return new THREE.Vector2(at(t) * scale, (t - .5) * height); });
+    box(m.rattan, a, y, d, 1, 1, 1, { shape: keep(new THREE.LatheGeometry(profile(1), 24)) });
+    const ribs = profile(1.03);
+    for (let k = 0; k < 14; k++) box(m.timber, a, y, d, 1, 1, 1, { shape: keep(new THREE.LatheGeometry(ribs, 1, k * Math.PI / 7, .07)) });
     rod(m.black, [a, y + height / 2, d], [a, 10.25, d], .01);
     box(m.glow, a, y - .32 * height, d, .16, .16, .16, { shape: sphere });
   }

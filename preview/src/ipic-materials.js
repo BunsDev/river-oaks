@@ -45,10 +45,11 @@ export function createIpicMaterials({ textures = typeof document !== 'undefined'
   const carpet = canvas(512, 512, (c, w, h) => {
     const pixels = c.createImageData(w, h);
     for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-      // Fine dark lines along the contours of a smooth field that tiles; they swirl round its eddies.
+      // Fine dark lines along the contours of a smooth field that tiles; they swirl round its eddies. At
+      // the lounge's 3 m tile they lie about 10 cm apart, as in IMG_9754.
       const u = 2 * Math.PI * x / w, v = 2 * Math.PI * y / h;
       const field = .9 * Math.sin(u + .7) + .8 * Math.cos(v) + .6 * Math.sin(u - v + 1.3) + .35 * Math.cos(2 * u + v);
-      const stripe = Math.max(0, Math.min(1, (Math.sin(20 * field) - .55) * 4));
+      const stripe = Math.max(0, Math.min(1, (Math.sin(40 * field) - .6) * 4));
       const noise = .97 + .03 * Math.sin(x * 53 + y * 71), i = (y * w + x) * 4, [b, p] = [IPIC_LOUNGE_CARPET.base, IPIC_LOUNGE_CARPET.pattern];
       pixels.data.set([0, 1, 2].map(k => (b[k] + stripe * (p[k] - b[k])) * noise).concat(255), i);
     }
@@ -111,7 +112,7 @@ export function createIpicMaterials({ textures = typeof document !== 'undefined'
     black: material('black-rubber', '#171714', { roughness: .9 }), yellow: material('step-safety-edge', '#c1a549'),
     glass: material('smoked-glass', '#869a96', { transparent: true, opacity: .22, metalness: .1, roughness: .13, depthWrite: false, side: THREE.DoubleSide }),
     leather: material('cognac-leather', '#805032', { roughness: .46 }),
-    rattan: material('woven-rattan', '#b5803f', { emissive: '#6b3a12', emissiveIntensity: .6, roughness: .8, side: THREE.DoubleSide }),
+    rattan: material('woven-rattan', '#8c5a2c', { emissive: '#5a2a0a', emissiveIntensity: .45, roughness: .85, side: THREE.DoubleSide }),
     sofa: material('olive-brown-sofa', '#504638', { roughness: .95 }), pillow: material('oatmeal-pillows', '#b1a086'),
     leaf: material('hanging-greenery', '#354931'), red: material('burgundy-booths', '#692b2f'),
     glow: material('warm-lamp', '#ffe7ac', { emissive: '#ffd494', emissiveIntensity: 2.2 }),

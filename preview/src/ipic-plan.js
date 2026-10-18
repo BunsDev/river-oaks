@@ -29,7 +29,7 @@ export const IPIC_CAMERAS = Object.freeze([
   // From the top of the first run's east lane into the walled bay, as a rider sees the mural (Val kept it
   // large in the bay, 2026-10-18; the in-line runs leave no wall to face it head-on).
   { name: 'mural', eye: [1.4, 4.6, 11.8], target: [4.7, 4.6, 13.7], photo: 'IMG_9771.jpg' },
-  { name: 'lounge', eye: [-2.6, 7.6, 25.5], target: [-4.3, 6.95, 20.3], photo: 'IMG_9758.jpg' },
+  { name: 'lounge', eye: [-4.1, 7.75, 25.7], target: [-4.1, 6.75, 20.4], photo: 'IMG_9758.jpg' },
   { name: 'bar', eye: [-.8, 7.65, 24.8], target: [4.5, 7.7, 22.8], photo: 'IMG_9756.jpg' },
   { name: 'auditorium', eye: [-4.7, 7.65, 27.3], target: [.5, 8.2, 33.7], photo: 'IMG_9767.jpg' },
 ]);
