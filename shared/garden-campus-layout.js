@@ -34,6 +34,9 @@ const SOURCE = {
   repository: 'BunsDev/river-oaks', commit: '153471bc2075e0d02e764a97b0a72129d6da5207',
   districtPath: 'preview/public/data/district.json', districtBlob: '566d7c52295f8811b50890c23f448261bbf9a0a7',
   buildingId: 'osm-way-625330790', kind: 'parking', height: 20, attribution: '© OpenStreetMap contributors; ODbL-1.0',
+  // The ring is also one of district.collisionPolygons (index 1 at this blob): the parcel
+  // blocks walking until a campus revision removes it (#507).
+  collision: 'district.collisionPolygons holds this ring exactly',
   ring: [
     [-2681.34210183291, -1186.853444818873], [-2690.127958538709, -1186.755477138795], [-2719.059281110647, -1186.4290162688121],
     [-2720.159361360711, -1285.1007009684108], [-2720.223349907552, -1290.8442606572062], [-2721.0810608329484, -1367.6393737783656],
