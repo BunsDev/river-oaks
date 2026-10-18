@@ -4,10 +4,11 @@
 
 Each plan is a task ledger. Status comes from the task register, where the primary checkout's live copy can be newer than the committed one. Plans from before the register are listed as historical: their own text is the record of what was delivered.
 
-## Active and blocked (26)
+## Active and blocked (28)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
+| [2026-10-18-plaza-fullscreen-polish](2026-10-18-plaza-fullscreen-polish.md)<br>Full-screen plaza games polish | `plaza-fullscreen-polish-20261018` | active | #521 | 2026-10-18 |
 | [2026-10-18-human-only-characters](2026-10-18-human-only-characters.md)<br>Human-only characters | `human-only-characters-20261018` | active | #496 | 2026-10-18 |
 | [2026-10-15-wine-pong-dynamic-throw-review](2026-10-15-wine-pong-dynamic-throw-review.md)<br>Wine pong: position-aware throws and readable table play | `wine-pong-dynamic-throw-20261015` | active | #448 | 2026-10-15 |
 | [2026-10-15-studio-safe-edits](2026-10-15-studio-safe-edits.md)<br>World Studio safe edits (#414, parent #413) | `studio-safe-edits-414` | queued | #427 | 2026-10-15 |
@@ -15,6 +16,7 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-15-studio-pilot-acceptance](2026-10-15-studio-pilot-acceptance.md)<br>Garden Office pilot acceptance (#417, parent #413) | `studio-acceptance-417` | active | — | 2026-10-15 |
 | [2026-10-15-release-0.2.1](2026-10-15-release-0.2.1.md)<br>Release 0.2.1: signed and notarized macOS build | `release-0-2-1-published` | active | — | 2026-10-16 |
 | [2026-10-15-procedural-phone-gpu-fixture](2026-10-15-procedural-phone-gpu-fixture.md)<br>Procedural gallery phone GPU fixture | `procedural-phone-gpu-fixture` | active | #393 | 2026-10-15 |
+| [2026-10-15-plaza-game-layout](2026-10-15-plaza-game-layout.md)<br>Expandable plaza game layout | `plaza-game-layout-20261015` | active | #468 | 2026-10-16 |
 | [2026-10-15-office-world-lifecycle-reliability](2026-10-15-office-world-lifecycle-reliability.md)<br>Office world lifecycle reliability | `office-world-lifecycle-reliability` | active | — | 2026-10-15 |
 | [2026-10-15-office-skyline-prototype](2026-10-15-office-skyline-prototype.md)<br>Penthouse skyline prototype (#363 views, kit guide P26) | `office-skyline-prototype` | active | #408 | 2026-10-15 |
 | [2026-10-15-office-computer-reliability](2026-10-15-office-computer-reliability.md)<br>Office computer reliability | `office-computer-reliability` | active | #394 | 2026-10-15 |
@@ -182,7 +184,7 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-11-delivered-source-retirement](2026-10-11-delivered-source-retirement.md)<br>Delivered source reconciliation | `reconcile-delivered-sources` | retired | — | 2026-10-11 |
 | [2026-10-11-ci-parallel-preview](2026-10-11-ci-parallel-preview.md)<br>Parallel preview check | `ci-parallel-preview` | retired | #252 | 2026-10-11 |
 
-## Historical, not in the register (111)
+## Historical, not in the register (112)
 
 | Plan | PRs mentioned |
 | --- | --- |
@@ -212,6 +214,7 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-15-office-seat-claims](2026-10-15-office-seat-claims.md)<br>#363 slice 1: penthouse seat claims and occupied-body clearance | #363, #361, #362 |
 | [2026-10-15-office-penthouse-glazing](2026-10-15-office-penthouse-glazing.md)<br>Penthouse graybox: glazed curtain wall | #363, #362, #351 |
 | [2026-10-15-office-outlook-phones](2026-10-15-office-outlook-phones.md)<br>Office outlook: the snapshot on phones | #449, #433, #408 |
+| [2026-10-15-office-outlook-cost](2026-10-15-office-outlook-cost.md)<br>Live office outlook cost (#449): first-entry compile and per-frame host uploads | #449, #473, #448 |
 | [2026-10-15-office-lift-ride-level](2026-10-15-office-lift-ride-level.md)<br>Office lift ride: the body stays on the car floor (2026-10-15) | #449, #450 |
 | [2026-10-15-office-kit-fit](2026-10-15-office-kit-fit.md)<br>#362: read-only desk fit check for the supplied kit | #362, #400, #363 |
 | [2026-10-15-office-ipic-journey](2026-10-15-office-ipic-journey.md)<br>#368 slice 2: two-account office + IPIC journey and rollback evidence | #368, #400, #361 |
