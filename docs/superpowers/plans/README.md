@@ -4,10 +4,11 @@
 
 Each plan is a task ledger. Status comes from the task register, where the primary checkout's live copy can be newer than the committed one. Plans from before the register are listed as historical: their own text is the record of what was delivered.
 
-## Active and blocked (28)
+## Active and blocked (29)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
+| [2026-10-18-turning](2026-10-18-turning.md)<br>Focused turning implementation and evidence | `turning-20261018-cody` | active | — | 2026-10-18 |
 | [2026-10-18-plaza-fullscreen-polish](2026-10-18-plaza-fullscreen-polish.md)<br>Full-screen plaza games polish | `plaza-fullscreen-polish-20261018` | active | #521 | 2026-10-18 |
 | [2026-10-18-human-only-characters](2026-10-18-human-only-characters.md)<br>Human-only characters | `human-only-characters-20261018` | active | #496 | 2026-10-18 |
 | [2026-10-15-wine-pong-dynamic-throw-review](2026-10-15-wine-pong-dynamic-throw-review.md)<br>Wine pong: position-aware throws and readable table play | `wine-pong-dynamic-throw-20261015` | active | #448 | 2026-10-15 |
