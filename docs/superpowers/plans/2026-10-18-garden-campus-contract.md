@@ -92,11 +92,31 @@ Pushed for consumers as `8921ca42`; later commits add files without renaming any
 - Views inspected after rendering (site plan, Floor 4, long section at u 16). Clipped labels were fixed after inspection.
 - Review page: served from this worktree's Vite on port 5196 (`/e2e/fixtures/garden-campus.html`). Checked headlessly under the browser lock with no page errors: massing and the l3 bridge walk, validator ok. Opened for Val.
 
-Gates and PR: see "Delivery" below.
+Gates and PR: see the Delivery section below.
 
 ## Delivery
 
-(Filled at PR time.)
+- **PR:** #519 (draft, then ready for review). Signed commits:
+  - `8921ca42`: contract and tests;
+  - `c8df81e4`: published artifacts, envelope, brief, review page;
+  - `0e46ec36`: pergola posts;
+  - `f859310e`: brief view links, after the desktop fix;
+  - `82028fc8`: landing-meets-portal check and the private-bypass test;
+  - this ledger commit.
+- **Hosted CI at `82028fc8`:** 19/19 succeeded, covering:
+  - aggregate `preview`, `preview checks` (agent tooling, preview, server with Redis, desktop, build, browser regressions) and the five shared/experience shards;
+  - `verify (3.11/3.13)`;
+  - `desktop` on macOS, Ubuntu and Windows;
+  - CodeQL and dependency review.
+- **Desktop failure and fix:** the first run at `0e46ec36` failed `desktop` on all three platforms. The Studio skill pack follows Markdown links from linked guides, and `docs/offices.md` now reaches the brief, whose `views/` directory link failed its safe-path rule ("Unsafe pack path"). `f859310e` links each view. Local `pnpm run test:desktop`: 76/76.
+- **Local core gate:** one run at `82028fc8`, under the browser lock, after waiting 45 minutes for load below 30. It started at load 85, which reached 268 during the run. It stopped in agent tooling at 120/121: `project-prune.test.js` "missing or expired deletion permits fail closed" (99 s, missed its expected exception). That file passes alone, 14/14, at load 201. This branch adds no tooling or test change outside its own files. Not rerun at this load; the hosted run is the single-run gate here, as Val accepted for #493.
+- **Coordination:**
+  - The #505 tracker owner river-oaks-95 consumes the contract: #507 at `302b3e0f`, #509 at draft PR #522.
+  - #508 is handed to this session's next goal (register task `garden-campus-traversal-508`).
+
+### Release decision to prepare
+
+Merging #519 needs Val's go-ahead (`pnpm run land 519`). Merging changes no runtime behaviour, because nothing imports the module outside tests, the views script and the review page. #507 and #509 are stacked on this branch, so landing #519 first shortens their diffs. Activation of the campus is #507/#512's content revision, with the garage as default.
 
 ## Open and next
 
