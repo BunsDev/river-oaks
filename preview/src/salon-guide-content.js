@@ -93,9 +93,9 @@ export const GUIDE = [
   { id: 'winePong', name: 'Wine pong', place: 'The long table by the café', pages: [
     { title: 'Taking a seat', text: ['A long linen-topped table stands between the café and the planters. Walk up to either end and press X (Play wine pong); there is no chair, you play standing.', 'Play a plaza regular at the far end, or Pass and play with a friend.'], figure: { kind: 'emblem' } },
     { title: 'The aim', text: ['Each side has six wine glasses racked three, two, one at its own end. Sink all six of the far glasses to win.', 'Each turn is two throws, then the far end throws.'], figure: { kind: 'pong-racks' } },
-    { title: 'A throw', text: ['A reticle sweeps across the far rack: stop it for the aim. It then sweeps along that line: stop it again for the power, and the ball flies.', 'The close-up beside the table shows the far glasses large, so you can time the reticle over one.'], figure: { kind: 'pong-throw' } },
+    { title: 'A throw', text: ['Left and right aim across the far rack, up and down set how far the ball carries, or click the table where it should come down. Your hand sways a little, so throw as the mark passes over a glass.', 'Where you stand changes the launch. Reposition (R) to walk along your end without leaving the game, then press X to carry on. Inspect rack shows the far glasses large.'], figure: { kind: 'pong-throw' } },
     { title: 'In, rim and bounce', text: ['A ball can drop straight in, catch a rim and rattle in or spin out, or land on the table and bounce into a glass. Anything else is a miss.', 'A sunk glass leaves the table.'], figure: { kind: 'pong-outcomes' } },
-    { title: 'At the table', text: ['The real table\'s glasses follow the game, and the ball flies over it.'], figure: { kind: 'keys', keys: [[['X'], 'Open the table, or put it away'], [['Space', 'Enter'], 'Stop the reticle: aim, then throw'], [['Tab'], 'Move between the buttons'], [['Esc'], 'Put the table away']] } },
+    { title: 'At the table', text: ['The real table\'s glasses follow the game, and the ball flies over it.'], figure: { kind: 'keys', keys: [[['X'], 'Open the table, put it away, or carry on after repositioning'], [['←', '→'], 'Aim left or right'], [['↑', '↓'], 'Throw further or shorter'], [['R'], 'Reposition along your end'], [['Space', 'Enter'], 'Throw'], [['Esc'], 'Put the table away']] } },
   ] },
   { id: 'shuffleboard', name: 'Shuffleboard', place: 'The long table by the café', pages: [
     { title: 'Taking a seat', text: ['Shuffleboard is played on the long table by the café, where wine pong is. Stand at either end, press X, and choose Shuffleboard at the top of the sheet; you play standing.', 'Play a plaza regular, or Pass and play with a friend. Both of you throw from your end.'], figure: { kind: 'emblem' } },
@@ -134,9 +134,9 @@ export const GUIDE = [
   { id: 'darts', name: 'Darts', place: 'The board on the south wall', pages: [
     { title: 'Taking a seat', text: ['A dartboard hangs on a post against the plaza\'s south wall. There is no chair: walk up to the throwing line in front of it and press X (Play darts).', 'Play a plaza regular, or Pass and play with a friend.'], figure: { kind: 'emblem' } },
     { title: 'The board', text: ['Each sector scores its number. The thin outer ring doubles it and the inner ring trebles it; the outer bull scores 25 and the bull 50.', 'The treble 20 is worth 60, the most on the board.'], figure: { kind: 'darts-board' } },
-    { title: 'A throw', text: ['A line sweeps across the board: stop it to set where you aim across. A second line sweeps up and down: stop it, and the dart lands where they cross.'], figure: { kind: 'darts-throw' } },
+    { title: 'A throw', text: ['Left and right set where across the board you release the dart. Up and down set how hard your hand accelerates: as with a real dart, a soft throw drops low on its way and a hard one flies high. You can also drag on the board.', 'Your hand sways a little, more the longer you hold it up, so throw as the landing guide passes your target. The dart lands within a hand\'s breadth of it, and a firm throw stays truer than a soft one.'], figure: { kind: 'darts-throw' } },
     { title: '501, double out', text: ['Both start on 501 and take each turn\'s three darts off. The last dart must land in a double (or the bull) and bring you to exactly 0.', 'A dart that leaves you on 1, below 0, or on 0 without a double is a bust: the turn\'s darts don\'t count. On 170 or less the sheet suggests a checkout.'], figure: { kind: 'darts-checkout' } },
-    { title: 'At the table', text: ['The real board shows the turn\'s darts where they landed.'], figure: { kind: 'keys', keys: [[['X'], 'Open the board, or put it away'], [['Space', 'Enter'], 'Stop the line: across, then up'], [['Tab'], 'Move between the buttons'], [['Esc'], 'Put the board away']] } },
+    { title: 'At the table', text: ['The real board shows the turn\'s darts where they landed.'], figure: { kind: 'keys', keys: [[['X'], 'Open the board, or put it away'], [['←', '→'], 'Move the release across'], [['↑', '↓'], 'Throw harder or softer'], [['Shift'], 'Hold for fine moves'], [['Space', 'Enter'], 'Throw'], [['Esc'], 'Put the board away']] } },
 ] },
   { id: 'dice', name: 'Liar’s dice', place: 'The round café table', pages: [
     { title: 'Taking a seat', text: ['At the round café table, press Z to sit and X to open the table, then choose Liar’s dice at the top of the sheet.', 'You and three plaza regulars each hold five dice under a cup.'], figure: { kind: 'emblem' } },
@@ -432,8 +432,12 @@ export function figureMarkup(figure, game) {
         body += `<circle class="sg-glow" cx="${c}" cy="${c - 103 * k}" r="8"/><text class="sg-label" x="${c + 40}" y="${c - 103 * k + 4}" font-size="11">T20 · 60</text><text class="sg-label" x="${c + 26}" y="${c + 4}" font-size="11">Bull · 50</text>`;
         return svg(220, 220, 'A dartboard: twenty sectors, the double ring at the edge, the treble ring halfway in, the outer bull and the bull at the centre; the treble 20 at the top is worth 60.', body);
       }
-      body += `<line x1="${c - 20}" y1="10" x2="${c - 20}" y2="210" style="stroke:#fff;stroke-width:2;stroke-dasharray:5 4"/><line x1="10" y1="${c - 40}" x2="210" y2="${c - 40}" style="stroke:#fff;stroke-width:2"/><circle cx="${c - 20}" cy="${c - 40}" r="7" style="fill:none;stroke:#fff;stroke-width:2"/>`;
-      return svg(220, 220, 'The aiming lines: the dashed one, set across the board; the solid one, sweeping up and down; the dart lands where they cross.', body); }
+      // The release line across, the landing guide on the treble 20, and the acceleration gauge beside the board.
+      body += `<line x1="${c}" y1="10" x2="${c}" y2="210" style="stroke:#fff;stroke-width:2"/><circle cx="${c}" cy="${c - 103 * k}" r="7" style="fill:none;stroke:#fff;stroke-width:2.5"/>`
+        + `<rect x="232" y="30" width="16" height="160" rx="8" class="sg-tile-face"/><rect x="232" y="74" width="16" height="116" rx="8" style="fill:#f6c445;opacity:.85"/>`
+        + arrow([[264, 150], [264, 50]], 'g') + arrowHead('g') + '<text class="sg-label sg-quiet" x="240" y="214" text-anchor="middle" font-size="11">harder: higher</text>'
+        + arrow([[c - 46, 222], [c + 46, 222]], 'x') + arrowHead('x') + `<text class="sg-label sg-quiet" x="${c}" y="240" text-anchor="middle" font-size="11">release across</text>`;
+      return svg(280, 250, 'The release line runs up the board where the dart is let go across; the ring on it is the landing guide, set on the treble 20 by the acceleration gauge beside the board: throw harder to land higher, softer to land lower.', body); }
     case 'darts-checkout': { const { score, plan } = DIAGRAMS.dartsCheckout;
       return svg(300, 110, `A checkout from ${score}: ${plan.join(', then ')}, finishing exactly on a double.`,
         `<text class="sg-label" x="30" y="62" font-size="26">${score}</text>` + plan.map((bed, i) => `<rect class="sg-tile-face" x="${110 + i * 90}" y="34" width="70" height="40" rx="8"/><text class="sg-label" x="${145 + i * 90}" y="60" text-anchor="middle" font-size="16">${bed}</text>`).join('')
@@ -514,11 +518,11 @@ export function figureMarkup(figure, game) {
       return svg(300, 130, 'The long table from above: six wine glasses racked three, two, one at each end; you throw at the far rack.',
         '<rect class="sg-tile-face" x="20" y="34" width="260" height="62" rx="6"/><line class="sg-path" x1="150" y1="38" x2="150" y2="92"/>' + rack(36, false) + rack(264, true)
         + '<text class="sg-label sg-quiet" x="40" y="118" font-size="11">your glasses</text><text class="sg-label sg-quiet" x="260" y="118" text-anchor="end" font-size="11">the far rack: sink all six</text>'); }
-    case 'pong-throw': return svg(170, 260, 'From your end: the dotted aim line crosses the far rack, and the power target rides along it onto a glass.',
+    case 'pong-throw': return svg(170, 260, 'From your end: the dotted aim line crosses the far rack, and the landing mark rides along it onto a glass as you set the distance.',
       '<rect class="sg-tile-face" x="55" y="20" width="60" height="200" rx="5"/>'
       + [[0, -1], [0, 0], [0, 1], [1, -0.5], [1, 0.5], [2, 0]].map(([row, across]) => `<circle class="sg-tile-face" cx="${85 + across * 13}" cy="${32 + row * 11}" r="5.5"/><circle class="sg-red" cx="${85 + across * 13}" cy="${32 + row * 11}" r="3.2"/>`).join('')
       + arrow([[85, 246], [85, 60]], 't') + arrowHead('t') + '<circle class="sg-win" cx="85" cy="54" r="8"/><circle class="sg-mark" cx="85" cy="246" r="5"/>'
-      + '<text class="sg-label sg-quiet" x="85" y="14" text-anchor="middle" font-size="11">aim, then power</text>');
+      + '<text class="sg-label sg-quiet" x="85" y="14" text-anchor="middle" font-size="11">aim and distance</text>');
     case 'pong-outcomes': { const glass = (x, sunk) => `<circle class="sg-tile-face" cx="${x}" cy="62" r="16"/>${sunk ? '' : `<circle class="sg-red" cx="${x}" cy="62" r="10"/>`}`;
       return svg(300, 140, 'Three ways in: straight in, off the rim and in, or a bounce on the table and in.',
         glass(55, true) + '<circle class="sg-mark" cx="55" cy="62" r="5"/>' + glass(150, true) + '<circle class="sg-mark" cx="164" cy="50" r="5"/>' + glass(245, true) + '<circle class="sg-mark" cx="245" cy="62" r="5"/>'

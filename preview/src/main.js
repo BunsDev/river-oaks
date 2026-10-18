@@ -21,6 +21,7 @@ import { warnIfSoftwareRendering } from './hardware-acceleration.js';
 import './hardware-acceleration.css';
 import { bindRenderVisibility } from './render-lifecycle.js';
 import { createRenderAudit } from './render-audit.js';
+import { createDrawCensus } from './draw-census.js';
 import { localToScene, terrainHeight } from './geometry.js';
 import { setupThemeControls } from './theme.js';
 import { configureMaterials, physicalSurface, loadEnvironment } from './materials.js';
@@ -50,7 +51,7 @@ import { buildStreetFurniture } from './street-furniture.js';
 import { buildPlazaSalon } from './plaza-salon.js';
 import { createPlazaTableGames, seatAtTable } from './plaza-table-games.js';
 import { createPlazaStage } from './plaza-stage.js';
-import { plazaSalonPlan } from './plaza-salon-plan.js';
+import { plazaSalonPlan, winePongPoint } from './plaza-salon-plan.js';
 import { createPlazaDominoes, seatAtCafe } from './plaza-dominoes.js';
 import { createPlazaHearts } from './plaza-hearts.js';
 import { createPlazaSpades } from './plaza-spades.js';
@@ -130,6 +131,7 @@ const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matc
 const softwareAcceptance = import.meta.env.DEV && import.meta.env.VITE_SHARED_SOFTWARE_RENDERING === '1';
 const renderAudit = import.meta.env.DEV && new URLSearchParams(location.search).get('render-audit') === '1' ? createRenderAudit() : null;
 let exteriorCulling = true; // A development audit can switch it off to compare frames.
+let pendingDrawCensus = null; // A development audit attributes the next frame's draws.
 // Inside IPIC's auditorium, facing away from its only partition, nothing outdoors can be seen (#428),
 // nor any other store's interior or people (#431): the frame keeps only IPIC's own.
 function ipicAuditoriumCull() {
@@ -378,7 +380,10 @@ function initializeRenderer() {
   };
   const longTable = () => (world && plazaSalonPlan(world)?.winePong) ?? null;
   plazaWinePong = createPlazaWinePong({ getMirror: () => plazaSalon?.userData.winePong ?? null, getTable: longTable,
-    getPose: () => walking?.getPose(), focusWorld: () => host.focus({ preventScroll: true }), reducedMotion, onSwitch: switchLongTable });
+    getPose: () => walking?.getPose(), focusWorld: () => host.focus({ preventScroll: true }),
+    frameTable: table => { if (world && table) walking?.lookAt([table.x, table.north, groundSurfaceHeight(world, table.x, -table.north) + 0.8], 0.9); },
+    onWindup: () => playerAvatar?.throwBall(performance.now()),
+    reducedMotion, onSwitch: switchLongTable });
   plazaShuffleboard = createPlazaShuffleboard({ getMirror: () => plazaSalon?.userData.shuffleboard ?? null, getTable: longTable,
     getPose: () => walking?.getPose(), focusWorld: () => host.focus({ preventScroll: true }), reducedMotion, onSwitch: switchLongTable });
   playProviders.push(() => longTableGames()[longTableGame]);
@@ -891,6 +896,7 @@ function followSunShadow() {
 function render(now) {
   noteFrame(now);
   const auditStart = renderAudit ? performance.now() : 0;
+  const drawCensus = pendingDrawCensus; pendingDrawCensus = null; drawCensus?.census.begin();
   clock.update();
   if (lastFrame !== null) quality.sample(now - lastFrame);
   lastFrame = now;
@@ -987,6 +993,7 @@ function render(now) {
     lastRenderStats=now;
   }
   renderAudit?.frame(now, performance.now() - auditStart);
+  drawCensus?.resolve(drawCensus.census.end());
 }
 
 document.querySelectorAll('[data-layer]').forEach((input) => input.addEventListener('change', () => {
@@ -1148,6 +1155,9 @@ if (import.meta.env.DEV && renderAudit) {
   window.__riverRenderAudit = {
     start: () => renderAudit.start(), stop: () => renderAudit.stop(),
     exteriorCulling(enabled) { exteriorCulling = Boolean(enabled); },
+    avatarCulling(enabled) { remotePlayers?.setCulling(enabled); },
+    // Draws and submitted triangles for one frame, by pass and tagged owner.
+    drawCensus: () => new Promise(resolve => { pendingDrawCensus = { census: createDrawCensus(renderer, camera), resolve }; }),
     crowdView() {
       const players = multiplayer?.snapshot?.players ?? [];
       if (!players.length) throw new Error('Join the shared world before framing its crowd.');
@@ -1209,11 +1219,11 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
   window.__riverAxes = () => axePanel ? { ...axePanel.debug(), stuck: Object.fromEntries(AXE_LANES.map(lane => [lane.id, buildingMesh?.userData.interiors?.userData.axeVenue?.axeLanes?.[lane.id]?.count() ?? null])),
     holdAt: mm => axePanel.holdAt(mm), open: () => axePanel.open() } : null;
   window.__riverVenueDarts = () => venueDarts ? { ...venueDarts.debug(), board: buildingMesh?.userData.interiors?.userData.axeVenue?.venueDarts?.count() ?? null,
-    holdAt: mm => venueDarts.holdAt(mm), open: () => venueDarts.open() } : null;
+    steadyOn: point => venueDarts.steadyOn(point), open: () => venueDarts.open() } : null;
   window.__riverIpicDarts = () => ipicDarts ? { ...ipicDarts.debug(), board: buildingMesh?.userData.interiors?.userData.dartboards?.[0]?.count() ?? null,
-    hold: value => ipicDarts.hold(value), holdAt: mm => ipicDarts.holdAt(mm), open: () => ipicDarts.open() } : null;
+    steadyAt: release => ipicDarts.steadyAt(release), steadyOn: point => ipicDarts.steadyOn(point), open: () => ipicDarts.open() } : null;
   window.__riverPlazaDarts = () => plazaDarts ? { ...plazaDarts.debug(), board: plazaSalon?.userData.darts?.count() ?? null,
-    hold: value => plazaDarts.hold(value), holdAt: mm => plazaDarts.holdAt(mm), reset: seed => plazaDarts.reset(seed),
+    steadyAt: release => plazaDarts.steadyAt(release), steadyOn: point => plazaDarts.steadyOn(point), landingFor: (release, dart) => plazaDarts.landingFor(release, dart), reset: seed => plazaDarts.reset(seed),
     // Walk to the throwing line and face the board.
     async goTo() {
       const board = world && plazaSalonPlan(world)?.darts;
@@ -1224,7 +1234,10 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
       return { ok: Boolean(result?.ok) };
     } } : null;
   window.__riverPlazaWinePong = () => plazaWinePong ? { ...plazaWinePong.debug(), table: plazaSalon?.userData.winePong?.glasses() ?? null, ball: plazaSalon?.userData.winePong?.ballVisible() ?? null,
-    hold: value => plazaWinePong.hold(value), deal: seed => plazaWinePong.deal(seed),
+    steadyAt: (aim, power) => plazaWinePong.steadyAt(aim, power), deal: seed => plazaWinePong.deal(seed),
+    reposition: () => plazaWinePong.reposition(), resume: () => plazaWinePong.resume(),
+    // A world point in the table's frame [u along it, v across it], for walking to a stance.
+    pointAt: (u, v) => { const table = world && plazaSalonPlan(world)?.winePong; return table ? winePongPoint(table, [u, v]) : null; },
     // Walk to one end of the table (0 west, 1 east) and face down it.
     async goTo(side) {
       const spot = plazaSalon?.userData.winePong?.stand(side), table = world && plazaSalonPlan(world)?.winePong;

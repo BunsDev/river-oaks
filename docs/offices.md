@@ -36,6 +36,13 @@ A failed save keeps your draft in the current page and offers Retry. Retries reu
 
 Each private desk can keep up to 24 tasks within a 128 KiB desk document. Task limits are 120 characters for the title, 4,000 for notes, 8,000 for the result and five file links. Removing a task requires confirmation. Redis stores the account's desk outside world checkpoints until tasks are removed; the standalone in-memory development server retains it only for that process lifetime. Creation/update timestamps are assigned by the server. Legacy tasks acquire timestamps when edited. Deletion removes task content while retaining a small version record to prevent stale writes from resurrecting deleted work.
 
+**Computer.** When `VITE_TYPESAFE_COMPUTER_ORIGIN` names a valid Computer origin, the
+desk shows **Tasks** and **Computer** tabs. Computer runs your own TypeSafe Computer in
+one separate-origin frame. It has its own sign-in in a new tab, and asks you to confirm
+the account on every visit. Leaving asks Computer to finish saving. Losing office access
+removes it at once. Without that configuration the desk is Tasks only and loads nothing
+from Computer. Contract, policies and staged blockers: [office-computer-embed.md](office-computer-embed.md).
+
 The desk routes require the existing authenticated, approved session, origin/CSRF checks, rate limits and an active office visit in that same session. Desk text is never included in public snapshots. Saves use version checks so simultaneous tabs cannot silently overwrite each other. The desk performs no external writes, file fetches or model calls.
 
 ## Authority and persistence
@@ -71,7 +78,7 @@ To see it locally, run `node preview/e2e/office-penthouse-runner.mjs`: the loopb
 
 **Live skyline.** Terrace layouts render the actual district with the existing scene, camera and postprocessing pipeline (`office-world-scene.js`). Walking, seats and bounded views change the real viewpoint; changing world time updates the sky and exterior lighting during the visit. There is no cubemap allocation or six-face recapture in the default product path. The district stays hidden during the enclosed elevator arrival and returns when the office is reached. `?office-skyline=off` remains a development comparison; software functional fixtures omit the live exterior workload and do not establish visual acceptance.
 
-Only the host tower skin and above-floor obstructions are masked, using the existing clearance rules; lower wings, neighbouring buildings and planting stay. The mask classifies fixed building architecture once per visit and restores its matrices/visibility after every pipeline draw, including exceptions. Moving residents are outside that cached architecture root. Street lighting remains owned by the world; the office keeps its own lamps, relit for the time of day (see Lighting above). Leaving restores the borrowed camera, avatar and lobby without rolling current sky or street lighting back to entry time. The snapshot utility remains available for bounded diagnostic captures, but is not the default office backdrop.
+Only the host tower skin and above-floor obstructions are masked, using the existing clearance rules; lower wings, neighbouring buildings and planting stay. The mask classifies fixed building architecture once per visit and gives each host mesh a stand-in holding only its unmasked instances (same geometry and material). Each pipeline draw swaps the stand-ins in and swaps them back after, including on exceptions, so no instance data is uploaded again per frame and other renders and raycasts between draws see the district unchanged. The office's lamps change the scene's light count when it first shows, so the visit compiles those programs while the arrival plays (`compileAsync`); a skipped arrival holds on the street until they are ready, for at most three seconds. Moving residents are outside that cached architecture root. Street lighting remains owned by the world; the office keeps its own lamps, relit for the time of day (see Lighting above). Leaving restores the borrowed camera, avatar and lobby without rolling current sky or street lighting back to entry time. The snapshot utility remains available for bounded diagnostic captures, but is not the default office backdrop.
 
 Live rendering costs an ordinary exterior scene draw instead of a static image. Local measurements and their hardware/sample limits are recorded in [green roofs](green-roofs.md). GPU/mobile/native and production acceptance require their own evidence.
 
@@ -105,3 +112,7 @@ personal-office visits are ended on checkpoint recovery; their identity cannot b
 used to enter Jevica’s office. Old workspace data is not read or served. This source
 change does not delete production records. Account-private desk tasks remain owned
 by their accounts and are accessible only during an authorized Jevica office visit.
+
+## The Gardens rental campus (planned)
+
+The Gardens will replace the parking garage with three rental office towers joined by public Floor 4 skywalks (#505). Its measured contract, which covers the parcel, floors, skywalks, support levels, suites and validator, is `shared/garden-campus-layout.js`. The brief, published contract and views are in [`docs/design/garden-campus/`](design/garden-campus/brief.md). Nothing in the running district uses it yet: the garage stays until a reviewed campus revision replaces it (#507), and rental tenancy is a separate service (#509), not the retired personal-office APIs above.
