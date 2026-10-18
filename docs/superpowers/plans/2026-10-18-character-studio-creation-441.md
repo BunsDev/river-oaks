@@ -363,6 +363,21 @@ fixture configuration.
   toward the hem. Broad waist-level tail panels remain a matter for final art
   approval.
 
+## Round 11: Rowan's chest tailoring (2026-10-18)
+
+- The chest test, pointed at Rowan, found his flat shirt box 1.8 cm inside the
+  chest at the collar. Rowan uses the `man-tailored` rig, whose suit is
+  `man-tailoredmale_elegantsuit01`, so the measurement now finds whichever suit
+  the rig has.
+- His shirt, lapels, pocket flaps (moved 2 cm inward, where the narrower suit
+  front exists) and buttons now lie on the chest. `chest-tailoring.test.js`
+  covers rowan-human and man-casual: 6/6 looks. Rowan triangles 7,644 → 6,416,
+  14 draws.
+- Related suites 128/128. Full preview suite 3454 of 3456 passed, with the
+  existing 1 skip and 1 todo. Close-ups: `.runtime/cs441/rowan-after-sheet.png`.
+- `character-studio` 44 checks and `player-forms` 139 checks passed
+  (`.runtime/cs441/rowan-journeys.json`).
+
 ## Gaps and next steps
 
 Not claimed: human keyboard, VoiceOver or novice acceptance (#444 protocol),

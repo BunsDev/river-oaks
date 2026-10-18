@@ -906,7 +906,10 @@ had been 2 cm inside the chest, so they were never visible. `chest-tailoring.tes
 raycasts the skinned suit independently and requires every chest vertex of the
 Kai formal, noir and explorer looks and Aurel to sit no more than 4 mm inside
 it and no more than 3.5 cm in front of it, allowing for layered pieces. Negative controls with sunk panels or lifted stars fail.
-The pieces use fewer triangles than the boxes they replace.
+The pieces use fewer triangles than the boxes they replace. Rowan's shirt,
+lapels, pocket flaps and buttons, on the elegant-suit rig, use the same
+measurement. His shirt had sunk 1.8 cm into the chest at the collar. The test
+also covers his human and wolf looks.
 
 ### Peer revision fallback and recovery
 

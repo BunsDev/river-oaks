@@ -8,14 +8,14 @@ import {loadCharacterRig} from './helpers/character-rig.js';
 
 // Tailoring and embroidery on the masculine chest must lie on it: never inside
 // the suit and never floating in front of it, from the collar to the waist.
-for(const id of ['man-workwear','kai-noir','kai-explorer','man-tailored'])test(`${id}: chest tailoring and embroidery sit on the chest`,async()=>{
+for(const id of ['man-workwear','kai-noir','kai-explorer','man-tailored','rowan-human','man-casual'])test(`${id}: chest tailoring and embroidery sit on the chest`,async()=>{
   const appearance=sharedAppearance(id),source=await loadCharacterRig(appearance.rig);
   const avatar=instantiateAvatar(source,{targetHeight:source.height,id});
   const model=avatar.model,original=new Set(model.getObjectsByProperty('isMesh',true)),look=createReferenceStyle(avatar,appearance);
   try{
     model.updateMatrixWorld(true);
     const spine=model.getObjectByName('spine_03'),groups=spine.children.filter(child=>child.isGroup);
-    const inverse=groups[0].matrixWorld.clone().invert(),body=model.getObjectByName('man-casualmale_casualsuit02');
+    const inverse=groups[0].matrixWorld.clone().invert(),body=model.getObjectsByProperty('isSkinnedMesh',true).find(mesh=>/suit/.test(mesh.name));
     // The chest's front-most surface, by raycasting the skinned suit from the front.
     const ray=new THREE.Raycaster(),hits=new Map(),frame=groups[0].matrixWorld,direction=new THREE.Vector3(0,0,-1).transformDirection(frame);
     const surface=(x,y)=>{
