@@ -11223,9 +11223,9 @@
         "feat/character-studio-persistence-20261015"
       ],
       "owner": "codex-character-studio-20261015",
-      "updatedAt": "2026-10-18T05:15:10.314949+00:00",
-      "leaseUntil": "2026-10-18T07:15:10.314949+00:00",
-      "nextAction": "World journey verified: browser35623 passed27checks;core79445 passed11/11 with isolatedRedis;focused21pass;frozen hash matches;recovery capture inspected;review no findings. Ready signed commit/push464 and issue443 update. No production edits. Project check64618 exit1 unrelated lifecycle debt; preserve reports/worktrees; no merge/deploy. Next address remaining442 crowd performance and final visual/device/human acceptance.",
+      "updatedAt": "2026-10-18T06:40:52.314190+00:00",
+      "leaseUntil": "2026-10-18T08:40:52.314190+00:00",
+      "nextAction": "Boot fit final gates passed: focused21+ownership4,wardrobe877checks132rows330phases,core11withRedis,native4Kbothzero. Selected Rowan/Kai sit/run visually clear at cuffs,review no blockers. Ready signed commit/push464 then exacthead CI/issue update. Preserve userdev5028,reports and otherowners; no merge/deploy.",
       "filesOwned": [
         "server/character-store.js",
         "server/tests/character-store.test.js",
@@ -11369,7 +11369,14 @@
         "preview/src/coat-tail-morph-receipt.json",
         "scripts/lib/coat-tail-fit.mjs",
         "preview/src/coat-tail-skinning.js",
-        "preview/e2e/character-studio-worlds.js"
+        "preview/e2e/character-studio-worlds.js",
+        "preview/src/rigid-costume-batching.js",
+        "preview/tests/rigid-costume-batching.test.js",
+        "preview/src/rigid-accessory-pool.js",
+        "preview/tests/rigid-accessory-pool.test.js",
+        "preview/tests/reference-boots.test.js",
+        "preview/src/boot-fitting.js",
+        "preview/tests/boot-fitting.test.js"
       ],
       "requiredChecks": [
         "Memory and real isolated Redis store contract tests",

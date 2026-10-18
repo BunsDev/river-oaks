@@ -1,3 +1,4 @@
+import {fitBootTrousers} from './boot-fitting.js';
 import {createSilvanTrousers} from './silvan-trousers.js';
 import {createCoatTailGeometry,COAT_TAIL_NAME} from './coat-tail-geometry.js';
 import {skinCoatTails} from './coat-tail-skinning.js';
@@ -21,7 +22,7 @@ import { batchCostumeAttachments } from './costume-batching.js';
 // Each piece follows a bone, so walking, gestures, and remote animation still work.
 export function createReferenceStyle(avatar,appearance){
   if(!['sable','rowan','vesper','aurel','kai','silvan','lyra'].includes(appearance?.character))return {dispose(){}};
-  const resources=new Set(),materials=new Set(),textures=new Set(),attachments=new Set(),correctives=[],lyraOutfit=[],model=avatar.model;
+  const resources=new Set(),materials=new Set(),textures=new Set(),attachments=new Set(),correctives=[],fittings=[],lyraOutfit=[],model=avatar.model;
   let trackLyraOutfit=false;
   const material=(color,options={})=>{const value=new THREE.MeshPhysicalMaterial({color,roughness:.6,...options});materials.add(value);return value;};
   const mesh=(parent,geometry,surface,position=[0,0,0],scale=[1,1,1])=>{
@@ -112,11 +113,11 @@ export function createReferenceStyle(avatar,appearance){
     }
   }
   function boots(color,{rugged=false}={}){
+    const shafts=[];
     const upper=material(color,{roughness:.74}),sole=material(['aurel','kai'].includes(appearance.character)?'#171618':rugged?'#332f2b':'#3b2028',{roughness:.86});
     for(const side of ['l','r']){
       const foot=aligned(`foot_${side}`);if(!foot)continue;
-      const tailored=appearance.character==='aurel'||appearance.character==='kai'&&appearance.variant!=='explorer';
-      const shin=tailored?aligned(`calf_${side}`):null;
+      const shin=aligned(`calf_${side}`);
       // The sole follows the foot; the tall shaft and its trim follow the shin.
       // Reparent in the rest pose so its authored fit is preserved exactly.
       const onShin=item=>{if(shin)shin.attach(item);return item;};
@@ -126,11 +127,13 @@ export function createReferenceStyle(avatar,appearance){
       const shaft=mesh(foot,new THREE.CylinderGeometry(rugged?.078:.067,rugged?.085:.073,rugged?.23:.17,16),upper,[0,rugged?.12:.10,-.014]);
       shaft.scale.z=.84;
       onShin(shaft);
+      if(shin)shafts.push({shaft,calf:shin.parent});
       if(rugged){
         for(let i=0;i<3;i++)onShin(tube(foot,gold,[[-.04,.09+i*.05,.07],[.04,.09+i*.05,.07]],.0035));
         onShin(box(foot,gold,[.077,.13,-.005],[.014,.018,.032],.003));
       }else onShin(box(foot,gold,[.065,.16,-.012],[.013,.019,.031],.003));
     }
+    if(appearance.character==='rowan'||appearance.character==='kai'&&appearance.variant==='explorer')fittings.push(fitBootTrousers(model,shafts));
   }
   function relaxedSleeves(color){
     const velvet=material(color,{roughness:.9,sheen:1,sheenColor:new THREE.Color('#8e4a60')});
@@ -390,6 +393,6 @@ export function createReferenceStyle(avatar,appearance){
   return {
     update(motion){for(const update of correctives)update();if(appearance.character!=='lyra'||appearance.form!=='beast')return;const dressed=!motion?.beast;
       for(const item of [...lyraOutfit,...sourceClothes])item.visible=dressed;},
-    dispose(){correctives.length=0;for(const item of attachments)item.removeFromParent();for(const geometry of resources)geometry.dispose();for(const surface of materials)surface.dispose();for(const texture of textures)texture.dispose();},
+    dispose(){for(const dispose of fittings)dispose();fittings.length=0;correctives.length=0;for(const item of attachments)item.removeFromParent();for(const geometry of resources)geometry.dispose();for(const surface of materials)surface.dispose();for(const texture of textures)texture.dispose();},
   };
 }
