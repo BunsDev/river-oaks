@@ -403,6 +403,28 @@ fixture configuration.
     `character-studio-paused` and `character-studio-layout` passed. The layout
     journey passed on rerun; its first run caught the access gate still checking.
 
+## Round 12: Val's device, keyboard and VoiceOver session (2026-10-18)
+
+- Setup:
+  - Code: `a0949092`.
+  - Server: the local acceptance fixture at `127.0.0.1:5196`, with the Studio on
+    and loopback dev identities. Its town server was restarted on the merged code.
+  - Devices: Safari 27.0 on macOS 26.7.1, and the iPhone 16 Pro simulator (iOS
+    26.5), whose Safari counts as loopback and signs in through the same fixture.
+- Val's results, from a checklist mapped to the acceptance criteria:
+  - **A. Keyboard only: pass.** Tab to "Open character studio", arrows through
+    character, dress and hair, Cmd+Z and Cmd+Shift+Z, Save draft by Tab and
+    Enter, then Escape back to the entry.
+  - **B. VoiceOver on macOS, same path: pass.** Steps, groups, selected state,
+    the live preview's look name and the save are announced.
+  - **C. Reduce motion: pass.** The Studio works without animated transitions.
+  - **D. Phone layout and touch in the simulator: pass.** Tapping changes the
+    look, the preview stays in view, and cancel or undo restores the start.
+  - **E. Novice self-check:** not reported.
+- Not covered: a physical phone, VoiceOver on iOS, and the five-person novice
+  trial (#444 protocol). A physical phone needs a sign-in-capable branch
+  preview; its variables were removed at Val's request.
+
 ## Gaps and next steps
 
 Not claimed: human keyboard, VoiceOver or novice acceptance (#444 protocol),
