@@ -1,5 +1,6 @@
 /* Darts on the south wall: the board drawn from the rules' rings, numbers round the
-   edge, the turn's darts marked, and the sweeping line (dashed once set). */
+   edge, the turn's darts marked, the release line with its landing guide, and the
+   acceleration gauge (the bull's acceleration and your last throw marked on it). */
 .darts-panel .darts-body { display: flex; flex-direction: column; gap: 12px; }
 .darts-panel .darts-scores { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
 .darts-panel .darts-scores li { padding: 5px 12px; border-radius: 10px; background: var(--hud-tile); color: var(--ink); font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
@@ -12,13 +13,21 @@
 .darts-panel .darts-number { fill: #f3ead8; font: 700 15px var(--font-ui, system-ui); }
 .darts-panel .darts-hit { fill: #f6c445; stroke: #1a1716; stroke-width: 2; }
 .darts-panel .darts-line { stroke: #ffffff; stroke-width: 2.5; opacity: .85; }
-.darts-panel .darts-line-set { stroke-dasharray: 6 5; }
 .darts-panel .darts-target { fill: none; stroke: #ffffff; stroke-width: 2.5; }
-.darts-panel .darts-side { display: grid; gap: 8px; color: var(--ink); font-size: 13px; }
-.darts-panel .darts-side p { margin: 0; }
+.darts-panel .darts-target-dot { fill: #ffffff; }
+.darts-panel .darts-board { touch-action: none; cursor: crosshair; }
+.darts-panel .darts-side { display: grid; grid-template-columns: 24px minmax(0, 1fr); column-gap: 12px; row-gap: 8px; align-content: center; color: var(--ink); font-size: 13px; }
+.darts-panel .darts-side p { margin: 0; grid-column: 2; }
+.darts-panel .darts-gauge { position: relative; grid-column: 1; grid-row: 1 / span 3; align-self: stretch; min-height: 168px; border-radius: 12px; background: var(--hud-tile); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 18%, transparent); overflow: hidden; }
+.darts-panel .darts-gauge-fill { position: absolute; inset: auto 0 0; height: calc(var(--fill, .375) * 100%); background: linear-gradient(to top, #237a45, #f6c445 70%, #b0262c); opacity: .85; }
+.darts-panel .darts-gauge-last, .darts-panel .darts-gauge-bull { position: absolute; left: 0; right: 0; bottom: calc(var(--at, 0) * 100%); height: 0; border-top: 2px solid var(--ink); }
+.darts-panel .darts-gauge-bull { border-top: 2px dotted color-mix(in srgb, var(--ink) 55%, transparent); }
+.darts-panel .darts-gauge-last[hidden] { display: none; }
+.darts-panel .darts-readout { font-variant-numeric: tabular-nums; }
 .darts-panel .darts-checkout { font-weight: 700; }
 .darts-panel .table-game-actions [data-darts-action] { background: var(--hud-action); border-color: transparent; color: var(--hud-on-action); }
 .darts-panel .table-game-actions [data-darts-action=throw] { min-width: 120px; }
 .darts-panel .table-game-actions [data-darts-action][aria-disabled=true] { opacity: .45; cursor: default; }
+.darts-panel .table-game-actions [data-darts-action=guide][aria-pressed=false] { background: var(--hud-tile); color: var(--ink); }
 .darts-panel .table-game-actions [hidden] { display: none; }
-@media (max-width: 560px) { .darts-panel .darts-play { grid-template-columns: 1fr; } }
+@media (max-width: 560px) { .darts-panel .darts-play { grid-template-columns: 1fr; } .darts-panel .darts-gauge { min-height: 96px; } }
