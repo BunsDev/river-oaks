@@ -250,6 +250,7 @@ one `{from:'gardens', to:'garage'}` log. Leases stay inert and desks are untouch
 **Release gates still open:**
 
 - #508's traversal;
+- #508's gallery/spine walls and closed suite door frames. The slice (b) circulation views (`06a93ced`, candidate `d8fe456a`) show Floor 4 galleries open to the suites, with #510's suite desks visible from the public route;
 - the #510 suite journey;
 - #512's two-account candidate run on the integrated head;
 - #511's resource measurements on named hardware;
