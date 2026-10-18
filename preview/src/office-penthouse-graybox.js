@@ -17,15 +17,26 @@ const DOOR = { halfWidth: 0.85, height: 2.6 }, SHELL = 0.2;
 // Curtain wall: pane thickness, the solid arrival core's half-width (it hides the cabin and lobby
 // that rise with the office), the transom underside over the terrace portals, mullion size.
 const GLASS = 0.025, CORE = 3, TRANSOM = 3, MULLION = { width: 0.07, depth: 0.1 }, BAND = 0.08;
+// Interior light. Four pendants over the desks and the west aisle and a reading lamp in the library,
+// each [x, height above its floor, d, full intensity], hang well below the ceiling so they pool on
+// the floor instead of hot-spotting the slab above them. Through the day they stay dimmed and
+// neutral beside the daylight; toward dusk (atmosphere.js `twilight`) they warm and come up to full.
+// The roof hides most of the sky, so interior finishes take the environment at a share of its
+// intensity; the terrace, outdoors, keeps all of it.
+const PENDANTS = [[-3, 4.5, 8, 40], [5, 4.5, 7, 40], [5, 4.5, 12, 35], [-9, 4.5, 4, 35]], READING_LAMP = [-6, 1.7, 17.4, 20];
+const DAYLIT_LEVEL = 0.6, SKY_SHARE = 0.45, DAY_WHITE = '#fff4ea', DUSK_WARM = '#ffd2a3';
 
 export function buildPenthouseOffice(THREE, layout) {
   const object = new THREE.Group(), geometries = [], materials = new Map();
   object.name = `office:${layout.id}`;
   const material = name => {
-    if (!materials.has(name)) materials.set(name, new THREE.MeshStandardMaterial({
-      color: COLORS[name], roughness: name === 'glass' ? 0.1 : name === 'bronze' ? 0.4 : 0.8, metalness: name === 'bronze' ? 0.6 : 0,
-      ...(name === 'glass' ? { transparent: true, opacity: 0.35 } : {}),
-    }));
+    if (!materials.has(name)) {
+      const finish = new THREE.MeshStandardMaterial({
+        color: COLORS[name], roughness: name === 'glass' ? 0.1 : name === 'bronze' ? 0.4 : 0.8, metalness: name === 'bronze' ? 0.6 : 0,
+        ...(name === 'glass' ? { transparent: true, opacity: 0.35 } : {}),
+      });
+      materials.set(name, name === 'glass' ? withoutLightGlints(finish) : finish);
+    }
     return materials.get(name);
   };
   const box = (zone, name, { x0, x1, d0, d1 }, y0, y1, finish) => {
@@ -103,14 +114,32 @@ export function buildPenthouseOffice(THREE, layout) {
   }
   box('shell:ceiling', 'ceiling', main, top, top + 0.15, 'ceiling');
 
-  // Authored lights; the shared-world scene moves them into its existing light pool.
-  for (const [x, y, d, intensity] of [[0, 6, 5, 70], [0, 6, 12, 70], [-8, 6, 8, 60], [8, 6, 8, 60], [0, upper.floorElevation + 2.8, 17, 45]]) {
-    const light = new THREE.PointLight('#fff1df', intensity, 16, 2); light.position.set(x, y, -d); object.add(light);
-  }
+  // Sunlight enters only through the glass: the roof, the solid walls, the mezzanine, desks and
+  // bookcases throw the sun's shadow on the floors, so noon leaves the room in daylight shade and a
+  // low sun lays bars across it. Chairs, treads and fittings only receive, which keeps the office's
+  // share of the sun's shadow pass to ten draws.
+  const casts = node => /^(shell|mezzanine)/.test(node.userData.zone ?? '') || ['desks', 'curtain wall frames'].includes(node.name) || node.name.startsWith('bookcase');
+  object.traverse(node => { if (node.isMesh && !node.material.transparent) { node.receiveShadow = true; node.castShadow = casts(node); } });
+
+  // The lamps (PENDANTS); the shared-world scene keeps them, or moves them into its existing light
+  // pool, and relights them for the time of day. Until then they burn at full, as authored.
+  const lamps = [...PENDANTS.map(([x, h, d, full]) => [x, ground.floorElevation + h, d, full]), [READING_LAMP[0], upper.floorElevation + READING_LAMP[1], READING_LAMP[2], READING_LAMP[3]]].map(([x, y, d, full]) => {
+    const light = new THREE.PointLight('#fff1df', full, 16, 2); light.position.set(x, y, -d); light.userData.fullIntensity = full; object.add(light);
+    return light;
+  });
+  const interior = [...materials].filter(([name, finish]) => name !== 'terrace' && !finish.transparent).map(([, finish]) => finish);
+  const dayWhite = new THREE.Color(DAY_WHITE), duskWarm = new THREE.Color(DUSK_WARM);
   return {
     object,
     get lights() { return object.children.filter(node => node.isPointLight); },
     update() {},
+    // The current atmosphere (atmosphere.js) and the scene's environment map: twilight warms and
+    // raises the lamps, and the environment intensity sets the interior's share of the sky.
+    relight({ twilight = 0, environmentIntensity = 1 } = {}, environment = null) {
+      const level = DAYLIT_LEVEL + (1 - DAYLIT_LEVEL) * twilight;
+      for (const light of lamps) { light.intensity = light.userData.fullIntensity * level; light.color.copy(dayWhite).lerp(duskWarm, twilight); }
+      for (const finish of interior) { finish.envMap = environment; finish.envMapIntensity = SKY_SHARE * environmentIntensity; }
+    },
     dispose() {
       // Instanced draws hold their own instance buffers on the GPU.
       object.traverse(node => { if (node.isInstancedMesh) node.dispose(); });
@@ -162,7 +191,7 @@ function glazeCurtainWall(THREE, { object, geometries, materials, bronze, ground
     else along(frames, 'transom', terraceX, d0, d1, floor + TRANSOM, top, MULLION.depth);
   }
   const unit = new THREE.BoxGeometry(1, 1, 1); geometries.push(unit);
-  if (!materials.has('curtain glass')) materials.set('curtain glass', thinStorefrontGlass());
+  if (!materials.has('curtain glass')) materials.set('curtain glass', withoutLightGlints(thinStorefrontGlass()));
   const matrix = new THREE.Matrix4(), position = new THREE.Vector3(), scale = new THREE.Vector3(), turn = new THREE.Quaternion();
   for (const [name, list, finish] of [['curtain wall panes', panes, materials.get('curtain glass')], ['curtain wall frames', frames, bronze]]) {
     const mesh = new THREE.InstancedMesh(unit, finish, list.length);
@@ -171,6 +200,19 @@ function glazeCurtainWall(THREE, { object, geometries, materials, bronze, ground
     if (finish !== bronze) { mesh.userData.aoExclude = true; mesh.castShadow = false; }
     object.add(mesh);
   }
+}
+
+// Near-mirror glass would show every light as a pinpoint glint. The penthouse glass keeps the
+// environment it reflects and the room behind it, and drops the lights' direct highlight, the sun's
+// included. Its own program key keeps the district's storefront glass unchanged.
+export function withoutLightGlints(material) {
+  const compile = material.onBeforeCompile, key = material.customProgramCacheKey.bind(material);
+  material.onBeforeCompile = (shader, renderer) => {
+    compile.call(material, shader, renderer);
+    shader.fragmentShader = shader.fragmentShader.replace('#include <aomap_fragment>', '#include <aomap_fragment>\n\treflectedLight.directSpecular = vec3( 0.0 );');
+  };
+  material.customProgramCacheKey = () => `${key()}|without-light-glints`;
+  return material;
 }
 
 // The geometry for a visit's admitted layout. An unknown layout fails rather than falling
