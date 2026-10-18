@@ -19,7 +19,8 @@ try {
   const source = (await readFile('preview/e2e/ipic-visit.js', 'utf8')).replaceAll('http://127.0.0.1:5173', fixture.origin);
   try {
     const result = await eval(`(${source})`)(page);
-    await writeFile('output/playwright/ipic/visit.json', JSON.stringify({ status: 'passed', browser: await browser.version(), ...result }, null, 2));
+    await writeFile('output/playwright/ipic/visit.json', JSON.stringify({ status: 'passed', browser: await browser.version(), ...result,
+      ...(gpu ? { rendering: 'Metal ANGLE on this machine\'s GPU, full pipeline (IPIC_GPU=1)' } : {}), reducedMotion: process.env.IPIC_REDUCED_MOTION === '1' }, null, 2));
     console.log(JSON.stringify(result));
   } catch (error) {
     await page.screenshot({ path: 'output/playwright/ipic/visit-failure.png' }).catch(() => {});

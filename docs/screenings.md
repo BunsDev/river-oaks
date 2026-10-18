@@ -188,9 +188,15 @@ second interior or renderer is built.
     camera that frames the whole film. From the seat itself the film is too close, low and to one side; the front
     row would need a vertical field of view over 100°. So focus looks from a bounded point instead
     (`ipic-screening-view.js`): on the screen's centre line, at the viewer's own row depth (at least 2.5 m away),
-    at the film's centre height. That point is inside the auditorium and above seated heads. The field of view
-    fits the film's corners, between 30° and 80°. On a narrow portrait phone even 80° cannot show it all;
-    `focus.fits` says so, and the framing stays centred.
+    at the film's centre height. That point is inside the auditorium and above seated heads.
+  - **Above the panel.** The screening panel (captions and controls) stays on screen in both views, so focus fits
+    the film into the band of the view above the panel's top edge (less 12 px), measured four times a second and
+    on resize. A lens shift (the projection's vertical off-centre term) centres the film in that band: the camera
+    keeps its height above the seats and faces the screen square-on. The field of view is between 30° and 80°.
+    Where the band is too short for the viewer's row within 80° (the front row at 1440 × 900 would need about 93°), focus
+    steps back along the centre line, but never past the back row (5.79 m, published with the screen frame). On a
+    narrow portrait phone even that cannot show it all; `focus.fits` says so, and the film stays centred in the
+    band.
   - **What focus never changes.** The avatar, the seat, the server's position, Stand up or Step outside. It eases
     in and out over 0.35 s, and is immediate with reduced motion.
   - **Ending focus.** **Look around**, a drag on the world, an arrow key, standing, leaving, disconnecting or a

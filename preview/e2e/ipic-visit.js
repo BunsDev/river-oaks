@@ -37,6 +37,10 @@ async page => {
   // Step outside is offered by the street door, not from deep inside the venue (Val, 2026-10-15).
   const hud = () => page.evaluate(() => { const shown = selector => { const el = document.querySelector(selector); return Boolean(el) && !el.hidden && getComputedStyle(el).visibility !== 'hidden' && el.getClientRects().length > 0; };
     return { theater: document.body.classList.contains('theater-seated'), exit: shown('#walking-enter') ? document.querySelector('#walking-enter').textContent : null, dock: shown('.visit-tools'), chat: shown('.town-chat-dock'), stand: shown('#walking-interact') ? document.querySelector('#walking-interact').textContent : null, inside: document.querySelector('#walking-hud')?.dataset.inside ?? '' }; });
+  // A first visit opens the store intro, which hides the HUD for up to 6 s (2.2 s with reduced motion), and it can open
+  // after the arrival; skip it as a visitor would, then read the door's prompt.
+  await page.waitForFunction(() => { document.querySelector('dialog.store-intro[open] button')?.click(); const enter = document.querySelector('#walking-enter');
+    return !document.body.classList.contains('store-introducing') && enter && !enter.hidden; }, null, { timeout: 15000 }).catch(() => {});
   const atDoor = await hud();
   check(/Step outside/.test(atDoor.exit ?? ''), `Step outside is offered in reception: ${JSON.stringify(atDoor)}`);
   // Between the rows, beside recliners 0-1 and 1-1 (the T3 seat), as the screening journeys stand.
@@ -107,13 +111,16 @@ async page => {
   const framed = await page.evaluate(() => {
     const s = window.__riverScreening(), f = s.focus, toPx = ([x, y]) => [(x + 1) / 2 * innerWidth, (1 - y) / 2 * innerHeight];
     // The film's centre and points just inside its four corners: each must meet the screen, nothing in front.
-    const points = [[0, 0], ...f.ndc.map(([x, y]) => [x * 0.92, y * 0.92])];
+    const c = [0, 1].map(i => f.ndc.reduce((sum, p) => sum + p[i], 0) / f.ndc.length), points = [c, ...f.ndc.map(p => p.map((v, i) => c[i] + (v - c[i]) * 0.92))];
     const hits = points.map(p => window.__riverDebug().pickAt(...toPx(p))?.materials ?? null);
     const button = document.querySelector('#ipic-screening [data-control="focus"]');
     return { fits: f.fits, fov: f.fov, wanted: f.wanted, distance: f.distance, film: f.film, aspect: f.aspect, eye: f.eye, bound: s.screen?.fit?.repeat ?? null, state: s.state,
-      inView: f.ndc.every(([x, y]) => Math.abs(x) <= 1 && Math.abs(y) <= 1), hits, camera: window.__riverCarriage().camera.position, position: f.position, label: button.textContent, pressed: button.getAttribute('aria-pressed') };
+      inView: f.ndc.every(([x, y]) => Math.abs(x) <= 1 && Math.abs(y) <= 1), hits,
+      // The panel stays on screen: the film's lowest corner must sit above its top edge (in device coordinates).
+      filmBottom: Math.min(...f.ndc.map(([, y]) => y)), panelTop: 1 - 2 * document.querySelector('#ipic-screening').getBoundingClientRect().top / innerHeight, band: f.band, row: f.row, camera: window.__riverCarriage().camera.position, position: f.position, label: button.textContent, pressed: button.getAttribute('aria-pressed') };
   });
   check(framed.fits && framed.inView && framed.hits.every(list => list?.includes('ipic-cinema-screen')) && framed.label === 'Look around' && framed.pressed === 'true', `focus frames the whole film, unobstructed: ${JSON.stringify(framed)}`);
+  check(framed.filmBottom > framed.panelTop, `the panel leaves the whole focused film in view: ${JSON.stringify(framed)}`);
   check(framed.camera.every((v, i) => Math.abs(v - framed.position[i]) < 0.01), `the camera is at the focus point: ${JSON.stringify([framed.camera, framed.position])}`);
   check(await seatOf() === seatBefore && (await pose()).position.every((v, i) => Math.abs(v - eyeBefore[i]) < 1e-6), 'focusing moves neither the seat nor the avatar');
   const focusReach = await standReach();
@@ -135,7 +142,7 @@ async page => {
   await page.waitForFunction(() => window.__riverScreening().focus.on);
   await page.mouse.move(640, 300); await page.mouse.down(); await page.mouse.move(700, 300); await page.mouse.up();
   await page.waitForFunction(() => !window.__riverScreening().focus.on, null, { timeout: 5000 });
-  checks.push(`focus framed the whole film unobstructed at ${framed.fov.toFixed(1)}°${reduced ? ' (reduced motion: immediate)' : ''}; seat, avatar and Stand up unchanged; keys stayed out of the world; Look around and a drag returned the seated view`);
+  checks.push(`focus framed the whole film unobstructed and above the panel at ${framed.fov.toFixed(1)}° from ${framed.distance.toFixed(2)} m (row ${framed.row.toFixed(2)} m)${reduced ? ' (reduced motion: immediate)' : ''}; seat, avatar and Stand up unchanged; keys stayed out of the world; Look around and a drag returned the seated view`);
   // Stop watching is local and reversible: the film and its decoder go, Join screening returns to the room's film.
   const room = await page.evaluate(() => window.__riverMultiplayer().snapshot.screenings.find(item => item.venueId === 'ipic'));
   await page.locator('#ipic-screening [data-control="stop-watching"]').click();

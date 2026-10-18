@@ -6,7 +6,7 @@
 import { SCREENING_DEFAULT_MEDIA, SCREENING_MEDIA, SCREENING_VENUES, screeningChoices } from './screening-contract.js';
 import { createScreeningPlayer, createServerClock } from './ipic-screening.js';
 import { createScreenBinding } from './ipic-screening-screen.js';
-import { FOCUS_VIEW, filmCorners, screenFocusPose } from './ipic-screening-view.js';
+import { FOCUS_VIEW, filmCorners, focusBand, screenFocusPose } from './ipic-screening-view.js';
 
 const CONTROLS = ['play-local', 'retry', 'host-start', 'host-play', 'host-pause', 'host-stop', 'sound', 'volume', 'captions', 'transcript', 'focus', 'stop-watching'];
 const HOST_ACTIONS = { 'host-start': 'start', 'host-play': 'play', 'host-pause': 'pause', 'host-stop': 'stop' };
@@ -170,7 +170,7 @@ export function createIpicScreening({ host, THREE, getMultiplayer, getVenue, get
     on(doc, 'visibilitychange', () => { if (!doc.hidden && session === state) void sync(state); });
     // A rotation or resize moves the walking card at once; measure it then, not at the next refresh, so the panel
     // never sits over Stand up meanwhile (the software profile refreshes only once a second, #500).
-    if (doc.defaultView) on(doc.defaultView, 'resize', () => { if (session === state) { state.clearedAt = now(); clearWalkingCard(state); } });
+    if (doc.defaultView) on(doc.defaultView, 'resize', () => { if (session === state) { state.clearedAt = now(); clearWalkingCard(state); measureBand(state); } });
     state.release = () => listeners.forEach(off => off());
     session = state;
     void sync(state);
@@ -257,6 +257,10 @@ export function createIpicScreening({ host, THREE, getMultiplayer, getVenue, get
     state.clearance = value;
     if (value) state.panel.style.setProperty('--ipic-clear', value); else state.panel.style.removeProperty('--ipic-clear');
   }
+  // The band of the view above the panel, where focus puts the film; measured with the clearance, since that moves the panel.
+  function measureBand(state) {
+    state.band = focusBand(host.getBoundingClientRect?.(), state.panel.hidden ? null : state.panel.getBoundingClientRect?.());
+  }
 
   function render(state, force = false) {
     const venue = getVenue(), stats = state.player.stats();
@@ -309,7 +313,7 @@ export function createIpicScreening({ host, THREE, getMultiplayer, getVenue, get
     object.updateWorldMatrix?.(true, false);
     const fit = state.screen.inspect().fit ?? { repeat: [1, 1] };
     return { center: new THREE.Vector3(...frame.center).applyMatrix4(object.matrixWorld).toArray(), right: new THREE.Vector3(...frame.right).transformDirection(object.matrixWorld).toArray(),
-      up: new THREE.Vector3(...frame.up).transformDirection(object.matrixWorld).toArray(), width: frame.width / fit.repeat[0], height: frame.height / fit.repeat[1] };
+      up: new THREE.Vector3(...frame.up).transformDirection(object.matrixWorld).toArray(), width: frame.width / fit.repeat[0], height: frame.height / fit.repeat[1], back: frame.back ?? 0 };
   }
   // Called after the walking camera has placed itself this frame. Focus never moves the avatar; when it ends
   // (Look around, a drag or arrow key, standing, leaving) the walking camera's own view returns.
@@ -317,14 +321,14 @@ export function createIpicScreening({ host, THREE, getMultiplayer, getVenue, get
     const state = session, at = now(), dt = view.at === null ? 0 : Math.max(0, at - view.at) / 1000; view.at = at;
     // The walking card moves with the HUD; keep the panel clear of it four times a second. This runs every frame,
     // where update() runs only on the software profile's once-a-second draw.
-    if (state && !state.stopped && !(at - state.clearedAt < 250)) { state.clearedAt = at; clearWalkingCard(state); }
+    if (state && !state.stopped && !(at - state.clearedAt < 250)) { state.clearedAt = at; clearWalkingCard(state); measureBand(state); }
     const seat = state && !state.stopped ? getSeat() : null;
     if (state?.focused && !seat) { state.focused = false; render(state, true); }
     const on = Boolean(state?.focused), step = (typeof reducedMotion === 'function' ? reducedMotion() : reducedMotion) ? 1 : dt / FOCUS_VIEW.easeSeconds;
     view.blend = on ? Math.min(1, view.blend + step) : Math.max(0, view.blend - step);
     if (on && view.restoreFov === null) view.restoreFov = camera.fov;
     const film = on || view.blend > 0 ? state && !state.stopped && filmFrame(state) : null;
-    if (on && seat && film) { view.pose = { ...screenFocusPose({ eye: seat.eye, film, aspect: camera.aspect }), eye: [...seat.eye], film: [film.width, film.height], aspect: camera.aspect }; view.fits = view.pose.fits; }
+    if (on && seat && film) { view.pose = { ...screenFocusPose({ eye: seat.eye, film, aspect: camera.aspect, band: state.band, maxDistance: film.back }), eye: [...seat.eye], film: [film.width, film.height], aspect: camera.aspect }; view.fits = view.pose.fits; }
     if (view.blend === 0 || !view.pose || (!film && !on)) {
       if (view.restoreFov !== null && view.blend === 0) { camera.fov = view.restoreFov; camera.updateProjectionMatrix(); view.restoreFov = null; view.pose = null; }
       return;
@@ -333,7 +337,10 @@ export function createIpicScreening({ host, THREE, getMultiplayer, getVenue, get
     const look = new THREE.Matrix4().lookAt(new THREE.Vector3(...position), new THREE.Vector3(...target), new THREE.Vector3(0, 1, 0));
     camera.position.lerp(new THREE.Vector3(...position), b);
     camera.quaternion.slerp(new THREE.Quaternion().setFromRotationMatrix(look), b);
-    camera.fov = view.restoreFov + (fov - view.restoreFov) * b; camera.updateProjectionMatrix(); camera.updateMatrixWorld();
+    camera.fov = view.restoreFov + (fov - view.restoreFov) * b; camera.updateProjectionMatrix();
+    // The lens shift that centres the film above the panel; the next updateProjectionMatrix clears it.
+    if (view.pose.shift) { camera.projectionMatrix.elements[9] = -view.pose.shift * b; camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert(); }
+    camera.updateMatrixWorld();
     // Where the film's corners land in view (normalised device coordinates), for checks of what it frames.
     view.ndc = film ? filmCorners(film).map(corner => new THREE.Vector3(...corner).project(camera)).map(v => [v.x, v.y]) : null;
   }
@@ -361,7 +368,8 @@ export function createIpicScreening({ host, THREE, getMultiplayer, getVenue, get
       return { active: true, houseLights, ...state.player.stats(), canHost: state.canHost, currentTime: state.video.currentTime, paused: state.video.paused, muted: state.video.muted,
         attached: Boolean(screen.key), screen, drawn: state.drawn ?? null, decoded: [state.video.videoWidth, state.video.videoHeight], serverNow: state.clock.serverNow(),
         focus: { on: state.focused, blend: view.blend, fits: view.fits, fov: view.pose?.fov ?? null, wanted: view.pose?.wanted ?? null, position: view.pose?.position ?? null, eye: view.pose?.eye ?? null,
-          distance: view.pose?.distance ?? null, film: view.pose?.film ?? null, aspect: view.pose?.aspect ?? null, ndc: view.blend > 0 ? view.ndc ?? null : null }, volumeSupported: state.volumeSupported };
+          distance: view.pose?.distance ?? null, row: view.pose?.row ?? null, band: view.pose?.band ?? null, shift: view.pose?.shift ?? null, film: view.pose?.film ?? null, aspect: view.pose?.aspect ?? null,
+          ndc: view.blend > 0 ? view.ndc ?? null : null }, volumeSupported: state.volumeSupported };
     },
     get houseLights() { return houseLights; },
     applyCamera,
