@@ -99,6 +99,17 @@ async (page, { computerOrigin }) => {
  }
  check(await frames()===0&&await page.evaluate(()=>window.__messageListeners())===listeners,'Repeated Computer visits leave no frame or message listener behind');
 
+ // A conflict survives a visit to Computer: the draft and the Reload choice wait on Tasks.
+ await page.route('**/api/office-desk/save?*',route=>route.fulfill({status:409,contentType:'application/json',body:JSON.stringify({error:'desk_conflict'})}));
+ await page.locator('#desk-notes').fill('Synthetic conflicting draft');await page.locator('#desk-reload').waitFor({state:'visible'});
+ await page.locator('#desk-view-computer').click();await page.locator('#desk-confirm').waitFor({state:'visible'});await page.locator('#desk-confirm-yes').click();
+ await waitState('account-confirmation');await page.locator('#desk-view-tasks').click();await waitView('tasks');
+ check(await page.locator('#desk-notes').inputValue()==='Synthetic conflicting draft'&&await page.locator('#desk-reload').isVisible()&&/changed in another tab/.test(await page.locator('#desk-error').textContent())&&await page.locator('#desk-save').isDisabled(),'A task conflict and its draft survive a visit to Computer, still offering Reload saved work');
+ await page.unroute('**/api/office-desk/save?*');
+ await page.locator('#desk-reload').click();await page.locator('#desk-confirm-yes').click();
+ await page.waitForFunction(()=>document.querySelector('#desk-notice')?.hidden&&document.querySelector('#desk-notes')?.value==='Keep this draft while I use Computer.');
+ check(true,'Reload saved work then restores the saved task');
+
  await page.locator('#desk-view-computer').click();await waitState('account-confirmation');
  check(await child().locator('#desktop').isHidden(),'Reentry starts a fresh account gate');
  await child().locator('#continue').click();await waitState('usable');
@@ -127,6 +138,16 @@ async (page, { computerOrigin }) => {
  await page.evaluate(id=>window.postMessage({protocol:'typesafe-place-embed',version:1,type:'request-close',instanceId:id},'*'),instance);
  await page.waitForTimeout(300);
  check(await state()==='usable'&&await deskOpen()&&await frames()===1&&page.url()===here,'Stale, malformed, unsupported, URL-bearing and wrong-origin messages are ignored and navigate nothing');
+ // Real cross-origin forgeries with the current instance id: another origin, and Computer's own origin from a window that is not the frame.
+ const {elsewhere}=await (await fetch(`${computerOrigin}/api/fixture`)).json();
+ await page.evaluate(([urls,id])=>{
+  window.__forged=[];window.__forgedListener=event=>{if(event.data?.instanceId===id)window.__forged.push(event.origin);};addEventListener('message',window.__forgedListener);
+  const messages=[{protocol:'typesafe-place-embed',version:1,type:'status',instanceId:id,state:'signin-required',sync:'none'},{protocol:'typesafe-place-embed',version:1,type:'request-close',instanceId:id}];
+  for(const url of urls){const f=document.createElement('iframe');f.className='journey-forge';f.src=`${url}#${encodeURIComponent(JSON.stringify(messages))}`;document.body.append(f);}
+ },[[`${elsewhere}/forge`,`${computerOrigin}/forge`],instance]);
+ await page.waitForFunction(()=>window.__forged.length>=4,null,{timeout:15000});
+ const forgedFrom=await page.evaluate(()=>{removeEventListener('message',window.__forgedListener);for(const f of document.querySelectorAll('.journey-forge'))f.remove();return [...new Set(window.__forged)];});
+ check(forgedFrom.length===2&&await state()==='usable'&&await deskOpen()&&await frames()===1,`Forged sign-in and close messages from another origin and from another Computer window change nothing (${forgedFrom.join(', ')})`);
  // A reload inside Computer is a new document: a fresh instance and account gate, nothing carried over.
  await childFrame().evaluate(()=>location.reload());await waitState('account-confirmation');
  check(await child().locator('#desktop').isHidden()&&await status()==='Confirm your TypeSafe Computer account to continue','A reload inside Computer starts a fresh account gate and drops the old save status');

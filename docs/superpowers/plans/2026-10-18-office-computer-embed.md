@@ -214,6 +214,8 @@ There is still no deployed Computer contract version to compare against.
 How to read the evidence column:
 
 - **Fixture:** local Chromium (macOS, Metal) against the child fixture.
+- **WebKit:** the same journey in Playwright's WebKit 2370, which is Safari's engine on
+  macOS desktop. It is not Safari.app, iOS or a touch device.
 - **CI:** the same journey on hosted Linux CI in software rendering, on PR #524.
 - **Unit:** `office-computer-frame` and `office-ui` tests.
 - **Code:** a code trace only.
@@ -223,11 +225,11 @@ How to read the evidence column:
 | --- | --- | --- |
 | Tasks and Computer tabs in the existing dialog | Fixture, CI | real Computer |
 | My tasks drafts and failed-save retry survive Computer | Fixture, CI | — |
-| Conflict state across a view switch | Unit (desk model), Code (view switch leaves the model untouched) | browser check |
+| Conflict state across a view switch | Fixture, WebKit (a 409 conflict keeps its draft and Reload across a Computer visit); Unit (desk model) | — |
 | Office tasks, accepted permissions, shared scope | not applicable: removed by #496 before this work | — |
 | Missing, invalid or disabled config: Tasks only, nothing loaded | Unit (config), Fixture and CI (`office-desk`: no tab, no frame) | — |
 | Exact origin; fixed sign-in and open-separately links; message URLs never navigate | Unit, Fixture | real hosts |
-| Forged origin, wrong window, malformed, unsupported version, stale instance | Unit, Fixture | — |
+| Forged origin, wrong window, malformed, unsupported version, stale instance | Unit; Fixture and WebKit, including real cross-origin forgeries with the current instance id: one from a third origin, one from Computer's origin in a window that is not the frame | — |
 | Duplicate or late close results, timeout races, reloads inside the frame | Unit, Fixture (reload) | — |
 | Usable only after Computer's own gate on a fresh instance; not from load, popup or Place login | Unit, Fixture (fixture child) | real Computer (#33) |
 | Two successive Place accounts and two or more Computer accounts | Fixture (owner with Ada/Ben; guest, then bob, then guest in one browser; Cy) | real Computer |
@@ -247,6 +249,41 @@ How to read the evidence column:
 | One frame, listeners and timers removed over repeated cycles | Fixture (frame count, message-listener counter), Unit (fake timers empty) | — |
 | Neutral `SCREEN_DYNAMIC` monitors | Code (no scene or monitor file changed) | — |
 | No private content in messages, task requests or snapshots | Fixture | real Computer |
-| Safari, iOS and physical devices | Incomplete | device runs |
+| Safari engine | WebKit (all 61 checks, including the framed same-site Lax cookie) | Safari.app itself |
+| iOS and physical touch devices | Incomplete | a device run |
 | Human accessibility review | Incomplete | Val or a reviewer |
 | Hosted embedded persistence and live pilot | Incomplete: Place CSP `frame-src` blocks Computer; no origin configured | #33, #21, #27, then a Place policy change |
+
+## Follow-up: WebKit and real forgeries
+
+**Branch:** `test/office-computer-embed-webkit-486-20261018`, task
+`office-computer-embed-webkit-486`.
+
+- `RIVER_OAKS_EXPERIENCE_BROWSER=webkit` runs the experience journeys in Playwright's
+  WebKit. Chromium stays the default.
+- The Computer fixture serves a `/forge` sender page from its own origin and from a
+  second loopback origin.
+- The journey adds a task conflict across a Computer visit, and the two real forgeries.
+
+**Results, 2026-10-18:**
+
+| Run | Result |
+| --- | --- |
+| `pnpm run test:experience office-computer-embed` (Chromium, 18:22Z) | 61 checks passed; receipt `data/reports/office-computer-embed-browser.json` |
+| `RIVER_OAKS_EXPERIENCE_BROWSER=webkit pnpm run test:experience office-computer-embed` (18:32Z) | the same 61 checks passed; receipt `data/reports/office-computer-embed-webkit.json` |
+
+WebKit teardown timings with a hung Computer:
+
+| Path | Frame removed in |
+| --- | --- |
+| Dropped connection | 76 ms |
+| World rebuild | 3440 ms |
+| Revocation | 313 ms |
+| Account change | 70 ms |
+| Sign-out | 96 ms |
+
+**Still incomplete, with the owner who can close each:**
+- a real Computer candidate (TypeSafeAI/typesafe-computer#33 has no embed build);
+- the hosted origin pair and persistence (#21, #27);
+- iOS and physical touch devices (a device run);
+- human accessibility review (Val or a reviewer).
