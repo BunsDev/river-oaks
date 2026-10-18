@@ -8,7 +8,7 @@ async page=>{
  const dialog=page.getByRole('dialog',{name:'Character studio'});
  await page.waitForFunction(()=>document.querySelector('.character-studio').dataset.accountPhase==='ready');
  const read=()=>page.evaluate(()=>fetch('/api/character').then(r=>r.json())),before=await read();
- await dialog.locator('button[data-character=sable]').click();await dialog.getByRole('button',{name:'Rose silk',exact:true}).click();
+ await dialog.locator('[data-character=sable]').click();await dialog.getByRole('radio',{name:'Rose silk',exact:true}).click();
  await dialog.locator('[data-save]').click();await dialog.locator('[data-retry]').waitFor({state:'visible'});
  check((await dialog.locator('[data-account-status]').textContent()).includes('Character Studio is paused'),'Server pause explains that edits and saved looks are safe');
  check(await dialog.getAttribute('data-palette')==='rose','Rejected save preserves the visible edit');

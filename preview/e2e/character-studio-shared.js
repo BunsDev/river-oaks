@@ -60,8 +60,8 @@ async page => {
   });
   check(alternate.appearanceId!=='sable-human'&&alternate.revision>0,'Appearance mismatch uses a valid owned published definition for a different appearance');
   await open();
-  await dialog.locator('button[data-character=sable]').click();await dialog.locator('[name=form]').selectOption('human');
-  await dialog.getByRole('button',{name:'Rose silk',exact:true}).click();await dialog.getByRole('button',{name:'Espresso',exact:true}).click();
+  await dialog.locator('[data-character=sable]').click();await dialog.locator('input[name=cs-form][value=human]').check();
+  await dialog.getByRole('radio',{name:'Rose silk',exact:true}).click();await dialog.getByRole('radio',{name:'Espresso',exact:true}).click();
   await dialog.locator('[data-save]').click();await page.waitForFunction(()=>document.querySelector('.character-studio').dataset.accountPhase==='ready');
   let saved=await account();check(saved.character.draft.palette==='rose'&&!saved.selection.character,'Save keeps the customized draft private');
   await dialog.locator('[data-wear]').click();await waitWear('rose');saved=await account();
@@ -80,8 +80,8 @@ async page => {
   };
   if(deferredCases.includes('save')){
    const held=await holdResponse('**/api/character/draft?*');
-   await dialog.getByRole('button',{name:'Lagoon',exact:true}).click();await dialog.locator('[data-save]').click();await held.received;
-   await dialog.getByRole('button',{name:'Rose silk',exact:true}).click();await dialog.locator('[data-close]').click();
+   await dialog.getByRole('radio',{name:'Lagoon',exact:true}).click();await dialog.locator('[data-save]').click();await held.received;
+   await dialog.getByRole('radio',{name:'Rose silk',exact:true}).click();await dialog.locator('[data-close]').click();
    await page.waitForTimeout(2200);await page.locator('input[name=player-character][value=rowan]').check();
    await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerAppearance==='rowan-human'&&document.querySelector('#canvas-host').dataset.playerReady==='true');
    await page.getByRole('button',{name:'Open character studio',exact:true}).click();
@@ -97,14 +97,14 @@ async page => {
   if(deferredCases.includes('read')){
    await dialog.locator('[data-close]').click();const held=await holdResponse('**/api/character?*');
    await page.getByRole('button',{name:'Open character studio',exact:true}).click();await held.received;
-   await dialog.getByRole('button',{name:'Midnight',exact:true}).click();await dialog.locator('[data-close]').click();
+   await dialog.getByRole('radio',{name:'Midnight',exact:true}).click();await dialog.locator('[data-close]').click();
    await page.waitForTimeout(2200);await page.locator('input[name=player-character][value=rowan]').check();
    await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerAppearance==='rowan-human'&&document.querySelector('#canvas-host').dataset.playerReady==='true');
    await page.getByRole('button',{name:'Open character studio',exact:true}).click();
    check(['loading','saving'].includes(await dialog.getAttribute('data-account-phase')),'The delayed account operation is still pending on reopen');await held.release();
    await page.waitForFunction(()=>document.querySelector('.character-studio').dataset.accountPhase==='ready');
    check(await dialog.getAttribute('data-palette')==='midnight','A delayed read does not replace the retained local edit');
-   await dialog.getByRole('button',{name:'Rose silk',exact:true}).click();
+   await dialog.getByRole('radio',{name:'Rose silk',exact:true}).click();
    check(await dialog.locator('[data-wear]').isEnabled(),'Reopening during a delayed read refreshes selection after the old read settles');
    await dialog.locator('.cs-preview[data-ready=true]').waitFor();
    await page.screenshot({path:'output/playwright/character-studio-deferred-read-ready.png'});
@@ -127,7 +127,7 @@ async page => {
   await dialog.locator('[data-close]').click();
 
   await page.reload();await ready(page);await open();check(await dialog.getAttribute('data-palette')==='rose','Reconnect opens the canonical equipped customization');
-  await dialog.getByRole('button',{name:'Midnight',exact:true}).click();await dialog.locator('[data-wear]').click();await waitWear('midnight');
+  await dialog.getByRole('radio',{name:'Midnight',exact:true}).click();await dialog.locator('[data-wear]').click();await waitWear('midnight');
   check((await account()).character.published.revision===2,'Editing and wearing appends an immutable revision');
   await dialog.locator('[data-close]').click();await framePeer();await peer.screenshot({path:'output/playwright/character-studio-peer-midnight.png'});
   const canonical=(await account()).selection.character,connectionsBeforeFaults=peerConnections;
@@ -168,7 +168,7 @@ async page => {
   let lost=false;await page.route('**/api/character/draft?*',async route=>{
    if(!lost){lost=true;await route.fetch();await route.abort('failed');}else await route.continue();
   });
-  await dialog.getByRole('button',{name:'Lagoon',exact:true}).click();await dialog.locator('[data-save]').click();
+  await dialog.getByRole('radio',{name:'Lagoon',exact:true}).click();await dialog.locator('[data-save]').click();
   await dialog.locator('[data-retry]').waitFor({state:'visible'});const afterLost=(await account()).character.version;
   await dialog.locator('[data-close]').click();
   await page.getByRole('button',{name:'Open character studio',exact:true}).click();
@@ -183,14 +183,14 @@ async page => {
    const result=await fetch('/api/character/draft',{method:'PUT',headers:{'Content-Type':'application/json','X-CSRF-Token':session.csrfToken},body:JSON.stringify({definition,expectedVersion:current.character.version,requestId:crypto.randomUUID()})});
    if(!result.ok)throw new Error('Concurrent fixture save failed');
   });
-  await dialog.getByRole('button',{name:'Rose silk',exact:true}).click();await dialog.locator('[data-save]').click();
+  await dialog.getByRole('radio',{name:'Rose silk',exact:true}).click();await dialog.locator('[data-save]').click();
   await page.waitForFunction(()=>document.querySelector('.character-studio').dataset.accountPhase==='conflict');
   check(await dialog.getAttribute('data-palette')==='rose','Concurrent save conflict retains the visible local edit');
   check((await account()).character.draft.palette==='botanical','Conflict preserves the other editor’s saved draft');
   await dialog.locator('[data-refresh]').click();await page.waitForFunction(()=>document.querySelector('.character-studio').dataset.accountPhase==='ready');
   check(await dialog.getAttribute('data-palette')==='rose','Checking the account does not discard local edits');
   await dialog.locator('[data-load-draft]').click();check(await dialog.getAttribute('data-palette')==='botanical','Loading the saved draft is an explicit choice');
-  await dialog.locator('button[data-character=rowan]').click();
+  await dialog.locator('[data-character=rowan]').click();
   await page.evaluate(()=>{const dialog=document.querySelector('.character-studio');window.__studioClosedDuringWear=false;const observer=new MutationObserver(()=>{if(!dialog.open)window.__studioClosedDuringWear=true;});observer.observe(dialog,{attributes:true,attributeFilter:['open']});window.__studioWearObserver=observer;});
   await dialog.locator('[data-wear]').click();await waitWear('authored');await ready(page);
   check(await dialog.isVisible()&&!await page.evaluate(()=>window.__studioClosedDuringWear),'Wearing a different base keeps Studio open through local avatar replacement');

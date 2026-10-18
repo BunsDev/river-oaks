@@ -73,6 +73,17 @@ Unavailable device storage falls back to the visit. Undo/redo retains at most
 framing, two lights and animated poses all use the same validated definition.
 Reduced motion freezes the preview and disables turntable/animated poses.
 
+The guided start numbers the creation steps: choose a character, choose a form,
+add color. Character, form, wardrobe and color choices are native radio groups,
+so each group is one tab stop with arrow keys, the same as the town picker. A
+summary names the character and lists only the changes the validated catalog
+supports (`character-studio-guide.js`). Wardrobe appears only for characters with
+several outfits. Characters without color support show the reason in place of the
+swatches. A polite live region announces undo, redo, Surprise me, favorites and
+before/after. Ctrl/Cmd+Z works while a choice has focus. Remix varies only the
+current character's validated forms, wardrobes and colors. Surprise me picks any
+permitted look. Both always stage a look different from the current one.
+
 V2 adds allowlisted dress and hair colors for Sable human and fox. Other looks
 retain authored colors with explicit compatibility feedback. V1 remains readable.
 Colors touch tagged, avatar-owned materials only; teardown restores their original

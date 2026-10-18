@@ -1,9 +1,10 @@
 import { createCharacterAccount } from './character-account.js';
 import { createCharacterDraft } from './character-studio-state.js';
 import { createCharacterPreview } from './character-studio-preview.js';
-import { CHARACTER_PALETTES, CHARACTER_HAIR, supportsCharacterColors } from './character-customization.js';
+import { CHARACTER_PALETTES, CHARACTER_HAIR } from './character-customization.js';
 import { validateCharacterDefinition } from './character-definition.js';
-import { CHARACTERS, appearanceFor, canUseAppearance, sharedAppearance, sharedCharacter } from './shared-appearances.js';
+import { describeLook, studioChoices, studioRoster } from './character-studio-guide.js';
+import { appearanceFor, sharedAppearance, sharedCharacter } from './shared-appearances.js';
 import './character-studio.css';
 
 export function createCharacterStudio({ownerId,getDefinition,accountTransport=null,canOpen=()=>true,canStayOpen=canOpen,onOpen=()=>{},reducedMotion=false}){
@@ -14,12 +15,16 @@ export function createCharacterStudio({ownerId,getDefinition,accountTransport=nu
       <div class="cs-view-tools"><label>View<select name="framing"><option value="full">Full look</option><option value="portrait">Portrait</option></select></label><label>Light<select name="lighting"><option value="day">Garden daylight</option><option value="warm">Golden hour</option></select></label><label>Pose<select name="pose"><option value="idle">Idle</option><option value="walk">Walk</option><option value="wave">Wave</option></select></label></div>
       <div class="cs-rotation"><label for="cs-yaw">Rotate</label><input id="cs-yaw" type="range" min="-180" max="180" value="0" step="1"><button type="button" data-turntable aria-pressed="false">Turntable</button></div></section>
     <section class="cs-controls" aria-label="Customize character"><p class="cs-intro">Start with someone you love. Make the look yours.</p>
-      <fieldset><legend>Starting character</legend><div class="cs-roster">${CHARACTERS.filter(person=>canUseAppearance(ownerId,appearanceFor(person.id).id)).map(person=>`<button type="button" data-character="${person.id}" aria-pressed="false" style="--cs-accent:${person.accent}"><span aria-hidden="true">${person.name[0]}</span>${person.name}</button>`).join('')}</div></fieldset>
-      <div class="cs-pair"><label>Form<select name="form"><option value="human">Human</option><option value="beast">Beast</option></select></label><label>Wardrobe<select name="variant"></select></label></div>
-      <fieldset data-palette><legend>Dress color</legend><div class="cs-swatches">${Object.entries(CHARACTER_PALETTES).map(([id,item])=>`<button type="button" data-palette="${id}" aria-label="${item.label}" aria-pressed="false" title="${item.label}" style="--cs-swatch:${item.color}"></button>`).join('')}</div><p data-palette-name></p></fieldset>
-      <fieldset data-hair><legend>Hair color</legend><div class="cs-swatches">${Object.entries(CHARACTER_HAIR).map(([id,item])=>`<button type="button" data-hair="${id}" aria-label="${item.label}" aria-pressed="false" title="${item.label}" style="--cs-swatch:${item.color}"></button>`).join('')}</div><p data-hair-name></p></fieldset>
-      <p class="cs-help" data-compatibility></p>
-      <div class="cs-edit-tools"><button type="button" data-undo>Undo</button><button type="button" data-redo>Redo</button><button type="button" data-compare aria-pressed="false">Before / after</button><button type="button" data-random>Surprise me</button></div>
+      <fieldset class="cs-step"><legend><span class="cs-step-mark" aria-hidden="true">1</span>Choose a character</legend><div class="cs-roster">${studioRoster(ownerId).map(person=>`<label class="cs-chip" data-character="${person.id}" title="${person.name} · ${person.title}" style="--cs-accent:${person.accent}"><input type="radio" name="cs-character" value="${person.id}"><span class="cs-mark" aria-hidden="true">${person.name[0]}</span><span>${person.name}</span></label>`).join('')}</div>
+        <div class="cs-summary"><p><strong data-cs-summary-name></strong><span data-cs-summary-title></span></p><p class="cs-summary-description" data-cs-summary-description></p><p class="cs-summary-options" data-cs-summary-options></p></div></fieldset>
+      <fieldset class="cs-step"><legend><span class="cs-step-mark" aria-hidden="true">2</span>Choose a form</legend><div class="cs-segments"><label><input type="radio" name="cs-form" value="human"><span>Humanoid</span></label><label><input type="radio" name="cs-form" value="beast"><span>Beast<small data-cs-species></small></span></label></div>
+        <fieldset class="cs-wardrobe" data-cs-wardrobe hidden><legend>Wardrobe</legend><div class="cs-segments" data-cs-variants></div></fieldset></fieldset>
+      <fieldset class="cs-step"><legend><span class="cs-step-mark" aria-hidden="true">3</span>Add color</legend><div class="cs-colors" data-cs-colors>
+        <fieldset data-palette><legend>Dress color</legend><div class="cs-swatches">${Object.entries(CHARACTER_PALETTES).map(([id,item])=>`<label class="cs-swatch" data-palette="${id}" title="${item.label}" style="--cs-swatch:${item.color}"><input type="radio" name="cs-palette" value="${id}" aria-label="${item.label}"></label>`).join('')}</div><p data-palette-name></p></fieldset>
+        <fieldset data-hair><legend>Hair color</legend><div class="cs-swatches">${Object.entries(CHARACTER_HAIR).map(([id,item])=>`<label class="cs-swatch" data-hair="${id}" title="${item.label}" style="--cs-swatch:${item.color}"><input type="radio" name="cs-hair" value="${id}" aria-label="${item.label}"></label>`).join('')}</div><p data-hair-name></p></fieldset></div>
+        <p class="cs-help" data-compatibility></p></fieldset>
+      <p class="sr-only" data-cs-announce aria-live="polite"></p>
+      <div class="cs-edit-tools"><button type="button" data-undo>Undo</button><button type="button" data-redo>Redo</button><button type="button" data-compare aria-pressed="false">Before / after</button><button type="button" data-remix>Remix</button><button type="button" data-random>Surprise me</button></div>
       <div class="cs-favorites"><button type="button" data-favorite>Favorite this look</button><label class="sr-only" for="cs-favorites">Favorite looks</label><select id="cs-favorites"><option value="">Your favorites</option></select><button type="button" data-remove-favorite disabled>Remove favorite</button></div>
       <div class="cs-portrait"><button type="button" data-portrait>Create 4K portrait</button><a data-download hidden>Download PNG</a><p>Front pose · Garden daylight · 3840 × 2160</p></div>
       <p class="cs-status" role="status" aria-live="polite"></p></section></div>
@@ -35,34 +40,52 @@ export function createCharacterStudio({ownerId,getDefinition,accountTransport=nu
   const sameLook=(a,b)=>Boolean(a&&b)&&JSON.stringify(editable(a))===JSON.stringify(editable(b));
   const readFavorites=()=>{if(storageUnavailable)return;try{const saved=JSON.parse(localStorage.getItem(storageKey)??'[]');favorites=Array.isArray(saved)?saved.filter(valid).slice(0,8).map(editable):[];}catch{storageUnavailable=true;}};
   const saveFavorites=()=>{try{localStorage.setItem(storageKey,JSON.stringify(favorites));return true;}catch{storageUnavailable=true;status.textContent='Device storage is unavailable. Favorites will last for this visit only.';return false;}};
-  const showFavorites=()=>{$('#cs-favorites').replaceChildren(new Option('Your favorites',''),...favorites.map((value,index)=>new Option(`${sharedAppearance(value.appearanceId).name} · ${value.form} · ${CHARACTER_PALETTES[value.palette].label}`,String(index))));$('[data-remove-favorite]').disabled=true;};
+  const showFavorites=()=>{$('#cs-favorites').replaceChildren(new Option('Your favorites',''),...favorites.map((value,index)=>new Option(describeLook(value),String(index))));$('[data-remove-favorite]').disabled=true;};
   const setStatus=state=>{$('[data-portrait]').disabled=state!=='ready'||portraitPending;status.textContent=state==='loading'?'Preparing your look…':state==='error'?'The preview could not load. Choose a character to try again.':'Preview ready. Your town appearance is unchanged.';};
   const render=()=>{
     if(!draft||!dialog.open)return;
     const value=draft.value,shown=comparing?draft.original:value,key=JSON.stringify(shown);if(portraitKey!==key){releasePortrait();portraitKey=key;}
-    const look=sharedAppearance(value.appearanceId),person=sharedCharacter(look.character),colors=supportsCharacterColors(value.appearanceId);
-    for(const button of dialog.querySelectorAll('button[data-character]'))button.setAttribute('aria-pressed',String(button.dataset.character===person.id));
-    $('[name=form]').value=look.form;
-    const variants=$('[name=variant]');if(variants.dataset.character!==person.id){variants.replaceChildren(...person.variants.map(v=>new Option(v.label,v.id)));variants.dataset.character=person.id;}
-    variants.value=look.variant;variants.disabled=person.variants.length<2;
-    for(const button of dialog.querySelectorAll('button[data-palette],button[data-hair]')){const key=button.hasAttribute('data-palette')?'palette':'hair';button.disabled=!colors;button.setAttribute('aria-pressed',String(button.dataset[key]===value[key]));}
-    $('[data-palette-name]').textContent=colors?CHARACTER_PALETTES[value.palette].label:'Authored wardrobe';$('[data-hair-name]').textContent=colors?CHARACTER_HAIR[value.hair].label:'Authored hair';
-    $('[data-compatibility]').textContent=colors?'Colors are fitted to Sable’s human and fox looks. Shape, skin and accessories keep their authored fit.':'This character keeps its authored colors. Choose Sable to explore dress and hair colors.';
+    const choices=studioChoices(ownerId,value.appearanceId),person=sharedCharacter(choices.character),colors=choices.colors;
+    const variants=$('[data-cs-variants]');
+    if(variants.dataset.csFor!==person.id){
+      variants.dataset.csFor=person.id;
+      variants.replaceChildren(...choices.variants.map(variant=>{const label=document.createElement('label'),input=document.createElement('input'),text=document.createElement('span');input.type='radio';input.name='cs-variant';input.value=variant.id;text.textContent=variant.label;label.append(input,text);return label;}));
+    }
+    $('[data-cs-wardrobe]').hidden=choices.variants.length<2;
+    // Radios mirror the staged definition, so a rejected or undone choice snaps back.
+    const selected={'cs-character':person.id,'cs-form':choices.form,'cs-variant':choices.variant,'cs-palette':value.palette??'authored','cs-hair':value.hair??'authored'};
+    for(const input of dialog.querySelectorAll('.cs-controls input[type=radio]'))input.checked=input.value===selected[input.name];
+    $('[data-cs-species]').textContent=person.species;$('[data-remix]').textContent=`Remix ${person.name}`;
+    $('[data-cs-summary-name]').textContent=person.name;$('[data-cs-summary-title]').textContent=person.title;
+    $('[data-cs-summary-description]').textContent=choices.description;$('[data-cs-summary-options]').textContent=choices.summary;
+    $('[data-cs-colors]').hidden=!colors;
+    $('[data-palette-name]').textContent=colors?CHARACTER_PALETTES[value.palette].label:'';$('[data-hair-name]').textContent=colors?CHARACTER_HAIR[value.hair].label:'';
+    $('[data-compatibility]').textContent=colors?'Colors are fitted to Sable’s human and fox looks. Shape, skin and accessories keep their authored fit.':`${person.name}’s colors stay as designed for now. Choose Sable to try dress and hair colors.`;
     $('[data-undo]').disabled=!draft.canUndo;$('[data-redo]').disabled=!draft.canRedo;
     $('[data-compare]').setAttribute('aria-pressed',String(comparing));$('[data-comparing]').hidden=!comparing;
     $('[data-look]').textContent=sharedAppearance(shown.appearanceId).label;
     dialog.dataset.appearance=value.appearanceId;dialog.dataset.palette=value.palette;dialog.dataset.hair=value.hair;
     preview?.setDefinition(shown);renderAccount();
   };
-  const change=patch=>{try{draft.change(patch);comparing=false;render();}catch{status.textContent='That combination is not available. Choose one of the fitted options.';}};
+  const change=patch=>{try{draft.change(patch);comparing=false;}catch{status.textContent='That combination is not available. Choose one of the fitted options.';}render();};
+  // Undo, redo, Surprise me and favorites change the look without moving focus,
+  // so screen readers hear the result here. Direct radio choices announce themselves.
+  const announce=text=>{const region=$('[data-cs-announce]');region.textContent='';requestAnimationFrame(()=>{region.textContent=text;});};
+  const step=(action,verb)=>{
+    action();comparing=false;render();announce(`${verb}: ${describeLook(draft.value)}.`);
+    // An undo can hide the focused swatch or disable the focused button; keep keyboard focus in the Studio.
+    const active=document.activeElement;
+    if(!dialog.contains(active)||active.closest('[hidden]')||active.disabled)
+      [verb==='Undone'&&'[data-redo]',verb==='Redone'&&'[data-undo]','input[name=cs-character]:checked'].filter(Boolean).map($).find(node=>node&&!node.disabled)?.focus();
+  };
   let accountState={phase:'idle',character:null,selection:null,canRetry:false,error:null};
   const renderAccount=()=>{
     const state=accountState,busy=['loading','saving','publishing','equipping'].includes(state.phase),value=draft?.value;
-    const saved=sameLook(value,state.character?.draft),worn=sameLook(value,state.selection?.character);
+    const saved=sameLook(value,state.character?.draft),worn=sameLook(value,state.selection?.character),current=Boolean(value)&&sameLook(value,getDefinition());
     const messages={idle:'Connecting to your saved looks…',loading:'Checking your saved looks…',saving:'Saving your private draft…',publishing:'Preparing your look for town…',equipping:'Waiting for the town to confirm your look…',
       conflict:'Your account changed elsewhere. Your edits are still here. Check the saved account before choosing what to save.',
       error:state.error==='character_studio_disabled'?'Character Studio is paused. Your saved looks and local edits are safe.':state.error==='appearance_cooldown'?'Your draft is saved. Wait a moment, then retry wearing it.':state.canRetry?'The action is not confirmed. Your edits are safe here. Retry to check the same action.':'Your account could not be updated. Your edits are safe here. Check the saved account to try again.',
-      ready:worn?'You are wearing this look in town.':saved?'Private draft saved. Wear it when you are ready.':'You have unsaved edits. Your town appearance is unchanged.'};
+      ready:worn?'You are wearing this look in town.':saved?'Private draft saved. Wear it when you are ready.':current?'This is your current town look. Change anything to start a new one.':'You have unsaved edits. Your town appearance is unchanged.'};
     $('[data-account-status]').textContent=accountTransport?messages[state.phase]:'Saved looks are unavailable. Your edits stay in this tab.';
     dialog.dataset.accountPhase=state.phase;
     $('[data-save]').disabled=!accountTransport||busy||state.phase!=='ready'||saved;
@@ -99,8 +122,9 @@ export function createCharacterStudio({ownerId,getDefinition,accountTransport=nu
     returnFocus=document.activeElement;onOpen();dialog.showModal();readFavorites();showFavorites();
     $('[name=pose]').value='idle';$('[name=pose]').disabled=reducedMotion;$('[data-turntable]').disabled=reducedMotion;$('[data-turntable]').setAttribute('aria-pressed','false');$('#cs-yaw').value='0';
     $('[name=framing]').value='full';$('[name=lighting]').value='day';
-    try{preview=createCharacterPreview({host:stage,ownerId,reducedMotion,onStatus:setStatus});render();}
+    try{preview=createCharacterPreview({host:stage,ownerId,reducedMotion,onStatus:setStatus});}
     catch{setStatus('error');}
+    render();
     renderAccount();refreshOnOpen=true;refreshAccount();
     $('[data-close]').focus();
   }
@@ -109,13 +133,13 @@ export function createCharacterStudio({ownerId,getDefinition,accountTransport=nu
   $('[data-close]').addEventListener('click',()=>close(true));$('[data-keep]').addEventListener('click',()=>close(true));$('[data-cancel]').addEventListener('click',()=>close(false));
   dialog.addEventListener('cancel',event=>{event.preventDefault();close(true);});
   dialog.addEventListener('close',()=>{releasePortrait();preview?.dispose();preview=null;stage.replaceChildren();returnFocus?.focus({preventScroll:true});});
-  dialog.addEventListener('click',event=>{
-    const button=event.target.closest('button');if(!button||button.disabled||!draft)return;
-    const look=sharedAppearance(draft.value.appearanceId);
-    if(button.dataset.character)change({appearanceId:appearanceFor(button.dataset.character,{form:look.form}).id});
-    if(button.dataset.palette)change({palette:button.dataset.palette});if(button.dataset.hair)change({hair:button.dataset.hair});
+  $('.cs-controls').addEventListener('change',event=>{
+    const input=event.target;if(input.type!=='radio'||!draft)return;
+    const look=sharedAppearance(draft.value.appearanceId),key=input.name.slice(3);
+    if(key==='character')change({appearanceId:appearanceFor(input.value,{form:look.form})?.id});
+    else if(key==='form'||key==='variant')change({appearanceId:appearanceFor(look.character,{form:look.form,variant:look.variant,[key]:input.value})?.id});
+    else if(key==='palette'||key==='hair')change({[key]:input.value});
   });
-  for(const name of ['form','variant'])$(`[name=${name}]`).addEventListener('change',event=>{const look=sharedAppearance(draft.value.appearanceId);change({appearanceId:appearanceFor(look.character,{form:look.form,variant:look.variant,[name]:event.target.value}).id});});
   $('[data-portrait]').addEventListener('click',async()=>{
     if(!preview||portraitPending)return;
     releasePortrait();const token=++portraitGeneration;portraitPending=true;$('[data-portrait]').disabled=true;status.textContent='Rendering your 4K portrait…';
@@ -127,14 +151,16 @@ export function createCharacterStudio({ownerId,getDefinition,accountTransport=nu
     }catch(error){if(token===portraitGeneration&&dialog.open)status.textContent=error.message||'Portrait could not be created. Try again.';}
     finally{portraitPending=false;$('[data-portrait]').disabled=stage.dataset.ready!=='true';}
   });
-  $('[data-undo]').addEventListener('click',()=>{draft.undo();comparing=false;render();});$('[data-redo]').addEventListener('click',()=>{draft.redo();comparing=false;render();});
-  $('[data-compare]').addEventListener('click',()=>{comparing=!comparing;render();});$('[data-random]').addEventListener('click',()=>{draft.randomize();comparing=false;render();});
+  $('[data-undo]').addEventListener('click',()=>step(()=>draft.undo(),'Undone'));$('[data-redo]').addEventListener('click',()=>step(()=>draft.redo(),'Redone'));
+  $('[data-compare]').addEventListener('click',()=>{comparing=!comparing;render();announce(comparing?`Showing the original: ${describeLook(draft.original)}.`:`Showing your edit: ${describeLook(draft.value)}.`);});
+  $('[data-remix]').addEventListener('click',()=>step(()=>draft.remix(),'Remix'));$('[data-random]').addEventListener('click',()=>step(()=>draft.randomize(),'Surprise'));
   $('[data-favorite]').addEventListener('click',()=>{const value=draft.value;if(favorites.some(item=>JSON.stringify(item)===JSON.stringify(value))){status.textContent='This look is already a favorite.';return;}if(favorites.length>=8){status.textContent='Your eight favorites are full. Remove one to make room.';return;}favorites.push(value);if(saveFavorites())status.textContent='Favorite saved on this device.';showFavorites();});
-  $('#cs-favorites').addEventListener('change',event=>{const index=event.target.value;if(index==='')return;try{draft.restore(editable(favorites[Number(index)]));comparing=false;render();$('[data-remove-favorite]').disabled=false;}catch{status.textContent='That favorite is no longer compatible.';}});
+  $('#cs-favorites').addEventListener('change',event=>{const index=event.target.value;if(index==='')return;try{step(()=>draft.restore(editable(favorites[Number(index)])),'Favorite');$('[data-remove-favorite]').disabled=false;}catch{status.textContent='That favorite is no longer compatible.';}});
   $('[data-remove-favorite]').addEventListener('click',()=>{const index=$('#cs-favorites').value;if(index==='')return;favorites.splice(Number(index),1);saveFavorites();showFavorites();});
   for(const name of ['pose','framing','lighting'])$(`[name=${name}]`).addEventListener('change',event=>preview?.setView({[name]:event.target.value}));
   $('#cs-yaw').addEventListener('input',event=>{spinning=false;$('[data-turntable]').setAttribute('aria-pressed','false');preview?.setView({yaw:Number(event.target.value),turntable:false});});
   $('[data-turntable]').addEventListener('click',()=>{spinning=!spinning;$('[data-turntable]').setAttribute('aria-pressed',String(spinning));preview?.setView({turntable:spinning});});
-  dialog.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='z'&&!event.target.matches('input,select,textarea')){event.preventDefault();event.shiftKey?draft.redo():draft.undo();comparing=false;render();}});
+  // Choice controls are radios, so only text entry keeps its own undo.
+  dialog.addEventListener('keydown',event=>{if(draft&&(event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='z'&&!event.target.matches('textarea,input:not([type=radio],[type=range])')){event.preventDefault();if(event.shiftKey?draft.canRedo:draft.canUndo)event.shiftKey?step(()=>draft.redo(),'Redone'):step(()=>draft.undo(),'Undone');}});
   return {trigger,open,get active(){return dialog.open;},update(){trigger.disabled=!canOpen();if(dialog.open&&!canStayOpen())close(true);},dispose(){close(false);closed=true;account?.dispose();preview?.dispose();dialog.remove();trigger.remove();}};
 }

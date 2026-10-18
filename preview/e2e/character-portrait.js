@@ -11,7 +11,7 @@ async page => {
   const open=async()=>{await page.getByRole('button',{name:'Open character studio',exact:true}).click();await page.waitForFunction(()=>document.querySelector('.cs-preview').dataset.ready==='true');};
   await open();const studio=page.locator('.character-studio'),capture=studio.getByRole('button',{name:'Create 4K portrait',exact:true}),link=studio.getByRole('link',{name:'Download PNG',exact:true});
   await studio.locator('[data-character=sable]').click();await page.waitForFunction(()=>document.querySelector('.cs-preview').dataset.appearance==='sable-human'&&document.querySelector('.cs-preview').dataset.ready==='true');
-  await studio.getByRole('button',{name:'Rose silk',exact:true}).click();await studio.getByRole('button',{name:'Espresso',exact:true}).click();
+  await studio.getByRole('radio',{name:'Rose silk',exact:true}).click();await studio.getByRole('radio',{name:'Espresso',exact:true}).click();
   const download=async file=>{
     await capture.click();await link.waitFor({state:'visible'});const next=page.waitForEvent('download');await link.click();await(await next).saveAs(file);
     const bytes=await(await import('node:fs/promises')).readFile(file);check(bytes.readUInt32BE(16)===3840&&bytes.readUInt32BE(20)===2160,`${file.split('/').pop()} is a native-size PNG`);
@@ -34,13 +34,13 @@ async page => {
   check(!await link.isVisible(),'Comparing the original removes the edited portrait');
   await studio.locator('[data-compare]').click();
   check(!await link.isVisible(),'Returning to the draft cannot restore an obsolete portrait');
-  await studio.locator('[name=form]').selectOption('beast');await page.waitForFunction(()=>document.querySelector('.cs-preview').dataset.appearance==='woman-casual'&&document.querySelector('.cs-preview').dataset.ready==='true');
+  await studio.locator('input[name=cs-form][value=beast]').check();await page.waitForFunction(()=>document.querySelector('.cs-preview').dataset.appearance==='woman-casual'&&document.querySelector('.cs-preview').dataset.ready==='true');
   check(!await link.isVisible(),'Changing identity removes the stale portrait');await download('output/playwright/character-portrait-fox-4k.png');
   check(await link.getAttribute('data-appearance')==='woman-casual','Fox portrait preserves beast identity');
   // Delay a real PNG callback to exercise closing/reopening during encoding.
   await page.evaluate(()=>{const original=HTMLCanvasElement.prototype.toBlob;window.__restorePortraitEncoder=()=>HTMLCanvasElement.prototype.toBlob=original;HTMLCanvasElement.prototype.toBlob=function(callback,...args){return original.call(this,blob=>{if(this.width===3840&&this.height===2160)window.__finishPortrait=()=>callback(blob);else callback(blob);},...args);};});
   await capture.click();await page.waitForFunction(()=>typeof window.__finishPortrait==='function');
-  await studio.getByRole('button',{name:'Lagoon',exact:true}).click();
+  await studio.getByRole('radio',{name:'Lagoon',exact:true}).click();
   check(await capture.isDisabled(),'Editing during encoding preserves the in-flight capture lock');
   await studio.getByRole('button',{name:'Close character studio',exact:true}).click();await open();
   check(await capture.isDisabled(),'Reopening during encoding cannot start another capture');

@@ -37,3 +37,20 @@ test('favorites and randomization are validated and permission scoped',()=>{
   assert.notEqual(draft.value.appearanceId,'jevica');
   const saved=draft.value;draft.change({appearanceId:'rowan-human'});draft.restore(saved);assert.deepEqual(draft.value,saved);
 });
+test('Surprise me and Remix always stage a different validated look',()=>{
+  // A constant random source would repeat the current look; both tools must still move.
+  const draft=createCharacterDraft({ownerId,definition:base()});
+  for(const random of [()=>0,()=>.4,()=>.999999]){
+    const before=JSON.stringify(draft.value);assert.equal(draft.randomize(random),true);
+    assert.notEqual(JSON.stringify(draft.value),before);assert.equal(validateCharacterDefinition(draft.value,{ownerId}).ok,true);
+  }
+  draft.change({appearanceId:'sable-human'});
+  for(const random of [()=>0,()=>.5,()=>.999999]){
+    const before=draft.value;assert.equal(draft.remix(random),true);const after=draft.value;
+    assert.notEqual(JSON.stringify(after),JSON.stringify(before));assert.equal(validateCharacterDefinition(after,{ownerId}).ok,true);
+    assert.ok(['sable-human','woman-casual'].includes(after.appearanceId),'Remix keeps the character');
+  }
+  // Characters without colors remix their form and wardrobe only.
+  draft.change({appearanceId:'kai-noir'});
+  for(let i=0;i<6;i++){draft.remix(()=>i/6);assert.match(draft.value.appearanceId,/kai|man-workwear/);assert.equal(draft.value.palette,'authored');}
+});
