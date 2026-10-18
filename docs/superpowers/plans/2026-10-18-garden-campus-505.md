@@ -151,6 +151,61 @@ External owners:
 
 None yet.
 
+## Release decision (draft, completed as evidence lands)
+
+**Merging and activating are separate decisions.** Every package ships with the garage as
+the default (`RIVER_OAKS_DISTRICT_REVISION` unset), so merging the stack does not show the
+campus to anyone. One production-visible effect of merging remains: #509 raises the town
+checkpoint to v13 (writer v14 with the character store). From then on an older build cannot
+replace the coordinator, so a code revert past that point needs a tested downgrade, which
+does not exist. Roll back by configuration instead (`docs/garden-campus.md`).
+
+**Proposed merge order** (each through `pnpm run land`, signed, current with main, `preview`
+green):
+
+1. #519 (#506 contract)
+2. #523 (#507)
+3. #522 (#509)
+4. #508's PR
+5. #510's PR
+6. #511's PR
+7. #512's PR (cutover, epoch fence, docs, candidate journeys)
+
+**Activation** (Val's separate authorization; production settings):
+
+1. Set the following on every production function, then redeploy:
+   - `RIVER_OAKS_DISTRICT_REVISION=river-oaks-gardens-3`
+   - `RIVER_OAKS_DISTRICT_EPOCH=1`
+   - `RIVER_OAKS_CAMPUS_OPERATOR_IDS=<the operator account>`
+2. Expect one `district_gardens_checkpoint_migrated {from:'garage', to:'gardens'}` log.
+   Then check that snapshots carry `districtRevision`, and smoke-test:
+   - sign in and go to the Grove Offices hall;
+   - sit at a workstation, then write and reload private work;
+   - have the operator offer a lease and the resident accept it;
+   - #508 parts: walk Floor 4 across both skywalks and enter the leased suite.
+3. Watch for `Invalid durable town district` with `checkpointReason`, runtime errors and
+   draw/frame regressions (#511).
+
+**Rollback:** set the revision back to the garage, set the epoch to 2, and redeploy. Expect
+one `{from:'gardens', to:'garage'}` log. Leases stay inert and desks are untouched.
+
+**Remaining business decisions (not invented, not configured):**
+
+- who operates the campus (the operator account ids);
+- whether paid rentals exist at all. If they do, #509's proposal lists the decisions: the
+  operator of record, currency, prices, periods, refunds and cancellation, the payment
+  provider, the settlement source, failure and expiry handling, eligibility and record
+  keeping, with a five-part readiness condition.
+
+**Release gates still open:**
+
+- #508's traversal;
+- the #510 suite journey;
+- #512's two-account candidate run on the integrated head;
+- #511's resource measurements on named hardware;
+- Val's visual review of matched views;
+- phone layouts and physical devices, which so far have only width emulation.
+
 ## Next action
 
 1. Run the `garden-campus-office` journey (queued behind the browser lock), then open the
