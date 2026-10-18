@@ -1,0 +1,52 @@
+{
+  "createdAt": "2026-10-18T16:41:09.959Z",
+  "results": [
+    {
+      "name": "office-visit",
+      "status": "passed",
+      "seconds": 73.952,
+      "result": {
+        "checks": [
+          "All elevator phases render before walking begins",
+          "Default entry admits the penthouse, never the retired one-room office",
+          "F at the lobby boards the elevator, rides upstairs and releases walking",
+          "W moves the player into the office",
+          "Walking stays within the penthouse floor and furniture bounds",
+          "Leaving returns focus to the street",
+          "Reduced motion enters without the elevator camera motion",
+          "An uninvited guest cannot board",
+          "Jevica invites the visitor from her office and the guest enters",
+          "Revocation returns the guest to the lobby immediately",
+          "Revocation during boarding ends the authoritative visit and restores street controls",
+          "No guest browser errors: "
+        ]
+      }
+    },
+    {
+      "name": "office-desk",
+      "status": "passed",
+      "seconds": 29.995,
+      "result": {
+        "checks": [
+          "The desk keeps account tasks private in Jevica’s office",
+          "Authorized office opens an empty private desk",
+          "Notes, file links and result save to the account",
+          "Typing at the desk does not move the player",
+          "Completed task retains the written result",
+          "Saved work can be downloaded",
+          "Closing the desk restores office focus",
+          "Leaving, reloading and returning resumes saved work",
+          "A failed save keeps the draft and offers retry",
+          "Mobile desk fits without horizontal overflow",
+          "Visible mobile actions keep touch-sized targets",
+          "Long titles wrap fully on mobile",
+          "Small phones retain a contained layout",
+          "Removing work requires confirmation and can be cancelled",
+          "Escape leaves the desk before leaving the office",
+          "Retry reopens cached work after a failed read",
+          "Confirmed removal restores focus to the empty desk"
+        ]
+      }
+    }
+  ]
+}

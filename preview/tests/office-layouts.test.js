@@ -34,8 +34,8 @@ function walkable(layout, levelId, from, to, occupied = []) {
   return false;
 }
 
-test('the legacy office stays the default and its collision is unchanged', () => {
-  assert.equal(DEFAULT_OFFICE_LAYOUT, OFFICE_LAYOUT_LEGACY);
+test('the penthouse is the default; legacy collision remains readable for checkpoint validation', () => {
+  assert.equal(DEFAULT_OFFICE_LAYOUT, OFFICE_LAYOUT_PENTHOUSE);
   assert.deepEqual(Object.keys(OFFICE_LAYOUTS).sort(), [OFFICE_LAYOUT_LEGACY, OFFICE_LAYOUT_PENTHOUSE].sort());
   assert.equal(officeLayout('office-penthouse-0'), null);
   assert.equal(officeLayout('__proto__'), null);
