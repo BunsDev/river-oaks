@@ -787,6 +787,43 @@ The soak at `1221547e` repeats the counts of record:
 
 The p95 under that load is still about half of Val's 16.7 ms budget.
 
+### Core gate: hosted single run, and the local idle-slice flake
+
+**Hosted, at PR head `959df11b`:** all 17 checks passed, including aggregate `preview`. Together
+the jobs run every core task in one run each on a clean runner:
+- `preview checks`: agent tooling, `pnpm test`, `test:server` with Redis installed,
+  `test:desktop` and the build, plus the security, reflections and screening browser runs;
+- `verify (3.11)` and `verify (3.13)`: secrets, ruff check and format, pytest, demo and
+  demo-verify.
+
+`959df11b` differs from the tested code revision `1221547e` only in this ledger and six receipt
+files.
+
+**Locally, the penthouse idle-slice test is a coin flip on this machine.** An interleaved A/B of
+the full preview suite (`pnpm test`, under the browser lock) compared an untouched archive of
+main `a308a95d` with this branch's worktree at `959df11b`:
+
+| Round | main `a308a95d` | branch `959df11b` | Load (1 min) |
+| --- | --- | --- | --- |
+| 1 | pass (3,411 / 0) | fail, longest slice 53.3 ms (3,410 / 1) | 28 → 31 |
+| 2 | fail, longest slice 115.4 ms (3,410 / 1) | **pass (3,411 / 0)** | 31 → 30 (80 at end) |
+
+Main fails the same way at the same load, and the branch passes the whole preview suite in round
+2. The test asserts each `setTimeout` slice runs in under 40 ms of wall-clock time, while the
+suite runs about 15 test processes at once on a machine other sessions already load to 30–200.
+It is not a regression from this branch, and its threshold belongs to the penthouse lane
+(#362/#473), so it is reported, not changed.
+
+A fifth local attempt, at `959df11b`, waited for the one-minute load to fall below 30 and
+started at 26. Other sessions pushed it to 62 during the run, and the gate stopped at the same
+single test (agent 116/116, preview 3,410 passed / 1 failed / 1 skipped). That makes five local
+core attempts today, each stopped only by this test.
+
+**Disposition:** the core gate passed as one run of each hosted job at the PR head. Every local
+core task other than this test passed: agent and preview in each attempt, the rest one profile
+at a time, and the branch's full preview suite in A/B round 2. Re-running the whole local gate
+until the coin lands is not evidence of anything, so it stops here.
+
 ### Handoff to local rollout
 
 The accepted engineering profile is the one above, at `1221547e`: MacBook Pro M3 Max, Chromium 156 with ANGLE
