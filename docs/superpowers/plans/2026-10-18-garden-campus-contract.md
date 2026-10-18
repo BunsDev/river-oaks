@@ -204,6 +204,25 @@ Facade crossings measured: every public part-to-part edge on the upper levels is
 - `node --test preview/tests/garden-campus-layout.test.js server/tests/garden-campus-support.test.js`: 19/19.
 - `node scripts/garden-campus-views.mjs --check`: ok.
 
+**Delivery (3.2).**
+- Signed commits:
+  - `f44adbbb`: finishes, guard span, rules, tests, views, docs;
+  - `8428c8dd`: signed merge of `origin/main` `97304fb7`, which auto-merged #486's `docs/offices.md` edit; the campus pointer is intact;
+  - this ledger commit.
+- Hosted CI at `8428c8dd`: 19/19 succeeded (same set as at `63ef1b10`). `pnpm run test:desktop` at `8428c8dd`: 76/76.
+- **Local core at `8428c8dd`: not yet run.**
+  - The 17:23Z attempt waited 25 minutes for the browser lock, then failed at 17:48Z before any step: `ENOSPC` creating the lock. The machine disk had 121 MB free, with swap at 23 of 24 GB from other workloads (another session stopped an Ollama runner with Val's approval), and load reached 539.
+  - A retry is queued (`nice -n 19`, under the browser lock), set to start once the 1-minute load falls below 40 and more than 10 GB is free.
+  - Since the passing `63ef1b10` run, the changes are the contract module, its two test files, the views script, the review page and docs. The focused checks above cover them.
+- Consumer confirmation: #507 merged 3.2 at `40aec12a`. Its ground collision is now 27 rects including the 11 tree pits, B12's guards render to v 90 from the published obstacles, and 38/38 campus tests pass (plus 1 Redis-only skip), including this branch's fixture and layout test. #509 reads none of the changed fields.
+- The PR #519 body was updated, and the #506 comment posted (`issuecomment-6253185330`).
+- **Review page:** serves from this worktree (200). It was not re-rendered headlessly at 3.2 because of the load.
+
+**Next action.**
+1. When load allows, the queued local core run and a headless review-page render at the head. Record both in the PR.
+2. Merging needs Val (`pnpm run land 519`); #507 and #509 stack on this branch.
+3. Then #508 in this session, which waits on Val starting that goal. river-oaks-95 asked for its first SHA and offered to take the two-player journey slice; no split is agreed yet.
+
 ## Open and next
 
 - **#507 (tracker owner):** `attachGardenCampus`, removal of `collisionPolygons[1]`, shells, street rooms, collision and the content revision.
