@@ -28,7 +28,6 @@ async page => {
     await open();
     const dialog = resident.getByRole('dialog', { name: 'Character studio' });
     await dialog.locator('[data-character=sable]').click();
-    await dialog.locator('input[name=cs-form][value=human]').check();
     await dialog.getByRole('radio', { name: 'Rose silk', exact: true }).click();
     await dialog.getByRole('radio', { name: 'Espresso', exact: true }).click();
     await dialog.locator('[data-save]').click();

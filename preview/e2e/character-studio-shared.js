@@ -60,7 +60,7 @@ async page => {
   });
   check(alternate.appearanceId!=='sable-human'&&alternate.revision>0,'Appearance mismatch uses a valid owned published definition for a different appearance');
   await open();
-  await dialog.locator('[data-character=sable]').click();await dialog.locator('input[name=cs-form][value=human]').check();
+  await dialog.locator('[data-character=sable]').click();
   await dialog.getByRole('radio',{name:'Rose silk',exact:true}).click();await dialog.getByRole('radio',{name:'Espresso',exact:true}).click();
   await dialog.locator('[data-save]').click();await page.waitForFunction(()=>document.querySelector('.character-studio').dataset.accountPhase==='ready');
   let saved=await account();check(saved.character.draft.palette==='rose'&&!saved.selection.character,'Save keeps the customized draft private');
