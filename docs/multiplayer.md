@@ -416,6 +416,8 @@ Copy `.env.example` to `.env` if you don't already have a private environment fi
 | `TURNSTILE_SECRET_KEY`, `VITE_TURNSTILE_SITE_KEY` | Optional Cloudflare Turnstile on email sign-in; set both or neither |
 | `TYPESAFE_API_KEY`, `JEV_AUTO_MODEL`, `CHAUFFEUR_DAILY_LIMIT` | Hosted Jev driving: server-only key, model (default `jev-1.13.0`), and daily decision budget (default 6,000, max 10,000) |
 | `RIVER_OAKS_WORKPLACE` | Opt-in flag for the workplace test (with `VITE_WORKPLACE=true` in the client) |
+| `RIVER_OAKS_OFFICE_LAYOUT` | Jevica's office layout: unset or `office-legacy-1` (legacy room), or `office-penthouse-1`; personal workspaces stay legacy ([offices](offices.md)) |
+| `RIVER_OAKS_SCREENING_HOSTS` | IPIC screening hosts, `ipic:<userId>[@<ISO expiry>]`, comma-separated; unset means nobody can host ([screenings](screenings.md)) |
 
 Generate a cookie secret locally:
 
