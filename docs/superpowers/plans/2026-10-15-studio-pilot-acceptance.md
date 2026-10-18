@@ -311,6 +311,456 @@ Not decided here, by role:
 - Focused `node --test preview/tests/studio-*.test.js server/tests/studio-assets.test.js`: 97 / 0 / 0.
 - Game check for `materials.js`: `player-lifecycle` and `hud-and-quality` passed.
 
-## Next
+## Next (2026-10-15)
 
-Signed commit and draft PR; then the reviews listed under the decision. No merge.
+Signed commit and draft PR; then the reviews listed under the decision. No merge. Done: #452
+merged as `5dc0303a`. The 2026-10-18 section below is current.
+
+## Current-main acceptance (2026-10-18)
+
+### Ownership and decisions carried in
+
+- **Task:** register `studio-acceptance-417-20261018`, owner `claude:studio-acceptance-417 (1e70822d)`,
+  branch `test/studio-acceptance-417-20261018` in `../river-oaks-studio-acceptance-417-20261018`, from
+  `origin/main` `dd9b61ee17e3e385dd6ea318e0becc3f01c5b49c` (#490).
+- **Codex refresh candidate:** `codex:root-studio-acceptance-417-refresh-20261015` measured
+  `a797d6b4` plus a five-file uncommitted diff in `../river-oaks-studio-acceptance-refresh` and went
+  idle on 2026-10-16 05:41Z with its lease expired. On 2026-10-18 Val chose to take #417 over on a
+  fresh branch. That worktree, its appendix to this ledger and its untracked
+  `data/reports/studio-417-*.json` receipts are preserved as history; nothing was committed from it.
+- **Val, 2026-10-17** (recorded on #417):
+  - **Budget:** p95 frame time under 16.7 ms on the review profile (M3 Max, Chromium with ANGLE
+    Metal on the real GPU, 1440 × 1000 at DPR 1, vsync off), desktop only. Phones, other GPUs and
+    software rendering are not covered. The report's draw-call, triangle and texture ceilings stay
+    provisional.
+  - **Arrow keys:** keep turning in walk mode, as in the office walk.
+  - **Packaged builds:** out of scope; development Electron covers #417. Packaged installs stay
+    with the desktop release track (#369–#373).
+
+### Review profile and what Studio actually renders
+
+Unchanged hardware from the 2026-10-15 profile: MacBook Pro Mac15,9, Apple M3 Max (40 GPU
+cores, Metal 4), 48 GB, macOS 26.7.1 (25G241); Electron 44.7.0, Three.js 0.186.1, Node 24.18.1.
+The Chromium build and ANGLE renderer string are recorded in each perf receipt.
+
+Studio does not use the game's pipeline. `viewport.js` creates its own `WebGLRenderer`
+(antialias, ACES tone mapping, PCF shadows from one 2048² directional light), one PMREM
+`RoomEnvironment` reflection target per viewport, created on the first furnished space and
+kept, and a single `requestAnimationFrame` loop. There are no quality tiers, composer passes
+or media/audio. Replacing a scene disposes the old content group's geometries and materials
+(`disposeStudioScene`). Shared photographic textures persist in `materials.js`. Route
+assessment runs in a worker per job (`space-assessment-runner.js`), terminated on finish,
+supersession or disposal, with a 10 s timeout. Media/audio counters are not applicable:
+Studio owns none.
+
+Resources the templates own, by traversal of `createSpaceScene(createSpace(id))` on this
+source (main pass only; the renderer's calls and triangles also include the shadow pass):
+
+| Template | Meshes | Triangles | Geometries | Geometry arrays | Materials | Photographic maps |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Garden Office | 346 | 26,574 | 35 | 524,468 B | 27 | 0 |
+| Courtyard House | 352 | 31,098 | 48 | 766,876 B | 27 | 6 |
+| Atelier Boutique | 315 | 24,906 | 40 | 481,076 B | 26 | 3 |
+| Corner Café | 403 | 35,490 | 43 | 538,244 B | 23 | 6 |
+
+The shipped Garden Office requests no photographic texture at all. The six shared 1024² maps
+(stone and paver colour/normal/ARM) arrive with the first House, Boutique or Café, or with an
+edit to a limestone or terracotta floor.
+
+Bounded persistent state, by owner:
+
+- **Viewport (one per Studio page):** shadow map (2048² RGBA8 colour plus 2048² depth texture,
+  about 32 MiB by format), PMREM target (768 × 1024 half-float RGBA, about 6 MiB), compiled
+  programs (6 for the office, 8 with House).
+- **`materials.js` (shared with the game):** at most one texture per material and channel,
+  never disposed by design (six maps here, about 32 MiB as RGBA8 with mipmaps).
+- **Document:** undo history capped at 80 entries (the 2026-10-15 70-cycle heap diagnosis).
+
+### Finding: the delayed-photograph defect does not reproduce
+
+The uncommitted refresh reported that a delayed limestone floor stayed at the neutral stand-in
+after its requests finished, and added `loaded.needsUpdate = true` to `materials.js`. Its
+evidence does not establish that:
+
+- **Live counts.** Its `loaded` result stored the live request-count object, so "3 finished"
+  was written when the report was serialised, not when the screenshot was taken.
+- **Timing.** The 8 s route delay starts when the floor edit requests the textures, after the
+  Office opens, but the capture was timed from the open. The same change added a five-second
+  retry window, which would also explain its "after fix" pass.
+
+Three.js r186 also says the change is unnecessary. `TextureLoader` sets `needsUpdate` before
+calling `onLoad`. `dispose()` then removes the texture's renderer properties, so the next
+`setTexture2D` sees no recorded version, creates a new GL texture and uploads the full image
+(`forceUpload`). Studio materials use the shared textures directly; nothing clones them.
+
+Measured on main `dd9b61ee` with the unmodified loader and the revised scenario below, which
+copies request counts at each capture and waits for the requests to finish:
+
+| Template | Surface | Normal | Missing | Loading | Loaded | Replaced | Requests settled |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Garden Office | limestone meeting floor (edited) | 186 | 200 | 200 | **186** | 186 | 8.5 s |
+| Courtyard House | terracotta patio | 81 | 111 | 111 | **81** | 81 | 8.2 s |
+| Atelier Boutique | limestone sales floor | 154 | 184 | 184 | **154** | 154 | 8.4 s |
+| Corner Café | terracotta floor | 82 | 112 | 112 | **82** | 82 | 8.4 s |
+
+Every delayed texture recovered exactly on the first capture after its requests settled. The
+`materials.js` change is not carried; the refresh's manifest hash refresh falls away with it.
+
+### Scenario and instrumentation changes (commit `b0e2d78a`)
+
+- **`studio-pilot-assets.js`** keeps #478's per-template stations. Garden Office's case makes
+  one valid edit (meeting-room floor to limestone, routes still passing) and looks down at it
+  from inside the room. Request counts are copied at each capture. The loaded capture waits for
+  the requests to finish, then allows five rendered seconds. Each template must read at least
+  5 levels differently without its texture (so the check can fail). Missing and loading stay
+  within 40 of normal (not black); loaded and replaced-then-reopened within 3. A replacement
+  made while the textures are pending must keep its mode, item list, selection, status and
+  geometry count once the late images arrive.
+- **`studio-pilot-soak.js`** records, per sample, distinct scene materials and the viewport's
+  render targets (both now in `data-render-stats`), material image requests, live
+  route-assessment workers and pending timeouts. The worker and timeout counts come from a
+  test-side init script that wraps `Worker` and `setTimeout`; no product code counts them.
+- **`viewport.js`** adds `materials` (distinct materials in the current content) and
+  `renderTargets` (shadow map and reflection target) to its once-a-second stats.
+- **`studio-pilot-perf.mjs`** reads the GPU process's physical footprint with `footprint`
+  at Studio ready, cold office open, the other template, warm office open and the end. On
+  Apple silicon, Metal allocations land in that process as `IOAccelerator (graphics)`. A
+  probe uploading eight 2048² RGBA8 textures (128 MiB) raised that category by 132 MiB.
+  The totals include ANGLE/driver staging and the canvas buffers, so phases are compared, not
+  read as per-resource VRAM.
+
+**Teeth check (mutated loader, never committed).** `materials.js` was edited in the worktree,
+the scenarios run, and the file restored byte-for-byte (`cmp` against HEAD).
+
+| Mutation | New scenario | Main's scenario (±40) |
+| --- | --- | --- |
+| Photographs never upload | fails: House patio and Office floor "not a textured surface" (111/111, 200/200) | **passes** (every House reading 111) |
+| Photographs arriving > 2 s after creation never replace the stand-in | fails: "loaded terracotta patio reads 111, normal 81: the texture did not recover"; Office 200 vs 186 | **passes** (normal 81, loaded 111, replaced 111) |
+
+Main's check could not detect either failure, including the exact one the refresh suspected.
+
+### Exact-revision results (`b0e2d78a`, app code = main `dd9b61ee` + the stats fields)
+
+One batch through the browser lock, clean tree, load average 27–37 (other sessions' runs).
+`RIVER_OAKS_GARDEN_CAPTURE_PREFIX=garden-office-417-b0e2d78a RIVER_OAKS_E2E_REPORT=studio-417-b0e2d78a-scenarios.json
+pnpm run test:experience world-studio studio-pilot-journey studio-pilot-soak studio-pilot-assets studio-pilot-a11y
+studio-office-stations studio-office-occupied studio-office-neutral`: **8/8 passed**, no page errors
+(`data/reports/studio-417-b0e2d78a-scenarios.json`).
+
+- **`world-studio`** (27.3 s): create, transform, undo, save, reopen, pick, export, import, walk,
+  safe edits and repair.
+- **`studio-pilot-journey`** (59.0 s), 14 checks: valid edit; blocked meeting-room route refused
+  with a finding and the sofa unmoved; repair; undo and redo; save keeps the office assessment
+  context; reload reopens and reassesses; the stale tab's save is refused and the other tab's
+  kept; the saved layout passes; walked tour, returning to the arrival each time:
+
+  | Target | Waypoints | Reached (E, N) | Back at | Seconds |
+  | --- | ---: | --- | --- | ---: |
+  | reception | 2 | 0, −4 | 0, −8.4 | 6.0 |
+  | work area | 4 | −1.9, 1 | 0, −8.5 | 14.4 |
+  | meeting room | 4 | 3, 1.1 | 0, −8.5 | 15.9 |
+  | kitchenette | 2 | −1, 5 | 0, −8.5 | 19.4 |
+
+  Then exit to the editor.
+- **`studio-pilot-soak`** passed here too. The receipt of record is the `ae3173cb` run below,
+  which adds GPU memory.
+- **`studio-pilot-assets`** (office): normal 186, missing 200, loading 200, loaded 186, replaced
+  186. House, Boutique and Café passed separately
+  (`data/reports/studio-417-b0e2d78a-assets-{house,boutique,cafe}.json`) with the readings in
+  the finding table above.
+- **`studio-pilot-a11y`**, 19 checks:
+  - **Layout:** 320 × 640 and 390 × 844 with no sideways scroll. Walk through, Undo, Redo, Save
+    on device and Space templates are reachable at 24 px or more.
+  - **Keyboard:** Enter selects a scene object; a typed East value commits without dragging; the
+    undo shortcut restores it; → then W moves 1.0 m east and −0.1 m north (arrows turn); focus
+    stays on the viewport after leaving walk mode, and returns to Space templates when the
+    chooser closes.
+  - **Reduced motion:** 0 running animations.
+
+  These are emulated widths and DOM checks, not touch or screen-reader evidence.
+- **Captures:** 33 shipped (11 stations × daylight/warm/evening), 33 with all nine chairs pulled
+  back 0.4 m and deepened to 0.75 m, and 22 neutral diagnostic. The neutral run restored and
+  hash-checked the original `viewport.js` response
+  (`641afe766d30930195f8f5cc366330cdbdf4d88b4771618f3a8cda82a1321cc2`). PNGs are local in
+  `output/playwright/garden-office-417-b0e2d78a-*`.
+
+`node scripts/browser-lock.mjs … -- node desktop/studio-e2e.js`: **11/11** development Electron
+checks (`.runtime/agent/studio-desktop.json`):
+- native menu open;
+- export through the native policy, JSON filter and region-v1;
+- oversized JSON blocked;
+- Keep editing / Discard;
+- world round trip;
+- save/reopen keeps the assessment sidecar;
+- bare v1 export/import without a fabricated assessment;
+- renderer isolation and external navigation blocked;
+- cancelled close;
+- crash recovery with the saved draft.
+
+Loopback identity only: no packaged build, native dialog interaction or live auth.
+
+### Soak of record (`ae3173cb`; `preview/src` identical to `b0e2d78a`)
+
+`RIVER_OAKS_E2E_REPORT=studio-417-ae3173cb-soak.json pnpm run test:experience studio-pilot-soak`:
+passed in 56.3 s, one warm-up plus ten cycles. Each cycle opens Garden Office, waits for its
+routes, walks (W 1.5 s, turn, W 1 s), returns to the editor, then replaces it with Courtyard
+House. Each sample follows a forced GC and a fresh render-stats frame
+(`data/reports/studio-417-ae3173cb-soak.json`).
+
+All ten post-warm-up samples are identical for every renderer and DOM count:
+
+| Sample | Calls | Triangles | Geometries | Materials | Textures | Render targets | Programs | Listeners | DOM nodes | Canvases |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Office open, cycles 1–10 | 688 | 53,076 | 35 | 27 | 10 | 2 | 6 | 157 | 925 | 1 |
+| After replacement, cycles 0–10 | 700 | 62,136 | 48 | 27 | 10 | 2 | 8 | 168 | 1,022 | 1 |
+
+The warm-up's office sample had 4 textures and 917 nodes: the shared maps arrive with the first
+House. Pending at every sample: 0 material requests (6 started and finished, all at the first
+House), 0 live route-assessment workers (22 created over the run, one per open, all
+terminated), 0 timeouts.
+
+Values that vary, per cycle (MiB):
+
+| Cycle | Office heap | Office GPU process | Office Metal | Replaced heap | Replaced GPU process | Replaced Metal |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 0 | 13.67 | 612.7 | 42.3 | 15.38 | 688.6 | 100.4 |
+| 1 | 14.65 | 506.8 | 78.0 | 14.70 | 690.2 | 99.9 |
+| 2 | 15.06 | 508.7 | 82.2 | 15.04 | 676.0 | 89.4 |
+| 3 | 14.59 | 506.0 | 79.2 | 14.52 | 686.2 | 98.8 |
+| 4 | 15.45 | 511.0 | 83.4 | 14.65 | 684.8 | 96.8 |
+| 5 | 14.53 | 502.8 | 82.1 | 14.70 | 690.4 | 101.1 |
+| 6 | 14.80 | 509.0 | 79.4 | 14.77 | 693.7 | 103.4 |
+| 7 | 14.80 | 509.9 | 79.3 | 14.74 | 694.9 | 101.9 |
+| 8 | 14.91 | 528.6 | 75.9 | 14.85 | 695.3 | 101.9 |
+| 9 | 15.74 | 667.2 | 73.3 | 15.36 | 692.3 | 98.8 |
+| 10 | 15.43 | 674.3 | 78.0 | 15.41 | 691.3 | 97.4 |
+
+"Metal" is the GPU process's `IOAccelerator (graphics)` footprint: textures, buffers and render
+targets on unified memory. It holds 73–83 MiB with the office open and 89–103 MiB with House,
+with no trend. The whole GPU-process footprint stays at or below the House level (676–695 MiB);
+at cycles 9–10 the office reading rose to that level rather than above it. That is non-Metal
+memory in the GPU process (ANGLE and allocator pages kept after House is disposed), not scene
+resources. JS heap moves 14.5–15.7 MiB without a trend over this window; the 70-cycle diagnosis
+of 2026-10-15 bounds it by the 80-step undo history.
+
+**Longer run.** `STUDIO_SOAK_CYCLES=30 RIVER_OAKS_E2E_REPORT=studio-417-ae3173cb-soak-30.json pnpm
+run test:experience studio-pilot-soak`: passed in 159.1 s
+(`data/reports/studio-417-ae3173cb-soak-30.json`).
+- **Counts:** every count above is identical for all 30 post-warm-up cycles. The one exception
+  is a single replaced sample with 992 DOM nodes instead of 1,022, a dip rather than growth.
+  Pending loads, workers and timeouts are 0 throughout.
+- **Memory, by ten-cycle window:**
+
+  | Cycles | Metal, office | Metal, House | Highest GPU-process footprint | Heap, office |
+  | --- | ---: | ---: | ---: | ---: |
+  | 1–10 | 80.6 MiB | 99.2 MiB | 697.9 MiB | 14.9 MiB |
+  | 11–20 | 82.8 MiB | 102.8 MiB | 696.9 MiB | 15.7 MiB |
+  | 21–30 | 82.2 MiB | 101.8 MiB | 700.8 MiB | 15.8 MiB |
+
+  Metal memory is flat. The heap's small rise is undo history filling (two snapshots per
+  cycle toward the 80-step cap, as diagnosed on 2026-10-15). **Soak disposition:** no
+  unexplained sustained growth; no fix needed.
+
+### Performance and resident memory on the review GPU (`b0e2d78a`)
+
+`STUDIO_PERF_OUT=.runtime/acceptance/b0e2d78a-perf node preview/e2e/studio-pilot-perf.mjs`
+(copied to `data/reports/studio-417-b0e2d78a-perf.json`). Chromium 156.0.8078.4, `ANGLE (Apple,
+ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)`, 1440 × 1000 at DPR 1, vsync and the
+frame-rate limit off; one-minute load 26.9 → 24.8. No page errors. Three windows of 180 frames
+per view:
+
+| View | p50 / p95 / p99 ms | Window p50/p95 | Calls | Triangles |
+| --- | --- | --- | ---: | ---: |
+| Whole scene, overhead | 1.5 / 5.1 / 6.5 | 1.9/4.4, 1.5/5.1, 1.4/5.2 | 688 | 53,076 |
+| CAM-01 entry | 1.5 / 3.8 / 5.3 | 1.6/3.8, 1.5/3.7, 1.5/4.3 | 550 | 40,164 |
+| CAM-02 reception | 1.5 / 4.3 / 5.7 | 1.4/4.5, 1.5/4.1, 1.5/4.4 | 396 | 29,652 |
+| CAM-03 work area | 1.5 / 4.1 / 5.8 | 1.5/4.5, 1.5/3.8, 1.4/3.9 | 418 | 31,716 |
+| CAM-04 meeting room | 1.5 / 4.0 / 6.1 | 1.6/3.9, 1.5/4.0, 1.5/4.0 | 407 | 29,896 |
+| CAM-05 kitchenette | 1.5 / 4.6 / 6.3 | 1.5/4.3, 1.4/4.9, 1.6/4.2 | 416 | 31,164 |
+| CAM-06 exit | 1.5 / 4.2 / 6.2 | 1.4/4.2, 1.7/4.7, 1.5/4.2 | 362 | 27,268 |
+
+Calls and triangles include the shadow pass. Every view's p95 is under a third of Val's
+16.7 ms budget for this profile. Studio swaps whole content groups rather than adding a room to
+a running world, so the game-style "incremental room" cost doesn't apply. Whole-scene and
+station times are the measure.
+
+Loading: cold Studio ready 336 ms; cold Garden Office open 687 ms, routes passed 884 ms; warm
+open 282 / 370 ms. Transfer at ready 55 requests, 8,622,357 bytes; after the office 78 requests,
+8,630,740 bytes (15,418,541 decoded). These are dev-server bytes (unbundled, uncompressed), not
+production transfer and not GPU memory.
+
+GPU process memory at each phase (MiB):
+
+| Phase | Footprint | Metal (IOAccelerator) | Other graphics | Textures | Geometries |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Studio ready (default region) | 399.6 | 25.8 | 291.1 | — | — |
+| Garden Office, cold | 447.3 | 32.8 | 310.3 | 4 | 35 |
+| Courtyard House | 509.3 | 70.5 | 314.5 | 10 | 48 |
+| Garden Office, warm | 509.1 | 73.2 | 314.5 | 10 | 35 |
+| After the six stations | 522.1 | 83.1 | 316.2 | 10 | 44 |
+
+Against format estimates:
+- **Opening the office:** adds 7.0 MiB of Metal memory, against the PMREM reflection target
+  (≈6 MiB) plus 0.5 MiB of geometry.
+- **The first House:** adds 37.7 MiB for the six shared 1024² maps (≈32 MiB as RGBA8 with
+  mipmaps) plus House's own geometry.
+- **The 2048² shadow map:** about 32 MiB, already resident at Studio ready.
+- **The stations:** placing the arrival brings up the transform gizmo (+9 geometries, +2
+  programs, then constant at every station).
+
+The soak above holds Metal memory flat across ten cycles. So the realistic resident set with the
+office open is about 80 MiB of Metal allocations in a 500–690 MiB GPU process, on this machine.
+That's a measurement on unified memory, not a per-resource VRAM breakdown; other GPUs, drivers
+and phones are unmeasured.
+
+### Accessibility and human review
+
+The automated checks above cover keyboard-only edit/undo/walk/turn, focus recovery after walk
+mode and the chooser, reduced motion, and 320/390 px emulated layouts. They are not the review
+#417 requires. That review belongs to Val (recorded on #417 2026-10-16 and 2026-10-17) and is
+posted on #417 as a checklist:
+- VoiceOver announcements for controls, selection, the blocked-route finding, save/reopen/stale
+  messages and walk mode;
+- keyboard-only use with visible focus;
+- physical touch;
+- uncoached edit/refusal/repair/save/reopen/walk/exit, including exit wayfinding.
+
+No result is inferred here.
+
+One fact for the touch review, from the source rather than a device: walk mode moves only from
+the keyboard (W/A/S/D and the arrows) and turns by pointer drag. There are no on-screen
+movement controls (`viewport.js` keydown; nothing in `main.js` or `studio.css`). On a
+touch-only device a visitor can turn but not walk. Val decides whether that is an accepted
+limit of the desktop-only profile or a follow-up; this patch doesn't add touch controls.
+Physical iOS stays with #289.
+
+### Paired player-height captures and visual disposition
+
+All captures use the fixed `studio-office-stations` cameras (eye 1.68 m, 1440 × 1000, ANGLE
+Metal on the M3 Max) under the daylight, warm and evening presets. Real materials throughout;
+the neutral set is the response-only diagnostic.
+
+| Pair | Baseline | Candidate | Mean pixel difference |
+| --- | --- | --- | --- |
+| Pre-pilot → current | `326506f7` recaptured now from a `git archive` with the current station script (33 views; neutral not possible: that viewport lacks the diagnostic's anchor) | `b0e2d78a` (33) | 7.6–37.3 by station and preset |
+| #416 reviewed → current | `garden-office-c644-review2-*`, #471's final set (33 + 33 occupied + 22 neutral) | `b0e2d78a` (33 + 33 + 22) | 0.0–0.6 at CAM-01/02/04/05/06/10/11; 1.3–5.3 at the workstation views CAM-03/07/08/09 |
+
+The `c644-final` shipped-preset CAM-07–10 frames predate their merged camera definitions
+(captured 20:48 CDT; `d0064437` landed 20:58), so they aren't comparable; `review2` is. PNGs and
+contact sheets are local only.
+
+Engineering inspection (not an independent design review):
+
+- **Pre-pilot → current.** The #416 defects stay fixed on the same physical plan:
+  - D1: no floating desk lamps;
+  - D2/D3: true-size desks on charcoal legs and true-size chairs, not stretched boxes;
+  - D4: a linear pendant instead of a flattened disc;
+  - D5: polished concrete instead of the outdoor paver;
+  - D6: charcoal glazing frames;
+  - D8: evening visibly warmer and darker;
+  - and the restrained `#F486A1` art accent.
+
+  Every station shows the same positions and room plan.
+- **#416 reviewed → current.** The only visible change is the shelving. It went from a deep
+  single-bay case with thick boards to the shared two-bay shelving with thin boards at a real
+  shelf pitch, with books, which arrived with #474. Desks, chairs, lights, art, floor, glazing
+  and the kitchenette (sink seated in its worktop, CAM-11) are unchanged. The reception counter
+  is the plain slab since #466.
+- **Scale and contact:** desks, chairs and shelving rest on the floor with contact shadows in
+  every preset.
+- **Glass:** the meeting-room partitions read as glass with charcoal mullions. Plants and
+  chairs behind them draw correctly, with no sorting artefacts seen. The glass looks pale
+  because the open roof and bare exterior (D7, D9) show through.
+- **Occupied use:** with all nine chairs pulled back and deepened, every required route still
+  passes and the views read the same.
+- **Exit wayfinding:** CAM-06 still faces a blank wall. The walked journey proves the exit is
+  reachable, not that a new visitor finds it.
+
+Disposition: no new visual blocker found by engineering inspection. Remaining visual review
+items: the design reviewer's look at the office shelving change, and D7/D9 (known limits from
+#416).
+
+### Decision
+
+**Engineering: continue with Garden Office as the local-template baseline, on the scoped
+desktop profile, at `ae3173cb`.**
+- The edit/refusal/repair/undo/save/reopen/stale-tab/walk/exit journey passes on the real GPU,
+  as does development Electron.
+- Ten post-warm-up cycles hold every renderer, DOM, listener, worker, timer and pending-load
+  count constant, and GPU Metal memory flat.
+- Late, missing and replaced-while-loading textures recover exactly, and the check can now fail.
+- Frame times are far inside Val's 16.7 ms p95 budget.
+- No product defect was found that needed a fix; the only source change is two fields in the
+  existing render stats.
+
+Still open, by owner:
+
+- **Val (human review):** VoiceOver, keyboard-only, physical touch and uncoached use, including
+  exit wayfinding and the touch-walk limit above. #417 stays open until these are recorded.
+- **Design reviewer:** the Garden Office as it now renders differs from the #416-reviewed set
+  only in its shelving (see the paired captures). That shelving family arrived with #474 and was
+  accepted for Boutique/House/Café on 2026-10-17, but hasn't been looked at in the office.
+  D7 (open roof) and D9 (bare exterior) remain known limits from #416.
+- **Not run, not claimed:** physical devices (#289), packaged Electron (out of scope per Val),
+  other GPUs, software rendering, isolated Redis/full (no server or shared code changed),
+  production.
+
+### Gates
+
+- **Focused:** `node --test preview/tests/studio-*.test.js server/tests/studio-assets.test.js`
+  132 / 0 / 0 (on `dd9b61ee` plus the scenario edits; no test or `preview/src` file changed
+  after).
+- **Core:** `pnpm run verify` at `ae3173cb`, twice. Both times agent 116/116 passed, then
+  preview-tests stopped the gate at 3,410 passed / 1 failed / 1 skipped. The failure both times
+  was `office-penthouse-furnishings.test.js` "surfaces are drawn in short idle slices…", a
+  wall-clock < 40 ms assertion (48.3 ms, then 1.8 s total), at load averages of about 35 and
+  42. This branch doesn't touch that test or the office sources. Alone it passes 15/15. The
+  remaining core tasks were run one profile at a time:
+  - `verify server`: 593 passed, 154 Redis skips, 6 failed. All six were real-transport
+    timeouts ("timed out", "Office command timed out", `request_timeout`) at load averages
+    70–95. Their five files rerun alone: 13 passed, 0 failed, 5 Redis skips.
+  - `verify desktop`: 76/76.
+  - `verify build`: passed.
+  - `verify python`: passed (lint, format, tests, demo, demo-verify).
+  - `check_secrets.py --all`: no leaks.
+
+  Logs are in `.runtime/acceptance/verify*-ae3173cb.log` and `verify-{server,desktop,build,python}.log`.
+- **Not run:** isolated Redis/full (no server, shared-state or game code changed), hosted CI
+  (runs on the PR), physical devices, packaged Electron.
+
+### Handoff to local rollout
+
+The accepted engineering profile is the one above: MacBook Pro M3 Max, Chromium 156 with ANGLE
+Metal on the real GPU, 1440 × 1000 at DPR 1, vsync off for timing; development Electron 44.7.0.
+Val's budget (p95 < 16.7 ms) applies there only. The reusable acceptance check, per template:
+
+```sh
+STUDIO_TEMPLATE=<office|house|boutique|cafe> pnpm run test:experience studio-pilot-assets   # texture missing/late/replaced; fails if a texture never shows or never recovers
+STUDIO_TEMPLATE=<id> pnpm run test:experience studio-pilot-soak                             # 1 + 10 cycles; STUDIO_SOAK_CYCLES=N for longer
+STUDIO_TEMPLATE=<id> node preview/e2e/studio-pilot-perf.mjs                                 # frame times, load, GPU-process memory
+pnpm run test:experience studio-pilot-journey studio-pilot-a11y                             # Garden Office; studio-template-journey for the others
+node desktop/studio-e2e.js
+```
+
+House, Boutique and Café already pass the stricter texture check on this revision. Receipts in
+`data/reports/`:
+- `studio-417-b0e2d78a-scenarios.json` (8 browser scenarios);
+- `studio-417-b0e2d78a-assets-{house,boutique,cafe}.json`;
+- `studio-417-b0e2d78a-perf.json` (Metal profile);
+- `studio-417-b0e2d78a-desktop.json` (Electron);
+- `studio-417-ae3173cb-soak.json` and `studio-417-ae3173cb-soak-30.json`.
+
+Pre-commit runs, mutated-loader runs and captures stay local under `.runtime/acceptance/` and
+`output/playwright/`.
+
+### Next
+
+| Item | Owner | Next action |
+| --- | --- | --- |
+| VoiceOver, keyboard-only, physical touch, uncoached use and exit wayfinding | Val | Work through the #417 checklist and record pass/fail with device details; decide on touch walking |
+| Garden Office shelving change since #416 review | Design reviewer | Look at the CAM-03/07/08/09 pairs and accept or ask for a fix |
+| Draft PR and hosted checks | this task | Watch the PR's checks; merging needs Val's say-so |
+| Codex's refresh worktree `river-oaks-studio-acceptance-refresh` | Val / register | Keep as history until this PR lands; its receipts are superseded, not deleted |
+| Physical iOS | #289 | Not started here |
+
+#417 stays open until Val's review is recorded.
