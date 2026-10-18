@@ -280,6 +280,7 @@
         "spatial-streets",
         "office-desk",
         "office-visit",
+        "office-computer-embed",
         "garden-campus-office"
       ],
       "browser": true,

@@ -127,7 +127,7 @@ test('a visitor climbs from the street to the skywalks by portals while a walker
   assert.deepEqual(walk(authority, 'walker', [[16, 76], [31, 76]], 0), ['ground']);
 });
 
-test('the authority refuses a forged level or height, a step off the deck, a suite and an unusable portal', () => {
+test('the authority refuses a forged level or height, a step off the deck, a finish, a suite and an unusable portal', () => {
   const authority = createCampusAuthority();
   authority.enter('walker', L(0), [16, 76]);authority.enter('visitor', L(3), [16, 80]);
   const refused = (id, message) => authority.move(id, message).error;
@@ -136,12 +136,16 @@ test('the authority refuses a forged level or height, a step off the deck, a sui
   assert.equal(refused('visitor', { position: [16, 80.2, 0] }), 'invalid_ground', 'a deck visitor cannot drop to the street');
   assert.equal(refused('visitor', { position: [17.4, 80, 13] }), 'blocked', "the body would overlap B12's east edge guard");
   assert.equal(refused('visitor', { position: [16, 84, 13] }), 'movement_too_fast');
-  // Along T2's facade line, where the deck guard ends: a point would slip through, a body cannot.
-  authority.move('visitor', { position: [16, 82.5, 13] });walk(authority, 'visitor', [[16, 82.5], [16, 93]], 13);
-  assert.equal(refused('visitor', { position: [14.2, 93, 13] }), 'blocked');
-  assert.equal(campusSupportAt(L(3), 14.2, 93).surfaceId, 'T2-terrace-4/1', 'the centre alone has terrace support there');
+  // B12's guards stop at T2's terrace, so the lane opens onto its west wing; #511's benches are solid.
+  authority.move('visitor', { position: [16, 82.5, 13] });
+  assert.deepEqual(walk(authority, 'visitor', [[16, 82.5], [16, 91.5], [8, 91.5]], 13), ['B12', 'T2-terrace-4/1']);
+  assert.equal(refused('visitor', { position: [8, 90.3, 13] }), 'blocked', 'T2-terrace-4/seat-south-7.3');
+  // Along the seam between T1's lift and stair shafts a point finds hall support; a body does not.
+  authority.enter('lobby', L(0), [12, 57.6]);
+  assert.equal(campusSupportAt(L(0), 10.2, 57.6).surfaceId, 'T1-F1-hall');
+  assert.equal(refused('lobby', { position: [10.2, 57.6, 0] }), 'blocked');
   // A suite is private: the gallery cannot walk into one.
-  walk(authority, 'visitor', [[16, 93], [16, 99]], 13);
+  walk(authority, 'visitor', [[8, 91.5], [16, 91.5], [16, 99]], 13);
   const suiteDoor = LAYOUT.towers[1].levels[3].suites.find(suite => suite.door.opensTo === 'T2-F4-public' && Math.abs(suite.door.position[1] - 99) < 3);
   walk(authority, 'visitor', [[16, 99], [16, suiteDoor.door.position[1]], [suiteDoor.door.position[0] + Math.sign(16 - suiteDoor.door.position[0]) * 0.4, suiteDoor.door.position[1]]], 13);
   assert.equal(refused('visitor', { position: [...suiteDoor.door.inside, 13] }), 'private_suite');

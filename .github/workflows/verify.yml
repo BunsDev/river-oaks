@@ -187,7 +187,7 @@ jobs:
           - id: streets
             journeys: spatial-streets world-studio
           - id: places
-            journeys: contextual-first-visit store-intro photo-mode rail-navigation places-guide destination-minimap spatial-circulation office-desk office-visit office-lift-ride
+            journeys: contextual-first-visit store-intro photo-mode rail-navigation places-guide destination-minimap spatial-circulation office-desk office-visit office-lift-ride office-computer-embed
           # The Gardens campus revision (#510): leases, public workstations and the private desk.
           - id: campus
             journeys: garden-campus-office
