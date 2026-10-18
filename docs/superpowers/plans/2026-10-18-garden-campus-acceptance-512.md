@@ -7,14 +7,16 @@ Parent tracker: #505. This branch becomes the integrated candidate: #507, then t
 
 ## Integrated inputs (by revision)
 
+Candidate head `284a5ca3` (PR #525), base main `97304fb7` (#486 Computer tab included).
+
 | Package | Revision in this branch | Notes |
 | --- | --- | --- |
-| #506 contract | `0e46ec36` (through #507) | PR #519 head `82028fc8` adds a landing/portal check; no id change |
-| #507 shells, overlay, gate | `5a572ea4` | detachGardenCampus restores the garage byte for byte |
-| #508 upper circulation | not yet | river-oaks-c5, stacks on #507 `302b3e0f` |
-| #509 leases | not yet | delegated agent; checkpoint v13, `payload.campus`, `campusServed` |
-| #510 resident journey | not yet | |
-| #511 finish and rendering | not yet | |
+| #506 contract | layout 3.2 (through #507 `40aec12a`) | PR #519 head `3fac6c32`, hosted 19/19 |
+| #507 shells, overlay, gate | `40aec12a` | detachGardenCampus restores the garage byte for byte |
+| #508 upper circulation | **not yet** | not started; c5's queued goal, which Val starts |
+| #509 leases | `1d151a8d` | checkpoint v13, `payload.campus`, `campusServed`, `leaseRequestId` |
+| #510 resident journey | `835c0c44` | dialog, fit-out, public workstations, seat rules, `garden-campus-office` journey and its `campus` CI shard |
+| #511 finish and rendering | not yet | `bb8cd938` pushed; PR after its core verify |
 
 ## Cutover and rollback (implemented)
 
@@ -40,24 +42,30 @@ chain:
 
 | Case | Status | Evidence / next |
 | --- | --- | --- |
-| Skyline/plot | partial | #507 contract and render tests; browser views pending under load |
-| Public route | partial | ground E1/E2/E3 → halls/café/pergola flood test (#507); upper route is #508 |
-| Stacked movement | partial | street walker below both skywalks stays on the platform (#507 server test); deck walkers are #508 |
-| Rental/permission | open | #509 |
-| Useful private work | open | #510 |
-| Access loss | open | #509/#510 |
-| Persistence/cutover | partial | garage ↔ Gardens recovery, older chain, refusals, Redis coordinator (this branch) |
-| Interaction/accessibility | open | #510 |
+| Skyline/plot | partial | #507 contract and render tests, matched views at #507; #511's finish views and Val's visual review pending |
+| Public route | partial | ground E1/E2/E3 → halls/café/pergola flood test (#507); the hall door and seats in the `garden-campus-office` journey; upper route is #508 |
+| Stacked movement | partial | a street walker below both skywalks stays on the platform (#507 server test); deck walkers are #508 |
+| Rental/permission | partial | #509 race, retry, forged-command and coordinator tests (memory and Redis, real sockets); the dialog's request → offer → accept, withdraw and decline over the real socket (#510); browser leg in the hosted `campus` shard |
+| Useful private work | partial | public workstation desk in both transports (#510 desk transport test); the browser save → stand → 403 → reload → recover leg in the `campus` shard; suite desks need #508 |
+| Access loss | partial | #509 revoke/expiry; standing or leaving closes the desk (#510); suite eviction needs #508 |
+| Persistence/cutover | done for street and halls | garage ↔ Gardens recovery, older chain, epoch fence, refusals, Redis coordinator, leases inert across a configuration rollback; campus-level occupants need #508 |
+| Interaction/accessibility | partial | dialog: Escape and focus return, keys do not walk, phone-width containment and 43 px targets (emulated) |
 | Visual/resource | open | #511 |
-| Optional Computer/paid mode | not claimed | #486/#487; paid mode needs the #509 business decisions |
+| Optional Computer/paid mode | not claimed | Computer appears at a workstation exactly where #486 configures it; paid mode needs the #509 business decisions |
 
 ## Evidence
 
-- `REDIS_URL=redis://127.0.0.1:16507 node --test server/tests/district-gardens-checkpoint-migration.test.js`:
-  5/5, Redis coordinator included.
-- `redis-room`, `district-tower-checkpoint-migration`, `district-checkpoint-migration`,
-  `district-gallery-levels` and `district-building-interiors`, with the same isolated
-  Redis: 34/34.
+- At `284a5ca3` (2026-10-18 18:32Z, load ~55), with an isolated Redis
+  (`REDIS_URL=redis://127.0.0.1:16507`, `--test-timeout=240000`): 145/145. The set is:
+  - `district-gardens-checkpoint-migration` (6), `redis-room` and the tower, levels,
+    gallery and interior recoveries;
+  - every `preview/tests/garden-campus-*` and `server/tests/garden-campus-*` test, the
+    `campus-leases*` transports and coordinators, and the office desk suites;
+  - `scripts/tests/agent.test.js` (the experience profile lists `garden-campus-office`).
+- Hosted at `9838e159`: everything green except the `campus` shard (the journey stalled
+  at the hall door, fixed by #510 `835c0c44`) and Desktop macOS, which hit the known W-check
+  flake at the garage spawn. Re-running at `284a5ca3`.
+- Earlier, at `936e4983`: hosted Desktop on all three runners green with the campus UI in.
 
 ## Gaps
 
@@ -68,6 +76,10 @@ chain:
 
 ## Next action
 
-Commit, then integrate #509 when its draft PR exists. Write `docs/garden-campus.md` with
-operations, recovery and rollback. Prepare the two-account journey harness against #508's
-levels.
+1. A green hosted `campus` shard at `284a5ca3`.
+2. Merge #511's PR head when it opens, and re-run the shard and the views.
+3. When #508 lands, merge it with #510's suite-seat integration, then write and run the
+   two-account candidate journey: Floor 4 across both skywalks, a walker below a bridge
+   while another crosses it, suite entry by the lease holder, a stranger refused, revoke
+   ending entry and the desk, reconnect and restore on a level, and a coordinator
+   takeover. Rerun the rollback test with real campus-level occupants.
