@@ -2,7 +2,6 @@ async page => {
   const origin = 'http://127.0.0.1:5173', checks = [];
   const check = (ok, message) => { if (!ok) throw new Error(message); checks.push(message); };
   const games = () => page.evaluate(() => window.__riverPlazaGames());
-  const cell = name => 'abcdefg'.indexOf(name[0]) + (Number(name[1]) - 1) * 7;
   const click = name => page.locator(`#table-game-panel .table-square[data-square=${name}]`).click();
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto(origin + '/?motion-debug=1', { waitUntil: 'commit' });
@@ -24,6 +23,9 @@ async page => {
     return p.left>=0&&p.right<=innerWidth+1&&p.top>=0&&p.bottom<=innerHeight+1&&panel.scrollWidth<=panel.clientWidth+1
       &&board.left>=p.left&&board.right<=p.right+1&&[...choice.querySelectorAll('button')].every(button=>{const b=button.getBoundingClientRect();return b.left>=c.left&&b.right<=c.right+1&&b.height>=44;});
   });
+  check(await panel.locator('.table-game-header').evaluate(header=>[...header.querySelectorAll('button')].every(button=>{
+    const box=button.getBoundingClientRect();return box.width>=44&&box.height>=44;
+  })),'Header actions provide 44-pixel targets');
   const initial=await measure();check(initial.width>=500,'Desktop board uses at least 500 pixels');
   await page.screenshot({path:'output/playwright/plaza-games-light.png'});
   await page.evaluate(()=>{document.documentElement.dataset.theme='dark';});
@@ -34,14 +36,55 @@ async page => {
   check(await expand.getAttribute('aria-pressed')==='true'&&await expand.evaluate(n=>n===document.activeElement),'Keyboard expansion retains focus and announces its pressed state');
   check(JSON.stringify((await games()).moves)===JSON.stringify(moves),'Expansion preserves the game position');
   check(await fits(),'Expanded board and selector fit the desktop viewport');
+  check(await panel.evaluate(panel=>{
+    const body=panel.querySelector('.table-game-body'),b=panel.querySelector('.table-game-board').getBoundingClientRect(),s=panel.querySelector('.table-game-side').getBoundingClientRect(),r=body.getBoundingClientRect();
+    return b.bottom<=r.bottom-12&&body.scrollHeight<=body.clientHeight+1&&s.left-b.right<=32;
+  }),'Expanded desktop shows the whole board beside its controls without scrolling');
+  check(await board.locator('.table-coordinate').count()===16,'Chess exposes all eight file and rank labels');
   await page.screenshot({path:'output/playwright/plaza-games-expanded.png'});
   for(const game of ['checkers','connectFour','reversi','morris','chess']){
     await panel.locator(`.table-game-choice [data-game=${game}]`).click();await frame();
     check((await games()).game===game&&await panel.locator(`.table-game-choice [data-game=${game}]`).getAttribute('aria-pressed')==='true',`${game} has a distinct active selection`);
     const box=await measure(),ratio=game==='connectFour'?7/6:1;
     check(Math.abs(box.width/box.height-ratio)<.02,`${game} keeps its board proportions when expanded`);
+    check(await board.evaluate(board=>{
+      const rows=[...board.children],bottom=[...rows.at(-1).children];
+      return rows.every((row,i)=>row.firstElementChild.querySelector('[data-axis=rank]')?.textContent===String(rows.length-i))
+        &&bottom.every((cell,i)=>cell.querySelector('[data-axis=file]')?.textContent===String.fromCharCode(97+i));
+    }),`${game} coordinates match the visible rows and columns`);
+    await page.screenshot({path:`output/playwright/plaza-games-${game}-expanded.png`});
   }
   check(JSON.stringify((await games()).moves)===JSON.stringify(moves),'Switching games preserves the chess position');
+  await panel.locator('.table-game-choice [data-game=checkers]').click();
+  await panel.locator('[data-mode=lesson]').click();
+  check((await games()).lesson==='1','Checkers lesson opens with its first instruction');
+  check(!await panel.locator('.table-game-side-choice').isVisible(),'Lessons omit unavailable side controls');
+  await click('c3');await click('d4');
+  await page.waitForFunction(()=>window.__riverPlazaGames().lesson==='2');
+  check((await games()).lesson==='2','Coordinate-guided lesson move advances the instruction');
+  await page.screenshot({path:'output/playwright/plaza-games-checkers-lesson.png'});
+  await panel.locator('.table-game-choice [data-game=chess]').click();
+  await panel.locator('[data-mode=regular]').click();
+  await panel.locator('[data-side-index="1"]').click();
+  check(await board.evaluate(board=>board.firstElementChild.firstElementChild.dataset.square==='h1'
+    &&board.firstElementChild.firstElementChild.querySelector('[data-axis=rank]').textContent==='1'
+    &&board.lastElementChild.firstElementChild.querySelector('[data-axis=file]').textContent==='h'),'Second-player coordinates rotate with the board');
+  await panel.locator('[data-mode=pass]').click();
+  for(const [width,height] of [[1920,1080],[1280,720],[1440,600]]){
+    await page.setViewportSize({width,height});await frame();
+    check(await panel.evaluate(panel=>{
+      const body=panel.querySelector('.table-game-body'),b=panel.querySelector('.table-game-board').getBoundingClientRect(),side=panel.querySelector('.table-game-side').getBoundingClientRect();
+      return b.bottom<=innerHeight-24&&body.scrollHeight<=body.clientHeight+1&&side.left-b.right<=32;
+    }),`Full board and adjacent controls fit expanded ${width} × ${height}`);
+    if(height===600){
+      await panel.locator('[data-action=new]').focus();
+      check(await panel.locator('[data-action=new]').evaluate(button=>{
+        const b=button.getBoundingClientRect(),s=button.closest('.table-game-side').getBoundingClientRect();return b.top>=s.top&&b.bottom<=s.bottom;
+      }),'Keyboard focus scrolls short-window controls into view');
+      await page.screenshot({path:'output/playwright/plaza-games-short.png'});
+    }
+  }
+  await page.setViewportSize({width:1440,height:1000});await frame();
   await expand.click();await frame();check(Math.abs((await measure()).width-initial.width)<2,'Restore size returns to the original board dimensions');
   await page.screenshot({path:'output/playwright/plaza-games-desktop.png'});
   for(const [width,height] of [[800,900],[390,844],[320,640],[800,450]]){

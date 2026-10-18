@@ -87,6 +87,10 @@ test('one public Floor 4 route joins all three galleries through both skywalks, 
   for (const t of ['T1', 'T2', 'T3']) assert.ok(campusRoute(`${t}-F4/lobby`, `${t}-F4-public`, { walkOnly: true }).includes(`${t}-F4-core-spur`));
   // The street reaches every gallery by a core, and every public roof and terrace.
   for (const id of ['T1-F4-public', 'T2-roof', 'T3-terrace-5', 'T2-terrace-4', 'S', 'C']) assert.ok(campusRoute('E1', id), id);
+  // B12's edge guards run to T2's facade across the z 13 terrace, so the deck is not a
+  // way onto that terrace: the graph reaches it through its door, as support does.
+  assert.ok(!campusGraph().edges.some(e => [e.a, e.b].includes('B12') && [e.a, e.b].includes('T2-terrace-4')));
+  assert.deepEqual(campusRoute('E1', 'T2-terrace-4').slice(-3), ['T2-F4-public', 'T2-terrace-4-passage', 'T2-terrace-4']);
   // A suite is not a way across: with private nodes allowed the shortest path still uses the gallery.
   assert.ok(!campusRoute('T1-F4-public', 'T3-F4-public', { publicOnly: false, walkOnly: true }).some(id => nodes.get(id).kind === 'suite'));
 });
@@ -104,9 +108,10 @@ test('support resolves against the occupant level: ground below a skywalk, deck 
   assert.equal(campusSupportAt(L(3), 9, 56), null, 'T1 lift shaft');
   assert.equal(campusSupportAt(L(3), 14.2, 80), null, 'B12 edge zone');
   assert.equal(campusSupportAt('garden-campus/l9', 16, 76), null);
-  // B12 meets T2's z 13 terrace at the same level before the facade.
+  // B12 crosses T2's z 13 terrace at the same level, inside its own edge guards.
   assert.equal(campusSupportAt(L(3), 16, 91.5).z, 13);
   assert.ok(campusSupportAt(L(3), 20, 91.5).surfaceId.startsWith('T2-terrace-4'));
+  assert.equal(campusSupportAt(L(3), 17.75, 91.5), null, "B12's east guard continues over the terrace");
 });
 
 test('levels are keyed by elevation campus-wide with portals, openings and reachable roofs and terraces', () => {
@@ -118,6 +123,14 @@ test('levels are keyed by elevation campus-wide with portals, openings and reach
     const target = levels.find(item => item.id === portal.toLevel);
     assert.ok(target.portals.some(other => other.id === portal.toPortal && other.toPortal === portal.id), portal.id);
   }
+  // A portal is where a body stands, 0.6 m in front of the shaft or headhouse door,
+  // so the server's free-landing rule can land a level change on it.
+  const t1 = tower(LAYOUT, 'T1');
+  assert.deepEqual([t1.core.lift.door, t1.core.lift.portal, t1.roof.headhouse.door, t1.roof.headhouse.landing], [[11, 56.3], [11.6, 56.3], [13, 58], [13.6, 58]]);
+  assert.deepEqual(levels[6].portals.filter(p => p.tower === 'T1').map(p => [p.id, p.position]), [['T1-roof/lift-down', [13.6, 58]], ['T1-roof/stairs-down', [13.6, 58]]]);
+  const onFace = clone();for (const t of onFace.towers) { t.core.lift.portal = [...t.core.lift.door];t.roof.headhouse.landing = [...t.roof.headhouse.door]; }
+  const faceFindings = validateGardenCampus(onFace).findings;
+  assert.ok(faceFindings.length > 0 && faceFindings.every(f => f.rule === 'portal' && /lift-|stairs-down/.test(f.id)), 'a portal on a shaft or headhouse face puts the body inside it');
   for (const level of levels) for (const surface of level.surfaces.filter(s => s.kind === 'roof')) assert.ok(surface.reachedBy.length >= 2, surface.id);
   assert.deepEqual(levels[7].surfaces.map(s => s.id), ['T2-roof']);
   // The pergola's posts are authoritative ground obstacles; its keep-clear interior excludes them.
@@ -160,7 +173,7 @@ test('versions: an incompatible floor, support or units version is refused', () 
   assert.ok(rules(validateGardenCampus(LAYOUT, { required: { id: LAYOUT.id, floors: 2 } })).includes('version'));
 });
 
-test('defects fail: shifted endpoint, wrong height, offsite volume, overlap, blocked landing and route, roof object off its support', () => {
+test('defects fail: shifted endpoint, wrong height, offsite volume, overlap, blocked landing and route, roof object off its support, door off its wall', () => {
   const shifted = clone();Object.assign(shifted.bridges[0].to, { v: 94 });shifted.bridges[0].rect[3] = 94;shifted.bridges[0].portals[1].position[1] = 94;
   assert.ok(['endpoint', 'span'].every(rule => rules(validateGardenCampus(shifted)).includes(rule)));
 
@@ -197,6 +210,13 @@ test('defects fail: shifted endpoint, wrong height, offsite volume, overlap, blo
 
   const tall = clone();tower(tall, 'T2').silhouette.headhouseTop = 33;
   assert.ok(rules(validateGardenCampus(tall)).includes('silhouette'));
+
+  // A door slid along its wall: the terrace door would open out of a suite, the suite
+  // door past its own suite. Both passed every other rule before the opening rule.
+  const terraceDoor = clone();tower(terraceDoor, 'T2').terraces.find(t => t.id === 'T2-terrace-4').door[1] += 2;
+  assert.deepEqual(validateGardenCampus(terraceDoor).findings.map(f => `${f.rule} ${f.id}`), ['opening T2-terrace-4/door']);
+  const suiteDoor = clone(), slid = floor(suiteDoor, 'T1', 4).suites[0];slid.door.position[1] = slid.rect[3] + 1;
+  assert.deepEqual(validateGardenCampus(suiteDoor).findings.map(f => `${f.rule} ${f.id}`), [`opening ${slid.id}/door`]);
 
   // A ground/bridge support mix-up: a deck registered on the ground level would lift street walkers.
   const mixed = campusLevels();const ground = mixed[0];
