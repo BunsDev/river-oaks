@@ -4,15 +4,15 @@
   "views": [
     {
       "name": "reception",
-      "calls": 57,
-      "triangles": 132060,
+      "calls": 58,
+      "triangles": 132204,
       "error": 0,
       "textures": 15
     },
     {
       "name": "mural",
       "calls": 36,
-      "triangles": 69846,
+      "triangles": 69978,
       "error": 0,
       "textures": 15
     },
@@ -25,8 +25,8 @@
     },
     {
       "name": "bar",
-      "calls": 40,
-      "triangles": 112844,
+      "calls": 41,
+      "triangles": 112988,
       "error": 0,
       "textures": 15
     },
@@ -38,5 +38,5 @@
       "textures": 15
     }
   ],
-  "glbBytes": 13927304
+  "glbBytes": 13938332
 }

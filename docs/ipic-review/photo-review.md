@@ -20,7 +20,7 @@ auditorium layout was inferred from three photos, so differences there are expec
 | # | View / photo | Observed in runtime | Photo shows | Sev | Owner | Proposed correction |
 | --- | --- | --- | --- | --- | --- | --- |
 | P1 | T2a mural / IMG_9771 | Open sky and the street above the escalator runs, from the landing | An enclosed atrium with a ceiling and downlights | S1 | eng | **Fixed 2026-10-15 (`568dda7d`):** ceilings over both flights at their upper neighbours' heights (6.7 m, 10.3 m); a test now requires a ceiling above every walkable point |
-| P2 | T2a mural / IMG_9771 | The mural is on a freestanding panel seen nearly edge-on; the view frames a stair wall | The mural fills a recessed bay at the landing, flanked by stacked stone, seen head-on | S1 | design + eng | Re-place the mural on the landing's end wall and re-aim the `mural` camera |
+| P2 | T2a mural / IMG_9771 | The mural is on a freestanding panel seen nearly edge-on; the view frames a stair wall | The mural fills a recessed bay at the landing, flanked by stacked stone, seen head-on | S1 | design + eng | **Resolved as Val chose (2026-10-18):** the mural stays large on the east bay's back wall, now walled in, and the review camera looks into the bay from the top of the first run's east lane, at an angle as a rider sees it. Facing it head-on would need the second run to turn at the landing (a layout change) |
 | P3 | T1 reception / IMG_9738 | A single-height block desk | A long two-level desk: a raised marble transaction ledge with curved ends over a lower counter | S2 | design | A two-level desk form in the master |
 | P4 | T1 reception / IMG_9738 | Dark, widely spaced slats | Close warm light-oak flutes with a lit cove above | S2 | design | Flute spacing, tone and a cove light |
 | P5 | T1 reception / IMG_9738 | "RIVER OAKS DISTRICT" on one line | "RIVER OAKS" stacked small beside a large "DISTRICT" on a black rounded panel | S3 | eng | **Fixed 2026-10-16 (`3028b138`):** RIVER over OAKS, small and letterspaced, beside a large DISTRICT (`districtSignLayout`) |
@@ -36,7 +36,7 @@ auditorium layout was inferred from three photos, so differences there are expec
 | P15 | T3 auditorium / IMG_9767 | A flat floor | Stadium risers, with lit steps and a handrail down the side aisle | S1 | design + eng | Risers would change seat heights, sightlines, routes and support (needs Val) |
 | P16 | T3 auditorium / IMG_9767 | The screen spans about a third of the front wall | The screen spans nearly the full wall | S2 | design + eng | Screen size; changes `IPIC_SCREEN` and #365's sightline data |
 | P17 | T3 auditorium / IMG_9767 | A plain grey floor | A dark carpet with an orange confetti pattern | S3 | eng | **Fixed (`3028b138`):** a dark carpet with orange and rust flecks |
-| P18 | T2a mural / IMG_9771 | Past the freestanding mural panel and under the first run, the street, its storefronts and its ground show (the district through the lane gap) | The landing is walled in; nothing outside shows | S1 | eng + design | Close the landing's far wall and the space under the first run, then re-check the exterior-culling views (#431) |
+| P18 | T2a mural / IMG_9771 | Past the freestanding mural panel and under the first run, the street, its storefronts and its ground show (the district through the lane gap) | The landing is walled in; nothing outside shows | S1 | eng + design | **Fixed 2026-10-18:** the landing's bays are walled in and steel decks close the runs; a test requires every sight line from the runs and the landing to meet the interior, and an in-world probe found no outside surface from the landing |
 
 **Not judged here:** lighting levels, which depend on the capture exposure and differ between a phone camera and the
 runtime tone mapping; photographic textures with baked light (the mural, the floral wall); and any real-device
@@ -47,3 +47,8 @@ sky was. It also showed P18, which the earlier frame had hidden behind the sky.
 
 **P5, P7, P9, P12 and P17, rechecked (2026-10-16):** Val chose these five. They were compared again in the
 export's review views and the Metal recapture at `3028b138` (the captures in `docs/design/office-ipic/captures/`).
+
+**P2 and P18, rechecked (2026-10-18):** an in-world probe on Metal sampled 144 points in each of 7 landing views.
+Outside surfaces showed in 6 to 26 points per view before; after, none in the bay, mural and second-run views. The
+remaining hits look back down the first run at the reception and out through its glass frontage, as intended. T2a
+was recaptured at `d6f3471f`.
