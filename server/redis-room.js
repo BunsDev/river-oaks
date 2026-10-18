@@ -7,6 +7,7 @@ import { recoverDistrictHeightCheckpoint } from './district-checkpoint-migration
 import { recoverDistrictInteriorCheckpoint } from './district-interior-checkpoint-migration.js';
 import { recoverDistrictLevelsCheckpoint } from './district-level-checkpoint-migration.js';
 import { recoverDistrictTowerCheckpoint } from './district-tower-checkpoint-migration.js';
+import { recoverDistrictGardensCheckpoint } from './district-gardens-checkpoint-migration.js';
 import { isJevicaAdmin } from './admin.js';
 import { districtRevisionOf } from '../preview/src/garden-campus-district.js';
 import { DEFAULT_WORLD_ID, validateWorldId } from '../preview/src/world-contract.js';
@@ -185,7 +186,9 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
         throw error;
       }
       if (!world.restore(previous.checkpoint, { onFailure: reason => { checkpointReason = reason; } }).ok) {
-        const tower = recoverDistrictTowerCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
+        // The garage/Gardens district revision switch (#512) chains the older garage recoveries itself.
+        const gardens = recoverDistrictGardensCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
+        const tower = gardens.ok ? gardens : recoverDistrictTowerCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
         const levels = tower.ok ? tower : recoverDistrictLevelsCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
         const interior = levels.ok ? levels : recoverDistrictInteriorCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
         const recovered = interior.ok ? interior
@@ -195,7 +198,8 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
           error.checkpointReason = checkpointReason;
           throw error;
         }
-        districtMigration = tower.ok ? { kind: 'tower', from: tower.from }
+        districtMigration = gardens.ok ? { kind: 'gardens', from: gardens.from, to: gardens.to, moved: gardens.moved.length }
+          : tower.ok ? { kind: 'tower', from: tower.from }
           : levels.ok ? { kind: 'levels', from: levels.from }
           : interior.ok ? { kind: 'interior', from: interior.from }
           : { kind: 'height', from: recovered.revision };
@@ -435,7 +439,9 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       visitors,
       ...replies.map(reply=>JSON.stringify(reply.result)));
     if(!committed){cached=null;return read();}
-    if (districtMigration) console.info(JSON.stringify(districtMigration.kind === 'tower'
+    if (districtMigration) console.info(JSON.stringify(districtMigration.kind === 'gardens'
+      ? { event: 'district_gardens_checkpoint_migrated', from: districtMigration.from, to: districtMigration.to, moved: districtMigration.moved }
+      : districtMigration.kind === 'tower'
       ? { event: 'district_tower_checkpoint_migrated', from: districtMigration.from, to: 'penthouse_tower_33m' }
       : districtMigration.kind === 'levels'
       ? { event: 'district_levels_checkpoint_migrated', from: districtMigration.from, to: 'gallery_plan_v2' }
