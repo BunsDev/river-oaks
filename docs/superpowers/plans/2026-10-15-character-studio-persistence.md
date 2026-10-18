@@ -1497,3 +1497,39 @@ added and passed. Project check48934 exit1 reports unrelated lifecycle gaps.
 Ready for signed coat increment and push to existing draft PR464. No merge/deploy.
 Next close the integrated corrupt/stale peer-revision fallback coverage gap for443;
 continue cloth-art and device/human acceptance under442/444. Preserve19worktrees.
+
+
+Coat increment signed/pushed9fa815d82a1b5ac57553c48de48b4302b92e8bce to draft464.
+New443 increment owns preview/e2e/character-studio-shared.js: inject missing,
+unpublished, retired-catalog, corrupt-asset, foreign-owner, unsupported-palette and
+mismatched-appearance definitions into only the receiving peer's live snapshots.
+Assert actual authored materials, intact authoritative account, and canonical
+recovery on the same connection. Existing real server permissions remain unchanged.
+Next run targeted shared journey, inspect fallback/recovery captures, then required
+verification/review. Current9fa hosted verify3.11/3.13/dependency checks passed;
+remaining hosted browser checks still running. No new production changes yet.
+
+First fallback browser5989 terminal0,79checks, captured visible ivory/ash-blonde
+fallback and midnight/espresso recovery. Review found two test gaps: first fault
+was its own color baseline, and mismatched ID was internally invalid. Superseded
+candidate retained in revision-fallback/first-candidate. New test captures known
+unmodified authored Sable outfit+hair before customization and exact-compares each
+fallback; mismatch now injects an independently validated owned alternate revision.
+Next rerun targeted browser; no production code change was needed so far.
+
+Reviewed fallback browser37963 terminal0:81checks passed. Reviewer confirmed both
+assertion gaps addressed, no remaining actionable finding. Current fallback and
+recovery captures inspected (authored ivory/ash-blonde to midnight/espresso).
+Frozen verification5221 now running under shared lock; focused21/21 passed and
+core uses its own isolatedRedis. Evidence revision-fallback/verified-20261018.
+Poll5221, then inspect core/source hash before commit. No production source changed.
+
+
+Fallback5221 terminal0:21focused and core11/11 pass, frozen journey hash matches.
+Browser37963 passed81checks; reviewed snapshots show authored and restored colors.
+Core:tooling117,preview3419 pass/1 existing skip/1TODO,server914 no skips,desktop69,
+Python141 pass/66warnings; build/lint/demo/secrets passed. Review issues addressed
+with independent authored material baseline and a valid alternate definition.
+Ready to sign/push the test-only increment to464; no runtime code changed.
+Next add actual saved-identity world-transition/admission-recovery coverage; broader
+human/device/art/live-provider criteria remain open. Preserve all14local reports.

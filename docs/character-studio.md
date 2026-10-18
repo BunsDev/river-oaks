@@ -376,8 +376,9 @@ Drafts remain absent from peer snapshots and do not change the current appearanc
 Publication and rollback create immutable revisions without equipping them. The
 server transport journey covers save, publish, equip, peer snapshot, gateway
 replacement/reconnect, edit and republish for both backends. It does not prove the
-Studio UI or rendered peer journey; those are covered separately below. Complete
-corrupt/missing revision fallback and release acceptance remain open.
+Studio UI or rendered peer journey; those are covered separately below. Peer-rendered
+corrupt/missing revision fallback is covered by the receiving-snapshot journey
+below; broader release acceptance remains open.
 
 
 ## Authoritative selection contract (#443)
@@ -411,8 +412,9 @@ sequence. The server resolves only the authenticated owner's immutable revision.
 Legacy appearance/movement commands can omit selection metadata; the server assigns
 an operation ID and current expected version to preserve existing controls. New
 clients can provide explicit metadata for conflict-aware legacy changes too.
-Corrupt/stale revision fallback and asset-unavailable journeys must still be proven
-across the integrated UI/rendering path before #443 acceptance.
+The integrated browser journey covers corrupt and retired-catalog definition
+fallback, plus missing-asset recovery, across the peer rendering path. This does
+not establish every admission/world-transition or hosted acceptance condition.
 
 ### Atomic account selection store
 
@@ -859,3 +861,24 @@ shaft tests passed. Reviewed stride and seated captures resolve the sampled boot
 crossing; broad side folds and angular calf bends remain art-quality limitations.
 Evidence: `.runtime/character-studio/coat-tails/verified-lower-20261018/` and
 `lower-render/`; the ledger records skip counts and verification limits.
+
+
+### Peer revision fallback and recovery
+
+The two-account shared Studio journey injects seven receiving-snapshot faults:
+missing or unpublished definitions, retired catalog, corrupt asset hash, foreign
+owner, unsupported palette, and a valid alternate definition that does not match
+the authorized appearance. The server and owner account are untouched. Every case
+must restore exact outfit and hair materials captured from an independent authored
+Sable baseline before customization, then recover the canonical customization on
+the existing connection. A positive revision number alone does not prove that a
+revision was published by the server; the alternate fixture tests client validation
+and matching, while server ownership/publication tests cover that authority.
+
+The strengthened journey passed 81 checks; focused selection/remote-controller
+tests passed21/21. Fallback and recovery screenshots were visually inspected.
+Evidence is retained under `.runtime/character-studio/revision-fallback/verified-20261018/`.
+All 11 core tasks passed with isolated Redis; preview retained one existing skip
+and one TODO, while all 914 server tests ran without skips. This covers received
+malformed/stale-catalog data, not continuous network fault injection, live providers,
+physical devices, human accessibility or all #443 acceptance.

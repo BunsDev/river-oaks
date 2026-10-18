@@ -6,6 +6,21 @@ async page => {
  await page.setViewportSize({width:1440,height:1000});await page.goto(origin+'/?motion-debug=1&render-audit=1');await ready(page);
  const peerContext=await page.context().browser().newContext({viewport:{width:1440,height:1000}});
  await peerContext.addCookies([{name:'fixture_session',value:'bob',url:origin}]);const peer=await peerContext.newPage();peer.setDefaultTimeout(60000);peer.on('pageerror',e=>errors.push(e.message));
+ // Fault only the receiving peer's transport. The authoritative server and
+ // owner's account remain untouched throughout fallback/recovery assertions.
+ let peerFault=null,peerFaultSnapshots=0,peerConnections=0;
+ await peer.routeWebSocket('**/multiplayer?*',client=>{
+  const server=client.connectToServer();peerConnections++;
+  client.onMessage(message=>server.send(message));
+  server.onMessage(message=>{
+   const data=JSON.parse(String(message));
+   if(data.type==='snapshot'&&peerFault){
+    const player=data.players?.find(player=>player.id==='alice');
+    if(player?.character){peerFault(player);peerFaultSnapshots++;client.send(JSON.stringify(data));return;}
+   }
+   client.send(message);
+  });
+ });
  const framePeer=async()=>{
   await peer.evaluate(()=>{const p=window.__riverMultiplayer().snapshot.players.find(p=>p.id==='alice');const [x,z,y]=p.position;window.__riverRenderAudit.view({position:[x,y+1.3,-z+3.5],target:[x,y+1,-z],fov:38});});
   await peer.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
@@ -33,7 +48,18 @@ async page => {
   await rendered(page,palette,false);await rendered(peer,palette,true);
  };
  try{
-  await peer.goto(origin+'/?motion-debug=1&render-audit=1');await ready(peer);await open();
+  await peer.goto(origin+'/?motion-debug=1&render-audit=1');await ready(peer);
+  await peer.waitForFunction(()=>{const remote=window.__riverMultiplayer().remotes.find(p=>p.id==='alice');return remote?.ready&&remote.appearance==='sable-human'&&remote.character?.revision===0&&remote.character.palette==='authored'&&remote.character.hair==='authored';});
+  const authoredBaseline=await peer.evaluate(()=>window.__riverMultiplayer().remotes.find(p=>p.id==='alice').materials);
+  check(['outfit','hair'].every(slot=>authoredBaseline.some(material=>material.slot===slot)),'Known authored Sable baseline includes real outfit and hair materials before customization');
+  const alternate=await peer.evaluate(async()=>{
+   const {characterDefinitionFor,validateCharacterDefinition}=await import('/src/character-definition.js');
+   const definition=characterDefinitionFor('alice','midnight-host-wolf',{revision:2});
+   if(!validateCharacterDefinition(definition,{ownerId:'alice'}).ok)throw new Error('Alternate appearance fixture must be independently valid');
+   return definition;
+  });
+  check(alternate.appearanceId!=='sable-human'&&alternate.revision>0,'Appearance mismatch uses a valid owned published definition for a different appearance');
+  await open();
   await dialog.locator('button[data-character=sable]').click();await dialog.locator('[name=form]').selectOption('human');
   await dialog.getByRole('button',{name:'Rose silk',exact:true}).click();await dialog.getByRole('button',{name:'Espresso',exact:true}).click();
   await dialog.locator('[data-save]').click();await page.waitForFunction(()=>document.querySelector('.character-studio').dataset.accountPhase==='ready');
@@ -103,7 +129,41 @@ async page => {
   await page.reload();await ready(page);await open();check(await dialog.getAttribute('data-palette')==='rose','Reconnect opens the canonical equipped customization');
   await dialog.getByRole('button',{name:'Midnight',exact:true}).click();await dialog.locator('[data-wear]').click();await waitWear('midnight');
   check((await account()).character.published.revision===2,'Editing and wearing appends an immutable revision');
-  await dialog.locator('[data-close]').click();await framePeer();await peer.screenshot({path:'output/playwright/character-studio-peer-midnight.png'});await open();
+  await dialog.locator('[data-close]').click();await framePeer();await peer.screenshot({path:'output/playwright/character-studio-peer-midnight.png'});
+  const canonical=(await account()).selection.character,connectionsBeforeFaults=peerConnections;
+  const authoredMaterials=JSON.stringify(authoredBaseline);
+  const revisionFaults=[
+   ['missing',player=>{delete player.character;}],
+   ['unpublished',player=>{player.character.revision=0;}],
+   ['stale-catalog',player=>{player.character.provenance.catalog='retired-catalog';}],
+   ['corrupt-asset',player=>{player.character.assets[0].sha256='0'.repeat(64);}],
+   ['foreign-owner',player=>{player.character.ownerId='bob';}],
+   ['unsupported-palette',player=>{player.character.palette='removed-color';}],
+   ['mismatched-appearance',player=>{player.character=structuredClone(alternate);}],
+  ];
+  for(const [name,mutate]of revisionFaults){
+   peerFaultSnapshots=0;peerFault=mutate;
+   await peer.waitForFunction(()=>{
+    const view=window.__riverMultiplayer(),remote=view.remotes.find(p=>p.id==='alice');
+    return view.connected&&remote?.ready&&!remote.fallback&&remote.appearance==='sable-human'&&remote.character?.revision===0&&remote.character.palette==='authored'&&remote.character.hair==='authored';
+   });
+   check(peerFaultSnapshots>0,`${name}: fault reached the actual peer snapshot transport`);
+   const fallback=await peer.evaluate(()=>window.__riverMultiplayer().remotes.find(p=>p.id==='alice'));
+   const outfit=fallback.materials.filter(m=>m.slot==='outfit');
+   check(outfit.length>0&&outfit.some(m=>m.color!=='353044'),`${name}: actual outfit materials restore authored colors`);
+   const materials=JSON.stringify(fallback.materials);
+   check(materials===authoredMaterials,`${name}: fallback restores consistent authored outfit and hair`);
+   if(name==='corrupt-asset'){await framePeer();await peer.screenshot({path:'output/playwright/character-studio-peer-invalid-revision.png'});}
+   check(JSON.stringify((await account()).selection.character)===JSON.stringify(canonical),`${name}: peer delivery fault cannot mutate the authoritative selection`);
+   peerFault=null;
+   await peer.waitForFunction(expected=>{
+    const remote=window.__riverMultiplayer().remotes.find(p=>p.id==='alice');
+    return remote?.ready&&JSON.stringify(remote.character)===JSON.stringify(expected);
+   },canonical);
+   await rendered(peer,'midnight',true);
+   check(peerConnections===connectionsBeforeFaults,`${name}: canonical revision recovers on the existing connection`);
+  }
+  await framePeer();await peer.screenshot({path:'output/playwright/character-studio-peer-revision-recovered.png'});await open();
   // Apply then lose the private-save HTTP response. Retry must recover its receipt.
   let lost=false;await page.route('**/api/character/draft?*',async route=>{
    if(!lost){lost=true;await route.fetch();await route.abort('failed');}else await route.continue();
