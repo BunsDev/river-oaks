@@ -85,9 +85,9 @@ due about 15:50Z on `feat/garden-campus-contract-506-20261018`.
 | #508 upper circulation | **river-oaks-95** (Val reassigned ~19:55Z; c5 stood down, no code) / `garden-campus-traversal-508` | → **#537** (draft, base #507) | `75f8e277` | campus floors on the interior-level machinery: lifts and stairs (`toPortal` pairing), facade glass, ceilings, fail-closed suite admission. Traversal 5/5, levels 5/5, transport memory+Redis, regression 154+49 |
 | #508 slice (b) | river-oaks-95 / `garden-campus-traversal-views-508b` | `test/garden-campus-traversal-journey-508-20261018` | `2c650446` | **browser journey passed locally end to end**: keyboard + phone touch, occupied landing, above/below B12, T2 roof, T3 stairs. 14 circulation views on the design plans |
 | #509 leases | river-oaks-d8 landing it (Val asked) | → #522 (base main) | `1d151a8d` + main | d8 is running the core gate, then `pnpm run land 522` |
-| #510 resident journey | river-oaks-95 / `garden-campus-journey-510` | → #527 (draft) | `60ebf88c` (+ #508) | suite seats on #509 leases: door, desk, workstation, eviction to the door landing, restore standing. 190/190. Hosted `garden-campus-office` green; `garden-campus-suite` journey queued locally |
+| #510 resident journey | river-oaks-95 / `garden-campus-journey-510` | → #527 (draft) | `1e6d32d7` (+ #508) | suite seats on #509 leases. **Hosted `garden-campus-suite` 10/10** (job 117798291819) and `garden-campus-office` green. The rotation-test and macOS-W flakes were re-run |
 | #511 finish + rendering | river-oaks-95 (agent finished) / `garden-campus-finish-511` | → #528 (draft, base #507) | `eab230b9` | 39/39 |
-| #512 integration | river-oaks-95 / `garden-campus-acceptance-512` | → #525 (draft candidate) | `7d863b88` (local; #510 + #511 + slice (b)) | integrated suite running |
+| #512 integration | river-oaks-95 / `garden-campus-acceptance-512` | → #525 (draft candidate) | `0b833b31` (all packages) | **full Verify green** (run 39169199120): `campus` (office + suite) and `campus-traversal` journeys pass. Integrated suite 258/259 (one load-sensitive failure passes 5/5 alone) |
 
 ### #508 slice (b) plan (river-oaks-95; assigned by Val, agreed with c5)
 
@@ -247,25 +247,22 @@ one `{from:'gardens', to:'garage'}` log. Leases stay inert and desks are untouch
   provider, the settlement source, failure and expiry handling, eligibility and record
   keeping, with a five-part readiness condition.
 
-**Release gates still open:**
+**Release gates still open (as of 2026-10-18 22:00Z):**
 
-- #508's traversal;
-- #508's gallery/spine walls and closed suite door frames. The slice (b) circulation views (`06a93ced`, candidate `d8fe456a`) show Floor 4 galleries open to the suites, with #510's suite desks visible from the public route;
-- the #510 suite journey;
-- #512's two-account candidate run on the integrated head;
-- #511's resource measurements on named hardware;
-- Val's visual review of matched views;
-- phone layouts and physical devices, which so far have only width emulation.
+- The packages land in order: #522 (d8, in progress), then #523, #537, #528, #527 and #525,
+  each current with main and with `preview` green.
+- Val's visual review of the matched views (`docs/design/garden-campus/finish/`,
+  `docs/design/garden-campus/circulation/sheet-day.jpg`, `docs/design/garden-campus/traversal/`).
+- Physical phones and target-GPU or mobile resource budgets are unmeasured; touch is emulated.
+- The commercial decisions below.
 
-## Decisions recorded 2026-10-18 evening
+**Closed since the last revision:**
 
-- **Val:** "start #508 in river-oaks-c5"; then "take slice (b) yourself"; then "add the gallery
-  walls yourself, don't wait for c5"; then "Take #508 now" (river-oaks-95 owns #508).
-- **Same owner for #508 and #510**, so the two-owner seat hooks collapse into the existing seat
-  path (`campus-suite:` seats, `campusSit`/`campusStand`). `registerCampusLevelObstacles` is
-  kept for suite furniture.
-- **#509 lands before the rest** (river-oaks-d8, at Val's request). The v13 checkpoint effect
-  was flagged to d8 and Val.
+- #508's traversal is authoritative, proven in-process, over real transports and in the
+  browser.
+- The #510 suite journey is green on hosted CI.
+- #512's candidate runs all three two-account journeys green on hosted CI at `0b833b31`.
+- The gallery walls and suite doors are in, opaque at any camera distance.
 
 ## Next action (superseded below)
 
