@@ -36,6 +36,13 @@ A failed save keeps your draft in the current page and offers Retry. Retries reu
 
 Each private desk can keep up to 24 tasks within a 128 KiB desk document. Task limits are 120 characters for the title, 4,000 for notes, 8,000 for the result and five file links. Removing a task requires confirmation. Redis stores the account's desk outside world checkpoints until tasks are removed; the standalone in-memory development server retains it only for that process lifetime. Creation/update timestamps are assigned by the server. Legacy tasks acquire timestamps when edited. Deletion removes task content while retaining a small version record to prevent stale writes from resurrecting deleted work.
 
+**Computer.** When `VITE_TYPESAFE_COMPUTER_ORIGIN` names a valid Computer origin, the
+desk shows **Tasks** and **Computer** tabs. Computer runs your own TypeSafe Computer in
+one separate-origin frame. It has its own sign-in in a new tab, and asks you to confirm
+the account on every visit. Leaving asks Computer to finish saving. Losing office access
+removes it at once. Without that configuration the desk is Tasks only and loads nothing
+from Computer. Contract, policies and staged blockers: [office-computer-embed.md](office-computer-embed.md).
+
 The desk routes require the existing authenticated, approved session, origin/CSRF checks, rate limits and an active office visit in that same session. Desk text is never included in public snapshots. Saves use version checks so simultaneous tabs cannot silently overwrite each other. The desk performs no external writes, file fetches or model calls.
 
 ## Authority and persistence
@@ -105,3 +112,7 @@ personal-office visits are ended on checkpoint recovery; their identity cannot b
 used to enter Jevica’s office. Old workspace data is not read or served. This source
 change does not delete production records. Account-private desk tasks remain owned
 by their accounts and are accessible only during an authorized Jevica office visit.
+
+## The Gardens rental campus (planned)
+
+The Gardens will replace the parking garage with three rental office towers joined by public Floor 4 skywalks (#505). Its measured contract, which covers the parcel, floors, skywalks, support levels, suites and validator, is `shared/garden-campus-layout.js`. The brief, published contract and views are in [`docs/design/garden-campus/`](design/garden-campus/brief.md). Nothing in the running district uses it yet: the garage stays until a reviewed campus revision replaces it (#507), and rental tenancy is a separate service (#509), not the retired personal-office APIs above.

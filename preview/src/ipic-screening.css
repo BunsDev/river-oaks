@@ -10,6 +10,15 @@
 .ipic-screening button[data-control^=host-]{background:var(--forest);color:var(--paper);border-color:transparent}
 .ipic-screening button[aria-pressed=true]{box-shadow:inset 0 0 0 2px var(--forest)}
 .ipic-screening input[type=range]{width:110px;margin:0 6px;min-height:44px}
+/* The host's film chooser (#499), only while nothing plays: the chosen film's poster (or a neutral frame),
+   its title and what it carries. Start film starts it. */
+.ipic-screening-chooser{display:grid;grid-template-columns:64px minmax(0,1fr);column-gap:10px;row-gap:2px;align-items:center}
+.ipic-screening-chooser label{grid-column:2;font-weight:600}
+/* An explicit height: hosted Linux Chromium drew the select 36 px tall under min-height alone (#499 CI). */
+.ipic-screening-chooser select{grid-column:2;box-sizing:border-box;height:44px;min-height:44px;min-width:0;max-width:100%;padding:0 10px;border:1px solid var(--line);border-radius:10px;background:var(--paper);color:var(--ink);font:inherit;line-height:1.2}
+.ipic-screening-poster{grid-column:1;grid-row:1/span 3;width:64px;aspect-ratio:16/9;border-radius:6px;overflow:hidden;background:#1c1714;border:1px solid #ffffff1f}
+.ipic-screening-poster img{display:block;width:100%;height:100%;object-fit:cover}
+.ipic-screening-film-details{grid-column:2;margin:0;font-size:12px;opacity:.85}
 /* The active caption cue: the film reaches the screen as texture frames, so the panel shows it. */
 .ipic-screening-caption{margin:0;padding:6px 12px;border-radius:8px;background:#000000d9;color:#fff;font-size:15px;line-height:1.4;text-align:center;white-space:pre-line}
 .ipic-screening-transcript{max-height:140px;overflow:auto;border-top:1px solid var(--line);padding-top:6px}
