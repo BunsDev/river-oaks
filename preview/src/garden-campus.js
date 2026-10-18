@@ -127,13 +127,16 @@ export function buildGardenCampus(world) {
     const [c0, c1, c2, c3] = tower.core.rect, roof = tower.roof, head = roof.headhouse, cap = 0.25;
     box('core', tower.core.lift.rect[0], tower.core.lift.rect[1], tower.core.lift.rect[2], tower.core.lift.rect[3], 0, roof.z);
     box('core', tower.core.stair.rect[0], tower.core.stair.rect[1], tower.core.stair.rect[2], tower.core.stair.rect[3], 0, roof.z);
-    // Headhouse: timber over the shafts and the lobby part, with its door to the east, under
-    // a bronze cap at the declared headhouse top.
-    box('timber', tower.core.lift.rect[0], tower.core.lift.rect[1], tower.core.lift.rect[2], tower.core.lift.rect[3], roof.z, head.z1 - cap);
-    box('timber', tower.core.stair.rect[0], tower.core.stair.rect[1], tower.core.stair.rect[2], tower.core.stair.rect[3], roof.z, head.z1 - cap);
-    box('timber', tower.core.lobby.rect[0], c1, c2, head.door[1] - 0.85, roof.z, head.z1 - cap);
-    box('timber', tower.core.lobby.rect[0], head.door[1] + 0.85, c2, c3, roof.z, head.z1 - cap);
+    // Headhouse: limestone over the shafts and the lobby part, like the parapets, with its door
+    // to the east under a bronze cap at the declared headhouse top.
+    box('stone', tower.core.lift.rect[0], tower.core.lift.rect[1], tower.core.lift.rect[2], tower.core.lift.rect[3], roof.z, head.z1 - cap);
+    box('stone', tower.core.stair.rect[0], tower.core.stair.rect[1], tower.core.stair.rect[2], tower.core.stair.rect[3], roof.z, head.z1 - cap);
+    box('stone', tower.core.lobby.rect[0], c1, c2, head.door[1] - 0.85, roof.z, head.z1 - cap);
+    box('stone', tower.core.lobby.rect[0], head.door[1] + 0.85, c2, c3, roof.z, head.z1 - cap);
     box('timber', tower.core.lobby.rect[0], head.door[1] - 0.85, c2, head.door[1] + 0.85, roof.z + DOOR_HEIGHT, head.z1 - cap);
+    // The roof garden's floor: flush limestone over the deck, around the headhouse.
+    for (const [a, b, c, d] of [[roof.rect[0], roof.rect[1], roof.rect[2], c1], [roof.rect[0], c3, roof.rect[2], roof.rect[3]], [roof.rect[0], c1, c0, c3], [c2, c1, roof.rect[2], c3]])
+      box('stone', a, b, c, d, roof.z, roof.z + ROOM.floor);
     box('bronze', c0, c1, c2, c3, head.z1 - cap, head.z1);
     // A lantern line on the cap's east face, above body clearance over the roof garden.
     box('luminaire', c2, head.door[1] - 0.8, c2 + 0.02, head.door[1] + 0.8, head.z1 - cap + 0.05, head.z1 - cap + 0.08);
@@ -168,7 +171,11 @@ export function buildGardenCampus(world) {
       .filter(terrace => terrace.z === bridge.deckZ).flatMap(terrace => terrace.parts).filter(part => part[1] < v1 && part[3] > v0 && part[0] < u1 && part[2] > u0);
     const spans = runs(v0, v1, onTerrace.map(part => [part[1], part[3]]));
     for (const [a, b] of spans) box('slab', u0, a, u1, b, bridge.underside + FINISH.soffit, bridge.deckZ);
-    for (const [a, b] of spans) box('timber', u0, a, u1, b, bridge.underside, bridge.underside + FINISH.soffit);
+    // Two soffit light lines along the deck's outer edges wash the walk beneath at dusk.
+    for (const [a, b] of spans) {
+      box('timber', u0, a, u1, b, bridge.underside + 0.005, bridge.underside + FINISH.soffit);
+      for (const [p, q] of [[u0 + 0.06, u0 + 0.12], [u1 - 0.12, u1 - 0.06]]) box('luminaire', p, a + 0.2, q, b - 0.2, bridge.underside, bridge.underside + 0.005);
+    }
     for (const [a, b] of spans) box('stone', bridge.clear[0], a, bridge.clear[2], b, bridge.deckZ, bridge.deckZ + ROOM.floor);
   }
 

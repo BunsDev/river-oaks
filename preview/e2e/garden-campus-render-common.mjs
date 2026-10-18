@@ -18,7 +18,7 @@ export const FINISH_CAMERAS = [
   { id: '13-south-office-approach', name: 'Street level from the south lane (E1), north along P1', position: [31.5, -12, 1.7], target: [19, 58, 9], fov: 62 },
   { id: '14-street-under-b23', name: 'Ground under the Commons-Atelier skywalk on P5', position: [27, 121.5, 1.7], target: [12, 124.5, 11], fov: 72 },
   { id: '15-floor4-t2-gallery', name: 'Floor 4 public gallery in The Commons, south to the B12 landing', position: [16, 113, 13 + 1.68], target: [16, 93, 13 + 1.5], fov: 70 },
-  { id: '16-t1-roof-garden', name: 'T1 roof garden from its south-east corner, over the bed to The Commons', position: [17.6, 52, 25 + 1.68], target: [8, 72, 25.6], fov: 66 },
+  { id: '16-t1-roof-garden', name: 'T1 roof garden from its north end, along the bed back to the office', position: [11.5, 68.6, 25 + 1.68], target: [6.8, 53, 25.6], fov: 66 },
   { id: '17-t2-terrace-4', name: 'T2 Floor 4 terrace, west along its planted guard to B12', position: [24, 91.2, 13 + 1.68], target: [8, 92, 13.6], fov: 70 },
 ];
 export const HOURS = { day: 15, dusk: 18.5 };

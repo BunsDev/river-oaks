@@ -122,8 +122,8 @@ export function campusPlantingPlan(layout = CAMPUS, levels = campusLevels(layout
     // fascia, each stopping at body clearance over any terrace, deck or floor beneath.
     for (let s = lo + 0.15; s < hi - 0.12; s += 0.3) {
       const rand = rng(alongV ? centre : s, alongV ? s : centre), at = (across, along, z) => alongV ? [across, along, z] : [along, across, z];
-      const along = s + (rand() - 0.5) * 0.12, r = 0.14 + rand() * 0.04;
-      plan.clumps.push({ of: 'trough', at: at(centre + (rand() - 0.5) * 0.06, along, trough.z1 + 0.04 + rand() * 0.05), radius: [r, r, 0.1 + rand() * 0.06], yaw: quarter(rand), hue: 0.24 + rand() * 0.06, tone: 0.2 + rand() * 0.07 });
+      const along = s + (rand() - 0.5) * 0.12, r = 0.1 + rand() * 0.07;
+      plan.clumps.push({ of: 'trough', at: at(centre + (rand() - 0.5) * 0.06, along, trough.z1 + 0.03 + rand() * 0.08), radius: [r, r, 0.07 + rand() * 0.1], yaw: quarter(rand), hue: 0.22 + rand() * 0.08, tone: 0.17 + rand() * 0.1 });
       if (rand() < 0.3) continue;
       const [hu, hv] = alongV ? [outer + sign * 0.06, along] : [along, outer + sign * 0.06], floor = floorUnder(hu, hv, 0.12, trough.z0);
       let z = trough.z0 + 0.12, size = 1;
