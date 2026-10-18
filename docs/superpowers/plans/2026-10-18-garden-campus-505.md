@@ -76,17 +76,17 @@ due about 15:50Z on `feat/garden-campus-contract-506-20261018`.
   - Every unit door names both the spine it opens from and the suite surface it opens
     into.
 
-## Package ownership and dependencies (as of 2026-10-18 18:31Z)
+## Package ownership and dependencies (as of 2026-10-18 18:45Z)
 
 | Package | Owner / task | Branch → PR | Delivered revision | Status |
 | --- | --- | --- | --- | --- |
 | #506 contract | river-oaks-c5 (1e70822d) / `garden-campus-contract-506` | → #519 (ready) | `3fac6c32`, layout 3.2 | hosted 19/19 green; BEHIND main (needs only an update before landing) |
-| #507 shells + ground | river-oaks-95 / `garden-campus-shells-507` | → #523 (draft, base #519) | `40aec12a` (3.2, main `97304fb7` with #486) | hosted 10/10 green, CLEAN; matched views captured |
+| #507 shells + ground | river-oaks-95 / `garden-campus-shells-507` | → #523 (draft, base #519) | `086c197e` (3.2, main `97304fb7`, room summaries) | green at `40aec12a`; `086c197e` fixes the hall-door bug #510's journey found; matched views captured |
 | #508 upper circulation | river-oaks-c5 / `garden-campus-traversal-508` | stacks on #507 | none | **not started.** Queued as c5's next goal, which Val starts; c5 is on another task (throw mechanics). The critical-path blocker. |
 | #509 leases | river-oaks-95 delegated agent / `garden-campus-leases-509` | → #522 (ready, base #519) | `1d151a8d`, checkpoint v13, `leaseRequestId` | hosted all green, CLEAN |
-| #510 resident journey | river-oaks-95 / `garden-campus-journey-510` | → #527 (draft, base #522) | `835c0c44` (merges #507 `40aec12a`) | dialog, fit-out, public workstations, seat rules; 105/105 focused tests. Hosted `campus` shard at `c4be49c6` passed 14 journey checks, then stalled at the hall door (fixed in `835c0c44`, re-running) |
-| #511 finish + rendering | river-oaks-95 delegated agent / `garden-campus-finish-511` | branch, PR after core verify | `bb8cd938` (merges #507 `40aec12a`) | 67 furnishings drawn once each; 34 focused tests; core verify running |
-| #512 integration | river-oaks-95 / `garden-campus-acceptance-512` | → #525 (draft candidate) | `284a5ca3` (#506 3.2 + #507 + #509 + #510 + main `97304fb7`) | cutover, epoch fence, configuration rollback; `campus` shard re-running |
+| #510 resident journey | river-oaks-95 / `garden-campus-journey-510` | → #527 (draft, base #522) | `5c13cdca` (merges #507 `086c197e`) | dialog, fit-out, public workstations, seat rules; 126/126 focused tests; hosted `campus` shard re-running for the first end-to-end pass |
+| #511 finish + rendering | river-oaks-95 delegated agent / `garden-campus-finish-511` | → #528 (draft, base #507) | `6b8c51e6` (merges #507 `40aec12a`; taking `086c197e`) | 67 furnishings drawn once each; matched day/dusk sheets; resources vs garage: street +10% calls / +18% triangles, aerial +3%, +3–5 programs, no rebuild growth (M3 Max) |
+| #512 integration | river-oaks-95 / `garden-campus-acceptance-512` | → #525 (draft candidate) | `aed8b247` (#507 `086c197e` + #509 + #510 `5c13cdca` + main `97304fb7`) | 145/145 integrated set at `284a5ca3`; 80/80 campus/migration/room suites at the code head; `campus` shard re-running |
 
 Interfaces agreed between owners (all recorded in their ledgers):
 
@@ -152,6 +152,13 @@ External owners:
   It is being fixed at its owner: #509 renames the field to `leaseRequestId` and adds a
   real-socket transport test. #510's client follows the rename. Lesson: lease tests must
   cross the real ticket/WebSocket gate, not only `world.command`.
+- **Campus rooms had no summary (found 18:35Z by #510's hosted journey, fixed at #507).**
+  `enterStore` selects the Map destination first, and the Map's `describeInterior` joins
+  `summary.highlights`. For a campus hall that threw before any travel was sent, so
+  "Step inside" did nothing beyond a fading "Could not step through", and the Map's
+  destination list broke on a campus hall. #507 `086c197e` adds summaries with a
+  regression; #510 and #512 merged it. Lesson: a new room kind must satisfy every
+  consumer of the store-room shape, not only walking.
 - **Fingerprint inputs.** Garage `5fc38cbe…38b80` (main 153471bc, unchanged on #507).
   Campus `29c1c02a…74389` at contract `0e46ec36`. The campus fingerprint changes with any
   contract layout change, so #512 pins it at the release candidate.
@@ -220,7 +227,8 @@ one `{from:'gardens', to:'garage'}` log. Leases stay inert and desks are untouch
 1. Get a green hosted `campus` shard on #527 `835c0c44` and #525 `284a5ca3`. The journey
    has not yet passed end to end anywhere, and local browser runs are blocked by machine
    load. Then mark #527 ready for review.
-2. Open #511's PR when its core verify passes; merge it into #525 and re-run the shard.
+2. #511 is open as #528. When it takes #507 `086c197e`, merge it into #525 and re-run the
+   shard and the views.
 3. #508 is Val's to start (c5's queued goal). When its first push lands, integrate suite
    seats and entry through its hooks (#510), then run #512's two-account candidate
    journey: Floor 4 across both skywalks, below-bridge movement, suite entry, access loss
