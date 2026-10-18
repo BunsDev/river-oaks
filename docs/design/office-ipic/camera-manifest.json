@@ -30,7 +30,7 @@
       "lighting": "ipic fixture review lighting", "source": "IPIC_CAMERAS[lounge]", "runner": "node preview/e2e/ipic-runner.mjs", "receipt": "docs/ipic-review/review.json", "viewport": null },
     { "id": "T2c", "label": "IPIC Tuck Room bar", "place": "ipic", "status": "observed", "reuse": "bar", "eye": [-0.8, 7.65, 24.8], "target": [4.5, 7.7, 22.8], "fov": 67, "photo": "assets/ipic/references/IMG_9756.jpg",
       "lighting": "ipic fixture review lighting", "source": "IPIC_CAMERAS[bar]", "runner": "node preview/e2e/ipic-runner.mjs", "receipt": "docs/ipic-review/review.json", "viewport": null },
-    { "id": "T3", "label": "IPIC doorway and seated auditorium", "place": "ipic", "status": "observed", "reuse": "auditorium", "eye": [-4.6, 8.05, 28.6], "target": [0.3, 8.3, 33.79], "fov": 67, "photo": "assets/ipic/references/IMG_9767.jpg",
+    { "id": "T3", "label": "IPIC doorway and seated auditorium", "place": "ipic", "status": "observed", "reuse": "auditorium", "eye": [-3.95, 8, 28.35], "target": [-0.6, 7.04, 33.79], "fov": 67, "photo": "assets/ipic/references/IMG_9767.jpg",
       "lighting": "ipic fixture review lighting", "source": "IPIC_CAMERAS[auditorium]; the seated variant is the recliner-0-0 seated pose from docs/ipic-review/visit.json", "runner": "node preview/e2e/ipic-runner.mjs", "receipt": "docs/ipic-review/review.json", "viewport": null }
   ]
 }

@@ -42,7 +42,7 @@ export const IPIC_CAMERAS = Object.freeze([
   { name: 'mural', eye: [1.4, 4.6, 11.8], target: [4.7, 4.6, 13.7], photo: 'IMG_9771.jpg' },
   { name: 'lounge', eye: [-4.1, 7.75, 25.7], target: [-4.1, 6.75, 20.4], photo: 'IMG_9758.jpg' },
   { name: 'bar', eye: [-.8, 7.65, 24.8], target: [4.5, 7.7, 22.8], photo: 'IMG_9756.jpg' },
-  { name: 'auditorium', eye: [-4.6, 8.05, 28.6], target: [.3, 8.3, 33.79], photo: 'IMG_9767.jpg' },
+  { name: 'auditorium', eye: [-3.95, 8, 28.35], target: [-.6, 7.04, 33.79], photo: 'IMG_9767.jpg' },
 ]);
 
 export function ipicFloor(d) {

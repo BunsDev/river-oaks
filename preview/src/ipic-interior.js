@@ -350,10 +350,12 @@ export function buildIpicInterior(room, options = {}) {
   section('Auditorium');
   const { rise, up: [u0, u1], down: [w0, w1], wall: [r0, r1] } = IPIC_RISER, steps = Math.round(rise / .1);
   floor(m.confetti, 26, u0, 6); floor(m.confetti, u1, w0, 6 + rise); floor(m.confetti, w1, 34, 6);
-  // Under the front row the floor starts at the riser; in the aisles the treads are the floor until w1.
-  box(m.confetti, (r0 + r1) / 2, 6 - .12, (w0 + w1) / 2, r1 - r0, .24, w1 - w0);
+  // Under the front row the floor starts at the riser; in the aisles the treads are the floor until w1. Seams
+  // overlap by 5 cm inside solid geometry (into the walls, under the treads), so no sunlight leaks through a
+  // flush joint when the district is drawn (#367's exterior-culling check found one at a = r1).
+  box(m.confetti, (r0 + r1) / 2, 6 - .12, (w0 + w1) / 2, r1 - r0 + .1, .24, w1 - w0);
   ceiling(26, 34, 10.4, m.black);
-  const aisles = [[room.aMin + .09, r0], [r1, room.aMax - .09]], lit = [[-5.5, r0], [r1, room.aMax - .15]];
+  const aisles = [[room.aMin, r0 + .05], [r1 - .05, room.aMax]], lit = [[-5.5, r0], [r1, room.aMax - .15]];
   for (let k = 0; k < steps; k++) {
     const upDepth = (u1 - u0) / steps, upTop = 6 + (k + 1) * .1, downDepth = (w1 - w0) / steps, downTop = 6 + rise - k * .1;
     box(m.confetti, room.center, (6 + upTop) / 2, u0 + (k + .5) * upDepth, room.width, upTop - 6, upDepth);
@@ -364,7 +366,7 @@ export function buildIpicInterior(room, options = {}) {
     }
   }
   // The riser wall across the seats, under the front row's backs.
-  box(m.black, (r0 + r1) / 2, 6 + rise / 2, w0 + .02, r1 - r0, rise, .04);
+  box(m.black, (r0 + r1) / 2, 6 + rise / 2, w0 + .02, r1 - r0 + .1, rise, .04);
   for (const a of [room.aMin, room.aMax]) box(m.black, a, 8.2, 30, .18, 4.4, 8);
   box(m.black, room.center, 8.2, 33.92, room.width, 4.4, .16);
   panel(m.screen, IPIC_SCREEN.a, 6 + IPIC_SCREEN.y, IPIC_SCREEN.d, IPIC_SCREEN.width, IPIC_SCREEN.height);
