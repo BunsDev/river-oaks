@@ -28,7 +28,13 @@ export function measureChestFront(body,frame){
   return (x,y)=>{
     const gx=Math.min(columns-1.001,Math.max(0,(x-x0)/step)),gy=Math.min(rows-1.001,Math.max(0,(y-y0)/step)),i=Math.floor(gx),j=Math.floor(gy),u=gx-i,v=gy-j;
     const cells=[[i,j,(1-u)*(1-v)],[i+1,j,u*(1-v)],[i,j+1,(1-u)*v],[i+1,j+1,u*v]].filter(([a,b])=>grid[b*columns+a]>-Infinity);
-    if(!cells.length)throw new RangeError('Chest tailoring lies outside the measured suit');
+    // Outside the suit's front (a narrower suit, or a stand-in rig): use the nearest
+    // covered cell toward the middle of the same row rather than fail the avatar.
+    if(!cells.length){
+      const middle=Math.round(-x0/step),toward=i<middle?1:-1;
+      for(let a=i;a>=0&&a<columns;a+=toward)if(grid[j*columns+a]>-Infinity)return grid[j*columns+a];
+      return Math.max(0,...grid.filter(Number.isFinite));
+    }
     const weight=cells.reduce((sum,cell)=>sum+cell[2],0);
     return weight>0?cells.reduce((sum,[a,b,k])=>sum+grid[b*columns+a]*k,0)/weight:Math.max(...cells.map(([a,b])=>grid[b*columns+a]));
   };
@@ -80,7 +86,8 @@ export function createReferenceStyle(avatar,appearance){
     const t=[side*.075,.245],b=[side*.125,-.04],length=Math.hypot(b[0]-t[0],b[1]-t[1]),dx=(b[0]-t[0])/length,dy=(b[1]-t[1])/length,width=(.035+.02*v)*(u-.5);
     return [t[0]+(b[0]-t[0])*v-dy*width,t[1]+(b[1]-t[1])*v+dx*width];
   },{offset,columns:2,rows:8});
-  let chest=null;const chestFront=(x,y)=>(chest??=measureChestFront(model.getObjectByName('man-casualmale_casualsuit02'),torso))(x,y);
+  // Either masculine rig: the casual suit (Kai, Aurel) or the elegant suit (Rowan).
+  let chest=null;const chestFront=(x,y)=>(chest??=measureChestFront(model.getObjectsByProperty('isSkinnedMesh',true).find(mesh=>/suit/.test(mesh.name)),torso))(x,y);
   const onChest=(x,y,lift)=>[x,y,chestFront(x,y)+lift];
   const aligned=name=>{
     const bone=model.getObjectByName(name);if(!bone)return null;
@@ -370,12 +377,13 @@ export function createReferenceStyle(avatar,appearance){
     }
   }else if(appearance.character==='rowan'){
     const jacket=material('#453b39',{roughness:.91}),shirt=material('#ece6dc',{roughness:.86}),fur=material('#a9a49f',{roughness:.98});
-    box(torso,shirt,[0,.1,.128],[.15,.26,.014],.007);
+    // Shirt, lapels and pocket flaps follow the chest (they were flat boxes).
+    chestPanel(shirt,(u,v)=>[-.075+.15*u,-.03+.26*v]);
     for(const side of [-1,1]){
-      const lapel=box(torso,jacket,[side*.12,.1,.136],[.068,.26,.02],.009);lapel.rotation.z=side*.2;
-      box(torso,jacket,[side*.17,-.06,.133],[.1,.09,.018],.008);
+      lapel(jacket,side,.012);
+      chestPanel(jacket,(u,v)=>[side*(.105+.06*u),-.105+.09*v],{offset:.008,columns:4,rows:3});
     }
-    for(let i=0;i<3;i++)ball(torso,darkGold,[0,.21-i*.07,.152],[.006,.006,.004]);
+    for(let i=0;i<3;i++)ball(torso,darkGold,onChest(0,.21-i*.07,.014),[.006,.006,.004]);
     shoulderBag({color:'#533e32',side:-1,large:true});boots('#49362d',{rugged:true});
   }else if(appearance.character==='kai'){
     const formal=appearance.variant==='formal',explorer=appearance.variant==='explorer',base=formal?'#dfd1bd':explorer?'#282e38':'#1e1b20';
