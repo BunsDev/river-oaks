@@ -272,6 +272,15 @@ export function winePongSide(table, [east, north]) {
   for (const side of [0, 1]) { const [x, n] = winePongStand(table, side); if (Math.hypot(east - x, north - n) <= WINE_PONG_REACH) return side; }
   return null;
 }
+// Preserve the actual standing point for the ball release. A launch must remain
+// beyond the table end; the round interaction reach alone also includes its top.
+export function winePongOrigin(table, side, point) {
+  if (!table || ![0, 1].includes(side) || !point || winePongSide(table, point) !== side) return null;
+  const east = point[0] - table.x, north = point[1] - table.north;
+  const c = Math.cos(table.heading), s = Math.sin(table.heading);
+  const u = east * c + north * s, v = -east * s + north * c;
+  return Number.isFinite(u) && Number.isFinite(v) && (side === 0 ? -u : u) >= 1.35 ? [u, Math.abs(v) < 1e-9 ? 0 : v] : null;
+}
 
 // The grove table's two chairs: chair 0 east of the table, chair 1 west.
 export function groveSeat(buildId) {
