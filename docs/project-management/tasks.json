@@ -11733,6 +11733,39 @@
         "core": "All core task coverage passed with bounded concurrency and documented retries; 204 Redis and 1 unrelated client skips. See data/reports/penthouse-core-20261018.json.",
         "browser": "Office visit/desk and selected required shared multiplayer journeys passed."
       }
+    },
+    {
+      "id": "plaza-fullscreen-polish-20261018",
+      "title": "Comprehensive full-screen plaza games polish from Val screenshot",
+      "status": "active",
+      "branches": [
+        "fix/plaza-fullscreen-polish-20261018"
+      ],
+      "owner": "codex-plaza-fullscreen-521",
+      "updatedAt": "2026-10-18T16:37:15.104049+00:00",
+      "nextAction": "Authorized to merge PR #521 and prune associated worktree/branches. Resolve main conflict, verify, land through guard, archive and retire.",
+      "ledger": "docs/superpowers/plans/2026-10-18-plaza-fullscreen-polish.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-plaza-fullscreen-polish-20261018",
+      "filesOwned": [
+        "preview/src/plaza-table-games.js",
+        "preview/src/plaza-table-games.css",
+        "preview/e2e/plaza-game-layout.js"
+      ],
+      "requiredChecks": [
+        "Focused table-game behavioral tests",
+        "plaza-game-layout, plaza-morris, salon-guide browser journeys",
+        "Shared table-game browser coverage",
+        "pnpm run verify",
+        "Exact-head hosted preview before landing"
+      ],
+      "pr": 521,
+      "verification": {
+        "focused": "26/26 passed",
+        "browser": "Five journeys passed; final layout 47/47 checks passed after reconnect interruption. Light/dark, checkers lesson, all board shapes, phone and short-window screenshots inspected.",
+        "remainingCore": "Desktop 76/76, build, Python lint/format/tests 141/141, demo checks and secret scan passed.",
+        "gaps": "Full preview suite timed out at 600s; server suite 667 pass, 1 fail, 204 skips. Office recovery failure passed isolated 1/1; unchanged source matches main. Hosted exact-head checks pending; no physical Safari/iPhone or human accessibility acceptance."
+      },
+      "leaseUntil": "2026-10-18T18:37:15.104049+00:00"
     }
   ]
 }
