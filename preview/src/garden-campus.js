@@ -142,6 +142,7 @@ export function buildGardenCampus(world) {
     box('luminaire', c2, head.door[1] - 0.8, c2 + 0.02, head.door[1] + 0.8, head.z1 - cap + 0.05, head.z1 - cap + 0.08);
   }
 
+  const roofBeds = new Set(CAMPUS.towers.flatMap(tower => tower.roof.planting.beds.map(bed => bed.id)));
   // Guards, parapets and posts: every guard obstacle the contract publishes, drawn at its level.
   for (const level of levels) for (const obstacle of level.obstacles) {
     const [u0, v0, u1, v1] = obstacle.rect, z = level.z;
@@ -159,6 +160,15 @@ export function buildGardenCampus(world) {
       box('guard', u0, v0, u1, v1, z, z + 1.1);
       box('bronze', u0, v0, u1, v1, z + 1.1 - RAIL, z + 1.1);
     } else if (obstacle.kind === 'post') box('timber', u0, v0, u1, v1, z, CAMPUS.groundBuildings.find(item => item.id === 'S').height);
+    // The contract's finishes (#506 furnishings), as plain massing so no collision is ever
+    // invisible; #511's finish pass draws them properly. Roof beds are drawn with the roofs.
+    else if (obstacle.kind === 'planter' && !roofBeds.has(obstacle.id)) box('planting', u0, v0, u1, v1, z, z + 0.45);
+    else if (obstacle.kind === 'seat') box('timber', u0, v0, u1, v1, z, z + 0.45);
+    else if (obstacle.kind === 'table') box('timber', u0, v0, u1, v1, z, z + 0.74);
+    else if (obstacle.kind === 'tree') {
+      const cu = (u0 + u1) / 2, cv = (v0 + v1) / 2;
+      box('timber', cu - 0.15, cv - 0.15, cu + 0.15, cv + 0.15, z, z + 3.4);box('planting', cu - 1.4, cv - 1.4, cu + 1.4, cv + 1.4, z + 3.4, z + 5.6);
+    }
   }
   // Terrace decks: timber over each part, on the slab of the tier below.
   for (const tower of CAMPUS.towers) for (const terrace of tower.terraces) for (const [u0, v0, u1, v1] of terrace.parts) box('timber', u0, v0, u1, v1, terrace.z, terrace.z + ROOM.floor);

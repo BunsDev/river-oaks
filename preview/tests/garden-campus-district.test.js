@@ -184,6 +184,15 @@ test('the shells draw 6/7/6 occupied floors, open every skywalk portal and dispo
   // Each deck runs from facade to facade, except where B12 lies on T2's own z 13 terrace.
   const decks = boxes('slab').filter(b => Math.abs(b.z1 - 13) < 1e-6 && b.u0 === 14 && b.u1 === 18);
   assert.deepEqual(decks.map(b => [b.v0, b.v1]).sort((a, b) => a[0] - b[0]), [[70, 90], [116, 131]]);
+  // Every published finish is drawn over its own footprint: no collision is ever invisible.
+  const drawn = [...boxes('timber'), ...boxes('planting')], near = (a, b) => Math.abs(a - b) < 1e-4; // instance matrices are float32
+  const roofBeds = new Set(CAMPUS.towers.flatMap(tower => tower.roof.planting.beds.map(bed => bed.id)));
+  for (const level of campusLevels()) for (const item of level.obstacles.filter(o => ['seat', 'table', 'planter', 'tree'].includes(o.kind) && !roofBeds.has(o.id))) {
+    const [u0, v0, u1, v1] = item.rect, cu = (u0 + u1) / 2, cv = (v0 + v1) / 2;
+    const found = item.kind === 'tree' ? drawn.some(b => near((b.u0 + b.u1) / 2, cu) && near((b.v0 + b.v1) / 2, cv) && near(b.z0, level.z))
+      : drawn.some(b => near(b.u0, u0) && near(b.v0, v0) && near(b.u1, u1) && near(b.v1, v1) && near(b.z0, level.z));
+    assert.ok(found, `${item.id} is drawn`);
+  }
   // The rotated root puts campus metres exactly where the contract's transform does.
   group.updateMatrixWorld(true);
   for (const corner of [[6, 46, 4.65], [25, 150, 5], [14, 70, 13], [37.7, 181.2, 0]]) {

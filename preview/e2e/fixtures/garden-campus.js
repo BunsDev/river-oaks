@@ -49,7 +49,7 @@ for (const tower of LAYOUT.towers) {
 }
 for (const bridge of LAYOUT.bridges) {
   box(bridge.rect, bridge.underside, bridge.deckZ, material('#e3a46b'), massing);
-  for (const side of [[bridge.rect[0], bridge.clear[0]], [bridge.clear[2], bridge.rect[2]]]) box([side[0], bridge.rect[1], side[1], bridge.rect[3]], bridge.deckZ, bridge.deckZ + bridge.guard, material('#9a5a2c', 0.4), massing);
+  for (const side of [[bridge.rect[0], bridge.clear[0]], [bridge.clear[2], bridge.rect[2]]]) box([side[0], bridge.guardSpan[0], side[1], bridge.guardSpan[1]], bridge.deckZ, bridge.deckZ + bridge.guard, material('#9a5a2c', 0.4), massing);
 }
 
 // Level view: the support surfaces one campus level publishes, coloured by access.
@@ -68,7 +68,9 @@ function showLevel(index) {
     const color = surface.kind === 'terrace' || surface.kind === 'roof' ? colors.terrace : colors[surface.access] ?? '#cccccc';
     box(surface.rect, level.z, level.z + 0.12, material(color), levelGroup);
   }
-  for (const obstacle of level.obstacles) box(obstacle.rect, level.z, level.z + (obstacle.kind === 'guard' ? 1.25 : 3), material(colors.obstacle), levelGroup);
+  // Heights are indicative: guards 1.25 m, #511's planters and seats 0.45 m, tables 0.75 m, a tree's trunk to its 3.2 m crown.
+  const heights = { guard: 1.25, planter: 0.45, seat: 0.45, table: 0.75, tree: 3.2 };
+  for (const obstacle of level.obstacles) box(obstacle.rect, level.z, level.z + (heights[obstacle.kind] ?? 3), material(obstacle.kind === 'tree' || obstacle.kind === 'planter' ? '#5c7048' : colors.obstacle), levelGroup);
   for (const portal of level.portals) { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 2.2, 12), material(portal.kind === 'lift' ? '#2f5d8e' : '#6b4f8e'));p.position.copy(at([...portal.position, level.z + 1.1]));levelGroup.add(p); }
   for (const opening of level.openings) { const o = new THREE.Mesh(new THREE.BoxGeometry(0.6, 2.2, 0.6), material(opening.kind === 'suite-door' ? '#7d6a4a' : '#c0392b'));o.position.copy(at([...opening.position, level.z + 1.1]));levelGroup.add(o); }
 }

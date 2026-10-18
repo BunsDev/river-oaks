@@ -69,10 +69,17 @@
 <rect x="75.7" y="569.8" width="0.6" height="18" fill="#5a5246"/>
 <rect x="88" y="296.2" width="18" height="15.6" fill="#4d463c"/>
 <rect x="88" y="275.8" width="18" height="20.4" fill="#4d463c"/>
-<rect x="124" y="569.8" width="3" height="138" fill="#5a5246"/>
-<rect x="145" y="569.8" width="3" height="138" fill="#5a5246"/>
+<rect x="124" y="587.8" width="3" height="120" fill="#5a5246"/>
+<rect x="145" y="587.8" width="3" height="120" fill="#5a5246"/>
 <rect x="124" y="341.8" width="3" height="90" fill="#5a5246"/>
 <rect x="145" y="341.8" width="3" height="90" fill="#5a5246"/>
+<rect x="184.9" y="512.8" width="4.8" height="71.4" fill="#4d463c"/>
+<rect x="184.9" y="450.4" width="4.8" height="38.4" fill="#4d463c"/>
+<rect x="174.1" y="432.4" width="15.3" height="15.6" fill="#4d463c"/>
+<rect x="76.3" y="569.8" width="4.8" height="17.7" fill="#4d463c"/>
+<rect x="83.8" y="584.5" width="18" height="3" fill="#4d463c"/>
+<rect x="106.6" y="582.7" width="14.4" height="4.8" fill="#4d463c"/>
+<rect x="151" y="584.5" width="18" height="3" fill="#4d463c"/>
 <rect x="127" y="707.8" width="18" height="18" fill="none" stroke="#c0392b" stroke-width="1" stroke-dasharray="2 2"/>
 <rect x="127" y="551.8" width="18" height="18" fill="none" stroke="#c0392b" stroke-width="1" stroke-dasharray="2 2"/>
 <rect x="127" y="431.8" width="18" height="18" fill="none" stroke="#c0392b" stroke-width="1" stroke-dasharray="2 2"/>
@@ -108,7 +115,7 @@
 <text x="72" y="500.8" font-size="10" text-anchor="end">T2-F4</text>
 <text x="72" y="284.8" font-size="10" text-anchor="end">T3-F4</text>
 <text x="288" y="60" font-size="10" text-anchor="start">The Gardens: Floor 4 (z 13, garden-campus/l3)</text>
-<text x="288" y="74" font-size="10" text-anchor="start">layout 3.1, support 1</text>
+<text x="288" y="74" font-size="10" text-anchor="start">layout 3.2, support 1</text>
 <text x="288" y="88" font-size="10" text-anchor="start"></text>
 <text x="288" y="102" font-size="10" text-anchor="start">orange: public gallery, spur, lobby, passage, deck</text>
 <text x="288" y="116" font-size="10" text-anchor="start">red dashes: 3 m bridge landings (keep clear)</text>

@@ -20,6 +20,17 @@
 <text x="116" y="144.2" font-size="9" text-anchor="middle">S</text>
 <rect x="132" y="689.2" width="28" height="48" fill="#a9c9d8" stroke="#6b93a6"/>
 <text x="146" y="716.2" font-size="9" text-anchor="middle">POOL</text>
+<rect x="69.6" y="580.8" width="4.8" height="4.8" fill="#5c7048"/>
+<rect x="69.6" y="520.8" width="4.8" height="4.8" fill="#5c7048"/>
+<rect x="69.6" y="402.8" width="4.8" height="4.8" fill="#5c7048"/>
+<rect x="69.6" y="338.8" width="4.8" height="4.8" fill="#5c7048"/>
+<rect x="69.6" y="226.8" width="4.8" height="4.8" fill="#5c7048"/>
+<rect x="89.6" y="746.8" width="4.8" height="4.8" fill="#5c7048"/>
+<rect x="105.6" y="706.8" width="4.8" height="4.8" fill="#5c7048"/>
+<rect x="151.6" y="612.8" width="4.8" height="4.8" fill="#5c7048"/>
+<rect x="71.6" y="438.8" width="4.8" height="4.8" fill="#5c7048"/>
+<rect x="155.6" y="438.8" width="4.8" height="4.8" fill="#5c7048"/>
+<rect x="162.8" y="110.8" width="4.8" height="4.8" fill="#5c7048"/>
 <rect x="84" y="505.2" width="76" height="96" fill="#d9d3c7" stroke="#5a5246" stroke-width="0.8"/>
 <rect x="84" y="505.2" width="64" height="86" fill="#c4bcae" stroke="#5a5246" stroke-width="0.8"/>
 <rect x="84" y="505.2" width="52" height="76" fill="#aea594" stroke="#5a5246" stroke-width="0.8"/>
@@ -57,7 +68,7 @@
 <circle cx="124" cy="499.2" r="2.5" fill="#2f5d8e"/>
 <text x="129" y="495.2" font-size="7" text-anchor="start">03-floor4-bridge-walk</text>
 <text x="232" y="60" font-size="10" text-anchor="start">The Gardens: site plan (z 0)</text>
-<text x="232" y="74" font-size="10" text-anchor="start">river-oaks-garden-campus layout 3.1</text>
+<text x="232" y="74" font-size="10" text-anchor="start">river-oaks-garden-campus layout 3.2</text>
 <text x="232" y="88" font-size="10" text-anchor="start">source osm-way-625330790</text>
 <text x="232" y="102" font-size="10" text-anchor="start">commit 153471bc2075</text>
 <text x="232" y="116" font-size="10" text-anchor="start"></text>
@@ -66,11 +77,12 @@
 <text x="232" y="158" font-size="10" text-anchor="start">dark: core; mid: core lobby</text>
 <text x="232" y="172" font-size="10" text-anchor="start">orange: skywalk deck and 3 m clear route</text>
 <text x="232" y="186" font-size="10" text-anchor="start">red dots: entries; red strips: seams</text>
-<text x="232" y="200" font-size="10" text-anchor="start">blue dots: ground-level review cameras</text>
-<text x="232" y="214" font-size="10" text-anchor="start"></text>
-<text x="232" y="228" font-size="10" text-anchor="start">01-southeast-aerial: [125, -90, 155]</text>
-<text x="232" y="242" font-size="10" text-anchor="start">02-street-under-b12: [32, 74.5, 1.7]</text>
-<text x="232" y="256" font-size="10" text-anchor="start">03-floor4-bridge-walk: [16, 71.5, 14.68]</text>
-<text x="232" y="270" font-size="10" text-anchor="start">04-northwest-high-oblique: [-70, 245, 95]</text>
-<text x="232" y="284" font-size="10" text-anchor="start">05-office-terrace-outlook: [10, -16, 34.7]</text>
+<text x="232" y="200" font-size="10" text-anchor="start">green squares: tree pits</text>
+<text x="232" y="214" font-size="10" text-anchor="start">blue dots: ground-level review cameras</text>
+<text x="232" y="228" font-size="10" text-anchor="start"></text>
+<text x="232" y="242" font-size="10" text-anchor="start">01-southeast-aerial: [125, -90, 155]</text>
+<text x="232" y="256" font-size="10" text-anchor="start">02-street-under-b12: [32, 74.5, 1.7]</text>
+<text x="232" y="270" font-size="10" text-anchor="start">03-floor4-bridge-walk: [16, 71.5, 14.68]</text>
+<text x="232" y="284" font-size="10" text-anchor="start">04-northwest-high-oblique: [-70, 245, 95]</text>
+<text x="232" y="298" font-size="10" text-anchor="start">05-office-terrace-outlook: [10, -16, 34.7]</text>
 </svg>

@@ -2,7 +2,7 @@
   "id": "river-oaks-garden-campus",
   "versions": {
     "schema": 1,
-    "layout": "3.1",
+    "layout": "3.2",
     "floors": 1,
     "support": 1,
     "units": 1
@@ -4146,6 +4146,10 @@
       "slab": 0.35,
       "underside": 12.65,
       "guard": 1.25,
+      "guardSpan": [
+        70,
+        90
+      ],
       "edgeZone": 0.5,
       "grossWidth": 4,
       "clearWidth": 3,
@@ -4252,6 +4256,10 @@
       "slab": 0.35,
       "underside": 12.65,
       "guard": 1.25,
+      "guardSpan": [
+        116,
+        131
+      ],
       "edgeZone": 0.5,
       "grossWidth": 4,
       "clearWidth": 3,
@@ -4786,6 +4794,745 @@
     "effectIfAdopted": "Extending each core 3.4 m north would remove about 8.5 m x 3.4 m = 28.9 m2 of lettable west-band suite per upper floor (19 floors, about 549 m2 campus-wide) and move every core spur. Not adopted; #508 may revise the core under a new layout version if walked stairs are required."
   },
   "obstacles": [],
+  "furnishings": [
+    {
+      "id": "T1-terrace-3/bed-east-46.6",
+      "kind": "planter",
+      "levelId": "garden-campus/l2",
+      "rect": [
+        24.15,
+        46.6,
+        24.95,
+        57.25
+      ]
+    },
+    {
+      "id": "T1-terrace-3/bed-east-61.25",
+      "kind": "planter",
+      "levelId": "garden-campus/l2",
+      "rect": [
+        24.15,
+        61.25,
+        24.95,
+        66.9
+      ]
+    },
+    {
+      "id": "T1-terrace-3/table-north",
+      "kind": "table",
+      "levelId": "garden-campus/l2",
+      "rect": [
+        22.35,
+        67.3,
+        24.9,
+        69.9
+      ]
+    },
+    {
+      "id": "T1-terrace-3/bed-west-end",
+      "kind": "planter",
+      "levelId": "garden-campus/l2",
+      "rect": [
+        6.05,
+        46.05,
+        6.85,
+        48.5
+      ]
+    },
+    {
+      "id": "T1-terrace-3/seat-south-7.3",
+      "kind": "seat",
+      "levelId": "garden-campus/l2",
+      "rect": [
+        7.3,
+        46.05,
+        10.3,
+        46.55
+      ]
+    },
+    {
+      "id": "T1-terrace-3/seat-south-11.1",
+      "kind": "seat",
+      "levelId": "garden-campus/l2",
+      "rect": [
+        11.1,
+        46.05,
+        14.1,
+        46.55
+      ]
+    },
+    {
+      "id": "T1-terrace-3/seat-south-14.9",
+      "kind": "seat",
+      "levelId": "garden-campus/l2",
+      "rect": [
+        14.9,
+        46.05,
+        17.9,
+        46.55
+      ]
+    },
+    {
+      "id": "T1-terrace-3/seat-south-18.7",
+      "kind": "seat",
+      "levelId": "garden-campus/l2",
+      "rect": [
+        18.7,
+        46.05,
+        21.7,
+        46.55
+      ]
+    },
+    {
+      "id": "T1-terrace-5/bed-east-49.1",
+      "kind": "planter",
+      "levelId": "garden-campus/l4",
+      "rect": [
+        21.15,
+        49.1,
+        21.95,
+        58.5
+      ]
+    },
+    {
+      "id": "T1-terrace-5/bed-east-62.5",
+      "kind": "planter",
+      "levelId": "garden-campus/l4",
+      "rect": [
+        21.15,
+        62.5,
+        21.95,
+        66.9
+      ]
+    },
+    {
+      "id": "T1-terrace-5/table-north",
+      "kind": "table",
+      "levelId": "garden-campus/l4",
+      "rect": [
+        19.35,
+        67.3,
+        21.9,
+        69.9
+      ]
+    },
+    {
+      "id": "T1-terrace-5/bed-west-end",
+      "kind": "planter",
+      "levelId": "garden-campus/l4",
+      "rect": [
+        6.05,
+        48.55,
+        6.85,
+        51
+      ]
+    },
+    {
+      "id": "T1-terrace-5/seat-south-7.3",
+      "kind": "seat",
+      "levelId": "garden-campus/l4",
+      "rect": [
+        7.3,
+        48.55,
+        10.3,
+        49.05
+      ]
+    },
+    {
+      "id": "T1-terrace-5/seat-south-11.1",
+      "kind": "seat",
+      "levelId": "garden-campus/l4",
+      "rect": [
+        11.1,
+        48.55,
+        14.1,
+        49.05
+      ]
+    },
+    {
+      "id": "T1-terrace-5/seat-south-14.9",
+      "kind": "seat",
+      "levelId": "garden-campus/l4",
+      "rect": [
+        14.9,
+        48.55,
+        17.9,
+        49.05
+      ]
+    },
+    {
+      "id": "T2-terrace-4/bed-east-90.6",
+      "kind": "planter",
+      "levelId": "garden-campus/l3",
+      "rect": [
+        24.15,
+        90.6,
+        24.95,
+        102.5
+      ]
+    },
+    {
+      "id": "T2-terrace-4/bed-east-106.5",
+      "kind": "planter",
+      "levelId": "garden-campus/l3",
+      "rect": [
+        24.15,
+        106.5,
+        24.95,
+        112.9
+      ]
+    },
+    {
+      "id": "T2-terrace-4/table-north",
+      "kind": "table",
+      "levelId": "garden-campus/l3",
+      "rect": [
+        22.35,
+        113.3,
+        24.9,
+        115.9
+      ]
+    },
+    {
+      "id": "T2-terrace-4/bed-west-end",
+      "kind": "planter",
+      "levelId": "garden-campus/l3",
+      "rect": [
+        6.05,
+        90.05,
+        6.85,
+        93
+      ]
+    },
+    {
+      "id": "T2-terrace-4/seat-south-7.3",
+      "kind": "seat",
+      "levelId": "garden-campus/l3",
+      "rect": [
+        7.3,
+        90.05,
+        10.3,
+        90.55
+      ]
+    },
+    {
+      "id": "T2-terrace-4/bed-south-11.1",
+      "kind": "planter",
+      "levelId": "garden-campus/l3",
+      "rect": [
+        11.1,
+        90.05,
+        13.5,
+        90.85
+      ]
+    },
+    {
+      "id": "T2-terrace-4/seat-south-18.5",
+      "kind": "seat",
+      "levelId": "garden-campus/l3",
+      "rect": [
+        18.5,
+        90.05,
+        21.5,
+        90.55
+      ]
+    },
+    {
+      "id": "T2-terrace-6/bed-east-93.6",
+      "kind": "planter",
+      "levelId": "garden-campus/l5",
+      "rect": [
+        21.15,
+        93.6,
+        21.95,
+        104
+      ]
+    },
+    {
+      "id": "T2-terrace-6/bed-east-108",
+      "kind": "planter",
+      "levelId": "garden-campus/l5",
+      "rect": [
+        21.15,
+        108,
+        21.95,
+        112.9
+      ]
+    },
+    {
+      "id": "T2-terrace-6/table-north",
+      "kind": "table",
+      "levelId": "garden-campus/l5",
+      "rect": [
+        19.35,
+        113.3,
+        21.9,
+        115.9
+      ]
+    },
+    {
+      "id": "T2-terrace-6/bed-west-end",
+      "kind": "planter",
+      "levelId": "garden-campus/l5",
+      "rect": [
+        6.05,
+        93.05,
+        6.85,
+        96
+      ]
+    },
+    {
+      "id": "T2-terrace-6/seat-south-7.3",
+      "kind": "seat",
+      "levelId": "garden-campus/l5",
+      "rect": [
+        7.3,
+        93.05,
+        10.3,
+        93.55
+      ]
+    },
+    {
+      "id": "T2-terrace-6/bed-south-11.1",
+      "kind": "planter",
+      "levelId": "garden-campus/l5",
+      "rect": [
+        11.1,
+        93.05,
+        13.6,
+        93.85
+      ]
+    },
+    {
+      "id": "T2-terrace-6/seat-south-14.4",
+      "kind": "seat",
+      "levelId": "garden-campus/l5",
+      "rect": [
+        14.4,
+        93.05,
+        17.4,
+        93.55
+      ]
+    },
+    {
+      "id": "T3-terrace-3/bed-east-128.6",
+      "kind": "planter",
+      "levelId": "garden-campus/l2",
+      "rect": [
+        24.15,
+        128.6,
+        24.95,
+        138.5
+      ]
+    },
+    {
+      "id": "T3-terrace-3/bed-east-142.5",
+      "kind": "planter",
+      "levelId": "garden-campus/l2",
+      "rect": [
+        24.15,
+        142.5,
+        24.95,
+        146.9
+      ]
+    },
+    {
+      "id": "T3-terrace-3/table-north",
+      "kind": "table",
+      "levelId": "garden-campus/l2",
+      "rect": [
+        22.35,
+        147.3,
+        24.9,
+        149.9
+      ]
+    },
+    {
+      "id": "T3-terrace-3/bed-west-end",
+      "kind": "planter",
+      "levelId": "garden-campus/l2",
+      "rect": [
+        6.05,
+        128.05,
+        6.85,
+        131
+      ]
+    },
+    {
+      "id": "T3-terrace-3/seat-south-7.3",
+      "kind": "seat",
+      "levelId": "garden-campus/l2",
+      "rect": [
+        7.3,
+        128.05,
+        10.3,
+        128.55
+      ]
+    },
+    {
+      "id": "T3-terrace-3/bed-south-11.1",
+      "kind": "planter",
+      "levelId": "garden-campus/l2",
+      "rect": [
+        11.1,
+        128.05,
+        13.6,
+        128.85
+      ]
+    },
+    {
+      "id": "T3-terrace-3/seat-south-14.4",
+      "kind": "seat",
+      "levelId": "garden-campus/l2",
+      "rect": [
+        14.4,
+        128.05,
+        17.4,
+        128.55
+      ]
+    },
+    {
+      "id": "T3-terrace-3/bed-south-18.2",
+      "kind": "planter",
+      "levelId": "garden-campus/l2",
+      "rect": [
+        18.2,
+        128.05,
+        20.7,
+        128.85
+      ]
+    },
+    {
+      "id": "T3-terrace-5/bed-east-131.6",
+      "kind": "planter",
+      "levelId": "garden-campus/l4",
+      "rect": [
+        21.15,
+        131.6,
+        21.95,
+        140
+      ]
+    },
+    {
+      "id": "T3-terrace-5/bed-east-144",
+      "kind": "planter",
+      "levelId": "garden-campus/l4",
+      "rect": [
+        21.15,
+        144,
+        21.95,
+        146.9
+      ]
+    },
+    {
+      "id": "T3-terrace-5/table-north",
+      "kind": "table",
+      "levelId": "garden-campus/l4",
+      "rect": [
+        19.35,
+        147.3,
+        21.9,
+        149.9
+      ]
+    },
+    {
+      "id": "T3-terrace-5/bed-west-end",
+      "kind": "planter",
+      "levelId": "garden-campus/l4",
+      "rect": [
+        6.05,
+        131.05,
+        6.85,
+        134
+      ]
+    },
+    {
+      "id": "T3-terrace-5/seat-south-7.3",
+      "kind": "seat",
+      "levelId": "garden-campus/l4",
+      "rect": [
+        7.3,
+        131.05,
+        10.3,
+        131.55
+      ]
+    },
+    {
+      "id": "T3-terrace-5/bed-south-11.1",
+      "kind": "planter",
+      "levelId": "garden-campus/l4",
+      "rect": [
+        11.1,
+        131.05,
+        13.6,
+        131.85
+      ]
+    },
+    {
+      "id": "T3-terrace-5/seat-south-14.4",
+      "kind": "seat",
+      "levelId": "garden-campus/l4",
+      "rect": [
+        14.4,
+        131.05,
+        17.4,
+        131.55
+      ]
+    },
+    {
+      "id": "T1-roof/table-south-east",
+      "kind": "table",
+      "levelId": "garden-campus/l6",
+      "rect": [
+        16.35,
+        51.6,
+        18.65,
+        54.2
+      ]
+    },
+    {
+      "id": "T1-roof/seat-east-a",
+      "kind": "seat",
+      "levelId": "garden-campus/l6",
+      "rect": [
+        18.45,
+        59,
+        18.95,
+        62
+      ]
+    },
+    {
+      "id": "T1-roof/seat-east-b",
+      "kind": "seat",
+      "levelId": "garden-campus/l6",
+      "rect": [
+        18.45,
+        66.4,
+        18.95,
+        69.4
+      ]
+    },
+    {
+      "id": "T1-roof/bed-north",
+      "kind": "planter",
+      "levelId": "garden-campus/l6",
+      "rect": [
+        9.2,
+        69.15,
+        17.8,
+        69.95
+      ]
+    },
+    {
+      "id": "T2-roof/table-south-east",
+      "kind": "table",
+      "levelId": "garden-campus/l7",
+      "rect": [
+        16.35,
+        96.6,
+        18.65,
+        99.2
+      ]
+    },
+    {
+      "id": "T2-roof/seat-east-a",
+      "kind": "seat",
+      "levelId": "garden-campus/l7",
+      "rect": [
+        18.45,
+        104.5,
+        18.95,
+        107.5
+      ]
+    },
+    {
+      "id": "T2-roof/seat-east-b",
+      "kind": "seat",
+      "levelId": "garden-campus/l7",
+      "rect": [
+        18.45,
+        112.4,
+        18.95,
+        115.4
+      ]
+    },
+    {
+      "id": "T2-roof/bed-north",
+      "kind": "planter",
+      "levelId": "garden-campus/l7",
+      "rect": [
+        9.2,
+        115.15,
+        17.8,
+        115.95
+      ]
+    },
+    {
+      "id": "T3-roof/table-south-east",
+      "kind": "table",
+      "levelId": "garden-campus/l6",
+      "rect": [
+        16.35,
+        134.6,
+        18.65,
+        137.2
+      ]
+    },
+    {
+      "id": "T3-roof/seat-east-a",
+      "kind": "seat",
+      "levelId": "garden-campus/l6",
+      "rect": [
+        18.45,
+        140.5,
+        18.95,
+        143.5
+      ]
+    },
+    {
+      "id": "T3-roof/seat-east-b",
+      "kind": "seat",
+      "levelId": "garden-campus/l6",
+      "rect": [
+        18.45,
+        146.4,
+        18.95,
+        149.4
+      ]
+    },
+    {
+      "id": "T3-roof/bed-north",
+      "kind": "planter",
+      "levelId": "garden-campus/l6",
+      "rect": [
+        9.2,
+        149.15,
+        17.8,
+        149.95
+      ]
+    },
+    {
+      "id": "ground/tree-west-t1-a",
+      "kind": "tree",
+      "levelId": "garden-campus/l0",
+      "rect": [
+        2.4,
+        49.9,
+        3.6,
+        51.1
+      ]
+    },
+    {
+      "id": "ground/tree-west-t1-b",
+      "kind": "tree",
+      "levelId": "garden-campus/l0",
+      "rect": [
+        2.4,
+        64.9,
+        3.6,
+        66.1
+      ]
+    },
+    {
+      "id": "ground/tree-west-t2-a",
+      "kind": "tree",
+      "levelId": "garden-campus/l0",
+      "rect": [
+        2.4,
+        94.4,
+        3.6,
+        95.6
+      ]
+    },
+    {
+      "id": "ground/tree-west-t2-b",
+      "kind": "tree",
+      "levelId": "garden-campus/l0",
+      "rect": [
+        2.4,
+        110.4,
+        3.6,
+        111.6
+      ]
+    },
+    {
+      "id": "ground/tree-west-t3",
+      "kind": "tree",
+      "levelId": "garden-campus/l0",
+      "rect": [
+        2.4,
+        138.4,
+        3.6,
+        139.6
+      ]
+    },
+    {
+      "id": "ground/tree-south-a",
+      "kind": "tree",
+      "levelId": "garden-campus/l0",
+      "rect": [
+        7.4,
+        8.4,
+        8.6,
+        9.6
+      ]
+    },
+    {
+      "id": "ground/tree-south-b",
+      "kind": "tree",
+      "levelId": "garden-campus/l0",
+      "rect": [
+        11.4,
+        18.4,
+        12.6,
+        19.6
+      ]
+    },
+    {
+      "id": "ground/tree-south-c",
+      "kind": "tree",
+      "levelId": "garden-campus/l0",
+      "rect": [
+        22.9,
+        41.9,
+        24.1,
+        43.1
+      ]
+    },
+    {
+      "id": "ground/tree-cross-west",
+      "kind": "tree",
+      "levelId": "garden-campus/l0",
+      "rect": [
+        2.9,
+        85.4,
+        4.1,
+        86.6
+      ]
+    },
+    {
+      "id": "ground/tree-cross-east",
+      "kind": "tree",
+      "levelId": "garden-campus/l0",
+      "rect": [
+        23.9,
+        85.4,
+        25.1,
+        86.6
+      ]
+    },
+    {
+      "id": "ground/tree-north-a",
+      "kind": "tree",
+      "levelId": "garden-campus/l0",
+      "rect": [
+        25.7,
+        167.4,
+        26.9,
+        168.6
+      ]
+    }
+  ],
   "policy": {
     "public": "Ground paths, the F1 halls, every core lobby and spur, every spine, terrace passage, terrace and roof garden, and both skywalks are public. Crossing the campus never needs a lease.",
     "private": "Suites are private and branch off public spines by one door each. No suite is ever part of the public route.",
@@ -5126,6 +5873,116 @@
             138.6,
             11,
             142
+          ]
+        },
+        {
+          "id": "ground/tree-west-t1-a",
+          "kind": "tree",
+          "rect": [
+            2.4,
+            49.9,
+            3.6,
+            51.1
+          ]
+        },
+        {
+          "id": "ground/tree-west-t1-b",
+          "kind": "tree",
+          "rect": [
+            2.4,
+            64.9,
+            3.6,
+            66.1
+          ]
+        },
+        {
+          "id": "ground/tree-west-t2-a",
+          "kind": "tree",
+          "rect": [
+            2.4,
+            94.4,
+            3.6,
+            95.6
+          ]
+        },
+        {
+          "id": "ground/tree-west-t2-b",
+          "kind": "tree",
+          "rect": [
+            2.4,
+            110.4,
+            3.6,
+            111.6
+          ]
+        },
+        {
+          "id": "ground/tree-west-t3",
+          "kind": "tree",
+          "rect": [
+            2.4,
+            138.4,
+            3.6,
+            139.6
+          ]
+        },
+        {
+          "id": "ground/tree-south-a",
+          "kind": "tree",
+          "rect": [
+            7.4,
+            8.4,
+            8.6,
+            9.6
+          ]
+        },
+        {
+          "id": "ground/tree-south-b",
+          "kind": "tree",
+          "rect": [
+            11.4,
+            18.4,
+            12.6,
+            19.6
+          ]
+        },
+        {
+          "id": "ground/tree-south-c",
+          "kind": "tree",
+          "rect": [
+            22.9,
+            41.9,
+            24.1,
+            43.1
+          ]
+        },
+        {
+          "id": "ground/tree-cross-west",
+          "kind": "tree",
+          "rect": [
+            2.9,
+            85.4,
+            4.1,
+            86.6
+          ]
+        },
+        {
+          "id": "ground/tree-cross-east",
+          "kind": "tree",
+          "rect": [
+            23.9,
+            85.4,
+            25.1,
+            86.6
+          ]
+        },
+        {
+          "id": "ground/tree-north-a",
+          "kind": "tree",
+          "rect": [
+            25.7,
+            167.4,
+            26.9,
+            168.6
           ]
         }
       ],
@@ -6794,6 +7651,166 @@
             6.05,
             131
           ]
+        },
+        {
+          "id": "T1-terrace-3/bed-east-46.6",
+          "kind": "planter",
+          "rect": [
+            24.15,
+            46.6,
+            24.95,
+            57.25
+          ]
+        },
+        {
+          "id": "T1-terrace-3/bed-east-61.25",
+          "kind": "planter",
+          "rect": [
+            24.15,
+            61.25,
+            24.95,
+            66.9
+          ]
+        },
+        {
+          "id": "T1-terrace-3/table-north",
+          "kind": "table",
+          "rect": [
+            22.35,
+            67.3,
+            24.9,
+            69.9
+          ]
+        },
+        {
+          "id": "T1-terrace-3/bed-west-end",
+          "kind": "planter",
+          "rect": [
+            6.05,
+            46.05,
+            6.85,
+            48.5
+          ]
+        },
+        {
+          "id": "T1-terrace-3/seat-south-7.3",
+          "kind": "seat",
+          "rect": [
+            7.3,
+            46.05,
+            10.3,
+            46.55
+          ]
+        },
+        {
+          "id": "T1-terrace-3/seat-south-11.1",
+          "kind": "seat",
+          "rect": [
+            11.1,
+            46.05,
+            14.1,
+            46.55
+          ]
+        },
+        {
+          "id": "T1-terrace-3/seat-south-14.9",
+          "kind": "seat",
+          "rect": [
+            14.9,
+            46.05,
+            17.9,
+            46.55
+          ]
+        },
+        {
+          "id": "T1-terrace-3/seat-south-18.7",
+          "kind": "seat",
+          "rect": [
+            18.7,
+            46.05,
+            21.7,
+            46.55
+          ]
+        },
+        {
+          "id": "T3-terrace-3/bed-east-128.6",
+          "kind": "planter",
+          "rect": [
+            24.15,
+            128.6,
+            24.95,
+            138.5
+          ]
+        },
+        {
+          "id": "T3-terrace-3/bed-east-142.5",
+          "kind": "planter",
+          "rect": [
+            24.15,
+            142.5,
+            24.95,
+            146.9
+          ]
+        },
+        {
+          "id": "T3-terrace-3/table-north",
+          "kind": "table",
+          "rect": [
+            22.35,
+            147.3,
+            24.9,
+            149.9
+          ]
+        },
+        {
+          "id": "T3-terrace-3/bed-west-end",
+          "kind": "planter",
+          "rect": [
+            6.05,
+            128.05,
+            6.85,
+            131
+          ]
+        },
+        {
+          "id": "T3-terrace-3/seat-south-7.3",
+          "kind": "seat",
+          "rect": [
+            7.3,
+            128.05,
+            10.3,
+            128.55
+          ]
+        },
+        {
+          "id": "T3-terrace-3/bed-south-11.1",
+          "kind": "planter",
+          "rect": [
+            11.1,
+            128.05,
+            13.6,
+            128.85
+          ]
+        },
+        {
+          "id": "T3-terrace-3/seat-south-14.4",
+          "kind": "seat",
+          "rect": [
+            14.4,
+            128.05,
+            17.4,
+            128.55
+          ]
+        },
+        {
+          "id": "T3-terrace-3/bed-south-18.2",
+          "kind": "planter",
+          "rect": [
+            18.2,
+            128.05,
+            20.7,
+            128.85
+          ]
         }
       ],
       "keepClear": [
@@ -7768,7 +8785,7 @@
             14,
             70,
             14.5,
-            93
+            90
           ]
         },
         {
@@ -7778,7 +8795,7 @@
             17.5,
             70,
             18,
-            93
+            90
           ]
         },
         {
@@ -7799,6 +8816,76 @@
             116,
             18,
             131
+          ]
+        },
+        {
+          "id": "T2-terrace-4/bed-east-90.6",
+          "kind": "planter",
+          "rect": [
+            24.15,
+            90.6,
+            24.95,
+            102.5
+          ]
+        },
+        {
+          "id": "T2-terrace-4/bed-east-106.5",
+          "kind": "planter",
+          "rect": [
+            24.15,
+            106.5,
+            24.95,
+            112.9
+          ]
+        },
+        {
+          "id": "T2-terrace-4/table-north",
+          "kind": "table",
+          "rect": [
+            22.35,
+            113.3,
+            24.9,
+            115.9
+          ]
+        },
+        {
+          "id": "T2-terrace-4/bed-west-end",
+          "kind": "planter",
+          "rect": [
+            6.05,
+            90.05,
+            6.85,
+            93
+          ]
+        },
+        {
+          "id": "T2-terrace-4/seat-south-7.3",
+          "kind": "seat",
+          "rect": [
+            7.3,
+            90.05,
+            10.3,
+            90.55
+          ]
+        },
+        {
+          "id": "T2-terrace-4/bed-south-11.1",
+          "kind": "planter",
+          "rect": [
+            11.1,
+            90.05,
+            13.5,
+            90.85
+          ]
+        },
+        {
+          "id": "T2-terrace-4/seat-south-18.5",
+          "kind": "seat",
+          "rect": [
+            18.5,
+            90.05,
+            21.5,
+            90.55
           ]
         }
       ],
@@ -8961,6 +10048,146 @@
             6.05,
             134
           ]
+        },
+        {
+          "id": "T1-terrace-5/bed-east-49.1",
+          "kind": "planter",
+          "rect": [
+            21.15,
+            49.1,
+            21.95,
+            58.5
+          ]
+        },
+        {
+          "id": "T1-terrace-5/bed-east-62.5",
+          "kind": "planter",
+          "rect": [
+            21.15,
+            62.5,
+            21.95,
+            66.9
+          ]
+        },
+        {
+          "id": "T1-terrace-5/table-north",
+          "kind": "table",
+          "rect": [
+            19.35,
+            67.3,
+            21.9,
+            69.9
+          ]
+        },
+        {
+          "id": "T1-terrace-5/bed-west-end",
+          "kind": "planter",
+          "rect": [
+            6.05,
+            48.55,
+            6.85,
+            51
+          ]
+        },
+        {
+          "id": "T1-terrace-5/seat-south-7.3",
+          "kind": "seat",
+          "rect": [
+            7.3,
+            48.55,
+            10.3,
+            49.05
+          ]
+        },
+        {
+          "id": "T1-terrace-5/seat-south-11.1",
+          "kind": "seat",
+          "rect": [
+            11.1,
+            48.55,
+            14.1,
+            49.05
+          ]
+        },
+        {
+          "id": "T1-terrace-5/seat-south-14.9",
+          "kind": "seat",
+          "rect": [
+            14.9,
+            48.55,
+            17.9,
+            49.05
+          ]
+        },
+        {
+          "id": "T3-terrace-5/bed-east-131.6",
+          "kind": "planter",
+          "rect": [
+            21.15,
+            131.6,
+            21.95,
+            140
+          ]
+        },
+        {
+          "id": "T3-terrace-5/bed-east-144",
+          "kind": "planter",
+          "rect": [
+            21.15,
+            144,
+            21.95,
+            146.9
+          ]
+        },
+        {
+          "id": "T3-terrace-5/table-north",
+          "kind": "table",
+          "rect": [
+            19.35,
+            147.3,
+            21.9,
+            149.9
+          ]
+        },
+        {
+          "id": "T3-terrace-5/bed-west-end",
+          "kind": "planter",
+          "rect": [
+            6.05,
+            131.05,
+            6.85,
+            134
+          ]
+        },
+        {
+          "id": "T3-terrace-5/seat-south-7.3",
+          "kind": "seat",
+          "rect": [
+            7.3,
+            131.05,
+            10.3,
+            131.55
+          ]
+        },
+        {
+          "id": "T3-terrace-5/bed-south-11.1",
+          "kind": "planter",
+          "rect": [
+            11.1,
+            131.05,
+            13.6,
+            131.85
+          ]
+        },
+        {
+          "id": "T3-terrace-5/seat-south-14.4",
+          "kind": "seat",
+          "rect": [
+            14.4,
+            131.05,
+            17.4,
+            131.55
+          ]
         }
       ],
       "keepClear": [
@@ -9890,6 +11117,76 @@
             11,
             142
           ]
+        },
+        {
+          "id": "T2-terrace-6/bed-east-93.6",
+          "kind": "planter",
+          "rect": [
+            21.15,
+            93.6,
+            21.95,
+            104
+          ]
+        },
+        {
+          "id": "T2-terrace-6/bed-east-108",
+          "kind": "planter",
+          "rect": [
+            21.15,
+            108,
+            21.95,
+            112.9
+          ]
+        },
+        {
+          "id": "T2-terrace-6/table-north",
+          "kind": "table",
+          "rect": [
+            19.35,
+            113.3,
+            21.9,
+            115.9
+          ]
+        },
+        {
+          "id": "T2-terrace-6/bed-west-end",
+          "kind": "planter",
+          "rect": [
+            6.05,
+            93.05,
+            6.85,
+            96
+          ]
+        },
+        {
+          "id": "T2-terrace-6/seat-south-7.3",
+          "kind": "seat",
+          "rect": [
+            7.3,
+            93.05,
+            10.3,
+            93.55
+          ]
+        },
+        {
+          "id": "T2-terrace-6/bed-south-11.1",
+          "kind": "planter",
+          "rect": [
+            11.1,
+            93.05,
+            13.6,
+            93.85
+          ]
+        },
+        {
+          "id": "T2-terrace-6/seat-south-14.4",
+          "kind": "seat",
+          "rect": [
+            14.4,
+            93.05,
+            17.4,
+            93.55
+          ]
         }
       ],
       "keepClear": [
@@ -10508,6 +11805,86 @@
             19.05,
             150
           ]
+        },
+        {
+          "id": "T1-roof/table-south-east",
+          "kind": "table",
+          "rect": [
+            16.35,
+            51.6,
+            18.65,
+            54.2
+          ]
+        },
+        {
+          "id": "T1-roof/seat-east-a",
+          "kind": "seat",
+          "rect": [
+            18.45,
+            59,
+            18.95,
+            62
+          ]
+        },
+        {
+          "id": "T1-roof/seat-east-b",
+          "kind": "seat",
+          "rect": [
+            18.45,
+            66.4,
+            18.95,
+            69.4
+          ]
+        },
+        {
+          "id": "T1-roof/bed-north",
+          "kind": "planter",
+          "rect": [
+            9.2,
+            69.15,
+            17.8,
+            69.95
+          ]
+        },
+        {
+          "id": "T3-roof/table-south-east",
+          "kind": "table",
+          "rect": [
+            16.35,
+            134.6,
+            18.65,
+            137.2
+          ]
+        },
+        {
+          "id": "T3-roof/seat-east-a",
+          "kind": "seat",
+          "rect": [
+            18.45,
+            140.5,
+            18.95,
+            143.5
+          ]
+        },
+        {
+          "id": "T3-roof/seat-east-b",
+          "kind": "seat",
+          "rect": [
+            18.45,
+            146.4,
+            18.95,
+            149.4
+          ]
+        },
+        {
+          "id": "T3-roof/bed-north",
+          "kind": "planter",
+          "rect": [
+            9.2,
+            149.15,
+            17.8,
+            149.95
+          ]
         }
       ],
       "keepClear": [
@@ -10735,6 +12112,46 @@
             96,
             19.05,
             116
+          ]
+        },
+        {
+          "id": "T2-roof/table-south-east",
+          "kind": "table",
+          "rect": [
+            16.35,
+            96.6,
+            18.65,
+            99.2
+          ]
+        },
+        {
+          "id": "T2-roof/seat-east-a",
+          "kind": "seat",
+          "rect": [
+            18.45,
+            104.5,
+            18.95,
+            107.5
+          ]
+        },
+        {
+          "id": "T2-roof/seat-east-b",
+          "kind": "seat",
+          "rect": [
+            18.45,
+            112.4,
+            18.95,
+            115.4
+          ]
+        },
+        {
+          "id": "T2-roof/bed-north",
+          "kind": "planter",
+          "rect": [
+            9.2,
+            115.15,
+            17.8,
+            115.95
           ]
         }
       ],
