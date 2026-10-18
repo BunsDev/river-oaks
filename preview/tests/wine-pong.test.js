@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { RIM, TABLE, THROWS_PER_TURN, aimAt, glassAt, landing, notation, play, replay, resolve, startGame, trajectory } from '../src/wine-pong-rules.js';
 import { WOBBLE, chooseThrow } from '../src/wine-pong-opponent.js';
-import { winePongOrigin, winePongSide, winePongStand } from '../src/plaza-salon-plan.js';
+import { WINE_PONG_LEAVE, WINE_PONG_REACH, winePongNear, winePongOrigin, winePongPoint, winePongSide, winePongStand } from '../src/plaza-salon-plan.js';
 
 test('two racks of six glasses, a triangle at each end, none touching', () => {
   for (const side of [0, 1]) {
@@ -87,6 +87,20 @@ test('each side stands just beyond its own end of the table', () => {
   assert.equal(winePongSide(table, winePongStand(table, 0)), 0);
   assert.equal(winePongSide(table, winePongStand(table, 1)), 1);
   assert.equal(winePongSide(table, [10, 20]), null, 'not from the middle of the table');
+});
+
+test('repositioning keeps a game while the visitor is near the table; only leaving it ends the game', () => {
+  const table = { x: 10, north: 20, heading: 0.3 };
+  // Off the end but close (beside it, or a step back): no stance, but still at the table.
+  for (const [u, v] of [[-1.7, 1.45], [-3.2, 0], [1.7, -1.6], [0, 0.9]]) {
+    const point = winePongPoint(table, [u, v]);
+    assert.equal(winePongSide(table, point), null, `${u}, ${v} is off the throwing end`);
+    assert.equal(winePongNear(table, point), true, `${u}, ${v} is still at the table`);
+  }
+  const edge = WINE_PONG_REACH + WINE_PONG_LEAVE;
+  assert.equal(winePongNear(table, winePongPoint(table, [-1.7 - edge + 0.01, 0])), true);
+  assert.equal(winePongNear(table, winePongPoint(table, [-1.7 - edge - 0.01, 0])), false, 'walking well away leaves the table');
+  assert.equal(winePongNear(table, winePongPoint(table, [0, 4])), false);
 });
 
 test('world standing points become actual table-local release origins', () => {

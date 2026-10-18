@@ -20,7 +20,7 @@ Turn #506's numeric design into one shared, versioned contract and a runnable va
 
 ## Interface versions
 
-`GARDEN_CAMPUS_VERSIONS` = `{schema 1, layout '3.1', floors 1, support 1, units 1}` (3.0 until follow-up 1). Published contract SHA-256 is in `docs/design/garden-campus/manifest.json`.
+`GARDEN_CAMPUS_VERSIONS` = `{schema 1, layout '3.2', floors 1, support 1, units 1}` (3.0 until follow-up 1; 3.1 at `63ef1b10`). Published contract SHA-256 is in `docs/design/garden-campus/manifest.json`.
 
 Exports:
 - `GARDEN_CAMPUS_LAYOUT`
@@ -136,7 +136,7 @@ Merging #519 needs Val's go-ahead (`pnpm run land 519`). Merging changes no runt
    - Each portal is now the standing point 0.6 m in front of its door: `CAMPUS_DOOR_SETBACK`, the same setback suite doors already used for `inside`. Example: T1 lift (11.6, 56.3).
    - Roof arrivals land outside the headhouse door (`headhouse.landing`, T1 (13.6, 58)). The faces stay published as `door`.
    - Layout becomes 3.1 (minor and compatible: positions only, no id changes).
-2. **The graph had a direct `B12 ↔ T2-terrace-4` walk edge** that the published support does not have. As the issue specifies, B12's guarded rect runs to T2's facade at v 93. A support flood fill from the deck reaches only the 3 m lane strip of terrace part 1, never part 0 with the door. Removed; the terrace is reached through its door, which is how `campusRoute('E1', 'T2-terrace-4')` now ends.
+2. *(Superseded in 3.2; see below.)* **The graph had a direct `B12 ↔ T2-terrace-4` walk edge** that the published support does not have. As the issue specifies, B12's guarded rect runs to T2's facade at v 93. A support flood fill from the deck reaches only the 3 m lane strip of terrace part 1, never part 0 with the door. Removed; the terrace is reached through its door, which is how `campusRoute('E1', 'T2-terrace-4')` now ends.
 3. **Doors could slide along their walls and still validate.** T2's terrace door moved 2 m north opened from suite `T2-F4-E-N`; a suite door moved past its suite also passed. The new `opening` rule requires every entrance, suite door, terrace door and skywalk portal (56 in all) to sit on the boundary it joins, with its full width inside the shared edge. A second `portal` rule keeps a body at each level portal on public support and clear of obstacles.
 4. **A point query slips along a facade line where a guard ends.** At (14.2, 93), the centre alone finds terrace support between B12's west guard and T2's facade. Recorded as an interface note: an authority checks the body against obstacles. The fixture shows that a 0.35 m body is refused there.
 
@@ -165,6 +165,63 @@ Facade crossings measured: every public part-to-part edge on the upper levels is
 - `node --test preview/tests/garden-campus-layout.test.js server/tests/garden-campus-support.test.js`: 19/19.
 - `node scripts/garden-campus-views.mjs --check`: ok, 0 findings, nothing stale.
 - The regenerated views change only the portal markers (0.6 m into each lobby) and the version label.
+
+**Gates at `63ef1b10` (3.1):**
+- Hosted CI: 19/19 succeeded.
+- Local `pnpm run verify`: passed on a clean tree, all 11 steps, 17:07–17:15Z (receipt `.runtime/agent/core.json`, revision `63ef1b10`).
+  - The run waited about 11 minutes for the browser lock, behind other sessions' runs.
+
+## Follow-up 1b: #511 finishes and the B12 guard correction (layout 3.2)
+
+**Request.** The #511 owner, via river-oaks-95, proposed 67 obstacle rects against layout 3.0: 26 planters, 21 seats, 9 tables and 11 ground tree pits. Source: `river-oaks-garden-campus-511-20261018/docs/design/garden-campus/finish/proposed-obstacles.json`, sha256 `b2a96309c710ed5e1f212d6308bbed661b494070194ba414d7a920697bf0e09b`. They asked for validation against 3.1 and publication under a new minor version. Seats are collision until #510 makes them usable.
+
+**Measured conflict.** Flooding T2-terrace-4 from its door with the 3.1 guards (B12's edge zones running on to T2's facade at v 93), a body never reached west of u 18.6 on the v 90–93 strip.
+- With no finishes: 13.11 m² where a body can stand is cut off from the door, plus the 3.61 m² lane strip.
+- With #511's finishes: the bench `T2-terrace-4/seat-south-7.3` cannot be reached.
+- #511's own flood missed this because it keeps only obstacles whose centres lie within 3 m of a part, and B12's 23 m guards' centres are 8.5 m away.
+- The issue asks to "interrupt the terrace guard at v 90 over u 14–18". Read with an all-public terrace, that means B12's guards stop where the terrace starts. 3.2 publishes `bridge.guardSpan` (B12 70–90, B23 unchanged) and restores the graph's `B12 ↔ T2-terrace-4` walk, which support now confirms. This reverses follow-up 1's item 2, which read the guards as running to the facade.
+
+**Adopted.** All 67 finishes, unchanged, as `layout.furnishings` `{id, kind, levelId, rect}` (the file's `level` renamed to `levelId`). `campusLevels` places them as obstacles on their levels; new kinds are `seat`, `table` and `tree`.
+
+**New validator rules** (`checkFurnishings`):
+- `furnish`: unknown level or kind, an empty rect, or a repeated id.
+- `support`: a finish not inside one public terrace or roof surface, or on open ground off the tower and solid-building holes.
+- `overlap`: a finish overlapping any obstacle on its level, reported once per pair.
+- `blocked`: a finish in a keep-clear zone, a deck rect, a door approach (1.8 m deep, 0.3 m beyond each jamb of every terrace and headhouse door), a path or a seam.
+- `reach`: 0.1 m floods for a 0.505 m body and a 1.8 m route from each terrace and roof door. They must reach every part, and every seat or table within 0.25 m. No cut-off area of 0.5 m² or more where a body can stand is allowed.
+
+**Results.**
+- `validateGardenCampus()`: ok, 0 findings with all 67 placed; about 355 ms per run (floods included).
+- Defects shown failing:
+  - 3.1-style guards: `reach` for the west wing and lane strip, and the west-wing bench.
+  - A seat in the T2 roof door approach: `blocked`, and the roof portals lose their standing point.
+  - A table across T1-terrace-3's east strip: `reach` for part 1 and all four south benches.
+  - A tree on P1: `blocked`.
+  - A planter over the terrace edge: `support`, `overlap`.
+  - A repeated id: `furnish`.
+- Server fixture: the visitor steps off the B12 lane onto T2's west wing, and a bench refuses a step (`blocked`). The facade-line slip at (14.2, 93) is ordinary terrace now; the point-versus-body case moved to the seam between T1's lift and stair shafts, where (10.2, 57.6) has hall support and a body is refused.
+- Views: B12's guard band ends at v 90 in the section; Floor 4 draws T2's terrace finishes; the site plan draws the tree pits. All inspected after rendering.
+- `node --test preview/tests/garden-campus-layout.test.js server/tests/garden-campus-support.test.js`: 19/19.
+- `node scripts/garden-campus-views.mjs --check`: ok.
+
+**Delivery (3.2).**
+- Signed commits:
+  - `f44adbbb`: finishes, guard span, rules, tests, views, docs;
+  - `8428c8dd`: signed merge of `origin/main` `97304fb7`, which auto-merged #486's `docs/offices.md` edit; the campus pointer is intact;
+  - this ledger commit.
+- Hosted CI at `8428c8dd`: 19/19 succeeded (same set as at `63ef1b10`). `pnpm run test:desktop` at `8428c8dd`: 76/76.
+- **Local core at `8428c8dd`: not yet run.**
+  - The 17:23Z attempt waited 25 minutes for the browser lock, then failed at 17:48Z before any step: `ENOSPC` creating the lock. The machine disk had 121 MB free, with swap at 23 of 24 GB from other workloads (another session stopped an Ollama runner with Val's approval), and load reached 539.
+  - A retry is queued (`nice -n 19`, under the browser lock), set to start once the 1-minute load falls below 40 and more than 10 GB is free.
+  - Since the passing `63ef1b10` run, the changes are the contract module, its two test files, the views script, the review page and docs. The focused checks above cover them.
+- Consumer confirmation: #507 merged 3.2 at `40aec12a`. Its ground collision is now 27 rects including the 11 tree pits, B12's guards render to v 90 from the published obstacles, and 38/38 campus tests pass (plus 1 Redis-only skip), including this branch's fixture and layout test. #509 reads none of the changed fields.
+- The PR #519 body was updated, and the #506 comment posted (`issuecomment-6253185330`).
+- **Review page:** serves from this worktree (200). It was not re-rendered headlessly at 3.2 because of the load.
+
+**Next action.**
+1. When load allows, the queued local core run and a headless review-page render at the head. Record both in the PR.
+2. Merging needs Val (`pnpm run land 519`); #507 and #509 stack on this branch.
+3. Then #508 in this session, which waits on Val starting that goal. river-oaks-95 asked for its first SHA and offered to take the two-player journey slice; no split is agreed yet.
 
 ## Open and next
 

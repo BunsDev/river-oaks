@@ -39,6 +39,7 @@ function sitePlan() {
   for (const path of LAYOUT.paths) body.push(rectEl(P, path.rect, 'fill="#e2dccd" stroke="#b9ae96" stroke-width="0.5"'));
   for (const seam of LAYOUT.seams) body.push(polyEl(P, seam.polygon, 'fill="#c96f4a" stroke="#c96f4a" stroke-width="0.6"'));
   for (const item of LAYOUT.groundBuildings) body.push(rectEl(P, item.rect, item.kind === 'pool' ? 'fill="#a9c9d8" stroke="#6b93a6"' : item.kind === 'pergola' ? 'fill="none" stroke="#7a6a4f" stroke-dasharray="3 2"' : 'fill="#c9d8b6" stroke="#5c7048"'), label(P.x((item.rect[0] + item.rect[2]) / 2), P.y((item.rect[1] + item.rect[3]) / 2) + 3, item.id));
+  for (const tree of LAYOUT.furnishings.filter(item => item.kind === 'tree')) body.push(rectEl(P, tree.rect, 'fill="#5c7048"'));
   const shades = ['#d9d3c7', '#c4bcae', '#aea594'];
   for (const tower of LAYOUT.towers) {
     tower.tiers.forEach((tier, i) => body.push(rectEl(P, tier.rect, `fill="${shades[i]}" stroke="#5a5246" stroke-width="0.8"`)));
@@ -55,7 +56,7 @@ function sitePlan() {
     body.push(`<circle cx="${P.x(camera.position[0])}" cy="${P.y(camera.position[1])}" r="2.5" fill="#2f5d8e"/>`, label(P.x(camera.position[0]) + 5, P.y(camera.position[1]) - 4, camera.id, 7, 'start'));
   const lx = P.pad + 38 * P.s + 20;
   body.push(legend(lx, 60, ['The Gardens: site plan (z 0)', `${LAYOUT.id} layout ${LAYOUT.versions.layout}`, `source ${LAYOUT.source.buildingId}`, `commit ${LAYOUT.source.commit.slice(0, 12)}`, '',
-    'u east (right), v north (up), metres', 'shade: tier 1 / 2 / 3', 'dark: core; mid: core lobby', 'orange: skywalk deck and 3 m clear route', 'red dots: entries; red strips: seams', 'blue dots: ground-level review cameras',
+    'u east (right), v north (up), metres', 'shade: tier 1 / 2 / 3', 'dark: core; mid: core lobby', 'orange: skywalk deck and 3 m clear route', 'red dots: entries; red strips: seams', 'green squares: tree pits', 'blue dots: ground-level review cameras',
     '', ...LAYOUT.cameras.map(c => `${c.id}: [${c.position.map(f).join(', ')}]`)]));
   return svg(P.width, P.height, 'The Gardens site plan', body);
 }
@@ -102,7 +103,7 @@ function section() {
     for (const terrace of tower.terraces) for (const part of terrace.parts) if (part[0] <= U && part[2] >= U) body.push(band(part[1], part[3], terrace.z - 0.3, terrace.z, 'fill="#9bbf7a"'));
   }
   for (const bridge of LAYOUT.bridges) body.push(band(bridge.rect[1], bridge.rect[3], bridge.underside, bridge.deckZ, 'fill="#e3a46b" stroke="#9a5a2c" stroke-width="0.6"'),
-    band(bridge.rect[1], bridge.rect[3], bridge.deckZ, bridge.deckZ + bridge.guard, 'fill="none" stroke="#9a5a2c" stroke-dasharray="1 2"'), label(x((bridge.rect[1] + bridge.rect[3]) / 2), y(bridge.deckZ + bridge.guard) - 4, `${bridge.id}: ${bridge.span} m facade to facade, deck z ${bridge.deckZ}`, 8));
+    band(bridge.guardSpan[0], bridge.guardSpan[1], bridge.deckZ, bridge.deckZ + bridge.guard, 'fill="none" stroke="#9a5a2c" stroke-dasharray="1 2"'), label(x((bridge.rect[1] + bridge.rect[3]) / 2), y(bridge.deckZ + bridge.guard) - 4, `${bridge.id}: ${bridge.span} m facade to facade, deck z ${bridge.deckZ}`, 8));
   const office = LAYOUT.context.office.nominalRoofAltitude - LAYOUT.frame.baseAltitude, ipic = LAYOUT.context.ipic.baseAltitude + LAYOUT.context.ipic.height - LAYOUT.frame.baseAltitude;
   body.push(dashed(0, vmax, office, '#8e2f2f', `existing office roof z ${f(office)}`), dashed(LAYOUT.context.ipic.wall.from[1], vmax, ipic, '#8e2f2f', `IPIC z ${f(ipic)}`));
   const p2 = LAYOUT.paths.find(p => p.id === 'P2');
