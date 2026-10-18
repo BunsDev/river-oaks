@@ -164,7 +164,7 @@ export function campusGroundCutout(world) {
 // environment reads (store-rooms.js roomAt): a mapped door on the east facade,
 // `a` along it (north), `d` inward (west). The core's lift and stair shafts are
 // obstacles; the core lobby in front of them stays walkable. No staff.
-function groundRoom(world, index, { id, name, use, rect, door, clear, obstacles, part }) {
+function groundRoom(world, index, { id, name, use, rect, door, clear, obstacles, part, summary }) {
   const [u0, v0, u1, v1] = rect, [du, dv] = door, base = CAMPUS.frame.baseAltitude;
   const facade = toSource([du, dv]), east = CAMPUS.frame.east, north = CAMPUS.frame.north;
   const outward = [...east], inward = [-east[0], -east[1]], right = [...north];
@@ -180,6 +180,8 @@ function groundRoom(world, index, { id, name, use, rect, door, clear, obstacles,
     footprint: [[aMin, 0], [aMax, 0], [aMax, depth], [aMin, depth]].map(([a, d]) => toWorld(a, d)),
     obstacles: obstacles.map(item => ({ id: item.id, kind: item.kind, a0: item.rect[1] - dv, a1: item.rect[3] - dv, d0: du - item.rect[2], d1: du - item.rect[0] })),
     fixtures: [], people: [], lights: [],
+    // The Map and the walking HUD describe every walk-in room by its summary (shared-population.js).
+    summary: { label: summary.label, staff: 0, guests: 0, mannequins: 0, highlights: [...summary.highlights] },
   };
   const bounds = [...room.footprint, toWorld(-0.85, -1.4), toWorld(0.85, -1.4)];
   room.lookupBounds = [Math.min(...bounds.map(p => p[0])), Math.min(...bounds.map(p => p[1])), Math.max(...bounds.map(p => p[0])), Math.max(...bounds.map(p => p[1]))];
@@ -195,10 +197,12 @@ export function planCampusRooms(world, firstIndex = 0) {
     const halls = CAMPUS.towers.map(tower => {
       const floor = tower.levels[0], hall = floor.hall;
       return { id: hall.id, name: `${tower.name} · ${hall.use}`, use: hall.use, rect: hall.rect, door: hall.door.position, clear: HALL_CLEAR, part: tower.id,
-        obstacles: [{ ...tower.core.lift, kind: 'lift' }, { ...tower.core.stair, kind: 'stair' }, ...furniture(hall.id)] };
+        obstacles: [{ ...tower.core.lift, kind: 'lift' }, { ...tower.core.stair, kind: 'stair' }, ...furniture(hall.id)],
+        summary: { label: 'Public ground-floor hall', highlights: ['open to everyone', 'public workstations', 'step-free lift to every floor', 'enclosed stairs'] } };
     });
     const cafe = CAMPUS.groundBuildings.find(item => item.id === 'C');
-    const rooms = [...halls, { id: 'C-hall', name: cafe.name, use: 'Public social and work café', rect: cafe.rect, door: cafe.door, clear: CAFE_CLEAR, part: 'C', obstacles: furniture('C-hall') }]
+    const rooms = [...halls, { id: 'C-hall', name: cafe.name, use: 'Public social and work café', rect: cafe.rect, door: cafe.door, clear: CAFE_CLEAR, part: 'C', obstacles: furniture('C-hall'),
+      summary: { label: 'Public café', highlights: ['open to everyone', 'public workstations', 'no lease needed'] } }]
       .map((spec, offset) => groundRoom(world, firstIndex + offset, spec));
     roomCache.set(world, rooms);
   }

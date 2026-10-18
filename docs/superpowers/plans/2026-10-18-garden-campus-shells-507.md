@@ -130,6 +130,19 @@ The garage's roof plant and mass go, and the instanced shells come in.
   `dependency-review`.
 - The penthouse idle-slice test that failed locally at load 145 or more passes there.
 
+## Found downstream
+
+- **Halls and café had no room summary (found by #510's hosted journey, run 39154402265).**
+  `describeInterior` in `main.js` reads `summary.label` and joins `summary.highlights`
+  whenever the Map selects a destination, and `enterStore` selects first. For a campus room
+  that threw, so "Step inside" never sent its travel and the walking HUD showed only "Could
+  not step through". The Map's destination list failed the same way for a campus hall.
+  `groundRoom` now carries `summary` like the axe room (`axe-room-plan.js`). Regression:
+  "every hall and the café describe themselves like any walk-in room", which fails on
+  `40aec12a`. With an isolated Redis, the campus suites plus `shared-population`,
+  `store-rooms`, `venue-rooms` and `walking` pass 60/60. Rooms are derived, so the world
+  fingerprint is unchanged.
+
 ## Gaps and owners
 
 - Upper-level movement, portals and gallery rendering: #508, river-oaks-c5.
