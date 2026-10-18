@@ -420,7 +420,9 @@ fixture configuration.
   - **C. Reduce motion: pass.** The Studio works without animated transitions.
   - **D. Phone layout and touch in the simulator: pass.** Tapping changes the
     look, the preview stays in view, and cancel or undo restores the start.
-  - **E. Novice self-check:** not reported.
+  - **E. Novice self-check: pass.** Val made a distinctive look of their own in
+    about 3 minutes, with no upload or prompt. Val built the Studio, so this is not
+    a novice result.
 - Not covered: a physical phone, VoiceOver on iOS, and the five-person novice
   trial (#444 protocol). A physical phone needs a sign-in-capable branch
   preview; its variables were removed at Val's request.
