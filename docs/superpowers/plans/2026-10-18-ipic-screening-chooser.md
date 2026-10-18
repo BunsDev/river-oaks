@@ -11,9 +11,10 @@
 
 - **The server allowlist is the authority.** `SCREENING_MEDIA` is one module shared by the server
   (`parseScreeningCommand`) and the client, so the chooser cannot offer what the server would refuse.
-- **The fixture stays out of the chooser and stays allowlisted.** Tests and tools still start it by direct command,
-  as the journey does. A server gate that refuses it in production would change existing semantics and every server
-  test for little gain. A display filter is not treated as authorization: the server checks every Start.
+- **The fixture stays allowlisted and out of the production chooser.** Production builds never offer it. Development
+  builds offer it only with `?screening-fixtures=1`, labelled "(test)", so the journey can choose it the way a host
+  would. A server gate that refused it in production would change existing semantics and every server test for little
+  gain. A display filter is not treated as authorization: the server checks every Start.
 - **The default is explicit:** `ipic-original-v1`, not whichever entry comes first.
 
 ## What was wrong on main `153471bc`
@@ -28,9 +29,21 @@
 | Check | Result |
 | --- | --- |
 | `server/tests/screenings.test.js` + two-film and racing-host cases | 14/14 on main as well: the server already holds (guards) |
-| Client regressions | Pending: after merging #498 |
+| Client regressions (`screening-contract.test.js`, `ipic-screening-ui.test.js`, `ipic-screening.test.js`) on main `153471bc` | **5 failed:** Start sent the snapshot's or the first film, not the chosen one; an unknown film kept playing the previous film's frames |
+| Same, on the branch | Pass, 0 skipped |
+| Hosted CI journey (Linux, Mesa), first run | Caught a 36 px `<select>` on Linux Chromium (only `min-height: 44px`); fixed with an explicit height |
+| Hosted CI at `2bb8eaae` and later | The host's chooser shows 2 films with the short chosen ("0:53 · Silent · English captions"); the viewer has none; a choice alone changes nothing shared; the select and Start film are on screen, uncovered and at least 44 px tall at 390 and 320 px; the host chose the fixture after the short and started it with Start film |
+| Isolated Redis (`REDIS_URL` on a private redis-server), screenings transport + screenings tests | 17/17, 0 skipped |
+| Hosted CI at `4e092679` | All 10 checks green |
+| Integrated soak on #520 `2df7a0a8` (with #498 and #500) | Passed: 10 cycles, each changing the film, 11/11 late joins within 500 ms |
+
+## Gaps and owners
+
+- **The second approved film:** #501 (Val's approval of the exact bytes). On approval it is registered here
+  (`sources.json`, `SCREENING_MEDIA`) and #502 runs the two-film checks with it.
+- **Keyboard, touch and VoiceOver on a device:** #502 device rows (Val).
 
 ## Next step
 
-Merge #498's committed branch, then write the failing client regressions (chosen id in Start; unknown film is
-unsupported, not the previous film), then the chooser UI.
+Wait for #501's approval; then register the film in this branch and rerun the chooser journey with two approved films.
+Land after #513 with Val's approval: `pnpm run land 514`.

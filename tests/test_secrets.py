@@ -63,7 +63,7 @@ def test_typesafe_key_in_arbitrary_config_is_blocked(repo):
 def test_clean_placeholder_passes(repo):
     if not shutil.which("gitleaks"):
         pytest.skip("Install gitleaks to exercise the real scanner")
-    stage(repo, ".env.example", "TYPESAFE_API_KEY=\nJEV_MODEL=jev-1.13.0\n")
+    stage(repo, ".env.example", "TYPESAFE_API_KEY=\nJEV_MODEL=jev-1.14.0\n")
     assert check(repo).returncode == 0
 
 

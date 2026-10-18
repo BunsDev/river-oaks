@@ -10457,6 +10457,43 @@
       "pr": 427
     },
     {
+      "id": "wine-pong-dynamic-throw-20261015",
+      "title": "Review and improve wine pong stance, release animation, and table views",
+      "status": "active",
+      "branches": [
+        "feat/wine-pong-dynamic-throw-20261015"
+      ],
+      "owner": "codex-root-wine-pong-dynamic-throw-20261015",
+      "leaseUntil": "2026-10-15T18:50:00.000Z",
+      "updatedAt": "2026-10-15T17:47:00.000Z",
+      "nextAction": "Review draft PR #448 and its exact-head checks; keep camera occlusion, touch target selection, audio, and human play/accessibility acceptance as follow-up before declaring the experience complete.",
+      "ledger": "docs/superpowers/plans/2026-10-15-wine-pong-dynamic-throw-review.md",
+      "requiredChecks": [
+        "Position-aware aim/landing/replay behavioral tests",
+        "Plaza wine pong browser journey with view and animation review",
+        "pnpm run verify",
+        "Exact-head hosted preview before merge"
+      ],
+      "filesOwned": [
+        "preview/src/wine-pong-rules.js",
+        "preview/src/plaza-wine-pong.js",
+        "preview/src/plaza-wine-pong.css",
+        "preview/src/plaza-salon-plan.js (wine pong geometry)",
+        "preview/src/plaza-salon.js (wine pong table mirror)",
+        "preview/tests/wine-pong.test.js",
+        "preview/e2e/plaza-wine-pong.js",
+        "docs/superpowers/plans/2026-10-15-wine-pong-dynamic-throw-review.md",
+        "docs/superpowers/plans/README.md (generated index)",
+        "docs/project-management/tasks.json (this task only)",
+        "preview/src/main.js (wine pong camera callback)",
+        "docs/multiplayer.md (wine pong play instructions)",
+        "preview/src/player-avatar.js (wine pong throw action)",
+        "preview/src/resident-gestures.js (wine pong throw pose)",
+        "preview/tests/resident-gestures.test.js (throw pose regression)"
+      ],
+      "pr": 448
+    },
+    {
       "id": "garden-office-416",
       "title": "#416 Garden Office realism pilot (coding scope): one desk/chair family, glazing, finishes, light/planting sample, catalog records and compatibility on the #414 interface",
       "status": "blocked",
@@ -11563,6 +11600,30 @@
       "updatedAt": "2026-10-15T20:08:36.760Z"
     },
     {
+      "id": "plaza-game-layout-20261015",
+      "title": "Expandable plaza boards and clear game selection",
+      "status": "active",
+      "branches": [
+        "feat/plaza-game-layout-20261015"
+      ],
+      "owner": "codex-plaza-game-layout-20261015",
+      "updatedAt": "2026-10-16T06:50:27.571433+00:00",
+      "leaseUntil": "2026-10-16T08:50:27.571433+00:00",
+      "nextAction": "Verified main a00a4d19 integration for draft PR #468: core11/11, browser68 checks, unchanged game hashes; all other tasks match main. Push signed integration commit and inspect hosted checks. No merge or deployment authorized; preserve worktree and evidence. Human accessibility and physical-device acceptance remain unverified.",
+      "filesOwned": [
+        "preview/src/plaza-table-games.js",
+        "preview/src/plaza-table-games.css",
+        "preview/e2e/plaza-game-layout.js",
+        "docs/superpowers/plans/2026-10-15-plaza-game-layout.md"
+      ],
+      "requiredChecks": [
+        "pnpm run verify",
+        "Focused game layout browser journey with desktop expanded, narrow and keyboard checks"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-15-plaza-game-layout.md",
+      "pr": 468
+    },
+    {
       "id": "release-0-2-1-signed",
       "title": "Release 0.2.1: Developer ID signed and notarized macOS build (Val, 2026-10-15: new 0.2.1 release, Soul Protocol LLC identity, notarytool keychain profile river-oaks-notary)",
       "status": "delivered",
@@ -11628,6 +11689,77 @@
       "nextAction": "Commit release results and the register entries; land; retire.",
       "pr": null,
       "updatedAt": "2026-10-16T01:56:03.947Z"
+    },
+    {
+      "id": "turning-20261018-cody",
+      "title": "Coordinate planted feet and knees during stationary and walking turns",
+      "status": "active",
+      "branches": [
+        "fix/turning-foot-placement-20261018"
+      ],
+      "owner": "cody:turning-office-20261018",
+      "leaseUntil": "2026-10-18T21:00:51.540812+00:00",
+      "updatedAt": "2026-10-18T19:00:51.540812+00:00",
+      "nextAction": "Commit verified patch, open PR, await exact-head CI and land through the repository queue.",
+      "ledger": "docs/superpowers/plans/2026-10-18-turning.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-turning-20261018",
+      "filesOwned": [
+        "data/reports/turning-core-20261018.json",
+        "data/reports/turning-browser-20261018.json",
+        "docs/project-management/tasks.json",
+        "docs/superpowers/plans/2026-10-18-turning.md",
+        "preview/e2e/turning-regression.mjs",
+        "preview/src/coat-tail-morph-receipt.json",
+        "preview/src/foot-placement.js",
+        "preview/src/lyra-drape-morph-receipt.json",
+        "preview/src/silvan-drape-morph-receipt.json",
+        "preview/src/skirt-seat-morph-receipt.json",
+        "preview/src/vesper-skirt-morph-receipt.json",
+        "preview/tests/foot-placement.test.js"
+      ],
+      "requiredChecks": [
+        "Focused behavioral regressions",
+        "pnpm run verify",
+        "Browser acceptance"
+      ],
+      "verification": {
+        "focused": "20 motion tests plus 4 curb tests passed; five garment validators passed",
+        "core": "All core task coverage passed with bounded concurrency and documented retries; 204 Redis and 1 unrelated client skips. See data/reports/turning-core-20261018.json.",
+        "browser": "Passed seven-rig before/after stationary/slow/normal sharp turns; data/reports/turning-browser-20261018.json."
+      }
+    },
+    {
+      "id": "plaza-fullscreen-polish-20261018",
+      "title": "Comprehensive full-screen plaza games polish from Val screenshot",
+      "status": "active",
+      "branches": [
+        "fix/plaza-fullscreen-polish-20261018"
+      ],
+      "owner": "codex-plaza-fullscreen-521",
+      "updatedAt": "2026-10-18T16:37:15.104049+00:00",
+      "nextAction": "Authorized to merge PR #521 and prune associated worktree/branches. Resolve main conflict, verify, land through guard, archive and retire.",
+      "ledger": "docs/superpowers/plans/2026-10-18-plaza-fullscreen-polish.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-plaza-fullscreen-polish-20261018",
+      "filesOwned": [
+        "preview/src/plaza-table-games.js",
+        "preview/src/plaza-table-games.css",
+        "preview/e2e/plaza-game-layout.js"
+      ],
+      "requiredChecks": [
+        "Focused table-game behavioral tests",
+        "plaza-game-layout, plaza-morris, salon-guide browser journeys",
+        "Shared table-game browser coverage",
+        "pnpm run verify",
+        "Exact-head hosted preview before landing"
+      ],
+      "pr": 521,
+      "verification": {
+        "focused": "26/26 passed",
+        "browser": "Five journeys passed; final layout 47/47 checks passed after reconnect interruption. Light/dark, checkers lesson, all board shapes, phone and short-window screenshots inspected.",
+        "remainingCore": "Desktop 76/76, build, Python lint/format/tests 141/141, demo checks and secret scan passed.",
+        "gaps": "Full preview suite timed out at 600s; server suite 667 pass, 1 fail, 204 skips. Office recovery failure passed isolated 1/1; unchanged source matches main. Hosted exact-head checks pending; no physical Safari/iPhone or human accessibility acceptance."
+      },
+      "leaseUntil": "2026-10-18T18:37:15.104049+00:00"
     }
   ]
 }

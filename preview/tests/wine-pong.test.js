@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { RIM, TABLE, THROWS_PER_TURN, aimAt, glassAt, landing, notation, play, replay, resolve, startGame, trajectory } from '../src/wine-pong-rules.js';
 import { WOBBLE, chooseThrow } from '../src/wine-pong-opponent.js';
-import { winePongSide, winePongStand } from '../src/plaza-salon-plan.js';
+import { WINE_PONG_LEAVE, WINE_PONG_REACH, winePongNear, winePongOrigin, winePongPoint, winePongSide, winePongStand } from '../src/plaza-salon-plan.js';
 
 test('two racks of six glasses, a triangle at each end, none touching', () => {
   for (const side of [0, 1]) {
@@ -77,6 +77,9 @@ test('the ball flies from the hand and comes to rest where the throw says', () =
   assert.ok(Math.hypot(path.at(-1)[0] - glassAt(1, 5)[0], path.at(-1)[1] - glassAt(1, 5)[1]) < 0.01, 'into the glass');
   const long = trajectory(0, resolve(state, 0.5, 1));
   assert.ok(long.at(-1)[2] < 0.1, 'a long miss falls to the paving');
+  const rimOut = { result: 'rim-out', land: [0.95, 0.08], glass: null };
+  const rattle = trajectory(0, rimOut);
+  assert.ok(rattle.length > 25 && rattle.at(-1)[1] > rimOut.land[1], 'a rim-out visibly kicks away from contact');
 });
 
 test('each side stands just beyond its own end of the table', () => {
@@ -84,4 +87,46 @@ test('each side stands just beyond its own end of the table', () => {
   assert.equal(winePongSide(table, winePongStand(table, 0)), 0);
   assert.equal(winePongSide(table, winePongStand(table, 1)), 1);
   assert.equal(winePongSide(table, [10, 20]), null, 'not from the middle of the table');
+});
+
+test('repositioning keeps a game while the visitor is near the table; only leaving it ends the game', () => {
+  const table = { x: 10, north: 20, heading: 0.3 };
+  // Off the end but close (beside it, or a step back): no stance, but still at the table.
+  for (const [u, v] of [[-1.7, 1.45], [-3.2, 0], [1.7, -1.6], [0, 0.9]]) {
+    const point = winePongPoint(table, [u, v]);
+    assert.equal(winePongSide(table, point), null, `${u}, ${v} is off the throwing end`);
+    assert.equal(winePongNear(table, point), true, `${u}, ${v} is still at the table`);
+  }
+  const edge = WINE_PONG_REACH + WINE_PONG_LEAVE;
+  assert.equal(winePongNear(table, winePongPoint(table, [-1.7 - edge + 0.01, 0])), true);
+  assert.equal(winePongNear(table, winePongPoint(table, [-1.7 - edge - 0.01, 0])), false, 'walking well away leaves the table');
+  assert.equal(winePongNear(table, winePongPoint(table, [0, 4])), false);
+});
+
+test('world standing points become actual table-local release origins', () => {
+  const table = { x: 10, north: 20, heading: Math.PI / 4 };
+  for (const side of [0, 1]) {
+    const at = winePongStand(table, side);
+    assert.deepEqual(winePongOrigin(table, side, at).map(value => Number(value.toFixed(3))), [side === 0 ? -1.7 : 1.7, 0]);
+  }
+  const [east, north] = [table.x - 1.7 * Math.cos(table.heading) - 0.5 * Math.sin(table.heading), table.north - 1.7 * Math.sin(table.heading) + 0.5 * Math.cos(table.heading)];
+  assert.deepEqual(winePongOrigin(table, 0, [east, north]).map(value => Number(value.toFixed(3))), [-1.7, 0.5]);
+  assert.equal(winePongOrigin(table, 0, [table.x, table.north]), null);
+});
+
+test('physical stance changes landing and launch while old throws replay unchanged', () => {
+  const left = [-1.7, -0.45], right = [-1.7, 0.45], target = glassAt(1, 5);
+  const shot = aimAt(0, target, left);
+  assert.ok(shot.aim >= 0 && shot.aim <= 1 && shot.power >= 0 && shot.power <= 1);
+  assert.ok(Math.hypot(...landing(0, shot.aim, shot.power, left).map((value, index) => value - target[index])) < 1e-9);
+  assert.ok(Math.hypot(...landing(0, shot.aim, shot.power, right).map((value, index) => value - target[index])) > 0.5);
+  const recorded = notation(shot.aim, shot.power, left);
+  const state = replay(11, [recorded]).state;
+  assert.deepEqual(state.last.origin, left);
+  assert.deepEqual(trajectory(0, state.last)[0].slice(0, 2), left);
+  assert.deepEqual(replay(11, [recorded]).state, state);
+  const legacy = notation(0.5, 0.5);
+  assert.equal(legacy.split(',').length, 2);
+  assert.equal(replay(11, [legacy]).state.last.origin, null);
+  assert.throws(() => play(startGame(), 0.5, 0.5, [-0.8, 0]), /origin/i);
 });
