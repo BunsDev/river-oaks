@@ -8,11 +8,12 @@ import * as THREE from 'three';
 import { createWalkingEnvironment } from '../src/walking.js';
 import { AVATAR_ENVELOPE } from '../src/workplace-room.js';
 import { buildIpicInterior } from '../src/ipic-interior.js';
-import { IPIC_CAMERAS, ipicFloor } from '../src/ipic-plan.js';
+import { IPIC_CAMERAS, IPIC_SCREEN, ipicFloor } from '../src/ipic-plan.js';
 import { IPIC_LOUNGE_CARPET, districtSignLayout } from '../src/ipic-materials.js';
 
 const world = JSON.parse(readFileSync(new URL('../public/data/district.json', import.meta.url)));
-const room = createWalkingEnvironment(world).rooms.find(r => r.interior === 'ipic-photo-v1');
+const environment = createWalkingEnvironment(world);
+const room = environment.rooms.find(r => r.interior === 'ipic-photo-v1');
 const group = buildIpicInterior(room, { textures: false, local: true });
 group.updateMatrixWorld(true);
 const meshes = []; group.traverse(item => { if (item.isMesh && !item.isInstancedMesh) meshes.push(item); });
@@ -168,4 +169,47 @@ test('P14: dense pothos trails from timber beams, all of it above the tallest ac
     if (!over(bar, v.x, -v.z)) lowest = Math.min(lowest, v.y);
   }
   assert.ok(lowest >= 6 + AVATAR_ENVELOPE.height, `the lowest leaf over walkable floor is at ${lowest.toFixed(2)}`);
+});
+
+// Auditorium against IMG_9767 (photo review P15, P16; Val, 2026-10-18).
+const recliner = key => room.ipicSeats.find(s => s.key === key);
+const free = (a, d) => { const [x, n] = room.toWorld(a, d); return environment.isFree(x, -n); };
+
+test('P15: stadium risers lift the back row 0.4 m over the front row, with no jump underfoot', () => {
+  const back = recliner('recliner-0-1'), front = recliner('recliner-1-1');
+  assert.ok(Math.abs(ipicFloor(back.d) - ipicFloor(front.d) - .4) < 1e-9, `${ipicFloor(back.d)} over ${ipicFloor(front.d)}`);
+  for (let d = 25.5; d < 34; d += .01) assert.ok(Math.abs(ipicFloor(d + .01) - ipicFloor(d)) <= .0051, `the support jumps at d ${d.toFixed(2)}`);
+  // The back row's cushions are drawn on the riser.
+  const cushion = s => hitFrom(at(s.a, 9, s.d), [0, -1, 0]);
+  assert.equal(cushion(back)?.object.name, 'Auditorium: ipic-cognac-leather');
+  assert.ok(Math.abs(cushion(back).point.y - cushion(front).point.y - .4) < .02, `${cushion(back).point.y} vs ${cushion(front).point.y}`);
+});
+
+test('P15: both side aisles step down with lit nosings, the west one past the handrail; across the seats a riser wall closes the drop', () => {
+  for (const a of [-4.85, 5.5]) {
+    let lit = 0;
+    for (let d = 26; d < 31.5; d += .025) if (hitFrom(at(a, 9, d), [0, -1, 0])?.object.name === 'Auditorium: ipic-warm-lamp') lit++;
+    assert.ok(lit >= 6, `${lit} lit nosing samples down the aisle at ${a}`);
+    assert.ok(free(a, 30.5), `the aisle at ${a} is open where it steps down`);
+  }
+  for (const a of [-2, 0, 2, 4]) assert.equal(free(a, 30.3), false, `a body can step off the riser at ${a}`);
+  // The handrail follows the steps: it stands about 0.9 m over the floor along the whole aisle.
+  for (const d of [27, 28.5, 30.5, 32.5]) {
+    const rail = hitFrom(at(-5.55, 9, d), [0, -1, 0]);
+    assert.ok(rail && Math.abs(rail.point.y - ipicFloor(d) - .92) < .06, `rail at ${d}: ${rail?.object.name} ${rail?.point.y} over ${ipicFloor(d)}`);
+  }
+});
+
+test('P16: the screen spans nearly the whole front wall, below the ceiling and clear of the floor', () => {
+  const inner = room.width - .36, left = IPIC_SCREEN.a - IPIC_SCREEN.width / 2, right = IPIC_SCREEN.a + IPIC_SCREEN.width / 2;
+  const bottom = 6 + IPIC_SCREEN.y - IPIC_SCREEN.height / 2, top = 6 + IPIC_SCREEN.y + IPIC_SCREEN.height / 2;
+  assert.ok(IPIC_SCREEN.width >= .9 * inner, `the screen is ${IPIC_SCREEN.width} m of a ${inner.toFixed(2)} m wall`);
+  assert.ok(left > room.aMin + .18 && right < room.aMax - .18, `${left}..${right} inside the walls`);
+  assert.ok(top <= 10.4 - .1 && bottom >= 6.5, `screen ${bottom}..${top}`);
+  // From a front-row seated eye every corner of it is screen.
+  const seat = recliner('recliner-1-1'), eye = at(seat.a, ipicFloor(seat.d) + seat.height + .69, seat.d);
+  for (const [a, y] of [[left + .1, bottom + .1], [right - .1, bottom + .1], [left + .1, top - .1], [right - .1, top - .1]]) {
+    const target = at(a, y, IPIC_SCREEN.d), hit = hitFrom(eye, target.map((v, i) => v - eye[i]));
+    assert.equal(hit?.object.name, 'Auditorium: ipic-cinema-screen', `corner ${a},${y}`);
+  }
 });

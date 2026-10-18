@@ -5,7 +5,7 @@ import { createIpicMaterials, districtSignLayout } from './ipic-materials.js';
 
 // Where the upper lounge's carpet meets the Tuck Room's boards, west of the bar stools (a = 3.4).
 const TUCK_ROOM_EDGE = 2.65;
-import { IPIC_BACK_BAR, IPIC_BAR, IPIC_DARTS, IPIC_ESCALATOR, IPIC_FLIGHTS, IPIC_INTERIOR, IPIC_PLANTERS, IPIC_SCREEN, IPIC_SOFA_ARMS, IPIC_SOFA_D } from './ipic-plan.js';
+import { IPIC_BACK_BAR, IPIC_BAR, IPIC_DARTS, IPIC_ESCALATOR, IPIC_FLIGHTS, IPIC_INTERIOR, IPIC_PLANTERS, IPIC_RISER, IPIC_SCREEN, IPIC_SOFA_ARMS, IPIC_SOFA_D, ipicFloor } from './ipic-plan.js';
 import { dartboardPixel } from './dartboard-texture.js';
 
 // Editable metre-scale scene. Local +X=across frontage, -Z=into the venue,
@@ -95,7 +95,7 @@ export function buildIpicInterior(room, options = {}) {
     box(m.leather, a, y, d, 1, 1, 1, { shape: barrelShell, yaw });
   }
   function recliner(seat) {
-    const { a, d } = seat, y = 6;
+    const { a, d } = seat, y = ipicFloor(d);
     soft(m.black, a, y + .18, d, 1.15, .32, 1.4);
     soft(m.leather, a, y + .52, d, .83, .25, 1.02);
     soft(m.leather, a, y + 1.01, d - .47, .88, .95, .24, { pitch: -.13 });
@@ -344,14 +344,35 @@ export function buildIpicInterior(room, options = {}) {
   box(m.black, 5.4, 7.5, 25.86, 1.35, .85, .05);
   box(m.marble, 5.4, 7.06, 25.62, 1.5, .055, .45);
 
-  section('Auditorium'); floor(m.confetti, 26, 34, 6); ceiling(26, 34, 10.4, m.black);
+  // Stadium risers as in IMG_9767 (P15): the back row's platform stands IPIC_RISER.rise above the front
+  // row's floor, with steps up just inside the doorway across the room and down the side aisle. Treads rise
+  // 10 cm over the continuous support (ipicFloor), as on the escalators; the aisle's nosings are lit.
+  section('Auditorium');
+  const { rise, up: [u0, u1], down: [w0, w1], wall: [r0, r1] } = IPIC_RISER, steps = Math.round(rise / .1);
+  floor(m.confetti, 26, u0, 6); floor(m.confetti, u1, w0, 6 + rise); floor(m.confetti, w1, 34, 6);
+  // Under the front row the floor starts at the riser; in the aisles the treads are the floor until w1.
+  box(m.confetti, (r0 + r1) / 2, 6 - .12, (w0 + w1) / 2, r1 - r0, .24, w1 - w0);
+  ceiling(26, 34, 10.4, m.black);
+  const aisles = [[room.aMin + .09, r0], [r1, room.aMax - .09]], lit = [[-5.5, r0], [r1, room.aMax - .15]];
+  for (let k = 0; k < steps; k++) {
+    const upDepth = (u1 - u0) / steps, upTop = 6 + (k + 1) * .1, downDepth = (w1 - w0) / steps, downTop = 6 + rise - k * .1;
+    box(m.confetti, room.center, (6 + upTop) / 2, u0 + (k + .5) * upDepth, room.width, upTop - 6, upDepth);
+    for (const [a0, a1] of aisles) box(m.confetti, (a0 + a1) / 2, (6 + downTop) / 2, w0 + (k + .5) * downDepth, a1 - a0, downTop - 6, downDepth);
+    for (const [a0, a1] of lit) {
+      box(m.glow, (a0 + a1) / 2, upTop + .004, u0 + k * upDepth + .025, a1 - a0, .008, .03);
+      box(m.glow, (a0 + a1) / 2, downTop + .004, w0 + (k + 1) * downDepth - .025, a1 - a0, .008, .03);
+    }
+  }
+  // The riser wall across the seats, under the front row's backs.
+  box(m.black, (r0 + r1) / 2, 6 + rise / 2, w0 + .02, r1 - r0, rise, .04);
   for (const a of [room.aMin, room.aMax]) box(m.black, a, 8.2, 30, .18, 4.4, 8);
   box(m.black, room.center, 8.2, 33.92, room.width, 4.4, .16);
   panel(m.screen, IPIC_SCREEN.a, 6 + IPIC_SCREEN.y, IPIC_SCREEN.d, IPIC_SCREEN.width, IPIC_SCREEN.height);
   for (const seat of room.ipicSeats.filter(s => s.key.startsWith('recliner'))) recliner(seat);
-  for (const d of [27, 28.5, 30, 31.5, 33]) box(m.glow, -5.4, 6.05, d, .18, .025, .035);
-  rod(m.steel, [-5.55, 6.9, 27], [-5.55, 6.9, 33], .023);
-  for (const d of [27, 29, 31, 33]) rod(m.steel, [-5.55, 6, d], [-5.55, 6.9, d], .02);
+  // The aisle handrail follows the steps, 0.92 m over the floor.
+  const railAt = [27, u1, w0, w1, 33];
+  for (let i = 1; i < railAt.length; i++) rod(m.steel, [-5.55, ipicFloor(railAt[i - 1]) + .92, railAt[i - 1]], [-5.55, ipicFloor(railAt[i]) + .92, railAt[i]], .023);
+  for (const d of [27, 29, 31, 33]) rod(m.steel, [-5.55, ipicFloor(d), d], [-5.55, ipicFloor(d) + .92, d], .02);
 
   for (const batch of batches.values()) {
     const flat = batch.geometries.map(g => g.index ? g.toNonIndexed() : g);

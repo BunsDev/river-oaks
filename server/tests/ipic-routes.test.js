@@ -11,6 +11,7 @@ import { LEAVE_GRACE_MS, createRedisRoom } from '../redis-room.js';
 import { createWalkingEnvironment } from '../../preview/src/walking.js';
 import { AVATAR_ENVELOPE } from '../../preview/src/workplace-room.js';
 import { IPIC_SEATED_REACH, ipicClearance, ipicReachable, seatApproach, seatedFootprint, widestRoute } from '../../preview/src/ipic-circulation.js';
+import { ipicFloor } from '../../preview/src/ipic-plan.js';
 
 const data = JSON.parse(readFileSync(new URL('../../preview/public/data/district.json', import.meta.url)));
 const env = createWalkingEnvironment(data), room = env.rooms.find(r => r.interior === 'ipic-photo-v1');
@@ -89,7 +90,7 @@ function sitSpot(seat, blockers, from) {
     if (Math.hypot(a - seat.a, d - seat.d) <= 1.6 && reachable([a, d])) candidates.push({ point: [a, d], clearance: ipicClearance(room, [a, d], blockers) });
   }
   const eye = ([a, d]) => { const [x, n] = room.toWorld(a, d); return [x, n, env.groundAt(x, -n) + 1.68]; };
-  const [sx, sn] = room.toWorld(seat.a, seat.d), cushion = [sx, sn, room.floor + 6 + seat.height + .6];
+  const [sx, sn] = room.toWorld(seat.a, seat.d), cushion = [sx, sn, room.floor + ipicFloor(seat.d) + seat.height + .6];
   const spot = candidates.sort((x, y) => y.clearance - x.clearance).find(c => env.hasSightLine(eye(c.point), cushion));
   assert.ok(spot, `nowhere to sit in ${seat.key}:${seat.slot} from`);
   return spot.point;
@@ -137,7 +138,7 @@ test('every recliner is reached, held exclusively, stood from and left with ever
     const { t, blockers } = takeSeat(seat);
     const stood = t.command('walker', { type: 'stand' });
     assert.equal(stood.ok, true, `${seatId(seat)} stand: ${stood.error}`);
-    assert.equal(stood.player.position[2], room.floor + 6, 'stands on the same floor');
+    assert.equal(stood.player.position[2], room.floor + ipicFloor(seat.stand[1]), 'stands on its row\'s floor');
     t.walk('walker', route(local(stood.player.position), DOOR, blockers).path);
     assert.equal(t.command('walker', { type: 'travel', storeId: room.storeId, mode: 'leave' }).ok, true);
   }

@@ -5,7 +5,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { createWalkingEnvironment } from '../preview/src/walking.js';
 import { AVATAR_ENVELOPE } from '../preview/src/workplace-room.js';
-import { IPIC_INTERIOR, IPIC_SCREEN } from '../preview/src/ipic-plan.js';
+import { IPIC_INTERIOR, IPIC_SCREEN, ipicFloor } from '../preview/src/ipic-plan.js';
 import { IPIC_SEATED_REACH, ipicBottleneck, ipicClearance, ipicReachable, largestCircle, seatApproach, seatedFootprint } from '../preview/src/ipic-circulation.js';
 import { SEAT_REACH } from '../preview/src/shared-seating.js';
 
@@ -48,7 +48,7 @@ export function ipicReviewData(world = JSON.parse(readFileSync(new URL('preview/
   // Where the widest accepted body sits each recliner from, with the other nine seats held: the
   // nearest spot it can walk to from the doorway that is within the server's sit reach (SEAT_REACH,
   // flat distance) and sees the cushion as the server's sit check does (eye 1.68 m, cushion + 0.6 m).
-  const world3 = ([a, d], above) => { const [x, n] = room.toWorld(a, d); return [x, n, room.floor + 6 + above]; };
+  const world3 = ([a, d], above) => { const [x, n] = room.toWorld(a, d); return [x, n, room.floor + ipicFloor(d) + above]; };
   const reclinerSitSpots = room.ipicSeats.filter(s => s.key.startsWith('recliner')).map(seat => {
     const blockers = footprints(seat), reachable = ipicReachable(room, doorway, { radius: AVATAR_ENVELOPE.bodyHalfWidth, blockers, step: .1 });
     const cushion = world3([seat.a, seat.d], seat.height + .6), candidates = [];
@@ -82,11 +82,12 @@ export function ipicReviewData(world = JSON.parse(readFileSync(new URL('preview/
   const screen = IPIC_SCREEN, floor = 6, left = screen.a - screen.width / 2, right = screen.a + screen.width / 2;
   const bottom = screen.y - screen.height / 2, top = screen.y + screen.height / 2, deg = r => round(r * 180 / Math.PI, 1);
   // The recliner in front blocks along its headrest: top 1.545 m, back face 0.63 m behind its seat origin (ipic-interior.js).
-  const HEADREST = { top: 1.545, behind: .63 };
+  // Heights are over the front row's floor (6 m); the back row sits on the riser (IPIC_RISER).
+  const HEADREST = { top: 1.545, behind: .63 }, raised = s => ipicFloor(s.d) - floor;
   const seats = room.ipicSeats.filter(s => s.key.startsWith('recliner')).map(s => {
-    const eye = s.height + SEATED_EYE, distance = screen.d - s.d;
+    const eye = raised(s) + s.height + SEATED_EYE, distance = screen.d - s.d;
     const front = room.ipicSeats.find(o => o.key.startsWith('recliner') && o.a === s.a && o.d > s.d);
-    const lowestVisible = front ? eye + (HEADREST.top - eye) / (front.d - HEADREST.behind - s.d) * distance : bottom;
+    const lowestVisible = front ? eye + (raised(front) + HEADREST.top - eye) / (front.d - HEADREST.behind - s.d) * distance : bottom;
     return { seat: `bench:ipic-${s.key}:${s.slot}`, at: [s.a, s.d], eyeM: round(eye, 2), distanceM: round(distance, 2),
       horizontalDeg: deg(Math.atan2(right - s.a, distance) - Math.atan2(left - s.a, distance)),
       offAxisDeg: deg(Math.atan2(screen.a - s.a, distance)), topElevationDeg: deg(Math.atan2(top - eye, distance)),
