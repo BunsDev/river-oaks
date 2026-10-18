@@ -58,7 +58,8 @@ export function createServerClock({ now = () => performance.now() } = {}) {
 // blocked (autoplay needs a gesture), error, unsupported (no playable source), disposed.
 // failure says why this viewer cannot watch: autoplay (needs a gesture), decode (no encoding
 // played), network (the download failed), stalled (no progress for SCREENING_LOAD.stallMs),
-// playback (anything else play() refused), or null.
+// playback (anything else play() refused), unknown (a film this version has no entry for, #499),
+// or null.
 //
 // Each element load (a new film, a fallback encoding, Retry, a stop) starts a new generation;
 // a play() promise or a frame callback from an earlier generation changes nothing (#498).
@@ -156,7 +157,12 @@ export function createScreeningPlayer({ media: element, clock, onChange = () => 
       if (state === 'disposed' || !view) return;
       if (shared && view.epoch === shared.epoch && view.revision < shared.revision) return;
       shared = { ...view };
-      if (shared.mediaId && shared.mediaId !== mediaId && Object.hasOwn(catalog, shared.mediaId)) load(shared.mediaId);
+      if (shared.mediaId && shared.mediaId !== mediaId) {
+        if (Object.hasOwn(catalog, shared.mediaId)) load(shared.mediaId);
+        // A film added by a newer build: release the previous film rather than play it under the new
+        // film's timeline, and say this version cannot show it.
+        else { mediaId = shared.mediaId; attempt = null; reset(); element.removeAttribute('src'); element.load(); failure = 'unknown'; set('unsupported'); }
+      }
       if (!shared.mediaId && state !== 'idle') unload();
     },
     tick() {

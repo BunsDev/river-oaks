@@ -358,6 +358,19 @@ test('presented frames and raw drift are reported separately from the requested 
   assert.equal(f.player.stats().presented.mediaTimeMs, 40);
 });
 
+test('a film this version does not know releases the previous film and says so (#499)', async () => {
+  const f = setup({ offset: 53_000 });
+  f.player.apply(filmView(ORIGINAL)); f.player.tick(); await tick();
+  assert.equal(f.player.stats().state, 'playing');
+  // A newer build added a film; this client has no entry for it.
+  f.player.apply(view({ mediaId: 'ipic-later-v1', screeningId: 'ipic-e1-2', revision: 3, durationMs: 60_000 }));
+  f.player.tick(); await tick();
+  assert.deepEqual([f.player.stats().state, f.player.stats().failure, f.player.stats().mediaId, f.media.src, f.media.paused], ['unsupported', 'unknown', 'ipic-later-v1', '', true],
+    'the previous film is not played under the new film’s timeline');
+  f.player.apply(filmView(ORIGINAL, { screeningId: 'ipic-e1-3', revision: 5 }));
+  assert.deepEqual([f.player.stats().state, f.player.stats().failure], ['loading', null], 'a known film loads again');
+});
+
 test('joining a paused film that never loads is reported stalled too, not shown as paused forever', async () => {
   const { SCREENING_LOAD } = await import('../src/ipic-screening.js');
   const f = setup({ offset: 53_000 });
