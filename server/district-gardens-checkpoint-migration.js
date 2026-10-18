@@ -61,10 +61,11 @@ function relocate(payload, environment, moves) {
 }
 
 /** Re-sign a validated town checkpoint for the district revision this coordinator serves. */
-export function recoverDistrictGardensCheckpoint({ worldData, checkpoint, worldId = DEFAULT_WORLD_ID, now, isAdmin, screeningHosts, officeLayout } = {}) {
+export function recoverDistrictGardensCheckpoint({ worldData, checkpoint, worldId = DEFAULT_WORLD_ID, now, isAdmin, screeningHosts, officeLayout, campusOperators } = {}) {
   try {
     if (worldId !== DEFAULT_WORLD_ID || !worldData || !checkpoint) return rejected();
-    const options = { worldId, screeningHosts, officeLayout, ...(now ? { now } : {}), ...(isAdmin ? { isAdmin } : {}) };
+    // The same configuration the coordinator runs with, campus operators (#509) included.
+    const options = { worldId, screeningHosts, officeLayout, ...(campusOperators ? { campusOperators } : {}), ...(now ? { now } : {}), ...(isAdmin ? { isAdmin } : {}) };
     const toCampus = Boolean(worldData.gardenCampus);
     const fromData = toCampus ? detachGardenCampus(worldData) : attachGardenCampus(worldData);
     const from = createSharedWorld(fromData, options);

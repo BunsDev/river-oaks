@@ -106,35 +106,52 @@ test('the switch refuses other worlds, another campus revision, corruption and l
 });
 
 const testRedis = (name, fn) => test(name, { skip: !process.env.REDIS_URL }, fn);
-testRedis('a Redis coordinator switches garage -> Gardens -> garage once each, keeping the town', async t => {
+testRedis('a Redis coordinator switches district only to a newer epoch; an older deployment never switches it back', async t => {
   const redis = new Redis(process.env.REDIS_URL, { lazyConnect: true, maxRetriesPerRequest: 1, retryStrategy: null });
   redis.on('error', () => {});await redis.connect();
   const prefix = `{river-oaks:test:${randomUUID()}}`, rooms = [];let time = 100000;
-  const create = worldData => { const room = createRedisRoom({ redis, prefix, worldData, authorize: async () => true, now: () => time, isAdmin: () => false });rooms.push(room);return room; };
+  const create = (worldData, districtEpoch = 0) => { const room = createRedisRoom({ redis, prefix, worldData, districtEpoch, authorize: async () => true, now: () => time, isAdmin: () => false });rooms.push(room);return room; };
   t.after(async () => { await Promise.all(rooms.map(room => room.close()));const keys = await redis.keys(`${prefix}:*`);if (keys.length) await redis.del(...keys);await redis.quit(); });
   const identity = userId => ({ userId, name: userId, sessionId: `${userId}-session`, expiresAt: time + 120000 });
   const join = (room, userId, connectionId) => room.request({ type: 'join', identity: identity(userId), connectionId });
   const command = (room, userId, connectionId, message) => { time += 2000;return room.request({ type: 'command', userId, connectionId, message }); };
+  const committed = async () => JSON.parse(inflateSync(await redis.getBuffer(`${prefix}:state`)));
   const logs = [];t.mock.method(console, 'info', message => logs.push(JSON.parse(message)));
+  // Today's town: the garage at epoch 0 commits no district record at all.
   const first = create(garage);
   assert.equal((await join(first, 'alice', 'one')).ok, true);
   assert.equal((await command(first, 'alice', 'one', { type: 'chat', text: 'Before the campus.' })).ok, true);
   await first.close();
-  const campus = create(gardens);
+  assert.equal(Object.hasOwn(await committed(), 'district'), false, 'the default garage leaves the durable record as it was');
+  // A switch that forgets to raise the epoch fails closed.
+  await assert.rejects(join(create(gardens, 0), 'alice', 'stale'), /Invalid durable town district/);
+  // Epoch 1 serves the campus: one migration, the town kept.
+  const campus = create(gardens, 1);
   assert.equal((await join(campus, 'alice', 'two')).ok, true);
   assert.deepEqual(logs, [{ event: 'district_gardens_checkpoint_migrated', from: 'garage', to: 'gardens', moved: 0 }]);
   assert.equal((await campus.read()).snapshot.chat.at(-1).text, 'Before the campus.');
-  assert.equal(JSON.parse(inflateSync(await redis.getBuffer(`${prefix}:state`))).checkpoint.worldFingerprint, hash(gardens));
+  assert.deepEqual((await committed()).district, { revision: DISTRICT_REVISION_GARDENS, epoch: 1 });
+  assert.equal((await committed()).checkpoint.worldFingerprint, hash(gardens));
   assert.equal((await command(campus, 'alice', 'two', { type: 'travel', storeId: 'campus:T2-F1-hall', mode: 'enter' })).ok, true);
   await campus.close();
-  const again = create(gardens);
+  // An old deployment (garage, epoch 0) still serving sockets refuses the newer town instead of switching it back.
+  const before = await redis.getBuffer(`${prefix}:state`);
+  await assert.rejects(join(create(garage, 0), 'alice', 'old'), /Invalid durable town district/);
+  assert.ok((await redis.getBuffer(`${prefix}:state`)).equals(before), 'the refused coordinator changed nothing');
+  // The campus at epoch 1 carries on without a second migration.
+  const again = create(gardens, 1);
   assert.equal((await join(again, 'alice', 'three')).ok, true);
   assert.equal(logs.length, 1, 'the switch is committed once');
   await again.close();
-  const rollback = create(garage);
+  // The configuration rollback: the garage at epoch 2 moves the hall visitor to the street.
+  const rollback = create(garage, 2);
   assert.equal((await join(rollback, 'alice', 'four')).ok, true);
   assert.deepEqual(logs.at(-1), { event: 'district_gardens_checkpoint_migrated', from: 'gardens', to: 'garage', moved: 1 });
   const alice = (await rollback.read()).snapshot.players.find(player => player.id === 'alice');
   assert.equal(onCampus(alice.position), false, 'the hall visitor stands on the street after the rollback');
   assert.equal((await rollback.read()).snapshot.chat.at(-1).text, 'Before the campus.');
+  assert.deepEqual((await committed()).district, { revision: null, epoch: 2 });
+  await rollback.close();
+  // And the campus deployment at epoch 1, if still alive, cannot take the town back.
+  await assert.rejects(join(create(gardens, 1), 'alice', 'late'), /Invalid durable town district/);
 });
