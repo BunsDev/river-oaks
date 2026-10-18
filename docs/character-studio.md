@@ -1,9 +1,10 @@
 # Character Studio architecture decision (#440)
 
-Status: contract increment #457 is on main. This branch integrates the editor,
-rendering and persistence stack (#461, #462, #464, #484), human-only characters,
-Jevica-only invited office access and the expanded Studio. Release acceptance
-remains subject to the verification and device gates below.
+Status: contract increment #457 is on main, and so are the editor, rendering and
+persistence stack (#461, #462, #464), #441's guided creation (through #496),
+human-only characters, Jevica-only invited office access and the expanded Studio.
+#484 carries the remaining #441 tailoring fixes. Release acceptance remains
+subject to the verification and device gates below.
 
 ## Decision and evidence
 Extend the authored character system with constrained modular customization.
@@ -373,6 +374,45 @@ license is inferred from the base files. The `.5m` position-morph and 4096 textu
 limits are integrity envelopes for this catalog, not interactive design controls
 or device performance promises.
 
+
+### Provenance of each exposed look (2026-10-18)
+
+The human-only catalog has 11 looks, built on three pinned rigs. `CHARACTER_ASSETS`
+in `character-assets.js` pins each rig's bytes and SHA-256 and points to its source
+receipt. `character-definition.test.js` refuses a look whose rig is not pinned,
+and `scripts/tests/character-assets-audit.test.js` fails a changed hash or an
+unlicensed or mismatched receipt.
+
+| Look | Rig (SHA-256 prefix) | Generator | License (receipt) | Source assets in the rig |
+| --- | --- | --- | --- | --- |
+| jevica, sable-human, woman-tailored, lyra-human, forest-aristocrat-feminine | jevica (`722b96e2fd77`) | MPFB 2.0.17 / Blender 4.5.3 LTS | CC0-1.0 (`jevica.sources.json`) | skin young_asian_female, hair long01, eyes high-poly, eyelashes01, eyebrow001; original fitted shell |
+| rowan-human | man-tailored (`ae3834fbc9d9`) | MPFB 2.0.17 / Blender 5.2.1 LTS | CC0-1.0 (`sources.json`) | middleage_african_male, male_elegantsuit01, short04, shoes03 |
+| man-tailored, man-workwear, kai-explorer, kai-noir, forest-aristocrat | man-casual (`e7ac712585ba`) | MPFB 2.0.17 / Blender 5.2.1 LTS | CC0-1.0 (`sources.json`) | young_caucasian_male, male_casualsuit02, short01, shoes01 |
+
+The source assets are MakeHuman's CC0 system assets. Their credits are in
+`preview/public/assets/characters/README.md` and `LICENSE-CC0.md`. MPFB itself is a
+GPL build tool and is not shipped.
+
+Everything else a look wears is authored in this repository: no third-party
+garment, hair or texture asset is loaded for these looks.
+
+- **Jevica:** `player-costume.js` → `jevica-costume.js`, with `jevica-drape.js`,
+  `jevica-embroidery.js`, `bodice-fitting.js` and `riding-clothes.js`.
+- **The other ten:** `romance-look.js` → `reference-archetypes.js`.
+- **Baked deformation data** carries its own receipt, which hashes the authored
+  inputs, the rig and the generator, and states its provenance:
+
+  | Bake receipt | Looks |
+  | --- | --- |
+  | `coat-tail-morph-receipt.json` | man-tailored, man-workwear, kai-noir |
+  | `lyra-drape-morph-receipt.json` | lyra-human |
+  | `silvan-drape-morph-receipt.json` | forest-aristocrat, forest-aristocrat-feminine |
+  | `skirt-seat-morph-receipt.json` | sable-human |
+  | `vesper-skirt-morph-receipt.json` | woman-tailored |
+
+This covers the shipped catalog's assets and their licenses. It doesn't cover
+npm dependency licenses (three.js and others), which are pinned in
+`pnpm-lock.yaml` and reviewed by the dependency-review check, not here.
 
 ## Runtime pose diagnostics (#442, incomplete acceptance)
 
@@ -974,7 +1014,10 @@ had been 2 cm inside the chest, so they were never visible. `chest-tailoring.tes
 raycasts the skinned suit independently and requires every chest vertex of the
 Kai formal, noir and explorer looks and Aurel to sit no more than 4 mm inside
 it and no more than 3.5 cm in front of it, allowing for layered pieces. Negative controls with sunk panels or lifted stars fail.
-The pieces use fewer triangles than the boxes they replace.
+The pieces use fewer triangles than the boxes they replace. Rowan's shirt,
+lapels, pocket flaps and buttons, on the elegant-suit rig, use the same
+measurement. His shirt had sunk 1.8 cm into the chest at the collar. The test
+also covers his human and wolf looks.
 
 ### Peer revision fallback and recovery
 
