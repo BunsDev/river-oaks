@@ -17,12 +17,13 @@ export function configuredOfficeLayout(value,{onInvalid=()=>{}}={}){
   if(officeLayout(value))return value;
   onInvalid(value);return DEFAULT_OFFICE_LAYOUT;
 }
-export function createOffices({worldData,players,isAdmin,environment,changed,cancel,officeLayout:configured=DEFAULT_OFFICE_LAYOUT}) {
+export function createOffices({worldData,players,isAdmin,isGuest=()=>false,environment,changed,cancel,officeLayout:configured=DEFAULT_OFFICE_LAYOUT}) {
   if(!officeLayout(configured))throw new Error('Unknown office layout');
   const catalog=officesFor(worldData),grants=new Map(),requests=new Map(),visits=new Map();
   // The sole office uses the server-selected layout. Clients cannot choose a floor.
   const layoutFor=()=>configured;
-  const access=(id,officeId)=>isAdmin(id)?'owner':grants.get(officeId)?.find(g=>g.userId===id)?.kind??null;
+  // isGuest: the loopback dev town's invitation override; such a visitor is invited, never the owner.
+  const access=(id,officeId)=>isAdmin(id)?'owner':isGuest(id)?'invited':grants.get(officeId)?.find(g=>g.userId===id)?.kind??null;
   const leave=id=>{const visit=visits.get(id),player=players.get(id);if(!visit)return;visits.delete(id);if(player){player.poseAt=visit.at;player.moveBudget=.1;player.liftBudget=.1;}changed();};
   const publicVisit=id=>{const v=visits.get(id);return v?{id:v.id,layout:v.layout,levelId:v.levelId,elevation:officeElevationAt(officeLayout(v.layout),v.levelId,v.position),position:[...v.position],yaw:v.yaw,...(v.seat?{seat:{id:v.seat.id}}:{})}:null;};
   // Other visits in the same office and layout, and the plan seats they hold (#363).

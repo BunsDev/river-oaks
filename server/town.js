@@ -37,6 +37,14 @@ export function workosConfigured(env) {
 
 // Normal development and production both use WorkOS. Explicit fixture mode
 // retains isolated loopback identities for browser acceptance only.
+// Local development only (Val, 2026-10-18): RIVER_OAKS_DEV_INVITE_OVERRIDE=1 on the loopback dev town (local identities,
+// the acceptance fixture) makes every local identity an invited guest of owner-only homes and offices, never their
+// owner. Real sign-in, production and Vercel never honour it.
+export function devInviteOverride({ mode, env }) {
+  return mode === 'local' && env.RIVER_OAKS_ACCEPTANCE_FIXTURE === '1' && env.RIVER_OAKS_DEV_INVITE_OVERRIDE === '1'
+    && env.NODE_ENV !== 'production' && !env.VERCEL;
+}
+
 export function chooseAuth({ env, origin, devAuth = 'auto' }) {
   if (devAuth === 'workos' || env.RIVER_OAKS_DEV_AUTH === 'workos') return 'workos';
   if (devAuth === 'local' && devAuthAllowed({ origin, env })) return 'local';
@@ -67,6 +75,8 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
   const screeningHosts=parseScreeningHosts(env.RIVER_OAKS_SCREENING_HOSTS,{onInvalid:()=>console.warn(JSON.stringify({event:'screening_host_grant_ignored'}))});
   // Jevica's office layout; unset or unknown keeps the legacy room (the default and the rollback).
   const officeLayout=configuredOfficeLayout(env.RIVER_OAKS_OFFICE_LAYOUT,{onInvalid:()=>console.warn(JSON.stringify({event:'office_layout_ignored'}))});
+  const devGuests=devInviteOverride({mode,env})?{isDevGuest:()=>true}:{};
+  if(devGuests.isDevGuest)console.warn(JSON.stringify({event:'dev_invite_override',scope:'every local identity is an invited guest of owner-only homes and offices'}));
   const officeDesk=createMemoryOfficeDesk();
   const games=new Map(),pending=new Map(),debugReports=createMemoryDebugReports(),catalog=createMemoryWorldCatalog(),social=createMemorySocial(),groups=createMemoryGroups(),profiles=createMemoryProfiles(),events=createMemoryEvents(),workplace=env.RIVER_OAKS_WORKPLACE==='1'?createWorkplace({allowed:async id=>!moderation.isBanned(id)&&await waitlist.isApproved(id)}):null,avatarPreferences=createMemoryAvatarPreferences(),characters=createMemoryCharacterStore(),cyclingMiles=createMemoryCyclingMiles(),presence=createMemoryPresence(),landmarkStores=new Map();
   const landmarkStoreFor=id=>{
@@ -90,7 +100,7 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
     if(!entry || entry.meta?.template!=='region-v1')return {ok:false,error:'missing'};
     const candidate=await catalog.revisionCandidate(id,expectedDraftVersion);
     if(!candidate.ok)return {ok:false,error:candidate.reason};
-    const options=mode==='local'?{isAdmin:auth.isAdmin,worldId:id,screeningHosts,officeLayout}:{worldId:id,screeningHosts,officeLayout};
+    const options=mode==='local'?{isAdmin:auth.isAdmin,...devGuests,worldId:id,screeningHosts,officeLayout}:{worldId:id,screeningHosts,officeLayout};
     const migrated=migrateWorldCheckpoint({fromData:await catalog.getRegion(id),toData:candidate.worldData,
       checkpoint:entry.world.checkpoint(),...options});
     if(!migrated.ok)return migrated;
@@ -112,7 +122,7 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
       if(!meta && id!==worldId)return null;
       const worldData=meta?.template==='region-v1'?await catalog.getRegion(id)
         :id===DEFAULT_WORLD_ID?data:{...data,title:meta?.title??data.title};
-      const world=createSharedWorld(worldData,mode==='local'?{isAdmin:auth.isAdmin,worldId:id,screeningHosts,officeLayout}:{worldId:id,screeningHosts,officeLayout});
+      const world=createSharedWorld(worldData,mode==='local'?{isAdmin:auth.isAdmin,...devGuests,worldId:id,screeningHosts,officeLayout}:{worldId:id,screeningHosts,officeLayout});
       const game=createGameServer({characterMetrics,characterStudioEnabled:env.RIVER_OAKS_CHARACTER_STUDIO==='1',auth:sharedAuth,world,worldTitle:meta?.title??worldData.title,waitlist,waitlistAdmins:admins,debugReports,landmarks:createWorldLandmarks({catalog,storeFor:landmarkStoreFor,worldId:id,worldTitle:meta?.title??worldData.title}),social,groups,profiles,events,workplace,officeDesk,avatarPreferences,characters,cyclingMiles,presence,worldDirectory,moderation,origin,staticRoot,
         ...(id===worldId?{worldCatalog:catalog}:{}),...(mode==='local'?{isAdmin:auth.isAdmin}:{}),
         ...(id===worldId?{onApplyRegion:applyRegion}:{}),regionSha256:meta?.regionSha256,
