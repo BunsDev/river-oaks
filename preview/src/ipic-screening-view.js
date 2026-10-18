@@ -39,7 +39,7 @@ export function screenFocusPose({ eye, film, aspect, view = FOCUS_VIEW }) {
   const distance = Math.max(view.minDistance, dot(sub(eye, film.center), normal));
   const position = film.center.map((c, i) => c + normal[i] * distance);
   const wanted = framingFov(position, film, aspect, view);
-  return { position, target: [...film.center], fov: Math.min(view.maxFov, Math.max(view.minFov, wanted)), fits: wanted <= view.maxFov, distance };
+  return { position, target: [...film.center], fov: Math.min(view.maxFov, Math.max(view.minFov, wanted)), fits: wanted <= view.maxFov, distance, wanted };
 }
 
 // Smoothstep easing between the walking camera and the focused framing; reduced motion is immediate.

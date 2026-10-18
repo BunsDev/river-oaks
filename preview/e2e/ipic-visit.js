@@ -98,16 +98,20 @@ async page => {
   const seatOf = () => page.evaluate(() => { const m = window.__riverMultiplayer(); return JSON.stringify(m.snapshot.players.find(p => p.id === m.selfId).sitting); });
   const seatBefore = await seatOf(), eyeBefore = (await pose()).position;
   const reduced = await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches);
+  // Focus frames the film's own rectangle once a frame of it is on the screen (the software profile binds it at
+  // its next once-a-second draw); before that it frames the whole screen.
+  await page.waitForFunction(() => window.__riverScreening().attached, null, { timeout: 30000 });
   await page.locator('#ipic-screening [data-control="focus"]').click();
   if (reduced) check(await page.evaluate(() => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(() => done(window.__riverScreening().focus.blend))))) === 1, 'reduced motion: focus is immediate');
-  await page.waitForFunction(() => { const f = window.__riverScreening().focus; return f.on && f.blend === 1 && f.ndc; }, null, { timeout: 20000 });
+  await page.waitForFunction(() => { const f = window.__riverScreening().focus; return f.on && f.blend === 1 && f.ndc && f.film; }, null, { timeout: 20000 });
   const framed = await page.evaluate(() => {
     const s = window.__riverScreening(), f = s.focus, toPx = ([x, y]) => [(x + 1) / 2 * innerWidth, (1 - y) / 2 * innerHeight];
     // The film's centre and points just inside its four corners: each must meet the screen, nothing in front.
     const points = [[0, 0], ...f.ndc.map(([x, y]) => [x * 0.92, y * 0.92])];
     const hits = points.map(p => window.__riverDebug().pickAt(...toPx(p))?.materials ?? null);
     const button = document.querySelector('#ipic-screening [data-control="focus"]');
-    return { fits: f.fits, fov: f.fov, inView: f.ndc.every(([x, y]) => Math.abs(x) <= 1 && Math.abs(y) <= 1), hits, camera: window.__riverCarriage().camera.position, position: f.position, label: button.textContent, pressed: button.getAttribute('aria-pressed') };
+    return { fits: f.fits, fov: f.fov, wanted: f.wanted, distance: f.distance, film: f.film, aspect: f.aspect, eye: f.eye, bound: s.screen?.fit?.repeat ?? null, state: s.state,
+      inView: f.ndc.every(([x, y]) => Math.abs(x) <= 1 && Math.abs(y) <= 1), hits, camera: window.__riverCarriage().camera.position, position: f.position, label: button.textContent, pressed: button.getAttribute('aria-pressed') };
   });
   check(framed.fits && framed.inView && framed.hits.every(list => list?.includes('ipic-cinema-screen')) && framed.label === 'Look around' && framed.pressed === 'true', `focus frames the whole film, unobstructed: ${JSON.stringify(framed)}`);
   check(framed.camera.every((v, i) => Math.abs(v - framed.position[i]) < 0.01), `the camera is at the focus point: ${JSON.stringify([framed.camera, framed.position])}`);

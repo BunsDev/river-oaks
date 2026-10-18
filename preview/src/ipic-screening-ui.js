@@ -315,7 +315,7 @@ export function createIpicScreening({ host, THREE, getMultiplayer, getVenue, get
     view.blend = on ? Math.min(1, view.blend + step) : Math.max(0, view.blend - step);
     if (on && view.restoreFov === null) view.restoreFov = camera.fov;
     const film = on || view.blend > 0 ? state && !state.stopped && filmFrame(state) : null;
-    if (on && seat && film) { view.pose = screenFocusPose({ eye: seat.eye, film, aspect: camera.aspect }); view.fits = view.pose.fits; }
+    if (on && seat && film) { view.pose = { ...screenFocusPose({ eye: seat.eye, film, aspect: camera.aspect }), eye: [...seat.eye], film: [film.width, film.height], aspect: camera.aspect }; view.fits = view.pose.fits; }
     if (view.blend === 0 || !view.pose || (!film && !on)) {
       if (view.restoreFov !== null && view.blend === 0) { camera.fov = view.restoreFov; camera.updateProjectionMatrix(); view.restoreFov = null; view.pose = null; }
       return;
@@ -352,7 +352,8 @@ export function createIpicScreening({ host, THREE, getMultiplayer, getVenue, get
       const screen = state.screen.inspect();
       return { active: true, houseLights, ...state.player.stats(), canHost: state.canHost, currentTime: state.video.currentTime, paused: state.video.paused, muted: state.video.muted,
         attached: Boolean(screen.key), screen, decoded: [state.video.videoWidth, state.video.videoHeight], serverNow: state.clock.serverNow(),
-        focus: { on: state.focused, blend: view.blend, fits: view.fits, fov: view.pose?.fov ?? null, position: view.pose?.position ?? null, ndc: view.blend > 0 ? view.ndc ?? null : null }, volumeSupported: state.volumeSupported };
+        focus: { on: state.focused, blend: view.blend, fits: view.fits, fov: view.pose?.fov ?? null, wanted: view.pose?.wanted ?? null, position: view.pose?.position ?? null, eye: view.pose?.eye ?? null,
+          distance: view.pose?.distance ?? null, film: view.pose?.film ?? null, aspect: view.pose?.aspect ?? null, ndc: view.blend > 0 ? view.ndc ?? null : null }, volumeSupported: state.volumeSupported };
     },
     get houseLights() { return houseLights; },
     applyCamera,
