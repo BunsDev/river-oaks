@@ -1,0 +1,100 @@
+{
+  "createdAt": "2026-10-18T15:31:21.659Z",
+  "results": [
+    {
+      "name": "office-visit",
+      "status": "passed",
+      "seconds": 70.333,
+      "result": {
+        "checks": [
+          "All elevator phases render before walking begins",
+          "F at the lobby boards the elevator, rides upstairs and releases walking",
+          "W moves the player into the office",
+          "The back wall and storage stop movement",
+          "Leaving returns focus to the street",
+          "Reduced motion enters without the elevator camera motion",
+          "An uninvited guest cannot board",
+          "Jevica invites the visitor from her office and the guest enters",
+          "Revocation returns the guest to the lobby immediately",
+          "Revocation during boarding ends the authoritative visit and restores street controls",
+          "No guest browser errors: "
+        ]
+      }
+    },
+    {
+      "name": "office-desk",
+      "status": "passed",
+      "seconds": 25.093,
+      "result": {
+        "checks": [
+          "The desk keeps account tasks private in Jevica’s office",
+          "Authorized office opens an empty private desk",
+          "Notes, file links and result save to the account",
+          "Typing at the desk does not move the player",
+          "Completed task retains the written result",
+          "Saved work can be downloaded",
+          "Closing the desk restores office focus",
+          "Leaving, reloading and returning resumes saved work",
+          "A failed save keeps the draft and offers retry",
+          "Mobile desk fits without horizontal overflow",
+          "Visible mobile actions keep touch-sized targets",
+          "Long titles wrap fully on mobile",
+          "Small phones retain a contained layout",
+          "Removing work requires confirmation and can be cancelled",
+          "Escape leaves the desk before leaving the office",
+          "Retry reopens cached work after a failed read",
+          "Confirmed removal restores focus to the empty desk"
+        ]
+      }
+    },
+    {
+      "name": "office-computer-embed",
+      "status": "passed",
+      "seconds": 63.702,
+      "result": {
+        "checks": [
+          "The desk opens on Tasks with a Computer tab beside it",
+          "Nothing loads from Computer before its tab opens",
+          "An unsaved task asks before Computer opens",
+          "Clicking Computer again retries the task first and still asks",
+          "Signed-out Computer offers its fixed top-level sign-in, with no frame left behind",
+          "Computer sign-in happens in its own top-level tab",
+          "A fresh frame shows Computer’s own account choice before any document",
+          "Exactly one Computer frame",
+          "Computer reports an acknowledged account save in the parent status",
+          "Typing in Computer cannot move, act or talk in the office",
+          "Place sends Computer lifecycle fields only: no credentials, account or task data",
+          "Escape closes Computer’s own menu first",
+          "Escape at Computer’s top level closes the desk, removes the frame and restores office focus",
+          "The Tasks draft and its failed save survive Computer",
+          "Retry then saves the same task",
+          "Reentry starts a fresh account gate",
+          "The note saved to the Computer account comes back after the frame was destroyed and recreated",
+          "Leaving during a save waits for Computer with the frame still mounted",
+          "Computer confirms the account save before the frame is removed",
+          "A cancelled close keeps editing in the same Computer",
+          "Stale, malformed, unsupported and wrong-origin messages are ignored",
+          "Another Computer account sees only its own notes",
+          "An unsaved change asks for a decision instead of closing",
+          "Leaving after keeping a local copy says so, not “saved”",
+          "An old receipt does not reappear on the next visit to the desk",
+          "Computer recovers its local copy in the same browser, still marked unsynced",
+          "An unanswered close is not treated as a save",
+          "Leave without confirmation removes the frame and returns to the office",
+          "Ending the visit removes an unresponsive Computer at once (135 ms)",
+          "A Computer that cannot load offers retry and Open separately, with no frame left behind",
+          "Tasks keep working after Computer fails",
+          "Phone-width desk fits Computer and a touch-sized Return to office",
+          "Small phones keep the Computer view contained",
+          "Return to office works from the keyboard and restores office focus",
+          "A visitor does not inherit the office owner’s Computer session",
+          "The visitor confirms their own Computer account",
+          "The visitor sees none of another account’s notes",
+          "Revocation removes the visitor’s unresponsive Computer at once (291 ms)",
+          "No guest browser errors: ",
+          "Computer notes never reach Place task requests"
+        ]
+      }
+    }
+  ]
+}
