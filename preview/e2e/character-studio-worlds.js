@@ -27,10 +27,10 @@ async page => {
     };
     await open();
     const dialog = resident.getByRole('dialog', { name: 'Character studio' });
-    await dialog.locator('button[data-character=sable]').click();
-    await dialog.locator('[name=form]').selectOption('human');
-    await dialog.getByRole('button', { name: 'Rose silk', exact: true }).click();
-    await dialog.getByRole('button', { name: 'Espresso', exact: true }).click();
+    await dialog.locator('[data-character=sable]').click();
+    await dialog.locator('input[name=cs-form][value=human]').check();
+    await dialog.getByRole('radio', { name: 'Rose silk', exact: true }).click();
+    await dialog.getByRole('radio', { name: 'Espresso', exact: true }).click();
     await dialog.locator('[data-save]').click();
     await resident.waitForFunction(() => document.querySelector('.character-studio').dataset.accountPhase === 'ready');
     check((await account()).character.draft.palette === 'rose', 'Ordinary resident saves a customized draft');

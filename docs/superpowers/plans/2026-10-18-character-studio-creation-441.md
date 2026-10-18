@@ -130,6 +130,14 @@ owner fixture, desktop 1440×1000 and phone 390×844.
   69/69; build; Python 141 passed. Redis, browser-full, native, live auth and
   production acceptance were not run.
 
+### Merge of #464 head 594cceb1 (2026-10-18)
+
+Codex pushed `594cceb1`, which adds the `character-studio-worlds` journey, written
+against the old button and select markup. A signed merge brought it in (`8a14a081`),
+and its selectors were moved to the radio groups. After the merge: unit 58/58, and
+`RIVER_OAKS_SHARED_JOURNEY=character-studio-worlds pnpm run test:shared development-world`
+passed with 27 checks in 73 s (`.runtime/cs441/worlds-run.json`).
+
 ## Gaps and next steps
 
 Not claimed: human keyboard, VoiceOver or novice acceptance (#444 protocol),
