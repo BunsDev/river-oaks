@@ -9,13 +9,12 @@ import {sharedAppearance} from '../src/shared-appearances.js';
 import {loadCharacterRig} from './helpers/character-rig.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {loadResidentAvatar} from '../src/avatars.js';
-import {traversalForAppearance} from '../src/beast-traversal.js';
 import {COAT_TAIL_NAME} from '../src/coat-tail-geometry.js';
 import {COAT_TAIL_MORPHS} from '../src/coat-tail-morph-data.js';
 import {skirtContactFixture} from './helpers/skirt-contact.js';
 import {garmentEdgeFixture} from './helpers/garment-edges.js';
 
-for(const id of ['man-workwear','kai-formal-beast','kai-noir','kai-noir-beast','man-tailored','midnight-host-wolf'])test(`${id}: coat tails bend with the legs instead of remaining rigid on the pelvis`,async()=>{
+for(const id of ['man-workwear','kai-noir','man-tailored'])test(`${id}: coat tails bend with the legs instead of remaining rigid on the pelvis`,async()=>{
   const appearance=sharedAppearance(id),source=await loadCharacterRig(appearance.rig);
   const avatar=instantiateAvatar(source,{targetHeight:source.height,id});
   const model=avatar.model,original=new Set(model.getObjectsByProperty('isMesh',true));
@@ -91,7 +90,7 @@ for(const id of ['man-workwear','man-tailored'])test(`${id}: coat clearance and 
   }finally{contact.dispose();edges.dispose();lower.dispose();look.dispose();avatar.dispose();}
 });
 
-for(const id of ['man-workwear','kai-formal-beast','kai-noir','kai-noir-beast','man-tailored','midnight-host-wolf'])test(`${id}: seated coat stays outside the actual trouser thighs`,async t=>{
+for(const id of ['man-workwear','kai-noir','man-tailored'])test(`${id}: seated coat stays outside the actual trouser thighs`,async t=>{
   const source=await loadCharacterRig('man-casual'),previousLoad=GLTFLoader.prototype.loadAsync,previousWindow=globalThis.window,previousDocument=globalThis.document;
   GLTFLoader.prototype.loadAsync=async()=>({scene:source.scene});
   globalThis.window={matchMedia:()=>({matches:false})};globalThis.document={createElement:()=>({getContext:()=>new Proxy({},{get:()=>()=>{}})})};
@@ -122,7 +121,7 @@ for(const id of ['man-workwear','kai-formal-beast','kai-noir','kai-noir-beast','
 });
 
 
-for(const id of ['man-workwear','kai-formal-beast','kai-noir','kai-noir-beast','man-tailored','midnight-host-wolf'])test(`${id}: lower coat clears actual trousers and boots through opposing strides`,async t=>{
+for(const id of ['man-workwear','kai-noir','man-tailored'])test(`${id}: lower coat clears actual trousers and boots through opposing strides`,async t=>{
   const source=await loadCharacterRig('man-casual'),previousLoad=GLTFLoader.prototype.loadAsync,previousWindow=globalThis.window,previousDocument=globalThis.document;
   GLTFLoader.prototype.loadAsync=async()=>({scene:source.scene});
   globalThis.window={matchMedia:()=>({matches:false})};globalThis.document={createElement:()=>({getContext:()=>new Proxy({},{get:()=>()=>{}})})};
@@ -132,13 +131,13 @@ for(const id of ['man-workwear','kai-formal-beast','kai-noir','kai-noir-beast','
   const attachments=['l','r'].flatMap(side=>model.getObjectByName(`calf_${side}`).getObjectsByProperty('isMesh',true));
   assert(attachments.length>=6,'include actual soles, foot lasts and shin shafts');
   const fixture=garmentEdgeFixture(model,body,[coat],{bottom:-.95,top:-.25,attachments});
-  const failures=[],beast=id.includes('beast')||id==='midnight-host-wolf',traversal=traversalForAppearance(id);
+  const failures=[];
   const sample=phase=>{for(const result of fixture.sample()){assert(result.testedEdges>2600);if(result.crossings)failures.push({phase,...result});}};
   try{
     sample('rest');
-    for(const [gait,speed]of [[0,beast?traversal.walk:1.4],[1,beast?traversal.sprint:3.4]])for(let frame=0;frame<=181;frame++){
+    for(const [gait,speed]of [[0,1.4],[1,3.4]])for(let frame=0;frame<=181;frame++){
       const distance=frame/60*speed;avatar.object.position.z=distance;
-      avatar.update(gait*4000+frame*1000/60,'continue',false,{speed,distance,beast},()=>0);
+      avatar.update(gait*4000+frame*1000/60,'continue',false,{speed,distance},()=>0);
       if([144,151,163,181].includes(frame))sample(`${gait}:${frame}`);
     }
     assert.deepEqual(failures,[],'lower coat crosses actual trousers or boots');

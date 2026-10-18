@@ -54,13 +54,13 @@ async page => {
   check(['outfit','hair'].every(slot=>authoredBaseline.some(material=>material.slot===slot)),'Known authored Sable baseline includes real outfit and hair materials before customization');
   const alternate=await peer.evaluate(async()=>{
    const {characterDefinitionFor,validateCharacterDefinition}=await import('/src/character-definition.js');
-   const definition=characterDefinitionFor('alice','midnight-host-wolf',{revision:2});
+   const definition=characterDefinitionFor('alice','man-tailored',{revision:2});
    if(!validateCharacterDefinition(definition,{ownerId:'alice'}).ok)throw new Error('Alternate appearance fixture must be independently valid');
    return definition;
   });
   check(alternate.appearanceId!=='sable-human'&&alternate.revision>0,'Appearance mismatch uses a valid owned published definition for a different appearance');
   await open();
-  await dialog.locator('[data-character=sable]').click();await dialog.locator('input[name=cs-form][value=human]').check();
+  await dialog.locator('[data-character=sable]').click();
   await dialog.getByRole('radio',{name:'Rose silk',exact:true}).click();await dialog.getByRole('radio',{name:'Espresso',exact:true}).click();
   await dialog.locator('[data-save]').click();await page.waitForFunction(()=>document.querySelector('.character-studio').dataset.accountPhase==='ready');
   let saved=await account();check(saved.character.draft.palette==='rose'&&!saved.selection.character,'Save keeps the customized draft private');

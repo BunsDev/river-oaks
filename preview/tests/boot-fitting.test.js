@@ -6,7 +6,7 @@ import {createReferenceStyle} from '../src/reference-archetypes.js';
 import {SHARED_APPEARANCES} from '../src/shared-appearances.js';
 import {loadCharacterRig} from './helpers/character-rig.js';
 
-for(const id of ['rowan-human','man-casual','kai-explorer','kai-explorer-beast'])test(`${id}: trousers stay inside boot shafts through calf and ankle bends`,async()=>{
+for(const id of ['rowan-human','kai-explorer'])test(`${id}: trousers stay inside boot shafts through calf and ankle bends`,async()=>{
   const appearance=SHARED_APPEARANCES.find(a=>a.id===id),source=await loadCharacterRig(appearance.rig);
   const avatar=instantiateAvatar(source,{targetHeight:source.height,id}),model=avatar.model;
   const cloth=model.getObjectsByProperty('isSkinnedMesh',true).find(m=>/^male_(elegantsuit01|casualsuit02)$/.test(m.material?.name));

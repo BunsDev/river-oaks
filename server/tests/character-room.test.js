@@ -41,7 +41,7 @@ test('Redis selection prepares durably before account CAS and acknowledges only 
  assert.equal((await f.stored()).pendingSelections.length,0);
  assert.equal((await room.read()).snapshot.players[0].character.palette,'rose');
  assert.equal((await f.store.getSelection('alice')).character.palette,'rose');
- const cooldown=await f.enqueue({type:'appearance',appearance:'woman-casual'},{expectedVersion:2,requestId:'too-soon'});
+ const cooldown=await f.enqueue({type:'appearance',appearance:'sable-human'},{expectedVersion:2,requestId:'too-soon'});
  await f.tick(room);assert.equal((await f.reply(cooldown)).error,'appearance_cooldown');
  assert.equal((await f.store.getSelection('alice')).version,2);
 });
@@ -83,17 +83,17 @@ test('Redis lease loss after account CAS recovers the receipt and retry never re
  assert.equal((await f.reply(id)).ok,true);assert.equal((await f.store.getSelection('alice')).version,2);
  const retry=await f.enqueue({revision:1,type:'character'});await f.tick(replacement);
  assert.equal((await f.reply(retry)).ok,true);assert.equal((await f.reply(retry)).appliedVersion,2);
- f.advance(2000);const next=await f.enqueue({type:'appearance',appearance:'woman-casual'},{expectedVersion:2,requestId:'newer'});
+ f.advance(2000);const next=await f.enqueue({type:'appearance',appearance:'sable-human'},{expectedVersion:2,requestId:'newer'});
  await f.tick(replacement);await f.tick(replacement);assert.equal((await f.reply(next)).ok,true);
  const old=await f.enqueue({type:'character',revision:1});await f.tick(replacement);
  assert.equal((await f.reply(old)).ok,true);assert.equal((await f.reply(old)).appliedVersion,2);
- assert.equal((await replacement.read()).snapshot.players[0].appearance,'woman-casual');assert.equal((await replacement.read()).snapshot.players[0].character,undefined);
+ assert.equal((await replacement.read()).snapshot.players[0].appearance,'sable-human');assert.equal((await replacement.read()).snapshot.players[0].character,undefined);
 });
 
 test('Redis pending retry attachments are bounded and reused identities cannot change content',options,async t=>{
  const f=await fixture(t);const room=f.create({characters:{...f.store,changeSelection:async()=>{throw new Error('fixture unavailable');}}});
  await f.join(room);await f.publish();const first=await f.enqueue({type:'character',revision:1});await f.tick(room);
- const duplicate=await f.enqueue({revision:1,type:'character'}),reused=await f.enqueue({type:'appearance',appearance:'woman-casual'});
+ const duplicate=await f.enqueue({revision:1,type:'character'}),reused=await f.enqueue({type:'appearance',appearance:'sable-human'});
  await f.tick(room);assert.equal(await f.reply(first),null);assert.equal(await f.reply(duplicate),null);
  assert.equal((await f.reply(reused)).error,'character_request_reused');
  const extra=[];for(let i=0;i<10;i++)extra.push(await f.enqueue({type:'character',revision:1}));await f.tick(room);
@@ -105,7 +105,7 @@ test('Redis concurrent worlds conflict on selection and converge on the confirme
  const f=await fixture(t),a=f.create(),otherPrefix=`{character-room:${randomUUID()}}`,b=f.create({prefix:otherPrefix,worldId:'garden-2'});
  await f.join(a);await f.join(b);await f.publish();
  const one=await f.enqueue({type:'character',revision:1},{expectedVersion:1,requestId:'world-a'});
- const two=await f.enqueue({type:'appearance',appearance:'woman-casual'},{expectedVersion:1,requestId:'world-b'},otherPrefix);
+ const two=await f.enqueue({type:'appearance',appearance:'sable-human'},{expectedVersion:1,requestId:'world-b'},otherPrefix);
  await f.tick(a);await f.tick(b);await f.tick(a);await f.tick(b);
  assert.equal((await f.reply(one)).ok,true);assert.equal((await f.reply(two,otherPrefix)).error,'character_selection_conflict');
  assert.equal((await f.store.getSelection('alice')).version,2);
@@ -169,10 +169,10 @@ test('Redis evicted account receipts finalize as conflict without replaying an o
  const f=await fixture(t);let steal=true;
  const room=f.create({characters:{...f.store,changeSelection:async(...args)=>{const result=await f.store.changeSelection(...args);if(steal){steal=false;await f.redis.set(`${f.prefix}:lease`,'v99:fixture');}return result;}}});
  await f.join(room);await f.publish();const id=await f.enqueue({type:'character',revision:1});await f.tick(room);await f.tick(room);
- for(let i=0;i<65;i++)await f.store.changeSelection('alice',{type:'appearance',appearance:'woman-casual'},{expectedVersion:2+i,requestId:`newer-${i}`});
+ for(let i=0;i<65;i++)await f.store.changeSelection('alice',{type:'appearance',appearance:'sable-human'},{expectedVersion:2+i,requestId:`newer-${i}`});
  await room.close();await f.redis.del(`${f.prefix}:lease`);const replacement=f.create();await f.tick(replacement);
  assert.equal((await f.reply(id)).error,'character_selection_conflict');assert.equal((await f.stored()).pendingSelections.length,0);
- assert.equal((await replacement.read()).snapshot.players[0].appearance,'woman-casual');assert.equal((await f.store.getSelection('alice')).version,67);
+ assert.equal((await replacement.read()).snapshot.players[0].appearance,'sable-human');assert.equal((await f.store.getSelection('alice')).version,67);
 });
 
 

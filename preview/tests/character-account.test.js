@@ -46,9 +46,9 @@ test('a lost publication reply followed by newer publication cannot equip the ol
  assert.equal(f.calls.some(x=>x.action==='equip'),false);assert.equal((await f.store.getSelection(owner)).character,undefined);
 });
 test('selection conflicts preserve the newer selection and retain the saved draft',async()=>{
- const f=await fixture();await f.store.changeSelection(owner,{type:'appearance',appearance:'woman-casual'},{expectedVersion:1,requestId:'other-look'});
+ const f=await fixture();await f.store.changeSelection(owner,{type:'appearance',appearance:'sable-human'},{expectedVersion:1,requestId:'other-look'});
  await assert.rejects(f.model.wear(draft('rose')),error=>error.code==='character_selection_conflict');
- assert.equal((await f.store.getSelection(owner)).appearance,'woman-casual');assert.equal((await f.store.get(owner)).draft.palette,'rose');
+ assert.equal((await f.store.getSelection(owner)).appearance,'sable-human');assert.equal((await f.store.get(owner)).draft.palette,'rose');
  assert.equal(f.model.state.phase,'conflict');
 });
 test('input snapshots and disposal fence late callbacks without mutating local edits',async()=>{
@@ -66,9 +66,9 @@ test('uncertain operations cannot be replaced by a fresh save or wear',async()=>
 });
 test('a lost equip reply never replays over a newer selection',async()=>{
  const f=await fixture();f.fail('equip');await assert.rejects(f.model.wear(draft('rose')));
- await f.store.changeSelection(owner,{type:'appearance',appearance:'woman-casual'},{expectedVersion:2,requestId:'newer-choice'});
+ await f.store.changeSelection(owner,{type:'appearance',appearance:'sable-human'},{expectedVersion:2,requestId:'newer-choice'});
  await assert.rejects(f.model.retry(),error=>error.code==='character_selection_conflict');
- assert.equal((await f.store.getSelection(owner)).appearance,'woman-casual');assert.equal(f.model.state.selection.version,3);
+ assert.equal((await f.store.getSelection(owner)).appearance,'sable-human');assert.equal(f.model.state.selection.version,3);
 });
 test('a lost draft reply cannot publish a newer editor\'s draft',async()=>{
  const f=await fixture();f.fail('draft');await assert.rejects(f.model.wear(draft('rose')));

@@ -7,7 +7,7 @@ import { createRomanceLook } from '../src/romance-look.js';
 import { sharedAppearance } from '../src/shared-appearances.js';
 import { customizedCharacterDefinition } from '../src/character-customization.js';
 import { createCharacterMaterials } from '../src/character-studio-materials.js';
-for(const id of ['sable-human','woman-casual'])test(`${id}: colors cover actual outfit and hair, reset exactly and keep sibling rig unchanged`,async()=>{
+for(const id of ['sable-human'])test(`${id}: colors cover actual outfit and hair, reset exactly and keep sibling rig unchanged`,async()=>{
   const source=await loadCharacterRig('jevica'),avatar=instantiateAvatar(source,{targetHeight:1.685,id:'fixture'}),other=instantiateAvatar(source,{targetHeight:1.685,id:'sibling'});
   const root=new THREE.Group();root.add(avatar.model);const look=createRomanceLook(avatar,root,sharedAppearance(id));
   const untouched=[...other.materials.values()].map(m=>m.color.getHex()),colors=createCharacterMaterials(root);

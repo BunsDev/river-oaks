@@ -18,7 +18,7 @@ const backAt=(body,y,band=.02)=>{
   return back;
 };
 
-for(const id of ['man-workwear','kai-formal-beast','kai-noir','kai-noir-beast','man-tailored','midnight-host-wolf'])test(`${id}: the coat back rises from the tails to the shoulder blades without entering the body`,async()=>{
+for(const id of ['man-workwear','kai-noir','man-tailored'])test(`${id}: the coat back rises from the tails to the shoulder blades without entering the body`,async()=>{
   const appearance=sharedAppearance(id),source=await loadCharacterRig(appearance.rig);
   const avatar=instantiateAvatar(source,{targetHeight:source.height,id});
   const model=avatar.model,look=createReferenceStyle(avatar,appearance);

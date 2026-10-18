@@ -51,8 +51,8 @@ for(const mode of ['memory','redis'])test(`${mode}: publish, equip, peer, reconn
  const selected=await a.command({type:'character',revision:1},{expectedVersion:1,requestId:'equip'});assert.equal(selected.ok,true);assert.equal(selected.selectionVersion,2);
  const peer=await b.until(frame=>frame.type==='snapshot'&&frame.players.some(p=>p.id==='alice'&&p.character?.palette==='rose'));
  assert.equal(peer.players.find(p=>p.id==='bob').character,undefined);assert.equal(JSON.stringify(peer).includes('draft'),false);
- assert.equal((await a.command({type:'appearance',appearance:'woman-casual'})).error,'appearance_cooldown');
- assert.equal((await a.command({type:'movement',movement:'beast'})).error,'beast_form_required');
+ assert.equal((await a.command({type:'appearance',appearance:'sable-human'})).error,'appearance_cooldown');
+ assert.equal((await a.command({type:'movement',movement:'beast'})).error,'invalid_character_selection');
  assert.equal((await a.command({type:'character',revision:1},{expectedVersion:1,requestId:'equip'})).appliedVersion,2);
  assert.equal((await a.command({type:'appearance',appearance:'jevica'})).ok,false);
  assert.equal((await a.command({type:'character',revision:1},{expectedVersion:1,requestId:'stale'})).error,'character_selection_conflict');
@@ -82,12 +82,12 @@ test('memory transport recovers a selection write finishing after shutdown witho
  const first=await f.open('alice');hold=true;
  first.ws.send(JSON.stringify({type:'character',revision:1,selection:{expectedVersion:1,requestId:'late'},requestId:'late-wire'}));
  await started;await f.replace();const next=await f.open('alice');
- assert.equal((await next.command({type:'appearance',appearance:'woman-casual'})).ok,true);
+ assert.equal((await next.command({type:'appearance',appearance:'sable-human'})).ok,true);
  release();await pause(100);
- assert.equal((await f.state('alice')).selection.appearance,'woman-casual');
+ assert.equal((await f.state('alice')).selection.appearance,'sable-human');
  assert.equal((await next.command({type:'character',revision:1},{expectedVersion:1,requestId:'late'})).error,'character_selection_conflict');
  const latest=next.frames.filter(frame=>frame.type==='snapshot').at(-1).players.find(p=>p.id==='alice');
- assert.equal(latest.appearance,'woman-casual');assert.equal(latest.character,undefined);
+ assert.equal(latest.appearance,'sable-human');assert.equal(latest.character,undefined);
 });
 
 test('publication rejects forged owner fields, stale versions, invalid rollback and unauthorized origins',{timeout:10000},async t=>{
@@ -155,7 +155,7 @@ for(const mode of ['memory','redis'])test(`${mode}: Studio rollout stops new wri
  assert.equal((await f.request('missing','/api/character/draft',draft)).status,401);
  assert.equal((await f.request('alice','/api/character/draft',draft,{'X-CSRF-Token':'wrong'})).status,403);
  await pause(2050);
- assert.equal((await back.command({type:'appearance',appearance:'woman-casual'})).ok,true,'Existing authored appearance controls remain available');
+ assert.equal((await back.command({type:'appearance',appearance:'sable-human'})).ok,true,'Existing authored appearance controls remain available');
  f.setStudioEnabled(true);await f.replace();
  assert.equal((await f.state('alice')).character.published.palette,'rose');
  assert.equal((await f.request('alice','/api/character/draft',{definition:{...definition,palette:'midnight'},expectedVersion:2,requestId:'rollout-resume'})).status,200);

@@ -40,7 +40,7 @@ for(const mode of ['memory','redis']){
     const current=await other.getSelection('alice');assert.equal(current.character.revision,1);assert.equal(current.character.palette,'rose');
     assert.equal((await store.get('alice')).published.revision,2);
     assert.equal(await store.getSelection('bob'),null);
-    assert.deepEqual(await other.initializeSelection('alice',{appearance:'woman-casual',movement:'beast'}),current,'late migration cannot overwrite selection');
+    assert.deepEqual(await other.initializeSelection('alice',{appearance:'sable-human',movement:'upright'}),current,'late migration cannot overwrite selection');
     const migrated=await store.initializeSelection('alice',{...legacy,character:await store.getRevision('alice',2)});
     assert.equal(migrated.character.revision,1);
   });
@@ -50,18 +50,18 @@ for(const mode of ['memory','redis']){
     await publish(store);await store.initializeSelection('alice',legacy);
     const result=await Promise.allSettled([
       change(store,'character',{revision:1},1,'world-a'),
-      change(other,'appearance',{appearance:'woman-casual'},1,'world-b'),
+      change(other,'appearance',{appearance:'sable-human'},1,'world-b'),
     ]);
     assert.equal(result.filter(x=>x.status==='fulfilled').length,1);
     assert.equal(result.find(x=>x.status==='rejected').reason.code,'character_selection_conflict');
     const before=await store.getSelection('alice');
-    await assert.rejects(change(other,'movement',{movement:'beast'},1,'stale-movement'),code('character_selection_conflict'));
+    await assert.rejects(change(other,'movement',{movement:'upright'},1,'stale-movement'),code('character_selection_conflict'));
     assert.deepEqual(await store.getSelection('alice'),before);
     const selected=await change(store,'character',{revision:1},2,'select-current');
-    const moved=await change(other,'movement',{movement:'beast'},3,'move-current');
-    assert.deepEqual(moved.selection.character,selected.selection.character);assert.equal(moved.selection.movement,'beast');
+    const moved=await change(other,'movement',{movement:'upright'},3,'move-current');
+    assert.deepEqual(moved.selection.character,selected.selection.character);assert.equal(moved.selection.movement,'upright');
     const cleared=await change(store,'appearance',{appearance:'sable-human'},4,'clear');
-    assert.equal(cleared.selection.character,undefined);assert.equal(cleared.selection.movement,'beast');
+    assert.equal(cleared.selection.character,undefined);assert.equal(cleared.selection.movement,'upright');
   });
 
   test(`${mode}: duplicate equip receipts survive later edits without replaying old state`,options,async t=>{
@@ -69,15 +69,15 @@ for(const mode of ['memory','redis']){
     await publish(store);await store.initializeSelection('alice',legacy);
     const results=await Promise.all([change(store,'character',{revision:1},1,'same'),change(other,'character',{revision:1},1,'same')]);
     assert.deepEqual(results.map(x=>x.appliedVersion),[2,2]);
-    await change(other,'appearance',{appearance:'woman-casual'},2,'later');
+    await change(other,'appearance',{appearance:'sable-human'},2,'later');
     const retry=await change(store,'character',{revision:1},1,'same');
-    assert.equal(retry.appliedVersion,2);assert.equal(retry.selection.version,3);assert.equal(retry.selection.appearance,'woman-casual');assert.equal(retry.selection.character,undefined);
-    await assert.rejects(change(store,'movement',{movement:'beast'},1,'same'),code('character_request_reused'));
+    assert.equal(retry.appliedVersion,2);assert.equal(retry.selection.version,3);assert.equal(retry.selection.appearance,'sable-human');assert.equal(retry.selection.character,undefined);
+    await assert.rejects(change(store,'movement',{movement:'upright'},1,'same'),code('character_request_reused'));
     await assert.rejects(change(store,'character',{revision:1},3,'same'),code('character_request_reused'));
     const privateState=await store.get('alice');
     await store.saveDraft('alice',draft('alice','midnight'),{expectedVersion:privateState.version,requestId:'private-edit'});
     assert.equal((await store.getSelection('alice')).version,3,'draft edit does not conflict with selection version');
-    for(let i=0;i<CHARACTER_STORE_LIMITS.receipts;i++)await change(store,'movement',{movement:i%2?'upright':'beast'},3+i,`move-${i}`);
+    for(let i=0;i<CHARACTER_STORE_LIMITS.receipts;i++)await change(store,'movement',{movement:i%2?'upright':'upright'},3+i,`move-${i}`);
     await assert.rejects(change(other,'character',{revision:1},1,'same'),code('character_selection_conflict'),'expired receipt cannot replay old selection');
   });
 
@@ -86,7 +86,7 @@ for(const mode of ['memory','redis']){
     await publish(store,'bob');await store.initializeSelection('alice',legacy);
     for(const command of [{type:'character',revision:0},{type:'character',revision:1,ownerId:'bob'},
       {type:'character',revision:1,definition:draft()},{type:'appearance',appearance:'jevica'},
-      {type:'movement',movement:'fly'},{type:'movement',movement:'beast',character:draft()},
+      {type:'movement',movement:'fly'},{type:'movement',movement:'upright',character:draft()},
       {type:'appearance',appearance:'https://example.test/mesh.glb'}])
       await assert.rejects(store.changeSelection('alice',command,{expectedVersion:1,requestId:'invalid'}),code('invalid_character_selection'));
     await assert.rejects(change(store,'character',{revision:1},1,'foreign'),code('character_revision_missing'));
@@ -94,7 +94,7 @@ for(const mode of ['memory','redis']){
     await assert.rejects(store.initializeSelection('carol',{...legacy,character:draft('carol')}),code('invalid_character_selection'));
     await assert.rejects(store.initializeSelection('carol',{...legacy,character:{...draft('carol'),revision:1}}),code('character_revision_missing'));
     for(const opts of [{expectedVersion:-1,requestId:'x'},{expectedVersion:1,requestId:''},{expectedVersion:1,requestId:'x'.repeat(65)}])
-      await assert.rejects(store.changeSelection('alice',{type:'movement',movement:'beast'},opts),code('invalid_character_operation'));
+      await assert.rejects(store.changeSelection('alice',{type:'movement',movement:'upright'},opts),code('invalid_character_operation'));
     assert.deepEqual(await store.getSelection('alice'),{...legacy,version:1});
     assert.equal(await store.getSelection('carol'),null);
   });
@@ -138,7 +138,7 @@ for(const mode of ['memory','redis']){
     const initialized=await store.initializeSelection('alice',{...legacy,character,version:37});
     assert.deepEqual(initialized,{...legacy,character,version:1});
     initialized.character.palette='modified';assert.equal((await other.getSelection('alice')).character.palette,'rose');
-    const candidates=await Promise.all([store.initializeSelection('bob',legacy),other.initializeSelection('bob',{appearance:'woman-casual',movement:'beast'})]);
+    const candidates=await Promise.all([store.initializeSelection('bob',legacy),other.initializeSelection('bob',{appearance:'sable-human',movement:'upright'})]);
     assert.deepEqual(candidates[0],candidates[1]);
   });
 }
@@ -155,11 +155,11 @@ test('Redis v1 records migrate without losing private drafts or immutable revisi
   await store.saveDraft('alice',draft('alice','midnight'),{expectedVersion:2,requestId:'new-edit'});
   assert.equal((await store.getSelection('alice')).character.palette,'rose');
   const raw=JSON.parse(await redis.hget(key,id));
-  for(const invalid of [{...raw,selection:{...raw.selection,revision:2}},{...raw,selection:{...raw.selection,appearance:'woman-casual'}},
+  for(const invalid of [{...raw,selection:{...raw.selection,revision:2}},{...raw,selection:{...raw.selection,appearance:'rowan-human'}},
     {...raw,selection:{...raw.selection,version:-1}},{...raw,selectionReceipts:[{id:'fake',fingerprint:'x',appliedVersion:1}]}]){
     await redis.hset(key,id,JSON.stringify(invalid));
     await assert.rejects(store.getSelection('alice'),code('invalid_character_record'));
-    await assert.rejects(change(store,'movement',{movement:'beast'},1,'corrupt'),code('invalid_character_record'));
+    await assert.rejects(change(store,'movement',{movement:'upright'},1,'corrupt'),code('invalid_character_record'));
   }
   await store.deleteAccount('alice');assert.equal(await store.getSelection('alice'),null);
   const deleted=await redis.hget(key,id);assert.ok(!deleted.includes('rose')&&!deleted.includes('espresso'));
@@ -180,9 +180,9 @@ test('Redis selection retries recover a lost CAS reply and a failed write leaves
   failure='after';
   await assert.rejects(change(uncertain,'character',{revision:1},1,'durable-equip'),/fixture reply lost/);
   assert.equal((await store.getSelection('alice')).version,2);
-  await change(store,'movement',{movement:'beast'},2,'later-movement');
+  await change(store,'movement',{movement:'upright'},2,'later-movement');
   const retried=await change(uncertain,'character',{revision:1},1,'durable-equip');
-  assert.equal(retried.appliedVersion,2);assert.equal(retried.selection.version,3);assert.equal(retried.selection.movement,'beast');
+  assert.equal(retried.appliedVersion,2);assert.equal(retried.selection.version,3);assert.equal(retried.selection.movement,'upright');
 });
 
 test('selection retries use canonical command fields rather than input key order',async()=>{
@@ -190,8 +190,8 @@ test('selection retries use canonical command fields rather than input key order
   await change(store,'character',{revision:1},1,'ordered');
   const retry=await store.changeSelection('alice',{revision:1,type:'character'},{requestId:'ordered',expectedVersion:1});
   assert.equal(retry.appliedVersion,2);assert.equal(retry.selection.version,2);
-  await change(store,'movement',{movement:'beast'},2,'movement-order');
-  const moved=await store.changeSelection('alice',{movement:'beast',type:'movement'},{requestId:'movement-order',expectedVersion:2});
+  await change(store,'movement',{movement:'upright'},2,'movement-order');
+  const moved=await store.changeSelection('alice',{movement:'upright',type:'movement'},{requestId:'movement-order',expectedVersion:2});
   assert.equal(moved.appliedVersion,3);
 });
 
@@ -210,10 +210,10 @@ test('receipt lookup is read-only and resolves committed retries before world co
   assert.equal(await store.getSelectionResult('alice',command,options),null);
   assert.equal((await store.getSelection('alice')).version,1);
   await store.changeSelection('alice',command,options);
-  await change(store,'appearance',{appearance:'woman-casual'},2,'newer');
+  await change(store,'appearance',{appearance:'sable-human'},2,'newer');
   const result=await store.getSelectionResult('alice',{revision:1,type:'character'},options);
-  assert.equal(result.appliedVersion,2);assert.equal(result.selection.version,3);assert.equal(result.selection.appearance,'woman-casual');
-  await assert.rejects(store.getSelectionResult('alice',{type:'movement',movement:'beast'},options),code('character_request_reused'));
+  assert.equal(result.appliedVersion,2);assert.equal(result.selection.version,3);assert.equal(result.selection.appearance,'sable-human');
+  await assert.rejects(store.getSelectionResult('alice',{type:'movement',movement:'upright'},options),code('character_request_reused'));
   await store.deleteAccount('alice');
   await assert.rejects(store.getSelectionResult('alice',command,options),code('character_account_deleted'));
 });

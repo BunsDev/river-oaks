@@ -2,7 +2,7 @@ import { createCharacterAccount } from './character-account.js';
 import { createCharacterDraft } from './character-studio-state.js';
 import { createCharacterPreview } from './character-studio-preview.js';
 import { CHARACTER_PALETTES, CHARACTER_HAIR } from './character-customization.js';
-import { validateCharacterDefinition } from './character-definition.js';
+import { validateCharacterDefinition, migrateStoredCharacterDefinition } from './character-definition.js';
 import { describeLook, studioChoices, studioRoster } from './character-studio-guide.js';
 import { appearanceFor, sharedAppearance, sharedCharacter } from './shared-appearances.js';
 import './character-studio.css';
@@ -17,9 +17,9 @@ export function createCharacterStudio({ownerId,getDefinition,accountTransport=nu
     <section class="cs-controls" aria-label="Customize character"><p class="cs-intro">Start with someone you love. Make the look yours.</p>
       <fieldset class="cs-step"><legend><span class="cs-step-mark" aria-hidden="true">1</span>Choose a character</legend><div class="cs-roster">${studioRoster(ownerId).map(person=>`<label class="cs-chip" data-character="${person.id}" title="${person.name} · ${person.title}" style="--cs-accent:${person.accent}"><input type="radio" name="cs-character" value="${person.id}"><span class="cs-mark" aria-hidden="true">${person.name[0]}</span><span>${person.name}</span></label>`).join('')}</div>
         <div class="cs-summary"><p><strong data-cs-summary-name></strong><span data-cs-summary-title></span></p><p class="cs-summary-description" data-cs-summary-description></p><p class="cs-summary-edit" data-cs-summary-edit hidden></p><p class="cs-summary-options" data-cs-summary-options></p></div></fieldset>
-      <fieldset class="cs-step"><legend><span class="cs-step-mark" aria-hidden="true">2</span>Choose a form</legend><div class="cs-segments"><label><input type="radio" name="cs-form" value="human"><span>Humanoid</span></label><label><input type="radio" name="cs-form" value="beast"><span>Beast<small data-cs-species></small></span></label></div>
+      <fieldset class="cs-step" data-cs-wardrobe-step><legend><span class="cs-step-mark" aria-hidden="true">2</span>Choose a wardrobe</legend>
         <fieldset class="cs-wardrobe" data-cs-wardrobe hidden><legend>Wardrobe</legend><div class="cs-segments" data-cs-variants></div></fieldset></fieldset>
-      <fieldset class="cs-step"><legend><span class="cs-step-mark" aria-hidden="true">3</span>Add color</legend><div class="cs-colors" data-cs-colors>
+      <fieldset class="cs-step"><legend><span class="cs-step-mark" data-cs-color-step aria-hidden="true">3</span>Add color</legend><div class="cs-colors" data-cs-colors>
         <fieldset data-palette><legend>Dress color</legend><div class="cs-swatches">${Object.entries(CHARACTER_PALETTES).map(([id,item])=>`<label class="cs-swatch" data-palette="${id}" title="${item.label}" style="--cs-swatch:${item.color}"><input type="radio" name="cs-palette" value="${id}" aria-label="${item.label}"></label>`).join('')}</div><p data-palette-name></p></fieldset>
         <fieldset data-hair><legend>Hair color</legend><div class="cs-swatches">${Object.entries(CHARACTER_HAIR).map(([id,item])=>`<label class="cs-swatch" data-hair="${id}" title="${item.label}" style="--cs-swatch:${item.color}"><input type="radio" name="cs-hair" value="${id}" aria-label="${item.label}"></label>`).join('')}</div><p data-hair-name></p></fieldset></div>
         <p class="cs-help" data-compatibility></p></fieldset>
@@ -38,7 +38,7 @@ export function createCharacterStudio({ownerId,getDefinition,accountTransport=nu
   const valid=value=>validateCharacterDefinition(value,{ownerId}).ok;
   const editable=value=>({...value,revision:0});
   const sameLook=(a,b)=>Boolean(a&&b)&&JSON.stringify(editable(a))===JSON.stringify(editable(b));
-  const readFavorites=()=>{if(storageUnavailable)return;try{const saved=JSON.parse(localStorage.getItem(storageKey)??'[]');favorites=Array.isArray(saved)?saved.filter(valid).slice(0,8).map(editable):[];}catch{storageUnavailable=true;}};
+  const readFavorites=()=>{if(storageUnavailable)return;try{const saved=JSON.parse(localStorage.getItem(storageKey)??'[]');favorites=Array.isArray(saved)?saved.map(value=>migrateStoredCharacterDefinition(value,{ownerId})).filter(result=>result.ok).map(result=>result.definition).slice(0,8).map(editable):[];}catch{storageUnavailable=true;}};
   const saveFavorites=()=>{try{localStorage.setItem(storageKey,JSON.stringify(favorites));return true;}catch{storageUnavailable=true;status.textContent='Device storage is unavailable. Favorites will last for this visit only.';return false;}};
   const showFavorites=()=>{$('#cs-favorites').replaceChildren(new Option('Your favorites',''),...favorites.map((value,index)=>new Option(describeLook(value),String(index))));$('[data-remove-favorite]').disabled=true;};
   const setStatus=state=>{$('[data-portrait]').disabled=state!=='ready'||portraitPending;status.textContent=state==='loading'?'Preparing your look…':state==='error'?'The preview could not load. Choose a character to try again.':'Preview ready. Your town appearance is unchanged.';};
@@ -51,11 +51,11 @@ export function createCharacterStudio({ownerId,getDefinition,accountTransport=nu
       variants.dataset.csFor=person.id;
       variants.replaceChildren(...choices.variants.map(variant=>{const label=document.createElement('label'),input=document.createElement('input'),text=document.createElement('span');input.type='radio';input.name='cs-variant';input.value=variant.id;text.textContent=variant.label;label.append(input,text);return label;}));
     }
-    $('[data-cs-wardrobe]').hidden=choices.variants.length<2;
+    $('[data-cs-wardrobe]').hidden=choices.variants.length<2;$('[data-cs-wardrobe-step]').hidden=choices.variants.length<2;$('[data-cs-color-step]').textContent=choices.variants.length<2?'2':'3';
     // Radios mirror the staged definition, so a rejected or undone choice snaps back.
-    const selected={'cs-character':person.id,'cs-form':choices.form,'cs-variant':choices.variant,'cs-palette':value.palette??'authored','cs-hair':value.hair??'authored'};
+    const selected={'cs-character':person.id,'cs-variant':choices.variant,'cs-palette':value.palette??'authored','cs-hair':value.hair??'authored'};
     for(const input of dialog.querySelectorAll('.cs-controls input[type=radio]'))input.checked=input.value===selected[input.name];
-    $('[data-cs-species]').textContent=person.species;$('[data-remix]').textContent=`Remix ${person.name}`;
+    $('[data-remix]').textContent=`Remix ${person.name}`;
     $('[data-cs-summary-name]').textContent=person.name;$('[data-cs-summary-title]').textContent=person.title;
     $('[data-cs-summary-description]').textContent=choices.description;
     // The authored description names the original colors; say so once they change.
@@ -63,7 +63,7 @@ export function createCharacterStudio({ownerId,getDefinition,accountTransport=nu
     $('[data-cs-summary-edit]').textContent=recolored?`Your colors: ${CHARACTER_PALETTES[value.palette].label} dress, ${CHARACTER_HAIR[value.hair].label} hair.`:'';$('[data-cs-summary-options]').textContent=choices.summary;
     $('[data-cs-colors]').hidden=!colors;
     $('[data-palette-name]').textContent=colors?CHARACTER_PALETTES[value.palette].label:'';$('[data-hair-name]').textContent=colors?CHARACTER_HAIR[value.hair].label:'';
-    $('[data-compatibility]').textContent=colors?'Colors are fitted to Sable’s human and fox looks. Shape, skin and accessories keep their authored fit.':`${person.name}’s colors stay as designed for now. Choose Sable to try dress and hair colors.`;
+    $('[data-compatibility]').textContent=colors?'Colors are fitted to Sable’s human look. Shape, skin and accessories keep their authored fit.':`${person.name}’s colors stay as designed for now. Choose Sable to try dress and hair colors.`;
     $('[data-undo]').disabled=!draft.canUndo;$('[data-redo]').disabled=!draft.canRedo;
     $('[data-compare]').setAttribute('aria-pressed',String(comparing));$('[data-comparing]').hidden=!comparing;
     $('[data-look]').textContent=sharedAppearance(shown.appearanceId).label;

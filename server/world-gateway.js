@@ -1,6 +1,5 @@
 import {createCharacterMetrics} from './character-metrics.js';
 import { createRedisCharacterStore } from './character-store.js';
-import { createRedisOfficeWorkspaces } from './office-workspaces.js';
 import { createRedisOfficeDesk } from './office-desk.js';
 import { createClientAddress, rateLimitKey } from './client-address.js';
 import { createRateLimiter } from './rate-limit.js';
@@ -35,7 +34,7 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
     // A long-lived gateway sweeps for tasks orphaned by another instance; on Vercel the
     // per-minute cron drain (/api/workplace-sweep) and owner reads advance them.
     sweepMs:workplaceSweep?5000:0}):null;
-  const officeDesk=createRedisOfficeDesk({redis,prefix}),officeWorkspaces=createRedisOfficeWorkspaces({redis,prefix});
+  const officeDesk=createRedisOfficeDesk({redis,prefix});
   const designLibrary=createRedisDesignLibrary({redis,prefix:accountPrefixFor(namespace)});
   // Lifetime cycling metres are one account total across every world.
   const cyclingMiles=createRedisCyclingMiles({redis,prefix:accountPrefixFor(namespace)});
@@ -75,12 +74,12 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
         :id===DEFAULT_WORLD_ID?worldData:{...worldData,title:meta?.title??worldData.title};
       const room=createRedisRoom({redis,prefix:roomPrefixFor(namespace,id),worldId:id,
         worldData:data,regionCatalog:meta?.template==='region-v1'?catalog:null,regionSha256:meta?.regionSha256,
-        avatarPreferences,characters,voice,cyclingMiles,officeWorkspaces,screeningHosts,...(officeLayout?{officeLayout}:{}),
+        avatarPreferences,characters,voice,cyclingMiles,screeningHosts,...(officeLayout?{officeLayout}:{}),
         ...(isAdmin?{isAdmin}:{}),
         authorize:async identity=>await auth.isSessionActive(identity.userId,identity.sessionId)
           && await waitlist.isApproved(identity.userId) && !(await security.isBanned(identity.userId))});
       const landmarks=createWorldLandmarks({catalog,storeFor:landmarkStoreFor,worldId:id,worldTitle:meta?.title??data.title});
-      const game=createDistributedServer({characterMetrics:metrics,characterStudioEnabled,assetGateSecret,auth:sharedAuth,room,worldTitle:meta?.title??data.title,security,waitlist,waitlistAdmins,debugReports,landmarks,social,groups,profiles,characters,events,workplace,officeDesk,officeWorkspaces,workplaceCronSecret,presence,designLibrary,cyclingMiles,worldDirectory,origin,moderators,trustedProxyIPs,voice,voiceCronSecret,
+      const game=createDistributedServer({characterMetrics:metrics,characterStudioEnabled,assetGateSecret,auth:sharedAuth,room,worldTitle:meta?.title??data.title,security,waitlist,waitlistAdmins,debugReports,landmarks,social,groups,profiles,characters,events,workplace,officeDesk,workplaceCronSecret,presence,designLibrary,cyclingMiles,worldDirectory,origin,moderators,trustedProxyIPs,voice,voiceCronSecret,
         ...(address?{address}:{}),...(isAdmin?{isAdmin}:{}),...(connectionLifetime?{connectionLifetime}:{}),...(rotateNoticeMs?{rotateNoticeMs}:{}),...(id===configuredWorldId?{worldCatalog:catalog}:{}),
         ...(id===configuredWorldId?{onApplyRegion:async (regionId,expectedDraftVersion,actorId)=>{
           const target=await worldFor(regionId);

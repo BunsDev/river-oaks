@@ -18,7 +18,7 @@ export function createSilvanTrousers(body,model,material){
         vertices.set(i,vertices.size);
         const normal=new THREE.Vector3().fromBufferAttribute(source.attributes.normal,i).applyNormalMatrix(normalToFrame);
         // Fit closely beneath the outer drape, with extra room at the knee.
-        // The lower cuff overlaps the tall boot through the prowl stride.
+        // The lower cuff overlaps the tall boot through the walking stride.
         const ease=.003+.009*THREE.MathUtils.smoothstep(-rest[i].y,.04,.3);
         const point=rest[i].clone().addScaledVector(normal,ease).applyMatrix4(fromFrame);attributes.position.push(...point.toArray());
         for(const name of ['normal','uv','skinIndex','skinWeight'])for(let c=0;c<source.attributes[name].itemSize;c++)attributes[name].push(source.attributes[name].getComponent(i,c));

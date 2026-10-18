@@ -1,6 +1,6 @@
 import { customizedCharacterDefinition } from './character-customization.js';
 import { characterAssetFor } from './character-assets.js';
-import { canUseAppearance, permittedAppearance, sharedAppearance } from './shared-appearances.js';
+import { LEGACY_APPEARANCES, canUseAppearance, permittedAppearance, sharedAppearance } from './shared-appearances.js';
 
 export const CHARACTER_SCHEMA_VERSION = 1;
 const fields = ['schemaVersion','ownerId','revision','appearanceId','rig','form','parameters','palette','hair','outfit','attachments','assets','provenance'];
@@ -52,4 +52,12 @@ export function migrateCharacterAppearance(ownerId, appearanceId) {
 export function characterAppearanceFor(definition, ownerId) {
   const result = validateCharacterDefinition(definition,{ownerId});
   return result.ok ? sharedAppearance(result.definition.appearanceId) : null;
+}
+
+// Storage reads only. New writes still require the strict human-only definition.
+export function migrateStoredCharacterDefinition(value, {ownerId} = {}) {
+  if (!record(value) || !Object.hasOwn(LEGACY_APPEARANCES,value.appearanceId)) return validateCharacterDefinition(value,{ownerId});
+  if (value.form !== 'beast' || value.outfit !== value.appearanceId) return {ok:false,error:'invalid_character_definition'};
+  const id=LEGACY_APPEARANCES[value.appearanceId];
+  return validateCharacterDefinition({...value,appearanceId:id,outfit:id,form:'human'},{ownerId});
 }

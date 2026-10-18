@@ -1,22 +1,22 @@
 # Character Studio architecture decision (#440)
 
-Status: the contract increment #457 merged to `main` on 2026-10-18. The draft stack
-above it is #461 (editor), #462 (render), #464 (persistence and client integration)
-and #484 (guided creation, #441). The integrated local full gate passed, and so did
-the subsequent client reopen regressions, editor journey and core gate. This is the
-first increment of #440–#444, not a shipped Studio.
+Status: contract increment #457 is on main, and so are the editor, rendering and
+persistence stack (#461, #462, #464), #441's guided creation (through #496),
+human-only characters, Jevica-only invited office access and the expanded Studio.
+#484 carries the remaining #441 tailoring fixes. Release acceptance remains
+subject to the verification and device gates below.
 
 ## Decision and evidence
 Extend the authored character system with constrained modular customization.
-Keep Three.js/Vite, existing humanoid rigs and procedural beast overlays,
+Keep Three.js/Vite, existing human rigs and authored human clothing,
 server-authoritative appearance, and existing photo mode. Do not introduce a
 vendor or arbitrary mesh ingestion into the playable path.
 
 `shared-appearances.js` already maps character/style/form to stable appearance
 IDs. `avatars.js` loads the base rig, `romance-look.js` applies the authored look,
-`animal-face.js` supplies beast heads, and `avatar-skeletons.js` shares matching
+and `avatar-skeletons.js` shares matching
 skeletons within each clone. `player-avatar.js` now resolves the versioned
-contract before loading the same rig and look. No appearance IDs change.
+contract before loading the same rig and look. Retired beast appearance IDs migrate to their corresponding human look when saved records are read.
 `server/avatar-preferences.js` stores account appearance/movement versions;
 `server/redis-room.js` reconciles account preferences on join and heartbeat.
 These remain authoritative. The owner-scoped character store now persists private
@@ -34,7 +34,7 @@ the evidence; the prompt's questions are reconciled against them below.
 
 | Approach | Current evidence | Decision |
 | --- | --- | --- |
-| Authored modular controls | Shipped rigs, authored garments, beast overlays and tests exist | Go, expose combinations after compatibility verification |
+| Authored modular controls | Shipped human rigs, authored garments and tests exist | Go, expose combinations after compatibility verification |
 | AI suggestions selecting approved parameters | Can be validated by the same contract, but no evaluated suggestion provider | Defer; optional, no provider needed for creation |
 | Arbitrary generated meshes | No proven rig fitting, garment compatibility, licensing or cleanup pipeline | No-go for playable MVP; separate explicitly authorized pilot |
 
@@ -63,7 +63,7 @@ open rows above answered first.
 ## Contract and migration
 `preview/src/character-definition.js` is DOM-free ESM shared by Node and client.
 A definition has `schemaVersion:1`, authenticated `ownerId`, nonnegative safe
-integer `revision`, canonical `appearanceId`, rig, human/beast form, parameters,
+integer `revision`, canonical `appearanceId`, rig, human form, parameters,
 palette, hair, outfit, attachments, pinned assets and authored provenance.
 Revision zero represents a migrated base. Publication allocates revisions on
 the server; passing structural validation does not establish freshness or ownership
@@ -111,11 +111,11 @@ swatches. A polite live region announces undo, redo, Surprise me, favorites and
 before/after. Ctrl/Cmd+Z works while a choice has focus. Remix varies only the
 current character's validated forms, wardrobes and colors. Surprise me picks any
 permitted look. Both always stage a look different from the current one.
-On phones the preview is sticky above the steps, so a change is visible while
-it is made. View labels stay in the accessibility tree, and scroll padding keeps
-a focused choice from landing under the preview.
+Desktop Studio uses the viewport with a 12 px margin and multiple control columns.
+Phones use the full safe viewport and one vertical workspace scroll area.
+View labels stay in the accessibility tree.
 
-V2 adds allowlisted dress and hair colors for Sable human and fox. Other looks
+V2 adds allowlisted dress and hair colors for Sable. Other looks
 retain authored colors with explicit compatibility feedback. V1 remains readable.
 Colors touch tagged, avatar-owned materials only; teardown restores their original
 values and disposes the preview. Late loads are discarded, including after close,
@@ -124,7 +124,7 @@ drawing behind the Studio while authoritative world/network updates continue.
 The Studio editor stages local edits and offers private Save draft and Wear in town actions. Server publication and selection replicate validated definitions; the integrated client applies their owned materials to local and peer rigs. The two-account save/wear journey and actual peer material checks pass locally; the complete visual, device and human acceptance matrix remains open.
 
 ## Components and delivery order
-1. #440: strict baseline contract, migration and actual human/beast rig fixtures;
+1. #440: strict baseline contract, migration and actual human rig fixtures;
    measure and inspect rendered baseline, then review this decision in a PR.
 2. #441: People opens an in-world dialog, isolated preview scene, staged definition,
    bounded undo/redo, cancel, curated randomize/favorites and before/after. Publish
@@ -163,8 +163,15 @@ this PR, branched from its earlier head `b6ef443e`. The base gained a plain merg
 `main` here, not a rewrite, so each can merge the new head forward.
 
 ## Supported scope and quality gates
+Current direction (2026-10-18): human characters only, with ultra-realistic human
+anatomy, skin, hair and clothing as the art target. iOS and macOS are the release
+platforms. Beast forms, animal anatomy and quadruped locomotion are retired.
+Old saved appearance IDs migrate to their matching human character/style; new
+publications must use canonical human definitions. Historical evidence below may
+refer to retired forms and does not establish current visual acceptance.
+
 Baseline families: existing Jevica, man-casual and man-tailored base rigs, human
-and procedural beast forms. First vertical fixtures: Sable human and fox.
+and human forms. First vertical fixture: Sable human.
 No arbitrary anatomy, uploads, free-form geometry, physical cloth or face morphs
 are exposed until supported. Long hair, dress, wings and armor are separate
 compatibility cases; untested combinations must remain unavailable.
@@ -182,7 +189,7 @@ Pin browser, OS/GPU, pixel ratio and color settings before approving a golden;
 set image-error tolerance from repeated captures before accepting changes.
 
 Visual acceptance requires no missing textures, major intersections, detached
-attachments or broken skinning in idle/walk/run/sit/emote and beast prowl/lope.
+attachments or broken skinning in idle/walk/run/sit/emote.
 Node rig tests retain actual geometry, skin weights and skeletons but omit image
 decoding, so they establish neither texture nor rendered visual acceptance.
 Human keyboard/VoiceOver review and novice usability remain explicit human gates.
@@ -224,6 +231,9 @@ touch, keyboard-only and VoiceOver acceptance remain separate recorded sessions.
 The trial cannot establish the visual/animation matrix or crowd/GPU budgets above.
 
 ## Verification evidence
+
+Historical receipts below describe their recorded revisions. Beast/fox captures and
+former form controls are retired; they do not describe the current human-only catalog.
 See the task ledger for exact commands/results. Baseline fixtures exercise the
 actual loader and procedural look and dispose them afterwards. Existing beast
 form regressions cover stable IDs and movement. Core, browser, Redis, hosted CI,

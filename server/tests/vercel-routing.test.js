@@ -65,14 +65,13 @@ test('only Vercel entry uses the platform-owned IP header and invalid values sha
   assert.equal(vercelClientAddress({ headers: { 'x-vercel-forwarded-for': '2001:0db8:0:0::1' } }), '2001:db8::1');
 });
 
-test('office workspace actions retain world routing through hosted rewrites',()=>{
+test('retired office workspace actions have no hosted route',()=>{
   const config=JSON.parse(readFileSync(new URL('../../vercel.json',import.meta.url)));
   for(const action of ['provision','list','invite','accept','revoke','read','save','remove']){
     const path=`/api/office-desk/workspace/${action}`;
-    assert.equal(normalizeVercelRoute(path),path);
+    assert.equal(normalizeVercelRoute(path),'/not-found');
     const rewrite=config.rewrites.find(item=>item.source===path);
-    assert.ok(rewrite,`missing hosted rewrite for ${action}`);
-    assert.equal(normalizeVercelRoute(`${rewrite.destination}&world=moon-garden`),`${path}?world=moon-garden`);
+    assert.equal(rewrite,undefined);
   }
   assert.equal(normalizeVercelRoute('/api/office-desk/workspace/admin'),'/not-found');
 });

@@ -9,7 +9,7 @@ import {loadCharacterRig} from './helpers/character-rig.js';
 import {loadResidentAvatar} from '../src/avatars.js';
 import {skirtContactFixture} from './helpers/skirt-contact.js';
 
-for (const appearanceId of ['lyra-human', 'woman-daywear']) test(`${appearanceId}: long opaque drape covers the seated lap and restores its standing shape`, async t => {
+for (const appearanceId of ['lyra-human', 'lyra-human']) test(`${appearanceId}: long opaque drape covers the seated lap and restores its standing shape`, async t => {
   const source = await loadCharacterRig('jevica'), previousLoad = GLTFLoader.prototype.loadAsync;
   const previousWindow = globalThis.window, previousDocument = globalThis.document;
   GLTFLoader.prototype.loadAsync = async () => ({scene: source.scene});
@@ -105,7 +105,7 @@ test('Lyra handkerchief hems clear the floor throughout upright idle, walk and r
   globalThis.window = {matchMedia: () => ({matches: false})};
   globalThis.document = {createElement: () => ({getContext: () => new Proxy({}, {get: () => () => {}})})};
   t.after(() => { GLTFLoader.prototype.loadAsync = previousLoad; globalThis.window = previousWindow; globalThis.document = previousDocument; });
-  for (const appearanceId of ['lyra-human', 'woman-daywear']) for (const speed of [0, 1.4, 3.4]) {
+  for (const appearanceId of ['lyra-human', 'lyra-human']) for (const speed of [0, 1.4, 3.4]) {
     const avatar = await loadResidentAvatar(4, 'remote-floor-regression', 'jevica', {folk: false, appearanceId, faceRecipe: {}});
     try {
       const meshes = ['Lyra velvet wrap', 'Lyra spotted sheer train'].map(name => avatar.rig.model.getObjectByName(name));

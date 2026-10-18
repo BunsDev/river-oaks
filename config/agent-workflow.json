@@ -279,7 +279,6 @@
         "spatial-circulation",
         "spatial-streets",
         "office-desk",
-        "office-computer-shared",
         "office-visit"
       ],
       "browser": true,

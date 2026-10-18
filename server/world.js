@@ -1,4 +1,4 @@
-import { validateCharacterDefinition } from '../preview/src/character-definition.js';
+import { validateCharacterDefinition, migrateStoredCharacterDefinition } from '../preview/src/character-definition.js';
 import { createOffices } from './offices.js';
 import { createTableGames } from './table-games.js';
 import { officesFor } from '../preview/src/office-contract.js';
@@ -10,8 +10,7 @@ import { createWalkingEnvironment, createWalkingState } from '../preview/src/wal
 import { grantWish, undoWish, stepWishes, wishFor, refreshWishTrouble } from '../preview/src/wishes.js';
 import { storefrontSpot } from '../preview/src/arrival.js';
 import { placesOf } from '../preview/src/places.js';
-import { APPEARANCE_COOLDOWN_MS, MOVEMENTS, canFlyAs, canUseAppearance, isBeastAppearance, isJevicaOwner, permittedAppearance, sharedAppearance } from '../preview/src/shared-appearances.js';
-import { traversalForAppearance } from '../preview/src/beast-traversal.js';
+import { APPEARANCE_COOLDOWN_MS, MOVEMENTS, canFlyAs, canUseAppearance, isJevicaOwner, permittedAppearance, sharedAppearance } from '../preview/src/shared-appearances.js';
 import { VEHICLES, vehicleKind } from '../preview/src/vehicle-config.js';
 import { buildKind, buildGeometry, buildYaw, buildFinish, buildRoads, buildRoomAt, checkBuildSite, BUILD_REACH, BUILD_EDIT_REACH, BUILD_PLAYER_GAP, BUILD_REASONS, MAX_SAVED_DESIGNS } from '../preview/src/shared-build.js';
 import { resolveSeat, seatYaw, SEAT_REACH } from '../preview/src/shared-seating.js';
@@ -114,9 +113,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   const roads=buildRoads(worldData);
   // The same rule the browser's builder mode previews (shared-build.js).
   const buildSite=(position,kind,occupied=builds,ignoreId=null)=>checkBuildSite({environment:placementEnvironment,roads,position,kind,builds:[...occupied.values()],ignoreId}).ground ?? null;
-  // Beast movement is an account preference that only shows in a beast form,
-  // so switching to a humanoid form and back keeps it.
-  const movementOf = player => movementByUser.get(player.id)==='beast' && isBeastAppearance(player.appearance) ? 'beast' : 'upright';
+  // Only upright human locomotion is supported.
+  const movementOf = () => 'upright';
   // Every name leaves the world checked against its account: only Jevica's
   // accounts are Jevica, whatever a stored or restored record says.
   const interactions=createInteractions({players,environment,environmentFor:player=>environmentForLevel(player.levelId),
@@ -383,7 +381,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if(current.appearance!==chosen.id || current.movement!==preference.movement || JSON.stringify(current.character??null)!==JSON.stringify(character)) {
       rememberAppearance(userId,chosen.id);
       if(character)characterByUser.set(userId,character);else characterByUser.delete(userId);
-      if(preference.movement==='beast')movementByUser.set(userId,'beast');else movementByUser.delete(userId);
+      movementByUser.delete(userId);
       if(player)player.appearance=chosen.id;
       revision++;
     }
@@ -525,8 +523,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     player.poseAt = time;
     player.moveBudget = Math.min(1,player.moveBudget+dt);
     player.liftBudget = Math.min(1,player.liftBudget+dt);
-    const beast=movementOf(player)==='beast'?traversalForAppearance(player.appearance):null;
-    const cost = distance(position,player.position) / (message.vehicle ? VEHICLES[message.vehicle].maxSpeed : Math.max(player.altitude,altitude)>0.1 ? 7.2 : beast ? beast.sprint+.2 : 3.4);
+    const cost = distance(position,player.position) / (message.vehicle ? VEHICLES[message.vehicle].maxSpeed : Math.max(player.altitude,altitude)>0.1 ? 7.2 : 3.4);
     const liftCost = Math.abs(altitude-player.altitude)/3.2;
     if (cost>player.moveBudget+1e-8 || liftCost>player.liftBudget+1e-8) return correction('movement_too_fast');
     const steps = Math.max(1,Math.ceil(distance(position,player.position)/0.15),Math.ceil(Math.abs(altitude-player.altitude)/0.15));
@@ -705,7 +702,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     revision++;
     return {ok:true,player:publicPlayer(player)};
   }
-  function command(userId, message, {officeWorkspace=null,sessionId=null,characterDefinition=null,prepareSelection=false}={}) {
+  function command(userId, message, {sessionId=null,characterDefinition=null,prepareSelection=false}={}) {
     const player=players.get(userId);
     if (!player) return reject('not_joined');
     if (!message || typeof message!=='object' || Array.isArray(message)) return reject('invalid_command');
@@ -713,7 +710,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     const ledger=ledgers.get(userId),time=now();
     ledger.seen=time;
     if(offices.has(userId) && !['office','chat'].includes(message.type))return reject('leave_office_first');
-    if(message.type==='office' && message.action==='move')return offices.command(player,message,time,officeWorkspace);
+    if(message.type==='office' && message.action==='move')return offices.command(player,message,time);
     if (message.type==='pose') return pose(player,message,time);
     // Voice is negotiated over HTTP from the transport's authority; it is never a game command.
     if (message.type==='voice') return reject('invalid_command');
@@ -739,7 +736,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     }
     if(message.type==='screening')return screenings.command(player,message,time,{sessionId});
     if(message.type==='interaction' && player.performing)return reject('performing','Leave the stage first.');
-    if(message.type==='office')return offices.command(player,message,time,officeWorkspace);
+    if(message.type==='office')return offices.command(player,message,time);
     if(message.type==='interaction' && offices.has(message.peerId))return reject('office_permission_required');
     if(message.type==='interaction')return interactions.command(player,message,ledger,time);
     if(message.type==='sit')return sit(player,message,time);
@@ -782,11 +779,10 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     }
     if (message.type==='movement') {
       if (!fields(message,['type','movement']) || !MOVEMENTS.includes(message.movement)) return reject('invalid_movement');
-      if (message.movement==='beast' && !isBeastAppearance(player.appearance)) return reject('beast_form_required','Choose a beast form before moving like one.');
       if ((movementByUser.get(userId)??'upright')===message.movement) return {ok:true,player:publicPlayer(player)};
       if(prepareSelection)return {ok:true,player:publicPlayer(player)};
       interactions.cancel(player.id);
-      if (message.movement==='beast') movementByUser.set(userId,'beast'); else movementByUser.delete(userId);
+      movementByUser.delete(userId);
       revision++;
       return {ok:true,player:publicPlayer(player)};
     }
@@ -1065,11 +1061,12 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       if(saved.version>=12 && !Array.isArray(recovered.characters) || saved.version<12 && recovered.characters?.length)throw new Error('Invalid characters');
       const nextCharacters=restoreMap(recovered.characters??[],MAX_APPEARANCES,record);
       for(const [id,definition] of nextCharacters) {
-        const validated=validateCharacterDefinition(definition,{ownerId:id});
+        const validated=migrateStoredCharacterDefinition(definition,{ownerId:id});
         if(!validated.ok || validated.definition.revision<1 || validated.definition.appearanceId!==nextAppearances.get(id))throw new Error('Invalid characters');
         nextCharacters.set(id,validated.definition);
       }
       const nextMovements=restoreMap(recovered.movements??[],MAX_APPEARANCES,movement=>movement==='beast');
+      nextMovements.clear(); // Retired locomotion is never restored into the human-only world.
       if(!Array.isArray(recovered.builds??[]) || (recovered.builds??[]).length>MAX_BUILDS)throw new Error('Invalid builds');
       const nextBuilds=new Map(),ownerCounts=new Map();
       for(const item of recovered.builds??[]){
@@ -1322,6 +1319,14 @@ export function migrateWorldCheckpoint({fromData,toData,checkpoint,worldId=DEFAU
   // Simulation and NPC routes depend on geography. Account-owned state does not.
   payload.revision=previous.revision+1;
   for(const field of ['ledgers','chat','appearances','characters','movements','builds','inventory'])payload[field]=copy(previous[field]??[]);
+  // A creator region compiled before #491 walked on bare terrain; its revision compiles the
+  // street datum (STREET.walkSurfaceOffset). Creations standing on that datum, outdoors or in
+  // a built-in room, move with it. Those on a generated level keep its floor.
+  const datumShift=(toData.walkSurfaceOffset??0)-(fromData.walkSurfaceOffset??0);
+  if(datumShift){
+    const oldEnvironment=createWalkingEnvironment(fromData);
+    for(const item of payload.builds)if(!buildRoomAt(oldEnvironment,item.position)?.generatedPlan)item.ground+=datumShift;
+  }
   const retainedHomes=new Set((toData.stores??[]).filter(store=>store.category==='home' && store.access==='owner').map(store=>store.id));
   const officeIds=new Set(officesFor(toData).map(o=>o.id));
   payload.offices={grants:(previous.offices?.grants??[]).filter(([id])=>officeIds.has(id)),requests:(previous.offices?.requests??[]).filter(([id])=>officeIds.has(id)),visits:[]};

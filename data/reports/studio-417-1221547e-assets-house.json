@@ -1,0 +1,142 @@
+{
+  "createdAt": "2026-10-18T10:42:22.766Z",
+  "results": [
+    {
+      "name": "studio-pilot-assets",
+      "status": "passed",
+      "seconds": 41.802,
+      "result": {
+        "passed": true,
+        "templateId": "house",
+        "surface": "terracotta patio",
+        "delayMs": 8000,
+        "results": {
+          "normal": {
+            "surface": 81,
+            "requests": {
+              "started": 6,
+              "finished": 6,
+              "failed": 0,
+              "pending": 0
+            },
+            "stats": {
+              "calls": 708,
+              "triangles": 62268,
+              "geometries": 57,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 10,
+              "at": 7853
+            }
+          },
+          "missing": {
+            "surface": 111,
+            "requests": {
+              "started": 6,
+              "finished": 0,
+              "failed": 6,
+              "pending": 0
+            },
+            "stats": {
+              "calls": 405,
+              "triangles": 34996,
+              "geometries": 57,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 10,
+              "at": 4777
+            }
+          },
+          "loading": {
+            "surface": 111,
+            "requests": {
+              "started": 6,
+              "finished": 0,
+              "failed": 0,
+              "pending": 6
+            },
+            "stats": {
+              "calls": 405,
+              "triangles": 34996,
+              "geometries": 57,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 10,
+              "at": 3801
+            },
+            "secondsAfterOpen": 2.925
+          },
+          "loaded": {
+            "surface": 81,
+            "requests": {
+              "started": 6,
+              "finished": 6,
+              "failed": 0,
+              "pending": 0
+            },
+            "stats": {
+              "calls": 405,
+              "triangles": 34996,
+              "geometries": 57,
+              "materials": 27,
+              "textures": 7,
+              "renderTargets": 2,
+              "programs": 10,
+              "at": 9900
+            },
+            "settledAfterOpen": 8.586,
+            "readings": [
+              81
+            ]
+          },
+          "replaced": {
+            "surface": 81,
+            "requests": {
+              "started": 6,
+              "finished": 6,
+              "failed": 0,
+              "pending": 0
+            },
+            "stats": {
+              "calls": 405,
+              "triangles": 34996,
+              "geometries": 57,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 10,
+              "at": 15562
+            },
+            "pendingAtReplacement": 6,
+            "pendingAfterReplacement": 6,
+            "stableReplacement": true,
+            "statsBefore": {
+              "calls": 688,
+              "triangles": 53076,
+              "geometries": 35,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 6,
+              "at": 4413
+            },
+            "statsAfter": {
+              "calls": 688,
+              "triangles": 53076,
+              "geometries": 35,
+              "materials": 27,
+              "textures": 4,
+              "renderTargets": 2,
+              "programs": 6,
+              "at": 12529
+            },
+            "replacementItems": 42
+          }
+        }
+      }
+    }
+  ]
+}

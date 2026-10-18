@@ -17,7 +17,7 @@ if (!['--record', '--check'].includes(mode) || args.length !== 2) throw new Erro
 const baseline = resolve(args[1]), record = mode === '--record';
 const output = record ? baseline : join(root, '.runtime/character-studio/hero-goldens', new Date().toISOString().replaceAll(':', '-'));
 if (!record && (output === baseline || output.startsWith(baseline + '/'))) throw new Error('Check output must be outside the reference directory');
-const cases = ['sable-human', 'woman-casual'], sha = bytes => createHash('sha256').update(bytes).digest('hex');
+const cases = ['sable-human'], sha = bytes => createHash('sha256').update(bytes).digest('hex');
 let reference;
 if (!record) {
   reference = JSON.parse(await readFile(join(baseline, 'manifest.json'), 'utf8'));

@@ -8,7 +8,7 @@ import * as THREE from 'three';
 function load(url, context, nextLoad) {
   if (url.endsWith('/avatars.js')) return { format: 'module', shortCircuit: true, source: `
     import * as THREE from 'three';
-    export const AVATAR_PROFILES=['woman-casual','man-casual','woman-tailored','man-tailored','woman-daywear','man-workwear'];
+    export const AVATAR_PROFILES=['sable-human','man-casual','woman-tailored','man-tailored','lyra-human','man-workwear'];
     export async function loadResidentAvatar(_index, _id, profile, options) {
       globalThis.__remoteAvatarAttempts?.push(options?.appearanceId);await globalThis.__remoteAvatarGate?.(options?.appearanceId);
       if(globalThis.__remoteFailOnce===options?.appearanceId){globalThis.__remoteFailOnce=null;throw new Error('temporary asset failure');}

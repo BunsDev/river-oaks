@@ -30,20 +30,16 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
   const panel = document.createElement('section');panel.className = 'player-controls';panel.setAttribute('aria-label', 'Your character');
   panel.innerHTML = `<header class="player-identity">
     <div class="player-portrait"><img src="/assets/characters/jevica-portrait.png" alt="" width="72" height="88" ${owner?'':'hidden'}><span class="player-monogram" ${owner?'hidden':''} aria-hidden="true">${owner?'J':'S'}</span></div>
-    <div><div class="player-controls-title">Your character</div><h2 id="player-name">${owner?'Jevica':'Sable'}</h2><span id="player-role">${owner?'Rose enchantress':'Fox charmer'}</span></div>
+    <div><div class="player-controls-title">Your character</div><h2 id="player-name">${owner?'Jevica':'Sable'}</h2><span id="player-role">${owner?'Rose enchantress':'City storyteller'}</span></div>
     <span id="player-mode" class="player-mode">On foot</span>
   </header>
   <fieldset class="character-picker">
     <legend>Character</legend>
     <div class="character-roster">${CHARACTERS.map(character=>`<label class="character-chip" ${character.id==='jevica'&&!owner?'hidden':''} style="--character-accent:${character.accent}" title="${character.name} · ${character.title}"><input type="radio" name="player-character" value="${character.id}"><span class="character-chip-mark" aria-hidden="true">${character.name[0]}</span><span class="character-chip-name">${character.name}</span></label>`).join('')}</div>
     <fieldset class="character-option" data-option="variant" hidden><legend>Style</legend><div class="character-segments" data-variants></div></fieldset>
-    <fieldset class="character-option" data-option="form"><legend>Form</legend><div class="character-segments">
-      <label><input type="radio" name="player-form" value="human"><span>Humanoid</span></label>
-      <label><input type="radio" name="player-form" value="beast"><span>Beast<small data-species></small></span></label>
-    </div></fieldset>
   </fieldset>
   <p id="player-description"></p><a id="player-reference" class="player-reference" target="_blank" rel="noopener" hidden>View full character reference</a>
-  <div class="player-actions player-quick-actions"><button id="player-flight" type="button" aria-pressed="false"><span data-flight-label>Take flight</span><kbd>B</kbd></button><button id="player-companion" type="button" aria-pressed="false"><span data-companion-label>Walk with Jev</span><kbd>J</kbd></button><button id="player-beast-movement" type="button" aria-pressed="false" hidden><span data-beast-label>Beast movement</span><kbd>P</kbd></button></div>
+  <div class="player-actions player-quick-actions"><button id="player-flight" type="button" aria-pressed="false"><span data-flight-label>Take flight</span><kbd>B</kbd></button><button id="player-companion" type="button" aria-pressed="false"><span data-companion-label>Walk with Jev</span><kbd>J</kbd></button></div>
   <div class="player-flight-pad" hidden><button type="button" data-flight-key="Space" aria-label="Ascend">↑ Rise</button><button type="button" data-flight-key="KeyC" aria-label="Descend">↓ Lower</button></div>
   <p id="player-companion-status" class="player-companion-status" role="status" aria-live="polite"></p>
   <details class="player-settings"><summary>Rides & camera<svg viewBox="0 0 20 20" aria-hidden="true"><path d="m6 8 4 4 4-4"/></svg></summary>
@@ -122,15 +118,13 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
   // Shared play: a choice the town has not confirmed yet, shown in the picker meanwhile.
   let wanted=null,sending=false,flushTimer=0,confirmedAt=-Infinity;
   const picker=panel.querySelector('.character-picker'),variantOption=picker.querySelector('[data-option=variant]'),variantList=picker.querySelector('[data-variants]');
-  const beastButton=panel.querySelector('#player-beast-movement');
   const flightButton=panel.querySelector('#player-flight');
-  const movementFor=id=>sharedAppearance(id)?.form==='beast'&&sharedMovement==='beast'?'beast':'upright';
+  const movementFor=()=>'upright';
   // The picker always shows the current appearance as character, style and form.
   const syncPicker=()=>{
     const current=sharedAppearance(wanted??appearance),person=sharedCharacter(current.character),worn=sharedAppearance(appearance);
     for(const input of picker.querySelectorAll('[name=player-character]'))input.checked=input.value===person.id;
     for(const input of picker.querySelectorAll('[name=player-form]'))input.checked=input.value===current.form;
-    picker.querySelector('[data-species]').textContent=person.species;
     variantOption.hidden=person.variants.length<2;
     if(variantList.dataset.character!==person.id){
       variantList.dataset.character=person.id;
@@ -142,18 +136,13 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     }
     for(const input of variantList.querySelectorAll('input'))input.checked=input.value===current.variant;
     movement=movementFor(appearance);
-    beastButton.hidden=worn.form!=='beast';beastButton.setAttribute('aria-pressed',String(movement==='beast'));
     flightButton.hidden=!canFlyAs(userId,appearance);
-    walking.setTraversal?.({canFly:canFlyAs(userId,appearance),kind:movement==='beast'?worn.kind:null});
+    walking.setTraversal?.({canFly:canFlyAs(userId,appearance),kind:null});
     picker.dataset.form=current.form;host.dataset.playerMovement=movement;
-    if(loadedAppearance===appearance && worn.movementReference){
-      const source=movement==='beast'?worn.movementReference:worn.portrait;
-      panel.querySelector('.player-portrait img').src=source;
-      panel.querySelector('#player-reference').href=movement==='beast'?worn.movementReference:worn.reference;
-    }
+
   };
   const applySharedPlayer=player=>{
-    sharedMovement=player.movement==='beast'?'beast':'upright';
+    sharedMovement='upright';
     const definition=selectedCharacterFor(player,userId),key=JSON.stringify(definition),changed=key!==definitionKey;
     selectedDefinition=definition;definitionKey=key;
     const confirmed=definition.appearanceId;
@@ -208,33 +197,13 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     else if(input.name==='player-variant')choose(appearanceFor(current.character,{variant:input.value,form:current.form})?.id);
     else if(input.name==='player-form')choose(appearanceFor(current.character,{variant:current.variant,form:input.value})?.id);
   });
-  const toggleBeastMovement=async()=>{
-    if(disposed)return;
-    const current=sharedAppearance(appearance),person=sharedCharacter(current.character);
-    if(current.form!=='beast'){const message='Beast movement belongs to beast forms. Choose Beast under Form first.';status.textContent=message;walking.notify?.(message);return;}
-    const next=movement==='beast'?'upright':'beast';
-    const message=next==='beast'?`Beast movement on: ${person.name} prowls and lopes like a ${person.species.toLowerCase()}.`:'Beast movement off.';
-    beastButton.disabled=true;
-    try{
-      const result=await requestMovement(next);
-      if(disposed)return;
-      if(result?.ok){sharedMovement=result.player?.movement??next;status.textContent=message;}
-      // A town server from before beast movement does not know the command.
-      else status.textContent=result?.error==='invalid_command'?'This town does not support beast movement yet.':result?.message??'Movement could not be saved.';
-    }
-    catch(error){if(!disposed)status.textContent=error.message;}
-    finally{if(!disposed){beastButton.disabled=false;syncPicker();}}
-  };
-  beastButton.addEventListener('click',toggleBeastMovement);
-  // P for prowl; Force mode already uses X to lower what it holds.
-  host.addEventListener('keydown',event=>{if(isGameplayKey(event)&&event.code==='KeyP'&&!event.repeat){event.preventDefault();toggleBeastMovement();}},{signal:lifetime.signal});
   syncPicker();
   const listeners = new Set();
   const attention=createPlayerAttention();
   // A refused take-off says so where the player is looking, not only in the dock.
   const refuseFlight=()=>{
     const hud=document.querySelector('#walking-hud')?.dataset??{};
-    const message=!canFlyAs(userId,appearance)?'Only Jevica can fly. Choose a beast form and use Beast movement to sprint.':hud.inside?'You’re indoors: step outside to take flight.':walking.getPose?.()?.riding?'Step out of your ride to take flight.':'No room to take off here: step out from under the arcade or trees.';
+    const message=!canFlyAs(userId,appearance)?'Only Jevica can fly. Hold Shift to walk briskly.':hud.inside?'You’re indoors: step outside to take flight.':walking.getPose?.()?.riding?'Step out of your ride to take flight.':'No room to take off here: step out from under the arcade or trees.';
     status.textContent=message;walking.notify?.(message);
   };
   flightButton.addEventListener('click',()=>{if(!walking.toggleFlight())refuseFlight();});
@@ -259,7 +228,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
       const portrait = new Image();
       let portraitReady=Promise.resolve(false);
       if(character.portrait||character.reference){
-        portrait.src=movement==='beast'&&character.movementReference?character.movementReference:character.portrait??character.reference;
+        portrait.src=character.portrait??character.reference;
         portraitReady=portrait.decode().then(()=>true,()=>false);
       }
       const avatarIndex=rigProfile==='jevica'?identity.avatar:AVATAR_PROFILES.indexOf(rigProfile);
@@ -295,7 +264,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
       const monogram=panel.querySelector('.player-monogram');monogram.hidden=hasPortrait;monogram.textContent=character.name[0];
       monogram.parentElement.style.setProperty('--character-accent',character.accent);
       panel.querySelector('#player-description').textContent = character.description;
-      const referenceLink=panel.querySelector('#player-reference');referenceLink.hidden=!character.reference;referenceLink.href=movement==='beast'&&character.movementReference?character.movementReference:character.reference??'#';
+      const referenceLink=panel.querySelector('#player-reference');referenceLink.hidden=!character.reference;referenceLink.href=character.reference??'#';
       status.textContent = '';
       host.dataset.playerForm = form;host.dataset.playerAppearance=chosenProfile;host.dataset.playerAppearanceForm=character.form;host.dataset.playerReady = 'true';
       listeners.forEach(listener => listener(form));
@@ -379,9 +348,8 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
         }
         if(!seated&&focus.facing!==null&&!sharedInteraction)holder.rotation.y=focus.facing;
         if(sharedInteraction&&!presentation&&!seated&&!pose.flying)holder.rotation.y=turnToward(holder.rotation.y,sharedInteraction.heading,previous===null?1:dt);
-        avatar.update(now, now < castUntil ? 'amazed' : watering ? 'water' : !pose.flying&&!pose.riding ? (sharedGesture??'continue') : 'continue', false, {speed:pose.flying||seated?0:pose.speed,flightSpeed:pose.flying?pose.speed:0,distance:pose.distance,platform:pose.platform,flying:pose.flying,riding:seated,ridingKind:pose.sitting?'seat':pose.riding?.kind,seatToFloor:pose.sitting?.height??pose.riding?.seatToFloor,vehicle:form,beast:movement==='beast',handshakeTarget:sharedInteraction?.kind==='handshake'?sharedInteraction.target:undefined,gestureTime:sharedInteraction?sharedInteraction.elapsed+Math.max(0,now-interactionAt)/1000:undefined}, pose.groundAt, focus.target, {conversing:focus.mode==='conversation'});outfit.update(pose.flying,now,seated);
+        avatar.update(now, now < castUntil ? 'amazed' : watering ? 'water' : !pose.flying&&!pose.riding ? (sharedGesture??'continue') : 'continue', false, {speed:pose.flying||seated?0:pose.speed,flightSpeed:pose.flying?pose.speed:0,distance:pose.distance,platform:pose.platform,flying:pose.flying,riding:seated,ridingKind:pose.sitting?'seat':pose.riding?.kind,seatToFloor:pose.sitting?.height??pose.riding?.seatToFloor,vehicle:form,handshakeTarget:sharedInteraction?.kind==='handshake'?sharedInteraction.target:undefined,gestureTime:sharedInteraction?sharedInteraction.elapsed+Math.max(0,now-interactionAt)/1000:undefined}, pose.groundAt, focus.target, {conversing:focus.mode==='conversation'});outfit.update(pose.flying,now,seated);
         outfit.updateOptics(camera,viewportHeight);
-        host.dataset.beastMotion=(avatar.beastMotion??0).toFixed(2);
         if(portraitWanted&&getPortrait){
           const id=portraitWanted;portraitWanted=null;
           getPortrait(`player-look:${id}`).then(url=>{

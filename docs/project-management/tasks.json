@@ -11458,6 +11458,33 @@
       "pr": 464
     },
     {
+      "id": "human-only-characters-20261018",
+      "title": "Human-only characters and Jevica-only invited office",
+      "status": "active",
+      "branches": [
+        "feat/human-only-characters-20261018"
+      ],
+      "owner": "codex-human-only-20261018",
+      "updatedAt": "2026-10-18T11:08:37.944467Z",
+      "leaseUntil": "2026-10-18T13:08:37.944467Z",
+      "nextAction": "User authorized commit/push/merge. Verify complete controlled core gate, reconcile current main and inherited Studio stack, commit signed, open PR and land via protected queue.",
+      "filesOwned": [
+        "preview/src",
+        "preview/tests",
+        "preview/e2e",
+        "server",
+        "docs/character-studio.md",
+        "preview/public/assets/characters"
+      ],
+      "requiredChecks": [
+        "Focused migration and catalog regressions",
+        "pnpm run verify",
+        "Human character browser journey"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-18-human-only-characters.md",
+      "pr": 496
+    },
+    {
       "id": "green-roofs-20261015",
       "title": "Implement composed green roof scenery and verify office outlook, fit and rendering budgets",
       "status": "active",
