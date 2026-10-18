@@ -11628,6 +11628,37 @@
       "nextAction": "Commit release results and the register entries; land; retire.",
       "pr": null,
       "updatedAt": "2026-10-16T01:56:03.947Z"
+    },
+    {
+      "id": "human-studio-apple-polish-20261018",
+      "title": "Measured human character and Character Studio polish for iOS and macOS",
+      "status": "active",
+      "branches": [
+        "feat/human-studio-apple-polish-20261018"
+      ],
+      "owner": "codex-apple-polish-20261018",
+      "updatedAt": "2026-10-18T13:12:00.114292+00:00",
+      "leaseUntil": "2026-10-18T14:29:59.869587+00:00",
+      "nextAction": "Full session 66899 passed unit/server/build/Python/secrets/security/reflections and is running experience journeys. Native Safari queued 72837; core queued 67924; final cross-browser requeued 68347 after source-hash timing correction. Focused eight tests passed after headless-rig allocation cleanup. Finish gates and acceptance report, signed commit and reviewable PR with hosted checks; no merge/deploy.",
+      "filesOwned": [
+        "preview/e2e/character-apple-baseline.mjs (new acceptance harness)",
+        "docs/superpowers/plans/2026-10-18-human-studio-apple-polish.md",
+        "docs/acceptance/human-studio-apple-polish.md (new acceptance report)",
+        "preview/src/character-studio.css (native control sizing only)",
+        "preview/src/character-studio.js (Safari pointer entry focus restoration only)",
+        "preview/src/character-studio-preview.js (visibility scheduling and bounded contact shadows)",
+        "preview/src/romance-look.js (shared human bodice fitting)",
+        "preview/src/character-bodice-fit.js",
+        "preview/tests/sable-bodice-fit.test.js"
+      ],
+      "requiredChecks": [
+        "Matched baseline and after browser captures/performance",
+        "Focused behavioral regressions",
+        "pnpm run verify",
+        "pnpm run verify full",
+        "Required hosted PR checks"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-18-human-studio-apple-polish.md"
     }
   ]
 }
