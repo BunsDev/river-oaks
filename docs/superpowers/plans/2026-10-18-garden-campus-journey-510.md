@@ -81,6 +81,33 @@ Parent: #505.
   `#walking-hud[data-inside="campus:T1-F1-hall"]`, also after the reload. The server's
   interior arrival `room.toWorld(0, 2.4)` is 3.17 m from table-1 chair 2, inside the
   3.6 m seat reach.
+- Run 39154402265 at `835c0c44`: three clicks on the door prompt and still outside. The
+  cause was a #507 product bug. Campus ground rooms had no `summary`, and `enterStore` first
+  selects the Map destination, whose `describeInterior` joins `summary.highlights`. It
+  threw before any travel was sent, leaving only a fading "Could not step through". Fixed
+  at #507 `086c197e` with a regression and merged here (`5c13cdca`). With the fit-out, the
+  halls and café also list public workstations.
+- Run 39155192638 at `5c13cdca`: inside the hall for the first time, then no "Sit down"
+  walking action. Hall chairs are street seats, so the shared-seating picker offers them
+  (`#nearby-seat`, `#seat-sit`), as for every bench in a room. The journey (`465785d2`) picks
+  the first free hall chair there, steps the second resident north until one is in reach,
+  and uses the HUD's Stand up and Use this desk buttons. Desktop ubuntu on that run timed out
+  in the Vite CSS hot-reload probe (`desktop/e2e.js:258`). The same check passed at
+  #525 `aed8b247`, which has the same code, so it is a runner flake.
+- **Run 39155567833 at `465785d2`: `preview experience (campus)` passed `garden-campus-office`
+  end to end, all 21 checks.** Those cover:
+  - Play panel, desk closed away from a workstation;
+  - 43-suite directory, no-charge terms, no price;
+  - request shown as asked;
+  - dialog keys, phone width and touch targets, Escape and focus;
+  - operator offer, acceptance, closed request, directions;
+  - public workstation empty desk, acknowledged save;
+  - stand-up removes the action and closes the route (403);
+  - reload recovers the work;
+  - the neighbour's own empty desk, and no leak of the other account's work.
+
+  The #512 candidate `ac88b09a` (run 39155682472) passed the same shard.
+  The full Verify run is green at `465785d2` (`preview` aggregate), and at `ac88b09a` for #512.
 - Desktop macOS at `c4be49c6` (and #512 at `9838e159`): "W moves the player: 0.00 m"
   ending at the spawn `[-2765.32, 20.14, 1295.06]`. That is the fixed point of the known
   macOS W-check flake (runs 38659435397, 38673593628, before any campus code), in the
@@ -88,8 +115,7 @@ Parent: #505.
 
 ## Still to do (in order)
 
-1. A green hosted `campus` shard on the current head (the journey has not yet passed end
-   to end anywhere; local browser runs are blocked by machine load).
+1. Keep the `campus` shard green on later heads; it passed end to end at `465785d2`.
 2. After #508: suite sit and stand through its hooks, `player.campusSeat` restore and
    validation, the suite workstation flag with `campusSuiteAccess`, the eviction release,
    and the journey's upstairs leg (enter the leased suite, a stranger refused).
