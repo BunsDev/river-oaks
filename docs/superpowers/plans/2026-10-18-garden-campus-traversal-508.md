@@ -101,6 +101,15 @@ highest-ground hack or visual-only platform is allowed (#508 acceptance).
 - `preview/src/walking-ui.js`: lift and stair prompts in the tower halls and at every core
   ("Take the lift up", "Go down one level"); server poses resolve campus levels.
 
+## Finishes
+
+- `preview/src/garden-campus-ceilings.js` (new): a pale plaster ceiling under every occupied
+  floor's slab, 6/7/6 = 19, inside the glass line, with a faint emissive bounce and no
+  added scene light. `district.js` adds it to the campus root and releases it with the
+  campus. Each skywalk portal keeps its 3.2 m clear height under it.
+- `preview/tests/garden-campus-ceilings.test.js`: 2/2. The district and campus preview suites
+  pass 39/39.
+
 ## Evidence
 
 - `server/tests/garden-campus-traversal.test.js`: 5/5, on the real world authority.
