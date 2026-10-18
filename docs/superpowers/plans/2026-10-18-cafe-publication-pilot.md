@@ -211,8 +211,18 @@ Player-height captures (local, git-ignored, `output/playwright/`, from run 9):
 **About the timing test:**
 - This branch doesn't touch `office-penthouse-furnishings.js` or its test. The test passed
   alone on this branch (1,241 ms).
-- An export of `d109648a` couldn't serve as a clean comparison: it lacks files other suites
-  need, and the timing test passed there in its one run.
+- **Interleaved check against the base:** I ran the full preview suite on a complete export of
+  `d109648a` and on this branch, alternating, at load average 50–90:
+
+  | Run | Base `d109648a` | This branch |
+  | --- | --- | --- |
+  | 1 | 3,400 pass, 1 fail (42.8 ms) | 3,405 pass, 1 fail (71.9 ms) |
+  | 2 | 3,400 pass, 1 fail (141.8 ms) | 3,406 pass, 0 fail |
+
+  The base fails the same test under the same load: it is a pre-existing flake.
+- `pnpm run verify full` (with the disposable Redis) also stopped there, at 42.8 ms, after
+  `pnpm audit --audit-level=moderate` (no known vulnerabilities) and agent 116/116.
+- Its later stages then ran through their own profiles (below).
 - So it is a load-dependent wall-clock check, not evidence about this change. The preview
   code is identical between run 2 (clean preview) and now.
 - The remaining core tasks then ran one by one on the final code:
@@ -225,6 +235,48 @@ Player-height captures (local, git-ignored, `output/playwright/`, from run 9):
 | `pnpm run verify python` | passed: lint, format, 141 pytest, demo and demo-verify |
 | `uv run --locked python scripts/check_secrets.py --all` | no leaks found |
 | `pnpm run agent:doctor` | passed after `uv sync --locked` gave the worktree its own `.venv` |
+| `pnpm audit --audit-level=moderate` (first task of `verify full`) | no known vulnerabilities |
+| `pnpm run verify security` | passed: worktree secret scan and full Git-history scan |
+| `pnpm run verify browser` | build, `security-browser` and `reflections` passed. All 13 experience journeys passed, including `world-studio`, `store-intro` and `office-visit`. Shared: 34 passed, 1 failed. The failure was this branch's `creator-approved-cafe`, whose wait read `snapshot.protocolVersion` while the page reloaded after rollback (a null snapshot). `ipic-screening` didn't run because the runner stops at the first failed task. |
+
+After that failure, every snapshot read in the journey was made null-safe. The whole
+`development-publish` mode was then rerun
+(`RIVER_OAKS_SHARED_REPORT=cafe-420-shared-publish.json pnpm run test:shared development-publish`).
+All four journeys passed:
+
+| Journey | Time |
+| --- | --- |
+| `world-publish` | 75 s |
+| `creator-generated-levels` | 26 s |
+| `creator-four-levels` | 33 s |
+| `creator-approved-cafe` | 176 s |
+
+The captures Val reviewed are run 9's, preserved on the private review page. Later reruns
+overwrite the local PNGs.
+
+**`ipic-screening`** (`node preview/e2e/ipic-screening-runner.mjs`):
+- **First run:** failed under load average 50–90. The late viewer stayed in IPIC's first-visit
+  intro cinematic past the step's 60 s wait for the HUD, with software rendering.
+- **On hosted CI:** the same journey passed on this branch's head (`preview checks`, run
+  39108965475).
+- **Local rerun:** passed with all checks, including host start, a late join at the running
+  position, two viewers converging within 500 ms, and host pause.
+
+**Coverage of `verify full`:** every stage has now passed on this code:
+- dependency audit;
+- agent;
+- preview, apart from the base's own timing flake above;
+- server with Redis;
+- desktop, build and python;
+- secrets and history;
+- browser security and reflections;
+- the 13 experience journeys;
+- the shared modes;
+- IPIC screening.
+
+The browser runs rewrote the tracked `data/reports/experience.json` and
+`shared-experience.json`. Those were restored, and copies are kept in the session
+scratchpad.
 
 The disposable Redis was `redis-server` 8.10.2 bound to 127.0.0.1 on a random port with no
 persistence, run from the session scratchpad. Its keys use random `river-oaks:cafe-420-test:*`
@@ -317,14 +369,22 @@ issue.
   browser journey ran on the #417 desktop profile (M3 Max, Chromium ANGLE Metal,
   1440 × 1000) on a shared, loaded machine.
 
+## Review and hosted CI
+
+- **Design review:** Val accepted the placement as reviewed on 2026-10-18, from the nine
+  run-9 captures on a private review page
+  ([#420 comment](https://github.com/BunsDev/river-oaks/issues/420#issuecomment-6247500573)).
+  VoiceOver, touch, uncoached use, phones and other GPUs were not reviewed.
+- **Hosted CI on draft #489 (`d390e126`):** 17/17 checks passed, including aggregate
+  `preview`. The `creator-approved-cafe` journey passed on Linux software rendering in
+  `preview shared (worlds-and-creator)` in 2 min 48 s, run 39108965475.
+
 ## Next step
 
-1. **Review:** this branch is a local, signed commit. Pushing it and opening a draft PR
-   for review are separate from this pilot's approval; merging and deploying are not
-   granted.
-2. **Val:** design review of the Café captures listed above. Then decide whether
-   approved spaces may ever be activated outside local fixtures, and what revocation
-   means for a world already showing one.
+1. **Review:** draft PR #489 is pushed with Val's approval; merging and deploying are
+   not granted.
+2. **Val:** decide whether approved spaces may ever be activated outside local fixtures,
+   and what revocation means for a world already showing one.
 3. **Separate issue:** the creator-street ground mismatch above.
 4. **Optional:** `pnpm run verify full` (Redis, audit, history scan and every browser
    journey) on an unloaded machine.

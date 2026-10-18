@@ -10,9 +10,10 @@ async page => {
   const fixture = await readFile('server/tests/fixtures/cafe-pilot-region.json');
   page.on('pageerror', error => errors.push(error.message));
   await page.setViewportSize({ width: 1440, height: 1000 });
-  const ready = (tab, id = worldId) => tab.waitForFunction(id => window.__riverMultiplayer?.().connected
-    && window.__riverMultiplayer().snapshot.worldId === id && document.querySelector('#canvas-host')?.dataset.playerReady === 'true', id);
-  const levelOf = (tab, playerId) => tab.evaluate(id => window.__riverMultiplayer().snapshot.players.find(item => item.id === id)?.levelId ?? null, playerId);
+  // A page reloading after a revision briefly has no snapshot; every read tolerates that.
+  const ready = (tab, id = worldId) => tab.waitForFunction(id => window.__riverMultiplayer?.()?.connected
+    && window.__riverMultiplayer()?.snapshot?.worldId === id && document.querySelector('#canvas-host')?.dataset.playerReady === 'true', id);
+  const levelOf = (tab, playerId) => tab.evaluate(id => window.__riverMultiplayer?.()?.snapshot?.players?.find(item => item.id === id)?.levelId ?? null, playerId);
   const waitLevel = (tab, playerId, levelId) => tab.waitForFunction(({ playerId, levelId }) => {
     const player = window.__riverMultiplayer?.()?.snapshot?.players?.find(item => item.id === playerId);
     return Boolean(player) && (player.levelId ?? null) === levelId; }, { playerId, levelId });
@@ -98,7 +99,7 @@ async page => {
   const url = `${origin}/?world=${worldId}&motion-debug=1`;
   await page.goto(url, { waitUntil: 'commit' }); await ready(page);
   const ownerId = await page.evaluate(() => window.__riverMultiplayer().selfId);
-  check(await page.evaluate(() => window.__riverMultiplayer().snapshot.protocolVersion) === 4, 'The Café world asks for protocol 4');
+  check(await page.evaluate(() => window.__riverMultiplayer?.()?.snapshot?.protocolVersion) === 4, 'The Café world asks for protocol 4');
 
   const browser = page.context().browser();
   const peerContext = await browser.newContext({ viewport: { width: 1440, height: 1000 } }), peer = await peerContext.newPage();
@@ -127,7 +128,7 @@ async page => {
     await old.waitForFunction(() => document.querySelector('#multiplayer-status')?.textContent === 'Refresh to join the improved world.');
     check(await old.locator('.multiplayer-gate').getByRole('button', { name: 'Refresh', exact: true }).isVisible(), 'An older client gets Refresh, not a guessed fallback');
     await old.goto(`${origin}/?motion-debug=1`, { waitUntil: 'commit' }); await ready(old, 'river-oaks');
-    check(await old.evaluate(() => window.__riverMultiplayer().snapshot.protocolVersion) === 3, 'The same older client still joins the original district');
+    check(await old.evaluate(() => window.__riverMultiplayer?.()?.snapshot?.protocolVersion) === 3, 'The same older client still joins the original district');
     await capture(old, 'older-client-district');
 
     // Outside: arrive at the Café, walk to its reviewed arrival and face the doorway.
@@ -169,7 +170,7 @@ async page => {
     await face(peer, [ownerPose[0], -ownerPose[2]]);
     await peer.waitForTimeout(1500);
     await capture(peer, 'guest-sees-owner');
-    const seen = await peer.evaluate(id => window.__riverMultiplayer().snapshot.players.find(item => item.id === id), ownerId);
+    const seen = await peer.evaluate(id => window.__riverMultiplayer?.()?.snapshot?.players?.find(item => item.id === id), ownerId);
     check(seen.levelId === level && Math.hypot(seen.position[0] - ownerPose[0], seen.position[1] + ownerPose[2]) < 0.6, 'The guest sees the owner inside the Café');
 
     // Reconnect: a reload inside the grace period returns the guest to the Café floor.
@@ -202,7 +203,7 @@ async page => {
     }, worldId);
     check(rollback.status === 200 && rollback.body.disconnectedPlayers === 2, `The owner rolls back with both visitors disconnected: ${JSON.stringify(rollback)}`);
     await ready(page); await ready(peer);
-    await page.waitForFunction(() => window.__riverMultiplayer().snapshot.protocolVersion === 3);
+    await page.waitForFunction(() => window.__riverMultiplayer?.()?.snapshot?.protocolVersion === 3);
     const plain = await (await page.request.get(`${origin}/api/world-data?world=${worldId}`)).json();
     check(plain.world.buildingInteriors === undefined, 'After rollback the region has no approved plan');
     check(await levelOf(peer, guestId) === null && await levelOf(page, ownerId) === null, 'Nobody is left on the replaced Café floor');
