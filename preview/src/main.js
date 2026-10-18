@@ -51,7 +51,7 @@ import { buildStreetFurniture } from './street-furniture.js';
 import { buildPlazaSalon } from './plaza-salon.js';
 import { createPlazaTableGames, seatAtTable } from './plaza-table-games.js';
 import { createPlazaStage } from './plaza-stage.js';
-import { plazaSalonPlan } from './plaza-salon-plan.js';
+import { plazaSalonPlan, winePongPoint } from './plaza-salon-plan.js';
 import { createPlazaDominoes, seatAtCafe } from './plaza-dominoes.js';
 import { createPlazaHearts } from './plaza-hearts.js';
 import { createPlazaSpades } from './plaza-spades.js';
@@ -1223,11 +1223,11 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
   window.__riverAxes = () => axePanel ? { ...axePanel.debug(), stuck: Object.fromEntries(AXE_LANES.map(lane => [lane.id, buildingMesh?.userData.interiors?.userData.axeVenue?.axeLanes?.[lane.id]?.count() ?? null])),
     holdAt: mm => axePanel.holdAt(mm), open: () => axePanel.open() } : null;
   window.__riverVenueDarts = () => venueDarts ? { ...venueDarts.debug(), board: buildingMesh?.userData.interiors?.userData.axeVenue?.venueDarts?.count() ?? null,
-    holdAt: mm => venueDarts.holdAt(mm), open: () => venueDarts.open() } : null;
+    steadyOn: point => venueDarts.steadyOn(point), open: () => venueDarts.open() } : null;
   window.__riverIpicDarts = () => ipicDarts ? { ...ipicDarts.debug(), board: buildingMesh?.userData.interiors?.userData.dartboards?.[0]?.count() ?? null,
-    hold: value => ipicDarts.hold(value), holdAt: mm => ipicDarts.holdAt(mm), open: () => ipicDarts.open() } : null;
+    steadyAt: release => ipicDarts.steadyAt(release), steadyOn: point => ipicDarts.steadyOn(point), open: () => ipicDarts.open() } : null;
   window.__riverPlazaDarts = () => plazaDarts ? { ...plazaDarts.debug(), board: plazaSalon?.userData.darts?.count() ?? null,
-    hold: value => plazaDarts.hold(value), holdAt: mm => plazaDarts.holdAt(mm), reset: seed => plazaDarts.reset(seed),
+    steadyAt: release => plazaDarts.steadyAt(release), steadyOn: point => plazaDarts.steadyOn(point), landingFor: (release, dart) => plazaDarts.landingFor(release, dart), reset: seed => plazaDarts.reset(seed),
     // Walk to the throwing line and face the board.
     async goTo() {
       const board = world && plazaSalonPlan(world)?.darts;
@@ -1238,7 +1238,10 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
       return { ok: Boolean(result?.ok) };
     } } : null;
   window.__riverPlazaWinePong = () => plazaWinePong ? { ...plazaWinePong.debug(), table: plazaSalon?.userData.winePong?.glasses() ?? null, ball: plazaSalon?.userData.winePong?.ballVisible() ?? null,
-    hold: value => plazaWinePong.hold(value), deal: seed => plazaWinePong.deal(seed),
+    steadyAt: (aim, power) => plazaWinePong.steadyAt(aim, power), deal: seed => plazaWinePong.deal(seed),
+    reposition: () => plazaWinePong.reposition(), resume: () => plazaWinePong.resume(),
+    // A world point in the table's frame [u along it, v across it], for walking to a stance.
+    pointAt: (u, v) => { const table = world && plazaSalonPlan(world)?.winePong; return table ? winePongPoint(table, [u, v]) : null; },
     // Walk to one end of the table (0 west, 1 east) and face down it.
     async goTo(side) {
       const spot = plazaSalon?.userData.winePong?.stand(side), table = world && plazaSalonPlan(world)?.winePong;

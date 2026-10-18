@@ -56,19 +56,25 @@ export async function startComputerFixture() {
         if (mode.save === 'slow') await new Promise(resolve => setTimeout(resolve, 1500));
         notes.set(s.account, String(note).slice(0, 2000)); return json(res, 200, { ok: true });
       }
-      // Test control, called by the journey from the child frame.
+      if (url.pathname === '/forge') return forge(res);
+      // Test control, called by the journey.
       if (url.pathname === '/api/fixture') {
         if (req.method === 'POST') Object.assign(mode, await body(req));
-        return json(res, 200, { ...mode });
+        return json(res, 200, { ...mode, elsewhere });
       }
       send(res, 404, 'not found');
     } catch (error) { console.error('Computer fixture:', error); send(res, 500, 'fixture error'); }
   });
+  // A forged sender: posts the messages in its URL fragment to its parent. Served from Computer's own
+  // origin (the right origin, the wrong window) and from a second origin (the wrong origin altogether).
+  const forge = res => send(res, 200, `<!doctype html><meta charset="utf-8"><title>Forged sender</title><script>for (const message of JSON.parse(decodeURIComponent(location.hash.slice(1)))) parent.postMessage(message, '*');</script>`, { 'Content-Type': 'text/html; charset=utf-8' });
+  const other = createServer((req, res) => new URL(req.url, 'http://fixture').pathname === '/forge' ? forge(res) : send(res, 404, 'not found'));
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
-  const origin = `http://127.0.0.1:${server.address().port}`;
+  await new Promise(resolve => other.listen(0, '127.0.0.1', resolve));
+  const origin = `http://127.0.0.1:${server.address().port}`, elsewhere = `http://127.0.0.1:${other.address().port}`;
   return {
     origin, log, notes,
     setParentOrigin(value) { parentOrigin = value; },
-    close: () => new Promise(resolve => { server.closeAllConnections?.(); server.close(() => resolve()); }),
+    close: () => Promise.all([server, other].map(instance => new Promise(resolve => { instance.closeAllConnections?.(); instance.close(() => resolve()); }))),
   };
 }
