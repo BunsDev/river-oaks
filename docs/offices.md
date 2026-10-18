@@ -113,3 +113,7 @@ personal-office visits are ended on checkpoint recovery; their identity cannot b
 used to enter Jevica’s office. Old workspace data is not read or served. This source
 change does not delete production records. Account-private desk tasks remain owned
 by their accounts and are accessible only during an authorized Jevica office visit.
+
+## The Gardens rental campus (planned)
+
+The Gardens will replace the parking garage with three rental office towers joined by public Floor 4 skywalks (#505). Its measured contract, which covers the parcel, floors, skywalks, support levels, suites and validator, is `shared/garden-campus-layout.js`. The brief, published contract and views are in [`docs/design/garden-campus/`](design/garden-campus/brief.md). Nothing in the running district uses it yet: the garage stays until a reviewed campus revision replaces it (#507), and rental tenancy is a separate service (#509), not the retired personal-office APIs above.
