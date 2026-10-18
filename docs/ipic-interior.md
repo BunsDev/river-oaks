@@ -173,18 +173,20 @@ collide; none is on a public route.
 T1–T3 with the photos they are indexed to and lists 18 differences by photo ID, severity
 and owner. P1 (open sky), P3, P4 and P6 (the reception), P5 (sign), P7 (reception view), P8,
 P9, P10 and P11 (the lounge group), P12 (lounge carpet and bar floor), P13 and P14 (the Tuck
-Room's island bar, rack and pothos), P17 (auditorium carpet) and P18 (the walled-in landing) are
-fixed, and P2 (the mural, kept large in its bay) is resolved as Val chose; the other 2 (the
-auditorium's risers and screen) are tracked on #359.
+Room's island bar, rack and pothos), P15 and P16 (the auditorium's risers and screen), P17
+(auditorium carpet) and P18 (the walled-in landing) are fixed, and P2 (the mural, kept large in
+its bay) is resolved as Val chose. All 18 are now fixed or resolved.
 
 **Screen** (`IPIC_SCREEN` in `ipic-plan.js`, used by the renderer and the data):
 
-- Size and place: 9.8 × 3.25 m (3.015:1), centred 2.5 m above the auditorium floor,
-  0.875–4.125 m.
-- **Back row.** Sees the screen only above 2.01 m over the front-row headrests, so
-  the bottom 35 % is hidden: anything burned into the picture belongs in the top 65 %.
-- **Front row.** 2.79 m from the screen: it spans 104–119° across, and the top edge
-  is 46° up.
+- Size and place: 12.1 × 3.6 m (3.36:1), centred 2.45 m above the front-row floor,
+  0.65–4.25 m (P16, 2026-10-18; it was 9.8 × 3.25 m). Films keep their aspect, so the
+  approved 16:9 short is pillarboxed.
+- **Back row.** It sits on the 0.4 m riser (P15; `IPIC_RISER`) and sees the screen above
+  1.44 m over the front-row headrests, so the bottom 22 % is hidden (35 % before the
+  risers): anything burned into the picture belongs in the top 78 %.
+- **Front row.** 2.79 m from the screen: it spans 120–130° across, and the top edge
+  is 47° up.
 - Seated eye: cushion + 0.69 m. Seated avatars in front are not modelled.
 - The player's captions are a WebVTT track, not burned in.
 

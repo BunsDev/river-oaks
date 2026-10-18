@@ -1,5 +1,6 @@
 async page => {
   const { openHudSpace } = await import('./hud-navigation.js');
+  const { ipicFloor } = await import('../src/ipic-plan.js');
   const check = (ok, message) => { if (!ok) throw new Error(message); };
   const errors = [], checks = [];
   page.on('pageerror', error => errors.push(error.message));
@@ -40,7 +41,8 @@ async page => {
   check(/Step outside/.test(atDoor.exit ?? ''), `Step outside is offered in reception: ${JSON.stringify(atDoor)}`);
   // Between the rows, beside recliners 0-1 and 1-1 (the T3 seat), as the screening journeys stand.
   for (const p of [[-1.4,4.8],[-1.4,20.7],[-1.4,24.5],[-4.85,24.5],[-4.85,29],[-4.85,29.65],[-1.6,29.65]]) await walk(...p);
-  const top = await pose(); check(Math.abs(top.ground - plan.floor - 6) < .01, 'Shared player reached the upstairs auditorium');
+  // The walk ends on the back row's riser (P15), 0.4 m over the front row's floor.
+  const top = await pose(); check(Math.abs(top.ground - plan.floor - ipicFloor(29.65)) < .01, `Shared player reached the back row's riser in the upstairs auditorium: ${top.ground - plan.floor}`);
   const deep = await hud();
   check(deep.exit === null && deep.inside, `No Step outside in the auditorium: ${JSON.stringify(deep)}`);
   await page.locator('#canvas-host').focus(); await page.keyboard.press('KeyF'); await page.waitForTimeout(1500);

@@ -19,7 +19,14 @@ export const IPIC_BACK_BAR = 6.28;
 // The auditorium screen, independent of what plays on it (#364/#365): centre
 // across the room (a) and above the auditorium floor (y), plane depth (d) and
 // size in metres, about 3:1. A film fits inside it; see ipic-screening.js.
-export const IPIC_SCREEN = Object.freeze({ a: .3, y: 2.5, d: 33.79, width: 9.8, height: 3.25 });
+// The screen spans nearly the whole front wall, as in IMG_9767 (photo review P16; Val, 2026-10-18), within
+// the 4.4 m between floor and ceiling. Films keep their aspect on it (ipic-screening.js fitVideoToScreen).
+export const IPIC_SCREEN = Object.freeze({ a: .3, y: 2.45, d: 33.79, width: 12.1, height: 3.6 });
+// Stadium risers (photo review P15, IMG_9767): the back row stands `rise` above the front row. The steps up
+// just inside the doorway and down both side aisles are continuous ramps underfoot, drawn as lit treads, like
+// the escalator flights; across the seats (`wall`, in a) a riser wall closes the drop. The east aisle keeps the
+// way round the front that the widest accepted body takes to the back row's east seats.
+export const IPIC_RISER = Object.freeze({ rise: .4, up: Object.freeze([26.15, 27.35]), down: Object.freeze([30.05, 30.95]), wall: Object.freeze([-3.3, 4.4]) });
 // The Tuck Room dartboard (Val, 2026-10-15): a freestanding cabinet in front of the
 // cinema wall, below the floral artwork. The board's face is at d, its centre at a and
 // 1.73 m above the floor; the throwing line is 2.37 m out. The throwing area behind the
@@ -35,7 +42,7 @@ export const IPIC_CAMERAS = Object.freeze([
   { name: 'mural', eye: [1.4, 4.6, 11.8], target: [4.7, 4.6, 13.7], photo: 'IMG_9771.jpg' },
   { name: 'lounge', eye: [-4.1, 7.75, 25.7], target: [-4.1, 6.75, 20.4], photo: 'IMG_9758.jpg' },
   { name: 'bar', eye: [-.8, 7.65, 24.8], target: [4.5, 7.7, 22.8], photo: 'IMG_9756.jpg' },
-  { name: 'auditorium', eye: [-4.7, 7.65, 27.3], target: [.5, 8.2, 33.7], photo: 'IMG_9767.jpg' },
+  { name: 'auditorium', eye: [-3.95, 8, 28.35], target: [-.6, 7.04, 33.79], photo: 'IMG_9767.jpg' },
 ]);
 
 export function ipicFloor(d) {
@@ -43,6 +50,11 @@ export function ipicFloor(d) {
   if (d < 12) return (d - 6) / 2;
   if (d <= 14) return 3;
   if (d < 20) return 3 + (d - 14) / 2;
+  const { rise, up: [u0, u1], down: [w0, w1] } = IPIC_RISER;
+  if (d <= u0) return 6;
+  if (d < u1) return 6 + rise * (d - u0) / (u1 - u0);
+  if (d <= w0) return 6 + rise;
+  if (d < w1) return 6 + rise * (w1 - d) / (w1 - w0);
   return 6;
 }
 
@@ -78,7 +90,13 @@ export function configureIpicRoom(room) {
   block('ipic-bar-shelves', (IPIC_BACK_BAR + room.aMax) / 2, 23, room.aMax - IPIC_BACK_BAR, 4.8, 6, 3.3);
   block('ipic-express-counter', 5.4, 25.62, 1.5, .45, 6, 1.1);
   block('ipic-lift-front', 5.3, 5.85, 1.85, .2, 0, 2.8);
-  block('ipic-aisle-rail', -5.55, 30, .05, 6.05, 6, .92);
+  block('ipic-aisle-rail', -5.55, 30, .05, 6.05, 6, .92 + IPIC_RISER.rise);
+  // The riser wall: across the seats the drop to the front row is closed. It stops behind the
+  // front row's backs, so their cushions stay usable, and short blocks close the gaps between those recliners.
+  const [w0, w1] = IPIC_RISER.down, [r0, r1] = IPIC_RISER.wall, edge = 30.6, h = IPIC_RISER.rise + .1;
+  block('ipic-riser', (r0 + r1) / 2, (w0 + edge) / 2, r1 - r0, edge - w0, 6, h);
+  const front = [-2.6, -.6, 1.4, 3.4], gaps = [...front.slice(1).map((a, i) => [front[i] + .575, a - .575]), [front.at(-1) + .575, r1]];
+  for (const [a0, a1] of gaps) block('ipic-riser', (a0 + a1) / 2, (edge + w1) / 2, a1 - a0, w1 - edge, 6, h);
   block('ipic-coffee-table', -4.1, 22.1, 1.5, .9, 6, .4);
   // The dart cabinet, its board and the darts in it.
   block('ipic-dart-cabinet', IPIC_DARTS.a, 25.71, .95, .32, 6, 2.05);
@@ -102,11 +120,12 @@ export function configureIpicRoom(room) {
   // (0.35 m) from every box, so the server sit/stand protocol needs no bypass or client authority.
   for (const seat of room.ipicSeats) {
     const back = seat.d - (seat.key === 'lounge-sofa' ? .45 : .48);
-    block('ipic-seat-back', seat.a, back, .98, .18, 6, 1.1);
+    const y = ipicFloor(seat.d);
+    block('ipic-seat-back', seat.a, back, .98, .18, y, 1.1);
     if (seat.key.startsWith('recliner')) {
-      for (const side of [-1, 1]) block('ipic-seat-arm', seat.a + side * .54, seat.d, .22, 1.05, 6, .905);
-      for (const end of [-1, 1]) block('ipic-recliner-base', seat.a, seat.d + end * .6125, 1.15, .175, 6, .34);
-      block('ipic-recliner-footrest', seat.a, seat.d + .72, .82, .468, 6, .49);
+      for (const side of [-1, 1]) block('ipic-seat-arm', seat.a + side * .54, seat.d, .22, 1.05, y, .905);
+      for (const end of [-1, 1]) block('ipic-recliner-base', seat.a, seat.d + end * .6125, 1.15, .175, y, .34);
+      block('ipic-recliner-footrest', seat.a, seat.d + .72, .82, .468, y, .49);
     }
   }
   for (const a of IPIC_SOFA_ARMS) block('ipic-seat-arm', a, IPIC_SOFA_D, .19, .95, 6, 1);
@@ -131,8 +150,8 @@ export function ipicSeatSites(rooms) {
     const buildId = `bench:ipic-${seat.key}`;
     // A recliner's back rises above its sitter's eye, so a camera behind it sees only leather:
     // its sitter watches from the seated eye (0.65 m above the cushion, as walking-ui places it),
-    // pitched at the screen centre.
-    const eyePitch = seat.key.startsWith('recliner') ? Math.atan2(IPIC_SCREEN.y - seat.height - .65, IPIC_SCREEN.d - seat.d) : null;
+    // pitched at the screen centre from the floor of its own row.
+    const eyePitch = seat.key.startsWith('recliner') ? Math.atan2(IPIC_SCREEN.y - (ipicFloor(seat.d) - 6) - seat.height - .65, IPIC_SCREEN.d - seat.d) : null;
     return { id: `${buildId}:${seat.slot}`, buildId, slot: seat.slot, kind: seat.kind, storeId: room.storeId,
       title: seat.key === 'lounge-sofa' ? 'IPIC lounge sofa' : 'IPIC theater recliner',
       x, north, heading: yaw, height: seat.height, approach: seat.approach ? room.toWorld(...seat.approach) : [x + Math.sin(yaw) * .9, north - Math.cos(yaw) * .9],

@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs';
 import * as THREE from 'three';
 import { createWalkingEnvironment } from '../src/walking.js';
 import { buildIpicInterior } from '../src/ipic-interior.js';
-import { IPIC_FLIGHTS, IPIC_SCREEN, ipicFloor } from '../src/ipic-plan.js';
+import { IPIC_FLIGHTS, IPIC_RISER, IPIC_SCREEN, ipicFloor } from '../src/ipic-plan.js';
 import { ipicClearance } from '../src/ipic-circulation.js';
 
 const world = JSON.parse(readFileSync(new URL('../public/data/district.json', import.meta.url)));
@@ -111,8 +111,9 @@ test('rendered floors, landings and treads sit on the server support height ever
     const hit = raycaster.intersectObjects(meshes, false).filter(h => h.point.y > ground - .5).at(-1);
     assert.ok(hit, `no rendered floor under ${a},${d}`);
     const lift = hit.point.y - ground;
-    const onFlight = IPIC_FLIGHTS.some(f => d > f.start && d < f.end);
-    // Static treads rise 0.1 m at a time above the continuous ramp the server walks.
+    const onFlight = IPIC_FLIGHTS.some(f => d > f.start && d < f.end) || [IPIC_RISER.up, IPIC_RISER.down].some(([start, end]) => d > start && d < end);
+    // Static treads rise 0.1 m at a time above the continuous ramp the server walks (the escalators, and the
+    // auditorium's riser steps).
     if (onFlight) { treads++; assert.ok(lift >= -.002 && lift <= .102, `tread at ${a.toFixed(2)},${d.toFixed(2)} is ${lift.toFixed(3)} from support`); }
     else { flat++; assert.ok(Math.abs(lift) < .01, `floor at ${a.toFixed(2)},${d.toFixed(2)} is ${lift.toFixed(3)} from support (${hit.object.name})`); }
     worst = Math.max(worst, Math.abs(lift));
@@ -135,7 +136,7 @@ const DRAWN_WITHOUT_COLLISION = [
   { mesh: 'Upper lounge: ipic-cognac-leather', a: [-4.6, -1], d: [21.7, 23.3], closest: .29, why: 'tub chair shells overhang their colliders' },
   { mesh: 'Reception: ipic-hanging-greenery', a: [-5.6, 6], d: [.95, 2.3], closest: .25, why: 'planter foliage' },
   { mesh: 'Upper lounge: ipic-hanging-greenery', a: [-5.85, 1.75], d: [24.7, 25.8], closest: .13, why: 'planter foliage; the west planter moved 5 cm to widen the passage (2026-10-15)' },
-  { mesh: 'Auditorium: ipic-cinema-screen', a: [-4.6, 5.25], d: [33.45, 33.55], closest: .28, why: 'the screen is 0.13 m in front of the wall the room edge stops a body at' },
+  { mesh: 'Auditorium: ipic-cinema-screen', a: [-5.85, 6.4], d: [33.45, 33.55], closest: .28, why: 'the screen is 0.13 m in front of the wall the room edge stops a body at; it spans nearly the whole wall since P16 (2026-10-18)' },
 ];
 
 test('the space the server lets a body walk through is visually empty, apart from recorded parts', () => {
