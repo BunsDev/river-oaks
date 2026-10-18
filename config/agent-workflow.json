@@ -281,7 +281,8 @@
         "office-desk",
         "office-visit",
         "office-computer-embed",
-        "garden-campus-office"
+        "garden-campus-office",
+        "garden-campus-traversal"
       ],
       "browser": true,
       "timeoutMs": 1200000

@@ -62,24 +62,76 @@ frame. The test checks that the frame reproduces the plan's parcel corner.
 - **Mutation:** moving the terrace cameras 0.2 m past the strip's outer edge fails "has
   support".
 
-## Journey plan (waits for #508's first push)
+## Journey (built against #508 `80a76ef3`)
 
-See the #505 tracker, "#508 slice (b) plan":
-- continuous Floor 4 route with keys;
-- above and below B12 at once;
-- an occupied landing;
-- one terrace and one roof;
-- touch controls and reduced motion;
-- rendered feet against `campusSupportAt`.
+`preview/e2e/garden-campus-traversal.js` is registered in the experience profile, the
+runner's fixture env (campus revision) and a `campus` CI shard. Two residents take part:
+
+- **Resident A** (owner fixture): keyboard, reduced motion.
+  1. Enters T1's hall through the Map's Step inside.
+  2. Rides T1's lift to Floor 4 (F, three presses) and waits on the landing.
+  3. Once B is under B12, walks the spur, gallery and B12 above them.
+  4. Crosses T2's terrace and gallery.
+  5. Rides T2's lift to the roof garden (Floor 8) and back.
+  6. Walks B23 into T3 and takes T3's stairs to the street, ending in T3's hall.
+- **Resident B** (alice): emulated phone, 390×844, touch.
+  1. Rides up by tapping the HUD prompts.
+  2. Arrives beside A on the occupied landing.
+  3. Taps back down to T1's hall.
+  4. Walks out under B12.
+
+Every arrival checks three things: the server's level, the floor's exact height, and the
+page's eye 1.68 m above it. Both pages see the other resident at the right level and
+height. Walking is W/Shift with view drags (walking-ui `yaw -= dx·0.003`), toward targets
+taken from the contract.
+
+**Fixes found while writing it.** These are journey mechanics only; no product changes:
+- wait for the town join before Step inside;
+- on a phone, fold the panel, visit tools and chat dock, and open More for the second action;
+- drag above the HUD;
+- read prompts only after the HUD repaints for the new floor (a stale "Take the lift down"
+  from the roof read as F on Floor 7);
+- wait for the exact target level.
 
 ## Evidence
 
-- `node --test preview/tests/garden-campus-circulation-views.test.js`: 3/3 at the first commit.
+- **Local passing run** at slice `ed8a0845` + journey, 2026-10-18 ~20:50Z:
+  `node preview/e2e/experience-runner.js garden-campus-traversal` (M3 Max, ANGLE Metal, Vite
+  dev fixture, load ~40–60). The phases took:
+  - T1 lift walk 15.7 s, phone 15.5 s;
+  - under B12 44.3 s, onto B12 26.3 s;
+  - T2 lift 37.3 s, T3 stairs 54.3 s.
+
+  Feet matched the floor at every arrival: 23.26, 27.26 and 31.26 m on Floors 2–4,
+  47.26 m on the roof, 18.26 m on the street. Screenshots are in
+  `docs/design/garden-campus/traversal/`.
+- `node --test preview/tests/garden-campus-circulation-views.test.js`: 3/3 at `706429f1`.
+  On the candidate `d8fe456a`, the circulation and #511 finish tests pass 12/12.
+- **Render.** `node preview/e2e/garden-campus-views.mjs gardens circulation` on the #512
+  candidate `d8fe456a`, re-rendered at `01ee3243` after the walls (sheet and receipt replaced):
+  - candidate contents: #507 `086c197e`, #509, #510 `465785d2`, #511 `b73cf65a` and this slice;
+  - setup: M3 Max, ANGLE Metal, 1280×800, Smooth, 15:00, interface hidden, under the browser
+    lock, host load ~40;
+  - result: 14 views passed with no page errors. Outputs are
+    `docs/design/garden-campus/circulation/sheet-day.jpg` (each render beside its plan crop)
+    and `views-2026-10-18.json` (poses, draw calls, triangles, frame times).
+
+## Findings from the views (for #508, river-oaks-c5)
+
+1. **Galleries were not separated from the suites (closed).** At `d8fe456a`, all three
+   Floor 4 galleries rendered without walls or suite doors, and #510's suite desks read as
+   public space. Val moved the walls to #507. #507 `a6dbb661` adds them with closed doors,
+   opaque at any camera distance. A second render (`79f74bfb`) showed the near-camera fade
+   dissolving them, which is now fixed. The current sheet at `01ee3243` shows each gallery as a
+   walled corridor with closed suite doors.
+2. **The ceiling is dark.** Gallery ceilings render as an unlit dark slab underside. That is
+   finish scope; the gallery and landing finishes are c5's.
+3. Skywalks, terraces and roofs read as #511 finished them: planted troughs, glass guards,
+   timber decks and headhouses. The plan crops place every camera on its surface.
 
 ## Next action
 
-Merge this branch into the #512 candidate and run
-`node preview/e2e/garden-campus-views.mjs gardens circulation` under the browser lock.
-Commit the sheet and receipt, and review them against the plans. #511's sheets cover the
-unoccupied finish from a distance; these cover where a resident stands. Rerun after #508's
-gallery finishes land.
+1. A hosted `campus` shard pass on the candidate; HUD polish (drop the generic "Level N"
+   suffix on campus floors).
+2. Re-render the circulation set once #508's ceiling, floor and lighting finishes land, and
+   confirm finding 2 is closed.

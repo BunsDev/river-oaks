@@ -188,9 +188,10 @@ jobs:
             journeys: spatial-streets world-studio
           - id: places
             journeys: contextual-first-visit store-intro photo-mode rail-navigation places-guide destination-minimap spatial-circulation office-desk office-visit office-lift-ride office-computer-embed
-          # The Gardens campus revision (#510): leases, public workstations and the private desk.
+          # The Gardens campus revision: leases, workstations and the private desk (#510), and
+          # public traversal of lifts, stairs and both skywalks (#508).
           - id: campus
-            journeys: garden-campus-office
+            journeys: garden-campus-office garden-campus-traversal
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
