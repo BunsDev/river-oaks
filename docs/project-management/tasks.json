@@ -11652,6 +11652,32 @@
       "nextAction": "Commit release results and the register entries; land; retire.",
       "pr": null,
       "updatedAt": "2026-10-16T01:56:03.947Z"
+    },
+    {
+      "id": "plaza-fullscreen-polish-20261018",
+      "title": "Comprehensive full-screen plaza games polish from Val screenshot",
+      "status": "active",
+      "branches": [
+        "fix/plaza-fullscreen-polish-20261018"
+      ],
+      "owner": "codex-pr-448-477-468-484",
+      "leaseUntil": "2026-10-18T17:38:54.247107+00:00",
+      "updatedAt": "2026-10-18T15:38:54.247107+00:00",
+      "nextAction": "Review screenshot and current layout; center board/control workspace, fit full board, improve control grouping and contrast, add oriented coordinates; verify all five games and responsive/keyboard states.",
+      "ledger": "docs/superpowers/plans/2026-10-18-plaza-fullscreen-polish.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-plaza-fullscreen-polish-20261018",
+      "filesOwned": [
+        "preview/src/plaza-table-games.js",
+        "preview/src/plaza-table-games.css",
+        "preview/e2e/plaza-game-layout.js"
+      ],
+      "requiredChecks": [
+        "Focused table-game behavioral tests",
+        "plaza-game-layout, plaza-morris, salon-guide browser journeys",
+        "Shared table-game browser coverage",
+        "pnpm run verify",
+        "Exact-head hosted preview before landing"
+      ]
     }
   ]
 }

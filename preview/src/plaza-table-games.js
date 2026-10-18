@@ -54,11 +54,11 @@ export function createPlazaTableGames({ host = document.querySelector('#viewport
     <p class="table-game-status" role="status" aria-live="polite"></p>
     <div class="table-game-invite" role="group" aria-label="Invitation" hidden><p></p><div><button type="button" data-invite="accept">Accept</button><button type="button" data-invite="decline">Decline</button></div></div>
     <div class="table-game-promotion" role="group" aria-label="Promote the pawn to" hidden></div>
-    <ol class="table-game-moves" aria-label="Moves"></ol>
     <div class="table-game-actions"><div class="table-game-mode" role="group" aria-label="Opponent">
       <button type="button" data-mode="regular" aria-pressed="true">Plaza regular</button><button type="button" data-mode="pass" aria-pressed="false">Pass and play</button><button type="button" data-mode="lesson" aria-pressed="false">Lesson</button><button type="button" data-mode="shared" aria-pressed="false" hidden></button></div>
       <div class="table-game-side-choice" role="group" aria-label="You play"><button type="button" data-side-index="0" aria-pressed="true"></button><button type="button" data-side-index="1" aria-pressed="false"></button></div>
       <button type="button" data-action="undo">Take back</button><button type="button" data-action="resign" hidden>Resign</button><button type="button" data-action="new">New game</button></div>
+    <section class="table-game-history" aria-label="Move history"><h3>Moves</h3><ol class="table-game-moves" aria-label="Moves"></ol></section>
     <p class="table-game-note"></p></div></div>`;
   host.append(panel);
   attachGuide(panel, () => panel.dataset.game);
@@ -161,6 +161,13 @@ export function createPlazaTableGames({ host = document.querySelector('#viewport
         const file = flipped ? cols - 1 - column : column, square = rank * cols + file, name = nameOf(adapter, square), piece = adapter.piece(state, square);
         const cell = document.createElement('button');
         cell.type = 'button'; cell.className = 'table-square'; cell.setAttribute('role', 'gridcell');
+        // Edge labels follow the visual orientation, including the second player's board.
+        for (const [axis, visible, text] of [['rank', column === 0, String(rank + 1)], ['file', row === size - 1, String.fromCharCode(97 + file)]]) {
+          if (!visible) continue;
+          const label = document.createElement('span');
+          label.className = 'table-coordinate'; label.dataset.axis = axis; label.textContent = text; label.setAttribute('aria-hidden', 'true');
+          cell.append(label);
+        }
         // Morris plays only its 24 points; the rest of the grid carries the lines.
         if (adapter.playable && !adapter.playable(square)) { cell.dataset.void = ''; cell.disabled = true; cell.tabIndex = -1; cell.setAttribute('aria-hidden', 'true'); cells.push(cell); continue; }
         cell.dataset.square = name; cell.dataset.shade = (file + rank) % 2 ? 'light' : 'dark';
@@ -208,6 +215,7 @@ export function createPlazaTableGames({ host = document.querySelector('#viewport
       button.setAttribute('aria-pressed', String(side === game.player)); button.disabled = game.mode !== 'regular';
     }
     const sharing = game.mode === 'shared';
+    $('.table-game-side-choice').hidden = game.mode !== 'regular' && !sharing;
     $('[data-action="undo"]').hidden = sharing; $('[data-action="undo"]').disabled = !game.moves.length;
     $('[data-action="resign"]').hidden = !sharing || Boolean(result);
     // A rematch is offered once the shared game has ended.
