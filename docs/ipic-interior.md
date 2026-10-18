@@ -169,8 +169,9 @@ collide; none is on a public route.
 **Runtime against the photos** (2026-10-15): `docs/ipic-review/photo-review.md` compares
 T1–T3 with the photos they are indexed to and lists 18 differences by photo ID, severity
 and owner. P1 (open sky), P5 (sign), P7 (reception view), P9 (coffee table), P12 (lounge carpet
-and bar floor) and P17 (auditorium carpet) are fixed; the other 12, P18 (the street showing
-past the mural panel) included, are art direction or layout work tracked on #359.
+and bar floor), P17 (auditorium carpet) and P18 (the walled-in landing) are fixed, and P2 (the
+mural, kept large in its bay) is resolved as Val chose; the other 10 are art direction or layout
+work tracked on #359.
 
 **Screen** (`IPIC_SCREEN` in `ipic-plan.js`, used by the renderer and the data):
 

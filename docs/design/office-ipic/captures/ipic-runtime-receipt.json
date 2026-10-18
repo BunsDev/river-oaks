@@ -1,9 +1,9 @@
 {
   "packet": "office-ipic",
   "runner": "node preview/e2e/ipic-photo-views.mjs",
-  "capturedAt": "2026-10-16T01:28:34.907Z",
-  "sourceRevision": "3028b1388c94e80fb7aef225f320df2f586eaa3c",
-  "dirtyPatchSha256": "19a6d97cecb84b5e7cf0a32d2946704d718db4d3e746d98ad577e62b2ff8fb3a",
+  "capturedAt": "2026-10-18T03:25:24.490Z",
+  "sourceRevision": "d6f3471ff5b0c0e0e174d6e36c36beba9cdb7308",
+  "dirtyPatchSha256": "46e155c2bc07f0ea5e314d182b78bd22e1bea71f8b5d049aa714c67d5c82c3d8",
   "browser": "156.0.8078.4",
   "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
   "viewport": [
@@ -50,14 +50,14 @@
       "photo": "assets/ipic/references/IMG_9767.jpg",
       "page": "owner",
       "file": "docs/design/office-ipic/captures/T3-auditorium.png",
-      "bytes": 597037,
-      "sha256": "e4069d65881edad12ae8fc3d1036879e9af9aefad72ff4fc84c19dfe4972a70b",
-      "calls": 236,
-      "triangles": 1076004,
+      "bytes": 595852,
+      "sha256": "1b1741ea931997f588ae68f7fd26a526cdc937fadfc2c78a2e404169787203ab",
+      "calls": 237,
+      "triangles": 1076148,
       "film": {
         "mediaId": "ipic-original-v1",
         "state": "playing",
-        "currentTime": 3.03,
+        "currentTime": 2.98,
         "shared": "playing"
       }
     },
@@ -77,14 +77,14 @@
       "photo": "assets/ipic/references/IMG_9756.jpg",
       "page": "alice",
       "file": "docs/design/office-ipic/captures/T2c-bar.png",
-      "bytes": 1368270,
-      "sha256": "f034eed010a45d8e5ea70475ad734be37ff1c31c41565df96841881e6cdaba88",
-      "calls": 143,
-      "triangles": 584072,
+      "bytes": 1371022,
+      "sha256": "24c9b1cf909de9e7f7064375bb5b03a1cf867e971eb3a82e646e40cb5f9c64c9",
+      "calls": 3478,
+      "triangles": 10323183,
       "film": {
         "mediaId": "ipic-original-v1",
         "state": "playing",
-        "currentTime": 5.74,
+        "currentTime": 5.48,
         "shared": "playing"
       }
     },
@@ -104,14 +104,14 @@
       "photo": "assets/ipic/references/IMG_9758.jpg",
       "page": "alice",
       "file": "docs/design/office-ipic/captures/T2b-lounge.png",
-      "bytes": 1210267,
-      "sha256": "72a33fce4970e007fdd66c1b9d9e534706eb2d8ae7c8bd9e1c7c3db2d297369b",
-      "calls": 721,
-      "triangles": 3342235,
+      "bytes": 1210746,
+      "sha256": "85fa0a3754daaa9d87cde2c26c74acdce38c06c76d3dc2f291690239768df18c",
+      "calls": 722,
+      "triangles": 3342379,
       "film": {
         "mediaId": "ipic-original-v1",
         "state": "playing",
-        "currentTime": 7.97,
+        "currentTime": 7.68,
         "shared": "playing"
       }
     },
@@ -131,14 +131,14 @@
       "photo": "assets/ipic/references/IMG_9738.jpg",
       "page": "alice",
       "file": "docs/design/office-ipic/captures/T1-reception.png",
-      "bytes": 1294483,
-      "sha256": "6b73cfa3e027c73d313d11f67d74c3a1ab0ebf8bd5b8b4e2bee167ff1eba310e",
-      "calls": 1679,
-      "triangles": 5696686,
+      "bytes": 1280865,
+      "sha256": "9bf2e1c3e0a3edbfcb99c0ec38cefa84bc548c8aa0ed0d7d92ab67ff1e111f9c",
+      "calls": 1674,
+      "triangles": 5695748,
       "film": {
         "mediaId": "ipic-original-v1",
         "state": "playing",
-        "currentTime": 10.23,
+        "currentTime": 10.02,
         "shared": "playing"
       }
     },
@@ -146,26 +146,26 @@
       "id": "T2a-mural",
       "camera": "mural",
       "eye": [
-        -1.4,
+        1.4,
         4.6,
-        11.7
+        11.8
       ],
       "target": [
-        3,
-        4.65,
-        13.65
+        4.7,
+        4.6,
+        13.7
       ],
       "photo": "assets/ipic/references/IMG_9771.jpg",
       "page": "alice",
       "file": "docs/design/office-ipic/captures/T2a-mural.png",
-      "bytes": 1172444,
-      "sha256": "dcf773fa9c4297333bd9142122f57cc50ca7160554faa97040253347ace4eb52",
-      "calls": 2338,
-      "triangles": 7553397,
+      "bytes": 1089362,
+      "sha256": "8793464d6e5721bc7616a9211b576029af4cb33562d167d7381c61558b09d931",
+      "calls": 1565,
+      "triangles": 5017442,
       "film": {
         "mediaId": "ipic-original-v1",
         "state": "playing",
-        "currentTime": 12.61,
+        "currentTime": 12.31,
         "shared": "playing"
       }
     },
@@ -185,14 +185,14 @@
       "photo": "assets/ipic/references/IMG_9767.jpg",
       "page": "alice",
       "file": "docs/design/office-ipic/captures/T3-seated.png",
-      "bytes": 769541,
-      "sha256": "9a8e547c791cd365ffcab33ee6c0aa337d32dc478de49d8d131c6168040f3094",
-      "calls": 134,
-      "triangles": 582558,
+      "bytes": 772470,
+      "sha256": "8bd085189ebb0e8fb4061fdce14ef3ea750cf439996ba5f3cb8be45ebb9117b7",
+      "calls": 144,
+      "triangles": 584216,
       "film": {
         "mediaId": "ipic-original-v1",
         "state": "playing",
-        "currentTime": 14.7,
+        "currentTime": 14.37,
         "shared": "playing"
       }
     }
