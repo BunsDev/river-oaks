@@ -167,14 +167,17 @@ async (host, viewer) => {
   // while the next film is still loading, nor keep the stopped film's last frame.
   await viewer.evaluate(() => {
     const log = window.__screenSwitchLog = [];
-    const step = () => { const s = window.__riverScreening(); if (s?.active) log.push({ state: s.state, shared: s.sharedStatus, attached: s.attached, mediaId: s.mediaId, key: s.screen?.key ?? null, decoded: s.decoded?.join('x') ?? null });
+    // What each update drew (the software profile draws once a second); a build without `drawn` reports live state.
+    const step = () => { const s = window.__riverScreening(); const d = s?.drawn ?? (s && { state: s.state, shared: s.sharedStatus, attached: s.attached, mediaId: s.mediaId });
+      if (s?.active) log.push({ ...d, key: s.screen?.key ?? null, decoded: s.decoded?.join('x') ?? null });
       if (!window.__screenSwitchDone && log.length < 20000) requestAnimationFrame(step); };
     requestAnimationFrame(step);
   });
   const shortKey = await viewer.evaluate(() => window.__riverScreening().screen?.key ?? null);
   const halted = await hostCommand({ ...swapBase, action: 'stop', expectedRevision: current.revision, operationId: 'journey-stop-002' });
   await viewer.waitForFunction(() => window.__riverScreening().sharedStatus === 'stopped', null, { timeout: 15000 });
-  await viewer.evaluate(() => new Promise(done => { let n = 0; const step = () => (++n > 3 ? done() : requestAnimationFrame(step)); requestAnimationFrame(step); }));
+  // The software profile draws once a second: allow the next draws, then read what the screen shows.
+  await viewer.waitForFunction(() => window.__riverScreening().attached === false, null, { timeout: 10000 }).catch(() => {});
   const idle = await screening(viewer);
   check(idle.attached === false && idle.state === 'idle', `a stopped film leaves the screen idle, not on its last frame: ${JSON.stringify({ state: idle.state, attached: idle.attached })}`);
   check(halted?.ok === true, `host stopped the short: ${JSON.stringify(halted)}`);
