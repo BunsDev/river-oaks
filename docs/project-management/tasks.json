@@ -11637,9 +11637,9 @@
         "feat/human-studio-apple-polish-20261018"
       ],
       "owner": "codex-apple-polish-20261018",
-      "updatedAt": "2026-10-18T13:12:00.114292+00:00",
-      "leaseUntil": "2026-10-18T14:29:59.869587+00:00",
-      "nextAction": "Full session 66899 passed unit/server/build/Python/secrets/security/reflections and is running experience journeys. Native Safari queued 72837; core queued 67924; final cross-browser requeued 68347 after source-hash timing correction. Focused eight tests passed after headless-rig allocation cleanup. Finish gates and acceptance report, signed commit and reviewable PR with hosted checks; no merge/deploy.",
+      "updatedAt": "2026-10-18T14:30:34.808459+00:00",
+      "leaseUntil": "2026-10-18T16:30:34.808459+00:00",
+      "nextAction": "Local acceptance complete with explicit limits: core follow-up passed all tasks, Metal screening12checks passed, final Studio browser matrix passed, native Safari rendering captured. Default full/core failures retained with passing diagnostic follow-ups. Redis and native fixture stopped. Commit/push acceptance artifacts, verify required checks on final PR504 head and audit delivery; no merge/deploy.",
       "filesOwned": [
         "preview/e2e/character-apple-baseline.mjs (new acceptance harness)",
         "docs/superpowers/plans/2026-10-18-human-studio-apple-polish.md",
@@ -11658,7 +11658,8 @@
         "pnpm run verify full",
         "Required hosted PR checks"
       ],
-      "ledger": "docs/superpowers/plans/2026-10-18-human-studio-apple-polish.md"
+      "ledger": "docs/superpowers/plans/2026-10-18-human-studio-apple-polish.md",
+      "pr": 504
     }
   ]
 }

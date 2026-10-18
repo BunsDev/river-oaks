@@ -8,7 +8,7 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
-| [2026-10-18-human-studio-apple-polish](2026-10-18-human-studio-apple-polish.md)<br>Human characters and Apple platform polish | `human-studio-apple-polish-20261018` | active | — | 2026-10-18 |
+| [2026-10-18-human-studio-apple-polish](2026-10-18-human-studio-apple-polish.md)<br>Human characters and Apple platform polish | `human-studio-apple-polish-20261018` | active | #504 | 2026-10-18 |
 | [2026-10-18-human-only-characters](2026-10-18-human-only-characters.md)<br>Human-only characters | `human-only-characters-20261018` | active | #496 | 2026-10-18 |
 | [2026-10-15-studio-safe-edits](2026-10-15-studio-safe-edits.md)<br>World Studio safe edits (#414, parent #413) | `studio-safe-edits-414` | queued | #427 | 2026-10-15 |
 | [2026-10-15-studio-prompt-stdin](2026-10-15-studio-prompt-stdin.md)<br>Studio prompts on stdin (#370 finding), 2026-10-15 | `studio-prompt-stdin` | active | — | 2026-10-15 |
