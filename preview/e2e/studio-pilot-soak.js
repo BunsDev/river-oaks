@@ -37,6 +37,20 @@ async page => {
   await page.goto(`${origin}/studio.html`);
   await page.waitForSelector('body[data-studio-ready="true"]');
   const viewport = page.locator('#studio-viewport');
+  // On macOS, the GPU process's physical footprint and its IOAccelerator (Metal) share, as in
+  // studio-pilot-perf.mjs: unified memory, so a trend across cycles rather than per-resource VRAM.
+  const gpuMemory = process.platform !== 'darwin' ? null : await (async () => {
+    const { execFileSync } = await import('node:child_process'), { mkdirSync, readFileSync } = await import('node:fs');
+    const browserCdp = await page.context().browser().newBrowserCDPSession(), file = '.runtime/acceptance/soak-gpu-footprint.json';
+    mkdirSync('.runtime/acceptance', { recursive: true });
+    return async () => {
+      const gpu = (await browserCdp.send('SystemInfo.getProcessInfo')).processInfo.find(info => info.type === 'GPU');
+      if (!gpu) return {};
+      execFileSync('footprint', ['-p', String(gpu.id), '--json', file, '-f', 'bytes'], { stdio: 'ignore' });
+      const [entry] = JSON.parse(readFileSync(file, 'utf8')).processes, metal = entry.categories?.['IOAccelerator (graphics)'];
+      return { gpuFootprintMiB: +(entry.footprint / 1048576).toFixed(1), gpuMetalMiB: metal ? +((metal.dirty + metal.swapped) / 1048576).toFixed(1) : 0 };
+    };
+  })();
   const sample = async () => {
     await cdp.send('HeapProfiler.collectGarbage');
     // Render stats refresh once a second; wait for a reading taken after this state settled.
@@ -48,7 +62,7 @@ async page => {
     return { calls: stats.calls, triangles: stats.triangles, geometries: stats.geometries, materials: stats.materials,
       textures: stats.textures, renderTargets: stats.renderTargets, programs: stats.programs,
       listeners: metrics.JSEventListeners, nodes: metrics.Nodes, heapMiB: +(metrics.JSHeapUsedSize / 1048576).toFixed(2), canvases: await page.locator('canvas').count(),
-      materialLoads: { ...materialLoads }, ...await page.evaluate(() => ({ ...window.__studioSoakCounts })) };
+      materialLoads: { ...materialLoads }, ...await page.evaluate(() => ({ ...window.__studioSoakCounts })), ...await gpuMemory?.() };
   };
   const open = async name => {
     await page.locator('#studio-templates').click();
