@@ -524,8 +524,9 @@ The existing Redis hash key remains stable for migration.
 
 ### Durable room selection
 
-Passing the character store to the Redis coordinator enables writer generation 13
-and room envelope 3. World checkpoint version 12 is unchanged. The coordinator
+Passing the character store to the Redis coordinator raises the writer generation by
+one and enables room envelope 3: generation 13 over world checkpoint 12, and 14 over
+checkpoint 13 since the garden campus leases (#509). The world checkpoint is unchanged by it. The coordinator
 validates connection, session, permissions, flight, beast movement and the existing
 per-room two-second appearance cooldown before persisting a bounded pending intent.
 Preparation consumes the ordinary command budget but changes neither the selected
@@ -549,7 +550,7 @@ canonical fingerprints, identities, timestamps, reply uniqueness and roster
 membership. Region replacement waits for pending selections. An actual v12/v13
 coordinator audit covers preemption, old-writer fencing, pending-intent recovery
 and replacement restoration. Rollback after activation must retain the generation
-13/envelope 3 coordinator, version 12 world codec and version 2 character-store
+14/envelope 3 coordinator (13 before #509), version 13 world codec (12 before #509) and version 2 character-store
 codec; an older coordinator rejects the new envelope.
 
 The running Redis gateway supplies the character store to this coordinator. Its
@@ -671,7 +672,7 @@ may finish during a pause. Clients retain uncertain operations and their stable
 request IDs so retry cannot create a second operation. Hiding the editor is a
 separate client release; it cannot undo a server operation already accepted.
 
-A feature pause must retain writer generation13/envelope3, world codec12 and
+A feature pause must retain writer generation 14/envelope 3, world codec 13 (13 and 12 before #509) and
 character-store codec2. Never roll back to an older reader/writer, delete a saved
 revision, clear request receipts, remove tombstones or reset account versions as a
 support fix. Reenable with the same compatible implementation after the failure is
