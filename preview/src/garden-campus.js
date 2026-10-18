@@ -27,6 +27,7 @@ import { GARDEN_CAMPUS_LAYOUT as CAMPUS, campusLevels, campusToScene } from '../
 import { paverSurface, physicalSurface } from './materials.js';
 import { FINISH, campusFurniture, entranceCanopies, freeRuns as runs, greenWalls, luminaires, slabBands } from './garden-campus-finish.js';
 import { buildCampusPlanting, campusPlantingPlan } from './garden-campus-planting.js';
+import { campusPartitions } from '../../shared/garden-campus-partitions.js';
 
 const GLASS_INSET = FINISH.glassInset, GLASS_THICKNESS = 0.04, MULLION = 0.08, MULLION_STEP = 1.5, MULLION_DEPTH = 0.18;
 const PARAPET = 1, GUARD_GLASS = 0.03, RAIL = 0.06, DOOR_HEIGHT = 2.6;
@@ -63,6 +64,7 @@ export function buildGardenCampus(world) {
     soil: new THREE.MeshStandardMaterial({ name: 'campus:soil', color: '#3d3a2e', roughness: 1 }),
     luminaire: new THREE.MeshStandardMaterial({ name: 'campus:luminaire', color: '#fff3df', emissive: '#ffd6a0', emissiveIntensity: CAMPUS_GLOW.day, roughness: 0.4 }),
     accent: new THREE.MeshStandardMaterial({ name: 'campus:accent', color: ACCENT, roughness: 0.5 }),
+    partition: new THREE.MeshStandardMaterial({ name: 'campus:partition', color: '#ece6da', roughness: 0.82 }),
   };
   materials.lawn.name = 'campus:lawn';materials.paving.name = 'campus:paving';materials.stone.name = 'campus:stone';
   const batches = new Map(Object.keys(materials).filter(key => !['lawn', 'paving'].includes(key)).map(key => [key, []]));
@@ -162,6 +164,15 @@ export function buildGardenCampus(world) {
     // The contract's finishes (#506 furnishings: planter, seat, table, tree) are drawn once
     // each, over their whole footprint, by campusFurniture and the planting plan below.
   }
+  // Interior walls closing every suite and service room off the public galleries and spines,
+  // and a closed timber door in bronze jambs in each suite's door (garden-campus-partitions.js).
+  const partitions = campusPartitions(CAMPUS);
+  for (const { rect, z0: za, z1: zb } of partitions.walls) box('partition', ...rect, za, zb);
+  for (const door of partitions.doors) {
+    for (const jamb of door.jambs) box('bronze', ...jamb, door.z0, door.head);
+    box('bronze', ...door.headRect, door.head, door.headTop);box('timber', ...door.leaf, door.z0, door.head);
+  }
+
   // Terrace decks: timber over each part, on the slab of the tier below.
   for (const tower of CAMPUS.towers) for (const terrace of tower.terraces) for (const [u0, v0, u1, v1] of terrace.parts) box('timber', u0, v0, u1, v1, terrace.z, terrace.z + ROOM.floor);
 
