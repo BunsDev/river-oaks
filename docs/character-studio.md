@@ -1,9 +1,10 @@
 # Character Studio architecture decision (#440)
 
-Status: contract increment #457 is on main. This branch integrates the editor,
-rendering and persistence stack (#461, #462, #464, #484), human-only characters,
-Jevica-only invited office access and the expanded Studio. Release acceptance
-remains subject to the verification and device gates below.
+Status: contract increment #457 is on main, and so are the editor, rendering and
+persistence stack (#461, #462, #464), #441's guided creation (through #496),
+human-only characters, Jevica-only invited office access and the expanded Studio.
+#484 carries the remaining #441 tailoring fixes. Release acceptance remains
+subject to the verification and device gates below.
 
 ## Decision and evidence
 Extend the authored character system with constrained modular customization.
@@ -373,6 +374,45 @@ license is inferred from the base files. The `.5m` position-morph and 4096 textu
 limits are integrity envelopes for this catalog, not interactive design controls
 or device performance promises.
 
+
+### Provenance of each exposed look (2026-10-18)
+
+The human-only catalog has 11 looks, built on three pinned rigs. `CHARACTER_ASSETS`
+in `character-assets.js` pins each rig's bytes and SHA-256 and points to its source
+receipt. `character-definition.test.js` refuses a look whose rig is not pinned,
+and `scripts/tests/character-assets-audit.test.js` fails a changed hash or an
+unlicensed or mismatched receipt.
+
+| Look | Rig (SHA-256 prefix) | Generator | License (receipt) | Source assets in the rig |
+| --- | --- | --- | --- | --- |
+| jevica, sable-human, woman-tailored, lyra-human, forest-aristocrat-feminine | jevica (`722b96e2fd77`) | MPFB 2.0.17 / Blender 4.5.3 LTS | CC0-1.0 (`jevica.sources.json`) | skin young_asian_female, hair long01, eyes high-poly, eyelashes01, eyebrow001; original fitted shell |
+| rowan-human | man-tailored (`ae3834fbc9d9`) | MPFB 2.0.17 / Blender 5.2.1 LTS | CC0-1.0 (`sources.json`) | middleage_african_male, male_elegantsuit01, short04, shoes03 |
+| man-tailored, man-workwear, kai-explorer, kai-noir, forest-aristocrat | man-casual (`e7ac712585ba`) | MPFB 2.0.17 / Blender 5.2.1 LTS | CC0-1.0 (`sources.json`) | young_caucasian_male, male_casualsuit02, short01, shoes01 |
+
+The source assets are MakeHuman's CC0 system assets. Their credits are in
+`preview/public/assets/characters/README.md` and `LICENSE-CC0.md`. MPFB itself is a
+GPL build tool and is not shipped.
+
+Everything else a look wears is authored in this repository: no third-party
+garment, hair or texture asset is loaded for these looks.
+
+- **Jevica:** `player-costume.js` → `jevica-costume.js`, with `jevica-drape.js`,
+  `jevica-embroidery.js`, `bodice-fitting.js` and `riding-clothes.js`.
+- **The other ten:** `romance-look.js` → `reference-archetypes.js`.
+- **Baked deformation data** carries its own receipt, which hashes the authored
+  inputs, the rig and the generator, and states its provenance:
+
+  | Bake receipt | Looks |
+  | --- | --- |
+  | `coat-tail-morph-receipt.json` | man-tailored, man-workwear, kai-noir |
+  | `lyra-drape-morph-receipt.json` | lyra-human |
+  | `silvan-drape-morph-receipt.json` | forest-aristocrat, forest-aristocrat-feminine |
+  | `skirt-seat-morph-receipt.json` | sable-human |
+  | `vesper-skirt-morph-receipt.json` | woman-tailored |
+
+This covers the shipped catalog's assets and their licenses. It doesn't cover
+npm dependency licenses (three.js and others), which are pinned in
+`pnpm-lock.yaml` and reviewed by the dependency-review check, not here.
 
 ## Runtime pose diagnostics (#442, incomplete acceptance)
 
@@ -793,6 +833,88 @@ timing before choosing a performance change. This repeat and the earlier varying
 hashes: `.runtime/character-studio/labels/verified-20261016/`.
 
 
+## Unthrottled crowd timing and remote avatar culling (#442, 2026-10-18)
+
+**Why the earlier frame p95 couldn't move.** The audit launched Chromium with
+vsync on, so each rAF interval is a multiple of the 16.7 ms refresh. That's why
+every p95 above reads 33.4 or 16.7 ms. `--vsync=off` (`--disable-gpu-vsync`,
+`--disable-frame-rate-limit`) measures frame cost instead. The default stays
+`on`, so older reports remain comparable.
+
+**Where a remote player's cost goes.** `window.__riverRenderAudit.drawCensus()`
+is development-only. It counts one frame's draws and submitted triangles by pass
+(`main`, `occlusion` for GTAO's geometry pass, `shadow`, `other`) and by owner
+(`remote-player`, `player`, `scene`). The audit records it per tier.
+
+At 16 players (desktop, vsync off), each peer costs about 79 draws, split evenly
+across main, GTAO and sun shadow, and about 292,000 submitted triangles per frame
+across those passes. CPU p50 rises from 12.8 ms at 1 player to 23.2 ms at 16, about
+0.7 ms per peer. Frame p50 follows it, so the frame is CPU-bound on the M3 Max.
+
+**Remote avatar culling.** Skinned meshes keep bind-pose bounds, so avatars set
+`frustumCulled = false`. Every mesh of every peer within 120 m then drew in all
+three passes, behind the camera or outside the shadow map. `avatar-culling.js`
+now gives each remote avatar's skinned meshes one sphere around the whole figure,
+in each mesh's own space: centred 0.55 h above the floor, radius 0.8 h, where h
+is the standing height. It then turns culling back on. three culls the figure
+against the camera in the main and GTAO passes, and against the sun's shadow
+frustum in the shadow pass. Skins carried by a bone stay unculled. Rigid trims
+already cull by their own geometry. The local player, store people and NPCs are
+unchanged.
+
+`avatar-culling.test.js` loads every exposed look on its shipped rig, Jevica with
+her costume included. It drives idle, walk, run, all eleven gestures, hover, fast
+flight and seated. After the world-matrix update a render performs, every vertex
+of every visible culled skin stays within 0.751 of the sphere's radius, which is
+25% headroom. A 0.55 h radius fails 9 of 11 looks.
+
+`--view=player` keeps the game's follow camera. `--view=away` looks from the
+viewer's eye away from the other players. `--compare=avatar-culling` alternates
+culling in eight segments in the same page (off, on, on, off, on, off, off, on),
+so load drift falls on both arms, and records each segment.
+
+Remote work per frame at 16 players. Culling changes only which draws are
+submitted, so these counts are exact:
+
+| View | Viewport | Peers on screen | Remote draws, off → on | Remote triangles, off → on |
+| --- | --- | ---: | --- | --- |
+| crowd | desktop and phone | 15/15 | 1,192 → 1,192 | 4,376,556 → 4,376,556 |
+| player | desktop | 13/15 | 1,158–1,174 → 1,162–1,176 | 4.37M → 4.37M |
+| player | phone viewport | 6/15 | 926–960 → 898–926 | 4.24M → 3.88–3.92M |
+| away | desktop | 1/15 | 634–642 → 478–500 | 3.56M → 2.24–2.31M |
+| away | phone viewport | 1/15 | 634 → 451–465 | 3.56M → 1.97–2.03M |
+
+Peers behind the camera keep their 396 shadow draws: the sun's shadow map covers
+at least 36 m around the camera. On the narrow phone viewport, peers just off
+the sides are still within the figure sphere's 1.4 m margin, so they stay drawn.
+That margin is the price of a sphere that never culls a visible limb.
+
+Timing, from the eight-segment away run (`ab-away8.json`, 18:15–18:19Z, load
+52–87). Values are means of the four segments per arm, in ms:
+
+| Viewport | CPU p50, off → on | Frame p50, off → on | Frames in 40 s, off → on |
+| --- | --- | --- | --- |
+| desktop | 17.75 → 16.73 | 20.7 → 19.9 | 1,913 → 2,000 |
+| phone viewport | 15.1 → 14.2 | 16.55 → 15.7 | 2,361 → 2,454 |
+
+Each culling-on segment's CPU p50 was lower than each culling-off segment's,
+with one exception per viewport: off segment 6 on desktop (16.7) and off
+segment 4 on the phone viewport (14.3). Frame p95 sits near 34.5 ms in any segment
+whose p50 is below about 20.5 ms, in both arms (desktop off segment 6 included).
+That's a pacing artifact of headless Chromium with vsync off, not a culling cost.
+In the crowd and player views, where culling removes nothing, repeated runs
+differed by up to 1.5 ms at p50 and 6 ms at p95 between arms with identical
+work; that is this shared machine's noise floor.
+
+All rows: Chromium 156.0.8078.4, M3 Max Metal, sharp quality, vsync off, 98 NPCs,
+10 s per segment after a 5 s warmup. Every run passed the audit's roster,
+reconnect, departure and cleanup checks, except one player-view run whose phone
+16-player tier lost the viewer's town socket (`ECONNRESET` through Vite's
+WebSocket proxy, load average 30–70). That tier passed in the three later runs. These
+are host-GPU measurements, not approved-device budgets. Evidence:
+`.runtime/crowd-442/` in the task worktree.
+
+
 ### Authored wardrobe matrix and Vesper wrap
 
 `pnpm run test:experience character-wardrobe` generates coverage from all 22 shipped
@@ -974,7 +1096,10 @@ had been 2 cm inside the chest, so they were never visible. `chest-tailoring.tes
 raycasts the skinned suit independently and requires every chest vertex of the
 Kai formal, noir and explorer looks and Aurel to sit no more than 4 mm inside
 it and no more than 3.5 cm in front of it, allowing for layered pieces. Negative controls with sunk panels or lifted stars fail.
-The pieces use fewer triangles than the boxes they replace.
+The pieces use fewer triangles than the boxes they replace. Rowan's shirt,
+lapels, pocket flaps and buttons, on the elegant-suit rig, use the same
+measurement. His shirt had sunk 1.8 cm into the chest at the collar. The test
+also covers his human and wolf looks.
 
 ### Peer revision fallback and recovery
 
