@@ -2,7 +2,7 @@
   "id": "river-oaks-garden-campus",
   "versions": {
     "schema": 1,
-    "layout": "3.1",
+    "layout": "3.2",
     "floors": 1,
     "support": 1,
     "units": 1
@@ -14,9 +14,9 @@
   },
   "generator": "scripts/garden-campus-views.mjs",
   "files": {
-    "layout-contract.json": "fb4a1d8fabb87337cdcbfd2d130c28aa554886efca2b0b22366853927a6f8c3a",
-    "views/site-plan.svg": "fdb3221f62ac7728b8da3ac44ef514a38025440e56b4fd92668bfc6dd952e1fa",
-    "views/floor-4.svg": "ecaa3cb6633ec602d5dfe6d1c5eae7818b6092fb12af5edb679c16319cf1555b",
-    "views/section-u16.svg": "26d1c729d4c4528c758235ac22f92febf7a08005bad3af143e11d6b304234edf"
+    "layout-contract.json": "bb54fd1493e816319e36bfccd8baf702e3a77d9b26e86c0aa6dca77214d9b03a",
+    "views/site-plan.svg": "470eb7856434f2937eb1be975c50f33aa05a0c87cd9b9e4d3b69d7c0b78e7540",
+    "views/floor-4.svg": "6273a6772d2c94053fa0eac0b457b9c63840f25e4dcf38497ed398b199ad7ae7",
+    "views/section-u16.svg": "65d64bf01dfb163c5784b8dfb2c86d82233fdb644b657ea623c353d9ed6fadbd"
   }
 }

@@ -87,9 +87,10 @@ test('one public Floor 4 route joins all three galleries through both skywalks, 
   for (const t of ['T1', 'T2', 'T3']) assert.ok(campusRoute(`${t}-F4/lobby`, `${t}-F4-public`, { walkOnly: true }).includes(`${t}-F4-core-spur`));
   // The street reaches every gallery by a core, and every public roof and terrace.
   for (const id of ['T1-F4-public', 'T2-roof', 'T3-terrace-5', 'T2-terrace-4', 'S', 'C']) assert.ok(campusRoute('E1', id), id);
-  // B12's edge guards run to T2's facade across the z 13 terrace, so the deck is not a
-  // way onto that terrace: the graph reaches it through its door, as support does.
-  assert.ok(!campusGraph().edges.some(e => [e.a, e.b].includes('B12') && [e.a, e.b].includes('T2-terrace-4')));
+  // B12's guards stop at T2's z 13 terrace (v 90), so its lane opens onto that terrace:
+  // the graph joins them, as support does, and the door still reaches it from inside.
+  assert.deepEqual(LAYOUT.bridges.map(b => [b.id, b.guardSpan]), [['B12', [70, 90]], ['B23', [116, 131]]]);
+  assert.ok(campusGraph().edges.some(e => e.a === 'B12' && e.b === 'T2-terrace-4' && e.kind === 'walk'));
   assert.deepEqual(campusRoute('E1', 'T2-terrace-4').slice(-3), ['T2-F4-public', 'T2-terrace-4-passage', 'T2-terrace-4']);
   // A suite is not a way across: with private nodes allowed the shortest path still uses the gallery.
   assert.ok(!campusRoute('T1-F4-public', 'T3-F4-public', { publicOnly: false, walkOnly: true }).some(id => nodes.get(id).kind === 'suite'));
@@ -108,10 +109,11 @@ test('support resolves against the occupant level: ground below a skywalk, deck 
   assert.equal(campusSupportAt(L(3), 9, 56), null, 'T1 lift shaft');
   assert.equal(campusSupportAt(L(3), 14.2, 80), null, 'B12 edge zone');
   assert.equal(campusSupportAt('garden-campus/l9', 16, 76), null);
-  // B12 crosses T2's z 13 terrace at the same level, inside its own edge guards.
+  // B12 crosses T2's z 13 terrace at the same level; its guards stop at the terrace edge.
   assert.equal(campusSupportAt(L(3), 16, 91.5).z, 13);
   assert.ok(campusSupportAt(L(3), 20, 91.5).surfaceId.startsWith('T2-terrace-4'));
-  assert.equal(campusSupportAt(L(3), 17.75, 91.5), null, "B12's east guard continues over the terrace");
+  assert.equal(campusSupportAt(L(3), 17.75, 89.5), null, "B12's east guard over open air");
+  assert.equal(campusSupportAt(L(3), 17.75, 91.5).surfaceId, 'T2-terrace-4/1', 'the lane opens onto the terrace');
 });
 
 test('levels are keyed by elevation campus-wide with portals, openings and reachable roofs and terraces', () => {
@@ -137,6 +139,14 @@ test('levels are keyed by elevation campus-wide with portals, openings and reach
   const posts = levels[0].obstacles.filter(o => o.kind === 'post');
   assert.equal(posts.length, 11);
   assert.deepEqual(levels[0].keepClear.find(k => k.id === 'S-below').rect, [4.3, 154.3, 23.7, 167.7]);
+  // #511's finishes are solid obstacles on their own levels: 26 planters, 21 seats, 9
+  // tables and 11 ground tree pits, with no support inside them.
+  const finishes = levels.flatMap(level => level.obstacles.filter(o => LAYOUT.furnishings.some(f => f.id === o.id)).map(o => [level.id, o.kind]));
+  assert.equal(finishes.length, 67);
+  assert.deepEqual(Object.fromEntries(['planter', 'seat', 'table', 'tree'].map(kind => [kind, finishes.filter(([, k]) => k === kind).length])), { planter: 26, seat: 21, table: 9, tree: 11 });
+  assert.ok(finishes.every(([level, kind]) => (kind === 'tree') === (level === L(0))));
+  const bench = LAYOUT.furnishings.find(f => f.id === 'T2-terrace-4/seat-south-7.3'), [bu0, bv0, bu1, bv1] = bench.rect;
+  assert.equal(campusSupportAt(L(3), (bu0 + bu1) / 2, (bv0 + bv1) / 2), null);
   const noAccess = clone();delete tower(noAccess, 'T3').roof.headhouse;
   const result = validateGardenCampus(noAccess);
   assert.ok(result.findings.some(f => f.rule === 'reach' && f.id === 'T3-roof'));
@@ -217,6 +227,21 @@ test('defects fail: shifted endpoint, wrong height, offsite volume, overlap, blo
   assert.deepEqual(validateGardenCampus(terraceDoor).findings.map(f => `${f.rule} ${f.id}`), ['opening T2-terrace-4/door']);
   const suiteDoor = clone(), slid = floor(suiteDoor, 'T1', 4).suites[0];slid.door.position[1] = slid.rect[3] + 1;
   assert.deepEqual(validateGardenCampus(suiteDoor).findings.map(f => `${f.rule} ${f.id}`), [`opening ${slid.id}/door`]);
+
+  // B12's guards run on to T2's facade (layout 3.1): the terrace's west wing is cut off
+  // from its door even before any finish, and its benches cannot be reached.
+  const fenced = clone();fenced.bridges[0].guardSpan = [70, 93];fenced.furnishings = fenced.furnishings.filter(f => !f.id.startsWith('T2-terrace-4/seat'));
+  assert.deepEqual(validateGardenCampus(fenced).findings.map(f => f.rule), ['reach', 'reach'], 'the west wing and the lane strip');
+  const fencedSeat = clone();fencedSeat.bridges[0].guardSpan = [70, 93];
+  assert.ok(validateGardenCampus(fencedSeat).findings.some(f => f.rule === 'reach' && f.id === 'T2-terrace-4/seat-south-7.3'));
+  // Finishes: in a door approach, cutting off a terrace part, on a path, over the edge, repeated.
+  const finish = (item, layout = clone()) => { layout.furnishings.push(item);return validateGardenCampus(layout).findings.map(f => `${f.rule} ${f.id}`); };
+  assert.ok(finish({ id: 'T2-roof/seat-x', kind: 'seat', levelId: L(7), rect: [13.5, 102.6, 14, 103.4] }).includes('blocked T2-roof/seat-x/T2-roof/door'));
+  const strip = finish({ id: 'T1-terrace-3/table-x', kind: 'table', levelId: L(2), rect: [22.05, 50, 24.1, 52] });
+  assert.ok(strip.includes('reach T1-terrace-3/1') && strip.includes('reach T1-terrace-3/seat-south-7.3'), 'a table across the east strip cuts off the south wing');
+  assert.deepEqual(finish({ id: 'ground/tree-x', kind: 'tree', levelId: L(0), rect: [29, 90, 30.2, 91.2] }), ['blocked ground/tree-x/P1']);
+  assert.ok(finish({ id: 'T1-terrace-3/bed-x', kind: 'planter', levelId: L(2), rect: [24.5, 50, 25.5, 51] }).includes('support T1-terrace-3/bed-x'));
+  assert.deepEqual(finish({ ...LAYOUT.furnishings[0], rect: [...LAYOUT.furnishings[0].rect] }), [`furnish ${LAYOUT.furnishings[0].id}`]);
 
   // A ground/bridge support mix-up: a deck registered on the ground level would lift street walkers.
   const mixed = campusLevels();const ground = mixed[0];
