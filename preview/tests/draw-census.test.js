@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
-import { createDrawCensus, drawOwner, drawPass } from '../src/draw-census.js';
+import { createDrawCensus, drawOwner, drawPass, programSignature } from '../src/draw-census.js';
 
 test('draw census attributes passes and tagged owners, then restores the renderer', () => {
   const mainCamera = new THREE.PerspectiveCamera(), probe = new THREE.PerspectiveCamera(), shadowCamera = new THREE.OrthographicCamera();
@@ -32,11 +32,24 @@ test('draw census attributes passes and tagged owners, then restores the rendere
   assert.equal(renderer.renderBufferDirect, original, 'the wrapper is removed after one frame');
   assert.equal(submitted.length, 7, 'every draw still reaches the renderer');
   assert.deepEqual(counts, {
-    'main:remote-player': { draws: 2, triangles: 12 + 2 },
-    'shadow:remote-player': { draws: 1, triangles: 12 },
-    'occlusion:remote-player': { draws: 1, triangles: 12 },
-    'main:scene': { draws: 1, triangles: 36 },
-    'other:scene': { draws: 1, triangles: 1 },
-  });
+    'main:remote-player': { draws: 2, triangles: 12 + 2, switches: 0 },
+    'shadow:remote-player': { draws: 1, triangles: 12, switches: 0 },
+    'occlusion:remote-player': { draws: 1, triangles: 12, switches: 0 },
+    'main:scene': { draws: 1, triangles: 36, switches: 1 },
+    'other:scene': { draws: 1, triangles: 1, switches: 1 },
+  }, 'the instanced crowd and the plain ground each change the shared material\'s object kind');
   assert.deepEqual(census.end(), counts, 'ending twice is harmless');
+});
+
+test('a program switch is counted when one material is drawn for a different kind of object', () => {
+  const camera = new THREE.PerspectiveCamera(), scene = new THREE.Scene(), material = new THREE.MeshDepthMaterial();
+  const bone = new THREE.Bone(), skinned = new THREE.SkinnedMesh(new THREE.BoxGeometry(), material);
+  skinned.add(bone); skinned.bind(new THREE.Skeleton([bone]));
+  const rigid = new THREE.Mesh(new THREE.BoxGeometry(), material), morphed = new THREE.Mesh(new THREE.BoxGeometry(), material);
+  morphed.geometry.morphAttributes.position = [morphed.geometry.attributes.position.clone()];
+  assert.deepEqual([programSignature(skinned, skinned.geometry), programSignature(rigid, rigid.geometry), programSignature(morphed, morphed.geometry)], ['s0', '0', '1']);
+  const renderer = { renderBufferDirect() {} }, census = createDrawCensus(renderer, camera);
+  census.begin();
+  for (const object of [skinned, skinned, rigid, rigid, skinned, morphed]) renderer.renderBufferDirect(camera, null, object.geometry, material, object, null);
+  assert.equal(census.end()['shadow:scene'].switches, 3, 'skinned to rigid, rigid to skinned, skinned to morphed');
 });
