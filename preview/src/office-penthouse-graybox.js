@@ -1,18 +1,18 @@
-// Graybox of the penthouse layout (#361): the geometry a visitor sees until #362's assets
-// and #363's integration replace it. Every mesh comes from the same plan the server
-// moves visitors through (office-layouts.js) and is tagged with the plan zone it occupies,
-// so tests can hold the art to the collision: nothing solid stands where a body may walk,
-// and the arrival doorway on the entrance wall stays open. Units are metres in the office
-// frame (x across, d inward, y up); Three.js uses [x, y, -d].
-import { OFFICE_LAYOUT_LEGACY, officeLayout, officeSeat } from './office-layouts.js';
+// The penthouse layout's shell (#361), furnished by #362's assets (office-penthouse-furnishings.js).
+// Every mesh comes from the same plan the server moves visitors through (office-layouts.js) and is
+// tagged with the plan zone it occupies, so tests can hold the art to the collision: nothing solid
+// stands where a body may walk, and the arrival doorway on the entrance wall stays open. Units are
+// metres in the office frame (x across, d inward, y up); Three.js uses [x, y, -d].
+import { OFFICE_LAYOUT_LEGACY, officeLayout } from './office-layouts.js';
 import { thinStorefrontGlass } from './storefront-materials.js';
+import { buildPenthouseFurnishings, createPenthouseFinishes, metricBoxUVs } from './office-penthouse-furnishings.js';
 
 const COLORS = {
-  travertine: '#e9dfd0', terrace: '#cbbfae', wall: '#efe7dc', ceiling: '#f6f1ea', walnut: '#6b4a33',
-  blush: '#e7b7b2', bronze: '#b08d57', glass: '#cfe3ea', stone: '#d9c7b4',
+  travertine: '#e9dfd0', terrace: '#cbbfae', wall: '#efe7dc', ceiling: '#f6f1ea', bronze: '#b08d57', glass: '#cfe3ea', stone: '#d9c7b4',
 };
-const HEIGHTS = { 'reading-side-table': 0.55, 'bookcase-1': 2.6, 'bookcase-2': 2.6 };
-const BACK = 0.5; // a chair back above the plan's seat height (#363), on the side away from where it faces
+// Floors and treads are the furnishings' travertine, toned per surface: the map carries the stone,
+// so these colours multiply it (the terrace pavers weather a shade darker). 1.2 m stones.
+const TRAVERTINE = { travertine: '#ffffff', terrace: '#e4dacb', stone: '#f3ece2' }, STONE_TILE = 1.2;
 const DOOR = { halfWidth: 0.85, height: 2.6 }, SHELL = 0.2;
 // Curtain wall: pane thickness, the solid arrival core's half-width (it hides the cabin and lobby
 // that rise with the office), the transom underside over the terrace portals, mullion size.
@@ -27,13 +27,14 @@ const PENDANTS = [[-3, 4.5, 8, 40], [5, 4.5, 7, 40], [5, 4.5, 12, 35], [-9, 4.5,
 const DAYLIT_LEVEL = 0.6, SKY_SHARE = 0.45, DAY_WHITE = '#fff4ea', DUSK_WARM = '#ffd2a3';
 
 export function buildPenthouseOffice(THREE, layout) {
-  const object = new THREE.Group(), geometries = [], materials = new Map();
+  const object = new THREE.Group(), geometries = [], materials = new Map(), finishes = createPenthouseFinishes();
   object.name = `office:${layout.id}`;
+  const stone = finishes.get('travertine').map ?? null;
   const material = name => {
     if (!materials.has(name)) {
       const finish = new THREE.MeshStandardMaterial({
-        color: COLORS[name], roughness: name === 'glass' ? 0.1 : name === 'bronze' ? 0.4 : 0.8, metalness: name === 'bronze' ? 0.6 : 0,
-        ...(name === 'glass' ? { transparent: true, opacity: 0.35 } : {}),
+        color: stone && TRAVERTINE[name] ? TRAVERTINE[name] : COLORS[name], roughness: name === 'glass' ? 0.1 : name === 'bronze' ? 0.4 : TRAVERTINE[name] ? 0.6 : 0.8, metalness: name === 'bronze' ? 0.6 : 0,
+        ...(name === 'glass' ? { transparent: true, opacity: 0.35 } : {}), ...(stone && TRAVERTINE[name] ? { map: stone } : {}),
       });
       materials.set(name, name === 'glass' ? withoutLightGlints(finish) : finish);
     }
@@ -41,6 +42,7 @@ export function buildPenthouseOffice(THREE, layout) {
   };
   const box = (zone, name, { x0, x1, d0, d1 }, y0, y1, finish) => {
     const geometry = new THREE.BoxGeometry(x1 - x0, y1 - y0, d1 - d0); geometries.push(geometry);
+    if (TRAVERTINE[finish]) metricBoxUVs(geometry, STONE_TILE);
     const mesh = new THREE.Mesh(geometry, material(finish));
     mesh.position.set((x0 + x1) / 2, (y0 + y1) / 2, -(d0 + d1) / 2);
     Object.assign(mesh, { name }); mesh.userData.zone = zone; object.add(mesh);
@@ -52,36 +54,14 @@ export function buildPenthouseOffice(THREE, layout) {
   for (const room of ground.rooms) box(`floor:${room.id}`, `${room.kind} floor`, room, ground.floorElevation - 0.1, ground.floorElevation, room.kind === 'terrace' ? 'terrace' : 'travertine');
   for (const room of upper.rooms) box('mezzanine', 'mezzanine slab', room, ground.floorElevation + main.clearUnderMezzanine, upper.floorElevation, 'stone');
 
-  // Collision obstacles, drawn exactly on their footprints: the stair, mezzanine furniture, and the
-  // terrace walls, which the curtain wall below glazes.
-  const glazedWalls = [], desks = [];
+  // The stair, drawn exactly on its footprint, and the terrace walls, which the curtain wall below
+  // glazes. Desks, chairs and furniture are the furnishings' (below), each on its own footprint.
+  const glazedWalls = [];
   for (const level of layout.levels) for (const o of level.obstacles) {
     if (o.kind === 'stair') {
       const { rise, risers } = layout.stair, run = (o.d1 - o.d0) / risers;
       for (let i = 0; i < risers; i++) box(`obstacle:${o.id}`, `stair tread ${i + 1}`, { x0: o.x0, x1: o.x1, d0: o.d0 + i * run, d1: o.d0 + (i + 1) * run }, level.floorElevation, level.floorElevation + rise * (i + 1) / risers, 'stone');
     } else if (o.kind === 'wall') glazedWalls.push({ ...o, y0: level.floorElevation, y1: level.floorElevation + level.clearHeight });
-    else if (o.kind === 'desk') desks.push({ ...o, y0: level.floorElevation, y1: level.floorElevation + o.height });
-    else if (officeSeat(layout, o.id)) {
-      // A reading chair: its seat at the plan's seat height, its back toward the bookcases (+d).
-      const seat = officeSeat(layout, o.id), y = level.floorElevation + seat.height;
-      box(`obstacle:${o.id}`, o.id, o, level.floorElevation, y, 'blush');
-      box(`obstacle:${o.id}`, `${o.id} back`, { ...o, d0: o.d1 - 0.15 }, y, y + BACK, 'blush');
-    } else box(`obstacle:${o.id}`, o.id, o, level.floorElevation, level.floorElevation + (HEIGHTS[o.id] ?? 0.75), o.id.startsWith('bookcase') || o.id.includes('table') ? 'walnut' : 'blush');
-  }
-  // The imported desks (R19) share one draw; each instance keeps its own plan zone.
-  if (desks.length) {
-    const geometry = new THREE.BoxGeometry(1, 1, 1); geometries.push(geometry);
-    const mesh = new THREE.InstancedMesh(geometry, material('walnut'), desks.length), matrix = new THREE.Matrix4();
-    desks.forEach((o, i) => mesh.setMatrixAt(i, matrix.compose(new THREE.Vector3((o.x0 + o.x1) / 2, (o.y0 + o.y1) / 2, -(o.d0 + o.d1) / 2), new THREE.Quaternion(), new THREE.Vector3(o.x1 - o.x0, o.y1 - o.y0, o.d1 - o.d0))));
-    mesh.name = 'desks'; mesh.userData.zones = desks.map(o => `obstacle:${o.id}`); object.add(mesh);
-  }
-  // Desk chairs are collision at the plan's seats, facing the imported desks. The seat top is the
-  // plan's seat height, so a seated visitor sits on it; the back is on the approach side.
-  for (const chair of ground.chairs) {
-    const [x, d] = chair.position, height = officeSeat(layout, chair.id)?.height ?? 0.5, geometry = new THREE.CylinderGeometry(0.35, 0.35, height, 20); geometries.push(geometry);
-    const mesh = new THREE.Mesh(geometry, material('blush'));
-    mesh.position.set(x, ground.floorElevation + height / 2, -d); mesh.name = chair.id; mesh.userData.zone = `chair:${chair.id}`; object.add(mesh);
-    box(`chair:${chair.id}`, `${chair.id} back`, { x0: x - 0.3, x1: x + 0.3, d0: d - 0.34, d1: d - 0.26 }, ground.floorElevation + height, ground.floorElevation + height + BACK, 'blush');
   }
 
   // The mezzanine's glass guard runs its d 14 edge, with a bronze top rail, open where the stair arrives.
@@ -114,20 +94,25 @@ export function buildPenthouseOffice(THREE, layout) {
   }
   box('shell:ceiling', 'ceiling', main, top, top + 0.15, 'ceiling');
 
-  // Sunlight enters only through the glass: the roof, the solid walls, the mezzanine, desks and
-  // bookcases throw the sun's shadow on the floors, so noon leaves the room in daylight shade and a
-  // low sun lays bars across it. Chairs, treads and fittings only receive, which keeps the office's
-  // share of the sun's shadow pass to ten draws.
-  const casts = node => /^(shell|mezzanine)/.test(node.userData.zone ?? '') || ['desks', 'curtain wall frames'].includes(node.name) || node.name.startsWith('bookcase');
-  object.traverse(node => { if (node.isMesh && !node.material.transparent) { node.receiveShadow = true; node.castShadow = casts(node); } });
-
   // The lamps (PENDANTS); the shared-world scene keeps them, or moves them into its existing light
   // pool, and relights them for the time of day. Until then they burn at full, as authored.
   const lamps = [...PENDANTS.map(([x, h, d, full]) => [x, ground.floorElevation + h, d, full]), [READING_LAMP[0], upper.floorElevation + READING_LAMP[1], READING_LAMP[2], READING_LAMP[3]]].map(([x, y, d, full]) => {
     const light = new THREE.PointLight('#fff1df', full, 16, 2); light.position.set(x, y, -d); light.userData.fullIntensity = full; object.add(light);
     return light;
   });
-  const interior = [...materials].filter(([name, finish]) => name !== 'terrace' && !finish.transparent).map(([, finish]) => finish);
+  // #362's furnishings, with a pendant drum hung at each lamp high enough to clear the tallest body.
+  // The terrace's pieces have their own finishes (sharing the maps), lit as outdoors like its floor.
+  const outdoor = createPenthouseFinishes({ like: finishes }), furnishings = buildPenthouseFurnishings(layout, { finishes, outdoor, lights: lamps });
+  object.add(furnishings.object);
+
+  // Sunlight enters only through the glass: the roof, the solid walls, the mezzanine, desk and table
+  // tops and bookcases throw the sun's shadow on the floors, so noon leaves the room in daylight shade
+  // and a low sun lays bars across it. Chairs, treads and fittings only receive, which keeps the
+  // office's share of the sun's shadow pass to about ten draws.
+  // Furnishings say for themselves (office-penthouse-furnishings.js).
+  const casts = node => node.userData.castsShadow ?? (/^(shell|mezzanine)/.test(node.userData.zone ?? '') || node.name === 'curtain wall frames');
+  object.traverse(node => { if (node.isMesh && !node.material.transparent) { node.receiveShadow = true; node.castShadow = casts(node); } });
+  const interior = [...[...materials].filter(([name, finish]) => name !== 'terrace' && !finish.transparent).map(([, finish]) => finish), ...finishes.materials];
   const dayWhite = new THREE.Color(DAY_WHITE), duskWarm = new THREE.Color(DUSK_WARM);
   return {
     object,
@@ -141,7 +126,8 @@ export function buildPenthouseOffice(THREE, layout) {
       for (const finish of interior) { finish.envMap = environment; finish.envMapIntensity = SKY_SHARE * environmentIntensity; }
     },
     dispose() {
-      // Instanced draws hold their own instance buffers on the GPU.
+      // The furnishings release their own draws; instanced draws hold instance buffers on the GPU.
+      object.remove(furnishings.object); furnishings.dispose(); outdoor.dispose(); finishes.dispose();
       object.traverse(node => { if (node.isInstancedMesh) node.dispose(); });
       for (const geometry of geometries) geometry.dispose(); for (const finish of materials.values()) finish.dispose();
     },
