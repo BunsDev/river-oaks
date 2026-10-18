@@ -105,14 +105,16 @@ All commands run from the worktree.
 | `pnpm test` (before the review fixes) | 3534 tests: 3533 pass, 0 fail, 1 skipped (already on main) |
 | `pnpm run build` (before the review fixes) | exit 0 |
 | `pnpm run test:experience office-computer-embed` (before the review fixes) | passed, 38 checks, 64 s; forced teardown 146 ms (visit end) and 290 ms (revocation) with a hung child |
-
-## Gaps and next step
-
-- After the review fixes, rerun `office-visit`, `office-desk` and `office-computer-embed`,
-  then `pnpm test`, build and `pnpm run verify`. Then commit (signed) and open a PR.
-- Post the contract proposal to Computer #33 and the Place status to #486 and #487.
-- Staged and not in this PR:
-  - the real Computer candidate (#33);
-  - the origin pair, auth and frame policy (#21);
-  - continuity (#27);
-  - the Place `frame-src` and environment change.
+| `pnpm test` (after the review fixes) | 3537 tests: 3536 pass, 0 fail, 1 skipped; exit 0 |
+| `pnpm run build` (after the review fixes) | exit 0 |
+| `pnpm run test:experience office-visit office-desk office-computer-embed` (after the review fixes, 2026-10-18 15:31Z) | all passed: office-visit 11 checks, office-desk 17, office-computer-embed 40. Forced teardown 135 ms (visit end, close pending) and 291 ms (revocation, hung child). Receipt: `data/reports/office-computer-embed-browser.json` |
+| `pnpm run verify` (core, 15:36–15:49Z, `nice -n 19`, load 96–244) | failed. `agent-tests` passed. `preview-tests` was SIGKILLed at the 600 s step timeout, with one failure: the penthouse furnishings "short idle slices" wall-clock test, a known load flake. The later steps did not run. |
+| Idle-slice A/B at load ~200 (10:51 local) | fails 3/3 on untouched main da74c6e9 and 3/3 on this branch (3.0–5.8 s). This change does not touch that module. |
+| Merged with origin/main 1d8740ad (signed merge 9d46bd24, clean); gates run one at a time at load 83–244 | |
+| `pnpm test` (merged) | 3547 tests: 3545 pass, 1 fail (the idle-slice load flake, 79.6 ms), 1 skipped |
+| `pnpm run test:server` (merged) | first run: load timeouts (browser fixture startup, screening command). Rerun: 872 tests, 668 pass, 0 fail, 204 skipped (Redis-only without `REDIS_URL`) |
+| `pnpm run test:desktop` (merged) | 76/76 |
+| `pnpm run build` (merged) | exit 0 |
+| `uv run --locked ruff check .` / `ruff format --check .` / `pytest -q` | pass / pass / 141 passed |
+| `uv run --locked python scripts/check_secrets.py --all` | exit 0 |
+| Not rerun locally | `river-oaks demo` and `demo-verify` (Python untouched); `verify full` (Redis, audit, browser matrix). Hosted CI is the merge gate. |
