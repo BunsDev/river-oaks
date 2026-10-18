@@ -177,11 +177,76 @@ shard that runs `office-computer-embed` in software rendering.
 
 ## Gaps and next step
 
-- **Resume:** watch hosted Verify on the PR head, then land with `pnpm run land 524`
-  (authorized by Val: "land when green").
+- **Delivered:** PR #524 merged as 97304fb7, and its worktree was retired
+  (`retirement-vNfNHv`). The final audit (below) lands separately; Val authorized landing
+  it when green.
+- **Resume:** the Place side is complete until Computer publishes an embed build. Then run
+  `office-computer-embed` against that build, record its revision and the contract
+  version here and in #487, and move to #21's origin-pair proof.
 - Contract proposal posted to Computer #33; status posted to #486 and #487. No reply yet.
 - Staged and not in this PR:
   - the real Computer candidate (#33);
   - the origin pair, auth and frame policy (#21);
   - continuity (#27);
   - the Place `frame-src` and environment change.
+
+## Final audit (after merge 97304fb7)
+
+**Branch:** `test/office-computer-embed-audit-486-20261018`, task
+`office-computer-embed-audit-486`.
+
+This pass adds browser regressions for the three teardown paths that were only traced
+in code: a dropped town connection, a world rebuild (Reload world data), and a live
+Place account change on one page (the socket returns as another account). Each runs with
+a hung Computer. Timing checks are strict: under 5 s, or 10 s for the rebuild, which
+waits for world data.
+
+**Computer side refreshed (2026-10-18 17:28Z):**
+- main is still 062ba495 (2026-10-03), with no open PRs and no embed branch;
+- #21's latest evidence is the 2026-10-03 staging WorkOS blocker;
+- #27 has no decision;
+- #33 has Place's contract and addendum, unanswered.
+
+There is still no deployed Computer contract version to compare against.
+
+### Evidence map
+
+How to read the evidence column:
+
+- **Fixture:** local Chromium (macOS, Metal) against the child fixture.
+- **CI:** the same journey on hosted Linux CI in software rendering, on PR #524.
+- **Unit:** `office-computer-frame` and `office-ui` tests.
+- **Code:** a code trace only.
+- **Incomplete:** no evidence yet.
+
+| Criterion | Evidence | Missing |
+| --- | --- | --- |
+| Tasks and Computer tabs in the existing dialog | Fixture, CI | real Computer |
+| My tasks drafts and failed-save retry survive Computer | Fixture, CI | — |
+| Conflict state across a view switch | Unit (desk model), Code (view switch leaves the model untouched) | browser check |
+| Office tasks, accepted permissions, shared scope | not applicable: removed by #496 before this work | — |
+| Missing, invalid or disabled config: Tasks only, nothing loaded | Unit (config), Fixture and CI (`office-desk`: no tab, no frame) | — |
+| Exact origin; fixed sign-in and open-separately links; message URLs never navigate | Unit, Fixture | real hosts |
+| Forged origin, wrong window, malformed, unsupported version, stale instance | Unit, Fixture | — |
+| Duplicate or late close results, timeout races, reloads inside the frame | Unit, Fixture (reload) | — |
+| Usable only after Computer's own gate on a fresh instance; not from load, popup or Place login | Unit, Fixture (fixture child) | real Computer (#33) |
+| Two successive Place accounts and two or more Computer accounts | Fixture (owner with Ada/Ben; guest, then bob, then guest in one browser; Cy) | real Computer |
+| Visit end, revocation, sign-out, dropped connection, world rebuild, live account change with a hung child | Fixture (timings recorded on the audit PR) | real Computer |
+| Reentry never flashes the previous desktop | Fixture (reentry, reload, next account) | real Computer |
+| Computer's account-switch and local-copy choices; nothing stored in Place state | Fixture (models Switch and Keep in this browser); Fixture (task requests and snapshot clean) | real Computer (#33, #17) |
+| Pending, failed and offline closes; ready, cancel, attention, timeout | Unit, Fixture | real Computer |
+| Frame removed after departure; note recovered after recreation | Fixture (fixture account store) | real Computer and hosts (#487) |
+| Account acknowledgement labelled apart from local-only recovery | Fixture | real Computer |
+| Nested Escape: menus and dialogs | Fixture (menu) | real Computer |
+| Nested Escape: drag and phone shell | Incomplete (Computer-side behavior) | real Computer |
+| Keys, held keys, push-to-talk | Fixture (no key reaches the parent; position unchanged), Code (keys cleared, transmit off on desk open) | — |
+| Return controls and keyboard focus | Fixture | human review |
+| Narrow touch layout | Fixture (390 and 320 px viewports, mouse and keyboard) | physical touch device |
+| Reduced motion | Fixture (journey runs reduced; no new animation) | — |
+| Pointer lock | not applicable: the office uses drag with pointer capture | — |
+| One frame, listeners and timers removed over repeated cycles | Fixture (frame count, message-listener counter), Unit (fake timers empty) | — |
+| Neutral `SCREEN_DYNAMIC` monitors | Code (no scene or monitor file changed) | — |
+| No private content in messages, task requests or snapshots | Fixture | real Computer |
+| Safari, iOS and physical devices | Incomplete | device runs |
+| Human accessibility review | Incomplete | Val or a reviewer |
+| Hosted embedded persistence and live pilot | Incomplete: Place CSP `frame-src` blocks Computer; no origin configured | #33, #21, #27, then a Place policy change |
