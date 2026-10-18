@@ -84,7 +84,7 @@ writeFileSync(join(out, 'sources.candidate.json'), `${JSON.stringify({
     footage: { source: `In-game runtime capture (${captured.length} shots, auditorium only), scripts/ipic-short/second-capture.mjs at ${sourceRevision}`, permission: 'The project\'s own runtime; the auditorium interior as committed. What it shows needs Val\'s approval.' },
     voices: { source: `${model}: ${voices}`, permission: 'Apache-2.0 model weights, local inference; synthetic voices, not any person\'s' },
     music: { source: 'scripts/ipic-short/second-score.mjs (original, synthesised; F major, 84 bpm)', permission: 'The project\'s own composition' },
-    likeness: { source: 'The browser fixture accounts\' committed avatars (alice as Maya, bob as Theo); fictional characters', permission: 'Pending Val\'s approval of each likeness shown' },
+    likeness: { source: `Committed characters worn by the browser fixture accounts: ${Object.entries(script.characters).map(([name, cast]) => `${name}: ${cast.appearance}`).join('; ')}. Fictional characters`, permission: 'Pending Val\'s approval of each likeness shown' },
     credits: ['Footage, edit and score: River Oaks runtime and scripts/ipic-short', `Voices: Kokoro-82M (${voices})`],
   },
   transcript: cues.map(c => c.text), files,

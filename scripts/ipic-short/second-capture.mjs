@@ -1,6 +1,6 @@
 // The second short's capture (#501, "Two Seats, One Screen"). Its output stays outside the repository until
 // Val approves the cut; second-cut.mjs makes the delivery files. Records a third page (the owner fixture,
-// standing at the back of the auditorium, out of shot) on real-GPU headless Chromium (Metal ANGLE) while two
+// standing in the west aisle, out of shot) on real-GPU headless Chromium (Metal ANGLE) while two
 // synthetic fixture accounts sit side by side in the front row: alice in recliner 1-1 (Maya), bob in recliner 1-0 (Theo).
 // Both are seated from the same spot between the rows, one after the other (the front row's gaps are narrower than a body).
 // Shots are framed with the DEV-only render-audit camera, as preview/e2e/ipic-photo-views.mjs does. alice
@@ -29,7 +29,9 @@ const CAMERAS = {
   auditorium: { eye: auditorium.eye, target: auditorium.target, fov: 62 },
   'two-shot': { eye: [-5.0, 7.35, 32.3], target: [-1.6, 7.0, 31.0], fov: 46 },
   'over-shoulder': { eye: [-1.6, 7.65, 29.4], target: [IPIC_SCREEN.a, 6 + IPIC_SCREEN.y - 0.2, IPIC_SCREEN.d], fov: 58 },
-  faces: { eye: [-1.6, 7.35, 33.25], target: [-1.6, 7.05, 31.0], fov: 44 },
+  // From beside the screen's west end, tilted down, so the back wall's lettering stays out of shot (the 18:51Z take
+  // showed it; framing probe, 2026-10-18).
+  faces: { eye: [-2.1, 7.35, 33.25], target: [-1.6, 6.9, 31.0], fov: 38 },
 };
 
 await mkdir(outDir, { recursive: true });
@@ -91,11 +93,21 @@ try {
     await page.waitForFunction(id => window.__riverCarriage().pose.sitting?.buildId === id, seat);
   }
   const entry = [[-1.4, 4.8], [-1.4, 20.7], [-1.4, 24.5], [-4.85, 24.5], [-4.85, 29.65]];
+  // Theo wears Rowan, a committed character, chosen in the in-game character picker as any player can; the account,
+  // its name and its seat are unchanged. Maya keeps the default guest look (Sable). Val approves both likenesses.
+  if (!await theo.locator('.visit-tools').evaluate(node => node.open)) await theo.locator('.visit-tools-toggle').click();
+  await theo.locator(`input[name=player-character][value=${script.characters.Theo.character}]`).check();
+  await theo.waitForFunction(async id => { const { sharedAppearance } = await import('/src/shared-appearances.js'); const host = document.querySelector('#canvas-host');
+    return host.dataset.playerReady === 'true' && sharedAppearance(host.dataset.playerAppearance)?.character === id; }, script.characters.Theo.character, { timeout: 60000 });
+  if (await theo.locator('.visit-tools').evaluate(node => node.open)) await theo.locator('.visit-tools-toggle').click();
   await Promise.all([enter(maya), enter(theo), enter(camera)]);
   await Promise.all([walk(maya, [...entry, [-1.6, 29.65]]), walk(theo, entry), walk(camera, [...entry.slice(0, 4), [-4.85, 26.6]])]);
   await sit(maya, 'bench:ipic-recliner-1-1');
   await walk(theo, [[-1.6, 29.65]]);
   await sit(theo, 'bench:ipic-recliner-1-0');
+  // The camera page's own player then steps up the west aisle, out of every shot; standing there earlier would block
+  // the friends' way to their seats.
+  await walk(camera, [[-4.85, 28.2]]);
   await camera.waitForFunction(() => (window.__riverMultiplayer().snapshot.players ?? []).filter(p => p.sitting).length >= 2);
   await camera.evaluate(([css]) => { const style = document.createElement('style'); style.textContent = css; document.head.append(style); document.body.classList.add('clear-view'); }, [HIDE]);
   // Each shot's health, sampled in the camera page (shot-health.mjs): the longest wait between two animation frames,

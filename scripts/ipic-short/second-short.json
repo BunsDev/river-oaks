@@ -4,8 +4,8 @@
   "logline": "Two friends find their recliners at IPIC just before the house lights go down.",
   "status": "Draft for Val's review (#501). Not approved, not committed as media, not published.",
   "characters": {
-    "Maya": { "voice": "af_heart", "speed": 1.0, "appearance": "the browser fixture's second account (alice), as committed" },
-    "Theo": { "voice": "am_liam", "speed": 1.0, "appearance": "the browser fixture's third account (bob), as committed" }
+    "Maya": { "voice": "af_heart", "speed": 1.0, "appearance": "the browser fixture account alice, in the default guest look (Sable, a committed character)" },
+    "Theo": { "voice": "am_liam", "speed": 1.0, "character": "rowan", "appearance": "the browser fixture account bob, wearing Rowan (a committed character) chosen in the in-game character picker" }
   },
   "constraints": [
     "Auditorium only: no lounge floral wall, no street frontage or signage in shot.",
