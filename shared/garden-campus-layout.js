@@ -19,7 +19,7 @@ export const GARDEN_CAMPUS_ID = 'river-oaks-garden-campus';
 // units: suite identities and boundaries. Persisted positions, leases and level
 // state record {id, layout, floors, support, units} and must refuse or relocate
 // on any major mismatch (checkCampusCompatibility).
-export const GARDEN_CAMPUS_VERSIONS = Object.freeze({ schema: 1, layout: '3.1', floors: 1, support: 1, units: 1 });
+export const GARDEN_CAMPUS_VERSIONS = Object.freeze({ schema: 1, layout: '3.2', floors: 1, support: 1, units: 1 });
 
 // Conservative body envelope (preview/src/workplace-room.js AVATAR_ENVELOPE, kept
 // equal by a test) and the clearances derived from it. Remeasured against the
@@ -117,6 +117,22 @@ const CAMERAS = [
   { id: '03-floor4-bridge-walk', name: 'On B12 at eye height, walking north into The Commons', position: [16, 71.5, PUBLIC_Z + 1.68], target: [16, 93, PUBLIC_Z + 1.6], fov: 70 },
   { id: '04-northwest-high-oblique', name: 'Opposite high oblique over the IPIC roof', position: [-70, 245, 95], target: [15, 95, 14], fov: 45 },
   { id: '05-office-terrace-outlook', name: 'From the existing office roof edge nearest the campus (approximate), looking north', position: [10, -16, 33.02 + 1.68], target: [15, 100, 16], fov: 60 },
+];
+// Finishes adopted from #511 (layout 3.2): planters, benches, meeting tables and ground
+// tree pits, each a solid obstacle on its level. Seats and tables are collision until
+// #510 makes them usable; a tree's crown is above 3.2 m, its pit and trunk are solid.
+const FURNISHING_KINDS = new Set(['planter', 'seat', 'table', 'tree']);
+const FURNISHINGS = [
+  { levelId: 'garden-campus/l2', items: [['T1-terrace-3/bed-east-46.6', 'planter', [24.15, 46.6, 24.95, 57.25]], ['T1-terrace-3/bed-east-61.25', 'planter', [24.15, 61.25, 24.95, 66.9]], ['T1-terrace-3/table-north', 'table', [22.35, 67.3, 24.9, 69.9]], ['T1-terrace-3/bed-west-end', 'planter', [6.05, 46.05, 6.85, 48.5]], ['T1-terrace-3/seat-south-7.3', 'seat', [7.3, 46.05, 10.3, 46.55]], ['T1-terrace-3/seat-south-11.1', 'seat', [11.1, 46.05, 14.1, 46.55]], ['T1-terrace-3/seat-south-14.9', 'seat', [14.9, 46.05, 17.9, 46.55]], ['T1-terrace-3/seat-south-18.7', 'seat', [18.7, 46.05, 21.7, 46.55]]] },
+  { levelId: 'garden-campus/l4', items: [['T1-terrace-5/bed-east-49.1', 'planter', [21.15, 49.1, 21.95, 58.5]], ['T1-terrace-5/bed-east-62.5', 'planter', [21.15, 62.5, 21.95, 66.9]], ['T1-terrace-5/table-north', 'table', [19.35, 67.3, 21.9, 69.9]], ['T1-terrace-5/bed-west-end', 'planter', [6.05, 48.55, 6.85, 51]], ['T1-terrace-5/seat-south-7.3', 'seat', [7.3, 48.55, 10.3, 49.05]], ['T1-terrace-5/seat-south-11.1', 'seat', [11.1, 48.55, 14.1, 49.05]], ['T1-terrace-5/seat-south-14.9', 'seat', [14.9, 48.55, 17.9, 49.05]]] },
+  { levelId: 'garden-campus/l3', items: [['T2-terrace-4/bed-east-90.6', 'planter', [24.15, 90.6, 24.95, 102.5]], ['T2-terrace-4/bed-east-106.5', 'planter', [24.15, 106.5, 24.95, 112.9]], ['T2-terrace-4/table-north', 'table', [22.35, 113.3, 24.9, 115.9]], ['T2-terrace-4/bed-west-end', 'planter', [6.05, 90.05, 6.85, 93]], ['T2-terrace-4/seat-south-7.3', 'seat', [7.3, 90.05, 10.3, 90.55]], ['T2-terrace-4/bed-south-11.1', 'planter', [11.1, 90.05, 13.5, 90.85]], ['T2-terrace-4/seat-south-18.5', 'seat', [18.5, 90.05, 21.5, 90.55]]] },
+  { levelId: 'garden-campus/l5', items: [['T2-terrace-6/bed-east-93.6', 'planter', [21.15, 93.6, 21.95, 104]], ['T2-terrace-6/bed-east-108', 'planter', [21.15, 108, 21.95, 112.9]], ['T2-terrace-6/table-north', 'table', [19.35, 113.3, 21.9, 115.9]], ['T2-terrace-6/bed-west-end', 'planter', [6.05, 93.05, 6.85, 96]], ['T2-terrace-6/seat-south-7.3', 'seat', [7.3, 93.05, 10.3, 93.55]], ['T2-terrace-6/bed-south-11.1', 'planter', [11.1, 93.05, 13.6, 93.85]], ['T2-terrace-6/seat-south-14.4', 'seat', [14.4, 93.05, 17.4, 93.55]]] },
+  { levelId: 'garden-campus/l2', items: [['T3-terrace-3/bed-east-128.6', 'planter', [24.15, 128.6, 24.95, 138.5]], ['T3-terrace-3/bed-east-142.5', 'planter', [24.15, 142.5, 24.95, 146.9]], ['T3-terrace-3/table-north', 'table', [22.35, 147.3, 24.9, 149.9]], ['T3-terrace-3/bed-west-end', 'planter', [6.05, 128.05, 6.85, 131]], ['T3-terrace-3/seat-south-7.3', 'seat', [7.3, 128.05, 10.3, 128.55]], ['T3-terrace-3/bed-south-11.1', 'planter', [11.1, 128.05, 13.6, 128.85]], ['T3-terrace-3/seat-south-14.4', 'seat', [14.4, 128.05, 17.4, 128.55]], ['T3-terrace-3/bed-south-18.2', 'planter', [18.2, 128.05, 20.7, 128.85]]] },
+  { levelId: 'garden-campus/l4', items: [['T3-terrace-5/bed-east-131.6', 'planter', [21.15, 131.6, 21.95, 140]], ['T3-terrace-5/bed-east-144', 'planter', [21.15, 144, 21.95, 146.9]], ['T3-terrace-5/table-north', 'table', [19.35, 147.3, 21.9, 149.9]], ['T3-terrace-5/bed-west-end', 'planter', [6.05, 131.05, 6.85, 134]], ['T3-terrace-5/seat-south-7.3', 'seat', [7.3, 131.05, 10.3, 131.55]], ['T3-terrace-5/bed-south-11.1', 'planter', [11.1, 131.05, 13.6, 131.85]], ['T3-terrace-5/seat-south-14.4', 'seat', [14.4, 131.05, 17.4, 131.55]]] },
+  { levelId: 'garden-campus/l6', items: [['T1-roof/table-south-east', 'table', [16.35, 51.6, 18.65, 54.2]], ['T1-roof/seat-east-a', 'seat', [18.45, 59, 18.95, 62]], ['T1-roof/seat-east-b', 'seat', [18.45, 66.4, 18.95, 69.4]], ['T1-roof/bed-north', 'planter', [9.2, 69.15, 17.8, 69.95]]] },
+  { levelId: 'garden-campus/l7', items: [['T2-roof/table-south-east', 'table', [16.35, 96.6, 18.65, 99.2]], ['T2-roof/seat-east-a', 'seat', [18.45, 104.5, 18.95, 107.5]], ['T2-roof/seat-east-b', 'seat', [18.45, 112.4, 18.95, 115.4]], ['T2-roof/bed-north', 'planter', [9.2, 115.15, 17.8, 115.95]]] },
+  { levelId: 'garden-campus/l6', items: [['T3-roof/table-south-east', 'table', [16.35, 134.6, 18.65, 137.2]], ['T3-roof/seat-east-a', 'seat', [18.45, 140.5, 18.95, 143.5]], ['T3-roof/seat-east-b', 'seat', [18.45, 146.4, 18.95, 149.4]], ['T3-roof/bed-north', 'planter', [9.2, 149.15, 17.8, 149.95]]] },
+  { levelId: 'garden-campus/l0', items: [['ground/tree-west-t1-a', 'tree', [2.4, 49.9, 3.6, 51.1]], ['ground/tree-west-t1-b', 'tree', [2.4, 64.9, 3.6, 66.1]], ['ground/tree-west-t2-a', 'tree', [2.4, 94.4, 3.6, 95.6]], ['ground/tree-west-t2-b', 'tree', [2.4, 110.4, 3.6, 111.6]], ['ground/tree-west-t3', 'tree', [2.4, 138.4, 3.6, 139.6]], ['ground/tree-south-a', 'tree', [7.4, 8.4, 8.6, 9.6]], ['ground/tree-south-b', 'tree', [11.4, 18.4, 12.6, 19.6]], ['ground/tree-south-c', 'tree', [22.9, 41.9, 24.1, 43.1]], ['ground/tree-cross-west', 'tree', [2.9, 85.4, 4.1, 86.6]], ['ground/tree-cross-east', 'tree', [23.9, 85.4, 25.1, 86.6]], ['ground/tree-north-a', 'tree', [25.7, 167.4, 26.9, 168.6]]] },
 ];
 // Roof access emerges inside each core: lift overrun and stair enclosure.
 const ROOF_HEADHOUSE_HEIGHT = 3.0, ROOF_EDGE_ZONE = 0.5;
@@ -236,8 +252,14 @@ function buildLayout() {
       opening: [...SPINE_U], width: SPINE_U[1] - SPINE_U[0], clearHeight: BRIDGE_DECK.portalClearHeight, access: 'public' });
     const landing = (tw, v, side) => ({ id: `${tw}-F4-${side}`, tower: tw, level: PUBLIC_LEVEL, z: PUBLIC_Z, access: 'public',
       rect: side === 'north' ? [SPINE_U[0], v - BRIDGE_DECK.landingDepth, SPINE_U[1], v] : [SPINE_U[0], v, SPINE_U[1], v + BRIDGE_DECK.landingDepth] });
+    // Edge guards run over open air only: where a terrace at deck level lies under an
+    // end of the deck (T2's z 13 terrace, v 90-93, below B12's north end), they stop at
+    // its edge and the lane opens onto that terrace, whose own guard closes the edge.
+    const [u0, v0, u1, v1] = bridge.rect, under = towers.flatMap(item => item.terraces).filter(terrace => terrace.z === BRIDGE_DECK.z)
+      .flatMap(terrace => terrace.parts).filter(part => Math.min(part[2], u1) > Math.max(part[0], u0) && Math.min(part[3], v1) > Math.max(part[1], v0));
+    const guardSpan = [Math.max(v0, ...under.filter(part => part[1] <= v0).map(part => part[3])), Math.min(v1, ...under.filter(part => part[3] >= v1).map(part => part[1]))];
     return { ...bridge, rect: [...bridge.rect], clear: [...bridge.clear], deckZ: BRIDGE_DECK.z, slab: BRIDGE_DECK.slab, underside: round(BRIDGE_DECK.z - BRIDGE_DECK.slab),
-      guard: BRIDGE_DECK.guard, edgeZone: BRIDGE_DECK.edgeZone, grossWidth: bridge.rect[2] - bridge.rect[0], clearWidth: bridge.clear[2] - bridge.clear[0], access: 'public',
+      guard: BRIDGE_DECK.guard, guardSpan, edgeZone: BRIDGE_DECK.edgeZone, grossWidth: bridge.rect[2] - bridge.rect[0], clearWidth: bridge.clear[2] - bridge.clear[0], access: 'public',
       from: { ...bridge.from, level: PUBLIC_LEVEL, v: fromV }, to: { ...bridge.to, level: PUBLIC_LEVEL, v: toV },
       portals: [portal('from', bridge.from.tower, fromV, bridge.from.side), portal('to', bridge.to.tower, toV, bridge.to.side)],
       landings: [landing(bridge.from.tower, fromV, bridge.from.side), landing(bridge.to.tower, toV, bridge.to.side)],
@@ -252,6 +274,7 @@ function buildLayout() {
     entries: ENTRIES.map(entry => ({ ...entry, position: [...entry.position], threshold: round(entry.laneAltitude - FRAME.baseAltitude) })),
     seams: ENTRIES.map(entry => seamFor(entry)), cameras: structuredClone(CAMERAS), coreDecision: { ...CORE_DECISION },
     obstacles: [],
+    furnishings: FURNISHINGS.flatMap(({ levelId, items }) => items.map(([id, kind, rect]) => ({ id, kind, levelId, rect: [...rect] }))),
     policy: {
       public: 'Ground paths, the F1 halls, every core lobby and spur, every spine, terrace passage, terrace and roof garden, and both skywalks are public. Crossing the campus never needs a lease.',
       private: 'Suites are private and branch off public spines by one door each. No suite is ever part of the public route.',
@@ -435,12 +458,15 @@ export function campusLevels(layout = GARDEN_CAMPUS_LAYOUT) {
   const deckLevel = at(PUBLIC_Z);
   for (const bridge of layout.bridges) {
     deckLevel.surfaces.push({ id: bridge.id, kind: 'deck', rect: [...bridge.clear], access: 'public', bridge: bridge.id });
-    deckLevel.obstacles.push({ id: `${bridge.id}/edge-west`, kind: 'guard', rect: [bridge.rect[0], bridge.rect[1], bridge.clear[0], bridge.rect[3]] },
-      { id: `${bridge.id}/edge-east`, kind: 'guard', rect: [bridge.clear[2], bridge.rect[1], bridge.rect[2], bridge.rect[3]] });
+    const [g0, g1] = bridge.guardSpan;
+    deckLevel.obstacles.push({ id: `${bridge.id}/edge-west`, kind: 'guard', rect: [bridge.rect[0], g0, bridge.clear[0], g1] },
+      { id: `${bridge.id}/edge-east`, kind: 'guard', rect: [bridge.clear[2], g0, bridge.rect[2], g1] });
     deckLevel.keepClear.push({ id: bridge.id, rect: [...bridge.clear] }, ...bridge.landings.map(landing => ({ id: landing.id, rect: [...landing.rect] })));
     for (const [i, portal] of bridge.portals.entries())
       deckLevel.openings.push({ id: portal.id, kind: 'skywalk-portal', position: portal.position.slice(0, 2), width: portal.width, clearHeight: portal.clearHeight, from: bridge.landings[i].id, to: bridge.id });
   }
+  // Finishes are solid obstacles on their own level.
+  for (const item of layout.furnishings ?? []) [...levels.values()].find(level => level.id === item.levelId)?.obstacles.push({ id: item.id, kind: item.kind, rect: [...item.rect] });
   // Reachability as data: the portals and doors that land on each roof and terrace.
   for (const level of levels.values()) for (const surface of level.surfaces.filter(item => item.kind === 'roof' || item.kind === 'terrace')) {
     surface.reachedBy = [...level.portals.filter(portal => surfaceCovers(surface, portal.position) && !insideObstacle(level, portal.position)).map(portal => portal.id),
@@ -517,8 +543,10 @@ export function campusGraph(layout = GARDEN_CAMPUS_LAYOUT) {
       edge(landing.id, portal.id, 'walk', portal.width);edge(portal.id, bridge.id, 'walk', portal.width);
     }
   }
-  // B12 crosses T2's z 13 terrace (v 90-93) inside its own edge guards, so the deck
-  // and that terrace do not join sideways: the terrace is reached by its door.
+  // B12's lane opens onto T2's z 13 terrace where its guards stop (guardSpan): a
+  // same-level junction, as support has it.
+  for (const bridge of layout.bridges) for (const tower of layout.towers) for (const terrace of tower.terraces)
+    if (terrace.z === bridge.deckZ && terrace.parts.some(part => rectsOverlap(part, bridge.rect))) edge(bridge.id, terrace.id, 'walk', bridge.clearWidth);
   return { nodes, edges };
 }
 export function campusRoute(from, to, { publicOnly = true, layout = GARDEN_CAMPUS_LAYOUT, walkOnly = false } = {}) {
@@ -732,7 +760,81 @@ export function validateGardenCampus(layout = GARDEN_CAMPUS_LAYOUT, { district =
       if (Math.abs(total - area(level.rect)) > 1e-6) fail('unit', level.id, `suites, circulation, core and residual cover ${round(total)} m2, plate ${area(level.rect)} m2`);
     }
   }
+  checkFurnishings(layout, campusLevels(layout), fail);
   return { ok: findings.length === 0, findings };
+}
+// Where a body arrives through a terrace or headhouse door: the approach in front of it,
+// 1.8 m deep and 0.3 m beyond each jamb. Every such door opens east (+u).
+const doorThreshold = ([u, v]) => [u, v - CAMPUS_DOOR_WIDTH / 2 - 0.3, u + CAMPUS_PASSAGE_WIDTH, v + CAMPUS_DOOR_WIDTH / 2 + 0.3];
+const furnishedPlaces = layout => [
+  ...layout.towers.flatMap(tower => tower.terraces).map(terrace => ({ id: terrace.id, z: terrace.z, parts: terrace.parts, door: terrace.door })),
+  ...layout.towers.filter(tower => tower.roof.headhouse).map(tower => ({ id: tower.roof.id, z: tower.roof.z, parts: [tower.roof.rect], door: tower.roof.headhouse.door })),
+];
+// Finishes (#511): each sits inside one public terrace or roof, or on open ground off every
+// path, clear of every obstacle, keep-clear zone, deck and door approach. From each terrace
+// and roof door a body, and a 1.8 m route, still reach every part, seat and table, and no
+// standable area is cut off.
+function checkFurnishings(layout, levels, fail) {
+  const ids = new Set(), places = furnishedPlaces(layout);
+  for (const item of layout.furnishings ?? []) {
+    const level = levels.find(entry => entry.id === item.levelId), r = item.rect;
+    if (ids.has(item.id)) fail('furnish', item.id, 'repeated finish id');
+    ids.add(item.id);
+    if (!level || !FURNISHING_KINDS.has(item.kind) || !(r[2] - r[0] > EPS && r[3] - r[1] > EPS)) { fail('furnish', item.id, 'unknown level or kind, or an empty rect');continue; }
+    const ground = level.surfaces.find(surface => surface.polygon);
+    const within = level.z === 0 ? corners(r).every(point => pointInPolygon(point, ground.polygon)) && !ground.holes.some(hole => rectsOverlap(hole, r))
+      : level.surfaces.some(surface => ['terrace', 'roof'].includes(surface.kind) && rectInside(r, surface.rect));
+    if (!within) fail('support', item.id, `${item.kind} is not inside one public terrace, roof or open ground`);
+    for (const other of level.obstacles) if (other.id !== item.id && rectsOverlap(other.rect, r) && !ids.has(other.id)) fail('overlap', `${item.id}/${other.id}`, `${item.kind} overlaps ${other.kind}`);
+    const zones = [...level.keepClear, ...layout.bridges.filter(bridge => bridge.deckZ === level.z).map(bridge => ({ id: bridge.id, rect: bridge.rect })),
+      ...places.filter(place => place.z === level.z).map(place => ({ id: `${place.id}/door`, rect: doorThreshold(place.door) })),
+      ...(level.z === 0 ? [...layout.paths, ...layout.seams.filter(seam => seam.polygon?.length && seam.polygon.every(Array.isArray)).map(seam => ({ id: seam.id, rect: boundsOf(seam.polygon) }))] : [])];
+    for (const zone of zones) if (rectsOverlap(zone.rect, r)) fail('blocked', `${item.id}/${zone.id}`, `${item.kind} sits in ${zone.id}`);
+  }
+  for (const place of places) {
+    const level = levels.find(entry => entry.z === place.z), start = [place.door[0] + CAMPUS_PASSAGE_WIDTH / 2 + 0.05, place.door[1]];
+    const usable = (layout.furnishings ?? []).filter(item => ['seat', 'table'].includes(item.kind) && item.levelId === level.id && place.parts.some(part => rectInside(item.rect, part)));
+    for (const radius of [CAMPUS_BODY.bodyHalfWidth, CAMPUS_PASSAGE_WIDTH / 2]) {
+      const flood = bodyFlood(level, place.parts, start, radius), label = radius === CAMPUS_BODY.bodyHalfWidth ? 'a body' : 'a 1.8 m route';
+      if (!flood.started) { fail('reach', `${place.id}/door`, `${label} cannot stand at the door`);continue; }
+      for (const [i, part] of place.parts.entries()) if (!flood.reached.some(point => rectContains(part, point))) fail('reach', `${place.id}/${i}`, `${label} cannot reach this part from the door`);
+      if (radius !== CAMPUS_BODY.bodyHalfWidth) continue;
+      for (const item of usable) if (!flood.reached.some(point => rectDistance(item.rect, point) <= radius + 0.25)) fail('reach', item.id, `a body cannot reach this ${item.kind} from the door`);
+      for (const pocket of flood.pockets) if (pocket.area >= 0.5) fail('reach', `${place.id}@${pocket.at.map(n => n.toFixed(1)).join(',')}`, `${round(pocket.area)} m2 a body can stand on is cut off from the door`);
+    }
+  }
+}
+const boundsOf = polygon => [Math.min(...polygon.map(p => p[0])), Math.min(...polygon.map(p => p[1])), Math.max(...polygon.map(p => p[0])), Math.max(...polygon.map(p => p[1]))];
+// Grid flood (0.1 m) of the positions where a disc of `radius` stays on `parts` and clear of
+// the level's obstacles, grown from `start`; the free cells it misses form `pockets`.
+function bodyFlood(level, parts, start, radius, step = 0.1) {
+  const [u0, v0, u1, v1] = boundsOf(parts.flatMap(([a, b, c, d]) => [[a, b], [c, d]]));
+  const nu = Math.round((u1 - u0) / step) + 1, nv = Math.round((v1 - v0) / step) + 1, at = (i, j) => [round(u0 + i * step), round(v0 + j * step)];
+  const on = (u, v) => parts.some(part => rectContains(part, [u, v]));
+  const near = level.obstacles.filter(item => item.rect[2] > u0 - radius && item.rect[0] < u1 + radius && item.rect[3] > v0 - radius && item.rect[1] < v1 + radius);
+  const free = new Uint8Array(nu * nv);
+  for (let i = 0; i < nu; i++) for (let j = 0; j < nv; j++) {
+    const [u, v] = at(i, j);
+    free[i * nv + j] = on(u, v) && on(u - radius, v) && on(u + radius, v) && on(u, v - radius) && on(u, v + radius) && near.every(item => rectDistance(item.rect, [u, v]) >= radius) ? 1 : 0;
+  }
+  const grow = (si, sj, mark, value) => {
+    const queue = [[si, sj]];mark[si * nv + sj] = value;let count = 0;
+    while (queue.length) {
+      const [i, j] = queue.pop();count++;
+      for (const [a, b] of [[i + 1, j], [i - 1, j], [i, j + 1], [i, j - 1]]) if (a >= 0 && b >= 0 && a < nu && b < nv && free[a * nv + b] && !mark[a * nv + b]) { mark[a * nv + b] = value;queue.push([a, b]); }
+    }
+    return count;
+  };
+  const si = Math.round((start[0] - u0) / step), sj = Math.round((start[1] - v0) / step), mark = new Int32Array(nu * nv);
+  const started = si >= 0 && sj >= 0 && si < nu && sj < nv && free[si * nv + sj] === 1;
+  if (started) grow(si, sj, mark, 1);
+  const reached = [], pockets = [];
+  for (let i = 0; i < nu; i++) for (let j = 0; j < nv; j++) {
+    const k = i * nv + j;
+    if (mark[k] === 1) reached.push(at(i, j));
+    else if (free[k] && !mark[k]) pockets.push({ at: at(i, j), area: grow(i, j, mark, 2 + pockets.length) * step * step });
+  }
+  return { started, reached, pockets };
 }
 const intersect = (a, b) => [Math.max(a[0], b[0]), Math.max(a[1], b[1]), Math.min(a[2], b[2]), Math.min(a[3], b[3])];
 
