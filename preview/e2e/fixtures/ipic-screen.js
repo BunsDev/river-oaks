@@ -67,6 +67,8 @@ const snapshotMaterial = () => {
   return JSON.stringify({ props: Object.fromEntries(Object.entries(m).filter(([key]) => key !== 'version').map(([key, v]) => [key, v?.isTexture ? v.uuid : typeof v === 'function' ? `fn:${v.toString().length}` : value(v)])),
     own: ['onBeforeCompile', 'customProgramCacheKey'].map(key => Object.hasOwn(m, key)), key: m.customProgramCacheKey() });
 };
+// The idle screen's material, and the textures resident once the interior has rendered (its own maps), before any film.
+await nextFrames(3);
 const idle = snapshotMaterial(), idleTextures = renderer.info.memory.textures;
 
 // Screen pixels: project a point given in film or screen fractions (u right, v down) on the screen plane.

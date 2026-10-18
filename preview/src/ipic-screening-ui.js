@@ -192,6 +192,9 @@ export function createIpicScreening({ host, THREE, getMultiplayer, getVenue, get
   function bindScreen(state) {
     const stats = state.player.stats(), { video } = state;
     state.screen.sync({ screen: getScreen?.(), video, key: `${stats.generation}:${video.videoWidth}x${video.videoHeight}`, show: SHOWN.includes(stats.state) && video.readyState >= 2 });
+    // What this update put on the screen, beside the player's state at that moment. The software acceptance
+    // profile draws (and updates this) once a second, so journeys read it rather than the live state.
+    state.drawn = { state: stats.state, shared: stats.sharedStatus, mediaId: stats.mediaId, attached: Boolean(state.screen.inspect().key) };
   }
 
   // Captions and transcript belong to the film actually playing: the venue's default until the
@@ -285,7 +288,7 @@ export function createIpicScreening({ host, THREE, getMultiplayer, getVenue, get
       const state = session; if (!state || state.stopped) return { active: false, stopped: Boolean(state?.stopped) };
       const screen = state.screen.inspect();
       return { active: true, houseLights, ...state.player.stats(), canHost: state.canHost, currentTime: state.video.currentTime, paused: state.video.paused, muted: state.video.muted,
-        attached: Boolean(screen.key), screen, decoded: [state.video.videoWidth, state.video.videoHeight], serverNow: state.clock.serverNow() };
+        attached: Boolean(screen.key), screen, drawn: state.drawn ?? null, decoded: [state.video.videoWidth, state.video.videoHeight], serverNow: state.clock.serverNow() };
     },
     get houseLights() { return houseLights; },
     dispose() { close(); },
