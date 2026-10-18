@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { loadDistrictData } from '../../server/district-data.js';
 import { attachGardenCampus } from '../src/garden-campus-district.js';
 import { buildGardenCampus } from '../src/garden-campus.js';
+import { seeThroughNearCamera } from '../src/near-camera-fade.js';
 import { PARTITION_THICKNESS, SUITE_DOOR_HEIGHT, campusPartitions } from '../../shared/garden-campus-partitions.js';
 import { GARDEN_CAMPUS_LAYOUT as CAMPUS, campusLevels, campusUnitInventory } from '../../shared/garden-campus-layout.js';
 
@@ -68,9 +69,18 @@ test('each of the 43 suites has one closed door in its contract opening, framed 
   }
 });
 
-test('the campus renderer draws every wall and door, and the garage draws none', async () => {
+test('the campus renderer draws every wall and door opaque at any camera distance, and the garage draws none', async () => {
   const garage = await loadDistrictData(), group = buildGardenCampus(attachGardenCampus(garage));
   assert.equal(group.userData.counts.partition, walls.length);
+  assert.equal(group.userData.counts.door, doors.length);
+  // The near-camera fade dissolves large occluders a camera comes close to; a suite wall
+  // or door must not, or a gallery walker's camera would look into the suite.
+  for (const name of ['campus:partition', 'campus:door']) {
+    const material = group.children.find(child => child.name === name).material;
+    assert.equal(seeThroughNearCamera(material).userData.seeThroughNearCamera, undefined, `${name} stays solid`);
+  }
+  const slab = group.children.find(child => child.name === 'campus:slab').material;
+  assert.equal(seeThroughNearCamera(slab).userData.seeThroughNearCamera, true, 'other shells still fade, so the check can fail');
   assert.equal(buildGardenCampus(garage), null);
   group.userData.dispose();
 });
