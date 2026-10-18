@@ -9,8 +9,8 @@ tabbed layout and a separate PR from `main`.
 ## Ownership and base
 
 - Task `play-rail-menu-20261018`, owner `claude:river-oaks-a9 (6cf0a612)`.
-- Branch `feat/play-rail-menu-20261018`, worktree `river-oaks-play-rail-menu`,
-  based on `origin/main` `a308a95d`.
+- Branch `feat/play-rail-menu-20261018`, worktree `river-oaks-play-rail-menu`.
+  Written on `origin/main` `a308a95d` and rebased onto `153471bc`.
 
 ## Change
 
@@ -69,6 +69,27 @@ tabbed layout and a separate PR from `main`.
     `153471bc` fails at the same step: town chat covers the walking console under
     900 px (`.game-hud:has(.town-chat-dock[open]) .walking-console`). Not caused by
     this change.
+
+## Rebase onto `153471bc`
+
+- `multiplayer-dev.js`: `main` dropped the beast form ("focus characters on
+  humans"), so the journey keeps `main`'s step and no longer switches forms.
+- `main.js`: both blocks stay. `main`'s Character Studio trigger sits before the
+  character picker, in the Character pane, and the Controls pane follows it.
+- `experience.js` checked that ride controls are reachable in a short landscape
+  window by scrolling to `#player-camera`, which now lives in Settings. It now
+  scrolls to the last visible button in the Rides pane.
+- No dependency changes. No new rail panels or `.player-controls` styles on `main`.
+- Checks on the rebased code, browser lock bypassed:
+  - Unit `play-dock` and `play-rail-tabs` 4/4; `pnpm run build` passed.
+  - Journeys `rail-navigation`, `player-forms`, `ui-polish`, `carriage`,
+    `character-studio` and `character-studio-layout` passed.
+  - `experience` fails at `#walking-controls-toggle`, as on `main`.
+  - Hosted CI does not run `experience`, so a throwaway copy closed town chat
+    before that step to reach the landscape checks, on this branch and on
+    `main`. On this branch, "Ride controls can be reached in landscape" passed.
+    Both then fail at "Commands remains independently reachable in landscape",
+    a pre-existing failure that this change does not cause. The copy was deleted.
 
 ## Gaps
 

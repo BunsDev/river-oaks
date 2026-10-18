@@ -42,8 +42,8 @@ async page => {
   await page.locator('.visit-tools-toggle').click();
   check(await page.locator('.visit-tools-content').evaluate(el=>el.clientHeight>=44&&el.scrollHeight>el.clientHeight),'Short landscape windows retain a full touch target and scrollable dock');
   await page.locator('#play-tab-rides').click();
-  await page.locator('#player-camera').scrollIntoViewIfNeeded();
-  check(await page.locator('#player-camera').evaluate(el=>{const r=el.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight;}),'Ride controls can be reached in landscape');
+  const lastRide=page.locator('#play-pane-rides button:visible').last();await lastRide.scrollIntoViewIfNeeded();
+  check(await lastRide.evaluate(el=>{const r=el.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight;}),'Ride controls can be reached in landscape');
   check(await page.locator('.visit-tools-toggle').evaluate(el=>{const r=el.getBoundingClientRect();return el.contains(document.elementFromPoint(r.right-12,r.top+r.height/2));}),'The dock collapse indicator is not covered by Commands');
   check(await page.locator('.commands-toggle').evaluate(el=>{const r=el.getBoundingClientRect();return el.contains(document.elementFromPoint(r.left+r.width/2,r.top+r.height/2));}),'Commands remains independently reachable in landscape');
   await page.screenshot({path:'output/playwright/aaa-hud-landscape.png'});
