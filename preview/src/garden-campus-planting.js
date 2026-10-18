@@ -93,7 +93,7 @@ export function campusPlantingPlan(layout = CAMPUS, levels = campusLevels(layout
     for (let i = 0; i < 7; i++) {
       const angle = i * 2.399963 + rand() * 0.4, r = i ? 0.9 + rand() * 0.5 : 0, z = crownBase + 1.1 + (i ? rand() * 1.4 : 1.6);
       const size = 1.05 + rand() * 0.35;
-      plan.clumps.push({ of: 'tree', at: [c[0] + Math.cos(angle) * r, c[1] + Math.sin(angle) * r, z], radius: [size, size, Math.min(size * 0.8, z - crownBase)], hue: 0.25 + rand() * 0.05, tone: 0.27 + rand() * 0.08 });
+      plan.clumps.push({ of: 'tree', at: [c[0] + Math.cos(angle) * r, c[1] + Math.sin(angle) * r, z], radius: [size, size, Math.min(size * 0.8, z - crownBase)], hue: 0.25 + rand() * 0.05, tone: 0.17 + rand() * 0.06 });
     }
   }
 
@@ -157,7 +157,7 @@ export function campusPlantingPlan(layout = CAMPUS, levels = campusLevels(layout
     for (let v = v0 + 0.6; v < v1 - 0.3; v += 0.9) for (let u = u0 + 0.6; u < u1 - 0.4; u += 1.1) {
       const rand = rng(u, v), patch = Math.sin(u * 0.55) + Math.cos(v * 0.7);
       if (patch < -0.2) continue;
-      plan.clumps.push({ of: 'pergola', at: [u, v, top + 0.06], radius: [0.55, 0.42, 0.16], hue: 0.25 + rand() * 0.05, tone: 0.28 + rand() * 0.08 });
+      plan.clumps.push({ of: 'pergola', at: [u, v, top + 0.06], radius: [0.55, 0.42, 0.16], hue: 0.25 + rand() * 0.05, tone: 0.2 + rand() * 0.07 });
       if (rand() < 0.35) plan.clumps.push({ of: 'pergola', at: [u + 0.2, v + 0.1, PLANTING.pergolaMinZ + 0.32], radius: [0.1, 0.1, 0.3], hue: 0.26, tone: 0.27 + rand() * 0.05 });
     }
     for (const post of item.posts ?? []) {

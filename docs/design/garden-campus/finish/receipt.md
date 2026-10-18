@@ -34,3 +34,13 @@ Placement is deterministic: every random draw is seeded from its position
   the arms, with vsync off.
 
 Both runners take the shared browser lock and start their own loopback fixtures.
+
+## Evidence in this folder
+
+- [sheet-day.jpg](sheet-day.jpg) and [sheet-dusk.jpg](sheet-dusk.jpg): matched contact sheets,
+  garage on the left and gardens on the right, for each of the twelve cameras at 15:00 and
+  18:30. They were captured at the PR head.
+- [resources-2026-10-18.json](resources-2026-10-18.json): the resource A/B receipt (garage,
+  gardens and an origin/main 97304fb7 copy). It was measured before a colour-only change to the
+  ground-tree and pergola foliage tones. That change alters no geometry, draw, program or
+  texture.

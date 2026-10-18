@@ -83,7 +83,101 @@ matched baseline on this machine.
 
 ## Checks and results
 
-(Filled in as runs complete; exact commands and counts below.)
+### Focused tests
+
+At `bb8cd938`:
+`node --test preview/tests/garden-campus-finish.test.js preview/tests/garden-campus-district.test.js preview/tests/garden-campus-layout.test.js`
+gives 34/34. The finish tests:
+
+- silhouette under each cap, with only the headhouse and roof-planter planting above a parapet;
+- no part in any walkable surface between 0.05 m and 2.75 m, except inside a published
+  obstacle or the 0.2 m facade line, sampled on a 5 cm grid on every level;
+- portals, terrace doors and entrances open;
+- storey bands and lit floors exactly 6/7/6;
+- planting support;
+- no lights, and relight touches only the glow;
+- three rebuilds release everything and repeat their counts;
+- draw and triangle budgets;
+- furnishings drawn over their footprints, with crowns above clearance.
+
+### Mutation checks
+
+| Change | Result |
+| --- | --- |
+| Canopy lowered to 2.3 m | Walkable test fails (12 parts) |
+| Troughs not cut at skywalks, strands unclamped | Walkable and portal tests fail |
+| Bench top shrunk by 0.1 m | Both footprint tests fail |
+
+### Core gate
+
+| Run | Revision | Result |
+| --- | --- | --- |
+| `nice -n 19 pnpm run verify` | `cefa4ee7` (layout 3.1) | passed: agent 121/121, preview 3569/3570 (1 skip), server 681 pass with 205 Redis skips, desktop 76/76, build, python 141, secrets |
+| `nice -n 19 pnpm run verify`, first try | `bb8cd938` | stopped by the 10-minute preview cap at load ~500 |
+| `nice -n 19 pnpm run verify`, rerun | `bb8cd938` | preview 3581/3583, 1 skip, 1 fail |
+| Remaining core profiles, one at a time | `bb8cd938` | all passed: server 681 (+205 Redis skips), desktop 76/76, build, python 141, security |
+
+The one preview failure is the known penthouse wall-clock test "surfaces are drawn in short
+idle slices" (a 231 ms slice under load). It passes alone, and this PR does not touch it.
+
+### Resource A/B
+
+`node preview/e2e/garden-campus-render-resources.mjs garage=garage gardens=gardens main=garage@<origin/main 97304fb7 copy> --rounds 2 --rebuilds 3`
+
+- Hardware: Apple M3 Max, ANGLE Metal, Chrome 156.0.8078.4.
+- Profile: 1280x800 at DPR 1, Smoothest, 15:00, vsync off, 180 frames per view.
+- Rounds were interleaved. Load average was 27–53 during the run (1-minute).
+- Receipt: [resources-2026-10-18.json](../../design/garden-campus/finish/resources-2026-10-18.json).
+
+Draw calls, triangles and programs are deterministic for a view. Frame times are this host
+under load: medians over two rounds, with vsync off.
+
+| View | garage | gardens | origin/main | gardens vs garage |
+| --- | --- | --- | --- | --- |
+| Steady, street under B12: calls / triangles | 1042 / 3.53M | 1150 / 4.16M | 1042 / 3.53M | +108 (+10%) / +634k (+18%) |
+| Southeast aerial (worst skyline + both bridges): calls / triangles | 1355 / 4.02M | 1394 / 4.14M | 1355 / 4.02M | +39 (+3%) / +127k (+3%) |
+| Office roof outlook: calls / triangles | 1040 / 3.23M | 1094 / 3.44M | 1040 / 3.23M | +54 (+5%) / +206k (+6%) |
+| Live GL programs at steady state (rounds) | 140–142 | 143–147 | 141–143 | +3 to +5 |
+| GPU geometries / textures at steady state | 545 / 181 | 557 / 181 | 544–545 / 175–181 | +12 / 0 |
+| Steady frame p50 / p95, ms (round 0, round 1) | 17.4/34.6, 15.1/33.0 | 17.2/34.9, 16.4/34.0 | 14.7/29.6, 15.4/30.8 | within this host's spread |
+| Aerial frame p50 / p95, ms | 19.3/34.1, 15.9/33.7 | 18.1/34.4, 18.1/34.8 | 16.7/34.7, 16.4/33.8 | within this host's spread |
+| First entry: ready / arrival p50 / p95 (round 0) | 4.1 s / 16.9 / 34.8 ms | 5.1 s / 20.6 / 41.8 ms | 3.6 s / 15.9 / 41.7 ms | +1 s ready, +7 ms p95 |
+
+Rebuilds, read at the aerial view after each Reload:
+
+| Arm | Geometries | Textures | Programs |
+| --- | --- | --- | --- |
+| garage | 547 → 565 → 565 → 565 | 181 → 191 → 191 → 191 | 142 → 141 → 141 → 141 |
+| gardens | 559 → 569 → 569 → 569 | 181 → 191 → 191 → 191 | 147 → 146 → 146 → 146 |
+| origin/main | 547 → 565 → 565 → 565 | same as garage | same as garage |
+
+- The one-time step after the first rebuild exists without the campus, on origin/main too.
+- After that step, no arm grows.
+
+Gardens' second first entry is excluded from the first-entry row. Its readiness fired before
+the district uploaded: 0.1 MiB uploaded and 16 programs at ready.
+
+Proposed budgets, from these measurements. The campus may add, against the garage at the same
+view:
+- at most +12% draw calls and +20% triangles at street level beside the towers;
+- at most +5% calls and triangles in the whole-campus aerial;
+- at most +6 live programs;
+- no growth across rebuilds beyond the existing district step.
+
+No universal frame claim: frame differences at this load are inside the host's own spread.
+Mobile and target-GPU budgets are unmeasured.
+
+### Matched views
+
+`node preview/e2e/garden-campus-render-views.mjs both`
+
+- Twelve cameras: the contract's five plus seven finish cameras, covering both long sides, the
+  south office approach, under each skywalk, the Floor 4 gallery, a roof garden and a terrace.
+- 15:00 and 18:30, garage and gardens.
+- The campus glow read 0.8 by day and 2.08 at 18:30 in the page, which confirms the main.js
+  relight hook.
+- Contact sheets: [day](../../design/garden-campus/finish/sheet-day.jpg) and
+  [dusk](../../design/garden-campus/finish/sheet-dusk.jpg).
 
 ## Gaps and owners
 
@@ -95,6 +189,9 @@ matched baseline on this machine.
 
 ## Next action
 
-Matched views (garage and gardens, day and dusk), resource A/B against the garage and an
-origin/main copy, `pnpm run build`, `nice -n 19 pnpm run verify`, then a draft PR on
-`feat/garden-campus-shells-507-20261018`.
+Draft PR #528 is open on `feat/garden-campus-shells-507-20261018`. Next:
+
+1. Review and hosted checks.
+2. #512 integrates this pass with #508's circulation and #510's fit-out, then takes the
+   occupied-suite views and occupied-route checks.
+3. Merge stays a separate release action.
