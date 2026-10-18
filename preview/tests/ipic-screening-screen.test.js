@@ -77,3 +77,24 @@ test('a rebuilt world’s new screen takes the film, and the old screen is resto
   binding.sync({ screen: null, video: video(1280, 720), key: 'g1:1280x720', show: true });
   assert.equal(rebuilt.material.map, null, 'no screen: nothing is bound');
 });
+
+test('a paused film’s frame reaches the screen: uploaded on binding and after each paused seek', () => {
+  // three.js uploads a VideoTexture when requestVideoFrameCallback fires, and a paused element that has
+  // just loaded or seeked presents no new frame: without these uploads a viewer joining a paused film, or
+  // one whose autoplay was refused, sees a black screen though the element holds the frame.
+  const s = screen(), v = Object.assign(video(1280, 720), { paused: true, seeking: false, currentTime: 2 }), binding = createScreenBinding({ THREE });
+  binding.sync({ screen: s, video: v, key: 'g1:1280x720', show: true });
+  const texture = s.material.map, first = texture.version;
+  assert.ok(first > 0, 'the bound frame is uploaded at once');
+  binding.sync({ screen: s, video: v, key: 'g1:1280x720', show: true });
+  assert.equal(texture.version, first, 'an unchanged paused frame is not uploaded again');
+  v.currentTime = 2.3; v.seeking = true;
+  binding.sync({ screen: s, video: v, key: 'g1:1280x720', show: true });
+  assert.equal(texture.version, first, 'not while the seek is still in flight');
+  v.seeking = false;
+  binding.sync({ screen: s, video: v, key: 'g1:1280x720', show: true });
+  assert.ok(texture.version > first, 'the seeked paused frame is uploaded');
+  const playing = texture.version; v.paused = false; v.currentTime = 2.5;
+  binding.sync({ screen: s, video: v, key: 'g1:1280x720', show: true });
+  assert.equal(texture.version, playing, 'while playing, frame callbacks upload frames');
+});
