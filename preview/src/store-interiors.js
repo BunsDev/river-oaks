@@ -537,7 +537,7 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
     group.add(mesh);
   }
   group.userData.lightPositions = lightPositions;
-  group.userData.screens = specialtyInteriors.filter(interior => interior.userData.screen).map(interior => ({ material: interior.userData.screen, aspect: interior.userData.screenAspect }));
+  group.userData.screens = specialtyInteriors.filter(interior => interior.userData.screen).map(interior => ({ material: interior.userData.screen, aspect: interior.userData.screenAspect, frame: interior.userData.screenFrame ?? null, object: interior }));
   group.userData.dartboards = specialtyInteriors.filter(interior => interior.userData.darts).map(interior => interior.userData.darts);
   // The axe-and-darts venue's lanes and board (venue-rooms.js), when it is in this world.
   group.userData.axeVenue = specialtyInteriors.find(interior => interior.userData.axeLanes)?.userData ?? null;

@@ -7,8 +7,9 @@ async (host, viewer) => {
   const checks = [], errors = [], samples = [];
   for (const page of [host, viewer]) page.on('pageerror', error => errors.push(error.message));
   const screening = page => page.evaluate(() => window.__riverScreening?.() ?? null);
-  async function load(page) {
-    await page.goto('http://127.0.0.1:5173/?motion-debug=1', { waitUntil: 'commit' });
+  // The host's page asks for the labelled fixture in its chooser (development builds only, #499).
+  async function load(page, extra = '') {
+    await page.goto(`http://127.0.0.1:5173/?motion-debug=1${extra}`, { waitUntil: 'commit' });
     await page.waitForFunction(() => window.__riverMultiplayer?.().connected && document.querySelector('#canvas-host')?.dataset.playerReady === 'true', null, { timeout: 90000 });
   }
   async function enterIpic(page) {
@@ -28,10 +29,16 @@ async (host, viewer) => {
   }
 
   // Both residents are in town first; the viewer's late join is then only the trip into IPIC.
-  await Promise.all([load(host), load(viewer)]);
+  await Promise.all([load(host, '&screening-fixtures=1'), load(viewer)]);
   await enterIpic(host);
   await host.waitForFunction(() => !document.querySelector('#ipic-screening [data-control="host-start"]')?.hidden);
   checks.push('host sees Start film inside IPIC after the server reported canHost');
+  // The chooser (#499): approved films, the approved short first and chosen; the fixture is marked as a test.
+  const chooser = await host.evaluate(() => { const box = document.querySelector('#ipic-screening .ipic-screening-chooser'), select = box?.querySelector('select');
+    return { shown: Boolean(box && !box.hidden), value: select?.value, options: [...(select?.options ?? [])].map(o => [o.value, o.textContent]), details: box?.querySelector('.ipic-screening-film-details')?.textContent, label: box?.querySelector('label')?.textContent }; });
+  check(chooser.shown && chooser.value === 'ipic-original-v1' && chooser.options[0][0] === 'ipic-original-v1' && chooser.options.some(([id, text]) => id === 'ipic-fixture-v1' && /\(test\)$/.test(text)) && /Silent/.test(chooser.details) && chooser.label === 'Film',
+    `the host's chooser offers the approved short first: ${JSON.stringify(chooser)}`);
+  checks.push(`the host's chooser shows ${chooser.options.length} films, the approved short chosen (${chooser.details})`);
   await host.locator('#ipic-screening [data-control="host-start"]').click();
   await host.waitForFunction(() => window.__riverScreening().state === 'playing' && window.__riverScreening().currentTime > 0.3, null, { timeout: 30000 });
   const film = await host.evaluate(() => window.__riverMultiplayer().snapshot.screenings.find(item => item.venueId === 'ipic')?.mediaId);
@@ -152,14 +159,58 @@ async (host, viewer) => {
   check(await viewer.evaluate(() => document.querySelector('#ipic-screening [data-control="captions"]').getAttribute('aria-pressed') === 'true'), 'captions on by default');
   checks.push('captions on by default and the transcript opens without audio');
 
-  // Another allowlisted film brings its own captions and transcript: the host starts the labelled
-  // fixture by command, and the viewer's caption track and transcript follow it (#365 review).
+  // Another allowlisted film brings its own captions and transcript: the host chooses the labelled
+  // fixture in the chooser and starts it, and the viewer's caption track and transcript follow (#365, #499).
   const current = await host.evaluate(() => window.__riverMultiplayer().snapshot.screenings.find(item => item.venueId === 'ipic'));
   const swapBase = { type: 'screening', venueId: 'ipic', epoch: current.epoch };
+  // Every rendered frame of the viewer through the switch (#498): the screen must never show a frame
+  // while the next film is still loading, nor keep the stopped film's last frame.
+  await viewer.evaluate(() => {
+    const log = window.__screenSwitchLog = [];
+    // What each update drew (the software profile draws once a second); a build without `drawn` reports live state.
+    const step = () => { const s = window.__riverScreening(); const d = s?.drawn ?? (s && { state: s.state, shared: s.sharedStatus, attached: s.attached, mediaId: s.mediaId });
+      if (s?.active) log.push({ ...d, key: s.screen?.key ?? null, decoded: s.decoded?.join('x') ?? null });
+      if (!window.__screenSwitchDone && log.length < 20000) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  });
+  const shortKey = await viewer.evaluate(() => window.__riverScreening().screen?.key ?? null);
   const halted = await hostCommand({ ...swapBase, action: 'stop', expectedRevision: current.revision, operationId: 'journey-stop-002' });
-  const fixture = await hostCommand({ ...swapBase, action: 'start', mediaId: 'ipic-fixture-v1', expectedRevision: halted?.screening?.revision, operationId: 'journey-start-02' });
-  check(fixture?.ok === true, `host started the fixture by command: ${JSON.stringify(fixture)}`);
-  await viewer.waitForFunction(revision => window.__riverScreening().revision === revision && window.__riverScreening().mediaId === 'ipic-fixture-v1', fixture.screening.revision, { timeout: 15000 });
+  await viewer.waitForFunction(() => window.__riverScreening().sharedStatus === 'stopped', null, { timeout: 15000 });
+  // The software profile draws once a second: allow the next draws, then read what the screen shows.
+  await viewer.waitForFunction(() => window.__riverScreening().attached === false, null, { timeout: 10000 }).catch(() => {});
+  const idle = await screening(viewer);
+  check(idle.attached === false && idle.state === 'idle', `a stopped film leaves the screen idle, not on its last frame: ${JSON.stringify({ state: idle.state, attached: idle.attached })}`);
+  check(halted?.ok === true, `host stopped the short: ${JSON.stringify(halted)}`);
+  await host.waitForFunction(() => !document.querySelector('#ipic-screening .ipic-screening-chooser')?.hidden && !document.querySelector('#ipic-screening [data-control="host-start"]')?.hidden);
+  check(await viewer.evaluate(() => document.querySelector('#ipic-screening .ipic-screening-chooser')?.hidden !== false), 'the viewer has no chooser');
+  // The chooser on narrow screens (#499): the film select and Start film stay on screen and are not covered.
+  for (const [width, height] of [[390, 844], [320, 640]]) {
+    await host.setViewportSize({ width, height }); await host.waitForTimeout(300);
+    const reach = await host.evaluate(() => [...document.querySelectorAll('#ipic-screening select[data-control="film"], #ipic-screening [data-control="host-start"]')].map(el => {
+      const r = el.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2, top = document.elementFromPoint(x, y);
+      return { control: el.dataset.control, inView: r.left >= 0 && r.right <= innerWidth + 0.5 && r.top >= 0 && r.bottom <= innerHeight, reachable: Boolean(top && (top === el || el.contains(top))), height: Math.round(r.height) };
+    }));
+    check(reach.length === 2 && reach.every(item => item.inView && item.reachable && item.height >= 44), `the chooser at ${width} px: ${JSON.stringify(reach)}`);
+    await host.locator('#ipic-screening').screenshot({ path: `output/playwright/ipic/screening-chooser-${width}.png` });
+  }
+  await host.setViewportSize({ width: 1280, height: 800 });
+  checks.push('the film chooser and Start film are on screen, uncovered and at least 44 px tall at 390 and 320 px');
+  await host.locator('#ipic-screening select[data-control="film"]').selectOption('ipic-fixture-v1');
+  const local = await Promise.all([host, viewer].map(screening));
+  check(local.every(item => item.sharedStatus === 'stopped' && item.mediaId === null), `a choice alone changes nothing shared: ${JSON.stringify(local.map(item => [item.sharedStatus, item.mediaId]))}`);
+  await host.locator('#ipic-screening [data-control="host-start"]').click();
+  await host.waitForFunction(() => window.__riverMultiplayer().snapshot.screenings.find(item => item.venueId === 'ipic')?.mediaId === 'ipic-fixture-v1', null, { timeout: 15000 });
+  const fixture = { screening: await host.evaluate(() => window.__riverMultiplayer().snapshot.screenings.find(item => item.venueId === 'ipic')) };
+  check(fixture.screening.status === 'playing', `the chosen fixture started through Start film: ${JSON.stringify(fixture.screening)}`);
+  checks.push('the host chose the fixture and started it with Start film; the choice alone changed nothing shared');
+  await viewer.waitForFunction(revision => window.__riverScreening().revision >= revision && window.__riverScreening().mediaId === 'ipic-fixture-v1', fixture.screening.revision, { timeout: 15000 });
+  await viewer.waitForFunction(() => window.__riverScreening().state === 'playing' && window.__riverScreening().attached, null, { timeout: 30000 });
+  const frames = await viewer.evaluate(() => { window.__screenSwitchDone = true; return window.__screenSwitchLog; });
+  const stale = frames.filter(item => item.attached && (['loading', 'idle', 'error'].includes(item.state) || item.shared === 'stopped'));
+  check(frames.length > 0 && stale.length === 0, `no frame of an earlier film while the next loads or after a stop (${stale.length} of ${frames.length} frames): ${JSON.stringify(stale.slice(0, 3))}`);
+  const after = frames.at(-1);
+  check(after.decoded === '640x360' && after.key && after.key !== shortKey, `the fixture got its own screen texture at its own size: ${JSON.stringify({ shortKey, after })}`);
+  checks.push(`stop left the screen idle and the fixture (640×360) replaced the short (1280×720) with its own texture; no stale frame in ${frames.length} rendered frames`);
   // The panel follows on its next frame; a slow software-rendered frame is allowed up to 10 s.
   await viewer.waitForFunction(() => document.querySelector('#ipic-screening video track')?.getAttribute('src')?.endsWith('fixture-v1.en.vtt'), null, { timeout: 10000 }).catch(() => {});
   const text = await viewer.evaluate(async () => {
@@ -171,7 +222,7 @@ async (host, viewer) => {
     };
   });
   check(text.tracks.length === 1 && text.tracks[0] === '/assets/ipic/screening/fixture-v1.en.vtt' && text.transcript && !text.stale, `captions and transcript follow the playing film: ${JSON.stringify(text)}`);
-  checks.push('another film (the fixture, by command) brings its own captions and transcript');
+  checks.push('the film chosen in the chooser (the fixture) brings its own captions and transcript');
 
   await openHudSpace(viewer, 'explore-section');
   const other = await viewer.evaluate(() => [...document.querySelectorAll('#destination option')].map(option => option.textContent).find(label => label && label !== 'IPIC Theaters'));
