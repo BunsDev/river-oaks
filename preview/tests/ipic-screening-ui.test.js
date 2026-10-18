@@ -57,3 +57,17 @@ test('the panel clears the walking card, so Stand up stays reachable under it', 
   // No card on screen: the stylesheet's own offset applies.
   for (const card of [null, undefined, { top: 0, width: 0, height: 0 }, { top: 500, width: 310, height: 0 }]) assert.equal(panelClearance(card, 844), null);
 });
+
+test('a failed film says why, and every failure keeps Retry and a way out (#498)', () => {
+  const texts = Object.fromEntries(['decode', 'network', 'stalled', 'playback'].map(failure => [failure, screeningStatusText({ shared: shared('playing'), local: 'error', failure })]));
+  assert.match(texts.decode, /couldn.t decode/);
+  assert.match(texts.network, /couldn.t download.*connection/);
+  assert.match(texts.stalled, /stopped loading/);
+  assert.match(texts.playback, /didn.t start/);
+  for (const text of Object.values(texts)) assert.match(text, /Retry, or stay and talk|Retry, or stay/);
+  assert.equal(new Set(Object.values(texts)).size, 4, 'each failure has its own words');
+  assert.match(screeningStatusText({ shared: shared('playing'), local: 'error' }), /couldn.t decode/, 'an unknown failure reads as a decode failure');
+  assert.match(screeningStatusText({ shared: shared('playing'), local: 'blocked', failure: 'autoplay' }), /Press Play film/, 'autoplay refusal asks for a gesture, not Retry');
+  const controls = screeningControls({ shared: shared('playing'), local: 'error', canHost: false, inAuditorium: true });
+  assert.deepEqual(['retry', 'stop-watching'].map(id => controls.find(item => item.id === id).hidden), [false, false]);
+});
