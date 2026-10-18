@@ -16,6 +16,7 @@
 // `workstation` open the sitter's own private desk; nothing of anyone's work is shown in
 // public.
 import { CAMPUS_BODY, GARDEN_CAMPUS_LAYOUT as CAMPUS, campusLevels, rectContains, rectsOverlap } from './garden-campus-layout.js';
+import { campusPartitions } from './garden-campus-partitions.js';
 
 export const FITOUT_VERSION = 1;
 // Furniture finish sizes (metres). Desk height matches the penthouse desks.
@@ -153,10 +154,15 @@ function suitePasses(suite, levelId, fitout) {
 // Every rule the fit-out promises, on the contract's own geometry: furniture inside its
 // room and clear of keepClear/doors; each stand point on its suite's support with the
 // turning body clear of walls and furniture; and from the door, every stand point
-// reachable by the turning body with every other seat of the suite taken.
+// reachable by the turning body with every other seat of the suite taken. The walls are
+// the drawn partitions (#507), which stand inside a suite's contract rect on its public
+// sides, so a seat that fits the bare rect can still meet a wall.
 export function validateCampusFitout(layout = CAMPUS, fitout = campusFitout(layout)) {
   const findings = [], fail = (rule, id, message) => findings.push({ rule, id, message });
   const levels = new Map(campusLevels(layout).map(level => [level.id, level]));
+  // Full-height walls reaching into each suite (transoms over doors leave the way clear).
+  const partitions = campusPartitions(layout).walls, wallsIn = (levelId, suite) => partitions
+    .filter(wall => wall.levelId === levelId && wall.z0 <= levels.get(levelId).z + EPS && rectsOverlap(wall.rect, suite.rect)).map(wall => ({ rect: wall.rect }));
   const suites = new Map(layout.towers.flatMap(tower => tower.levels.flatMap(floor => floor.suites)).map(suite => [suite.id, suite]));
   const occupied = 2.158;
   for (const entry of fitout.levels) {
@@ -171,12 +177,12 @@ export function validateCampusFitout(layout = CAMPUS, fitout = campusFitout(layo
     for (const seat of entry.seats) {
       const suite = suites.get(seat.unitId), at = surfaceAt(level, seat.stand);
       if (at?.id !== seat.unitId) fail('support', seat.id, 'stand point is not on its suite');
-      const others = entry.obstacles.filter(item => item.unitId === seat.unitId && item.seatId !== seat.id);
+      const others = [...entry.obstacles.filter(item => item.unitId === seat.unitId && item.seatId !== seat.id), ...wallsIn(entry.levelId, suite)];
       if (!clearPoint(seat.stand, suite.rect, others)) fail('clear', seat.id, 'turning body does not fit at the stand point');
     }
     // Reachability: from each suite door to each of its stand points, others' seats taken.
     for (const suite of [...suites.values()].filter(item => entry.seats.some(seat => seat.unitId === item.id))) {
-      const seats = entry.seats.filter(seat => seat.unitId === suite.id), furniture = entry.obstacles.filter(item => item.unitId === suite.id);
+      const seats = entry.seats.filter(seat => seat.unitId === suite.id), furniture = [...entry.obstacles.filter(item => item.unitId === suite.id), ...wallsIn(entry.levelId, suite)];
       for (const seat of seats) {
         const blockers = seats.filter(other => other !== seat).map(other => ({ position: other.position, radius: occupied }));
         if (!reachable(suite.rect, suite.door.inside, seat.stand, furniture.filter(item => item.seatId !== seat.id), blockers)) fail('route', seat.id, 'not reachable from the door with the other seats taken');

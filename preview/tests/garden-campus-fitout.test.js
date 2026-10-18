@@ -4,7 +4,8 @@ import { buildGardenCampusFitout } from '../src/garden-campus-fitout-render.js';
 import { loadDistrictData } from '../../server/district-data.js';
 import assert from 'node:assert/strict';
 import { FITOUT_VERSION, campusFitout, campusFitoutObstacles, campusFitoutSeat, campusUnitSeats, validateCampusFitout } from '../../shared/garden-campus-fitout.js';
-import { GARDEN_CAMPUS_LAYOUT as CAMPUS, campusLevels, campusSupportAt, campusUnitInventory, rectsOverlap } from '../../shared/garden-campus-layout.js';
+import { CAMPUS_BODY, GARDEN_CAMPUS_LAYOUT as CAMPUS, campusLevels, campusSupportAt, campusUnitInventory, rectsOverlap } from '../../shared/garden-campus-layout.js';
+import { campusPartitions } from '../../shared/garden-campus-partitions.js';
 
 const fitout = campusFitout(), levels = new Map(campusLevels().map(level => [level.id, level]));
 const mutate = edit => { const copy = structuredClone(fitout);edit(copy);return validateCampusFitout(CAMPUS, copy); };
@@ -77,4 +78,20 @@ test('the fit-out draws every desk with one neutral screen and every seat, and r
   group.userData.dispose();
   assert.equal(released, new Set(owned).size);
   assert.ok(group instanceof THREE.Group);
+});
+
+test('a seat must clear the drawn suite walls, not only the suite rect (#507 partitions)', () => {
+  // T2-201's gallery wall stands 0.12 m inside the suite rect. A stand point 0.06 m beyond the
+  // turning radius from the rect edge fits the bare rect and every piece of furniture, and
+  // still meets the wall.
+  const fitout = structuredClone(campusFitout()), R = CAMPUS_BODY.turningRadius;
+  const entry = fitout.levels.find(level => level.seats.some(seat => seat.unitId === 'T2-F2-W-S')), seat = entry.seats.find(item => item.unitId === 'T2-F2-W-S');
+  const suite = CAMPUS.towers.flatMap(tower => tower.levels.flatMap(floor => floor.suites)).find(item => item.id === 'T2-F2-W-S'), [u0, v0, u1, v1] = suite.rect;
+  seat.stand = [u1 - (R + 0.06), 98.5];
+  const gap = ([a0, b0, a1, b1], [u, v]) => Math.hypot(Math.max(a0 - u, 0, u - a1), Math.max(b0 - v, 0, v - b1));
+  assert.ok(Math.min(seat.stand[0] - u0, u1 - seat.stand[0], seat.stand[1] - v0, v1 - seat.stand[1]) >= R, 'fits the bare rect');
+  assert.ok(entry.obstacles.filter(item => item.unitId === seat.unitId && item.seatId !== seat.id).every(item => gap(item.rect, seat.stand) >= R), 'clear of furniture');
+  assert.ok(campusPartitions().walls.some(wall => wall.room === 'T2-F2-W-S' && gap(wall.rect, seat.stand) < R), 'within a turning radius of the drawn wall');
+  assert.ok(validateCampusFitout(CAMPUS, fitout).findings.some(finding => finding.rule === 'clear' && finding.id === seat.id), 'the validator refuses it');
+  assert.equal(validateCampusFitout().ok, true, 'the real fit-out clears every wall');
 });
