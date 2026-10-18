@@ -7,6 +7,7 @@ import { CAMPUS_GLOW, buildGardenCampus } from '../src/garden-campus.js';
 import { FINISH, campusFurniture, expressedStoreys, luminaires, slabBands, terraceTroughs } from '../src/garden-campus-finish.js';
 import { PLANTING, campusPlantingPlan } from '../src/garden-campus-planting.js';
 import { GARDEN_CAMPUS_LAYOUT as CAMPUS, campusLevels } from '../../shared/garden-campus-layout.js';
+import { campusPartitions } from '../../shared/garden-campus-partitions.js';
 
 const campus = attachGardenCampus(await loadDistrictData());
 const levels = campusLevels(CAMPUS), EPS = 1e-6, CLEAR = FINISH.clearance;
@@ -73,15 +74,18 @@ test('the finished campus stays inside each declared silhouette: parapets, headh
 // Allowed places for anything at body height on a level: published obstacles, a plate's
 // facade line (the shell's glazing and its 0.18 m mullions, centred 0.1 m inside the plate
 // edge, so 0.2 m deep; fins and plinths stay inside it) and the air outside every surface.
-// Sampled on a 5 cm grid over each part's footprint.
+// Sampled on a 5 cm grid over each part's footprint. A suite's walls and door (#507,
+// garden-campus-partitions.js) are its boundary, never in a public surface by their own test.
 const FACADE_LINE = FINISH.glassInset + 0.09 + 0.01;
+const PARTITIONS = (({ walls, doors }) => [...walls.map(wall => [wall.levelId, wall.rect]), ...doors.flatMap(door => [door.leaf, door.headRect, ...door.jambs].map(rect => [door.levelId, rect]))])(campusPartitions());
 test('nothing finished stands in a walkable surface below body clearance, except inside a published obstacle or the facade line', () => {
   const failures = [];
   for (const level of levels) {
     const plates = CAMPUS.towers.flatMap(tower => tower.levels).filter(floor => floor.z0 === level.z).map(floor => floor.rect);
     const ground = level.surfaces.find(surface => surface.polygon), rects = level.surfaces.filter(surface => surface.rect && surface.access !== 'service');
     const walkable = point => (ground && inPolygon(point, ground.polygon) && !ground.holes.some(hole => inside(hole, point, -1e-4))) || rects.some(surface => inside(surface.rect, point, -1e-4));
-    const allowed = point => level.obstacles.some(item => inside(item.rect, point, 1e-4))
+    const partitions = PARTITIONS.filter(([levelId]) => levelId === level.id).map(([, rect]) => rect);
+    const allowed = point => level.obstacles.some(item => inside(item.rect, point, 1e-4)) || partitions.some(rect => inside(rect, point, 1e-4))
       || plates.some(([u0, v0, u1, v1]) => inside([u0, v0, u1, v1], point) && Math.min(point[0] - u0, u1 - point[0], point[1] - v0, v1 - point[1]) <= FACADE_LINE);
     for (const b of boxes) {
       if (b.z1 <= level.z + 0.05 || b.z0 >= level.z + CLEAR) continue;
