@@ -183,6 +183,26 @@ second interior or renderer is built.
   - **Test films.** `scripts/make-screening-test-sources.mjs` writes borderless test films to
     `preview/e2e/fixtures/screening/`, outside `SCREENING_MEDIA`. `node preview/e2e/ipic-screen-runner.mjs`
     checks them on the real screen material.
+- **Viewing from a recliner (#500).**
+  - **Focus on screen.** A seated viewer (a recliner that names an eye pitch) gets **Focus on screen**: a local
+    camera that frames the whole film. From the seat itself the film is too close, low and to one side; the front
+    row would need a vertical field of view over 100°. So focus looks from a bounded point instead
+    (`ipic-screening-view.js`): on the screen's centre line, at the viewer's own row depth (at least 2.5 m away),
+    at the film's centre height. That point is inside the auditorium and above seated heads. The field of view
+    fits the film's corners, between 30° and 80°. On a narrow portrait phone even 80° cannot show it all;
+    `focus.fits` says so, and the framing stays centred.
+  - **What focus never changes.** The avatar, the seat, the server's position, Stand up or Step outside. It eases
+    in and out over 0.35 s, and is immediate with reduced motion.
+  - **Ending focus.** **Look around**, a drag on the world, an arrow key, standing, leaving, disconnecting or a
+    rebuild all return the walking camera's own view and field of view.
+  - **Input.** The game uses no pointer lock. Keys pressed on the panel's buttons stay out of the world (the walking
+    keys listen on the canvas host): no walking, no push-to-talk.
+  - **Stop watching and Join screening.** **Stop watching** releases the film and its decoder and leaves a small
+    panel with **Join screening**, which opens a fresh player on the room's current timeline. Neither sends a command.
+  - **Volume.** The slider appears only where setting the film's volume works: iOS Safari keeps it at 1, so there
+    the panel says to use the device's volume buttons. Sound on/off always works.
+  - **Refused sound.** If the browser refuses to start the film with sound, the status says so and asks for
+    Play film, rather than showing sound as on.
 - **Cleanup.** Leaving IPIC, losing the connection, a world rebuild or disposal stops the
   film and releases the video element, the screen texture, listeners and timers. A late
   `play()` cannot start a disposed film.
