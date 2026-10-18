@@ -7,16 +7,16 @@ Parent tracker: #505. This branch becomes the integrated candidate: #507, then t
 
 ## Integrated inputs (by revision)
 
-Candidate code head `57a99589` (PR #525), base main `97304fb7` (#486 Computer tab included).
+Candidate code head `0b833b31` (PR #525), base main `97304fb7` (#486 Computer tab included).
 
 | Package | Revision in this branch | Notes |
 | --- | --- | --- |
 | #506 contract | layout 3.2 (through #507 `40aec12a`) | PR #519 head `3fac6c32`, hosted 19/19 |
-| #507 shells, overlay, gate | `086c197e` | detachGardenCampus restores the garage byte for byte; halls and café carry room summaries |
-| #508 upper circulation | **not yet** | not started; c5's queued goal, which Val starts |
+| #507 shells, overlay, gate | `3e58f384` (main `ab0059fc` with #519) | detachGardenCampus restores the garage byte for byte; halls and café carry room summaries |
+| #508 upper circulation | `75f8e277` (PR #537) | campus floors on the interior-level machinery, lifts/stairs, facade glass, ceilings; slice (b) `2c650446` |
 | #509 leases | `1d151a8d` | checkpoint v13, `payload.campus`, `campusServed`, `leaseRequestId` |
-| #510 resident journey | `465785d2` | dialog, fit-out, public workstations, seat rules, `garden-campus-office` journey and its `campus` CI shard |
-| #511 finish and rendering | `b73cf65a` (PR #528) | 67 furnishings drawn once each, storey bands 6/7/6, dusk glow; resources vs garage at street +10% calls / +18% triangles |
+| #510 resident journey | `1e6d32d7` (suite seats, suite journey) | dialog, fit-out, public workstations, seat rules, `garden-campus-office` journey and its `campus` CI shard |
+| #511 finish and rendering | `eab230b9` (PR #528) | 67 furnishings drawn once each, storey bands 6/7/6, dusk glow; resources vs garage at street +10% calls / +18% triangles |
 
 ## Cutover and rollback (implemented)
 
@@ -40,21 +40,30 @@ chain:
 
 ## Acceptance matrix (from #512)
 
-| Case | Status | Evidence / next |
+| Case | Status | Evidence |
 | --- | --- | --- |
-| Skyline/plot | partial | #507 contract and render tests, matched views at #507; #511's finish views and Val's visual review pending |
-| Public route | partial | ground E1/E2/E3 → halls/café/pergola flood test (#507); the hall door and seats in the `garden-campus-office` journey; upper route is #508 |
-| Stacked movement | partial | a street walker below both skywalks stays on the platform (#507 server test); deck walkers are #508 |
-| Rental/permission | partial | #509 race, retry, forged-command and coordinator tests (memory and Redis, real sockets); the dialog's request → offer → accept, withdraw and decline over the real socket (#510); browser leg in the hosted `campus` shard |
-| Useful private work | partial | public workstation desk in both transports (#510 desk transport test); the browser save → stand → 403 → reload → recover leg in the `campus` shard; suite desks need #508 |
-| Access loss | partial | #509 revoke/expiry; standing or leaving closes the desk (#510); suite eviction needs #508 |
-| Persistence/cutover | done for street and halls | garage ↔ Gardens recovery, older chain, epoch fence, refusals, Redis coordinator, leases inert across a configuration rollback; campus-level occupants need #508 |
-| Interaction/accessibility | partial | dialog: Escape and focus return, keys do not walk, phone-width containment and 43 px targets (emulated) |
-| Visual/resource | partial | #511 matched day/dusk sheets and the M3 Max A/B (#528); occupied-suite views need #508; Val's visual review open |
-| Optional Computer/paid mode | not claimed | Computer appears at a workstation exactly where #486 configures it; paid mode needs the #509 business decisions |
+| Skyline/plot | done for the candidate | #507 contract and render tests, #511 day/dusk sheets, slice (b) circulation sheet with suite walls (`c1feaf6b`). Val's visual review is open |
+| Public route | done | #508 levels test: Floor 4 is one walk from T1's lift to T3, and every public surface is reached from its cores. Hosted `garden-campus-traversal` |
+| Stacked movement | done | in-process, transport (memory and Redis) and browser, with two residents at one x/z on B12 and P2, each seeing the other at their own level and height |
+| Rental/permission | done | #509 race, retry, forged and coordinator tests. Hosted `garden-campus-office` and `garden-campus-suite` (request → offer → accept; a stranger kept outside the suite door) |
+| Useful private work | done | a public workstation (office journey) and a suite desk (suite journey, private work saved with the server's acknowledgement), with no leak to another account |
+| Access loss | done | an ended lease walks the tenant out to the gallery side of the door and the desk action goes (suite journey). #510 server test: revoke while seated |
+| Persistence/cutover | done | reload recovers work (office journey); a seated tenant is restored standing; reconnect resumes on Floor 4 (transport); garage ↔ Gardens recovery, epoch fence and leases inert across a rollback (#512 tests) |
+| Interaction/accessibility | partial | keyboard, emulated phone touch and reduced motion in the traversal journey; dialog keys, phone width and touch targets. Physical devices are unproven |
+| Visual/resource | partial | #511 A/B on an M3 Max (street +10% calls / +18% triangles). Target-GPU and mobile budgets are unmeasured |
+| Optional Computer/paid mode | not claimed | Computer appears at any workstation where #486 is configured. Paid mode needs the #509 business decisions |
 
 ## Evidence
 
+- **Hosted CI at candidate `0b833b31`** (Verify run 39169199120): all three campus journeys passed.
+  - `preview experience (campus)` (job 117798531567): `garden-campus-office` and `garden-campus-suite`.
+  - `preview experience (campus-traversal)` (job 117798531796): `garden-campus-traversal`.
+- **#510 `1e6d32d7`** (job 117798291819): `garden-campus-suite` passed 10/10 checks, among them:
+  - the stranger was kept in the gallery at [14.48, 51.20];
+  - the resident was walked out to [15.10, 51.00] when the lease ended.
+- **Integrated suite at the candidate before these journey merges, `7d863b88`:** 258/259 under
+  host load ~400. The one failure, #509's Redis lease UI transport test, passes 5/5 alone, so
+  it is load-sensitive (8 s request timeout).
 - At `57a99589` (#510 `465785d2` and #511 `b73cf65a` merged), 2026-10-18 18:50Z, load ~60, with
   an isolated Redis: 175/175. This is the integrated set below plus #511's
   `garden-campus-finish` and the `shared-population`, `store-rooms`, `venue-rooms` and
@@ -85,7 +94,7 @@ chain:
 
 ## Next action
 
-1. A green hosted `campus` shard at `284a5ca3`.
+1. The full Verify on `0b833b31`, then the release handoff (#505).
 2. Merge #511's PR head when it opens, and re-run the shard and the views.
 3. When #508 lands, merge it with #510's suite-seat integration, then write and run the
    two-account candidate journey: Floor 4 across both skywalks, a walker below a bridge
