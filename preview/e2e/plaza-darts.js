@@ -59,6 +59,16 @@ async page => {
   check(state.board === 3, 'The board on the wall shows the last turn’s darts');
   check(await page.evaluate(() => document.querySelector('#darts-panel').contains(document.activeElement)), 'Keyboard focus stays in the sheet through the regular’s turn');
   await page.screenshot({ path: 'output/playwright/plaza-darts.png' });
+  // On a phone the gauge and readout stack under the board; the board, gauge and throw stay on screen.
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.screenshot({ path: 'output/playwright/plaza-darts-mobile.png' });
+  const phone = await page.evaluate(() => {
+    const panel = document.querySelector('#darts-panel').getBoundingClientRect(), box = selector => document.querySelector(`#darts-panel ${selector}`)?.getBoundingClientRect();
+    const inside = rect => rect && rect.width > 0 && rect.left >= panel.left - 1 && rect.right <= panel.right + 1;
+    return { board: inside(box('.darts-board')), gauge: inside(box('.darts-gauge')) && box('.darts-gauge').height >= 90, throwOnScreen: (r => r && r.top >= 0 && r.bottom <= innerHeight)(box('[data-darts-action="throw"]')) };
+  });
+  check(phone.board && phone.gauge && phone.throwOnScreen, `On a phone the board, the gauge and the throw button fit (${JSON.stringify(phone)})`);
+  await page.setViewportSize({ width: 1440, height: 900 });
   await page.locator('#darts-panel [data-darts-action="guide"]').click();
   check(await page.locator('#darts-panel [data-darts-action="guide"]').getAttribute('aria-pressed') === 'false' && await page.locator('#darts-panel .darts-target').count() === 0, 'The landing guide can be turned off');
   await page.locator('#darts-panel [data-darts-action="guide"]').click();
