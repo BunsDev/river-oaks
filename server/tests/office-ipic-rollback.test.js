@@ -7,11 +7,8 @@ import { createWalkingEnvironment } from '../../preview/src/walking.js';
 import { SCREENING_MEDIA } from '../../preview/src/screening-contract.js';
 import { OFFICE_LAYOUT_LEGACY, OFFICE_LAYOUT_PENTHOUSE, officeLayout, officeSeat } from '../../preview/src/office-layouts.js';
 
-// #368 rollback, in a disposable in-memory town: the feature is rolled back by keeping the current
-// compatible writer (checkpoint v12) and changing configuration, never by restoring older code.
-// The legacy office layout ends penthouse visits and their seat claims; removing the host grant
-// pauses the film where it was. Grants and pending requests stay. Desks and shared workspace
-// tasks live outside world checkpoints (docs/offices.md) and are not touched by this restore.
+// Retired office configuration must not revive the one-room office. Removing a
+// screening host grant remains independent and pauses playback after recovery.
 const data = JSON.parse(readFileSync(new URL('../../preview/public/data/district.json', import.meta.url)));
 const ipic = createWalkingEnvironment(data).rooms.find(room => room.interior === 'ipic-photo-v1');
 const FILM = SCREENING_MEDIA['ipic-fixture-v1'], owner = JEVICA_ADMIN_USER_IDS[0], officeId = 'jevica-office';
@@ -28,7 +25,7 @@ function town({ officeLayout: layout, hosts, restore, at = 1_000_000 }) {
   return { world, clock, send, office, screening, visit };
 }
 
-test('rolling back keeps the v12 writer: legacy layout ends seated penthouse visits, a removed host grant pauses the film, invitations stay and requests remain disabled', () => {
+test('retired layout keeps seated penthouse visits while removed host grants pause playback', () => {
   const live = town({ officeLayout: OFFICE_LAYOUT_PENTHOUSE, hosts: [{ venueId: 'ipic', userId: owner }] });
   for (const userId of [owner, 'guest', 'asker']) assert.ok(live.world.join({ userId, name: userId }).ok);
   assert.equal(live.office(owner, 'invite', { peerId: 'guest' }).ok, true);
@@ -58,8 +55,7 @@ test('rolling back keeps the v12 writer: legacy layout ends seated penthouse vis
 
   // Roll back: the same current code, the legacy layout, no host grants, restored within the handoff grace.
   const back = town({ officeLayout: OFFICE_LAYOUT_LEGACY, hosts: [], restore: saved, at: live.clock.time + 500 });
-  assert.equal(back.visit('guest'), null, 'the penthouse visit and its seat claim ended');
-  assert.equal(back.world.snapshot().players.find(player => player.id === 'guest')?.office ?? null, null);
+  assert.deepEqual(back.visit('guest'), live.visit('guest'), 'penthouse visit and seat survive retired configuration');
   const restored = back.world.checkpoint();
   assert.equal(restored.version, 12, 'the compatible writer is kept');
   assert.deepEqual(restored.payload.offices.grants, saved.payload.offices.grants, 'grants stay');
@@ -71,15 +67,11 @@ test('rolling back keeps the v12 writer: legacy layout ends seated penthouse vis
   assert.ok(paused.positionMs >= 4000 && paused.positionMs <= FILM.durationMs);
   const refused = back.send(owner, { type: 'screening', action: 'play', venueId: 'ipic', epoch: paused.epoch, expectedRevision: paused.revision, operationId: 'rollback-play-01' });
   assert.equal(refused.error, 'screening_host_required', 'nobody can resume it without an explicit grant');
-  // The legacy office still admits the invited guest, and its visits have no seats.
-  const lobby = back.office('guest', 'list').offices[0].entrance;
-  assert.equal(back.send('guest', { type: 'travel', position: lobby }).ok, true);
-  const legacy = back.office('guest', 'enter');
-  assert.deepEqual([legacy.ok, legacy.office.layout], [true, OFFICE_LAYOUT_LEGACY]);
-  assert.equal(back.office('guest', 'sit', { seatId: chair.id, layout: OFFICE_LAYOUT_LEGACY }).error, 'invalid_office_seat');
+  assert.equal(back.visit('guest').layout, OFFICE_LAYOUT_PENTHOUSE);
+  assert.equal(back.office('guest', 'sit', { seatId: chair.id, layout: OFFICE_LAYOUT_LEGACY }).error, 'office_layout_stale');
 
-  // Re-enabling is configuration again: legacy visits end on the penthouse layout; grants carry over.
+  // Re-enabling the host changes no office state; invitations carry over.
   const again = town({ officeLayout: OFFICE_LAYOUT_PENTHOUSE, hosts: [{ venueId: 'ipic', userId: owner }], restore: back.world.checkpoint(), at: back.clock.time + 500 });
-  assert.equal(again.visit('guest'), null);
+  assert.deepEqual(again.visit('guest'), back.visit('guest'));
   assert.deepEqual(again.world.checkpoint().payload.offices.grants, saved.payload.offices.grants);
 });

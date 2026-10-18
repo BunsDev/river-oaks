@@ -11689,6 +11689,50 @@
       "nextAction": "Commit release results and the register entries; land; retire.",
       "pr": null,
       "updatedAt": "2026-10-16T01:56:03.947Z"
+    },
+    {
+      "id": "penthouse-only-20261018-cody",
+      "title": "Retire one-room office and enforce owner/invitation access",
+      "status": "active",
+      "branches": [
+        "fix/penthouse-only-access-20261018"
+      ],
+      "owner": "cody:turning-office-20261018",
+      "leaseUntil": "2026-10-18T21:00:51.540812+00:00",
+      "updatedAt": "2026-10-18T19:00:51.540812+00:00",
+      "nextAction": "Commit verified patch, open PR, await exact-head CI and land through the repository queue.",
+      "ledger": "docs/superpowers/plans/2026-10-18-penthouse-only.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-penthouse-only-20261018",
+      "filesOwned": [
+        ".env.example",
+        "data/reports/penthouse-core-20261018.json",
+        "data/reports/penthouse-only-20261018.json",
+        "data/reports/penthouse-shared-multiplayer-20261018.json",
+        "docs/multiplayer.md",
+        "docs/offices.md",
+        "docs/project-management/tasks.json",
+        "docs/superpowers/plans/2026-10-18-penthouse-only.md",
+        "preview/e2e/office-visit.js",
+        "preview/src/office-layouts.js",
+        "preview/tests/office-layouts.test.js",
+        "server/offices.js",
+        "server/tests/office-ipic-rollback.test.js",
+        "server/tests/office-world-lifecycle.test.js",
+        "server/tests/offices.test.js",
+        "server/tests/penthouse-office.test.js",
+        "server/tests/penthouse-only.test.js",
+        "server/tests/penthouse-seats.test.js"
+      ],
+      "requiredChecks": [
+        "Focused behavioral regressions",
+        "pnpm run verify",
+        "Browser acceptance"
+      ],
+      "verification": {
+        "focused": "27 focused tests, 5 lifecycle tests and office-visit/office-desk browser journeys passed",
+        "core": "All core task coverage passed with bounded concurrency and documented retries; 204 Redis and 1 unrelated client skips. See data/reports/penthouse-core-20261018.json.",
+        "browser": "Office visit/desk and selected required shared multiplayer journeys passed."
+      }
     }
   ]
 }
