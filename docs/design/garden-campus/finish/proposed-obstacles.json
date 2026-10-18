@@ -1,0 +1,824 @@
+{
+ "for": "shared/garden-campus-layout.js campusLevels() obstacles (owner: #506, river-oaks-c5)",
+ "proposedBy": "#511 finish pass",
+ "contract": {
+  "schema": 1,
+  "layout": "3.0",
+  "floors": 1,
+  "support": 1,
+  "units": 1
+ },
+ "kinds": {
+  "planter": "planted bed: solid to walkers, drawn by garden-campus-planting.js",
+  "seat": "bench: solid to walkers, seated use is #510",
+  "table": "meeting table with four chairs inside the rect: solid to walkers, seated use is #510",
+  "tree": "ground tree pit: trunk and kerb solid; crown above 3.2 m"
+ },
+ "rule": "Every rect is inside its surface, outside every keepClear rect, landing, portal approach, passage and door threshold, and leaves a 1.8 m route from the door to each part (preview/tests/garden-campus-finish.test.js).",
+ "obstacles": [
+  {
+   "level": "garden-campus/l2",
+   "id": "T1-terrace-3/bed-east-46.6",
+   "kind": "planter",
+   "rect": [
+    24.15,
+    46.6,
+    24.95,
+    57.25
+   ],
+   "note": "bed along the outer guard; 2.15 m clear to the facade"
+  },
+  {
+   "level": "garden-campus/l2",
+   "id": "T1-terrace-3/bed-east-61.25",
+   "kind": "planter",
+   "rect": [
+    24.15,
+    61.25,
+    24.95,
+    66.9
+   ],
+   "note": "bed along the outer guard; 2.15 m clear to the facade"
+  },
+  {
+   "level": "garden-campus/l2",
+   "id": "T1-terrace-3/table-north",
+   "kind": "table",
+   "rect": [
+    22.35,
+    67.3,
+    24.9,
+    69.9
+   ],
+   "note": "outdoor meeting table with four chairs at the dead end"
+  },
+  {
+   "level": "garden-campus/l2",
+   "id": "T1-terrace-3/bed-west-end",
+   "kind": "planter",
+   "rect": [
+    6.05,
+    46.05,
+    6.85,
+    48.5
+   ],
+   "note": "planted dead end against the facade corner"
+  },
+  {
+   "level": "garden-campus/l2",
+   "id": "T1-terrace-3/seat-south-7.3",
+   "kind": "seat",
+   "rect": [
+    7.3,
+    46.05,
+    10.3,
+    46.55
+   ],
+   "note": "bench on the guard; 1.95 m clear"
+  },
+  {
+   "level": "garden-campus/l2",
+   "id": "T1-terrace-3/seat-south-11.1",
+   "kind": "seat",
+   "rect": [
+    11.1,
+    46.05,
+    14.1,
+    46.55
+   ],
+   "note": "bench on the guard; 1.95 m clear"
+  },
+  {
+   "level": "garden-campus/l2",
+   "id": "T1-terrace-3/seat-south-14.9",
+   "kind": "seat",
+   "rect": [
+    14.9,
+    46.05,
+    17.9,
+    46.55
+   ],
+   "note": "bench on the guard; 1.95 m clear"
+  },
+  {
+   "level": "garden-campus/l2",
+   "id": "T1-terrace-3/seat-south-18.7",
+   "kind": "seat",
+   "rect": [
+    18.7,
+    46.05,
+    21.7,
+    46.55
+   ],
+   "note": "bench on the guard; 1.95 m clear"
+  },
+  {
+   "level": "garden-campus/l4",
+   "id": "T1-terrace-5/bed-east-49.1",
+   "kind": "planter",
+   "rect": [
+    21.15,
+    49.1,
+    21.95,
+    58.5
+   ],
+   "note": "bed along the outer guard; 2.15 m clear to the facade"
+  },
+  {
+   "level": "garden-campus/l4",
+   "id": "T1-terrace-5/bed-east-62.5",
+   "kind": "planter",
+   "rect": [
+    21.15,
+    62.5,
+    21.95,
+    66.9
+   ],
+   "note": "bed along the outer guard; 2.15 m clear to the facade"
+  },
+  {
+   "level": "garden-campus/l4",
+   "id": "T1-terrace-5/table-north",
+   "kind": "table",
+   "rect": [
+    19.35,
+    67.3,
+    21.9,
+    69.9
+   ],
+   "note": "outdoor meeting table with four chairs at the dead end"
+  },
+  {
+   "level": "garden-campus/l4",
+   "id": "T1-terrace-5/bed-west-end",
+   "kind": "planter",
+   "rect": [
+    6.05,
+    48.55,
+    6.85,
+    51
+   ],
+   "note": "planted dead end against the facade corner"
+  },
+  {
+   "level": "garden-campus/l4",
+   "id": "T1-terrace-5/seat-south-7.3",
+   "kind": "seat",
+   "rect": [
+    7.3,
+    48.55,
+    10.3,
+    49.05
+   ],
+   "note": "bench on the guard; 1.95 m clear"
+  },
+  {
+   "level": "garden-campus/l4",
+   "id": "T1-terrace-5/seat-south-11.1",
+   "kind": "seat",
+   "rect": [
+    11.1,
+    48.55,
+    14.1,
+    49.05
+   ],
+   "note": "bench on the guard; 1.95 m clear"
+  },
+  {
+   "level": "garden-campus/l4",
+   "id": "T1-terrace-5/seat-south-14.9",
+   "kind": "seat",
+   "rect": [
+    14.9,
+    48.55,
+    17.9,
+    49.05
+   ],
+   "note": "bench on the guard; 1.95 m clear"
+  },
+  {
+   "level": "garden-campus/l3",
+   "id": "T2-terrace-4/bed-east-90.6",
+   "kind": "planter",
+   "rect": [
+    24.15,
+    90.6,
+    24.95,
+    102.5
+   ],
+   "note": "bed along the outer guard; 2.15 m clear to the facade"
+  },
+  {
+   "level": "garden-campus/l3",
+   "id": "T2-terrace-4/bed-east-106.5",
+   "kind": "planter",
+   "rect": [
+    24.15,
+    106.5,
+    24.95,
+    112.9
+   ],
+   "note": "bed along the outer guard; 2.15 m clear to the facade"
+  },
+  {
+   "level": "garden-campus/l3",
+   "id": "T2-terrace-4/table-north",
+   "kind": "table",
+   "rect": [
+    22.35,
+    113.3,
+    24.9,
+    115.9
+   ],
+   "note": "outdoor meeting table with four chairs at the dead end"
+  },
+  {
+   "level": "garden-campus/l3",
+   "id": "T2-terrace-4/bed-west-end",
+   "kind": "planter",
+   "rect": [
+    6.05,
+    90.05,
+    6.85,
+    93
+   ],
+   "note": "planted dead end against the facade corner"
+  },
+  {
+   "level": "garden-campus/l3",
+   "id": "T2-terrace-4/seat-south-7.3",
+   "kind": "seat",
+   "rect": [
+    7.3,
+    90.05,
+    10.3,
+    90.55
+   ],
+   "note": "bench on the guard; 2.45 m clear"
+  },
+  {
+   "level": "garden-campus/l3",
+   "id": "T2-terrace-4/bed-south-11.1",
+   "kind": "planter",
+   "rect": [
+    11.1,
+    90.05,
+    13.5,
+    90.85
+   ],
+   "note": "bed on the guard; 2.15 m clear"
+  },
+  {
+   "level": "garden-campus/l3",
+   "id": "T2-terrace-4/seat-south-18.5",
+   "kind": "seat",
+   "rect": [
+    18.5,
+    90.05,
+    21.5,
+    90.55
+   ],
+   "note": "bench on the guard; 2.45 m clear"
+  },
+  {
+   "level": "garden-campus/l5",
+   "id": "T2-terrace-6/bed-east-93.6",
+   "kind": "planter",
+   "rect": [
+    21.15,
+    93.6,
+    21.95,
+    104
+   ],
+   "note": "bed along the outer guard; 2.15 m clear to the facade"
+  },
+  {
+   "level": "garden-campus/l5",
+   "id": "T2-terrace-6/bed-east-108",
+   "kind": "planter",
+   "rect": [
+    21.15,
+    108,
+    21.95,
+    112.9
+   ],
+   "note": "bed along the outer guard; 2.15 m clear to the facade"
+  },
+  {
+   "level": "garden-campus/l5",
+   "id": "T2-terrace-6/table-north",
+   "kind": "table",
+   "rect": [
+    19.35,
+    113.3,
+    21.9,
+    115.9
+   ],
+   "note": "outdoor meeting table with four chairs at the dead end"
+  },
+  {
+   "level": "garden-campus/l5",
+   "id": "T2-terrace-6/bed-west-end",
+   "kind": "planter",
+   "rect": [
+    6.05,
+    93.05,
+    6.85,
+    96
+   ],
+   "note": "planted dead end against the facade corner"
+  },
+  {
+   "level": "garden-campus/l5",
+   "id": "T2-terrace-6/seat-south-7.3",
+   "kind": "seat",
+   "rect": [
+    7.3,
+    93.05,
+    10.3,
+    93.55
+   ],
+   "note": "bench on the guard; 2.45 m clear"
+  },
+  {
+   "level": "garden-campus/l5",
+   "id": "T2-terrace-6/bed-south-11.1",
+   "kind": "planter",
+   "rect": [
+    11.1,
+    93.05,
+    13.6,
+    93.85
+   ],
+   "note": "bed on the guard; 2.15 m clear"
+  },
+  {
+   "level": "garden-campus/l5",
+   "id": "T2-terrace-6/seat-south-14.4",
+   "kind": "seat",
+   "rect": [
+    14.4,
+    93.05,
+    17.4,
+    93.55
+   ],
+   "note": "bench on the guard; 2.45 m clear"
+  },
+  {
+   "level": "garden-campus/l2",
+   "id": "T3-terrace-3/bed-east-128.6",
+   "kind": "planter",
+   "rect": [
+    24.15,
+    128.6,
+    24.95,
+    138.5
+   ],
+   "note": "bed along the outer guard; 2.15 m clear to the facade"
+  },
+  {
+   "level": "garden-campus/l2",
+   "id": "T3-terrace-3/bed-east-142.5",
+   "kind": "planter",
+   "rect": [
+    24.15,
+    142.5,
+    24.95,
+    146.9
+   ],
+   "note": "bed along the outer guard; 2.15 m clear to the facade"
+  },
+  {
+   "level": "garden-campus/l2",
+   "id": "T3-terrace-3/table-north",
+   "kind": "table",
+   "rect": [
+    22.35,
+    147.3,
+    24.9,
+    149.9
+   ],
+   "note": "outdoor meeting table with four chairs at the dead end"
+  },
+  {
+   "level": "garden-campus/l2",
+   "id": "T3-terrace-3/bed-west-end",
+   "kind": "planter",
+   "rect": [
+    6.05,
+    128.05,
+    6.85,
+    131
+   ],
+   "note": "planted dead end against the facade corner"
+  },
+  {
+   "level": "garden-campus/l2",
+   "id": "T3-terrace-3/seat-south-7.3",
+   "kind": "seat",
+   "rect": [
+    7.3,
+    128.05,
+    10.3,
+    128.55
+   ],
+   "note": "bench on the guard; 2.45 m clear"
+  },
+  {
+   "level": "garden-campus/l2",
+   "id": "T3-terrace-3/bed-south-11.1",
+   "kind": "planter",
+   "rect": [
+    11.1,
+    128.05,
+    13.6,
+    128.85
+   ],
+   "note": "bed on the guard; 2.15 m clear"
+  },
+  {
+   "level": "garden-campus/l2",
+   "id": "T3-terrace-3/seat-south-14.4",
+   "kind": "seat",
+   "rect": [
+    14.4,
+    128.05,
+    17.4,
+    128.55
+   ],
+   "note": "bench on the guard; 2.45 m clear"
+  },
+  {
+   "level": "garden-campus/l2",
+   "id": "T3-terrace-3/bed-south-18.2",
+   "kind": "planter",
+   "rect": [
+    18.2,
+    128.05,
+    20.7,
+    128.85
+   ],
+   "note": "bed on the guard; 2.15 m clear"
+  },
+  {
+   "level": "garden-campus/l4",
+   "id": "T3-terrace-5/bed-east-131.6",
+   "kind": "planter",
+   "rect": [
+    21.15,
+    131.6,
+    21.95,
+    140
+   ],
+   "note": "bed along the outer guard; 2.15 m clear to the facade"
+  },
+  {
+   "level": "garden-campus/l4",
+   "id": "T3-terrace-5/bed-east-144",
+   "kind": "planter",
+   "rect": [
+    21.15,
+    144,
+    21.95,
+    146.9
+   ],
+   "note": "bed along the outer guard; 2.15 m clear to the facade"
+  },
+  {
+   "level": "garden-campus/l4",
+   "id": "T3-terrace-5/table-north",
+   "kind": "table",
+   "rect": [
+    19.35,
+    147.3,
+    21.9,
+    149.9
+   ],
+   "note": "outdoor meeting table with four chairs at the dead end"
+  },
+  {
+   "level": "garden-campus/l4",
+   "id": "T3-terrace-5/bed-west-end",
+   "kind": "planter",
+   "rect": [
+    6.05,
+    131.05,
+    6.85,
+    134
+   ],
+   "note": "planted dead end against the facade corner"
+  },
+  {
+   "level": "garden-campus/l4",
+   "id": "T3-terrace-5/seat-south-7.3",
+   "kind": "seat",
+   "rect": [
+    7.3,
+    131.05,
+    10.3,
+    131.55
+   ],
+   "note": "bench on the guard; 2.45 m clear"
+  },
+  {
+   "level": "garden-campus/l4",
+   "id": "T3-terrace-5/bed-south-11.1",
+   "kind": "planter",
+   "rect": [
+    11.1,
+    131.05,
+    13.6,
+    131.85
+   ],
+   "note": "bed on the guard; 2.15 m clear"
+  },
+  {
+   "level": "garden-campus/l4",
+   "id": "T3-terrace-5/seat-south-14.4",
+   "kind": "seat",
+   "rect": [
+    14.4,
+    131.05,
+    17.4,
+    131.55
+   ],
+   "note": "bench on the guard; 2.45 m clear"
+  },
+  {
+   "level": "garden-campus/l6",
+   "id": "T1-roof/table-south-east",
+   "kind": "table",
+   "rect": [
+    16.35,
+    51.6,
+    18.65,
+    54.2
+   ],
+   "note": "roof meeting table"
+  },
+  {
+   "level": "garden-campus/l6",
+   "id": "T1-roof/seat-east-a",
+   "kind": "seat",
+   "rect": [
+    18.45,
+    59,
+    18.95,
+    62
+   ],
+   "note": "bench on the east parapet"
+  },
+  {
+   "level": "garden-campus/l6",
+   "id": "T1-roof/seat-east-b",
+   "kind": "seat",
+   "rect": [
+    18.45,
+    66.4,
+    18.95,
+    69.4
+   ],
+   "note": "bench on the east parapet"
+  },
+  {
+   "level": "garden-campus/l6",
+   "id": "T1-roof/bed-north",
+   "kind": "planter",
+   "rect": [
+    9.2,
+    69.15,
+    17.8,
+    69.95
+   ],
+   "note": "low bed on the north parapet"
+  },
+  {
+   "level": "garden-campus/l7",
+   "id": "T2-roof/table-south-east",
+   "kind": "table",
+   "rect": [
+    16.35,
+    96.6,
+    18.65,
+    99.2
+   ],
+   "note": "roof meeting table"
+  },
+  {
+   "level": "garden-campus/l7",
+   "id": "T2-roof/seat-east-a",
+   "kind": "seat",
+   "rect": [
+    18.45,
+    104.5,
+    18.95,
+    107.5
+   ],
+   "note": "bench on the east parapet"
+  },
+  {
+   "level": "garden-campus/l7",
+   "id": "T2-roof/seat-east-b",
+   "kind": "seat",
+   "rect": [
+    18.45,
+    112.4,
+    18.95,
+    115.4
+   ],
+   "note": "bench on the east parapet"
+  },
+  {
+   "level": "garden-campus/l7",
+   "id": "T2-roof/bed-north",
+   "kind": "planter",
+   "rect": [
+    9.2,
+    115.15,
+    17.8,
+    115.95
+   ],
+   "note": "low bed on the north parapet"
+  },
+  {
+   "level": "garden-campus/l6",
+   "id": "T3-roof/table-south-east",
+   "kind": "table",
+   "rect": [
+    16.35,
+    134.6,
+    18.65,
+    137.2
+   ],
+   "note": "roof meeting table"
+  },
+  {
+   "level": "garden-campus/l6",
+   "id": "T3-roof/seat-east-a",
+   "kind": "seat",
+   "rect": [
+    18.45,
+    140.5,
+    18.95,
+    143.5
+   ],
+   "note": "bench on the east parapet"
+  },
+  {
+   "level": "garden-campus/l6",
+   "id": "T3-roof/seat-east-b",
+   "kind": "seat",
+   "rect": [
+    18.45,
+    146.4,
+    18.95,
+    149.4
+   ],
+   "note": "bench on the east parapet"
+  },
+  {
+   "level": "garden-campus/l6",
+   "id": "T3-roof/bed-north",
+   "kind": "planter",
+   "rect": [
+    9.2,
+    149.15,
+    17.8,
+    149.95
+   ],
+   "note": "low bed on the north parapet"
+  },
+  {
+   "level": "garden-campus/l0",
+   "id": "ground/tree-west-t1-a",
+   "kind": "tree",
+   "rect": [
+    2.4,
+    49.9,
+    3.6,
+    51.1
+   ],
+   "note": "tree pit; crown above 3.2 m"
+  },
+  {
+   "level": "garden-campus/l0",
+   "id": "ground/tree-west-t1-b",
+   "kind": "tree",
+   "rect": [
+    2.4,
+    64.9,
+    3.6,
+    66.1
+   ],
+   "note": "tree pit; crown above 3.2 m"
+  },
+  {
+   "level": "garden-campus/l0",
+   "id": "ground/tree-west-t2-a",
+   "kind": "tree",
+   "rect": [
+    2.4,
+    94.4,
+    3.6,
+    95.6
+   ],
+   "note": "tree pit; crown above 3.2 m"
+  },
+  {
+   "level": "garden-campus/l0",
+   "id": "ground/tree-west-t2-b",
+   "kind": "tree",
+   "rect": [
+    2.4,
+    110.4,
+    3.6,
+    111.6
+   ],
+   "note": "tree pit; crown above 3.2 m"
+  },
+  {
+   "level": "garden-campus/l0",
+   "id": "ground/tree-west-t3",
+   "kind": "tree",
+   "rect": [
+    2.4,
+    138.4,
+    3.6,
+    139.6
+   ],
+   "note": "tree pit; crown above 3.2 m"
+  },
+  {
+   "level": "garden-campus/l0",
+   "id": "ground/tree-south-a",
+   "kind": "tree",
+   "rect": [
+    7.4,
+    8.4,
+    8.6,
+    9.6
+   ],
+   "note": "tree pit; crown above 3.2 m"
+  },
+  {
+   "level": "garden-campus/l0",
+   "id": "ground/tree-south-b",
+   "kind": "tree",
+   "rect": [
+    11.4,
+    18.4,
+    12.6,
+    19.6
+   ],
+   "note": "tree pit; crown above 3.2 m"
+  },
+  {
+   "level": "garden-campus/l0",
+   "id": "ground/tree-south-c",
+   "kind": "tree",
+   "rect": [
+    22.9,
+    41.9,
+    24.1,
+    43.1
+   ],
+   "note": "tree pit; crown above 3.2 m"
+  },
+  {
+   "level": "garden-campus/l0",
+   "id": "ground/tree-cross-west",
+   "kind": "tree",
+   "rect": [
+    2.9,
+    85.4,
+    4.1,
+    86.6
+   ],
+   "note": "tree pit; crown above 3.2 m"
+  },
+  {
+   "level": "garden-campus/l0",
+   "id": "ground/tree-cross-east",
+   "kind": "tree",
+   "rect": [
+    23.9,
+    85.4,
+    25.1,
+    86.6
+   ],
+   "note": "tree pit; crown above 3.2 m"
+  },
+  {
+   "level": "garden-campus/l0",
+   "id": "ground/tree-north-a",
+   "kind": "tree",
+   "rect": [
+    25.7,
+    167.4,
+    26.9,
+    168.6
+   ],
+   "note": "tree pit; crown above 3.2 m"
+  }
+ ]
+}

@@ -769,6 +769,7 @@ function updateAtmosphere() {
   $('#sun-time').textContent = `${String(Math.floor(hour)).padStart(2, '0')}:${String(Math.round((hour % 1) * 60)).padStart(2, '0')}`;
   const atmosphere = atmosphereFor(hour, weather);
   currentAtmosphere = atmosphere;
+  layers.buildings?.getObjectByName('The Gardens (garden campus)')?.userData.relight?.(atmosphere);
   sunOffset.set(Math.cos(atmosphere.angle) * 4500, Math.max(300, Math.sin(atmosphere.angle) * 5500), 1900);
   sun.position.copy(sun.target.position).add(sunOffset);
   sun.intensity = atmosphere.sunIntensity;
