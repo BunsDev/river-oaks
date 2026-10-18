@@ -25,7 +25,9 @@ const op = () => `op-${randomUUID()}`;
 const base = () => ({ operationId: op(), worldId: 'river-oaks', contract: { ...CAMPUS_LEASE_CONTRACT } });
 const campusKeys = frame => Object.keys(frame.campus ?? {}).sort();
 
-for (const mode of ['memory', 'redis']) test(`${mode}: two accounts racing for one suite through ${mode === 'redis' ? 'two gateways' : 'one server'} get one lease; retries, reconnects and forged commands cannot add another`, { skip: mode === 'redis' && !process.env.REDIS_URL }, async t => {
+// One memory server, or Redis gateways sharing a namespace, behind the real ticket and
+// WebSocket gates. Each client numbers its own replies with a top-level requestId.
+async function harness(t, mode) {
   const origin = 'http://127.0.0.1', ids = { operator: OP, alice: A, bob: B };
   const sessions = {};
   const auth = { handle: async () => false, close() {}, isSessionActive: async () => true, authenticate: async req => {
@@ -81,6 +83,11 @@ for (const mode of ['memory', 'redis']) test(`${mode}: two accounts racing for o
     };
   };
   const campus = (client, message) => client.send({ type: 'campus', ...message });
+  return { ids, sessions, gateway, ticket, join, campus, sockets, apps };
+}
+
+for (const mode of ['memory', 'redis']) test(`${mode}: two accounts racing for one suite through ${mode === 'redis' ? 'two gateways' : 'one server'} get one lease; retries, reconnects and forged commands cannot add another`, { skip: mode === 'redis' && !process.env.REDIS_URL }, async t => {
+  const { ids, sessions, gateway, ticket, join, campus, sockets, apps } = await harness(t, mode);
   const first = await gateway(), second = await gateway();
   assert.equal((await ticket(first, 'alice', 'wrong')).status, 403, 'CSRF still guards the ticket');
   assert.equal((await ticket(first, 'nobody')).status, 401);
@@ -132,6 +139,29 @@ for (const mode of ['memory', 'redis']) test(`${mode}: two accounts racing for o
   assert.equal((await campus(winnerAgain, { ...winnerAccept, operationId: op(), expectedVersion: 3 })).error, 'campus_lease_ended', 'a revoked lease cannot be revived');
   assert.equal((await campus(winnerAgain, { action: 'list' })).campus.access.length, 0);
   await winnerAgain.until(value => value.campus?.leased?.length === 0);
+});
+
+// The transports keep a top-level requestId for reply routing and strip it before the world
+// sees the command, so a lease request travels as leaseRequestId (found by #510's journey).
+for (const mode of ['memory', 'redis']) test(`${mode}: requests are offered, cancelled and declined by leaseRequestId through the real socket, and replies keep the transport's requestId`, { skip: mode === 'redis' && !process.env.REDIS_URL }, async t => {
+  const { gateway, join, campus } = await harness(t, mode);
+  const first = await gateway(), second = await gateway();
+  const operator = await join(first, 'operator'), alice = await join(second, 'alice');
+  const startsAt = Date.now() + HOUR, endsAt = startsAt + 30 * DAY;
+  const routed = reply => { assert.match(String(reply.requestId), /^\d+$/, 'the reply carries the transport requestId');return reply; };
+  const ask = async unitId => { const reply = routed(await campus(alice, { action: 'request', ...base(), unitId, startsAt, endsAt }));assert.equal(reply.ok, true, JSON.stringify(reply));return reply.request; };
+  const offered = await ask(U1), withdrawn = await ask(U2);
+  const issued = routed(await campus(operator, { action: 'issue', ...base(), unitId: U1, tenantId: A, startsAt, endsAt, leaseRequestId: offered.id }));
+  assert.deepEqual([issued.ok, issued.lease.requestId], [true, offered.id], JSON.stringify(issued));
+  const cancelled = routed(await campus(alice, { action: 'cancel', ...base(), leaseRequestId: withdrawn.id }));
+  assert.deepEqual([cancelled.ok, cancelled.request.status], [true, 'cancelled'], JSON.stringify(cancelled));
+  const refused = await ask('T2-F3-W-S');
+  const declined = routed(await campus(operator, { action: 'decline', ...base(), leaseRequestId: refused.id }));
+  assert.deepEqual([declined.ok, declined.request.status], [true, 'declined'], JSON.stringify(declined));
+  const mine = (await campus(alice, { action: 'list' })).campus;
+  assert.deepEqual(mine.requests.map(item => [item.id, item.status, item.leaseId]),
+    [[offered.id, 'offered', issued.lease.id], [withdrawn.id, 'cancelled', null], [refused.id, 'declined', null]]);
+  assert.deepEqual(mine.leases.map(lease => [lease.id, lease.status]), [[issued.lease.id, 'offered']]);
 });
 
 const testRedis = (name, fn) => test(name, { skip: !process.env.REDIS_URL }, fn);

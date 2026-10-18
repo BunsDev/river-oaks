@@ -19,11 +19,12 @@ export function buildGardenCampusFitout(world) {
   const [x0, y0, z0] = campusToScene([0, 0, 0]), east = CAMPUS.frame.east;
   root.position.set(x0, y0, z0);root.rotation.y = Math.atan2(east[1], east[0]);
   const materials = {
+    // The campus palette (#511): timber, bronze and limestone, with walnut desk tops.
     walnut: new THREE.MeshStandardMaterial({ name: 'campus-fitout:walnut', color: '#6b4a32', roughness: 0.6 }),
-    oak: new THREE.MeshStandardMaterial({ name: 'campus-fitout:oak', color: '#b08a5a', roughness: 0.66 }),
-    frame: new THREE.MeshStandardMaterial({ name: 'campus-fitout:frame', color: '#2f2f2c', metalness: 0.5, roughness: 0.45 }),
+    oak: new THREE.MeshStandardMaterial({ name: 'campus-fitout:oak', color: '#8c7660', roughness: 0.78 }),
+    frame: new THREE.MeshStandardMaterial({ name: 'campus-fitout:frame', color: '#8a6a45', metalness: 0.75, roughness: 0.34 }),
     fabric: new THREE.MeshStandardMaterial({ name: 'campus-fitout:fabric', color: '#5d6b5a', roughness: 0.95 }),
-    stone: new THREE.MeshStandardMaterial({ name: 'campus-fitout:stone', color: '#d8cfbf', roughness: 0.5 }),
+    stone: new THREE.MeshStandardMaterial({ name: 'campus-fitout:stone', color: '#fff5df', roughness: 0.85 }),
     screen: new THREE.MeshStandardMaterial({ name: 'campus-fitout:screen', color: '#111416', metalness: 0.2, roughness: 0.35 }),
   };
   const batches = new Map(Object.keys(materials).map(key => [key, []]));

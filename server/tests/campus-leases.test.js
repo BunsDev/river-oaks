@@ -35,8 +35,8 @@ function fixture({ operators = [OP], worldId, data = small, ids = [OP, A, B, G, 
     world, state, send, advance: ms => { state.time += ms; },
     list: id => send(id, { action: 'list' }),
     request: (id, unitId, startsAt = state.time + HOUR, endsAt = startsAt + 30 * DAY, more = {}) => send(id, { action: 'request', ...base(), unitId, startsAt, endsAt, ...more }),
-    issue: (id, unitId, tenantId, { startsAt = state.time + 1000, endsAt = startsAt + 30 * DAY, requestId } = {}) =>
-      send(id, { action: 'issue', ...base(), unitId, tenantId, startsAt, endsAt, ...(requestId === undefined ? {} : { requestId }) }),
+    issue: (id, unitId, tenantId, { startsAt = state.time + 1000, endsAt = startsAt + 30 * DAY, leaseRequestId } = {}) =>
+      send(id, { action: 'issue', ...base(), unitId, tenantId, startsAt, endsAt, ...(leaseRequestId === undefined ? {} : { leaseRequestId }) }),
     lease: (id, action, lease, more = {}) => send(id, { action, ...base(), leaseId: lease.id, expectedVersion: lease.version, ...more }),
     access: (id, unitId) => world.campusSuiteAccess(id, unitId),
   };
@@ -111,7 +111,7 @@ test('request, offer, accept, renew and release persist explicit no-charge terms
   const queue = f.list(OP).campus.manage.requests;
   assert.deepEqual(queue.map(item => [item.id, item.userId, item.unitId, item.status]), [[asked.request.id, A, U1, 'pending']]);
   assert.equal(f.list(B).campus.requests.length, 0, 'another resident does not see the request');
-  const offer = f.issue(OP, U1, A, { requestId: asked.request.id });
+  const offer = f.issue(OP, U1, A, { leaseRequestId: asked.request.id });
   assert.equal(offer.ok, true);
   assert.deepEqual([offer.lease.status, offer.lease.role, offer.lease.tenantId, offer.lease.version], ['offered', 'operator', A, 1]);
   assert.equal(f.list(A).campus.requests[0].status, 'offered');

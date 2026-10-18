@@ -56,11 +56,12 @@ export const CAMPUS_LEASE_ERRORS = Object.freeze({
 
 // Mutating commands all carry operationId (stable across retries and reconnects), the
 // worldId and the contract they were made for. Lease commands also carry the version
-// the client last saw, so a late command cannot overwrite a newer state.
+// the client last saw, so a late command cannot overwrite a newer state. A request is
+// named leaseRequestId: the transports keep a top-level requestId for reply routing.
 const COMMON = ['type', 'action', 'operationId', 'worldId', 'contract'];
 const ACTIONS = Object.freeze({
-  request: ['unitId', 'startsAt', 'endsAt'], cancel: ['requestId'], decline: ['requestId'],
-  issue: ['unitId', 'tenantId', 'startsAt', 'endsAt', 'requestId'], accept: ['leaseId', 'expectedVersion'],
+  request: ['unitId', 'startsAt', 'endsAt'], cancel: ['leaseRequestId'], decline: ['leaseRequestId'],
+  issue: ['unitId', 'tenantId', 'startsAt', 'endsAt', 'leaseRequestId'], accept: ['leaseId', 'expectedVersion'],
   release: ['leaseId', 'expectedVersion'], renew: ['leaseId', 'expectedVersion', 'endsAt'], revoke: ['leaseId', 'expectedVersion'],
   grant: ['leaseId', 'expectedVersion', 'peerId'], ungrant: ['leaseId', 'expectedVersion', 'peerId'],
 });
@@ -78,18 +79,18 @@ const instant = value => Number.isSafeInteger(value) && value >= 0 && value <= 8
 const version = value => Number.isSafeInteger(value) && value >= 1 && value <= 1e9;
 const CHECKS = {
   unitId: value => typeof value === 'string' && UNIT_ID.test(value) && !RESERVED.includes(value), tenantId: campusUserId, peerId: campusUserId,
-  requestId: value => typeof value === 'string' && CAMPUS_REQUEST_ID.test(value), leaseId: value => typeof value === 'string' && CAMPUS_LEASE_ID.test(value),
+  leaseRequestId: value => typeof value === 'string' && CAMPUS_REQUEST_ID.test(value), leaseId: value => typeof value === 'string' && CAMPUS_LEASE_ID.test(value),
   startsAt: instant, endsAt: instant, expectedVersion: version,
 };
 const invalid = { ok: false, error: 'invalid_campus_command', message: CAMPUS_LEASE_ERRORS.invalid_campus_command };
 
 // Exact fields only: an owner, tenant, operator, price or terms field the action does not
-// name is refused, never ignored. issue's requestId is optional (null or omitted).
+// name is refused, never ignored. issue's leaseRequestId is optional (null or omitted).
 export function parseCampusCommand(message) {
   if (!record(message) || message.type !== 'campus') return invalid;
   if (message.action === 'list') return exactly(message, ['type', 'action']) ? { ok: true, command: { action: 'list' } } : invalid;
   if (typeof message.action !== 'string' || !Object.hasOwn(ACTIONS, message.action)) return invalid;
-  const fields = ACTIONS[message.action], keys = [...COMMON, ...fields], optional = message.action === 'issue' ? ['requestId'] : [];
+  const fields = ACTIONS[message.action], keys = [...COMMON, ...fields], optional = message.action === 'issue' ? ['leaseRequestId'] : [];
   if (!Object.keys(message).every(key => keys.includes(key)) || !keys.every(key => optional.includes(key) || Object.hasOwn(message, key))) return invalid;
   if (typeof message.operationId !== 'string' || !CAMPUS_OPERATION_ID.test(message.operationId)
     || typeof message.worldId !== 'string' || message.worldId.length > 64 || !campusContract(message.contract)) return invalid;
@@ -97,7 +98,7 @@ export function parseCampusCommand(message) {
     contract: { id: message.contract.id, layout: message.contract.layout, units: message.contract.units } };
   for (const field of fields) {
     const value = message[field] ?? null;
-    if (!(field === 'requestId' && optional.length && value === null) && !CHECKS[field](value)) return invalid;
+    if (!(field === 'leaseRequestId' && optional.length && value === null) && !CHECKS[field](value)) return invalid;
     command[field] = value;
   }
   return { ok: true, command };

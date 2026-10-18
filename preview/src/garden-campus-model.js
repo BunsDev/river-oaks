@@ -89,11 +89,12 @@ export function createCampusCommands({ worldId, send, randomId = () => crypto.ra
     pending: () => intents.size,
     list: () => send({ type: 'campus', action: 'list' }),
     request: (unitId, { startsAt, endsAt }) => { const key = `request:${unitId}:${startsAt}:${endsAt}`;return run(key, { ...common(key), action: 'request', unitId, startsAt, endsAt }); },
-    cancel: request => { const key = `cancel:${request.id}`;return run(key, { ...common(key), action: 'cancel', requestId: request.id }); },
-    decline: request => { const key = `decline:${request.id}`;return run(key, { ...common(key), action: 'decline', requestId: request.id }); },
+    // A lease request is named leaseRequestId: the socket envelope's own requestId routes replies.
+    cancel: request => { const key = `cancel:${request.id}`;return run(key, { ...common(key), action: 'cancel', leaseRequestId: request.id }); },
+    decline: request => { const key = `decline:${request.id}`;return run(key, { ...common(key), action: 'decline', leaseRequestId: request.id }); },
     issue: ({ unitId, tenantId, startsAt, endsAt, requestId = null }) => {
       const key = `issue:${unitId}:${tenantId}:${startsAt}:${endsAt}:${requestId ?? ''}`;
-      return run(key, { ...common(key), action: 'issue', unitId, tenantId, startsAt, endsAt, ...(requestId ? { requestId } : {}) });
+      return run(key, { ...common(key), action: 'issue', unitId, tenantId, startsAt, endsAt, ...(requestId ? { leaseRequestId: requestId } : {}) });
     },
     accept: lease => leaseCommand('accept', lease), release: lease => leaseCommand('release', lease), revoke: lease => leaseCommand('revoke', lease),
     renew: (lease, endsAt) => leaseCommand('renew', lease, { endsAt }),
