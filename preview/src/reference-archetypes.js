@@ -28,7 +28,13 @@ export function measureChestFront(body,frame){
   return (x,y)=>{
     const gx=Math.min(columns-1.001,Math.max(0,(x-x0)/step)),gy=Math.min(rows-1.001,Math.max(0,(y-y0)/step)),i=Math.floor(gx),j=Math.floor(gy),u=gx-i,v=gy-j;
     const cells=[[i,j,(1-u)*(1-v)],[i+1,j,u*(1-v)],[i,j+1,(1-u)*v],[i+1,j+1,u*v]].filter(([a,b])=>grid[b*columns+a]>-Infinity);
-    if(!cells.length)throw new RangeError('Chest tailoring lies outside the measured suit');
+    // Outside the suit's front (a narrower suit, or a stand-in rig): use the nearest
+    // covered cell toward the middle of the same row rather than fail the avatar.
+    if(!cells.length){
+      const middle=Math.round(-x0/step),toward=i<middle?1:-1;
+      for(let a=i;a>=0&&a<columns;a+=toward)if(grid[j*columns+a]>-Infinity)return grid[j*columns+a];
+      return Math.max(0,...grid.filter(Number.isFinite));
+    }
     const weight=cells.reduce((sum,cell)=>sum+cell[2],0);
     return weight>0?cells.reduce((sum,[a,b,k])=>sum+grid[b*columns+a]*k,0)/weight:Math.max(...cells.map(([a,b])=>grid[b*columns+a]));
   };

@@ -43,3 +43,17 @@ for(const id of ['man-workwear','kai-noir','kai-explorer','man-tailored','rowan-
     assert.ok(checked>50,`checked ${checked} chest vertices`);
   }finally{look.dispose();avatar.dispose();}
 });
+
+test('chest tailoring on a stand-in rig degrades instead of failing the avatar', async () => {
+  // The garment bakes load Rowan's wolf look on the casual-suit rig, whose front
+  // ends nearer the middle than his elegant suit's. Building it must not throw.
+  const appearance = sharedAppearance('man-casual'), source = await loadCharacterRig('man-casual');
+  const avatar = instantiateAvatar(source, { targetHeight: source.height, id: 'stand-in' });
+  const original = new Set(avatar.model.getObjectsByProperty('isMesh', true));
+  const look = createReferenceStyle(avatar, appearance);
+  try {
+    const pieces = avatar.model.getObjectsByProperty('isMesh', true).filter(mesh => !original.has(mesh));
+    assert.ok(pieces.length > 0);
+    for (const mesh of pieces) assert.ok([...mesh.geometry.attributes.position.array].every(Number.isFinite), mesh.name || mesh.geometry.type);
+  } finally { look.dispose(); avatar.dispose(); }
+});
