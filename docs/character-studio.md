@@ -1,9 +1,10 @@
 # Character Studio architecture decision (#440)
 
-Status: contract increment #457 is on main. This branch integrates the editor,
-rendering and persistence stack (#461, #462, #464, #484), human-only characters,
-Jevica-only invited office access and the expanded Studio. Release acceptance
-remains subject to the verification and device gates below.
+Status: contract increment #457 is on main, and so are the editor, rendering and
+persistence stack (#461, #462, #464), #441's guided creation (through #496),
+human-only characters, Jevica-only invited office access and the expanded Studio.
+#484 carries the remaining #441 tailoring fixes. Release acceptance remains
+subject to the verification and device gates below.
 
 ## Decision and evidence
 Extend the authored character system with constrained modular customization.
@@ -975,7 +976,10 @@ had been 2 cm inside the chest, so they were never visible. `chest-tailoring.tes
 raycasts the skinned suit independently and requires every chest vertex of the
 Kai formal, noir and explorer looks and Aurel to sit no more than 4 mm inside
 it and no more than 3.5 cm in front of it, allowing for layered pieces. Negative controls with sunk panels or lifted stars fail.
-The pieces use fewer triangles than the boxes they replace.
+The pieces use fewer triangles than the boxes they replace. Rowan's shirt,
+lapels, pocket flaps and buttons, on the elegant-suit rig, use the same
+measurement. His shirt had sunk 1.8 cm into the chest at the collar. The test
+also covers his human and wolf looks.
 
 ### Peer revision fallback and recovery
 

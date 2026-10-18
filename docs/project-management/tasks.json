@@ -11563,6 +11563,30 @@
       "updatedAt": "2026-10-15T20:08:36.760Z"
     },
     {
+      "id": "plaza-game-layout-20261015",
+      "title": "Expandable plaza boards and clear game selection",
+      "status": "active",
+      "branches": [
+        "feat/plaza-game-layout-20261015"
+      ],
+      "owner": "codex-plaza-game-layout-20261015",
+      "updatedAt": "2026-10-16T06:50:27.571433+00:00",
+      "leaseUntil": "2026-10-16T08:50:27.571433+00:00",
+      "nextAction": "Verified main a00a4d19 integration for draft PR #468: core11/11, browser68 checks, unchanged game hashes; all other tasks match main. Push signed integration commit and inspect hosted checks. No merge or deployment authorized; preserve worktree and evidence. Human accessibility and physical-device acceptance remain unverified.",
+      "filesOwned": [
+        "preview/src/plaza-table-games.js",
+        "preview/src/plaza-table-games.css",
+        "preview/e2e/plaza-game-layout.js",
+        "docs/superpowers/plans/2026-10-15-plaza-game-layout.md"
+      ],
+      "requiredChecks": [
+        "pnpm run verify",
+        "Focused game layout browser journey with desktop expanded, narrow and keyboard checks"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-15-plaza-game-layout.md",
+      "pr": 468
+    },
+    {
       "id": "release-0-2-1-signed",
       "title": "Release 0.2.1: Developer ID signed and notarized macOS build (Val, 2026-10-15: new 0.2.1 release, Soul Protocol LLC identity, notarytool keychain profile river-oaks-notary)",
       "status": "delivered",
