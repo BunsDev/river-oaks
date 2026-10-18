@@ -16,7 +16,7 @@ async page=>{
   };
   await join(page,'owner');
   if(!await page.locator('.visit-tools').evaluate(node=>node.open))await page.locator('.visit-tools-toggle').click();
-  await page.locator('#build-kind').selectOption('object');
+  await page.locator('#play-tab-build').click();await page.locator('#build-kind').selectOption('object');
   check(await page.locator('#creator-name').count()===1,'Jevica can edit a named primitive assembly');
   await page.locator('#creator-name').fill('Rose glass sculpture');
   await page.locator('#creator-size-y').fill('0.2');await page.locator('#creator-position-y').fill('0.1');

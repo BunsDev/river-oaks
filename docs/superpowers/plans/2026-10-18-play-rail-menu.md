@@ -91,6 +91,19 @@ tabbed layout and a separate PR from `main`.
     Both then fail at "Commands remains independently reachable in landscape",
     a pre-existing failure that this change does not cause. The copy was deleted.
 
+## Hosted CI on PR #503 (`4df7db65`)
+
+- `rail-navigation` and the other journeys in the hosted shards passed, except four that timed out on hidden pane controls:
+  - `world-publish` and `creator-objects` picked `#build-kind` before selecting Build.
+  - `office-desk` and `office-visit` clicked `#office-enter` in the Office pane.
+- Players are not affected: the office's "Office elevator · F" prompt mounts on the canvas, outside the rail.
+- Fix: those journeys, and `office-ipic-journey`, select the tab first.
+- A sweep of every pane's control ids against every journey found no other action on a hidden pane control. It excludes the office dialog, which hosts office management while a player is inside.
+- Local reruns with the fix:
+  - `office-desk`, `office-visit`, the `development-publish` mode (`world-publish` and the three creator-level journeys) and the `creator` mode (`creator-objects`) passed.
+  - `pnpm run verify` passed on `4df7db65`.
+  - `office-ipic-journey` (own runner, local only) fails twice at line 78, before the edited step: the resident's `#office-nearby` prompt never shows after the lobby travel. Unmodified `main` `153471bc` fails at the same step, at load 80. That prompt mounts on the canvas, not in the rail, so the edited tab step at line 94 is not reached locally.
+
 ## Gaps
 
 - Shared-mode journeys (multiplayer-dev, rail-shared, shared-seating,

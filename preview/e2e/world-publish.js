@@ -126,7 +126,7 @@ async page=>{
   await page.waitForFunction(()=>document.querySelector('#walking-hud')?.dataset.inside==='venue-building-2');
   check(true,'Jevica can enter the furnished home');
   if(!(await page.locator('.visit-tools').evaluate(node=>node.open)))await page.locator('.visit-tools-toggle').click();
-  await page.locator('#build-kind').selectOption('side-table');
+  await page.locator('#play-tab-build').click();await page.locator('#build-kind').selectOption('side-table');
   await page.locator('#play-tab-build').click();await page.locator('#build-mode').click();
   const canvas=await page.locator('#canvas-host').boundingBox();
   let furnitureAim=null;

@@ -4,7 +4,7 @@ async page => {
  const arrive=async()=>{
   await page.waitForFunction(()=>document.querySelector('#canvas-host')?.dataset.playerReady==='true',null,{timeout:90000});
   await page.locator('#office-lobby').waitFor({state:'attached'});await page.locator('#office-lobby').evaluate(b=>b.click());
-  await page.locator('#office-enter').click();
+  await page.locator('#play-tab-office').click();await page.locator('#office-enter').click();
   await page.waitForFunction(()=>document.querySelector('#office-visit')?.dataset.phase==='office',null,{timeout:60000});
   await page.locator('#office-desk-open').click();await page.locator('#desk-loading').waitFor({state:'hidden'});
  };
