@@ -11689,6 +11689,40 @@
       "nextAction": "Commit release results and the register entries; land; retire.",
       "pr": null,
       "updatedAt": "2026-10-16T01:56:03.947Z"
+    },
+    {
+      "id": "garden-campus-leases-509",
+      "title": "#509 Garden Offices: bounded owner-managed rental leases, tenant/guest grants and persistence (non-charging), paid-mode proposal",
+      "status": "active",
+      "branches": [
+        "feat/garden-campus-leases-509-20261018"
+      ],
+      "owner": "claude:river-oaks-95/agent-509 (5bececff)",
+      "leaseUntil": "2026-10-18T18:09:25Z",
+      "updatedAt": "2026-10-18T16:09:25Z",
+      "nextAction": "Draft PR #522 (base feat/garden-campus-contract-506-20261018) at 38f8de52: campus leases, checkpoint v13, inert unless the district serves the campus (#512 requirement). Core checks rerunning one at a time at the final head (verify's 10-min cap killed preview-tests under load ~110); then record results in the PR and ledger. Not mergeable before #506; merge stays a separate release action.",
+      "ledger": "docs/superpowers/plans/2026-10-18-garden-campus-leases-509.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-garden-campus-509-20261018",
+      "issue": 509,
+      "pr": 522,
+      "filesOwned": [
+        "server/campus-leases.js (new)",
+        "shared/garden-campus-lease-contract.js (new)",
+        "server/tests/campus-leases*.test.js (new)",
+        "server/world.js (campus command dispatch, prune, snapshot field, checkpoint v13 section, API accessors)",
+        "server/redis-room.js (writer generation v13/v14, campusOperators option)",
+        "server/world-gateway.js, server/redis-backend.js, server/town.js (RIVER_OAKS_CAMPUS_OPERATOR_IDS threading)",
+        "server/avatar-preferences.js, server/creator-rollout-audit.js (v13 pins)",
+        "server/tests/* (v12->v13 pins only)",
+        "docs/garden-campus-leases.md (new)",
+        "docs/offices.md, docs/multiplayer.md, docs/screenings.md (writer generation prose)",
+        "docs/superpowers/plans/2026-10-18-garden-campus-leases-509.md (new)"
+      ],
+      "requiredChecks": [
+        "node --test server/tests/campus-leases*.test.js",
+        "pnpm run test:server (isolated REDIS_URL)",
+        "pnpm run verify"
+      ]
     }
   ]
 }

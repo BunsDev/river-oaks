@@ -149,7 +149,9 @@ lease or overwriting a newer change (`campus_lease_stale`, `campus_lease_ended`,
   `campus_unavailable`, `campus_unknown_unit`, `campus_unit_not_leased`,
   `campus_lease_not_started`, `campus_lease_expired` and `campus_access_required`.
   Check it on every suite entry, desk open and desk write, inside the same
-  serialised world command or route as the action. Don't cache it.
+  serialised world command or route as the action. Don't cache it. Inside
+  `world.restore`, check a restored occupant against the state about to be
+  committed: `campus.suiteAccess(userId, unitId, now(), nextCampus)`.
 - `world.campusAccess(userId)` lists the suites an account may enter now.
 - When access ends, the module reports `{userId, role, unitId, leaseId, reason,
   landing}` for the tenant and every guest. The reason is `expired`, `revoked`,
