@@ -5,6 +5,7 @@ import { createOfficeSkyline, officeSkylineEye, officeSkylineSize } from '../src
 import { captureOfficeStreet } from '../src/office-world-presentation.js';
 import { createOfficeWorldScene } from '../src/office-world-scene.js';
 import { officeLayout, OFFICE_LAYOUT_LEGACY, OFFICE_LAYOUT_PENTHOUSE } from '../src/office-layouts.js';
+import { atmosphereFor } from '../src/atmosphere.js';
 
 // A renderer that records every draw: enough of the WebGLRenderer surface for the capture,
 // with no GPU. `onRender` sees each district face (drawn into the capture's temporary 2D
@@ -316,6 +317,66 @@ test('the legacy room and the off switch never capture or change the sky', t => 
     assert.equal(v.phases.at(-1), 'office');
     assert.equal(s.renderer.renders.length, 0); assert.equal(s.scene.background, s.background);
     assert.equal(v.scene.inspect().skyline, null);
+    v.scene.dispose();
+  }
+});
+
+test('live skyline draws current district without a cubemap, filters host only during each draw, and restores on errors', () => {
+  const f = district(), renderer = fakeRenderer(), roof = new THREE.Mesh(new THREE.BoxGeometry(2,2,2), new THREE.MeshStandardMaterial());
+  roof.position.set(0, f.floorY + 2, 0); f.stage.add(roof); f.scene.updateMatrixWorld(true);
+  const skyline = createOfficeSkyline({ mode: 'live', hostRoot: f.group, renderer, scene: f.scene, eye: new THREE.Vector3(0,f.floorY+1.68,0), floorY:f.floorY, hostBuildingIndex:0,hostBuildingId:'host',hide:[f.stage] });
+  assert.equal(skyline.texture, null); assert.equal(skyline.stats.bytes,0);
+  const actor = new THREE.Mesh(new THREE.BoxGeometry(1,2,1),new THREE.MeshStandardMaterial());actor.position.set(0,f.floorY+2,0);f.scene.add(actor);f.scene.updateMatrixWorld(true);
+  const draw = () => { assert.equal(actor.visible,true,'live filtering never adopts moving actors');assert.equal(scaleOf(f.mesh,0),0);assert.ok(scaleOf(f.mesh,2)>0);assert.equal(f.mass.visible,false);assert.equal(roof.visible,true);assert.equal(f.stage.visible,true); };
+  skyline.render(draw);assert.ok(scaleOf(f.mesh,0)>0);assert.equal(f.mass.visible,true);
+  actor.position.x=50;actor.updateMatrixWorld(true);
+  const dusk = new THREE.Color('#443344');f.scene.background=dusk;skyline.render(()=>{draw();assert.equal(f.scene.background,dusk);});
+  assert.throws(()=>skyline.render(()=>{draw();throw new Error('draw failed');}),/draw failed/);
+  assert.ok(scaleOf(f.mesh,0)>0);assert.equal(f.mass.visible,true);assert.equal(f.scene.background,dusk);
+  assert.equal(renderer.renders.length,0,'no six-face renderer submissions');assert.equal(skyline.stats.state,'live');
+  skyline.dispose();skyline.dispose();assert.equal(skyline.render(()=>assert.fail('disposed view draws')),false);
+});
+
+test('live office keeps exterior current, moves the actual viewpoint and restores street presentation', t => {
+  const s=street({layout:OFFICE_LAYOUT_PENTHOUSE,skyline:{mode:'live'}}),v=visit(t,s);v.scene.skip();
+  let draws=0;s.captured.pipeline.render=()=>{draws++;assert.equal(s.districtGroup.visible,true);};
+  s.lamp.intensity=27;s.lamp.position.set(10,20,30);
+  v.draw(0);v.draw(16);const first=s.captured.camera.position.clone();
+  const next=new THREE.Color('#776655');s.scene.background=next;
+  v.scene.render(32,[-18,8],.4,[]);assert.ok(s.captured.camera.position.distanceTo(first)>10);
+  assert.equal(s.scene.background,next);assert.equal(s.renderer.renders.length,0);assert.equal(s.lamp.intensity,27,'street lights retain their current environment');assert.deepEqual(s.lamp.position.toArray(),[10,20,30]);
+  assert.equal(v.scene.inspect().skyline.state,'live');assert.equal(v.scene.inspect().skyline.bytes,0);assert.equal(draws,3);
+  v.scene.dispose();assert.equal(s.lamp.intensity,27);assert.deepEqual(s.lamp.position.toArray(),[10,20,30]);assert.equal(s.districtGroup.visible,true);assert.equal(s.scene.background,next);assert.equal(s.captured.lobby.object.parent,s.districtGroup);
+});
+
+test('phones and tablets keep the bounded snapshot outlook; other devices draw the live district', async () => {
+  const { officeOutlookFor } = await import('../src/office-skyline.js');
+  assert.deepEqual(officeOutlookFor({ coarsePointer: true, scale: 1 }), { mode: 'snapshot', size: 512 }, 'a touch-first device keeps the snapshot at the phone size');
+  assert.deepEqual(officeOutlookFor({ coarsePointer: false, scale: 0.6 }), { mode: 'snapshot', size: 512 }, 'a reduced render scale keeps the snapshot');
+  assert.deepEqual(officeOutlookFor({ coarsePointer: true, scale: 1, maxCubemapSize: 256 }), { mode: 'snapshot', size: 256 }, 'within the device limits');
+  assert.deepEqual(officeOutlookFor({ coarsePointer: false, scale: 1 }), { mode: 'live' }, 'a full-scale fine-pointer device draws the live district');
+  assert.deepEqual(officeOutlookFor(), { mode: 'live' });
+});
+
+test('office lamps follow the street clock during a visit, live and through the phone light pool', t => {
+  for (const skyline of [{ mode: 'live' }, { size: 16 }]) {
+    const s = street({ layout: OFFICE_LAYOUT_PENTHOUSE, skyline });
+    // A pool large enough for the cabin's two lights and the office's five, as in main.js.
+    for (let i = 0; i < 7; i++) { const lamp = new THREE.PointLight('#ffffff', 0, 10, 2); s.scene.add(lamp); s.captured.lights.push(lamp); }
+    let hour = 12; s.captured.atmosphere = () => atmosphereFor(hour, 'clear');
+    const v = visit(t, s), count = () => { let n = 0; s.scene.traverseVisible(node => { if (node.isLight) n++; }); return n; };
+    v.scene.skip(); v.draw(0); v.draw(16);
+    const office = s.scene.getObjectByName('office:office-penthouse-1');
+    const lamps = skyline.mode === 'live' ? office.children.filter(node => node.isPointLight) : s.captured.lights.slice(2, 7);
+    assert.equal(lamps.length, 5, skyline.mode ?? 'snapshot');
+    if (!skyline.mode) assert.equal(office.children.some(node => node.isPointLight), false, 'the phone path adds no lights to the scene');
+    const noon = lamps.map(lamp => ({ intensity: lamp.intensity, warmth: lamp.color.r - lamp.color.b })), lights = count();
+    hour = 18.75; v.draw(32); v.draw(48);
+    lamps.forEach((lamp, i) => {
+      assert.ok(lamp.intensity > noon[i].intensity * 1.4, `${skyline.mode ?? 'snapshot'} lamp ${i} comes up at dusk`);
+      assert.ok(lamp.color.r - lamp.color.b > noon[i].warmth + 0.1, 'and warms');
+    });
+    assert.equal(count(), lights, 'the time of day never changes the number of lights');
     v.scene.dispose();
   }
 });

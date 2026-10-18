@@ -29,3 +29,5 @@ Latest verification:
 Final browser rerun: `pnpm run test:experience character-studio` passed all 43 checks, including desktop fit, keyboard save, touch editing and animation. Dedicated layout and office-visit journeys also passed. Isolated Redis 6397 stopped after tests; user dev server 5173 remains running. Broader core gate is still not green; keep this undelivered checkout.
 
 Delivery authorized: commit, push and merge to main. Review commit is backed by build, 43-check Studio browser, layout and office browser, 74 focused client tests and focused server/Redis suites. Complete gate remains required before landing; integrate latest main and resolve dependency-stack conflicts next.
+
+Integrated origin/main a308a95d before delivery. Resolved Studio asset validation by keeping `characterAssetFor`, retained moving-platform locomotion, kept the office-lift journey and current office activation history while removing retired workspace behavior. Integrated build passed; character contract/migration/guide 12 passed and human/office authority 4 passed. Complete core-controlled run is pending and remains a merge gate.

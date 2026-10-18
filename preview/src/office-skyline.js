@@ -27,6 +27,13 @@ export function officeSkylineSize({ scale = 1, coarsePointer = false, maxCubemap
   return Math.min(coarsePointer || scale < 0.75 ? 512 : 1024, maxCubemapSize, maxTextureSize);
 }
 
+// Which outlook a terrace office draws (Val, 2026-10-15): a phone or tablet (coarse pointer) or a
+// reduced render scale keeps the bounded one-time snapshot at officeSkylineSize; other devices draw
+// the live district. Chosen once, when a visit starts.
+export function officeOutlookFor({ scale = 1, coarsePointer = false, maxCubemapSize = Infinity, maxTextureSize = Infinity } = {}) {
+  return coarsePointer || scale < 0.75 ? { mode: 'snapshot', size: officeSkylineSize({ scale, coarsePointer, maxCubemapSize, maxTextureSize }) } : { mode: 'live' };
+}
+
 // The six faces as three.js CubeCamera draws them for WebGL (cameras/CubeCamera.js), in cube
 // face order +x, -x, +y, -y, +z, -z: the direction each looks along and its up vector, through
 // a 90-degree camera whose negative field of view (CubeCamera's own) mirrors it into the cube
@@ -83,21 +90,24 @@ function insideRing(ring, x, z, margin = MARGIN) {
 // target (size^2 x (8 + 4) bytes) and copied into its cube face; that target is released as soon
 // as the capture ends, so the depth never outlives it. `bytes` is what stays, `peakBytes` the
 // most held during the capture.
-export function createOfficeSkyline({ renderer, scene, eye, floorY, hostBuildingIndex = -1, hostBuildingId = null, hostRing = null, hide = [], size = 1024, far = 6000, now = () => performance.now() }) {
-  const target = new THREE.WebGLCubeRenderTarget(size, { type: THREE.HalfFloatType, depthBuffer: false });
-  target.texture.name = 'office-skyline';
-  const colour = size * size * 6 * 8, face = size * size * (8 + 4);
-  const stats = { state: 'pending', size, bytes: colour, peakBytes: colour + face, traverseMs: null, submitMs: null, ms: null, newPrograms: null, hiddenInstances: 0, hiddenMeshes: 0 };
+export function createOfficeSkyline({ mode = 'snapshot', hostRoot = null, renderer, scene, eye, floorY, hostBuildingIndex = -1, hostBuildingId = null, hostRing = null, hide = [], size = 1024, far = 6000, now = () => performance.now() }) {
+  const live = mode === 'live';
+  const target = live ? null : new THREE.WebGLCubeRenderTarget(size, { type: THREE.HalfFloatType, depthBuffer: false });
+  if (target) target.texture.name = 'office-skyline';
+  const colour = live ? 0 : size * size * 6 * 8, face = live ? 0 : size * size * (8 + 4);
+  const stats = { mode, frames: 0, state: 'pending', size: live ? 0 : size, bytes: colour, peakBytes: colour + face, traverseMs: null, submitMs: null, ms: null, newPrograms: null, hiddenInstances: 0, hiddenMeshes: 0 };
   const round = ms => Math.round(ms * 10) / 10;
   let attempted = false, disposed = false, saved = null;
   const ringBounds = hostRing?.length > 2 ? hostRing.reduce((b, [x, z]) => [Math.min(b[0], x), Math.max(b[1], x), Math.min(b[2], z), Math.max(b[3], z)], [Infinity, -Infinity, Infinity, -Infinity]) : null;
   const inFootprint = (x, z) => Boolean(ringBounds) && insideRing(hostRing, x, z);
+  const excluded = object => { for (let node = object; node && node !== scene; node = node.parent) if (hide.includes(node)) return true; return false; };
+  const architecture = live ? hostRoot : scene;
   const eyeInside = Boolean(ringBounds) && insideRing(hostRing, eye.x, eye.z, 0);
   // The host's lower roof: the top of its massing that stays below the office floor (a stepped
   // block's wing). None for a single-mass building, whose whole facade is then skin.
   function lowerRoof() {
     let top = -Infinity; const box = new THREE.Box3();
-    if (hostBuildingId) scene.traverseVisible(object => {
+    if (hostBuildingId) architecture?.traverseVisible(object => {
       if (object.isMesh && object.userData.districtBuilding === hostBuildingId && box.setFromObject(object).max.y <= floorY + 0.05) top = Math.max(top, box.max.y);
     });
     return top;
@@ -110,8 +120,8 @@ export function createOfficeSkyline({ renderer, scene, eye, floorY, hostBuilding
     const found = [], box = new THREE.Box3(), matrix = new THREE.Matrix4(), centre = new THREE.Vector3();
     if (hostBuildingIndex < 0 && !ringBounds) return found;
     const skinFrom = eyeInside ? lowerRoof() + PARAPET : Infinity;
-    scene.traverseVisible(object => {
-      if (!object.isInstancedMesh) return;
+    architecture?.traverseVisible(object => {
+      if (!object.isInstancedMesh || excluded(object)) return;
       const indices = object.userData.buildingIndices, geometry = object.geometry, world = object.matrixWorld, e = object.instanceMatrix.array;
       if (!geometry.boundingSphere) geometry.computeBoundingSphere();
       if (!geometry.boundingBox) geometry.computeBoundingBox();
@@ -140,8 +150,8 @@ export function createOfficeSkyline({ renderer, scene, eye, floorY, hostBuilding
   // A district-wide merged mesh (signs, roads) is never hidden for overlapping it.
   function hostMeshes() {
     const found = [], box = new THREE.Box3(), centre = new THREE.Vector3();
-    scene.traverseVisible(object => {
-      if (!object.isMesh || object.isInstancedMesh || box.setFromObject(object).max.y <= floorY + 0.05) return;
+    architecture?.traverseVisible(object => {
+      if (!object.isMesh || object.isInstancedMesh || excluded(object) || box.setFromObject(object).max.y <= floorY + 0.05) return;
       const tagged = hostBuildingId && object.userData.districtBuilding === hostBuildingId;
       const contained = ringBounds && box.min.x >= ringBounds[0] - MARGIN && box.max.x <= ringBounds[1] + MARGIN && box.min.z >= ringBounds[2] - MARGIN && box.max.z <= ringBounds[3] + MARGIN
         && inFootprint(box.getCenter(centre).x, centre.z);
@@ -150,14 +160,43 @@ export function createOfficeSkyline({ renderer, scene, eye, floorY, hostBuilding
     return found;
   }
 
+  // District architecture is fixed for a visit. Classify once; only the selected
+  // instance matrices are saved/masked/restored around each normal pipeline draw.
+  let liveMask = null;
+  const zero = new THREE.Matrix4().makeScale(0, 0, 0);
   return {
-    get texture() { return target.texture; },
+    get texture() { return target?.texture ?? null; },
+    render(draw) {
+      if (!live || disposed) return false;
+      if (!liveMask) {
+        const started = now();
+        scene.updateMatrixWorld(true);
+        const instances = hostInstances(), masses = hostMeshes();
+        liveMask = { instances, masses, meshes: new Set(instances.map(([mesh]) => mesh)) };
+        stats.traverseMs = round(now() - started);
+        stats.hiddenInstances = instances.length; stats.hiddenMeshes = masses.length;
+      }
+      const { instances, masses, meshes } = liveMask;
+      const visible = masses.map(object => object.visible), started = now();
+      try {
+        for (const [mesh, index, matrix] of instances) { mesh.getMatrixAt(index, matrix); mesh.setMatrixAt(index, zero); }
+        for (const mesh of meshes) mesh.instanceMatrix.needsUpdate = true;
+        for (const object of masses) object.visible = false;
+        draw(); stats.frames++; stats.state = 'live';
+        stats.lastRenderMs = round(now() - started);
+        return true;
+      } finally {
+        for (const [mesh, index, matrix] of instances) mesh.setMatrixAt(index, matrix);
+        for (const mesh of meshes) mesh.instanceMatrix.needsUpdate = true;
+        masses.forEach((object, index) => { object.visible = visible[index]; });
+      }
+    },
     get stats() { return { ...stats }; },
-    get pending() { return !attempted && !disposed; },
+    get pending() { return !live && !attempted && !disposed; },
     // Capture once per visit, while the district is still drawn. Returns whether the
     // backdrop is now showing; a second call, or a call after dispose, does nothing.
     capture() {
-      if (attempted || disposed) return false;
+      if (live || attempted || disposed) return false;
       attempted = true;
       const started = now(), instances = hostInstances(), masses = hostMeshes(), zero = new THREE.Matrix4().makeScale(0, 0, 0);
       stats.traverseMs = round(now() - started);
@@ -213,11 +252,11 @@ export function createOfficeSkyline({ renderer, scene, eye, floorY, hostBuilding
       if (disposed) return;
       disposed = true;
       // A sky changed while inside (time of day, weather) belongs to the street now.
-      if (saved && scene.background === target.texture) {
+      if (saved && scene.background === target?.texture) {
         scene.background = saved.background; scene.backgroundIntensity = saved.intensity; scene.backgroundBlurriness = saved.blurriness;
         if (saved.rotation) scene.backgroundRotation.copy(saved.rotation);
       }
-      target.dispose();
+      target?.dispose(); liveMask = null;
     },
   };
 }
@@ -233,5 +272,5 @@ export function createVisitSkyline(street, layout, hide) {
   const hostBuildingId = street.world ? officeLobbyFor(street.world)?.buildingId ?? null : null;
   const hostBuildingIndex = hostBuildingId ? street.world.buildings.findIndex(building => building.id === hostBuildingId) : -1;
   const hostRing = street.world?.buildings?.[hostBuildingIndex]?.ring?.map(([x, north]) => [x, -north]) ?? null;
-  return createOfficeSkyline({ renderer: street.renderer, scene: street.scene, eye, floorY, hostBuildingIndex, hostBuildingId, hostRing, hide, size: street.skyline.size ?? 1024, far: street.camera.far });
+  return createOfficeSkyline({ mode: street.skyline.mode ?? 'snapshot', hostRoot: street.architecture, renderer: street.renderer, scene: street.scene, eye, floorY, hostBuildingIndex, hostBuildingId, hostRing, hide, size: street.skyline.size ?? 1024, far: street.camera.far });
 }

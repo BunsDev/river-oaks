@@ -92,7 +92,7 @@ async page => {
     await openHudSpace(guest, 'community-section');
     await guest.getByRole('button',{name:'Wave',exact:true}).click();
     await page.waitForFunction(id=>window.__riverMultiplayer().remotes?.some(p=>p.id===id&&p.gesture==='wave'&&p.rightArmMotion>.7&&p.riderSeated),visitor.id);
-    check(true,'Seated fox visitors visibly wave to the other browser without moving their seat');
+    check(true,'Seated visitors visibly wave to the other browser without moving their seat');
     await closePanel(guest);
     if(!await page.locator('.visit-tools').evaluate(node=>node.open))await page.locator('.visit-tools-toggle').click();
     await page.locator('#build-list button',{hasText:'Remove'}).click();

@@ -28,6 +28,16 @@ test('malformed, foreign, future and privilege-bearing definitions fail closed',
   assert.deepEqual(base.parameters,{},'validation returns independent owned state');
 });
 
+test('every playable rig is pinned to its shipped bytes, and an unpinned rig cannot form a definition', async () => {
+  const { CHARACTER_ASSETS, characterAssetFor } = await import('../src/character-assets.js');
+  for (const look of SHARED_APPEARANCES) assert.ok(Object.hasOwn(CHARACTER_ASSETS, look.rig ?? look.id), `${look.id}: rig ${look.rig ?? look.id} has no pin`);
+  // woman-casual.glb ships in the repository but no look uses it as a rig, so it has no pin.
+  assert.throws(() => characterAssetFor('woman-casual'), /Unpinned character rig/);
+  assert.deepEqual(characterAssetFor('jevica'), CHARACTER_ASSETS.jevica);
+  assert.notEqual(characterAssetFor('jevica'), CHARACTER_ASSETS.jevica, 'callers get their own copy');
+  for (const id of ['__proto__', 'constructor', '', undefined]) assert.throws(() => characterAssetFor(id), /Unpinned character rig/);
+});
+
 test('legacy read migration preserves aliases and uses permission-safe defaults', () => {
   assert.equal(migrateCharacterAppearance('fixture-owner','midnight-host-hybrid').appearanceId,'man-tailored');
   for (const id of ['jevica','unknown','__proto__',undefined]) assert.equal(migrateCharacterAppearance('fixture-owner',id).appearanceId,'sable-human');

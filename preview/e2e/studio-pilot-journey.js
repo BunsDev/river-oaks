@@ -1,6 +1,6 @@
 async page => {
   // #417 Garden Office acceptance journey: open → valid edit → blocked-route refusal →
-  // undo/redo → save → reload/reopen → stale-tab conflict → walk to every required
+  // repair → undo/redo → save → reload/reopen → stale-tab conflict → walk to every required
   // destination along its assessed route and back to the arrival → editor.
   const { pathToFileURL } = await import('node:url');
   const source = file => import(pathToFileURL(`${process.cwd()}/preview/src/studio/${file}`).href);
@@ -39,7 +39,10 @@ async page => {
   await page.locator('#studio-findings').filter({ hasText: 'Edit rejected.' }).waitFor();
   check((await page.locator('#studio-findings').textContent()).includes('meeting room'), 'blocking the meeting room is refused with a finding');
   check(await page.getByLabel('East (m)', { exact: true }).inputValue() === '5', 'the refused move leaves the sofa where it was');
-  for (let step = 0; step < 3; step++) await page.locator('#studio-undo').click();
+  await property(page, 'North (m)', -4.6);
+  await page.locator('#studio-assessment-status').filter({ hasText: 'Required routes passed' }).waitFor();
+  check(await page.getByLabel('North (m)', { exact: true }).inputValue() === '-4.6', 'moving the sofa clear repairs the layout');
+  for (let step = 0; step < 4; step++) await page.locator('#studio-undo').click();
   check(await page.getByLabel('Width (m)', { exact: true }).inputValue() === '2.6', 'undo restores the sofa');
   await page.locator('#studio-redo').click();
   check(await page.getByLabel('Width (m)', { exact: true }).inputValue() === '0.8', 'redo reapplies one edit');

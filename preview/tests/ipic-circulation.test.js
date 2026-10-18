@@ -6,6 +6,7 @@ import { readFileSync } from 'node:fs';
 import { AVATAR_ENVELOPE } from '../src/workplace-room.js';
 import { IPIC_SCREEN } from '../src/ipic-plan.js';
 import { IPIC_SEATED_REACH } from '../src/ipic-circulation.js';
+import { SEAT_REACH } from '../src/shared-seating.js';
 import { ipicReviewData } from '../../scripts/ipic-review-data.mjs';
 
 const data = ipicReviewData();
@@ -28,13 +29,28 @@ test('both escalator lanes carry the widest accepted body straight up from the s
   for (const t of trip('street door')) assert.ok(t.widestAcceptedBody && t.widthM >= 1.7, `${t.name}: ${t.widthM} m`);
 });
 
-test('every recliner is reachable by the widest accepted body with the other nine seats occupied', () => {
+// Recliner footrests and bases collide as drawn (Val, 2026-10-15). With the back row seated the
+// front-row aisle is narrower than the widest accepted (bind-pose) body, which instead sits from any
+// spot within the server's sit reach that it can walk to and that sees the cushion.
+test('the widest accepted body reaches a sit spot for every recliner with the other nine seats occupied', () => {
+  const spots = data.circulation.reclinerSitSpots;
+  assert.equal(spots?.length, 8);
+  for (const s of spots) {
+    assert.equal(s.otherSeatsOccupied, 9);
+    assert.ok(s.widestAcceptedBody && s.sitDistanceM <= SEAT_REACH && s.sightLine, `${s.seat}: ${JSON.stringify(s)}`);
+  }
+});
+
+test('the server body walks to every recliner approach with the other nine seats occupied', () => {
   const recliners = trip('doorway to recliner');
   assert.equal(recliners.length, 8);
-  for (const t of recliners) {
-    assert.equal(t.otherSeatsOccupied, 9);
-    assert.ok(t.widestAcceptedBody, `${t.name}: ${t.widthM} m`);
-  }
+  for (const t of recliners) assert.ok(t.otherSeatsOccupied === 9 && t.serverBody, `${t.name}: ${t.widthM} m`);
+});
+
+test('the front-row aisle with the back row seated is recorded and fits the widest posed body', () => {
+  const aisle = data.circulation.frontRowAisle;
+  assert.ok(aisle, 'no front-row aisle record');
+  assert.ok(aisle.widthM >= aisle.widestPosedBodyM && !aisle.clearsWidestAcceptedBody, JSON.stringify(aisle));
 });
 
 test('each zone where a route turns has room for the longest turning body with every seat occupied', () => {
@@ -50,10 +66,11 @@ test('the screen data hands #365 the plan screen and a sightline per recliner', 
   assert.equal(burnedInTextSafe.lowestM, Math.max(...seats.map(s => s.lowestVisibleM)));
 });
 
-// Open (#364), reported in docs/ipic-interior.md: the only lounge-to-auditorium
-// passage, between the lounge planter and the sofa's west arm, is 5 mm narrower
-// than the accepted widest body (bind-pose bounds; posed bodies measured on
-// 2026-10-15 are at most 0.80 m wide and clear it).
-test('the lounge-to-auditorium passage admits the widest accepted body', { todo: 'planter/sofa-arm gap is 1.005 m against 1.01 m' }, () => {
-  assert.ok(data.circulation.narrowestPublicPassage.clears, `${data.circulation.narrowestPublicPassage.widthM} m`);
+// The lounge-to-auditorium passage once ran between the lounge planter and the sofa's west arm, 5 mm
+// narrower than the widest accepted body until Val had the planter moved (2026-10-15). The sofa now backs
+// onto the west guardrail (2026-10-18); the route and every public trip must still admit that body.
+test('the lounge-to-auditorium passage admits the widest accepted body', () => {
+  const [route] = trip('lane top to inside the auditorium doorway');
+  assert.ok(route.widestAcceptedBody, `${route.widthM} m`);
+  assert.ok(data.circulation.narrowestPublicPassage.clears, JSON.stringify(data.circulation.narrowestPublicPassage));
 });

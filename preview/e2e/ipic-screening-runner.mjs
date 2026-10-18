@@ -4,13 +4,14 @@
 import { chromium } from 'playwright';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { startBrowserFixture } from './fixture-server.js';
+import { screeningLaunchOptions } from './ipic-screening-launch.js';
 import { holdBrowserLock } from '../../scripts/browser-lock.mjs';
 const release = await holdBrowserLock('IPIC screening two-browser journey');
 let fixture, browser;
 await mkdir('output/playwright/ipic', { recursive: true });
 try {
   fixture = await startBrowserFixture({ env: { VITE_SHARED_SOFTWARE_RENDERING: '1', RIVER_OAKS_SCREENING_HOSTS: 'ipic:alice' } });
-  browser = await chromium.launch({ headless: true, args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+  browser = await chromium.launch(screeningLaunchOptions());
   const open = async identity => {
     const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
     await context.addCookies([{ name: 'fixture_session', value: identity, url: fixture.origin }]);

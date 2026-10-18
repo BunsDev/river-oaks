@@ -1,8 +1,9 @@
 # Character Studio architecture decision (#440)
 
-Status: draft stack #457 (contract), #461 (editor), #462 (render), and #464
-(persistence and client integration). The integrated local full gate passed; the subsequent client reopen regressions, editor journey and core gate also passed. Release acceptance remains in progress.
-This is the first increment of #440–#444, not a shipped Studio.
+Status: contract increment #457 is on main. This branch integrates the editor,
+rendering and persistence stack (#461, #462, #464, #484), human-only characters,
+Jevica-only invited office access and the expanded Studio. Release acceptance
+remains subject to the verification and device gates below.
 
 ## Decision and evidence
 Extend the authored character system with constrained modular customization.
@@ -21,8 +22,14 @@ These remain authoritative. The owner-scoped character store now persists privat
 drafts, immutable published revisions and selected account state; see the transport
 and migration details below.
 
-The Deep Research report was not provided or located. No conclusions here are
-attributed to it. Existing code and asset receipts are the evidence available.
+The Deep Research report has not been completed or supplied. On 2026-10-18 the
+only Character Studio research artifact on this machine was its prompt,
+`~/Downloads/typesafe-place-character-studio-deep-research-prompt.md` (SHA-256
+`4a4334e4…`, 2026-10-11; a byte-identical copy beside it). The six local
+`deep-research-report*` files cover other subjects: A2A infrastructure, prime gaps,
+virtual workplace agents, Modex decomposition, a VTuber avatar and Astra. No
+conclusion here is attributed to a report. Existing code and asset receipts are
+the evidence; the prompt's questions are reconciled against them below.
 
 | Approach | Current evidence | Decision |
 | --- | --- | --- |
@@ -31,6 +38,26 @@ attributed to it. Existing code and asset receipts are the evidence available.
 | Arbitrary generated meshes | No proven rig fitting, garment compatibility, licensing or cleanup pipeline | No-go for playable MVP; separate explicitly authorized pilot |
 
 No paid calls, model downloads or production writes are required or performed.
+
+### The research prompt's questions, against the evidence available
+
+| Prompt section | Answered by code and assets here | Open (needs the report, a vendor trial or a product decision) |
+| --- | --- | --- |
+| 1. Project baseline | Yes. Three.js/Vite client, three skinned base rigs, procedural beast overlays, the appearance catalog, server-confirmed appearance, file map below. | Target devices, audience and crowd size remain planning assumptions. |
+| 2. Player experience | Partly. #441's staged editor plan reuses existing tokens, focus and reduced-motion patterns. | Natural-language and reference-image routes; usability evidence. |
+| 3. Approach comparison | Partly: the go/defer/no-go table above, from rig, garment and licensing evidence in the repository. | Current vendor capabilities, pricing and terms (Meshy, Tripo, MetaHuman and others) were not researched. |
+| 4. Production pipeline | Partly. Pinned rig bytes and receipts; procedural overlays tied to the catalog version. | Cleanup, retopology, auto-rigging and facial rigs for any generated input. |
+| 5. Identity and editability | Yes, for v1: the versioned owner-scoped definition, immutable revisions planned for #443, alias migration on read, appearance separate from capabilities. | Face and body parameters arrive with #442's compatibility catalog. |
+| 6. Playable proof | Partly. Human and fox rigs load through the contract; rendered baseline and forms and movement journeys pass. | The full body-by-outfit-by-animation matrix, crowd and device budgets (#442, #444). |
+| 7. Integration architecture | Yes, for the authored path: no jobs or provider adapters are needed; publication is #443. | Async jobs, retries and charge safety only if a generation pilot is authorized. |
+| 8. Rights and privacy | The authored path uses repository-owned and CC0 sources with receipts. | Generated-output, likeness and provider-data terms. |
+| 9. Cost and risk | Authored path: no per-character operating cost. | Per-character generation cost at 100, 1,000 and 10,000 a month. |
+| 10. First playable path | Yes: the delivery order below (#440–#444). | Effort calibration to a named team. |
+
+**Vendor dependence: none for the playable MVP.** Every v1 path runs on shipped,
+pinned assets. A generation pilot would need its own authorization, its own
+adapter behind the contract (provenance `generated`, currently rejected), and the
+open rows above answered first.
 
 ## Contract and migration
 `preview/src/character-definition.js` is DOM-free ESM shared by Node and client.
@@ -108,6 +135,31 @@ The Studio editor stages local edits and offers private Save draft and Wear in t
    optimistic revision checks, stable replication refs and safe load fallback.
 5. #444: full desktop/touch/reduced-motion/failure/two-player matrices, pinned GPU
    goldens, measured device budgets, usability and release/rollback decision.
+
+## Handoff to #441–#443
+
+The contract is the seam the next increments build on. Each must keep
+`validateCharacterDefinition` as the single gate for anything it accepts.
+
+- **#441 (editor):** stage edits as candidate definitions built with
+  `characterDefinitionFor`, and check every staged change with
+  `validateCharacterDefinition` before preview. Undo and redo hold definitions,
+  never raw parameters. With v1, only authored looks (appearance, form) are valid
+  choices; finer controls arrive through #442's catalog.
+- **#442 (assets and rendering):** each new control raises `CHARACTER_SCHEMA_VERSION`
+  (or adds a v2 branch). It extends the allowlist and the validator together, pins any
+  new asset in `character-assets.js` with its receipt, and adds an old-revision
+  migration test. Untested rig and outfit combinations stay unavailable. Native 4K
+  uses a dedicated render target; photo mode's 2048 px cap cannot prove it.
+- **#443 (persistence):** the endpoint takes `ownerId` from authentication only.
+  It stores the canonical definition that `validateCharacterDefinition` returns and
+  allocates revisions on the server (compare-and-swap). It reads legacy accounts
+  through `migrateCharacterAppearance`, and must pass in both the memory and Redis rooms.
+  Appearance never grants flight, speed, admin or companion privileges.
+
+Codex's drafts #461 (editor), #462 (render) and #464 (persistence) are stacked on
+this PR, branched from its earlier head `b6ef443e`. The base gained a plain merge of
+`main` here, not a rewrite, so each can merge the new head forward.
 
 ## Supported scope and quality gates
 Current direction (2026-10-18): human characters only, with ultra-realistic human
@@ -205,6 +257,12 @@ Metal launch path, 1440×1000 canvas):
 | --- | --- | ---: | ---: |
 | Sable human | 16.7 / 33.3 | 1547 | 5,275,904 |
 | Sable fox | 16.7 / 33.4 | 1649 | 5,540,490 |
+
+Re-measured on current `main` (2026-10-18, after merging `c17f9f1c`, same
+browser and canvas): Sable human 16.7 / 33.3 ms with 1,594 draw calls and 5,335,772
+triangles; Sable fox 16.7 / 33.4 ms with 1,696 calls and 5,600,358 triangles.
+`player-forms` 139 checks and `beast-movement` 17 passed. Both new captures were
+inspected and match the earlier ones.
 
 Measured 60 frame intervals per look. Scene statistics include the whole active
 world, and varying residents, so differences are not isolated avatar costs.
