@@ -33,7 +33,11 @@ test('garage to Gardens keeps the town and moves only a flight over the new towe
   assert.equal(world.join({ userId: 'resident', name: 'Resident' }).ok, true);
   assert.equal(world.command('resident', { type: 'chat', text: 'Keep this town through the new campus.' }).ok, true);
   assert.equal(world.join({ userId: OWNER, name: 'Owner' }).ok, true);
+  // Jevica's office invitation is unrelated durable state: it must ride the switch untouched.
+  const invited = world.command(OWNER, { type: 'office', officeId: 'jevica-office', action: 'invite', peerId: 'resident' });
+  assert.equal(invited.ok, true, invited.error);
   const checkpoint = world.checkpoint();
+  assert.ok(checkpoint.payload.offices.grants.length > 0, 'control: the invitation is in the checkpoint');
   // A flight 26 m up over T1, legal above the 20 m garage roof, inside T1's 28.1 m cap clearance.
   const [east, north] = source([16, 58]), flyer = checkpoint.payload.players.find(player => player.id === OWNER);
   flyer.position = [east, north, createWalkingEnvironment(garage).groundAt(east, -north)];flyer.altitude = 26.5;
@@ -45,13 +49,18 @@ test('garage to Gardens keeps the town and moves only a flight over the new towe
   assert.deepEqual([migrated.from, migrated.to, migrated.moved], ['garage', 'gardens', [OWNER]]);
   assert.deepEqual(saved, original, 'the input is not mutated');
   assert.equal(migrated.checkpoint.worldFingerprint, hash(gardens));
-  assert.deepEqual(without(migrated.checkpoint.payload, 'players'), without(saved.payload, 'players'), 'everything but the moved resident is carried');
+  assert.deepEqual(without(migrated.checkpoint.payload, 'players', 'offices'), without(saved.payload, 'players', 'offices'), 'everything but the moved resident is carried');
+  // Offices compare by meaning: a restored world writes an office with no requests as no entry.
+  const nonEmpty = list => list.filter(([, items]) => items.length);
+  assert.deepEqual(migrated.checkpoint.payload.offices.grants, saved.payload.offices.grants, 'office invitations are carried exactly');
+  assert.deepEqual(nonEmpty(migrated.checkpoint.payload.offices.requests), nonEmpty(saved.payload.offices.requests));
   const moved = migrated.checkpoint.payload.players.find(player => player.id === OWNER), stayed = migrated.checkpoint.payload.players.find(player => player.id === 'resident');
   assert.deepEqual(stayed, saved.payload.players.find(player => player.id === 'resident'));
   assert.equal(moved.altitude, 0);assert.equal(onCampus(moved.position), false, 'landed outside the parcel');
   const after = createSharedWorld(gardens, options);
   assert.equal(after.restore(migrated.checkpoint).ok, true);
   assert.deepEqual(after.snapshot().chat, world.snapshot().chat);
+  assert.deepEqual(after.checkpoint().payload.offices.grants, saved.payload.offices.grants, 'office invitations survive the switch');
 });
 
 test('Gardens to garage, the configuration rollback, moves everyone on the campus to the street', () => {
