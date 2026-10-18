@@ -27,6 +27,11 @@ Each item has a regression that failed on main; output saved with this session's
    joining a paused film, the local state went straight to `paused` before any frame had decoded. A load that
    never arrived was never reported, and the viewer saw nothing and had no Retry. The player now stays `loading`
    until a frame decodes, so the stall limit applies. A regression covers it.
+9. **A paused film's frame never reached the screen** (found by `ipic-screen-runner` run 2: the screen read 0,0,0 where
+   the direct video read the film's blue edge). three.js uploads a VideoTexture when requestVideoFrameCallback fires,
+   and a paused element that has just loaded or seeked presents no new frame. A viewer joining a paused film, or one
+   whose autoplay was refused, saw a black screen. main's `attach()` had the same behaviour. The binding now uploads
+   the current frame on binding and after each paused seek (`3561d5ba`, with a regression).
 
 ## Change
 
@@ -69,6 +74,10 @@ Each item has a regression that failed on main; output saved with this session's
 | `node --test preview/tests/ipic-screening-screen.test.js` on main | Failed: no binding module |
 | Same, on the branch | 24/24 and 4/4; all screening unit tests 37/37 |
 | `node preview/e2e/ipic-screen-runner.mjs` (Metal), run 1 | Failed at its first step (stalled load on a paused film): item 8 above, a real defect, now fixed |
+| Same, run 2 (`45a9f401`) | The stall step passed, then the screen was black for a paused frame: item 9, fixed in `3561d5ba` |
+| Same, run 3 (`3561d5ba`) | Failed on the check's own baseline (resident textures counted before the interior's maps uploaded); fixed in `fc55a2de` |
+| Same, run 4 (`3561d5ba` + `fc55a2de`'s fixture change), Chromium 156, ANGLE Metal, Apple M3 Max, 1440×900 | **Passed, 8 checks.** Every aspect (16:9, 4:3, 2.39:1, 4:1) has black mattes (0,0,0) just outside the film and halfway out, and all four film edges show the film's own colour: whole, unstretched, the right way round. Stall reported, then Retry played. Non-film WebM → MP4 decoded. Offline → network failure, then Retry played. A switch during a load is quiet. One texture resident per film; 10 created, 10 disposed; Stop restores the material exactly. Presented frames advanced 7 → 52 in 2 s. Captures are in the session evidence |
+| Colour, the same run (16:9 test film, paused, square-on view) | Screen against the direct frame: black 0 → 0; grey 128 → 143; white 255 → 227. Identical with house lights at 1 and 0.25: the film is not lit twice. The difference is the game's global ACES tone mapping (exposure 0.95) on the screen's emission. Black is exact and white is not washed out, so no screen-specific change was made; a renderer-wide change is out of scope. For design review |
 | In-world, seated eye of recliner 1-1, Metal ANGLE, real pipeline (scratch `world-screen-runner.mjs`) | Branch `e602cdcc`: after Stop the screen is idle (its own material, not attached); switching to the fixture, 0 of 44 frames showed a frame while loading. Main `153471bc`: after Stop the screen stayed attached on a frame of the short, and 3 of 4 logged switch frames showed the old film while the new loaded |
 | `node preview/e2e/ipic-screening-runner.mjs` (branch), run 1 | Not run: the disk filled (ENOSPC on the shared browser-lock file) |
 | Same journey on main (scratch runner, main's code) | Pending: expected to fail at "a stopped film leaves the screen idle" |
