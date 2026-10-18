@@ -191,7 +191,9 @@ jobs:
           # The Gardens campus revision: leases, workstations and the private desk (#510), and
           # public traversal of lifts, stairs and both skywalks (#508).
           - id: campus
-            journeys: garden-campus-office garden-campus-traversal
+            journeys: garden-campus-office garden-campus-suite
+          - id: campus-traversal
+            journeys: garden-campus-traversal
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
