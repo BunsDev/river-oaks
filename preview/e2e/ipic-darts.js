@@ -46,7 +46,7 @@ async (alice, bob) => {
     const before = (await darts(page)).line?.points.length ?? 0;
     await page.evaluate(target => window.__riverIpicDarts().steadyOn(target), point);
     await page.locator('.darts-panel[open] [data-darts-action="throw"]').click();
-    await page.waitForFunction(n => (window.__riverIpicDarts().line?.points.length ?? 0) > n, before);
+    await page.waitForFunction(n => (window.__riverIpicDarts().line?.points.length ?? 0) > n && !window.__riverIpicDarts().flying, before);
   }
 
   await Promise.all([load(alice), load(bob)]);

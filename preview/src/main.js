@@ -412,6 +412,8 @@ function initializeRenderer() {
   const laneOf = position => { const point = position && roomPoint(AXE_ROOM_INTERIOR, position); return point ? atAxeLane(point) : null; };
   axePanel = createAxePanel({ getMirror: id => venueProps()?.axeLanes?.[id] ?? null, focusWorld: () => host.focus({ preventScroll: true }), reducedMotion,
     shared: { ...townShared, laneIds: AXE_LANES.map(lane => lane.id), laneAt: () => laneOf(onFoot()),
+      // Your distance to your lane's target, as the town measures it (axe-rules.js rotation).
+      distance: () => { const position = onFoot(), point = position && roomPoint(AXE_ROOM_INTERIOR, position), lane = AXE_LANES.find(item => item.id === laneOf(position)); return point && lane ? lane.target - point[1] : null; },
       lane: id => multiplayer?.snapshot?.axes?.find(item => item.id === id) ?? null,
       peers: id => snapshotPlayers().filter(player => laneOf(player.position) === id).map(player => ({ id: player.id, name: player.name })) } });
   playProviders.push(() => axePanel);
@@ -1202,7 +1204,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
     mancalaBoard: plazaSalon?.userData.mancala?.visible() ?? null, reset: () => plazaGo.reset() } : null;
   window.__riverPlazaMancala = () => plazaMancala ? { ...plazaMancala.debug(), table: plazaSalon?.userData.mancala?.count() ?? null, reset: () => plazaMancala.reset() } : null;
   window.__riverAxes = () => axePanel ? { ...axePanel.debug(), stuck: Object.fromEntries(AXE_LANES.map(lane => [lane.id, buildingMesh?.userData.interiors?.userData.axeVenue?.axeLanes?.[lane.id]?.count() ?? null])),
-    holdAt: mm => axePanel.holdAt(mm), open: () => axePanel.open() } : null;
+    steadyAt: release => axePanel.steadyAt(release), steadyOn: point => axePanel.steadyOn(point), open: () => axePanel.open() } : null;
   window.__riverVenueDarts = () => venueDarts ? { ...venueDarts.debug(), board: buildingMesh?.userData.interiors?.userData.axeVenue?.venueDarts?.count() ?? null,
     steadyOn: point => venueDarts.steadyOn(point), open: () => venueDarts.open() } : null;
   window.__riverIpicDarts = () => ipicDarts ? { ...ipicDarts.debug(), board: buildingMesh?.userData.interiors?.userData.dartboards?.[0]?.count() ?? null,
@@ -1235,7 +1237,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
     diceShown: plazaSalon?.userData.yacht?.visible() ?? null, towerShown: plazaSalon?.userData.jenga?.visible() ?? null, deal: seed => plazaYacht.deal(seed) } : null;
   window.__riverPlazaShuffleboard = () => plazaShuffleboard ? { ...plazaShuffleboard.debug(), longTableGame, table: plazaSalon?.userData.shuffleboard?.count() ?? null,
     pucksShown: plazaSalon?.userData.shuffleboard?.visible() ?? null, glassesShown: plazaSalon?.userData.winePong?.visible() ?? null,
-    hold: value => plazaShuffleboard.hold(value), reset: () => plazaShuffleboard.reset() } : null;
+    steadyAt: (aim, power) => plazaShuffleboard.steadyAt(aim, power), reset: () => plazaShuffleboard.reset() } : null;
   window.__riverPlazaJenga = () => plazaJenga ? { ...plazaJenga.debug(), table: plazaSalon?.userData.jenga?.count() ?? null, towerFallen: plazaSalon?.userData.jenga?.fallen() ?? null,
     aim: at => plazaJenga.aim(at), deal: seed => plazaJenga.deal(seed) } : null;
   window.__riverPlazaCribbage = () => plazaCribbage ? { ...plazaCribbage.debug(), walnutGame, pegs: plazaSalon?.userData.cribbage?.pegs() ?? null, board: plazaSalon?.userData.cribbage?.visible() ?? null,

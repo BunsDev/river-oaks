@@ -39,13 +39,13 @@ async (alice, bob) => {
       check(distance <= .16, `could not reach ${a}, ${d}`);
     }
   }
-  async function throwAt(page, [x, y]) {
+  // One axe: hold the hand still on the release that carries it to a point from where the
+  // thrower stands, throw, and wait for the town's landing to finish its flight.
+  async function throwAt(page, point) {
     const before = (await axes(page)).lane?.throws.length ?? 0;
-    await page.evaluate(mm => window.__riverAxes().holdAt(mm), x);
+    await page.evaluate(target => window.__riverAxes().steadyOn(target), point);
     await page.locator('#axe-panel [data-axe-action="throw"]').click();
-    await page.evaluate(mm => window.__riverAxes().holdAt(mm), y);
-    await page.locator('#axe-panel [data-axe-action="throw"]').click();
-    await page.waitForFunction(n => (window.__riverAxes().lane?.throws.length ?? 0) > n, before);
+    await page.waitForFunction(n => (window.__riverAxes().lane?.throws.length ?? 0) > n && !window.__riverAxes().flying, before);
   }
 
   await Promise.all([load(alice), load(bob)]);
