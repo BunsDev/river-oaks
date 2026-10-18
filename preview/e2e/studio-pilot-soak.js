@@ -5,13 +5,32 @@ async page => {
   // another template (Courtyard House, or Garden Office when soaking House) so the scene
   // is disposed. Samples follow a forced garbage collection: renderer counts from the
   // viewport's render stats, and JS heap, event listeners and DOM nodes from Chromium's
-  // Performance domain.
+  // Performance domain. Pending loads: shared material image requests, route-assessment
+  // workers still alive and timeouts not yet fired or cleared (counted in the page).
   const NAMES = { house: 'Courtyard House', office: 'Garden Office', boutique: 'Atelier Boutique', cafe: 'Corner Café' };
   const templateId = process.env.STUDIO_TEMPLATE ?? 'office', subject = NAMES[templateId], other = templateId === 'house' ? NAMES.office : NAMES.house;
   if (!subject) throw Error(`Unknown template ${templateId}`);
   const origin = 'http://127.0.0.1:5173', errors = [], cycles = [];
   page.on('pageerror', error => errors.push(error.message));
   page.on('dialog', dialog => dialog.accept());
+  const materialLoads = { started: 0, finished: 0, failed: 0, pending: 0 };
+  const materialRequest = request => new URL(request.url()).pathname.startsWith('/assets/materials/');
+  page.on('request', request => { if (materialRequest(request)) { materialLoads.started++;materialLoads.pending++; } });
+  page.on('requestfinished', request => { if (materialRequest(request)) { materialLoads.finished++;materialLoads.pending--; } });
+  page.on('requestfailed', request => { if (materialRequest(request)) { materialLoads.failed++;materialLoads.pending--; } });
+  await page.addInitScript(() => {
+    const counts = window.__studioSoakCounts = { workers: 0, liveWorkers: 0, pendingTimeouts: 0 }, timeouts = new Set();
+    const NativeWorker = window.Worker, { setTimeout: set, clearTimeout: clear } = window;
+    window.Worker = class extends NativeWorker {
+      constructor(...args) { super(...args);counts.workers++;counts.liveWorkers++; }
+      terminate() { if (!this.terminated) { this.terminated = true;counts.liveWorkers--; } super.terminate(); }
+    };
+    window.setTimeout = (callback, ...rest) => {
+      const id = set(typeof callback === 'function' ? (...args) => { timeouts.delete(id);counts.pendingTimeouts = timeouts.size;callback(...args); } : callback, ...rest);
+      timeouts.add(id);counts.pendingTimeouts = timeouts.size;return id;
+    };
+    window.clearTimeout = id => { timeouts.delete(id);counts.pendingTimeouts = timeouts.size;clear(id); };
+  });
   const cdp = await page.context().newCDPSession(page);
   await cdp.send('Performance.enable');
   await page.setViewportSize({ width: 1440, height: 1000 });
@@ -25,8 +44,11 @@ async page => {
     await page.waitForFunction(after => JSON.parse(document.querySelector('#studio-viewport').dataset.renderStats ?? '{"at":0}').at > after + 250, settled);
     const stats = JSON.parse(await viewport.getAttribute('data-render-stats'));
     const metrics = Object.fromEntries((await cdp.send('Performance.getMetrics')).metrics.map(metric => [metric.name, metric.value]));
-    return { calls: stats.calls, triangles: stats.triangles, geometries: stats.geometries, textures: stats.textures, programs: stats.programs,
-      listeners: metrics.JSEventListeners, nodes: metrics.Nodes, heapMiB: +(metrics.JSHeapUsedSize / 1048576).toFixed(2), canvases: await page.locator('canvas').count() };
+    if (!Number.isInteger(stats.materials) || !Number.isInteger(stats.renderTargets)) throw Error('Studio resource ownership counts unavailable');
+    return { calls: stats.calls, triangles: stats.triangles, geometries: stats.geometries, materials: stats.materials,
+      textures: stats.textures, renderTargets: stats.renderTargets, programs: stats.programs,
+      listeners: metrics.JSEventListeners, nodes: metrics.Nodes, heapMiB: +(metrics.JSHeapUsedSize / 1048576).toFixed(2), canvases: await page.locator('canvas').count(),
+      materialLoads: { ...materialLoads }, ...await page.evaluate(() => ({ ...window.__studioSoakCounts })) };
   };
   const open = async name => {
     await page.locator('#studio-templates').click();
