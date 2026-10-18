@@ -76,18 +76,30 @@ due about 15:50Z on `feat/garden-campus-contract-506-20261018`.
   - Every unit door names both the spine it opens from and the suite surface it opens
     into.
 
-## Package ownership and dependencies (as of 2026-10-18 21:15Z)
+## Package ownership and dependencies (as of 2026-10-18 23:40Z)
+
+Landing (Val's decision, about 23:20Z):
+- river-oaks-d8 lands #523, then #537.
+- river-oaks-b5 lands #528 right after #523, #527 after #537, then #525 last, and does the
+  production switch.
+- river-oaks-95 keeps the branch updates on #528, #527 and #525, and hands each head SHA to
+  b5 once its preview shards and macOS desktop job are green.
+- Dependencies, by ancestry:
+  - #527 contains #537's head `75f8e277`;
+  - #528 contains only #507;
+  - #527 and #528 do not depend on each other;
+  - #525 contains all of them.
 
 | Package | Owner / task | Branch → PR | Delivered revision | Status |
 | --- | --- | --- | --- | --- |
 | #506 contract | river-oaks-c5 | #519 | **merged to main `ab0059fc`** (layout 3.2, Val-authorized land) | done |
-| #507 shells + ground | river-oaks-95 / `garden-campus-shells-507` | → #523 (draft, base main) | `3e58f384` (main `ab0059fc` + room summaries + suite walls/doors, opaque near the camera) | 60/60 focused |
-| #508 upper circulation | **river-oaks-95** (Val reassigned ~19:55Z; c5 stood down, no code) / `garden-campus-traversal-508` | → **#537** (draft, base #507) | `75f8e277` | campus floors on the interior-level machinery: lifts and stairs (`toPortal` pairing), facade glass, ceilings, fail-closed suite admission. Traversal 5/5, levels 5/5, transport memory+Redis, regression 154+49 |
-| #508 slice (b) | river-oaks-95 / `garden-campus-traversal-views-508b` | `test/garden-campus-traversal-journey-508-20261018` | `2c650446` | **browser journey passed locally end to end**: keyboard + phone touch, occupied landing, above/below B12, T2 roof, T3 stairs. 14 circulation views on the design plans |
-| #509 leases | river-oaks-d8 landing it (Val asked) | → #522 (base main) | `1d151a8d` + main | d8 is running the core gate, then `pnpm run land 522` |
-| #510 resident journey | river-oaks-95 / `garden-campus-journey-510` | → #527 (draft) | `1e6d32d7` (+ #508) | suite seats on #509 leases. **Hosted `garden-campus-suite` 10/10** (job 117798291819) and `garden-campus-office` green. The rotation-test and macOS-W flakes were re-run |
-| #511 finish + rendering | river-oaks-95 (agent finished) / `garden-campus-finish-511` | → #528 (draft, base #507) | `eab230b9` | 39/39 |
-| #512 integration | river-oaks-95 / `garden-campus-acceptance-512` | → #525 (draft candidate) | `0b833b31` (all packages) | **full Verify green** (run 39169199120): `campus` (office + suite) and `campus-traversal` journeys pass. Integrated suite 258/259 (one load-sensitive failure passes 5/5 alone) |
+| #507 shells + ground | built by river-oaks-95; **river-oaks-d8 lands** / `garden-campus-shells-507` (claimed by d8) | → #523 (draft, base main) | `efb935cf` (main `9582091f` + the desktop e2e rejoin fix) | handed to d8 at `efb935cf`; d8 merges main and runs `land 523` |
+| #508 upper circulation | built by river-oaks-95; **river-oaks-d8 lands** / `garden-campus-traversal-508` (claimed by d8) | → **#537** (draft, base #507) | `75f8e277` | lifts and stairs (`toPortal` pairing), facade glass, ceilings, fail-closed suite admission. **d8's review found nothing blocking:** 133/133 (campus, interior-level, store-room, walking and world suites, isolated Redis); suite surface ids equal #509's 43 unit ids; `toPortal` pairing correct. UX note: a lift moves one floor per press |
+| #508 slice (b) | river-oaks-95 / `garden-campus-traversal-views-508b` | `test/garden-campus-traversal-journey-508-20261018` | `2c650446` | **browser journey passed locally end to end**: keyboard + phone touch, occupied landing, above/below B12, T2 roof, T3 stairs. 14 circulation views on the design plans; carried by #525 |
+| #509 leases | river-oaks-d8 | #522 | **merged to main `53fba3fa`** (23:15Z; 20 checks green, tree equal to the head `e7b98e42`) | delivered |
+| #510 resident journey | river-oaks-95 / `garden-campus-journey-510` | → #527 (draft, **base main**) | `8f4a20ac` (main `53fba3fa` + #507 `efb935cf`) | suite seats on #509 leases. Campus suites 80/80 with Redis; **macOS desktop green** at `8f4a20ac`; earlier hosted `garden-campus-suite` 10/10 (job 117798291819). Lands after #537 |
+| #511 finish + rendering | river-oaks-95 (agent-511) / `garden-campus-finish-511` | → #528 (draft, base #507) | `070d588b` (#507 `efb935cf`) | campus, render-audit and remote-player suites 76/76 with Redis. Lands right after #523 |
+| #512 integration | river-oaks-95 / `garden-campus-acceptance-512` | → #525 (draft candidate) | `e9716e46` (#510 `8f4a20ac` + #511 `070d588b`, so every package head and main `53fba3fa`) | 122/122 across 20 campus, interior and render suites with Redis. Previous full Verify green at `0b833b31` (run 39169199120). Lands last |
 
 ### #508 slice (b) plan (river-oaks-95; assigned by Val, agreed with c5)
 
@@ -210,23 +222,24 @@ checkpoint to v13 (writer v14 with the character store). From then on an older b
 replace the coordinator, so a code revert past that point needs a tested downgrade, which
 does not exist. Roll back by configuration instead (`docs/garden-campus.md`).
 
-**Proposed merge order** (each through `pnpm run land`, signed, current with main, `preview`
-green):
+**Merge order** (each through `pnpm run land`, signed, current with main, `preview` green):
 
-1. #519 (#506 contract)
-2. #523 (#507)
-3. #522 (#509)
-4. #508's PR
-5. #510's PR
-6. #511's PR
-7. #512's PR (cutover, epoch fence, docs, candidate journeys)
+1. #519 (#506 contract): merged `ab0059fc`.
+2. #522 (#509 leases): merged `53fba3fa`.
+3. #523 (#507): d8.
+4. #528 (#511): b5, right after #523.
+5. #537 (#508): d8.
+6. #527 (#510): b5, after #537.
+7. #525 (#512: cutover, epoch fence, docs, candidate journeys): b5, last.
 
 **Activation** (Val's separate authorization; production settings):
 
 1. Set the following on every production function, then redeploy:
    - `RIVER_OAKS_DISTRICT_REVISION=river-oaks-gardens-3`
    - `RIVER_OAKS_DISTRICT_EPOCH=1`
-   - `RIVER_OAKS_CAMPUS_OPERATOR_IDS=<the operator account>`
+   - `RIVER_OAKS_CAMPUS_OPERATOR_IDS=<the operator account>`. Val has chosen Jevica's
+     production account. river-oaks-b5 holds the id, which is not written in this public
+     ledger. b5 makes the switch once Val authorizes it.
 2. Expect one `district_gardens_checkpoint_migrated {from:'garage', to:'gardens'}` log.
    Then check that snapshots carry `districtRevision`, and smoke-test:
    - sign in and go to the Grove Offices hall;
@@ -239,36 +252,50 @@ green):
 **Rollback:** set the revision back to the garage, set the epoch to 2, and redeploy. Expect
 one `{from:'gardens', to:'garage'}` log. Leases stay inert and desks are untouched.
 
-**Remaining business decisions (not invented, not configured):**
+**Business decisions:**
 
-- who operates the campus (the operator account ids);
-- whether paid rentals exist at all. If they do, #509's proposal lists the decisions: the
+- Operator: decided. Val chose Jevica's production account, for owner-issued tenancy that
+  charges nothing.
+- Still open, not invented and not configured: whether paid rentals exist at all. Paid mode
+  stays off. If paid rentals are wanted, #509's proposal lists the decisions: the
   operator of record, currency, prices, periods, refunds and cancellation, the payment
   provider, the settlement source, failure and expiry handling, eligibility and record
   keeping, with a five-part readiness condition.
 
-**Release gates still open (as of 2026-10-18 22:00Z):**
+**Release gates still open (as of 2026-10-18 23:40Z):**
 
-- The packages land in order: #522 (d8, in progress), then #523, #537, #528, #527 and #525,
-  each current with main and with `preview` green.
+- The packages land in the order above, each current with main and with `preview` green.
 - Val's visual review of the matched views (`docs/design/garden-campus/finish/`,
   `docs/design/garden-campus/circulation/sheet-day.jpg`, `docs/design/garden-campus/traversal/`).
 - Physical phones and target-GPU or mobile resource budgets are unmeasured; touch is emulated.
-- **The Desktop workflow's macOS e2e fails on every campus head checked since #507**
-  (`3e58f384`, `465785d2`, `60ebf88c`, `1e6d32d7` ×2, candidate `0b833b31`). Main `ab0059fc`
-  passes. Ubuntu and Windows pass everywhere.
-  - **Signature:** the town socket drops at readiness (`[vite] ws proxy error: write EPIPE`
-    4–18 s before the walk check), then "W moves the player: 0.00 m" at the spawn
-    `[-2765.32, 20.14, 1295.06]`. That is the same signature as the pre-campus macOS
-    W-check flake (2 in ~11 on #377).
-  - **What it is not:** the district check (`null`/`null` on the garage). A local Chromium
-    probe of #507 on a fast Mac shows no socket close.
-  - **Suspect:** the 8 s staleness watchdog (code 4901) on a runner that takes 65–88 s to
-    ready.
-  - **Next:** main's run and the candidate's are re-running (22:15Z) to measure. If main stays
-    green, bisect #507's client diff on a push-only `diag/` workflow that logs the close code.
-    Desktop is not the merge gate (`preview` is), but landing #523 would carry this onto main.
-- The commercial decisions below.
+- The commercial decision on paid rentals (above). Paid mode stays off until then.
+
+**Closed: the Desktop workflow's macOS e2e ("W moves the player: 0.00 m")**
+
+The bisect showed runner timing that main shares, not a #507 defect. Details are in #507's
+ledger, section "Desktop macOS e2e".
+- **Rates, 3 attempts per variant:** main 2/3 (run 39173762547); #507 2/3 (run 39173766491).
+- **Mechanism:**
+  1. While loading, the renderer blocks for 20–28 s. The town socket's handshake completes
+     inside that block, so the page never answers the server's 30 s heartbeat ping, and the
+     server terminates the socket.
+  2. The page processes the 1006 close late, usually just as the walk begins.
+  3. The gate takes focus, and the rejoin restores the server's pose.
+  - The earlier suspect, the 4901 watchdog, never fired.
+- **Fix:** `efb935cf` on #523 changes only the harness. A hold that the town's absence undid
+  is repeated after the town is `joined` again; a hold with the town joined throughout still
+  has to walk.
+- **Proof:**
+  - the old harness 0/3 (run 39174839205);
+  - the fixed one passed the walk 9/9 (runs 39175116721 and 39175120310), with three
+    repeated holds;
+  - #527 `8f4a20ac`'s macOS desktop job is green.
+- **Residual:** 1 in 15 logged attempts, on the slowest runner. The reloaded page's socket was
+  also dropped, the gate closed the open settings dialog, and the e2e's close click timed
+  out. `land`'s one rerun covers it.
+- **Product follow-up (not campus scope):** a client whose renderer blocks for over 30 s right
+  after the handshake is cut by the heartbeat and rejoins. This belongs to the
+  connection-continuity owner (#447's policy).
 
 **Closed since the last revision:**
 
@@ -278,15 +305,17 @@ one `{from:'gardens', to:'garage'}` log. Leases stay inert and desks are untouch
 - #512's candidate runs all three two-account journeys green on hosted CI at `0b833b31`.
 - The gallery walls and suite doors are in, opaque at any camera distance.
 
-## Next action (superseded below)
+## Next action (2026-10-18 23:40Z)
 
-1. Get a green hosted `campus` shard on #527 `835c0c44` and #525 `284a5ca3`. The journey
-   has not yet passed end to end anywhere, and local browser runs are blocked by machine
-   load. Then mark #527 ready for review.
-2. #511 is open as #528. When it takes #507 `086c197e`, merge it into #525 and re-run the
-   shard and the views.
-3. #508 is Val's to start (c5's queued goal). When its first push lands, integrate suite
-   seats and entry through its hooks (#510), then run #512's two-account candidate
-   journey: Floor 4 across both skywalks, below-bridge movement, suite entry, access loss
-   and reconnect.
-4. Then the release handoff (merge order and activation above).
+1. Hosted CI is running on #527 `8f4a20ac`, #528 `070d588b` and #525 `e9716e46`. When each
+   head's preview shards and macOS desktop job are green, hand its SHA to river-oaks-b5.
+   It won't queue a PR before then, and checks base and head first.
+2. When d8 reports #523's merge SHA:
+   - GitHub retargets #528 to main;
+   - merge main into #528 and re-run its CI;
+   - hand it to b5.
+3. When d8 reports #537's merge SHA: merge main into #527 and #525, re-run, and hand them
+   over in that order.
+4. After #525 lands, finish this tracker with the exact PR and merge SHAs. Activation stays
+   Val's separate authorization, carried out by b5 as above. Then retire the campus worktrees
+   through `project:prune`.
