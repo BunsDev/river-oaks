@@ -132,6 +132,11 @@ here and in #508's ledger.
 - **Restore.** A suite sitter is restored standing at the stand point.
 - **Client.** The seat picker offers only the desks of the suite the resident stands in. The
   page predicts suite doors from the resident's own entitlements (`setCampusSuiteGate`).
+- **Browser.** `garden-campus-suite` (`preview/e2e/garden-campus-suite.js`, `campus` CI shard)
+  passed all 10 checks on hosted CI at `1e6d32d7` (job 117798291819) and at candidate
+  `0b833b31`. It passed again locally at 22:08Z (load ~150). Screenshots are in
+  `docs/design/garden-campus/suite/`: the seated tenant's private desk, and the tenant walked out
+  to the gallery after the lease ended, with the stranger at the door.
 - **Evidence.** `server/tests/garden-campus-suite-seats.test.js` passes 3/3: door, desk and
   workstation for the tenant; door and desk refused to a stranger; revoke walks a seated tenant
   out; restore stands them. With an isolated Redis, the campus, lease, desk, room, walking,
