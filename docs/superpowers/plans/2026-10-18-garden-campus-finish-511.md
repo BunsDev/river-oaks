@@ -19,6 +19,10 @@ matched baseline on this machine.
   #506 layout `3.1` and origin/main `1d8740ad` (including #477).
 - #506 contract `shared/garden-campus-layout.js`, versions `{schema 1, layout '3.2', floors 1,
   support 1, units 1}` (via #507 `40aec12a`, signed merge `d0b1c514`). Not edited here.
+- Latest #507 head merged: `086c197e`, which adds campus ground room summaries (signed merge
+  `4381fe96`). The focused campus tests pass afterwards: 35/35. Views and the resource A/B
+  were taken at `6b8c51e6`. The merge touches only garden-campus-district.js (room summaries),
+  so rendering is unchanged.
 - #508 (upper circulation, river-oaks-c5) and #510 (suite fit-out, `The Gardens fit-out` root)
   are separate roots; this pass neither depends on nor restyles them.
 
