@@ -9,7 +9,8 @@ try {
   // the seated step can start the film and measure its panel.
   fixture = await startBrowserFixture({ env: { VITE_SHARED_SOFTWARE_RENDERING: '1', RIVER_OAKS_SCREENING_HOSTS: 'ipic:user_01M40Y914S1H4EJCEHH91DKTAY' } });
   browser = await chromium.launch({ headless: true, ...(process.env.IPIC_CHROMIUM ? { executablePath: process.env.IPIC_CHROMIUM } : {}), args: ['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'] });
-  const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  // IPIC_REDUCED_MOTION=1 runs the same visit with reduced motion (screen focus is then immediate, #500).
+  const context = await browser.newContext({ viewport: { width: 1280, height: 800 }, reducedMotion: process.env.IPIC_REDUCED_MOTION === '1' ? 'reduce' : 'no-preference' });
   await context.addCookies([{ name: 'fixture_session', value: 'owner', url: fixture.origin }]);
   const page = await context.newPage();page.setDefaultTimeout(60000);
   const source = (await readFile('preview/e2e/ipic-visit.js', 'utf8')).replaceAll('http://127.0.0.1:5173', fixture.origin);

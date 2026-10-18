@@ -93,14 +93,76 @@ async page => {
   await page.waitForTimeout(600);
   const desktopReach = await standReach();
   check(desktopReach.visible && desktopReach.onScreen && desktopReach.topmost && desktopReach.panel && desktopReach.overlap === 0, `Seated, Stand up is reachable and clear of the film panel: ${JSON.stringify(desktopReach)}`);
+  // Screen-focused viewing (#500): a local camera that frames the whole film from this row. The seat, the
+  // avatar and the way out stay as they were; looking around (the button, a drag) or standing ends it.
+  const seatOf = () => page.evaluate(() => { const m = window.__riverMultiplayer(); return JSON.stringify(m.snapshot.players.find(p => p.id === m.selfId).sitting); });
+  const seatBefore = await seatOf(), eyeBefore = (await pose()).position;
+  const reduced = await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches);
+  // Focus frames the film's own rectangle once a frame of it is on the screen (the software profile binds it at
+  // its next once-a-second draw); before that it frames the whole screen.
+  await page.waitForFunction(() => window.__riverScreening().attached, null, { timeout: 30000 });
+  await page.locator('#ipic-screening [data-control="focus"]').click();
+  if (reduced) check(await page.evaluate(() => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(() => done(window.__riverScreening().focus.blend))))) === 1, 'reduced motion: focus is immediate');
+  await page.waitForFunction(() => { const f = window.__riverScreening().focus; return f.on && f.blend === 1 && f.ndc && f.film; }, null, { timeout: 20000 });
+  const framed = await page.evaluate(() => {
+    const s = window.__riverScreening(), f = s.focus, toPx = ([x, y]) => [(x + 1) / 2 * innerWidth, (1 - y) / 2 * innerHeight];
+    // The film's centre and points just inside its four corners: each must meet the screen, nothing in front.
+    const points = [[0, 0], ...f.ndc.map(([x, y]) => [x * 0.92, y * 0.92])];
+    const hits = points.map(p => window.__riverDebug().pickAt(...toPx(p))?.materials ?? null);
+    const button = document.querySelector('#ipic-screening [data-control="focus"]');
+    return { fits: f.fits, fov: f.fov, wanted: f.wanted, distance: f.distance, film: f.film, aspect: f.aspect, eye: f.eye, bound: s.screen?.fit?.repeat ?? null, state: s.state,
+      inView: f.ndc.every(([x, y]) => Math.abs(x) <= 1 && Math.abs(y) <= 1), hits, camera: window.__riverCarriage().camera.position, position: f.position, label: button.textContent, pressed: button.getAttribute('aria-pressed') };
+  });
+  check(framed.fits && framed.inView && framed.hits.every(list => list?.includes('ipic-cinema-screen')) && framed.label === 'Look around' && framed.pressed === 'true', `focus frames the whole film, unobstructed: ${JSON.stringify(framed)}`);
+  check(framed.camera.every((v, i) => Math.abs(v - framed.position[i]) < 0.01), `the camera is at the focus point: ${JSON.stringify([framed.camera, framed.position])}`);
+  check(await seatOf() === seatBefore && (await pose()).position.every((v, i) => Math.abs(v - eyeBefore[i]) < 1e-6), 'focusing moves neither the seat nor the avatar');
+  const focusReach = await standReach();
+  check(focusReach.visible && focusReach.onScreen && focusReach.topmost, `focused, Stand up stays reachable: ${JSON.stringify(focusReach)}`);
+  // Keys pressed on the focused button do not reach the world: no walking, no push-to-talk, still seated.
+  await page.locator('#ipic-screening [data-control="focus"]').focus();
+  for (const key of ['KeyW', 'KeyM', 'Space']) { await page.keyboard.down(key); await page.waitForTimeout(300); await page.keyboard.up(key); }
+  check((await pose()).sitting && (await pose()).position.every((v, i) => Math.abs(v - eyeBefore[i]) < 1e-6) && await seatOf() === seatBefore, 'keys on the focused button leave the avatar seated and in place');
+  // Space on a focused button clicks it (Look around): that is the button working, so focus again if it did.
+  if (!(await page.evaluate(() => window.__riverScreening().focus.on))) await page.locator('#ipic-screening [data-control="focus"]').click();
+  await page.waitForFunction(() => window.__riverScreening().focus.on);
+  // Look around (the button, by keyboard) returns the walking camera to the seated eye.
+  await page.locator('#ipic-screening [data-control="focus"]').press('Enter');
+  await page.waitForFunction(() => { const f = window.__riverScreening().focus; return !f.on && f.blend === 0; }, null, { timeout: 10000 });
+  const back = await page.evaluate(() => { const c = window.__riverCarriage(); return { view: c.camera.view, offset: Math.hypot(...c.camera.position.map((v, i) => v - c.pose.position[i])), focused: document.activeElement?.dataset?.control }; });
+  check(back.view === 'eye' && back.offset < .01 && back.focused === 'focus', `Look around returns the seated view and keeps keyboard focus: ${JSON.stringify(back)}`);
+  // A drag on the world looks around too.
+  await page.locator('#ipic-screening [data-control="focus"]').click();
+  await page.waitForFunction(() => window.__riverScreening().focus.on);
+  await page.mouse.move(640, 300); await page.mouse.down(); await page.mouse.move(700, 300); await page.mouse.up();
+  await page.waitForFunction(() => !window.__riverScreening().focus.on, null, { timeout: 5000 });
+  checks.push(`focus framed the whole film unobstructed at ${framed.fov.toFixed(1)}°${reduced ? ' (reduced motion: immediate)' : ''}; seat, avatar and Stand up unchanged; keys stayed out of the world; Look around and a drag returned the seated view`);
+  // Stop watching is local and reversible: the film and its decoder go, Join screening returns to the room's film.
+  const room = await page.evaluate(() => window.__riverMultiplayer().snapshot.screenings.find(item => item.venueId === 'ipic'));
+  await page.locator('#ipic-screening [data-control="stop-watching"]').click();
+  const stopped = await page.evaluate(() => ({ video: Boolean(document.querySelector('#ipic-screening video')), join: !document.querySelector('#ipic-screening [data-control="join"]')?.hidden, s: window.__riverScreening() }));
+  check(!stopped.video && stopped.join && stopped.s.stopped, `Stop watching released the film and offers Join screening: ${JSON.stringify(stopped)}`);
+  await page.waitForTimeout(1500);
+  await page.locator('#ipic-screening [data-control="join"]').click();
+  await page.waitForFunction(() => window.__riverScreening()?.state === 'playing', null, { timeout: 30000 });
+  const rejoined = await page.evaluate(() => { const s = window.__riverScreening(), v = window.__riverMultiplayer().snapshot.screenings.find(item => item.venueId === 'ipic');
+    return { revision: s.revision, room: v.revision, currentTime: s.currentTime, target: (v.positionMs + (s.serverNow - v.anchorServerTimeMs)) / 1000 }; });
+  check(rejoined.revision === room.revision && rejoined.room === room.revision && Math.abs(rejoined.currentTime - rejoined.target) < 1.5, `Join screening returned to the room's timeline without a command: ${JSON.stringify({ rejoined, room: room.revision })}`);
+  checks.push('Stop watching released the film; Join screening returned to the running film at the room’s time, sending nothing');
   const desktopViewport = page.viewportSize();
   await page.setViewportSize({ width: 390, height: 844 }); await page.waitForTimeout(800);
   const phoneReach = await standReach();
   check(phoneReach.visible && phoneReach.onScreen && phoneReach.topmost && phoneReach.panel && phoneReach.overlap === 0, `Seated on a 390 px phone, Stand up is reachable and clear of the film panel: ${JSON.stringify(phoneReach)}`);
   checks.push('seated: Stand up is visible, topmost and clear of the film panel at 1280 and 390 px');
+  // Focused on a 390 px phone, Stand up stays reachable; standing ends focus (#500).
+  await page.locator('#ipic-screening [data-control="focus"]').click();
+  await page.waitForFunction(() => window.__riverScreening().focus.on);
+  const phoneFocusReach = await standReach();
+  check(phoneFocusReach.visible && phoneFocusReach.onScreen && phoneFocusReach.topmost, `focused at 390 px, Stand up is reachable: ${JSON.stringify(phoneFocusReach)}`);
   // A phone has no Z: tap Stand up. Z standing is covered by the office and plaza journeys.
   await page.locator('#walking-interact').click();
   await page.waitForFunction(() => !window.__riverCarriage().pose.sitting);
+  await page.waitForFunction(() => !window.__riverScreening().focus.on && window.__riverScreening().focus.blend === 0, null, { timeout: 10000 });
+  checks.push('focused at 390 px, Stand up was reachable; standing ended focus');
   await page.setViewportSize(desktopViewport); await page.waitForTimeout(400);
   check(await page.evaluate(() => window.__riverCarriage().camera.view) === 'third-person', 'Standing restores the walking camera');
   // The HUD repaints on its next pass (every 150 ms); a slow software frame is allowed 10 s.
