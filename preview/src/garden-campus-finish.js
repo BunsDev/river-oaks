@@ -23,6 +23,7 @@ export const FINISH = Object.freeze({
   trough: { depth: 0.3, below: 0.5, above: 0.05 }, // planted trough hung outside a terrace guard
   greenWall: 0.25, // planted depth outside a west service wall
   groundcover: 0.04,
+  toeLight: 0.015, // a planter's open face sits this far back behind its toe light
   clearance: CAMPUS.body.height + CAMPUS.body.headroom,
 });
 
@@ -121,25 +122,27 @@ export function planterOpenSide([u0, v0, u1, v1], level) {
   return touches(a) && !touches(b) ? b : touches(b) && !touches(a) ? a : null;
 }
 
-// Furniture the contract publishes as obstacles (none yet; proposed in
-// docs/design/garden-campus/finish/proposed-obstacles.json): a `seat` is a timber bench on
-// bronze legs filling its rect; a `table` is a meeting table with four chairs inside its rect.
+// Furniture the contract publishes (#506 `furnishings`, proposed by #511): a `seat` is a timber
+// bench on bronze legs filling its rect; a `table` is a meeting table with four chairs on a
+// flush timber pad that marks its whole footprint, so its collision is never invisible.
 export function campusFurniture(levels = campusLevels(CAMPUS)) {
   const parts = [], push = (finish, rect, z0, z1) => parts.push({ finish, box: [...rect, z0, z1] });
   for (const level of levels) for (const item of level.obstacles) {
     const [u0, v0, u1, v1] = item.rect, z = level.z, alongV = v1 - v0 >= u1 - u0;
     if (item.kind === 'seat') {
-      push('timber', [u0 + 0.02, v0 + 0.02, u1 - 0.02, v1 - 0.02], z + 0.4, z + 0.46);
+      push('timber', [u0, v0, u1, v1], z + 0.4, z + 0.46);
       for (const end of [0.12, 0.88]) {
         const s = alongV ? v0 + (v1 - v0) * end : u0 + (u1 - u0) * end;
         push('bronze', alongV ? [u0 + 0.06, s - 0.03, u1 - 0.06, s + 0.03] : [s - 0.03, v0 + 0.06, s + 0.03, v1 - 0.06], z, z + 0.4);
       }
     } else if (item.kind === 'table') {
+      push('timber', [u0, v0, u1, v1], z, z + 0.03);
       const c = [(u0 + u1) / 2, (v0 + v1) / 2], [w, d] = alongV ? [0.8, 1.4] : [1.4, 0.8];
       push('timber', [c[0] - w / 2, c[1] - d / 2, c[0] + w / 2, c[1] + d / 2], z + 0.72, z + 0.76);
       push('bronze', [c[0] - 0.05, c[1] - 0.05, c[0] + 0.05, c[1] + 0.05], z, z + 0.72);
       for (const [du, dv] of alongV ? [[-1, -0.35], [-1, 0.35], [1, -0.35], [1, 0.35]] : [[-0.35, -1], [0.35, -1], [-0.35, 1], [0.35, 1]]) {
-        const cu = c[0] + du * (alongV ? w / 2 + 0.32 : d), cv = c[1] + dv * (alongV ? d : w / 2 + 0.32);
+        // Two chairs on each long side of the table, 0.32 m out from its edge.
+        const cu = c[0] + du * (alongV ? w / 2 + 0.32 : w), cv = c[1] + dv * (alongV ? d : d / 2 + 0.32);
         const chair = [Math.max(u0, cu - 0.22), Math.max(v0, cv - 0.22), Math.min(u1, cu + 0.22), Math.min(v1, cv + 0.22)];
         push('timber', chair, z + 0.42, z + 0.46);push('bronze', [chair[0] + 0.05, chair[1] + 0.05, chair[2] - 0.05, chair[3] - 0.05], z, z + 0.42);
       }
@@ -176,8 +179,8 @@ export function luminaires(levels = campusLevels(CAMPUS), layout = CAMPUS) {
       push('guard', obstacle.rect, level.z + 1.0, level.z + 1.03);
     } else if (obstacle.kind === 'planter') {
       // Beds: a toe light along the face that meets the walking surface, inside the bed's rect.
-      const open = planterOpenSide(obstacle.rect, level), strip = { east: [a1 - 0.02, b0 + 0.3, a1 - 0.005, b1 - 0.3], west: [a0 + 0.005, b0 + 0.3, a0 + 0.02, b1 - 0.3],
-        north: [a0 + 0.3, b1 - 0.02, a1 - 0.3, b1 - 0.005], south: [a0 + 0.3, b0 + 0.005, a1 - 0.3, b0 + 0.02] }[open];
+      const t = FINISH.toeLight, open = planterOpenSide(obstacle.rect, level), strip = { east: [a1 - t, b0 + 0.3, a1, b1 - 0.3], west: [a0, b0 + 0.3, a0 + t, b1 - 0.3],
+        north: [a0 + 0.3, b1 - t, a1 - 0.3, b1], south: [a0 + 0.3, b0, a1 - 0.3, b0 + t] }[open];
       if (strip) push('bed', strip, level.z + 0.06, level.z + 0.09);
     }
   }

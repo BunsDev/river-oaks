@@ -22,9 +22,9 @@ Placement is deterministic: every random draw is seeded from its position
 ## Rebuild and capture
 
 - Unit checks: `node --test preview/tests/garden-campus-finish.test.js preview/tests/garden-campus-district.test.js preview/tests/garden-campus-layout.test.js`.
-- Contract-obstacle proposal: `node docs/design/garden-campus/finish/propose-obstacles.mjs`
-  rewrites [`proposed-obstacles.json`](proposed-obstacles.json). The unit checks validate it
-  against the current contract.
+- Furnishings: the 67 terrace, roof and ground finishes #511 proposed are now the contract's
+  own `GARDEN_CAMPUS_LAYOUT.furnishings` (#506 layout 3.2), validated there. The proposal file
+  and its generator are retired; the unit checks draw them from `campusLevels()`.
 - Matched views: `node preview/e2e/garden-campus-render-views.mjs both`. Writes
   `output/playwright/garden-campus-render-views/`. Cameras: the contract's five plus seven
   finish cameras ([`garden-campus-render-common.mjs`](../../../../preview/e2e/garden-campus-render-common.mjs)).

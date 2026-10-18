@@ -17,8 +17,8 @@ matched baseline on this machine.
 
 - #507 shells: started at `5a572ea4`; merged `15e8400a` (signed merge `cefa4ee7`), which brings
   #506 layout `3.1` and origin/main `1d8740ad` (including #477).
-- #506 contract `shared/garden-campus-layout.js`, versions `{schema 1, layout '3.1', floors 1,
-  support 1, units 1}`. Not edited here.
+- #506 contract `shared/garden-campus-layout.js`, versions `{schema 1, layout '3.2', floors 1,
+  support 1, units 1}` (via #507 `40aec12a`, signed merge `d0b1c514`). Not edited here.
 - #508 (upper circulation, river-oaks-c5) and #510 (suite fit-out, `The Gardens fit-out` root)
   are separate roots; this pass neither depends on nor restyles them.
 
@@ -33,8 +33,9 @@ matched baseline on this machine.
 - `preview/tests/garden-campus-finish.test.js` (new).
 - `preview/e2e/garden-campus-render-common.mjs`, `garden-campus-render-views.mjs`,
   `garden-campus-render-resources.mjs` (new).
-- `docs/design/garden-campus/finish/proposed-obstacles.json`, `propose-obstacles.mjs` and
-  `receipt.md` (new).
+- `docs/design/garden-campus/finish/receipt.md` (new) and the review contact sheets beside it.
+- `preview/tests/garden-campus-district.test.js`: the "every finish is drawn over its footprint"
+  block only, rewritten for the finish meshes at the coordinator's request.
 
 ## Design
 
@@ -66,10 +67,19 @@ matched baseline on this machine.
 - **Bounded detail.** Fine procedural leaves and grasses submit within 60 m (green roofs use
   55). Foliage clumps use a 20-face form for small clumps and 80 faces for crowns. Every mesh
   is instanced and spatially batched.
-- **Proposed contract obstacles.** Terrace and roof furniture and ground tree pits, as exact
-  rects: `docs/design/garden-campus/finish/proposed-obstacles.json`, relayed to river-oaks-c5.
-  The renderer already draws `planter`, `seat`, `table` and `tree` obstacles from
-  `campusLevels()`, and draws nothing for them until the contract publishes them.
+- **Furnishings.** #511 proposed 67 terrace, roof and ground finishes as exact rects (26
+  planters, 21 seats, 9 tables, 11 tree pits). #506 adopted all of them unchanged as layout
+  3.2 (`GARDEN_CAMPUS_LAYOUT.furnishings`), validated their support and reach, and fixed one
+  defect the proposal's own reach flood missed. In 3.1, B12's edge guards ran across T2's z 13
+  terrace and cut off its west wing; the flood had filtered obstacles by centre distance. In 3.2
+  `bridge.guardSpan` stops the guards at the terrace. The proposal file and its tests are
+  retired. This pass draws each furnishing from `campusLevels()` once, over its whole
+  footprint, replacing #507's interim massing:
+  - a planter as stone walls with a toe light, soil and planting (roof planters get columnar
+    trees; terrace beds the lighter species);
+  - a seat as a bench top on bronze legs;
+  - a table as a flush pad with a table and four chairs;
+  - a tree as a stone kerb, a trunk and a crown above 3.2 m.
 
 ## Checks and results
 
@@ -79,8 +89,7 @@ matched baseline on this machine.
 
 - Occupied-suite views and occupied-route checks need #508's circulation and #510's fit-out
   merged into one candidate (#512).
-- Terrace and roof furniture and ground trees stay unbuilt until #506 publishes the proposed
-  obstacles. #507 already collides every l0 obstacle outside a plate.
+- Seats and tables are collision only until #510 makes them usable.
 - Flight volumes do not include terrace troughs, canopies or green walls: a flyer can pass
   through them. They are above body clearance and outside every walk surface.
 

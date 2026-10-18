@@ -32,7 +32,10 @@ export const PLANTING = Object.freeze({
 // equal, so each keeps its exact footprint for the support and clearance checks.
 const quarter = rand => Math.floor(rand() * 4) * Math.PI / 2;
 const PERENNIALS = ['foxtail-fern', 'mound-fern', 'agave', 'pentas', 'foxtail-fern', 'coleus'];
-const EDGE = ['foxtail-fern', 'pentas', 'mound-fern', 'agave', 'foxtail-fern', 'coleus'];
+// Terrace beds and skywalk edges favour the lighter species: a foxtail fern's plumes cost about
+// three times a mounded fern's fronds, and these beds run for hundreds of metres.
+const TERRACE = ['mound-fern', 'agave', 'pentas', 'coleus', 'persian-shield', 'agave'];
+const EDGE = ['pentas', 'mound-fern', 'agave', 'coleus', 'foxtail-fern', 'agave'];
 
 // One planting plan for the whole campus.
 // clumps: foliage ellipsoids {of, at: [u, v, z], radius: [ru, rv, rz], hue, tone}
@@ -70,13 +73,14 @@ export function campusPlantingPlan(layout = CAMPUS, levels = campusLevels(layout
       }
     }
     const offset = Math.min(0.2, Math.max(0, half - PLANTING.bed.wall - 0.2)), reach = half - PLANTING.bed.wall - offset - 0.02;
+    const roof = Boolean(tower && level.z === tower.roof.z), palette = roof ? PERENNIALS : TERRACE, step = roof ? 0.55 : 0.7;
     let n = 0;
-    for (let s = lo + 0.35; s < hi - 0.3; s += 0.55, n++) {
+    for (let s = lo + 0.35; s < hi - 0.3; s += step, n++) {
       if (trees.some(t => Math.abs(t - s) < 0.5)) continue;
       const rand = rng(...at(s, centre + 0.5).slice(0, 2));
       // Grass blades lean up to about 0.37 m from their crown: tufts stand on the centre line of a bed wide enough.
       if (n % 5 === 4 && half - PLANTING.bed.wall >= 0.4) plan.tufts.push({ at: at(s, centre, soil), seed: Math.floor(rand() * 4294967296) });
-      else plan.plants.push({ species: PERENNIALS[n % PERENNIALS.length], at: at(s, centre + (n % 2 ? offset : -offset), soil), reach, seed: Math.floor(rand() * 4294967296) });
+      else plan.plants.push({ species: palette[n % palette.length], at: at(s, centre + (n % 2 ? offset : -offset), soil), reach, seed: Math.floor(rand() * 4294967296) });
     }
   }
 

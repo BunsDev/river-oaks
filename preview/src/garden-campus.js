@@ -142,7 +142,6 @@ export function buildGardenCampus(world) {
     box('luminaire', c2, head.door[1] - 0.8, c2 + 0.02, head.door[1] + 0.8, head.z1 - cap + 0.05, head.z1 - cap + 0.08);
   }
 
-  const roofBeds = new Set(CAMPUS.towers.flatMap(tower => tower.roof.planting.beds.map(bed => bed.id)));
   // Guards, parapets and posts: every guard obstacle the contract publishes, drawn at its level.
   for (const level of levels) for (const obstacle of level.obstacles) {
     const [u0, v0, u1, v1] = obstacle.rect, z = level.z;
@@ -160,15 +159,8 @@ export function buildGardenCampus(world) {
       box('guard', u0, v0, u1, v1, z, z + 1.1);
       box('bronze', u0, v0, u1, v1, z + 1.1 - RAIL, z + 1.1);
     } else if (obstacle.kind === 'post') box('timber', u0, v0, u1, v1, z, CAMPUS.groundBuildings.find(item => item.id === 'S').height);
-    // The contract's finishes (#506 furnishings), as plain massing so no collision is ever
-    // invisible; #511's finish pass draws them properly. Roof beds are drawn with the roofs.
-    else if (obstacle.kind === 'planter' && !roofBeds.has(obstacle.id)) box('planting', u0, v0, u1, v1, z, z + 0.45);
-    else if (obstacle.kind === 'seat') box('timber', u0, v0, u1, v1, z, z + 0.45);
-    else if (obstacle.kind === 'table') box('timber', u0, v0, u1, v1, z, z + 0.74);
-    else if (obstacle.kind === 'tree') {
-      const cu = (u0 + u1) / 2, cv = (v0 + v1) / 2;
-      box('timber', cu - 0.15, cv - 0.15, cu + 0.15, cv + 0.15, z, z + 3.4);box('planting', cu - 1.4, cv - 1.4, cu + 1.4, cv + 1.4, z + 3.4, z + 5.6);
-    }
+    // The contract's finishes (#506 furnishings: planter, seat, table, tree) are drawn once
+    // each, over their whole footprint, by campusFurniture and the planting plan below.
   }
   // Terrace decks: timber over each part, on the slab of the tier below.
   for (const tower of CAMPUS.towers) for (const terrace of tower.terraces) for (const [u0, v0, u1, v1] of terrace.parts) box('timber', u0, v0, u1, v1, terrace.z, terrace.z + ROOM.floor);
@@ -226,8 +218,9 @@ export function buildGardenCampus(world) {
   // Planting: planters as boxes here, foliage as the planting meshes below.
   const plan = campusPlantingPlan(CAMPUS, levels);
   for (const planter of plan.planters) {
-    // The open face sits 2 cm back, so its toe light reads in front of the wall.
-    const [u0, v0, u1, v1] = planter.rect, w = planter.wall, inset = { east: [0, 0, 0.02, 0], west: [0.02, 0, 0, 0], north: [0, 0, 0, 0.02], south: [0, 0.02, 0, 0] }[planter.open] ?? [0, 0, 0, 0];
+    // The open face sits back by the toe light's depth, so the light reads in front of the wall
+    // and wall and light together fill the planter's whole footprint.
+    const [u0, v0, u1, v1] = planter.rect, w = planter.wall, t = FINISH.toeLight, inset = { east: [0, 0, t, 0], west: [t, 0, 0, 0], north: [0, 0, 0, t], south: [0, t, 0, 0] }[planter.open] ?? [0, 0, 0, 0];
     const [a0, b0, a1, b1] = [u0 + inset[0], v0 + inset[1], u1 - inset[2], v1 - inset[3]];
     for (const [p, q, r, s] of [[a0, b0, a1, b0 + w], [a0, b1 - w, a1, b1], [a0, b0 + w, a0 + w, b1 - w], [a1 - w, b0 + w, a1, b1 - w]]) box(planter.finish, p, q, r, s, planter.z0, planter.z1);
     box(planter.finish, a0 + w, b0 + w, a1 - w, b1 - w, planter.z0, planter.z0 + w);

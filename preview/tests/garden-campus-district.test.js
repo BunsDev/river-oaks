@@ -184,14 +184,15 @@ test('the shells draw 6/7/6 occupied floors, open every skywalk portal and dispo
   // Each deck runs from facade to facade, except where B12 lies on T2's own z 13 terrace.
   const decks = boxes('slab').filter(b => Math.abs(b.z1 - 13) < 1e-6 && b.u0 === 14 && b.u1 === 18);
   assert.deepEqual(decks.map(b => [b.v0, b.v1]).sort((a, b) => a[0] - b[0]), [[70, 90], [116, 131]]);
-  // Every published finish is drawn over its own footprint: no collision is ever invisible.
-  const drawn = [...boxes('timber'), ...boxes('planting')], near = (a, b) => Math.abs(a - b) < 1e-4; // instance matrices are float32
-  const roofBeds = new Set(CAMPUS.towers.flatMap(tower => tower.roof.planting.beds.map(bed => bed.id)));
-  for (const level of campusLevels()) for (const item of level.obstacles.filter(o => ['seat', 'table', 'planter', 'tree'].includes(o.kind) && !roofBeds.has(o.id))) {
-    const [u0, v0, u1, v1] = item.rect, cu = (u0 + u1) / 2, cv = (v0 + v1) / 2;
-    const found = item.kind === 'tree' ? drawn.some(b => near((b.u0 + b.u1) / 2, cu) && near((b.v0 + b.v1) / 2, cv) && near(b.z0, level.z))
-      : drawn.some(b => near(b.u0, u0) && near(b.v0, v0) && near(b.u1, u1) && near(b.v1, v1) && near(b.z0, level.z));
-    assert.ok(found, `${item.id} is drawn`);
+  // Every published finish (and roof bed) is drawn over its own footprint from its level up: no
+  // collision is ever invisible. #511's finish pass draws them as several parts (planter walls and
+  // toe light, a bench top, a table pad, a tree pit's kerb), so the parts standing on the footprint
+  // must together span it exactly.
+  const drawn = ['timber', 'stone', 'bronze', 'luminaire'].flatMap(finish => boxes(finish)), near = (a, b) => Math.abs(a - b) < 1e-4; // instance matrices are float32
+  for (const level of campusLevels()) for (const item of level.obstacles.filter(o => ['seat', 'table', 'planter', 'tree'].includes(o.kind))) {
+    const [u0, v0, u1, v1] = item.rect, own = drawn.filter(b => b.u0 > u0 - 1e-4 && b.u1 < u1 + 1e-4 && b.v0 > v0 - 1e-4 && b.v1 < v1 + 1e-4 && b.z0 > level.z - 1e-4 && b.z0 < level.z + 0.5);
+    const spans = own.length && near(Math.min(...own.map(b => b.u0)), u0) && near(Math.max(...own.map(b => b.u1)), u1) && near(Math.min(...own.map(b => b.v0)), v0) && near(Math.max(...own.map(b => b.v1)), v1);
+    assert.ok(spans && own.some(b => near(b.z0, level.z)), `${item.id} is drawn over its footprint`);
   }
   // The rotated root puts campus metres exactly where the contract's transform does.
   group.updateMatrixWorld(true);

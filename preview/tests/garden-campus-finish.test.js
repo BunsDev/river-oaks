@@ -6,7 +6,7 @@ import { attachGardenCampus } from '../src/garden-campus-district.js';
 import { CAMPUS_GLOW, buildGardenCampus } from '../src/garden-campus.js';
 import { FINISH, campusFurniture, expressedStoreys, luminaires, slabBands, terraceTroughs } from '../src/garden-campus-finish.js';
 import { PLANTING, campusPlantingPlan } from '../src/garden-campus-planting.js';
-import { CAMPUS_PASSAGE_WIDTH as CAMPUS_PASSAGE, GARDEN_CAMPUS_LAYOUT as CAMPUS, campusLevels } from '../../shared/garden-campus-layout.js';
+import { GARDEN_CAMPUS_LAYOUT as CAMPUS, campusLevels } from '../../shared/garden-campus-layout.js';
 
 const campus = attachGardenCampus(await loadDistrictData());
 const levels = campusLevels(CAMPUS), EPS = 1e-6, CLEAR = FINISH.clearance;
@@ -52,8 +52,9 @@ test('the finished campus stays inside each declared silhouette: parapets, headh
     const top = Math.max(...own.map(b => b.z1));
     assert.ok(top <= tower.silhouette.capZ + EPS, `${tower.id} reaches ${top}, cap ${tower.silhouette.capZ}`);
     assert.ok(top > tower.silhouette.parapetTop, `${tower.id} roof garden rises over its parapet`);
-    // Above the parapet only the headhouse (to its declared top) and the roof beds' planting stand.
-    const head = tower.roof.headhouse.rect, beds = tower.roof.planting.beds.map(bed => bed.rect);
+    // Above the parapet only the headhouse (to its declared top) and planting in the roof's
+    // published planters (its bed and any furnishing planter) stand.
+    const head = tower.roof.headhouse.rect, beds = levels.find(level => level.z === tower.roof.z).obstacles.filter(item => item.kind === 'planter' && item.id.startsWith(`${tower.id}-`)).map(item => item.rect);
     for (const b of own.filter(item => item.z1 > tower.silhouette.parapetTop + EPS)) {
       const centre = [(b.u0 + b.u1) / 2, (b.v0 + b.v1) / 2];
       if (inside(head, centre, 0.05)) assert.ok(b.z1 <= tower.silhouette.headhouseTop + EPS, `${b.name} over ${tower.id}'s headhouse`);
@@ -123,13 +124,15 @@ test('each tower expresses exactly its occupied storeys, one band and one lit ce
 test('planting has real support and stays clear of the walkway it shades', () => {
   const plan = campusPlantingPlan(CAMPUS, levels), troughs = terraceTroughs(levels);
   const posts = CAMPUS.groundBuildings.flatMap(item => item.posts ?? []).map(post => post.rect), pergola = CAMPUS.groundBuildings.find(item => item.kind === 'pergola');
-  const cafe = CAMPUS.groundBuildings.find(item => item.kind === 'cafe');
+  const cafe = CAMPUS.groundBuildings.find(item => item.kind === 'cafe'), pits = levels[0].obstacles.filter(item => item.kind === 'tree');
   const supported = ([u, v, z], radius = [0, 0, 0]) => {
     const footprint = point => plan.planters.some(planter => inside(planter.rect, point) && z >= planter.z0 - 1.5);
     if (footprint([u - radius[0], v - radius[1]]) && footprint([u + radius[0], v + radius[1]])) return 'planter';
     if (posts.some(post => inside(post, [u - radius[0], v - radius[1]]) && inside(post, [u + radius[0], v + radius[1]]))) return 'post';
     if (inside(pergola.rect, [u, v]) && z - radius[2] >= PLANTING.pergolaMinZ - EPS) return 'pergola';
     if (inside(cafe.rect, [u, v]) && z >= cafe.height) return 'cafe roof';
+    // A ground tree's crown: around its published pit, wholly above body clearance.
+    if (pits.some(pit => Math.hypot(u - (pit.rect[0] + pit.rect[2]) / 2, v - (pit.rect[1] + pit.rect[3]) / 2) < 3) && z - radius[2] >= CLEAR - EPS) return 'tree';
     // Hanging outside a trough: within its outer reach, below its rim, in the air.
     if (troughs.some(trough => inside(trough.rect, [u, v], 0.25) && z <= trough.z1 + 0.3)) return 'trough';
     // A west green wall: outside the plate edge, above the ground floor.
@@ -192,99 +195,46 @@ test('repeated builds release everything they own and reuse the shared surface m
 });
 
 test('the finish stays inside a bounded draw and detail budget', () => {
-  let meshes = 0, lods = 0;const triangles = { always: 0, detail: 0 };
+  let lods = 0;const triangles = { always: 0, detail: 0 }, meshes = { always: 0, detail: 0 };
   root.traverse(item => {
     if (item.isLOD) { lods++;assert.ok(item.levels.at(-1).distance <= PLANTING.detailDistance && item.levels.at(-1).object.children.length === 0, 'fine planting drops out beyond its distance'); }
     if (!item.isMesh) return;
-    meshes++;
     let detail = false;for (let parent = item.parent; parent; parent = parent.parent) if (parent.isLOD) detail = true;
+    meshes[detail ? 'detail' : 'always']++;
     const per = item.geometry.index ? item.geometry.index.count / 3 : item.geometry.attributes.position.count / 3;
     triangles[detail ? 'detail' : 'always'] += per * (item.isInstancedMesh ? item.count : 1);
   });
-  // Budgets from the 2026-10-18 build (63 meshes; about 205k triangles always drawn and 300k of
-  // fine planting that only submits within PLANTING.detailDistance), with a little headroom.
-  assert.ok(meshes <= 80, `${meshes} meshes`);
-  assert.ok(triangles.always <= 240000, `${triangles.always} triangles always drawn`);
-  assert.ok(triangles.detail <= 330000, `${triangles.detail} detail triangles`);
+  // Budgets from the 2026-10-18 build at layout 3.2 (furnishings included): 39 meshes and about
+  // 171k triangles always drawn, 73 meshes and about 375k triangles of fine planting that only
+  // submit within PLANTING.detailDistance of the camera; a little headroom on each.
+  assert.ok(meshes.always <= 45, `${meshes.always} meshes always drawn`);assert.ok(meshes.detail <= 80, `${meshes.detail} detail meshes`);
+  assert.ok(triangles.always <= 200000, `${triangles.always} triangles always drawn`);
+  assert.ok(triangles.detail <= 420000, `${triangles.detail} detail triangles`);
   assert.ok(lods > 0);
 });
 
-// The obstacles #511 proposes for the contract (terrace and roof furniture, ground tree pits):
-// docs/design/garden-campus/finish/proposed-obstacles.json. Until #506 publishes them, nothing
-// is drawn for them; these checks keep the proposal valid against the current contract.
-const proposal = JSON.parse(await (await import('node:fs/promises')).readFile(new URL('../../docs/design/garden-campus/finish/proposed-obstacles.json', import.meta.url), 'utf8'));
-const proposedLevels = () => levels.map(level => ({ ...level, obstacles: [...level.obstacles, ...proposal.obstacles.filter(item => item.level === level.id).map(item => ({ id: item.id, kind: item.kind, rect: item.rect }))] }));
-const rectOverlap = (a, b) => Math.min(a[2], b[2]) - Math.max(a[0], b[0]) > EPS && Math.min(a[3], b[3]) - Math.max(a[1], b[1]) > EPS;
-const doorZones = () => [
-  ...CAMPUS.towers.flatMap(tower => tower.terraces).map(t => ({ id: `${t.id}/door`, z: t.z, rect: [t.door[0], t.door[1] - 1.15, t.door[0] + 1.8, t.door[1] + 1.15] })),
-  ...CAMPUS.towers.map(tower => { const [u, v] = tower.roof.headhouse.door;return { id: `${tower.roof.id}/door`, z: tower.roof.z, rect: [u, v - 1.15, u + 1.8, v + 1.15] }; }),
-];
-
-test('proposed obstacles stay inside their surfaces and out of every route, landing, portal, path and door', () => {
-  assert.deepEqual(proposal.contract, CAMPUS.versions);
-  const problems = [], ids = new Set();
-  for (const item of proposal.obstacles) {
-    const level = levels.find(l => l.id === item.level), r = item.rect;
-    if (ids.has(item.id)) problems.push(`${item.id} repeats`);ids.add(item.id);
-    if (!level) { problems.push(`${item.id}: no level`);continue; }
-    const corners = [[r[0], r[1]], [r[2], r[1]], [r[2], r[3]], [r[0], r[3]]];
-    const ground = level.surfaces.find(s => s.polygon), parts = level.surfaces.filter(s => ['terrace', 'roof'].includes(s.kind));
-    const within = level.z === 0 ? corners.every(p => inPolygon(p, ground.polygon)) && !ground.holes.some(hole => rectOverlap(hole, r))
-      : parts.some(s => inside(s.rect, corners[0]) && inside(s.rect, corners[2]));
-    if (!within) problems.push(`${item.id}: not inside one surface`);
-    for (const other of [...level.obstacles, ...level.keepClear]) if (rectOverlap(other.rect, r)) problems.push(`${item.id} overlaps ${other.id}`);
-    for (const bridge of CAMPUS.bridges) if (level.z === bridge.deckZ && rectOverlap(bridge.rect, r)) problems.push(`${item.id} on ${bridge.id}`);
-    for (const zone of doorZones().filter(zone => zone.z === level.z)) if (rectOverlap(zone.rect, r)) problems.push(`${item.id} in ${zone.id}`);
-    if (level.z === 0) for (const path of CAMPUS.paths) if (rectOverlap(path.rect, r)) problems.push(`${item.id} on ${path.id}`);
-    for (const other of proposal.obstacles.filter(o => o !== item && o.level === item.level)) if (rectOverlap(other.rect, r)) problems.push(`${item.id} overlaps ${other.id}`);
+// The contract's furnishings (#506 layout 3.2, proposed by #511): campusLevels() publishes them
+// as obstacles, and the contract itself validates their support, clearance and reach. Here:
+// they draw over their own footprint and their planting stays inside them.
+test('every published furnishing draws over its whole footprint, and its planting stays inside it', () => {
+  const furnishings = CAMPUS.furnishings ?? [];
+  assert.ok(furnishings.length > 0, 'the contract publishes furnishings');
+  const plan = campusPlantingPlan(CAMPUS, levels), parts = campusFurniture(levels);
+  for (const item of furnishings) {
+    const level = levels.find(l => l.id === item.levelId), r = item.rect;
+    // Drawn parts that stand on this footprint, at this level, below a tree crown.
+    const own = boxes.filter(b => b.u0 >= r[0] - 1e-4 && b.u1 <= r[2] + 1e-4 && b.v0 >= r[1] - 1e-4 && b.v1 <= r[3] + 1e-4 && b.z0 >= level.z - 1e-4 && b.z0 < level.z + 0.5);
+    const hull = [Math.min(...own.map(b => b.u0)), Math.min(...own.map(b => b.v0)), Math.max(...own.map(b => b.u1)), Math.max(...own.map(b => b.v1))];
+    assert.ok(hull.every((value, i) => Math.abs(value - r[i]) < 1e-3), `${item.id} draws over ${r}, not ${hull}`);
+    assert.ok(Math.abs(Math.min(...own.map(b => b.z0)) - level.z) < 1e-3, `${item.id} stands on its level`);
+    if (['seat', 'table'].includes(item.kind)) assert.ok(parts.some(part => part.box[0] === r[0] && part.box[2] === r[2] && part.box[1] === r[1] && part.box[3] === r[3]), `${item.id} has a full-footprint part`);
   }
-  assert.deepEqual(problems, []);
-});
-
-test('with the proposed furniture every terrace and roof keeps a 1.8 m route from its door to each part, and every seat is reachable', () => {
-  const extended = proposedLevels(), problems = [];
-  const places = [
-    ...CAMPUS.towers.flatMap(tower => tower.terraces).map(t => ({ id: t.id, z: t.z, parts: t.parts, start: [t.door[0] + 0.95, t.door[1]] })),
-    ...CAMPUS.towers.map(tower => ({ id: tower.roof.id, z: tower.roof.z, parts: [tower.roof.rect], start: [tower.roof.headhouse.door[0] + 0.95, tower.roof.headhouse.door[1]] })),
-  ];
-  const distance = ([u, v], [a0, b0, a1, b1]) => Math.hypot(Math.max(a0 - u, 0, u - a1), Math.max(b0 - v, 0, v - b1));
-  for (const place of places) {
-    const level = extended.find(l => l.z === place.z), mine = id => id.startsWith(`${place.id}/`) || !proposal.obstacles.some(item => item.id === id);
-    const blocks = level.obstacles.filter(item => mine(item.id) && place.parts.some(part => distance([(item.rect[0] + item.rect[2]) / 2, (item.rect[1] + item.rect[3]) / 2], part) < 3));
-    const onSurface = p => place.parts.some(part => inside(part, p));
-    for (const radius of [CAMPUS.body.bodyHalfWidth, CAMPUS_PASSAGE / 2]) {
-      const step = 0.1, key = p => `${Math.round(p[0] / step)},${Math.round(p[1] / step)}`;
-      // The body's disc stays on the surface (its four extreme points) and clear of every obstacle.
-      const free = p => onSurface(p) && [[radius, 0], [-radius, 0], [0, radius], [0, -radius]].every(([du, dv]) => onSurface([p[0] + du, p[1] + dv]))
-        && blocks.every(item => distance(p, item.rect) >= radius);
-      const start = place.start.map(n => Math.round(n / step) * step), seen = new Map([[key(start), start]]), queue = [start];
-      if (!free(start)) { problems.push(`${place.id}: door threshold blocked at r ${radius}`);continue; }
-      while (queue.length) {
-        const [u, v] = queue.pop();
-        for (const next of [[u + step, v], [u - step, v], [u, v + step], [u, v - step]]) if (!seen.has(key(next)) && free(next)) { seen.set(key(next), next);queue.push(next); }
-      }
-      const reached = [...seen.values()];
-      for (const [i, part] of place.parts.entries()) if (!reached.some(p => inside(part, p))) problems.push(`${place.id} part ${i} unreachable at r ${radius}`);
-      if (radius === CAMPUS.body.bodyHalfWidth) for (const item of level.obstacles.filter(o => ['seat', 'table'].includes(o.kind) && o.id.startsWith(`${place.id}/`)))
-        if (!reached.some(p => distance(p, item.rect) <= radius + 0.25)) problems.push(`${item.id} cannot be reached`);
-    }
+  for (const pit of furnishings.filter(item => item.kind === 'tree')) {
+    const c = [(pit.rect[0] + pit.rect[2]) / 2, (pit.rect[1] + pit.rect[3]) / 2], crown = plan.clumps.filter(clump => clump.of === 'tree' && Math.hypot(clump.at[0] - c[0], clump.at[1] - c[1]) < 3);
+    assert.ok(crown.length >= 5, `${pit.id} crown`);
+    for (const clump of crown) assert.ok(clump.at[2] - clump.radius[2] >= CLEAR - EPS, `${pit.id} crown at ${clump.at[2] - clump.radius[2]}`);
   }
-  assert.deepEqual(problems, []);
-});
-
-test('published furniture and planting would draw inside their rects, and tree crowns stay above body clearance', () => {
-  const extended = proposedLevels(), plan = campusPlantingPlan(CAMPUS, extended);
-  for (const item of proposal.obstacles.filter(o => o.kind !== 'tree')) {
-    const level = extended.find(l => l.id === item.level);
-    for (const part of campusFurniture([{ ...level, obstacles: [{ id: item.id, kind: item.kind, rect: item.rect }] }]))
-      assert.ok(inside(item.rect, [part.box[0], part.box[1]]) && inside(item.rect, [part.box[2], part.box[3]]), `${item.id} ${part.finish}`);
-  }
-  for (const pit of proposal.obstacles.filter(o => o.kind === 'tree')) {
-    const clumps = plan.clumps.filter(c => c.of === 'tree' && Math.hypot(c.at[0] - (pit.rect[0] + pit.rect[2]) / 2, c.at[1] - (pit.rect[1] + pit.rect[3]) / 2) < 3);
-    assert.ok(clumps.length >= 5, `${pit.id} crown`);
-    for (const c of clumps) assert.ok(c.at[2] - c.radius[2] >= CLEAR - EPS, `${pit.id} crown at ${c.at[2] - c.radius[2]}`);
-  }
-  for (const bed of proposal.obstacles.filter(o => o.kind === 'planter'))
+  for (const bed of furnishings.filter(item => item.kind === 'planter'))
     for (const item of [...plan.plants, ...plan.tufts, ...plan.trunks].filter(p => inside(bed.rect, p.at, 0.3)))
       assert.ok(inside(bed.rect, item.at), `${bed.id} plant at ${item.at}`);
 });
