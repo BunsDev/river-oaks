@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { RINGS, START, checkout, replay, scoreAt, startGame, targetPoint, throwDart } from '../src/darts-rules.js';
+import { HAND, RINGS, START, THROW, accelFor, checkout, handDraw, heightAt, landingOf, releaseSpeed, replay, scoreAt, startGame, targetPoint, throwDart, throwLanding, validRelease } from '../src/darts-rules.js';
 import { aimFor, throwPoint } from '../src/darts-opponent.js';
 
 test('the board: bulls, singles, trebles, doubles and misses where they belong', () => {
@@ -57,4 +57,36 @@ test('the regular aims sensibly, throws deterministically, and finishes games', 
     assert.notEqual(state.winner, null, `seed ${seed} finishes`); lengths.push(darts);
   }
   assert.ok(Math.max(...lengths) < 400, `games end in reasonable time (${lengths.join(', ')} darts)`);
+});
+
+test('a release: across sets where the dart lands across, the hand\'s acceleration sets its height', () => {
+  // Smeets, Frens & Brenner (2002): about 50 m/s² brings the hand to some 6 m/s at release.
+  assert.ok(Math.abs(releaseSpeed(THROW.nominal) - 6) < 1e-9);
+  assert.ok(Math.abs(heightAt(releaseSpeed(THROW.nominal))) < 1e-9, 'the nominal throw meets the board level with the bull');
+  assert.ok(THROW.angle > 15 * Math.PI / 180 && THROW.angle < 18 * Math.PI / 180, 'released a little upward');
+  // Harder is higher, softer drops lower, and the across position never depends on it.
+  let previous = -Infinity;
+  for (let accel = THROW.accel[0]; accel <= THROW.accel[1]; accel += 2.5) {
+    const [x, y] = landingOf([-40, accel]);
+    assert.equal(x, -40); assert.ok(y > previous, `${accel} m/s² lands higher than softer`); previous = y;
+  }
+  // The range spans the board, from below its bottom double to above its top one.
+  assert.ok(landingOf([0, THROW.accel[0]])[1] < -RINGS.doubleOut && landingOf([0, THROW.accel[1]])[1] > RINGS.doubleOut);
+  assert.equal(scoreAt(landingOf([0, accelFor(103)])).label, 'T20');
+  assert.equal(scoreAt(landingOf([0, accelFor(-166)])).label, 'D3');
+  for (const height of [-160, -50, 0, 33, 103, 166]) assert.ok(Math.abs(landingOf([0, accelFor(height)])[1] - height) < 1e-6, `accelFor inverts the flight at ${height} mm`);
+  assert.equal(accelFor(900), THROW.accel[1], 'out of reach asks for the hardest throw');
+});
+
+test('the hand\'s error: across from its direction, and a slow throw drops further for the same speed error', () => {
+  assert.equal(handDraw(0.5), 0);
+  assert.deepEqual(throwLanding([12, 55], [0, 0]), landingOf([12, 55]));
+  const [x] = throwLanding([0, 50], [1, 0]);
+  assert.equal(x, HAND.across, 'one unit of direction error moves it across by the hand\'s spread');
+  const drop = accel => landingOf([0, accel])[1] - throwLanding([0, accel], [0, -1])[1];
+  assert.ok(drop(42) > drop(70) * 1.8, `slow ${drop(42).toFixed(1)} mm vs firm ${drop(70).toFixed(1)} mm`);
+  assert.ok(drop(50) > 15 && drop(50) < 21, 'about 18 mm at the nominal throw, like the across spread');
+  assert.deepEqual(throwLanding([THROW.across, THROW.accel[1]], [40, 40]), [400, 400], 'held to the recorded square');
+  for (const release of [[0, 50], [THROW.across, THROW.accel[0]], [-THROW.across, THROW.accel[1]]]) assert.ok(validRelease(release), JSON.stringify(release));
+  for (const release of [[0], [0, 50, 1], [THROW.across + 0.1, 50], [0, THROW.accel[0] - 0.1], [NaN, 50], ['0', 50], null]) assert.equal(validRelease(release), false, JSON.stringify(release));
 });

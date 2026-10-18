@@ -165,6 +165,8 @@ function groundRoom(world, index, { id, name, use, rect, door, clear, obstacles,
   const room = {
     id: `${CAMPUS_ROOM_PREFIX}${id}`, storeId: `${CAMPUS_ROOM_PREFIX}${id}`, buildingId: `${GARDEN_CAMPUS_ID}/${part}`, name, category: 'campus', theme: 'campus',
     campus: { surfaceId: id, part, use }, index, facade, outward, inward, right, aMin, aMax, center: (aMin + aMax) / 2, width: aMax - aMin, depth,
+    // A tower hall is the campus's street level (#508): its core lobby starts the lift and stairs.
+    ...(part.startsWith('T') ? { planId: 'garden-campus/l0' } : {}),
     height: clear, bay: null, floor: base, toWorld, toLocal,
     contains(e, n, shrink = 0) { const [a, d] = toLocal(e, n);return a > aMin + shrink && a < aMax - shrink && d > shrink && d < depth - shrink; },
     footprint: [[aMin, 0], [aMax, 0], [aMax, depth], [aMin, depth]].map(([a, d]) => toWorld(a, d)),

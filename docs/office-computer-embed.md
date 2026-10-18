@@ -245,9 +245,15 @@ no shared scope to preserve.
   - a slow save while leaving, cancel, attention, local copy and no answer;
   - forged and stale messages, and a second account;
   - denied framing;
-  - visit end and revocation while Computer hangs;
+  - with Computer hung: visit end, revocation, Place sign-out, a dropped town connection,
+    a world rebuild, and a live Place account change on one page;
+  - a second Place account in the same browser, and a reload inside the frame;
+  - repeated visits leaving no frame or message listener behind;
   - Escape, keyboard isolation and focus;
   - 390 px and 320 px layouts.
+
+`RIVER_OAKS_EXPERIENCE_BROWSER=webkit` runs the same journey in Playwright's WebKit (Safari's
+engine on desktop). That is not iOS or a touch device.
 
 The fixture is not Computer. It proves Place's behavior against the contract, not
 Computer's hosting, authentication or sync. Both fixture servers run on `127.0.0.1`, and

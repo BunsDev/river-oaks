@@ -1,6 +1,6 @@
 import { startBrowserFixture } from './fixture-server.js';
 import { startComputerFixture } from './fixtures/office-computer-child/server.js';
-import { chromium } from 'playwright';
+import { chromium, webkit } from 'playwright';
 import { holdBrowserLock } from '../../scripts/browser-lock.mjs';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
@@ -29,7 +29,8 @@ try {
   await mkdir(join(root, 'output/playwright'), { recursive: true });
   // Fake media lets the voice journey grant a microphone without a device or a prompt; other journeys never ask.
   const media = ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'];
-  browser = await chromium.launch({ headless: !software,
+  // RIVER_OAKS_EXPERIENCE_BROWSER=webkit runs the journeys in Playwright's WebKit (Safari's engine on this desktop, not iOS).
+  browser = process.env.RIVER_OAKS_EXPERIENCE_BROWSER === 'webkit' ? await webkit.launch({ headless: true }) : await chromium.launch({ headless: !software,
     args: [...media, ...(software ? ['--use-gl=angle', '--use-angle=gl', '--ignore-gpu-blocklist'] : process.platform === 'darwin' ? ['--use-angle=metal'] : [])] });
   for (const name of names.length ? names : suite) {
     // The voice journey runs the real voice routes and reconciler over a fake LiveKit.

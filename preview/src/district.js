@@ -16,6 +16,7 @@ import { venueDoorSites } from './venue-rooms.js';
 import { CAMPUS_BUILDING_KIND, isCampusRoom } from './garden-campus-district.js';
 import { buildGardenCampus } from './garden-campus.js';
 import { buildGardenCampusFitout } from './garden-campus-fitout-render.js';
+import { buildCampusCeilings } from './garden-campus-ceilings.js';
 import { buildStoreInteriors } from './store-interiors.js';
 import { createReferenceFacades, visibleRoofHeight } from './reference-facades.js';
 import { finishKey } from './material-finish.js';
@@ -430,7 +431,12 @@ export function buildDistrictBuildings(world) {
   group.add(reference.group);
   group.add(buildGreenRoofs(world));
   const campus = buildGardenCampus(world), fitout = buildGardenCampusFitout(world);
-  if (campus) group.add(campus);
+  if (campus) {
+    // Lit ceilings over every campus floor (#508), in the campus root's frame; released with it.
+    const ceilings = buildCampusCeilings(), release = campus.userData.dispose;
+    campus.add(ceilings);campus.userData.dispose = () => { ceilings.userData.dispose();release?.(); };
+    group.add(campus);
+  }
   if (fitout) group.add(fitout);
   if(officeLobby){
     const arrival=buildOfficeArrival({facade:false}),n=officeLobby.outward;
