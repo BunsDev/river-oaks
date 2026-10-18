@@ -144,12 +144,17 @@ export function createRenderPipeline(renderer, scene, camera, { samples = 4, blo
         const three = draw(false), kind = draw(true), repeat = draw(true);
         const texelDiffers = (a, b, i) => a[i] !== b[i] || a[i + 1] !== b[i + 1] || a[i + 2] !== b[i + 2] || a[i + 3] !== b[i + 3];
         let differing = 0, unstable = 0, unread = 0;
+        const points = [], bounds = [width, height, -1, -1];
         for (let i = 0; i < three.length; i += 4) {
           if (three[i] === 0xffff && three[i + 1] === 0xffff && three[i + 2] === 0xffff && three[i + 3] === 0xffff) unread++;
-          if (texelDiffers(three, kind, i)) differing++;
           if (texelDiffers(kind, repeat, i)) unstable++;
+          if (!texelDiffers(three, kind, i)) continue;
+          // Report where differing texels lie, top-left origin like a screenshot.
+          const x = (i / 4) % width, y = height - 1 - Math.floor(i / 4 / width);
+          differing++; if (points.length < 24) points.push([x, y]);
+          bounds[0] = Math.min(bounds[0], x); bounds[1] = Math.min(bounds[1], y); bounds[2] = Math.max(bounds[2], x); bounds[3] = Math.max(bounds[3], y);
         }
-        return { width, height, texels: width * height, differing, unstable, unread };
+        return { width, height, texels: width * height, differing, unstable, unread, points, bounds: differing ? bounds : null };
       } finally { occlusionSort = sortedBefore; renderer.setRenderTarget(previous); }
     },
     // Keep the exterior in the beauty pass while omitting it from interior AO

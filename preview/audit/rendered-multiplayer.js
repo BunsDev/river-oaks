@@ -289,6 +289,8 @@ try {
         // The sort may only change which fragment wins an exact depth tie: compare
         // GTAO's normal buffer in both orders at one instant, with a repeat as control.
         const equality = options.compare === 'occlusion-sort' ? await page.evaluate(() => window.__riverRenderAudit.occlusionSortEquality()) : undefined;
+        // The probe's texel coordinates match this capture when AO runs at full resolution.
+        if (equality) await page.screenshot({ path: `${root}/output/playwright/occlusion-sort-${profile.name}-${count}.png` });
         row.compare = { feature: options.compare, order, secondsPerSegment: options.seconds, segments, arms: Object.fromEntries(Object.entries(arms).map(([arm, { frames, censuses }]) =>
           [arm, { frame: distribution(frames.map(frame => frame.intervalMs)), cpuSubmission: distribution(frames.map(frame => frame.cpuMs)), drawCensus: censuses }])), equality };
         console.log(`${profile.name} ${count}: culling off frame p50/p95 ${row.compare.arms.off.frame.p50Ms}/${row.compare.arms.off.frame.p95Ms} ms, on ${row.compare.arms.on.frame.p50Ms}/${row.compare.arms.on.frame.p95Ms} ms`);
