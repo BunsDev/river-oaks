@@ -13,10 +13,6 @@
 /* A short glowing bar under the chosen tab, as in console menus. */
 .play-rail-tab[aria-selected=true]::after { content: ''; position: absolute; left: 30%; right: 30%; bottom: 3px; height: 2px; border-radius: 2px; background: currentColor; opacity: .7; }
 
-.play-rail-heading { display: flex; align-items: center; gap: 4px; padding: 0 2px; }
-.play-rail-title { flex: 1; min-width: 0; margin: 0; overflow: hidden; color: var(--ink); font-size: 11px; font-weight: 800; letter-spacing: .16em; text-align: center; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
-.play-rail-step { width: 32px; height: 32px; display: grid; place-items: center; padding: 0; border: 0; border-radius: var(--hud-control-radius, 9px); background: transparent; color: var(--hud-muted, var(--muted)); font-size: 20px; line-height: 1; cursor: pointer; }
-.play-rail-step:hover { background: var(--hud-tile-hover, var(--accent-soft)); color: var(--ink); }
 
 /* Panes hold the existing cards; the pane itself is not a card. */
 :root[data-theme] .visit-tools .visit-tools-content > .play-rail-pane,
@@ -29,11 +25,52 @@
 .play-rail-pane > .player-settings > summary { display: none; }
 .play-rail-pane > .player-settings { padding: 8px 10px 10px; }
 .play-rail-pane > .player-settings .player-actions:empty { display: none; }
+/* The garage's driving controls hide until Jevica rides. */
+.play-rail-pane :is(.player-drive-pad, .player-actions, #player-chauffeur)[hidden] { display: none; }
 .play-rail-pane:not([hidden]) { animation: play-rail-pane-in 160ms ease-out; }
 @keyframes play-rail-pane-in { from { opacity: 0; transform: translateY(4px); } }
 
-/* The activity hint closes the menu, like a console's button legend. */
-.visit-tools .play-rail-context { margin: 0; padding: 6px 8px 2px; border-top: 1px solid var(--hud-hairline, var(--line)); border-radius: 0; background: transparent; color: var(--hud-muted, var(--muted)); font-size: 11px; text-align: center; }
+/* While an activity has its own keys, its legend sits under the pane as a chip. */
+:root[data-theme] .visit-tools .play-rail-context,
+.visit-tools .play-rail-context { margin: 0; padding: 7px 10px; border: 0; border-radius: var(--hud-control-radius, 9px); background: color-mix(in srgb, var(--hud-action, #2c7466) 18%, transparent); color: var(--ink); font-size: 11.5px; font-weight: 600; text-align: center; }
+.visit-tools .play-rail-context[hidden] { display: none; }
+
+/* One card language for every pane: 12px inset, a quiet 13px heading, muted
+   12px body, and actions that look like actions. Scoped to the rail, so the
+   same panels keep their own styles wherever else they appear. */
+.play-rail-pane :is(.office-panel, .bird-cams) { padding: 12px; border: 0; border-radius: 14px; background: var(--hud-tile); color: var(--ink); font: 13px/1.45 system-ui, sans-serif; }
+.play-rail-pane :is(.office-panel h3, .bird-cams h2) { margin: 0 0 2px; font: 600 14px/1.3 system-ui, sans-serif; letter-spacing: 0; color: var(--ink); }
+.play-rail-pane :is(.office-panel p, .bird-cams > p) { margin: 0; color: var(--hud-muted); font-size: 12px; line-height: 1.45; }
+.play-rail-pane :is(.office-panel, .bird-cams) :is(button, select) { min-height: 36px; margin: 0; padding: 0 12px; border: 1px solid var(--hud-hairline); border-radius: var(--hud-control-radius, 9px); background: var(--hud-raised); color: var(--ink); font: 600 12.5px/1 system-ui, sans-serif; cursor: pointer; }
+.play-rail-pane :is(.office-panel, .bird-cams) :is(button, select):hover:not(:disabled) { background: var(--hud-tile-hover); }
+.play-rail-pane :is(.office-panel, .bird-cams) :is(button, select):focus-visible { outline: 2px solid var(--hud-focus); outline-offset: 2px; }
+.play-rail-pane :is(.office-panel, .bird-cams) button:disabled { opacity: .55; cursor: default; }
+@media (pointer: coarse) { .play-rail-pane :is(.office-panel, .bird-cams) :is(button, select) { min-height: 44px; } }
+
+/* Office: where it is, the two ways in stacked full width (the rail is too narrow
+   for both labels on one line; the elevator is the main one once you are at the
+   lobby), then who you have invited. */
+.play-rail-pane .office-panel { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; border-top: 0; }
+.play-rail-pane .office-panel > p:empty, .play-rail-pane .office-panel > [hidden] { display: none; }
+.play-rail-pane .office-panel #office-enter:not(:disabled) { border-color: transparent; background: var(--hud-action); color: var(--hud-on-action); }
+.play-rail-pane .office-management:not(:empty) { display: grid; gap: 8px; padding-top: 10px; border-top: 1px solid var(--hud-hairline); }
+.play-rail-pane .office-management h4 { margin: 0; font: 600 12px/1.3 system-ui, sans-serif; color: var(--hud-muted); }
+.play-rail-pane .office-management select { width: 100%; }
+.play-rail-pane .office-management .office-invite { justify-self: start; }
+.play-rail-pane .office-person { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+
+/* Bird cams: one compact row per bird, its name and what it is watching, and Ride along. */
+.play-rail-pane .bird-cams > p { margin: 2px 0 10px; }
+.play-rail-pane .bird-cams-row { padding: 8px 8px 8px 10px; border: 0; border-radius: 10px; background: var(--hud-tile); }
+.play-rail-pane .bird-cams-row strong { font-weight: 600; }
+.play-rail-pane .bird-cams-row small { color: var(--hud-muted); font-size: 11.5px; }
+
+/* Cycling: its own tab keeps the board open, so the fold-out summary is not shown;
+   the board's label is sentence case instead of spaced capitals. */
+.play-rail-pane > .cycling-board > summary { display: none; }
+.play-rail-pane > .cycling-board .cycling-board-sheet { padding: 12px; }
+.play-rail-pane .cycling-board-eyebrow { margin-bottom: 6px; letter-spacing: 0; text-transform: none; font-size: 14px; font-weight: 600; color: var(--ink); }
+.play-rail-pane .cycling-board-empty { margin-top: 0; font-size: 12px; }
 
 /* Settings › Controls. The camera toggle moved here from the character card. */
 #settings-dialog #player-camera { display: inline-flex; align-items: center; gap: 10px; min-height: 40px; padding: 0 12px; border: 1px solid var(--hud-hairline, var(--line)); border-radius: var(--hud-control-radius, 9px); background: var(--hud-tile, transparent); color: var(--ink); font-weight: 600; cursor: pointer; }
@@ -41,5 +78,5 @@
 #settings-dialog #player-camera kbd { display: grid; place-items: center; min-width: 20px; height: 20px; padding: 0 4px; border: 1px solid var(--hud-key-edge, currentColor); border-radius: 5px; background: var(--hud-key-bg, transparent); font: 600 10px/1 var(--font-mono, ui-monospace, monospace); }
 #settings-dialog .settings-commands { min-height: 40px; padding: 0 14px; border: 1px solid var(--hud-hairline, var(--line)); border-radius: var(--hud-control-radius, 9px); background: var(--hud-tile, transparent); color: var(--ink); font-weight: 600; cursor: pointer; }
 
-@media (pointer: coarse) { .play-rail-tab { height: 44px; } .play-rail-step { width: 44px; height: 44px; } }
+@media (pointer: coarse) { .play-rail-tab { height: 44px; } }
 @media (prefers-reduced-motion: reduce) { .play-rail-pane:not([hidden]) { animation: none; } .play-rail-tab { transition: none; } }
