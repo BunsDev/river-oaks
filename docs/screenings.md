@@ -85,6 +85,10 @@ An entry may carry an ISO expiry after `@`. A malformed entry grants nothing and
 status, Jevica's appearance, office ownership and a recliner seat are not grants. Local
 acceptance fixtures set synthetic grants only.
 
+**Production host (Val, 2026-10-18):** Jevica's production account,
+`ipic:user_01M402HKJYDTH1QJM5NAQDZ4HH`, with no expiry. It is set in Vercel Production and takes
+effect on the next deployment, only on Val's go; #359 records whether it has been.
+
 ## Lifecycle
 
 - **The host leaves town.** The film pauses where it was at that moment. The memory town removes a disconnected player after its 30 s reconnect grace. The Redis room does so 10 s after an explicit leave, or 20 s after the last heartbeat.

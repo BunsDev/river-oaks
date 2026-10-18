@@ -61,6 +61,18 @@ async (host, viewer) => {
   const dimmed = await viewer.waitForFunction(() => window.__riverScreening().houseLights < 0.5, null, { timeout: 10000 }).then(() => true, () => false);
   check(dimmed, `house lights dim while the film plays: ${JSON.stringify(await viewer.evaluate(() => window.__riverScreening().houseLights))}`);
 
+  // The short runs 52.6 s. On a loaded machine (or hosted CI on Mesa) the late join and the convergence
+  // window can use most of it, and a pause needs a film still running: the host starts it again first
+  // when under 12 s remain. Setup only; what the pause must do is checked unchanged below.
+  const remainingS = await host.evaluate(() => { const s = window.__riverScreening(), video = document.querySelector('#ipic-screening video');
+    return s.sharedStatus === 'playing' && video?.duration ? video.duration - s.currentTime : 0; });
+  if (remainingS < 12) {
+    const stop = host.locator('#ipic-screening [data-control="host-stop"]');
+    if (await stop.isVisible()) { await stop.click(); await host.waitForFunction(() => window.__riverScreening().sharedStatus === 'stopped'); }
+    await host.locator('#ipic-screening [data-control="host-start"]').click();
+    await Promise.all([host, viewer].map(page => page.waitForFunction(() => window.__riverScreening().state === 'playing' && window.__riverScreening().currentTime > .5, null, { timeout: 30000 })));
+    checks.push(`the film was started again before the pause (${remainingS.toFixed(1)} s were left)`);
+  }
   await host.locator('#ipic-screening [data-control="host-pause"]').click();
   await Promise.all([host, viewer].map(page => page.waitForFunction(() => window.__riverScreening().paused && window.__riverScreening().sharedStatus === 'paused', null, { timeout: 10000 })));
   const paused = await spread();

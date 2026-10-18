@@ -40,7 +40,7 @@ it is not an unattended test fixture.
 | `pnpm run verify python` | Ruff, Python tests, offline synthetic pipeline |
 | `pnpm run verify` | Web + Python + worktree secret guard; default `core` |
 | `pnpm run verify security` | Worktree and full local Git-history secret scan |
-| `pnpm run verify browser` | Build, security browser regressions, WebGL reflection, thirteen experience journeys (player-lifecycle, multiplayer-lifecycle, contextual-first-visit, store-intro, photo-mode, rail-navigation, places-guide, world-studio, spatial-circulation, spatial-streets, office-desk, office-computer-shared, office-visit) and all shared-town journeys |
+| `pnpm run verify browser` | Build, security browser regressions, WebGL reflection, thirteen experience journeys (player-lifecycle, multiplayer-lifecycle, contextual-first-visit, store-intro, photo-mode, rail-navigation, places-guide, world-studio, spatial-circulation, spatial-streets, office-desk, office-visit) and all shared-town journeys |
 | `pnpm run verify full` | Core + mandatory Redis server tests + JavaScript dependency audit + history scan + browser journeys |
 
 `pnpm run agent:doctor full` prints JSON prerequisite diagnostics, exits 2 when

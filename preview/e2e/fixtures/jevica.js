@@ -27,7 +27,7 @@ const identity=VISITOR_FORMS[0];
 // ?resident=local-07&rig=2 inspects a dressed resident (human fashion styling included) on a given shared rig;
 // &face=none keeps the rig's authored face for that resident.
 const appearance=sharedAppearance(params.get('appearance'));
-const avatar = appearance ? await loadResidentAvatar(4,params.get('remote')?'remote-studio':'player',appearance.rig??appearance.id,{folk:false,appearanceId:appearance.id}) : resident ? await loadResidentAvatar(Number(params.get('rig') ?? 0),resident,undefined,{faceRecipe:params.get('face')==='none'?{}:undefined}) : await loadResidentAvatar(identity.avatar,'player',identity.profile);
+const avatar = appearance ? await loadResidentAvatar(4,params.get('remote')?'remote-studio':'player',appearance.rig??appearance.id,{folk:false,appearanceId:appearance.id,faceRecipe:params.get('face')==='none'?{}:undefined}) : resident ? await loadResidentAvatar(Number(params.get('rig') ?? 0),resident,undefined,{faceRecipe:params.get('face')==='none'?{}:undefined}) : await loadResidentAvatar(identity.avatar,'player',identity.profile);
 const outfit = resident||appearance ? {update(){}} : createPlayerCostume(avatar,form); const holder=new THREE.Group();scene.add(holder);holder.add(avatar.object);
 function render(view='full',time=0,speed=0,pose={}) {
   avatar.object.rotation.y = view === 'back' ? Math.PI : view === 'profile' ? -Math.PI/2 : 0;
@@ -42,6 +42,6 @@ function render(view='full',time=0,speed=0,pose={}) {
   renderer.render(scene,camera);
   return {costumeUpdateMs,profile:avatar.profile, bounds:new THREE.Box3().setFromObject(avatar.object).getSize(new THREE.Vector3()).toArray(), calls:renderer.info.render.calls,triangles:renderer.info.render.triangles};
 }
-window.jevicaFixture = {render,avatar,outfit,renderer,scene,camera,holder};
+window.jevicaFixture = {THREE,render,avatar,outfit,renderer,scene,camera,holder};
 window.addEventListener('resize',()=>{renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();render();});
 render(); document.body.dataset.ready = 'true';

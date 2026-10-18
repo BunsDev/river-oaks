@@ -93,6 +93,7 @@ test('the stair and lift move a visitor between floors only from their entry, an
   f.send(owner, 'invite', { peerId: 'guest' });
   f.enter('guest');
   f.walk('guest', [-8, 1.5]); // around the executive desk chair
+  f.walk('guest', [-7, 13.6]); // and east of the lounge (#362's furnishings are collision)
   f.walk('guest', anchor('lift-ground'));
   const guest = f.visit('guest'), host = f.visit(owner);
   assert.deepEqual(guest.position, host.position);
@@ -145,7 +146,7 @@ test('checkpoints keep the floor; older checkpoints migrate to the legacy room; 
   f.walk(owner, anchor('stairs-bottom'));
   f.send(owner, 'transition', { portalId: portal(L0, 'stairs'), layout: OFFICE_LAYOUT_PENTHOUSE });
   const saved = f.world.checkpoint();
-  assert.equal(saved.version, 11);
+  assert.equal(saved.version, 12);
   const restored = setup({ restore: saved });
   assert.deepEqual([restored.visit(owner).levelId, restored.visit(owner).elevation], [L1, 3.8]);
 

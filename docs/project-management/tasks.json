@@ -3311,7 +3311,7 @@
           "reviewedHead": "444dd451312665b88a69756e282b8d968916e1e6",
           "merge": "e55c3866fcf8ec85090c22789fd5bc8ca5364a05",
           "tree": "6504df673f23e0b750f69c262664a1c83c5df1e6",
-          "checks": "All 17 hosted checks passed on 444dd45 (guard CLEAN, first attempt after a rebase onto #268; the earlier head lost a run to the known spatial-streets Herm\u00e8s stall). Docs-only; project:status validated the register."
+          "checks": "All 17 hosted checks passed on 444dd45 (guard CLEAN, first attempt after a rebase onto #268; the earlier head lost a run to the known spatial-streets Hermès stall). Docs-only; project:status validated the register."
         }
       ],
       "retirement": {
@@ -3334,7 +3334,7 @@
     },
     {
       "id": "plaza-salon",
-      "title": "Furnish the Dior-Toulouse plaza as a caf\u00e9 and chess promenade (Val's reference set: curved bench, caf\u00e9 armchairs, chess and timber tables, travertine planters, bronze lanterns, string lights)",
+      "title": "Furnish the Dior-Toulouse plaza as a café and chess promenade (Val's reference set: curved bench, café armchairs, chess and timber tables, travertine planters, bronze lanterns, string lights)",
       "status": "retired",
       "branches": [
         "feat/plaza-salon"
@@ -4287,7 +4287,7 @@
     },
     {
       "id": "plaza-games",
-      "title": "Playable games at the Dior\u2013Toulouse plaza tables: solo chess first (X to play at a chess chair, local AI and pass-and-play, mirrored on the 3D board); later checkers, caf\u00e9 cards/dominoes, more game tables, Jenga and wine pong",
+      "title": "Playable games at the Dior–Toulouse plaza tables: solo chess first (X to play at a chess chair, local AI and pass-and-play, mirrored on the 3D board); later checkers, café cards/dominoes, more game tables, Jenga and wine pong",
       "status": "retired",
       "branches": [
         "feat/plaza-chess-20261013"
@@ -4459,7 +4459,7 @@
     },
     {
       "id": "plaza-dominoes",
-      "title": "Dominoes at the plaza caf\u00e9 table: double-six draw (2 players) and block (4 players) games against the plaza regulars, scored to 100, tiles mirrored on the round table",
+      "title": "Dominoes at the plaza café table: double-six draw (2 players) and block (4 players) games against the plaza regulars, scored to 100, tiles mirrored on the round table",
       "status": "retired",
       "branches": [
         "feat/plaza-dominoes-20261013"
@@ -4473,8 +4473,8 @@
         "preview/src/dominoes-opponent.js",
         "preview/src/plaza-dominoes.js",
         "preview/src/plaza-dominoes.css",
-        "preview/src/plaza-salon.js (caf\u00e9 table tiles)",
-        "preview/src/plaza-salon-plan.js (caf\u00e9 seats)",
+        "preview/src/plaza-salon.js (café table tiles)",
+        "preview/src/plaza-salon-plan.js (café seats)",
         "preview/src/main.js (wiring)",
         "preview/e2e/plaza-dominoes.js"
       ],
@@ -4516,7 +4516,7 @@
     },
     {
       "id": "plaza-hearts",
-      "title": "Hearts at the plaza caf\u00e9 table: four players (you and three plaza regulars), passing, tricks, shooting the moon, game to 100; cards mirrored on the round table",
+      "title": "Hearts at the plaza café table: four players (you and three plaza regulars), passing, tricks, shooting the moon, game to 100; cards mirrored on the round table",
       "status": "retired",
       "branches": [
         "feat/plaza-hearts-20261013"
@@ -4530,8 +4530,8 @@
         "preview/src/hearts-opponent.js",
         "preview/src/plaza-hearts.js",
         "preview/src/plaza-hearts.css",
-        "preview/src/plaza-dominoes.js (caf\u00e9 game switch)",
-        "preview/src/plaza-salon.js (caf\u00e9 cards)",
+        "preview/src/plaza-dominoes.js (café game switch)",
+        "preview/src/plaza-salon.js (café cards)",
         "preview/e2e/plaza-hearts.js"
       ],
       "requiredChecks": [
@@ -5001,7 +5001,7 @@
           "reviewedHead": "3cdc45a91b7dcad603ea41685658bac309ec401a",
           "merge": "fb068e47b5a7a8f9aead367a98ccea170b85a330",
           "tree": "7885452832f54b9446adfdadcf1d9dddd355aaaa",
-          "checks": "https://github.com/BunsDev/river-oaks/actions/runs/38427259400 \u2014 all hosted Verify jobs including aggregate preview passed on the exact head; guard reported 17 successful checks and verified signatures. Local core 3747 passed / 1 existing skip; final-head office browser 9/9 passed (.runtime/office-final-head-experience.json)."
+          "checks": "https://github.com/BunsDev/river-oaks/actions/runs/38427259400 — all hosted Verify jobs including aggregate preview passed on the exact head; guard reported 17 successful checks and verified signatures. Local core 3747 passed / 1 existing skip; final-head office browser 9/9 passed (.runtime/office-final-head-experience.json)."
         }
       ],
       "retirement": {
@@ -5750,7 +5750,7 @@
           "checks": "Exact-head hosted preview and 15 other checks passed; focused combined 47/47 and local pnpm run verify core passed after current-main reconciliation. Earlier isolated-Redis full and targeted gallery/Studio journeys are recorded in the implementation ledger; pilot 60 Hz, target-device and human acceptance remain open."
         }
       ],
-      "handoff": "Ordered procedural interior stack #349\u2013#358 and pilot contact-shading #382 merged to main; final merge c1104f4741f7a17fcce7812d47b82e8f6e1a31d0. Pilot appearance approved for two player-height captures. All PRs had exact-head aggregate preview and hosted checks green before merge. Broader objective remains active for target-device pacing, live keyboard/accessibility and additional archetype rollout.",
+      "handoff": "Ordered procedural interior stack #349–#358 and pilot contact-shading #382 merged to main; final merge c1104f4741f7a17fcce7812d47b82e8f6e1a31d0. Pilot appearance approved for two player-height captures. All PRs had exact-head aggregate preview and hosted checks green before merge. Broader objective remains active for target-device pacing, live keyboard/accessibility and additional archetype rollout.",
       "statusRepair": "2026-10-14T23:35:49.761Z claude:river-oaks-b7 (43d73155): Codex released this entry at 2026-10-14T23:22:47Z (owner null, no lease) but left status active, which validateTasks rejects (\"active owner and leaseUntil required\") and which stopped project:status, inventory and prune for every session. The PR is merged with exact-head evidence, so the entry is delivered; the broader objective continues in procedural-landing-follow-through.",
       "retirement": {
         "head": "0b8f88dd4b5919fea7a6b78cbfec9c02f6038dcf",
@@ -6546,7 +6546,7 @@
     },
     {
       "id": "route-waypoint-clearance",
-      "title": "Keep navigation route waypoints clear of obstacles (spatial-streets Herm\u00e8s stall)",
+      "title": "Keep navigation route waypoints clear of obstacles (spatial-streets Hermès stall)",
       "status": "retired",
       "branches": [],
       "owner": null,
@@ -7533,7 +7533,7 @@
     },
     {
       "id": "plaza-spades",
-      "title": "Spades at the plaza caf\u00e9 table: four players in two partnerships (you and a plaza regular against two regulars), bids, nil, bags, game to 500; cards mirrored on the round table",
+      "title": "Spades at the plaza café table: four players in two partnerships (you and a plaza regular against two regulars), bids, nil, bags, game to 500; cards mirrored on the round table",
       "status": "retired",
       "branches": [
         "feat/plaza-spades-20261013"
@@ -7681,7 +7681,7 @@
     },
     {
       "id": "plaza-reversi",
-      "title": "Reversi at the plaza chess tables: a fourth game in the table-games sheet (8\u00d78, place a disc on the clicked square, flips), against the plaza regular in a worker or pass-and-play; discs mirrored on the table",
+      "title": "Reversi at the plaza chess tables: a fourth game in the table-games sheet (8×8, place a disc on the clicked square, flips), against the plaza regular in a worker or pass-and-play; discs mirrored on the table",
       "status": "retired",
       "branches": [
         "feat/plaza-reversi-20261013"
@@ -7728,7 +7728,7 @@
     },
     {
       "id": "plaza-go",
-      "title": "Go (9\u00d79) at the plaza grove table (a Mancala/Go switch): captures, suicide, ko, passing, area scoring with komi; a Monte Carlo plaza regular in a worker or pass-and-play; stones mirrored on a goban",
+      "title": "Go (9×9) at the plaza grove table (a Mancala/Go switch): captures, suicide, ko, passing, area scoring with komi; a Monte Carlo plaza regular in a worker or pass-and-play; stones mirrored on a goban",
       "status": "retired",
       "branches": [
         "feat/plaza-go-20261013"
@@ -7935,7 +7935,7 @@
     },
     {
       "id": "plaza-liars-dice",
-      "title": "Liar's dice at the plaza caf\u00e9 table: you and three regulars, five dice under a cup each, bids and 'liar' calls, ones wild, lose a die per lost challenge; cups and dice mirrored on the round table; joins the caf\u00e9 switch",
+      "title": "Liar's dice at the plaza café table: you and three regulars, five dice under a cup each, bids and 'liar' calls, ones wild, lose a die per lost challenge; cups and dice mirrored on the round table; joins the café switch",
       "status": "retired",
       "branches": [
         "feat/plaza-liars-dice-20261013"
@@ -8262,7 +8262,7 @@
     },
     {
       "id": "plaza-xiangqi",
-      "title": "Xiangqi (Chinese chess) at the plaza grove table (joins the Mancala/Go switch): 9\u00d710 board with river and palaces, cannons, flying-general rule; a search-based plaza regular in a worker or pass-and-play; disc pieces mirrored in 3D",
+      "title": "Xiangqi (Chinese chess) at the plaza grove table (joins the Mancala/Go switch): 9×10 board with river and palaces, cannons, flying-general rule; a search-based plaza regular in a worker or pass-and-play; disc pieces mirrored in 3D",
       "status": "retired",
       "branches": [
         "feat/plaza-xiangqi-20261013"
@@ -9082,7 +9082,7 @@
     },
     {
       "id": "shared-dominoes-server",
-      "title": "Shared dominoes, PR 1: the town deals and holds the caf\u00e9 round (server module, hidden hands via command replies)",
+      "title": "Shared dominoes, PR 1: the town deals and holds the café round (server module, hidden hands via command replies)",
       "status": "retired",
       "branches": [
         "feat/shared-dominoes-20261014"
@@ -9095,7 +9095,7 @@
         "server/tests/cafe-games.test.js",
         "server/world.js (tableGame routing, snapshot, checkpoint)",
         "server/recovery-diagnostics.js",
-        "docs/multiplayer.md (caf\u00e9 games)"
+        "docs/multiplayer.md (café games)"
       ],
       "requiredChecks": [
         "pnpm run test:server",
@@ -9390,14 +9390,51 @@
     },
     {
       "id": "cancelled-feat-character-studio-20261013",
-      "title": "Archived local feat/character-studio-20261013",
-      "status": "queued",
-      "branches": [],
-      "owner": null,
-      "updatedAt": "2026-10-14T19:54:03.182Z",
-      "nextAction": "Local feat/character-studio-20261013 archived under /Users/buns/worktree-backups/river-oaks/cancel-stale-SwztW4/manifest.json; restore it before resuming this task. Remote PR and branch, if any, remain unchanged.",
-      "filesOwned": [],
-      "requiredChecks": [],
+      "title": "TypeSafe Place Character Studio #440–#444",
+      "status": "active",
+      "branches": [
+        "feat/character-studio-render-20261015"
+      ],
+      "owner": "codex-character-studio-20261015",
+      "updatedAt": "2026-10-15T21:57:05.134413+00:00",
+      "nextAction": "Deliver reviewed pose diagnostic harness after core; seated Sable fit remains visually failed (594/689 above probes), experiments restored. Fix against runtime pose, then remaining #442 render/provenance/budgets and #443 persistence/#444 full acceptance. Existing7c6facc5 hosted checks pass; no merge/deploy.",
+      "filesOwned": [
+        "preview/src/character-definition.js",
+        "preview/tests/character-definition.test.js",
+        "docs/character-studio.md",
+        "docs/superpowers/plans/2026-10-15-character-studio.md",
+        "preview/src/character-assets.js",
+        "preview/src/player-avatar.js",
+        "preview/e2e/character-contract.js",
+        "preview/src/character-studio*",
+        "preview/src/character-customization.js",
+        "preview/src/reference-archetypes.js",
+        "preview/src/romance-look.js",
+        "preview/src/sable-look.js",
+        "preview/src/main.js",
+        "preview/tests/character-studio.test.js",
+        "preview/e2e/character-studio.js",
+        "preview/tests/character-studio*.test.js",
+        "preview/src/character-portrait.js",
+        "preview/tests/character-portrait.test.js",
+        "preview/src/character-hero.js",
+        "preview/src/skirt-skinning.js",
+        "preview/tests/skirt-skinning.test.js",
+        "preview/tests/character-hero.test.js",
+        "preview/e2e/character-portrait.js",
+        "scripts/character-assets-audit.mjs",
+        "scripts/tests/character-assets-audit.test.js",
+        "preview/src/character-compatibility.js",
+        "preview/tests/character-compatibility.test.js",
+        "preview/src/rail-navigation.js",
+        "preview/e2e/character-poses.js",
+        "preview/e2e/fixtures/jevica.js"
+      ],
+      "requiredChecks": [
+        "Focused contract and rig tests",
+        "pnpm run verify",
+        "Rendered human/beast fixture inspection"
+      ],
       "cancelledBranches": [
         "feat/character-studio-20261013"
       ],
@@ -9417,6 +9454,17 @@
             }
           ]
         }
+      },
+      "leaseUntil": "2026-10-15T23:57:05.134413+00:00",
+      "ledger": "docs/superpowers/plans/2026-10-15-character-studio.md",
+      "pr": 462,
+      "verification": {
+        "core": "catalog/focus patch b21bf7b8 passed; .runtime/character-studio/catalog-rail-core-final.json; preview1 skip1 todo, server153 Redis skips",
+        "focused": "13 native portrait/skirt/material tests plus16 catalog/contract/editor tests passed",
+        "browser": "15 final portrait checks,17 shared rail checks passed; editor21 and previous regressions253 passed; native human/fox PNGs and walking render inspected",
+        "review": "Portrait lifecycle, invalid transforms and character focus findings fixed, regression verified, re-reviewed without blocking findings",
+        "limitations": "Full Redis/native/crowd/physical-device/human acceptance and approved goldens remain open; #443 not implemented; hosted checks pending on current head",
+        "render": "PR #462 b21bf7b8: final core passed tooling117/preview3319/server598/desktop69/Python141; preview1 skip1 todo; server153 Redis skips. Portrait15/shared rail17/focused16 passed; real 4K and walk captures inspected."
       }
     },
     {
@@ -10982,64 +11030,6 @@
       }
     },
     {
-      "id": "green-roofs-20261015",
-      "title": "Implement composed green roof scenery and verify office outlook, fit and rendering budgets",
-      "status": "active",
-      "branches": [
-        "feat/green-roofs-20261015"
-      ],
-      "owner": "codex:green-roofs-20261015",
-      "updatedAt": "2026-10-15T19:40:15.925333+00:00",
-      "nextAction": "Signed19cf13ee all16 hosted checks passed; prior queue refused stale main. Integrated ec036956 (Studio/voice main) with repo task merge driver; final combined pnpm verify core passed. Commit/push signed final merge, re-enter pnpm land449, await exact-head hosted checks and actual merge proof. Full18-component pass9a4404da and Metal evidence retain recorded scope.",
-      "ledger": "docs/superpowers/plans/2026-10-15-green-roofs.md",
-      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-green-roofs",
-      "filesOwned": [
-        "preview/src/green-roofs.js (new)",
-        "preview/tests/green-roofs.test.js (new)",
-        "preview/src/district.js (roof integration only)",
-        "docs/vegetation.md (authored roof planting)",
-        "docs/superpowers/plans/2026-10-15-green-roofs.md",
-        "preview/e2e/green-roofs-webgl.js (new)",
-        "docs/green-roofs.md",
-        "preview/e2e/green-roofs-office.mjs (new)",
-        "preview/src/roof-field-boundaries.js (new)",
-        "preview/tests/roof-field-boundaries.test.js (new)",
-        "preview/src/roof-field-mesh.js (new)",
-        "preview/tests/roof-field-mesh.test.js (new)",
-        "preview/src/hermes-roof-surface.js (new)",
-        "preview/tests/hermes-roof-surface.test.js (new)",
-        "preview/src/reference-facades.js (pavilion helper replacement only)",
-        "preview/src/roof-grasses.js (new)",
-        "preview/tests/roof-grasses.test.js (new)",
-        "preview/e2e/green-roofs-town.mjs (new)",
-        "preview/src/office-layouts.js (roof-gardens view only)",
-        "preview/tests/office-views.test.js",
-        "preview/tests/office-ui.test.js",
-        "preview/e2e/office-penthouse.js",
-        "preview/e2e/office-penthouse-runner.mjs",
-        "docs/offices.md (bounded views)",
-        "preview/src/office-world-scene.js",
-        "preview/src/office-world-presentation.js",
-        "preview/src/office-skyline.js",
-        "preview/tests/office-skyline.test.js",
-        "preview/tests/office-world-presentation.test.js",
-        "preview/src/main.js (live office mode)",
-        "preview/e2e/spatial-circulation.js (startup fence and failure diagnostics)",
-        "preview/e2e/spatial-circulation.js (fixture readiness/diagnostics)"
-      ],
-      "requiredChecks": [
-        "deterministic containment, equipment and geometry regressions",
-        "office capture lifecycle and inclusion",
-        "pnpm run verify",
-        "matched daylight/dusk street/elevated captures and performance deltas",
-        "live current-light/parallax/actor-mask/lifecycle regressions",
-        "pnpm run verify full with owned isolated Redis",
-        "native live office routes, in-visit time change, fixed-view costs"
-      ],
-      "pr": 449,
-      "leaseUntil": "2026-10-15T22:23:30.634352+00:00"
-    },
-    {
       "id": "studio-acceptance-417",
       "title": "#417 Garden Office pilot acceptance (coding scope): review profile, full Studio journey, warm-up plus ten-cycle resource soak, late/missing asset recovery, real-GPU measurements, keyboard and layout checks",
       "status": "active",
@@ -11255,6 +11245,302 @@
           "head": "60bccd746e61dd27fc73f2bf973e2a2f9a8217d1"
         }
       }
+    },
+    {
+      "id": "character-studio-contract-20261015",
+      "title": "Character Studio contract PR #457",
+      "status": "active",
+      "branches": [
+        "feat/character-studio-contract-20261015"
+      ],
+      "owner": "codex-character-studio-20261015",
+      "updatedAt": "2026-10-15T21:57:05.134413+00:00",
+      "leaseUntil": "2026-10-15T23:57:05.134413+00:00",
+      "nextAction": "Preserve draft contract #457 at b6ef443e; review baseline/contract acceptance with render/editor stack. No merge authorization.",
+      "filesOwned": [],
+      "requiredChecks": [
+        "Focused contract and rig tests",
+        "pnpm run verify",
+        "Rendered human/beast fixture inspection"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-15-character-studio.md",
+      "pr": 457
+    },
+    {
+      "id": "character-studio-editor-20261015",
+      "title": "Character Studio editor PR #461",
+      "status": "active",
+      "branches": [
+        "feat/character-studio-editor-20261015"
+      ],
+      "owner": "codex-character-studio-20261015",
+      "updatedAt": "2026-10-15T21:57:05.134413+00:00",
+      "leaseUntil": "2026-10-15T23:57:05.134413+00:00",
+      "nextAction": "Preserve draft editor #461 at 93f29271; backport/reconcile selected-character focus correction from #462 before any future landing. No merge authorization.",
+      "filesOwned": [],
+      "requiredChecks": [
+        "Focused contract and rig tests",
+        "pnpm run verify",
+        "Rendered human/beast fixture inspection"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-15-character-studio.md",
+      "pr": 461
+    },
+    {
+      "id": "character-studio-persistence-20261015",
+      "title": "Character Studio #443 authoritative drafts and immutable revisions",
+      "status": "active",
+      "branches": [
+        "feat/character-studio-persistence-20261015"
+      ],
+      "owner": "codex-character-studio-20261015",
+      "updatedAt": "2026-10-18T06:40:52.314190+00:00",
+      "leaseUntil": "2026-10-18T08:40:52.314190+00:00",
+      "nextAction": "Boot fit final gates passed: focused21+ownership4,wardrobe877checks132rows330phases,core11withRedis,native4Kbothzero. Selected Rowan/Kai sit/run visually clear at cuffs,review no blockers. Ready signed commit/push464 then exacthead CI/issue update. Preserve userdev5028,reports and otherowners; no merge/deploy.",
+      "filesOwned": [
+        "server/character-store.js",
+        "server/tests/character-store.test.js",
+        "docs/character-studio.md",
+        "docs/superpowers/plans/2026-10-15-character-studio-persistence.md",
+        "server/character-routes.js",
+        "server/tests/character-transport.test.js",
+        "server/app.js",
+        "server/distributed-app.js",
+        "server/world-gateway.js",
+        "server/town.js",
+        "server/redis-security.js",
+        "server/world.js",
+        "server/redis-room.js",
+        "server/avatar-preferences.js",
+        "server/tests/character-world.test.js",
+        "server/tests/redis-room.test.js",
+        "server/tests/avatar-preferences.test.js",
+        "server/creator-rollout-audit.js",
+        "server/tests/seating.test.js",
+        "server/tests/creator-objects.test.js",
+        "server/tests/penthouse-office.test.js",
+        "server/tests/offices.test.js",
+        "server/tests/office-ipic-rollback.test.js",
+        "server/tests/interactions.test.js",
+        "server/tests/penthouse-seats-redis.test.js",
+        "server/tests/penthouse-seats.test.js",
+        "server/recovery-diagnostics.js",
+        "server/tests/character-selection.test.js",
+        "server/tests/character-room.test.js",
+        "server/character-selection.js",
+        "server/tests/character-selection-memory.test.js",
+        "server/tests/character-equip.test.js",
+        "server/tests/world-gateway.test.js",
+        "preview/src/character-account.js",
+        "preview/tests/character-account.test.js",
+        "preview/src/character-studio.js",
+        "preview/src/character-studio.css",
+        "preview/src/multiplayer-client.js",
+        "preview/src/main.js",
+        "preview/src/player-avatar.js",
+        "preview/src/remote-players.js",
+        "preview/src/character-selection-view.js",
+        "preview/tests/remote-players.test.js",
+        "preview/e2e/character-studio.js",
+        "preview/e2e/character-studio-shared.js",
+        "preview/e2e/shared-runner.js",
+        "server/tests/browser-fixture.js",
+        "preview/vite.config.js",
+        "server/vercel-routing.js",
+        "server/tests/vercel-routing.test.js",
+        "vercel.json",
+        "preview/src/character-studio-materials.js",
+        "preview/tests/character-selection-view.test.js",
+        "preview/src/avatar-placeholder.js",
+        ".env.example",
+        "server/character-rollout.js",
+        "server/redis-backend.js",
+        "preview/e2e/fixture-server.js",
+        "preview/e2e/experience-runner.js",
+        "preview/e2e/character-studio-disabled.js",
+        "preview/e2e/character-studio-paused.js",
+        "server/auth.js",
+        "server/redis-auth.js",
+        "server/tests/auth.test.js",
+        "server/tests/redis-auth.test.js",
+        "server/workos-deletion.js",
+        "server/tests/workos-deletion.test.js",
+        "server/tests/character-account-deletion.test.js",
+        "server/tests/character-deletion-factories.test.js",
+        "server/character-metrics.js",
+        "server/character-metrics-http.js",
+        "server/character-metrics-equip.js",
+        "server/tests/character-metrics.test.js",
+        "server/tests/character-metrics-http.test.js",
+        "server/tests/character-metrics-equip.test.js",
+        "server/tests/character-metrics-routes.test.js",
+        "server/tests/character-metrics-transport.test.js",
+        "server/tests/character-metrics-factories.test.js",
+        "preview/src/peer-label-layout.js",
+        "preview/tests/peer-label-layout.test.js",
+        "preview/src/multiplayer.css",
+        "preview/audit/rendered-multiplayer.js",
+        "preview/tests/office-world-presentation.test.js",
+        "preview/src/office-ui.js",
+        "preview/tests/office-ui.test.js",
+        "preview/src/skirt-geometry.js",
+        "preview/src/skirt-seat-morph.js",
+        "preview/src/skirt-seat-morph-data.js",
+        "preview/src/reference-archetypes.js",
+        "preview/src/romance-look.js",
+        "preview/src/sable-look.js",
+        "preview/tests/skirt-skinning.test.js",
+        "preview/tests/reference-batching.test.js",
+        "preview/tests/helpers/skirt-contact.js",
+        "scripts/bake-skirt-seat-morph.mjs",
+        "scripts/lib/skirt-seat-fit.mjs",
+        "preview/e2e/character-poses.js",
+        "preview/tests/skirt-seat-bake.test.js",
+        "preview/src/skirt-seat-morph-receipt.json",
+        "scripts/character-hero-goldens.mjs",
+        "preview/e2e/fixtures/character-hero-golden.html",
+        "preview/e2e/fixtures/character-hero-golden.js",
+        "preview/audit/character-image-comparison.js",
+        "preview/tests/character-image-comparison.test.js",
+        "preview/e2e/goldens/character-hero",
+        "preview/e2e/character-wardrobe.js",
+        "preview/audit/character-wardrobe-matrix.js",
+        "preview/tests/character-wardrobe-matrix.test.js",
+        "preview/src/vesper-skirt-geometry.js",
+        "preview/src/vesper-skirt-morph-data.js",
+        "preview/src/vesper-skirt-morph-receipt.json",
+        "scripts/bake-vesper-skirt.mjs",
+        "scripts/lib/skirt-detail-fit.mjs",
+        "preview/src/drape-geometry.js",
+        "preview/tests/drape-skinning.test.js",
+        "scripts/lib/drape-seat-fit.mjs",
+        "scripts/bake-lyra-drapes.mjs",
+        "preview/src/lyra-drape-morph-data.js",
+        "preview/src/lyra-drape-morph-receipt.json",
+        "preview/tests/romance-look.test.js",
+        "preview/tests/drape-seat-bake.test.js",
+        "preview/src/silvan-drape-geometry.js",
+        "preview/src/silvan-drape-morph-data.js",
+        "preview/src/silvan-drape-morph-receipt.json",
+        "scripts/bake-silvan-drapes.mjs",
+        "preview/tests/silvan-drape.test.js",
+        "preview/tests/helpers/garment-edges.js",
+        "preview/src/packed-morph-data.js",
+        "preview/tests/packed-morph-data.test.js",
+        "preview/tests/garment-edges.test.js",
+        "preview/tests/silvan-trousers.test.js",
+        "preview/tests/helpers/body-coverage.js",
+        "preview/src/silvan-trousers.js",
+        "preview/tests/body-coverage.test.js",
+        "preview/tests/silvan-trousers-motion.test.js",
+        "preview/src/coat-tail-geometry.js",
+        "preview/tests/coat-tails.test.js",
+        "scripts/bake-coat-tails.mjs",
+        "preview/src/coat-tail-morph-data.js",
+        "preview/src/coat-tail-morph-receipt.json",
+        "scripts/lib/coat-tail-fit.mjs",
+        "preview/src/coat-tail-skinning.js",
+        "preview/e2e/character-studio-worlds.js",
+        "preview/src/rigid-costume-batching.js",
+        "preview/tests/rigid-costume-batching.test.js",
+        "preview/src/rigid-accessory-pool.js",
+        "preview/tests/rigid-accessory-pool.test.js",
+        "preview/tests/reference-boots.test.js",
+        "preview/src/boot-fitting.js",
+        "preview/tests/boot-fitting.test.js"
+      ],
+      "requiredChecks": [
+        "Memory and real isolated Redis store contract tests",
+        "pnpm run verify",
+        "Authenticated HTTP/WebSocket and two-player journeys before integration acceptance"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-15-character-studio-persistence.md",
+      "pr": 464
+    },
+    {
+      "id": "human-only-characters-20261018",
+      "title": "Human-only characters and Jevica-only invited office",
+      "status": "active",
+      "branches": [
+        "feat/human-only-characters-20261018"
+      ],
+      "owner": "codex-human-only-20261018",
+      "updatedAt": "2026-10-18T11:08:37.944467Z",
+      "leaseUntil": "2026-10-18T13:08:37.944467Z",
+      "nextAction": "User authorized commit/push/merge. Verify complete controlled core gate, reconcile current main and inherited Studio stack, commit signed, open PR and land via protected queue.",
+      "filesOwned": [
+        "preview/src",
+        "preview/tests",
+        "preview/e2e",
+        "server",
+        "docs/character-studio.md",
+        "preview/public/assets/characters"
+      ],
+      "requiredChecks": [
+        "Focused migration and catalog regressions",
+        "pnpm run verify",
+        "Human character browser journey"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-18-human-only-characters.md",
+      "pr": 496
+    },
+    {
+      "id": "green-roofs-20261015",
+      "title": "Implement composed green roof scenery and verify office outlook, fit and rendering budgets",
+      "status": "active",
+      "branches": [
+        "feat/green-roofs-20261015"
+      ],
+      "owner": "codex:green-roofs-20261015",
+      "updatedAt": "2026-10-15T19:40:15.925333+00:00",
+      "nextAction": "Signed19cf13ee all16 hosted checks passed; prior queue refused stale main. Integrated ec036956 (Studio/voice main) with repo task merge driver; final combined pnpm verify core passed. Commit/push signed final merge, re-enter pnpm land449, await exact-head hosted checks and actual merge proof. Full18-component pass9a4404da and Metal evidence retain recorded scope.",
+      "ledger": "docs/superpowers/plans/2026-10-15-green-roofs.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-green-roofs",
+      "filesOwned": [
+        "preview/src/green-roofs.js (new)",
+        "preview/tests/green-roofs.test.js (new)",
+        "preview/src/district.js (roof integration only)",
+        "docs/vegetation.md (authored roof planting)",
+        "docs/superpowers/plans/2026-10-15-green-roofs.md",
+        "preview/e2e/green-roofs-webgl.js (new)",
+        "docs/green-roofs.md",
+        "preview/e2e/green-roofs-office.mjs (new)",
+        "preview/src/roof-field-boundaries.js (new)",
+        "preview/tests/roof-field-boundaries.test.js (new)",
+        "preview/src/roof-field-mesh.js (new)",
+        "preview/tests/roof-field-mesh.test.js (new)",
+        "preview/src/hermes-roof-surface.js (new)",
+        "preview/tests/hermes-roof-surface.test.js (new)",
+        "preview/src/reference-facades.js (pavilion helper replacement only)",
+        "preview/src/roof-grasses.js (new)",
+        "preview/tests/roof-grasses.test.js (new)",
+        "preview/e2e/green-roofs-town.mjs (new)",
+        "preview/src/office-layouts.js (roof-gardens view only)",
+        "preview/tests/office-views.test.js",
+        "preview/tests/office-ui.test.js",
+        "preview/e2e/office-penthouse.js",
+        "preview/e2e/office-penthouse-runner.mjs",
+        "docs/offices.md (bounded views)",
+        "preview/src/office-world-scene.js",
+        "preview/src/office-world-presentation.js",
+        "preview/src/office-skyline.js",
+        "preview/tests/office-skyline.test.js",
+        "preview/tests/office-world-presentation.test.js",
+        "preview/src/main.js (live office mode)",
+        "preview/e2e/spatial-circulation.js (startup fence and failure diagnostics)",
+        "preview/e2e/spatial-circulation.js (fixture readiness/diagnostics)"
+      ],
+      "requiredChecks": [
+        "deterministic containment, equipment and geometry regressions",
+        "office capture lifecycle and inclusion",
+        "pnpm run verify",
+        "matched daylight/dusk street/elevated captures and performance deltas",
+        "live current-light/parallax/actor-mask/lifecycle regressions",
+        "pnpm run verify full with owned isolated Redis",
+        "native live office routes, in-visit time change, fixed-view costs"
+      ],
+      "pr": 449,
+      "leaseUntil": "2026-10-15T22:23:30.634352+00:00"
     },
     {
       "id": "release-0-2-0-published",

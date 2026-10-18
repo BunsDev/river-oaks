@@ -6,7 +6,6 @@ import { createPointerGesture } from './pointer-gesture.js';
 import { withinTalkingReach } from './people-picking.js';
 import { nearbyPeople } from './nearby-people.js';
 import { createWalkingEnvironment, createWalkingState, stepWalking } from './walking.js';
-import { beastTraversal } from './beast-traversal.js';
 import { ENCOUNTER_FAR, clearConversationLine, encounterPosition, indoorEncounterPosition } from './encounter.js';
 import { sharedRoomSummary } from './shared-population.js';
 import { isGameplayKey } from './keyboard-input.js';
@@ -82,7 +81,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   const placedObjects = [];
   let transport = null, sitting = null, performing = false, seatedGround = 0, doorwayPending = false;
   let flight = createFlightState();
-  let flightAllowed=false,beastKind=null;
+  let flightAllowed=false;
   let thirdPerson = true, bodyVisible = true;
   let active = false, environment, walkingWorld = null, stores = [], state, nearest = null, lastPaint = 0, pathLabel = 'public district paths';
   const drag = createPointerGesture();
@@ -251,9 +250,9 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   });
   return {
     setTraversal({canFly=false,kind=null}={}) {
-      flightAllowed=Boolean(canFly);beastKind=beastTraversal(kind)?kind:null;
-      sprintButton.hidden=!beastKind;
-      hud.querySelector('.walking-help').innerHTML=`WASD to move · Drag to look · Shift to ${beastKind?'sprint':'walk briskly'}<br>Arrow keys to turn · E to talk · F uses stairs or doors · Shift+F goes down · Z to sit or water<br>Y joins voice · M mutes<br>${flightAllowed?'B to fly · Space to rise · C to lower · ':''}Escape closes conversations`;
+      flightAllowed=Boolean(canFly);
+      sprintButton.hidden=true;
+      hud.querySelector('.walking-help').innerHTML=`WASD to move · Drag to look · Shift to walk briskly<br>Arrow keys to turn · E to talk · F uses stairs or doors · Shift+F goes down · Z to sit or water<br>Y joins voice · M mutes<br>${flightAllowed?'B to fly · Space to rise · C to lower · ':''}Escape closes conversations`;
     },
     // The voice row sits under the actions, above the place line.
     mountVoice(element) { more.after(element); },
@@ -372,7 +371,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
           const ride=transport.pose;state.yaw+=ride.yaw-yaw;
           state.position=[ride.seat[0],ride.seat[1]+.62,ride.seat[2]];
           state.speed=0;state.velocity=[0,0];
-        } else if(flight.active) stepFlight(state,environment,flight,input,delta);else stepWalking(state,environment,{...input,beastKind},delta);
+        } else if(flight.active) stepFlight(state,environment,flight,input,delta);else stepWalking(state,environment,input,delta);
       }
       place(delta);
       if (now - lastPaint < 150) return;

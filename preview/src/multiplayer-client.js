@@ -375,6 +375,13 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
   logout.addEventListener('click',signOut);gateLogout.addEventListener('click',signOut);
   connect();
   return {
+    characterRequest(action,body){
+      const routes={read:['/api/character','GET'],draft:['/api/character/draft','PUT'],publish:['/api/character/publish','POST'],rollback:['/api/character/rollback','POST']};
+      const route=routes[action];if(!route)return Promise.reject(new TypeError('Unknown character action'));
+      const [path,method]=route;
+      return api(`${path}?world=${encodeURIComponent(worldId)}`,{method,signal:AbortSignal.timeout(15000),
+        ...(method==='GET'?{cache:'no-store'}:{headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})});
+    },
     claimStoreIntro: storeId => api(`/api/profile/claim-intro?world=${encodeURIComponent(worldId)}`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({storeId})}),
     get connected(){return connected;},get traveling(){return traveling;},get identity(){return identity;},get snapshot(){return latestSnapshot;},get homeAccess(){return homeAccess;},get voice(){return voice;},command,
     landmarkRequest(action,data={}){

@@ -25,7 +25,7 @@ test('IPIC has a continuous two-flight route to its upper lounge and auditorium'
 });
 
 test('railings, furniture arms and planters block bodies while cushion centers stay usable', () => {
-  for (const [a, d] of [[.6, 9], [2.28, 9], [-.6, 17], [-2.28, 17], [-2.06, 28], [-4.26, 24.8], [-5.6, 25.4], [1, 25.4], [-4.8, 1.6], [5.7, 1.6]]) {
+  for (const [a, d] of [[.6, 9], [2.28, 9], [-.6, 17], [-2.28, 17], [-2.06, 28], [-5.35, 20.6], [-2.85, 20.6], [-5.6, 25.4], [1, 25.4], [-4.8, 1.6], [5.7, 1.6]]) {
     assert.equal(environment.isFree(...at(a, d)), false, `solid prop is walkable at ${a},${d}`);
   }
   for (const seat of room.ipicSeats) assert.ok(environment.isFree(...at(seat.a, seat.d)), `seat ${seat.key}:${seat.slot} is blocked`);
@@ -44,7 +44,7 @@ test('recliner bases and footrests block bodies, and each recliner names a free 
 
 test('walking reaches upper floor and returns to street without a teleport or floor snap', () => {
   const state = createWalkingState(environment, room.toWorld(0, 1));
-  const visit = [[-1.4, 4.8], [-1.4, 20.7], [-5.55, 20.7], [-5.55, 24.7], [-4.85, 24.7], [-4.85, 31.5], [-4.85, 24.7], [-5.55, 24.7], [-5.55, 20.7], [-1.4, 20.7], [-1.4, 4.8], [0, 1], [0, -1.8]];
+  const visit = [[-1.4, 4.8], [-1.4, 20.7], [-1.4, 24.5], [-4.85, 24.5], [-4.85, 31.5], [-4.85, 24.5], [-1.4, 24.5], [-1.4, 20.7], [-1.4, 4.8], [0, 1], [0, -1.8]];
   let top = state.position[1];
   for (const waypoint of visit) {
     const target = room.toWorld(...waypoint);

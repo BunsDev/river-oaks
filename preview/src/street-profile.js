@@ -12,6 +12,11 @@ export const STREET = Object.freeze({
   // The district ground's height above terrain: below every gutter flowline
   // so the road stays visible, and just under shop floors (walkSurfaceOffset).
   plazaOffset: 0.17,
+  // The walking datum this profile is drawn around: shop floors, and the ground the
+  // server checks poses against where nothing is drawn. Every drawn surface, from the
+  // plaza to the road crown, stays within the server's 0.2 m pose tolerance of it.
+  // The district's data carries the same value; creator regions compile it (#491).
+  walkSurfaceOffset: 0.2,
   // 12.5 ft fits the perpendicular ramp and its 4 ft 2 in landing, and
   // exceeds the commercial minimum of 10 ft without narrowing the clear path.
   sidewalkWidth: 12.5 * FOOT, rampRun: 2.54, landing: 50 * FOOT / 12,

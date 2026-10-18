@@ -66,9 +66,11 @@ test('the screen data hands #365 the plan screen and a sightline per recliner', 
   assert.equal(burnedInTextSafe.lowestM, Math.max(...seats.map(s => s.lowestVisibleM)));
 });
 
-// The only lounge-to-auditorium passage runs between the lounge planter and the
-// sofa's west arm. It was 5 mm narrower than the widest accepted body until Val
-// had the planter moved about 5 cm (2026-10-15).
+// The lounge-to-auditorium passage once ran between the lounge planter and the sofa's west arm, 5 mm
+// narrower than the widest accepted body until Val had the planter moved (2026-10-15). The sofa now backs
+// onto the west guardrail (2026-10-18); the route and every public trip must still admit that body.
 test('the lounge-to-auditorium passage admits the widest accepted body', () => {
-  assert.ok(data.circulation.narrowestPublicPassage.clears, `${data.circulation.narrowestPublicPassage.widthM} m`);
+  const [route] = trip('lane top to inside the auditorium doorway');
+  assert.ok(route.widestAcceptedBody, `${route.widthM} m`);
+  assert.ok(data.circulation.narrowestPublicPassage.clears, JSON.stringify(data.circulation.narrowestPublicPassage));
 });

@@ -1,3 +1,4 @@
+import { createCharacterStudio } from './character-studio.js';
 import { createOfficeUI } from './office-ui.js';
 import { createIpicScreening } from './ipic-screening-ui.js';
 import { IPIC_DARTS, IPIC_INTERIOR, atIpicDartsLine } from './ipic-plan.js';
@@ -22,7 +23,7 @@ import { bindRenderVisibility } from './render-lifecycle.js';
 import { createRenderAudit } from './render-audit.js';
 import { localToScene, terrainHeight } from './geometry.js';
 import { setupThemeControls } from './theme.js';
-import { configureMaterials, physicalSurface, paverSurface, loadEnvironment } from './materials.js';
+import { configureMaterials, physicalSurface, loadEnvironment } from './materials.js';
 import { setupDistrictUI } from './district-ui.js';
 import { setupSidebar, setupSidebarSections } from './sidebar.js';
 import { setupRailNavigation } from './rail-navigation.js';
@@ -89,7 +90,7 @@ import './visual-finish.css';
 import './retro-finish.css';
 import './rail-navigation.css';
 import { setupUIMotion } from './ui-motion.js';
-import { STREET } from './street-profile.js';
+import { buildPlazaSurface } from './plaza-surface.js';
 import { createBirdCams, BIRD_WINGSPAN } from './bird-cams.js';
 import { FACE_SHAPES } from './resident-face.js';
 import { seeThroughNearCameraIn } from './near-camera-fade.js';
@@ -149,12 +150,13 @@ const officeSkylineOff = import.meta.env.DEV && new URLSearchParams(location.sea
 let auditCamera = null;
 let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, storePeople, interiorsLayer, generatedInteriors;
 let districtUI, environmentAssets = null, storefrontReflections = null, roomGroundClip = null;
+let currentAtmosphere = null; // the time-of-day light updateAtmosphere last applied; an office visit reads it
 let placesUI = null, landmarks = null;
 let pendingSharedPlace = null, sharedPlaceInFlight = false;
 let worldPortal = null;
 let worldRegionSha256 = null;
 let landmarkAccountId = null;
-let playerAvatar, officeUI, ipicScreening;
+let playerAvatar, characterStudio, officeUI, ipicScreening;
 let multiplayer, remotePlayers, buildLayer, buildControls, seatingControls, seatAndWater;
 let plazaSalon = null, plazaGames = null, plazaDominoes = null, plazaHearts = null, plazaBackgammon = null, cafeGame = 'dominoes', plazaStage = null, plazaBicycle = null, cyclingBoard = null;
 let plazaJenga = null, plazaYacht = null, benchGame = 'jenga';
@@ -286,6 +288,16 @@ function initializeRenderer() {
     },
     requestVehicleExit: position => multiplayer.travel({position:[position[0],-position[2]]}),
     getPortrait: id => portraits.portrait(id) });
+  if(import.meta.env.VITE_CHARACTER_STUDIO==='true'){
+    characterStudio = createCharacterStudio({ownerId:document.body.dataset.accountId,
+      getDefinition:()=>playerAvatar.definition,
+      accountTransport:{read:()=>multiplayer.characterRequest('read'),write:(action,body)=>multiplayer.characterRequest(action,body),
+        select:(command,selection)=>multiplayer.command({...command,selection})},
+      canOpen:()=>Boolean(multiplayer?.connected&&playerAvatar?.ready&&!loading&&!multiplayer?.traveling&&!photoMode?.active&&!officeUI?.active),
+      canStayOpen:()=>Boolean(multiplayer?.connected&&!loading&&!multiplayer?.traveling&&!photoMode?.active&&!officeUI?.active),
+      onOpen:()=>walking.halt(),reducedMotion});
+    document.querySelector('.character-picker').before(characterStudio.trigger);
+  }
   seatAndWater = createSeatAndWater({ walking, playerAvatar, getLocals: () => community.state?.locals, getMultiplayer: () => multiplayer, isBusy: () => seatingControls?.busy() ?? false });
   // Seated at a plaza chess table, X plays chess, checkers or Connect Four; the table mirrors the game.
   plazaGames = createPlazaTableGames({ getMirror: () => plazaSalon?.userData.chess ?? null, getFourMirror: () => plazaSalon?.userData.connectFour ?? null, getMorrisMirror: () => plazaSalon?.userData.morris ?? null, getSeat: () => seatAtTable(walking?.getPose()),
@@ -425,7 +437,7 @@ function initializeRenderer() {
   if (creationToolsEnabled) buildControls=createSharedBuildControls({getPose:()=>walking?.getPose(),isBuildableRoom:id=>world?.stores.some(store=>store.id===id && store.category==='home'),onBuilderChange:builder=>{builderAim='';if(!builder.active)buildLayer?.setGhost(null);},request:message=>multiplayer?.command(message)??Promise.resolve({ok:false,message:'Join the town before building.'})});
   visitTools.append($('.player-controls'), cyclingBoard.panel, ...(buildControls ? [buildControls.panel] : []));
   officeUI=createOfficeUI({host,panelHost:visitTools,renderer,getWorld:()=>world,getMultiplayer:()=>multiplayer,walking,
-    captureStreet:()=>captureOfficeStreet({scene,camera,pipeline,renderer,architecture:buildingMesh,skyline:officeSkylineOff||softwareAcceptance?null:officeOutlookFor({scale:quality?.stats.scale,coarsePointer:window.matchMedia('(pointer: coarse)').matches,maxCubemapSize:renderer.capabilities.maxCubemapSize,maxTextureSize:renderer.capabilities.maxTextureSize}),lights:storeLights,avatar:playerAvatar,lobby:buildingMesh?.userData.officeArrival,world,getWorld:()=>world,pose:walking?.getPose()})});
+    captureStreet:()=>captureOfficeStreet({scene,camera,pipeline,renderer,architecture:buildingMesh,skyline:officeSkylineOff||softwareAcceptance?null:officeOutlookFor({scale:quality?.stats.scale,coarsePointer:window.matchMedia('(pointer: coarse)').matches,maxCubemapSize:renderer.capabilities.maxCubemapSize,maxTextureSize:renderer.capabilities.maxTextureSize}),lights:storeLights,atmosphere:()=>currentAtmosphere,avatar:playerAvatar,lobby:buildingMesh?.userData.officeArrival,world,getWorld:()=>world,pose:walking?.getPose()})});
   // IPIC screenings (#367): the town's timeline on the existing screen, while the player is inside IPIC.
   // Mounted on the viewport, not the canvas host: walking takes pointer capture on the canvas host.
   ipicScreening??=createIpicScreening({host:host.parentElement??host,THREE,getMultiplayer:()=>multiplayer,getScreen:()=>buildingMesh?.userData.interiors?.userData.screens?.[0]??null,
@@ -567,35 +579,7 @@ function buildGround(data) {
   const width = east - west, depth = north - south;
   const center = [(east + west) / 2, (north + south) / 2];
   const terrain = data.terrain;
-  let surface;
-  if (terrain) {
-    const positions = [], indices = [], uvs = [];
-    for (let row = 0; row < terrain.height; row += 1) {
-      for (let column = 0; column < terrain.width; column += 1) {
-        const x = terrain.grid_origin_m[0] + column * terrain.spacing_m[0];
-        const y = terrain.grid_origin_m[1] + row * terrain.spacing_m[1];
-        positions.push(x, terrain.heights_m[row * terrain.width + column], -y);
-        uvs.push(x, -y);
-        if (row < terrain.height - 1 && column < terrain.width - 1) {
-          const a = row * terrain.width + column, b = a + 1, c = a + terrain.width, d = c + 1;
-          indices.push(a, b, c, b, d, c);
-        }
-      }
-    }
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-    geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
-    geometry.setIndex(indices);
-    geometry.computeVertexNormals();
-    surface = new THREE.Mesh(geometry, paverSurface());
-    surface.position.y = STREET.plazaOffset;
-  } else {
-    surface = new THREE.Mesh(new THREE.PlaneGeometry(width, depth), paverSurface());
-    surface.rotation.x = -Math.PI / 2;
-    surface.position.set(center[0], 0, -center[1]);
-  }
-  surface.receiveShadow = true;
-  group.add(surface);
+  group.add(buildPlazaSurface(data));
   const minimum = terrain ? terrain.heights_m.reduce((low, value) => Math.min(low, value), Infinity) : 0;
   const base = new THREE.Mesh(new THREE.BoxGeometry(width, 35, depth), new THREE.MeshStandardMaterial({ color: '#635745', roughness: 1 }));
   base.position.set(center[0], minimum - 18, -center[1]);
@@ -779,6 +763,7 @@ function updateAtmosphere() {
   const hour = Number($('#sun-hour').value), weather = $('#weather').value;
   $('#sun-time').textContent = `${String(Math.floor(hour)).padStart(2, '0')}:${String(Math.round((hour % 1) * 60)).padStart(2, '0')}`;
   const atmosphere = atmosphereFor(hour, weather);
+  currentAtmosphere = atmosphere;
   sunOffset.set(Math.cos(atmosphere.angle) * 4500, Math.max(300, Math.sin(atmosphere.angle) * 5500), 1900);
   sun.position.copy(sun.target.position).add(sunOffset);
   sun.intensity = atmosphere.sunIntensity;
@@ -924,7 +909,7 @@ function render(now) {
     canPlay: Boolean(walking?.active && !loading && !multiplayer?.traveling && !photoMode?.active && !birdCams?.riding && !self?.altitude
       && (!introRoom?.generatedPlan || generatedInteriors?.readyFor(introRoom.planId))),
   });
-  if (officeUI?.active || officeUI?.entering || storeIntros?.active || photoMode?.active || birdCams?.riding) walking?.halt();
+  if (characterStudio?.active || officeUI?.active || officeUI?.entering || storeIntros?.active || photoMode?.active || birdCams?.riding) walking?.halt();
   else if (multiplayer?.connected && !multiplayer.traveling) walking?.update(delta, now);
   else walking?.halt();
   plazaGames?.update(); plazaDominoes?.update(); plazaHearts?.update(); plazaSpades?.update(); plazaLiarsDice?.update(); plazaBackgammon?.update(); plazaCribbage?.update(); plazaJenga?.update(); plazaYacht?.update(); plazaWinePong?.update(); plazaShuffleboard?.update(); plazaDarts?.update(); ipicDarts?.update(); venueDarts?.update(); axePanel?.update(); plazaMancala?.update(); plazaGo?.update(); plazaChineseCheckers?.update(); plazaXiangqi?.update(); plazaStage?.update();
@@ -938,6 +923,7 @@ function render(now) {
     camera.updateMatrixWorld();
   }
   photoMode?.update();
+  characterStudio?.update();
   storeIntros?.update(now);
   remotePlayers?.update(now, camera);
   buildLayer?.update(camera.position);
@@ -958,7 +944,7 @@ function render(now) {
   debugTools?.update(now);
   // llvmpipe draws both browser clients on CPU. Keep simulation and transport
   // updating every frame while capping only acceptance-profile draw work.
-  if (officeUI?.active || !softwareAcceptance || now - lastSoftwareDraw >= 1000) {
+  if (!characterStudio?.active && (officeUI?.active || !softwareAcceptance || now - lastSoftwareDraw >= 1000)) {
     lastSoftwareDraw = now;
     renderer.info.reset();
     const currentRoom = buildingMesh?.userData.generatedRooms?.find(room => room.planId === self?.levelId);
@@ -1295,7 +1281,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
   window.__riverScreening = () => ipicScreening?.inspect() ?? null;
   // Development-only: send a raw command, as a modified client could, to prove the server refuses it.
   window.__riverMultiplayerCommand = message => multiplayer?.command(message);
-  window.__riverMultiplayer = () => ({ connected: multiplayer?.connected ?? false, selfId: multiplayer?.identity?.id, snapshot: multiplayer?.snapshot, remotes: remotePlayers?.stats(), voice: multiplayer?.voice.debug() ?? null,creations:buildLayer?.stats(),birds:birdCams?.state,builder:buildControls?{...buildControls.builder,ghost:buildLayer?.ghost?{position:buildLayer.ghost.position.toArray(),visible:buildLayer.ghost.visible}:null,hint:document.querySelector('#build-hint')?.textContent,valid:document.querySelector('#build-hint')?.dataset.valid}:null });
+  window.__riverMultiplayer = () => ({ connected: multiplayer?.connected ?? false, selfId: multiplayer?.identity?.id, snapshot: multiplayer?.snapshot, remotes: remotePlayers?.stats(), selfMaterials:playerAvatar?.materials, voice: multiplayer?.voice.debug() ?? null,creations:buildLayer?.stats(),birds:birdCams?.state,builder:buildControls?{...buildControls.builder,ghost:buildLayer?.ghost?{position:buildLayer.ghost.position.toArray(),visible:buildLayer.ghost.visible}:null,hint:document.querySelector('#build-hint')?.textContent,valid:document.querySelector('#build-hint')?.dataset.valid}:null });
   window.__riverPlayerAttention=()=>{
     const rig=playerAvatar?.rig;if(!rig)return null;
     rig.model.updateWorldMatrix(true,true);

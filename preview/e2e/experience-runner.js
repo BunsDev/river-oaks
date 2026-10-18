@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
-const suite = ['player-lifecycle', 'multiplayer-lifecycle', 'contextual-first-visit', 'store-intro', 'photo-mode', 'connection-required', 'birds-visible', 'bird-cams', 'debug-tools', 'movement-review', 'sable', 'experience', 'sidebar', 'game-hud', 'town-chat', 'game-chat-shared', 'rail-navigation', 'places', 'places-guide', 'destination-minimap', 'world-studio', 'ui-polish', 'hud-and-quality', 'hardware-acceleration', 'player-forms', 'beast-movement', 'carriage', 'unicorn-carriage', 'carriage-driver', 'carriage-companion', 'carriage-mobile', 'reference-facades', 'street-level', 'plaza-salon', 'plaza-stage', 'plaza-chess', 'plaza-checkers', 'plaza-connect-four', 'plaza-reversi', 'plaza-morris', 'plaza-shared-game', 'plaza-dominoes', 'cycling-rack', 'cycling-leaderboard', 'plaza-hearts', 'plaza-spades', 'plaza-mancala', 'plaza-go', 'plaza-chinese-checkers', 'plaza-xiangqi', 'salon-guide', 'plaza-backgammon', 'plaza-cribbage', 'plaza-jenga', 'plaza-yacht', 'plaza-wine-pong', 'plaza-shuffleboard', 'plaza-darts', 'plaza-liars-dice', 'plaza-table-lessons', 'ui-improvements', 'nearby-encounters'];
+const suite = ['player-lifecycle', 'multiplayer-lifecycle', 'contextual-first-visit', 'store-intro', 'photo-mode', 'connection-required', 'birds-visible', 'bird-cams', 'debug-tools', 'movement-review', 'sable', 'experience', 'sidebar', 'game-hud', 'town-chat', 'game-chat-shared', 'rail-navigation', 'places', 'places-guide', 'destination-minimap', 'world-studio', 'ui-polish', 'hud-and-quality', 'hardware-acceleration', 'player-forms', 'carriage', 'unicorn-carriage', 'carriage-driver', 'carriage-companion', 'carriage-mobile', 'reference-facades', 'street-level', 'plaza-salon', 'plaza-stage', 'plaza-chess', 'plaza-checkers', 'plaza-connect-four', 'plaza-reversi', 'plaza-morris', 'plaza-shared-game', 'plaza-dominoes', 'cycling-rack', 'cycling-leaderboard', 'plaza-hearts', 'plaza-spades', 'plaza-mancala', 'plaza-go', 'plaza-chinese-checkers', 'plaza-xiangqi', 'salon-guide', 'plaza-backgammon', 'plaza-cribbage', 'plaza-jenga', 'plaza-yacht', 'plaza-wine-pong', 'plaza-shuffleboard', 'plaza-darts', 'plaza-liars-dice', 'plaza-table-lessons', 'ui-improvements', 'nearby-encounters'];
 const names = process.argv.slice(2);
 // Linux CI renders through Mesa under Xvfb, like the shared and security journeys;
 // Chromium's headless SwiftShader path stalls on the district scene.
@@ -32,7 +32,12 @@ try {
     args: [...media, ...(software ? ['--use-gl=angle', '--use-angle=gl', '--ignore-gpu-blocklist'] : process.platform === 'darwin' ? ['--use-angle=metal'] : [])] });
   for (const name of names.length ? names : suite) {
     // The voice journey runs the real voice routes and reconciler over a fake LiveKit.
-    fixture = await startBrowserFixture(name === 'voice-shared' ? { env: { RIVER_OAKS_VOICE_FIXTURE: '1' } } : name === 'voice-live' ? { env: { RIVER_OAKS_VOICE_FIXTURE: 'live' } } : {});
+    const fixtureEnv={
+      'voice-shared':{RIVER_OAKS_VOICE_FIXTURE:'1'},'voice-live':{RIVER_OAKS_VOICE_FIXTURE:'live'},
+      'character-studio-disabled':{RIVER_OAKS_CHARACTER_STUDIO:'0',VITE_CHARACTER_STUDIO:'false'},
+      'character-studio-paused':{RIVER_OAKS_CHARACTER_STUDIO:'0',VITE_CHARACTER_STUDIO:'true'},
+    }[name]??{};
+    fixture = await startBrowserFixture({env:fixtureEnv});
     const { origin } = fixture;
     const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
     await context.addCookies([{ name: 'fixture_session', value: 'owner', url: origin }]);
