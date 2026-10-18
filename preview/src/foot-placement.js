@@ -64,11 +64,14 @@ export function createFootPlacement(model, root) {
     const thigh = model.getObjectByName(`thigh_${side}`), calf = model.getObjectByName(`calf_${side}`), foot = model.getObjectByName(`foot_${side}`);
     if (!thigh || !calf || !foot) return null;
     const hip = thigh.getWorldPosition(new THREE.Vector3()), knee = calf.getWorldPosition(new THREE.Vector3()), ankle = foot.getWorldPosition(new THREE.Vector3());
+    // Imported rigs do not share the same local foot axes. Capture body-forward
+    // in each shoe's bind frame before using its planted orientation for the knee.
+    const forwardAxis=new THREE.Vector3(0,0,1).applyQuaternion(root.getWorldQuaternion(new THREE.Quaternion())).applyQuaternion(foot.getWorldQuaternion(new THREE.Quaternion()).invert());
     const rest=root.worldToLocal(ankle.clone());
     rest.x=root.worldToLocal(hip.clone()).x; // Walk under the hips, rather than retaining the rig's wide bind stance.
     const {points:sole,toeWeights,sources:soleSources}=measureFootSupport(model,foot,side);
     const roll=createFootRoll(foot,model.getObjectByName(`ball_${side}`),sole,toeWeights);
-    return {side, index, thigh, calf, foot, sole, soleSources, roll, bindScale:foot.getWorldScale(new THREE.Vector3()).y, baseUpperLength:hip.distanceTo(knee), baseLowerLength:knee.distanceTo(ankle), upperLength:hip.distanceTo(knee), lowerLength:knee.distanceTo(ankle), rest, target:null, swing:null, lastPhase:0, contact:true};
+    return {side, index, thigh, calf, foot, forwardAxis, sole, soleSources, roll, bindScale:foot.getWorldScale(new THREE.Vector3()).y, baseUpperLength:hip.distanceTo(knee), baseLowerLength:knee.distanceTo(ankle), upperLength:hip.distanceTo(knee), lowerLength:knee.distanceTo(ankle), rest, target:null, swing:null, lastPhase:0, contact:true};
   }).filter(Boolean);
   let lastDistance = null, lastPosition = null, hasStepped = false, pelvisLower = 0, bodyHeight = 0, bodyRise = 0, bodyRootHeight = null, lastPlatform = null;
   const swingTravel = 0.38, reach = 0.25;
@@ -145,6 +148,11 @@ export function createFootPlacement(model, root) {
         if (reset) {leg.roll?.reset();leg.target=sample.clone();leg.swing=null;leg.orientation=shoe.clone();hasStepped=false;}
         const makeSwing = (end,settling,travel=swingTravel,turning=false) => ({turning,start:leg.target.clone(), end, progress:0, settling, travel, fromRotation:leg.orientation.clone(), toRotation:poseAt(end,leg,base)});
         const moving = speed > 0.03;
+        // Only yaw requests a turning step; terrain pitch/roll must retain
+        // the distance-driven curb landing and body-height transfer.
+        const plantedForward=leg.forwardAxis.clone().applyQuaternion(leg.orientation);
+        const yawDelta=Math.atan2(plantedForward.x,plantedForward.z)-Math.atan2(forward.x,forward.z);
+        const turning=Math.abs(Math.atan2(Math.sin(yawDelta),Math.cos(yawDelta)))>.25;
         const trailing = leg.target.clone().sub(sample).dot(travelForward) < -strideReach;
         if (moving && !legs.some(other=>other.swing) && (trailing || !hasStepped && leg.index===1)) {
           // From standing, the support foot starts under the hip rather than
@@ -158,13 +166,20 @@ export function createFootPlacement(model, root) {
         if (!moving && leg.swing && !leg.swing.settling) {
           leg.swing = makeSwing(sample.clone(),true);
         }
-        const turning=leg.orientation.angleTo(shoe)>.25;
         if (!moving && !leg.swing && !legs.some(other=>other.swing) && (leg.target.distanceTo(sample) > 0.09 || turning)) {
           leg.swing = makeSwing(sample.clone(),true,swingTravel,turning);
         }
+        // Rotation needs a time-based corrective step even at walking speeds.
+        // Distance alone can leave a slow-moving character twisted for seconds.
+        if(moving && turning && !leg.swing && !legs.some(other=>other.swing)) {
+          leg.swing=makeSwing(sample.clone(),false,swingTravel,true);
+        }
         if (leg.swing) {
           const swing = leg.swing;
-          swing.progress = swing.settling ? Math.min(1,swing.progress+delta/0.24) : Math.min(1,swing.progress+Math.max(0,distance-(lastDistance ?? distance))/swing.travel);
+          if(turning)swing.turning=true;
+          const distanceProgress=Math.max(0,distance-(lastDistance ?? distance))/swing.travel;
+          const progress=swing.settling?delta/.24:swing.turning?Math.max(delta/.24,distanceProgress):distanceProgress;
+          swing.progress=Math.min(1,swing.progress+progress);
           // A turning body's natural stance keeps moving during the step.
           // Follow it only while airborne; the supporting shoe stays planted.
           if(swing.turning) {
@@ -268,7 +283,11 @@ export function createFootPlacement(model, root) {
       model.position.y -= pelvisLower/scale;
       root.updateWorldMatrix(true,true);
       for (const leg of legs) {
-        const pole = leg.thigh.getWorldPosition(new THREE.Vector3()).addScaledVector(forward, 1);
+        // The shoe carries the support leg's bend frame while the body turns.
+        // A small body-facing contribution avoids a rigid knee without letting
+        // a planted foot acquire a backwards knee during a sharp reversal.
+        const kneeForward=leg.forwardAxis.clone().applyQuaternion(leg.orientation).multiplyScalar(.75).addScaledVector(forward,.25).normalize();
+        const pole = leg.thigh.getWorldPosition(new THREE.Vector3()).add(kneeForward);
         leg.error = applyLegIK(leg, leg.ikTarget, pole);
         if(leg.rollPose)leg.roll.applyToes(leg.rollPose.flex);
       }
