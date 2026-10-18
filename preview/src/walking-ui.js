@@ -423,6 +423,8 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       const roomSummary=room && sharedRoomSummary(room);
       $('#walking-place').textContent = sitting ? 'Drag to look around · Z stands up' : performing ? 'Drag to look around · X steps down' : transport ? (transport.pose.kind === 'bicycle' ? `${(transport.pose.distance / 1609.344).toFixed(2)} mi cycled this ride · W to pedal · Shift to sprint · G to step off` : 'W/S to ride or reverse · A/D or arrows to steer · G to step out') : flight.active ? `${flight.altitude.toFixed(1)} m above ground · Space to rise · C to lower` : room ? room.theme === 'home'
         ? `Inside ${room.name} · ${roomSummary.label} · ${roomSummary.guests} resident${roomSummary.guests === 1 ? '' : 's'}`
+        // A campus floor names itself ("The Gardens · Floor 4") and has no staff or guests to count (#508).
+        : room.campusLevel ? `Inside ${room.name} · ${roomSummary.label}`
         : `Inside ${room.name}${room.generatedPlan?.index ? ` · Level ${room.generatedPlan.index + 1}` : ''} · ${roomSummary.label} · ${roomSummary.staff} staff, ${roomSummary.guests} guests`
         : nearest ? `${nearest.anchorName} · nearby` : `${state.distance.toFixed(0)} m walked · ${pathLabel}`;
       hud.dataset.eyeHeight = (state.position[1] - environment.groundAt(state.position[0], state.position[2])).toFixed(2);
