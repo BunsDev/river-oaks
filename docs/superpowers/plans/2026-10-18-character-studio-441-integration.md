@@ -68,3 +68,43 @@ a concrete integration slice when the validated #517/#442 handoff is available.
 - `agent:doctor` exited 2: Python environment absent (`uv sync --locked` needed).
   JavaScript prerequisites passed. No Python or full/core gate claimed.
 - `git diff --check` passed. This is a documentation-only reconciliation.
+
+### Continuation: independent acceptance checks
+
+- Previous goal turn made progress: recorded Val's P4/P5 waiver and delivered
+  draft PR #531 at signed head `34c68989779a33f2d0aaa819aa8594c2f3650aed`.
+- Fresh state/guide/definition suite: 14 passed, 0 failed/skipped, including
+  cancel/history, incompatible edits, privilege rejection and scoped favorites.
+  Command: `node --test preview/tests/character-studio.test.js
+  preview/tests/character-studio-guide.test.js preview/tests/character-definition.test.js`.
+- Four Studio journeys started through the normal browser queue; unified process
+  handle 1178, log `/tmp/river-oaks-441-journeys.log`. They are not yet passed.
+  Queue holder PID 22377 was confirmed live with `ps`; do not bypass its lock.
+- Hosted Verify run 39156376502 and PR run 39156373248 are in progress on the
+  exact PR head. Dependency review passed; no aggregate success claim yet.
+- #517 still has no comment handoff. #440 is closed; #443/#444 remain open.
+  Their older acceptance comments are historical, not current closure evidence.
+
+Next: poll existing journey handle and hosted runs, inspect generated desktop,
+phone and pose captures, then record results. Do not restart on an observation
+ timeout or treat the queued run as a terminal failure.
+
+### Terminal verification, 19:08Z
+
+- Existing local journey handle 1178 exited 0. All four journeys passed:
+  `character-studio`, `character-studio-layout`, `character-studio-disabled`,
+  `character-studio-paused`. Exact application revision: main 2703571b plus
+  documentation-only 34c68989. Receipt retained in
+  `.runtime/441-acceptance/experience-34c68989.json`; console log in
+  `/tmp/river-oaks-441-journeys.log`.
+- Inspected generated desktop, phone, walk and wave captures under
+  `output/playwright/character-studio-*.png`. Selected Sable colors render and
+  shown controls fit their viewports. These selected captures do not prove all
+  looks/poses, physical-phone performance or realistic-human fidelity.
+- Hosted Verify run 39156376502 completed successfully on 34c68989.
+  No merge or deployment. Restored tracked generated experience report after
+  preserving the local receipt.
+- Remaining integration blocker: #517 validated realistic-human fixture contract
+  and #442 compatible content/tier evidence. No supported realistic controls can
+  be added until that handoff exists. Val waived P4/P5; physical device coverage
+  remains explicitly unverified. No source change was needed for these checks.
