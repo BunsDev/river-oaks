@@ -95,7 +95,7 @@ export function setupRailNavigation({ sidebar, getSections, getDock, getClearVie
       ? 'Bird ride: T take / give controls · N next bird · WASD steer · Space climb · C dive · Esc land'
       : document.querySelector('#build-mode[aria-pressed=true]')
         ? 'Builder: R rotate · Shift+R reverse · Enter place · Esc finish'
-        : 'WASD walk · arrows turn · Shift brisk walk · E talk · F enter / leave · Z sit / stand / water · Y voice · M mic · B flight · Space rise · C lower · J companion · Q call Jev · G get in / out · P beast movement · V camera';
+        : 'WASD walk · arrows turn · Shift brisk walk · E talk · F enter / leave · Z sit / stand / water · Y voice · M mic · B flight · Space rise · C lower · J companion · Q call Jev · G get in / out · V camera';
   };
   const open = ({ help = false } = {}) => { returnFocus = document.activeElement; search.value = ''; dialog.querySelector('.commands-reference').open = help; render(); dialog.showModal(); search.focus(); };
   dismissOnOutsideClick(dialog, () => close());

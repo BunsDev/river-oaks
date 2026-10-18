@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { validateCharacterDefinition } from '../preview/src/character-definition.js';
+import { validateCharacterDefinition, migrateStoredCharacterDefinition } from '../preview/src/character-definition.js';
 import { MOVEMENTS, canUseAppearance, sharedAppearance } from '../preview/src/shared-appearances.js';
 
 export const CHARACTER_STORE_LIMITS=Object.freeze({accounts:10000,revisions:64,receipts:64,recordBytes:256*1024});
@@ -17,7 +17,7 @@ const selected=state=>state.selection?structuredClone({version:state.selection.v
   movement:state.selection.movement,...(state.selection.revision===null?{}:{character:state.revisions[state.selection.revision-1]})}):null;
 
 function canonical(value,ownerId,revision,code='invalid_character_definition'){
-  const result=validateCharacterDefinition(value,{ownerId});
+  const result=(code==='invalid_character_record'?migrateStoredCharacterDefinition:validateCharacterDefinition)(value,{ownerId});
   if(!result.ok||result.definition.revision!==revision)fail(code);
   return result.definition;
 }
@@ -52,6 +52,8 @@ function decode(raw,ownerId){
     }
     if(state.selection!==null){
       const value=state.selection,appearance=sharedAppearance(value?.appearance);
+      if(appearance)value.appearance=appearance.id;
+      if(value.movement==='beast')value.movement='upright';
       if(!exact(value,['version','appearance','movement','revision'])||!version(value.version)||value.version<1
         ||appearance?.id!==value.appearance||!canUseAppearance(ownerId,value.appearance)||!MOVEMENTS.includes(value.movement)
         ||value.revision!==null&&(!Number.isSafeInteger(value.revision)||value.revision<1

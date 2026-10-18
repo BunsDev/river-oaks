@@ -29,7 +29,7 @@ test('missing, unpublished, corrupt and unavailable catalog revisions render aut
 
 test('foreign or mismatched revisions cannot replace the authorized selected appearance',()=>{
  assert.deepEqual(selectedCharacterFor(snapshot({...custom(),ownerId:'bob'})),authored());
- const wolf=characterDefinitionFor(owner,'midnight-host-wolf',{revision:2});
+ const wolf=characterDefinitionFor(owner,'man-tailored',{revision:2});
  assert.deepEqual(selectedCharacterFor(snapshot(wolf)),authored());
  // The local renderer supplies the authenticated identity independently of the
  // player record; neither a forged player id nor definition can change it.
@@ -38,7 +38,7 @@ test('foreign or mismatched revisions cannot replace the authorized selected app
 });
 
 test('legacy identities migrate while protected or unknown looks use permitted defaults',()=>{
- assert.equal(selectedCharacterFor({id:owner,appearance:'midnight-host-hybrid'}).appearanceId,'midnight-host-wolf');
+ assert.equal(selectedCharacterFor({id:owner,appearance:'midnight-host-hybrid'}).appearanceId,'man-tailored');
  for(const appearance of ['jevica','missing-look','__proto__',undefined]){
   const protectedDefinition=characterDefinitionFor(JEVICA_OWNER_USER_IDS[0],'jevica',{revision:1});
   assert.deepEqual(selectedCharacterFor({id:owner,appearance,character:protectedDefinition}),authored());

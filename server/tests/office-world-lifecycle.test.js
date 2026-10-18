@@ -6,7 +6,6 @@ import { createHash } from 'node:crypto';
 import { deflateSync, inflateSync } from 'node:zlib';
 import { createWalkingEnvironment } from '../../preview/src/walking.js';
 import { createRedisRoom } from '../redis-room.js';
-import { createRedisOfficeWorkspaces } from '../office-workspaces.js';
 import { officeRedis } from './helpers/office-redis.js';
 import { OFFICE_LAYOUT_LEGACY, OFFICE_LAYOUT_PENTHOUSE, officeLayout } from '../../preview/src/office-layouts.js';
 
@@ -28,7 +27,6 @@ async function setup(t) {
   const prefix = '{office-lifecycle}', worldId = 'office-fixture', revoked = new Set();
   let time = 100_000;
   const now = () => time;
-  const workspaces = createRedisOfficeWorkspaces({ redis, prefix, now });
   // Synthetic catalog records let the room's real fenced publication transaction
   // exercise the authored district office/IPIC geometry. The creator region editor
   // cannot author these district-only venues; its HTTP path has separate coverage.
@@ -51,7 +49,7 @@ async function setup(t) {
   };
   const create = (overrides = {}) => {
     const room = createRedisRoom({ redis, prefix, worldId, worldData: data, regionSha256: initial.regionSha256,
-      regionCatalog: catalog, officeWorkspaces: workspaces, now, authorize: async identity => !revoked.has(identity.sessionId),
+      regionCatalog: catalog, now, authorize: async identity => !revoked.has(identity.sessionId),
       isAdmin: id => id === 'owner', officeLayout: OFFICE_LAYOUT_PENTHOUSE,
       screeningHosts: [{ venueId: 'ipic', userId: 'host' }], ...overrides });
     rooms.push(room); return room;
@@ -88,7 +86,7 @@ async function setup(t) {
     }
     assert.equal((await office(room, user, 'transition', { portalId: up, layout: OFFICE_LAYOUT_PENTHOUSE })).ok, true);
   };
-  return { redis, prefix, keys, catalog, create, join, identity, identities, command, office, visit, enter, climb, workspaces, revoked,
+  return { redis, prefix, keys, catalog, create, join, identity, identities, command, office, visit, enter, climb, revoked,
     advance(ms) { time += ms; },
     async draft() { await redis.hset(keys.draft, worldId, JSON.stringify({ version: 1, data: { ...data, title: 'Published office revision' } })); },
     publish: room => room.request({ type: 'revise', actorId: 'owner', expectedDraftVersion: 1 }),
@@ -96,13 +94,12 @@ async function setup(t) {
   };
 }
 
-test('publication and coordinator replacement retain layout and screening permissions; personal offices stay legacy', options, async t => {
+test('publication and coordinator replacement retain layout and screening permissions; uninvited residents cannot enter', options, async t => {
   const f = await setup(t); let room = f.create();
-  const workspace = await f.workspaces.provision('resident');
   const verifyConfiguration = async () => {
     for (const user of ['owner', 'resident', 'host', 'viewer']) assert.equal((await f.join(room, user)).ok, true);
     assert.equal((await f.enter(room, 'owner')).layout, OFFICE_LAYOUT_PENTHOUSE);
-    assert.equal((await f.enter(room, 'resident', workspace.id)).layout, OFFICE_LAYOUT_LEGACY);
+    assert.equal((await f.office(room, 'resident', 'enter')).error,'office_permission_required');
     assert.equal((await f.command(room, 'host', { type: 'travel', storeId: ipic.storeId, mode: 'enter' })).ok, true);
     assert.equal((await f.command(room, 'host', { type: 'screening', action: 'sync', venueId: 'ipic' })).canHost, true);
     assert.equal((await f.command(room, 'viewer', { type: 'travel', storeId: ipic.storeId, mode: 'enter' })).ok, true);
@@ -120,61 +117,26 @@ test('publication and coordinator replacement retain layout and screening permis
   await verifyConfiguration();
 });
 
-test('compatible coordinator checkpoints preserve floors, personal visits, membership and task receipts; rollback ends only incompatible visits', options, async t => {
+test('compatible coordinator checkpoints preserve floors, invited visits; rollback ends only incompatible visits', options, async t => {
   const f = await setup(t); let room = f.create();
-  const { id } = await f.workspaces.provision('resident');
-  await f.workspaces.invite('resident', id, 'guest'); await f.workspaces.accept('guest', id);
-  const save = { expectedVersion: 0, operationId: 'before-replacement', task };
-  assert.equal((await f.workspaces.save('guest', id, save)).ok, true);
   for (const user of ['owner', 'guest', 'host']) assert.equal((await f.join(room, user)).ok, true);
   assert.equal((await f.command(room, 'host', { type: 'travel', storeId: ipic.storeId, mode: 'enter' })).ok, true);
-  await f.enter(room, 'owner'); await f.climb(room, 'owner'); await f.enter(room, 'guest', id);
+  await f.enter(room, 'owner'); await f.climb(room, 'owner'); assert.equal((await f.office(room,'owner','invite',{peerId:'guest'})).ok,true);await f.enter(room, 'guest');
   const before = await f.visit(room, 'owner'), personal = await f.visit(room, 'guest');
   assert.equal(before.levelId, 'jevica-office/l1');
-  const contents = await f.workspaces.read('guest', id), membership = await f.workspaces.list('guest');
   await room.close(); room = f.create(); await f.restored(room);
   assert.deepEqual(await f.visit(room, 'owner'), before);
   assert.deepEqual(await f.visit(room, 'guest'), personal);
-  assert.deepEqual(await f.workspaces.read('guest', id), contents);
-  assert.deepEqual(await f.workspaces.list('guest'), membership);
-  assert.equal((await f.workspaces.save('guest', id, save)).desk.version, 1);
   assert.equal((await f.command(room, 'host', { type: 'screening', action: 'sync', venueId: 'ipic' })).canHost, true);
   await room.close(); room = f.create({ officeLayout: OFFICE_LAYOUT_LEGACY, screeningHosts: [] }); await f.restored(room);
   assert.equal(await f.visit(room, 'owner'), null);
-  assert.deepEqual(await f.visit(room, 'guest'), personal);
+  assert.equal(await f.visit(room, 'guest'), null);
   assert.equal((await f.office(room, 'owner', 'transition', { portalId: up, layout: OFFICE_LAYOUT_PENTHOUSE })).error, 'office_visit_required');
   assert.equal((await f.enter(room, 'owner')).layout, OFFICE_LAYOUT_LEGACY);
   assert.equal((await f.command(room, 'host', { type: 'screening', action: 'sync', venueId: 'ipic' })).canHost, false, 'checkpoint cannot restore a removed host grant');
 });
 
-test('restored and reconnected visits reject revoked membership and expired or revoked sessions, including delayed commands and retries', options, async t => {
-  const f = await setup(t); let room = f.create();
-  const { id } = await f.workspaces.provision('owner');
-  for (const user of ['guest', 'expired', 'revoked']) {
-    await f.workspaces.invite('owner', id, user); await f.workspaces.accept(user, id);
-    assert.equal((await f.join(room, user, user === 'expired' ? { expiresAt: f.identity(user).expiresAt - 117_000 } : {})).ok, true); await f.enter(room, user, id);
-  }
-  const save = { expectedVersion: 0, operationId: 'old-success', task };
-  assert.equal((await f.workspaces.save('guest', id, save)).ok, true);
-  await room.close();
-  await f.workspaces.revoke('owner', id, 'guest');
-  f.revoked.add('revoked-session');
-  // Cross only the short session's expiry and cleanup grace, within the presence timeout.
-  f.advance(12_000);
-  room = f.create();
-  const restored = await f.restored(room);
-  assert.deepEqual(restored.snapshot.players.map(p => p.id), ['guest'], 'expired and revoked sessions are removed before publication');
-  assert.equal(restored.snapshot.players[0].office, null, 'canonical membership revocation removes the restored visit');
-  assert.equal((await room.request({ type: 'join', identity: f.identities.get('expired'), connectionId: 'expired-new' })).error, 'session_invalid');
-  assert.equal((await f.join(room, 'revoked')).error, 'session_invalid');
-  assert.equal((await f.office(room, 'expired', 'move', { officeId: id, position: [0, 1.4], yaw: 0 })).error, 'stale_connection');
-  assert.equal((await f.join(room, 'guest')).ok, true);
-  assert.equal(await f.visit(room, 'guest'), null);
-  assert.equal((await f.office(room, 'guest', 'enter', { officeId: id })).error, 'office_permission_required');
-  assert.equal((await f.office(room, 'guest', 'move', { officeId: id, position: [0, 1.4], yaw: 0 })).error, 'office_permission_required');
-  assert.equal((await f.workspaces.save('guest', id, save)).reason, 'office_access_denied');
-  assert.equal((await f.workspaces.read('owner', id)).desk.tasks.length, 1);
-});
+
 
 test('a publication losing its atomic draft comparison retains the previous authoritative world and retries safely', options, async t => {
   const f = await setup(t), room = f.create();
@@ -228,14 +190,10 @@ test('supported district checkpoint recovery keeps configured office floors and 
   assert.equal((await f.command(room, 'host', { type: 'screening', action: 'sync', venueId: 'ipic' })).canHost, true);
 });
 
-test('a pre-playback screening checkpoint cannot block office floor, membership and task recovery', options, async t => {
+test('a pre-playback screening checkpoint cannot block office floor, invited visit recovery', options, async t => {
   const f = await setup(t); let room = f.create();
-  const { id } = await f.workspaces.provision('resident');
-  await f.workspaces.invite('resident', id, 'guest'); await f.workspaces.accept('guest', id);
-  const save = { expectedVersion: 0, operationId: 'retained-office-save', task };
-  assert.equal((await f.workspaces.save('guest', id, save)).ok, true);
   for (const user of ['owner', 'guest', 'host']) assert.equal((await f.join(room, user)).ok, true);
-  await f.enter(room, 'owner'); await f.climb(room, 'owner'); await f.enter(room, 'guest', id);
+  await f.enter(room, 'owner'); await f.climb(room, 'owner'); assert.equal((await f.office(room,'owner','invite',{peerId:'guest'})).ok,true);await f.enter(room, 'guest');
   assert.equal((await f.command(room, 'host', { type: 'travel', storeId: ipic.storeId, mode: 'enter' })).ok, true);
   const screening = (await room.read()).snapshot.screenings[0];
   const start = { type: 'screening', action: 'start', venueId: 'ipic', mediaId: 'ipic-fixture-v1',
@@ -256,8 +214,6 @@ test('a pre-playback screening checkpoint cannot block office floor, membership 
   const restored = await f.restored(room);
   assert.deepEqual(await f.visit(room, 'owner'), upper);
   assert.deepEqual(await f.visit(room, 'guest'), personal);
-  assert.equal((await f.workspaces.authorize('guest', id)).ok, true);
-  assert.equal((await f.workspaces.save('guest', id, save)).desk.version, 1);
   assert.equal(restored.snapshot.screenings[0].status, 'stopped');
   assert.notEqual(restored.snapshot.screenings[0].epoch, screening.epoch);
   assert.equal((await f.command(room, 'host', start)).error, 'screening_stale');

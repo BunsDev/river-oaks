@@ -73,52 +73,6 @@
           "changedPixelFraction": 0
         }
       ]
-    },
-    {
-      "appearanceId": "woman-casual",
-      "file": "woman-casual.png",
-      "sha256": "30e1de7d0e3a81c9335c65181e8eabd5cb1dac55d18cbab54b2acafe1a063809",
-      "definition": {
-        "schemaVersion": 2,
-        "ownerId": "hero-reference-fixture",
-        "revision": 0,
-        "appearanceId": "woman-casual",
-        "rig": "jevica",
-        "form": "beast",
-        "parameters": {},
-        "palette": "rose",
-        "hair": "espresso",
-        "outfit": "woman-casual",
-        "attachments": [],
-        "assets": [
-          {
-            "id": "jevica",
-            "sha256": "722b96e2fd77b36c85ec01c1594a35e3f3f39b5ec76dfc3c9a351ef1eb4f117a",
-            "bytes": 5779116,
-            "receipt": "/assets/characters/jevica.sources.json"
-          }
-        ],
-        "provenance": {
-          "kind": "authored",
-          "catalog": "river-oaks-looks-v2"
-        }
-      },
-      "comparisons": [
-        {
-          "passed": true,
-          "maxChannel": 0,
-          "meanChannel": 0,
-          "changedPixels": 0,
-          "changedPixelFraction": 0
-        },
-        {
-          "passed": true,
-          "maxChannel": 0,
-          "meanChannel": 0,
-          "changedPixels": 0,
-          "changedPixelFraction": 0
-        }
-      ]
     }
   ],
   "sources": {

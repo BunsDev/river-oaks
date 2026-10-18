@@ -19,10 +19,10 @@ test('memory selection confirms account CAS before projection and preserves auth
  const f=await fixture();assert.equal(f.world.snapshot().players[0].character,undefined);
  const result=await f.selection.command('alice',command,options,{});assert.equal(result.ok,true);assert.equal(result.selectionVersion,2);
  assert.equal(f.world.snapshot().players[0].character.palette,'rose');
- assert.equal((await f.selection.command('alice',{type:'appearance',appearance:'woman-casual'},undefined,{})).error,'appearance_cooldown');
- assert.equal((await f.selection.command('alice',{type:'movement',movement:'beast'},undefined,{})).error,'beast_form_required');
+ assert.equal((await f.selection.command('alice',{type:'appearance',appearance:'sable-human'},undefined,{})).error,'appearance_cooldown');
+ assert.equal((await f.selection.command('alice',{type:'movement',movement:'beast'},undefined,{})).error,'invalid_character_selection');
  const retry=await f.selection.command('alice',command,options,{});assert.equal(retry.ok,true);assert.equal(retry.appliedVersion,2);
- f.advance();assert.equal((await f.selection.command('alice',{type:'appearance',appearance:'woman-casual'},undefined,{})).ok,true);
+ f.advance();assert.equal((await f.selection.command('alice',{type:'appearance',appearance:'sable-human'},undefined,{})).ok,true);
  const old=await f.selection.command('alice',command,options,{});assert.equal(old.ok,true);assert.equal(old.player.character,undefined);
 });
 test('memory unavailable writes retain the old view and pending fence until recovery',async()=>{
@@ -64,6 +64,6 @@ test('memory delayed sync cannot overwrite a replacement world or a newer connec
   const value=await f.store.getSelection(...args);startedAgain();await new Promise(resolve=>{releaseAgain=resolve;});return value;
  }},authorized:async()=>true});
  const oldConnection=reconnect.sync('alice',()=>current);await waitAgain;current=false;
- active.applyAccountAppearance('alice',{appearance:'woman-casual',movement:'upright'});
- releaseAgain();await oldConnection;assert.equal(active.snapshot().players[0].appearance,'woman-casual');
+ active.applyAccountAppearance('alice',{appearance:'sable-human',movement:'upright'});
+ releaseAgain();await oldConnection;assert.equal(active.snapshot().players[0].appearance,'sable-human');
 });

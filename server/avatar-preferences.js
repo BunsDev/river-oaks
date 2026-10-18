@@ -1,4 +1,4 @@
-import { validateCharacterDefinition } from '../preview/src/character-definition.js';
+import { validateCharacterDefinition, migrateStoredCharacterDefinition } from '../preview/src/character-definition.js';
 import { createHash } from 'node:crypto';
 import { inflateSync } from 'node:zlib';
 import { MOVEMENTS, canUseAppearance, defaultAppearanceFor, sharedAppearance } from '../preview/src/shared-appearances.js';
@@ -8,12 +8,13 @@ const MAX_ACCOUNTS=10000;
 const validId=value=>typeof value==='string' && value.length>0 && value.length<=160 && !/[\u0000-\u001f\u007f]/.test(value);
 const normalize=(value,userId,{legacy=false}={})=>{
   const appearance=sharedAppearance(value?.appearance)?.id;
-  if(!appearance || !MOVEMENTS.includes(value?.movement))throw new Error('Invalid account appearance');
+  const movement=legacy&&value?.movement==='beast'?'upright':value?.movement;
+  if(!appearance || !MOVEMENTS.includes(movement))throw new Error('Invalid account appearance');
   if(!canUseAppearance(userId,appearance) && !legacy)throw new Error('Account cannot use this appearance');
   const chosen=canUseAppearance(userId,appearance)?appearance:defaultAppearanceFor(userId);
-  const selected=value.character===undefined?null:validateCharacterDefinition(value.character,{ownerId:userId});
+  const selected=value.character===undefined?null:(legacy?migrateStoredCharacterDefinition:validateCharacterDefinition)(value.character,{ownerId:userId});
   if(selected && (!selected.ok || selected.definition.revision<1 || selected.definition.appearanceId!==chosen))throw new Error('Invalid account character');
-  return {appearance:chosen,movement:value.movement,...(selected?{character:selected.definition}:{})};
+  return {appearance:chosen,movement,...(selected?{character:selected.definition}:{})};
 };
 const initial=userId=>({appearance:defaultAppearanceFor(userId),movement:'upright'});
 function decode(raw,userId) {

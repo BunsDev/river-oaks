@@ -72,7 +72,7 @@ async page => {
         for (let frame = 0; frame <= row.frames.at(-1); frame++) {
           const time = frame * 1000 / 60, distance = time / 1000 * row.speed;
           f.avatar.object.position.z = distance;
-          f.avatar.update(time, row.pose === 'wave' ? 'wave' : 'continue', false, {speed: row.speed, distance, beast: row.beast,
+          f.avatar.update(time, row.pose === 'wave' ? 'wave' : 'continue', false, {speed: row.speed, distance,
             riding: seated, ridingKind: seated ? 'seat' : undefined, seatToFloor: seated ? .55 : undefined, gestureTime: time / 1000}, () => 0);
           costume?.update(false, time);
           if (!row.frames.includes(frame)) continue;
@@ -110,7 +110,7 @@ async page => {
             above.getContext('2d').drawImage(f.renderer.domElement, 0, 0); document.body.append(above);
           }
           let drapeFloor = null;
-          if (row.character === 'lyra' && !row.beast) {
+          if (row.character === 'lyra') {
             drapeFloor = Infinity;
             for (const mesh of [skirt, train]) {
               mesh.skeleton.update();
@@ -121,7 +121,7 @@ async page => {
             }
           }
           snapshots.push({drapeFloor,coatLowerEdges:coatLowerEdges?.sample()??null,coatEdges:coatEdges?.sample()??null,kneeCoverage:kneeCoverage?.sample()??null,trouserLayers:trouserLayers?.sample()??null,frame, seconds: time / 1000, finite, meshes, vertices, materials: materials.size, bounds: {min, max}, feet,
-            decoded: [...textures].map(texture => ({name: texture.name, width: texture.image?.width, height: texture.image?.height})), beastWeight: f.avatar.beastMotion, render});
+            decoded: [...textures].map(texture => ({name: texture.name, width: texture.image?.width, height: texture.image?.height})),  render});
           f.avatar.object.position.z = distance;
         }
         f.renderer.domElement.style.display = 'none'; document.body.append(canvas);
@@ -155,13 +155,12 @@ async page => {
         check(result.thighContact?.tested>100&&result.thighContact.penetrating===0,`${appearanceId}/${pose}: drape clears rendered upper thighs`);
         check(result.frontPanelContact?.tested>100&&result.frontPanelContact.penetrating===0,`${appearanceId}/${pose}: front panel clears rendered upper thighs`);
       }
-      if (row.character === 'lyra' && !row.beast) check(result.snapshots.every(s => Number.isFinite(s.drapeFloor) && s.drapeFloor >= .005), `${appearanceId}/${pose}: both drape hems clear the floor`);
+      if (row.character === 'lyra') check(result.snapshots.every(s => Number.isFinite(s.drapeFloor) && s.drapeFloor >= .005), `${appearanceId}/${pose}: both drape hems clear the floor`);
       if (['vesper', 'lyra'].includes(row.character) && pose === 'sit') check(result.thighContact?.tested > 200 && result.thighContact.penetrating === 0, `${appearanceId}/${pose}: seated wrap clears sampled upper thighs`);
       if (row.character === 'lyra' && pose === 'sit') {
         check(result.sheerContact?.tested > 200 && result.sheerContact.penetrating === 0, `${appearanceId}/${pose}: sheer train clears sampled upper thighs`);
         check(result.layersContact?.tested > 100 && result.layersContact.penetrating === 0, `${appearanceId}/${pose}: sheer train clears the opaque lap`);
       }
-      if (row.beast) check(result.snapshots.every(s => s.beastWeight > .95), `${appearanceId}/${pose}: beast locomotion active`);
       if (row.speed) {
         const first = result.snapshots[0].feet;
         check(result.snapshots.slice(1).some(s => s.feet.some((foot, i) => foot.some((v, k) => Math.abs(v - first[i][k]) > .001))), `${appearanceId}/${pose}: gait advances across sampled phases`);

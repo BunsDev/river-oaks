@@ -29,13 +29,13 @@ test('malformed, foreign, future and privilege-bearing definitions fail closed',
 });
 
 test('legacy read migration preserves aliases and uses permission-safe defaults', () => {
-  assert.equal(migrateCharacterAppearance('fixture-owner','midnight-host-hybrid').appearanceId,'midnight-host-wolf');
+  assert.equal(migrateCharacterAppearance('fixture-owner','midnight-host-hybrid').appearanceId,'man-tailored');
   for (const id of ['jevica','unknown','__proto__',undefined]) assert.equal(migrateCharacterAppearance('fixture-owner',id).appearanceId,'sable-human');
   assert.equal(migrateCharacterAppearance(JEVICA_OWNER_USER_IDS[0],'jevica').appearanceId,'jevica');
   assert.throws(() => migrateCharacterAppearance('', 'sable-human'));
 });
 
-for (const id of ['sable-human','woman-casual']) test(`definition loads the actual ${id} rig and authored form`, async () => {
+for (const id of ['sable-human']) test(`definition loads the actual ${id} rig and authored form`, async () => {
   const definition=characterDefinitionFor('fixture-owner',id),look=characterAppearanceFor(definition,'fixture-owner');
   const source=await loadCharacterRig(definition.rig),avatar=instantiateAvatar(source,{targetHeight:source.height,id:'player'});
   const root=new THREE.Group();root.add(avatar.model);
@@ -44,8 +44,8 @@ for (const id of ['sable-human','woman-casual']) test(`definition loads the actu
     root.updateMatrixWorld(true);
     const bounds=new THREE.Box3().setFromObject(root),size=bounds.getSize(new THREE.Vector3());
     assert.ok(size.toArray().every(Number.isFinite));assert.ok(size.y>1 && size.y<3);
-    assert.equal(outfit.beast,definition.form==='beast');
-    assert.equal(Boolean(root.getObjectByName('fox tail')),definition.form==='beast');
+    assert.equal(definition.form,'human');
+    assert.equal(Boolean(root.getObjectByName('fox tail')),false);
     assert.ok(avatar.bones.length>0);
   } finally { outfit.dispose();avatar.dispose(); }
 });

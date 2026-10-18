@@ -9,7 +9,6 @@ import { createFlightVehicle } from './flight-vehicles.js';
 import { createRoadVehicle } from './road-vehicles.js';
 import { VEHICLES, vehicleKind } from './vehicle-config.js';
 import { permittedAppearance, sharedAppearance } from './shared-appearances.js';
-import { traversalForAppearance } from './beast-traversal.js';
 
 export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=>true,snapInitialHeading=false}={}){
   const entries=new Map(),labels=document.createElement('div');labels.className='remote-player-labels';labels.setAttribute('aria-hidden','true');host.append(labels);
@@ -75,7 +74,7 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
     });},
     stats(){return [...entries].map(([id,entry])=>{
       const arm=entry.avatar?.rig?.model?.getObjectByName('upperarm_r'),rest=arm&&entry.avatar.rig.rest.get(arm);
-      return {id,onScreen:Boolean(entry.onScreen),labelVisible:Boolean(entry.labelVisible),ready:Boolean(entry.avatar),fallback:Boolean(entry.placeholder),appearance:entry.loadedAppearance,character:entry.definition?structuredClone(entry.definition):null,materials:entry.colors?.inspect()??[],movement:entry.target.movement??'upright',gesture:entry.target.gesture??null,rightArmMotion:rest?arm.quaternion.angleTo(rest):0,beastMotion:entry.avatar?.beastMotion??0,vehicle:entry.road?.spec.kind??null,roadVisible:Boolean(entry.road?.object.visible),riderSeated:Boolean(entry.riderSeated),sitting:entry.target.sitting??null,watering:Boolean(entry.avatar?.object.getObjectByName('Watering can')?.visible),heading:entry.holder.rotation.y,position:entry.holder.position.toArray()};
+      return {id,onScreen:Boolean(entry.onScreen),labelVisible:Boolean(entry.labelVisible),ready:Boolean(entry.avatar),fallback:Boolean(entry.placeholder),appearance:entry.loadedAppearance,character:entry.definition?structuredClone(entry.definition):null,materials:entry.colors?.inspect()??[],movement:entry.target.movement??'upright',gesture:entry.target.gesture??null,rightArmMotion:rest?arm.quaternion.angleTo(rest):0,vehicle:entry.road?.spec.kind??null,roadVisible:Boolean(entry.road?.object.visible),riderSeated:Boolean(entry.riderSeated),sitting:entry.target.sitting??null,watering:Boolean(entry.avatar?.object.getObjectByName('Watering can')?.visible),heading:entry.holder.rotation.y,position:entry.holder.position.toArray()};
     });},
     sync(players,selfId){
       if(disposed)return;
@@ -122,12 +121,11 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
         entry.riderSeated=false;
         if(avatar&&!holder.visible)avatar.suspend();
         if(avatar&&holder.visible){
-          const beast=target.movement==='beast'?traversalForAppearance(target.appearance):null;
           const ride=entry.road?.spec,seat=target.sitting,seated=Boolean(ride||seat);
           const speed=delta?Math.hypot(dx,dz)/delta:0;
           avatar.object.position.set(0,seat?seat.height-avatar.rig.hipHeight+.025:ride?ride.passengerSeat[1]-avatar.rig.hipHeight+.025:0,0);
           avatar.object.rotation.y=ride?-Math.PI/2:0;
-          avatar.update(now,!ride&&target.altitude<=0.1?(target.gesture??'continue'):'continue',speaking.has(target.id),{speed:seated?0:Math.min(beast?.sprint??3.4,delta?moved/delta:0),flightSpeed:speed,distance:entry.distance,flying:!seated&&target.altitude>0.1,riding:seated,ridingKind:seat?'seat':ride?.kind,seatToFloor:seat?seat.height:ride?ride.passengerSeat[1]-ride.passengerFloor:undefined,vehicle:'jevica',beast:Boolean(beast),handshakeTarget:target.interaction?.kind==='handshake'?target.interaction.target:undefined,gestureTime:target.interaction?target.interaction.elapsed+Math.max(0,now-entry.syncedAt)/1000:undefined},()=>holder.position.y);
+          avatar.update(now,!ride&&target.altitude<=0.1?(target.gesture??'continue'):'continue',speaking.has(target.id),{speed:seated?0:Math.min(3.4,delta?moved/delta:0),flightSpeed:speed,distance:entry.distance,flying:!seated&&target.altitude>0.1,riding:seated,ridingKind:seat?'seat':ride?.kind,seatToFloor:seat?seat.height:ride?ride.passengerSeat[1]-ride.passengerFloor:undefined,vehicle:'jevica',handshakeTarget:target.interaction?.kind==='handshake'?target.interaction.target:undefined,gestureTime:target.interaction?target.interaction.elapsed+Math.max(0,now-entry.syncedAt)/1000:undefined},()=>holder.position.y);
           entry.riderSeated=seated;
           entry.outfit.update(!seated&&target.altitude>0.1,now,seated);entry.vehicle.object.visible=!seated&&target.altitude>0.1;
           if(entry.road){

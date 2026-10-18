@@ -6,7 +6,7 @@
     "pnpm-lock.yaml": "038d8d726a18c114350298c2a4ec89ef0cbc040aac1459ca60c1f866d7a5c0d9",
     "preview/public/assets/characters/man-casual.glb": "e7ac712585ba2d4558092b67ccf30e67d29843a9a81c4ca00384200f69588684",
     "preview/public/assets/characters/sources.json": "9e51242b9680901309edcfa26b780f0fd8723f046891f1a1f7fa2fc96be6b15d",
-    "preview/src/avatars.js": "1640d11d5712a07b9c61fda3a6169769875ee62edb7c2498fe64ddd1ed806ee9",
+    "preview/src/avatars.js": "dfc79d4973890c051a37a6954b9b9354c044f78398ec0904dfb97aeea2017a14",
     "preview/src/foot-placement.js": "fbf9ddb600a0d9470ca9e7eb58d73e9f13d7e39103852357c3eb0e06cdc98eb3",
     "preview/src/foot-roll.js": "4ab749ab51cc9e6bdd5265d638068c276c9fbd1d9b0c5cfb497b5215e5bd29bb",
     "preview/src/sole-support.js": "1d77dad5449799032809f815298af1acb01fffdaa54371aa71a4601a3794d18f",

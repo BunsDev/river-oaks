@@ -169,7 +169,7 @@ jobs:
           - id: streets
             journeys: spatial-streets world-studio
           - id: places
-            journeys: contextual-first-visit store-intro photo-mode rail-navigation places-guide destination-minimap spatial-circulation office-desk office-computer-shared office-visit
+            journeys: contextual-first-visit store-intro photo-mode rail-navigation places-guide destination-minimap spatial-circulation office-desk office-visit
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

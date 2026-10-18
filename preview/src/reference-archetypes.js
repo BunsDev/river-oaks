@@ -363,12 +363,10 @@ export function createReferenceStyle(avatar,appearance){
     ball(torso,gold,[0,.183,.143],[.009,.012,.003]);
   }else if(appearance.character==='vesper'){
     dressSkirt('#541a30',{wrap:true});shoulderBag({color:'#4b2931'});boots('#4a1f2e');relaxedSleeves('#521a30');
-    // The panther wears her hoops through the base of her ears. Authored on the
     // 0.20 skull like the scalp pieces, so the fit below lowers them with it.
-    const panther=appearance.form==='beast';
     for(const side of [-1,1]){
-      const hoop=mesh(face,new THREE.TorusGeometry(.013,.0025,7,20),gold,panther?[side*.09,.166,-.018]:[side*.091,-.045,.02]);
-      if(panther)hoop.rotation.set(0,side*.35,side*.3);else hoop.rotation.y=side*.25;
+      const hoop=mesh(face,new THREE.TorusGeometry(.013,.0025,7,20),gold,[side*.091,-.045,.02]);
+      hoop.rotation.y=side*.25;
     }
   }else if(appearance.character==='rowan'){
     const jacket=material('#453b39',{roughness:.91}),shirt=material('#ece6dc',{roughness:.86}),fur=material('#a9a49f',{roughness:.98});
@@ -379,7 +377,6 @@ export function createReferenceStyle(avatar,appearance){
     }
     for(let i=0;i<3;i++)ball(torso,darkGold,[0,.21-i*.07,.152],[.006,.006,.004]);
     shoulderBag({color:'#533e32',side:-1,large:true});boots('#49362d',{rugged:true});
-    // The sculpted wolf head (animal-face.js) carries the fur; no tuft cones over it.
   }else if(appearance.character==='kai'){
     const formal=appearance.variant==='formal',explorer=appearance.variant==='explorer',base=formal?'#dfd1bd':explorer?'#282e38':'#1e1b20';
     const cloth=material(base,{roughness:formal?.67:.86,sheen:.42,sheenColor:new THREE.Color(formal?'#fff1d7':'#6c5b5d')}),
@@ -435,16 +432,11 @@ export function createReferenceStyle(avatar,appearance){
   }
   // Bake only static, unnamed opaque pieces on the same bone/material. Keep
   // transparent surfaces sorted separately and named pieces addressable. Lyra's
-  // outfit has per-piece visibility during prowl, so retain those handles.
+  // outfit retains individual transparent pieces for sorting.
   if(appearance.character!=='lyra')batchCostumeAttachments([...attachments].map(group=>({group})),resources,
     item=>!item.name&&item.visible&&!item.material.transparent);
-  const sourceClothes=[];
-  if(appearance.character==='lyra'&&appearance.form==='beast')model.traverse(item=>{
-    if(item.isMesh&&item.material?.name==='female_casualsuit02')sourceClothes.push(item);
-  });
   return {
-    update(motion){for(const update of correctives)update();if(appearance.character!=='lyra'||appearance.form!=='beast')return;const dressed=!motion?.beast;
-      for(const item of [...lyraOutfit,...sourceClothes])item.visible=dressed;},
+    update(){for(const update of correctives)update();},
     dispose(){for(const dispose of fittings)dispose();fittings.length=0;correctives.length=0;for(const item of attachments)item.removeFromParent();for(const geometry of resources)geometry.dispose();for(const surface of materials)surface.dispose();for(const texture of textures)texture.dispose();},
   };
 }

@@ -52,7 +52,7 @@ test('reviewed hero reference PNGs retain native dimensions, bytes and canonical
   assert.equal(manifest.status, 'passed');
   assert(manifest.review.scope.trim() && manifest.review.limitations.trim());
   assert.equal(compareHeroEnvironment(manifest.environment, manifest.environment).compatible, true);
-  assert.deepEqual(manifest.cases.map(value => value.appearanceId), ['sable-human', 'woman-casual']);
+  assert.deepEqual(manifest.cases.map(value => value.appearanceId), ['sable-human']);
   for (const item of manifest.cases) {
     const bytes = await readFile(new URL(`${item.appearanceId}.png`, root));
     assert.equal(bytes.subarray(0, 8).toString('hex'), '89504e470d0a1a0a');

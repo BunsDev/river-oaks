@@ -34,9 +34,6 @@ async page => {
   check(!await link.isVisible(),'Comparing the original removes the edited portrait');
   await studio.locator('[data-compare]').click();
   check(!await link.isVisible(),'Returning to the draft cannot restore an obsolete portrait');
-  await studio.locator('input[name=cs-form][value=beast]').check();await page.waitForFunction(()=>document.querySelector('.cs-preview').dataset.appearance==='woman-casual'&&document.querySelector('.cs-preview').dataset.ready==='true');
-  check(!await link.isVisible(),'Changing identity removes the stale portrait');await download('output/playwright/character-portrait-fox-4k.png');
-  check(await link.getAttribute('data-appearance')==='woman-casual','Fox portrait preserves beast identity');
   // Delay a real PNG callback to exercise closing/reopening during encoding.
   await page.evaluate(()=>{const original=HTMLCanvasElement.prototype.toBlob;window.__restorePortraitEncoder=()=>HTMLCanvasElement.prototype.toBlob=original;HTMLCanvasElement.prototype.toBlob=function(callback,...args){return original.call(this,blob=>{if(this.width===3840&&this.height===2160)window.__finishPortrait=()=>callback(blob);else callback(blob);},...args);};});
   await capture.click();await page.waitForFunction(()=>typeof window.__finishPortrait==='function');

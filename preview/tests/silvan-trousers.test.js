@@ -9,7 +9,7 @@ import {garmentEdgeFixture} from './helpers/garment-edges.js';
 import {SILVAN_DRAPES} from '../src/silvan-drape-geometry.js';
 import {bodyCoverageFixture} from './helpers/body-coverage.js';
 
-for(const id of ['forest-aristocrat-feminine','forest-aristocrat-feminine-beast'])test(`${id}: linen covers the knee through bends`,async t=>{
+for(const id of ['forest-aristocrat-feminine'])test(`${id}: linen covers the knee through bends`,async t=>{
   const source=await loadCharacterRig('jevica'),avatar=instantiateAvatar(source,{targetHeight:1.685,id:'knee-test'}),model=avatar.model;
   const root=new THREE.Group();root.add(model);
   const body=model.getObjectByName('Jevica'),sourcePositions=body.geometry.attributes.position.array.slice(),sourceWeights=body.geometry.attributes.skinWeight.array.slice();

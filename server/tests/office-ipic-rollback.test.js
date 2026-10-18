@@ -28,11 +28,11 @@ function town({ officeLayout: layout, hosts, restore, at = 1_000_000 }) {
   return { world, clock, send, office, screening, visit };
 }
 
-test('rolling back keeps the v12 writer: legacy layout ends seated penthouse visits, a removed host grant pauses the film, grants and requests stay', () => {
+test('rolling back keeps the v12 writer: legacy layout ends seated penthouse visits, a removed host grant pauses the film, invitations stay and requests remain disabled', () => {
   const live = town({ officeLayout: OFFICE_LAYOUT_PENTHOUSE, hosts: [{ venueId: 'ipic', userId: owner }] });
   for (const userId of [owner, 'guest', 'asker']) assert.ok(live.world.join({ userId, name: userId }).ok);
   assert.equal(live.office(owner, 'invite', { peerId: 'guest' }).ok, true);
-  assert.equal(live.office('asker', 'request').ok, true);
+  assert.equal(live.office('asker', 'request').ok, false);
   const entrance = live.office('guest', 'list').offices[0].entrance;
   assert.equal(live.send('guest', { type: 'travel', position: entrance }).ok, true);
   assert.equal(live.office('guest', 'enter').ok, true);
@@ -63,7 +63,7 @@ test('rolling back keeps the v12 writer: legacy layout ends seated penthouse vis
   const restored = back.world.checkpoint();
   assert.equal(restored.version, 12, 'the compatible writer is kept');
   assert.deepEqual(restored.payload.offices.grants, saved.payload.offices.grants, 'grants stay');
-  assert.deepEqual(restored.payload.offices.requests, saved.payload.offices.requests, 'pending requests stay');
+  assert.deepEqual(restored.payload.offices.requests, [], 'retired requests are not restored');
   back.clock.time += 1000; back.world.step(0.05);
   const paused = back.screening();
   assert.equal(paused.status, 'paused', 'without a host grant the film pauses');

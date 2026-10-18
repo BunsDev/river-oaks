@@ -117,7 +117,7 @@ test('standing turn steps follow the current facing without excessive knee-to-sh
   }
 });
 
-test('a beast lope takes fewer, longer steps over the same ground; stride 1 is the ordinary gait',()=>{
+test('an extended stride takes fewer, longer steps over the same ground; stride 1 is the ordinary gait',()=>{
   const walk=stride=>{
     const {root,model}=rig(),placement=createFootPlacement(model,root),swinging=[false,false];
     let distance=0,started=0,planted=0;

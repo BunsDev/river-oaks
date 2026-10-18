@@ -16,9 +16,9 @@ import {SILVAN_DRAPES} from '../src/silvan-drape-geometry.js';
 
 for(const [appearanceId,profile,bodyName] of [
   ['forest-aristocrat','man-casual','man-casualmale_casualsuit02'],
-  ['forest-aristocrat-beast','man-casual','man-casualmale_casualsuit02'],
+  ['forest-aristocrat','man-casual','man-casualmale_casualsuit02'],
   ['forest-aristocrat-feminine','jevica','Jevica'],
-  ['forest-aristocrat-feminine-beast','jevica','Jevica'],
+  ['forest-aristocrat-feminine','jevica','Jevica'],
 ])test(`${appearanceId}: drapes and details follow the seated rig and restore standing`,async t=>{
   const source=await loadCharacterRig(profile),previousLoad=GLTFLoader.prototype.loadAsync,previousWindow=globalThis.window,previousDocument=globalThis.document;
   GLTFLoader.prototype.loadAsync=async()=>({scene:source.scene});

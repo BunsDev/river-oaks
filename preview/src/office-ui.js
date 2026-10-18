@@ -7,26 +7,20 @@ import {
 import { createOfficeScene } from './office-scene.js';
 import './office.css';
 const el=(tag,text,className)=>{const n=document.createElement(tag);if(text)n.textContent=text;if(className)n.className=className;return n;};
-const messages={office_permission_required:'This office is private. Ask Jevica for access.',office_lobby_required:'Walk to the office lobby to take the elevator.',office_lobby_blocked:'The lobby is temporarily obstructed.',office_owner_required:'Only Jevica can manage office access.',office_request_limit:'The request list is full. Please try again later.',office_guest_limit:'The guest list is full.',office_request_missing:'That request has already been handled.',rate_limited:'Please wait a moment and try again.',office_portal_out_of_reach:'Step closer to the stairs or lift.',office_landing_blocked:'Someone is standing where you would arrive. Try again in a moment.',office_layout_stale:'The office changed. Rejoining your visit…',office_level_stale:'Position corrected by the office.',invalid_office_portal:'That way is not available here.',office_seat_out_of_reach:'Step closer to the chair.',office_seat_occupied:'Someone is already sitting there.',office_seat_blocked:'Someone is standing where you would sit. Try again in a moment.',office_stand_blocked:'There is no room to stand up yet. Try again in a moment.',office_seated:'Stand up first.',office_already_seated:'You are already seated.',office_not_seated:'You are already standing.',invalid_office_seat:'That seat is not available here.'};
+const messages={office_permission_required:'This office is private. An invitation from Jevica is required.',office_lobby_required:'Walk to the office lobby to take the elevator.',office_lobby_blocked:'The lobby is temporarily obstructed.',office_owner_required:'Only Jevica can manage office access.',office_request_limit:'The request list is full. Please try again later.',office_guest_limit:'The guest list is full.',office_request_missing:'That request has already been handled.',rate_limited:'Please wait a moment and try again.',office_portal_out_of_reach:'Step closer to the stairs or lift.',office_landing_blocked:'Someone is standing where you would arrive. Try again in a moment.',office_layout_stale:'The office changed. Rejoining your visit…',office_level_stale:'Position corrected by the office.',invalid_office_portal:'That way is not available here.',office_seat_out_of_reach:'Step closer to the chair.',office_seat_occupied:'Someone is already sitting there.',office_seat_blocked:'Someone is standing where you would sit. Try again in a moment.',office_stand_blocked:'There is no room to stand up yet. Try again in a moment.',office_seated:'Stand up first.',office_already_seated:'You are already seated.',office_not_seated:'You are already standing.',invalid_office_seat:'That seat is not available here.'};
 export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,walking,captureStreet=()=>null,createScene=createOfficeScene}) {
   const lifetime=new AbortController(),signal=lifetime.signal;
   const panel=el('section',null,'office-panel');panel.hidden=true;
-  const title=el('h3','Offices'),description=el('p','Your workspace and invited offices · Level 6'),status=el('p');status.setAttribute('role','status');
+  const title=el('h3','Jevica’s office'),description=el('p','Entry by invitation from Jevica · Level 6'),status=el('p');status.setAttribute('role','status');
   const button=(text,id,fn)=>{const b=el('button',text);if(id)b.id=id;b.type='button';b.addEventListener('click',fn,{signal});return b;};
   const lobby=button('Go to office lobby','office-lobby',async()=>{const m=getMultiplayer(),o=catalog()[0];if(!m?.connected||!o)return;const result=await m.travel({position:o.entrance});say(result.ok?'Office lobby · F takes the elevator.':result.message);});
   const enter=button('Take elevator · F','office-enter',()=>void enterOffice());enter.disabled=true;
   const retryCancel=button('Finish cancelling entry','office-cancel-retry',()=>void finishCancellation(cancelledEntry));retryCancel.hidden=true;
-  const request=button('Request a visit','office-request',()=>void action('request'));
   const management=el('div',null,'office-management');management.id='office-management';
-  const personal=button('Open my office','office-personal',()=>void openPersonal());
-  const picker=el('select');picker.id='office-workspace';picker.setAttribute('aria-label','Office to visit');
-  picker.addEventListener('change',()=>{if(view||entryAttempt)return;selectedOffice=picker.value;currentOffice=null;void refresh();},{signal});
-  const accept=button('Accept collaboration invitation','office-accept',()=>void workspaceAction('accept'));accept.hidden=true;
-  panel.append(title,description,personal,picker,accept,lobby,enter,request,retryCancel,status,management);panelHost.append(panel);
+  panel.append(title,description,lobby,enter,retryCancel,status,management);panelHost.append(panel);
   const guestPrompt=el('dialog',null,'office-request-dialog');guestPrompt.id='office-request-dialog';guestPrompt.setAttribute('aria-labelledby','office-request-title');
   const guestHeading=el('h2','Visit Jevica’s office');guestHeading.id='office-request-title';const guestStatus=el('p');guestStatus.setAttribute('role','status');
-  const guestRequest=button('Request a visit','office-request-send',()=>void action('request'));
-  const guestClose=button('Close',null,()=>guestPrompt.close());guestPrompt.append(guestHeading,guestStatus,guestRequest,guestClose);document.body.append(guestPrompt);guestPrompt.addEventListener('close',()=>host.focus({preventScroll:true}),{signal});
+  const guestClose=button('Close',null,()=>guestPrompt.close());guestPrompt.append(guestHeading,guestStatus,guestClose);document.body.append(guestPrompt);guestPrompt.addEventListener('close',()=>host.focus({preventScroll:true}),{signal});
   const pendingDialog=el('dialog',null,'office-request-dialog office-pending');pendingDialog.id='office-pending';pendingDialog.setAttribute('aria-labelledby','office-pending-title');
   const pendingTitle=el('h2','Calling your elevator','office-pending-title');pendingTitle.id='office-pending-title';
   const pendingStatus=el('p','Checking your office access…');pendingStatus.setAttribute('role','status');
@@ -42,7 +36,7 @@ export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,
   const accessButton=button('Office access','office-access',()=>{management.hidden=!management.hidden;accessButton.setAttribute('aria-expanded',String(!management.hidden));});accessButton.setAttribute('aria-expanded','false');
   const voiceJoin=button('Join voice · Y','office-voice',()=>void mp()?.voice?.toggleJoin()),voiceMic=button('Microphone off · M','office-mic',()=>void mp()?.voice?.toggleMic());
   let desk=null,deskAccount=null;
-  const openDesk=()=>{if(phase!=='office'||!view)return;if(viewId)setView(null);keys.clear();mp()?.voice?.setTransmit(false);desk??=createOfficeDeskUI({getMultiplayer:mp,getWorkspace:()=>self()?.office?.id??null,onClose:()=>{keys.clear();dialog.focus({preventScroll:true});}});deskAccount=mp()?.identity?.id;void desk.open();};
+  const openDesk=()=>{if(phase!=='office'||!view)return;if(viewId)setView(null);keys.clear();mp()?.voice?.setTransmit(false);desk??=createOfficeDeskUI({getMultiplayer:mp,onClose:()=>{keys.clear();dialog.focus({preventScroll:true});}});deskAccount=mp()?.identity?.id;void desk.open();};
   const deskButton=button('Open desk · E','office-desk-open',openDesk);deskButton.hidden=true;
   const deskNearby=button('Use this desk · E','office-desk-nearby',openDesk);deskNearby.hidden=true;dialog.append(deskNearby);
   // Stairs and lift are server transitions from their entry; the button appears only within reach.
@@ -63,7 +57,7 @@ export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,
   dialog.append(header,journey,help,pad);document.body.append(dialog);
   const headerSize=typeof ResizeObserver==='function'?new ResizeObserver(()=>dialog.style.setProperty('--office-header-bottom',`${Math.ceil(header.getBoundingClientRect().bottom)+10}px`)):null;
   headerSize?.observe(header);
-  const keys=new Set();let view=null,position=[...OFFICE_SPAWN],yaw=0,layoutId=OFFICE_LAYOUT_LEGACY,levelId=null,levelPending=false,seatId=null,seatPending=false,viewId=null,closing=false,phase='closed',busy=false,entryAttempt=null,cancelledEntry=null,movePending=false,lastMove=0,lastPoll=0,lastPanelCheck=-Infinity,polling=null,failedOffice=null,epoch=0,currentOffice=null,owned=false,lastState='',disposed=false,accountKey='',openedAt=0,selectedOffice=null,workspaceList=[];
+  const keys=new Set();let view=null,position=[...OFFICE_SPAWN],yaw=0,layoutId=OFFICE_LAYOUT_LEGACY,levelId=null,levelPending=false,seatId=null,seatPending=false,viewId=null,closing=false,phase='closed',busy=false,entryAttempt=null,cancelledEntry=null,movePending=false,lastMove=0,lastPoll=0,lastPanelCheck=-Infinity,polling=null,failedOffice=null,epoch=0,currentOffice=null,owned=false,lastState='',disposed=false,accountKey='',openedAt=0;
   const catalog=()=>officesFor(getWorld()??{}),mp=()=>getMultiplayer();
   const self=()=>mp()?.snapshot?.players.find(p=>p.id===mp()?.identity?.id);
   accountKey=`${mp()?.identity?.id??''}:${Boolean(self())}`;
@@ -74,59 +68,24 @@ export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,
     if(polling)return polling;
     if(!mp()?.connected||!catalog().length||disposed)return Promise.resolve();
     const token=epoch;const pending=(async()=>{const result=await send('list');
-    let workspaceError=false,nextWorkspaces=[];
-    if(mp()?.officeDeskRequest){try{const response=await workspaceRequest('list');nextWorkspaces=response.workspaces??[];}catch{workspaceError=true;}}
-
     if(disposed||token!==epoch)return;
     if(!result.ok){say(result.message);return;}
-    workspaceList=nextWorkspaces;
-    const legacy=result.offices[0],selected=workspaceList.find(w=>w.id===selectedOffice);
-    currentOffice=selected?{...legacy,...selected,access:['owner','accepted'].includes(selected.role)?selected.role:null,personal:true,requested:false}:legacy;
-    if(selectedOffice&&selectedOffice!==legacy.id&&!selected){selectedOffice=legacy.id;say('Office access is unavailable. Your private tasks remain yours.');}
+    currentOffice=result.offices[0];if(!currentOffice)return;
     owned=currentOffice.access==='owner';
-    const options=[{id:legacy.id,label:'Jevica’s office'},...workspaceList.map(w=>({id:w.id,label:w.ownerId===mp()?.identity?.id?'My office':`${w.role==='invited'?'Invitation · ':''}Office of ${mp()?.snapshot?.players.find(p=>p.id===w.ownerId)?.name??w.ownerId}`}))];
-    const optionsKey=JSON.stringify(options);if(picker.dataset.options!==optionsKey){picker.dataset.options=optionsKey;picker.replaceChildren();for(const o of options){const option=el('option',o.label);option.value=o.id;picker.append(option);}}
-    picker.value=currentOffice.id;picker.disabled=Boolean(view||entryAttempt);personal.disabled=Boolean(view||entryAttempt||!mp()?.connected);
-    accept.hidden=selected?.role!=='invited';enter.disabled=!mp()?.connected||!near()||!currentOffice.access||busy||Boolean(entryAttempt);
-    const activeWorkspace=self()?.office?.id;
-    if(!workspaceError&&activeWorkspace?.startsWith('office-')&&!workspaceList.some(w=>w.id===activeWorkspace&&['owner','accepted'].includes(w.role)))desk?.revokeShared?.();
-    if(workspaceError)say('Office storage is unavailable. Please try again.');
+    enter.disabled=!mp()?.connected||!near()||!currentOffice.access||busy||Boolean(entryAttempt);
     if(currentOffice.access&&guestPrompt.open)guestPrompt.close();
-    request.hidden=Boolean(currentOffice.personal||currentOffice.access);request.disabled=Boolean(currentOffice.requested);request.textContent=currentOffice.requested?'Visit requested':'Request a visit';guestRequest.disabled=request.disabled;guestRequest.hidden=request.hidden;
-    if(!workspaceError)say(currentOffice.personal?(currentOffice.role==='invited'?'Accept this invitation to collaborate on office tasks.':owned?'You own this office. Your personal tasks stay private.':'Office tasks are shared with accepted collaborators.'):currentOffice.access==='owner'?'You own this office.':currentOffice.access?'Your visit is approved.':currentOffice.requested?'Waiting for Jevica to accept your request.':'Private office. Request access or ask Jevica to invite you.');
+    say(owned?'You own this office. Invite a resident to grant access.':currentOffice.access?'Jevica has invited you to her office.':'An invitation from Jevica is required to enter.');
     renderManagement();
     })();polling=pending;void pending.finally(()=>{if(polling===pending)polling=null;});return pending;
-  }
-  async function workspaceRequest(action,data={}){
-    const client=mp(),token=epoch,account=client?.identity?.id;
-    if(!client?.connected||!client.officeDeskRequest)throw Error('office_unavailable');
-    const result=await client.officeDeskRequest(`workspace/${action}`,data);
-    if(disposed||token!==epoch||mp()!==client||!client.connected||account!==client.identity?.id)throw Error('stale_office_response');
-    return result;
-  }
-  async function openPersonal(){
-    if(busy||view||entryAttempt)return;busy=true;
-    try{const result=await workspaceRequest('provision');selectedOffice=result.workspace.id;await refresh();}
-    catch{say('Your office could not open. Please try again.');return;}
-    finally{busy=false;}
-    if(near())await enterOffice();else say('Your office is ready. Go to the office lobby to enter.');
-  }
-  async function workspaceAction(action,data={}){
-    if(busy||entryAttempt||!currentOffice?.personal)return;busy=true;
-    try{await workspaceRequest(action,{workspaceId:currentOffice.id,...data});lastState='';await refresh();}
-    catch{say('The office change could not be saved. Please try again.');}
-    finally{busy=false;}
   }
   function renderManagement(){
     const state=JSON.stringify([currentOffice,mp()?.snapshot?.players.map(p=>[p.id,p.name])]);if(state===lastState)return;lastState=state;
     management.replaceChildren();if(!owned)return;
-    const h=el('h4',currentOffice.personal?'Office collaborators':'Office guests'),select=el('select');select.setAttribute('aria-label','Resident to invite');
-    for(const p of mp()?.snapshot?.players??[])if(p.id!==self()?.id&&(currentOffice.personal||!p.canBuild)){const option=el('option',p.name);option.value=p.id;select.append(option);}
-    const invite=button('Invite resident',null,()=>void (currentOffice.personal?workspaceAction('invite',{peerId:select.value}):action('invite',{peerId:select.value})));invite.disabled=!select.options.length;
+    const h=el('h4','Office guests'),select=el('select');select.setAttribute('aria-label','Resident to invite');
+    for(const p of mp()?.snapshot?.players??[])if(p.id!==self()?.id&&!p.canBuild){const option=el('option',p.name);option.value=p.id;select.append(option);}
+    const invite=button('Invite resident',null,()=>void action('invite',{peerId:select.value}));invite.disabled=!select.options.length;
     if(invite.disabled){const option=el('option','No other residents in town');option.value='';select.append(option);select.disabled=true;}
     management.append(h,select,invite);
-    if(currentOffice.personal){for(const member of currentOffice.members??[]){const row=el('div',null,'office-person');row.append(el('span',`${mp()?.snapshot?.players.find(p=>p.id===member.userId)?.name??member.userId} · ${member.status}`),button('Revoke collaboration',null,()=>void workspaceAction('revoke',{peerId:member.userId})));management.append(row);}return;}
-    for(const r of currentOffice.requests??[]){const row=el('div',null,'office-person');row.append(el('span',r.name),button('Accept',null,()=>void action('approve',{peerId:r.userId})),button('Decline',null,()=>void action('deny',{peerId:r.userId})));management.append(row);}
     for(const g of currentOffice.guests??[]){const row=el('div',null,'office-person');row.append(el('span',g.name),button('Revoke access',null,()=>void action('revoke',{peerId:g.userId})));management.append(row);}
   }
   async function action(name,data){if(busy||entryAttempt)return;busy=true;const r=await send(name,data);busy=false;if(disposed)return;if(r.ok){lastState='';await refresh();}else say(messages[r.error]??r.message);}
@@ -135,7 +94,7 @@ export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,
     layoutId=officeLayout(player.office.layout)?player.office.layout:OFFICE_LAYOUT_LEGACY;levelId=heldLevelId=player.office.levelId??officeLayout(layoutId).spawn.levelId;levelPending=false;
     seatId=player.office.seat?.id??null;seatPending=false;viewId=null;help.textContent=WALKING_HELP;
     viewSelect.replaceChildren(...[{id:'',label:'Walking view'},...officeViews(officeLayout(layoutId))].map(item=>{const option=el('option',item.label);option.value=item.id;return option;}));viewSelect.value='';
-    heading.textContent=player.office.id==='jevica-office'?'Jevica’s office':workspaceList.find(w=>w.id===player.office.id)?.ownerId===mp()?.identity?.id?'My office':'Shared office';
+    heading.textContent='Jevica’s office';
     label.textContent='Preparing your avatar · You can skip or return';
     management.hidden=true;dialog.append(management);accessButton.hidden=!owned;
     dialog.dataset.phase=phase;dialog.dataset.position=JSON.stringify(position);dialog.showModal();dialog.focus();document.body.classList.add('visiting-office');
@@ -211,7 +170,7 @@ export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,
     }finally{if(entryAttempt===attempt){entryAttempt=null;busy=false;if(pendingDialog.open)pendingDialog.close();}}
   }
   async function leaveOffice(){
-    if(busy||desk?.confirmOfficeLeave?.(()=>void leaveOffice()))return;busy=true;keys.clear();const r=await send('leave');busy=false;
+    if(busy)return;busy=true;keys.clear();const r=await send('leave');busy=false;
     if(disposed)return;if(r.ok){close();say('You’re back under the office canopy. Continue along the street.');void refresh();}else label.textContent=r.message;
   }
   // Escape leaves a view before it leaves the office.
@@ -245,7 +204,7 @@ export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,
       if(key!==accountKey){
         const identityChanged=id!==accountKey.slice(0,accountKey.lastIndexOf(':'));accountKey=key;epoch++;
         if(entryAttempt)cancelEntry();if(view)close();
-        if(identityChanged){cancelledEntry=null;selectedOffice=null;workspaceList=[];picker.replaceChildren();picker.dataset.options='';}
+        if(identityChanged){cancelledEntry=null;}
         else if(cancelledEntry&&!p){
           // A reconnect can resume the server's departure-grace visit. Keep the
           // cancellation intention, but fence cleanup from the old connection.
@@ -254,7 +213,6 @@ export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,
         retryCancel.hidden=!cancelledEntry;busy=false;polling=null;currentOffice=null;owned=false;lastState='';management.replaceChildren();accessButton.hidden=true;lastPoll=0;lastPanelCheck=-Infinity;if(guestPrompt.open)guestPrompt.close();
       }
       if(cancelledEntry&&p&&mp()?.connected&&!cancelledEntry.cleanupStarted){cancelledEntry.client=mp();void finishCancellation(cancelledEntry);}
-      if(p&&!p.office&&mp()?.connected)desk?.revokeShared?.();
       if(!p?.office)failedOffice=null;
       if(cancelledEntry?.leaveConfirmed&&!p?.office){cancelledEntry=null;retryCancel.hidden=true;}
       if(view&&!p?.office){close();say(p?'Your office visit has ended.':'Reconnect to continue your visit.');}
@@ -268,7 +226,7 @@ export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,
     },
     update(now,delta){
       panel.hidden=!catalog().length;const at=near(),connected=mp()?.connected;
-      nearby.textContent=cancelledEntry?'Finish cancelling entry · F':currentOffice?.access?'Offices · Level 6 · F':currentOffice?.requested?'Office visit pending · F':'Request office visit · F';nearby.hidden=Boolean(view)||Boolean(entryAttempt&&!entryAttempt.cancelled)||!at||!connected;enter.disabled=!connected||!at||busy||Boolean(entryAttempt)||Boolean(cancelledEntry)||!currentOffice?.access;
+      nearby.textContent=cancelledEntry?'Finish cancelling entry · F':currentOffice?.access?'Jevica’s office · Level 6 · F':'Jevica’s office · Invitation required · F';nearby.hidden=Boolean(view)||Boolean(entryAttempt&&!entryAttempt.cancelled)||!at||!connected;enter.disabled=!connected||!at||busy||Boolean(entryAttempt)||Boolean(cancelledEntry)||!currentOffice?.access;
       if(connected&&!document.hidden&&now-lastPoll>5000){
         let interested=at||view||guestPrompt.open||entryAttempt;
         // A hidden panel never advances lastPoll. Bound its layout read separately

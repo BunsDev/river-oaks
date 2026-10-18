@@ -73,8 +73,7 @@ async page => {
     await guest.routeWebSocket('**/multiplayer?*',route=>{guestSocket={client:route,server:route.connectToServer()};connections++;});
     await join(guest,'guest');
     if(!await guest.locator('.visit-tools').evaluate(node=>node.open))await guest.locator('.visit-tools-toggle').click();
-    await guest.locator('input[name=player-form][value=beast]').check();
-    await guest.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerAppearance==='woman-casual'&&document.querySelector('#canvas-host').dataset.playerReady==='true');
+    await guest.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerAppearance==='sable-human'&&document.querySelector('#canvas-host').dataset.playerReady==='true');
     await guest.locator('.visit-tools-toggle').click();await openPlaces(guest);
     await guest.locator('.world-map-player-list>summary').click();
     await guest.locator(`.world-map-player-list button[data-peer-id="${owner.id}"]`).click();
@@ -86,7 +85,7 @@ async page => {
     await guest.locator('#nearby-seat').selectOption(right);await guest.locator('#seat-sit').click();
     await guest.waitForFunction(()=>document.querySelector('#player-mode')?.textContent==='Seated');
     const visitor=await self(guest);
-    check(visitor.sitting?.slot===1&&visitor.appearance==='woman-casual'&&!visitor.canBuild&&!visitor.canGrantWishes,'A guest uses the second slot without acquiring admin powers');
+    check(visitor.sitting?.slot===1&&visitor.appearance==='sable-human'&&!visitor.canBuild&&!visitor.canGrantWishes,'A guest uses the second slot without acquiring admin powers');
     await page.waitForFunction(id=>window.__riverMultiplayer().remotes?.some(p=>p.id===id&&p.ready&&p.riderSeated&&p.sitting?.slot===1),visitor.id);
     check(true,'The other browser renders the confirmed remote seated pose');
     if(await guest.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await guest.locator('#panel-toggle').click();

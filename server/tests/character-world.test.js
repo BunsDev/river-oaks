@@ -49,7 +49,7 @@ test('custom and legacy appearance changes share the same two-second cooldown, i
   f.advance();assert.equal(f.equip(first).ok,true,'selecting an earlier immutable revision is permitted');
 });
 
-test('custom selection retains Jevica, flight and beast movement authority',()=>{
+test('custom selection retains Jevica and flight authority and rejects retired movement',()=>{
   const f=fixture(),owner=JEVICA_OWNER_USER_IDS[0];
   const jevica=characterDefinitionFor(owner,'jevica',{revision:1});
   assert.equal(f.equip({...jevica,ownerId:'alice'}).error,'invalid_character');
@@ -60,10 +60,10 @@ test('custom selection retains Jevica, flight and beast movement authority',()=>
   assert.equal(f.world.command(owner,{type:'character',revision:1},{characterDefinition:definition(owner)}).ok,true);
   f.advance();assert.equal(f.world.command(owner,{type:'pose',position,yaw:0,altitude:1}).error,'flight_not_allowed');
   assert.equal(f.equip(definition()).ok,true);
-  assert.equal(f.world.command('alice',{type:'movement',movement:'beast'}).error,'beast_form_required');
-  f.advance();assert.equal(f.equip(definition('alice',2,'rose','woman-casual')).ok,true);
-  assert.equal(f.world.command('alice',{type:'movement',movement:'beast'}).ok,true);
-  assert.equal(f.world.snapshot().players.find(p=>p.id==='alice').movement,'beast');
+  assert.equal(f.world.command('alice',{type:'movement',movement:'beast'}).error,'invalid_movement');
+  f.advance();assert.equal(f.equip(definition('alice',2,'rose','sable-human')).ok,true);
+  assert.equal(f.world.command('alice',{type:'movement',movement:'beast'}).error,'invalid_movement');
+  assert.equal(f.world.snapshot().players.find(p=>p.id==='alice').movement,'upright');
 });
 
 test('selected canonical revisions and their cooldown survive departure, checkpoint recovery and geography migration',()=>{
@@ -87,7 +87,7 @@ test('malformed, foreign, draft and version-masquerading selected checkpoint def
     saved=>{saved.payload.characters[0][1].revision=0;},
     saved=>{saved.payload.characters[0][1].palette='unknown';},
     saved=>{saved.payload.characters[0][1].flight=true;},
-    saved=>{saved.payload.characters[0][1]=definition('alice',1,'rose','woman-casual');},
+    saved=>{saved.payload.characters[0][1]=characterDefinitionFor('alice','rowan-human',{revision:1});},
     saved=>{saved.payload.characters.push(structuredClone(saved.payload.characters[0]));},
     saved=>{saved.version=11;},
     saved=>{delete saved.payload.characters;},
@@ -131,8 +131,8 @@ test('selection preparation preserves appearance until confirmed projection and 
   const selected={appearance:look.appearanceId,movement:'upright',character:look,version:2};
   const projected=f.world.commitAccountSelection('alice',selected,{appearanceChanged:true});
   assert.equal(projected.character.palette,'rose');
-  assert.equal(f.world.command('alice',{type:'appearance',appearance:'woman-casual'}).error,'appearance_cooldown');
+  assert.equal(f.world.command('alice',{type:'appearance',appearance:'sable-human'}).error,'appearance_cooldown');
   f.advance();
-  assert.equal(f.world.prepareAccountSelection('alice',{type:'movement',movement:'beast'}).error,'beast_form_required');
+  assert.equal(f.world.prepareAccountSelection('alice',{type:'movement',movement:'beast'}).error,'invalid_movement');
   assert.equal(f.world.prepareAccountSelection('alice',{type:'pose',position:[0,0,0],yaw:0}).error,'invalid_command');
 });

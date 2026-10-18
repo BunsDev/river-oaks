@@ -9,7 +9,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { loadResidentAvatar } from '../src/avatars.js';
 import { skirtContactFixture } from './helpers/skirt-contact.js';
 
-for(const appearanceId of ['sable-human','woman-casual','woman-tailored','vesper-beast'])test(`${appearanceId}: skirt covers actual upper thighs through opposing walking strides`,async()=>{
+for(const appearanceId of ['sable-human','woman-tailored'])test(`${appearanceId}: skirt covers actual upper thighs through opposing walking strides`,async()=>{
   const source=await loadCharacterRig('jevica'),avatar=instantiateAvatar(source,{targetHeight:1.685,id:'skirt-fixture'});
   const root=new THREE.Group();root.add(avatar.model);
   const look=createReferenceStyle(avatar,sharedAppearance(appearanceId)),model=avatar.model,body=model.getObjectByName('Jevica'),skirt=model.getObjectByName('Sable ivory mini dress')??model.getObjectByName('Vesper velvet wrap skirt');
@@ -61,7 +61,7 @@ for (const appearanceId of ['sable-human', 'woman-tailored']) test(`${appearance
   } finally { contact.dispose(); look.dispose(); avatar.dispose(); }
 });
 
-for (const appearanceId of ['sable-human', 'woman-casual', 'woman-tailored', 'vesper-beast']) test(`${appearanceId}: the runtime seated skirt clears the actual upper thighs and restores standing`, async t => {
+for (const appearanceId of ['sable-human', 'sable-human', 'woman-tailored', 'woman-tailored']) test(`${appearanceId}: the runtime seated skirt clears the actual upper thighs and restores standing`, async t => {
   const source = await loadCharacterRig('jevica'), previousLoad = GLTFLoader.prototype.loadAsync;
   const previousWindow = globalThis.window, previousDocument = globalThis.document;
   GLTFLoader.prototype.loadAsync = async () => ({scene: source.scene});
@@ -79,7 +79,7 @@ for (const appearanceId of ['sable-human', 'woman-casual', 'woman-tailored', 've
     assert(result.tested > 200, 'a substantial front garment surface was tested');
     assert.equal(result.penetrating, 0, `seated garment crosses the upper thighs: ${JSON.stringify(result)}`);
     const trim = model.getObjectByName('Vesper wrap trim');
-    if (['woman-tailored', 'vesper-beast'].includes(appearanceId)) assert(trim?.isSkinnedMesh, 'Vesper keeps her fitted decorative trim');
+    if (['woman-tailored', 'woman-tailored'].includes(appearanceId)) assert(trim?.isSkinnedMesh, 'Vesper keeps her fitted decorative trim');
     if (trim) {
       assert.equal(trim.skeleton, skirt.skeleton, 'detail shares the garment skeleton');
       assert.equal(trim.morphTargetInfluences.length, 2);

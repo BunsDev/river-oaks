@@ -1,4 +1,3 @@
-import { workspaceContext, reconcileOfficeVisit, reconcileOfficeVisits } from './office-workspace-visits.js';
 import { characterSelectionOperation } from './character-store.js';
 import { defaultAppearanceFor } from '../preview/src/shared-appearances.js';
 import { randomUUID } from 'node:crypto';
@@ -129,7 +128,7 @@ function restoreSelections(previous,enabled){
 }
 
 /** Private room coordinator. Authentication and connection IDs come from the server. */
-export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID,now=Date.now,authorize,isAdmin=isJevicaAdmin,regionCatalog=null,regionSha256=null,avatarPreferences=null,characters=null,voice=null,cyclingMiles=null,officeWorkspaces=null,screeningHosts=[],officeLayout}) {
+export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID,now=Date.now,authorize,isAdmin=isJevicaAdmin,regionCatalog=null,regionSha256=null,avatarPreferences=null,characters=null,voice=null,cyclingMiles=null,screeningHosts=[],officeLayout}) {
   if(!redis || typeof authorize!=='function' || typeof prefix!=='string' || !prefix || prefix.length>180) throw new Error('Invalid room configuration');
   validateWorldId(worldId);
   if(characters&&!['getSelection','initializeSelection','getSelectionResult','changeSelection','getRevision'].every(key=>typeof characters[key]==='function'))throw new Error('Invalid character selection store');
@@ -328,7 +327,6 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
             else console.warn(JSON.stringify({event:'room_appearance_unavailable',worldId}));
           }
         }
-        if(result.ok)await reconcileOfficeVisit(world,officeWorkspaces,operation.identity.userId);
         if(result.ok)connections.set(operation.identity.userId,{identity:operation.identity,connectionId:operation.connectionId,lastSeen:time,leftAt:null});
         return result;
       }
@@ -380,8 +378,7 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       if(pendingSelections.has(operation.userId))return rejected('character_selection_pending');
       if(avatarPreferences && ['appearance','movement'].includes(operation.message.type))
         await syncAccount(operation.userId);
-      const officeWorkspace=await workspaceContext(officeWorkspaces,operation.userId,operation.message);
-      const result=world.command(operation.userId,operation.message,{officeWorkspace,sessionId:connection.identity.sessionId??null});
+      const result=world.command(operation.userId,operation.message,{sessionId:connection.identity.sessionId??null});
       if(result.ok && avatarPreferences && ['appearance','movement'].includes(operation.message.type))
         await avatarPreferences.save(operation.userId,world.accountAppearance(operation.userId));
       return result;
@@ -408,8 +405,6 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       }
       if(result!==null)replies.push({key:`${tag}:reply:${entry.id}`,result});
     }
-    let officeCheckedAt=cached?.officeCheckedAt??-Infinity;
-    if(time-officeCheckedAt>=5000){await reconcileOfficeVisits(world,officeWorkspaces);officeCheckedAt=time;}
     if(closed){cached=null;return null;}
     // Shared voice: the lease holder is the one place with both the live world
     // and the authoritative connections, so it reconciles leases here, after
@@ -446,7 +441,7 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       : districtMigration.kind === 'interior'
         ? { event: 'district_interior_checkpoint_migrated', from: districtMigration.from, to: 'gallery_plan_v1' }
         : { event: 'district_height_checkpoint_migrated', from: districtMigration.from, to: 'photographed_heights' }));
-    cached={world,connections,previous:checkpoint,currentData,currentHash,officeCheckedAt};lastView=view;
+    cached={world,connections,previous:checkpoint,currentData,currentHash};lastView=view;
     if(rides){rides.merge(drained);void rides.send();}
     return view;
   }

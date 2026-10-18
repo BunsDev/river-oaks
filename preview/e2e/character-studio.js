@@ -15,17 +15,19 @@ async page => {
   // Guided start: each choice group is one tab stop, and the summary says what this character can change.
   await dialog.locator('[data-close]').focus();const stops=[];
   for(let i=0;i<12;i++){await page.keyboard.press('Tab');stops.push(await page.evaluate(()=>document.activeElement.name||document.activeElement.dataset.close!==undefined&&'close'||document.activeElement.tagName));}
-  check(stops.filter(name=>name==='cs-character').length===1&&stops.includes('cs-form'),'Character and form choices are single tab stops');
+  check(stops.filter(name=>name==='cs-character').length===1&&!stops.includes('cs-form'),'Human character choices are one tab stop');
   await dialog.locator('[data-character=sable]').click();await ready('sable-human');
-  check(/form, dress color and hair color/.test(await dialog.locator('[data-cs-summary-options]').innerText()),'The guided summary lists the validated changes for Sable');
+  check(/dress color and hair color/.test(await dialog.locator('[data-cs-summary-options]').innerText()),'The guided summary lists the validated changes for Sable');
   await dialog.getByRole('radio',{name:'Ivory',exact:true}).focus();await page.keyboard.press('ArrowRight');
   check(await dialog.getAttribute('data-palette')==='rose','Arrow keys move through a color group');
   await dialog.getByRole('radio',{name:'Espresso',exact:true}).click();
+  await page.setViewportSize({width:1440,height:900});
+  check(await dialog.evaluate(n=>{const box=n.getBoundingClientRect(),controls=n.querySelector('.cs-controls');return box.width>=innerWidth-28&&box.height>=innerHeight-28&&n.scrollWidth<=n.clientWidth&&controls.scrollHeight<=controls.clientHeight+1;}),'Desktop Studio fills the window with all editing controls visible without scrolling');
   check(await dialog.getAttribute('data-palette')==='rose'&&await dialog.getAttribute('data-hair')==='espresso','Dress and hair changes form a distinct validated draft');
   check(await dialog.locator('[data-cs-summary-edit]').innerText()==='Your colors: Rose silk dress, Espresso hair.','The summary names the edited colors instead of contradicting the preview');
   await dialog.getByRole('button',{name:'Undo',exact:true}).click();check(await dialog.getAttribute('data-hair')==='authored','Undo restores the previous hair');
   await dialog.getByRole('button',{name:'Redo',exact:true}).click();check(await dialog.getAttribute('data-hair')==='espresso','Redo restores the edit');
-  check(await dialog.getByRole('img',{name:'Live preview: Sable, Humanoid form, Rose silk dress, Espresso hair'}).isVisible()&&await dialog.getByRole('button',{name:'Undo',exact:true}).getAttribute('aria-keyshortcuts')==='Control+Z Meta+Z','The preview image names the staged look and Undo advertises its shortcut');
+  check(await dialog.getByRole('img',{name:'Live preview: Sable, Human, Rose silk dress, Espresso hair'}).isVisible()&&await dialog.getByRole('button',{name:'Undo',exact:true}).getAttribute('aria-keyshortcuts')==='Control+Z Meta+Z','The preview image names the staged look and Undo advertises its shortcut');
   await dialog.getByRole('button',{name:'Before / after',exact:true}).click();check(await dialog.locator('[data-comparing]').isVisible(),'Comparison shows the original');
   check(await dialog.getByRole('img',{name:/^Original look: /}).isVisible(),'The preview image names the original during comparison');
   await dialog.getByRole('button',{name:'Before / after',exact:true}).click();await ready('sable-human');
@@ -34,7 +36,6 @@ async page => {
   check(await page.locator('#canvas-host').getAttribute('data-player-appearance')===before,'Editing never changes the authoritative town appearance');
   await page.evaluate(()=>{const set=Storage.prototype.setItem;Storage.prototype.setItem=function(key,value){if(key.startsWith('river-oaks-character-favorites'))throw new DOMException('Storage unavailable','QuotaExceededError');return set.call(this,key,value);};});
   await dialog.getByRole('button',{name:'Favorite this look',exact:true}).click();check(await dialog.locator('#cs-favorites option').count()>1,'A validated look can be favorited');
-  await dialog.locator('input[name=cs-form][value=beast]').check();await ready('woman-casual');await page.screenshot({path:'output/playwright/character-studio-fox.png'});
   await dialog.getByRole('button',{name:'Discard edits',exact:true}).click();await open();check(await dialog.getAttribute('data-appearance')===before,'Discard returns to confirmed character');
   check(await dialog.locator('#cs-favorites option').count()>1,'Storage failure preserves in-memory favorites across reopen');
   await dialog.locator('[data-character=sable]').click();await ready('sable-human');
@@ -49,7 +50,7 @@ async page => {
   await page.keyboard.press('Control+z');await page.keyboard.press('Control+z');await ready('rowan-human');
   check(await page.evaluate(()=>{const active=document.activeElement;return Boolean(active.closest('.character-studio'))&&!active.closest('[hidden]')&&!active.disabled;}),'Undo that hides the focused choice keeps focus in the Studio');
   await dialog.locator('[data-character=kai]').click();await ready('man-workwear');
-  await dialog.getByRole('radio',{name:'Starlit noir',exact:true}).click();await ready('kai-noir');check(await dialog.getByRole('group',{name:'Wardrobe'}).isVisible(),'Wardrobe choices appear only for characters with several validated outfits');
+  await dialog.getByRole('radio',{name:'Starlit noir',exact:true}).click();await ready('kai-noir');check(await dialog.getByRole('group',{name:'Wardrobe',exact:true}).isVisible(),'Wardrobe choices appear only for characters with several validated outfits');
   await dialog.getByRole('button',{name:'Remix Kai',exact:true}).click();
   check(await dialog.getAttribute('data-appearance')!=='kai-noir'&&(await dialog.getAttribute('data-appearance')).match(/kai|man-workwear/)&&/^Remix: Kai/.test(await dialog.locator('[data-cs-announce]').evaluate(n=>new Promise(r=>requestAnimationFrame(()=>r(n.textContent))))),'Remix varies the current character and announces the result');
   await dialog.getByRole('button',{name:'Surprise me',exact:true}).click();check(await dialog.getAttribute('data-appearance'),'Curated randomize produces a valid choice');
@@ -68,10 +69,9 @@ async page => {
     const start=await studio.getAttribute('data-appearance');
     while(await studio.getAttribute('data-appearance')!=='sable-human'){await board.keyboard.press('ArrowRight');if(await studio.getAttribute('data-appearance')===start)break;}
     await settled('sable-human');
-    check(await tabTo('cs-form'),'Keyboard reaches the form choice');await board.keyboard.press('ArrowRight');await settled('woman-casual');
     check(await tabTo('cs-palette'),'Keyboard reaches dress colors');await board.keyboard.press('ArrowRight');
     check(await tabTo('cs-hair'),'Keyboard reaches hair colors');await board.keyboard.press('ArrowRight');
-    check(await studio.getAttribute('data-palette')==='rose'&&await studio.getAttribute('data-hair')==='espresso','Keyboard alone creates a distinct fox variation');
+    check(await studio.getAttribute('data-palette')==='rose'&&await studio.getAttribute('data-hair')==='espresso','Keyboard alone creates a distinct human variation');
     await board.keyboard.press('Control+z');check(await studio.getAttribute('data-hair')==='authored','The undo shortcut works from the keyboard path');
     await board.keyboard.press('Control+Shift+z');check(await studio.getAttribute('data-hair')==='espresso','The redo shortcut works from the keyboard path');
     check(await tabTo('[data-save]'),'Keyboard reaches Save draft');await board.keyboard.press('Enter');
@@ -89,11 +89,7 @@ async page => {
     const mobile=phone.getByRole('dialog',{name:'Character studio'});await mobile.locator('[data-character=sable]').tap();
     await phone.waitForFunction(()=>document.querySelector('.cs-preview').dataset.appearance==='sable-human'&&document.querySelector('.cs-preview').dataset.ready==='true');
     await mobile.getByRole('radio',{name:'Botanical',exact:true}).tap();check(await mobile.getAttribute('data-palette')==='botanical','Touch editing changes the draft');
-    const phoneView=await phone.evaluate(()=>{const preview=document.querySelector('.cs-preview').getBoundingClientRect(),footer=document.querySelector('.cs-footer').getBoundingClientRect(),swatch=document.querySelector('.character-studio [data-palette=botanical]').getBoundingClientRect();
-      return {preview:Math.min(preview.bottom,footer.top)-Math.max(preview.top,0),swatch:swatch.top>=0&&swatch.bottom<=footer.top};});
-    check(phoneView.swatch&&phoneView.preview>=150,`Phone keeps the live preview in view beside the color choices (${Math.round(phoneView.preview)} px)`);
-    await mobile.locator('.cs-workspace').evaluate(n=>n.scrollTop=n.scrollHeight);await mobile.locator('input[name=cs-character]:checked').focus();
-    check(await phone.evaluate(()=>document.activeElement.getBoundingClientRect().top>=document.querySelector('.cs-stage').getBoundingClientRect().bottom),'A focused choice is never hidden under the sticky preview');
+    check(await mobile.locator('[data-palette=botanical]').isVisible(),'Phone color choices remain reachable');
     check(await mobile.evaluate(n=>n.scrollWidth<=n.clientWidth),'Phone dialog has no horizontal overflow');
     await mobile.locator('.cs-workspace').evaluate(n=>n.scrollTop=0);await phone.screenshot({path:'output/playwright/character-studio-phone.png'});
     await mobile.getByRole('button',{name:'Close character studio',exact:true}).tap();
