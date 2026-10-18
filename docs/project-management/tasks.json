@@ -11760,6 +11760,29 @@
         "gaps": "Full preview suite timed out at 600s; server suite 667 pass, 1 fail, 204 skips. Office recovery failure passed isolated 1/1; unchanged source matches main. Hosted exact-head checks pending; no physical Safari/iPhone or human accessibility acceptance."
       },
       "leaseUntil": "2026-10-18T18:37:15.104049+00:00"
+    },
+    {
+      "id": "character-fidelity-517-review",
+      "title": "#517 supporting license/vendor and downstream integration review",
+      "status": "active",
+      "owner": "codex-517-review-20261018",
+      "branches": [
+        "docs/character-fidelity-517-review-20261018"
+      ],
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-517-review",
+      "updatedAt": "2026-10-18T19:51:54.525642+00:00",
+      "leaseUntil": "2026-10-18T21:51:54.525642+00:00",
+      "ledger": "docs/superpowers/plans/2026-10-18-character-fidelity-517-review.md",
+      "filesOwned": [
+        "docs/acceptance/character-fidelity-options.md",
+        "docs/superpowers/plans/2026-10-18-character-fidelity-517-review.md"
+      ],
+      "requiredChecks": [
+        "Official source verification",
+        "Local contract/source inspection",
+        "git diff --check"
+      ],
+      "nextAction": "Verify current vendor/licensing facts and downstream contract gaps; hand off supporting review to active #517 implementation owner without asset or source overlap."
     }
   ]
 }
