@@ -40,12 +40,11 @@ async (alice, bob) => {
       check(distance <= .16, `could not reach ${a}, ${d}`);
     }
   }
-  // One dart through the meter: hold the sweep across, set the line, hold it up, throw.
-  async function throwAt(page, [x, y]) {
+  // One dart: hold the hand still on the release that carries it to a point, and throw;
+  // the town flies it with the hand's own error.
+  async function throwAt(page, point) {
     const before = (await darts(page)).line?.points.length ?? 0;
-    await page.evaluate(mm => window.__riverIpicDarts().holdAt(mm), x);
-    await page.locator('.darts-panel[open] [data-darts-action="throw"]').click();
-    await page.evaluate(mm => window.__riverIpicDarts().holdAt(mm), y);
+    await page.evaluate(target => window.__riverIpicDarts().steadyOn(target), point);
     await page.locator('.darts-panel[open] [data-darts-action="throw"]').click();
     await page.waitForFunction(n => (window.__riverIpicDarts().line?.points.length ?? 0) > n, before);
   }
@@ -71,8 +70,8 @@ async (alice, bob) => {
   check(seen.line.points.length === 3 && seen.line.turn === 1, `bob sees alice's three darts and his turn: ${JSON.stringify(seen.line)}`);
   await bob.waitForFunction(() => window.__riverIpicDarts().board === 3);
   check(seen.line.scores[0] < 501, 'alice scored');
-  checks.push(`alice threw three darts through the meter; bob's board shows them (${seen.line.scores[0]} left)`);
-  const refused = await alice.evaluate(() => window.__riverMultiplayerCommand?.({ type: 'darts', lineId: 'ipic-tuck-room', action: 'throw', aim: [0, 0] }) ?? null);
+  checks.push(`alice released three darts at the treble 20; bob's board shows where the town landed them (${seen.line.scores[0]} left)`);
+  const refused = await alice.evaluate(() => window.__riverMultiplayerCommand?.({ type: 'darts', lineId: 'ipic-tuck-room', action: 'throw', release: [0, 50] }) ?? null);
   if (refused) { check(refused.error === 'not_your_turn', `out of turn refused: ${JSON.stringify(refused)}`); checks.push('a direct out-of-turn throw is refused by the town'); }
 
   await throwAt(bob, [0, 0]);

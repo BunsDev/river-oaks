@@ -93,3 +93,14 @@ test('watering leans in, looks down and tips the can forward with the right hand
   for (let i = 0; i < 120; i++) pose = gestures.update('continue', 1 / 60, i / 60);
   assert.ok(Math.abs(pose.hand_r[0]) < 0.01, 'releases back to rest');
 });
+
+test('table throw winds the right arm back, follows through, and settles', () => {
+  const gestures = createResidentGestures();
+  let pose;
+  for (let i = 0; i < 18; i++) pose = gestures.update('throw-windup', 1 / 60, i / 60);
+  assert.ok(pose.lowerarm_r[2] > 0.6, 'ball held at the shoulder');
+  for (let i = 0; i < 30; i++) pose = gestures.update('throw-release', 1 / 60, (18 + i) / 60);
+  assert.ok(pose.upperarm_r[0] < -0.9 && pose.lowerarm_r[2] < 0.4, 'arm extends through release');
+  for (let i = 0; i < 120; i++) pose = gestures.update('continue', 1 / 60, (48 + i) / 60);
+  assert.ok(Object.values(pose).flat().every(angle => Math.abs(angle) < 1e-6));
+});

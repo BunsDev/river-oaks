@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Computer fixture</title>
+<style>body{font:14px/1.5 system-ui,sans-serif;margin:0;padding:16px;background:#fff;color:#222}[hidden]{display:none!important}button{min-height:44px;margin:4px 4px 4px 0}textarea{display:block;width:100%;min-height:160px;box-sizing:border-box}h1{font-size:20px}#menu,#save-dialog{border:1px solid #999;padding:8px;margin:8px 0}</style>
+<script>window.__PARENT_ORIGIN=__PARENT_ORIGIN__;</script></head>
+<body data-phase="loading"><main>
+<p id="loading">Loading the Computer fixture…</p>
+<section id="signin" hidden><h1>Sign in required</h1><p>Computer signs you in in its own window.</p></section>
+<section id="gate" hidden><h1>Continue as <span id="gate-name"></span>?</h1><button id="continue" type="button">Continue</button><button id="switch" type="button">Switch account</button><div id="accounts" hidden></div></section>
+<section id="desktop" hidden><header><button id="menu-button" type="button" aria-expanded="false">Menu</button><span id="account-name"></span> · <span id="sync"></span></header><div id="menu" hidden><button id="menu-item" type="button">Arrange windows</button></div>
+<label for="note">Note</label><textarea id="note"></textarea>
+<div id="save-dialog" role="dialog" aria-label="Unsaved note" hidden><p>Couldn’t save to your account.</p><button id="keep-editing" type="button">Keep editing</button><button id="keep-local" type="button">Keep in this browser</button><button id="save-retry" type="button">Try again</button></div></section>
+<section id="standalone" hidden><h1>Computer fixture · standalone</h1><p id="standalone-account"></p></section>
+</main><script type="module" src="/child.js"></script></body></html>

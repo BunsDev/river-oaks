@@ -140,3 +140,55 @@ test('an extended stride takes fewer, longer steps over the same ground; stride 
   assert.ok(lope.started<ordinary.started*.85,`fewer steps: ${lope.started} vs ${ordinary.started}`);
   assert.ok(lope.planted>100);
 });
+
+test('sharp stationary and slow walking turns keep knee bend aligned with the shoe and complete corrective steps',()=>{
+  for(const speed of [0,.04,1.1])for(const hz of [30,60,120])for(const direction of [-1,1]) {
+    const {root,model}=rig(),placement=createFootPlacement(model,root);
+    let distance=0,maxTwist=0,steps=0;
+    for(let frame=0;frame<3*hz;frame++) {
+      const yaw=direction*Math.PI*Math.min(1,Math.max(0,frame/hz-.5)/.3);
+      root.rotation.y=yaw;distance+=speed/hz;
+      root.position.x+=Math.sin(yaw)*speed/hz;root.position.z+=Math.cos(yaw)*speed/hz;
+      model.position.y=-.08;model.traverse(bone=>{if(bone.isBone)bone.quaternion.identity();});
+      const previous=placement.legs.map(leg=>({contact:leg.contact,target:leg.target?.clone()}));
+      placement.update(1/hz,{speed,distance,heading:yaw},()=>0);
+      assert.ok(placement.legs.some(leg=>leg.contact),'one foot supports every turn');
+      placement.legs.forEach((leg,i)=>{
+        if(previous[i].contact&&!leg.contact)steps++;
+        if(previous[i].contact&&leg.contact&&previous[i].target)assert.ok(leg.target.distanceTo(previous[i].target)<1e-9,'support foot does not slide');
+        const hip=leg.thigh.getWorldPosition(new THREE.Vector3()),ankle=leg.foot.getWorldPosition(new THREE.Vector3()),knee=leg.calf.getWorldPosition(new THREE.Vector3());
+        const axis=ankle.clone().sub(hip).normalize();
+        const bend=knee.sub(hip);bend.addScaledVector(axis,-bend.dot(axis));
+        const toe=leg.forwardAxis.clone().applyQuaternion(leg.ikOrientation);toe.addScaledVector(axis,-toe.dot(axis));
+        if(bend.length()>.005&&toe.length()>.1)maxTwist=Math.max(maxTwist,bend.angleTo(toe));
+      });
+    }
+    assert.ok(maxTwist<Math.PI/3,`knee bends within 60 degrees of shoe: speed=${speed}, hz=${hz}, direction=${direction}, twist=${maxTwist}`);
+    assert.ok(steps>=2,'both feet can reposition during the turn');
+    if(speed<.1)for(const leg of placement.legs)assert.ok(leg.orientation.angleTo(root.quaternion)<.3,'slow turns finish repositioning without waiting for forward travel');
+  }
+});
+
+test('shipped rigs keep knee direction and reachable support through sharp turns',async()=>{
+  const {loadCharacterRig}=await import('./helpers/character-rig.js');
+  const {instantiateAvatar,AVATAR_PROFILES}=await import('../src/avatars.js');
+  for(const profile of [...AVATAR_PROFILES,'jevica'])for(const speed of [0,.04,1.1]) {
+    const avatar=instantiateAvatar(await loadCharacterRig(profile),{targetHeight:1.7}),root=new THREE.Group();root.add(avatar.model);
+    const baseY=avatar.model.position.y,placement=createFootPlacement(avatar.model,root);
+    let distance=0;
+    for(let frame=0;frame<180;frame++){
+      const yaw=Math.PI*Math.min(1,Math.max(0,frame/60-.5)/.3);
+      root.rotation.y=yaw;distance+=speed/60;root.position.x+=Math.sin(yaw)*speed/60;root.position.z+=Math.cos(yaw)*speed/60;
+      avatar.model.position.y=baseY;for(const [bone,rest]of avatar.rest)bone.quaternion.copy(rest);
+      placement.update(1/60,{speed,distance,heading:yaw},()=>0);
+      assert.ok(placement.legs.some(l=>l.contact));
+      for(const leg of placement.legs){
+        const hip=leg.thigh.getWorldPosition(new THREE.Vector3()),ankle=leg.foot.getWorldPosition(new THREE.Vector3()),bend=leg.calf.getWorldPosition(new THREE.Vector3()).sub(hip),axis=ankle.sub(hip).normalize();
+        bend.addScaledVector(axis,-bend.dot(axis));const toe=leg.forwardAxis.clone().applyQuaternion(leg.ikOrientation);toe.addScaledVector(axis,-toe.dot(axis));
+        if(bend.length()>.005&&toe.length()>.1)assert.ok(bend.angleTo(toe)<Math.PI/3,`${profile}/${speed}/${frame}: knee follows shoe ${bend.angleTo(toe)} axis=${axis.toArray()} toe=${toe.toArray()}`);
+        assert.ok(leg.error<.005,`${profile}/${speed}: foot stays reachable (${leg.error})`);
+      }
+    }
+    avatar.dispose();
+  }
+});
