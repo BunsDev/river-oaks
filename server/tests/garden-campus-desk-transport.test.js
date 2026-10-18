@@ -19,7 +19,8 @@ import { campusToSource } from '../../shared/garden-campus-layout.js';
 
 const gardens = await loadDistrictData({ districtRevision: DISTRICT_REVISION_GARDENS }), env = createWalkingEnvironment(gardens);
 const source = ([u, v]) => campusToSource([u, v]).slice(0, 2), delay = ms => new Promise(resolve => setTimeout(resolve, ms));
-const seat = name => ({ type: 'sit', buildId: `bench:campus-T1-F1-hall.table-2-${name}`, slot: 0 });
+// The lounge table beside the T1 entrance: chair 2 is within reach of the hall's arrival point.
+const seat = name => ({ type: 'sit', buildId: `bench:campus-T1-F1-hall.table-1-${name}`, slot: 0 });
 
 for (const mode of ['memory', 'redis']) test(`${mode}: a Gardens workstation opens only the sitter's own private desk`, { skip: mode === 'redis' && !process.env.REDIS_URL }, async t => {
   const origin = 'http://127.0.0.1', ids = { alice: 'alice', alice_alt: 'alice', bob: 'bob' };
@@ -63,26 +64,25 @@ for (const mode of ['memory', 'redis']) test(`${mode}: a Gardens workstation ope
   assert.equal((await post('alice', 'read')).status, 403, 'not at a workstation yet');
   for (const client of [a, b]) assert.equal((await client.send({ type: 'travel', storeId: 'campus:T1-F1-hall', mode: 'enter' })).ok, true);
   assert.equal((await post('alice', 'read')).status, 403, 'standing in the hall is not a workstation');
-  await a.walk([[22.6, 62], [20.6, 62.5]]);
-  const sat = await a.send(seat('chair-1'));assert.equal(sat.ok, true, sat.error);
+  const sat = await a.send(seat('chair-2'));assert.equal(sat.ok, true, sat.error);
   await until(() => a.snapshot.players.find(p => p.id === 'alice')?.campusWorkstation === true, 'snapshot shows the workstation');
   assert.equal((await post('alice_alt', 'read')).status, 403, 'another session does not inherit the seat');
   const task = { id: 'campus-task', title: 'Plan the atelier launch', notes: 'Private campus notes', result: '', links: [], status: 'open' };
   assert.equal((await post('alice', 'save', { expectedVersion: 0, task })).status, 200);
   assert.equal((await (await post('alice', 'read')).json()).desk.tasks[0].notes, 'Private campus notes');
   // Bob at the next chair has his own, empty desk.
-  await b.walk([[22.6, 62], [21, 63]]);
-  assert.equal((await b.send(seat('chair-2'))).ok, true);
+  await b.walk([[22.6, 58.6]]);
+  const bobSat = await b.send(seat('chair-1'));assert.equal(bobSat.ok, true, bobSat.error);
   await until(() => b.snapshot.players.find(p => p.id === 'bob')?.campusWorkstation === true, 'bob seated');
   assert.deepEqual((await (await post('bob', 'read')).json()).desk.tasks, [], 'a neighbour never sees another account’s work');
   assert.equal(JSON.stringify(b.snapshot).includes('Private campus notes'), false, 'private work never enters public snapshots');
-  assert.equal((await b.send(seat('chair-1'))).error, 'already_seated');
+  assert.equal((await b.send(seat('chair-2'))).error, 'already_seated');
   // Standing up closes the desk for that account.
   assert.equal((await a.send({ type: 'stand' })).ok, true);
   await until(() => !a.snapshot.players.find(p => p.id === 'alice')?.campusWorkstation, 'alice stood');
   assert.equal((await post('alice', 'read')).status, 403);
   // And the work is still there when she sits again.
-  assert.equal((await a.send(seat('chair-1'))).ok, true);
+  assert.equal((await a.send(seat('chair-2'))).ok, true);
   await until(() => a.snapshot.players.find(p => p.id === 'alice')?.campusWorkstation === true, 'alice back');
   assert.equal((await (await post('alice', 'read')).json()).desk.tasks[0].title, 'Plan the atelier launch');
 });

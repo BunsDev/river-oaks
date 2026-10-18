@@ -81,7 +81,7 @@ function suiteFitout(suite, levelId) {
 // Every piece keeps a 3 m clear route from the door to the core lobby (along the door's
 // axis) and stays out of the lobby; chairs are seat sites, not collision.
 const HALL_PROGRAMME = {
-  T1: { title: 'Shared work lounge', tables: [[19, 50.5], [19, 65.5]], bench: null, reception: [22.6, 52.3] },
+  T1: { title: 'Shared work lounge', tables: [[21.5, 62.4], [19, 66.5]], bench: null, reception: [22.6, 52.3] },
   T2: { title: 'Collaboration and project review', tables: [[18.5, 94.5], [18.5, 111.5]], bench: [19, 99] },
   T3: { title: 'Atelier workbenches', tables: [[18.5, 131.5], [18.5, 146.5]], bench: [14.6, 146.8] },
 };
