@@ -11,6 +11,7 @@ import { createDevAuth, devAuthAllowed } from './dev-auth.js';
 import { createSharedWorld, migrateWorldCheckpoint } from './world.js';
 import { parseScreeningHosts } from './screenings.js';
 import { configuredOfficeLayout } from './offices.js';
+import { parseCampusOperators } from './campus-leases.js';
 import { createModeration } from './moderation.js';
 import { createGameServer } from './app.js';
 import { createFileWaitlist } from './waitlist.js';
@@ -67,6 +68,8 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
   const screeningHosts=parseScreeningHosts(env.RIVER_OAKS_SCREENING_HOSTS,{onInvalid:()=>console.warn(JSON.stringify({event:'screening_host_grant_ignored'}))});
   // Jevica's office layout; unset or unknown keeps the legacy room (the default and the rollback).
   const officeLayout=configuredOfficeLayout(env.RIVER_OAKS_OFFICE_LAYOUT,{onInvalid:()=>console.warn(JSON.stringify({event:'office_layout_ignored'}))});
+  // Garden campus lease operators are explicit account ids; none configured keeps leasing closed.
+  const campusOperators=parseCampusOperators(env.RIVER_OAKS_CAMPUS_OPERATOR_IDS,{onInvalid:()=>console.warn(JSON.stringify({event:'campus_operator_ignored'}))});
   const officeDesk=createMemoryOfficeDesk();
   const games=new Map(),pending=new Map(),debugReports=createMemoryDebugReports(),catalog=createMemoryWorldCatalog(),social=createMemorySocial(),groups=createMemoryGroups(),profiles=createMemoryProfiles(),events=createMemoryEvents(),workplace=env.RIVER_OAKS_WORKPLACE==='1'?createWorkplace({allowed:async id=>!moderation.isBanned(id)&&await waitlist.isApproved(id)}):null,avatarPreferences=createMemoryAvatarPreferences(),characters=createMemoryCharacterStore(),cyclingMiles=createMemoryCyclingMiles(),presence=createMemoryPresence(),landmarkStores=new Map();
   const landmarkStoreFor=id=>{
@@ -90,7 +93,7 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
     if(!entry || entry.meta?.template!=='region-v1')return {ok:false,error:'missing'};
     const candidate=await catalog.revisionCandidate(id,expectedDraftVersion);
     if(!candidate.ok)return {ok:false,error:candidate.reason};
-    const options=mode==='local'?{isAdmin:auth.isAdmin,worldId:id,screeningHosts,officeLayout}:{worldId:id,screeningHosts,officeLayout};
+    const options=mode==='local'?{isAdmin:auth.isAdmin,worldId:id,screeningHosts,officeLayout,campusOperators}:{worldId:id,screeningHosts,officeLayout,campusOperators};
     const migrated=migrateWorldCheckpoint({fromData:await catalog.getRegion(id),toData:candidate.worldData,
       checkpoint:entry.world.checkpoint(),...options});
     if(!migrated.ok)return migrated;
@@ -112,7 +115,7 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
       if(!meta && id!==worldId)return null;
       const worldData=meta?.template==='region-v1'?await catalog.getRegion(id)
         :id===DEFAULT_WORLD_ID?data:{...data,title:meta?.title??data.title};
-      const world=createSharedWorld(worldData,mode==='local'?{isAdmin:auth.isAdmin,worldId:id,screeningHosts,officeLayout}:{worldId:id,screeningHosts,officeLayout});
+      const world=createSharedWorld(worldData,mode==='local'?{isAdmin:auth.isAdmin,worldId:id,screeningHosts,officeLayout,campusOperators}:{worldId:id,screeningHosts,officeLayout,campusOperators});
       const game=createGameServer({characterMetrics,characterStudioEnabled:env.RIVER_OAKS_CHARACTER_STUDIO==='1',auth:sharedAuth,world,worldTitle:meta?.title??worldData.title,waitlist,waitlistAdmins:admins,debugReports,landmarks:createWorldLandmarks({catalog,storeFor:landmarkStoreFor,worldId:id,worldTitle:meta?.title??worldData.title}),social,groups,profiles,events,workplace,officeDesk,avatarPreferences,characters,cyclingMiles,presence,worldDirectory,moderation,origin,staticRoot,
         ...(id===worldId?{worldCatalog:catalog}:{}),...(mode==='local'?{isAdmin:auth.isAdmin}:{}),
         ...(id===worldId?{onApplyRegion:applyRegion}:{}),regionSha256:meta?.regionSha256,
