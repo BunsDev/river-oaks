@@ -168,6 +168,9 @@ export function createIpicScreening({ host, THREE, getMultiplayer, getVenue, get
     on(image, 'error', () => { image.hidden = true; });
     // Foreground recovery: a fresh clock sample as soon as the page is visible again.
     on(doc, 'visibilitychange', () => { if (!doc.hidden && session === state) void sync(state); });
+    // A rotation or resize moves the walking card at once; measure it then, not at the next refresh, so the panel
+    // never sits over Stand up meanwhile (the software profile refreshes only once a second, #500).
+    if (doc.defaultView) on(doc.defaultView, 'resize', () => { if (session === state) { state.clearedAt = now(); clearWalkingCard(state); } });
     state.release = () => listeners.forEach(off => off());
     session = state;
     void sync(state);
