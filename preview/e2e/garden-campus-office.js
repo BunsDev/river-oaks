@@ -1,14 +1,13 @@
 async page => {
  // The Gardens' first useful-work journey (#510) on the campus revision, three fixture accounts:
  // the resident (owner fixture) asks for a suite and accepts the operator's offer through the
- // dialog; at a public workstation in the Grove Offices hall she writes private work, leaves,
- // reloads and recovers it; a second resident at the next chair has only his own desk. Entering
+ // dialog; at a public workstation in the Grove Offices hall they write private work, leave,
+ // reload and recover it; a second resident at the next chair has only their own desk. Entering
  // a leased suite upstairs needs #508's levels and is not part of this journey yet.
  const checks=[],check=(ok,label)=>{if(!ok)throw new Error(label);checks.push(label);console.log(label);};
  await page.emulateMedia({reducedMotion:'reduce'});
  const ready=async tab=>tab.waitForFunction(()=>document.querySelector('#canvas-host')?.dataset.playerReady==='true',null,{timeout:120000});
  const title=tab=>tab.locator('.walking-title strong').textContent();
- const press=async(tab,key)=>{await tab.locator('#canvas-host').focus();await tab.keyboard.press(key);};
  const click=async(tab,selector,text)=>{const target=text?tab.locator(selector,{hasText:text}).first():tab.locator(selector).first();await target.waitFor({state:'attached'});await target.evaluate(n=>n.click());};
  // Inside means the HUD's room marker, not the title: the street title at the door also names Grove Offices.
  const hall='campus:T1-F1-hall',inside=(tab,timeout=30000)=>tab.waitForFunction(id=>document.querySelector('#walking-hud')?.dataset.inside===id,hall,{timeout});
@@ -23,7 +22,7 @@ async page => {
  const intoHall=async tab=>{
   await click(tab,'#campus-panel button','Go to the Grove Offices hall');
   await tab.waitForFunction(()=>/Grove Offices hall/.test(document.querySelector('#campus-panel [role=status]')?.textContent??''),null,{timeout:30000});
-  // A software-rendered runner can drop the first press while arrival settles; the door prompt stays, so ask again.
+  // A software-rendered runner can miss the first step through while arrival settles; the door prompt stays, so ask again.
   for(let attempt=0;;attempt++){
    await tab.waitForFunction(()=>{const n=document.querySelector('#walking-enter');return n&&!n.hidden&&!n.disabled&&/Step inside Grove Offices/.test(n.textContent);},null,{timeout:30000});
    await tab.locator('#walking-enter').evaluate(n=>n.click());
@@ -34,12 +33,22 @@ async page => {
    }
   }
  };
- const sitAndOpenDesk=async tab=>{
-  await tab.waitForFunction(()=>/Sit down/.test(document.querySelector('#walking-interact')?.textContent??'')&&!document.querySelector('#walking-interact').hidden,null,{timeout:30000});
-  await press(tab,'KeyZ');
+ // Hall chairs are street seats: the Nearby seats picker lists the free ones within reach of
+ // the sitter (shared-seating-ui.js). From the hall's arrival point only table-1 chair 2 is in
+ // reach, so a second resident steps right (north, facing in) until another chair is offered.
+ const freeChair=tab=>tab.evaluate(prefix=>[...document.querySelectorAll('#nearby-seat option')].find(option=>!option.disabled&&option.value.startsWith(prefix))?.value??null,`bench:campus-${hall.slice('campus:'.length)}.`);
+ const sitAndOpenDesk=async(tab,{step=false}={})=>{
+  let chair=null;
+  for(let tries=0;tries<16&&!(chair=await freeChair(tab));tries++){
+   if(step){await tab.locator('#canvas-host').focus();await tab.keyboard.down('KeyD');await tab.waitForTimeout(250);await tab.keyboard.up('KeyD');}
+   await tab.waitForTimeout(400);
+  }
+  if(!chair)throw new Error(`No free hall chair was offered: ${JSON.stringify(await tab.evaluate(()=>({options:[...document.querySelectorAll('#nearby-seat option')].map(o=>`${o.value}${o.disabled?' (taken)':''}`),position:document.querySelector('#walking-hud')?.dataset.position})))}`);
+  await tab.locator('#nearby-seat').selectOption(chair);
+  await tab.locator('#seat-sit').evaluate(n=>n.click());
   await tab.waitForFunction(()=>document.querySelector('.walking-title strong')?.textContent==='Seated',null,{timeout:30000});
   await tab.waitForFunction(()=>/Use this desk/.test(document.querySelector('#walking-play')?.textContent??'')&&!document.querySelector('#walking-play').hidden,null,{timeout:30000});
-  await press(tab,'KeyX');
+  await tab.locator('#walking-play').evaluate(n=>n.click());
   await tab.locator('#office-desk').waitFor({state:'visible'});await tab.locator('#desk-loading').waitFor({state:'hidden'});
  };
  await page.goto('http://127.0.0.1:5173/?motion-debug=1',{waitUntil:'commit'});await ready(page);
@@ -100,7 +109,8 @@ async page => {
  check(true,'Work saves with the server’s acknowledgement');
  await page.screenshot({path:'output/playwright/garden-campus-desk.png'});
  await page.locator('#desk-close').click();
- await press(page,'KeyZ');await page.waitForFunction(()=>document.querySelector('.walking-title strong')?.textContent!=='Seated',null,{timeout:30000});
+ await page.waitForFunction(()=>/^Stand up/.test(document.querySelector('#walking-interact')?.textContent??''));await page.locator('#walking-interact').evaluate(n=>n.click());
+ await page.waitForFunction(()=>document.querySelector('.walking-title strong')?.textContent!=='Seated',null,{timeout:30000});
  check(await page.locator('#walking-play').evaluate(n=>n.hidden||!/Use this desk/.test(n.textContent)),'Standing up removes the desk action');
  check(await deskRead(page)===403,'Standing up closes the desk route');
  await page.reload({waitUntil:'commit'});await ready(page);
@@ -109,14 +119,13 @@ async page => {
  check(await page.locator('#desk-title').inputValue()==='Atelier launch plan','Reloading and returning to a workstation recovers the saved work');
  await page.locator('#desk-close').click();
 
- // A second resident at the next chair has only his own desk.
+ // A second resident at the next chair has only their own desk.
  const guestContext=await browser.newContext({viewport:{width:1280,height:900}});await guestContext.addCookies([{name:'fixture_session',value:'alice',url:origin}]);
  const guest=await guestContext.newPage();guest.setDefaultTimeout(60000);watchTravel(guest);
  await guest.goto(`${origin}/?motion-debug=1`,{waitUntil:'commit'});await ready(guest);
  await intoHall(guest);
- await guest.locator('#canvas-host').focus();await guest.keyboard.down('KeyD');await guest.waitForTimeout(450);await guest.keyboard.up('KeyD');
- await sitAndOpenDesk(guest);
- check(await guest.locator('#desk-start').isVisible(),'The neighbour’s workstation opens his own empty desk');
+ await sitAndOpenDesk(guest,{step:true});
+ check(await guest.locator('#desk-start').isVisible(),'The neighbour’s workstation opens their own empty desk');
  check(await guest.evaluate(()=>!document.body.textContent.includes('invite the creators')),'Another account’s private work never reaches the neighbour’s page');
  await guest.screenshot({path:'output/playwright/garden-campus-neighbour.png'});
  await guestContext.close();await operatorContext.close();
