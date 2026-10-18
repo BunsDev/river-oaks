@@ -446,6 +446,8 @@ function initializeRenderer() {
   // IPIC screenings (#367): the town's timeline on the existing screen, while the player is inside IPIC.
   // Mounted on the viewport, not the canvas host: walking takes pointer capture on the canvas host.
   ipicScreening??=createIpicScreening({host:host.parentElement??host,THREE,getMultiplayer:()=>multiplayer,getScreen:()=>buildingMesh?.userData.interiors?.userData.screens?.[0]??null,
+    // A recliner that names an eye pitch faces the screen; focus frames the film from that row (#500).
+    getSeat:()=>{const pose=walking?.getPose();return pose?.sitting&&Number.isFinite(pose.sitting.eyePitch)?{eye:pose.position}:null;},input:host,reducedMotion,
     getVenue:()=>{
       const pose=walking?.getPose(),room=pose&&!officeUI?.active?walking?.environment?.roomAt(pose.position[0],pose.position[2]):null;
       if(room?.interior!==IPIC_INTERIOR)return {active:false,auditorium:false};
@@ -923,6 +925,7 @@ function render(now) {
   multiplayer?.update(now);
   officeUI?.prepare(now);
   seatingControls?.update(now);
+  ipicScreening?.applyCamera(camera);
   if (auditCamera) {
     camera.position.copy(auditCamera.position); camera.lookAt(auditCamera.target);
     if (auditCamera.fov && camera.fov !== auditCamera.fov) { camera.fov = auditCamera.fov; camera.updateProjectionMatrix(); }
