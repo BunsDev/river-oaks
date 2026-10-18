@@ -5,6 +5,7 @@ import * as checkers from './checkers-rules.js';
 import { TABLE_GAMES } from './table-game-adapters.js';
 import { LESSONS, lessonAt } from './table-game-lessons.js';
 import { attachGuide } from './salon-guide.js';
+import { iconMarkup } from './salon-guide-content.js';
 
 export { TABLE_GAMES };
 
@@ -46,9 +47,10 @@ export function createPlazaTableGames({ host = document.querySelector('#viewport
   panel.id = 'table-game-panel'; panel.className = 'table-game-panel';
   panel.setAttribute('aria-labelledby', 'table-game-title');
   panel.innerHTML = `<header class="table-game-header"><div><p class="table-game-eyebrow" id="table-game-eyebrow">Plaza games · practice game</p><h2 id="table-game-title">Chess at the plaza</h2></div>
-    <button type="button" class="table-game-close" aria-label="Close the game board">×</button></header>
+    <button type="button" class="table-game-expand" aria-pressed="false" aria-label="Expand game board">Expand board</button><button type="button" class="table-game-close" aria-label="Close the game board">×</button></header>
+    <div class="table-game-choice" role="group" aria-label="Game">${Object.values(TABLE_GAMES).map(game => `<button type="button" data-game="${game.id}" aria-pressed="false">${iconMarkup(game.id)}<span>${game.short ?? game.name}</span></button>`).join('')}</div>
     <div class="table-game-body"><div class="table-game-board" role="grid" aria-label="Game board"></div>
-    <div class="table-game-side"><div class="table-game-choice" role="group" aria-label="Game">${Object.values(TABLE_GAMES).map(game => `<button type="button" data-game="${game.id}" aria-pressed="false">${game.short ?? game.name}</button>`).join('')}</div>
+    <div class="table-game-side">
     <p class="table-game-status" role="status" aria-live="polite"></p>
     <div class="table-game-invite" role="group" aria-label="Invitation" hidden><p></p><div><button type="button" data-invite="accept">Accept</button><button type="button" data-invite="decline">Decline</button></div></div>
     <div class="table-game-promotion" role="group" aria-label="Promote the pawn to" hidden></div>
@@ -447,6 +449,13 @@ export function createPlazaTableGames({ host = document.querySelector('#viewport
     panel.close(); selected = null; pendingChoice = null; promotion.hidden = true; focusWorld();
   };
   $('.table-game-close').addEventListener('click', close);
+  $('.table-game-expand').addEventListener('click', () => {
+    const expanded=panel.dataset.expanded!=='true';
+    panel.dataset.expanded=String(expanded);
+    const button=$('.table-game-expand');button.setAttribute('aria-pressed',String(expanded));
+    button.textContent=expanded?'Restore size':'Expand board';
+    button.setAttribute('aria-label',expanded?'Restore game board size':'Expand game board');
+  });
   // Escape, or X again (as in the world), puts the board away.
   panel.addEventListener('keydown', event => {
     if (event.key === 'Escape' || (event.code === 'KeyX' && !event.repeat && !event.metaKey && !event.ctrlKey && !event.altKey)) { event.preventDefault(); event.stopPropagation(); close(); }
