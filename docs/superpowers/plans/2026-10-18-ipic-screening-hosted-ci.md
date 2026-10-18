@@ -27,4 +27,4 @@
 | `node --test preview/tests/ipic-screening-launch.test.js`, written first | Failed (no module), then 3/3 |
 | `pnpm run test:screening` (local SwiftShader) | First run failed at the pause step ("The film has ended"), which led to the guard; the rerun passed 12 checks |
 | `pnpm run verify` | Passed: agent 112, preview 3371, server 753 with Redis skips, 76/76 |
-| Hosted Verify on the PR (Mesa) | RESULT_HOSTED |
+| Hosted Verify on the PR (Mesa) | Passed: the screening step ran in 66 s (run 39087616789, `preview checks`); the failure-evidence upload was skipped |
