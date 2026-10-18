@@ -143,6 +143,15 @@ External owners:
   recovery that moves parcel and campus-level occupants to a valid street point, keeps
   leases inert and keeps private desks. A code revert past v13 is not a supported
   rollback without a tested downgrade.
+- **Command field collides with the socket envelope (found 17:30Z by #510's journey).**
+  Both transports split `requestId` off every socket message to route replies. So #509's
+  `requestId` command field never reached the world:
+  - an offer from a request stayed unlinked, and the request stayed pending;
+  - `cancel` and `decline` failed as invalid.
+
+  It is being fixed at its owner: #509 renames the field to `leaseRequestId` and adds a
+  real-socket transport test. #510's client follows the rename. Lesson: lease tests must
+  cross the real ticket/WebSocket gate, not only `world.command`.
 - **Fingerprint inputs.** Garage `5fc38cbe…38b80` (main 153471bc, unchanged on #507).
   Campus `29c1c02a…74389` at contract `0e46ec36`. The campus fingerprint changes with any
   contract layout change, so #512 pins it at the release candidate.
