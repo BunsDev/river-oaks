@@ -292,6 +292,29 @@ fixture configuration.
 - Median satisfaction is at least 4 of 5.
 - Any identity leak, permission bypass or lost saved work fails the trial, whatever the totals.
 
+## Round 8: coat back panel, taken from the #442 lane with Val's approval (2026-10-18)
+
+- Val chose "Take the coat fix". Codex had marked its goal blocked at 07:02Z and
+  was idle, with no uncommitted coat files. The change stays outside the frozen
+  coat bake (`coat-tail-morph-receipt.json` inputs unchanged; the provenance test
+  passes).
+- The bake receipt already proves 0 penetrating vertices and 0 edge crossings, with
+  at least 2.5 cm clearance, so the coats met the intersection criterion. The
+  visible problem was art: the tails' waist ring sits about 7 cm behind the back
+  (measured: ring z −0.156 against a back at −0.083 m), a hard shelf in profile.
+- `coat-back.js` adds a skinned 280-triangle panel from that ring to the shoulder
+  blades (pelvis → `spine_02` → `spine_03`, back ±54° only). Beast tails root
+  about 9 cm below it. Before and after captures:
+  `.runtime/cs441/coats-compare-*.png`. The profile shelf is gone, and the coat
+  now hangs from the shoulders.
+- Checks: `coat-back.test.js` 6/6, with a negative control that fails when the
+  panel is moved inside the back. Coat, batching, character and garment tests:
+  92/92, with pinned triangle counts +280 for the six coat looks. The
+  `character-wardrobe` journey passed 877 checks in 292 s, 0 crossings
+  (`.runtime/cs441/wardrobe-run.json`).
+- Still open for art review: the tails' flat front panels (a bake input) and the
+  box lapels.
+
 ## Gaps and next steps
 
 Not claimed: human keyboard, VoiceOver or novice acceptance (#444 protocol),

@@ -1,6 +1,7 @@
 import {fitBootTrousers} from './boot-fitting.js';
 import {createSilvanTrousers} from './silvan-trousers.js';
 import {createCoatTailGeometry,COAT_TAIL_NAME} from './coat-tail-geometry.js';
+import {createCoatBackGeometry,skinCoatBack,COAT_BACK_NAME} from './coat-back.js';
 import {skinCoatTails} from './coat-tail-skinning.js';
 import {COAT_TAIL_MORPHS} from './coat-tail-morph-data.js';
 import {SILVAN_DRAPES,silvanDrapes,silvanWaist,createSilvanDrapeDetailGeometry} from './silvan-drape-geometry.js';
@@ -45,8 +46,9 @@ export function createReferenceStyle(avatar,appearance){
   function coatTails(surface){
     const cloth=surface.clone();cloth.side=THREE.DoubleSide;materials.add(cloth);
     const tails=mesh(pelvis,createCoatTailGeometry(appearance.character),cloth);tails.name=COAT_TAIL_NAME;
-    const fitted=skinCoatTails(tails,model.getObjectByName('man-casualmale_casualsuit02'));
+    const body=model.getObjectByName('man-casualmale_casualsuit02'),fitted=skinCoatTails(tails,body);
     attachments.add(fitted.group);
+    const back=mesh(pelvis,createCoatBackGeometry(),cloth);back.name=COAT_BACK_NAME;attachments.add(skinCoatBack(back,body).group);
     correctives.push(createSkirtSeatMorph(fitted.mesh,model,COAT_TAIL_MORPHS[appearance.character]));
   }
   function wavyHair(color,number){

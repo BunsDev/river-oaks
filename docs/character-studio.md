@@ -877,6 +877,20 @@ Evidence: `.runtime/character-studio/coat-tails/verified-lower-20261018/` and
 `lower-render/`; the ledger records skip counts and verification limits.
 
 
+### Coat back panel (#441, 2026-10-18)
+
+The split tails start at a waist ring about 7 cm behind the back, which showed as
+a hard shelf in profile. `coat-back.js` adds a 280-triangle panel that rises from
+just outside that ring to the shoulder blades. It spans only the back (±54°), so
+it stays inside the arms' swing. It is skinned to the body skeleton: pinned to the
+pelvis where it meets the tails, then carried by `spine_02` and `spine_03`. The
+panel is not a coat-bake input, so the tails' frozen hashes and seated morphs are
+unchanged. `coat-back.test.js` checks the six coat looks: skeleton binding,
+normalized weights, overlap with the waist ring, and staying behind the actual back
+at rest and with the spine bent ±0.18 rad. A negative control with the panel moved
+inside the back fails the check. Each look adds one draw, still within its
+20-draw cap. Flat front tail panels and box lapels remain open for art review.
+
 ### Peer revision fallback and recovery
 
 The two-account shared Studio journey injects seven receiving-snapshot faults:
