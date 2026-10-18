@@ -1,4 +1,7 @@
 import test from 'node:test';
+import * as THREE from 'three';
+import { buildGardenCampusFitout } from '../src/garden-campus-fitout-render.js';
+import { loadDistrictData } from '../../server/district-data.js';
 import assert from 'node:assert/strict';
 import { FITOUT_VERSION, campusFitout, campusFitoutObstacles, campusFitoutSeat, campusUnitSeats, validateCampusFitout } from '../../shared/garden-campus-fitout.js';
 import { GARDEN_CAMPUS_LAYOUT as CAMPUS, campusLevels, campusSupportAt, campusUnitInventory, rectsOverlap } from '../../shared/garden-campus-layout.js';
@@ -59,4 +62,19 @@ test('the halls and the café offer real seats: free floor, approach clear, work
     for (const seat of room.seats) assert.ok(seat.approach && seat.workstation, `${seat.id}`);
   }
   assert.deepEqual(fitout.ground.map(room => room.roomId), ['T1-F1-hall', 'T2-F1-hall', 'T3-F1-hall', 'C-hall']);
+});
+
+test('the fit-out draws every desk with one neutral screen and every seat, and releases what it owns', async () => {
+  assert.equal(buildGardenCampusFitout(await loadDistrictData()), null, 'nothing without the campus');
+  const group = buildGardenCampusFitout(await loadDistrictData({ districtRevision: 'river-oaks-gardens-3' }));
+  const desks = fitout.levels.flatMap(level => level.obstacles).filter(item => item.kind === 'desk').length;
+  const seats = fitout.levels.flatMap(level => level.seats).length + fitout.ground.flatMap(room => room.seats).length;
+  assert.equal(group.userData.counts.screen, desks, 'one dark screen per desk');
+  // A chair is a seat cushion, a back and a post, in two finishes.
+  assert.equal(group.userData.counts.fabric, seats * 2);
+  const owned = [];group.traverse(item => { if (item.material) owned.push(item.material);if (item.geometry) owned.push(item.geometry); });
+  let released = 0;for (const item of new Set(owned)) item.addEventListener('dispose', () => released++);
+  group.userData.dispose();
+  assert.equal(released, new Set(owned).size);
+  assert.ok(group instanceof THREE.Group);
 });
