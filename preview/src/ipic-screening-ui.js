@@ -315,6 +315,9 @@ export function createIpicScreening({ host, THREE, getMultiplayer, getVenue, get
   // (Look around, a drag or arrow key, standing, leaving) the walking camera's own view returns.
   function applyCamera(camera) {
     const state = session, at = now(), dt = view.at === null ? 0 : Math.max(0, at - view.at) / 1000; view.at = at;
+    // The walking card moves with the HUD; keep the panel clear of it four times a second. This runs every frame,
+    // where update() runs only on the software profile's once-a-second draw.
+    if (state && !state.stopped && !(at - state.clearedAt < 250)) { state.clearedAt = at; clearWalkingCard(state); }
     const seat = state && !state.stopped ? getSeat() : null;
     if (state?.focused && !seat) { state.focused = false; render(state, true); }
     const on = Boolean(state?.focused), step = (typeof reducedMotion === 'function' ? reducedMotion() : reducedMotion) ? 1 : dt / FOCUS_VIEW.easeSeconds;
@@ -351,7 +354,6 @@ export function createIpicScreening({ host, THREE, getMultiplayer, getVenue, get
       const state = session; if (state.stopped) return;
       if (now() - state.syncAt > 15_000) void sync(state);
       state.player.tick(); bindScreen(state); render(state); showCaption(state);
-      if (!(at - state.clearedAt < 250)) { state.clearedAt = at; clearWalkingCard(state); }
     },
     inspect() {
       const state = session; if (!state || state.stopped) return { active: false, stopped: Boolean(state?.stopped) };
