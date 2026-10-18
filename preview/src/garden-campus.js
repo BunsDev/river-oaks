@@ -18,6 +18,7 @@
 // rendering, and #508's campus levels own movement up there.
 import * as THREE from 'three';
 import { GARDEN_CAMPUS_LAYOUT as CAMPUS, campusLevels, campusToScene } from '../../shared/garden-campus-layout.js';
+import { campusPartitions } from '../../shared/garden-campus-partitions.js';
 
 const GLASS_INSET = 0.1, GLASS_THICKNESS = 0.04, MULLION = 0.08, MULLION_STEP = 1.5, MULLION_DEPTH = 0.18;
 const PARAPET = 1, PARAPET_THICKNESS = 0.25, GUARD_GLASS = 0.03, RAIL = 0.06, DOOR_HEIGHT = 2.6;
@@ -49,6 +50,7 @@ export function buildGardenCampus(world) {
     planting: new THREE.MeshStandardMaterial({ name: 'campus:planting', color: '#4f6b3c', roughness: 0.9 }),
     water: new THREE.MeshStandardMaterial({ name: 'campus:water', color: '#45606a', metalness: 0.2, roughness: 0.08 }),
     interior: new THREE.MeshStandardMaterial({ name: 'campus:floor', color: '#e6dfd2', roughness: 0.55 }),
+    partition: new THREE.MeshStandardMaterial({ name: 'campus:partition', color: '#ece6da', roughness: 0.82 }),
   };
   const batches = new Map(Object.keys(materials).map(key => [key, []]));
   // A box spanning [u0, u1] x [v0, v1] x [z0, z1] in campus metres.
@@ -134,6 +136,15 @@ export function buildGardenCampus(world) {
       box('timber', cu - 0.15, cv - 0.15, cu + 0.15, cv + 0.15, z, z + 3.4);box('planting', cu - 1.4, cv - 1.4, cu + 1.4, cv + 1.4, z + 3.4, z + 5.6);
     }
   }
+  // Interior walls closing every suite and service room off the public galleries and spines,
+  // and a closed timber door in bronze jambs in each suite's door (garden-campus-partitions.js).
+  const partitions = campusPartitions(CAMPUS);
+  for (const { rect, z0: za, z1: zb } of partitions.walls) box('partition', ...rect, za, zb);
+  for (const door of partitions.doors) {
+    for (const jamb of door.jambs) box('bronze', ...jamb, door.z0, door.head);
+    box('bronze', ...door.headRect, door.head, door.headTop);box('timber', ...door.leaf, door.z0, door.head);
+  }
+
   // Terrace decks: timber over each part, on the slab of the tier below.
   for (const tower of CAMPUS.towers) for (const terrace of tower.terraces) for (const [u0, v0, u1, v1] of terrace.parts) box('timber', u0, v0, u1, v1, terrace.z, terrace.z + ROOM.floor);
 

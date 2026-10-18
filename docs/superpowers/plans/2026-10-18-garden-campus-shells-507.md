@@ -143,6 +143,29 @@ The garage's roof plant and mass go, and the instanced shells come in.
   `store-rooms`, `venue-rooms` and `walking` pass 60/60. Rooms are derived, so the world
   fingerprint is unchanged.
 
+- **Floor 4 galleries open to the suites (found by the #508 slice (b) circulation views,
+  `06a93ced`).** Every upper level rendered without walls between the public galleries and
+  spines and the private suites, and #510's suite desks read as public space. Val moved the
+  walls and suite doors from #508 to #507 (2026-10-18 ~19:15Z); c5 agreed and keeps
+  ceilings, floors and lighting.
+  - **Geometry.** `shared/garden-campus-partitions.js` derives it from the contract. It
+    closes every private-suite and service room except at facades and shafts:
+    - 0.12 m walls, wholly inside the room on a public boundary and centred between two rooms;
+    - each of the 43 suites gets its contract door opening (1.7 m) with bronze jambs and head,
+      a closed timber leaf and a transom to the slab.
+  - **Renderer.** `garden-campus.js` draws it in a new `partition` plaster finish.
+  - **Tests.** `garden-campus-partitions.test.js` checks four things:
+    - every room is closed except its own door, sampled every 5 cm;
+    - no wall enters a public surface or shaft, and walls stay inside the plate and meet the slab;
+    - doors match their openings;
+    - the renderer draws every wall.
+  - **Mutations.** No walls between neighbours, public-side walls centred on the line, and
+    narrowed doors each fail the tests.
+  - **Results.** Campus, room and walking suites pass 64/64. Against #510's fit-out there is
+    no overlap with any of its 218 obstacles. The nearest suite stand point is 0.868 m from
+    a wall, under the 0.888 m turning radius, so #510's validator must take these walls as
+    the suite boundary.
+
 ## Gaps and owners
 
 - Upper-level movement, portals and gallery rendering: #508, river-oaks-c5.
