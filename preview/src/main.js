@@ -194,6 +194,7 @@ const sun = new THREE.DirectionalLight('#fff2d8', 2.5);
 const ambient = new THREE.HemisphereLight('#eef4eb', '#73806c', 2.3);
 const clock = new THREE.Timer();
 const sunOffset = new THREE.Vector3();
+const sunDirection = new THREE.Vector3(); // the direction sunlight travels
 const shadowCenter = new THREE.Vector3();
 const reflectionPosition = new THREE.Vector3();
 // A small pool of warm point lights follows the visitor into the nearest boutiques.
@@ -518,7 +519,9 @@ function gameDiagnostics() {
 // The town owns gameplay state from startup through reconnect.
 function startMultiplayer() {
   if (multiplayer) return;
-  remotePlayers = createRemotePlayers(scene, host);
+  // Peers out of view are culled with their shadows, while the sun casts any.
+  remotePlayers = createRemotePlayers(scene, host, { shadowDirection: () => renderer.shadowMap.enabled && sun.castShadow && sun.intensity > 0
+    ? sunDirection.copy(sunOffset).negate().normalize() : null });
   buildLayer ??= createSharedBuildLayer(scene);
   buildControls?.hide();
   multiplayer = createMultiplayer({
@@ -1148,6 +1151,7 @@ if (import.meta.env.DEV && renderAudit) {
     start: () => renderAudit.start(), stop: () => renderAudit.stop(),
     exteriorCulling(enabled) { exteriorCulling = Boolean(enabled); },
     avatarCulling(enabled) { remotePlayers?.setCulling(enabled); },
+    figureCulling(enabled) { remotePlayers?.setFigureCulling(enabled); },
     // Draws and submitted triangles for one frame, by pass and tagged owner.
     drawCensus: () => new Promise(resolve => { pendingDrawCensus = { census: createDrawCensus(renderer, camera), resolve }; }),
     crowdView() {
