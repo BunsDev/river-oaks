@@ -889,7 +889,11 @@ unchanged. `coat-back.test.js` checks the six coat looks: skeleton binding,
 normalized weights, overlap with the waist ring, and staying behind the actual back
 at rest and with the spine bent ±0.18 rad. A negative control with the panel moved
 inside the back fails the check. Each look adds one draw, still within its
-20-draw cap. Flat front tail panels remain open for art review.
+20-draw cap. The tails' fronts now sweep back from 20° off centre at the waist
+to about 43° at the hem, like a cut-away frock, instead of hanging as two
+straight boards. The waist ring and the 950-vertex topology are unchanged, and
+the seated corrections were rebaked (`node scripts/bake-coat-tails.mjs --write`,
+then `--check`): 0 penetrating, 0 crossings, 2.5 cm minimum clearance.
 
 Kai's and Aurel's chest pieces were flat rounded boxes. The flat fronts stood
 off the receding upper chest as slabs, and Kai's embroidery points sat at a fixed

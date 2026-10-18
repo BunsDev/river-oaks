@@ -17,6 +17,13 @@ export function createCoatTailGeometry(character='kai'){
   // A cutaway front clears the toe during a bent-ankle stride while the back
   // retains the full coat length. Keep the waist and upper tailoring fixed.
   const positions=geometry.attributes.position,uv=geometry.attributes.uv;
+  // The fronts sweep back from the waist toward the hem, like a cut-away frock,
+  // instead of hanging as two straight boards. The waist ring is unchanged.
+  for(let i=0;i<positions.count;i++){
+    const u=uv.getX(i),depth=uv.getY(i),right=positions.getX(i)>=0,sweep=.4*depth**1.4,spread=1+recipe.flare*depth/.19;
+    const a=right?.35+sweep+(Math.PI-.08-.35-sweep)*u:Math.PI+.08+(Math.PI-.35-sweep-.08)*u;
+    positions.setX(i,Math.sin(a)*recipe.rx*spread);positions.setZ(i,Math.cos(a)*recipe.rz*spread);
+  }
   for(let i=0;i<positions.count;i++){
     const front=MathUtils.smoothstep(positions.getZ(i),.04,.15);
     const rear=MathUtils.smoothstep(-positions.getZ(i),.10,.20);

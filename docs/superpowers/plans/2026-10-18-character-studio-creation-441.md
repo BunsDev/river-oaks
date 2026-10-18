@@ -345,6 +345,24 @@ fixture configuration.
   - Journeys run with the browser lock bypassed at Val's request: character-studio 44 checks in 127 s; character-wardrobe 877 checks in 301 s
     (`.runtime/cs441/chest-journeys.json`). Close-ups are inspected in `chest2-sheet.png`.
 
+## Round 10: coat fronts sweep back (2026-10-18)
+
+- The tails' front edges hung as two straight vertical boards with a 14 cm gap.
+  `coat-tail-geometry.js` now sweeps each front from 0.35 rad at the waist to
+  0.75 rad at the hem (`.4·depth^1.4`), keeping the waist ring (radius ratio
+  1.0000) and all 950 vertices.
+- Rebaked deterministically (`bake-coat-tails.mjs --write`, then `--check`
+  verified): Kai and Aurel 0 penetrating, 0 crossings, 2.5 cm minimum clearance,
+  maximum stretch 3.09 and 3.08 (was 3.07). This is a bake input, so the receipt
+  changes too.
+- Coat, back, chest, batching, garment and skirt tests 51/51. Full preview suite
+  3452 of 3454 passed, with the existing 1 skip and 1 todo. `character-wardrobe`
+  877 checks passed, `character-studio` 44 passed
+  (`.runtime/cs441/fronts-journeys.json`).
+- Before and after: `.runtime/cs441/fronts-compare-*.png`. The fronts open in a V
+  toward the hem. Broad waist-level tail panels remain a matter for final art
+  approval.
+
 ## Gaps and next steps
 
 Not claimed: human keyboard, VoiceOver or novice acceptance (#444 protocol),
