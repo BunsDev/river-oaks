@@ -50,7 +50,12 @@
 | In-world focus inspection (scratch runner, Metal, 1440 × 900, two accounts), `b9d78b86`, 16:34Z | Both rows framed the whole film within 80° (front 73.4° from 2.79 m, back 39.5° from 5.79 m); raycasts at the centre and four inset corners met the screen; seats unchanged. **But the captures show the screening panel over the bottom quarter of the focused film** |
 | Band regression (`ipic-screening-view.test.js`) on `b9d78b86` | Failed: the front row's film reached NDC y −0.865, below the panel's edge at −0.28 |
 | Same, with the band framing | Passes: front row steps back to 3.49 m at 80° (92.7° at its own row), back row 53.6° at its own row; film centre shifted up 0.36 |
-| `pnpm run verify` | Pending |
+| Hosted CI at `0adfc53e` | All 10 checks green, including the visit journey's new check that the film is above the panel |
+| GPU visit, normal motion, `0adfc53e`, 17:33Z (Metal, 1280 × 800) | **Passed, 11 checks** (the intro fix let the reception check through): focus framed the whole film above the panel at 80° from 3.75 m (row 2.79 m) |
+| GPU visit, reduced motion, `0adfc53e`, 18:30Z | **Passed, 11 checks:** the same framing, immediate |
+| In-world focus inspection, `0adfc53e`, 18:39Z (Metal, 1440 × 900, alice front 1-1, bob back 0-1) | Both fit: front 80° from 3.49 m (stepped back from 2.79 m), back 53.6° at its own 5.79 m; the film's lowest corner at NDC −0.255, above the panel's top at −0.306; all five raycasts on the screen; seats unchanged. Captures: the whole film with black mattes above the panel in both rows. Design note: in the back-row view, alice's nameplate floats over the film |
+| Lens shift through the pipeline (review) | The projection's off-centre term is set after `updateProjectionMatrix` each frame, with its inverse. Culling and raycasts use the matrices; GTAO copies `projectionMatrix` and its inverse on every render and never reads `fov`; bloom is screen-space. The next `updateProjectionMatrix` (focus ending) clears it |
+| `pnpm run verify` | Queued (chain14, after #501's retake) |
 
 ## Gaps and owners
 
