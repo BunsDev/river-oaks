@@ -1,10 +1,10 @@
 {
-  "createdAt": "2026-10-18T15:31:21.659Z",
+  "createdAt": "2026-10-18T17:03:51.774Z",
   "results": [
     {
       "name": "office-visit",
       "status": "passed",
-      "seconds": 70.333,
+      "seconds": 75.452,
       "result": {
         "checks": [
           "All elevator phases render before walking begins",
@@ -24,11 +24,12 @@
     {
       "name": "office-desk",
       "status": "passed",
-      "seconds": 25.093,
+      "seconds": 28.023,
       "result": {
         "checks": [
           "The desk keeps account tasks private in Jevica’s office",
           "Authorized office opens an empty private desk",
+          "Without a Computer origin the desk is Tasks only and loads no frame",
           "Notes, file links and result save to the account",
           "Typing at the desk does not move the player",
           "Completed task retains the written result",
@@ -50,7 +51,7 @@
     {
       "name": "office-computer-embed",
       "status": "passed",
-      "seconds": 63.702,
+      "seconds": 88.302,
       "result": {
         "checks": [
           "The desk opens on Tasks with a Computer tab beside it",
@@ -68,12 +69,17 @@
           "Escape at Computer’s top level closes the desk, removes the frame and restores office focus",
           "The Tasks draft and its failed save survive Computer",
           "Retry then saves the same task",
+          "Computer visit 1 runs exactly one frame",
+          "Computer visit 2 runs exactly one frame",
+          "Computer visit 3 runs exactly one frame",
+          "Repeated Computer visits leave no frame or message listener behind",
           "Reentry starts a fresh account gate",
           "The note saved to the Computer account comes back after the frame was destroyed and recreated",
           "Leaving during a save waits for Computer with the frame still mounted",
           "Computer confirms the account save before the frame is removed",
           "A cancelled close keeps editing in the same Computer",
-          "Stale, malformed, unsupported and wrong-origin messages are ignored",
+          "Stale, malformed, unsupported, URL-bearing and wrong-origin messages are ignored and navigate nothing",
+          "A reload inside Computer starts a fresh account gate and drops the old save status",
           "Another Computer account sees only its own notes",
           "An unsaved change asks for a decision instead of closing",
           "Leaving after keeping a local copy says so, not “saved”",
@@ -81,7 +87,7 @@
           "Computer recovers its local copy in the same browser, still marked unsynced",
           "An unanswered close is not treated as a save",
           "Leave without confirmation removes the frame and returns to the office",
-          "Ending the visit removes an unresponsive Computer at once (135 ms)",
+          "Ending the visit removes an unresponsive Computer at once (291 ms)",
           "A Computer that cannot load offers retry and Open separately, with no frame left behind",
           "Tasks keep working after Computer fails",
           "Phone-width desk fits Computer and a touch-sized Return to office",
@@ -90,9 +96,14 @@
           "A visitor does not inherit the office owner’s Computer session",
           "The visitor confirms their own Computer account",
           "The visitor sees none of another account’s notes",
-          "Revocation removes the visitor’s unresponsive Computer at once (291 ms)",
+          "Revocation removes the visitor’s unresponsive Computer at once (269 ms)",
+          "A second Place account in the same browser sees only its own tasks",
+          "The next Place account gets a fresh Computer gate, not the previous desktop",
+          "Place sign-out removes an unresponsive Computer at once (142 ms)",
           "No guest browser errors: ",
-          "Computer notes never reach Place task requests"
+          "Computer notes never reach Place task requests",
+          "Computer notes never appear in the public world snapshot",
+          "After every departure and forced teardown, no Computer frame or listener remains"
         ]
       }
     }

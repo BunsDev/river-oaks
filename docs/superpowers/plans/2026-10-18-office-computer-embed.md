@@ -117,6 +117,7 @@ All commands run from the worktree.
 | `pnpm run build` (merged) | exit 0 |
 | `uv run --locked ruff check .` / `ruff format --check .` / `pytest -q` | pass / pass / 141 passed |
 | `uv run --locked python scripts/check_secrets.py --all` | exit 0 |
+| `pnpm run test:experience office-visit office-desk office-computer-embed` (audit head 52fb3118, 2026-10-18T17:03Z) | all passed: office-visit 11, office-desk 18, office-computer-embed 50 checks. Forced teardown with a hung child: 291 ms (visit end, close pending), 269 ms (revocation), 142 ms (Place sign-out). Receipt refreshed. |
 | Not rerun locally | `river-oaks demo` and `demo-verify` (Python untouched); `verify full` (Redis, audit, browser matrix). Hosted CI is the merge gate. |
 
 ## Audit (2026-10-18, second pass)
