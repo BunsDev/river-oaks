@@ -1,6 +1,6 @@
 # The Gardens: measured campus contract (#506)
 
-The Gardens replaces the parking garage `osm-way-625330790` with three stepped rental office towers, two public Floor 4 skywalks and a planted public ground, inside the garage's own parcel. This brief records what the contract decides and how the next packages consume it. The numbers live in one place, [`shared/garden-campus-layout.js`](../../../shared/garden-campus-layout.js). [`layout-contract.json`](layout-contract.json) and the [views](views/) are generated from that module.
+The Gardens replaces the parking garage `osm-way-625330790` with three stepped rental office towers, two public Floor 4 skywalks and a planted public ground, inside the garage's own parcel. This brief records what the contract decides and how the next packages consume it. The numbers live in one place, [`shared/garden-campus-layout.js`](../../../shared/garden-campus-layout.js). [`layout-contract.json`](layout-contract.json) and the views ([site plan](views/site-plan.svg), [Floor 4](views/floor-4.svg), [long section](views/section-u16.svg)) are generated from that module.
 
 ## What is fixed
 

@@ -178,6 +178,13 @@ test('defects fail: shifted endpoint, wrong height, offsite volume, overlap, blo
   assert.ok(blockedLanding.findings.some(f => f.rule === 'blocked' && f.id === 'planter/T2-F4-south'));
   assert.ok(rules(blockedLanding).includes('route'), 'the gallery route is cut');
 
+  const moved = clone();moved.bridges[0].landings[0].rect = [14.5, 63, 17.5, 66];
+  assert.ok(validateGardenCampus(moved).findings.some(f => f.rule === 'landing' && f.id === 'T1-F4-north'), 'a landing moved away from its portal');
+
+  const gallery = clone();gallery.obstacles.push({ id: 'screen', kind: 'furniture', rect: [14.5, 104, 17.5, 105] });
+  assert.equal(campusRoute('T1-F4-public', 'T3-F4-public', { layout: gallery, walkOnly: true }), null);
+  assert.equal(campusRoute('T1-F4-public', 'T3-F4-public', { layout: gallery, walkOnly: true, publicOnly: false }), null, 'suites cannot replace the public crossing');
+
   const deck = clone();deck.obstacles.push({ id: 'kiosk', kind: 'furniture', rect: [15, 122, 17, 123] });
   assert.equal(campusRoute('T2-F4-public', 'T3-F4-public', { layout: deck, walkOnly: true }), null);
   assert.ok(rules(validateGardenCampus(deck)).includes('route'));
