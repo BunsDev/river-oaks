@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import { loadDistrictData } from '../../server/district-data.js';
 import {
-  CAMPUS_BUILDING_KIND, DISTRICT_REVISION_GARAGE, DISTRICT_REVISION_GARDENS, attachGardenCampus, campusCollisionRects, campusGroundAt,
+  CAMPUS_BUILDING_KIND, DISTRICT_REVISION_GARAGE, DISTRICT_REVISION_GARDENS, attachGardenCampus, campusCollisionRects, campusGroundAt, detachGardenCampus,
   campusGroundCutout, configuredDistrictRevision, districtRevisionOf, isCampusRoom, planCampusRooms,
 } from '../src/garden-campus-district.js';
 import { buildGardenCampus } from '../src/garden-campus.js';
@@ -43,7 +43,9 @@ test('the campus replaces the garage building and its exact collision ring, and 
   assert.deepEqual([...campus.collisionPolygons.slice(0, index), ...campus.collisionPolygons.slice(index + added)], garage.collisionPolygons.filter(ring => !same(ring)));
   assert.equal(campus.collisionPolygons.length, garage.collisionPolygons.length - 1 + added);
   assert.deepEqual(campus.buildings.filter(item => item.kind === CAMPUS_BUILDING_KIND).map(item => item.campus.part), ['T1', 'T2', 'T3', 'C', 'S']);
-  assert.deepEqual(campus.gardenCampus.replaced.ring, source.ring, 'provenance keeps the replaced ring');
+  assert.deepEqual(campus.gardenCampus.replaced.building, source, 'provenance keeps the replaced building');
+  // The garage district comes back byte for byte: the migration and rollback input.
+  assert.equal(JSON.stringify(detachGardenCampus(campus)), JSON.stringify(garage));
   assert.equal(campus.gardenCampus.versions.layout, CAMPUS.versions.layout);
   // Tower volumes reach their declared silhouette cap, which stays below the office roof.
   for (const tower of CAMPUS.towers) assert.equal(campus.buildings.find(item => item.campus?.part === tower.id).size[2], tower.silhouette.capZ);

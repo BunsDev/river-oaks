@@ -77,7 +77,7 @@ campus.
 ## Evidence (local, not yet hosted)
 
 - Garage fingerprint `5fc38cbe…38b80`, identical on main `153471bc` and on this branch's
-  default. Campus fingerprint `29c1c02a…74389` (contract `0e46ec36`).
+  default. Campus fingerprint `a9b7b4cc…6d84d455` (contract `0e46ec36`, with full replaced-building provenance for detachGardenCampus).
 - `node --test preview/tests/garden-campus-district.test.js`: 10/10.
 - `REDIS_URL=redis://127.0.0.1:16507 node --test server/tests/garden-campus-district.test.js`:
   10/10, Redis gateway included, 0 skipped.

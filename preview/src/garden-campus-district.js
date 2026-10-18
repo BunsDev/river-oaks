@@ -87,15 +87,29 @@ export function attachGardenCampus(world) {
   const garage = world.buildings.find(item => item.id === CAMPUS.source.buildingId);
   const collision = (world.collisionPolygons ?? []).findIndex(ring => sameRing(ring, garage.ring));
   if (collision < 0) throw new Error('Garage collision ring is not in this district');
-  const buildings = world.buildings.flatMap(item => item === garage ? campusBuildings() : [item]);
-  const collisionPolygons = world.collisionPolygons.flatMap((ring, index) => index === collision ? campusCollisionRects().map(item => ringOf(item.rect)) : [ring]);
+  const added = campusBuildings(), rings = campusCollisionRects().map(item => ringOf(item.rect));
+  const buildings = world.buildings.flatMap(item => item === garage ? added : [item]);
+  const collisionPolygons = world.collisionPolygons.flatMap((ring, index) => index === collision ? rings : [ring]);
   return {
     ...world, buildings, collisionPolygons,
     gardenCampus: {
       id: GARDEN_CAMPUS_ID, revision: DISTRICT_REVISION_GARDENS, versions: { ...GARDEN_CAMPUS_VERSIONS },
-      replaced: { buildingId: garage.id, kind: garage.kind, ring: structuredClone(garage.ring), size: [...garage.size], collisionIndex: collision },
+      // Exactly what was replaced and where, so detachGardenCampus restores the garage district byte for byte.
+      replaced: { building: structuredClone(garage), buildingIndex: world.buildings.indexOf(garage), buildings: added.length,
+        collisionRing: structuredClone(world.collisionPolygons[collision]), collisionIndex: collision, collisionRings: rings.length },
     },
   };
+}
+
+/** The garage district a campus world was built from (migration and rollback input). */
+export function detachGardenCampus(world) {
+  const replaced = world?.gardenCampus?.replaced;
+  if (!replaced) throw new Error('No garden campus to detach');
+  const { gardenCampus: _campus, ...rest } = world;
+  const buildings = [...world.buildings], collisionPolygons = [...world.collisionPolygons];
+  buildings.splice(replaced.buildingIndex, replaced.buildings, structuredClone(replaced.building));
+  collisionPolygons.splice(replaced.collisionIndex, replaced.collisionRings, structuredClone(replaced.collisionRing));
+  return { ...rest, buildings, collisionPolygons };
 }
 
 // ---- Ground ------------------------------------------------------------------
