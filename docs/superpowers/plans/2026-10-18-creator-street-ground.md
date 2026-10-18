@@ -69,7 +69,15 @@ sidewalk. Built-in creator rooms sat 17 cm below the paving for the same reason.
 | `REDIS_URL=<disposable local redis-server 8.10.2> pnpm run test:server` | 801 tests: 799 passed, 2 failed, 0 skipped. The failures were `connection-rotation` "memory: voice carries on across a hand-over" (timed out) and `town-worlds` "publishes and joins a second world" (`fetch failed`, `ECONNRESET`), with a load average of about 60 from other sessions. Both files then passed alone, twice (10/10 each run). |
 | First Redis attempt | Redis 8.10.2 itself segfaulted (`kvGetKey`, during a `ZADD` in the ticket script) 42 s in, and the remaining tests could not connect. The run was discarded and Redis restarted; the same binary had run the full suite cleanly three times earlier that day. |
 
-The journeys ran on ANGLE Metal (M3 Max, 1440 × 1000). CI results follow.
+| Hosted CI, Verify run 39121344948 on `11c6ad2b` (PR #495) | all 16 checks passed, including the aggregate `preview` gate. `preview shared (worlds-and-creator)` ran `world-publish`, `creator-generated-levels`, `creator-four-levels`, `creator-street-crossing` and `creator-objects`, all passed, on Mesa llvmpipe CPU acceptance rendering. |
+
+Locally the journeys ran on ANGLE Metal (M3 Max, 1440 × 1000).
+
+## Delivery
+
+- PR #495 (ready for review) closes #491. The evidence is commented on #491.
+- Not merged: merging waits for Val. When authorized: `pnpm run land 495`, then retire the
+  worktree with `project:prune`, then update #489's goldens.
 
 **Coordination:** the #489 Café branch pins golden digests of compiled creator regions from
 `d109648a`. Once this lands, those regions compile `walkSurfaceOffset: 0.2`, so #489's
