@@ -1,6 +1,6 @@
 import { validateCharacterDefinition, migrateStoredCharacterDefinition } from '../preview/src/character-definition.js';
 import { createOffices } from './offices.js';
-import { createCampusLeases } from './campus-leases.js';
+import { campusServed, createCampusLeases } from './campus-leases.js';
 import { createTableGames } from './table-games.js';
 import { officesFor } from '../preview/src/office-contract.js';
 import { createHash } from 'node:crypto';
@@ -121,9 +121,10 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   const interactions=createInteractions({players,environment,environmentFor:player=>environmentForLevel(player.levelId),
     now,movementOf,changed:()=>revision++,residents:()=>state.locals});
   const offices=createOffices({worldData,players,isAdmin,environment,changed:()=>revision++,cancel:id=>{interactions.cancel(id);focus.delete(id);},...(officeLayout?{officeLayout}:{})});
-  // Garden campus suites (campus-leases.js): owner-managed leases in the River Oaks town only,
-  // operated by RIVER_OAKS_CAMPUS_OPERATOR_IDS. Jevica's admin predicate grants nothing here.
-  const campus=createCampusLeases({enabled:worldId===DEFAULT_WORLD_ID,worldId,operators:campusOperators,players,changed:()=>revision++,onAccessEnded:event=>campusAccessEnded(event)});
+  // Garden campus suites (campus-leases.js): owner-managed leases in the River Oaks town, on a
+  // district that carries the campus, operated by RIVER_OAKS_CAMPUS_OPERATOR_IDS. Jevica's
+  // admin predicate grants nothing here. Elsewhere the saved campus section is kept inert.
+  const campus=createCampusLeases({enabled:campusServed(worldData,worldId),worldId,operators:campusOperators,players,changed:()=>revision++,onAccessEnded:event=>campusAccessEnded(event)});
   // Suite access that ended (expiry, revocation, release, a removed guest) names the public
   // point outside that suite's door. #508 returns an occupant of the suite there; until suite
   // occupancy exists nobody can stand inside one, so there is nobody to move.

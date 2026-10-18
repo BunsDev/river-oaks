@@ -12,12 +12,15 @@ import { createRedisRoom } from '../redis-room.js';
 import { createRedisSecurity } from '../redis-security.js';
 import { approvedWaitlist } from './waitlist-fixture.js';
 import { CAMPUS_LEASE_CONTRACT } from '../../shared/garden-campus-lease-contract.js';
+import { GARDEN_CAMPUS_ID, GARDEN_CAMPUS_VERSIONS } from '../../shared/garden-campus-layout.js';
 
 // Garden campus leases (#509) through the real ticket/WebSocket gates, two Redis gateways,
 // coordinator replacement and durable recovery. Redis cases skip without REDIS_URL.
 const HOUR = 3_600_000, DAY = 24 * HOUR, U1 = 'T1-F2-W-S', U2 = 'T3-F4-E';
 const OP = 'campus-operator', A = 'tenant-a', B = 'tenant-b';
-const data = JSON.parse(readFileSync(new URL('../../preview/public/data/district.json', import.meta.url)));
+// A stand-in for #507's attachGardenCampus marker: the district serves the campus.
+const served = world => ({ ...world, gardenCampus: { id: GARDEN_CAMPUS_ID, revision: 'river-oaks-gardens-3', versions: { ...GARDEN_CAMPUS_VERSIONS } } });
+const data = served(JSON.parse(readFileSync(new URL('../../preview/public/data/district.json', import.meta.url))));
 const op = () => `op-${randomUUID()}`;
 const base = () => ({ operationId: op(), worldId: 'river-oaks', contract: { ...CAMPUS_LEASE_CONTRACT } });
 const campusKeys = frame => Object.keys(frame.campus ?? {}).sort();
@@ -132,8 +135,8 @@ for (const mode of ['memory', 'redis']) test(`${mode}: two accounts racing for o
 });
 
 const testRedis = (name, fn) => test(name, { skip: !process.env.REDIS_URL }, fn);
-const small = { scene: 'district', bounds_m: [-30, -30, 30, 30], walkSpawn: [-12, 0, 0], collisionPolygons: [], stores: [], buildings: [],
-  communityLocations: [{ id: 'a', name: 'Garden', position: [-12, 0, 0] }] };
+const small = served({ scene: 'district', bounds_m: [-30, -30, 30, 30], walkSpawn: [-12, 0, 0], collisionPolygons: [], stores: [], buildings: [],
+  communityLocations: [{ id: 'a', name: 'Garden', position: [-12, 0, 0] }] });
 async function coordinators(t) {
   const redis = new Redis(process.env.REDIS_URL, { lazyConnect: true, maxRetriesPerRequest: 1, retryStrategy: null });
   redis.on('error', () => {});await redis.connect();

@@ -12,6 +12,7 @@
 // lease, the version the client saw. See docs/garden-campus-leases.md.
 import { createHash } from 'node:crypto';
 import { accountName } from '../preview/src/resident-names.js';
+import { DEFAULT_WORLD_ID } from '../preview/src/world-contract.js';
 import { checkCampusCompatibility } from '../shared/garden-campus-layout.js';
 import {
   CAMPUS_LEASE_CHARGE, CAMPUS_LEASE_CONTRACT, CAMPUS_LEASE_ERRORS, CAMPUS_LEASE_ID, CAMPUS_LEASE_LABEL, CAMPUS_LEASE_LIMITS as LIMITS,
@@ -45,6 +46,12 @@ export function parseCampusOperators(text = '', { onInvalid = () => {} } = {}) {
   return ids;
 }
 
+// The campus is served only in the River Oaks town, and only on a district revision that
+// carries it (#507's attachGardenCampus sets worldData.gardenCampus). Anywhere else the
+// section is inert: restored, validated and written back unchanged, with no access, units,
+// commands or expiry, so switching the district back and forth (#512) loses nothing.
+export const campusServed = (worldData, worldId) => worldId === DEFAULT_WORLD_ID && worldData?.gardenCampus?.id === CAMPUS_LEASE_CONTRACT.id;
+
 export function createCampusLeases({ enabled = true, worldId, operators = [], players = new Map(), changed = () => {}, onAccessEnded = () => {} } = {}) {
   const operatorIds = new Set(operators.filter(campusUserId));
   let serial = 0, leases = new Map(), requests = new Map(), receipts = [];
@@ -76,6 +83,7 @@ export function createCampusLeases({ enabled = true, worldId, operators = [], pl
   }
   // Expiry happens at the instant it was due, whichever gateway ticks first.
   function prune(time) {
+    if (!enabled) return false;
     let touched = false;
     for (const lease of live()) {
       if (lease.status === 'active' && lease.endsAt <= time) end(lease, 'expired', lease.endsAt);
@@ -340,6 +348,8 @@ export function createCampusLeases({ enabled = true, worldId, operators = [], pl
         || typeof item.id !== 'string' || !(item.kind === 'lease' ? CAMPUS_LEASE_ID : CAMPUS_REQUEST_ID).test(item.id) || serialOf(item.id) > saved.serial) throw new Error('Invalid campus receipt');
       keys.add(item.key);
     }
+    // An inert campus keeps every record exactly as saved; retirement waits until it is served.
+    if (!enabled) return { serial: saved.serial, leases: nextLeases, requests: nextRequests, receipts: structuredClone(saved.receipts) };
     for (const lease of openLeases) if (!UNITS.has(lease.unitId) || !compatible(lease.contract))
       Object.assign(lease, { status: 'ended', endedAt: time, endedReason: 'retired', guests: [], version: lease.version + 1, updatedAt: Math.max(lease.updatedAt, time) });
     for (const item of waiting) if (!UNITS.has(item.unitId) || !compatible(item.contract)) close(item, 'retired', time);

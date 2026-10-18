@@ -84,7 +84,12 @@ Full reference: `docs/garden-campus-leases.md`.
 - Older checkpoints (v2–12) restore with an empty campus. An empty section in an
   older version is tolerated, as with v12's `characters`. Lease data cannot
   masquerade as older.
-- The campus is enabled only in the `river-oaks` world.
+- The campus is served only in the `river-oaks` world on a district carrying
+  `worldData.gardenCampus` (#507). Anywhere else the section is inert and kept byte
+  for byte. This was #512's rollback-by-configuration requirement (coordinator,
+  2026-10-18). On main's current garage district, leasing is therefore inert until
+  the campus revision is served. Tests use a stand-in marker because #507 is not in
+  this base.
 
 ## Checks
 

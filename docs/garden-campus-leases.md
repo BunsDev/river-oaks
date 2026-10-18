@@ -27,10 +27,22 @@ out of it is #508, which calls the access decision described below.
 - **Guests** can enter the one suite they were named for while its lease is
   active, and can remove themselves.
 
-Leasing exists only in the `river-oaks` world. Other worlds and creator regions
-answer `campus_unavailable`. Configuration comes from the running application, not
-from a checkpoint: replace the processes to change it, and keep it the same on
-every gateway.
+Leasing exists only in the `river-oaks` world, and only on a district revision
+that serves the campus. #507's `attachGardenCampus` marks one with
+`worldData.gardenCampus` (`campusServed` in `server/campus-leases.js`). Everywhere
+else the campus is **inert**:
+
+- the snapshot has no `campus` field;
+- every campus command answers `campus_unavailable`;
+- `campusSuiteAccess` refuses, and `campusAccess` is empty;
+- nothing expires;
+- a restored campus section is validated and written back byte for byte.
+
+So switching the district between the garage and the campus (#512) loses no lease.
+When the campus is served again, its leases are honoured, and any lease past its end
+expires on the first tick, dated at its end. Configuration comes from the running
+application, not from a checkpoint: replace the processes to change it, and keep it
+the same on every gateway.
 
 ## Suites
 
@@ -184,6 +196,8 @@ replacement and Redis coordinator takeover. A lease expires on time even if nobo
 is in town. Region revisions carry the section over, and the district checkpoint
 migrations re-sign it unchanged.
 
+- A world that does not serve the campus restores the section unchanged and keeps
+  it inert (see [Who can do what](#who-can-do-what)).
 - Checkpoints from versions 2–12 restore with no campus. An empty section is the
   same as none. A version-12 checkpoint carrying lease data is refused, so campus
   state cannot pass itself off as an older version.

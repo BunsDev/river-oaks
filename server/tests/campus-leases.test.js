@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { createSharedWorld } from '../world.js';
 import { createCampusLeases, parseCampusOperators } from '../campus-leases.js';
 import { JEVICA_ADMIN_USER_IDS } from '../admin.js';
-import { campusSupportAt, campusUnitInventory } from '../../shared/garden-campus-layout.js';
+import { GARDEN_CAMPUS_ID, GARDEN_CAMPUS_VERSIONS, campusSupportAt, campusUnitInventory } from '../../shared/garden-campus-layout.js';
 import { CAMPUS_LEASE_CONTRACT, CAMPUS_LEASE_LABEL, CAMPUS_LEASE_LIMITS, campusLeaseUnits } from '../../shared/garden-campus-lease-contract.js';
 
 // Garden campus tenancy (#509) through the world command path, its checkpoint and the
@@ -13,9 +13,13 @@ import { CAMPUS_LEASE_CONTRACT, CAMPUS_LEASE_LABEL, CAMPUS_LEASE_LIMITS, campusL
 const HOUR = 3_600_000, DAY = 24 * HOUR, T0 = Date.UTC(2026, 9, 18, 16);
 const OP = 'campus-operator', A = 'tenant-a', B = 'tenant-b', G = 'guest-g', S = 'stranger';
 const U1 = 'T1-F2-W-S', U2 = 'T2-F4-E-N', U3 = 'T3-F6-W-N';
-const small = { scene: 'district', bounds_m: [-30, -30, 30, 30], walkSpawn: [-12, 0, 0], collisionPolygons: [], stores: [], buildings: [],
+// #507's attachGardenCampus marks a district that serves the campus with worldData.gardenCampus;
+// this stand-in carries only the marker the lease authority reads. Without it the campus is inert.
+const served = world => ({ ...world, gardenCampus: { id: GARDEN_CAMPUS_ID, revision: 'river-oaks-gardens-3', versions: { ...GARDEN_CAMPUS_VERSIONS } } });
+const garage = { scene: 'district', bounds_m: [-30, -30, 30, 30], walkSpawn: [-12, 0, 0], collisionPolygons: [], stores: [], buildings: [],
   communityLocations: [{ id: 'a', name: 'Garden', position: [-12, 0, 0] }] };
-const district = JSON.parse(readFileSync(new URL('../../preview/public/data/district.json', import.meta.url)));
+const small = served(garage);
+const district = served(JSON.parse(readFileSync(new URL('../../preview/public/data/district.json', import.meta.url))));
 const resign = saved => { const { checksum: _checksum, ...envelope } = saved; saved.checksum = createHash('sha256').update(JSON.stringify(envelope)).digest('hex'); return saved; };
 let serial = 0;
 const op = () => `op-${String(++serial).padStart(6, '0')}`;
@@ -378,6 +382,44 @@ test('a lease on a retired unit or incompatible contract ends on restore instead
   assert.deepEqual(next.world.snapshot().campus.leased, []);
   const again = next.world.checkpoint();
   assert.equal(fixture({ clock: f.state }).world.restore(again).ok, true, 'the retired state is itself a valid checkpoint');
+});
+
+// #512 switches RIVER_OAKS_DISTRICT_REVISION between the garage and the campus on the same
+// code; its recovery re-signs the checkpoint for the other district, as refit does here.
+const refit = (saved, data) => { saved.worldFingerprint = createHash('sha256').update(JSON.stringify(data)).digest('hex');return resign(saved); };
+test('a district without the campus keeps the section inert byte for byte; serving it again honours the leases and expires lapsed ones', () => {
+  const clock = { time: T0 }, campus = fixture({ clock });
+  let lease = campus.active(A, U1);
+  lease = campus.lease(A, 'grant', lease, { peerId: G }).lease;
+  const startsAt = clock.time + 1000, short = campus.issue(OP, U2, B, { startsAt, endsAt: startsAt + 2 * DAY }).lease;
+  campus.advance(2000);assert.equal(campus.lease(B, 'accept', short).ok, true);
+  const asked = campus.request(S, U3), offer = campus.issue(OP, U3, G);
+  const saved = campus.world.checkpoint(), section = JSON.stringify(saved.payload.campus);
+  // (a) The garage district restores the campus section without refusing it.
+  const inert = fixture({ data: garage, clock });
+  assert.equal(inert.world.restore(refit(structuredClone(saved), garage)).ok, true);
+  // (b) It writes the section back exactly as it was.
+  assert.equal(JSON.stringify(inert.world.checkpoint().payload.campus), section);
+  // (c) No access, no units, no commands and no expiry while the campus is absent.
+  assert.equal(inert.world.snapshot().campus, undefined);
+  assert.equal(inert.list(A).error, 'campus_unavailable');
+  assert.equal(inert.issue(OP, U3, B).error, 'campus_unavailable');
+  for (const [id, unitId] of [[A, U1], [G, U1], [B, U2]]) assert.deepEqual(inert.access(id, unitId), { ok: false, reason: 'campus_unavailable' });
+  assert.deepEqual(inert.world.campusAccess(A), []);
+  inert.advance(3 * DAY);
+  for (let i = 0; i < 3; i++) inert.world.step(0.1);
+  assert.equal(JSON.stringify(inert.world.checkpoint().payload.campus), section, 'nothing expired or was evicted while inert');
+  // (d) Served again, the leases are honoured and the one past its end expires on the first tick.
+  const back = fixture({ clock });
+  assert.equal(back.world.restore(refit(inert.world.checkpoint(), small)).ok, true);
+  assert.deepEqual([back.access(A, U1).role, back.access(G, U1).role], ['tenant', 'guest']);
+  assert.equal(back.access(B, U2).reason, 'campus_lease_expired', 'a lapsed lease admits nobody even before the tick');
+  back.world.step(0.1);
+  const lapsed = back.list(B).campus.leases.find(item => item.id === short.id);
+  assert.deepEqual([lapsed.status, lapsed.endedReason, lapsed.endedAt], ['ended', 'expired', short.endsAt]);
+  assert.deepEqual(back.world.snapshot().campus.leased, [U1]);
+  assert.equal(back.list(S).campus.requests.find(item => item.id === asked.request.id).status, 'pending');
+  assert.equal(back.lease(G, 'accept', offer.lease).ok, true, 'an offer inside its 7 days still stands');
 });
 
 test('operator authority comes from the running configuration, never from the checkpoint', () => {
