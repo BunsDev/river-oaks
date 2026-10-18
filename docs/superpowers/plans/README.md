@@ -184,10 +184,12 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-11-delivered-source-retirement](2026-10-11-delivered-source-retirement.md)<br>Delivered source reconciliation | `reconcile-delivered-sources` | retired | — | 2026-10-11 |
 | [2026-10-11-ci-parallel-preview](2026-10-11-ci-parallel-preview.md)<br>Parallel preview check | `ci-parallel-preview` | retired | #252 | 2026-10-11 |
 
-## Historical, not in the register (112)
+## Historical, not in the register (114)
 
 | Plan | PRs mentioned |
 | --- | --- |
+| [2026-10-18-throw-mechanics-darts-pong](2026-10-18-throw-mechanics-darts-pong.md)<br>Darts release and acceleration, and wine pong repositioning | — |
+| [2026-10-18-office-computer-embed](2026-10-18-office-computer-embed.md)<br>#486 Office desk: Tasks and Computer (Place side) | #486, #487, #33 |
 | [2026-10-18-ipic-tuck-room-photo](2026-10-18-ipic-tuck-room-photo.md)<br>IPIC Tuck Room from IMG_9756–9757 (photo review P13, P14) | — |
 | [2026-10-18-ipic-screening-hosted-ci](2026-10-18-ipic-screening-hosted-ci.md)<br>Hosted CI runs the IPIC screening journey | — |
 | [2026-10-18-ipic-reception-photo](2026-10-18-ipic-reception-photo.md)<br>IPIC reception from IMG_9738 (photo review P3, P4, P6) | — |
