@@ -119,3 +119,51 @@
 .morris-piece { position: relative; width: 66%; aspect-ratio: 1; border-radius: 50%; pointer-events: none; }
 .morris-piece[data-side=w] { background: radial-gradient(circle at 42% 36%, #fffaf0, #d8ccb4 64%); box-shadow: 0 2px 3px rgb(0 0 0 / .35), inset 0 0 0 2px rgb(0 0 0 / .06); }
 .morris-piece[data-side=b] { background: radial-gradient(circle at 42% 36%, #4a403b, #1e1a18 62%); box-shadow: 0 2px 3px rgb(0 0 0 / .45); }
+
+/* The five-game salon sheet gives the board its own stage. Scope these sizing
+   rules so the other plaza games retain their deliberately different boards. */
+#table-game-panel {
+  --board-size: max(240px, min(580px, calc(100vw - 346px), calc(100dvh - 238px)));
+  width: min(900px, calc(100vw - 40px));
+}
+#table-game-panel .table-game-header > div { flex: 1; min-width: 0; }
+#table-game-panel .table-game-expand { flex: none; min-height: 40px; padding: 8px 12px; border: 1px solid var(--hud-hairline); border-radius: 10px; color: var(--ink); background: var(--hud-tile); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+#table-game-panel .table-game-expand[aria-pressed=true] { background: var(--hud-raised); border-color: var(--hud-action); }
+#table-game-panel .table-game-choice { flex: none; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--hud-hairline); border-radius: 0; background: none; }
+#table-game-panel .table-game-choice button { display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 52px; padding: 6px 8px; border: 1px solid transparent; border-radius: 12px; color: var(--hud-muted); background: var(--hud-tile); line-height: 1.2; }
+#table-game-panel .table-game-choice button:hover { color: var(--ink); border-color: var(--hud-hairline); }
+#table-game-panel .table-game-choice button[aria-pressed=true] { color: var(--ink); background: var(--hud-raised); border-color: var(--hud-action); box-shadow: inset 0 -3px var(--hud-action); }
+#table-game-panel .table-game-choice .salon-icon { width: 30px; height: 30px; flex: none; }
+#table-game-panel .table-game-choice .sg-icon-fill, #table-game-panel .table-game-choice .sg-icon-glyph { fill: currentColor; }
+#table-game-panel .table-game-choice .sg-icon-line { fill: none; stroke: currentColor; stroke-width: 1.5; }
+#table-game-panel .table-game-body { grid-template-columns: minmax(0, 1fr) 248px; gap: 18px; align-items: start; padding-top: 16px; }
+#table-game-panel .table-game-board { justify-self: center; }
+#table-game-panel .table-game-side { max-height: var(--board-size); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; padding: 1px 3px 3px; }
+#table-game-panel .table-game-moves { min-height: 68px; max-height: none; }
+#table-game-panel .chess-piece { font-size: calc(var(--board-size) * .09); }
+#table-game-panel .checkers-piece[data-king]::after { font-size: calc(var(--board-size) * .05); }
+#table-game-panel[data-expanded=true] {
+  --board-size: max(240px, min(calc(100vw - 340px), calc(100dvh - 202px)));
+  position: fixed; inset: 16px; width: auto; height: calc(100dvh - 32px); max-height: none;
+}
+#table-game-panel[data-expanded=true] .table-game-body { flex: 1; }
+@media (max-width: 1100px) {
+  #table-game-panel[data-expanded=true] { --board-size: max(240px, min(calc(100vw - 76px), calc(100dvh - 220px))); }
+  #table-game-panel[data-expanded=true] .table-game-body { grid-template-columns: minmax(0, 1fr); }
+  #table-game-panel[data-expanded=true] .table-game-side { max-height: none; overflow: visible; }
+  #table-game-panel[data-expanded=true] .table-game-moves { max-height: 140px; }
+}
+@media (max-width: 760px) {
+  #table-game-panel { --board-size: min(480px, calc(100vw - 58px)); inset: 64px 12px auto; width: auto; padding-inline: 16px; }
+  #table-game-panel .table-game-header { gap: 7px; flex-wrap: wrap; }
+  #table-game-panel .table-game-header > div { flex-basis: 100%; padding-right: 92px; box-sizing: border-box; }
+  #table-game-panel .table-game-header .salon-guide-open { position: absolute; top: 13px; right: 59px; }
+  #table-game-panel .table-game-close { position: absolute; top: 13px; right: 16px; }
+  #table-game-panel .table-game-choice { gap: 4px; }
+  #table-game-panel .table-game-choice button { flex-direction: column; gap: 3px; min-height: 64px; padding: 5px 2px; font-size: 10px; }
+  #table-game-panel .table-game-choice .salon-icon { width: 25px; height: 25px; }
+  #table-game-panel .table-game-body { grid-template-columns: minmax(0, 1fr); margin-inline: -16px; padding-inline: 16px; }
+  #table-game-panel .table-game-side { max-height: none; overflow: visible; }
+  #table-game-panel .table-game-moves { max-height: 140px; }
+  #table-game-panel[data-expanded=true] { --board-size: min(620px, calc(100vw - 50px)); inset: 8px; height: calc(100dvh - 16px); }
+}
