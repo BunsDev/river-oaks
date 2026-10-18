@@ -7,8 +7,11 @@ let fixture, browser;
 try {
   // A synthetic IPIC host grant for the owner fixture's user id (server/tests/browser-fixture.js), so
   // the seated step can start the film and measure its panel.
-  fixture = await startBrowserFixture({ env: { VITE_SHARED_SOFTWARE_RENDERING: '1', RIVER_OAKS_SCREENING_HOSTS: 'ipic:user_01M40Y914S1H4EJCEHH91DKTAY' } });
-  browser = await chromium.launch({ headless: true, ...(process.env.IPIC_CHROMIUM ? { executablePath: process.env.IPIC_CHROMIUM } : {}), args: ['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'] });
+  // IPIC_GPU=1 runs the visit on this machine's GPU (Metal ANGLE on macOS) with the game's full pipeline, instead of
+  // the software profile, whose slow frames can swallow the walk's short key taps under load (#500).
+  const gpu = process.env.IPIC_GPU === '1';
+  fixture = await startBrowserFixture({ env: { ...(gpu ? {} : { VITE_SHARED_SOFTWARE_RENDERING: '1' }), RIVER_OAKS_SCREENING_HOSTS: 'ipic:user_01M40Y914S1H4EJCEHH91DKTAY' } });
+  browser = await chromium.launch({ headless: true, ...(process.env.IPIC_CHROMIUM ? { executablePath: process.env.IPIC_CHROMIUM } : {}), args: gpu ? ['--use-angle=metal', '--ignore-gpu-blocklist'] : ['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'] });
   // IPIC_REDUCED_MOTION=1 runs the same visit with reduced motion (screen focus is then immediate, #500).
   const context = await browser.newContext({ viewport: { width: 1280, height: 800 }, reducedMotion: process.env.IPIC_REDUCED_MOTION === '1' ? 'reduce' : 'no-preference' });
   await context.addCookies([{ name: 'fixture_session', value: 'owner', url: fixture.origin }]);
