@@ -162,9 +162,11 @@ The garage's roof plant and mass go, and the instanced shells come in.
   - **Mutations.** No walls between neighbours, public-side walls centred on the line, and
     narrowed doors each fail the tests.
   - **Results.** Campus, room and walking suites pass 64/64. Against #510's fit-out there is
-    no overlap with any of its 218 obstacles. The nearest suite stand point is 0.868 m from
-    a wall, under the 0.888 m turning radius, so #510's validator must take these walls as
-    the suite boundary.
+    no overlap with any of its 218 obstacles. The nearest of its 116 suite stand points is
+    1.38 m from a full-height wall (`T1-F3-E-S/desk-1-chair`), clear of the 0.888 m turning
+    radius. An earlier note here said 0.868 m; that came from a faulty one-off script.
+    #510's validator now counts these walls as obstacles anyway, so a future layout cannot
+    meet one unseen.
 
 ## Gaps and owners
 
