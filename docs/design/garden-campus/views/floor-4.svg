@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="568" height="1168" viewBox="0 0 568 1168" font-family="Helvetica, Arial, sans-serif">
+<title>The Gardens Floor 4 plan</title>
+<rect width="568" height="1168" fill="#fbfaf7"/>
+<polygon points="266.32,40.49 213.6,40.49 40,40.47 40,632.54 40.01,667 40,1127.8 241.01,1127.83 266.55,1127.82 266.51,953.98 266.32,40.49" fill="none" stroke="#3b4a3f" stroke-width="1" stroke-dasharray="4 3"/>
+<rect x="172" y="431.8" width="18" height="156" fill="#d5e5c2" stroke="#5c7048" stroke-width="0.6"/>
+<rect x="76" y="569.8" width="96" height="18" fill="#d5e5c2" stroke="#5c7048" stroke-width="0.6"/>
+<rect x="76" y="761.8" width="12" height="36" fill="#dedad3" stroke="#a9a397" stroke-width="0.4"/>
+<rect x="118" y="791.8" width="9" height="6" fill="#dedad3" stroke="#a9a397" stroke-width="0.4"/>
+<rect x="118" y="761.8" width="9" height="12" fill="#dedad3" stroke="#a9a397" stroke-width="0.4"/>
+<rect x="127" y="830.8" width="18" height="6" fill="#dedad3" stroke="#a9a397" stroke-width="0.4"/>
+<rect x="76" y="491.8" width="12" height="36" fill="#dedad3" stroke="#a9a397" stroke-width="0.4"/>
+<rect x="118" y="518.8" width="9" height="9" fill="#dedad3" stroke="#a9a397" stroke-width="0.4"/>
+<rect x="118" y="491.8" width="9" height="9" fill="#dedad3" stroke="#a9a397" stroke-width="0.4"/>
+<rect x="76" y="275.8" width="12" height="36" fill="#dedad3" stroke="#a9a397" stroke-width="0.4"/>
+<rect x="118" y="302.8" width="9" height="9" fill="#dedad3" stroke="#a9a397" stroke-width="0.4"/>
+<rect x="118" y="275.8" width="9" height="9" fill="#dedad3" stroke="#a9a397" stroke-width="0.4"/>
+<rect x="127" y="227.8" width="18" height="6" fill="#dedad3" stroke="#a9a397" stroke-width="0.4"/>
+<rect x="76" y="797.8" width="51" height="39" fill="#f3e7d3" stroke="#7d6a4a" stroke-width="0.6"/>
+<text x="101.5" y="817.3" font-size="8" text-anchor="middle">T1-401</text>
+<text x="101.5" y="827.3" font-size="7" text-anchor="middle">55.25 m2</text>
+<rect x="76" y="707.8" width="51" height="54" fill="#f3e7d3" stroke="#7d6a4a" stroke-width="0.6"/>
+<text x="101.5" y="734.8" font-size="8" text-anchor="middle">T1-402</text>
+<text x="101.5" y="744.8" font-size="7" text-anchor="middle">76.5 m2</text>
+<rect x="145" y="707.8" width="27" height="129" fill="#f3e7d3" stroke="#7d6a4a" stroke-width="0.6"/>
+<text x="158.5" y="772.3" font-size="6" text-anchor="middle">T1-403</text>
+<text x="158.5" y="780.3" font-size="5" text-anchor="middle">96.75 m2</text>
+<rect x="76" y="527.8" width="51" height="42" fill="#f3e7d3" stroke="#7d6a4a" stroke-width="0.6"/>
+<text x="101.5" y="548.8" font-size="8" text-anchor="middle">T2-401</text>
+<text x="101.5" y="558.8" font-size="7" text-anchor="middle">59.5 m2</text>
+<rect x="76" y="431.8" width="51" height="60" fill="#f3e7d3" stroke="#7d6a4a" stroke-width="0.6"/>
+<text x="101.5" y="461.8" font-size="8" text-anchor="middle">T2-402</text>
+<text x="101.5" y="471.8" font-size="7" text-anchor="middle">85 m2</text>
+<rect x="145" y="506.2" width="27" height="63.6" fill="#f3e7d3" stroke="#7d6a4a" stroke-width="0.6"/>
+<text x="158.5" y="538" font-size="6" text-anchor="middle">T2-403</text>
+<text x="158.5" y="546" font-size="5" text-anchor="middle">47.7 m2</text>
+<rect x="145" y="431.8" width="27" height="63.6" fill="#f3e7d3" stroke="#7d6a4a" stroke-width="0.6"/>
+<text x="158.5" y="463.6" font-size="6" text-anchor="middle">T2-404</text>
+<text x="158.5" y="471.6" font-size="5" text-anchor="middle">47.7 m2</text>
+<rect x="76" y="311.8" width="51" height="30" fill="#f3e7d3" stroke="#7d6a4a" stroke-width="0.6"/>
+<text x="101.5" y="326.8" font-size="8" text-anchor="middle">T3-401</text>
+<text x="101.5" y="336.8" font-size="7" text-anchor="middle">42.5 m2</text>
+<rect x="76" y="227.8" width="51" height="48" fill="#f3e7d3" stroke="#7d6a4a" stroke-width="0.6"/>
+<text x="101.5" y="251.8" font-size="8" text-anchor="middle">T3-402</text>
+<text x="101.5" y="261.8" font-size="7" text-anchor="middle">68 m2</text>
+<rect x="145" y="227.8" width="27" height="114" fill="#f3e7d3" stroke="#7d6a4a" stroke-width="0.6"/>
+<text x="158.5" y="284.8" font-size="6" text-anchor="middle">T3-403</text>
+<text x="158.5" y="292.8" font-size="5" text-anchor="middle">85.5 m2</text>
+<rect x="127" y="707.8" width="18" height="123" fill="#f6d9b8" stroke="#a8682f" stroke-width="0.8"/>
+<rect x="127" y="431.8" width="18" height="138" fill="#f6d9b8" stroke="#a8682f" stroke-width="0.8"/>
+<rect x="127" y="233.8" width="18" height="108" fill="#f6d9b8" stroke="#a8682f" stroke-width="0.8"/>
+<rect x="118" y="773.8" width="9" height="18" fill="#f6d9b8" stroke="#a8682f" stroke-width="0.6"/>
+<rect x="118" y="500.8" width="9" height="18" fill="#f6d9b8" stroke="#a8682f" stroke-width="0.6"/>
+<rect x="118" y="284.8" width="9" height="18" fill="#f6d9b8" stroke="#a8682f" stroke-width="0.6"/>
+<rect x="145" y="495.4" width="27" height="10.8" fill="#f6d9b8" stroke="#a8682f" stroke-width="0.4"/>
+<rect x="106" y="761.8" width="12" height="36" fill="#e9c9a3" stroke="#a8682f" stroke-width="0.6"/>
+<rect x="106" y="491.8" width="12" height="36" fill="#e9c9a3" stroke="#a8682f" stroke-width="0.6"/>
+<rect x="106" y="275.8" width="12" height="36" fill="#e9c9a3" stroke="#a8682f" stroke-width="0.6"/>
+<rect x="127" y="569.8" width="18" height="138" fill="#f2c79a" stroke="#9a5a2c" stroke-width="0.8"/>
+<rect x="127" y="341.8" width="18" height="90" fill="#f2c79a" stroke="#9a5a2c" stroke-width="0.8"/>
+<rect x="88" y="782.2" width="18" height="15.6" fill="#4d463c"/>
+<rect x="88" y="761.8" width="18" height="20.4" fill="#4d463c"/>
+<rect x="88" y="512.2" width="18" height="15.6" fill="#4d463c"/>
+<rect x="88" y="491.8" width="18" height="20.4" fill="#4d463c"/>
+<rect x="172" y="587.5" width="18" height="0.6" fill="#5a5246"/>
+<rect x="172" y="431.5" width="18" height="0.6" fill="#5a5246"/>
+<rect x="189.7" y="431.8" width="0.6" height="156" fill="#5a5246"/>
+<rect x="76" y="587.5" width="48" height="0.6" fill="#5a5246"/>
+<rect x="148" y="587.5" width="24" height="0.6" fill="#5a5246"/>
+<rect x="75.7" y="569.8" width="0.6" height="18" fill="#5a5246"/>
+<rect x="88" y="296.2" width="18" height="15.6" fill="#4d463c"/>
+<rect x="88" y="275.8" width="18" height="20.4" fill="#4d463c"/>
+<rect x="124" y="569.8" width="3" height="138" fill="#5a5246"/>
+<rect x="145" y="569.8" width="3" height="138" fill="#5a5246"/>
+<rect x="124" y="341.8" width="3" height="90" fill="#5a5246"/>
+<rect x="145" y="341.8" width="3" height="90" fill="#5a5246"/>
+<rect x="127" y="707.8" width="18" height="18" fill="none" stroke="#c0392b" stroke-width="1" stroke-dasharray="2 2"/>
+<rect x="127" y="551.8" width="18" height="18" fill="none" stroke="#c0392b" stroke-width="1" stroke-dasharray="2 2"/>
+<rect x="127" y="431.8" width="18" height="18" fill="none" stroke="#c0392b" stroke-width="1" stroke-dasharray="2 2"/>
+<rect x="127" y="323.8" width="18" height="18" fill="none" stroke="#c0392b" stroke-width="1" stroke-dasharray="2 2"/>
+<circle cx="127" cy="814.3" r="2.5" fill="#7d6a4a"/>
+<circle cx="127" cy="734.8" r="2.5" fill="#7d6a4a"/>
+<circle cx="145" cy="769.3" r="2.5" fill="#7d6a4a"/>
+<circle cx="127" cy="548.8" r="2.5" fill="#7d6a4a"/>
+<circle cx="127" cy="461.8" r="2.5" fill="#7d6a4a"/>
+<circle cx="145" cy="538" r="2.5" fill="#7d6a4a"/>
+<circle cx="145" cy="463.6" r="2.5" fill="#7d6a4a"/>
+<circle cx="172" cy="500.8" r="2.5" fill="#c0392b"/>
+<circle cx="127" cy="326.8" r="2.5" fill="#7d6a4a"/>
+<circle cx="127" cy="254.8" r="2.5" fill="#7d6a4a"/>
+<circle cx="145" cy="287.8" r="2.5" fill="#7d6a4a"/>
+<circle cx="136" cy="707.8" r="4" fill="#c0392b"/>
+<circle cx="136" cy="569.8" r="4" fill="#c0392b"/>
+<circle cx="136" cy="431.8" r="4" fill="#c0392b"/>
+<circle cx="136" cy="341.8" r="4" fill="#c0392b"/>
+<rect x="103" y="787" width="6" height="6" fill="#2f5d8e"/>
+<rect x="103" y="769" width="6" height="6" fill="#6b4f8e"/>
+<rect x="103" y="787" width="6" height="6" fill="#2f5d8e"/>
+<rect x="103" y="769" width="6" height="6" fill="#6b4f8e"/>
+<rect x="103" y="517" width="6" height="6" fill="#2f5d8e"/>
+<rect x="103" y="499" width="6" height="6" fill="#6b4f8e"/>
+<rect x="103" y="517" width="6" height="6" fill="#2f5d8e"/>
+<rect x="103" y="499" width="6" height="6" fill="#6b4f8e"/>
+<rect x="103" y="301" width="6" height="6" fill="#2f5d8e"/>
+<rect x="103" y="283" width="6" height="6" fill="#6b4f8e"/>
+<rect x="103" y="301" width="6" height="6" fill="#2f5d8e"/>
+<rect x="103" y="283" width="6" height="6" fill="#6b4f8e"/>
+<text x="72" y="772.3" font-size="10" text-anchor="end">T1-F4</text>
+<text x="72" y="500.8" font-size="10" text-anchor="end">T2-F4</text>
+<text x="72" y="284.8" font-size="10" text-anchor="end">T3-F4</text>
+<text x="288" y="60" font-size="10" text-anchor="start">The Gardens: Floor 4 (z 13, garden-campus/l3)</text>
+<text x="288" y="74" font-size="10" text-anchor="start">layout 3.0, support 1</text>
+<text x="288" y="88" font-size="10" text-anchor="start"></text>
+<text x="288" y="102" font-size="10" text-anchor="start">orange: public gallery, spur, lobby, passage, deck</text>
+<text x="288" y="116" font-size="10" text-anchor="start">red dashes: 3 m bridge landings (keep clear)</text>
+<text x="288" y="130" font-size="10" text-anchor="start">red dots: skywalk portals, terrace door</text>
+<text x="288" y="144" font-size="10" text-anchor="start">brown dots: suite doors</text>
+<text x="288" y="158" font-size="10" text-anchor="start">cream: private suites (number, net m2)</text>
+<text x="288" y="172" font-size="10" text-anchor="start">grey: service residual</text>
+<text x="288" y="186" font-size="10" text-anchor="start">green: T2 z 13 terrace</text>
+<text x="288" y="200" font-size="10" text-anchor="start">blue / violet squares: lift / stair portals</text>
+<text x="288" y="214" font-size="10" text-anchor="start">dark: lift and stair shafts, guards</text>
+</svg>
