@@ -6,6 +6,7 @@ import { copyFileSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from '
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { audioProblems, captionProblems, checkCandidate, mp4FastStart, parseLoudness, parseVtt, recordProblems } from '../ipic-short/intake-check.mjs';
+import { takeProblems } from '../ipic-short/shot-health.mjs';
 
 // The intake check for #501's second short. Synthetic candidates are built in a temporary
 // directory for the test and never kept; nothing here is a film anyone approved.
@@ -25,6 +26,16 @@ test('captions follow the panel’s rules: plain speaker labels, described sound
   assert.match(silent, /no cue names a speaker/);
   assert.match(silent, /no cue describes it/);
   assert.match(captionProblems(cues, { durationMs: 3000, transcript: [], audio: { dialogue: true, music: true } }).problems.join(), /ends after the film.*differ from the transcript|differ from the transcript/);
+});
+
+test('a take is refused when the town dropped, a friend left their seat or the page stalled, and when it has no sample', () => {
+  const good = { id: 'two-shot', health: { samples: 65, maxGapMs: 34, offline: 0, unseated: 0 } };
+  assert.deepEqual(takeProblems([good]), []);
+  assert.match(takeProblems([{ ...good, health: { ...good.health, offline: 12 } }]).join(), /two-shot: the camera page was offline for 12 of 65 samples/);
+  assert.match(takeProblems([{ ...good, health: { ...good.health, unseated: 3 } }]).join(), /fewer than two friends were seated for 3 of 65/);
+  assert.match(takeProblems([{ ...good, health: { ...good.health, maxGapMs: 900 } }]).join(), /went 900 ms between frames/);
+  // A take from before the check (such as the 17:00Z take, frozen for 15 s in the screen shot) is not cut.
+  assert.match(takeProblems([{ id: 'screen', start: 231.9, end: 245.7 }]).join(), /screen: no health sample/);
 });
 
 test('loudness: a silent track cannot pass as dialogue or music, and peaks must leave headroom', () => {

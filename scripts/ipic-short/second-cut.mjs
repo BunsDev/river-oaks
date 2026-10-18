@@ -9,11 +9,15 @@ import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { takeProblems } from './shot-health.mjs';
 
 const [capture, voicesDir, scoreWav, out] = process.argv.slice(2).map(p => resolve(p));
 const here = dirname(fileURLToPath(import.meta.url));
 const script = JSON.parse(readFileSync(join(here, 'second-short.json'), 'utf8'));
 const { shots: captured, browser, renderer, recordedAt, sourceRevision } = JSON.parse(readFileSync(join(capture, 'shots.json'), 'utf8'));
+// Only a healthy take is cut (shot-health.mjs): one recorded while the town dropped or the page stalled is refused.
+const unusable = takeProblems(captured);
+if (unusable.length) { console.error(`This take cannot be cut: ${unusable.join('; ')}`); process.exit(1); }
 const { lines, model } = JSON.parse(readFileSync(join(voicesDir, 'voices.json'), 'utf8'));
 const id = script.id, run = (cmd, args) => execFileSync(cmd, args, { stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 1 << 26 }).toString();
 mkdirSync(out, { recursive: true });

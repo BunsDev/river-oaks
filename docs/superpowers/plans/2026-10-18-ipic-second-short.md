@@ -38,9 +38,11 @@
 
 | Check | Result |
 | --- | --- |
-| `node --test scripts/tests/ipic-short-intake.test.js` | 5/5 (ffmpeg 9.0.1 locally; the two ffmpeg cases skip with a reason where it is missing) |
+| `node --test scripts/tests/ipic-short-intake.test.js` | 6/6 (ffmpeg 9.0.1 locally; the two ffmpeg cases skip with a reason where it is missing) |
 | `pnpm run verify` (core, at nice 19) | Agent 126/126 (the 5 intake tests included). Preview 3,523/3,524, with one existing skip. Then server 668 + 204 Redis skips, desktop 76/76, build, python (ruff) and security: all passed |
 | Dry run of `second-cut.mjs` on stand-in footage, then `intake-check.mjs` | `engineering-candidate`, no problems. Awaiting Val's approval of the exact bytes |
+| Real capture, 16:43–17:00Z, Metal (M3 Max), Chromium 156.0.8078.4, source `cecb90dd` plus the uncommitted seating fix | **Unusable.** Load rose from 57 to 212 during it. All three pages logged 1,163 page errors (`Cannot read properties of null (reading 'players')`, about 388 each): the fixture's sockets dropped, and `shared-seating-ui.js:51` reads `town.snapshot.players` unguarded beside the recliners, so each disconnected frame threw before its draw. `freezedetect` found the screen shot unchanged for 15 s. Frame timestamps stayed at a steady 25 fps (the recorder's own clock), so they could not show it. The seating guard is already in open PR #489 (`cafe-publication-pilot-420`); not duplicated here |
+| Take health (`shot-health.mjs`), new | The capture samples each shot in the camera page (longest gap between animation frames; every 200 ms, offline and fewer than two seated) and refuses a take that dropped, lost a seated friend or stalled more than 250 ms; `second-cut.mjs` refuses one without healthy samples. On `cecb90dd` the cut accepted any take. Regression: 6/6 intake tests. The cut refuses the 17:00Z take |
 
 ## The film: "Two Seats, One Screen" (`ipic-two-seats-v1`, a draft id)
 
@@ -54,7 +56,7 @@
   bars, a seeded touch of timing, a small Schroeder room). Deterministic: two runs give identical bytes. No samples or
   recordings. It swells only after the last line (from 53 s), then fades.
 - **Footage.** `scripts/ipic-short/second-capture.mjs` records a third page (the owner fixture, out of shot at the back)
-  on Metal while alice (Maya) and bob (Theo) sit in recliners 1-1 and 1-2. Six render-audit camera shots; alice starts the
+  on Metal while alice (Maya) and bob (Theo) sit side by side in front-row recliners 1-1 and 1-0, seated one after the other from the spot between the rows (the first try at 1-2 could not be reached: the gaps in the front row are narrower than a body). Six render-audit camera shots; alice starts the
   default film for the house-lights shot. Load-gated (below 40), so the footage does not stutter.
 - **Cut and mix.** `scripts/ipic-short/second-cut.mjs`:
   - dialogue at its cue times, and the score ducked under it (sidechain, ratio 6);
@@ -74,7 +76,7 @@ then #499, #500 and #502 stay fixture-ready, and the two-film rows in #502's mat
 
 ## Next step
 
-1. The real capture (load-gated, queued on the browser lock).
+1. Take the capture again, load-gated, with the health samples: a take that drops or stalls fails with `retake:`.
 2. `second-cut.mjs`, then `intake-check.mjs` and `decode-check.mjs` on the candidate.
 3. Copy the candidate to a private review folder outside the repository and ask Val to review and approve the exact
    bytes.

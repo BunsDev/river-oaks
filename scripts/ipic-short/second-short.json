@@ -13,7 +13,7 @@
     "Fictional characters: Maya and Theo are not anyone real."
   ],
   "shots": [
-    { "id": "arrive", "seconds": 8, "camera": "auditorium", "action": "Wide from the back corner: the two friends settle into front-row recliners; house lights up." },
+    { "id": "arrive", "seconds": 8, "camera": "auditorium", "action": "Wide from the back corner: the two friends settle into front-row recliners 1-1 and 1-0; house lights up." },
     { "id": "two-shot", "seconds": 13, "camera": "two-shot", "action": "Side two-shot along the front row." },
     { "id": "screen", "seconds": 13, "camera": "over-shoulder", "action": "From behind the pair toward the idle screen." },
     { "id": "faces", "seconds": 12, "camera": "faces", "action": "From near the screen back toward the pair." },

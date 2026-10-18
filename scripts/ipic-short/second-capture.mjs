@@ -1,7 +1,8 @@
 // The second short's capture (#501, "Two Seats, One Screen"). Its output stays outside the repository until
 // Val approves the cut; second-cut.mjs makes the delivery files. Records a third page (the owner fixture,
 // standing at the back of the auditorium, out of shot) on real-GPU headless Chromium (Metal ANGLE) while two
-// synthetic fixture accounts sit in the front row: alice in recliner 1-1 (Maya), bob in recliner 1-2 (Theo).
+// synthetic fixture accounts sit side by side in the front row: alice in recliner 1-1 (Maya), bob in recliner 1-0 (Theo).
+// Both are seated from the same spot between the rows, one after the other (the front row's gaps are narrower than a body).
 // Shots are framed with the DEV-only render-audit camera, as preview/e2e/ipic-photo-views.mjs does. alice
 // holds a synthetic IPIC host grant and starts the venue's default film for the "dim" shot.
 //   node scripts/ipic-short/second-capture.mjs <worktree> <out-dir>
@@ -9,6 +10,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { execFileSync } from 'node:child_process';
+import { takeProblems } from './shot-health.mjs';
 
 const [worktree, outDir] = process.argv.slice(2).map(p => resolve(p));
 const load = path => import(pathToFileURL(join(worktree, path)).href);
@@ -25,9 +27,9 @@ const HIDE = '#ipic-screening,.hardware-acceleration-warning,.visit-tools,#panel
 const auditorium = IPIC_CAMERAS.find(item => item.name === 'auditorium');
 const CAMERAS = {
   auditorium: { eye: auditorium.eye, target: auditorium.target, fov: 62 },
-  'two-shot': { eye: [-4.4, 7.3, 31.55], target: [0.4, 7.0, 31.0], fov: 46 },
-  'over-shoulder': { eye: [0.4, 7.65, 29.4], target: [IPIC_SCREEN.a, 6 + IPIC_SCREEN.y - 0.2, IPIC_SCREEN.d], fov: 58 },
-  faces: { eye: [0.4, 7.35, 33.25], target: [0.4, 7.05, 31.0], fov: 44 },
+  'two-shot': { eye: [-5.0, 7.35, 32.3], target: [-1.6, 7.0, 31.0], fov: 46 },
+  'over-shoulder': { eye: [-1.6, 7.65, 29.4], target: [IPIC_SCREEN.a, 6 + IPIC_SCREEN.y - 0.2, IPIC_SCREEN.d], fov: 58 },
+  faces: { eye: [-1.6, 7.35, 33.25], target: [-1.6, 7.05, 31.0], fov: 44 },
 };
 
 await mkdir(outDir, { recursive: true });
@@ -90,10 +92,22 @@ try {
   }
   const entry = [[-1.4, 4.8], [-1.4, 20.7], [-1.4, 24.5], [-4.85, 24.5], [-4.85, 29.65]];
   await Promise.all([enter(maya), enter(theo), enter(camera)]);
-  await Promise.all([walk(maya, [...entry, [-1.6, 29.65]]), walk(theo, [...entry, [0.4, 29.65]]), walk(camera, [...entry.slice(0, 4), [-4.85, 26.6]])]);
-  await Promise.all([sit(maya, 'bench:ipic-recliner-1-1'), sit(theo, 'bench:ipic-recliner-1-2')]);
+  await Promise.all([walk(maya, [...entry, [-1.6, 29.65]]), walk(theo, entry), walk(camera, [...entry.slice(0, 4), [-4.85, 26.6]])]);
+  await sit(maya, 'bench:ipic-recliner-1-1');
+  await walk(theo, [[-1.6, 29.65]]);
+  await sit(theo, 'bench:ipic-recliner-1-0');
   await camera.waitForFunction(() => (window.__riverMultiplayer().snapshot.players ?? []).filter(p => p.sitting).length >= 2);
   await camera.evaluate(([css]) => { const style = document.createElement('style'); style.textContent = css; document.head.append(style); document.body.classList.add('clear-view'); }, [HIDE]);
+  // Each shot's health, sampled in the camera page (shot-health.mjs): the longest wait between two animation frames,
+  // and, every 200 ms, whether the town was offline or fewer than two friends sat.
+  const watch = () => camera.evaluate(() => {
+    const w = window.__shotHealth = { samples: 0, maxGapMs: 0, offline: 0, unseated: 0, done: false };
+    let last = performance.now();
+    const tick = at => { w.maxGapMs = Math.max(w.maxGapMs, at - last); last = at; if (!w.done) requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
+    w.timer = setInterval(() => { const town = window.__riverMultiplayer?.(); w.samples++; if (!town?.connected) w.offline++; if ((town?.snapshot?.players ?? []).filter(p => p.sitting).length < 2) w.unseated++; }, 200);
+  });
+  const health = () => camera.evaluate(() => { const w = window.__shotHealth; w.done = true; clearInterval(w.timer); return { samples: w.samples, maxGapMs: Math.round(w.maxGapMs), offline: w.offline, unseated: w.unseated }; });
   const frame = name => { const c = CAMERAS[name]; return camera.evaluate(([position, target, fov]) => window.__riverRenderAudit.view({ position, target, fov }), [three(c.eye), three(c.target), c.fov]); };
   // Each shot holds its camera for its length plus a lead-in the cut trims away.
   for (const shot of script.shots) {
@@ -101,15 +115,17 @@ try {
     await camera.waitForTimeout(1500);
     if (shot.id === 'dim') {
       await maya.waitForFunction(() => !document.querySelector('#ipic-screening [data-control="host-start"]')?.hidden);
+      await watch();
       const start = (Date.now() - started) / 1000;
       await maya.locator('#ipic-screening [data-control="host-start"]').click();
       await camera.waitForTimeout(shot.seconds * 1000 + 800);
-      shots.push({ ...shot, start, end: (Date.now() - started) / 1000 });
+      shots.push({ ...shot, start, end: (Date.now() - started) / 1000, health: await health() });
       continue;
     }
+    await watch();
     const start = (Date.now() - started) / 1000;
     await camera.waitForTimeout(shot.seconds * 1000 + 800);
-    shots.push({ ...shot, start, end: (Date.now() - started) / 1000 });
+    shots.push({ ...shot, start, end: (Date.now() - started) / 1000, health: await health() });
   }
   const graphics = await camera.evaluate(() => window.__riverRenderAudit.graphics());
   const video = camera.video();
@@ -118,6 +134,9 @@ try {
   execFileSync('mv', [raw, join(outDir, 'raw.webm')]);
   const head = execFileSync('git', ['-C', worktree, 'rev-parse', 'HEAD']).toString().trim();
   await writeFile(join(outDir, 'shots.json'), JSON.stringify({ shots, errors, browser: await browser.version(), renderer: graphics.renderer, recordedAt: new Date(started).toISOString(), sourceRevision: head, cameras: CAMERAS }, null, 2));
+  // A take that dropped, lost a seated friend or stalled is refused rather than cut: take it again on a quieter machine.
+  const problems = takeProblems(shots);
+  if (problems.length) throw new Error(`retake: ${problems.join('; ')}`);
   if (errors.length) throw new Error(errors.join('; '));
   console.log(JSON.stringify({ shots: shots.map(s => [s.id, +(s.end - s.start).toFixed(1)]) }));
 } finally { await browser?.close(); await fixture?.close(); release(); }
