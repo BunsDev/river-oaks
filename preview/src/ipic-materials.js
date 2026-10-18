@@ -115,6 +115,11 @@ export function createIpicMaterials({ textures = typeof document !== 'undefined'
     rattan: material('woven-rattan', '#8c5a2c', { emissive: '#5a2a0a', emissiveIntensity: .45, roughness: .85, side: THREE.DoubleSide }),
     sofa: material('olive-brown-sofa', '#504638', { roughness: .95 }), pillow: material('oatmeal-pillows', '#b1a086'),
     leaf: material('hanging-greenery', '#354931'), red: material('burgundy-booths', '#692b2f'),
+    // The Tuck Room from IMG_9756 and IMG_9757 (photo review P13, P14).
+    pothos: material('pothos', '#4c7337', { roughness: .8, side: THREE.DoubleSide }),
+    steel: material('black-steel', '#1e1d1b', { metalness: .55, roughness: .45 }),
+    stemware: material('stemware', '#e4ecec', { transparent: true, opacity: .35, metalness: .1, roughness: .05, depthWrite: false, side: THREE.DoubleSide }),
+    fridge: material('wine-fridge', '#2a1d16', { emissive: '#b57a42', emissiveIntensity: .35, roughness: .2 }),
     glow: material('warm-lamp', '#ffe7ac', { emissive: '#ffd494', emissiveIntensity: 2.2 }),
     screen: material('cinema-screen', '#acb3d6', { emissive: '#747fad', emissiveIntensity: .6, roughness: 1 }),
   };
