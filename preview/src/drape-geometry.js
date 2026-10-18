@@ -2,7 +2,7 @@ import * as THREE from 'three';
 
 export const LYRA_DRAPES = Object.freeze([
   {from: -.45, to: Math.PI * 2 - .45, top: .11, length: .67, rx: .19, rz: .14, flare: .045, jag: .12, lobes: 2, rows: 24, name: 'Lyra velvet wrap'},
-  {from: .22, to: Math.PI * 2 - .22, top: .09, length: .86, rx: .19, rz: .14, flare: .1, jag: .26, lobes: 3, rows: 24, name: 'Lyra spotted sheer train'},
+  {from: .22, to: Math.PI * 2 - .22, top: .09, length: .80, rx: .19, rz: .14, flare: .1, jag: .26, lobes: 3, rows: 24, name: 'Lyra spotted sheer train'},
 ]);
 
 // Original handkerchief surface, shared with the offline seated bake.

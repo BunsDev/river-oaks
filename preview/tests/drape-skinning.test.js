@@ -97,3 +97,34 @@ test('Lyra lap coverage follows asymmetric bends under transformed roots',async(
     assert.deepEqual(failures,[]);
   }finally{contact.dispose();look.dispose();avatar.dispose();}
 });
+
+test('Lyra handkerchief hems clear the floor throughout upright idle, walk and run', async t => {
+  const source = await loadCharacterRig('jevica'), previousLoad = GLTFLoader.prototype.loadAsync;
+  const previousWindow = globalThis.window, previousDocument = globalThis.document;
+  GLTFLoader.prototype.loadAsync = async () => ({scene: source.scene});
+  globalThis.window = {matchMedia: () => ({matches: false})};
+  globalThis.document = {createElement: () => ({getContext: () => new Proxy({}, {get: () => () => {}})})};
+  t.after(() => { GLTFLoader.prototype.loadAsync = previousLoad; globalThis.window = previousWindow; globalThis.document = previousDocument; });
+  for (const appearanceId of ['lyra-human', 'woman-daywear']) for (const speed of [0, 1.4, 3.4]) {
+    const avatar = await loadResidentAvatar(4, 'remote-floor-regression', 'jevica', {folk: false, appearanceId, faceRecipe: {}});
+    try {
+      const meshes = ['Lyra velvet wrap', 'Lyra spotted sheer train'].map(name => avatar.rig.model.getObjectByName(name));
+      assert(meshes.every(mesh => mesh?.isSkinnedMesh));
+      const point = new THREE.Vector3(); let minimum = Infinity, worst;
+      for (let frame = 0; frame <= 360; frame++) {
+        const time = frame * 1000 / 60, distance = time / 1000 * speed;
+        avatar.object.position.z = distance;
+        avatar.update(time, 'continue', false, {speed, distance}, () => 0);
+        avatar.object.updateMatrixWorld(true);
+        for (const mesh of meshes) {
+          mesh.skeleton.update();
+          for (let i = 0; i < mesh.geometry.attributes.position.count; i++) {
+            mesh.getVertexPosition(i, point).applyMatrix4(mesh.matrixWorld);
+            if (point.y < minimum) { minimum = point.y; worst = {name: mesh.name, frame, vertex: i}; }
+          }
+        }
+      }
+      assert(minimum >= .005, `${appearanceId} speed=${speed}: hem clearance ${minimum}m ${JSON.stringify(worst)}`);
+    } finally { avatar.dispose(); }
+  }
+});

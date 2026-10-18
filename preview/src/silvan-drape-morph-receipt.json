@@ -10,7 +10,7 @@
     "preview/src/foot-placement.js": "fbf9ddb600a0d9470ca9e7eb58d73e9f13d7e39103852357c3eb0e06cdc98eb3",
     "preview/src/foot-roll.js": "4ab749ab51cc9e6bdd5265d638068c276c9fbd1d9b0c5cfb497b5215e5bd29bb",
     "preview/src/sole-support.js": "1d77dad5449799032809f815298af1acb01fffdaa54371aa71a4601a3794d18f",
-    "preview/src/drape-geometry.js": "3c2502033b43e2c73061b8e9285b42f676b463994428eb419b36c3602619aa61",
+    "preview/src/drape-geometry.js": "d624e47a003bb761b0663f436e0df201f1ba9b17e8ce4b0271b119a5eb7401ce",
     "preview/src/silvan-drape-geometry.js": "cbfd10c2f97f205ace8d59e4af3dd35a0a6981e48ad6c10c20fe63704212b8d9",
     "preview/src/packed-morph-data.js": "36b4a1ce66ec4135a8349897da1f309bc180815d3ef31719948736abc65d14c4",
     "scripts/lib/skirt-detail-fit.mjs": "0b9860411d4eabd17936c13e38a0fd3b33f87bd5c99c30f8374f8c3dd85b1b93",

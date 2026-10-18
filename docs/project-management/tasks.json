@@ -11223,9 +11223,9 @@
         "feat/character-studio-persistence-20261015"
       ],
       "owner": "codex-character-studio-20261015",
-      "updatedAt": "2026-10-18T05:15:10.314949+00:00",
-      "leaseUntil": "2026-10-18T07:15:10.314949+00:00",
-      "nextAction": "World journey verified: browser35623 passed27checks;core79445 passed11/11 with isolatedRedis;focused21pass;frozen hash matches;recovery capture inspected;review no findings. Ready signed commit/push464 and issue443 update. No production edits. Project check64618 exit1 unrelated lifecycle debt; preserve reports/worktrees; no merge/deploy. Next address remaining442 crowd performance and final visual/device/human acceptance.",
+      "updatedAt": "2026-10-18T06:12:30.160973+00:00",
+      "leaseUntil": "2026-10-18T07:54:56.439206+00:00",
+      "nextAction": "Lyra hem fix verified:35focused,877wardrobechecks132rows, native4Kzero differences, core11/11 withRedis914tests zero skips. Final hashes match and reviewer no blockers. Sign/push464 then update issue/PR; preserve userdevserver93357 and15reports. No merge/deploy or full-goal acceptance.",
       "filesOwned": [
         "server/character-store.js",
         "server/tests/character-store.test.js",
@@ -11369,7 +11369,11 @@
         "preview/src/coat-tail-morph-receipt.json",
         "scripts/lib/coat-tail-fit.mjs",
         "preview/src/coat-tail-skinning.js",
-        "preview/e2e/character-studio-worlds.js"
+        "preview/e2e/character-studio-worlds.js",
+        "preview/src/rigid-costume-batching.js",
+        "preview/tests/rigid-costume-batching.test.js",
+        "preview/src/rigid-accessory-pool.js",
+        "preview/tests/rigid-accessory-pool.test.js"
       ],
       "requiredChecks": [
         "Memory and real isolated Redis store contract tests",

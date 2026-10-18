@@ -12,7 +12,7 @@
     "preview/src/sole-support.js": "1d77dad5449799032809f815298af1acb01fffdaa54371aa71a4601a3794d18f",
     "preview/src/coat-tail-geometry.js": "ac260fc81fff9baa1db582ca49558bf1a167e0c98b8a77e5ea4b301e0d64d992",
     "preview/src/coat-tail-skinning.js": "7e32f0d52a80634154a5783ff180b8f0ed12fd0099f52793946217868d7ae939",
-    "preview/src/drape-geometry.js": "3c2502033b43e2c73061b8e9285b42f676b463994428eb419b36c3602619aa61",
+    "preview/src/drape-geometry.js": "d624e47a003bb761b0663f436e0df201f1ba9b17e8ce4b0271b119a5eb7401ce",
     "preview/src/skirt-skinning.js": "414fa6b5277c4798198b26f4b1c1c2f355e62c27748db157c9334b4e5515c0e5",
     "preview/src/packed-morph-data.js": "36b4a1ce66ec4135a8349897da1f309bc180815d3ef31719948736abc65d14c4",
     "preview/tests/helpers/character-rig.js": "879b137a09b0bd35e9c32c7ffe57491f299207244f94a6e3cc8c5d71c667f7be",

@@ -109,7 +109,18 @@ async page => {
             const above = document.createElement('canvas'); above.id = 'wardrobe-above'; above.width = 420; above.height = 640;
             above.getContext('2d').drawImage(f.renderer.domElement, 0, 0); document.body.append(above);
           }
-          snapshots.push({coatLowerEdges:coatLowerEdges?.sample()??null,coatEdges:coatEdges?.sample()??null,kneeCoverage:kneeCoverage?.sample()??null,trouserLayers:trouserLayers?.sample()??null,frame, seconds: time / 1000, finite, meshes, vertices, materials: materials.size, bounds: {min, max}, feet,
+          let drapeFloor = null;
+          if (row.character === 'lyra' && !row.beast) {
+            drapeFloor = Infinity;
+            for (const mesh of [skirt, train]) {
+              mesh.skeleton.update();
+              for (let i = 0; i < mesh.geometry.attributes.position.count; i++) {
+                mesh.getVertexPosition(i, point).applyMatrix4(mesh.matrixWorld);
+                drapeFloor = Math.min(drapeFloor, point.y);
+              }
+            }
+          }
+          snapshots.push({drapeFloor,coatLowerEdges:coatLowerEdges?.sample()??null,coatEdges:coatEdges?.sample()??null,kneeCoverage:kneeCoverage?.sample()??null,trouserLayers:trouserLayers?.sample()??null,frame, seconds: time / 1000, finite, meshes, vertices, materials: materials.size, bounds: {min, max}, feet,
             decoded: [...textures].map(texture => ({name: texture.name, width: texture.image?.width, height: texture.image?.height})), beastWeight: f.avatar.beastMotion, render});
           f.avatar.object.position.z = distance;
         }
@@ -144,6 +155,7 @@ async page => {
         check(result.thighContact?.tested>100&&result.thighContact.penetrating===0,`${appearanceId}/${pose}: drape clears rendered upper thighs`);
         check(result.frontPanelContact?.tested>100&&result.frontPanelContact.penetrating===0,`${appearanceId}/${pose}: front panel clears rendered upper thighs`);
       }
+      if (row.character === 'lyra' && !row.beast) check(result.snapshots.every(s => Number.isFinite(s.drapeFloor) && s.drapeFloor >= .005), `${appearanceId}/${pose}: both drape hems clear the floor`);
       if (['vesper', 'lyra'].includes(row.character) && pose === 'sit') check(result.thighContact?.tested > 200 && result.thighContact.penetrating === 0, `${appearanceId}/${pose}: seated wrap clears sampled upper thighs`);
       if (row.character === 'lyra' && pose === 'sit') {
         check(result.sheerContact?.tested > 200 && result.sheerContact.penetrating === 0, `${appearanceId}/${pose}: sheer train clears sampled upper thighs`);

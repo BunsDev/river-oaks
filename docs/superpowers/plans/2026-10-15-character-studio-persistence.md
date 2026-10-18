@@ -1589,3 +1589,198 @@ hash match. Browser35623 passed27checks and recovery render inspected. Project
 check64618 exit1 retains unrelated lifecycle gaps. Ready signed test-only commit
 and push to464; final reviewer found no actionable issue. No merge/deploy or
 human/device/live-provider acceptance. Preserve21worktrees and14local reports.
+
+World-transition increment signed/pushed594cceb1387392d9c9cd4a3e257af9ec2a800069
+into draft464; issue443 comment6246008403. All local handles terminal. Exact-head
+hosted verify3.11/3.13 and dependency-review pass; browser jobs remain active.
+Next442 performance increment: refreshed prior CPU harness in new local folder
+.runtime/character-studio/crowd-cost-20261018 at current594cceb1. Browser34490
+running under shared lock:16players,30seconds timing,10seconds warmup per desktop
+and phone viewport; separate10second CDP CPU sample. No tracked runtime changes.
+Existing335a CPU evidence points to render pipeline/uniform submissions; inspect
+new call tree before selecting optimization. Phone viewport is host GPU only.
+Separate441 creation checkout belongs to claude:river-oaks-a9; preserve its editor
+work. New run writes distinct profiles/captures and keeps old evidence intact.
+
+Crowd34490 terminal0: two16player rows pass functional/cleanup checks, frozen hashes
+match. Desktop framep9533.4ms/CPU21.1ms/3100calls; phone viewport33.3/18.7/2768.
+CPU pipeline inclusive69.76%/74.08%; nested samples are not GPU duration. Desktop
+capture inspected; no approved-device or frame-target pass. New mesh census36429
+queued under shared lock, separate runtime script/captures. Poll exact handle;
+read draw-audit.json after terminal result, then select material/mesh optimization.
+No production source edits. Raw profiles/summaries/findings retained crowd-cost-20261018.
+
+Draw census36429 terminal0. Separate60frame Mesh.onBeforeRender census observes
+2198 mesh/material pairs and132180 submissions, excludes shadow-only and custom
+hooks. Many reference accessories remain separate across bones despite same-bone
+batching. Prototype Sable-only rigid accessory batching uses existing body skeleton,
+unchanged owned material, one original bone influence per vertex; keeps named,
+transparent, hidden, deformable and independently controlled pieces separate.
+New helper/test claimed before editing. Focused4tests pass (posed construction,
+root transforms and later bone poses, disposal/material identity, existing shipped
+reference-look triangle/draw limits). Candidate browser67039 now runs matched
+16player30s/10s timing plus separateCPU; distinct batched-audit report/captures.
+No source edits until terminal; read-only review requested. No performance win yet.
+
+Candidate67039 terminal0: both16player rows pass functional/cleanup assertions;
+frozen hashes match and desktop crowd capture inspected. Calls3100->2858 desktop,
+2768->2512 phone viewport. Framep95 unchanged33.4/33.3ms. CPUsubmissionp95 baseline
+21.1->22.5ms desktop and18.7->18.5ms phone viewport: no demonstrated frame/CPU win.
+Do not call fewer draws performance acceptance. Native4K comparison53539 queued
+behind other owners' browser work; poll same handle, keep source frozen. Review
+found no blocker but position tests do not prove normals/shadow fidelity. Prototype
+remains uncommitted pending image evidence and decision to retain or shelve; next
+measure repeatability/CPU tradeoff before broadening to other characters.
+
+Hero53539 exited1 before rendering: ENOSPC while acquiring queue lock. Removed
+only this checkout's untracked regenerable dist and four Vite caches after inventory;
+all source/evidence/other trees preserved. Retry60063 terminal1: compatible native4K
+human comparison fails104pixels/maxchannel29>2 (mean0.0000076); no tolerance edits.
+Independent animated-normal oracle passes but does not override render evidence.
+Rejected prototype for unproven speedup plus failed pinned gate. Saved exact helper,
+test and integration source in crowd-cost-20261018/rejected-prototype; restored
+reference-archetypes byte-exactHEAD594cceb1 and removed only archived new source/test.
+Restored hero65114 queued; poll. No core rerun needed merely to undo own candidate,
+but rendered control must establish baseline. Next investigate basebody/shadow cost;
+mesh census shows basebody920672 vertex submissions/frame vs215747 fox hair across
+crowd (vertex attributes, not triangle/GPU timing); shadow CPU inclusive16%.
+
+594cceb1 exact-head hosted checks refreshed: all10 success, including aggregate
+preview and world/creator coverage. Restored hero65114 remains live queued behind
+experience runner65318, independently confirmed running. Runtime source unchanged.
+Source inspection: avatars intentionally disable frustum culling for posed bounds;
+blindly turning it on would risk missing limbs and shadows. That is not an accepted
+optimization. Need conservative animated bounds or another measured path before
+changing culling. Continue source/cost investigation while preserving queued check.
+
+Restored control65114 terminal0: native4K sable-human and woman-casual both
+match pinned references exactly (zero changed pixels), compatible environment,
+all recorded source hashes revalidated. Report hero-goldens/2026-10-18T05-32-10.468Z.
+Cross-bone prototype stays rejected. Next: diagnostic geometry/material duplicate
+census to establish whether cross-avatar rigid instancing has enough opportunity
+before changing runtime ownership or rendering. No performance acceptance claimed.
+
+Duplicate census61076 launched under shared browser lock; syntax check passed.
+Separate runtime-only script hashes geometry attributes/index and serialized material
+values after60frame submission sampling; excludes named/skinned/instanced/morphing/
+transparent meshes. This is candidate attribution, not proof of instancing safety.
+Queued behind IPIC browser work; poll same handle and preserve source freeze.
+
+Duplicate census61076 terminal0, desktop16 functional/reconnect/departure checks
+pass and frozen source hashes match. 26signature groups /255meshes suggest229
+possible beauty submissions saved across scene, not proven savings. Three foot
+groups each contain32meshes (247/4344/3564vertices); strongest bounded candidate
+is remote-only rigid foot accessories (30instances each), keeping local/hero
+rendering unchanged. Texture serialization emitted warnings; material equality
+is not established by JSON signatures. Require direct material/texture identity
+or verified values, shader/layer compatibility, per-peer palette invalidation,
+replacement/departure disposal, current bone matrices and shadow/normal fidelity.
+Next prototype only after these invariants are explicit; compare matched crowd
+frame/CPU timing and rendered captures before retaining. No runtime edits yet.
+
+Remote rigid-foot instancing prototype implemented, uncommitted: authored Sable
+foot pieces explicitly tagged after same-bone batching; texture-free nonpalette
+MeshPhysicalMaterial only; exact geometry equality, independently owned pooled
+resources, source layer restoration, visible ancestor checks, bounded128 slots
+with ordinary fallback. Peer replacement/removal releases before avatar disposal.
+Focused pool + remote-player tests19/19 pass; diff whitespace clean. Matched
+30s/10s desktop+phone-host-GPU audit25159 queued under shared lock; source frozen.
+Original generic audit captures copied to before-pool-output before candidate
+writes; candidate JSON/profiles have unique pool-* paths. Read-only lifecycle
+review requested. No performance/visual acceptance or commit yet.
+
+Review blocker: late pool buckets added directly to scene escape main.js storefront
+reflection exclusion snapshot. If candidate timing justifies retention, create an
+eager persistent pool Group and regression-test late children under that excluded
+root, then reverify. Source remains frozen while audit25159 measures. Reviewer
+found resource ownership, cleanup, palette exclusion and transforms otherwise sound;
+that is not shadow/AO or performance proof.
+
+Pool audit25159 terminal0: desktop framep9533.4 unchanged, CPU21.1->21.4ms;
+phone viewport frame33.3->33.4, CPU18.7->20.4ms. Calls3100->2855 /2768->2489
+but no measured frame benefit. Functional/cleanup rows pass and hashes match.
+Rejected prototype; exact source/tests/diff/captures archived in rejected-pool,
+verified before removing own new files/restoring tracked runtime byte-exactHEAD.
+Reflection review blocker recorded in archive; no flawed pooling code retained.
+Next reassess full remaining acceptance and rendering attribution before another
+optimization; reducing draw counts twice has not improved frame timing.
+
+Acceptance refresh:440closed, PR457 merged fe249fe4 via d109648a;441owned creation
+branch now8a14a081 with world-journey edits; preserve.464still open/mergeable.
+Inspected latest Lyra sitting/running and Kai noir sitting archived captures.
+Lyra train appears floor-close; actual-rig probe64431 confirmed floor penetration
+in217/217walk/run sampledframes per upright form (144–360at60Hz), worst42.068mm
+walk/38.495mmrun; idle15.904mm abovefloor. New focused regression fails on old
+recipe as expected (red.log). Candidate shortens sheer train length.86->.80,
+preserving all other recipe fields/opaque layer; seated bake49789 queued under
+shared lock. Poll exact handle before tests; source/data temporarily inconsistent
+until bake succeeds. Evidence in garment-floor-20261018. No verification claim
+for candidate; require ground/seated regressions, regenerated bake check, rendered
+matrix/4K inspection, core gate and review before commit.
+
+Lyra bake49789 terminal0. Focused94522 terminal0:5tests pass, including new
+217frame ground regression per upright form/speed and existing seated layer/
+asymmetric-bend coverage. Regenerated sheer fit545body samples,12.209mmminimum
+clearance;1225layer samples5.882mmminimum. Browser wardrobe now asserts>=5mm
+clearance for both Lyra hems in all sampled upright poses, including sit/wave.
+Frozen hashes saved garment-floor-20261018/source-hashes.json. Live verification:
+33170 bake --check then full wardrobe;14758 core with owned ephemeralRedis;
+88860 native4K baseline. All use shared lock, preserve frozen source; poll same
+handles. Read-only review requested. User-requested dev app opened separately
+from441creation checkout at127.0.0.1:5342, town8942, handle93357; leave running.
+This user server uses normal WorkOS flow, not test identities.
+
+Review found dependency receipt blocker: silvan-drape-morph-receipt and coat-tail-
+morph-receipt pin shared drape-geometry old hash. Refresh those via existing bake
+scripts after current frozen runs; generated geometry expected unchanged but must
+verify. Core14758 likely exposes hash failures; do not call it passed or rewrite
+receipt hashes manually. Lyra reproducibility check already passed in33170.
+
+Core14758 terminal1:3418previewpasses,2failures precisely stale coat/Silvan
+receipt hashes,1existing skip/1existingTODO. Failed receipt preserved as
+core-before-receipts.json; remaining core tasks not run. Hero88860 terminal0,
+both native4K fixtures pass (report2026-10-18T05-54-32.355Z). Wardrobe33170 still
+live queued; poll exact handle before regenerating dependent receipts. No hidden
+thirdfailure:IPIC1.005m diagnostic is the existingTODO.
+
+Independent startup probe9611 terminal0: all361frames0–360 per upright form
+and idle/walk/run sampled on actual rig. Candidate train minimum80.66mmidle,
+22.49mmwalk,25.65mmrun; no floor crossings. Evidence startup-report.json/log
+under garment-floor-20261018. Extend regression to startup once frozen browser
+33170finishes; preserve original pre-fix report. Terrain variation remains outside
+this level-ground fixture. Wardrobe live, progressing through Silvan variants.
+
+Wardrobe33170terminal0:877checks/132rows/330phases pass; frozen hashes matched
+before mutation. Report/captures archived garment-floor-20261018/browser.json and
+captures/. Human+beast upright Lyra sit/run front/side/rear captures inspected: hem
+clears floor, seated layered silhouette retained. No exhaustive art approval.
+Extended Node floor regression to frames0–360 (startup included). Dependent bake
+11239queued under sharedlock:Silvan --write then coat --write. Original generated
+data archived before-* to require byte-identical outputs. After terminal refresh,
+run focused/provenance tests and core again; render inputs unchanged apart from
+expected receipt metadata/test coverage. Preserve user devserver93357.
+
+Dependent bake11239terminal0; Silvan/coat generated data byte-identical to saved
+pre-refresh files. Three affected receipts input hashes match. Startup regression
+35434test1/1passes (shell exit1 was subsequent ps finding vanished60269, not test
+failure). Final hashes stored final-source-hashes.json; focused87745running and
+core69113running/queued with isolatedRedis. No runtime edits after rendered pass,
+only receipts and expanded test. Final read-only review requested. Need final
+results, core receipt, signed commit/push to464 and issue evidence; no landing.
+
+Final review confirms all affected input/output hashes and no remaining code
+blocker; terrain and exhaustive art acceptance remain excluded. Focused87745/core
+69113still live; core has begun preview suite. Prepared shorter accurate PR body
+in garment-floor-20261018/pr-body-draft.md, with explicit pending validation
+paragraph to replace only after final gate/commit. Do not post draft as verified.
+
+Final focused87745terminal0:35tests pass,zero skips. Core69113live running
+preview suite; no commit until terminal pass.
+
+Final core69113terminal0:11/11tasks passed with isolatedRedis. Tooling117;
+preview3420pass/1existing skip/1TODO; server914zero skips; desktop69; Python141
+with66warnings; build/lint/demo/secrets passed. Final source hashes match.
+Focused35pass; wardrobe877checks132rows330phases and inspected human/beast Lyra
+sit/run captures; native4Kboth0pixel differences. Final review no code blockers.
+Ready for signed Lyra floor-fix commit/push464; no merge/deploy, approved-device,
+human or exhaustive art acceptance. Preserve15localreports and userdevserver.
