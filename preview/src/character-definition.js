@@ -1,5 +1,6 @@
+import { customizedCharacterDefinition } from './character-customization.js';
 import { characterAssetFor } from './character-assets.js';
-import { canUseAppearance, permittedAppearance, sharedAppearance } from './shared-appearances.js';
+import { LEGACY_APPEARANCES, canUseAppearance, permittedAppearance, sharedAppearance } from './shared-appearances.js';
 
 export const CHARACTER_SCHEMA_VERSION = 1;
 const fields = ['schemaVersion','ownerId','revision','appearanceId','rig','form','parameters','palette','hair','outfit','attachments','assets','provenance'];
@@ -31,9 +32,11 @@ function equal(value, expected) {
 export function validateCharacterDefinition(value, { ownerId } = {}) {
   if (!record(value) || Object.keys(value).length !== fields.length || fields.some(key => !Object.hasOwn(value,key))) return { ok:false, error:'invalid_character_definition' };
   if (!owner(ownerId) || value.ownerId !== ownerId) return { ok:false, error:'character_owner_mismatch' };
-  if (value.schemaVersion !== CHARACTER_SCHEMA_VERSION) return { ok:false, error:'unsupported_character_version' };
+  if (![CHARACTER_SCHEMA_VERSION,2].includes(value.schemaVersion)) return { ok:false, error:'unsupported_character_version' };
   let canonical;
-  try { canonical = characterDefinitionFor(ownerId,value.appearanceId,{revision:value.revision}); }
+  try { canonical = value.schemaVersion===2
+    ? customizedCharacterDefinition(ownerId,value.appearanceId,{revision:value.revision,palette:value.palette,hair:value.hair})
+    : characterDefinitionFor(ownerId,value.appearanceId,{revision:value.revision}); }
   catch { return { ok:false, error:'invalid_character_definition' }; }
   // Legacy aliases are migrated on read, never published as a new identity.
   if (!equal(value,canonical)) return { ok:false, error:'invalid_character_definition' };
@@ -49,4 +52,12 @@ export function migrateCharacterAppearance(ownerId, appearanceId) {
 export function characterAppearanceFor(definition, ownerId) {
   const result = validateCharacterDefinition(definition,{ownerId});
   return result.ok ? sharedAppearance(result.definition.appearanceId) : null;
+}
+
+// Storage reads only. New writes still require the strict human-only definition.
+export function migrateStoredCharacterDefinition(value, {ownerId} = {}) {
+  if (!record(value) || !Object.hasOwn(LEGACY_APPEARANCES,value.appearanceId)) return validateCharacterDefinition(value,{ownerId});
+  if (value.form !== 'beast' || value.outfit !== value.appearanceId) return {ok:false,error:'invalid_character_definition'};
+  const id=LEGACY_APPEARANCES[value.appearanceId];
+  return validateCharacterDefinition({...value,appearanceId:id,outfit:id,form:'human'},{ownerId});
 }

@@ -3,6 +3,17 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { normalizeVercelRoute, vercelClientAddress } from '../vercel-routing.js';
 
+test('character account operations retain world routing through hosted rewrites',()=>{
+ const config=JSON.parse(readFileSync(new URL('../../vercel.json',import.meta.url)));
+ for(const path of ['/api/character','/api/character/draft','/api/character/publish','/api/character/rollback']){
+  const rewrite=config.rewrites.find(item=>item.source===path);assert.ok(rewrite,`missing rewrite for ${path}`);
+  assert.equal(normalizeVercelRoute(path),path);
+  assert.equal(normalizeVercelRoute(`${rewrite.destination}&world=moon-garden`),`${path}?world=moon-garden`);
+ }
+ assert.equal(normalizeVercelRoute('/api/server?_river_path=/api/character/admin'),'/not-found');
+ assert.equal(normalizeVercelRoute('/api/server?_river_path=/api/character&_river_path=/auth/logout'),'/not-found');
+});
+
 test('rewritten routes retain OAuth/socket parameters without accepting arbitrary paths', () => {
   assert.equal(normalizeVercelRoute('/api/server?_river_path=/auth/callback&code=abc&state=xyz'), '/auth/callback?code=abc&state=xyz');
   assert.equal(normalizeVercelRoute('/api/server?_river_path=/auth/verify'), '/auth/verify');
@@ -54,14 +65,13 @@ test('only Vercel entry uses the platform-owned IP header and invalid values sha
   assert.equal(vercelClientAddress({ headers: { 'x-vercel-forwarded-for': '2001:0db8:0:0::1' } }), '2001:db8::1');
 });
 
-test('office workspace actions retain world routing through hosted rewrites',()=>{
+test('retired office workspace actions have no hosted route',()=>{
   const config=JSON.parse(readFileSync(new URL('../../vercel.json',import.meta.url)));
   for(const action of ['provision','list','invite','accept','revoke','read','save','remove']){
     const path=`/api/office-desk/workspace/${action}`;
-    assert.equal(normalizeVercelRoute(path),path);
+    assert.equal(normalizeVercelRoute(path),'/not-found');
     const rewrite=config.rewrites.find(item=>item.source===path);
-    assert.ok(rewrite,`missing hosted rewrite for ${action}`);
-    assert.equal(normalizeVercelRoute(`${rewrite.destination}&world=moon-garden`),`${path}?world=moon-garden`);
+    assert.equal(rewrite,undefined);
   }
   assert.equal(normalizeVercelRoute('/api/office-desk/workspace/admin'),'/not-found');
 });

@@ -18,7 +18,7 @@ test('every permitted authored ID round trips without changing identity or permi
 
 test('malformed, foreign, future and privilege-bearing definitions fail closed', () => {
   const base = characterDefinitionFor('fixture-owner','sable-human');
-  for (const change of [{ownerId:'other'},{schemaVersion:2},{revision:-1},{revision:1.5},{revision:Number.MAX_SAFE_INTEGER+1},{appearanceId:'jevica'},{rig:'jevica-beast'},{form:'beast'},{parameters:{height:200}},{palette:'#fff'},{hair:'file:///tmp/x'},{outfit:'unlicensed'},{attachments:['wings']},{assets:[{url:'https://example.com/a.glb'}]},{provenance:{kind:'generated'}},{canFly:true}]) {
+  for (const change of [{ownerId:'other'},{schemaVersion:99},{revision:-1},{revision:1.5},{revision:Number.MAX_SAFE_INTEGER+1},{appearanceId:'jevica'},{rig:'jevica-beast'},{form:'beast'},{parameters:{height:200}},{palette:'#fff'},{hair:'file:///tmp/x'},{outfit:'unlicensed'},{attachments:['wings']},{assets:[{url:'https://example.com/a.glb'}]},{provenance:{kind:'generated'}},{canFly:true}]) {
     assert.equal(validateCharacterDefinition({...base,...change},{ownerId:'fixture-owner'}).ok,false,JSON.stringify(change));
   }
   for (const value of [null,[],{},Object.create(base)]) assert.equal(validateCharacterDefinition(value,{ownerId:'fixture-owner'}).ok,false);
@@ -39,13 +39,13 @@ test('every playable rig is pinned to its shipped bytes, and an unpinned rig can
 });
 
 test('legacy read migration preserves aliases and uses permission-safe defaults', () => {
-  assert.equal(migrateCharacterAppearance('fixture-owner','midnight-host-hybrid').appearanceId,'midnight-host-wolf');
+  assert.equal(migrateCharacterAppearance('fixture-owner','midnight-host-hybrid').appearanceId,'man-tailored');
   for (const id of ['jevica','unknown','__proto__',undefined]) assert.equal(migrateCharacterAppearance('fixture-owner',id).appearanceId,'sable-human');
   assert.equal(migrateCharacterAppearance(JEVICA_OWNER_USER_IDS[0],'jevica').appearanceId,'jevica');
   assert.throws(() => migrateCharacterAppearance('', 'sable-human'));
 });
 
-for (const id of ['sable-human','woman-casual']) test(`definition loads the actual ${id} rig and authored form`, async () => {
+for (const id of ['sable-human']) test(`definition loads the actual ${id} rig and authored form`, async () => {
   const definition=characterDefinitionFor('fixture-owner',id),look=characterAppearanceFor(definition,'fixture-owner');
   const source=await loadCharacterRig(definition.rig),avatar=instantiateAvatar(source,{targetHeight:source.height,id:'player'});
   const root=new THREE.Group();root.add(avatar.model);
@@ -54,8 +54,8 @@ for (const id of ['sable-human','woman-casual']) test(`definition loads the actu
     root.updateMatrixWorld(true);
     const bounds=new THREE.Box3().setFromObject(root),size=bounds.getSize(new THREE.Vector3());
     assert.ok(size.toArray().every(Number.isFinite));assert.ok(size.y>1 && size.y<3);
-    assert.equal(outfit.beast,definition.form==='beast');
-    assert.equal(Boolean(root.getObjectByName('fox tail')),definition.form==='beast');
+    assert.equal(definition.form,'human');
+    assert.equal(Boolean(root.getObjectByName('fox tail')),false);
     assert.ok(avatar.bones.length>0);
   } finally { outfit.dispose();avatar.dispose(); }
 });

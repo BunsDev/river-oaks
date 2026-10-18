@@ -11,7 +11,7 @@ import { createRedisSecurity } from '../redis-security.js';
 import { approvedWaitlist } from './waitlist-fixture.js';
 import { JEVICA_ADMIN_USER_IDS } from '../admin.js';
 const data=JSON.parse(readFileSync(new URL('../../preview/public/data/district.json',import.meta.url)));
-for(const mode of ['memory','redis'])test(`${mode}: office invitations, requests, movement and ended approval through real ticket/WebSocket gates`,{skip:mode==='redis'&&!process.env.REDIS_URL},async t=>{
+for(const mode of ['memory','redis'])test(`${mode}: office invitations, movement and ended approval through real ticket/WebSocket gates`,{skip:mode==='redis'&&!process.env.REDIS_URL},async t=>{
  const origin='http://127.0.0.1',owner=JEVICA_ADMIN_USER_IDS[0],ids={owner,guest:'visitor',stranger:'stranger'};let approved=true;
  const auth={handle:async()=>false,close(){},isSessionActive:async()=>true,authenticate:async req=>{const id=req.headers.cookie?.match(/fixture=(\w+)/)?.[1];return ids[id]?{userId:ids[id],name:id,sessionId:id,csrfToken:'test-csrf',expiresAt:Date.now()+60000}:null;}};
  const waitlist={...approvedWaitlist,isApproved:async id=>id===owner||approved};
@@ -34,8 +34,8 @@ for(const mode of ['memory','redis'])test(`${mode}: office invitations, requests
  const listing=await office(b,'list');assert.equal(listing.offices[0].access,null);
  assert.equal((await b.send({type:'travel',position:listing.offices[0].entrance})).ok,true);
  assert.equal((await office(b,'enter')).error,'office_permission_required');
- assert.equal((await office(b,'request')).ok,true);assert.equal((await office(b,'enter')).ok,false);
- assert.equal((await office(a,'approve',{peerId:'visitor'})).ok,true);
+ assert.equal((await office(b,'request')).ok,false);assert.equal((await office(b,'enter')).ok,false);
+ assert.equal((await office(a,'invite',{peerId:'visitor'})).ok,true);
  assert.equal((await office(b,'enter')).ok,true);
  assert.equal((await office(b,'move',{position:[0,100],yaw:0})).ok,false);
  assert.equal((await a.send({type:'interaction',action:'offer',kind:'handshake',peerId:'visitor'})).ok,false);

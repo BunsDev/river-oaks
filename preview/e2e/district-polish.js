@@ -59,7 +59,7 @@ async page => {
   await touch.locator('#loading').waitFor({state:'hidden'});
   // The pad appears just after the loading screen hides; wait for it rather than racing it.
   check(await touch.locator('#walking-movement').waitFor({state:'visible',timeout:10000}).then(()=>true,()=>false), 'Touch devices start with movement controls available');
-  // Only rendered targets count: the hold-to-sprint key appears in beast form only.
+  // Only rendered targets count; hidden optional controls are excluded.
   const touchTargets = await touch.locator('[data-walk-key]').evaluateAll(nodes => { const shown = nodes.filter(node => node.getClientRects().length); return shown.length === 6 && shown.every(node => { const r = node.getBoundingClientRect(); return r.width >= 44 && r.height >= 44 && r.left >= 0 && r.right <= innerWidth; }); });
   check(touchTargets, 'All six touch movement targets fit the narrow viewport at 44px or larger');
   await touchContext.close();

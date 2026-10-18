@@ -1,0 +1,148 @@
+{
+  "version": 1,
+  "status": "passed",
+  "revision": "d9dca2e587fb4f2097e9a14a48a0a482de98975e",
+  "environment": {
+    "platform": "darwin",
+    "osRelease": "25.6.0",
+    "osVersion": "Darwin Kernel Version 25.6.0: Tue Aug 18 17:51:35 PDT 2026; root:xnu-12377.161.15.700.19~2/RELEASE_ARM64_T6031",
+    "architecture": "arm64",
+    "browserVersion": "156.0.8078.4",
+    "browserSha256": "c8509aee32abd6977968e9999769980b7a420dea05402d90042d9e5b41db15ef",
+    "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+    "gpuVendor": "Google Inc. (Apple)",
+    "webglVersion": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+    "threeRevision": "186",
+    "pixelRatio": 1,
+    "colorSpace": "srgb",
+    "toneMapping": 4,
+    "exposure": 1.1,
+    "preset": "garden-front-v1",
+    "width": 3840,
+    "height": 2160,
+    "samples": 4
+  },
+  "limits": {
+    "maxChannel": 2,
+    "meanChannel": 0.01,
+    "changedPixelFraction": 0.001
+  },
+  "cases": [
+    {
+      "appearanceId": "sable-human",
+      "file": "sable-human.png",
+      "sha256": "30359fb712c01a3cdabe1d9cc7f5daa182eeb459c7433129ab73ca77e5569f87",
+      "definition": {
+        "schemaVersion": 2,
+        "ownerId": "hero-reference-fixture",
+        "revision": 0,
+        "appearanceId": "sable-human",
+        "rig": "jevica",
+        "form": "human",
+        "parameters": {},
+        "palette": "rose",
+        "hair": "espresso",
+        "outfit": "sable-human",
+        "attachments": [],
+        "assets": [
+          {
+            "id": "jevica",
+            "sha256": "722b96e2fd77b36c85ec01c1594a35e3f3f39b5ec76dfc3c9a351ef1eb4f117a",
+            "bytes": 5779116,
+            "receipt": "/assets/characters/jevica.sources.json"
+          }
+        ],
+        "provenance": {
+          "kind": "authored",
+          "catalog": "river-oaks-looks-v2"
+        }
+      },
+      "comparisons": [
+        {
+          "passed": true,
+          "maxChannel": 0,
+          "meanChannel": 0,
+          "changedPixels": 0,
+          "changedPixelFraction": 0
+        },
+        {
+          "passed": true,
+          "maxChannel": 0,
+          "meanChannel": 0,
+          "changedPixels": 0,
+          "changedPixelFraction": 0
+        }
+      ]
+    }
+  ],
+  "sources": {
+    "preview/e2e/fixtures/character-hero-golden.js": "0ee0cabe0f5d6846ab62542110df49f88d411d78f7f7ba5703b9edfffe7ce462",
+    "preview/src/character-hero.js": "b0161b361b93c48492351e31f961e6b1bd2d8f7e0ae4973433a232e0321b1f35",
+    "preview/src/avatars.js": "1640d11d5712a07b9c61fda3a6169769875ee62edb7c2498fe64ddd1ed806ee9",
+    "preview/src/arm-contact.js": "ad3956907adb280811631065699157e272f225197c2300165e8e30424b0434ba",
+    "preview/src/foot-placement.js": "fbf9ddb600a0d9470ca9e7eb58d73e9f13d7e39103852357c3eb0e06cdc98eb3",
+    "preview/src/sole-support.js": "1d77dad5449799032809f815298af1acb01fffdaa54371aa71a4601a3794d18f",
+    "preview/src/foot-roll.js": "4ab749ab51cc9e6bdd5265d638068c276c9fbd1d9b0c5cfb497b5215e5bd29bb",
+    "preview/src/handshake-contact.js": "6f92ae3935c043cccfd9027546687cfe1dc5172bd62b0817dfe3927746ba9692",
+    "preview/src/avatar-skeletons.js": "5a44e65049eadf0b0aea0d6d06e550ad924742c0feef922a45e3a58201063adb",
+    "preview/src/conversation-gaze.js": "2b87a0df8a9035ecb5327d558b7cdd1be3f887da0ff6c260d1c9f25b27a16811",
+    "preview/src/conversation-motion.js": "e2b6bf52e91b32020fb8d27adcfe690c71aa3f2823c144c35470678799b9f5d0",
+    "preview/src/conversation-body.js": "94884f405a479ba9652b6e6c247d505aea388a82c406ac5d335835c9eadf5ee0",
+    "preview/src/facial-motion.js": "d90f5ee3e67b7edaa755e3494dd097db89682cec2cc8c61730fa201bf939fc87",
+    "preview/src/eye-tracking.js": "93b8af25f82f59ffbfecd44b090fc6e32650add837c4a21ce68a1c5099165313",
+    "preview/src/speech-avatar.js": "55417a45c3503c4b49891afd82794355644af6cb8a6602289632f61a6d339871",
+    "preview/src/speech-track.js": "bd93c22eb85c6b9e04e6440c2637f6d4f5eb6dcb958040a0f27a01df2054752f",
+    "preview/src/resident-style.js": "2ab0caaae62fa7291d687a9fa0bcccde6716037c3cc3538e7604823dec660ea7",
+    "preview/src/resident-hairstyle.js": "0910838a65be76c237fc5e050115138a1e87730db561411f4e7ec53cd5f29910",
+    "preview/src/head-fit.js": "2285bec83cab33019136c895bebdcd5676cf8c7b4e47c10e451a2d56a7b044cf",
+    "preview/src/resident-face.js": "97cf65116a8ce4a0f83f3a96538c8180661f766131543705566acfc32a2b6ed4",
+    "preview/src/gltf-image-decoder.js": "72962e0e554b8237c87d20101145285f0891d94f707a064ba1d9e34b76296290",
+    "preview/src/upper-body-gait.js": "58d929b9561a5098d7ab88d650df9ba8bc94adfd842228580930c782e2b89352",
+    "preview/src/resident-gestures.js": "9037021357e4e11afc83572faf2d23794bd2f0888f22cac5487aa388a3ccc3c4",
+    "preview/src/avatar-stance.js": "c1f857d5a6d28f1a6436858030e3d94459304cba76136a7e5536684c54445a56",
+    "preview/src/shoe-skinning.js": "59b48076b226536832c031ffd9108eb49499c6bc7f0b3fbe234f2892b206adfe",
+    "preview/src/sock-fitting.js": "a9c37f828e7a7021003f1a4e1a5310188336f332b24bacf1041697c5ed24b887",
+    "preview/src/romance-look.js": "089a6c4ffdcd9da7bbf3fea17563e6d75feda9c6e779b75360a658c4f2e6a3a4",
+    "preview/src/sable-look.js": "954a1861d43255fc34c70d91d5b3b7960bc1f3b7cb6d28f3152113f7f2fffa36",
+    "preview/src/reference-archetypes.js": "6be675856c129f17526bba8796fe2ebea76b1663b433900361322b9f41352291",
+    "preview/src/skirt-skinning.js": "414fa6b5277c4798198b26f4b1c1c2f355e62c27748db157c9334b4e5515c0e5",
+    "preview/src/skirt-geometry.js": "aa74e1d9dce55e6ffa298fd3bd6b9f0fa0baead3d48f4d1979cf27ec27741e0b",
+    "preview/src/skirt-seat-morph.js": "6d9d6647a0edd2d81c7eaca3e99c9eddcab9769abbbb9468d08ac28622715f7e",
+    "preview/src/skirt-seat-morph-data.js": "54e926224089e8fe86b0d91415eed210164ff9bd0f9185ecb341ee0f039e9f72",
+    "preview/src/limb-fit.js": "24a7714575792eb821015f94d4aa85e8580a65238730c0186a0e6e1d4f49647a",
+    "preview/src/costume-batching.js": "51a3d51f6840cc842a62c2afb8cea5be15a3e87bc04abf89e362ff7c41d1c889",
+    "preview/src/sable-face.js": "a6f563525c83bdf5c05a0e0b7b7238ceacf66d3bf097cdf769bbb0887245c7fb",
+    "preview/src/tail-motion.js": "4c4afca68da689675c50a8013fe17508efe266debc8217c858f01326e8eb514d",
+    "preview/src/animal-face.js": "101ba556fb413f81a9cef94703e3cf2c205e5e451e26ca9e631a8f890d056619",
+    "preview/src/beast-gait.js": "ae80bbd425ef24ff9622e219ae8d1c45140f3688442be7bb252fabcbb891556e",
+    "preview/src/shared-appearances.js": "0f22d85ca8b7b367ae2d9dbb1d4e877848887d93e6ed067a662cb3479aa43825",
+    "preview/src/jevica-accounts.js": "931b1ad52bd21df91f32c1c7b8c01b97bd21374045f03d86c38bc8ab9f6b866e",
+    "preview/src/player-costume.js": "fd34ee05e269d1dad47266f9fc002e081641ddf16ce00290f5686c1927624580",
+    "preview/src/jevica-costume.js": "3fe5ee19c8f2fa25b61821162aaba20809086fcf39115c17e75abb7c8bbc3324",
+    "preview/src/jevica-drape.js": "f5f0f69da361ba469c1f1cd1c94f950dff2e13ca3cc598813578281fc41ca5e7",
+    "preview/src/skinned-vertex-sampler.js": "6cdc501d952a1ee7197f2b2ce60346e3f63cbe876957681f59e76c2a7aba77a4",
+    "preview/src/jevica-embroidery.js": "c805a4df5fa340e749cd9d3734c8e59b670b5b8d78b06edb9f0d8390cb86b85e",
+    "preview/src/bodice-fitting.js": "568dc6969d0831fe2fc50f1742f764b7d92e5a7276d9c18ddbacc925af511a94",
+    "preview/src/riding-clothes.js": "75c563bdc1dbf55e1fc82d3680d8084b9f08338b1d79ce609cf252b442b96a1c",
+    "preview/src/character-studio-materials.js": "20ce561a3dd28c8b9df4d61401abf6467babc86e07bc7094e909d188dc1f4bb1",
+    "preview/src/character-customization.js": "9dcb352e657d8dc519a1d15bc2808667fadca75605995c0afd499202672af3ea",
+    "preview/src/character-compatibility.js": "529201d8c1f3caf20ba076674e8db1aec08a6e2d3e634c7f40f0a64c480e73eb",
+    "preview/src/character-definition.js": "e976f709c55acb14d72694a5c3193370d854b84cab003c925baf3d6fbbd51f3d",
+    "preview/src/character-assets.js": "246f0d5606a7f7f60283a7db670aea30d6847c1260f7f990472fef78bfb27b71",
+    "preview/src/character-portrait.js": "6850d528dd8465a7b12b5fcea7d2e1080e70f225973826a2e50b583dea96543a",
+    "preview/audit/character-image-comparison.js": "fb24f15ae7f09bbdb0ff1921a5dd5ddedf255852634fec1297d5d11579dc66b3",
+    "pnpm-lock.yaml": "038d8d726a18c114350298c2a4ec89ef0cbc040aac1459ca60c1f866d7a5c0d9",
+    "preview/e2e/fixtures/character-hero-golden.html": "d799915c0eeb4206879d1ad03e188c13011d1204b1b6b6931b56b0ebdb778aeb",
+    "preview/public/assets/characters/jevica.glb": "722b96e2fd77b36c85ec01c1594a35e3f3f39b5ec76dfc3c9a351ef1eb4f117a",
+    "preview/public/assets/characters/jevica.sources.json": "104ce65388e02ad9e08730334083f297269faf74341b0685ed6eac36bfb9e1a3",
+    "scripts/character-hero-goldens.mjs": "5dab740d0ac3866d8ee887c8ed172c3903a1ee330d13c38e5e958057056b466e"
+  },
+  "scope": "Two authored neutral human/fox portraits on this exact renderer. Review images before promoting. Not wardrobe, animation, approved-device or human acceptance.",
+  "kind": "reviewed-render-reference",
+  "recordedAt": "2026-10-16T08:21:59.758Z",
+  "review": {
+    "date": "2026-10-16T08:23:39.326313+00:00",
+    "scope": "Rendered inspection of neutral human and fox with rose outfit and espresso hair. Head, hair, outfit, bag, shoes and fox head/tail are visible; framing and canonical colors match the intended current preset. Final PNG hashes match the inspected captures. Accepted as regression references for current rendering.",
+    "limitations": "Current authored garment has faceted trim/hem and stylized materials. This does not approve high-fidelity art quality, side cutouts, other views, wardrobe/animation compatibility, device budgets, or human usability/accessibility."
+  }
+}

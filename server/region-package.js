@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { terrainHeight } from '../preview/src/geometry.js';
 import { createWalkingEnvironment } from '../preview/src/walking.js';
 import { storefrontSpot } from '../preview/src/arrival.js';
+import { STREET } from '../preview/src/street-profile.js';
 import { generateBuildingInteriorPlan, validBuildingInteriorGeneration } from '../preview/src/building-interiors-plan.js';
 
 export const MAX_REGION_REQUEST_BYTES = 128 * 1024;
@@ -113,7 +114,7 @@ export function compileRegionPackage(region,title,{worldId='creator-region'}={})
   const hash=createHash('sha256').update(JSON.stringify(region)).digest('hex');
   const world={schema_version:1,scene:'district',title,address:'Creator-authored region',origin:[0,0],crs:'LOCAL:METRES',
     bounds_m:[west,south,east,north],site_ring:[[west,south],[east,south],[east,north],[west,north],[west,south]],
-    buildings,roads,trees,parcels,stores,terrain:surface,walkSurfaceOffset:0,walkSpawn:[...region.spawn,altitude(region.spawn)],
+    buildings,roads,trees,parcels,stores,terrain:surface,walkSurfaceOffset:STREET.walkSurfaceOffset,walkSpawn:[...region.spawn,altitude(region.spawn)],
     collisionPolygons:buildings.map(building=>building.ring),communityLocations,
     provenance:{kind:'creator',source:'Creator-authored region package',source_sha256:hash,attribution:'World creator'},
     limitations:['This region and its geography were supplied by its creator.'],

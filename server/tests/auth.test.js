@@ -468,3 +468,65 @@ test('a username approved at sign-up names the resident, and anything else falls
   answer = null;
   assert.equal(await name(), 'val-dev');
 });
+
+
+test('account erasure revokes every local session and fences later sign-in',async t=>{
+ let deleted=false;const f=await fixture(t,{accountActive:async id=>id!=='user_1'||!deleted});
+ f.workos.mintDistinctSessions();const one=await f.login(),two=await f.login();
+ f.workos.setUserId('user_2');const other=await f.login();f.workos.setUserId('user_1');
+ deleted=true;await f.auth.revokeUser('user_1');await f.auth.revokeUser('user_1');
+ for(const sessionCookie of [one.sessionCookie,two.sessionCookie])assert.equal((await (await f.request('/auth/session',{headers:{cookie:sessionCookie}})).json()).authenticated,false);
+ assert.equal((await (await f.request('/auth/session',{headers:{cookie:other.sessionCookie}})).json()).authenticated,true);
+ assert.equal((await f.login()).callback.status,403);
+ assert.equal(await f.auth.isSessionActive('user_1','session_1'),false);
+});
+test('account erasure fences a sign-in response already in flight',async t=>{
+ let deleted=false,release,entered;const gate=new Promise(resolve=>{release=resolve;}),started=new Promise(resolve=>{entered=resolve;});
+ const f=await fixture(t,{accountActive:async()=>!deleted});
+ const original=f.workos.userManagement.authenticateWithCode;
+ f.workos.userManagement.authenticateWithCode=async(...args)=>{const result=await original(...args);entered();await gate;return result;};
+ t.after(()=>release());const login=f.login();await started;deleted=true;await f.auth.revokeUser('user_1');release();
+ const result=await login;assert.equal(result.callback.status,403);assert.equal(result.sessionCookie,undefined);
+});
+test('account erasure fences identity resolution already in flight',async t=>{
+ let deleted=false,release,entered;const gate=new Promise(resolve=>{release=resolve;}),started=new Promise(resolve=>{entered=resolve;});
+ const f=await fixture(t,{accountActive:async()=>!deleted,usernameOf:async()=>{entered();await gate;return 'approved-name';}});
+ t.after(()=>release());const login=await f.login();const pending=f.request('/auth/session',{headers:{cookie:login.sessionCookie}});
+ await started;deleted=true;await f.auth.revokeUser('user_1');release();
+ assert.equal((await (await pending).json()).authenticated,false);
+});
+
+test('account erasure fences a delayed desktop credential exchange',async t=>{
+ let deleted=false,release,entered;const gate=new Promise(resolve=>{release=resolve;}),started=new Promise(resolve=>{entered=resolve;});
+ const f=await fixture(t,{accountActive:async()=>!deleted});await f.login();t.after(()=>release());
+ const original=f.workos.userManagement.authenticateWithRefreshToken;
+ f.workos.userManagement.authenticateWithRefreshToken=async(...args)=>{const value=await original(...args);entered();await gate;return value;};
+ const pending=f.request('/auth/desktop/exchange',{method:'POST',headers:{origin:config.origin,'content-type':'application/json'},body:JSON.stringify({refreshToken:'private-desktop-refresh'})});
+ await started;deleted=true;await f.auth.revokeUser('user_1');release();const result=await pending;
+ assert.equal(result.status,403);assert.equal(cookie(result,'river_oaks_session'),undefined);
+});
+test('account erasure fences a delayed access-token refresh',async t=>{
+ let deleted=false,release,entered;const gate=new Promise(resolve=>{release=resolve;}),started=new Promise(resolve=>{entered=resolve;});
+ const f=await fixture(t,{accountActive:async()=>!deleted}),login=await f.login();t.after(()=>release());
+ const original=f.workos.userManagement.loadSealedSession;
+ f.workos.userManagement.loadSealedSession=(...args)=>{const session=original(...args);return {...session,refresh:async()=>{const result=await session.refresh();entered();await gate;return result;}};};
+ f.advance(300001);const pending=f.request('/auth/session',{headers:{cookie:login.sessionCookie}});
+ await started;deleted=true;await f.auth.revokeUser('user_1');release();const result=await pending;
+ assert.equal((await result.json()).authenticated,false);assert.equal(cookie(result,'river_oaks_session'),undefined);
+});
+test('account erasure retries disconnect cleanup after session removal succeeded',async t=>{
+ let attempts=0;const f=await fixture(t,{onLogout:async()=>{if(++attempts===1)throw new Error('temporary disconnect failure');}});
+ const login=await f.login();await assert.rejects(f.auth.revokeUser('user_1'),/temporary/);
+ assert.equal((await (await f.request('/auth/session',{headers:{cookie:login.sessionCookie}})).json()).authenticated,false);
+ await f.auth.revokeUser('user_1');assert.equal(attempts,2);
+});
+test('account erasure removes a session inserted after an earlier activity read',async t=>{
+ let deleted=false,checks=0,release,entered,sealed;const gate=new Promise(resolve=>{release=resolve;}),started=new Promise(resolve=>{entered=resolve;});
+ const f=await fixture(t,{accountActive:async()=>{if(++checks===1){entered();await gate;return true;}return !deleted;}});t.after(()=>release());
+ const original=f.workos.userManagement.authenticateWithCode;
+ f.workos.userManagement.authenticateWithCode=async(...args)=>{const result=await original(...args);sealed=result.sealedSession;return result;};
+ const pending=f.login();await started;deleted=true;await f.auth.revokeUser('user_1');release();
+ assert.equal((await pending).callback.status,403);
+ deleted=false;
+ assert.equal((await (await f.request('/auth/session',{headers:{cookie:'river_oaks_session='+encodeURIComponent(sealed)}})).json()).authenticated,false,'the raced insertion must be removed, even if the activity predicate later allows the account');
+});

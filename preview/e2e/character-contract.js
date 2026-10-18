@@ -8,7 +8,7 @@ async page => {
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='true')await page.locator('#panel-toggle').click();
   await page.locator('input[name=player-character][value=sable]').check();
   await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerAppearance==='sable-human'&&document.querySelector('#canvas-host').dataset.playerReady==='true');
-  for(const [id,form] of [['sable-human','human'],['woman-casual','beast']]) {
+  for(const [id,form] of [['sable-human','human'],['rowan-human','human']]) {
     await page.locator(`input[name=player-form][value=${form}]`).check();
     await page.waitForFunction(id=>{const d=document.querySelector('#canvas-host').dataset;return d.playerAppearance===id&&d.playerReady==='true';},id);
     const sample=await page.evaluate(async id=>{

@@ -28,16 +28,14 @@ async page => {
   check(a.gate === true && b.gate === true, 'no sign-in gate blocks development');
   check(a.appearance === 'sable-human' && b.appearance === 'sable-human' && a.appearancePicker && b.appearancePicker, 'Players start with an appearance picker and a default look');
   await page.locator('input[name=player-character][value=sable]').check();
-  await page.locator('input[name=player-form][value=beast]').check();
-  await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerAppearance==='woman-casual'&&document.querySelector('#canvas-host').dataset.playerReady==='true');
-  await second.waitForFunction(id=>window.__riverMultiplayer().snapshot?.players.find(p=>p.id===id)?.appearance==='woman-casual',a.self);
-  await second.waitForFunction(id=>window.__riverMultiplayer().remotes?.some(p=>p.id===id&&p.ready&&p.appearance==='woman-casual'),a.self);
+  await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerAppearance==='sable-human'&&document.querySelector('#canvas-host').dataset.playerReady==='true');
+  await second.waitForFunction(id=>window.__riverMultiplayer().snapshot?.players.find(p=>p.id===id)?.appearance==='sable-human',a.self);
+  await second.waitForFunction(id=>window.__riverMultiplayer().remotes?.some(p=>p.id===id&&p.ready&&p.appearance==='sable-human'),a.self);
   check(true,'Sable selection reaches the other browser and its rendered remote avatar');
   // The authoritative town permits one appearance change every two seconds.
   await page.waitForTimeout(2100);
   await page.locator('input[name=player-character][value=silvan]').check();
   await page.locator('input[name=player-variant][value=feminine]').check();
-  await page.locator('input[name=player-form][value=human]').check();
   await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerAppearance==='forest-aristocrat-feminine'&&document.querySelector('#canvas-host').dataset.playerReady==='true');
   await second.waitForFunction(id=>window.__riverMultiplayer().remotes?.some(p=>p.id===id&&p.ready&&p.appearance==='forest-aristocrat-feminine'),a.self);
   await page.keyboard.press('F3');
@@ -228,14 +226,12 @@ async page => {
   await page.keyboard.press('Escape');
   check(!(await builder()).active && !(await builder()).ghost, 'Escape leaves builder mode and removes the preview');
   check(await page.locator('.visit-tools').evaluate(node => node.open), 'Escape in builder mode leaves the dock open');
-  await page.locator('input[name=player-form][value=beast]').check();
-  await page.waitForFunction(()=>document.querySelector('#canvas-host')?.dataset.playerAppearance==='forest-aristocrat-feminine-beast');
+  await page.waitForFunction(()=>document.querySelector('#canvas-host')?.dataset.playerAppearance==='forest-aristocrat-feminine');
   await page.locator('.visit-tools-toggle').click();
   await page.setViewportSize({width:390,height:844});
   await page.waitForFunction(()=>!document.querySelector('.visit-tools').open);
   check(await page.locator('.visit-tools').evaluate(node=>!node.open),'Shared mobile play starts with a compact dock');
   await page.locator('.visit-tools-toggle').click();
-  check(!await page.locator('#player-flight').isVisible()&&await page.locator('#player-beast-movement').isVisible(),'Shared mobile guests get beast movement without flight');
   check(!await page.locator('#player-companion').isVisible()&&!await page.locator('.vehicle-garage').isVisible(),'Shared mobile play hides private companion and vehicle actions');
   check(!await page.locator('.force-controls').isVisible()&&!await page.locator('.auto-controls').isVisible(),'Shared mobile play hides local-only scenarios');
   check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Shared mobile controls stay within the viewport');
