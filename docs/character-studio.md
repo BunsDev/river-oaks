@@ -882,3 +882,17 @@ All 11 core tasks passed with isolated Redis; preview retained one existing skip
 and one TODO, while all 914 server tests ran without skips. This covers received
 malformed/stale-catalog data, not continuous network fault injection, live providers,
 physical devices, human accessibility or all #443 acceptance.
+
+### Saved-character world transitions and admission recovery
+
+The `character-studio-worlds` development-world journey creates a separate ordinary
+resident after the fixture owner, saves and wears a customized Sable look through
+Studio, then travels between `garden-2` and `river-oaks`. It checks the immutable
+selected definition, unchanged building permissions, actual outfit/hair materials,
+and the original peer observing departure followed by a correctly rendered return.
+Aborting real admission tickets keeps the application inert and its initialized
+walking position frozen across held input. Restoring admission preserves the look
+and permits actual movement; reopening Studio shows the equipped customization.
+The 27-check browser run and recovery capture are retained under
+`.runtime/character-studio/worlds-20261018/verified-pose/`. This exercises loopback
+development identities and real world routing, not hosted WorkOS acceptance.

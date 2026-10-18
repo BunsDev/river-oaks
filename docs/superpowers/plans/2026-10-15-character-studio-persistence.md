@@ -1533,3 +1533,59 @@ with independent authored material baseline and a valid alternate definition.
 Ready to sign/push the test-only increment to464; no runtime code changed.
 Next add actual saved-identity world-transition/admission-recovery coverage; broader
 human/device/art/live-provider criteria remain open. Preserve all14local reports.
+
+World-transition increment: claimed new character-studio-worlds.js and registered
+it in development-world with an isolated town reset. Uses a separate ordinary
+local resident after the fixture owner, saves/wears via Studio, crosses river-oaks
+and garden-2, compares canonical revision and actual outfit/hair materials, checks
+peer visibility on return, then aborts real admission tickets and verifies gated
+movement plus restored selection/materials after retry. No production edits.
+Browser session62395 running; evidence .runtime/character-studio/worlds-20261018.
+No source edits while browser runs. Next inspect result/capture, strengthen any
+failed assumptions, run required core verification and review before commit.
+
+Initial browser62395 exited1 before starting: report option is relative to
+ data/reports, not repository root. Corrected invocation59160 passed23checks.
+Retained receipt/log/capture in worlds-20261018/first-candidate. Review identified
+stale-peer and instantaneous-input false positives. Added explicit departure from
+both original-world snapshot/remotes, returned remote material equality, initialized
+blocked position with30 animation frames of held movement, and recovery movement
+positive control. Strengthened browser87732 now running; poll that handle.
+
+Strengthened87732 exited1 at the initialized-blocked-position assertion: denied
+admission intentionally creates no avatar/HUD position. Failure preserved under
+blocked-position-assumption. Revised assertion explicitly requires no playable
+avatar/position before and after30 held-key frames, with initialized position and
+real movement required after recovery. Browser4206 running; verification script
+queued behind browser lock and will refuse if its report fails. Review confirmed
+departure/material and movement changes before this final assumption correction.
+
+Browser4206 exited1: avatar readiness is asset-loading state, independent of
+admitted walking. Core4953 refused the failed browser receipt before running.
+Preserved both failures in avatar-readiness-assumption. Source inspection confirms
+walking.getPose() returns null while inactive; existing __riverCarriage().pose
+exposes this controller directly. New check requires inactive pose before/after
+held input, then finite active pose and real movement after recovery. Browser86970
+running; core queued with fresh verified-controller evidence directory. No restart
+of an active process and no production source changes.
+
+Browser86970 exited1: the walking controller is active before admission, but
+main.js render explicitly calls walking.update only when connected. Thus HUD
+position is unset while actual controller position exists and is frozen. Corrected
+check to require a finite3D controller position and compare it across30 held-input
+frames while disconnected; actual recovery movement still required. Failure retained
+controller-inactive-assumption. Core41684 refused failed receipt. Browser35623 now
+running; new core queued with verified-pose output. These are test-assumption fixes,
+not a change to authority/admission behavior.
+
+Browser35623 terminal0,27checks. Recovery capture inspected: rose outfit and
+espresso hair, Studio reports equipped look. Peer departure/material and finite
+position/recovery controls pass; final read-only review found no actionable issue.
+Core79445 now running; focused21 passed. Evidence verified-pose. No production
+changes. Poll core before signing/pushing; host/device/human scope remains open.
+
+Core79445 terminal0: core11/11 with isolatedRedis, focused21/21 and frozen journey
+hash match. Browser35623 passed27checks and recovery render inspected. Project
+check64618 exit1 retains unrelated lifecycle gaps. Ready signed test-only commit
+and push to464; final reviewer found no actionable issue. No merge/deploy or
+human/device/live-provider acceptance. Preserve21worktrees and14local reports.
