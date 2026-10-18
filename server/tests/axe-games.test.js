@@ -22,10 +22,14 @@ test('alone at a lane, a player throws against the house, who throws on the serv
   const f = fixture({ random: still });
   f.join('alice');
   assert.equal(f.send('alice', { action: 'practice' }).ok, true);
-  assert.equal(f.send('alice', { action: 'throw', release: rel([0, 0]) }).ok, true);
+  const reply = f.send('alice', { action: 'throw', release: rel([0, 0]) });
+  assert.equal(reply.ok, true);
   const view = f.lane();
   assert.deepEqual(view.players, ['alice', AXE_HOUSE]);
   assert.equal(view.throws.length, 2, 'the house answered at once');
+  // The reply names the thrower's own axe, ahead of the house's answer in the same reply.
+  assert.deepEqual([reply.thrown, reply.axes.throws.length], [0, 2]);
+  assert.equal(f.send('alice', { action: 'throw', release: rel([0, 0]) }).thrown, 2);
   assert.equal(view.scores[0], 6);
   assert.equal(view.turn, 0);
   assert.deepEqual(view.scores, replay(view.throws).state.scores);

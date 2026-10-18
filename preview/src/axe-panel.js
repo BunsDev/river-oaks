@@ -27,7 +27,8 @@ const tenth = n => Math.round(n * 10) / 10;
 
 export function createAxePanel({ host = document.querySelector('#viewport'), getMirror = () => null, focusWorld = () => {},
   now = () => performance.now(), reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false, shared, storage = globalThis.localStorage, sounds = throwSounds() }) {
-  let laneId = null, release = [0, AXE_THROW.nominal], ready = now(), steady = false, flying = false, frame = 0, said = '', lastKey = '', generation = 0;
+  // pending: a throw is with the town; flying: its axe is in the air on the sheet.
+  let laneId = null, release = [0, AXE_THROW.nominal], ready = now(), steady = false, pending = false, flying = false, frame = 0, said = '', lastKey = '', generation = 0;
   let guide = true;
   try { guide = storage?.getItem(GUIDE_KEY) !== 'off'; } catch { /* storage may be unavailable */ }
   const panel = document.createElement('dialog');
@@ -130,36 +131,44 @@ export function createAxePanel({ host = document.querySelector('#viewport'), get
     $('.darts-scores').replaceChildren(...(lane()?.players ? [0, 1] : []).map(player => { const item = document.createElement('li'); item.textContent = `${who(player)}: ${state.scores[player]} (${state.throws[player]}/${THROWS})`; if (state.turn === player && !lane().result) item.dataset.turn = ''; return item; }));
     const last = state.history.at(-1);
     $('.darts-turn').textContent = last ? `${who(last.player)} threw: ${last.label}${last.stuck ? ` (${last.value})` : ''}.` : 'Ten throws each.';
-    throwButton.setAttribute('aria-disabled', String(flying || !yours(state)));
+    throwButton.setAttribute('aria-disabled', String(pending || flying || !yours(state)));
     guideButton.setAttribute('aria-pressed', String(guide));
     if (hadFocus && !panel.contains(document.activeElement)) throwButton.focus({ preventScroll: true });
   }
-  // `before`: how many axes the lane held before this throw, so the flight follows the
-  // thrower's own axe even when the house answers in the same reply.
-  async function send(message, { before = null } = {}) {
+  // A reply for a sheet that was closed or reopened meanwhile is dropped (`ticket`); the
+  // snapshot still brings its axes. A throw holds the button until the town answers.
+  async function send(message) {
+    const ticket = generation, throwing = message.action === 'throw';
+    if (throwing) { pending = true; render(); }
     let reply;
     try { reply = await shared.send({ type: 'axes', laneId, ...message }); } catch (error) { reply = { ok: false, message: error.message }; }
+    finally { if (throwing && ticket === generation) pending = false; }
+    if (ticket !== generation) return;
     said = reply?.ok ? '' : reply?.message ?? 'The lane did not take that.';
-    // A throw the town took flies to where it landed: a thud if it stuck, a clatter if not.
-    const landed = message.action === 'throw' && reply?.ok && before !== null ? reply.axes?.throws?.[before] ?? null : null;
+    // A throw the town took flies to where it landed (the reply names the thrower's own
+    // axe, ahead of the house's answer): a thud if it stuck, a clatter if not.
+    const landed = throwing && reply?.ok ? reply.axes?.throws?.[reply.thrown] ?? null : null;
     if (landed) {
-      const ticket = generation;
       flying = true; drawReticle();
-      sounds.play('release', { strength: 0.7 });
-      const arrived = await flyOnBoard(board, { from: [VIEW / 2, VIEW - 6], to: toScreen(landed.point), reducedMotion, now, className: 'darts-flight', lift: 30, cancelled: () => ticket !== generation || !panel.open });
-      flying = false;
-      if (arrived) sounds.play(landed.stuck ? 'axe-stick' : 'axe-bounce');
+      let arrived = false;
+      try {
+        sounds.play('release', { strength: 0.7 });
+        arrived = await flyOnBoard(board, { from: [VIEW / 2, VIEW - 6], to: toScreen(landed.point), reducedMotion, now, className: 'darts-flight', lift: 30, cancelled: () => ticket !== generation || !panel.open });
+        if (arrived) sounds.play(landed.stuck ? 'axe-stick' : 'axe-bounce');
+      } finally { if (ticket === generation) flying = false; }
+      if (ticket !== generation) return;
       if (!landed.stuck) said = STEP_HINT[reply.rotation] ?? (Math.abs(landed.point[0]) > BOARD || Math.abs(landed.point[1]) > BOARD ? 'Off the target.' : 'It bounced off the grain.');
       pickUp();
     }
     lastKey = ''; render();
   }
   function press() {
-    if (!laneId || flying || !yours(round().state)) return;
+    if (!laneId || pending || flying || !yours(round().state)) return;
+    sounds.unlock();
     const thrown = swayed(), sent = [tenth(thrown[0]), Math.round(thrown[1] * 100) / 100];
     $('.darts-gauge-last').hidden = false;
     $('.darts-gauge-last').style.setProperty('--at', ((sent[1] - AXE_THROW.speed[0]) / (AXE_THROW.speed[1] - AXE_THROW.speed[0])).toFixed(4));
-    void send({ action: 'throw', release: sent }, { before: lane()?.throws.length ?? 0 });
+    void send({ action: 'throw', release: sent });
   }
   throwButton.addEventListener('click', press);
   guideButton.addEventListener('click', () => {
@@ -171,7 +180,7 @@ export function createAxePanel({ host = document.querySelector('#viewport'), get
     const button = event.target.closest('[data-axe-shared]');
     if (button) void send(button.dataset.axeShared === 'invite' ? { action: 'invite', peerId: button.dataset.peer } : { action: button.dataset.axeShared });
   });
-  const close = () => { if (!panel.open) return; generation++; flying = false; controls.clear(); panel.close(); cancelAnimationFrame(frame); laneId = null; focusWorld(); };
+  const close = () => { if (!panel.open) return; generation++; pending = false; flying = false; controls.clear(); panel.close(); cancelAnimationFrame(frame); laneId = null; focusWorld(); };
   $('.table-game-close').addEventListener('click', close);
   // The sheet keeps its keys: arrows and WASD line up the release (a tap is one step, a hold
   // keeps moving; Shift for fine moves), Space and Enter press the focused button.
@@ -214,7 +223,7 @@ export function createAxePanel({ host = document.querySelector('#viewport'), get
       if (panel.open && !flying) render();
     },
     open, close,
-    debug: () => ({ open: panel.open, laneId, lane: lane(), status: status.textContent, release: release.slice(), swayed: swayed(), steady, guide, flying, distance: distance(),
+    debug: () => ({ open: panel.open, laneId, lane: lane(), status: status.textContent, release: release.slice(), swayed: swayed(), steady, guide, pending, flying, distance: distance(),
       buttons: [...panel.querySelectorAll('[data-axe-shared]')].map(button => button.textContent) }),
     // For tests: hold the hand still on a release [across mm, speed m/s], or on the release
     // that carries an axe to a point [across, height] mm from where you stand.

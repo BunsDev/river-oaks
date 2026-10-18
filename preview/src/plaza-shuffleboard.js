@@ -131,19 +131,20 @@ export function createPlazaShuffleboard({ host = document.querySelector('#viewpo
   function throwPuck(shot) {
     const { state } = round(), { frames, pucks } = slide(state.pucks, state.turn, shot.aim, shot.power), owners = pucks.map(p => p.owner);
     const ticket = generation, step = reducedMotion ? 4 : 1, knocked = new Set();
-    // Frames are 8 simulation steps of 1/240 s: the slide hisses for as long as anything moves.
+    // The sheet draws `step` frames a display frame (about 60 a second), and the slide hisses
+    // while it moves: sized to that, and stopped when the slide ends or is cancelled.
     sounds.play('release', { strength: 0.4 + shot.power * 0.4 });
-    sounds.play('slide', { seconds: frames.length * 8 / 240, strength: 0.5 + shot.power * 0.4, delay: 0.05 });
+    const hiss = sounds.play('slide', { seconds: frames.length / step / 60, strength: 0.5 + shot.power * 0.4, delay: 0.05 });
     return new Promise(resolve => {
       let index = 0;
       const tick = () => {
-        if (ticket !== generation) { sliding = null; resolve(false); return; }
+        if (ticket !== generation) { hiss?.stop(); sliding = null; resolve(false); return; }
         const positions = frames[Math.min(index, frames.length - 1)], list = positions.map(([u, v, out], i) => ({ owner: owners[i], u, v, out }));
         // A puck already down that starts to move has been struck: one knock each.
         const before = frames[Math.max(0, index - step)];
         positions.forEach(([u, v], i) => { if (i < positions.length - 1 && !knocked.has(i) && Math.hypot(u - before[i][0], v - before[i][1]) > 1e-4) { knocked.add(i); sounds.play('knock', { strength: 0.7 }); } });
         sliding = { list }; mirror(list); render();
-        if (index >= frames.length - 1) { sliding = null; resolve(true); return; }
+        if (index >= frames.length - 1) { hiss?.stop(); sliding = null; resolve(true); return; }
         index += step; requestAnimationFrame(tick);
       };
       requestAnimationFrame(tick);

@@ -31,12 +31,13 @@ Val, 2026-10-18, after #535 (darts release and acceleration, wine pong repositio
 - **Shuffleboard (practice):**
   - Left/right aim (Right drifts right as seen), up/down power, with taps, holds, Shift and sway as in `throw-controls.js`.
   - A click on the table solves for the aim and power that stop a lone puck there. The aim line and the lone-puck stop mark are always shown.
-- **Sounds (`throw-sounds.js`):** synthesized WebAudio with no files.
+- **Sounds (`throw-sounds.js`):** synthesized WebAudio with no files. `play()` returns `{ stop }` (the shuffleboard hiss stops with its slide), and a broken audio stack never throws into a game.
   - The cues are release, dart, dart-miss, tap, clink, plop, slide, knock, axe-stick and axe-bounce.
-  - They are created on the first throw (a user gesture) and are quiet by default.
+  - Each throw's press unlocks the context inside its own gesture: WebKit starts audio only there, and a shared throw's first sound waits for the town's reply. Quiet by default.
   - One Sound switch is shared by every throwing sheet and remembered per viewer (`river-oaks-game-sounds`).
 - **Flights (`board-flight.js`):** on the darts and axe sheets the dart or axe leaves the hand below the board and arcs onto where it landed, shrinking, in about 260 ms; reduced motion lands it at once.
-  - Shared boards fly to the town's landing for the thrower's own throw, found by index because the house may answer in the same reply.
+  - Shared boards fly to the town's landing for the thrower's own throw. The reply names it (`thrown`, recorded before the house answers in the same reply).
+  - The Throw button holds while the town answers (`pending`), so a double click is one throw. A reply for a sheet closed or reopened meanwhile is dropped.
   - The regular's darts fly too.
 - **Wine pong:** a release whoosh, then the right contact as the ball first comes down (plop into a glass, clink off a rim, tap on the linen) and as it settles.
 
@@ -45,26 +46,54 @@ Val, 2026-10-18, after #535 (darts release and acceleration, wine pong repositio
 - **New:** `preview/src/throw-sounds.js`, `preview/src/board-flight.js`, and their tests.
 - **Changed:**
   - `preview/src/axe-rules.js` and `axe-panel.js`;
-  - `server/axe-games.js` and `world.js` (the axe `distanceTo` only);
+  - `server/axe-games.js` and `world.js` (the axe `distanceTo` only), and `server/darts-games.js` (the reply's `thrown`);
   - `preview/src/plaza-shuffleboard.js` and its CSS;
   - `plaza-darts.js` and its CSS, and `plaza-wine-pong.js` (sounds and flight);
   - `main.js` (test hooks and the axe distance);
   - `salon-guide-content.js` (the shuffleboard page);
-  - tests: `preview/tests/axe-rules.test.js`, `server/tests/axe-games.test.js`, `server/tests/axe-venue.test.js`;
-  - journeys: `plaza-shuffleboard`, `axe-venue`, `plaza-darts`, `ipic-darts`.
+  - tests: `preview/tests/axe-rules.test.js`, `server/tests/axe-games.test.js`, `server/tests/axe-venue.test.js`, `server/tests/darts-games.test.js`;
+  - journeys: `plaza-shuffleboard`, `axe-venue`, `plaza-darts`, `ipic-darts`, and the design-review script `axe-venue-views.mjs` (moved off the removed `holdAt`; not run, since it rewrites `docs/design/axe-and-darts`).
 
-## Results so far
+## Results
 
+At `c5f29643` (before the review):
 - **Focused unit tests:** 74 passed across axe rules, flight, sounds, controls, shuffleboard, darts, wine pong, the guide, and the axe and darts server suites. After the guide edit, 32 more passed.
   - The checkpoint test caught a `-0` landing (JSON stores it as `0`); axe landings normalise it now.
 - **Build:** `pnpm run build` passed.
-- **Journeys** (`plaza-darts`, `plaza-wine-pong` and `plaza-shuffleboard`, then the IPIC darts and axe venue two-browser runners): queued until load is under 60 with 5 GB free. At queue time load was 478 with 1.1 GB free (other sessions' gates and builds).
+- **Journeys** (local Chromium, under the browser lock):
+  - `pnpm run test:experience plaza-darts plaza-wine-pong plaza-shuffleboard` passed: 24, 36 and 23 checks.
+  - `node preview/e2e/axe-venue-runner.mjs` passed 8 checks.
+  - `node preview/e2e/ipic-darts-runner.mjs`: the first run stopped walking to a waypoint before any darts ("could not reach 1.4, 20.6", load in the hundreds). The rerun passed 6 checks, but main was merged into the tree during it, so it is not counted.
+- **Main:** merged at `b79914ad`; main's plans index lacked the plans from #515 and #529, regenerated at `36afb585`.
+
+## Independent review (read-only subagent) and fixes
+
+No server-authority or checkpoint defect: a forged point, stick or distance is refused, a NaN distance is refused before anything is stored, and stored throws keep `{point, stuck}`.
+
+Fixed:
+1. **A double send:** a double click (or a held Enter) on the axe or shared darts Throw sent two throws before the first reply. Against the house both were taken, and the second flight followed the first axe, because `before` came from the 200 ms snapshot.
+   - Now `pending` holds the button until the town answers, and the server names the thrower's own throw (`thrown`).
+   - The ticket is taken at press time, so a reply for a closed or reopened sheet is dropped.
+2. **The design-review script** `axe-venue-views.mjs` still called the removed `holdAt`.
+3. **`flying` could stay on:** an exception inside the sound code could leave it set. `play()` now catches everything, and every flight clears `flying` in a `finally`.
+4. **WebKit silence:** the audio context was first made after the town's reply, outside the gesture. Presses now call `sounds.unlock()`.
+5. **A dimmed Throw button:** after New game or a mode switch mid-flight, the darts Throw button stayed dimmed. Those actions, and close, now clear `pending` and `flying`.
+6. **The shuffleboard hiss** ran for the simulated length (about twice the animation, four times under reduced motion). It is now sized to the animation and stopped when the slide ends or is cancelled.
+
+Regressions:
+- `server/tests/axe-games.test.js` and `darts-games.test.js` check that `thrown` names the thrower's own throw when the house answers in the same reply.
+- `throw-sounds.test.js` covers the early stop, the unlock, and a context whose `createBuffer` throws.
+- The `ipic-darts` journey makes alice's first dart a double click and checks that exactly one dart lands.
+
+After the fixes:
+- 19 focused tests passed (sounds, flight, axe and darts server suites), then 40 across every darts and axe command test plus the shuffleboard, darts and axe rules.
+- `pnpm run build` passed.
 
 ## Next action
 
-Read the journey results, then:
-1. run `pnpm run verify`;
-2. make a signed commit;
-3. open a PR and watch hosted CI.
+1. Commit and push the fixes to #542.
+2. Rerun the journeys on the final tree: plaza darts and shuffleboard, the IPIC darts and axe venue runners.
+3. Run `pnpm run verify`.
+4. Fill the PR results, mark it ready, and watch hosted CI.
 
 Merging needs Val.

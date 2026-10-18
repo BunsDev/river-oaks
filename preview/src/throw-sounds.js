@@ -2,12 +2,15 @@
 // ball, puck or axe leaves the hand, and what it meets: a dart's thunk into the board, a
 // ball's tap on linen and clink on a glass, a puck's slide and knock, an axe's thud into
 // wood or clatter off it. Each is a few WebAudio nodes (filtered noise and oscillators)
-// that stop themselves. The context is made on the first sound, which always follows a
-// throw (a user gesture). Quiet by default; one switch, remembered per viewer, turns
-// every game's sounds off.
+// that stop themselves, or stop early when a slide ends sooner. The context is made inside
+// a throw's own click or key (unlock), since WebKit starts audio only in the gesture and a
+// shared throw's first sound waits for the town's reply. Quiet by default; one switch,
+// remembered per viewer, turns every game's sounds off.
 
 const KEY = 'river-oaks-game-sounds';
 let shared = null;
+// The sound being built collects its voices here, so play() can hand back a stop.
+let voices = null;
 
 export function createThrowSounds({ storage = globalThis.localStorage, AudioContextClass = globalThis.AudioContext ?? globalThis.webkitAudioContext, volume = 0.3 } = {}) {
   let context = null, noise = null, on = true;
@@ -42,6 +45,7 @@ export function createThrowSounds({ storage = globalThis.localStorage, AudioCont
     filter.frequency.setValueAtTime(from, at); filter.frequency.exponentialRampToValueAtTime(to, at + length);
     source.connect(filter).connect(gain);
     source.start(at); source.stop(at + length + 0.02);
+    voices?.push({ node: source, gain });
   }
   // A tone that falls from `from` to `to` Hz: a thud's body, a glass's ring.
   function tone(ctx, at, { from, to = from, peak, length, type = 'sine' }) {
@@ -50,7 +54,15 @@ export function createThrowSounds({ storage = globalThis.localStorage, AudioCont
     oscillator.frequency.setValueAtTime(from, at); oscillator.frequency.exponentialRampToValueAtTime(to, at + length);
     oscillator.connect(gain);
     oscillator.start(at); oscillator.stop(at + length + 0.02);
+    voices?.push({ node: oscillator, gain });
   }
+  // Fades a sound's voices out over a few milliseconds and stops them.
+  const silence = (ctx, list) => () => {
+    const at = ctx.currentTime;
+    for (const { node, gain } of list) {
+      try { gain.gain.cancelScheduledValues?.(at); gain.gain.setTargetAtTime?.(0.0001, at, 0.015); node.stop(at + 0.08); } catch { /* already stopped */ }
+    }
+  };
 
   // `strength` (0–1) scales how hard it sounds; `seconds` sets a slide's length.
   const SOUNDS = {
@@ -69,12 +81,19 @@ export function createThrowSounds({ storage = globalThis.localStorage, AudioCont
 
   return {
     kinds: Object.keys(SOUNDS),
-    // Plays a sound now (or `delay` seconds from now). Returns false when sounds are off or unavailable.
+    // Plays a sound now (or `delay` seconds from now) and returns { stop } to end it early, or
+    // null when sounds are off or unavailable. A broken audio stack never throws into a game.
     play(kind, options = {}) {
-      const recipe = SOUNDS[kind], ctx = recipe && audio();
-      if (!ctx) return false;
-      try { recipe(ctx, ctx.currentTime + 0.005 + (options.delay ?? 0), options); return true; } catch { return false; }
+      try {
+        const recipe = SOUNDS[kind], ctx = recipe && audio();
+        if (!ctx) return null;
+        const built = voices = [];
+        recipe(ctx, ctx.currentTime + 0.005 + (options.delay ?? 0), options);
+        return { stop: silence(ctx, built) };
+      } catch { return null; } finally { voices = null; }
     },
+    // Makes or wakes the context inside a throw's click or key handler. False when off or unavailable.
+    unlock() { try { return Boolean(audio()); } catch { return false; } },
     enabled: () => on,
     setEnabled(next) {
       on = Boolean(next);

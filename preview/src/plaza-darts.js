@@ -36,7 +36,8 @@ const tenth = n => Math.round(n * 10) / 10;
 export function createPlazaDarts({ host = document.querySelector('#viewport'), getMirror = () => null, getBoard = () => null, getPose = () => null, focusWorld = () => {},
   random = Math.random, now = () => performance.now(), replyDelay = 650, reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false,
   shared = null, storage = globalThis.localStorage, sounds = throwSounds() } = {}) {
-  let game = null, release = [0, THROW.nominal], ready = now(), steady = false, last = null, generation = 0, thinking = false, flying = false, frame = 0, lastKey = '';
+  // pending: a shared throw is with the town; flying: a dart is in the air on the sheet.
+  let game = null, release = [0, THROW.nominal], ready = now(), steady = false, last = null, generation = 0, thinking = false, pending = false, flying = false, frame = 0, lastKey = '';
   const controls = createHeldControls({ keys: KEYS, step: STEP, rate: RATE, now,
     apply: move => { release = clampRelease([release[0] + (move.across ?? 0), release[1] + (move.accel ?? 0)]); steady = false; drawReticle(); } });
   let guide = true;
@@ -156,7 +157,7 @@ export function createPlazaDarts({ host = document.querySelector('#viewport'), g
     const mark = $('.darts-gauge-last');
     mark.hidden = !last; if (last) mark.style.setProperty('--at', ((last.release[1] - THROW.accel[0]) / (THROW.accel[1] - THROW.accel[0])).toFixed(4));
     $('.darts-gauge-bull').style.setProperty('--at', ((THROW.nominal - THROW.accel[0]) / (THROW.accel[1] - THROW.accel[0])).toFixed(4));
-    throwButton.setAttribute('aria-disabled', String(state.winner !== null || thinking || flying || !yours(state)));
+    throwButton.setAttribute('aria-disabled', String(state.winner !== null || thinking || pending || flying || !yours(state)));
     guideButton.setAttribute('aria-pressed', String(guide));
     $('[data-darts-action="new"]').hidden = Boolean(shared) || state.winner === null;
     for (const button of panel.querySelectorAll('[data-darts-mode]')) button.setAttribute('aria-pressed', String(button.dataset.dartsMode === game.mode));
@@ -191,39 +192,46 @@ export function createPlazaDarts({ host = document.querySelector('#viewport'), g
   const handFor = dart => { const next = seededRandom((Math.imul(game.seed >>> 0, 0x5bd1e995) ^ Math.imul(dart + 1, 0x27d4eb2f)) >>> 0); return [handDraw(next() * 0.999998 + 0.000001), handDraw(next() * 0.999998 + 0.000001)]; };
 
   // The dart in the air: from the hand below the board onto where it landed, then its thunk.
-  // Resolves false if the sheet closed or a new game started meanwhile.
+  // Resolves false if the sheet closed or a new game started meanwhile (those clear `flying`
+  // themselves, so a later dart's flight is never cut short).
   async function fly(point, accel = last?.release?.[1] ?? THROW.nominal) {
     const ticket = generation, strength = Math.min(1, Math.max(0.2, (accel - THROW.accel[0]) / (THROW.accel[1] - THROW.accel[0])));
     flying = true; drawReticle();
-    sounds.play('release', { strength });
-    const arrived = await flyOnBoard(board, { from: [VIEW / 2, VIEW - 6], to: toScreen(point), reducedMotion, now, className: 'darts-flight', cancelled: () => ticket !== generation || !panel.open });
-    flying = false;
-    if (arrived) sounds.play(scoreAt(point).value > 0 ? 'dart' : 'dart-miss', { strength });
-    return arrived;
+    try {
+      sounds.play('release', { strength });
+      const arrived = await flyOnBoard(board, { from: [VIEW / 2, VIEW - 6], to: toScreen(point), reducedMotion, now, className: 'darts-flight', cancelled: () => ticket !== generation || !panel.open });
+      if (arrived) sounds.play(scoreAt(point).value > 0 ? 'dart' : 'dart-miss', { strength });
+      return arrived;
+    } finally { if (ticket === generation) flying = false; }
   }
 
   async function press() {
     const { state } = round();
-    if (!game || state.winner !== null || thinking || flying || !yours(state)) return;
+    if (!game || state.winner !== null || thinking || pending || flying || !yours(state)) return;
+    sounds.unlock();
     const thrown = swayed(), sent = [tenth(thrown[0]), Math.round(thrown[1] * 100) / 100];
     last = { release: sent, before: state.darts.length };
-    if (shared) { pickUp(); render(); void send({ action: 'throw', release: sent }, { before: line()?.points.length ?? 0 }); return; }
+    if (shared) { pickUp(); void send({ action: 'throw', release: sent }); return; }
     const point = throwLanding(sent, handFor(game.points.length));
     if (!(await fly(point))) return;
     land(point); pickUp(); render(); void regular();
   }
 
-  // Shared matches: the town answers, and its snapshot brings the darts back.
-  // `before`: how many darts the line held before this throw, so the flight follows the
-  // thrower's own dart even when the house regular answers in the same reply.
-  async function send(message, { before = null } = {}) {
+  // Shared matches: the town answers, and its snapshot brings the darts back. A reply for a
+  // sheet closed meanwhile is dropped (`ticket`). A throw holds the button until the town answers.
+  async function send(message) {
+    const ticket = generation, throwing = message.action === 'throw';
+    if (throwing) { pending = true; render(); }
     let reply;
     try { reply = await shared.send({ type: 'darts', lineId: shared.lineId, ...message }); }
     catch (error) { reply = { ok: false, message: error.message }; }
+    finally { if (throwing && ticket === generation) pending = false; }
+    if (ticket !== generation) return;
     game.said = reply?.ok ? '' : reply?.message ?? 'The board did not take that.';
-    // A throw the town took flies to where the town landed it.
-    const landed = message.action === 'throw' && reply?.ok && before !== null ? reply.darts?.points?.[before] ?? null : null;
-    if (landed) await fly(landed);
+    // A throw the town took flies to where the town landed it: the reply names the
+    // thrower's own dart, ahead of any the regular answers with.
+    const landed = throwing && reply?.ok ? reply.darts?.points?.[reply.thrown] ?? null : null;
+    if (landed && !(await fly(landed))) return;
     lastKey = ''; render();
   }
   function renderShared() {
@@ -266,9 +274,9 @@ export function createPlazaDarts({ host = document.querySelector('#viewport'), g
     try { storage?.setItem(GUIDE_KEY, guide ? 'on' : 'off'); } catch { /* storage may be unavailable */ }
     render();
   });
-  $('[data-darts-action="new"]').addEventListener('click', () => { generation++; thinking = false; last = null; newGame({ wins: game.wins }); mirror(); render(); void regular(); throwButton.focus(); });
-  for (const button of panel.querySelectorAll('[data-darts-mode]')) button.addEventListener('click', () => { if (game.mode === button.dataset.dartsMode) return; generation++; thinking = false; last = null; newGame({ mode: button.dataset.dartsMode, wins: [0, 0] }); mirror(); render(); void regular(); });
-  const close = () => { if (!panel.open) return; generation++; thinking = false; controls.clear(); panel.close(); cancelAnimationFrame(frame); focusWorld(); };
+  $('[data-darts-action="new"]').addEventListener('click', () => { generation++; thinking = false; pending = false; flying = false; last = null; newGame({ wins: game.wins }); mirror(); render(); void regular(); throwButton.focus(); });
+  for (const button of panel.querySelectorAll('[data-darts-mode]')) button.addEventListener('click', () => { if (game.mode === button.dataset.dartsMode) return; generation++; thinking = false; pending = false; flying = false; last = null; newGame({ mode: button.dataset.dartsMode, wins: [0, 0] }); mirror(); render(); void regular(); });
+  const close = () => { if (!panel.open) return; generation++; thinking = false; pending = false; flying = false; controls.clear(); panel.close(); cancelAnimationFrame(frame); focusWorld(); };
   $('.table-game-close').addEventListener('click', close);
   // The sheet keeps its keys: arrows and WASD line up the release (a tap is one step, a hold
 // keeps moving; Shift for fine moves),
@@ -325,7 +333,7 @@ export function createPlazaDarts({ host = document.querySelector('#viewport'), g
     open, close,
     debug() {
       const hand = { release: release.slice(), swayed: swayed(), guide, steady, landing: landingOf(swayed()), lastRelease: last ? last.release.slice() : null };
-      if (shared) return { open: panel.open, shared: true, line: line(), status: status.textContent, ...hand, flying, buttons: [...panel.querySelectorAll('[data-darts-shared]')].map(button => button.textContent) };
+      if (shared) return { open: panel.open, shared: true, line: line(), status: status.textContent, ...hand, pending, flying, buttons: [...panel.querySelectorAll('[data-darts-shared]')].map(button => button.textContent) };
       if (!game) return { open: panel.open, game: null };
       const { state } = round();
       return { open: panel.open, mode: game.mode, turn: state.turn, scores: state.scores.slice(), darts: state.darts.map(dart => dart.label), thrown: game.points.length, points: game.points.map(p => p.slice()),

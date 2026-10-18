@@ -190,7 +190,7 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | Plan | PRs mentioned |
 | --- | --- |
 | [2026-10-18-throw-mechanics-darts-pong](2026-10-18-throw-mechanics-darts-pong.md)<br>Darts release and acceleration, and wine pong repositioning | — |
-| [2026-10-18-throw-followups](2026-10-18-throw-followups.md)<br>Throw follow-ups: shuffleboard and axes, sounds, a dart flight | #535, #519 |
+| [2026-10-18-throw-followups](2026-10-18-throw-followups.md)<br>Throw follow-ups: shuffleboard and axes, sounds, a dart flight | #535, #519, #515 |
 | [2026-10-18-office-computer-embed](2026-10-18-office-computer-embed.md)<br>#486 Office desk: Tasks and Computer (Place side) | #486, #487, #33 |
 | [2026-10-18-ipic-tuck-room-photo](2026-10-18-ipic-tuck-room-photo.md)<br>IPIC Tuck Room from IMG_9756–9757 (photo review P13, P14) | — |
 | [2026-10-18-ipic-screening-viewing](2026-10-18-ipic-screening-viewing.md)<br>IPIC screening: screen-focused viewing, Join screening and truthful sound (#500) | #500, #497, #499 |

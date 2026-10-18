@@ -45,7 +45,7 @@ async (alice, bob) => {
     const before = (await axes(page)).lane?.throws.length ?? 0;
     await page.evaluate(target => window.__riverAxes().steadyOn(target), point);
     await page.locator('#axe-panel [data-axe-action="throw"]').click();
-    await page.waitForFunction(n => (window.__riverAxes().lane?.throws.length ?? 0) > n && !window.__riverAxes().flying, before);
+    await page.waitForFunction(n => (window.__riverAxes().lane?.throws.length ?? 0) > n && !window.__riverAxes().pending && !window.__riverAxes().flying, before);
   }
 
   await Promise.all([load(alice), load(bob)]);

@@ -90,11 +90,12 @@ export function createAxeGames({ players, laneIds = [], atLane = () => null, dis
         const distance = distanceTo(player, laneId);
         if (!Number.isFinite(distance)) return reject('not_at_lane', 'Step into the lane first.');
         const flown = axeThrow(message.release, distance, [spread(random()), spread(random()), spread(random()), random()]);
-        lane.throws.push({ point: flown.point, stuck: flown.stuck });
+        const thrown = lane.throws.push({ point: flown.point, stuck: flown.stuck }) - 1;
         lane.result = outcome(state(lane));
         if (!lane.result) { houseTurn(lane); lane.result = outcome(state(lane)); }
-        // How the axe turned is the thrower's feedback, not part of the match record.
-        return { ...save(lane), rotation: flown.rotation, distance: tenth(distance * 100) / 100 };
+        // How the axe turned is the thrower's feedback, not part of the match record, and
+        // `thrown` names the thrower's own axe in the reply, ahead of any house throws.
+        return { ...save(lane), thrown, rotation: flown.rotation, distance: tenth(distance * 100) / 100 };
       }
       case 'resign': {
         if (!only(message, ['type', 'action', 'laneId'])) return reject('invalid_axes');
