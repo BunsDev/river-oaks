@@ -52,7 +52,7 @@ test('rolling back keeps the v12 writer: legacy layout ends seated penthouse vis
   assert.equal(live.send(owner, { type: 'screening', action: 'start', venueId: 'ipic', epoch: before.epoch, expectedRevision: before.revision, operationId: 'rollback-start-01', mediaId: FILM.id }).ok, true);
   live.clock.time += 4000; live.world.step(0.05);
   const saved = live.world.checkpoint(), playing = live.screening();
-  assert.equal(saved.version, 12);
+  assert.equal(saved.version, 13);
   assert.equal(playing.status, 'playing');
   assert.deepEqual(live.visit('guest').seat, { id: chair.id });
 
@@ -61,7 +61,7 @@ test('rolling back keeps the v12 writer: legacy layout ends seated penthouse vis
   assert.equal(back.visit('guest'), null, 'the penthouse visit and its seat claim ended');
   assert.equal(back.world.snapshot().players.find(player => player.id === 'guest')?.office ?? null, null);
   const restored = back.world.checkpoint();
-  assert.equal(restored.version, 12, 'the compatible writer is kept');
+  assert.equal(restored.version, 13, 'the compatible writer is kept');
   assert.deepEqual(restored.payload.offices.grants, saved.payload.offices.grants, 'grants stay');
   assert.deepEqual(restored.payload.offices.requests, [], 'retired requests are not restored');
   back.clock.time += 1000; back.world.step(0.05);

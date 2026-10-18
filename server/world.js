@@ -1,5 +1,6 @@
 import { validateCharacterDefinition, migrateStoredCharacterDefinition } from '../preview/src/character-definition.js';
 import { createOffices } from './offices.js';
+import { campusServed, createCampusLeases } from './campus-leases.js';
 import { createTableGames } from './table-games.js';
 import { officesFor } from '../preview/src/office-contract.js';
 import { createHash } from 'node:crypto';
@@ -24,7 +25,7 @@ import { IPIC_DARTS, atIpicDartsLine } from '../preview/src/ipic-plan.js';
 import { createAxeGames } from './axe-games.js';
 import { AXE_LANES, AXE_ROOM_DARTS, AXE_ROOM_INTERIOR, atAxeLane, atAxeRoomDarts } from '../preview/src/axe-room-plan.js';
 import { isVenueRoom } from '../preview/src/venue-rooms.js';
-import { districtRevisionOf, isCampusRoom } from '../preview/src/garden-campus-district.js';
+import { districtRevisionOf, isCampusRoom, isCampusSeat } from '../preview/src/garden-campus-district.js';
 import { createScreenings } from './screenings.js';
 import { SCREENING_VENUES } from '../preview/src/screening-contract.js';
 import { isJevicaAdmin } from './admin.js';
@@ -52,7 +53,7 @@ const fields = (message, allowed) => Object.keys(message).every(key => allowed.i
 const textId = value => typeof value === 'string' && value.length > 0 && value.length <= 160;
 const reject = (error, message = error) => ({ok:false,error,message});
 
-const CHECKPOINT_VERSION = 12, MAX_CHECKPOINT_BYTES = 8 * 1024 * 1024;
+const CHECKPOINT_VERSION = 13, MAX_CHECKPOINT_BYTES = 8 * 1024 * 1024;
 const LIFE_FIELDS = ['elapsed','storm','revision','packet','cursor','paused','stats'];
 const digest = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const nonnegative = value => Number.isFinite(value) && value >= 0;
@@ -82,7 +83,7 @@ function decodeCheckpoint(json) {
 
 // The transport authenticates identities. Only this object advances the town;
 // client messages contain player intent, never resident state or elapsed time.
-export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, sharedPopulation = true, isAdmin = isJevicaAdmin, worldId = DEFAULT_WORLD_ID, random, screeningHosts = [], officeLayout } = {}) {
+export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, sharedPopulation = true, isAdmin = isJevicaAdmin, worldId = DEFAULT_WORLD_ID, random, screeningHosts = [], officeLayout, campusOperators = [] } = {}) {
   validateWorldId(worldId);
   const colliders=[],placementEnvironment=createWalkingEnvironment(worldData);
   const environment = createWalkingEnvironment(worldData,colliders);
@@ -121,6 +122,14 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   const interactions=createInteractions({players,environment,environmentFor:player=>environmentForLevel(player.levelId),
     now,movementOf,changed:()=>revision++,residents:()=>state.locals});
   const offices=createOffices({worldData,players,isAdmin,environment,changed:()=>revision++,cancel:id=>{interactions.cancel(id);focus.delete(id);},...(officeLayout?{officeLayout}:{})});
+  // Garden campus suites (campus-leases.js): owner-managed leases in the River Oaks town, on a
+  // district that carries the campus, operated by RIVER_OAKS_CAMPUS_OPERATOR_IDS. Jevica's
+  // admin predicate grants nothing here. Elsewhere the saved campus section is kept inert.
+  const campus=createCampusLeases({enabled:campusServed(worldData,worldId),worldId,operators:campusOperators,players,changed:()=>revision++,onAccessEnded:event=>campusAccessEnded(event)});
+  // Suite access that ended (expiry, revocation, release, a removed guest) names the public
+  // point outside that suite's door. #508 returns an occupant of the suite there; until suite
+  // occupancy exists nobody can stand inside one, so there is nobody to move.
+  function campusAccessEnded(_event){}
   // Shared games at the plaza chess tables (table-games.js): the town holds each table's game.
   const tableGames=createTableGames({players,tableIds:plazaSalonPlan(worldData)?.chess.map(table=>table.id)??[],changed:()=>revision++});
   // The café round table's shared dominoes: hidden hands stay here and in the checkpoint.
@@ -142,10 +151,14 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   const screenings=createScreenings({players,grants:screeningHosts,changed:()=>revision++,
     inVenue:(player,venueId)=>!player.levelId && !offices.has(player.id)
       && environment.roomAt(player.position[0],-player.position[1])?.interior===SCREENING_VENUES[venueId]?.interior});
-  const publicPlayer = player => ({office:offices.publicVisit(player.id),interaction:interactions.publicFor(player),id:player.id,name:accountName(player.id,player.name),appearance:player.appearance,...(characterByUser.has(player.id)?{character:copy(characterByUser.get(player.id))}:{}),movement:movementOf(player),gesture:interactions.publicFor(player)?.kind??(player.gestureUntil>now()?player.gesture:null)??(player.performing?'perform':null),performing:Boolean(player.performing),canBuild:Boolean(isAdmin(player.id)),canGrantWishes:Boolean(isAdmin(player.id)),vehicle:player.vehicle??null,sitting:publicSeat(player),position:[...player.position],yaw:player.yaw,altitude:player.altitude,buildingId:player.buildingId??null,levelId:player.levelId??null,voice:{space:voiceSpaceOf(player.id),id:voiceIdentities.get(player.id)??null}});
+  const publicPlayer = player => ({office:offices.publicVisit(player.id),...(campusWorkstation(player)?{campusWorkstation:true}:{}),interaction:interactions.publicFor(player),id:player.id,name:accountName(player.id,player.name),appearance:player.appearance,...(characterByUser.has(player.id)?{character:copy(characterByUser.get(player.id))}:{}),movement:movementOf(player),gesture:interactions.publicFor(player)?.kind??(player.gestureUntil>now()?player.gesture:null)??(player.performing?'perform':null),performing:Boolean(player.performing),canBuild:Boolean(isAdmin(player.id)),canGrantWishes:Boolean(isAdmin(player.id)),vehicle:player.vehicle??null,sitting:publicSeat(player),position:[...player.position],yaw:player.yaw,altitude:player.altitude,buildingId:player.buildingId??null,levelId:player.levelId??null,voice:{space:voiceSpaceOf(player.id),id:voiceIdentities.get(player.id)??null}});
   // Seats are Jevica's garden seats and lounge chairs, and the two places on
   // every storefront bench ('bench:<store>', slots 0 and 1).
   const benches=benchSeats(worldData);
+  // The Gardens (#510): seated at a campus workstation, a resident may open their own private
+  // desk. Snapshots carry only that boolean; which seat and whose work stay private.
+  const campusWorkstations=new Set(benches.filter(seat=>isCampusSeat(seat.buildId)&&seat.workstation).map(seat=>seat.buildId));
+  const campusWorkstation=player=>Boolean(player?.sitting && campusWorkstations.has(player.sitting.buildId));
   // The plaza bike rack: a slot is held by at most one player (player.cycling),
   // exactly as a seat is. Metres ride on the player until the transport drains
   // them into the account store (drainRides), so a disconnect loses nothing.
@@ -720,6 +733,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if (ledger.tokens<1) return reject('rate_limited');
     ledger.tokens--;
     interactions.prune();
+    if(message.type==='campus')return campus.command(player,message,time);
     if(message.type==='interiorLevel')return changeInteriorLevel(player,message,time);
     if(interiorLevels.get(player.levelId)?.level.index>0
       && !['chat','interaction','gesture','appearance','character','movement'].includes(message.type))return reject('return_to_ground_level');
@@ -939,7 +953,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if (!Number.isFinite(delta) || delta<=0) return;
     const duration=Math.min(delta,0.25),time=now();
     clearExpiredLedgers(time);
-    tableGames.prune();cafeGames.prune();dartsGames.prune();axeGames.prune();screenings.prune(time);
+    tableGames.prune();cafeGames.prune();dartsGames.prune();axeGames.prune();screenings.prune(time);campus.prune(time);
     for (const [id,hold] of focus) if (hold.until<=time || !reachable(players.get(id),localById.get(hold.localId))) focus.delete(id);
     const held=new Set([...focus.values()].map(hold=>hold.localId));
     for (const local of state.locals) {
@@ -959,7 +973,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     const social=interactions.snapshot();
     const community={};
     for (const key of ['status','running','elapsed','target','supported','unmet','supplies','helpBudget','jobs','events','scenarioKey','generation','result','storm','resupplied']) community[key]=copy(state[key]);
-    return {type:'snapshot',interactions:social,worldId,protocolVersion:WORLD_PROTOCOL_VERSION,revision,elapsed,screenings:screenings.snapshot(),cycling:{taken:takenSlots()},tables:[...tableGames.snapshot(),...cafeGames.snapshot()],darts:dartsGames.snapshot(),axes:axeGames.snapshot(),players:[...players.values()].map(publicPlayer),
+    return {type:'snapshot',interactions:social,worldId,protocolVersion:WORLD_PROTOCOL_VERSION,revision,elapsed,screenings:screenings.snapshot(),cycling:{taken:takenSlots()},tables:[...tableGames.snapshot(),...cafeGames.snapshot()],darts:dartsGames.snapshot(),axes:axeGames.snapshot(),...(campus.enabled?{campus:campus.snapshot()}:{}),players:[...players.values()].map(publicPlayer),
       chat:copy(chat).map(entry=>({...entry,authorName:accountName(entry.authorId,entry.authorName)})),
       builds:copy([...builds.values()]).map(item=>({...item,ownerName:accountName(item.ownerId,item.ownerName)})),wishes:copy(state.wishes),community,
       locals:state.locals.map(local=>({id:local.id,name:local.name,position:[...local.position],indoor:!!local.indoor,storeId:local.storeId??null,
@@ -974,7 +988,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if (life?.planning) throw new Error('Cannot checkpoint an unfinished route search');
     interactions.prune();
     tableGames.prune();cafeGames.prune();dartsGames.prune();axeGames.prune();screenings.prune(now());
-    const payload=JSON.parse(checkpointJSON({offices:offices.checkpoint(),tableGames:tableGames.checkpoint(),cafeGames:cafeGames.checkpoint(),dartsGames:dartsGames.checkpoint(),axeGames:axeGames.checkpoint(),screenings:screenings.checkpoint(now()),revision,elapsed,state,interactions:interactions.snapshot(),players:[...players.values()].map(player=>{
+    const payload=JSON.parse(checkpointJSON({offices:offices.checkpoint(),campus:campus.checkpoint(),tableGames:tableGames.checkpoint(),cafeGames:cafeGames.checkpoint(),dartsGames:dartsGames.checkpoint(),axeGames:axeGames.checkpoint(),screenings:screenings.checkpoint(now()),revision,elapsed,state,interactions:interactions.snapshot(),players:[...players.values()].map(player=>{
       if(!player.performing)return player;
       const {performing,...rest}=player;
       return {...rest,position:stageStepDown(player)??performing.from};
@@ -995,14 +1009,14 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
         ? {version:saved.version,worldFingerprint:saved.worldFingerprint,payload:saved.payload}
         : {version:saved.version,worldId:saved.worldId,worldFingerprint:saved.worldFingerprint,payload:saved.payload};
       if (!record(saved) || !fields(saved,legacy?['version','worldFingerprint','payload','checksum']:['version','worldId','worldFingerprint','payload','checksum'])
-        || !(legacy || [2,3,4,5,6,7,8,9,10,11,CHECKPOINT_VERSION].includes(saved.version) && saved.worldId===worldId)
+        || !(legacy || [2,3,4,5,6,7,8,9,10,11,12,CHECKPOINT_VERSION].includes(saved.version) && saved.worldId===worldId)
         || saved.worldFingerprint!==worldFingerprint || saved.checksum!==digest(envelope)) throw new Error('Invalid envelope');
       let recovered=decodeCheckpoint(JSON.stringify(saved.payload));
       if (sharedPopulation && recovered.state?.locals?.length!==residentIdentities.length) {
         // Validate the entire old checkpoint before dropping any retired shop
         // residents. This keeps invalid data in a removed record from being
         // laundered into an accepted reduced-population checkpoint.
-        const fullPopulation=createSharedWorld(worldData,{now,maxPlayers,sharedPopulation:false,isAdmin,worldId,screeningHosts,officeLayout});
+        const fullPopulation=createSharedWorld(worldData,{now,maxPlayers,sharedPopulation:false,isAdmin,worldId,screeningHosts,officeLayout,campusOperators});
         if (!fullPopulation.restore(saved).ok) throw new Error('Invalid legacy checkpoint');
         const activeIds=new Set(residentIdentities.map(local=>local.id));
         const kept=recovered.state.locals.filter(local=>activeIds.has(local.id));
@@ -1115,6 +1129,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       if(saved.version<6 && recovered.offices!==undefined)throw new Error('Invalid office version');
       if(saved.version>=6 && recovered.offices===undefined)throw new Error('Missing offices');
       const nextOffices=offices.validate(recovered.offices,nextPlayers,saved.version>=8,saved.version);
+      // Checkpoint v13 adds campus leases; older ones restore with none.
+      const nextCampus=campus.validate(recovered.campus,saved.version,now());
       // Older checkpoints have no table games: they restore with none.
       const nextTables=tableGames.validate(recovered.tableGames??[]);
       const nextCafe=cafeGames.validate(recovered.cafeGames??[]);
@@ -1257,6 +1273,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       homeGuests.clear();for(const [storeId,ids] of nextHomeGuests)homeGuests.set(storeId,ids);
       localById.clear();for (const local of state.locals) localById.set(local.id,local);
       offices.load(nextOffices);
+      campus.load(nextCampus);
       tableGames.load(nextTables);
       cafeGames.load(nextCafe);
       dartsGames.load(nextDarts);
@@ -1305,21 +1322,24 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   const listPlaces = () => placesOf(worldData);
   return {worldId,join,rename,leave,command,step,snapshot,checkpoint,restore,reset,
     // Frames carry the clock that anchors screenings (screenings.js), stamped by the transport.
-    serverTime:()=>now(),districtRevision:districtRevisionOf(worldData),officeVisit:offices.publicVisit,endOfficeVisit:offices.leave,accountAppearance,applyAccountAppearance,prepareAccountSelection,commitAccountSelection,resolvePlace,listPlaces,voiceSpaceOf,setVoice,drainRides,players,state};
+    serverTime:()=>now(),districtRevision:districtRevisionOf(worldData),campusWorkstation:userId=>campusWorkstation(players.get(userId)),officeVisit:offices.publicVisit,endOfficeVisit:offices.leave,
+    // The synchronous suite decision for #508 entry and #510 desk access (campus-leases.js).
+    campusSuiteAccess:(userId,unitId)=>campus.suiteAccess(userId,unitId,now()),campusAccess:userId=>campus.entitlements(userId,now()),accountAppearance,applyAccountAppearance,prepareAccountSelection,commitAccountSelection,resolvePlace,listPlaces,voiceSpaceOf,setVoice,drainRides,players,state};
 }
 
 /** Validate an old room, then transfer durable account and creation state to a new geography. */
-export function migrateWorldCheckpoint({fromData,toData,checkpoint,worldId=DEFAULT_WORLD_ID,now=Date.now,isAdmin=isJevicaAdmin,screeningHosts,officeLayout}={}) {
+export function migrateWorldCheckpoint({fromData,toData,checkpoint,worldId=DEFAULT_WORLD_ID,now=Date.now,isAdmin=isJevicaAdmin,screeningHosts,officeLayout,campusOperators}={}) {
   if(!fromData || !toData || !checkpoint)return reject('invalid_checkpoint');
-  const options={worldId,now,isAdmin,screeningHosts,officeLayout};
+  const options={worldId,now,isAdmin,screeningHosts,officeLayout,campusOperators};
   const oldWorld=createSharedWorld(fromData,options);
   if(!oldWorld.restore(checkpoint).ok)return reject('invalid_checkpoint');
   const old=oldWorld.checkpoint();
   const fresh=createSharedWorld(toData,options).checkpoint();
   const payload=fresh.payload,previous=old.payload;
-  // Simulation and NPC routes depend on geography. Account-owned state does not.
+  // Simulation and NPC routes depend on geography. Account-owned state, leases included, does not.
   payload.revision=previous.revision+1;
   for(const field of ['ledgers','chat','appearances','characters','movements','builds','inventory'])payload[field]=copy(previous[field]??[]);
+  payload.campus=copy(previous.campus);
   // A creator region compiled before #491 walked on bare terrain; its revision compiles the
   // street datum (STREET.walkSurfaceOffset). Creations standing on that datum, outdoors or in
   // a built-in room, move with it. Those on a generated level keep its floor.

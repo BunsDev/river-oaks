@@ -12,6 +12,7 @@ import { createWorldGateway } from './world-gateway.js';
 import { parseScreeningHosts } from './screenings.js';
 import { configuredOfficeLayout } from './offices.js';
 import { configuredDistrictEpoch, configuredDistrictRevision } from '../preview/src/garden-campus-district.js';
+import { parseCampusOperators } from './campus-leases.js';
 import { vercelClientAddress } from './vercel-routing.js';
 import { DEFAULT_WORLD_ID, validateWorldId } from '../preview/src/world-contract.js';
 import { configureVoice, createRedisVoiceLeases } from './voice.js';
@@ -77,6 +78,8 @@ export async function createRedisBackend(env = process.env) {
       // Raised with every district revision switch; see docs/garden-campus.md (#512).
       districtEpoch: configuredDistrictEpoch(env.RIVER_OAKS_DISTRICT_EPOCH),
       screeningHosts: parseScreeningHosts(env.RIVER_OAKS_SCREENING_HOSTS, { onInvalid: () => console.warn(JSON.stringify({ event: 'screening_host_grant_ignored' })) }),
+      // Garden campus lease operators are explicit account ids; none configured keeps leasing closed.
+      campusOperators: parseCampusOperators(env.RIVER_OAKS_CAMPUS_OPERATOR_IDS, { onInvalid: () => console.warn(JSON.stringify({ event: 'campus_operator_ignored' })) }),
       workplaceSweep: env.VERCEL !== '1',
       // Vercel Cron sends it as a Bearer token; without it the sweep route stays closed.
       workplaceCronSecret: env.CRON_SECRET || null,

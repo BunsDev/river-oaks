@@ -24,7 +24,7 @@ import { createRedisCyclingMiles } from './cycling-miles.js';
 
 /** Routes a single HTTP origin to persistent world rooms with shared auth. */
 export function createWorldGateway({redis,namespace,worldData,auth,security,waitlist,waitlistAdmins=[],origin,configuredWorldId=DEFAULT_WORLD_ID,
-  characterStudioEnabled=true,characterMetrics=null,characterMetricsEnabled=false,moderators=[],trustedProxyIPs=[],address,isAdmin,handleRequest,workplaceEnabled=false,workplaceSweep=false,workplaceCronSecret=null,assetGateSecret=null,voice=null,voiceCronSecret=null,screeningHosts=[],officeLayout,districtEpoch=0,connectionLifetime,rotateNoticeMs}={}) {
+  characterStudioEnabled=true,characterMetrics=null,characterMetricsEnabled=false,moderators=[],trustedProxyIPs=[],address,isAdmin,handleRequest,workplaceEnabled=false,workplaceSweep=false,workplaceCronSecret=null,assetGateSecret=null,voice=null,voiceCronSecret=null,screeningHosts=[],officeLayout,campusOperators=[],districtEpoch=0,connectionLifetime,rotateNoticeMs}={}) {
   if (!waitlist) throw new Error('Waitlist is required');
   validateWorldId(configuredWorldId);
   const prefix=`{${namespace}}`,catalog=createRedisWorldCatalog({redis,prefix}),social=createRedisSocial({redis,prefix}),groups=createRedisGroups({redis,prefix}),profiles=createRedisProfiles({redis,prefix}),events=createRedisEvents({redis,prefix}),debugReports=createRedisDebugReports({redis,prefix}),presence=createRedisPresence({redis,prefix});
@@ -74,7 +74,7 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
         :id===DEFAULT_WORLD_ID?worldData:{...worldData,title:meta?.title??worldData.title};
       const room=createRedisRoom({redis,prefix:roomPrefixFor(namespace,id),worldId:id,
         worldData:data,regionCatalog:meta?.template==='region-v1'?catalog:null,regionSha256:meta?.regionSha256,
-        avatarPreferences,characters,voice,cyclingMiles,screeningHosts,...(officeLayout?{officeLayout}:{}),districtEpoch,
+        avatarPreferences,characters,voice,cyclingMiles,screeningHosts,campusOperators,...(officeLayout?{officeLayout}:{}),districtEpoch,
         ...(isAdmin?{isAdmin}:{}),
         authorize:async identity=>await auth.isSessionActive(identity.userId,identity.sessionId)
           && await waitlist.isApproved(identity.userId) && !(await security.isBanned(identity.userId))});
