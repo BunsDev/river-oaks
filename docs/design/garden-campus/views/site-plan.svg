@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="532" height="845" viewBox="0 0 532 845" font-family="Helvetica, Arial, sans-serif">
+<title>The Gardens site plan</title>
+<rect width="532" height="845" fill="#fbfaf7"/>
+<polygon points="210.88,60.33 175.73,60.33 60,60.31 60,455.02 60,478 60,785.2 194,785.22 211.04,785.22 211,669.32 210.88,60.33" fill="#eef1ea" stroke="#3b4a3f" stroke-width="1.2"/>
+<rect x="174" y="60.4" width="24" height="724.8" fill="#e2dccd" stroke="#b9ae96" stroke-width="0.5"/>
+<rect x="60.04" y="466" width="137.96" height="24" fill="#e2dccd" stroke="#b9ae96" stroke-width="0.5"/>
+<rect x="124" y="647.2" width="56" height="20" fill="#e2dccd" stroke="#b9ae96" stroke-width="0.5"/>
+<rect x="160" y="361.2" width="20" height="24" fill="#e2dccd" stroke="#b9ae96" stroke-width="0.5"/>
+<rect x="72" y="289.2" width="108" height="20" fill="#e2dccd" stroke="#b9ae96" stroke-width="0.5"/>
+<rect x="160" y="219.2" width="20" height="20" fill="#e2dccd" stroke="#b9ae96" stroke-width="0.5"/>
+<rect x="156" y="129.2" width="24" height="24" fill="#e2dccd" stroke="#b9ae96" stroke-width="0.5"/>
+<rect x="80" y="77.2" width="100" height="20" fill="#e2dccd" stroke="#b9ae96" stroke-width="0.5"/>
+<rect x="160" y="543.2" width="20" height="20" fill="#e2dccd" stroke="#b9ae96" stroke-width="0.5"/>
+<polygon points="174,785.22 194,785.22 198,785.22 198,785.2 174,785.2 174,785.22" fill="#c96f4a" stroke="#c96f4a" stroke-width="0.6"/>
+<polygon points="60,490 60,478 60,466 60.04,466 60.04,490 60,490" fill="#c96f4a" stroke="#c96f4a" stroke-width="0.6"/>
+<polygon points="174,60.33 175.73,60.33 198,60.33 198,60.4 174,60.4 174,60.33" fill="#c96f4a" stroke="#c96f4a" stroke-width="0.6"/>
+<rect x="76" y="629.2" width="48" height="56" fill="#c9d8b6" stroke="#5c7048"/>
+<text x="100" y="660.2" font-size="9" text-anchor="middle">C</text>
+<rect x="76" y="113.2" width="80" height="56" fill="none" stroke="#7a6a4f" stroke-dasharray="3 2"/>
+<text x="116" y="144.2" font-size="9" text-anchor="middle">S</text>
+<rect x="132" y="689.2" width="28" height="48" fill="#a9c9d8" stroke="#6b93a6"/>
+<text x="146" y="716.2" font-size="9" text-anchor="middle">POOL</text>
+<rect x="84" y="505.2" width="76" height="96" fill="#d9d3c7" stroke="#5a5246" stroke-width="0.8"/>
+<rect x="84" y="505.2" width="64" height="86" fill="#c4bcae" stroke="#5a5246" stroke-width="0.8"/>
+<rect x="84" y="505.2" width="52" height="76" fill="#aea594" stroke="#5a5246" stroke-width="0.8"/>
+<rect x="92" y="541.2" width="20" height="24" fill="#4d463c"/>
+<rect x="104" y="541.2" width="8" height="24" fill="#8c8273"/>
+<text x="122" y="501.2" font-size="8" text-anchor="middle">T1: 6 floors, roof z 25</text>
+<rect x="84" y="321.2" width="76" height="104" fill="#d9d3c7" stroke="#5a5246" stroke-width="0.8"/>
+<rect x="84" y="321.2" width="64" height="92" fill="#c4bcae" stroke="#5a5246" stroke-width="0.8"/>
+<rect x="84" y="321.2" width="52" height="80" fill="#aea594" stroke="#5a5246" stroke-width="0.8"/>
+<rect x="92" y="361.2" width="20" height="24" fill="#4d463c"/>
+<rect x="104" y="361.2" width="8" height="24" fill="#8c8273"/>
+<text x="122" y="317.2" font-size="8" text-anchor="middle">T2: 7 floors, roof z 29</text>
+<rect x="84" y="185.2" width="76" height="88" fill="#d9d3c7" stroke="#5a5246" stroke-width="0.8"/>
+<rect x="84" y="185.2" width="64" height="76" fill="#c4bcae" stroke="#5a5246" stroke-width="0.8"/>
+<rect x="84" y="185.2" width="52" height="64" fill="#aea594" stroke="#5a5246" stroke-width="0.8"/>
+<rect x="92" y="217.2" width="20" height="24" fill="#4d463c"/>
+<rect x="104" y="217.2" width="8" height="24" fill="#8c8273"/>
+<text x="122" y="181.2" font-size="8" text-anchor="middle">T3: 6 floors, roof z 25</text>
+<rect x="116" y="413.2" width="16" height="92" fill="#e3a46b" stroke="#9a5a2c" stroke-width="0.8"/>
+<rect x="118" y="413.2" width="12" height="92" fill="#f2c79a"/>
+<text x="142" y="462.2" font-size="8" text-anchor="start">B12 23 m, z 13</text>
+<rect x="116" y="261.2" width="16" height="60" fill="#e3a46b" stroke="#9a5a2c" stroke-width="0.8"/>
+<rect x="118" y="261.2" width="12" height="60" fill="#f2c79a"/>
+<text x="142" y="294.2" font-size="8" text-anchor="start">B23 15 m, z 13</text>
+<line x1="60" y1="455.02" x2="60" y2="60.31" stroke="#8e2f2f" stroke-width="4"/>
+<text x="54" y="265.2" font-size="9" text-anchor="middle" transform="rotate(-90 54 265.2)">IPIC wall (retained)</text>
+<circle cx="194" cy="785.22" r="4" fill="#c96f4a"/>
+<text x="202" y="799.22" font-size="10" text-anchor="start">E1</text>
+<circle cx="60" cy="478" r="4" fill="#c96f4a"/>
+<text x="68" y="492" font-size="10" text-anchor="start">E2</text>
+<circle cx="175.73" cy="60.33" r="4" fill="#c96f4a"/>
+<text x="183.73" y="54.33" font-size="10" text-anchor="start">E3</text>
+<circle cx="188" cy="487.2" r="2.5" fill="#2f5d8e"/>
+<text x="193" y="483.2" font-size="7" text-anchor="start">02-street-under-b12</text>
+<circle cx="124" cy="499.2" r="2.5" fill="#2f5d8e"/>
+<text x="129" y="495.2" font-size="7" text-anchor="start">03-floor4-bridge-walk</text>
+<text x="232" y="60" font-size="10" text-anchor="start">The Gardens: site plan (z 0)</text>
+<text x="232" y="74" font-size="10" text-anchor="start">river-oaks-garden-campus layout 3.0</text>
+<text x="232" y="88" font-size="10" text-anchor="start">source osm-way-625330790</text>
+<text x="232" y="102" font-size="10" text-anchor="start">commit 153471bc2075</text>
+<text x="232" y="116" font-size="10" text-anchor="start"></text>
+<text x="232" y="130" font-size="10" text-anchor="start">u east (right), v north (up), metres</text>
+<text x="232" y="144" font-size="10" text-anchor="start">shade: tier 1 / 2 / 3</text>
+<text x="232" y="158" font-size="10" text-anchor="start">dark: core; mid: core lobby</text>
+<text x="232" y="172" font-size="10" text-anchor="start">orange: skywalk deck and 3 m clear route</text>
+<text x="232" y="186" font-size="10" text-anchor="start">red dots: entries; red strips: seams</text>
+<text x="232" y="200" font-size="10" text-anchor="start">blue dots: ground-level review cameras</text>
+<text x="232" y="214" font-size="10" text-anchor="start"></text>
+<text x="232" y="228" font-size="10" text-anchor="start">01-southeast-aerial: [125, -90, 155]</text>
+<text x="232" y="242" font-size="10" text-anchor="start">02-street-under-b12: [32, 74.5, 1.7]</text>
+<text x="232" y="256" font-size="10" text-anchor="start">03-floor4-bridge-walk: [16, 71.5, 14.68]</text>
+<text x="232" y="270" font-size="10" text-anchor="start">04-northwest-high-oblique: [-70, 245, 95]</text>
+<text x="232" y="284" font-size="10" text-anchor="start">05-office-terrace-outlook: [10, -16, 34.7]</text>
+</svg>

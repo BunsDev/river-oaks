@@ -33,6 +33,8 @@ test('the parcel is the garage polygon, not a rectangle, in the shared datum', (
   assert.ok(Math.abs(Math.abs(area) / 2 - 6838.982905168) < 1e-6);
   assert.ok(Math.abs(polygon[2][1] - 181.2216357447) < 1e-9, 'west length');
   assert.ok(Math.abs(polygon[0][0] - 37.71956706) < 1e-8 && Math.abs(polygon[7][0] - 37.75888242) < 1e-8, 'north and south widths differ');
+  // The garage still blocks walking: #507 must remove exactly this collision polygon.
+  assert.equal(district.collisionPolygons.filter(ring => JSON.stringify(ring) === JSON.stringify(garage.ring)).length, 1);
   // A changed district ring is refused, not silently reused.
   const moved = structuredClone(district);moved.buildings.find(item => item.id === garage.id).ring[0][0] += 0.01;
   assert.ok(rules(validateGardenCampus(LAYOUT, { district: moved })).includes('provenance'));
@@ -118,6 +120,10 @@ test('levels are keyed by elevation campus-wide with portals, openings and reach
   }
   for (const level of levels) for (const surface of level.surfaces.filter(s => s.kind === 'roof')) assert.ok(surface.reachedBy.length >= 2, surface.id);
   assert.deepEqual(levels[7].surfaces.map(s => s.id), ['T2-roof']);
+  // The pergola's posts are authoritative ground obstacles; its keep-clear interior excludes them.
+  const posts = levels[0].obstacles.filter(o => o.kind === 'post');
+  assert.equal(posts.length, 11);
+  assert.deepEqual(levels[0].keepClear.find(k => k.id === 'S-below').rect, [4.3, 154.3, 23.7, 167.7]);
   const noAccess = clone();delete tower(noAccess, 'T3').roof.headhouse;
   const result = validateGardenCampus(noAccess);
   assert.ok(result.findings.some(f => f.rule === 'reach' && f.id === 'T3-roof'));
@@ -179,6 +185,9 @@ test('defects fail: shifted endpoint, wrong height, offsite volume, overlap, blo
   const roof = clone();tower(roof, 'T1').roof.planting.beds[0].rect[0] = 4;
   assert.ok(validateGardenCampus(roof).findings.some(f => f.rule === 'support' && f.id === 'T1-roof-bed-west'));
 
+  const post = clone();post.groundBuildings.find(b => b.id === 'S').posts.push({ id: 'S-post-x', rect: [23.7, 160, 24, 160.3] });
+  assert.ok(validateGardenCampus(post).findings.some(f => f.rule === 'blocked' && f.id === 'S-post-x/P7'));
+
   const tall = clone();tower(tall, 'T2').silhouette.headhouseTop = 33;
   assert.ok(rules(validateGardenCampus(tall)).includes('silhouette'));
 
@@ -200,4 +209,20 @@ test('the retained IPIC wall stays closed and entries connect through explicit s
   assert.deepEqual(LAYOUT.entries.map(e => Math.round(e.threshold * 1000)), [-31, -11, 59]);
   const gap = clone();gap.seams[0].polygon = [null];
   assert.ok(rules(validateGardenCampus(gap)).includes('seam'));
+});
+
+test('the envelope bounds every current human appearance (fresh measurement, not the stale 22-look comment)', async () => {
+  const { SHARED_APPEARANCES } = await import('../src/shared-appearances.js');
+  const receipt = JSON.parse(readFileSync(new URL('../../docs/design/garden-campus/avatar-envelope.json', import.meta.url), 'utf8'));
+  assert.deepEqual(Object.keys(receipt.looks).sort(), SHARED_APPEARANCES.map(look => look.id).sort(), 'remeasure when the catalog changes');
+  for (const [id, look] of Object.entries(receipt.looks)) {
+    assert.ok(look.widthM / 2 <= CAMPUS_BODY.bodyHalfWidth + 1e-9 && look.heightM <= CAMPUS_BODY.height + 1e-9, id);
+    assert.ok(look.turningRadiusM <= CAMPUS_BODY.turningRadius && look.seated.footprintRadiusM <= CAMPUS_BODY.seatedRadius, id);
+  }
+});
+
+test('published contract, manifest and views are generated from the module and current', async () => {
+  const { renderCampusArtifacts } = await import('../../scripts/garden-campus-views.mjs');
+  for (const [name, text] of Object.entries(renderCampusArtifacts()))
+    assert.equal(readFileSync(new URL(`../../docs/design/garden-campus/${name}`, import.meta.url), 'utf8'), text, `${name} is stale: run node scripts/garden-campus-views.mjs`);
 });
