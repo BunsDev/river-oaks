@@ -102,6 +102,7 @@ import { DEFAULT_WORLD_ID, worldIdFromSearch } from './world-contract.js';
 import './hud-glass.css';
 import './game-hud.css';
 import './settings-dialog.css';
+import './play-rail-menu.css';
 import { createPlazaBicycle } from './plaza-bicycle.js';
 import { createCyclingLeaderboard } from './cycling-leaderboard.js';
 import './cycling-leaderboard.css';
@@ -297,6 +298,13 @@ function initializeRenderer() {
       canStayOpen:()=>Boolean(multiplayer?.connected&&!loading&&!multiplayer?.traveling&&!photoMode?.active&&!officeUI?.active),
       onOpen:()=>walking.halt(),reducedMotion});
     document.querySelector('.character-picker').before(characterStudio.trigger);
+  }
+  // Camera perspective is a preference, so it lives in Settings › Controls; V still
+  // switches it in play. The full key list is one button away there too.
+  {
+    const keys=document.createElement('button');keys.type='button';keys.className='settings-commands';keys.textContent='All commands & keys';
+    keys.addEventListener('click',()=>{document.querySelector('#settings-dialog [aria-label="Close settings"]')?.click();document.querySelector('.commands-toggle')?.click();});
+    sidebarSections.addSettings('Controls','How you see the world, and the keys for everything.',[sidebarSections.group('Camera',[$('#player-camera')]),sidebarSections.group('Keys',[keys])],{after:'Graphics'});
   }
   seatAndWater = createSeatAndWater({ walking, playerAvatar, getLocals: () => community.state?.locals, getMultiplayer: () => multiplayer, isBusy: () => seatingControls?.busy() ?? false });
   // Seated at a plaza chess table, X plays chess, checkers or Connect Four; the table mirrors the game.
