@@ -18,7 +18,7 @@ import { createWaitlistRoutes } from './waitlist-routes.js';
 import { createDebugReportRoutes } from './debug-report-routes.js';
 import { createMemoryDebugReports } from './debug-reports.js';
 import { protectedGameAsset } from './game-assets.js';
-import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, validateWorldId } from '../preview/src/world-contract.js';
+import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, acceptsWorldProtocol, validateWorldId } from '../preview/src/world-contract.js';
 import { isJevicaAdmin } from './admin.js';
 import { MAX_REGION_REQUEST_BYTES } from './region-package.js';
 import { socialAction } from './social-api.js';
@@ -123,7 +123,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
         let data;
         try {data=await body(req,MAX_REGION_REQUEST_BYTES);}catch{return json(res,400,{error:'Invalid world.'});}
         const result=await worldCatalog.publish(data,identity.userId);
-        return json(res,result.ok?201:['invalid_world','invalid_region'].includes(result.reason)?400:409,result.ok?{world:result.world}:{error:result.reason});
+        return json(res,result.ok?201:['invalid_world','invalid_region'].includes(result.reason)?400:409,result.ok?{world:result.world}:{error:result.reason,...(result.detail?{detail:result.detail}:{})});
       }
       if (pathname.startsWith('/api/world-draft/') && req.method==='POST' && worldCatalog) {
         const identity=await authorized(req,res);if(!identity)return;
@@ -167,7 +167,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
         for(const [key] of mine.slice(0,Math.max(0,mine.length-(TICKETS_PER_USER-1))))tickets.delete(key);
         if(tickets.size>=512)return json(res,503,{error:'The town is busy. Try again shortly.'});
         const ticket=randomBytes(32).toString('base64url');tickets.set(ticket,{identity,until:now()+TICKET_TTL_MS});
-        return json(res,200,{ticket,worldId,protocolVersion:WORLD_PROTOCOL_VERSION,moderator:moderatorIds.has(identity.userId)});
+        return json(res,200,{ticket,worldId,protocolVersion:world.protocolVersion??WORLD_PROTOCOL_VERSION,moderator:moderatorIds.has(identity.userId)});
       }
       if (pathname.startsWith('/api/landmarks/') && req.method==='POST') {
         const identity=await authorized(req,res);if(!identity)return;
@@ -314,8 +314,8 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
       const url=new URL(req.url,'http://localhost');
       if(stopped || url.pathname!=='/multiplayer' || req.headers.origin!==origin || !access(rateLimitKey(clientAddress(req))))return reject(403);
       if(!matchesWorld(url))return reject(403);
-      const protocol=url.searchParams.get('protocol');
-      if(protocol!==String(WORLD_PROTOCOL_VERSION))return reject(426);
+      // A client older than this world's features gets the refresh prompt, not a guessed fallback.
+      if(!acceptsWorldProtocol(url.searchParams.get('protocol'),world.protocolVersion??WORLD_PROTOCOL_VERSION))return reject(426);
       const identity=await auth.authenticate(req);
       if(!identity || isBanned(identity.userId) || !(await waitlist.isApproved(identity.userId)))return reject(401);
       const key=url.searchParams.get('ticket'),ticket=tickets.get(key);

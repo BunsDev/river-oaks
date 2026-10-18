@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { buildStoreInteriors } from './store-interiors.js';
+import { buildApprovedSpaceInterior } from './approved-space-interior.js';
 
 const PREPARE_RADIUS = 14;
 const EVICT_RADIUS = 36;
@@ -28,13 +29,16 @@ function previewShell(room) {
 
 /** Keep collision-ready shells present, prepare finished geometry near the visitor, then evict it. */
 export function createGeneratedInteriorStream(rooms, parent, {
-  build = room => buildStoreInteriors([room]),
+  build = room => room.approvedSpace ? buildApprovedSpaceInterior(room, { part: 'indoor' }) : buildStoreInteriors([room]),
+  buildExterior = room => room.approvedSpace ? buildApprovedSpaceInterior(room, { part: 'outdoor' }) : null,
   schedule = callback => setTimeout(callback, 0),
   cancel = handle => clearTimeout(handle),
 } = {}) {
   const entries = rooms.map(room => {
     const shell = previewShell(room); parent.add(shell);
-    return { room, shell, detail: null, pending: null, farSince: null, retryAt: 0 };
+    // An approved space's terrace stands outside the facade and stays drawn (#420).
+    const exterior = buildExterior(room); if (exterior) parent.add(exterior);
+    return { room, shell, exterior, detail: null, pending: null, farSince: null, retryAt: 0 };
   });
   let disposed = false;
   const removeDetail = entry => {
@@ -83,6 +87,7 @@ export function createGeneratedInteriorStream(rooms, parent, {
       for (const entry of entries) {
         if (entry.pending !== null) cancel(entry.pending);
         removeDetail(entry); parent.remove(entry.shell); entry.shell.userData.dispose();
+        if (entry.exterior) { parent.remove(entry.exterior); entry.exterior.userData.dispose?.(); }
       }
     },
   };

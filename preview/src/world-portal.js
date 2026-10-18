@@ -1,5 +1,6 @@
 import { DEFAULT_WORLD_ID, validateWorldId } from './world-contract.js';
 import { REGION_DRAFT_STORAGE_KEY } from './region-draft.js';
+import { approvedSpaceRefusal } from './approved-spaces.js';
 import './world-portal.css';
 
 const element=(tag,text,className)=>{const node=document.createElement(tag);if(text)node.textContent=text;if(className)node.className=className;return node;};
@@ -94,7 +95,8 @@ export function createWorldPortal({host,getCanPublish=()=>false,creationToolsEna
     if(!response.ok)throw new Error(result.error==='stale'?'This world changed. Reload its published region before saving.'
       :result.error==='draft_conflict'?'A newer revision draft was saved elsewhere. Download your JSON before reloading it.'
         :result.error==='invalid_draft'?'The region draft is invalid. Check its layout.'
-          :result.error==='incompatible_region'?'This layout conflicts with existing creations. Move or remove them before applying.':result.error??'Region draft is unavailable.');
+          :result.error==='incompatible_region'?'This layout conflicts with existing creations. Move or remove them before applying.'
+            :approvedSpaceRefusal(result.error,result.detail)??result.error??'Region draft is unavailable.');
     return result;
   };
   const editRevision=async world=>{
@@ -221,7 +223,8 @@ export function createWorldPortal({host,getCanPublish=()=>false,creationToolsEna
       } else if(useDraft)proposal.region=editor?.getRegion();
       const response=await fetch('/api/worlds',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-CSRF-Token':session.csrfToken},body:JSON.stringify(proposal)});
       const result=await response.json();
-      if(!response.ok)throw new Error(result.error==='world_exists'?'That world ID is already in use.':result.error==='world_limit'?'The world directory is full.':result.error==='invalid_region'?'The region package is invalid. Check the sample format.':result.error??'World could not be published.');
+      if(!response.ok)throw new Error(result.error==='world_exists'?'That world ID is already in use.':result.error==='world_limit'?'The world directory is full.':result.error==='invalid_region'?'The region package is invalid. Check the sample format.'
+        :approvedSpaceRefusal(result.error,result.detail)??result.error??'World could not be published.');
       worlds=[...worlds,result.world];render();status.textContent=`${result.world.title} is published. Open it from the list.`;form.reset();useDraft=false;updateRegionSource();
     } catch(error) {status.textContent=error.message||'World could not be published.';}
     finally {publish.disabled=false;}

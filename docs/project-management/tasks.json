@@ -11342,6 +11342,33 @@
       "nextAction": "Commit release results and the register entries; land; retire.",
       "pr": null,
       "updatedAt": "2026-10-16T01:56:03.947Z"
+    },
+    {
+      "id": "cafe-publication-pilot-420",
+      "title": "#420 approved Corner Cafe publication pilot: one immutable reviewed Cafe revision placed in one owned disposable creator-region building through a versioned compiler adapter (Val opened the scope locally on 2026-10-18; no production placement, merge or deploy)",
+      "status": "active",
+      "branches": [
+        "feat/cafe-publication-pilot-420-20261018"
+      ],
+      "owner": "claude:river-oaks-cafe-420 (eb49c122)",
+      "updatedAt": "2026-10-18T07:18:12.659Z",
+      "leaseUntil": "2026-10-18T09:18:12.659Z",
+      "nextAction": "Adapter, activation checks, protocol gate, client renderer and editor selector done (uncommitted). Server/Redis/client tests pass; two-client browser journey creator-approved-cafe passes (19 checks). Next: confirm terrace capture, pnpm run verify, full development-publish, ledger/issue handoff, then ask Val about commit/push/draft PR.",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-cafe-publication-420",
+      "issue": 420,
+      "ledger": "docs/superpowers/plans/2026-10-18-cafe-publication-pilot.md",
+      "filesOwned": [
+        "server/region-package.js, world-catalog.js, redis-room.js, town.js, world.js, app.js, distributed-app.js, world-gateway.js (adapter, activation, protocol)",
+        "preview/src/approved-spaces.js, approved-space-plan.js, approved-space-interior.js (new)",
+        "preview/src/approved-interior-room.js, store-rooms.js, district.js, generated-interior-stream.js, interior-exterior-culling.js, region-draft.js, region-editor.js, world-portal.js, world-contract.js, multiplayer-client.js, shared-seating-ui.js",
+        "server/tests/approved-space-*.test.js, server/tests/fixtures/cafe-pilot-region.json, preview/tests/approved-space.test.js, preview/e2e/creator-approved-cafe.js",
+        "docs/creator-regions.md, docs/multiplayer.md, docs/superpowers/plans/2026-10-18-cafe-publication-pilot.md"
+      ],
+      "requiredChecks": [
+        "node --test server/tests/region-package.test.js server/tests/world-catalog.test.js preview/tests/building-interiors-plan.test.js",
+        "pnpm run test:shared development-publish",
+        "pnpm run verify"
+      ]
     }
   ]
 }

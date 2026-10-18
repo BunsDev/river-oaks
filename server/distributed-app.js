@@ -11,7 +11,7 @@ import { CLIENT_ADDRESS, createClientAddress, rateLimitKey } from './client-addr
 import { ADMITTED } from './world-router.js';
 import { createWaitlistRoutes } from './waitlist-routes.js';
 import { createDebugReportRoutes } from './debug-report-routes.js';
-import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, validateWorldId } from '../preview/src/world-contract.js';
+import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, acceptsWorldProtocol, validateWorldId } from '../preview/src/world-contract.js';
 import { isJevicaAdmin } from './admin.js';
 import { MAX_REGION_REQUEST_BYTES } from './region-package.js';
 import { socialAction } from './social-api.js';
@@ -39,7 +39,7 @@ const json = (res, status, value) => {
 };
 
 /** HTTP/WS edge for a durable room. No instance owns canonical game or auth state. */
-export function createDistributedServer({ auth, room, worldTitle, security, waitlist, waitlistAdmins = [], debugReports = null, landmarks, social = null, groups = null, profiles = null, events = null, workplace = null, officeDesk = null, officeWorkspaces = null, workplaceCronSecret = null, presence = null, designLibrary = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
+export function createDistributedServer({ auth, room, protocolVersion: worldProtocol = WORLD_PROTOCOL_VERSION, worldTitle, security, waitlist, waitlistAdmins = [], debugReports = null, landmarks, social = null, groups = null, profiles = null, events = null, workplace = null, officeDesk = null, officeWorkspaces = null, workplaceCronSecret = null, presence = null, designLibrary = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
   trustedProxyIPs = [], address = createClientAddress(trustedProxyIPs), now = Date.now,
   connectionLifetime = 270_000, rotateNoticeMs = ROTATE_NOTICE_MS, assetGateSecret = null, heartbeatMs = 5000, onMove = null, voice = null, voiceCronSecret = null,
   // cyclingMiles: accepted for the leaderboard route (PR 2); the room owner flushes rides.
@@ -162,7 +162,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
         try { data = await body(req,MAX_REGION_REQUEST_BYTES); } catch { return json(res, 400, { error: 'Invalid world.' }); }
         const result = await worldCatalog.publish(data, identity.userId);
         const status = result.ok ? 201 : ['invalid_world','invalid_region'].includes(result.reason) ? 400 : 409;
-        return json(res, status, result.ok ? { world: result.world } : { error: result.reason });
+        return json(res, status, result.ok ? { world: result.world } : { error: result.reason, ...(result.detail ? { detail: result.detail } : {}) });
       }
       if (path.startsWith('/api/world-draft/') && req.method === 'POST' && worldCatalog) {
         const identity = await authorized(req, res); if (!identity) return;
@@ -204,7 +204,10 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
         const identity = await authorized(req, res); if (!identity) return;
         if (!matchesWorld(url)) return json(res, 404, { error: 'World not found.' });
         const ticket = await security.issueTicket(identity, worldId);
-        return ticket ? json(res, 200, { ticket, worldId, protocolVersion: WORLD_PROTOCOL_VERSION, moderator: moderatorIds.has(identity.userId) })
+        // The committed snapshot names the lowest protocol that can draw this world.
+        // Before the room's first commit, the world data it was created from decides.
+        const protocolVersion = ticket ? (await room.read())?.snapshot?.protocolVersion ?? worldProtocol : worldProtocol;
+        return ticket ? json(res, 200, { ticket, worldId, protocolVersion, moderator: moderatorIds.has(identity.userId) })
           : json(res, 429, { error: 'Please wait before reconnecting.' });
       }
       if (path.startsWith('/api/landmarks/') && req.method === 'POST') {
@@ -350,7 +353,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
       if (stopped || url.pathname !== '/multiplayer' || req.headers.origin !== origin || !(await access(req))) return reject(403);
       if (!matchesWorld(url)) return reject(403);
       const protocol = url.searchParams.get('protocol');
-      if (protocol !== String(WORLD_PROTOCOL_VERSION)) return reject(426);
+      if (!acceptsWorldProtocol(protocol, WORLD_PROTOCOL_VERSION)) return reject(426);
       const identity = await auth.authenticate(req);
       if (!identity || identity.expiresAt <= now() || !(await waitlist.isApproved(identity.userId)) || await security.isBanned(identity.userId)
         || !(await security.consumeTicket(url.searchParams.get('ticket'), identity, worldId))) return reject(401);
@@ -367,6 +370,11 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
           notify: () => { if (connection.joined && connections.get(connectionId) === connection) send(ws, rotateNotice(connectionLifetime, rotateNoticeMs, connectionId)); } });
         let admissionStage = 'join';
         const ready = (async () => {
+          // A world with newer features (world-contract.js) refuses an older client before
+          // it joins; the page offers Refresh instead of drawing a world it cannot render.
+          // An unreadable view falls back to the world data; admission then fails as before.
+          const required = (await room.read().catch(() => null))?.snapshot?.protocolVersion ?? worldProtocol;
+          if (!acceptsWorldProtocol(protocol, required)) { ws.close(4000, 'World version changed'); return false; }
           const result = await room.request({ type: 'join', identity, connectionId });
           if (!result.ok) { ws.close(1013, 'The town cannot accept this connection.'); return false; }
           connection.joined = true;

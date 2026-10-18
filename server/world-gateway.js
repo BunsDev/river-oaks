@@ -8,7 +8,7 @@ import { createWorldLandmarks } from './world-landmarks.js';
 import { createDistributedServer } from './distributed-app.js';
 import { createRedisWorldCatalog } from './world-catalog.js';
 import { roomPrefixFor, accountPrefixFor, populationKeyFor } from './world-keys.js';
-import { DEFAULT_WORLD_ID, validateWorldId } from '../preview/src/world-contract.js';
+import { DEFAULT_WORLD_ID, validateWorldId, worldProtocolVersion } from '../preview/src/world-contract.js';
 import { createWorldRouter } from './world-router.js';
 import { createRedisSocial } from './social.js';
 import { createRedisGroups } from './groups.js';
@@ -76,7 +76,7 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
         authorize:async identity=>await auth.isSessionActive(identity.userId,identity.sessionId)
           && await waitlist.isApproved(identity.userId) && !(await security.isBanned(identity.userId))});
       const landmarks=createWorldLandmarks({catalog,storeFor:landmarkStoreFor,worldId:id,worldTitle:meta?.title??data.title});
-      const game=createDistributedServer({assetGateSecret,auth:sharedAuth,room,worldTitle:meta?.title??data.title,security,waitlist,waitlistAdmins,debugReports,landmarks,social,groups,profiles,events,workplace,officeDesk,officeWorkspaces,workplaceCronSecret,presence,designLibrary,cyclingMiles,worldDirectory,origin,moderators,trustedProxyIPs,voice,voiceCronSecret,
+      const game=createDistributedServer({assetGateSecret,auth:sharedAuth,room,protocolVersion:worldProtocolVersion(data),worldTitle:meta?.title??data.title,security,waitlist,waitlistAdmins,debugReports,landmarks,social,groups,profiles,events,workplace,officeDesk,officeWorkspaces,workplaceCronSecret,presence,designLibrary,cyclingMiles,worldDirectory,origin,moderators,trustedProxyIPs,voice,voiceCronSecret,
         ...(address?{address}:{}),...(isAdmin?{isAdmin}:{}),...(connectionLifetime?{connectionLifetime}:{}),...(rotateNoticeMs?{rotateNoticeMs}:{}),...(id===configuredWorldId?{worldCatalog:catalog}:{}),
         ...(id===configuredWorldId?{onApplyRegion:async (regionId,expectedDraftVersion,actorId)=>{
           const target=await worldFor(regionId);

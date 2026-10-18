@@ -85,7 +85,7 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
     if(!(mode==='local'?auth.isAdmin(actorId):isJevicaAdmin(actorId)))return {ok:false,error:'admin_only'};
     const entry=await worldFor(id);
     if(!entry || entry.meta?.template!=='region-v1')return {ok:false,error:'missing'};
-    const candidate=await catalog.revisionCandidate(id,expectedDraftVersion);
+    const candidate=await catalog.revisionCandidate(id,expectedDraftVersion,actorId);
     if(!candidate.ok)return {ok:false,error:candidate.reason};
     const options=mode==='local'?{isAdmin:auth.isAdmin,worldId:id,screeningHosts,officeLayout}:{worldId:id,screeningHosts,officeLayout};
     const migrated=migrateWorldCheckpoint({fromData:await catalog.getRegion(id),toData:candidate.worldData,
@@ -93,6 +93,8 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
     if(!migrated.ok)return migrated;
     const next=createSharedWorld(candidate.worldData,options);
     if(!next.restore(migrated.checkpoint).ok)return {ok:false,error:'incompatible_region'};
+    // An approved space's routes must stay walkable with the creations carried forward (#420).
+    if(next.approvedSpaceRoutesBlocked())return {ok:false,error:'approved_space_route'};
     const applied=await catalog.applyRevision(candidate);
     if(!applied.ok)return {ok:false,error:applied.reason};
     entry.game.replaceWorld(next,candidate.world.regionSha256);

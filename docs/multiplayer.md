@@ -725,7 +725,10 @@ current coordinator (writer generation `v11:`) atomically takes over older lease
 an older writer from publishing or trimming commands. Do not roll back older
 code against version-11 checkpoints. Browser protocol 3 is required: older and
 unversioned clients must refresh
-before joining.
+before joining. A world that places an approved furnished space
+([creator regions](creator-regions.md#approved-furnished-spaces)) asks for protocol 4
+in its ticket and snapshot and refuses an older client with 426 or 4000, so that client
+sees **Refresh** there while every other world still accepts protocol 3.
 This prevents older renderers from applying snapshots with unknown geometry.
 
 Placed creations and storefront benches are interactive; other built-in shop

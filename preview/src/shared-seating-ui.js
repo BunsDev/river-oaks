@@ -42,13 +42,13 @@ export function createSharedSeatingControls({host,getTown,getPose,getEnvironment
     choices=(town.snapshot?.builds??[]).flatMap(build=>seatSlots(build.kind).map(slot=>{
       const seat=resolveSeat(build,slot),distance=Math.hypot(seat.position[0]-position[0],seat.position[1]-position[1]);
       if(distance>SEAT_REACH || (buildRoomAt(environment,seat.position)?.storeId??null)!==roomId)return null;
-      const occupant=town.snapshot.players.find(player=>player.sitting?.buildId===build.id&&player.sitting.slot===slot);
+      const occupant=town.snapshot?.players.find(player=>player.sitting?.buildId===build.id&&player.sitting.slot===slot);
       return {key:`${build.id}:${slot}`,buildId:build.id,slot,distance,occupied:Boolean(occupant),
         label:`${buildKind(build.kind).label}${build.kind==='seat'?` · ${slot===0?'left':'right'}`:''} · ${build.ownerName}${occupant?' · Occupied':''}`};
     }).filter(Boolean)).concat(getBenches().map(seat=>{
       const distance=Math.hypot(seat.x-position[0],seat.north-position[1]),key=`${seat.buildId}:${seat.slot}`;
       if(distance>SEAT_REACH || (buildRoomAt(environment,[seat.x,seat.north])?.storeId??null)!==roomId)return null;
-      const occupied=isHeld(key)||town.snapshot.players.some(player=>player.sitting?.buildId===seat.buildId&&player.sitting.slot===seat.slot);
+      const occupied=isHeld(key)||Boolean(town.snapshot?.players.some(player=>player.sitting?.buildId===seat.buildId&&player.sitting.slot===seat.slot));
       return {key,buildId:seat.buildId,slot:seat.slot,distance,occupied,label:`${benchLabel(seat)}${occupied?' · Occupied':''}`};
     }).filter(Boolean)).sort((a,b)=>a.distance-b.distance||a.key.localeCompare(b.key)).slice(0,8);
     panel.hidden=seated||!choices.length;

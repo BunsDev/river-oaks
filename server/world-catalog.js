@@ -1,11 +1,15 @@
 import { DEFAULT_WORLD_ID, validateWorldId } from '../preview/src/world-contract.js';
 import { createHash } from 'node:crypto';
 import { compileRegionPackage, editableRegionFromWorld, MAX_REGION_REQUEST_BYTES } from './region-package.js';
+import { ApprovedSpaceError, approvedSpaceSources, approvedSpacesCurrent } from '../preview/src/approved-space-plan.js';
+import { isJevicaAdmin } from './admin.js';
 
 const MAX_PUBLISHED_WORLDS=16;
+// KEYS[3] holds revoked approved-space revisions (#420); ARGV[5..] are the ones placed.
 const PUBLISH=`
   if redis.call('HEXISTS',KEYS[1],ARGV[1]) == 1 then return 0 end
   if redis.call('HLEN',KEYS[1]) >= tonumber(ARGV[3]) then return -1 end
+  for i=5,#ARGV do if redis.call('SISMEMBER',KEYS[3],ARGV[i]) == 1 then return -2 end end
   redis.call('HSET',KEYS[1],ARGV[1],ARGV[2])
   if ARGV[4] ~= '' then redis.call('HSET',KEYS[2],ARGV[1],ARGV[4]) end
   return 1
@@ -30,6 +34,17 @@ const DISCARD_DRAFT=`
   return 'ok'
 `;
 const digest=value=>createHash('sha256').update(value).digest('hex');
+// A compile failure names the approved-space rule it broke; anything else is invalid.
+const regionReason=error=>error instanceof ApprovedSpaceError?error.code:'invalid_region';
+// Placing an approved space is the world owner's act: another publisher account cannot
+// place a reviewed revision into someone else's world. Jevica's accounts are one owner.
+const sameOwner=(actorId,ownerId)=>actorId===ownerId || isJevicaAdmin(actorId)&&isJevicaAdmin(ownerId);
+// The last checks before a candidate becomes the live world, shared by both catalogs.
+function activationReason(candidate,revoked,policy) {
+  if(candidate.sources?.some(source=>revoked(source)))return 'approved_space_revoked';
+  if(!approvedSpacesCurrent(candidate.worldData,policy))return 'approved_space_assets';
+  return null;
+}
 const validVersionRequest=(revision,baseRegionSha256)=>Number.isSafeInteger(revision) && revision>=1 && revision<=100000
   && /^[a-f0-9]{64}$/.test(baseRegionSha256);
 function retainedVersion(entry,id,decodeWorld=world=>world) {
@@ -44,38 +59,39 @@ const clean=(value,max)=>typeof value==='string' && value===value.trim() && [...
   && !/[\x00-\x1f\x7f\u202a-\u202e\u2066-\u2069]/u.test(value);
 const validDescription=value=>value===undefined || value==='' || clean(value,280);
 const defaultWorld=Object.freeze({id:DEFAULT_WORLD_ID,title:'River Oaks District',description:'The original shared district.',template:'river-oaks',ownerId:null,createdAt:0});
-function publication(data,ownerId,now) {
+function publication(data,ownerId,now,policy) {
   let id;
   try {id=validateWorldId(data?.id);} catch {return null;}
   if(id===DEFAULT_WORLD_ID || !clean(data.title,64) || !validDescription(data.description) || !clean(ownerId,200)
     || Object.keys(data).some(key=>!['id','title','description','region'].includes(key)))return null;
   let region=null;
   if(data.region!==undefined) {
-    try {region=compileRegionPackage(data.region,data.title,{worldId:id});} catch {return {error:'invalid_region'};}
+    try {region=compileRegionPackage(data.region,data.title,{worldId:id,approvedSpaces:policy});}
+    catch(error) {return {error:regionReason(error),...(error instanceof ApprovedSpaceError?{detail:error.message}:{})};}
   }
   const encoded=region?JSON.stringify(region):'';
   const world={id,title:data.title,description:data.description??'',template:region?'region-v1':'river-oaks',ownerId,createdAt:now(),
     ...(region?{regionSha256:digest(encoded)}:{})};
-  return {world,encoded,region};
+  return {world,encoded,region,sources:approvedSpaceSources(region)};
 }
 
-function draftInput(data,editorId,now) {
+function draftInput(data,editorId,now,policy) {
   let id;
   try {id=validateWorldId(data?.id);} catch {return null;}
   if(id===DEFAULT_WORLD_ID || !clean(editorId,200) || !/^[a-f0-9]{64}$/.test(data?.baseRegionSha256)
     || !Number.isSafeInteger(data?.expectedDraftVersion) || data.expectedDraftVersion<0 || data.expectedDraftVersion>100000
     || Object.keys(data).some(key=>!['id','baseRegionSha256','expectedDraftVersion','region'].includes(key)))return null;
   let compiled;
-  try {compiled=compileRegionPackage(data.region,'Revision draft',{worldId:id});} catch {return null;}
+  try {compiled=compileRegionPackage(data.region,'Revision draft',{worldId:id,approvedSpaces:policy});} catch {return null;}
   const encoded=JSON.stringify(data.region);
   if(Buffer.byteLength(encoded)>MAX_REGION_REQUEST_BYTES)return null;
   return {id,baseRegionSha256:data.baseRegionSha256,region:data.region,compiledSha256:digest(JSON.stringify(compiled)),
     editedBy:editorId,updatedAt:now(),version:data.expectedDraftVersion+1};
 }
 
-export function createRedisWorldCatalog({redis,prefix,now=Date.now}={}) {
+export function createRedisWorldCatalog({redis,prefix,now=Date.now,approvedSpaces:policy}={}) {
   if(!redis || typeof prefix!=='string' || !/^\{[^{}]+\}$/.test(prefix))throw new Error('Invalid world catalog configuration');
-  const key=`${prefix}:worlds:v1`,regionKey=`${prefix}:regions:v1`,draftKey=`${prefix}:region-drafts:v1`;
+  const key=`${prefix}:worlds:v1`,regionKey=`${prefix}:regions:v1`,draftKey=`${prefix}:region-drafts:v1`,revocationKey=`${prefix}:approved-space-revocations:v1`;
   const decode=value=>{
     const world=JSON.parse(value);
     if(!world || typeof world!=='object' || Array.isArray(world) || validateWorldId(world.id)===DEFAULT_WORLD_ID
@@ -109,11 +125,12 @@ export function createRedisWorldCatalog({redis,prefix,now=Date.now}={}) {
       return JSON.parse(encoded);
     },
     async publish(data,ownerId) {
-      const entry=publication(data,ownerId,now);
+      const entry=publication(data,ownerId,now,policy);
       if(!entry)return {ok:false,reason:'invalid_world'};
-      if(entry.error)return {ok:false,reason:entry.error};
-      const result=await redis.eval(PUBLISH,2,key,regionKey,entry.world.id,JSON.stringify(entry.world),MAX_PUBLISHED_WORLDS,entry.encoded);
-      return result===1?{ok:true,world:entry.world}:result===0?{ok:false,reason:'world_exists'}:{ok:false,reason:'world_limit'};
+      if(entry.error)return {ok:false,reason:entry.error,...(entry.detail?{detail:entry.detail}:{})};
+      const result=await redis.eval(PUBLISH,3,key,regionKey,revocationKey,entry.world.id,JSON.stringify(entry.world),MAX_PUBLISHED_WORLDS,entry.encoded,...entry.sources);
+      return result===1?{ok:true,world:entry.world}:result===0?{ok:false,reason:'world_exists'}
+        :result===-2?{ok:false,reason:'approved_space_revoked'}:{ok:false,reason:'world_limit'};
     },
     async editable(id) {
       const world=await this.get(id);
@@ -140,7 +157,7 @@ export function createRedisWorldCatalog({redis,prefix,now=Date.now}={}) {
       return entry?{ok:true,world,...entry}:{ok:false,reason:'missing_version'};
     },
     async saveDraft(data,editorId) {
-      const draft=draftInput(data,editorId,now);
+      const draft=draftInput(data,editorId,now,policy);
       if(!draft)return {ok:false,reason:'invalid_draft'};
       const result=await redis.eval(SAVE_DRAFT,2,key,draftKey,draft.id,draft.baseRegionSha256,JSON.stringify(draft),draft.version-1);
       return result==='ok'?{ok:true,draft}: {ok:false,reason:result};
@@ -151,34 +168,49 @@ export function createRedisWorldCatalog({redis,prefix,now=Date.now}={}) {
       const result=await redis.eval(DISCARD_DRAFT,1,draftKey,id,expectedDraftVersion);
       return result==='ok'?{ok:true,removed:true}:result==='missing'?{ok:true,removed:false}:{ok:false,reason:result};
     },
-    async revisionCandidate(id,expectedDraftVersion) {
+    async revisionCandidate(id,expectedDraftVersion,actorId) {
       if(!Number.isSafeInteger(expectedDraftVersion) || expectedDraftVersion<1)return {ok:false,reason:'invalid_draft'};
       const editable=await this.editable(id);
       if(!editable)return {ok:false,reason:'missing'};
       const {world,draft}=editable;
       if(!draft || draft.version!==expectedDraftVersion)return {ok:false,reason:'draft_conflict'};
       if((world.revision??1)>=100000)return {ok:false,reason:'world_limit'};
-      const worldData=compileRegionPackage(draft.region,world.title,{worldId:id}),encoded=JSON.stringify(worldData);
+      let worldData;
+      try {worldData=compileRegionPackage(draft.region,world.title,{worldId:id,approvedSpaces:policy});} catch(error) {return {ok:false,reason:regionReason(error)};}
+      const encoded=JSON.stringify(worldData),sources=approvedSpaceSources(worldData);
+      if(sources.length && !sameOwner(actorId,world.ownerId))return {ok:false,reason:'not_owner'};
       const next={...world,revision:(world.revision??1)+1,updatedAt:now(),regionSha256:digest(encoded)};
-      return {ok:true,world:next,worldData,encoded,expectedRegionSha256:world.regionSha256,expectedDraftVersion,
-        keys:{catalog:key,region:regionKey,draft:draftKey,history:`${prefix}:region-history:${id}`}};
+      return {ok:true,world:next,worldData,encoded,expectedRegionSha256:world.regionSha256,expectedDraftVersion,sources,
+        keys:{catalog:key,region:regionKey,draft:draftKey,history:`${prefix}:region-history:${id}`,revocations:revocationKey}};
+    },
+    /** Rechecked by the room just before it commits a revision; the commit rechecks revocation atomically. */
+    async activationReason(candidate) {
+      const revoked=candidate.sources?.length?new Set((await redis.smismember(revocationKey,...candidate.sources))
+        .flatMap((member,index)=>member?[candidate.sources[index]]:[])):new Set();
+      return activationReason(candidate,source=>revoked.has(source),policy);
+    },
+    /** Stop placing a reviewed revision. Live worlds keep their plan until their owner revises it. */
+    async revokeApprovedSpace(source) {
+      if(typeof source!=='string' || !/^[a-z0-9-]{1,48}@\d{1,5}$/.test(source))return {ok:false,reason:'invalid_source'};
+      await redis.sadd(revocationKey,source);return {ok:true};
     },
   };
 }
 
-export function createMemoryWorldCatalog({now=Date.now}={}) {
-  const worlds=new Map(),regions=new Map(),drafts=new Map(),history=new Map();
+export function createMemoryWorldCatalog({now=Date.now,approvedSpaces:policy}={}) {
+  const worlds=new Map(),regions=new Map(),drafts=new Map(),history=new Map(),revocations=new Set();
   return {
     async get(id) {return id===DEFAULT_WORLD_ID?{...defaultWorld}:worlds.get(id)??null;},
     async list() {return [{...defaultWorld},...[...worlds.values()].sort((a,b)=>a.createdAt-b.createdAt || a.id.localeCompare(b.id))];},
     async getRegion(id) {return regions.has(id)?structuredClone(regions.get(id)):null;},
     async publish(data,ownerId) {
-      const entry=publication(data,ownerId,now);
+      const entry=publication(data,ownerId,now,policy);
       if(!entry)return {ok:false,reason:'invalid_world'};
-      if(entry.error)return {ok:false,reason:entry.error};
+      if(entry.error)return {ok:false,reason:entry.error,...(entry.detail?{detail:entry.detail}:{})};
       const {world,region}=entry;
       if(worlds.has(world.id))return {ok:false,reason:'world_exists'};
       if(worlds.size>=MAX_PUBLISHED_WORLDS)return {ok:false,reason:'world_limit'};
+      if(entry.sources.some(source=>revocations.has(source)))return {ok:false,reason:'approved_space_revoked'};
       worlds.set(world.id,world);if(region)regions.set(world.id,region);return {ok:true,world};
     },
     async editable(id) {
@@ -200,7 +232,7 @@ export function createMemoryWorldCatalog({now=Date.now}={}) {
       return entry?{ok:true,world:retained.world,...entry}:{ok:false,reason:'missing_version'};
     },
     async saveDraft(data,editorId) {
-      const draft=draftInput(data,editorId,now);
+      const draft=draftInput(data,editorId,now,policy);
       if(!draft)return {ok:false,reason:'invalid_draft'};
       const world=worlds.get(draft.id);
       if(!world)return {ok:false,reason:'missing'};
@@ -216,22 +248,33 @@ export function createMemoryWorldCatalog({now=Date.now}={}) {
       if(current.version!==expectedDraftVersion)return {ok:false,reason:'draft_conflict'};
       drafts.delete(id);return {ok:true,removed:true};
     },
-    async revisionCandidate(id,expectedDraftVersion) {
+    async revisionCandidate(id,expectedDraftVersion,actorId) {
       if(!Number.isSafeInteger(expectedDraftVersion) || expectedDraftVersion<1)return {ok:false,reason:'invalid_draft'};
       const editable=await this.editable(id);
       if(!editable)return {ok:false,reason:'missing'};
       const {world,draft}=editable;
       if(!draft || draft.version!==expectedDraftVersion)return {ok:false,reason:'draft_conflict'};
       if((world.revision??1)>=100000)return {ok:false,reason:'world_limit'};
-      const worldData=compileRegionPackage(draft.region,world.title,{worldId:id}),encoded=JSON.stringify(worldData);
+      let worldData;
+      try {worldData=compileRegionPackage(draft.region,world.title,{worldId:id,approvedSpaces:policy});} catch(error) {return {ok:false,reason:regionReason(error)};}
+      const encoded=JSON.stringify(worldData),sources=approvedSpaceSources(worldData);
+      if(sources.length && !sameOwner(actorId,world.ownerId))return {ok:false,reason:'not_owner'};
       return {ok:true,world:{...world,revision:(world.revision??1)+1,updatedAt:now(),regionSha256:digest(encoded)},
-        worldData,encoded,expectedRegionSha256:world.regionSha256,expectedDraftVersion};
+        worldData,encoded,expectedRegionSha256:world.regionSha256,expectedDraftVersion,sources};
+    },
+    async activationReason(candidate) {return activationReason(candidate,source=>revocations.has(source),policy);},
+    async revokeApprovedSpace(source) {
+      if(typeof source!=='string' || !/^[a-z0-9-]{1,48}@\d{1,5}$/.test(source))return {ok:false,reason:'invalid_source'};
+      revocations.add(source);return {ok:true};
     },
     async applyRevision(candidate) {
       if(!candidate?.ok)return {ok:false,reason:'invalid_draft'};
       const current=worlds.get(candidate.world.id),draft=drafts.get(candidate.world.id);
       if(!current || current.regionSha256!==candidate.expectedRegionSha256)return {ok:false,reason:'stale'};
       if(!draft || draft.version!==candidate.expectedDraftVersion)return {ok:false,reason:'draft_conflict'};
+      // The final state change: revocation, assets and policy are checked in the same turn.
+      const blocked=activationReason(candidate,source=>revocations.has(source),policy);
+      if(blocked)return {ok:false,reason:blocked};
       const prior=history.get(current.id)??[];
       prior.unshift({world:structuredClone(current),region:structuredClone(regions.get(current.id))});
       history.set(current.id,prior.slice(0,8));
