@@ -93,6 +93,8 @@ async page => {
  await click(page,'#campus-panel button','Suites and leases');
  await page.locator('#campus-dialog .campus-row',{hasText:'T1-201'}).getByRole('button',{name:'Accept'}).click();
  await page.waitForFunction(()=>/Lease accepted/.test(document.querySelector('#campus-dialog .campus-status')?.textContent??''));
+ // The directory refreshes after the accept; read the chip once it has.
+ await page.locator('#campus-dialog .campus-units li',{hasText:'T1-201'}).locator('.campus-chip',{hasText:'Your suite'}).waitFor({timeout:15000}).catch(()=>{});
  check(await page.locator('#campus-dialog .campus-units li',{hasText:'T1-201'}).locator('.campus-chip').textContent()==='Your suite','The accepted lease makes T1-201 the resident’s suite');
  check(await page.locator('#campus-dialog .campus-row',{hasText:'T1-201'}).count()===1,'The answered request is closed: only the lease remains');
  check(/Grove Offices \(T1\), Floor 2/.test(await page.locator('#campus-dialog .campus-row',{hasText:'T1-201'}).textContent()),'The lease explains how to reach the suite');
