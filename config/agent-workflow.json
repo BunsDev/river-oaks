@@ -279,7 +279,8 @@
         "spatial-circulation",
         "spatial-streets",
         "office-desk",
-        "office-visit"
+        "office-visit",
+        "office-computer-embed"
       ],
       "browser": true,
       "timeoutMs": 1200000
