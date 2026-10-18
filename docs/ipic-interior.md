@@ -172,9 +172,10 @@ collide; none is on a public route.
 **Runtime against the photos** (2026-10-15): `docs/ipic-review/photo-review.md` compares
 T1–T3 with the photos they are indexed to and lists 18 differences by photo ID, severity
 and owner. P1 (open sky), P3, P4 and P6 (the reception), P5 (sign), P7 (reception view), P8,
-P9, P10 and P11 (the lounge group), P12 (lounge carpet and bar floor), P17 (auditorium carpet)
-and P18 (the walled-in landing) are fixed, and P2 (the mural, kept large in its bay) is resolved
-as Val chose; the other 4 (the Tuck Room and auditorium) are tracked on #359.
+P9, P10 and P11 (the lounge group), P12 (lounge carpet and bar floor), P13 and P14 (the Tuck
+Room's island bar, rack and pothos), P17 (auditorium carpet) and P18 (the walled-in landing) are
+fixed, and P2 (the mural, kept large in its bay) is resolved as Val chose; the other 2 (the
+auditorium's risers and screen) are tracked on #359.
 
 **Screen** (`IPIC_SCREEN` in `ipic-plan.js`, used by the renderer and the data):
 
