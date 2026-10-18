@@ -178,7 +178,7 @@ export function createCampusLeases({ enabled = true, worldId, operators = [], pl
       }
       case 'cancel': case 'decline': {
         if (ask.action === 'decline' && !isOperator(id)) return fail('campus_operator_required');
-        const item = requests.get(ask.requestId);
+        const item = requests.get(ask.leaseRequestId);
         if (!item || ask.action === 'cancel' && item.userId !== id) return fail('campus_request_unknown');
         if (item.status !== 'pending') return fail('campus_request_closed');
         close(item, ask.action === 'cancel' ? 'cancelled' : 'declined', time);return done('request', item);
@@ -193,8 +193,8 @@ export function createCampusLeases({ enabled = true, worldId, operators = [], pl
         if (offers.some(lease => lease.tenantId === ask.tenantId)) return fail('campus_offer_exists');
         if (offers.length >= LIMITS.offersPerUnit) return fail('campus_offer_limit');
         if (live().filter(lease => lease.tenantId === ask.tenantId).length >= LIMITS.leasesPerAccount) return fail('campus_lease_limit');
-        const asked = ask.requestId === null ? null : requests.get(ask.requestId);
-        if (ask.requestId !== null) {
+        const asked = ask.leaseRequestId === null ? null : requests.get(ask.leaseRequestId);
+        if (ask.leaseRequestId !== null) {
           if (!asked) return fail('campus_request_unknown');
           if (asked.status !== 'pending') return fail('campus_request_closed');
           if (asked.userId !== ask.tenantId || asked.unitId !== ask.unitId) return fail('campus_request_mismatch');
