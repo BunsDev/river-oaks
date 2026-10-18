@@ -10,6 +10,7 @@ import { buildGardenCampus } from '../src/garden-campus.js';
 import { createWalkingEnvironment } from '../src/walking.js';
 import { groundSurfaceHeight, registerGroundSurfaces } from '../src/world-surface.js';
 import { storeRoomsFor } from '../src/store-rooms.js';
+import { sharedRoomSummary } from '../src/shared-population.js';
 import { insideRoomFootprint } from '../src/room-ground-clip.js';
 import { GARDEN_CAMPUS_LAYOUT as CAMPUS, campusLevels, campusToScene, campusToSource } from '../../shared/garden-campus-layout.js';
 
@@ -205,4 +206,17 @@ test('the shells draw 6/7/6 occupied floors, open every skywalk portal and dispo
   for (const item of new Set([...materials, ...geometries])) item.addEventListener('dispose', () => disposed++);
   group.userData.dispose();
   assert.equal(disposed, new Set([...materials, ...geometries]).size, 'every owned material and geometry is released');
+});
+
+test('every hall and the café describe themselves like any walk-in room, so the Map and the door can step inside', () => {
+  // The Map's describe (main.js describeInterior) joins the summary's highlights before a door
+  // travels; a room without one threw there, and "Step inside" never sent its travel.
+  const rooms = storeRoomsFor(campus).filter(room => room.storeId.startsWith('campus:'));
+  assert.equal(rooms.length, 4);
+  for (const room of rooms) {
+    const { label, staff, guests, highlights } = sharedRoomSummary(room);
+    assert.ok(typeof label === 'string' && label.length > 0, `${room.storeId} label`);
+    assert.ok(Array.isArray(highlights) && highlights.length > 0 && highlights.every(item => typeof item === 'string'), `${room.storeId} highlights`);
+    assert.deepEqual([staff, guests], [0, 0], `${room.storeId} has no staff or residents`);
+  }
 });
