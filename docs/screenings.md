@@ -108,7 +108,7 @@ Inside IPIC, a panel shows the shared status and this viewer's own controls. The
 the auditorium's existing screen material, which is restored when the viewer leaves; no
 second interior or renderer is built.
 
-- **Media.** Only bundled sources from `SCREENING_MEDIA` play. **Start** plays the venue's first film:
+- **Media.** Only bundled sources from `SCREENING_MEDIA` play. The venue's films are:
   - **The approved short**, `ipic-original-v1`. Val approved candidate 1 as cut on 2026-10-15.
     - A silent, captioned 52.6 s film captured from the game itself.
     - WebM (VP9/Opus, 1.41 Mbps) and MP4 (H.264 Main/AAC, 2.04 Mbps), 1280×720 at 24 fps, with a black border of at least 4 px.
@@ -143,6 +143,24 @@ second interior or renderer is built.
 - **Host controls.** **Start**, **Pause**, **Resume** and **Stop** appear only when the
   server's `sync` reply says this viewer may host. Each sends one operation id and retries
   once with the same id if the reply is lost.
+- **Choosing a film (#499).** While nothing plays (stopped or ended), a host sees a **Film** chooser
+  above **Start film**. It lists the venue's approved films with their length, sound and captions, and a
+  poster or a neutral frame. `screeningChoices` builds the list and leaves fixtures out. The approved short
+  is the named default (`SCREENING_DEFAULT_MEDIA`), not whichever entry comes first.
+  - **Choosing is local.** Nothing loads and nobody else sees the choice until Start succeeds, and Start
+    sends the chosen id.
+  - **Replacing a film.** While a film plays or is paused, the chooser is hidden: the host must Stop first.
+    There is no queue, seek or next film.
+  - **Authority.** The server checks every Start against the allowlist. A refused Start (stale, no grant,
+    not in the venue) shows the reason and syncs the room's real state.
+  - **Fixtures.** A development build lists the labelled fixture too when the page has
+    `?screening-fixtures=1`, as the two-browser journey's host does. Tools can still start it by command.
+  - **A film this version does not know.** This is a film a newer build added. This client stops the
+    previous film and says "This film needs a newer version of River Oaks". It never shows another
+    film's frames, captions or transcript under the new film's timeline.
+- **Adding a film.** A new film needs its own versioned id, Val's approval of the exact bytes, a
+  `sources.json` entry and a `SCREENING_MEDIA` entry with `audio` and `poster`. The intake and checks are
+  #501's. Keep every id a checkpoint or receipt may name (see Rolling back).
 - **Cleanup.** Leaving IPIC, losing the connection, a world rebuild or disposal stops the
   film and releases the video element, the screen texture, listeners and timers. A late
   `play()` cannot start a disposed film.
