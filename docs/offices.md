@@ -36,7 +36,7 @@ A failed save keeps your draft in the current page and offers Retry. Retries reu
 
 Each private desk can keep up to 24 tasks within a 128 KiB desk document. Task limits are 120 characters for the title, 4,000 for notes, 8,000 for the result and five file links. Removing a task requires confirmation. Redis stores the account's desk outside world checkpoints until tasks are removed; the standalone in-memory development server retains it only for that process lifetime. Creation/update timestamps are assigned by the server. Legacy tasks acquire timestamps when edited. Deletion removes task content while retaining a small version record to prevent stale writes from resurrecting deleted work.
 
-The desk routes require the existing authenticated, approved session, origin/CSRF checks, rate limits and an active office visit in that same session. Desk text is never included in public snapshots. Saves use version checks so simultaneous tabs cannot silently overwrite each other. The desk performs no external writes, file fetches or model calls.
+The desk routes require the existing authenticated, approved session, origin/CSRF checks, rate limits and, in that same session, an active office visit or a seat at a workstation in The Gardens campus (#510): a public hall or café chair, or a desk in a suite the resident may use. Seated there, **Use this desk · X** opens the same private desk; standing up puts it away. Snapshots carry only `campusWorkstation: true` for the sitter, never which work. Desk text is never included in public snapshots. Saves use version checks so simultaneous tabs cannot silently overwrite each other. The desk performs no external writes, file fetches or model calls.
 
 ## Authority and persistence
 
