@@ -56,3 +56,32 @@ test('P7: the reception review camera faces the desk from its front, as IMG_9738
   const da = ta - ea, dd = td - ed, t = ((desk.a - ea) * da + (desk.d - ed) * dd) / (da * da + dd * dd);
   assert.ok(t > 0 && Math.hypot(ea + t * da - desk.a, ed + t * dd - desk.d) < .5, `view ${camera.eye} -> ${camera.target}`);
 });
+
+// Reception against IMG_9738 (photo review P3, P4, P6; Val chose these on 2026-10-18).
+const hitFrom = (from, direction) => new THREE.Raycaster(new THREE.Vector3(...from), new THREE.Vector3(...direction).normalize()).intersectObjects(meshes, false)[0] ?? null;
+const at = (a, h, d) => [a, h, -d];
+
+test('P3: the reception desk steps down to a lower counter at its west end, within its footprint', () => {
+  const top = (a, d) => hitFrom(at(a, 2, d), [0, -1, 0]);
+  const east = top(4.6, 3.5), west = top(2.1, 3.5);
+  assert.equal(east?.object.name, 'Reception: ipic-veined-marble');
+  assert.equal(west?.object.name, 'Reception: ipic-veined-marble');
+  assert.ok(east.point.y > 1 && west.point.y < .85 && west.point.y > .65, `east ${east.point.y.toFixed(2)}, west ${west.point.y.toFixed(2)}`);
+});
+
+test('P4: close light-oak flutes back the desk, lit by a cove, and stop short of the right escalator lane', () => {
+  assert.equal(hitFrom(at(3.4, 2.9, 4.5), [0, 0, -1])?.object.name, 'Reception: ipic-light-oak');
+  const oak = meshes.filter(m => m.name === 'Reception: ipic-light-oak');
+  const box = new THREE.Box3(); for (const m of oak) box.expandByObject(m);
+  assert.ok(box.min.x >= 2.35, `flutes start at a = ${box.min.x.toFixed(2)}; the right lane runs to 2.255`);
+  assert.ok(hitFrom(at(3.4, 3.2, 5), [0, 1, 0])?.object.name === 'Reception: ipic-warm-lamp' || meshes.some(m => m.name === 'Reception: ipic-warm-lamp'), 'a lit cove or pendant');
+});
+
+test('P6: the reception floor is warm stone with quiet joints, under a coffered ceiling and a low linear pendant', () => {
+  assert.equal(below(-.5, 1), 'Reception: ipic-reception-stone');
+  const centre = hitFrom(at(-.5, 2, 3), [0, 1, 0]), edge = hitFrom(at(room.aMin + .3, 2, 3), [0, 1, 0]);
+  assert.ok(centre && edge && centre.point.y - edge.point.y > .15, `ceiling centre ${centre?.point.y.toFixed(2)}, edge ${edge?.point.y.toFixed(2)}`);
+  const lamp = hitFrom(at(3.4, 1.4, 3.5), [0, 1, 0]);
+  assert.equal(lamp?.object.name, 'Reception: ipic-warm-lamp');
+  assert.ok(lamp.point.y < 3.05, `pendant at ${lamp.point.y.toFixed(2)} m`);
+});

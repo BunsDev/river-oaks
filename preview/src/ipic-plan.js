@@ -51,6 +51,9 @@ export function configureIpicRoom(room) {
     room.obstacles.push({ a0: a - w / 2, a1: a + w / 2, d0: d - l / 2, d1: d + l / 2 });
   };
   block('ipic-reception', 3.4, 3.5, 3.6, .85, 0, 1.08);
+  // The fluted backing behind the desk (ipic-interior.js, IMG_9738) is a wall: bodies stop short of it
+  // instead of standing in the flutes. It starts east of the right escalator lane's rails.
+  block('ipic-reception-backing', 4.125, 5.65, 3.35, .12, 0, 3.6);
   for (const flight of IPIC_FLIGHTS) {
     const d = (flight.start + flight.end) / 2, length = flight.end - flight.start;
     block('ipic-centre-rail', 0, d, .42, length, flight.base, 4.1);
