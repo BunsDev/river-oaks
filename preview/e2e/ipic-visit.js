@@ -39,7 +39,7 @@ async page => {
   const atDoor = await hud();
   check(/Step outside/.test(atDoor.exit ?? ''), `Step outside is offered in reception: ${JSON.stringify(atDoor)}`);
   // Between the rows, beside recliners 0-1 and 1-1 (the T3 seat), as the screening journeys stand.
-  for (const p of [[-1.4,4.8],[-1.4,20.7],[-5.55,20.7],[-5.55,24.7],[-4.85,24.7],[-4.85,29],[-4.85,29.65],[-1.6,29.65]]) await walk(...p);
+  for (const p of [[-1.4,4.8],[-1.4,20.7],[-1.4,24.5],[-4.85,24.5],[-4.85,29],[-4.85,29.65],[-1.6,29.65]]) await walk(...p);
   const top = await pose(); check(Math.abs(top.ground - plan.floor - 6) < .01, 'Shared player reached the upstairs auditorium');
   const deep = await hud();
   check(deep.exit === null && deep.inside, `No Step outside in the auditorium: ${JSON.stringify(deep)}`);
@@ -111,7 +111,7 @@ async page => {
   // between its seats are narrower than a body.
   const [row, column] = recliner.slice(-3).split('-').map(Number), a = [-2.6, -.6, 1.4, 3.4][column], d = [28, 31][row];
   for (const p of [[a, d + 1.4], ...(row ? [[-4.85, d + 1.4]] : []), [-4.85, 29.65]]) await walk(...p);
-  for (const p of [[-4.85,29.65],[-4.85,24.7],[-5.55,24.7],[-5.55,20.7],[-1.4,20.7],[-1.4,4.8],[0,1],[0,-1.8]]) await walk(...p);
+  for (const p of [[-4.85,29.65],[-4.85,24.5],[-1.4,24.5],[-1.4,20.7],[-1.4,4.8],[0,1],[0,-1.8]]) await walk(...p);
   check(!(await pose()).roomId, 'Walked back onto the street');
   checks.push('walked downstairs and exited onto street');
   check(!errors.length, errors.join('; '));

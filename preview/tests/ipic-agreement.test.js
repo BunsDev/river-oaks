@@ -128,7 +128,7 @@ test('rendered floors, landings and treads sit on the server support height ever
 const DRAWN_WITHOUT_COLLISION = [
   // Footrests and base ends collide since 2026-10-15 (Val); only the base under each cushion centre is left.
   { mesh: 'Auditorium: ipic-black-rubber', a: [-2.7, 3.5], d: [27.95, 31.05], closest: 0, why: 'recliner bases under the cushion centres (seat zone)' },
-  { mesh: 'Upper lounge: ipic-olive-brown-sofa', a: [-3.85, -2], d: [24.2, 24.8], closest: 0, why: 'sofa cushions (seat zone)' },
+  { mesh: 'Upper lounge: ipic-olive-brown-sofa', a: [-4.85, -3.25], d: [20.7, 21.3], closest: 0, why: 'sofa cushions (seat zone)' },
   { mesh: 'Auditorium: ipic-weathered-timber', a: [4.4, 4.5], d: [27.7, 31.6], closest: .17, why: 'recliner side tables' },
   { mesh: 'Escalators: ipic-smoked-glass', a: [-2.35, 2.5], d: [5.45, 20.55], closest: .27, why: 'pitched glass balustrades overhang their rail colliders at the lane ends' },
   { mesh: 'Escalators: ipic-taupe-stacked-stone', a: [-2.85, 3], d: [12.45, 20.55], closest: .27, why: 'split-face stone courses run past the flight walls onto the landing' },

@@ -5,7 +5,7 @@ import { createIpicMaterials, districtSignLayout } from './ipic-materials.js';
 
 // Where the upper lounge's carpet meets the Tuck Room's boards, west of the bar stools (a = 3.4).
 const TUCK_ROOM_EDGE = 2.65;
-import { IPIC_DARTS, IPIC_ESCALATOR, IPIC_FLIGHTS, IPIC_INTERIOR, IPIC_PLANTERS, IPIC_SCREEN, IPIC_SOFA_ARMS } from './ipic-plan.js';
+import { IPIC_DARTS, IPIC_ESCALATOR, IPIC_FLIGHTS, IPIC_INTERIOR, IPIC_PLANTERS, IPIC_SCREEN, IPIC_SOFA_ARMS, IPIC_SOFA_D } from './ipic-plan.js';
 import { dartboardPixel } from './dartboard-texture.js';
 
 // Editable metre-scale scene. Local +X=across frontage, -Z=into the venue,
@@ -22,7 +22,9 @@ export function buildIpicInterior(room, options = {}) {
   const cylinder = keep(new THREE.CylinderGeometry(.5, .5, 1, 16));
   const sphere = keep(new THREE.SphereGeometry(.5, 12, 8));
   const plane = keep(new THREE.PlaneGeometry(1, 1));
-  const tubShell = keep(new THREE.LatheGeometry([[.38,.3],[.43,.48],[.46,.82],[.43,.94],[.37,.94],[.34,.8],[.32,.48]].map(p => new THREE.Vector2(...p)), 24, Math.PI / 2, Math.PI));
+  // A barrel tub chair's shell (photo review P10, IMG_9758): it wraps three quarters of the way round and
+  // opens towards -d at yaw 0.
+  const barrelShell = keep(new THREE.LatheGeometry([[.34,.28],[.39,.46],[.41,.8],[.385,.9],[.33,.9],[.3,.78],[.28,.46]].map(p => new THREE.Vector2(...p)), 36, Math.PI / 4, Math.PI * 1.5));
   const matrix = new THREE.Matrix4(), quaternion = new THREE.Quaternion(), euler = new THREE.Euler();
   let zone;
   const section = name => { zone = new THREE.Group(); zone.name = name; root.add(zone); };
@@ -66,19 +68,23 @@ export function buildIpicInterior(room, options = {}) {
       soft(m.leaf, a + Math.cos(angle) * .25, top - .1, d + Math.sin(angle) * .25, .16, .65, .07, { roll: Math.cos(angle) * .6, yaw: angle });
     }
   }
-  function pendant(a, y, d, size = 1) {
-    rod(m.black, [a, y + 1.4, d], [a, y, d], .012);
-    for (let i = 0; i < 14; i++) {
-      const t = i / 13, radius = (.18 + .16 * Math.sin(t * Math.PI)) * size;
-      const g = keep(new THREE.TorusGeometry(radius, .014 * size, 4, 18));
-      box(m.timber, a, y + (t - .5) * size, d, 1, 1, 1, { shape: g, pitch: Math.PI / 2 + .08 * Math.sin(i) });
+  // An elongated woven cocoon (photo review P8, IMG_9758): a closed rattan shell banded by its weave, open
+  // at the bottom where the lamp shines through. Centred on y, it is 1.05 m tall at size 1.
+  function cocoon(a, y, d, size = 1) {
+    const height = 1.05 * size, radius = .3 * size, at = t => radius * Math.sin(Math.PI * t) ** .75;
+    const shell = keep(new THREE.LatheGeometry(Array.from({ length: 19 }, (_, i) => { const t = .1 + .9 * i / 18; return new THREE.Vector2(at(t), (t - .5) * height); }), 24));
+    box(m.rattan, a, y, d, 1, 1, 1, { shape: shell });
+    for (let k = 1; k < 8; k++) {
+      const t = .1 + .9 * k / 8, band = keep(new THREE.TorusGeometry(at(t) + .006, .011 * size, 4, 24));
+      box(m.timber, a, y + (t - .5) * height, d, 1, 1, 1, { shape: band, pitch: Math.PI / 2 });
     }
-    box(m.glow, a, y, d, .12, .3 * size, .12, { shape: sphere });
+    rod(m.black, [a, y + height / 2, d], [a, 10.25, d], .01);
+    box(m.glow, a, y - .32 * height, d, .16, .16, .16, { shape: sphere });
   }
   function tub(a, y, d, yaw) {
-    soft(m.leather, a, y + .42, d, .88, .2, .86, { yaw });
-    box(m.leather, a, y, d, 1, 1, 1, { shape: tubShell, yaw });
-    for (const offset of [-.3, .3]) box(m.timber, a + offset, y + .15, d, .06, .3, .65);
+    box(m.black, a, y + .14, d, .56, .28, .56, { shape: cylinder });
+    box(m.leather, a, y + .42, d, .6, .2, .6, { shape: cylinder });
+    box(m.leather, a, y, d, 1, 1, 1, { shape: barrelShell, yaw });
   }
   function recliner(seat) {
     const { a, d } = seat, y = 6;
@@ -184,15 +190,18 @@ export function buildIpicInterior(room, options = {}) {
   section('Upper lounge'); box(m.carpet, (room.aMin + TUCK_ROOM_EDGE) / 2, 6 - .12, 23, TUCK_ROOM_EDGE - room.aMin, .24, 6); ceiling(20, 26, 10.3);
   for (const a of [room.aMin, room.aMax]) box(m.timber, a, 8.15, 23, .15, 4.3, 6);
   for (const d of [20.2, 25.7]) box(m.timber, room.center, 9.9, d, room.width, .52, .42);
-  soft(m.sofa, -2.82, 6.4, 24.8, 3, .36, .95);
-  soft(m.sofa, -2.82, 6.9, 25.2, 3, .96, .18);
-  for (const a of IPIC_SOFA_ARMS) soft(m.sofa, a, 6.67, 24.8, .19, .66, .95);
-  for (const a of [-3.7, -1.95]) soft(m.pillow, a, 6.94, 25.05, .58, .52, .13, { roll: a < -3 ? -.12 : .13 });
-  soft(m.leather, -2.82, 6.78, 25.05, .58, .25, .13);
-  box(m.sunburst, -2.8, 6.4, 23.3, 1.5, .075, .9, { shape: cylinder });
-  for (const a of [-3.3, -2.3]) rod(m.black, [a, 6, 23.3], [a, 6.38, 23.3], .025);
-  tub(-4.3, 6, 22.4, -.6); tub(-1.05, 6, 22.6, .6);
-  for (const [a, d, size] of [[-3, 22, 1.1], [-1, 23, .8], [-4.6, 24, .9], [1, 21, .7]]) pendant(a, 8.85, d, size);
+  // The sofa group as in IMG_9758 (P11): the sofa backs onto the glass over the escalators and faces into
+  // the lounge, with the oval table in front of it and two barrel chairs across the table.
+  const sofaA = (IPIC_SOFA_ARMS[0] + IPIC_SOFA_ARMS[1]) / 2, D = IPIC_SOFA_D;
+  soft(m.sofa, sofaA, 6.4, D, 2.6, .36, .95);
+  soft(m.sofa, sofaA, 6.9, D - .4, 2.6, .96, .18);
+  for (const a of IPIC_SOFA_ARMS) soft(m.sofa, a, 6.67, D, .19, .66, .95);
+  for (const a of [sofaA - .88, sofaA + .87]) soft(m.pillow, a, 6.94, D - .25, .58, .52, .13, { roll: a < sofaA ? -.12 : .13 });
+  soft(m.leather, sofaA, 6.78, D - .25, .58, .25, .13);
+  box(m.sunburst, sofaA, 6.4, 22.1, 1.5, .075, .9, { shape: cylinder });
+  for (const a of [sofaA - .5, sofaA + .5]) rod(m.black, [a, 6, 22.1], [a, 6.38, 22.1], .025);
+  tub(-4.75, 6, 23.2, .3); tub(-3.45, 6, 23.2, -.3);
+  for (const [a, d, y, size] of [[-4.5, 21.9, 8.8, 1.15], [-3.3, 22.8, 9.05, .9], [-5.3, 24.2, 9, .85], [-1.8, 21.5, 9.1, .8], [-1.4, 24, 8.85, 1.05], [.6, 22.3, 9.05, .8]]) cocoon(a, y, d, size);
   label(["I'm Busy for the rest of my Life.", "I'm Busy for the rest of my Life.", "I'm Busy for the rest of my Life."], room.aMin + .13, 8.4, 23.6, 3.8, 1.45, { yaw: Math.PI / 2, font: 'cursive', color: '#ccb68c', height: 512 });
   // Glass arrival guardrails stop at the two escalator openings.
   for (const a of [-4.5, 4.7]) {

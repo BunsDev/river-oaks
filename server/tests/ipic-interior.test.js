@@ -28,7 +28,7 @@ function walk(f, a, d) {
   }
 }
 
-const route = [[-1.4, 4.8], [-1.4, 20.7], [-5.55, 20.7], [-5.55, 24.7], [-4.85, 24.7], [-4.85, 29]];
+const route = [[-1.4, 4.8], [-1.4, 20.7], [-1.4, 24.5], [-4.85, 24.5], [-4.85, 29]];
 
 test('shared visitor walks both flights, sits, stands, restores checkpoint, and returns', () => {
   let f = fixture();
@@ -47,8 +47,8 @@ test('shared visitor walks both flights, sits, stands, restores checkpoint, and 
   assert.equal(f.town.command('second-guest', { type: 'sit', buildId: seat.buildId, slot: 0 }).error, 'seat_occupied');
   const stood = f.command({ type: 'stand' }); assert.equal(stood.ok, true, stood.error);
   // Reach the left aisle using the clear space in front of the first row.
-  walk(f, -4.85, 29.65); walk(f, -4.85, 24.7); walk(f, -5.55, 24.7);
-  walk(f, -5.55, 20.7); walk(f, -1.4, 20.7); walk(f, -1.4, 4.8); walk(f, 0, 1);
+  walk(f, -4.85, 29.65); walk(f, -4.85, 24.5); walk(f, -1.4, 24.5);
+  walk(f, -1.4, 20.7); walk(f, -1.4, 4.8); walk(f, 0, 1);
   assert.equal(f.command({ type: 'travel', storeId: room.storeId, mode: 'leave' }).ok, true);
   assert.equal(env.roomAt(f.player().position[0], -f.player().position[1]), null);
 });

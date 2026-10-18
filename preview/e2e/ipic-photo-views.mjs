@@ -71,7 +71,7 @@ try {
   }
   await Promise.all([enter(alice), enter(owner)]);
   await Promise.all([
-    walk(alice, [[-1.4, 4.8], [-1.4, 20.7], [-5.55, 20.7], [-5.55, 24.7], [-4.85, 24.7], [-4.85, 29.65], [-1.6, 29.65]]),
+    walk(alice, [[-1.4, 4.8], [-1.4, 20.7], [-1.4, 24.5], [-4.85, 24.5], [-4.85, 29.65], [-1.6, 29.65]]),
     walk(owner, [[1.4, 4.8], [1.4, 20.7], [2.3, 22.2]]),
   ]);
   await alice.locator('#nearby-seat').selectOption(`${SEAT}:0`);
