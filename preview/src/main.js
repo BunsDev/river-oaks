@@ -41,7 +41,8 @@ import { canCullExterior, canCullIpicAuditorium, renderOnly, renderWithoutExteri
 import { sharedRoomSummary } from './shared-population.js';
 import { storeRoomsFor } from './store-rooms.js';
 import { attachDistrictGalleryPlan } from './district-interior-contract.js';
-import { DISTRICT_REVISION_GARDENS, attachGardenCampus, campusDoorSites, campusGroundAt, campusGroundCutout } from './garden-campus-district.js';
+import { DISTRICT_REVISION_GARDENS, attachGardenCampus, campusDoorSites, campusGroundAt, campusGroundCutout, campusSuiteSeatSites } from './garden-campus-district.js';
+import { campusLevelRoom } from './garden-campus-levels.js';
 import { createGardenCampusUI } from './garden-campus-ui.js';
 import { buildFoliage, buildObservedFoliage } from './foliage.js';
 import { castShadowsFromProxies } from './landscape-models.js';
@@ -573,7 +574,7 @@ function startMultiplayer() {
   seatingControls=createSharedSeatingControls({host:document.querySelector('.walking-console'),getTown:()=>multiplayer,
     getPose:()=>walking?.getPose(),getEnvironment:()=>walking?.environment,
     request:message=>multiplayer.command(message),onConfirmed:player=>walking.applyServerPose(player),
-    getBenches:()=>seatAndWater?.benches()??[],isHeld:key=>seatAndWater?.residentHolds(key)??false,isBusy:()=>seatAndWater?.busy()??false});
+    getBenches:()=>[...(seatAndWater?.benches()??[]),...suiteSeatsHere()],isHeld:key=>seatAndWater?.residentHolds(key)??false,isBusy:()=>seatAndWater?.busy()??false});
   host.dataset.multiplayer = 'connecting';
 }
 
@@ -724,6 +725,18 @@ function canEnterStore(store) {
   if (store?.access !== 'owner') return true;
   return Boolean(multiplayer?.connected && (multiplayer.snapshot?.players.find(player => player.id === multiplayer.identity?.id)?.canBuild
     || multiplayer.homeAccess.some(home => home.storeId === store.id)));
+}
+
+// The desks and meeting chairs of the suite the resident stands in (#510): a campus floor is
+// one room, so the walls, not the room, decide which seats are near enough to offer.
+let suiteSeatCache = null;
+function suiteSeatsHere() {
+  const self = multiplayer?.snapshot?.players.find(player => player.id === multiplayer.identity?.id), pose = walking?.getPose?.();
+  if (!world || !self?.levelId || !pose) return [];
+  const here = campusLevelRoom(world, self.levelId)?.supportAt(pose.position[0], -pose.position[2]);
+  if (here?.access !== 'private-suite') return [];
+  if (suiteSeatCache?.world !== world) suiteSeatCache = { world, seats: campusSuiteSeatSites(world) };
+  return suiteSeatCache.seats.filter(seat => seat.levelId === self.levelId && seat.unitId === here.surfaceId);
 }
 
 function enterStore(store) {

@@ -20,7 +20,8 @@
 import {
   GARDEN_CAMPUS_ID, GARDEN_CAMPUS_LAYOUT as CAMPUS, GARDEN_CAMPUS_VERSIONS, campusLevels, campusToSource, sourceToCampus, validateGardenCampus,
 } from '../../shared/garden-campus-layout.js';
-import { campusFitout } from '../../shared/garden-campus-fitout.js';
+import { campusFitout, campusFitoutObstacles } from '../../shared/garden-campus-fitout.js';
+import { registerCampusLevelObstacles } from './garden-campus-levels.js';
 
 export const DISTRICT_REVISION_GARAGE = 'river-oaks-garage-1';
 export const DISTRICT_REVISION_GARDENS = 'river-oaks-gardens-3';
@@ -217,6 +218,24 @@ export function campusSeatSites(world) {
   }));
 }
 export const isCampusSeat = buildId => typeof buildId === 'string' && buildId.startsWith(CAMPUS_SEAT_PREFIX);
+
+// Suite seats on the campus floors (#510 on #508's levels): every desk and meeting chair of
+// every suite, with its floor, suite and stand point. They are not street benches: no
+// townsperson sits in a suite, and a resident sits only from inside the suite they may use.
+export const CAMPUS_SUITE_SEAT_PREFIX = 'campus-suite:';
+export const isCampusSuiteSeat = buildId => typeof buildId === 'string' && buildId.startsWith(CAMPUS_SUITE_SEAT_PREFIX);
+export function campusSuiteSeatSites(world) {
+  if (!world?.gardenCampus) return [];
+  return campusFitout().levels.flatMap(entry => entry.seats.map(seat => {
+    const [x, north] = toSource(seat.position), facing = [seat.facing[0] * CAMPUS.frame.east[0] + seat.facing[1] * CAMPUS.frame.north[0],
+      seat.facing[0] * CAMPUS.frame.east[1] + seat.facing[1] * CAMPUS.frame.north[1]];
+    return { id: `${CAMPUS_SUITE_SEAT_PREFIX}${seat.id}:0`, buildId: `${CAMPUS_SUITE_SEAT_PREFIX}${seat.id}`, slot: 0, seatId: seat.id, kind: seat.kind,
+      levelId: entry.levelId, unitId: seat.unitId, x, north, heading: Math.atan2(facing[0], -facing[1]), height: seat.height, stand: toSource(seat.stand),
+      workstation: seat.workstation ? seat.id : null, title: seat.kind === 'desk' ? 'Suite desk' : 'Meeting table' };
+  }));
+}
+// Suite furniture is solid on its floor for everyone walking there, client and server alike.
+registerCampusLevelObstacles(levelId => campusFitoutObstacles(levelId).map(item => ({ id: item.id, rect: item.rect })));
 
 // The halls and café as storefront sites, in the shape world.stores and venue door sites
 // have, so the directory lists them and travel enters or leaves them like any door.
