@@ -227,11 +227,14 @@ Facilitator setup on one Mac, checked against `main` `7ed86fc5`:
   Point `WAITLIST_FILE` and `MODERATION_FILE` at a scratch folder. Dev sign-in
   is loopback-only, so laptop sessions run on this Mac. Phone participants need
   a sign-in-capable branch preview (ledger Round 5).
-- Give each participant a new Chrome Guest window at `http://127.0.0.1:5196/`.
-  That is a fresh local account with no favorites. Close it afterwards.
-- For task 3, the second player is an Incognito window opened from the
-  facilitator's own profile. Guest windows share one session, so a second Guest
-  window would be the same player.
+- Give each participant their own throwaway Chrome profile:
+  `"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --user-data-dir=<scratch>/P<n> --no-first-run --no-default-browser-check http://127.0.0.1:5196/`.
+  That is a fresh local account with no favorites. Do not use Guest windows.
+  Chrome keeps one Guest session while any Guest window is open, so a "new"
+  Guest window can reopen the previous participant's account. That happened
+  while preparing P2 on 2026-10-18.
+- For task 3, the second player is an Incognito window from the facilitator's
+  own profile.
 - For task 5, open DevTools in the participant's window, then More tools ›
   Network request blocking. Add `*/api/character/draft*` and enable it before
   the participant saves. Disable it once the failure shows, so Retry can succeed.

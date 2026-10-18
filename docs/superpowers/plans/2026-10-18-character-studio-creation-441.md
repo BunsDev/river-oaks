@@ -289,8 +289,11 @@ fixture configuration.
 character card in Play & rides, not from People. Task 1 now asks people to find it,
 and timing starts when task 1 is handed over. The pass gate below is unchanged.
 `docs/character-studio.md` (Usability trial protocol) has the facilitator setup:
-the local fixture, a Chrome Guest window per participant, an Incognito second
-player, and request blocking on `*/api/character/draft*` for the failed save.
+the local fixture, a throwaway Chrome profile per participant, an Incognito
+second player, and request blocking on `*/api/character/draft*` for the failed
+save. The kit first said a Guest window per participant. A Guest window opened
+for P2 reused P1's open Guest session, so no new account was made. P2 started
+in a fresh profile instead, on a new account.
 A headless dry run of that setup on `7ed86fc5` passed:
 - Each new browser context signed in as its own account.
 - Blocking the draft URL made Save fail with "The action is not confirmed. Your
