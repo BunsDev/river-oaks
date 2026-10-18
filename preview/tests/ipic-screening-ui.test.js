@@ -91,3 +91,23 @@ test('the chooser describes each film as the catalog records it: length, sound, 
   assert.equal(screeningFilmDetails(FILM), '0:30 · Test tone · English captions');
   assert.equal(screeningFilmDetails({ durationMs: 75_400, audio: 'dialogue and music', captions: null }), '1:15 · Dialogue and music · No captions');
 });
+
+// Viewing (#500): a seated viewer may focus the camera on the screen and return; local only.
+test('a seated viewer can focus on the screen and look around again; standing viewers cannot', () => {
+  const seated = screeningControls({ shared: shared('playing'), local: 'playing', inAuditorium: true, seated: true, focused: false });
+  const focus = seated.find(item => item.id === 'focus');
+  assert.deepEqual([focus.hidden, focus.label, focus.pressed], [false, 'Focus on screen', false]);
+  const focused = screeningControls({ shared: shared('playing'), local: 'playing', inAuditorium: true, seated: true, focused: true }).find(item => item.id === 'focus');
+  assert.deepEqual([focused.label, focused.pressed], ['Look around', true]);
+  assert.equal(screeningControls({ shared: shared('playing'), local: 'playing', inAuditorium: true, seated: false }).find(item => item.id === 'focus').hidden, true, 'standing: no focus');
+  assert.equal(screeningControls({ shared: shared('stopped'), local: 'idle', inAuditorium: true, seated: true }).find(item => item.id === 'focus').hidden, true, 'nothing showing: no focus');
+  for (const local of ['error', 'blocked']) assert.equal(screeningControls({ shared: shared('playing'), local, inAuditorium: true, seated: true, focused: true }).find(item => item.id === 'stop-watching').hidden, false, `${local}: the way out stays`);
+});
+
+test('the volume slider is offered only where it changes the sound; mute always works (#500)', () => {
+  const visibleIds = more => visible(screeningControls({ shared: shared('playing'), local: 'playing', inAuditorium: true, ...more }));
+  assert.ok(visibleIds({ volumeSupported: true }).includes('volume'));
+  assert.ok(!visibleIds({ volumeSupported: false }).includes('volume'), 'no decorative slider where programmatic volume is ignored');
+  assert.ok(visibleIds({ volumeSupported: false }).includes('sound'), 'sound on and off still works');
+  assert.match(screeningStatusText({ shared: shared('playing'), local: 'blocked', sound: true }), /Sound is on.*Play film/, 'a refused sound start is not shown as sound');
+});
