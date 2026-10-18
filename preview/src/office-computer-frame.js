@@ -19,6 +19,16 @@ export function createComputerFrame({config,mount,win=window,doc=document,timers
   state=reported=next;code=detail;sync='none';
   const pending=closing;closing=null;pending?.resolve({outcome:'destroyed'});emit();
  }
+ function start(){
+  instanceId=embedId(random);state=reported='loading';sync='none';code=null;used=false;const id=instanceId;
+  timers.clearTimeout(loadTimer);loadTimer=timers.setTimeout(()=>{if(id===instanceId)destroy('failed','timeout');},timeouts.load);
+ }
+ // The frame's document changed under it (a reload or navigation): that is a new, ungated instance.
+ // Nothing the old document reported carries over, and a pending close goes unanswered.
+ function renew(){
+  timers.clearInterval(resendTimer);timers.clearTimeout(closeTimer);resendTimer=closeTimer=null;
+  const pending=closing;closing=null;start();if(pending)state='unconfirmed';emit();pending?.resolve({outcome:'timeout'});
+ }
  function receive(event){
   if(!frame||event.origin!==config.origin||event.source!==frame.contentWindow)return;
   const message=parseChildMessage(event.data);if(!message||message.instanceId!==instanceId)return;
@@ -46,16 +56,17 @@ export function createComputerFrame({config,mount,win=window,doc=document,timers
   /** Creates the frame if there is none and starts a fresh instance; Computer then shows its own account gate. */
   open(){
    if(frame)return;
-   instanceId=embedId(random);state=reported='loading';sync='none';code=null;used=false;
-   frame=doc.createElement('iframe');frame.className='desk-computer-frame';frame.title='TypeSafe Computer';
-   frame.setAttribute('sandbox',COMPUTER_SANDBOX);frame.setAttribute('allow',COMPUTER_PERMISSIONS);frame.setAttribute('referrerpolicy','no-referrer');
-   win.addEventListener('message',receive);listening=true;
-   const token=instanceId;
-   frame.addEventListener('load',()=>{if(token!==instanceId)return;post(initMessage(token));timers.clearInterval(resendTimer);
+   const el=doc.createElement('iframe');frame=el;el.className='desk-computer-frame';el.title='TypeSafe Computer';
+   el.setAttribute('sandbox',COMPUTER_SANDBOX);el.setAttribute('allow',COMPUTER_PERMISSIONS);el.setAttribute('referrerpolicy','no-referrer');
+   win.addEventListener('message',receive);listening=true;start();
+   let loads=0;
+   el.addEventListener('load',()=>{
+    if(frame!==el)return;if(loads++)renew();
+    const id=instanceId;post(initMessage(id));timers.clearInterval(resendTimer);
     // A child that attaches its listener after load still receives init; it ends at the first valid status.
-    resendTimer=timers.setInterval(()=>{if(token===instanceId)post(initMessage(token));},timeouts.resend);});
-   loadTimer=timers.setTimeout(()=>{if(token===instanceId)destroy('failed','timeout');},timeouts.load);
-   frame.src=config.frameURL;mount.append(frame);emit();
+    resendTimer=timers.setInterval(()=>{if(frame===el&&id===instanceId)post(initMessage(id));},timeouts.resend);
+   });
+   el.src=config.frameURL;mount.append(el);emit();
   },
   /**
    * Normal departure. An instance that never showed a usable desktop holds no edits, so the frame goes

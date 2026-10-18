@@ -15,7 +15,8 @@ export async function startComputerFixture() {
   // save: ok | fail | slow. close: normal | hang | attention | cancel. frame: allow | deny.
   const mode = { save: 'ok', close: 'normal', frame: 'allow' };
   let parentOrigin = null;
-  const send = (res, status, body, headers = {}) => { res.writeHead(status, { 'Cache-Control': 'no-store', ...headers }); res.end(body); };
+  // Plain text unless a route says otherwise; nothing a request supplies is echoed back as markup.
+  const send = (res, status, body, headers = {}) => { res.writeHead(status, { 'Cache-Control': 'no-store', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', ...headers }); res.end(body); };
   const json = (res, status, data, headers) => send(res, status, JSON.stringify(data), { 'Content-Type': 'application/json', ...headers });
   const body = async req => { let text = ''; for await (const chunk of req) text += chunk; return text ? JSON.parse(text) : {}; };
   const session = req => sessions.get(req.headers.cookie?.match(/(?:^|; )computer_session=([\w-]+)/)?.[1]);
@@ -61,7 +62,7 @@ export async function startComputerFixture() {
         return json(res, 200, { ...mode });
       }
       send(res, 404, 'not found');
-    } catch (error) { send(res, 500, error.message); }
+    } catch (error) { console.error('Computer fixture:', error); send(res, 500, 'fixture error'); }
   });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   const origin = `http://127.0.0.1:${server.address().port}`;

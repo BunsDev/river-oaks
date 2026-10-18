@@ -174,6 +174,15 @@ A frame load, a closed popup or a URL parameter proves nothing.
    save) rather than holding the request. The person decides in Computer and leaves
    again.
 
+### Reloads inside the frame
+
+If the frame's document loads again (a reload, or Computer navigating its own frame),
+Place treats it as a new instance:
+
+- it sends a fresh `init` with a new `instanceId` and re-arms the load timeout;
+- nothing the old document reported carries over, so Computer must gate again;
+- a pending close is reported as unanswered, never as a save.
+
 ### Forced teardown
 
 Place removes the frame immediately, without sending a message or waiting, when any of

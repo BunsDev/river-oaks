@@ -31,7 +31,13 @@ async (page, { computerOrigin }) => {
   const top=await popup.evaluate(()=>window.top===window);await popup.close();return top;
  };
 
+ // Counts live window message listeners, so departures and teardown can be shown to leave none behind.
+ await page.addInitScript(()=>{const live=new Set(),add=window.addEventListener.bind(window),remove=window.removeEventListener.bind(window);
+  window.addEventListener=(type,fn,options)=>{if(type==='message')live.add(fn);return add(type,fn,options);};
+  window.removeEventListener=(type,fn,options)=>{if(type==='message')live.delete(fn);return remove(type,fn,options);};
+  window.__messageListeners=()=>live.size;});
  await page.goto('http://127.0.0.1:5173/?motion-debug=1',{waitUntil:'commit'});await arrive();await openDesk();
+ const listeners=await page.evaluate(()=>window.__messageListeners());
  check(await page.locator('#desk-views').isVisible()&&await page.locator('#desk-view-tasks').getAttribute('aria-selected')==='true','The desk opens on Tasks with a Computer tab beside it');
  check(await frames()===0&&computerRequests.length===0,'Nothing loads from Computer before its tab opens');
 
@@ -80,6 +86,12 @@ async (page, { computerOrigin }) => {
  check(await page.locator('#desk-title').inputValue()==='Synthetic desk draft'&&await page.locator('#desk-notes').inputValue()==='Keep this draft while I use Computer.'&&await page.locator('#desk-notice').isVisible(),'The Tasks draft and its failed save survive Computer');
  await page.unroute('**/api/office-desk/save?*');await page.locator('#desk-retry').click();
  await page.waitForFunction(()=>document.querySelector('#desk-save-status')?.textContent==='All changes saved');check(true,'Retry then saves the same task');
+ for(let visit=0;visit<3;visit++){
+  await page.locator('#desk-view-computer').click();await waitState('account-confirmation');await child().locator('#continue').click();await waitState('usable');
+  check(await frames()===1,`Computer visit ${visit+1} runs exactly one frame`);
+  await page.locator('#desk-view-tasks').click();await waitView('tasks');
+ }
+ check(await frames()===0&&await page.evaluate(()=>window.__messageListeners())===listeners,'Repeated Computer visits leave no frame or message listener behind');
 
  await page.locator('#desk-view-computer').click();await waitState('account-confirmation');
  check(await child().locator('#desktop').isHidden(),'Reentry starts a fresh account gate');
@@ -103,10 +115,16 @@ async (page, { computerOrigin }) => {
   send({...base,type:'status',instanceId:'stale-instance-00000001',state:'signin-required',sync:'none'});
   send({...base,type:'status',instanceId:id,state:'usable',sync:'saved',note:'leak'});
   send({...base,version:2,type:'request-close',instanceId:id});
-  send({...base,type:'close-result',instanceId:id,requestId:'request-not-pending-01',result:'ready',persistence:'saved'});},instance);
+  send({...base,type:'close-result',instanceId:id,requestId:'request-not-pending-01',result:'ready',persistence:'saved'});
+  send({...base,type:'request-close',instanceId:id,url:'https://example.com/'});send({...base,type:'init',instanceId:id});},instance);
+ const here=page.url();
  await page.evaluate(id=>window.postMessage({protocol:'typesafe-place-embed',version:1,type:'request-close',instanceId:id},'*'),instance);
  await page.waitForTimeout(300);
- check(await state()==='usable'&&await deskOpen()&&await frames()===1,'Stale, malformed, unsupported and wrong-origin messages are ignored');
+ check(await state()==='usable'&&await deskOpen()&&await frames()===1&&page.url()===here,'Stale, malformed, unsupported, URL-bearing and wrong-origin messages are ignored and navigate nothing');
+ // A reload inside Computer is a new document: a fresh instance and account gate, nothing carried over.
+ await childFrame().evaluate(()=>location.reload());await waitState('account-confirmation');
+ check(await child().locator('#desktop').isHidden()&&await status()==='Confirm your TypeSafe Computer account to continue','A reload inside Computer starts a fresh account gate and drops the old save status');
+ await child().locator('#continue').click();await waitState('usable');
  await fixture({close:'normal'});
 
  // Switching Computer accounts shows that account's own desktop.
@@ -194,9 +212,28 @@ async (page, { computerOrigin }) => {
   const revoked=Date.now();await page.locator('#office-management button').filter({hasText:'Revoke access'}).click();
   await guest.waitForFunction(()=>!document.querySelector('.desk-computer-frame')&&!document.querySelector('#office-desk').open&&!document.querySelector('#office-visit').open,null,{timeout:10000});
   check(true,`Revocation removes the visitor’s unresponsive Computer at once (${Date.now()-revoked} ms)`);
+  // The next Place account in the same browser: its own tasks, and a fresh Computer gate, never the prior desktop.
+  await fixture({close:'normal'});
+  await guestContext.addCookies([{name:'fixture_session',value:'bob',url:page.url()}]);
+  await guest.reload({waitUntil:'commit'});
+  await guest.waitForFunction(()=>window.__riverMultiplayer?.().connected&&window.__riverMultiplayer().selfId==='bob'&&document.querySelector('#canvas-host')?.dataset.playerReady==='true',null,{timeout:90000});
+  await page.locator('#office-management select option',{hasText:'bob'}).waitFor({state:'attached',timeout:15000});
+  await page.locator('#office-management select').selectOption({label:'bob'});await page.locator('#office-management button').filter({hasText:'Invite resident'}).click();
+  await arrive(guest);await openDesk(guest);
+  check(await guest.locator('#desk-start').isVisible(),'A second Place account in the same browser sees only its own tasks');
+  await guest.locator('#desk-view-computer').click();await guest.waitForFunction(()=>document.querySelector('#office-desk')?.dataset.computer==='account-confirmation');
+  check(await guest.frameLocator('.desk-computer-frame').locator('#desktop').isHidden()&&await guest.frameLocator('.desk-computer-frame').locator('#gate-name').textContent()==='Cy Fixture','The next Place account gets a fresh Computer gate, not the previous desktop');
+  await guest.frameLocator('.desk-computer-frame').locator('#continue').click();await guest.waitForFunction(()=>document.querySelector('#office-desk')?.dataset.computer==='usable');
+  await fixture({close:'hang'});
+  const signedOut=Date.now();
+  await guest.evaluate(()=>fetch('/auth/logout',{method:'POST',headers:{'X-CSRF-Token':'fixture-bob'}}));
+  await guest.waitForFunction(()=>!document.querySelector('.desk-computer-frame')&&!document.querySelector('#office-desk').open,null,{timeout:10000});
+  check(true,`Place sign-out removes an unresponsive Computer at once (${Date.now()-signedOut} ms)`);
   check(guestErrors.length===0,`No guest browser errors: ${guestErrors.join('; ')}`);
  }finally{await fixture({close:'normal'});await guestContext.close();}
 
  check(!deskBodies.some(body=>/Synthetic (note|offline)/.test(body)),'Computer notes never reach Place task requests');
+ check(!/Synthetic (note|offline)/.test(await page.evaluate(()=>JSON.stringify(window.__riverMultiplayer().snapshot))),'Computer notes never appear in the public world snapshot');
+ check(await frames()===0&&await page.evaluate(()=>window.__messageListeners())===listeners,'After every departure and forced teardown, no Computer frame or listener remains');
  return {checks};
 }

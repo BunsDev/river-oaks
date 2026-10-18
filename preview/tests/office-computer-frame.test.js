@@ -187,3 +187,28 @@ test('instance ids do not need crypto.randomUUID, which plain-http development o
   const a=embedId(),b=embedId();assert.match(a,/^[0-9a-f]{32}$/);assert.notEqual(a,b);}
  finally{Object.defineProperty(crypto,'randomUUID',{value:original,configurable:true,writable:true});}
 });
+
+test('a reload or navigation inside the frame starts a fresh, ungated instance and forgets the old document', async () => {
+ const t=setup();t.owner.open();t.frames[0].load();t.status('usable','saved');
+ const old=t.owner.state.instanceId;
+ t.frames[0].load();
+ assert.notEqual(t.owner.state.instanceId,old,'the new document gets a new instance');
+ assert.deepEqual([t.owner.state.state,t.owner.state.sync],['loading','none'],'no readiness or save state carries over');
+ assert.deepEqual(t.posted.at(-1).message,msg('init',t.owner.state.instanceId));
+ t.deliver(msg('status',old,{state:'usable',sync:'saved'}));assert.equal(t.owner.state.state,'loading','the old instance is fenced');
+ assert.deepEqual(await t.owner.depart(),{outcome:'ready',persistence:null},'the new document showed nothing, so leaving needs no decision');
+ t.owner.open();t.frames[1].load();t.status('usable','saved');t.frames[1].load();
+ t.timers.advance(15000);
+ assert.deepEqual([t.owner.state.state,t.owner.state.code,t.owner.state.mounted],['failed','timeout',false],'a document that never answers times out again');
+});
+
+test('a reload during a pending close is an unanswered close, not a save', async () => {
+ const t=setup();t.owner.open();t.frames[0].load();t.status('usable','pending');
+ const departing=t.owner.depart();const request=t.posted.at(-1).message.requestId,old=t.owner.state.instanceId;
+ t.frames[0].load();
+ // Settled synchronously by the reload; a regression fails here instead of waiting forever.
+ assert.deepEqual(await Promise.race([departing,new Promise(r=>setImmediate(()=>r('still pending')))]),{outcome:'timeout'});assert.deepEqual([t.owner.state.state,t.owner.state.mounted],['unconfirmed',true]);
+ t.deliver(msg('close-result',old,{requestId:request,result:'ready',persistence:'saved'}));
+ assert.equal(t.owner.state.state,'unconfirmed','the old document’s late answer is ignored');
+ t.status('account-confirmation');t.owner.resume();assert.equal(t.owner.state.state,'account-confirmation','the new document gates again');
+});

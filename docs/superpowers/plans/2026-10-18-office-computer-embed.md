@@ -101,7 +101,7 @@ All commands run from the worktree.
 
 | Check | Result |
 | --- | --- |
-| `node --test preview/tests/office-computer-frame.test.js` | 13/13 pass. Mutating the two review fixes back fails exactly the two new tests. |
+| `node --test preview/tests/office-computer-frame.test.js` | 13/13 pass. Mutating the two review fixes back fails exactly the two new tests. After the Codex fix: 15/15; the pre-fix module fails both reload tests. |
 | `pnpm test` (before the review fixes) | 3534 tests: 3533 pass, 0 fail, 1 skipped (already on main) |
 | `pnpm run build` (before the review fixes) | exit 0 |
 | `pnpm run test:experience office-computer-embed` (before the review fixes) | passed, 38 checks, 64 s; forced teardown 146 ms (visit end) and 290 ms (revocation) with a hung child |
@@ -118,3 +118,69 @@ All commands run from the worktree.
 | `uv run --locked ruff check .` / `ruff format --check .` / `pytest -q` | pass / pass / 141 passed |
 | `uv run --locked python scripts/check_secrets.py --all` | exit 0 |
 | Not rerun locally | `river-oaks demo` and `demo-verify` (Python untouched); `verify full` (Redis, audit, browser matrix). Hosted CI is the merge gate. |
+
+## Audit (2026-10-18, second pass)
+
+PR #524 head b40cb536 passed hosted Verify: every check green, including the `places`
+shard that runs `office-computer-embed` in software rendering.
+
+**Review findings, fixed:**
+- **CodeQL alert** on PR #524: the fixture's 500 response echoed exception text without a
+  content type. Fixture responses now default to `text/plain` with `nosniff`, and the
+  500 body is generic.
+- **Independent review** (Codex CLI 0.163.0, read-only), one P2: a reload or navigation
+  inside the frame kept the old document's readiness and save status and never re-armed
+  the load timeout. A later `load` now starts a fresh, ungated instance and reports a
+  pending close as unanswered. Two unit regressions cover it (the bounded await makes a
+  regression fail instead of hang), plus a browser check. Codex found the fence, teardown,
+  save honesty, navigation and Tasks paths clean.
+- **This ledger:** an earlier edit had truncated the "Gaps and next step" section; it is
+  restored below.
+
+**New browser regressions:**
+- repeated Computer visits leave one frame at a time and no message listener (window
+  listener counter);
+- a URL-bearing forged message navigates nothing;
+- a reload inside Computer gates again;
+- a second Place account in the same browser sees its own tasks and a fresh Computer gate;
+- Place sign-out (the fixture's `/auth/logout` disconnects the user) removes a hung Computer;
+- the public snapshot never holds Computer notes;
+- an unconfigured desk shows no Computer tab (`office-desk` journey).
+
+**Traced in code, not by a browser check:**
+- **World teardown:** `populateWorld` → `officeUI.reset` → `close` → `desk.suspend` →
+  `computer.destroy`.
+- **Place account change on a live socket:** `sync` → `desk.reset`.
+- **Disconnect:** `update` closes the office when not connected, then `desk.suspend`. The
+  sign-out check exercises this path through a server disconnect.
+- **Pointer lock:** the office uses drag with pointer capture, not pointer lock, so there
+  is no gesture-dependent re-lock.
+- **Monitors:** no scene, monitor, layout or server file changed.
+
+### Evidence by criterion
+
+| #486 criterion | Evidence |
+| --- | --- |
+| Tasks and Computer tabs in the existing dialog | fixture journey; hosted CI |
+| My tasks drafts, retries and conflicts across switches | fixture journey (failed-save draft and retry survive Computer). Office tasks were removed by #496. |
+| No request before the tab; one frame; no hidden frame | fixture journey (request log, frame count, listener counter); unit tests |
+| Only validated active-child messages count | unit tests (shapes, origin, source, instance, request, reload); fixture journey (forged, stale, URL, wrong origin, reload) |
+| Fresh gate on every frame; a Place account change gates again | fixture journey (reentry, reload, second Place account); real Computer not tested |
+| Honest pending, failed, offline, cancel and timeout closes | fixture journey; unit tests |
+| Forced teardown with an unresponsive child | fixture journey: visit end, revocation, sign-out. World teardown and live account change are traced in code. |
+| Denial, timeout and unavailable keep Tasks, retry, open-separately and exit | fixture journey (framing denied); unit tests (error codes) |
+| Input, voice and focus; nested Escape; desktop and narrow touch | fixture journey (keys, menu Escape, keyboard return, 390/320 px); no physical touch or Safari evidence |
+| No private content or credentials in messages, tasks, snapshots or monitors | fixture journey; no monitor change |
+| Regressions, gates and review | this ledger; hosted CI on #524 |
+| Hosted, real Computer, device and human acceptance | none (#487) |
+
+## Gaps and next step
+
+- **Resume:** watch hosted Verify on the PR head, then land with `pnpm run land 524`
+  (authorized by Val: "land when green").
+- Contract proposal posted to Computer #33; status posted to #486 and #487. No reply yet.
+- Staged and not in this PR:
+  - the real Computer candidate (#33);
+  - the origin pair, auth and frame policy (#21);
+  - continuity (#27);
+  - the Place `frame-src` and environment change.
