@@ -142,6 +142,40 @@ test('the film ends at its duration, an explicit start replays it, and stop rese
   assert.deepEqual([f.view().status, f.view().positionMs, f.view().hostId], ['stopped', 0, null]);
 });
 
+// The host's film choice (#499): Start carries the chosen allowlisted id, and nothing else picks it.
+test('after film A ends the host starts film B by id; the server takes its duration, and refuses ids it does not allowlist', () => {
+  const ORIGINAL = SCREENING_MEDIA['ipic-original-v1'], f = fixture();
+  assert.equal(f.send('host', 'start', { mediaId: ORIGINAL.id }).ok, true);
+  f.tick(ORIGINAL.durationMs + 1000);
+  assert.deepEqual([f.view().status, f.view().mediaId], ['ended', ORIGINAL.id], 'the ended snapshot still names film A');
+  const before = f.view();
+  for (const mediaId of ['ipic-unknown-v9', undefined, '', 'https://example.com/film.mp4', '../ipic-original-v1', 'IPIC-ORIGINAL-V1', 'constructor', '__proto__'])
+    assert.equal(f.send('host', 'start', mediaId === undefined ? {} : { mediaId }).error, 'invalid_screening', `refused: ${mediaId}`);
+  assert.deepEqual(f.view(), before, 'a refused choice changes nothing');
+  const started = f.send('host', 'start', { mediaId: FILM.id });
+  assert.equal(started.ok, true);
+  assert.deepEqual([f.view().mediaId, f.view().durationMs, f.view().positionMs, f.view().status], [FILM.id, FILM.durationMs, 0, 'playing'], 'film B, with its own allowlisted duration');
+  // A client cannot attach a duration, a URL or an approval to its choice.
+  const current = f.view();
+  for (const extra of [{ durationMs: 1 }, { src: '/x.mp4' }, { approved: true }])
+    assert.equal(f.town.command('host', { type: 'screening', action: 'start', venueId: 'ipic', epoch: current.epoch, expectedRevision: current.revision, operationId: 'op-extra-0001', mediaId: ORIGINAL.id, ...extra }, { sessionId: 'host-session' }).error, 'invalid_screening');
+});
+
+test('two hosts racing to start different films: one wins, the other is stale and must sync', () => {
+  const ORIGINAL = SCREENING_MEDIA['ipic-original-v1'];
+  const f = fixture({ hosts: [{ venueId: 'ipic', userId: 'host' }, { venueId: 'ipic', userId: 'viewer' }] });
+  const seen = f.view();
+  const ask = (userId, mediaId, operationId) => { f.clock.time += 600; return f.town.command(userId, { type: 'screening', action: 'start', venueId: 'ipic', epoch: seen.epoch, expectedRevision: seen.revision, operationId, mediaId }, { sessionId: `${userId}-session` }); };
+  assert.equal(ask('host', ORIGINAL.id, 'op-race-host-01').ok, true);
+  assert.equal(ask('viewer', FILM.id, 'op-race-other-1').error, 'screening_stale', 'the second host saw the old revision');
+  assert.equal(f.view().mediaId, ORIGINAL.id, 'the winner’s film plays; nobody overrode it silently');
+  // The winner's lost reply, resent with its exact payload, applies once.
+  const replay = ask('host', ORIGINAL.id, 'op-race-host-01');
+  assert.deepEqual([replay.ok, replay.replayed], [true, true]);
+  // The same operation id with another film is a different request, refused rather than mutated.
+  assert.equal(ask('host', FILM.id, 'op-race-host-01').error, 'screening_operation_conflict');
+});
+
 test('losing the host pauses at the server position: leaving town, walking out, and a lapsed grant', () => {
   const leaving = fixture();
   assert.equal(start(leaving).ok, true);
