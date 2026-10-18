@@ -167,6 +167,12 @@ The garage's roof plant and mass go, and the instanced shells come in.
     radius. An earlier note here said 0.868 m; that came from a faulty one-off script.
     #510's validator now counts these walls as obstacles anyway, so a future layout cannot
     meet one unseen.
+  - **Opaque near the camera.** The first re-render (candidate `79f74bfb`) showed the engine's
+    near-camera fade (`near-camera-fade.js`, 1.4–3.2 m) dissolving the gallery walls and
+    revealing a suite's desk behind them. In a 3 m gallery, a resident's camera is always
+    that close. The partition and the new suite-door material now carry `nearCameraSolid`,
+    the fade's own opt-out for enclosed spaces, and the test checks that the fade leaves
+    both untouched while other shells still fade. Removing the flag fails the test.
 
 ## Gaps and owners
 

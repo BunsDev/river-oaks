@@ -65,8 +65,12 @@ export function buildGardenCampus(world) {
     luminaire: new THREE.MeshStandardMaterial({ name: 'campus:luminaire', color: '#fff3df', emissive: '#ffd6a0', emissiveIntensity: CAMPUS_GLOW.day, roughness: 0.4 }),
     accent: new THREE.MeshStandardMaterial({ name: 'campus:accent', color: ACCENT, roughness: 0.5 }),
     partition: new THREE.MeshStandardMaterial({ name: 'campus:partition', color: '#ece6da', roughness: 0.82 }),
+    door: new THREE.MeshStandardMaterial({ name: 'campus:suite-door', color: '#9a7350', roughness: 0.72 }),
   };
   materials.lawn.name = 'campus:lawn';materials.paving.name = 'campus:paving';materials.stone.name = 'campus:stone';
+  // A suite's walls and door stay opaque at any camera distance (near-camera-fade.js): a
+  // resident walking a 3 m gallery never sees through them into a private suite.
+  materials.partition.userData.nearCameraSolid = materials.door.userData.nearCameraSolid = true;
   const batches = new Map(Object.keys(materials).filter(key => !['lawn', 'paving'].includes(key)).map(key => [key, []]));
   // A box spanning [u0, u1] x [v0, v1] x [z0, z1] in campus metres.
   const box = (finish, u0, v0, u1, v1, za, zb) => { if (u1 - u0 > 1e-6 && v1 - v0 > 1e-6 && zb - za > 1e-6) batches.get(finish).push([u0, v0, u1, v1, za, zb]); };
@@ -170,7 +174,7 @@ export function buildGardenCampus(world) {
   for (const { rect, z0: za, z1: zb } of partitions.walls) box('partition', ...rect, za, zb);
   for (const door of partitions.doors) {
     for (const jamb of door.jambs) box('bronze', ...jamb, door.z0, door.head);
-    box('bronze', ...door.headRect, door.head, door.headTop);box('timber', ...door.leaf, door.z0, door.head);
+    box('bronze', ...door.headRect, door.head, door.headTop);box('door', ...door.leaf, door.z0, door.head);
   }
 
   // Terrace decks: timber over each part, on the slab of the tier below.
