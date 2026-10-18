@@ -459,6 +459,7 @@ by store travel.
 | `pnpm run test:shared development-publish` | 5/5 journeys passed (receipt `data/reports/cafe-420-shared-main495.json`, 11:32Z, ANGLE Metal M3 Max) |
 | `creator-approved-cafe` in that run | passed 22 checks in 203 s, the run-9 checks plus three: the guest starts south of the street `[1.6, −32]`; the server keeps the guest at the Café arrival after crossing `[−0.02, −14.28]`; after leaving, the server keeps the guest back across the street `[1.62, −32.24]` |
 | `REDIS_URL=<disposable> node --test` approved-space-redis, world-catalog, redis-room, world-gateway, office-world-lifecycle, world-invite-gateway, distributed-app, approved-space region/transport, creator-street-ground | 64/64, 0 skipped |
+| Hosted CI, Verify run 39124258482 on `6aff87f5` (draft #489) | all checks passed, including aggregate `preview`. `preview shared (worlds-and-creator)` passed `creator-street-crossing` and `creator-approved-cafe` with the other world and creator journeys, on Mesa llvmpipe CPU acceptance rendering. |
 
 ## Next step
 
