@@ -1784,3 +1784,92 @@ Focused35pass; wardrobe877checks132rows330phases and inspected human/beast Lyra
 sit/run captures; native4Kboth0pixel differences. Final review no code blockers.
 Ready for signed Lyra floor-fix commit/push464; no merge/deploy, approved-device,
 human or exhaustive art acceptance. Preserve15localreports and userdevserver.
+
+Next visual review: Rowan/KaiExplorer rear seated captures show calf/shaft
+misalignment. Source only attached tailored shafts tocalf. New actual-geometry
+ankle-flexion regression failed8bundles (Rowan,Vesper,Lyra,KaiExplorer human/beast),
+6tailoredpassed. Unified shaft/trim attachment tocalf; soles/last retainfoot.
+Focused59210terminal0:17tests inclall14bootedbundles and existing drawcaps.
+Evidence boot-attachment-20261018; no baked input hashes reference changedmodule.
+Next rendered fullmatrix/native4K/core/review beforecommit. Currentb9f85f7a hosted
+verify3.11/3.13+dependencygreen, browserCIrunning. No fullgoal acceptance.
+
+Boot source frozen:wardrobe75941/core96847withisolatedRedis/hero27163 live.
+Read-only review requested; poll exact handles. Runtime change deliberately
+retains boot rest transforms and original material/geometry ownership.
+
+Boot continuation: all three handles75941/96847/27163 confirmed live; core
+progressed into server tests, wardrobe/hero queued. Frozen source hashes match.
+Read-only review found no code blocker; attachment regression does not establish
+ankle seam or full clothing clearance. Render inspection still required.
+User dev access repaired operationally: original worktree lacked auth env;
+restarted own process with primary env files loaded in place (no copies/output),
+session5028 on5342/town8942. Both direct and proxied auth/session200 signedout;
+Character Studio flags enabled. Preserve this server; old93357 no longer current.
+
+Core96847 terminal0:11/11tasks passed; receipt archived boot-attachment/core.json.
+Tooling117,preview3434pass/1existing skip/1TODO,server914zero skips,desktop69,
+Python141/66warnings. Wardrobe75941 now capturing; hero27163 queued and live.
+Initial current Rowan seated front/side/rear compared with prior floor capture:
+shaft alignment changed but rear trouser/upper-shaft intersection persists.
+Archived review/rowan-human-sit-current.png; not final clearance acceptance.
+Inspect remaining changed bundles; preserve frozen inputs until both gates finish,
+then decide a measured fit correction before claiming the visual defect resolved.
+
+Fit probe78015terminal0 (boot-attachment/fit-probe.mjs,fit-report.json): actual
+rest-pose trouser vertices exceed shaft radial envelope for Rowan and KaiExplorer
+human/beast. Rowan51/122 left and50/120 right vertices outside; max local-frame
+radial excess .03290/.04682. Kai31/95 left,42/92 right, .01542/.02354.
+This is diagnostic rest geometry, not animated collision or visible acceptance;
+probe currently tests mesh.visible, not ancestor visibility. Rowan rear defect
+also confirmed in current man-casual four-phase run strip. Kai seated looks
+cleaner but cannot be accepted from that view alone. Vesper/Lyra human/beast
+seated strips inspected; no equivalent visible upper-shaft protrusion identified.
+Next: finish frozen wardrobe/4K, archive captures, add measured trouser-tuck
+regression using actual visible mesh and animation before implementing fit.
+
+Attachment-only wardrobe75941terminal0 and hero27163terminal0 (both native4K
+comparisons passed);154captures archived under boot-attachment/captures.
+Actual-rig fit regression reproduced radial overlap all4Rowan/KaiExplorer bundles
+(red11486terminal1). Added owned boot-fitting helper: tuck covered trousers and
+follow calf, blend original drape above cuff, restore original geometry ondispose;
+keep unaffected normals. Focused47377terminal0:21pass; final45810terminal0:21pass.
+No final visual acceptance yet. Freeze new inputs boot-fit/source-hashes.json;
+rerun wardrobe/core/native4K for final fit before commit.
+
+Final-fit verification handles:wardrobe46167/core49154/hero84646 live.
+Poll exact handles; source frozen. Userdev5028 remains separate and running.
+
+Fit continuation: wardrobe46167/core49154/hero84646 confirmed live; frozen hashes
+match, diffcheck clean. Current Rowan sit and wolf run4phases reviewed against
+attachment-only captures: large rear trouser protrusion removed. Selected captures
+archived boot-fit/review; not continuous motion acceptance. Kai inspection pending.
+Hosted b9f85f7a now all10checks green including aggregatepreview. Read-only
+boot_fit_review dispatched per requesting-code-review skill; no test/source edits.
+
+Current KaiExplorer human sit and beast run4phases visually reviewed and archived:
+no upper-shaft trouser protrusion identified in these views. Read-only boot_fit_review
+found no code blocker. Test gaps: cached position isolation asserted, not weights/
+normals or dispose event; interior vertices exclude cuff transitions/ankle seams.
+Current callers satisfy rest-pose fitting precondition. No universal clearance
+claim; wait frozen wardrobe/core/4K completion before delivery.
+
+Final-fit wardrobe46167terminal0;154captures and progress/report archived
+boot-fit-20261018. Core49154 now running; hero84646 queued, both confirmedlive.
+Issue442 progress posted6246606813 explicitly uncommitted/pending gates.
+Next collect core/4K receipts before signed commit/push464.
+
+Extra ownership audit84547terminal0:4bundles pass using retained standalone
+boot-fit/ownership.test.mjs. Checks every cached geometry attribute unchanged
+(including weights/normals), fitted clone disposed exactlyonce, cachedgeometry
+not disposed. Tracked source/test hashes unchanged. Core49154 actively running
+preview childprocesses (CPU confirmed); hero84646 live queued. Poll samehandles.
+
+Final fit core49154terminal0:11/11tasks;tooling117,preview3438pass/1existing
+skip/1TODO,server914zero skips,desktop69,Python141/66warnings. Build/lint/demo/
+secrets pass. Hero84646terminal0:both native4Kcomparisons0pixelsdifference.
+Receipts archived boot-fit/core.json,hero.json;source hashes match. Wardrobe877
+checks132rows330phases passed, selected Rowan/Kai sit/run inspected;focused21
+and extraownership4pass. Read-only review no blockers. Projectcheck50490exit1
+for unrelated lifecycle debt; first43683exit2 used unsupported extra--, corrected.
+Ready signed commit/push464, no merge/deploy or fullgoal acceptance.

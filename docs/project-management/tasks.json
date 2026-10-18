@@ -11223,9 +11223,9 @@
         "feat/character-studio-persistence-20261015"
       ],
       "owner": "codex-character-studio-20261015",
-      "updatedAt": "2026-10-18T06:12:30.160973+00:00",
-      "leaseUntil": "2026-10-18T07:54:56.439206+00:00",
-      "nextAction": "Lyra hem fix verified:35focused,877wardrobechecks132rows, native4Kzero differences, core11/11 withRedis914tests zero skips. Final hashes match and reviewer no blockers. Sign/push464 then update issue/PR; preserve userdevserver93357 and15reports. No merge/deploy or full-goal acceptance.",
+      "updatedAt": "2026-10-18T06:40:52.314190+00:00",
+      "leaseUntil": "2026-10-18T08:40:52.314190+00:00",
+      "nextAction": "Boot fit final gates passed: focused21+ownership4,wardrobe877checks132rows330phases,core11withRedis,native4Kbothzero. Selected Rowan/Kai sit/run visually clear at cuffs,review no blockers. Ready signed commit/push464 then exacthead CI/issue update. Preserve userdev5028,reports and otherowners; no merge/deploy.",
       "filesOwned": [
         "server/character-store.js",
         "server/tests/character-store.test.js",
@@ -11373,7 +11373,10 @@
         "preview/src/rigid-costume-batching.js",
         "preview/tests/rigid-costume-batching.test.js",
         "preview/src/rigid-accessory-pool.js",
-        "preview/tests/rigid-accessory-pool.test.js"
+        "preview/tests/rigid-accessory-pool.test.js",
+        "preview/tests/reference-boots.test.js",
+        "preview/src/boot-fitting.js",
+        "preview/tests/boot-fitting.test.js"
       ],
       "requiredChecks": [
         "Memory and real isolated Redis store contract tests",
