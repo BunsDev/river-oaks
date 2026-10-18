@@ -135,6 +135,11 @@ export function buildIpicInterior(room, options = {}) {
         rod(m.steel, [edge, f.base + .15, f.start], [edge, f.base + 3.15, f.end], .045);
       }
     }
+    // Steel decks close the runs between the lanes and beside them, so the street's ground no longer
+    // shows through under either flight (photo review P18). They sit at the treads' own slope.
+    for (const [a0, a1] of [[-.65, .65], [-2.63, -2.15], [2.15, 2.63]]) {
+      box(m.steel, (a0 + a1) / 2, f.base + 1.53, (f.start + f.end) / 2, a1 - a0, .04, Math.hypot(length, 3), { pitch });
+    }
     for (const a of [-2.72, 2.72]) {
       box(m.stone, a, f.base + 3, (f.start + f.end) / 2, .18, 6, length);
       // Horizontal split-face stone joints and recessed candle niches.
@@ -148,6 +153,14 @@ export function buildIpicInterior(room, options = {}) {
   }
 
   section('Mural landing'); floor(m.tile, 12, 14, 3); ceiling(12, 14, 6.7, m.plaster);
+  // The landing's side bays are walled in, front, back and at the room's edge, from the landing to its
+  // ceiling: they had opened onto the street and the sky (photo review P18; IMG_9771 shows a closed
+  // landing). Each wall stands outside the walkable floor, inside the run walls' colliders or the room.
+  for (const [inner, edge] of [[-2.72, room.aMin], [2.72, room.aMax]]) {
+    const a = (inner + edge) / 2, w = Math.abs(edge - inner), side = Math.sign(edge);
+    for (const d of [11.91, 14.09]) box(m.stone, a, 3 + 1.85, d, w, 3.7, .18);
+    box(m.stone, edge + side * .09, 3 + 1.85, 13, .18, 3.7, 2.36);
+  }
   const mural = room.fixtures.find(f => f.kind === 'ipic-mural-wall');
   box(m.black, mural.a, mural.y + mural.h / 2, mural.d, mural.w, mural.h, mural.l);
   panel(finishes.photo('book-spine-mural', 'IMG_9771.jpg'), mural.a, mural.y + mural.h / 2, mural.d - .1, mural.w, mural.h, 0,
