@@ -76,17 +76,17 @@ due about 15:50Z on `feat/garden-campus-contract-506-20261018`.
   - Every unit door names both the spine it opens from and the suite surface it opens
     into.
 
-## Package ownership and dependencies (as of 2026-10-18 ~17:20Z)
+## Package ownership and dependencies (as of 2026-10-18 18:31Z)
 
 | Package | Owner / task | Branch → PR | Delivered revision | Status |
 | --- | --- | --- | --- | --- |
-| #506 contract | river-oaks-c5 (1e70822d) / `garden-campus-contract-506` | → #519 (ready) | `63ef1b10`, layout 3.1 | hosted CI all green, CLEAN |
-| #507 shells + ground | river-oaks-95 / `garden-campus-shells-507` | → #523 (draft, base #519) | `15e8400a` | green at `0eb42839`; re-running at 15e8400a; matched views captured |
-| #508 upper circulation | river-oaks-c5 / `garden-campus-traversal-508` | stacks on #507 | none | can start now (#519 ready) |
-| #509 leases | river-oaks-95 delegated agent / `garden-campus-leases-509` | → #522 (ready, base #519) | `d72f0bea`, checkpoint v13 | hosted CI all 13 green (server 932/932) |
-| #510 resident journey | river-oaks-95 / `garden-campus-journey-510` | branch, PR after the journey | `0dc1da19` | lease dialog, fit-out, public workstations, seat rules; journey queued behind the browser lock |
-| #511 finish + rendering | river-oaks-95 delegated agent / `garden-campus-finish-511` | branch | `cefa4ee7` and on | finish pass, relight hook, 67-rect obstacle proposal with #506 |
-| #512 integration | river-oaks-95 / `garden-campus-acceptance-512` | branch | `ed50f3ff` (#507 + #509 + #510) | cutover, epoch fence, configuration rollback with inert leases; 94/94 + 6/6 tests |
+| #506 contract | river-oaks-c5 (1e70822d) / `garden-campus-contract-506` | → #519 (ready) | `3fac6c32`, layout 3.2 | hosted 19/19 green; BEHIND main (needs only an update before landing) |
+| #507 shells + ground | river-oaks-95 / `garden-campus-shells-507` | → #523 (draft, base #519) | `40aec12a` (3.2, main `97304fb7` with #486) | hosted 10/10 green, CLEAN; matched views captured |
+| #508 upper circulation | river-oaks-c5 / `garden-campus-traversal-508` | stacks on #507 | none | **not started.** Queued as c5's next goal, which Val starts; c5 is on another task (throw mechanics). The critical-path blocker. |
+| #509 leases | river-oaks-95 delegated agent / `garden-campus-leases-509` | → #522 (ready, base #519) | `1d151a8d`, checkpoint v13, `leaseRequestId` | hosted all green, CLEAN |
+| #510 resident journey | river-oaks-95 / `garden-campus-journey-510` | → #527 (draft, base #522) | `835c0c44` (merges #507 `40aec12a`) | dialog, fit-out, public workstations, seat rules; 105/105 focused tests. Hosted `campus` shard at `c4be49c6` passed 14 journey checks, then stalled at the hall door (fixed in `835c0c44`, re-running) |
+| #511 finish + rendering | river-oaks-95 delegated agent / `garden-campus-finish-511` | branch, PR after core verify | `bb8cd938` (merges #507 `40aec12a`) | 67 furnishings drawn once each; 34 focused tests; core verify running |
+| #512 integration | river-oaks-95 / `garden-campus-acceptance-512` | → #525 (draft candidate) | `284a5ca3` (#506 3.2 + #507 + #509 + #510 + main `97304fb7`) | cutover, epoch fence, configuration rollback; `campus` shard re-running |
 
 Interfaces agreed between owners (all recorded in their ledgers):
 
@@ -217,9 +217,12 @@ one `{from:'gardens', to:'garage'}` log. Leases stay inert and desks are untouch
 
 ## Next action
 
-1. Run the `garden-campus-office` journey (queued behind the browser lock), then open the
-   #510 draft PR (base #522).
-2. When #508 publishes its first push, integrate suite seats and entry through its hooks.
-3. Run #512's two-account candidate journey, including below-bridge movement and access
-   loss.
-4. Then the release handoff.
+1. Get a green hosted `campus` shard on #527 `835c0c44` and #525 `284a5ca3`. The journey
+   has not yet passed end to end anywhere, and local browser runs are blocked by machine
+   load. Then mark #527 ready for review.
+2. Open #511's PR when its core verify passes; merge it into #525 and re-run the shard.
+3. #508 is Val's to start (c5's queued goal). When its first push lands, integrate suite
+   seats and entry through its hooks (#510), then run #512's two-account candidate
+   journey: Floor 4 across both skywalks, below-bridge movement, suite entry, access loss
+   and reconnect.
+4. Then the release handoff (merge order and activation above).
