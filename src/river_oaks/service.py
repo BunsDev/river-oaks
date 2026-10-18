@@ -22,6 +22,7 @@ from .elevenlabs_voice import (
     JevVoiceSelection,
 )
 from .geo import digest
+from .jev import JEV_MODEL
 from .voice import LocalVoice, VoiceBusy, VoiceRequest, VoiceUnavailable
 
 
@@ -58,25 +59,25 @@ def create_app(
             app.state.engine = DecisionEngine(
                 client,
                 os.environ.get("TYPESAFE_API_KEY"),
-                model=os.environ.get("JEV_MODEL", "jev-1.13.0"),
+                model=os.environ.get("JEV_MODEL", JEV_MODEL),
             )
             if auto_engine is None:
                 app.state.auto_engine = AutoEngine(
                     client,
                     os.environ.get("TYPESAFE_API_KEY"),
-                    model=os.environ.get("JEV_AUTO_MODEL", "jev-1.13.0"),
+                    model=os.environ.get("JEV_AUTO_MODEL", JEV_MODEL),
                 )
             if companion_engine is None:
                 app.state.companion_engine = CompanionEngine(
                     client,
                     os.environ.get("TYPESAFE_API_KEY"),
-                    model=os.environ.get("JEV_AUTO_MODEL", "jev-1.13.0"),
+                    model=os.environ.get("JEV_AUTO_MODEL", JEV_MODEL),
                 )
             if chauffeur_engine is None:
                 app.state.chauffeur_engine = ChauffeurEngine(
                     client,
                     os.environ.get("TYPESAFE_API_KEY"),
-                    model=os.environ.get("JEV_AUTO_MODEL", "jev-1.13.0"),
+                    model=os.environ.get("JEV_AUTO_MODEL", JEV_MODEL),
                 )
             if elevenlabs_voice is None:
                 app.state.elevenlabs_voice = ElevenLabsVoice(

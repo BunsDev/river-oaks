@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
-import { createChauffeurRoute, chauffeurChoices } from '../chauffeur.js';
+import { JEV_AUTO_MODEL, createChauffeurRoute, chauffeurChoices } from '../chauffeur.js';
 import policy from '../../src/river_oaks/chauffeur-policy.json' with { type: 'json' };
 
 const packet = changes => ({ schema_version: 1, tick: 2, generation: 1, vehicle: 'rolls', speed: 0, remaining_m: 40, turn_radians: 0, road_clear: true, rear_clear: true, recovery: false,
@@ -28,7 +28,7 @@ async function fixture(t, overrides = {}) {
       calls++; assert.equal(url, 'https://api.typesafe.ai/v1/systemone'); assert.equal(options.headers.Authorization, 'Bearer private-fixture-key');
       const body = JSON.parse(options.body), choices = body.questions.next_action.criteria;
       assert.doesNotMatch(options.body, /private-fixture-key/);
-      return { ok: true, json: async () => ({ model: 'jev-1.13.0', answers: { next_action: { type: 'choice', choice: 'cruise', confidence: .9, probabilities: Object.fromEntries(Object.keys(choices).map(key => [key, Number(key === 'cruise')])), ...answerChange } } }) };
+      return { ok: true, json: async () => ({ model: JEV_AUTO_MODEL, answers: { next_action: { type: 'choice', choice: 'cruise', confidence: .9, probabilities: Object.fromEntries(Object.keys(choices).map(key => [key, Number(key === 'cruise')])), ...answerChange } } }) };
     }, ...overrides });
   const server = createServer(async (req, res) => { if (!await handler(req, res)) { res.writeHead(404); res.end(); } });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
@@ -58,4 +58,18 @@ test('invalid, low confidence and unconfigured decisions hold instead of moving'
   }
   const absent = await fixture(t, { apiKey: null });
   assert.equal((await (await absent.request()).json()).reason, 'not_configured'); assert.equal(absent.calls(), 0);
+});
+test('hosted driving asks for the pinned Jev model and holds on a reply from any other', async t => {
+  let asked = null;
+  const reply = model => async (url, options) => {
+    const body = JSON.parse(options.body), choices = body.questions.next_action.criteria; asked = body.model;
+    return { ok: true, json: async () => ({ model, answers: { next_action: { type: 'choice', choice: 'cruise', confidence: .9, probabilities: Object.fromEntries(Object.keys(choices).map(key => [key, Number(key === 'cruise')])) } } }) };
+  };
+  const pinned = await fixture(t, { fetcher: reply(JEV_AUTO_MODEL) });
+  assert.equal((await (await pinned.request()).json()).candidate_id, 'cruise');
+  assert.equal(asked, 'jev-1.14.0', 'the default pin is TypeSafe\'s jev-1.14.0, an exact version rather than an alias');
+  const stale = await fixture(t, { fetcher: reply('jev-1.13.0') });
+  const held = await (await stale.request()).json();
+  assert.equal(held.candidate_id, null, 'a reply from the previous pin does not drive the car');
+  assert.notEqual(held.source, 'jev');
 });

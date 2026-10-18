@@ -414,7 +414,7 @@ Copy `.env.example` to `.env` if you don't already have a private environment fi
 | `RIVER_OAKS_VOICE_NAMESPACE`, `VOICE_DAILY_JOINS`, `VOICE_MAX_LEASES` | Optional voice room namespace (defaults to `REDIS_NAMESPACE`, or `river-oaks:local:v1` on the standalone town) and caps (5,000 joins per UTC day, 256 concurrent leases) |
 | `EMAIL_SIGNIN_DAILY_LIMIT`, `EMAIL_SIGNIN_DAILY_PER_ADDRESS` | Optional email-code budgets (defaults 2,000 per day and 10 per address per day); see [email access](email-access.md) |
 | `TURNSTILE_SECRET_KEY`, `VITE_TURNSTILE_SITE_KEY` | Optional Cloudflare Turnstile on email sign-in; set both or neither |
-| `TYPESAFE_API_KEY`, `JEV_AUTO_MODEL`, `CHAUFFEUR_DAILY_LIMIT` | Hosted Jev driving: server-only key, model (default `jev-1.13.0`), and daily decision budget (default 6,000, max 10,000) |
+| `TYPESAFE_API_KEY`, `JEV_AUTO_MODEL`, `CHAUFFEUR_DAILY_LIMIT` | Hosted Jev driving: server-only key, model (default `jev-1.14.0`), and daily decision budget (default 6,000, max 10,000) |
 | `RIVER_OAKS_WORKPLACE` | Opt-in flag for the workplace test (with `VITE_WORKPLACE=true` in the client) |
 | `RIVER_OAKS_OFFICE_LAYOUT` | Jevica's office layout: unset or `office-legacy-1` (legacy room), or `office-penthouse-1`; personal workspaces stay legacy ([offices](offices.md)) |
 | `RIVER_OAKS_SCREENING_HOSTS` | IPIC screening hosts, `ipic:<userId>[@<ISO expiry>]`, comma-separated; unset means nobody can host ([screenings](screenings.md)) |
@@ -719,16 +719,17 @@ After that grace, departure releases it. A compatible region revision keeps
 furniture but disconnects players, so it leaves no stale occupancy. Checkpoint
 recovery validates slots, unique occupancy and the exact furniture-derived pose.
 
-Private world checkpoints write version 11 and read valid versions 1 (original
-district only) through 11. Seat reservations require version 3 or later; custom
+Private world checkpoints write version 13 and read valid versions 1 (original
+district only) through 13. Seat reservations require version 3 or later; custom
 assemblies require version 4; paired interactions require version 5; office state
 requires version 6; explicit interior level occupancy requires version 7; personal
 workspace visits require version 8; venue screenings ([screenings](screenings.md))
 require version 9; office visit layouts and levels ([offices](offices.md)) require version 10; office
-seat claims require version 11. The
-current coordinator (writer generation `v11:`) atomically takes over older leases. Commit fencing prevents
+seat claims require version 11; selected character revisions require version 12;
+garden campus leases ([garden campus leases](garden-campus-leases.md)) require version 13. The
+current coordinator (writer generation `v13:`, or `v14:` with the character store) atomically takes over older leases. Commit fencing prevents
 an older writer from publishing or trimming commands. Do not roll back older
-code against version-11 checkpoints. Browser protocol 3 is required: older and
+code against version-13 checkpoints. Browser protocol 3 is required: older and
 unversioned clients must refresh
 before joining.
 This prevents older renderers from applying snapshots with unknown geometry.
@@ -835,4 +836,4 @@ grants the microphone to this origin only.
 
 Owner accounts can use manual acceleration, reverse, steering, braking and parking, or let Jev drive an authored road route. Pause/resume keeps the route but invalidates old AI decisions; manual directions cancel the route. Losing window focus pauses and stops the ride. All vehicle movement retains road, pedestrian and collision checks.
 
-Development uses the local `/v1/chauffeur` bridge and its Settings key override. Hosted play uses `/api/chauffeur` with server-only `TYPESAFE_API_KEY` and optional `JEV_AUTO_MODEL` (default `jev-1.13.0`). The endpoint requires an approved owner session, canonical Origin and CSRF token. It's limited to 40 decisions per minute per owner and `CHAUFFEUR_DAILY_LIMIT` (default 6,000, max 10,000) per UTC day across owners; three provider failures in a row pause calls for 60 seconds. On Redis these budgets are shared across instances; the standalone server keeps them in memory. Credentials never reach the browser; absent keys, invalid answers and expired decisions hold the vehicle. `src/river_oaks/chauffeur-policy.json` supplies both bridge and hosted action policies.
+Development uses the local `/v1/chauffeur` bridge and its Settings key override. Hosted play uses `/api/chauffeur` with server-only `TYPESAFE_API_KEY` and optional `JEV_AUTO_MODEL` (default `jev-1.14.0`). The endpoint requires an approved owner session, canonical Origin and CSRF token. It's limited to 40 decisions per minute per owner and `CHAUFFEUR_DAILY_LIMIT` (default 6,000, max 10,000) per UTC day across owners; three provider failures in a row pause calls for 60 seconds. On Redis these budgets are shared across instances; the standalone server keeps them in memory. Credentials never reach the browser; absent keys, invalid answers and expired decisions hold the vehicle. `src/river_oaks/chauffeur-policy.json` supplies both bridge and hosted action policies.
