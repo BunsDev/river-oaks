@@ -51,9 +51,11 @@ test('entry captures the street before acknowledgement and reset releases presen
  f.ui.prepare(6200);assert.deepEqual(f.prepared,[6200]);f.ui.reset();f.ui.reset();f.ui.prepare(6300);
  assert.equal(f.disposed,1);assert.equal(f.ui.active,false);assert.deepEqual(f.prepared,[6200]);assert.equal(document.activeElement,f.host);
 });
-test('lobby prompt opens a visible request dialog for an uninvited visitor',async t=>{
- const f=setup(t,{access:null});f.ui.update(6000,.016);await tick();f.find('office-nearby').emit('click');await tick();
- assert.equal(f.find('office-request-dialog').open,true);f.find('office-request-send').emit('click');await tick();assert.ok(f.calls.some(c=>c.action==='request'));assert.equal(f.ui.active,false);
+test('uninvited visitors see invitation requirements and cannot provision an office',async t=>{
+ const f=setup(t,{access:null});f.ui.update(6000,.016);await tick();
+ assert.equal(f.find('office-personal'),null);assert.equal(f.find('office-workspace'),null);
+ assert.equal(f.find('office-enter').disabled,true);
+ assert.equal(f.calls.some(c=>c.api?.startsWith('workspace/')),false);
 });
 test('office modal exposes voice and movement and returns focus/resources on revocation',async t=>{
  const f=setup(t);f.ui.update(6000,.016);await tick();f.find('office-enter').emit('click');await tick();assert.equal(f.ui.active,true);
@@ -141,25 +143,9 @@ test('dragging during the elevator cannot preload an abrupt arrival camera turn'
  f.setPhase('office');f.ui.update(6200,.016);dialog.emit('pointerdown',{pointerId:2,clientX:100});dialog.emit('pointermove',{pointerId:2,clientX:200});assert.equal(f.ui.pose.yaw,-.4);
 });
 
-test('resident provisions their office and enters it without Jevica permissions',async t=>{
- const workspace={id:'office-'+'a'.repeat(64),ownerId:'owner',role:'owner',members:[]};
- const f=setup(t,{access:null,workspaces:[workspace]});f.ui.update(6000,.016);await tick();
- assert.ok(f.find('office-personal'));f.find('office-personal').emit('click');await tick();await tick();
- assert.ok(f.calls.some(c=>c.api==='workspace/provision'));
- assert.equal(f.player.office?.id,workspace.id);assert.equal(f.ui.active,true);
- f.ui.update(6400,.1);f.ui.update(6600,.1);await tick();assert.equal(f.calls.find(c=>c.action==='move').officeId,workspace.id);
- f.find('office-exit').emit('click');await tick();assert.equal(f.player.office,null);
-});
 
-test('pending collaborator accepts explicitly before shared office entry',async t=>{
- const workspace={id:'office-'+'b'.repeat(64),ownerId:'other',role:'invited',members:[]};
- const f=setup(t,{access:null,workspaces:[workspace]});f.ui.update(6000,.016);await tick();
- const picker=f.find('office-workspace');assert.ok(picker);picker.value=workspace.id;picker.emit('change');await tick();
- assert.equal(f.find('office-enter').disabled,true);assert.equal(f.find('office-accept').hidden,false);
- f.find('office-accept').emit('click');await tick();await tick();
- assert.ok(f.calls.some(c=>c.api==='workspace/accept'&&c.workspaceId===workspace.id));
- f.find('office-nearby').emit('click');await tick();assert.equal(f.player.office?.id,workspace.id);
-});
+
+
 
 
 test('office discovery stays idle away from the lobby and resumes when needed',async t=>{
@@ -167,13 +153,45 @@ test('office discovery stays idle away from the lobby and resumes when needed',a
  f.ui.update(6000,.016);await tick();f.ui.update(12000,.016);await tick();
  assert.equal(f.calls.length,0);
  f.player.position=[...officesFor(data)[0].entrance,0];f.ui.update(18000,.016);await tick();
- assert.ok(f.calls.some(c=>c.api==='workspace/list'));
+ assert.ok(f.calls.some(c=>c.action==='list'));
+});
+
+test('idle office discovery bounds DOM visibility checks independently of network polling',async t=>{
+ const f=setup(t,{workspaces:[]});f.player.position=[9999,9999];
+ const panel=f.find('office-lobby').parent;let measurements=0;
+ panel.checkVisibility=()=>{measurements++;return Boolean(panel.visible);};
+ for(let frame=0;frame<300;frame++)f.ui.update(6000+frame*1000/60,1/60);
+ await tick();assert.equal(f.calls.length,0,'an idle hidden panel sends no requests');
+ assert(measurements>0&&measurements<=20,`visibility checked ${measurements} times in five seconds`);
+});
+
+test('panel discovery responds within a quarter second and keeps its five-second request interval',async t=>{
+ const f=setup(t,{workspaces:[]});f.player.position=[9999,9999];
+ const panel=f.find('office-lobby').parent;let measurements=0;
+ panel.checkVisibility=()=>{measurements++;return Boolean(panel.visible);};
+ f.ui.update(6000,.016);panel.visible=true;f.ui.update(6001,.016);f.ui.update(6249,.016);await tick();
+ assert.equal(measurements,1);assert.equal(f.calls.length,0);
+ f.ui.update(6250,.016);await tick();assert(f.calls.some(c=>c.action==='list'));
+ const requests=f.calls.length;f.ui.update(11250,.016);await tick();assert.equal(f.calls.length,requests);assert.equal(measurements,2,'poll cooldown avoids layout reads');
+ f.ui.update(11251,.016);await tick();assert(f.calls.length>requests);assert.equal(measurements,3);
+});
+
+test('nearby discovery bypasses panel sampling while hidden and disconnected frames do no layout work',async t=>{
+ const f=setup(t,{workspaces:[]});f.player.position=[9999,9999];
+ const panel=f.find('office-lobby').parent;let measurements=0;
+ panel.checkVisibility=()=>{measurements++;return false;};
+ f.ui.update(6000,.016);assert.equal(measurements,1);
+ document.hidden=true;f.ui.update(7000,.016);document.hidden=false;f.mp.connected=false;f.ui.update(8000,.016);
+ assert.equal(measurements,1);assert.equal(f.calls.length,0);
+ f.mp.connected=true;f.ui.update(9000,.016);assert.equal(measurements,2);
+ f.player.position=[...officesFor(data)[0].entrance,0];f.ui.update(9001,.016);await tick();
+ assert(f.calls.some(c=>c.action==='list'),'approaching a lobby does not wait for the panel check');assert.equal(measurements,2);
 });
 
 test('an open office panel refreshes invitations even away from the lobby',async t=>{
  const f=setup(t,{workspaces:[]});f.player.position=[9999,9999];
- f.find('office-personal').parent.visible=true;f.ui.update(6000,.016);await tick();
- assert.ok(f.calls.some(c=>c.api==='workspace/list'));
+ f.find('office-lobby').parent.visible=true;f.ui.update(6000,.016);await tick();
+ assert.ok(f.calls.some(c=>c.action==='list'));
 });
 
 test('a legacy visit keeps its move commands unchanged',async t=>{

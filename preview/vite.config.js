@@ -33,6 +33,8 @@ export default defineConfig({
       '/api/groups': townHttp,
       '/api/events': townHttp,
       '/api/profile': townHttp,
+      '/api/workos': townHttp,
+      '/api/character': townHttp,
       '/api/office-desk': townHttp,
       '/api/cycling': townHttp,
       '/api/moderation': townHttp,

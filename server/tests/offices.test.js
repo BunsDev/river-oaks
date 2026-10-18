@@ -19,16 +19,14 @@ test('only authenticated Jevica accounts own offices; requesting or naming Jevic
   assert.equal(send('guest', 'list').offices[0].access, null);
   lobby('guest');assert.equal(send('guest', 'enter').error, 'office_permission_required');
   assert.equal(send('guest', 'invite', {peerId:'stranger'}).error, 'office_owner_required');
-  assert.equal(send('guest', 'request').ok, true);
+  assert.equal(send('guest', 'request').ok, false);
   assert.equal(send('guest', 'enter').error, 'office_permission_required');
   assert.equal(send('guest', 'enter', {ownerId:owner}).ok, false);
 });
-test('owner invitations and accepted requests allow entry; revocation ejects and persists', () => {
+test('owner invitations allow entry; revocation ejects and persists', () => {
   const {world, send, lobby} = setup();
-  send('guest', 'request');
-  assert.equal(send(owner, 'list').offices[0].requests[0].userId, 'guest');
-  assert.ok(send(owner, 'approve', {peerId:'guest'}).ok);
-  assert.equal(send('guest', 'list').offices[0].access, 'accepted');
+  assert.ok(send(owner, 'invite', {peerId:'guest'}).ok);
+  assert.equal(send('guest', 'list').offices[0].access, 'invited');
   assert.equal(send('stranger', 'list').offices[0].requests, undefined);
   assert.equal(send('guest', 'enter').error, 'office_lobby_required');
   lobby('guest');assert.ok(send('guest', 'enter').ok);
@@ -66,29 +64,10 @@ test('leaving the world clears visit presence; private office state cannot be fo
 test('checkpoint version fences old writers and retains permissions on geography migration',async()=>{
  const {migrateWorldCheckpoint}=await import('../world.js');
  const {createHash}=await import('node:crypto');const {world,send}=setup();send(owner,'invite',{peerId:'guest'});send('stranger','request');
- const checkpoint=world.checkpoint();assert.equal(checkpoint.version,11);
+ const checkpoint=world.checkpoint();assert.equal(checkpoint.version,12);
  const migrated=migrateWorldCheckpoint({fromData:data,toData:{...data,title:'Updated district'},checkpoint});assert.ok(migrated.ok);
- assert.deepEqual(migrated.checkpoint.payload.offices.grants,checkpoint.payload.offices.grants);assert.deepEqual(migrated.checkpoint.payload.offices.requests,checkpoint.payload.offices.requests);
+ assert.deepEqual(migrated.checkpoint.payload.offices.grants,checkpoint.payload.offices.grants);assert.deepEqual(migrated.checkpoint.payload.offices.requests,[]);
  const resign=v=>{const {checksum,...envelope}=v;v.checksum=createHash('sha256').update(JSON.stringify(envelope)).digest('hex');};
  const bad=structuredClone(checkpoint);bad.payload.offices.visits=[['guest',{id:'jevica-office',position:[0,999],yaw:0,at:0,budget:1}]];resign(bad);assert.equal(world.restore(bad).ok,false);
  const old=structuredClone(checkpoint);old.version=5;resign(old);assert.equal(world.restore(old).ok,false,'office data cannot masquerade as a v5 checkpoint');delete old.payload.offices;delete old.payload.screenings;resign(old);assert.equal(world.restore(old).ok,true,'real v5 checkpoint upgrades');
-});
-
-test('resident workspaces reuse the room with isolated visits and trusted membership only',async()=>{
- const {createMemoryOfficeWorkspaces}=await import('../office-workspaces.js');
- const store=createMemoryOfficeWorkspaces(),a=await store.provision('guest'),b=await store.provision('stranger');
- const {world,lobby}=setup();lobby('guest');lobby('stranger');
- const enter=(user,id,workspace)=>world.command(user,{type:'office',action:'enter',officeId:id},{officeWorkspace:workspace});
- assert.equal(enter('guest',a.id).ok,false);
- assert.equal(world.command('guest',{type:'office',action:'enter',officeId:a.id,officeWorkspace:a}).ok,false);
- assert.equal(enter('guest',a.id,a).ok,true);
- assert.equal(enter('stranger',b.id,b).ok,true);
- assert.notEqual(world.voiceSpaceOf('guest'),world.voiceSpaceOf('stranger'));
- assert.equal(world.snapshot().players.find(p=>p.id==='guest').office.id,a.id);
- const checkpoint=world.checkpoint(),restored=createSharedWorld(data);assert.equal(checkpoint.version,11);
- assert.equal(restored.restore(checkpoint).ok,true);
- assert.equal(restored.snapshot().players.find(p=>p.id==='guest').office.id,a.id);
- assert.equal(world.command('guest',{type:'office',action:'move',officeId:a.id,position:[0,1.3],yaw:0}).ok,false,'movement needs current authorization');
- assert.equal(world.snapshot().players.find(p=>p.id==='guest').office,null,'missing authorization ends personal visit');
- assert.equal(world.command('stranger',{type:'office',action:'leave',officeId:b.id}).ok,true,'leaving never requires membership');
 });

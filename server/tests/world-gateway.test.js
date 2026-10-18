@@ -6,9 +6,10 @@ import Redis from 'ioredis';
 import { WebSocket } from 'ws';
 import { createWorldGateway } from '../world-gateway.js';
 import { createRedisRoom } from '../redis-room.js';
+import { createRedisCharacterStore } from '../character-store.js';
 import { createRedisSecurity } from '../redis-security.js';
 import { JEVICA_ADMIN_USER_IDS } from '../admin.js';
-import { roomPrefixFor } from '../world-keys.js';
+import { roomPrefixFor, accountPrefixFor } from '../world-keys.js';
 import { approvedWaitlist } from './waitlist-fixture.js';
 
 test('Jevica publishes a second world that survives gateway replacement', {skip:!process.env.REDIS_URL,timeout:60_000},async t=>{
@@ -84,16 +85,16 @@ test('Jevica publishes a second world that survives gateway replacement', {skip:
     const receive=raw=>{const value=JSON.parse(raw);if(value.type==='result'&&value.requestId===requestId){socket.off('message',receive);resolve(value);}};
     socket.on('message',receive);socket.once('error',reject);socket.send(JSON.stringify({requestId,...body}));
   });
-  assert.equal((await command(second.socket,'look',{type:'appearance',appearance:'woman-casual'})).ok,true);
-  assert.equal((await command(second.socket,'gait',{type:'movement',movement:'beast'})).ok,true);
+  assert.equal((await command(second.socket,'look',{type:'appearance',appearance:'sable-human'})).ok,true);
+  assert.equal((await command(second.socket,'gait',{type:'movement',movement:'upright'})).ok,true);
   const riverRoom=(await gateway.worldFor('river-oaks')).room;
   const riverConnection=(await riverRoom.read()).connections.find(connection=>connection.userId===admin);
   assert.equal((await riverRoom.request({type:'heartbeat',userId:admin,connectionId:riverConnection.connectionId})).ok,true);
-  assert.equal((await riverRoom.read()).snapshot.players.find(player=>player.id===admin).appearance,'woman-casual');
-  assert.equal((await riverRoom.read()).snapshot.players.find(player=>player.id===admin).movement,'beast');
+  assert.equal((await riverRoom.read()).snapshot.players.find(player=>player.id===admin).appearance,'sable-human');
+  assert.equal((await riverRoom.read()).snapshot.players.find(player=>player.id===admin).movement,'upright');
   const sameAccountOtherWorld=await open('river-oaks');
-  assert.equal(sameAccountOtherWorld.snapshot.players.find(player=>player.id===admin).appearance,'woman-casual');
-  assert.equal(sameAccountOtherWorld.snapshot.players.find(player=>player.id===admin).movement,'beast');
+  assert.equal(sameAccountOtherWorld.snapshot.players.find(player=>player.id===admin).appearance,'sable-human');
+  assert.equal(sameAccountOtherWorld.snapshot.players.find(player=>player.id===admin).movement,'upright');
   assert.equal((await command(sameAccountOtherWorld.socket,'human',{type:'appearance',appearance:'sable-human'})).ok,true);
   const moonRoom=(await gateway.worldFor('moon-garden')).room;
   const moonConnection=(await moonRoom.read()).connections.find(connection=>connection.userId===admin);
@@ -167,6 +168,7 @@ test('Jevica publishes a second world that survives gateway replacement', {skip:
   await gateway.close();
   const staleRoom=createRedisRoom({redis,prefix:roomPrefixFor(namespace,'moon-garden'),worldId:'moon-garden',
     worldData:publishedData.world,regionSha256:oldHash,regionCatalog:gateway.catalog,
+    characters:createRedisCharacterStore({redis,prefix:accountPrefixFor(namespace)}),
     authorize:async()=>true,isAdmin:id=>id===admin});
   assert.equal((await staleRoom.tick()).snapshot.regionSha256,live.regionSha256);
   await staleRoom.close();

@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "provenance": "Repository-authored corrective fitted to the shipped rig; base asset source and license are recorded in preview/public/assets/characters/jevica.sources.json.",
+  "scope": "Offline symmetric seated fit; front garment samples against upper thighs only. Runtime/other-pose and rendered acceptance are separate.",
+  "command": "node scripts/bake-vesper-skirt.mjs --check",
+  "inputs": {
+    "pnpm-lock.yaml": "ba688f3b800f2cbdc5f1d6acec471d4622f7815d681edc7a74087749f4e21a31",
+    "preview/public/assets/characters/jevica.glb": "722b96e2fd77b36c85ec01c1594a35e3f3f39b5ec76dfc3c9a351ef1eb4f117a",
+    "preview/public/assets/characters/jevica.sources.json": "104ce65388e02ad9e08730334083f297269faf74341b0685ed6eac36bfb9e1a3",
+    "preview/src/avatars.js": "dfc79d4973890c051a37a6954b9b9354c044f78398ec0904dfb97aeea2017a14",
+    "preview/src/foot-placement.js": "7f2158d5cac806b40e3abb9caae40b4d32c5c143d8a888293c0a9958e5b5f69e",
+    "preview/src/foot-roll.js": "5c8de2ef4c1d3ed3905991d7cc16ed3ce249b7091b70ad90c6b5bfb6afc98528",
+    "preview/src/sole-support.js": "1d77dad5449799032809f815298af1acb01fffdaa54371aa71a4601a3794d18f",
+    "preview/src/skirt-geometry.js": "aa74e1d9dce55e6ffa298fd3bd6b9f0fa0baead3d48f4d1979cf27ec27741e0b",
+    "preview/src/skirt-skinning.js": "414fa6b5277c4798198b26f4b1c1c2f355e62c27748db157c9334b4e5515c0e5",
+    "preview/src/vesper-skirt-geometry.js": "b4356274316d84f6ffbd9ff030de7620a20f81da7a27f7a1f13a9380f1fb4bb5",
+    "scripts/lib/skirt-detail-fit.mjs": "0b9860411d4eabd17936c13e38a0fd3b33f87bd5c99c30f8374f8c3dd85b1b93",
+    "preview/tests/helpers/character-rig.js": "879b137a09b0bd35e9c32c7ffe57491f299207244f94a6e3cc8c5d71c667f7be",
+    "scripts/lib/skirt-seat-fit.mjs": "49113e25e7483e61e1663e32dc3fb4ad3ff38d861b76584c421f50e1ad0c2340",
+    "scripts/bake-vesper-skirt.mjs": "36fe61b4211605e8610637415775650fa3d01eab8862d266e20f8c886f93c522"
+  },
+  "outputSha256": "3bf6496042e756cb04b4837d7f2aa0116d6c7dd7edde787a5db666b8c3948d6e",
+  "vertices": 567,
+  "triangles": 960,
+  "trimVertices": 264,
+  "maximumTrimOffset": 0.023220979299252407,
+  "diagnostic": {
+    "activation": 1,
+    "flexion": [
+      1.5707963786629784,
+      1.5707963786629784
+    ],
+    "corrected": 250,
+    "contacts": 62,
+    "tested": 1002,
+    "penetrating": 0,
+    "minimumClearance": 0.02000000000000013,
+    "maximumStretch": 3.3458361292588634,
+    "minimumAreaRatio": 0.5022246779035653,
+    "failures": [],
+    "surfaceCorrections": 5
+  }
+}
