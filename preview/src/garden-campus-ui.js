@@ -47,17 +47,23 @@ export function createGardenCampusUI({ host, panelHost, getWorld, getMultiplayer
   const residents = () => (mp()?.snapshot?.players ?? []).filter(player => player.id !== mp()?.identity?.id).map(player => ({ id: player.id, name: player.name }));
   async function refresh() {
     const answer = await ensureCommands().list().catch(error => ({ ok: false, message: error.message }));
-    if (!answer?.ok) { status.textContent = answer?.message ?? 'The campus directory is unavailable.';return; }
+    if (!answer?.ok) { status.textContent = answer?.message ?? 'The campus directory is unavailable.';return false; }
     serverNow = answer.serverTimeMs ?? Date.now();listedAt = Date.now();lastAnswer = answer.campus;render(campusDirectory(answer.campus, { now: serverNow }));
     // The page predicts suite doors from this resident's own access; the server still decides every step (#508).
     const entitled = new Set((answer.campus.access ?? []).map(entry => entry.unitId));setCampusSuiteGate(unitId => entitled.has(unitId));
+    return true;
   }
   async function act(fn, done) {
     if (busy) return;busy = true;retry.hidden = true;status.textContent = 'Sending…';
     try {
       const result = await fn();
       if (result.retry) { last = { fn, done };retry.hidden = false;status.textContent = `${result.message} Your request is kept; Try again sends the same one.`; }
-      else { last = null;status.textContent = result.ok ? (result.replayed ? `${done} (already done).` : `${done}.`) : result.message;await refresh(); }
+      else {
+        // List again before saying how it went, so the answer never sits beside a row that
+        // still offers the old state; a directory that fails to list says so after it.
+        last = null;const said = result.ok ? (result.replayed ? `${done} (already done).` : `${done}.`) : result.message;
+        status.textContent = await refresh() ? said : `${said} ${status.textContent}`;
+      }
     } finally { busy = false; }
   }
   const retryLast = () => last && act(last.fn, last.done);
