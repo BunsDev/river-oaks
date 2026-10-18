@@ -1,0 +1,61 @@
+{
+  "recordedAt": "2026-10-18T17:08:32.181079+00:00",
+  "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-turning-20261018",
+  "base": "1d8740ada63aee0062e8471a5ffd6d9323517108",
+  "status": "core_checks_passed_with_documented_retries_and_skips",
+  "counts": {
+    "toolingPassed": 121,
+    "clientPassed": 3535,
+    "clientSkipped": 1,
+    "serverPassed": 668,
+    "serverSkipped": 204,
+    "desktopPassedInitially": 75,
+    "desktopRetriedPassed": 1,
+    "pythonPassed": 141
+  },
+  "execution": "Core tasks executed through existing runProfile with bounded Node concurrency and selected retries. Standard pnpm run verify was interrupted under machine contention; do not describe it as a passing uninterrupted invocation.",
+  "skips": [
+    "204 server tests skipped without Redis",
+    "1 pre-existing Vince glazing approach fixture skipped"
+  ],
+  "limits": [
+    "No live WorkOS acceptance",
+    "No hosted CI, deployment or human acceptance",
+    "No commits or pushes"
+  ],
+  "logs": [
+    {
+      "path": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-turning-20261018/turning-final-unit.log",
+      "sha256": "336d5360e90bd61023e2a310cf22919dd618e6f29f01763966f67b29b035b597"
+    },
+    {
+      "path": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-turning-20261018/curb-final.log",
+      "sha256": "0f8267481b825107f196d4980337a10b93496baf48542a6c0e15be58edb540d7"
+    },
+    {
+      "path": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-turning-20261018/preview-final.log",
+      "sha256": "929da270db030ca7757ec4fc447f050a40d8688814fda5766745440f382e71bd"
+    },
+    {
+      "path": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-turning-20261018/core-bounded.log",
+      "sha256": "a99d1ca5272f477eda1f899f44a80fdb93d237684395843be39cc40ce34356c9"
+    },
+    {
+      "path": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-turning-20261018/core-tail.log",
+      "sha256": "f652ba273b29a8547ee351cffe109787d12aaa11b8d324709f83c66d2947bf59"
+    },
+    {
+      "path": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-turning-20261018/desktop-final.log",
+      "sha256": "4357d44d70203a0cc1fdc9a5dad6cce1cbe9a2c5595ad651e9b1ec21cf9e5bbf"
+    },
+    {
+      "path": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-turning-20261018/core-rest.log",
+      "sha256": "142e2dca57721ede95d2ba1205f8fd337e134dd3f67ef5ce820375e6bfcc1e8d"
+    }
+  ],
+  "repositoryHygiene": {
+    "diffCheck": "passed",
+    "taskAudit": "failed: 24 existing unrelated gaps; none names turning-20261018-cody or penthouse-only-20261018-cody",
+    "log": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-turning-20261018/project-check-final.log"
+  }
+}

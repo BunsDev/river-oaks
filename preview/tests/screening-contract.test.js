@@ -64,3 +64,25 @@ test('position projects from the server anchor and never passes the duration or 
   assert.equal(screeningPositionAt({ ...playing, status: 'stopped', positionMs: 0 }, 1e12), 0);
   assert.equal(screeningPositionAt(playing, Number.NaN), 2000, 'a non-finite clock reads the anchored position');
 });
+
+// The host's chooser (#499): approved films only, the approved short first by name, not by order.
+test('a host chooses among approved films; the default is named, and fixtures are for tests only', async () => {
+  const { SCREENING_DEFAULT_MEDIA, screeningChoices } = await import('../src/screening-contract.js');
+  assert.equal(SCREENING_DEFAULT_MEDIA.ipic, 'ipic-original-v1');
+  assert.deepEqual(screeningChoices('ipic').map(film => film.id), ['ipic-original-v1'], 'the fixture is not a public choice');
+  assert.deepEqual(screeningChoices('ipic', { fixtures: true }).map(film => film.id), ['ipic-original-v1', 'ipic-fixture-v1'], 'tests may list it, default still first');
+  assert.deepEqual(screeningChoices('elsewhere'), []);
+  for (const film of screeningChoices('ipic', { fixtures: true })) assert.ok(parseScreeningCommand(control('start', { mediaId: film.id })).ok, `${film.id} is startable`);
+});
+
+test('every film says truthfully what it carries: duration, sound, captions and a poster or none', () => {
+  const short = SCREENING_MEDIA['ipic-original-v1'], fixture = SCREENING_MEDIA['ipic-fixture-v1'];
+  assert.equal(short.audio, 'silent', 'the approved short has a silent track; nothing may advertise dialogue');
+  assert.equal(short.poster, '/assets/ipic/screening/ipic-original-v1-poster.jpg');
+  assert.equal(fixture.audio, 'test tone');
+  assert.equal(fixture.poster, null, 'no poster: the chooser shows a neutral fallback');
+  for (const film of Object.values(SCREENING_MEDIA)) {
+    assert.ok(['silent', 'test tone', 'dialogue and music', 'music', 'dialogue'].includes(film.audio), `${film.id} audio`);
+    assert.ok(film.captions?.src && film.captions.srclang === 'en', `${film.id} has English captions`);
+  }
+});
