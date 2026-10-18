@@ -41,6 +41,13 @@ const EXITS = CAMPUS.entries.map(entry => {
   return { id: entry.id, at: [entry.position[0] + outward[0] * 6, entry.position[1] + outward[1] * 6] };
 });
 
+// The campus this code builds over a served garage, and its fingerprint, once per district.
+const campuses = new WeakMap();
+function campusOf(worldData) {
+  if (!campuses.has(worldData)) { const data = attachGardenCampus(worldData);campuses.set(worldData, { data, fingerprint: digest(data) }); }
+  return campuses.get(worldData);
+}
+
 function relocate(payload, environment, moves) {
   const placed = payload.players.filter(player => !moves.has(player.id)).map(player => player.position);
   for (const player of payload.players.filter(item => moves.has(item.id))) {
@@ -67,7 +74,9 @@ export function recoverDistrictGardensCheckpoint({ worldData, checkpoint, worldI
     // The same configuration the coordinator runs with, campus operators (#509) included.
     const options = { worldId, screeningHosts, officeLayout, ...(campusOperators ? { campusOperators } : {}), ...(now ? { now } : {}), ...(isAdmin ? { isAdmin } : {}) };
     const toCampus = Boolean(worldData.gardenCampus);
-    const fromData = toCampus ? detachGardenCampus(worldData) : attachGardenCampus(worldData);
+    // Decide before building any world: a rollback needs the exact campus this code builds.
+    const { data: fromData, fingerprint } = toCampus ? { data: detachGardenCampus(worldData), fingerprint: null } : campusOf(worldData);
+    if (!toCampus && checkpoint?.worldFingerprint !== fingerprint) return rejected();
     const from = createSharedWorld(fromData, options);
     let source = toCampus ? 'garage' : 'gardens';
     if (!from.restore(checkpoint).ok) {
