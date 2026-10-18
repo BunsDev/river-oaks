@@ -266,7 +266,7 @@ fresh account with no saved favorites. Note the exact commit, browser, device an
 fixture configuration.
 
 **Task card (hand over one at a time):**
-1. Open the character studio from People, choose a character, and make a version
+1. Find and open the character studio, choose a character, and make a version
    you like.
 2. Undo one change, compare with how it started, and save it as a draft.
 3. Wear it in town, then check that a second player sees the same look. The
@@ -277,13 +277,25 @@ fixture configuration.
 
 **Observation sheet (one row per participant):**
 
-| Code | Device / input / assistive tech | Time from People to first Wear | Tasks 1–4 done without coaching | Help requests (time, what) | Mistakes and recoveries | Explains Save draft vs Wear? | Second distinct look? | Satisfaction 1–5 | Would make another? | Notes |
+| Code | Device / input / assistive tech | Time from task 1 to first Wear | Tasks 1–4 done without coaching | Help requests (time, what) | Mistakes and recoveries | Explains Save draft vs Wear? | Second distinct look? | Satisfaction 1–5 | Would make another? | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | P1 | | | | | | | | | | |
 | P2 | | | | | | | | | | |
 | P3 | | | | | | | | | | |
 | P4 | | | | | | | | | | |
 | P5 | | | | | | | | | | |
+
+**Correction before the first session (2026-10-18):** the Studio opens from the
+character card in Play & rides, not from People. Task 1 now asks people to find it,
+and timing starts when task 1 is handed over. The pass gate below is unchanged.
+`docs/character-studio.md` (Usability trial protocol) has the facilitator setup:
+the local fixture, a Chrome Guest window per participant, an Incognito second
+player, and request blocking on `*/api/character/draft*` for the failed save.
+A headless dry run of that setup on `7ed86fc5` passed:
+- Each new browser context signed in as its own account.
+- Blocking the draft URL made Save fail with "The action is not confirmed. Your
+  edits are safe here. Retry to check the same action." The edit was kept.
+- After unblocking, Retry saved the draft.
 
 **Pass gate (fixed in advance):**
 - At least 4 of 5 finish tasks 1–4 without coaching, within 5 minutes to the first Wear.

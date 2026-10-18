@@ -93,7 +93,8 @@ Continue using server confirmed appearance/movement, Jevica ownership and existi
 
 ## Local editor increment (#441)
 
-The People controls open a native modal with an isolated Three.js preview.
+**Open character studio**, on the character card in Play & rides, opens a
+native modal with an isolated Three.js preview.
 Definitions remain staged: keep a draft in the current tab, discard back to the
 opening draft, or store up to eight owner-scoped favorites on this device.
 Unavailable device storage falls back to the visit. Undo/redo retains at most
@@ -204,19 +205,36 @@ until a participant asks for help or is stuck for 60 seconds. Record that assist
 
 Give each participant the same tasks:
 
-1. Open Studio from People, choose a character and make a variation they like.
+1. Find and open the Studio, choose a character and make a variation they like.
 2. Undo a change, compare with the starting look, and save the draft.
 3. Wear it in town and confirm that a second player sees the same look.
 4. Reconnect, change the look again, and wear the new version.
 5. Recover an unsaved edit after a simulated failed save, then create a second
    variation using any creative tools they discover.
 
-Record elapsed time from opening People to the first successful Wear, completion
+Record elapsed time from handing over task 1 to the first successful Wear, completion
 of each task, help requests, mistaken actions, recovery attempts, and whether the
 participant can explain Save draft versus Wear in town. Ask for satisfaction on a
 1–5 scale and whether they would make another look. Store anonymous participant
 codes and observations, not account identifiers, reference images or recordings
 without consent. Record the exact commit, browser/device and fixture configuration.
+
+Facilitator setup on one Mac, checked against `main` `7ed86fc5`:
+
+- Serve the local acceptance fixture with the Studio on, from a checkout of the
+  commit under test:
+  `RIVER_OAKS_ACCEPTANCE_FIXTURE=1 RIVER_OAKS_DEV_TOWN_PORT=8796 VITE_CHARACTER_STUDIO=true RIVER_OAKS_CHARACTER_STUDIO=1 pnpm exec vite --config preview/vite.config.js --port 5196 --strictPort --host 127.0.0.1`.
+  Point `WAITLIST_FILE` and `MODERATION_FILE` at a scratch folder. Dev sign-in
+  is loopback-only, so laptop sessions run on this Mac. Phone participants need
+  a sign-in-capable branch preview (ledger Round 5).
+- Give each participant a new Chrome Guest window at `http://127.0.0.1:5196/`.
+  That is a fresh local account with no favorites. Close it afterwards.
+- For task 3, the second player is an Incognito window opened from the
+  facilitator's own profile. Guest windows share one session, so a second Guest
+  window would be the same player.
+- For task 5, open DevTools in the participant's window, then More tools ›
+  Network request blocking. Add `*/api/character/draft*` and enable it before
+  the participant saves. Disable it once the failure shows, so Retry can succeed.
 
 Set these criteria before the first session: at least four of five participants
 complete tasks 1–4 without coaching within five minutes to first Wear; all five
