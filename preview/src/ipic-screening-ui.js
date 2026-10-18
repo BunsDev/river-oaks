@@ -4,7 +4,8 @@
 // and never changes the shared film. Leaving the venue, disconnecting or disposing releases
 // the media element, the screen texture, listeners and timers.
 import { SCREENING_MEDIA, SCREENING_VENUES } from './screening-contract.js';
-import { createScreeningPlayer, createServerClock, fitVideoToScreen } from './ipic-screening.js';
+import { createScreeningPlayer, createServerClock } from './ipic-screening.js';
+import { createScreenBinding } from './ipic-screening-screen.js';
 
 const CONTROLS = ['play-local', 'retry', 'host-start', 'host-play', 'host-pause', 'host-stop', 'sound', 'volume', 'captions', 'transcript', 'stop-watching'];
 const HOST_ACTIONS = { 'host-start': 'start', 'host-play': 'play', 'host-pause': 'pause', 'host-stop': 'stop' };
@@ -30,11 +31,18 @@ export function screeningControls({ shared, local, canHost = false, inAuditorium
   return CONTROLS.map(id => ({ id, label: labels[id], hidden: !show[id], disabled: id === 'sound' && !inAuditorium }));
 }
 
-export function screeningStatusText({ shared, local }) {
+// Why this viewer's film stopped, from the player's failure (#498). Each one offers Retry.
+const FAILURES = {
+  decode: 'This device couldn’t decode the film. Retry, or stay and talk.',
+  network: 'The film couldn’t download. Check the connection and Retry, or stay and talk.',
+  stalled: 'The film stopped loading. Retry, or stay and talk.',
+  playback: 'The film didn’t start on this device. Retry, or stay and talk.',
+};
+export function screeningStatusText({ shared, local, failure = null }) {
   const status = shared?.status ?? 'stopped', label = SCREENING_MEDIA[shared?.mediaId]?.label ?? 'the film';
   if (status === 'stopped') return 'Waiting for the host to start a film.';
   if (local === 'unsupported') return 'This device can’t play this film. You can stay, talk or leave.';
-  if (local === 'error') return 'The film didn’t load on this device. Retry, or stay and talk.';
+  if (local === 'error') return FAILURES[failure] ?? FAILURES.decode;
   if (status === 'paused') return 'Paused by the host.';
   if (status === 'ended') return 'The film has ended.';
   if (local === 'blocked') return 'Playing for everyone · Press Play film to watch here.';
@@ -95,7 +103,7 @@ export function createIpicScreening({ host, THREE, getMultiplayer, getVenue, get
       control.dataset.control = id; control.hidden = true; controls.append(control); buttons.set(id, control);
     }
     panel.append(status, caption, controls, transcript, video); host.append(panel);
-    const state = { token, clock, video, panel, status, caption, transcript, buttons, view: null, canHost: false, sound: false, captions: true, texture: null, saved: null, lastRender: '', syncAt: -Infinity, message: '', busy: false, textFor: media?.id ?? null };
+    const state = { token, clock, video, panel, status, caption, transcript, buttons, view: null, canHost: false, sound: false, captions: true, screen: createScreenBinding({ THREE }), lastRender: '', syncAt: -Infinity, message: '', busy: false, textFor: media?.id ?? null };
     state.player = createScreeningPlayer({ media: video, clock });
     state.player.setCaptions(true); state.player.setVolume(0.8);
     const listeners = [];
@@ -147,23 +155,13 @@ export function createIpicScreening({ host, THREE, getMultiplayer, getVenue, get
     render(state, true);
   }
 
-  // The film goes on the existing screen material; leaving restores it exactly.
-  function attach(state) {
-    const screen = getScreen?.(), material = screen?.material; if (!material || state.texture || state.video.readyState < 2) return;
-    state.saved = { map: material.map, emissiveMap: material.emissiveMap, color: material.color.clone(), emissive: material.emissive.clone(), emissiveIntensity: material.emissiveIntensity, material };
-    state.texture = new THREE.VideoTexture(state.video); state.texture.colorSpace = THREE.SRGBColorSpace;
-    // Keep the film's aspect on the wide screen; clamped edges show the media's black border.
-    const fit = fitVideoToScreen(state.video.videoWidth / state.video.videoHeight, screen.aspect);
-    state.texture.wrapS = state.texture.wrapT = THREE.ClampToEdgeWrapping;
-    state.texture.repeat.set(...fit.repeat); state.texture.offset.set(...fit.offset);
-    Object.assign(material, { map: state.texture, emissiveMap: state.texture, emissiveIntensity: 1 });
-    material.color.set('#ffffff'); material.emissive.set('#ffffff'); material.needsUpdate = true;
-  }
-  function detach(state) {
-    if (!state.saved) return;
-    const { material, map, emissiveMap, color, emissive, emissiveIntensity } = state.saved;
-    Object.assign(material, { map, emissiveMap, emissiveIntensity }); material.color.copy(color); material.emissive.copy(emissive); material.needsUpdate = true;
-    state.texture?.dispose(); state.texture = null; state.saved = null;
+  // The film goes on the existing screen material, one texture per loaded source and decoded size,
+  // and only once that source has a decoded frame: while a replacement loads, or after a stop or a
+  // failure, the screen is its idle self rather than a frame of an earlier film (#498).
+  const SHOWN = ['ready', 'playing', 'buffering', 'paused', 'ended', 'blocked'];
+  function bindScreen(state) {
+    const stats = state.player.stats(), { video } = state;
+    state.screen.sync({ screen: getScreen?.(), video, key: `${stats.generation}:${video.videoWidth}x${video.videoHeight}`, show: SHOWN.includes(stats.state) && video.readyState >= 2 });
   }
 
   // Captions and transcript belong to the film actually playing: the venue's default until the
@@ -200,11 +198,11 @@ export function createIpicScreening({ host, THREE, getMultiplayer, getVenue, get
     const venue = getVenue(), stats = state.player.stats();
     filmText(state, stats.mediaId);
     state.video.muted = !(state.sound && venue.auditorium);
-    const key = JSON.stringify([stats.state, stats.sharedStatus, state.view?.revision, state.canHost, state.sound, state.captions, venue.auditorium, state.message, state.transcript.hidden]);
+    const key = JSON.stringify([stats.state, stats.failure, stats.sharedStatus, state.view?.revision, state.canHost, state.sound, state.captions, venue.auditorium, state.message, state.transcript.hidden]);
     if (!force && key === state.lastRender) return;
     state.lastRender = key;
     const shared = state.view ? { ...state.view, status: stats.sharedStatus ?? state.view.status } : null;
-    state.status.textContent = state.message || screeningStatusText({ shared, local: stats.state });
+    state.status.textContent = state.message || screeningStatusText({ shared, local: stats.state, failure: stats.failure });
     for (const control of screeningControls({ shared, local: stats.state, canHost: state.canHost, inAuditorium: venue.auditorium, sound: state.sound, captions: state.captions })) {
       const element = state.buttons.get(control.id);
       element.hidden = control.hidden; element.disabled = control.disabled || (HOST_ACTIONS[control.id] && state.busy);
@@ -218,7 +216,7 @@ export function createIpicScreening({ host, THREE, getMultiplayer, getVenue, get
   function close() {
     const state = session; generation++;
     if (!state || state.stopped) { session = null; return; }
-    detach(state); state.player.dispose(); state.release(); state.panel.remove(); session = null;
+    state.screen.release(); state.player.dispose(); state.release(); state.panel.remove(); session = null;
   }
 
   return {
@@ -236,12 +234,14 @@ export function createIpicScreening({ host, THREE, getMultiplayer, getVenue, get
       if (!session) open();
       const state = session; if (state.stopped) return;
       if (now() - state.syncAt > 15_000) void sync(state);
-      state.player.tick(); attach(state); render(state); showCaption(state);
+      state.player.tick(); bindScreen(state); render(state); showCaption(state);
       if (!(at - state.clearedAt < 250)) { state.clearedAt = at; clearWalkingCard(state); }
     },
     inspect() {
       const state = session; if (!state || state.stopped) return { active: false, stopped: Boolean(state?.stopped) };
-      return { active: true, houseLights, ...state.player.stats(), canHost: state.canHost, currentTime: state.video.currentTime, paused: state.video.paused, muted: state.video.muted, attached: Boolean(state.texture), serverNow: state.clock.serverNow() };
+      const screen = state.screen.inspect();
+      return { active: true, houseLights, ...state.player.stats(), canHost: state.canHost, currentTime: state.video.currentTime, paused: state.video.paused, muted: state.video.muted,
+        attached: Boolean(screen.key), screen, decoded: [state.video.videoWidth, state.video.videoHeight], serverNow: state.clock.serverNow() };
     },
     get houseLights() { return houseLights; },
     dispose() { close(); },

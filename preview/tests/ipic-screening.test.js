@@ -8,7 +8,7 @@ const tick = () => new Promise(resolve => setImmediate(resolve));
 
 // A media element double: time advances only while playing, at its playback rate.
 function fakeMedia({ canPlay = type => type.startsWith('video/webm') ? 'probably' : 'maybe', play = () => Promise.resolve() } = {}) {
-  const listeners = new Map(), calls = { play: 0, pause: 0, load: 0, seeks: [] };
+  const listeners = new Map(), calls = { play: 0, pause: 0, load: 0, seeks: [], loaded: [] };
   let time = 0;
   const media = {
     calls, paused: true, playbackRate: 1, muted: true, volume: 1, readyState: 4, src: '', textTracks: [{ mode: 'disabled' }],
@@ -18,7 +18,11 @@ function fakeMedia({ canPlay = type => type.startsWith('video/webm') ? 'probably
     play() { calls.play++; const attempt = { aborted: false }; media.attempt = attempt;
       return play().then(() => { if (attempt.aborted) throw Object.assign(new Error('aborted'), { name: 'AbortError' }); media.paused = false; media.emit('playing'); }); },
     pause() { calls.pause++; if (media.attempt) media.attempt.aborted = true; media.paused = true; },
-    load() { calls.load++; media.readyState = 0; },
+    // load() resets the element: a pending play() is aborted, and the old resource's error clears.
+    load() { calls.load++; calls.loaded.push(media.src); if (media.attempt) media.attempt.aborted = true; media.paused = true; media.error = null; media.readyState = 0; },
+    // A failed resource: MediaError codes 1 aborted, 2 network, 3 decode, 4 source not supported.
+    fail(code) { media.error = { code }; media.emit('error'); },
+    error: null,
     removeAttribute(key) { if (key === 'src') media.src = ''; },
     addEventListener(type, fn) { (listeners.get(type) ?? listeners.set(type, new Set()).get(type)).add(fn); },
     removeEventListener(type, fn) { listeners.get(type)?.delete(fn); },
@@ -33,7 +37,7 @@ function setup({ media = fakeMedia(), offset = 0 } = {}) {
   const local = { now: 50_000 };
   const clock = createServerClock({ now: () => local.now });
   clock.observeSync(local.now + offset, local.now, local.now); // a zero-latency sync: server = local + offset
-  const player = createScreeningPlayer({ media, clock });
+  const player = createScreeningPlayer({ media, clock, now: () => local.now });
   return { media, clock, player, local };
 }
 
@@ -117,7 +121,7 @@ test('autoplay denial waits for a gesture without retry loops or a shared change
 test('a media error offers retry, and an unsupported film says so', async () => {
   const f = setup({ offset: 51_000 });
   f.player.apply(view()); f.player.tick(); await tick();
-  f.media.emit('error');
+  f.media.fail(3); f.media.fail(3); // the WebM, then the MP4 (#498 tries each once)
   assert.equal(f.player.stats().state, 'error');
   const loads = f.media.calls.load;
   f.player.retry();
@@ -200,4 +204,155 @@ test('captions come from the active cues of a tracked track, because the video i
   assert.equal(player.captionText(), '', 'between cues shows nothing');
   player.dispose();
   assert.equal(player.captionText(), '');
+});
+
+// Switching films and encodings (#498). Each film change, Retry and fallback starts a new load
+// generation, and nothing from an earlier generation can mark the replacement ready or playing.
+const ORIGINAL = SCREENING_MEDIA['ipic-original-v1'];
+const filmView = (film, more = {}) => view({ mediaId: film.id, durationMs: film.durationMs, ...more });
+
+test('a film switch fences the previous film: its late play cannot mark the replacement playing', async () => {
+  let resolve;
+  const media = fakeMedia({ play: () => new Promise(r => { resolve = r; }) });
+  const f = setup({ media, offset: 51_000 });
+  f.player.apply(filmView(ORIGINAL)); f.player.tick();
+  // The original's play() has resolved, but the player's continuation is still queued when the
+  // host's switch to the fixture arrives.
+  resolve(); await null;
+  f.player.apply(filmView(FILM, { screeningId: 'ipic-e1-2', revision: 3, anchorServerTimeMs: 101_000 }));
+  await tick(); await tick();
+  assert.deepEqual([f.player.stats().mediaId, f.player.stats().state], [FILM.id, 'loading'], 'the replacement is still loading');
+  assert.deepEqual(f.media.calls.loaded, [ORIGINAL.sources[0].src, FILM.sources[0].src]);
+  f.media.readyState = 4; f.media.emit('canplay');
+  f.player.tick(); resolve(); await tick();
+  assert.equal(f.player.stats().state, 'playing');
+  assert.ok(Math.abs(f.media.currentTime - 0) < 0.01, `the fixture starts at its own shared position (${f.media.currentTime})`);
+  f.player.apply(filmView(ORIGINAL, { screeningId: 'ipic-e1-3', revision: 5, anchorServerTimeMs: 101_000 }));
+  assert.deepEqual([f.player.stats().mediaId, f.player.stats().state, f.media.calls.loaded.at(-1)], [ORIGINAL.id, 'loading', ORIGINAL.sources[0].src]);
+});
+
+test('a new screening of the same film reloads it at the shared position', async () => {
+  const f = setup({ offset: 53_000 });
+  f.player.apply(filmView(ORIGINAL)); f.player.tick(); await tick();
+  f.player.apply(view({ status: 'stopped', mediaId: null, screeningId: null, revision: 2, positionMs: 0, anchorServerTimeMs: 0, durationMs: 0, hostId: null }));
+  f.player.tick();
+  assert.deepEqual([f.player.stats().state, f.media.paused, f.media.src], ['idle', true, ''], 'a stopped film releases its decoder');
+  f.player.apply(filmView(ORIGINAL, { screeningId: 'ipic-e1-2', revision: 3, anchorServerTimeMs: 102_500 }));
+  assert.deepEqual(f.media.calls.loaded, [ORIGINAL.sources[0].src, '', ORIGINAL.sources[0].src], 'a fresh load for the new screening');
+  f.media.readyState = 4; f.media.emit('canplay'); f.player.tick(); await tick();
+  assert.equal(f.player.stats().state, 'playing');
+  assert.ok(Math.abs(f.media.currentTime - 0.5) < 0.01, `seeked to the new screening's position (${f.media.currentTime})`);
+});
+
+test('each playable encoding is tried once per attempt; Retry starts a new bounded attempt', async () => {
+  const media = fakeMedia({ canPlay: () => 'maybe' });
+  const f = setup({ media, offset: 51_000 });
+  f.player.apply(filmView(ORIGINAL));
+  f.media.fail(4); // the WebM: format not supported after all
+  assert.deepEqual([f.player.stats().state, f.media.calls.loaded], ['loading', [ORIGINAL.sources[0].src, ORIGINAL.sources[1].src]], 'the MP4 is tried next');
+  f.media.fail(3); // the MP4 does not decode either
+  assert.deepEqual([f.player.stats().state, f.player.stats().failure], ['error', 'decode']);
+  assert.deepEqual(f.player.stats().attempts.map(a => [a.src, a.result]), [[ORIGINAL.sources[0].src, 'decode'], [ORIGINAL.sources[1].src, 'decode']]);
+  for (let i = 0; i < 5; i++) { f.local.now += 10_000; f.player.tick(); }
+  await tick();
+  assert.equal(f.media.calls.load, 2, 'no automatic retry once every encoding has failed');
+  assert.equal(f.media.calls.play, 0);
+  f.player.retry();
+  assert.deepEqual([f.player.stats().state, f.media.calls.loaded.at(-1), f.player.stats().attempts.length], ['loading', ORIGINAL.sources[0].src, 1], 'Retry begins again with the first encoding');
+});
+
+test('a fallback encoding resumes at the shared position with this viewer’s sound and captions', async () => {
+  const media = fakeMedia({ canPlay: () => 'maybe' });
+  const f = setup({ media, offset: 54_000 });
+  f.player.setMuted(false); f.player.setVolume(0.4); f.player.setCaptions(true);
+  f.player.apply(filmView(ORIGINAL));
+  f.media.fail(3);
+  f.local.now += 1000; f.media.readyState = 4; f.media.emit('canplay');
+  f.player.tick(); await tick();
+  assert.equal(f.player.stats().state, 'playing');
+  assert.ok(Math.abs(f.media.currentTime - 5) < 0.01, `joined the running film at 5 s (${f.media.currentTime})`);
+  assert.deepEqual([f.media.muted, f.media.volume, f.media.textTracks[0].mode], [false, 0.4, 'hidden']);
+  assert.equal(f.player.stats().source.src, ORIGINAL.sources[1].src, 'the MP4 is what decoded');
+  assert.deepEqual(f.player.stats().attempts.map(a => a.result), ['decode', 'decoded']);
+});
+
+test('a network failure is not a codec failure: no second encoding, and Retry is offered', () => {
+  const f = setup({ media: fakeMedia({ canPlay: () => 'maybe' }), offset: 51_000 });
+  f.player.apply(filmView(ORIGINAL));
+  f.media.fail(2);
+  assert.deepEqual([f.player.stats().state, f.player.stats().failure, f.media.calls.load], ['error', 'network', 1]);
+});
+
+test('an aborted load is intentional, not a playback failure', () => {
+  const f = setup({ offset: 51_000 });
+  f.player.apply(filmView(ORIGINAL));
+  f.media.fail(1);
+  assert.deepEqual([f.player.stats().state, f.player.stats().failure], ['loading', null]);
+});
+
+test('a stalled load or buffer gives up after the documented limit, with Retry instead of an endless spinner', async () => {
+  const { SCREENING_LOAD } = await import('../src/ipic-screening.js');
+  const f = setup({ media: fakeMedia({ canPlay: () => 'maybe' }), offset: 51_000 });
+  f.player.apply(filmView(ORIGINAL));
+  f.media.readyState = 0;
+  f.local.now += SCREENING_LOAD.stallMs - 1; f.player.tick();
+  assert.equal(f.player.stats().state, 'loading');
+  f.local.now += 2; f.player.tick();
+  assert.deepEqual([f.player.stats().state, f.player.stats().failure, f.media.calls.load], ['error', 'stalled', 1], 'a stall is not blamed on the codec');
+  f.player.retry(); f.media.readyState = 4; f.media.emit('canplay'); f.player.tick(); await tick();
+  f.media.emit('waiting');
+  assert.equal(f.player.stats().state, 'buffering');
+  f.local.now += SCREENING_LOAD.stallMs + 1; f.player.tick();
+  assert.deepEqual([f.player.stats().state, f.player.stats().failure], ['error', 'stalled']);
+});
+
+test('autoplay refusal waits for a gesture and never cycles encodings', async () => {
+  const media = fakeMedia({ canPlay: () => 'maybe', play: () => Promise.reject(Object.assign(new Error('blocked'), { name: 'NotAllowedError' })) });
+  const f = setup({ media, offset: 51_000 });
+  f.player.apply(filmView(ORIGINAL)); f.player.tick(); await tick();
+  assert.deepEqual([f.player.stats().state, f.player.stats().failure, f.media.calls.load, f.media.calls.play], ['blocked', 'autoplay', 1, 1]);
+});
+
+test('Retry while a replacement loads retries the replacement, never the previous film', () => {
+  const f = setup({ offset: 51_000 });
+  f.player.apply(filmView(ORIGINAL));
+  f.media.fail(2);
+  f.player.apply(filmView(FILM, { screeningId: 'ipic-e1-2', revision: 3 }));
+  f.player.retry();
+  assert.deepEqual([f.player.stats().mediaId, f.player.stats().state, f.media.calls.loaded.at(-1)], [FILM.id, 'loading', FILM.sources[0].src]);
+});
+
+test('disposal during recovery: a late load or play cannot restart the film', async () => {
+  let resolve;
+  const media = fakeMedia({ play: () => new Promise(r => { resolve = r; }) });
+  const f = setup({ media, offset: 51_000 });
+  f.player.apply(filmView(ORIGINAL)); f.media.fail(2);
+  f.player.retry(); f.media.readyState = 4; f.media.emit('canplay'); f.player.tick();
+  f.player.dispose();
+  resolve(); f.media.emit('canplay'); f.media.emit('playing'); await tick();
+  assert.deepEqual([f.player.stats().state, f.media.paused, f.media.calls.play], ['disposed', true, 1]);
+});
+
+test('presented frames and raw drift are reported separately from the requested time', async () => {
+  // requestVideoFrameCallback reports what the compositor actually presented; a seek request and
+  // the drift reset after it are not evidence of a visible frame (#497 research decision 7).
+  const callbacks = new Map(); let ids = 0;
+  const media = Object.assign(fakeMedia(), { requestVideoFrameCallback: fn => { callbacks.set(++ids, fn); return ids; }, cancelVideoFrameCallback: id => callbacks.delete(id) });
+  const present = (mediaTime, presentedFrames) => { const due = [...callbacks.values()]; callbacks.clear(); for (const fn of due) fn(1000, { mediaTime, presentedFrames }); };
+  const f = setup({ media, offset: 54_000 });
+  f.player.apply(filmView(ORIGINAL)); f.player.tick(); await tick();
+  assert.equal(f.player.stats().presented, null, 'no frame has been presented yet');
+  present(4.0, 1);
+  assert.deepEqual([f.player.stats().presented.mediaTimeMs, f.player.stats().presented.frames], [4000, 1]);
+  f.media.currentTime = 3.0; f.player.tick(); // a full second behind: the player seeks
+  assert.equal(f.player.stats().driftMs, 0, 'the correction diagnostic resets after a seek request');
+  assert.ok(f.player.stats().measuredDriftMs <= -900, `but the measured drift is kept (${f.player.stats().measuredDriftMs})`);
+  const stale = [...callbacks.values()];
+  f.player.apply(filmView(FILM, { screeningId: 'ipic-e1-2', revision: 3 }));
+  assert.equal(f.player.stats().presented, null, 'a new film has presented nothing yet');
+  assert.equal(callbacks.size, 1, 'the previous film’s frame request was cancelled and a new one made');
+  for (const fn of stale) fn(1000, { mediaTime: 9.0, presentedFrames: 2 }); // one that fires anyway
+  assert.equal(f.player.stats().presented, null, 'a frame from the previous film is not counted for the new one');
+  present(0.04, 3);
+  assert.equal(f.player.stats().presented.mediaTimeMs, 40);
 });

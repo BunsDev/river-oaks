@@ -156,10 +156,30 @@ async (host, viewer) => {
   // fixture by command, and the viewer's caption track and transcript follow it (#365 review).
   const current = await host.evaluate(() => window.__riverMultiplayer().snapshot.screenings.find(item => item.venueId === 'ipic'));
   const swapBase = { type: 'screening', venueId: 'ipic', epoch: current.epoch };
+  // Every rendered frame of the viewer through the switch (#498): the screen must never show a frame
+  // while the next film is still loading, nor keep the stopped film's last frame.
+  await viewer.evaluate(() => {
+    const log = window.__screenSwitchLog = [];
+    const step = () => { const s = window.__riverScreening(); if (s?.active) log.push({ state: s.state, shared: s.sharedStatus, attached: s.attached, mediaId: s.mediaId, key: s.screen?.key ?? null, decoded: s.decoded?.join('x') ?? null });
+      if (!window.__screenSwitchDone && log.length < 20000) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  });
+  const shortKey = await viewer.evaluate(() => window.__riverScreening().screen?.key ?? null);
   const halted = await hostCommand({ ...swapBase, action: 'stop', expectedRevision: current.revision, operationId: 'journey-stop-002' });
+  await viewer.waitForFunction(() => window.__riverScreening().sharedStatus === 'stopped', null, { timeout: 15000 });
+  await viewer.evaluate(() => new Promise(done => { let n = 0; const step = () => (++n > 3 ? done() : requestAnimationFrame(step)); requestAnimationFrame(step); }));
+  const idle = await screening(viewer);
+  check(idle.attached === false && idle.state === 'idle', `a stopped film leaves the screen idle, not on its last frame: ${JSON.stringify({ state: idle.state, attached: idle.attached })}`);
   const fixture = await hostCommand({ ...swapBase, action: 'start', mediaId: 'ipic-fixture-v1', expectedRevision: halted?.screening?.revision, operationId: 'journey-start-02' });
   check(fixture?.ok === true, `host started the fixture by command: ${JSON.stringify(fixture)}`);
   await viewer.waitForFunction(revision => window.__riverScreening().revision === revision && window.__riverScreening().mediaId === 'ipic-fixture-v1', fixture.screening.revision, { timeout: 15000 });
+  await viewer.waitForFunction(() => window.__riverScreening().state === 'playing' && window.__riverScreening().attached, null, { timeout: 30000 });
+  const frames = await viewer.evaluate(() => { window.__screenSwitchDone = true; return window.__screenSwitchLog; });
+  const stale = frames.filter(item => item.attached && (['loading', 'idle', 'error'].includes(item.state) || item.shared === 'stopped'));
+  check(frames.length > 0 && stale.length === 0, `no frame of an earlier film while the next loads or after a stop (${stale.length} of ${frames.length} frames): ${JSON.stringify(stale.slice(0, 3))}`);
+  const after = frames.at(-1);
+  check(after.decoded === '640x360' && after.key && after.key !== shortKey, `the fixture got its own screen texture at its own size: ${JSON.stringify({ shortKey, after })}`);
+  checks.push(`stop left the screen idle and the fixture (640×360) replaced the short (1280×720) with its own texture; no stale frame in ${frames.length} rendered frames`);
   // The panel follows on its next frame; a slow software-rendered frame is allowed up to 10 s.
   await viewer.waitForFunction(() => document.querySelector('#ipic-screening video track')?.getAttribute('src')?.endsWith('fixture-v1.en.vtt'), null, { timeout: 10000 }).catch(() => {});
   const text = await viewer.evaluate(async () => {
