@@ -1297,6 +1297,14 @@ export function migrateWorldCheckpoint({fromData,toData,checkpoint,worldId=DEFAU
   // Simulation and NPC routes depend on geography. Account-owned state does not.
   payload.revision=previous.revision+1;
   for(const field of ['ledgers','chat','appearances','movements','builds','inventory'])payload[field]=copy(previous[field]??[]);
+  // A creator region compiled before #491 walked on bare terrain; its revision compiles the
+  // street datum (STREET.walkSurfaceOffset). Creations standing on that datum, outdoors or in
+  // a built-in room, move with it. Those on a generated level keep its floor.
+  const datumShift=(toData.walkSurfaceOffset??0)-(fromData.walkSurfaceOffset??0);
+  if(datumShift){
+    const oldEnvironment=createWalkingEnvironment(fromData);
+    for(const item of payload.builds)if(!buildRoomAt(oldEnvironment,item.position)?.generatedPlan)item.ground+=datumShift;
+  }
   const retainedHomes=new Set((toData.stores??[]).filter(store=>store.category==='home' && store.access==='owner').map(store=>store.id));
   const officeIds=new Set(officesFor(toData).map(o=>o.id));
   payload.offices={grants:(previous.offices?.grants??[]).filter(([id])=>officeIds.has(id)),requests:(previous.offices?.requests??[]).filter(([id])=>officeIds.has(id)),visits:[]};

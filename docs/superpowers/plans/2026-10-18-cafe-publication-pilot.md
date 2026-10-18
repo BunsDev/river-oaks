@@ -339,11 +339,11 @@ branch.
 - The Café check now keeps the terrace and the arrival off the whole drawn street section
   (curb plus 3.81 m sidewalk).
 - The journey arrives by store travel.
-- The route-to-street check is proven against the authoritative environment only.
+- The route-to-street check was proven against the authoritative environment only. Since
+  #495, the browser journey also walks the guest across the street both ways.
 
-**Next action:** a separate fix, so the server's creator-region ground matches the street
-surfaces it lets clients draw, or the drawn curbs stay within tolerance. It needs its own
-issue.
+**Resolved:** filed as #491 and fixed by #495 (merged `a5e2a8ec`). Creator regions now compile
+the district's 0.2 m walking datum. See the update section below.
 
 ## Limits and decisions left open
 
@@ -412,10 +412,57 @@ issue.
     idle-slice test, at 253.2 ms under load average 104. Base fails that test too under
     load.
 
+## Update from `main` after #495 (2026-10-18)
+
+#495 (fixing #491) changed creator-region compile output, so this branch conflicted with
+`main` and its golden digests no longer held. #489 stays a draft; this update only keeps it
+current.
+
+**Merge:** `main` `a5e2a8ec` merged into the branch, with two conflicts resolved.
+- `server/region-package.js`: compiles `walkSurfaceOffset: STREET.walkSurfaceOffset` from
+  #495, plus this branch's approved-space outdoor collision rings.
+- `preview/e2e/shared-runner.js`: `development-publish` runs both `creator-street-crossing`
+  and `creator-approved-cafe`, each from a fresh town.
+
+**Golden digests:** recomputed on a clean export of `a5e2a8ec`, without the adapter.
+
+| Case | Compiled SHA-256 (was, on `d109648a`) | Now |
+| --- | --- | --- |
+| plain | `fdc6a3a5…` | `72b4b51b…` |
+| legacy venue | `5569cd9e…` | `25a5b5f0…` |
+| legacy restaurant | `1cf6a022…` | `32502ee4…` |
+| generated | `ec57bed9…` | `66e9d7a0…` |
+
+The four editable round-trip digests are unchanged. The merged branch's plain-region output
+already equalled `main`'s, so the adapter still leaves legacy output byte-identical.
+
+**What did not change:**
+- The approved plan digest is still `5a00bb04…`, with the same source and the door at
+  `[0, −12]`.
+- The record and asset pins are unchanged.
+- The Café floor stays at the doorway's terrain height (`store.facade[2]`), as generated
+  levels do. So the step down at the Café door is 0.2 m below the street datum, within the
+  server's tolerance.
+- #495's revision carry leaves creations on approved levels where they are, because
+  approved rooms carry `generatedPlan`.
+
+**Journey:** the guest now walks from the spawn across Harbour Street to the Café, and back
+across it after leaving. Before #495 the server refused that walk. The owner still arrives
+by store travel.
+
+**Checks on the merged tree:**
+
+| Command | Result |
+| --- | --- |
+| `node --test` approved-space region, transport, creator-street-ground; preview approved-space | 20/20 |
+| `pnpm run verify` (core) | passed. Agent 116/116; preview 3,416/3,417 (1 skip); server 614 passed, 157 Redis skips; desktop 76/76 |
+| `pnpm run test:shared development-publish` | 5/5 journeys passed (receipt `data/reports/cafe-420-shared-main495.json`, 11:32Z, ANGLE Metal M3 Max) |
+| `creator-approved-cafe` in that run | passed 22 checks in 203 s, the run-9 checks plus three: the guest starts south of the street `[1.6, −32]`; the server keeps the guest at the Café arrival after crossing `[−0.02, −14.28]`; after leaving, the server keeps the guest back across the street `[1.62, −32.24]` |
+| `REDIS_URL=<disposable> node --test` approved-space-redis, world-catalog, redis-room, world-gateway, office-world-lifecycle, world-invite-gateway, distributed-app, approved-space region/transport, creator-street-ground | 64/64, 0 skipped |
+
 ## Next step
 
-1. **If Val decides to land #489:** update it from `main`, then `pnpm run land 489`.
-   Merging and deploying are not granted by the pilot.
-3. **Separate issue:** the creator-street ground mismatch above.
-4. **Optional:** `pnpm run verify full` (Redis, audit, history scan and every browser
+1. **If Val decides to land #489:** update it from `main` again if needed, then
+   `pnpm run land 489`. Merging and deploying are not granted by the pilot.
+2. **Optional:** `pnpm run verify full` (Redis, audit, history scan and every browser
    journey) on an unloaded machine.

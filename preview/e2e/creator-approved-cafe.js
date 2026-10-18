@@ -17,9 +17,8 @@ async page => {
   const waitLevel = (tab, playerId, levelId) => tab.waitForFunction(({ playerId, levelId }) => {
     const player = window.__riverMultiplayer?.()?.snapshot?.players?.find(item => item.id === playerId);
     return Boolean(player) && (player.levelId ?? null) === levelId; }, { playerId, levelId });
-  // Arrive by the store's travel point, as other creator journeys do: walking across a
-  // creator street is refused by the server today, because the client stands on the drawn
-  // curb and sidewalk while the server walks on bare terrain (recorded in the #420 ledger).
+  // The owner arrives by the store's travel point; the guest walks from the spawn across
+  // Harbour Street, which the server accepts since #495 (#491).
   const arrive = async tab => {
     if (await tab.locator('#panel-toggle').getAttribute('aria-expanded') === 'false') await tab.locator('#panel-toggle').click();
     await openHudSpace(tab, 'explore-section');
@@ -159,9 +158,17 @@ async page => {
       check(await levelOf(page, ownerId) === level, `The owner reaches ${target.label} on the Café floor`);
     }
 
-    // The guest enters by the door too and sees the owner where the server put them.
-    await arrive(peer); await tidy(peer);
+    // The guest walks from the spawn across Harbour Street to the Café, then in by the door,
+    // and sees the owner where the server put them.
+    const serverPose = (tab, playerId) => tab.evaluate(id => window.__riverMultiplayer?.()?.snapshot?.players?.find(item => item.id === id)?.position ?? null, playerId);
+    const street = data.world.roads.find(road => road.id === 'harbour-street'), kerbNorth = street.points[0][1];
+    const start = await serverPose(peer, guestId);
+    check(start && start[1] < kerbNorth - 4, `The guest starts south of Harbour Street: ${JSON.stringify(start)}`);
+    await tidy(peer);
     await move(peer, plan.routes.arrival);
+    await peer.waitForTimeout(800);
+    const crossed = await serverPose(page, guestId);
+    check(Math.hypot(crossed[0] - plan.routes.arrival[0], crossed[1] - plan.routes.arrival[1]) < 1, `The server keeps the guest at the Café arrival after crossing the street: ${JSON.stringify(crossed)}`);
     await move(peer, [plan.placement.door[0], plan.placement.door[1] + 1.4]);
     await waitLevel(peer, guestId, level); await waitLevel(page, guestId, level);
     const seating = plan.routes.targets[0];
@@ -189,6 +196,11 @@ async page => {
     await peer.waitForTimeout(800);
     await capture(peer, 'guest-departed');
     check(true, 'The guest walks out of the Café to its arrival');
+    // Clear departure: on across the street, back to where the guest joined.
+    await move(peer, [start[0], start[1]]);
+    await peer.waitForTimeout(800);
+    const away = await serverPose(page, guestId);
+    check(away[1] < kerbNorth - 4, `The server keeps the guest back across Harbour Street: ${JSON.stringify(away)}`);
 
     // Rollback: the owner restores the plain region. Both clients are moved out explicitly.
     const rollback = await page.evaluate(async worldId => {

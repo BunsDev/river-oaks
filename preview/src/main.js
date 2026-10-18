@@ -22,7 +22,7 @@ import { bindRenderVisibility } from './render-lifecycle.js';
 import { createRenderAudit } from './render-audit.js';
 import { localToScene, terrainHeight } from './geometry.js';
 import { setupThemeControls } from './theme.js';
-import { configureMaterials, physicalSurface, paverSurface, loadEnvironment } from './materials.js';
+import { configureMaterials, physicalSurface, loadEnvironment } from './materials.js';
 import { setupDistrictUI } from './district-ui.js';
 import { setupSidebar, setupSidebarSections } from './sidebar.js';
 import { setupRailNavigation } from './rail-navigation.js';
@@ -89,7 +89,7 @@ import './visual-finish.css';
 import './retro-finish.css';
 import './rail-navigation.css';
 import { setupUIMotion } from './ui-motion.js';
-import { STREET } from './street-profile.js';
+import { buildPlazaSurface } from './plaza-surface.js';
 import { createBirdCams, BIRD_WINGSPAN } from './bird-cams.js';
 import { FACE_SHAPES } from './resident-face.js';
 import { seeThroughNearCameraIn } from './near-camera-fade.js';
@@ -568,35 +568,7 @@ function buildGround(data) {
   const width = east - west, depth = north - south;
   const center = [(east + west) / 2, (north + south) / 2];
   const terrain = data.terrain;
-  let surface;
-  if (terrain) {
-    const positions = [], indices = [], uvs = [];
-    for (let row = 0; row < terrain.height; row += 1) {
-      for (let column = 0; column < terrain.width; column += 1) {
-        const x = terrain.grid_origin_m[0] + column * terrain.spacing_m[0];
-        const y = terrain.grid_origin_m[1] + row * terrain.spacing_m[1];
-        positions.push(x, terrain.heights_m[row * terrain.width + column], -y);
-        uvs.push(x, -y);
-        if (row < terrain.height - 1 && column < terrain.width - 1) {
-          const a = row * terrain.width + column, b = a + 1, c = a + terrain.width, d = c + 1;
-          indices.push(a, b, c, b, d, c);
-        }
-      }
-    }
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-    geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
-    geometry.setIndex(indices);
-    geometry.computeVertexNormals();
-    surface = new THREE.Mesh(geometry, paverSurface());
-    surface.position.y = STREET.plazaOffset;
-  } else {
-    surface = new THREE.Mesh(new THREE.PlaneGeometry(width, depth), paverSurface());
-    surface.rotation.x = -Math.PI / 2;
-    surface.position.set(center[0], 0, -center[1]);
-  }
-  surface.receiveShadow = true;
-  group.add(surface);
+  group.add(buildPlazaSurface(data));
   const minimum = terrain ? terrain.heights_m.reduce((low, value) => Math.min(low, value), Infinity) : 0;
   const base = new THREE.Mesh(new THREE.BoxGeometry(width, 35, depth), new THREE.MeshStandardMaterial({ color: '#635745', roughness: 1 }));
   base.position.set(center[0], minimum - 18, -center[1]);

@@ -1,0 +1,44 @@
+{
+  "createdAt": "2026-10-18T09:51:43.532Z",
+  "status": "passed",
+  "modes": [
+    "development-publish"
+  ],
+  "rendering": "Full rendering",
+  "scope": "Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.",
+  "results": [
+    {
+      "name": "creator-street-crossing",
+      "status": "passed",
+      "seconds": 42.772,
+      "result": {
+        "passed": true,
+        "checks": [
+          "The owner publishes the street fixture: {\"status\":201,\"body\":{\"world\":{\"id\":\"street-walk\",\"title\":\"Street Walk\",\"description\":\"\",\"template\":\"region-v1\",\"ownerId\":\"dev-9f8782d7379c\",\"createdAt\":1792317111021,\"regionSha256\":\"309191d4d6a35405bbdf67918bcbf1bb191b574edc8bd86d36b1885444d9c173\"}}}",
+          "The visitor starts south of Harbour Street: [0,-40,0.2]",
+          "The server keeps the visitor on the far side of the street: [1.3371468462233555e-15,-14.762062483696901,0.2]",
+          "The server keeps the visitor back on the near side: [0.0000012629491100278554,-36.23620249558695,0.2]",
+          "No page errors: "
+        ],
+        "positions": {
+          "start": [
+            0,
+            -40,
+            0.2
+          ],
+          "across": [
+            1.3371468462233555e-15,
+            -14.762062483696901,
+            0.2
+          ],
+          "back": [
+            0.0000012629491100278554,
+            -36.23620249558695,
+            0.2
+          ]
+        }
+      }
+    }
+  ],
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)"
+}

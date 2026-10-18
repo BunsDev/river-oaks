@@ -73,17 +73,18 @@ test('one rigid transform: no object is scaled, and every distance in the review
 });
 
 test('plain region-v1 and generation-v1 output and editable round trips are byte-identical', () => {
-  // Digests recorded on main d109648a before the adapter existed.
+  // Digests recorded on main a5e2a8ec, without the adapter. Compiled output moved from
+  // d109648a's when #495 compiled the 0.2 m walking datum; the editable forms did not.
   const withInterior = interior => ({ ...sample, buildings: sample.buildings.map((building, index) => index ? building : { ...building, interior }) });
   const cases = [
-    ['plain', sample, 'Sample Region', {}, 'fdc6a3a54de265d2827143eb875495b394d497e4b1b23e7138bf798cd31d507a', 'ced33b0bb4e2972e14edf03788a2b457d67ee37ae8cc3482b07d48db98fc7392'],
+    ['plain', sample, 'Sample Region', {}, '72b4b51b395050680e05a8a6ea60b32057d484c76b2d0c2f0d7dff72a209f9d6', 'ced33b0bb4e2972e14edf03788a2b457d67ee37ae8cc3482b07d48db98fc7392'],
     ['legacy venue', withInterior({ name: 'Moon Pavilion Gallery', category: 'art', entrance: 'south' }), 'Moon Garden', { worldId: 'moon-garden' },
-      '5569cd9e4114055a49981636a79f428b18c61ce517a23faf66d07053ace53395', 'b8eed0890dee7b263af7095dfb17aad5674b799a5f1cded81eb956155c29eb53'],
+      '25a5b5f0481b6677801c2f0c08c4773a7c8ffe77aefa8f9bfd65e4b24025bcfc', 'b8eed0890dee7b263af7095dfb17aad5674b799a5f1cded81eb956155c29eb53'],
     ['legacy restaurant', withInterior({ name: 'Moon Café', category: 'restaurant', entrance: 'south' }), 'Moon Garden', { worldId: 'moon-garden' },
-      '1cf6a022f3817fa0b07eb8a8208e6d2613f5dd21cb5598a26d166bb8468c443a', 'c3c1e3f604ac798c48fe2f157e1c3af6810521eb944d48d2aa479ab7859f33d2'],
+      '32502ee419d9ed4597e80edff4c09492bf7c4cde896e01ee061c502edda1175f', 'c3c1e3f604ac798c48fe2f157e1c3af6810521eb944d48d2aa479ab7859f33d2'],
     ['generated', withInterior({ name: 'Moon Pavilion Gallery', category: 'art', entrance: 'south', generation: { version: 1, seed: 'moon-gallery-01', levels: 2,
       overrides: [{ targetId: 'moon-pavilion/l0/finish/floor', material: 'concrete' }] } }), 'Moon Garden', { worldId: 'moon-garden' },
-      'ec57bed9a40aac38020b18e566995ad5b0b42cc416115da38a8d46fc09c2c0d0', 'bcfeded59b1d0d2f05e46730d4196361992f25e267cc616a26d102e308c1a86a'],
+      '66e9d7a01fd22c0e093dc64b738eaba832d53c7e994d765105d9f5d8652bb850', 'bcfeded59b1d0d2f05e46730d4196361992f25e267cc616a26d102e308c1a86a'],
   ];
   for (const [name, value, title, options, compiled, editable] of cases) {
     const world = compileRegionPackage(value, title, options);

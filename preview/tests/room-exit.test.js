@@ -12,7 +12,7 @@ test('Step outside is offered near the street door, never from deep inside a ven
   assert.equal(ROOM_EXIT_REACH, 12);
   assert.equal(nearRoomExit(ipic, at(ipic, 0, 1)), true, 'reception, by the doors');
   assert.equal(nearRoomExit(ipic, at(ipic, 0, 5.5)), true, 'the back of reception');
-  assert.equal(nearRoomExit(ipic, at(ipic, -3.25, 24.8)), false, 'the lounge sofa');
+  assert.equal(nearRoomExit(ipic, at(ipic, -4.525, 20.6)), false, 'the lounge sofa');
   assert.equal(nearRoomExit(ipic, at(ipic, -0.6, 31)), false, 'a front-row recliner');
 });
 

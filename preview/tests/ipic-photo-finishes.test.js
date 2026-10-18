@@ -6,12 +6,14 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import * as THREE from 'three';
 import { createWalkingEnvironment } from '../src/walking.js';
+import { AVATAR_ENVELOPE } from '../src/workplace-room.js';
 import { buildIpicInterior } from '../src/ipic-interior.js';
-import { IPIC_CAMERAS, ipicFloor } from '../src/ipic-plan.js';
+import { IPIC_CAMERAS, IPIC_SCREEN, ipicFloor } from '../src/ipic-plan.js';
 import { IPIC_LOUNGE_CARPET, districtSignLayout } from '../src/ipic-materials.js';
 
 const world = JSON.parse(readFileSync(new URL('../public/data/district.json', import.meta.url)));
-const room = createWalkingEnvironment(world).rooms.find(r => r.interior === 'ipic-photo-v1');
+const environment = createWalkingEnvironment(world);
+const room = environment.rooms.find(r => r.interior === 'ipic-photo-v1');
 const group = buildIpicInterior(room, { textures: false, local: true });
 group.updateMatrixWorld(true);
 const meshes = []; group.traverse(item => { if (item.isMesh && !item.isInstancedMesh) meshes.push(item); });
@@ -22,7 +24,8 @@ const below = (a, d) => {
 };
 
 test('P9: the lounge coffee table has a radial sunburst timber top', () => {
-  assert.equal(below(-2.8, 23.3), 'Upper lounge: ipic-sunburst-timber');
+  const table = room.fixtures.find(f => f.kind === 'ipic-coffee-table');
+  assert.equal(below(table.a, table.d), 'Upper lounge: ipic-sunburst-timber');
 });
 
 test('P12: the Tuck Room stands on timber; the lounge keeps its carpet', () => {
@@ -30,11 +33,13 @@ test('P12: the Tuck Room stands on timber; the lounge keeps its carpet', () => {
   for (const [a, d] of [[-1, 21.5], [-4.9, 25.4], [1.8, 22]]) assert.equal(below(a, d), 'Upper lounge: ipic-red-swirl-carpet', `${a},${d}`);
 });
 
-test('P12: the lounge carpet is dark and its red pattern restrained, as in IMG_9758', () => {
-  const lum = ([r, g, b]) => .2126 * r + .7152 * g + .0722 * b;
+// Reversed 2026-10-18: #469 darkened this carpet after IMG_9758 alone, which is underexposed. IMG_9753,
+// IMG_9754 and IMG_9755 show a bold red ground with a dark swirl; the palette follows them now.
+test('P12: the lounge carpet is a bold red with a dark swirl, as in IMG_9753-9755', () => {
   const sat = ([r, g, b]) => (Math.max(r, g, b) - Math.min(r, g, b)) / Math.max(r, g, b);
-  assert.ok(lum(IPIC_LOUNGE_CARPET.pattern) < 70 && sat(IPIC_LOUNGE_CARPET.pattern) < .6, JSON.stringify(IPIC_LOUNGE_CARPET));
-  assert.ok(lum(IPIC_LOUNGE_CARPET.base) < 40, JSON.stringify(IPIC_LOUNGE_CARPET));
+  const { base, pattern } = IPIC_LOUNGE_CARPET;
+  assert.ok(sat(base) > .6 && base[0] > 2 * base[1] && base[0] > 120, `red ground ${base}`);
+  assert.ok(Math.max(...pattern) < base[0] * .6, `dark swirl ${pattern} on ${base}`);
 });
 
 test('P17: the auditorium floor is a dark confetti carpet, aisles and rows alike', () => {
@@ -84,4 +89,127 @@ test('P6: the reception floor is warm stone with quiet joints, under a coffered 
   const lamp = hitFrom(at(3.4, 1.4, 3.5), [0, 1, 0]);
   assert.equal(lamp?.object.name, 'Reception: ipic-warm-lamp');
   assert.ok(lamp.point.y < 3.05, `pendant at ${lamp.point.y.toFixed(2)} m`);
+});
+
+// Lounge against IMG_9752-9758 (photo review P8, P10, P11; Val, 2026-10-18).
+test('P11: the sofa backs onto the west guardrail over the escalators and faces into the lounge', () => {
+  const sofa = room.ipicSeats.filter(s => s.key === 'lounge-sofa');
+  assert.equal(sofa.length, 2);
+  for (const seat of sofa) assert.ok(seat.d < 21.5 && seat.a < -2.8 && Math.abs(seat.yaw) < 1e-9, `${seat.slot}: ${seat.a}, ${seat.d}, yaw ${seat.yaw}`);
+  const table = room.fixtures.find(f => f.kind === 'ipic-coffee-table'), chairs = room.fixtures.filter(f => f.kind === 'ipic-tub-chair');
+  assert.ok(table.d > sofa[0].d + 1 && chairs.length === 2 && chairs.every(c => c.d > table.d), 'table in front of the sofa, chairs across it');
+  // From the guardrail side the sofa's back is what you meet.
+  assert.equal(hitFrom(at(-4.5, 6.6, 20.1), [0, 0, -1])?.object.name, 'Upper lounge: ipic-olive-brown-sofa');
+});
+
+test('P10: the tub chairs are round leather barrels', () => {
+  for (const chair of room.fixtures.filter(f => f.kind === 'ipic-tub-chair')) {
+    let hits = 0;
+    for (let k = 0; k < 12; k++) { const t = k * Math.PI / 6; if (hitFrom(at(chair.a, 6.7, chair.d), [Math.cos(t), 0, Math.sin(t)])?.object.name === 'Upper lounge: ipic-cognac-leather') hits++; }
+    assert.ok(hits >= 8, `${chair.a},${chair.d}: the shell wraps ${hits} of 12 directions`);
+    // It opens towards the sofa: looking from the cushion at the sofa meets no shell.
+    const sofa = room.ipicSeats.find(t => t.key === 'lounge-sofa'), toSofa = hitFrom(at(chair.a, 6.7, chair.d), [sofa.a - chair.a + .425, 0, -(sofa.d - chair.d)]);
+    assert.notEqual(toSofa && toSofa.distance < .5 ? toSofa.object.name : null, 'Upper lounge: ipic-cognac-leather', `${chair.a},${chair.d} faces away from the sofa`);
+    const seat = hitFrom(at(chair.a, 7.5, chair.d), [0, -1, 0]);
+    assert.ok(seat?.object.name === 'Upper lounge: ipic-cognac-leather' && seat.point.y > 6.35 && seat.point.y < 6.65, `seat ${seat?.point.y}`);
+  }
+});
+
+test('P8: the lounge pendants are closed woven cocoons', () => {
+  for (const [a, d, y] of [[-4.5, 21.9, 8.8], [-1.4, 24, 8.85]]) {
+    let hits = 0, rays = 0;
+    for (const dy of [-.25, 0, .25]) for (let k = 0; k < 8; k++) { const t = k * Math.PI / 4; rays++; const hit = hitFrom(at(a, y + dy, d), [Math.cos(t), 0, Math.sin(t)]); if (hit && hit.distance < .5 && hit.object.name === 'Upper lounge: ipic-woven-rattan') hits++; }
+    assert.ok(hits / rays >= .75, `${a},${d}: the weave closes ${hits} of ${rays} sight lines`);
+  }
+});
+
+// Tuck Room against IMG_9756 and IMG_9757 (photo review P13, P14; Val, 2026-10-18).
+const fixture = kind => room.fixtures.find(f => f.kind === kind);
+const over = (f, a, d, margin = 0) => Math.abs(a - f.a) <= f.w / 2 + margin && Math.abs(d - f.d) <= f.l / 2 + margin;
+
+test('P13: the bar is an island, ringed by its counter, with room to walk behind it', () => {
+  const bar = fixture('ipic-bar'), back = fixture('ipic-bar-shelves');
+  const behind = bar.a + bar.w / 2, wall = back.a - back.w / 2;
+  assert.ok(wall - behind >= .75, `the aisle behind the island is ${(wall - behind).toFixed(2)} m`);
+  // From that aisle the island's back is counter, not wall.
+  assert.match(hitFrom(at((behind + wall) / 2, 6.6, bar.d), [-1, 0, 0])?.object.name ?? '', /^Tuck Room: ipic-(weathered-timber|veined-marble)$/);
+  // The counter top rings a lower service well.
+  const well = hitFrom(at(bar.a, 7.3, bar.d), [0, -1, 0]), rim = hitFrom(at(bar.a - bar.w / 2 + .15, 7.3, bar.d), [0, -1, 0]);
+  assert.equal(rim?.object.name, 'Tuck Room: ipic-veined-marble');
+  assert.ok(well && well.point.y < rim.point.y - .1, `well ${well?.point.y} under rim ${rim?.point.y}`);
+});
+
+test('P13: a black steel rack hangs over the island, glassware below it and plants on it', () => {
+  const bar = fixture('ipic-bar'), seen = new Map();
+  for (let a = bar.a - bar.w / 2 + .05; a < bar.a + bar.w / 2; a += .05) for (let d = bar.d - bar.l / 2 + .05; d < bar.d + bar.l / 2; d += .05) {
+    const hit = hitFrom(at(a, 7.3, d), [0, 1, 0]);
+    if (hit) seen.set(hit.object.name, Math.min(seen.get(hit.object.name) ?? Infinity, hit.point.y));
+  }
+  for (const name of ['Tuck Room: ipic-stemware', 'Tuck Room: ipic-black-steel']) assert.ok(seen.get(name) < 9.2, `${name}: ${seen.get(name)} (${[...seen.keys()]})`);
+  // Plants sit on the rack: looking down onto it from under the beams meets greenery.
+  let planted = 0;
+  for (let d = bar.d - bar.l / 2 + .2; d < bar.d + bar.l / 2; d += .2) if (/Tuck Room: ipic-(pothos|hanging-greenery)/.test(hitFrom(at(bar.a, 9.5, d), [0, -1, 0])?.object.name ?? '')) planted++;
+  assert.ok(planted >= 6, `${planted} plants seen on the rack`);
+});
+
+test('P14: dense pothos trails from timber beams, all of it above the tallest accepted body', () => {
+  const bar = fixture('ipic-bar');
+  let leafy = 0, rays = 0;
+  for (let a = 2.9; a <= 6.1; a += .2) for (let d = 20.3; d <= 25.3; d += .25) {
+    if (over(bar, a, d, .3)) continue;
+    rays++;
+    if (hitFrom(at(a, 8.2, d), [0, 1, 0])?.object.name === 'Tuck Room: ipic-pothos') leafy++;
+  }
+  assert.ok(leafy / rays >= .4, `pothos covers ${leafy} of ${rays} upward views`);
+  const pothos = meshes.find(item => item.name === 'Tuck Room: ipic-pothos'), v = new THREE.Vector3();
+  const position = pothos.geometry.attributes.position;
+  let lowest = Infinity;
+  for (let i = 0; i < position.count; i++) {
+    v.fromBufferAttribute(position, i).applyMatrix4(pothos.matrixWorld);
+    if (!over(bar, v.x, -v.z)) lowest = Math.min(lowest, v.y);
+  }
+  assert.ok(lowest >= 6 + AVATAR_ENVELOPE.height, `the lowest leaf over walkable floor is at ${lowest.toFixed(2)}`);
+});
+
+// Auditorium against IMG_9767 (photo review P15, P16; Val, 2026-10-18).
+const recliner = key => room.ipicSeats.find(s => s.key === key);
+const free = (a, d) => { const [x, n] = room.toWorld(a, d); return environment.isFree(x, -n); };
+
+test('P15: stadium risers lift the back row 0.4 m over the front row, with no jump underfoot', () => {
+  const back = recliner('recliner-0-1'), front = recliner('recliner-1-1');
+  assert.ok(Math.abs(ipicFloor(back.d) - ipicFloor(front.d) - .4) < 1e-9, `${ipicFloor(back.d)} over ${ipicFloor(front.d)}`);
+  for (let d = 25.5; d < 34; d += .01) assert.ok(Math.abs(ipicFloor(d + .01) - ipicFloor(d)) <= .0051, `the support jumps at d ${d.toFixed(2)}`);
+  // The back row's cushions are drawn on the riser.
+  const cushion = s => hitFrom(at(s.a, 9, s.d), [0, -1, 0]);
+  assert.equal(cushion(back)?.object.name, 'Auditorium: ipic-cognac-leather');
+  assert.ok(Math.abs(cushion(back).point.y - cushion(front).point.y - .4) < .02, `${cushion(back).point.y} vs ${cushion(front).point.y}`);
+});
+
+test('P15: both side aisles step down with lit nosings, the west one past the handrail; across the seats a riser wall closes the drop', () => {
+  for (const a of [-4.85, 5.5]) {
+    let lit = 0;
+    for (let d = 26; d < 31.5; d += .025) if (hitFrom(at(a, 9, d), [0, -1, 0])?.object.name === 'Auditorium: ipic-warm-lamp') lit++;
+    assert.ok(lit >= 6, `${lit} lit nosing samples down the aisle at ${a}`);
+    assert.ok(free(a, 30.5), `the aisle at ${a} is open where it steps down`);
+  }
+  for (const a of [-2, 0, 2, 4]) assert.equal(free(a, 30.3), false, `a body can step off the riser at ${a}`);
+  // The handrail follows the steps: it stands about 0.9 m over the floor along the whole aisle.
+  for (const d of [27, 28.5, 30.5, 32.5]) {
+    const rail = hitFrom(at(-5.55, 9, d), [0, -1, 0]);
+    assert.ok(rail && Math.abs(rail.point.y - ipicFloor(d) - .92) < .06, `rail at ${d}: ${rail?.object.name} ${rail?.point.y} over ${ipicFloor(d)}`);
+  }
+});
+
+test('P16: the screen spans nearly the whole front wall, below the ceiling and clear of the floor', () => {
+  const inner = room.width - .36, left = IPIC_SCREEN.a - IPIC_SCREEN.width / 2, right = IPIC_SCREEN.a + IPIC_SCREEN.width / 2;
+  const bottom = 6 + IPIC_SCREEN.y - IPIC_SCREEN.height / 2, top = 6 + IPIC_SCREEN.y + IPIC_SCREEN.height / 2;
+  assert.ok(IPIC_SCREEN.width >= .9 * inner, `the screen is ${IPIC_SCREEN.width} m of a ${inner.toFixed(2)} m wall`);
+  assert.ok(left > room.aMin + .18 && right < room.aMax - .18, `${left}..${right} inside the walls`);
+  assert.ok(top <= 10.4 - .1 && bottom >= 6.5, `screen ${bottom}..${top}`);
+  // From a front-row seated eye every corner of it is screen.
+  const seat = recliner('recliner-1-1'), eye = at(seat.a, ipicFloor(seat.d) + seat.height + .69, seat.d);
+  for (const [a, y] of [[left + .1, bottom + .1], [right - .1, bottom + .1], [left + .1, top - .1], [right - .1, top - .1]]) {
+    const target = at(a, y, IPIC_SCREEN.d), hit = hitFrom(eye, target.map((v, i) => v - eye[i]));
+    assert.equal(hit?.object.name, 'Auditorium: ipic-cinema-screen', `corner ${a},${y}`);
+  }
 });

@@ -42,6 +42,15 @@ building footprints must fit there. Height samples must be between -50 and
 the [compiler](../server/region-package.js) is the exact format authority.
 The complete publish request is limited to 128 KiB. Region IDs are unique
 across roads, buildings, parcels, trees, and places.
+
+Visitors walk on the same datum as in the original district: open ground and
+built-in shop and home floors are 0.2 m above the terrain. The paving, sidewalks
+and road crowns drawn around them stay within the server's 0.2 m step check, so a
+visitor can walk across any street. Regions published before 18 October 2026
+walked on the bare terrain, below the drawn sidewalks, so their streets stopped
+visitors. Such a region picks up the datum the next time its owner applies a
+revision, even an unchanged one. Creations outdoors and in built-in rooms move up
+with it; those on generated levels keep their floor.
 The studio's **Parcel** tool takes two opposite corners. Jevica can assign an
 unassigned plot to her account or an accepted contact in the inspector. The
 owner account ID is stored with the published region and retained in revision
