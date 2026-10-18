@@ -120,6 +120,10 @@ test('levels are keyed by elevation campus-wide with portals, openings and reach
   }
   for (const level of levels) for (const surface of level.surfaces.filter(s => s.kind === 'roof')) assert.ok(surface.reachedBy.length >= 2, surface.id);
   assert.deepEqual(levels[7].surfaces.map(s => s.id), ['T2-roof']);
+  // The pergola's posts are authoritative ground obstacles; its keep-clear interior excludes them.
+  const posts = levels[0].obstacles.filter(o => o.kind === 'post');
+  assert.equal(posts.length, 11);
+  assert.deepEqual(levels[0].keepClear.find(k => k.id === 'S-below').rect, [4.3, 154.3, 23.7, 167.7]);
   const noAccess = clone();delete tower(noAccess, 'T3').roof.headhouse;
   const result = validateGardenCampus(noAccess);
   assert.ok(result.findings.some(f => f.rule === 'reach' && f.id === 'T3-roof'));
@@ -180,6 +184,9 @@ test('defects fail: shifted endpoint, wrong height, offsite volume, overlap, blo
 
   const roof = clone();tower(roof, 'T1').roof.planting.beds[0].rect[0] = 4;
   assert.ok(validateGardenCampus(roof).findings.some(f => f.rule === 'support' && f.id === 'T1-roof-bed-west'));
+
+  const post = clone();post.groundBuildings.find(b => b.id === 'S').posts.push({ id: 'S-post-x', rect: [23.7, 160, 24, 160.3] });
+  assert.ok(validateGardenCampus(post).findings.some(f => f.rule === 'blocked' && f.id === 'S-post-x/P7'));
 
   const tall = clone();tower(tall, 'T2').silhouette.headhouseTop = 33;
   assert.ok(rules(validateGardenCampus(tall)).includes('silhouette'));

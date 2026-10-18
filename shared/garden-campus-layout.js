@@ -85,7 +85,12 @@ const TERRACES = [
 // Ground program. Open pergola and the pool: the pergola is walkable under, the pool is not.
 const GROUND_BUILDINGS = [
   { id: 'C', kind: 'cafe', name: 'Garden café', rect: rect(4, 25, 16, 39), height: 4.8, door: [16, 32], approach: 'P3', walkableBelow: false },
-  { id: 'S', kind: 'pergola', name: 'Social pergola', rect: rect(4, 154, 24, 168), height: 4.2, approach: 'P7', walkableBelow: true },
+  // Posts are 0.3 m square on the perimeter: 5 m bays along the south and north edges, one
+  // mid post on the west edge (about 6.9 m bays), and only corners on the east edge so the
+  // 6 m P7 approach stays clear.
+  { id: 'S', kind: 'pergola', name: 'Social pergola', rect: rect(4, 154, 24, 168), height: 4.2, approach: 'P7', walkableBelow: true,
+    posts: [[4, 154], [9, 154], [14, 154], [19, 154], [23.7, 154], [4, 167.7], [9, 167.7], [14, 167.7], [19, 167.7], [23.7, 167.7], [4, 160.85]]
+      .map(([u, v], i) => ({ id: `S-post-${i + 1}`, rect: rect(u, v, u + 0.3, v + 0.3) })) },
   { id: 'POOL', kind: 'pool', name: 'South reflecting pool', rect: rect(18, 12, 25, 24), height: 0, walkableBelow: false },
 ];
 const PATHS = [
@@ -360,7 +365,11 @@ export function campusLevels(layout = GARDEN_CAMPUS_LAYOUT) {
   const ground = at(0);
   ground.surfaces.push({ id: 'ground', kind: 'ground', polygon: layout.parcel.polygon, access: 'public',
     holes: [...layout.towers.map(tower => tower.tiers[0].rect), ...layout.groundBuildings.filter(item => !item.walkableBelow).map(item => item.rect)] });
-  for (const item of layout.groundBuildings.filter(b => b.walkableBelow)) ground.keepClear.push({ id: `${item.id}-below`, rect: item.rect });
+  for (const item of layout.groundBuildings.filter(b => b.walkableBelow)) {
+    for (const post of item.posts ?? []) ground.obstacles.push({ id: post.id, kind: 'post', rect: [...post.rect] });
+    const inset = item.posts?.length ? 0.3 : 0;
+    ground.keepClear.push({ id: `${item.id}-below`, rect: [item.rect[0] + inset, item.rect[1] + inset, item.rect[2] - inset, item.rect[3] - inset] });
+  }
   for (const tower of layout.towers) {
     for (const [i, floor] of tower.levels.entries()) {
       const level = at(floor.z0), surface = (id, kind, rect, access) => level.surfaces.push({ id, kind, rect: [...rect], access, tower: tower.id, floor: floor.id });
@@ -544,6 +553,16 @@ export function validateGardenCampus(layout = GARDEN_CAMPUS_LAYOUT, { district =
   for (const item of [...footprints, ...layout.paths, ...layout.bridges]) inParcel(item.id, item.rect);
   for (const [i, a] of footprints.entries()) for (const b of footprints.slice(i + 1)) if (rectsOverlap(a.rect, b.rect)) fail('overlap', `${a.id}/${b.id}`, 'footprints overlap');
   for (const path of layout.paths) for (const item of footprints) if (rectsOverlap(path.rect, item.rect) && !(layout.groundBuildings.find(b => b.id === item.id)?.walkableBelow)) fail('overlap', `${path.id}/${item.id}`, 'path runs through a footprint');
+  // Ground posts stay inside their structure, out of paths and out of keep-clear zones.
+  const groundLevel = campusLevels(layout)[0];
+  for (const obstacle of groundLevel.obstacles.filter(item => item.kind === 'post')) {
+    const owner = layout.groundBuildings.find(item => item.posts?.some(post => post.id === obstacle.id));
+    if (!owner || !rectInside(obstacle.rect, owner.rect)) fail('support', obstacle.id, 'post lies outside its structure');
+    for (const path of layout.paths) if (rectsOverlap(obstacle.rect, path.rect)) fail('blocked', `${obstacle.id}/${path.id}`, 'post stands in a path');
+    for (const zone of groundLevel.keepClear) if (rectsOverlap(obstacle.rect, zone.rect)) fail('blocked', `${obstacle.id}/${zone.id}`, 'post stands in a keep-clear zone');
+    if (owner?.approach) { const approach = layout.paths.find(item => item.id === owner.approach).rect;
+      if (obstacle.rect[2] >= owner.rect[2] - EPS && obstacle.rect[3] > approach[1] + EPS && obstacle.rect[1] < approach[3] - EPS) fail('blocked', `${obstacle.id}/${owner.approach}`, 'post narrows the approach opening'); }
+  }
   // Towers: 6/7/6, shared datum, nested tiers, roofs, silhouette.
   const expected = { T1: [2, 2, 2], T2: [3, 2, 2], T3: [2, 2, 2] };
   for (const tower of layout.towers) {

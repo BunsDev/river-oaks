@@ -14,7 +14,7 @@
   },
   "generator": "scripts/garden-campus-views.mjs",
   "files": {
-    "layout-contract.json": "4ac23acea4f3031ab372cf86deaa8e25e33f5ba75d8c2780934f2281549fc814",
+    "layout-contract.json": "8d5bd6c24dc38ad153c1e8fa0ae9d3e1409b68f8692cc6731fdaa447b967360f",
     "views/site-plan.svg": "215cdf626e70d8bccf42136b3ffe1a5b1805e179547bf6da97ce96fde39c1c3b",
     "views/floor-4.svg": "44039b1f740bd54a4b56a7136f05a4aed32836a5624ffcc23896341061ccaf2d",
     "views/section-u16.svg": "e32404a5f927cf7f1c34ed8809997db3d8cda160f1d64f51fa4f7a99fa2b05e2"
