@@ -1,0 +1,106 @@
+{
+  "runs": [
+    {
+      "variant": "before",
+      "speed": 0,
+      "maxTwist": 2.822688580016508,
+      "maxError": 1.6711069443220838e-16,
+      "supportFailures": 0,
+      "perRig": {
+        "woman-casual": 2.821469167002356,
+        "man-casual": 2.821139449325345,
+        "woman-tailored": 2.8218680722092864,
+        "man-tailored": 2.8214208629665767,
+        "woman-daywear": 2.8216398296570255,
+        "man-workwear": 2.8212062166201335,
+        "jevica": 2.822688580016508
+      }
+    },
+    {
+      "variant": "before",
+      "speed": 0.04,
+      "maxTwist": 3.141592653589793,
+      "maxError": 1.6883057536160649e-16,
+      "supportFailures": 0,
+      "perRig": {
+        "woman-casual": 3.141592528917734,
+        "man-casual": 3.14159258058931,
+        "woman-tailored": 3.1415925146010144,
+        "man-tailored": 3.1415925617328666,
+        "woman-daywear": 3.141592653589793,
+        "man-workwear": 3.1415926202697837,
+        "jevica": 3.1415925654333345
+      }
+    },
+    {
+      "variant": "before",
+      "speed": 1.1,
+      "maxTwist": 3.140848711184003,
+      "maxError": 2.0014830212433605e-16,
+      "supportFailures": 0,
+      "perRig": {
+        "woman-casual": 3.140848711184003,
+        "man-casual": 2.592352358861461,
+        "woman-tailored": 2.5607548116738412,
+        "man-tailored": 2.592603888742139,
+        "woman-daywear": 2.5582029495844183,
+        "man-workwear": 2.5961887136377126,
+        "jevica": 2.561740511245183
+      }
+    },
+    {
+      "variant": "after",
+      "speed": 0,
+      "maxTwist": 0.3452273517671594,
+      "maxError": 1.6711069443220838e-16,
+      "supportFailures": 0,
+      "perRig": {
+        "woman-casual": 0.34466350427948816,
+        "man-casual": 0.3437536390950238,
+        "woman-tailored": 0.34296750017126576,
+        "man-tailored": 0.34381982742109424,
+        "woman-daywear": 0.344717596152876,
+        "man-workwear": 0.34399061974814005,
+        "jevica": 0.3452273517671594
+      }
+    },
+    {
+      "variant": "after",
+      "speed": 0.04,
+      "maxTwist": 0.34234727386401015,
+      "maxError": 1.7554167342883506e-16,
+      "supportFailures": 0,
+      "perRig": {
+        "woman-casual": 0.3418038453065188,
+        "man-casual": 0.33895094682823407,
+        "woman-tailored": 0.34234727386401015,
+        "man-tailored": 0.33852099258985585,
+        "woman-daywear": 0.3419302243210347,
+        "man-workwear": 0.34141846290169015,
+        "jevica": 0.34200919867288676
+      }
+    },
+    {
+      "variant": "after",
+      "speed": 1.1,
+      "maxTwist": 0.3661570821895886,
+      "maxError": 2.0014830212433605e-16,
+      "supportFailures": 0,
+      "perRig": {
+        "woman-casual": 0.3633550794363823,
+        "man-casual": 0.3598999174141693,
+        "woman-tailored": 0.3648284180973589,
+        "man-tailored": 0.3598497857709544,
+        "woman-daywear": 0.3642888874763634,
+        "man-workwear": 0.35921054934531726,
+        "jevica": 0.3661570821895886
+      }
+    }
+  ],
+  "browser": "156.0.8078.4",
+  "status": "passed",
+  "sourceSha256": "425899b01551534f72d20b0d011b0b319e525c4ba12d3c9f02bf8dfc7d548ea3",
+  "harnessSha256": "a1ec6b58b99babf95ba5abb4e4a3d0e7f74cf225331e97bfb525d84e6ae24842",
+  "log": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-turning-20261018/turning-browser-final.log",
+  "scope": "Controlled browser fixture; seven shipped rigs, 180-degree reversals, stationary and 0.04/1.1 m/s. Static screenshots are not human animation acceptance."
+}

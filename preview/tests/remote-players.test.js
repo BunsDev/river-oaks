@@ -14,7 +14,8 @@ function load(url, context, nextLoad) {
       if(globalThis.__remoteFailOnce===options?.appearanceId){globalThis.__remoteFailOnce=null;throw new Error('temporary asset failure');}
       const object = new THREE.Group(); object.userData.frames = []; object.userData.profile = profile; object.userData.appearance = options?.appearanceId; object.userData.suspends = 0;
       const material=new THREE.MeshStandardMaterial({color:'#123456'});material.userData.characterSlot='outfit';object.add(new THREE.Mesh(new THREE.BoxGeometry(),material));
-      return { object, rig:{hipHeight:.9}, update(_now, action, _speaking, motion) { object.userData.frames.push({...motion,action}); }, suspend() { object.userData.suspends++; }, dispose() { object.userData.disposed=true; } };
+      if(globalThis.__remoteSkins){const bone=new THREE.Bone(),skin=new THREE.SkinnedMesh(new THREE.BoxGeometry(),new THREE.MeshStandardMaterial());skin.frustumCulled=false;skin.add(bone);skin.bind(new THREE.Skeleton([bone]));object.add(skin);}
+      return { object, rig:{hipHeight:.9,source:{height:1.7},model:new THREE.Group()}, update(_now, action, _speaking, motion) { object.userData.frames.push({...motion,action}); }, suspend() { object.userData.suspends++; }, dispose() { object.userData.disposed=true; } };
     }` };
   if (url.endsWith('/player-costume.js')) return { format: 'module', shortCircuit: true, source: 'export function createPlayerCostume() { return { update() {}, dispose() {} }; }' };
   if (url.endsWith('/flight-vehicles.js')) return { format: 'module', shortCircuit: true, source: "import * as THREE from 'three'; export function createFlightVehicle() { return { object: new THREE.Group(), dispose() {} }; }" };
@@ -90,6 +91,25 @@ test('a culled peer suspends its avatar clock before it reappears',async()=>{
     assert.equal(rig.userData.frames.length,1,'the avatar resumes from its suspended clock');
     players.dispose();
   }finally{globalThis.document=previousDocument;}
+});
+
+test('remote skins cull by the whole figure, and the audit can switch that off for later peers too',async()=>{
+  const previousDocument=globalThis.document;globalThis.document={createElement:()=>new Element()};globalThis.__remoteSkins=true;
+  try{
+    const scene=new THREE.Scene(),players=createRemotePlayers(scene,new Element());
+    const skins=()=>scene.children.flatMap(holder=>holder.getObjectsByProperty('isSkinnedMesh',true));
+    players.sync([{id:'peer',name:'Peer',position:[0,0,0],altitude:0,yaw:0,appearance:'sable-human'}],'self');
+    await new Promise(resolve=>setImmediate(resolve));
+    const [skin]=skins();
+    assert.equal(skin.frustumCulled,true);
+    assert.deepEqual([skin.boundingSphere.center.toArray(),skin.boundingSphere.radius],[[0,.55*1.7,0],.8*1.7]);
+    players.setCulling(false);assert.equal(skin.frustumCulled,false);
+    players.sync([{id:'peer',name:'Peer',position:[0,0,0],altitude:0,yaw:0,appearance:'sable-human'},{id:'late',name:'Late',position:[2,0,0],altitude:0,yaw:0,appearance:'sable-human'}],'self');
+    await new Promise(resolve=>setImmediate(resolve));
+    assert.deepEqual(skins().map(mesh=>mesh.frustumCulled),[false,false],'a peer loaded during the comparison follows the switch');
+    players.setCulling(true);assert.deepEqual(skins().map(mesh=>mesh.frustumCulled),[true,true]);
+    players.dispose();
+  }finally{delete globalThis.__remoteSkins;globalThis.document=previousDocument;}
 });
 
 test('failed remote look keeps the loaded rig and retries after a bounded delay',async()=>{

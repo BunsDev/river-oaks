@@ -6,10 +6,16 @@ export function distribution(samples) {
 }
 
 export function auditOptions(args) {
-  const result = { seconds: 15, warmup: 5, quality: 'sharp', players: [1, 8, 16, 32], output: 'data/reports/rendered-multiplayer-audit.json' };
+  // vsync=off unlocks the frame rate, so intervals measure frame cost instead of
+  // snapping to display refresh multiples (16.7/33.3 ms at 60 Hz). view=player
+  // keeps the game's follow camera; view=away looks from the viewer's eye away
+  // from the other players, who are then behind the camera. compare adds eight
+  // alternating segments (off/on/on/off/on/off/off/on) of one runtime feature to each tier, and
+  // profile=on records a CPU profile beside the report for each tier.
+  const result = { seconds: 15, warmup: 5, quality: 'sharp', vsync: 'on', view: 'crowd', compare: 'none', profile: 'off', players: [1, 8, 16, 32], output: 'data/reports/rendered-multiplayer-audit.json' };
   const seen = new Set();
   for (const arg of args) {
-    const match = /^--(seconds|warmup|quality|players|output)=(.+)$/.exec(arg);
+    const match = /^--(seconds|warmup|quality|vsync|view|compare|profile|players|output)=(.+)$/.exec(arg);
     if (!match || seen.has(match[1])) throw new Error(`Invalid or duplicate option: ${arg}`);
     seen.add(match[1]);
     const [, key, value] = match;
@@ -17,9 +23,10 @@ export function auditOptions(args) {
   }
   if (!Number.isInteger(result.seconds) || result.seconds < 5 || result.seconds > 600
     || !Number.isInteger(result.warmup) || result.warmup < 1 || result.warmup > 60
-    || !['sharp', 'auto', 'smooth'].includes(result.quality)
+    || !['sharp', 'auto', 'smooth'].includes(result.quality) || !['on', 'off'].includes(result.vsync)
+    || !['crowd', 'player', 'away'].includes(result.view) || !['none', 'avatar-culling'].includes(result.compare) || !['on', 'off'].includes(result.profile)
     || !result.players.length || result.players.some((value, i) => ![1, 8, 16, 32].includes(value) || i && value <= result.players[i - 1]))
-    throw new Error('Use seconds 5–600, warmup 1–60, quality sharp/auto/smooth, and increasing player tiers from 1,8,16,32.');
+    throw new Error('Use seconds 5–600, warmup 1–60, quality sharp/auto/smooth, vsync on/off, view crowd/player/away, compare none/avatar-culling, profile on/off, and increasing player tiers from 1,8,16,32.');
   return result;
 }
 

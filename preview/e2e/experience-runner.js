@@ -1,5 +1,6 @@
 import { startBrowserFixture } from './fixture-server.js';
-import { chromium } from 'playwright';
+import { startComputerFixture } from './fixtures/office-computer-child/server.js';
+import { chromium, webkit } from 'playwright';
 import { holdBrowserLock } from '../../scripts/browser-lock.mjs';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
@@ -21,14 +22,15 @@ for (const file of await readdir(join(root, 'preview/e2e'))) {
 }
 if (names.some(name => !selectable.includes(name))) throw new Error(`Choose page harnesses from: ${selectable.join(', ')}`);
 const results = [];
-let browser, fixture;
+let browser, fixture, computerFixture;
 // Local runs take turns with other sessions' browser runs (scripts/browser-lock.mjs).
 const releaseBrowserLock = await holdBrowserLock('experience journeys');
 try {
   await mkdir(join(root, 'output/playwright'), { recursive: true });
   // Fake media lets the voice journey grant a microphone without a device or a prompt; other journeys never ask.
   const media = ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'];
-  browser = await chromium.launch({ headless: !software,
+  // RIVER_OAKS_EXPERIENCE_BROWSER=webkit runs the journeys in Playwright's WebKit (Safari's engine on this desktop, not iOS).
+  browser = process.env.RIVER_OAKS_EXPERIENCE_BROWSER === 'webkit' ? await webkit.launch({ headless: true }) : await chromium.launch({ headless: !software,
     args: [...media, ...(software ? ['--use-gl=angle', '--use-angle=gl', '--ignore-gpu-blocklist'] : process.platform === 'darwin' ? ['--use-angle=metal'] : [])] });
   for (const name of names.length ? names : suite) {
     // The voice journey runs the real voice routes and reconciler over a fake LiveKit.
@@ -37,8 +39,14 @@ try {
       'character-studio-disabled':{RIVER_OAKS_CHARACTER_STUDIO:'0',VITE_CHARACTER_STUDIO:'false'},
       'character-studio-paused':{RIVER_OAKS_CHARACTER_STUDIO:'0',VITE_CHARACTER_STUDIO:'true'},
     }[name]??{};
+    // The Computer embed journey frames a separate-origin child fixture (#486); other journeys get no Computer origin.
+    if (name === 'office-computer-embed') {
+      computerFixture = await startComputerFixture();
+      Object.assign(fixtureEnv, { VITE_TYPESAFE_COMPUTER_ORIGIN: computerFixture.origin, VITE_TYPESAFE_COMPUTER_TEST_LOOPBACK: '1' });
+    }
     fixture = await startBrowserFixture({env:fixtureEnv});
     const { origin } = fixture;
+    computerFixture?.setParentOrigin(origin);
     const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
     await context.addCookies([{ name: 'fixture_session', value: 'owner', url: origin }]);
     const page = await context.newPage();
@@ -52,7 +60,7 @@ try {
       console.log(`Running ${name}`);
       // These repository harnesses are page functions, also used by the browser CLI.
       const source = (await readFile(join(root, `preview/e2e/${name}.js`), 'utf8')).replace(/http:\/\/127\.0\.0\.1:(?:5173|5180|5181)/g, origin);
-      const result = await eval(`(${source})\n//# sourceURL=preview/e2e/${name}.js`)(page, { worldMapEnabled: process.env.VITE_WORLD_MAP === 'true' });
+      const result = await eval(`(${source})\n//# sourceURL=preview/e2e/${name}.js`)(page, { worldMapEnabled: process.env.VITE_WORLD_MAP === 'true', computerOrigin: computerFixture?.origin });
       if (result?.passed === false) throw new Error(result.failure ?? 'Harness reported failure');
       results.push({ name, status: 'passed', seconds: (Date.now() - started) / 1000, result });
       console.log(`Passed ${name}`);
@@ -76,11 +84,13 @@ try {
     } finally {
       for (const active of browser.contexts()) await active.close();
       await fixture.close(); fixture = null;
+      await computerFixture?.close(); computerFixture = null;
       await writeFile(join(root, 'data/reports', process.env.RIVER_OAKS_E2E_REPORT ?? 'experience.json'), JSON.stringify({ createdAt: new Date().toISOString(), results }, null, 2) + '\n');
     }
   }
 } finally {
   await browser?.close();
   await fixture?.close();
+  await computerFixture?.close();
   releaseBrowserLock();
 }

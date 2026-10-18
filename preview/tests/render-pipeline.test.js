@@ -187,3 +187,18 @@ test('CPU acceptance can render without bloom, and bloom stays on by default',()
     assert.equal(software.pipeline.stats.bloom,false);
   } finally {for(const {pipeline,leaf} of [plain,software]){pipeline.dispose();leaf.geometry.dispose();leaf.material.dispose();}}
 });
+
+test('programs compile for the scene pass: its half-float target is bound for the call and the previous one restored', async () => {
+  const {scene,renderer,pipeline}=fixture(),camera=new THREE.PerspectiveCamera(),previous=new THREE.WebGLRenderTarget(1,1),seen=[];
+  let current=previous;
+  renderer.getRenderTarget=()=>current;renderer.setRenderTarget=target=>{current=target;};
+  renderer.compileAsync=(object,view,target)=>{seen.push({object,view,target,bound:current});return Promise.resolve(object);};
+  const batch=new THREE.Object3D();
+  assert.equal(await pipeline.compileAsync(batch,camera,scene),batch);
+  assert.equal(seen.length,1);assert.equal(seen[0].object,batch);assert.equal(seen[0].view,camera);assert.equal(seen[0].target,scene);
+  assert.ok(seen[0].bound?.isWebGLRenderTarget&&seen[0].bound!==previous,'the scene pass target, not the screen');
+  assert.equal(seen[0].bound.texture.type,THREE.HalfFloatType,'materials compile without tone mapping, as the scene pass draws them');
+  assert.equal(current,previous,'the caller keeps its target');
+  renderer.compileAsync=()=>{throw new Error('compile failed');};
+  assert.throws(()=>pipeline.compileAsync(batch,camera,scene),/compile failed/);assert.equal(current,previous,'restored on errors');
+});
