@@ -2,7 +2,7 @@ import * as THREE from 'three';
 
 // Fold the authored long surface over the lap, then enforce upper-thigh contact
 // offline. Animation keeps its skin weights and only applies the baked targets.
-export function prepareDrapeSeatFit(skirt, model, {layer = 0, waist = .11, body = model.getObjectByName('Jevica')} = {}) {
+export function prepareDrapeSeatFit(skirt, model, {layer = 0, waist = .11, body = model.getObjectByName('Jevica'), shape = null, lapClearance = .028} = {}) {
   const pelvis = model.getObjectByName('pelvis');
   model.updateWorldMatrix(true, true); model.updateMatrixWorld(true);
   const frame = new THREE.Matrix4().compose(pelvis.getWorldPosition(new THREE.Vector3()), model.getWorldQuaternion(new THREE.Quaternion()), model.getWorldScale(new THREE.Vector3()));
@@ -36,7 +36,7 @@ export function prepareDrapeSeatFit(skirt, model, {layer = 0, waist = .11, body 
         const waistBlend = THREE.MathUtils.smoothstep(Math.max(0, waist-p.y),0,.05);
         const folded = new THREE.Vector3(p.x,.11+.045*Math.sin(lap/.45*Math.PI)-Math.max(0,depth-.45),p.z+lap*.85);
         const rear = new THREE.Vector3(p.x,Math.max(p.y,-.48),p.z);
-        const desired = p.clone().lerp(rear.lerp(folded,front),waistBlend);
+        const desired = shape ? shape(p,waist) : p.clone().lerp(rear.lerp(folded,front),waistBlend);
         // Keep the transparent overlay above the opaque lap and outside its
         // knee fold without shifting the pinned waist or standing surface.
         const separation = layer * .008 * front * waistBlend;
@@ -59,10 +59,10 @@ export function prepareDrapeSeatFit(skirt, model, {layer = 0, waist = .11, body 
           const point = new THREE.Vector3(); ids.forEach((id,j) => point.addScaledVector(posed[id], bary[j]));
           ray.set(point.clone().addScaledVector(up,.6),down);ray.far=1.2;
           const hit = ray.intersectObject(collider,false)[0]; if (!hit) continue;
-          const clearance = point.clone().sub(hit.point).dot(up); if (clearance >= .028) continue;
+          const clearance = point.clone().sub(hit.point).dot(up); if (clearance >= lapClearance) continue;
           const movable = ids.map(i => authored[i].y < waist - 1e-5), denominator = bary.reduce((sum,w,j) => sum + (movable[j] ? w*w : 0), 0);
           if (!denominator) continue;
-          ids.forEach((id,j) => {if (movable[j]) posed[id].addScaledVector(up,bary[j]*(.028-clearance)/denominator);});corrected++;
+          ids.forEach((id,j) => {if (movable[j]) posed[id].addScaledVector(up,bary[j]*(lapClearance-clearance)/denominator);});corrected++;
         }
       }
       let maximumStretch=0,minimumAreaRatio=Infinity;

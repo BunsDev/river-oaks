@@ -22,14 +22,21 @@ export function createSkirtSeatMorph(skirt, model, data = SKIRT_SEAT_MORPH) {
   if (data.fittedWeights) geometry.attributes.skinWeight.array.set(data.fittedWeights);
   if (geometry.attributes.position.array.length !== data.positionDelta.length || data.normalDelta.length !== data.positionDelta.length) throw new TypeError('Seated skirt topology differs from its bake');
   geometry.morphTargetsRelative = true;
-  // Split the full seated shape using the garment's existing thigh weights.
+  // Split the full seated shape using the garment's existing leg weights.
   // Both targets sum to the baked shape; each leg can reach it independently.
   const weights = geometry.attributes.skinWeight;
+  const indices = geometry.attributes.skinIndex;
+  const legSides = skirt.skeleton.bones.map(bone => /^(thigh|calf|foot)_l$/.test(bone.name) ? 0 : /^(thigh|calf|foot)_r$/.test(bone.name) ? 1 : -1);
   for (const [name, delta] of [['position', data.positionDelta], ['normal', data.normalDelta]]) {
     const left = new Float32Array(delta.length), right = new Float32Array(delta.length);
     for (let i = 0; i < weights.count; i++) {
-      const total = weights.getY(i) + weights.getZ(i);
-      const share = total > 0 ? weights.getY(i) / total : .5;
+      let leftWeight=0,rightWeight=0;
+      for(let channel=0;channel<4;channel++){
+        const side=legSides[indices.getComponent(i,channel)],weight=weights.getComponent(i,channel);
+        if(side===0)leftWeight+=weight;else if(side===1)rightWeight+=weight;
+      }
+      const total = leftWeight + rightWeight;
+      const share = total > 0 ? leftWeight / total : .5;
       for (let axis = 0; axis < 3; axis++) {
         const index = i * 3 + axis;
         left[index] = delta[index] * share;

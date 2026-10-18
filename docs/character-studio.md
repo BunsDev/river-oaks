@@ -823,3 +823,39 @@ and the two boot shafts, and outer layer edges at each captured feminine Silvan 
 sampled visibility and edge clearance, not whole-leg containment, every camera,
 continuous-motion safety or final cloth quality. Current verification and rendered
 review status are recorded in the task ledger.
+
+
+### Split coat-tail deformation
+
+Kai formal/noir and Aurel use two curved cloth panels merged into one owned
+skinned mesh on the existing masculine rig. The front opening and rear vent remain
+open in both forms. The 950-vertex, 1728-triangle mesh replaces two rigid boxes;
+each affected accessory bundle gains1128triangles and remains within its existing
+20draw cap. A cutaway front hem and wider lower rear vent clear opposing strides;
+lower tails follow the calves. Boot shafts and trim follow the shins while soles
+and foot lasts follow the ankles. Materials retain the authored palette and use a two-sided cloth surface.
+
+`node scripts/bake-coat-tails.mjs --check` reproduces the two packed seated
+corrections against the shipped rig and actual trouser mesh. A coat-specific offline
+profile spreads the lap transition around the hip and gathers the rear tails.
+Runtime only adjusts the existing GPU morph influences. The source receipts include
+the authored geometry, fitter, rig and license manifest. Tests cover all six looks,
+seated/walk/run samples, asymmetric bends under transformed roots, pinned waists,
+source-buffer immutability, normalized weights and disposal/draw budgets. The
+wardrobe browser journey additionally checks thigh and lower-trouser edge crossings
+against actual posed body and boot surfaces in every captured coat phase, plus
+directional lap contact while seated. Non-indexed attachments are included in the
+probe, with synthetic crossing and clearance controls. These are sampled probes,
+not continuous collision or final cloth-art acceptance. Broad side folds and
+upper-body tailoring still require visual refinement; full frozen evidence is
+recorded in the task ledger when it completes.
+
+
+The coat increment passed 67 focused regressions, five deterministic garment bakes,
+132 wardrobe rows / 330 phases / 867 browser checks, native 4K human/fox reference
+comparisons and all 11 core tasks with isolated Redis. All 16 frozen source hashes
+matched. Lower-body asymmetric/transformed-root tests and ankle-independent boot
+shaft tests passed. Reviewed stride and seated captures resolve the sampled boot
+crossing; broad side folds and angular calf bends remain art-quality limitations.
+Evidence: `.runtime/character-studio/coat-tails/verified-lower-20261018/` and
+`lower-render/`; the ledger records skip counts and verification limits.

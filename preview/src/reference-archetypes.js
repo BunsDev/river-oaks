@@ -1,4 +1,7 @@
 import {createSilvanTrousers} from './silvan-trousers.js';
+import {createCoatTailGeometry,COAT_TAIL_NAME} from './coat-tail-geometry.js';
+import {skinCoatTails} from './coat-tail-skinning.js';
+import {COAT_TAIL_MORPHS} from './coat-tail-morph-data.js';
 import {SILVAN_DRAPES,silvanDrapes,silvanWaist,createSilvanDrapeDetailGeometry} from './silvan-drape-geometry.js';
 import {SILVAN_DRAPE_MORPHS} from './silvan-drape-morph-data.js';
 import {createDrapeGeometry, LYRA_DRAPES} from './drape-geometry.js';
@@ -38,6 +41,13 @@ export function createReferenceStyle(avatar,appearance){
   const gold=material('#d4ad70',{metalness:.83,roughness:.23}),darkGold=material('#9d794b',{metalness:.68,roughness:.34});
   const leather=material(appearance.character==='rowan'?'#574237':appearance.character==='vesper'?'#48232c':appearance.character==='lyra'?'#704753':appearance.character==='aurel'?'#211d20':appearance.variant==='explorer'?'#513e32':'#ede1d1',{roughness:.62});
   const face=aligned('head'),torso=aligned('spine_03'),pelvis=aligned('pelvis');
+  function coatTails(surface){
+    const cloth=surface.clone();cloth.side=THREE.DoubleSide;materials.add(cloth);
+    const tails=mesh(pelvis,createCoatTailGeometry(appearance.character),cloth);tails.name=COAT_TAIL_NAME;
+    const fitted=skinCoatTails(tails,model.getObjectByName('man-casualmale_casualsuit02'));
+    attachments.add(fitted.group);
+    correctives.push(createSkirtSeatMorph(fitted.mesh,model,COAT_TAIL_MORPHS[appearance.character]));
+  }
   function wavyHair(color,number){
     const hair=material(color,{roughness:.78,sheen:1,sheenColor:new THREE.Color(color)});
     for(let i=0;i<number;i++){
@@ -105,15 +115,21 @@ export function createReferenceStyle(avatar,appearance){
     const upper=material(color,{roughness:.74}),sole=material(['aurel','kai'].includes(appearance.character)?'#171618':rugged?'#332f2b':'#3b2028',{roughness:.86});
     for(const side of ['l','r']){
       const foot=aligned(`foot_${side}`);if(!foot)continue;
+      const tailored=appearance.character==='aurel'||appearance.character==='kai'&&appearance.variant!=='explorer';
+      const shin=tailored?aligned(`calf_${side}`):null;
+      // The sole follows the foot; the tall shaft and its trim follow the shin.
+      // Reparent in the rest pose so its authored fit is preserved exactly.
+      const onShin=item=>{if(shin)shin.attach(item);return item;};
       box(foot,sole,[0,-.056,.06],rugged?[.142,.04,.30]:[.107,.024,.27],.012);
       // A fitted boot foot: a rounded last that tapers to the toe, not a ball.
       const last=box(foot,upper,[0,-.012,.075],rugged?[.112,.085,.27]:[.094,.07,.255],rugged?.034:.03);last.rotation.x=-.06;
       const shaft=mesh(foot,new THREE.CylinderGeometry(rugged?.078:.067,rugged?.085:.073,rugged?.23:.17,16),upper,[0,rugged?.12:.10,-.014]);
       shaft.scale.z=.84;
+      onShin(shaft);
       if(rugged){
-        for(let i=0;i<3;i++)tube(foot,gold,[[-.04,.09+i*.05,.07],[.04,.09+i*.05,.07]],.0035);
-        box(foot,gold,[.077,.13,-.005],[.014,.018,.032],.003);
-      }else box(foot,gold,[.065,.16,-.012],[.013,.019,.031],.003);
+        for(let i=0;i<3;i++)onShin(tube(foot,gold,[[-.04,.09+i*.05,.07],[.04,.09+i*.05,.07]],.0035));
+        onShin(box(foot,gold,[.077,.13,-.005],[.014,.018,.032],.003));
+      }else onShin(box(foot,gold,[.065,.16,-.012],[.013,.019,.031],.003));
     }
   }
   function relaxedSleeves(color){
@@ -319,9 +335,8 @@ export function createReferenceStyle(avatar,appearance){
     if(!explorer){
       for(const side of [-1,1]){
         const lapel=box(torso,cloth,[side*.12,.1,.138],[.07,.27,.022],.01);lapel.rotation.z=side*.2;
-        const skirt=box(pelvis,cloth,[side*.167,-.34,-.045],[.226,.80,.12],.02);skirt.rotation.z=side*.08;
       }
-      boots(formal?'#b4a998':'#1c1a1d',{rugged:!formal});
+      coatTails(cloth);boots(formal?'#b4a998':'#1c1a1d',{rugged:!formal});
     }else{
       shoulderBag({color:'#4d3c32',side:-1,large:true});boots('#252328',{rugged:true});
     }
@@ -343,7 +358,6 @@ export function createReferenceStyle(avatar,appearance){
     for(const side of [-1,1]){
       const lapel=box(torso,coat,[side*.12,.1,.138],[.07,.27,.022],.01);lapel.rotation.z=side*.2;
       const vestPanel=box(torso,vest,[side*.06,-.01,.134],[.1,.26,.016],.008);vestPanel.rotation.z=-side*.09;
-      const skirt=box(pelvis,coat,[side*.17,-.36,-.039],[.24,.82,.13],.02);skirt.rotation.z=side*.09;
       // A few restrained brocade lines read at conversation distance.
       for(let i=0;i<3;i++)tube(torso,darkGold,[[side*(.11+i*.01),.2,.151],[side*(.13+i*.008),.1,.152],[side*(.12+i*.011),-.01,.149]],.0016);
     }
@@ -351,7 +365,7 @@ export function createReferenceStyle(avatar,appearance){
     tube(torso,silver,[[.015,-.06,.146],[.08,-.1,.14],[.15,-.075,.11]],.0026);
     box(pelvis,leather,[0,.09,.137],[.31,.029,.016],.005);
     box(pelvis,silver,[0,.09,.149],[.037,.036,.009],.005);
-    boots('#1c1a1d',{rugged:true});
+    coatTails(coat);boots('#1c1a1d',{rugged:true});
   }
   // Hair and headwear above were authored for a 0.20 skull top; the shipped
   // rigs measure 0.149-0.160, which left them floating. Lower everything rooted

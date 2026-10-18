@@ -1374,3 +1374,126 @@ motion remain unapproved. Review found no production blocker; its source-snapsho
 visibility and beast-motion guard requests are in the passed gate. Ready for
 signed commit/push to existing PR464 and exact-head CI; no merge/deploy or claim
 that issues440-444 are complete. Preserve checkout and evidence for further work.
+
+
+Coat-tail continuation: previous goal turn only reconfirmed completed plaza work,
+so made no progress on440-444. Brief re-read; owned checkout e8b5b370 remains
+tracked-clean with13preserved reports. Latest CI5green/4running. Read-only project
+handle55483 completed with unrelated register gaps. Next increment owns
+coat-tail-geometry.js, coat-tails.test.js and deterministic bake/data/receipt, plus
+existing reference-archetypes, batching and wardrobe coverage. Actual baseline
+seated formal panels remain thick vertical pelvis boxes. Reproduce relative
+deformation failure before replacing them with thin curved panels on existing rig.
+Full acceptance still requires focused tests, rendered poses, core and pinned4K.
+
+Coat candidate now replaces both rigid pelvis boxes for Kai formal/noir and Aurel
+(all six human/beast bundles) with one owned indexed split-wrap mesh,950vertices,
+1728triangles. Net1128triangles per affected outfit; all existing20draw caps pass.
+The first regression reproduced0/900 moving lower-coat samples in each old look.
+Skinning alone failed397/1101Kai and380/1080Aurel seated lap samples plus53/55edge
+crossings. Generic drape bake cleared sitting/walking but had3crossings in upper
+front cells under90degree asymmetric bends and7.29maximumstretch. A waist lift
+failed and was reverted. Coat-specific offline profile now spreads the transition
+around the hip and gathers rear rows without collapsing them. Current maxstretch
+3.076/3.063, minarea.100/.099;2676testededges,0skipped/0crossings,537/523lap
+samples clear. All18coat+batching tests pass, including asymmetric/transformed
+roots, pinned waist, immutable source buffers, provenance and normalized weights.
+Lyra/Silvan regenerated data is byte-identical; only shared-fitter receipt hashes
+changed. Doctor73913 passed. Previous source e8b5b370 has all10hosted checks green.
+
+First browser candidate83898 passed36rows/90phases/247checks, then source profile
+changed to fix the measured stretching and asymmetric defects. Updated browser
+20862 was interrupted by Vite reload while bake refresh36965 wrote existing files;
+not a pass. Failure/captures archived in coat-tails/profile-interrupted, first
+candidate in coat-tails/first-candidate.36965is terminal0. Temporary journey removed
+and original tracked experience report restored after preservation. Inspected new
+formal seated front/side/rear: thin curved tails and smoother gathered back; broad
+side fold and upper-body tailoring still need art refinement. Continuous collision
+and complete garment quality remain unapproved. Reviewer found no additional
+ownership/binding blocker; requested provenance/weight tests are added and pass.
+Next freeze source and run full58focused,5bakes,132row wardrobe,pinned4K,andcore
+with isolatedRedis using .runtime/character-studio/coat-tails/verify.py. Do not
+edit source or restart a live gate. No commit/merge/deploy for this candidate yet.
+
+
+Frozen45433 completed0:58focused,5deterministicbakes,132rows/330phases/831browser
+checks,native4K,core11/11,and12sourcehashes all pass. This candidate is NOT approved
+for commit: visual review of kai-formal-beast-lope.png reveals lower calf/boot
+penetration beyond the existing upper-thigh probe band. New actual lower-trouser
+and foot-attached boot probe25862 is running after the gate; initial formal lope
+samples reproduce65-68lowertrouser crossings plus boot crossings. Evidence is
+preserved in coat-tails/verified-20261016 and lower-leg-red.log/json. No thresholds
+relaxed. Next implement coat-specific calf/foot weighting, bone-aware corrective
+side shares, lower-leg/actualboot regression and rerun appropriate gates. Existing
+skirts retain their default fitting. This is implementation progress, not delivery;
+full440-444 objective remains active. No coat commit/push yet.
+
+
+Continuation: recovered terminal probe7859 (exit0). Front-only toe weighting
+introduced lower-trouser crossings, so it is rejected. Current candidate restores
+calf following, cuts away the front hem by up to18cm and adds12cm flare. Actual
+lower-leg probe50829 completed24 beast-motion samples: formal clear; noir has2
+rear-vent/shaft crossings and Aurel7 at lope frame144. No tolerance changed.
+Permanent garmentEdgeFixture now accepts a lower-body band and actual transformed
+attachment meshes, including non-indexed geometry; synthetic positive/clearance
+controls pass2/2 (44941). Added six actual-appearance lower-coat motion regressions;
+70946 is running focused coat/helper/batching tests under the shared heavy lock.
+Next inspect that exact handle, widen the lower rear vent to clear the opposing
+boot, rebake and rerun actual surfaces before rendered acceptance. Current coat
+source remains uncommitted and is not covered by the older green full gate.
+
+
+Rear-vent candidate:64317 terminal0, all24 actual beast-motion samples clear.
+Permanent focused60738 terminal0:26/26 tests pass, including all six appearances
+at rest and eight human/beast stride samples each. Widened lower rear vent clears
+the opposing boot while keeping full back length and pinned waist. Browser journey
+now checks lower trousers and actual boot attachments at every captured phase.
+Removed unused ankle weighting; added shaft/ankle independence and bone-identity
+corrective routing tests. Final focused98183 running after refreshed coat bake.
+Next poll98183 and run/render-inspect wardrobe, then full frozen gate. Issue442
+comment6203152484 updated with the visual failure and current evidence. No commit.
+
+Final focused98183 completed0:28/28 pass, zero skips. Includes actual six-look
+lower-leg/boot motion, synthetic non-indexed attachment controls, ankle-independent
+shin shafts and calf-bone corrective routing. Full wardrobe browser32491 started
+with lower-body/boot assertions; source frozen during the run. Previous report
+preserved at coat-tails/lower-render/previous-wardrobe.json; browser.log records
+current progress. Poll32491 rather than restarting. Next inspect all coat captures,
+then deterministic bakes/native4K/core before signed delivery. No coat commit yet.
+
+
+Review follow-up: independent read-only reviewer found no concrete production
+blocker in calf skinning, bone-aware morph shares, boot rest transforms/disposal,
+attachment probes or receipt hashes. Requested stronger lower-leg coverage in the
+manual asymmetric/transformed-root cases. Add that after browser32491 exits.
+Rendered current Aurel prowl and seated, and Kai formal beast seated/lope inspected:
+previous sampled boot crossing is absent; broad seated curtains and angular calf
+folds remain art-refinement limitations, not full tailoring acceptance. Browser
+continues (122 rows /785 checks at observation), no console errors so far.
+
+
+Browser32491 terminal0:132rows/330phases/867checks passed with lower-trouser and
+actual boot checks in every captured coat phase. All captures/report archived in
+coat-tails/lower-render. Reviewed Kai formal/noir beast lope and Aurel prowl/seated;
+sampled boot intersections resolved. Full final cloth art remains unapproved.
+Reviewer's manual asymmetric lower-leg gap addressed:96074 terminal0,2/2 pass
+under transformed roots; same actual lower body and boot surfaces now sampled.
+Only Node tests/docs changed after browser run, no runtime/browser source changes.
+Full verification33147 running under shared lock via verify-lower.py: broad garment
+regressions,5 deterministic bakes,native4K,core with isolatedRedis; completed browser
+867 reused rather than repeated. Evidence verified-lower-20261018; poll33147.
+No commit, push, merge or deployment of this coat increment yet.
+
+
+Full33147 terminal0:67 focused tests,5 deterministic bakes,native3840x2160 human/fox
+comparisons,core11/11 with isolatedRedis, and all16 frozen source hashes pass.
+Completed wardrobe evidence reused:132rows/330phases/867checks. Core counts:
+tooling117; preview3419 pass/1 existing skip/1TODO; server914 zero skips; desktop69;
+Python141 pass/66warnings. Lint/build/demo/secrets pass; demo's documented blocked
+acceptance result remains expected. Receipts verified-lower-20261018; no broad
+physical-device, human accessibility, final art or production acceptance claimed.
+Read-only reviewer found no production blocker; requested lower asymmetric checks
+added and passed. Project check48934 exit1 reports unrelated lifecycle gaps.
+Ready for signed coat increment and push to existing draft PR464. No merge/deploy.
+Next close the integrated corrupt/stale peer-revision fallback coverage gap for443;
+continue cloth-art and device/human acceptance under442/444. Preserve19worktrees.
