@@ -1,13 +1,13 @@
 {
-  "renderedAt": "2026-10-18T19:09Z",
-  "candidate": "d8fe456ae26209f1e46efde328de048e7c162f54",
+  "renderedAt": "2026-10-18T19:47Z",
+  "candidate": "01ee32439cb229b48521a1b84e09fde4c94a8bd0",
   "command": "node preview/e2e/garden-campus-views.mjs gardens circulation",
   "host": "M3 Max, Chromium (ANGLE Metal), 1280x800, Smooth preset, 15:00, interface hidden",
   "status": "passed",
   "limits": "Local loopback fixture on this machine; residents move between views; frame times are the host under its recorded load, not a device budget.",
   "findings": [
-    "Floor 4 galleries render without the gallery/spine walls and closed suite door frames (#508, river-oaks-c5): suite desks from #510 read as one open floor with the public gallery.",
-    "Gallery ceilings render as an unlit dark slab underside."
+    "Closed: Floor 4 galleries are walled off from the suites with closed suite doors (#507 a6dbb661), opaque at any camera distance. First render at d8fe456a showed them open.",
+    "Open (#508, river-oaks-c5): gallery ceilings render as an unlit dark slab underside."
   ],
   "views": [
     {
@@ -30,15 +30,15 @@
         "fov": 70
       },
       "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
-      "calls": 777,
-      "triangles": 3098831,
-      "frameP50": 16.699999999999818,
-      "frameP95": 350,
+      "calls": 781,
+      "triangles": 3113231,
+      "frameP50": 16.69999999999891,
+      "frameP95": 33.399999999999636,
       "samples": 15,
       "hostLoad": [
-        54.7,
-        48.3,
-        51.7
+        46.1,
+        36.3,
+        45.3
       ]
     },
     {
@@ -61,15 +61,15 @@
         "fov": 70
       },
       "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
-      "calls": 619,
-      "triangles": 3056217,
+      "calls": 623,
+      "triangles": 3070617,
       "frameP50": 16.69999999999891,
-      "frameP95": 16.799999999999272,
+      "frameP95": 16.80000000000109,
       "samples": 15,
       "hostLoad": [
-        54.7,
-        48.3,
-        51.7
+        46.1,
+        36.3,
+        45.3
       ]
     },
     {
@@ -92,15 +92,15 @@
         "fov": 70
       },
       "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
-      "calls": 1236,
-      "triangles": 4334222,
+      "calls": 1240,
+      "triangles": 4348622,
       "frameP50": 16.69999999999891,
-      "frameP95": 16.80000000000109,
+      "frameP95": 33.399999999999636,
       "samples": 15,
       "hostLoad": [
-        54.7,
-        48.3,
-        51.7
+        46.1,
+        36.3,
+        45.3
       ]
     },
     {
@@ -123,15 +123,15 @@
         "fov": 70
       },
       "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
-      "calls": 806,
-      "triangles": 3361643,
+      "calls": 810,
+      "triangles": 3376043,
       "frameP50": 16.69999999999891,
       "frameP95": 16.799999999999272,
       "samples": 15,
       "hostLoad": [
-        54.7,
-        48.3,
-        51.7
+        46.1,
+        36.3,
+        45.3
       ]
     },
     {
@@ -154,15 +154,15 @@
         "fov": 70
       },
       "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
-      "calls": 1065,
-      "triangles": 4008149,
-      "frameP50": 16.700000000000728,
-      "frameP95": 16.700000000000728,
+      "calls": 1069,
+      "triangles": 4022549,
+      "frameP50": 16.69999999999891,
+      "frameP95": 16.80000000000109,
       "samples": 15,
       "hostLoad": [
-        54.7,
-        48.3,
-        51.7
+        46.1,
+        36.3,
+        45.3
       ]
     },
     {
@@ -185,15 +185,15 @@
         "fov": 70
       },
       "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
-      "calls": 633,
-      "triangles": 2784198,
+      "calls": 637,
+      "triangles": 2798598,
       "frameP50": 16.69999999999891,
-      "frameP95": 16.700000000000728,
+      "frameP95": 16.799999999999272,
       "samples": 15,
       "hostLoad": [
-        54.7,
-        48.3,
-        51.7
+        46.1,
+        36.3,
+        45.3
       ]
     },
     {
@@ -216,15 +216,15 @@
         "fov": 70
       },
       "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
-      "calls": 1095,
-      "triangles": 4101312,
+      "calls": 1099,
+      "triangles": 4115712,
       "frameP50": 16.69999999999891,
-      "frameP95": 16.700000000000728,
+      "frameP95": 16.799999999999272,
       "samples": 15,
       "hostLoad": [
-        54.7,
-        48.3,
-        51.7
+        46.1,
+        36.3,
+        45.3
       ]
     },
     {
@@ -247,15 +247,15 @@
         "fov": 70
       },
       "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
-      "calls": 831,
-      "triangles": 3517294,
+      "calls": 835,
+      "triangles": 3531694,
       "frameP50": 16.69999999999891,
-      "frameP95": 16.799999999999272,
+      "frameP95": 16.80000000000109,
       "samples": 15,
       "hostLoad": [
-        54.7,
-        48.3,
-        51.7
+        46.1,
+        36.3,
+        45.3
       ]
     },
     {
@@ -278,15 +278,15 @@
         "fov": 70
       },
       "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
-      "calls": 662,
-      "triangles": 2827522,
+      "calls": 666,
+      "triangles": 2841922,
       "frameP50": 16.69999999999891,
       "frameP95": 16.799999999999272,
       "samples": 15,
       "hostLoad": [
-        51.2,
-        47.7,
-        51.5
+        44,
+        36,
+        45.1
       ]
     },
     {
@@ -309,15 +309,15 @@
         "fov": 70
       },
       "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
-      "calls": 1133,
-      "triangles": 4152027,
+      "calls": 1137,
+      "triangles": 4166427,
       "frameP50": 16.69999999999891,
-      "frameP95": 16.700000000000728,
+      "frameP95": 16.799999999999272,
       "samples": 15,
       "hostLoad": [
-        51.2,
-        47.7,
-        51.5
+        44,
+        36,
+        45.1
       ]
     },
     {
@@ -340,15 +340,15 @@
         "fov": 70
       },
       "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
-      "calls": 840,
-      "triangles": 3507300,
+      "calls": 844,
+      "triangles": 3521700,
       "frameP50": 16.69999999999891,
-      "frameP95": 16.700000000000728,
+      "frameP95": 16.80000000000109,
       "samples": 15,
       "hostLoad": [
-        51.2,
-        47.7,
-        51.5
+        44,
+        36,
+        45.1
       ]
     },
     {
@@ -371,15 +371,15 @@
         "fov": 70
       },
       "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
-      "calls": 744,
-      "triangles": 3177774,
+      "calls": 748,
+      "triangles": 3192174,
       "frameP50": 16.69999999999891,
       "frameP95": 16.700000000000728,
       "samples": 15,
       "hostLoad": [
-        51.2,
-        47.7,
-        51.5
+        44,
+        36,
+        45.1
       ]
     },
     {
@@ -402,15 +402,15 @@
         "fov": 70
       },
       "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
-      "calls": 584,
-      "triangles": 2974858,
+      "calls": 588,
+      "triangles": 2989258,
       "frameP50": 16.69999999999891,
       "frameP95": 16.799999999999272,
       "samples": 15,
       "hostLoad": [
-        51.2,
-        47.7,
-        51.5
+        44,
+        36,
+        45.1
       ]
     },
     {
@@ -433,15 +433,15 @@
         "fov": 70
       },
       "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
-      "calls": 450,
-      "triangles": 2588851,
-      "frameP50": 16.700000000000728,
-      "frameP95": 16.700000000000728,
+      "calls": 454,
+      "triangles": 2603251,
+      "frameP50": 16.69999999999709,
+      "frameP95": 16.799999999999272,
       "samples": 15,
       "hostLoad": [
-        51.2,
-        47.7,
-        51.5
+        44,
+        36,
+        45.1
       ]
     }
   ]

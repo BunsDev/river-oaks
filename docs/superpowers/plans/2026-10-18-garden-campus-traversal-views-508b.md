@@ -77,7 +77,7 @@ See the #505 tracker, "#508 slice (b) plan":
 - `node --test preview/tests/garden-campus-circulation-views.test.js`: 3/3 at `706429f1`.
   On the candidate `d8fe456a`, the circulation and #511 finish tests pass 12/12.
 - **Render.** `node preview/e2e/garden-campus-views.mjs gardens circulation` on the #512
-  candidate `d8fe456a`:
+  candidate `d8fe456a`, re-rendered at `01ee3243` after the walls (sheet and receipt replaced):
   - candidate contents: #507 `086c197e`, #509, #510 `465785d2`, #511 `b73cf65a` and this slice;
   - setup: M3 Max, ANGLE Metal, 1280×800, Smooth, 15:00, interface hidden, under the browser
     lock, host load ~40;
@@ -87,11 +87,12 @@ See the #505 tracker, "#508 slice (b) plan":
 
 ## Findings from the views (for #508, river-oaks-c5)
 
-1. **Galleries are not separated from the suites.** All three Floor 4 galleries render without
-   the gallery or spine walls and the closed suite door frames. #510's suite desks read as one
-   open floor with the public gallery. This is the agreed #508 scope (circulation walls and
-   suite door frames). It blocks release: until it lands, the campus shows private suites as
-   open public space.
+1. **Galleries were not separated from the suites (closed).** At `d8fe456a`, all three
+   Floor 4 galleries rendered without walls or suite doors, and #510's suite desks read as
+   public space. Val moved the walls to #507. #507 `a6dbb661` adds them with closed doors,
+   opaque at any camera distance. A second render (`79f74bfb`) showed the near-camera fade
+   dissolving them, which is now fixed. The current sheet at `01ee3243` shows each gallery as a
+   walled corridor with closed suite doors.
 2. **The ceiling is dark.** Gallery ceilings render as an unlit dark slab underside. That is
    finish scope; the gallery and landing finishes are c5's.
 3. Skywalks, terraces and roofs read as #511 finished them: planted troughs, glass guards,
@@ -101,5 +102,5 @@ See the #505 tracker, "#508 slice (b) plan":
 
 1. When #508's first push lands, merge c5's branch here and build the two-player
    journey against its protocol.
-2. Re-render the circulation set once #508's gallery walls, suite door frames and finishes
-   land, and confirm findings 1 and 2 are closed.
+2. Re-render the circulation set once #508's ceiling, floor and lighting finishes land, and
+   confirm finding 2 is closed.
