@@ -243,6 +243,55 @@ passed with 27 checks in 73 s (`.runtime/cs441/worlds-run.json`).
   you wave. Its look belongs to the motion system, not #441, and the label is
   unchanged.
 
+## Novice trial kit (#444 protocol, prepared 2026-10-18, not yet run)
+
+Val recruits five people. Nothing here has been sent. The criteria come from the
+"Usability trial protocol" in `docs/character-studio.md`. They are fixed before
+the first session and are not lowered afterwards.
+
+**Recruiting note (for Val to send):**
+> I'm testing a new character creator in a small online town and would love 20
+> minutes of your time. No prep and no right answers. You'll make a look for a
+> character on a phone or laptop while I watch quietly and take notes. Nothing is
+> recorded without your OK, and I won't keep your name with the notes. Reply with
+> a time that suits you.
+
+**Consent (read aloud, note the answer):** "I'll note what you do and say, under a
+code like P1, with no name. I'll only record the screen if you say yes, and you
+can stop at any time. Is that OK? And is screen recording OK?"
+
+**Facilitator rules:** explain the goal, not the controls. Don't coach until the
+person asks for help or has been stuck for 60 seconds, and log every hint. Use a
+fresh account with no saved favorites. Note the exact commit, browser, device and
+fixture configuration.
+
+**Task card (hand over one at a time):**
+1. Open the character studio from People, choose a character, and make a version
+   you like.
+2. Undo one change, compare with how it started, and save it as a draft.
+3. Wear it in town, then check that a second player sees the same look. The
+   facilitator runs the second window.
+4. Reload the page, change the look again, and wear the new version.
+5. The facilitator simulates a failed save. Get your edit back, then make a
+   second, different look with any tools you find.
+
+**Observation sheet (one row per participant):**
+
+| Code | Device / input / assistive tech | Time from People to first Wear | Tasks 1–4 done without coaching | Help requests (time, what) | Mistakes and recoveries | Explains Save draft vs Wear? | Second distinct look? | Satisfaction 1–5 | Would make another? | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| P1 | | | | | | | | | | |
+| P2 | | | | | | | | | | |
+| P3 | | | | | | | | | | |
+| P4 | | | | | | | | | | |
+| P5 | | | | | | | | | | |
+
+**Pass gate (fixed in advance):**
+- At least 4 of 5 finish tasks 1–4 without coaching, within 5 minutes to the first Wear.
+- All 5 recover their edit without losing it.
+- At least 4 tell private save apart from shared wear, and make a second distinct look without help.
+- Median satisfaction is at least 4 of 5.
+- Any identity leak, permission bypass or lost saved work fails the trial, whatever the totals.
+
 ## Gaps and next steps
 
 Not claimed: human keyboard, VoiceOver or novice acceptance (#444 protocol),
