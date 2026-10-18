@@ -1,3 +1,4 @@
+import { migrateCharacterAppearance, characterAppearanceFor } from './character-definition.js';
 import { createPlayerAttention } from './player-attention.js';
 import { createPlayerCostume } from './player-costume.js';
 import { createFlightVehicle } from './flight-vehicles.js';
@@ -247,7 +248,8 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     host.dataset.playerReady = 'false';
     let next, nextOutfit, nextVehicle;
     try {
-      const chosenProfile=appearance,character=sharedAppearance(chosenProfile),rigProfile=character.rig??chosenProfile;
+      const definition=migrateCharacterAppearance(userId,appearance);
+      const chosenProfile=definition.appearanceId,character=characterAppearanceFor(definition,userId),rigProfile=definition.rig;
       const portrait = new Image();
       let portraitReady=Promise.resolve(false);
       if(character.portrait||character.reference){
