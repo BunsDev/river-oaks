@@ -191,6 +191,29 @@ passed with 27 checks in 73 s (`.runtime/cs441/worlds-run.json`).
   preview builds omit the Studio. The local fixture issues loopback-only
   identities, so a physical phone cannot sign in to it.
 
+## Round 5: a sign-in-capable branch preview for human sessions (2026-10-18)
+
+- Before: the #484 preview answered `/auth/session` with 503 `auth_unavailable`.
+  Previews have no Redis namespace, public origin or cookie secret, and the server
+  refuses to share the production town (`server/redis-backend.js`).
+- Val approved a full branch preview. Five Preview variables were added, scoped
+  to `feat/character-studio-creation-441-20261018` only:
+  - `REDIS_NAMESPACE=river-oaks:preview:cs441:v1`, an isolated keyspace;
+  - `PUBLIC_ORIGIN` set to the branch alias;
+  - `RIVER_OAKS_CHARACTER_STUDIO=1`;
+  - `VITE_CHARACTER_STUDIO=true`;
+  - a generated, sensitive `WORKOS_COOKIE_PASSWORD`, never printed.
+  Production and every other branch are unchanged.
+- Redeployed as `river-oaks-ffav4xfqd` (Ready). At the branch alias
+  `https://river-oaks-git-feat-character-studio-creation-441-dcb2ad-0xbuns.vercel.app`,
+  `/auth/session` now answers 200 `{"authenticated":false}` and
+  `/api/waitlist/status` answers 401 `sign_in_required`.
+- Email-code sign-in needs no callback allow-list. GitHub sign-in would need
+  `<alias>/auth/callback` allowed in WorkOS. No email was sent from automation.
+- To remove later: `vercel env rm <NAME> preview feat/character-studio-creation-441-20261018`
+  for each of the five variables, then delete the `river-oaks:preview:cs441:v1*`
+  keys if the namespace is retired.
+
 ## Gaps and next steps
 
 Not claimed: human keyboard, VoiceOver or novice acceptance (#444 protocol),
