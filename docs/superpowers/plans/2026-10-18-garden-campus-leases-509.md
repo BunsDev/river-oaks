@@ -43,17 +43,17 @@ proposal only. No payment code, prices or provider fixtures exist.
 
 ## Interfaces
 
-**Consumed.** #506 `shared/garden-campus-layout.js` at `8921ca42`:
+**Consumed.** #506 `shared/garden-campus-layout.js`, built on `8921ca42` and merged up to `63ef1b10` (layout 3.1):
 `campusUnitInventory()` (43 suites), `GARDEN_CAMPUS_LAYOUT` (doors and inside
 points), `campusLevelId`, `checkCampusCompatibility` and
-`GARDEN_CAMPUS_VERSIONS {schema 1, layout '3.0', floors 1, support 1, units 1}`.
+`GARDEN_CAMPUS_VERSIONS {schema 1, layout '3.1', floors 1, support 1, units 1}`. Layout 3.1 moved level portals to standing points but left suite doors as they were (inside point 0.6 m in), so the landings did not change. Compatibility checks major versions, so a lease written at 3.0 restores at 3.1.
 One difference from the agreed sketch: `campusUnitInventory().door` is the door
 position array. `opensTo` and the inside point come from the layout's suites.
 
 **Published.**
 
 - Lease contract `CAMPUS_LEASE_CONTRACT = {id: 'river-oaks-garden-campus', layout:
-  '3.0', units: 1}`.
+  GARDEN_CAMPUS_VERSIONS.layout ('3.1'), units: 1}`.
 - Command `{type: 'campus', action, …}` with the actions `list`, `request`,
   `cancel`, `decline`, `issue`, `accept`, `release`, `renew`, `revoke`, `grant`
   and `ungrant`. Error codes are in `CAMPUS_LEASE_ERRORS`.
@@ -93,7 +93,25 @@ Full reference: `docs/garden-campus-leases.md`.
 
 ## Checks
 
-The results follow.
+All runs used my own loopback `redis-server --port 16509 --save ''`. Tests own random
+namespaces, and nothing used FLUSHDB. Load averages were 50–310 throughout, from
+other sessions' browsers and builds.
+
+| What | Revision | Result |
+| --- | --- | --- |
+| `node --test server/tests/campus-leases.test.js` | f9dbc541, a5704bdb | 15/15 |
+| Campus leases, transport (memory + two Redis gateways + coordinators), offices, world | f9dbc541 | 72/72, 0 skipped |
+| Campus leases + transport + #506 `garden-campus-support` | 56956212 (layout 3.1) | 22/22, 0 skipped |
+| Mutation checks (no exclusivity or supersede; no version check; receipts ignored; access open to all; no retirement; inert prune on) | working tree, reverted | each detected by at least one campus test |
+| Touched existing suites (offices, character-world, creator-objects, interactions, seating, world-contract, district-gallery-levels, penthouse-office, penthouse-seats, office-ipic-rollback) | pre-commit | 63/63 |
+| `REDIS_URL=… pnpm run test:server` | 503e9fd0 content | 931/931, 0 skipped |
+| `pnpm run verify` (core) | e7fcca2c | agent 121/121; preview-tests killed by the runner's 10-min cap at load ~110 (`ETIMEDOUT`, no test failed) |
+| Core commands one at a time, no cap | 38f8de52 | server+Redis 914/932 at load ~300: 18 failures, all timeouts in transport, gateway and migration suites. Those 11 files rerun alone: 65/65 and phone fixture 7/7. Preview 3546/3549: 2 wall-clock failures (morris reply budget, penthouse idle slice), 22/22 rerun alone. Desktop 76/76; build ok; ruff check and format ok; pytest 141 passed; demo ok; demo-verify exit 2 (the expected exit); secrets ok |
+| Hosted CI | 38f8de52 | all green except `preview checks`, where email-access e2e timed out on `#access-invites-open`. Same job: preview 3548/3549 (1 skip), server 932/932 (Redis, 0 skips), desktop 75/76 (1 skip) |
+| Hosted CI | 485d4e11 | **all 13 checks green**: agent 121/121, preview 3548/3549 (1 skip), server 932/932 (Redis, 0 skips), desktop 75/76 (1 skip), email/security e2e 2/2 |
+
+Not covered: browser journeys (none needed for #509), hosted or production
+acceptance, and real WorkOS accounts.
 
 ## Gaps and next steps
 

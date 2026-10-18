@@ -47,7 +47,7 @@ the same on every gateway.
 ## Suites
 
 The rentable units are exactly #506's `campusUnitInventory()`: 43 suites,
-3,279.7 m² net, on floors 2 and above of T1, T2 and T3 (layout 3.0, units version
+3,279.7 m² net, on floors 2 and above of T1, T2 and T3 (layout 3.1 at this revision; leases check major versions only, units version
 1). Ids look like `T1-F2-W-S`, with display numbers like `T1-201`.
 `campusLeaseUnits()` adds each suite's level id (`garden-campus/l1`…), its door,
 and its **landing**: the point on the public spine just outside the door. The world
