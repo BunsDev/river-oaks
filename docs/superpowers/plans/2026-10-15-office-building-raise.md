@@ -4,6 +4,7 @@
 - **Branch / worktree:** `feat/office-building-raise-20261015` in `../river-oaks-office-building-raise`, from `origin/main` `f72a173e`.
 - **Decision:** Val, 2026-10-14 (`docs/design/office-ipic/brief.md`, "Physical fit"; contract `fit.decision`): raise the modelled building, keeping level 6, the 24.3 m lift ride and the arrival film.
 - **Merge is held** for Val's authorization of the activation deploy, because deploying it migrates the production town checkpoint.
+- **Update 2026-10-18:** the hold above is out of date. Val authorized the deploy on 2026-10-15; #432 merged as `7a3b8bcf` and its production deployment succeeded at 16:27Z. Production's `RIVER_OAKS_OFFICE_LAYOUT=office-penthouse-1` was set the same day, so the penthouse has been active in production since then.
 
 ## Objective
 
