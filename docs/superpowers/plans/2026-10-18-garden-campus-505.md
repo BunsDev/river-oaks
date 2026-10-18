@@ -76,17 +76,51 @@ due about 15:50Z on `feat/garden-campus-contract-506-20261018`.
   - Every unit door names both the spine it opens from and the suite surface it opens
     into.
 
-## Package ownership and dependencies (as of 2026-10-18 18:45Z)
+## Package ownership and dependencies (as of 2026-10-18 19:00Z)
 
 | Package | Owner / task | Branch → PR | Delivered revision | Status |
 | --- | --- | --- | --- | --- |
 | #506 contract | river-oaks-c5 (1e70822d) / `garden-campus-contract-506` | → #519 (ready) | `3fac6c32`, layout 3.2 | hosted 19/19 green; BEHIND main (needs only an update before landing) |
 | #507 shells + ground | river-oaks-95 / `garden-campus-shells-507` | → #523 (draft, base #519) | `086c197e` (3.2, main `97304fb7`, room summaries) | green at `40aec12a`; `086c197e` fixes the hall-door bug #510's journey found; matched views captured |
-| #508 upper circulation | river-oaks-c5 / `garden-campus-traversal-508` | stacks on #507 | none | **not started.** Queued as c5's next goal, which Val starts; c5 is on another task (throw mechanics). The critical-path blocker. |
+| #508 upper circulation | river-oaks-c5 / `garden-campus-traversal-508` | stacks on #507 `086c197e` | none | **Val started it at ~18:55Z.** c5 begins after its darts/wine-pong PR; first push will freeze the hooks. Slice (b) split to river-oaks-95 (below). |
+| #508 slice (b) | river-oaks-95 / `garden-campus-traversal-views-508b` | `test/garden-campus-traversal-journey-508-20261018`, stacked on c5's #508 branch | none | queued on #508's first push; built against that push's protocol only |
 | #509 leases | river-oaks-95 delegated agent / `garden-campus-leases-509` | → #522 (ready, base #519) | `1d151a8d`, checkpoint v13, `leaseRequestId` | hosted all green, CLEAN |
-| #510 resident journey | river-oaks-95 / `garden-campus-journey-510` | → #527 (draft, base #522) | `5c13cdca` (merges #507 `086c197e`) | dialog, fit-out, public workstations, seat rules; 126/126 focused tests; hosted `campus` shard re-running for the first end-to-end pass |
+| #510 resident journey | river-oaks-95 / `garden-campus-journey-510` | → #527 (draft, base #522) | `465785d2` (merges #507 `086c197e`) | **hosted `garden-campus-office` passed end to end, 21/21 checks** (run 39155567833); 126/126 focused tests; suite entry waits on #508 |
 | #511 finish + rendering | river-oaks-95 delegated agent / `garden-campus-finish-511` | → #528 (draft, base #507) | `6b8c51e6` (merges #507 `40aec12a`; taking `086c197e`) | 67 furnishings drawn once each; matched day/dusk sheets; resources vs garage: street +10% calls / +18% triangles, aerial +3%, +3–5 programs, no rebuild growth (M3 Max) |
-| #512 integration | river-oaks-95 / `garden-campus-acceptance-512` | → #525 (draft candidate) | `aed8b247` (#507 `086c197e` + #509 + #510 `5c13cdca` + main `97304fb7`) | 145/145 integrated set at `284a5ca3`; 80/80 campus/migration/room suites at the code head; `campus` shard re-running |
+| #512 integration | river-oaks-95 / `garden-campus-acceptance-512` | → #525 (draft candidate) | `ac88b09a` (#507 `086c197e` + #509 `1d151a8d` + #510 `465785d2` + #511 `b73cf65a` + main `97304fb7`) | 175/175 integrated set; hosted `campus` shard passed (run 39155682472) |
+
+### #508 slice (b) plan (river-oaks-95; assigned by Val, agreed with c5)
+
+Owned files:
+- `preview/e2e/garden-campus-traversal.js` (new);
+- its runner fixture and CI shard entries;
+- the Floor 4 and terrace cameras in `preview/e2e/garden-campus-views.mjs`;
+- the view captures and the slice ledger.
+
+c5 keeps the server authority, level environments, portal transitions, client walking/level
+hooks and the gallery, landing and core-lobby finishes. HUD markers the journey needs (level
+id, portal action labels) are requested from c5, not added here.
+
+Journey checks, mapped to #508's acceptance and run against the first push's protocol:
+1. **Continuous route.** A resident enters T1, takes the lift or stairs to Floor 4 with the
+   HUD's own portal action, then walks T1-F4-public → B12 → T2-terrace-4 → T2-F4-public →
+   B23 → T3-F4-public with keys, no travel. The position stays continuous (no step over
+   the bridge spacing) and the level id stays `garden-campus/l3`. They return to the street
+   through T3's core.
+2. **Above and below.** A second resident stands on P2 under B12 at the same x/z while the
+   first crosses. Altitudes differ by the deck height. Each resident sees the other at the
+   correct height, and neither receives a correction (no rubber-banding).
+3. **Landings.** An occupied lift landing does not barricade the arriving resident.
+4. **Reach.** One terrace (T2-terrace-4, on the route) and one roof (T2-roof, l7) in the
+   browser; all six terraces and three roofs come from c5's transport tests.
+5. **Controls.** Phone viewport with touch for the portal and step-outside actions;
+   reduced-motion arrival reaches the same authoritative destination.
+6. **Feet.** The rendered avatar's feet agree with `campusSupportAt(level, u, v).z` within
+   tolerance on the deck, in a lobby and on the terrace.
+
+Matched views: contract camera `03-floor4-bridge-walk` plus Floor 4 gallery and T2-terrace-4
+cameras, with a resident standing there, set against `docs/design/garden-campus/views/floor-4.svg`
+and `section-u16.svg`. #511's sheets cover the unoccupied finish.
 
 Interfaces agreed between owners (all recorded in their ledgers):
 
