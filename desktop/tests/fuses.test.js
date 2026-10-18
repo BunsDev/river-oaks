@@ -16,6 +16,11 @@ test('the packaged app turns off every way to run Node code as River Oaks', () =
   assert.equal(DESKTOP_FUSES[FuseV1Options.GrantFileProtocolExtraPrivileges], false);
 });
 
+// Signed releases keep the Keychain key across updates (desktop/sign.js).
+test('the packaged app encrypts its cookies', () => {
+  assert.equal(DESKTOP_FUSES[FuseV1Options.EnableCookieEncryption], true);
+});
+
 test('every fuse this Electron knows is decided, so a new one fails packaging', () => {
   assert.equal(DESKTOP_FUSES.strictlyRequireAllFuses, true);
   const known = Object.values(FuseV1Options).filter(value => typeof value === 'number');

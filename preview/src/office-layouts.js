@@ -12,6 +12,7 @@
 // The penthouse carries only what the reviewed contract states: shell, levels, terrace
 // openings, stair, lift, anchors and the approved mezzanine programme. Of the supplied
 // kit's furniture colliders, only the measured desk footprints are imported (R19, below).
+// The lounge, meeting, terrace and planting footprints are #362's own original furnishings.
 //
 // Seats (#363) are the desk chairs and the library reading chairs. A visitor claims one from
 // its stand point and stands back up there. While a seat is taken, the measured seated body
@@ -70,6 +71,33 @@ const deskFootprints = [
   { id: 'bench-a', x: [2.4, 7.6], d: [6.4, 7.6] },
   { id: 'bench-b', x: [2.4, 7.6], d: [11.4, 12.6] },
 ];
+// The main floor's furnishings (#362): original pieces placed by this plan, not the kit's. Each
+// footprint is the piece's collision at the floor, with its top height. Hosting is a lounge at the
+// `lounge` view, collaboration a meeting table under the mezzanine at the `meeting` view, and the
+// terrace a retreat. Every required route stays walkable for the turning body, also with every
+// other seat taken (office-layouts.test.js). The botanical planter's canopy spreads above head
+// height and is not collision; the art keeps it there (office-penthouse-furnishings.js).
+const furnishings = [
+  { id: 'lounge-sofa', x: [-11.3, -8.5], d: [11.55, 12.55], height: 0.8 },
+  { id: 'lounge-table', x: [-10.6, -9.2], d: [9.85, 10.65], height: 0.38 },
+  { id: 'lounge-chair-a', x: [-11.325, -10.475], d: [8.2, 9.05], height: 0.8 },
+  { id: 'lounge-chair-b', x: [-9.325, -8.475], d: [8.2, 9.05], height: 0.8 },
+  { id: 'botanical-planter', x: [-14.5, -13.3], d: [7.9, 9.1], height: 0.7 },
+  { id: 'back-console', x: [-8, -1], d: [19.45, 19.95], height: 0.8 },
+  { id: 'meeting-table', x: [5.6, 8.8], d: [17.1, 18.3], height: 0.75 },
+  ...[6.2, 7.2, 8.2].flatMap((x, i) => [
+    { id: `meeting-chair-${i + 1}`, x: [x - 0.28, x + 0.28], d: [16.22, 16.78], height: 0.85 },
+    { id: `meeting-chair-${i + 4}`, x: [x - 0.28, x + 0.28], d: [18.62, 19.18], height: 0.85 },
+  ]),
+  { id: 'terrace-planter-south', x: [-22.95, -22.35], d: [0.6, 6], height: 0.6 },
+  { id: 'terrace-planter-north', x: [-22.95, -22.35], d: [14, 19.4], height: 0.6 },
+  { id: 'terrace-lounger-a', x: [-21.3, -20.55], d: [15.8, 17.8], height: 0.45 },
+  { id: 'terrace-lounger-b', x: [-20.05, -19.3], d: [15.8, 17.8], height: 0.45 },
+  { id: 'terrace-side-table', x: [-20.5, -20.1], d: [17.3, 17.7], height: 0.45 },
+  { id: 'terrace-bistro-table', x: [-20.6, -19.8], d: [3.2, 4], height: 0.74 },
+  { id: 'terrace-bistro-chair-a', x: [-20.45, -19.95], d: [2.45, 2.95], height: 0.85 },
+  { id: 'terrace-bistro-chair-b', x: [-20.45, -19.95], d: [4.25, 4.75], height: 0.85 },
+];
 const stair = { x: [10.2, 13.4], d: [5.6, 14], rise: 3.8, risers: 22 };
 // Library revision 3 (approved 2026-10-14): furniture bases at the mezzanine floor.
 const mezzanine = {
@@ -101,6 +129,7 @@ const penthouse = {
         box('terrace-wall-south', 'wall', -15, 1.5, WALL, 3, 7.6), box('terrace-wall-middle', 'wall', -15, 8.5, WALL, 3, 7.6), box('terrace-wall-north', 'wall', -15, 17, WALL, 6, 7.6),
         { id: 'stair', kind: 'stair', x0: stair.x[0], x1: stair.x[1], d0: stair.d[0], d1: stair.d[1], height: stair.rise },
         ...deskFootprints.map(({ id, x, d }) => ({ id, kind: 'desk', x0: x[0], x1: x[1], d0: d[0], d1: d[1], height: DESK_HEIGHT })),
+        ...furnishings.map(({ id, x, d, height }) => ({ id, kind: 'furniture', x0: x[0], x1: x[1], d0: d[0], d1: d[1], height })),
       ],
       chairs: desks.map(([id, , seat]) => ({ id: `${id}-chair`, position: seat })),
       portals: [
@@ -138,8 +167,13 @@ const penthouse = {
     { id: 'overview', label: 'Overview', levelId: L0, eye: [13.6, 6.4, 1.2], target: [-6, 1, 12] },
     { id: 'main-floor', label: 'Main floor', levelId: L0, eye: [-8, 1.7, 1.5], target: [5, 1.2, 12] },
     { id: 'workstations', label: 'Workstations', levelId: L0, eye: [9, 2.4, 1.8], target: [4.5, 0.8, 7.5] },
-    { id: 'library', label: 'Library', levelId: L1, eye: [13.5, 2.2, 19.2], target: [-6, 1, 17.5] },
+    // From the mezzanine's east end down the library, past the bookcase faces to the reading chairs
+    // (#362: from the back corner, a bookcase's end and the back wall filled the frame).
+    { id: 'library', label: 'Library', levelId: L1, eye: [14.2, 2.4, 17.6], target: [-6, 1, 18.9] },
     { id: 'terrace', label: 'Terrace', levelId: L0, eye: [-16, 1.8, 17.5], target: [-30, 1, 4] },
+    // From the front terrace corner, look over its parapet toward the actual
+    // neighbouring podiums in the live district; no visitor relocation.
+    { id: 'roof-gardens', label: 'Roof gardens', levelId: L0, eye: [-22, 1.8, 1], target: [-5, -15.2, -33] },
   ],
 };
 

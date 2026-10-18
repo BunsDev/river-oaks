@@ -115,8 +115,9 @@ Results:
 | Trip | Width | Accepted body |
 | --- | --- | --- |
 | Street door to the top of either escalator lane | 1.70 m (the door) | fits; lanes are 1.71 m between glass rails |
-| Lane top to inside the auditorium doorway | 1.005 m (planter at −5.6, 25.4 to the sofa's west arm) | **5 mm short** of 1.01 m; posed bodies fit |
-| Doorway to each of the 8 recliner approaches, other 9 seats occupied | 1.11–1.14 m | fits |
+| Lane top to inside the auditorium doorway | 1.055 m (planter at −5.65, 25.4 to the sofa's west arm) | fits (the planter moved 5 cm west, Val, 2026-10-15) |
+| Doorway to each of the 8 recliner approaches (d + 1.4, in front of the footrest), other 9 seats occupied | 0.89 m | the server body fits; the widest accepted body reaches a sit spot within the 3.6 m sit reach for every recliner (1.2–3.09 m away) |
+| Front-row aisle with the back row seated | 0.891 m (footrests to the back row's seated bodies) | below 1.01 m, above the widest posed body (0.80 m); accepted by Val, 2026-10-15 |
 | Turning circles: reception, landing, lounge, auditorium, every seat occupied | 3.05, 1.31, 1.85, 1.50 m radius | fit (0.888 m needed) |
 
 The server walks these routes in `server/tests/ipic-routes.test.js`. It covers:
@@ -144,16 +145,33 @@ collide; none is on a public route.
    steps out, past the arm at its end (`ipic-plan.js` `stand`). The server's `stand()` tries
    that spot, with the usual destination checks, before its radial search, which never
    finds a straight clear path out of the sofa.
-2. **The lounge-to-auditorium passage** is 1.005 m against the 1.01 m accepted body.
-3. **Drawn without collision, where a body can stand:**
-   - recliner bases, footrests and side tables, and the sofa cushions: seat zones,
-     whose cushion centres must stay free for the sit protocol;
+2. ~~**The lounge-to-auditorium passage** was 1.005 m against the 1.01 m accepted body.~~
+   Fixed (Val, 2026-10-15): the lounge planter moved 5 cm west; the passage is 1.055 m.
+3. ~~**Recliner footrests and base ends had no collision.**~~ Fixed (Val, 2026-10-15): they
+   collide as drawn (`ipic-recliner-base`, `ipic-recliner-footrest` in `ipic-plan.js`).
+   Each recliner names a stand spot and approach at d + 1.4, in the aisle in front of the
+   footrest, 0.45 m from it and from the back row's seated bodies. With the back row
+   seated the front-row aisle is 0.891 m: the widest accepted body sits the front row
+   from the side aisles, within the server's sit reach.
+4. ~~**Open sky over the escalator runs.**~~ Fixed: the runs share the ceilings of the
+   floors they rise to; a test requires a ceiling above every walkable point. Found by
+   the photo review (`docs/ipic-review/photo-review.md`, P1).
+5. **Drawn without collision, where a body can stand:**
+   - the base under each recliner cushion, the side tables, and the sofa cushions: seat
+     zones, whose cushion centres must stay free for the sit protocol;
    - the fluted reception backing and its sign, drawn across the right escalator
      lane's entrance (slats from a = 1.29 m; the lane runs 0.545–2.255 m), so a
      collider there would close the lane: an art fix;
    - pitched escalator glass and stone courses overhanging the lane ends;
    - tub-chair shells, planter foliage, and the screen plane, 0.13 m in front of the
      wall that stops a body.
+
+**Runtime against the photos** (2026-10-15): `docs/ipic-review/photo-review.md` compares
+T1–T3 with the photos they are indexed to and lists 18 differences by photo ID, severity
+and owner. P1 (open sky), P5 (sign), P7 (reception view), P9 (coffee table), P12 (lounge carpet
+and bar floor), P17 (auditorium carpet) and P18 (the walled-in landing) are fixed, and P2 (the
+mural, kept large in its bay) is resolved as Val chose; the other 10 are art direction or layout
+work tracked on #359.
 
 **Screen** (`IPIC_SCREEN` in `ipic-plan.js`, used by the renderer and the data):
 

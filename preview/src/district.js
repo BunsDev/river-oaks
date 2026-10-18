@@ -1,3 +1,4 @@
+import { buildGreenRoofs } from './green-roofs.js';
 import { buildReferenceLandscape } from './reference-landscape.js';
 import { decorateWinstonDoor } from './harry-winston-facade.js';
 import * as THREE from 'three';
@@ -422,6 +423,7 @@ export function buildDistrictBuildings(world) {
     mesh.castShadow = material !== glass && material !== light && material !== spot; mesh.receiveShadow = true; mesh.userData.aoExclude = material === glass; group.add(mesh);
   }
   group.add(reference.group);
+  group.add(buildGreenRoofs(world));
   if(officeLobby){
     const arrival=buildOfficeArrival({facade:false}),n=officeLobby.outward;
     arrival.object.position.set(officeLobby.facade[0]-n[0]*ARRIVAL.facadeOffset,officeLobby.floor,-officeLobby.facade[1]+n[1]*ARRIVAL.facadeOffset);

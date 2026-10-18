@@ -1,7 +1,7 @@
 {
   "blender": "5.2.2 LTS",
-  "meshes": 59,
-  "triangles": 131528,
-  "packed_images": 13,
-  "bytes": 11308050
+  "meshes": 64,
+  "triangles": 131708,
+  "packed_images": 16,
+  "bytes": 11557689
 }

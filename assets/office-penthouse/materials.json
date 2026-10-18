@@ -1,0 +1,74 @@
+{
+  "package": "office-penthouse",
+  "note": "One material per finish; tinted finishes take vertex colour. Surfaces are in textures/ (sRGB, 512 px) and tile at `tile` metres.",
+  "finishes": {
+    "travertine": {
+      "color": "#ffffff",
+      "surface": "travertine",
+      "tile": 1.2,
+      "roughness": 0.55
+    },
+    "rose-stone": {
+      "color": "#ffffff",
+      "surface": "rose-stone",
+      "tile": 1.6,
+      "roughness": 0.2
+    },
+    "wood": {
+      "color": "#ffffff",
+      "surface": "wood",
+      "tile": 0.9,
+      "roughness": 0.42,
+      "tint": true
+    },
+    "bronze": {
+      "color": "#c7a676",
+      "roughness": 0.3,
+      "metalness": 1
+    },
+    "upholstery": {
+      "color": "#ffffff",
+      "roughness": 0.86,
+      "tint": true
+    },
+    "graphite": {
+      "color": "#2c2a28",
+      "roughness": 0.42,
+      "metalness": 0.2
+    },
+    "SCREEN_DYNAMIC": {
+      "color": "#101417",
+      "roughness": 0.18,
+      "emissive": "#26343d",
+      "emissiveIntensity": 0.3
+    },
+    "foliage": {
+      "color": "#ffffff",
+      "roughness": 0.62,
+      "tint": true,
+      "double": true
+    },
+    "organic": {
+      "color": "#ffffff",
+      "roughness": 0.92,
+      "tint": true
+    },
+    "objects": {
+      "color": "#ffffff",
+      "roughness": 0.5,
+      "tint": true
+    },
+    "wool": {
+      "color": "#ffffff",
+      "roughness": 1,
+      "tint": true
+    },
+    "shade": {
+      "color": "#f4eadc",
+      "roughness": 0.9,
+      "emissive": "#ffd6a0",
+      "emissiveIntensity": 0.55,
+      "double": true
+    }
+  }
+}

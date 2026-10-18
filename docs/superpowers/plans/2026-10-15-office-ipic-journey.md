@@ -47,65 +47,52 @@ first run. Desks and shared workspace tasks live outside world checkpoints (offi
 | Journey runs 2–5 | failed before the journey's own steps: an outside disk sweep deleted every `node_modules`, then the Playwright cache dropped Chromium 1248 (both restored). Run 4 reached the chair race and found the harness let bob stop beyond the 1.3 m reach (server answered `office_seat_out_of_reach`); the walk now stops within 0.25 m and both racers start 0.9 m from the stand point. |
 | **Journey run 6** at `cb4006d5` (load average 23–108, SwiftShader, no reloads) | **passed 30 checks**: refusal (UI and direct `enter`), request accepted in the Offices panel, both arrivals, the scene idea prompt (saves nothing until written; named on writing), private My tasks, bob's desk empty, both snapshots clean, a forged direct desk read refused (400), a two-socket chair race with one winner and `office_seat_occupied`, the envelope blocking the loser, Z to stand, stairs, library reading chair b, bob on the terrace seeing Jevica seated on the mezzanine, the seat released on leaving, bob's late join at 12.9 s without host controls, within 500 ms after 3 ms, both back in town with nothing playing, no page errors. Software rendering on the graybox and fixture: not final art, the approved short, or device evidence. |
 
-## Lead status and resume point (2026-10-15, 11:58Z)
+## Lead status: final (2026-10-15, 21:20Z)
 
-This is the lead ledger for the #359 goal. Heads after merging main `dda596c5` (#411, #415 axe checkpoint
-field, #419), all signed, hosted checks green:
+This is the lead ledger for the #359 goal (session river-oaks-39, owner `claude:office-seats-363`). Summary
+page of everything merged today: https://claude.ai/artifact/CWKmY3KwRMiDME7z7H6vKR (private to Val until shared).
 
-| PR | Branch | Head | Hosted |
+**Landed through `pnpm run land`, each authorized by Val in session:**
+
+| PR | Package | What | Merge |
 | --- | --- | --- | --- |
-| #400 | `feat/office-seat-claims-20261015` | `d1266a15` | 16/16 |
-| #403 | `feat/office-kit-fit-362-20261015` | `8d09e6dc` | 10/10 |
-| #404 | `feat/office-views-363-20261015` | `a1abfb84` | 10/10 |
-| #406 | `test/office-ipic-journey-20261015` | `9db4e845` | 10/10 |
-| #407 | `test/ipic-screening-soak-20261015` | `144b3aa8` | 16/16 |
-| #424 | `fix/ipic-recliner-view-20261015` | `d7cc8ea7` | running (ready for review, not a draft) |
+| #400 | #363 | Server seat claims, occupied-body clearance, checkpoint v11 | `9149ed72` |
+| #403 | #362 | Read-only desk fit check for the supplied kit | `f72a173e` |
+| #404 | #363 | Bounded views and the private scene idea prompt | `d53a63e7` |
+| #406 | #368 | This journey and the v11 rollback test | `9a7eb234` |
+| #407 | #367, #368 | Captions fix, ten-cycle soak, screening profile | `49e96c70` |
+| #424 | #368 | T3: a seated recliner viewer sees the screen | `326506f7` |
+| #429 | #365 | The approved short (Val: "Approve as is") is the default screening | `1cb2b3a3` |
+| #430 | #362 | R19: the kit's measured desk footprints, numbers only | `d8f9cdee` |
+| #437 | — | Landing page: residents with access see "Enter River Oaks" | `941dfe6a` |
+| #445 | #361 | No barricades: a body on a landing never keeps a visitor off a floor | `372c080b` |
+| #446 | — | Say hello: semi-transparent, opened on purpose when you face someone | `c3f6726f` |
+| #453 | #364, #367 | Theater UX: Step outside near the door only, seated mode, Stand up reachable, house lights | `2d7a1ef3` |
 
-| Check on the merged heads | Result |
-| --- | --- |
-| `REDIS_URL=<isolated> node --test server/tests/*.test.js` at `d1266a15` | 771/771, 0 skipped, 0 todo (includes #415's optional `axeGames` field beside v11 seats) |
-| `node --test preview/tests/office-*.test.js server/tests/office-ipic-rollback.test.js` at `9db4e845` | 89/89 |
-| `node --test preview/tests/ipic-*.test.js preview/tests/screening-contract.test.js scripts/tests/agent.test.js` at `144b3aa8` | 46 pass, 1 todo, 0 fail |
+**Final evidence on main** (software rendering on one Mac, load recorded):
+- **This journey:** 30 checks on `2d7a1ef3`, load 24–33, with the late join within 500 ms after 257 ms. Host Start
+  plays the approved short since #429; the receipt's `rendering` text still names the fixture, which is stale.
+- **Soak:** `node preview/e2e/ipic-screening-soak-runner.mjs 10` passed on `883ed56c` at load 18–33. All 11 joins
+  came within 500 ms in 2–17 ms and stayed there (worst 294 ms), and counters stayed flat.
+- **The earlier soak failure:** a run on `2d7a1ef3` failed the stay-within rule once (595 ms, load 27–31). That led
+  to the seek A/B in `2026-10-15-screening-seek-lead.md`: the fix was not landed, and its branch is parked.
 
-**#365 short: candidate 1, local only.** `~/Documents/river-oaks-drafts/ipic-short-candidate-20261015/`
-(README there). It is a 52.6 s runtime capture on Metal (commit `7712634b`, default office layout, synthetic
-identities, idle IPIC screen), delivered as WebM (VP9, 1.41 Mbps) and MP4 (H.264 Main 3.1, 2.04 Mbps), with
-8 caption cues, a transcript, a poster and a manifest in the fixture's shape (approval pending).
-- Every edge has a black border of at least 4 px.
-- Decode check on Metal Chromium: hashes match, durations equal the manifest, no dropped frames, and the cues
-  equal the transcript.
-- Not committed, allowlisted or played in-world. The repository is public; publication is Val's decision.
-- Take 1 was rejected: the office spun about 550° in 6 s, name tags showed through walls, and a door prompt
-  was in frame.
-- Posted on #365 (issuecomment-6190568373). Lead status posted on #359 (issuecomment-6190568677).
+**Issues:**
+- **Closed today, at Val's request:** #363, #365, #361, #364, #367 and #368. Each closing comment lists what moved to #359.
+- **Open:** #362 (R19 ticked) and #359. The final status is #359 issuecomment-6202245197.
 
-**Blocked on decisions, not engineering:**
-- Val: #400's v11 checkpoint. After deploy, roll back by configuration on v11 code; a v10 build cannot take
-  the lease from a v11 writer.
-- Val/design: R19 kit import and desk footprints (#362, #403 evidence).
-- Val: the #365 cut, likeness, lounge artwork (floral texture from `IMG_9761.jpg`, the venue's lettering),
-  signage, and the allowlist commit.
-- Val: production host grants, a hosted CI screening job, and activation and the building raise (held).
-- HUD owners: the greetings panel covers **Play & rides** at 700 px and below.
-- Not done: real-GPU playback beyond this Mac, Safari, iOS, physical touch, and human accessibility review.
+**What keeps #359 open:**
+1. Final office art: desks, chairs, monitors and `SCREEN_DYNAMIC`, plus furniture collision beyond the desks and
+   O1–O4 captures with real materials.
+2. Val's IPIC decisions: the 1.005 m lounge passage, and recliner footrest colliders.
+3. Real-GPU, Safari, iOS and touch playback, and a human accessibility and caption review. That also decides the
+   parked seek fix.
+4. Activation, the 33 m raise, production screening hosts, a hosted CI screening job, and the player's poster.
 
-**T3 from the viewer's own seat (#424).** In the default seated camera, front-row recliner 1-1 showed
-recliner leather: the eye kept the downward pitch left by walking. Recliners now name an `eyePitch` at the
-screen centre.
-- A pre-fix camera fails the visit journey; the fix passes it.
-- Metal, with #407's captions merged in uncommitted: 10 checks at 1440 and 390 px.
-- Independent review addressed.
-- Posted on #368 (issuecomment-6191475574). The #359 status comment is updated.
-- At 390 px, Play & rides is closed when a page first loads at that width (`play-dock.js:17`). A frame
-  that seemed to show it open by default came from resizing a page loaded at 1440 px; corrected on #368.
+**Rollback rule:** once v11 seats or the short have run, roll back by configuration on a build that has them,
+never by redeploying an older build (`docs/screenings.md`).
 
-**#365 candidate in this journey (local only, reverted).** Candidate 1 was listed first in `SCREENING_MEDIA`
-(52,555 ms) with its media under `preview/public/assets/ipic/screening/`, uncommitted. The journey passed 31
-checks: its 30 plus both viewers on `mediaId: "ipic-original-v1"`. The late join came at 9.7 s and was
-within 500 ms after 507 ms. Afterwards the tree was clean again. Software rendering, load average 24–26.
-Posted on #365 (issuecomment-6191641392). Approval is the only step left: add the entry, commit the media
-and `sources.json`, rerun.
+**Retirement:** all 12 branches above were retired with `project:prune` on 2026-10-15, about 21:05Z, and every
+archive verifies. Evidence is in `~/worktree-backups/river-oaks/<task>-evidence-20261015/`.
 
-**Next action:** once Val approves the short, add `ipic-original-v1` to `SCREENING_MEDIA` and
-`sources.json`, then rerun this journey with the short instead of the fixture. Otherwise, watch #424's hosted
-checks. Land #400 first when authorised; merging and landing are Val's.
+**Next action:** none in this lead's scope. The next owner of #359 starts from the list above.

@@ -189,8 +189,9 @@ test('IPIC refuses false heights, solid shortcuts, teleports, a working lift and
   assert.equal(pose(-1, 26.4).error, 'blocked', 'through the cinema wall beside the doorway');
   assert.equal(t.command('visitor', { type: 'sit', buildId: 'bench:ipic-recliner-2-0', slot: 0 }).error, 'invalid_seat');
   assert.equal(t.command('visitor', { type: 'sit', buildId: 'bench:ipic-recliner-0-0', slot: 1 }).error, 'invalid_seat');
-  t.walk('visitor', route([-.8, 25.15], [-2.6, 28.9]).path);
+  t.walk('visitor', route([-.8, 25.15], [-2.6, 29.4]).path);
   assert.equal(pose(-2.06, 28.1).error, 'blocked', 'onto a recliner arm');
+  assert.equal(pose(-2.6, 28.75).error, 'blocked', 'onto a recliner footrest');
   assert.equal(pose(-2.6, 27.6).error, 'blocked', 'onto the recliner back');
   const [ax, an] = room.toWorld(-4.85, 29);
   assert.equal(t.command('friend', { type: 'travel', position: [ax, an] }).error, 'destination_blocked', 'no position travel into the auditorium');
@@ -203,7 +204,7 @@ test('leaving IPIC or disconnecting while seated releases the recliner', () => {
   const t = town();
   for (const id of ['first', 'second']) t.world.join({ userId: id, name: id });
   for (const id of ['first', 'second']) t.walk(id, route(t.enter(id), [-4.7, 26.6]).path);
-  t.walk('first', route([-4.7, 26.6], [-2.6, 28.9]).path);
+  t.walk('first', route([-4.7, 26.6], [-2.6, 29.4]).path);
   const intent = { type: 'sit', buildId: 'bench:ipic-recliner-0-0', slot: 0 };
   assert.equal(t.command('first', intent).ok, true);
   assert.equal(t.command('second', intent).error, 'seat_occupied');
@@ -239,7 +240,7 @@ testRedis('two coordinators give one IPIC recliner to exactly one visitor and re
     const entered = await send(first, id, { type: 'travel', storeId: room.storeId, mode: 'enter' });
     assert.equal(entered.ok, true, entered.error);
     let position = entered.player.position; const steps = [];
-    for (const [a, d] of corners(route(local(position), [id === 'bob' ? -2.6 : -1.6, 28.9]).path)) {
+    for (const [a, d] of corners(route(local(position), [id === 'bob' ? -2.6 : -1.6, 29.4]).path)) {
       const [x, n] = room.toWorld(a, d), count = Math.max(1, Math.ceil(Math.hypot(x - position[0], n - position[1]) / 2.5));
       for (let i = 1; i <= count; i++) steps.push([position[0] + (x - position[0]) * i / count, position[1] + (n - position[1]) * i / count]);
       position = [x, n];

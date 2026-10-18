@@ -58,6 +58,48 @@ function nearestSurface(a, d, radius, top = 1.9) {
   return best;
 }
 
+// The runtime-vs-photo review (docs/ipic-review/photo-review.md, P1) found open sky above the escalator
+// runs from the mural landing: no ceiling covered either flight. Everywhere a body can stand indoors,
+// looking straight up must meet the interior, never the district's sky.
+// Photo review P18: from the mural landing the street showed past the landing's open side bays, and
+// the district's ground showed under both escalator runs. From anywhere a body stands on the runs or
+// the landing, every sight line at eye height must meet an opaque part of the interior (glass is seen
+// through, so it does not count).
+test('from the escalator runs and the mural landing every sight line meets the interior', () => {
+  const raycaster = new THREE.Raycaster(), open = [];
+  const opaque = hit => !(hit.object.material?.transparent && hit.object.material.opacity < 1);
+  const directions = [];
+  for (let k = 0; k < 16; k++) directions.push(new THREE.Vector3(Math.cos(k * Math.PI / 8), 0, Math.sin(k * Math.PI / 8)));
+  for (let k = 0; k < 8; k++) directions.push(new THREE.Vector3(Math.cos(k * Math.PI / 4), -.7, Math.sin(k * Math.PI / 4)).normalize());
+  for (const [a, d] of walkable.filter(([, d]) => d > 6.2 && d < 19.8)) {
+    const eye = new THREE.Vector3(a, serverGround(a, d) + 1.6, -d);
+    for (const direction of directions) {
+      raycaster.set(eye, direction);
+      if (raycaster.intersectObjects(meshes, false).some(opaque)) continue;
+      // Looking back down the runs, the street shows through the glass frontage at d = 0, as it does
+      // in the building; any other way out (a side, the floor, the back) is a hole in the interior.
+      const toFacade = direction.z > 0 ? -eye.z / direction.z : Infinity, toSide = direction.x ? Math.max((room.aMin - eye.x) / direction.x, (room.aMax - eye.x) / direction.x) : Infinity;
+      const toFloor = direction.y < 0 ? (eye.y + 1) / -direction.y : Infinity, toBack = direction.z < 0 ? (room.depth + eye.z) / -direction.z : Infinity;
+      const exit = Math.min(toFacade, toSide, toFloor, toBack), leftAt = -(eye.z + direction.z * exit);
+      // Only the runs' and the landing's own enclosure (d 6 to 20) is under test here; the reception's
+      // and the lounge's outer sides face the neighbouring buildings in the world.
+      if (exit === toFacade || leftAt < 6 || leftAt > 20) continue;
+      open.push(`${a.toFixed(2)},${d.toFixed(2)} by ${exit === toSide ? 'side' : exit === toFloor ? 'floor' : 'back'}`);
+    }
+  }
+  const where = {}; for (const line of open) { const [at, , face] = line.split(' '), [a, d] = at.split(',').map(Number), key = `${face} d${Math.floor(d)} a${a < -2.6 ? 'W' : a > 2.6 ? 'E' : 'lanes'}`; where[key] = (where[key] ?? 0) + 1; }
+  assert.deepEqual(open.slice(0, 6), [], `${open.length} sight lines leave the interior: ${JSON.stringify(where)}`);
+});
+
+test('every walkable point has a rendered ceiling above it', () => {
+  const raycaster = new THREE.Raycaster(), up = new THREE.Vector3(0, 1, 0), open = [];
+  for (const [a, d] of walkable) {
+    raycaster.set(new THREE.Vector3(a, serverGround(a, d) + 1.8, -d), up);
+    if (!raycaster.intersectObjects(meshes, false).length) open.push(`${a.toFixed(2)},${d.toFixed(2)}`);
+  }
+  assert.deepEqual(open.slice(0, 6), [], `${open.length} walkable points see the sky`);
+});
+
 test('rendered floors, landings and treads sit on the server support height everywhere a body can stand', () => {
   const raycaster = new THREE.Raycaster(), down = new THREE.Vector3(0, -1, 0);
   let flat = 0, treads = 0, worst = 0;
@@ -84,8 +126,8 @@ test('rendered floors, landings and treads sit on the server support height ever
 // rest are reported art defects (docs/ipic-interior.md, "Circulation").
 // Anything else in walkable space, or closer than recorded, fails.
 const DRAWN_WITHOUT_COLLISION = [
-  { mesh: 'Auditorium: ipic-cognac-leather', a: [-3.35, 4], d: [28.2, 32.3], closest: 0, why: 'recliner cushions and footrests (seat zone)' },
-  { mesh: 'Auditorium: ipic-black-rubber', a: [-3.1, 4], d: [26.9, 31.6], closest: 0, why: 'recliner bases and footrests (seat zone)' },
+  // Footrests and base ends collide since 2026-10-15 (Val); only the base under each cushion centre is left.
+  { mesh: 'Auditorium: ipic-black-rubber', a: [-2.7, 3.5], d: [27.95, 31.05], closest: 0, why: 'recliner bases under the cushion centres (seat zone)' },
   { mesh: 'Upper lounge: ipic-olive-brown-sofa', a: [-3.85, -2], d: [24.2, 24.8], closest: 0, why: 'sofa cushions (seat zone)' },
   { mesh: 'Auditorium: ipic-weathered-timber', a: [4.4, 4.5], d: [27.7, 31.6], closest: .17, why: 'recliner side tables' },
   { mesh: 'Reception: ipic-warm-plaster', a: [.9, 1.75], d: [5.45, 6.05], closest: .05, why: 'the fluted reception backing is drawn across the right escalator entrance' },
@@ -94,7 +136,7 @@ const DRAWN_WITHOUT_COLLISION = [
   { mesh: 'Escalators: ipic-taupe-stacked-stone', a: [-2.85, 3], d: [12.45, 20.55], closest: .27, why: 'split-face stone courses run past the flight walls onto the landing' },
   { mesh: 'Upper lounge: ipic-cognac-leather', a: [-4.6, -1], d: [21.7, 23.3], closest: .29, why: 'tub chair shells overhang their colliders' },
   { mesh: 'Reception: ipic-hanging-greenery', a: [-5.6, 6], d: [.95, 2.3], closest: .25, why: 'planter foliage' },
-  { mesh: 'Upper lounge: ipic-hanging-greenery', a: [-5.85, 1.75], d: [24.7, 25.55], closest: .22, why: 'planter foliage' },
+  { mesh: 'Upper lounge: ipic-hanging-greenery', a: [-5.85, 1.75], d: [24.7, 25.8], closest: .13, why: 'planter foliage; the west planter moved 5 cm to widen the passage (2026-10-15)' },
   { mesh: 'Auditorium: ipic-cinema-screen', a: [-4.6, 5.25], d: [33.45, 33.55], closest: .28, why: 'the screen is 0.13 m in front of the wall the room edge stops a body at' },
 ];
 
