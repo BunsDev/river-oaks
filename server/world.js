@@ -25,13 +25,16 @@ import { IPIC_DARTS, atIpicDartsLine } from '../preview/src/ipic-plan.js';
 import { createAxeGames } from './axe-games.js';
 import { AXE_LANES, AXE_ROOM_DARTS, AXE_ROOM_INTERIOR, atAxeLane, atAxeRoomDarts } from '../preview/src/axe-room-plan.js';
 import { isVenueRoom } from '../preview/src/venue-rooms.js';
-import { districtRevisionOf, isCampusRoom, isCampusSeat } from '../preview/src/garden-campus-district.js';
+import { campusSuiteSeatSites, districtRevisionOf, isCampusRoom, isCampusSeat, isCampusSuiteSeat } from '../preview/src/garden-campus-district.js';
+import { campusSit, campusStand } from '../shared/garden-campus-seats.js';
+import { campusToSource, sourceToCampus } from '../shared/garden-campus-layout.js';
 import { createScreenings } from './screenings.js';
 import { SCREENING_VENUES } from '../preview/src/screening-contract.js';
 import { isJevicaAdmin } from './admin.js';
 import { accountName } from '../preview/src/resident-names.js';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, validateWorldId } from '../preview/src/world-contract.js';
 import { checkpointFailureReason } from './recovery-diagnostics.js';
+import { campusInteriorPlan, isCampusLevelId } from '../preview/src/garden-campus-levels.js';
 
 const CYCLE_GRACE_MS = 1500;
 const WISH_COOLDOWN_MS = 5000, TRAVEL_COOLDOWN_MS = 1000, CHAT_COOLDOWN_MS = 1000, GESTURE_COOLDOWN_MS = 1500, GESTURE_DURATION_MS = 3200, FOCUS_MS = 30000;
@@ -83,11 +86,16 @@ function decodeCheckpoint(json) {
 
 // The transport authenticates identities. Only this object advances the town;
 // client messages contain player intent, never resident state or elapsed time.
-export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, sharedPopulation = true, isAdmin = isJevicaAdmin, worldId = DEFAULT_WORLD_ID, random, screeningHosts = [], officeLayout, campusOperators = [] } = {}) {
+export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, sharedPopulation = true, isAdmin = isJevicaAdmin, worldId = DEFAULT_WORLD_ID, random, screeningHosts = [], officeLayout, campusOperators = [], campusAdmission } = {}) {
   validateWorldId(worldId);
   const colliders=[],placementEnvironment=createWalkingEnvironment(worldData);
   const environment = createWalkingEnvironment(worldData,colliders);
   const interiorLevels=new Map((worldData.buildingInteriors??[]).flatMap(plan=>plan.levels.map(level=>[level.id,{plan,level}])));
+  // The Gardens' floors (#508) are interior levels of one shared campus plan: l0 is the street
+  // (its tower halls start the lift and stairs), l1..l7 are authoritative walking levels.
+  // Suite floor is walkable only for whom `admits` (below: #509's leases) lets in: fail closed.
+  const campusPlan=campusInteriorPlan(worldData);
+  for(const level of campusPlan?.levels??[])interiorLevels.set(level.id,{plan:campusPlan,level});
   const upperEnvironments=new Map();
   const environmentForLevel=levelId=>{
     const entry=interiorLevels.get(levelId);
@@ -126,10 +134,23 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   // district that carries the campus, operated by RIVER_OAKS_CAMPUS_OPERATOR_IDS. Jevica's
   // admin predicate grants nothing here. Elsewhere the saved campus section is kept inert.
   const campus=createCampusLeases({enabled:campusServed(worldData,worldId),worldId,operators:campusOperators,players,changed:()=>revision++,onAccessEnded:event=>campusAccessEnded(event)});
+  // Suite floor (#508) admits whom a lease admits now (#509), unless a test injects its own rule.
+  const admits=campusAdmission ?? ((userId,unitId)=>campus.suiteAccess(userId,unitId,now()).ok);
   // Suite access that ended (expiry, revocation, release, a removed guest) names the public
   // point outside that suite's door. #508 returns an occupant of the suite there; until suite
   // occupancy exists nobody can stand inside one, so there is nobody to move.
-  function campusAccessEnded(_event){}
+  function campusAccessEnded(event){
+    const player=players.get(event.userId),landing=event.landing;
+    if(!player || !landing || player.levelId!==landing.levelId)return;
+    const inside=environmentForLevel(player.levelId).roomAt(player.position[0],-player.position[1])?.supportAt?.(player.position[0],player.position[1]);
+    if(inside?.surfaceId!==event.unitId)return;
+    // Stood up and walked out to the gallery side of the suite door, on the same floor.
+    const [east,north]=campusToSource(landing.position);
+    interactions.cancel(player.id);focus.delete(player.id);
+    Object.assign(player,{position:[east,north,interiorLevels.get(landing.levelId).level.floorElevation],sitting:null,altitude:0,vehicle:null,
+      poseAt:now(),moveBudget:.1,liftBudget:.1,gesture:null,gestureUntil:0});
+    revision++;
+  }
   // Shared games at the plaza chess tables (table-games.js): the town holds each table's game.
   const tableGames=createTableGames({players,tableIds:plazaSalonPlan(worldData)?.chess.map(table=>table.id)??[],changed:()=>revision++});
   // The café round table's shared dominoes: hidden hands stay here and in the checkpoint.
@@ -158,7 +179,11 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   // The Gardens (#510): seated at a campus workstation, a resident may open their own private
   // desk. Snapshots carry only that boolean; which seat and whose work stay private.
   const campusWorkstations=new Set(benches.filter(seat=>isCampusSeat(seat.buildId)&&seat.workstation).map(seat=>seat.buildId));
-  const campusWorkstation=player=>Boolean(player?.sitting && campusWorkstations.has(player.sitting.buildId));
+  // Suite seats (#510): a desk or meeting chair in a suite, used only by whom its lease admits.
+  const suiteSeats=new Map(campusSuiteSeatSites(worldData).map(seat=>[seat.buildId,seat]));
+  const suiteAdmits=(player,seat,time=now())=>campus.suiteAccess(player.id,seat.unitId,time).ok;
+  const campusWorkstation=player=>Boolean(player?.sitting && (campusWorkstations.has(player.sitting.buildId)
+    || suiteSeats.get(player.sitting.buildId)?.workstation && suiteAdmits(player,suiteSeats.get(player.sitting.buildId))));
   // The plaza bike rack: a slot is held by at most one player (player.cycling),
   // exactly as a seat is. Metres ride on the player until the transport drains
   // them into the account store (drainRides), so a disconnect loses nothing.
@@ -221,7 +246,9 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     for(const player of players.values())bankRide(player);
     const drained=[...rides.values()];rides.clear();return drained;
   }
-  const seatAt=(buildId,slot,source=builds)=>String(buildId).startsWith('bench:')
+  const suiteSeatAt=(buildId,slot)=>{ const seat=suiteSeats.get(buildId);
+    return seat && slot===0 ? {buildId,slot:0,height:seat.height,yaw:seat.heading,position:[seat.x,seat.north,interiorLevels.get(seat.levelId).level.floorElevation]} : null; };
+  const seatAt=(buildId,slot,source=builds)=>isCampusSuiteSeat(buildId) ? suiteSeatAt(buildId,slot) : String(buildId).startsWith('bench:')
     ? resolveBenchSeat(benches,buildId,slot,(x,north)=>environment.groundAt(x,-north)) : resolveSeat(source.get(buildId),slot);
   // A townsperson resting on a bench place holds it as a player would.
   const residentOnSeat=(buildId,slot)=>state.locals.some(local=>local.life?.seat?.id===`${buildId}:${slot}`);
@@ -285,8 +312,33 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   }
   const seatOccupied=(buildId,slot)=>[...players.values()].some(p=>p.sitting?.buildId===buildId && p.sitting.slot===slot);
   const buildOccupied=id=>[...players.values()].some(p=>p.sitting?.buildId===id);
+  // A suite seat (#510) follows the campus seat rules (shared/garden-campus-seats.js): from its
+  // stand point on its own floor, one occupant, nobody standing on it, the suite admitting you.
+  function sitInSuite(player,site,time) {
+    if(player.sitting)return reject('already_seated','Stand up before choosing another seat.');
+    if(player.altitude>.1 || player.vehicle)return reject('campus_seat_out_of_reach');
+    const others=[...players.values()].filter(other=>other!==player);
+    const taken=new Set(others.filter(other=>isCampusSuiteSeat(other.sitting?.buildId)).map(other=>suiteSeats.get(other.sitting.buildId)?.seatId));
+    const bodies=others.filter(other=>other.levelId===site.levelId && !other.sitting).map(other=>sourceToCampus([other.position[0],other.position[1]]));
+    const result=campusSit({seatId:site.seatId,at:{levelId:player.levelId,position:sourceToCampus([player.position[0],player.position[1]])},taken,bodies,
+      access:unitId=>campus.suiteAccess(player.id,unitId,time)});
+    if(!result.ok)return reject(result.error);
+    const [east,north]=campusToSource(result.position);
+    interactions.cancel(player.id);focus.delete(player.id);
+    Object.assign(player,{position:[east,north,interiorLevels.get(site.levelId).level.floorElevation],yaw:seatYaw(site.heading-Math.PI),altitude:0,vehicle:null,
+      sitting:{buildId:site.buildId,slot:0},poseAt:time,moveBudget:.1,liftBudget:.1,gesture:null,gestureUntil:0});
+    revision++;return {ok:true,player:publicPlayer(player)};
+  }
+  function standInSuite(player,time) {
+    const site=suiteSeats.get(player.sitting.buildId),stood=campusStand({seatId:site?.seatId});
+    if(!stood.ok)return reject(stood.error);
+    const [east,north]=campusToSource(stood.position);
+    Object.assign(player,{position:[east,north,interiorLevels.get(stood.levelId).level.floorElevation],sitting:null,poseAt:time,moveBudget:.1,liftBudget:.1,gesture:null,gestureUntil:0});
+    revision++;return {ok:true,player:publicPlayer(player)};
+  }
   function sit(player,message,time) {
     if(!fields(message,['type','buildId','slot']) || !textId(message.buildId))return reject('invalid_seat');
+    if(isCampusSuiteSeat(message.buildId)) { const site=suiteSeats.get(message.buildId);return site && message.slot===0 ? sitInSuite(player,site,time) : reject('invalid_seat'); }
     const seat=seatAt(message.buildId,message.slot);
     if(!seat)return reject('invalid_seat');
     if(player.sitting)return reject('already_seated','Stand up before choosing another seat.');
@@ -313,6 +365,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   function stand(player,message,time) {
     if(!fields(message,['type']))return reject('invalid_seat');
     if(!player.sitting)return reject('not_seated');
+    if(isCampusSuiteSeat(player.sitting.buildId))return standInSuite(player,time);
     const build=builds.get(player.sitting.buildId),roomId=buildRoomAt(environment,player.position)?.storeId??null;
     // A bench has no build: stand up around the place itself, in front first.
     const anchor=build??seatAt(player.sitting.buildId,player.sitting.slot);
@@ -511,7 +564,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if(assignedUpper && message.levelId!==player.levelId
       || message.levelId && (interiorLevels.get(message.levelId)?.level.index??0)>0 && message.levelId!==player.levelId)
       return correction('invalid_level');
-    const movementEnvironment=environmentForLevel(player.levelId);
+    const movementEnvironment=environmentForLevel(player.levelId), campusLevel=assignedUpper && isCampusLevelId(player.levelId);
     if(player.sitting) {
       if(distance(position,player.position)>1e-6 || Math.abs(position[2]-player.position[2])>1e-6
         || altitude!==0 || message.vehicle)return correction('stand_before_moving');
@@ -547,6 +600,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       const privateRoom=height<=0.1 && restrictedRoomAt(x,north);
       if (privateRoom && !canEnterHome(player.id,privateRoom.storeId)) return correction('private_home');
       if (height>0.1 ? !movementEnvironment.canFly(x,movementEnvironment.groundAt(x,-north)+height,-north) : !movementEnvironment.isFree(x,-north)) return correction('blocked');
+      const suite=campusLevel && movementEnvironment.roomAt(x,-north)?.supportAt?.(x,north);
+      if (suite?.access==='private-suite' && !admits(player.id,suite.surfaceId)) return correction('private_suite');
     }
     if(distance(position,player.position)>.015 || altitude>.1 || message.vehicle)interactions.cancel(player.id);
     player.moveBudget -= cost;
@@ -689,11 +744,14 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     const sourceEnvironment=environmentForLevel(source.level.id);
     if(sourceEnvironment.roomAt(player.position[0],-player.position[1])?.planId!==source.level.id
       || Math.abs(player.position[2]-source.level.floorElevation)>0.2)return reject('not_at_source_level');
-    const portal=source.level.portals.find(item=>item.id===message.portalId && item.kind==='stairs');
-    if(!portal || distance(player.position,portal.position)>1.3)return reject('level_portal_out_of_reach');
+    // Campus cores have a lift beside the stairs; both are level portals (#508).
+    const portal=source.level.portals.find(item=>item.id===message.portalId && (item.kind==='stairs' || source.plan.campus && item.kind==='lift'));
+    if(!portal)return reject('invalid_level_portal');
+    if(distance(player.position,portal.position)>1.3)return reject('level_portal_out_of_reach');
     const destination=interiorLevels.get(portal.toLevelId);
-    const paired=destination?.level.portals.find(item=>item.kind==='stairs' && item.toLevelId===source.level.id
-      && distance(item.position,portal.position)<0.01);
+    // A campus portal names its pair (both roof portals of a core share one headhouse landing).
+    const paired=portal.toPortal ? destination?.level.portals.find(item=>item.id===portal.toPortal && item.toPortal===portal.id && item.toLevelId===source.level.id)
+      : destination?.level.portals.find(item=>item.kind==='stairs' && item.toLevelId===source.level.id && distance(item.position,portal.position)<0.01);
     if(!destination || destination.plan!==source.plan || !paired)return reject('invalid_level_portal');
     const targetEnvironment=environmentForLevel(destination.level.id);
     const onLevel=([x,n])=>targetEnvironment.isFree(x,-n) && targetEnvironment.roomAt(x,-n)?.planId===destination.level.id;
@@ -711,8 +769,10 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       }
     const [east,north]=arrival;
     interactions.cancel(player.id);focus.delete(player.id);
-    Object.assign(player,{position:[east,north,destination.level.floorElevation],buildingId:destination.plan.buildingId,
-      levelId:destination.level.id,altitude:0,vehicle:null,poseAt:time,moveBudget:0.1,liftBudget:0.1});
+    // Back at the campus street level a resident is on the street again, in the hall.
+    const street=destination.plan.campus && destination.level.index===0;
+    Object.assign(player,{position:[east,north,destination.level.floorElevation],buildingId:street?null:destination.plan.buildingId,
+      levelId:street?null:destination.level.id,altitude:0,vehicle:null,poseAt:time,moveBudget:0.1,liftBudget:0.1});
     revision++;
     return {ok:true,player:publicPlayer(player)};
   }
@@ -736,7 +796,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if(message.type==='campus')return campus.command(player,message,time);
     if(message.type==='interiorLevel')return changeInteriorLevel(player,message,time);
     if(interiorLevels.get(player.levelId)?.level.index>0
-      && !['chat','interaction','gesture','appearance','character','movement'].includes(message.type))return reject('return_to_ground_level');
+      && !['chat','interaction','gesture','appearance','character','movement'].includes(message.type)
+      && !(isCampusLevelId(player.levelId) && ['campus','sit','stand'].includes(message.type)))return reject('return_to_ground_level');
     if(message.type==='stage') {
       if(!fields(message,['type','action']) || !['take','leave'].includes(message.action))return reject('invalid_stage');
       return message.action==='take'?takeStage(player,time):leaveStage(player,time);
@@ -1156,6 +1217,14 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
         player.appearance=permittedAppearance(player.id,player.appearance??nextAppearances.get(player.id));
         if(nextAppearances.has(player.id) && nextAppearances.get(player.id)!==player.appearance) throw new Error('Invalid player appearance');
         if(!nextAppearances.has(player.id))nextAppearances.set(player.id,player.appearance);
+        // A suite sitter (#510) is restored standing at the seat's stand point, inside the suite;
+        // if the lease has meanwhile ended, the next expiry pass walks them out of the door.
+        if(isCampusSuiteSeat(player.sitting?.buildId)) {
+          const site=suiteSeats.get(player.sitting.buildId),stood=site && player.levelId===site.levelId && campusStand({seatId:site.seatId});
+          if(!stood?.ok)throw new Error('Invalid seated player');
+          const [standEast,standNorth]=campusToSource(stood.position);
+          player.position=[standEast,standNorth,interiorLevels.get(site.levelId).level.floorElevation];player.sitting=null;
+        }
         const [east,north,ground]=player.position;
         const playerEnvironment=recoveredEnvironmentFor(player.levelId);
         if (!nextLedgers.has(player.id) || (!player.sitting && Math.abs(ground-playerEnvironment.groundAt(east,-north))>0.2)

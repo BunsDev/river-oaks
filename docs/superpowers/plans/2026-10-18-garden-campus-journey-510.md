@@ -113,6 +113,30 @@ Parent: #505.
   macOS W-check flake (runs 38659435397, 38673593628, before any campus code), in the
   garage revision. Not campus-specific; re-run on the next head.
 
+## Suites on #508's levels (`36c78e28` and after)
+
+#508 is merged in. river-oaks-95 owns both #508 and #510 since Val reassigned #508, so the
+seat hooks designed for two owners collapse into the existing seat path. Decision recorded
+here and in #508's ledger.
+
+- **Admission.** Suite floor admits whom #509's leases admit (`campus.suiteAccess`). An
+  injected `campusAdmission` still wins in tests.
+- **Seats.** `campusSuiteSeatSites` gives 116 desk and meeting seats, as `campus-suite:<seat>`
+  build ids. They are separate from street benches, so townspeople never use them.
+  - `sit` and `stand` on a campus floor follow `campusSit`/`campusStand`: 1.3 m from the stand
+    point on the same floor, one occupant, no body on it, the suite admitting the sitter.
+  - The workstation flag holds only while the suite still admits the sitter.
+- **Furniture.** Suite furniture is a registered level obstacle on client and server.
+- **Access loss.** When access ends (revoke, expiry, release, a removed guest), an occupant of
+  that suite is stood up and moved to the lease landing outside the door.
+- **Restore.** A suite sitter is restored standing at the stand point.
+- **Client.** The seat picker offers only the desks of the suite the resident stands in. The
+  page predicts suite doors from the resident's own entitlements (`setCampusSuiteGate`).
+- **Evidence.** `server/tests/garden-campus-suite-seats.test.js` passes 3/3: door, desk and
+  workstation for the tenant; door and desk refused to a stranger; revoke walks a seated tenant
+  out; restore stands them. With an isolated Redis, the campus, lease, desk, room, walking,
+  district, world and world-interactions suites pass 190/190.
+
 ## Still to do (in order)
 
 1. Keep the `campus` shard green on later heads; it passed end to end at `465785d2`.

@@ -8,6 +8,7 @@
 import { createOfficeDeskUI } from './office-desk-ui.js';
 import { campusDefaultTerm, campusDirectory, createCampusCommands } from './garden-campus-model.js';
 import './garden-campus.css';
+import { setCampusSuiteGate } from './garden-campus-levels.js';
 
 const DAY = 86_400_000;
 const el = (tag, text, className) => { const n = document.createElement(tag);if (text) n.textContent = text;if (className) n.className = className;return n; };
@@ -48,6 +49,8 @@ export function createGardenCampusUI({ host, panelHost, getWorld, getMultiplayer
     const answer = await ensureCommands().list().catch(error => ({ ok: false, message: error.message }));
     if (!answer?.ok) { status.textContent = answer?.message ?? 'The campus directory is unavailable.';return; }
     serverNow = answer.serverTimeMs ?? Date.now();listedAt = Date.now();lastAnswer = answer.campus;render(campusDirectory(answer.campus, { now: serverNow }));
+    // The page predicts suite doors from this resident's own access; the server still decides every step (#508).
+    const entitled = new Set((answer.campus.access ?? []).map(entry => entry.unitId));setCampusSuiteGate(unitId => entitled.has(unitId));
   }
   async function act(fn, done) {
     if (busy) return;busy = true;retry.hidden = true;status.textContent = 'Sending…';
