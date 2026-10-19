@@ -1,50 +1,54 @@
 {
   "schemaVersion": 1,
-  "status": "unchanged-render-workload-inputs",
-  "checkedAt": "2026-10-19T05:29:46.958012+00:00",
-  "candidateRevision": "132e11b9829635f5d305a68f9fc70d40c96d9d6a",
-  "integratedMain": "b76ab77cf716e5f4ddb24e54bce771412de0e1f0",
-  "candidateRuntimeManifestSha256": "0a587e5f6194330ef82670f95ae5c30301813c80b63d797eef2a6777c6ffb19b",
-  "testedRenderRuntimeManifestSha256": "6e2565ac0e8916aad1f8fc53182c936ba3f58b5dd652778787174713f59e84bb",
-  "unchangedPriorRuntimeInputs": 1277,
-  "unchangedPriorChangedInputs": 88,
-  "onlyCodeTestConfigChanges": [
-    "scripts/ipic-short/decode-check.mjs",
-    "scripts/ipic-short/intake-check.mjs",
-    "scripts/ipic-short/second-capture.mjs",
-    "scripts/ipic-short/second-cut.mjs",
-    "scripts/ipic-short/second-score.mjs",
-    "scripts/ipic-short/second-short.json",
-    "scripts/ipic-short/second-voices.py",
-    "scripts/ipic-short/shot-health.mjs",
-    "scripts/tests/ipic-short-intake.test.js"
-  ],
+  "status": "unaffected-render-workloads-retained;world-journey-renewal-required",
+  "checkedAt": "2026-10-19T10:32:01.713Z",
+  "candidateRevision": "54b5cd62daddb2abf0f8cc1d9e0b6427698da6da",
+  "integratedMain": "7c10f418b0ea519bc0d2b84bb65869e3c7cdae0e",
+  "candidateRuntimeManifestSha256": "3e04a4ae0af73d8e452f02024685108ef2d3808cc5822461ec878400b2e0f608",
+  "testedNativeRuntimeManifestSha256": "eb50b85d64fddedec9f358c9204f96ddf13d8b49fb56759272de4e3f9246b2aa",
+  "testedBrowserRuntimeManifestSha256": "4ee88f688473ae7e12dcae6683df8d30c1a409d9e693f35a9697c6020e00c3d5",
+  "nativeApplicabilityReceipt": {
+    "file": "data/reports/character-fidelity-review-native-applicability-517.json",
+    "sha256": "ae7411bc3de72ff6ee53f8f0a180c19299cc58a3aa9c2ce0a89556657a44613e"
+  },
   "retainedReceipts": [
     {
       "file": "data/reports/character-fidelity-review-m1-517.json",
-      "sha256": "54951492c3580e55f773796147a9ea04605540d1bcbdd7bb236d818b0aac8214"
+      "sha256": "78d749110f2f5ef852dfc024b3d3e7a583054869d121892177e52d7e30a4bc93",
+      "actualRuntimeManifestSha256": "eb50b85d64fddedec9f358c9204f96ddf13d8b49fb56759272de4e3f9246b2aa"
     },
     {
       "file": "data/reports/character-fidelity-review-tiers-517.json",
-      "sha256": "6857a9697f33c9ca18ab5b8ce980e94e72c16d7c6063703747f959c46c868283"
+      "sha256": "07c6c84412f919e5e7e99ec3476467a255be27ad1f666d9c0db3f53c46d8225a",
+      "actualRuntimeManifestSha256": "eb50b85d64fddedec9f358c9204f96ddf13d8b49fb56759272de4e3f9246b2aa"
     },
     {
       "file": "data/reports/character-fidelity-review-crowd-lifecycle-517.json",
-      "sha256": "822695d814bac727c8da02ea5d77e58bd836a83c837a58d0e280b23c05966ecc"
+      "sha256": "47ae5dd845c07b8ec02eee84d18040919af56b50f8b92d16db29e9d1e83f55b9",
+      "actualRuntimeManifestSha256": "eb50b85d64fddedec9f358c9204f96ddf13d8b49fb56759272de4e3f9246b2aa"
     },
     {
       "file": "data/reports/character-fidelity-review-chromium-517.json",
-      "sha256": "11dd3ee04ac1671148b02e127d3d3532c6f1fefa5b856c747ec5a2cf98f15c5c"
+      "sha256": "99272f56d3af9e192b70bec49b782fc1fab5b5899eab849c5d674b232a14784e",
+      "actualRuntimeManifestSha256": "4ee88f688473ae7e12dcae6683df8d30c1a409d9e693f35a9697c6020e00c3d5"
     },
     {
       "file": "data/reports/character-fidelity-review-webkit-517.json",
-      "sha256": "46b5a689afa787f8acfeb476ae0beb4fe35a24d55646302afecd2bea9232185e"
+      "sha256": "12afea8e364c53090cd98186333e4d9ab46fe2051be2b09a190eadd26dc6c6b9",
+      "actualRuntimeManifestSha256": "4ee88f688473ae7e12dcae6683df8d30c1a409d9e693f35a9697c6020e00c3d5"
     },
     {
       "file": "data/reports/character-fidelity-review-goldens-517.json",
-      "sha256": "01a3deae3b19726ef1562c44eff0fc22444b137a7db39d42a9d337eb0fcf48f8"
+      "sha256": "5c1c58118f30091d2721826398a9f1000b2e8c92deb6b92f20ff4719331075d5",
+      "actualRuntimeManifestSha256": "4ee88f688473ae7e12dcae6683df8d30c1a409d9e693f35a9697c6020e00c3d5"
     }
   ],
-  "method": "Compared every prior runtime input and changed code/test/config byte hash; exact upstream delta is nine screening offline CLI/test/config files. Preview,server,shared,assets,package/locks,baseline/golden/browser/phone helpers and all previously changed inputs are identical. Independent integration review found no runtime/fixture imports of these explicit production tools.",
-  "limits": "Retains historical6e render receipts without restamping. Core/full renew for changed tooling/Python inputs. Phone applicability is separately bound to all113C0-tested inputs. No new performance stability or whole-town physical acceptance follows."
+  "renewedReceipts": [],
+  "completeRuntimeDeltaFromBrowserExecution": [
+    "preview/e2e/garden-campus-office.js",
+    "preview/e2e/garden-campus-readiness.js",
+    "preview/e2e/garden-campus-suite.js"
+  ],
+  "method": "Compared every G/M runtime path/hash. Only the office and suite journeys and their fixture-only startup helper differ; the helper is not a selectable async journey, and both journeys remain selectable. The three explicitly selected Chromium/WebKit journeys, runner, fixture, clients/assets and strict golden sources are byteidentical and do not execute the office/suite or import their helper. Retain actual G browser/golden and actual F native receipts with original execution manifests/timestamps. M core/full and changed office/suite renewal remain separate required gates.",
+  "limits": "No failed G/H full run is converted into a pass. No current M full success, stable rendering, performance reproduction or new physical acceptance is inferred."
 }

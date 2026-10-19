@@ -1,0 +1,273 @@
+{
+  "schemaVersion": 1,
+  "status": "controlled-red-green-stock-and-required-local-gates-verified;hosted-pending",
+  "recordedAt": "2026-10-19T10:33:09.420152+00:00",
+  "candidateRuntimeManifestSha256": "3e04a4ae0af73d8e452f02024685108ef2d3808cc5822461ec878400b2e0f608",
+  "originalFailure": "Candidate L full verification failed at the guest\u2019s first hall arrival in garden-campus-office after 30 seconds. The exact historical cause remains unclassified.",
+  "controlledFailure": "With Alice\u2019s ticket POST held, avatar readiness preceded admission. The original single arrival click returned \u201cReconnect before taking an action.\u201d Admission later recovered, but the original 30-second status assertion failed with Alice still at spawn. Positive hold, avatar-ready, independent release and join events are retained.",
+  "correction": "Track all three pages before their first navigation. After each original avatar-ready wait, including owner reload, await the existing startup helper\u2019s correlated read-only acknowledgement. Original arrival actions, deadlines, privacy and business assertions are unchanged.",
+  "budgets": "The avatar-ready wait remains 120 seconds. A separate read-only startup wait has a 120-second deadline; the end-to-end startup budget is therefore not unchanged.",
+  "rawReceipts": [
+    {
+      "file": ".runtime/character-fidelity/goal2m/office-admission-probe-v3-input.json",
+      "sha256": "399de856774f2a4956198c3cd7fd6091a7aab47dd66c57b96f99ed6584487991"
+    },
+    {
+      "file": ".runtime/character-fidelity/goal2m/office-admission-probe-v3.mjs",
+      "sha256": "567aaa6b92174b69d8062de9e65f6229067115fe93e97bb3ec111b965edd95a7"
+    },
+    {
+      "file": ".runtime/character-fidelity/goal2m/office-admission-v3-baseline.json",
+      "sha256": "1104ba73a4adc4e4b02b2bb7dc24baaea7daa98f18730017ca3d3b8fa4f36605"
+    },
+    {
+      "file": ".runtime/character-fidelity/goal2m/office-admission-v3-baseline.log",
+      "sha256": "3a61c08b4e043b37b8ed36dbec675b4ecd19fc13fa16bc9065474d329da94ba0"
+    },
+    {
+      "file": ".runtime/character-fidelity/goal2m/readiness-unit-green.log",
+      "sha256": "b0bfed042610094b78519628469fa3b909df644c5008c594589c6b1aa87be219"
+    },
+    {
+      "file": ".runtime/character-fidelity/goal2m/office-admission-v3-candidate.json",
+      "sha256": "655196beae88f4d474f89f31252f9af08bffd145c99f9999db61c9b21b5e5093"
+    },
+    {
+      "file": ".runtime/character-fidelity/goal2m/office-admission-v3-candidate.log",
+      "sha256": "3a755772f1a8219099789a59bf3cd247a12842da0934893ceb4638bbb20e1634"
+    }
+  ],
+  "uninjectedV1": {
+    "file": ".runtime/character-fidelity/goal2m/v1-uninjected/classification.json",
+    "sha256": "8648ff014e33317d0374497dbe2fe044a1586268f4ec084796a6625133d848c3"
+  },
+  "inconclusiveV2": {
+    "file": ".runtime/character-fidelity/goal2m/office-admission-v2-baseline.json",
+    "sha256": "80b2e7ee63df0c8ed0fe053d71be49ad48f23d585ef5756be080b9e230c075ea"
+  },
+  "readinessTests": {
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0
+  },
+  "independentReview": "No required findings after reviewing the two-file patch, positive control ordering and paired result. The ten tracked unit tests passed independently.",
+  "limits": "Controlled ticket-request/admission delay proves a missing fixture precondition. It does not establish the exact historical L cause, a production transport repair, full-gate success or performance acceptance. The existing door-entry retry loop is separate and unchanged.",
+  "pairedAudit": {
+    "file": ".runtime/character-fidelity/goal2m/office-admission-paired-audit.json",
+    "sha256": "3e56b014d6f37b09424989c3be843da1399169877a1ba465c60c0d977f7de929"
+  },
+  "pairedResults": [
+    {
+      "mode": "baseline",
+      "classification": "controlled-admission-precondition-failure",
+      "source": {
+        "file": "preview/e2e/garden-campus-office.js",
+        "sha256": "59e739ab533f3dc08d5627fd60accad257c6768d8fa7f9c8de184fc5cab1adf3",
+        "commit": "7c10f418b0ea519bc0d2b84bb65869e3c7cdae0e",
+        "qualification": "Only the original office source bytes are identified by this commit. The diagnostic executed against the recorded dirty L fixture, not a clean main revision."
+      },
+      "executedProbe": {
+        "file": ".runtime/character-fidelity/goal2m/office-admission-probe-v3.mjs",
+        "sha256": "567aaa6b92174b69d8062de9e65f6229067115fe93e97bb3ec111b965edd95a7"
+      },
+      "events": [
+        {
+          "kind": "guest-ticket-held",
+          "at": 1792405793814
+        },
+        {
+          "kind": "avatar-ready-while-ticket-held",
+          "at": 1792405821051
+        },
+        {
+          "kind": "office-arrival-before",
+          "guest": true,
+          "at": 1792405821054,
+          "connected": false,
+          "hasSelf": false,
+          "avatarReady": "true"
+        },
+        {
+          "kind": "office-arrival-after-click",
+          "guest": true,
+          "at": 1792405833225,
+          "connected": false,
+          "status": "Reconnect before taking an action.",
+          "travel": []
+        },
+        {
+          "kind": "guest-ticket-released-independent-timer",
+          "at": 1792405841052
+        }
+      ],
+      "authoritativeAliceEvents": [
+        {
+          "at": 1792405841063,
+          "event": "join",
+          "user": "alice"
+        }
+      ],
+      "prefixStatus": "prefix-failed",
+      "errorSummary": "Error: Office arrival diagnostic {\"before\":{\"at\":1792405821054,\"connected\":false,\"hasSelf\":false,\"avatarReady\":\"true\"},\"after\":{\"at\":1792405863229,\"connected\":true,\"status\":\"Reconnect before taking an action.\",\"position\":[-2765.321977373157,-1295.064162750871,18.383521112135007]},\"travel\":[]}; page.waitForFunction: Timeout 30000ms exceeded."
+    },
+    {
+      "mode": "candidate",
+      "classification": "controlled-admission-prefix-passed",
+      "source": {
+        "file": "preview/e2e/garden-campus-office.js",
+        "sha256": "daab8da81a101853e2dca8c03fbe4fd2de65b47bbe715515634dbb6a60cc41f8"
+      },
+      "executedProbe": {
+        "file": ".runtime/character-fidelity/goal2m/office-admission-probe-v3.mjs",
+        "sha256": "567aaa6b92174b69d8062de9e65f6229067115fe93e97bb3ec111b965edd95a7"
+      },
+      "events": [
+        {
+          "kind": "guest-ticket-held",
+          "at": 1792405981067
+        },
+        {
+          "kind": "avatar-ready-while-ticket-held",
+          "at": 1792406008841
+        },
+        {
+          "kind": "guest-ticket-released-independent-timer",
+          "at": 1792406028841
+        },
+        {
+          "kind": "office-arrival-before",
+          "guest": true,
+          "at": 1792406029176,
+          "connected": true,
+          "hasSelf": true,
+          "avatarReady": "true"
+        },
+        {
+          "kind": "office-arrival-after-click",
+          "guest": true,
+          "at": 1792406029212,
+          "connected": true,
+          "status": "",
+          "travel": [
+            "sent {\"type\":\"travel\",\"storeId\":\"campus:T1-F1-hall\",\"mode\":\"arrive\",\"requestId\":\"2\"}"
+          ]
+        }
+      ],
+      "authoritativeAliceEvents": [
+        {
+          "at": 1792406028852,
+          "event": "join",
+          "user": "alice"
+        },
+        {
+          "at": 1792406029173,
+          "event": "execute",
+          "user": "alice",
+          "type": "inventory",
+          "requestId": "1",
+          "position": [
+            -2765.321977373157,
+            -1295.064162750871,
+            18.383521112135007
+          ]
+        },
+        {
+          "at": 1792406029173,
+          "event": "result",
+          "user": "alice",
+          "type": "inventory",
+          "requestId": "1",
+          "ok": false,
+          "error": "admin_only",
+          "message": "Only Jevica can use building designs in the shared town."
+        },
+        {
+          "at": 1792406029212,
+          "event": "execute",
+          "user": "alice",
+          "type": "travel",
+          "requestId": "2",
+          "position": [
+            -2765.321977373157,
+            -1295.064162750871,
+            18.383521112135007
+          ]
+        },
+        {
+          "at": 1792406029212,
+          "event": "result",
+          "user": "alice",
+          "type": "travel",
+          "requestId": "2",
+          "ok": true,
+          "position": [
+            -2694.224464210995,
+            -1308.9353431000068,
+            18.25939189446673
+          ]
+        },
+        {
+          "at": 1792406029829,
+          "event": "execute",
+          "user": "alice",
+          "type": "travel",
+          "requestId": "3",
+          "position": [
+            -2694.224464210995,
+            -1308.9353431000068,
+            18.25939189446673
+          ]
+        },
+        {
+          "at": 1792406029829,
+          "event": "result",
+          "user": "alice",
+          "type": "travel",
+          "requestId": "3",
+          "ok": false,
+          "error": "travel_cooldown",
+          "message": "travel_cooldown"
+        },
+        {
+          "at": 1792406039831,
+          "event": "execute",
+          "user": "alice",
+          "type": "travel",
+          "requestId": "4",
+          "position": [
+            -2694.224464210995,
+            -1308.9353431000068,
+            18.25939189446673
+          ]
+        },
+        {
+          "at": 1792406039831,
+          "event": "result",
+          "user": "alice",
+          "type": "travel",
+          "requestId": "4",
+          "ok": true,
+          "position": [
+            -2697.835396559484,
+            -1309.8951178520365,
+            18.25939189446673
+          ]
+        }
+      ],
+      "prefixStatus": "prefix-completed",
+      "errorSummary": ""
+    }
+  ],
+  "stockFocusedReceipt": {
+    "file": "data/reports/character-fidelity-review-campus-focused-517.json",
+    "sha256": "2df101c69cdfaf72ea7e2967f6cc9f0527216f19c95d85bbb92f991064298a46"
+  },
+  "localVerification": {
+    "runtimeManifestSha256": "3e04a4ae0af73d8e452f02024685108ef2d3808cc5822461ec878400b2e0f608",
+    "stockOfficeChecks": 21,
+    "stockSuiteChecks": 10,
+    "readinessTests": 10,
+    "coreTasks": 11,
+    "fullTasks": 18
+  }
+}

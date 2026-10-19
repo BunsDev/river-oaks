@@ -1,10 +1,10 @@
 {
   "version": 1,
-  "startedAt": "2026-10-19T05:03:07.627Z",
+  "startedAt": "2026-10-19T06:54:14.306Z",
   "status": "passed",
   "mode": "--check",
   "baseline": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-character-fidelity-517/preview/e2e/goldens/character-hero",
-  "revision": "132e11b9829635f5d305a68f9fc70d40c96d9d6a",
+  "revision": "54b5cd62daddb2abf0f8cc1d9e0b6427698da6da",
   "limits": {
     "maxChannel": 2,
     "meanChannel": 0.01,
@@ -152,5 +152,5 @@
     "compatible": true,
     "mismatches": []
   },
-  "finishedAt": "2026-10-19T05:03:10.338Z"
+  "finishedAt": "2026-10-19T06:54:16.757Z"
 }

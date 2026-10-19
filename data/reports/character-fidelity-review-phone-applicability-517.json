@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
   "status": "identical-tested-inputs",
-  "checkedAt": "2026-10-19T05:29:16.071Z",
-  "candidateRevision": "132e11b9829635f5d305a68f9fc70d40c96d9d6a",
-  "integratedMain": "b76ab77cf716e5f4ddb24e54bce771412de0e1f0",
-  "candidateRuntimeManifestSha256": "0a587e5f6194330ef82670f95ae5c30301813c80b63d797eef2a6777c6ffb19b",
+  "checkedAt": "2026-10-19T10:32:01.453Z",
+  "candidateRevision": "54b5cd62daddb2abf0f8cc1d9e0b6427698da6da",
+  "integratedMain": "7c10f418b0ea519bc0d2b84bb65869e3c7cdae0e",
+  "candidateRuntimeManifestSha256": "3e04a4ae0af73d8e452f02024685108ef2d3808cc5822461ec878400b2e0f608",
   "testedRuntimeManifestSha256": "c0f5b8de9f6bad47a018c7a21e2446f647167b9be16e5a1aca5d63eab60ff036",
   "testedInputReceipt": {
     "file": "data/reports/character-fidelity-review-phone-inputs-517.json",

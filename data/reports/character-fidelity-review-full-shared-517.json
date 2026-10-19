@@ -1,5 +1,5 @@
 {
-  "createdAt": "2026-10-19T05:52:40.098Z",
+  "createdAt": "2026-10-19T11:08:30.138Z",
   "status": "passed",
   "modes": [
     "development",
@@ -14,7 +14,7 @@
     {
       "name": "multiplayer-dev",
       "status": "passed",
-      "seconds": 131.717,
+      "seconds": 103.289,
       "result": {
         "checks": [
           "each browser is its own development player",
@@ -65,10 +65,10 @@
           "No browser page errors"
         ],
         "a": {
-          "self": "dev-25becc8fac20",
+          "self": "dev-586d1d819709",
           "players": [
-            "dev-25becc8fac20",
-            "dev-d23dc2b3d21a"
+            "dev-586d1d819709",
+            "dev-6aa25b69033e"
           ],
           "gate": true,
           "appearance": "sable-human",
@@ -77,10 +77,10 @@
           "roster": "2 players in town"
         },
         "b": {
-          "self": "dev-d23dc2b3d21a",
+          "self": "dev-6aa25b69033e",
           "players": [
-            "dev-25becc8fac20",
-            "dev-d23dc2b3d21a"
+            "dev-586d1d819709",
+            "dev-6aa25b69033e"
           ],
           "gate": true,
           "appearance": "sable-human",
@@ -94,7 +94,7 @@
     {
       "name": "groups",
       "status": "passed",
-      "seconds": 69.06,
+      "seconds": 69.325,
       "result": {
         "checks": [
           "An accepted contact appears in the group invitation picker",
@@ -106,7 +106,7 @@
     {
       "name": "world-events",
       "status": "passed",
-      "seconds": 8.501,
+      "seconds": 8.249,
       "result": {
         "checks": [
           "Unreleased Events has no browsing or hosting surface",
@@ -118,7 +118,7 @@
     {
       "name": "rail-shared",
       "status": "passed",
-      "seconds": 6.211,
+      "seconds": 5.903,
       "result": {
         "checks": [
           "Chat command opens the town dock and focuses its composer",
@@ -139,7 +139,7 @@
     {
       "name": "shared-seating",
       "status": "passed",
-      "seconds": 46.867,
+      "seconds": 39.727,
       "result": {
         "passed": true,
         "checks": [
@@ -166,11 +166,11 @@
         "readiness": [
           {
             "role": "owner",
-            "elapsedMs": 3301
+            "elapsedMs": 3251
           },
           {
             "role": "guest",
-            "elapsedMs": 17157
+            "elapsedMs": 13759
           }
         ]
       }
@@ -178,7 +178,7 @@
     {
       "name": "world-boundary",
       "status": "passed",
-      "seconds": 18.824,
+      "seconds": 9.941,
       "result": {
         "passed": true,
         "checks": [
@@ -195,7 +195,7 @@
     {
       "name": "world-map",
       "status": "passed",
-      "seconds": 56.09,
+      "seconds": 49.585,
       "result": {
         "passed": true,
         "checks": [
@@ -222,7 +222,7 @@
     {
       "name": "character-studio-worlds",
       "status": "passed",
-      "seconds": 124.764,
+      "seconds": 100.025,
       "result": {
         "passed": true,
         "checks": [
@@ -260,7 +260,7 @@
     {
       "name": "world-publish",
       "status": "passed",
-      "seconds": 59.164,
+      "seconds": 57.108,
       "result": {
         "passed": true,
         "checks": [
@@ -325,7 +325,7 @@
     {
       "name": "creator-generated-levels",
       "status": "passed",
-      "seconds": 26.371,
+      "seconds": 24.928,
       "result": {
         "passed": true,
         "checks": [
@@ -347,7 +347,7 @@
     {
       "name": "creator-four-levels",
       "status": "passed",
-      "seconds": 35.521,
+      "seconds": 30.466,
       "result": {
         "passed": true,
         "checks": [
@@ -376,14 +376,14 @@
     {
       "name": "creator-street-crossing",
       "status": "passed",
-      "seconds": 40.919,
+      "seconds": 40.446,
       "result": {
         "passed": true,
         "checks": [
-          "The owner publishes the street fixture: {\"status\":201,\"body\":{\"world\":{\"id\":\"street-walk\",\"title\":\"Street Walk\",\"description\":\"\",\"template\":\"region-v1\",\"ownerId\":\"dev-c84f83c493f1\",\"createdAt\":1792389755741,\"regionSha256\":\"309191d4d6a35405bbdf67918bcbf1bb191b574edc8bd86d36b1885444d9c173\"}}}",
+          "The owner publishes the street fixture: {\"status\":201,\"body\":{\"world\":{\"id\":\"street-walk\",\"title\":\"Street Walk\",\"description\":\"\",\"template\":\"region-v1\",\"ownerId\":\"dev-85f44b5c4751\",\"createdAt\":1792408618446,\"regionSha256\":\"309191d4d6a35405bbdf67918bcbf1bb191b574edc8bd86d36b1885444d9c173\"}}}",
           "The visitor starts south of Harbour Street: [0,-40,0.2]",
-          "The server keeps the visitor on the far side of the street: [1.3371110139080376e-15,-14.740084908334795,0.2]",
-          "The server keeps the visitor back on the near side: [0.0000012646168193655767,-36.24257857435805,0.2]",
+          "The server keeps the visitor on the far side of the street: [1.333894700836439e-15,-14.742004607425947,0.2]",
+          "The server keeps the visitor back on the near side: [0.0000012630201209983915,-36.21735398493732,0.2]",
           "No page errors: "
         ],
         "positions": {
@@ -393,13 +393,13 @@
             0.2
           ],
           "across": [
-            1.3371110139080376e-15,
-            -14.740084908334795,
+            1.333894700836439e-15,
+            -14.742004607425947,
             0.2
           ],
           "back": [
-            0.0000012646168193655767,
-            -36.24257857435805,
+            0.0000012630201209983915,
+            -36.21735398493732,
             0.2
           ]
         }
@@ -408,7 +408,7 @@
     {
       "name": "access-gate",
       "status": "passed",
-      "seconds": 16.996,
+      "seconds": 16.889,
       "result": {
         "passed": true,
         "checks": [
@@ -469,7 +469,7 @@
     {
       "name": "connection-required",
       "status": "passed",
-      "seconds": 5.812,
+      "seconds": 5.621,
       "result": {
         "checks": [
           "Legacy solo preferences cannot unlock an offline game",
@@ -486,7 +486,7 @@
     {
       "name": "multiplayer",
       "status": "passed",
-      "seconds": 100.61,
+      "seconds": 90.904,
       "result": {
         "passed": true,
         "checks": [
@@ -519,7 +519,7 @@
     {
       "name": "indoor-npcs",
       "status": "passed",
-      "seconds": 23.788,
+      "seconds": 15.008,
       "result": {
         "passed": true,
         "checks": [
@@ -537,7 +537,7 @@
     {
       "name": "multiplayer-exclusivity",
       "status": "passed",
-      "seconds": 39.487,
+      "seconds": 21.627,
       "result": {
         "passed": true,
         "guest": {
@@ -562,16 +562,16 @@
     {
       "name": "vehicle-exit",
       "status": "passed",
-      "seconds": 7.564,
+      "seconds": 7.445,
       "result": {
         "checks": [
           "Jevica boards a vehicle accepted by the shared town",
-          "The initial parked vehicle supports a scenic drive: {\"riding\":true,\"chauffeur\":{\"active\":true,\"paused\":false,\"label\":\"Connecting to Jev…\",\"source\":null,\"remaining\":28},\"placement\":{\"position\":[-2768.3956419313604,18.462294390991243,1295.0133343366692],\"yaw\":1.5542610866111075,\"pitch\":-0.015001887053174272,\"roll\":-0.0020945138733826337,\"distance\":0,\"scale\":1,\"team\":false,\"vehicle\":\"rolls\",\"terrainError\":0.0029902968317507828,\"speed\":0,\"steering\":0,\"wheelOffsets\":[-0.0015592997989273272,0.000873349023500225,0.000590662636000161,-0.0007119591905535572]},\"princeVisible\":true,\"companion\":{\"enabled\":false,\"mode\":\"seat\",\"stance\":\"seat\",\"source\":null,\"label\":\"Ready to drive\",\"reason\":null,\"decisions\":0,\"carrying\":false,\"position\":null},\"status\":\"Ride with Jev, or give directions with W/S and A/D.\"}",
+          "The initial parked vehicle supports a scenic drive: {\"riding\":true,\"chauffeur\":{\"active\":true,\"paused\":false,\"label\":\"Jev smart driving\",\"source\":\"jev\",\"remaining\":27},\"placement\":{\"position\":[-2768.3956419313604,18.462294390991243,1295.0133343366692],\"yaw\":1.5542610866111075,\"pitch\":-0.015001887053174272,\"roll\":-0.0020945138733826337,\"distance\":0,\"scale\":1,\"team\":false,\"vehicle\":\"rolls\",\"terrainError\":0.0029902968317507828,\"speed\":0,\"steering\":0,\"wheelOffsets\":[-0.0015592997989273272,0.000873349023500225,0.000590662636000161,-0.0007119591905535572]},\"princeVisible\":true,\"companion\":{\"enabled\":false,\"mode\":\"seat\",\"stance\":\"seat\",\"source\":null,\"label\":\"Ready to drive\",\"reason\":null,\"decisions\":0,\"carrying\":false,\"position\":null},\"status\":\"Ride with Jev, or give directions with W/S and A/D.\"}",
           "Jev smart driving receives a valid decision",
           "Paused smart drive holds the vehicle",
           "A quick manual direction immediately cancels autopilot",
           "Brake and park stops the vehicle",
-          "Shared corrections preserve the exit point: {\"exit\":[-2765.4293722566686,20.15126327904874,1297.0778572259264],\"position\":[-2765.4293722566686,20.15126327904874,1297.0778572259264],\"corrections\":[]}",
+          "Shared corrections preserve the exit point: {\"exit\":[-2765.4297021121606,20.151336016893122,1297.097804047128],\"position\":[-2765.4297021121606,20.151336016893122,1297.097804047128],\"corrections\":[]}",
           "The shared town confirms the same grounded exit",
           "Jevica remains visible after stepping out",
           "Stepping out produces no rejected pose"
@@ -581,7 +581,7 @@
     {
       "name": "multiplayer-gate",
       "status": "passed",
-      "seconds": 40.864,
+      "seconds": 31.663,
       "result": {
         "passed": true,
         "checks": [
@@ -605,7 +605,7 @@
     {
       "name": "resident-names",
       "status": "passed",
-      "seconds": 224.96,
+      "seconds": 232.263,
       "result": {
         "checks": [
           "A resident is shown by their GitHub username",
@@ -638,7 +638,7 @@
     {
       "name": "sit-and-water",
       "status": "passed",
-      "seconds": 30.549,
+      "seconds": 24.055,
       "result": {
         "checks": [
           "The town lists storefront benches as seats",
@@ -659,7 +659,7 @@
           "Arrived beside planter:osm-node-8172494989:0",
           "Beside a planter, the Z prompt offers to water it",
           "Arrived beside planter:osm-node-8172494989:1",
-          "Another player sees them turn to the planter and pour from a watering can ({\"seen\":5.3584113090773124,\"toward\":-0.7853981633975945})",
+          "Another player sees them turn to the planter and pour from a watering can ({\"seen\":-0.6114112070937102,\"toward\":-0.7853981633975945})",
           "The watering animation ends by itself",
           "No outdoor NPCs are rendered on multiplayer benches",
           "No page errors: "
@@ -669,7 +669,7 @@
     {
       "name": "greetings",
       "status": "passed",
-      "seconds": 49.984,
+      "seconds": 32.31,
       "result": {
         "checks": [
           "No greeting card or prompt until someone is faced",
@@ -693,7 +693,7 @@
     {
       "name": "character-studio-shared",
       "status": "passed",
-      "seconds": 78.7,
+      "seconds": 87.819,
       "result": {
         "passed": true,
         "checks": [
@@ -785,7 +785,7 @@
     {
       "name": "creator-objects",
       "status": "passed",
-      "seconds": 63.33,
+      "seconds": 43.887,
       "result": {
         "checks": [
           "Jevica can edit a named primitive assembly",

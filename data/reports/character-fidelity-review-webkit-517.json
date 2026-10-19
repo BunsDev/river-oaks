@@ -1,10 +1,10 @@
 {
-  "createdAt": "2026-10-19T05:03:07.283Z",
+  "createdAt": "2026-10-19T06:54:13.906Z",
   "results": [
     {
       "name": "character-fidelity",
       "status": "passed",
-      "seconds": 31.221,
+      "seconds": 29.146,
       "result": {
         "passed": true,
         "checks": [

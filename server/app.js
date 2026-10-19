@@ -238,7 +238,9 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
         const action=pathname.slice('/api/office-desk/'.length);
         const visit=async user=>connections.get(user.userId)?.identity.sessionId===user.sessionId ? world.officeVisit(user.userId) : null;
         const common={identity,readBody:()=>body(req,OFFICE_DESK_BODY_LIMIT),allow:id=>deskCalls(id)};
-        const result=await officeDeskAction({...common,action,desk:officeDesk,hasVisit:async user=>(await visit(user))?.id==='jevica-office'});
+        // Jevica's office, or a Gardens workstation seat (#510), in this same session.
+        const atWorkstation=user=>connections.get(user.userId)?.identity.sessionId===user.sessionId && Boolean(world.campusWorkstation?.(user.userId));
+        const result=await officeDeskAction({...common,action,desk:officeDesk,hasVisit:async user=>(await visit(user))?.id==='jevica-office'||atWorkstation(user)});
         return json(res,result.status,result.value);
       }
       if (pathname.startsWith('/api/workplace/') && req.method==='POST' && workplace) {

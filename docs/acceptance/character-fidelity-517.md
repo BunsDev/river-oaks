@@ -5,6 +5,10 @@ not establish AAA quality or an approved device budget. Review the actual
 captures alongside the executable [capability contract](../../preview/src/character-fidelity-contract.js)
 and [integration guide](../character-fidelity.md).
 
+<!-- character-fidelity-current-review:start -->
+Current review candidate M passed stock office (21 checks), suite (10), ten readiness regressions, core (11 tasks) and full (18 tasks, 16 world journeys, 24 shared journeys/five fixture modes with full rendering and 18 IPIC checks). Runtime `3e04a4ae0af73d8e452f02024685108ef2d3808cc5822461ec878400b2e0f608` matches 1,330 staged runtime/test blobs. Signed source and exact final-head hosted proof remain pending. Historical failed runs and performance limits below remain explicit.
+<!-- character-fidelity-current-review:end -->
+
 ## Accepted baseline
 
 The [M1 receipt](../../data/reports/character-fidelity-m1-final-517.json) identifies
@@ -163,159 +167,88 @@ coverage; they do not provide geometric crowd LOD.
 
 ## Reconciled source and physical iPhone
 
-This section records the earlier signed candidate `67c44177` at runtime
-`426886a8...`. The reviewed candidate and renewed phone evidence are below.
+L adds an authoritative lift-readiness precondition after a controlled pose-publication
+delay reproduced an early F, `level_portal_out_of_reach`, and the original arrival
+timeout. This demonstrates a fixture ordering gap; J’s historical cause remains
+unclassified. Nine regressions pass and independent review found no required issue.
+Fresh L focused verification passed ten checks and core passed eleven tasks. Full verification failed at the office visitor’s hall arrival; 15 of 16 world journeys passed, including all ten suite checks. Shared/IPIC checks were not run. The J gate results below remain
+historical evidence; they do not prove L’s full acceptance.
 
-The candidate was reconciled with main `2b4e4926`. The [renewed core](../../data/reports/character-fidelity-main-core-517.json),
-[M1 reproduction](../../data/reports/character-fidelity-main-m1-517.json),
-[tier reproduction](../../data/reports/character-fidelity-main-tiers-517.json),
-[Chromium](../../data/reports/character-fidelity-main-chromium-517.json),
-[desktop WebKit](../../data/reports/character-fidelity-main-webkit-517.json), and
-[strict portrait check](../../data/reports/character-fidelity-main-goldens-517.json)
-passed at runtime manifest `426886a8e79e3acf652a29e4985ad07ec287479e500cf6c01c41f77155c81895`.
-All eight original and all 32 new tier/expression PNGs match the prior run
-byte-for-byte. The WebKit invocation caveat above also applies to its renewed raw
-receipt. The [renewed full gate](../../data/reports/character-fidelity-main-full-517.json)
-passed all 18 tasks, including 13 experience journeys, 24 shared journeys across
-five modes, and 18 IPIC screening checks. The preview suite has one existing
-negative-approach skip; that skip supplies no glazing proof. The expected offline
-domain-policy exit 2 is retained. The [78-input manifest](../../data/reports/character-fidelity-main-verification-inputs-517.json)
-records the exact combined source.
+Current candidate L has runtime `74850126` and 142 changed source/test/config
+inputs, integrating main `7c10f418` over signed checkpoint `54b5cd62`. Its 1,330
+combined runtime/test Git blobs match the staged index. It is not yet a signed,
+pushed or hosted-green final candidate.
 
-The [focused crowd lifecycle](../../data/reports/character-fidelity-main-crowd-lifecycle-517.json)
-also passed: both high-tier fixtures repeated cold loading and crowds of 1, 8
-and 24 three times with zero geometry, texture or program growth. Ten viewport
-and ten native two-camera portrait cycles per fixture also reported zero growth;
-four native captures remained byte-identical to the tier run.
+Integration exposed a rail visibility defect: author `display: grid` overrode
+hidden office cards. The scoped `[hidden]` rule passed the browser regression,
+retaining the original rail assertions. See the
+[rail receipt](../../data/reports/character-fidelity-review-rail-regression-517.json).
 
-The [resource reference budgets](../../data/reports/character-fidelity-resource-budgets-517.json)
-set exact per-version scene-census ceilings from both matching runs. Morgan is
-84,550 triangles and Imani 88,544 at every tier. Production tiers use ten scene
-census draws; high-tier estimated texture storage is 67,458,385 and 61,865,980
-bytes respectively. Existing `--against` checks enforce an unchanged census.
-These are structural regression budgets for the pinned bundles, not a frame-time
-promise, whole-town budget or total GPU-residency measurement. Material tiers
-provide no geometric crowd LOD.
+The [suite receipt](../../data/reports/character-fidelity-review-suite-regression-517.json)
+retains two failed full runs. Fifteen world journeys passed in each, then the
+stranger's hall arrival failed at initial spawn; shared/IPIC checks did not run.
+H's attempted fresh-publication precondition and focused ten-check pass did not
+repair the full workload. H core passed all eleven tasks, but that is historical
+proof for its inputs, not J.
 
-The physical iPhone 16 Pro Max (`iPhone17,2`, iOS 27.0.1) Mobile Safari run
-[passed](../../data/reports/character-fidelity-iphone-517.json) with unchanged
-runtime and helper inputs. Both human fixtures ran all four tiers at populations
-of 1, 8 and 24, with two alternated repeats and 120 intervals after 30 warmup
-frames per case. All 48 cases completed; all 24 paired p50 comparisons agree
-within the unchanged 20% band. Ten viewport cycles for each of eight fixture/tier
-combinations and three native portrait cycles per fixture reported zero growth
-in geometry, texture and program counts. Twelve native 3840×2160 PNGs completed.
-The earlier [Locked launch](../../data/reports/character-fidelity-iphone-blocked-517.json)
-remains a separate failed attempt with zero measurements.
+Diagnostics positively recorded missed-pong termination and delayed browser
+close/reconnection during heavy scene loading. The original collector could lose
+split lines, so an absent travel record does not prove it never reached the server.
+The corrected longer diagnostic found a 27.689-second pong delay and a snapshot
+already 12.335 seconds old after the freshness check. That run's suite passed after
+an observational read-only probe; it did not reproduce H's exact failure, and two
+early private helper-resolution errors keep the run outside gate evidence.
 
-| High tier, physical iPhone | Frame interval p50 / p95 ms at 8 | Frame interval p50 / p95 ms at 24 |
-| --- | --- | --- |
-| Morgan | 20 / 22 | 46–48 / 50–52 |
-| Imani | 20 / 22–23 | 47 / 50–51 |
+J adds a fixture-only startup barrier: a correlated read-only inventory response
+on the current socket, normal recovery within one unchanged 120-second deadline,
+and explicit failure on unexpected server errors. It records transport losses and
+duration. No travel is replayed and no production heartbeat, permission or
+backpressure policy changes. Seven loopback regressions and the actual focused
+suite's ten business checks passed, including privacy, door exclusion and lease
+revocation. Fresh J core passed all eleven tasks: 131 tooling, 3,737 preview
+passes plus one existing Vince negative-control skip, 984 server/Redis tests
+with no skips, 76 desktop and 149 Python tests (66 warnings). Build, Ruff
+(472 files), offline fixtures (expected exit 2) and secret guard passed. J full
+verification failed at resident lift travel after 15 world journeys passed.
+Startup acknowledgements passed, but the Floor 2 arrival timed out. Shared
+and IPIC checks were not reached. Raw failures are retained; current full
+acceptance, signed source binding and exact-head hosted checks remain required. This does not establish
+stable heavy initial rendering or repair of a demonstrated production policy bug.
 
-At population 1, both high-tier fixtures measured 17/17 ms p50/p95 with vsync
-unchanged. The [device reference budgets](../../data/reports/character-fidelity-iphone-budgets-517.json)
-retain every population/tier pair and set each p95 reference ceiling to the
-rounded-up maximum of its two measured p95 values, with no added headroom.
-These are initial same-fixture regression references, not a separately verified
-production SLA. Morgan's first page load took 2,024 ms, followed by 5,277 ms for
-the first render/GPU completion; Imani took 1,905 + 1,377 ms. Those are one local
-Wi-Fi load per appearance, with material caches potentially shared after Morgan.
-They are not Internet loading distributions. GPU timer queries were unavailable;
-texture storage remains a scene estimate, not total GPU residency. This short
-isolated run establishes neither whole-town performance nor thermal/soak stability.
+Chromium's earlier G workload passed 9 fidelity, 43 Studio and 25 rail checks;
+desktop WebKit passed 9, and the strict native 4K golden passed. Complete runtime
+comparison shows J changes only the suite and its new helper from G. Those are
+outside the explicitly selected browser/golden workloads, whose actual receipts,
+execution manifests and timestamps are retained through applicability proofs.
+Final signed input binding and exact-head hosted verification remain pending.
 
-Review the physical captures: Morgan [off](character-fidelity-517-captures/iphone-morgan-human.off-closeUp.png),
-[high](character-fidelity-517-captures/iphone-morgan-human.high-closeUp.png),
-[full](character-fidelity-517-captures/iphone-morgan-human.high-full.png),
-[smile](character-fidelity-517-captures/iphone-morgan-human.high-expression-smile.png),
-[brow](character-fidelity-517-captures/iphone-morgan-human.high-expression-browRaise.png);
-Imani [off](character-fidelity-517-captures/iphone-imani-human.off-closeUp.png),
-[high](character-fidelity-517-captures/iphone-imani-human.high-closeUp.png),
-[full](character-fidelity-517-captures/iphone-imani-human.high-full.png),
-[smile](character-fidelity-517-captures/iphone-imani-human.high-expression-smile.png),
-[brow](character-fidelity-517-captures/iphone-imani-human.high-expression-browRaise.png).
-Actual phone images retain natural irises, skin detail and the authored identities;
-coarse hair, dense brows and soft clothing detail remain visible. These are native
-canvas readbacks from the real phone, not screenshots of the phone's browser chrome.
+The [native applicability proof](../../data/reports/character-fidelity-review-native-applicability-517.json)
+retains the actual `eb50` native measurements below. It enumerates all 15 changed
+broad inputs, verifies the unchanged 113 client/asset/helper inputs and four native
+harnesses, and rebuilds the 142-module memory fixture with its actual prior source:
+generated execution bytes are identical. The new pure epoch export is unused;
+Redis migration, rail CSS and journey/catalog changes are outside this isolated
+workload. World/HUD and browser acceptance renew separately. Native receipt
+manifests and measurement times are unchanged.
 
-The [bounded phone helper](character-fidelity-517-captures/capture-phone.mjs)
-uses the existing fixture on one private IPv4 interface. Its smoke checks reject
-private-file/key requests, stale runs and premature success; physical completion
-requires all 48 timing cases, lifecycle checks and 12 native PNGs. The helper
-closes its fixture after completion or its eight-minute collection deadline.
-
-```sh
-node --test docs/acceptance/character-fidelity-517-captures/phone-evidence.test.mjs
-node docs/acceptance/character-fidelity-517-captures/capture-phone.mjs --smoke
-# Supply the paired CoreDevice identifier locally; keep the phone unlocked.
-node docs/acceptance/character-fidelity-517-captures/capture-phone.mjs --device <paired-device-id>
-```
-
-The seven gate regressions, real HTTP boundary smoke, and subsequent physical run
-passed separately. Raw launch/device records stay under ignored
-`.runtime/character-fidelity/physical/`. Published captures and receipts omit paired
-identifiers and private launch URLs; the raw report hash is retained for audit.
-
-## Reviewed candidate and renewed physical evidence
-
-Independent review reproduced one quality-controller race: an older pending low
-request could overwrite a newer request reaffirming the already applied high
-tier. The controller now advances its generation before the cached-tier return.
-Four behavioral regressions (return to high, standard, low and off) failed on the
-old source and pass with the fix. The reviewer independently confirmed the
-same-turn high→low→high sequence retains high and its normal map. The
-[review receipt](../../data/reports/character-fidelity-review-517.json) records the
-finding, red/green evidence and proof boundaries.
-
-The candidate integrates main `b76ab77c` over remote `132e11b9`; frozen runtime:
-`0a587e5f6194330ef82670f95ae5c30301813c80b63d797eef2a6777c6ffb19b`.
-The exact 97 changed code/test/config inputs are frozen separately from reports
-and ledgers. Independent review found no required defect in the Play rail or
-GTAO integration; the latter documents small exact-depth AO seam differences.
-The [renewed core](../../data/reports/character-fidelity-review-core-517.json)
-passed on the current 0a source: 131 tooling, 3,709 preview passes plus one existing documented skip,
-969 server/Redis tests with no skips, 76 desktop and 149 Python tests. Build,
-Ruff, offline fixtures and secret guard passed. The expected offline domain-policy
-exit 2 and Python warnings are retained. The [full profile](../../data/reports/character-fidelity-review-full-517.json)
-passed all 18 tasks on the same source: 13 world journeys, 24 shared journeys
-across five full-renderer modes, and 18 IPIC checks. Final signed delivery and
-hosted checks remain separate. The render receipts below retain their actual 6e
-manifest. The [render applicability audit](../../data/reports/character-fidelity-review-render-applicability-517.json)
-compares every prior runtime input and confirms the only nine changed/added
-code inputs are offline screening CLI/test/config files. Preview, server, shared,
-assets, dependency pins and render/browser helpers are unchanged. Core/full renew
-for tooling and Python coverage; render and phone receipts are not restamped.
-
-[M1 reproduction](../../data/reports/character-fidelity-review-m1-517.json)
-passed all eight native byte comparisons and four censuses with zero lifecycle
-growth. The [new tier reproduction](../../data/reports/character-fidelity-review-tiers-517.json)
-passed all 32 native byte comparisons, eight censuses, quality transitions and
-cleanup. [Chromium](../../data/reports/character-fidelity-review-chromium-517.json)
-fidelity 9 + Studio 43, [desktop WebKit](../../data/reports/character-fidelity-review-webkit-517.json)
-fidelity 9, and [strict native 4K golden](../../data/reports/character-fidelity-review-goldens-517.json)
-1 with zero pixel differences also passed. The WebKit raw scope-string caveat
-noted above still applies; its invocation selected desktop WebKit explicitly. The [high-tier crowd check](../../data/reports/character-fidelity-review-crowd-lifecycle-517.json)
-passed three repeated cold-load/1/8/24 scenes per fixture with zero growth and
-four further matching native images. Desktop timing reproduction did not pass:
-only 14/48 frame/GPU p50 comparisons matched the earlier run within the unchanged
-20% band, with timing-sample one-minute host load around 22–31. These timings remain descriptive;
-no stable desktop performance budget is inferred.
+The current [M1](../../data/reports/character-fidelity-review-m1-517.json) and
+[tier](../../data/reports/character-fidelity-review-tiers-517.json) reproductions
+passed all 8 + 32 native byte comparisons and matching censuses. Repeated
+[high-tier crowd cleanup](../../data/reports/character-fidelity-review-crowd-lifecycle-517.json)
+has zero reported resource growth. Desktop timing reproduction remains unmet:
+18/48 frame/GPU p50 comparisons agreed within the unchanged 20% band; sampled
+one-minute host load was 7.69–9.78. Those samples do not establish a stable budget.
 
 The [renewed physical receipt](../../data/reports/character-fidelity-review-iphone-517.json)
 passed collection/completeness: all 48 cases, 80 viewport cycles, six native
-two-camera portrait cycles and 12 native captures. All geometry/texture/program
-lifecycle deltas are zero. All 12 new PNGs reproduce the earlier tracked phone
-captures byte-for-byte; fresh raw captures are preserved, and the new receipt
-references the identical public files. The [71-module input comparison](../../data/reports/character-fidelity-review-phone-inputs-517.json)
-shows only the quality-controller module changed for that physical run; all 38
-tracked character assets, the fixture, helper and dependency pins were unchanged.
-The [current applicability audit](../../data/reports/character-fidelity-review-phone-applicability-517.json)
-rebuilds the complete graph and verifies all 113 tested inputs still match after
-current-main integration. Its broader runtime hash differs from the historical
-c0 physical run. Neither world render-pipeline nor occlusion-sort is reachable
-from this fixture, so this is unchanged isolated-workload evidence, not renewed
-phone world/HUD acceptance.
+two-camera portrait cycles and 12 native captures. Geometry/texture/program
+lifecycle deltas are zero. All 12 PNGs reproduce the earlier tracked captures
+byte-for-byte; fresh raw originals remain retained. Its actual tested broad
+manifest is historical `c0`. The
+[current phone applicability audit](../../data/reports/character-fidelity-review-phone-applicability-517.json)
+rebuilt the complete 71-module graph and verified all 113 tested module, asset,
+helper and dependency inputs unchanged after the newer integration. This applies
+the same isolated workload; it is not renewed phone world/HUD acceptance.
 
 Timing stability did **not** pass every comparison: 22/24 within-run p50 pairs
 and 46/48 corresponding-repeat comparisons against the earlier phone run agree
@@ -323,20 +256,19 @@ within the unchanged 20% band. Morgan off at 8 figures changed from 19→23 ms p
 Imani low at 24 changed from 46→68 ms. These observations do not isolate a cause.
 The [comparison report](../../data/reports/character-fidelity-review-iphone-budgets-517.json)
 preserves every original frame/CPU p95 ceiling unchanged: nine frame and eleven
-CPU cases exceeded an initial reference. New observed maxima are separate;
-no threshold or baseline receipt was changed to hide instability.
+CPU cases exceeded a reference. Observed maxima are separate; no threshold or
+baseline receipt was changed to hide instability.
 
 | Renewed high tier | Frame interval p50 / p95 ms at 8 | Frame interval p50 / p95 ms at 24 |
 | --- | --- | --- |
 | Morgan | 20 / 22 | 46–51 / 49–56 |
 | Imani | 20 / 22–23 | 47–48 / 50–51 |
 
-This is an isolated physical-fixture collection and cleanup pass, not a stable
-phone performance budget, whole-town acceptance or thermal/soak proof. GPU timer
-queries remain unavailable, and texture bytes remain estimates of active scene
-storage rather than total GPU residency. The rapid-request race is covered by
-the focused real-material regression, not by a claim that phone timing exercised
-that exact event sequence.
+This is physical fixture collection and cleanup evidence, not a stable phone
+budget, whole-town acceptance or thermal/soak proof. GPU timer queries remain
+unavailable, and texture bytes estimate active scene storage rather than total
+GPU residency. The rapid-request race is covered by the real-material regression,
+not a claim that phone timing exercised that exact event sequence.
 
 ## Limits and next acceptance
 
@@ -350,3 +282,12 @@ live auth, native Unreal, whole-town iPhone performance or human accessibility
 acceptance. Contended desktop timing is descriptive. The phone's measured
 reference budgets apply only to its documented isolated workload. Val waived #441 P4/P5 novice trials; those remain
 waived, not passed. Preserve prior human results.
+
+
+### M office admission precondition, verification pending
+
+The controlled v3 baseline failed on the original guest arrival. With the ticket POST held, avatar readiness preceded admission; the original click returned a local reconnect refusal before the independent 20-second release. Admission recovered, but the original 30-second status wait failed with Alice still at spawn. The office regression receipt retains positive control timestamps and raw hashes. The exact historical L cause remains unproven.
+
+The office fixture now tracks three pages before navigation and awaits the existing correlated read-only startup helper after all four avatar-ready waits, including owner reload. The avatar wait remains 120 seconds, followed by a separate 120-second startup budget. No arrival replay, authentication, arrival-deadline or business-assertion change was added; the existing door-entry retry loop is unchanged. The added before-first-socket test brings the focused suite to ten passes, zero skips, independently repeated.
+
+Frozen M runtime `3e04a4ae0af73d8e452f02024685108ef2d3808cc5822461ec878400b2e0f608` binds 142 changed inputs and 1,330 staged Git blobs. Phone applicability verifies all 113 inputs; native applicability verifies the 142-module generated workload, and selected G render workloads remain unchanged. At this checkpoint, paired candidate76849, stock office/suite, core/full, signed delivery and hosted verification were pending; subsequent results follow below.

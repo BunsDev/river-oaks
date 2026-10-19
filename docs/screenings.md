@@ -115,6 +115,12 @@ second interior or renderer is built.
     - Eight English captions, a transcript and a poster.
     - `sources.json` records provenance, what Val approved, and the OpenStreetMap credit, which stays in frame.
     - `scripts/ipic-short/` holds the capture, the cut and the decode check. A new cut needs approval again.
+  - **The second short**, `ipic-two-seats-v1`, "Two Seats, One Screen" (#501). Val approved candidate B, these exact files, on 2026-10-19.
+    - A 62 s scene captured from the game in IPIC's auditorium: two fictional friends, Maya and Theo, settle into front-row recliners before the house lights go down.
+    - Real dialogue and music: eight lines from local Kokoro-82M synthetic voices (`af_heart`, `am_liam`), under an original piano and bass score from `scripts/ipic-short/second-score.mjs`. Stereo, 48 kHz, about −18 LUFS integrated, true peak −1.5 dBTP, every line at least 10.4 dB over the music.
+    - WebM (VP9 Profile 0/Opus) and MP4 (H.264 Main/AAC, fast start), 1280×720 at 24 fps, a keyframe every second, no border (the screen draws the mattes).
+    - English captions with speaker names and three sound cues, an eleven-line transcript and a poster.
+    - `sources.json` records provenance, what Val approved (`approvedItems`) and the encoding. `scripts/ipic-short/second-*` holds the capture, cut, intake and decode tooling. A recut needs approval again.
   - **The fixture**, `ipic-fixture-v1`. A 30 s test pattern with one beep a second, in WebM (VP9/Opus) and MP4 (H.264/AAC), with English captions. It is labelled as a fixture everywhere, and tests can still name it. `scripts/make-screening-fixture.mjs` regenerates it, rewriting only its own entry in `sources.json`.
   - **Checks.** `node scripts/make-screening-fixture.mjs --check` verifies every film's committed hashes and durations. `preview/tests/screening-media.test.js` checks each allowlisted film against `sources.json`: types, bytes, SHA-256, duration within 60 ms, captions equal to the transcript, and a recorded approval.
 - **Rolling back.** Once the short has started, a town's checkpoint names `ipic-original-v1`, in its

@@ -1326,3 +1326,280 @@ polish (48files,includingruntime/server/shared/CI/agent catalog). This0a evidenc
 is a verified historical candidate, not proof of those new inputs. Preserve a signed
 source freeze, then integrate latest main and renew affected gates/evidence before
 final push/hosted verdict. No merge/deployment/closure/retirement authorized.
+
+
+Signed and normally pushed source checkpoint `54b5cd62daddb2abf0f8cc1d9e0b6427698da6da` after
+localgate completion. ED25519 signature good;prohibited attribution check empty.
+All1299combined runtime/test Git blobs (97changed) match tested0a manifest before
+and after commit. PR545draft body now exposes this concrete checkpoint and current
+main gap. Source-binding receipt records exactcommit/manifest;generic generated
+experience/shared files restored only after task-specific copies.
+
+Clean no-commit integration of28f8e9b2 succeeded over54b5cd62. Frozen runtime
+`11352ec42c6e37fe0a66a6c98139022f5ed442d0a7304e5795e18d2bf5fa37c6`
+has131changed inputs. Independent46/46focused checks found0required defects.
+Phone graph71modules/113inputs identical. Newworld/UI/fixture source invalidates
+the old only-offline desktop applicability proof;goal2e driver90050 renews core,
+all baseline/tier/crowd/strictgolden/ChromiumStudio+rail/WebKit,thenfull. Fullworld
+profile now15journeys,CIgainscampusjob. No physical rerun claimed or needed for
+unchanged isolated phone inputs;all performance limits stay explicit.
+
+
+Goal2e core failed in new upstream integration: intake negative test iterated every
+registered film and rejected validnew ipic-two-seats-v1 (engineering-candidate
+vsdraft). Driver90050 terminal1,rawcore/log preserved;all later tasks notrun.
+Read owningtest/intake/registry/docs;independentrepro5pass/1fail/0skip. Smalltest-only
+repair explicitly selects originalsilent+fixture IDs and assertsboth exist,retaining
+allfile/audio/caption/record checks. No production/media/approval changes. Focused
+6/6 and independent19/19intake+contract+media passed,0skips. Addedtestpath to
+ownfiles. Newruntime `eb50b85d64fddedec9f358c9204f96ddf13d8b49fb56759272de4e3f9246b2aa`
+retains131changed paths;goal2f renews core/render/rail/Studio/WebKit/golden/full.
+Oldrawfailure and red/green receipt retained;phone113inputs stillidentical.
+
+Goal2f coordinator handle47764 is live;goal2e90050 is terminal1.
+
+
+Goal2f currentcore passed at unchangedeb50/131inputs:131tooling,3727preview
+plus1existing skip,978server,76desktop,149Python/66warnings;build,Ruff469files,
+offline expected exit2,secrets passed. Driver47764 now renews renders including
+Chromiumrailpolish thenfull15world. The acceptance section was rewritten around
+currentproof and historical54b5/C0 boundaries;no finalhosted/readiness claim.
+
+
+Rail selector-only attempt failed:campus hidden card rendered display:grid/visibletrue.
+Focused browser assertion reproduced runtimehidden-state defect;scoped railoffice
+[hidden] display:none restored controller state;focused journey passed25checks.
+Static reviewer corrected earlier selector-only assessment and confirmed CSSrootcause.
+Raw red/failed-attempt/green retainedgoal2f;no threshold/assertion weakened.
+Main advanced7c10f418 (#525campus traversal/Redis epochmigration). Preserved13dirty
+trackedfiles,cleanlyreintegrated latestmain,verified all bytesrestored. FrozenG
+`4ee88f688473ae7e12dcae6683df8d30c1a409d9e693f35a9697c6020e00c3d5` has140changedinputs. Phonegraph71modules/113inputs identical.
+Gcore handle4952 running;browser/golden/full16world pending. NativeF retention
+requires explicit workload proof,not fresh timing measurements or restamping.
+
+
+G core4952 terminal0 on frozen4ee88f68:131tooling,3730preview+1existing
+skip,984server0skip,76desktop,149Python66warnings;11tasks passed inclbuild,
+Ruff472files,offlineexpected2,secrets. Driver18859 nowChromiumfidelity/Studio/rail,
+thenWebKit/strictgolden/full16world. Independent applicabilityaudit verifies
+13pathdelta,all3actualFreceipt hashes,113phone inputs and142module memoryfixture
+current/actualF overlay byteidentity. Reviewerrequiredrailmetadata provenance
+clarification applied:eb50 explicitly failing source,focusedgreen fullmanifest
+notfrozen at execution;renewedG rail supplies currentcandidate proof.
+
+
+G Chromium9fidelity+43Studio+25rail passed;WebKit9passed;strictnative4K
+goldenpassed. Inputbefore/after unchanged4ee88f68;renderapplicability hashes3fresh
+receipts and3actualF native receipts with explicitworkloadproof. Railreceipt now
+binds green currentcandidate to frozenG Chromiumreceipt (historicalfocusedgreen
+manifest gap remains explicitlyrecorded). Driver18859 nowfull18tasks/16world.
+
+
+G full18859 terminal1 at2026-10-19 07:19:30.823454+00:00:15worldjourneys passed,then campus-suite
+stranger hall-door wait30s failed with alice faroutsidecampus(-2765/-1295).
+Shared/IPICnotrun. Failedfull/experience/journey retainedgoal2g;no retry or
+thresholdchange. Investigate actualnavigation/input/runtime beforetargetedfix.
+Gcore/renderpassed remainsactualfrozen4ee proof;nofinalcandidateclaimed.
+
+Independent authoritativeprobe confirmsfailedalice coordinates areexactinitial
+spawn (campus[-45.04784,72.07713]),notrunaway movement;hall-arrival command succeeds
+fromthatspawn. Arrivalcode doesnotrejectotherplayeroccupancy. Originalfailure
+lacksstatus/notice/WSreply,so noprovenruntimecause. Privatebounded diagnostic
+40793 runsunchangedjourneywithtravelrequest/reply+HTTPstatus+allpage-state capture,
+not a retry forgreen or threshold change.
+
+
+Servertrace53176terminal1 confirmedAlice aliveheartbeat07:32:48.422,missingpong
+then terminate07:33:18.423. Browsertravel07:33:25.052 neverreachedserver;close1006
+delivered07:33:25.444,reconnect26.299. Fourposesbeforetermination,135after,
+notallafter. Cachedjoined() acceptedinitialsnapshot afterheavythirdpage load.
+Readiness-onlyjourneyrepair requires same-host serverTimeMs >= postreadyNode
+checkpoint;deadline120s,allbusinessassertions,heartbeat30s,commandfences unchanged.
+Independentcause/patchreview and6predicatechecks passed. Publicsuite-regression
+receipt embedsfailedprofile/journey+tracehashes;heavyloading/performancegap remains.
+FrozenH `85d264d4d3c39b23943577e5fcb261631650df7c1a9d093c04e49087e5f594c4` has140changedinputs. NativeF/phoneC0 apply
+through14pathdelta/142byteidenticalmemoryfixture/113inputs. HdiffersG onlysuite
+body;Gbrowser/golden selectedworkloads unchanged,all6renderreceipts retainedwith
+originalmanifests/times. Focused94347live;Hcore/full27020queuednormalbrowserlock
+and requirefocusedpass beforestarting. No sourcecommit/push/readiness yet.
+
+Focused94347 terminal0:all10suitechecks passed,includingstrangerheldgallery14.50,
+privateworknotdisclosed,andrevocationwalkout15.10/deskremoved. Hdriver27020
+acceptedfocusedpassguard,checked85d264d4/140inputs,andstartedfreshcore;then
+required full18tasks/16world. Gfailedprofileandthreeprogressivelyinstrumented
+reproductions remainretained;noheartbeatpolicy/performanceclaimchanged.
+
+
+Hcore11tasks passed at85d264d4/140inputs:131tooling,3730preview+1existing
+Vince negativecontrolskip,984server0skip,76desktop,149Python66warnings;build,
+Ruff472files,offlineexpected2,secrets passed. Driver27020 thenstartedHfull
+18tasks/16world on unchangedinputs. Stagedindex1328combinedGitblobs/140changed
+matchHmanifest;notyetcommitted. IndependentHscopeauditverified1306runtime
+paths/140changedinputs/130receipt-inputhashlinks withnorequiredcorrections.
+
+Read-only project:check --tasks primary returned1 for41global lifecycle gaps
+(otherexpiredleases,missingpaths,retirementbacklog). Noown#517gap;activeowner/
+branch matched,preserve-dirty disposition correct. Rawglobalinventory retained
+goal2h/project-check.log,summaryJSON;foreignrecords untouched. Notclaimedgreen.
+
+Intake regressionreceipt provenanceclarified beforefinalbinding:11352manifest
+explicitly failingRuntimeManifestSha256;currentfixedsource hashandactualHcore
+receipt hashseparate. Originalfailedprofile/rawtimestamps unchanged.
+
+
+H27020 terminal1 at2026-10-19T08:07:34.985108+00:00:
+15worldpassed;finalsuite stranger hallarrivalstatus30sfailed again atinitialspawn
+afterfreshsnapshot checkpointlogged. Focused10green isinsufficient toclaimrepair
+underfullworkload. Hfailedfull/journey/sourceattempt preserved;shared/IPICnotrun.
+Do notinvoke finish-local orsign/push. Investigateactualroundtrip/heartbeat
+response behavior;freshpublicationprecondition alone notsufficient.
+
+
+H diagnostic50136 terminal0:all10checks passed;stranger socket1006/reconnect
+during scene load before fresh checkpoint. Not full-workload repair proof.
+Independent reviewer found private trace collector discarded partial stdout lines;
+positive heartbeat evidence stands,absence of travel alone is inconclusive.
+Next bounded diagnostic fixes collection and correlates one read-only command,
+ping callbacks/pong and Vite both-leg buffers. No new sourcebehavior change.
+
+Correction to prior servertrace53176 narrative:positive missed-pong termination
+and delayed client close are confirmed;the statement that travel never reached
+server was too strong because chunk splitting could drop records. Publicreceipt/
+acceptance corrected;raw traces untouched. Private collector now uses readline.
+
+Private full-world diagnostic42251 began with two helper-resolution errors
+(contextual-first-visit/store-intro importsrelative to private runner). Corrected
+private symlink for remaining journeys;preserve those errors. This run is diagnostic
+only,not faithful successful16journey/fullgate evidence. No production/sourcechange.
+
+Correlated read-only diagnostic62456 terminal0/all10suitechecks. Corrected
+collector has505records/0parseerrors;Aliceconn3 ping send+localcallback08:15:20.068,
+no recordedpong,positive termination08:15:50.071;clientclose57.651/rejoin58.349;
+conn4inventory admin_onlyack58.687/travelack58.707. Server recordedbuffers0;
+proxy maxima68KB do not ruleout downstreamkernel/browserqueues. Original
+instrumentation lacksendpointcorrelation andtimestampedlag,explicitlimitations
+retained in publicreceipt. Longerdiagnostic42251 nowlive withbothcorrections.
+No new productionfix,sourcecommit,push or full-gate success claimed.
+
+Independent actual-H-helper regression exit1 onintendedack barrierassertion.
+Loopback transportpositivecontrol passed;postcheckpointapplicationack withheld,
+freshsnapshot08:24:28.685,actualjoined returned28.688 while1requestpending/0newacks.
+Private reviewer-readiness-red files/publicreceipt retainhashes andVM/transport
+scope. This proveslogicalpreconditionweakness,notfullmissedpongcause.
+
+Private startup-barrier prototype only:6loopback cases +independentPlaywright
+error-prefix case pass. Reviewer reproduced prefixerror red;fixedknownclient
+transportexceptions insidepage.evaluate,not broadNodeerror matching. Rawredlog
+retained;genericreviewerJSON overwritten by its testproducer ongreen,not cited
+asred. Summaryhashesgoal2i/prototype-review-summary.json. No actualHruntime edits.
+Independentreview finds nofurtherrequired prototypeissue withinrotation-disabled
+campusfixture;realPlaywrightframeordering/fullworkload remainunverified.
+
+Long diagnostic42251 terminal1(twoearlyprivatehelperimporterrors retained),
+suite10passed. Haftermanifest verified85d264d4/140unchanged. Correctedtrace507
+records/0parseerrors/noappseqgaps;AliceTCPtuplemapsproxy3↔conn3. Firstpong
+27.689s after immediatepingwrite,second7.370s;timestamped20s+5–6sstalls.
+AfterHfreshcheck snapshotwas12.335sold;readonlyprobe235ms,thenoriginaltravel
+acknowledged. No termination inthisrun,notexactHfullfailurecauseproof andnot
+fullgate. Summary/rawhashesgoal2i/full-diagnostic-summary.json/publicreceipt.
+Demonstratedreadiness weakness supports reviewedboundedstartupack proposal;
+production heartbeat/backpressure defect stillunproven,policiesunchanged.
+
+Installed fixture-onlyackbarrier afterindependentlogicalred/causallimitsaudit.
+New garden-campus-readiness helper +7loopbacktests;all3pagestrackbeforegoto,
+allbusinessassertions unchanged. Tracked7/7unit0skip independentlyrepeated;
+focused actualrunner54151 terminal0/all10checks;startupacks3pages succeed.
+FrozenJ `602547082edf9640c27c2fe098217586a3d2d6f0237983d95ff2318e547d998e` /142changed/1307runtimefiles;
+indexbind84136 terminal0 matches1330combinedGitblobs(notcommitted).
+Jphone113inputs identical;native15pathdelta/142-modulememoryfixturecodeidentical;
+render2pathdelta retainsactual6F/Greceipts,never restampsmeasurementtimes.
+Fresh core/full coordinator90875live;Redis59317positivePONG/owned retained.
+Hfailures anddiagnostic42251terminal1 labels remainexplicit. No commit/push.
+
+IndependentJproofaudit verifies1307runtimehashes/155receipt-inputSHA links/
+1330combinedindexblobs/142changedinputs,0mismatches. RetainedactualF/G/C0hashes
+unchanged;delta15/2 andnewhelpernonselection verified. Correctedolderaudit
+pointer tohistoricalEvidenceAuditG. Olderprivategoal2PRtemplate/goal2hdelivery
+helpersremainstale;rewriteforfinalJbeforepublication,neverpublishold0a text.
+Current core/full90875stilllive;nofinalsourcebinding/hosted claim.
+
+Jcore90875 stage terminal0:11tasks passed atfrozen60254708/142inputs,
+131tooling,3737preview+1existingVince skip,984server0skip,76desktop,149Python
+66warnings;build,Ruff472files,offlineexpected2,secrets passed. Inputaftercore
+unchanged;coordinator nowfull18tasks/16world. Actualcorepublicreceiptupdated;
+intakeproofnowJcore withimmutablehistoricalHcopyretained,avoidingmutablehashlink.
+No sourcecommit,push,hosted orfullpass yet.
+
+Prepared J guarded local/source proof andPR/fourhandoff payload generators;
+no modes/generators/posts/commits executed. Independentreview found/fixed stale
+phase-labels andCIstatuspagination completeness;re-review no requiredfindings.
+A→metadata-onlyB binding design preserves54b5/dirtyexecutionmetadata and
+commit-qualifiedhistoricalinputreceipt hashes. CIreader actualcheckpoint smoke
+check terminal0:old54b5 has17greenchecks but91behindmain,readyfalse—NOTJproof.
+Read-only projectcheck7779 terminal1 at08:57:45UTC:59global lifecyclegaps,
+0own517gaps,30worktrees/43branches. Foreignstate preserved. Refreshatfinal
+handoff after push;do not claimglobalcoordinationgate passed.
+
+
+### J full terminal failure, renewed investigation
+
+The actual J full run finished 2026-10-19T09:08:59Z with exit 1. Core passed 11 tasks, but world acceptance failed at `garden-campus-suite`: resident lift to Floor 2 timed out after the resident/operator startup acknowledgements passed. Shared/IPIC checks were not reached. Raw `goal2j/full.log`, `full-profile.json` and `driver-result.json` are retained. The startup barrier does not prove later travel reliability. Next: correlate KeyF delivery, action eligibility, outgoing travel, server response and current authoritative state before changing code or rerunning verification. No signed current candidate or hosted readiness is claimed.
+
+
+### Authoritative lift readiness, candidate L
+
+K instrumented16-world diagnostic passed (suite10checks), butdidnotreproduceJcause. Controlledactualbrowser pose-publicationdelay thenreproducedearlyF/out-of-reachrefusal/original30stimeout. Thisisapplicationpublicationfaultinjection,notTCPdelay. Originalredsource/receipts retained. Same-independent5000msreleasepairedprobe46674isrunning.
+
+Extractedoldlabelpredicateforbehavioralred:7pass/2fail. Addedauthoritativesource-levelreach+usableprompt inoriginal30spromptwait;singleF/arrival/businessassertions unchanged.9/9passed,independentlyrepeated;3pathreview0requiredfindings. FrozenLruntime748501264732cac774f6139c1a5b5f47372fb6c1db148b52742034f54fd3d993/142changed/1330indexblobs match. Renewedphone113/native142-module/generated-byteproof/browserGapplicabilitypassed. Freshfocused/core/full/signeddelivery/hosted remainrequired;doNOTrunJdeliveryhelpersagainstL.
+
+
+L core passed all11tasks at2026-10-19T09:50:15.061Z:131tooling/3739preview+1existingVince negative-controlskip/984serverRedis0skip/76desktop/149Python66warnings. Build/Ruff472/offlineexpected2/secrets passed. FrozenL74850126/142inputs unchangedbefore/aftercore. Actualfocused10passedincludingstartupreconnect. Samejob20786nowFULL;no currentfull/signed/hosted claim. IntakecurrentcoreproofrenewedactualL;Jcorehistoricalhashretainedimmutable.
+
+
+### L full terminal failure and monitoring correction
+
+ActualLfull finished2026-10-19T10:15:30.357Z with exit1. Fifteenof16worldjourneys passed,including garden-campus-suite/all10checks. Garden-campus-office failed at intoHall firstarrival-statuswait(line24),guestcallafterready(line128);shared/IPICnotrun. Experience runtime1162836ms isbelow1200000msbudget;thiswasajourneyassertiontimeout,notprofiledeadline. Originalprofile/world/log/driverreceipts preserved. Parentprogressupdatesincorrectlysaidcampusofficepassedbecausetailmissedearlierfailurewhile runnercontinued;thiscorrectsthatrecord. OfficecurrentlywaitsonlycanvasplayerReadybeforeguesttravel anditsarrival-statuserror doesnotemitcollectedtraveltrace. Next:boundedcorrelatedoffice/admission-readinessdiagnostic;reuseexistingfixturecontractonlyif demonstrated. NoactualLofficecause,fullpass,signedsourceorhostedreadinessclaimed.
+
+
+### Office admission diagnostic controls
+
+Initial goal2m probe terminal0/prefix-completed with events=[]: its literal ticket route glob omitted the URL query string and did not inject the proposed fault. Original script/input/result/log preserved in goal2m/v1-uninjected, with explicit uninjected-positive-control-only classification. V2 matches ticket pathname and POST, labels the fault as request/admission delay, and requires positive hold/avatar-ready/independent release events. Baseline34874 is running through the browser lock; no production or journey source change and no exact L cause claim.
+
+
+V2 admission diagnostic terminal0/prefix-completed but classification=inconclusive: positive ticket hold and avatar-ready controls occurred; guest pre-action connected=false, then original locator click dispatched12.57s later, after independent2s release, and authoritative travel succeeded. Raw v2 input/script/result/log hashes preserved; no repair claimed. V3 baseline41278 uses an independently timed20s hold, identical for planned baseline/candidate, with original actions/deadlines/auth unchanged and red additionally requiring post-click timestamp before release. Private before-first-socket real-loopback test passed10/10,zero skips; demonstrates helper startup ordering only,not office wiring or exact L failure cause.
+
+
+### M office admission precondition, verification pending
+
+The controlled v3 baseline failed on the original guest arrival. With the ticket POST held, avatar readiness preceded admission; the original click returned a local reconnect refusal before the independent 20-second release. Admission recovered, but the original 30-second status wait failed with Alice still at spawn. The office regression receipt retains positive control timestamps and raw hashes. The exact historical L cause remains unproven.
+
+The office fixture now tracks three pages before navigation and awaits the existing correlated read-only startup helper after all four avatar-ready waits, including owner reload. The avatar wait remains 120 seconds, followed by a separate 120-second startup budget. No arrival replay, authentication, arrival-deadline or business-assertion change was added; the existing door-entry retry loop is unchanged. The added before-first-socket test brings the focused suite to ten passes, zero skips, independently repeated.
+
+Frozen M runtime `3e04a4ae0af73d8e452f02024685108ef2d3808cc5822461ec878400b2e0f608` binds 142 changed inputs and 1,330 staged Git blobs. Phone applicability verifies all 113 inputs; native applicability verifies the 142-module generated workload, and selected G render workloads remain unchanged. At this checkpoint, paired candidate76849, stock office/suite, core/full, signed delivery and hosted verification were pending; subsequent results follow below.
+
+
+M pairedv3candidate76849 terminal0/controlled-admission-prefix-passed. Sameprobehash567aaa andsameindependent20srelease;candidateack at6029173 thenonearrivalrequest2 acceptedat6029212,afterrelease6028841. Baselineoriginalclick locallyrefused7827msbeforerelease andoriginal30sarrivalfailedafteradmissionrecovered. Strictpaired-audit validatespositivecontrols/sourceMhash/currentprobehash/serverack. Existingdoor-entrycooldownretryloop isseparateandunchanged. ExacthistoricalLcause remainsunproven. FreshMstockoffice21/suite10→core11→full18/16world/shared/IPICqueued;no candidatecommit/push yet.
+
+
+Mcoordinator83415 live:stockoffice21passed includingneighbourprivateworkisolation;suite10running beforecore/full. Independentreviewverifiedpairedordering/samescripthash,1307runtime/1330index/142changed/113phoneinputs andcomplete16native/3browserdeltas. Parent159explicitfileSHA linkspassed afterrenewingchangedreadinesstesthashin currentstartupsourceproof;pre-renewalauditretainedprivate. Mdeliveryhelpers preparedsyntax-only with mandatoryactualfull/local-auditguards;notexecuted.
+
+
+M stock acceptance passed: office21 checks and suite10, including private-work isolation, stranger exclusion and lease-revocation walkout. The actual combined receipt is character-fidelity-review-campus-focused-517.json. Coordinator83415 confirmed unchanged inputs and began fresh core at2026-10-19T10:40:15Z; full follows only on core success. Read-only project check at10:39:04Z returned1 for59 global lifecycle gaps,0 own517 gaps,30worktrees/43branches. Foreign records preserved; refresh before final handoff. M guarded delivery helpers were independently re-reviewed after two metadata corrections; no required findings remain and no helper modes/commits/push/posts were executed.
+
+
+M core passed all eleven tasks at 2026-10-19T10:45:07.904Z: 131 tooling; 3,740 preview passes plus the existing Vince skip; 984 server/Redis with zero skips; 76 desktop; 149 Python with 66 warnings. Build, Ruff472, expected offline exit2 and secret scanning passed. Frozen3e04a4ae/142 inputs unchanged after core. Coordinator83415 is now running full18/16world/shared/IPIC. Actual core-counts/input/profile evidence retained; no full/signed/hosted success inferred. Current preservation audit independently compares all38 assets with67c44177, race source/regressions with54b5, secret policy withmain7c10 and the per-caster shadow coverage with signed54b5/current preview pass.
+
+
+The fresh M requirement audit (goal2m/completion-audit-interim.json) covers all ten original review/integration/verification/delivery/boundary groups. It explicitly remains incomplete: full83415 is live; signed source, normal push, current PR/four handoffs and exact-head hosted/current-main proof are not achieved. M metadata/delivery helpers remain guarded and unexecuted. All source diffs and staged diffs pass whitespace checks.
+
+
+M full-run milestone at 2026-10-19T11:02:21.755Z: campus office passed all21 checks, including guest hall arrival and private-work isolation. Fourteen of16 world journeys passed with no logged/structured failure. Campus traversal/suite, shared and IPIC remain; full-profile success is not yet established. The immutable office-full-milestone.json preserves this completed journey independently of the live generic report.
+
+
+M full-world acceptance passed all16 journeys at 2026-10-19T11:08:29.676Z (experience duration 1093157ms; original1200000ms limit unchanged). Campus office21 and suite10 checks passed in this actual full run. Stranger startup experienced socket loss and recovered with only the read-only probe before original travel; no stable initial-rendering or historical-cause claim is inferred. Coordinator83415 now runs shared acceptance; IPIC remains next. Full-profile/signed/hosted success is still unproven.
+
+
+M required local gates verified at 2026-10-19T11:29:27.475098+00:00:core11/full18,16world,24shared/5fixturemodes/fullrendering,18IPIC.
+All frozen3e04a4ae/142inputs unchanged before/after;1330stagedGitblobs match.
+OriginalG/H/J/Lfailures retained;no timingthreshold/golden/heartbeat/securityweakening.
+Signedsource andexactfinalhead hosted verification remain required.

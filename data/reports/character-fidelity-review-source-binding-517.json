@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "historical-verified-source-checkpoint;current-integration-pending",
+  "recordedAt": "2026-10-19T06:23:00.751592+00:00",
+  "checkpoints": [
+    {
+      "commit": "54b5cd62daddb2abf0f8cc1d9e0b6427698da6da",
+      "integratedMain": "b76ab77cf716e5f4ddb24e54bce771412de0e1f0",
+      "runtimeManifestSha256": "0a587e5f6194330ef82670f95ae5c30301813c80b63d797eef2a6777c6ffb19b",
+      "boundGitBlobInputs": 1299,
+      "changedInputs": 97,
+      "inputReceipt": {
+        "commit": "54b5cd62daddb2abf0f8cc1d9e0b6427698da6da",
+        "file": "data/reports/character-fidelity-review-verification-inputs-517.json",
+        "sha256": "0a0676a1695ad2db71f6f8e0d356ed135dfe9a7aebca922e0ff12ac83c717c95"
+      },
+      "checks": "core11/full18 passed,13world,24shared/5fullrenderer modes,18IPIC",
+      "signature": "Good ED25519 git signature for repository author; prohibited-authorship check empty",
+      "push": "normal feature push132e11b9\u219254b5cd62",
+      "method": "Compared each expected runtime/changed input SHA256 and size against staged Git blobs, then HEAD blobs after signed commit. Executed receipts retain precommit132e11b9/dirty state; no clean-execution revision invented."
+    }
+  ],
+  "currentCandidate": {
+    "integratedMain": "7c10f418b0ea519bc0d2b84bb65869e3c7cdae0e",
+    "runtimeManifestSha256": "3e04a4ae0af73d8e452f02024685108ef2d3808cc5822461ec878400b2e0f608",
+    "changedInputs": 142,
+    "verification": "Mcore11/full18,focusedoffice21/suite10browserchecks/10unitregressions passed;1330indexblobs matched;not yet signed/current-pushed",
+    "stagedIndexBinding": {
+      "ref": "index",
+      "boundInputs": 1330,
+      "changedInputs": 142,
+      "runtime": "3e04a4ae0af73d8e452f02024685108ef2d3808cc5822461ec878400b2e0f608"
+    }
+  },
+  "historicalAttemptH": {
+    "integratedMain": "7c10f418b0ea519bc0d2b84bb65869e3c7cdae0e",
+    "runtimeManifestSha256": "85d264d4d3c39b23943577e5fcb261631650df7c1a9d093c04e49087e5f594c4",
+    "changedInputs": 140,
+    "verification": "Hcore11passed,focused suite10passed,butHfull failedagainlastcampus-suite;1328stagedblobs matched;no signedcommit/currentpush;roundtripdiagnosis pending",
+    "stagedIndexBinding": {
+      "ref": "index",
+      "boundInputs": 1328,
+      "changedInputs": 140,
+      "runtime": "85d264d4d3c39b23943577e5fcb261631650df7c1a9d093c04e49087e5f594c4",
+      "scope": "Staged Git blobs only;no signed-currentcommit or completedHprofile claim."
+    }
+  },
+  "historicalJAttempt": {
+    "file": ".runtime/character-fidelity/goal2l/historical-J/character-fidelity-review-source-binding-517.json",
+    "sha256": "28082dfc9e1a59359396bbaa5d5acb7b0fa23ee84052def8729b055c66e16864"
+  },
+  "historicalLAttempt": {
+    "file": ".runtime/character-fidelity/goal2m/historical-L/character-fidelity-review-source-binding-517.json",
+    "sha256": "bff426abdb445b693db1d7df5ace197eada646d359e06980f9c7021dff9e47d8"
+  }
+}

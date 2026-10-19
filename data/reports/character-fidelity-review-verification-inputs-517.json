@@ -1,14 +1,14 @@
 {
-  "revision": "132e11b9829635f5d305a68f9fc70d40c96d9d6a",
-  "integratedMain": "b76ab77cf716e5f4ddb24e54bce771412de0e1f0",
+  "revision": "54b5cd62daddb2abf0f8cc1d9e0b6427698da6da",
+  "integratedMain": "7c10f418b0ea519bc0d2b84bb65869e3c7cdae0e",
   "runtime": {
     "dirty": true,
-    "sha256": "0a587e5f6194330ef82670f95ae5c30301813c80b63d797eef2a6777c6ffb19b",
+    "sha256": "3e04a4ae0af73d8e452f02024685108ef2d3808cc5822461ec878400b2e0f608",
     "files": [
       {
         "path": "config/agent-workflow.json",
-        "bytes": 5660,
-        "sha256": "bbfebcf74cef35620b22a4ef1266e7fb30d047afc192fc3d21d76b78b8f3796b"
+        "bytes": 5758,
+        "sha256": "71508137d7a6c32aa686d2f632f0f1e91536a95962ac51d45593f77001d21452"
       },
       {
         "path": "config/river-oaks.json",
@@ -342,8 +342,8 @@
       },
       {
         "path": "preview/e2e/experience-runner.js",
-        "bytes": 7897,
-        "sha256": "b874813dcca99b7eda7ccd6bf3a95cfba3ca33984bedbd55b8b7da649adbe07d"
+        "bytes": 8398,
+        "sha256": "51cfe23357eea4edfc5650ff487646e2bf961ff0b130da54aaaf61b860f39285"
       },
       {
         "path": "preview/e2e/experience.js",
@@ -691,6 +691,21 @@
         "sha256": "5e4d8eb9128fe1aaf66a1e0f8bf619d135d8e7d421e00c1e9a67a10986c7f9e0"
       },
       {
+        "path": "preview/e2e/garden-campus-circulation-views.mjs",
+        "bytes": 3648,
+        "sha256": "103adaf14ddcfae50beaf69a665e24b043cb74b59e9b24065e37386749df5f78"
+      },
+      {
+        "path": "preview/e2e/garden-campus-office.js",
+        "bytes": 13395,
+        "sha256": "daab8da81a101853e2dca8c03fbe4fd2de65b47bbe715515634dbb6a60cc41f8"
+      },
+      {
+        "path": "preview/e2e/garden-campus-readiness.js",
+        "bytes": 6293,
+        "sha256": "482c08d445a3a19bfebd641ae0b006feae47cac399d20b18ee95b34e86c3c71b"
+      },
+      {
         "path": "preview/e2e/garden-campus-render-common.mjs",
         "bytes": 9729,
         "sha256": "36b88fabd161e8660a34be24e0d077c1ecbe60a3bef51205a629597c39df6902"
@@ -706,9 +721,19 @@
         "sha256": "f5a82e38c53d09002bd9431a4409925897a54e8f312add2cef7100c6b9d747ef"
       },
       {
+        "path": "preview/e2e/garden-campus-suite.js",
+        "bytes": 13305,
+        "sha256": "587cc180e02010fb372ff8045b91ec0fafb14a3608a7d791547f01738a035b36"
+      },
+      {
+        "path": "preview/e2e/garden-campus-traversal.js",
+        "bytes": 14301,
+        "sha256": "317776a464172c3a7cb20ebe75fe74045ab1ca61b9475f641640c980cc8ca394"
+      },
+      {
         "path": "preview/e2e/garden-campus-views.mjs",
-        "bytes": 5077,
-        "sha256": "eb6121f72ab19f7923633e10faa5ff41b2cb14170f5ae90c8d2ab747da5694ff"
+        "bytes": 8084,
+        "sha256": "e923c0db6221d4adf5a7f03fe1551049fb5c93679eef905555beafa7f388c2fb"
       },
       {
         "path": "preview/e2e/generated-gallery-ao-geometry.js",
@@ -1124,6 +1149,11 @@
         "path": "preview/e2e/planting-live-cost.js",
         "bytes": 3557,
         "sha256": "160bf0748cf44d4f35ab0243b7bf04e772df1e066b24873a823d41b13ee7e470"
+      },
+      {
+        "path": "preview/e2e/play-rail-polish.js",
+        "bytes": 4573,
+        "sha256": "977fb5e8d86c7e687da29c708bdc5af78cfcf6f76bbc28cd62d7a80a87e06172"
       },
       {
         "path": "preview/e2e/player-attention-motion.js",
@@ -1926,9 +1956,29 @@
         "sha256": "d81ffef9345b2fa29a037b8170f7ed72642ab52227121c9ef5946d8812b8d780"
       },
       {
+        "path": "preview/public/assets/ipic/screening/ipic-two-seats-v1-poster.jpg",
+        "bytes": 106530,
+        "sha256": "2e53991c81a3ec015258280e63cb91fdf47f736f0821947313b45a014df29628"
+      },
+      {
+        "path": "preview/public/assets/ipic/screening/ipic-two-seats-v1.en.vtt",
+        "bytes": 745,
+        "sha256": "2a6b54e0dd52a3e8352a0890da9d57a79131d70261cab550704978baa2a40cb5"
+      },
+      {
+        "path": "preview/public/assets/ipic/screening/ipic-two-seats-v1.mp4",
+        "bytes": 16902639,
+        "sha256": "85b1079ecb61645a31b608a352bf6cecb3ddea7ea60059df3c1e0778d1063b2a"
+      },
+      {
+        "path": "preview/public/assets/ipic/screening/ipic-two-seats-v1.webm",
+        "bytes": 12940976,
+        "sha256": "24f08a74767b63f9c7113844dd4861fe8202af8d6bf6a2a8f1fe6801f1d3bc69"
+      },
+      {
         "path": "preview/public/assets/ipic/screening/sources.json",
-        "bytes": 5766,
-        "sha256": "b2079e0ff1f3db23d64922f86f8c14b944102a50f88416c3629ec50cf6e1e037"
+        "bytes": 11686,
+        "sha256": "b0af1cd0648c8fc9760842a21e0f0c59cbf4ee6beef60d33cf0fa136121430d0"
       },
       {
         "path": "preview/public/assets/landscape/boxwood-source.glb",
@@ -2762,8 +2812,8 @@
       },
       {
         "path": "preview/src/district.js",
-        "bytes": 36983,
-        "sha256": "9652dddf10750b3b4889ec064a1c15163051bb6b35713aa87e2241911b1fa4bc"
+        "bytes": 37160,
+        "sha256": "f8973e7164d57019f9b7c05919529bd310b743ae40f0f28118636e3fff4fbe95"
       },
       {
         "path": "preview/src/dominoes-opponent.js",
@@ -2857,8 +2907,8 @@
       },
       {
         "path": "preview/src/garden-campus-district.js",
-        "bytes": 14117,
-        "sha256": "95507f0e547d39798e349b9ac356eec07673c382aeefad88d06cd19bc5efb8ea"
+        "bytes": 18082,
+        "sha256": "eccf8b4376a102d9604d9dc93e6e389b995b959835571a7dc91d8ae034c87fbf"
       },
       {
         "path": "preview/src/garden-campus-finish.js",
@@ -2866,14 +2916,34 @@
         "sha256": "5ff5755d219b7a10ecf37c8e4871a2036ee6bfedeab2eec42f9ac5cd6b5f466b"
       },
       {
+        "path": "preview/src/garden-campus-fitout-render.js",
+        "bytes": 5683,
+        "sha256": "739abb2a6786c7bda062f4168338611e535043f605bfde7619149580da2ed656"
+      },
+      {
         "path": "preview/src/garden-campus-levels.js",
         "bytes": 8455,
         "sha256": "23e1563ae34eb9cdb63201084b79391f339015c9a7e46e11446295e5cb1b5ad6"
       },
       {
+        "path": "preview/src/garden-campus-model.js",
+        "bytes": 7796,
+        "sha256": "7d44dd2dc7e69f02b32a44e42534640e03bd9420f33c910377418f0633b55717"
+      },
+      {
         "path": "preview/src/garden-campus-planting.js",
         "bytes": 17569,
         "sha256": "6436d15ae5f068ff23515df0ae5b69ba3fa98df08651c7f0ff1badd4333c55c9"
+      },
+      {
+        "path": "preview/src/garden-campus-ui.js",
+        "bytes": 14589,
+        "sha256": "d007d25ec20e468b3f5b039eb666bc5cc03c0d29adffdb6e81ea473f7bcc78d2"
+      },
+      {
+        "path": "preview/src/garden-campus.css",
+        "bytes": 2653,
+        "sha256": "fd7234623ed6c52474fab45d66f3dca7b1378ca98a666aa5dfef0ac0431b9950"
       },
       {
         "path": "preview/src/garden-campus.js",
@@ -3127,8 +3197,8 @@
       },
       {
         "path": "preview/src/main.js",
-        "bytes": 102519,
-        "sha256": "4116dab6123d8999709581a887792edd3ce571f0081b0e3841762fb726588aea"
+        "bytes": 103806,
+        "sha256": "9177136cdef81a2b2237c8a8f6cbe90d79549359057c6baddbfa92f1a317a812"
       },
       {
         "path": "preview/src/mancala-opponent.js",
@@ -3272,8 +3342,8 @@
       },
       {
         "path": "preview/src/office-ui.js",
-        "bytes": 29922,
-        "sha256": "23b694f7ac239d912ee0e84b6f5c2b1d9ee8040c17aac76a6f65c0f7c8bcb5f7"
+        "bytes": 30022,
+        "sha256": "e829321865ad9d2637ebec707bdb411e1520cd20e3b304a3706a7cd02d8a7f67"
       },
       {
         "path": "preview/src/office-world-presentation.js",
@@ -3387,13 +3457,13 @@
       },
       {
         "path": "preview/src/play-dock.js",
-        "bytes": 9144,
-        "sha256": "553cd33c465d466fed79e0f91526c1de01b72a6278cf70fc3f4690ab82fa38f9"
+        "bytes": 9090,
+        "sha256": "b8157d0ca97a1c38c0a0538fd04f3ec134471abf07f2f74078a67d1f44d44380"
       },
       {
         "path": "preview/src/play-rail-menu.css",
-        "bytes": 5222,
-        "sha256": "60b1032046d4a1c7ccc5fc6aef5f7872d414597f6b884a8045135e122d3330e2"
+        "bytes": 8354,
+        "sha256": "797c255be0f79df21d710d43ea1f251b1b27ffa3682df9928c1803320cf713f9"
       },
       {
         "path": "preview/src/play-rail-tabs.js",
@@ -3412,8 +3482,8 @@
       },
       {
         "path": "preview/src/player-avatar.js",
-        "bytes": 31681,
-        "sha256": "1f5f93bdf0b8393a335a8994ac668a4f95b04ab7557e462c42d0b335ab84144d"
+        "bytes": 31986,
+        "sha256": "1d5cc1fa6a1bb2159736a0862c358cc1932256136cd0feb690fb05ca9cd86eb5"
       },
       {
         "path": "preview/src/player-costume.js",
@@ -3857,8 +3927,8 @@
       },
       {
         "path": "preview/src/screening-contract.js",
-        "bytes": 5941,
-        "sha256": "03c35184466a791abc4cb870ba28250f0937aabe6661654140f156ffc07b4d9e"
+        "bytes": 7049,
+        "sha256": "3a9dfa8aa2232f26322671cebe714973e924b1e0e009886ea80d6bd71d57fbb9"
       },
       {
         "path": "preview/src/seat-and-water.js",
@@ -4567,8 +4637,8 @@
       },
       {
         "path": "preview/src/world-interactions.js",
-        "bytes": 5874,
-        "sha256": "6e2a100782a9178c8739427001ac3daa6f2e47b665de4f42bdd8ea5bc9a0c72d"
+        "bytes": 5961,
+        "sha256": "d088c9643003af3695c6bff4360648c02bc7d5e01e628d05d9aa561582f4f061"
       },
       {
         "path": "preview/src/world-map.css",
@@ -5052,8 +5122,8 @@
       },
       {
         "path": "scripts/tests/ipic-short-intake.test.js",
-        "bytes": 9699,
-        "sha256": "5b8e08936c97b282284e4429ebb31d07ff31188f2c959e2487e6be6261f8457e"
+        "bytes": 9848,
+        "sha256": "45e12a8ba44b1d689f3212f287b1e4da8205960a1ee9f38c3f8d5f60754b0180"
       },
       {
         "path": "scripts/tests/land-pr.test.js",
@@ -5137,8 +5207,8 @@
       },
       {
         "path": "server/app.js",
-        "bytes": 39624,
-        "sha256": "71d3f2dc4a4899c3c7a9dcab56c095c53fe445d14654f1c78380f05ed7c900fa"
+        "bytes": 39885,
+        "sha256": "37b4e5b2305a08490b217d1ea84d9622b025c45bead719b7064c6fe31818e61d"
       },
       {
         "path": "server/asset-gate.js",
@@ -5282,8 +5352,8 @@
       },
       {
         "path": "server/distributed-app.js",
-        "bytes": 36041,
-        "sha256": "057623946a682b4c58f34a3d4f6f4f92053d8185891c7a6e9ad5115a1366c924"
+        "bytes": 36245,
+        "sha256": "cf30cc42e658c9aed16470c01cdc4f30ced8a134e0a0125f29b6fcaa8b861288"
       },
       {
         "path": "server/district-checkpoint-migration.js",
@@ -5294,6 +5364,11 @@
         "path": "server/district-data.js",
         "bytes": 1319,
         "sha256": "9df1102d42e053932eb9f3634761844e4c13865e407c6a997d721c2ae865ca38"
+      },
+      {
+        "path": "server/district-gardens-checkpoint-migration.js",
+        "bytes": 7125,
+        "sha256": "1825b65ee56cc56f6e8774623b599439b304c4f3b85167f4f5024accdc849ff9"
       },
       {
         "path": "server/district-interior-checkpoint-migration.js",
@@ -5432,13 +5507,13 @@
       },
       {
         "path": "server/redis-backend.js",
-        "bytes": 7357,
-        "sha256": "d03d831672bcab36c16faf1fa185a047e135a427481bc2ccaa6fc4aa5ceb2d7f"
+        "bytes": 7546,
+        "sha256": "5d905bb035e577321a3241c229287162782f4ad53a8c6d3c8074591e1a18f6c8"
       },
       {
         "path": "server/redis-room.js",
-        "bytes": 32781,
-        "sha256": "56e4c7165e999c729d77ff9813b0c63058ecbd3162752a2d1ae200755ccfe83d"
+        "bytes": 34380,
+        "sha256": "c9f467b1b69f4588499836131c61c20238e429ddf6c15a788eca0e34f17eda92"
       },
       {
         "path": "server/redis-security.js",
@@ -5527,8 +5602,8 @@
       },
       {
         "path": "server/tests/browser-fixture.js",
-        "bytes": 7632,
-        "sha256": "8f8f48d455b5e646c89b0a065783689996370ec9846feeda1e5a4975a79b76ee"
+        "bytes": 7773,
+        "sha256": "5a42b393844f2d15151515b520d8dfe15eeb687457c670c1dfb7060497eab500"
       },
       {
         "path": "server/tests/cafe-games.test.js",
@@ -5756,6 +5831,11 @@
         "sha256": "486706bd3af2df5142528b23d92ef29e2a2ef5136fdca49260c743cd33a94bcf"
       },
       {
+        "path": "server/tests/district-gardens-checkpoint-migration.test.js",
+        "bytes": 16075,
+        "sha256": "e5e75862c9bdf95fcf7a9102d313a4b0eac91bc12499a563d6a8ec4938ef6bfc"
+      },
+      {
         "path": "server/tests/district-history.js",
         "bytes": 657,
         "sha256": "1f7097f35cf0601382cb3c84310a2353f221652261702507621bf43c6c8f5b26"
@@ -5786,9 +5866,24 @@
         "sha256": "299564b37a80ff00e6dbd64e23af126df30abf5992bc4f922b09b99bd1d22424"
       },
       {
+        "path": "server/tests/garden-campus-desk-transport.test.js",
+        "bytes": 9314,
+        "sha256": "5204481f1afb84357aecb1091a7e12a2e3e387849e125ec8ca762e01f16bcfdd"
+      },
+      {
         "path": "server/tests/garden-campus-district.test.js",
         "bytes": 11844,
         "sha256": "26241970fce15cfc09b09eb0abf2a9942d75d6f990e3b52df3ff5488c689480c"
+      },
+      {
+        "path": "server/tests/garden-campus-lease-ui-transport.test.js",
+        "bytes": 5774,
+        "sha256": "99f911d9e106198f5932515e032c5706d924e20982c3977ffe3cc18fc8c0b720"
+      },
+      {
+        "path": "server/tests/garden-campus-suite-seats.test.js",
+        "bytes": 7676,
+        "sha256": "b279f3e101f1bbfe3d0d8b7fe89beb5ad09fb79c735f1c1fe8ba6c8216914b34"
       },
       {
         "path": "server/tests/garden-campus-support.test.js",
@@ -6387,8 +6482,8 @@
       },
       {
         "path": "server/world-gateway.js",
-        "bytes": 8455,
-        "sha256": "ed03ab849a094bcccb2d395f377ba73e1ca34f6f2d923d64430b1b0117e3cdfa"
+        "bytes": 8485,
+        "sha256": "5e54a797285c22d9ed3c955c720ab9096968f99120d5f6bf5542225f8ce761f6"
       },
       {
         "path": "server/world-keys.js",
@@ -6407,8 +6502,13 @@
       },
       {
         "path": "server/world.js",
-        "bytes": 104764,
-        "sha256": "08a1e07fe3f0f64913c84fc542eb1f93303e81604ae14170aa550f3a30a6ff3f"
+        "bytes": 110145,
+        "sha256": "200973029a0d2b37ff501acd54a3c0f509f92d1cb0f17d8c2285f46a44c38942"
+      },
+      {
+        "path": "shared/garden-campus-fitout.js",
+        "bytes": 17730,
+        "sha256": "a7f1440544681ed799c6852581971bd40c5c494db5ba9354ca852b7b31fe0569"
       },
       {
         "path": "shared/garden-campus-layout.js",
@@ -6426,6 +6526,11 @@
         "sha256": "13eae42d60020d96918b66b264a3734645592517f7210a24b271121627ff0d47"
       },
       {
+        "path": "shared/garden-campus-seats.js",
+        "bytes": 4191,
+        "sha256": "d0aa86fba4f1d4e4cdf945eea9b092054656e22ecd3cf785359df7d5c48091e8"
+      },
+      {
         "path": "shared/studio-space-catalog.js",
         "bytes": 468,
         "sha256": "758ad21a0b192379b2d0481b729da5dd8c72882e8825fd65da65c29ef41f85e0"
@@ -6438,6 +6543,16 @@
     ]
   },
   "changed": [
+    {
+      "path": ".github/workflows/verify.yml",
+      "bytes": 13294,
+      "sha256": "0a4f7f35eaff6f56034b6a1b44fd32b115cbf9af409c430b2a96d133f4274d7f"
+    },
+    {
+      "path": "config/agent-workflow.json",
+      "bytes": 5758,
+      "sha256": "71508137d7a6c32aa686d2f632f0f1e91536a95962ac51d45593f77001d21452"
+    },
     {
       "path": "preview/audit/metrics.js",
       "bytes": 2892,
@@ -6494,6 +6609,11 @@
       "sha256": "ee6aab5728f19689795830fa6cf7f1fb5198f45b621d43c9ed04719a46272882"
     },
     {
+      "path": "preview/e2e/experience-runner.js",
+      "bytes": 8398,
+      "sha256": "51cfe23357eea4edfc5650ff487646e2bf961ff0b130da54aaaf61b860f39285"
+    },
+    {
       "path": "preview/e2e/experience.js",
       "bytes": 6710,
       "sha256": "effe497f596d43b400744ed1ccf27dec81c12522ccc0cdd95da2133d2fcd7f20"
@@ -6502,6 +6622,21 @@
       "path": "preview/e2e/game-hud.js",
       "bytes": 5744,
       "sha256": "5e4d8eb9128fe1aaf66a1e0f8bf619d135d8e7d421e00c1e9a67a10986c7f9e0"
+    },
+    {
+      "path": "preview/e2e/garden-campus-circulation-views.mjs",
+      "bytes": 3648,
+      "sha256": "103adaf14ddcfae50beaf69a665e24b043cb74b59e9b24065e37386749df5f78"
+    },
+    {
+      "path": "preview/e2e/garden-campus-office.js",
+      "bytes": 13395,
+      "sha256": "daab8da81a101853e2dca8c03fbe4fd2de65b47bbe715515634dbb6a60cc41f8"
+    },
+    {
+      "path": "preview/e2e/garden-campus-readiness.js",
+      "bytes": 6293,
+      "sha256": "482c08d445a3a19bfebd641ae0b006feae47cac399d20b18ee95b34e86c3c71b"
     },
     {
       "path": "preview/e2e/garden-campus-render-common.mjs",
@@ -6517,6 +6652,21 @@
       "path": "preview/e2e/garden-campus-render-views.mjs",
       "bytes": 5301,
       "sha256": "f5a82e38c53d09002bd9431a4409925897a54e8f312add2cef7100c6b9d747ef"
+    },
+    {
+      "path": "preview/e2e/garden-campus-suite.js",
+      "bytes": 13305,
+      "sha256": "587cc180e02010fb372ff8045b91ec0fafb14a3608a7d791547f01738a035b36"
+    },
+    {
+      "path": "preview/e2e/garden-campus-traversal.js",
+      "bytes": 14301,
+      "sha256": "317776a464172c3a7cb20ebe75fe74045ab1ca61b9475f641640c980cc8ca394"
+    },
+    {
+      "path": "preview/e2e/garden-campus-views.mjs",
+      "bytes": 8084,
+      "sha256": "e923c0db6221d4adf5a7f03fe1551049fb5c93679eef905555beafa7f388c2fb"
     },
     {
       "path": "preview/e2e/ipic-darts.js",
@@ -6552,6 +6702,11 @@
       "path": "preview/e2e/office-visit.js",
       "bytes": 8850,
       "sha256": "aec57e9cbba190cd2a7f479f73fb275f1067ae51cd2d0cc6a4f8dfbc35ccfde6"
+    },
+    {
+      "path": "preview/e2e/play-rail-polish.js",
+      "bytes": 4573,
+      "sha256": "977fb5e8d86c7e687da29c708bdc5af78cfcf6f76bbc28cd62d7a80a87e06172"
     },
     {
       "path": "preview/e2e/player-forms.js",
@@ -6609,6 +6764,31 @@
       "sha256": "cc8d4304a91b8de8d4338d8f7dff17538b0373290ce1243e3f112dac87e91829"
     },
     {
+      "path": "preview/public/assets/ipic/screening/ipic-two-seats-v1-poster.jpg",
+      "bytes": 106530,
+      "sha256": "2e53991c81a3ec015258280e63cb91fdf47f736f0821947313b45a014df29628"
+    },
+    {
+      "path": "preview/public/assets/ipic/screening/ipic-two-seats-v1.en.vtt",
+      "bytes": 745,
+      "sha256": "2a6b54e0dd52a3e8352a0890da9d57a79131d70261cab550704978baa2a40cb5"
+    },
+    {
+      "path": "preview/public/assets/ipic/screening/ipic-two-seats-v1.mp4",
+      "bytes": 16902639,
+      "sha256": "85b1079ecb61645a31b608a352bf6cecb3ddea7ea60059df3c1e0778d1063b2a"
+    },
+    {
+      "path": "preview/public/assets/ipic/screening/ipic-two-seats-v1.webm",
+      "bytes": 12940976,
+      "sha256": "24f08a74767b63f9c7113844dd4861fe8202af8d6bf6a2a8f1fe6801f1d3bc69"
+    },
+    {
+      "path": "preview/public/assets/ipic/screening/sources.json",
+      "bytes": 11686,
+      "sha256": "b0af1cd0648c8fc9760842a21e0f0c59cbf4ee6beef60d33cf0fa136121430d0"
+    },
+    {
       "path": "preview/src/axe-panel.js",
       "bytes": 18832,
       "sha256": "dfdfa25651211e7f31ed15f60d42a53afa3bbcd6940ec5dcd7db2bb2f33cde17"
@@ -6630,8 +6810,8 @@
     },
     {
       "path": "preview/src/district.js",
-      "bytes": 36983,
-      "sha256": "9652dddf10750b3b4889ec064a1c15163051bb6b35713aa87e2241911b1fa4bc"
+      "bytes": 37160,
+      "sha256": "f8973e7164d57019f9b7c05919529bd310b743ae40f0f28118636e3fff4fbe95"
     },
     {
       "path": "preview/src/garden-campus-ceilings.js",
@@ -6640,8 +6820,8 @@
     },
     {
       "path": "preview/src/garden-campus-district.js",
-      "bytes": 14117,
-      "sha256": "95507f0e547d39798e349b9ac356eec07673c382aeefad88d06cd19bc5efb8ea"
+      "bytes": 18082,
+      "sha256": "eccf8b4376a102d9604d9dc93e6e389b995b959835571a7dc91d8ae034c87fbf"
     },
     {
       "path": "preview/src/garden-campus-finish.js",
@@ -6649,14 +6829,34 @@
       "sha256": "5ff5755d219b7a10ecf37c8e4871a2036ee6bfedeab2eec42f9ac5cd6b5f466b"
     },
     {
+      "path": "preview/src/garden-campus-fitout-render.js",
+      "bytes": 5683,
+      "sha256": "739abb2a6786c7bda062f4168338611e535043f605bfde7619149580da2ed656"
+    },
+    {
       "path": "preview/src/garden-campus-levels.js",
       "bytes": 8455,
       "sha256": "23e1563ae34eb9cdb63201084b79391f339015c9a7e46e11446295e5cb1b5ad6"
     },
     {
+      "path": "preview/src/garden-campus-model.js",
+      "bytes": 7796,
+      "sha256": "7d44dd2dc7e69f02b32a44e42534640e03bd9420f33c910377418f0633b55717"
+    },
+    {
       "path": "preview/src/garden-campus-planting.js",
       "bytes": 17569,
       "sha256": "6436d15ae5f068ff23515df0ae5b69ba3fa98df08651c7f0ff1badd4333c55c9"
+    },
+    {
+      "path": "preview/src/garden-campus-ui.js",
+      "bytes": 14589,
+      "sha256": "d007d25ec20e468b3f5b039eb666bc5cc03c0d29adffdb6e81ea473f7bcc78d2"
+    },
+    {
+      "path": "preview/src/garden-campus.css",
+      "bytes": 2653,
+      "sha256": "fd7234623ed6c52474fab45d66f3dca7b1378ca98a666aa5dfef0ac0431b9950"
     },
     {
       "path": "preview/src/garden-campus.js",
@@ -6665,8 +6865,8 @@
     },
     {
       "path": "preview/src/main.js",
-      "bytes": 102519,
-      "sha256": "4116dab6123d8999709581a887792edd3ce571f0081b0e3841762fb726588aea"
+      "bytes": 103806,
+      "sha256": "9177136cdef81a2b2237c8a8f6cbe90d79549359057c6baddbfa92f1a317a812"
     },
     {
       "path": "preview/src/occlusion-sort.js",
@@ -6674,14 +6874,19 @@
       "sha256": "7b073d15b308ff5fc9becd077a8908817f45dae1b45b7a6577d03c8bfcf8bae8"
     },
     {
+      "path": "preview/src/office-ui.js",
+      "bytes": 30022,
+      "sha256": "e829321865ad9d2637ebec707bdb411e1520cd20e3b304a3706a7cd02d8a7f67"
+    },
+    {
       "path": "preview/src/play-dock.js",
-      "bytes": 9144,
-      "sha256": "553cd33c465d466fed79e0f91526c1de01b72a6278cf70fc3f4690ab82fa38f9"
+      "bytes": 9090,
+      "sha256": "b8157d0ca97a1c38c0a0538fd04f3ec134471abf07f2f74078a67d1f44d44380"
     },
     {
       "path": "preview/src/play-rail-menu.css",
-      "bytes": 5222,
-      "sha256": "60b1032046d4a1c7ccc5fc6aef5f7872d414597f6b884a8045135e122d3330e2"
+      "bytes": 8354,
+      "sha256": "797c255be0f79df21d710d43ea1f251b1b27ffa3682df9928c1803320cf713f9"
     },
     {
       "path": "preview/src/play-rail-tabs.js",
@@ -6692,6 +6897,11 @@
       "path": "preview/src/player-avatar.css",
       "bytes": 6351,
       "sha256": "fe4ae37236a5228ccea7fadc95797be2af2a8df215f782c54b92e1190514ec6a"
+    },
+    {
+      "path": "preview/src/player-avatar.js",
+      "bytes": 31986,
+      "sha256": "1d5cc1fa6a1bb2159736a0862c358cc1932256136cd0feb690fb05ca9cd86eb5"
     },
     {
       "path": "preview/src/plaza-darts.css",
@@ -6734,6 +6944,11 @@
       "sha256": "e05f31f9acc2b4a9766874e08d1dbd139fb72ec3567fa03e8a118a41cd049cd7"
     },
     {
+      "path": "preview/src/screening-contract.js",
+      "bytes": 7049,
+      "sha256": "3a9dfa8aa2232f26322671cebe714973e924b1e0e009886ea80d6bd71d57fbb9"
+    },
+    {
       "path": "preview/src/sidebar.js",
       "bytes": 13283,
       "sha256": "2114516fc3b4efa7fcc263dd2858843e5e1615180697b0e29caf9fa7dca24233"
@@ -6757,6 +6972,11 @@
       "path": "preview/src/walking-ui.js",
       "bytes": 32270,
       "sha256": "951b10346f94be2a1def873eb6c66328294cbde861a5e750a4c6080f223c8e86"
+    },
+    {
+      "path": "preview/src/world-interactions.js",
+      "bytes": 5961,
+      "sha256": "d088c9643003af3695c6bff4360648c02bc7d5e01e628d05d9aa561582f4f061"
     },
     {
       "path": "preview/tests/axe-rules.test.js",
@@ -6784,9 +7004,19 @@
       "sha256": "4ddd0ac89e6c1ef928f0beeb47c03c8d881a5d12b31c6959003adeb7056e95c0"
     },
     {
+      "path": "preview/tests/garden-campus-circulation-views.test.js",
+      "bytes": 3037,
+      "sha256": "c6f44461fc36b6fa00099ab4bf97095a4de7caacd69e772f5e68361307873611"
+    },
+    {
+      "path": "preview/tests/garden-campus-dialog.test.js",
+      "bytes": 5302,
+      "sha256": "2250ec0c6d8c55f488d2727bd31712e092760321cb9fcdaca381373602ae4efd"
+    },
+    {
       "path": "preview/tests/garden-campus-district.test.js",
-      "bytes": 15442,
-      "sha256": "0937514b8b18d1c9e0d643ca31c76c00d6d1016b7f4f4c4497ecbfc661f0a260"
+      "bytes": 15775,
+      "sha256": "922ee9face461c7a0cdcbf294b8c5ad820046021bce96618153798de0a0566e1"
     },
     {
       "path": "preview/tests/garden-campus-finish.test.js",
@@ -6794,14 +7024,39 @@
       "sha256": "512a73f5878a80b8d89dbd7a50825e35e797a08c6e91d66fafc21b1548f91675"
     },
     {
+      "path": "preview/tests/garden-campus-fitout.test.js",
+      "bytes": 7316,
+      "sha256": "60125fe0154536cb23f9b8730ea51d59cfc730863aea93b6883373648cac9126"
+    },
+    {
       "path": "preview/tests/garden-campus-levels.test.js",
       "bytes": 6871,
       "sha256": "69f6d9a8d000c4d92b5695265e20040c54c3c381f932a02058df4bd09733df37"
     },
     {
+      "path": "preview/tests/garden-campus-model.test.js",
+      "bytes": 5496,
+      "sha256": "936918f83ba7770fa1e716039522f0d4490dc75239a6fa29c88e1bdc7a19f1a1"
+    },
+    {
+      "path": "preview/tests/garden-campus-readiness.test.js",
+      "bytes": 12579,
+      "sha256": "1ee59116908e097c6e45c234eed583fafdb7327cc0917a5f525c3e1f1bbdd439"
+    },
+    {
+      "path": "preview/tests/garden-campus-seats.test.js",
+      "bytes": 3410,
+      "sha256": "166822f32765a9b9bb4a9a3723a2aec467c88a778ee0ac96be40ef3665b99791"
+    },
+    {
       "path": "preview/tests/occlusion-sort.test.js",
       "bytes": 7872,
       "sha256": "9e59d246f52886d5ff4c50b017ccceaa6e919ef79dbbdeb8cb8ba5c4768be9ab"
+    },
+    {
+      "path": "preview/tests/play-dock.test.js",
+      "bytes": 4005,
+      "sha256": "616b3b7606914a441806c24b8979558be2ddf7fa971e443783881a29b9d2328e"
     },
     {
       "path": "preview/tests/play-rail-tabs.test.js",
@@ -6817,6 +7072,16 @@
       "path": "preview/tests/render-pipeline.test.js",
       "bytes": 12774,
       "sha256": "01929d68b0c83724d3fe2843cdcee2d2f92afa1822d7351f4d47ed4afad0fbe1"
+    },
+    {
+      "path": "preview/tests/screening-contract.test.js",
+      "bytes": 7397,
+      "sha256": "7abf07c05d8b2dca8777250f300c88c8d725aeebebe6fcd61317555387969064"
+    },
+    {
+      "path": "preview/tests/screening-media.test.js",
+      "bytes": 5633,
+      "sha256": "9f11f18960fd133021cc4498988cd4ca1002d9cf8e2846d09f965f0a767a69f2"
     },
     {
       "path": "preview/tests/throw-sounds.test.js",
@@ -6865,8 +7130,13 @@
     },
     {
       "path": "scripts/tests/ipic-short-intake.test.js",
-      "bytes": 9699,
-      "sha256": "5b8e08936c97b282284e4429ebb31d07ff31188f2c959e2487e6be6261f8457e"
+      "bytes": 9848,
+      "sha256": "45e12a8ba44b1d689f3212f287b1e4da8205960a1ee9f38c3f8d5f60754b0180"
+    },
+    {
+      "path": "server/app.js",
+      "bytes": 39885,
+      "sha256": "37b4e5b2305a08490b217d1ea84d9622b025c45bead719b7064c6fe31818e61d"
     },
     {
       "path": "server/axe-games.js",
@@ -6879,9 +7149,29 @@
       "sha256": "d5ff344d711429b7aea1e2a400925fa5de1821cd5d9fd61e34ec8c075156aef9"
     },
     {
+      "path": "server/distributed-app.js",
+      "bytes": 36245,
+      "sha256": "cf30cc42e658c9aed16470c01cdc4f30ced8a134e0a0125f29b6fcaa8b861288"
+    },
+    {
+      "path": "server/district-gardens-checkpoint-migration.js",
+      "bytes": 7125,
+      "sha256": "1825b65ee56cc56f6e8774623b599439b304c4f3b85167f4f5024accdc849ff9"
+    },
+    {
       "path": "server/offices.js",
       "bytes": 15177,
       "sha256": "09a10fb4b76a53d10062fa42c154d1aa123e3a3295ebe3876671d9e344efbf8d"
+    },
+    {
+      "path": "server/redis-backend.js",
+      "bytes": 7546,
+      "sha256": "5d905bb035e577321a3241c229287162782f4ad53a8c6d3c8074591e1a18f6c8"
+    },
+    {
+      "path": "server/redis-room.js",
+      "bytes": 34380,
+      "sha256": "c9f467b1b69f4588499836131c61c20238e429ddf6c15a788eca0e34f17eda92"
     },
     {
       "path": "server/tests/axe-games.test.js",
@@ -6894,6 +7184,11 @@
       "sha256": "15250c4e417c83ee4afb3edd00b693d419c330439e6faea0b1f6929df36428cf"
     },
     {
+      "path": "server/tests/browser-fixture.js",
+      "bytes": 7773,
+      "sha256": "5a42b393844f2d15151515b520d8dfe15eeb687457c670c1dfb7060497eab500"
+    },
+    {
       "path": "server/tests/darts-games.test.js",
       "bytes": 9396,
       "sha256": "c56769f135f6d916b1497ee6e7cfd5ce6f868cb6afdc9fdfbce0682bd2b1aece"
@@ -6902,6 +7197,26 @@
       "path": "server/tests/dev-invite-override.test.js",
       "bytes": 4584,
       "sha256": "041f0150344a48905d8e48dd9e946319eb5173a751de2f55d4116f2e2dcd82d2"
+    },
+    {
+      "path": "server/tests/district-gardens-checkpoint-migration.test.js",
+      "bytes": 16075,
+      "sha256": "e5e75862c9bdf95fcf7a9102d313a4b0eac91bc12499a563d6a8ec4938ef6bfc"
+    },
+    {
+      "path": "server/tests/garden-campus-desk-transport.test.js",
+      "bytes": 9314,
+      "sha256": "5204481f1afb84357aecb1091a7e12a2e3e387849e125ec8ca762e01f16bcfdd"
+    },
+    {
+      "path": "server/tests/garden-campus-lease-ui-transport.test.js",
+      "bytes": 5774,
+      "sha256": "99f911d9e106198f5932515e032c5706d924e20982c3977ffe3cc18fc8c0b720"
+    },
+    {
+      "path": "server/tests/garden-campus-suite-seats.test.js",
+      "bytes": 7676,
+      "sha256": "b279f3e101f1bbfe3d0d8b7fe89beb5ad09fb79c735f1c1fe8ba6c8216914b34"
     },
     {
       "path": "server/tests/garden-campus-traversal-transport.test.js",
@@ -6919,9 +7234,24 @@
       "sha256": "90eb6ffdc2fe85c177ba65d1c3b338e8480ce0dc2c6fa18dd27d37a5b909eec9"
     },
     {
+      "path": "server/world-gateway.js",
+      "bytes": 8485,
+      "sha256": "5e54a797285c22d9ed3c955c720ab9096968f99120d5f6bf5542225f8ce761f6"
+    },
+    {
       "path": "server/world.js",
-      "bytes": 104764,
-      "sha256": "08a1e07fe3f0f64913c84fc542eb1f93303e81604ae14170aa550f3a30a6ff3f"
+      "bytes": 110145,
+      "sha256": "200973029a0d2b37ff501acd54a3c0f509f92d1cb0f17d8c2285f46a44c38942"
+    },
+    {
+      "path": "shared/garden-campus-fitout.js",
+      "bytes": 17730,
+      "sha256": "a7f1440544681ed799c6852581971bd40c5c494db5ba9354ca852b7b31fe0569"
+    },
+    {
+      "path": "shared/garden-campus-seats.js",
+      "bytes": 4191,
+      "sha256": "d0aa86fba4f1d4e4cdf945eea9b092054656e22ecd3cf785359df7d5c48091e8"
     }
   ]
 }

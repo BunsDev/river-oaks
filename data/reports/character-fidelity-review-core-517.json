@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "profile": "core",
-  "startedAt": "2026-10-19T05:29:47.519Z",
+  "startedAt": "2026-10-19T10:40:16.183Z",
   "status": "passed",
-  "revision": "132e11b9829635f5d305a68f9fc70d40c96d9d6a",
+  "revision": "54b5cd62daddb2abf0f8cc1d9e0b6427698da6da",
   "dirty": true,
   "scope": "Selected repository checks only; not production, live auth, native Unreal, human accessibility, or target GPU acceptance.",
   "results": [
@@ -18,7 +18,7 @@
       "exitCode": 0,
       "expectedExit": 0,
       "signal": null,
-      "durationMs": 13804
+      "durationMs": 13360
     },
     {
       "id": "preview-tests",
@@ -30,7 +30,7 @@
       "exitCode": 0,
       "expectedExit": 0,
       "signal": null,
-      "durationMs": 180354
+      "durationMs": 174397
     },
     {
       "id": "server-tests",
@@ -43,7 +43,7 @@
       "exitCode": 0,
       "expectedExit": 0,
       "signal": null,
-      "durationMs": 84223
+      "durationMs": 84330
     },
     {
       "id": "desktop-tests",
@@ -56,7 +56,7 @@
       "exitCode": 0,
       "expectedExit": 0,
       "signal": null,
-      "durationMs": 7166
+      "durationMs": 4454
     },
     {
       "id": "build",
@@ -69,7 +69,7 @@
       "exitCode": 0,
       "expectedExit": 0,
       "signal": null,
-      "durationMs": 15006
+      "durationMs": 1369
     },
     {
       "id": "python-lint",
@@ -85,7 +85,7 @@
       "exitCode": 0,
       "expectedExit": 0,
       "signal": null,
-      "durationMs": 342
+      "durationMs": 163
     },
     {
       "id": "python-format",
@@ -102,7 +102,7 @@
       "exitCode": 0,
       "expectedExit": 0,
       "signal": null,
-      "durationMs": 49
+      "durationMs": 36
     },
     {
       "id": "python-tests",
@@ -117,7 +117,7 @@
       "exitCode": 0,
       "expectedExit": 0,
       "signal": null,
-      "durationMs": 11855
+      "durationMs": 3897
     },
     {
       "id": "demo",
@@ -132,7 +132,7 @@
       "exitCode": 0,
       "expectedExit": 0,
       "signal": null,
-      "durationMs": 317
+      "durationMs": 222
     },
     {
       "id": "demo-verify",
@@ -155,7 +155,7 @@
       "exitCode": 2,
       "expectedExit": 2,
       "signal": null,
-      "durationMs": 317
+      "durationMs": 228
     },
     {
       "id": "secrets",
@@ -171,8 +171,8 @@
       "exitCode": 0,
       "expectedExit": 0,
       "signal": null,
-      "durationMs": 40819
+      "durationMs": 9233
     }
   ],
-  "finishedAt": "2026-10-19T05:35:41.908Z"
+  "finishedAt": "2026-10-19T10:45:07.904Z"
 }

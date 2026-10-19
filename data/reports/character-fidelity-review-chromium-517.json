@@ -1,10 +1,10 @@
 {
-  "createdAt": "2026-10-19T05:02:30.848Z",
+  "createdAt": "2026-10-19T06:53:42.149Z",
   "results": [
     {
       "name": "character-fidelity",
       "status": "passed",
-      "seconds": 83.994,
+      "seconds": 78.137,
       "result": {
         "passed": true,
         "checks": [
@@ -24,7 +24,7 @@
     {
       "name": "character-studio",
       "status": "passed",
-      "seconds": 120.145,
+      "seconds": 95.421,
       "result": {
         "passed": true,
         "checks": [
@@ -73,6 +73,40 @@
           "No runtime errors: "
         ],
         "scope": "Automated desktop/touch/reduced-motion draft journey; no published revisions or human accessibility acceptance"
+      }
+    },
+    {
+      "name": "play-rail-polish",
+      "status": "passed",
+      "seconds": 11.064,
+      "result": {
+        "checks": [
+          "The rail has no title row: each card names its activity",
+          "No key legend while choosing an activity",
+          "Driving controls stay out of the way until a ride",
+          "dark character: nothing spills sideways",
+          "dark rides: nothing spills sideways",
+          "dark photo: nothing spills sideways",
+          "dark cycling: nothing spills sideways",
+          "dark birds: nothing spills sideways",
+          "dark guide: nothing spills sideways",
+          "dark office: nothing spills sideways",
+          "The Cycling tab shows its board open",
+          "The board closes (and stops refreshing) when another tab shows",
+          "light character: nothing spills sideways",
+          "light rides: nothing spills sideways",
+          "light photo: nothing spills sideways",
+          "light cycling: nothing spills sideways",
+          "light birds: nothing spills sideways",
+          "light guide: nothing spills sideways",
+          "light office: nothing spills sideways",
+          "Office cards excluded from this world stay visually hidden",
+          "The active office tab shows one visible office card",
+          "The office card has an inset (12 px)",
+          "Office actions fit on one line each (36, 36 px)",
+          "With nobody to invite, the card says so instead of a disabled picker",
+          "Captured character, rides, photo, cycling, birds, guide, office"
+        ]
       }
     }
   ]

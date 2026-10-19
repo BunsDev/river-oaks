@@ -7,6 +7,7 @@ import { recoverDistrictHeightCheckpoint } from './district-checkpoint-migration
 import { recoverDistrictInteriorCheckpoint } from './district-interior-checkpoint-migration.js';
 import { recoverDistrictLevelsCheckpoint } from './district-level-checkpoint-migration.js';
 import { recoverDistrictTowerCheckpoint } from './district-tower-checkpoint-migration.js';
+import { recoverDistrictGardensCheckpoint } from './district-gardens-checkpoint-migration.js';
 import { isJevicaAdmin } from './admin.js';
 import { districtRevisionOf } from '../preview/src/garden-campus-district.js';
 import { DEFAULT_WORLD_ID, validateWorldId } from '../preview/src/world-contract.js';
@@ -129,7 +130,7 @@ function restoreSelections(previous,enabled){
 }
 
 /** Private room coordinator. Authentication and connection IDs come from the server. */
-export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID,now=Date.now,authorize,isAdmin=isJevicaAdmin,regionCatalog=null,regionSha256=null,avatarPreferences=null,characters=null,voice=null,cyclingMiles=null,screeningHosts=[],officeLayout,campusOperators=[]}) {
+export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID,now=Date.now,authorize,isAdmin=isJevicaAdmin,regionCatalog=null,regionSha256=null,avatarPreferences=null,characters=null,voice=null,cyclingMiles=null,screeningHosts=[],officeLayout,campusOperators=[],districtEpoch=0}) {
   if(!redis || typeof authorize!=='function' || typeof prefix!=='string' || !prefix || prefix.length>180) throw new Error('Invalid room configuration');
   validateWorldId(worldId);
   if(characters&&!['getSelection','initializeSelection','getSelectionResult','changeSelection','getRevision'].every(key=>typeof characters[key]==='function'))throw new Error('Invalid character selection store');
@@ -144,6 +145,10 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
   // peers/future generations retain it. The generation is the checkpoint version, one more for
   // selection-aware rooms, which additionally require durable envelope v3 intents.
   const token=`v${characters?14:13}:${randomUUID()}`;
+  // The default district's revision and the operator's switch epoch (#512): a town committed
+  // at a newer epoch, or at this epoch under another revision, is never coordinated here.
+  if(!Number.isSafeInteger(districtEpoch) || districtEpoch<0)throw new Error('Invalid district epoch');
+  const district=worldId===DEFAULT_WORLD_ID?{revision:districtRevisionOf(worldData),epoch:districtEpoch}:null;
   // Every replacement and recovery probe uses this coordinator's current configuration.
   const worldOptions={now,isAdmin,worldId,screeningHosts,officeLayout,campusOperators};
   let closed=false,pendingTick=null,lastAttempt=-Infinity,lastView=null,cached=null;
@@ -185,8 +190,18 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
         error.checkpointReason = checkpointReason;
         throw error;
       }
+      if (district) {
+        const saved = previous.district ?? { revision: null, epoch: 0 };
+        if (saved.epoch > district.epoch || saved.epoch === district.epoch && (saved.revision ?? null) !== district.revision) {
+          const error = new Error('Invalid durable town district');
+          error.checkpointReason = saved.epoch > district.epoch ? 'newer_district_epoch' : 'district_epoch_unchanged';
+          throw error;
+        }
+      }
       if (!world.restore(previous.checkpoint, { onFailure: reason => { checkpointReason = reason; } }).ok) {
-        const tower = recoverDistrictTowerCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
+        // The garage/Gardens district revision switch (#512) chains the older garage recoveries itself.
+        const gardens = recoverDistrictGardensCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
+        const tower = gardens.ok ? gardens : recoverDistrictTowerCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
         const levels = tower.ok ? tower : recoverDistrictLevelsCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
         const interior = levels.ok ? levels : recoverDistrictInteriorCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
         const recovered = interior.ok ? interior
@@ -196,7 +211,8 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
           error.checkpointReason = checkpointReason;
           throw error;
         }
-        districtMigration = tower.ok ? { kind: 'tower', from: tower.from }
+        districtMigration = gardens.ok ? { kind: 'gardens', from: gardens.from, to: gardens.to, moved: gardens.moved.length }
+          : tower.ok ? { kind: 'tower', from: tower.from }
           : levels.ok ? { kind: 'levels', from: levels.from }
           : interior.ok ? { kind: 'interior', from: interior.from }
           : { kind: 'height', from: recovered.revision };
@@ -425,7 +441,8 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
     const view={worldId,snapshot,connections:[...connections.values()].map(({identity,connectionId})=>({userId:identity.userId,connectionId,sessionId:identity.sessionId,expiresAt:identity.expiresAt})),revision};
     const checkpoint={version:characters?3:2,worldId,revision,lastTick:time,connections:[...connections.values()],checkpoint:world.checkpoint(),
       ...(characters?{pendingSelections:[...pendingSelections.values()],selectionVersions:[...selectionVersions]}:{}),
-      ...(previous?.regionSha256||revisionUpdate?{regionSha256:currentHash}:{})};
+      ...(previous?.regionSha256||revisionUpdate?{regionSha256:currentHash}:{}),
+      ...(district&&(district.epoch||district.revision)?{district}:{})};
     const revisionKeys=revisionUpdate?['catalog','region','draft','history'].map(key=>revisionUpdate.keys[key]):[];
     const visitors=[...connections.values()].filter(connection=>connection.leftAt===null).length;
     const committed=await redis.eval(COMMIT,5+replies.length+revisionKeys.length,keys.lease,keys.state,keys.view,keys.queue,keys.population,
@@ -436,7 +453,9 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       visitors,
       ...replies.map(reply=>JSON.stringify(reply.result)));
     if(!committed){cached=null;return read();}
-    if (districtMigration) console.info(JSON.stringify(districtMigration.kind === 'tower'
+    if (districtMigration) console.info(JSON.stringify(districtMigration.kind === 'gardens'
+      ? { event: 'district_gardens_checkpoint_migrated', from: districtMigration.from, to: districtMigration.to, moved: districtMigration.moved }
+      : districtMigration.kind === 'tower'
       ? { event: 'district_tower_checkpoint_migrated', from: districtMigration.from, to: 'penthouse_tower_33m' }
       : districtMigration.kind === 'levels'
       ? { event: 'district_levels_checkpoint_migrated', from: districtMigration.from, to: 'gallery_plan_v2' }

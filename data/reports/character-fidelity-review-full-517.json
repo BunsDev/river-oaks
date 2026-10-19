@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "profile": "full",
-  "startedAt": "2026-10-19T05:35:42.582Z",
+  "startedAt": "2026-10-19T10:45:08.440Z",
   "status": "passed",
-  "revision": "132e11b9829635f5d305a68f9fc70d40c96d9d6a",
+  "revision": "54b5cd62daddb2abf0f8cc1d9e0b6427698da6da",
   "dirty": true,
   "scope": "Selected repository checks only; not production, live auth, native Unreal, human accessibility, or target GPU acceptance.",
   "results": [
@@ -18,7 +18,7 @@
       "exitCode": 0,
       "expectedExit": 0,
       "signal": null,
-      "durationMs": 413
+      "durationMs": 380
     },
     {
       "id": "agent-tests",
@@ -31,7 +31,7 @@
       "exitCode": 0,
       "expectedExit": 0,
       "signal": null,
-      "durationMs": 31498
+      "durationMs": 13655
     },
     {
       "id": "preview-tests",
@@ -43,7 +43,7 @@
       "exitCode": 0,
       "expectedExit": 0,
       "signal": null,
-      "durationMs": 174015
+      "durationMs": 168729
     },
     {
       "id": "server-redis-tests",
@@ -56,7 +56,7 @@
       "exitCode": 0,
       "expectedExit": 0,
       "signal": null,
-      "durationMs": 84518
+      "durationMs": 84876
     },
     {
       "id": "desktop-tests",
@@ -69,7 +69,7 @@
       "exitCode": 0,
       "expectedExit": 0,
       "signal": null,
-      "durationMs": 9200
+      "durationMs": 4382
     },
     {
       "id": "build",
@@ -82,7 +82,7 @@
       "exitCode": 0,
       "expectedExit": 0,
       "signal": null,
-      "durationMs": 14795
+      "durationMs": 1193
     },
     {
       "id": "python-lint",
@@ -98,7 +98,7 @@
       "exitCode": 0,
       "expectedExit": 0,
       "signal": null,
-      "durationMs": 62
+      "durationMs": 32
     },
     {
       "id": "python-format",
@@ -115,7 +115,7 @@
       "exitCode": 0,
       "expectedExit": 0,
       "signal": null,
-      "durationMs": 47
+      "durationMs": 36
     },
     {
       "id": "python-tests",
@@ -130,7 +130,7 @@
       "exitCode": 0,
       "expectedExit": 0,
       "signal": null,
-      "durationMs": 10678
+      "durationMs": 3510
     },
     {
       "id": "demo",
@@ -145,7 +145,7 @@
       "exitCode": 0,
       "expectedExit": 0,
       "signal": null,
-      "durationMs": 299
+      "durationMs": 217
     },
     {
       "id": "demo-verify",
@@ -168,7 +168,7 @@
       "exitCode": 2,
       "expectedExit": 2,
       "signal": null,
-      "durationMs": 273
+      "durationMs": 211
     },
     {
       "id": "secrets",
@@ -184,7 +184,7 @@
       "exitCode": 0,
       "expectedExit": 0,
       "signal": null,
-      "durationMs": 29184
+      "durationMs": 8115
     },
     {
       "id": "secret-history",
@@ -200,7 +200,7 @@
       "exitCode": 0,
       "expectedExit": 0,
       "signal": null,
-      "durationMs": 3857
+      "durationMs": 3657
     },
     {
       "id": "security-browser",
@@ -213,7 +213,7 @@
       "exitCode": 0,
       "expectedExit": 0,
       "signal": null,
-      "durationMs": 17030
+      "durationMs": 16729
     },
     {
       "id": "reflections",
@@ -226,7 +226,7 @@
       "exitCode": 0,
       "expectedExit": 0,
       "signal": null,
-      "durationMs": 2700
+      "durationMs": 2401
     },
     {
       "id": "experience",
@@ -246,13 +246,16 @@
         "spatial-streets",
         "office-desk",
         "office-visit",
-        "office-computer-embed"
+        "office-computer-embed",
+        "garden-campus-office",
+        "garden-campus-traversal",
+        "garden-campus-suite"
       ],
       "status": "passed",
       "exitCode": 0,
       "expectedExit": 0,
       "signal": null,
-      "durationMs": 638336
+      "durationMs": 1093157
     },
     {
       "id": "shared",
@@ -265,7 +268,7 @@
       "exitCode": 0,
       "expectedExit": 0,
       "signal": null,
-      "durationMs": 1319520
+      "durationMs": 1157790
     },
     {
       "id": "ipic-screening",
@@ -277,8 +280,8 @@
       "exitCode": 0,
       "expectedExit": 0,
       "signal": null,
-      "durationMs": 98402
+      "durationMs": 89317
     }
   ],
-  "finishedAt": "2026-10-19T06:16:17.571Z"
+  "finishedAt": "2026-10-19T11:29:16.863Z"
 }

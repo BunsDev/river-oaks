@@ -59,7 +59,9 @@ test('records: a new versioned id, provenance per part, and approval of these ex
 
 test('the approved silent short and the fixture are not a second film with dialogue and music', { skip: !hasFfmpeg && 'ffmpeg and ffprobe are not installed' }, () => {
   const sources = JSON.parse(readFileSync(new URL('preview/public/assets/ipic/screening/sources.json', root), 'utf8'));
-  for (const entry of sources.media) {
+  for (const id of ['ipic-original-v1', 'ipic-fixture-v1']) {
+    const entry = sources.media.find(film => film.id === id);
+    assert.ok(entry, `Missing negative intake fixture: ${id}`);
     const dir = mkdtempSync(join(tmpdir(), 'ipic-intake-'));
     try {
       for (const file of entry.files) copyFileSync(new URL(file.path, root), join(dir, file.path.split('/').pop()));

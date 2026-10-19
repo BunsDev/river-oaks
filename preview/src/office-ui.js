@@ -83,9 +83,9 @@ export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,
     management.replaceChildren();if(!owned)return;
     const h=el('h4','Office guests'),select=el('select');select.setAttribute('aria-label','Resident to invite');
     for(const p of mp()?.snapshot?.players??[])if(p.id!==self()?.id&&!p.canBuild){const option=el('option',p.name);option.value=p.id;select.append(option);}
-    const invite=button('Invite resident',null,()=>void action('invite',{peerId:select.value}));invite.disabled=!select.options.length;
-    if(invite.disabled){const option=el('option','No other residents in town');option.value='';select.append(option);select.disabled=true;}
-    management.append(h,select,invite);
+    // With nobody to invite, say so in a line rather than show a picker and a button that both do nothing.
+    if(select.options.length){const invite=button('Invite resident',null,()=>void action('invite',{peerId:select.value}));invite.className='office-invite';management.append(h,select,invite);}
+    else management.append(h,el('p','Residents you can invite appear here once they are in town.','office-empty'));
     for(const g of currentOffice.guests??[]){const row=el('div',null,'office-person');row.append(el('span',g.name),button('Revoke access',null,()=>void action('revoke',{peerId:g.userId})));management.append(row);}
   }
   async function action(name,data){if(busy||entryAttempt)return;busy=true;const r=await send(name,data);busy=false;if(disposed)return;if(r.ok){lastState='';await refresh();}else say(messages[r.error]??r.message);}
