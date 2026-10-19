@@ -41,12 +41,13 @@ async (alice, bob) => {
     }
   }
   // One dart: hold the hand still on the release that carries it to a point, and throw;
-  // the town flies it with the hand's own error.
-  async function throwAt(page, point) {
-    const before = (await darts(page)).line?.points.length ?? 0;
+  // the town flies it with the hand's own error. `twice`: a double click.
+  async function throwAt(page, point, { twice = false } = {}) {
+    const before = (await darts(page)).line?.points.length ?? 0, button = page.locator('.darts-panel[open] [data-darts-action="throw"]');
     await page.evaluate(target => window.__riverIpicDarts().steadyOn(target), point);
-    await page.locator('.darts-panel[open] [data-darts-action="throw"]').click();
-    await page.waitForFunction(n => (window.__riverIpicDarts().line?.points.length ?? 0) > n, before);
+    await (twice ? button.dblclick() : button.click());
+    await page.waitForFunction(n => (window.__riverIpicDarts().line?.points.length ?? 0) > n && !window.__riverIpicDarts().pending && !window.__riverIpicDarts().flying, before);
+    return before;
   }
 
   await Promise.all([load(alice), load(bob)]);
@@ -65,7 +66,12 @@ async (alice, bob) => {
   await alice.waitForFunction(() => window.__riverIpicDarts().line?.players?.length === 2 && !window.__riverIpicDarts().line.result);
   checks.push('alice invited bob through the panel and bob accepted');
 
-  for (let i = 0; i < 3; i++) await throwAt(alice, [0, 103]);
+  // The second click lands while the town is still answering the first: one dart, not two.
+  const first = await throwAt(alice, [0, 103], { twice: true });
+  await alice.waitForTimeout(1000);
+  check((await darts(alice)).line.points.length === first + 1, `a double click throws one dart: ${JSON.stringify((await darts(alice)).line)}`);
+  checks.push('a double click on Throw while the town answers throws one dart');
+  for (let i = 1; i < 3; i++) await throwAt(alice, [0, 103]);
   const seen = await darts(bob);
   check(seen.line.points.length === 3 && seen.line.turn === 1, `bob sees alice's three darts and his turn: ${JSON.stringify(seen.line)}`);
   await bob.waitForFunction(() => window.__riverIpicDarts().board === 3);

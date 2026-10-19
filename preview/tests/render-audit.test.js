@@ -27,7 +27,9 @@ test('capacity options refuse ambiguous runs, excessive duration and invalid pla
   assert.equal(auditOptions(['--vsync=off']).vsync, 'off');
   assert.deepEqual([auditOptions([]).view, auditOptions([]).compare, auditOptions([]).profile], ['crowd', 'none', 'off']);
   assert.deepEqual(auditOptions(['--view=away', '--compare=avatar-culling', '--profile=on']), { ...auditOptions([]), view: 'away', compare: 'avatar-culling', profile: 'on' });
-  for (const args of [['--seconds=601'], ['--seconds=4'], ['--warmup=0'], ['--players=32,8'], ['--players=33'], ['--players=8,8'], ['--quality=fast'], ['--vsync=false'], ['--vsync=on', '--vsync=off'], ['--view=top'], ['--compare=batching'], ['--profile=yes'], ['--seconds=5', '--seconds=6'], ['--unknown=x']])
+  assert.equal(auditOptions(['--compare=figure-culling']).compare, 'figure-culling');
+  assert.equal(auditOptions(['--compare=shadow-depth']).compare, 'shadow-depth');
+  for (const args of [['--seconds=601'], ['--seconds=4'], ['--warmup=0'], ['--players=32,8'], ['--players=33'], ['--players=8,8'], ['--quality=fast'], ['--vsync=false'], ['--vsync=on', '--vsync=off'], ['--view=top'], ['--compare=batching'], ['--compare=figure'], ['--profile=yes'], ['--seconds=5', '--seconds=6'], ['--unknown=x']])
     assert.throws(() => auditOptions(args));
 });
 

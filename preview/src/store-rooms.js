@@ -3,6 +3,8 @@ import { clearStandingStations } from './store-clearance.js';
 import { approvedGroundRoom, approvedLevelRoom } from './approved-interior-room.js';
 import { isIpicStore, configureIpicRoom } from './ipic-plan.js';
 import { planVenueRooms } from './venue-rooms.js';
+import { planCampusRooms } from './garden-campus-district.js';
+import { campusLevelRoom } from './garden-campus-levels.js';
 
 // Walk-in boutique floor plans behind each mapped storefront. Rooms stay inside
 // the OSM footprint ring, never overlap, and open through the mapped entrance.
@@ -48,6 +50,8 @@ export function storeRoomsFor(world) {
     }
     // Code-only venues (venue-rooms.js) after every tenant: not in the world data.
     rooms.push(...planVenueRooms(world));
+    // The Gardens' halls and café (garden-campus-district.js), when this district serves the campus.
+    rooms.push(...planCampusRooms(world, rooms.length));
     cache.set(world, rooms);
   }
   return cache.get(world);
@@ -59,7 +63,8 @@ export function interiorLevelRoomsFor(world, levelId) {
   if (!levelCache.has(world)) levelCache.set(world, new Map());
   const levels = levelCache.get(world);
   if (!levels.has(levelId)) {
-    const rooms = [];
+    // The Gardens' upper floors (#508): one room per campus level.
+    const campus = campusLevelRoom(world, levelId), rooms = campus ? [campus] : [];
     for (const plan of world.buildingInteriors ?? []) {
       const level = plan.levels?.find(item => item.id === levelId && item.index > 0);
       if (!level) continue;

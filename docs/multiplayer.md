@@ -416,7 +416,7 @@ Copy `.env.example` to `.env` if you don't already have a private environment fi
 | `TURNSTILE_SECRET_KEY`, `VITE_TURNSTILE_SITE_KEY` | Optional Cloudflare Turnstile on email sign-in; set both or neither |
 | `TYPESAFE_API_KEY`, `JEV_AUTO_MODEL`, `CHAUFFEUR_DAILY_LIMIT` | Hosted Jev driving: server-only key, model (default `jev-1.14.0`), and daily decision budget (default 6,000, max 10,000) |
 | `RIVER_OAKS_WORKPLACE` | Opt-in flag for the workplace test (with `VITE_WORKPLACE=true` in the client) |
-| `RIVER_OAKS_OFFICE_LAYOUT` | Jevica's office layout: unset or `office-legacy-1` (legacy room), or `office-penthouse-1`; personal workspaces stay legacy ([offices](offices.md)) |
+| `RIVER_OAKS_OFFICE_LAYOUT` | Jevica's sole office is `office-penthouse-1`; unset, retired and unknown settings select the penthouse ([offices](offices.md)) |
 | `RIVER_OAKS_SCREENING_HOSTS` | IPIC screening hosts, `ipic:<userId>[@<ISO expiry>]`, comma-separated; unset means nobody can host ([screenings](screenings.md)) |
 
 Generate a cookie secret locally:
@@ -719,16 +719,17 @@ After that grace, departure releases it. A compatible region revision keeps
 furniture but disconnects players, so it leaves no stale occupancy. Checkpoint
 recovery validates slots, unique occupancy and the exact furniture-derived pose.
 
-Private world checkpoints write version 11 and read valid versions 1 (original
-district only) through 11. Seat reservations require version 3 or later; custom
+Private world checkpoints write version 13 and read valid versions 1 (original
+district only) through 13. Seat reservations require version 3 or later; custom
 assemblies require version 4; paired interactions require version 5; office state
 requires version 6; explicit interior level occupancy requires version 7; personal
 workspace visits require version 8; venue screenings ([screenings](screenings.md))
 require version 9; office visit layouts and levels ([offices](offices.md)) require version 10; office
-seat claims require version 11. The
-current coordinator (writer generation `v11:`) atomically takes over older leases. Commit fencing prevents
+seat claims require version 11; selected character revisions require version 12;
+garden campus leases ([garden campus leases](garden-campus-leases.md)) require version 13. The
+current coordinator (writer generation `v13:`, or `v14:` with the character store) atomically takes over older leases. Commit fencing prevents
 an older writer from publishing or trimming commands. Do not roll back older
-code against version-11 checkpoints. Browser protocol 3 is required: older and
+code against version-13 checkpoints. Browser protocol 3 is required: older and
 unversioned clients must refresh
 before joining.
 This prevents older renderers from applying snapshots with unknown geometry.
