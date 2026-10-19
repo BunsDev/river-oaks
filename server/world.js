@@ -1,5 +1,6 @@
 import { validateCharacterDefinition, migrateStoredCharacterDefinition } from '../preview/src/character-definition.js';
 import { createOffices } from './offices.js';
+import { campusServed, createCampusLeases } from './campus-leases.js';
 import { createTableGames } from './table-games.js';
 import { officesFor } from '../preview/src/office-contract.js';
 import { createHash } from 'node:crypto';
@@ -24,12 +25,14 @@ import { IPIC_DARTS, atIpicDartsLine } from '../preview/src/ipic-plan.js';
 import { createAxeGames } from './axe-games.js';
 import { AXE_LANES, AXE_ROOM_DARTS, AXE_ROOM_INTERIOR, atAxeLane, atAxeRoomDarts } from '../preview/src/axe-room-plan.js';
 import { isVenueRoom } from '../preview/src/venue-rooms.js';
+import { districtRevisionOf, isCampusRoom } from '../preview/src/garden-campus-district.js';
 import { createScreenings } from './screenings.js';
 import { SCREENING_VENUES } from '../preview/src/screening-contract.js';
 import { isJevicaAdmin } from './admin.js';
 import { accountName } from '../preview/src/resident-names.js';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, validateWorldId } from '../preview/src/world-contract.js';
 import { checkpointFailureReason } from './recovery-diagnostics.js';
+import { campusInteriorPlan, isCampusLevelId } from '../preview/src/garden-campus-levels.js';
 
 const CYCLE_GRACE_MS = 1500;
 const WISH_COOLDOWN_MS = 5000, TRAVEL_COOLDOWN_MS = 1000, CHAT_COOLDOWN_MS = 1000, GESTURE_COOLDOWN_MS = 1500, GESTURE_DURATION_MS = 3200, FOCUS_MS = 30000;
@@ -51,7 +54,7 @@ const fields = (message, allowed) => Object.keys(message).every(key => allowed.i
 const textId = value => typeof value === 'string' && value.length > 0 && value.length <= 160;
 const reject = (error, message = error) => ({ok:false,error,message});
 
-const CHECKPOINT_VERSION = 12, MAX_CHECKPOINT_BYTES = 8 * 1024 * 1024;
+const CHECKPOINT_VERSION = 13, MAX_CHECKPOINT_BYTES = 8 * 1024 * 1024;
 const LIFE_FIELDS = ['elapsed','storm','revision','packet','cursor','paused','stats'];
 const digest = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const nonnegative = value => Number.isFinite(value) && value >= 0;
@@ -81,11 +84,16 @@ function decodeCheckpoint(json) {
 
 // The transport authenticates identities. Only this object advances the town;
 // client messages contain player intent, never resident state or elapsed time.
-export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, sharedPopulation = true, isAdmin = isJevicaAdmin, worldId = DEFAULT_WORLD_ID, random, screeningHosts = [], officeLayout } = {}) {
+export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, sharedPopulation = true, isAdmin = isJevicaAdmin, worldId = DEFAULT_WORLD_ID, random, screeningHosts = [], officeLayout, campusOperators = [], campusAdmission = () => false } = {}) {
   validateWorldId(worldId);
   const colliders=[],placementEnvironment=createWalkingEnvironment(worldData);
   const environment = createWalkingEnvironment(worldData,colliders);
   const interiorLevels=new Map((worldData.buildingInteriors??[]).flatMap(plan=>plan.levels.map(level=>[level.id,{plan,level}])));
+  // The Gardens' floors (#508) are interior levels of one shared campus plan: l0 is the street
+  // (its tower halls start the lift and stairs), l1..l7 are authoritative walking levels.
+  // Suite floor is walkable only for whom campusAdmission(userId, unitId) admits: fail closed.
+  const campusPlan=campusInteriorPlan(worldData);
+  for(const level of campusPlan?.levels??[])interiorLevels.set(level.id,{plan:campusPlan,level});
   const upperEnvironments=new Map();
   const environmentForLevel=levelId=>{
     const entry=interiorLevels.get(levelId);
@@ -120,6 +128,14 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   const interactions=createInteractions({players,environment,environmentFor:player=>environmentForLevel(player.levelId),
     now,movementOf,changed:()=>revision++,residents:()=>state.locals});
   const offices=createOffices({worldData,players,isAdmin,environment,changed:()=>revision++,cancel:id=>{interactions.cancel(id);focus.delete(id);},...(officeLayout?{officeLayout}:{})});
+  // Garden campus suites (campus-leases.js): owner-managed leases in the River Oaks town, on a
+  // district that carries the campus, operated by RIVER_OAKS_CAMPUS_OPERATOR_IDS. Jevica's
+  // admin predicate grants nothing here. Elsewhere the saved campus section is kept inert.
+  const campus=createCampusLeases({enabled:campusServed(worldData,worldId),worldId,operators:campusOperators,players,changed:()=>revision++,onAccessEnded:event=>campusAccessEnded(event)});
+  // Suite access that ended (expiry, revocation, release, a removed guest) names the public
+  // point outside that suite's door. #508 returns an occupant of the suite there; until suite
+  // occupancy exists nobody can stand inside one, so there is nobody to move.
+  function campusAccessEnded(_event){}
   // Shared games at the plaza chess tables (table-games.js): the town holds each table's game.
   const tableGames=createTableGames({players,tableIds:plazaSalonPlan(worldData)?.chess.map(table=>table.id)??[],changed:()=>revision++});
   // The café round table's shared dominoes: hidden hands stay here and in the checkpoint.
@@ -136,7 +152,9 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     atLine:player=>onFootIn(player,ipicRoom) && atIpicDartsLine(roomPoint(ipicRoom,player)) ? IPIC_DARTS.id
       : onFootIn(player,axeRoom) && atAxeRoomDarts(roomPoint(axeRoom,player)) ? AXE_ROOM_DARTS.id : null});
   const axeGames=createAxeGames({players,laneIds:axeRoom?AXE_LANES.map(lane=>lane.id):[],changed:()=>revision++,
-    atLane:player=>onFootIn(player,axeRoom) ? atAxeLane(roomPoint(axeRoom,player)) : null});
+    atLane:player=>onFootIn(player,axeRoom) ? atAxeLane(roomPoint(axeRoom,player)) : null,
+    // The thrower's real distance to the target decides the axe's rotation (axe-rules.js).
+    distanceTo:(player,laneId)=>{const lane=AXE_LANES.find(item=>item.id===laneId);return axeRoom&&lane?lane.target-roomPoint(axeRoom,player)[1]:NaN;}});
   // Venue screenings (screenings.js): the server decides who is in the venue and who may host.
   const screenings=createScreenings({players,grants:screeningHosts,changed:()=>revision++,
     inVenue:(player,venueId)=>!player.levelId && !offices.has(player.id)
@@ -497,7 +515,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if(assignedUpper && message.levelId!==player.levelId
       || message.levelId && (interiorLevels.get(message.levelId)?.level.index??0)>0 && message.levelId!==player.levelId)
       return correction('invalid_level');
-    const movementEnvironment=environmentForLevel(player.levelId);
+    const movementEnvironment=environmentForLevel(player.levelId), campusLevel=assignedUpper && isCampusLevelId(player.levelId);
     if(player.sitting) {
       if(distance(position,player.position)>1e-6 || Math.abs(position[2]-player.position[2])>1e-6
         || altitude!==0 || message.vehicle)return correction('stand_before_moving');
@@ -533,6 +551,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       const privateRoom=height<=0.1 && restrictedRoomAt(x,north);
       if (privateRoom && !canEnterHome(player.id,privateRoom.storeId)) return correction('private_home');
       if (height>0.1 ? !movementEnvironment.canFly(x,movementEnvironment.groundAt(x,-north)+height,-north) : !movementEnvironment.isFree(x,-north)) return correction('blocked');
+      const suite=campusLevel && movementEnvironment.roomAt(x,-north)?.supportAt?.(x,north);
+      if (suite?.access==='private-suite' && !campusAdmission(player.id,suite.surfaceId)) return correction('private_suite');
     }
     if(distance(position,player.position)>.015 || altitude>.1 || message.vehicle)interactions.cancel(player.id);
     player.moveBudget -= cost;
@@ -566,8 +586,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     const local = localById.get(message.localId);
     const peer = players.get(message.peerId);
     if(peer && offices.has(peer.id))return reject('office_permission_required');
-    // A code-only venue (venue-rooms.js) travels like a store, from its own facade.
-    const venue = environment.rooms.find(room=>room.storeId===message.storeId && isVenueRoom(room));
+    // A code-only venue (venue-rooms.js) or a Gardens hall travels like a store, from its own facade.
+    const venue = environment.rooms.find(room=>room.storeId===message.storeId && (isVenueRoom(room)||isCampusRoom(room)));
     const store = worldData.stores?.find(store=>store.id===message.storeId) ?? (venue ? { id:venue.storeId, name:venue.name, facade:venue.facade, outward:venue.outward } : undefined);
     const room = environment.rooms.find(room=>room.storeId===message.storeId);
     const place = (worldData.communityLocations ?? []).find(place=>place.id===message.placeId);
@@ -675,11 +695,14 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     const sourceEnvironment=environmentForLevel(source.level.id);
     if(sourceEnvironment.roomAt(player.position[0],-player.position[1])?.planId!==source.level.id
       || Math.abs(player.position[2]-source.level.floorElevation)>0.2)return reject('not_at_source_level');
-    const portal=source.level.portals.find(item=>item.id===message.portalId && item.kind==='stairs');
-    if(!portal || distance(player.position,portal.position)>1.3)return reject('level_portal_out_of_reach');
+    // Campus cores have a lift beside the stairs; both are level portals (#508).
+    const portal=source.level.portals.find(item=>item.id===message.portalId && (item.kind==='stairs' || source.plan.campus && item.kind==='lift'));
+    if(!portal)return reject('invalid_level_portal');
+    if(distance(player.position,portal.position)>1.3)return reject('level_portal_out_of_reach');
     const destination=interiorLevels.get(portal.toLevelId);
-    const paired=destination?.level.portals.find(item=>item.kind==='stairs' && item.toLevelId===source.level.id
-      && distance(item.position,portal.position)<0.01);
+    // A campus portal names its pair (both roof portals of a core share one headhouse landing).
+    const paired=portal.toPortal ? destination?.level.portals.find(item=>item.id===portal.toPortal && item.toPortal===portal.id && item.toLevelId===source.level.id)
+      : destination?.level.portals.find(item=>item.kind==='stairs' && item.toLevelId===source.level.id && distance(item.position,portal.position)<0.01);
     if(!destination || destination.plan!==source.plan || !paired)return reject('invalid_level_portal');
     const targetEnvironment=environmentForLevel(destination.level.id);
     const onLevel=([x,n])=>targetEnvironment.isFree(x,-n) && targetEnvironment.roomAt(x,-n)?.planId===destination.level.id;
@@ -697,8 +720,10 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       }
     const [east,north]=arrival;
     interactions.cancel(player.id);focus.delete(player.id);
-    Object.assign(player,{position:[east,north,destination.level.floorElevation],buildingId:destination.plan.buildingId,
-      levelId:destination.level.id,altitude:0,vehicle:null,poseAt:time,moveBudget:0.1,liftBudget:0.1});
+    // Back at the campus street level a resident is on the street again, in the hall.
+    const street=destination.plan.campus && destination.level.index===0;
+    Object.assign(player,{position:[east,north,destination.level.floorElevation],buildingId:street?null:destination.plan.buildingId,
+      levelId:street?null:destination.level.id,altitude:0,vehicle:null,poseAt:time,moveBudget:0.1,liftBudget:0.1});
     revision++;
     return {ok:true,player:publicPlayer(player)};
   }
@@ -719,9 +744,11 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if (ledger.tokens<1) return reject('rate_limited');
     ledger.tokens--;
     interactions.prune();
+    if(message.type==='campus')return campus.command(player,message,time);
     if(message.type==='interiorLevel')return changeInteriorLevel(player,message,time);
     if(interiorLevels.get(player.levelId)?.level.index>0
-      && !['chat','interaction','gesture','appearance','character','movement'].includes(message.type))return reject('return_to_ground_level');
+      && !['chat','interaction','gesture','appearance','character','movement'].includes(message.type)
+      && !(isCampusLevelId(player.levelId) && message.type==='campus'))return reject('return_to_ground_level');
     if(message.type==='stage') {
       if(!fields(message,['type','action']) || !['take','leave'].includes(message.action))return reject('invalid_stage');
       return message.action==='take'?takeStage(player,time):leaveStage(player,time);
@@ -938,7 +965,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if (!Number.isFinite(delta) || delta<=0) return;
     const duration=Math.min(delta,0.25),time=now();
     clearExpiredLedgers(time);
-    tableGames.prune();cafeGames.prune();dartsGames.prune();axeGames.prune();screenings.prune(time);
+    tableGames.prune();cafeGames.prune();dartsGames.prune();axeGames.prune();screenings.prune(time);campus.prune(time);
     for (const [id,hold] of focus) if (hold.until<=time || !reachable(players.get(id),localById.get(hold.localId))) focus.delete(id);
     const held=new Set([...focus.values()].map(hold=>hold.localId));
     for (const local of state.locals) {
@@ -958,7 +985,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     const social=interactions.snapshot();
     const community={};
     for (const key of ['status','running','elapsed','target','supported','unmet','supplies','helpBudget','jobs','events','scenarioKey','generation','result','storm','resupplied']) community[key]=copy(state[key]);
-    return {type:'snapshot',interactions:social,worldId,protocolVersion:WORLD_PROTOCOL_VERSION,revision,elapsed,screenings:screenings.snapshot(),cycling:{taken:takenSlots()},tables:[...tableGames.snapshot(),...cafeGames.snapshot()],darts:dartsGames.snapshot(),axes:axeGames.snapshot(),players:[...players.values()].map(publicPlayer),
+    return {type:'snapshot',interactions:social,worldId,protocolVersion:WORLD_PROTOCOL_VERSION,revision,elapsed,screenings:screenings.snapshot(),cycling:{taken:takenSlots()},tables:[...tableGames.snapshot(),...cafeGames.snapshot()],darts:dartsGames.snapshot(),axes:axeGames.snapshot(),...(campus.enabled?{campus:campus.snapshot()}:{}),players:[...players.values()].map(publicPlayer),
       chat:copy(chat).map(entry=>({...entry,authorName:accountName(entry.authorId,entry.authorName)})),
       builds:copy([...builds.values()]).map(item=>({...item,ownerName:accountName(item.ownerId,item.ownerName)})),wishes:copy(state.wishes),community,
       locals:state.locals.map(local=>({id:local.id,name:local.name,position:[...local.position],indoor:!!local.indoor,storeId:local.storeId??null,
@@ -973,7 +1000,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if (life?.planning) throw new Error('Cannot checkpoint an unfinished route search');
     interactions.prune();
     tableGames.prune();cafeGames.prune();dartsGames.prune();axeGames.prune();screenings.prune(now());
-    const payload=JSON.parse(checkpointJSON({offices:offices.checkpoint(),tableGames:tableGames.checkpoint(),cafeGames:cafeGames.checkpoint(),dartsGames:dartsGames.checkpoint(),axeGames:axeGames.checkpoint(),screenings:screenings.checkpoint(now()),revision,elapsed,state,interactions:interactions.snapshot(),players:[...players.values()].map(player=>{
+    const payload=JSON.parse(checkpointJSON({offices:offices.checkpoint(),campus:campus.checkpoint(),tableGames:tableGames.checkpoint(),cafeGames:cafeGames.checkpoint(),dartsGames:dartsGames.checkpoint(),axeGames:axeGames.checkpoint(),screenings:screenings.checkpoint(now()),revision,elapsed,state,interactions:interactions.snapshot(),players:[...players.values()].map(player=>{
       if(!player.performing)return player;
       const {performing,...rest}=player;
       return {...rest,position:stageStepDown(player)??performing.from};
@@ -994,14 +1021,14 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
         ? {version:saved.version,worldFingerprint:saved.worldFingerprint,payload:saved.payload}
         : {version:saved.version,worldId:saved.worldId,worldFingerprint:saved.worldFingerprint,payload:saved.payload};
       if (!record(saved) || !fields(saved,legacy?['version','worldFingerprint','payload','checksum']:['version','worldId','worldFingerprint','payload','checksum'])
-        || !(legacy || [2,3,4,5,6,7,8,9,10,11,CHECKPOINT_VERSION].includes(saved.version) && saved.worldId===worldId)
+        || !(legacy || [2,3,4,5,6,7,8,9,10,11,12,CHECKPOINT_VERSION].includes(saved.version) && saved.worldId===worldId)
         || saved.worldFingerprint!==worldFingerprint || saved.checksum!==digest(envelope)) throw new Error('Invalid envelope');
       let recovered=decodeCheckpoint(JSON.stringify(saved.payload));
       if (sharedPopulation && recovered.state?.locals?.length!==residentIdentities.length) {
         // Validate the entire old checkpoint before dropping any retired shop
         // residents. This keeps invalid data in a removed record from being
         // laundered into an accepted reduced-population checkpoint.
-        const fullPopulation=createSharedWorld(worldData,{now,maxPlayers,sharedPopulation:false,isAdmin,worldId,screeningHosts,officeLayout});
+        const fullPopulation=createSharedWorld(worldData,{now,maxPlayers,sharedPopulation:false,isAdmin,worldId,screeningHosts,officeLayout,campusOperators});
         if (!fullPopulation.restore(saved).ok) throw new Error('Invalid legacy checkpoint');
         const activeIds=new Set(residentIdentities.map(local=>local.id));
         const kept=recovered.state.locals.filter(local=>activeIds.has(local.id));
@@ -1114,6 +1141,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       if(saved.version<6 && recovered.offices!==undefined)throw new Error('Invalid office version');
       if(saved.version>=6 && recovered.offices===undefined)throw new Error('Missing offices');
       const nextOffices=offices.validate(recovered.offices,nextPlayers,saved.version>=8,saved.version);
+      // Checkpoint v13 adds campus leases; older ones restore with none.
+      const nextCampus=campus.validate(recovered.campus,saved.version,now());
       // Older checkpoints have no table games: they restore with none.
       const nextTables=tableGames.validate(recovered.tableGames??[]);
       const nextCafe=cafeGames.validate(recovered.cafeGames??[]);
@@ -1256,6 +1285,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       homeGuests.clear();for(const [storeId,ids] of nextHomeGuests)homeGuests.set(storeId,ids);
       localById.clear();for (const local of state.locals) localById.set(local.id,local);
       offices.load(nextOffices);
+      campus.load(nextCampus);
       tableGames.load(nextTables);
       cafeGames.load(nextCafe);
       dartsGames.load(nextDarts);
@@ -1304,21 +1334,24 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   const listPlaces = () => placesOf(worldData);
   return {worldId,join,rename,leave,command,step,snapshot,checkpoint,restore,reset,
     // Frames carry the clock that anchors screenings (screenings.js), stamped by the transport.
-    serverTime:()=>now(),officeVisit:offices.publicVisit,endOfficeVisit:offices.leave,accountAppearance,applyAccountAppearance,prepareAccountSelection,commitAccountSelection,resolvePlace,listPlaces,voiceSpaceOf,setVoice,drainRides,players,state};
+    serverTime:()=>now(),districtRevision:districtRevisionOf(worldData),officeVisit:offices.publicVisit,endOfficeVisit:offices.leave,
+    // The synchronous suite decision for #508 entry and #510 desk access (campus-leases.js).
+    campusSuiteAccess:(userId,unitId)=>campus.suiteAccess(userId,unitId,now()),campusAccess:userId=>campus.entitlements(userId,now()),accountAppearance,applyAccountAppearance,prepareAccountSelection,commitAccountSelection,resolvePlace,listPlaces,voiceSpaceOf,setVoice,drainRides,players,state};
 }
 
 /** Validate an old room, then transfer durable account and creation state to a new geography. */
-export function migrateWorldCheckpoint({fromData,toData,checkpoint,worldId=DEFAULT_WORLD_ID,now=Date.now,isAdmin=isJevicaAdmin,screeningHosts,officeLayout}={}) {
+export function migrateWorldCheckpoint({fromData,toData,checkpoint,worldId=DEFAULT_WORLD_ID,now=Date.now,isAdmin=isJevicaAdmin,screeningHosts,officeLayout,campusOperators}={}) {
   if(!fromData || !toData || !checkpoint)return reject('invalid_checkpoint');
-  const options={worldId,now,isAdmin,screeningHosts,officeLayout};
+  const options={worldId,now,isAdmin,screeningHosts,officeLayout,campusOperators};
   const oldWorld=createSharedWorld(fromData,options);
   if(!oldWorld.restore(checkpoint).ok)return reject('invalid_checkpoint');
   const old=oldWorld.checkpoint();
   const fresh=createSharedWorld(toData,options).checkpoint();
   const payload=fresh.payload,previous=old.payload;
-  // Simulation and NPC routes depend on geography. Account-owned state does not.
+  // Simulation and NPC routes depend on geography. Account-owned state, leases included, does not.
   payload.revision=previous.revision+1;
   for(const field of ['ledgers','chat','appearances','characters','movements','builds','inventory'])payload[field]=copy(previous[field]??[]);
+  payload.campus=copy(previous.campus);
   // A creator region compiled before #491 walked on bare terrain; its revision compiles the
   // street datum (STREET.walkSurfaceOffset). Creations standing on that datum, outdoors or in
   // a built-in room, move with it. Those on a generated level keep its floor.

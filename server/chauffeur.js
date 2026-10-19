@@ -58,7 +58,10 @@ export function createLocalChauffeurSecurity({ isBanned, now = Date.now }) {
     return limiters.get(key)(id);
   } };
 }
-export function createChauffeurRoute({ auth, security, waitlist, origin, apiKey, model = 'jev-1.13.0', fetcher = fetch, isAdmin = isJevicaAdmin, dailyLimit = CHAUFFEUR_DAILY_LIMIT, now = Date.now }) {
+// The Jev model hosted driving pins (TypeSafe, docs.typesafe.ai/models): an exact version, never an alias,
+// since each reply must name it. JEV_AUTO_MODEL overrides it; src/river_oaks/jev.py pins the bridge's.
+export const JEV_AUTO_MODEL = 'jev-1.14.0';
+export function createChauffeurRoute({ auth, security, waitlist, origin, apiKey, model = JEV_AUTO_MODEL, fetcher = fetch, isAdmin = isJevicaAdmin, dailyLimit = CHAUFFEUR_DAILY_LIMIT, now = Date.now }) {
   let failures = 0, pausedUntil = 0;
   return async (req, res) => {
     if (new URL(req.url, origin).pathname !== '/api/chauffeur') return false;

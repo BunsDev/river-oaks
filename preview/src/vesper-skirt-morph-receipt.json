@@ -8,7 +8,7 @@
     "preview/public/assets/characters/jevica.glb": "722b96e2fd77b36c85ec01c1594a35e3f3f39b5ec76dfc3c9a351ef1eb4f117a",
     "preview/public/assets/characters/jevica.sources.json": "104ce65388e02ad9e08730334083f297269faf74341b0685ed6eac36bfb9e1a3",
     "preview/src/avatars.js": "dfc79d4973890c051a37a6954b9b9354c044f78398ec0904dfb97aeea2017a14",
-    "preview/src/foot-placement.js": "7f2158d5cac806b40e3abb9caae40b4d32c5c143d8a888293c0a9958e5b5f69e",
+    "preview/src/foot-placement.js": "425899b01551534f72d20b0d011b0b319e525c4ba12d3c9f02bf8dfc7d548ea3",
     "preview/src/foot-roll.js": "5c8de2ef4c1d3ed3905991d7cc16ed3ce249b7091b70ad90c6b5bfb6afc98528",
     "preview/src/sole-support.js": "1d77dad5449799032809f815298af1acb01fffdaa54371aa71a4601a3794d18f",
     "preview/src/skirt-geometry.js": "aa74e1d9dce55e6ffa298fd3bd6b9f0fa0baead3d48f4d1979cf27ec27741e0b",

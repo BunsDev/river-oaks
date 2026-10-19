@@ -1,5 +1,7 @@
 import { layoutPeerLabels } from './peer-label-layout.js';
 import { createAvatarPlaceholder } from './avatar-placeholder.js';
+import { cullAvatarMeshes, figureHeight, figureInView, FIGURE_SPHERE } from './avatar-culling.js';
+import { assignShadowDepth, setShadowDepth } from './shadow-depth.js';
 import { selectedCharacterFor } from './character-selection-view.js';
 import { createCharacterMaterials } from './character-studio-materials.js';
 import * as THREE from 'three';
@@ -10,12 +12,16 @@ import { createRoadVehicle } from './road-vehicles.js';
 import { VEHICLES, vehicleKind } from './vehicle-config.js';
 import { permittedAppearance, sharedAppearance } from './shared-appearances.js';
 
-export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=>true,snapInitialHeading=false}={}){
+// shadowDirection, when given, returns the shadow-casting light's direction (or
+// null without sun shadows) and lets a peer whose figure and shadow are both out
+// of view skip its update and every pass, like a peer beyond the distance gate.
+export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=>true,snapInitialHeading=false,shadowDirection=null}={}){
   const entries=new Map(),labels=document.createElement('div');labels.className='remote-player-labels';labels.setAttribute('aria-hidden','true');host.append(labels);
   // Who is talking on shared voice right now: a ring on the nameplate and the
   // speaker cadence in conversation-motion. Set at event time, read per frame.
   const speaking=new Set();
-  let disposed=false,previous=null,labelWidth=0,labelHeight=0;
+  let disposed=false,previous=null,labelWidth=0,labelHeight=0,culling=true,figureCulling=true,shadowDepth=true;
+  const frustum=new THREE.Frustum(),viewProjection=new THREE.Matrix4(),figureCenter=new THREE.Vector3();
   const fonts=document.fonts;
   const invalidateLabelSizes=()=>{for(const entry of entries.values())entry.labelSize=null;};
   fonts?.addEventListener('loadingdone',invalidateLabelSizes);
@@ -50,9 +56,11 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
     loadResidentAvatar(rigProfile==='jevica'?4:AVATAR_PROFILES.indexOf(rigProfile),'remote-'+player.id,rigProfile,{folk:false,appearanceId:appearance}).then(avatar=>{
       if(disposed||entry.removed||entry.version!==version){avatar.dispose();return;}
       const outfit=sharedAppearance(appearance).costume==='jevica'?createPlayerCostume(avatar,'jevica'):{update(){},dispose(){}};
-      const vehicle=createFlightVehicle('jevica');
+      const vehicle=createFlightVehicle('jevica'),height=figureHeight(avatar),culled=cullAvatarMeshes(avatar.object,height);
+      for(const mesh of culled)mesh.frustumCulled=culling;
+      const depth=assignShadowDepth(avatar.object);if(!shadowDepth)setShadowDepth(depth,false);
       entry.placeholder?.dispose();entry.placeholder=null;entry.colors?.dispose();entry.outfit?.dispose();entry.vehicle?.dispose();entry.avatar?.dispose();entry.holder.clear();
-      entry.avatar=avatar;entry.outfit=outfit;entry.vehicle=vehicle;entry.holder.add(avatar.object,vehicle.object);
+      entry.avatar=avatar;entry.outfit=outfit;entry.vehicle=vehicle;entry.culled=culled;entry.depth=depth;entry.height=height;entry.holder.add(avatar.object,vehicle.object);
       if(entry.road)entry.holder.add(entry.road.object);
       entry.colors=createCharacterMaterials(avatar.object);entry.definition=selectedCharacterFor(entry.target);entry.definitionKey=JSON.stringify(entry.definition);entry.colors.apply(entry.definition);
       entry.loadedAppearance=appearance;entry.pendingAppearance=null;entry.failures=0;entry.retryAt=0;
@@ -83,7 +91,7 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
       for(const player of peers){
         let entry=entries.get(player.id);
         if(!entry){
-          const holder=new THREE.Group(),label=document.createElement('span');label.className='remote-player-label';label.setAttribute('data-peer-id',player.id);label.textContent=player.name;labels.append(label);scene.add(holder);
+          const holder=new THREE.Group(),label=document.createElement('span');holder.userData.renderAuditOwner='remote-player';label.className='remote-player-label';label.setAttribute('data-peer-id',player.id);label.textContent=player.name;labels.append(label);scene.add(holder);
           holder.position.set(player.position[0],player.position[2]+player.altitude,-player.position[1]);
           if(snapInitialHeading)holder.rotation.y=player.yaw+Math.PI;
           const placeholder=createAvatarPlaceholder();holder.add(placeholder.object);
@@ -99,6 +107,8 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
       if(width!==labelWidth||height!==labelHeight){invalidateLabelSizes();labelWidth=width;labelHeight=height;}
       const candidates=[],dirty=[];
       const delta=previous===null?0:Math.min(0.1,(now-previous)/1000);previous=now;
+      const light=shadowDirection&&figureCulling?shadowDirection():undefined;
+      if(light!==undefined){camera.updateMatrixWorld();frustum.setFromProjectionMatrix(viewProjection.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse));}
       for(const entry of entries.values()){
         const {holder,target,avatar}=entry;next.set(target.position[0],target.position[2]+target.altitude,-target.position[1]);
         before.copy(holder.position);if(target.sitting || entry.wasSitting || holder.position.distanceTo(next)>8)holder.position.copy(next);else holder.position.lerp(next,1-Math.exp(-12*delta));
@@ -117,10 +127,20 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
         else if(Math.hypot(dx,dz)>0.004)entry.heading=Math.atan2(dx,dz);
         if(target.sitting)holder.rotation.y=entry.heading;
         else holder.rotation.y+=Math.atan2(Math.sin(entry.heading-holder.rotation.y),Math.cos(entry.heading-holder.rotation.y))*(1-Math.exp(-12*delta));
-        holder.visible=isVisible(target)&&holder.position.distanceTo(camera.position)<120;
+        const gated=!(isVisible(target)&&holder.position.distanceTo(camera.position)<120);
+        // Out of view with its shadow: skip every pass, but keep animating at a
+        // quarter rate so the figure is current when it turns back into view. A
+        // car or flight vehicle extends past the figure sphere, so its rider stays.
+        let figureHidden=false;
+        if(!gated&&avatar&&light!==undefined&&!entry.road&&target.altitude<=0.1){
+          figureCenter.set(holder.position.x,holder.position.y+avatar.object.position.y+FIGURE_SPHERE.center*entry.height,holder.position.z);
+          figureHidden=!figureInView(frustum,figureCenter,FIGURE_SPHERE.radius*entry.height,holder.position.y,light);
+        }
+        holder.visible=!gated&&!figureHidden;
+        entry.hiddenFrames=figureHidden?(entry.hiddenFrames??0)+1:0;
         entry.riderSeated=false;
-        if(avatar&&!holder.visible)avatar.suspend();
-        if(avatar&&holder.visible){
+        if(avatar&&gated)avatar.suspend();
+        if(avatar&&!gated&&entry.hiddenFrames%4===0){
           const ride=entry.road?.spec,seat=target.sitting,seated=Boolean(ride||seat);
           const speed=delta?Math.hypot(dx,dz)/delta:0;
           avatar.object.position.set(0,seat?seat.height-avatar.rig.hipHeight+.025:ride?ride.passengerSeat[1]-avatar.rig.hipHeight+.025:0,0);
@@ -153,6 +173,10 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
         if(box)entry.label.style.transform=`translate(${box.x}px,${box.y}px) translate(-50%,-100%)`;
       }
     },
+    // Development audit only: compare frames with each of these off.
+    setCulling(enabled){culling=Boolean(enabled);for(const entry of entries.values())for(const mesh of entry.culled??[])mesh.frustumCulled=culling;},
+    setFigureCulling(enabled){figureCulling=Boolean(enabled);},
+    setShadowDepth(enabled){shadowDepth=Boolean(enabled);for(const entry of entries.values())setShadowDepth(entry.depth??[],shadowDepth);},
     setSpeaking(ids){
       if(disposed)return;
       speaking.clear();for(const id of ids??[])speaking.add(id);

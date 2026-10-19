@@ -8,6 +8,7 @@ import { createSharedWorld } from '../world.js';
 import { createWalkingEnvironment } from '../../preview/src/walking.js';
 import { IPIC_DARTS } from '../../preview/src/ipic-plan.js';
 import { ipicRoute } from '../../preview/src/ipic-circulation.js';
+import { accelFor } from '../../preview/src/darts-rules.js';
 
 const data = JSON.parse(readFileSync(new URL('../../preview/public/data/district.json', import.meta.url)));
 const env = createWalkingEnvironment(data), room = env.rooms.find(r => r.interior === 'ipic-photo-v1');
@@ -49,21 +50,21 @@ test('two visitors at the Tuck Room line play a shared match everyone can see', 
   assert.equal(t.darts('carol', { action: 'practice' }).error, 'not_at_line');
   assert.equal(t.darts('alice', { action: 'invite', peerId: 'bob' }).ok, true);
   assert.equal(t.darts('bob', { action: 'accept' }).ok, true);
-  for (let i = 0; i < 3; i++) assert.equal(t.darts('alice', { action: 'throw', aim: [0, 103] }).ok, true);
-  assert.equal(t.darts('bob', { action: 'throw', aim: [0, 0] }).ok, true);
+  for (let i = 0; i < 3; i++) assert.equal(t.darts('alice', { action: 'throw', release: [0, accelFor(103)] }).ok, true);
+  assert.equal(t.darts('bob', { action: 'throw', release: [0, accelFor(0)] }).ok, true);
   const seen = t.line();
   assert.deepEqual(seen.players, ['alice', 'bob']);
   assert.equal(seen.points.length, 4);
   assert.equal(seen.turn, 1);
   assert.ok(seen.scores[0] < 501 && seen.scores[1] <= 501);
-  assert.equal(t.darts('alice', { action: 'throw', aim: [0, 0], point: [0, 0] }).error, 'invalid_darts', 'no client landing points');
+  assert.equal(t.darts('alice', { action: 'throw', release: [0, accelFor(0)], point: [0, 0] }).error, 'invalid_darts', 'no client landing points');
 });
 
 test('a darts match survives a checkpoint and ends when a player walks off or goes to sit down', () => {
   const t = town();
   t.enter('alice', [.1, 22.8]); t.enter('bob', [.9, 22.5]);
   t.darts('alice', { action: 'invite', peerId: 'bob' }); t.darts('bob', { action: 'accept' });
-  t.darts('alice', { action: 'throw', aim: [0, 103] });
+  t.darts('alice', { action: 'throw', release: [0, accelFor(103)] });
   const saved = t.world.checkpoint(), before = t.line();
   const u = town();
   assert.deepEqual(u.world.restore(saved), { ok: true });
@@ -84,14 +85,14 @@ test('a darts match survives a checkpoint and ends when a player walks off or go
   assert.equal(u.command('alice', { type: 'sit', buildId: 'bench:ipic-lounge-sofa', slot: 1 }).ok, true);
   u.world.step(.1);
   assert.equal(u.line(), null);
-  assert.equal(u.darts('alice', { action: 'throw', aim: [0, 0] }).error, 'not_playing');
+  assert.equal(u.darts('alice', { action: 'throw', release: [0, accelFor(0)] }).error, 'not_playing');
 });
 
 test('the house regular answers a lone player on the server, and its darts are in the snapshot', () => {
   const t = town();
   t.enter('alice', [.1, 22.8]);
   assert.equal(t.darts('alice', { action: 'practice' }).ok, true);
-  for (let i = 0; i < 3; i++) t.darts('alice', { action: 'throw', aim: [0, 103] });
+  for (let i = 0; i < 3; i++) t.darts('alice', { action: 'throw', release: [0, accelFor(103)] });
   const seen = t.line();
   assert.deepEqual(seen.players, ['alice', 'regular']);
   assert.equal(seen.points.length, 6);

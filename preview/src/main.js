@@ -21,6 +21,7 @@ import { warnIfSoftwareRendering } from './hardware-acceleration.js';
 import './hardware-acceleration.css';
 import { bindRenderVisibility } from './render-lifecycle.js';
 import { createRenderAudit } from './render-audit.js';
+import { createDrawCensus } from './draw-census.js';
 import { localToScene, terrainHeight } from './geometry.js';
 import { setupThemeControls } from './theme.js';
 import { configureMaterials, physicalSurface, loadEnvironment } from './materials.js';
@@ -41,6 +42,7 @@ import { canCullExterior, canCullIpicAuditorium, renderOnly, renderWithoutExteri
 import { sharedRoomSummary } from './shared-population.js';
 import { storeRoomsFor } from './store-rooms.js';
 import { attachDistrictGalleryPlan } from './district-interior-contract.js';
+import { DISTRICT_REVISION_GARDENS, attachGardenCampus, campusDoorSites, campusGroundAt, campusGroundCutout } from './garden-campus-district.js';
 import { buildFoliage, buildObservedFoliage } from './foliage.js';
 import { castShadowsFromProxies } from './landscape-models.js';
 import { validateVegetation } from './vegetation.js';
@@ -50,7 +52,7 @@ import { buildStreetFurniture } from './street-furniture.js';
 import { buildPlazaSalon } from './plaza-salon.js';
 import { createPlazaTableGames, seatAtTable } from './plaza-table-games.js';
 import { createPlazaStage } from './plaza-stage.js';
-import { plazaSalonPlan } from './plaza-salon-plan.js';
+import { plazaSalonPlan, winePongPoint } from './plaza-salon-plan.js';
 import { createPlazaDominoes, seatAtCafe } from './plaza-dominoes.js';
 import { createPlazaHearts } from './plaza-hearts.js';
 import { createPlazaSpades } from './plaza-spades.js';
@@ -129,6 +131,7 @@ const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matc
 const softwareAcceptance = import.meta.env.DEV && import.meta.env.VITE_SHARED_SOFTWARE_RENDERING === '1';
 const renderAudit = import.meta.env.DEV && new URLSearchParams(location.search).get('render-audit') === '1' ? createRenderAudit() : null;
 let exteriorCulling = true; // A development audit can switch it off to compare frames.
+let pendingDrawCensus = null; // A development audit attributes the next frame's draws.
 // Inside IPIC's auditorium, facing away from its only partition, nothing outdoors can be seen (#428),
 // nor any other store's interior or people (#431): the frame keeps only IPIC's own.
 function ipicAuditoriumCull() {
@@ -155,6 +158,8 @@ let placesUI = null, landmarks = null;
 let pendingSharedPlace = null, sharedPlaceInFlight = false;
 let worldPortal = null;
 let worldRegionSha256 = null;
+// The default district's revision once loaded (#507): null is the garage; undefined while loading.
+let worldDistrictRevision;
 let landmarkAccountId = null;
 let playerAvatar, characterStudio, officeUI, ipicScreening;
 let multiplayer, remotePlayers, buildLayer, buildControls, seatingControls, seatAndWater;
@@ -192,6 +197,7 @@ const sun = new THREE.DirectionalLight('#fff2d8', 2.5);
 const ambient = new THREE.HemisphereLight('#eef4eb', '#73806c', 2.3);
 const clock = new THREE.Timer();
 const sunOffset = new THREE.Vector3();
+const sunDirection = new THREE.Vector3(); // the direction sunlight travels
 const shadowCenter = new THREE.Vector3();
 const reflectionPosition = new THREE.Vector3();
 // A small pool of warm point lights follows the visitor into the nearest boutiques.
@@ -370,7 +376,10 @@ function initializeRenderer() {
   };
   const longTable = () => (world && plazaSalonPlan(world)?.winePong) ?? null;
   plazaWinePong = createPlazaWinePong({ getMirror: () => plazaSalon?.userData.winePong ?? null, getTable: longTable,
-    getPose: () => walking?.getPose(), focusWorld: () => host.focus({ preventScroll: true }), reducedMotion, onSwitch: switchLongTable });
+    getPose: () => walking?.getPose(), focusWorld: () => host.focus({ preventScroll: true }),
+    frameTable: table => { if (world && table) walking?.lookAt([table.x, table.north, groundSurfaceHeight(world, table.x, -table.north) + 0.8], 0.9); },
+    onWindup: () => playerAvatar?.throwBall(performance.now()),
+    reducedMotion, onSwitch: switchLongTable });
   plazaShuffleboard = createPlazaShuffleboard({ getMirror: () => plazaSalon?.userData.shuffleboard ?? null, getTable: longTable,
     getPose: () => walking?.getPose(), focusWorld: () => host.focus({ preventScroll: true }), reducedMotion, onSwitch: switchLongTable });
   playProviders.push(() => longTableGames()[longTableGame]);
@@ -409,6 +418,8 @@ function initializeRenderer() {
   const laneOf = position => { const point = position && roomPoint(AXE_ROOM_INTERIOR, position); return point ? atAxeLane(point) : null; };
   axePanel = createAxePanel({ getMirror: id => venueProps()?.axeLanes?.[id] ?? null, focusWorld: () => host.focus({ preventScroll: true }), reducedMotion,
     shared: { ...townShared, laneIds: AXE_LANES.map(lane => lane.id), laneAt: () => laneOf(onFoot()),
+      // Your distance to your lane's target, as the town measures it (axe-rules.js rotation).
+      distance: () => { const position = onFoot(), point = position && roomPoint(AXE_ROOM_INTERIOR, position), lane = AXE_LANES.find(item => item.id === laneOf(position)); return point && lane ? lane.target - point[1] : null; },
       lane: id => multiplayer?.snapshot?.axes?.find(item => item.id === id) ?? null,
       peers: id => snapshotPlayers().filter(player => laneOf(player.position) === id).map(player => ({ id: player.id, name: player.name })) } });
   playProviders.push(() => axePanel);
@@ -441,6 +452,8 @@ function initializeRenderer() {
   // IPIC screenings (#367): the town's timeline on the existing screen, while the player is inside IPIC.
   // Mounted on the viewport, not the canvas host: walking takes pointer capture on the canvas host.
   ipicScreening??=createIpicScreening({host:host.parentElement??host,THREE,getMultiplayer:()=>multiplayer,getScreen:()=>buildingMesh?.userData.interiors?.userData.screens?.[0]??null,
+    // A recliner that names an eye pitch faces the screen; focus frames the film from that row (#500).
+    getSeat:()=>{const pose=walking?.getPose();return pose?.sitting&&Number.isFinite(pose.sitting.eyePitch)?{eye:pose.position}:null;},input:host,reducedMotion,
     getVenue:()=>{
       const pose=walking?.getPose(),room=pose&&!officeUI?.active?walking?.environment?.roomAt(pose.position[0],pose.position[2]):null;
       if(room?.interior!==IPIC_INTERIOR)return {active:false,auditorium:false};
@@ -513,7 +526,9 @@ function gameDiagnostics() {
 // The town owns gameplay state from startup through reconnect.
 function startMultiplayer() {
   if (multiplayer) return;
-  remotePlayers = createRemotePlayers(scene, host);
+  // Peers out of view are culled with their shadows, while the sun casts any.
+  remotePlayers = createRemotePlayers(scene, host, { shadowDirection: () => renderer.shadowMap.enabled && sun.castShadow && sun.intensity > 0
+    ? sunDirection.copy(sunOffset).negate().normalize() : null });
   buildLayer ??= createSharedBuildLayer(scene);
   buildControls?.hide();
   multiplayer = createMultiplayer({
@@ -525,6 +540,7 @@ function startMultiplayer() {
     getMeetingPlaces: () => world ? placesOf(world) : [],
     getOwnerHomes: () => world?.stores.filter(store => store.category === 'home' && store.access === 'owner') ?? [],
     getRegionSha256: () => worldRegionSha256,
+    getDistrictRevision: () => worldDistrictRevision,
     onHomeAccess: () => districtUI?.refreshAccess(),
     onSnapshot: snapshot => { ipicScreening?.onSnapshot(snapshot); if (world) community.applyRemote(snapshot);buildLayer?.sync(snapshot.builds??[]);plazaSalon?.userData.rack?.setTaken(snapshot.cycling?.taken ?? []); },
     onCorrection: player => { if (world && player) { walking.applyServerPose(player); plazaBicycle?.sync(); } },
@@ -637,12 +653,13 @@ function populateWorld(data) {
   buildingMesh = seeThroughNearCameraIn(buildDistrictBuildings(data));
   const ground=buildGround(data),roads=buildRoads(data);
   const streetEnvironment=createWalkingEnvironment(data);
-  const streetSpace=(x,z)=>streetEnvironment.isFree(x,z)&&!streetEnvironment.roomAt(x,z);
+  // The Gardens' platform is campus space: no street sidewalk, bench or fountain is generated on it.
+  const streetSpace=(x,z)=>streetEnvironment.isFree(x,z)&&!streetEnvironment.roomAt(x,z)&&campusGroundAt(data,x,-z)===null;
   const sidewalks=buildDesignatedSidewalks(data,streetSpace);
   // Rising terrain must not show through walk-in floors (render only). Roads and
   // sidewalks never rise above a room floor, so only the terrain surface pays for it.
-  const lobbyCutout=officeLobbyGroundCutout(data);
-  roomGroundClip?.dispose();roomGroundClip=createRoomGroundClip(buildingMesh.userData.rooms??[],{persistent:lobbyCutout?[lobbyCutout]:[]});roomGroundClip.apply(ground.children[0]);
+  const lobbyCutout=officeLobbyGroundCutout(data),campusCutout=campusGroundCutout(data);
+  roomGroundClip?.dispose();roomGroundClip=createRoomGroundClip(buildingMesh.userData.rooms??[],{persistent:[lobbyCutout,campusCutout].filter(Boolean)});roomGroundClip.apply(ground.children[0]);
   host.dataset.streetProfile=JSON.stringify(sidewalks.userData.streetProfile);
   const supports=[ground.children[0],roads,...sidewalks.children];
   registerGroundSurfaces(data,supports);
@@ -676,7 +693,7 @@ function populateWorld(data) {
   $('#district-source').hidden = creatorRegion;
   $('#district-directory').hidden = false;
   $('#building-layer-label').textContent = creatorRegion?'Buildings & architecture':'Boutiques & architecture';
-  districtUI.setStores([...data.stores, ...venueDoorSites(data)], 'Dior');
+  districtUI.setStores([...data.stores, ...venueDoorSites(data), ...campusDoorSites(data)], 'Dior');
   $('#view-scale').textContent = creatorRegion?'Explore a creator-built region':'Street level · meet the locals';
   $('#connection').textContent = 'World ready to explore';
   $('#stores-count').textContent = data.stores.length;
@@ -782,6 +799,16 @@ function updateAtmosphere() {
   districtUI?.syncAtmosphere();
 }
 
+// Which revision of the default district the town serves (#507). Without an answer the
+// page draws the garage; the first snapshot from a campus town then reloads it once.
+async function defaultWorldManifest() {
+  try {
+    const response = await fetch(`/api/world-data?world=${encodeURIComponent(DEFAULT_WORLD_ID)}`, { cache: 'no-store', signal: AbortSignal.timeout(5000) });
+    const manifest = response.ok ? await response.json() : {};
+    return { template: 'river-oaks', ...(typeof manifest.districtRevision === 'string' ? { districtRevision: manifest.districtRevision } : {}) };
+  } catch { return { template: 'river-oaks' }; }
+}
+
 async function jsonResponse(path) {
   const response = await fetch(path, { cache: 'no-store', signal: AbortSignal.timeout(20000) });
   if (!response.ok) {
@@ -801,9 +828,11 @@ async function loadWorld() {
   $('#loading p').textContent = 'Opening the boutiques and gardens…';
   try {
     const worldId=worldIdFromSearch(location.search);
-    const manifest=worldId===DEFAULT_WORLD_ID?{template:'river-oaks'}
+    const manifest=worldId===DEFAULT_WORLD_ID?await defaultWorldManifest()
       :await jsonResponse(`/api/world-data?world=${encodeURIComponent(worldId)}`);
     worldRegionSha256=manifest.regionSha256??null;
+    const districtRevision=manifest.districtRevision??null;
+    if(districtRevision!==null && districtRevision!==DISTRICT_REVISION_GARDENS)throw new Error('This district revision is not supported by this client');
     let data;
     if(manifest.template==='region-v1')data=manifest.world;
     else if(manifest.template==='river-oaks') {
@@ -813,7 +842,9 @@ async function loadWorld() {
       ]);
       district.vegetation=validateVegetation(district,vegetation);
       data=attachDistrictGalleryPlan(district,approved);
+      if(districtRevision===DISTRICT_REVISION_GARDENS)data=attachGardenCampus(data);
     } else throw new Error('This region format is not supported by this client');
+    worldDistrictRevision=districtRevision;
     if (data.schema_version !== 1 || data.scene !== 'district' || !Array.isArray(data.bounds_m) || !['roads', 'stores', 'buildings', 'trees'].every(key => Array.isArray(data[key]))) throw new Error('The district data does not match the supported schema.');
     populateWorld(data);
     // Reveal a finished street: stone, asphalt and sky first. Trees, people
@@ -883,6 +914,7 @@ function followSunShadow() {
 function render(now) {
   noteFrame(now);
   const auditStart = renderAudit ? performance.now() : 0;
+  const drawCensus = pendingDrawCensus; pendingDrawCensus = null; drawCensus?.census.begin();
   clock.update();
   if (lastFrame !== null) quality.sample(now - lastFrame);
   lastFrame = now;
@@ -917,6 +949,7 @@ function render(now) {
   multiplayer?.update(now);
   officeUI?.prepare(now);
   seatingControls?.update(now);
+  ipicScreening?.applyCamera(camera);
   if (auditCamera) {
     camera.position.copy(auditCamera.position); camera.lookAt(auditCamera.target);
     if (auditCamera.fov && camera.fov !== auditCamera.fov) { camera.fov = auditCamera.fov; camera.updateProjectionMatrix(); }
@@ -979,6 +1012,7 @@ function render(now) {
     lastRenderStats=now;
   }
   renderAudit?.frame(now, performance.now() - auditStart);
+  drawCensus?.resolve(drawCensus.census.end());
 }
 
 document.querySelectorAll('[data-layer]').forEach((input) => input.addEventListener('change', () => {
@@ -1140,6 +1174,11 @@ if (import.meta.env.DEV && renderAudit) {
   window.__riverRenderAudit = {
     start: () => renderAudit.start(), stop: () => renderAudit.stop(),
     exteriorCulling(enabled) { exteriorCulling = Boolean(enabled); },
+    avatarCulling(enabled) { remotePlayers?.setCulling(enabled); },
+    figureCulling(enabled) { remotePlayers?.setFigureCulling(enabled); },
+    shadowDepth(enabled) { remotePlayers?.setShadowDepth(enabled); },
+    // Draws and submitted triangles for one frame, by pass and tagged owner.
+    drawCensus: () => new Promise(resolve => { pendingDrawCensus = { census: createDrawCensus(renderer, camera), resolve }; }),
     crowdView() {
       const players = multiplayer?.snapshot?.players ?? [];
       if (!players.length) throw new Error('Join the shared world before framing its crowd.');
@@ -1199,13 +1238,13 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
     mancalaBoard: plazaSalon?.userData.mancala?.visible() ?? null, reset: () => plazaGo.reset() } : null;
   window.__riverPlazaMancala = () => plazaMancala ? { ...plazaMancala.debug(), table: plazaSalon?.userData.mancala?.count() ?? null, reset: () => plazaMancala.reset() } : null;
   window.__riverAxes = () => axePanel ? { ...axePanel.debug(), stuck: Object.fromEntries(AXE_LANES.map(lane => [lane.id, buildingMesh?.userData.interiors?.userData.axeVenue?.axeLanes?.[lane.id]?.count() ?? null])),
-    holdAt: mm => axePanel.holdAt(mm), open: () => axePanel.open() } : null;
+    steadyAt: release => axePanel.steadyAt(release), steadyOn: point => axePanel.steadyOn(point), open: () => axePanel.open() } : null;
   window.__riverVenueDarts = () => venueDarts ? { ...venueDarts.debug(), board: buildingMesh?.userData.interiors?.userData.axeVenue?.venueDarts?.count() ?? null,
-    holdAt: mm => venueDarts.holdAt(mm), open: () => venueDarts.open() } : null;
+    steadyOn: point => venueDarts.steadyOn(point), open: () => venueDarts.open() } : null;
   window.__riverIpicDarts = () => ipicDarts ? { ...ipicDarts.debug(), board: buildingMesh?.userData.interiors?.userData.dartboards?.[0]?.count() ?? null,
-    hold: value => ipicDarts.hold(value), holdAt: mm => ipicDarts.holdAt(mm), open: () => ipicDarts.open() } : null;
+    steadyAt: release => ipicDarts.steadyAt(release), steadyOn: point => ipicDarts.steadyOn(point), open: () => ipicDarts.open() } : null;
   window.__riverPlazaDarts = () => plazaDarts ? { ...plazaDarts.debug(), board: plazaSalon?.userData.darts?.count() ?? null,
-    hold: value => plazaDarts.hold(value), holdAt: mm => plazaDarts.holdAt(mm), reset: seed => plazaDarts.reset(seed),
+    steadyAt: release => plazaDarts.steadyAt(release), steadyOn: point => plazaDarts.steadyOn(point), landingFor: (release, dart) => plazaDarts.landingFor(release, dart), reset: seed => plazaDarts.reset(seed),
     // Walk to the throwing line and face the board.
     async goTo() {
       const board = world && plazaSalonPlan(world)?.darts;
@@ -1216,7 +1255,10 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
       return { ok: Boolean(result?.ok) };
     } } : null;
   window.__riverPlazaWinePong = () => plazaWinePong ? { ...plazaWinePong.debug(), table: plazaSalon?.userData.winePong?.glasses() ?? null, ball: plazaSalon?.userData.winePong?.ballVisible() ?? null,
-    hold: value => plazaWinePong.hold(value), deal: seed => plazaWinePong.deal(seed),
+    steadyAt: (aim, power) => plazaWinePong.steadyAt(aim, power), deal: seed => plazaWinePong.deal(seed),
+    reposition: () => plazaWinePong.reposition(), resume: () => plazaWinePong.resume(),
+    // A world point in the table's frame [u along it, v across it], for walking to a stance.
+    pointAt: (u, v) => { const table = world && plazaSalonPlan(world)?.winePong; return table ? winePongPoint(table, [u, v]) : null; },
     // Walk to one end of the table (0 west, 1 east) and face down it.
     async goTo(side) {
       const spot = plazaSalon?.userData.winePong?.stand(side), table = world && plazaSalonPlan(world)?.winePong;
@@ -1229,7 +1271,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
     diceShown: plazaSalon?.userData.yacht?.visible() ?? null, towerShown: plazaSalon?.userData.jenga?.visible() ?? null, deal: seed => plazaYacht.deal(seed) } : null;
   window.__riverPlazaShuffleboard = () => plazaShuffleboard ? { ...plazaShuffleboard.debug(), longTableGame, table: plazaSalon?.userData.shuffleboard?.count() ?? null,
     pucksShown: plazaSalon?.userData.shuffleboard?.visible() ?? null, glassesShown: plazaSalon?.userData.winePong?.visible() ?? null,
-    hold: value => plazaShuffleboard.hold(value), reset: () => plazaShuffleboard.reset() } : null;
+    steadyAt: (aim, power) => plazaShuffleboard.steadyAt(aim, power), reset: () => plazaShuffleboard.reset() } : null;
   window.__riverPlazaJenga = () => plazaJenga ? { ...plazaJenga.debug(), table: plazaSalon?.userData.jenga?.count() ?? null, towerFallen: plazaSalon?.userData.jenga?.fallen() ?? null,
     aim: at => plazaJenga.aim(at), deal: seed => plazaJenga.deal(seed) } : null;
   window.__riverPlazaCribbage = () => plazaCribbage ? { ...plazaCribbage.debug(), walnutGame, pegs: plazaSalon?.userData.cribbage?.pegs() ?? null, board: plazaSalon?.userData.cribbage?.visible() ?? null,
