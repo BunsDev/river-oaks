@@ -110,9 +110,18 @@ Main `5ce4e767` (#520, #522, #533, #538) merged at `ea807b93`. The plans index w
   - #545's own config allows them; main's does not.
   - #546 (owned by `claude:river-oaks-95`) brings the allowlist to main.
 
+#546 landed. Main `2b4e4926` (#523, #546) merged at `7a6c86fd`, and the plans index is regenerated again. At `7a6c86fd`:
+- 56 throw tests and `pnpm run build` passed, and the local history secret scan (all remote refs) found no leaks.
+- The plaza journeys passed 24, 36 and 23 checks; IPIC darts 7 (the double click included); axe venue 8.
+- **Hosted CI passed all 16 checks**, including both `verify` jobs.
+- **Local `pnpm run verify` failed one test, under load 35–45:** `office-penthouse-furnishings.test.js` "surfaces are drawn in short idle slices" (the longest slice took 42.2 ms against a 40 ms wall-clock bound). Run alone at load 89, it took 61.9 ms.
+  - This branch does not touch the penthouse furnishings, and the test is a known load flake that fails on main too.
+  - Hosted `verify` passed it on this head.
+  - A low-load rerun was queued, but Claude Code stopped it for memory pressure before it started. Swap was full from other projects' builds.
+
 Not run: `axe-venue-views.mjs`, because it rewrites `docs/design/axe-and-darts`; `pnpm run verify full`; any human play review or real-device audio check.
 
 ## Next action
 
-1. After #546 lands, merge main and confirm hosted `verify` passes on the new head.
+1. Merge main before landing; the plans index conflicts whenever a PR with a new plan lands.
 2. Merging needs Val (`pnpm run land 542`).
