@@ -3,6 +3,7 @@ import { groundSurfaceHeight } from './world-surface.js';
 import { storeRoomsFor, interiorLevelRoomsFor, roomAt, roomBlocked } from './store-rooms.js';
 import { roomBlocksConversation } from './conversation-sight.js';
 import { plazaSalonFootprints } from './plaza-salon-plan.js';
+import { campusFlightVolumes } from './garden-campus-district.js';
 
 const RADIUS = 0.35, EYE_HEIGHT = 1.68;
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
@@ -62,6 +63,8 @@ export function createWalkingEnvironment(world, placedObjects = [], levelId = nu
     const ring=building.ring?.map(([x,y])=>[x,-y])??[[-1,-1],[1,-1],[1,1],[-1,1]].map(([x,y])=>[building.center[0]+x*building.size[0]/2*c-y*building.size[1]/2*s,-building.center[1]-x*building.size[0]/2*s-y*building.size[1]/2*c]);
     return {ring,top:(building.center[2]??terrainHeight(world.terrain,building.center[0],building.center[1]))+building.size[2]+3.1};
   });
+  // The campus skywalks are not buildings: they span above the street, so a flight keeps clear of them.
+  for(const volume of campusFlightVolumes(world))roofs.push({ring:volume.ring.map(([x,y])=>[x,-y]),top:volume.top+3.1});
   // Imported collision-only worlds have no roof metadata; retain a finite safe cap.
   if(!roofs.length)for(const ring of polygons)roofs.push({ring,top:Math.max(...ring.map(([x,z])=>terrainHeight(world.terrain,x,-z)))+23.1});
   for(const roof of roofs)Object.assign(roof,{minX:Math.min(...roof.ring.map(p=>p[0]))-flightRadius,maxX:Math.max(...roof.ring.map(p=>p[0]))+flightRadius,minZ:Math.min(...roof.ring.map(p=>p[1]))-flightRadius,maxZ:Math.max(...roof.ring.map(p=>p[1]))+flightRadius});

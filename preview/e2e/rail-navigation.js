@@ -55,12 +55,17 @@ async (page, { worldMapEnabled = false } = {}) => {
   await search.fill('no such activity');
   check((await menu.locator('.commands-count').textContent()).startsWith('No matching'), 'Command search explains an empty result');
   await search.fill('rides'); await page.keyboard.press('ArrowDown');
-  check(await page.evaluate(() => document.activeElement.textContent === 'Rides · driving and camera'), 'Arrow keys navigate filtered command actions');
+  check(await page.evaluate(() => document.activeElement.textContent === 'Rides · call Jev and drive'), 'Arrow keys navigate filtered command actions');
   await page.keyboard.press('Enter');
   check(!await menu.isVisible() && await dock.evaluate(node => node.open) && await page.locator('.player-settings').evaluate(node => node.open), 'Executing a command reveals the play rail and nested rides controls');
-  check(await focus() === 'player-camera', 'Play command focuses the revealed control');
-  await page.locator('#player-camera').evaluate(node => node.dispatchEvent(new KeyboardEvent('keydown', {code:'Escape',key:'Escape',isComposing:true,bubbles:true})));
-  check(await dock.evaluate(node => node.open) && await focus() === 'player-camera', 'Composing Escape leaves the play rail and focus intact');
+  check(await focus() === 'player-vehicle' && await dock.getByRole('tab', { name: 'Rides', exact: true }).getAttribute('aria-selected') === 'true', 'Play command selects the Rides tab and focuses its first control');
+  await page.locator('#player-vehicle').evaluate(node => node.dispatchEvent(new KeyboardEvent('keydown', {code:'Escape',key:'Escape',isComposing:true,bubbles:true})));
+  check(await dock.evaluate(node => node.open) && await focus() === 'player-vehicle', 'Composing Escape leaves the play rail and focus intact');
+  // A game menu: one activity at a time, arrow keys between tabs, camera view in Settings.
+  check(await page.locator('.play-rail-pane:not([hidden])').count() === 1 && await page.locator('.player-controls').isHidden(), 'The play rail shows one activity at a time');
+  await dock.getByRole('tab', { name: 'Rides', exact: true }).focus(); await page.keyboard.press('ArrowLeft');
+  check(await page.evaluate(() => document.activeElement.getAttribute('aria-label')) === 'Character' && await page.locator('.player-controls').isVisible(), 'Arrow keys move between activity tabs');
+  check(await page.locator('#settings-dialog #player-camera').count() === 1, 'Camera view lives in Settings');
   check(await exposed(), 'Nested play controls are exposed below the persistent activity navigation');
   await page.keyboard.press('Escape');
   check(!await dock.evaluate(node => node.open) && await focus() === 'canvas-host', 'Escape closes the play rail with a safe focus handoff');
@@ -98,16 +103,17 @@ async (page, { worldMapEnabled = false } = {}) => {
   await page.locator('.commands-toggle').click();
   await menu.getByRole('button', { name: /^Show controls/ }).click();
   check(!await page.evaluate(() => document.body.classList.contains('clear-view')), 'Commands can restore the visit controls');
-  await dock.getByRole('button', { name: 'Rides', exact: true }).focus(); await page.keyboard.press('h');
+  await dock.getByRole('tab', { name: 'Rides', exact: true }).focus(); await page.keyboard.press('h');
   check(await page.evaluate(() => document.activeElement.classList.contains('commands-toggle')), 'H hands focus to Commands before hiding a focused card');
   await page.keyboard.press('h');
-  check(!await dock.getByRole('button', { name: 'Build', exact: true }).isVisible(), 'Play navigation omits unavailable activities');
+  check(!await dock.getByRole('tab', { name: 'Build', exact: true }).isVisible(), 'Play navigation omits unavailable activities');
   check(await page.evaluate(() => Boolean(document.querySelector('.player-settings').compareDocumentPosition(document.querySelector('.bird-cams')) & Node.DOCUMENT_POSITION_FOLLOWING)), 'Play card order follows its stable activity navigation');
-  await dock.getByRole('button', { name: 'Birds', exact: true }).click();
-  check(await page.evaluate(() => document.activeElement.closest('.bird-cams') !== null), 'Play activity jump reveals and focuses its destination');
+  await dock.getByRole('tab', { name: 'Birds', exact: true }).click();
+  check(await page.locator('.bird-cams').isVisible() && await dock.getByRole('tab', { name: 'Birds', exact: true }).getAttribute('aria-selected') === 'true', 'An activity tab reveals its pane');
   await page.keyboard.press('Escape');
   await page.reload(); await page.waitForFunction(() => document.querySelector('#canvas-host').dataset.playerReady === 'true' && document.querySelector('.world-map')?.hidden === false);
   check(await expanded() === 'false' && !await dock.evaluate(node => node.open), 'Collapsed Places and Play preferences survive reload');
+  check(await page.locator('#play-tab-birds').getAttribute('aria-selected') === 'true', 'The chosen play activity survives reload');
 
   for (const [width, height] of [[390, 844], [844, 390], [1024, 600]]) {
     await page.setViewportSize({ width, height });
@@ -119,9 +125,9 @@ async (page, { worldMapEnabled = false } = {}) => {
     await host.focus(); await page.keyboard.press('Control+Shift+b');
     check(await expanded() === 'false' && await dock.evaluate(node => node.open), `${width}×${height}: play rail has room without competing left rail`);
     await page.screenshot({ path: `output/playwright/rails-${width}x${height}.png` });
-    await dock.getByRole('button', { name: 'Rides', exact: true }).click();
-    check(await focus() === 'player-camera' && await exposed(), `${width}×${height}: activity jump leaves its focused control exposed`);
-    const fixedNav = await dock.locator('.play-rail-nav').evaluate(node => {
+    await dock.getByRole('tab', { name: 'Rides', exact: true }).click();
+    check(await focus() === 'play-tab-rides' && await exposed() && await page.locator('#player-vehicle').isVisible(), `${width}×${height}: the Rides tab shows its pane and stays focused`);
+    const fixedNav = await dock.locator('.play-rail-tabs').evaluate(node => {
       const nav = node.getBoundingClientRect(), cards = document.querySelector('.visit-tools-content').getBoundingClientRect();
       return nav.bottom <= cards.top && nav.top >= 0;
     });
@@ -150,7 +156,7 @@ async (page, { worldMapEnabled = false } = {}) => {
   await dock.locator('summary').first().focus(); await page.keyboard.press('Escape');
   await page.setViewportSize({ width: 1440, height: 800 });
   await host.focus(); await page.keyboard.press('Control+Shift+b');
-  await dock.getByRole('button', { name: 'Birds', exact: true }).click();
+  await dock.getByRole('tab', { name: 'Birds', exact: true }).click();
   await page.locator('.bird-cams-row[data-bird=dove] button').click();
   await page.waitForFunction(() => document.body.classList.contains('bird-riding'));
   const birdBeforeModal = await page.locator('#bird-ride-name').textContent();

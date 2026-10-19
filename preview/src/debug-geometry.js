@@ -2,6 +2,8 @@
 // in scene space (x = east, y = up, z = -north) so it can be tested without
 // WebGL; debug-tools.js turns them into Three.js lines, points and meshes.
 
+import { campusFlightVolumes } from './garden-campus-district.js';
+
 // Mapped rings arrive as [east, north]; the walking model stores [x, z].
 export const ringToScene = ring => ring.map(([east, north]) => [east, -north]);
 
@@ -96,6 +98,8 @@ export function roofRings(world, terrainAt) {
       : [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([x, y]) => [building.center[0] + x * building.size[0] / 2 * c - y * building.size[1] / 2 * s, -building.center[1] - x * building.size[0] / 2 * s - y * building.size[1] / 2 * c]);
     return { ring, top: (building.center?.[2] ?? terrainAt(building.center[0], -building.center[1])) + building.size[2] + 3.1 };
   });
+  // The campus skywalks, as walking.js clears flights of them.
+  for (const volume of campusFlightVolumes(world)) roofs.push({ ring: ringToScene(volume.ring), top: volume.top + 3.1 });
   if (!roofs.length) for (const ring of (world.collisionPolygons ?? []).map(ringToScene)) roofs.push({ ring, top: Math.max(...ring.map(([x, z]) => terrainAt(x, z))) + 23.1 });
   return roofs;
 }

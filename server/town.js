@@ -11,6 +11,7 @@ import { createDevAuth, devAuthAllowed } from './dev-auth.js';
 import { createSharedWorld, migrateWorldCheckpoint } from './world.js';
 import { parseScreeningHosts } from './screenings.js';
 import { configuredOfficeLayout } from './offices.js';
+import { configuredDistrictRevision } from '../preview/src/garden-campus-district.js';
 import { parseCampusOperators } from './campus-leases.js';
 import { createModeration } from './moderation.js';
 import { createGameServer } from './app.js';
@@ -38,6 +39,14 @@ export function workosConfigured(env) {
 
 // Normal development and production both use WorkOS. Explicit fixture mode
 // retains isolated loopback identities for browser acceptance only.
+// Local development only (Val, 2026-10-18): RIVER_OAKS_DEV_INVITE_OVERRIDE=1 on the loopback dev town (local identities,
+// the acceptance fixture) makes every local identity an invited guest of owner-only homes and offices, never their
+// owner. Real sign-in, production and Vercel never honour it.
+export function devInviteOverride({ mode, env }) {
+  return mode === 'local' && env.RIVER_OAKS_ACCEPTANCE_FIXTURE === '1' && env.RIVER_OAKS_DEV_INVITE_OVERRIDE === '1'
+    && env.NODE_ENV !== 'production' && !env.VERCEL;
+}
+
 export function chooseAuth({ env, origin, devAuth = 'auto' }) {
   if (devAuth === 'workos' || env.RIVER_OAKS_DEV_AUTH === 'workos') return 'workos';
   if (devAuth === 'local' && devAuthAllowed({ origin, env })) return 'local';
@@ -56,7 +65,9 @@ export function validateOrigin(origin) {
 export async function createTown({ env = process.env, origin, devAuth = 'auto', staticRoot = resolve('dist/preview') } = {}) {
   validateOrigin(origin);
   const worldId=validateWorldId(env.WORLD_ID??DEFAULT_WORLD_ID);
-  const data = await loadDistrictData();
+  // The district revision; unset or unknown keeps the garage (the default and the rollback, #507).
+  const districtRevision=configuredDistrictRevision(env.RIVER_OAKS_DISTRICT_REVISION,{onInvalid:()=>console.warn(JSON.stringify({event:'district_revision_ignored'}))});
+  const data = await loadDistrictData({ districtRevision });
   const moderation = await createModeration(resolve(env.MODERATION_FILE ?? '.runtime/moderation.json'));
   const mode = chooseAuth({ env, origin, devAuth });
   const admins = (env.WAITLIST_ADMIN_USER_IDS ?? '').split(',').map(id => id.trim()).filter(Boolean);
@@ -68,6 +79,8 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
   const screeningHosts=parseScreeningHosts(env.RIVER_OAKS_SCREENING_HOSTS,{onInvalid:()=>console.warn(JSON.stringify({event:'screening_host_grant_ignored'}))});
   // Jevica's office layout; unset or unknown keeps the legacy room (the default and the rollback).
   const officeLayout=configuredOfficeLayout(env.RIVER_OAKS_OFFICE_LAYOUT,{onInvalid:()=>console.warn(JSON.stringify({event:'office_layout_ignored'}))});
+  const devGuests=devInviteOverride({mode,env})?{isDevGuest:()=>true}:{};
+  if(devGuests.isDevGuest)console.warn(JSON.stringify({event:'dev_invite_override',scope:'every local identity is an invited guest of owner-only homes and offices'}));
   // Garden campus lease operators are explicit account ids; none configured keeps leasing closed.
   const campusOperators=parseCampusOperators(env.RIVER_OAKS_CAMPUS_OPERATOR_IDS,{onInvalid:()=>console.warn(JSON.stringify({event:'campus_operator_ignored'}))});
   const officeDesk=createMemoryOfficeDesk();
@@ -93,7 +106,7 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
     if(!entry || entry.meta?.template!=='region-v1')return {ok:false,error:'missing'};
     const candidate=await catalog.revisionCandidate(id,expectedDraftVersion);
     if(!candidate.ok)return {ok:false,error:candidate.reason};
-    const options=mode==='local'?{isAdmin:auth.isAdmin,worldId:id,screeningHosts,officeLayout,campusOperators}:{worldId:id,screeningHosts,officeLayout,campusOperators};
+    const options=mode==='local'?{isAdmin:auth.isAdmin,...devGuests,worldId:id,screeningHosts,officeLayout,campusOperators}:{worldId:id,screeningHosts,officeLayout,campusOperators};
     const migrated=migrateWorldCheckpoint({fromData:await catalog.getRegion(id),toData:candidate.worldData,
       checkpoint:entry.world.checkpoint(),...options});
     if(!migrated.ok)return migrated;
@@ -115,7 +128,7 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
       if(!meta && id!==worldId)return null;
       const worldData=meta?.template==='region-v1'?await catalog.getRegion(id)
         :id===DEFAULT_WORLD_ID?data:{...data,title:meta?.title??data.title};
-      const world=createSharedWorld(worldData,mode==='local'?{isAdmin:auth.isAdmin,worldId:id,screeningHosts,officeLayout,campusOperators}:{worldId:id,screeningHosts,officeLayout,campusOperators});
+      const world=createSharedWorld(worldData,mode==='local'?{isAdmin:auth.isAdmin,...devGuests,worldId:id,screeningHosts,officeLayout,campusOperators}:{worldId:id,screeningHosts,officeLayout,campusOperators});
       const game=createGameServer({characterMetrics,characterStudioEnabled:env.RIVER_OAKS_CHARACTER_STUDIO==='1',auth:sharedAuth,world,worldTitle:meta?.title??worldData.title,waitlist,waitlistAdmins:admins,debugReports,landmarks:createWorldLandmarks({catalog,storeFor:landmarkStoreFor,worldId:id,worldTitle:meta?.title??worldData.title}),social,groups,profiles,events,workplace,officeDesk,avatarPreferences,characters,cyclingMiles,presence,worldDirectory,moderation,origin,staticRoot,
         ...(id===worldId?{worldCatalog:catalog}:{}),...(mode==='local'?{isAdmin:auth.isAdmin}:{}),
         ...(id===worldId?{onApplyRegion:applyRegion}:{}),regionSha256:meta?.regionSha256,

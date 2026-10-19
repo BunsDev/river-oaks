@@ -4,6 +4,7 @@
 process.env.RIVER_OAKS_DEV_TOWN='off';
 import { createServer as createViteServer } from 'vite';
 import { configuredOfficeLayout } from '../offices.js';
+import { configuredDistrictRevision } from '../../preview/src/garden-campus-district.js';
 import { parseScreeningHosts } from '../screenings.js';
 import { createGameServer } from '../app.js';
 import { createMemoryCharacterStore } from '../character-store.js';
@@ -26,7 +27,8 @@ const webPort=Number(process.env.RIVER_OAKS_TEST_WEB_PORT??5180),townPort=Number
 const phoneHost=phoneFixtureHost(process.env.RIVER_OAKS_PHONE_FIXTURE_HOST);
 const webHost=phoneHost??'127.0.0.1';
 const origin=`http://${webHost}:${webPort}`;
-const data=await loadDistrictData();
+// RIVER_OAKS_DISTRICT_REVISION=river-oaks-gardens-3 serves the Gardens campus (#507); unset keeps the garage.
+const data=await loadDistrictData({districtRevision:configuredDistrictRevision(process.env.RIVER_OAKS_DISTRICT_REVISION)});
 let app;
 const identity=req=>{
   // Residents carry their GitHub username; the owner is a Jevica account. The

@@ -51,7 +51,7 @@ export function buildDistrictFantasy(world) {
     add(dome,warm,at(2.75,5.55,.39),[.065,.065,.05],yaw,store.id);
   }
   for(const [index,building] of world.buildings.entries()) {
-    if(building.kind==='parking')continue;
+    if(building.kind==='parking'||building.kind==='campus')continue;
     const [x,north,base]=building.center,roof=base+visibleRoofHeight(world,building);
     const radius=Math.min(2.6,building.size[0]*.17,building.size[1]*.17);
     if(radius<1)continue;
