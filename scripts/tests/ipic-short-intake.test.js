@@ -59,7 +59,10 @@ test('records: a new versioned id, provenance per part, and approval of these ex
 
 test('the approved silent short and the fixture are not a second film with dialogue and music', { skip: !hasFfmpeg && 'ffmpeg and ffprobe are not installed' }, () => {
   const sources = JSON.parse(readFileSync(new URL('preview/public/assets/ipic/screening/sources.json', root), 'utf8'));
-  for (const entry of sources.media) {
+  // Only these two: the approved second short (#547) really has dialogue and music.
+  const named = sources.media.filter(entry => ['ipic-original-v1', 'ipic-fixture-v1'].includes(entry.id));
+  assert.equal(named.length, 2);
+  for (const entry of named) {
     const dir = mkdtempSync(join(tmpdir(), 'ipic-intake-'));
     try {
       for (const file of entry.files) copyFileSync(new URL(file.path, root), join(dir, file.path.split('/').pop()));
@@ -72,6 +75,19 @@ test('the approved silent short and the fixture are not a second film with dialo
       assert.match(problems, /already names another film/);
     } finally { rmSync(dir, { recursive: true, force: true }); }
   }
+});
+
+test('the registered second short passes intake on its own record', { skip: !hasFfmpeg && 'ffmpeg and ffprobe are not installed' }, () => {
+  const sources = JSON.parse(readFileSync(new URL('preview/public/assets/ipic/screening/sources.json', root), 'utf8'));
+  const entry = sources.media.find(item => item.id === 'ipic-two-seats-v1');
+  const dir = mkdtempSync(join(tmpdir(), 'ipic-intake-'));
+  try {
+    for (const file of entry.files) copyFileSync(new URL(file.path, root), join(dir, file.path.split('/').pop()));
+    writeFileSync(join(dir, 'sources.candidate.json'), JSON.stringify(entry));
+    const result = checkCandidate(dir);
+    assert.deepEqual(result.problems, []);
+    assert.notEqual(result.state, 'draft');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
 test('a synthetic candidate with stereo sound passes as an engineering candidate, and as approved only with matching hashes', { skip: !hasFfmpeg && 'ffmpeg and ffprobe are not installed' }, () => {
