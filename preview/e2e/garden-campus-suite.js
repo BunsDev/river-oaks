@@ -113,7 +113,16 @@ async page => {
  await toFloor2(stranger, 'stranger');
  await walk(stranger, [[12.4, 57.5], [16, 57.5], [16, door[1]]], 'T1-201’s door (stranger)');
  await walkTo(stranger, [12.6, door[1]], null, { strides: 12 });
- const kept = await where(stranger);
+ // The town decides, so read its position for the stranger once it stops changing. The HUD can
+ // still show a predicted step the town is refusing: a 3 fps software page read u = 14.38 while
+ // the town held the stranger at the door line (its last accepted u is 14.50).
+ let held = null;
+ for (let read = 0; read < 20; read++) {
+  const position = (await self(stranger))?.position;
+  if (held && position && Math.hypot(position[0] - held[0], position[1] - held[1]) < 1e-6) break;
+  held = position;await stranger.waitForTimeout(500);
+ }
+ const kept = sourceToCampus([held[0], held[1]]);
  check(kept[0] > 14.4, `The suite door keeps the stranger in the gallery (at [${kept.map(n => n.toFixed(2))}])`);
  check(await stranger.evaluate(() => !document.body.textContent.includes('T1-201 fit-out')), 'The tenant’s private work never reaches the stranger’s page');
  await strangerContext.close();

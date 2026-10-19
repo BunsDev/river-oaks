@@ -162,9 +162,36 @@ here and in #508's ledger.
   - Against the old `act()`, both tests fail with the CI symptom
     `['Asked for suite T1-201.', 'Available']`.
 
+## Later hosted results
+
+- **`79a5b580`:** `preview`, the `campus` shard and macOS desktop were all green. The desktop
+  job's first attempt failed after every check had passed. The runner's GPU process crashed
+  on its own (`GPU process exited unexpectedly: exit_code=6`, `CONTEXT_LOST_WEBGL`). After
+  the restore, three.js released objects from the lost context: 434
+  "object does not belong to this context" warnings, which tripped the e2e's console
+  assertion. The rerun passed, and the same dialog change was green on #525 `fa0e8410`. The
+  console check was left as it is.
+- **`27ac42e8`:** #508 `d456fbca` merged (main `5bb321ba`). Two `server/world.js` hunks keep
+  #510's side:
+  - the `campusAdmission` default stays undefined, so admission falls back to #509's
+    `suiteAccess` (#508 alone fails closed with `() => false`);
+  - the `campusWorkstation` accessor stays.
+
+  Campus, world, interior and walking suites pass 191/191 with Redis, and macOS desktop is
+  green. Two failures:
+  - `verify` failed at the repo-wide gitleaks history scan of #517's `00a74a7c`, fixed by #546;
+  - the `campus` shard failed `garden-campus-suite` at "The suite door keeps the stranger in
+    the gallery (at [14.38,51.20])", job 117835615845.
+- **The stranger check read a prediction.** The merge changed no campus code. Walking a
+  stranger toward T1-201's door in 2 cm steps against `createSharedWorld` at this head, the
+  last accepted u is 14.500 (the door line), and 14.48 is refused `private_suite`. The
+  journey read the HUD, the page's predicted position, 120 ms after releasing W, on a 3 fps
+  software page whose correction had not arrived. The check now reads the town's own
+  snapshot position for the stranger once two reads 500 ms apart agree. Local run:
+  `garden-campus-suite` 10/10, stranger held at [14.50, 51.05].
+
 ## Still to do (in order)
 
-1. Get the `campus` shard and macOS desktop green on the head that carries this fix. The
-   macOS desktop job was green at `8f4a20ac`. Then hand the head SHA to river-oaks-b5; it
-   lands #527 after #537.
-2. When #537 lands (d8), merge main and re-run.
+1. Get `preview` and the `campus` shard green on the head that carries the journey fix, and
+   `verify` once #546 is on main.
+2. When #537 lands (d8), merge main and re-run, then hand the head SHA to river-oaks-b5.
