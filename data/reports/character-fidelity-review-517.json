@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "status": "current-local-gates-verified;signed-source-and-hosted-pending",
+  "status": "reviewed-local-candidate-and-signed-source-verified;hosted-verdict-external",
   "reviewedAt": "2026-10-19T04:10:27.262106+00:00",
   "revision": "54b5cd62daddb2abf0f8cc1d9e0b6427698da6da",
   "integratedMain": "7c10f418b0ea519bc0d2b84bb65869e3c7cdae0e",
@@ -39,7 +39,7 @@
   },
   "limits": [
     "Independent review is code/evidence review, not merge authorization.",
-    "Failed G/H/J/L full runs and diagnostics remain retained. M local gates pass with the fixture startup barrier and authoritative lift precondition. Controlled publication delay proved the lift ordering gap; historical H/J/L causes and stable heavy initial rendering remain unproven. Signed-source and exact hosted proof remain separate.",
+    "M local gates and signed source binding are verified; actual F/G/C0 measurements retain their original provenance through applicability proofs. G/H/J/L failures, exact-H/J/L-causes uncertainty, heavy initial-load and performance reproduction gaps remain explicit. Final-head hosted verdict is external on PR545/live task.",
     "Original three IPIC forward-clearance findings and native/live-auth/human/AAA/whole-town/thermal limits remain explicit.",
     "P4/P5 novice trials remain waived, not passed."
   ],
@@ -66,8 +66,8 @@
     "core": "Mpassed11tasks:131tooling/3740preview+1existingVince skip/984server0skip/76desktop/149Python66warnings;build/Ruff472/offlineexpected2/secrets passed",
     "full": "Mpassed18tasks;16worldjourneys,24sharedjourneys across5fixturemodeswithfullrendering,18IPICchecks",
     "render": "Mphone113/native142-module/generatedbytes andGselectedbrowser/goldenapplicabilityverified;originalreceiptsunchanged",
-    "committedInputBinding": "1330stagedruntime/testGitblobs and142changedinputs matchMmanifest; signedsourceverification follows",
-    "hostedExactHead": "Mnotpushed;PR545draft"
+    "committedInputBinding": "Signed d11a6ee4ce794bc3f5f061bd48d5af8ce9a7cff9:1330runtime/testGitblobs/142changedinputs matchMmanifest",
+    "hostedExactHead": "Authoritative final-head verdict is onPR545 checks andprimarylive register;this receipt attests testedsource binding"
   },
   "historicalReviewSnapshot": {
     "revision": "132e11b9829635f5d305a68f9fc70d40c96d9d6a",
@@ -164,7 +164,7 @@
       "skips": 0,
       "independentReview": "Actual2filepatch/controlorderingreviewed;10trackedtestsindependentlypassed",
       "finding": "Controlledinitialticketrequestdelayleavesavatarreadybutdisconnected;singleoriginalarrivalreturnsReconnectthen30sassertionfailsafteradmissionrecovers. ExactLcauseunclassified.",
-      "coverage": "Mcore/full passed;actualF/G/C0 retained only through exact applicability proof;signed-source and hosted verification follow."
+      "coverage": "Mcore/full andsigned1330blob sourcebinding verified;F/G/C0 retained byexactproof;finalheadhostedverdict external onPR545/live task."
     }
   ],
   "finalConsistencyAudit": {
@@ -176,13 +176,13 @@
     "scope": "Historical checkpoint consistency audit;G proof is in historicalEvidenceAuditG, J proof in currentEvidenceAudit and candidateVerification."
   },
   "currentEvidenceAudit": {
-    "status": "independent-input-applicability-verified;current-local-gates-passed;signed-hosted-pending",
+    "status": "independent-input-applicability-plus-local-gates-and-signed-source-verified;hosted-verdict-external",
     "runtimeManifestSha256": "3e04a4ae0af73d8e452f02024685108ef2d3808cc5822461ec878400b2e0f608",
     "boundIndexInputs": 1330,
     "changedInputsMatched": 142,
     "runtimeFilesMatched": 1307,
     "sourceReview": "Independent2filepatchandpairedproofauditclear;1307runtime/1330index/142changed/113phoneverified;tracked10testsindependentlypassed",
-    "scope": "Independent M input/applicability audit plus actual completed M core/full profiles; signed-source and exact-hosted verification remain separate.",
+    "scope": "M input/applicability audit and completed local profiles, followed by actual signed HEAD verification; exact final-head hosted verdict is external.",
     "checkedAt": "2026-10-19T10:38:02.753407+00:00",
     "explicitReceiptLinksVerified": 174,
     "receiptAudit": "Parent current-M audit verified174 explicit file/SHA links after actual core/full metadata renewal; this is distinct from the earlier independent source/input review and is not hosted proof.",
@@ -195,7 +195,7 @@
       "sha256": "ce95f2d692040cacf30b7cbba57a6ce0b1dac0126963b56607e700a31c9d3a41"
     },
     "localGatesVerifiedAt": "2026-10-19T11:29:27.475098+00:00",
-    "assessment": "Independent runtime/receipt/index audit passed at its recorded checkedAt. Required M core/full subsequently passed on unchanged frozen inputs; no signed or hosted verdict is inferred."
+    "assessment": "Independent input/receipt/index audit retains its recorded checkedAt. Subsequent M core/full and all1330 signed HEAD blobs were verified; no receipt revision or measurement timestamp is restamped."
   },
   "verifiedCheckpoint": {
     "commit": "54b5cd62daddb2abf0f8cc1d9e0b6427698da6da",
@@ -296,10 +296,11 @@
   },
   "officeRegressionReceipt": {
     "file": "data/reports/character-fidelity-review-office-regression-517.json",
-    "sha256": "0c23e645d72d0fe9186e7c53a5660794d4b648cfd97d28dfad11f115a20e657f"
+    "sha256": "3618368429e4cfc9531fec3e8e8472346ab69b948a9487bd3c884d6dc001dec4"
   },
   "stockFocusedReceipt": {
     "file": "data/reports/character-fidelity-review-campus-focused-517.json",
     "sha256": "2df101c69cdfaf72ea7e2967f6cc9f0527216f19c95d85bbb92f991064298a46"
-  }
+  },
+  "verifiedSourceCommit": "d11a6ee4ce794bc3f5f061bd48d5af8ce9a7cff9"
 }

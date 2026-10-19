@@ -6,7 +6,16 @@ captures alongside the executable [capability contract](../../preview/src/charac
 and [integration guide](../character-fidelity.md).
 
 <!-- character-fidelity-current-review:start -->
-Current review candidate M passed stock office (21 checks), suite (10), ten readiness regressions, core (11 tasks) and full (18 tasks, 16 world journeys, 24 shared journeys/five fixture modes with full rendering and 18 IPIC checks). Runtime `3e04a4ae0af73d8e452f02024685108ef2d3808cc5822461ec878400b2e0f608` matches 1,330 staged runtime/test blobs. Signed source and exact final-head hosted proof remain pending. Historical failed runs and performance limits below remain explicit.
+Signed source `d11a6ee4ce794bc3f5f061bd48d5af8ce9a7cff9` matches all 1,330 tested
+runtime/test Git blobs. Candidate M passed 21 office checks, ten suite checks,
+ten readiness regressions, core's eleven tasks and full's 18 tasks. Full includes
+16 world journeys, 24 shared journeys across five fixture modes with full
+rendering, and 18 IPIC checks.
+
+Execution receipts retain their actual precommit dirty-tree metadata. Check
+[PR545](https://github.com/BunsDev/river-oaks/pull/545/checks) and the primary live
+task register for the exact final-head hosted verdict. Historical failures and
+performance limits below remain explicit.
 <!-- character-fidelity-current-review:end -->
 
 ## Accepted baseline

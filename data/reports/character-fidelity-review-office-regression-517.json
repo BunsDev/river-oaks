@@ -269,5 +269,6 @@
     "readinessTests": 10,
     "coreTasks": 11,
     "fullTasks": 18
-  }
+  },
+  "verifiedSourceCommit": "d11a6ee4ce794bc3f5f061bd48d5af8ce9a7cff9"
 }

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "status": "fixture-startup-and-authoritative-lift-focused-and-full-verified;delivery-pending",
+  "status": "fixture-startup-and-authoritative-lift-focused-full-and-signed-source-verified;hosted-verdict-external",
   "recordedAt": "2026-10-19T07:38:48.517605+00:00",
   "failingRuntimeManifestSha256": "4ee88f688473ae7e12dcae6683df8d30c1a409d9e693f35a9697c6020e00c3d5",
   "candidateRuntimeManifestSha256": "3e04a4ae0af73d8e452f02024685108ef2d3808cc5822461ec878400b2e0f608",
@@ -1692,7 +1692,7 @@
   "currentStartupBarrier": {
     "runtimeManifestSha256": "3e04a4ae0af73d8e452f02024685108ef2d3808cc5822461ec878400b2e0f608",
     "status": "focused-browser-regressions-and-required-core-full-verified",
-    "remaining": "Signedsource/finalheadhosted verification;stableheavyinitialrendering andexactH/J/Lfullcauses remainunproven.",
+    "remaining": "Final-headhosted verdict external onPR545;stableheavyinitialrendering andexactH/J/Lfullcauses notestablished.",
     "sources": [
       {
         "file": "preview/e2e/garden-campus-readiness.js",
@@ -1786,10 +1786,10 @@
     "suiteInSameFull": "passedall10checks",
     "remaining": "Classifyofficefixturestartup/arrival failure;thenrequiredfull18/shared/IPIC/signed/hosted"
   },
-  "currentVerification": "ActualMstockoffice21/suite10,10readinessregressions,core11/full18passed;unsigned/unpushed;exacthostedpending",
+  "currentVerification": "ActualMstockoffice21/suite10,10readinessregressions,core11/full18andsigned1330blobsourcebindingverified;exactfinalheadhostedexternalonPR545/live task",
   "officeRegressionReceipt": {
     "file": "data/reports/character-fidelity-review-office-regression-517.json",
-    "sha256": "0c23e645d72d0fe9186e7c53a5660794d4b648cfd97d28dfad11f115a20e657f"
+    "sha256": "3618368429e4cfc9531fec3e8e8472346ab69b948a9487bd3c884d6dc001dec4"
   },
   "stockFocusedReceipt": {
     "file": "data/reports/character-fidelity-review-campus-focused-517.json",

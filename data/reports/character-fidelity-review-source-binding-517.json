@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "status": "historical-verified-source-checkpoint;current-integration-pending",
-  "recordedAt": "2026-10-19T06:23:00.751592+00:00",
+  "status": "signed-source-verified;final-head-hosted-verdict-external",
+  "recordedAt": "2026-10-19T11:31:50.891434+00:00",
   "checkpoints": [
     {
       "commit": "54b5cd62daddb2abf0f8cc1d9e0b6427698da6da",
@@ -18,19 +18,52 @@
       "signature": "Good ED25519 git signature for repository author; prohibited-authorship check empty",
       "push": "normal feature push132e11b9\u219254b5cd62",
       "method": "Compared each expected runtime/changed input SHA256 and size against staged Git blobs, then HEAD blobs after signed commit. Executed receipts retain precommit132e11b9/dirty state; no clean-execution revision invented."
+    },
+    {
+      "commit": "d11a6ee4ce794bc3f5f061bd48d5af8ce9a7cff9",
+      "integratedMain": "7c10f418b0ea519bc0d2b84bb65869e3c7cdae0e",
+      "runtimeManifestSha256": "3e04a4ae0af73d8e452f02024685108ef2d3808cc5822461ec878400b2e0f608",
+      "boundGitBlobInputs": 1330,
+      "changedInputs": 142,
+      "inputReceipt": {
+        "commit": "d11a6ee4ce794bc3f5f061bd48d5af8ce9a7cff9",
+        "file": "data/reports/character-fidelity-review-verification-inputs-517.json",
+        "sha256": "ca4aad083c2c9090ef2ae0313174925597b41417569e749462db1ce8f5de3599"
+      },
+      "checks": "Actual Mcore11/full18;16world,24shared/5fixturemodes/fullrendering,18IPIC;focusedoffice21/suite10/10unit;unchangedselectedrender/native/phoneworkloads retainactualG/F/C0provenance",
+      "signature": "git verify-commit returned0;authorprovenance present;no coauthor/generated footer",
+      "method": "All1330runtime/testGitblob sizes/SHA256 matchedstagedindex then signedHEAD. Executionreceipts retain actual54b5/dirtymerge metadata;no cleanexecutionrevision invented. Metadata-onlyproofcommit mayfollow;finalHEADbinding/CIverdict are recordedonPR545 andprimarylive task."
     }
   ],
   "currentCandidate": {
     "integratedMain": "7c10f418b0ea519bc0d2b84bb65869e3c7cdae0e",
     "runtimeManifestSha256": "3e04a4ae0af73d8e452f02024685108ef2d3808cc5822461ec878400b2e0f608",
     "changedInputs": 142,
-    "verification": "Mcore11/full18,focusedoffice21/suite10browserchecks/10unitregressions passed;1330indexblobs matched;not yet signed/current-pushed",
+    "verification": "Mcore11/full18 andsigned1330blob sourcebinding verified;PR545/primarylive register carryexactfinalheadhostedverdict",
     "stagedIndexBinding": {
       "ref": "index",
       "boundInputs": 1330,
       "changedInputs": 142,
-      "runtime": "3e04a4ae0af73d8e452f02024685108ef2d3808cc5822461ec878400b2e0f608"
-    }
+      "runtime": "3e04a4ae0af73d8e452f02024685108ef2d3808cc5822461ec878400b2e0f608",
+      "scope": "Historical precommit index comparison; signed HEAD proof is currentCandidate.committedInputBinding."
+    },
+    "sourceCommit": "d11a6ee4ce794bc3f5f061bd48d5af8ce9a7cff9",
+    "committedInputBinding": {
+      "commit": "d11a6ee4ce794bc3f5f061bd48d5af8ce9a7cff9",
+      "integratedMain": "7c10f418b0ea519bc0d2b84bb65869e3c7cdae0e",
+      "runtimeManifestSha256": "3e04a4ae0af73d8e452f02024685108ef2d3808cc5822461ec878400b2e0f608",
+      "boundGitBlobInputs": 1330,
+      "changedInputs": 142,
+      "inputReceipt": {
+        "commit": "d11a6ee4ce794bc3f5f061bd48d5af8ce9a7cff9",
+        "file": "data/reports/character-fidelity-review-verification-inputs-517.json",
+        "sha256": "ca4aad083c2c9090ef2ae0313174925597b41417569e749462db1ce8f5de3599"
+      },
+      "checks": "Actual Mcore11/full18;16world,24shared/5fixturemodes/fullrendering,18IPIC;focusedoffice21/suite10/10unit;unchangedselectedrender/native/phoneworkloads retainactualG/F/C0provenance",
+      "signature": "git verify-commit returned0;authorprovenance present;no coauthor/generated footer",
+      "method": "All1330runtime/testGitblob sizes/SHA256 matchedstagedindex then signedHEAD. Executionreceipts retain actual54b5/dirtymerge metadata;no cleanexecutionrevision invented. Metadata-onlyproofcommit mayfollow;finalHEADbinding/CIverdict are recordedonPR545 andprimarylive task."
+    },
+    "deliveryEvidence": "https://github.com/BunsDev/river-oaks/pull/545/checks"
   },
   "historicalAttemptH": {
     "integratedMain": "7c10f418b0ea519bc0d2b84bb65869e3c7cdae0e",
