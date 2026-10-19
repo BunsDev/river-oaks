@@ -2,10 +2,12 @@ import './plaza-table-games.css';
 import './plaza-darts.css';
 import { attachGuide } from './salon-guide.js';
 import { atDartsLine } from './plaza-salon-plan.js';
-import { RINGS, SECTORS, THROW, accelFor, checkout, handDraw, landingOf, releaseSpeed, replay, throwLanding } from './darts-rules.js';
+import { RINGS, SECTORS, THROW, accelFor, checkout, handDraw, landingOf, releaseSpeed, replay, scoreAt, throwLanding } from './darts-rules.js';
 import { throwPoint } from './darts-opponent.js';
 import { seededRandom } from './seeded-random.js';
 import { createHeldControls } from './throw-controls.js';
+import { soundToggle, throwSounds } from './throw-sounds.js';
+import { flyOnBoard } from './board-flight.js';
 
 // Darts at the board on the plaza's south wall: 501, double out, for whoever stands at
 // the throwing line, against a plaza regular or two players passing the turn. A throw is
@@ -33,8 +35,9 @@ const tenth = n => Math.round(n * 10) / 10;
 
 export function createPlazaDarts({ host = document.querySelector('#viewport'), getMirror = () => null, getBoard = () => null, getPose = () => null, focusWorld = () => {},
   random = Math.random, now = () => performance.now(), replyDelay = 650, reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false,
-  shared = null, storage = globalThis.localStorage } = {}) {
-  let game = null, release = [0, THROW.nominal], ready = now(), steady = false, last = null, generation = 0, thinking = false, frame = 0, lastKey = '';
+  shared = null, storage = globalThis.localStorage, sounds = throwSounds() } = {}) {
+  // pending: a shared throw is with the town; flying: a dart is in the air on the sheet.
+  let game = null, release = [0, THROW.nominal], ready = now(), steady = false, last = null, generation = 0, thinking = false, pending = false, flying = false, frame = 0, lastKey = '';
   const controls = createHeldControls({ keys: KEYS, step: STEP, rate: RATE, now,
     apply: move => { release = clampRelease([release[0] + (move.across ?? 0), release[1] + (move.accel ?? 0)]); steady = false; drawReticle(); } });
   let guide = true;
@@ -68,6 +71,7 @@ export function createPlazaDarts({ host = document.querySelector('#viewport'), g
   attachGuide(panel, 'darts');
   const $ = selector => panel.querySelector(selector);
   const board = $('.darts-board'), status = $('.table-game-status'), throwButton = $('[data-darts-action="throw"]'), guideButton = $('[data-darts-action="guide"]');
+  guideButton.after(soundToggle(sounds));
 
   // The shared line's match from the town's snapshot, or null.
   const line = () => shared?.line() ?? null;
@@ -124,7 +128,7 @@ export function createPlazaDarts({ host = document.querySelector('#viewport'), g
   function drawReticle() {
     const group = board.querySelector('.darts-reticle');
     if (!group || !game) return;
-    const { state } = round(), active = state.winner === null && !thinking && yours(state);
+    const { state } = round(), active = state.winner === null && !thinking && !flying && yours(state);
     const [x, accel] = active ? swayed() : release, fill = (accel - THROW.accel[0]) / (THROW.accel[1] - THROW.accel[0]);
     $('.darts-gauge-fill').style.setProperty('--fill', fill.toFixed(4));
     const gauge = $('.darts-gauge'), speed = releaseSpeed(accel), text = `${accel.toFixed(1)} m/s², release at ${speed.toFixed(2)} m/s`;
@@ -153,7 +157,7 @@ export function createPlazaDarts({ host = document.querySelector('#viewport'), g
     const mark = $('.darts-gauge-last');
     mark.hidden = !last; if (last) mark.style.setProperty('--at', ((last.release[1] - THROW.accel[0]) / (THROW.accel[1] - THROW.accel[0])).toFixed(4));
     $('.darts-gauge-bull').style.setProperty('--at', ((THROW.nominal - THROW.accel[0]) / (THROW.accel[1] - THROW.accel[0])).toFixed(4));
-    throwButton.setAttribute('aria-disabled', String(state.winner !== null || thinking || !yours(state)));
+    throwButton.setAttribute('aria-disabled', String(state.winner !== null || thinking || pending || flying || !yours(state)));
     guideButton.setAttribute('aria-pressed', String(guide));
     $('[data-darts-action="new"]').hidden = Boolean(shared) || state.winner === null;
     for (const button of panel.querySelectorAll('[data-darts-mode]')) button.setAttribute('aria-pressed', String(button.dataset.dartsMode === game.mode));
@@ -187,21 +191,47 @@ export function createPlazaDarts({ host = document.querySelector('#viewport'), g
   // The hand's error for a practice dart, seeded from the game and the dart, so it replays.
   const handFor = dart => { const next = seededRandom((Math.imul(game.seed >>> 0, 0x5bd1e995) ^ Math.imul(dart + 1, 0x27d4eb2f)) >>> 0); return [handDraw(next() * 0.999998 + 0.000001), handDraw(next() * 0.999998 + 0.000001)]; };
 
-  function press() {
-    const { state } = round();
-    if (!game || state.winner !== null || thinking || !yours(state)) return;
-    const thrown = swayed(), sent = [tenth(thrown[0]), Math.round(thrown[1] * 100) / 100];
-    last = { release: sent, before: state.darts.length };
-    if (shared) { pickUp(); render(); void send({ action: 'throw', release: sent }); return; }
-    land(throwLanding(sent, handFor(game.points.length))); pickUp(); render(); void regular();
+  // The dart in the air: from the hand below the board onto where it landed, then its thunk.
+  // Resolves false if the sheet closed or a new game started meanwhile (those clear `flying`
+  // themselves, so a later dart's flight is never cut short).
+  async function fly(point, accel = last?.release?.[1] ?? THROW.nominal) {
+    const ticket = generation, strength = Math.min(1, Math.max(0.2, (accel - THROW.accel[0]) / (THROW.accel[1] - THROW.accel[0])));
+    flying = true; drawReticle();
+    try {
+      sounds.play('release', { strength });
+      const arrived = await flyOnBoard(board, { from: [VIEW / 2, VIEW - 6], to: toScreen(point), reducedMotion, now, className: 'darts-flight', cancelled: () => ticket !== generation || !panel.open });
+      if (arrived) sounds.play(scoreAt(point).value > 0 ? 'dart' : 'dart-miss', { strength });
+      return arrived;
+    } finally { if (ticket === generation) flying = false; }
   }
 
-  // Shared matches: the town answers, and its snapshot brings the darts back.
+  async function press() {
+    const { state } = round();
+    if (!game || state.winner !== null || thinking || pending || flying || !yours(state)) return;
+    sounds.unlock();
+    const thrown = swayed(), sent = [tenth(thrown[0]), Math.round(thrown[1] * 100) / 100];
+    last = { release: sent, before: state.darts.length };
+    if (shared) { pickUp(); void send({ action: 'throw', release: sent }); return; }
+    const point = throwLanding(sent, handFor(game.points.length));
+    if (!(await fly(point))) return;
+    land(point); pickUp(); render(); void regular();
+  }
+
+  // Shared matches: the town answers, and its snapshot brings the darts back. A reply for a
+  // sheet closed meanwhile is dropped (`ticket`). A throw holds the button until the town answers.
   async function send(message) {
+    const ticket = generation, throwing = message.action === 'throw';
+    if (throwing) { pending = true; render(); }
     let reply;
     try { reply = await shared.send({ type: 'darts', lineId: shared.lineId, ...message }); }
     catch (error) { reply = { ok: false, message: error.message }; }
+    finally { if (throwing && ticket === generation) pending = false; }
+    if (ticket !== generation) return;
     game.said = reply?.ok ? '' : reply?.message ?? 'The board did not take that.';
+    // A throw the town took flies to where the town landed it: the reply names the
+    // thrower's own dart, ahead of any the regular answers with.
+    const landed = throwing && reply?.ok ? reply.darts?.points?.[reply.thrown] ?? null : null;
+    if (landed && !(await fly(landed))) return;
     lastKey = ''; render();
   }
   function renderShared() {
@@ -231,7 +261,9 @@ export function createPlazaDarts({ host = document.querySelector('#viewport'), g
         render();
         await new Promise(resolve => setTimeout(resolve, replyDelay));
         if (ticket !== generation) return;
-        land(throwPoint(state, game.seed));
+        const point = throwPoint(state, game.seed);
+        if (!(await fly(point, THROW.nominal)) || ticket !== generation) return;
+        land(point); render();
       }
     } finally { if (ticket === generation) { thinking = false; pickUp(); render(); } }
   }
@@ -242,9 +274,9 @@ export function createPlazaDarts({ host = document.querySelector('#viewport'), g
     try { storage?.setItem(GUIDE_KEY, guide ? 'on' : 'off'); } catch { /* storage may be unavailable */ }
     render();
   });
-  $('[data-darts-action="new"]').addEventListener('click', () => { generation++; thinking = false; last = null; newGame({ wins: game.wins }); mirror(); render(); void regular(); throwButton.focus(); });
-  for (const button of panel.querySelectorAll('[data-darts-mode]')) button.addEventListener('click', () => { if (game.mode === button.dataset.dartsMode) return; generation++; thinking = false; last = null; newGame({ mode: button.dataset.dartsMode, wins: [0, 0] }); mirror(); render(); void regular(); });
-  const close = () => { if (!panel.open) return; generation++; thinking = false; controls.clear(); panel.close(); cancelAnimationFrame(frame); focusWorld(); };
+  $('[data-darts-action="new"]').addEventListener('click', () => { generation++; thinking = false; pending = false; flying = false; last = null; newGame({ wins: game.wins }); mirror(); render(); void regular(); throwButton.focus(); });
+  for (const button of panel.querySelectorAll('[data-darts-mode]')) button.addEventListener('click', () => { if (game.mode === button.dataset.dartsMode) return; generation++; thinking = false; pending = false; flying = false; last = null; newGame({ mode: button.dataset.dartsMode, wins: [0, 0] }); mirror(); render(); void regular(); });
+  const close = () => { if (!panel.open) return; generation++; thinking = false; pending = false; flying = false; controls.clear(); panel.close(); cancelAnimationFrame(frame); focusWorld(); };
   $('.table-game-close').addEventListener('click', close);
   // The sheet keeps its keys: arrows and WASD line up the release (a tap is one step, a hold
 // keeps moving; Shift for fine moves),
@@ -295,17 +327,18 @@ export function createPlazaDarts({ host = document.querySelector('#viewport'), g
       const view = line(), key = JSON.stringify([view?.points.length, view?.result, view?.invite, view?.players, panel.open && shared.peers().map(peer => peer.id)]);
       if (key === lastKey) return;
       lastKey = key; game ??= sharedGame(); mirror();
-      if (panel.open) render();
+      // A dart in flight draws its hit when it lands, not when the town's snapshot arrives.
+      if (panel.open && !flying) render();
     },
     open, close,
     debug() {
       const hand = { release: release.slice(), swayed: swayed(), guide, steady, landing: landingOf(swayed()), lastRelease: last ? last.release.slice() : null };
-      if (shared) return { open: panel.open, shared: true, line: line(), status: status.textContent, ...hand, buttons: [...panel.querySelectorAll('[data-darts-shared]')].map(button => button.textContent) };
+      if (shared) return { open: panel.open, shared: true, line: line(), status: status.textContent, ...hand, pending, flying, buttons: [...panel.querySelectorAll('[data-darts-shared]')].map(button => button.textContent) };
       if (!game) return { open: panel.open, game: null };
       const { state } = round();
       return { open: panel.open, mode: game.mode, turn: state.turn, scores: state.scores.slice(), darts: state.darts.map(dart => dart.label), thrown: game.points.length, points: game.points.map(p => p.slice()),
         last: state.history.at(-1) ? { player: state.history.at(-1).player, result: state.history.at(-1).result, darts: state.history.at(-1).darts.map(dart => dart.label) } : null,
-        winner: state.winner, ...hand, thinking, status: status.textContent, seed: game.seed };
+        winner: state.winner, ...hand, thinking, flying, status: status.textContent, seed: game.seed };
     },
     // For tests: hold the hand still on a release [across mm, acceleration], or on the
     // release that carries a dart to a point [across, height] in mm. Keys or a drag move it again.
