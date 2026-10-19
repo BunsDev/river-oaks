@@ -8,7 +8,7 @@ async page=>{
   await page.waitForFunction(()=>document.querySelector('#canvas-host')?.dataset.carriageDriverReady==='true'&&window.__riverCarriage?.().placement);
   const panel=page.locator('#panel-toggle');if(await panel.getAttribute('aria-expanded')==='false')await panel.click();
   await openHudSpace(page, 'explore-section');await page.locator('#destination').selectOption({label:'Dior'});
-  if(!await page.locator('.player-settings').evaluate(e=>e.open))await page.locator('.player-settings > summary').click();
+  await page.locator('#play-tab-character').click();
   check(await page.locator('#player-companion').getAttribute('aria-pressed')==='false','Companionship is opt-in');
   await page.waitForFunction(()=>{const c=window.__riverCarriage();return c.princeVisible&&Math.hypot(c.princePosition[0]-c.pose.position[0],c.princePosition[2]-c.pose.position[2])<=8;});
   await page.locator('#player-companion').click();

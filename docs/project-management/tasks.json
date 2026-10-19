@@ -11724,26 +11724,76 @@
       "pr": 448
     },
     {
-      "id": "character-studio-441-integration",
-      "title": "#441 remaining acceptance and validated realistic human integration",
+      "id": "garden-campus-leases-509",
+      "title": "#509 Garden Offices: bounded owner-managed rental leases, tenant/guest grants and persistence (non-charging), paid-mode proposal",
       "status": "active",
       "branches": [
-        "docs/character-studio-441-integration-20261018"
+        "feat/garden-campus-leases-509-20261018"
       ],
-      "owner": "codex-441-goal-20261018",
-      "updatedAt": "2026-10-18T18:53:14.310098+00:00",
-      "leaseUntil": "2026-10-18T20:53:14.310098+00:00",
-      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-441-integration",
-      "ledger": "docs/superpowers/plans/2026-10-18-character-studio-441-integration.md",
+      "owner": "claude:river-oaks-95/agent-509 (5bececff)",
+      "leaseUntil": "2026-10-18T19:04:32Z",
+      "updatedAt": "2026-10-18T17:04:32Z",
+      "nextAction": "Draft PR #522 at 58afa301 (base #506 branch, includes #506 63ef1b10 layout 3.1 and main 5033ea37). Hosted CI all green at 485d4e11 (server 932/932 Redis, preview 3548/3549); rerun for 58afa301 in progress. Remaining: #508 wires campusAccessEnded/campusSuiteAccess, #510 UI + campus desk context + campusSeat, #512 real attachGardenCampus inert test and district migration; paid mode needs Val's decisions. Merge after #506 lands; merge/deploy are separate release actions.",
+      "ledger": "docs/superpowers/plans/2026-10-18-garden-campus-leases-509.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-garden-campus-509-20261018",
+      "issue": 509,
+      "pr": 522,
       "filesOwned": [
-        "docs/superpowers/plans/2026-10-18-character-studio-441-integration.md"
+        "server/campus-leases.js (new)",
+        "shared/garden-campus-lease-contract.js (new)",
+        "server/tests/campus-leases*.test.js (new)",
+        "server/world.js (campus command dispatch, prune, snapshot field, checkpoint v13 section, API accessors)",
+        "server/redis-room.js (writer generation v13/v14, campusOperators option)",
+        "server/world-gateway.js, server/redis-backend.js, server/town.js (RIVER_OAKS_CAMPUS_OPERATOR_IDS threading)",
+        "server/avatar-preferences.js, server/creator-rollout-audit.js (v13 pins)",
+        "server/tests/* (v12->v13 pins only)",
+        "docs/garden-campus-leases.md (new)",
+        "docs/offices.md, docs/multiplayer.md, docs/screenings.md (writer generation prose)",
+        "docs/superpowers/plans/2026-10-18-garden-campus-leases-509.md (new)"
       ],
       "requiredChecks": [
-        "Focused character contract and guide tests",
-        "git diff --check",
-        "project:check against primary live register"
+        "node --test server/tests/campus-leases*.test.js",
+        "pnpm run test:server (isolated REDIS_URL)",
+        "pnpm run verify"
+      ]
+    },
+    {
+      "id": "turning-20261018-cody",
+      "title": "Coordinate planted feet and knees during stationary and walking turns",
+      "status": "active",
+      "branches": [
+        "fix/turning-foot-placement-20261018"
       ],
-      "nextAction": "Reconcile current acceptance and concrete #517 contract dependency; await genuine P4/P5 results without taking over novice-trial owner or PR504."
+      "owner": "cody:turning-office-20261018",
+      "leaseUntil": "2026-10-18T21:00:51.540812+00:00",
+      "updatedAt": "2026-10-18T19:00:51.540812+00:00",
+      "nextAction": "Commit verified patch, open PR, await exact-head CI and land through the repository queue.",
+      "ledger": "docs/superpowers/plans/2026-10-18-turning.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-turning-20261018",
+      "filesOwned": [
+        "data/reports/turning-core-20261018.json",
+        "data/reports/turning-browser-20261018.json",
+        "docs/project-management/tasks.json",
+        "docs/superpowers/plans/2026-10-18-turning.md",
+        "preview/e2e/turning-regression.mjs",
+        "preview/src/coat-tail-morph-receipt.json",
+        "preview/src/foot-placement.js",
+        "preview/src/lyra-drape-morph-receipt.json",
+        "preview/src/silvan-drape-morph-receipt.json",
+        "preview/src/skirt-seat-morph-receipt.json",
+        "preview/src/vesper-skirt-morph-receipt.json",
+        "preview/tests/foot-placement.test.js"
+      ],
+      "requiredChecks": [
+        "Focused behavioral regressions",
+        "pnpm run verify",
+        "Browser acceptance"
+      ],
+      "verification": {
+        "focused": "20 motion tests plus 4 curb tests passed; five garment validators passed",
+        "core": "All core task coverage passed with bounded concurrency and documented retries; 204 Redis and 1 unrelated client skips. See data/reports/turning-core-20261018.json.",
+        "browser": "Passed seven-rig before/after stationary/slow/normal sharp turns; data/reports/turning-browser-20261018.json."
+      }
     }
   ]
 }

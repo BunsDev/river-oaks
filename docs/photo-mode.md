@@ -1,6 +1,6 @@
 # Photo mode
 
-Open **Commands → Photo mode**, or **Play & rides → Camera → Photo mode**.
+Open **Commands → Photo mode**, or **Play & rides → Photo → Photo mode**.
 Frame the scene with pan, tilt, roll, lens movement and field of view. Choose an
 original, square, portrait, story or cinema crop, and Natural, Warm film or
 Black & white. The grid helps composition; **Hide controls** clears the controls

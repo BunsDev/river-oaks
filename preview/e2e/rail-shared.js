@@ -27,8 +27,8 @@ async page => {
   await page.keyboard.press('Escape');
   if (canBuild) {
     await command('build & decorate');
-    check(await page.locator('.visit-tools').getByRole('button', { name: 'Build', exact: true }).isVisible(), 'Build jump appears when the shared permission allows it');
-    await page.locator('#build-mode').click();
+    check(await page.locator('.visit-tools').getByRole('tab', { name: 'Build', exact: true }).isVisible(), 'The Build tab appears when the shared permission allows it');
+    await page.locator('#play-tab-build').click();await page.locator('#build-mode').click();
     await host.focus(); await page.keyboard.press('Control+b'); await page.keyboard.press('Escape');
     check(await page.locator('#build-mode').getAttribute('aria-pressed') === 'true', 'Dismissing the left rail does not cancel the builder');
     await host.focus(); await page.keyboard.press('?');

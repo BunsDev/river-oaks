@@ -16,7 +16,7 @@ import { isGameplayKey } from './keyboard-input.js';
 
 export function createPlayerAvatar({ scene, host, walking, userId, getLocals, getWorld, getConversation=()=>null, requestAppearance=()=>Promise.resolve({ok:false}), requestMovement=()=>Promise.resolve({ok:false}), requestVehicleExit=async()=>({ok:true}), requestChauffeur, getPortrait=null, reducedMotion }) {
   const lifetime = new AbortController();
-  const holder = new THREE.Group();holder.name = 'Player character';scene.add(holder);
+  const holder = new THREE.Group();holder.name = 'Player character';holder.userData.renderAuditOwner = 'player';scene.add(holder);
   const owner=isJevicaOwner(userId);
   let crewLocal=null;
   const crewLocals=()=>{
@@ -70,6 +70,8 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
   const pauseDrive=panel.querySelector('#player-drive-pause');
   pauseDrive.addEventListener('click',()=>{if(carriage.chauffeur.paused)carriage.resumeTour();else carriage.pauseTour();});
   panel.querySelector('#player-drive-park').addEventListener('click',()=>{carriage.park();status.textContent='Vehicle stopped. Resume with manual directions or start a new smart ride.';});
+  // Driving controls appear once Jevica is riding; before that the garage offers choosing and calling a ride.
+  const rideOnly=[driveButton,pauseDrive.parentElement,panel.querySelector('.player-drive-pad')];
   const directions={forward:{forward:1},reverse:{forward:-1},left:{turn:1},right:{turn:-1}};
   for(const button of panel.querySelectorAll('[data-drive]')) {
     const release=()=>carriage.setControls({});
@@ -319,6 +321,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
       vehicleSelect.disabled=!owner||carriage.riding||away;driveButton.disabled=!owner||!carriage.riding||away;
       pauseDrive.textContent=carriage.chauffeur.paused?'Resume ride':'Pause ride';pauseDrive.disabled=!carriage.chauffeur.active&&!carriage.chauffeur.paused;
       for(const button of panel.querySelectorAll('[data-drive],#player-drive-park'))button.disabled=!carriage.riding;
+      for(const node of rideOnly)if(node.hidden===carriage.riding)node.hidden=!carriage.riding;
       driveButton.textContent=carriage.chauffeur.active?'Stop the ride':'Jev smart drive';driveButton.setAttribute('aria-pressed',String(carriage.chauffeur.active));
       if(driveStatus.textContent!==carriage.chauffeur.label)driveStatus.textContent=carriage.chauffeur.label;
       host.dataset.vehicle=carriage.kind;host.dataset.chauffeur=JSON.stringify(carriage.chauffeur);

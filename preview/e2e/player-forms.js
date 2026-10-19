@@ -88,10 +88,11 @@ async page => {
     check(Number(await page.locator('#walking-hud').getAttribute('data-altitude'))===0,`${form}: landed at ground level`);
     await page.screenshot({path:`output/playwright/${form}-district.png`});
   }
-  if(!await page.locator('.player-settings').evaluate(e=>e.open))await page.locator('.player-settings > summary').click();
+  await page.locator('#settings-toggle').click();await page.getByRole('tab',{name:'Controls',exact:true}).click();
   await page.locator('#player-camera').click();
   await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.cameraMode==='first');
-  check(true,'First-person toggle');
+  check(true,'First-person toggle from Settings › Controls');
+  await page.keyboard.press('Escape');
   await page.locator('#canvas-host').focus();await page.keyboard.press('KeyV');
   check(await page.locator('#player-camera').getAttribute('aria-pressed')==='true','V restores third person');
   await page.evaluate(()=>document.documentElement.dataset.theme='dark');
@@ -99,7 +100,7 @@ async page => {
   const rememberedPlayOpen=await page.locator('.visit-tools').evaluate(el=>el.open);
   await page.setViewportSize({width:390,height:844});
   await page.reload();await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerReady==='true');
-  check(!await page.locator('.player-settings').evaluate(el=>el.open),'Mobile character controls start collapsed');
+  check(!await page.locator('#player-vehicle').isVisible(),'Mobile ride controls start out of view');
   check(await page.locator('.visit-tools').evaluate(el=>el.open)===rememberedPlayOpen,'The chosen play-rail state survives a mobile reload');
   check(!await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),'No mobile horizontal overflow');
   await page.screenshot({path:'output/playwright/jevica-ui-mobile.png'});

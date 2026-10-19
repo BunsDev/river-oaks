@@ -24,7 +24,7 @@ async page => {
   await page.goto(`${origin}/?motion-debug=1`);
   await page.waitForFunction(()=>document.querySelector('#canvas-host')?.dataset.playerReady==='true'&&document.querySelector('#canvas-host')?.dataset.carriageReady==='true');
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='true')await page.locator('#panel-toggle').click();
-  if(!await page.locator('.player-settings').evaluate(e=>e.open))await page.locator('.player-settings > summary').click();
+  await page.locator('#play-tab-rides').click();
   await page.locator('#canvas-host').focus();await page.keyboard.press('KeyQ');
   await page.waitForFunction(()=>document.querySelector('#player-status').textContent.includes('waiting nearby'));
   check(await page.locator('#player-carriage kbd').textContent()==='Q','Call button shows Q');
@@ -75,6 +75,7 @@ async page => {
   // The server chooses a clear exit position; it need not overlap the coach.
   // Move into open space before checking the retained flight/boarding interlock.
   await page.locator('#canvas-host').focus();await page.keyboard.down('KeyS');await page.waitForTimeout(1000);await page.keyboard.up('KeyS');
+  await page.locator('#play-tab-character').click();
   await page.locator('#player-flight').click();await page.waitForFunction(()=>window.__riverCarriage().pose.altitude>3);
   check(await page.locator('#player-ride').isDisabled(),'Boarding is unavailable in flight');
   await page.locator('#player-flight').click();await page.waitForFunction(()=>!window.__riverCarriage().pose.flying);
