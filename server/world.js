@@ -84,7 +84,7 @@ function decodeCheckpoint(json) {
 
 // The transport authenticates identities. Only this object advances the town;
 // client messages contain player intent, never resident state or elapsed time.
-export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, sharedPopulation = true, isAdmin = isJevicaAdmin, worldId = DEFAULT_WORLD_ID, random, screeningHosts = [], officeLayout, campusOperators = [], campusAdmission = () => false } = {}) {
+export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, sharedPopulation = true, isAdmin = isJevicaAdmin, isDevGuest = () => false, worldId = DEFAULT_WORLD_ID, random, screeningHosts = [], officeLayout, campusOperators = [], campusAdmission = () => false } = {}) {
   validateWorldId(worldId);
   const colliders=[],placementEnvironment=createWalkingEnvironment(worldData);
   const environment = createWalkingEnvironment(worldData,colliders);
@@ -127,7 +127,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   // accounts are Jevica, whatever a stored or restored record says.
   const interactions=createInteractions({players,environment,environmentFor:player=>environmentForLevel(player.levelId),
     now,movementOf,changed:()=>revision++,residents:()=>state.locals});
-  const offices=createOffices({worldData,players,isAdmin,environment,changed:()=>revision++,cancel:id=>{interactions.cancel(id);focus.delete(id);},...(officeLayout?{officeLayout}:{})});
+  const offices=createOffices({worldData,players,isAdmin,isGuest:isDevGuest,environment,changed:()=>revision++,cancel:id=>{interactions.cancel(id);focus.delete(id);},...(officeLayout?{officeLayout}:{})});
   // Garden campus suites (campus-leases.js): owner-managed leases in the River Oaks town, on a
   // district that carries the campus, operated by RIVER_OAKS_CAMPUS_OPERATOR_IDS. Jevica's
   // admin predicate grants nothing here. Elsewhere the saved campus section is kept inert.
@@ -152,7 +152,9 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     atLine:player=>onFootIn(player,ipicRoom) && atIpicDartsLine(roomPoint(ipicRoom,player)) ? IPIC_DARTS.id
       : onFootIn(player,axeRoom) && atAxeRoomDarts(roomPoint(axeRoom,player)) ? AXE_ROOM_DARTS.id : null});
   const axeGames=createAxeGames({players,laneIds:axeRoom?AXE_LANES.map(lane=>lane.id):[],changed:()=>revision++,
-    atLane:player=>onFootIn(player,axeRoom) ? atAxeLane(roomPoint(axeRoom,player)) : null});
+    atLane:player=>onFootIn(player,axeRoom) ? atAxeLane(roomPoint(axeRoom,player)) : null,
+    // The thrower's real distance to the target decides the axe's rotation (axe-rules.js).
+    distanceTo:(player,laneId)=>{const lane=AXE_LANES.find(item=>item.id===laneId);return axeRoom&&lane?lane.target-roomPoint(axeRoom,player)[1]:NaN;}});
   // Venue screenings (screenings.js): the server decides who is in the venue and who may host.
   const screenings=createScreenings({players,grants:screeningHosts,changed:()=>revision++,
     inVenue:(player,venueId)=>!player.levelId && !offices.has(player.id)
@@ -475,7 +477,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       [local.position[0],local.position[1],local.position[2]+(local.eyeHeight ?? 1.55)]);
   }
   const ownerOnlyHomes = new Set((worldData.stores??[]).filter(store=>store.category==='home' && store.access==='owner').map(store=>store.id));
-  const canEnterHome = (userId,storeId,access=homeGuests) => isAdmin(userId) || access.get(storeId)?.includes(userId);
+  // isDevGuest is the loopback dev town's invitation override (server/town.js devInviteOverride); false everywhere else.
+  const canEnterHome = (userId,storeId,access=homeGuests) => isAdmin(userId) || isDevGuest(userId) || access.get(storeId)?.includes(userId);
   // Shared voice: the space a player's audio belongs to. Flying is always
   // outdoors, and a private home counts only for those allowed inside (null
   // means no voice at all there). Identities are stamped by the transport's
@@ -814,7 +817,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if (message.type==='homeAccess') {
       if (message.action==='list' && fields(message,['type','action'])) {
         const homes=(worldData.stores??[]).filter(store=>ownerOnlyHomes.has(store.id)
-          && (isAdmin(userId) || homeGuests.get(store.id)?.includes(userId)))
+          && canEnterHome(userId,store.id))
           .map(store=>({storeId:store.id,name:store.name,
             ...(isAdmin(userId)?{guestIds:[...(homeGuests.get(store.id)??[])]}:{})}));
         return {ok:true,homes};

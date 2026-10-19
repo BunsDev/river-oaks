@@ -186,12 +186,13 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-11-delivered-source-retirement](2026-10-11-delivered-source-retirement.md)<br>Delivered source reconciliation | `reconcile-delivered-sources` | retired | — | 2026-10-11 |
 | [2026-10-11-ci-parallel-preview](2026-10-11-ci-parallel-preview.md)<br>Parallel preview check | `ci-parallel-preview` | retired | #252 | 2026-10-11 |
 
-## Historical, not in the register (126)
+## Historical, not in the register (128)
 
 | Plan | PRs mentioned |
 | --- | --- |
 | [2026-10-19-gitleaks-asset-digests](2026-10-19-gitleaks-asset-digests.md)<br>History secret scan: allow SHA-256 digests in character source manifests | #517, #545, #537 |
 | [2026-10-18-throw-mechanics-darts-pong](2026-10-18-throw-mechanics-darts-pong.md)<br>Darts release and acceleration, and wine pong repositioning | — |
+| [2026-10-18-throw-followups](2026-10-18-throw-followups.md)<br>Throw follow-ups: shuffleboard and axes, sounds, a dart flight | #535, #519, #515 |
 | [2026-10-18-right-rail-polish](2026-10-18-right-rail-polish.md)<br>Right rail polish | #503 |
 | [2026-10-18-play-rail-menu](2026-10-18-play-rail-menu.md)<br>Play rail as a game menu; preferences in Settings | #484, #503 |
 | [2026-10-18-penthouse-only](2026-10-18-penthouse-only.md)<br>Penthouse-only office implementation and evidence | — |
@@ -208,6 +209,7 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-18-ipic-auditorium-photo](2026-10-18-ipic-auditorium-photo.md)<br>IPIC auditorium from IMG_9767 (photo review P15, P16) | — |
 | [2026-10-18-garden-campus-traversal-508](2026-10-18-garden-campus-traversal-508.md)<br>#508 Garden campus: authoritative public traversal | #508, #506, #507 |
 | [2026-10-18-garden-campus-shells-507](2026-10-18-garden-campus-shells-507.md)<br>Garden Offices #507: the campus replaces the garage, behind a district revision | #507, #505, #506 |
+| [2026-10-18-garden-campus-finish-511](2026-10-18-garden-campus-finish-511.md)<br>Garden Offices #511: finish, planting, lighting and bounded rendering | #511, #505, #507 |
 | [2026-10-18-garden-campus-contract](2026-10-18-garden-campus-contract.md)<br>#506 Garden campus: measured campus, floor and connection contract | #506, #505, #507 |
 | [2026-10-18-creator-street-ground](2026-10-18-creator-street-ground.md)<br>#491: walk across creator-region streets (2026-10-18) | #491, #420, #108 |
 | [2026-10-18-character-studio-creation-441](2026-10-18-character-studio-creation-441.md)<br>Character Studio #441: guided creation flow | #441, #464, #461 |

@@ -100,9 +100,9 @@ export const GUIDE = [
   { id: 'shuffleboard', name: 'Shuffleboard', place: 'The long table by the café', pages: [
     { title: 'Taking a seat', text: ['Shuffleboard is played on the long table by the café, where wine pong is. Stand at either end, press X, and choose Shuffleboard at the top of the sheet; you play standing.', 'Play a plaza regular, or Pass and play with a friend. Both of you throw from your end.'], figure: { kind: 'emblem' } },
     { title: 'The aim', text: ['Each round, the two of you slide four weighted pucks each, in turn, toward the far end. A puck that stops short of the dashed foul line is taken off, and one that goes over a side or off the end is gone.', 'The far end is marked in zones worth 1, 2 and 3, and a puck left hanging over the end scores 4. First to 15 wins.'], figure: { kind: 'shuffle-zones' } },
-    { title: 'A throw', text: ['A line sweeps across the table: stop it for the aim. A target then rides along that line: stop it for the power, and the puck slides.', 'Pucks knock each other: the one you strike carries on, and yours slows.'], figure: { kind: 'shuffle-throw' } },
+    { title: 'A throw', text: ['Left and right aim, up and down set the power, or click the table where the puck should stop. Your hand sways a little, so slide as the mark passes the spot.', 'Pucks knock each other: the one you strike carries on, and yours slows.'], figure: { kind: 'shuffle-throw' } },
     { title: 'Scoring a round', text: ['When all eight are down, only the player whose puck lies furthest scores: each of their pucks beyond the other\'s best counts its zone. So knocking a rival\'s leader off the end can be worth more than a careful slide.', 'The two of you take turns to throw first, round by round.'], figure: { kind: 'shuffle-score' } },
-    { title: 'At the table', text: ['The real table\'s pucks follow every slide, and the wine glasses are put away while you play.'], figure: { kind: 'keys', keys: [[['X'], 'Open the table, or put it away'], [['Space', 'Enter'], 'Stop the line: aim, then slide'], [['Tab'], 'Move between the buttons'], [['Esc'], 'Put the table away']] } },
+    { title: 'At the table', text: ['The real table\'s pucks follow every slide, and the wine glasses are put away while you play.'], figure: { kind: 'keys', keys: [[['X'], 'Open the table, or put it away'], [['←', '→'], 'Aim left or right'], [['↑', '↓'], 'Slide harder or softer'], [['Shift'], 'Hold for fine moves'], [['Space', 'Enter'], 'Slide'], [['Esc'], 'Put the table away']] } },
   ] },
   { id: 'go', name: 'Go', place: 'The small grove table', pages: [
     { title: 'Taking a seat', text: ['At the small grove table, press Z to sit and X to open the board, then choose Go at the top of the sheet.', 'Play the plaza regular as black or white, or Pass and play with a friend. Black moves first.'], figure: { kind: 'emblem' } },
@@ -594,7 +594,7 @@ export function figureMarkup(figure, game) {
       return svg(300, 124, `A round's end: red's furthest puck lies beyond every blue one, so red scores, but only its puck past blue's best: ${scored[1]} in the far zone.`,
         table + pucks.map(item => puck(item, item[0] === scored[0] && item[1] > rival)).join('')
         + `<text class="sg-label" x="150" y="112" text-anchor="middle" font-size="12">red scores ${scored[1]}</text>`); }
-    case 'shuffle-throw': return svg(170, 260, 'From your end: the dotted aim line runs up the table, and the power target rides along it into the far zone.',
+    case 'shuffle-throw': return svg(170, 260, 'From your end: the dotted aim line runs up the table, and the mark where a lone puck would stop rides along it into the far zone.',
       '<rect class="sg-tile-face" x="55" y="20" width="60" height="220" rx="5"/>'
       + [[20, 46, 3], [46, 73, 2], [73, 105, 1]].map(([top, bottom, points]) => `<rect class="sg-tile-back" opacity="${0.12 + points * 0.1}" x="55" y="${top}" width="60" height="${bottom - top}"/>`).join('')
       + '<line class="sg-path" stroke-dasharray="4 3" x1="55" y1="105" x2="115" y2="105"/>'

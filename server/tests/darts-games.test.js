@@ -24,10 +24,13 @@ test('a player alone at the line practises against the house regular, who throws
   f.join('alice');
   assert.equal(f.send('alice', { action: 'practice' }).ok, true);
   assert.deepEqual(f.line().players, ['alice', DARTS_REGULAR]);
-  for (let i = 0; i < 3; i++) assert.equal(f.send('alice', { action: 'throw', release: rel([0, 103]) }).ok, true, 'treble 20');
+  const replies = [0, 1, 2].map(() => f.send('alice', { action: 'throw', release: rel([0, 103]) }));
+  assert.ok(replies.every(reply => reply.ok), 'treble 20');
   const view = f.line();
   // Alice's three darts, then the regular's three, then back to Alice.
   assert.equal(view.points.length, 6);
+  // Each reply names alice's own dart, even the third, which the regular answers at once.
+  assert.deepEqual(replies.map(reply => [reply.thrown, reply.darts.points.length]), [[0, 1], [1, 2], [2, 6]]);
   assert.equal(view.scores[0], START - 180);
   assert.ok(view.scores[1] < START, 'the regular scored');
   assert.equal(view.turn, 0);
