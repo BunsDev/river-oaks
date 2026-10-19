@@ -33,6 +33,43 @@ export function targetPoint(number, ring = 'treble') {
   return [Math.sin(angle) * radius, Math.cos(angle) * radius];
 }
 
+// A throw is a release: where across the board the dart is let go toward (x, in mm),
+// and how hard the hand accelerates through its stroke. In a real throw (Smeets, Frens
+// & Brenner, Exp Brain Res 2002: board 2.37 m away, bull 1.73 m up, hand accelerating
+// at about 50 m/s² to some 6 m/s) nothing acts across the flight, so the release alone
+// sets the across position; the speed sets the height, because the dart falls on its
+// way: too slow lands low, too fast lands high. Here the hand releases level with the
+// bull, 2.0 m from the board, at the angle that carries a 6.0 m/s dart onto the bull.
+export const THROW = { distance: 2.0, stroke: 0.36, gravity: 9.81, nominal: 50, accel: [35, 75], across: 230 };
+THROW.angle = Math.asin(THROW.gravity * THROW.distance / (2 * THROW.nominal * THROW.stroke)) / 2;
+export const releaseSpeed = accel => Math.sqrt(2 * accel * THROW.stroke);
+// Height (mm above the bull) at which a dart leaving at `speed` m/s meets the board.
+export function heightAt(speed) {
+  const { distance, gravity, angle } = THROW, cos = Math.cos(angle);
+  return (distance * Math.tan(angle) - gravity * distance ** 2 / (2 * speed ** 2 * cos ** 2)) * 1000;
+}
+// Where a release lands before the hand's own error.
+export const landingOf = ([x, accel]) => [x, heightAt(releaseSpeed(accel))];
+// The acceleration that carries a dart to a height (inverse of landingOf), within the hand's range.
+export function accelFor(height) {
+  const { distance, gravity, angle, stroke } = THROW, cos = Math.cos(angle), drop = distance * Math.tan(angle) - height / 1000;
+  const accel = drop > 0 ? gravity * distance ** 2 / (2 * cos ** 2 * drop) / (2 * stroke) : THROW.accel[1];
+  return Math.min(THROW.accel[1], Math.max(THROW.accel[0], accel));
+}
+// The hand's error: a release direction off by `across` (mm) and a speed off by `speed`
+// (m/s). The same speed error drops a slow dart further than a firm one.
+export const HAND = { across: 18, speed: 0.09 };
+// A unit-variance logistic draw from u in (0, 1): zero at 0.5, so a fixed 0.5 throws true.
+export const handDraw = u => Math.log(u / (1 - u)) * .5513;
+// Where a dart lands from a release and two unit-variance draws, held to the
+// recorded square (darts that far out are misses anyway).
+export function throwLanding([x, accel], [across, speed], hand = HAND, limit = 400) {
+  const height = heightAt(Math.max(1, releaseSpeed(accel) + speed * hand.speed));
+  return [Math.max(-limit, Math.min(limit, x + across * hand.across)), Math.max(-limit, Math.min(limit, height))];
+}
+export const validRelease = release => Array.isArray(release) && release.length === 2 && release.every(n => typeof n === 'number' && Number.isFinite(n))
+  && Math.abs(release[0]) <= THROW.across && release[1] >= THROW.accel[0] && release[1] <= THROW.accel[1];
+
 export const startGame = (players = 2) => ({ scores: Array(players).fill(START), turn: 0, darts: [], turnStart: START, winner: null, history: [] });
 
 // Throws one dart landing at `point` for the player whose turn it is.

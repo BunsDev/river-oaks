@@ -1,6 +1,7 @@
-import { createMemoryOfficeWorkspaces } from './office-workspaces.js';
-import { officeWorkspaceAction } from './office-workspaces-api.js';
-import { workspaceContext, reconcileOfficeVisit, reconcileOfficeVisits } from './office-workspace-visits.js';
+import {observeCharacterEquip} from './character-metrics-equip.js';
+import {characterSelectionGate} from './character-rollout.js';
+import {createMemoryCharacterSelection,isCharacterSelection} from './character-selection.js';
+import { createCharacterRoutes } from './character-routes.js';
 import { createMemoryOfficeDesk } from './office-desk.js';
 import { officeDeskAction, OFFICE_DESK_BODY_LIMIT } from './office-desk-api.js';
 import {validAssembly} from '../preview/src/creator-object.js';
@@ -30,17 +31,19 @@ import { securityHeaders } from './security-headers.js';
 import { createVoiceRoutes } from './voice-routes.js';
 import { createRideFlush } from './ride-flush.js';
 import { createCyclingLeaderboard } from './cycling-api.js';
+import { ROTATE_NOTICE_MS, UPDATE_CLOSE, closeForUpdate, continuedConnection, retireAfter, rotateNotice } from './connection-close.js';
 
 const types = { '.webm':'video/webm','.mp4':'video/mp4','.vtt':'text/vtt; charset=utf-8','.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.glb':'model/gltf-binary','.hdr':'application/octet-stream','.svg':'image/svg+xml','.woff2':'font/woff2' };
 const equal = (a,b) => typeof a==='string' && typeof b==='string' && Buffer.byteLength(a)===Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a),Buffer.from(b));
 const json = (res,status,value) => { res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(value)); };
-export function createGameServer({ debugReports = createMemoryDebugReports(), auth, world, worldTitle = world.title, landmarks, social = null, groups = null, profiles = null, events = null, workplace = null, officeDesk = createMemoryOfficeDesk(), officeWorkspaces = createMemoryOfficeWorkspaces(), avatarPreferences = null, presence = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, regionSha256 = null, onBan = null, origin, staticRoot, moderation, waitlist, waitlistAdmins = [], moderators = [], trustedProxyIPs = [], now = Date.now, onMove = null, voice = null, voiceReconcileMs = 1000, departureGraceMs = 30000, cyclingMiles = null, cyclingFlushMs = 30000 }) {
+export function createGameServer({ debugReports = createMemoryDebugReports(), auth, world, worldTitle = world.title, landmarks, social = null, groups = null, profiles = null, events = null, workplace = null, officeDesk = createMemoryOfficeDesk(), avatarPreferences = null, characters = null, characterStudioEnabled = true, characterMetrics = null, presence = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, regionSha256 = null, onBan = null, origin, staticRoot, moderation, waitlist, waitlistAdmins = [], moderators = [], trustedProxyIPs = [], now = Date.now, onMove = null, voice = null, voiceReconcileMs = 1000, departureGraceMs = 30000, connectionLifetime = 0, rotateNoticeMs = ROTATE_NOTICE_MS, cyclingMiles = null, cyclingFlushMs = 30000 }) {
   if (!waitlist) throw new Error('Waitlist is required');
   const worldId=validateWorldId(world.worldId??DEFAULT_WORLD_ID);
   const matchesWorld=url=>(url.searchParams.get('world')??(worldId===DEFAULT_WORLD_ID?DEFAULT_WORLD_ID:null))===worldId;
   const clientAddress = createClientAddress(trustedProxyIPs);
   const connections = new Map(), tickets = new Map(), departures = new Map();
   const deskCalls=createRateLimiter(90,60000);
+  const characterReads=createRateLimiter(120,60000),characterWrites=createRateLimiter(30,60000);
   const frames = createRateLimiter(40,1000), issuing = createRateLimiter(10,60000), reports = createRateLimiter(3,60000), socialWrites = createRateLimiter(12,60000), groupWrites = createRateLimiter(24,60000), eventWrites = createRateLimiter(12,60000), workplaceWrites = createRateLimiter(30,60000), workplaceReads = createRateLimiter(120,60000), inviteLists = createRateLimiter(20,60000), voiceCalls = createRateLimiter(30,60000);
   const access = createRateLimiter(1000,60000,4096), signIns = createRateLimiter(SIGN_INS_PER_ADDRESS,SIGN_IN_WINDOW), moderatorIds = new Set(moderators);
   let stopped = false;
@@ -53,7 +56,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
   const flushRides=()=>rides?rides.flush():Promise.resolve();
   const send = (ws,value,options) => sendFrame(ws,value,options);
   // Frames carry the world clock that anchors screenings (screenings.js).
-  const snapshot=()=>({...world.snapshot(),...(typeof world.serverTime==='function'?{serverTimeMs:world.serverTime()}:{}),...(regionSha256?{regionSha256}:{}),...(voice?{voice:{available:voice.status().available}}:{})});
+  const snapshot=()=>({...world.snapshot(),...(typeof world.serverTime==='function'?{serverTimeMs:world.serverTime()}:{}),...(regionSha256?{regionSha256}:{}),...(world.districtRevision?{districtRevision:world.districtRevision}:{}),...(voice?{voice:{available:voice.status().available}}:{})});
   const approvedIdentity = async (req,res) => {
     const identity = await auth.authenticate(req);
     if (!identity) {json(res,401,{error:'Sign in to join the town.'});return null;}
@@ -66,6 +69,15 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
     if (req.headers.origin!==origin || !equal(req.headers['x-csrf-token'],identity.csrfToken)) {json(res,403,{error:'Invalid request origin or security token.'});return null;}
     return identity;
   };
+  const characterSelection=characters?.getSelection?createMemoryCharacterSelection({world:()=>world,store:characters,legacy:avatarPreferences,
+    authorized:async(userId,context)=>{
+      const connection=connections.get(userId);
+      if(!connection||connection.token!==context.connectionId||connection.identity.sessionId!==context.sessionId)return false;
+      const approved=await waitlist.isApproved(userId);
+      const active=!auth.isSessionActive||await auth.isSessionActive(userId,context.sessionId);
+      return approved&&active&&connections.get(userId)===connection&&connection.identity.expiresAt>now()&&!isBanned(userId);
+    }}):null;
+  const handleCharacters=characters?createCharacterRoutes({metrics:characterMetrics,enabled:characterStudioEnabled,store:characters,approvedIdentity,authorized,allowRead:characterReads,allowWrite:characterWrites}):null;
   const disconnectUser = (id, code=4003, reason='Session ended') => {
     for (const [key,ticket] of tickets) if (ticket.identity.userId===id) tickets.delete(key);
     clearTimeout(departures.get(id)); departures.delete(id);
@@ -73,7 +85,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
     if(connection && presence)void presence.leave(id,connection.token).catch(()=>{});
     // Every kick (ban, approval ended, logout, another world) ends the account's voice too.
     if(voice)void voice.revokeUser(id).catch(()=>{});
-    connection?.ws.close(code,reason);world.leave(id);void flushRides();
+    connection?.ws.close(code,reason);world.leave(id);characterSelection?.forget(id);void flushRides();
   };
   const handleVoice=voice?createVoiceRoutes({voice,worldId,authorized,matchesWorld,allow:id=>voiceCalls(id),
     present:async identity=>{
@@ -105,15 +117,18 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
       if (await auth.handle(req,res)) return;
       if (await handleWaitlist(req, res, pathname)) return;
       if (await handleDebugReports(req, res, pathname)) return;
+      if (handleCharacters && await handleCharacters(req,res,pathname)) return;
       if (handleVoice && await handleVoice(req,res,pathname,new URL(req.url,'http://localhost'))) return;
-      if (pathname==='/api/world-data' && req.method==='GET' && worldCatalog) {
+      // The default district answers with its served revision (#507) even without a catalog.
+      if (pathname==='/api/world-data' && req.method==='GET' && (worldCatalog || world.districtRevision)) {
         if(!await approvedIdentity(req,res))return;
         const ids=new URL(req.url,'http://localhost').searchParams.getAll('world');
         if(ids.length!==1)return json(res,400,{error:'Choose one world.'});
-        const meta=await worldCatalog.get(ids[0]);
+        const meta=worldCatalog?await worldCatalog.get(ids[0]):null;
         if(!meta && ids[0]!==world.worldId)return json(res,404,{error:'World not found.'});
         return json(res,200,meta?.template==='region-v1'
-          ? {template:meta.template,regionSha256:meta.regionSha256,world:await worldCatalog.getRegion(meta.id)}:{template:meta?.template??'river-oaks'});
+          ? {template:meta.template,regionSha256:meta.regionSha256,world:await worldCatalog.getRegion(meta.id)}
+          : {template:meta?.template??'river-oaks',...(ids[0]===world.worldId&&world.districtRevision?{districtRevision:world.districtRevision}:{})});
       }
       if (pathname==='/api/worlds' && req.method==='GET' && worldCatalog) return json(res,200,{worlds:await worldDirectory()});
       if (pathname==='/api/worlds' && req.method==='POST' && worldCatalog) {
@@ -223,11 +238,9 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
         const action=pathname.slice('/api/office-desk/'.length);
         const visit=async user=>connections.get(user.userId)?.identity.sessionId===user.sessionId ? world.officeVisit(user.userId) : null;
         const common={identity,readBody:()=>body(req,OFFICE_DESK_BODY_LIMIT),allow:id=>deskCalls(id)};
-        const result=action.startsWith('workspace/')
-          ? await officeWorkspaceAction({...common,action:action.slice('workspace/'.length),workspaces:officeWorkspaces,visit,
-            isApproved:async id=>!isBanned(id)&&await waitlist.isApproved(id)})
-          : await officeDeskAction({...common,action,desk:officeDesk,hasVisit:async user=>Boolean(await visit(user))});
-        if(action==='workspace/revoke'&&result.status===200)await reconcileOfficeVisits(world,officeWorkspaces);
+        // Jevica's office, or a Gardens workstation seat (#510), in this same session.
+        const atWorkstation=user=>connections.get(user.userId)?.identity.sessionId===user.sessionId && Boolean(world.campusWorkstation?.(user.userId));
+        const result=await officeDeskAction({...common,action,desk:officeDesk,hasVisit:async user=>(await visit(user))?.id==='jevica-office'||atWorkstation(user)});
         return json(res,result.status,result.value);
       }
       if (pathname.startsWith('/api/workplace/') && req.method==='POST' && workplace) {
@@ -320,12 +333,14 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
       const key=url.searchParams.get('ticket'),ticket=tickets.get(key);
       if(!ticket || ticket.until<=now() || ticket.identity.sessionId!==identity.sessionId || ticket.identity.userId!==identity.userId)return reject(401);
       tickets.delete(key);
+      const continues=continuedConnection(url.searchParams.get('continues'));
       wss.handleUpgrade(req,socket,head,ws=>{
         let joinedHere=false;
         const token=randomUUID();
         void (async()=>{
-        if(stopped){ws.close(1012,'Town restarting');return;}
-        if(avatarPreferences) {
+        if(stopped){ws.close(UPDATE_CLOSE.code,UPDATE_CLOSE.reason);return;}
+        if(characterSelection)await characterSelection.initialize(identity.userId,()=>!stopped&&ws.readyState===WebSocket.OPEN);
+        else if(avatarPreferences) {
           const preference=await avatarPreferences.initialize(identity.userId,world.accountAppearance(identity.userId));
           world.applyAccountAppearance(identity.userId,preference);
         }
@@ -334,7 +349,6 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
           const result=world.join(identity);if(!result.ok){ws.close(1013,'The town is full. Try again shortly.');return;}
           joinedHere=true;
         } else world.rename(identity);
-        await reconcileOfficeVisit(world,officeWorkspaces,identity.userId);
         // One world per account (as on the hosted gateway): arriving here removes
         // the account from the world it was last in, in the background.
         if(presence){
@@ -352,6 +366,10 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
         const old=connections.get(identity.userId);
         const connection={ws,identity,token,alive:true,pending:0};connections.set(identity.userId,connection);
         old?.ws.close(4009,'This account joined in another tab.');
+        // Off by default here; a host with a request limit sets it, and the page moves to a fresh socket first.
+        const retire=retireAfter(ws,connectionLifetime,{noticeMs:rotateNoticeMs,notify:()=>{if(connections.get(identity.userId)===connection)send(ws,rotateNotice(connectionLifetime,rotateNoticeMs,token));}});
+        // A page moving from another socket brings its voice lease along (voice.js continueConnection).
+        if(voice&&continues)void voice.continueConnection({userId:identity.userId,from:continues,to:token});
         ws.on('error',()=>{});ws.on('pong',()=>{connection.alive=true;});
         let messageQueue = Promise.resolve(),waitingPose=null;
         ws.on('message',(raw,isBinary)=>{
@@ -378,6 +396,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
           try { approved = await waitlist.isApproved(identity.userId); } catch { /* Storage fails closed. */ }
           if(connections.get(identity.userId)!==connection || ws.readyState!==WebSocket.OPEN)return;
           if(identity.expiresAt<=now() || isBanned(identity.userId) || !approved)return disconnectUser(identity.userId,4001,'Please sign in again.');
+          let equipObservation=null;
           try {
             const message=slot.message;
             if(!message)throw new Error('Invalid');
@@ -385,38 +404,40 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
               if(!moderation || !reports(identity.userId) || !['disruption','harassment','cheating'].includes(message.reason) || !connections.has(message.playerId) || message.playerId===identity.userId)return send(ws,{type:'result',requestId:message.requestId,ok:false,message:'Report could not be submitted.'});
               moderation.report(identity.userId,message.playerId,message.reason).then(()=>send(ws,{type:'result',requestId:message.requestId,ok:true,message:'Report sent to the town moderators.'}),()=>send(ws,{type:'result',requestId:message.requestId,ok:false,message:'Report unavailable. Try again.'}));return;
             }
-            const {requestId,...command}=message;
-            const officeWorkspace=await workspaceContext(officeWorkspaces,identity.userId,command);
-            if(connections.get(identity.userId)!==connection || ws.readyState!==WebSocket.OPEN)return;
-            const result=world.command(identity.userId,command,{officeWorkspace,sessionId:identity.sessionId??null});
-            if(result.ok && avatarPreferences && ['appearance','movement'].includes(command.type))
+            const {requestId,selection,...command}=message;
+            if(command.type==='character'||selection!==undefined)equipObservation=observeCharacterEquip(characterMetrics);
+            const studioGate=await characterSelectionGate({enabled:characterStudioEnabled,store:characters,userId:identity.userId,command,selection});
+            if(studioGate){equipObservation?.result(studioGate);send(ws,{type:'result',requestId,...studioGate});return;}
+            if(selection!==undefined&&(!characterSelection||!isCharacterSelection(command))){const result={ok:false,error:'invalid_character_operation'};equipObservation?.result(result);return send(ws,{type:'result',requestId,...result});}
+            if(characterSelection?.hasPending(identity.userId)){const result={ok:false,error:'character_selection_pending'};equipObservation?.result(result);return send(ws,{type:'result',requestId,...result});}
+            if(connections.get(identity.userId)!==connection || ws.readyState!==WebSocket.OPEN){equipObservation?.aborted();return;}
+            const result=characterSelection&&isCharacterSelection(command)
+              ?await characterSelection.command(identity.userId,command,selection,{connectionId:token,sessionId:identity.sessionId??null})
+              :world.command(identity.userId,command,{sessionId:identity.sessionId??null});
+            equipObservation?.result(result);
+            if(result.ok && !characterSelection && avatarPreferences && ['appearance','movement'].includes(command.type))
               await avatarPreferences.save(identity.userId,world.accountAppearance(identity.userId));
             if(result.ok && command.type==='uncycle')await flushRides();
             const earlyAck=result.ok && command.type==='travel' && requestId!==undefined;
             if(earlyAck)send(ws,{type:'result',requestId,...result});
             if(result.ok && command.type!=='pose' && command.type!=='inventory')send(ws,snapshot());
             if(!earlyAck && (requestId!==undefined || !result.ok))send(ws,{type:'result',requestId,...result});
-          } catch {send(ws,{type:'result',ok:false,message:'Invalid game command.'});}
+          } catch {equipObservation?.unavailable();send(ws,{type:'result',ok:false,message:'Invalid game command.'});}
           }).catch(()=>ws.close(1013,'Town temporarily unavailable.')).finally(()=>{if(!coalescible)connection.pending--;});
         });
         ws.on('close',()=>{
+          retire();
           if(connections.get(identity.userId)!==connection)return;
           connections.delete(identity.userId);
           if(presence)void presence.leave(identity.userId,token).catch(()=>{});
-          if(stopped){world.leave(identity.userId);void flushRides();return;}
-          const timer=setTimeout(()=>{departures.delete(identity.userId);world.leave(identity.userId);void flushRides();if(voice)void voice.revokeUser(identity.userId).catch(()=>{});},departureGraceMs);timer.unref();departures.set(identity.userId,timer);
+          if(stopped){world.leave(identity.userId);characterSelection?.forget(identity.userId);void flushRides();return;}
+          const timer=setTimeout(()=>{departures.delete(identity.userId);world.leave(identity.userId);characterSelection?.forget(identity.userId);void flushRides();if(voice)void voice.revokeUser(identity.userId).catch(()=>{});},departureGraceMs);timer.unref();departures.set(identity.userId,timer);
         });
         send(ws,{...snapshot(),selfId:identity.userId});
         })().catch(()=>{if(joinedHere)world.leave(identity.userId);if(presence)void presence.leave(identity.userId,token).catch(()=>{});ws.close(1013,'Town temporarily unavailable.');});
       });
     }catch{return reject(401);}
   });
-  let officeSyncing=false;
-  const officeSync=setInterval(()=>{
-    if(stopped||officeSyncing||!connections.size)return;
-    officeSyncing=true;
-    void reconcileOfficeVisits(world,officeWorkspaces).finally(()=>{officeSyncing=false;});
-  },5000);officeSync.unref();
   let previous=now(),broadcastAt=0;
   const loop=setInterval(()=>{
     const time=now(),delta=Math.min(0.25,Math.max(0,(time-previous)/1000));previous=time;
@@ -438,14 +459,28 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
     }
     for(const [key,ticket]of tickets)if(ticket.until<=now())tickets.delete(key);
   },30000);heartbeat.unref();
-  const avatarSync=avatarPreferences?setInterval(()=>{
+  const avatarSync=characterSelection||avatarPreferences?setInterval(()=>{
     for(const [userId,connection] of connections) {
+      if(characterSelection){
+        void characterSelection.sync(userId,()=>connections.get(userId)===connection).catch(error=>{
+          if(connections.get(userId)!==connection)return;
+          if(error.code==='character_account_deleted')disconnectUser(userId,4003,'Character account deleted.');
+          else connection.ws.close(1013,'Account appearance temporarily unavailable.');
+        });
+        continue;
+      }
       void avatarPreferences.get(userId).then(preference=>{
         if(preference && connections.get(userId)===connection)world.applyAccountAppearance(userId,preference);
       }).catch(()=>connection.ws.close(1013,'Account appearance temporarily unavailable.'));
     }
   },5000):null;
   avatarSync?.unref();
+  let selectionRecovering=false;
+  const selectionRecovery=characterSelection?setInterval(()=>{
+    if(selectionRecovering)return;selectionRecovering=true;
+    void characterSelection.recover().finally(()=>{selectionRecovering=false;});
+  },200):null;
+  selectionRecovery?.unref();
   const rideFlush=cyclingMiles?setInterval(()=>{void flushRides();},cyclingFlushMs):null;
   rideFlush?.unref();
   // Shared voice: stamp each player's participant identity from its lease, and
@@ -463,9 +498,9 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
     departures.clear();tickets.clear();
     if(presence)for(const connection of connections.values())void presence.leave(connection.identity.userId,connection.token).catch(()=>{});
     for(const {ws} of connections.values())ws.close(4000,'World region updated.');
-    connections.clear();void flushRides();world=next;regionSha256=hash;
+    connections.clear();characterSelection?.clear();void flushRides();world=next;regionSha256=hash;
   },async close(){
-    stopped=true;clearInterval(officeSync);clearInterval(loop);clearInterval(heartbeat);clearInterval(avatarSync);clearInterval(voiceLoop);clearInterval(rideFlush);
+    stopped=true;clearInterval(loop);clearInterval(heartbeat);clearInterval(avatarSync);clearInterval(selectionRecovery);clearInterval(voiceLoop);clearInterval(rideFlush);
     for(const [id,timer] of departures){clearTimeout(timer);world.leave(id);}
     departures.clear();tickets.clear();
     if(presence)await Promise.allSettled([...connections.values()].map(connection=>presence.leave(connection.identity.userId,connection.token)));
@@ -473,7 +508,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
     connections.clear();
     // The last rides, plus anything a running flush was still sending.
     if(rides){rides.drain();await rides.settle();}
-    for(const ws of wss.clients)ws.terminate();
+    await closeForUpdate(wss.clients);
     auth.close?.();wss.close();
     await new Promise(resolve=>server.close(resolve));
   }};

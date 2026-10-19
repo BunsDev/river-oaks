@@ -5,7 +5,7 @@
 - Review both local and Redis authentication, waitlist enforcement, and hosted routing.
 - Add WorkOS Magic Auth email sign-in without bypassing waitlist approval.
 - Allow verified users to redeem a single-use invitation; rejected users cannot bypass an admin decision.
-- Give each newly accepted account exactly two invitations, expiring after 30 days; repeated approval cannot replenish them.
+- Give each newly accepted account exactly two invitations, expiring after 30 days; repeated approval cannot replenish them. Since 2026-10-15, only accounts approved from the waitlist receive them: accounts that joined with a code get none (the referral decay in `docs/email-access.md`).
 - Let admins issue, assign, and expire invitations, with audit records.
 - Preserve CSRF, rate limits, session verification, and atomic persistence across server instances.
 - Verify replay, concurrent redemption, expiry, assignment, authorization, and the login UI.

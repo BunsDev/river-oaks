@@ -29,11 +29,68 @@ The overhead view leaves the roof open for editing. Finish presets and built-in
 geometry improve material and shape detail, but photorealism remains a visual
 acceptance target, not a guarantee from automated tests.
 
+Desks, chairs, pendants and plants are drawn at true size, so resizing one keeps its legs,
+frame and rounded edges in proportion instead of stretching them. A pendant whose
+footprint is at least twice as long as it is wide becomes a linear fitting on two
+cables; others get a round shade. Plants have a tapered pot and leafy clusters on
+their upper stems, from a café table vase to a floor plant. Interior concrete is a polished slab with
+saw-cut joints every 4 m, and floor-standing glazing sits in a base shoe. Furnished
+spaces reflect a neutral room, so glass and brass read as glass and metal, and the
+Evening preset dims the sky as well as the sun. Saved v1 files are unchanged and pick
+up the new forms when opened. The forms' catalog records, with measured size and
+cost, are in `docs/design/garden-office/asset-manifest.json`; refresh them with
+`node scripts/garden-office-manifest.mjs --write` after reviewing a change to
+`space-furniture.js`.
+
+The bed is drawn at true size as well: a timber frame, an upholstered headboard, a
+mattress, a duvet that hangs over the sides and foot, a folded sheet, two pillows and a
+throw, all in a soft textile finish that stays inside the bed's footprint at any size.
+Cabinet, counter and sink doors and worktops keep crisp true-size edges however long the
+run. Floor textures repeat at real unit sizes: terracotta is herringbone brick about
+24 cm long and limestone is laid in 30 cm rows. Stone tables, worktops and basin
+surrounds are one slab, never paving. A sink's worktop is at 0.77 of its height, so a
+1.17 m sink meets 0.9 m kitchen cabinets.
+
+Shelving is drawn at true size too: thin boards about 36 cm apart over a recessed kick,
+bays at most 0.9 m wide, with folded garments and lidded boxes on some shelves. A few
+variants come from finish and proportions rather than new fields. A cabinet in limestone,
+concrete or terracotta is a solid display plinth. Raised glazing no deeper than 6 cm and
+at least 0.8 m tall is a silvered mirror. Raised glazing deeper than 0.3 m, standing on a
+counter, is a glass display case with a shelf and pastries. The other glazing stays clear
+glass. Tables share the desk family: a 30 mm top on 45 mm legs with aprons, true-size at
+any length. A cabinet, counter or appliance shows its doors and controls on its front, so
+turn a service counter 180° to give customers a closed front.
+
 Space files use `document_type: "studio-space"`, are limited to 128 KiB and 160
 objects, and export as `world-studio-space.json`. Save, reopen, import and undo work
 as for regions. They are private Studio documents; the shared-world region
 publisher does not accept this format. Existing schema-v1 region files remain
 compatible, and **New region** still starts the original region workflow.
+
+New templates select their **Assessment program** explicitly. Accepted inspector
+edits, completed drags and agent batches must preserve routes from arrival to the
+program's required destinations and back to its exit. A blocked edit leaves the
+accepted draft and undo history unchanged. The finding explains the route and
+lets you select a changed or nearby furnishing in the inspector to repair it.
+Dragging previews changes only the view; Escape cancels the drag. A valid final
+agent batch is one undoable edit even when its intermediate layout blocks a route.
+
+The selected program and its version are saved **on this device**, alongside the
+v1 document. Bare JSON export contains only the v1 document, so importing it shows
+**Not assessed** until you explicitly select a program. A document's name never
+selects its program. Unknown or newer program versions cannot report a pass;
+select a current program to reassess. These checks are local layout guidance, not
+shared-world publication approval or a guarantee of visual quality.
+
+An old draft can open, save and export even when newly selected route rules find
+a problem. Repair it to accept a guided edit; undo can return to the recoverable
+draft and shows its findings again. Required destination roles retain their IDs
+and kinds, although their display names can change. **Restore required furnishings**
+recovers missing roles from the selected template as one checked, undoable edit,
+preserving other furnishings. Checks keep the viewport responsive and leave
+changes pending until a result arrives. Failed assessments offer **Retry assessment**. Fixed recipe destinations
+remain required when furniture is moved. A work-limit result is blocked, never
+a pass; simplify the layout and assess again.
 
 ## Build a region
 
@@ -105,7 +162,8 @@ world. Existing server publication validation remains authoritative.
 ## Walk through
 
 **Walk through** starts a private blockout preview at the region's arrival point.
-Use WASD or arrow keys to move, drag to look, and Shift to move faster. **Escape**
+Use WASD or the up and down arrows to move, the left and right arrows or a drag to
+turn (as in the office), and Shift to move faster. **Escape**
 or **Return to editor** restores the authoring camera. Editing is disabled during
 the preview; walking does not change your draft or contact the multiplayer server.
 
@@ -136,6 +194,53 @@ or physical-device performance evidence. Screenshots live in
 `output/playwright/world-studio-*.png`; the browser receipt is
 `data/reports/world-studio-browser.json` and the Electron receipt is
 `.runtime/agent/studio-desktop.json`.
+
+For a visual review of Garden Office, capture its six player-height stations under
+all three presets. Each station stands on a required route target and faces the
+furnishing it serves:
+
+```sh
+RIVER_OAKS_E2E_REPORT=garden-office-stations.json pnpm run test:experience studio-office-stations
+```
+
+It writes `output/playwright/garden-office-<preset>-CAM-0N-<station>.png`.
+`studio-template-stations` does the same for any template, from its route profile:
+the entry, each required destination facing the furnishing it serves, and the exit.
+
+```sh
+STUDIO_TEMPLATE=house STUDIO_CAPTURE_TAG=review pnpm run test:experience studio-template-stations
+STUDIO_TEMPLATE=house pnpm run test:experience studio-template-journey   # the pilot journey for House or Garden Office
+STUDIO_TEMPLATE=house node preview/e2e/studio-pilot-perf.mjs            # frame times for House
+```
+
+Captures go to `output/playwright/studio-<template>-<tag>-<preset>-CAM-0N-<station>.png`.
+
+Pilot acceptance (#417) reuses four more checks against Garden Office:
+
+```sh
+pnpm run test:experience studio-pilot-journey   # edit, refusal, undo/redo, save/reopen, stale tab, walked route tour
+pnpm run test:experience studio-pilot-soak      # one warm-up plus ten open/walk/replace cycles; STUDIO_SOAK_CYCLES=N for longer
+pnpm run test:experience studio-pilot-assets    # missing, late and replaced-while-loading textures
+pnpm run test:experience studio-pilot-a11y      # 320/390 px layouts, keyboard-only use, focus, reduced motion
+node preview/e2e/studio-pilot-perf.mjs          # vsync-off frame times, load and transfer
+```
+
+`STUDIO_TEMPLATE=house` (or `boutique`, `cafe`) runs the soak and the texture check
+against another template. The texture check measures a textured floor, because stone
+worktops are plain slabs. Garden Office has no textured surface left, so its case first
+changes the meeting-room floor to limestone. Each case must show the texture (a blocked
+texture reads differently), and once its requests finish the floor must match the normal
+reading within 3 levels.
+
+The soak samples renderer counts from the viewport's `data-render-stats` (the game's
+format plus `programs`, distinct scene `materials` and the viewport's own `renderTargets`),
+heap, listeners and DOM nodes from Chromium after a forced garbage collection, and
+pending loads: material image requests, live route-assessment workers and pending
+timeouts. Persistent by design: the shared PBR texture cache, one reflection map, the
+shadow map, compiled shader programs and up to 80 undo steps. The performance profile
+writes `.runtime/acceptance/perf/receipt.json`. On macOS the soak and the profile also
+record the GPU process's physical footprint and its Metal share, per sample or phase
+(unified memory, so a trend rather than a per-resource VRAM figure).
 
 ## World Designer
 

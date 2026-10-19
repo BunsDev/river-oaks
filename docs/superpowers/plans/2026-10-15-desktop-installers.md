@@ -88,10 +88,18 @@ Files owned: `desktop/installers.js`, `desktop/installer-acceptance.js`, `deskto
 - Windows signing: rehearsal with an ephemeral certificate signs and verifies Setup.exe, the app, `squirrel.exe` (Update.exe), the stub and the unsigned DLLs; real Artifact Signing is wired behind `signing-config`/`sign-windows` and skips with a notice until the six repository variables exist (`signing-config` confirmed the skip path in every diag run).
 - Local at the final head: `pnpm run verify desktop-package` (macOS arm64) and `pnpm run verify` core passed. Earlier core runs failed once on the known load-sensitive `voice-reconcile` test and once on ENOSPC (disk filled by another project's leaking dev server); both reruns passed.
 - Hosted at `134e19fa`: Desktop 38700752333 and Verify 38700752319 green; dispatch 38700833828 produced and checked every installer with one `SHA256SUMS`.
+- 2026-10-19, merged main `fdc7cafe`, which includes release 0.2.1 (`c77aa435`: Developer ID signing, notarization and `EnableCookieEncryption` on).
+  - `package.json` keeps both `desktop:installers` and `desktop:sign`.
+  - `docs/desktop.md` and `docs/security-review.md` now say the cookie fuse is on for every platform, keeping the Windows and Linux measurements above. macOS signing is listed as done.
+  - The installer checks read the expected fuses from `desktop/fuses.js`, so the installed-copy fuse check follows the change with no code edit.
+  - Main's five garment bake receipts pin `pnpm-lock.yaml`. This branch's lockfile only adds `electron-winstaller` and its dependencies (nothing removed, three.js untouched), so core verify failed on those receipts after the merge.
+    - Rebaked with `--write`: `bake-skirt-seat-morph`, `bake-lyra-drapes`, `bake-silvan-drapes`, `bake-coat-tails` and `bake-vesper-skirt`.
+    - Every generated data file came out byte-identical. Each receipt changed only its `pnpm-lock.yaml` hash.
+  - The branch's `tasks.json` and plans index changes were dropped earlier the same day (`9bad914a`), because the live register moved to the common Git directory in #548.
 
 ## Gaps and next step
 
 - Human: Val creates the Azure Artifact Signing account, passes identity validation, creates the certificate profile, federates `repo:BunsDev/river-oaks:environment:desktop-signing`, creates the environment and sets the six variables (`docs/desktop.md`, "Windows signing"); then a dispatch on `main` signs, and the subject and thumbprint go in the release ledger.
 - Not proven here: a Squirrel update (`--squirrel-updated`/`--squirrel-obsolete`) end to end (unit-tested only); SmartScreen on a fresh Windows 11 VM; the AppImage on distributions other than Ubuntu 24.04 (restricted and unrestricted states measured); Wayland app-ID matching (`desktopName` set, not observed). These belong to #373's acceptance matrix.
 - macOS e2e on the new `macos-26-arm64` 20261013 image (W input misses, render-loop floor) belongs to #371.
-- Open questions for Val: the `.deb` Maintainer address (the GitHub noreply identity that signs commits is used until a contact address exists); whether to keep the desktop shortcut on install (Squirrel's default, kept); whether to enable cookie encryption on Windows only (needs per-platform fuses).
+- Open questions for Val: the `.deb` Maintainer address (the GitHub noreply identity that signs commits is used until a contact address exists); whether to keep the desktop shortcut on install (Squirrel's default, kept). The Windows-only cookie encryption question is settled: 0.2.1 turned the fuse on for every platform. On Linux without a keyring, it falls back to Chromium's built-in key.

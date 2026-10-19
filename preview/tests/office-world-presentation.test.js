@@ -46,6 +46,30 @@ test('the real world scene survives a stalled render, completes all phases and r
   assert.equal(f.district.visible,false);visit.dispose();visit.dispose();
   assert.equal(f.lobby.object.parent,f.district);assert.equal(f.avatar.presentation,null);assert.equal(f.scene.children.length,2);assert.equal(f.district.visible,true);
 });
+test('a glazed penthouse hides the borrowed cabin and lobby after arrival, leaving the closed car doors, and restores them on exit',t=>{
+  const previous=globalThis.document,element=()=>({style:{},classList:{},append(){},setAttribute(){},remove(){}});
+  globalThis.document={createElement:element};t.after(()=>{globalThis.document=previous;});
+  const visitIn=layout=>{
+    const f=fixture();f.avatar.ready=true;
+    const stone=new THREE.Group(),hiddenTrim=new THREE.Group(),door=new THREE.Group();hiddenTrim.visible=false;
+    f.lobby.object.add(stone,hiddenTrim,door);f.lobby.frontDoors=[door];
+    const visit=createOfficeWorldScene({street:f.street,host:{...element(),clientWidth:1440,clientHeight:1000},self:{id:'self',office:{id:'jevica-office',layout,levelId:'jevica-office/l0'}}});
+    t.after(()=>visit.dispose());
+    const seen={};
+    for(let i=0;i<=1500;i++){const now=i*1000/60;visit.prepare(now);const {phase}=visit.render(now,[0,1.25],0,[]);seen[phase]??={stone:stone.visible,door:door.visible,doors:f.lobby.frame.doors};}
+    return {f,visit,stone,hiddenTrim,door,seen};
+  };
+  const glazed=visitIn('office-penthouse-1');
+  assert.equal(glazed.seen.arriving.stone&&glazed.seen.arriving.door,true,'the cabin stays drawn while the visitor walks out of it');
+  assert.deepEqual(glazed.seen.office,{stone:false,door:true,doors:0},'arrived: cabin and lobby hidden, front doors drawn and closed');
+  assert.equal(glazed.hiddenTrim.visible,false);
+  glazed.visit.dispose();
+  assert.equal(glazed.stone.visible,true,'leaving restores the lobby');assert.equal(glazed.hiddenTrim.visible,false,'and keeps a part that was already hidden hidden');
+  assert.equal(glazed.f.lobby.object.parent,glazed.f.district);
+  const legacy=visitIn('office-legacy-1');
+  assert.deepEqual(legacy.seen.office,{stone:true,door:true,doors:1},'the windowless legacy room is unchanged');
+  legacy.visit.dispose();
+});
 test('street lead-in begins at the exact camera and avatar and meets the established lobby path',()=>{
   const {street,body,camera}=fixture(),path=officeStreetApproach(street),rotation=new THREE.Quaternion().setFromRotationMatrix(street.frame);
   const first=path.at(0,1.44),last=path.at(path.duration,1.44),expected=arrivalCamera(0,{aspect:1.44});
@@ -93,4 +117,49 @@ test('enclosed arrival walls remain opaque near the camera while street facades 
   seeThroughNearCamera(cabin);seeThroughNearCamera(facade);
   assert.equal(cabin.userData.seeThroughNearCamera,undefined);assert.equal(facade.userData.seeThroughNearCamera,true);
   cabin.dispose();facade.dispose();
+});
+test('seated peers render on their plan seat facing its desk, and a seated visitor\'s eye drops to the seated height',t=>{
+  const previous=globalThis.document,element=()=>({style:{},classList:{},append(){},setAttribute(){},remove(){},getBoundingClientRect(){return {width:110,height:26};}});
+  globalThis.document={createElement:element};t.after(()=>{globalThis.document=previous;});
+  const f=fixture();f.avatar.ready=true;
+  const place={layoutId:'office-penthouse-1',levelId:'jevica-office/l0'};
+  const visit=createOfficeWorldScene({street:f.street,host:{...element(),clientWidth:1440,clientHeight:1000},self:{id:'self',office:{id:'jevica-office',...place,layout:place.layoutId}},reducedMotion:true});
+  t.after(()=>visit.dispose());
+  const guest={id:'guest',name:'Guest',office:{id:'jevica-office',layout:'office-penthouse-1',levelId:'jevica-office/l0',elevation:0,position:[3.65,5.6],yaw:0,seat:{id:'desk-a1-chair'}}};
+  visit.prepare(0);visit.render(0,[3.65,3.55],0,[guest],place);
+  const turn=Math.atan2(f.street.frame.elements[8],f.street.frame.elements[10]);
+  const peer=visit.inspect().actors.find(actor=>actor.id==='guest'),seated=peer.sitting;
+  assert.equal(peer.onScreen,true);assert.equal(peer.labelVisible,true,'an isolated seated peer keeps a readable nameplate');
+  assert.equal(seated.height,0.5);
+  assert.ok(Math.abs(Math.atan2(Math.sin(seated.yaw-(Math.PI+turn)),Math.cos(seated.yaw-(Math.PI+turn))))<1e-9,'faces the desk at +d');
+  visit.render(16,[3.65,3.55],0,[{...guest,office:{...guest.office,position:[3.65,3.55],seat:undefined}}],place);
+  assert.equal(visit.inspect().actors.find(actor=>actor.id==='guest').sitting,null,'standing up clears the pose');
+  const standing=visit.inspect().camera.position[1];
+  visit.render(32,[3.65,5.6],0,[],{...place,seatId:'desk-a1-chair'});
+  assert.ok(Math.abs(standing-visit.inspect().camera.position[1]-(1.68-1.2))<1e-9,'seated eye is 0.48 m lower');
+});
+test('a view moves the camera to its fixed eye inside the office and shows the visitor\'s own body, seated when seated',t=>{
+  const previous=globalThis.document,element=()=>({style:{},classList:{},append(){},setAttribute(){},remove(){}});
+  globalThis.document={createElement:element};t.after(()=>{globalThis.document=previous;});
+  const f=fixture();f.avatar.ready=true;
+  const place={layoutId:'office-penthouse-1',levelId:'jevica-office/l0'};
+  const visit=createOfficeWorldScene({street:f.street,host:{...element(),clientWidth:1440,clientHeight:1000},self:{id:'self',office:{id:'jevica-office',...place,layout:place.layoutId}},reducedMotion:true});
+  t.after(()=>visit.dispose());
+  visit.prepare(0);visit.render(0,[3.65,3.55],0,[],place);
+  assert.equal(f.avatar.presentation.showBody,false,'first person hides the body');
+  const walking=visit.inspect().camera.position;
+  visit.render(16,[3.65,3.55],0,[],{...place,viewId:'overview'});
+  const eye=new THREE.Vector3(13.6,6.4,-1.2).applyMatrix4(f.street.frame);eye.y+=ARRIVAL.officeElevation;
+  near(new THREE.Vector3(...visit.inspect().camera.position),eye,'the camera sits at the overview eye');
+  assert.equal(f.avatar.presentation.showBody,true,'the visitor sees their own body from a view');
+  assert.equal(f.avatar.presentation.sitting,null);
+  visit.render(32,[3.65,5.6],0,[],{...place,viewId:'overview',seatId:'desk-a1-chair'});
+  assert.equal(f.avatar.presentation.sitting?.height,0.5,'seated visitors are drawn seated in a view');
+  visit.render(48,[3.65,3.55],0,[],place);
+  near(new THREE.Vector3(...visit.inspect().camera.position),new THREE.Vector3(...walking),'leaving the view restores the walking camera');
+});
+test('opening live exterior restores only layers hidden by the cabin lease',()=>{
+ const f=fixture(),off=new THREE.Group();off.visible=false;f.scene.add(off);const lease=borrowOfficePresentation(f.street);
+ lease.inside(true);assert.equal(f.district.visible,false);lease.inside(false);assert.equal(f.district.visible,true);assert.equal(off.visible,false);
+ lease.render();assert.equal(f.district.visible,true);lease.dispose();
 });

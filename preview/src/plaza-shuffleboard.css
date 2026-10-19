@@ -22,3 +22,5 @@
 .shuffleboard-panel .table-game-actions [data-shuffle-action=throw], .shuffleboard-panel .table-game-actions [data-shuffle-action=new] { background: var(--hud-action); border-color: transparent; color: var(--hud-on-action); }
 .shuffleboard-panel .table-game-actions [data-shuffle-action=throw] { min-width: 120px; }
 .shuffleboard-panel [data-shuffle-action=throw][aria-disabled=true] { opacity: .45; cursor: default; }
+.shuffleboard-panel .shuffle-readout { margin: 0; color: var(--ink); font-size: 13px; font-variant-numeric: tabular-nums; min-height: 1.3em; }
+.shuffleboard-panel .shuffle-table { touch-action: none; cursor: crosshair; }

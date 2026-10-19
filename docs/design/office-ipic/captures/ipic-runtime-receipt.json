@@ -1,0 +1,200 @@
+{
+  "packet": "office-ipic",
+  "runner": "node preview/e2e/ipic-photo-views.mjs",
+  "capturedAt": "2026-10-19T21:19:00.345Z",
+  "sourceRevision": "43e3e9900b79305e77593c2287a6ab7900becc80",
+  "dirtyPatchSha256": null,
+  "browser": "156.0.8078.4",
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+  "viewport": [
+    1440,
+    900
+  ],
+  "pixelRatio": 1,
+  "quality": "sharp",
+  "fov": 67,
+  "frame": "eye and target are [a, h, d] in the IPIC room frame, h above the street floor (camera-manifest.json frame)",
+  "scene": {
+    "alice": "bench:ipic-recliner-1-1:0 seated, synthetic host, ipic-original-v1 playing",
+    "owner": "standing at the Tuck Room bar",
+    "seatPose": [
+      -2725.038366970851,
+      25.163281879609556,
+      1219.6093035272747
+    ],
+    "framedFrom": {
+      "T3-auditorium": "owner",
+      "T2c-bar": "alice",
+      "T2b-lounge": "alice",
+      "T1-reception": "alice",
+      "T2a-mural": "alice",
+      "T3-seated": "alice"
+    }
+  },
+  "limits": "Local macOS Chromium with Metal ANGLE under shared load; the film named in scene; not physical-device, human or final-art acceptance.",
+  "errors": [],
+  "captures": [
+    {
+      "id": "T3-auditorium",
+      "camera": "auditorium",
+      "eye": [
+        -4.4,
+        7.75,
+        31.4
+      ],
+      "target": [
+        -19.35,
+        8.4409,
+        30
+      ],
+      "photo": "assets/ipic/references/IMG_9767.jpg",
+      "page": "owner",
+      "file": "docs/design/office-ipic/captures/T3-auditorium.png",
+      "bytes": 440033,
+      "sha256": "99738c59e73265ab87c801f63674188d4ab4802ba30325053f4e58566d1a9e8d",
+      "calls": 763,
+      "triangles": 3467098,
+      "film": {
+        "mediaId": "ipic-original-v1",
+        "state": "playing",
+        "currentTime": 2.97,
+        "shared": "playing"
+      }
+    },
+    {
+      "id": "T2c-bar",
+      "camera": "bar",
+      "eye": [
+        -0.8,
+        7.65,
+        24.8
+      ],
+      "target": [
+        4.5,
+        7.7,
+        22.8
+      ],
+      "photo": "assets/ipic/references/IMG_9756.jpg",
+      "page": "alice",
+      "file": "docs/design/office-ipic/captures/T2c-bar.png",
+      "bytes": 1550898,
+      "sha256": "8ff11e77543784eb65c977497a9762145c049a2161423cc600c5a6c208954e3b",
+      "calls": 3525,
+      "triangles": 10272099,
+      "film": {
+        "mediaId": "ipic-original-v1",
+        "state": "playing",
+        "currentTime": 5.67,
+        "shared": "playing"
+      }
+    },
+    {
+      "id": "T2b-lounge",
+      "camera": "lounge",
+      "eye": [
+        -4.1,
+        7.75,
+        25.7
+      ],
+      "target": [
+        -4.1,
+        6.75,
+        20.4
+      ],
+      "photo": "assets/ipic/references/IMG_9758.jpg",
+      "page": "alice",
+      "file": "docs/design/office-ipic/captures/T2b-lounge.png",
+      "bytes": 1365817,
+      "sha256": "adf6b0c6522ca08632caa3a12cec6f75ea8f282e577de8a9eeef1d00624329cc",
+      "calls": 1628,
+      "triangles": 5339747,
+      "film": {
+        "mediaId": "ipic-original-v1",
+        "state": "playing",
+        "currentTime": 7.87,
+        "shared": "playing"
+      }
+    },
+    {
+      "id": "T1-reception",
+      "camera": "reception",
+      "eye": [
+        1.4,
+        1.55,
+        0.6
+      ],
+      "target": [
+        3.6,
+        1.4,
+        3.6
+      ],
+      "photo": "assets/ipic/references/IMG_9738.jpg",
+      "page": "alice",
+      "file": "docs/design/office-ipic/captures/T1-reception.png",
+      "bytes": 1181875,
+      "sha256": "5e5daf7378ed11e675c4bef009fc9f1acf36a0c81772a69a589b990efe37ebed",
+      "calls": 1655,
+      "triangles": 5598698,
+      "film": {
+        "mediaId": "ipic-original-v1",
+        "state": "playing",
+        "currentTime": 10.07,
+        "shared": "playing"
+      }
+    },
+    {
+      "id": "T2a-mural",
+      "camera": "mural",
+      "eye": [
+        1.4,
+        4.6,
+        11.8
+      ],
+      "target": [
+        4.7,
+        4.6,
+        13.7
+      ],
+      "photo": "assets/ipic/references/IMG_9771.jpg",
+      "page": "alice",
+      "file": "docs/design/office-ipic/captures/T2a-mural.png",
+      "bytes": 1071873,
+      "sha256": "3d324d7e8c8c933fe51c1178fa0b2144993874727b5cf6c45b989d008f411707",
+      "calls": 100,
+      "triangles": 206744,
+      "film": {
+        "mediaId": "ipic-original-v1",
+        "state": "playing",
+        "currentTime": 12.2,
+        "shared": "playing"
+      }
+    },
+    {
+      "id": "T3-seated",
+      "camera": "recliner-1-1 seated eye",
+      "eye": [
+        -9.85,
+        6.713,
+        30
+      ],
+      "target": [
+        -19.35,
+        8.4409,
+        30
+      ],
+      "photo": "assets/ipic/references/IMG_9767.jpg",
+      "page": "alice",
+      "file": "docs/design/office-ipic/captures/T3-seated.png",
+      "bytes": 463221,
+      "sha256": "fe9290754b5fb676cab7ebb3baf27c985c7776b76917524346cace7c9ab79c34",
+      "calls": 109,
+      "triangles": 208258,
+      "film": {
+        "mediaId": "ipic-original-v1",
+        "state": "playing",
+        "currentTime": 14.12,
+        "shared": "playing"
+      }
+    }
+  ]
+}

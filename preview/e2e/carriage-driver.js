@@ -30,7 +30,7 @@ async page=>{
  await page.screenshot({path:'output/playwright/prince-companion.png'});
  await page.locator('#player-companion').click();
  await page.waitForFunction(()=>JSON.parse(document.querySelector('#canvas-host').dataset.companion).mode==='seat',null,{timeout:30000});
- if(!await page.locator('.player-settings').evaluate(e=>e.open))await page.locator('.player-settings > summary').click();
+ await page.locator('#play-tab-rides').click();
   await page.locator('#player-ride').click();await page.waitForFunction(()=>window.__riverCarriage().riding);
  const start=await page.evaluate(()=>(()=>{const c=window.__riverCarriage();return {id:'carriage-driver',visible:c.princeVisible,position:[c.princePosition[0],-c.princePosition[2]],reachable:Math.hypot(c.princePosition[0]-c.pose.position[0],c.princePosition[2]-c.pose.position[2])<3.5};})());
  await page.locator('#canvas-host').focus();await page.keyboard.down('KeyW');

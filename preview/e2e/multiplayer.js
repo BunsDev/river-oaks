@@ -23,23 +23,17 @@ async page => {
     check(await page.evaluate(()=>typeof window.__riverForce==='undefined'),'Force shortcut cannot bypass shared-mode gating');
     check(await page.evaluate(()=>window.__riverMultiplayer().snapshot.players.length===2),'Two accounts share the roster and rendered avatars');
     await page.locator('input[name=player-character][value=vesper]').check();
-    await page.locator('input[name=player-form][value=human]').check();
     await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerReady==='true'&&document.querySelector('#canvas-host').dataset.playerAppearance==='woman-tailored');
     await other.waitForFunction(()=>window.__riverMultiplayer().remotes?.some(player=>player.id==='alice'&&player.ready&&player.appearance==='woman-tailored'));
     check(await other.evaluate(()=>window.__riverMultiplayer().snapshot.players.find(player=>player.id==='alice').appearance==='woman-tailored'),'A peer sees the selected avatar');
     // Person and form chosen in quick succession reach the town as the final look.
     await page.locator('input[name=player-character][value=kai]').check();
-    await page.locator('input[name=player-form][value=beast]').check();
-    await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerReady==='true'&&document.querySelector('#canvas-host').dataset.playerAppearance==='kai-formal-beast',null,{timeout:15000});
+    await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerReady==='true'&&document.querySelector('#canvas-host').dataset.playerAppearance==='man-workwear',null,{timeout:15000});
     check(!/wait a moment/i.test(await page.locator('#player-status').textContent()),'Quick person-then-form choices settle without a cooldown error');
-    await page.locator('#player-beast-movement').click();
-    await page.waitForFunction(()=>window.__riverMultiplayer().snapshot.players.find(player=>player.id==='alice')?.movement==='beast');
-    await other.waitForFunction(()=>window.__riverMultiplayer().remotes?.some(player=>player.id==='alice'&&player.ready&&player.appearance==='kai-formal-beast'&&player.movement==='beast'&&player.beastMotion>.9));
-    check(true,'A peer sees beast movement on the shared beast form');
+    await other.waitForFunction(()=>window.__riverMultiplayer().remotes?.some(player=>player.id==='alice'&&player.ready&&player.appearance==='man-workwear'&&player.movement==='upright'));
+    check(true,'A peer sees the shared human character');
     await page.reload({waitUntil:'commit'});await ready(page);
-    await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerAppearance==='kai-formal-beast');
-    check(await page.locator('input[name=player-character][value=kai]').isChecked()&&await page.locator('input[name=player-form][value=beast]').isChecked(),'Appearance survives reconnect');
-    check(await page.locator('#player-beast-movement').getAttribute('aria-pressed')==='true','Beast movement belongs to the account and survives reconnect');
+    await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerAppearance==='man-workwear');
     await page.bringToFront();
     await openHudSpace(page, 'community-section');
     check(await page.evaluate(()=>window.__riverMultiplayer().snapshot.players.find(player=>player.id==='alice')?.canGrantWishes===true),'Alice fixture retains server-issued wish permission after reconnect');

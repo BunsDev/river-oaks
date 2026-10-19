@@ -1,3 +1,6 @@
+import { createRedisCharacterStore } from './character-store.js';
+import { accountPrefixFor } from './world-keys.js';
+import { createWorkOSDeletionHandler } from './workos-deletion.js';
 import { createChauffeurRoute, chauffeurDailyLimit } from './chauffeur.js';
 import Redis from 'ioredis';
 import { loadDistrictData } from './district-data.js';
@@ -8,6 +11,8 @@ import { createRedisWaitlist } from './waitlist.js';
 import { createWorldGateway } from './world-gateway.js';
 import { parseScreeningHosts } from './screenings.js';
 import { configuredOfficeLayout } from './offices.js';
+import { configuredDistrictEpoch, configuredDistrictRevision } from '../preview/src/garden-campus-district.js';
+import { parseCampusOperators } from './campus-leases.js';
 import { vercelClientAddress } from './vercel-routing.js';
 import { DEFAULT_WORLD_ID, validateWorldId } from '../preview/src/world-contract.js';
 import { configureVoice, createRedisVoiceLeases } from './voice.js';
@@ -25,7 +30,9 @@ export async function createRedisBackend(env = process.env) {
   if (env.VERCEL_ENV && env.VERCEL_ENV !== 'production' && namespace.startsWith('river-oaks:production:')) throw new Error('Preview cannot use the production town');
   const worldId = validateWorldId(env.WORLD_ID ?? DEFAULT_WORLD_ID);
   const prefix = `{${namespace}}`;
-  const worldData = await loadDistrictData();
+  // The district revision; unset or unknown keeps the garage (the default and the rollback, #507).
+  const districtRevision = configuredDistrictRevision(env.RIVER_OAKS_DISTRICT_REVISION, { onInvalid: () => console.warn(JSON.stringify({ event: 'district_revision_ignored' })) });
+  const worldData = await loadDistrictData({ districtRevision });
   const redis = new Redis(env.REDIS_URL, {
     lazyConnect: true, connectTimeout: 3000, commandTimeout: 3000,
     maxRetriesPerRequest: 1, autoResendUnfulfilledCommands: false,
@@ -41,15 +48,19 @@ export async function createRedisBackend(env = process.env) {
     if (!/^[A-Za-z0-9:_-]{1,120}$/.test(accessNamespace)
       || env.VERCEL_ENV && env.VERCEL_ENV !== 'production' && accessNamespace === 'river-oaks:production:access:v1') throw new Error('Invalid waitlist namespace');
     const waitlist = createRedisWaitlist({ redis, prefix: `{${accessNamespace}}`, admins });
+    const characters=createRedisCharacterStore({redis,prefix:accountPrefixFor(namespace)});
     let gateway;
-    const auth = createRedisAuth({ redis, prefix, origin,
+    const auth = createRedisAuth({ redis, prefix, origin, accountActive: async id => !(await characters.get(id)).deleted,
       apiKey: env.WORKOS_API_KEY, clientId: env.WORKOS_CLIENT_ID, cookiePassword: env.WORKOS_COOKIE_PASSWORD,
       githubToken: env.GITHUB_TOKEN || null, returnPath: env.AUTH_RETURN_PATH,
       onLogout: (userId, sessionId) => gateway.disconnectUser(userId, sessionId), magic: magicOptions(env, origin),
       usernameOf: userId => waitlist.usernameOf(userId),
     });
     // Redis counts the daily budget in UTC-day windows across every gateway.
-    const handleRequest = createChauffeurRoute({auth,security,waitlist,origin,apiKey:env.TYPESAFE_API_KEY,model:env.JEV_AUTO_MODEL,dailyLimit:chauffeurDailyLimit(env)});
+    const chauffeurRequest = createChauffeurRoute({auth,security,waitlist,origin,apiKey:env.TYPESAFE_API_KEY,model:env.JEV_AUTO_MODEL,dailyLimit:chauffeurDailyLimit(env)});
+    const deletionRequest=createWorkOSDeletionHandler({secret:env.WORKOS_WEBHOOK_SECRET||null,
+      onDelete:async id=>{await characters.deleteAccount(id);await auth.revokeUser(id);}});
+    const handleRequest=async(req,res)=>await deletionRequest(req,res)||await chauffeurRequest(req,res);
     // Shared voice rooms and the daily join budget count across every gateway of this namespace.
     // A long-lived gateway sweeps orphaned voice participants on a timer; on
     // Vercel the per-minute cron (/api/voice-sweep) does it.
@@ -58,11 +69,17 @@ export async function createRedisBackend(env = process.env) {
       moderators: (env.MODERATOR_USER_IDS ?? '').split(',').map(id => id.trim()).filter(Boolean),
       trustedProxyIPs: (env.TRUSTED_PROXY_IPS ?? '').split(',').map(ip => ip.trim()).filter(Boolean),
       ...(env.VERCEL === '1' ? { address: vercelClientAddress } : {}),
+      characterMetricsEnabled:env.RIVER_OAKS_CHARACTER_STUDIO_METRICS==='1',
+      characterStudioEnabled: env.RIVER_OAKS_CHARACTER_STUDIO === '1',
       workplaceEnabled: env.RIVER_OAKS_WORKPLACE === '1',
       // Venue hosts are explicit grants; none configured means no one can control a screening.
       // Jevica's office layout; unset or unknown keeps the legacy room (the default and the rollback).
       officeLayout: configuredOfficeLayout(env.RIVER_OAKS_OFFICE_LAYOUT, { onInvalid: () => console.warn(JSON.stringify({ event: 'office_layout_ignored' })) }),
+      // Raised with every district revision switch; see docs/garden-campus.md (#512).
+      districtEpoch: configuredDistrictEpoch(env.RIVER_OAKS_DISTRICT_EPOCH),
       screeningHosts: parseScreeningHosts(env.RIVER_OAKS_SCREENING_HOSTS, { onInvalid: () => console.warn(JSON.stringify({ event: 'screening_host_grant_ignored' })) }),
+      // Garden campus lease operators are explicit account ids; none configured keeps leasing closed.
+      campusOperators: parseCampusOperators(env.RIVER_OAKS_CAMPUS_OPERATOR_IDS, { onInvalid: () => console.warn(JSON.stringify({ event: 'campus_operator_ignored' })) }),
       workplaceSweep: env.VERCEL !== '1',
       // Vercel Cron sends it as a Bearer token; without it the sweep route stays closed.
       workplaceCronSecret: env.CRON_SECRET || null,

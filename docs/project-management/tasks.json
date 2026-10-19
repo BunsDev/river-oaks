@@ -9025,13 +9025,13 @@
     {
       "id": "release-0-2-0-readiness",
       "title": "Prepare TypeSafe Place 0.2.0 release candidate from verified procedural interior stack",
-      "status": "blocked",
+      "status": "retired",
       "branches": [
         "release/v0.2.0-20261014"
       ],
       "owner": null,
-      "updatedAt": "2026-10-15T00:28:34.282389+00:00",
-      "nextAction": "Prepared signed/pushed candidate 89d17cdcd65d61009ca7ba1d20c4c08e3043708f in draft PR #376, cut at main f72a89f8 including #379 desktop identity and #383 restore fix. Core 11/11 passed (95 tooling, 3045 preview + one existing skip, 682 Redis/server zero skips, 61 desktop, 141 Python); all 16 exact-head hosted checks passed. Final ad-hoc macOS arm64 package inspected, SHA-256 6557488c4da6f7af3b2c8b561ff9badb0ab7fda0c63e2d46e6023257c17542fa. Cloth contacts -21.1%, component CPU about -10%, sampled pixels/vertices identical. Release owner must schedule quiet-machine local shared/full rerun and 60 Hz acceptance: 0e15133 full passed 16/17 then shared reconnect timed out with host load 996.96. Complete live packaged auth, human accessibility, Developer ID/notarization and migration acceptance; obtain landing/publication authorization. Main 4966d99f now adds test-only #384; refresh via landing queue and require current-head checks before landing. Preserve worktree and archived artifacts; receipts in .runtime/release-0.2.0/candidate-handoff.json. Owned Redis stopped; no merge/publish performed.",
+      "updatedAt": "2026-10-15T20:05:11.761Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "ledger": "docs/superpowers/plans/2026-10-14-release-0.2.0-readiness.md",
       "requiredChecks": [
         "Review exact-head stacked PR checks and changes",
@@ -9052,7 +9052,33 @@
         "preview/e2e/gown-contact-samples.js"
       ],
       "pr": 376,
-      "previousOwner": "codex-resume-20261014-release-readiness"
+      "previousOwner": "codex-resume-20261014-release-readiness",
+      "evidence": [
+        {
+          "pr": 376,
+          "reviewedHead": "d7e8ea1d2ff8a8a54d1f53bcdcf77dd404e4422f",
+          "merge": "e87b458ec7883c2355c0f3e1028b07a65120355f",
+          "tree": "4b042e93144018fb58c08f8946b6f8f7824fc1b1",
+          "checks": "Landed by claude:river-oaks-1b with pnpm run land 376 at 2026-10-15T18:19:11Z after Val asked to take #376 through to merging (land updated the branch to d7e8ea1d; Verify passed; guard CLEAN). Refreshed head: cloth unit 3/3; gown-contact-samples, jevica-gown, jevica-waist passed; core verify passed (agent 111/111, preview 3268+1 skip+1 todo, server 590+150 Redis skips, desktop 69/69). Release notes and readiness addendum updated to main's content; generated plans index and register kept identical to main."
+        }
+      ],
+      "retirement": {
+        "head": "d7e8ea1d2ff8a8a54d1f53bcdcf77dd404e4422f",
+        "releasedAt": "2026-10-15T20:03:59.000Z",
+        "sessionsReviewedAt": "2026-10-15T20:03:59.000Z"
+      },
+      "retiredBranches": [
+        "release/v0.2.0-20261014"
+      ],
+      "archive": {
+        "release/v0.2.0-20261014": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-PqNQgF/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-PqNQgF/history.bundle",
+          "sha256": "8bbf15be36f774fe39c8c6d05dd255586c8618b63bee206bd58b52c051020d1f",
+          "tag": "refs/tags/archive/worktree-prune/4f9b3c42-3023-4ddc-912d-474b053eed7b",
+          "head": "d7e8ea1d2ff8a8a54d1f53bcdcf77dd404e4422f"
+        }
+      }
     },
     {
       "id": "shared-dominoes-server",
@@ -9241,13 +9267,13 @@
     {
       "id": "office-ipic-baseline-360",
       "title": "Office + IPIC #360 (design side, D0/D1): kit/reference inventory, brief, asset manifest and review matrix in docs/design/office-ipic",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "docs/office-ipic-baseline-20261014"
       ],
-      "owner": "claude:river-oaks-1b (f4107618)",
-      "updatedAt": "2026-10-15T03:43:33.020Z",
-      "nextAction": "main c1cfd584 merged (dace7b1a); engineering G1 agreement added to review-matrix.md, brief notes #388. Push, mark #380 ready, land after #381.",
+      "owner": null,
+      "updatedAt": "2026-10-15T04:11:09.286Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "filesOwned": [
         "docs/design/office-ipic/brief.md",
         "docs/design/office-ipic/reference-index.json",
@@ -9268,25 +9294,49 @@
       "ledger": "docs/superpowers/plans/2026-10-14-office-ipic-baseline.md",
       "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-ipic-baseline-20261014",
       "pr": 380,
-      "leaseUntil": "2026-10-15T05:43:33.020Z",
       "handoff": {
         "at": "2026-10-15T03:38:57.407Z",
         "from": null,
         "to": "claude:river-oaks-1b (f4107618)",
         "reason": "Released design packet task; Val's /goal of 2026-10-15 asks river-oaks-1b to mark #380 ready, land it and close #360."
+      },
+      "evidence": [
+        {
+          "pr": 380,
+          "reviewedHead": "99c8fea61500af720bc837c63f2babfc8384f5e6",
+          "merge": "a714a8a5038e10747ed53a117b1dc4703953a6a6",
+          "tree": "64375b6fa2f3d423adaeba4ffe059ef702ea6270",
+          "checks": "pnpm run land 380 (river-oaks-1b): Verify passed on 99c8fea6, merge guard CLEAN with 16 checks. With both packet halves present: contract + references tests 14/14, index check 0 problems (3 reported drifts)."
+        }
+      ],
+      "retirement": {
+        "head": "99c8fea61500af720bc837c63f2babfc8384f5e6",
+        "releasedAt": "2026-10-15T04:08:56.611Z",
+        "sessionsReviewedAt": "2026-10-15T04:08:56.611Z"
+      },
+      "retiredBranches": [
+        "docs/office-ipic-baseline-20261014"
+      ],
+      "archive": {
+        "docs/office-ipic-baseline-20261014": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-Ky3bfO/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-Ky3bfO/history.bundle",
+          "sha256": "35704c8e4d2adf3d085f836a1140b53ce790888160143a4d144a40322686f947",
+          "tag": "refs/tags/archive/worktree-prune/8cc6494f-cb14-40b4-b158-2e2ae2bbad20",
+          "head": "99c8fea61500af720bc837c63f2babfc8384f5e6"
+        }
       }
     },
     {
       "id": "office-ipic-engineering-baseline",
       "title": "Office + IPIC #360, engineering half: baseline checks, physical fit, keep/reuse against #349, and the executable layout/camera contract with its validator",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "docs/office-ipic-engineering-baseline-20261014"
       ],
-      "owner": "claude:river-oaks-1b (f4107618)",
-      "updatedAt": "2026-10-15T03:43:33.020Z",
-      "leaseUntil": "2026-10-15T05:43:33.020Z",
-      "nextAction": "#388 landed into this branch (merge cbe393b8); main c1cfd584 merged (f1a80496); core verify passed (agent 103/103, preview 3052+1 skip, server 508+144 Redis skips, desktop 66/66, python 141). Engineering G1 agreement in the ledger and review-matrix.md (#380). Push, then pnpm run land 381 --owner river-oaks-1b.",
+      "owner": null,
+      "updatedAt": "2026-10-15T04:10:42.578Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-ipic-engineering-20261014",
       "ledger": "docs/superpowers/plans/2026-10-14-office-ipic-engineering-baseline.md",
       "issue": 360,
@@ -9310,18 +9360,81 @@
         "from": "claude-code river-oaks-dc bc053eff",
         "to": "claude:river-oaks-1b (f4107618)",
         "reason": "Val's /goal of 2026-10-15 directs river-oaks-1b to take over #381 from the expired river-oaks-dc lease (expired 2026-10-15T00:23:26Z). river-oaks-dc is not in ListAgents; worktree clean and in sync with origin at 7c7f7368."
+      },
+      "evidence": [
+        {
+          "pr": 381,
+          "reviewedHead": "0862fd99472b43d2c13ee06eb762ec3f4dd2158d",
+          "merge": "44ecd9394dbba0ab07acb3e4424385a1a5fadb61",
+          "tree": "e9bfef85ac009c3aa9818b89ceae6ed4cbfbc127",
+          "checks": "pnpm run land 381 (river-oaks-1b): Verify passed on 0862fd99, merge guard CLEAN with 17 checks. Local core verify on the merged tree passed (agent 103/103, preview 3052+1 skip, server 508+144 Redis skips, desktop 66/66, python 141); contract tests 8/8; focused office/IPIC 86 tests, 82 pass, 4 Redis skips. Includes #388 (merge cbe393b8)."
+        }
+      ],
+      "retirement": {
+        "head": "0862fd99472b43d2c13ee06eb762ec3f4dd2158d",
+        "releasedAt": "2026-10-15T04:08:56.611Z",
+        "sessionsReviewedAt": "2026-10-15T04:08:56.611Z"
+      },
+      "retiredBranches": [
+        "docs/office-ipic-engineering-baseline-20261014"
+      ],
+      "archive": {
+        "docs/office-ipic-engineering-baseline-20261014": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-t8SuWk/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-t8SuWk/history.bundle",
+          "sha256": "28308374dbd829245b904fd4f452973c52485bfcc6c2e2bd88dd0c6c24dda4f9",
+          "tag": "refs/tags/archive/worktree-prune/ce6bb044-0c34-4d6c-8c73-be5d613ed9b5",
+          "head": "0862fd99472b43d2c13ee06eb762ec3f4dd2158d"
+        }
       }
     },
     {
       "id": "cancelled-feat-character-studio-20261013",
-      "title": "Archived local feat/character-studio-20261013",
-      "status": "queued",
-      "branches": [],
-      "owner": null,
-      "updatedAt": "2026-10-14T19:54:03.182Z",
-      "nextAction": "Local feat/character-studio-20261013 archived under /Users/buns/worktree-backups/river-oaks/cancel-stale-SwztW4/manifest.json; restore it before resuming this task. Remote PR and branch, if any, remain unchanged.",
-      "filesOwned": [],
-      "requiredChecks": [],
+      "title": "TypeSafe Place Character Studio #440–#444",
+      "status": "active",
+      "branches": [
+        "feat/character-studio-render-20261015"
+      ],
+      "owner": "codex-character-studio-20261015",
+      "updatedAt": "2026-10-15T21:57:05.134413+00:00",
+      "nextAction": "Deliver reviewed pose diagnostic harness after core; seated Sable fit remains visually failed (594/689 above probes), experiments restored. Fix against runtime pose, then remaining #442 render/provenance/budgets and #443 persistence/#444 full acceptance. Existing7c6facc5 hosted checks pass; no merge/deploy.",
+      "filesOwned": [
+        "preview/src/character-definition.js",
+        "preview/tests/character-definition.test.js",
+        "docs/character-studio.md",
+        "docs/superpowers/plans/2026-10-15-character-studio.md",
+        "preview/src/character-assets.js",
+        "preview/src/player-avatar.js",
+        "preview/e2e/character-contract.js",
+        "preview/src/character-studio*",
+        "preview/src/character-customization.js",
+        "preview/src/reference-archetypes.js",
+        "preview/src/romance-look.js",
+        "preview/src/sable-look.js",
+        "preview/src/main.js",
+        "preview/tests/character-studio.test.js",
+        "preview/e2e/character-studio.js",
+        "preview/tests/character-studio*.test.js",
+        "preview/src/character-portrait.js",
+        "preview/tests/character-portrait.test.js",
+        "preview/src/character-hero.js",
+        "preview/src/skirt-skinning.js",
+        "preview/tests/skirt-skinning.test.js",
+        "preview/tests/character-hero.test.js",
+        "preview/e2e/character-portrait.js",
+        "scripts/character-assets-audit.mjs",
+        "scripts/tests/character-assets-audit.test.js",
+        "preview/src/character-compatibility.js",
+        "preview/tests/character-compatibility.test.js",
+        "preview/src/rail-navigation.js",
+        "preview/e2e/character-poses.js",
+        "preview/e2e/fixtures/jevica.js"
+      ],
+      "requiredChecks": [
+        "Focused contract and rig tests",
+        "pnpm run verify",
+        "Rendered human/beast fixture inspection"
+      ],
       "cancelledBranches": [
         "feat/character-studio-20261013"
       ],
@@ -9341,6 +9454,17 @@
             }
           ]
         }
+      },
+      "leaseUntil": "2026-10-15T23:57:05.134413+00:00",
+      "ledger": "docs/superpowers/plans/2026-10-15-character-studio.md",
+      "pr": 462,
+      "verification": {
+        "core": "catalog/focus patch b21bf7b8 passed; .runtime/character-studio/catalog-rail-core-final.json; preview1 skip1 todo, server153 Redis skips",
+        "focused": "13 native portrait/skirt/material tests plus16 catalog/contract/editor tests passed",
+        "browser": "15 final portrait checks,17 shared rail checks passed; editor21 and previous regressions253 passed; native human/fox PNGs and walking render inspected",
+        "review": "Portrait lifecycle, invalid transforms and character focus findings fixed, regression verified, re-reviewed without blocking findings",
+        "limitations": "Full Redis/native/crowd/physical-device/human acceptance and approved goldens remain open; #443 not implemented; hosted checks pending on current head",
+        "render": "PR #462 b21bf7b8: final core passed tooling117/preview3319/server598/desktop69/Python141; preview1 skip1 todo; server153 Redis skips. Portrait15/shared rail17/focused16 passed; real 4K and walk captures inspected."
       }
     },
     {
@@ -9574,14 +9698,13 @@
     {
       "id": "procedural-gpu-matrix-harness",
       "title": "Make generated gallery AO-tail GPU comparison repeatable without source edits",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "test/procedural-gpu-matrix-harness-20261015"
       ],
-      "owner": "codex-root-procedural-gpu-matrix-harness",
-      "leaseUntil": "2026-10-15T03:52:32.496Z",
-      "updatedAt": "2026-10-15T02:25:57.921Z",
-      "nextAction": "Watch exact-head hosted preview on draft PR #389, mark ready when passing, and land through the queue; then prepare test-only iPhone Safari access for the GPU matrix.",
+      "owner": null,
+      "updatedAt": "2026-10-15T02:38:54.474Z",
+      "nextAction": "Preserve restoration bundle and selected local receipts; prepare a separate test-only iPhone Safari fixture for the physical GPU matrix.",
       "ledger": "docs/superpowers/plans/2026-10-15-procedural-gpu-matrix-harness.md",
       "requiredChecks": [
         "Focused journey with AO tail off and on",
@@ -9596,8 +9719,205 @@
         "docs/project-management/tasks.json (this task only)"
       ],
       "parent": "procedural-gpu-acceptance",
-      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-procedural-gpu-matrix-harness-20261015",
-      "pr": 389
+      "pr": 389,
+      "evidence": [
+        {
+          "pr": 389,
+          "reviewedHead": "9ab0e1248f7d6d50f35eaca8944fc0615b1945a0",
+          "merge": "d2ea93c34137651b21e497ac519805fd403ba93f",
+          "tree": "08baf815f8e9ae5955b755d15828c96421b31ac0",
+          "checks": [
+            "pnpm run verify passed; .runtime/agent/core.json",
+            "pnpm run verify full passed with isolated Redis; .runtime/agent/full.json",
+            "Gallery cycle off and on focused journeys passed with active-mode assertion",
+            "Hosted exact-head preview and all 17 landing checks passed; pnpm run land 389 merged at 2026-10-15T02:35:54Z"
+          ]
+        }
+      ],
+      "retirement": {
+        "head": "9ab0e1248f7d6d50f35eaca8944fc0615b1945a0",
+        "releasedAt": "2026-10-15T02:37:47.377Z",
+        "sessionsReviewedAt": "2026-10-15T02:37:47.377Z",
+        "note": "Owner codex-root-procedural-gpu-matrix-harness reviewed the sole owned worktree, clean tracked/untracked/ignored state, and no process CWD in it. Nine selected receipts and capture files were hash-verified at ~/worktree-backups/river-oaks/procedural-gpu-matrix-harness-20261015/manifest.json; regenerable caches removed. Project:prune retired the exact branch/worktree, then reported a concurrent register change; reconciled from its retired manifest."
+      },
+      "previousOwner": "codex-root-procedural-gpu-matrix-harness",
+      "retiredBranches": [
+        "test/procedural-gpu-matrix-harness-20261015"
+      ],
+      "archive": {
+        "test/procedural-gpu-matrix-harness-20261015": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-Yxk2Cv/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-Yxk2Cv/history.bundle",
+          "sha256": "2c0bb31d72dcfb7bb3687ce74bf6bd72dd21a0912deb7097535b4a78105e2886",
+          "tag": "refs/tags/archive/worktree-prune/0895babe-2d33-43ec-883e-6e0978dd33eb",
+          "head": "9ab0e1248f7d6d50f35eaca8944fc0615b1945a0"
+        }
+      }
+    },
+    {
+      "id": "procedural-phone-gpu-fixture",
+      "title": "Provide isolated private-LAN Safari fixture for procedural gallery GPU acceptance",
+      "status": "active",
+      "branches": [
+        "test/procedural-phone-gpu-fixture-20261015"
+      ],
+      "owner": "codex-root-procedural-phone-gpu-fixture",
+      "leaseUntil": "2026-10-15T07:42:45.000Z",
+      "updatedAt": "2026-10-15T05:42:45.000Z",
+      "nextAction": "Physical Safari crashes on normal and AO-off routes but joins with the fixture-only HTML decoder control. Finish integrated full gate, exact-head hosted preview and PR #393 landing; retain the production decoder crash and phone GPU row as separate open work.",
+      "ledger": "docs/superpowers/plans/2026-10-15-procedural-phone-gpu-fixture.md",
+      "requiredChecks": [
+        "Focused phone fixture HTTP/WebSocket and host tests",
+        "pnpm run verify",
+        "pnpm run verify full with isolated Redis",
+        "Exact-head hosted preview"
+      ],
+      "filesOwned": [
+        "server/tests/browser-fixture.js",
+        "server/tests/phone-fixture-host.js",
+        "server/tests/phone-fixture-decoder.js",
+        "server/tests/phone-fixture.test.js",
+        "preview/e2e/world-publish.js (revision readiness wait)",
+        "docs/superpowers/plans/2026-10-14-procedural-gpu-acceptance.md",
+        "docs/superpowers/plans/2026-10-15-procedural-phone-gpu-fixture.md",
+        "docs/superpowers/plans/README.md",
+        "docs/project-management/tasks.json (this task and retired gpu harness only)"
+      ],
+      "parent": "procedural-gpu-acceptance",
+      "pr": 393
+    },
+    {
+      "id": "office-computer-db-mvp",
+      "title": "Resident-owned office computers with private and shared database tasks",
+      "status": "retired",
+      "branches": [
+        "feat/office-computer-db-mvp"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-15T04:12:56.219Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "ledger": "docs/superpowers/plans/2026-10-15-office-computer-db-mvp.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-computer-db-mvp",
+      "filesOwned": [
+        "server/office-workspaces*.js",
+        "server/office-desk*.js",
+        "server/offices.js",
+        "server/world.js (office workspace wiring)",
+        "server/app.js (office routes)",
+        "server/distributed-app.js (office routes)",
+        "server/town.js (workspace store)",
+        "server/world-gateway.js (workspace store)",
+        "preview/src/office-*.js",
+        "preview/src/office-desk.css",
+        "server/tests/office*.test.js",
+        "preview/tests/office*.test.js",
+        "preview/e2e/office-desk.js",
+        "docs/offices.md",
+        "server/redis-room.js (workspace visit authorization and writer generation)",
+        "server/tests/redis-room.test.js (writer generation)",
+        "server/tests/creator-objects.test.js (checkpoint version)",
+        "server/tests/interactions.test.js (checkpoint version)",
+        "server/tests/seating.test.js (checkpoint version)",
+        "server/vercel-routing.js (workspace endpoint allowlist)",
+        "vercel.json (workspace endpoint rewrites)",
+        "server/tests/vercel-routing.test.js (workspace rewrites)",
+        "server/avatar-preferences.js (v8 checkpoint compatibility)",
+        "server/creator-rollout-audit.js (current writer/checkpoint generation)",
+        "preview/e2e/office-computer-shared.js",
+        "data/reports/office-computer*.json"
+      ],
+      "requiredChecks": [
+        "Focused memory and isolated Redis workspace/access/race tests",
+        "Office real HTTP/WebSocket regressions",
+        "Office browser journeys including narrow screen and keyboard",
+        "pnpm run verify",
+        "pnpm run verify full"
+      ],
+      "pr": 390,
+      "evidence": [
+        {
+          "pr": 390,
+          "reviewedHead": "7d05a210cc2862a19020f51f397ef83e1b215aaf",
+          "merge": "c1cfd5845f34594f94ec3a61d8c3043db2d8fb09",
+          "tree": "4d27e50644eb63193d6eb62d72d4be89973bc46e",
+          "checks": "Integrated pnpm run verify passed. Verify run 38672969450 passed; merge guard CLEAN, all 17 hosted checks passed. GitHub verified both signed commits. Prior full local run interrupted; split shared coverage retained."
+        }
+      ],
+      "retirement": {
+        "head": "7d05a210cc2862a19020f51f397ef83e1b215aaf",
+        "releasedAt": "2026-10-15T04:12:21.566Z",
+        "sessionsReviewedAt": "2026-10-15T04:12:21.566Z",
+        "by": "claude:river-oaks-1b (f4107618)"
+      },
+      "retiredBranches": [
+        "feat/office-computer-db-mvp"
+      ],
+      "archive": {
+        "feat/office-computer-db-mvp": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-2Ldox4/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-2Ldox4/history.bundle",
+          "sha256": "cf3fee478dd5b71970eb596d587afe6648707ba859063ae9e6a3747c2bed7771",
+          "tag": "refs/tags/archive/worktree-prune/fb6d85e5-1c21-4e79-ae6c-8271a75903f6",
+          "head": "7d05a210cc2862a19020f51f397ef83e1b215aaf"
+        }
+      }
+    },
+    {
+      "id": "office-ipic-contract-decisions",
+      "title": "Office + IPIC #360: record Val's fit and mezzanine decisions in layout-contract.json (stacked on #381)",
+      "status": "retired",
+      "branches": [
+        "docs/office-ipic-contract-decisions-20261015"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-15T04:09:44.845Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "filesOwned": [
+        "docs/design/office-ipic/layout-contract.json (decisions, fit.decision, mezzanineProgramme only)",
+        "scripts/office-ipic-contract.mjs (fit decision rule)",
+        "scripts/tests/office-ipic-contract.test.js (one test)",
+        "docs/superpowers/plans/2026-10-15-office-ipic-contract-decisions.md"
+      ],
+      "requiredChecks": [
+        "node --test scripts/tests/office-ipic-contract.test.js",
+        "pnpm run verify"
+      ],
+      "issue": 360,
+      "ledger": "docs/superpowers/plans/2026-10-15-office-ipic-contract-decisions.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-ipic-contract-decisions-20261015",
+      "pr": 388,
+      "handoff": {
+        "at": "2026-10-15T03:38:57.407Z",
+        "from": null,
+        "to": "claude:river-oaks-1b (f4107618)",
+        "reason": "Released by session aa2272b7; Val's /goal of 2026-10-15 asks river-oaks-1b to merge draft #388 into #381."
+      },
+      "evidence": [
+        {
+          "pr": 388,
+          "reviewedHead": "43aaab77b1d193c70c6a275290e5b9276e051754",
+          "merge": "cbe393b8e98eca98dae661fc94ce74aaa7bd47fc",
+          "tree": "0242e74738661f097bdb5af413b761d169c917a0",
+          "checks": "pnpm run land 388 (river-oaks-1b) into docs/office-ipic-engineering-baseline-20261014: 11 checks green; merge cbe393b8 reached main through #381 (44ecd939)."
+        }
+      ],
+      "retirement": {
+        "head": "43aaab77b1d193c70c6a275290e5b9276e051754",
+        "releasedAt": "2026-10-15T04:08:56.611Z",
+        "sessionsReviewedAt": "2026-10-15T04:08:56.611Z"
+      },
+      "retiredBranches": [
+        "docs/office-ipic-contract-decisions-20261015"
+      ],
+      "archive": {
+        "docs/office-ipic-contract-decisions-20261015": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-XSPqFZ/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-XSPqFZ/history.bundle",
+          "sha256": "13e985dd54aab247b80fd167e92bfc8c686ecb2297caba22f1ec6878cede2ed2",
+          "tag": "refs/tags/archive/worktree-prune/ffb41f50-8c6a-4569-b458-821dcb540021",
+          "head": "43aaab77b1d193c70c6a275290e5b9276e051754"
+        }
+      }
     },
     {
       "id": "studio-prompt-stdin",
@@ -9638,99 +9958,17 @@
       ]
     },
     {
-      "id": "office-computer-db-mvp",
-      "title": "Resident-owned office computers with private and shared database tasks",
-      "status": "active",
-      "branches": [
-        "feat/office-computer-db-mvp"
-      ],
-      "owner": "codex-root-office-computer-db-mvp",
-      "updatedAt": "2026-10-15T02:42:50.281103+00:00",
-      "nextAction": "User authorized commit, push and merge to main. Commit verified MVP, open PR, land through CI and merge guard, reconcile delivery evidence; provide next long-running goal.",
-      "ledger": "docs/superpowers/plans/2026-10-15-office-computer-db-mvp.md",
-      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-computer-db-mvp",
-      "filesOwned": [
-        "server/office-workspaces*.js",
-        "server/office-desk*.js",
-        "server/offices.js",
-        "server/world.js (office workspace wiring)",
-        "server/app.js (office routes)",
-        "server/distributed-app.js (office routes)",
-        "server/town.js (workspace store)",
-        "server/world-gateway.js (workspace store)",
-        "preview/src/office-*.js",
-        "preview/src/office-desk.css",
-        "server/tests/office*.test.js",
-        "preview/tests/office*.test.js",
-        "preview/e2e/office-desk.js",
-        "docs/offices.md",
-        "server/redis-room.js (workspace visit authorization and writer generation)",
-        "server/tests/redis-room.test.js (writer generation)",
-        "server/tests/creator-objects.test.js (checkpoint version)",
-        "server/tests/interactions.test.js (checkpoint version)",
-        "server/tests/seating.test.js (checkpoint version)",
-        "server/vercel-routing.js (workspace endpoint allowlist)",
-        "vercel.json (workspace endpoint rewrites)",
-        "server/tests/vercel-routing.test.js (workspace rewrites)",
-        "server/avatar-preferences.js (v8 checkpoint compatibility)",
-        "server/creator-rollout-audit.js (current writer/checkpoint generation)",
-        "preview/e2e/office-computer-shared.js",
-        "data/reports/office-computer*.json"
-      ],
-      "requiredChecks": [
-        "Focused memory and isolated Redis workspace/access/race tests",
-        "Office real HTTP/WebSocket regressions",
-        "Office browser journeys including narrow screen and keyboard",
-        "pnpm run verify",
-        "pnpm run verify full"
-      ],
-      "leaseUntil": "2026-10-15T04:42:50.281103+00:00"
-    },
-    {
-      "id": "office-ipic-contract-decisions",
-      "title": "Office + IPIC #360: record Val's fit and mezzanine decisions in layout-contract.json (stacked on #381)",
-      "status": "active",
-      "branches": [
-        "docs/office-ipic-contract-decisions-20261015"
-      ],
-      "owner": "claude:river-oaks-1b (f4107618)",
-      "updatedAt": "2026-10-15T03:43:33.020Z",
-      "nextAction": "PR #388 merged into docs/office-ipic-engineering-baseline-20261014 as cbe393b8 (land, 11 checks green). Retire with project:prune after #381 lands on main.",
-      "filesOwned": [
-        "docs/design/office-ipic/layout-contract.json (decisions, fit.decision, mezzanineProgramme only)",
-        "scripts/office-ipic-contract.mjs (fit decision rule)",
-        "scripts/tests/office-ipic-contract.test.js (one test)",
-        "docs/superpowers/plans/2026-10-15-office-ipic-contract-decisions.md"
-      ],
-      "requiredChecks": [
-        "node --test scripts/tests/office-ipic-contract.test.js",
-        "pnpm run verify"
-      ],
-      "issue": 360,
-      "ledger": "docs/superpowers/plans/2026-10-15-office-ipic-contract-decisions.md",
-      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-ipic-contract-decisions-20261015",
-      "pr": 388,
-      "leaseUntil": "2026-10-15T05:43:33.020Z",
-      "handoff": {
-        "at": "2026-10-15T03:38:57.407Z",
-        "from": null,
-        "to": "claude:river-oaks-1b (f4107618)",
-        "reason": "Released by session aa2272b7; Val's /goal of 2026-10-15 asks river-oaks-1b to merge draft #388 into #381."
-      }
-    },
-    {
       "id": "ipic-screening-authority-366",
       "title": "IPIC #366: authoritative screening timeline and host controls (server/screenings.js, preview/src/screening-contract.js) with fixture media, checkpoint v9",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "feat/ipic-screening-authority-20261015"
       ],
-      "owner": "claude:river-oaks-1b (f4107618)",
-      "leaseUntil": "2026-10-15T06:20:30.386Z",
-      "updatedAt": "2026-10-15T04:20:30.386Z",
+      "owner": null,
+      "updatedAt": "2026-10-15T04:38:42.883Z",
       "issue": 366,
       "ledger": "docs/superpowers/plans/2026-10-15-ipic-screening-authority.md",
-      "nextAction": "Core verify passed at a714a8a5 + patch (agent 109/109, preview 3056+1 skip, server 519+146 Redis skips, desktop 66/66, python 141); Redis-backed server run in progress. Commit signed, open PR, land with pnpm run land.",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "filesOwned": [
         "preview/src/screening-contract.js",
         "server/screenings.js",
@@ -9751,21 +9989,47 @@
         "pnpm run verify",
         "pnpm run verify full with isolated Redis"
       ],
-      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-ipic-screening-20261015"
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-ipic-screening-20261015",
+      "pr": 395,
+      "evidence": [
+        {
+          "pr": 395,
+          "reviewedHead": "5fd3e28ae75c3372e1a7abc6afeb0c015cf1094c",
+          "merge": "096a6cdd9cb1f3315cc745096fa90e2b9846758c",
+          "tree": "222d211f6840a2b28e91a7f0776ddecfd7f40d12",
+          "checks": "pnpm run land 395: Verify passed after one rerun of the known contextual-first-visit travel_cooldown flake; merge guard CLEAN, 17 checks. Local: core verify passed (agent 109/109, preview 3056+1 skip, server 519+146 Redis skips, desktop 66/66, python 141); isolated-Redis server suite 707/707, 0 skips."
+        }
+      ],
+      "retirement": {
+        "head": "5fd3e28ae75c3372e1a7abc6afeb0c015cf1094c",
+        "releasedAt": "2026-10-15T04:38:04.472Z",
+        "sessionsReviewedAt": "2026-10-15T04:38:04.472Z"
+      },
+      "retiredBranches": [
+        "feat/ipic-screening-authority-20261015"
+      ],
+      "archive": {
+        "feat/ipic-screening-authority-20261015": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-9iO54M/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-9iO54M/history.bundle",
+          "sha256": "897c58f139cd87cce6865fc8beeeeeb6d308ed6b7f01a0e083edf8916877464c",
+          "tag": "refs/tags/archive/worktree-prune/e57211d3-cdb0-4ba2-97f1-cb0bbeea9585",
+          "head": "5fd3e28ae75c3372e1a7abc6afeb0c015cf1094c"
+        }
+      }
     },
     {
       "id": "office-penthouse-traversal-361",
       "title": "Office #361: versioned penthouse layout (#349 level/portal shape, jevica-office/l<n>), server-validated levels and transitions, safe saved-visit migration; legacy office stays default",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "feat/office-penthouse-client-20261015"
       ],
-      "owner": "claude:river-oaks-1b (f4107618)",
-      "leaseUntil": "2026-10-15T07:18:55.576Z",
-      "updatedAt": "2026-10-15T05:18:55.576Z",
+      "owner": null,
+      "updatedAt": "2026-10-15T05:42:53.050Z",
       "issue": 361,
       "ledger": "docs/superpowers/plans/2026-10-15-office-penthouse-traversal.md",
-      "nextAction": "PR B verified: office preview 75/75, penthouse browser smoke passed (stairs to mezzanine, eye +3.800 m), legacy office-visit passed, core verify passed. Commit, PR, land, then close #361.",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "filesOwned": [
         "preview/src/office-layouts.js",
         "preview/tests/office-layouts.test.js",
@@ -9783,7 +10047,34 @@
         "pnpm run verify",
         "pnpm run verify full with isolated Redis"
       ],
-      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-penthouse-client-20261015"
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-penthouse-client-20261015",
+      "pr": 397,
+      "evidence": [
+        {
+          "pr": 397,
+          "reviewedHead": "778890738dfcbe73ef94f5f88092a13256be55d3",
+          "merge": "65feca351330262c3352e5107541816018d40d6a",
+          "tree": "e3e434dd52010f003d1df2258aa86c73cd47f7e7",
+          "checks": "pnpm run land 397: Verify passed, merge guard CLEAN, 17 checks. Local: office preview 75/75; focused 108/108 on the final merged tree; penthouse browser smoke passed (stairs to mezzanine, eye +3.800 m); legacy office-visit passed (13 checks); core verify passed (agent 109/109, preview 3076+1 skip, server 526+147 Redis skips, desktop 69/69, python 141). PR A is task office-penthouse-layout-361a (#396)."
+        }
+      ],
+      "retirement": {
+        "head": "778890738dfcbe73ef94f5f88092a13256be55d3",
+        "releasedAt": "2026-10-15T05:42:12.773Z",
+        "sessionsReviewedAt": "2026-10-15T05:42:12.773Z"
+      },
+      "retiredBranches": [
+        "feat/office-penthouse-client-20261015"
+      ],
+      "archive": {
+        "feat/office-penthouse-client-20261015": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-TKptjc/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-TKptjc/history.bundle",
+          "sha256": "7982b94eee15a85aaf3bee68bfe488b37e84b9209cdb6f154a600561d39e9ef1",
+          "tag": "refs/tags/archive/worktree-prune/aca4b339-e721-4d10-88b5-446ff4abf066",
+          "head": "778890738dfcbe73ef94f5f88092a13256be55d3"
+        }
+      }
     },
     {
       "id": "desktop-e2e-walk-game-time",
@@ -9897,16 +10188,15 @@
     {
       "id": "ipic-screening-playback-367",
       "title": "IPIC #367: synchronized client playback, accessible controls and media recovery against #366's contract, with a labelled local fixture clip",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "feat/ipic-screening-playback-20261015"
       ],
-      "owner": "claude:river-oaks-1b (f4107618)",
-      "leaseUntil": "2026-10-15T07:20:42.517Z",
-      "updatedAt": "2026-10-15T05:20:42.517Z",
+      "owner": null,
+      "updatedAt": "2026-10-15T05:33:26.619Z",
       "issue": 367,
       "ledger": "docs/superpowers/plans/2026-10-15-ipic-screening-playback.md",
-      "nextAction": "Two-browser journey passed twice (max spread 7 ms, pause 0 ms); core verify passed. Commit, merge main, PR, land after #397.",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "filesOwned": [
         "preview/src/ipic-screening.js",
         "preview/src/ipic-screening-ui.js",
@@ -9927,7 +10217,1583 @@
         "pnpm run verify",
         "hosted Verify"
       ],
-      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-ipic-playback-20261015"
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-ipic-playback-20261015",
+      "pr": 398,
+      "evidence": [
+        {
+          "pr": 398,
+          "reviewedHead": "eaf9ebdc4fb98591484253df7d5256da4d09fb95",
+          "merge": "b4f4c430ad135bbdf94049e8b4a827032cd16eed",
+          "tree": "158f9d5c027f1bb0c64b9af9fcc0c6fc1bd0f874",
+          "checks": "pnpm run land 398: Verify passed, merge guard CLEAN, 17 checks. Local: focused 53/53 on the merged tree; core verify passed (agent 109/109, preview 3072+1 skip, server 520+146 Redis skips, desktop 69/69, python 141); two-browser journey passed twice (max spread 7 ms over 36 samples, pause 0 ms)."
+        }
+      ],
+      "retirement": {
+        "head": "eaf9ebdc4fb98591484253df7d5256da4d09fb95",
+        "releasedAt": "2026-10-15T05:32:45.230Z",
+        "sessionsReviewedAt": "2026-10-15T05:32:45.230Z"
+      },
+      "retiredBranches": [
+        "feat/ipic-screening-playback-20261015"
+      ],
+      "archive": {
+        "feat/ipic-screening-playback-20261015": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-x3nptd/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-x3nptd/history.bundle",
+          "sha256": "f577b5f270387dcfef42432498ff9e32dce4b324feb4b64372f69e757ccb9459",
+          "tag": "refs/tags/archive/worktree-prune/d79c2885-f423-4f36-8c2b-d1efe0ec2b0e",
+          "head": "eaf9ebdc4fb98591484253df7d5256da4d09fb95"
+        }
+      }
+    },
+    {
+      "id": "office-skyline-prototype",
+      "title": "Penthouse skyline prototype: show the actual district outside the penthouse glass and terrace while the street is hidden, as a one-time local capture at entry (kit P26 cosmetic backdrop: never moves the office, authority or geography); penthouse layout only",
+      "status": "active",
+      "branches": [
+        "feat/office-skyline-prototype-20261015"
+      ],
+      "owner": "claude:river-oaks-penthouse (7a57e655)",
+      "leaseUntil": "2026-10-15T13:16:48.000Z",
+      "updatedAt": "2026-10-15T11:16:48.000Z",
+      "nextAction": "Draft #408: navy rings fixed (host tower floor-line bands, found by raycast probe; tower skin rule keeps the wing parapet), recaptured on the branch and with #405 glass (scratch removed). Next: independent review, phone measurement before activation.",
+      "ledger": "docs/superpowers/plans/2026-10-15-office-skyline-prototype.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-skyline",
+      "filesOwned": [
+        "preview/src/office-skyline.js (new)",
+        "preview/tests/office-skyline.test.js (new)",
+        "preview/src/office-world-scene.js (skyline hook only, clear of #405's dispose line)",
+        "preview/src/office-world-presentation.js (captureOfficeStreet renderer/skyline only)",
+        "preview/src/main.js (renderer, size and ?office-skyline switch only)",
+        "docs/offices.md (skyline paragraph)",
+        "docs/superpowers/plans/2026-10-15-office-skyline-prototype.md",
+        "docs/project-management/tasks.json (own entry)"
+      ],
+      "requiredChecks": [
+        "node --test preview/tests/office-*.test.js",
+        "browser capture of the penthouse with the skyline under the browser lock",
+        "pnpm run verify",
+        "independent review"
+      ],
+      "pr": 408
+    },
+    {
+      "id": "safari-gltf-decoder-investigation",
+      "title": "Isolate and resolve physical iPhone Safari avatar glTF image decode startup failure before procedural GPU acceptance",
+      "status": "active",
+      "branches": [
+        "test/safari-gltf-decoder-investigation-20261015",
+        "test/safari-phone-frame-receipt-20261015",
+        "test/safari-phone-error-receipt-20261015",
+        "docs/safari-decoder-evidence-20261015",
+        "fix/safari-avatar-html-ios-20261015"
+      ],
+      "owner": "codex-root-safari-gltf-decoder-investigation-20261015",
+      "leaseUntil": "2026-10-15T18:50:00.000Z",
+      "updatedAt": "2026-10-15T16:50:00.000Z",
+      "nextAction": "Draft PR #436 includes current main at 4ab01892; final local core passed and player-lifecycle browser journey passed. Two normal iPhone visits were playable. The refreshed full gate under isolated Redis stopped on an unrelated two-second desktop child timeout at host load above 90, while its owning suite passed 14/14 alone. Require PR #436 exact-head hosted preview/Vercel and current main before ready/merge. Quieter phone frame/portal timing and remaining GPU devices are separate acceptance work.",
+      "ledger": "docs/superpowers/plans/2026-10-15-ios-avatar-image-decoder-default.md",
+      "requiredChecks": [
+        "Focused decoder selection regression",
+        "Physical iPhone Safari default and scoped decoder controls with fixture health and asset readiness",
+        "pnpm run verify before commit",
+        "Exact-head hosted preview before merge"
+      ],
+      "filesOwned": [
+        "preview/src/avatars.js (scoped iOS avatar decoder selection)",
+        "preview/src/gltf-image-decoder.js",
+        "preview/tests/gltf-image-decoder.test.js",
+        "server/tests/phone-fixture-decoder.js (test-only control)",
+        "server/tests/phone-fixture.test.js (fixture readiness regression)",
+        "docs/superpowers/plans/README.md (generated plan index)",
+        "docs/superpowers/plans/2026-10-15-safari-gltf-decoder-investigation.md",
+        "docs/superpowers/plans/2026-10-15-ios-avatar-image-decoder-default.md",
+        "docs/project-management/tasks.json (this task only)"
+      ],
+      "parent": "procedural-gpu-acceptance",
+      "related": "ios-device-feasibility #309; preserve its dirty worktree and do not modify owned files",
+      "evidence": [
+        {
+          "pr": 401,
+          "reviewedHead": "7ff43d9edee77abe4ae29d06f90a656b60a578c9",
+          "merge": "67388f8dd894601833366d8d355e7e8d20726809",
+          "checks": [
+            "Focused decoder and phone fixture tests 7/7; pnpm run verify core passed after the last code change",
+            "Hosted exact-head preview and all 17 landing checks passed; merged by pnpm run land 401 at 2026-10-15T08:14:58Z",
+            "Local full gate twice stopped on unchanged voice and office timing assertions under concurrent load; both files passed in isolated Redis-backed reruns; physical GPU timing remains open"
+          ]
+        },
+        {
+          "pr": 409,
+          "reviewedHead": "5605c1cd8d5484ccd1c36a35271711047e49edb9",
+          "merge": "cc7f5561e925a4976692ce91bcfc7900ee4f9655",
+          "checks": [
+            "Focused decoder and fixture suites 8/8; pnpm run verify core passed after fixture change",
+            "Hosted exact-head 16/16 check runs and Vercel status passed; merged by GitHub REST at 2026-10-15T08:47:09Z",
+            "Physical bounded iPhone frame receipt and default-decoder root cause remain open"
+          ]
+        },
+        {
+          "pr": 411,
+          "reviewedHead": "4559778b4f3e48c4d73d25e73668c93accd1ba35",
+          "merge": "dda596c58477e646ea6ae636eba9ca708562b2a6",
+          "checks": [
+            "Focused decoder and fixture suites 9/9; plan index and pnpm run verify core passed after the final main refresh",
+            "Hosted exact-head 16/16 check runs including required preview and Vercel passed; merged through GitHub REST at 2026-10-15T10:13:05Z",
+            "Physical scoped avatar-only iPhone visit reported a playable view, one guest and three bounded diagnostic receipts with zero app or console errors; normal decoder root cause and GPU timing remain open",
+            "Post-merge full local gate passed at the same code head with isolated Redis, security and browser journeys, including creator four levels; preview suite retained one skip and one IPIC circulation TODO. Physical GPU and human accessibility remain open"
+          ]
+        },
+        {
+          "pr": 421,
+          "reviewedHead": "57445dfd21d4ca5af10c16d394e0164cde40ffbe",
+          "merge": "ff24fdcd40ba20025a2a4ebfad2a23e4361d8ccd",
+          "checks": [
+            "Evidence ledger and generated plan index published; local pnpm run verify core passed after the final main refresh",
+            "Hosted exact-head 15/15 check runs including required aggregate preview and Vercel passed; merged through GitHub REST at 2026-10-15T11:30:10Z",
+            "Physical scoped HTML avatar-decoder control was visible and playable after 30 seconds with zero app or console errors; normal-decoder comparison and full GPU acceptance remain open"
+          ]
+        },
+        {
+          "pr": 423,
+          "reviewedHead": "ddc5919eecb160ebec2ef4ade6d6ff5fac3af550",
+          "merge": "cd99570a6d1ff4171c83637744d38cc8131a2684",
+          "checks": [
+            "Published the fresh-port normal-decoder attempt as inconclusive; the fixture had zero reports and zero guests, so physical default-decoder recovery remains unverified",
+            "Local pnpm run verify core passed after the final main refresh; hosted exact-head checks including required preview passed after one unrelated email-access click timeout rerun; Vercel succeeded",
+            "Merged through GitHub REST at 2026-10-15T12:25:28Z"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "office-world-lifecycle-reliability",
+      "title": "Preserve office configuration and access through publication, coordinator replacement and recovery",
+      "status": "active",
+      "branches": [
+        "fix/office-world-lifecycle-reliability"
+      ],
+      "owner": "codex:01a13e08-bc72-7333-a97a-d1ab642e0933",
+      "leaseUntil": "2026-10-15T10:44:52.915089+00:00",
+      "updatedAt": "2026-10-15T08:44:52.915089+00:00",
+      "nextAction": "Verified source ready for signed commit and PR. Local core11/11, focused105/105, independent18/18, full16 passed stages including Redis731/731 and13 experience; shared timed out. Retain failure; require complete exact-head hosted shared/experience matrix on up-to-date PR, then pnpm land and delivery proof.",
+      "ledger": "docs/superpowers/plans/2026-10-15-office-world-lifecycle-reliability.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-world-lifecycle",
+      "filesOwned": [
+        "server/redis-room.js",
+        "server/tests/office-world-lifecycle.test.js",
+        "docs/offices.md (lifecycle and recovery)",
+        "docs/superpowers/plans/2026-10-15-office-world-lifecycle-reliability.md",
+        "docs/project-management/tasks.json (own entry)",
+        "server/world.js (configuration propagation)",
+        "server/district-*-checkpoint-migration.js (configuration propagation)",
+        "server/screenings.js (historical fixture checkpoint recovery)",
+        "server/tests/screenings.test.js (historical recovery)",
+        "docs/screenings.md (recovery contract)",
+        "preview/e2e/creator-objects.js (consistent guest readiness timeout)",
+        "data/reports/office-lifecycle-*.json (verification evidence)"
+      ],
+      "requiredChecks": [
+        "focused office/checkpoint/transport/recovery regressions with disposable Redis",
+        "office-desk office-computer-shared office-visit journeys",
+        "pnpm run verify",
+        "pnpm run verify full with disposable Redis",
+        "independent review",
+        "hosted Verify and pnpm run land"
+      ]
+    },
+    {
+      "id": "studio-safe-edits-414",
+      "title": "#414 World Studio required-route safe edits and recoverable profile context",
+      "status": "queued",
+      "branches": [
+        "fix/studio-safe-edits-414"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-15T13:05:43.608556+00:00",
+      "nextAction": "Review draft PR #427 and confirm recipe destinations for #416. Local core/browser/native/agent/designer checks pass, review findings resolved. Keep worktree and evidence; no merge authorization or delivered/retired status claimed.",
+      "ledger": "docs/superpowers/plans/2026-10-15-studio-safe-edits.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-studio-safe-edits-414",
+      "filesOwned": [
+        "preview/src/studio/document.js",
+        "preview/src/studio/space-document.js",
+        "preview/src/studio/space-templates.js",
+        "preview/src/studio/space-scene.js (data-only world extraction)",
+        "preview/src/studio/space-assessment.js",
+        "preview/src/studio/main.js (transactions and findings)",
+        "preview/src/studio/viewport.js (drag preview)",
+        "preview/tests/studio-*.test.js (safe edit regressions)",
+        "preview/e2e/world-studio.js",
+        "docs/world-studio.md",
+        "docs/superpowers/plans/2026-10-15-studio-safe-edits.md",
+        "preview/src/studio/designer-protocol.js",
+        "preview/src/studio/agent-chat.js (failure reporting)",
+        "preview/src/studio/designer-panel.js (failure reporting)",
+        "preview/src/studio/studio.css (compact findings)",
+        "desktop/studio-e2e.js (local save sidecar and bare v1 export/import coverage)",
+        "preview/src/studio/space-assessment-worker.js",
+        "preview/src/studio/space-assessment-runner.js",
+        "preview/tests/studio-safe-edits.test.js",
+        "preview/tests/studio-safe-edits-async.test.js",
+        "preview/tests/studio-assessment-runner.test.js",
+        "desktop/agent-e2e.js (await assessed agent batch)"
+      ],
+      "requiredChecks": [
+        "node --test preview/tests/studio-*.test.js server/tests/studio-assets.test.js",
+        "pnpm run test:experience world-studio",
+        "pnpm run test:desktop",
+        "node desktop/studio-e2e.js",
+        "pnpm run verify"
+      ],
+      "verification": {
+        "source": "Reviewed signed implementation f5d7899a34a68a6e3af96833f3f4fb55ade33030; .runtime/safe-edits/delivery-source-manifest.json",
+        "focused": "86/86 passed, no skips",
+        "core": "11/11 tasks; 4114 passed, 149 skipped, 1 TODO; .runtime/safe-edits/review-core.txt",
+        "browser": "worker-backed world-studio passed 24.885s, zero page errors; .runtime/safe-edits/reports/studio-safe-edits-worker-browser.json",
+        "desktop": "69 units; native Studio11, synthetic agent13, designer9 passed",
+        "review": "Fresh independent review: both Important findings fixed; no remaining Important/Critical findings",
+        "limits": "No full Redis, hosted CI, packaged distribution, live auth, physical-device performance or human accessibility acceptance claimed."
+      },
+      "pr": 427
+    },
+    {
+      "id": "garden-office-416",
+      "title": "#416 Garden Office realism pilot (coding scope): one desk/chair family, glazing, finishes, light/planting sample, catalog records and compatibility on the #414 interface",
+      "status": "blocked",
+      "branches": [
+        "test/garden-office-416-audit-20261015"
+      ],
+      "owner": "codex-root-garden-office-audit-20261015",
+      "updatedAt": "2026-10-16T00:02:30.680600+00:00",
+      "nextAction": "Source-handoff scope complete after independent visual/profile review and required pink correction. Final core11/11 (4245 pass154skip1TODO), focused106, final30 captures pass. Update draft#459/#417 handoff; remaining task gate is ordinary PR review/up-to-date checks and separately authorized landing, not Val-personal visual approval. Preserve worktree/evidence.",
+      "ledger": "docs/superpowers/plans/2026-10-15-garden-office-pilot.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-garden-office-audit",
+      "issue": 416,
+      "filesOwned": [
+        "docs/superpowers/plans/2026-10-15-garden-office-pilot.md (continuation audit)",
+        "docs/design/garden-office/ (only if audit exposes metadata gaps)",
+        "preview/tests/studio-garden-office.test.js (only concrete uncovered pilot regressions)",
+        "preview/src/studio/space-furniture.js (valid v1 bounds only)",
+        "scripts/garden-office-manifest.mjs (pilot contract accuracy/completeness)",
+        "preview/e2e/studio-office-{stations,neutral}.js (neutral diagnostic evidence only)",
+        "preview/src/studio/space-scene.js (existing art circle material only)"
+      ],
+      "requiredChecks": [
+        "node --test preview/tests/studio-*.test.js server/tests/studio-assets.test.js",
+        "pnpm run test:desktop",
+        "pnpm run test:experience world-studio",
+        "node desktop/studio-e2e.js",
+        "pnpm run build",
+        "pnpm run verify"
+      ],
+      "previousOwner": "claude:river-oaks-safe-edits (e9aa0185)",
+      "deliveryPr": 439,
+      "evidence": [
+        {
+          "pr": 439,
+          "reviewedHead": "c83532f2a264743de042bd06562641567d813043",
+          "merge": "05a5e9fe45ba5250678a08ed077245b52e077942",
+          "tree": "0d183fdbfd79058f22824ad43896786e2b3a1487",
+          "checks": "Landed by claude:river-oaks-safe-edits (e9aa0185) with pnpm run land 439 under Val's authorization at 2026-10-15T17:38:01Z: the lander updated the branch from main (c83532f2, GitHub-verified), Verify passed, guard read 17 checks green, CLEAN; merge tree equals head tree. Before landing: signed 3b67438d (pilot) and signed merge cf428566 (register conflict GitHub update-branch cannot resolve) with all 16 check runs and Vercel green. Local at 3b67438d: pnpm run verify 11/11 tasks, 4,160 passed / 150 skipped / 1 TODO; world-studio 29.068 s, 0 page errors; native Studio 11/11; focused 96/0/0. Ledger docs/superpowers/plans/2026-10-15-garden-office-pilot.md. #416 left open for design review and #417."
+        }
+      ],
+      "retirement": {
+        "head": "c83532f2a264743de042bd06562641567d813043",
+        "releasedAt": "2026-10-15T17:40:04.500Z",
+        "sessionsReviewedAt": "2026-10-15T17:40:04.500Z"
+      },
+      "evidenceArchive": "/Users/buns/worktree-backups/river-oaks/garden-office-416-evidence-20261015 (.runtime/garden-office: baseline and five after capture sets, cost and canopy-coverage measurements, red-test output, gate receipts; .runtime/agent; output/playwright)",
+      "retiredBranches": [
+        "feat/garden-office-416-20261015"
+      ],
+      "archive": {
+        "feat/garden-office-416-20261015": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-LEDVWb/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-LEDVWb/history.bundle",
+          "sha256": "4faeeda0c621d63c605570e1405e6e44aa8f703e2078924d917736252cba35ff",
+          "tag": "refs/tags/archive/worktree-prune/692d1f85-2662-4136-87aa-4ca358e0f394",
+          "head": "c83532f2a264743de042bd06562641567d813043"
+        }
+      },
+      "leaseUntil": "2026-10-16T01:51:25.163814+00:00",
+      "previousPr": 439,
+      "pr": 459
+    },
+    {
+      "id": "ipic-route-evidence-364",
+      "title": "#364 IPIC route, seat and export evidence: measured body envelopes on both escalator lanes, lounge, auditorium, occupied seats and stand/return; height agreement, false-claim rejection, exclusive seat claims; screen bounds/sightlines for #365; export reproducibility; T1-T3 and five photo views",
+      "status": "retired",
+      "branches": [
+        "test/ipic-route-evidence-20261015"
+      ],
+      "owner": null,
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "ledger": "docs/superpowers/plans/2026-10-15-ipic-route-evidence.md",
+      "requiredChecks": [
+        "node --test preview/tests/ipic-*.test.js server/tests/ipic-interior.test.js (+ new route tests)",
+        "node scripts/export-ipic.mjs (Blender absent = recorded gap)",
+        "node preview/e2e/ipic-runner.mjs under the browser lock",
+        "pnpm run verify",
+        "hosted Verify via pnpm run land"
+      ],
+      "filesOwned": [
+        "preview/src/ipic-plan.js (IPIC_SCREEN, four colliders)",
+        "preview/src/ipic-interior.js (screen reads IPIC_SCREEN)",
+        "preview/src/ipic-circulation.js",
+        "preview/src/main.js (DEV render-audit view/release only)",
+        "scripts/ipic-review-data.mjs",
+        "docs/ipic-review/circulation.json",
+        "docs/ipic-review/screen.json",
+        "server/tests/ipic-routes.test.js",
+        "preview/tests/ipic-agreement.test.js",
+        "preview/tests/ipic-circulation.test.js",
+        "preview/e2e/ipic-photo-views.mjs",
+        "docs/design/office-ipic/captures/T*",
+        "docs/ipic-interior.md (#364 section)",
+        "docs/superpowers/plans/2026-10-15-ipic-route-evidence*",
+        "docs/project-management/tasks.json (own entry)"
+      ],
+      "pr": 402,
+      "updatedAt": "2026-10-15T09:25:58.284Z",
+      "evidence": [
+        {
+          "pr": 402,
+          "reviewedHead": "9b6e680e6991da7137d62eb9bd939abb6e146dc6",
+          "merge": "b5d99a13ced10748159f4c2184588fd336f7919c",
+          "tree": "a6dfdd40567e1dabed7c4309426d4027abadb791",
+          "checks": "Landed by claude:river-oaks-1b with pnpm run land 402 at 2026-10-15T09:25:04.000Z: guard read 17 checks green, CLEAN; merge tree equals head tree. Local: focused IPIC 56 pass/0 fail/2 todo; core verify passed at 083373ff; full server on throwaway Redis 730/729/0 skipped/1 todo; GLB geometry byte-identical on re-export; runtime T1-T3 captured on Metal."
+        }
+      ],
+      "retirement": {
+        "head": "9b6e680e6991da7137d62eb9bd939abb6e146dc6",
+        "releasedAt": "2026-10-15T09:25:04.000Z",
+        "sessionsReviewedAt": "2026-10-15T09:25:04.000Z"
+      },
+      "retiredBranches": [
+        "test/ipic-route-evidence-20261015"
+      ],
+      "archive": {
+        "test/ipic-route-evidence-20261015": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-h7wFIN/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-h7wFIN/history.bundle",
+          "sha256": "86c666d29bf4ccd293b2b876138a62faeccb889a032019c5531dc55f27335cf0",
+          "tag": "refs/tags/archive/worktree-prune/391e8c34-f2d8-4da1-a4fc-9c84ec8fb63f",
+          "head": "9b6e680e6991da7137d62eb9bd939abb6e146dc6"
+        }
+      }
+    },
+    {
+      "id": "ipic-tuck-room-darts",
+      "title": "Shared darts in the IPIC Tuck Room (Val, 2026-10-15): freestanding dart cabinet in the upper lounge below the floral artwork (lane a -0.5..0.7, oche d about 23.5), server-held 501 double-out matches at the line, live board for everyone in IPIC, practice vs a regular when alone",
+      "status": "retired",
+      "branches": [
+        "feat/ipic-tuck-room-darts-20261015"
+      ],
+      "owner": null,
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "ledger": "docs/superpowers/plans/2026-10-15-bar-games.md",
+      "requiredChecks": [
+        "focused server/preview darts tests",
+        "IPIC agreement/circulation tests stay green",
+        "pnpm run verify",
+        "hosted Verify via pnpm run land"
+      ],
+      "filesOwned": [
+        "server/darts-games.js",
+        "server/tests/darts-games.test.js",
+        "preview/src/ipic-plan.js (IPIC darts line + cabinet collider)",
+        "preview/src/ipic-interior.js (dart cabinet)",
+        "preview/src/plaza-darts.js (shared mode)",
+        "preview/src/dartboard-mesh.js",
+        "server/world.js (darts routing/snapshot/checkpoint hunks only, after Codex lands)",
+        "docs/superpowers/plans/2026-10-15-bar-games.md"
+      ],
+      "pr": 412,
+      "updatedAt": "2026-10-15T09:42:46.272Z",
+      "evidence": [
+        {
+          "pr": 412,
+          "reviewedHead": "2e2e9b3b17855985da99b1bf656dba4125272f4b",
+          "merge": "29cdff5de04c4c0a2a7cb6922b3b8511fd4173b9",
+          "tree": "1484112c13dfbdf0165cb78361b61c3b184d3d39",
+          "checks": "Val authorized landing ('Land both now', 2026-10-15 09:30Z). Landed by claude:river-oaks-1b with pnpm run land 412 at 2026-10-15T09:42:05.000Z: guard 17 checks green, CLEAN; merge tree equals head tree. Local: darts tests 11/11; core verify passed at 0c29a7b7; two-browser journey passed (6 checks); exports regenerated."
+        }
+      ],
+      "retirement": {
+        "head": "2e2e9b3b17855985da99b1bf656dba4125272f4b",
+        "releasedAt": "2026-10-15T09:42:05.000Z",
+        "sessionsReviewedAt": "2026-10-15T09:42:05.000Z"
+      },
+      "retiredBranches": [
+        "feat/ipic-tuck-room-darts-20261015"
+      ],
+      "archive": {
+        "feat/ipic-tuck-room-darts-20261015": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-oVjHBH/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-oVjHBH/history.bundle",
+          "sha256": "9c3276a79864300cca1df065facf163c495d447fa84c3500a394d17a26fa202c",
+          "tag": "refs/tags/archive/worktree-prune/ff92c4da-db76-4b5f-ace9-c02a54b3add4",
+          "head": "2e2e9b3b17855985da99b1bf656dba4125272f4b"
+        }
+      }
+    },
+    {
+      "id": "axe-darts-room",
+      "title": "New unbranded axe-and-darts room (Val, 2026-10-15): fictional walk-in game room with two caged axe-throwing lanes and shared matches; no real brand",
+      "status": "retired",
+      "branches": [
+        "feat/axe-darts-room-20261015"
+      ],
+      "owner": null,
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "ledger": "docs/superpowers/plans/2026-10-15-bar-games.md",
+      "requiredChecks": [
+        "focused server/preview tests",
+        "pnpm run verify",
+        "browser journey",
+        "hosted Verify via pnpm run land"
+      ],
+      "filesOwned": [
+        "preview/src/axe-rules.js",
+        "preview/src/venue-rooms.js",
+        "preview/src/axe-room-plan.js",
+        "preview/src/axe-room-interior.js",
+        "server/axe-games.js",
+        "server/tests/axe-*.test.js",
+        "preview/tests/axe-*.test.js",
+        "docs/superpowers/plans/2026-10-15-bar-games.md"
+      ],
+      "pr": 415,
+      "updatedAt": "2026-10-15T10:03:37.433Z",
+      "evidence": [
+        {
+          "pr": 415,
+          "reviewedHead": "67511537f14d9fecba056669923ab8a9a3b59011",
+          "merge": "a079271a79244a7fd5e75f384a4d0d055a6dc01e",
+          "tree": "7a3625a8e41cb21463cb2f0e9c692806e6577350",
+          "checks": "Val authorized landing ('Land both now', 2026-10-15 09:30Z). Landed by claude:river-oaks-1b with pnpm run land 415 at 2026-10-15T10:02:50.000Z: guard 17 checks green, CLEAN; merge tree equals head tree. Local: 22 focused tests; core verify passed at b8e0053c; full server on throwaway Redis 751/750/0 skipped/1 todo; two-browser journey passed (8 checks); Metal views V1-V4."
+        }
+      ],
+      "retirement": {
+        "head": "67511537f14d9fecba056669923ab8a9a3b59011",
+        "releasedAt": "2026-10-15T10:02:50.000Z",
+        "sessionsReviewedAt": "2026-10-15T10:02:50.000Z"
+      },
+      "retiredBranches": [
+        "feat/axe-darts-room-20261015"
+      ],
+      "archive": {
+        "feat/axe-darts-room-20261015": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-uH7E2S/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-uH7E2S/history.bundle",
+          "sha256": "f2db8db83f2e6bfb7e6b27bd3fb4b26973cd40080846fa82673ee9f926c55f9b",
+          "tag": "refs/tags/archive/worktree-prune/ce43e188-3a63-4a9e-9fdb-3b1e215f5853",
+          "head": "67511537f14d9fecba056669923ab8a9a3b59011"
+        }
+      }
+    },
+    {
+      "id": "ipic-sofa-stand",
+      "title": "IPIC lounge sofa traps its sitter (stand_blocked even when empty): authored stand-out points per sofa place, tried by the server's stand() before its radial search (#364 follow-up)",
+      "status": "retired",
+      "branches": [
+        "fix/ipic-sofa-stand-20261015"
+      ],
+      "owner": null,
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "ledger": "docs/superpowers/plans/2026-10-15-ipic-route-evidence.md",
+      "requiredChecks": [
+        "server/tests/ipic-routes.test.js",
+        "server/tests/seating.test.js",
+        "pnpm run verify",
+        "hosted Verify via pnpm run land"
+      ],
+      "filesOwned": [
+        "preview/src/ipic-plan.js (sofa stand points)",
+        "preview/src/world-interactions.js (resolveBenchSeat standAt)",
+        "server/world.js (stand: authored points first)",
+        "server/tests/ipic-routes.test.js"
+      ],
+      "pr": 419,
+      "updatedAt": "2026-10-15T09:54:24.107Z",
+      "evidence": [
+        {
+          "pr": 419,
+          "reviewedHead": "d0ce158ccefd5b61c33f5ad8f545b020c4eb9809",
+          "merge": "2ee629a093316e062c3d9a8fd5170ff2744f84ee",
+          "tree": "347833f1ec5905f10a9bbbdfc4748d5a9d34146a",
+          "checks": "Landed by claude:river-oaks-1b with pnpm run land 419 at 2026-10-15T09:53:02.000Z: guard 17 checks green, CLEAN; merge tree equals head tree. Local: regression failed first (stand_blocked) and passes; core verify passed; full server on throwaway Redis 740/740, 0 skipped, 0 todo."
+        }
+      ],
+      "retirement": {
+        "head": "d0ce158ccefd5b61c33f5ad8f545b020c4eb9809",
+        "releasedAt": "2026-10-15T09:53:02.000Z",
+        "sessionsReviewedAt": "2026-10-15T09:53:02.000Z"
+      },
+      "retiredBranches": [
+        "fix/ipic-sofa-stand-20261015"
+      ],
+      "archive": {
+        "fix/ipic-sofa-stand-20261015": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-dhVySZ/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-dhVySZ/history.bundle",
+          "sha256": "c1e036936decc5e970588b91e244489c090930b61dc433edb64e68e3e5a7c462",
+          "tag": "refs/tags/archive/worktree-prune/390b04f2-deb7-4372-9ba3-fae623c2012b",
+          "head": "d0ce158ccefd5b61c33f5ad8f545b020c4eb9809"
+        }
+      }
+    },
+    {
+      "id": "ipic-screening-replay-368",
+      "title": "#368 slice: stale and replayed playback commands in the two-browser screening journey (no viewer rewinds or jumps); transport-level coverage already on main (screenings-transport.test.js)",
+      "status": "retired",
+      "branches": [
+        "test/ipic-screening-replay-20261015"
+      ],
+      "owner": null,
+      "nextAction": "Preserve restoration archives; nothing left to deliver.",
+      "ledger": "docs/superpowers/plans/2026-10-15-ipic-screening-replay.md",
+      "requiredChecks": [
+        "node preview/e2e/ipic-screening-runner.mjs",
+        "pnpm run verify",
+        "hosted Verify via pnpm run land"
+      ],
+      "filesOwned": [
+        "preview/e2e/ipic-screening.js (stale/replayed step only)",
+        "docs/superpowers/plans/2026-10-15-ipic-screening-replay.md"
+      ],
+      "pr": 422,
+      "updatedAt": "2026-10-15T11:18:52.647Z",
+      "evidence": [
+        {
+          "pr": 422,
+          "reviewedHead": "508a846a31689aa46135608ea568f1db1be5bf1e",
+          "merge": "1cdfe2ba15b55102ff042540a1e8045de54a40cc",
+          "tree": "61ce496347344ecc5591f730a7ffc2e5a97d2fb3",
+          "checks": "Landed by claude:river-oaks-1b with pnpm run land 422 at 2026-10-15T11:17:01Z: guard 17 checks green, CLEAN; merge tree equals head tree. Local: two-browser journey run 2 passed 10/10 (new step: revision 4 on both pages, 3.15->5.17 s, 7-43 ms apart, three refusals as expected); mutation (revision fence !== to >) failed the step as intended; core verify passed (agent 109/109, preview 3177+1 skip+1 todo, server 572+148 Redis skips, desktop 69/69). Evidence copied to ~/worktree-backups/river-oaks/ipic-screening-replay-368-evidence-20261015/."
+        }
+      ],
+      "retirement": {
+        "head": "508a846a31689aa46135608ea568f1db1be5bf1e",
+        "releasedAt": "2026-10-15T11:17:52.000Z",
+        "sessionsReviewedAt": "2026-10-15T11:17:52.000Z"
+      },
+      "retiredBranches": [
+        "test/ipic-screening-replay-20261015"
+      ],
+      "archive": {
+        "test/ipic-screening-replay-20261015": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-Cg7eYm/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-Cg7eYm/history.bundle",
+          "sha256": "a9d58ea64814142825fe2cb01a7dc041d80a9cf84fafb41d4457791dd5dee511",
+          "tag": "refs/tags/archive/worktree-prune/8b86186a-642e-4def-aa8c-bc1b11e24bc2",
+          "head": "508a846a31689aa46135608ea568f1db1be5bf1e"
+        }
+      }
+    },
+    {
+      "id": "greetings-dock-overlap",
+      "title": "Phone HUD: the nearby greetings card covers the Play & rides toggle at <=700 px (found by #368's soak, #359 lead status item 5)",
+      "status": "retired",
+      "branches": [
+        "fix/greetings-dock-overlap-20261015"
+      ],
+      "owner": null,
+      "nextAction": "Preserve restoration archives; design review of the phone placement is optional (see ledger).",
+      "ledger": "docs/superpowers/plans/2026-10-15-greetings-dock-overlap.md",
+      "requiredChecks": [
+        "browser regression red on main, green after",
+        "pnpm run verify",
+        "hosted Verify via pnpm run land"
+      ],
+      "filesOwned": [
+        "preview/src/multiplayer.css (.nearby-greetings placement only)",
+        "preview/e2e/greetings-dock-overlap.js and runner (new)",
+        "docs/superpowers/plans/2026-10-15-greetings-dock-overlap.md"
+      ],
+      "pr": 425,
+      "updatedAt": "2026-10-15T12:15:04.077Z",
+      "evidence": [
+        {
+          "pr": 425,
+          "reviewedHead": "9fc5cb1e753cd7679746bdf650d89d1a150dd04d",
+          "merge": "5e2ed17a2ec66f9f1e054fa744a32102e5352893",
+          "tree": "9dbda27abba98f82e38204bab6e6f4f74662b963",
+          "checks": "Landed by claude:river-oaks-1b with pnpm run land 425 at 2026-10-15T12:13:49Z (land updated the branch to 9fc5cb1e, Verify passed): guard 17 checks green, CLEAN; merge tree equals head tree. Local: greetings-dock-runner failed on main with 13 problems and passed with the fix at nine sizes plus the invitation-over-open-dock case; experience greetings journey passed; core verify passed (agent 109/109, preview 3177+1 skip+1 todo, server 572+148 Redis skips, desktop 69/69). Evidence in ~/worktree-backups/river-oaks/greetings-dock-overlap-evidence-20261015/."
+        }
+      ],
+      "retirement": {
+        "head": "9fc5cb1e753cd7679746bdf650d89d1a150dd04d",
+        "releasedAt": "2026-10-15T12:14:26.000Z",
+        "sessionsReviewedAt": "2026-10-15T12:14:26.000Z"
+      },
+      "retiredBranches": [
+        "fix/greetings-dock-overlap-20261015"
+      ],
+      "archive": {
+        "fix/greetings-dock-overlap-20261015": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-1a0RKt/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-1a0RKt/history.bundle",
+          "sha256": "e7c5d85cba487e1a5e992aed94e84e6f1d83923dc3463fb28752aa04502e86f1",
+          "tag": "refs/tags/archive/worktree-prune/4c29cfed-9094-4e3a-af91-96cb88153448",
+          "head": "9fc5cb1e753cd7679746bdf650d89d1a150dd04d"
+        }
+      }
+    },
+    {
+      "id": "office-ipic-perf-368",
+      "title": "#368 slice: measure p50/p95 frame time, draw calls, triangles, GPU memory, load cost and playback drift for street, IPIC T1-T3 (film playing), penthouse and legacy office on this Mac (Metal, vsync off); provisional, not device limits",
+      "status": "retired",
+      "branches": [
+        "test/office-ipic-perf-20261015"
+      ],
+      "owner": null,
+      "nextAction": "Preserve restoration archives; budgets need named devices (Val); IPIC exterior culling is a candidate after the lane see-through art fix.",
+      "ledger": "docs/superpowers/plans/2026-10-15-office-ipic-perf.md",
+      "requiredChecks": [
+        "node preview/e2e/office-ipic-perf.mjs",
+        "pnpm run verify",
+        "hosted Verify via pnpm run land"
+      ],
+      "filesOwned": [
+        "preview/e2e/office-ipic-perf.mjs (new)",
+        "docs/superpowers/plans/2026-10-15-office-ipic-perf.md (+ receipt json)"
+      ],
+      "pr": 428,
+      "updatedAt": "2026-10-15T13:16:51.779Z",
+      "evidence": [
+        {
+          "pr": 428,
+          "reviewedHead": "382a569674823138a1c8845077ad7f67eb98bfb7",
+          "merge": "e5bb21d2725c4027ef15e6dcf09eb6cc2ab682c2",
+          "tree": "29b52215d9e97defea0bb2771a90854dc6ced76e",
+          "checks": "Landed by claude:river-oaks-1b with pnpm run land 428 at 2026-10-15T13:15:44Z (land updated the branch to 382a5696, Verify passed): guard 17 checks green, CLEAN; merge tree equals head tree. Local: office-ipic-perf runs 1-3 passed with no page errors (run 3 receipt committed); core verify passed (agent 109/109, preview 3192+1 skip+1 todo, server 572+148 Redis skips, desktop 69/69). Evidence in ~/worktree-backups/river-oaks/office-ipic-perf-368-evidence-20261015/."
+        }
+      ],
+      "retirement": {
+        "head": "382a569674823138a1c8845077ad7f67eb98bfb7",
+        "releasedAt": "2026-10-15T13:16:14.000Z",
+        "sessionsReviewedAt": "2026-10-15T13:16:14.000Z"
+      },
+      "retiredBranches": [
+        "test/office-ipic-perf-20261015"
+      ],
+      "archive": {
+        "test/office-ipic-perf-20261015": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-HCdAdi/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-HCdAdi/history.bundle",
+          "sha256": "8ca053b5f9565c9a618d5e9cf02846df90203ddf757e8d9db4fec37300a275dc",
+          "tag": "refs/tags/archive/worktree-prune/dfe729ed-f570-4f70-8f69-c90788a6c824",
+          "head": "382a569674823138a1c8845077ad7f67eb98bfb7"
+        }
+      }
+    },
+    {
+      "id": "ipic-exterior-culling",
+      "title": "IPIC auditorium exterior culling (perf finding from #428): drop the district while the camera is in the auditorium facing away from its partition; pixel-identical",
+      "status": "retired",
+      "branches": [
+        "exp/ipic-exterior-culling-20261015"
+      ],
+      "owner": null,
+      "nextAction": "Preserve restoration archives; nothing left to deliver.",
+      "ledger": "docs/superpowers/plans/2026-10-15-ipic-exterior-culling.md",
+      "requiredChecks": [
+        "pixel comparison at review poses",
+        "office-ipic-perf re-run",
+        "pnpm run verify",
+        "IPIC journeys"
+      ],
+      "filesOwned": [
+        "preview/src/interior-exterior-culling.js (IPIC predicate)",
+        "preview/src/main.js (render call site only)",
+        "new tests/e2e for IPIC culling"
+      ],
+      "pr": 431,
+      "updatedAt": "2026-10-15T14:34:15.951Z",
+      "evidence": [
+        {
+          "pr": 431,
+          "reviewedHead": "515ccadc25be7b988ace52676c1934bbe18f867a",
+          "merge": "a82e96e81fe3aa3e9793563f0416f0b367b5b620",
+          "tree": "4a323acbd1180c5dbd13563d553ef71399632965",
+          "checks": "Landed by claude:river-oaks-1b with pnpm run land 431 at 2026-10-15T14:32:52Z (land updated the branch to 515ccadc, Verify passed): guard 17 checks green, CLEAN; merge tree equals head tree. Local: ipic-exterior-culling runs 4-5 passed (every culled frame pixel-identical; seated 564->218 calls, 2.66M->0.36M triangles; seated p50 7.6->5.4 ms interleaved); unit 4/4, mutation fails 3/4; focused 41 pass + 1 todo; core verify passed (agent 109/109, preview 3207+1 skip+1 todo, server 580+149 Redis skips, desktop 69/69). Evidence in ~/worktree-backups/river-oaks/ipic-exterior-culling-evidence-20261015/."
+        }
+      ],
+      "retirement": {
+        "head": "515ccadc25be7b988ace52676c1934bbe18f867a",
+        "releasedAt": "2026-10-15T14:33:26.000Z",
+        "sessionsReviewedAt": "2026-10-15T14:33:26.000Z"
+      },
+      "retiredBranches": [
+        "exp/ipic-exterior-culling-20261015"
+      ],
+      "archive": {
+        "exp/ipic-exterior-culling-20261015": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-64eVAJ/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-64eVAJ/history.bundle",
+          "sha256": "6ff0695080e90595bccfa96868b6cf5ec01fa24820564ac4c4e24842973a10ae",
+          "tag": "refs/tags/archive/worktree-prune/d08ba9f9-79a6-4afa-8350-787acb635bf6",
+          "head": "515ccadc25be7b988ace52676c1934bbe18f867a"
+        }
+      }
+    },
+    {
+      "id": "ipic-auditorium-interiors",
+      "title": "IPIC auditorium perf round 2 (Val chose 2026-10-15): after #431, also skip what cannot be seen from the auditorium (other stores' interiors and people, town objects); pixel-identical or not shipped",
+      "status": "retired",
+      "branches": [
+        "perf/ipic-auditorium-interiors-20261015"
+      ],
+      "owner": null,
+      "nextAction": "Preserve restoration archives; nothing left to deliver.",
+      "ledger": "docs/superpowers/plans/2026-10-15-ipic-auditorium-interiors.md",
+      "requiredChecks": [
+        "pixel comparison (ipic-exterior-culling.mjs extended)",
+        "pnpm run verify",
+        "hosted Verify via pnpm run land"
+      ],
+      "filesOwned": [
+        "preview/src/interior-exterior-culling.js",
+        "preview/src/main.js (render call site only)",
+        "preview/e2e/ipic-exterior-culling.mjs",
+        "preview/tests/interior-exterior-culling.test.js"
+      ],
+      "pr": 435,
+      "updatedAt": "2026-10-15T16:42:25.582Z",
+      "evidence": [
+        {
+          "pr": 435,
+          "reviewedHead": "6984df50279967755fe35353e3d5eba0a8d94e8f",
+          "merge": "4ab018923bc350048b85cff1448cacb9747570bd",
+          "tree": "ec549e8355cba5615ec8bde4e0728bd8f72256b3",
+          "checks": "Landed by claude:river-oaks-1b with pnpm run land 435 at 2026-10-15T16:40:36Z (land updated the branch to 6984df50, Verify passed): guard 17 checks green, CLEAN; merge tree equals head tree. Local: ipic-exterior-culling run 3 passed (every culled pose pixel-identical; seated 555->99 calls, 2.66M->0.20M triangles; seated p50 9.2->5.9 ms interleaved); runs 1-2 failed only on test artefacts (doorway animation, late first-visit overlay), both fixed in the runner; unit 5/5; focused 43 pass + 1 todo; core verify passed (agent 111/111, preview 3246+1 skip+1 todo, server 581+149 Redis skips, desktop 69/69). Evidence in ~/worktree-backups/river-oaks/ipic-auditorium-interiors-evidence-20261015/."
+        }
+      ],
+      "retirement": {
+        "head": "6984df50279967755fe35353e3d5eba0a8d94e8f",
+        "releasedAt": "2026-10-15T16:41:38.000Z",
+        "sessionsReviewedAt": "2026-10-15T16:41:38.000Z"
+      },
+      "retiredBranches": [
+        "perf/ipic-auditorium-interiors-20261015"
+      ],
+      "archive": {
+        "perf/ipic-auditorium-interiors-20261015": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-1Fz50F/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-1Fz50F/history.bundle",
+          "sha256": "ec25ec976834cbcc5f806de8f9b09a92c7ef6b7af4004840e7ab741daf87a733",
+          "tag": "refs/tags/archive/worktree-prune/3c400526-df12-4598-bf20-23435081a760",
+          "head": "6984df50279967755fe35353e3d5eba0a8d94e8f"
+        }
+      }
+    },
+    {
+      "id": "register-sweep-20261015-1b",
+      "title": "Register sweep: commit claude:river-oaks-1b live entries to main (7 from the morning session: #360 baseline, contract decisions, office computer MVP, #366, #361, #367; 9 from today rounds)",
+      "status": "retired",
+      "branches": [
+        "docs/register-sweep-20261015-1b"
+      ],
+      "owner": null,
+      "nextAction": "Preserve restoration archives; nothing left to deliver.",
+      "filesOwned": [
+        "docs/project-management/tasks.json (the 13 named entries and this one only)"
+      ],
+      "pr": 438,
+      "updatedAt": "2026-10-15T19:37:36.932Z",
+      "evidence": [
+        {
+          "pr": 438,
+          "reviewedHead": "823f9aa6c0b01857db200f1640dfccce29116685",
+          "merge": "ee6a044a5781f358a65b8f1623a360fde9c6aa4b",
+          "tree": "e2855228446b9ed87b4cc3eef9d7a0d87d1fb450",
+          "checks": "Landed by claude:river-oaks-1b with pnpm run land 438 (Verify passed on 823f9aa; guard CLEAN; merge tree equals head tree). project:check on the swept file added no gaps and cleared 15 of main's."
+        }
+      ],
+      "retirement": {
+        "head": "823f9aa6c0b01857db200f1640dfccce29116685",
+        "releasedAt": "2026-10-15T18:31:18.000Z",
+        "sessionsReviewedAt": "2026-10-15T18:31:18.000Z"
+      },
+      "retiredBranches": [
+        "docs/register-sweep-20261015-1b"
+      ],
+      "archive": {
+        "docs/register-sweep-20261015-1b": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-OVdmf5/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-OVdmf5/history.bundle",
+          "sha256": "6f41cd1532d71723af0cbc60611fedf366e1c59202ddefb31529d8a68a138066",
+          "tag": "refs/tags/archive/worktree-prune/c1f18347-dc69-4ac8-bde3-7daa4eebc801",
+          "head": "823f9aa6c0b01857db200f1640dfccce29116685"
+        }
+      }
+    },
+    {
+      "id": "studio-acceptance-417",
+      "title": "#417 Garden Office pilot acceptance (coding scope): review profile, full Studio journey, warm-up plus ten-cycle resource soak, late/missing asset recovery, real-GPU measurements, keyboard and layout checks",
+      "status": "active",
+      "branches": [
+        "test/studio-acceptance-417-20261015"
+      ],
+      "owner": "claude:river-oaks-safe-edits (e9aa0185)",
+      "updatedAt": "2026-10-15T18:22:32.901Z",
+      "leaseUntil": "2026-10-15T20:22:32.901Z",
+      "nextAction": "Soak: no unexplained growth (70 cycles; heap growth was undo history, capped at 80, shown by 40-to-70 snapshots). Journey passed 13 checks with a walked tour of all four destinations. Queued on the browser lock: late/missing texture scenario, then the Studio frame-timing profile. Next: keyboard, focus, reduced motion and 320/390 px checks; occupied-use captures.",
+      "ledger": "docs/superpowers/plans/2026-10-15-studio-pilot-acceptance.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-studio-acceptance-417",
+      "issue": 417,
+      "filesOwned": [
+        "preview/e2e/ (new Studio acceptance scenario only)",
+        "preview/src/studio/viewport.js (opt-in diagnostics, measured lifecycle fixes only)",
+        "preview/src/studio/scene.js (measured lifecycle fixes only)",
+        "preview/tests/studio-*.test.js (acceptance regressions)",
+        "docs/world-studio.md",
+        "docs/superpowers/plans/2026-10-15-studio-pilot-acceptance.md"
+      ],
+      "requiredChecks": [
+        "node --test preview/tests/studio-*.test.js server/tests/studio-assets.test.js",
+        "pnpm run test:experience world-studio",
+        "the new soak scenario (warm-up plus ten cycles)",
+        "node desktop/studio-e2e.js",
+        "pnpm run verify"
+      ]
+    },
+    {
+      "id": "connection-continuity",
+      "title": "Players stay connected (Val, 2026-10-15): seamless 270 s rotation, dead-connection watchdog, online/visible reconnect + jitter, 30 s production grace, and update messaging that says the world is improving",
+      "status": "retired",
+      "branches": [
+        "fix/connection-continuity-20261015"
+      ],
+      "owner": null,
+      "nextAction": "Preserve restoration archives; nothing left to deliver.",
+      "ledger": "docs/superpowers/plans/2026-10-15-connection-continuity.md",
+      "requiredChecks": [
+        "new unit and transport tests red then green",
+        "connection-continuity browser journey",
+        "multiplayer and voice journeys",
+        "Redis server suite on throwaway Redis",
+        "pnpm run verify",
+        "hosted Verify via pnpm run land"
+      ],
+      "filesOwned": [
+        "preview/src/multiplayer-client.js",
+        "preview/src/connection-policy.js (new)",
+        "preview/src/voice-chat.js",
+        "server/distributed-app.js",
+        "server/app.js (connection lifetime + shutdown close only)",
+        "server/redis-room.js (leave grace)",
+        "server/world-gateway.js (option pass-through)",
+        "server/tests/browser-fixture.js (lifetime env)",
+        "tests and e2e for these"
+      ],
+      "pr": 447,
+      "updatedAt": "2026-10-15T18:31:05.764Z",
+      "evidence": [
+        {
+          "pr": 447,
+          "reviewedHead": "c5d7ca60c052e77295a9ae26d43c39672c4aeead",
+          "merge": "5bb0470d061c76c8d291624097954eb8eb32aa9e",
+          "tree": "60ff38f2415d473fd727119af72d7dd86a875b82",
+          "checks": "Landed by claude:river-oaks-1b with pnpm run land 447 at 2026-10-15T18:29Z (land updated the branch to c5d7ca60, Verify passed; guard CLEAN). Local: connection-continuity journey run 6 passed every check (5 hand-overs, no gate, bob never gone, quiet socket noticed 8.8 s, online 256 ms, update screens); mutation (ignore rotate) failed on the gate; connection-rotation 4/4 memory+Redis; full server suite on throwaway Redis 786/786; multiplayer-lifecycle, greetings, ipic-screening journeys passed; core verify passed (agent 111/111, preview 3265+1 skip, server 592+152 Redis skips, desktop 69/69). Evidence in ~/worktree-backups/river-oaks/connection-continuity-evidence-20261015/."
+        }
+      ],
+      "retirement": {
+        "head": "c5d7ca60c052e77295a9ae26d43c39672c4aeead",
+        "releasedAt": "2026-10-15T18:30:09.000Z",
+        "sessionsReviewedAt": "2026-10-15T18:30:09.000Z"
+      },
+      "retiredBranches": [
+        "fix/connection-continuity-20261015"
+      ],
+      "archive": {
+        "fix/connection-continuity-20261015": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-Cw3f1P/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-Cw3f1P/history.bundle",
+          "sha256": "319989475e71676f2267b99dda7dd5b5189ccaeca755bc2a32ae1aefdbc3a8cb",
+          "tag": "refs/tags/archive/worktree-prune/2061e65b-df24-4685-9ef9-400081d429fa",
+          "head": "c5d7ca60c052e77295a9ae26d43c39672c4aeead"
+        }
+      }
+    },
+    {
+      "id": "release-0-2-0-tag",
+      "title": "Cut the signed v0.2.0 tag on the 0.2.0 bump merge e87b458e (Val, 2026-10-15): fresh install, tests, desktop package and inspection; GitHub release publication only on a separate yes",
+      "status": "retired",
+      "branches": [],
+      "owner": null,
+      "nextAction": "Published: GitHub release v0.2.0 (https://github.com/BunsDev/river-oaks/releases/tag/v0.2.0, 2026-10-15T20:07:56Z, Latest) with TypeSafe-Place-0.2.0-macOS-arm64.zip (sha256 5c3ae6a4..., GitHub digest and re-download match) and SHA256SUMS, at Val's request. Ad-hoc signed only; Developer ID signing and notarization remain open.",
+      "filesOwned": [
+        "refs/tags/v0.2.0"
+      ],
+      "pr": 376,
+      "updatedAt": "2026-10-15T20:08:31.581Z",
+      "evidence": [
+        {
+          "pr": 376,
+          "reviewedHead": "d7e8ea1d2ff8a8a54d1f53bcdcf77dd404e4422f",
+          "merge": "e87b458ec7883c2355c0f3e1028b07a65120355f",
+          "tree": "4b042e93144018fb58c08f8946b6f8f7824fc1b1",
+          "checks": "Tag v0.2.0 (object 55eafd8d) -> e87b458e, git tag -v Good ED25519, GitHub verified=true. Release worktree at e87b458e with fresh pnpm install: test:desktop 69/69; desktop:package; desktop:package:check ok (exact ASAR allowlist, no fuse drift); codesign --verify --deep --strict valid; Info.plist 0.2.0, bundle id works.jev.river-oaks; ASAR package.json 0.2.0; desktop e2e --dev passed (status passed, 0 failed). TypeSafe-Place-0.2.0-macOS-arm64.zip 127,305,352 bytes, SHA-256 5c3ae6a4a450de18a03ed33d7a67573c9c96b6b2ee09df792e7b6f5cdd4c28b0, unzip -t clean."
+        }
+      ],
+      "retirement": {
+        "head": "e87b458ec7883c2355c0f3e1028b07a65120355f",
+        "releasedAt": "2026-10-15T19:00:18.000Z",
+        "sessionsReviewedAt": "2026-10-15T19:00:18.000Z"
+      },
+      "archive": {
+        "ref": "refs/tags/v0.2.0",
+        "sha": "e87b458ec7883c2355c0f3e1028b07a65120355f",
+        "tagObject": "55eafd8d",
+        "evidence": "/Users/buns/worktree-backups/river-oaks/release-v0.2.0-artifacts",
+        "note": "Detached worktree (no branch); its head is main history and the signed, pushed v0.2.0 tag. Restore with git worktree add --detach <path> v0.2.0. Ignored runtime, receipts and the packaged zip are in the evidence folder."
+      }
+    },
+    {
+      "id": "voice-continuity",
+      "title": "Voice survives the 270 s socket hand-over (Val, 2026-10-15): the replacement socket proves continuity with the old connection id, the server moves the voice lease (compare-and-swap) and reconcile allows a short grace, so voice need not rejoin",
+      "status": "retired",
+      "branches": [
+        "fix/voice-continuity-20261015"
+      ],
+      "owner": null,
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "filesOwned": [
+        "server/voice.js",
+        "server/voice-routes.js",
+        "server/app.js (voice continuity only)",
+        "server/distributed-app.js (voice continuity only)",
+        "server/connection-close.js",
+        "preview/src/multiplayer-client.js (continues param)",
+        "preview/src/voice-chat.js (onConnectionChanged)",
+        "tests for these"
+      ],
+      "pr": 454,
+      "updatedAt": "2026-10-15T19:36:23.286Z",
+      "evidence": [
+        {
+          "pr": 454,
+          "reviewedHead": "287c466fa2e0e0ba2d26be9a8ac3bb48bf53c7b7",
+          "merge": "ec03695650d6436f106d8c7bdb353e134d054523",
+          "tree": "44b3e4f56f7672c3b7441171fa1d6084f4e62f44",
+          "checks": "17 hosted checks green via pnpm run land 454. Local: voice-chat 19/19; voice server tests on throwaway Redis 48/48; connection-rotation 6/6 twice (voice carries on across a hand-over; control loses voice after the 3 s grace); mutation (no continueConnection) fails with no_lease; full Redis server suite 792/792 nothing skipped; connection-continuity journey passed (5 bracketed rotations, no gate); pnpm run verify core passed. Evidence archived in ~/worktree-backups/river-oaks/voice-continuity-evidence-20261015/."
+        }
+      ],
+      "retirement": {
+        "head": "287c466fa2e0e0ba2d26be9a8ac3bb48bf53c7b7",
+        "releasedAt": "2026-10-15T19:34:31.000Z",
+        "sessionsReviewedAt": "2026-10-15T19:34:31.000Z"
+      },
+      "retiredBranches": [
+        "fix/voice-continuity-20261015"
+      ],
+      "archive": {
+        "fix/voice-continuity-20261015": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-RnXb7j/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-RnXb7j/history.bundle",
+          "sha256": "25259849de41993c7188ebdb78d29aac401315c1c34a6cb99b0eeef9a10d6792",
+          "tag": "refs/tags/archive/worktree-prune/5b3d33d1-3d0f-4ce6-9047-2ea34f7295da",
+          "head": "287c466fa2e0e0ba2d26be9a8ac3bb48bf53c7b7"
+        }
+      }
+    },
+    {
+      "id": "register-sweep-20261015-1b2",
+      "title": "Commit river-oaks-1b's later register entries and record the v0.2.0 tag evidence",
+      "status": "retired",
+      "owner": null,
+      "branches": [
+        "docs/register-sweep-20261015-1b2"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-14-release-0.2.0-readiness.md",
+      "requiredChecks": [
+        "node scripts/project-status.mjs --check"
+      ],
+      "filesOwned": [
+        "docs/project-management/tasks.json (the named entries and this one only)",
+        "docs/superpowers/plans/2026-10-14-release-0.2.0-readiness.md",
+        "data/reports/desktop-development.json"
+      ],
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "updatedAt": "2026-10-15T19:57:28.909Z",
+      "pr": 455,
+      "evidence": [
+        {
+          "pr": 455,
+          "reviewedHead": "60bccd746e61dd27fc73f2bf973e2a2f9a8217d1",
+          "merge": "6dac1b21039f005788b8524a67c74b02bd71246d",
+          "tree": "bff2a2ce6aca0690e388ef700156aef562a0e0ef",
+          "checks": "Landed by claude:river-oaks-1b with pnpm run land 455 (branch updated to 60bccd74; 17 hosted checks; guard CLEAN; merge tree equals head tree). Both JSON files parse; project-status --check on the swept register cleared 2 of main's gaps and added only the accurate release-0-2-0-readiness pending-retirement gap."
+        }
+      ],
+      "retirement": {
+        "head": "60bccd746e61dd27fc73f2bf973e2a2f9a8217d1",
+        "releasedAt": "2026-10-15T19:56:46.000Z",
+        "sessionsReviewedAt": "2026-10-15T19:56:46.000Z"
+      },
+      "retiredBranches": [
+        "docs/register-sweep-20261015-1b2"
+      ],
+      "archive": {
+        "docs/register-sweep-20261015-1b2": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-Co6TTW/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-Co6TTW/history.bundle",
+          "sha256": "d0db1e1e5cbf688c19fbef42039545237a5fb9d994922869ebf1598f6d634034",
+          "tag": "refs/tags/archive/worktree-prune/e9c8ccfc-16c5-4aaf-bbf7-9a45f5df6461",
+          "head": "60bccd746e61dd27fc73f2bf973e2a2f9a8217d1"
+        }
+      }
+    },
+    {
+      "id": "character-studio-contract-20261015",
+      "title": "Character Studio contract PR #457",
+      "status": "active",
+      "branches": [
+        "feat/character-studio-contract-20261015"
+      ],
+      "owner": "codex-character-studio-20261015",
+      "updatedAt": "2026-10-15T21:57:05.134413+00:00",
+      "leaseUntil": "2026-10-15T23:57:05.134413+00:00",
+      "nextAction": "Preserve draft contract #457 at b6ef443e; review baseline/contract acceptance with render/editor stack. No merge authorization.",
+      "filesOwned": [],
+      "requiredChecks": [
+        "Focused contract and rig tests",
+        "pnpm run verify",
+        "Rendered human/beast fixture inspection"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-15-character-studio.md",
+      "pr": 457
+    },
+    {
+      "id": "character-studio-editor-20261015",
+      "title": "Character Studio editor PR #461",
+      "status": "active",
+      "branches": [
+        "feat/character-studio-editor-20261015"
+      ],
+      "owner": "codex-character-studio-20261015",
+      "updatedAt": "2026-10-15T21:57:05.134413+00:00",
+      "leaseUntil": "2026-10-15T23:57:05.134413+00:00",
+      "nextAction": "Preserve draft editor #461 at 93f29271; backport/reconcile selected-character focus correction from #462 before any future landing. No merge authorization.",
+      "filesOwned": [],
+      "requiredChecks": [
+        "Focused contract and rig tests",
+        "pnpm run verify",
+        "Rendered human/beast fixture inspection"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-15-character-studio.md",
+      "pr": 461
+    },
+    {
+      "id": "character-studio-persistence-20261015",
+      "title": "Character Studio #443 authoritative drafts and immutable revisions",
+      "status": "active",
+      "branches": [
+        "feat/character-studio-persistence-20261015"
+      ],
+      "owner": "codex-character-studio-20261015",
+      "updatedAt": "2026-10-18T06:40:52.314190+00:00",
+      "leaseUntil": "2026-10-18T08:40:52.314190+00:00",
+      "nextAction": "Boot fit final gates passed: focused21+ownership4,wardrobe877checks132rows330phases,core11withRedis,native4Kbothzero. Selected Rowan/Kai sit/run visually clear at cuffs,review no blockers. Ready signed commit/push464 then exacthead CI/issue update. Preserve userdev5028,reports and otherowners; no merge/deploy.",
+      "filesOwned": [
+        "server/character-store.js",
+        "server/tests/character-store.test.js",
+        "docs/character-studio.md",
+        "docs/superpowers/plans/2026-10-15-character-studio-persistence.md",
+        "server/character-routes.js",
+        "server/tests/character-transport.test.js",
+        "server/app.js",
+        "server/distributed-app.js",
+        "server/world-gateway.js",
+        "server/town.js",
+        "server/redis-security.js",
+        "server/world.js",
+        "server/redis-room.js",
+        "server/avatar-preferences.js",
+        "server/tests/character-world.test.js",
+        "server/tests/redis-room.test.js",
+        "server/tests/avatar-preferences.test.js",
+        "server/creator-rollout-audit.js",
+        "server/tests/seating.test.js",
+        "server/tests/creator-objects.test.js",
+        "server/tests/penthouse-office.test.js",
+        "server/tests/offices.test.js",
+        "server/tests/office-ipic-rollback.test.js",
+        "server/tests/interactions.test.js",
+        "server/tests/penthouse-seats-redis.test.js",
+        "server/tests/penthouse-seats.test.js",
+        "server/recovery-diagnostics.js",
+        "server/tests/character-selection.test.js",
+        "server/tests/character-room.test.js",
+        "server/character-selection.js",
+        "server/tests/character-selection-memory.test.js",
+        "server/tests/character-equip.test.js",
+        "server/tests/world-gateway.test.js",
+        "preview/src/character-account.js",
+        "preview/tests/character-account.test.js",
+        "preview/src/character-studio.js",
+        "preview/src/character-studio.css",
+        "preview/src/multiplayer-client.js",
+        "preview/src/main.js",
+        "preview/src/player-avatar.js",
+        "preview/src/remote-players.js",
+        "preview/src/character-selection-view.js",
+        "preview/tests/remote-players.test.js",
+        "preview/e2e/character-studio.js",
+        "preview/e2e/character-studio-shared.js",
+        "preview/e2e/shared-runner.js",
+        "server/tests/browser-fixture.js",
+        "preview/vite.config.js",
+        "server/vercel-routing.js",
+        "server/tests/vercel-routing.test.js",
+        "vercel.json",
+        "preview/src/character-studio-materials.js",
+        "preview/tests/character-selection-view.test.js",
+        "preview/src/avatar-placeholder.js",
+        ".env.example",
+        "server/character-rollout.js",
+        "server/redis-backend.js",
+        "preview/e2e/fixture-server.js",
+        "preview/e2e/experience-runner.js",
+        "preview/e2e/character-studio-disabled.js",
+        "preview/e2e/character-studio-paused.js",
+        "server/auth.js",
+        "server/redis-auth.js",
+        "server/tests/auth.test.js",
+        "server/tests/redis-auth.test.js",
+        "server/workos-deletion.js",
+        "server/tests/workos-deletion.test.js",
+        "server/tests/character-account-deletion.test.js",
+        "server/tests/character-deletion-factories.test.js",
+        "server/character-metrics.js",
+        "server/character-metrics-http.js",
+        "server/character-metrics-equip.js",
+        "server/tests/character-metrics.test.js",
+        "server/tests/character-metrics-http.test.js",
+        "server/tests/character-metrics-equip.test.js",
+        "server/tests/character-metrics-routes.test.js",
+        "server/tests/character-metrics-transport.test.js",
+        "server/tests/character-metrics-factories.test.js",
+        "preview/src/peer-label-layout.js",
+        "preview/tests/peer-label-layout.test.js",
+        "preview/src/multiplayer.css",
+        "preview/audit/rendered-multiplayer.js",
+        "preview/tests/office-world-presentation.test.js",
+        "preview/src/office-ui.js",
+        "preview/tests/office-ui.test.js",
+        "preview/src/skirt-geometry.js",
+        "preview/src/skirt-seat-morph.js",
+        "preview/src/skirt-seat-morph-data.js",
+        "preview/src/reference-archetypes.js",
+        "preview/src/romance-look.js",
+        "preview/src/sable-look.js",
+        "preview/tests/skirt-skinning.test.js",
+        "preview/tests/reference-batching.test.js",
+        "preview/tests/helpers/skirt-contact.js",
+        "scripts/bake-skirt-seat-morph.mjs",
+        "scripts/lib/skirt-seat-fit.mjs",
+        "preview/e2e/character-poses.js",
+        "preview/tests/skirt-seat-bake.test.js",
+        "preview/src/skirt-seat-morph-receipt.json",
+        "scripts/character-hero-goldens.mjs",
+        "preview/e2e/fixtures/character-hero-golden.html",
+        "preview/e2e/fixtures/character-hero-golden.js",
+        "preview/audit/character-image-comparison.js",
+        "preview/tests/character-image-comparison.test.js",
+        "preview/e2e/goldens/character-hero",
+        "preview/e2e/character-wardrobe.js",
+        "preview/audit/character-wardrobe-matrix.js",
+        "preview/tests/character-wardrobe-matrix.test.js",
+        "preview/src/vesper-skirt-geometry.js",
+        "preview/src/vesper-skirt-morph-data.js",
+        "preview/src/vesper-skirt-morph-receipt.json",
+        "scripts/bake-vesper-skirt.mjs",
+        "scripts/lib/skirt-detail-fit.mjs",
+        "preview/src/drape-geometry.js",
+        "preview/tests/drape-skinning.test.js",
+        "scripts/lib/drape-seat-fit.mjs",
+        "scripts/bake-lyra-drapes.mjs",
+        "preview/src/lyra-drape-morph-data.js",
+        "preview/src/lyra-drape-morph-receipt.json",
+        "preview/tests/romance-look.test.js",
+        "preview/tests/drape-seat-bake.test.js",
+        "preview/src/silvan-drape-geometry.js",
+        "preview/src/silvan-drape-morph-data.js",
+        "preview/src/silvan-drape-morph-receipt.json",
+        "scripts/bake-silvan-drapes.mjs",
+        "preview/tests/silvan-drape.test.js",
+        "preview/tests/helpers/garment-edges.js",
+        "preview/src/packed-morph-data.js",
+        "preview/tests/packed-morph-data.test.js",
+        "preview/tests/garment-edges.test.js",
+        "preview/tests/silvan-trousers.test.js",
+        "preview/tests/helpers/body-coverage.js",
+        "preview/src/silvan-trousers.js",
+        "preview/tests/body-coverage.test.js",
+        "preview/tests/silvan-trousers-motion.test.js",
+        "preview/src/coat-tail-geometry.js",
+        "preview/tests/coat-tails.test.js",
+        "scripts/bake-coat-tails.mjs",
+        "preview/src/coat-tail-morph-data.js",
+        "preview/src/coat-tail-morph-receipt.json",
+        "scripts/lib/coat-tail-fit.mjs",
+        "preview/src/coat-tail-skinning.js",
+        "preview/e2e/character-studio-worlds.js",
+        "preview/src/rigid-costume-batching.js",
+        "preview/tests/rigid-costume-batching.test.js",
+        "preview/src/rigid-accessory-pool.js",
+        "preview/tests/rigid-accessory-pool.test.js",
+        "preview/tests/reference-boots.test.js",
+        "preview/src/boot-fitting.js",
+        "preview/tests/boot-fitting.test.js"
+      ],
+      "requiredChecks": [
+        "Memory and real isolated Redis store contract tests",
+        "pnpm run verify",
+        "Authenticated HTTP/WebSocket and two-player journeys before integration acceptance"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-15-character-studio-persistence.md",
+      "pr": 464
+    },
+    {
+      "id": "human-only-characters-20261018",
+      "title": "Human-only characters and Jevica-only invited office",
+      "status": "active",
+      "branches": [
+        "feat/human-only-characters-20261018"
+      ],
+      "owner": "codex-human-only-20261018",
+      "updatedAt": "2026-10-18T11:08:37.944467Z",
+      "leaseUntil": "2026-10-18T13:08:37.944467Z",
+      "nextAction": "User authorized commit/push/merge. Verify complete controlled core gate, reconcile current main and inherited Studio stack, commit signed, open PR and land via protected queue.",
+      "filesOwned": [
+        "preview/src",
+        "preview/tests",
+        "preview/e2e",
+        "server",
+        "docs/character-studio.md",
+        "preview/public/assets/characters"
+      ],
+      "requiredChecks": [
+        "Focused migration and catalog regressions",
+        "pnpm run verify",
+        "Human character browser journey"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-18-human-only-characters.md",
+      "pr": 496
+    },
+    {
+      "id": "green-roofs-20261015",
+      "title": "Implement composed green roof scenery and verify office outlook, fit and rendering budgets",
+      "status": "active",
+      "branches": [
+        "feat/green-roofs-20261015"
+      ],
+      "owner": "codex:green-roofs-20261015",
+      "updatedAt": "2026-10-15T19:40:15.925333+00:00",
+      "nextAction": "Signed19cf13ee all16 hosted checks passed; prior queue refused stale main. Integrated ec036956 (Studio/voice main) with repo task merge driver; final combined pnpm verify core passed. Commit/push signed final merge, re-enter pnpm land449, await exact-head hosted checks and actual merge proof. Full18-component pass9a4404da and Metal evidence retain recorded scope.",
+      "ledger": "docs/superpowers/plans/2026-10-15-green-roofs.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-green-roofs",
+      "filesOwned": [
+        "preview/src/green-roofs.js (new)",
+        "preview/tests/green-roofs.test.js (new)",
+        "preview/src/district.js (roof integration only)",
+        "docs/vegetation.md (authored roof planting)",
+        "docs/superpowers/plans/2026-10-15-green-roofs.md",
+        "preview/e2e/green-roofs-webgl.js (new)",
+        "docs/green-roofs.md",
+        "preview/e2e/green-roofs-office.mjs (new)",
+        "preview/src/roof-field-boundaries.js (new)",
+        "preview/tests/roof-field-boundaries.test.js (new)",
+        "preview/src/roof-field-mesh.js (new)",
+        "preview/tests/roof-field-mesh.test.js (new)",
+        "preview/src/hermes-roof-surface.js (new)",
+        "preview/tests/hermes-roof-surface.test.js (new)",
+        "preview/src/reference-facades.js (pavilion helper replacement only)",
+        "preview/src/roof-grasses.js (new)",
+        "preview/tests/roof-grasses.test.js (new)",
+        "preview/e2e/green-roofs-town.mjs (new)",
+        "preview/src/office-layouts.js (roof-gardens view only)",
+        "preview/tests/office-views.test.js",
+        "preview/tests/office-ui.test.js",
+        "preview/e2e/office-penthouse.js",
+        "preview/e2e/office-penthouse-runner.mjs",
+        "docs/offices.md (bounded views)",
+        "preview/src/office-world-scene.js",
+        "preview/src/office-world-presentation.js",
+        "preview/src/office-skyline.js",
+        "preview/tests/office-skyline.test.js",
+        "preview/tests/office-world-presentation.test.js",
+        "preview/src/main.js (live office mode)",
+        "preview/e2e/spatial-circulation.js (startup fence and failure diagnostics)",
+        "preview/e2e/spatial-circulation.js (fixture readiness/diagnostics)"
+      ],
+      "requiredChecks": [
+        "deterministic containment, equipment and geometry regressions",
+        "office capture lifecycle and inclusion",
+        "pnpm run verify",
+        "matched daylight/dusk street/elevated captures and performance deltas",
+        "live current-light/parallax/actor-mask/lifecycle regressions",
+        "pnpm run verify full with owned isolated Redis",
+        "native live office routes, in-visit time change, fixed-view costs"
+      ],
+      "pr": 449,
+      "leaseUntil": "2026-10-15T22:23:30.634352+00:00"
+    },
+    {
+      "id": "release-0-2-0-published",
+      "title": "Record the published v0.2.0 GitHub release in the readiness ledger and register",
+      "status": "active",
+      "owner": "claude:river-oaks-1b (b929a625)",
+      "leaseUntil": "2026-10-15T22:08:36.000Z",
+      "branches": [
+        "docs/release-0-2-0-published-20261015"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-14-release-0.2.0-readiness.md",
+      "requiredChecks": [
+        "node scripts/project-status.mjs --check"
+      ],
+      "filesOwned": [
+        "docs/superpowers/plans/2026-10-14-release-0.2.0-readiness.md",
+        "docs/project-management/tasks.json (the named entries and this one only)"
+      ],
+      "nextAction": "Update the readiness ledger's tag section for the published release; copy release-0-2-0-readiness, register-sweep-20261015-1b2, release-0-2-0-tag and this entry onto main's register; PR and land.",
+      "updatedAt": "2026-10-15T20:08:36.760Z"
+    },
+    {
+      "id": "plaza-game-layout-20261015",
+      "title": "Expandable plaza boards and clear game selection",
+      "status": "active",
+      "branches": [
+        "feat/plaza-game-layout-20261015"
+      ],
+      "owner": "codex-plaza-game-layout-20261015",
+      "updatedAt": "2026-10-16T06:50:27.571433+00:00",
+      "leaseUntil": "2026-10-16T08:50:27.571433+00:00",
+      "nextAction": "Verified main a00a4d19 integration for draft PR #468: core11/11, browser68 checks, unchanged game hashes; all other tasks match main. Push signed integration commit and inspect hosted checks. No merge or deployment authorized; preserve worktree and evidence. Human accessibility and physical-device acceptance remain unverified.",
+      "filesOwned": [
+        "preview/src/plaza-table-games.js",
+        "preview/src/plaza-table-games.css",
+        "preview/e2e/plaza-game-layout.js",
+        "docs/superpowers/plans/2026-10-15-plaza-game-layout.md"
+      ],
+      "requiredChecks": [
+        "pnpm run verify",
+        "Focused game layout browser journey with desktop expanded, narrow and keyboard checks"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-15-plaza-game-layout.md",
+      "pr": 468
+    },
+    {
+      "id": "release-0-2-1-signed",
+      "title": "Release 0.2.1: Developer ID signed and notarized macOS build (Val, 2026-10-15: new 0.2.1 release, Soul Protocol LLC identity, notarytool keychain profile river-oaks-notary)",
+      "status": "delivered",
+      "owner": "claude:river-oaks-1b",
+      "leaseUntil": "2026-10-16T04:43:55.000Z",
+      "branches": [
+        "release/v0.2.1-20261015"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-15-release-0.2.1.md",
+      "requiredChecks": [
+        "pnpm run test:desktop",
+        "pnpm run verify",
+        "pnpm run desktop:package",
+        "pnpm run desktop:package:check",
+        "codesign --verify --deep --strict",
+        "spctl -a -t exec (Notarized Developer ID)"
+      ],
+      "filesOwned": [
+        "desktop/sign.js",
+        "desktop/entitlements.mac.plist",
+        "desktop/fuses.js",
+        "desktop/tests/sign.test.js",
+        "desktop/tests/fuses.test.js",
+        "package.json (version)",
+        "docs/releases/0.2.1.md",
+        "docs/desktop.md (signing section)",
+        "docs/superpowers/plans/2026-10-15-release-0.2.1.md",
+        "scripts/tests/browser-lock.test.js",
+        "refs/tags/v0.2.1",
+        "detached release worktree /Users/buns/Documents/GitHub/BunsDev/river-oaks-release-v0.2.1-tag"
+      ],
+      "nextAction": "Retire release/v0.2.1-20261015 and the detached tag worktree river-oaks-release-v0.2.1-tag (evidence in ~/worktree-backups/river-oaks/release-v0.2.1-artifacts).",
+      "pr": 467,
+      "updatedAt": "2026-10-16T01:56:03.906Z",
+      "evidence": [
+        {
+          "pr": 467,
+          "reviewedHead": "67c8913f1653b27f23e7ecf63d8f54866a70f612",
+          "merge": "19d112502a557b8b172e8449cac4d7bbe4510909",
+          "tree": "8f4c92c0baca4825cd58dd61e7a667c37dbf19c6",
+          "checks": "Landed by claude:river-oaks-1b with pnpm run land 467 (20 hosted checks green incl. CodeQL and desktop on macOS/Linux/Windows; guard CLEAN; merge tree equals head tree). Local: test:desktop 76/76, verify core passed, CodeQL suite 0 results. CodeQL alert #4 fixed on main at 19d11250 (2026-10-16T01:46:10Z); 0 open alerts. Release build at 19d11250 (head of main): test:desktop 76/76, package + package:check, desktop e2e 13/13; Developer ID signed (Soul Protocol LLC 9LR8Z8UQ9X, cert EE732DF3), notarization 055e4bd7-e036-4248-8a60-7e189fe692a0 Accepted, stapled, spctl Notarized Developer ID (also on unzipped quarantined copy). Signed tag v0.2.1 (object 0b5ba60e, GitHub verified) published 2026-10-16T01:55:24Z as Latest; zip sha256 fa5e7e2c digest and re-download match."
+        }
+      ]
+    },
+    {
+      "id": "release-0-2-1-published",
+      "title": "Record the published v0.2.1 release (signed, notarized) in the release ledger and register",
+      "status": "active",
+      "owner": "claude:river-oaks-1b",
+      "leaseUntil": "2026-10-16T03:56:03.000Z",
+      "branches": [
+        "docs/release-0-2-1-published-20261015"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-15-release-0.2.1.md",
+      "requiredChecks": [
+        "node scripts/project-status.mjs --check"
+      ],
+      "filesOwned": [
+        "docs/superpowers/plans/2026-10-15-release-0.2.1.md",
+        "data/reports/desktop-development.json (release e2e receipt)",
+        "docs/project-management/tasks.json (release-0-2-1-signed and this entry only)"
+      ],
+      "nextAction": "Commit release results and the register entries; land; retire.",
+      "pr": null,
+      "updatedAt": "2026-10-16T01:56:03.947Z"
+    },
+    {
+      "id": "plaza-fullscreen-polish-20261018",
+      "title": "Comprehensive full-screen plaza games polish from Val screenshot",
+      "status": "active",
+      "branches": [
+        "fix/plaza-fullscreen-polish-20261018"
+      ],
+      "owner": "codex-plaza-fullscreen-521",
+      "updatedAt": "2026-10-18T16:37:15.104049+00:00",
+      "nextAction": "Authorized to merge PR #521 and prune associated worktree/branches. Resolve main conflict, verify, land through guard, archive and retire.",
+      "ledger": "docs/superpowers/plans/2026-10-18-plaza-fullscreen-polish.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-plaza-fullscreen-polish-20261018",
+      "filesOwned": [
+        "preview/src/plaza-table-games.js",
+        "preview/src/plaza-table-games.css",
+        "preview/e2e/plaza-game-layout.js"
+      ],
+      "requiredChecks": [
+        "Focused table-game behavioral tests",
+        "plaza-game-layout, plaza-morris, salon-guide browser journeys",
+        "Shared table-game browser coverage",
+        "pnpm run verify",
+        "Exact-head hosted preview before landing"
+      ],
+      "pr": 521,
+      "verification": {
+        "focused": "26/26 passed",
+        "browser": "Five journeys passed; final layout 47/47 checks passed after reconnect interruption. Light/dark, checkers lesson, all board shapes, phone and short-window screenshots inspected.",
+        "remainingCore": "Desktop 76/76, build, Python lint/format/tests 141/141, demo checks and secret scan passed.",
+        "gaps": "Full preview suite timed out at 600s; server suite 667 pass, 1 fail, 204 skips. Office recovery failure passed isolated 1/1; unchanged source matches main. Hosted exact-head checks pending; no physical Safari/iPhone or human accessibility acceptance."
+      },
+      "leaseUntil": "2026-10-18T18:37:15.104049+00:00"
+    },
+    {
+      "id": "wine-pong-dynamic-throw-20261015",
+      "title": "Review and improve wine pong stance, release animation, and table views",
+      "status": "active",
+      "branches": [
+        "feat/wine-pong-dynamic-throw-20261015"
+      ],
+      "owner": "codex-root-wine-pong-dynamic-throw-20261015",
+      "leaseUntil": "2026-10-15T18:50:00.000Z",
+      "updatedAt": "2026-10-15T17:47:00.000Z",
+      "nextAction": "Review draft PR #448 and its exact-head checks; keep camera occlusion, touch target selection, audio, and human play/accessibility acceptance as follow-up before declaring the experience complete.",
+      "ledger": "docs/superpowers/plans/2026-10-15-wine-pong-dynamic-throw-review.md",
+      "requiredChecks": [
+        "Position-aware aim/landing/replay behavioral tests",
+        "Plaza wine pong browser journey with view and animation review",
+        "pnpm run verify",
+        "Exact-head hosted preview before merge"
+      ],
+      "filesOwned": [
+        "preview/src/wine-pong-rules.js",
+        "preview/src/plaza-wine-pong.js",
+        "preview/src/plaza-wine-pong.css",
+        "preview/src/plaza-salon-plan.js (wine pong geometry)",
+        "preview/src/plaza-salon.js (wine pong table mirror)",
+        "preview/tests/wine-pong.test.js",
+        "preview/e2e/plaza-wine-pong.js",
+        "docs/superpowers/plans/2026-10-15-wine-pong-dynamic-throw-review.md",
+        "docs/superpowers/plans/README.md (generated index)",
+        "docs/project-management/tasks.json (this task only)",
+        "preview/src/main.js (wine pong camera callback)",
+        "docs/multiplayer.md (wine pong play instructions)",
+        "preview/src/player-avatar.js (wine pong throw action)",
+        "preview/src/resident-gestures.js (wine pong throw pose)",
+        "preview/tests/resident-gestures.test.js (throw pose regression)"
+      ],
+      "pr": 448
+    },
+    {
+      "id": "garden-campus-leases-509",
+      "title": "#509 Garden Offices: bounded owner-managed rental leases, tenant/guest grants and persistence (non-charging), paid-mode proposal",
+      "status": "active",
+      "branches": [
+        "feat/garden-campus-leases-509-20261018"
+      ],
+      "owner": "claude:river-oaks-95/agent-509 (5bececff)",
+      "leaseUntil": "2026-10-18T19:04:32Z",
+      "updatedAt": "2026-10-18T17:04:32Z",
+      "nextAction": "Draft PR #522 at 58afa301 (base #506 branch, includes #506 63ef1b10 layout 3.1 and main 5033ea37). Hosted CI all green at 485d4e11 (server 932/932 Redis, preview 3548/3549); rerun for 58afa301 in progress. Remaining: #508 wires campusAccessEnded/campusSuiteAccess, #510 UI + campus desk context + campusSeat, #512 real attachGardenCampus inert test and district migration; paid mode needs Val's decisions. Merge after #506 lands; merge/deploy are separate release actions.",
+      "ledger": "docs/superpowers/plans/2026-10-18-garden-campus-leases-509.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-garden-campus-509-20261018",
+      "issue": 509,
+      "pr": 522,
+      "filesOwned": [
+        "server/campus-leases.js (new)",
+        "shared/garden-campus-lease-contract.js (new)",
+        "server/tests/campus-leases*.test.js (new)",
+        "server/world.js (campus command dispatch, prune, snapshot field, checkpoint v13 section, API accessors)",
+        "server/redis-room.js (writer generation v13/v14, campusOperators option)",
+        "server/world-gateway.js, server/redis-backend.js, server/town.js (RIVER_OAKS_CAMPUS_OPERATOR_IDS threading)",
+        "server/avatar-preferences.js, server/creator-rollout-audit.js (v13 pins)",
+        "server/tests/* (v12->v13 pins only)",
+        "docs/garden-campus-leases.md (new)",
+        "docs/offices.md, docs/multiplayer.md, docs/screenings.md (writer generation prose)",
+        "docs/superpowers/plans/2026-10-18-garden-campus-leases-509.md (new)"
+      ],
+      "requiredChecks": [
+        "node --test server/tests/campus-leases*.test.js",
+        "pnpm run test:server (isolated REDIS_URL)",
+        "pnpm run verify"
+      ]
+    },
+    {
+      "id": "turning-20261018-cody",
+      "title": "Coordinate planted feet and knees during stationary and walking turns",
+      "status": "active",
+      "branches": [
+        "fix/turning-foot-placement-20261018"
+      ],
+      "owner": "cody:turning-office-20261018",
+      "leaseUntil": "2026-10-18T21:00:51.540812+00:00",
+      "updatedAt": "2026-10-18T19:00:51.540812+00:00",
+      "nextAction": "Commit verified patch, open PR, await exact-head CI and land through the repository queue.",
+      "ledger": "docs/superpowers/plans/2026-10-18-turning.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-turning-20261018",
+      "filesOwned": [
+        "data/reports/turning-core-20261018.json",
+        "data/reports/turning-browser-20261018.json",
+        "docs/project-management/tasks.json",
+        "docs/superpowers/plans/2026-10-18-turning.md",
+        "preview/e2e/turning-regression.mjs",
+        "preview/src/coat-tail-morph-receipt.json",
+        "preview/src/foot-placement.js",
+        "preview/src/lyra-drape-morph-receipt.json",
+        "preview/src/silvan-drape-morph-receipt.json",
+        "preview/src/skirt-seat-morph-receipt.json",
+        "preview/src/vesper-skirt-morph-receipt.json",
+        "preview/tests/foot-placement.test.js"
+      ],
+      "requiredChecks": [
+        "Focused behavioral regressions",
+        "pnpm run verify",
+        "Browser acceptance"
+      ],
+      "verification": {
+        "focused": "20 motion tests plus 4 curb tests passed; five garment validators passed",
+        "core": "All core task coverage passed with bounded concurrency and documented retries; 204 Redis and 1 unrelated client skips. See data/reports/turning-core-20261018.json.",
+        "browser": "Passed seven-rig before/after stationary/slow/normal sharp turns; data/reports/turning-browser-20261018.json."
+      }
     }
   ]
 }

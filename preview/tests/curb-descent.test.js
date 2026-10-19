@@ -67,6 +67,36 @@ test('relocating a walker clears the rendered body height transfer',async()=>{
   avatar.dispose();
 });
 
+// The office lift rises 24.3 m in 2.4 s (office-arrival-model.js). Read as a curb, every
+// frame was an abrupt step: the body lagged at 8/s, then rose at most 0.5 m/s, so it sank
+// out through the car floor and was still below it when the doors opened.
+test('a body standing in a rising lift car rides on its floor with both shoes on it',async()=>{
+  const {ARRIVAL,ease}=await import('../src/office-arrival-model.js');
+  const rise=ARRIVAL.ascentEnd-ARRIVAL.closingEnd;
+  for(const [profile,targetHeight] of [['woman-casual',1.66],['jevica',1.685]]) {
+    const source=await loadCharacterRig(profile);
+    for(const hz of [30,60,120]) {
+      const avatar=instantiateAvatar(source,{targetHeight}),root=new THREE.Group();root.add(avatar.model);
+      const placement=createFootPlacement(avatar.model,root),baseY=avatar.model.position.y;
+      let standing=null,hipDrift=0,shoeDrift=0;
+      for(let frame=0;frame<Math.round((rise+2)*hz);frame++) {
+        const t=frame/hz-1,floor=18.43+ARRIVAL.officeElevation*ease(t/rise);
+        root.position.set(-2741.8,floor,1391.2);avatar.model.position.y=baseY-.018;
+        for(const [bone,rest]of avatar.rest)bone.quaternion.copy(rest);
+        placement.update(1/hz,{speed:0,distance:0,platform:[-2741.8,floor,1391.2]},()=>floor);
+        const hip=placement.legs[0].thigh.getWorldPosition(new THREE.Vector3()).y-floor,shoes=placement.legs.map(leg=>leg.ikTarget.y-floor);
+        for(const leg of placement.legs)assert.ok(leg.error<.003,`${profile} ${hz} Hz frame ${frame}: ${leg.side} shoe out of reach by ${leg.error} m`);
+        if(t<0){standing={hip,shoes};continue;}
+        hipDrift=Math.max(hipDrift,Math.abs(hip-standing.hip));
+        shoeDrift=Math.max(shoeDrift,...shoes.map((y,i)=>Math.abs(y-standing.shoes[i])));
+      }
+      assert.ok(hipDrift<.005,`${profile} ${hz} Hz: the hips leave the car floor by ${hipDrift.toFixed(3)} m`);
+      assert.ok(shoeDrift<.005,`${profile} ${hz} Hz: a shoe leaves the car floor by ${shoeDrift.toFixed(3)} m`);
+      avatar.dispose();
+    }
+  }
+});
+
 // A sharp 16 cm curb used to move the hip at up to 1.5 m/s: the step offset
 // decayed at 12/s and the pelvis sprang back the instant leg reach freed.
 test('a sharp curb descent moves the hip no faster than a person steps down',async()=>{

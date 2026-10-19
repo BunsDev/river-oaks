@@ -57,11 +57,14 @@ test('the Hermès pavilion turns its corner and ends on the shared bay grid', ()
 });
 
 test('mapped heights follow the photographs; the Hermès, Etro and Dior blocks step down beside their tall ends', () => {
-  const heights = { [IPIC_BLOCK]: 18.5, [BELLA_BLOCK]: 10.6, [HERMES_BLOCK]: 14.5, [EQUINOX_BLOCK]: 28, [ETRO_BLOCK]: 9.2, [DIOR_BLOCK]: 13.5, [RESIDENCES_SOUTH]: 23.5, [RESIDENCES_NORTH]: 23.5 };
+  const heights = { [IPIC_BLOCK]: 18.5, [BELLA_BLOCK]: 10.6, [HERMES_BLOCK]: 14.5, [ETRO_BLOCK]: 9.2, [DIOR_BLOCK]: 13.5, [RESIDENCES_SOUTH]: 23.5, [RESIDENCES_NORTH]: 23.5 };
   for (const [id, height] of Object.entries(heights)) {
     assert.equal(building(id).size[2], height, id);
     assert.match(building(id).height_source, /reference photographs/, id);
   }
+  // The Equinox tower is authored 5 m above its photographed 28 m for the penthouse office, and says so.
+  assert.equal(building(EQUINOX_BLOCK).size[2], 33);
+  assert.match(building(EQUINOX_BLOCK).height_source, /authored 5 m above the photographed 28 m/);
   assert.equal(visibleRoofHeight(world, building(HERMES_BLOCK)), 9.6);
   assert.equal(visibleRoofHeight(world, building(ETRO_BLOCK)), 8.2);
   assert.equal(visibleRoofHeight(world, building(DIOR_BLOCK)), 9.4);
@@ -71,8 +74,12 @@ test('mapped heights follow the photographs; the Hermès, Etro and Dior blocks s
 test('the build script carries the same photographed heights as the district data', () => {
   const script = readFileSync(new URL('../../scripts/build_district.py', import.meta.url), 'utf8');
   const table = Object.fromEntries([...script.match(/REFERENCE_HEIGHTS = \{([^}]*)\}/)[1].matchAll(/"(\d+)": ([\d.]+)/g)].map(([, id, height]) => [`osm-way-${id}`, Number(height)]));
-  for (const [id, height] of Object.entries(table)) assert.equal(building(id).size[2], height, id);
+  const authored = Object.fromEntries([...script.match(/AUTHORED_HEIGHTS = \{([\s\S]*?)\n\}/)[1].matchAll(/"(\d+)": \(\s*([\d.]+),\s*"([^"]+)"/g)].map(([, id, height, source]) => [`osm-way-${id}`, { height: Number(height), source }]));
+  for (const [id, height] of Object.entries(table)) assert.equal(building(id).size[2], authored[id]?.height ?? height, id);
+  for (const [id, { source }] of Object.entries(authored)) assert.equal(building(id).height_source, source, id);
   assert.equal(Object.keys(table).length, 8);
+  assert.deepEqual(Object.keys(authored), [EQUINOX_BLOCK]);
+  assert.equal(table[EQUINOX_BLOCK], 28, 'the photographed height stays on record');
 });
 
 test('facade edges share the renderer numbering and outward normals', () => {
@@ -124,7 +131,7 @@ test('the Equinox block steps down to Le Colonial\'s two-storey wing on Ketterin
   assert.equal(step.ring.length, 5);
   assert.deepEqual(step.ring[0], step.ring.at(-1));
   // The mapped (flight) height is still the tower's.
-  assert.equal(visibleRoofHeight(world, block), 28);
+  assert.equal(visibleRoofHeight(world, block), block.size[2]);
   assert.equal(plan.steps.size, 1);
 });
 

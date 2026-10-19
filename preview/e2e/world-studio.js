@@ -83,6 +83,10 @@ async (page) => {
   },{shot,box});
   if(!handle)throw Error('Move handle was not rendered');
   const eastBefore=await page.getByLabel('East (m)',{exact:true}).inputValue();
+  await page.mouse.move(handle.x,handle.y);await page.mouse.down();await page.mouse.move(handle.x+48,handle.y+22,{steps:12});
+  if(await page.getByLabel('East (m)',{exact:true}).inputValue()!==eastBefore)throw Error('Intermediate gizmo preview mutated the document');
+  await page.keyboard.press('Escape');await page.mouse.move(handle.x+64,handle.y+30);await page.mouse.up();
+  if(await page.getByLabel('East (m)',{exact:true}).inputValue()!==eastBefore)throw Error('Cancelled gizmo committed');
   await page.mouse.move(handle.x,handle.y);await page.mouse.down();await page.mouse.move(handle.x+48,handle.y+22,{steps:12});await page.mouse.up();
   await page.waitForFunction(before=>document.querySelector('input[name="east"]').value!==before,eastBefore);
   await page.getByRole('button',{name:'Undo',exact:true}).click();
@@ -126,9 +130,11 @@ async (page) => {
     await page.getByRole('status').filter({hasText:`${names[i]} opened`}).waitFor();
     await page.locator('[data-item="@environment"]').click();
     await page.getByRole('combobox',{name:'Lighting',exact:true}).selectOption('evening');
+    await page.waitForFunction(()=>document.body.dataset.studioBusy!=='true');
     await page.locator('#studio-undo').click();
     await page.getByRole('button',{name:'Add furnishing',exact:true}).click();
     await page.getByRole('combobox',{name:'Finish',exact:true}).selectOption('walnut');
+    await page.waitForFunction(()=>document.body.dataset.studioBusy!=='true');
     await page.locator('#studio-undo').click();await page.locator('#studio-undo').click();
     await page.screenshot({path:`output/playwright/world-studio-template-${i+1}.png`});
     await page.getByRole('button',{name:'Walk through',exact:true}).click();
@@ -138,7 +144,7 @@ async (page) => {
     try{await page.waitForFunction(()=>Number(document.querySelector('#studio-position').textContent.match(/\/ ([\d.-]+) N/)[1])>-5.5,null,{timeout:10000});}finally{await page.keyboard.up('w');}
     const north=Number((await page.locator('#studio-position').textContent()).match(/\/ ([\d.-]+) N/)[1]);if(north<=-5.8)throw Error(`${names[i]} entrance was not traversed`);
     await page.screenshot({path:`output/playwright/world-studio-space-walk-${i+1}.png`});
-    await page.keyboard.press('Escape');await page.waitForSelector('body[data-mode="edit"]');
+    await page.getByRole('button',{name:'Return to editor',exact:true}).click();await page.waitForSelector('body[data-mode="edit"]');
   }
   await page.locator('#studio-templates').click();
   page.once('dialog',dialog=>dialog.dismiss());
@@ -149,6 +155,87 @@ async (page) => {
   await page.screenshot({path:'output/playwright/world-studio-templates-narrow.png'});
   await page.keyboard.press('Escape');
   if(await page.evaluate(()=>localStorage.getItem('river-oaks-world-studio-v1'))!==savedBeforeTemplates)throw Error('Template silently overwrote saved draft');
+  // Safe edits: real inspector changes, feedback, repair, history and persistence.
+  await page.setViewportSize({width:1280,height:900});
+  await page.locator('#studio-templates').click();
+  page.once('dialog',dialog=>dialog.accept());
+  await page.getByRole('button',{name:'Use Garden Office',exact:true}).click();
+  await page.locator('#studio-assessment-status').filter({hasText:'Required routes passed'}).waitFor();
+  await page.locator('[data-item="waiting-sofa"]').click();
+  const property=async(name,value)=>{
+    const input=page.getByLabel(name,{exact:true});await input.fill(String(value));await input.press('Tab');await page.waitForFunction(()=>document.body.dataset.studioBusy!=='true');
+  };
+  await property('Width (m)',.8);await property('Depth (m)',1.8);await property('North (m)',.9);
+  await page.locator('#studio-save').click();
+  const accepted=await page.evaluate(()=>JSON.parse(localStorage.getItem('river-oaks-world-studio-v1')));
+  await property('East (m)',2);
+  await page.locator('#studio-findings').filter({hasText:'Edit rejected.'}).waitFor();
+  const finding=await page.locator('#studio-findings').textContent();
+  if(!finding.includes('meeting room')||!finding.includes('required-route')||!finding.includes('revision'))throw Error('Blocked route finding lacks repair context');
+  if(await page.getByLabel('East (m)',{exact:true}).inputValue()!=='5')throw Error('Blocked inspector move mutated accepted draft');
+  await page.getByRole('button',{name:'Select waiting-sofa',exact:true}).click();
+  if(!await page.getByLabel('Name',{exact:true}).evaluate(el=>el===document.activeElement))throw Error('Finding did not focus the existing inspector');
+  await page.locator('#studio-findings').scrollIntoViewIfNeeded();
+  await page.screenshot({path:'output/playwright/world-studio-safe-edit-blocked.png'});
+  await page.locator('#studio-save').click();
+  const afterReject=await page.evaluate(()=>JSON.parse(localStorage.getItem('river-oaks-world-studio-v1')));
+  if(JSON.stringify(afterReject.region)!==JSON.stringify(accepted.region))throw Error('Rejected edit changed saved document');
+  await property('North (m)',-4.6);
+  await page.locator('#studio-undo').click();
+  if(await page.getByLabel('North (m)',{exact:true}).inputValue()!=='.9'&&await page.getByLabel('North (m)',{exact:true}).inputValue()!=='0.9')throw Error('Repair did not undo once');
+  await page.locator('#studio-redo').click();await page.locator('#studio-save').click();
+  await page.reload();await page.waitForSelector('body[data-studio-ready="true"]');
+  await page.locator('#studio-assessment-status').filter({hasText:'Required routes passed'}).waitFor();
+  if(await page.locator('#studio-profile').inputValue()!=='office')throw Error('Local reopen lost assessment program');
+  await page.locator('[data-item="waiting-sofa"]').click();
+  if(await page.getByLabel('North (m)',{exact:true}).inputValue()!=='-4.6')throw Error('Local reopen lost repair');
+  await page.screenshot({path:'output/playwright/world-studio-safe-edit-reopened.png'});
+  await page.evaluate(()=>{
+    const key='river-oaks-world-studio-v1',record=JSON.parse(localStorage.getItem(key));
+    record.assessmentContext.profileVersion=2;localStorage.setItem(key,JSON.stringify(record));
+  });
+  await page.reload();await page.waitForSelector('body[data-studio-ready="true"]');
+  await page.locator('#studio-assessment-status').filter({hasText:'Not assessed.'}).waitFor();
+  if(await page.locator('#studio-profile').inputValue()!=='unsupported')throw Error('Future profile looked current');
+  await page.getByRole('combobox',{name:'Assessment program',exact:true}).selectOption('office');
+  await page.locator('#studio-assessment-status').filter({hasText:'Required routes passed'}).waitFor();
+  await page.locator('#studio-save').click();
+  // A bare v1 export lacks sidecar context. It can contain a newly invalid layout
+  // and must remain recoverable, with explicit assessment rather than name inference.
+  const legacy=afterReject.region;
+  Object.assign(legacy.objects.find(o=>o.id==='waiting-sofa'),{east:2,north:.9});
+  await page.locator('#studio-import').setInputFiles({name:'legacy-office.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(legacy))});
+  await page.locator('#studio-assessment-status').filter({hasText:'Not assessed.'}).waitFor();
+  await page.getByRole('combobox',{name:'Assessment program',exact:true}).selectOption('office');
+  await page.locator('#studio-assessment-status').filter({hasText:'Draft needs repair'}).waitFor();
+  await page.locator('[data-item="waiting-sofa"]').click();
+  await property('North (m)',-4.6);
+  await page.locator('#studio-assessment-status').filter({hasText:'Required routes passed'}).waitFor();
+  await page.locator('#studio-undo').click();
+  await page.locator('#studio-assessment-status').filter({hasText:'Draft needs repair'}).waitFor();
+  await page.locator('#studio-redo').click();await page.locator('#studio-save').click();
+  await page.reload();await page.waitForSelector('body[data-studio-ready="true"]');
+  await page.locator('#studio-assessment-status').filter({hasText:'Required routes passed'}).waitFor();
+  const recovered=await page.evaluate(()=>JSON.parse(localStorage.getItem('river-oaks-world-studio-v1')).region);
+  recovered.objects=recovered.objects.filter(o=>!['meeting-table','kitchenette-sink'].includes(o.id));
+  await page.locator('#studio-import').setInputFiles({name:'missing-roles.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(recovered))});
+  await page.locator('#studio-assessment-status').filter({hasText:'Not assessed.'}).waitFor();
+  await page.getByRole('combobox',{name:'Assessment program',exact:true}).selectOption('office');
+  await page.getByRole('button',{name:'Restore required furnishings',exact:true}).waitFor();
+  await page.getByRole('button',{name:'Restore required furnishings',exact:true}).click();
+  await page.waitForFunction(()=>document.body.dataset.studioBusy!=='true');
+  await page.locator('#studio-assessment-status').filter({hasText:'Required routes passed'}).waitFor();
+  await page.locator('#studio-save').click();
+  const restored=await page.evaluate(()=>JSON.parse(localStorage.getItem('river-oaks-world-studio-v1')).region);
+  for(const object of recovered.objects)if(JSON.stringify(restored.objects.find(o=>o.id===object.id))!==JSON.stringify(object))throw Error('Role restoration changed unrelated furniture');
+  await page.locator('#studio-undo').click();
+  await page.getByRole('button',{name:'Restore required furnishings',exact:true}).waitFor();
+  await page.locator('#studio-redo').click();
+  await page.locator('#studio-assessment-status').filter({hasText:'Required routes passed'}).waitFor();
+  await page.setViewportSize({width:390,height:844});
+  if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth))throw Error('Route feedback overflows narrow view');
+  await page.locator('#studio-assessment').scrollIntoViewIfNeeded();
+  await page.screenshot({path:'output/playwright/world-studio-safe-edit-narrow.png'});
   if(errors.length)throw Error(errors.join('\n'));
-  return {passed:true,journey:'create-transform-undo-save-reopen-pick-export-import-walk',errors};
+  return {passed:true,journey:'create-transform-undo-save-reopen-pick-export-import-walk-safe-edits-repair',errors};
 }

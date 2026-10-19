@@ -2,8 +2,8 @@ import { terrainHeight } from './geometry.js';
 import { groundSurfaceHeight } from './world-surface.js';
 import { storeRoomsFor, interiorLevelRoomsFor, roomAt, roomBlocked } from './store-rooms.js';
 import { roomBlocksConversation } from './conversation-sight.js';
-import { beastTraversal } from './beast-traversal.js';
 import { plazaSalonFootprints } from './plaza-salon-plan.js';
+import { campusFlightVolumes } from './garden-campus-district.js';
 
 const RADIUS = 0.35, EYE_HEIGHT = 1.68;
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
@@ -63,6 +63,8 @@ export function createWalkingEnvironment(world, placedObjects = [], levelId = nu
     const ring=building.ring?.map(([x,y])=>[x,-y])??[[-1,-1],[1,-1],[1,1],[-1,1]].map(([x,y])=>[building.center[0]+x*building.size[0]/2*c-y*building.size[1]/2*s,-building.center[1]-x*building.size[0]/2*s-y*building.size[1]/2*c]);
     return {ring,top:(building.center[2]??terrainHeight(world.terrain,building.center[0],building.center[1]))+building.size[2]+3.1};
   });
+  // The campus skywalks are not buildings: they span above the street, so a flight keeps clear of them.
+  for(const volume of campusFlightVolumes(world))roofs.push({ring:volume.ring.map(([x,y])=>[x,-y]),top:volume.top+3.1});
   // Imported collision-only worlds have no roof metadata; retain a finite safe cap.
   if(!roofs.length)for(const ring of polygons)roofs.push({ring,top:Math.max(...ring.map(([x,z])=>terrainHeight(world.terrain,x,-z)))+23.1});
   for(const roof of roofs)Object.assign(roof,{minX:Math.min(...roof.ring.map(p=>p[0]))-flightRadius,maxX:Math.max(...roof.ring.map(p=>p[0]))+flightRadius,minZ:Math.min(...roof.ring.map(p=>p[1]))-flightRadius,maxZ:Math.max(...roof.ring.map(p=>p[1]))+flightRadius});
@@ -152,11 +154,9 @@ export function stepWalking(state, environment, input, delta) {
   if (!Number.isFinite(delta) || delta <= 0) return state;
   const duration = Math.min(delta, 0.08), steps = Math.ceil(duration * 120), dt = duration / steps;
   const forward = clamp(input.forward ?? 0, -1, 1), strafe = clamp(input.strafe ?? 0, -1, 1), norm = Math.max(1, Math.hypot(forward, strafe));
-  const beast=beastTraversal(input.beastKind);
-  const turning=Math.abs(clamp(input.turn??0,-1,1));
-  const speed=(beast?(input.fast?beast.sprint:beast.walk):(input.fast?3.2:1.65))*(beast&&input.fast?1-beast.turnSlowdown*turning:1);
+  const speed=input.fast?3.2:1.65;
   for (let i = 0; i < steps; i++) {
-    state.yaw += clamp(input.turn ?? 0, -1, 1) * (beast?.turn??1.6) * dt;
+    state.yaw += clamp(input.turn ?? 0, -1, 1) * 1.6 * dt;
     const vx = (-Math.sin(state.yaw) * forward + Math.cos(state.yaw) * strafe) * speed / norm;
     const vz = (-Math.cos(state.yaw) * forward - Math.sin(state.yaw) * strafe) * speed / norm;
     trackVelocity(state, vx, vz, dt);

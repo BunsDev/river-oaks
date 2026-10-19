@@ -1,3 +1,4 @@
+import { validateCharacterDefinition, migrateStoredCharacterDefinition } from '../preview/src/character-definition.js';
 import { createHash } from 'node:crypto';
 import { inflateSync } from 'node:zlib';
 import { MOVEMENTS, canUseAppearance, defaultAppearanceFor, sharedAppearance } from '../preview/src/shared-appearances.js';
@@ -7,16 +8,20 @@ const MAX_ACCOUNTS=10000;
 const validId=value=>typeof value==='string' && value.length>0 && value.length<=160 && !/[\u0000-\u001f\u007f]/.test(value);
 const normalize=(value,userId,{legacy=false}={})=>{
   const appearance=sharedAppearance(value?.appearance)?.id;
-  if(!appearance || !MOVEMENTS.includes(value?.movement))throw new Error('Invalid account appearance');
+  const movement=legacy&&value?.movement==='beast'?'upright':value?.movement;
+  if(!appearance || !MOVEMENTS.includes(movement))throw new Error('Invalid account appearance');
   if(!canUseAppearance(userId,appearance) && !legacy)throw new Error('Account cannot use this appearance');
-  return {appearance:canUseAppearance(userId,appearance)?appearance:defaultAppearanceFor(userId),movement:value.movement};
+  const chosen=canUseAppearance(userId,appearance)?appearance:defaultAppearanceFor(userId);
+  const selected=value.character===undefined?null:(legacy?migrateStoredCharacterDefinition:validateCharacterDefinition)(value.character,{ownerId:userId});
+  if(selected && (!selected.ok || selected.definition.revision<1 || selected.definition.appearanceId!==chosen))throw new Error('Invalid account character');
+  return {appearance:chosen,movement,...(selected?{character:selected.definition}:{})};
 };
 const initial=userId=>({appearance:defaultAppearanceFor(userId),movement:'upright'});
 function decode(raw,userId) {
   if(raw===null)return null;
   const value=JSON.parse(raw),preference=normalize(value,userId,{legacy:true});
   if(!Number.isSafeInteger(value.version) || value.version<1 || value.version>1000000
-    || Object.keys(value).some(key=>!['appearance','movement','version'].includes(key)))throw new Error('Invalid account appearance record');
+    || Object.keys(value).some(key=>!['appearance','movement','version','character'].includes(key)))throw new Error('Invalid account appearance record');
   return {...preference,version:value.version};
 }
 
@@ -40,7 +45,8 @@ export function createMemoryAvatarPreferences() {
       if(!validId(userId))throw new Error('Invalid account');
       const preference=normalize(value,userId),old=records.get(userId);
       if(!old && records.size>=MAX_ACCOUNTS)throw new Error('Account appearance capacity exceeded');
-      if(old?.appearance!==preference.appearance || old?.movement!==preference.movement)
+      if(old?.appearance!==preference.appearance || old?.movement!==preference.movement
+        || JSON.stringify(old?.character??null)!==JSON.stringify(preference.character??null))
         records.set(userId,{...preference,version:(old?.version??0)+1});
       return structuredClone(records.get(userId));
     },
@@ -55,15 +61,25 @@ const INITIALIZE=`
   return ARGV[2]
 `;
 const SAVE=`
+  local character = ARGV[5] ~= '' and cjson.decode(ARGV[5]) or nil
+  local function same(a,b)
+    if type(a) ~= type(b) then return false end
+    if type(a) ~= 'table' then return a == b end
+    for k,v in pairs(a) do if not same(v,b[k]) then return false end end
+    for k,_ in pairs(b) do if a[k] == nil then return false end end
+    return true
+  end
   local old=redis.call('HGET',KEYS[1],ARGV[1])
   if not old and redis.call('HLEN',KEYS[1]) >= tonumber(ARGV[4]) then return redis.error_reply('Account appearance capacity exceeded') end
   local version=0
   if old then
     local value=cjson.decode(old)
-    if value.appearance == ARGV[2] and value.movement == ARGV[3] then return old end
+    if value.appearance == ARGV[2] and value.movement == ARGV[3] and same(value.character,character) then return old end
     version=value.version
   end
   local value=cjson.encode({appearance=ARGV[2],movement=ARGV[3],version=version+1})
+  -- Preserve canonical empty arrays: Redis cjson encodes decoded [] as {}.
+  if character then value=string.sub(value,1,-2)..',"character":'..ARGV[5]..'}' end
   redis.call('HSET',KEYS[1],ARGV[1],value)
   return value
 `;
@@ -81,7 +97,7 @@ export function createRedisAvatarPreferences({redis,prefix}={}) {
     },
     async save(userId,value) {
       const preference=normalize(value,userId);
-      return decode(await redis.eval(SAVE,1,key,id(userId),preference.appearance,preference.movement,MAX_ACCOUNTS),userId);
+      return decode(await redis.eval(SAVE,1,key,id(userId),preference.appearance,preference.movement,MAX_ACCOUNTS,preference.character?JSON.stringify(preference.character):''),userId);
     },
   };
 }
@@ -95,19 +111,22 @@ export async function legacyDefaultAppearance(redis,stateKey,userId) {
   if(!packed)return null;
   const room=JSON.parse(inflateSync(packed,{maxOutputLength:16*1024*1024}).toString('utf8'));
   const saved=room?.checkpoint;
-  if(![1,2].includes(room?.version) || room.version===2 && room.worldId!==DEFAULT_WORLD_ID
-    || !saved || ![1,2,3,4,5,6,7,8,9,10].includes(saved.version) || saved.version>=2 && saved.worldId!==DEFAULT_WORLD_ID)
+  if(![1,2,3].includes(room?.version) || room.version>=2 && room.worldId!==DEFAULT_WORLD_ID
+    || !saved || ![1,2,3,4,5,6,7,8,9,10,11,12,13].includes(saved.version) || saved.version>=2 && saved.worldId!==DEFAULT_WORLD_ID)
     throw new Error('Invalid legacy account appearance checkpoint');
   const envelope=saved.version===1
     ? {version:saved.version,worldFingerprint:saved.worldFingerprint,payload:saved.payload}
     : {version:saved.version,worldId:saved.worldId,worldFingerprint:saved.worldFingerprint,payload:saved.payload};
   if(createHash('sha256').update(JSON.stringify(envelope)).digest('hex')!==saved.checksum
     || !Array.isArray(saved.payload?.appearances??[]) || !Array.isArray(saved.payload?.movements??[])
+    || saved.version>=12 && !Array.isArray(saved.payload?.characters)
+    || saved.version<12 && saved.payload?.characters?.length
     || !Array.isArray(saved.payload?.players))
     throw new Error('Invalid legacy account appearance checkpoint');
   const appearance=(saved.payload.appearances??[]).find(entry=>Array.isArray(entry) && entry[0]===userId)?.[1]
     ?? saved.payload.players.find(player=>player?.id===userId)?.appearance;
   if(!appearance)return null;
   const movement=(saved.payload.movements??[]).find(entry=>Array.isArray(entry) && entry[0]===userId)?.[1]??'upright';
-  return normalize({appearance,movement},userId,{legacy:true});
+  const character=(saved.payload.characters??[]).find(entry=>Array.isArray(entry) && entry[0]===userId)?.[1];
+  return normalize({appearance,movement,...(character!==undefined?{character}:{})},userId,{legacy:true});
 }

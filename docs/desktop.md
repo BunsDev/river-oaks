@@ -52,7 +52,32 @@ dist/desktop/TypeSafe Place-darwin-arm64/TypeSafe Place.app
 
 Open it in Finder. For a quick bundled run without packaging, use `pnpm run build && pnpm run desktop:start`.
 
-Packaging stages the desktop runtime; the packaged window loads the hosted game after device sign-in. Repository files, `.env`, server code, development dependencies, and game assets are excluded. This is a local development build, not a signed/notarized distribution release. The packaging command targets its host platform and architecture; the `Desktop` workflow below exercises Windows x64, Linux x64 and macOS arm64.
+Packaging stages the desktop runtime; the packaged window loads the hosted game after device sign-in. Repository files, `.env`, server code, development dependencies, and game assets are excluded. The build is ad-hoc signed; a macOS release is then signed and notarized as described under [Signed macOS release](#signed-macos-release). The packaging command targets its host platform and architecture; the `Desktop` workflow below exercises Windows x64, Linux x64 and macOS arm64.
+
+## Signed macOS release
+
+Since 0.2.1 the macOS release is signed with a Developer ID Application certificate and notarized by Apple. Sign after `desktop:package` and `desktop:package:check`, because flipping the fuses rewrites the binary:
+
+```sh
+pnpm run desktop:package && pnpm run desktop:package:check
+pnpm run desktop:sign --identity <certificate SHA-1> --notary-profile river-oaks-notary --receipt <file>
+ditto -c -k --sequesterRsrc --keepParent "dist/desktop/TypeSafe Place-darwin-arm64/TypeSafe Place.app" TypeSafe-Place-<version>-macOS-arm64.zip
+```
+
+`desktop/sign.js` does the following:
+- Signs every nested binary and helper with the hardened runtime and a secure timestamp, using `@electron/osx-sign`.
+- Gives the app and its plain helper `desktop/entitlements.mac.plist`: JIT for V8, and the microphone for shared voice. Chromium's GPU, renderer and plugin helpers keep Chromium's own entitlements.
+- Refuses the result unless all of these hold: `codesign --verify --deep --strict` passes, the first authority is a Developer ID Application certificate, the runtime flag and timestamp are present, and the entitlements read back exactly.
+- With `--notary-profile`, zips the app, submits it with `xcrun notarytool submit --wait` and prints Apple's log when it is not accepted. It then staples the ticket, validates the staple, and requires `spctl` to report `source=Notarized Developer ID`.
+- Prints a JSON receipt, and writes it to `--receipt` when given.
+
+**Credentials.** They stay in the keychain. `--identity` takes a certificate's exact name or its SHA-1 from `security find-identity -v -p codesigning`. Use the SHA-1 when two certificates share a name, because codesign refuses an ambiguous name. Notarization reads a profile stored once by the release owner:
+
+```sh
+xcrun notarytool store-credentials river-oaks-notary --key <AuthKey .p8 path> --key-id <key id> --issuer <issuer id>
+```
+
+The script never takes a password, key or issuer. CI does not sign: the `Desktop` workflow holds no secrets.
 
 ## CI builds on Windows, Linux and macOS
 
@@ -182,7 +207,7 @@ A renderer crash reloads the current app (world or Studio) once automatically. R
 
 The renderer has no Node access. A narrow Studio-only preload API exposes designer catalog/setup/request/cancel/disconnect; every call verifies the exact main frame and origin. Native confirmation precedes setup and each provider task. Sandbox, context isolation, navigation restrictions, and device permissions follow [Electron's security guidance](https://www.electronjs.org/docs/latest/tutorial/security): the only permission the window may hold is the microphone, for shared voice, asked by the exact game origin from the main frame and only after the resident chooses to unmute (`desktop/runtime.js` `mediaPermissionAllowed`); video, mixed audio-and-video, other origins and every other permission are refused. The packaged app carries `NSMicrophoneUsageDescription`; the hardened-runtime `com.apple.security.device.audio-input` entitlement belongs to the same release that adds Developer ID signing. WorkOS device sign-in opens in the system browser, and external HTTPS references ask before opening there. The packaged window stays on the exact River Oaks origin.
 
-Packaging also sets the app's [Electron fuses](https://www.electronjs.org/docs/latest/tutorial/fuses) (`desktop/fuses.js`). `ELECTRON_RUN_AS_NODE`, `NODE_OPTIONS` and `--inspect` are ignored, so another local program cannot run code as River Oaks or inherit its macOS permissions, and the app runs only from its integrity-checked `app.asar`. File-protocol privileges are off, and `strictlyRequireAllFuses` makes packaging fail when a new Electron adds a fuse nobody has decided on. `EnableCookieEncryption` is deliberately off: the app is ad-hoc signed, so each update would ask for Keychain access to the cookie key, and declining would leave sessions unreadable. Turn it on in the same release that adds Developer ID signing and notarization (a release gate in the [security review](security-review.md)). On Windows and Linux the fuse would behave differently, as measured with it on (#372): Windows protects the cookie key with DPAPI, which is tied to the Windows account rather than the signature, so updates would not prompt. Linux uses the Secret Service key when a keyring such as GNOME Keyring is unlocked, and otherwise Chromium's built-in key, which protects nothing. The fuse is one setting for all platforms today; see the [security review](security-review.md). Check a build with `pnpm exec electron-fuses read --app "dist/desktop/TypeSafe Place-darwin-arm64/TypeSafe Place.app"`. Because the inspector is off, Playwright cannot drive a packaged build; `desktop/e2e.js` runs against the development Electron.
+Packaging also sets the app's [Electron fuses](https://www.electronjs.org/docs/latest/tutorial/fuses) (`desktop/fuses.js`). `ELECTRON_RUN_AS_NODE`, `NODE_OPTIONS` and `--inspect` are ignored, so another local program cannot run code as River Oaks or inherit its macOS permissions, and the app runs only from its integrity-checked `app.asar`. File-protocol privileges are off, and `strictlyRequireAllFuses` makes packaging fail when a new Electron adds a fuse nobody has decided on. `EnableCookieEncryption` is on since 0.2.1. The cookie key lives in a Keychain item the app creates, and macOS lets later builds signed by the same team use it without asking. Ad-hoc builds would have asked on every update, so it waited for Developer ID signing. Cookies saved unencrypted by 0.2.0 still read. A rollback to a build without encryption clears the cookie store, so the user signs in again. The fuse is one setting for all platforms, so the Windows and Linux builds encrypt too, as measured with it on (#372): Windows protects the cookie key with DPAPI, which is tied to the Windows account rather than the signature, so updates do not prompt. Linux uses the Secret Service key when a keyring such as GNOME Keyring is unlocked, and otherwise Chromium's built-in key, which protects nothing; see the [security review](security-review.md). Check a build with `pnpm exec electron-fuses read --app "dist/desktop/TypeSafe Place-darwin-arm64/TypeSafe Place.app"`. Because the inspector is off, Playwright cannot drive a packaged build; `desktop/e2e.js` runs against the development Electron.
 
 ## Verification
 

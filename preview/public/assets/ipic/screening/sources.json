@@ -1,35 +1,174 @@
 {
-  "id": "ipic-fixture-v1",
-  "label": "Fixture clip (test pattern)",
-  "fixture": true,
-  "provenance": "Synthetic, generated locally by scripts/make-screening-fixture.mjs with ffmpeg version 9.0.1 Copyright (c) 2000-2026 the FFmpeg developers: lavfi testsrc and a sine beep. No source footage, voices, music, artwork or likeness.",
-  "license": "Original synthetic test signal; no third-party content.",
-  "approval": "Test fixture only. Not the approved short (#365).",
-  "transcript": [
-    "Fixture clip: a test pattern for shared playback.",
-    "A tone sounds once each second.",
-    "This is not the IPIC screening short."
-  ],
-  "files": [
+  "media": [
     {
-      "path": "preview/public/assets/ipic/screening/fixture-v1.webm",
-      "type": "video/webm; codecs=\"vp9, opus\"",
-      "bytes": 669050,
-      "sha256": "69b0cc60d14ada21c913e978a32347406b99c3005e496e98c251885ad96bd0e6",
-      "durationMs": 30008
+      "id": "ipic-original-v1",
+      "label": "River Oaks: an evening at the office and IPIC",
+      "fixture": false,
+      "provenance": "Runtime capture of River Oaks only, from commit 7712634b4a4b73a993684541887850af6f128fa7: headless Chromium 156.0.8078.4 with Metal ANGLE (ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)), recorded 2026-10-15T10:20:16.541Z by scripts/ipic-short/capture.mjs and cut by scripts/ipic-short/cut.mjs. The default (legacy) office layout, synthetic fixture identities, an idle IPIC screen. No external images, music, voices, generated footage or new likenesses; characters appear as committed at that revision. Characters: Jevica is preview/public/assets/characters/jevica.glb (sha256 722b96e2…, CC0-1.0, MakeHuman system assets, marked fictional_generic_appearance) in the committed Jevica costume; the seated friend and the IPIC staff are the committed CC0 resident avatars. Street geometry is derived from OpenStreetMap; the game's \"© OpenStreetMap contributors · ODbL · Artistic interpretation\" credit stays in frame in the street shots and must stay in any recut. The audio is a silent stereo track (ffmpeg anullsrc). Captions were written for this cut.",
+      "license": "The project's own runtime capture. Jevica's in-game appearance, the IPIC lounge's floral wall (a texture from venue photo IMG_9761.jpg) and lettering, and the visible signage are shown with Val Alexander's approval (2026-10-15). Street geometry © OpenStreetMap contributors, ODbL; the credit stays in frame.",
+      "approval": "Approved by Val Alexander on 2026-10-15 (#365): candidate 1 as cut, including the items listed under approvedItems.",
+      "approvedItems": [
+        "Lounge shot (about 0:34-0:39): the floral wall is a texture cut from venue photo IMG_9761.jpg (preview/src/ipic-interior.js), and the repeated \"I'm Busy for the rest of my Life.\" wall text reproduces the venue's own lettering. Approved by Val Alexander on 2026-10-15 as shown.",
+        "Reception and return shots: real marks on the signage (\"RIVER OAKS DISTRICT\", \"IPIC & THE TUCK ROOM\") and photographed street frontages. Approved by Val Alexander on 2026-10-15 as shown.",
+        "Jevica's in-game appearance (preview/public/assets/characters/jevica.glb, CC0-1.0, a fictional generic appearance) in public media. Approved by Val Alexander on 2026-10-15."
+      ],
+      "transcript": [
+        "Westheimer Road, River Oaks.",
+        "Jevica’s office, by invitation.",
+        "Room for good work.",
+        "A scene idea, saved privately.",
+        "Then out, to meet a friend at IPIC.",
+        "Past the lounge.",
+        "Two seats, one screen.",
+        "Then back to the street."
+      ],
+      "files": [
+        {
+          "path": "preview/public/assets/ipic/screening/ipic-original-v1.webm",
+          "type": "video/webm; codecs=\"vp9, opus\"",
+          "bytes": 9289288,
+          "sha256": "d81ffef9345b2fa29a037b8170f7ed72642ab52227121c9ef5946d8812b8d780",
+          "durationMs": 52563
+        },
+        {
+          "path": "preview/public/assets/ipic/screening/ipic-original-v1.mp4",
+          "type": "video/mp4; codecs=\"avc1.4D401F, mp4a.40.2\"",
+          "bytes": 13313704,
+          "sha256": "2ddbb16b91e05c2a80d2a85c59945b267e1113414c82b9b2ee7e20dadbde5541",
+          "durationMs": 52555
+        },
+        {
+          "path": "preview/public/assets/ipic/screening/ipic-original-v1.en.vtt",
+          "type": "text/vtt",
+          "bytes": 486,
+          "sha256": "4bb1df707bc4feac95f1ab95da1e64b7fa4baae920ec36b9ca975cad7c89c0b6"
+        },
+        {
+          "path": "preview/public/assets/ipic/screening/ipic-original-v1-poster.jpg",
+          "type": "image/jpeg",
+          "bytes": 93773,
+          "sha256": "85e4f31b273c572644f0fe795dcd844ea4fb0cef86dee4aa0657caf8001ac94a"
+        }
+      ],
+      "encoding": "2026-10-16: the WebM and MP4 were re-encoded from the same capture and cut (scripts/ipic-short/cut.mjs) with a keyframe every second, approved by Val. Captions, transcript, poster and duration are unchanged; the first encode had keyframes up to 6 s apart, which froze loaded viewers on seek."
     },
     {
-      "path": "preview/public/assets/ipic/screening/fixture-v1.mp4",
-      "type": "video/mp4; codecs=\"avc1.42E01E, mp4a.40.2\"",
-      "bytes": 911982,
-      "sha256": "f6ccc3a6b1757a55413c7e43edc71792f88f60c2a9b67896871fe162e52c7826",
-      "durationMs": 30000
+      "id": "ipic-fixture-v1",
+      "label": "Fixture clip (test pattern)",
+      "fixture": true,
+      "provenance": "Synthetic, generated locally by scripts/make-screening-fixture.mjs with ffmpeg version 9.0.1 Copyright (c) 2000-2026 the FFmpeg developers: lavfi testsrc and a sine beep. No source footage, voices, music, artwork or likeness.",
+      "license": "Original synthetic test signal; no third-party content.",
+      "approval": "Test fixture only. Not the approved short (#365).",
+      "transcript": [
+        "Fixture clip: a test pattern for shared playback.",
+        "A tone sounds once each second.",
+        "This is not the IPIC screening short."
+      ],
+      "files": [
+        {
+          "path": "preview/public/assets/ipic/screening/fixture-v1.webm",
+          "type": "video/webm; codecs=\"vp9, opus\"",
+          "bytes": 669050,
+          "sha256": "69b0cc60d14ada21c913e978a32347406b99c3005e496e98c251885ad96bd0e6",
+          "durationMs": 30008
+        },
+        {
+          "path": "preview/public/assets/ipic/screening/fixture-v1.mp4",
+          "type": "video/mp4; codecs=\"avc1.42E01E, mp4a.40.2\"",
+          "bytes": 911982,
+          "sha256": "f6ccc3a6b1757a55413c7e43edc71792f88f60c2a9b67896871fe162e52c7826",
+          "durationMs": 30000
+        },
+        {
+          "path": "preview/public/assets/ipic/screening/fixture-v1.en.vtt",
+          "type": "text/vtt",
+          "bytes": 226,
+          "sha256": "e3f926e05cf4d98559638ef475ff2d4183f894709204a535b83aca445c134bd1"
+        }
+      ]
     },
     {
-      "path": "preview/public/assets/ipic/screening/fixture-v1.en.vtt",
-      "type": "text/vtt",
-      "bytes": 226,
-      "sha256": "e3f926e05cf4d98559638ef475ff2d4183f894709204a535b83aca445c134bd1"
+      "id": "ipic-two-seats-v1",
+      "label": "Two Seats, One Screen",
+      "fixture": false,
+      "audio": {
+        "dialogue": true,
+        "music": true
+      },
+      "provenance": "Runtime capture of River Oaks only, from commit d4ce2929d1d6e99939db7337baebbde2f37093ae: headless Chromium 156.0.8078.4 with Metal ANGLE (ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)), recorded 2026-10-18T19:53:51.009Z by scripts/ipic-short/second-capture.mjs and cut and mixed by scripts/ipic-short/second-cut.mjs. Inside the IPIC auditorium only. Dialogue rendered locally with Kokoro-82M v1.0 int8 (Apache-2.0), local (Maya: af_heart, Theo: am_liam); music synthesised by scripts/ipic-short/second-score.mjs. No external footage, recordings, samples or paid services.",
+      "license": "The project's own runtime capture of River Oaks, an original score synthesised by scripts/ipic-short/second-score.mjs (no samples), and synthetic voices from Kokoro-82M v1.0 (Apache-2.0 model weights, run locally). The characters shown are committed CC0 character assets (MakeHuman CC0 system assets via MPFB 2.0.17; preview/public/assets/characters/README.md). Shown and published with Val Alexander's approval (2026-10-19).",
+      "approval": "Approved by Val Alexander on 2026-10-19 (#501): candidate B as cut, these exact files (WebM 24f08a74, MP4 85b1079e, captions 2a6b54e0, poster 2e53991c), including the items listed under approvedItems.",
+      "components": {
+        "footage": {
+          "source": "In-game runtime capture (6 shots, auditorium only), scripts/ipic-short/second-capture.mjs at d4ce2929d1d6e99939db7337baebbde2f37093ae",
+          "permission": "The project's own runtime; the auditorium interior as committed. What it shows needs Val's approval."
+        },
+        "voices": {
+          "source": "Kokoro-82M v1.0 int8 (Apache-2.0), local: Maya: af_heart, Theo: am_liam",
+          "permission": "Apache-2.0 model weights, local inference; synthetic voices, not any person's"
+        },
+        "music": {
+          "source": "scripts/ipic-short/second-score.mjs (original, synthesised; F major, 84 bpm)",
+          "permission": "The project's own composition"
+        },
+        "likeness": {
+          "source": "Committed characters worn by the browser fixture accounts: Maya: the browser fixture account alice, in the default guest look (Sable, a committed character); Theo: the browser fixture account bob, wearing Rowan (a committed character) chosen in the in-game character picker. Fictional characters",
+          "permission": "Approved by Val Alexander on 2026-10-19"
+        },
+        "credits": [
+          "Footage, edit and score: River Oaks runtime and scripts/ipic-short",
+          "Voices: Kokoro-82M (Maya: af_heart, Theo: am_liam)"
+        ]
+      },
+      "transcript": [
+        "[Soft piano music]",
+        "Maya: Two seats, front row. Told you we'd make it.",
+        "Theo: Barely. Westheimer was all brake lights.",
+        "Maya: So what's on tonight?",
+        "Theo: Whatever the host picks. That's half the fun.",
+        "Maya: No spoilers, then.",
+        "Theo: None. Just a good seat and good company.",
+        "[The house lights dim]",
+        "Maya: Here it comes.",
+        "Theo: Phones down. Sound on.",
+        "[The piano swells, then fades]"
+      ],
+      "files": [
+        {
+          "path": "preview/public/assets/ipic/screening/ipic-two-seats-v1.webm",
+          "type": "video/webm; codecs=\"vp9, opus\"",
+          "bytes": 12940976,
+          "sha256": "24f08a74767b63f9c7113844dd4861fe8202af8d6bf6a2a8f1fe6801f1d3bc69",
+          "durationMs": 62008
+        },
+        {
+          "path": "preview/public/assets/ipic/screening/ipic-two-seats-v1.mp4",
+          "type": "video/mp4; codecs=\"avc1.4D401F, mp4a.40.2\"",
+          "bytes": 16902639,
+          "sha256": "85b1079ecb61645a31b608a352bf6cecb3ddea7ea60059df3c1e0778d1063b2a",
+          "durationMs": 62000
+        },
+        {
+          "path": "preview/public/assets/ipic/screening/ipic-two-seats-v1.en.vtt",
+          "type": "text/vtt",
+          "bytes": 745,
+          "sha256": "2a6b54e0dd52a3e8352a0890da9d57a79131d70261cab550704978baa2a40cb5"
+        },
+        {
+          "path": "preview/public/assets/ipic/screening/ipic-two-seats-v1-poster.jpg",
+          "type": "image/jpeg",
+          "bytes": 106530,
+          "sha256": "2e53991c81a3ec015258280e63cb91fdf47f736f0821947313b45a014df29628"
+        }
+      ],
+      "approvedItems": [
+        "The script and characters: Maya and Theo, fictional friends, with eight lines (the transcript); no new canon or real people. Approved by Val Alexander on 2026-10-19.",
+        "The voices: Kokoro-82M v1.0 synthetic voices af_heart (Maya) and am_liam (Theo), rendered locally; not any real person's voice. Approved by Val Alexander on 2026-10-19.",
+        "The music: an original solo piano and bass score in F major, synthesised by scripts/ipic-short/second-score.mjs with no samples, mixed under the speech. Approved by Val Alexander on 2026-10-19.",
+        "The likenesses shown: the committed fictional characters Sable (alice, the default guest look) and Rowan (bob, picked in the in-game character picker), and the approved ipic-original-v1 on the screen in the house-lights shot. Approved by Val Alexander on 2026-10-19.",
+        "The setting: IPIC's auditorium only, with no lounge floral wall, street frontage or signage; a small window pane shows at the top right of the faces shot. Approved by Val Alexander on 2026-10-19 as shown."
+      ],
+      "encoding": "2026-10-19: candidate B, cut by scripts/ipic-short/second-cut.mjs with MUSIC_WEIGHT=0.38 from the 2026-10-18 19:55Z take (capture at d4ce2929), so every line is at least 10.4 dB over the music (candidate A at 0.45 had two lines under 10 dB). Keyframes every second; MP4 fast start; WebM 8 ms longer from Opus padding."
     }
   ]
 }

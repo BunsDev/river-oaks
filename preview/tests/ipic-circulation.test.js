@@ -1,0 +1,79 @@
+// #364: how wide a body each IPIC trip admits, with the other seats occupied
+// by measured seated bodies, and the screen data handed to #365.
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { AVATAR_ENVELOPE } from '../src/workplace-room.js';
+import { IPIC_SCREEN } from '../src/ipic-plan.js';
+import { IPIC_SEATED_REACH } from '../src/ipic-circulation.js';
+import { SEAT_REACH } from '../src/shared-seating.js';
+import { ipicReviewData } from '../../scripts/ipic-review-data.mjs';
+
+const data = ipicReviewData();
+const committed = name => JSON.parse(readFileSync(new URL(`../../docs/ipic-review/${name}.json`, import.meta.url)));
+const trip = prefix => data.circulation.trips.filter(t => t.name.startsWith(prefix));
+
+test('the committed circulation and screen data match the plan', () => {
+  assert.deepEqual(committed('circulation'), data.circulation, 'run node scripts/ipic-review-data.mjs');
+  assert.deepEqual(committed('screen'), data.screen, 'run node scripts/ipic-review-data.mjs');
+});
+
+test('the seated reach matches the worst measured look on every side', () => {
+  const measured = JSON.parse(readFileSync(new URL('../../docs/superpowers/plans/2026-10-15-ipic-route-evidence/seated-extents.json', import.meta.url)));
+  const worst = measured.worst.seated;
+  assert.deepEqual(IPIC_SEATED_REACH, { side: Math.max(worst.left.value, worst.right.value), front: worst.front.value, back: worst.back.value });
+  assert.equal(Object.keys(measured.looks).length, 22);
+});
+
+test('both escalator lanes carry the widest accepted body straight up from the street door', () => {
+  for (const t of trip('street door')) assert.ok(t.widestAcceptedBody && t.widthM >= 1.7, `${t.name}: ${t.widthM} m`);
+});
+
+// Recliner footrests and bases collide as drawn (Val, 2026-10-15). With the row in front seated a row's
+// legroom is narrower than the widest accepted (bind-pose) body, which instead sits from any spot within
+// the server's sit reach that it can walk to and that sees the cushion. The auditorium wing (2026-10-19)
+// has nine recliners, three rows of three, and the lounge sofa two places.
+test('the widest accepted body reaches a sit spot for every recliner with the other ten seats occupied', () => {
+  const spots = data.circulation.reclinerSitSpots;
+  assert.equal(spots?.length, 9);
+  for (const s of spots) {
+    assert.equal(s.otherSeatsOccupied, 10);
+    assert.ok(s.widestAcceptedBody && s.sitDistanceM <= SEAT_REACH && s.sightLine, `${s.seat}: ${JSON.stringify(s)}`);
+  }
+});
+
+test('the server body walks to every recliner approach with the other ten seats occupied', () => {
+  const recliners = trip('doorway to recliner');
+  assert.equal(recliners.length, 9);
+  for (const t of recliners) assert.ok(t.otherSeatsOccupied === 10 && t.serverBody, `${t.name}: ${t.widthM} m`);
+});
+
+test('every row\'s legroom, with the row in front seated, is recorded and fits the widest posed body', () => {
+  const aisle = data.circulation.frontRowAisle;
+  assert.ok(aisle, 'no front-row aisle record');
+  assert.ok(aisle.widthM >= aisle.widestPosedBodyM && !aisle.clearsWidestAcceptedBody, JSON.stringify(aisle));
+});
+
+test('each zone where a route turns has room for the longest turning body with every seat occupied', () => {
+  for (const zone of data.circulation.turningCircles) assert.ok(zone.radiusM >= AVATAR_ENVELOPE.turningRadius, `${zone.zone}: ${zone.radiusM} m`);
+});
+
+test('the screen data hands #365 the plan screen and a sightline per recliner', () => {
+  const { screen, seats, burnedInTextSafe } = data.screen;
+  // The screen hangs on the wing's north wall, so its horizontal axis runs along d.
+  assert.deepEqual([screen.widthM, screen.heightM, screen.leftM, screen.rightM], [IPIC_SCREEN.width, IPIC_SCREEN.height, +(IPIC_SCREEN.d - IPIC_SCREEN.width / 2).toFixed(3), +(IPIC_SCREEN.d + IPIC_SCREEN.width / 2).toFixed(3)]);
+  assert.deepEqual(screen.facing, [...IPIC_SCREEN.facing]);
+  assert.equal(seats.length, 9);
+  // The rake keeps every headrest below every eye line to the image's bottom edge: nobody loses any of it.
+  for (const seat of seats) assert.ok(seat.hiddenBottomFraction === 0 && seat.lowestVisibleM === screen.bottomM, `${seat.seat}: ${JSON.stringify(seat)}`);
+  assert.equal(burnedInTextSafe.lowestM, Math.max(...seats.map(s => s.lowestVisibleM)));
+});
+
+// The lounge-to-auditorium passage once ran between the lounge planter and the sofa's west arm, 5 mm
+// narrower than the widest accepted body until Val had the planter moved (2026-10-15). The sofa now backs
+// onto the west guardrail (2026-10-18); the route and every public trip must still admit that body.
+test('the lounge-to-auditorium passage admits the widest accepted body', () => {
+  const [route] = trip('lane top to inside the auditorium doorway');
+  assert.ok(route.widestAcceptedBody, `${route.widthM} m`);
+  assert.ok(data.circulation.narrowestPublicPassage.clears, JSON.stringify(data.circulation.narrowestPublicPassage));
+});

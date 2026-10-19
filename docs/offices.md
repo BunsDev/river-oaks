@@ -2,11 +2,15 @@
 
 Open **Play → Offices → Go to office lobby**, or walk to the existing office lobby beneath the green-glass canopy beside Equinox. Press **F** or choose **Office elevator**.
 
-Every approved account can choose **Open my office** to provision one personal workspace on first use. The same lobby and furnished room serve separate logical offices; each workspace has its own visits, voice space and shared tasks. Setup requires no maintainer action. The office selector also lists invitations and accepted collaborations.
+Jevica’s penthouse is the only supported office. Jevica’s authenticated admin
+accounts own it; every other resident needs an invitation and a current
+server-side permission grant.
+Choosing her name or appearance grants no access. Personal office provisioning,
+workspace membership, shared office tasks and visit-request approval are removed.
 
-Jevica’s original office remains available in the selector. Visiting it still requires an invitation from Jevica or a visit request she has accepted. Choosing Jevica’s appearance or name does not grant ownership. Existing visit grants do not grant collaboration access to a personal workspace.
-
-Jevica can invite residents currently in town, accept or decline requests, and revoke access from **Play → Offices**. Upstairs, **Office access** exposes the same controls. Invitations and accepted requests last until revoked. Revoking access returns an occupant to their lobby position immediately.
+Jevica can invite residents currently in town and revoke access from **Play →
+Jevica’s office** or **Office access** upstairs. Revocation returns an occupant to
+the lobby immediately. Legacy accepted-request grants do not become invitations.
 
 The arrival sequence starts from your current street view, opens the lobby doors, and follows your selected avatar into the elevator. The same cabin rides to level 6 and opens into the furnished office. **Skip arrival** bypasses the sequence; reduced motion skips it automatically. Inside:
 
@@ -15,7 +19,7 @@ The arrival sequence starts from your current street view, opens the lobby doors
 - **Y** joins/leaves voice and **M** mutes or holds to talk, following the existing voice preference. Voice remains optional.
 - **Return to street** or **Escape** ends the visit and restores your street view and controls. During the access check, **Cancel entry** also handles an acceptance that arrives late.
 
-The office uses the existing 9 × 7 m furnished room, with collision against walls, desks, chairs, storage and the review table. Walking reserves the measured 0.888 m turning radius of the longest playable body. The cinematic crosses the doorway along its centerline; free walking stays inside the office.
+By default, the office uses the existing 9 × 7 m furnished room, with collision against walls, desks, chairs, storage and the review table. Walking reserves the measured 0.888 m turning radius of the longest playable body. The cinematic crosses the doorway along its centerline; free walking stays inside the office.
 
 ## Arrival presentation
 
@@ -25,137 +29,91 @@ The entrance retains the mapped office frontage, neighboring tenants, stone port
 
 ## Work at your desk
 
-While upstairs, choose **Open desk · E**, press **E**, or approach a desk and choose **Use this desk**. The desk pauses walking and opens **My tasks**, private to your account. Guests keep their own tasks; office ownership does not grant access to someone else's notes. In personal workspaces, **Office tasks** switches to the current office’s shared tasks. The scope is labeled before saving. Existing private tasks are never automatically copied into shared tasks.
+While upstairs, choose **Open desk · E**, press **E**, or approach a desk and choose **Use this desk**. The desk pauses walking and opens **My tasks**, private to your account. Guests keep their own tasks; office ownership does not grant access to someone else's notes.
 
-Owners use **Office access** to invite approved residents currently in town. Invitees choose the office in their selector and explicitly accept before entering or accessing shared tasks. Accepted collaborators can edit tasks but cannot manage membership. Owners can revoke pending invitations or accepted collaborations. Task authorization observes revocation on every request, including retried mutations. Occupants are removed immediately in the local server and on the bounded reconciliation interval (up to five seconds) in Redis rooms; clients clear shared views when revocation is observed. Previously delivered data cannot be recalled. Jevica’s original visit-only office continues to provide private desks.
+Create a task, add notes and links to your files or documents, and write the result. An empty private desk also offers **Or write a three-line scene idea**, which opens a private task with a three-line hint. The task is named Scene idea once you write in it, so the click alone saves nothing. It is never shared, published or copied to Office tasks. Changes save automatically after a short pause; **Save** or **Cmd/Ctrl S** saves immediately. **Mark complete** keeps the result, and **Reopen task** resumes it. Returning to the desk after leaving or reloading opens the last saved task. **Download** exports a plain-text copy. File references are web links, not uploaded copies.
 
-Create a task, add notes and links to your files or documents, and write the result. Changes save automatically after a short pause; **Save** or **Cmd/Ctrl S** saves immediately. **Mark complete** keeps the result, and **Reopen task** resumes it. Returning to the desk after leaving or reloading opens the last saved task. **Download** exports a plain-text copy. File references are web links, not uploaded copies.
+A failed save keeps your draft in the current page and offers Retry. Retries reuse the original operation ID and payload; typing after a timeout remains dirty until a subsequent save. The server retains the latest 32 operation receipts per desk; retries outside that window fail the version check safely. Conflicts with another tab require downloading the local draft or explicitly reloading saved work. Closing a failed or unnamed draft asks before hiding it; it remains in that page until you return. Unsaved changes prompt before browser reload/navigation. They are not recoverable after closing the page without saving. Escape closes the desk first; a second Escape leaves the office.
 
-A failed save keeps your draft in the current page and offers Retry. Retries reuse the original operation ID and payload; typing after a timeout remains dirty until a subsequent save. The server retains the latest 32 operation receipts per desk or workspace; retries outside that window fail the version check safely. Conflicts with another tab require downloading the local draft or explicitly reloading saved work. Closing a failed or unnamed draft asks before hiding it; it remains in that page until you return. Unsaved changes prompt before browser reload/navigation. They are not recoverable after closing the page without saving. Switching task scopes or leaving an office asks before discarding a failed shared draft. Account changes and observed revocation clear shared cached content; export before leaving if you need an unsaved copy. Escape closes the desk first; a second Escape leaves the office.
+Each private desk can keep up to 24 tasks within a 128 KiB desk document. Task limits are 120 characters for the title, 4,000 for notes, 8,000 for the result and five file links. Removing a task requires confirmation. Redis stores the account's desk outside world checkpoints until tasks are removed; the standalone in-memory development server retains it only for that process lifetime. Creation/update timestamps are assigned by the server. Legacy tasks acquire timestamps when edited. Deletion removes task content while retaining a small version record to prevent stale writes from resurrecting deleted work.
 
-Each private desk and each shared office desk can keep up to 24 tasks within a 128 KiB desk document. Task limits are 120 characters for the title, 4,000 for notes, 8,000 for the result and five file links. Removing a task requires confirmation. Redis stores the account's desk outside world checkpoints until tasks are removed; the standalone in-memory development server retains it only for that process lifetime. Creation/update timestamps are assigned by the server. Legacy tasks acquire timestamps when edited. Deletion removes task content while retaining a small version record to prevent stale writes from resurrecting deleted work.
+**Computer.** When `VITE_TYPESAFE_COMPUTER_ORIGIN` names a valid Computer origin, the
+desk shows **Tasks** and **Computer** tabs. Computer runs your own TypeSafe Computer in
+one separate-origin frame. It has its own sign-in in a new tab, and asks you to confirm
+the account on every visit. Leaving asks Computer to finish saving. Losing office access
+removes it at once. Without that configuration the desk is Tasks only and loads nothing
+from Computer. Contract, policies and staged blockers: [office-computer-embed.md](office-computer-embed.md).
 
-The desk routes require the existing authenticated, approved session, origin/CSRF checks, rate limits and an active office visit in that same session. Desk text is never included in public snapshots. Saves use version checks so simultaneous tabs cannot silently overwrite each other. The desk performs no external writes, file fetches or model calls.
+The desk routes require the existing authenticated, approved session, origin/CSRF checks, rate limits and, in that same session, an active office visit or a seat at a workstation in The Gardens campus (#510): a public hall or café chair, or a desk in a suite the resident may use. Seated there, **Use this desk · X** opens the same private desk; standing up puts it away. Snapshots carry only `campusWorkstation: true` for the sitter, never which work. Desk text is never included in public snapshots. Saves use version checks so simultaneous tabs cannot silently overwrite each other. The desk performs no external writes, file fetches or model calls.
 
 ## Authority and persistence
 
 `server/offices.js` handles the `office` world command. It derives ownership from the existing Jevica admin predicate; no command accepts an owner field. The same authenticated ticket/WebSocket gates enforce waitlist approval, session expiry and bans for both the local and Redis servers. Movement uses office-local coordinates, a speed budget and swept collision. Office visitors cannot perform street interactions or travel until they leave. Voice receives a distinct office space.
 
-Grants, pending requests and current visits entered the private world checkpoint in version 6. Version 7 adds interior level occupancy; version 8 adds personal workspace visits. Workspace membership is revalidated before the first reconnect snapshot and by the coordinator before restored visits are published. Version 10 records each visit's layout and level (below). The Redis writer generation is fenced at v10 (v9 added venue screenings, [screenings](screenings.md)). Pre-v6 checkpoints upgrade without office state; v6–v9 visits upgrade to the legacy layout. Older writers reject the current version. Region migration preserves grants/requests when the office remains and ends visits along with other player connections. Redis persists this state with the world; a standalone in-memory town loses it when restarted.
+Grants, pending requests and current visits entered the private world checkpoint in version 6. Version 7 adds interior level occupancy; version 8 adds personal workspace visits; version 9 adds venue screenings; version 10 adds each office visit’s layout and floor; version 11 adds penthouse seat claims; version 12 adds selected character revisions; version 13 adds garden campus leases ([garden campus leases](garden-campus-leases.md)), which grant no office access. The Redis writer generation is fenced at v13 (v14 with the character store). Earlier supported checkpoints upgrade according to their schema: pre-v6 checkpoints have no office state, pre-v10 office visits use the legacy layout, and pre-v11 visits stand. Unsupported writers cannot replace a newer coordinator.
 
-Workspace metadata, invitations and shared tasks live in a versioned account-level store outside world checkpoints. Provisioning uses a deterministic workspace ID and atomic compare-and-set writes. Redis updates membership, discovery indices and shared tasks in the same transaction, preventing stale writes from bypassing revocation. Storage is bounded to 10,000 workspaces, 32 collaborators per office and 64 owned/invited offices per account; discovery uses per-account indices, not database scans. Browser discovery refreshes only near the lobby, in an active office, or while the office panel is visible. Private desk records read the legacy shape and write schema version 2 with bounded retry receipts. No existing task content is made public or shared.
+Application replacement and coordinator takeover restore compatible visits, including their floor, within the normal session and presence timeouts, while rechecking current sessions and Jevica’s invitation grants before publishing the restored room. This is separate from region publication, which intentionally disconnects players and ends visits as geography changes; office invitation grants survive when that office remains. Both paths use the new coordinator’s configured `RIVER_OAKS_OFFICE_LAYOUT` and `RIVER_OAKS_SCREENING_HOSTS`, including the supported district checkpoint recovery chain. Configuration comes from the application, not the backup. Keep it consistent across gateways; changing environment values takes effect when those processes are replaced.
 
-The new endpoints are POST `/api/office-desk/workspace/{provision,list,invite,accept,revoke,read,save,remove}`. Discovery and invitations require an approved authenticated account; task reads/writes additionally require an active visit in the same session. The hosted allowlist and rewrites include these routes. Production rollout must update the gateway and client together; real hosted authentication remains a separate acceptance check.
+The penthouse is always selected, including when `RIVER_OAKS_OFFICE_LAYOUT` is unset. Retired `office-legacy-1` and unknown settings fall back to the penthouse and log `office_layout_ignored`. Production has run the penthouse since 2026-10-15, authorized with the tower raise (#432); Val confirmed this on 2026-10-18. Legacy room visits in older checkpoints end safely on restore without discarding invitations or private tasks; the next authorized entry uses the penthouse. Removed or expired screening-host grants cannot be recovered from an old checkpoint. The pre-playback 12-second synthetic screening fixture is recognized during recovery and stopped with a new screening epoch; its old command receipts cannot replay. This does not discard office visits or private tasks. Failed region publication leaves the previous committed region and world authoritative; a competing draft must be refreshed before retrying. Redis retains world state across application replacement; the standalone in-memory town loses it when restarted.
 
 This office visit feature is independent of the experimental companion drafting panel and its `RIVER_OAKS_WORKPLACE` / `VITE_WORKPLACE` flags. It performs no paid model or speech calls. It does not enable the drafting service.
 
-Tests: `server/tests/offices*.test.js`, `server/tests/penthouse-*.test.js`, `preview/tests/office-*.test.js`, the office spatial-voice regression, and `pnpm run test:experience office-visit office-desk office-computer-shared`. Browser fixtures use synthetic identities; they do not establish live WorkOS, hosted deployment, human accessibility or target-device performance acceptance.
 
 ## Layouts and floors
 
-Each visit records the layout and the floor the server admitted it to (`preview/src/office-layouts.js`). The legacy 9 × 7 m room (`office-legacy-1`) is the default and the rollback. `RIVER_OAKS_OFFICE_LAYOUT=office-penthouse-1` selects the penthouse for Jevica's office on that server. It is a two-floor plan in #349's level shape (`jevica-office/l0` main floor and terrace, `jevica-office/l1` mezzanine at +3.8 m), built from the reviewed #360 contract. Personal workspaces always use the legacy room. An unknown value keeps the legacy room and logs `office_layout_ignored`.
+Each visit records the layout and the floor the server admitted it to (`preview/src/office-layouts.js`). The one-room layout is retired from live use. Its geometry remains only for old checkpoint validation and compatibility tests. The sole live layout is `office-penthouse-1`. It is a two-floor plan in #349's level shape (`jevica-office/l0` main floor and terrace, `jevica-office/l1` mezzanine at +3.8 m), built from the reviewed #360 contract.  An unknown setting keeps the penthouse and logs `office_layout_ignored`.
 
 - **Floors.** Moves are checked against the visit's own floor, so the mezzanine and the main floor beneath it never share collision. A move names the layout it was computed for (`office_layout_stale` otherwise). It may repeat the visit's floor but never choose it (`office_level_stale`). Height and elevation are not command fields. Snapshots publish `layout`, `levelId` and the server-derived `elevation`.
-- **Stairs and lift.** `{type:'office', action:'transition', officeId, portalId, layout}` works only from within 1.3 m of a stair or lift portal on the current floor. It lands on that portal's pair if the landing is free and no other visitor stands within 0.7 m, then resets the movement budget. There is no arbitrary destination.
-- **Checkpoints.** Version 10 stores `layout` and `levelId` with each visit. Visits from versions 6–9 were in the legacy room and upgrade to it. A malformed layout, floor or position refuses the restore. A well-formed visit on a layout the server no longer serves for that office ends safely; grants, requests and desks stay. Switching the option back to the legacy room is the rollback.
+- **Stairs and lift.** `{type:'office', action:'transition', officeId, portalId, layout}` works only from within 1.3 m of a stair or lift portal on the current floor. It lands on that portal's pair, then resets the movement budget. Nobody can barricade a floor by standing on a landing. If another visitor is within 0.7 m of it, the traveller arrives at the nearest free spot beside them that is reachable from the landing (`officeLandingSpot`). With nowhere clear, the traveller arrives on the landing itself, because standing visitors do not collide. There is no arbitrary destination. The town's multi-level buildings follow the same rule.
+- **Walking the stair.** The penthouse stair can also be walked with ordinary moves (`officeWalk` in `office-layouts.js`). A lane down its middle, a turning radius clear of each side, belongs to the main floor's plan and runs past its foot and its head. The server derives the height from the position along the run, through the tread nosings, and reports it as the visit's `elevation`. A move changes floor only where two surfaces meet at the same height, so the stair head leads onto the mezzanine and its foot onto the main floor. Nobody steps onto the flight from its side, off the mezzanine edge or into the back of the stair from under the mezzanine. A move still names the floor the server holds; the client adopts the floor the server answers with. The mezzanine guard is open where the stair arrives. Q and the lift work as before.
+- **Seats (#363).** The penthouse's seats are the plan's five desk chairs on the main floor and the two library reading chairs on the mezzanine (`officeSeats` in `office-layouts.js`). `{type:'office', action:'sit', officeId, seatId, layout}` works only within 1.3 m of the seat's stand point on the visit's own floor: a desk chair's stand point is its desk's approach, and a reading chair's is the edge of the gallery band (d 16.45). The server places the visitor at the plan's seat position and facing; the client sends no pose. Each seat has one occupant, so of two concurrent claims one wins and the other gets `office_seat_occupied`. A taken seat is collision for everyone else on its floor, for moves, sweeps and stair or lift landings. It covers 2.158 m around the seat, the measured turning radius (0.888 m) plus the widest seated footprint (`AVATAR_ENVELOPE.seatedRadius`, 1.27 m), and 0.7 m around its stand point. A claim is refused (`office_seat_blocked`) while another standing visitor is inside that area. Every required contract route stays walkable with every other seat taken, and the reading chairs' envelopes stay out of the gallery band and passing bay. Seated visitors cannot move or take the stairs (`office_seated`). `{action:'stand', layout}` returns the visitor to the stand point, which nobody else can be standing near, so standing up is never blocked by a body. Leaving, revocation, a layout the server no longer serves, and departure after the reconnect grace end the visit and release its seat; a late `sit` or `stand` cannot recreate a visit. Snapshots publish `seat: {id}` only. The legacy room and personal workspaces have no seats.
+- **Checkpoints.** Version 10 stores `layout` and `levelId` with each visit. Version 11 adds the optional `seat: {id}`. Visits from versions 6–9 were in the legacy room and upgrade to it, and version 10 visits stand. A restored claim must name a seat on the visit's own floor, sit exactly at that seat's position and facing, leave its stand point clear, and be the seat's only claim. No standing visit may be inside another visit's taken seat. Anything else refuses the restore. Claims survive a Redis coordinator replacement this way. A well-formed visit on a layout the server no longer serves for that office ends safely, and its seat with it; grants, requests and desks stay. Switching the option back to the legacy room is the rollback; the writer stays at version 11.
 
 
-- **In the browser.** Within reach of the stair foot or the lift, **Take the stairs up · Q** (or down, or **Use the lift · Q**) appears; it sends the transition and adopts the floor the server answers with. Moves carry the layout and floor; a reply that arrives after the visit closed changes nothing. The first-person eye and avatars stand at the server-derived floor elevation, and a visitor on the other floor stays visible even directly above or below. Until #362's assets arrive, the penthouse is a graybox drawn from the same plan (`preview/src/office-penthouse-graybox.js`); an unknown layout refuses to render rather than show another plan's geometry.
+- **In the browser.** Within reach of the stair foot or the lift, **Take the stairs up · Q** (or down, or **Use the lift · Q**) appears; it sends the transition and adopts the floor the server answers with. Moves carry the layout and floor; a reply that arrives after the visit closed changes nothing. At a chair's stand point, **Sit down · Z** claims it; seated, walking and stairs pause, the eye drops to 1.2 m, a desk chair offers **Use this desk**, and **Stand up · Z** stands. The client adopts a seat or release the server reports, predicts movement around other visitors' occupied seats, and draws seated peers on their seat. The first-person eye and avatars stand at the server-derived floor elevation, and a visitor on the other floor stays visible even directly above or below. The penthouse's shell is drawn from the same plan (`preview/src/office-penthouse-graybox.js`) and furnished with #362's assets (below); an unknown layout refuses to render rather than show another plan's geometry. Its street front, east side and terrace side are a bronze-mullioned glass curtain wall (two instanced draws), with a solid core around the arrival doorway and a solid back wall; transoms 3 m up close the terrace portals, which stay walkable, and the plan's terrace walls keep their collision. In this layout, once you arrive, the borrowed cabin and lobby are hidden, so they cannot show through the front glass; the car's closed doors stay in the doorway. Leaving restores them. The standalone office scene, used when the street cannot be borrowed, hides its own lift and lobby the same way (`arrivalBehindGlass` in `office-arrival-architecture.js`). For a terrace layout the real district is drawn through the glass and around the terrace once arrival finishes. The standalone scene has no borrowed district and retains its plain backdrop.
+
+- **Views (#363).** **V**, or the view select in the header, cycles six fixed camera positions inside the penthouse: Overview, Main floor, Workstations, Library, Terrace and Roof gardens (`officeViews` in `office-layouts.js`). A view moves only that visitor's camera. It sends no command and keeps the visitor where they stand. Walking pauses, and the visitor sees their own body, seated if seated. Escape, a walking key, the touch pad, the stairs, a chair or the desk returns to walking. Escape leaves a view before it leaves the office. Choosing from the select returns keyboard focus to the office. If the browser closes the office on a second Escape, the visit is left properly. Roof gardens looks down from the front terrace corner toward the actual neighbouring podium planting in the live district, with positional parallax and current world lighting. The legacy room has no views.
+- **Lighting.** The graybox follows the street's time of day (`atmosphere.js`). Four pendants over the desks and the west aisle and a reading lamp in the library hang well below the ceiling, so they pool on the floor instead of hot-spotting the slab above. Through the day they burn at 60 % in a neutral white; toward dusk (`twilight`) they warm and come up to full. The roof hides most of the sky, so interior finishes take 45 % of the scene environment; the open terrace keeps all of it. The roof, solid walls, mezzanine, desk and table tops and bookcases cast the sun's shadow on the floors (eleven shadow draws), so noon leaves the room in daylight shade and a low sun lays mullion bars across it. The penthouse glass reflects the sky and shows the room behind it, but no lamp or sun highlight (`withoutLightGlints`); district storefront glass keeps its highlights. In the live outlook the five lamps stay in the scene; on phones they are relit and moved into the existing light pool, so the time of day never changes the number of lights. `node preview/e2e/office-penthouse-lighting.mjs <label>` captures the six views at noon and dusk for a matched before/after review; the 2026-10-15 pair is in `docs/office-review/`.
 
 To see it locally, run `node preview/e2e/office-penthouse-runner.mjs`: the loopback fixture serves the penthouse, and the owner takes the stairs to the mezzanine.
 
-The penthouse is not active anywhere by default. Raising the mapped building to fit it, furniture collision beyond the desk chairs, and final art are later steps (#362, #363).
+**Live skyline.** Terrace layouts render the actual district with the existing scene, camera and postprocessing pipeline (`office-world-scene.js`). Walking, seats and bounded views change the real viewpoint; changing world time updates the sky and exterior lighting during the visit. There is no cubemap allocation or six-face recapture in the default product path. The district stays hidden during the enclosed elevator arrival and returns when the office is reached. `?office-skyline=off` remains a development comparison; software functional fixtures omit the live exterior workload and do not establish visual acceptance.
 
-## Operating office storage
+Only the host tower skin and above-floor obstructions are masked, using the existing clearance rules; lower wings, neighbouring buildings and planting stay. The mask classifies fixed building architecture once per visit and gives each host mesh a stand-in holding only its unmasked instances (same geometry and material). Each pipeline draw swaps the stand-ins in and swaps them back after, including on exceptions, so no instance data is uploaded again per frame and other renders and raycasts between draws see the district unchanged. The office's lamps change the scene's light count when it first shows, so the visit compiles those programs while the arrival plays (`compileAsync`); a skipped arrival holds on the street until they are ready, for at most three seconds. Moving residents are outside that cached architecture root. Street lighting remains owned by the world; the office keeps its own lamps, relit for the time of day (see Lighting above). Leaving restores the borrowed camera, avatar and lobby without rolling current sky or street lighting back to entry time. The snapshot utility remains available for bounded diagnostic captures, but is not the default office backdrop.
 
-Office provisioning, invitations and task management need no maintainer intervention.
-Keep the existing account authentication and Redis backend; no additional service,
-provider setting, scheduled cleanup or task runner is needed.
+Live rendering costs an ordinary exterior scene draw instead of a static image. Local measurements and their hardware/sample limits are recorded in [green roofs](green-roofs.md). GPU/mobile/native and production acceptance require their own evidence.
 
-**Bounds and cost.** Each private/shared desk has at most 24 tasks and 128 KiB of
-serialized public desk data. Private storage admits 10,000 accounts; shared storage
-admits 10,000 offices, 32 collaborators per office and 64 office references per
-account. These are admission limits, not TTLs: deleting the last task retains its
-version and bounded retry receipts (32) so stale writes cannot recreate it. Metadata,
-receipts, Redis hash/index overhead, checkpoints and other application data consume
-additional memory; 128 KiB is not a whole-record or deployment memory limit.
-Full-capacity public task data alone can approach 2.44 GiB across both stores.
-Existing desks remain readable at capacity; new writes exceeding limits return a
-conflict instead of growing storage silently.
+The mapped Equinox tower (`osm-way-625330785`) is 33 m: 5 m above its photographed 28 m, authored so the penthouse's 31.9 m ceiling sits under a 32.85 m curtain-wall top. Above the 24.3 m office floor the wall is one double-height band with no line at the mezzanine, and the U.S. Capital Advisors crest moves with the top. The height changes the district fingerprint, so the first Redis load after deploying it migrates the town checkpoint (`server/district-tower-checkpoint-migration.js`, logged once as `district_tower_checkpoint_migrated`); older checkpoints chain through the earlier district migrations. As with those, a saved flight that the taller roof now encloses fails closed rather than being moved: land any flight over the tower before deploying. The penthouse is the default and sole live office.
 
-Movement, reconnect validation, visit reconciliation, repeat provisioning and
-indexed discovery project current metadata from the canonical record in Redis.
-No task text/receipts cross the wire on these paths, and there is no authorization
-cache. Redis still decodes the bounded record per projection; each projection is
-one EVAL with one internal HGET. Discovery reads at most 64 indexed offices per
-account. Task saves and membership changes retain the full-record compare-and-set
-transaction, including discovery index updates; their transfer/CPU cost still grows
-with desk size and membership. Task reads always recheck membership. A request
-ordered after revocation is denied, including a previously successful save retry.
-An already-running read ordered before revocation can complete afterward; previously
-delivered content cannot be recalled.
+The penthouse's three desks are the supplied kit's measured footprints: the executive desk and two shared benches, 0.76 m high. They were imported as numbers only under Val's R19 decision of 2026-10-15. They are collision for the server and the client. The penthouse is the default and sole live office.
 
-**Persistence is not durability configuration.** Replacing a gateway leaves Redis
-records intact; restarting the standalone memory server loses them. Redis restart
-survival depends on its existing persistence and recovery configuration. Our local
-recovery fixture uses AOF with `appendfsync always` and verifies acknowledged writes
-after SIGKILL/restart. RDB snapshots and less frequent AOF fsync have different loss
-windows; replication alone is not a backup. No test here inspects or changes the
-hosted provider's configuration, guarantees its disk durability, or proves production
-recovery. Verify that separately before making a production durability claim.
-The version/receipt and membership records must also survive without expiration or
-eviction. Losing a tombstone or reverting to an older snapshot loses its stale-write
-fence. Capacity planning must preserve these records (for example, a no-eviction
-policy with adequate headroom); this patch does not inspect or change that policy.
-See Redis’s [persistence](https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/)
-and [eviction](https://redis.io/docs/latest/develop/reference/eviction/) references.
+**Furnishings (#362).** The penthouse is furnished with original procedural art from its JS master, `preview/src/office-penthouse-furnishings.js`. No kit art or kit bytes are used, and no imagery is generated or bought. Its palette is pale travertine, rose stone, champagne bronze, walnut, blush upholstery and planting, with TypeSafe pink as an accent on a cushion and a few book spines.
 
-**Compatibility and failures.** Workspace records remain schema 1 in
-`<namespace-tag>:office-workspaces:v1`; the account discovery index remains
-`office-workspaces-index:v1`. Private records remain schema 2 in `office-desk:v1`
-and still read the legacy shape. This improvement requires no data migration or
-backfill; old and new compatible writers share the same atomic record. Personal workspace visits entered checkpoint generation 8; the integrated world
-now uses checkpoint/writer generation 10 for office layouts (v9 added venue screenings). Do not roll back to a writer that cannot read
-the current checkpoint/schema. Deploy the gateway and client as a compatible pair.
-Storage failures deny access rather than granting cached membership; a failed save
-keeps its current-page draft and stable operation ID for Retry. Export a needed draft
-before closing the page. For a conflict, explicitly reload saved work or export the
-local draft. Do not delete version records, edit memberships by hand, flush Redis,
-or replay an old operation with a new expected version as a recovery shortcut.
+- **Hosting.** The lounge sits at the `lounge` view: a boucle sofa, two blush tub chairs and a rose-stone table on a rug. One botanical focal point, a standard tree in a travertine planter, stands between the terrace portals. The arrival core's inner face is rose stone with a bronze door surround, framing the exit.
+- **Work and collaboration.** There is the executive desk (a walnut slab on rose-stone pedestals) with three displays, two walnut workbenches with two displays per station, and five task chairs. A meeting table with six chairs stands under the mezzanine at the `meeting` view, beside a back console.
+- **Retreat.** On the mezzanine: library revision 3's club chairs, side table and lamp, and bookcases, plus a fluted walnut panel where bookcase-0 stood. On the terrace: planters with grasses and box, two loungers and a bistro set.
+- **Displays.** All eleven are separate, and their screens use the reserved `SCREEN_DYNAMIC` material: dark, neutral and idle. They never show desk text, agents or remote desktops.
 
-**Validate recovery with synthetic local data.** Install the repository prerequisites
-and a local `redis-server`, then run:
+The lounge, meeting and terrace pieces are new plan collision (`furnishings` in `office-layouts.js`), checked by `preview/tests/office-layouts.test.js`. Each keeps every anchor, stand point and landing clear for the turning body, and every required route stays walkable with the other seats taken. A checkpoint visitor standing where a new piece now stands ends that visit on restore, as with R19's desks. The lounge seating is not a plan seat yet: its asset carries seat anchors only.
 
-```sh
-node --test server/tests/office-recovery.test.js
-node scripts/office-database-cost.mjs a714a8a5
-node scripts/office-database-cost.mjs
-```
+The art stays inside its footprints and on its floors (`preview/tests/office-penthouse-graybox.test.js`):
 
-The recovery test starts its own temporary loopback Redis processes and never uses
-an existing database URL. It replaces stores, drops successful responses, kills and
-restarts AOF Redis, makes a consistent RDB snapshot with SAVE, copies it to a fresh
-owned directory and boots a separate Redis with AOF disabled to validate the backup.
-It checks exact private/shared tasks, membership, versions and receipts, then exercises
-concurrent edits, deletion, revocation, reinvitation and stale retries after recovery.
-Temporary data/processes are removed on completion. A missing local binary is a skip
-in the core suite, never recovery proof; the full profile requires `redis-server` and
-fails if it is unavailable. Full verification also requires its separate disposable
-`REDIS_URL` for the existing server suites. Real HTTP/WebSocket replacement/reconnect
-coverage is in `office-desk-transport.test.js`.
+- the cushions of every plan seat sit at the plan's 0.5 m seat height;
+- the tree's canopy and the pendant drums overhang walkable floor only above the tallest body plus 0.3 m;
+- the doorway is checked triangle by triangle.
 
-The cost fixture writes raw and summarized receipts under
-`.runtime/office-reliability/cost-{baseline,after}.json`. It measures office-store
-commands (including Lua subcommands), RESP socket bytes, and five latency samples per
-scenario; it excludes authentication and room transport overhead. Use the same host
-and fixture for comparison; loopback latency is not hosted performance acceptance.
+Repeated pieces are one instanced draw per finish. One-off pieces are one static draw per finish in each visibility group (`furnishings:main-floor`, `:terrace`, `:mezzanine`), and each piece keeps its plan zone. The furnished office measures 92 draws and about 87,000 triangles before avatars, against a provisional 150-draw budget.
 
-A real backup must preserve the workspace records **and** discovery indices, private
-desk records and relevant world/checkpoint state from a consistent recovery point.
-Restore into an isolated destination first and validate account isolation, versions,
-retry behavior and membership before any separately authorized cutover. Restoring
-an older backup also restores its older grants and task contents: post-snapshot
-revocations/deletions cannot be inferred from that backup. Keep traffic stopped until
-those changes are reconciled from authoritative evidence; do not claim that stale
-backup restoration preserves newer revocations. This runbook authorizes no production
-backup, restore, deployment or provider changes.
+The surfaces are three shared 512 px seeded-noise maps, drawn in idle slots after arrival. The exported package, with its GLBs, editable `.blend`, textures, materials and receipts, is in `assets/office-penthouse/` (see its README), and its manifest entries are `repo-penthouse-*` in `docs/design/office-ipic/asset-manifest.json`. Reviews: `node scripts/export-office-penthouse.mjs preview` (asset preview) and `node preview/e2e/office-penthouse-review.mjs` (runtime, two accounts, noon and dusk).
+
+## Retired personal offices
+
+Personal workspace APIs and stores are no longer part of the runtime. Existing
+personal-office visits are ended on checkpoint recovery; their identity cannot be
+used to enter Jevica’s office. Old workspace data is not read or served. This source
+change does not delete production records. Account-private desk tasks remain owned
+by their accounts and are accessible only during an authorized Jevica office visit.
+
+## The Gardens rental campus (planned)
+
+The Gardens will replace the parking garage with three rental office towers joined by public Floor 4 skywalks (#505). Its measured contract, which covers the parcel, floors, skywalks, support levels, suites and validator, is `shared/garden-campus-layout.js`. The brief, published contract and views are in [`docs/design/garden-campus/`](design/garden-campus/brief.md). Nothing in the running district uses it yet: the garage stays until a reviewed campus revision replaces it (#507), and rental tenancy is a separate service (#509), not the retired personal-office APIs above.

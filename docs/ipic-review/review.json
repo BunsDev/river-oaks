@@ -1,42 +1,42 @@
 {
-  "browser": "134.0.6998.35",
+  "browser": "156.0.8078.4",
   "errors": [],
   "views": [
     {
       "name": "reception",
-      "calls": 59,
-      "triangles": 133418,
+      "calls": 63,
+      "triangles": 136632,
       "error": 0,
-      "textures": 12
+      "textures": 17
     },
     {
       "name": "mural",
-      "calls": 33,
-      "triangles": 69742,
+      "calls": 41,
+      "triangles": 95226,
       "error": 0,
-      "textures": 12
+      "textures": 17
     },
     {
       "name": "lounge",
-      "calls": 24,
-      "triangles": 95384,
+      "calls": 51,
+      "triangles": 67504,
       "error": 0,
-      "textures": 12
+      "textures": 17
     },
     {
       "name": "bar",
-      "calls": 37,
-      "triangles": 112740,
+      "calls": 46,
+      "triangles": 130232,
       "error": 0,
-      "textures": 12
+      "textures": 17
     },
     {
       "name": "auditorium",
-      "calls": 12,
-      "triangles": 56060,
+      "calls": 11,
+      "triangles": 39970,
       "error": 0,
-      "textures": 12
+      "textures": 17
     }
   ],
-  "glbBytes": 12394500
+  "glbBytes": 14501656
 }

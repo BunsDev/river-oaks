@@ -1,0 +1,312 @@
+{
+  "createdAt": "2026-10-15T20:33:39.642Z",
+  "results": [
+    {
+      "name": "studio-pilot-soak",
+      "status": "passed",
+      "seconds": 57.181,
+      "result": {
+        "passed": true,
+        "cycles": [
+          {
+            "cycle": 0,
+            "warmUp": true,
+            "seconds": 4.781,
+            "office": {
+              "calls": 648,
+              "triangles": 48564,
+              "geometries": 25,
+              "textures": 7,
+              "programs": 6,
+              "listeners": 157,
+              "nodes": 916,
+              "heapMiB": 13.63,
+              "canvases": 1
+            },
+            "replaced": {
+              "calls": 670,
+              "triangles": 59744,
+              "geometries": 25,
+              "textures": 10,
+              "programs": 6,
+              "listeners": 165,
+              "nodes": 1003,
+              "heapMiB": 13.72,
+              "canvases": 1
+            }
+          },
+          {
+            "cycle": 1,
+            "warmUp": false,
+            "seconds": 5.086,
+            "office": {
+              "calls": 648,
+              "triangles": 48564,
+              "geometries": 25,
+              "textures": 10,
+              "programs": 6,
+              "listeners": 157,
+              "nodes": 921,
+              "heapMiB": 14.97,
+              "canvases": 1
+            },
+            "replaced": {
+              "calls": 670,
+              "triangles": 59744,
+              "geometries": 25,
+              "textures": 10,
+              "programs": 6,
+              "listeners": 165,
+              "nodes": 1003,
+              "heapMiB": 13.93,
+              "canvases": 1
+            }
+          },
+          {
+            "cycle": 2,
+            "warmUp": false,
+            "seconds": 5.081,
+            "office": {
+              "calls": 648,
+              "triangles": 48564,
+              "geometries": 25,
+              "textures": 10,
+              "programs": 6,
+              "listeners": 157,
+              "nodes": 921,
+              "heapMiB": 13.97,
+              "canvases": 1
+            },
+            "replaced": {
+              "calls": 670,
+              "triangles": 59744,
+              "geometries": 25,
+              "textures": 10,
+              "programs": 6,
+              "listeners": 165,
+              "nodes": 1003,
+              "heapMiB": 14.28,
+              "canvases": 1
+            }
+          },
+          {
+            "cycle": 3,
+            "warmUp": false,
+            "seconds": 5.072,
+            "office": {
+              "calls": 648,
+              "triangles": 48564,
+              "geometries": 25,
+              "textures": 10,
+              "programs": 6,
+              "listeners": 157,
+              "nodes": 921,
+              "heapMiB": 14.42,
+              "canvases": 1
+            },
+            "replaced": {
+              "calls": 670,
+              "triangles": 59744,
+              "geometries": 25,
+              "textures": 10,
+              "programs": 6,
+              "listeners": 165,
+              "nodes": 1003,
+              "heapMiB": 14.68,
+              "canvases": 1
+            }
+          },
+          {
+            "cycle": 4,
+            "warmUp": false,
+            "seconds": 5.088,
+            "office": {
+              "calls": 648,
+              "triangles": 48564,
+              "geometries": 25,
+              "textures": 10,
+              "programs": 6,
+              "listeners": 157,
+              "nodes": 921,
+              "heapMiB": 14.18,
+              "canvases": 1
+            },
+            "replaced": {
+              "calls": 670,
+              "triangles": 59744,
+              "geometries": 25,
+              "textures": 10,
+              "programs": 6,
+              "listeners": 165,
+              "nodes": 1003,
+              "heapMiB": 14.73,
+              "canvases": 1
+            }
+          },
+          {
+            "cycle": 5,
+            "warmUp": false,
+            "seconds": 5.081,
+            "office": {
+              "calls": 648,
+              "triangles": 48564,
+              "geometries": 25,
+              "textures": 10,
+              "programs": 6,
+              "listeners": 157,
+              "nodes": 921,
+              "heapMiB": 14.74,
+              "canvases": 1
+            },
+            "replaced": {
+              "calls": 670,
+              "triangles": 59744,
+              "geometries": 25,
+              "textures": 10,
+              "programs": 6,
+              "listeners": 165,
+              "nodes": 1003,
+              "heapMiB": 15.34,
+              "canvases": 1
+            }
+          },
+          {
+            "cycle": 6,
+            "warmUp": false,
+            "seconds": 5.082,
+            "office": {
+              "calls": 648,
+              "triangles": 48564,
+              "geometries": 25,
+              "textures": 10,
+              "programs": 6,
+              "listeners": 157,
+              "nodes": 921,
+              "heapMiB": 14.26,
+              "canvases": 1
+            },
+            "replaced": {
+              "calls": 670,
+              "triangles": 59744,
+              "geometries": 25,
+              "textures": 10,
+              "programs": 6,
+              "listeners": 165,
+              "nodes": 1003,
+              "heapMiB": 15.07,
+              "canvases": 1
+            }
+          },
+          {
+            "cycle": 7,
+            "warmUp": false,
+            "seconds": 5.099,
+            "office": {
+              "calls": 648,
+              "triangles": 48564,
+              "geometries": 25,
+              "textures": 10,
+              "programs": 6,
+              "listeners": 157,
+              "nodes": 921,
+              "heapMiB": 14.75,
+              "canvases": 1
+            },
+            "replaced": {
+              "calls": 670,
+              "triangles": 59744,
+              "geometries": 25,
+              "textures": 10,
+              "programs": 6,
+              "listeners": 165,
+              "nodes": 1003,
+              "heapMiB": 14.45,
+              "canvases": 1
+            }
+          },
+          {
+            "cycle": 8,
+            "warmUp": false,
+            "seconds": 5.103,
+            "office": {
+              "calls": 648,
+              "triangles": 48564,
+              "geometries": 25,
+              "textures": 10,
+              "programs": 6,
+              "listeners": 157,
+              "nodes": 921,
+              "heapMiB": 14.32,
+              "canvases": 1
+            },
+            "replaced": {
+              "calls": 670,
+              "triangles": 59744,
+              "geometries": 25,
+              "textures": 10,
+              "programs": 6,
+              "listeners": 165,
+              "nodes": 1003,
+              "heapMiB": 14.56,
+              "canvases": 1
+            }
+          },
+          {
+            "cycle": 9,
+            "warmUp": false,
+            "seconds": 5.048,
+            "office": {
+              "calls": 648,
+              "triangles": 48564,
+              "geometries": 25,
+              "textures": 10,
+              "programs": 6,
+              "listeners": 157,
+              "nodes": 921,
+              "heapMiB": 14.4,
+              "canvases": 1
+            },
+            "replaced": {
+              "calls": 670,
+              "triangles": 59744,
+              "geometries": 25,
+              "textures": 10,
+              "programs": 6,
+              "listeners": 165,
+              "nodes": 1003,
+              "heapMiB": 14.66,
+              "canvases": 1
+            }
+          },
+          {
+            "cycle": 10,
+            "warmUp": false,
+            "seconds": 5.092,
+            "office": {
+              "calls": 648,
+              "triangles": 48564,
+              "geometries": 25,
+              "textures": 10,
+              "programs": 6,
+              "listeners": 157,
+              "nodes": 921,
+              "heapMiB": 15.11,
+              "canvases": 1
+            },
+            "replaced": {
+              "calls": 670,
+              "triangles": 59744,
+              "geometries": 25,
+              "textures": 10,
+              "programs": 6,
+              "listeners": 165,
+              "nodes": 973,
+              "heapMiB": 15.58,
+              "canvases": 1
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

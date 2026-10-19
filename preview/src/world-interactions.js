@@ -4,6 +4,7 @@ import { plazaSalonSeats } from './plaza-salon-plan.js';
 import { SEAT_REACH, resolveSeat, seatSlots } from './shared-seating.js';
 import { storeRoomsFor } from './store-rooms.js';
 import { ipicSeatSites } from './ipic-plan.js';
+import { campusSeatSites } from './garden-campus-district.js';
 
 // Places a character can sit and planters they can water, shared by the
 // browser, the townspeople and the authoritative town. Positions are world
@@ -39,7 +40,7 @@ export function benchSeats(world) {
     });
   }
   // The plaza salon's bench and café chairs are bench places too.
-  return seats.concat(plazaSalonSeats(world), ipicSeatSites(storeRoomsFor(world)));
+  return seats.concat(plazaSalonSeats(world), ipicSeatSites(storeRoomsFor(world)), campusSeatSites(world));
 }
 
 // Jevica's garden seats hold two, her lounge chairs one, placed exactly as
@@ -56,7 +57,7 @@ export function buildSeats(builds = []) {
 // {buildId, slot, height, yaw, position: [east, north, ground]}.
 export function resolveBenchSeat(benches, buildId, slot, groundAt) {
   const seat = benches.find(item => item.buildId === buildId && item.slot === slot);
-  return seat ? { buildId, slot, height: seat.height, yaw: seat.heading, position: [seat.x, seat.north, groundAt(seat.x, seat.north)] } : null;
+  return seat ? { buildId, slot, height: seat.height, yaw: seat.heading, position: [seat.x, seat.north, groundAt(seat.x, seat.north)], ...(seat.standAt ? { standAt: seat.standAt } : {}), ...(Number.isFinite(seat.eyePitch) ? { eyePitch: seat.eyePitch } : {}) } : null;
 }
 
 // Boxwood planters flank each boutique entrance (district.js draws them).

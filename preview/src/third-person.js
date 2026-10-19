@@ -33,3 +33,18 @@ export function thirdPersonPose(state, environment) {
   }
   return { position: target.map((value, index) => value + boom[index] * fraction), target, showBody: fraction > 0.18 };
 }
+
+// A seat that names an eye pitch (a cinema recliner) is watched from the seated eye at that
+// pitch (#368). The walking camera's boom already collapses into a recliner's back, but the pitch
+// a walk leaves looks down at the sitter's own footrest, or at the backs of the row in front.
+export function seatedEyeView(sitting) {
+  return Number.isFinite(sitting?.eyePitch) ? { pitch: sitting.eyePitch } : null;
+}
+
+// The pitch after the server's seated pose changes: sitting in such a seat looks at what it faces,
+// a reconnect or correction on the same seat keeps the sitter's own look, standing levels it.
+export function pitchAfterSeatChange(before, after, pitch) {
+  const eye = seatedEyeView(after);
+  if (eye) return before?.buildId === after.buildId && before?.slot === after.slot ? pitch : eye.pitch;
+  return seatedEyeView(before) ? 0 : pitch;
+}

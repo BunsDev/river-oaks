@@ -46,3 +46,17 @@ description = "Vercel KV or Upstash Redis REST token assigned in configuration o
 regex = '''(?i)(?:KV_REST_API(?:_READ_ONLY)?_TOKEN|UPSTASH_REDIS_REST_TOKEN)[\t "']*[:=][\t "']*([A-Za-z0-9_=-]{20,})'''
 secretGroup = 1
 keywords = ["kv_rest_api", "upstash_redis_rest_token"]
+
+# Character asset source manifests (`*.sources.json` beside the bundles) map each upstream
+# source file to its SHA-256 digest. A path such as `entities/material/mhmatkeys.py` next to
+# a 64-hex digest trips the default generic-api-key rule (#517's manifest, commit 00a74a7c,
+# failed every PR's history scan). Only that rule, only in those manifests, and only a bare
+# 64-hex value is allowed: any other secret shape in a manifest, and any digest elsewhere,
+# is still reported. The path is unanchored so the worktree scan's temporary copy matches.
+[[allowlists]]
+description = "SHA-256 file digests in character asset source manifests"
+targetRules = ["generic-api-key"]
+condition = "AND"
+paths = ['''(?:^|/)preview/public/assets/characters/[^/]+\.sources\.json$''']
+regexTarget = "secret"
+regexes = ['''^[0-9a-f]{64}$''']

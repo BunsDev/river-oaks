@@ -20,7 +20,7 @@ export const STUDIO_AGENT_GUIDE = `You are the World Studio Agent: an expert ope
 - Scene panel: add Building, Tree or Place in a region, or Furnishing in a space; click objects to select. Inspector edits exact values. Delete removes a non-arrival object.
 - Viewport: drag to orbit, right-drag to pan, scroll to zoom. W move, E rotate, R size, F frame selection. Moves snap to 0.5 m, rotation to 22.5 degrees.
 - Cmd/Ctrl Z undo, Cmd/Ctrl Shift Z redo, Cmd/Ctrl S save on device. Export JSON downloads world-studio-region.json for regions or world-studio-space.json for spaces; Open JSON imports either document.
-- Walk through: WASD or arrows, drag to look, Shift to hurry, Escape returns to the editor. Regions use solid building blockouts; furnished spaces use individual wall/furniture collision and allow indoor traversal. Walking never changes the draft or contacts the multiplayer server.
+- Walk through: WASD or up/down arrows to move, left/right arrows or a drag to turn, Shift to hurry, Escape returns to the editor. Regions use solid building blockouts; furnished spaces use individual wall/furniture collision and allow indoor traversal. Walking never changes the draft or contacts the multiplayer server.
 - Saving is local authoring. It does not publish to a shared world; server publication validation remains authoritative.
 
 ## Design expertise

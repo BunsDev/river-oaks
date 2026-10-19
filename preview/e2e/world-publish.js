@@ -126,8 +126,8 @@ async page=>{
   await page.waitForFunction(()=>document.querySelector('#walking-hud')?.dataset.inside==='venue-building-2');
   check(true,'Jevica can enter the furnished home');
   if(!(await page.locator('.visit-tools').evaluate(node=>node.open)))await page.locator('.visit-tools-toggle').click();
-  await page.locator('#build-kind').selectOption('side-table');
-  await page.locator('#build-mode').click();
+  await page.locator('#play-tab-build').click();await page.locator('#build-kind').selectOption('side-table');
+  await page.locator('#play-tab-build').click();await page.locator('#build-mode').click();
   const canvas=await page.locator('#canvas-host').boundingBox();
   let furnitureAim=null;
   for(const [fx,fy] of [[.5,.72],[.4,.72],[.6,.72],[.5,.8],[.35,.8],[.65,.8],[.3,.7],[.7,.7]]){
@@ -139,7 +139,7 @@ async page=>{
   await page.locator('#build-place').click();
   await page.waitForFunction(()=>window.__riverMultiplayer().snapshot.builds.some(item=>item.kind==='side-table'));
   check(true,'Jevica places a shared side table inside her home');
-  await page.locator('#build-mode').click();
+  await page.locator('#play-tab-build').click();await page.locator('#build-mode').click();
   await page.screenshot({path:'output/playwright/creator-home.png'});
   await page.waitForTimeout(1100);
   if(!await page.locator('.walking-more').evaluate(more=>more.open||more.hidden))await page.locator('.walking-more summary').click();
@@ -250,6 +250,8 @@ async page=>{
     && document.querySelector('#view-name')?.textContent==='Moon Garden',null,{timeout:60000});
   const live=await (await page.request.get(`${origin}/api/world-data?world=moon-garden`)).json();
   check(live.world.communityLocations.some(place=>place.name==='Revised Moon Arch'),'Applying a saved draft updates the published region');
+  await page.waitForFunction(sha=>window.__riverMultiplayer?.().snapshot?.regionSha256===sha,live.regionSha256,{timeout:60000});
+  await page.locator('.world-map-place title').filter({hasText:'Revised Moon Arch'}).waitFor({state:'attached',timeout:60000});
   check((await page.locator('.world-map-place title').allTextContents()).includes('Revised Moon Arch'),'The map follows the applied region revision');
   check((await page.evaluate(()=>window.__riverMultiplayer().snapshot.regionSha256))===live.regionSha256,'The client reconnects to the applied region');
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
@@ -274,6 +276,7 @@ async page=>{
     && document.querySelector('#view-name')?.textContent==='Moon Garden',null,{timeout:60000});
   const restored=await (await page.request.get(`${origin}/api/world-data?world=moon-garden`)).json();
   check(restored.world.communityLocations.some(place=>place.name==='Moon Arch'),'Saving and applying the retained version restores the live region');
+  await page.waitForFunction(sha=>window.__riverMultiplayer?.().snapshot?.regionSha256===sha,restored.regionSha256,{timeout:60000});
   check(restored.regionSha256===(await page.evaluate(()=>window.__riverMultiplayer().snapshot.regionSha256)),'The client reconnects to the restored region');
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
   await openHudSpace(page, 'explore-section');

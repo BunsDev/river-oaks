@@ -23,10 +23,10 @@ export function officePeerVisible(player,selfId,position,firstPerson,levelId=nul
 
 // A presentation lease borrows the actual street camera, avatar and lobby. It
 // never changes walking/server coordinates, and releases only resources it owns.
-export function captureOfficeStreet({scene,camera,pipeline,lights=[],avatar,lobby,world,getWorld,pose}) {
+export function captureOfficeStreet({scene,camera,pipeline,renderer=null,skyline=null,lights=[],atmosphere=()=>null,avatar,lobby,world,getWorld,pose,architecture=null}) {
   if(!lobby||!pose||!avatar)return null;
   lobby.object.updateWorldMatrix(true,false);
-  return {scene,camera,pipeline,lights,avatar,lobby,world,getWorld,startCamera:camera.clone(),
+  return {scene,camera,pipeline,renderer,skyline,lights,atmosphere,avatar,lobby,world,getWorld,architecture,startCamera:camera.clone(),
     startPose:{...pose,position:[...pose.position],velocity:[...pose.velocity]},
     startAvatar:{position:avatar.object.position.clone(),quaternion:avatar.object.quaternion.clone(),visible:avatar.object.visible},
     frame:lobby.object.matrixWorld.clone()};
@@ -56,16 +56,20 @@ export function borrowOfficePresentation(street) {
   street.frame.decompose(stage.position,stage.quaternion,stage.scale);
   stage.name='Authorized office visit';scene.add(stage);stage.add(lobby.object);
   lobby.object.position.set(0,0,0);lobby.object.quaternion.identity();lobby.object.scale.set(1,1,1);
-  let disposed=false,interior=false;
+  let disposed=false,interior=false,borrowedLights=false;
   const applyVisibility=()=>{
     if(!interior)return;
     for(const object of scene.children)if(!allowed.has(object)&&!object.isLight){if(!hidden.has(object))hidden.set(object,object.visible);object.visible=false;}
   };
   return {stage,
     allow(object){allowed.add(object);},
-    inside(value){interior=value;applyVisibility();},
+    inside(value){
+      if(interior&&!value){for(const[object,visible]of hidden)object.visible=visible;hidden.clear();}
+      interior=value;applyVisibility();
+    },
     camera(view){camera.position.copy(view.position);camera.quaternion.copy(view.quaternion);camera.fov=view.fov;camera.aspect=view.aspect;camera.updateProjectionMatrix();camera.updateMatrixWorld();},
     lights(sources,blend=1){
+      borrowedLights=true;
       // Reuse the district's fixed light pool. Changing the number of lights
       // recompiles every visible PBR material, including those outside the car.
       lighting.forEach((saved,index)=>{
@@ -82,7 +86,7 @@ export function borrowOfficePresentation(street) {
       // A resize during the visit changes the viewport, not the original pose.
       const aspect=camera.aspect;camera.copy(street.startCamera);camera.aspect=aspect;camera.updateProjectionMatrix();camera.updateMatrixWorld();
       for(const[object,visible]of hidden)object.visible=visible;
-      for(const saved of lighting){const light=saved.light;light.position.copy(saved.position);light.color.copy(saved.color);light.intensity=saved.intensity;light.distance=saved.distance;light.decay=saved.decay;}
+      if(borrowedLights)for(const saved of lighting){const light=saved.light;light.position.copy(saved.position);light.color.copy(saved.color);light.intensity=saved.intensity;light.distance=saved.distance;light.decay=saved.decay;}
       parent?.add(lobby.object);lobby.object.position.copy(position);lobby.object.quaternion.copy(quaternion);lobby.object.scale.copy(scale);
       lobby.setEntryOpen(0);lobby.update({phase:'idle',doors:0,floor:1});stage.removeFromParent();
     },
