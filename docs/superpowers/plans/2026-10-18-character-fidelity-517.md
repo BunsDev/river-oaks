@@ -6,7 +6,33 @@ Val explicitly transferred the existing dirty checkout from
 `claude:river-oaks (015e1f43)` to this session. Initially claimed
 2026-10-18T19:33Z on main `f897c1d6`.
 
-## Current candidate
+## Current review candidate
+
+Signed source `d11a6ee4ce794bc3f5f061bd48d5af8ce9a7cff9` integrates main
+`7c10f418b0ea519bc0d2b84bb65869e3c7cdae0e`. All 1,330 tested runtime/test Git
+blobs and 142 changed inputs match runtime manifest
+`3e04a4ae0af73d8e452f02024685108ef2d3808cc5822461ec878400b2e0f608`.
+The later proof commits change metadata only. Check
+[PR #545](https://github.com/BunsDev/river-oaks/pull/545) and the primary live task
+register for the exact final head and hosted/current-main verdict.
+
+Candidate M passed core's eleven tasks and full's 18 tasks, including 16 world
+journeys, 24 shared journeys across five fixture modes with full rendering, and
+18 IPIC checks. The focused office/suite journeys passed 21/10 checks; ten
+readiness regressions passed. One existing preview negative control remains
+skipped; offline verification returned its expected exit 2. Actual execution
+receipts retain their precommit dirty-tree revision; signed-source binding does
+not relabel that execution as a clean commit run.
+
+Desktop timing reproduction remains unmet (18/48 comparisons within 20%). Phone
+agreement is 22/24 within-run pairs and 46/48 cross-run comparisons; nine frame
+and eleven CPU reference ceilings were exceeded. Original limits and failures
+are retained. #441 P4/P5 trials are waived, not passed. Three existing-look IPIC
+clearance findings and whole-town/thermal, AAA, native Unreal, live-auth and human
+accessibility acceptance remain explicit gaps. Retain the checkout; this review
+candidate does not authorize landing or retirement.
+
+## Initial candidate (historical)
 
 HEAD `225acfc9eaebf67627db7337feacac130b241ad8` plus the recorded dirty patch;
 runtime/asset manifest `f1f07b69267e7d47e264e4f476a04c30f65ce5cce5f619cfc826d4dac1a4472b`.
