@@ -333,6 +333,16 @@ and zero error-level lines. Rollback, if needed: `RIVER_OAKS_DISTRICT_REVISION=r
 `RIVER_OAKS_DISTRICT_EPOCH=2`, then redeploy (`docs/garden-campus.md`); #551 proves it clears
 campus-floor occupants.
 
+**Production smoke test: passed** (Val, after the switch, relayed by river-oaks-b5 on
+2026-10-19). It covered the release decision's four-part checklist on the production site:
+1. a tower hall;
+2. a hall workstation with its private desk;
+3. a Floor 4 walk across both skywalks, B12 then B23;
+4. an operator lease offer as Jevica, accepted by a resident account.
+
+Val reported an overall "smoke test passed" without per-item detail, so it is recorded as one
+pass on that checklist.
+
 ## Release decision (draft, completed as evidence lands)
 
 **Merging and activating are separate decisions.** Every package ships with the garage as
@@ -385,9 +395,6 @@ one `{from:'gardens', to:'garage'}` log. Leases stay inert and desks are untouch
 
 **Release gates still open (as of 2026-10-19 06:40Z):**
 
-- The manual smoke test on production (Grove Offices hall, a workstation, an operator offer
-  and a resident acceptance, Floor 4 across both skywalks). Only the migration and the log
-  checks above are recorded so far.
 - Val's visual review of the matched views (`docs/design/garden-campus/finish/`,
   `docs/design/garden-campus/circulation/sheet-day.jpg`, `docs/design/garden-campus/traversal/`).
 - Physical phones and target-GPU or mobile resource budgets are unmeasured; touch is emulated.
@@ -450,8 +457,7 @@ ledger, section "Desktop macOS e2e".
 
 ## Next action (2026-10-19 06:40Z)
 
-1. Production is switched (Evidence above). The manual smoke test in the release decision is
-   still to run and record.
+1. Production is switched and Val's smoke test passed (Evidence above).
 2. #551 (rollback with floor occupants) is green on hosted CI, 18/18. Landing is up to Val or a
    lander.
 3. Retire the #512, slice (b) and tracker worktrees through `project:prune` once this
