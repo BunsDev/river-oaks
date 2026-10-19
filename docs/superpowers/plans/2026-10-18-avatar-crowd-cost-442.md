@@ -374,6 +374,21 @@ an exact depth tie.
     304 ms (2.9%);
   - the comparators took 35 ms (0.34%).
 
+- **Core gate, at `aee92462`** (`main` `5ce4e767` merged in):
+  - Agent tooling: 121/121.
+  - Preview: 3,625 passed, 1 skipped, 1 failed. The failure is the penthouse idle-slice
+    wall-clock test (63.6 ms, then 2,097 ms total, against a 40 ms slice). It passed twice
+    on its own, and it also fails on `main` under load.
+  - The gate stops at the first failed step, so the remaining profiles ran on their own,
+    and all passed:
+    - server: 696 passed, 207 Redis skips;
+    - desktop: 76/76;
+    - build;
+    - Python: lint, format, 141 tests, demo and demo-verify;
+    - security: secrets and secret history.
+  - The first gate run found a real defect: `frame-budget.test.js`'s stub renderer had no
+    sort setters. That stub is fixed in `aee92462`.
+
 **Not covered.** The visible AO difference on those seam texels is not measured on its
 own. There are no device runs.
 
@@ -407,7 +422,7 @@ own. There are no device runs.
 
 ## Next step
 
-#529, #534 and #538 land in order (Val, 2026-10-18). After #538 merges, merge `main`
-into `perf/occlusion-sort-442-20261018` (signed), run the core gate, push, and open the
-increment 4 PR as a draft for review. Remaining candidate: the world's own 52 shadow-pass
+#529 (`6da70d4c`), #534 (`9582091f`) and #538 (`5ce4e767`) landed in order, and their
+branches are retired. Increment 4 is open as a draft PR for Val's review; land it only
+with Val's go-ahead. Remaining candidate: the world's own 52 shadow-pass
 switches (rigid casters through three's shared depth material).
