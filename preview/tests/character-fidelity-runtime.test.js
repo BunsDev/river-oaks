@@ -44,3 +44,22 @@ test('the same quality tier can recover after optional maps become available',as
   control.dispose();
  }
 });
+
+for (const appliedTier of ['high','standard','low','off']) {
+ test(`returning to applied ${appliedTier} cancels an older pending tier`,async()=>{
+  const avatar=rig(),roughness=new THREE.Texture();let delay=false,resolve;
+  const control=runtime.createCharacterFidelity(avatar,{loadTextures:()=>delay?new Promise(done=>{resolve=done;}):Promise.resolve({roughness})});
+  await control.setTier(appliedTier);
+  const expected=control.report,normal=avatar.material.normalMap,map=avatar.material.roughnessMap;
+  // Leave another tier's maps unresolved while the latest request reaffirms
+  // the existing appearance. Its eventual completion must not replace it.
+  delay=true;
+  const older=control.setTier(appliedTier==='high'?'low':'high');
+  await control.setTier(appliedTier);
+  resolve({roughness});await older;
+  assert.deepEqual(control.report,expected);
+  assert.equal(avatar.material.normalMap,normal);
+  assert.equal(avatar.material.roughnessMap,map);
+  control.dispose();roughness.dispose();
+ });
+}

@@ -124,7 +124,7 @@ async page => {
   check(true,'Accepted contacts and private history survive a browser reconnect');
   // People and Play share the right edge; reveal Play before checking permissions.
   for (const tab of [page, second]) await tab.locator('#people-toggle').click();
-  await page.locator('.visit-tools').getByRole('button', { name: 'Build', exact: true }).click();
+  await page.locator('.visit-tools').getByRole('tab', { name: 'Build', exact: true }).click();
   await page.locator('.shared-build-controls').waitFor({ state: 'visible' });
   check(await page.locator('.shared-build-controls').isVisible(),'Shared play exposes player-owned building');
   check(!(await second.locator('.shared-build-controls').isVisible()),'A guest cannot access the shared builder');
@@ -177,7 +177,7 @@ async page => {
   const builder = () => page.evaluate(() => window.__riverMultiplayer().builder);
   const dockOpen = await page.locator('.visit-tools').evaluate(node => node.open);
   if (!dockOpen) await page.locator('.visit-tools-toggle').click();
-  await page.locator('#build-mode').click();
+  await page.locator('#play-tab-build').click();await page.locator('#build-mode').click();
   check((await page.locator('#build-mode').getAttribute('aria-pressed')) === 'true', 'Builder mode can be switched on');
 
   const canvas = await page.locator('#canvas-host').boundingBox();

@@ -1,0 +1,40 @@
+{
+  "id": "ipic-two-seats-v1",
+  "title": "Two Seats, One Screen",
+  "logline": "Two friends find their recliners at IPIC just before the house lights go down.",
+  "status": "Draft for Val's review (#501). Not approved, not committed as media, not published.",
+  "characters": {
+    "Maya": { "voice": "af_heart", "speed": 1.0, "appearance": "the browser fixture account alice, in the default guest look (Sable, a committed character)" },
+    "Theo": { "voice": "am_liam", "speed": 1.0, "character": "rowan", "appearance": "the browser fixture account bob, wearing Rowan (a committed character) chosen in the in-game character picker" }
+  },
+  "constraints": [
+    "Auditorium only: no lounge floral wall, no street frontage or signage in shot.",
+    "No new canon, no feature claims, no brands, no OpenCoven marks, no implied IPIC partnership.",
+    "Fictional characters: Maya and Theo are not anyone real."
+  ],
+  "shots": [
+    { "id": "arrive", "seconds": 8, "camera": "auditorium", "action": "Wide from the back corner: the two friends settle into front-row recliners 1-1 and 1-0; house lights up." },
+    { "id": "two-shot", "seconds": 13, "camera": "two-shot", "action": "Side two-shot along the front row." },
+    { "id": "screen", "seconds": 13, "camera": "over-shoulder", "action": "From behind the pair toward the idle screen." },
+    { "id": "faces", "seconds": 12, "camera": "faces", "action": "From near the screen back toward the pair." },
+    { "id": "dim", "seconds": 10, "camera": "over-shoulder", "action": "The host starts the film: the house lights dim and the screen lights up." },
+    { "id": "end", "seconds": 6, "camera": "auditorium", "action": "Wide from the back: the screen glows over the dark room." }
+  ],
+  "cues": [
+    { "shot": "arrive", "at": 0.6, "sound": "[Soft piano music]" },
+    { "shot": "two-shot", "at": 1.0, "speaker": "Maya", "line": "Two seats, front row. Told you we'd make it." },
+    { "shot": "two-shot", "at": 5.4, "speaker": "Theo", "line": "Barely. Westheimer was all brake lights." },
+    { "shot": "screen", "at": 0.8, "speaker": "Maya", "line": "So what's on tonight?" },
+    { "shot": "screen", "at": 3.6, "speaker": "Theo", "line": "Whatever the host picks. That's half the fun." },
+    { "shot": "faces", "at": 0.8, "speaker": "Maya", "line": "No spoilers, then." },
+    { "shot": "faces", "at": 3.4, "speaker": "Theo", "line": "None. Just a good seat and good company." },
+    { "shot": "dim", "at": 0.4, "sound": "[The house lights dim]" },
+    { "shot": "dim", "at": 3.0, "speaker": "Maya", "line": "Here it comes." },
+    { "shot": "dim", "at": 5.4, "speaker": "Theo", "line": "Phones down. Sound on." },
+    { "shot": "end", "at": 0.5, "sound": "[The piano swells, then fades]" }
+  ],
+  "music": {
+    "source": "scripts/ipic-short/second-score.mjs",
+    "description": "Original solo piano and soft bass in F major, 84 bpm, synthesised by the script; ducked under speech."
+  }
+}

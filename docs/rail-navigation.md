@@ -12,6 +12,16 @@
 >   Left/Right/Home/End.
 > - Only each panel's open state is remembered.
 > - The Events panel has been removed.
+> - **Play & rides** (Cmd/Ctrl+Shift+B, updated 2026-10-18) is a game-style menu:
+>   - An icon tab per activity (Character, Rides, Photo, Cycling, Birds, Game guide,
+>     plus Build, Office or More when they apply), with one pane shown at a time.
+>   - Left/Right/Home/End move between tabs, and ‹ › step through them. The chosen
+>     tab is remembered.
+>   - Modules still add their panels to the rail and the dock files each under its
+>     tab. An activity with nothing to show has no tab.
+>   - Commands and `jump()` select the right tab before focusing a control.
+> - Camera view (third or first person, still V in play) is in **Settings →
+>   Controls**, beside a button that opens every command and key.
 >
 > The review below records the 2026-10-05 design. Where it describes a tab row or
 > an Events section, the layout above supersedes it.

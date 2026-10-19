@@ -1,0 +1,432 @@
+{
+  "status": "passed",
+  "browser": "156.0.8078.4",
+  "checks": [
+    "host sees Start film inside IPIC after the server reported canHost",
+    "the host's chooser shows 2 films, the approved short chosen (0:53 · Silent · English captions)",
+    "host started ipic-original-v1 and its own video element is playing",
+    "late viewer joined at the running position with local controls only",
+    "two viewers converged within 500 ms after 5 ms and stayed there",
+    "host pause stopped both viewers on the same frame",
+    "house lights dimmed while the film played and came back up on pause",
+    "panel fits desktop, 390 px and 320 px views; captures in output/playwright/ipic",
+    "a direct transport pause from the viewer is refused by the server",
+    "a resent start applied once; stale revision, earlier epoch and reused operation id refused; both films kept playing forward together",
+    "captions on by default and the transcript opens without audio",
+    "the film chooser and Start film are on screen, uncovered and at least 44 px tall at 390 and 320 px",
+    "the host chose the fixture and started it with Start film; the choice alone changed nothing shared",
+    "stop left the screen idle and the fixture (640×360) replaced the short (1280×720) with its own texture; no stale frame in 66 rendered frames",
+    "the film chosen in the chooser (the fixture) brings its own captions and transcript",
+    "background and back (emulated: hidden, its film paused, then frozen 8 s by CDP): the film restarted, and its first presented frame was 84 ms from the room, 457 ms after showing",
+    "host loss: the host walked out to Alice + Olivia; the server paused the film at 10.14 s, the viewer stopped on that frame, and nobody was promoted",
+    "leaving IPIC (to Alice + Olivia) released the viewer's film, panel and video element"
+  ],
+  "errors": [],
+  "convergedAfterMs": 5,
+  "samples": [
+    {
+      "sinceJoinMs": 5,
+      "spreadMs": 8,
+      "hostDriftMs": -34,
+      "viewerDriftMs": -27,
+      "hostRate": 1,
+      "viewerRate": 1
+    },
+    {
+      "sinceJoinMs": 260,
+      "spreadMs": 7,
+      "hostDriftMs": -37,
+      "viewerDriftMs": -27,
+      "hostRate": 1,
+      "viewerRate": 1
+    },
+    {
+      "sinceJoinMs": 512,
+      "spreadMs": 10,
+      "hostDriftMs": -37,
+      "viewerDriftMs": -27,
+      "hostRate": 1,
+      "viewerRate": 1
+    },
+    {
+      "sinceJoinMs": 765,
+      "spreadMs": 9,
+      "hostDriftMs": -37,
+      "viewerDriftMs": -27,
+      "hostRate": 1,
+      "viewerRate": 1
+    },
+    {
+      "sinceJoinMs": 1020,
+      "spreadMs": 9,
+      "hostDriftMs": -37,
+      "viewerDriftMs": -27,
+      "hostRate": 1,
+      "viewerRate": 1
+    },
+    {
+      "sinceJoinMs": 1274,
+      "spreadMs": 10,
+      "hostDriftMs": -35,
+      "viewerDriftMs": -27,
+      "hostRate": 1,
+      "viewerRate": 1
+    },
+    {
+      "sinceJoinMs": 1528,
+      "spreadMs": 10,
+      "hostDriftMs": -35,
+      "viewerDriftMs": -27,
+      "hostRate": 1,
+      "viewerRate": 1
+    },
+    {
+      "sinceJoinMs": 1786,
+      "spreadMs": 10,
+      "hostDriftMs": -35,
+      "viewerDriftMs": -27,
+      "hostRate": 1,
+      "viewerRate": 1
+    },
+    {
+      "sinceJoinMs": 2040,
+      "spreadMs": 8,
+      "hostDriftMs": -35,
+      "viewerDriftMs": -27,
+      "hostRate": 1,
+      "viewerRate": 1
+    },
+    {
+      "sinceJoinMs": 2293,
+      "spreadMs": 10,
+      "hostDriftMs": -36,
+      "viewerDriftMs": -27,
+      "hostRate": 1,
+      "viewerRate": 1
+    },
+    {
+      "sinceJoinMs": 2547,
+      "spreadMs": 9,
+      "hostDriftMs": -36,
+      "viewerDriftMs": -27,
+      "hostRate": 1,
+      "viewerRate": 1
+    },
+    {
+      "sinceJoinMs": 2802,
+      "spreadMs": 11,
+      "hostDriftMs": -36,
+      "viewerDriftMs": -26,
+      "hostRate": 1,
+      "viewerRate": 1
+    },
+    {
+      "sinceJoinMs": 3057,
+      "spreadMs": 11,
+      "hostDriftMs": -36,
+      "viewerDriftMs": -26,
+      "hostRate": 1,
+      "viewerRate": 1
+    },
+    {
+      "sinceJoinMs": 3310,
+      "spreadMs": 10,
+      "hostDriftMs": -36,
+      "viewerDriftMs": -26,
+      "hostRate": 1,
+      "viewerRate": 1
+    },
+    {
+      "sinceJoinMs": 3563,
+      "spreadMs": 10,
+      "hostDriftMs": -34,
+      "viewerDriftMs": -26,
+      "hostRate": 1,
+      "viewerRate": 1
+    },
+    {
+      "sinceJoinMs": 3817,
+      "spreadMs": 8,
+      "hostDriftMs": -34,
+      "viewerDriftMs": -26,
+      "hostRate": 1,
+      "viewerRate": 1
+    },
+    {
+      "sinceJoinMs": 4070,
+      "spreadMs": 8,
+      "hostDriftMs": -34,
+      "viewerDriftMs": -28,
+      "hostRate": 1,
+      "viewerRate": 1
+    },
+    {
+      "sinceJoinMs": 4323,
+      "spreadMs": 10,
+      "hostDriftMs": -34,
+      "viewerDriftMs": -28,
+      "hostRate": 1,
+      "viewerRate": 1
+    },
+    {
+      "sinceJoinMs": 4577,
+      "spreadMs": 9,
+      "hostDriftMs": -34,
+      "viewerDriftMs": -28,
+      "hostRate": 1,
+      "viewerRate": 1
+    },
+    {
+      "sinceJoinMs": 4831,
+      "spreadMs": 7,
+      "hostDriftMs": -36,
+      "viewerDriftMs": -28,
+      "hostRate": 1,
+      "viewerRate": 1
+    },
+    {
+      "sinceJoinMs": 5086,
+      "spreadMs": 10,
+      "hostDriftMs": -36,
+      "viewerDriftMs": -27,
+      "hostRate": 1,
+      "viewerRate": 1
+    },
+    {
+      "sinceJoinMs": 5340,
+      "spreadMs": 7,
+      "hostDriftMs": -36,
+      "viewerDriftMs": -27,
+      "hostRate": 1,
+      "viewerRate": 1
+    },
+    {
+      "sinceJoinMs": 5594,
+      "spreadMs": 10,
+      "hostDriftMs": -36,
+      "viewerDriftMs": -27,
+      "hostRate": 1,
+      "viewerRate": 1
+    },
+    {
+      "sinceJoinMs": 5848,
+      "spreadMs": 10,
+      "hostDriftMs": -35,
+      "viewerDriftMs": -27,
+      "hostRate": 1,
+      "viewerRate": 1
+    },
+    {
+      "sinceJoinMs": 6100,
+      "spreadMs": 10,
+      "hostDriftMs": -35,
+      "viewerDriftMs": -26,
+      "hostRate": 1,
+      "viewerRate": 1
+    },
+    {
+      "sinceJoinMs": 6354,
+      "spreadMs": 11,
+      "hostDriftMs": -35,
+      "viewerDriftMs": -26,
+      "hostRate": 1,
+      "viewerRate": 1
+    },
+    {
+      "sinceJoinMs": 6608,
+      "spreadMs": 9,
+      "hostDriftMs": -35,
+      "viewerDriftMs": -26,
+      "hostRate": 1,
+      "viewerRate": 1
+    },
+    {
+      "sinceJoinMs": 6862,
+      "spreadMs": 6,
+      "hostDriftMs": -35,
+      "viewerDriftMs": -26,
+      "hostRate": 1,
+      "viewerRate": 1
+    },
+    {
+      "sinceJoinMs": 7115,
+      "spreadMs": 7,
+      "hostDriftMs": -33,
+      "viewerDriftMs": -28,
+      "hostRate": 1,
+      "viewerRate": 1
+    },
+    {
+      "sinceJoinMs": 7369,
+      "spreadMs": 11,
+      "hostDriftMs": -33,
+      "viewerDriftMs": -28,
+      "hostRate": 1,
+      "viewerRate": 1
+    },
+    {
+      "sinceJoinMs": 7623,
+      "spreadMs": 9,
+      "hostDriftMs": -33,
+      "viewerDriftMs": -28,
+      "hostRate": 1,
+      "viewerRate": 1
+    },
+    {
+      "sinceJoinMs": 7875,
+      "spreadMs": 10,
+      "hostDriftMs": -33,
+      "viewerDriftMs": -28,
+      "hostRate": 1,
+      "viewerRate": 1
+    },
+    {
+      "sinceJoinMs": 8128,
+      "spreadMs": 8,
+      "hostDriftMs": -35,
+      "viewerDriftMs": -23,
+      "hostRate": 1,
+      "viewerRate": 1
+    },
+    {
+      "sinceJoinMs": 8380,
+      "spreadMs": 9,
+      "hostDriftMs": -35,
+      "viewerDriftMs": -23,
+      "hostRate": 1,
+      "viewerRate": 1
+    },
+    {
+      "sinceJoinMs": 8639,
+      "spreadMs": 8,
+      "hostDriftMs": -35,
+      "viewerDriftMs": -23,
+      "hostRate": 1,
+      "viewerRate": 1
+    },
+    {
+      "sinceJoinMs": 8893,
+      "spreadMs": 9,
+      "hostDriftMs": -35,
+      "viewerDriftMs": -23,
+      "hostRate": 1,
+      "viewerRate": 1
+    }
+  ],
+  "panels": {
+    "host-desktop": {
+      "width": 560,
+      "height": 200
+    },
+    "viewer-390": {
+      "width": 358,
+      "height": 196
+    },
+    "viewer-320": {
+      "width": 288,
+      "height": 240
+    }
+  },
+  "pausedSpreadMs": 0,
+  "replay": {
+    "revision": 4,
+    "refusals": {
+      "staleRevision": "screening_stale",
+      "earlierEpoch": "screening_stale",
+      "reusedOperation": "screening_operation_conflict"
+    },
+    "samples": [
+      {
+        "host": 2.60847,
+        "viewer": 2.522367,
+        "hostRevision": 4,
+        "viewerRevision": 4,
+        "spreadMs": 86,
+        "paused": false
+      },
+      {
+        "host": 2.863592,
+        "viewer": 2.785394,
+        "hostRevision": 4,
+        "viewerRevision": 4,
+        "spreadMs": 78,
+        "paused": false
+      },
+      {
+        "host": 3.115521,
+        "viewer": 3.047723,
+        "hostRevision": 4,
+        "viewerRevision": 4,
+        "spreadMs": 68,
+        "paused": false
+      },
+      {
+        "host": 3.36965,
+        "viewer": 3.312457,
+        "hostRevision": 4,
+        "viewerRevision": 4,
+        "spreadMs": 57,
+        "paused": false
+      },
+      {
+        "host": 3.623514,
+        "viewer": 3.575356,
+        "hostRevision": 4,
+        "viewerRevision": 4,
+        "spreadMs": 48,
+        "paused": false
+      },
+      {
+        "host": 3.879839,
+        "viewer": 3.837642,
+        "hostRevision": 4,
+        "viewerRevision": 4,
+        "spreadMs": 42,
+        "paused": false
+      },
+      {
+        "host": 4.132733,
+        "viewer": 4.101793,
+        "hostRevision": 4,
+        "viewerRevision": 4,
+        "spreadMs": 31,
+        "paused": false
+      },
+      {
+        "host": 4.387127,
+        "viewer": 4.363197,
+        "hostRevision": 4,
+        "viewerRevision": 4,
+        "spreadMs": 24,
+        "paused": false
+      },
+      {
+        "host": 4.639381,
+        "viewer": 4.624376,
+        "hostRevision": 4,
+        "viewerRevision": 4,
+        "spreadMs": 15,
+        "paused": false
+      }
+    ]
+  },
+  "background": {
+    "advancedS": 0,
+    "recoveredAfterMs": 254,
+    "spreadsMs": [
+      8026,
+      33
+    ],
+    "presentedAfterMs": 457,
+    "presentedSpreadMs": 84
+  },
+  "hostLoss": {
+    "status": "paused",
+    "positionS": 10.145,
+    "currentTime": 10.145,
+    "paused": true,
+    "canHost": false,
+    "hostControls": false
+  },
+  "profile": "one machine, loopback town, headless Chromium with SwiftShader, 250 ms sampling; local clocks share one wall clock"
+}

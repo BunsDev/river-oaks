@@ -1,0 +1,701 @@
+{
+  "schemaVersion": 1,
+  "status": "identical-tested-inputs",
+  "checkedAt": "2026-10-19T05:29:16.071Z",
+  "candidateRevision": "132e11b9829635f5d305a68f9fc70d40c96d9d6a",
+  "integratedMain": "b76ab77cf716e5f4ddb24e54bce771412de0e1f0",
+  "candidateRuntimeManifestSha256": "0a587e5f6194330ef82670f95ae5c30301813c80b63d797eef2a6777c6ffb19b",
+  "testedRuntimeManifestSha256": "c0f5b8de9f6bad47a018c7a21e2446f647167b9be16e5a1aca5d63eab60ff036",
+  "testedInputReceipt": {
+    "file": "data/reports/character-fidelity-review-phone-inputs-517.json",
+    "sha256": "ba20e7eb1f8e0720407d59e42a24986574bbe4a821b264465c7ecf71c436c126"
+  },
+  "physicalReceipt": {
+    "file": "data/reports/character-fidelity-review-iphone-517.json",
+    "sha256": "b91bbd59d09ec4e34cc3c83feb0150b2e3028054491c3c031f2cc383ec4a2000"
+  },
+  "method": "Rebuilt actual Rolldown graph in memory, compared complete module/character-asset/helper/package input sets and every byte hash with the tested source. No phone receipt revision/timestamp is changed.",
+  "modules": 71,
+  "characterAssets": 38,
+  "inputChecks": [
+    {
+      "path": "docs/acceptance/character-fidelity-517-captures/capture-phone.mjs",
+      "sha256": "e5a7198c1ffef961c5e881cff682f7e30fa2cdbee0c954f5a585fc94837d9c00",
+      "testedSha256": "e5a7198c1ffef961c5e881cff682f7e30fa2cdbee0c954f5a585fc94837d9c00",
+      "unchanged": true
+    },
+    {
+      "path": "docs/acceptance/character-fidelity-517-captures/phone-evidence.mjs",
+      "sha256": "3a6e0cbbacec2f462cfc33f3b22818a74e7cbe335b073c1ed16a5d2f9dd95761",
+      "testedSha256": "3a6e0cbbacec2f462cfc33f3b22818a74e7cbe335b073c1ed16a5d2f9dd95761",
+      "unchanged": true
+    },
+    {
+      "path": "package.json",
+      "sha256": "5be570757b14fbd64c032a7881f005dc483a0e0c613133f6f4cbc29d594c1910",
+      "testedSha256": "5be570757b14fbd64c032a7881f005dc483a0e0c613133f6f4cbc29d594c1910",
+      "unchanged": true
+    },
+    {
+      "path": "pnpm-lock.yaml",
+      "sha256": "ba688f3b800f2cbdc5f1d6acec471d4622f7815d681edc7a74087749f4e21a31",
+      "testedSha256": "ba688f3b800f2cbdc5f1d6acec471d4622f7815d681edc7a74087749f4e21a31",
+      "unchanged": true
+    },
+    {
+      "path": "preview/audit/character-image-comparison.js",
+      "sha256": "fb24f15ae7f09bbdb0ff1921a5dd5ddedf255852634fec1297d5d11579dc66b3",
+      "testedSha256": "fb24f15ae7f09bbdb0ff1921a5dd5ddedf255852634fec1297d5d11579dc66b3",
+      "unchanged": true
+    },
+    {
+      "path": "preview/e2e/fixtures/character-fidelity.js",
+      "sha256": "c1d4412c984a9f9d3f0bd0334241b037121cb634106e64010d33013afbaddbb0",
+      "testedSha256": "c1d4412c984a9f9d3f0bd0334241b037121cb634106e64010d33013afbaddbb0",
+      "unchanged": true
+    },
+    {
+      "path": "preview/public/assets/characters/LICENSE-CC0.md",
+      "sha256": "f6089cba01cb570a24712b41ab8a586ccd3cc5ef53dc266ca50b95c288956d2c",
+      "testedSha256": "f6089cba01cb570a24712b41ab8a586ccd3cc5ef53dc266ca50b95c288956d2c",
+      "unchanged": true
+    },
+    {
+      "path": "preview/public/assets/characters/README.md",
+      "sha256": "a3972dff6597068dcd4e47afa575696d3088500d6cc99128bf0b97aa432ed2cc",
+      "testedSha256": "a3972dff6597068dcd4e47afa575696d3088500d6cc99128bf0b97aa432ed2cc",
+      "unchanged": true
+    },
+    {
+      "path": "preview/public/assets/characters/dorothy-portrait.png",
+      "sha256": "7b854a3351fdd2ed796fef39c505e51f5454f39ba03cfe549c19e29021c882af",
+      "testedSha256": "7b854a3351fdd2ed796fef39c505e51f5454f39ba03cfe549c19e29021c882af",
+      "unchanged": true
+    },
+    {
+      "path": "preview/public/assets/characters/jevica-portrait.png",
+      "sha256": "5a47f00ca5217be8b962a654add530c4b8f8406829b0021b5f6e396db1fdbd66",
+      "testedSha256": "5a47f00ca5217be8b962a654add530c4b8f8406829b0021b5f6e396db1fdbd66",
+      "unchanged": true
+    },
+    {
+      "path": "preview/public/assets/characters/jevica.glb",
+      "sha256": "722b96e2fd77b36c85ec01c1594a35e3f3f39b5ec76dfc3c9a351ef1eb4f117a",
+      "testedSha256": "722b96e2fd77b36c85ec01c1594a35e3f3f39b5ec76dfc3c9a351ef1eb4f117a",
+      "unchanged": true
+    },
+    {
+      "path": "preview/public/assets/characters/jevica.sources.json",
+      "sha256": "104ce65388e02ad9e08730334083f297269faf74341b0685ed6eac36bfb9e1a3",
+      "testedSha256": "104ce65388e02ad9e08730334083f297269faf74341b0685ed6eac36bfb9e1a3",
+      "unchanged": true
+    },
+    {
+      "path": "preview/public/assets/characters/lion-portrait.png",
+      "sha256": "f7ab543ab828be9820f90476f5563c5c5e6b9c113ddc14c5f87c6a368036d771",
+      "testedSha256": "f7ab543ab828be9820f90476f5563c5c5e6b9c113ddc14c5f87c6a368036d771",
+      "unchanged": true
+    },
+    {
+      "path": "preview/public/assets/characters/man-casual.glb",
+      "sha256": "e7ac712585ba2d4558092b67ccf30e67d29843a9a81c4ca00384200f69588684",
+      "testedSha256": "e7ac712585ba2d4558092b67ccf30e67d29843a9a81c4ca00384200f69588684",
+      "unchanged": true
+    },
+    {
+      "path": "preview/public/assets/characters/man-realistic-casual.glb",
+      "sha256": "bce971f3e523419b9ee1ceaccf9a8044152dc1647dd2148c458e40aad0da4305",
+      "testedSha256": "bce971f3e523419b9ee1ceaccf9a8044152dc1647dd2148c458e40aad0da4305",
+      "unchanged": true
+    },
+    {
+      "path": "preview/public/assets/characters/man-tailored.glb",
+      "sha256": "ae3834fbc9d96c3588f330a80280a2dfd5d69830ad18ca2f51d5e1003f7e042f",
+      "testedSha256": "ae3834fbc9d96c3588f330a80280a2dfd5d69830ad18ca2f51d5e1003f7e042f",
+      "unchanged": true
+    },
+    {
+      "path": "preview/public/assets/characters/man-workwear.glb",
+      "sha256": "37e96403d3ea1e779551070e3568543a669f6c3029233d2c54926f1332ab95fd",
+      "testedSha256": "37e96403d3ea1e779551070e3568543a669f6c3029233d2c54926f1332ab95fd",
+      "unchanged": true
+    },
+    {
+      "path": "preview/public/assets/characters/prince-jev.glb",
+      "sha256": "8b9595b538e3e3ac9dfc28edcdf85ec8623e30e70d519cfea423d0e7cf07a60a",
+      "testedSha256": "8b9595b538e3e3ac9dfc28edcdf85ec8623e30e70d519cfea423d0e7cf07a60a",
+      "unchanged": true
+    },
+    {
+      "path": "preview/public/assets/characters/prince-jev.sources.json",
+      "sha256": "99191b0129472e5f02a885dc32328e0773bde262da55c9bb2a2740423ca15fcd",
+      "testedSha256": "99191b0129472e5f02a885dc32328e0773bde262da55c9bb2a2740423ca15fcd",
+      "unchanged": true
+    },
+    {
+      "path": "preview/public/assets/characters/realism/skin-roughness.webp",
+      "sha256": "2da8fb586a5ae921ac3b7bc5792d6021e179f9b0492e3f80479daf1474eb4adc",
+      "testedSha256": "2da8fb586a5ae921ac3b7bc5792d6021e179f9b0492e3f80479daf1474eb4adc",
+      "unchanged": true
+    },
+    {
+      "path": "preview/public/assets/characters/realism/sources.json",
+      "sha256": "33cae349a486884db6c5ce95e0c1b15c98a92796f2994339b90705f7e3a8518a",
+      "testedSha256": "33cae349a486884db6c5ce95e0c1b15c98a92796f2994339b90705f7e3a8518a",
+      "unchanged": true
+    },
+    {
+      "path": "preview/public/assets/characters/realistic-humans.sources.json",
+      "sha256": "adb70b049cb40998ebf08dfbdc9dc2eeba1d85df45bb2e80696002e6d79187c4",
+      "testedSha256": "adb70b049cb40998ebf08dfbdc9dc2eeba1d85df45bb2e80696002e6d79187c4",
+      "unchanged": true
+    },
+    {
+      "path": "preview/public/assets/characters/references/aurel-human.png",
+      "sha256": "40e793397fcef2653895a7e6a5826f4146439cdd2f796362337ac8b522c4820c",
+      "testedSha256": "40e793397fcef2653895a7e6a5826f4146439cdd2f796362337ac8b522c4820c",
+      "unchanged": true
+    },
+    {
+      "path": "preview/public/assets/characters/references/forest-aristocrat-feminine.png",
+      "sha256": "bda83312d1d25ba8cb877eebacff2b1364777c3ab7c92978d0667bfa50657fe9",
+      "testedSha256": "bda83312d1d25ba8cb877eebacff2b1364777c3ab7c92978d0667bfa50657fe9",
+      "unchanged": true
+    },
+    {
+      "path": "preview/public/assets/characters/references/forest-aristocrat-masculine.png",
+      "sha256": "1d57735cdf28b1f8980e5ec6064e6d161a769c5bc618ee12c75d5fb0815460e2",
+      "testedSha256": "1d57735cdf28b1f8980e5ec6064e6d161a769c5bc618ee12c75d5fb0815460e2",
+      "unchanged": true
+    },
+    {
+      "path": "preview/public/assets/characters/references/kai-three-celestial-styles.png",
+      "sha256": "2187c06fac6c68da8a15c6958cd8c71478c4d65c96131b3ed45d788c366aa56e",
+      "testedSha256": "2187c06fac6c68da8a15c6958cd8c71478c4d65c96131b3ed45d788c366aa56e",
+      "unchanged": true
+    },
+    {
+      "path": "preview/public/assets/characters/references/lyra-human.png",
+      "sha256": "11ef2e71a4276aba8ef14c0f78e42e70efd106b30d3fa7e3bcde502d90bad4dd",
+      "testedSha256": "11ef2e71a4276aba8ef14c0f78e42e70efd106b30d3fa7e3bcde502d90bad4dd",
+      "unchanged": true
+    },
+    {
+      "path": "preview/public/assets/characters/references/vesper-velvet-turnaround.png",
+      "sha256": "4e6b55d901ef15cbbec3e9f6b516e929840ec5c97262209d42a8df2918e5305c",
+      "testedSha256": "4e6b55d901ef15cbbec3e9f6b516e929840ec5c97262209d42a8df2918e5305c",
+      "unchanged": true
+    },
+    {
+      "path": "preview/public/assets/characters/scarecrow-portrait.png",
+      "sha256": "b8cb72003471f2adaefcfe8d7917ff178baecfd3128b53325512e63b872a7bf1",
+      "testedSha256": "b8cb72003471f2adaefcfe8d7917ff178baecfd3128b53325512e63b872a7bf1",
+      "unchanged": true
+    },
+    {
+      "path": "preview/public/assets/characters/sources.json",
+      "sha256": "9e51242b9680901309edcfa26b780f0fd8723f046891f1a1f7fa2fc96be6b15d",
+      "testedSha256": "9e51242b9680901309edcfa26b780f0fd8723f046891f1a1f7fa2fc96be6b15d",
+      "unchanged": true
+    },
+    {
+      "path": "preview/public/assets/characters/speech/README.md",
+      "sha256": "65c77b510e6ea6a1f2c6eff96229e7a21c5756742a611a7993acc402e3f3e76e",
+      "testedSha256": "65c77b510e6ea6a1f2c6eff96229e7a21c5756742a611a7993acc402e3f3e76e",
+      "unchanged": true
+    },
+    {
+      "path": "preview/public/assets/characters/speech/jevica.glb",
+      "sha256": "9752d509b67c318930c542bbb94412f6ab5c676ea00ba7e413b9f3bb59fcf729",
+      "testedSha256": "9752d509b67c318930c542bbb94412f6ab5c676ea00ba7e413b9f3bb59fcf729",
+      "unchanged": true
+    },
+    {
+      "path": "preview/public/assets/characters/speech/man-casual.glb",
+      "sha256": "398589ed1587fc31df8c8383884e05926210fe430e39e25bf014cfbf857a5930",
+      "testedSha256": "398589ed1587fc31df8c8383884e05926210fe430e39e25bf014cfbf857a5930",
+      "unchanged": true
+    },
+    {
+      "path": "preview/public/assets/characters/speech/man-tailored.glb",
+      "sha256": "4d32553e1f86b7677bea01fd7fa8818af451904da6812bacb4b7a0f1f19cddd8",
+      "testedSha256": "4d32553e1f86b7677bea01fd7fa8818af451904da6812bacb4b7a0f1f19cddd8",
+      "unchanged": true
+    },
+    {
+      "path": "preview/public/assets/characters/speech/man-workwear.glb",
+      "sha256": "1576023d1507a7abd5bf1b24428de7d5611b37bc0af70d2b42cab84224a868cc",
+      "testedSha256": "1576023d1507a7abd5bf1b24428de7d5611b37bc0af70d2b42cab84224a868cc",
+      "unchanged": true
+    },
+    {
+      "path": "preview/public/assets/characters/speech/sources.json",
+      "sha256": "67693ec15b4c1cc63493150d6c8e86d835c407f835a951766dc1fc5c3f4a0d92",
+      "testedSha256": "67693ec15b4c1cc63493150d6c8e86d835c407f835a951766dc1fc5c3f4a0d92",
+      "unchanged": true
+    },
+    {
+      "path": "preview/public/assets/characters/speech/woman-casual.glb",
+      "sha256": "d0c674575875c99cfc6cdf91a9c2dcdf2efd455965cf5a6ad24145bbb7a7ece3",
+      "testedSha256": "d0c674575875c99cfc6cdf91a9c2dcdf2efd455965cf5a6ad24145bbb7a7ece3",
+      "unchanged": true
+    },
+    {
+      "path": "preview/public/assets/characters/speech/woman-daywear.glb",
+      "sha256": "eca580b73a32a801d56a0ff9f03c560443aa3a132d09554231fd3626b17921d8",
+      "testedSha256": "eca580b73a32a801d56a0ff9f03c560443aa3a132d09554231fd3626b17921d8",
+      "unchanged": true
+    },
+    {
+      "path": "preview/public/assets/characters/speech/woman-tailored.glb",
+      "sha256": "dea914661c3f31ea01aba966f956ff47b39b16cdd33c6e9e17168bf8e80c0b66",
+      "testedSha256": "dea914661c3f31ea01aba966f956ff47b39b16cdd33c6e9e17168bf8e80c0b66",
+      "unchanged": true
+    },
+    {
+      "path": "preview/public/assets/characters/tinman-portrait.png",
+      "sha256": "a616550905a1ea872a54506d29e967943b5cf478b69288ab55543d3459d9243f",
+      "testedSha256": "a616550905a1ea872a54506d29e967943b5cf478b69288ab55543d3459d9243f",
+      "unchanged": true
+    },
+    {
+      "path": "preview/public/assets/characters/woman-casual.glb",
+      "sha256": "51fa4cda6fd5f76c2657a350a2bfd800eb25b3da28a41d4001330cd174a8d3d1",
+      "testedSha256": "51fa4cda6fd5f76c2657a350a2bfd800eb25b3da28a41d4001330cd174a8d3d1",
+      "unchanged": true
+    },
+    {
+      "path": "preview/public/assets/characters/woman-daywear.glb",
+      "sha256": "7d2db64730455d55d207773850de760c4046db71c0e095d4006da8d549a148d9",
+      "testedSha256": "7d2db64730455d55d207773850de760c4046db71c0e095d4006da8d549a148d9",
+      "unchanged": true
+    },
+    {
+      "path": "preview/public/assets/characters/woman-realistic-tailored.glb",
+      "sha256": "d341bf3a344bfd8d091ea226482d9bd51ad18732fe361e5860537052e767cdc1",
+      "testedSha256": "d341bf3a344bfd8d091ea226482d9bd51ad18732fe361e5860537052e767cdc1",
+      "unchanged": true
+    },
+    {
+      "path": "preview/public/assets/characters/woman-tailored.glb",
+      "sha256": "c4fbe6b7c069ed2236d16774190893222f5dc8459a09e2cd68b73dbd4ca1e19c",
+      "testedSha256": "c4fbe6b7c069ed2236d16774190893222f5dc8459a09e2cd68b73dbd4ca1e19c",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/arm-contact.js",
+      "sha256": "ad3956907adb280811631065699157e272f225197c2300165e8e30424b0434ba",
+      "testedSha256": "ad3956907adb280811631065699157e272f225197c2300165e8e30424b0434ba",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/avatar-skeletons.js",
+      "sha256": "5a44e65049eadf0b0aea0d6d06e550ad924742c0feef922a45e3a58201063adb",
+      "testedSha256": "5a44e65049eadf0b0aea0d6d06e550ad924742c0feef922a45e3a58201063adb",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/avatar-stance.js",
+      "sha256": "c1f857d5a6d28f1a6436858030e3d94459304cba76136a7e5536684c54445a56",
+      "testedSha256": "c1f857d5a6d28f1a6436858030e3d94459304cba76136a7e5536684c54445a56",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/avatars.js",
+      "sha256": "0e069678d6a1fd1956abf6589a3a2a3fb4f068a1123dbb8a47304be70a7e3d31",
+      "testedSha256": "0e069678d6a1fd1956abf6589a3a2a3fb4f068a1123dbb8a47304be70a7e3d31",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/bodice-fitting.js",
+      "sha256": "568dc6969d0831fe2fc50f1742f764b7d92e5a7276d9c18ddbacc925af511a94",
+      "testedSha256": "568dc6969d0831fe2fc50f1742f764b7d92e5a7276d9c18ddbacc925af511a94",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/boot-fitting.js",
+      "sha256": "f4603d1e64bdeadc19f052a0fdf179a5bd04ff8a411958594ccb81dd60b50795",
+      "testedSha256": "f4603d1e64bdeadc19f052a0fdf179a5bd04ff8a411958594ccb81dd60b50795",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/character-assets.js",
+      "sha256": "319b6797edf5b7fc63c79f2e7f8fea90ecc2f8dfacba84472b51a300770e578f",
+      "testedSha256": "319b6797edf5b7fc63c79f2e7f8fea90ecc2f8dfacba84472b51a300770e578f",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/character-compatibility.js",
+      "sha256": "99304590e3a78635a2d163d1dee1aa9de18638f0f2393b74e76374282e9ad531",
+      "testedSha256": "99304590e3a78635a2d163d1dee1aa9de18638f0f2393b74e76374282e9ad531",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/character-customization.js",
+      "sha256": "9dcb352e657d8dc519a1d15bc2808667fadca75605995c0afd499202672af3ea",
+      "testedSha256": "9dcb352e657d8dc519a1d15bc2808667fadca75605995c0afd499202672af3ea",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/character-definition.js",
+      "sha256": "c5de71b414be6cc88e5fd608d2e78ecf3a2803503aaeed8bc1d9d4744e426ee5",
+      "testedSha256": "c5de71b414be6cc88e5fd608d2e78ecf3a2803503aaeed8bc1d9d4744e426ee5",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/character-expressions.js",
+      "sha256": "e517295e5dc28af32f0c0bf4ae5ad53adf3ae6149cfc570c7ea3c6a6a5f605d1",
+      "testedSha256": "e517295e5dc28af32f0c0bf4ae5ad53adf3ae6149cfc570c7ea3c6a6a5f605d1",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/character-fidelity-contract.js",
+      "sha256": "9b2a6c9a89cc9bc94d161ce006a803ae2812dd9b39e52ea31cdaaec1ded84119",
+      "testedSha256": "9b2a6c9a89cc9bc94d161ce006a803ae2812dd9b39e52ea31cdaaec1ded84119",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/character-fidelity-metrics.js",
+      "sha256": "12e8e1da529d5959bd5ce7fc6379aea48148721063640a27b999ecba38f100e3",
+      "testedSha256": "12e8e1da529d5959bd5ce7fc6379aea48148721063640a27b999ecba38f100e3",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/character-fidelity-runtime.js",
+      "sha256": "60c22d7d3c7e3622b106cf9786bb47b977a79117ba0dfee95368ea6a6c1e5bdc",
+      "testedSha256": "60c22d7d3c7e3622b106cf9786bb47b977a79117ba0dfee95368ea6a6c1e5bdc",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/character-hero.js",
+      "sha256": "592d434e1ccf2436110f06bd53bd7098d4ce7220db0ee504636faba650d6c308",
+      "testedSha256": "592d434e1ccf2436110f06bd53bd7098d4ce7220db0ee504636faba650d6c308",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/character-portrait.js",
+      "sha256": "3cefa0947d6c941c9689d478b708a882b25a1f26aa52284e61d532a8a4b1fb72",
+      "testedSha256": "3cefa0947d6c941c9689d478b708a882b25a1f26aa52284e61d532a8a4b1fb72",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/character-quality.js",
+      "sha256": "24dcdbbf6a68431a632b24b93725baec217f3b0622b17b097244aff39868d69a",
+      "testedSha256": "24dcdbbf6a68431a632b24b93725baec217f3b0622b17b097244aff39868d69a",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/character-realism.js",
+      "sha256": "b2f248892471eaacdccd2eaed424b85f1739d960e8103c229da398eef407e4f2",
+      "testedSha256": "b2f248892471eaacdccd2eaed424b85f1739d960e8103c229da398eef407e4f2",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/character-studio-materials.js",
+      "sha256": "20ce561a3dd28c8b9df4d61401abf6467babc86e07bc7094e909d188dc1f4bb1",
+      "testedSha256": "20ce561a3dd28c8b9df4d61401abf6467babc86e07bc7094e909d188dc1f4bb1",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/coat-back.js",
+      "sha256": "7c8d92ee10d801a396fa95897f08aeb9bc8227fbd5b67b53be276512a5a24955",
+      "testedSha256": "7c8d92ee10d801a396fa95897f08aeb9bc8227fbd5b67b53be276512a5a24955",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/coat-tail-geometry.js",
+      "sha256": "c332fef4f2663bc61c2e7cc60bc4197cab9de534a01c34cf24b67328857a0824",
+      "testedSha256": "c332fef4f2663bc61c2e7cc60bc4197cab9de534a01c34cf24b67328857a0824",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/coat-tail-morph-data.js",
+      "sha256": "5cc23cdfbd965a2ddf74d8546e7605f44424341d7583fece66784be3cae6c39a",
+      "testedSha256": "5cc23cdfbd965a2ddf74d8546e7605f44424341d7583fece66784be3cae6c39a",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/coat-tail-skinning.js",
+      "sha256": "7e32f0d52a80634154a5783ff180b8f0ed12fd0099f52793946217868d7ae939",
+      "testedSha256": "7e32f0d52a80634154a5783ff180b8f0ed12fd0099f52793946217868d7ae939",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/conversation-body.js",
+      "sha256": "94884f405a479ba9652b6e6c247d505aea388a82c406ac5d335835c9eadf5ee0",
+      "testedSha256": "94884f405a479ba9652b6e6c247d505aea388a82c406ac5d335835c9eadf5ee0",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/conversation-gaze.js",
+      "sha256": "2b87a0df8a9035ecb5327d558b7cdd1be3f887da0ff6c260d1c9f25b27a16811",
+      "testedSha256": "2b87a0df8a9035ecb5327d558b7cdd1be3f887da0ff6c260d1c9f25b27a16811",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/conversation-motion.js",
+      "sha256": "e2b6bf52e91b32020fb8d27adcfe690c71aa3f2823c144c35470678799b9f5d0",
+      "testedSha256": "e2b6bf52e91b32020fb8d27adcfe690c71aa3f2823c144c35470678799b9f5d0",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/costume-batching.js",
+      "sha256": "51a3d51f6840cc842a62c2afb8cea5be15a3e87bc04abf89e362ff7c41d1c889",
+      "testedSha256": "51a3d51f6840cc842a62c2afb8cea5be15a3e87bc04abf89e362ff7c41d1c889",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/drape-geometry.js",
+      "sha256": "d624e47a003bb761b0663f436e0df201f1ba9b17e8ce4b0271b119a5eb7401ce",
+      "testedSha256": "d624e47a003bb761b0663f436e0df201f1ba9b17e8ce4b0271b119a5eb7401ce",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/eye-tracking.js",
+      "sha256": "93b8af25f82f59ffbfecd44b090fc6e32650add837c4a21ce68a1c5099165313",
+      "testedSha256": "93b8af25f82f59ffbfecd44b090fc6e32650add837c4a21ce68a1c5099165313",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/facial-motion.js",
+      "sha256": "d90f5ee3e67b7edaa755e3494dd097db89682cec2cc8c61730fa201bf939fc87",
+      "testedSha256": "d90f5ee3e67b7edaa755e3494dd097db89682cec2cc8c61730fa201bf939fc87",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/foot-placement.js",
+      "sha256": "425899b01551534f72d20b0d011b0b319e525c4ba12d3c9f02bf8dfc7d548ea3",
+      "testedSha256": "425899b01551534f72d20b0d011b0b319e525c4ba12d3c9f02bf8dfc7d548ea3",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/foot-roll.js",
+      "sha256": "5c8de2ef4c1d3ed3905991d7cc16ed3ce249b7091b70ad90c6b5bfb6afc98528",
+      "testedSha256": "5c8de2ef4c1d3ed3905991d7cc16ed3ce249b7091b70ad90c6b5bfb6afc98528",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/gltf-image-decoder.js",
+      "sha256": "72962e0e554b8237c87d20101145285f0891d94f707a064ba1d9e34b76296290",
+      "testedSha256": "72962e0e554b8237c87d20101145285f0891d94f707a064ba1d9e34b76296290",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/handshake-contact.js",
+      "sha256": "6f92ae3935c043cccfd9027546687cfe1dc5172bd62b0817dfe3927746ba9692",
+      "testedSha256": "6f92ae3935c043cccfd9027546687cfe1dc5172bd62b0817dfe3927746ba9692",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/head-fit.js",
+      "sha256": "2285bec83cab33019136c895bebdcd5676cf8c7b4e47c10e451a2d56a7b044cf",
+      "testedSha256": "2285bec83cab33019136c895bebdcd5676cf8c7b4e47c10e451a2d56a7b044cf",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/jevica-accounts.js",
+      "sha256": "931b1ad52bd21df91f32c1c7b8c01b97bd21374045f03d86c38bc8ab9f6b866e",
+      "testedSha256": "931b1ad52bd21df91f32c1c7b8c01b97bd21374045f03d86c38bc8ab9f6b866e",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/jevica-costume.js",
+      "sha256": "3fe5ee19c8f2fa25b61821162aaba20809086fcf39115c17e75abb7c8bbc3324",
+      "testedSha256": "3fe5ee19c8f2fa25b61821162aaba20809086fcf39115c17e75abb7c8bbc3324",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/jevica-drape.js",
+      "sha256": "f5f0f69da361ba469c1f1cd1c94f950dff2e13ca3cc598813578281fc41ca5e7",
+      "testedSha256": "f5f0f69da361ba469c1f1cd1c94f950dff2e13ca3cc598813578281fc41ca5e7",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/jevica-embroidery.js",
+      "sha256": "c805a4df5fa340e749cd9d3734c8e59b670b5b8d78b06edb9f0d8390cb86b85e",
+      "testedSha256": "c805a4df5fa340e749cd9d3734c8e59b670b5b8d78b06edb9f0d8390cb86b85e",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/limb-fit.js",
+      "sha256": "24a7714575792eb821015f94d4aa85e8580a65238730c0186a0e6e1d4f49647a",
+      "testedSha256": "24a7714575792eb821015f94d4aa85e8580a65238730c0186a0e6e1d4f49647a",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/lyra-drape-morph-data.js",
+      "sha256": "3796e219ef00092b8d4bf7456f7700d975718b808965e28145072b1897a42434",
+      "testedSha256": "3796e219ef00092b8d4bf7456f7700d975718b808965e28145072b1897a42434",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/packed-morph-data.js",
+      "sha256": "36b4a1ce66ec4135a8349897da1f309bc180815d3ef31719948736abc65d14c4",
+      "testedSha256": "36b4a1ce66ec4135a8349897da1f309bc180815d3ef31719948736abc65d14c4",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/player-costume.js",
+      "sha256": "fd34ee05e269d1dad47266f9fc002e081641ddf16ce00290f5686c1927624580",
+      "testedSha256": "fd34ee05e269d1dad47266f9fc002e081641ddf16ce00290f5686c1927624580",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/reference-archetypes.js",
+      "sha256": "3aede9799c3656be1c09b25f79e52b23c3cee74d71cdd3f3d3ce3466975910de",
+      "testedSha256": "3aede9799c3656be1c09b25f79e52b23c3cee74d71cdd3f3d3ce3466975910de",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/render-quality.js",
+      "sha256": "e2f48cec65a12627b3b01cadac4abc188b0da42a9087a3148a3373ce7078201d",
+      "testedSha256": "e2f48cec65a12627b3b01cadac4abc188b0da42a9087a3148a3373ce7078201d",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/resident-face.js",
+      "sha256": "97cf65116a8ce4a0f83f3a96538c8180661f766131543705566acfc32a2b6ed4",
+      "testedSha256": "97cf65116a8ce4a0f83f3a96538c8180661f766131543705566acfc32a2b6ed4",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/resident-gestures.js",
+      "sha256": "6d16390525a774a47554e3b551be01a8de4d5cf7d33c3bda4d45d7f6f7fbb6d8",
+      "testedSha256": "6d16390525a774a47554e3b551be01a8de4d5cf7d33c3bda4d45d7f6f7fbb6d8",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/resident-hairstyle.js",
+      "sha256": "0910838a65be76c237fc5e050115138a1e87730db561411f4e7ec53cd5f29910",
+      "testedSha256": "0910838a65be76c237fc5e050115138a1e87730db561411f4e7ec53cd5f29910",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/resident-style.js",
+      "sha256": "2ab0caaae62fa7291d687a9fa0bcccde6716037c3cc3538e7604823dec660ea7",
+      "testedSha256": "2ab0caaae62fa7291d687a9fa0bcccde6716037c3cc3538e7604823dec660ea7",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/riding-clothes.js",
+      "sha256": "75c563bdc1dbf55e1fc82d3680d8084b9f08338b1d79ce609cf252b442b96a1c",
+      "testedSha256": "75c563bdc1dbf55e1fc82d3680d8084b9f08338b1d79ce609cf252b442b96a1c",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/romance-look.js",
+      "sha256": "265a99eb9b89a94caaf271b7fd1810c4fbedf2f0587e5f2b6813389ce1c9ba43",
+      "testedSha256": "265a99eb9b89a94caaf271b7fd1810c4fbedf2f0587e5f2b6813389ce1c9ba43",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/shared-appearances.js",
+      "sha256": "6b9861a9e22fa3e685190e3172c63213b5f88b11d36c85d6ef6805732f0220c1",
+      "testedSha256": "6b9861a9e22fa3e685190e3172c63213b5f88b11d36c85d6ef6805732f0220c1",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/shoe-skinning.js",
+      "sha256": "59b48076b226536832c031ffd9108eb49499c6bc7f0b3fbe234f2892b206adfe",
+      "testedSha256": "59b48076b226536832c031ffd9108eb49499c6bc7f0b3fbe234f2892b206adfe",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/silvan-drape-geometry.js",
+      "sha256": "cbfd10c2f97f205ace8d59e4af3dd35a0a6981e48ad6c10c20fe63704212b8d9",
+      "testedSha256": "cbfd10c2f97f205ace8d59e4af3dd35a0a6981e48ad6c10c20fe63704212b8d9",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/silvan-drape-morph-data.js",
+      "sha256": "a63cc845595955cec937f50964bd2f3c648b4268f26642d53a0f557e535f94a5",
+      "testedSha256": "a63cc845595955cec937f50964bd2f3c648b4268f26642d53a0f557e535f94a5",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/silvan-trousers.js",
+      "sha256": "08fafd120d3ae737eca6a40a350acd7ce80feeaf26a5c16cb1ac23b0862ad145",
+      "testedSha256": "08fafd120d3ae737eca6a40a350acd7ce80feeaf26a5c16cb1ac23b0862ad145",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/skinned-vertex-sampler.js",
+      "sha256": "6cdc501d952a1ee7197f2b2ce60346e3f63cbe876957681f59e76c2a7aba77a4",
+      "testedSha256": "6cdc501d952a1ee7197f2b2ce60346e3f63cbe876957681f59e76c2a7aba77a4",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/skirt-geometry.js",
+      "sha256": "aa74e1d9dce55e6ffa298fd3bd6b9f0fa0baead3d48f4d1979cf27ec27741e0b",
+      "testedSha256": "aa74e1d9dce55e6ffa298fd3bd6b9f0fa0baead3d48f4d1979cf27ec27741e0b",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/skirt-seat-morph-data.js",
+      "sha256": "54e926224089e8fe86b0d91415eed210164ff9bd0f9185ecb341ee0f039e9f72",
+      "testedSha256": "54e926224089e8fe86b0d91415eed210164ff9bd0f9185ecb341ee0f039e9f72",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/skirt-seat-morph.js",
+      "sha256": "2ef2e112d662995ff467adb2337dda1103ffa516f15c64e7aad556eb756b82be",
+      "testedSha256": "2ef2e112d662995ff467adb2337dda1103ffa516f15c64e7aad556eb756b82be",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/skirt-skinning.js",
+      "sha256": "414fa6b5277c4798198b26f4b1c1c2f355e62c27748db157c9334b4e5515c0e5",
+      "testedSha256": "414fa6b5277c4798198b26f4b1c1c2f355e62c27748db157c9334b4e5515c0e5",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/sock-fitting.js",
+      "sha256": "a9c37f828e7a7021003f1a4e1a5310188336f332b24bacf1041697c5ed24b887",
+      "testedSha256": "a9c37f828e7a7021003f1a4e1a5310188336f332b24bacf1041697c5ed24b887",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/sole-support.js",
+      "sha256": "1d77dad5449799032809f815298af1acb01fffdaa54371aa71a4601a3794d18f",
+      "testedSha256": "1d77dad5449799032809f815298af1acb01fffdaa54371aa71a4601a3794d18f",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/speech-avatar.js",
+      "sha256": "55417a45c3503c4b49891afd82794355644af6cb8a6602289632f61a6d339871",
+      "testedSha256": "55417a45c3503c4b49891afd82794355644af6cb8a6602289632f61a6d339871",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/speech-track.js",
+      "sha256": "bd93c22eb85c6b9e04e6440c2637f6d4f5eb6dcb958040a0f27a01df2054752f",
+      "testedSha256": "bd93c22eb85c6b9e04e6440c2637f6d4f5eb6dcb958040a0f27a01df2054752f",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/transmission-targets.js",
+      "sha256": "e18adb75ab764b235743836055627109be3624bcca90321f89090c56fd0ce59c",
+      "testedSha256": "e18adb75ab764b235743836055627109be3624bcca90321f89090c56fd0ce59c",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/upper-body-gait.js",
+      "sha256": "58d929b9561a5098d7ab88d650df9ba8bc94adfd842228580930c782e2b89352",
+      "testedSha256": "58d929b9561a5098d7ab88d650df9ba8bc94adfd842228580930c782e2b89352",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/vesper-skirt-geometry.js",
+      "sha256": "b4356274316d84f6ffbd9ff030de7620a20f81da7a27f7a1f13a9380f1fb4bb5",
+      "testedSha256": "b4356274316d84f6ffbd9ff030de7620a20f81da7a27f7a1f13a9380f1fb4bb5",
+      "unchanged": true
+    },
+    {
+      "path": "preview/src/vesper-skirt-morph-data.js",
+      "sha256": "3bf6496042e756cb04b4837d7f2aa0116d6c7dd7edde787a5db666b8c3948d6e",
+      "testedSha256": "3bf6496042e756cb04b4837d7f2aa0116d6c7dd7edde787a5db666b8c3948d6e",
+      "unchanged": true
+    }
+  ],
+  "conclusion": "The existing c0 physical evidence applies to this identical isolated fixture. Broad world/HUD source changed and requires its own renewed core/full/desktop/Studio/world acceptance. No new physical whole-town UI or timing-stability proof is inferred; original performance reproduction remains unmet."
+}

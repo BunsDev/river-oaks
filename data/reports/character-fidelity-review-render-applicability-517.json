@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "status": "unchanged-render-workload-inputs",
+  "checkedAt": "2026-10-19T05:29:46.958012+00:00",
+  "candidateRevision": "132e11b9829635f5d305a68f9fc70d40c96d9d6a",
+  "integratedMain": "b76ab77cf716e5f4ddb24e54bce771412de0e1f0",
+  "candidateRuntimeManifestSha256": "0a587e5f6194330ef82670f95ae5c30301813c80b63d797eef2a6777c6ffb19b",
+  "testedRenderRuntimeManifestSha256": "6e2565ac0e8916aad1f8fc53182c936ba3f58b5dd652778787174713f59e84bb",
+  "unchangedPriorRuntimeInputs": 1277,
+  "unchangedPriorChangedInputs": 88,
+  "onlyCodeTestConfigChanges": [
+    "scripts/ipic-short/decode-check.mjs",
+    "scripts/ipic-short/intake-check.mjs",
+    "scripts/ipic-short/second-capture.mjs",
+    "scripts/ipic-short/second-cut.mjs",
+    "scripts/ipic-short/second-score.mjs",
+    "scripts/ipic-short/second-short.json",
+    "scripts/ipic-short/second-voices.py",
+    "scripts/ipic-short/shot-health.mjs",
+    "scripts/tests/ipic-short-intake.test.js"
+  ],
+  "retainedReceipts": [
+    {
+      "file": "data/reports/character-fidelity-review-m1-517.json",
+      "sha256": "54951492c3580e55f773796147a9ea04605540d1bcbdd7bb236d818b0aac8214"
+    },
+    {
+      "file": "data/reports/character-fidelity-review-tiers-517.json",
+      "sha256": "6857a9697f33c9ca18ab5b8ce980e94e72c16d7c6063703747f959c46c868283"
+    },
+    {
+      "file": "data/reports/character-fidelity-review-crowd-lifecycle-517.json",
+      "sha256": "822695d814bac727c8da02ea5d77e58bd836a83c837a58d0e280b23c05966ecc"
+    },
+    {
+      "file": "data/reports/character-fidelity-review-chromium-517.json",
+      "sha256": "11dd3ee04ac1671148b02e127d3d3532c6f1fefa5b856c747ec5a2cf98f15c5c"
+    },
+    {
+      "file": "data/reports/character-fidelity-review-webkit-517.json",
+      "sha256": "46b5a689afa787f8acfeb476ae0beb4fe35a24d55646302afecd2bea9232185e"
+    },
+    {
+      "file": "data/reports/character-fidelity-review-goldens-517.json",
+      "sha256": "01a3deae3b19726ef1562c44eff0fc22444b137a7db39d42a9d337eb0fcf48f8"
+    }
+  ],
+  "method": "Compared every prior runtime input and changed code/test/config byte hash; exact upstream delta is nine screening offline CLI/test/config files. Preview,server,shared,assets,package/locks,baseline/golden/browser/phone helpers and all previously changed inputs are identical. Independent integration review found no runtime/fixture imports of these explicit production tools.",
+  "limits": "Retains historical6e render receipts without restamping. Core/full renew for changed tooling/Python inputs. Phone applicability is separately bound to all113C0-tested inputs. No new performance stability or whole-town physical acceptance follows."
+}

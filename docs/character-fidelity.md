@@ -114,6 +114,14 @@ and portrait cleanup, and 12 native captures. Its [reference budgets](../data/re
 come directly from those two repeats, with no added headroom. They apply to the
 isolated fixture, not the whole town or a production service-level promise.
 
+The reviewed candidate fixes cancellation when a newer quality request reaffirms
+the already applied tier while an older map load is pending. See the
+[renewed candidate evidence](acceptance/character-fidelity-517.md#reviewed-candidate-and-renewed-physical-evidence).
+Its new physical run completed all cases and reproduced all 12 PNGs, but only
+22/24 paired p50 comparisons met the unchanged 20% band. Original reference
+ceilings are retained, and exceedances are reported separately. This is not a
+stable mobile performance budget.
+
 ## Acceptance boundaries
 
 Track current results and exact revisions in the [#517 ledger](superpowers/plans/2026-10-18-character-fidelity-517.md).

@@ -11,7 +11,7 @@ async page => {
   });
   await page.goto(origin + '/?motion-debug=1', { waitUntil: 'commit' });
   await page.waitForFunction(() => window.__riverMultiplayer?.().connected && document.querySelector('#canvas-host').dataset.playerReady === 'true' && document.querySelector('#canvas-host').dataset.carriageDriverReady === 'true');
-  if (!await page.locator('.player-settings').evaluate(node => node.open)) await page.locator('.player-settings > summary').click();
+  await page.locator('#play-tab-rides').click();
   await page.locator('#player-ride').click();
   await page.waitForFunction(() => window.__riverCarriage().riding);
   await page.waitForFunction(() => { const town = window.__riverMultiplayer(); return town.snapshot.players.find(player => player.id === town.selfId).vehicle === 'rolls'; });

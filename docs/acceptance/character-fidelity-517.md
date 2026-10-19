@@ -163,6 +163,9 @@ coverage; they do not provide geometric crowd LOD.
 
 ## Reconciled source and physical iPhone
 
+This section records the earlier signed candidate `67c44177` at runtime
+`426886a8...`. The reviewed candidate and renewed phone evidence are below.
+
 The candidate was reconciled with main `2b4e4926`. The [renewed core](../../data/reports/character-fidelity-main-core-517.json),
 [M1 reproduction](../../data/reports/character-fidelity-main-m1-517.json),
 [tier reproduction](../../data/reports/character-fidelity-main-tiers-517.json),
@@ -253,6 +256,87 @@ The seven gate regressions, real HTTP boundary smoke, and subsequent physical ru
 passed separately. Raw launch/device records stay under ignored
 `.runtime/character-fidelity/physical/`. Published captures and receipts omit paired
 identifiers and private launch URLs; the raw report hash is retained for audit.
+
+## Reviewed candidate and renewed physical evidence
+
+Independent review reproduced one quality-controller race: an older pending low
+request could overwrite a newer request reaffirming the already applied high
+tier. The controller now advances its generation before the cached-tier return.
+Four behavioral regressions (return to high, standard, low and off) failed on the
+old source and pass with the fix. The reviewer independently confirmed the
+same-turn high→low→high sequence retains high and its normal map. The
+[review receipt](../../data/reports/character-fidelity-review-517.json) records the
+finding, red/green evidence and proof boundaries.
+
+The candidate integrates main `b76ab77c` over remote `132e11b9`; frozen runtime:
+`0a587e5f6194330ef82670f95ae5c30301813c80b63d797eef2a6777c6ffb19b`.
+The exact 97 changed code/test/config inputs are frozen separately from reports
+and ledgers. Independent review found no required defect in the Play rail or
+GTAO integration; the latter documents small exact-depth AO seam differences.
+The [renewed core](../../data/reports/character-fidelity-review-core-517.json)
+passed on the current 0a source: 131 tooling, 3,709 preview passes plus one existing documented skip,
+969 server/Redis tests with no skips, 76 desktop and 149 Python tests. Build,
+Ruff, offline fixtures and secret guard passed. The expected offline domain-policy
+exit 2 and Python warnings are retained. The [full profile](../../data/reports/character-fidelity-review-full-517.json)
+passed all 18 tasks on the same source: 13 world journeys, 24 shared journeys
+across five full-renderer modes, and 18 IPIC checks. Final signed delivery and
+hosted checks remain separate. The render receipts below retain their actual 6e
+manifest. The [render applicability audit](../../data/reports/character-fidelity-review-render-applicability-517.json)
+compares every prior runtime input and confirms the only nine changed/added
+code inputs are offline screening CLI/test/config files. Preview, server, shared,
+assets, dependency pins and render/browser helpers are unchanged. Core/full renew
+for tooling and Python coverage; render and phone receipts are not restamped.
+
+[M1 reproduction](../../data/reports/character-fidelity-review-m1-517.json)
+passed all eight native byte comparisons and four censuses with zero lifecycle
+growth. The [new tier reproduction](../../data/reports/character-fidelity-review-tiers-517.json)
+passed all 32 native byte comparisons, eight censuses, quality transitions and
+cleanup. [Chromium](../../data/reports/character-fidelity-review-chromium-517.json)
+fidelity 9 + Studio 43, [desktop WebKit](../../data/reports/character-fidelity-review-webkit-517.json)
+fidelity 9, and [strict native 4K golden](../../data/reports/character-fidelity-review-goldens-517.json)
+1 with zero pixel differences also passed. The WebKit raw scope-string caveat
+noted above still applies; its invocation selected desktop WebKit explicitly. The [high-tier crowd check](../../data/reports/character-fidelity-review-crowd-lifecycle-517.json)
+passed three repeated cold-load/1/8/24 scenes per fixture with zero growth and
+four further matching native images. Desktop timing reproduction did not pass:
+only 14/48 frame/GPU p50 comparisons matched the earlier run within the unchanged
+20% band, with timing-sample one-minute host load around 22–31. These timings remain descriptive;
+no stable desktop performance budget is inferred.
+
+The [renewed physical receipt](../../data/reports/character-fidelity-review-iphone-517.json)
+passed collection/completeness: all 48 cases, 80 viewport cycles, six native
+two-camera portrait cycles and 12 native captures. All geometry/texture/program
+lifecycle deltas are zero. All 12 new PNGs reproduce the earlier tracked phone
+captures byte-for-byte; fresh raw captures are preserved, and the new receipt
+references the identical public files. The [71-module input comparison](../../data/reports/character-fidelity-review-phone-inputs-517.json)
+shows only the quality-controller module changed for that physical run; all 38
+tracked character assets, the fixture, helper and dependency pins were unchanged.
+The [current applicability audit](../../data/reports/character-fidelity-review-phone-applicability-517.json)
+rebuilds the complete graph and verifies all 113 tested inputs still match after
+current-main integration. Its broader runtime hash differs from the historical
+c0 physical run. Neither world render-pipeline nor occlusion-sort is reachable
+from this fixture, so this is unchanged isolated-workload evidence, not renewed
+phone world/HUD acceptance.
+
+Timing stability did **not** pass every comparison: 22/24 within-run p50 pairs
+and 46/48 corresponding-repeat comparisons against the earlier phone run agree
+within the unchanged 20% band. Morgan off at 8 figures changed from 19→23 ms p50;
+Imani low at 24 changed from 46→68 ms. These observations do not isolate a cause.
+The [comparison report](../../data/reports/character-fidelity-review-iphone-budgets-517.json)
+preserves every original frame/CPU p95 ceiling unchanged: nine frame and eleven
+CPU cases exceeded an initial reference. New observed maxima are separate;
+no threshold or baseline receipt was changed to hide instability.
+
+| Renewed high tier | Frame interval p50 / p95 ms at 8 | Frame interval p50 / p95 ms at 24 |
+| --- | --- | --- |
+| Morgan | 20 / 22 | 46–51 / 49–56 |
+| Imani | 20 / 22–23 | 47–48 / 50–51 |
+
+This is an isolated physical-fixture collection and cleanup pass, not a stable
+phone performance budget, whole-town acceptance or thermal/soak proof. GPU timer
+queries remain unavailable, and texture bytes remain estimates of active scene
+storage rather than total GPU residency. The rapid-request race is covered by
+the focused real-material regression, not by a claim that phone timing exercised
+that exact event sequence.
 
 ## Limits and next acceptance
 

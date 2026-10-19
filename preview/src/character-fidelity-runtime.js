@@ -13,8 +13,10 @@ export function createCharacterFidelity(rig, {loadTextures = loadCharacterRealis
   let generation = 0, disposed = false, effect = null, report = {tier:'off', requestedTier:'off'};
   async function setTier(tier) {
     if (!Object.hasOwn(REALISM_TIERS, tier)) throw new TypeError('Unknown realism tier');
-    if (disposed || (effect && report.requestedTier === tier && report.tier === tier && !report.fallback)) return report;
+    if (disposed) return report;
     const request = ++generation;
+    // Reaffirming the applied tier must still cancel an older pending load.
+    if (effect && report.requestedTier === tier && report.tier === tier && !report.fallback) return report;
     let textures = null, selected = tier, fallback;
     if (tier !== 'off') {
       try { textures = await loadTextures(); }

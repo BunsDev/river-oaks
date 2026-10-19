@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 1,
+  "status": "local-reviewed-candidate;newer-main-reconciliation-and-delivery-pending",
+  "reviewedAt": "2026-10-19T04:10:27.262106+00:00",
+  "revision": "132e11b9829635f5d305a68f9fc70d40c96d9d6a",
+  "integratedMain": "b76ab77cf716e5f4ddb24e54bce771412de0e1f0",
+  "runtimeManifestSha256": "0a587e5f6194330ef82670f95ae5c30301813c80b63d797eef2a6777c6ffb19b",
+  "independentReview": {
+    "scope": "Actual human fidelity diff, focused regressions, original asset preservation, rendered captures, contract/persistence call paths, provenance and physical budget derivation",
+    "focusedTests": 54,
+    "skips": 0,
+    "requiredFindings": 1,
+    "remainingRequiredFindings": 0,
+    "verificationOfFix": "Independent13/13 focused tests; original same-turn high/low/high probe now retains high and its normal map."
+  },
+  "finding": {
+    "severity": "P2",
+    "file": "preview/src/character-fidelity-runtime.js",
+    "trigger": "Applied high, request low with asynchronous textures, then reaffirm high before low resolves. The cached high fast path did not advance generation; low subsequently overwrote it.",
+    "fix": "Advance generation after disposed/validity guards but before the cached applied-tier return.",
+    "behavioralRegressions": [
+      "high",
+      "standard",
+      "low",
+      "off"
+    ],
+    "red": {
+      "exitCode": 1,
+      "passed": 6,
+      "failed": 4,
+      "logSha256": "4a5cb8e736332ffed400759a18f6a6b1165e94fe59543e7c346c0dac552c0779"
+    },
+    "green": {
+      "exitCode": 0,
+      "passed": 13,
+      "failed": 0,
+      "logSha256": "3e326a22282693f6246a02c39b487bfd650ca69443bc04382e166981526cd094"
+    }
+  },
+  "limits": [
+    "Independent review is code/evidence review, not merge authorization.",
+    "Current0a core/full are verified; historical render/phone evidence applies through unchanged-input proofs. New main28f8e9b2 must be integrated and affected evidence renewed before final delivery. Signed-input and exact-head hosted proof remain pending. Performance reproduction remains unmet.",
+    "Original three IPIC forward-clearance findings and native/live-auth/human/AAA/whole-town/thermal limits remain explicit.",
+    "P4/P5 novice trials remain waived, not passed."
+  ],
+  "renewedPhysicalAudit": {
+    "status": "evidence internally verified,performance reproduction not met",
+    "records": 67,
+    "timingCases": 48,
+    "inputHashesVerified": 113,
+    "byteIdenticalNativeCaptures": 12,
+    "withinRunP50Agreement": "22/24",
+    "crossRunP50Agreement": "46/48",
+    "frameP95ReferenceExceedanceCases": 9,
+    "cpuP95ReferenceExceedanceCases": 11,
+    "originalCeilingsPreserved": 48,
+    "privateIdentifiersFound": 0,
+    "assessment": "No demonstrated source correctness blocker from timing alone. Off-tier workloads bypass the changed controller and also slowed; this run does not isolate cause. Retain explicit performance acceptance limits; do not rerun until green or raise ceilings."
+  },
+  "candidateVerification": {
+    "runtimeManifestSha256": "0a587e5f6194330ef82670f95ae5c30301813c80b63d797eef2a6777c6ffb19b",
+    "changedCodeTestConfigInputs": 97,
+    "core": "passed0a587e5f:131tooling,3709preview+1existing skip,969server/Redis,76desktop,149Python;build/lint/offline/secrets passed",
+    "render": "historical6e passed;all workload inputs unchanged via review-render-applicability receipt",
+    "full": "passed0a587e5f:18tasks,13world,24shared/5full-renderer modes,18IPIC;final inputs unchanged",
+    "committedInputBinding": "pending signed delivery",
+    "hostedExactHead": "pending signed delivery",
+    "desktopTiming": "14/48 frame/GPU p50 comparisons within unchanged20%band;timing-sample host1minload21.98\u201330.54;performance reproduction unmet",
+    "coreReceipt": "data/reports/character-fidelity-review-core-517.json"
+  },
+  "historicalReviewSnapshot": {
+    "revision": "132e11b9829635f5d305a68f9fc70d40c96d9d6a",
+    "integratedMain": "5f3f5dc2d3fb3525a3e2c3f7ba55ff140b9aedb0",
+    "runtimeManifestSha256": "c0f5b8de9f6bad47a018c7a21e2446f647167b9be16e5a1aca5d63eab60ff036"
+  },
+  "integrationReviews": [
+    {
+      "main": "6b93031b42cace3addb30c9fe6c665741f0897aa",
+      "scope": "Play rail/Studio/persistence integration",
+      "requiredFindings": 0,
+      "focusedPassed": 14,
+      "skips": 0,
+      "phoneInputsUnchanged": 113
+    },
+    {
+      "main": "36f22b120509186ea67432601eda6f540a708238",
+      "scope": "GTAO override sort, renderer-state restoration, fidelity/Studio/persistence integration",
+      "requiredFindings": 0,
+      "focusedPassed": 34,
+      "skips": 0,
+      "phoneModulesUnchanged": 71,
+      "phoneInputsUnchanged": 113,
+      "limitation": "Upstream documents small exact-depth AO seam differences. World/render journey renewal is required; unit tests do not establish visual equality."
+    },
+    {
+      "main": "b76ab77cf716e5f4ddb24e54bce771412de0e1f0",
+      "scope": "Nine offline screening CLI/test/config inputs; no preview/server/shared/assets/package/lock/agent-catalog/CI changes",
+      "requiredFindings": 0,
+      "pureProbeGroupsPassed": 4,
+      "phoneInputsUnchanged": 113,
+      "renderWorkloadInputsUnchanged": true,
+      "coverage": "Core/full renew for new tooling/Python inputs; historical6e render andC0phone evidence retained only through applicability proofs."
+    }
+  ],
+  "finalConsistencyAudit": {
+    "requiredFindings": 1,
+    "remainingRequiredFindings": 0,
+    "correction": "Narrowed stale pending-status sentence to full/signed-input/hosted scope; core and render receipts already prove their passes.",
+    "verified": "Current render manifests/capture counts, desktop timing arithmetic, physical/reference/applicability hashlinks, historical phone source and local documentation links."
+  },
+  "currentEvidenceAudit": {
+    "checkedAt": "2026-10-19T05:48:01.346562+00:00",
+    "requiredFindings": 0,
+    "runtimeManifestSha256": "0a587e5f6194330ef82670f95ae5c30301813c80b63d797eef2a6777c6ffb19b",
+    "unchangedPriorRuntimeInputs": 1277,
+    "modifiedPriorRuntimeInputs": 1,
+    "addedRuntimeInputs": 8,
+    "removedRuntimeInputs": 0,
+    "priorChangedInputs": 88,
+    "newChangedInputs": 9,
+    "totalChangedInputs": 97,
+    "renderReceiptHashesVerified": 6,
+    "phoneInputHashesVerified": 113,
+    "assessment": "Independent recomputation confirms current core proof, historical6e render/C0physical scope, unchanged original ceilings and legitimately pending full/signed/hosted proof are consistent."
+  }
+}

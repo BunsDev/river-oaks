@@ -1142,3 +1142,187 @@ All24 paired p50 comparisons agree within the existing20% band. High-tier p95 at
 Sanitized physical evidence and derived references: `data/reports/character-fidelity-iphone-517.json` and `character-fidelity-iphone-budgets-517.json`. Twelve reviewed native captures have `iphone-` filenames in the acceptance capture directory. Raw launch receipts/device identifiers/private URLs remain ignored; the published report retains the raw-report hash. The earlier Locked0 attempt remains historical. The phone fixture closed normally and the owned loopback Redis51195 shut down after terminal local gates. No foreign process, cache or checkout was stopped or removed.
 
 The attachment's implementation, measured fixtures/tiers, executable Studio/world contract and required local/core/full/browser/physical verification now have evidence. Signed delivery and final hosted head are recorded in draftPR545 and the primary live register; verification identity remains the exact78-input manifest rather than an invented clean pre-run revision. Next action is maintainer review and the separate hosted/up-to-date-main landing gate. Retain the worktree; no merge, deployment, issue closure, novice trial or retirement is authorized. Existing three IPIC forward-clearance findings and visual/native/live-auth/human scope limits remain explicit.
+
+### Goal 2: adversarial review and current-main candidate
+
+Continue the existing owner/check-out under attachment `5ddb0aaf`. Objective:
+independently review the full human fidelity patch, reconcile current main,
+reproduce required findings, verify the resulting source, and deliver a signed,
+pushed, exact-head-green review candidate. Landing remains unauthorized.
+
+Live recovery found clean local67c44177 and remote132e11b9, a GitHub-verified
+main update with parents67c44177/4eca5153. Preserved that update by fast-forward.
+The uncommitted integration of main5f3f5dc2 is clean: development invitation
+changes in server/offices.js, server/town.js, server/world.js, their regression,
+and docs/multiplayer.md. Earlier incoming main changes also include the campus
+finish and throw follow-ups. No foreign checkout or dirty primary source was
+modified; the primary live task remains authoritative and its lease is renewed.
+
+Independent `review_goal2` is reviewing actual code, capability/evidence claims
+and renders. Required findings must be reproduced before production edits;
+optional follow-ups remain separate. Current-main core/full, affected desktop
+render/strict golden/Studio/world evidence, exact input binding, signed delivery
+and hosted checks are pending. Prior receipts remain historical. The standalone
+phone fixture and its known direct runtime modules/assets/package locks are
+unchanged from67c44177; transitive dependency evidence will determine whether its
+physical baseline can be retained or requires renewal. No new device target or
+novice trial is requested.
+
+Owned files remain the registered fidelity source/tests, acceptance docs,
+reports and this ledger. Verification will use isolated loopback Redis, the
+shared browser queue and existing harnesses. Keep failed receipts, skips and
+scope boundaries explicit. Next: finish review/reproduction and run the new
+candidate gates; do not merge, deploy, publish, close issues or retire worktrees.
+
+
+Independent review reproduced one required P2: after applying high, pending low
+then reaffirmed high could finish as low. The cached-tier fast path returned
+before generation advanced, so it failed to fence the older load. Four new
+real-material regressions (return to high/standard/low/off) failed on the original
+source:6pass/4fail,exit1. Moving generation advancement before that fast path
+passed13runtime/lifecycle/quality checks,exit0. The independent reviewer reran
+13/13 and the original same-turn probe, confirming high and its normal map are
+retained. No other required finding remains. Review receipt:
+`data/reports/character-fidelity-review-517.json`.
+
+The resulting source is frozen at runtime
+`c0f5b8de9f6bad47a018c7a21e2446f647167b9be16e5a1aca5d63eab60ff036`,
+with48changed code/test/config inputs since67c44177 and parents132e11b9/main5f3f5dc2.
+The fix changes a module reachable by the phone fixture, so a fresh physical run
+was started successfully on the existing paired phone. The prior phone receipt
+is preserved as historical; no device pass is inferred from it for the new source.
+Owned Redis59317 is running; full doctor prerequisites passed. Core/render/full
+are queued normally behind physical collection. No existing golden, timing band
+or baseline ceiling was loosened.
+
+
+Renewed phone run exited0 at unchanged c0f5b8de:67records,48cases,80viewport
+and6native two-camera portrait cycles,allresource deltas zero,12native PNGs.
+All12 are byte-identical to the prior tracked phone captures. New raw originals
+remain ignored; the reviewed receipt reuses identical public image paths and
+retains the raw-report hash. Fresh device metadata confirms iPhone17,2 /
+iPhone16ProMax / iOS27.0.1. The phone helper closed normally.
+
+Performance stability remains explicitly unproven:22/24within-run and46/48
+cross-run p50 pairs agree within the unchanged20%band. Morganoffx8 is19→23ms;
+Imanilowx24 is46→68ms. Cause is not isolated. Original ceilings were preserved:
+9/24frame-p95 and11/24CPU-p95 cases exceeded initial references. The new report
+separates observed maxima from unchanged ceilings; no threshold was relaxed.
+High8p95 is22–23ms;high24 is49–56ms. No whole-town,stable-device-budget,thermal,
+totalGPU-residency or exact rapid-event-sequence acceptance follows from this
+collection pass. Public reviewed phone/input/comparison reports have the
+`character-fidelity-review-` prefix; earlier receipts remain historical.
+
+Core/render/full driver1398 remains live, queued behind foreign browser PID76014.
+No process or queue fence was bypassed. Delivery readiness remains pending those
+gates, exact committed-input binding and final hosted checks.
+
+
+Renewed core passed at unchanged c0f5b8de:125tooling,3702preview passes plus
+one existing documented negative-approach skip,969server/Redis with0skips,
+76desktop and149Python tests. Build,Ruff,offline fixture and secret guard passed;
+expected blocked-domain exit2 and66Python warnings are retained. Receipt:
+`data/reports/character-fidelity-review-core-517.json`. Render reproduction is
+now running, followed by full. Final commit/push/hosted readiness remains pending.
+
+
+The reviewed render gate exited0: M1 eight and new tiers32native PNGs are
+byte-identical;4+8censuses match. All viewport/portrait/quality-transition and
+three repeated high-tier cold-load/1/8/24 crowd cycle deltas are zero. Chromium
+fidelity9+Studio43,desktopWebKit9,and1strictnative4K golden comparison passed,
+with0pixel differences. Reviewed raw receipts use `character-fidelity-review-`.
+Desktop timing reproduction remains unmet:14/48frame/GPU p50 comparisons agree
+within20%,host one-minute load around28–32. These are descriptive timings, not
+a stable performance budget. Full is queued normally behind liveIPIC PID95827;
+no pass is inferred from the earlier full receipt.
+
+
+Main advanced to6b93031b (PR503Play rail menu) during the first full profile.
+These UI/world and journey changes require new candidate verification. Sent
+SIGTERM only to the owned full agent13358; its abort handler stopped its own
+test process group and coordinator1398 exited1. Partial receipt/log are retained
+as superseded, not a source-failure claim (`character-fidelity-review-superseded-full-517.json`).
+No foreign process was interrupted. Saved11dirty tracked files, aborted only
+the uncommitted5f3 integration, and merged6b without conflicts; all own source
+fixes and docs survived byte-for-byte. Earlier core/render receipts remain in
+ignored `goal2/superseded-receipts/`; raw captures remain in their original runs.
+
+The refreshed candidate is frozen at
+`daa4e800222e690a1110a47760ecf9aaf5c094d2a1f8a18b1f1e3d739528684a`
+with80changed code/test/config inputs since67c44177, HEAD132e11b9 and integrated
+main6b93031b. Runtime+Playrail focused12/12passed. Driver42139 reruns core,
+render/Studio/WebKit/strictgolden, then full under the normal queue.
+
+Rebuilt the actual phone graph and compared all113tested module/asset/helper/lock
+inputs: every byte and the complete71-module/38-asset set are identical to the
+c0 physical fixture. Applicability receipt:
+`data/reports/character-fidelity-review-phone-applicability-517.json`. The c0 phone
+revision, raw receipt and timing limits remain historical and unchanged. This
+proves identical isolated workload inputs, not new phone world/HUD acceptance;
+no extra device run or request is justified by this unrelated UI integration.
+
+
+Main advanced again to36f22b12 (PR544 GTAO override sort), affecting the actual
+world render pipeline. Stopped only owned core agent82762; coordinator42139
+exited1 and its partial receipt is preserved in goal2b/superseded-core.json.
+This was intentional supersession, not a source-failure claim. Backed up all6
+dirty tracked files, cleanly re-integrated36, and verified every dirty file
+survived byte-for-byte. New frozen runtime
+`6e2565ac0e8916aad1f8fc53182c936ba3f58b5dd652778787174713f59e84bb`
+has88changed code/test/config inputs. Runtime/occlusion/pipeline26/26passed,
+zero skips. Rebuilt phone graph still has exactly113identical tested inputs;
+physical applicability updated without altering the historical c0 receipt.
+The goal2c coordinator renews core/render/full; final signed delivery and hosted
+checks remain pending. Independent selective integration review requested.
+
+
+Core passed at unchanged6e2565ac:125tooling,3709preview+1existing skip,
+969server/Redis(no skips),76desktop,149Python(66warnings);build,Ruff464files,
+offline expected exit2 and secret guard passed. Current review-core receipt
+now records the actual fresh run. Goal2c rendering is live; full and signed
+delivery/exact-head hosted checks remain pending. Selective GTAO independent
+review found no required defect;34focused checks passed,zero skips; all113
+phone-tested inputs independently confirmed identical.
+
+
+Current-runtime render gate passed at6e2565ac:8M1+32new PNG byte matches,
+4+8censuses,zero viewport/portrait/quality and repeated high-tier cold-load/
+1/8/24 crowd lifecycle deltas. Chromium9+Studio43,WebKit9 and strictnative4K1
+passed with0pixel differences. Inspected fresh Morgan world-peer and Imani
+Studio captures. Actual strict golden receipt copied from05:03:07.625Z run.
+Desktop timing reproduction remains unmet:14/48frame/GPU comparisons within
+unchanged20%band;timing sample1minload21.98–30.54. Full profile now live under
+coordinator71119; final signed input binding/push/hosted proof pending.
+
+
+Main advanced to b76ab77c/PR516 screening intake. Its9offline CLI/test/config
+inputs require renewed tooling/Python and core/full proof. Stopped only owned
+full agent28143;coordinator71119 exited1;raw receipt and public supersession
+wrapper retained. Core/render,13world journeys and completed shared journeys
+remain historical6e evidence; the partial full run is not a full pass. Backed
+up7dirty tracked files, cleanly remergedb76, and verified all dirty bytes intact.
+New runtime `0a587e5f6194330ef82670f95ae5c30301813c80b63d797eef2a6777c6ffb19b`
+contains97changed inputs. Coordinator61244/goal2d renews core thenfull.
+Independent intake review found no required runtime issue;4pure probe groups
+passed without production/paid calls. Exact full-file comparison found only
+9offline tooling changes;all prior88changed inputs and1277other prior runtime
+inputs are identical. Render applicability receipt preserves original6e
+receipts;phone graph still has113identicalC0inputs. No renderer/device rerun
+is represented or needed for these unchanged workloads;performance limits stay.
+
+
+Core passed at unchanged0a587e5f/97inputs:131tooling,3709preview+1existing
+skip,969server/Redis(0skips),76desktop,149Python(66warnings);build,Ruff467files,
+offline expected exit2 and secrets passed. Driver61244 started the renewed full
+profile at05:35:42.582Z on the same frozen inputs. Source binding/signing/push
+and exact-head hosted checks remain pending; no final readiness claimed.
+
+
+Goal2d coordinator61244 exited0. Core/full passed at unchanged0a587e5f/97inputs:
+full18tasks,13world,24shared across5full-renderer modes,18IPIC checks. Strict local
+audit verified all receipts/hashes and completed profiles; final input check passed.
+Main has advanced to28f8e9b2 through PR527campus,547second-short registration,543rail
+polish (48files,includingruntime/server/shared/CI/agent catalog). This0a evidence
+is a verified historical candidate, not proof of those new inputs. Preserve a signed
+source freeze, then integrate latest main and renew affected gates/evidence before
+final push/hosted verdict. No merge/deployment/closure/retirement authorized.
