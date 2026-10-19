@@ -89,11 +89,30 @@ After the fixes:
 - 19 focused tests passed (sounds, flight, axe and darts server suites), then 40 across every darts and axe command test plus the shuffleboard, darts and axe rules.
 - `pnpm run build` passed.
 
+## Final results
+
+Each run below logged the head it started and ended on, and no tree was edited while it ran.
+
+At `4dcb19a0` (the review fixes):
+- `pnpm run test:experience plaza-darts plaza-wine-pong plaza-shuffleboard` passed 24, 36 and 23 checks.
+- `node preview/e2e/ipic-darts-runner.mjs` passed 7 checks, including "a double click on Throw while the town answers throws one dart".
+- `node preview/e2e/axe-venue-runner.mjs` passed 8 checks.
+- `pnpm run verify` (core) passed: agent 121, preview 3619 with 1 skip, server 677 with 204 skips (the distributed suites, which need `REDIS_URL`), desktop 76, Python 141.
+- Hosted CI passed all 16 checks.
+
+Main `5ce4e767` (#520, #522, #533, #538) merged at `ea807b93`. The plans index was the only conflict and is regenerated. At `ea807b93`:
+- 56 tests across the throw, darts, axe, shuffleboard and wine pong files passed, and `pnpm run build` passed.
+- The plaza journeys passed 24, 36 and 23 checks; IPIC darts 7; axe venue 8.
+- `pnpm run verify` (core) passed: agent 121, preview 3627 with 1 skip, server 697 with 207 skips (the same distributed suites), desktop 76, Python 141.
+- **Hosted `verify` fails at the history secret scan, for every PR, not because of this one.**
+  - `verify.yml` scans every remote branch (`gitleaks git --log-opts=--all`).
+  - Commit `00a74a7c` on #545's branch adds a character source manifest whose public SHA-256 digests trip `generic-api-key`.
+  - #545's own config allows them; main's does not.
+  - #546 (owned by `claude:river-oaks-95`) brings the allowlist to main.
+
+Not run: `axe-venue-views.mjs`, because it rewrites `docs/design/axe-and-darts`; `pnpm run verify full`; any human play review or real-device audio check.
+
 ## Next action
 
-1. Commit and push the fixes to #542.
-2. Rerun the journeys on the final tree: plaza darts and shuffleboard, the IPIC darts and axe venue runners.
-3. Run `pnpm run verify`.
-4. Fill the PR results, mark it ready, and watch hosted CI.
-
-Merging needs Val.
+1. After #546 lands, merge main and confirm hosted `verify` passes on the new head.
+2. Merging needs Val (`pnpm run land 542`).
