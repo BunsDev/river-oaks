@@ -12,6 +12,7 @@ import { createWalkingEnvironment } from '../../preview/src/walking.js';
 import { AVATAR_ENVELOPE } from '../../preview/src/workplace-room.js';
 import { IPIC_SEATED_REACH, ipicClearance, ipicReachable, seatApproach, seatedFootprint, widestRoute } from '../../preview/src/ipic-circulation.js';
 import { ipicFloor } from '../../preview/src/ipic-plan.js';
+import { SEAT_REACH } from '../../preview/src/shared-seating.js';
 
 const data = JSON.parse(readFileSync(new URL('../../preview/public/data/district.json', import.meta.url)));
 const env = createWalkingEnvironment(data), room = env.rooms.find(r => r.interior === 'ipic-photo-v1');
@@ -19,6 +20,10 @@ const seatId = seat => `bench:ipic-${seat.key}`;
 const local = position => room.toLocal(position[0], position[1]);
 const groundAt = ([a, d]) => { const [x, n] = room.toWorld(a, d); return env.groundAt(x, -n); };
 const DOOR = [0, -.6];
+// The back row's end recliner by the doorway, a lounge point behind the cinema wall near it, the
+// cross-aisle behind the back row, and the wing's front aisle west of the main rectangle.
+const BACK_END = room.ipicSeats.find(s => s.key === 'recliner-0-0');
+const LOUNGE_CORNER = [-5.8, 24.8], CROSS_AISLE = [-8.25, 26.7], FRONT_AISLE = [-14.25, 29];
 
 function town() {
   let time = 1000;
@@ -90,7 +95,7 @@ function sitSpot(seat, blockers, from) {
     if (Math.hypot(a - seat.a, d - seat.d) <= 1.6 && reachable([a, d])) candidates.push({ point: [a, d], clearance: ipicClearance(room, [a, d], blockers) });
   }
   const eye = ([a, d]) => { const [x, n] = room.toWorld(a, d); return [x, n, env.groundAt(x, -n) + 1.68]; };
-  const [sx, sn] = room.toWorld(seat.a, seat.d), cushion = [sx, sn, room.floor + ipicFloor(seat.d) + seat.height + .6];
+  const [sx, sn] = room.toWorld(seat.a, seat.d), cushion = [sx, sn, room.floor + ipicFloor(seat.d, seat.a) + seat.height + .6];
   const spot = candidates.sort((x, y) => y.clearance - x.clearance).find(c => env.hasSightLine(eye(c.point), cushion));
   assert.ok(spot, `nowhere to sit in ${seat.key}:${seat.slot} from`);
   return spot.point;
@@ -138,7 +143,7 @@ test('every recliner is reached, held exclusively, stood from and left with ever
     const { t, blockers } = takeSeat(seat);
     const stood = t.command('walker', { type: 'stand' });
     assert.equal(stood.ok, true, `${seatId(seat)} stand: ${stood.error}`);
-    assert.equal(stood.player.position[2], room.floor + ipicFloor(seat.stand[1]), 'stands on its row\'s floor');
+    assert.equal(stood.player.position[2], room.floor + ipicFloor(seat.stand[1], seat.stand[0]), 'stands on its row\'s floor');
     t.walk('walker', route(local(stood.player.position), DOOR, blockers).path);
     assert.equal(t.command('walker', { type: 'travel', storeId: room.storeId, mode: 'leave' }).ok, true);
   }
@@ -185,17 +190,20 @@ test('IPIC refuses false heights, solid shortcuts, teleports, a working lift and
   assert.equal(pose(-.6, 9).error, 'blocked', 'through the glass rail');
   assert.equal(pose(-4.85, 29).error, 'movement_too_fast', 'reception-to-auditorium teleport');
   assert.equal(t.command('visitor', { type: 'interiorLevel', portalId: 'ipic-lift' }).error, 'not_in_interior', 'the lift is decorative');
-  t.walk('visitor', route([-1.4, 9], [-.8, 25.15]).path);
-  // The lounge side of the cinema wall is 2.9 m from the first-row recliner.
-  assert.equal(t.command('visitor', { type: 'sit', buildId: 'bench:ipic-recliner-0-1', slot: 0 }).error, 'seat_out_of_reach', 'no seat through the wall');
-  assert.equal(pose(-1, 26.4).error, 'blocked', 'through the cinema wall beside the doorway');
-  assert.equal(t.command('visitor', { type: 'sit', buildId: 'bench:ipic-recliner-2-0', slot: 0 }).error, 'invalid_seat');
+  t.walk('visitor', route([-1.4, 9], LOUNGE_CORNER).path);
+  // The lounge side of the cinema wall is within reach of the back row's end recliner, but the wall hides it.
+  assert.ok(Math.hypot(LOUNGE_CORNER[0] - BACK_END.a, LOUNGE_CORNER[1] - BACK_END.d) < SEAT_REACH);
+  assert.equal(t.command('visitor', { type: 'sit', buildId: seatId(BACK_END), slot: 0 }).error, 'seat_out_of_reach', 'no seat through the wall');
+  assert.equal(pose(LOUNGE_CORNER[0], 26.2).error, 'blocked', 'through the cinema wall beside the doorway');
+  assert.equal(t.command('visitor', { type: 'sit', buildId: 'bench:ipic-recliner-3-0', slot: 0 }).error, 'invalid_seat');
   assert.equal(t.command('visitor', { type: 'sit', buildId: 'bench:ipic-recliner-0-0', slot: 1 }).error, 'invalid_seat');
-  t.walk('visitor', route([-.8, 25.15], [-2.6, 29.4]).path);
-  assert.equal(pose(-2.06, 28.1).error, 'blocked', 'onto a recliner arm');
-  assert.equal(pose(-2.6, 28.75).error, 'blocked', 'onto a recliner footrest');
-  assert.equal(pose(-2.6, 27.6).error, 'blocked', 'onto the recliner back');
-  const [ax, an] = room.toWorld(-4.85, 29);
+  // In the legroom in front of the recliner, which faces the screen at the wing's north end.
+  t.walk('visitor', route(LOUNGE_CORNER, BACK_END.approach).path);
+  assert.equal(pose(BACK_END.a, BACK_END.d + .54).error, 'blocked', 'onto a recliner arm');
+  assert.equal(pose(BACK_END.a - .65, BACK_END.d).error, 'blocked', 'onto a recliner footrest');
+  assert.equal(pose(BACK_END.a + .5, BACK_END.d).error, 'blocked', 'onto the recliner back');
+  // Beyond the main rectangle, in the wing's front aisle: still the room, so no travel lands there.
+  const [ax, an] = room.toWorld(FRONT_AISLE[0], FRONT_AISLE[1]);
   assert.equal(t.command('friend', { type: 'travel', position: [ax, an] }).error, 'destination_blocked', 'no position travel into the auditorium');
   assert.equal(t.command('friend', { type: 'travel', peerId: 'visitor' }).error, 'destination_blocked', 'no peer travel into the auditorium');
   const entered = t.command('friend', { type: 'travel', storeId: room.storeId, mode: 'enter' });
@@ -206,7 +214,8 @@ test('leaving IPIC or disconnecting while seated releases the recliner', () => {
   const t = town();
   for (const id of ['first', 'second']) t.world.join({ userId: id, name: id });
   for (const id of ['first', 'second']) t.walk(id, route(t.enter(id), [-4.7, 26.6]).path);
-  t.walk('first', route([-4.7, 26.6], [-2.6, 29.4]).path);
+  t.walk('first', route([-4.7, 26.6], BACK_END.approach).path);
+  t.walk('second', route([-4.7, 26.6], CROSS_AISLE).path);
   const intent = { type: 'sit', buildId: 'bench:ipic-recliner-0-0', slot: 0 };
   assert.equal(t.command('first', intent).ok, true);
   assert.equal(t.command('second', intent).error, 'seat_occupied');
@@ -215,7 +224,7 @@ test('leaving IPIC or disconnecting while seated releases the recliner', () => {
   assert.equal(left.player.sitting, null);
   assert.equal(t.command('second', intent).ok, true, 'travel out released the seat');
   t.advance(1000);
-  t.walk('first', route(t.enter('first'), [-4.7, 26.6]).path);
+  t.walk('first', route(t.enter('first'), CROSS_AISLE).path);
   assert.equal(t.command('first', intent).error, 'seat_occupied');
   assert.equal(t.world.leave('second'), true);
   assert.equal(t.command('first', intent).ok, true, 'a disconnect released the seat');
@@ -242,7 +251,7 @@ testRedis('two coordinators give one IPIC recliner to exactly one visitor and re
     const entered = await send(first, id, { type: 'travel', storeId: room.storeId, mode: 'enter' });
     assert.equal(entered.ok, true, entered.error);
     let position = entered.player.position; const steps = [];
-    for (const [a, d] of corners(route(local(position), [id === 'bob' ? -2.6 : -1.6, 29.4]).path)) {
+    for (const [a, d] of corners(route(local(position), id === 'bob' ? BACK_END.approach : CROSS_AISLE).path)) {
       const [x, n] = room.toWorld(a, d), count = Math.max(1, Math.ceil(Math.hypot(x - position[0], n - position[1]) / 2.5));
       for (let i = 1; i <= count; i++) steps.push([position[0] + (x - position[0]) * i / count, position[1] + (n - position[1]) * i / count]);
       position = [x, n];

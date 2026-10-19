@@ -80,9 +80,9 @@ try {
     if (await page.locator('#panel-toggle').getAttribute('aria-expanded') === 'true') await page.locator('#panel-toggle').click();
   }
 
-  // Alice goes ahead to a front-row recliner; the screen stays idle (no fixture on screen).
+  // Alice goes ahead to the middle row's centre recliner; the screen stays idle (no fixture on screen).
   await enterIpic(alice);
-  await walk(alice, [[-1.4, 4.8], [-1.4, 20.7], [-1.4, 24.5], [-4.85, 24.5], [-4.85, 29.65], [-1.6, 29.65]]);
+  await walk(alice, [[-1.4, 4.8], [-1.4, 20.7], [-1.4, 24.5], [-4.85, 24.5], [-4.85, 26.7], [-11.25, 26.7], [-11.25, 29]]);
   await alice.locator('#nearby-seat').selectOption(`${SEAT}:0`); await alice.locator('#seat-sit').click();
   await alice.waitForFunction(seat => window.__riverCarriage().pose.sitting?.buildId === seat, SEAT);
 
