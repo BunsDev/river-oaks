@@ -18,7 +18,7 @@ User objective: “thoroughly implement an auto mode controlled by a comprehensi
 
 ## Provider constraint
 
-Verified 2026-09-21: [TypeSafe models](https://docs.typesafe.ai/models) explicitly excludes customer fine-tuning/LoRA. All accounts use the same weights. Supported customization uses state, instructions, criteria and atomic decisions. This implementation uses a versioned domain policy and examples with pinned `jev-1.13.0`; examples do not change its weights. [Known limitations](https://docs.typesafe.ai/model-jaggedness/jev-1.13) put arithmetic, constraints and exact comparisons in code. [HTTP contract](https://docs.typesafe.ai/api) defines choice probabilities and confidence.
+Verified 2026-09-21: [TypeSafe models](https://docs.typesafe.ai/models) explicitly excludes customer fine-tuning/LoRA. All accounts use the same weights. Supported customization uses state, instructions, criteria and atomic decisions. This implementation uses a versioned domain policy and examples with pinned `jev-1.14.0` (since 2026-10-18; `jev-1.13.0` before); examples do not change its weights. [Known limitations](https://docs.typesafe.ai/model-jaggedness/jev-1.13) (TypeSafe's latest published page, for 1.13; none for 1.14 yet) put arithmetic, constraints and exact comparisons in code. [HTTP contract](https://docs.typesafe.ai/api) defines choice probabilities and confidence.
 
 The running bridge now authenticates using Val's 1Password Jev credential, injected into the server environment without writing its value to disk. Literal custom weight training would require a provider capability that does not currently exist.
 
@@ -36,7 +36,7 @@ The left rail has three labeled, keyboard-accessible tabs: teal **People**, pink
 
 ## Running and evaluating
 
-Start the bridge with `TYPESAFE_API_KEY` in its environment and a pinned `JEV_AUTO_MODEL` (default `jev-1.13.0`). With 1Password CLI, a secret reference can be resolved without storing the key:
+Start the bridge with `TYPESAFE_API_KEY` in its environment and a pinned `JEV_AUTO_MODEL` (default `jev-1.14.0`, TypeSafe's newest release from 14 October 2026; `jev-latest` still names 1.13.0). The held-out evaluation in `data/reports/jev-auto-eval.json` was recorded on jev-1.13.0, so `/v1/auto` reports `evaluated_on_heldout_scenarios` again only after a live held-out run on the pinned model (billable). With 1Password CLI, a secret reference can be resolved without storing the key:
 
 ```sh
 TYPESAFE_API_KEY='op://Development/Jev API Key/password' op run -- uv run river-oaks serve

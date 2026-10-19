@@ -4,13 +4,14 @@ async page => {
  const arrive=async()=>{
   await page.waitForFunction(()=>document.querySelector('#canvas-host')?.dataset.playerReady==='true',null,{timeout:90000});
   await page.locator('#office-lobby').waitFor({state:'attached'});await page.locator('#office-lobby').evaluate(b=>b.click());
-  await page.locator('#office-enter').click();
+  await page.locator('#play-tab-office').click();await page.locator('#office-enter').click();
   await page.waitForFunction(()=>document.querySelector('#office-visit')?.dataset.phase==='office',null,{timeout:60000});
   await page.locator('#office-desk-open').click();await page.locator('#desk-loading').waitFor({state:'hidden'});
  };
  await page.goto('http://127.0.0.1:5173/?motion-debug=1',{waitUntil:'commit'});await arrive();
  check(await page.locator('#desk-scope-label').textContent()==='Private to you'&&await page.locator('#desk-scope-shared').count()===0,'The desk keeps account tasks private in Jevica’s office');
  check(await page.locator('#desk-start').isVisible(),'Authorized office opens an empty private desk');
+ check(await page.locator('#desk-views').isHidden()&&await page.locator('.desk-computer-frame').count()===0,'Without a Computer origin the desk is Tasks only and loads no frame');
  await page.screenshot({path:'output/playwright/desk-empty-desktop.png'});
  await page.locator('#desk-start').click();await page.locator('#desk-title').fill('A thoughtful studio opening');
  await page.locator('#desk-notes').fill('Invite the team for a quiet afternoon.\nSet aside time to share what everyone is making.');

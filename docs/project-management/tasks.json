@@ -11563,6 +11563,30 @@
       "updatedAt": "2026-10-15T20:08:36.760Z"
     },
     {
+      "id": "plaza-game-layout-20261015",
+      "title": "Expandable plaza boards and clear game selection",
+      "status": "active",
+      "branches": [
+        "feat/plaza-game-layout-20261015"
+      ],
+      "owner": "codex-plaza-game-layout-20261015",
+      "updatedAt": "2026-10-16T06:50:27.571433+00:00",
+      "leaseUntil": "2026-10-16T08:50:27.571433+00:00",
+      "nextAction": "Verified main a00a4d19 integration for draft PR #468: core11/11, browser68 checks, unchanged game hashes; all other tasks match main. Push signed integration commit and inspect hosted checks. No merge or deployment authorized; preserve worktree and evidence. Human accessibility and physical-device acceptance remain unverified.",
+      "filesOwned": [
+        "preview/src/plaza-table-games.js",
+        "preview/src/plaza-table-games.css",
+        "preview/e2e/plaza-game-layout.js",
+        "docs/superpowers/plans/2026-10-15-plaza-game-layout.md"
+      ],
+      "requiredChecks": [
+        "pnpm run verify",
+        "Focused game layout browser journey with desktop expanded, narrow and keyboard checks"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-15-plaza-game-layout.md",
+      "pr": 468
+    },
+    {
       "id": "release-0-2-1-signed",
       "title": "Release 0.2.1: Developer ID signed and notarized macOS build (Val, 2026-10-15: new 0.2.1 release, Soul Protocol LLC identity, notarytool keychain profile river-oaks-notary)",
       "status": "delivered",
@@ -11630,36 +11654,146 @@
       "updatedAt": "2026-10-16T01:56:03.947Z"
     },
     {
-      "id": "human-studio-apple-polish-20261018",
-      "title": "Measured human character and Character Studio polish for iOS and macOS",
+      "id": "plaza-fullscreen-polish-20261018",
+      "title": "Comprehensive full-screen plaza games polish from Val screenshot",
       "status": "active",
       "branches": [
-        "feat/human-studio-apple-polish-20261018"
+        "fix/plaza-fullscreen-polish-20261018"
       ],
-      "owner": "codex-apple-polish-20261018",
-      "updatedAt": "2026-10-18T14:30:34.808459+00:00",
-      "leaseUntil": "2026-10-18T16:30:34.808459+00:00",
-      "nextAction": "Local acceptance complete with explicit limits: core follow-up passed all tasks, Metal screening12checks passed, final Studio browser matrix passed, native Safari rendering captured. Default full/core failures retained with passing diagnostic follow-ups. Redis and native fixture stopped. Commit/push acceptance artifacts, verify required checks on final PR504 head and audit delivery; no merge/deploy.",
+      "owner": "codex-plaza-fullscreen-521",
+      "updatedAt": "2026-10-18T16:37:15.104049+00:00",
+      "nextAction": "Authorized to merge PR #521 and prune associated worktree/branches. Resolve main conflict, verify, land through guard, archive and retire.",
+      "ledger": "docs/superpowers/plans/2026-10-18-plaza-fullscreen-polish.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-plaza-fullscreen-polish-20261018",
       "filesOwned": [
-        "preview/e2e/character-apple-baseline.mjs (new acceptance harness)",
-        "docs/superpowers/plans/2026-10-18-human-studio-apple-polish.md",
-        "docs/acceptance/human-studio-apple-polish.md (new acceptance report)",
-        "preview/src/character-studio.css (native control sizing only)",
-        "preview/src/character-studio.js (Safari pointer entry focus restoration only)",
-        "preview/src/character-studio-preview.js (visibility scheduling and bounded contact shadows)",
-        "preview/src/romance-look.js (shared human bodice fitting)",
-        "preview/src/character-bodice-fit.js",
-        "preview/tests/sable-bodice-fit.test.js"
+        "preview/src/plaza-table-games.js",
+        "preview/src/plaza-table-games.css",
+        "preview/e2e/plaza-game-layout.js"
       ],
       "requiredChecks": [
-        "Matched baseline and after browser captures/performance",
+        "Focused table-game behavioral tests",
+        "plaza-game-layout, plaza-morris, salon-guide browser journeys",
+        "Shared table-game browser coverage",
+        "pnpm run verify",
+        "Exact-head hosted preview before landing"
+      ],
+      "pr": 521,
+      "verification": {
+        "focused": "26/26 passed",
+        "browser": "Five journeys passed; final layout 47/47 checks passed after reconnect interruption. Light/dark, checkers lesson, all board shapes, phone and short-window screenshots inspected.",
+        "remainingCore": "Desktop 76/76, build, Python lint/format/tests 141/141, demo checks and secret scan passed.",
+        "gaps": "Full preview suite timed out at 600s; server suite 667 pass, 1 fail, 204 skips. Office recovery failure passed isolated 1/1; unchanged source matches main. Hosted exact-head checks pending; no physical Safari/iPhone or human accessibility acceptance."
+      },
+      "leaseUntil": "2026-10-18T18:37:15.104049+00:00"
+    },
+    {
+      "id": "wine-pong-dynamic-throw-20261015",
+      "title": "Review and improve wine pong stance, release animation, and table views",
+      "status": "active",
+      "branches": [
+        "feat/wine-pong-dynamic-throw-20261015"
+      ],
+      "owner": "codex-root-wine-pong-dynamic-throw-20261015",
+      "leaseUntil": "2026-10-15T18:50:00.000Z",
+      "updatedAt": "2026-10-15T17:47:00.000Z",
+      "nextAction": "Review draft PR #448 and its exact-head checks; keep camera occlusion, touch target selection, audio, and human play/accessibility acceptance as follow-up before declaring the experience complete.",
+      "ledger": "docs/superpowers/plans/2026-10-15-wine-pong-dynamic-throw-review.md",
+      "requiredChecks": [
+        "Position-aware aim/landing/replay behavioral tests",
+        "Plaza wine pong browser journey with view and animation review",
+        "pnpm run verify",
+        "Exact-head hosted preview before merge"
+      ],
+      "filesOwned": [
+        "preview/src/wine-pong-rules.js",
+        "preview/src/plaza-wine-pong.js",
+        "preview/src/plaza-wine-pong.css",
+        "preview/src/plaza-salon-plan.js (wine pong geometry)",
+        "preview/src/plaza-salon.js (wine pong table mirror)",
+        "preview/tests/wine-pong.test.js",
+        "preview/e2e/plaza-wine-pong.js",
+        "docs/superpowers/plans/2026-10-15-wine-pong-dynamic-throw-review.md",
+        "docs/superpowers/plans/README.md (generated index)",
+        "docs/project-management/tasks.json (this task only)",
+        "preview/src/main.js (wine pong camera callback)",
+        "docs/multiplayer.md (wine pong play instructions)",
+        "preview/src/player-avatar.js (wine pong throw action)",
+        "preview/src/resident-gestures.js (wine pong throw pose)",
+        "preview/tests/resident-gestures.test.js (throw pose regression)"
+      ],
+      "pr": 448
+    },
+    {
+      "id": "garden-campus-leases-509",
+      "title": "#509 Garden Offices: bounded owner-managed rental leases, tenant/guest grants and persistence (non-charging), paid-mode proposal",
+      "status": "active",
+      "branches": [
+        "feat/garden-campus-leases-509-20261018"
+      ],
+      "owner": "claude:river-oaks-95/agent-509 (5bececff)",
+      "leaseUntil": "2026-10-18T19:04:32Z",
+      "updatedAt": "2026-10-18T17:04:32Z",
+      "nextAction": "Draft PR #522 at 58afa301 (base #506 branch, includes #506 63ef1b10 layout 3.1 and main 5033ea37). Hosted CI all green at 485d4e11 (server 932/932 Redis, preview 3548/3549); rerun for 58afa301 in progress. Remaining: #508 wires campusAccessEnded/campusSuiteAccess, #510 UI + campus desk context + campusSeat, #512 real attachGardenCampus inert test and district migration; paid mode needs Val's decisions. Merge after #506 lands; merge/deploy are separate release actions.",
+      "ledger": "docs/superpowers/plans/2026-10-18-garden-campus-leases-509.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-garden-campus-509-20261018",
+      "issue": 509,
+      "pr": 522,
+      "filesOwned": [
+        "server/campus-leases.js (new)",
+        "shared/garden-campus-lease-contract.js (new)",
+        "server/tests/campus-leases*.test.js (new)",
+        "server/world.js (campus command dispatch, prune, snapshot field, checkpoint v13 section, API accessors)",
+        "server/redis-room.js (writer generation v13/v14, campusOperators option)",
+        "server/world-gateway.js, server/redis-backend.js, server/town.js (RIVER_OAKS_CAMPUS_OPERATOR_IDS threading)",
+        "server/avatar-preferences.js, server/creator-rollout-audit.js (v13 pins)",
+        "server/tests/* (v12->v13 pins only)",
+        "docs/garden-campus-leases.md (new)",
+        "docs/offices.md, docs/multiplayer.md, docs/screenings.md (writer generation prose)",
+        "docs/superpowers/plans/2026-10-18-garden-campus-leases-509.md (new)"
+      ],
+      "requiredChecks": [
+        "node --test server/tests/campus-leases*.test.js",
+        "pnpm run test:server (isolated REDIS_URL)",
+        "pnpm run verify"
+      ]
+    },
+    {
+      "id": "turning-20261018-cody",
+      "title": "Coordinate planted feet and knees during stationary and walking turns",
+      "status": "active",
+      "branches": [
+        "fix/turning-foot-placement-20261018"
+      ],
+      "owner": "cody:turning-office-20261018",
+      "leaseUntil": "2026-10-18T21:00:51.540812+00:00",
+      "updatedAt": "2026-10-18T19:00:51.540812+00:00",
+      "nextAction": "Commit verified patch, open PR, await exact-head CI and land through the repository queue.",
+      "ledger": "docs/superpowers/plans/2026-10-18-turning.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-turning-20261018",
+      "filesOwned": [
+        "data/reports/turning-core-20261018.json",
+        "data/reports/turning-browser-20261018.json",
+        "docs/project-management/tasks.json",
+        "docs/superpowers/plans/2026-10-18-turning.md",
+        "preview/e2e/turning-regression.mjs",
+        "preview/src/coat-tail-morph-receipt.json",
+        "preview/src/foot-placement.js",
+        "preview/src/lyra-drape-morph-receipt.json",
+        "preview/src/silvan-drape-morph-receipt.json",
+        "preview/src/skirt-seat-morph-receipt.json",
+        "preview/src/vesper-skirt-morph-receipt.json",
+        "preview/tests/foot-placement.test.js"
+      ],
+      "requiredChecks": [
         "Focused behavioral regressions",
         "pnpm run verify",
-        "pnpm run verify full",
-        "Required hosted PR checks"
+        "Browser acceptance"
       ],
-      "ledger": "docs/superpowers/plans/2026-10-18-human-studio-apple-polish.md",
-      "pr": 504
+      "verification": {
+        "focused": "20 motion tests plus 4 curb tests passed; five garment validators passed",
+        "core": "All core task coverage passed with bounded concurrency and documented retries; 204 Redis and 1 unrelated client skips. See data/reports/turning-core-20261018.json.",
+        "browser": "Passed seven-rig before/after stationary/slow/normal sharp turns; data/reports/turning-browser-20261018.json."
+      }
     }
   ]
 }

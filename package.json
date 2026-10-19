@@ -83,7 +83,9 @@
     "project:inventory": "node scripts/project-inventory.mjs",
     "preproject:inventory": "node scripts/enforce-pnpm.mjs",
     "project:archives": "node scripts/project-archives.mjs",
+    "register": "node scripts/task-register.mjs",
     "preproject:archives": "node scripts/enforce-pnpm.mjs",
+    "preregister": "node scripts/enforce-pnpm.mjs",
     "land": "node scripts/land-pr.mjs",
     "preland": "node scripts/enforce-pnpm.mjs"
   },

@@ -4,6 +4,8 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync, existsSync, realpathSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+// A static import: the two modules import each other, and a top-level await here would deadlock.
+import { defaultRegisterText } from './task-register.mjs';
 
 const git = (root, args, optional = false) => {
   try { return execFileSync('git', args, { cwd: root, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024, stdio: ['ignore','pipe','pipe'], env: {...process.env,GIT_OPTIONAL_LOCKS:'0',GIT_TERMINAL_PROMPT:'0'} }).trimEnd(); }
@@ -133,7 +135,9 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).hr
     const args=process.argv.slice(2),option=name=>{const i=args.indexOf(name);if(i<0)return null;if(!args[i+1]||args[i+1].startsWith('--'))throw new Error(`Missing value for ${name}`);return args[i+1];};
     const allowed=new Set(['--repo','--tasks','--output','--github','--check','--allow-orphans']);
     for(let i=0;i<args.length;i++){if(!allowed.has(args[i]))throw new Error(`Unknown argument: ${args[i]}`);if(['--repo','--tasks','--output'].includes(args[i]))i++;}
-    const root=resolve(option('--repo')??process.cwd()),text=readFileSync(resolve(root,option('--tasks')??REGISTER),'utf8');
+    // Without --tasks this reads the live register (common Git directory), from any worktree.
+    const root=resolve(option('--repo')??process.cwd()),tasks=option('--tasks');
+    const text=tasks?readFileSync(resolve(root,tasks),'utf8'):defaultRegisterText(root);
     if(/^(<{7}|>{7})( |$)/m.test(text))throw new Error('Task register has conflict markers; merge it by task id (see docs/project-management/workflow.md)');
     const register=JSON.parse(text);
     const errors=validateTasks(register);if(errors.length)throw new Error(errors.join('\n'));
