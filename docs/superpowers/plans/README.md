@@ -4,7 +4,7 @@
 
 Each plan is a task ledger. Status comes from the task register, where the primary checkout's live copy can be newer than the committed one. Plans from before the register are listed as historical: their own text is the record of what was delivered.
 
-## Active and blocked (19)
+## Active and blocked (18)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
@@ -16,7 +16,6 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-15-office-computer-db-mvp](2026-10-15-office-computer-db-mvp.md)<br>Office computer database MVP | `office-computer-db-mvp` | active | — | 2026-10-15 |
 | [2026-10-15-ipic-screening-playback](2026-10-15-ipic-screening-playback.md)<br>IPIC #367: synchronized client playback, accessible controls and media recovery (2026-10-15) | `ipic-screening-playback-367` | active | — | 2026-10-15 |
 | [2026-10-15-ipic-screening-authority](2026-10-15-ipic-screening-authority.md)<br>IPIC #366: authoritative screening timeline and host controls (2026-10-15) | `ipic-screening-authority-366` | active | — | 2026-10-15 |
-| [2026-10-15-desktop-installers](2026-10-15-desktop-installers.md)<br>Desktop installers and signing (#372), 2026-10-15 | `desktop-installers` | active | — | 2026-10-15 |
 | [2026-10-15-desktop-e2e-walk-game-time](2026-10-15-desktop-e2e-walk-game-time.md)<br>Desktop e2e: the W walk over game time, 2026-10-15 | `desktop-e2e-walk-game-time` | active | — | 2026-10-15 |
 | [2026-10-14-shared-dominoes](2026-10-14-shared-dominoes.md)<br>Shared Dominoes Implementation Plan (PR 1: the town holds the round) | `shared-dominoes-sheet` | active | — | 2026-10-14 |
 | [2026-10-14-procedural-gpu-acceptance](2026-10-14-procedural-gpu-acceptance.md)<br>Procedural interiors: physical GPU acceptance plan | `procedural-gpu-acceptance` | queued | — | 2026-10-15 |
