@@ -244,11 +244,7 @@ server heartbeat's terminations, and ran 3 attempts per variant.
 
 ## Next action
 
-After main `9582091f` was merged (`522f39b1`), the campus suites and #534's render-audit and
-remote-player tests pass 66/67, with the Redis transport case skipped without
-`REDIS_URL`. Next:
-
-1. Push the harness fix.
-2. Get the head's preview shards and its macOS desktop job green.
-3. Hand the verified head SHA to river-oaks-b5, which lands the stack (Val's decision):
-   #523 → #537 → #528 → #527 → #525.
+Delivered. #523 merged at 2026-10-19T00:29:16Z as `5bb321ba`. river-oaks-d8 landed it with
+`pnpm run land` from head `c04d1b6d`, and the tree equals that head. The desktop harness fix
+(`efb935cf`) landed with it. The task is retired. The rest of the campus landed after it;
+the #505 tracker lists every merge and the release decision.
