@@ -1,4 +1,5 @@
 // Physical flight companion: bounded acceleration, swept clearance and gentle landing.
+import {FLIGHT_SPEED} from './flight.js';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 export const HOVER_LEAN=.18,GLIDE_PITCH=1.28;
 // 0 while hovering, 1 in a horizontal glide: drives the body pose between them.
@@ -8,9 +9,14 @@ export function createPrinceFlight(position,heading=0) {
   return {position:[...position],velocity:[0,0,0],acceleration:[0,0,0],avoidAge:0,avoidance:null,heading,pitch:0,bank:0,blend:0,landed:false,blocked:false};
 }
 export function flightSlot(pose,heading,side=1) {
-  // Clear Jevica's bubble and leave her forward view open.
-  return [pose.position[0]+clamp(pose.velocity?.[0]??0,-7,7)*.35+Math.cos(heading)*4.8*side-Math.sin(heading)*.6,
-    pose.position[1]-1.68+.35,pose.position[2]+clamp(pose.velocity?.[1]??0,-7,7)*.35-Math.sin(heading)*4.8*side-Math.cos(heading)*.6];
+  // Clear Jevica's bubble and leave her forward view open. The slot leads the bubble by 0.35 s of its travel. Jev
+  // only wants a speed v once she is v²/(2·8) m short of her slot (her braking curve, below), which 0.35 s of lead
+  // roughly cancels up to 7 m/s; above that the slot leads by the rest of that distance, so she keeps the same place
+  // beside the bubble at its fast speed (2026-10-19) as at the old 7 m/s.
+  const [vx,vz]=pose.velocity??[0,0],moving=Math.hypot(vx,vz),speed=Math.min(FLIGHT_SPEED.fast,moving);
+  const lead=(speed<=7?speed*.35:speed*speed/(2*8)-.6125)/(moving||1);
+  return [pose.position[0]+vx*lead+Math.cos(heading)*4.8*side-Math.sin(heading)*.6,
+    pose.position[1]-1.68+.35,pose.position[2]+vz*lead-Math.sin(heading)*4.8*side-Math.cos(heading)*.6];
 }
 export function stepPrinceFlight(state,target,environment,delta,{landing=false,playerSpeed=0}={}) {
   if(!Number.isFinite(delta)||delta<=0)return state;
@@ -18,7 +24,8 @@ export function stepPrinceFlight(state,target,environment,delta,{landing=false,p
   const destination=[...target];destination[1]=Math.max(environment.groundAt(target[0],target[2]),destination[1]);
   // A short prediction absorbs her turn without chasing the position she just left.
   const difference=destination.map((v,i)=>v-state.position[i]),gap=Math.hypot(...difference);
-  const maxSpeed=landing?4:Math.min(10,Math.max(5,playerSpeed+2));
+  // Jev keeps 2 m/s in hand over the bubble, up to its fast speed.
+  const maxSpeed=landing?4:Math.min(FLIGHT_SPEED.fast+2,Math.max(5,playerSpeed+2));
   const speed=Math.min(maxSpeed,Math.sqrt(2*8*gap),gap*2.4);
   let desired=difference.map(v=>gap>.001?v/gap*speed:0);
   state.avoidAge-=dt;

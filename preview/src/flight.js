@@ -1,4 +1,7 @@
 const clamp = (value, low, high) => Math.max(low, Math.min(high, value));
+// Jevica's bubble, horizontal m/s: cruising, and held fast (Shift). The fast speed doubled from 7 (Val, 2026-10-19);
+// the server's pose budget (server/world.js) and Jev's flying companion (prince-flight.js) follow it.
+export const FLIGHT_SPEED = Object.freeze({ cruise: 4.5, fast: 14 });
 export function createFlightState() { return { active:false, altitude:0, target:0, verticalSpeed:0, landing:false }; }
 export function beginFlight(state,environment,flight) {
   const [x,,z]=state.position;
@@ -18,7 +21,7 @@ export function stepFlight(state, environment, flight, input, delta) {
   flight.altitude=clamp(flight.altitude+flight.verticalSpeed*dt,0,Math.max(limit,oldAltitude));
   if(Math.sign(flight.target-oldAltitude)!==Math.sign(flight.target-flight.altitude)) {flight.altitude=flight.target;flight.verticalSpeed=0;}
   state.yaw+=clamp(input.turn ?? 0,-1,1)*1.35*dt;
-  const forward=clamp(input.forward ?? 0,-1,1),strafe=clamp(input.strafe ?? 0,-1,1),norm=Math.max(1,Math.hypot(forward,strafe)),speed=input.fast?7:4.5;
+  const forward=clamp(input.forward ?? 0,-1,1),strafe=clamp(input.strafe ?? 0,-1,1),norm=Math.max(1,Math.hypot(forward,strafe)),speed=input.fast?FLIGHT_SPEED.fast:FLIGHT_SPEED.cruise;
   const vx=(-Math.sin(state.yaw)*forward+Math.cos(state.yaw)*strafe)*speed/norm,vz=(-Math.cos(state.yaw)*forward-Math.sin(state.yaw)*strafe)*speed/norm;
   state.velocity[0]+=(vx-state.velocity[0])*(1-Math.exp(-3.5*dt));state.velocity[1]+=(vz-state.velocity[1])*(1-Math.exp(-3.5*dt));
   const [x,,z]=state.position,px=x+state.velocity[0]*dt,pz=z+state.velocity[1]*dt;
