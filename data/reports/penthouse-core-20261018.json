@@ -1,0 +1,60 @@
+{
+  "recordedAt": "2026-10-18T17:08:32.196275+00:00",
+  "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-penthouse-only-20261018",
+  "base": "1d8740ada63aee0062e8471a5ffd6d9323517108",
+  "status": "core_checks_passed_with_documented_retries_and_skips",
+  "counts": {
+    "toolingPassed": 121,
+    "clientPassed": 3533,
+    "clientSkipped": 1,
+    "serverPassed": 670,
+    "serverSkipped": 204,
+    "desktopPassed": 76,
+    "pythonPassed": 141
+  },
+  "execution": "Core tasks executed through existing runProfile with bounded Node concurrency and selected retries. Standard pnpm run verify was interrupted under machine contention; do not describe it as a passing uninterrupted invocation.",
+  "skips": [
+    "204 server tests skipped without Redis",
+    "1 pre-existing Vince glazing approach fixture skipped"
+  ],
+  "limits": [
+    "No live WorkOS acceptance",
+    "No hosted CI, deployment or human acceptance",
+    "No commits or pushes"
+  ],
+  "logs": [
+    {
+      "path": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-penthouse-only-20261018/office-updated.log",
+      "sha256": "cb479133fe98f7b41ae5a26e8521cadd8bca82ce69a9a4e03bb1f0b3e53a73c7"
+    },
+    {
+      "path": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-penthouse-only-20261018/office-lifecycle.log",
+      "sha256": "4d9f9c3251f13158003fa6cbeccd93b971ee5f517458fb84d4672a54ab4593d6"
+    },
+    {
+      "path": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-penthouse-only-20261018/office-browser-recheck.log",
+      "sha256": "8a9f9977ad8efcfd1d68ebf7875836d322337c849ab1b516dcc019ac995f777b"
+    },
+    {
+      "path": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-penthouse-only-20261018/core-bounded.log",
+      "sha256": "1b8cf1cca1513d87f94bbeb5c3767d0ce0ada449d50e8562bdeb9a8640426ed8"
+    },
+    {
+      "path": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-penthouse-only-20261018/core-recheck.log",
+      "sha256": "2fc9b4664ff57229da9c754dc24c1ecfc2fe3ce06a980351891431d3c400e0ab"
+    },
+    {
+      "path": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-penthouse-only-20261018/core-final-tail.log",
+      "sha256": "442cf6402e8fc0a7316228d8fd858127c28b3a401d19bbc8a301686ffb400d94"
+    },
+    {
+      "path": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-penthouse-only-20261018/shared-multiplayer.log",
+      "sha256": "987fdd6132cb205329eefb373c20022e629bc3c6d74b592ded57bb8099fbf928"
+    }
+  ],
+  "repositoryHygiene": {
+    "diffCheck": "passed",
+    "taskAudit": "failed: 24 existing unrelated gaps; none names turning-20261018-cody or penthouse-only-20261018-cody",
+    "log": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-penthouse-only-20261018/project-check-final.log"
+  }
+}

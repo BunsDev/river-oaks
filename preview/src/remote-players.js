@@ -1,6 +1,7 @@
 import { layoutPeerLabels } from './peer-label-layout.js';
 import { createAvatarPlaceholder } from './avatar-placeholder.js';
 import { cullAvatarMeshes, figureHeight, figureInView, FIGURE_SPHERE } from './avatar-culling.js';
+import { assignShadowDepth, setShadowDepth } from './shadow-depth.js';
 import { selectedCharacterFor } from './character-selection-view.js';
 import { createCharacterMaterials } from './character-studio-materials.js';
 import * as THREE from 'three';
@@ -19,7 +20,7 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
   // Who is talking on shared voice right now: a ring on the nameplate and the
   // speaker cadence in conversation-motion. Set at event time, read per frame.
   const speaking=new Set();
-  let disposed=false,previous=null,labelWidth=0,labelHeight=0,culling=true,figureCulling=true;
+  let disposed=false,previous=null,labelWidth=0,labelHeight=0,culling=true,figureCulling=true,shadowDepth=true;
   const frustum=new THREE.Frustum(),viewProjection=new THREE.Matrix4(),figureCenter=new THREE.Vector3();
   const fonts=document.fonts;
   const invalidateLabelSizes=()=>{for(const entry of entries.values())entry.labelSize=null;};
@@ -57,8 +58,9 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
       const outfit=sharedAppearance(appearance).costume==='jevica'?createPlayerCostume(avatar,'jevica'):{update(){},dispose(){}};
       const vehicle=createFlightVehicle('jevica'),height=figureHeight(avatar),culled=cullAvatarMeshes(avatar.object,height);
       for(const mesh of culled)mesh.frustumCulled=culling;
+      const depth=assignShadowDepth(avatar.object);if(!shadowDepth)setShadowDepth(depth,false);
       entry.placeholder?.dispose();entry.placeholder=null;entry.colors?.dispose();entry.outfit?.dispose();entry.vehicle?.dispose();entry.avatar?.dispose();entry.holder.clear();
-      entry.avatar=avatar;entry.outfit=outfit;entry.vehicle=vehicle;entry.culled=culled;entry.height=height;entry.holder.add(avatar.object,vehicle.object);
+      entry.avatar=avatar;entry.outfit=outfit;entry.vehicle=vehicle;entry.culled=culled;entry.depth=depth;entry.height=height;entry.holder.add(avatar.object,vehicle.object);
       if(entry.road)entry.holder.add(entry.road.object);
       entry.colors=createCharacterMaterials(avatar.object);entry.definition=selectedCharacterFor(entry.target);entry.definitionKey=JSON.stringify(entry.definition);entry.colors.apply(entry.definition);
       entry.loadedAppearance=appearance;entry.pendingAppearance=null;entry.failures=0;entry.retryAt=0;
@@ -171,9 +173,10 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
         if(box)entry.label.style.transform=`translate(${box.x}px,${box.y}px) translate(-50%,-100%)`;
       }
     },
-    // Development audit only: compare frames with either kind of culling off.
+    // Development audit only: compare frames with each of these off.
     setCulling(enabled){culling=Boolean(enabled);for(const entry of entries.values())for(const mesh of entry.culled??[])mesh.frustumCulled=culling;},
     setFigureCulling(enabled){figureCulling=Boolean(enabled);},
+    setShadowDepth(enabled){shadowDepth=Boolean(enabled);for(const entry of entries.values())setShadowDepth(entry.depth??[],shadowDepth);},
     setSpeaking(ids){
       if(disposed)return;
       speaking.clear();for(const id of ids??[])speaking.add(id);

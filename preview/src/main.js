@@ -1175,6 +1175,7 @@ if (import.meta.env.DEV && renderAudit) {
     exteriorCulling(enabled) { exteriorCulling = Boolean(enabled); },
     avatarCulling(enabled) { remotePlayers?.setCulling(enabled); },
     figureCulling(enabled) { remotePlayers?.setFigureCulling(enabled); },
+    shadowDepth(enabled) { remotePlayers?.setShadowDepth(enabled); },
     // Draws and submitted triangles for one frame, by pass and tagged owner.
     drawCensus: () => new Promise(resolve => { pendingDrawCensus = { census: createDrawCensus(renderer, camera), resolve }; }),
     crowdView() {
