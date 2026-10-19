@@ -20,6 +20,8 @@
 import {
   GARDEN_CAMPUS_ID, GARDEN_CAMPUS_LAYOUT as CAMPUS, GARDEN_CAMPUS_VERSIONS, campusLevels, campusToSource, sourceToCampus, validateGardenCampus,
 } from '../../shared/garden-campus-layout.js';
+import { campusFitout, campusFitoutObstacles } from '../../shared/garden-campus-fitout.js';
+import { registerCampusLevelObstacles } from './garden-campus-levels.js';
 
 export const DISTRICT_REVISION_GARAGE = 'river-oaks-garage-1';
 export const DISTRICT_REVISION_GARDENS = 'river-oaks-gardens-3';
@@ -183,20 +185,57 @@ const roomCache = new WeakMap();
 export function planCampusRooms(world, firstIndex = 0) {
   if (!world?.gardenCampus) return [];
   if (!roomCache.has(world)) {
+    // Each room's furniture (#510 fit-out) is collision; its chairs are seat sites (campusSeatSites).
+    const furniture = id => campusFitout().ground.find(room => room.roomId === id)?.obstacles ?? [];
     const halls = CAMPUS.towers.map(tower => {
       const floor = tower.levels[0], hall = floor.hall;
       return { id: hall.id, name: `${tower.name} · ${hall.use}`, use: hall.use, rect: hall.rect, door: hall.door.position, clear: HALL_CLEAR, part: tower.id,
-        obstacles: [{ ...tower.core.lift, kind: 'lift' }, { ...tower.core.stair, kind: 'stair' }],
-        summary: { label: 'Public ground-floor hall', highlights: ['open to everyone', 'step-free lift to every floor', 'enclosed stairs'] } };
+        obstacles: [{ ...tower.core.lift, kind: 'lift' }, { ...tower.core.stair, kind: 'stair' }, ...furniture(hall.id)],
+        summary: { label: 'Public ground-floor hall', highlights: ['open to everyone', 'public workstations', 'step-free lift to every floor', 'enclosed stairs'] } };
     });
     const cafe = CAMPUS.groundBuildings.find(item => item.id === 'C');
-    const rooms = [...halls, { id: 'C-hall', name: cafe.name, use: 'Public social and work café', rect: cafe.rect, door: cafe.door, clear: CAFE_CLEAR, part: 'C', obstacles: [],
-      summary: { label: 'Public café', highlights: ['open to everyone', 'no lease needed'] } }]
+    const rooms = [...halls, { id: 'C-hall', name: cafe.name, use: 'Public social and work café', rect: cafe.rect, door: cafe.door, clear: CAFE_CLEAR, part: 'C', obstacles: furniture('C-hall'),
+      summary: { label: 'Public café', highlights: ['open to everyone', 'public workstations', 'no lease needed'] } }]
       .map((spec, offset) => groundRoom(world, firstIndex + offset, spec));
     roomCache.set(world, rooms);
   }
   return roomCache.get(world);
 }
+
+// The halls' and café's chairs as street seat sites (world-interactions benchSeats), in the
+// bench-place shape: `bench:campus-<seat>` slot 0. Workstation seats open the sitter's own
+// private desk (#510); residents may rest on any of them, as on any bench.
+export const CAMPUS_SEAT_PREFIX = 'bench:campus-';
+const seatBuildId = id => `${CAMPUS_SEAT_PREFIX}${id.replaceAll('/', '.')}`;
+export function campusSeatSites(world) {
+  if (!world?.gardenCampus) return [];
+  const rooms = new Map(planCampusRooms(world).map(room => [room.campus.surfaceId, room]));
+  return campusFitout().ground.flatMap(entry => entry.seats.map(seat => {
+    const room = rooms.get(entry.roomId), [x, north] = toSource(seat.position), facing = [seat.facing[0] * CAMPUS.frame.east[0] + seat.facing[1] * CAMPUS.frame.north[0],
+      seat.facing[0] * CAMPUS.frame.east[1] + seat.facing[1] * CAMPUS.frame.north[1]], buildId = seatBuildId(seat.id);
+    return { id: `${buildId}:0`, buildId, slot: 0, kind: seat.kind, storeId: room.storeId, title: seat.title, x, north, heading: Math.atan2(facing[0], -facing[1]),
+      height: seat.height, approach: toSource(seat.approach), workstation: seat.workstation ? seat.id : null };
+  }));
+}
+export const isCampusSeat = buildId => typeof buildId === 'string' && buildId.startsWith(CAMPUS_SEAT_PREFIX);
+
+// Suite seats on the campus floors (#510 on #508's levels): every desk and meeting chair of
+// every suite, with its floor, suite and stand point. They are not street benches: no
+// townsperson sits in a suite, and a resident sits only from inside the suite they may use.
+export const CAMPUS_SUITE_SEAT_PREFIX = 'campus-suite:';
+export const isCampusSuiteSeat = buildId => typeof buildId === 'string' && buildId.startsWith(CAMPUS_SUITE_SEAT_PREFIX);
+export function campusSuiteSeatSites(world) {
+  if (!world?.gardenCampus) return [];
+  return campusFitout().levels.flatMap(entry => entry.seats.map(seat => {
+    const [x, north] = toSource(seat.position), facing = [seat.facing[0] * CAMPUS.frame.east[0] + seat.facing[1] * CAMPUS.frame.north[0],
+      seat.facing[0] * CAMPUS.frame.east[1] + seat.facing[1] * CAMPUS.frame.north[1]];
+    return { id: `${CAMPUS_SUITE_SEAT_PREFIX}${seat.id}:0`, buildId: `${CAMPUS_SUITE_SEAT_PREFIX}${seat.id}`, slot: 0, seatId: seat.id, kind: seat.kind,
+      levelId: entry.levelId, unitId: seat.unitId, x, north, heading: Math.atan2(facing[0], -facing[1]), height: seat.height, stand: toSource(seat.stand),
+      workstation: seat.workstation ? seat.id : null, title: seat.kind === 'desk' ? 'Suite desk' : 'Meeting table' };
+  }));
+}
+// Suite furniture is solid on its floor for everyone walking there, client and server alike.
+registerCampusLevelObstacles(levelId => campusFitoutObstacles(levelId).map(item => ({ id: item.id, rect: item.rect })));
 
 // The halls and café as storefront sites, in the shape world.stores and venue door sites
 // have, so the directory lists them and travel enters or leaves them like any door.

@@ -42,7 +42,9 @@ import { canCullExterior, canCullIpicAuditorium, renderOnly, renderWithoutExteri
 import { sharedRoomSummary } from './shared-population.js';
 import { storeRoomsFor } from './store-rooms.js';
 import { attachDistrictGalleryPlan } from './district-interior-contract.js';
-import { DISTRICT_REVISION_GARDENS, attachGardenCampus, campusDoorSites, campusGroundAt, campusGroundCutout } from './garden-campus-district.js';
+import { DISTRICT_REVISION_GARDENS, attachGardenCampus, campusDoorSites, campusGroundAt, campusGroundCutout, campusSuiteSeatSites } from './garden-campus-district.js';
+import { campusLevelRoom } from './garden-campus-levels.js';
+import { createGardenCampusUI } from './garden-campus-ui.js';
 import { buildFoliage, buildObservedFoliage } from './foliage.js';
 import { castShadowsFromProxies } from './landscape-models.js';
 import { validateVegetation } from './vegetation.js';
@@ -162,7 +164,7 @@ let worldRegionSha256 = null;
 // The default district's revision once loaded (#507): null is the garage; undefined while loading.
 let worldDistrictRevision;
 let landmarkAccountId = null;
-let playerAvatar, characterStudio, officeUI, ipicScreening;
+let playerAvatar, characterStudio, officeUI, ipicScreening, campusUI;
 let multiplayer, remotePlayers, buildLayer, buildControls, seatingControls, seatAndWater;
 let plazaSalon = null, plazaGames = null, plazaDominoes = null, plazaHearts = null, plazaBackgammon = null, cafeGame = 'dominoes', plazaStage = null, plazaBicycle = null, cyclingBoard = null;
 let plazaJenga = null, plazaYacht = null, benchGame = 'jenga';
@@ -457,6 +459,9 @@ function initializeRenderer() {
   visitTools.append($('.player-controls'), cyclingBoard.panel, ...(buildControls ? [buildControls.panel] : []));
   officeUI=createOfficeUI({host,panelHost:visitTools,renderer,getWorld:()=>world,getMultiplayer:()=>multiplayer,walking,
     captureStreet:()=>captureOfficeStreet({scene,camera,pipeline,renderer,architecture:buildingMesh,skyline:officeSkylineOff||softwareAcceptance?null:officeOutlookFor({scale:quality?.stats.scale,coarsePointer:window.matchMedia('(pointer: coarse)').matches,maxCubemapSize:renderer.capabilities.maxCubemapSize,maxTextureSize:renderer.capabilities.maxTextureSize}),lights:storeLights,atmosphere:()=>currentAtmosphere,avatar:playerAvatar,lobby:buildingMesh?.userData.officeArrival,world,getWorld:()=>world,pose:walking?.getPose()})});
+  // The Gardens (#510): the campus Play section, suites and leases, and the workstation desk.
+  campusUI=createGardenCampusUI({host,panelHost:visitTools,getWorld:()=>world,getMultiplayer:()=>multiplayer});
+  playProviders.push(() => campusUI?.playProvider);
   // IPIC screenings (#367): the town's timeline on the existing screen, while the player is inside IPIC.
   // Mounted on the viewport, not the canvas host: walking takes pointer capture on the canvas host.
   ipicScreening??=createIpicScreening({host:host.parentElement??host,THREE,getMultiplayer:()=>multiplayer,getScreen:()=>buildingMesh?.userData.interiors?.userData.screens?.[0]??null,
@@ -550,7 +555,7 @@ function startMultiplayer() {
     getRegionSha256: () => worldRegionSha256,
     getDistrictRevision: () => worldDistrictRevision,
     onHomeAccess: () => districtUI?.refreshAccess(),
-    onSnapshot: snapshot => { ipicScreening?.onSnapshot(snapshot); if (world) community.applyRemote(snapshot);buildLayer?.sync(snapshot.builds??[]);plazaSalon?.userData.rack?.setTaken(snapshot.cycling?.taken ?? []); },
+    onSnapshot: snapshot => { ipicScreening?.onSnapshot(snapshot);campusUI?.onSnapshot(snapshot); if (world) community.applyRemote(snapshot);buildLayer?.sync(snapshot.builds??[]);plazaSalon?.userData.rack?.setTaken(snapshot.cycling?.taken ?? []); },
     onCorrection: player => { if (world && player) { walking.applyServerPose(player); plazaBicycle?.sync(); } },
     onPlayers: (players, selfId) => {
       host.dataset.multiplayer = players.length ? 'joined' : 'disconnected';
@@ -586,7 +591,7 @@ function startMultiplayer() {
   seatingControls=createSharedSeatingControls({host:document.querySelector('.walking-console'),getTown:()=>multiplayer,
     getPose:()=>walking?.getPose(),getEnvironment:()=>walking?.environment,
     request:message=>multiplayer.command(message),onConfirmed:player=>walking.applyServerPose(player),
-    getBenches:()=>seatAndWater?.benches()??[],isHeld:key=>seatAndWater?.residentHolds(key)??false,isBusy:()=>seatAndWater?.busy()??false});
+    getBenches:()=>[...(seatAndWater?.benches()??[]),...suiteSeatsHere()],isHeld:key=>seatAndWater?.residentHolds(key)??false,isBusy:()=>seatAndWater?.busy()??false});
   host.dataset.multiplayer = 'connecting';
 }
 
@@ -644,6 +649,7 @@ function populateWorld(data) {
     });
   }
   world = data;
+  campusUI?.setWorld(data);
   const creatorRegion=data.provenance?.kind==='creator';
   if(creatorRegion) {
     document.title=`${data.title} — Shared worlds`;
@@ -736,6 +742,18 @@ function canEnterStore(store) {
   if (store?.access !== 'owner') return true;
   return Boolean(multiplayer?.connected && (multiplayer.snapshot?.players.find(player => player.id === multiplayer.identity?.id)?.canBuild
     || multiplayer.homeAccess.some(home => home.storeId === store.id)));
+}
+
+// The desks and meeting chairs of the suite the resident stands in (#510): a campus floor is
+// one room, so the walls, not the room, decide which seats are near enough to offer.
+let suiteSeatCache = null;
+function suiteSeatsHere() {
+  const self = multiplayer?.snapshot?.players.find(player => player.id === multiplayer.identity?.id), pose = walking?.getPose?.();
+  if (!world || !self?.levelId || !pose) return [];
+  const here = campusLevelRoom(world, self.levelId)?.supportAt(pose.position[0], -pose.position[2]);
+  if (here?.access !== 'private-suite') return [];
+  if (suiteSeatCache?.world !== world) suiteSeatCache = { world, seats: campusSuiteSeatSites(world) };
+  return suiteSeatCache.seats.filter(seat => seat.levelId === self.levelId && seat.unitId === here.surfaceId);
 }
 
 function enterStore(store) {
