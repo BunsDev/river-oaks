@@ -133,27 +133,55 @@ try {
   if (await panel.getAttribute('aria-expanded') === 'true') await panel.click();
   await page.locator('#canvas-host').focus();
   const position = () => page.locator('#walking-hud').evaluate(el => JSON.parse(el.dataset.position));
-  const before = await position();
   // Hold W for 1.2 s of the game's clock, not the wall clock. The game reads keys in
   // its frame loop and advances at most 0.08 s a frame (main.js), so a frame stall on
   // a slow runner (macOS CI compiling shader pipelines) could cover a wall-clock hold
   // and leave the player at the spawn: "0 m walked" in Desktop runs 38659435397 and
   // 38673593628. The distance threshold is unchanged.
-  await page.keyboard.down('KeyW');
-  const hold = await page.evaluate(() => new Promise(resolve => {
-    const started = performance.now(); let last, game = 0, frames = 0, longest = 0;
-    const frame = now => {
-      if (last !== undefined) { const dt = (now - last) / 1000; game += Math.min(dt, 0.08); longest = Math.max(longest, dt); frames++; }
-      last = now;
-      if (game >= 1.2 || now - started > 30000) resolve({ game, frames, longest, wall: (now - started) / 1000 }); else requestAnimationFrame(frame);
-    };
-    requestAnimationFrame(frame);
-  }));
-  await page.keyboard.up('KeyW');
-  const after = await position();
-  const walked = Math.hypot(after[0] - before[0], after[2] - before[2]);
-  report.walk = { metres: walked, ...hold };
-  assert.ok(walked > 0.5, `W moves the player: ${walked.toFixed(2)} m over ${hold.game.toFixed(2)} s of game time (${hold.frames} frames in ${hold.wall.toFixed(2)} s, longest ${hold.longest.toFixed(2)} s)`);
+  // The same runner can block the renderer for 20-28 s while it loads, so the town
+  // socket misses the server's 30 s heartbeat and is dropped; the page sees the close
+  // late, rejoins, and the rejoin restores the server's pose, undoing a hold that
+  // overlaps it (0.00 m in diag runs 39173762547, 39173766491 and 39174839205, on main
+  // and #507 alike). A hold that did not walk while the town was away, at its start or
+  // during it, is repeated once the town is joined again; a hold with the town joined
+  // throughout still has to walk.
+  const holdW = async () => {
+    await page.locator('#canvas-host').focus();
+    const before = await position();
+    // Watch the town from before the key goes down until the walked distance is read.
+    await page.evaluate(() => {
+      const host = document.querySelector('#canvas-host');let state = host.dataset.multiplayer;const town = [state];
+      const watch = new MutationObserver(() => { if (host.dataset.multiplayer !== state) town.push(state = host.dataset.multiplayer); });
+      watch.observe(host, { attributes: true, attributeFilter: ['data-multiplayer'] });
+      window.__desktopHoldTown = { watch, town };
+    });
+    await page.keyboard.down('KeyW');
+    const hold = await page.evaluate(() => new Promise(resolve => {
+      const started = performance.now(); let last, game = 0, frames = 0, longest = 0;
+      const frame = now => {
+        if (last !== undefined) { const dt = (now - last) / 1000; game += Math.min(dt, 0.08); longest = Math.max(longest, dt); frames++; }
+        last = now;
+        if (game >= 1.2 || now - started > 30000) resolve({ game, frames, longest, wall: (now - started) / 1000 }); else requestAnimationFrame(frame);
+      };
+      requestAnimationFrame(frame);
+    }));
+    await page.keyboard.up('KeyW');
+    const after = await position();
+    const town = await page.evaluate(() => { const { watch, town } = window.__desktopHoldTown;watch.disconnect();delete window.__desktopHoldTown;return town; });
+    return { metres: Math.hypot(after[0] - before[0], after[2] - before[2]), ...hold, town };
+  };
+  let walk = await holdW();
+  const repeated = [];
+  while (walk.metres <= 0.5 && walk.town.some(state => state !== 'joined') && repeated.length < 2) {
+    repeated.push(walk);
+    const back = await page.waitForFunction(() => document.querySelector('#canvas-host').dataset.multiplayer === 'joined', null, { timeout: 60000 }).then(() => true, () => false);
+    if (!back) break;
+    await page.waitForTimeout(1000);
+    walk = await holdW();
+  }
+  report.walk = { ...walk, repeated };
+  const hold = walk, walked = walk.metres;
+  assert.ok(walked > 0.5, `W moves the player: ${walked.toFixed(2)} m over ${hold.game.toFixed(2)} s of game time (${hold.frames} frames in ${hold.wall.toFixed(2)} s, longest ${hold.longest.toFixed(2)} s; town ${JSON.stringify(hold.town)}, ${repeated.length} repeated holds)`);
   check('keyboard movement');
   const sharedTown = await page.locator('#canvas-host').getAttribute('data-multiplayer') === 'joined';
   report.sharedTown = sharedTown;
