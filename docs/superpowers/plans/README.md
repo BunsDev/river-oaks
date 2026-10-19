@@ -186,13 +186,14 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-11-delivered-source-retirement](2026-10-11-delivered-source-retirement.md)<br>Delivered source reconciliation | `reconcile-delivered-sources` | retired | — | 2026-10-11 |
 | [2026-10-11-ci-parallel-preview](2026-10-11-ci-parallel-preview.md)<br>Parallel preview check | `ci-parallel-preview` | retired | #252 | 2026-10-11 |
 
-## Historical, not in the register (118)
+## Historical, not in the register (121)
 
 | Plan | PRs mentioned |
 | --- | --- |
 | [2026-10-18-throw-mechanics-darts-pong](2026-10-18-throw-mechanics-darts-pong.md)<br>Darts release and acceleration, and wine pong repositioning | — |
 | [2026-10-18-office-computer-embed](2026-10-18-office-computer-embed.md)<br>#486 Office desk: Tasks and Computer (Place side) | #486, #487, #33 |
 | [2026-10-18-ipic-tuck-room-photo](2026-10-18-ipic-tuck-room-photo.md)<br>IPIC Tuck Room from IMG_9756–9757 (photo review P13, P14) | — |
+| [2026-10-18-ipic-screening-viewing](2026-10-18-ipic-screening-viewing.md)<br>IPIC screening: screen-focused viewing, Join screening and truthful sound (#500) | #500, #497, #499 |
 | [2026-10-18-ipic-screening-switching](2026-10-18-ipic-screening-switching.md)<br>IPIC screening: film switching, mattes and source recovery (#498) | #498, #497, #359 |
 | [2026-10-18-ipic-screening-hosted-ci](2026-10-18-ipic-screening-hosted-ci.md)<br>Hosted CI runs the IPIC screening journey | — |
 | [2026-10-18-ipic-screening-chooser](2026-10-18-ipic-screening-chooser.md)<br>IPIC screening: an approved-film chooser for the host (#499) | #499, #497, #498 |
@@ -200,6 +201,8 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-18-ipic-mural-bay](2026-10-18-ipic-mural-bay.md)<br>IPIC: the walled-in mural landing (photo review P18, P2) | — |
 | [2026-10-18-ipic-lounge-photo](2026-10-18-ipic-lounge-photo.md)<br>IPIC lounge from IMG_9752–9758 (photo review P8, P10, P11, P12) | #469 |
 | [2026-10-18-ipic-auditorium-photo](2026-10-18-ipic-auditorium-photo.md)<br>IPIC auditorium from IMG_9767 (photo review P15, P16) | — |
+| [2026-10-18-garden-campus-traversal-508](2026-10-18-garden-campus-traversal-508.md)<br>#508 Garden campus: authoritative public traversal | #508, #506, #507 |
+| [2026-10-18-garden-campus-shells-507](2026-10-18-garden-campus-shells-507.md)<br>Garden Offices #507: the campus replaces the garage, behind a district revision | #507, #505, #506 |
 | [2026-10-18-garden-campus-contract](2026-10-18-garden-campus-contract.md)<br>#506 Garden campus: measured campus, floor and connection contract | #506, #505, #507 |
 | [2026-10-18-creator-street-ground](2026-10-18-creator-street-ground.md)<br>#491: walk across creator-region streets (2026-10-18) | #491, #420, #108 |
 | [2026-10-18-character-studio-creation-441](2026-10-18-character-studio-creation-441.md)<br>Character Studio #441: guided creation flow | #441, #464, #461 |

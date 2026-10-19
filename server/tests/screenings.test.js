@@ -307,3 +307,30 @@ test('historical fixture migration still rejects corrupt timelines and receipts'
     assert.deepEqual(target.snapshot().players, []);
   }
 });
+
+// Rollback compatibility for the two-film milestone (#502): a checkpoint written while hosts switched films keeps
+// every media id and duration it names, in the live timeline and in the operation receipts, and restores on this
+// build, stopped or playing; a resent start after the restore still applies once.
+test('a checkpoint whose timeline and receipts name both films restores, stopped or playing, and retries stay idempotent', () => {
+  const ORIGINAL = SCREENING_MEDIA['ipic-original-v1'], f = fixture();
+  assert.equal(f.send('host', 'start', { mediaId: ORIGINAL.id }).ok, true);
+  f.tick(3000);
+  assert.equal(f.send('host', 'stop').ok, true);
+  const current = f.view();
+  const resend = { type: 'screening', action: 'start', venueId: 'ipic', epoch: current.epoch, expectedRevision: current.revision, operationId: 'op-rollback-01', mediaId: FILM.id };
+  f.clock.time += 600;
+  assert.equal(f.town.command('host', resend, { sessionId: 'host-session' }).ok, true);
+  f.tick(2000);
+  const playing = f.town.checkpoint();
+  const named = JSON.stringify(playing.screenings ?? playing);
+  for (const id of [ORIGINAL.id, FILM.id]) assert.ok(named.includes(id), `the checkpoint keeps ${id}`);
+  const restored = fixture({ restore: playing, at: f.clock.time + 2000 });
+  assert.deepEqual([restored.view().status, restored.view().mediaId, restored.view().durationMs], ['playing', FILM.id, FILM.durationMs], 'the second film resumes after a quick handoff');
+  restored.clock.time += 600;
+  const replay = restored.town.command('host', resend, { sessionId: 'host-session' });
+  assert.deepEqual([replay.ok, replay.replayed, restored.view().revision], [true, true, f.view().revision], 'a resent start after the restore applies once');
+  // Stopped, with receipts naming both films: the stopped venue still restores.
+  assert.equal(f.send('host', 'stop').ok, true);
+  const stopped = fixture({ restore: f.town.checkpoint(), at: f.clock.time + 60_000 });
+  assert.deepEqual([stopped.view().status, stopped.view().mediaId], ['stopped', null]);
+});

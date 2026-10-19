@@ -14,7 +14,7 @@ function load(url, context, nextLoad) {
       if(globalThis.__remoteFailOnce===options?.appearanceId){globalThis.__remoteFailOnce=null;throw new Error('temporary asset failure');}
       const object = new THREE.Group(); object.userData.frames = []; object.userData.profile = profile; object.userData.appearance = options?.appearanceId; object.userData.suspends = 0;
       const material=new THREE.MeshStandardMaterial({color:'#123456'});material.userData.characterSlot='outfit';object.add(new THREE.Mesh(new THREE.BoxGeometry(),material));
-      if(globalThis.__remoteSkins){const bone=new THREE.Bone(),skin=new THREE.SkinnedMesh(new THREE.BoxGeometry(),new THREE.MeshStandardMaterial());skin.frustumCulled=false;skin.add(bone);skin.bind(new THREE.Skeleton([bone]));object.add(skin);}
+      if(globalThis.__remoteSkins){const bone=new THREE.Bone(),skin=new THREE.SkinnedMesh(new THREE.BoxGeometry(),new THREE.MeshStandardMaterial());skin.frustumCulled=false;skin.castShadow=true;skin.add(bone);skin.bind(new THREE.Skeleton([bone]));object.add(skin);}
       return { object, rig:{hipHeight:.9,source:{height:1.7},model:new THREE.Group()}, update(_now, action, _speaking, motion) { object.userData.frames.push({...motion,action}); }, suspend() { object.userData.suspends++; }, dispose() { object.userData.disposed=true; } };
     }` };
   if (url.endsWith('/player-costume.js')) return { format: 'module', shortCircuit: true, source: 'export function createPlayerCostume() { return { update() {}, dispose() {} }; }' };
@@ -103,6 +103,8 @@ test('remote skins cull by the whole figure, and the audit can switch that off f
     const [skin]=skins();
     assert.equal(skin.frustumCulled,true);
     assert.deepEqual([skin.boundingSphere.center.toArray(),skin.boundingSphere.radius],[[0,.55*1.7,0],.8*1.7]);
+    assert.ok(skin.customDepthMaterial?.isMeshDepthMaterial,'the shadow pass draws it with its kind\'s depth material');
+    players.setShadowDepth(false);assert.equal(skin.customDepthMaterial,undefined);players.setShadowDepth(true);assert.ok(skin.customDepthMaterial?.isMeshDepthMaterial);
     players.setCulling(false);assert.equal(skin.frustumCulled,false);
     players.sync([{id:'peer',name:'Peer',position:[0,0,0],altitude:0,yaw:0,appearance:'sable-human'},{id:'late',name:'Late',position:[2,0,0],altitude:0,yaw:0,appearance:'sable-human'}],'self');
     await new Promise(resolve=>setImmediate(resolve));
