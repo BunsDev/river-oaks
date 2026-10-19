@@ -38,7 +38,7 @@ async page => {
   await page.locator('.places-close').click();
   await closePanel(page);
   if(!await page.locator('.visit-tools').evaluate(node=>node.open))await page.locator('.visit-tools-toggle').click();
-  await page.locator('#build-mode').click();
+  await page.locator('#play-tab-build').click();await page.locator('#build-mode').click();
   const canvas=await page.locator('#canvas-host').boundingBox();
   let aimed=false;
   for(const [x,y]of [[.5,.72],[.42,.74],[.58,.74],[.5,.8],[.35,.7],[.65,.7],[.2,.7],[.25,.8],[.15,.85],[.3,.9],[.1,.72],[.18,.64]]) {
@@ -51,7 +51,7 @@ async page => {
   await page.mouse.down(); await page.mouse.up();
   await page.waitForFunction(()=>window.__riverMultiplayer().snapshot.builds.length===1);
   const build=await page.evaluate(()=>window.__riverMultiplayer().snapshot.builds[0]);
-  await page.locator('#build-mode').click();
+  await page.locator('#play-tab-build').click();await page.locator('#build-mode').click();
   await page.locator('.visit-tools-toggle').click();
   const left=`${build.id}:0`,right=`${build.id}:1`;
   await page.locator('#nearby-seat').selectOption(left);await page.locator('#seat-sit').click();

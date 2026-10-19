@@ -22,9 +22,9 @@ async page => {
   await page.waitForFunction(()=>document.querySelector('#canvas-host')?.dataset.carriageDriverReady==='true'&&window.__riverCarriage?.().placement);
   const panel=page.locator('#panel-toggle');if(await panel.getAttribute('aria-expanded')==='false')await panel.click();
   await openHudSpace(page, 'explore-section');await page.locator('#destination').selectOption({label:'Dior'});
-  await page.locator('#visit-destination').click();if(!await page.locator('.player-settings').evaluate(e=>e.open))await page.locator('.player-settings > summary').click();
+  await page.locator('#visit-destination').click();await page.locator('#play-tab-rides').click();
   await page.locator('#player-carriage').click();
-  await page.locator('#player-companion').click();await page.waitForFunction(()=>window.__riverCarriage().companion.mode==='walking');
+  await page.locator('#play-tab-character').click();await page.locator('#player-companion').click();await page.waitForFunction(()=>window.__riverCarriage().companion.mode==='walking');
   await page.keyboard.press('F3');await page.locator('[data-debug-layer="navigation"]').check();
   await page.waitForFunction(()=>window.__riverDebug().root.getObjectByName('Jev route')?.geometry.attributes.position.count>0);
   check(true,'F3 displays the current walking route in the district');

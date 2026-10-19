@@ -44,7 +44,8 @@ test('body, clothing and hair clones share one skeleton when bound to the same b
 test('late-loading AO exclusions apply immediately and restore after every pass', () => {
   const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera();
   const renderer = { capabilities: { maxSamples: 4 }, getPixelRatio: () => 1, shadowMap: { autoUpdate: true, needsUpdate: false }, autoClear: true,
-    getClearColor: target => target, getClearAlpha: () => 1, setClearAlpha: () => {}, setClearColor: () => {}, setRenderTarget: () => {}, clear: () => {}, render: () => {} };
+    getClearColor: target => target, getClearAlpha: () => 1, setClearAlpha: () => {}, setClearColor: () => {}, setRenderTarget: () => {}, clear: () => {}, render: () => {},
+    setOpaqueSort: () => {}, setTransparentSort: () => {} };
   const pipeline = createRenderPipeline(renderer, scene, camera);
   const leaf = new THREE.Mesh(new THREE.PlaneGeometry(), new THREE.MeshBasicMaterial()); leaf.userData.aoExclude = true; scene.add(leaf);
   const hiddenDuringPass = () => { const seen = []; renderer.render = () => scene.traverse(object => { if (object.isMesh && !object.visible) seen.push(object); }); pipeline.occlusion.render(renderer, { texture: {} }, { texture: {} }); return seen; };

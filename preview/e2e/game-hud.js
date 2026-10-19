@@ -13,7 +13,8 @@ async page => {
   check(await page.locator('[data-quality=smooth]').getAttribute('aria-pressed') === 'true', 'Existing graphics control works in its own settings tab');
   await page.getByRole('tab', { name: 'Graphics', exact: true }).focus();
   await page.keyboard.press('ArrowDown');
-  check(await page.getByRole('tab', { name: 'Audio', exact: true }).getAttribute('aria-selected') === 'true', 'Sidebar tabs support arrow navigation');
+  // Controls joins after Graphics once the player exists.
+  check(await page.getByRole('tab', { name: 'Controls', exact: true }).getAttribute('aria-selected') === 'true', 'Sidebar tabs support arrow navigation');
   await page.keyboard.press('Escape');
   check(await page.locator('#settings-toggle').evaluate(node => node === document.activeElement), 'Escape restores settings launcher focus');
   await page.locator('#panel-toggle').click();
