@@ -314,8 +314,24 @@ resident was ever on a campus floor when the town rolled back to the garage.
 - **Results:** 15/15 in the migration, seat and traversal suites with Redis;
   `test:server` 983/983 with Redis; hosted 18/18 at `08b5260c`. No product code changed.
 
-**Production activation:** pending. river-oaks-b5 makes the switch under Val's authorization
-and sends the `district_gardens_checkpoint_migrated` line for this section.
+**Production activation: done** (river-oaks-b5, under Val's authorization).
+1. #525 merged as `7c10f418` at 06:29:36Z.
+2. The garage deploy of `7c10f418` succeeded at 06:30:14Z.
+3. Production was set to `RIVER_OAKS_DISTRICT_REVISION=river-oaks-gardens-3`,
+   `RIVER_OAKS_DISTRICT_EPOCH=1`, and `RIVER_OAKS_CAMPUS_OPERATOR_IDS` = the account Val chose.
+   The id is not written here. Each value was verified by comparison.
+4. Redeployed at 06:31:43Z.
+5. The town switched on the first sign-in after that:
+
+   ```
+   2026-10-19T17:39:14Z dpl_3UvSb1fELmtyr7HvfWFiVtXzZvRD {"event":"district_gardens_checkpoint_migrated","from":"garage","to":"gardens","moved":0}
+   ```
+
+In the hour after, the logs held zero `district_revision_ignored`, `campus_operator_ignored`,
+`district_epoch_unchanged`, `newer_district_epoch` or "Invalid durable town district" lines,
+and zero error-level lines. Rollback, if needed: `RIVER_OAKS_DISTRICT_REVISION=river-oaks-garage-1`,
+`RIVER_OAKS_DISTRICT_EPOCH=2`, then redeploy (`docs/garden-campus.md`); #551 proves it clears
+campus-floor occupants.
 
 ## Release decision (draft, completed as evidence lands)
 
@@ -369,8 +385,9 @@ one `{from:'gardens', to:'garage'}` log. Leases stay inert and desks are untouch
 
 **Release gates still open (as of 2026-10-19 06:40Z):**
 
-- Production activation and its migration log (b5, authorized by Val). Every package has
-  landed.
+- The manual smoke test on production (Grove Offices hall, a workstation, an operator offer
+  and a resident acceptance, Floor 4 across both skywalks). Only the migration and the log
+  checks above are recorded so far.
 - Val's visual review of the matched views (`docs/design/garden-campus/finish/`,
   `docs/design/garden-campus/circulation/sheet-day.jpg`, `docs/design/garden-campus/traversal/`).
 - Physical phones and target-GPU or mobile resource budgets are unmeasured; touch is emulated.
@@ -415,23 +432,22 @@ ledger, section "Desktop macOS e2e".
 
 - **Desktop e2e owner:** the macOS "render loop keeps advancing" threshold (100 frames)
   sits inside slow runners' normal range; see the frame-count finding above.
-- **#509's owner:** `campus-leases-transport.test.js`'s `join()` waits for the first
-  snapshot with no timeout and does not reject on `close`, so a stall under load hangs
-  instead of failing.
+- **#509's suite (handled in #551):** `campus-leases-transport.test.js`'s `join()` now rejects
+  on a close before the first snapshot and after 15 s, and each test has a 120 s timeout.
 - **#486's owner:** `office-computer-embed`'s account-change tail flaked three times today
   (#546, #527 `859965a9` and `822d0d66`). Each passed on rerun.
 - **#501's owner (river-oaks-4b, told):** `scripts/tests/ipic-short-intake.test.js` fails
   on main wherever ffmpeg is installed, since #547 registered the second short.
-- **d8:** the #507 and #508 ledgers' "Next action" sections still describe the
-  pre-landing steps.
+- **Ledgers (done in this PR, d8 agreed):** #507, #508, #510 and #511 now record their
+  delivered merges instead of pre-landing steps.
 - **Product, connection continuity (#447's policy):** a client whose renderer blocks for
   over 30 s right after the handshake is cut by the heartbeat.
 - **UX, #508:** a lift moves one floor per press.
 
 ## Next action (2026-10-19 06:40Z)
 
-1. b5 makes the production switch, then the smoke test in the release decision above.
-   Record its migration log line under Evidence.
+1. Production is switched (Evidence above). The manual smoke test in the release decision is
+   still to run and record.
 2. #551 (rollback with floor occupants) is green on hosted CI, 18/18. Landing is up to Val or a
    lander.
 3. Retire the #512, slice (b) and tracker worktrees through `project:prune` once this
