@@ -436,8 +436,12 @@ ledger, section "Desktop macOS e2e".
   on a close before the first snapshot and after 15 s, and each test has a 120 s timeout.
 - **#486's owner:** `office-computer-embed`'s account-change tail flaked three times today
   (#546, #527 `859965a9` and `822d0d66`). Each passed on rerun.
-- **#501's owner (river-oaks-4b, told):** `scripts/tests/ipic-short-intake.test.js` fails
-  on main wherever ffmpeg is installed, since #547 registered the second short.
+- **#501's owner (river-oaks-4b, confirmed):** `scripts/tests/ipic-short-intake.test.js` fails
+  on main wherever ffmpeg is installed, since #547 registered the second short. Hosted
+  runners have no ffmpeg, so CI skips it. The fix is on `test/ipic-intake-named-films-20261019`
+  (task `ipic-intake-test-named-films-501`): the negative test names the two films it means,
+  and a positive test admits the second short. It passes 7/7 locally with ffmpeg; its PR and
+  landing are pending.
 - **Ledgers (done in this PR, d8 agreed):** #507, #508, #510 and #511 now record their
   delivered merges instead of pre-landing steps.
 - **Product, connection continuity (#447's policy):** a client whose renderer blocks for
