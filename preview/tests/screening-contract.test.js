@@ -11,7 +11,7 @@ test('the only venue is the IPIC auditorium; it shows the approved short first a
   assert.deepEqual(Object.keys(SCREENING_VENUES), ['ipic']);
   assert.equal(SCREENING_VENUES.ipic.interior, IPIC_INTERIOR);
   // Host Start plays the venue's first film, so the approved short (#365) leads.
-  assert.deepEqual(Object.keys(SCREENING_MEDIA), ['ipic-original-v1', 'ipic-fixture-v1']);
+  assert.deepEqual(Object.keys(SCREENING_MEDIA), ['ipic-original-v1', 'ipic-fixture-v1', 'ipic-two-seats-v1']);
   const short = SCREENING_MEDIA['ipic-original-v1'];
   assert.equal(short.fixture, false);
   assert.deepEqual(short.venues, ['ipic']);
@@ -69,10 +69,22 @@ test('position projects from the server anchor and never passes the duration or 
 test('a host chooses among approved films; the default is named, and fixtures are for tests only', async () => {
   const { SCREENING_DEFAULT_MEDIA, screeningChoices } = await import('../src/screening-contract.js');
   assert.equal(SCREENING_DEFAULT_MEDIA.ipic, 'ipic-original-v1');
-  assert.deepEqual(screeningChoices('ipic').map(film => film.id), ['ipic-original-v1'], 'the fixture is not a public choice');
-  assert.deepEqual(screeningChoices('ipic', { fixtures: true }).map(film => film.id), ['ipic-original-v1', 'ipic-fixture-v1'], 'tests may list it, default still first');
+  assert.deepEqual(screeningChoices('ipic').map(film => film.id), ['ipic-original-v1', 'ipic-two-seats-v1'], 'the fixture is not a public choice');
+  assert.deepEqual(screeningChoices('ipic', { fixtures: true }).map(film => film.id), ['ipic-original-v1', 'ipic-fixture-v1', 'ipic-two-seats-v1'], 'tests may list it, default still first');
   assert.deepEqual(screeningChoices('elsewhere'), []);
   for (const film of screeningChoices('ipic', { fixtures: true })) assert.ok(parseScreeningCommand(control('start', { mediaId: film.id })).ok, `${film.id} is startable`);
+});
+
+test('the second short (#501) carries real dialogue and music, captions, a poster and a speaker-labelled transcript', () => {
+  const film = SCREENING_MEDIA['ipic-two-seats-v1'];
+  assert.equal(film.fixture, false);
+  assert.deepEqual(film.venues, ['ipic']);
+  assert.ok(film.durationMs >= 45_000 && film.durationMs <= 90_000, 'the proposed 45-90 s');
+  assert.equal(film.audio, 'dialogue and music');
+  assert.ok(film.captions && film.poster);
+  assert.equal(film.transcript.filter(line => /^(Maya|Theo): /.test(line)).length, 8, 'eight spoken lines, each with its speaker');
+  assert.ok(film.transcript.some(line => /^\[.*music.*\]$/i.test(line)), 'the music is described');
+  assert.ok(Object.isFrozen(film) && Object.isFrozen(film.sources) && Object.isFrozen(film.transcript));
 });
 
 test('every film says truthfully what it carries: duration, sound, captions and a poster or none', () => {
