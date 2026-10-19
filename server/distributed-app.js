@@ -283,10 +283,11 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
         const identity=await authorized(req,res);if(!identity)return;
         if(!matchesWorld(url))return json(res,404,{error:'World not found.'});
         const action=path.slice('/api/office-desk/'.length);
-        const visit=async user=>{const view=await room.read();return view?.connections.some(c=>c.userId===user.userId&&c.sessionId===user.sessionId)
-          ? view.snapshot.players.find(p=>p.id===user.userId)?.office : null;};
+        // Jevica's office, or a Gardens workstation seat (#510), in this same session.
+        const visit=async user=>{const view=await room.read();if(!view?.connections.some(c=>c.userId===user.userId&&c.sessionId===user.sessionId))return null;
+          const player=view.snapshot.players.find(p=>p.id===user.userId);return player?.office??(player?.campusWorkstation===true?{id:'garden-campus'}:null);};
         const common={identity,readBody:()=>body(req,OFFICE_DESK_BODY_LIMIT),allow:id=>security.allow('office_desk',id,90,60000)};
-        const result=await officeDeskAction({...common,action,desk:officeDesk,hasVisit:async user=>(await visit(user))?.id==='jevica-office'});
+        const result=await officeDeskAction({...common,action,desk:officeDesk,hasVisit:async user=>['jevica-office','garden-campus'].includes((await visit(user))?.id)});
         return json(res,result.status,result.value);
       }
       if (path.startsWith('/api/workplace/') && req.method==='POST' && workplace) {

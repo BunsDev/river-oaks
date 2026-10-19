@@ -37,7 +37,7 @@ async page => {
     await owner.waitForFunction(ownerId=>window.__riverMultiplayer().snapshot.players.find(player=>player.id===ownerId)?.altitude>.2,ownerId);
     await owner.locator('#player-flight').click();
     await owner.waitForFunction(ownerId=>window.__riverMultiplayer().snapshot.players.find(player=>player.id===ownerId)?.altitude===0,ownerId);
-    await owner.locator('.player-settings summary').click();
+    await owner.locator('#play-tab-rides').click();
     await owner.locator('#player-ride').click();
     await owner.waitForFunction(()=>document.querySelector('#canvas-host').dataset.riding==='true');
     await owner.keyboard.down('w');

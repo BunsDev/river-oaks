@@ -19,6 +19,7 @@ export const SCREENING_VENUES = freeze({
 // say truthfully what each film carries, for the chooser.
 const SHORT_TEXT = ['Westheimer Road, River Oaks.', 'Jevica’s office, by invitation.', 'Room for good work.', 'A scene idea, saved privately.', 'Then out, to meet a friend at IPIC.', 'Past the lounge.', 'Two seats, one screen.', 'Then back to the street.'];
 const FIXTURE_TEXT = ['Fixture clip: a test pattern for shared playback.', 'A tone sounds once each second.', 'This is not the IPIC screening short.'];
+const TWO_SEATS_TEXT = ["[Soft piano music]", "Maya: Two seats, front row. Told you we'd make it.", "Theo: Barely. Westheimer was all brake lights.", "Maya: So what's on tonight?", "Theo: Whatever the host picks. That's half the fun.", "Maya: No spoilers, then.", "Theo: None. Just a good seat and good company.", "[The house lights dim]", "Maya: Here it comes.", "Theo: Phones down. Sound on.", "[The piano swells, then fades]"];
 export const SCREENING_MEDIA = freeze({
   'ipic-original-v1': freeze({
     id: 'ipic-original-v1', venues: freeze(['ipic']), durationMs: 52_555, label: 'River Oaks: an evening at the office and IPIC', fixture: false,
@@ -39,6 +40,16 @@ export const SCREENING_MEDIA = freeze({
     ]),
     captions: freeze({ src: '/assets/ipic/screening/fixture-v1.en.vtt', srclang: 'en', label: 'English' }),
     transcript: freeze(FIXTURE_TEXT),
+  }),
+  'ipic-two-seats-v1': freeze({
+    id: 'ipic-two-seats-v1', venues: freeze(['ipic']), durationMs: 62_000, label: 'Two Seats, One Screen', fixture: false,
+    audio: 'dialogue and music', poster: '/assets/ipic/screening/ipic-two-seats-v1-poster.jpg',
+    sources: freeze([
+      freeze({ src: '/assets/ipic/screening/ipic-two-seats-v1.webm', type: 'video/webm; codecs="vp9, opus"' }),
+      freeze({ src: '/assets/ipic/screening/ipic-two-seats-v1.mp4', type: 'video/mp4; codecs="avc1.4D401F, mp4a.40.2"' }),
+    ]),
+    captions: freeze({ src: '/assets/ipic/screening/ipic-two-seats-v1.en.vtt', srclang: 'en', label: 'English' }),
+    transcript: freeze(TWO_SEATS_TEXT),
   }),
 });
 
