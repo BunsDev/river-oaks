@@ -32,6 +32,7 @@ import { isJevicaAdmin } from './admin.js';
 import { accountName } from '../preview/src/resident-names.js';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, validateWorldId } from '../preview/src/world-contract.js';
 import { checkpointFailureReason } from './recovery-diagnostics.js';
+import { campusInteriorPlan, isCampusLevelId } from '../preview/src/garden-campus-levels.js';
 
 const CYCLE_GRACE_MS = 1500;
 const WISH_COOLDOWN_MS = 5000, TRAVEL_COOLDOWN_MS = 1000, CHAT_COOLDOWN_MS = 1000, GESTURE_COOLDOWN_MS = 1500, GESTURE_DURATION_MS = 3200, FOCUS_MS = 30000;
@@ -83,11 +84,16 @@ function decodeCheckpoint(json) {
 
 // The transport authenticates identities. Only this object advances the town;
 // client messages contain player intent, never resident state or elapsed time.
-export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, sharedPopulation = true, isAdmin = isJevicaAdmin, worldId = DEFAULT_WORLD_ID, random, screeningHosts = [], officeLayout, campusOperators = [] } = {}) {
+export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, sharedPopulation = true, isAdmin = isJevicaAdmin, worldId = DEFAULT_WORLD_ID, random, screeningHosts = [], officeLayout, campusOperators = [], campusAdmission = () => false } = {}) {
   validateWorldId(worldId);
   const colliders=[],placementEnvironment=createWalkingEnvironment(worldData);
   const environment = createWalkingEnvironment(worldData,colliders);
   const interiorLevels=new Map((worldData.buildingInteriors??[]).flatMap(plan=>plan.levels.map(level=>[level.id,{plan,level}])));
+  // The Gardens' floors (#508) are interior levels of one shared campus plan: l0 is the street
+  // (its tower halls start the lift and stairs), l1..l7 are authoritative walking levels.
+  // Suite floor is walkable only for whom campusAdmission(userId, unitId) admits: fail closed.
+  const campusPlan=campusInteriorPlan(worldData);
+  for(const level of campusPlan?.levels??[])interiorLevels.set(level.id,{plan:campusPlan,level});
   const upperEnvironments=new Map();
   const environmentForLevel=levelId=>{
     const entry=interiorLevels.get(levelId);
@@ -507,7 +513,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if(assignedUpper && message.levelId!==player.levelId
       || message.levelId && (interiorLevels.get(message.levelId)?.level.index??0)>0 && message.levelId!==player.levelId)
       return correction('invalid_level');
-    const movementEnvironment=environmentForLevel(player.levelId);
+    const movementEnvironment=environmentForLevel(player.levelId), campusLevel=assignedUpper && isCampusLevelId(player.levelId);
     if(player.sitting) {
       if(distance(position,player.position)>1e-6 || Math.abs(position[2]-player.position[2])>1e-6
         || altitude!==0 || message.vehicle)return correction('stand_before_moving');
@@ -543,6 +549,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       const privateRoom=height<=0.1 && restrictedRoomAt(x,north);
       if (privateRoom && !canEnterHome(player.id,privateRoom.storeId)) return correction('private_home');
       if (height>0.1 ? !movementEnvironment.canFly(x,movementEnvironment.groundAt(x,-north)+height,-north) : !movementEnvironment.isFree(x,-north)) return correction('blocked');
+      const suite=campusLevel && movementEnvironment.roomAt(x,-north)?.supportAt?.(x,north);
+      if (suite?.access==='private-suite' && !campusAdmission(player.id,suite.surfaceId)) return correction('private_suite');
     }
     if(distance(position,player.position)>.015 || altitude>.1 || message.vehicle)interactions.cancel(player.id);
     player.moveBudget -= cost;
@@ -685,11 +693,14 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     const sourceEnvironment=environmentForLevel(source.level.id);
     if(sourceEnvironment.roomAt(player.position[0],-player.position[1])?.planId!==source.level.id
       || Math.abs(player.position[2]-source.level.floorElevation)>0.2)return reject('not_at_source_level');
-    const portal=source.level.portals.find(item=>item.id===message.portalId && item.kind==='stairs');
-    if(!portal || distance(player.position,portal.position)>1.3)return reject('level_portal_out_of_reach');
+    // Campus cores have a lift beside the stairs; both are level portals (#508).
+    const portal=source.level.portals.find(item=>item.id===message.portalId && (item.kind==='stairs' || source.plan.campus && item.kind==='lift'));
+    if(!portal)return reject('invalid_level_portal');
+    if(distance(player.position,portal.position)>1.3)return reject('level_portal_out_of_reach');
     const destination=interiorLevels.get(portal.toLevelId);
-    const paired=destination?.level.portals.find(item=>item.kind==='stairs' && item.toLevelId===source.level.id
-      && distance(item.position,portal.position)<0.01);
+    // A campus portal names its pair (both roof portals of a core share one headhouse landing).
+    const paired=portal.toPortal ? destination?.level.portals.find(item=>item.id===portal.toPortal && item.toPortal===portal.id && item.toLevelId===source.level.id)
+      : destination?.level.portals.find(item=>item.kind==='stairs' && item.toLevelId===source.level.id && distance(item.position,portal.position)<0.01);
     if(!destination || destination.plan!==source.plan || !paired)return reject('invalid_level_portal');
     const targetEnvironment=environmentForLevel(destination.level.id);
     const onLevel=([x,n])=>targetEnvironment.isFree(x,-n) && targetEnvironment.roomAt(x,-n)?.planId===destination.level.id;
@@ -707,8 +718,10 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       }
     const [east,north]=arrival;
     interactions.cancel(player.id);focus.delete(player.id);
-    Object.assign(player,{position:[east,north,destination.level.floorElevation],buildingId:destination.plan.buildingId,
-      levelId:destination.level.id,altitude:0,vehicle:null,poseAt:time,moveBudget:0.1,liftBudget:0.1});
+    // Back at the campus street level a resident is on the street again, in the hall.
+    const street=destination.plan.campus && destination.level.index===0;
+    Object.assign(player,{position:[east,north,destination.level.floorElevation],buildingId:street?null:destination.plan.buildingId,
+      levelId:street?null:destination.level.id,altitude:0,vehicle:null,poseAt:time,moveBudget:0.1,liftBudget:0.1});
     revision++;
     return {ok:true,player:publicPlayer(player)};
   }
@@ -732,7 +745,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if(message.type==='campus')return campus.command(player,message,time);
     if(message.type==='interiorLevel')return changeInteriorLevel(player,message,time);
     if(interiorLevels.get(player.levelId)?.level.index>0
-      && !['chat','interaction','gesture','appearance','character','movement'].includes(message.type))return reject('return_to_ground_level');
+      && !['chat','interaction','gesture','appearance','character','movement'].includes(message.type)
+      && !(isCampusLevelId(player.levelId) && message.type==='campus'))return reject('return_to_ground_level');
     if(message.type==='stage') {
       if(!fields(message,['type','action']) || !['take','leave'].includes(message.action))return reject('invalid_stage');
       return message.action==='take'?takeStage(player,time):leaveStage(player,time);
