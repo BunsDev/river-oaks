@@ -56,17 +56,17 @@ test('a visitor throws axes against the house in a lane; two visitors share the 
   const t = town();
   t.enter('alice'); t.walk('alice', [[laneOne.a, 3.6], boxOf(laneOne)]);
   assert.equal(t.command('alice', { type: 'axes', laneId: laneOne.id, action: 'practice' }).ok, true);
-  assert.equal(t.command('alice', { type: 'axes', laneId: laneOne.id, action: 'throw', aim: [0, 0] }).ok, true);
+  assert.equal(t.command('alice', { type: 'axes', laneId: laneOne.id, action: 'throw', release: [0, 8] }).ok, true);
   assert.deepEqual(t.lane(laneOne.id).players, ['alice', 'house']);
   assert.equal(t.lane(laneOne.id).throws.length, 2);
   t.enter('bob'); t.walk('bob', [[laneTwo.a - .2, 3.6], [laneTwo.a - .2, laneTwo.box.d[0] + .3]]);
   t.enter('carol'); t.walk('carol', [[laneTwo.a + .3, 3.6], [laneTwo.a + .3, laneTwo.box.d[0] + .5]]);
   assert.equal(t.command('bob', { type: 'axes', laneId: laneTwo.id, action: 'invite', peerId: 'carol' }).ok, true);
   assert.equal(t.command('carol', { type: 'axes', laneId: laneTwo.id, action: 'accept' }).ok, true);
-  assert.equal(t.command('bob', { type: 'axes', laneId: laneTwo.id, action: 'throw', aim: [0, 0] }).ok, true);
-  assert.equal(t.command('carol', { type: 'axes', laneId: laneTwo.id, action: 'throw', aim: [0, 0] }).ok, true);
+  assert.equal(t.command('bob', { type: 'axes', laneId: laneTwo.id, action: 'throw', release: [0, 8] }).ok, true);
+  assert.equal(t.command('carol', { type: 'axes', laneId: laneTwo.id, action: 'throw', release: [0, 8] }).ok, true);
   assert.equal(t.lane(laneTwo.id).throws.length, 2);
-  assert.equal(t.command('alice', { type: 'axes', laneId: laneTwo.id, action: 'throw', aim: [0, 0] }).error, 'not_playing');
+  assert.equal(t.command('alice', { type: 'axes', laneId: laneTwo.id, action: 'throw', release: [0, 8] }).error, 'not_playing');
   // The match survives a checkpoint.
   const saved = t.world.checkpoint(), u = town();
   assert.deepEqual(u.world.restore(saved), { ok: true });

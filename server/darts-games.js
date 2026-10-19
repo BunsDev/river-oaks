@@ -89,10 +89,11 @@ export function createDartsGames({ players, lineIds = [], atLine = () => null, c
         if (!atThis) return reject('not_at_line', 'Stand at the throwing line first.');
         if (state(line).turn !== chair) return reject('not_your_turn', 'Wait for your turn.');
         const [x, y] = throwLanding(message.release, [handDraw(random()), handDraw(random())], HAND, LANDING);
-        line.points.push([tenth(x), tenth(y)]);
+        const thrown = line.points.push([tenth(x), tenth(y)]) - 1;
         settle(line);
         if (!line.result) { houseTurn(line); settle(line); }
-        return save(line);
+        // `thrown` names the thrower's own dart in the reply, ahead of any the regular throws.
+        return { ...save(line), thrown };
       }
       case 'resign': {
         if (!only(message, ['type', 'action', 'lineId'])) return reject('invalid_darts');
