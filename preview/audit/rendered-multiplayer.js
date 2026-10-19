@@ -30,7 +30,7 @@ district.vegetation = JSON.parse(await readFile(new URL('../public/data/district
 const appearances = SHARED_APPEARANCES.filter(look => look.character !== 'jevica' && look.form === 'human');
 const sourceFiles = ['pnpm-lock.yaml', 'preview/src/main.js', 'preview/src/render-audit.js', 'preview/src/render-pipeline.js',
   'preview/src/remote-players.js', 'preview/src/avatars.js', 'preview/src/romance-look.js',
-  'preview/src/reference-archetypes.js', 'preview/src/costume-batching.js', 'preview/src/draw-census.js', 'preview/src/avatar-culling.js', 'server/app.js', 'server/world.js',
+  'preview/src/reference-archetypes.js', 'preview/src/costume-batching.js', 'preview/src/draw-census.js', 'preview/src/avatar-culling.js', 'preview/src/shadow-depth.js', 'server/app.js', 'server/world.js',
   'preview/audit/rendered-multiplayer.js', 'preview/audit/metrics.js'];
 const source = { baseCommit: execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim(),
   sha256: Object.fromEntries(await Promise.all(sourceFiles.map(async file => [file, createHash('sha256').update(await readFile(`${root}/${file}`)).digest('hex')]))) };
@@ -271,11 +271,12 @@ try {
       // The same page, peers and view, alternating the feature so drift in
       // machine load falls on both arms (ABBA then BAAB). Each segment is kept,
       // so a tail that follows the clock rather than the arm is visible.
-      if (options.compare === 'avatar-culling') {
+      if (options.compare !== 'none') {
+        const toggle = options.compare.replace(/-(\w)/g, (_, letter) => letter.toUpperCase());
         const arms = { on: { frames: [], censuses: [] }, off: { frames: [], censuses: [] } }, segments = [];
         const order = ['off', 'on', 'on', 'off', 'on', 'off', 'off', 'on'];
         for (const arm of order) {
-          await page.evaluate(on => window.__riverRenderAudit.avatarCulling(on), arm === 'on');
+          await page.evaluate(([name, on]) => window.__riverRenderAudit[name](on), [toggle, arm === 'on']);
           await pause(1000);
           await page.evaluate(() => window.__riverRenderAudit.start());
           await pause(options.seconds * 1000);
@@ -284,8 +285,8 @@ try {
           assert.equal(timing.overflow, false); arms[arm].frames.push(...timing.frames);
           segments.push({ arm, frame: distribution(timing.frames.map(frame => frame.intervalMs)), cpuSubmission: distribution(timing.frames.map(frame => frame.cpuMs)) });
         }
-        await page.evaluate(() => window.__riverRenderAudit.avatarCulling(true));
-        row.compare = { feature: 'avatar-culling', order, secondsPerSegment: options.seconds, segments, arms: Object.fromEntries(Object.entries(arms).map(([arm, { frames, censuses }]) =>
+        await page.evaluate(name => window.__riverRenderAudit[name](true), toggle);
+        row.compare = { feature: options.compare, order, secondsPerSegment: options.seconds, segments, arms: Object.fromEntries(Object.entries(arms).map(([arm, { frames, censuses }]) =>
           [arm, { frame: distribution(frames.map(frame => frame.intervalMs)), cpuSubmission: distribution(frames.map(frame => frame.cpuMs)), drawCensus: censuses }])) };
         console.log(`${profile.name} ${count}: culling off frame p50/p95 ${row.compare.arms.off.frame.p50Ms}/${row.compare.arms.off.frame.p95Ms} ms, on ${row.compare.arms.on.frame.p50Ms}/${row.compare.arms.on.frame.p95Ms} ms`);
       }

@@ -1,5 +1,5 @@
-// Versioned office layouts (#361). The legacy 9 x 7 m room stays the default and the
-// rollback; the penthouse is the reviewed #360 proposal (docs/design/office-ipic/
+// Versioned office layouts (#361). The legacy room is retained only to validate old
+// checkpoints; live offices use the penthouse (docs/design/office-ipic/
 // layout-contract.json), expressed in #349's level and portal shape: levels
 // `jevica-office/l<n>`, portals `<level>/portal/<name>`. Positions are the office's own
 // [x, d] frame (x east across the entrance wall, d inward); a level's floorElevation is
@@ -25,7 +25,7 @@ import { OFFICE_ROOM, OFFICE_SPAWN, officeFree } from './office-contract.js';
 
 export const OFFICE_LAYOUT_LEGACY = 'office-legacy-1';
 export const OFFICE_LAYOUT_PENTHOUSE = 'office-penthouse-1';
-export const DEFAULT_OFFICE_LAYOUT = OFFICE_LAYOUT_LEGACY;
+export const DEFAULT_OFFICE_LAYOUT = OFFICE_LAYOUT_PENTHOUSE;
 export const OFFICE_BUILDING = 'jevica-office';
 export const OFFICE_PORTAL_REACH = 1.3;
 export const OFFICE_SEAT_REACH = 1.3;
