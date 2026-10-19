@@ -312,7 +312,7 @@ resident was ever on a campus floor when the town rolled back to the garage.
 - **Mutations:** the case fails if the move leaves `levelId` set or the selection skips
   level occupants.
 - **Results:** 15/15 in the migration, seat and traversal suites with Redis;
-  `test:server` 983/983 with Redis. No product code changed.
+  `test:server` 983/983 with Redis; hosted 18/18 at `08b5260c`. No product code changed.
 
 **Production activation:** pending. river-oaks-b5 makes the switch under Val's authorization
 and sends the `district_gardens_checkpoint_migrated` line for this section.
@@ -432,6 +432,7 @@ ledger, section "Desktop macOS e2e".
 
 1. b5 makes the production switch, then the smoke test in the release decision above.
    Record its migration log line under Evidence.
-2. #551 (rollback with floor occupants): hosted CI, then landing by Val or a lander.
+2. #551 (rollback with floor occupants) is green on hosted CI, 18/18. Landing is up to Val or a
+   lander.
 3. Retire the #512, slice (b) and tracker worktrees through `project:prune` once this
    tracker's PR lands.
