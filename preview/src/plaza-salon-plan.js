@@ -272,6 +272,12 @@ export function winePongSide(table, [east, north]) {
   for (const side of [0, 1]) { const [x, n] = winePongStand(table, side); if (Math.hypot(east - x, north - n) <= WINE_PONG_REACH) return side; }
   return null;
 }
+// Near enough to the table to keep a game open while repositioning: within this far of
+// either end's throwing reach. Further away, the visitor has left the table.
+export const WINE_PONG_LEAVE = 2.5;
+export function winePongNear(table, [east, north]) {
+  return [0, 1].some(side => { const [x, n] = winePongStand(table, side); return Math.hypot(east - x, north - n) <= WINE_PONG_REACH + WINE_PONG_LEAVE; });
+}
 // Preserve the actual standing point for the ball release. A launch must remain
 // beyond the table end; the round interaction reach alone also includes its top.
 export function winePongOrigin(table, side, point) {

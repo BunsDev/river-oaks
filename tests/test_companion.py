@@ -6,6 +6,7 @@ from pydantic import ValidationError
 
 from river_oaks.auto import AutoEngine
 from river_oaks.companion import CompanionEngine, CompanionSnapshot, eligible, request_body
+from river_oaks.jev import JEV_MODEL
 from river_oaks.service import create_app
 
 CANDIDATES = [
@@ -27,7 +28,7 @@ def packet(**changes):
 def reply(body, choice, confidence=0.9):
     options = body["questions"]["next_action"]["criteria"]
     return {
-        "model": "jev-1.13.0",
+        "model": JEV_MODEL,
         "answers": {
             "next_action": {
                 "type": "choice",
@@ -40,7 +41,7 @@ def reply(body, choice, confidence=0.9):
 
 
 def ids(p):
-    return set(request_body(p, "jev-1.13.0")["questions"]["next_action"]["criteria"])
+    return set(request_body(p, JEV_MODEL)["questions"]["next_action"]["criteria"])
 
 
 def test_eligibility_keeps_the_prince_sensible():

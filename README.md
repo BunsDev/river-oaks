@@ -138,7 +138,7 @@ key is validated by Jev on the next inference request.
 uv run --env-file .env river-oaks serve
 ```
 
-The adapter uses the documented `POST /v1/systemone` choice interface with `jev-1.13.0`, at most 32 questions per batch, four concurrent requests, and a 750 ms overall deadline. It caps starts at 15 batches per second and falls back when overloaded, late, malformed, or low-confidence. Batch priority rotates each tick to avoid starving the last agents. No remote retry backlog accumulates. Each question names its target NPC explicitly. A provided key enables billable remote calls; tests use local transports and synthetic fixtures only.
+The adapter uses the documented `POST /v1/systemone` choice interface with `jev-1.14.0` (pinned in `src/river_oaks/jev.py`), at most 32 questions per batch, four concurrent requests, and a 750 ms overall deadline. It caps starts at 15 batches per second and falls back when overloaded, late, malformed, or low-confidence. Batch priority rotates each tick to avoid starving the last agents. No remote retry backlog accumulates. Each question names its target NPC explicitly. A provided key enables billable remote calls; tests use local transports and synthetic fixtures only.
 
 Unreal sends a snapshot at most every two seconds and never blocks movement on HTTP. One request may be outstanding; old ticks and responses older than 1.5 seconds are rejected. Local collision, schedule, and weather limits remain authoritative. `seek_shelter` pauses a marker in this foundation; reachable shelter navigation and vehicle lane topology remain unimplemented.
 
