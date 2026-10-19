@@ -190,8 +190,11 @@ here and in #508's ledger.
   snapshot position for the stranger once two reads 500 ms apart agree. Local run:
   `garden-campus-suite` 10/10, stranger held at [14.50, 51.05].
 
-## Still to do (in order)
+## Delivered
 
-1. Get `preview` and the `campus` shard green on the head that carries the journey fix, and
-   `verify` once #546 is on main.
-2. When #537 lands (d8), merge main and re-run, then hand the head SHA to river-oaks-b5.
+#527 merged at 2026-10-19T05:29:33Z as `69699036` (river-oaks-b5, from head `1653f8ce`, 20/20
+hosted). #540 (`5f3f5dc2`, dev-invite override) had changed the `createSharedWorld`
+signature. `822d0d66` kept its `isDevGuest` option and this package's `campusAdmission`
+with no default, so admission falls back to #509's `suiteAccess`. Result: 211/211 with an
+isolated Redis across 33 files, 0 skips. The local worktree is retired, with
+`output/playwright` archived.
