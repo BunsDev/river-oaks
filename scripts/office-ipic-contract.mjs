@@ -119,6 +119,8 @@ function checkIpic(place, live, problems) {
   if (live.ipicRoom) {
     for (const key of ['depth', 'height']) if (!near(place.bounds?.[key], live.ipicRoom[key])) problems.push(`${at}: ${key} differs from the live room`);
     if (!near(place.bounds?.width, live.ipicRoom.width)) problems.push(`${at}: width differs from the live room ${live.ipicRoom.width}`);
+    const wing = live.ipicRoom.parts?.[0];
+    if (Boolean(place.bounds?.wing) !== Boolean(wing) || (wing && !['aMin', 'aMax', 'd0', 'd1'].every(k => near(place.bounds.wing[k], wing[k])))) problems.push(`${at}: wing differs from the live room`);
     for (const level of place.levels ?? []) for (const d of level.dRange ?? []) if (!near(live.ipicRoom.floorAt(...live.ipicRoom.toWorld(0, d)) - live.ipicRoom.floor, level.elevation)) problems.push(`${at}: level ${level.id} elevation differs from floorAt(d=${d})`);
     const seatIds = new Set(live.ipicSeatIds ?? []);
     for (const anchor of place.anchors ?? []) if (anchor.seatId && !seatIds.has(anchor.seatId)) problems.push(`${at}: seat anchor ${anchor.id} names unknown seat ${anchor.seatId}`);
