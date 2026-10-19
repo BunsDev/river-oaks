@@ -38,7 +38,7 @@ async page => {
   await page.locator('.places-close').click();
   await closePanel(page);
   if(!await page.locator('.visit-tools').evaluate(node=>node.open))await page.locator('.visit-tools-toggle').click();
-  await page.locator('#build-mode').click();
+  await page.locator('#play-tab-build').click();await page.locator('#build-mode').click();
   const canvas=await page.locator('#canvas-host').boundingBox();
   let aimed=false;
   for(const [x,y]of [[.5,.72],[.42,.74],[.58,.74],[.5,.8],[.35,.7],[.65,.7],[.2,.7],[.25,.8],[.15,.85],[.3,.9],[.1,.72],[.18,.64]]) {
@@ -51,7 +51,7 @@ async page => {
   await page.mouse.down(); await page.mouse.up();
   await page.waitForFunction(()=>window.__riverMultiplayer().snapshot.builds.length===1);
   const build=await page.evaluate(()=>window.__riverMultiplayer().snapshot.builds[0]);
-  await page.locator('#build-mode').click();
+  await page.locator('#play-tab-build').click();await page.locator('#build-mode').click();
   await page.locator('.visit-tools-toggle').click();
   const left=`${build.id}:0`,right=`${build.id}:1`;
   await page.locator('#nearby-seat').selectOption(left);await page.locator('#seat-sit').click();
@@ -73,8 +73,7 @@ async page => {
     await guest.routeWebSocket('**/multiplayer?*',route=>{guestSocket={client:route,server:route.connectToServer()};connections++;});
     await join(guest,'guest');
     if(!await guest.locator('.visit-tools').evaluate(node=>node.open))await guest.locator('.visit-tools-toggle').click();
-    await guest.locator('input[name=player-form][value=beast]').check();
-    await guest.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerAppearance==='woman-casual'&&document.querySelector('#canvas-host').dataset.playerReady==='true');
+    await guest.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerAppearance==='sable-human'&&document.querySelector('#canvas-host').dataset.playerReady==='true');
     await guest.locator('.visit-tools-toggle').click();await openPlaces(guest);
     await guest.locator('.world-map-player-list>summary').click();
     await guest.locator(`.world-map-player-list button[data-peer-id="${owner.id}"]`).click();
@@ -86,14 +85,14 @@ async page => {
     await guest.locator('#nearby-seat').selectOption(right);await guest.locator('#seat-sit').click();
     await guest.waitForFunction(()=>document.querySelector('#player-mode')?.textContent==='Seated');
     const visitor=await self(guest);
-    check(visitor.sitting?.slot===1&&visitor.appearance==='woman-casual'&&!visitor.canBuild&&!visitor.canGrantWishes,'A guest uses the second slot without acquiring admin powers');
+    check(visitor.sitting?.slot===1&&visitor.appearance==='sable-human'&&!visitor.canBuild&&!visitor.canGrantWishes,'A guest uses the second slot without acquiring admin powers');
     await page.waitForFunction(id=>window.__riverMultiplayer().remotes?.some(p=>p.id===id&&p.ready&&p.riderSeated&&p.sitting?.slot===1),visitor.id);
     check(true,'The other browser renders the confirmed remote seated pose');
     if(await guest.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await guest.locator('#panel-toggle').click();
     await openHudSpace(guest, 'community-section');
     await guest.getByRole('button',{name:'Wave',exact:true}).click();
     await page.waitForFunction(id=>window.__riverMultiplayer().remotes?.some(p=>p.id===id&&p.gesture==='wave'&&p.rightArmMotion>.7&&p.riderSeated),visitor.id);
-    check(true,'Seated fox visitors visibly wave to the other browser without moving their seat');
+    check(true,'Seated visitors visibly wave to the other browser without moving their seat');
     await closePanel(guest);
     if(!await page.locator('.visit-tools').evaluate(node=>node.open))await page.locator('.visit-tools-toggle').click();
     await page.locator('#build-list button',{hasText:'Remove'}).click();

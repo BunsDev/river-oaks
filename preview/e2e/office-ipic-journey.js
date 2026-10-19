@@ -65,8 +65,16 @@ async (owner, resident) => {
   const ownerId = await selfId(owner), residentId = await selfId(resident);
   await resident.emulateMedia({ reducedMotion: 'reduce' });
 
+  // "Go to office lobby" does nothing until the office catalog exists, which comes from the district
+  // world: under load that arrives after the player is ready, and a click before it was lost (2026-10-18).
+  // The Offices panel is revealed once the catalog is there.
+  const goToLobby = async page => {
+    await page.waitForFunction(() => document.querySelector('#office-lobby')?.closest('.office-panel')?.hidden === false, null, { timeout: 90000 });
+    await page.locator('#office-lobby').evaluate(button => button.click());
+  };
+
   // 1. Permission: B is refused and asks; A accepts from the Offices panel in the play dock.
-  await resident.locator('#office-lobby').evaluate(button => button.click());
+  await goToLobby(resident);
   await resident.locator('#office-nearby').waitFor({ state: 'visible' });
   await resident.locator('#canvas-host').focus(); await resident.keyboard.press('KeyF');
   await resident.locator('#office-request-dialog[open]').waitFor();
@@ -74,7 +82,7 @@ async (owner, resident) => {
   const refused = await command(resident, { type: 'office', action: 'enter', officeId: OFFICE });
   check(refused.error === 'office_permission_required', `a direct entry command is refused: ${JSON.stringify(refused)}`);
   await resident.locator('#office-request-send').click();
-  await owner.locator('#office-lobby').evaluate(button => button.click());
+  await goToLobby(owner);
   if (!await owner.locator('.visit-tools').evaluate(dock => dock.open)) await owner.locator('.visit-tools-toggle').click();
   const accept = owner.locator('#office-management button').filter({ hasText: 'Accept' });
   await accept.waitFor({ timeout: 20000 }); await accept.click();
@@ -83,7 +91,7 @@ async (owner, resident) => {
 
   // 2. Arrival: A rides and skips the film; B arrives with reduced motion.
   await resident.locator('#office-request-dialog').evaluate(dialog => dialog.open && dialog.close());
-  await resident.locator('#office-enter').click();
+  await resident.locator('#play-tab-office').click(); await resident.locator('#office-enter').click();
   await owner.locator('#canvas-host').focus(); await owner.keyboard.press('KeyF');
   await owner.locator('#office-visit[open]').waitFor();
   await owner.locator('#office-skip').click().catch(() => {});

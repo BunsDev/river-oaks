@@ -121,7 +121,19 @@ export function createSpaceScene(space, theme = 'light') {
         break;
       }
       case 'glazing': {
-        box(root,glass(),[.96,.96,.14],[0,.5,0],'Glass pane');
+        // Deep raised glazing standing on a counter is a glass display case.
+        if (object.elevation > 0 && object.depth > .3) {
+          home.displayCase(root,object,mat,glass(),[['#c98a4b',.7],['#e9d5aa',.8],['#6e4330',.6]].map(([color,roughness])=>special(`pastry:${color}`,{ color,roughness })));
+          break;
+        }
+        // Thin raised glazing (a fitting-room or wall mirror) is silvered; other glazing is glass.
+        const mirror = object.elevation > 0 && object.depth <= .06 && object.height >= .8;
+        if (mirror) {
+          // The viewport gives mirrors the room reflection at full strength (userData.mirror).
+          const silver = special('mirror',{ color:'#e9eded', metalness:1, roughness:.03 });silver.userData.mirror = true;
+          box(root,silver,[.96,.96,.5],[0,.5,.15],'Mirror');
+        }
+        else box(root,glass(),[.96,.96,.14],[0,.5,0],'Glass pane');
         const stile = Math.min(.1,.055/object.width), rail = Math.min(.1,.055/object.height);
         for (const x of [-.5+stile/2,.5-stile/2]) box(root,mat,[stile,1,1],[x,.5,0],'Window stile');
         box(root,mat,[1,rail,1],[0,1-rail/2,0],'Window rail');
@@ -175,30 +187,22 @@ export function createSpaceScene(space, theme = 'light') {
       }
       case 'chair': forms.chair(root,object,mat,wood()); break;
       case 'desk': forms.desk(root,object,mat,finish('charcoal')); break;
-      case 'table': {
-        legs(root,wood(),.91,.055,.4);
-        box(root,mat,[1,.09,1],[0,.955,0],'Tabletop',true);
-        break;
-      }
+      case 'table': home.table(root,object,mat,wood()); break;
       case 'bed': home.bed(root,object,{ cover:textile(object.finish), linen:textile('linen'), timber:wood(), accent:textile(object.finish === 'sage' ? 'terracotta' : 'sage') }); break;
       case 'cabinet':
       case 'counter': {
+        // A stone cabinet is a display plinth: one solid block over a shadow gap.
+        if (object.kind === 'cabinet' && ['limestone','concrete','terracotta'].includes(object.finish)) {
+          const gap = Math.min(.02,object.height/10)/object.height;
+          box(root,finish('charcoal'),[.96,gap,.96],[0,gap/2,0],'Shadow gap');
+          trueRound(root,mat,[1,1-gap,1],[0,(1+gap)/2,0],'Plinth',.004);
+          break;
+        }
         cabinet(root,mat,.92);
         trueRound(root,object.kind === 'counter' ? finish('limestone','slab') : mat,[1,.08,1],[0,.96,0],'Countertop',.006);
         break;
       }
-      case 'shelf': {
-        box(root,mat,[1,1,.06],[0,.5,-.47],'Back panel');
-        for (const x of [-.47,.47]) box(root,mat,[.06,1,1],[x,.5,0],'Side panel');
-        for (const y of [.025,.26,.495,.73,.975]) box(root,mat,[1,.05,1],[0,y,0],'Shelf');
-        const bays=Math.min(12,Math.ceil(object.width/1.2));
-        for(let i=1;i<bays;i++)box(root,mat,[Math.min(.04,.025/object.width),1,.96],[-.5+i/bays,.5,-.02],'Shelf divider');
-        for (const [x,y,tone] of [[-.28,.4,'sage'],[.2,.17,'terracotta'],[.15,.87,'fabric']]) {
-          box(root,finish(tone),[.21,.16,.5],[x,y,-.03],'Display object',true);
-          box(root,finish('white'),[.27,.035,.55],[x,y-.08,0],'Book');
-        }
-        break;
-      }
+      case 'shelf': home.shelf(root,object,mat,finish('charcoal'),['linen','sage','terracotta','fabric'].map(textile)); break;
       case 'sink': {
         cabinet(root,mat,.56);
         const stone = finish('limestone','slab'), metal = finish('brass');

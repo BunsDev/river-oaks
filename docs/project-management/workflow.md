@@ -1,8 +1,13 @@
 # Task ownership and retirement
 
-`tasks.json` is the task register. The primary checkout's uncommitted copy is the live
-register; claims, releases and `project:prune` use it, and a branch's copy can be
-stale (see [register sweeps](#register-sweeps)). Dated ledgers under
+The live task register is one JSON file in the common Git directory
+(`.git/river-oaks-tasks.json`, printed by `pnpm run --silent register path`). Every
+worktree shares it, and claims, releases, `project:status` and `project:prune` use it.
+It is changed only under a short lock, and Git never reads or writes it, so a pull,
+a branch switch or a GUI client's stash cannot move it.
+`docs/project-management/tasks.json` is a committed snapshot of it, updated only by
+[register sweeps](#register-sweeps); feature PRs must not change it (Verify fails
+them). Dated ledgers under
 `docs/superpowers/plans/` retain implementation and verification history. GitHub
 is authoritative for PR state; local Git is authoritative for files and refs.
 A register entry records the next action, not a substitute for either source.
@@ -11,9 +16,7 @@ A register entry records the next action, not a substitute for either source.
 
 1. Run `git status --short`, `git worktree list` and
    `pnpm run --silent project:status --github --output .runtime/project-status.json`.
-   It reads the register in the checkout you run it from. From a feature
-   worktree, pass `--tasks <primary>/docs/project-management/tasks.json` to check
-   the live register.
+   It reads the live register from any worktree (`--tasks <file>` reads a file instead).
    Create `.runtime` first when absent. This command reads Git and GitHub; it never
    fetches, checks out, edits tasks, deletes refs, or removes worktrees. Refresh
    `origin` explicitly before delivery or retirement decisions.
@@ -28,8 +31,11 @@ A register entry records the next action, not a substitute for either source.
    prune find a task's PR only through `pr` (a number). Delivered and retired tasks
    need `evidence`, an array of `{pr, reviewedHead, merge, tree, checks}`. Retired
    tasks also need `archive`. `deliveryPr` is informational.
+   Write it with `pnpm run register patch <id> --json '{"status":"active",...}'`
+   (`--create` adds a new task, `--unset leaseUntil` removes a field). The patch
+   merges your fields into the current entry under the register lock, stamps
+   `updatedAt`, and refuses a change that would make the register invalid.
    An active claim is a coordination record, not a lock enforced by the tool.
-   Inspect the diff again before saving because other agents may update the file.
 4. Use `active` only with a named owner and a bounded lease (normally two hours).
    Renew during sustained work. An expired lease requires reconciliation; it never
    authorizes taking another session's changes. Record a handoff before transferring.
@@ -99,25 +105,27 @@ common Git directory (`scripts/browser-lock.mjs`):
 
 ## Register merges and stashes
 
-The primary checkout's `tasks.json` is the live register, an uncommitted edit that
-branches also change. `.gitattributes` routes it through a merge driver that
-`pnpm install` installs with the other shared hooks (`install-project-hooks.mjs`).
-Branch merges, rebases and stash pops then merge the register by task id:
+The live register is not in the working tree, so merges, rebases, pulls and stashes
+never touch it. Older instructions had sessions edit the primary checkout's
+`docs/project-management/tasks.json` directly. Every read of the live register
+(`register`, `project:status`, `project:prune`, `project:inventory`) absorbs such an
+edit by task id, then puts the tracked file back to its committed text, so the
+primary checkout stays clean:
 
 - An entry changed on one side takes that side, including a deletion.
 - An entry changed on both sides takes the newer `updatedAt`.
 - A deletion never discards an edit made on the other side.
 
-Without the driver, for example in a fresh clone before `pnpm install`, Git falls
-back to its line merge.
+The committed snapshot still merges through the same rules: `.gitattributes`
+routes it through a merge driver that `pnpm install` installs with the other shared
+hooks (`install-project-hooks.mjs`). Without the driver, for example in a fresh
+clone before `pnpm install`, Git falls back to its line merge.
 
-A GUI client's pull can stash the live register and leave it stashed. `project:check`
-reports any stash that holds register edits. To recover, merge that stash's
-register into the live one by task id, keeping the newer `updatedAt` and every
-id. Write the result atomically, refusing if the file changed, then drop the stash.
-If the register contains conflict markers, `project:status` fails validation and
-exits 2. Find them with `grep -n '^<<<<<<<' docs/project-management/tasks.json`
-and resolve them the same way.
+A tracked copy with conflict markers is not absorbed; `project:status` names the
+markers and exits 2. Find them with `grep -n '^<<<<<<<' docs/project-management/tasks.json`,
+merge the two sides by task id, and the next read absorbs the result.
+`project:check` still reports any stash that holds register edits; the next read
+absorbs them once they are popped, or merge them in with `register patch`.
 
 ## Daily reconciliation and handoff
 
@@ -225,8 +233,8 @@ GitHub API, so it needs network access and `gh` authentication. Exit 0 means
 eligible (or retired with `--apply`), 1 means a dry run found blockers, and 2 means
 an error, including a blocked `--apply`. Add `--apply` to retire that exact
 local branch and its worktree. There is no bulk, force, remote-delete or age-based
-mode. The command reads the **primary checkout's** task register so stale copies in
-feature worktrees cannot release another owner's work.
+mode. The command reads the **live** task register (the common Git directory), so
+stale snapshot copies in feature worktrees cannot release another owner's work.
 
 Before applying, the task owner must release the delivered task (`owner: null`,
 remove `leaseUntil`) and record `retirement: { head, releasedAt, sessionsReviewedAt }`.
@@ -286,7 +294,7 @@ owner; `lease-expired` is a flag, not a release), `open-pr`, `detached`,
 `retire-candidate` (delivered at the exact merged head; only the session release
 is missing), `retire-eligible` (`project:prune` would accept it now) or
 `blocked:<reasons>` (the same blockers `project:prune` reports). It reads the
-primary checkout's live register and GitHub (`--no-github` skips that), fetches
+live register and GitHub (`--no-github` skips that), fetches
 without pruning (`--no-fetch` skips that), and changes nothing. `--json` and
 `--output <file>` give the machine-readable report.
 
@@ -320,32 +328,13 @@ the authorization, cutoff and guard rules above apply unchanged.
 
 ## Register sweeps
 
-Branches commit their own register entries, but `project:prune` writes retirement
-records only to the primary's live file. Releases and other sessions' updates also
-land there first. So the live register runs ahead of `main`.
+The committed `docs/project-management/tasks.json` is a snapshot of the live
+register for history and review. It drifts by design. When it should be refreshed,
+open a docs-only register sweep PR from current `main` on a
+`docs/register-sweep-<date>` branch (the only branches Verify lets change it):
 
-When it has drifted, open a docs-only register sweep PR from current `main`, on a
-`docs/register-sweep-<date>` branch:
-
-1. Copy the live entries exactly as written: only your own, or the whole live file
-   when the owners agree. Confirm first that no committed entry is newer than its
-   live counterpart.
-2. Claim the sweep as its own task.
-3. Validate with `project:status`, and merge.
-
-The merge driver keeps later live edits on the next fast-forward of the primary.
-The sweep's own retirement record is live-only until the next sweep.
-Examples: #255, #269, and the docs refresh of 2026-10-12.
-
-```mermaid
-%% diagram: task-lifecycle-and-retirement (placeholder; replace this block with the real diagram)
-flowchart LR
-  pending["Diagram pending: Task lifecycle and safe retirement"]
-```
-<details><summary>Diagram prompt: task-lifecycle-and-retirement</summary>
-
-Draw a flowchart of one task from claim to retirement in the task register. States: queued/active (claimed with owner, branch, leaseUntil) -> blocked (optional) -> delivered (exact PR, reviewed head, merge commit, tree, checks as an evidence array) -> retired. Then the retirement path run by `pnpm run project:prune`: owner releases (owner null, no leaseUntil, retirement {head, releasedAt, sessionsReviewedAt} within 2 h, in the PRIMARY checkout's live tasks.json) -> archive ignored evidence and clear regenerable caches -> dry run (blockers: ownership-not-released, dirty, ignored-data, exact-merged-pr-required, merge-not-on-default, aggregate-tree-review-required, active-process) -> --apply: lock, archive tag, bundle, restore into a fresh bare repo, fsck, non-forced worktree removal, expected-SHA ref deletion through the reference-transaction hook permit -> register updated to retired. Show the side path for superseded branches (blocked for aggregate review, archived but kept) and the register merge driver reconciling live and committed copies by task id.
-
-See [the diagram index](../diagrams.md) for the convention.
-
-</details>
+1. Claim the sweep as its own task in the live register.
+2. Write the snapshot: `pnpm run register snapshot` in the sweep worktree writes the
+   live register to its `docs/project-management/tasks.json`.
+3. Regenerate the plans index (`pnpm run plans:index`), validate with
+   `project:status --tasks docs/project-management/tasks.json`, and merge.

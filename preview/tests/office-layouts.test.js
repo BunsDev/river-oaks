@@ -17,24 +17,25 @@ const LEVEL_OF = { l0: L0, mezz: L1 };
 const anchor = id => penthouse.anchors.find(item => item.id === id);
 const near = (a, b) => Math.abs(a - b) < 1e-9;
 
-// Breadth-first search on a 0.2 m grid anchored at the start: is there a walkable path on one level?
-function walkable(layout, levelId, from, to) {
+// Breadth-first search on a 0.2 m grid anchored at the start: is there a walkable path on one level,
+// beside any occupied seats?
+function walkable(layout, levelId, from, to, occupied = []) {
   const step = 0.2, at = ([i, j]) => [from[0] + i * step, from[1] + j * step];
   const seen = new Set(['0,0']), queue = [[0, 0]];
-  while (queue.length) {
-    const cell = queue.shift(), here = at(cell);
-    if (Math.hypot(here[0] - to[0], here[1] - to[1]) <= step && officeLevelSegmentFree(layout, levelId, here, to)) return true;
+  for (let head = 0; head < queue.length; head++) {
+    const cell = queue[head], here = at(cell);
+    if (Math.hypot(here[0] - to[0], here[1] - to[1]) <= step && officeLevelSegmentFree(layout, levelId, here, to, occupied)) return true;
     for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
       const next = [cell[0] + di, cell[1] + dj], key = next.join();
-      if (seen.has(key) || !officeLevelFree(layout, levelId, at(next))) continue;
+      if (seen.has(key) || !officeLevelFree(layout, levelId, at(next), occupied)) continue;
       seen.add(key); queue.push(next);
     }
   }
   return false;
 }
 
-test('the legacy office stays the default and its collision is unchanged', () => {
-  assert.equal(DEFAULT_OFFICE_LAYOUT, OFFICE_LAYOUT_LEGACY);
+test('the penthouse is the default; legacy collision remains readable for checkpoint validation', () => {
+  assert.equal(DEFAULT_OFFICE_LAYOUT, OFFICE_LAYOUT_PENTHOUSE);
   assert.deepEqual(Object.keys(OFFICE_LAYOUTS).sort(), [OFFICE_LAYOUT_LEGACY, OFFICE_LAYOUT_PENTHOUSE].sort());
   assert.equal(officeLayout('office-penthouse-0'), null);
   assert.equal(officeLayout('__proto__'), null);
@@ -125,6 +126,31 @@ test('the penthouse main floor has the kit\'s three measured desks (R19), clear 
   // A desk is collision for the body, server and client alike.
   assert.equal(officeLevelFree(penthouse, L0, [5, 7]), false);
   assert.equal(officeLevelFree(penthouse, L0, [-3, 8]), false);
+});
+
+test('#362\'s furnishings stand in their rooms, clear of every anchor, stand point and landing, and every route stays walkable with the other seats taken', () => {
+  const main = penthouse.levels.find(level => level.id === L0), furniture = main.obstacles.filter(o => o.kind === 'furniture');
+  const gap = (box, [x, d]) => Math.hypot(x - Math.max(box.x0, Math.min(x, box.x1)), d - Math.max(box.d0, Math.min(d, box.d1)));
+  for (const id of ['lounge-sofa', 'lounge-chair-a', 'lounge-chair-b', 'lounge-table', 'botanical-planter', 'meeting-table', 'meeting-chair-1', 'terrace-lounger-a', 'terrace-bistro-table'])
+    assert.ok(furniture.some(o => o.id === id), `${id} is collision`);
+  const keepClear = [...penthouse.anchors.filter(a => a.levelId === L0).map(a => [a.id, a.position]), ...penthouse.seats.filter(s => s.levelId === L0).map(s => [`${s.id} stand point`, s.stand]), ...main.portals.map(p => [p.id, p.position])];
+  for (const o of furniture) {
+    assert.ok(main.rooms.some(room => o.x0 >= room.x0 && o.x1 <= room.x1 && o.d0 >= room.d0 && o.d1 <= room.d1), `${o.id} stands inside one room`);
+    assert.ok(o.height > 0 && o.height <= 1.2, `${o.id} has a height`);
+    for (const other of main.obstacles.filter(item => item !== o))
+      assert.ok(!(o.x0 < other.x1 && o.x1 > other.x0 && o.d0 < other.d1 && o.d1 > other.d0), `${o.id} overlaps ${other.id}`);
+    for (const [name, point] of keepClear) assert.ok(gap(o, point) >= AVATAR_ENVELOPE.turningRadius, `${o.id} keeps ${name} clear (${gap(o, point).toFixed(2)} m)`);
+    for (const chair of main.chairs) assert.ok(gap(o, chair.position) >= 0.4 + AVATAR_ENVELOPE.turningRadius, `${o.id} leaves ${chair.id} reachable`);
+  }
+  for (const route of proposed.routes.filter(item => item.required && item.kind === 'walk' && anchor(item.from).levelId === L0)) {
+    const from = anchor(route.from), to = anchor(route.to);
+    const occupied = penthouse.seats.filter(seat => seat.levelId === L0 && seat.workstation !== route.to && seat.workstation !== route.from);
+    assert.ok(walkable(penthouse, L0, from.position, to.position, occupied), `${route.from} -> ${route.to} with ${occupied.length} seats taken`);
+  }
+  // Furniture is collision for the body, server and client alike.
+  assert.equal(officeLevelFree(penthouse, L0, [-9.9, 12]), false, 'the lounge sofa');
+  assert.equal(officeLevelFree(penthouse, L0, [7.2, 17.7]), false, 'the meeting table');
+  assert.equal(officeLevelFree(penthouse, L0, [-20.9, 16.8]), false, 'a terrace lounger');
 });
 
 test('overlapping floors are told apart by level, never by a nearest elevation', () => {

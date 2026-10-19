@@ -1,20 +1,23 @@
 // Shared axe throwing at the lanes of the unbranded axe-and-darts room (Val, 2026-10-15).
 // Whoever stands in a lane's throwing box plays there: alone against the house thrower,
 // or two players who agree to a match of ten throws each (preview/src/axe-rules.js).
-// A client sends only where its meter stopped; the server adds the throw's scatter and
-// decides whether the axe sticks, from its own random source, so no client can place an
-// axe. The house thrower throws here too, from a seed the server chose. Every lane's
+// A client sends only its release (across, and the throw's speed); the server takes the
+// thrower's real distance to the target from where they stand, adds the hand's error
+// from its own random source and flies the axe (axe-rules.js axeThrow): the flight sets the
+// height and the distance sets the rotation, so whether it sticks is the server's, and a
+// bounce tells the thrower which way to step. The house thrower throws here too, from
+// the ideal distance and a seed the server chose. Every lane's
 // match is in the snapshot. A match ends after the last throw, a resignation, or when
 // one of its players leaves the lane. The same shape as server/darts-games.js.
 import { randomInt } from 'node:crypto';
-import { BOARD, replay } from '../preview/src/axe-rules.js';
+import { AXE_HAND, AXE_THROW, axeSpeedFor, axeThrow, replay, validAxeRelease } from '../preview/src/axe-rules.js';
 import { seededRandom } from '../preview/src/seeded-random.js';
 
 export const AXE_HOUSE = 'house';
-// A fair recreational hand, in millimetres, and how often an axe on the wood sticks.
-export const AXE_SCATTER = 45, STICK = .9, HOUSE_WOBBLE = 60;
-// The meter's square, a little wider than the board.
-export const AXE_AIM = 450;
+// A fair recreational hand across, in millimetres (axe-rules.js AXE_HAND); the house thrower's own.
+export const AXE_SCATTER = AXE_HAND.across, HOUSE_HAND = { across: 60, speed: 0.16 };
+// The widest release across the target: wider is not a throw. Stored landings stay within twice the board.
+export const AXE_AIM = AXE_THROW.across;
 export const MAX_AXES = 200;
 
 const only = (message, keys) => Object.keys(message).every(key => keys.includes(key));
@@ -25,10 +28,9 @@ const reject = (error, message = error) => ({ ok: false, error, message });
 // A unit-variance logistic draw from u in (0, 1): zero at 0.5.
 const spread = u => Math.log(u / (1 - u)) * .5513;
 const tenth = n => Math.round(n * 10) / 10;
-const onBoard = ([x, y]) => Math.abs(x) <= BOARD && Math.abs(y) <= BOARD;
-const toThrow = ([x, y], roll) => { const landed = [tenth(x), tenth(y)]; return { point: landed, stuck: onBoard(landed) && roll < STICK }; };
 
-export function createAxeGames({ players, laneIds = [], atLane = () => null, changed = () => {}, random = () => randomInt(1, 2 ** 32) / 2 ** 32 }) {
+// distanceTo(player, laneId): the thrower's distance to that lane's target, in metres.
+export function createAxeGames({ players, laneIds = [], atLane = () => null, distanceTo = () => AXE_THROW.ideal, changed = () => {}, random = () => randomInt(1, 2 ** 32) / 2 ** 32 }) {
   // laneId → { id, players: [id, id | 'house'] | null, throws: [{ point, stuck }], result, invite: { from, to } | null, seed }
   let lanes = new Map();
   const laneFor = laneId => lanes.get(laneId) ?? { id: laneId, players: null, throws: [], result: null, invite: null, seed: null };
@@ -44,11 +46,12 @@ export function createAxeGames({ players, laneIds = [], atLane = () => null, cha
   const start = (lane, pair, seed = null) => Object.assign(lane, { players: pair, throws: [], result: null, invite: null, seed });
   const outcome = game => game.winner !== null ? { winner: game.winner, reason: 'final' } : game.draw ? { winner: null, reason: 'draw' } : null;
 
-  // The house throws for the bull with a seeded wobble whenever the turn is its own.
+  // The house throws for the bull from the ideal distance with a seeded hand whenever the turn is its own.
   function houseTurn(lane) {
     for (let game = state(lane); lane.players[1] === AXE_HOUSE && game.turn === 1 && !outcome(game); game = state(lane)) {
       const next = seededRandom((Math.imul(lane.seed >>> 0, 0x27d4eb2f) ^ Math.imul(lane.throws.length + 1, 0x165667b1)) >>> 0);
-      lane.throws.push(toThrow([spread(next()) * HOUSE_WOBBLE, spread(next()) * HOUSE_WOBBLE], next()));
+      const { point, stuck } = axeThrow([0, axeSpeedFor(0, AXE_THROW.ideal)], AXE_THROW.ideal, [spread(next()), spread(next()), spread(next()), next()], HOUSE_HAND);
+      lane.throws.push({ point, stuck });
     }
   }
 
@@ -78,17 +81,21 @@ export function createAxeGames({ players, laneIds = [], atLane = () => null, cha
         return save(start(lane, [lane.invite.from, player.id]));
       }
       case 'throw': {
-        if (!only(message, ['type', 'action', 'laneId', 'aim']) || !point(message.aim, AXE_AIM)) return reject('invalid_axes');
+        if (!only(message, ['type', 'action', 'laneId', 'release']) || !validAxeRelease(message.release)) return reject('invalid_axes');
         const chair = lane.players?.indexOf(player.id) ?? -1;
         if (chair < 0) return reject('not_playing', 'Start or join a match first.');
         if (lane.result) return reject('match_over', 'This match is over.');
         if (!atThis) return reject('not_at_lane', 'Step into the lane first.');
         if (state(lane).turn !== chair) return reject('not_your_turn', 'Wait for your turn.');
-        const [x, y] = message.aim, dx = spread(random()) * AXE_SCATTER, dy = spread(random()) * AXE_SCATTER;
-        lane.throws.push(toThrow([x + dx, y + dy], random()));
+        const distance = distanceTo(player, laneId);
+        if (!Number.isFinite(distance)) return reject('not_at_lane', 'Step into the lane first.');
+        const flown = axeThrow(message.release, distance, [spread(random()), spread(random()), spread(random()), random()]);
+        const thrown = lane.throws.push({ point: flown.point, stuck: flown.stuck }) - 1;
         lane.result = outcome(state(lane));
         if (!lane.result) { houseTurn(lane); lane.result = outcome(state(lane)); }
-        return save(lane);
+        // How the axe turned is the thrower's feedback, not part of the match record, and
+        // `thrown` names the thrower's own axe in the reply, ahead of any house throws.
+        return { ...save(lane), thrown, rotation: flown.rotation, distance: tenth(distance * 100) / 100 };
       }
       case 'resign': {
         if (!only(message, ['type', 'action', 'laneId'])) return reject('invalid_axes');

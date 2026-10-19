@@ -9,7 +9,8 @@ export function atmosphereFor(hour, weather) {
   const sunColor = new THREE.Color('#fff4f9').lerp(new THREE.Color('#ffb98a'), low * 0.85);
   const horizon = new THREE.Color(overcast ? '#b9c3c9' : haze ? '#d2cfc1' : '#dee0ec').lerp(new THREE.Color('#e7b9c4'), low * (overcast ? 0.25 : 0.7));
   return {
-    angle, sunColor, horizon,
+    // How far the light has gone toward dawn or dusk: 0 through the day, 1 at its lowest.
+    angle, sunColor, horizon, twilight: low,
     sunIntensity: (overcast ? 0.8 : 3.2) * (0.3 + 0.7 * Math.min(1, elevation * 1.5)),
     ambientIntensity: (overcast ? 0.55 : 0.35) * (1 - 0.45 * low),
     environmentIntensity: (overcast ? 0.45 : 0.7) * (1 - 0.55 * low),

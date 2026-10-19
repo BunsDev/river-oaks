@@ -1,0 +1,50 @@
+{
+  "blender": "5.2.2 LTS",
+  "source": "assets/office-penthouse/office-penthouse.glb",
+  "meshes": 184,
+  "collision_proxies": 34,
+  "anchors": 15,
+  "triangles": 85960,
+  "materials": [
+    "Material_0",
+    "Material_1",
+    "Material_2",
+    "Material_3",
+    "Material_4",
+    "Material_5",
+    "Material_6",
+    "Material_7",
+    "SCREEN_DYNAMIC",
+    "bronze",
+    "bronze.001",
+    "foliage",
+    "graphite",
+    "objects",
+    "organic",
+    "rose-stone",
+    "shade",
+    "travertine",
+    "upholstery",
+    "wood",
+    "wool"
+  ],
+  "packed_images": 3,
+  "collections": {
+    "Shell": 43,
+    "Main floor": 147,
+    "Terrace": 25,
+    "Mezzanine": 24,
+    "Collision": 34,
+    "Anchors": 15,
+    "Lamps": 6
+  },
+  "bytes": 1636232,
+  "renders": [
+    "docs/design/office-ipic/captures/penthouse/blender-preview/O1-arrival.jpg",
+    "docs/design/office-ipic/captures/penthouse/blender-preview/O2-hosting-and-work.jpg",
+    "docs/design/office-ipic/captures/penthouse/blender-preview/O3-workstation-seated.jpg",
+    "docs/design/office-ipic/captures/penthouse/blender-preview/O4-mezzanine-library.jpg",
+    "docs/design/office-ipic/captures/penthouse/blender-preview/O4-terrace-retreat.jpg"
+  ],
+  "samples": 48
+}

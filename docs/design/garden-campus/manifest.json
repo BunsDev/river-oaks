@@ -1,0 +1,22 @@
+{
+  "id": "river-oaks-garden-campus",
+  "versions": {
+    "schema": 1,
+    "layout": "3.2",
+    "floors": 1,
+    "support": 1,
+    "units": 1
+  },
+  "source": {
+    "commit": "153471bc2075e0d02e764a97b0a72129d6da5207",
+    "districtBlob": "566d7c52295f8811b50890c23f448261bbf9a0a7",
+    "buildingId": "osm-way-625330790"
+  },
+  "generator": "scripts/garden-campus-views.mjs",
+  "files": {
+    "layout-contract.json": "bb54fd1493e816319e36bfccd8baf702e3a77d9b26e86c0aa6dca77214d9b03a",
+    "views/site-plan.svg": "470eb7856434f2937eb1be975c50f33aa05a0c87cd9b9e4d3b69d7c0b78e7540",
+    "views/floor-4.svg": "6273a6772d2c94053fa0eac0b457b9c63840f25e4dcf38497ed398b199ad7ae7",
+    "views/section-u16.svg": "65d64bf01dfb163c5784b8dfb2c86d82233fdb644b657ea623c353d9ed6fadbd"
+  }
+}

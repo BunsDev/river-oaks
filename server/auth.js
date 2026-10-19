@@ -38,7 +38,7 @@ function json(res, status, value) {
 }
 
 /** Single-process auth: restarting intentionally invalidates all local sessions. */
-export function createAuth({ apiKey, clientId, cookiePassword, origin, returnPath = '/', workos, githubToken = null, githubFetch = fetch, now = Date.now, onLogout = () => {}, usernameOf = async () => null, maxStates = MAX_STATES, maxSessions = MAX_SESSIONS, magic = {} } = {}) {
+export function createAuth({ apiKey, clientId, cookiePassword, origin, returnPath = '/', workos, githubToken = null, githubFetch = fetch, now = Date.now, onLogout = () => {}, usernameOf = async () => null, accountActive = async () => true, maxStates = MAX_STATES, maxSessions = MAX_SESSIONS, magic = {} } = {}) {
   let base;
   try {
     const parsed = new URL(origin);
@@ -116,6 +116,7 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, returnPat
       logSessionRejection(verified, {}, clientId, now());
       json(res, 403, { error: 'invalid_session' }); return;
     }
+    if(!await accountActive(verified.user.id)){json(res,403,{error:'account_unavailable'});return true;}
     const previous = sessions.get(verified.sessionId);
     if (previous) removeSession(previous);
     makeRoomFor(verified.user.id);
@@ -133,6 +134,7 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, returnPat
     // Only a verified session is looked up on GitHub. The cookie is not sent
     // until the lookup finishes, so no request sees the record without it.
     if (record.authMethod === 'GitHubOAuth') Object.assign(record, await github.resolve({ userId: record.userId, oauthAccessToken: result.oauthTokens?.accessToken }));
+    if(!enabled||!await accountActive(record.userId)||sessions.get(record.sessionId)!==record){removeSession(record);json(res,403,{error:'account_unavailable'});return true;}
     setCookie(res, SESSION_COOKIE, result.sealedSession, SESSION_TTL / 1000);
     if (asJson) json(res, 200, { authenticated: true, redirectTo: returnPath });
     else { res.writeHead(302, { Location: returnPath }); res.end(); }
@@ -162,7 +164,10 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, returnPat
     try {
       const session = sdk.userManagement.loadSealedSession({ sessionData: sealed, cookiePassword });
       const result = await session.authenticate();
-      if (result.authenticated) return withUsername(await named(identity(result, record), record));
+      if (result.authenticated) {
+        const user=await withUsername(await named(identity(result,record),record));
+        return enabled&&await accountActive(record.userId)&&sessions.get(record.sessionId)===record?user:null;
+      }
       // Only a previously issued, active cookie may refresh, and only over HTTP.
       if (!res || result.reason !== 'invalid_jwt') return null;
       if (!record.refreshing) {
@@ -180,8 +185,10 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, returnPat
       }
       const refreshed = await record.refreshing;
       if (!refreshed || sessions.get(record.sessionId) !== record) return null;
+      const user=await withUsername(await named(refreshed.user,record));
+      if(!enabled||!await accountActive(record.userId)||sessions.get(record.sessionId)!==record)return null;
       setCookie(res, SESSION_COOKIE, refreshed.sealed, Math.max(0, Math.floor((record.expiresAt - now()) / 1000)));
-      return withUsername(await named(refreshed.user, record));
+      return user;
     } catch { return null; }
   }
 
@@ -298,6 +305,7 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, returnPat
           logSessionRejection(verified, {}, clientId, now());
           json(res, 403, { error: 'invalid_session' }); return true;
         }
+        if(!await accountActive(verified.user.id)){json(res,403,{error:'account_unavailable'});return true;}
         const previous = sessions.get(verified.sessionId);
         if (previous) removeSession(previous);
         makeRoomFor(verified.user.id);
@@ -311,6 +319,7 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, returnPat
           json(res, 403, { error: 'invalid_session' }); return true;
         }
         if (record.authMethod === 'GitHubOAuth') Object.assign(record, await github.resolve({ userId: record.userId, oauthAccessToken: result.oauthTokens?.accessToken }));
+        if(!enabled||!await accountActive(record.userId)||sessions.get(record.sessionId)!==record){removeSession(record);json(res,403,{error:'account_unavailable'});return true;}
         setCookie(res, SESSION_COOKIE, result.sealedSession, SESSION_TTL / 1000);
         json(res, 200, { authenticated: true });
       } else if (path === '/auth/session') {
@@ -339,6 +348,16 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, returnPat
   return {
     handle,
     authenticate: (req, { refresh = false } = {}) => authenticateRequest(req, refresh ? req.res : undefined),
+    async isSessionActive(userId,sessionId){
+      if(!enabled)return false;
+      try{if(!await accountActive(userId))return false;const record=sessions.get(sessionId);return enabled&&record?.userId===userId&&record.expiresAt>now();}catch{return false;}
+    },
+    async revokeUser(userId){
+      if(typeof userId!=='string'||!userId.length||userId.length>200)throw new TypeError('Invalid account');
+      for(const record of sessions.values())if(record.userId===userId)removeSession(record);
+      // Retry cleanup even when an earlier delivery already removed the sessions.
+      await onLogout(userId);
+    },
     close() { enabled = false; clearInterval(timer); magicStore.close(); states.clear(); verifications.clear(); sessions.clear(); cookies.clear(); },
   };
 }

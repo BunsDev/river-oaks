@@ -1,18 +1,18 @@
-.player-controls{position:absolute;z-index:5;right:18px;top:18px;width:218px;padding:16px;border:1px solid #ffffff38;border-radius:18px;background:#211d2aee;color:#f6eef9;box-shadow:0 8px 32px #0003;backdrop-filter:blur(16px);font:12px/1.5 system-ui,sans-serif}.player-controls[hidden]{display:none}.player-controls-title{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#d9badf;margin-bottom:10px}.player-controls button{width:100%;min-height:40px;border:1px solid #bca8c855;border-radius:9px;background:#3b2d45;color:#fff;font:inherit;padding:8px;cursor:pointer}.player-controls p{margin:10px 0 0;font-size:11px;color:#d6c8de}.player-controls #player-status{color:#f5d2ed}.player-controls :focus-visible{outline:3px solid #e6a8ed;outline-offset:3px}@media(max-width:700px){.player-controls{top:112px;right:9px;width:162px;padding:11px}.player-controls #player-description{display:none}.player-controls #player-status{max-height:48px;overflow:auto}}
-.player-controls #player-flight{margin-top:10px;background:#695073}.player-flight-pad{display:flex;gap:7px;margin-top:7px}.player-flight-pad[hidden]{display:none}.player-flight-pad button{touch-action:none;min-height:36px}
-.player-controls #player-carriage{margin-top:10px;min-height:44px}
+.player-controls{position:absolute;z-index:5;right:18px;top:18px;width:218px;padding:16px;border:1px solid #ffffff38;border-radius:18px;background:#211d2aee;color:#f6eef9;box-shadow:0 8px 32px #0003;backdrop-filter:blur(16px);font:12px/1.5 system-ui,sans-serif}.player-controls[hidden]{display:none}.player-controls-title{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#d9badf;margin-bottom:10px}:is(.player-controls, .play-rail-rides) button{width:100%;min-height:40px;border:1px solid #bca8c855;border-radius:9px;background:#3b2d45;color:#fff;font:inherit;padding:8px;cursor:pointer}:is(.player-controls, .play-rail-rides) p{margin:10px 0 0;font-size:11px;color:#d6c8de}:is(.player-controls, .play-rail-rides) #player-status{color:#f5d2ed}:is(.player-controls, .play-rail-rides) :focus-visible{outline:3px solid #e6a8ed;outline-offset:3px}@media(max-width:700px){.player-controls{top:112px;right:9px;width:162px;padding:11px}:is(.player-controls, .play-rail-rides) #player-description{display:none}:is(.player-controls, .play-rail-rides) #player-status{max-height:48px;overflow:auto}}
+:is(.player-controls, .play-rail-rides) #player-flight{margin-top:10px;background:#695073}.player-flight-pad{display:flex;gap:7px;margin-top:7px}.player-flight-pad[hidden]{display:none}.player-flight-pad button{touch-action:none;min-height:36px}
+:is(.player-controls, .play-rail-rides) #player-carriage{margin-top:10px;min-height:44px}
 /* Charcoal typography and rose accents share the surrounding satin surface. */
-:root[data-theme] .player-controls .vehicle-garage { margin-top:12px; padding:12px; border:1px solid var(--line); border-radius:16px; background:var(--soft); color:var(--ink); }
-:root[data-theme] .player-controls .vehicle-garage[hidden] { display:none; }
+:root[data-theme] :is(.player-controls, .play-rail-rides) .vehicle-garage { margin-top:12px; padding:12px; border:1px solid var(--line); border-radius:16px; background:var(--soft); color:var(--ink); }
+:root[data-theme] :is(.player-controls, .play-rail-rides) .vehicle-garage[hidden] { display:none; }
 .vehicle-garage-title { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; font:10px/1.4 ui-monospace,monospace; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
 .vehicle-garage-title span:last-child { font-size:20px; color:var(--accent); }
-:root[data-theme] .player-controls .vehicle-garage label { display:block; margin-bottom:6px; font-size:11px; color:var(--muted); }
-:root[data-theme] .player-controls .vehicle-garage select { box-sizing:border-box; width:100%; padding:10px; border:1px solid var(--line); border-radius:10px; background:var(--panel); color:var(--ink); font:12px/1.4 system-ui; cursor:pointer; }
-:root[data-theme] .player-controls .vehicle-garage button { margin-top:8px; border-radius:10px; }
-:root[data-theme] .player-controls .vehicle-garage #player-chauffeur { background:var(--accent); border-color:var(--accent); color:var(--on-accent); font-weight:600; }
-:root[data-theme] .player-controls :is(button,select):disabled { opacity:.45; cursor:default; }
-:root[data-theme] .player-controls .vehicle-garage #player-drive-status { font:11px/1.55 system-ui; color:var(--muted); margin:10px 0 0; }
-.player-controls button[hidden] { display:none; }
+:root[data-theme] :is(.player-controls, .play-rail-rides) .vehicle-garage label { display:block; margin-bottom:6px; font-size:11px; color:var(--muted); }
+:root[data-theme] :is(.player-controls, .play-rail-rides) .vehicle-garage select { box-sizing:border-box; width:100%; padding:10px; border:1px solid var(--line); border-radius:10px; background:var(--panel); color:var(--ink); font:12px/1.4 system-ui; cursor:pointer; }
+:root[data-theme] :is(.player-controls, .play-rail-rides) .vehicle-garage button { margin-top:8px; border-radius:10px; }
+:root[data-theme] :is(.player-controls, .play-rail-rides) .vehicle-garage #player-chauffeur { background:var(--accent); border-color:var(--accent); color:var(--on-accent); font-weight:600; }
+:root[data-theme] :is(.player-controls, .play-rail-rides) :is(button,select):disabled { opacity:.45; cursor:default; }
+:root[data-theme] :is(.player-controls, .play-rail-rides) .vehicle-garage #player-drive-status { font:11px/1.55 system-ui; color:var(--muted); margin:10px 0 0; }
+:is(.player-controls, .play-rail-rides) button[hidden] { display:none; }
 /* Character picker: person, then style when there is more than one, then form. */
 .character-picker { min-width:0; margin:0; padding:0; border:0; }
 .character-picker legend, .character-option legend { margin:0 0 6px; padding:0; color:var(--muted,#d6c8de); font-size:9px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; }

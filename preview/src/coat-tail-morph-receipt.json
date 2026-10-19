@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "provenance": "Repository-authored split coat surfaces; shipped rig source/license in sources.json.",
+  "command": "node scripts/bake-coat-tails.mjs --check",
+  "inputs": {
+    "pnpm-lock.yaml": "ba688f3b800f2cbdc5f1d6acec471d4622f7815d681edc7a74087749f4e21a31",
+    "preview/public/assets/characters/man-casual.glb": "e7ac712585ba2d4558092b67ccf30e67d29843a9a81c4ca00384200f69588684",
+    "preview/public/assets/characters/sources.json": "9e51242b9680901309edcfa26b780f0fd8723f046891f1a1f7fa2fc96be6b15d",
+    "preview/src/avatars.js": "dfc79d4973890c051a37a6954b9b9354c044f78398ec0904dfb97aeea2017a14",
+    "preview/src/foot-placement.js": "425899b01551534f72d20b0d011b0b319e525c4ba12d3c9f02bf8dfc7d548ea3",
+    "preview/src/foot-roll.js": "5c8de2ef4c1d3ed3905991d7cc16ed3ce249b7091b70ad90c6b5bfb6afc98528",
+    "preview/src/sole-support.js": "1d77dad5449799032809f815298af1acb01fffdaa54371aa71a4601a3794d18f",
+    "preview/src/coat-tail-geometry.js": "c332fef4f2663bc61c2e7cc60bc4197cab9de534a01c34cf24b67328857a0824",
+    "preview/src/coat-tail-skinning.js": "7e32f0d52a80634154a5783ff180b8f0ed12fd0099f52793946217868d7ae939",
+    "preview/src/drape-geometry.js": "d624e47a003bb761b0663f436e0df201f1ba9b17e8ce4b0271b119a5eb7401ce",
+    "preview/src/skirt-skinning.js": "414fa6b5277c4798198b26f4b1c1c2f355e62c27748db157c9334b4e5515c0e5",
+    "preview/src/packed-morph-data.js": "36b4a1ce66ec4135a8349897da1f309bc180815d3ef31719948736abc65d14c4",
+    "preview/tests/helpers/character-rig.js": "879b137a09b0bd35e9c32c7ffe57491f299207244f94a6e3cc8c5d71c667f7be",
+    "preview/tests/helpers/skirt-contact.js": "a8c5f038a5901743e0280875fca318ced18fecdb2ca633b7bb6aca905dd5feb7",
+    "preview/tests/helpers/garment-edges.js": "de893290b9e96d2c1babe46af8f5c0815c134a26f0f117b14a6b9b725b28fa20",
+    "scripts/lib/drape-seat-fit.mjs": "bf329ff64f6a21aad5634b2cc51f459779279c0a7c004b1318fee6f6b4003644",
+    "scripts/lib/coat-tail-fit.mjs": "21e2fbfe58d89e60a902e724009c8dbdf48c22009ca93f525a99680d74c586da",
+    "scripts/bake-coat-tails.mjs": "3e14be59c95b95c545e400eaa1376741109a8285dfdc28071601bc84e836ccc6"
+  },
+  "outputSha256": "5cc23cdfbd965a2ddf74d8546e7605f44424341d7583fece66784be3cae6c39a",
+  "diagnostics": {
+    "kai": {
+      "failures": [],
+      "maxReconstruction": 6.227281684775573e-8,
+      "maximumStretch": 3.0904570761214476,
+      "minimumAreaRatio": 0.15307345105433948,
+      "corrected": 17,
+      "vertices": 950,
+      "scope": "Offline front-lap fit; rendered layers, other poses and continuous motion require separate evidence.",
+      "tested": 403,
+      "penetrating": 0,
+      "minimumClearance": 0.025141016089995107,
+      "edges": [
+        {
+          "name": "",
+          "testedEdges": 2676,
+          "skippedEdges": 0,
+          "crossings": 0,
+          "examples": []
+        }
+      ]
+    },
+    "aurel": {
+      "failures": [],
+      "maxReconstruction": 5.961360460207531e-8,
+      "maximumStretch": 3.077013062752754,
+      "minimumAreaRatio": 0.14989789043089846,
+      "corrected": 18,
+      "vertices": 950,
+      "scope": "Offline front-lap fit; rendered layers, other poses and continuous motion require separate evidence.",
+      "tested": 400,
+      "penetrating": 0,
+      "minimumClearance": 0.025141016089995107,
+      "edges": [
+        {
+          "name": "",
+          "testedEdges": 2676,
+          "skippedEdges": 0,
+          "crossings": 0,
+          "examples": []
+        }
+      ]
+    }
+  }
+}

@@ -15,12 +15,8 @@ async page => {
     throw new Error(`Guest could access Jevica or her crew: ${JSON.stringify(guest)}`);
   await page.locator('#canvas-host').focus();await page.keyboard.press('KeyB');
   if(await page.evaluate(()=>document.querySelector('#walking-hud').dataset.flying==='true'))throw new Error('Guest took flight with B');
-  await page.locator('input[name=player-form][value=beast]').check();
-  await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerAppearance==='woman-casual');
-  await page.locator('#player-beast-movement').click();
-  await page.waitForFunction(()=>window.__riverMultiplayer().snapshot.players.find(player=>player.id==='guest')?.movement==='beast');
+  await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerAppearance==='sable-human');
   if(await page.locator('#walking-movement').isHidden())await page.locator('#walking-controls-toggle').click();
-  if(!await page.locator('#walking-sprint').isVisible())throw new Error('Guest beast has no touch sprint control');
   const context=await page.context().browser().newContext();
   try {
     await context.addCookies([{name:'fixture_session',value:'owner',url:origin}]);
@@ -41,7 +37,7 @@ async page => {
     await owner.waitForFunction(ownerId=>window.__riverMultiplayer().snapshot.players.find(player=>player.id===ownerId)?.altitude>.2,ownerId);
     await owner.locator('#player-flight').click();
     await owner.waitForFunction(ownerId=>window.__riverMultiplayer().snapshot.players.find(player=>player.id===ownerId)?.altitude===0,ownerId);
-    await owner.locator('.player-settings summary').click();
+    await owner.locator('#play-tab-rides').click();
     await owner.locator('#player-ride').click();
     await owner.waitForFunction(()=>document.querySelector('#canvas-host').dataset.riding==='true');
     await owner.keyboard.down('w');

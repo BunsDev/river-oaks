@@ -279,8 +279,11 @@
         "spatial-circulation",
         "spatial-streets",
         "office-desk",
-        "office-computer-shared",
-        "office-visit"
+        "office-visit",
+        "office-computer-embed",
+        "garden-campus-office",
+        "garden-campus-traversal",
+        "garden-campus-suite"
       ],
       "browser": true,
       "timeoutMs": 1200000

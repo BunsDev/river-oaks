@@ -1,8 +1,10 @@
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { attachDistrictGalleryPlan } from '../preview/src/district-interior-contract.js';
+import { DISTRICT_REVISION_GARDENS, attachGardenCampus } from '../preview/src/garden-campus-district.js';
 
-export async function loadDistrictData() {
+/** The pinned district with its approved gallery; the Gardens revision replaces the garage (#507). */
+export async function loadDistrictData({ districtRevision } = {}) {
   const [district, vegetation, approved] = await Promise.all([
     readFile(new URL('../preview/public/data/district.json', import.meta.url), 'utf8'),
     readFile(new URL('../preview/public/data/district-vegetation.json', import.meta.url), 'utf8'),
@@ -15,5 +17,6 @@ export async function loadDistrictData() {
   if (createHash('sha256').update(JSON.stringify(payload)).digest('hex') !== approvedSha256) {
     throw new Error('District gallery plan digest mismatch');
   }
-  return attachDistrictGalleryPlan(world, plan);
+  const attached = attachDistrictGalleryPlan(world, plan);
+  return districtRevision === DISTRICT_REVISION_GARDENS ? attachGardenCampus(attached) : attached;
 }

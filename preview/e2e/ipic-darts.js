@@ -40,14 +40,14 @@ async (alice, bob) => {
       check(distance <= .16, `could not reach ${a}, ${d}`);
     }
   }
-  // One dart through the meter: hold the sweep across, set the line, hold it up, throw.
-  async function throwAt(page, [x, y]) {
-    const before = (await darts(page)).line?.points.length ?? 0;
-    await page.evaluate(mm => window.__riverIpicDarts().holdAt(mm), x);
-    await page.locator('.darts-panel[open] [data-darts-action="throw"]').click();
-    await page.evaluate(mm => window.__riverIpicDarts().holdAt(mm), y);
-    await page.locator('.darts-panel[open] [data-darts-action="throw"]').click();
-    await page.waitForFunction(n => (window.__riverIpicDarts().line?.points.length ?? 0) > n, before);
+  // One dart: hold the hand still on the release that carries it to a point, and throw;
+  // the town flies it with the hand's own error. `twice`: a double click.
+  async function throwAt(page, point, { twice = false } = {}) {
+    const before = (await darts(page)).line?.points.length ?? 0, button = page.locator('.darts-panel[open] [data-darts-action="throw"]');
+    await page.evaluate(target => window.__riverIpicDarts().steadyOn(target), point);
+    await (twice ? button.dblclick() : button.click());
+    await page.waitForFunction(n => (window.__riverIpicDarts().line?.points.length ?? 0) > n && !window.__riverIpicDarts().pending && !window.__riverIpicDarts().flying, before);
+    return before;
   }
 
   await Promise.all([load(alice), load(bob)]);
@@ -66,13 +66,18 @@ async (alice, bob) => {
   await alice.waitForFunction(() => window.__riverIpicDarts().line?.players?.length === 2 && !window.__riverIpicDarts().line.result);
   checks.push('alice invited bob through the panel and bob accepted');
 
-  for (let i = 0; i < 3; i++) await throwAt(alice, [0, 103]);
+  // The second click lands while the town is still answering the first: one dart, not two.
+  const first = await throwAt(alice, [0, 103], { twice: true });
+  await alice.waitForTimeout(1000);
+  check((await darts(alice)).line.points.length === first + 1, `a double click throws one dart: ${JSON.stringify((await darts(alice)).line)}`);
+  checks.push('a double click on Throw while the town answers throws one dart');
+  for (let i = 1; i < 3; i++) await throwAt(alice, [0, 103]);
   const seen = await darts(bob);
   check(seen.line.points.length === 3 && seen.line.turn === 1, `bob sees alice's three darts and his turn: ${JSON.stringify(seen.line)}`);
   await bob.waitForFunction(() => window.__riverIpicDarts().board === 3);
   check(seen.line.scores[0] < 501, 'alice scored');
-  checks.push(`alice threw three darts through the meter; bob's board shows them (${seen.line.scores[0]} left)`);
-  const refused = await alice.evaluate(() => window.__riverMultiplayerCommand?.({ type: 'darts', lineId: 'ipic-tuck-room', action: 'throw', aim: [0, 0] }) ?? null);
+  checks.push(`alice released three darts at the treble 20; bob's board shows where the town landed them (${seen.line.scores[0]} left)`);
+  const refused = await alice.evaluate(() => window.__riverMultiplayerCommand?.({ type: 'darts', lineId: 'ipic-tuck-room', action: 'throw', release: [0, 50] }) ?? null);
   if (refused) { check(refused.error === 'not_your_turn', `out of turn refused: ${JSON.stringify(refused)}`); checks.push('a direct out-of-turn throw is refused by the town'); }
 
   await throwAt(bob, [0, 0]);

@@ -33,15 +33,24 @@ async page => {
   state = await game();
   check(state.side === 0 && state.round === 1 && state.table === 0 && state.throws === 0, `A fresh game, nothing on the table (${state.table} pucks)`);
   check(await page.evaluate(() => document.activeElement?.dataset.shuffleAction === 'throw'), 'Focus is on the throw button, so Space throws');
-  check(/Stop the line for the aim/.test(state.status), `The sheet asks for the aim (${state.status})`);
+  check(/Aim and set the power/.test(state.status), `The sheet asks for the slide (${state.status})`);
 
-  // A straight slide to rest at 2.3 m, in the far zone: hold the line on the aim, press; then on its power, press.
-  const power = await page.evaluate(async () => { const { powerFor } = await import('/src/shuffleboard-rules.js'); return powerFor(2.3); });
-  await page.evaluate(() => window.__riverPlazaShuffleboard().hold(0.5));
-  await page.keyboard.press('Space');
+  // Keys: a tap right aims right one step (the puck drifts right as you see the table), a held up adds power.
+  await page.evaluate(() => window.__riverPlazaShuffleboard().steadyAt(0.5, 0.5));
+  for (let tap = 0; tap < 3; tap++) await page.keyboard.press('ArrowRight');
+  await page.keyboard.down('ArrowUp'); await page.waitForTimeout(600); await page.keyboard.up('ArrowUp');
   state = await game();
-  check(state.phase === 'power' && Math.abs(state.aim - 0.5) < 0.002, 'The first press locks the aim');
-  await page.evaluate(value => window.__riverPlazaShuffleboard().hold(value), power);
+  check(state.aim >= 0.53 - 1e-6 && state.aim < 0.58 && state.power > 0.55, `Three taps right and a held up move the aim and power (${state.aim.toFixed(3)}, ${state.power.toFixed(3)})`);
+  // A click on the table aims a lone puck to stop there.
+  const box = await page.locator('#shuffleboard-panel .shuffle-table').boundingBox();
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height * 0.3);
+  state = await game();
+  check(Math.abs(state.aim - 0.5) < 0.02 && state.power > 0.2 && state.power < 1, `A click on the centre line aims straight there (${state.aim.toFixed(3)}, ${state.power.toFixed(3)})`);
+  check(await page.evaluate(() => document.activeElement?.dataset.shuffleAction === 'throw'), 'The throw button keeps focus after the click');
+
+  // A straight slide to rest at 2.3 m, in the far zone: the hand held still on it, Space slides.
+  const power = await page.evaluate(async () => { const { powerFor } = await import('/src/shuffleboard-rules.js'); return powerFor(2.3); });
+  await page.evaluate(value => window.__riverPlazaShuffleboard().steadyAt(0.5, value), power);
   await page.keyboard.press('Space');
   await named('Waiting for the puck to slide', page.waitForFunction(() => window.__riverPlazaShuffleboard().sliding, null, { timeout: 5000 }));
   check(true, 'The puck slides on the sheet and the real table');

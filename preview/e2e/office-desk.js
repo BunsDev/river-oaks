@@ -4,13 +4,14 @@ async page => {
  const arrive=async()=>{
   await page.waitForFunction(()=>document.querySelector('#canvas-host')?.dataset.playerReady==='true',null,{timeout:90000});
   await page.locator('#office-lobby').waitFor({state:'attached'});await page.locator('#office-lobby').evaluate(b=>b.click());
-  await page.locator('#office-personal').evaluate(b=>b.click());
+  await page.locator('#play-tab-office').click();await page.locator('#office-enter').click();
   await page.waitForFunction(()=>document.querySelector('#office-visit')?.dataset.phase==='office',null,{timeout:60000});
   await page.locator('#office-desk-open').click();await page.locator('#desk-loading').waitFor({state:'hidden'});
  };
  await page.goto('http://127.0.0.1:5173/?motion-debug=1',{waitUntil:'commit'});await arrive();
- check(await page.locator('#desk-scope-private').isVisible()&&await page.locator('#desk-scope-shared').isVisible(),'Computer distinguishes My tasks from Office tasks');
+ check(await page.locator('#desk-scope-label').textContent()==='Private to you'&&await page.locator('#desk-scope-shared').count()===0,'The desk keeps account tasks private in Jevica’s office');
  check(await page.locator('#desk-start').isVisible(),'Authorized office opens an empty private desk');
+ check(await page.locator('#desk-views').isHidden()&&await page.locator('.desk-computer-frame').count()===0,'Without a Computer origin the desk is Tasks only and loads no frame');
  await page.screenshot({path:'output/playwright/desk-empty-desktop.png'});
  await page.locator('#desk-start').click();await page.locator('#desk-title').fill('A thoughtful studio opening');
  await page.locator('#desk-notes').fill('Invite the team for a quiet afternoon.\nSet aside time to share what everyone is making.');
@@ -47,21 +48,5 @@ async page => {
  await page.locator('#office-desk-open').click();await page.locator('#desk-notice').waitFor({state:'visible'});
  await page.unroute('**/api/office-desk/read?*');await page.locator('#desk-retry').click();await page.locator('#desk-notice').waitFor({state:'hidden'});check(true,'Retry reopens cached work after a failed read');
  await page.locator('#desk-delete').click();await page.locator('#desk-confirm-yes').click();await page.locator('#desk-start').waitFor({state:'visible'});check(await page.locator('#desk-start').evaluate(n=>n===document.activeElement),'Confirmed removal restores focus to the empty desk');
- await page.locator('#desk-scope-shared').click();await page.locator('#desk-start').waitFor({state:'visible'});
- check(await page.locator('#desk-scope-label').textContent()==='Shared with office collaborators','Shared scope is explicit before typing');
- await page.locator('#desk-start').click();await page.locator('#desk-title').fill('Shared office plan');await page.locator('#desk-notes').fill('A shared result');
- await page.waitForFunction(()=>document.querySelector('#desk-save-status')?.textContent==='All changes saved');
- await page.locator('#desk-scope-private').focus();await page.keyboard.press('Enter');await page.locator('#desk-start').waitFor({state:'visible'});
- check(await page.locator('#desk-scope-label').textContent()==='Private to you','Keyboard scope switch keeps shared work out of My tasks');
- await page.locator('#desk-scope-shared').click();await page.waitForFunction(()=>document.querySelector('#desk-title')?.value==='Shared office plan');
- check(await page.locator('#desk-notes').inputValue()==='A shared result','Office work resumes when switching back');
- await page.screenshot({path:'output/playwright/desk-shared-mobile.png'});
- await page.route('**/api/office-desk/workspace/save?*',route=>route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:'office_unavailable'})}));
- await page.locator('#desk-notes').fill('Unsaved shared draft before departure');await page.locator('#desk-notice').waitFor({state:'visible'});
- await page.locator('#desk-close').click();await page.locator('#desk-confirm-yes').click();await page.locator('#office-exit').click();
- await page.locator('#desk-confirm').waitFor({state:'visible',timeout:5000});
- check(await page.locator('#office-visit').evaluate(n=>n.open),'Leaving an office warns before discarding a failed shared draft');
- await page.locator('#desk-confirm-no').click();check(await page.locator('#desk-notes').inputValue()==='Unsaved shared draft before departure','Cancelling departure retains the shared draft');
- await page.unroute('**/api/office-desk/workspace/save?*');await page.locator('#desk-retry').click();await page.waitForFunction(()=>document.querySelector('#desk-save-status')?.textContent==='All changes saved');
  await page.locator('#desk-close').click();await page.locator('#office-exit').click();return {checks};
 }

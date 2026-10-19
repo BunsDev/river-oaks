@@ -6,6 +6,7 @@ import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 export const AO_OUTPUT = GTAOPass.OUTPUT;
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { withOcclusionSort } from './occlusion-sort.js';
 
 // Ground-truth ambient occlusion darkens recesses, soffits and contact edges
 // that the single sun and sky probe leave flat. It runs at half resolution
@@ -56,7 +57,7 @@ export function createRenderPipeline(renderer, scene, camera, { samples = 4, blo
   occlusion.output = GTAOPass.OUTPUT.Default;
   occlusion.blendIntensity = 1.0;
   const hidden = [], pending = [];
-  let aoExteriorRoot = null, aoInteriorLayer = null;
+  let aoExteriorRoot = null, aoInteriorLayer = null, occlusionSort = true;
   occlusion._overrideVisibility = () => {
     // Fold GTAO's line/point exclusion into the foliage/glass pass. Hidden
     // rooms and excluded groups already hide their descendants; do not scan
@@ -86,7 +87,9 @@ export function createRenderPipeline(renderer, scene, camera, { samples = 4, blo
     const matrixAuto=scene.matrixWorldAutoUpdate,override=scene.overrideMaterial,autoClear=renderer.autoClear;
     const clearAlpha=renderer.getClearAlpha();renderer.getClearColor(geometryClearColor);
     renderer.shadowMap.autoUpdate=false;renderer.shadowMap.needsUpdate=false;scene.matrixWorldAutoUpdate=false;
-    try { return renderGeometry(renderer,...args); }
+    // Every draw here uses the one normal material, so order it by object kind
+    // (occlusion-sort.js) instead of by each object's own material.
+    try { return withOcclusionSort(renderer, occlusionSort, () => renderGeometry(renderer,...args)); }
     finally {
       renderer.shadowMap.autoUpdate=shadowAuto;renderer.shadowMap.needsUpdate=shadowNeeds;
       scene.matrixWorldAutoUpdate=matrixAuto;scene.overrideMaterial=override;renderer.autoClear=autoClear;
@@ -120,6 +123,40 @@ export function createRenderPipeline(renderer, scene, camera, { samples = 4, blo
       renderScale = next; applySize();
     },
     setOcclusion(enabled) { occlusion.enabled = enabled; },
+    // Development audit only: three's order for the GTAO geometry pass.
+    setOcclusionSort(enabled) { occlusionSort = Boolean(enabled); },
+    // Development audit only: GTAO's normal buffer drawn at one instant in three's
+    // order, in kind order, and in kind order again, compared texel by texel. The
+    // repeat shows whether equal draws reproduce on this GPU at all. A sentinel
+    // fill detects a refused half-float readback rather than reporting a match.
+    compareOcclusionSort() {
+      const normals = occlusion.normalRenderTarget;
+      if (!sized || !occlusion.enabled || !normals) return null;
+      const { width, height } = normals, previous = renderer.getRenderTarget(), sortedBefore = occlusionSort;
+      const draw = sorted => {
+        occlusionSort = sorted; occlusion._overrideVisibility();
+        occlusion._renderOverride(renderer, occlusion.normalMaterial, normals, 0x7777ff, 1.0);
+        const texels = new Uint16Array(width * height * 4).fill(0xffff);
+        renderer.readRenderTargetPixels(normals, 0, 0, width, height, texels);
+        return texels;
+      };
+      try {
+        const three = draw(false), kind = draw(true), repeat = draw(true);
+        const texelDiffers = (a, b, i) => a[i] !== b[i] || a[i + 1] !== b[i + 1] || a[i + 2] !== b[i + 2] || a[i + 3] !== b[i + 3];
+        let differing = 0, unstable = 0, unread = 0;
+        const points = [], bounds = [width, height, -1, -1];
+        for (let i = 0; i < three.length; i += 4) {
+          if (three[i] === 0xffff && three[i + 1] === 0xffff && three[i + 2] === 0xffff && three[i + 3] === 0xffff) unread++;
+          if (texelDiffers(kind, repeat, i)) unstable++;
+          if (!texelDiffers(three, kind, i)) continue;
+          // Report where differing texels lie, top-left origin like a screenshot.
+          const x = (i / 4) % width, y = height - 1 - Math.floor(i / 4 / width);
+          differing++; if (points.length < 24) points.push([x, y]);
+          bounds[0] = Math.min(bounds[0], x); bounds[1] = Math.min(bounds[1], y); bounds[2] = Math.max(bounds[2], x); bounds[3] = Math.max(bounds[3], y);
+        }
+        return { width, height, texels: width * height, differing, unstable, unread, points, bounds: differing ? bounds : null };
+      } finally { occlusionSort = sortedBefore; renderer.setRenderTarget(previous); }
+    },
     // Keep the exterior in the beauty pass while omitting it from interior AO
     // normals/depth. The geometry hook restores every hidden root afterward.
     setOcclusionExteriorMask(worldGroup, interiorsLayer) {
@@ -128,6 +165,12 @@ export function createRenderPipeline(renderer, scene, camera, { samples = 4, blo
     },
     get stats() { return { samples: target.samples, ao: occlusion.enabled, bloom: bloom.enabled, renderScale, aoScale: aoResolutionScale(size.width * size.pixelRatio * renderScale, size.height * size.pixelRatio * renderScale), transmissionScale:renderer.transmissionResolutionScale }; },
     render(delta) { if(sized)composeFrame(() => composer.render(delta)); },
+    // Programs for the scene pass. It draws into a half-float target, so its materials compile
+    // without tone mapping; compiling against the screen would build variants it never uses.
+    compileAsync(object, camera, targetScene) {
+      const previous = renderer.getRenderTarget(); renderer.setRenderTarget(target);
+      try { return renderer.compileAsync(object, camera, targetScene); } finally { renderer.setRenderTarget(previous); }
+    },
     dispose() { aoExteriorRoot = aoInteriorLayer = null; occlusion.dispose(); bloom.dispose(); output.dispose(); render.dispose(); composer.dispose(); },
   };
 }

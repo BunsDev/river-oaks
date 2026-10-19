@@ -16,11 +16,18 @@ import { sharedVoicePreferences } from './voice-preferences.js';
 import { listenerFromPose } from './voice-spatial.js';
 
 const element = (tag,text,className) => { const node=document.createElement(tag);if(text)node.textContent=text;if(className)node.className=className;return node; };
-export function createMultiplayer({ getPose, getEnvironment = () => null, getRegionSha256 = () => null, getMeetingPlaces = () => [], getOwnerHomes = () => [], onSnapshot, onCorrection, onPlayers, onHomeAccess = () => {}, creationToolsEnabled = false, getWalking = () => null, onVoiceChange = () => {} }) {
+export function createMultiplayer({ getPose, getEnvironment = () => null, getRegionSha256 = () => null, getDistrictRevision = () => undefined, getMeetingPlaces = () => [], getOwnerHomes = () => [], onSnapshot, onCorrection, onPlayers, onHomeAccess = () => {}, creationToolsEnabled = false, getWalking = () => null, onVoiceChange = () => {} }) {
   const lifetime=new AbortController();let connectionDeadline=null;
   const reloadRegion=()=>{
     if(window.__riverRegionReloadScheduled)return;
     window.__riverRegionReloadScheduled=true;setTimeout(()=>location.reload(),0);
+  };
+  // Reload once for a changed district revision; a second mismatch means the town and the
+  // page disagree after a fresh load, so stop rather than loop.
+  const districtChanged=(ws,served)=>{
+    let tried=null;try{tried=sessionStorage.getItem('river-oaks-district-reload');}catch{}
+    if(tried!==String(served)){try{sessionStorage.setItem('river-oaks-district-reload',String(served));}catch{}reloadRegion();return;}
+    ws.close(4000,'District revision changed');
   };
   const gate=element('section',null,'multiplayer-gate');gate.setAttribute('role','dialog');gate.setAttribute('aria-modal','true');gate.setAttribute('aria-labelledby','multiplayer-title');
   const orbit=element('span',null,'access-orbit');orbit.setAttribute('aria-hidden','true');
@@ -262,6 +269,9 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
     if(!validTownSnapshot(data,selfId)){notice.textContent='A town update could not be read.';ws.close(4002,'Invalid town snapshot');return;}
     if((data.worldId??DEFAULT_WORLD_ID)!==worldId || (data.protocolVersion??WORLD_PROTOCOL_VERSION)!==WORLD_PROTOCOL_VERSION){ws.close(4000,'World version changed');return;}
     if(getRegionSha256() && data.regionSha256 && data.regionSha256!==getRegionSha256()){reloadRegion();return;}
+    // The default district's revision (#507): the town and this page must draw the same campus or garage.
+    const loadedDistrict=getDistrictRevision();
+    if(worldId===DEFAULT_WORLD_ID && loadedDistrict!==undefined && (data.districtRevision??null)!==loadedDistrict){districtChanged(ws,data.districtRevision??null);return;}
     staleness.heard(performance.now());
     // The server checks every name; checking again here means no
     // surface fed by a snapshot can show anyone but Jevica's accounts as Jevica.
@@ -375,6 +385,13 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
   logout.addEventListener('click',signOut);gateLogout.addEventListener('click',signOut);
   connect();
   return {
+    characterRequest(action,body){
+      const routes={read:['/api/character','GET'],draft:['/api/character/draft','PUT'],publish:['/api/character/publish','POST'],rollback:['/api/character/rollback','POST']};
+      const route=routes[action];if(!route)return Promise.reject(new TypeError('Unknown character action'));
+      const [path,method]=route;
+      return api(`${path}?world=${encodeURIComponent(worldId)}`,{method,signal:AbortSignal.timeout(15000),
+        ...(method==='GET'?{cache:'no-store'}:{headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})});
+    },
     claimStoreIntro: storeId => api(`/api/profile/claim-intro?world=${encodeURIComponent(worldId)}`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({storeId})}),
     get connected(){return connected;},get traveling(){return traveling;},get identity(){return identity;},get snapshot(){return latestSnapshot;},get homeAccess(){return homeAccess;},get voice(){return voice;},command,
     landmarkRequest(action,data={}){

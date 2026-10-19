@@ -23,7 +23,7 @@ export function ipicClearance(room, [a, d], blockers = []) {
 // How far a seated body reaches from its seat origin, worst over the 22 shared
 // looks, measured on the real rigs in the game's seat pose (2026-10-15,
 // docs/superpowers/plans/2026-10-15-ipic-route-evidence/seated-extents.json):
-// legs reach forward, beast tails reach back. Side is the wider of the two.
+// legs reach forward, clothing extends behind. Side is the wider of the two.
 export const IPIC_SEATED_REACH = Object.freeze({ side: .514, front: .644, back: 1.155 });
 
 // The plan-view footprint of a seated body, as a rectangle in the seat's own

@@ -27,13 +27,37 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
     const lights=[2,-3].map((z,i)=>({position:new THREE.Vector3(0,2.9,z),color:new THREE.Color('#fff1df'),intensity:i?65:45,distance:i?10:7,decay:2}));
     // Preserve the office's authored lighting using the existing world pool.
     // Detached owned light objects have no GPU resources to dispose.
-    for(const light of [...office.object.children].filter(n=>n.isPointLight)){
+    const authored=[...office.object.children].filter(n=>n.isPointLight);
+    for(const light of authored){
       lights.push({position:light.position.clone(),color:light.color.clone(),intensity:light.intensity,distance:light.distance,decay:light.decay});if(!live)light.removeFromParent();
     }
     // A layout with an outside shows the district captured once as the doors close (office-skyline.js).
     // It changes the scene only once captured, so it is released with the visit's own dispose below.
     const skyline=createVisitSkyline(street,layout,[stage,street.lobby.object,street.avatar.object,peerRoot]);
     const worldLights=lights.map(light=>({...light,position:light.position.clone()}));
+    // First entry (#449): in the live outlook the office's lamps join the scene's lights when it first
+    // shows, which changes the program of every lit material in view. Compile them during the arrival,
+    // one batch a frame, for the pipeline's scene pass, with the office shown just for each call so its
+    // lamps count. Only what is drawn is queued: the visible district
+    // and the office, one object per material and kind (instanced and skinned meshes are kinds of
+    // their own). A skipped arrival has nothing to hide that behind, so it holds on the street until
+    // they are ready, for at most three seconds.
+    const precompile=street.pipeline?.compileAsync?[]:null,kinds=new Set(),drawn=o=>(o.isMesh||o.isPoints||o.isLine||o.isSprite)&&o.material;
+    const enqueue=o=>{if(!drawn(o))return;const kind=[...[o.material].flat().map(m=>m.uuid),o.isInstancedMesh?'instanced':o.isSkinnedMesh?'skinned':o.isBatchedMesh?'batched':o.type,o.receiveShadow,!!o.instanceColor,!!o.geometry?.attributes?.color].join();if(!kinds.has(kind)){kinds.add(kind);precompile.push(o);}};
+    if(precompile){street.scene.traverseVisible(enqueue);office.object.traverse(enqueue);}
+    const queued=precompile?.length??0;let compiling=0,batches=0,batchSize=8,holdFrom=null;
+    const compiled=()=>!precompile?.length&&!compiling,settle=()=>{compiling--;};
+    const compileSome=()=>{
+      if(!precompile?.length)return;
+      const items=precompile.splice(-batchSize).filter(o=>o.parent),batch=new THREE.Object3D(),shown=office.object.visible,started=performance.now();
+      batch.traverse=visit=>items.forEach(visit);batch.traverseVisible=()=>{};
+      office.object.visible=true;compiling++;batches++;
+      try{street.pipeline.compileAsync(batch,street.camera,street.scene).then(settle,settle);}catch{settle();}
+      finally{office.object.visible=shown;}
+      // Each call also walks the scene for its lights, a fixed cost; size batches past it so the queue
+      // drains during the arrival rather than one object a frame.
+      const spent=performance.now()-started;batchSize=spent<12?batchSize*2:spent>32?Math.max(8,batchSize>>1):batchSize;
+    };
     actors=createRemotePlayers(peerRoot,host,{snapInitialHeading:true,isVisible:p=>current?.done&&officePeerVisible({...p,position:p.office.position},self.id,position,!fixedView(),levelId)});
     const view=street.startCamera.clone(),localView=new THREE.PerspectiveCamera(),worldRotation=new THREE.Quaternion().setFromRotationMatrix(street.frame);
     const basePosition=new THREE.Vector3().setFromMatrixPosition(street.frame),point=new THREE.Vector3(),worldBody=new THREE.Vector3();
@@ -51,13 +75,18 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
       const ready=street.avatar.ready;
       if(started===null&&ready)started=now;
       const elapsed=clock.tick(now,ready),time=Math.max(0,elapsed-approach.duration);
-      const entering=!skipped&&elapsed<approach.duration;
+      compileSome();
+      if(skipped&&!compiled())holdFrom??=now;
+      const holding=skipped&&!compiled()&&now-holdFrom<3000,entering=holding||!skipped&&elapsed<approach.duration;
       const frame=arrivalFrame(time,{reducedMotion:skipped}),aspect=host.clientWidth/Math.max(1,host.clientHeight);
       current={...frame,phase:started===null&&!skipped?'loading':entering?'lobby':frame.phase,ready,progress:skipped?1:Math.min(1,elapsed/(approach.duration+ARRIVAL.duration))};
       const ascent=frame.done?1:ease((time-ARRIVAL.closingEnd)/(ARRIVAL.ascentEnd-ARRIVAL.closingEnd));
       const height=ARRIVAL.officeElevation*ascent;
       stage.position.copy(basePosition);stage.position.y+=height;
-      worldLights.forEach((light,i)=>{light.position.copy(lights[i].position).applyMatrix4(street.frame);light.position.y+=height;});
+      // The office lights follow the street's time of day; in the pool they carry it as well.
+      const atmosphere=street.atmosphere?.();
+      if(atmosphere&&office.relight){office.relight(atmosphere,street.scene.environment);authored.forEach((light,i)=>{lights[2+i].color.copy(light.color);lights[2+i].intensity=light.intensity;});}
+      worldLights.forEach((light,i)=>{light.position.copy(lights[i].position).applyMatrix4(street.frame);light.position.y+=height;light.color.copy(lights[i].color);light.intensity=lights[i].intensity;});
       const lightBlend=skipped?1:ease(elapsed/.8);if(!live)lease.lights(worldLights,lightBlend);
       const inside=!entering&&(skipped||time>=ARRIVAL.closingEnd);
       // The capture sees the street's own lighting, not the cabin's (office-skyline.js).
@@ -70,7 +99,7 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
       glass.update(frame);
       let body;
       if(entering){
-        const start=approach.at(elapsed,aspect);body=start.player;view.position.copy(start.camera);view.quaternion.copy(start.quaternion);view.fov=start.fov;
+        const start=approach.at(holding?0:elapsed,aspect);body=start.player;view.position.copy(start.camera);view.quaternion.copy(start.quaternion);view.fov=start.fov;
       }else if(frame.done){
         body=point.set(position[0],floor,-position[1]);placeCamera();
       }else{
@@ -110,7 +139,7 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
         return current;
       },
       skip(){skipped=true;},get position(){return current?.position??position;},
-      inspect(){return {camera:{position:street.camera.position.toArray(),quaternion:street.camera.quaternion.toArray(),verticalFov:street.camera.fov},actors:actors.stats(),duration:approach.duration+ARRIVAL.duration,dimensions:ARRIVAL,presentation:'shared-world',skyline:skyline?.stats??null,elevation:stage.position.y-basePosition.y,phase:current?.phase,progress:current?.progress,skipped,avatar:street.avatar.object.position.toArray(),
+      inspect(){return {camera:{position:street.camera.position.toArray(),quaternion:street.camera.quaternion.toArray(),verticalFov:street.camera.fov},actors:actors.stats(),duration:approach.duration+ARRIVAL.duration,dimensions:ARRIVAL,presentation:'shared-world',skyline:skyline?.stats??null,precompile:precompile&&{queued,remaining:precompile.length,compiling,batches},elevation:stage.position.y-basePosition.y,phase:current?.phase,progress:current?.progress,skipped,avatar:street.avatar.object.position.toArray(),
         // The rendered shoes' world height: where the body is drawn, not only where it is placed.
         shoes:['foot_l','foot_r'].map(name=>street.avatar.object.getObjectByName(name)?.getWorldPosition(new THREE.Vector3()).y??null)};},
       dispose(){skyline?.dispose();dispose();},
