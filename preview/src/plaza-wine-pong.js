@@ -5,6 +5,7 @@ import { winePongNear, winePongOrigin, winePongSide } from './plaza-salon-plan.j
 import { RIM, TABLE, THROWS_PER_TURN, aimAt, glassAt, landing, notation, replay, trajectory } from './wine-pong-rules.js';
 import { chooseThrow } from './wine-pong-opponent.js';
 import { createHeldControls } from './throw-controls.js';
+import { soundToggle, throwSounds } from './throw-sounds.js';
 
 // Wine pong at the long table by the café, for whoever stands at one of its ends:
 // against a plaza regular at the far end, or two players passing the turn. Left and
@@ -32,7 +33,7 @@ const SWAY = { aim: 0.008, power: 0.011, calm: 5, tire: 7 };
 const clamp = value => Math.min(1, Math.max(0, value));
 
 export function createPlazaWinePong({ host = document.querySelector('#viewport'), getMirror = () => null, getTable = () => null, getPose = () => null, focusWorld = () => {},
-  frameTable = () => {}, onWindup = () => {}, random = Math.random, now = () => performance.now(), replyDelay = 650, flight = 900, reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false, onSwitch = null } = {}) {
+  frameTable = () => {}, onWindup = () => {}, random = Math.random, now = () => performance.now(), replyDelay = 650, flight = 900, reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false, onSwitch = null, sounds = throwSounds() } = {}) {
   let game = null, stance = null, aim = 0.5, power = 0.5, ready = now(), steady = false, generation = 0, thinking = false, flying = false, said = '', frame = 0, inspectRack = false;
   // Repositioning: the sheet stays open while the visitor walks; `away` when they have
   // stepped off the end (the launch waits for them to come back).
@@ -67,6 +68,9 @@ export function createPlazaWinePong({ host = document.querySelector('#viewport')
   attachGuide(panel, 'winePong');
   const $ = selector => panel.querySelector(selector);
   const board = $('.wine-pong-table'), zoom = $('.wine-pong-zoom'), status = $('.table-game-status'), throwButton = $('[data-pong-action="throw"]'), repositionButton = $('[data-pong-action="reposition"]');
+  $('[data-pong-action="inspect"]').after(soundToggle(sounds));
+  // What the ball meets: where it first comes down (a glass, a rim, the linen), and where it ends.
+  const CONTACT = { in: 'plop', 'rim-in': 'clink', 'rim-out': 'clink', 'bounce-in': 'tap', miss: 'tap' }, SETTLE = { 'rim-in': 'plop', 'bounce-in': 'plop', 'rim-out': 'tap' };
 
   const round = () => replay(game.seed, game.throws);
   const shotOrigin = side => stance?.side === side ? stance.origin : null;
@@ -177,19 +181,25 @@ export function createPlazaWinePong({ host = document.querySelector('#viewport')
   }
 
   // Flies the ball along the throw's path (in the sheet and over the real table), then records it.
-  function fly(side, outcome) {
-    const path = trajectory(side, outcome), duration = reducedMotion ? Math.min(flight, 300) : flight, start = now(), ticket = generation;
+  function fly(side, outcome, steps = 24) {
+    const path = trajectory(side, outcome, steps), duration = reducedMotion ? Math.min(flight, 300) : flight, start = now(), ticket = generation;
+    // The first arc ends at index `steps`; a ball off the end of the table meets nothing there.
+    const contact = outcome.result === 'miss' && !outcome.bounce ? null : CONTACT[outcome.result];
+    let landed = false;
     flying = true; render();
+    sounds.play('release', { strength: 0.5 });
     return new Promise(resolve => {
       const step = () => {
         if (ticket !== generation) { getMirror()?.ball(null); resolve(false); return; }
-        const t = Math.min(1, (now() - start) / duration), point = path[Math.min(path.length - 1, Math.floor(t * (path.length - 1)))];
+        const t = Math.min(1, (now() - start) / duration), index = Math.min(path.length - 1, Math.floor(t * (path.length - 1))), point = path[index];
+        if (!landed && index >= steps) { landed = true; if (contact) sounds.play(contact, { strength: 0.7 }); }
         getMirror()?.ball(point);
         const ball = board.querySelector('.pong-ball'), [x, y] = toScreen(viewer(round().state), [point[0], point[1]]);
         ball?.setAttribute('cx', x); ball?.setAttribute('cy', y); ball?.setAttribute('r', 5 + point[2] * 4);
         const closeBall = zoom.querySelector('.pong-ball'), [zx, zy] = toZoom(viewer(round().state), [point[0], point[1]]);
         closeBall?.setAttribute('cx', zx); closeBall?.setAttribute('cy', zy); closeBall?.setAttribute('r', 6 + point[2] * 6);
         if (t < 1) { requestAnimationFrame(step); return; }
+        if (SETTLE[outcome.result]) sounds.play(SETTLE[outcome.result], { strength: 0.6 });
         setTimeout(() => { getMirror()?.ball(null); resolve(true); }, 250);
       };
       requestAnimationFrame(step);
