@@ -9,7 +9,7 @@ function setup() {
   let time = 10000;
   const world = createSharedWorld(data, {now: () => time});
   for (const userId of [owner, 'guest', 'stranger']) assert.ok(world.join({userId, name: userId === owner ? 'Jevica' : 'Jevica'}).ok);
-  const send = (user, action, more = {}) => {time += 1000;return world.command(user, {type: 'office', action, officeId: id, ...more});};
+  const send = (user, action, more = {}) => {time += 1000;return world.command(user, {type: 'office', action, officeId: id, ...(action==='move'?{layout:'office-penthouse-1'}:{}), ...more});};
   const lobby = user => {const office = send(user, 'list').offices[0];time += 2000;assert.ok(world.command(user, {type:'travel', position:office.entrance}).ok);};
   return {world, send, lobby};
 }
@@ -64,7 +64,7 @@ test('leaving the world clears visit presence; private office state cannot be fo
 test('checkpoint version fences old writers and retains permissions on geography migration',async()=>{
  const {migrateWorldCheckpoint}=await import('../world.js');
  const {createHash}=await import('node:crypto');const {world,send}=setup();send(owner,'invite',{peerId:'guest'});send('stranger','request');
- const checkpoint=world.checkpoint();assert.equal(checkpoint.version,12);
+ const checkpoint=world.checkpoint();assert.equal(checkpoint.version,13);
  const migrated=migrateWorldCheckpoint({fromData:data,toData:{...data,title:'Updated district'},checkpoint});assert.ok(migrated.ok);
  assert.deepEqual(migrated.checkpoint.payload.offices.grants,checkpoint.payload.offices.grants);assert.deepEqual(migrated.checkpoint.payload.offices.requests,[]);
  const resign=v=>{const {checksum,...envelope}=v;v.checksum=createHash('sha256').update(JSON.stringify(envelope)).digest('hex');};

@@ -117,7 +117,7 @@ test('publication and coordinator replacement retain layout and screening permis
   await verifyConfiguration();
 });
 
-test('compatible coordinator checkpoints preserve floors, invited visits; rollback ends only incompatible visits', options, async t => {
+test('compatible coordinator checkpoints preserve floors, invited visits; retired layout configuration cannot revive the one-room office', options, async t => {
   const f = await setup(t); let room = f.create();
   for (const user of ['owner', 'guest', 'host']) assert.equal((await f.join(room, user)).ok, true);
   assert.equal((await f.command(room, 'host', { type: 'travel', storeId: ipic.storeId, mode: 'enter' })).ok, true);
@@ -129,10 +129,8 @@ test('compatible coordinator checkpoints preserve floors, invited visits; rollba
   assert.deepEqual(await f.visit(room, 'guest'), personal);
   assert.equal((await f.command(room, 'host', { type: 'screening', action: 'sync', venueId: 'ipic' })).canHost, true);
   await room.close(); room = f.create({ officeLayout: OFFICE_LAYOUT_LEGACY, screeningHosts: [] }); await f.restored(room);
-  assert.equal(await f.visit(room, 'owner'), null);
-  assert.equal(await f.visit(room, 'guest'), null);
-  assert.equal((await f.office(room, 'owner', 'transition', { portalId: up, layout: OFFICE_LAYOUT_PENTHOUSE })).error, 'office_visit_required');
-  assert.equal((await f.enter(room, 'owner')).layout, OFFICE_LAYOUT_LEGACY);
+  assert.deepEqual(await f.visit(room, 'owner'), before);
+  assert.deepEqual(await f.visit(room, 'guest'), personal);
   assert.equal((await f.command(room, 'host', { type: 'screening', action: 'sync', venueId: 'ipic' })).canHost, false, 'checkpoint cannot restore a removed host grant');
 });
 

@@ -19,6 +19,11 @@
 .ipic-screening-poster{grid-column:1;grid-row:1/span 3;width:64px;aspect-ratio:16/9;border-radius:6px;overflow:hidden;background:#1c1714;border:1px solid #ffffff1f}
 .ipic-screening-poster img{display:block;width:100%;height:100%;object-fit:cover}
 .ipic-screening-film-details{grid-column:2;margin:0;font-size:12px;opacity:.85}
+/* Stop watching leaves only this (#500): a line and Join screening, which returns to the room's film. */
+.ipic-screening-stopped{flex-direction:row;flex-wrap:wrap;align-items:center}
+.ipic-screening-stopped .ipic-screening-status{flex:1 1 220px}
+/* Where a page cannot set the film's volume (iOS Safari), the slider is not offered: say what works. */
+.ipic-screening-device-volume{margin:0 4px;font-size:12px;opacity:.85}
 /* The active caption cue: the film reaches the screen as texture frames, so the panel shows it. */
 .ipic-screening-caption{margin:0;padding:6px 12px;border-radius:8px;background:#000000d9;color:#fff;font-size:15px;line-height:1.4;text-align:center;white-space:pre-line}
 .ipic-screening-transcript{max-height:140px;overflow:auto;border-top:1px solid var(--line);padding-top:6px}
