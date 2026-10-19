@@ -104,8 +104,29 @@ tabbed layout and a separate PR from `main`.
   - `pnpm run verify` passed on `4df7db65`.
   - `office-ipic-journey` (own runner, local only) fails twice at line 78, before the edited step: the resident's `#office-nearby` prompt never shows after the lobby travel. Unmodified `main` `153471bc` fails at the same step, at load 80. That prompt mounts on the canvas, not in the rail, so the edited tab step at line 94 is not reached locally.
 
+## Landing (river-oaks-c5, 2026-10-19)
+
+Val's goal on 2026-10-19 asked c5 to take #503 through to merge. a9's lease had expired, and its session had been idle since 2026-10-18 16:33Z. Val had updated the branch from main (`1c5690b7`, then `eb8553ae`); c5 merged main `4eca5153` (#528) at `d4425ad2` and regenerated the plans index, which had lost this ledger's entry.
+
+The hosted shards don't run these journeys, so c5 ran nine of the dock-adjacent local-only ones on `1c5690b7`, then reran the failures on main `eb8553ae`:
+
+| Journey | `1c5690b7` | main `eb8553ae` | Cause |
+| --- | --- | --- | --- |
+| `plaza-salon`, `sidebar`, `hud-and-quality` (14), `player-lifecycle` (19), `nearby-encounters` | passed | — | — |
+| `salon-guide` | timed out clicking `[data-guide-entry]` | fails earlier, at the 390 px medallion check | this change: the entry is in the hidden Game guide pane. The id sweep missed it because it targets an attribute |
+| `game-hud` | "Sidebar tabs support arrow navigation" | passed (19) | this change: Controls now follows Graphics |
+| `sable` | null `dataset` | same | main |
+| `ui-improvements` | "Clearing filters restores all stores" | same | main |
+
+Fix: `salon-guide` selects `#play-tab-guide` before the entry. `game-hud` expects Controls after Graphics. On the merged tree:
+- `game-hud` passed 19 checks, and `sidebar` passed.
+- `salon-guide` passes both dock steps. It still fails main's 390 px check ("How to play is a 36 px medallion"): #521 gave `.salon-guide-open` a 44 px minimum touch target. That is main's, not this PR's.
+- A throwaway copy with only that check skipped passed 21 checks, both guide entries included, and was deleted.
+
 ## Gaps
 
+- `salon-guide`'s 390 px medallion check disagrees with #521's 44 px touch target on main. It needs an owner's decision.
+- `sable` and `ui-improvements` fail on main too.
 - Shared-mode journeys (multiplayer-dev, rail-shared, shared-seating,
   multiplayer-exclusivity, vehicle-exit, world-publish, creator-objects,
   cycling-leaderboard, the carriage variants) have edited selectors but have not

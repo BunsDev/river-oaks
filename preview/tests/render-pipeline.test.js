@@ -2,12 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import { createRenderPipeline } from '../src/render-pipeline.js';
+import { occlusionOpaqueSort, occlusionTransparentSort } from '../src/occlusion-sort.js';
 
 function fixture(options) {
   const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(),color=new THREE.Color('#123456');
   const leaf=new THREE.Mesh(new THREE.PlaneGeometry(),new THREE.MeshStandardMaterial());leaf.userData.aoExclude=true;scene.add(leaf);
   const renderer={capabilities:{maxSamples:4},getPixelRatio:()=>1,shadowMap:{autoUpdate:true,needsUpdate:true},autoClear:true,
-    getClearColor:target=>target.copy(color),getClearAlpha:()=>1,setClearAlpha:()=>{},setClearColor:()=>{},setRenderTarget:()=>{},clear:()=>{},render:()=>{}};
+    getClearColor:target=>target.copy(color),getClearAlpha:()=>1,setClearAlpha:()=>{},setClearColor:()=>{},setRenderTarget:()=>{},clear:()=>{},render:()=>{},
+    opaqueSort:null,transparentSort:null,setOpaqueSort:sort=>{renderer.opaqueSort=sort;},setTransparentSort:sort=>{renderer.transparentSort=sort;}};
   const pipeline=createRenderPipeline(renderer,scene,camera,options);
   return {scene,leaf,renderer,pipeline};
 }
@@ -21,10 +23,13 @@ test('the AO geometry pass reuses current scene transforms and shadow maps',()=>
     assert.equal(renderer.shadowMap.autoUpdate,false,'Normals must not redraw sun shadows');
     assert.equal(renderer.shadowMap.needsUpdate,false,'A pending shadow update belongs to the beauty pass');
     assert.equal(scene.matrixWorldAutoUpdate,false,'The beauty pass already updated transforms');
+    assert.equal(renderer.opaqueSort,occlusionOpaqueSort,'One normal material: order the pass by object kind');
+    assert.equal(renderer.transparentSort,occlusionTransparentSort);
   };
   try {
     pipeline.occlusion.render(renderer,{texture:{}},{texture:{}});
     assert.equal(geometryPasses,1);
+    assert.equal(renderer.opaqueSort,null,'Other passes keep three\'s order');assert.equal(renderer.transparentSort,null);
     assert.equal(leaf.visible,true);
     assert.equal(renderer.shadowMap.autoUpdate,true);assert.equal(renderer.shadowMap.needsUpdate,true);
     assert.equal(scene.matrixWorldAutoUpdate,true);
@@ -40,6 +45,18 @@ test('a failed AO geometry render restores hidden foliage and renderer state',()
     assert.equal(scene.overrideMaterial,null);assert.equal(scene.matrixWorldAutoUpdate,true);
     assert.equal(renderer.shadowMap.autoUpdate,true);assert.equal(renderer.shadowMap.needsUpdate,true);
     assert.equal(renderer.autoClear,true);
+    assert.equal(renderer.opaqueSort,null);assert.equal(renderer.transparentSort,null);
+  } finally {pipeline.dispose();leaf.geometry.dispose();leaf.material.dispose();}
+});
+
+test('the audit switch draws AO geometry in three\'s own order',()=>{
+  const {scene,leaf,renderer,pipeline}=fixture();let sorts=null;
+  renderer.render=subject=>{if(subject===scene)sorts=[renderer.opaqueSort,renderer.transparentSort];};
+  try {
+    pipeline.setOcclusionSort(false);pipeline.occlusion.render(renderer,{texture:{}},{texture:{}});
+    assert.deepEqual(sorts,[null,null]);
+    pipeline.setOcclusionSort(true);pipeline.occlusion.render(renderer,{texture:{}},{texture:{}});
+    assert.deepEqual(sorts,[occlusionOpaqueSort,occlusionTransparentSort]);
   } finally {pipeline.dispose();leaf.geometry.dispose();leaf.material.dispose();}
 });
 

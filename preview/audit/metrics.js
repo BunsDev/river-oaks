@@ -24,9 +24,9 @@ export function auditOptions(args) {
   if (!Number.isInteger(result.seconds) || result.seconds < 5 || result.seconds > 600
     || !Number.isInteger(result.warmup) || result.warmup < 1 || result.warmup > 60
     || !['sharp', 'auto', 'smooth'].includes(result.quality) || !['on', 'off'].includes(result.vsync)
-    || !['crowd', 'player', 'away'].includes(result.view) || !['none', 'avatar-culling', 'figure-culling', 'shadow-depth'].includes(result.compare) || !['on', 'off'].includes(result.profile)
+    || !['crowd', 'player', 'away'].includes(result.view) || !['none', 'avatar-culling', 'figure-culling', 'shadow-depth', 'occlusion-sort'].includes(result.compare) || !['on', 'off'].includes(result.profile)
     || !result.players.length || result.players.some((value, i) => ![1, 8, 16, 32].includes(value) || i && value <= result.players[i - 1]))
-    throw new Error('Use seconds 5–600, warmup 1–60, quality sharp/auto/smooth, vsync on/off, view crowd/player/away, compare none/avatar-culling/figure-culling/shadow-depth, profile on/off, and increasing player tiers from 1,8,16,32.');
+    throw new Error('Use seconds 5–600, warmup 1–60, quality sharp/auto/smooth, vsync on/off, view crowd/player/away, compare none/avatar-culling/figure-culling/shadow-depth/occlusion-sort, profile on/off, and increasing player tiers from 1,8,16,32.');
   return result;
 }
 
