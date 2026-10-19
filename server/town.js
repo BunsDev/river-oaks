@@ -11,6 +11,7 @@ import { createDevAuth, devAuthAllowed } from './dev-auth.js';
 import { createSharedWorld, migrateWorldCheckpoint } from './world.js';
 import { parseScreeningHosts } from './screenings.js';
 import { configuredOfficeLayout } from './offices.js';
+import { configuredDistrictRevision } from '../preview/src/garden-campus-district.js';
 import { parseCampusOperators } from './campus-leases.js';
 import { createModeration } from './moderation.js';
 import { createGameServer } from './app.js';
@@ -56,7 +57,9 @@ export function validateOrigin(origin) {
 export async function createTown({ env = process.env, origin, devAuth = 'auto', staticRoot = resolve('dist/preview') } = {}) {
   validateOrigin(origin);
   const worldId=validateWorldId(env.WORLD_ID??DEFAULT_WORLD_ID);
-  const data = await loadDistrictData();
+  // The district revision; unset or unknown keeps the garage (the default and the rollback, #507).
+  const districtRevision=configuredDistrictRevision(env.RIVER_OAKS_DISTRICT_REVISION,{onInvalid:()=>console.warn(JSON.stringify({event:'district_revision_ignored'}))});
+  const data = await loadDistrictData({ districtRevision });
   const moderation = await createModeration(resolve(env.MODERATION_FILE ?? '.runtime/moderation.json'));
   const mode = chooseAuth({ env, origin, devAuth });
   const admins = (env.WAITLIST_ADMIN_USER_IDS ?? '').split(',').map(id => id.trim()).filter(Boolean);
