@@ -253,6 +253,49 @@ Checks:
   The failure is the penthouse idle-slice timing test (88.3 ms against 40 ms);
   `office-penthouse-furnishings.test.js` passes 15/15 alone.
 
+## Increment 3: shadow depth materials per object kind
+
+Task `shadow-depth-442-20261018`, branch `perf/shadow-depth-442-20261018`,
+stacked on #534 (`e2b315dc`).
+
+- `draw-census.js`: `programSignature(object, geometry)`, plus a per-pass
+  `switches` count. A switch is a material drawn for a different kind of object
+  than its previous draw, the condition under which three calls `getProgram`.
+- Baseline census (`switch-crowd.json`, `switch-away.json`), desktop, per frame:
+
+  | View | Players | Shadow (scene / remote / player) | GTAO (scene / remote / player) | Main (scene / remote) |
+  | --- | ---: | --- | --- | --- |
+  | crowd | 1 | 52 / 0 / 3 | 55 / 0 / 7 | 11 / 0 |
+  | crowd | 16 | 52 / 55 / 3 | 54 / 93 / 7 | 11 / 8 |
+  | away | 16 | 50 / 34 / 3 | 68 / 30 / 6 | 14 / 2 |
+
+- `shadow-depth.js`: `assignShadowDepth(root)` gives each eligible shadow caster
+  the depth material of its kind. Materials with an `alphaTest`, clipping or
+  displacement keep three's own depth variant, and existing depth materials are
+  kept. `remote-players.js` applies it once a look is built. `setShadowDepth()`
+  and `__riverRenderAudit.shadowDepth()` exist for the audit, with
+  `--compare=shadow-depth`.
+- Unit: `shadow-depth.test.js` 2/2. It covers eligibility and grouping, and on
+  every exposed look no depth material is drawn for two kinds; alpha-tested hair
+  and lashes keep their cutout path. Negative control: one shared material fails
+  on Sable's bodice. Remote players 19/19, census 2/2, audit options 4/4.
+- A/B (`depth-crowd.json`, crowd view, 16 players, eight segments, exit 0):
+  shadow-pass switches 110 → 56 per frame in all eight segments on desktop and
+  phone (remote avatars 55 → 1). GTAO (154 desktop, 142 phone) and main (19)
+  are unchanged. The expected saving is about 54 × 3.4 µs ≈ 0.2 ms per frame. The
+  timing can't resolve it: load stepped mid-run (desktop CPU p50 fell from about
+  26 to 20 ms between segments 5 and 6). On the steady phone segments 3–8, CPU
+  p50 averaged 21.9 (off) and 21.6 (on).
+- Core gate: the verify runner's preview step was killed at its 600 s limit
+  under load (swap 26 of 27.6 GB). Run step by step instead: agent 121/121;
+  preview 3,551 passed, 1 skipped, 1 failed. The failure is the penthouse
+  idle-slice wall-clock test, which passed once and failed once alone (309 ms,
+  a scheduling stall). Server 668 passed with 204 Redis skips, desktop 76/76,
+  build, Python, demo and the secrets scan passed.
+- Shared journeys were not rerun locally for this increment. The change only
+  selects which depth material draws remote avatars' shadows. Hosted CI runs every
+  shared and experience shard.
+
 ## Gaps
 
 - Increment 2 culls peers whose shadows cannot reach the view. Peers whose
@@ -266,7 +309,9 @@ Checks:
   pass renders every mesh without a `customDepthMaterial` through one shared
   depth material, in unsorted scene order, so it switches kind constantly. A
   depth material per object signature should stop that; GTAO's single
-  `scene.overrideMaterial` has the same shape. Measured, not yet changed.
+  `scene.overrideMaterial` has the same shape. Increment 3 removes remote
+  avatars' shadow switches (55 → 1). The world's 52 shadow switches, and all
+  154 GTAO switches, remain.
 - three advances `info.render.frame` on every `renderer.render()` call, so
   `WebGLObjects.update` (geometry attribute upkeep) runs once per pass rather than
   once per frame; skeletons are already pinned by `composeFrame`. Unmeasured

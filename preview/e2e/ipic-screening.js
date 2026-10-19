@@ -224,6 +224,79 @@ async (host, viewer) => {
   check(text.tracks.length === 1 && text.tracks[0] === '/assets/ipic/screening/fixture-v1.en.vtt' && text.transcript && !text.stale, `captions and transcript follow the playing film: ${JSON.stringify(text)}`);
   checks.push('the film chosen in the chooser (the fixture) brings its own captions and transcript');
 
+  // Background and back (#502). Headless Chromium keeps a tab "visible" behind another, so this is emulated: the
+  // viewer's page is marked hidden (the game stops drawing) and its JavaScript frozen for 8 s with the browser's own
+  // lifecycle control (CDP Page.setWebLifecycleState), then resumed and shown. Its film must find the room's time
+  // again. Not device evidence: a phone's lock screen stays a #502 device row. The 30 s fixture is started again
+  // first when too little of it is left for the step.
+  const fixtureLeft = await host.evaluate(() => { const s = window.__riverScreening(), video = document.querySelector('#ipic-screening video');
+    return s.sharedStatus === 'playing' && video?.duration ? video.duration - s.currentTime : 0; });
+  if (fixtureLeft < 22) {
+    const now = await host.evaluate(() => window.__riverMultiplayer().snapshot.screenings.find(item => item.venueId === 'ipic'));
+    const halt = await hostCommand({ ...swapBase, epoch: now.epoch, action: 'stop', expectedRevision: now.revision, operationId: 'journey-stop-003' });
+    const again = await hostCommand({ ...swapBase, epoch: now.epoch, action: 'start', mediaId: 'ipic-fixture-v1', expectedRevision: halt.screening.revision, operationId: 'journey-start-03' });
+    check(again?.ok === true, `the fixture started again for the background step: ${JSON.stringify(again)}`);
+    await Promise.all([host, viewer].map(page => page.waitForFunction(revision => window.__riverScreening().state === 'playing' && window.__riverScreening().revision === revision, again.screening.revision, { timeout: 30000 })));
+  }
+  const cdp = await viewer.context().newCDPSession(viewer);
+  const setHidden = hidden => viewer.evaluate(value => {
+    if (value) { Object.defineProperty(document, 'hidden', { configurable: true, get: () => true }); Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'hidden' }); }
+    else { delete document.hidden; delete document.visibilityState; }
+    document.dispatchEvent(new Event('visibilitychange'));
+  }, hidden);
+  await setHidden(true);
+  // A browser may pause a hidden page's media (iOS Safari does), and freezing alone does not: pause it, so coming
+  // back has to restart the film at the room's time rather than find it still running.
+  const away = await viewer.evaluate(() => { document.querySelector('#ipic-screening video')?.pause(); return window.__riverScreening(); });
+  await cdp.send('Page.setWebLifecycleState', { state: 'frozen' });
+  await host.waitForTimeout(8000);
+  await cdp.send('Page.setWebLifecycleState', { state: 'active' });
+  const resumed = await screening(viewer);
+  await setHidden(false);
+  const shown = Date.now(), back = [];
+  let recovered = null;
+  while (Date.now() - shown < 12000) {
+    const sample = await spread();
+    back.push(Math.round(sample.spreadMs));
+    if (sample.spreadMs < 500 && sample.viewer.state === 'playing' && !sample.viewer.paused) { recovered = Date.now() - shown; break; }
+    await viewer.waitForTimeout(250);
+  }
+  // A requested time is not a presented one: wait for the first frame the viewer actually presents after its seek
+  // (requestVideoFrameCallback), and compare its media time with the host's film at that frame's display time.
+  const frame = await viewer.evaluate(fromS => new Promise(done => {
+    const video = document.querySelector('#ipic-screening video'), start = performance.now(), timer = setTimeout(() => done(null), 12000);
+    const step = (now, meta) => {
+      if (meta.mediaTime > fromS + 4) { clearTimeout(timer); done({ wallMs: performance.timeOrigin + (meta.expectedDisplayTime ?? now), mediaMs: meta.mediaTime * 1000, afterMs: Math.round(now - start) }); }
+      else video.requestVideoFrameCallback(step);
+    };
+    video.requestVideoFrameCallback(step);
+  }), away.currentTime);
+  const hostThen = await position(host);
+  const background = { advancedS: Math.round((resumed.currentTime - away.currentTime) * 100) / 100, recoveredAfterMs: recovered, spreadsMs: back,
+    presentedAfterMs: frame ? Math.round(frame.wallMs - shown) : null, presentedSpreadMs: frame ? Math.round(Math.abs(frame.mediaMs - (hostThen.currentTime * 1000 - (hostThen.at - frame.wallMs)))) : null };
+  check(recovered !== null, `after 8 s frozen in the background the viewer found the room's time again: ${JSON.stringify(background)}`);
+  check(background.advancedS < 1, `the viewer's film was paused while frozen in the background: ${JSON.stringify(background)}`);
+  check(background.presentedSpreadMs !== null && background.presentedSpreadMs < 500, `the first frame presented after coming back is within 500 ms of the room: ${JSON.stringify(background)}`);
+  checks.push(`background and back (emulated: hidden, its film paused, then frozen 8 s by CDP): the film restarted, and its first presented frame was ${background.presentedSpreadMs} ms from the room, ${background.presentedAfterMs} ms after showing`);
+
+  // Host loss (#502): the host walks out of IPIC while the film plays. The server pauses it where it was on its
+  // next tick and promotes nobody: the viewer's film stops on that frame, and the viewer still has no host controls.
+  await openHudSpace(host, 'explore-section');
+  const elsewhere = await host.evaluate(() => [...document.querySelectorAll('#destination option')].map(option => option.textContent).find(label => label && label !== 'IPIC Theaters'));
+  await host.locator('#destination').selectOption({ label: elsewhere });
+  await host.locator('#enter-destination').click();
+  await host.waitForFunction(() => document.querySelector('#walking-hud')?.dataset.inside !== 'osm-node-8172494964');
+  await viewer.waitForFunction(() => window.__riverScreening().sharedStatus === 'paused' && window.__riverScreening().paused, null, { timeout: 15000 });
+  // The software profile updates the player once a second: let it settle on the paused frame.
+  await viewer.waitForFunction(() => { const s = window.__riverScreening(), view = window.__riverMultiplayer().snapshot.screenings.find(item => item.venueId === 'ipic');
+    return Math.abs(s.currentTime - view.positionMs / 1000) < 0.3; }, null, { timeout: 10000 }).catch(() => {});
+  const hostLoss = await viewer.evaluate(() => { const view = window.__riverMultiplayer().snapshot.screenings.find(item => item.venueId === 'ipic'), s = window.__riverScreening();
+    return { status: view.status, positionS: view.positionMs / 1000, currentTime: s.currentTime, paused: s.paused, canHost: s.canHost,
+      hostControls: [...document.querySelectorAll('#ipic-screening [data-control^="host-"]')].some(button => !button.hidden) }; });
+  check(hostLoss.status === 'paused' && hostLoss.paused && Math.abs(hostLoss.currentTime - hostLoss.positionS) < 0.3 && !hostLoss.canHost && !hostLoss.hostControls,
+    `the host's exit paused the viewer's film at the server's position, and nobody was promoted: ${JSON.stringify(hostLoss)}`);
+  checks.push(`host loss: the host walked out to ${elsewhere}; the server paused the film at ${hostLoss.positionS.toFixed(2)} s, the viewer stopped on that frame, and nobody was promoted`);
+
   await openHudSpace(viewer, 'explore-section');
   const other = await viewer.evaluate(() => [...document.querySelectorAll('#destination option')].map(option => option.textContent).find(label => label && label !== 'IPIC Theaters'));
   await viewer.locator('#destination').selectOption({ label: other });
@@ -232,5 +305,5 @@ async (host, viewer) => {
   await viewer.waitForFunction(() => window.__riverScreening()?.active === false && !document.querySelector('#ipic-screening video'));
   checks.push(`leaving IPIC (to ${other}) released the viewer's film, panel and video element`);
   check(!errors.length, errors.join('; '));
-  return { checks, errors, convergedAfterMs: converged, samples, panels, pausedSpreadMs: Math.round(paused.spreadMs), replay, profile: 'one machine, loopback town, headless Chromium with SwiftShader, 250 ms sampling; local clocks share one wall clock' };
+  return { checks, errors, convergedAfterMs: converged, samples, panels, pausedSpreadMs: Math.round(paused.spreadMs), replay, background, hostLoss, profile: 'one machine, loopback town, headless Chromium with SwiftShader, 250 ms sampling; local clocks share one wall clock' };
 }
