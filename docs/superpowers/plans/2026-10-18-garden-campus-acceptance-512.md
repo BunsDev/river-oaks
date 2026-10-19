@@ -35,8 +35,9 @@ chain:
 - Logged once per switch as `district_gardens_checkpoint_migrated {from, to, moved}`.
 - #509 keeps `payload.campus` inert, byte for byte, in a world without the campus
   (`campusServed(worldData, worldId)`), so a rollback and re-select keeps leases. Its test
-  uses a stand-in marker. This branch must rerun it with
-  `attachGardenCampus(loadDistrictData())` once #509 is integrated.
+  used a stand-in marker. The candidate reruns it on the real campus
+  (`loadDistrictData({ districtRevision })`): "a configuration rollback keeps every lease
+  inert, byte for byte, and switching back honours it".
 
 ## Acceptance matrix (from #512)
 
@@ -48,7 +49,7 @@ chain:
 | Rental/permission | done | #509 race, retry, forged and coordinator tests. Hosted `garden-campus-office` and `garden-campus-suite` (request → offer → accept; a stranger kept outside the suite door) |
 | Useful private work | done | a public workstation (office journey) and a suite desk (suite journey, private work saved with the server's acknowledgement), with no leak to another account |
 | Access loss | done | an ended lease walks the tenant out to the gallery side of the door and the desk action goes (suite journey). #510 server test: revoke while seated |
-| Persistence/cutover | done | reload recovers work (office journey); a seated tenant is restored standing; reconnect resumes on Floor 4 (transport); garage ↔ Gardens recovery, epoch fence and leases inert across a rollback (#512 tests) |
+| Persistence/cutover | done | reload recovers work (office journey); a seated tenant is restored standing; reconnect resumes on Floor 4 (transport); garage ↔ Gardens recovery, epoch fence and leases inert across a rollback (#512 tests); the rollback clears real campus-floor occupants (Floor 4, mid-B12, Floor 2, a seated suite tenant) and the garage restores (2026-10-19) |
 | Interaction/accessibility | partial | keyboard, emulated phone touch and reduced motion in the traversal journey; dialog keys, phone width and touch targets. Physical devices are unproven |
 | Visual/resource | partial | #511 A/B on an M3 Max (street +10% calls / +18% triangles). Target-GPU and mobile budgets are unmeasured |
 | Optional Computer/paid mode | not claimed | Computer appears at any workstation where #486 is configured. Paid mode needs the #509 business decisions |
@@ -87,17 +88,54 @@ chain:
 
 ## Gaps
 
-- No campus-level occupant exists yet to exercise the rollback's level clearing. The
-  test covers hall and platform occupants. Rerun once #508's levels exist.
 - A code revert past checkpoint v13 is not a supported rollback without a downgrade
   path. The release plan must say "configuration rollback first".
 
+## Rollback with campus-floor occupants (2026-10-19, after #525 landed)
+
+The gap was that no test had a resident on a campus floor when the town rolled back to the
+garage. `server/tests/district-gardens-checkpoint-migration.test.js` now has one ("the
+configuration rollback clears every campus floor, seated tenants included, and the garage
+restores"). It builds a real Gardens town and moves its residents into place with real
+commands:
+- one rides T1's lift to Floor 4 (`garden-campus/l3`);
+- one walks Floor 4 to midway along B12;
+- one stops on Floor 2's spine (`garden-campus/l1`);
+- a tenant leases T1-201 from the operator, walks through its door and sits at its
+  workstation desk;
+- a street walker is the control.
+
+The rollback moves exactly the four campus residents. Each is on foot at street level, off
+the parcel, with no level, building, seat or vehicle, at least 0.9 m from the others. The
+street walker and the lease section are carried unchanged. The garage restores the town,
+and a moved resident's next step is accepted. Switching forward again moves nobody, and
+the Gardens restore that town.
+
+- **Mutations:** the case fails when the rollback leaves `levelId` set, and when its
+  selection skips level occupants (both `incompatible_district`). Dropping `sitting: null`
+  from the move does not fail it, because the migration first restores the town in the
+  Gardens world, which stands seated residents up.
+- **Results (main `7c10f418` plus this test):**
+  - migration, suite-seat and traversal suites with an isolated Redis: 15/15, including
+    the epoch-fenced Redis coordinator switch;
+  - `pnpm run test:server` with that Redis: 983/983, 0 skipped;
+  - `pnpm run verify` (core) stops at `test:agent` on one failure that main shares:
+    `scripts/tests/ipic-short-intake.test.js` ("the approved silent short and the fixture
+    are not a second film with dialogue and music"). #547 registered a second short that
+    really has dialogue and music, and the test runs only where ffmpeg is installed. It was
+    reported to its owner, river-oaks-4b. The other 126 agent tests pass.
+
 ## Next action
 
-1. The full Verify on `0b833b31`, then the release handoff (#505).
-2. Merge #511's PR head when it opens, and re-run the shard and the views.
-3. When #508 lands, merge it with #510's suite-seat integration, then write and run the
-   two-account candidate journey: Floor 4 across both skywalks, a walker below a bridge
-   while another crosses it, suite entry by the lease holder, a stranger refused, revoke
-   ending entry and the desk, reconnect and restore on a level, and a coordinator
-   takeover. Rerun the rollback test with real campus-level occupants.
+Delivered. All packages are on main:
+- #519 `ab0059fc`, #522 `53fba3fa`, #523 `5bb321ba`, #537 `3767d42b`, #528 `4eca5153` and
+  #527 `69699036`;
+- this candidate, #525, merged at 2026-10-19T06:29:36Z as `7c10f418` from head `d70607a4`,
+  18/18 hosted.
+
+Still open:
+1. Production activation, by river-oaks-b5 under Val's authorization, as written in
+   `docs/garden-campus.md`. Its `district_gardens_checkpoint_migrated` log line goes into
+   the #505 tracker.
+2. Physical devices, target-GPU and mobile budgets.
+3. Val's visual review.
