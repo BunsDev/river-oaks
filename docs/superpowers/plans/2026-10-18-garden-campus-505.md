@@ -76,7 +76,7 @@ due about 15:50Z on `feat/garden-campus-contract-506-20261018`.
   - Every unit door names both the spine it opens from and the suite surface it opens
     into.
 
-## Package ownership and dependencies (as of 2026-10-19 02:10Z)
+## Package ownership and dependencies (as of 2026-10-19 04:05Z)
 
 Landing (Val's decision, about 23:20Z):
 - river-oaks-d8 lands #523, then #537.
@@ -85,7 +85,12 @@ Landing (Val's decision, about 23:20Z):
 - river-oaks-95 keeps the branch updates on #528, #527 and #525, and hands each head SHA to
   b5 once its preview shards and macOS desktop job are green.
 - #523 merged at 00:29Z as `5bb321ba`. #546, the repo-wide secret-scan fix (below), merged
-  at 02:05Z as `2b4e4926`; Val approved landing it first and b5 landed it.
+  at 02:05Z as `2b4e4926`; Val approved landing it first and b5 landed it. #537 merged at
+  02:29Z as `3767d42b` (d8). #528 merged at 03:45Z as `4eca5153` (b5).
+- Val merged #542 (`eb8553ae`) at 03:29Z and pressed "Update branch" on #527 and #525. Their
+  heads became GitHub-made, verified merges of the handed-over SHAs with `eb8553ae`: #527
+  `2b5c3ac3` (from `8098839c`), #525 `b722b576` (from `c48a983b`). b5's land gate accepts
+  exactly that shape. Val decided b5 lands #525 and does the switch; c5 stood down.
 - Dependencies, by ancestry:
   - #527 contains #537's `d456fbca`. #537's own content has not changed since `75f8e277`;
     its later heads only merge main;
@@ -97,12 +102,12 @@ Landing (Val's decision, about 23:20Z):
 | --- | --- | --- | --- | --- |
 | #506 contract | river-oaks-c5 | #519 | **merged to main `ab0059fc`** (layout 3.2, Val-authorized land) | done |
 | #507 shells + ground | built by river-oaks-95; **river-oaks-d8 lands** / `garden-campus-shells-507` (claimed by d8) | #523 | `efb935cf` (the desktop e2e rejoin fix) | **merged to main `5bb321ba`** (00:29Z, d8) |
-| #508 upper circulation | built by river-oaks-95; **river-oaks-d8 lands** / `garden-campus-traversal-508` (claimed by d8) | → **#537** (base main) | `75f8e277`; head `c675ff22` only adds main `2b4e4926` | lifts and stairs (`toPortal` pairing), facade glass, ceilings, fail-closed suite admission. **d8's review found nothing blocking:** 133/133 (campus, interior-level, store-room, walking and world suites, isolated Redis); suite surface ids equal #509's 43 unit ids; `toPortal` pairing correct. UX note: a lift moves one floor per press |
+| #508 upper circulation | built by river-oaks-95; **river-oaks-d8 lands** / `garden-campus-traversal-508` (claimed by d8) | #537 | `75f8e277`; head `c675ff22` only adds main `2b4e4926` | **merged to main `3767d42b`** (02:29Z, d8; 17 checks green, tree equal to `c675ff22`). Lifts and stairs (`toPortal` pairing), facade glass, ceilings, fail-closed suite admission. **d8's review found nothing blocking:** 133/133 (campus, interior-level, store-room, walking and world suites, isolated Redis); suite surface ids equal #509's 43 unit ids; `toPortal` pairing correct. UX note: a lift moves one floor per press |
 | #508 slice (b) | river-oaks-95 / `garden-campus-traversal-views-508b` | `test/garden-campus-traversal-journey-508-20261018` | `2c650446` | **browser journey passed locally end to end**: keyboard + phone touch, occupied landing, above/below B12, T2 roof, T3 stairs. 14 circulation views on the design plans; carried by #525 |
 | #509 leases | river-oaks-d8 | #522 | **merged to main `53fba3fa`** (23:15Z; 20 checks green, tree equal to the head `e7b98e42`) | delivered |
-| #510 resident journey | river-oaks-95 / `garden-campus-journey-510` | → #527 (draft, **base main**) | `859965a9` (main `2b4e4926` + #508 `d456fbca` + the dialog and stranger fixes below) | suite seats on #509 leases. Campus, world, interior and walking suites 191/191 with Redis at `27ac42e8`. **Hosted at `79a5b580`: `preview` green, `campus` shard green, macOS desktop green; `859965a9` running.** The desktop job's first attempt failed after every check had passed: the runner's GPU process crashed on its own (`exit_code=6`, context lost), and three.js's 434 stale-object deletes after the restore tripped the console assertion. The rerun passed, and the same change was green on #525. Lands after #537 |
-| #511 finish + rendering | river-oaks-95 (agent-511) / `garden-campus-finish-511` | → #528 (draft, base main) | `040fc700` (main `2b4e4926`) | campus, render-audit and remote-player suites 76/76 with Redis. **Hosted `preview` green at `070d588b` and `3f843515`; `040fc700` running.** Lands next |
-| #512 integration | river-oaks-95 / `garden-campus-acceptance-512` | → #525 (draft candidate) | `a7b16ca2` (#510 `859965a9` + #511 `040fc700`, so every package head and main `2b4e4926`) | 124/124 across 20 campus, interior and render suites with Redis. **Hosted at `fa0e8410`: `preview` green, both `campus` and `campus-traversal` shards green, macOS desktop green; `a7b16ca2` running.** Lands last |
+| #510 resident journey | river-oaks-95 / `garden-campus-journey-510` | → #527 (ready, base main) | handed to b5 at `8098839c` (main `3767d42b`; tree equal to `859965a9`); head `2b5c3ac3` adds main `eb8553ae` | suite seats on #509 leases. Campus, world, interior and walking suites 191/191 with Redis at `27ac42e8`. **Hosted 20/20 at `8098839c` and at `2b5c3ac3`** (campus shard, desktop on all three OSes). `859965a9` failed only `places` (`office-computer-embed`: the frame's Continue button detached mid-click; main's flake, also on #546). The desktop job's first attempt failed after every check had passed: the runner's GPU process crashed on its own (`exit_code=6`, context lost), and three.js's 434 stale-object deletes after the restore tripped the console assertion. The rerun passed, and the same change was green on #525. Lands after #537 |
+| #511 finish + rendering | river-oaks-95 (agent-511) / `garden-campus-finish-511` | #528 | `040fc700` (main `2b4e4926`); landed head `c358c573` adds main `3767d42b` and `eb8553ae` by update-branch | **merged to main `4eca5153`** (03:45Z, b5; 16/16 green, tree equal to `c358c573`). Campus, render-audit and remote-player suites 76/76 with Redis |
+| #512 integration | river-oaks-95 / `garden-campus-acceptance-512` | → #525 (ready candidate) | handed to b5 at `c48a983b` (#510 `8098839c` + #511 `040fc700`, main `3767d42b`; tree equal to `a7b16ca2`); head `b722b576` adds main `eb8553ae` | 124/124 across 20 campus, interior and render suites with Redis. **Hosted 21/21 at `a7b16ca2` and at `c48a983b`** (both campus shards, desktop on all three OSes; `c48a983b`'s macOS job passed on rerun after a runner GPU crash). At `b722b576` see the macOS frame-count finding below. Lands last, queued by b5 |
 
 **Found at candidate `e9716e46`, fixed at its owner (#510 `79a5b580`).** The hosted `campus`
 shard failed `garden-campus-office` at "A request is shown as asked, not admitted" (job
@@ -128,6 +133,35 @@ beside MakeHuman paths naming "keys", which trips `generic-api-key`. #546 allows
 64-hex value for that rule in `preview/public/assets/characters/*.sources.json` only, with
 tests that the allowlist stays that narrow. Its ledger is
 `docs/superpowers/plans/2026-10-19-gitleaks-asset-digests.md`.
+
+**Found at #525 `b722b576`; runner speed, not campus code (no change).** The macOS desktop
+job failed "render loop keeps advancing": 72 animation frames in 10 s against a threshold of
+100 (`desktop/e2e.js:241`). The walk passed.
+- **What the count measures:** the e2e selects Auto graphics, which restarts the governor
+  (`preview/src/render-quality.js`) at full scale with ambient occlusion on, then waits 5 s
+  and counts frames for 10 s. The governor steps down one 45-frame window at a time and
+  drops AO only after two slow windows at its 0.6 floor. On a slow runner it is still drawing
+  the AO pass when sampled.
+- **Same scene in every run:** geometries (487) and textures (159) are identical across all
+  runs. The two groups differ only by the AO pass: 1,004 calls and 3.70M triangles with AO
+  off, 1,462 and 5.17M with it on.
+- **The split followed the clock, not the code.** Every run from 23:30Z to 00:30Z reached AO
+  off with 203–278 frames. Every run after 00:30Z sampled with AO on.
+- **A/B on the same commit:** old main `5bb321ba` drew 264 frames with AO off at 00:29Z (run
+  39180992526). Dispatched again at 03:40Z on a temporary `diag/` branch (since deleted), it
+  drew 116, 110 and 137 frames with AO on (runs 39196369229, 39196375857, 39196382550).
+  Main `eb8553ae`, dispatched by c5, drew 189 and 157. The candidate's runs (72–153, plus
+  402 on one attempt of `c48a983b`) sit in the same distribution.
+- The third old-main run also hit the runner GPU crash (`exit_code=6`), so that flake is on
+  main too.
+- **Follow-up, desktop e2e owner, outside campus scope:** the 100-frame threshold sits inside
+  the slow runners' normal range. A fixed quality mode, or a longer settle, would measure the
+  render loop without the governor's convergence time.
+
+**Also at #525 `b722b576`, a flake outside campus code:** the `places` shard failed
+`contextual-first-visit` on touch. Talk was pressed inside the travel cooldown its previous
+step had started, and the town refused with `travel_cooldown`. Main `eb8553ae` and #527
+`2b5c3ac3` pass that shard, so it was rerun.
 
 ### #508 slice (b) plan (river-oaks-95; assigned by Val, agreed with c5)
 
@@ -256,9 +290,9 @@ does not exist. Roll back by configuration instead (`docs/garden-campus.md`).
 2. #522 (#509 leases): merged `53fba3fa`.
 3. #523 (#507): merged `5bb321ba` (d8).
 4. #546 (secret-scan allowlist, not a campus package): merged `2b4e4926` (b5).
-5. #528 (#511): b5, next.
-6. #537 (#508): d8.
-7. #527 (#510): b5, after #537.
+5. #537 (#508): merged `3767d42b` (d8).
+6. #528 (#511): merged `4eca5153` (b5).
+7. #527 (#510): b5, queued after #540 and #543.
 8. #525 (#512: cutover, epoch fence, docs, candidate journeys): b5, last.
 
 **Activation** (Val's separate authorization; production settings):
@@ -334,15 +368,12 @@ ledger, section "Desktop macOS e2e".
 - #512's candidate runs all three two-account journeys green on hosted CI at `0b833b31`.
 - The gallery walls and suite doors are in, opaque at any camera distance.
 
-## Next action (2026-10-19 02:10Z)
+## Next action (2026-10-19 04:05Z)
 
-1. Main `2b4e4926` is merged into all three heads. Each is signed, and each passes the
-   gitleaks `--all` scan, `tests/test_secrets.py` (19/19) and ruff locally. Hosted CI is
-   running on #528 `040fc700`, #527 `859965a9` and #525 `a7b16ca2`.
-2. Once #528's preview shards, macOS desktop job and `verify` are green, hand its head SHA
-   to river-oaks-b5, which queues it straight away.
-3. When d8 reports #537's merge SHA: merge main into #527 and then #525, re-run, and hand
-   them over in that order.
-4. After #525 lands, finish this tracker with the exact PR and merge SHAs. Activation stays
-   Val's separate authorization, carried out by b5 as above. Then retire the campus worktrees
+1. b5's land queue holds #527 at `2b5c3ac3`, then #525 at `b722b576`, after #540 and #543.
+   b5 sends both merge SHAs.
+2. When each merges, record it here and in the register, and mark #510 and #512 delivered.
+3. After #525, b5 makes the production switch that Val authorized and sends the
+   `district_gardens_checkpoint_migrated` log line for the Evidence section. Then finish this
+   tracker with the exact PR, merge and evidence links, and retire the campus worktrees
    through `project:prune`.
