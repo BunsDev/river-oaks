@@ -11,6 +11,17 @@ import { photoDownloadAllowed } from './photo-download.js';
 import { studioDownloadAllowed } from './studio-download.js';
 import { deviceSignIn, exchangeDesktopSession } from './auth.js';
 import { APP_NAME, APP_USER_MODEL_ID } from './identity.js';
+import { runSquirrelEvent, squirrelEvent } from './squirrel.js';
+
+// The Windows installer (Squirrel) starts the app to install, update or remove
+// its shortcuts and waits for it to exit. Handle that before anything else and
+// leave: no single-instance lock (an open window would swallow the event) and no window.
+const squirrel = squirrelEvent(process.argv);
+if (squirrel) {
+  try { runSquirrelEvent(squirrel, { execPath: process.execPath, appData: app.getPath('appData'), desktop: app.getPath('desktop'), shell }); }
+  catch (error) { console.error(`Squirrel ${squirrel} failed:`, error); }
+  app.exit(0);
+}
 
 app.setName(APP_NAME);
 // Windows groups the taskbar button, notifications and jump list by this ID; without it
@@ -146,7 +157,9 @@ function createWindow() {
   void loadGame();
 }
 
-if (!app.requestSingleInstanceLock()) app.quit();
+// app.exit() above normally ends the process at once; this keeps a Squirrel run
+// from ever taking the lock or opening a window if it returns.
+if (squirrel || !app.requestSingleInstanceLock()) app.quit();
 else {
   app.on('second-instance', () => { if (window?.isMinimized()) window.restore(); window?.show(); window?.focus(); });
   app.on('before-quit', event => {
