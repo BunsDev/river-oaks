@@ -3,8 +3,9 @@
 Coordinator ledger for tracker #497 and packages #498–#502 (umbrella #359). #502 owns this evidence matrix.
 
 - **Owner:** `claude:river-oaks-4b (6191db50)`. Tasks are in the primary's live register: `ipic-screening-switching-498`,
-  `ipic-screening-chooser-499`, `ipic-screening-viewing-500`, `ipic-screening-second-short-501` and
-  `ipic-screening-acceptance-502`.
+  `ipic-screening-chooser-499`, `ipic-screening-viewing-500`, `ipic-screening-second-short-501`,
+  `ipic-screening-second-short-register-501` (#547), `ipic-screening-acceptance-502` and
+  `ipic-screening-ledgers-delivered-497` (this update). All but the last two are retired.
 - **Baseline:** main `153471bc` (2026-10-18 12:4xZ). The tracker's planning SHA `a5e2a8ec` and #496's `3592780c` are
   evidence only, not reset targets.
 - **Milestone:** an authorized host chooses between two approved shorts. A friend joins partway, and both watch on
@@ -15,11 +16,11 @@ Coordinator ledger for tracker #497 and packages #498–#502 (umbrella #359). #5
 
 | # | Package | Branch / worktree | State | Next action |
 | --- | --- | --- | --- | --- |
-| S1 #498 | Switching, mattes, fallback, failure states | draft **#513**, `fix/screening-switching-498-20261018` | `6eee1ce9`: hosted CI all green, including the extended screening journey on Mesa; ipic-screen-runner passed | Ten-cycle soak (load-gated), then ready for review |
-| S2 #499 | Host-only approved-film chooser | draft **#514** (base: #498's branch) | `4e092679`: hosted CI all green (10/10, including the chooser steps at 390 and 320 px on Mesa) | Register #501's film after Val approves it, then the two-film checks |
-| S3 #500 | Screen focus, Join screening, local audio | draft **#515** (base: #499's branch) | `b9d78b86`: hosted CI all green (10/10) | Visit journey on Metal (normal and reduced motion) and the in-world focus inspection (load-gated) |
-| S4 #501 | Second short "Two Seats, One Screen" | draft **#516** (tooling only, no media) | Val chose a new in-game scene (14:30Z). Script, voices, score and cut/mix are ready; the dry run is an engineering candidate | In-game capture (load-gated below 40), the cut, the checks, then Val's review of the bytes |
-| S5 #502 | Evidence matrix, device/human rows, release handoff | draft **#520** (base: #500's branch), `test/screening-acceptance-502-20261018` | `2df7a0a8`: hosted CI all green (10/10); rollback guard committed | Integrated ten-cycle soak and the isolated-Redis rerun (load-gated) |
+| S1 #498 | Switching, mattes, fallback, failure states | **#513**, merged `1b38e44d` (2026-10-18 21:04Z) | Deployed 21:05:06Z; retired | — |
+| S2 #499 | Host-only approved-film chooser | **#514**, merged `1a61e448` (21:45Z) | Live with #529's deploy (22:02:21Z); retired | — |
+| S3 #500 | Screen focus, Join screening, local audio | **#515**, merged `225acfc9` (22:29Z) | Deployed 22:29:46Z; retired | Val: the film against live voice chat |
+| S4 #501 | Second short "Two Seats, One Screen" | **#516** tooling, merged `b76ab77c` (2026-10-19 05:02Z); **#547** the approved film, merged `a4b889e3` (05:42Z) | Val approved the exact bytes (04:10Z); deployed 05:03:12Z and 05:43:17Z; production serves the approved bytes; both retired | Val: listening on headphones and a device speaker |
+| S5 #502 | Evidence matrix, device/human rows, release handoff | **#520**, merged `7fcce0f6` (2026-10-18 23:31Z), `test/screening-acceptance-502-20261018` | Deployed 23:31:50Z. The worktree still serves Val's local dev server on :5180 | The two-film journey on main with both approved films; Val's device rows |
 
 Integration order: #498 → #499 → #500 → #502. #501 runs in parallel, and until it delivers, #499, #500 and #502
 work on the fixtures. Shared hunks get one owner at a time: `ipic-screening-ui.js` and its CSS (#498 lifecycle, then
@@ -67,8 +68,8 @@ not device evidence. Self-review is not independent review.
 | Focus on screen / Look around; seat and exit unchanged | #500 | 4b | unit: the seated eye needs 103° (front) / 57° (back); centre-line framing fits within 80° | pass (unit) | journey-sw (`ipic-visit.js`, both motion settings), in-world-gpu capture |
 | Stop watching → Join screening at the room's time | #500 | 4b | — | implemented | journey-sw |
 | Truthful sound/volume; no audio after leaving | #500 | 4b | unit (slider only where volume works; refused-sound text) | pass (unit) | device rows |
-| Second approved film with dialogue and music | #501 | Val (media, approval) | intake tooling (unit) | **blocked** | Val's choice of source, voices, music and likeness |
-| Two films, two clients, late join, pause/resume/stop | #502 | 4b | Hosted journey (Mesa) on every head: two browsers, late join, pause, stop, the host choosing and starting a second film (the labelled fixture). Integrated soak: 11 late joins, each converged within 500 ms in 3–9 ms (worst spread after 15–283 ms) | pass with the fixture | The second **approved** film: blocked on #501 (Val) |
+| Second approved film with dialogue and music | #501 | Val (media, approval) | `ipic-two-seats-v1`, approved 2026-10-19 as exact bytes (WebM `24f08a74`, MP4 `85b1079e`, captions `2a6b54e0`, poster `2e53991c`). Intake, decode (Chromium 156, Metal) and in-world playback in both rows passed; 79/79 media and contract tests on main `a4b889e3`; production serves the same bytes. Details: `2026-10-18-ipic-second-short.md` | **pass** (approved, registered, deployed) | Val: listening (below) |
+| Two films, two clients, late join, pause/resume/stop | #502 | 4b | Hosted journey (Mesa) on every head: two browsers, late join, pause, stop, the host choosing and starting a second film (the labelled fixture). Integrated soak: 11 late joins, each converged within 500 ms in 3–9 ms (worst spread after 15–283 ms). With the second **approved** film: the two-browser journey on main `a4b889e3` (local, SwiftShader, 2026-10-19 05:47–06:18Z, load 9–18) passed 18 checks. The host chose `ipic-two-seats-v1` and started it, and it replaced the first short with its own 1280×720 texture, with no stale frame in 53 rendered frames. Its captions, transcript and audio (37,657 bytes decoded) followed it. The background-and-back first frame was 254 ms from the room, and host loss paused at 9.72 s. The second-film swap is a local variant of the committed journey, which still uses the fixture; the patch and receipts are in `~/worktree-backups/river-oaks/ipic-screening-497-20261018/main-a4b889e3-two-film-journey/`. Three earlier runs on the candidate at load 20–53 failed load-bound steps | **pass** with both approved films (local) | Optional: let the committed journey choose `ipic-two-seats-v1`, so hosted CI covers it |
 | Host loss, stale or duplicate commands, competing hosts | #502 | 4b | Server unit tests: leaving town, walking out and a lapsed grant pause at the server position; two hosts racing (one wins, the other is stale). Journey: a resent start applies once; stale revision, earlier epoch and reused operation id refused. Journey (local, SwiftShader, 18:33Z): the host walks out mid-film; the server paused at 10.571 s, the viewer's element paused at 10.571 s, no host controls, nobody promoted (also 19.662 s on the 17:39Z run) | pass | — |
 | Interrupted loads, offline, background/foreground | #502 | 4b | fixture-browser (#498): stall → Retry plays, offline → network → Retry plays, interrupted load quiet. Journey (emulated; headless Chromium keeps background tabs visible): the page marked hidden, its film paused as Safari pauses hidden media, its JavaScript frozen 8 s (CDP `Page.setWebLifecycleState`), then shown. The film had not moved while away; 254 ms after showing it had seeked, and its first **presented** frame (requestVideoFrameCallback) came 338 ms after showing, 59 ms from the room. Finding: disconnected beside a seat, `shared-seating-ui.js:51` throws every frame before the draw (seen in the 17:00Z #501 capture); the guard is in open PR #489, not duplicated | pass (emulated) | A phone lock and app switch are device rows (Val) |
 | Warm-up plus ten cycles of resources with a film change | #502 | 4b | Integrated soak on #520 `2df7a0a8` (#498 + #499 + #500 `b9d78b86` + #502), 17:15–17:20Z, load 29–53: warm-up plus 10 cycles, each changing the film from the short to the fixture (its own 640×360 texture on screen in 1.1–4.1 s). Startup per cycle: first presented frame 1.8–3.9 s after the trip in began (7.9 s on the cold first cycle). No growth in media elements, audio contexts, intervals, documents, textures or geometries; DOM nodes 5,923 → 5,941, listeners flat. Baseline on main: 11/11 with one film | pass | — |
@@ -80,7 +81,7 @@ not device evidence. Self-review is not independent review.
 | iPhone Safari (physical) | #502 | Val (device) | — | **unassigned device run** | as above |
 | Other GPUs (beyond Apple M3 Max) | #502 | Val (device) | — | unassigned | name the devices |
 | VoiceOver and keyboard human review | #502 | Val (human) | — | unassigned | Val, later (#359) |
-| Listening review of dialogue and music | #500, #502 | Val (human) | — | blocked on #501 | — |
+| Listening review of dialogue and music | #500, #501, #502 | Val (human) | Measured, not heard: speech over music 10.4–19.5 dB per line (median 16.9); −17.9/−18.0 LUFS, −1.6/−1.5 dBTP | **unassigned listening run** | Val: headphones and a device speaker (device runs, step 4) |
 | Signed-in production host Start plus a viewer | #502 | Val (production) | Val-reported: Start film appears | unverified | Val's go only |
 
 ## Device and human runs for Val (not automated; emulation is not evidence)
@@ -152,6 +153,29 @@ note for each step. Screen recordings help.
   Leaving the venue restores the screen's own material (#498). Do not redeploy a build from before #429, and never
   edit production checkpoints.
 
+## Release outcome (2026-10-19)
+
+Val approved each landing, and each went through `pnpm run land <pr>`. Every merge deployed production.
+
+| PR | Merge on main | Production |
+| --- | --- | --- |
+| #513 (#498) | `1b38e44d`, 2026-10-18 21:04Z | 21:05:06Z |
+| #514 (#499) | `1a61e448`, 21:45Z | no status of its own; live with #529's deploy, 22:02:21Z |
+| #515 (#500) | `225acfc9`, 22:29Z | 22:29:46Z |
+| #520 (#502) | `7fcce0f6`, 23:31Z | 23:31:50Z |
+| #516 (#501 tooling) | `b76ab77c`, 2026-10-19 05:02Z | 05:03:12Z |
+| #547 (#501, the approved film) | `a4b889e3`, 05:42Z | 05:43:17Z |
+
+- **Engineering-ready with both approved films.** The second approved film is registered and served byte for byte.
+  The two-browser journey on main `a4b889e3` passed 18 checks with it as the second film.
+- **Two-film experience-ready: not yet proven.** Listening, voice-chat balance, macOS and iPhone Safari, other GPUs
+  and VoiceOver are Val's runs and are unassigned.
+- **Production-delivered: code and media yes; signed-in host smoke no.** It is still Val's go only, and the deployed
+  grant is unchanged.
+- **Withdrawing the second film is not a plain revert of #547.** That would delete its catalog entry, and the server
+  would then refuse a saved timeline that names `ipic-two-seats-v1`. Instead, ship a compatible build that drops it
+  from `screeningChoices` and keeps the entry, its venue and its duration.
+
 ## Boundaries
 
 No deployment, production configuration or grant change, signed-in host action, media publication, paid service,
@@ -182,3 +206,11 @@ model co-author line. Merges go through `pnpm run land <pr>`, only after Val app
   #515 (`0adfc53e`, hosted CI green). #501's first real capture was unusable (load 212, sockets dropped); #516
   (`847aa444`) now refuses such takes, and a retake is queued. The two-browser journey gains host walk-out and an
   emulated background-and-back step.
+- **2026-10-18 17:25Z – 2026-10-19 06:00Z:** Val approved landing the stack (#513 → #514 → #515 → #520), then #516.
+  - **#501's second short.** Recast take 2 (19:55Z) was healthy. Candidate A's music bed left two lines under 10 dB
+    of speech over music. Candidate B (bed 0.38) measured 10.4–19.5 dB, and Val approved its exact bytes at about
+    04:10Z.
+  - **Landing.** #547 registered the film, and Val approved landing it. Production serves the four approved files
+    with the approved hashes.
+  - **Journey.** The two-browser journey on main `a4b889e3`, with both approved films, passed 18 checks at load 9–18.
+  - **Retirement.** All delivered worktrees are retired except #502's, which serves Val's local dev server.
