@@ -5,7 +5,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { createWalkingEnvironment } from '../preview/src/walking.js';
 import { AVATAR_ENVELOPE } from '../preview/src/workplace-room.js';
-import { IPIC_INTERIOR, IPIC_SCREEN, ipicFloor } from '../preview/src/ipic-plan.js';
+import { IPIC_AUDITORIUM_ROWS, IPIC_INTERIOR, IPIC_SCREEN, ipicFloor } from '../preview/src/ipic-plan.js';
 import { IPIC_SEATED_REACH, ipicBottleneck, ipicClearance, ipicReachable, largestCircle, seatApproach, seatedFootprint } from '../preview/src/ipic-circulation.js';
 import { SEAT_REACH } from '../preview/src/shared-seating.js';
 
@@ -48,7 +48,7 @@ export function ipicReviewData(world = JSON.parse(readFileSync(new URL('preview/
   // Where the widest accepted body sits each recliner from, with the other nine seats held: the
   // nearest spot it can walk to from the doorway that is within the server's sit reach (SEAT_REACH,
   // flat distance) and sees the cushion as the server's sit check does (eye 1.68 m, cushion + 0.6 m).
-  const world3 = ([a, d], above) => { const [x, n] = room.toWorld(a, d); return [x, n, room.floor + ipicFloor(d) + above]; };
+  const world3 = ([a, d], above) => { const [x, n] = room.toWorld(a, d); return [x, n, room.floor + ipicFloor(d, a) + above]; };
   const reclinerSitSpots = room.ipicSeats.filter(s => s.key.startsWith('recliner')).map(seat => {
     const blockers = footprints(seat), reachable = ipicReachable(room, doorway, { radius: AVATAR_ENVELOPE.bodyHalfWidth, blockers, step: .1 });
     const cushion = world3([seat.a, seat.d], seat.height + .6), candidates = [];
@@ -60,11 +60,15 @@ export function ipicReviewData(world = JSON.parse(readFileSync(new URL('preview/
     return { seat: seat.key, otherSeatsOccupied: blockers.length, widestAcceptedBody: Boolean(spot), sightLine: Boolean(spot),
       sitSpot: spot ? spot.at.map(v => round(v, 2)) : null, sitDistanceM: spot ? round(spot.distance, 2) : null };
   });
-  // In front of the first row, between its footrests and the back row's seated bodies.
-  const footrestFront = Math.max(...room.fixtures.filter(f => f.kind === 'ipic-recliner-footrest' && f.d < 29.5).map(f => f.d + f.l / 2));
-  const backRowReach = Math.min(...room.ipicSeats.filter(s => s.key.startsWith('recliner-1-')).map(s => s.d - IPIC_SEATED_REACH.back));
-  const frontRowAisle = { between: ['front-row footrests', 'back-row seated bodies'], widthM: round(backRowReach - footrestFront, 3),
-    widestAcceptedBodyM: round(2 * AVATAR_ENVELOPE.bodyHalfWidth, 3), clearsWidestAcceptedBody: backRowReach - footrestFront >= 2 * AVATAR_ENVELOPE.bodyHalfWidth,
+  // The legroom of each row (the recliners face the north screen, toward -a): between its footrests and the
+  // seated bodies of the row in front, which reach IPIC_SEATED_REACH.back behind their seats. The narrowest.
+  const legroom = IPIC_AUDITORIUM_ROWS.slice(0, -1).map((row, k) => {
+    const footrestFront = Math.min(...room.fixtures.filter(f => f.kind === 'ipic-recliner-footrest' && Math.abs(f.a - (row.a - .72)) < 1e-6).map(f => f.a - f.w / 2));
+    return footrestFront - (IPIC_AUDITORIUM_ROWS[k + 1].a + IPIC_SEATED_REACH.back);
+  });
+  const narrowLegroom = Math.min(...legroom);
+  const frontRowAisle = { between: ['footrests of a row', 'seated bodies of the row in front'], widthM: round(narrowLegroom, 3),
+    widestAcceptedBodyM: round(2 * AVATAR_ENVELOPE.bodyHalfWidth, 3), clearsWidestAcceptedBody: narrowLegroom >= 2 * AVATAR_ENVELOPE.bodyHalfWidth,
     widestPosedBodyM: WIDEST_POSED_BODY, accepted: 'Val, 2026-10-15: footrest and base colliders follow the art' };
   const occupied = room.ipicSeats.map(s => seatedFootprint(s, IPIC_SEATED_REACH));
   const turning = Object.entries({ reception: [0, 5.9], 'mural landing': [12.1, 13.9], 'upper lounge': [20.1, 25.9], auditorium: [26.1, 33.9] })
@@ -79,26 +83,30 @@ export function ipicReviewData(world = JSON.parse(readFileSync(new URL('preview/
     trips, reclinerSitSpots, frontRowAisle, narrowestPublicPassage: { trip: narrowest.name, widthM: narrowest.widthM, widestAcceptedBodyM: round(2 * AVATAR_ENVELOPE.bodyHalfWidth, 3), clears: narrowest.widestAcceptedBody },
     turningCircles: turning.map(t => ({ ...t, clearsLongestTurningBody: t.radiusM >= AVATAR_ENVELOPE.turningRadius })),
   };
-  const screen = IPIC_SCREEN, floor = 6, left = screen.a - screen.width / 2, right = screen.a + screen.width / 2;
-  const bottom = screen.y - screen.height / 2, top = screen.y + screen.height / 2, deg = r => round(r * 180 / Math.PI, 1);
+  // The screen faces IPIC_SCREEN.facing in (a, d); a seat's distance runs along that facing and its offset
+  // along the screen's own horizontal axis as the seats see it (right). Heights are over the front row's floor.
+  const screen = IPIC_SCREEN, [fa, fd] = screen.facing, right = [-fd || 0, fa], floor = 6 + IPIC_AUDITORIUM_ROWS.at(-1).floor;
+  const distanceOf = s => (s.a - screen.a) * fa + (s.d - screen.d) * fd, offsetOf = s => (s.a - screen.a) * right[0] + (s.d - screen.d) * right[1];
+  const centreAlong = screen.a * right[0] + screen.d * right[1], left = centreAlong - screen.width / 2, rightEdge = centreAlong + screen.width / 2;
+  const bottom = 6 + screen.y - screen.height / 2 - floor, top = 6 + screen.y + screen.height / 2 - floor, deg = r => round(r * 180 / Math.PI, 1);
   // The recliner in front blocks along its headrest: top 1.545 m, back face 0.63 m behind its seat origin (ipic-interior.js).
-  // Heights are over the front row's floor (6 m); the back row sits on the riser (IPIC_RISER).
-  const HEADREST = { top: 1.545, behind: .63 }, raised = s => ipicFloor(s.d) - floor;
-  const seats = room.ipicSeats.filter(s => s.key.startsWith('recliner')).map(s => {
-    const eye = raised(s) + s.height + SEATED_EYE, distance = screen.d - s.d;
-    const front = room.ipicSeats.find(o => o.key.startsWith('recliner') && o.a === s.a && o.d > s.d);
-    const lowestVisible = front ? eye + (raised(front) + HEADREST.top - eye) / (front.d - HEADREST.behind - s.d) * distance : bottom;
+  const HEADREST = { top: 1.545, behind: .63 }, raised = s => ipicFloor(s.d, s.a) - floor;
+  const recliners = room.ipicSeats.filter(s => s.key.startsWith('recliner'));
+  const seats = recliners.map(s => {
+    const eye = raised(s) + s.height + SEATED_EYE, distance = distanceOf(s), u = offsetOf(s);
+    const front = recliners.filter(o => Math.abs(offsetOf(o) - u) < 1e-6 && distanceOf(o) < distance).sort((x, y) => distanceOf(y) - distanceOf(x))[0];
+    const lowestVisible = front ? eye + (raised(front) + HEADREST.top - eye) / (distance - distanceOf(front) - HEADREST.behind) * distance : bottom;
     return { seat: `bench:ipic-${s.key}:${s.slot}`, at: [s.a, s.d], eyeM: round(eye, 2), distanceM: round(distance, 2),
-      horizontalDeg: deg(Math.atan2(right - s.a, distance) - Math.atan2(left - s.a, distance)),
-      offAxisDeg: deg(Math.atan2(screen.a - s.a, distance)), topElevationDeg: deg(Math.atan2(top - eye, distance)),
+      horizontalDeg: deg(Math.atan2(screen.width / 2 - u, distance) - Math.atan2(-screen.width / 2 - u, distance)),
+      offAxisDeg: deg(Math.atan2(-u, distance)), topElevationDeg: deg(Math.atan2(top - eye, distance)),
       lowestVisibleM: round(Math.max(bottom, lowestVisible), 2), hiddenBottomFraction: round(Math.max(0, Math.min(1, (lowestVisible - bottom) / screen.height)), 2) };
   });
   const captionFloor = Math.max(...seats.map(s => s.lowestVisibleM));
   const screenData = {
     schemaVersion: 1, interior: IPIC_INTERIOR, source: 'preview/src/ipic-plan.js IPIC_SCREEN',
-    frame: 'room metres; heights above the auditorium floor (room floor + 6 m)',
-    screen: { centre: [screen.a, screen.y, screen.d], widthM: screen.width, heightM: screen.height, aspect: round(screen.width / screen.height, 3),
-      leftM: round(left, 3), rightM: round(right, 3), bottomM: round(bottom, 3), topM: round(top, 3), auditoriumFloorM: floor },
+    frame: 'room metres; heights above the front row\'s floor; left and right along the screen\'s horizontal axis (d, as the seats see it)',
+    screen: { centre: [screen.a, screen.y, screen.d], facing: [fa, fd], widthM: screen.width, heightM: screen.height, aspect: round(screen.width / screen.height, 3),
+      leftM: round(left, 3), rightM: round(rightEdge, 3), bottomM: round(bottom, 3), topM: round(top, 3), auditoriumFloorM: round(floor, 4) },
     seatedEye: `cushion height + ${SEATED_EYE} m (store-encounters.js); seated avatars in front are not modelled, only recliner headrests`,
     seats,
     burnedInTextSafe: { lowestM: captionFloor, fractionFromTop: round((top - captionFloor) / screen.height, 2),

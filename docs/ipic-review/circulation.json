@@ -71,8 +71,8 @@
       "widthM": 1.6,
       "widestAcceptedBody": true,
       "serverBody": true,
-      "endClearanceM": 0.91,
-      "endNearest": "ipic-aisle-rail"
+      "endClearanceM": 1.03,
+      "endNearest": "ipic-cinema-wall"
     },
     {
       "name": "doorway to recliner-0-0 approach",
@@ -81,14 +81,14 @@
         26.6
       ],
       "to": [
-        -2.6,
-        29.4
+        -8.25,
+        28
       ],
-      "otherSeatsOccupied": 9,
+      "otherSeatsOccupied": 10,
       "widthM": 0.89,
       "widestAcceptedBody": false,
       "serverBody": true,
-      "endClearanceM": 0.45,
+      "endClearanceM": 0.44,
       "endNearest": "ipic-recliner-footrest"
     },
     {
@@ -98,14 +98,14 @@
         26.6
       ],
       "to": [
-        -0.6,
-        29.4
+        -8.25,
+        30
       ],
-      "otherSeatsOccupied": 9,
+      "otherSeatsOccupied": 10,
       "widthM": 0.89,
       "widestAcceptedBody": false,
       "serverBody": true,
-      "endClearanceM": 0.45,
+      "endClearanceM": 0.44,
       "endNearest": "ipic-recliner-footrest"
     },
     {
@@ -115,31 +115,14 @@
         26.6
       ],
       "to": [
-        1.4,
-        29.4
+        -8.25,
+        32
       ],
-      "otherSeatsOccupied": 9,
+      "otherSeatsOccupied": 10,
       "widthM": 0.89,
       "widestAcceptedBody": false,
       "serverBody": true,
-      "endClearanceM": 0.45,
-      "endNearest": "ipic-recliner-footrest"
-    },
-    {
-      "name": "doorway to recliner-0-3 approach",
-      "from": [
-        -4.7,
-        26.6
-      ],
-      "to": [
-        3.4,
-        29.4
-      ],
-      "otherSeatsOccupied": 9,
-      "widthM": 0.89,
-      "widestAcceptedBody": false,
-      "serverBody": true,
-      "endClearanceM": 0.45,
+      "endClearanceM": 0.44,
       "endNearest": "ipic-recliner-footrest"
     },
     {
@@ -149,14 +132,14 @@
         26.6
       ],
       "to": [
-        -2.6,
-        32.4
+        -11.25,
+        28
       ],
-      "otherSeatsOccupied": 9,
+      "otherSeatsOccupied": 10,
       "widthM": 0.89,
       "widestAcceptedBody": false,
       "serverBody": true,
-      "endClearanceM": 0.45,
+      "endClearanceM": 0.44,
       "endNearest": "ipic-recliner-footrest"
     },
     {
@@ -166,14 +149,14 @@
         26.6
       ],
       "to": [
-        -0.6,
-        32.4
+        -11.25,
+        30
       ],
-      "otherSeatsOccupied": 9,
+      "otherSeatsOccupied": 10,
       "widthM": 0.89,
       "widestAcceptedBody": false,
       "serverBody": true,
-      "endClearanceM": 0.45,
+      "endClearanceM": 0.44,
       "endNearest": "ipic-recliner-footrest"
     },
     {
@@ -183,10 +166,27 @@
         26.6
       ],
       "to": [
-        1.4,
-        32.4
+        -11.25,
+        32
       ],
-      "otherSeatsOccupied": 9,
+      "otherSeatsOccupied": 10,
+      "widthM": 0.89,
+      "widestAcceptedBody": false,
+      "serverBody": true,
+      "endClearanceM": 0.44,
+      "endNearest": "ipic-recliner-footrest"
+    },
+    {
+      "name": "doorway to recliner-2-0 approach",
+      "from": [
+        -4.7,
+        26.6
+      ],
+      "to": [
+        -14.25,
+        28
+      ],
+      "otherSeatsOccupied": 10,
       "widthM": 0.89,
       "widestAcceptedBody": false,
       "serverBody": true,
@@ -194,16 +194,33 @@
       "endNearest": "ipic-recliner-footrest"
     },
     {
-      "name": "doorway to recliner-1-3 approach",
+      "name": "doorway to recliner-2-1 approach",
       "from": [
         -4.7,
         26.6
       ],
       "to": [
-        3.4,
-        32.4
+        -14.25,
+        30
       ],
-      "otherSeatsOccupied": 9,
+      "otherSeatsOccupied": 10,
+      "widthM": 0.89,
+      "widestAcceptedBody": false,
+      "serverBody": true,
+      "endClearanceM": 0.45,
+      "endNearest": "ipic-recliner-footrest"
+    },
+    {
+      "name": "doorway to recliner-2-2 approach",
+      "from": [
+        -4.7,
+        26.6
+      ],
+      "to": [
+        -14.25,
+        32
+      ],
+      "otherSeatsOccupied": 10,
       "widthM": 0.89,
       "widestAcceptedBody": false,
       "serverBody": true,
@@ -220,7 +237,7 @@
         -5.6,
         21.6
       ],
-      "otherSeatsOccupied": 9,
+      "otherSeatsOccupied": 10,
       "widthM": 1.09,
       "widestAcceptedBody": true,
       "serverBody": true,
@@ -237,7 +254,7 @@
         -2.6,
         21.6
       ],
-      "otherSeatsOccupied": 9,
+      "otherSeatsOccupied": 10,
       "widthM": 1.09,
       "widestAcceptedBody": true,
       "serverBody": true,
@@ -248,97 +265,108 @@
   "reclinerSitSpots": [
     {
       "seat": "recliner-0-0",
-      "otherSeatsOccupied": 9,
+      "otherSeatsOccupied": 10,
       "widestAcceptedBody": true,
       "sightLine": true,
       "sitSpot": [
-        -3.8,
-        28
+        -6.85,
+        26.8
       ],
       "sitDistanceM": 1.2
     },
     {
       "seat": "recliner-0-1",
-      "otherSeatsOccupied": 9,
+      "otherSeatsOccupied": 10,
       "widestAcceptedBody": true,
       "sightLine": true,
       "sitSpot": [
-        -3.4,
-        29.3
+        -5.55,
+        30
       ],
-      "sitDistanceM": 3.09
+      "sitDistanceM": 1.3
     },
     {
       "seat": "recliner-0-2",
-      "otherSeatsOccupied": 9,
+      "otherSeatsOccupied": 10,
       "widestAcceptedBody": true,
       "sightLine": true,
       "sitSpot": [
-        4.2,
-        29.3
-      ],
-      "sitDistanceM": 3.09
-    },
-    {
-      "seat": "recliner-0-3",
-      "otherSeatsOccupied": 9,
-      "widestAcceptedBody": true,
-      "sightLine": true,
-      "sitSpot": [
-        4.6,
-        28
+        -6.85,
+        33.2
       ],
       "sitDistanceM": 1.2
     },
     {
       "seat": "recliner-1-0",
-      "otherSeatsOccupied": 9,
+      "otherSeatsOccupied": 10,
       "widestAcceptedBody": true,
       "sightLine": true,
       "sitSpot": [
-        -3.8,
-        31
+        -9.85,
+        26.8
       ],
       "sitDistanceM": 1.2
     },
     {
       "seat": "recliner-1-1",
-      "otherSeatsOccupied": 9,
+      "otherSeatsOccupied": 10,
       "widestAcceptedBody": true,
       "sightLine": true,
       "sitSpot": [
-        -1.6,
-        32
+        -11.15,
+        27.2
       ],
-      "sitDistanceM": 1.41
+      "sitDistanceM": 3.09
     },
     {
       "seat": "recliner-1-2",
-      "otherSeatsOccupied": 9,
+      "otherSeatsOccupied": 10,
       "widestAcceptedBody": true,
       "sightLine": true,
       "sitSpot": [
-        0.4,
-        32
+        -9.85,
+        33.2
       ],
-      "sitDistanceM": 1.41
+      "sitDistanceM": 1.2
     },
     {
-      "seat": "recliner-1-3",
-      "otherSeatsOccupied": 9,
+      "seat": "recliner-2-0",
+      "otherSeatsOccupied": 10,
       "widestAcceptedBody": true,
       "sightLine": true,
       "sitSpot": [
-        4.6,
-        31.5
+        -12.85,
+        26.8
       ],
-      "sitDistanceM": 1.3
+      "sitDistanceM": 1.2
+    },
+    {
+      "seat": "recliner-2-1",
+      "otherSeatsOccupied": 10,
+      "widestAcceptedBody": true,
+      "sightLine": true,
+      "sitSpot": [
+        -13.95,
+        29
+      ],
+      "sitDistanceM": 1.49
+    },
+    {
+      "seat": "recliner-2-2",
+      "otherSeatsOccupied": 10,
+      "widestAcceptedBody": true,
+      "sightLine": true,
+      "sitSpot": [
+        -12.85,
+        33.2
+      ],
+      "sitDistanceM": 1.2
     }
   ],
   "frontRowAisle": {
     "between": [
-      "front-row footrests",
-      "back-row seated bodies"
+      "footrests of a row",
+      "seated bodies of the row in front"
     ],
     "widthM": 0.891,
     "widestAcceptedBodyM": 1.01,
@@ -364,7 +392,7 @@
     },
     {
       "zone": "mural landing",
-      "radiusM": 1.31,
+      "radiusM": 1.32,
       "at": [
         -1.4,
         13
@@ -373,7 +401,7 @@
     },
     {
       "zone": "upper lounge",
-      "radiusM": 2.7,
+      "radiusM": 2.69,
       "at": [
         -0.35,
         22.7
@@ -382,10 +410,10 @@
     },
     {
       "zone": "auditorium",
-      "radiusM": 1.48,
+      "radiusM": 4,
       "at": [
-        5.25,
-        32.45
+        7.6,
+        30
       ],
       "clearsLongestTurningBody": true
     }

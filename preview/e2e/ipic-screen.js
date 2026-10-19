@@ -3,6 +3,7 @@ async page => {
   // preview/e2e/fixtures/ipic-screen.html. Films are test-only synthetic sources plus the bundled
   // ones; nothing here is device, human or final-media acceptance.
   const check = (ok, message) => { if (!ok) throw new Error(message); };
+  const { IPIC_SCREEN } = await import('../src/ipic-plan.js');
   const checks = [], errors = [], results = {};
   page.on('pageerror', error => errors.push(error.message));
   await page.goto('http://127.0.0.1:5173/e2e/fixtures/ipic-screen.html');
@@ -35,18 +36,20 @@ async page => {
     check(shown.screen.key && shown.failure === null, `${id} is on the screen: ${JSON.stringify(shown)}`);
     const sample = await fx('sample'), [w, h] = shown.decoded;
     results[id] = sample;
-    const visible = 1 / sample.bound.fit.repeat[0] * 12.1 / (1 / sample.bound.fit.repeat[1] * 3.6);
+    const visible = 1 / sample.bound.fit.repeat[0] * IPIC_SCREEN.width / (1 / sample.bound.fit.repeat[1] * IPIC_SCREEN.height);
     check(Math.abs(visible - w / h) < 1e-6, `${id} keeps its ${w}x${h} aspect on the screen (${visible})`);
     for (const edge of ['edgeLeft', 'edgeRight', 'edgeTop', 'edgeBottom']) check(tinted(sample.film[edge].rendered, colour), `${id} ${edge} shows the film's own edge: ${JSON.stringify(sample.film[edge])}`);
     for (const [name, value] of Object.entries(sample.matte)) check(dark(value.rendered), `${id} ${name} matte is black: ${JSON.stringify(value)}`);
-    check(Object.keys(sample.matte).length === 4, `${id} has mattes on both sides`);
+    // The screen is 2.39:1 scope: narrower films are pillarboxed, and a 2.39:1 film fills it.
+    const fills = Math.abs(w / h - IPIC_SCREEN.width / IPIC_SCREEN.height) < .01 * IPIC_SCREEN.width / IPIC_SCREEN.height;
+    check(fills ? !Object.keys(sample.matte).length : Object.keys(sample.matte).length === 4, `${id} ${fills ? 'fills the screen' : 'has mattes on both sides'}`);
     check(Math.min(...sample.film.white.rendered) > Math.max(...sample.film.black.rendered) + 100, `${id} is the right way round: white box left of black box ${JSON.stringify([sample.film.white, sample.film.black])}`);
     if (previous) check(shown.screen.texture !== previous.screen.texture && shown.screen.counts.created === previous.screen.counts.created + 1 && shown.screen.counts.disposed === previous.screen.counts.disposed + 1, `${id}: a new texture replaced the previous one: ${JSON.stringify([previous.screen, shown.screen])}`);
     check(shown.textures === shown.idleTextures + 1, `${id}: exactly one film texture is resident (${shown.textures} vs idle ${shown.idleTextures})`);
     await fx('pose', 'seated'); await capture(`${id}-seated`); await fx('pose', 'square'); await capture(`${id}-square`);
     previous = shown;
   }
-  checks.push('16:9, 4:3 and 2.39:1 borderless films show whole, unstretched and the right way round, with black mattes and one texture each');
+  checks.push('16:9 and 4:3 borderless films show whole, unstretched and the right way round, with black mattes; 2.39:1 fills the scope screen; one texture each');
 
   // A network failure (offline) is reported as such, without trying the other encoding; back
   // online, Retry plays it. 4:1 is wider than the screen: letterboxed above and below.
