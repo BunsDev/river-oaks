@@ -148,6 +148,15 @@ on departure. Page errors/reloads: zero. Current-light ownership, moving-actor
 exclusion from static filtering and restoration on render errors have focused
 regressions and independent review.
 
+### Throttled laptop A/B (2026-10-15)
+
+Two review risks were fixed after this run: the first entry linked every lit program on the frame the
+doors opened, and the host mask re-uploaded whole instance buffers every frame. With the CPU throttled
+4x, 1440×900, Smoothest and vsync off, the first entry's longest frame went from 658 to 265 ms (quiet
+run) and 927 to 398 ms (busy run), no program links when the doors open, and per-frame buffer uploads
+fell from 212 KiB in 12 calls to 124 KiB in 2. Draw counts are unchanged. Method, all four runs and the
+open Roof gardens finding: `docs/superpowers/plans/2026-10-15-office-outlook-cost.md`.
+
 ## Delivery verification
 
 The full local profile passed all 18 components on integration9a4404da with the

@@ -1,20 +1,22 @@
 // Shared darts at a throwing line (the IPIC Tuck Room board; Val, 2026-10-15). Whoever
 // stands at the line plays: alone against the house regular, or two players who agree
 // to a match, three darts a turn, 501 double out (preview/src/darts-rules.js). A client
-// sends only where its meter stopped; the server adds the hand's scatter from its own
-// random source and keeps the landing point, so no client can place a dart. The house
+// sends only its release (across, and the hand's acceleration); the server adds the
+// hand's error from its own random source and flies the dart (throwLanding), keeping
+// the landing point, so no client can place a dart. The house
 // regular throws here too, from a seed the server chose. Every line's match is in the
 // snapshot for everyone. A match ends at a checkout, a resignation, or when one of its
 // players leaves the line (walking off, sitting, travelling or leaving town).
 import { randomInt } from 'node:crypto';
-import { replay } from '../preview/src/darts-rules.js';
+import { HAND, THROW, handDraw, replay, throwLanding, validRelease } from '../preview/src/darts-rules.js';
 import { throwPoint } from '../preview/src/darts-opponent.js';
 
 export const DARTS_REGULAR = 'regular';
-// A decent pub hand, in millimetres (the regular's own wobble is 24).
-export const DARTS_SCATTER = 18;
-// The meter's square: aims beyond it are not throws.
-export const DARTS_AIM = 230;
+// A decent pub hand: the release direction's error across, in millimetres (the regular's
+// own wobble is 24); its speed error drops a slow dart further (darts-rules.js HAND).
+export const DARTS_SCATTER = HAND.across;
+// The widest release across the board: wider is not a throw.
+export const DARTS_AIM = THROW.across;
 export const MAX_DARTS = 600;
 const LANDING = 400;
 
@@ -23,8 +25,6 @@ const record = value => value !== null && typeof value === 'object' && !Array.is
 const id = value => typeof value === 'string' && value.length > 0 && value.length <= 128;
 const point = (value, limit) => Array.isArray(value) && value.length === 2 && value.every(n => typeof n === 'number' && Number.isFinite(n) && Math.abs(n) <= limit);
 const reject = (error, message = error) => ({ ok: false, error, message });
-// A unit-variance logistic draw from u in (0, 1): zero at 0.5, so a fixed 0.5 throws true.
-const spread = u => Math.log(u / (1 - u)) * .5513;
 const tenth = n => Math.round(n * 10) / 10;
 
 export function createDartsGames({ players, lineIds = [], atLine = () => null, changed = () => {}, random = () => randomInt(1, 2 ** 32) / 2 ** 32 }) {
@@ -82,17 +82,18 @@ export function createDartsGames({ players, lineIds = [], atLine = () => null, c
         return save(start(line, [line.invite.from, player.id]));
       }
       case 'throw': {
-        if (!only(message, ['type', 'action', 'lineId', 'aim']) || !point(message.aim, DARTS_AIM)) return reject('invalid_darts');
+        if (!only(message, ['type', 'action', 'lineId', 'release']) || !validRelease(message.release)) return reject('invalid_darts');
         const chair = line.players?.indexOf(player.id) ?? -1;
         if (chair < 0) return reject('not_playing', 'Start or join a match first.');
         if (line.result) return reject('match_over', 'This match is over.');
         if (!atThis) return reject('not_at_line', 'Stand at the throwing line first.');
         if (state(line).turn !== chair) return reject('not_your_turn', 'Wait for your turn.');
-        const [x, y] = message.aim;
-        line.points.push([tenth(x + spread(random()) * DARTS_SCATTER), tenth(y + spread(random()) * DARTS_SCATTER)]);
+        const [x, y] = throwLanding(message.release, [handDraw(random()), handDraw(random())], HAND, LANDING);
+        const thrown = line.points.push([tenth(x), tenth(y)]) - 1;
         settle(line);
         if (!line.result) { houseTurn(line); settle(line); }
-        return save(line);
+        // `thrown` names the thrower's own dart in the reply, ahead of any the regular throws.
+        return { ...save(line), thrown };
       }
       case 'resign': {
         if (!only(message, ['type', 'action', 'lineId'])) return reject('invalid_darts');

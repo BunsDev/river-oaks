@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Garden campus contract review</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #f4f2ec; font: 13px/1.4 Helvetica, Arial, sans-serif; color: #2b2a26; }
+    canvas { display: block; }
+    #panel { position: fixed; top: 12px; left: 12px; width: 300px; max-height: calc(100% - 24px); overflow: auto; background: rgba(251, 250, 247, .94); border: 1px solid #d8d2c4; border-radius: 8px; padding: 12px 14px; }
+    #panel h1 { font-size: 15px; margin: 0 0 4px; }
+    #panel h2 { font-size: 12px; margin: 12px 0 6px; text-transform: uppercase; letter-spacing: .04em; color: #6b6556; }
+    #panel button { font: inherit; margin: 2px 4px 2px 0; padding: 3px 8px; border: 1px solid #c9c1b0; border-radius: 5px; background: #fff; cursor: pointer; }
+    #panel button[aria-pressed="true"] { background: #2f5d8e; border-color: #2f5d8e; color: #fff; }
+    .ok { color: #2e6b39; font-weight: 600; } .bad { color: #a12f2f; font-weight: 600; }
+    #legend span { display: inline-block; width: 10px; height: 10px; margin-right: 5px; vertical-align: -1px; border-radius: 2px; }
+    #finding { white-space: pre-wrap; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div id="panel">
+    <h1>The Gardens: contract review</h1>
+    <div id="meta"></div>
+    <h2>Validator</h2><div id="validation"></div>
+    <h2>Level</h2><div id="levels"></div>
+    <h2>Cameras</h2><div id="cameras"></div>
+    <h2>Legend</h2>
+    <div id="legend">
+      <div><span style="background:#f2a65a"></span>public circulation, skywalk decks</div>
+      <div><span style="background:#e9dcc4"></span>private suites</div>
+      <div><span style="background:#b9b2a5"></span>service residual</div>
+      <div><span style="background:#8fbf73"></span>terraces and roof gardens</div>
+      <div><span style="background:#3d3830"></span>lift and stair shafts, headhouses</div>
+      <div><span style="background:#9a3b3b"></span>retained IPIC wall</div>
+    </div>
+    <p style="font-size:11px;color:#6b6556">A review harness for shared/garden-campus-layout.js (#506), not the in-world build (#507). It redraws when the contract changes.</p>
+  </div>
+  <script type="module" src="./garden-campus.js"></script>
+</body>
+</html>

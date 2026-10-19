@@ -149,14 +149,16 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
       if (await handleDebugReports(req, res, path)) return;
       if (handleCharacters && await handleCharacters(req,res,path)) return;
       if (handleVoice && await handleVoice(req, res, path, url)) return;
-      if (path === '/api/world-data' && req.method === 'GET' && worldCatalog) {
+      // The default district answers with its served revision (#507) even without a catalog.
+      if (path === '/api/world-data' && req.method === 'GET' && (worldCatalog || room.districtRevision)) {
         if (!await approvedIdentity(req, res)) return;
         const ids=url.searchParams.getAll('world');
         if(ids.length!==1)return json(res,400,{error:'Choose one world.'});
-        const meta=await worldCatalog.get(ids[0]);
+        const meta=worldCatalog?await worldCatalog.get(ids[0]):null;
         if(!meta && ids[0]!==room.worldId)return json(res,404,{error:'World not found.'});
         return json(res,200,meta?.template==='region-v1'
-          ? {template:meta.template,regionSha256:meta.regionSha256,world:await worldCatalog.getRegion(meta.id)}:{template:meta?.template??'river-oaks'});
+          ? {template:meta.template,regionSha256:meta.regionSha256,world:await worldCatalog.getRegion(meta.id)}
+          : {template:meta?.template??'river-oaks',...(ids[0]===room.worldId&&room.districtRevision?{districtRevision:room.districtRevision}:{})});
       }
       if (path === '/api/worlds' && req.method === 'GET' && worldCatalog) {
         return json(res, 200, { worlds: await worldDirectory() });
@@ -281,10 +283,11 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
         const identity=await authorized(req,res);if(!identity)return;
         if(!matchesWorld(url))return json(res,404,{error:'World not found.'});
         const action=path.slice('/api/office-desk/'.length);
-        const visit=async user=>{const view=await room.read();return view?.connections.some(c=>c.userId===user.userId&&c.sessionId===user.sessionId)
-          ? view.snapshot.players.find(p=>p.id===user.userId)?.office : null;};
+        // Jevica's office, or a Gardens workstation seat (#510), in this same session.
+        const visit=async user=>{const view=await room.read();if(!view?.connections.some(c=>c.userId===user.userId&&c.sessionId===user.sessionId))return null;
+          const player=view.snapshot.players.find(p=>p.id===user.userId);return player?.office??(player?.campusWorkstation===true?{id:'garden-campus'}:null);};
         const common={identity,readBody:()=>body(req,OFFICE_DESK_BODY_LIMIT),allow:id=>security.allow('office_desk',id,90,60000)};
-        const result=await officeDeskAction({...common,action,desk:officeDesk,hasVisit:async user=>(await visit(user))?.id==='jevica-office'});
+        const result=await officeDeskAction({...common,action,desk:officeDesk,hasVisit:async user=>['jevica-office','garden-campus'].includes((await visit(user))?.id)});
         return json(res,result.status,result.value);
       }
       if (path.startsWith('/api/workplace/') && req.method==='POST' && workplace) {

@@ -39,7 +39,7 @@ async page => {
       await intro.waitFor({ state: 'hidden' });
       await page.waitForFunction(() => !!document.querySelector('#walking-hud').dataset.inside);
       await page.locator('#panel-toggle').click();
-      if (await page.locator('.player-settings').evaluate(node => node.open)) await page.locator('.player-settings > summary').click();
+      if (await page.locator('.visit-tools').evaluate(node => node.open)) await page.locator('#play-tab-character').click();
       await page.locator('#canvas-host').focus();
       const room = await page.evaluate(async name => {
         const { planStoreRooms } = await import('/src/store-rooms.js');

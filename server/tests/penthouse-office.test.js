@@ -44,14 +44,14 @@ function setup({ officeLayout: layout = OFFICE_LAYOUT_PENTHOUSE, restore } = {})
   return { world, clock, send, visit, enter, walk };
 }
 
-test('the legacy office stays the default; the penthouse is only an explicit server option', () => {
+test('the penthouse is the default and old clients cannot select the retired room', () => {
   const plain = createSharedWorld(data, { now: () => 10_000 });
   plain.join({ userId: owner, name: 'Jevica' });
   const office = plain.command(owner, { type: 'office', action: 'list', officeId }).offices[0];
   plain.command(owner, { type: 'travel', position: office.entrance });
   const entered = plain.command(owner, { type: 'office', action: 'enter', officeId });
-  assert.deepEqual([entered.office.layout, entered.office.levelId, entered.office.elevation], [OFFICE_LAYOUT_LEGACY, L0, 0]);
-  assert.equal(plain.command(owner, { type: 'office', action: 'move', officeId, position: [0, 1.4], yaw: 0 }).ok, true, 'a legacy client move without layout still works');
+  assert.deepEqual([entered.office.layout, entered.office.levelId, entered.office.elevation], [OFFICE_LAYOUT_PENTHOUSE, L0, 0]);
+  assert.equal(plain.command(owner, { type: 'office', action: 'move', officeId, position: [0, 1.4], yaw: 0 }).error, 'office_layout_stale', 'old clients must refresh their layout');
   assert.throws(() => createSharedWorld(data, { officeLayout: 'office-penthouse-0' }), /Unknown office layout/);
   const f = setup();
   const visit = f.enter(owner);
@@ -140,13 +140,13 @@ test('revocation during a climb ends the visit; a delayed transition or move can
   assert.equal(f.visit('guest'), null);
 });
 
-test('checkpoints keep the floor; older checkpoints migrate to the legacy room; forged visits fail closed', () => {
+test('checkpoints keep the floor; retired visits end without restoring the legacy room; forged visits fail closed', () => {
   const f = setup();
   f.enter(owner);
   f.walk(owner, anchor('stairs-bottom'));
   f.send(owner, 'transition', { portalId: portal(L0, 'stairs'), layout: OFFICE_LAYOUT_PENTHOUSE });
   const saved = f.world.checkpoint();
-  assert.equal(saved.version, 12);
+  assert.equal(saved.version, 13);
   const restored = setup({ restore: saved });
   assert.deepEqual([restored.visit(owner).levelId, restored.visit(owner).elevation], [L1, 3.8]);
 
@@ -157,7 +157,8 @@ test('checkpoints keep the floor; older checkpoints migrate to the legacy room; 
   const v9 = structuredClone(current); v9.version = 9;
   for (const [, visit] of v9.payload.offices.visits) { delete visit.layout; delete visit.levelId; }
   const upgraded = setup({ officeLayout: OFFICE_LAYOUT_LEGACY, restore: resign(v9) });
-  assert.deepEqual([upgraded.visit(owner).layout, upgraded.visit(owner).levelId], [OFFICE_LAYOUT_LEGACY, L0]);
+  assert.equal(upgraded.visit(owner), null, 'old room occupancy ends safely');
+  assert.equal(upgraded.enter(owner).layout, OFFICE_LAYOUT_PENTHOUSE);
   const masquerade = structuredClone(current); masquerade.version = 9;
   assert.equal(createSharedWorld(data, { officeLayout: OFFICE_LAYOUT_LEGACY }).restore(resign(masquerade)).ok, false, 'layout fields cannot hide in a v9 checkpoint');
 
@@ -173,7 +174,7 @@ test('checkpoints keep the floor; older checkpoints migrate to the legacy room; 
   }
 });
 
-test('rolling back to the legacy room ends penthouse visits and keeps grants and requests', () => {
+test('retired legacy configuration preserves penthouse visits and invitations', () => {
   const f = setup();
   f.send(owner, 'invite', { peerId: 'guest' });
   f.send('guest', 'request');
@@ -182,9 +183,7 @@ test('rolling back to the legacy room ends penthouse visits and keeps grants and
   f.send(owner, 'transition', { portalId: portal(L0, 'stairs'), layout: OFFICE_LAYOUT_PENTHOUSE });
   const saved = f.world.checkpoint();
   const rolledBack = setup({ officeLayout: OFFICE_LAYOUT_LEGACY, restore: saved });
-  assert.equal(rolledBack.visit(owner), null, 'the incompatible visit ends safely');
+  assert.deepEqual(rolledBack.visit(owner), f.visit(owner), 'retired configuration cannot replace the live layout');
   assert.deepEqual(rolledBack.world.checkpoint().payload.offices.grants, saved.payload.offices.grants);
-  assert.equal(rolledBack.send(owner, 'move', { position: [0, 2], yaw: 0, layout: OFFICE_LAYOUT_PENTHOUSE }).error, 'office_visit_required');
-  const entered = rolledBack.enter(owner);
-  assert.equal(entered.layout, OFFICE_LAYOUT_LEGACY);
+  assert.equal(rolledBack.visit(owner).layout, OFFICE_LAYOUT_PENTHOUSE);
 });

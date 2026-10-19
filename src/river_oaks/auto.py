@@ -11,6 +11,7 @@ import httpx
 from pydantic import Field, model_validator
 
 from .agents import Finite, Identifier, Packet
+from .jev import JEV_MODEL
 
 POLICY_VERSION = "district-visitor-v2"
 # Calibrated on the development split; held-out runs must be kept separate.
@@ -180,7 +181,7 @@ class AutoEngine:
     def request_body(self, packet):
         return request_body(packet, self.model)
 
-    def __init__(self, client=None, api_key=None, model="jev-1.13.0", deadline_s=1.2):
+    def __init__(self, client=None, api_key=None, model=JEV_MODEL, deadline_s=1.2):
         self.client, self.api_key, self.model = client, api_key, model
         self.deadline_s = deadline_s
         self.busy = asyncio.Lock()

@@ -131,21 +131,27 @@ export function setupSidebarSections({ graphics = null, sidebar } = {}) {
     tabs[index].scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
     if (focus) tabs[index].focus();
   };
-  groups.forEach(([label, purpose, nodes], index) => {
-    const tab = document.createElement('button'); tab.type = 'button'; tab.textContent = label; tab.id = `settings-tab-${index}`;
+  // Panes can also arrive later (Controls, once the player exists), placed after a named one.
+  const addPane = (label, purpose, nodes, { after = null } = {}) => {
+    const index = panes.length, tab = document.createElement('button'); tab.type = 'button'; tab.textContent = label; tab.id = `settings-tab-${index}`;
     tab.setAttribute('role', 'tab'); tab.setAttribute('aria-controls', `settings-pane-${index}`);
     const pane = document.createElement('section'); pane.id = `settings-pane-${index}`; pane.setAttribute('role', 'tabpanel'); pane.setAttribute('aria-labelledby', tab.id); pane.tabIndex = 0;
     const title = document.createElement('h3'); title.textContent = label;
     const intro = document.createElement('p'); intro.className = 'settings-pane-intro'; intro.id = `settings-intro-${index}`; intro.textContent = purpose;
-    pane.setAttribute('aria-describedby', intro.id); pane.append(title, intro, ...nodes); settings.append(pane);
-    dialog.querySelector('nav').append(tab); tabs.push(tab); panes.push(pane);
-    tab.addEventListener('click', () => selectSettings(index));
+    pane.setAttribute('aria-describedby', intro.id); pane.append(title, intro, ...nodes);
+    const before = after === null ? -1 : tabs.findIndex(item => item.textContent === after) + 1;
+    if (before > 0 && before < tabs.length) { tabs[before].before(tab); panes[before].before(pane); tabs.splice(before, 0, tab); panes.splice(before, 0, pane); }
+    else { settings.append(pane); dialog.querySelector('nav').append(tab); tabs.push(tab); panes.push(pane); }
+    tab.addEventListener('click', () => selectSettings(tabs.indexOf(tab)));
     tab.addEventListener('keydown', event => {
       // Narrow screens lay the categories out in a row, so left and right move too.
-      const next = ['ArrowDown', 'ArrowRight'].includes(event.key) ? (index + 1) % groups.length : ['ArrowUp', 'ArrowLeft'].includes(event.key) ? (index + groups.length - 1) % groups.length : event.key === 'Home' ? 0 : event.key === 'End' ? groups.length - 1 : null;
+      const at = tabs.indexOf(tab), count = tabs.length;
+      const next = ['ArrowDown', 'ArrowRight'].includes(event.key) ? (at + 1) % count : ['ArrowUp', 'ArrowLeft'].includes(event.key) ? (at + count - 1) % count : event.key === 'Home' ? 0 : event.key === 'End' ? count - 1 : null;
       if (next !== null) { event.preventDefault(); selectSettings(next, true); }
     });
-  });
+    return pane;
+  };
+  for (const [label, purpose, nodes] of groups) addPane(label, purpose, nodes);
   selectSettings(0);
   let returnFocus = null;
   const openSettings = selector => {
@@ -172,5 +178,9 @@ export function setupSidebarSections({ graphics = null, sidebar } = {}) {
     closeTarget(target) { const index = sections.findIndex(section => section.contains(target)); if (index >= 0) { setOpen(index, false); focusWorld(); } },
   };
   sidebar.bind(controls);
-  return { select(index, focus = false, selector = null) { if (index === 2) openSettings(selector); else setOpen(index, true, { focus }); } };
+  return {
+    select(index, focus = false, selector = null) { if (index === 2) openSettings(selector); else setOpen(index, true, { focus }); },
+    addSettings(label, purpose, nodes, options) { const pane = addPane(label, purpose, nodes, options); selectSettings(Math.max(0, tabs.findIndex(tab => tab.getAttribute('aria-selected') === 'true'))); return pane; },
+    group,
+  };
 }

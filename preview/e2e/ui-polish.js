@@ -47,14 +47,15 @@ async page=>{
     await page.keyboard.press('Escape');
   }
   if(await page.locator('#people-toggle').getAttribute('aria-expanded')==='true')await page.locator('#people-toggle').click();
-  if(!await page.locator('.player-settings').evaluate(e=>e.open))await page.locator('.player-settings > summary').click();
+  await page.locator('#settings-toggle').click();await page.getByRole('tab',{name:'Controls',exact:true}).click();
   await page.locator('#player-camera').click();
-  check(await page.evaluate(()=>document.activeElement.id==='canvas-host'),'Pointer camera controls return focus to movement');
+  check(await page.evaluate(()=>document.activeElement.id==='player-camera'),'The camera view setting keeps focus in Settings');
   await page.locator('#player-camera').click();
   const b=await page.locator('#player-camera').boundingBox();await page.mouse.move(b.x+b.width/2,b.y+b.height/2);await page.mouse.down();await page.waitForTimeout(160);
   check(await page.locator('#player-camera').evaluate(e=>Math.abs(Number(getComputedStyle(e).scale)-.96)<.002),'Pointer press feedback reaches the shared restrained scale');
   await page.mouse.up();await page.waitForTimeout(180);
   check(await page.locator('#player-camera').evaluate(e=>['none','1'].includes(getComputedStyle(e).scale)),'Press feedback releases cleanly');
+  await page.keyboard.press('Escape');
   await page.emulateMedia({reducedMotion:'reduce'});
   await page.locator('#panel-toggle').click();
   const staticUI=await page.evaluate(()=>['#control-panel','#player-camera','#community-dialogue'].map(s=>getComputedStyle(document.querySelector(s)).transitionDuration));
