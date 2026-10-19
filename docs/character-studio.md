@@ -954,6 +954,26 @@ and the 0.3–0.4 ms difference is within this machine's noise. On the narrow
 phone viewport, 8 peers are off screen, and only one at a time sometimes loses its
 shadow draws (377 of 396 in three of four segments).
 
+**Shadow depth materials per object kind.** three draws every shadow caster
+without a `customDepthMaterial` through one shared depth material, in unsorted
+scene order. Each time the next caster is a different kind of object (skinned or
+rigid, morph-target count, instanced), three re-derives that material's program
+(`getProgram`). The census now counts these switches per pass: a material drawn
+for a different kind of object than its previous draw. At 16 players in the crowd
+view there are 110 per frame in the shadow pass (55 from remote avatars), 154 in
+GTAO's geometry pass (one override material) and 19 in the main pass. The world
+alone has 52 shadow and 55 GTAO switches.
+
+`shadow-depth.js` gives each remote avatar's shadow casters a depth material per
+kind (`programSignature`), shared across avatars. Casters whose materials need
+three's own depth variant keep it: alpha cutouts (any `alphaTest`), clipping and
+displacement. In every segment of the crowd-view A/B, shadow-pass switches fall
+from 110 to 56 per frame (remote avatars 55 to 1). At about 3.4 µs per
+re-derivation in the CPU profiles, that is roughly 0.2 ms per frame at 16
+players. That's below what this shared machine can resolve: in that run load
+fell abruptly mid-run, and the segment timing shows the drift, not the change.
+The world's own switches and GTAO's override material are unchanged.
+
 ### Authored wardrobe matrix and Vesper wrap
 
 `pnpm run test:experience character-wardrobe` generates coverage from all 22 shipped
