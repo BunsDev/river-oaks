@@ -118,12 +118,25 @@ the Gardens restore that town.
 - **Results (main `7c10f418` plus this test):**
   - migration, suite-seat and traversal suites with an isolated Redis: 15/15, including
     the epoch-fenced Redis coordinator switch;
-  - `pnpm run test:server` with that Redis: 983/983, 0 skipped;
-  - `pnpm run verify` (core) stops at `test:agent` on one failure that main shares:
+  - `pnpm run test:server` with that Redis: 983/983, 0 skipped. On the final tree, with the
+    transport hardening below, it was 982/983 at a load average of ~27. The one failure was
+    `redis-room`'s "default district commits the approved two-level revision" on its
+    request deadline (`request_timeout`); that file passes 21/21 alone.
+  - Every other core verify step passes: preview tests 3,686 (1 skipped), desktop 76/76,
+    build, ruff check and format, pytest 145, demo, demo-verify (expected exit 2) and the
+    secret scan.
+  - `pnpm run verify` (core) itself stops at `test:agent` on one failure that main shares:
     `scripts/tests/ipic-short-intake.test.js` ("the approved silent short and the fixture
     are not a second film with dialogue and music"). #547 registered a second short that
     really has dialogue and music, and the test runs only where ffmpeg is installed. It was
     reported to its owner, river-oaks-4b. The other 126 agent tests pass.
+- **Transport test hardening (#509's suite, same PR):** one local run of
+  `campus-leases-transport.test.js` stalled for 33 minutes at a load average of ~55, because
+  `join()` waited for the first snapshot with no timeout and did not reject on `close`. It
+  now rejects on a close before the first snapshot and after 15 s of silence, and each test
+  has a 120 s timeout. Against a socket server that accepts and closes cleanly, the old wait
+  was still pending after 5 s; the new one failed in 54 ms with the close code. The file
+  passes 5/5 with Redis.
 
 ## Next action
 
