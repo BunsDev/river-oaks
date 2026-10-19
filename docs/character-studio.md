@@ -375,6 +375,45 @@ limits are integrity envelopes for this catalog, not interactive design controls
 or device performance promises.
 
 
+### Provenance of each exposed look (2026-10-18)
+
+The human-only catalog has 11 looks, built on three pinned rigs. `CHARACTER_ASSETS`
+in `character-assets.js` pins each rig's bytes and SHA-256 and points to its source
+receipt. `character-definition.test.js` refuses a look whose rig is not pinned,
+and `scripts/tests/character-assets-audit.test.js` fails a changed hash or an
+unlicensed or mismatched receipt.
+
+| Look | Rig (SHA-256 prefix) | Generator | License (receipt) | Source assets in the rig |
+| --- | --- | --- | --- | --- |
+| jevica, sable-human, woman-tailored, lyra-human, forest-aristocrat-feminine | jevica (`722b96e2fd77`) | MPFB 2.0.17 / Blender 4.5.3 LTS | CC0-1.0 (`jevica.sources.json`) | skin young_asian_female, hair long01, eyes high-poly, eyelashes01, eyebrow001; original fitted shell |
+| rowan-human | man-tailored (`ae3834fbc9d9`) | MPFB 2.0.17 / Blender 5.2.1 LTS | CC0-1.0 (`sources.json`) | middleage_african_male, male_elegantsuit01, short04, shoes03 |
+| man-tailored, man-workwear, kai-explorer, kai-noir, forest-aristocrat | man-casual (`e7ac712585ba`) | MPFB 2.0.17 / Blender 5.2.1 LTS | CC0-1.0 (`sources.json`) | young_caucasian_male, male_casualsuit02, short01, shoes01 |
+
+The source assets are MakeHuman's CC0 system assets. Their credits are in
+`preview/public/assets/characters/README.md` and `LICENSE-CC0.md`. MPFB itself is a
+GPL build tool and is not shipped.
+
+Everything else a look wears is authored in this repository: no third-party
+garment, hair or texture asset is loaded for these looks.
+
+- **Jevica:** `player-costume.js` → `jevica-costume.js`, with `jevica-drape.js`,
+  `jevica-embroidery.js`, `bodice-fitting.js` and `riding-clothes.js`.
+- **The other ten:** `romance-look.js` → `reference-archetypes.js`.
+- **Baked deformation data** carries its own receipt, which hashes the authored
+  inputs, the rig and the generator, and states its provenance:
+
+  | Bake receipt | Looks |
+  | --- | --- |
+  | `coat-tail-morph-receipt.json` | man-tailored, man-workwear, kai-noir |
+  | `lyra-drape-morph-receipt.json` | lyra-human |
+  | `silvan-drape-morph-receipt.json` | forest-aristocrat, forest-aristocrat-feminine |
+  | `skirt-seat-morph-receipt.json` | sable-human |
+  | `vesper-skirt-morph-receipt.json` | woman-tailored |
+
+This covers the shipped catalog's assets and their licenses. It doesn't cover
+npm dependency licenses (three.js and others), which are pinned in
+`pnpm-lock.yaml` and reviewed by the dependency-review check, not here.
+
 ## Runtime pose diagnostics (#442, incomplete acceptance)
 
 Run `pnpm run test:experience character-poses` to capture the canonical rose/espresso
@@ -525,8 +564,9 @@ The existing Redis hash key remains stable for migration.
 
 ### Durable room selection
 
-Passing the character store to the Redis coordinator enables writer generation 13
-and room envelope 3. World checkpoint version 12 is unchanged. The coordinator
+Passing the character store to the Redis coordinator raises the writer generation by
+one and enables room envelope 3: generation 13 over world checkpoint 12, and 14 over
+checkpoint 13 since the garden campus leases (#509). The world checkpoint is unchanged by it. The coordinator
 validates connection, session, permissions, flight, beast movement and the existing
 per-room two-second appearance cooldown before persisting a bounded pending intent.
 Preparation consumes the ordinary command budget but changes neither the selected
@@ -550,7 +590,7 @@ canonical fingerprints, identities, timestamps, reply uniqueness and roster
 membership. Region replacement waits for pending selections. An actual v12/v13
 coordinator audit covers preemption, old-writer fencing, pending-intent recovery
 and replacement restoration. Rollback after activation must retain the generation
-13/envelope 3 coordinator, version 12 world codec and version 2 character-store
+14/envelope 3 coordinator (13 before #509), version 13 world codec (12 before #509) and version 2 character-store
 codec; an older coordinator rejects the new envelope.
 
 The running Redis gateway supplies the character store to this coordinator. Its
@@ -672,7 +712,7 @@ may finish during a pause. Clients retain uncertain operations and their stable
 request IDs so retry cannot create a second operation. Hiding the editor is a
 separate client release; it cannot undo a server operation already accepted.
 
-A feature pause must retain writer generation13/envelope3, world codec12 and
+A feature pause must retain writer generation 14/envelope 3, world codec 13 (13 and 12 before #509) and
 character-store codec2. Never roll back to an older reader/writer, delete a saved
 revision, clear request receipts, remove tombstones or reset account versions as a
 support fix. Reenable with the same compatible implementation after the failure is
@@ -793,6 +833,146 @@ timing before choosing a performance change. This repeat and the earlier varying
 8-player result do not establish a stable scaling curve. Evidence and source
 hashes: `.runtime/character-studio/labels/verified-20261016/`.
 
+
+## Unthrottled crowd timing and remote avatar culling (#442, 2026-10-18)
+
+**Why the earlier frame p95 couldn't move.** The audit launched Chromium with
+vsync on, so each rAF interval is a multiple of the 16.7 ms refresh. That's why
+every p95 above reads 33.4 or 16.7 ms. `--vsync=off` (`--disable-gpu-vsync`,
+`--disable-frame-rate-limit`) measures frame cost instead. The default stays
+`on`, so older reports remain comparable.
+
+**Where a remote player's cost goes.** `window.__riverRenderAudit.drawCensus()`
+is development-only. It counts one frame's draws and submitted triangles by pass
+(`main`, `occlusion` for GTAO's geometry pass, `shadow`, `other`) and by owner
+(`remote-player`, `player`, `scene`). The audit records it per tier.
+
+At 16 players (desktop, vsync off), each peer costs about 79 draws, split evenly
+across main, GTAO and sun shadow, and about 292,000 submitted triangles per frame
+across those passes. CPU p50 rises from 12.8 ms at 1 player to 23.2 ms at 16, about
+0.7 ms per peer. Frame p50 follows it, so the frame is CPU-bound on the M3 Max.
+
+**Remote avatar culling.** Skinned meshes keep bind-pose bounds, so avatars set
+`frustumCulled = false`. Every mesh of every peer within 120 m then drew in all
+three passes, behind the camera or outside the shadow map. `avatar-culling.js`
+now gives each remote avatar's skinned meshes one sphere around the whole figure,
+in each mesh's own space: centred 0.55 h above the floor, radius 0.8 h, where h
+is the standing height. It then turns culling back on. three culls the figure
+against the camera in the main and GTAO passes, and against the sun's shadow
+frustum in the shadow pass. Skins carried by a bone stay unculled. Rigid trims
+already cull by their own geometry. The local player, store people and NPCs are
+unchanged.
+
+`avatar-culling.test.js` loads every exposed look on its shipped rig, Jevica with
+her costume included. It drives idle, walk, run, all eleven gestures, hover, fast
+flight and seated. After the world-matrix update a render performs, every vertex
+of every visible culled skin stays within 0.751 of the sphere's radius, which is
+25% headroom. A 0.55 h radius fails 9 of 11 looks.
+
+`--view=player` keeps the game's follow camera. `--view=away` looks from the
+viewer's eye away from the other players. `--compare=avatar-culling` alternates
+culling in eight segments in the same page (off, on, on, off, on, off, off, on),
+so load drift falls on both arms, and records each segment.
+
+Remote work per frame at 16 players. Culling changes only which draws are
+submitted, so these counts are exact:
+
+| View | Viewport | Peers on screen | Remote draws, off → on | Remote triangles, off → on |
+| --- | --- | ---: | --- | --- |
+| crowd | desktop and phone | 15/15 | 1,192 → 1,192 | 4,376,556 → 4,376,556 |
+| player | desktop | 13/15 | 1,158–1,174 → 1,162–1,176 | 4.37M → 4.37M |
+| player | phone viewport | 6/15 | 926–960 → 898–926 | 4.24M → 3.88–3.92M |
+| away | desktop | 1/15 | 634–642 → 478–500 | 3.56M → 2.24–2.31M |
+| away | phone viewport | 1/15 | 634 → 451–465 | 3.56M → 1.97–2.03M |
+
+Peers behind the camera keep their 396 shadow draws: the sun's shadow map covers
+at least 36 m around the camera. On the narrow phone viewport, peers just off
+the sides are still within the figure sphere's 1.4 m margin, so they stay drawn.
+That margin is the price of a sphere that never culls a visible limb.
+
+Timing, from the eight-segment away run (`ab-away8.json`, 18:15–18:19Z, load
+52–87). Values are means of the four segments per arm, in ms:
+
+| Viewport | CPU p50, off → on | Frame p50, off → on | Frames in 40 s, off → on |
+| --- | --- | --- | --- |
+| desktop | 17.75 → 16.73 | 20.7 → 19.9 | 1,913 → 2,000 |
+| phone viewport | 15.1 → 14.2 | 16.55 → 15.7 | 2,361 → 2,454 |
+
+Each culling-on segment's CPU p50 was lower than each culling-off segment's,
+with one exception per viewport: off segment 6 on desktop (16.7) and off
+segment 4 on the phone viewport (14.3). Frame p95 sits near 34.5 ms in any segment
+whose p50 is below about 20.5 ms, in both arms (desktop off segment 6 included).
+That's a pacing artifact of headless Chromium with vsync off, not a culling cost.
+In the crowd and player views, where culling removes nothing, repeated runs
+differed by up to 1.5 ms at p50 and 6 ms at p95 between arms with identical
+work; that is this shared machine's noise floor.
+
+All rows: Chromium 156.0.8078.4, M3 Max Metal, sharp quality, vsync off, 98 NPCs,
+10 s per segment after a 5 s warmup. Every run passed the audit's roster,
+reconnect, departure and cleanup checks, except one player-view run whose phone
+16-player tier lost the viewer's town socket (`ECONNRESET` through Vite's
+WebSocket proxy, load average 30–70). That tier passed in the three later runs. These
+are host-GPU measurements, not approved-device budgets. Evidence:
+`.runtime/crowd-442/` in the task worktree.
+
+
+**Figures out of view with their shadows.** Mesh culling still drew the shadows
+of peers behind the camera: the sun's shadow map covers at least 36 m around it.
+`figureInView` now also asks whether the figure's shadow could reach the view.
+It sweeps the figure sphere along the sun direction until the sphere is
+`SHADOW_DROP` (4 m) below the figure's floor, in sub-spheres no wider than 1.5
+radii, and tests each against the camera frustum. A peer whose figure and sweep
+both miss the view gets `holder.visible = false`, so it skips every pass. It
+keeps animating at a quarter rate and is never suspended, so its pose is at most
+three frames old when it turns back into view; the reappearing frame updates
+before rendering.
+
+Only the town's main view passes a sun direction, and only while sun shadows
+render. Without one, only the figure counts. The office scenes keep their
+existing gates. Riders in a car and flying peers are never figure-culled,
+because the vehicle extends past the figure sphere. Shadows on receivers more
+than 4 m below the figure's floor are not covered, such as a street below a
+high terrace; within that, the test is conservative. A seeded property test
+marches 48 sampled figure points per hidden case along the light to the shadow
+floor, and finds no point in view in 300 random views, figures and sun
+directions. A version that ignores shadows fails it at case 46.
+
+Eight-segment A/B at 16 players (`fig-away.json`, `fig-player.json`; load 34–64;
+mesh culling on in both arms). Values are segment means, in ms:
+
+| View | Viewport | Remote draws, off → on | Remote shadow draws, off → on | CPU p50, off → on | Frame p50, off → on | Frames in 40 s |
+| --- | --- | --- | --- | --- | --- | --- |
+| away | desktop | 478–494 → 286–300 | 396 → 204 | 13.5 → 12.0 | 15.6 → 14.1 | 2,489 → 2,732 |
+| away | phone viewport | 451–465 → 221–254 | 396 → 166–185 | 14.3 → 11.8 | 16.0 → 13.6 | 2,468 → 2,902 |
+| player | desktop | 1,154–1,176 → 1,154–1,176 | 396 → 396 | 16.8 → 17.2 | 19.8 → 20.1 | 2,013 → 1,983 |
+| player | phone viewport | 884–942 → 863–924 | 396 → 377–396 | 15.4 → 15.4 | 17.2 → 17.0 | 2,275 → 2,299 |
+
+In the away view, every figure-culling segment was faster than every segment
+without it. In the desktop player view, nothing is culled: the two peers off screen
+still have shadows that can reach the view, so both arms draw the same work,
+and the 0.3–0.4 ms difference is within this machine's noise. On the narrow
+phone viewport, 8 peers are off screen, and only one at a time sometimes loses its
+shadow draws (377 of 396 in three of four segments).
+
+**Shadow depth materials per object kind.** three draws every shadow caster
+without a `customDepthMaterial` through one shared depth material, in unsorted
+scene order. Each time the next caster is a different kind of object (skinned or
+rigid, morph-target count, instanced), three re-derives that material's program
+(`getProgram`). The census now counts these switches per pass: a material drawn
+for a different kind of object than its previous draw. At 16 players in the crowd
+view there are 110 per frame in the shadow pass (55 from remote avatars), 154 in
+GTAO's geometry pass (one override material) and 19 in the main pass. The world
+alone has 52 shadow and 55 GTAO switches.
+
+`shadow-depth.js` gives each remote avatar's shadow casters a depth material per
+kind (`programSignature`), shared across avatars. Casters whose materials need
+three's own depth variant keep it: alpha cutouts (any `alphaTest`), clipping and
+displacement. In every segment of the crowd-view A/B, shadow-pass switches fall
+from 110 to 56 per frame (remote avatars 55 to 1). At about 3.4 µs per
+re-derivation in the CPU profiles, that is roughly 0.2 ms per frame at 16
+players. That's below what this shared machine can resolve: in that run load
+fell abruptly mid-run, and the segment timing shows the drift, not the change.
+The world's own switches and GTAO's override material are unchanged.
 
 ### Authored wardrobe matrix and Vesper wrap
 

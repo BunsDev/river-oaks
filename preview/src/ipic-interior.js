@@ -5,7 +5,7 @@ import { createIpicMaterials, districtSignLayout } from './ipic-materials.js';
 
 // Where the upper lounge's carpet meets the Tuck Room's boards, west of the bar stools (a = 3.4).
 const TUCK_ROOM_EDGE = 2.65;
-import { IPIC_BACK_BAR, IPIC_BAR, IPIC_DARTS, IPIC_ESCALATOR, IPIC_FLIGHTS, IPIC_INTERIOR, IPIC_PLANTERS, IPIC_RISER, IPIC_SCREEN, IPIC_SOFA_ARMS, IPIC_SOFA_D, ipicFloor } from './ipic-plan.js';
+import { IPIC_BACK_BAR, IPIC_BAR, IPIC_DARTS, IPIC_ESCALATOR, IPIC_FLIGHTS, IPIC_INTERIOR, IPIC_PLANTERS, IPIC_RECLINER_ROWS, IPIC_RISER, IPIC_SCREEN, IPIC_SOFA_ARMS, IPIC_SOFA_D, ipicFloor } from './ipic-plan.js';
 import { dartboardPixel } from './dartboard-texture.js';
 
 // Editable metre-scale scene. Local +X=across frontage, -Z=into the venue,
@@ -399,6 +399,11 @@ export function buildIpicInterior(room, options = {}) {
   // The screen's own material, so a screening (#367) can show a film on it and restore it.
   root.userData.screen = m.screen;
   root.userData.screenAspect = IPIC_SCREEN.width / IPIC_SCREEN.height;
+  // Where the screen is, in this root's frame, for a camera that frames the film (#500): its centre,
+  // its right and up directions as the seats see it, its size, and the back row's distance from it (the furthest a
+  // focused view steps back).
+  root.userData.screenFrame = { center: [IPIC_SCREEN.a, 6 + IPIC_SCREEN.y, -IPIC_SCREEN.d], right: [1, 0, 0], up: [0, 1, 0], width: IPIC_SCREEN.width, height: IPIC_SCREEN.height,
+    back: IPIC_SCREEN.d - Math.min(...IPIC_RECLINER_ROWS) };
   root.userData.ready = finishes.ready();
   // Loading failure remains observable by callers; attach a handler for callers
   // that only mount the production mesh, to avoid an unhandled rejection.

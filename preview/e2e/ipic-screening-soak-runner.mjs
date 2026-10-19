@@ -6,6 +6,7 @@ import { chromium } from 'playwright';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { startBrowserFixture } from './fixture-server.js';
 import { holdBrowserLock } from '../../scripts/browser-lock.mjs';
+import { framePace, frameSamplerScript, presentedSpread } from './ipic-screening-frames.js';
 import { loadavg } from 'node:os';
 
 // Counts what the page creates, without changing what it does: media elements it plays or
@@ -50,6 +51,7 @@ try {
     const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
     await context.addCookies([{ name: 'fixture_session', value: identity, url: fixture.origin }]);
     await context.addInitScript(instrument);
+    await context.addInitScript(frameSamplerScript);
     const page = await context.newPage(); page.setDefaultTimeout(60000);
     sessions.set(page, await context.newCDPSession(page));
     return page;
@@ -59,6 +61,8 @@ try {
     cycles,
     gc: async page => { await sessions.get(page).send('HeapProfiler.collectGarbage'); await page.waitForTimeout(50); await sessions.get(page).send('HeapProfiler.collectGarbage'); },
     dom: async page => sessions.get(page).send('Memory.getDOMCounters'),
+    // Presented frames (#502): requestVideoFrameCallback samples from the page's own screening video.
+    frames: (page, sinceWallMs) => page.evaluate(since => window.__screeningFrames(since), sinceWallMs), presentedSpread, framePace,
   };
   const source = (await readFile('preview/e2e/ipic-screening-soak.js', 'utf8')).replaceAll('http://127.0.0.1:5173', fixture.origin);
   const started = Date.now();

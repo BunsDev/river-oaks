@@ -11,14 +11,15 @@ const fail=error=>({ok:false,error,message:error});
 const LIMIT=64;
 const workspaceId=id=>typeof id==='string'&&/^office-[a-f0-9]{64}$/.test(id);
 const LEGACY_LEVEL=officeLayout(OFFICE_LAYOUT_LEGACY).spawn.levelId;
-// RIVER_OAKS_OFFICE_LAYOUT selects Jevica's office layout; anything unknown keeps the legacy room.
+// The penthouse is the sole live office; retired configuration cannot restore the old room.
 export function configuredOfficeLayout(value,{onInvalid=()=>{}}={}){
   if(value===undefined||value===null||value==='')return DEFAULT_OFFICE_LAYOUT;
-  if(officeLayout(value))return value;
+  if(value===DEFAULT_OFFICE_LAYOUT)return value;
   onInvalid(value);return DEFAULT_OFFICE_LAYOUT;
 }
 export function createOffices({worldData,players,isAdmin,isGuest=()=>false,environment,changed,cancel,officeLayout:configured=DEFAULT_OFFICE_LAYOUT}) {
   if(!officeLayout(configured))throw new Error('Unknown office layout');
+  configured=configuredOfficeLayout(configured);
   const catalog=officesFor(worldData),grants=new Map(),requests=new Map(),visits=new Map();
   // The sole office uses the server-selected layout. Clients cannot choose a floor.
   const layoutFor=()=>configured;

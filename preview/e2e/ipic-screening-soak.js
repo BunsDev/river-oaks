@@ -6,7 +6,10 @@ async (host, viewer, tools) => {
   // geometries, tracked media elements (loaded, playing), open AudioContexts, live intervals and
   // pending timeouts. A late play() after exit is caught by counting play() calls. Then the
   // panel is reviewed at 390 and 320 px with the software-rendering banner and the play dock on
-  // screen. Software rendering, one machine; not a visual, device or human acceptance.
+  // screen. Since #502 each cycle also changes the film while the viewer watches (the short and the
+  // fixture, two decoded sizes) before the counters are read, and records requestVideoFrameCallback frames
+  // (presented spread and pace) beside the currentTime spread. Software rendering, one machine; not a
+  // visual, device or human acceptance.
   const { openHudSpace } = await import('./hud-navigation.js');
   const IPIC = 'osm-node-8172494964', CYCLES = tools.cycles ?? 10;
   const checks = [], errors = [], cycles = [];
@@ -110,31 +113,58 @@ async (host, viewer, tools) => {
     const joined = Date.now(), late = await screening(viewer);
     check(late.epoch === before.epoch, `cycle ${index}: the viewer joined the host's epoch ${before.epoch}, got ${late.epoch}`);
     let converged = null, worst = 0;
+    // Raw samples (#502): the spread, and the viewer's drift as measured before any correction where
+    // the player reports it (measuredDriftMs; driftMs is reset after a seek request).
+    const raw = [];
     while (Date.now() - joined < 5000) {
       const sample = await spread();
+      raw.push({ t: Date.now() - joined, spreadMs: Math.round(sample.spreadMs), viewerMeasuredDriftMs: sample.viewer.measuredDriftMs ?? null, viewerDriftMs: sample.viewer.driftMs, viewerRate: sample.viewer.rate });
       if (sample.spreadMs < 500 && converged === null) converged = Date.now() - joined;
       if (converged !== null) worst = Math.max(worst, sample.spreadMs);
       await viewer.waitForTimeout(250);
     }
     check(converged !== null && converged <= 5000, `cycle ${index}: viewers within 500 ms in ${converged} ms`);
     check(worst < 500, `cycle ${index}: stayed within 500 ms after converging (worst ${Math.round(worst)} ms)`);
+    // What each page actually presented over the window (requestVideoFrameCallback), not a requested
+    // time: the viewer's frames must advance; the presented spread is recorded with its uncertainty.
+    const [hostFrames, viewerFrames] = await Promise.all([tools.frames(host, joined), tools.frames(viewer, joined)]);
+    // Startup, apart from convergence: from the trip into IPIC to the viewer's playing state and its first presented frame.
+    const firstFrame = (await tools.frames(viewer, started)).samples[0] ?? null;
+    const startup = { tripMs: entryMs, toPlayingMs: joined - started, firstFrameMs: firstFrame ? Math.round(firstFrame.wallMs - started) : null };
+    const pace = tools.framePace(viewerFrames.samples), presented = tools.presentedSpread(hostFrames.samples, viewerFrames.samples);
+    check(viewerFrames.supported && pace.frames > 0 && pace.mediaPerWall > 0.5, `cycle ${index}: the viewer presented advancing frames in the window: ${JSON.stringify(pace)}`);
     // Sampled after the convergence window, so the GC and the wait below never eat into it. The
     // texture attaches on a later rendered frame; a loaded machine renders slowly, so wait for it
     // (it must still attach).
     await viewer.waitForFunction(() => window.__riverScreening().attached, null, { timeout: 30000 })
       .catch(async error => { throw new Error(`${error.message}: cycle ${index} the film never reached the screen: ${JSON.stringify(await screening(viewer))}`); });
+    // A film change while the viewer watches (#502): the host stops and starts the other film (the short and
+    // the fixture differ in size, 1280×720 and 640×360). The viewer must reach the new film on its screen, and
+    // the counters below are read after it, so a texture or element left by the old film would show as growth.
+    const was = (await screening(host)).mediaId, next = was === 'ipic-fixture-v1' ? 'ipic-original-v1' : 'ipic-fixture-v1';
+    const room = await host.evaluate(() => window.__riverMultiplayer().snapshot.screenings.find(item => item.venueId === 'ipic'));
+    const hostCommand = message => host.evaluate(value => window.__riverMultiplayerCommand(value), message);
+    const halted = await hostCommand({ type: 'screening', action: 'stop', venueId: 'ipic', epoch: room.epoch, expectedRevision: room.revision, operationId: `soak-stop-${String(index).padStart(4, '0')}` });
+    const switched = await hostCommand({ type: 'screening', action: 'start', venueId: 'ipic', epoch: room.epoch, expectedRevision: halted?.screening?.revision, operationId: `soak-start-${String(index).padStart(3, '0')}`, mediaId: next });
+    check(switched?.ok === true, `cycle ${index}: the host switched to ${next}: ${JSON.stringify(switched)}`);
+    const switchedAt = Date.now();
+    await viewer.waitForFunction(id => { const s = window.__riverScreening(); return s.mediaId === id && s.state === 'playing' && s.attached; }, next, { timeout: 30000 })
+      .catch(async error => { throw new Error(`${error.message}: cycle ${index} the viewer never showed ${next}: ${JSON.stringify(await screening(viewer))}`); });
+    const film = { from: was, to: next, onScreenMs: Date.now() - switchedAt, decoded: (await screening(viewer)).decoded ?? null };
     const inside = await counters(viewer);
     check(inside.screeningVideos === 1 && inside.mediaPlaying === 1 && (await screening(viewer)).attached, `cycle ${index}: one playing video attached inside IPIC: ${JSON.stringify(inside)}`);
-    const position = (await screening(viewer)).currentTime;
+    const position = (await screening(viewer)).currentTime, beforeExit = await screening(host);
     await leaveIpic(viewer);
     const playCalls = (await viewer.evaluate(() => window.__soak.counters().playCalls));
     await viewer.waitForTimeout(1500);
     const after = await counters(viewer), hostAfter = await screening(host);
     check(after.mediaPlaying === 0 && after.screeningVideos === 0, `cycle ${index}: no film left playing after exit: ${JSON.stringify(after)}`);
     check(after.playCalls === playCalls, `cycle ${index}: no late play() after exit (${playCalls} -> ${after.playCalls})`);
-    check(hostAfter.epoch === before.epoch && (hostAfter.currentTime > before.currentTime || hostAfter.sharedStatus === 'ended'), `cycle ${index}: the viewer's entry and exit did not reset the host's film`);
+    check(hostAfter.epoch === beforeExit.epoch && hostAfter.mediaId === beforeExit.mediaId && (hostAfter.currentTime > beforeExit.currentTime || hostAfter.sharedStatus === 'ended'), `cycle ${index}: the viewer's entry and exit did not reset the host's film`);
     console.log(`cycle ${index}: ${lateJoin ? 'late join' : 'in-room start'} at ${late.currentTime.toFixed(2)} s after a ${entryMs} ms trip in, within 500 ms after ${converged} ms; after exit ${JSON.stringify(after)}`);
-    return { cycle: index, restarted, lateJoin, entryMs, joinedAtS: Math.round(late.currentTime * 100) / 100, convergedAfterMs: converged, worstSpreadMs: Math.round(worst), viewerPositionS: Math.round(position * 100) / 100, inside, after };
+    return { cycle: index, restarted, lateJoin, entryMs, joinedAtS: Math.round(late.currentTime * 100) / 100, convergedAfterMs: converged, worstSpreadMs: Math.round(worst), viewerPositionS: Math.round(position * 100) / 100, inside, after,
+      film, startup, presented: presented && { spreadMs: Math.round(presented.spreadMs), uncertaintyMs: Math.round(presented.uncertaintyMs), gapMs: Math.round(presented.gapMs) },
+      viewerPace: { frames: pace.frames, fps: Math.round(pace.fps * 10) / 10, mediaPerWall: Math.round(pace.mediaPerWall * 100) / 100 }, hostPace: { fps: Math.round(tools.framePace(hostFrames.samples).fps * 10) / 10 }, raw };
   }
 
   cycles.push({ warmUp: true, ...await cycle(0) });

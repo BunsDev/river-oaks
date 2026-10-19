@@ -30,7 +30,7 @@ district.vegetation = JSON.parse(await readFile(new URL('../public/data/district
 const appearances = SHARED_APPEARANCES.filter(look => look.character !== 'jevica' && look.form === 'human');
 const sourceFiles = ['pnpm-lock.yaml', 'preview/src/main.js', 'preview/src/render-audit.js', 'preview/src/render-pipeline.js',
   'preview/src/remote-players.js', 'preview/src/avatars.js', 'preview/src/romance-look.js',
-  'preview/src/reference-archetypes.js', 'preview/src/costume-batching.js', 'server/app.js', 'server/world.js',
+  'preview/src/reference-archetypes.js', 'preview/src/costume-batching.js', 'preview/src/draw-census.js', 'preview/src/avatar-culling.js', 'preview/src/shadow-depth.js', 'server/app.js', 'server/world.js',
   'preview/audit/rendered-multiplayer.js', 'preview/audit/metrics.js'];
 const source = { baseCommit: execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim(),
   sha256: Object.fromEntries(await Promise.all(sourceFiles.map(async file => [file, createHash('sha256').update(await readFile(`${root}/${file}`)).digest('hex')]))) };
@@ -180,7 +180,7 @@ try {
   vite = await createViteServer({ configFile: false, root: `${root}/preview`, cacheDir: `${root}/.runtime/render-audit-vite`,
     server: { host: '127.0.0.1', port: webPort, strictPort: true, proxy } });
   await vite.listen();
-  browser = await chromium.launch({ headless: true, handleSIGINT: false, handleSIGTERM: false, handleSIGHUP: false, args: process.platform === 'darwin' ? ['--use-angle=metal'] : [] });
+  browser = await chromium.launch({ headless: true, handleSIGINT: false, handleSIGTERM: false, handleSIGHUP: false, args: [...process.platform === 'darwin' ? ['--use-angle=metal'] : [], ...options.vsync === 'off' ? ['--disable-gpu-vsync', '--disable-frame-rate-limit'] : []] });
   report.browser = browser.version();
   for (const profile of [{ name: 'desktop', viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 }, { name: 'phone-viewport', viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 }]) {
     const context = await browser.newContext({ viewport: profile.viewport, deviceScaleFactor: profile.deviceScaleFactor });
@@ -207,7 +207,17 @@ try {
       await converge(page, count);
       const browserConvergenceMs = Math.round(performance.now() - convergenceStart);
       const settleStart = performance.now();
-      await page.evaluate(() => window.__riverRenderAudit.crowdView());
+      await page.evaluate(view => {
+        const audit = window.__riverRenderAudit;
+        if (view === 'crowd') return audit.crowdView();
+        if (view === 'player') return audit.release();
+        // Away: the viewer's eye, facing directly away from everyone else.
+        const { snapshot, selfId } = window.__riverMultiplayer(), scene = ([east, north, ground]) => [east, ground + 1.6, -north];
+        const self = scene(snapshot.players.find(player => player.id === selfId).position), others = snapshot.players.filter(player => player.id !== selfId);
+        const away = others.length ? others.map(player => scene(player.position)).reduce((sum, point) => [sum[0] + self[0] - point[0], 0, sum[2] + self[2] - point[2]], [0, 0, 0]) : [0, 0, -1];
+        const length = Math.hypot(away[0], away[2]) || 1;
+        audit.view({ position: self, target: [self[0] + away[0] / length * 10, self[1], self[2] + away[2] / length * 10] });
+      }, options.view);
       await pause(options.warmup * 1000);
       await page.waitForFunction(() => { const progress = JSON.parse(document.querySelector('#viewport').dataset.assetProgress ?? '{}'); return progress.done; }, null, { timeout: 90000 });
       const assetState = await page.locator('#viewport').getAttribute('data-asset-progress');
@@ -230,6 +240,7 @@ try {
         if (wait.finish) break;
       }
       const measuredSeconds = (performance.now() - measurementStart) / 1000;
+      const drawCensus = await page.evaluate(() => window.__riverRenderAudit.drawCensus());
       const sample = await page.evaluate(() => ({ timing: window.__riverRenderAudit.stop(), transport: window.__auditTransport.stop(), graphics: window.__riverRenderAudit.graphics(),
         onScreenPeers: window.__riverMultiplayer().remotes.filter(peer => peer.onScreen).length,
         labelViewport: (()=>{const r=document.querySelector('.remote-player-labels').getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,bottom:r.bottom};})(),
@@ -237,8 +248,10 @@ try {
         peers: window.__riverMultiplayer().remotes, npcs: window.__riverMultiplayer().snapshot.locals.length, visibility: document.visibilityState }));
       report.lastSample = sample;
       assert.equal(sample.timing.overflow, false); assert.equal(sample.visibility, 'visible');
-      assert.equal(sample.onScreenPeers, count - 1, 'All peer landmarks must fit in the crowd view');
-      if(count>1)assert.ok(sample.labels.length>0,'A crowd retains readable nameplates');
+      if (options.view === 'crowd') {
+        assert.equal(sample.onScreenPeers, count - 1, 'All peer landmarks must fit in the crowd view');
+        if(count>1)assert.ok(sample.labels.length>0,'A crowd retains readable nameplates');
+      }
       for(const label of sample.labels)assert.ok(label.left>=sample.labelViewport.left&&label.right<=sample.labelViewport.right&&label.top>=sample.labelViewport.top&&label.bottom<=sample.labelViewport.bottom,'Visible names fit within the label viewport');
       for(let i=0;i<sample.labels.length;i++)for(let j=i+1;j<sample.labels.length;j++){
         const a=sample.labels[i],b=sample.labels[j];
@@ -254,7 +267,38 @@ try {
         framesOver33Ms: sample.timing.frames.filter(frame => frame.intervalMs > 33.34).length, framesOver50Ms: sample.timing.frames.filter(frame => frame.intervalMs > 50).length,
         snapshots: sample.transport.snapshots, snapshotGap: distribution(sample.transport.gaps), decodedSnapshotBytesPerSecond: Math.round(sample.transport.bytes / measuredSeconds),
         gestureAck: distribution(sample.transport.commands), loadedPeers: sample.peers.length, onScreenPeers: sample.onScreenPeers, visibleLabels: sample.labels.length,
-        graphicsBefore: before, graphicsAfter: sample.graphics, assets: JSON.parse(assetState), actorCorrections: [...actors.values()].reduce((sum, actor) => sum + actor.corrections, 0) };
+        graphicsBefore: before, graphicsAfter: sample.graphics, drawCensus, assets: JSON.parse(assetState), actorCorrections: [...actors.values()].reduce((sum, actor) => sum + actor.corrections, 0) };
+      // The same page, peers and view, alternating the feature so drift in
+      // machine load falls on both arms (ABBA then BAAB). Each segment is kept,
+      // so a tail that follows the clock rather than the arm is visible.
+      if (options.compare !== 'none') {
+        const toggle = options.compare.replace(/-(\w)/g, (_, letter) => letter.toUpperCase());
+        const arms = { on: { frames: [], censuses: [] }, off: { frames: [], censuses: [] } }, segments = [];
+        const order = ['off', 'on', 'on', 'off', 'on', 'off', 'off', 'on'];
+        for (const arm of order) {
+          await page.evaluate(([name, on]) => window.__riverRenderAudit[name](on), [toggle, arm === 'on']);
+          await pause(1000);
+          await page.evaluate(() => window.__riverRenderAudit.start());
+          await pause(options.seconds * 1000);
+          arms[arm].censuses.push(await page.evaluate(() => window.__riverRenderAudit.drawCensus()));
+          const timing = await page.evaluate(() => window.__riverRenderAudit.stop());
+          assert.equal(timing.overflow, false); arms[arm].frames.push(...timing.frames);
+          segments.push({ arm, frame: distribution(timing.frames.map(frame => frame.intervalMs)), cpuSubmission: distribution(timing.frames.map(frame => frame.cpuMs)) });
+        }
+        await page.evaluate(name => window.__riverRenderAudit[name](true), toggle);
+        row.compare = { feature: options.compare, order, secondsPerSegment: options.seconds, segments, arms: Object.fromEntries(Object.entries(arms).map(([arm, { frames, censuses }]) =>
+          [arm, { frame: distribution(frames.map(frame => frame.intervalMs)), cpuSubmission: distribution(frames.map(frame => frame.cpuMs)), drawCensus: censuses }])) };
+        console.log(`${profile.name} ${count}: culling off frame p50/p95 ${row.compare.arms.off.frame.p50Ms}/${row.compare.arms.off.frame.p95Ms} ms, on ${row.compare.arms.on.frame.p50Ms}/${row.compare.arms.on.frame.p95Ms} ms`);
+      }
+      if (options.profile === 'on') {
+        // Main-thread attribution for the tier; frame timing above is unaffected.
+        const cdp = await context.newCDPSession(page);
+        await cdp.send('Profiler.enable'); await cdp.send('Profiler.setSamplingInterval', { interval: 200 });
+        await cdp.send('Profiler.start'); await pause(options.seconds * 1000);
+        const { profile: cpuProfile } = await cdp.send('Profiler.stop'); await cdp.detach();
+        row.cpuProfile = options.output.replace(/\.json$/, '') + `-${profile.name}-${count}.cpuprofile`;
+        await writeFile(row.cpuProfile, JSON.stringify(cpuProfile));
+      }
       // Reconnect a peer in the room at capacity. Preserve its authenticated ID,
       // and wait for the same loaded roster rather than counting socket opens.
       if (actors.size) {
