@@ -1,6 +1,7 @@
-// #365 decode check for the local candidate: hashes and durations against sources.candidate.json, then
-// real decode in headless Chromium (Metal ANGLE) over HTTP: duration, presented frames while playing,
-// seeks, the caption track's cues against the transcript, and the poster.
+// Decode check for a local candidate film (#365, generalised for #501): hashes and durations against
+// sources.candidate.json, then real decode in headless Chromium (Metal ANGLE) over HTTP: duration, presented
+// frames while playing, decoded audio bytes, seeks through the film at one size, the caption track's cues
+// against the transcript, and a poster at the film's size.
 //   node <this file> <worktree> <candidate-dir>
 import { createServer } from 'node:http';
 import { createHash } from 'node:crypto';
@@ -56,9 +57,9 @@ try {
       const cues = [...track.track.cues].map(c => ({ start: c.startTime, end: c.endTime, text: c.text }));
       let frames = 0; const count = () => { frames += 1; video.requestVideoFrameCallback(count); }; video.requestVideoFrameCallback(count);
       await video.play(); console.log('playing'); await new Promise(ok => setTimeout(ok, 3000)); video.pause();
-      const played = { currentTime: video.currentTime, frames, quality: video.getVideoPlaybackQuality?.() && { total: video.getVideoPlaybackQuality().totalVideoFrames, dropped: video.getVideoPlaybackQuality().droppedVideoFrames } };
+      const played = { currentTime: video.currentTime, frames, audioBytes: video.webkitAudioDecodedByteCount ?? null, quality: video.getVideoPlaybackQuality?.() && { total: video.getVideoPlaybackQuality().totalVideoFrames, dropped: video.getVideoPlaybackQuality().droppedVideoFrames } };
       const seeks = [];
-      for (const at of [10, 26, 44, video.duration - 0.5]) {
+      for (const at of [0.2, 0.5, 0.85].map(f => video.duration * f).concat(video.duration - 0.5)) {
         video.currentTime = at; await once(video, 'seeked'); console.log('seeked', at);
         if (video.readyState < 2) fail(`${name}: no current frame after seeking to ${at} (readyState ${video.readyState})`); const frame = video.currentTime; // rVFC does not fire for a paused seek in headless Chromium; draw the current frame instead.
         const canvas = new OffscreenCanvas(64, 36), ctx = canvas.getContext('2d'); ctx.drawImage(video, 0, 0, 64, 36);
@@ -71,14 +72,16 @@ try {
     if (!out.canPlay) fail(`${name}: canPlayType('${file.type}') is empty`);
     if (Math.abs(out.durationMs - file.durationMs) > 60) fail(`${name}: decoded ${out.durationMs} ms, manifest ${file.durationMs} ms`);
     if (out.played.currentTime < 2 || out.played.frames < 24) fail(`${name}: played ${out.played.currentTime}s, ${out.played.frames} frames presented`);
-    if (out.seeks.some(s => s.size[0] !== 1280 || s.size[1] !== 720 || s.meanRgb < 8)) fail(`${name}: a seek decoded a black or mis-sized frame: ${JSON.stringify(out.seeks)}`);
+    const size = out.seeks[0].size;
+    if (out.seeks.some(s => s.size.join() !== size.join() || s.meanRgb < 8)) fail(`${name}: a seek decoded a black or mis-sized frame: ${JSON.stringify(out.seeks)}`);
+    if (result.media.length && result.media[0].seeks[0].size.join() !== size.join()) fail(`${name}: decodes at ${size}, the other encode at ${result.media[0].seeks[0].size}`);
     if (JSON.stringify(out.cues.map(c => c.text)) !== JSON.stringify(manifest.transcript)) fail(`${name}: caption cues differ from the transcript`);
     if (out.cues.some(c => c.end > out.durationMs / 1000)) fail(`${name}: a cue ends after the film`);
-    checks.push(`${name}: plays as ${file.type} (${out.canPlay}), decodes ${out.durationMs} ms (manifest ${file.durationMs}), ${out.played.frames} frames presented in 3 s, ${out.seeks.length} seeks decoded at 1280×720, ${out.cues.length} cues equal the transcript`);
+    checks.push(`${name}: plays as ${file.type} (${out.canPlay}), decodes ${out.durationMs} ms (manifest ${file.durationMs}), ${out.played.frames} frames presented in 3 s, ${out.played.audioBytes ?? 'unknown'} audio bytes decoded, ${out.seeks.length} seeks decoded at ${size.join('×')}, ${out.cues.length} cues equal the transcript`);
     result.media.push({ name, ...out, cues: out.cues.length });
   }
   const image = await page.evaluate(async src => { const img = new Image(); img.src = src; await img.decode(); return [img.naturalWidth, img.naturalHeight]; }, basename(poster.path));
-  if (image[0] !== 1280 || image[1] !== 720) fail(`poster decodes at ${image}`);
+  if (image.join() !== result.media[0].seeks[0].size.join()) fail(`poster decodes at ${image}, the film at ${result.media[0].seeks[0].size}`);
   checks.push(`poster decodes at ${image.join('×')}`);
   result.browser = await browser.version();
   result.renderer = await page.evaluate(() => { const gl = document.createElement('canvas').getContext('webgl'); const ext = gl?.getExtension('WEBGL_debug_renderer_info'); return ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : null; });
