@@ -12,6 +12,7 @@
 .darts-panel .darts-red { fill: #b0262c; } .darts-panel .darts-green { fill: #237a45; }
 .darts-panel .darts-number { fill: #f3ead8; font: 700 15px var(--font-ui, system-ui); }
 .darts-panel .darts-hit { fill: #f6c445; stroke: #1a1716; stroke-width: 2; }
+.darts-panel .darts-flight { fill: #f3ead8; stroke: #1a1716; stroke-width: 1.5; pointer-events: none; }
 .darts-panel .darts-line { stroke: #ffffff; stroke-width: 2.5; opacity: .85; }
 .darts-panel .darts-target { fill: none; stroke: #ffffff; stroke-width: 2.5; }
 .darts-panel .darts-target-dot { fill: #ffffff; }

@@ -152,7 +152,9 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     atLine:player=>onFootIn(player,ipicRoom) && atIpicDartsLine(roomPoint(ipicRoom,player)) ? IPIC_DARTS.id
       : onFootIn(player,axeRoom) && atAxeRoomDarts(roomPoint(axeRoom,player)) ? AXE_ROOM_DARTS.id : null});
   const axeGames=createAxeGames({players,laneIds:axeRoom?AXE_LANES.map(lane=>lane.id):[],changed:()=>revision++,
-    atLane:player=>onFootIn(player,axeRoom) ? atAxeLane(roomPoint(axeRoom,player)) : null});
+    atLane:player=>onFootIn(player,axeRoom) ? atAxeLane(roomPoint(axeRoom,player)) : null,
+    // The thrower's real distance to the target decides the axe's rotation (axe-rules.js).
+    distanceTo:(player,laneId)=>{const lane=AXE_LANES.find(item=>item.id===laneId);return axeRoom&&lane?lane.target-roomPoint(axeRoom,player)[1]:NaN;}});
   // Venue screenings (screenings.js): the server decides who is in the venue and who may host.
   const screenings=createScreenings({players,grants:screeningHosts,changed:()=>revision++,
     inVenue:(player,venueId)=>!player.levelId && !offices.has(player.id)

@@ -46,7 +46,11 @@ async page => {
     const { scoreAt } = await import('/src/darts-rules.js');
     return [0, 1, 2].map(dart => { const point = window.__riverPlazaDarts().landingFor(release, dart).map(n => Math.round(n * 10) / 10); return { point, label: scoreAt(point).label, value: scoreAt(point).value }; });
   }, release);
-  for (let dart = 0; dart < 3; dart++) { await page.evaluate(() => window.__riverPlazaDarts().steadyOn([0, 103])); await page.keyboard.press('Space'); }
+  // Each dart flies onto the board before the next can be thrown.
+  for (let dart = 0; dart < 3; dart++) {
+    await page.evaluate(() => window.__riverPlazaDarts().steadyOn([0, 103])); await page.keyboard.press('Space');
+    await named(`Waiting for dart ${dart + 1} to land`, page.waitForFunction(n => window.__riverPlazaDarts().thrown > n && !window.__riverPlazaDarts().flying, dart, { timeout: 10000 }));
+  }
   state = await game();
   const scored = expected.reduce((sum, hit) => sum + hit.value, 0);
   check(state.points.slice(0, 3).map(p => p.join()).join(' ') === expected.map(hit => hit.point.join()).join(' '), `The darts land at the release plus the hand's error (${expected.map(hit => hit.label).join(' ')})`);
@@ -72,6 +76,12 @@ async page => {
   await page.locator('#darts-panel [data-darts-action="guide"]').click();
   check(await page.locator('#darts-panel [data-darts-action="guide"]').getAttribute('aria-pressed') === 'false' && await page.locator('#darts-panel .darts-target').count() === 0, 'The landing guide can be turned off');
   await page.locator('#darts-panel [data-darts-action="guide"]').click();
+  // One Sound switch for every throwing game: on by default, off is remembered.
+  const sound = page.locator('#darts-panel [data-game-sound]');
+  check(await sound.getAttribute('aria-pressed') === 'true', 'Game sounds are on by default');
+  await sound.click();
+  check(await sound.getAttribute('aria-pressed') === 'false' && await page.evaluate(() => localStorage.getItem('river-oaks-game-sounds')) === 'off', 'The Sound switch turns game sounds off, and remembers it');
+  await sound.click();
 
   await page.keyboard.press('Escape');
   check(!await page.locator('#darts-panel').evaluate(panel => panel.open), 'Escape puts the board away');
