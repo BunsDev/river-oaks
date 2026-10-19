@@ -26,6 +26,10 @@ receive a stable `Visitor #<account ID>` name automatically. The full public
 account ID keeps fallbacks unique across accounts and separate from valid GitHub
 handles; existing stored names are checked again before being displayed.
 The automated acceptance runner uses isolated temporary local identities under `RIVER_OAKS_ACCEPTANCE_FIXTURE=1`.
+On that loopback dev town, `RIVER_OAKS_DEV_INVITE_OVERRIDE=1` also makes every local identity an invited guest of
+Jevica's office and of owner-only homes, so a second browser profile can walk in without an invitation. It never
+makes anyone the owner (inviting and revoking stay Jevica's), and real sign-in, production and Vercel ignore it
+(`devInviteOverride` in `server/town.js`). The town logs `dev_invite_override` when it is on.
 For a separate checkout while the default ports are in use, run
 `RIVER_OAKS_DEV_TOWN_PORT=8797 pnpm run dev --port 5179`. The preview proxies
 auth, multiplayer, and landmark traffic to that checkout's own town on the

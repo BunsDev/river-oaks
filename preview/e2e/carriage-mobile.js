@@ -8,10 +8,11 @@ async page => {
   await phone.waitForFunction(()=>document.querySelector('#canvas-host')?.dataset.playerReady==='true'&&document.querySelector('#canvas-host')?.dataset.carriageReady==='true');
   if(await phone.locator('#panel-toggle').getAttribute('aria-expanded')==='true')await phone.locator('#panel-toggle').click();
   await phone.locator('.visit-tools-toggle').tap();
-  if(!await phone.locator('.player-settings').evaluate(e=>e.open))await phone.locator('.player-settings summary').click();
+  await phone.locator('#play-tab-rides').click();
   check(await phone.locator('#player-ride').evaluate(e=>e.getBoundingClientRect().height>=44),'Boarding has a 44px phone touch target');
   await phone.locator('#player-ride').tap();await phone.waitForFunction(()=>window.__riverCarriage().riding);
-  await phone.locator('.player-settings summary').tap();
+  // Close the play menu to give the movement pad room; Rides stays the chosen tab.
+  await phone.locator('.visit-tools-toggle').tap();
   if(await phone.locator('#walking-controls-toggle').getAttribute('aria-expanded')==='false')await phone.locator('#walking-controls-toggle').tap();
   const button=phone.locator('[data-walk-key=KeyW]'),box=await button.boundingBox(),client=await context.newCDPSession(phone);
   await client.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{id:1,x:box.x+box.width/2,y:box.y+box.height/2}]});
@@ -21,7 +22,7 @@ async page => {
   await phone.waitForFunction(()=>Math.abs(window.__riverCarriage().placement.speed)<.03);
   check(true,'Releasing the touch pad brakes the carriage');
   await phone.screenshot({path:'output/playwright/carriage-mobile.png'});
-  await phone.locator('#walking-controls-toggle').tap();await phone.locator('.player-settings summary').tap();
+  await phone.locator('#walking-controls-toggle').tap();await phone.locator('.visit-tools-toggle').tap();
   await phone.locator('#player-ride').tap();await phone.waitForFunction(()=>!window.__riverCarriage().riding);
   check(await phone.evaluate(()=>window.__riverCarriage().pose.showBody),'Phone dismount retains a visible third-person body');
   check(!await phone.evaluate(()=>document.documentElement.scrollWidth>innerWidth),'Carriage controls do not overflow the phone viewport');

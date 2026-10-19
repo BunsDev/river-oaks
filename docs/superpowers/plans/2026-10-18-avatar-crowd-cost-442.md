@@ -296,6 +296,102 @@ stacked on #534 (`e2b315dc`).
   selects which depth material draws remote avatars' shadows. Hosted CI runs every
   shared and experience shard.
 
+## Increment 4: GTAO's override pass in kind order
+
+Task `occlusion-sort-442-20261018`, branch `perf/occlusion-sort-442-20261018`, from
+#538's head `7e68449b`. Val approved the sort-order approach (2026-10-18).
+
+**Cause.** GTAO draws its normal/depth pass with one `MeshNormalMaterial` as
+`scene.overrideMaterial`. three r186 still sorts that pass by each object's own
+`material.id`, then `materialVariant`, which covers only skinned and instanced meshes.
+Kinds interleave, so the override's program is re-derived at every change: 154 times
+per frame at 16 players on desktop (93 of them from remote avatars).
+
+**Change.**
+- `occlusion-sort.js`: `occlusionKind` reads the same fields as the census's
+  `programSignature`. The opaque and transparent comparators order by group order,
+  then render order, then kind, then depth, then id.
+  - Render items cache their kind against their object and geometry.
+  - Without the cache, the comparator cost 896 µs per sort for 1,500 items.
+- `render-pipeline.js`: the GTAO geometry wrapper draws inside `withOcclusionSort`, which
+  installs both comparators and restores three's defaults afterwards, including after a
+  throw.
+  - `setOcclusionSort()` switches it for the audit.
+  - `compareOcclusionSort()` is the equality probe.
+- Audit:
+  - `--compare=occlusion-sort`;
+  - `__riverRenderAudit.occlusionSort()` and `.occlusionSortEquality()`;
+  - a screenshot beside the probe.
+
+**Why the image is safe.** Every draw in this pass uses the one depth-tested override,
+and nothing in the game sets `allowOverride = false` or a custom sort. The depth buffer
+keeps the nearest fragment in any order, so order can only change which normal wins at
+an exact depth tie.
+
+**Checks.**
+- **Unit tests:**
+  - `occlusion-sort.test.js`, 4/4:
+    - the kind distinguishes exactly what `programSignature` does;
+    - on three's real `WebGLRenderLists`, with six real remote avatars (three looks,
+      two copies) among 60 world props (196 draws, 4 kinds), re-derivations go from 62 in
+      three's order to 5. Five is the minimum for 4 kinds over two lists;
+    - every draw is kept;
+    - opaque draws stay front to back, and transparent draws back to front, within a
+      kind;
+    - group and render order still come first;
+    - the wrapper restores three's order after a failure.
+  - `render-pipeline.test.js` 12/12, including a new test of the audit switch. The
+    audit options test passes.
+- **Mutations:**
+  - Sorting by `material.id` in place of kind fails two occlusion tests.
+  - Leaving the pass unwired fails two render-pipeline tests.
+- **Comparator cost**, from a Node benchmark on 1,500 shuffled items at load 50:
+  - three's sort: 135 µs;
+  - the kind sort: 274 µs.
+  - The real pass has 969 draws on desktop and 802 on the phone viewport at 16
+    players.
+- **A/B audit**, crowd view, 16 players, eight segments, vsync off,
+  `.runtime/crowd-442/occlusion-crowd*.json`:
+
+  | Run | Viewport | GTAO switches, off → on | CPU p50, off → on | Normal texels differing |
+  | --- | --- | --- | --- | --- |
+  | 1 (desktop only) | desktop | 154 → 8 (remote 93 → 3) | 20.1 → 18.9 ms; every on segment below every off | 98 / 1,024,000 |
+  | 2 (passed, load 35–79) | desktop | 153 → 8 | 21.2 → 21.2 ms; load fell during the run | 108 / 1,024,000 |
+  | 2 | phone | 142 → 8 | 17.2 → 15.8 ms | 324 / 1,316,640 |
+
+  - Main (19) and shadow (56) switches are unchanged.
+  - In every probe, the repeat in kind order matched exactly, and every texel was read.
+  - Run 1's phone tier stopped before its compare segments, on a baseline transport
+    assertion (`transport.closes` 1). That is a socket drop under load, outside this
+    change. Run 2 passed it.
+- **Where the texels differ:** in the desktop capture they lie on a one-pixel diagonal
+  across the plaza floor, the seam where coplanar ground meshes meet. That is the
+  exact-depth tie predicted above.
+  - Captures: `output/playwright/occlusion-sort-{desktop,phone-viewport}-16.png`.
+  - Crop: the session scratchpad's `occlusion-diff-desktop-crop.png`.
+- **CPU profile** (desktop, 16 players, 10 s), against #538's own profile:
+  - `getProgram` plus `getParameters` self time fell from 631 ms (6.1% of CPU) to
+    304 ms (2.9%);
+  - the comparators took 35 ms (0.34%).
+
+- **Core gate, at `aee92462`** (`main` `5ce4e767` merged in):
+  - Agent tooling: 121/121.
+  - Preview: 3,625 passed, 1 skipped, 1 failed. The failure is the penthouse idle-slice
+    wall-clock test (63.6 ms, then 2,097 ms total, against a 40 ms slice). It passed twice
+    on its own, and it also fails on `main` under load.
+  - The gate stops at the first failed step, so the remaining profiles ran on their own,
+    and all passed:
+    - server: 696 passed, 207 Redis skips;
+    - desktop: 76/76;
+    - build;
+    - Python: lint, format, 141 tests, demo and demo-verify;
+    - security: secrets and secret history.
+  - The first gate run found a real defect: `frame-budget.test.js`'s stub renderer had no
+    sort setters. That stub is fixed in `aee92462`.
+
+**Not covered.** The visible AO difference on those seam texels is not measured on its
+own. There are no device runs.
+
 ## Gaps
 
 - Increment 2 culls peers whose shadows cannot reach the view. Peers whose
@@ -310,8 +406,8 @@ stacked on #534 (`e2b315dc`).
   depth material, in unsorted scene order, so it switches kind constantly. A
   depth material per object signature should stop that; GTAO's single
   `scene.overrideMaterial` has the same shape. Increment 3 removes remote
-  avatars' shadow switches (55 → 1). The world's 52 shadow switches, and all
-  154 GTAO switches, remain.
+  avatars' shadow switches (55 → 1), and increment 4 takes GTAO's from 154 to 8.
+  The world's 52 shadow switches remain.
 - three advances `info.render.frame` on every `renderer.render()` call, so
   `WebGLObjects.update` (geometry attribute upkeep) runs once per pass rather than
   once per frame; skeletons are already pinned by `composeFrame`. Unmeasured
@@ -326,7 +422,7 @@ stacked on #534 (`e2b315dc`).
 
 ## Next step
 
-Commit and push the increment, open a draft PR, check hosted CI, and update #442.
-Then measure the shadow-pass candidate: a conservative test of each figure's
-shadow volume (the figure sphere swept along the sun direction to the ground)
-against the camera frustum, A/B'd with the same eight-segment away run.
+#529 (`6da70d4c`), #534 (`9582091f`) and #538 (`5ce4e767`) landed in order, and their
+branches are retired. Increment 4 is open as a draft PR for Val's review; land it only
+with Val's go-ahead. Remaining candidate: the world's own 52 shadow-pass
+switches (rigid casters through three's shared depth material).
