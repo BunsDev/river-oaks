@@ -289,7 +289,14 @@ def test_history_scan_admits_source_manifest_digests(repo):
         check=True,
     )
     result = subprocess.run(
-        ["gitleaks", "git", "--log-opts=--all", "--redact", "--no-banner", "--ignore-gitleaks-allow"],
+        [
+            "gitleaks",
+            "git",
+            "--log-opts=--all",
+            "--redact",
+            "--no-banner",
+            "--ignore-gitleaks-allow",
+        ],
         cwd=repo,
         capture_output=True,
         text=True,
