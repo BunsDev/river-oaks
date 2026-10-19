@@ -69,10 +69,19 @@ Sources:
 - **GPU visit:** `IPIC_GPU=1 node preview/e2e/ipic-runner.mjs` passed. It walked in through the doorway and down the side aisle and sat in `recliner-1-1`. The seated eye faces the screen, and focus framed the film from 9.50 m. It stood, then walked out to the street. This run came before the seal, which is above the ceiling and off every route.
 - **Culling:** `node preview/e2e/ipic-exterior-culling.mjs` passed. All 9 poses decided as expected with 0 changed px, including the 6 wing poses that cull, the doorway and the sideways foyer. Seated frame time was 5.8 ms with culling and 10.2 ms without (p50).
 - **Screen fixture:** `node preview/e2e/ipic-screen-runner.mjs` passed 8 checks. 16:9 and 4:3 are pillarboxed, 2.39:1 fills the screen, and 4:1 is letterboxed. Stop restores the material, with 10 textures created and all disposed.
-- **Photo views:** `node preview/e2e/ipic-photo-views.mjs` comes after the commit, so its receipt names a clean head.
+- **Photo views:** `node preview/e2e/ipic-photo-views.mjs` at `43e3e990`, clean (`dirtyPatchSha256` null). The six captures and the receipt are committed in `77aa04f4`. T3 looks down the wing to the screen with alice seated in the middle row; T3-seated is her seat's view over the front row. `office-ipic-contract.test.js` passes 8/8.
 - **Core gate, first run:** `pnpm run verify` failed. Agent tests passed; preview tests ran 3,692 with 1 failure (the ground clip, adjustment 6). The later stages did not run.
-- **Core gate, rerun:** running.
+- **Core gate, rerun:** `pnpm run verify` passed all 11 stages at `f24e7d83` plus this diff (receipt `.runtime/agent/core.json`).
+  - Preview: 3,691/3,692, 1 skipped.
+  - Server: 729 pass, 212 skipped without Redis or a browser.
+  - Agent: 137. Desktop: 76. Python: 145.
+  - Build, lint, format, demo and secrets passed.
 
 ## Next action
 
-Run the browser checks and the core gate, commit signed, push, and open a draft PR. Merging waits for Val.
+A draft PR is open and hosted CI is the merge gate. Merging waits for Val.
+
+Still open:
+- Val's own look at the house in the game.
+- Re-probing the second short's close-shot framings in the wing before any new take.
+- The THX back-row choice: keep 33°, or deepen the wing for a wider screen.
