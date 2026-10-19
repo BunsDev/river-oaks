@@ -76,7 +76,7 @@ due about 15:50Z on `feat/garden-campus-contract-506-20261018`.
   - Every unit door names both the spine it opens from and the suite surface it opens
     into.
 
-## Package ownership and dependencies (as of 2026-10-19 05:35Z)
+## Package ownership and dependencies (as of 2026-10-19 06:40Z)
 
 Landing (Val's decision, about 23:20Z):
 - river-oaks-d8 lands #523, then #537.
@@ -96,7 +96,8 @@ Landing (Val's decision, about 23:20Z):
   `isDevGuest` and #510's `campusAdmission` with no default, so admission still falls back to
   #509's `suiteAccess`. #527 merged at 05:29Z as `69699036` (b5, from `1653f8ce`). The
   candidate then merged main `69699036` cleanly as `012f1601`; it adds only #512's 21 files
-  on top of main.
+  on top of main. #525 merged at 06:29Z as `7c10f418` (b5, from `d70607a4`, 18/18). Every
+  campus package is on main.
 - Dependencies, by ancestry:
   - #527 contains #537's `d456fbca`. #537's own content has not changed since `75f8e277`;
     its later heads only merge main;
@@ -109,11 +110,11 @@ Landing (Val's decision, about 23:20Z):
 | #506 contract | river-oaks-c5 | #519 | **merged to main `ab0059fc`** (layout 3.2, Val-authorized land) | done |
 | #507 shells + ground | built by river-oaks-95; **river-oaks-d8 lands** / `garden-campus-shells-507` (claimed by d8) | #523 | `efb935cf` (the desktop e2e rejoin fix) | **merged to main `5bb321ba`** (00:29Z, d8) |
 | #508 upper circulation | built by river-oaks-95; **river-oaks-d8 lands** / `garden-campus-traversal-508` (claimed by d8) | #537 | `75f8e277`; head `c675ff22` only adds main `2b4e4926` | **merged to main `3767d42b`** (02:29Z, d8; 17 checks green, tree equal to `c675ff22`). Lifts and stairs (`toPortal` pairing), facade glass, ceilings, fail-closed suite admission. **d8's review found nothing blocking:** 133/133 (campus, interior-level, store-room, walking and world suites, isolated Redis); suite surface ids equal #509's 43 unit ids; `toPortal` pairing correct. UX note: a lift moves one floor per press |
-| #508 slice (b) | river-oaks-95 / `garden-campus-traversal-views-508b` | `test/garden-campus-traversal-journey-508-20261018` | `2c650446` | **browser journey passed locally end to end**: keyboard + phone touch, occupied landing, above/below B12, T2 roof, T3 stairs. 14 circulation views on the design plans; carried by #525 |
+| #508 slice (b) | river-oaks-95 / `garden-campus-traversal-views-508b` | `test/garden-campus-traversal-journey-508-20261018` | `2c650446`, on main through #525 `7c10f418` | **delivered.** Browser journey passed locally end to end: keyboard + phone touch, occupied landing, above/below B12, T2 roof, T3 stairs. 14 circulation views on the design plans; carried by #525 |
 | #509 leases | river-oaks-d8 | #522 | **merged to main `53fba3fa`** (23:15Z; 20 checks green, tree equal to the head `e7b98e42`) | delivered |
 | #510 resident journey | river-oaks-95 / `garden-campus-journey-510` | #527 | `822d0d66` (main `5f3f5dc2`, #540's signature conflict resolved); landed head `1653f8ce` adds main `b76ab77c` | **merged to main `69699036`** (05:29Z, b5; 20/20, tree equal to `1653f8ce`). `822d0d66`: 211/211 with Redis across 33 files, 0 skips. | suite seats on #509 leases. Campus, world, interior and walking suites 191/191 with Redis at `27ac42e8`. **Hosted 20/20 at `8098839c` and at `2b5c3ac3`** (campus shard, desktop on all three OSes). `859965a9` failed only `places` (`office-computer-embed`: the frame's Continue button detached mid-click; main's flake, also on #546). The desktop job's first attempt failed after every check had passed: the runner's GPU process crashed on its own (`exit_code=6`, context lost), and three.js's 434 stale-object deletes after the restore tripped the console assertion. The rerun passed, and the same change was green on #525. Lands after #537 |
 | #511 finish + rendering | river-oaks-95 (agent-511) / `garden-campus-finish-511` | #528 | `040fc700` (main `2b4e4926`); landed head `c358c573` adds main `3767d42b` and `eb8553ae` by update-branch | **merged to main `4eca5153`** (03:45Z, b5; 16/16 green, tree equal to `c358c573`). Campus, render-audit and remote-player suites 76/76 with Redis |
-| #512 integration | river-oaks-95 / `garden-campus-acceptance-512` | → #525 (ready candidate) | `012f1601` (main `69699036`, which now holds every other package; the candidate adds #512's 21 files) | 124/124 across 20 campus, interior and render suites with Redis. **Hosted 21/21 at `a7b16ca2` and at `c48a983b`** (both campus shards, desktop on all three OSes; `c48a983b`'s macOS job passed on rerun after a runner GPU crash). At `b722b576` see the macOS frame-count finding below. Lands last, queued by b5 |
+| #512 integration | river-oaks-95 / `garden-campus-acceptance-512` | #525 | `012f1601` (main `69699036` + #512's 21 files); landed head `d70607a4` adds main `28f8e9b2` | **merged to main `7c10f418`** (06:29Z, b5; 18/18, tree equal to `d70607a4`). `012f1601`: 215/215 with Redis across 31 files, 0 skips. | 124/124 across 20 campus, interior and render suites with Redis. **Hosted 21/21 at `a7b16ca2` and at `c48a983b`** (both campus shards, desktop on all three OSes; `c48a983b`'s macOS job passed on rerun after a runner GPU crash). At `b722b576` see the macOS frame-count finding below |
 
 **Found at candidate `e9716e46`, fixed at its owner (#510 `79a5b580`).** The hosted `campus`
 shard failed `garden-campus-office` at "A request is shown as asked, not admitted" (job
@@ -286,7 +287,35 @@ External owners:
 
 ## Evidence
 
-None yet.
+**Delivered revisions on main** (each landed with `pnpm run land`; merge commit verified, tree
+equal to the reviewed head):
+
+| Package | PR | Reviewed head | Merge on main |
+| --- | --- | --- | --- |
+| #506 contract | [#519](https://github.com/BunsDev/river-oaks/pull/519) | `0222e9d1` | `ab0059fc` |
+| #509 leases | [#522](https://github.com/BunsDev/river-oaks/pull/522) | `e7b98e42` | `53fba3fa` |
+| #507 shells and ground | [#523](https://github.com/BunsDev/river-oaks/pull/523) | `c04d1b6d` | `5bb321ba` |
+| secret-scan allowlist (blocker) | [#546](https://github.com/BunsDev/river-oaks/pull/546) | `8fb1bd8a` | `2b4e4926` |
+| #508 upper circulation | [#537](https://github.com/BunsDev/river-oaks/pull/537) | `c675ff22` | `3767d42b` |
+| #511 finish and rendering | [#528](https://github.com/BunsDev/river-oaks/pull/528) | `c358c573` | `4eca5153` |
+| #510 resident journey | [#527](https://github.com/BunsDev/river-oaks/pull/527) | `1653f8ce` | `69699036` |
+| #512 candidate (+ #508 slice (b)) | [#525](https://github.com/BunsDev/river-oaks/pull/525) | `d70607a4` | `7c10f418` |
+
+**After landing: the rollback with campus-floor occupants**
+([#551](https://github.com/BunsDev/river-oaks/pull/551), branch
+`test/garden-campus-rollback-levels-20261019`). #512's ledger had one recovery gap: no
+resident was ever on a campus floor when the town rolled back to the garage.
+- **The case:** residents ride T1's lift to Floor 4, stop midway along B12 and on Floor 2,
+  and a tenant leases T1-201 and sits at its desk. After the rollback each is on foot at
+  street level off the parcel, the garage restores the town, a moved resident can walk,
+  and switching forward again moves nobody.
+- **Mutations:** the case fails if the move leaves `levelId` set or the selection skips
+  level occupants.
+- **Results:** 15/15 in the migration, seat and traversal suites with Redis;
+  `test:server` 983/983 with Redis. No product code changed.
+
+**Production activation:** pending. river-oaks-b5 makes the switch under Val's authorization
+and sends the `district_gardens_checkpoint_migrated` line for this section.
 
 ## Release decision (draft, completed as evidence lands)
 
@@ -306,7 +335,7 @@ does not exist. Roll back by configuration instead (`docs/garden-campus.md`).
 5. #537 (#508): merged `3767d42b` (d8).
 6. #528 (#511): merged `4eca5153` (b5).
 7. #527 (#510): merged `69699036` (b5).
-8. #525 (#512: cutover, epoch fence, docs, candidate journeys): b5, last.
+8. #525 (#512: cutover, epoch fence, docs, candidate journeys): merged `7c10f418` (b5).
 
 **Activation** (Val's separate authorization; production settings):
 
@@ -338,9 +367,10 @@ one `{from:'gardens', to:'garage'}` log. Leases stay inert and desks are untouch
   provider, the settlement source, failure and expiry handling, eligibility and record
   keeping, with a five-part readiness condition.
 
-**Release gates still open (as of 2026-10-18 23:40Z):**
+**Release gates still open (as of 2026-10-19 06:40Z):**
 
-- The packages land in the order above, each current with main and with `preview` green.
+- Production activation and its migration log (b5, authorized by Val). Every package has
+  landed.
 - Val's visual review of the matched views (`docs/design/garden-campus/finish/`,
   `docs/design/garden-campus/circulation/sheet-day.jpg`, `docs/design/garden-campus/traversal/`).
 - Physical phones and target-GPU or mobile resource budgets are unmeasured; touch is emulated.
@@ -381,12 +411,27 @@ ledger, section "Desktop macOS e2e".
 - #512's candidate runs all three two-account journeys green on hosted CI at `0b833b31`.
 - The gallery walls and suite doors are in, opaque at any camera distance.
 
-## Next action (2026-10-19 05:35Z)
+## Remaining follow-ups outside the campus packages
 
-1. #525 is pushed at `012f1601`; hosted CI is running. When it is green, tell b5, which
-   queues it at once.
-2. When #525 merges, record it here and in the register and mark #512 delivered.
-3. b5 then makes the production switch that Val authorized and sends the
-   `district_gardens_checkpoint_migrated` log line for the Evidence section. Then finish this
-   tracker with the exact PR, merge and evidence links, open its PR, and retire the campus
-   worktrees through `project:prune`.
+- **Desktop e2e owner:** the macOS "render loop keeps advancing" threshold (100 frames)
+  sits inside slow runners' normal range; see the frame-count finding above.
+- **#509's owner:** `campus-leases-transport.test.js`'s `join()` waits for the first
+  snapshot with no timeout and does not reject on `close`, so a stall under load hangs
+  instead of failing.
+- **#486's owner:** `office-computer-embed`'s account-change tail flaked three times today
+  (#546, #527 `859965a9` and `822d0d66`). Each passed on rerun.
+- **#501's owner (river-oaks-4b, told):** `scripts/tests/ipic-short-intake.test.js` fails
+  on main wherever ffmpeg is installed, since #547 registered the second short.
+- **d8:** the #507 and #508 ledgers' "Next action" sections still describe the
+  pre-landing steps.
+- **Product, connection continuity (#447's policy):** a client whose renderer blocks for
+  over 30 s right after the handshake is cut by the heartbeat.
+- **UX, #508:** a lift moves one floor per press.
+
+## Next action (2026-10-19 06:40Z)
+
+1. b5 makes the production switch, then the smoke test in the release decision above.
+   Record its migration log line under Evidence.
+2. #551 (rollback with floor occupants): hosted CI, then landing by Val or a lander.
+3. Retire the #512, slice (b) and tracker worktrees through `project:prune` once this
+   tracker's PR lands.
