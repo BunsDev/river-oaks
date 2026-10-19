@@ -1,0 +1,79 @@
+{
+  "createdAt": "2026-10-18T23:09:29.229Z",
+  "results": [
+    {
+      "name": "character-fidelity",
+      "status": "passed",
+      "seconds": 97.108,
+      "result": {
+        "passed": true,
+        "checks": [
+          "morgan-human: unsupported color controls stay unavailable",
+          "morgan-human: publication preserves the exact approved asset pin",
+          "morgan-human: selected identity survives reload",
+          "morgan-human: authoritative local and peer render paths loaded",
+          "imani-human: unsupported color controls stay unavailable",
+          "imani-human: publication preserves the exact approved asset pin",
+          "imani-human: selected identity survives reload",
+          "imani-human: authoritative local and peer render paths loaded",
+          "No page errors: "
+        ],
+        "scope": "Local Chromium fixture identities, Studio publication, shared peer and reload; not live auth, native, physical-device or human acceptance"
+      }
+    },
+    {
+      "name": "character-studio",
+      "status": "passed",
+      "seconds": 126.964,
+      "result": {
+        "passed": true,
+        "checks": [
+          "Reduced motion disables turntable",
+          "Reduced motion disables animated poses",
+          "An unedited look is not reported as unsaved edits",
+          "Human character choices are one tab stop",
+          "The guided summary lists the validated changes for Sable",
+          "Arrow keys move through a color group",
+          "Desktop Studio fills the window with all editing controls visible without scrolling",
+          "Dress and hair changes form a distinct validated draft",
+          "The summary names the edited colors instead of contradicting the preview",
+          "Undo restores the previous hair",
+          "Redo restores the edit",
+          "The preview image names the staged look and Undo advertises its shortcut",
+          "Comparison shows the original",
+          "The preview image names the original during comparison",
+          "Editing never changes the authoritative town appearance",
+          "A validated look can be favorited",
+          "Discard returns to confirmed character",
+          "Storage failure preserves in-memory favorites across reopen",
+          "A kept draft survives closing and reopening",
+          "Discard restores the previously kept draft",
+          "Clicking a hair color stages it",
+          "Undo from a focused choice restores and announces the look",
+          "Unsupported color choices are withheld with explanatory feedback",
+          "Undo that hides the focused choice keeps focus in the Studio",
+          "Wardrobe choices appear only for characters with several validated outfits",
+          "Remix varies the current character and announces the result",
+          "Curated randomize produces a valid choice",
+          "Escape closes the Studio",
+          "Closing restores focus to the entry",
+          "Keyboard reaches the character choices",
+          "Keyboard reaches dress colors",
+          "Keyboard reaches hair colors",
+          "Keyboard alone creates a distinct human variation",
+          "The undo shortcut works from the keyboard path",
+          "The redo shortcut works from the keyboard path",
+          "Keyboard reaches Save draft",
+          "Keyboard saves the draft privately",
+          "Escape closes the keyboard session and returns focus to the entry",
+          "Touch editing changes the draft",
+          "Phone color choices remain reachable",
+          "Phone dialog has no horizontal overflow",
+          "Motion-enabled preview offers walk and turntable",
+          "No runtime errors: "
+        ],
+        "scope": "Automated desktop/touch/reduced-motion draft journey; no published revisions or human accessibility acceptance"
+      }
+    }
+  ]
+}

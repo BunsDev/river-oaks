@@ -218,3 +218,37 @@ def test_project_placeholders_pass(repo, text):
         pytest.skip("Install gitleaks to exercise the real scanner")
     stage(repo, "example.env.txt", text)
     assert check(repo).returncode == 0
+
+
+def test_pinned_mpfb_source_digests_pass_only_in_the_asset_receipt(repo):
+    import json
+
+    if not shutil.which("gitleaks"):
+        pytest.skip("Install gitleaks to exercise the real scanner")
+    name = "preview/public/assets/characters/realistic-humans.sources.json"
+    receipt = json.loads((ROOT / name).read_text())
+    paths = [
+        "entities/material/mhmatkeys.py",
+        "entities/material/mhmatkeytypes.py",
+        "ui/operations/basemeshops/operators/bakeshapekeys.py",
+        "ui/operations/exportops/properties/bake_shapekeys.json",
+        "ui/operations/faceops/operators/loadfaceshapekeys.py",
+    ]
+    text = json.dumps({path: receipt["toolInputs"][path] for path in paths}, indent=2)
+    stage(repo, name, text)
+    assert check(repo).returncode == 0
+
+    # The same digest-shaped findings outside that exact receipt remain blocked.
+    stage(repo, "other-receipt.json", text)
+    assert check(repo).returncode != 0
+
+
+def test_other_key_values_in_the_mpfb_receipt_remain_blocked(repo):
+    if not shutil.which("gitleaks"):
+        pytest.skip("Install gitleaks to exercise the real scanner")
+    stage(
+        repo,
+        "preview/public/assets/characters/realistic-humans.sources.json",
+        "api_key=" + "Ab3Cd4Ef5Gh6Ij7Kl8" + "Mn9Op0Qr1St2Uv3Wx4",
+    )
+    assert check(repo).returncode != 0
