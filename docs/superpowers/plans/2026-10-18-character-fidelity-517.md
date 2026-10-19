@@ -25,7 +25,9 @@ skipped; offline demo verification returns its expected blocked-domain exit 2.
 
 All 28 review PNGs and the independent crowd script match their recorded hashes.
 See [the reviewable evidence](../../acceptance/character-fidelity-517.md).
-Signed commit, feature push, draft PR and issue handoff are next.
+Signed implementation `00a74a7c8f38c424d6baa4d2f85be4e2149e76b5` is pushed.
+[Draft PR #545](https://github.com/BunsDev/river-oaks/pull/545) is open, with
+handoffs posted to #517/#441/#442/#444. Final metadata receipt commit is next.
 Supported mobile/device budgets, native, live-auth and human acceptance remain
 gaps. Val's #441 P4/P5 waiver remains a waiver. No AAA or full-goal completion
 claim. The worktree stays active.
@@ -991,3 +993,30 @@ path),thenusednormal `sh scripts/install-hooks.sh` torefreshmanagedcopies.
 Refguardretained;nohooks override/bypass,noprimarysource edits. Onlyconfig
 refreshneeded. Source53inputs remainunchanged;retry ordinarysignedcommit
 withinstalledprecommitguard active.
+
+
+### Signed delivery and issue handoff
+
+Implementationcommit00a74a7c8f38c424d6baa4d2f85be4e2149e76b5 signedand
+verifiedwithGitSSHsigning; prohibitedattributioncheckempty. All53committed
+blobs matchpassedverificationinputs,andcommittedruntimehashisf1f07b69... .
+Featurepushsucceeded;RESTcreateddraftPR545atthat exacthead.
+
+- #517: https://github.com/BunsDev/river-oaks/issues/517#issuecomment-6257106326 (comment 6257106326)
+- #441: https://github.com/BunsDev/river-oaks/issues/441#issuecomment-6257106505 (comment 6257106505)
+- #442: https://github.com/BunsDev/river-oaks/issues/442#issuecomment-6257106716 (comment 6257106716)
+- #444: https://github.com/BunsDev/river-oaks/issues/444#issuecomment-6257106892 (comment 6257106892)
+
+GitHub reportedmergeable_state dirty against origin/main5ce4e76(65commits
+aheadoftestedbase). Read-onlymerge-treewithnormalcustomregisterdriver
+mergedcleanly; portabledriver-disabled simulationconfirmedonlyconflictwas
+docs/project-management/tasks.json. RemovedONLYbranchclaimmirror byrestoring
+thatfiletobase225acfc9;primaryliveclaim remainsauthoritativeandnowrecords
+PR545/all4handoffURLs. No upstreamproductioncode imported,no runtime/test/
+asset changes,andall53passedinputhashesremainmatched. This removesregistry
+churnfromeffectivePRdiffandkeepsotherprimaryliveentries untouched.
+
+Finalmetadata/docsreceiptcommitstillneeded;verifyportablemergetreeand
+GitHubdrafthead/CIafterpush. HostedCIandup-to-date-mainlandingareseparate
+mergegates. Userauthorizednodemerge/deploy/retirement;goalstillnotclaimed
+completebecausemobile/devicebudgets andexplicitacceptancegaps remain.
