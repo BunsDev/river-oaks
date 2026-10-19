@@ -11,15 +11,13 @@ export function createPlayDock({creationToolsEnabled=false}={}) {
   toggle.querySelector('kbd').textContent=/Mac|iPhone|iPad/.test(navigator.platform)?'⌘⇧B':'Ctrl ⇧B';
   toggle.setAttribute('aria-keyshortcuts','Meta+Shift+B Control+Shift+B');
   const tabs=document.createElement('div');tabs.className='play-rail-tabs';tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','Play activities');
-  // The chosen activity's name, with previous and next for pointer and touch.
-  const heading=document.createElement('div');heading.className='play-rail-heading';
-  const title=document.createElement('p');title.className='play-rail-title';title.setAttribute('aria-hidden','true');
-  const step=(label,glyph)=>{const button=document.createElement('button');button.type='button';button.className='play-rail-step';button.setAttribute('aria-label',label);button.textContent=glyph;return button;};
-  const previous=step('Previous activity','‹'),next=step('Next activity','›');heading.append(previous,title,next);
-  const context=document.createElement('p');context.className='play-rail-context';
+  // Each pane's own card names it, and each tab carries its name as a tooltip and
+  // accessible label, so the rail has no separate title row. A key legend appears
+  // only while an activity has its own controls (bird ride, building, flying).
+  const context=document.createElement('p');context.className='play-rail-context';context.hidden=true;
   const content=document.createElement('div');content.className='visit-tools-content';
   const shell=document.createElement('div');shell.className='play-rail-shell';
-  shell.append(tabs,heading,content,context);dock.append(toggle,shell);
+  shell.append(tabs,content,context);dock.append(toggle,shell);
   const compact=window.matchMedia('(max-width: 700px), (max-height: 600px)');
   const key='river-oaks-play-rail-open';let preference=null;
   try{preference=localStorage.getItem(key);}catch{/* Session choice still works. */}
@@ -54,6 +52,14 @@ export function createPlayDock({creationToolsEnabled=false}={}) {
     tabs.append(...sorted.map(item=>item.tab));content.append(...sorted.map(item=>item.pane));
     return entry;
   };
+  // Cycling has its own tab, so its board is shown open there rather than folded behind
+  // a summary. The board fetches and refreshes while open, so it is open only while its
+  // tab is showing in an open rail.
+  const showCycling=()=>{
+    const board=panes.get('cycling')?.pane.querySelector?.('.cycling-board');if(!board)return;
+    const wanted=dock.open&&selected==='cycling';if(board.open!==wanted)board.open=wanted;
+  };
+  dock.addEventListener('toggle',showCycling);
   const visible=()=>[...panes.values()].filter(entry=>!entry.tab.hidden).map(entry=>entry.definition.id).sort((a,b)=>order.indexOf(a)-order.indexOf(b));
   // Only a player's choice is remembered; until then the dock keeps preferring the
   // remembered tab, then Character, as panels arrive (the character card comes last).
@@ -61,7 +67,7 @@ export function createPlayDock({creationToolsEnabled=false}={}) {
     const entry=panes.get(id);if(!entry||entry.tab.hidden)return false;
     selected=id;if(user)chosen=true;
     for(const item of panes.values()){const on=item===entry;item.tab.setAttribute('aria-selected',String(on));item.tab.tabIndex=on?0:-1;item.pane.hidden=!on;}
-    title.textContent=entry.definition.label;dock.setAttribute('data-play-tab',id);content.scrollTop=0;
+    dock.setAttribute('data-play-tab',id);content.scrollTop=0;showCycling();
     if(user)try{localStorage.setItem(tabKey,id);}catch{/* The choice lasts for this visit. */}
     if(focus)entry.tab.focus({preventScroll:true});
     return true;
@@ -72,8 +78,6 @@ export function createPlayDock({creationToolsEnabled=false}={}) {
     const target=nextPlayTab(visible(),from,event.key);if(!target)return;
     event.preventDefault();select(target,{focus:true});
   });
-  previous.addEventListener('click',()=>select(nextPlayTab(visible(),selected,'ArrowLeft')));
-  next.addEventListener('click',()=>select(nextPlayTab(visible(),selected,'ArrowRight')));
   // Rides was a disclosure inside the character panel; now it is its own activity,
   // so it stays open and its summary is not shown.
   const keptOpen=new WeakSet();
@@ -106,11 +110,13 @@ export function createPlayDock({creationToolsEnabled=false}={}) {
     for(const entry of panes.values()){const hidden=![...entry.pane.children].some(child=>!child.hidden);if(entry.tab.hidden!==hidden)entry.tab.hidden=hidden;}
     const ids=visible(),preferred=[saved,'character'].find(id=>ids.includes(id))??ids[0];
     if(preferred&&(!chosen?selected!==preferred:!selected||panes.get(selected)?.tab.hidden))select(preferred,{user:false});
+    showCycling();
     const activity=document.body.classList.contains('bird-riding')?'Bird ride · T control · N next · Esc land'
       :content.querySelector('#build-mode[aria-pressed=true]')?'Building · R rotate · Enter place · Esc finish'
       :content.querySelector('#player-flight[aria-pressed=true]')?'Flying · Space rise · C lower · B land'
-      :'Choose an activity · ? opens commands & keys';
+      :'';
     if(context.textContent!==activity)context.textContent=activity;
+    if(context.hidden!==!activity)context.hidden=!activity;
     if(shell.contains(document.activeElement)&&document.activeElement.closest('[hidden]'))toggle.focus({preventScroll:true});
   };
   const observer=new MutationObserver(refresh);

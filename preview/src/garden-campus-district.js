@@ -37,6 +37,16 @@ export function configuredDistrictRevision(value, { onInvalid = () => {} } = {})
   if (DISTRICT_REVISIONS.includes(value)) return value;
   onInvalid(value);return DISTRICT_REVISION_GARAGE;
 }
+// RIVER_OAKS_DISTRICT_EPOCH: a whole number an operator raises with every district revision
+// switch (#512). A Redis coordinator migrates the town only to a strictly newer epoch and
+// refuses a town committed at a newer one, so an old deployment still serving sockets during
+// a cutover can never switch the district back. Anything but a whole number refuses to start.
+export function configuredDistrictEpoch(value) {
+  if (value === undefined || value === null || value === '') return 0;
+  const epoch = Number(value);
+  if (!Number.isSafeInteger(epoch) || epoch < 0 || String(epoch) !== String(value).trim()) throw new Error('RIVER_OAKS_DISTRICT_EPOCH must be a whole number');
+  return epoch;
+}
 export const isCampusRoom = room => typeof room?.storeId === 'string' && room.storeId.startsWith(CAMPUS_ROOM_PREFIX);
 // The revision a district reports to clients: only the campus names one; null is the garage default.
 export const districtRevisionOf = world => world?.gardenCampus?.revision ?? null;
