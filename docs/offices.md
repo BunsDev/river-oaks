@@ -44,7 +44,7 @@ the account on every visit. Leaving asks Computer to finish saving. Losing offic
 removes it at once. Without that configuration the desk is Tasks only and loads nothing
 from Computer. Contract, policies and staged blockers: [office-computer-embed.md](office-computer-embed.md).
 
-The desk routes require the existing authenticated, approved session, origin/CSRF checks, rate limits and an active office visit in that same session. Desk text is never included in public snapshots. Saves use version checks so simultaneous tabs cannot silently overwrite each other. The desk performs no external writes, file fetches or model calls.
+The desk routes require the existing authenticated, approved session, origin/CSRF checks, rate limits and, in that same session, an active office visit or a seat at a workstation in The Gardens campus (#510): a public hall or café chair, or a desk in a suite the resident may use. Seated there, **Use this desk · X** opens the same private desk; standing up puts it away. Snapshots carry only `campusWorkstation: true` for the sitter, never which work. Desk text is never included in public snapshots. Saves use version checks so simultaneous tabs cannot silently overwrite each other. The desk performs no external writes, file fetches or model calls.
 
 ## Authority and persistence
 
