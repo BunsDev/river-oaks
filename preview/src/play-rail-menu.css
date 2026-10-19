@@ -1,0 +1,45 @@
+/* The play rail as a game menu: an icon tab per activity, the chosen activity's
+   name between previous and next, and one pane at a time. Built on the HUD glass
+   tokens, so light and dark themes follow. Loaded after the HUD layers. */
+.visit-tools > .visit-tools-toggle > span { font-size: 11.5px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+.visit-tools .play-rail-shell { gap: 6px; }
+
+.play-rail-tabs { display: flex; gap: 2px; padding: 4px; border-radius: var(--hud-tile-radius, 12px); background: var(--hud-tile, var(--panel)); }
+.play-rail-tab { position: relative; flex: 1 1 0; min-width: 0; height: 40px; display: grid; place-items: center; padding: 0; border: 0; border-radius: var(--hud-control-radius, 9px); background: transparent; color: var(--hud-muted, var(--muted)); cursor: pointer; transition: background-color 140ms ease, color 140ms ease, box-shadow 160ms ease; }
+.play-rail-tab[hidden] { display: none; }
+.play-rail-tab svg { width: 20px; height: 20px; }
+.play-rail-tab:hover { background: var(--hud-tile-hover, var(--accent-soft)); color: var(--ink); }
+.play-rail-tab[aria-selected=true] { background: var(--hud-action, #2c7466); color: var(--hud-on-action, #f4fbf8); box-shadow: 0 6px 16px color-mix(in srgb, var(--hud-action, #2c7466) 42%, transparent), inset 0 1px 0 rgb(255 255 255 / .22); }
+/* A short glowing bar under the chosen tab, as in console menus. */
+.play-rail-tab[aria-selected=true]::after { content: ''; position: absolute; left: 30%; right: 30%; bottom: 3px; height: 2px; border-radius: 2px; background: currentColor; opacity: .7; }
+
+.play-rail-heading { display: flex; align-items: center; gap: 4px; padding: 0 2px; }
+.play-rail-title { flex: 1; min-width: 0; margin: 0; overflow: hidden; color: var(--ink); font-size: 11px; font-weight: 800; letter-spacing: .16em; text-align: center; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+.play-rail-step { width: 32px; height: 32px; display: grid; place-items: center; padding: 0; border: 0; border-radius: var(--hud-control-radius, 9px); background: transparent; color: var(--hud-muted, var(--muted)); font-size: 20px; line-height: 1; cursor: pointer; }
+.play-rail-step:hover { background: var(--hud-tile-hover, var(--accent-soft)); color: var(--ink); }
+
+/* Panes hold the existing cards; the pane itself is not a card. */
+:root[data-theme] .visit-tools .visit-tools-content > .play-rail-pane,
+.visit-tools .visit-tools-content > .play-rail-pane { display: flex; flex-direction: column; gap: 6px; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+:root[data-theme] .visit-tools .visit-tools-content > .play-rail-pane[hidden],
+.visit-tools .visit-tools-content > .play-rail-pane[hidden] { display: none; }
+.play-rail-pane > * { flex-shrink: 0; box-sizing: border-box; margin: 0; scroll-margin-top: 8px; }
+:root[data-theme] .visit-tools .play-rail-pane > :is(section, details) { border: 0; border-radius: 14px; background: var(--hud-tile); box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+/* Rides is a whole activity now, not a disclosure inside the character card. */
+.play-rail-pane > .player-settings > summary { display: none; }
+.play-rail-pane > .player-settings { padding: 8px 10px 10px; }
+.play-rail-pane > .player-settings .player-actions:empty { display: none; }
+.play-rail-pane:not([hidden]) { animation: play-rail-pane-in 160ms ease-out; }
+@keyframes play-rail-pane-in { from { opacity: 0; transform: translateY(4px); } }
+
+/* The activity hint closes the menu, like a console's button legend. */
+.visit-tools .play-rail-context { margin: 0; padding: 6px 8px 2px; border-top: 1px solid var(--hud-hairline, var(--line)); border-radius: 0; background: transparent; color: var(--hud-muted, var(--muted)); font-size: 11px; text-align: center; }
+
+/* Settings › Controls. The camera toggle moved here from the character card. */
+#settings-dialog #player-camera { display: inline-flex; align-items: center; gap: 10px; min-height: 40px; padding: 0 12px; border: 1px solid var(--hud-hairline, var(--line)); border-radius: var(--hud-control-radius, 9px); background: var(--hud-tile, transparent); color: var(--ink); font-weight: 600; cursor: pointer; }
+#settings-dialog #player-camera[aria-pressed=true] { border-color: var(--hud-action, var(--accent)); }
+#settings-dialog #player-camera kbd { display: grid; place-items: center; min-width: 20px; height: 20px; padding: 0 4px; border: 1px solid var(--hud-key-edge, currentColor); border-radius: 5px; background: var(--hud-key-bg, transparent); font: 600 10px/1 var(--font-mono, ui-monospace, monospace); }
+#settings-dialog .settings-commands { min-height: 40px; padding: 0 14px; border: 1px solid var(--hud-hairline, var(--line)); border-radius: var(--hud-control-radius, 9px); background: var(--hud-tile, transparent); color: var(--ink); font-weight: 600; cursor: pointer; }
+
+@media (pointer: coarse) { .play-rail-tab { height: 44px; } .play-rail-step { width: 44px; height: 44px; } }
+@media (prefers-reduced-motion: reduce) { .play-rail-pane:not([hidden]) { animation: none; } .play-rail-tab { transition: none; } }

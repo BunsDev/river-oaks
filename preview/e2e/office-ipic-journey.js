@@ -91,7 +91,7 @@ async (owner, resident) => {
 
   // 2. Arrival: A rides and skips the film; B arrives with reduced motion.
   await resident.locator('#office-request-dialog').evaluate(dialog => dialog.open && dialog.close());
-  await resident.locator('#office-enter').click();
+  await resident.locator('#play-tab-office').click(); await resident.locator('#office-enter').click();
   await owner.locator('#canvas-host').focus(); await owner.keyboard.press('KeyF');
   await owner.locator('#office-visit[open]').waitFor();
   await owner.locator('#office-skip').click().catch(() => {});
