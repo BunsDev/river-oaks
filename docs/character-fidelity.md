@@ -105,14 +105,24 @@ host with competing CPU/GPU work doesn't establish a device budget. Source and
 asset inputs must remain unchanged during the run; each receipt contains their
 SHA256 manifest, including untracked inputs.
 
-## Acceptance still required
+The [measured resource ceilings](../data/reports/character-fidelity-resource-budgets-517.json)
+are exact scene-census references for these pinned asset versions. They do not
+establish a frame-time or total GPU-memory budget. For a paired physical iPhone,
+use the [bounded device recipe and physical results](acceptance/character-fidelity-517.md#reconciled-source-and-physical-iphone).
+The iPhone 16 Pro Max / iOS 27.0.1 Safari run passed 48 timing cases, viewport
+and portrait cleanup, and 12 native captures. Its [reference budgets](../data/reports/character-fidelity-iphone-budgets-517.json)
+come directly from those two repeats, with no added headroom. They apply to the
+isolated fixture, not the whole town or a production service-level promise.
+
+## Acceptance boundaries
 
 Track current results and exact revisions in the [#517 ledger](superpowers/plans/2026-10-18-character-fidelity-517.md).
 Screenshots don't establish AAA quality. Current hair silhouettes, fine eye
-detail, and wardrobe texture quality still need visual review against the goal.
+detail, and wardrobe texture quality remain visible limitations.
 Material tiers share the same geometry; geometric LOD isn't implemented.
 
-Desktop Chromium fixtures don't prove Safari, iOS, physical-device, native,
-live-auth, or human acceptance. No supported mobile target or device budget has been established.
+Desktop Chromium, desktop WebKit and physical iPhone Safari are separate evidence.
+The physical run does not establish native Unreal, live-auth, whole-town mobile
+performance, thermal/soak stability or human acceptance.
 The existing #441 P4/P5 novice trials were waived by Val and remain waived,
 rather than passed. Keep prior human results intact.

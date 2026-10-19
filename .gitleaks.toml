@@ -47,22 +47,16 @@ regex = '''(?i)(?:KV_REST_API(?:_READ_ONLY)?_TOKEN|UPSTASH_REDIS_REST_TOKEN)[\t 
 secretGroup = 1
 keywords = ["kv_rest_api", "upstash_redis_rest_token"]
 
-# Five public SHA-256 digests of cached MPFB 2.0.17 tool files whose names
-# contain "keys". Each was verified against its source file, not classified
-# from its shape alone. Keep both the exact receipt path and exact digests;
-# tests/test_secrets.py checks other values and other paths still fail.
-[[rules]]
-id = "generic-api-key"
-
-[[rules.allowlists]]
-description = "Verified MPFB source digests in the pinned realistic-human receipt"
+# Character asset source manifests (`*.sources.json` beside the bundles) map each upstream
+# source file to its SHA-256 digest. A path such as `entities/material/mhmatkeys.py` next to
+# a 64-hex digest trips the default generic-api-key rule (#517's manifest, commit 00a74a7c,
+# failed every PR's history scan). Only that rule, only in those manifests, and only a bare
+# 64-hex value is allowed: any other secret shape in a manifest, and any digest elsewhere,
+# is still reported. The path is unanchored so the worktree scan's temporary copy matches.
+[[allowlists]]
+description = "SHA-256 file digests in character asset source manifests"
+targetRules = ["generic-api-key"]
 condition = "AND"
-paths = ['''(^|/)preview/public/assets/characters/realistic-humans\.sources\.json$''']
+paths = ['''(?:^|/)preview/public/assets/characters/[^/]+\.sources\.json$''']
 regexTarget = "secret"
-regexes = [
-    '''^c478310a991b4eeac09be11a5ce4d75afe8e2a7c0e134dbc6ab98f0cfcf6a4e8$''', # entities/material/mhmatkeys.py
-    '''^03c05280d8eb4fa86d686ca7206dce8a6c0e7529d7c441db12ce106509d88ea8$''', # entities/material/mhmatkeytypes.py
-    '''^321076f0c47e58ae9cbf72749c6a1409189856ff99168ef57d3e7baf8a2b721c$''', # ui/operations/basemeshops/operators/bakeshapekeys.py
-    '''^d585b1140c250090d60d59b70f1529ee7a6b295c492ddb0edb4ed3f1fbbcb295$''', # ui/operations/exportops/properties/bake_shapekeys.json
-    '''^de5c5f535d7b0033b2b01a9afc88b467dc5ec81b402c1da2f708f3578adb0839$''', # ui/operations/faceops/operators/loadfaceshapekeys.py
-]
+regexes = ['''^[0-9a-f]{64}$''']

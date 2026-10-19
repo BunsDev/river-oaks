@@ -1029,3 +1029,116 @@ proof, or all-catalog IPIC clearance claim. The three newly observed existing-lo
 front-bound findings remain explicit; #441 P4/P5 novice trials remain waived.
 Hosted CI and an up-to-date branch are separate landing gates. No merge, deploy
 or retirement is authorized, and the checkout is retained.
+
+
+### Final-head CI reconciliation
+
+Run `39181541217` at signed head `335224c2` completed with one failing job:
+`preview checks`, followed by the failing aggregate `preview`. The new upstream
+shadow test required at least ten casters for every appearance. A local run of
+`node --test preview/tests/shadow-depth.test.js` on the combined source reproduced
+Morgan's nine-caster assertion failure. This is a test count assumption, not
+evidence that a caster lacks its required depth material. The corrected test
+requires a nonempty assignment and checks every eligible caster individually;
+kind isolation and cutout behavior remain enforced. No production shadow code
+was changed.
+
+Refreshing the feature branch from main `2b4e4926` produced only `.gitleaks.toml`
+and appended secret-test conflicts. Retained upstream PR #546's manifest digest
+policy and both sets of behavioral regressions. No primary tracked source or
+other session's checkout was edited. Focused/core/full verification and renewed
+render evidence are pending; older receipts remain historical at their exact
+source manifests. A paired iPhone 16 Pro Max is available, but its measurement
+path and Web Inspector prerequisite remain unverified.
+
+The reconciled core gate passed at 02:20:24 UTC on the uncommitted merge of
+`335224c2` and main `2b4e4926`. The full gate is live under the shared browser
+lock; no full pass is claimed yet. Old smoke helpers completed as smoke only.
+
+The phone-helper review found and corrected two evidence/serving boundaries
+before any physical launch: client-reported success now requires the complete
+server-validated 48-case timing matrix, lifecycle and capture set; run-specific
+URL/receipt IDs fence stale tabs. Seven behavioral regressions failed against
+the former acceptance path and pass with the validator. Vite now permits only
+fixture/dependency directories, preserves every installed default denial, and
+also denies `.runtime`. The final HTTP smoke has private-file, synthetic-key,
+stale-page/packet and premature-success negative controls. The independent
+reviewer found no remaining required source issue; the actual smoke and physical
+run remain pending. Device inventory confirms a booted paired iPhone 16 Pro Max,
+iOS 27.0.1, with developer services enabled. No Inspector setting was changed.
+
+The explicit goal requires honest separation of web, native, physical and human
+evidence; it does not authorize an engine rewrite or invent a new native/human
+acceptance gate. The remaining named-mobile measurement and baseline-derived
+budget evidence is being pursued on the available phone. The novice waiver is
+unchanged. No AAA claim or total GPU-residency measurement is inferred from
+fixture PNGs or estimated texture storage.
+
+Full reconciliation attempt stopped at production build with ENOSPC while
+copying `ez-oak-low.glb`. The exact failed receipt is retained as
+`data/reports/character-fidelity-main-full-failed-disk-517.json`; remaining tasks
+were not run. An immediate filesystem check found 2.2 GiB available, versus
+191 MiB of this checkout's public inputs and 138 MiB partial build output. No
+source, evidence, other worktree or cache was deleted. Retrying the ordinary
+build and full profile is justified by the recovered capacity; inputs still
+match manifest `426886a8...` with 78 changed source/test/config inputs.
+
+Final phone HTTP smoke passed at exact helper SHA
+`e5a7198c1ffef961c5e881cff682f7e30fa2cdbee0c954f5a585fc94837d9c00`: private
+root file and synthetic key both 403, stale packet/premature success both 400,
+stale page 403, full smoke readiness, and unchanged runtime inputs. Physical
+measurement is now queued after the renewed desktop render suite; no physical
+pass is claimed from this smoke receipt.
+
+Renewed M1 and tier suites passed under runtime manifest `426886a8...`: eight
+original PNGs and all32 new tier/expression PNGs byte-identical, censuses match,
+and lifecycle checks pass. Chromium fidelity9 + Studio43, desktop WebKit9, and
+one strict native4K golden comparison passed after disk recovery. Raw renewed
+receipts are `character-fidelity-main-{m1,tiers,chromium,webkit,goldens}-517.json`.
+
+The first actual physical launch was rejected by CoreDevice as `Locked`, before
+Safari loaded a page: zero receipt records and no accepted mobile measurement.
+The sanitized blocker is `data/reports/character-fidelity-iphone-blocked-517.json`;
+ignored raw launch/report files retain the precise failure. Val was asked to
+unlock the already identified paired phone and keep it awake for the bounded
+run. This is an unlock prerequisite, not another target request or novice trial.
+The ordinary build retry passed; full verification is running independently.
+No source, receipts, caches or other worktrees were deleted for space.
+
+
+### Disk-recovered full verification and crowd cleanup
+
+The ordinary build and `REDIS_URL=<owned loopback Redis> pnpm run verify full`
+retry completed with exit 0. All 18 tasks passed: 125 tooling, 3,676 preview
+passes plus one documented skip, 957 server, 76 desktop and 149 Python tests;
+Ruff checked 459 files. Browser coverage passed 13 experience journeys, 24 shared
+journeys across five modes and 18 IPIC screening checks. The existing preview
+negative-approach skip supplies no glazing proof. Offline domain-policy exit 2
+is expected. Raw task-specific receipts are `character-fidelity-main-full-517`,
+`main-full-experience`, `main-full-shared`, and `main-ipic-screening` in
+`data/reports/`. The recorded 78 code/test/config inputs and runtime manifest
+`426886a8e79e3acf652a29e4985ad07ec287479e500cf6c01c41f77155c81895`
+remained unchanged after completion. The failed disk receipt remains historical.
+
+The focused new-human high-tier crowd check also exited 0:
+`node scripts/character-fidelity-baseline.mjs --appearances morgan-human,imani-human --realism high --repeats 0 --timing-cycles --against .runtime/character-fidelity/main-reconcile/tiers --out .runtime/character-fidelity/main-reconcile/crowd-lifecycle`.
+Both fixtures repeated three cold-load/1/8/24 crowd scenes, ten viewport cycles
+and ten native two-camera portrait cycles with zero reported geometry, texture
+or program deltas. Their four native captures stayed byte-identical and both
+censuses matched. Receipt: `character-fidelity-main-crowd-lifecycle-517.json`.
+
+Val confirmed disk space was freed and the paired phone was unlocked. The new
+bounded physical run is queued under the shared browser lock; it contributes no
+mobile pass until the complete server-validated receipt finishes. No cleanup
+was performed by this session.
+
+
+### Physical Safari completion and delivery candidate
+
+After Val's unlock readiness, `node docs/acceptance/character-fidelity-517-captures/capture-phone.mjs --device <paired-id>` exited 0. Paired Mobile Safari on iPhone 16 Pro Max / iOS27.0.1 returned all 67 records: hello/environment, two first loads, 48 timing cases, eight viewport lifecycle results, two portrait lifecycle results, four capture sets and completion. Every server-validated completeness condition passed. All 80 viewport and six native two-camera portrait cycles reported zero geometry/texture/program growth. All twelve 3840×2160 native PNG bytes and hashes match the reviewed public copies. Runtime inputs stayed unchanged at426886a8; helper e5a7198c and gate3a6e0cbb match the independently reviewed HTTP smoke.
+
+All24 paired p50 comparisons agree within the existing20% band. High-tier p95 at8 avatars was22ms Morgan/22–23ms Imani; at24 it was50–52ms/50–51ms. At1 both were17ms with unchanged vsync. The first local Wi-Fi load and subsequent first render were2024+5277ms Morgan and1905+1377ms Imani; these are single first-page samples, not Internet distributions. GPU timers were unavailable; texture bytes remain estimates. The measured reference budget for each case is ceil(max(two p95 samples)), with no added headroom or loosened tolerance. No whole-town, thermal/soak or production SLA claim follows.
+
+Sanitized physical evidence and derived references: `data/reports/character-fidelity-iphone-517.json` and `character-fidelity-iphone-budgets-517.json`. Twelve reviewed native captures have `iphone-` filenames in the acceptance capture directory. Raw launch receipts/device identifiers/private URLs remain ignored; the published report retains the raw-report hash. The earlier Locked0 attempt remains historical. The phone fixture closed normally and the owned loopback Redis51195 shut down after terminal local gates. No foreign process, cache or checkout was stopped or removed.
+
+The attachment's implementation, measured fixtures/tiers, executable Studio/world contract and required local/core/full/browser/physical verification now have evidence. Signed delivery and final hosted head are recorded in draftPR545 and the primary live register; verification identity remains the exact78-input manifest rather than an invented clean pre-run revision. Next action is maintainer review and the separate hosted/up-to-date-main landing gate. Retain the worktree; no merge, deployment, issue closure, novice trial or retirement is authorized. Existing three IPIC forward-clearance findings and visual/native/live-auth/human scope limits remain explicit.

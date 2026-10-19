@@ -7,6 +7,7 @@ from pydantic import ValidationError
 
 from river_oaks.auto import AutoEngine, AutoSnapshot, eligible, parse_choice, request_body
 from river_oaks.auto_eval import curriculum
+from river_oaks.jev import JEV_MODEL
 from river_oaks.service import create_app
 
 
@@ -34,7 +35,7 @@ def packet(**changes):
 def response(body, **changes):
     options = body["questions"]["next_action"]["criteria"]
     return {
-        "model": "jev-1.13.0",
+        "model": JEV_MODEL,
         "answers": {
             "next_action": {
                 "type": "choice",
@@ -119,7 +120,7 @@ def test_eligibility_excludes_weather_distance_and_resource_violations():
     for changes in [{"known": False}, {"needs_help": False}, {"cooldown": True}]:
         assert not eligible(supply.model_copy(update=changes), ready)
     assert set(
-        request_body(packet(storm=True), "jev-1.13.0")["questions"]["next_action"]["criteria"]
+        request_body(packet(storm=True), JEV_MODEL)["questions"]["next_action"]["criteria"]
     ) == {"wait"}
 
 
@@ -139,7 +140,7 @@ async def test_unconfigured_http_and_validation_are_explicit():
 
 
 def test_rounded_probability_mass_is_accepted_but_bad_distribution_is_not():
-    body = request_body(packet(), "jev-1.13.0")
+    body = request_body(packet(), JEV_MODEL)
     body["questions"]["next_action"]["criteria"]["wait"] = {"action": "wait"}
     options = body["questions"]["next_action"]["criteria"]
     rounded = response(body, probabilities={"ask-person": 0.8, "wait": 0.21})
@@ -157,7 +158,7 @@ def test_curriculum_labels_are_eligible_and_never_leak_into_inference():
         snapshot = AutoSnapshot.model_validate(case["packet"])
         allowed = {c.id for c in snapshot.candidates if eligible(c, snapshot)}
         assert set(case["expected"]) <= allowed
-        body = request_body(snapshot, "jev-1.13.0")
+        body = request_body(snapshot, JEV_MODEL)
         assert "expected" not in body["state"] and "family" not in body["state"]
         (dev if case["split"] == "development" else holdout).append(case["id"])
     assert set(dev).isdisjoint(holdout)
@@ -173,7 +174,7 @@ async def test_quality_status_rejects_stale_or_non_live_evidence(tmp_path, monke
         "mode": "live_jev",
         "split": "holdout",
         "passed": True,
-        "model": "jev-1.13.0",
+        "model": JEV_MODEL,
         "policy_sha256": POLICY_SHA256,
         "created_at": "fixture",
         "dataset_sha256": "fixture",

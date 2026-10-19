@@ -1,0 +1,21 @@
+{
+  "status": "blocked",
+  "reason": "CoreDevice rejected Safari launch because the device was not, or could not be, unlocked.",
+  "code": "Locked",
+  "physicalMeasurementsAccepted": false,
+  "recordCount": 0,
+  "finishedAt": "2026-10-19T02:41:40.379Z",
+  "device": {
+    "model": "iPhone 16 Pro Max",
+    "productType": "iPhone17,2",
+    "osVersion": "27.0.1"
+  },
+  "revision": "335224c2e00efdaee49dad70d652d715e0efa38f",
+  "runtimeManifestSha256": "426886a8e79e3acf652a29e4985ad07ec287479e500cf6c01c41f77155c81895",
+  "scriptSha256": "e5a7198c1ffef961c5e881cff682f7e30fa2cdbee0c954f5a585fc94837d9c00",
+  "gateSha256": "3a6e0cbbacec2f462cfc33f3b22818a74e7cbe335b073c1ed16a5d2f9dd95761",
+  "inputsUnchanged": true,
+  "rawReportSha256": "351d377cd8cd85e941119d376d4d7d5fb93288732fc738f8849bc21b3a8e53d0",
+  "redactions": "Device identifier and private LAN launch URL remain only in the ignored raw receipt.",
+  "nextAction": "Unlock paired phone and keep Safari foreground for the bounded fixture. No phone timing, capture or budget is accepted yet."
+}

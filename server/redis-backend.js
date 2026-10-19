@@ -11,6 +11,8 @@ import { createRedisWaitlist } from './waitlist.js';
 import { createWorldGateway } from './world-gateway.js';
 import { parseScreeningHosts } from './screenings.js';
 import { configuredOfficeLayout } from './offices.js';
+import { configuredDistrictRevision } from '../preview/src/garden-campus-district.js';
+import { parseCampusOperators } from './campus-leases.js';
 import { vercelClientAddress } from './vercel-routing.js';
 import { DEFAULT_WORLD_ID, validateWorldId } from '../preview/src/world-contract.js';
 import { configureVoice, createRedisVoiceLeases } from './voice.js';
@@ -28,7 +30,9 @@ export async function createRedisBackend(env = process.env) {
   if (env.VERCEL_ENV && env.VERCEL_ENV !== 'production' && namespace.startsWith('river-oaks:production:')) throw new Error('Preview cannot use the production town');
   const worldId = validateWorldId(env.WORLD_ID ?? DEFAULT_WORLD_ID);
   const prefix = `{${namespace}}`;
-  const worldData = await loadDistrictData();
+  // The district revision; unset or unknown keeps the garage (the default and the rollback, #507).
+  const districtRevision = configuredDistrictRevision(env.RIVER_OAKS_DISTRICT_REVISION, { onInvalid: () => console.warn(JSON.stringify({ event: 'district_revision_ignored' })) });
+  const worldData = await loadDistrictData({ districtRevision });
   const redis = new Redis(env.REDIS_URL, {
     lazyConnect: true, connectTimeout: 3000, commandTimeout: 3000,
     maxRetriesPerRequest: 1, autoResendUnfulfilledCommands: false,
@@ -72,6 +76,8 @@ export async function createRedisBackend(env = process.env) {
       // Jevica's office layout; unset or unknown keeps the legacy room (the default and the rollback).
       officeLayout: configuredOfficeLayout(env.RIVER_OAKS_OFFICE_LAYOUT, { onInvalid: () => console.warn(JSON.stringify({ event: 'office_layout_ignored' })) }),
       screeningHosts: parseScreeningHosts(env.RIVER_OAKS_SCREENING_HOSTS, { onInvalid: () => console.warn(JSON.stringify({ event: 'screening_host_grant_ignored' })) }),
+      // Garden campus lease operators are explicit account ids; none configured keeps leasing closed.
+      campusOperators: parseCampusOperators(env.RIVER_OAKS_CAMPUS_OPERATOR_IDS, { onInvalid: () => console.warn(JSON.stringify({ event: 'campus_operator_ignored' })) }),
       workplaceSweep: env.VERCEL !== '1',
       // Vercel Cron sends it as a Bearer token; without it the sweep route stays closed.
       workplaceCronSecret: env.CRON_SECRET || null,
