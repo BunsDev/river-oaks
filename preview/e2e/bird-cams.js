@@ -14,6 +14,7 @@ async page => {
   await page.waitForFunction(() => window.__riverBirds().birds.every(bird => bird.watching), null, { timeout: 15000 });
   check(true, 'Jev sends every bird to watch something');
   const footCamera = (await birds()).camera;
+  await page.locator('#play-tab-birds').click();
   await page.locator('.bird-cams-row[data-bird=dove] button').click();
   // The glide into the bird runs on frame time (0.8 s of frames), so under load it
   // takes longer in wall time; wait for the camera to arrive rather than a fixed delay.

@@ -115,8 +115,9 @@ async page => {
   await page.keyboard.press('Escape');
   await page.waitForFunction(() => !document.querySelector('#table-game-panel').open);
 
-  // Play & rides has the guide beside Photo mode.
+  // Play & rides has the guide under its own Game guide tab.
   await page.locator('.visit-tools').evaluate(dock => { dock.open = true; });
+  await page.locator('#play-tab-guide').click();
   await page.locator('[data-guide-entry]').click();
   await page.waitForFunction(() => document.querySelector('[data-guide-dialog]')?.open);
   check((await book()).open, 'Play & rides opens the Salon Guide');

@@ -1,12 +1,14 @@
 /* Wine pong: the table from your end, linen with a centre seam, each rack's glasses
-   as rims with a pour of red (your own rack muted), the reticle's aim line and power
-   target, the last landing, and the ball in flight. */
+   as rims with a pour of red (your own rack muted), the aim line, the distance span and
+   the landing mark, the last landing, and the ball in flight. While repositioning the
+   hand pulses and the throw button reads Resume. */
 .wine-pong-panel .wine-pong-body { display: flex; flex-direction: column; gap: 12px; }
 @media (min-width: 761px) { .wine-pong-panel { inset: 76px auto auto 20px; width: min(440px, calc(100vw - 40px)); } }
 .wine-pong-panel .wine-pong-scores { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
 .wine-pong-panel .wine-pong-scores li { padding: 4px 10px; border-radius: 999px; background: var(--hud-tile); color: var(--ink); font-size: 12px; font-weight: 650; }
 .wine-pong-panel .wine-pong-views { display: flex; gap: 18px; align-items: flex-start; justify-content: center; }
-.wine-pong-panel .wine-pong-table { display: block; flex: 0 0 auto; width: auto; height: min(50vh, 440px); }
+.wine-pong-panel .wine-pong-table { display: block; flex: 0 0 auto; width: auto; height: min(50vh, 440px); touch-action: none; cursor: crosshair; }
+.wine-pong-panel .wine-pong-readout { margin: 0; color: var(--ink); font-size: 13px; font-variant-numeric: tabular-nums; min-height: 1.3em; }
 .wine-pong-panel .wine-pong-zoom { display: block; flex: 0 1 280px; width: min(100%, 280px); height: 220px; }
 .wine-pong-panel .wine-pong-zoom[hidden] { display: none; }
 @media (max-width: 520px) { .wine-pong-panel .wine-pong-table { height: min(40vh, 300px); } }
@@ -17,6 +19,12 @@
 .wine-pong-panel .pong-glass-down { fill: none; stroke: #c9bfae; stroke-dasharray: 2 3; opacity: .7; }
 .wine-pong-panel .pong-wine { fill: #6d1424; pointer-events: none; }
 .wine-pong-panel .pong-hand { fill: var(--hud-action); opacity: .8; }
+.wine-pong-panel .pong-hand-moving { animation: pong-hand-pulse 1.2s ease-in-out infinite; }
+@keyframes pong-hand-pulse { 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .wine-pong-panel .pong-hand-moving { animation: none; opacity: .5; } }
+:root[data-rendering=software] .wine-pong-panel .pong-hand-moving { animation: none; opacity: .5; }
+.wine-pong-panel[data-state=repositioning] .wine-pong-table { cursor: default; }
+.wine-pong-panel .table-game-actions [data-pong-action=reposition][aria-pressed=true] { box-shadow: inset 0 0 0 2px var(--hud-action); }
 .wine-pong-panel .pong-aim { stroke: var(--hud-action); stroke-width: 2; stroke-dasharray: 6 5; opacity: .7; }
 .wine-pong-panel .pong-span { stroke: var(--hud-action); stroke-width: 4; opacity: .25; stroke-linecap: round; }
 .wine-pong-panel .pong-target { fill: none; stroke: var(--hud-action); stroke-width: 2.5; }

@@ -56,7 +56,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
   const flushRides=()=>rides?rides.flush():Promise.resolve();
   const send = (ws,value,options) => sendFrame(ws,value,options);
   // Frames carry the world clock that anchors screenings (screenings.js).
-  const snapshot=()=>({...world.snapshot(),...(typeof world.serverTime==='function'?{serverTimeMs:world.serverTime()}:{}),...(regionSha256?{regionSha256}:{}),...(voice?{voice:{available:voice.status().available}}:{})});
+  const snapshot=()=>({...world.snapshot(),...(typeof world.serverTime==='function'?{serverTimeMs:world.serverTime()}:{}),...(regionSha256?{regionSha256}:{}),...(world.districtRevision?{districtRevision:world.districtRevision}:{}),...(voice?{voice:{available:voice.status().available}}:{})});
   const approvedIdentity = async (req,res) => {
     const identity = await auth.authenticate(req);
     if (!identity) {json(res,401,{error:'Sign in to join the town.'});return null;}
@@ -119,14 +119,16 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
       if (await handleDebugReports(req, res, pathname)) return;
       if (handleCharacters && await handleCharacters(req,res,pathname)) return;
       if (handleVoice && await handleVoice(req,res,pathname,new URL(req.url,'http://localhost'))) return;
-      if (pathname==='/api/world-data' && req.method==='GET' && worldCatalog) {
+      // The default district answers with its served revision (#507) even without a catalog.
+      if (pathname==='/api/world-data' && req.method==='GET' && (worldCatalog || world.districtRevision)) {
         if(!await approvedIdentity(req,res))return;
         const ids=new URL(req.url,'http://localhost').searchParams.getAll('world');
         if(ids.length!==1)return json(res,400,{error:'Choose one world.'});
-        const meta=await worldCatalog.get(ids[0]);
+        const meta=worldCatalog?await worldCatalog.get(ids[0]):null;
         if(!meta && ids[0]!==world.worldId)return json(res,404,{error:'World not found.'});
         return json(res,200,meta?.template==='region-v1'
-          ? {template:meta.template,regionSha256:meta.regionSha256,world:await worldCatalog.getRegion(meta.id)}:{template:meta?.template??'river-oaks'});
+          ? {template:meta.template,regionSha256:meta.regionSha256,world:await worldCatalog.getRegion(meta.id)}
+          : {template:meta?.template??'river-oaks',...(ids[0]===world.worldId&&world.districtRevision?{districtRevision:world.districtRevision}:{})});
       }
       if (pathname==='/api/worlds' && req.method==='GET' && worldCatalog) return json(res,200,{worlds:await worldDirectory()});
       if (pathname==='/api/worlds' && req.method==='POST' && worldCatalog) {
@@ -236,7 +238,9 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
         const action=pathname.slice('/api/office-desk/'.length);
         const visit=async user=>connections.get(user.userId)?.identity.sessionId===user.sessionId ? world.officeVisit(user.userId) : null;
         const common={identity,readBody:()=>body(req,OFFICE_DESK_BODY_LIMIT),allow:id=>deskCalls(id)};
-        const result=await officeDeskAction({...common,action,desk:officeDesk,hasVisit:async user=>(await visit(user))?.id==='jevica-office'});
+        // Jevica's office, or a Gardens workstation seat (#510), in this same session.
+        const atWorkstation=user=>connections.get(user.userId)?.identity.sessionId===user.sessionId && Boolean(world.campusWorkstation?.(user.userId));
+        const result=await officeDeskAction({...common,action,desk:officeDesk,hasVisit:async user=>(await visit(user))?.id==='jevica-office'||atWorkstation(user)});
         return json(res,result.status,result.value);
       }
       if (pathname.startsWith('/api/workplace/') && req.method==='POST' && workplace) {
