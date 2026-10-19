@@ -274,6 +274,12 @@ jobs:
         run: |
           python3 scripts/check_secrets.py --all
           gitleaks git --log-opts=--all --redact --no-banner --ignore-gitleaks-allow
+      - name: Feature PRs leave the task register snapshot alone
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_BRANCH: ${{ github.head_ref }}
+        run: node scripts/check-register-snapshot.mjs "$BASE_REF" "$HEAD_BRANCH"
       - run: uv sync --locked
       - name: Audit locked Python runtime dependencies
         run: |

@@ -7,6 +7,7 @@ import { homedir } from 'node:os';
 import { createHash, randomUUID } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 import { loadPulls, validateTasks } from './project-status.mjs';
+import { ensureLiveRegister, withRegisterLock } from './task-register.mjs';
 
 export function git(root,args,optional=false) {
   try { return execFileSync('git',args,{cwd:root,encoding:'utf8',maxBuffer:32*1024*1024,stdio:['ignore','pipe','pipe'],env:{...process.env,GIT_TERMINAL_PROMPT:'0'}}).trimEnd(); }
@@ -131,11 +132,14 @@ export function archiveAndRemove({root,branch,expectedHead,archiveRoot,prefix='r
 // Re-read the live register and apply one targeted change under the same
 // "nothing changed meanwhile" rule the retirement used for its evidence.
 export function updateRegister(tasksPath,mutate,manifest) {
-  const before=readFileSync(tasksPath,'utf8'),register=JSON.parse(before);
-  mutate(register);
-  const temp=`${tasksPath}.${randomUUID()}.tmp`;writeFileSync(temp,JSON.stringify(register,null,2)+'\n');
-  if(readFileSync(tasksPath,'utf8')!==before){unlinkSync(temp);throw new Error(`Task register changed; reconcile using ${manifest}`);}
-  renameSync(temp,tasksPath);
+  // The same lock as `pnpm run register`, so a CLI change cannot land between read and rename.
+  withRegisterLock(`${tasksPath}.lock`,()=>{
+    const before=readFileSync(tasksPath,'utf8'),register=JSON.parse(before);
+    mutate(register);
+    const temp=`${tasksPath}.${randomUUID()}.tmp`;writeFileSync(temp,JSON.stringify(register,null,2)+'\n');
+    if(readFileSync(tasksPath,'utf8')!==before){unlinkSync(temp);throw new Error(`Task register changed; reconcile using ${manifest}`);}
+    renameSync(temp,tasksPath);
+  });
 }
 
 export function retire(options) {
@@ -170,8 +174,10 @@ export function parseRetirementArgs(args) {
   return {values,apply,cancelStale,staleHours};
 }
 
+// The live register in the common Git directory, shared by every worktree (see
+// task-register.mjs); any legacy edit to the primary's tracked copy is absorbed first.
 export function primaryRegisterPath(root) {
-  return join(worktrees(root)[0].path,'docs/project-management/tasks.json');
+  return ensureLiveRegister(root);
 }
 
 export function liveEvidence(root,tasksPath) {
