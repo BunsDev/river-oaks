@@ -1,0 +1,913 @@
+{
+  "status": "passed",
+  "browser": "156.0.8078.4",
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+  "profile": {
+    "viewport": [
+      1280,
+      800
+    ],
+    "deviceScaleFactor": 1,
+    "graphics": "smooth",
+    "vsync": "off",
+    "hour": 15,
+    "rounds": 2,
+    "rebuilds": 3,
+    "frames": 180
+  },
+  "arms": [
+    {
+      "label": "garage",
+      "revision": "garage",
+      "root": null,
+      "sources": {
+        "garden-campus.js": "24561f09880337d7",
+        "garden-campus-finish.js": "5ff5755d219b7a10",
+        "garden-campus-planting.js": "98fe00c8f421812b",
+        "garden-campus-district.js": "d9ec604b763f254a",
+        "main.js": "85b188214eb08b7b",
+        "district.js": "d11f3f0ae9190843"
+      }
+    },
+    {
+      "label": "gardens",
+      "revision": "gardens",
+      "root": null,
+      "sources": {
+        "garden-campus.js": "24561f09880337d7",
+        "garden-campus-finish.js": "5ff5755d219b7a10",
+        "garden-campus-planting.js": "98fe00c8f421812b",
+        "garden-campus-district.js": "d9ec604b763f254a",
+        "main.js": "85b188214eb08b7b",
+        "district.js": "d11f3f0ae9190843"
+      }
+    },
+    {
+      "label": "main",
+      "revision": "garage",
+      "root": "/private/tmp/claude-501/-Users-buns-Documents-GitHub-BunsDev-river-oaks/5bececff-3ef3-4803-a0be-381c3472a704/scratchpad/main-97304fb7",
+      "sources": {
+        "garden-campus.js": null,
+        "garden-campus-finish.js": null,
+        "garden-campus-planting.js": null,
+        "garden-campus-district.js": null,
+        "main.js": "43ac08f3021a7fc6",
+        "district.js": "58ad76bb752b2896"
+      }
+    }
+  ],
+  "summary": {
+    "garage": {
+      "firstEntry": {
+        "readyMs": 4066,
+        "programs": 110,
+        "links": 113,
+        "geometries": 338,
+        "textures": 122,
+        "uploadMiB": 38.2,
+        "arrivalP50": 16.9,
+        "arrivalP95": 35.1
+      },
+      "steady": {
+        "calls": 1042,
+        "triangles": 3530544,
+        "frameP50": 17.4,
+        "frameP95": 34.6
+      },
+      "aerial": {
+        "calls": 1355,
+        "triangles": 4017928,
+        "frameP50": 19.3,
+        "frameP95": 34.1
+      },
+      "officeOutlook": {
+        "calls": 1040,
+        "triangles": 3233064,
+        "frameP50": 16.3,
+        "frameP95": 34.2
+      },
+      "rebuildGrowth": {
+        "programs": -1,
+        "geometries": 18,
+        "textures": 10
+      }
+    },
+    "gardens": {
+      "firstEntry": {
+        "readyMs": 5098,
+        "programs": 115,
+        "links": 118,
+        "geometries": 338,
+        "textures": 112,
+        "uploadMiB": 37.1,
+        "arrivalP50": 20.6,
+        "arrivalP95": 113.9
+      },
+      "steady": {
+        "calls": 1150,
+        "triangles": 4164898,
+        "frameP50": 17.2,
+        "frameP95": 34.9
+      },
+      "aerial": {
+        "calls": 1394,
+        "triangles": 4144642,
+        "frameP50": 18.1,
+        "frameP95": 34.8
+      },
+      "officeOutlook": {
+        "calls": 1094,
+        "triangles": 3438602,
+        "frameP50": 16.4,
+        "frameP95": 33.4
+      },
+      "rebuildGrowth": {
+        "programs": 1,
+        "geometries": 10,
+        "textures": 10
+      }
+    },
+    "main": {
+      "firstEntry": {
+        "readyMs": 3707,
+        "programs": 136,
+        "links": 139,
+        "geometries": 483,
+        "textures": 146,
+        "uploadMiB": 44.5,
+        "arrivalP50": 16.8,
+        "arrivalP95": 41.7
+      },
+      "steady": {
+        "calls": 1042,
+        "triangles": 3530544,
+        "frameP50": 15.4,
+        "frameP95": 30.8
+      },
+      "aerial": {
+        "calls": 1355,
+        "triangles": 4017928,
+        "frameP50": 16.7,
+        "frameP95": 34.7
+      },
+      "officeOutlook": {
+        "calls": 1040,
+        "triangles": 3233064,
+        "frameP50": 14.1,
+        "frameP95": 17.5
+      },
+      "rebuildGrowth": {
+        "programs": -2,
+        "geometries": 19,
+        "textures": 16
+      }
+    }
+  },
+  "results": [
+    {
+      "arm": "garage",
+      "revision": "garage",
+      "round": 0,
+      "loadBefore": 41.9,
+      "firstEntry": {
+        "readyMs": 4066,
+        "programs": 109,
+        "links": 112,
+        "uploadMiB": 38.2,
+        "geometries": 338,
+        "textures": 122,
+        "arrivalP50": 16.9,
+        "arrivalP95": 34.8,
+        "arrivalCalls": 1040
+      },
+      "steady": {
+        "view": "02-street-under-b12",
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+        "samples": 179,
+        "overflow": false,
+        "frameP50": 17.4,
+        "frameP95": 34.6,
+        "cpuP50": 9.9,
+        "calls": 1042,
+        "triangles": 3530544,
+        "memory": {
+          "geometries": 545,
+          "textures": 181
+        },
+        "programs": 140,
+        "links": 143,
+        "scale": 0.75
+      },
+      "skyline": [
+        {
+          "view": "01-southeast-aerial",
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+          "samples": 179,
+          "overflow": false,
+          "frameP50": 19.3,
+          "frameP95": 34.1,
+          "cpuP50": 10.6,
+          "calls": 1355,
+          "triangles": 4017928,
+          "memory": {
+            "geometries": 547,
+            "textures": 181
+          },
+          "programs": 142,
+          "links": 145,
+          "scale": 0.75
+        },
+        {
+          "view": "05-office-terrace-outlook",
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+          "samples": 179,
+          "overflow": false,
+          "frameP50": 16.3,
+          "frameP95": 34.2,
+          "cpuP50": 10.2,
+          "calls": 1040,
+          "triangles": 3233064,
+          "memory": {
+            "geometries": 547,
+            "textures": 181
+          },
+          "programs": 142,
+          "links": 145,
+          "scale": 0.75
+        }
+      ],
+      "worst": "05-office-terrace-outlook",
+      "rebuild": [
+        {
+          "rebuild": 0,
+          "programs": 142,
+          "links": 145,
+          "geometries": 547,
+          "textures": 181,
+          "calls": 1355,
+          "frameP50": 19
+        },
+        {
+          "rebuild": 1,
+          "programs": 141,
+          "links": 241,
+          "geometries": 565,
+          "textures": 191,
+          "calls": 1355,
+          "frameP50": 19.6
+        },
+        {
+          "rebuild": 2,
+          "programs": 141,
+          "links": 337,
+          "geometries": 565,
+          "textures": 191,
+          "calls": 1355,
+          "frameP50": 19
+        },
+        {
+          "rebuild": 3,
+          "programs": 141,
+          "links": 433,
+          "geometries": 565,
+          "textures": 191,
+          "calls": 1355,
+          "frameP50": 19.6
+        }
+      ],
+      "growth": {
+        "programs": -1,
+        "geometries": 18,
+        "textures": 10
+      },
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+      "errors": [],
+      "hostLoad": [
+        46.3,
+        53.7,
+        99.1
+      ]
+    },
+    {
+      "arm": "gardens",
+      "revision": "gardens",
+      "round": 0,
+      "loadBefore": 46.3,
+      "firstEntry": {
+        "readyMs": 5098,
+        "programs": 115,
+        "links": 118,
+        "uploadMiB": 37.1,
+        "geometries": 338,
+        "textures": 112,
+        "arrivalP50": 20.6,
+        "arrivalP95": 41.8,
+        "arrivalCalls": 1074
+      },
+      "steady": {
+        "view": "02-street-under-b12",
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+        "samples": 179,
+        "overflow": false,
+        "frameP50": 17.2,
+        "frameP95": 34.9,
+        "cpuP50": 10.4,
+        "calls": 1150,
+        "triangles": 4164898,
+        "memory": {
+          "geometries": 557,
+          "textures": 181
+        },
+        "programs": 145,
+        "links": 148,
+        "scale": 0.75
+      },
+      "skyline": [
+        {
+          "view": "01-southeast-aerial",
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+          "samples": 179,
+          "overflow": false,
+          "frameP50": 18.1,
+          "frameP95": 34.4,
+          "cpuP50": 10.8,
+          "calls": 1394,
+          "triangles": 4144642,
+          "memory": {
+            "geometries": 559,
+            "textures": 181
+          },
+          "programs": 147,
+          "links": 150,
+          "scale": 0.75
+        },
+        {
+          "view": "05-office-terrace-outlook",
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+          "samples": 179,
+          "overflow": false,
+          "frameP50": 16.4,
+          "frameP95": 33.4,
+          "cpuP50": 9.7,
+          "calls": 1094,
+          "triangles": 3438602,
+          "memory": {
+            "geometries": 559,
+            "textures": 181
+          },
+          "programs": 147,
+          "links": 150,
+          "scale": 0.75
+        }
+      ],
+      "worst": "01-southeast-aerial",
+      "rebuild": [
+        {
+          "rebuild": 0,
+          "programs": 147,
+          "links": 150,
+          "geometries": 559,
+          "textures": 181,
+          "calls": 1394,
+          "frameP50": 19.4
+        },
+        {
+          "rebuild": 1,
+          "programs": 146,
+          "links": 251,
+          "geometries": 569,
+          "textures": 191,
+          "calls": 1394,
+          "frameP50": 18.5
+        },
+        {
+          "rebuild": 2,
+          "programs": 146,
+          "links": 352,
+          "geometries": 569,
+          "textures": 191,
+          "calls": 1394,
+          "frameP50": 17.3
+        },
+        {
+          "rebuild": 3,
+          "programs": 146,
+          "links": 453,
+          "geometries": 569,
+          "textures": 191,
+          "calls": 1394,
+          "frameP50": 17
+        }
+      ],
+      "growth": {
+        "programs": -1,
+        "geometries": 10,
+        "textures": 10
+      },
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+      "errors": [],
+      "hostLoad": [
+        43.3,
+        52,
+        95.9
+      ]
+    },
+    {
+      "arm": "main",
+      "revision": "garage",
+      "round": 0,
+      "loadBefore": 43.3,
+      "firstEntry": {
+        "readyMs": 3633,
+        "programs": 113,
+        "links": 116,
+        "uploadMiB": 42.9,
+        "geometries": 354,
+        "textures": 134,
+        "arrivalP50": 15.9,
+        "arrivalP95": 41.7,
+        "arrivalCalls": 1040
+      },
+      "steady": {
+        "view": "02-street-under-b12",
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+        "samples": 179,
+        "overflow": false,
+        "frameP50": 14.7,
+        "frameP95": 29.6,
+        "cpuP50": 8.9,
+        "calls": 1042,
+        "triangles": 3530544,
+        "memory": {
+          "geometries": 545,
+          "textures": 181
+        },
+        "programs": 141,
+        "links": 144,
+        "scale": 0.75
+      },
+      "skyline": [
+        {
+          "view": "01-southeast-aerial",
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+          "samples": 179,
+          "overflow": false,
+          "frameP50": 16.7,
+          "frameP95": 34.7,
+          "cpuP50": 10.1,
+          "calls": 1355,
+          "triangles": 4017928,
+          "memory": {
+            "geometries": 547,
+            "textures": 181
+          },
+          "programs": 143,
+          "links": 146,
+          "scale": 0.75
+        },
+        {
+          "view": "05-office-terrace-outlook",
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+          "samples": 179,
+          "overflow": false,
+          "frameP50": 13.9,
+          "frameP95": 17.5,
+          "cpuP50": 8.7,
+          "calls": 1040,
+          "triangles": 3233064,
+          "memory": {
+            "geometries": 547,
+            "textures": 181
+          },
+          "programs": 143,
+          "links": 146,
+          "scale": 0.75
+        }
+      ],
+      "worst": "01-southeast-aerial",
+      "rebuild": [
+        {
+          "rebuild": 0,
+          "programs": 143,
+          "links": 146,
+          "geometries": 547,
+          "textures": 181,
+          "calls": 1355,
+          "frameP50": 15.6
+        },
+        {
+          "rebuild": 1,
+          "programs": 141,
+          "links": 242,
+          "geometries": 565,
+          "textures": 191,
+          "calls": 1355,
+          "frameP50": 17.4
+        },
+        {
+          "rebuild": 2,
+          "programs": 141,
+          "links": 338,
+          "geometries": 565,
+          "textures": 191,
+          "calls": 1355,
+          "frameP50": 17.3
+        },
+        {
+          "rebuild": 3,
+          "programs": 141,
+          "links": 434,
+          "geometries": 565,
+          "textures": 191,
+          "calls": 1355,
+          "frameP50": 16.6
+        }
+      ],
+      "growth": {
+        "programs": -2,
+        "geometries": 18,
+        "textures": 10
+      },
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+      "errors": [],
+      "hostLoad": [
+        37,
+        49.2,
+        92.8
+      ]
+    },
+    {
+      "arm": "main",
+      "revision": "garage",
+      "round": 1,
+      "loadBefore": 37,
+      "firstEntry": {
+        "readyMs": 3707,
+        "programs": 136,
+        "links": 139,
+        "uploadMiB": 44.5,
+        "geometries": 483,
+        "textures": 146,
+        "arrivalP50": 16.8,
+        "arrivalP95": 38.3,
+        "arrivalCalls": 1040
+      },
+      "steady": {
+        "view": "02-street-under-b12",
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+        "samples": 179,
+        "overflow": false,
+        "frameP50": 15.4,
+        "frameP95": 30.8,
+        "cpuP50": 9.2,
+        "calls": 1042,
+        "triangles": 3530544,
+        "memory": {
+          "geometries": 544,
+          "textures": 175
+        },
+        "programs": 141,
+        "links": 144,
+        "scale": 0.75
+      },
+      "skyline": [
+        {
+          "view": "01-southeast-aerial",
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+          "samples": 179,
+          "overflow": false,
+          "frameP50": 16.4,
+          "frameP95": 33.8,
+          "cpuP50": 9.8,
+          "calls": 1355,
+          "triangles": 4017928,
+          "memory": {
+            "geometries": 546,
+            "textures": 175
+          },
+          "programs": 143,
+          "links": 146,
+          "scale": 0.75
+        },
+        {
+          "view": "05-office-terrace-outlook",
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+          "samples": 179,
+          "overflow": false,
+          "frameP50": 14.1,
+          "frameP95": 17.2,
+          "cpuP50": 8.8,
+          "calls": 1040,
+          "triangles": 3233064,
+          "memory": {
+            "geometries": 546,
+            "textures": 175
+          },
+          "programs": 143,
+          "links": 146,
+          "scale": 0.75
+        }
+      ],
+      "worst": "01-southeast-aerial",
+      "rebuild": [
+        {
+          "rebuild": 0,
+          "programs": 143,
+          "links": 146,
+          "geometries": 546,
+          "textures": 175,
+          "calls": 1355,
+          "frameP50": 16.5
+        },
+        {
+          "rebuild": 1,
+          "programs": 141,
+          "links": 242,
+          "geometries": 565,
+          "textures": 191,
+          "calls": 1355,
+          "frameP50": 16.7
+        },
+        {
+          "rebuild": 2,
+          "programs": 141,
+          "links": 338,
+          "geometries": 565,
+          "textures": 191,
+          "calls": 1355,
+          "frameP50": 16.8
+        },
+        {
+          "rebuild": 3,
+          "programs": 141,
+          "links": 434,
+          "geometries": 565,
+          "textures": 191,
+          "calls": 1355,
+          "frameP50": 16.7
+        }
+      ],
+      "growth": {
+        "programs": -2,
+        "geometries": 19,
+        "textures": 16
+      },
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+      "errors": [],
+      "hostLoad": [
+        27,
+        44.8,
+        88.9
+      ]
+    },
+    {
+      "arm": "gardens",
+      "revision": "gardens",
+      "round": 1,
+      "loadBefore": 27,
+      "firstEntry": {
+        "readyMs": 2968,
+        "programs": 16,
+        "links": 19,
+        "uploadMiB": 0.1,
+        "geometries": 21,
+        "textures": 28,
+        "arrivalP50": 16.5,
+        "arrivalP95": 113.9,
+        "arrivalCalls": 1074
+      },
+      "steady": {
+        "view": "02-street-under-b12",
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+        "samples": 179,
+        "overflow": false,
+        "frameP50": 16.4,
+        "frameP95": 34,
+        "cpuP50": 9.5,
+        "calls": 1150,
+        "triangles": 4164898,
+        "memory": {
+          "geometries": 557,
+          "textures": 181
+        },
+        "programs": 143,
+        "links": 146,
+        "scale": 0.75
+      },
+      "skyline": [
+        {
+          "view": "01-southeast-aerial",
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+          "samples": 179,
+          "overflow": false,
+          "frameP50": 18.1,
+          "frameP95": 34.8,
+          "cpuP50": 9.9,
+          "calls": 1394,
+          "triangles": 4144642,
+          "memory": {
+            "geometries": 559,
+            "textures": 181
+          },
+          "programs": 145,
+          "links": 148,
+          "scale": 0.75
+        },
+        {
+          "view": "05-office-terrace-outlook",
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+          "samples": 179,
+          "overflow": false,
+          "frameP50": 14.5,
+          "frameP95": 31.9,
+          "cpuP50": 9.2,
+          "calls": 1094,
+          "triangles": 3438602,
+          "memory": {
+            "geometries": 559,
+            "textures": 181
+          },
+          "programs": 145,
+          "links": 148,
+          "scale": 0.75
+        }
+      ],
+      "worst": "01-southeast-aerial",
+      "rebuild": [
+        {
+          "rebuild": 0,
+          "programs": 145,
+          "links": 148,
+          "geometries": 559,
+          "textures": 181,
+          "calls": 1394,
+          "frameP50": 15.6
+        },
+        {
+          "rebuild": 1,
+          "programs": 146,
+          "links": 249,
+          "geometries": 569,
+          "textures": 191,
+          "calls": 1394,
+          "frameP50": 16.4
+        },
+        {
+          "rebuild": 2,
+          "programs": 146,
+          "links": 350,
+          "geometries": 569,
+          "textures": 191,
+          "calls": 1394,
+          "frameP50": 17.1
+        },
+        {
+          "rebuild": 3,
+          "programs": 146,
+          "links": 451,
+          "geometries": 569,
+          "textures": 191,
+          "calls": 1394,
+          "frameP50": 19.4
+        }
+      ],
+      "growth": {
+        "programs": 1,
+        "geometries": 10,
+        "textures": 10
+      },
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+      "errors": [],
+      "hostLoad": [
+        27,
+        42.2,
+        85.7
+      ]
+    },
+    {
+      "arm": "garage",
+      "revision": "garage",
+      "round": 1,
+      "loadBefore": 27,
+      "firstEntry": {
+        "readyMs": 3588,
+        "programs": 110,
+        "links": 113,
+        "uploadMiB": 36.8,
+        "geometries": 333,
+        "textures": 112,
+        "arrivalP50": 16.8,
+        "arrivalP95": 35.1,
+        "arrivalCalls": 1040
+      },
+      "steady": {
+        "view": "02-street-under-b12",
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+        "samples": 179,
+        "overflow": false,
+        "frameP50": 15.1,
+        "frameP95": 33,
+        "cpuP50": 9.2,
+        "calls": 1042,
+        "triangles": 3530544,
+        "memory": {
+          "geometries": 545,
+          "textures": 181
+        },
+        "programs": 141,
+        "links": 144,
+        "scale": 0.75
+      },
+      "skyline": [
+        {
+          "view": "01-southeast-aerial",
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+          "samples": 179,
+          "overflow": false,
+          "frameP50": 15.9,
+          "frameP95": 33.7,
+          "cpuP50": 10.1,
+          "calls": 1355,
+          "triangles": 4017928,
+          "memory": {
+            "geometries": 547,
+            "textures": 181
+          },
+          "programs": 143,
+          "links": 146,
+          "scale": 0.75
+        },
+        {
+          "view": "05-office-terrace-outlook",
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+          "samples": 179,
+          "overflow": false,
+          "frameP50": 14.5,
+          "frameP95": 18.8,
+          "cpuP50": 9.3,
+          "calls": 1040,
+          "triangles": 3233064,
+          "memory": {
+            "geometries": 547,
+            "textures": 181
+          },
+          "programs": 143,
+          "links": 146,
+          "scale": 0.75
+        }
+      ],
+      "worst": "01-southeast-aerial",
+      "rebuild": [
+        {
+          "rebuild": 0,
+          "programs": 143,
+          "links": 146,
+          "geometries": 547,
+          "textures": 181,
+          "calls": 1355,
+          "frameP50": 15.2
+        },
+        {
+          "rebuild": 1,
+          "programs": 141,
+          "links": 242,
+          "geometries": 565,
+          "textures": 191,
+          "calls": 1355,
+          "frameP50": 16.8
+        },
+        {
+          "rebuild": 2,
+          "programs": 141,
+          "links": 338,
+          "geometries": 565,
+          "textures": 191,
+          "calls": 1355,
+          "frameP50": 17.6
+        },
+        {
+          "rebuild": 3,
+          "programs": 141,
+          "links": 434,
+          "geometries": 565,
+          "textures": 191,
+          "calls": 1355,
+          "frameP50": 17.4
+        }
+      ],
+      "growth": {
+        "programs": -2,
+        "geometries": 18,
+        "textures": 10
+      },
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+      "errors": [],
+      "hostLoad": [
+        35,
+        42.2,
+        83.7
+      ]
+    }
+  ],
+  "limits": "One shared Mac under the recorded load average, Metal through ANGLE; frame intervals with vsync off are this host, not a device budget. Residents keep moving. Interleaved rounds limit drift but not other sessions."
+}
