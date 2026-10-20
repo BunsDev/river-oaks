@@ -146,7 +146,7 @@ test('opt-in phone frame report waits for a playable view and retains bounded re
   const context = {
     document: { documentElement: { dataset: { phoneAvatarDecoder: 'html-images' } },
       querySelector: selector => selector === '#loading' ? loading : selector === '.multiplayer-gate' ? gate : null },
-    performance: { now: () => now },
+    performance: { now: () => now }, location: { search: '?phone-avatar-decoder=html&phone-frame-report=1&render-audit=1' }, URLSearchParams,
     __riverRenderAudit: { start: () => { starts++; }, stop: () => {
       stops++;
       return { frames: [{ intervalMs: 16.67, cpuMs: 3.42 }, { intervalMs: 33.34, cpuMs: 4.51 }], overflow: false };
@@ -170,6 +170,7 @@ test('opt-in phone frame report waits for a playable view and retains bounded re
   finishSample.fn();
   assert.equal(stops, 1);
   assert.equal(sent.length, 1);
+  assert.equal(scheduled.length, 0, 'one window by default');
   const report = JSON.parse(sent[0].options.body);
   assert.equal(report.mode, 'avatar-html');
   assert.deepEqual(report.sample.frames, [[16.67, 3.42], [33.34, 4.51]]);
@@ -184,6 +185,67 @@ test('opt-in phone frame report waits for a playable view and retains bounded re
     method: 'POST', headers: { Origin: phone.origin, 'Content-Type': 'application/json' },
     body: JSON.stringify({ ...report, sample: { ...report.sample, frames: [[-1, 4]] } }),
   })).status, 400);
+});
+
+test('phone frame report can take consecutive windows with render-phase totals and effective quality', { timeout: 90000 }, async t => {
+  const phone = await startBrowserFixture({ env: { RIVER_OAKS_PHONE_FIXTURE_HOST: '127.0.0.1' } });
+  t.after(() => phone.close());
+  const search = '?phone-frame-report=1&render-audit=1&phone-frame-windows=2&phone-frame-seconds=10';
+  const script = (await (await fetch(`${phone.origin}/${search}`)).text()).match(/<script id="phone-frame-report">([\s\S]*?)<\/script>/)?.[1];
+  assert.ok(script);
+  const scheduled = [], sent = [];
+  let now = 0, starts = 0;
+  const frame = (intervalMs, cpuMs, pipeline) => ({ intervalMs, cpuMs, phasesMs: { setup: 1, residents: 2, pipeline, tail: cpuMs - 3 - pipeline } });
+  const context = {
+    document: { documentElement: { dataset: {} }, querySelector: () => ({ hidden: true }) },
+    performance: { now: () => now }, location: { search }, URLSearchParams,
+    __riverRenderAudit: {
+      start: () => { starts++; },
+      stop: () => ({ frames: [frame(66, 20, 12), frame(70, 24, 15)], overflow: false }),
+      graphics: () => ({ quality: { mode: 'auto', scale: 0.6, occlusion: false, fps: 15 }, render: { calls: 739, triangles: 2928000, points: 0 } }),
+    },
+    setTimeout: (fn, ms) => scheduled.push({ fn, ms }),
+    fetch: (url, options) => { sent.push(JSON.parse(options.body)); return Promise.resolve(); },
+  };
+  runInNewContext(script, context);
+  scheduled.shift().fn();
+  assert.equal(starts, 1);
+  for (const window of [0, 1]) {
+    const finish = scheduled.shift();
+    assert.equal(finish.ms, 10000);
+    now += 10000; finish.fn();
+    assert.equal(sent.at(-1).window, window);
+  }
+  assert.equal(starts, 2);
+  assert.equal(scheduled.length, 0, 'stops after the requested windows');
+  assert.deepEqual(sent[0].sample.phases, { setup: 2, residents: 4, pipeline: 27, tail: 11 });
+  assert.deepEqual(sent[0].quality, { mode: 'auto', scale: 0.6, occlusion: false });
+  assert.deepEqual(sent[0].render, { calls: 739, triangles: 2928000 });
+  const post = body => fetch(`${phone.origin}/__phone_readiness`, {
+    method: 'POST', headers: { Origin: phone.origin, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  assert.equal((await post(sent[1])).status, 204);
+  const [record] = await (await fetch(`${phone.origin}/__phone_readiness`)).json();
+  assert.equal(record.window, 1);
+  assert.deepEqual(record.sample.phases, sent[1].sample.phases);
+  assert.deepEqual(record.quality, { mode: 'auto', scale: 0.6, occlusion: false });
+  assert.equal((await post({ ...sent[1], sample: { ...sent[1].sample, phases: { gpu: 1 } } })).status, 400);
+  assert.equal((await post({ ...sent[1], window: 60 })).status, 400);
+
+  // The shadow-caster A/B alternates variants window by window, starting with every caster.
+  const abSearch = `${search}&phone-frame-ab=shadow-casters`;
+  const abScript = (await (await fetch(`${phone.origin}/${abSearch}`)).text()).match(/<script id="phone-frame-report">([\s\S]*?)<\/script>/)?.[1];
+  const variants = [], abSent = [], abScheduled = [];
+  runInNewContext(abScript, { ...context, location: { search: abSearch },
+    __riverRenderAudit: { ...context.__riverRenderAudit, shadowCasters: mode => { variants.push(mode); } },
+    setTimeout: (fn, ms) => abScheduled.push({ fn, ms }),
+    fetch: (url, options) => { abSent.push(JSON.parse(options.body)); return Promise.resolve(); } });
+  abScheduled.shift().fn();
+  while (abScheduled.length) abScheduled.shift().fn();
+  assert.deepEqual(variants, ['all', 'lean']);
+  assert.deepEqual(abSent.map(report => report.variant), ['all', 'lean']);
+  assert.equal((await post(abSent[1])).status, 204);
+  assert.equal((await (await fetch(`${phone.origin}/__phone_readiness`)).json()).at(-1).variant, 'lean');
+  assert.equal((await post({ ...abSent[1], variant: 'none' })).status, 400);
 });
 
 test('phone fixture can retain only bounded redacted app diagnostic summaries', { timeout: 90000 }, async t => {
