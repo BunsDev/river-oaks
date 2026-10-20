@@ -66,6 +66,15 @@ test('authorized stale cancellation restores Git and local files before guarded 
   assert.ok(saved.tasks[0].archive.feature);
 });
 
+test('cancellation bundles only the commits the default branch lacks',t=>{
+  const f=fixture(t),base=f.git('rev-parse','main');f.git('update-ref','refs/remotes/origin/main',base);
+  const result=cancelStale({...f.options,tasksPath:f.tasksPath,archiveRoot:join(f.base,'archives'),loadEvidence:()=>({register:f.register,pulls:f.pulls,activity:f.activity})});
+  assert.equal(result.status,'cancelled-local');assert.deepEqual(result.prerequisites,[base]);
+  const restored=join(f.base,'recovery');f.git('init','--bare',restored);
+  f.git('-C',restored,'fetch',f.root,'main:main');f.git('-C',restored,'fetch',result.bundle,`${result.tag}:refs/heads/recovered`);
+  assert.equal(f.git('-C',restored,'rev-parse','recovered'),f.head);
+});
+
 test('verified partial archive can resume when nested ignored Git data survives clean',t=>{
   const f=fixture(t),hooks=join(f.root,'hooks');mkdirSync(hooks);
   const guard=new URL('../project-ref-guard.mjs',import.meta.url).pathname;
