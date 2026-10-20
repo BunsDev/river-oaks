@@ -3,7 +3,7 @@
   "provenance": "Repository-authored split coat surfaces; shipped rig source/license in sources.json.",
   "command": "node scripts/bake-coat-tails.mjs --check",
   "inputs": {
-    "pnpm-lock.yaml": "ba688f3b800f2cbdc5f1d6acec471d4622f7815d681edc7a74087749f4e21a31",
+    "pnpm-lock.yaml": "5d692799fe250187d9c677f841cdee9e87eb6877223972d82f8275ab68021058",
     "preview/public/assets/characters/man-casual.glb": "e7ac712585ba2d4558092b67ccf30e67d29843a9a81c4ca00384200f69588684",
     "preview/public/assets/characters/sources.json": "9e51242b9680901309edcfa26b780f0fd8723f046891f1a1f7fa2fc96be6b15d",
     "preview/src/avatars.js": "dfc79d4973890c051a37a6954b9b9354c044f78398ec0904dfb97aeea2017a14",
