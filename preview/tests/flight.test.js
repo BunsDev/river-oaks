@@ -1,3 +1,4 @@
+import {readFileSync} from 'node:fs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { FLIGHT_SPEED, createFlightState, stepFlight } from '../src/flight.js';
@@ -161,4 +162,16 @@ test('roof escape over steep falling terrain respects the lift budget while prog
     assert.ok(env.canFly(walker.position[0],walker.position[1]-1.68,0));
   }
   assert.ok(walker.position[0]>5,'slows horizontal motion instead of sticking');
+});
+
+test('flight rounds a slightly rotated mapped corner without losing tangential progress',()=>{
+  const world=JSON.parse(readFileSync(new URL('../public/data/district.json',import.meta.url)));
+  const environment=createWalkingEnvironment(world),walker={...state(),position:[-2763.228,5.18,1346.935],yaw:-Math.PI/2};
+  const flight={...createFlightState(),active:true,altitude:3.5,target:3.5};
+  for(let frame=0;frame<1200;frame++){
+    stepFlight(walker,environment,flight,{forward:1,strafe:1},1/60);
+    assert.ok(environment.canFly(walker.position[0],environment.groundAt(walker.position[0],walker.position[2])+3.5,walker.position[2]),'retains wall clearance');
+    if(frame%12===0)flight.acknowledged=[walker.position[0],walker.position[2],flight.altitude];
+  }
+  assert.ok(walker.position[0]>-2755&&walker.position[2]>1374,`rounds corner: ${walker.position}`);
 });

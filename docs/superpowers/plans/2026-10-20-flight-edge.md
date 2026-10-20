@@ -82,3 +82,23 @@ Independent review now reports no remaining blocking findings and independently 
 - `git diff --check`: PASS.
 
 Implementation, independent review and local acceptance are complete. Signed commit and draft PR identifiers are recorded in the live register at handoff. This is a delivery candidate, not a merged/deployed change. No worktree retirement or unrelated task reconciliation was performed. Main and other agents' worktrees are preserved.
+
+## Current-main integration goal (2026-10-20)
+
+Reclaimed the existing task and checkout. GitHub updated the branch from main via verified merge commit `6a5e73307caea65d69653807daf5713ad5e41e92`; only `pyproject.toml` and `uv.lock` changed (Pillow/certifi advisory updates). No conflicts or movement/transport source changes. `uv sync --locked` installed the new locked dependencies. No PR reviews or inline comments were present at refresh.
+
+Required checks: 67 focused tests (passed); fresh core; named flight/render/transport/lifecycle journeys; full gate with disposable loopback Redis; current-head hosted aggregate preview. Add explicit mapped-corner progress to the real two-client route, which previously covered facade and roof traversal but left corners to synthetic authority tests. Preserve old receipts. No merge, deployment or retirement authorized.
+
+The expanded mapped route reproduced a stop at southwest corner (-2759.6043, 1369.8905), with zero corrections. A focused real-map fixture reproduced it; flat synthetic corners had missed it. Projecting against the attempted position's normal can aim the tangent inward at rounded corner clearance. The fix keeps candidate-based blocker selection but computes the tangent at the current position. Collision radius, sweep validation and speed limits remain unchanged. The new regression failed before the patch and passes after it; focused flight/authority suite now has 68 passing tests. Independent corner review found no blockers and independently passed 60 flight/walking tests. Expanded two-client flight route passes. Initial core passed before this follow-up; final full and core checks still required on the new source.
+
+### Final integration verification
+
+Stable source hashes and phase receipts: `data/reports/flight-edge-integration-verification-20261020.json`. These runs used merge base `6a5e7330` plus the corner patch, before committing; receipt revision/dirty fields intentionally retain that fact.
+
+- `node --test preview/tests/flight.test.js server/tests/flight-path.test.js`: 68 passed, zero failures/skips; `.runtime/flight-corner-normal.log`.
+- `PATH="$PWD/.venv/bin:$PATH" pnpm run verify`: all 11 phases passed on final source; `.runtime/flight-core-final.log`, `.runtime/agent/core.json`. Tooling 160/3 skipped, preview 3744/1, server 747/212, desktop 115/3; Python 145 passed.
+- `RIVER_OAKS_E2E_REPORT=flight-edge-integration-20261020.json pnpm run test:experience flight-edge render-budget flight-pose-transport multiplayer-lifecycle`: all four passed. Durable report records grounded landing and reconnect, followed by mapped southwest-corner traversal observed by both clients, zero corrections.
+- `REDIS_URL=redis://127.0.0.1:16389 PATH="$PWD/.venv/bin:$PATH" RIVER_OAKS_E2E_REPORT=flight-full-experience-20261020.json pnpm run verify full`: all 18 phases passed. Disposable loopback Redis; all 1001 server tests passed, zero skips. Dependency audit, history scan, browser security, WebGL reflections, 16 experience journeys, 24 shared journeys, 19 IPIC screening assertions passed. Existing tooling/preview/desktop skips remain explicit. Logs and raw reports retained under `.runtime/flight-full-*`; historical shared report restored after retaining this run.
+- Independent follow-up review: no blockers; 60 flight/walking tests passed independently.
+
+Hosted aggregate preview passed at `6a5e7330`; final signed follow-up needs its own hosted checks. That revision's Swift CodeQL failed on runner DNS (`getaddrinfo ENOTFOUND api.github.com`), not a source finding. Final PR/head/check evidence is maintained in the live task register and PR. No native, live WorkOS, human accessibility or target-GPU acceptance claim. No merge, deployment or retirement authorized.

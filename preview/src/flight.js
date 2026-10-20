@@ -82,7 +82,7 @@ export function stepFlight(state, environment, flight, input, delta) {
   if(!canMove(x,z)){flight.altitude=oldAltitude;nextAltitude=oldAltitude;flight.verticalSpeed=0;}
   if(canMove(px,pz)) {state.position[0]=nextX;state.position[2]=nextZ;}
   else {
-    const normal=environment.flightWallNormal?.(px,environment.groundAt(px,pz)+flight.altitude,pz);
+    const normal=environment.flightWallNormal?.(px,environment.groundAt(px,pz)+flight.altitude,pz,x,z);
     const inward=normal?Math.min(0,state.velocity[0]*normal[0]+state.velocity[1]*normal[1]):0;
     const sx=normal?state.velocity[0]-inward*normal[0]:0,sz=normal?state.velocity[1]-inward*normal[1]:0;
     if(normal&&inward<0&&canMove(x+sx*dt,z+sz*dt)) {

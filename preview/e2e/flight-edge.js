@@ -56,6 +56,16 @@ async page => {
     check(!reconnected.flying&&reconnected.altitude===0,'reconnect preserves the acknowledged grounded state');
     check(Math.hypot(...reconnected.position.map((n,i)=>n-landed.position[i]))<1,'reconnect preserves landed position');
     check(!corrections.length,`post-reconnect corrections: ${JSON.stringify(corrections)}`);
+    // Continue around the mapped southwest corner at wall height. Both clients
+    // must observe progress past both facade planes without a correction.
+    await page.locator('#canvas-host').focus();await page.keyboard.press('KeyB');
+    await page.waitForFunction(()=>window.__riverCarriage().pose.altitude>=3.4);
+    await page.keyboard.down('KeyW');await page.keyboard.down('KeyD');
+    await page.waitForFunction(()=>{const p=window.__riverCarriage().pose.position;return p[2]>1374&&p[0]>-2755;},null,{timeout:20000});
+    await page.keyboard.up('KeyW');await page.keyboard.up('KeyD');await page.waitForTimeout(700);
+    const corner=await sample('mapped-corner');
+    check(corner.position[2]>1374&&corner.position[0]>-2755,'progress around southwest corner beyond both facade planes');
+    check(!corrections.length,`corner corrections: ${JSON.stringify(corrections)}`);
     return {building:'osm-way-625330792',samples,corrections,scope:'Real controller, authenticated loopback owner and guest, mapped facade and roof; no production auth claim.'};
   } catch(error) {console.error(JSON.stringify({samples,corrections,failedPose:await pose().catch(()=>null)}));throw error;} finally {await peerContext.close();}
 }
