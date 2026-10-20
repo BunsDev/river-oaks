@@ -129,6 +129,11 @@ silently break play.
 5. Before raising world capacity, run isolated load and Redis-failure tests;
    monitor latency, failed authorization, reconnect rate, memory and queue depth.
 6. Keep the production owner settings below in place.
+7. For a desktop release, follow [Releases on Windows, Linux and macOS](desktop.md#releases-on-windows-linux-and-macos). Before the draft is published, every row of its acceptance matrix must hold a person's result from a real Windows 11, Ubuntu LTS (X11 and Wayland) or macOS machine, and the signatures must check:
+   - **Tag.** `vX.Y.Z` is signed, and GitHub reports it verified.
+   - **macOS.** The app unzipped from the release zip passes `codesign --verify --deep --strict` and `xcrun stapler validate`, and `spctl` accepts it as "Notarized Developer ID".
+   - **Windows.** The tag run's `signtool verify /pa /v` passed on `Setup.exe` and every packed binary, each with a timestamp, and the signed `Setup.exe` was installed and checked. The ledger records the certificate subject and SHA-1 thumbprint.
+   - **Linux.** The `.deb` and AppImage carry no signature. The release's `SHA256SUMS` is their only integrity check, so the release notes say so.
 
 ## Production owner settings (outside this repo)
 

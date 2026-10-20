@@ -1,6 +1,6 @@
 # River Oaks desktop
 
-The desktop application runs River Oaks in Electron. Playing requires an online connection, WorkOS sign-in through GitHub in the system browser, and waitlist approval. The packaged app opens the hosted game at `https://typesafe.place/play`; its browser profile retains the approved session until sign-out or expiry. Email-code sign-in is not offered in the app. The session cookie is stored unencrypted for now (see the cookie-encryption note below).
+The desktop application runs River Oaks in Electron. Playing requires an online connection, WorkOS sign-in through GitHub in the system browser, and waitlist approval. The packaged app opens the hosted game at `https://typesafe.place/play`; its browser profile retains the approved session until sign-out or expiry. Email-code sign-in is not offered in the app. Since 0.2.1 the session cookie is encrypted; how strongly depends on the platform (see the cookie-encryption note below).
 
 ```mermaid
 %% diagram: desktop-sign-in (placeholder; replace this block with the real diagram)
@@ -10,7 +10,7 @@ sequenceDiagram
 ```
 <details><summary>Diagram prompt: desktop-sign-in</summary>
 
-Draw a sequence diagram of the Electron desktop thin client signing in. Participants: Desktop main process (desktop/main.js, desktop/auth.js), system browser, WorkOS, hosted game (typesafe.place) /auth/desktop/exchange, Electron session cookie store. Show device sign-in in the system browser, the refresh-token exchange at /auth/desktop/exchange (rate-limited per address), the sealed session cookie written to session.defaultSession with an expiry, and the packaged window loading only the hosted https origin. Note the fuses (RunAsNode off, NODE_OPTIONS off, inspect off, asar integrity on, file protocol privileges off) and that cookie encryption stays off until Developer ID signing ships.
+Draw a sequence diagram of the Electron desktop thin client signing in. Participants: Desktop main process (desktop/main.js, desktop/auth.js), system browser, WorkOS, hosted game (typesafe.place) /auth/desktop/exchange, Electron session cookie store. Show device sign-in in the system browser, the refresh-token exchange at /auth/desktop/exchange (rate-limited per address), the sealed session cookie written to session.defaultSession with an expiry, and the packaged window loading only the hosted https origin. Note the fuses (RunAsNode off, NODE_OPTIONS off, inspect off, asar integrity on, file protocol privileges off) and that cookie encryption is on since 0.2.1.
 
 See [the diagram index](diagrams.md) for the convention.
 
@@ -118,7 +118,7 @@ The Studio agent (Claude or Codex CLI) and the World Designer (Coven running Cod
 | Windows x64 | `TypeSafe-Place-<version>-windows-x64-Setup.exe`, plus `TypeSafePlace-<version>-full.nupkg` and `RELEASES` for a later Squirrel updater |
 | Linux x64 | `TypeSafe-Place-<version>-linux-x64.AppImage` and `TypeSafe-Place-<version>-linux-x64.deb` |
 
-Each run also writes `SHA256SUMS` over those files and `build-manifest-<platform>-<arch>.json`, which lists every packaged file with its SHA-256 and mode so an installed copy can be compared with the build. There is no macOS installer; macOS keeps the zip until Developer ID signing and notarization.
+Each run also writes `SHA256SUMS` over those files and `build-manifest-<platform>-<arch>.json`, which lists every packaged file with its SHA-256 and mode so an installed copy can be compared with the build. There is no macOS installer: macOS ships the signed and notarized zip (see [Signed macOS release](#signed-macos-release)).
 
 `desktop/installers.js` runs the package check first and refuses, with every reason listed, a build whose fuse wire is unflipped or differs from `desktop/fuses.js`, a binary with no Electron fuse wire or built for another platform or architecture, an asar that is not exactly the staged files, or an app whose version is not `package.json`'s. It never repackages: packaging, the fuse flip and the asar stay in `desktop/package.js`. Tools fetched outside pnpm (appimagetool 1.9.1, the AppImage type-2 runtime 20251108 and the Artifact Signing client 1.0.128) are pinned by version and SHA-256 in `TOOLS`; a download with any other hash is deleted and refused, and a cached copy is rehashed before each use.
 
@@ -198,6 +198,71 @@ Windows signs with [Azure Artifact Signing](https://learn.microsoft.com/azure/ar
 **Rotation and revocation.** Artifact Signing issues a new short-lived certificate as it signs, so there is no certificate file or password to rotate, and the OIDC credential has no secret. What can lapse is the identity validation: renew it in the portal before it expires, keeping the same subject, and keep the certificate profile pointed at it. To change the GitHub identity, add a new app registration with the same federated credential and role, then update `AZURE_CLIENT_ID`. If signing is misused, remove the role assignment and, in the portal, revoke the affected certificate by thumbprint (with a revocation time), then dispatch a fresh signed build.
 
 **SmartScreen.** A valid signature does not by itself remove Microsoft Defender SmartScreen's "Windows protected your PC" prompt for a new publisher. Reputation builds over time and downloads. Record what a fresh Windows 11 VM shows during acceptance (#373) rather than promising that the prompt is gone.
+
+## Releases on Windows, Linux and macOS
+
+A release carries one asset set per platform and one `SHA256SUMS` over every asset (#373):
+
+| Platform | Assets | Built by | Signature |
+| --- | --- | --- | --- |
+| macOS arm64 | `TypeSafe-Place-<version>-macOS-arm64.zip` | A detached worktree on the release owner's Mac, as in [Signed macOS release](#signed-macos-release) | Developer ID, notarized and stapled |
+| Windows x64 | `TypeSafe-Place-<version>-windows-x64-Setup.exe`, `TypeSafePlace-<version>-full.nupkg`, `RELEASES` | The `Desktop` workflow's run on the release tag | Authenticode through [Azure Artifact Signing](#windows-signing) |
+| Linux x64 | `TypeSafe-Place-<version>-linux-x64.AppImage`, `TypeSafe-Place-<version>-linux-x64.deb` | The same tag run | None; `SHA256SUMS` only |
+
+Windows and Linux come from CI. Only those runners build and install-test the installers, and Windows signs there through OIDC with no stored secret. macOS stays local until Developer ID signing moves to CI, because the workflow holds no Apple credentials. The `.nupkg` and `RELEASES` are what a later Squirrel updater reads; nothing downloads them yet.
+
+### Release steps
+
+The tag run is the release build. People accept the exact files it produced, and those files are what gets published. A candidate that fails acceptance is never published; the fix ships under the next patch version.
+
+1. **Bump.** On a `release/vX.Y.Z` branch, set the version in `package.json`, write `docs/releases/X.Y.Z.md`, and copy [the release ledger template](superpowers/plans/_template-desktop-release.md) to a dated ledger. Commit with `-S`, open the PR and land it with `pnpm run land`.
+2. **Build macOS.** In a detached worktree at the merge commit, with its own `pnpm install --frozen-lockfile`, run `pnpm run test:desktop`. Then package, check, sign, notarize and zip as in [Signed macOS release](#signed-macos-release). Record the zip's SHA-256 and the signing receipt.
+3. **Tag.** Run `git tag -s vX.Y.Z <merge commit> -m "TypeSafe Place X.Y.Z"`, then `git push origin vX.Y.Z`. The tag push starts the `Desktop` workflow; its path filters do not apply to tags. Approve the `desktop-signing` environment when `sign (windows-latest)` waits for it. Then check two things: `Windows signing configuration` posted no "Windows signing skipped" notice, and the installer artifact is named `TypeSafe-Place-<version>-installers`, not `-installers-unsigned`. An unsigned Windows installer is not a release asset, unless Val records in the ledger that one ships.
+4. **Keep the candidate.** Artifacts expire: the installers after 30 days, the per-platform zips after 14. Download them as soon as the run finishes, and check them:
+
+   ```sh
+   evidence=~/worktree-backups/river-oaks/release-vX.Y.Z-artifacts
+   gh run download <tag run id> -n TypeSafe-Place-<version>-installers -D "$evidence/installers"
+   gh run download <tag run id> -n installer-acceptance-windows-signed -D "$evidence/windows-signed"
+   gh run download <tag run id> -n installer-acceptance-linux -D "$evidence/linux"
+   (cd "$evidence/installers" && shasum -a 256 -c SHA256SUMS)
+   ```
+
+   In the ledger, record the run id, the five digests, and the certificate subject and SHA-1 thumbprint from `installer-acceptance-windows-signed`.
+5. **Accept.** Run [the acceptance matrix](#acceptance-on-real-machines) on those exact files, on real machines. Each row names the machine, the OS version, the asset and its digest, what was done, and the result. A failed row stops the release: file an issue linked from #373, fix it, and start again at step 1 with the next patch version.
+6. **Publish.** Put the macOS zip and the five installer files in one folder. Then:
+
+   ```sh
+   shasum -a 256 -- * > SHA256SUMS && shasum -a 256 -c SHA256SUMS
+   gh release create vX.Y.Z --verify-tag --draft --title "TypeSafe Place X.Y.Z" --notes-file <release notes> -- *
+   gh release view vX.Y.Z --json assets --jq '.assets[] | "\(.digest) \(.name)"'
+   ```
+
+   Compare each uploaded digest with `SHA256SUMS`. Then publish the draft with `gh release edit vX.Y.Z --draft=false`. Download the published assets into an empty folder and run `shasum -a 256 -c SHA256SUMS` once more.
+7. **Close.** Commit the ledger with its evidence: run ids, digests, matrix rows, signing receipts and the release URL. Reconcile the register task and retire the branch with `pnpm run project:prune` (a dry run, then `--apply`).
+
+### Acceptance on real machines
+
+Use at least:
+- one Windows 11 x64 machine;
+- one Ubuntu LTS x64 machine, run once in an X11 session and once in a Wayland session;
+- one Apple Silicon Mac.
+
+A row passes only on a person's run with the release candidate's files. A CI job, a fixture run or a build on another platform never fills a row. Where a row cannot run (for example, no earlier release exists to upgrade from), write why instead of a result. Record each machine as it is: model or virtual machine, OS version and build, and GPU.
+
+| Row | What to do | Platform notes |
+| --- | --- | --- |
+| Install and first launch | Install from the release asset and open the app. Check the icon in the taskbar, dock or launcher, and the window title "TypeSafe Place". | **Windows:** run `Setup.exe`, and record any SmartScreen prompt and the publisher it names; check Start menu and desktop shortcuts and the Installed apps entry. **Linux:** `sudo apt install ./TypeSafe-Place-<version>-linux-x64.deb`, then the app from the launcher. Separately, make the AppImage executable and run it: on Ubuntu 23.10 and later it is expected to stop with the sandbox message unless an AppArmor profile is installed ([Linux](#linux-deb-and-appimage)). **macOS:** unzip, move to Applications and open. Gatekeeper must not warn. |
+| Device sign-in | From a signed-out profile: the sign-in dialog shows a code, the system browser opens, enter the code, return to the app, and play loads. Quit and relaunch: still signed in. Sign out: back to the sign-in flow. Needs an approved account. | **Linux:** note whether a keyring (for example GNOME Keyring) was unlocked, which decides how the cookie is protected ([security review](security-review.md)). |
+| Microphone | Join shared voice and unmute. Deny, or turn the microphone off: the game stays playable. Allow: a peer hears you (a second machine, or this machine plus a browser). | **macOS** asks once. **Windows** and **Linux** show no per-app prompt for a desktop app: record what appears, and for Windows check that turning off *Let desktop apps access your microphone* leaves the game playable. |
+| Window state | Resize, move, maximize, enter fullscreen; quit and relaunch after each. Each state restores. With a second display, disconnect the one the window is on: on relaunch the window opens on a visible display. | **Linux:** both X11 and Wayland. |
+| Photo and Studio export | **Commands → Photo mode**: save a PNG through the native Save dialog. **Game → World Studio**: export the region JSON through the native Save dialog. No other download prompt appears during the session. | — |
+| Renderer crash recovery | End the game's renderer process. The game reloads once by itself. End it again within a minute: the "The game stopped unexpectedly" choice appears, and **Reload game** works. | **Windows:** Task Manager → Details; add the Command line column and end the `TypeSafe Place.exe` with `--type=renderer`. **Linux:** `pgrep -af 'typesafe-place.*--type=renderer'` lists it; `kill <pid>`. **macOS:** Activity Monitor → TypeSafe Place Helper (Renderer) → Force Quit. |
+| Studio hosts | On a machine with none of `claude`, `codex` or `coven` installed, open World Studio. The agent and the designer show as unavailable, and the first send explains why ([Studio hosts](#studio-hosts-by-platform)). | **Windows:** the message names the `.exe` to install. |
+| Upgrade | Install the previous release, sign in and change a preference, then install the new one over it. Record whether the preference and the session survive. | **Windows:** the first signed release has no signed predecessor: upgrade from the previous candidate build and say so. **macOS:** replace the app in Applications. **Linux:** `apt install` the new `.deb` over the old one; replace the AppImage file. |
+| GPU and frame timing | From a checkout of the release tag on that machine, run the development end-to-end suite ([Verification](#verification)) and attach `gpu` and the frame fields from `data/reports/desktop-development.json`. | They describe that machine and the development build, not the packaged app or a frame-rate promise. |
+
+`installer-acceptance.js` in CI already proves install, file integrity, the fuse wire, shortcuts or desktop entries, an offline launch and a clean uninstall on fresh runners. The matrix covers what a runner cannot: a GPU, a display, a person signing in, a microphone and an upgrade.
 
 ## Rendering and recovery
 
