@@ -136,6 +136,7 @@ const renderAudit = (import.meta.env.DEV || import.meta.env.MODE === 'ios-probe'
   ? createRenderAudit({ limit: import.meta.env.DEV ? 120000 : 7200 }) : null;
 let exteriorCulling = true; // A development audit can switch it off to compare frames.
 let pendingDrawCensus = null; // A development audit attributes the next frame's draws.
+const leanShadowRestore = new Map(); // Sun-shadow casters a development audit switched off.
 // Inside IPIC's auditorium, facing away from its only partition, nothing outdoors can be seen (#428),
 // nor any other store's interior or people (#431): the frame keeps only IPIC's own.
 function ipicAuditoriumCull() {
@@ -1219,6 +1220,20 @@ if (renderAudit) {
       avatarCulling(enabled) { remotePlayers?.setCulling(enabled); },
       figureCulling(enabled) { remotePlayers?.setFigureCulling(enabled); },
       shadowDepth(enabled) { remotePlayers?.setShadowDepth(enabled); },
+      // Sun-shadow casters a lean phone tier could drop outdoors (#285 device A/B): shop
+      // interiors under their roofs, the parked bikes and the bird cams. 'all' restores them.
+      shadowCasters(mode) {
+        if (mode === 'all') {
+          for (const [mesh, cast] of leanShadowRestore) mesh.castShadow = cast;
+          const restored = leanShadowRestore.size; leanShadowRestore.clear(); return restored;
+        }
+        if (mode !== 'lean') throw new Error("shadowCasters takes 'lean' or 'all'");
+        const lean = node => node.name === 'Boutique interiors layer' || node.name === 'Parked bikes' || node.name.endsWith('(bird cam)');
+        scene.traverse(node => {
+          if (lean(node)) node.traverse(mesh => { if (mesh.isMesh && mesh.castShadow && !leanShadowRestore.has(mesh)) { leanShadowRestore.set(mesh, true); mesh.castShadow = false; } });
+        });
+        return leanShadowRestore.size;
+      },
       occlusionSort(enabled) { pipeline?.setOcclusionSort(enabled); },
       // GTAO's normal buffer in three's order against kind order, at one instant.
       occlusionSortEquality: () => pipeline?.compareOcclusionSort() ?? null,

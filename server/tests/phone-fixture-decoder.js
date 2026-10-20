@@ -4,6 +4,8 @@ const reportScript = `(() => { const started = performance.now(); for (const del
 // Optional ?phone-frame-windows=N (1-60) and ?phone-frame-seconds=S (1-20) take
 // N consecutive S-second windows; each report adds that window's render-phase
 // totals and effective quality, so a long sustained run stays bounded per POST.
+// ?phone-frame-ab=shadow-casters alternates windows between every sun-shadow
+// caster ('all', even windows) and the development audit's lean set ('lean').
 const frameReportScript = `(() => {
   const started = performance.now();
   const mode = document.documentElement.dataset.phoneAvatarDecoder === 'html-images'
@@ -15,7 +17,10 @@ const frameReportScript = `(() => {
   };
   const windows = bounded('phone-frame-windows', 1, 60), seconds = bounded('phone-frame-seconds', 5, 20);
   const round = value => Math.round(value * 100) / 100;
+  const ab = params.get('phone-frame-ab') === 'shadow-casters';
   const sample = (audit, index) => {
+    let variant = null;
+    if (ab) try { variant = index % 2 ? 'lean' : 'all'; audit.shadowCasters(variant); } catch { variant = null; }
     audit.start();
     setTimeout(() => {
       const result = audit.stop();
@@ -27,7 +32,7 @@ const frameReportScript = `(() => {
       try { graphics = audit.graphics?.() ?? null; } catch {}
       void fetch('/__phone_readiness', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode, elapsedMs: Math.round(performance.now() - started), window: index,
+        body: JSON.stringify({ mode, elapsedMs: Math.round(performance.now() - started), window: index, ...(variant ? { variant } : {}),
           sample: { durationMs: seconds * 1000, frames, overflow: result.overflow || result.frames.length > 1200,
             phases, discontinuities: result.discontinuities ?? 0 },
           quality: graphics?.quality ? { mode: graphics.quality.mode, scale: graphics.quality.scale, occlusion: graphics.quality.occlusion } : null,
@@ -95,6 +100,7 @@ export function phoneDecoderProbePlugin() {
             if (phases != null && (typeof phases !== 'object' || Object.entries(phases).some(([name, ms]) =>
               !PHASES.includes(name) || !Number.isFinite(ms) || ms < 0 || ms > 600000))) throw new Error('invalid phases');
             if (report.window != null && (!Number.isInteger(report.window) || report.window < 0 || report.window > 59)) throw new Error('invalid window');
+            if (report.variant != null && !['all', 'lean'].includes(report.variant)) throw new Error('invalid variant');
             const finite = value => Number.isFinite(value) ? Math.max(0, Math.round(value)) : null;
             const diagnosticEntries = entries => {
               if (!Array.isArray(entries) || entries.length > 4 || entries.some(entry =>
@@ -102,7 +108,7 @@ export function phoneDecoderProbePlugin() {
               return entries.map(entry => ({ at: finite(entry.at), type: String(entry.type ?? '').slice(0, 32),
                 message: entry.message.slice(0, 180) }));
             };
-            reports.push({ mode: report.mode, elapsedMs: finite(report.elapsedMs), ...(report.window != null ? { window: report.window } : {}),
+            reports.push({ mode: report.mode, elapsedMs: finite(report.elapsedMs), ...(report.window != null ? { window: report.window } : {}), ...(report.variant ? { variant: report.variant } : {}),
               asset: report.asset && { loaded: finite(report.asset.loaded), total: finite(report.asset.total), failed: finite(report.asset.failed), done: report.asset.done === true },
               loading: report.loading && { shown: report.loading.shown === true, error: report.loading.error === true, title: String(report.loading.title ?? '').slice(0, 80), message: String(report.loading.message ?? '').slice(0, 200) },
               gate: report.gate && { shown: report.gate.shown === true, status: String(report.gate.status ?? '').slice(0, 120) },

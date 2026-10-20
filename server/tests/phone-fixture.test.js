@@ -230,6 +230,22 @@ test('phone frame report can take consecutive windows with render-phase totals a
   assert.deepEqual(record.quality, { mode: 'auto', scale: 0.6, occlusion: false });
   assert.equal((await post({ ...sent[1], sample: { ...sent[1].sample, phases: { gpu: 1 } } })).status, 400);
   assert.equal((await post({ ...sent[1], window: 60 })).status, 400);
+
+  // The shadow-caster A/B alternates variants window by window, starting with every caster.
+  const abSearch = `${search}&phone-frame-ab=shadow-casters`;
+  const abScript = (await (await fetch(`${phone.origin}/${abSearch}`)).text()).match(/<script id="phone-frame-report">([\s\S]*?)<\/script>/)?.[1];
+  const variants = [], abSent = [], abScheduled = [];
+  runInNewContext(abScript, { ...context, location: { search: abSearch },
+    __riverRenderAudit: { ...context.__riverRenderAudit, shadowCasters: mode => { variants.push(mode); } },
+    setTimeout: (fn, ms) => abScheduled.push({ fn, ms }),
+    fetch: (url, options) => { abSent.push(JSON.parse(options.body)); return Promise.resolve(); } });
+  abScheduled.shift().fn();
+  while (abScheduled.length) abScheduled.shift().fn();
+  assert.deepEqual(variants, ['all', 'lean']);
+  assert.deepEqual(abSent.map(report => report.variant), ['all', 'lean']);
+  assert.equal((await post(abSent[1])).status, 204);
+  assert.equal((await (await fetch(`${phone.origin}/__phone_readiness`)).json()).at(-1).variant, 'lean');
+  assert.equal((await post({ ...abSent[1], variant: 'none' })).status, 400);
 });
 
 test('phone fixture can retain only bounded redacted app diagnostic summaries', { timeout: 90000 }, async t => {
