@@ -1,5 +1,5 @@
 import { personPosition, personEyeHeight, personDistance } from './person-position.js';
-import { createFlightState, beginFlight, stepFlight } from './flight.js';
+import { createFlightState, beginFlight, stepFlight, recordFlightPose, acknowledgeFlightPose } from './flight.js';
 import { thirdPersonPose, createCameraBoom, pitchAfterSeatChange, seatedEyeView } from './third-person.js';
 import { nearRoomExit } from './room-exit.js';
 import { createPointerGesture } from './pointer-gesture.js';
@@ -305,8 +305,13 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       if (player.altitude > 0) Object.assign(flight, { active: true, altitude: player.altitude, target: player.altitude });
       place();
     },
+    recordSubmittedPose(pose) {
+      const current=flight,receipt=recordFlightPose(current,pose);
+      return player=>{if(current===flight)acknowledgeFlightPose(current,player,receipt);};
+    },
     syncAuthoritativePose(player) {
       if(!player)return;
+      acknowledgeFlightPose(flight,player);
       const level=interiorLevelFor(walkingWorld,player.levelId)?.level;
       if((player.sitting?.buildId??null)!==(sitting?.buildId??null) || player.sitting?.slot!==sitting?.slot
         || environment?.levelId!==(level?.index>0?level.id:null))this.applyServerPose(player);
