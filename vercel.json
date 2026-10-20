@@ -26,7 +26,16 @@
       ]
     },
     {
-      "source": "/assets/((?!.*\\.(?:glb|hdr|jpg|jpeg|png|webp|ktx2)$).*)",
+      "source": "/assets/(ipic/screening/[^/]+\\.(?:mp4|webm|vtt))",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600, stale-while-revalidate=86400"
+        }
+      ]
+    },
+    {
+      "source": "/assets/((?!.*\\.(?:glb|hdr|jpg|jpeg|png|webp|ktx2)$)(?!ipic/screening/[^/]+\\.(?:mp4|webm|vtt)$).*)",
       "headers": [
         {
           "key": "Cache-Control",

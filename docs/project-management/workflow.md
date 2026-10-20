@@ -167,8 +167,9 @@ Preserve primary/default, dirty, active, open-PR, missing-proof and uncertain wo
 
 Prefer ancestry proof. For squash/rebase/supersession, compare the entire aggregate
 patch against the actual merged commit, including every changed path. Preserve the
-exact original ref in an archive tag and self-contained bundle outside removal
-paths; restore every ref in a new bare repository and run `git fsck --full`.
+exact original ref in an archive tag and a bundle outside removal paths. The bundle
+may leave out commits already on origin's default branch. Restore every ref into a
+new bare repository that can reach those commits, and run `git fsck --full`.
 Keep ignored reports/private local evidence in a restricted archive and verify its
 contents. Do not print credential values or copy private state into another runtime.
 Only explicitly identified regenerable dependencies/caches are disposable.
@@ -199,7 +200,10 @@ proof or blanket approval to cancel newer work.
 ## Restore
 
 Read the task's `archive` manifest first. Verify its checksum, then fetch the
-recorded tag from the bundle into a **new** recovery branch. Create a separate
+recorded tag from the bundle into a **new** recovery branch, in a checkout that has
+origin's default branch. Since 2026-10-20 a bundle holds only the commits that branch
+lacked; the manifest lists the commits it builds on as `prerequisites`, and an empty
+list means the bundle is self-contained. Create a separate
 worktree from that branch. Restore local evidence from its verified archive after
 inspection; never apply private state to a live service automatically.
 
@@ -258,9 +262,15 @@ remain blocked for aggregate review. It refuses:
 evidence such as `.runtime` and `output/playwright` first, then remove the caches. Retain ignored evidence separately first; this tool
 never deletes cache directories or private files to make a checkout removable.
 
-Apply takes a common-Git-directory lock, preserves the exact tip in a unique
-archive tag, creates a self-contained bundle outside all worktrees, fetches it into
-a fresh bare repository, compares the SHA and runs `git fsck --full`. It then
+Apply takes a common-Git-directory lock and preserves the exact tip in a unique
+archive tag. Outside all worktrees, it bundles only the commits that origin's
+default branch lacks. A tip already on that branch gets just its own commit, and
+without a default-branch ref the bundle is self-contained. It restores the bundle
+into a fresh bare repository that borrows the branch's history from the common Git
+directory (`objects/info/alternates`), compares the SHA and runs `git fsck --full`.
+The restore uses `git bundle unbundle`, not `fetch`: once alternates reach the tip,
+a fetch never reads the pack, so it would accept a corrupt bundle. Archives written
+before 2026-10-20 copy the whole history twice, about 0.8 GB each. It then
 rechecks ownership, GitHub, activity, worktree registrations and clean state before
 non-forced removal and expected-SHA ref deletion. The external manifest records
 partial progress as well as success. The primary task register is updated only
@@ -269,9 +279,9 @@ all its recorded branches have been retired.
 
 Backups default to `~/worktree-backups/river-oaks/`; `--archive-root` must point
 outside every checkout. Preserve its manifest, bundle, checksum and restore-tested
-bare repository. A crash may leave `river-oaks-retirement.lock` in the common Git
-directory: inspect its owner activity and external receipts before manually
-reconciling it; the tool never steals a lock.
+bare repository, which reads the common Git directory's objects. A crash may leave
+`river-oaks-retirement.lock` in the common Git directory: inspect its owner activity
+and external receipts before manually reconciling it; the tool never steals a lock.
 
 `pnpm install` (prepare) and `sh scripts/install-hooks.sh` install a shared
 reference-transaction hook alongside the secret guard in the common Git directory.

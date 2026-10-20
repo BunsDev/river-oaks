@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs';
 import * as THREE from 'three';
 import { createWalkingEnvironment } from '../src/walking.js';
 import { buildIpicInterior } from '../src/ipic-interior.js';
-import { IPIC_FLIGHTS, IPIC_RISER, IPIC_SCREEN, ipicFloor } from '../src/ipic-plan.js';
+import { IPIC_AUDITORIUM_RISERS, IPIC_FLIGHTS, IPIC_SCREEN, IPIC_WING, RISER_RAMP, ipicFloor } from '../src/ipic-plan.js';
 import { ipicClearance } from '../src/ipic-circulation.js';
 
 const world = JSON.parse(readFileSync(new URL('../public/data/district.json', import.meta.url)));
@@ -18,12 +18,16 @@ group.updateMatrixWorld(true);
 const meshes = [];
 // Instanced darts are placed at runtime by a match, not part of the room.
 group.traverse(item => { if (item.isMesh && !item.isInstancedMesh) meshes.push(item); });
-const serverFree = (a, d) => { const [x, n] = room.toWorld(a, d); return environment.isFree(x, -n); };
+// Free for the server and inside IPIC itself (the grid across the wing also crosses the neighbouring shops).
+const serverFree = (a, d) => { const [x, n] = room.toWorld(a, d); return room.containsAccess(x, n) && environment.isFree(x, -n); };
 const serverGround = (a, d) => { const [x, n] = room.toWorld(a, d); return environment.groundAt(x, -n) - room.floor; };
 
-// Every walkable point on a 0.25 m grid, by the server's own collision.
+// Every walkable point on a 0.25 m grid, by the server's own collision: the room's own grid as before, and the
+// auditorium wing's beyond the room's width.
 const walkable = [];
 for (let a = room.aMin; a <= room.aMax; a += .25) for (let d = .25; d < room.depth; d += .25) if (serverFree(a, d)) walkable.push([a, d]);
+for (let a = IPIC_WING.aMin; a <= IPIC_WING.aMax; a += .25) for (let d = IPIC_WING.d0; d < IPIC_WING.d1; d += .25)
+  if ((a < room.aMin || a > room.aMax) && serverFree(a, d)) walkable.push([a, d]);
 
 // Triangles in a 0.5 m plan hash, for body-sized distance queries.
 const CELL = .5, hash = new Map(), triangles = [];
@@ -50,7 +54,7 @@ function nearestSurface(a, d, radius, top = 1.9) {
       if (seen.has(item) || item.box.max.y < ground - .5 || item.box.min.y > ground + top) continue; seen.add(item);
       for (let y = ground + .12; y <= ground + top; y += .1) {
         item.t.closestPointToPoint(point.set(a, y, -d), closest);
-        if (closest.y < ipicFloor(-closest.z) + .12 || closest.y > ground + top) continue;
+        if (closest.y < ipicFloor(-closest.z, closest.x) + .12 || closest.y > ground + top) continue;
         const flat = Math.hypot(closest.x - a, closest.z + d);
         if (flat < best.distance) best = { distance: flat, mesh: item.mesh, at: [closest.x, closest.y, -closest.z] };
       }
@@ -105,15 +109,15 @@ test('rendered floors, landings and treads sit on the server support height ever
   let flat = 0, treads = 0, worst = 0;
   for (const [a, d] of walkable) {
     const ground = serverGround(a, d);
-    assert.ok(Math.abs(ground - ipicFloor(d)) < 1e-6, 'client and server share one support function');
+    assert.ok(Math.abs(ground - ipicFloor(d, a)) < 1e-6, 'client and server share one support function');
     raycaster.set(new THREE.Vector3(a, ground + 1.2, -d), down);
     // The lowest surface under the ray is the floor; anything above it is furniture.
     const hit = raycaster.intersectObjects(meshes, false).filter(h => h.point.y > ground - .5).at(-1);
     assert.ok(hit, `no rendered floor under ${a},${d}`);
     const lift = hit.point.y - ground;
-    const onFlight = IPIC_FLIGHTS.some(f => d > f.start && d < f.end) || [IPIC_RISER.up, IPIC_RISER.down].some(([start, end]) => d > start && d < end);
+    const onFlight = IPIC_FLIGHTS.some(f => d > f.start && d < f.end) || d > IPIC_WING.d0 && IPIC_AUDITORIUM_RISERS.some(r => Math.abs(a - r.a) < RISER_RAMP);
     // Static treads rise 0.1 m at a time above the continuous ramp the server walks (the escalators, and the
-    // auditorium's riser steps).
+    // auditorium's aisle steps at each riser).
     if (onFlight) { treads++; assert.ok(lift >= -.002 && lift <= .102, `tread at ${a.toFixed(2)},${d.toFixed(2)} is ${lift.toFixed(3)} from support`); }
     else { flat++; assert.ok(Math.abs(lift) < .01, `floor at ${a.toFixed(2)},${d.toFixed(2)} is ${lift.toFixed(3)} from support (${hit.object.name})`); }
     worst = Math.max(worst, Math.abs(lift));
@@ -127,16 +131,14 @@ test('rendered floors, landings and treads sit on the server support height ever
 // rest are reported art defects (docs/ipic-interior.md, "Circulation").
 // Anything else in walkable space, or closer than recorded, fails.
 const DRAWN_WITHOUT_COLLISION = [
-  // Footrests and base ends collide since 2026-10-15 (Val); only the base under each cushion centre is left.
-  { mesh: 'Auditorium: ipic-black-rubber', a: [-2.7, 3.5], d: [27.95, 31.05], closest: 0, why: 'recliner bases under the cushion centres (seat zone)' },
   { mesh: 'Upper lounge: ipic-olive-brown-sofa', a: [-4.85, -3.25], d: [20.7, 21.3], closest: 0, why: 'sofa cushions (seat zone)' },
-  { mesh: 'Auditorium: ipic-weathered-timber', a: [4.4, 4.5], d: [27.7, 31.6], closest: .17, why: 'recliner side tables' },
+  // The auditorium wing (2026-10-19): the back row's east side table overhangs the east aisle.
+  { mesh: 'Auditorium: ipic-weathered-timber', a: [-7.3, -7.2], d: [32.95, 33.05], closest: .148, why: 'recliner side tables' },
   { mesh: 'Escalators: ipic-smoked-glass', a: [-2.35, 2.5], d: [5.45, 20.55], closest: .27, why: 'pitched glass balustrades overhang their rail colliders at the lane ends' },
   { mesh: 'Escalators: ipic-taupe-stacked-stone', a: [-2.85, 3], d: [12.45, 20.55], closest: .27, why: 'split-face stone courses run past the flight walls onto the landing' },
   { mesh: 'Upper lounge: ipic-cognac-leather', a: [-4.6, -1], d: [21.7, 23.3], closest: .29, why: 'tub chair shells overhang their colliders' },
   { mesh: 'Reception: ipic-hanging-greenery', a: [-5.6, 6], d: [.95, 2.3], closest: .25, why: 'planter foliage' },
   { mesh: 'Upper lounge: ipic-hanging-greenery', a: [-5.85, 1.75], d: [24.7, 25.8], closest: .13, why: 'planter foliage; the west planter moved 5 cm to widen the passage (2026-10-15)' },
-  { mesh: 'Auditorium: ipic-cinema-screen', a: [-5.85, 6.4], d: [33.45, 33.55], closest: .28, why: 'the screen is 0.13 m in front of the wall the room edge stops a body at; it spans nearly the whole wall since P16 (2026-10-18)' },
 ];
 
 test('the space the server lets a body walk through is visually empty, apart from recorded parts', () => {
@@ -158,10 +160,11 @@ test('every collision box has rendered geometry inside it at walking height', ()
 test('the screen material plane matches the shared screen bounds', () => {
   const screen = meshes.find(mesh => mesh.material === group.userData.screen);
   const box = new THREE.Box3().setFromObject(screen);
-  assert.deepEqual([box.min.x, box.max.x, box.min.y, box.max.y, -box.max.z].map(v => +v.toFixed(3)),
-    [IPIC_SCREEN.a - IPIC_SCREEN.width / 2, IPIC_SCREEN.a + IPIC_SCREEN.width / 2, 6 + IPIC_SCREEN.y - IPIC_SCREEN.height / 2, 6 + IPIC_SCREEN.y + IPIC_SCREEN.height / 2, IPIC_SCREEN.d].map(v => +v.toFixed(3)));
+  // On the wing's north wall the screen's plane is at a and it spans d.
+  assert.deepEqual([box.min.x, box.max.x, -box.max.z, -box.min.z, box.min.y, box.max.y].map(v => +v.toFixed(3)),
+    [IPIC_SCREEN.a, IPIC_SCREEN.a, IPIC_SCREEN.d - IPIC_SCREEN.width / 2, IPIC_SCREEN.d + IPIC_SCREEN.width / 2, 6 + IPIC_SCREEN.y - IPIC_SCREEN.height / 2, 6 + IPIC_SCREEN.y + IPIC_SCREEN.height / 2].map(v => +v.toFixed(3)));
   assert.equal(group.userData.screenAspect, IPIC_SCREEN.width / IPIC_SCREEN.height);
-  assert.ok(ipicClearance(room, [IPIC_SCREEN.a, IPIC_SCREEN.d - .5]) > 0);
+  assert.ok(ipicClearance(room, [IPIC_SCREEN.a + .5 * IPIC_SCREEN.facing[0], IPIC_SCREEN.d]) > 0, 'the floor in front of the screen is open');
 });
 
 test.after(() => group.userData.dispose());

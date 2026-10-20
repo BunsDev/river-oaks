@@ -2,140 +2,158 @@
   "schemaVersion": 1,
   "interior": "ipic-photo-v1",
   "source": "preview/src/ipic-plan.js IPIC_SCREEN",
-  "frame": "room metres; heights above the auditorium floor (room floor + 6 m)",
+  "frame": "room metres; heights above the front row's floor; left and right along the screen's horizontal axis (d, as the seats see it)",
   "screen": {
     "centre": [
-      0.3,
-      2.45,
-      33.79
+      -19.35,
+      2.4409,
+      30
     ],
-    "widthM": 12.1,
-    "heightM": 3.6,
-    "aspect": 3.361,
-    "leftM": -5.75,
-    "rightM": 6.35,
-    "bottomM": 0.65,
-    "topM": 4.25,
-    "auditoriumFloorM": 6
+    "facing": [
+      1,
+      0
+    ],
+    "widthM": 7.4,
+    "heightM": 3.0962,
+    "aspect": 2.39,
+    "leftM": 26.3,
+    "rightM": 33.7,
+    "bottomM": 1.8,
+    "topM": 4.896,
+    "auditoriumFloorM": 5.0928
   },
   "seatedEye": "cushion height + 0.69 m (store-encounters.js); seated avatars in front are not modelled, only recliner headrests",
   "seats": [
     {
       "seat": "bench:ipic-recliner-0-0:0",
       "at": [
-        -2.6,
+        -6.85,
         28
       ],
-      "eyeM": 1.62,
-      "distanceM": 5.79,
-      "horizontalDeg": 85.6,
-      "offAxisDeg": 26.6,
-      "topElevationDeg": 24.4,
-      "lowestVisibleM": 1.44,
-      "hiddenBottomFraction": 0.22
+      "eyeM": 2.13,
+      "distanceM": 12.5,
+      "horizontalDeg": 32.3,
+      "offAxisDeg": 9.1,
+      "topElevationDeg": 12.5,
+      "lowestVisibleM": 1.8,
+      "hiddenBottomFraction": 0
     },
     {
       "seat": "bench:ipic-recliner-0-1:0",
       "at": [
-        -0.6,
-        28
+        -6.85,
+        30
       ],
-      "eyeM": 1.62,
-      "distanceM": 5.79,
-      "horizontalDeg": 91.9,
-      "offAxisDeg": 8.8,
-      "topElevationDeg": 24.4,
-      "lowestVisibleM": 1.44,
-      "hiddenBottomFraction": 0.22
+      "eyeM": 2.13,
+      "distanceM": 12.5,
+      "horizontalDeg": 33,
+      "offAxisDeg": 0,
+      "topElevationDeg": 12.5,
+      "lowestVisibleM": 1.8,
+      "hiddenBottomFraction": 0
     },
     {
       "seat": "bench:ipic-recliner-0-2:0",
       "at": [
-        1.4,
-        28
+        -6.85,
+        32
       ],
-      "eyeM": 1.62,
-      "distanceM": 5.79,
-      "horizontalDeg": 91.5,
-      "offAxisDeg": -10.8,
-      "topElevationDeg": 24.4,
-      "lowestVisibleM": 1.44,
-      "hiddenBottomFraction": 0.22
-    },
-    {
-      "seat": "bench:ipic-recliner-0-3:0",
-      "at": [
-        3.4,
-        28
-      ],
-      "eyeM": 1.62,
-      "distanceM": 5.79,
-      "horizontalDeg": 84.7,
-      "offAxisDeg": -28.2,
-      "topElevationDeg": 24.4,
-      "lowestVisibleM": 1.44,
-      "hiddenBottomFraction": 0.22
+      "eyeM": 2.13,
+      "distanceM": 12.5,
+      "horizontalDeg": 32.3,
+      "offAxisDeg": -9.1,
+      "topElevationDeg": 12.5,
+      "lowestVisibleM": 1.8,
+      "hiddenBottomFraction": 0
     },
     {
       "seat": "bench:ipic-recliner-1-0:0",
       "at": [
-        -2.6,
-        31
+        -9.85,
+        28
       ],
-      "eyeM": 1.22,
-      "distanceM": 2.79,
-      "horizontalDeg": 121.2,
-      "offAxisDeg": 46.1,
-      "topElevationDeg": 47.4,
-      "lowestVisibleM": 0.65,
+      "eyeM": 1.62,
+      "distanceM": 9.5,
+      "horizontalDeg": 41.1,
+      "offAxisDeg": 11.9,
+      "topElevationDeg": 19,
+      "lowestVisibleM": 1.8,
       "hiddenBottomFraction": 0
     },
     {
       "seat": "bench:ipic-recliner-1-1:0",
       "at": [
-        -0.6,
-        31
+        -9.85,
+        30
       ],
-      "eyeM": 1.22,
-      "distanceM": 2.79,
-      "horizontalDeg": 129.7,
-      "offAxisDeg": 17.9,
-      "topElevationDeg": 47.4,
-      "lowestVisibleM": 0.65,
+      "eyeM": 1.62,
+      "distanceM": 9.5,
+      "horizontalDeg": 42.6,
+      "offAxisDeg": 0,
+      "topElevationDeg": 19,
+      "lowestVisibleM": 1.8,
       "hiddenBottomFraction": 0
     },
     {
       "seat": "bench:ipic-recliner-1-2:0",
       "at": [
-        1.4,
-        31
+        -9.85,
+        32
       ],
-      "eyeM": 1.22,
-      "distanceM": 2.79,
-      "horizontalDeg": 129.3,
-      "offAxisDeg": -21.5,
-      "topElevationDeg": 47.4,
-      "lowestVisibleM": 0.65,
+      "eyeM": 1.62,
+      "distanceM": 9.5,
+      "horizontalDeg": 41.1,
+      "offAxisDeg": -11.9,
+      "topElevationDeg": 19,
+      "lowestVisibleM": 1.8,
       "hiddenBottomFraction": 0
     },
     {
-      "seat": "bench:ipic-recliner-1-3:0",
+      "seat": "bench:ipic-recliner-2-0:0",
       "at": [
-        3.4,
-        31
+        -12.85,
+        28
       ],
       "eyeM": 1.22,
-      "distanceM": 2.79,
-      "horizontalDeg": 119.6,
-      "offAxisDeg": -48,
-      "topElevationDeg": 47.4,
-      "lowestVisibleM": 0.65,
+      "distanceM": 6.5,
+      "horizontalDeg": 55.9,
+      "offAxisDeg": 17.1,
+      "topElevationDeg": 29.5,
+      "lowestVisibleM": 1.8,
+      "hiddenBottomFraction": 0
+    },
+    {
+      "seat": "bench:ipic-recliner-2-1:0",
+      "at": [
+        -12.85,
+        30
+      ],
+      "eyeM": 1.22,
+      "distanceM": 6.5,
+      "horizontalDeg": 59.3,
+      "offAxisDeg": 0,
+      "topElevationDeg": 29.5,
+      "lowestVisibleM": 1.8,
+      "hiddenBottomFraction": 0
+    },
+    {
+      "seat": "bench:ipic-recliner-2-2:0",
+      "at": [
+        -12.85,
+        32
+      ],
+      "eyeM": 1.22,
+      "distanceM": 6.5,
+      "horizontalDeg": 55.9,
+      "offAxisDeg": -17.1,
+      "topElevationDeg": 29.5,
+      "lowestVisibleM": 1.8,
       "hiddenBottomFraction": 0
     }
   ],
   "burnedInTextSafe": {
-    "lowestM": 1.44,
-    "fractionFromTop": 0.78,
+    "lowestM": 1.8,
+    "fractionFromTop": 1,
     "note": "Lowest screen height every recliner sees over the headrest in front. Captions in the player are a WebVTT track, not burned in."
   }
 }

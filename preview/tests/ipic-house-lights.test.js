@@ -12,7 +12,7 @@ test('the auditorium\'s own lights are the house lights; reception and the loung
   const built = buildIpicInterior(room, { textures: false }), lights = built.userData.lightPositions;
   const local = light => room.toLocal(light.position.x, -light.position.z);
   const house = lights.filter(light => light.house), other = lights.filter(light => !light.house);
-  assert.equal(house.length, 4, 'two rows of downlights over the recliners');
+  assert.equal(house.length, 16, 'two rows of downlights along the auditorium wing, over the house and the foyer behind it');
   assert.ok(house.every(light => local(light)[1] > 27), 'all over the auditorium');
   assert.ok(other.every(light => local(light)[1] < 27), 'reception, escalators and lounge stay lit');
 });
