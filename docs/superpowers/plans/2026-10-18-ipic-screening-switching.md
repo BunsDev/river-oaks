@@ -96,3 +96,124 @@ Each item has a regression that failed on main; output saved with this session's
 Done: browser results, the in-world screen at player height, `pnpm run verify`, signed commits and draft PR #513
 (hosted CI green). Remaining: Val's approval, then `pnpm run land 513` before #514, #515 and #520. Device rows
 (Safari/iOS, other GPUs) and the colour design review stay with Val under #502.
+
+## S1 resumed audit — 2026-10-20 (Codex)
+
+Owner `codex:S1-resume-20261020`; task `ipic-screening-switching-498` resumed after
+verified delivery/retirement of #513. Follow-up branch `fix/screening-lifecycle-498-20261020`,
+checkout `../river-oaks-screening-498-resume`, base `a35214f3`. The historical next-step
+above is superseded: #513, #514 and #515 are merged. Their evidence remains dated evidence.
+
+Objective: audit source generations, bounded recovery, captions, resource ownership and real
+screen output against the current candidate. Preserve media bytes, keyframe repair, cancelled
+seek workaround and server authority. S2/S3 interfaces inspected in current code and latest
+#499/#500 handoffs; no public API or host-control changes planned.
+
+Owned follow-up files: player, focused player tests, this ledger; screen/browser harness
+extensions only for missing evidence. Shared UI/catalog/CSS remain unmodified.
+
+Reproduced with four new behavioral tests on current main (26 old pass, four new fail):
+- Same-film Start with an intervening Stop absent from the received snapshots retains the old
+  pending play and marks the new screening playing instead of loading.
+- A play promise resolving after the stall deadline revives error state and sound.
+- `canplay` moves to ready and exempts an unresolved play promise from the stall limit.
+- A cancelled old frame callback that arrives anyway schedules another callback chain; disposal
+  only knows the last handle.
+
+Minimal candidate fences same-film screening/epoch replacements, terminates pending work on
+failure, applies the ready-to-play timeout and stops stale frame callbacks before rescheduling.
+Player 30/30 and focused screening/media/binding/UI suite 52/52 pass, no skips.
+Raw logs: `.runtime/s1-498/`. `pnpm install --frozen-lockfile`, `uv sync --locked` complete;
+`pnpm run agent:doctor` passes. Initial fixture hash/duration command blocked: ffprobe missing
+from PATH (unit media hash/keyframe checks passed). Browser screen run started; not yet evidence.
+
+Still required: event/caption boundary audit, actual candidate browser/resource checks,
+postprocessing color comparison, required core gate, review, exact media hashes and #497 update.
+Physical Safari/iOS/other-GPU and human color/listening/accessibility evidence remain open with
+Val/#502. No production action or acceptance claim. Repository-wide project:check reports
+pre-existing missing worktree/branch reconciliation debt; no unrelated records changed.
+
+### Review and verification delta (same session)
+
+- Added current-element checks for queued media events: an error event with a cleared error
+  property consumed the new source's fallback; a queued canplay/playing could falsely mark it ready.
+  Regression failed before the guard. Captions now hide during loading/seeking/failure; the same-film
+  stale-cue regression failed before this change.
+- Independent reviewer `/root/review_s1` found two P2 issues: blocked autoplay was suppressing
+  genuine decoder errors, and pending resume from paused escaped the stall deadline. Both new
+  regressions failed before fixes. Fallback now preserves the gesture requirement, and every play
+  waits under the loading/buffering deadline. Reviewer independently rechecked 11 focused tests,
+  all passing; code review ready subject to gates/browser evidence. Reviewed player SHA-256:
+  `f69a277a846956e9b7580377318079b9ae72d90d2f797d943c2ef1f0d2eb71a7`.
+- Self-review caught failure fencing cancelling frame observation after gesture unlock; restored
+  observation on unlock with a regression. This was introduced and resolved within the candidate.
+- Focused player/UI/binding/media command now passes **58/58, zero skipped**. Borrowed textures,
+  shader hooks and material survive binding release; only the owned film texture is disposed.
+- `node scripts/make-screening-fixture.mjs --check`: **11 files / 3 films match sources.json**.
+  Installed local ffmpeg/ffprobe through Homebrew to unblock duration checking; no film regenerated.
+- First core run failed agent archive tests because PATH selected system Python 3.9 (`extractall`
+  lacks `filter`). Rerun with `PATH="$PWD/.venv/bin:$PATH" pnpm run verify` uses Python 3.13.16;
+  agent tests pass that boundary, full result pending. Original receipt preserved as
+  `.runtime/s1-498/core-system-python.json`; logs retain actual failures/skips.
+- Existing screen fixture now calls production `createRenderPipeline` with GTAO, bloom and
+  OutputPass. Browser test adds same-film restart without Stop and records before/after texture
+  and raw position. This still uses fixture lighting, so it is not full-world sky-light evidence.
+- Browser process remains queued behind live `node scripts/browser-lock.mjs` PID 3435 (garment
+  provenance full gate); lock respected. No current rendered/color/resource pass claimed yet.
+- `.runtime/s1-498/candidate.json` records base, branch, SHA-256 of candidate source/tests/harness
+  and all media files. No commit, merge, deployment or production operation performed.
+
+Next executable actions: poll live core session and browser runner; inspect failures if any,
+review real captures/color samples, then run two-browser journey and proportional resource check.
+Refresh candidate hashes if code changes. Update #497 with exact evidence and keep missing criteria open.
+
+Progress receipt published to #497:
+https://github.com/BunsDev/river-oaks/issues/497#issuecomment-6304411629
+
+Live handles at this handoff: exec session `24271` (core, PID 80628; preview finished,
+server started); exec session `49206` (screen runner PID 18038; browser queue waiting
+behind live PID 3435). Poll these handles rather than starting duplicates. Core began
+before the final review fixes, so validate the final changed preview slice after it;
+do not attribute an earlier loaded test file to later source edits. The full 58-test
+focused result and independent reviewer signature match the final player hash above.
+
+### Continuation — 2026-10-20 23:56Z
+
+Previous turn was progress (reproduced defects, patch, regressions, review and coordinator update).
+Re-polled the existing core and screen runner; neither was restarted.
+
+- Corrected-Python core gate **passed**: agent 165/168 (3 media-intake skips before ffmpeg
+  installation), preview 3707/3708 (existing obstructed Vince glazing negative-test skip),
+  server 732/944 (212 Redis skips), desktop 115/118 (3 Windows PowerShell skips), production
+  build, Ruff/format, Python 145 tests, offline fixture and secret guard passed. Offline
+  verification's expected blocked result is not production evidence.
+- After ffmpeg installation, `node --test scripts/tests/ipic-short-intake.test.js` passed
+  **7/7, zero skipped**, covering the three media-intake rows skipped by that core run.
+- Final audit reproduced a diagnostic defect: successful gesture recovery retained an
+  `autoplay` attempt result after actual decoding. `decoded()` now recognizes a valid decoded
+  event after policy refusal too, without changing the gesture gate. Existing regression
+  extended, failed first, then passed. Focused suite remains **58/58, zero skips**.
+- Independent reviewer `/root/review_s1` approved this diagnostic delta and independently
+  ran its regression (1/1). Final player SHA-256 is
+  `46772895d863cf2626dc09a71be0c2ce70dde23a693d3dd4dd4abf6f7321f539`;
+  `.runtime/s1-498/candidate.json` refreshed. The earlier review signature remains historical.
+- Final candidate preview gate `PATH="$PWD/.venv/bin:$PATH" pnpm run verify preview` is live
+  in exec session `59038` (agent PID 67357, node tests PID 67582; current remaining worker
+  PID 83653, `silvan-drape.test.js`). No failed result or timeout yet; do not restart it.
+- Screen runner session `49206`, PID 18038, remains queued behind live PID 3435; no rendered
+  result. The original core handle `24271` completed successfully and is now closed.
+
+Next: finish final preview gate; prepare a draft PR using GitHub-signed commit API because
+this environment has no local signing executable, comparing the resulting tree with staged
+files before adopting it locally. Then consume the existing screen runner, inspect output,
+and run two-browser/resource checks. Keep missing criteria open; no merge/deployment authority
+is inferred. No changes to shared S2/S3 hunks or media bytes.
+
+### Draft candidate gate — 2026-10-20 23:58Z
+
+`PATH="$PWD/.venv/bin:$PATH" pnpm run verify preview` completed: **3709 passed / 3710,
+zero failures, one existing obstructed Vince glazing skip** (302.9 s). This run covers the
+final player revision `46772895…` and includes both independent-review fixes. Combined with
+the completed core run and 7/7 media-intake rerun, the code is ready for a draft PR; browser,
+postprocessing/color and same-candidate resource evidence remain pending. Screen process
+18038 remains live and queued behind live PID 3435. No duplicate browser runner started.

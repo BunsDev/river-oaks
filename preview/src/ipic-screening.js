@@ -68,20 +68,23 @@ export function createScreeningPlayer({ media: element, clock, onChange = () => 
   let shared = null, mediaId = null, state = 'idle', generation = 0, playing = null, rate = 1, drift = 0, measured = 0, captions = false;
   let attempt = null, failure = null, presented = null, frameRequest = 0, progressAt = now();
   const set = next => { if (state !== next) { state = next; progressAt = now(); onChange(stats()); } };
-  const decoded = () => { if (attempt?.current?.result === 'loading') attempt.current.result = 'decoded'; };
+  const decoded = () => { if (['loading', 'autoplay'].includes(attempt?.current?.result)) attempt.current.result = 'decoded'; };
   const listeners = {
-    playing: () => { decoded(); if (shared?.status === 'playing' && !['blocked', 'error'].includes(state)) set('playing'); },
+    playing: () => { if (element.paused || element.readyState < 2 || !attempt?.current) return; decoded(); if (shared?.status === 'playing' && !['blocked', 'error'].includes(state)) set('playing'); },
     waiting: () => { if (shared?.status === 'playing' && state === 'playing') set('buffering'); },
-    canplay: () => { decoded(); if (state === 'loading') set('ready'); },
+    canplay: () => { if (element.readyState < 3 || !attempt?.current) return; decoded(); if (state === 'loading') set('ready'); },
     progress: () => { progressAt = now(); },
     error: () => {
       const code = element.error?.code;
       // Our own reload, switch or stop aborts the old resource: that is not a failure.
-      if (code === MEDIA_ERR.ABORTED || !attempt?.current || state === 'idle') return;
+      if (!code || code === MEDIA_ERR.ABORTED || !attempt?.current || ['idle', 'error'].includes(state)) return;
       // A failed download is not the codec's fault: report it rather than trying another encoding.
       if (code === MEDIA_ERR.NETWORK || globalThis.navigator?.onLine === false) return fail('network');
+      const blocked = state === 'blocked';
       attempt.current.result = 'decode';
       if (!next()) fail('decode');
+      // A genuine decode error may select another encoding, but cannot grant autoplay.
+      else if (blocked) set('blocked');
     },
   };
   for (const [type, fn] of Object.entries(listeners)) element.addEventListener(type, fn);
@@ -92,14 +95,17 @@ export function createScreeningPlayer({ media: element, clock, onChange = () => 
     if (typeof element.requestVideoFrameCallback !== 'function' || state === 'disposed') return;
     const token = generation;
     frameRequest = element.requestVideoFrameCallback((at, meta) => {
+      if (token !== generation || state === 'disposed') return;
       frameRequest = 0;
-      if (state === 'disposed') return;
-      if (token === generation && meta) presented = { mediaTimeMs: Math.round(meta.mediaTime * 1000), frames: meta.presentedFrames, at, generation };
+      if (meta) presented = { mediaTimeMs: Math.round(meta.mediaTime * 1000), frames: meta.presentedFrames, at, generation };
       watchFrames();
     });
   }
   function fail(reason) {
-    playing = null; failure = reason;
+    // End this attempt before pausing: a queued play/frame continuation must not revive it.
+    generation++; playing = null; presented = null; failure = reason;
+    if (frameRequest) element.cancelVideoFrameCallback?.(frameRequest);
+    frameRequest = 0; element.pause();
     if (attempt?.current?.result === 'loading') attempt.current.result = reason;
     set(reason === 'autoplay' ? 'blocked' : 'error');
   }
@@ -130,6 +136,8 @@ export function createScreeningPlayer({ media: element, clock, onChange = () => 
     set('idle');
   }
   function play() {
+    // A pending resume or foreground recovery needs the same deadline as initial playback.
+    if (!['loading', 'buffering'].includes(state)) set('loading');
     const token = generation;
     // Call play() now, not in a later task, so dispose() can never be followed by a start.
     let started;
@@ -156,8 +164,9 @@ export function createScreeningPlayer({ media: element, clock, onChange = () => 
     apply(view) {
       if (state === 'disposed' || !view) return;
       if (shared && view.epoch === shared.epoch && view.revision < shared.revision) return;
+      const replacement = shared && (view.epoch !== shared.epoch || view.screeningId !== shared.screeningId);
       shared = { ...view };
-      if (shared.mediaId && shared.mediaId !== mediaId) {
+      if (shared.mediaId && (shared.mediaId !== mediaId || replacement)) {
         if (Object.hasOwn(catalog, shared.mediaId)) load(shared.mediaId);
         // A film added by a newer build: release the previous film rather than play it under the new
         // film's timeline, and say this version cannot show it.
@@ -167,7 +176,7 @@ export function createScreeningPlayer({ media: element, clock, onChange = () => 
     },
     tick() {
       // A load or buffer without progress for too long is reported, with Retry, not left spinning.
-      if (['loading', 'buffering'].includes(state) && now() - progressAt > SCREENING_LOAD.stallMs) fail('stalled');
+      if ((['loading', 'buffering'].includes(state) || state === 'ready' && shared?.status === 'playing') && now() - progressAt > SCREENING_LOAD.stallMs) fail('stalled');
       if (!shared?.mediaId || ['disposed', 'unsupported', 'error', 'blocked', 'idle'].includes(state) && !(state === 'idle' && shared?.mediaId)) {
         if (shared?.status !== 'playing' && !element.paused) element.pause();
         return;
@@ -196,7 +205,7 @@ export function createScreeningPlayer({ media: element, clock, onChange = () => 
       }
     },
     // A user gesture: try again after autoplay was refused.
-    unlock() { if (state !== 'blocked' && state !== 'ready') return Promise.resolve(); failure = null; set('loading'); return play() ?? Promise.resolve(); },
+    unlock() { if (state !== 'blocked' && state !== 'ready') return Promise.resolve(); failure = null; set('loading'); if (!frameRequest) watchFrames(); return play() ?? Promise.resolve(); },
     // A new bounded attempt: every encoding gets one more try, starting with the first.
     retry() { if (!mediaId || state === 'disposed') return; load(mediaId); },
     setMuted(value) { element.muted = Boolean(value); },
@@ -205,7 +214,7 @@ export function createScreeningPlayer({ media: element, clock, onChange = () => 
     // nowhere. 'hidden' keeps them tracked for the panel's caption line; off stops tracking.
     setCaptions(on) { captions = Boolean(on); for (const track of element.textTracks ?? []) track.mode = captions ? 'hidden' : 'disabled'; },
     captionText() {
-      if (!captions || state === 'disposed') return '';
+      if (!captions || ['idle', 'loading', 'unsupported', 'error', 'disposed'].includes(state) || element.readyState < 2 || element.seeking) return '';
       const track = [...(element.textTracks ?? [])].find(item => item.mode === 'hidden');
       return [...(track?.activeCues ?? [])].map(cue => cue.text).join('\n');
     },

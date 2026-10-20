@@ -78,6 +78,12 @@ async page => {
   check(switched.mediaId === 'test-edge-4x3' && switched.failure === null && switched.screen.key && switched.decoded.join() === '640,480', `interrupted load: ${JSON.stringify(switched)}`);
   checks.push('switching while a load is pending aborts it quietly and shows the replacement');
 
+  // Snapshots can skip Stop: a new screening of this same film still owns a fresh load.
+  const restarted = await fx('show', 'test-edge-4x3', { at: 2000 });
+  check(restarted.generation > switched.generation && restarted.screen.texture !== switched.screen.texture && Math.abs(restarted.currentTime - 2) < 0.06, `same-film restart: ${JSON.stringify(restarted)}`);
+  results.sameFilmRestart = { before: switched, after: restarted };
+  checks.push('a same-film restart without an observed Stop replaces its texture and reaches the new position');
+
   // Colour: the screen against the film's own pixels, house lights up and dimmed.
   await fx('show', 'test-edge-16x9');
   results.colour = { lit: await fx('sample'), dimmed: (await fx('pose', 'square', 0.25), await fx('sample')) };

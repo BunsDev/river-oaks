@@ -1,14 +1,15 @@
 // IPIC screen review (#498): the real auditorium interior and screen material, the real screening
 // player and screen binding, and test-only films (preview/e2e/fixtures/screening). Driven by
 // preview/e2e/ipic-screen.js; renders with the game's tone mapping (ACES, exposure 0.95) and the
-// game's store lights (8 nearest, #ffd9ae, 10 × the house-light level). Not the game's full
-// pipeline (no bloom, GTAO or sky light): in-world captures are separate evidence.
+// game's store lights (8 nearest, #ffd9ae, 10 × the house-light level). Uses the production
+// render pipeline (GTAO, bloom, OutputPass); full-world sky lighting is separate evidence.
 import * as THREE from 'three';
 import { buildIpicInterior } from '../../src/ipic-interior.js';
 import { planStoreRooms } from '../../src/store-rooms.js';
 import { IPIC_AUDITORIUM_ROWS, IPIC_AUDITORIUM_SEAT_D, IPIC_SCREEN, IPIC_VIEWING } from '../../src/ipic-plan.js';
 import { SCREENING_MEDIA } from '../../src/screening-contract.js';
 import { createScreeningPlayer, createServerClock } from '../../src/ipic-screening.js';
+import { createRenderPipeline } from '../../src/render-pipeline.js';
 import { createScreenBinding } from '../../src/ipic-screening-screen.js';
 
 const status = text => { document.querySelector('#status').textContent = text; };
@@ -25,6 +26,8 @@ renderer.setPixelRatio(1); renderer.setSize(innerWidth, innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 0.95; renderer.outputColorSpace = THREE.SRGBColorSpace;
 document.body.append(renderer.domElement);
 const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(67, innerWidth / innerHeight, 0.08, 100);
+const pipeline = createRenderPipeline(renderer, scene, camera);
+pipeline.resize(innerWidth, innerHeight, 1);
 const model = buildIpicInterior(room, { local: true }); scene.add(model);
 scene.add(new THREE.HemisphereLight('#eee0c4', '#66584a', 0.6));
 const lights = Array.from({ length: 8 }, () => { const light = new THREE.PointLight('#ffd9ae', 0, 10, 2); scene.add(light); return light; });
@@ -61,7 +64,7 @@ function frame() {
   player.tick();
   const stats = player.stats();
   binding.sync({ screen, video, key: `${stats.generation}:${video.videoWidth}x${video.videoHeight}`, show: SHOWN.includes(stats.state) && video.readyState >= 2 });
-  pose(current); renderer.render(scene, camera); frames++;
+  pose(current); pipeline.render(1 / 60); frames++;
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
@@ -135,7 +138,7 @@ window.screenFixture = {
     return out;
   },
   inspect: () => ({ ...player.stats(), screen: binding.inspect(), decoded: [video.videoWidth, video.videoHeight], currentTime: video.currentTime, readyState: video.readyState,
-    textures: renderer.info.memory.textures, idleTextures, materialRestored: snapshotMaterial() === idle, materialBound: snapshotMaterial() !== idle }),
+    pipeline: pipeline.stats, textures: renderer.info.memory.textures, idleTextures, materialRestored: snapshotMaterial() === idle, materialBound: snapshotMaterial() !== idle }),
 };
 // A real user gesture (the harness clicks the page) answers an autoplay refusal, as Play film does.
 addEventListener('click', () => { void player.unlock(); });
