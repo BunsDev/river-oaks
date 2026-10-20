@@ -1,9 +1,10 @@
 // Explicitly authorized local cancellation of branches past the selected cutoff.
 // Keep the reference guard, archive restoration, and non-forced worktree removal.
 import { execFileSync } from 'node:child_process';
-import { createHash, randomUUID } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, renameSync, rmdirSync, unlinkSync, writeFileSync } from 'node:fs';
 import { join, resolve, relative, isAbsolute } from 'node:path';
+import { archiveTip } from './project-prune.mjs';
 
 const git=(root,args,optional=false)=>{
   try{return execFileSync('git',args,{cwd:root,encoding:'utf8',maxBuffer:32*1024*1024,stdio:['ignore','pipe','pipe'],env:{...process.env,GIT_TERMINAL_PROMPT:'0'}}).trimEnd();}
@@ -76,11 +77,7 @@ export function cancelStale(options){
     const receipt={branch,head:expectedHead,tag,bundle,worktrees:plan.worktrees,latestTouch:plan.latestTouch,cutoff:plan.cutoff,status:'archiving',createdAt:new Date().toISOString()};
     const record=()=>writeFileSync(manifest,JSON.stringify(receipt,null,2)+'\n',{mode:0o600});record();
     git(root,['update-ref',tag,expectedHead,'0'.repeat(expectedHead.length)]);
-    git(root,['bundle','create',bundle,tag]);
-    receipt.sha256=createHash('sha256').update(readFileSync(bundle)).digest('hex');
-    git(root,['init','--bare',restore]);git(restore,['fetch',bundle,`${tag}:${tag}`]);
-    if(git(restore,['rev-parse',tag])!==expectedHead)throw new Error('Archive restoration SHA mismatch');
-    git(restore,['fsck','--full']);
+    Object.assign(receipt,archiveTip({root,tag,expectedHead,bundle,restore}));
     receipt.localFiles=[];
     for(const path of plan.worktrees){receipt.localFiles.push(snapshot('archive',path,'--directory',directory));record();}
     receipt.status='restore-verified';record();
@@ -204,11 +201,8 @@ export function cancelDetached(options){
     const tag=`refs/tags/archive/worktree-prune/${randomUUID()}`,bundle=join(directory,'history.bundle'),restore=join(directory,'restore.git'),manifest=join(directory,'manifest.json');
     const receipt={path:target,head:expectedHead,tag,bundle,status:'archiving',latestTouch:plan.latestTouch,cutoff:plan.cutoff,createdAt:new Date().toISOString()};
     const record=()=>writeFileSync(manifest,JSON.stringify(receipt,null,2)+'\n',{mode:0o600});record();
-    git(root,['update-ref',tag,expectedHead,'0'.repeat(expectedHead.length)]);git(root,['bundle','create',bundle,tag]);
-    receipt.sha256=createHash('sha256').update(readFileSync(bundle)).digest('hex');
-    git(root,['init','--bare',restore]);git(restore,['fetch',bundle,`${tag}:${tag}`]);
-    if(git(restore,['rev-parse',tag])!==expectedHead)throw new Error('Archive restoration SHA mismatch');
-    git(restore,['fsck','--full']);receipt.localFiles=snapshot('archive',target,'--directory',directory);receipt.status='restore-verified';record();
+    git(root,['update-ref',tag,expectedHead,'0'.repeat(expectedHead.length)]);
+    Object.assign(receipt,archiveTip({root,tag,expectedHead,bundle,restore}));receipt.localFiles=snapshot('archive',target,'--directory',directory);receipt.status='restore-verified';record();
     check();snapshot('verify-source',target,'--manifest',receipt.localFiles.manifest);
     git(target,['reset','--hard',expectedHead]);git(target,['clean','-fdx']);
     if(git(target,['status','--porcelain=v1','--ignored']))throw new Error(`Worktree still has local files; archive: ${manifest}`);
