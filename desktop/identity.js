@@ -10,3 +10,8 @@ export const APP_USER_MODEL_ID = 'works.jev.river-oaks';
 // Linux launchers and desktop entries get a space-free binary; macOS and Windows keep the product name.
 export const LINUX_EXECUTABLE = 'typesafe-place';
 export const WINDOWS_EXECUTABLE = `${APP_NAME}.exe`;
+// Squirrel's package ID (desktop/installers.js): it names the install folder
+// %LocalAppData%\TypeSafePlace and the Installed apps entry, and updates find the
+// install by it, so changing it strands every existing Windows install.
+export const WINDOWS_INSTALL_ID = 'TypeSafePlace';
+export const APP_HOMEPAGE = 'https://typesafe.place';

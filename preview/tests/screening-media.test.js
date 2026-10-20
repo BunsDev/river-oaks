@@ -41,6 +41,21 @@ test('the approved short records who approved it and what it shows', () => {
   assert.match(entry.provenance, /OpenStreetMap/, 'the ODbL credit stays with the film');
 });
 
+test('the second short records who approved which files, and what it carries', () => {
+  const entry = manifest.media.find(item => item.id === 'ipic-two-seats-v1');
+  assert.equal(entry.fixture, false);
+  assert.match(entry.approval, /Approved by Val Alexander on 2026-10-19 \(#501\)/);
+  assert.deepEqual(entry.audio, { dialogue: true, music: true });
+  assert.equal(entry.approvedItems.length, 5);
+  assert.ok(entry.approvedItems.every(item => /Approved by Val Alexander on 2026-10-19/.test(item)));
+  // The approval names these exact files: each approved prefix matches the committed file's SHA-256.
+  for (const [suffix, prefix] of [['.webm', '24f08a74'], ['.mp4', '85b1079e'], ['.en.vtt', '2a6b54e0'], ['-poster.jpg', '2e53991c']]) {
+    const file = entry.files.find(item => item.path.endsWith(`ipic-two-seats-v1${suffix}`));
+    assert.ok(file && file.sha256.startsWith(prefix) && entry.approval.includes(prefix), `${suffix}: the approved bytes`);
+  }
+  assert.doesNotMatch(JSON.stringify(entry), /Pending/, 'no pending approval is left in the record');
+});
+
 test('the caption parser reads cue text only, whatever the cue ids and comment blocks', () => {
   const vtt = 'WEBVTT\n\nNOTE written for the cut\n\n1\n00:00:00.200 --> 00:00:05.000\n1999\n\nintro\n00:00:05.000 --> 00:00:07.000\nTwo lines,\none cue.\n';
   assert.deepEqual(cueText(vtt), ['1999', 'Two lines, one cue.']);

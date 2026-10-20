@@ -15,6 +15,7 @@ import { storeRoomsFor, interiorLevelRoomsFor, uncoveredBay, coveringRoom } from
 import { venueDoorSites } from './venue-rooms.js';
 import { CAMPUS_BUILDING_KIND, isCampusRoom } from './garden-campus-district.js';
 import { buildGardenCampus } from './garden-campus.js';
+import { buildGardenCampusFitout } from './garden-campus-fitout-render.js';
 import { buildCampusCeilings } from './garden-campus-ceilings.js';
 import { buildStoreInteriors } from './store-interiors.js';
 import { createReferenceFacades, visibleRoofHeight } from './reference-facades.js';
@@ -429,13 +430,14 @@ export function buildDistrictBuildings(world) {
   }
   group.add(reference.group);
   group.add(buildGreenRoofs(world));
-  const campus = buildGardenCampus(world);
+  const campus = buildGardenCampus(world), fitout = buildGardenCampusFitout(world);
   if (campus) {
     // Lit ceilings over every campus floor (#508), in the campus root's frame; released with it.
     const ceilings = buildCampusCeilings(), release = campus.userData.dispose;
     campus.add(ceilings);campus.userData.dispose = () => { ceilings.userData.dispose();release?.(); };
     group.add(campus);
   }
+  if (fitout) group.add(fitout);
   if(officeLobby){
     const arrival=buildOfficeArrival({facade:false}),n=officeLobby.outward;
     arrival.object.position.set(officeLobby.facade[0]-n[0]*ARRIVAL.facadeOffset,officeLobby.floor,-officeLobby.facade[1]+n[1]*ARRIVAL.facadeOffset);
@@ -467,7 +469,7 @@ export function buildDistrictBuildings(world) {
   };
   group.add(buildRetailDisplays(displays));
   group.userData.dispose = () => {
-    campus?.userData.dispose();
+    campus?.userData.dispose();fitout?.userData.dispose();
     const arrival=group.userData.officeArrival;
     if(arrival){arrival.object.removeFromParent();arrival.dispose();}
     interiorGroup.userData.dispose();

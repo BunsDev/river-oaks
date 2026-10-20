@@ -6,7 +6,7 @@
 import * as THREE from 'three';
 import { buildIpicInterior } from '../../src/ipic-interior.js';
 import { planStoreRooms } from '../../src/store-rooms.js';
-import { IPIC_SCREEN } from '../../src/ipic-plan.js';
+import { IPIC_AUDITORIUM_ROWS, IPIC_AUDITORIUM_SEAT_D, IPIC_SCREEN, IPIC_VIEWING } from '../../src/ipic-plan.js';
 import { SCREENING_MEDIA } from '../../src/screening-contract.js';
 import { createScreeningPlayer, createServerClock } from '../../src/ipic-screening.js';
 import { createScreenBinding } from '../../src/ipic-screening-screen.js';
@@ -31,11 +31,16 @@ const lights = Array.from({ length: 8 }, () => { const light = new THREE.PointLi
 await model.userData.ready;
 const screen = { material: model.userData.screen, aspect: model.userData.screenAspect };
 const p = ([a, h, d]) => new THREE.Vector3(a, h, -d);
-// Poses in the room frame [a, h, d] (h above the street floor, 6 m below the auditorium's base).
+// The screen faces IPIC_SCREEN.facing in (a, d); film right runs along `right`, a quarter turn from it.
+const [fa, fd] = IPIC_SCREEN.facing, right = [-fd || 0, fa], centre = [IPIC_SCREEN.a, 6 + IPIC_SCREEN.y, IPIC_SCREEN.d];
+const ahead = metres => [IPIC_SCREEN.a + fa * metres, 6 + IPIC_SCREEN.y, IPIC_SCREEN.d + fd * metres];
+const middle = IPIC_AUDITORIUM_ROWS[1];
+// Poses in the room frame [a, h, d] (h above the street floor; the upper floor is 6 m up). Square on, the
+// screen spans the share of the frame the 12.1 m screen did from the old back wall (6.05 / 7.19 = 3.7 / 4.4).
 const POSES = {
-  square: { eye: [IPIC_SCREEN.a, 6 + IPIC_SCREEN.y, 26.6], target: [IPIC_SCREEN.a, 6 + IPIC_SCREEN.y, IPIC_SCREEN.d] },
-  // recliner-1-1's seated eye (cushion + 0.69 m), as ipic-photo-views.mjs T3-seated.
-  seated: { eye: [-0.6, 6 + 0.53 + 0.69, 31], target: [0.3, 6 + 2.5, IPIC_SCREEN.d] },
+  square: { eye: ahead(4.4), target: centre },
+  // recliner-1-1's seated eye (cushion + 0.69 m) in the middle row, as ipic-photo-views.mjs T3-seated.
+  seated: { eye: [middle.a, 6 + middle.floor + IPIC_VIEWING.seatedEye, IPIC_AUDITORIUM_SEAT_D[1]], target: centre },
 };
 let houseLights = 1;
 function pose(name) {
@@ -68,12 +73,15 @@ const snapshotMaterial = () => {
     own: ['onBeforeCompile', 'customProgramCacheKey'].map(key => Object.hasOwn(m, key)), key: m.customProgramCacheKey() });
 };
 // The idle screen's material, and the textures resident once the interior has rendered (its own maps), before any film.
-await nextFrames(3);
+// Each pose renders first: square on, the screen hides the rows, whose maps upload when they first come into view.
+for (const name of Object.keys(POSES)) { current = name; await nextFrames(3); }
+current = 'square'; await nextFrames(3);
 const idle = snapshotMaterial(), idleTextures = renderer.info.memory.textures;
 
 // Screen pixels: project a point given in film or screen fractions (u right, v down) on the screen plane.
 function screenPoint(s, t) {
-  const point = p([IPIC_SCREEN.a + (s - 0.5) * IPIC_SCREEN.width, 6 + IPIC_SCREEN.y + (0.5 - t) * IPIC_SCREEN.height, IPIC_SCREEN.d - 0.01]).project(camera);
+  const across = (s - 0.5) * IPIC_SCREEN.width;
+  const point = p([IPIC_SCREEN.a + right[0] * across + fa * 0.01, 6 + IPIC_SCREEN.y + (0.5 - t) * IPIC_SCREEN.height, IPIC_SCREEN.d + right[1] * across + fd * 0.01]).project(camera);
   return [Math.round((point.x + 1) / 2 * innerWidth), Math.round((1 - point.y) / 2 * innerHeight)];
 }
 function readPixel([x, y]) {
@@ -120,8 +128,9 @@ window.screenFixture = {
     const named = { grey: [0.5, 0.15], white: [0.325, 0.5], black: [0.675, 0.5], edgeLeft: [eu, 0.5], edgeRight: [1 - eu, 0.5], edgeTop: [0.5, ev], edgeBottom: [0.5, 1 - ev], ...points };
     const out = { bound, pose: current, houseLights, film: {}, matte: {} };
     for (const [name, [u, v]] of Object.entries(named)) out.film[name] = { rendered: readPixel(screenPoint(...film(u, v))), direct: directPixel(u, v), at: screenPoint(...film(u, v)) };
-    const mattes = rx > 1 ? { outsideLeft: [left - 0.004, 0.5], outsideRight: [1 - left + 0.004, 0.5], midLeft: [left / 2, 0.5], midRight: [1 - left / 2, 0.5] }
-      : ry > 1 ? { outsideTop: [0.5, top - 0.01], outsideBottom: [0.5, 1 - top + 0.01], midTop: [0.5, top / 2], midBottom: [0.5, 1 - top / 2] } : {};
+    // A film within 1 % of the screen's aspect fills it (2.39:1 on the scope screen): no matte to sample.
+    const mattes = rx > 1.01 ? { outsideLeft: [left - 0.004, 0.5], outsideRight: [1 - left + 0.004, 0.5], midLeft: [left / 2, 0.5], midRight: [1 - left / 2, 0.5] }
+      : ry > 1.01 ? { outsideTop: [0.5, top - 0.01], outsideBottom: [0.5, 1 - top + 0.01], midTop: [0.5, top / 2], midBottom: [0.5, 1 - top / 2] } : {};
     for (const [name, st] of Object.entries(mattes)) out.matte[name] = { rendered: readPixel(screenPoint(...st)), at: screenPoint(...st) };
     return out;
   },

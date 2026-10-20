@@ -1,0 +1,448 @@
+{
+  "renderedAt": "2026-10-18T19:47Z",
+  "candidate": "01ee32439cb229b48521a1b84e09fde4c94a8bd0",
+  "command": "node preview/e2e/garden-campus-views.mjs gardens circulation",
+  "host": "M3 Max, Chromium (ANGLE Metal), 1280x800, Smooth preset, 15:00, interface hidden",
+  "status": "passed",
+  "limits": "Local loopback fixture on this machine; residents move between views; frame times are the host under its recorded load, not a device budget.",
+  "findings": [
+    "Closed: Floor 4 galleries are walled off from the suites with closed suite doors (#507 a6dbb661), opaque at any camera distance. First render at d8fe456a showed them open.",
+    "Open (#508, river-oaks-c5): gallery ceilings render as an unlit dark slab underside."
+  ],
+  "views": [
+    {
+      "name": "gardens-f4-t1-gallery",
+      "revision": "gardens",
+      "camera": "f4-t1-gallery",
+      "levelId": "garden-campus/l3",
+      "surfaceId": "T1-F4-public",
+      "pose": {
+        "position": [
+          -2704.5164274781187,
+          32.93939189446673,
+          1317.1210313489069
+        ],
+        "target": [
+          -2704.256483529726,
+          32.459391894466734,
+          1293.8224814124044
+        ],
+        "fov": 70
+      },
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+      "calls": 781,
+      "triangles": 3113231,
+      "frameP50": 16.69999999999891,
+      "frameP95": 33.399999999999636,
+      "samples": 15,
+      "hostLoad": [
+        46.1,
+        36.3,
+        45.3
+      ]
+    },
+    {
+      "name": "gardens-f4-t2-gallery",
+      "revision": "gardens",
+      "camera": "f4-t2-gallery",
+      "levelId": "garden-campus/l3",
+      "surfaceId": "T2-F4-public",
+      "pose": {
+        "position": [
+          -2704.031124398502,
+          32.93939189446673,
+          1273.623738548999
+        ],
+        "target": [
+          -2703.743289468522,
+          32.459391894466734,
+          1247.8253441987088
+        ],
+        "fov": 70
+      },
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+      "calls": 623,
+      "triangles": 3070617,
+      "frameP50": 16.69999999999891,
+      "frameP95": 16.80000000000109,
+      "samples": 15,
+      "hostLoad": [
+        46.1,
+        36.3,
+        45.3
+      ]
+    },
+    {
+      "name": "gardens-f4-t3-gallery",
+      "revision": "gardens",
+      "camera": "f4-t3-gallery",
+      "levelId": "garden-campus/l3",
+      "surfaceId": "T3-F4-public",
+      "pose": {
+        "position": [
+          -2703.433141753273,
+          32.93939189446673,
+          1220.0270743173883
+        ],
+        "target": [
+          -2703.665194720078,
+          32.459391894466734,
+          1240.825779840103
+        ],
+        "fov": 70
+      },
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+      "calls": 1240,
+      "triangles": 4348622,
+      "frameP50": 16.69999999999891,
+      "frameP95": 33.399999999999636,
+      "samples": 15,
+      "hostLoad": [
+        46.1,
+        36.3,
+        45.3
+      ]
+    },
+    {
+      "name": "gardens-f4-b12-south",
+      "revision": "gardens",
+      "camera": "f4-b12-south",
+      "levelId": "garden-campus/l3",
+      "surfaceId": "B12",
+      "pose": {
+        "position": [
+          -2704.0891376402033,
+          32.93939189446673,
+          1278.8234149296777
+        ],
+        "target": [
+          -2704.345734670805,
+          32.459391894466734,
+          1301.8219835365255
+        ],
+        "fov": 70
+      },
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+      "calls": 810,
+      "triangles": 3376043,
+      "frameP50": 16.69999999999891,
+      "frameP95": 16.799999999999272,
+      "samples": 15,
+      "hostLoad": [
+        46.1,
+        36.3,
+        45.3
+      ]
+    },
+    {
+      "name": "gardens-f4-b23-south",
+      "revision": "gardens",
+      "camera": "f4-b23-south",
+      "levelId": "garden-campus/l3",
+      "surfaceId": "B23",
+      "pose": {
+        "position": [
+          -2703.6317255421736,
+          32.93939189446673,
+          1237.8259665435576
+        ],
+        "target": [
+          -2703.832540609601,
+          32.459391894466734,
+          1255.8248463228297
+        ],
+        "fov": 70
+      },
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+      "calls": 1069,
+      "triangles": 4022549,
+      "frameP50": 16.69999999999891,
+      "frameP95": 16.80000000000109,
+      "samples": 15,
+      "hostLoad": [
+        46.1,
+        36.3,
+        45.3
+      ]
+    },
+    {
+      "name": "gardens-t1-terrace-3",
+      "revision": "gardens",
+      "camera": "t1-terrace-3",
+      "levelId": "garden-campus/l2",
+      "surfaceId": "T1-terrace-3/0",
+      "pose": {
+        "position": [
+          -2696.921507079727,
+          28.93939189446673,
+          1308.655236398514
+        ],
+        "target": [
+          -2697.069329282139,
+          28.45939189446673,
+          1321.9044117915894
+        ],
+        "fov": 70
+      },
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+      "calls": 637,
+      "triangles": 2798598,
+      "frameP50": 16.69999999999891,
+      "frameP95": 16.799999999999272,
+      "samples": 15,
+      "hostLoad": [
+        46.1,
+        36.3,
+        45.3
+      ]
+    },
+    {
+      "name": "gardens-t3-terrace-3",
+      "revision": "gardens",
+      "camera": "t3-terrace-3",
+      "levelId": "garden-campus/l2",
+      "surfaceId": "T3-terrace-3/0",
+      "pose": {
+        "position": [
+          -2696.0150501781436,
+          28.93939189446673,
+          1227.4102929504102
+        ],
+        "target": [
+          -2696.1545050860796,
+          28.45939189446673,
+          1239.9095150193493
+        ],
+        "fov": 70
+      },
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+      "calls": 1099,
+      "triangles": 4115712,
+      "frameP50": 16.69999999999891,
+      "frameP95": 16.799999999999272,
+      "samples": 15,
+      "hostLoad": [
+        46.1,
+        36.3,
+        45.3
+      ]
+    },
+    {
+      "name": "gardens-t2-terrace-4",
+      "revision": "gardens",
+      "camera": "t2-terrace-4",
+      "levelId": "garden-campus/l3",
+      "surfaceId": "T2-terrace-4/0",
+      "pose": {
+        "position": [
+          -2696.4166803129992,
+          32.93939189446673,
+          1263.4080525089546
+        ],
+        "target": [
+          -2696.578448006205,
+          32.459391894466734,
+          1277.907150108924
+        ],
+        "fov": 70
+      },
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+      "calls": 835,
+      "triangles": 3531694,
+      "frameP50": 16.69999999999891,
+      "frameP95": 16.80000000000109,
+      "samples": 15,
+      "hostLoad": [
+        46.1,
+        36.3,
+        45.3
+      ]
+    },
+    {
+      "name": "gardens-t1-terrace-5",
+      "revision": "gardens",
+      "camera": "t1-terrace-5",
+      "levelId": "garden-campus/l4",
+      "surfaceId": "T1-terrace-5/0",
+      "pose": {
+        "position": [
+          -2699.907374885479,
+          36.93939189446673,
+          1307.3718450137155
+        ],
+        "target": [
+          -2700.0412515970975,
+          36.459391894466734,
+          1319.371098199897
+        ],
+        "fov": 70
+      },
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+      "calls": 666,
+      "triangles": 2841922,
+      "frameP50": 16.69999999999891,
+      "frameP95": 16.799999999999272,
+      "samples": 15,
+      "hostLoad": [
+        44,
+        36,
+        45.1
+      ]
+    },
+    {
+      "name": "gardens-t3-terrace-5",
+      "revision": "gardens",
+      "camera": "t3-terrace-5",
+      "levelId": "garden-campus/l4",
+      "surfaceId": "T3-terrace-5/0",
+      "pose": {
+        "position": [
+          -2698.998128885737,
+          36.93939189446673,
+          1225.876917124233
+        ],
+        "target": [
+          -2699.120849204721,
+          36.459391894466734,
+          1236.8762325448993
+        ],
+        "fov": 70
+      },
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+      "calls": 1137,
+      "triangles": 4166427,
+      "frameP50": 16.69999999999891,
+      "frameP95": 16.799999999999272,
+      "samples": 15,
+      "hostLoad": [
+        44,
+        36,
+        45.1
+      ]
+    },
+    {
+      "name": "gardens-t2-terrace-6",
+      "revision": "gardens",
+      "camera": "t2-terrace-6",
+      "levelId": "garden-campus/l5",
+      "surfaceId": "T2-terrace-6/0",
+      "pose": {
+        "position": [
+          -2699.3997590205922,
+          40.93939189446673,
+          1261.8746766827774
+        ],
+        "target": [
+          -2699.5447921248456,
+          40.459391894466734,
+          1274.873867634474
+        ],
+        "fov": 70
+      },
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+      "calls": 844,
+      "triangles": 3521700,
+      "frameP50": 16.69999999999891,
+      "frameP95": 16.80000000000109,
+      "samples": 15,
+      "hostLoad": [
+        44,
+        36,
+        45.1
+      ]
+    },
+    {
+      "name": "gardens-t1-roof",
+      "revision": "gardens",
+      "camera": "t1-roof",
+      "levelId": "garden-campus/l6",
+      "surfaceId": "T1-roof",
+      "pose": {
+        "position": [
+          -2706.8348364491203,
+          44.93939189446673,
+          1309.7947103183226
+        ],
+        "target": [
+          -2706.7065379338196,
+          44.459391894466734,
+          1298.2954260148986
+        ],
+        "fov": 70
+      },
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+      "calls": 748,
+      "triangles": 3192174,
+      "frameP50": 16.69999999999891,
+      "frameP95": 16.700000000000728,
+      "samples": 15,
+      "hostLoad": [
+        44,
+        36,
+        45.1
+      ]
+    },
+    {
+      "name": "gardens-t2-roof",
+      "revision": "gardens",
+      "camera": "t2-roof",
+      "levelId": "garden-campus/l7",
+      "surfaceId": "T2-roof",
+      "pose": {
+        "position": [
+          -2706.3327987805515,
+          48.93939189446673,
+          1264.797510870142
+        ],
+        "target": [
+          -2706.1933438726155,
+          48.459391894466734,
+          1252.298288801203
+        ],
+        "fov": 70
+      },
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+      "calls": 588,
+      "triangles": 2989258,
+      "frameP50": 16.69999999999891,
+      "frameP95": 16.799999999999272,
+      "samples": 15,
+      "hostLoad": [
+        44,
+        36,
+        45.1
+      ]
+    },
+    {
+      "name": "gardens-t3-roof",
+      "revision": "gardens",
+      "camera": "t3-roof",
+      "levelId": "garden-campus/l6",
+      "surfaceId": "T3-roof",
+      "pose": {
+        "position": [
+          -2705.931168645696,
+          44.93939189446673,
+          1228.7997513115977
+        ],
+        "target": [
+          -2705.81402652303,
+          44.459391894466734,
+          1218.3004047736888
+        ],
+        "fov": 70
+      },
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+      "calls": 454,
+      "triangles": 2603251,
+      "frameP50": 16.69999999999709,
+      "frameP95": 16.799999999999272,
+      "samples": 15,
+      "hostLoad": [
+        44,
+        36,
+        45.1
+      ]
+    }
+  ]
+}

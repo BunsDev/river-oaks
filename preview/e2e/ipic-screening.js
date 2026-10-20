@@ -224,18 +224,49 @@ async (host, viewer) => {
   check(text.tracks.length === 1 && text.tracks[0] === '/assets/ipic/screening/fixture-v1.en.vtt' && text.transcript && !text.stale, `captions and transcript follow the playing film: ${JSON.stringify(text)}`);
   checks.push('the film chosen in the chooser (the fixture) brings its own captions and transcript');
 
+  // The second approved film (#501, #547): the host stops the fixture, chooses "Two Seats, One Screen" and starts it.
+  // The viewer gets its own texture, captions and transcript, and its dialogue-and-music track decodes.
+  const fixturePlaying = await host.evaluate(() => window.__riverMultiplayer().snapshot.screenings.find(item => item.venueId === 'ipic'));
+  const fixtureStopped = await hostCommand({ ...swapBase, epoch: fixturePlaying.epoch, action: 'stop', expectedRevision: fixturePlaying.revision, operationId: 'journey-stop-004' });
+  check(fixtureStopped?.ok === true, `host stopped the fixture: ${JSON.stringify(fixtureStopped)}`);
+  await host.waitForFunction(() => !document.querySelector('#ipic-screening .ipic-screening-chooser')?.hidden && !document.querySelector('#ipic-screening [data-control="host-start"]')?.hidden, null, { timeout: 15000 });
+  await host.locator('#ipic-screening select[data-control="film"]').selectOption('ipic-two-seats-v1');
+  await host.locator('#ipic-screening [data-control="host-start"]').click();
+  await host.waitForFunction(() => { const s = window.__riverMultiplayer().snapshot.screenings.find(item => item.venueId === 'ipic'); return s?.mediaId === 'ipic-two-seats-v1' && s.status === 'playing'; }, null, { timeout: 15000 });
+  const secondFilm = await host.evaluate(() => window.__riverMultiplayer().snapshot.screenings.find(item => item.venueId === 'ipic'));
+  await viewer.waitForFunction(revision => { const s = window.__riverScreening(); return s.revision >= revision && s.mediaId === 'ipic-two-seats-v1' && s.state === 'playing' && s.attached; }, secondFilm.revision, { timeout: 30000 });
+  await viewer.waitForFunction(() => document.querySelector('#ipic-screening video track')?.getAttribute('src')?.endsWith('ipic-two-seats-v1.en.vtt'), null, { timeout: 10000 }).catch(() => {});
+  // Decoded audio bytes count per load; wait for more while the second film plays (software decode is slow).
+  const audioFrom = await viewer.evaluate(() => document.querySelector('#ipic-screening video')?.webkitAudioDecodedByteCount ?? 0);
+  await viewer.waitForFunction(from => { const video = document.querySelector('#ipic-screening video'); return /ipic-two-seats-v1\.(webm|mp4)$/.test(video?.currentSrc ?? '') && video.webkitAudioDecodedByteCount > from; }, audioFrom, { timeout: 15000 }).catch(() => {});
+  const second = await viewer.evaluate(async () => {
+    const { SCREENING_MEDIA } = await import('/src/screening-contract.js'), panel = document.querySelector('.ipic-screening-transcript');
+    const s = window.__riverScreening(), video = document.querySelector('#ipic-screening video');
+    return {
+      tracks: [...document.querySelectorAll('#ipic-screening video track')].map(track => track.getAttribute('src')),
+      transcript: SCREENING_MEDIA['ipic-two-seats-v1'].transcript.every(line => panel.textContent.includes(line)),
+      stale: SCREENING_MEDIA['ipic-fixture-v1'].transcript.some(line => panel.textContent.includes(line)),
+      decoded: s.decoded?.join('x') ?? null, key: s.screen?.key ?? null,
+      source: video?.currentSrc?.split('/').pop() ?? null, audioBytes: video?.webkitAudioDecodedByteCount ?? null,
+    };
+  });
+  check(second.decoded === '1280x720' && second.key && second.key !== after.key, `the second film got its own screen texture: ${JSON.stringify({ fixtureKey: after.key, second })}`);
+  check(second.tracks.length === 1 && second.tracks[0] === '/assets/ipic/screening/ipic-two-seats-v1.en.vtt' && second.transcript && !second.stale, `the second film's captions and transcript follow it: ${JSON.stringify(second)}`);
+  check(/^ipic-two-seats-v1\.(webm|mp4)$/.test(second.source) && second.audioBytes > audioFrom, `the second film's dialogue and music decode: ${JSON.stringify({ audioFrom, second })}`);
+  checks.push(`the host chose the second approved film (ipic-two-seats-v1) after the fixture: its own 1280×720 texture, captions and transcript, and its sound decoding (${second.source}, ${second.audioBytes} audio bytes)`);
+
   // Background and back (#502). Headless Chromium keeps a tab "visible" behind another, so this is emulated: the
   // viewer's page is marked hidden (the game stops drawing) and its JavaScript frozen for 8 s with the browser's own
   // lifecycle control (CDP Page.setWebLifecycleState), then resumed and shown. Its film must find the room's time
-  // again. Not device evidence: a phone's lock screen stays a #502 device row. The 30 s fixture is started again
+  // again. Not device evidence: a phone's lock screen stays a #502 device row. The playing film is started again
   // first when too little of it is left for the step.
-  const fixtureLeft = await host.evaluate(() => { const s = window.__riverScreening(), video = document.querySelector('#ipic-screening video');
+  const filmLeft = await host.evaluate(() => { const s = window.__riverScreening(), video = document.querySelector('#ipic-screening video');
     return s.sharedStatus === 'playing' && video?.duration ? video.duration - s.currentTime : 0; });
-  if (fixtureLeft < 22) {
+  if (filmLeft < 22) {
     const now = await host.evaluate(() => window.__riverMultiplayer().snapshot.screenings.find(item => item.venueId === 'ipic'));
     const halt = await hostCommand({ ...swapBase, epoch: now.epoch, action: 'stop', expectedRevision: now.revision, operationId: 'journey-stop-003' });
-    const again = await hostCommand({ ...swapBase, epoch: now.epoch, action: 'start', mediaId: 'ipic-fixture-v1', expectedRevision: halt.screening.revision, operationId: 'journey-start-03' });
-    check(again?.ok === true, `the fixture started again for the background step: ${JSON.stringify(again)}`);
+    const again = await hostCommand({ ...swapBase, epoch: now.epoch, action: 'start', mediaId: now.mediaId, expectedRevision: halt.screening.revision, operationId: 'journey-start-03' });
+    check(again?.ok === true, `the film started again for the background step: ${JSON.stringify(again)}`);
     await Promise.all([host, viewer].map(page => page.waitForFunction(revision => window.__riverScreening().state === 'playing' && window.__riverScreening().revision === revision, again.screening.revision, { timeout: 30000 })));
   }
   const cdp = await viewer.context().newCDPSession(viewer);

@@ -60,11 +60,15 @@ async function harness(t, mode) {
     const ws = new WebSocket(`${target.base.replace('http:', 'ws:')}/multiplayer?ticket=${token}&world=river-oaks&protocol=3`, { headers: { Origin: origin, Cookie: `fixture=${id}` } });
     sockets.push(ws);
     const pending = new Map();let last = null, seq = 0;
+    // A socket that closes or stays silent before its first snapshot fails the test instead
+    // of leaving it waiting forever (seen once under a load average near 55).
     await new Promise((resolve, reject) => {
-      ws.once('error', reject);
+      const timeout = setTimeout(() => reject(new Error(`${id}: no first snapshot within 15 s`)), 15000);
+      ws.once('error', error => { clearTimeout(timeout);reject(error); });
+      ws.once('close', code => { clearTimeout(timeout);if (!last) reject(new Error(`${id}: socket closed (${code}) before its first snapshot`)); });
       ws.on('message', raw => {
         const value = JSON.parse(raw);
-        if (value.type === 'snapshot') { last = value;resolve(); }
+        if (value.type === 'snapshot') { last = value;clearTimeout(timeout);resolve(); }
         if (value.type === 'result' && pending.has(value.requestId)) { pending.get(value.requestId)(value);pending.delete(value.requestId); }
       });
     });
@@ -86,7 +90,7 @@ async function harness(t, mode) {
   return { ids, sessions, gateway, ticket, join, campus, sockets, apps };
 }
 
-for (const mode of ['memory', 'redis']) test(`${mode}: two accounts racing for one suite through ${mode === 'redis' ? 'two gateways' : 'one server'} get one lease; retries, reconnects and forged commands cannot add another`, { skip: mode === 'redis' && !process.env.REDIS_URL }, async t => {
+for (const mode of ['memory', 'redis']) test(`${mode}: two accounts racing for one suite through ${mode === 'redis' ? 'two gateways' : 'one server'} get one lease; retries, reconnects and forged commands cannot add another`, { skip: mode === 'redis' && !process.env.REDIS_URL, timeout: 120_000 }, async t => {
   const { ids, sessions, gateway, ticket, join, campus, sockets, apps } = await harness(t, mode);
   const first = await gateway(), second = await gateway();
   assert.equal((await ticket(first, 'alice', 'wrong')).status, 403, 'CSRF still guards the ticket');
@@ -143,7 +147,7 @@ for (const mode of ['memory', 'redis']) test(`${mode}: two accounts racing for o
 
 // The transports keep a top-level requestId for reply routing and strip it before the world
 // sees the command, so a lease request travels as leaseRequestId (found by #510's journey).
-for (const mode of ['memory', 'redis']) test(`${mode}: requests are offered, cancelled and declined by leaseRequestId through the real socket, and replies keep the transport's requestId`, { skip: mode === 'redis' && !process.env.REDIS_URL }, async t => {
+for (const mode of ['memory', 'redis']) test(`${mode}: requests are offered, cancelled and declined by leaseRequestId through the real socket, and replies keep the transport's requestId`, { skip: mode === 'redis' && !process.env.REDIS_URL, timeout: 120_000 }, async t => {
   const { gateway, join, campus } = await harness(t, mode);
   const first = await gateway(), second = await gateway();
   const operator = await join(first, 'operator'), alice = await join(second, 'alice');
@@ -164,7 +168,7 @@ for (const mode of ['memory', 'redis']) test(`${mode}: requests are offered, can
   assert.deepEqual(mine.leases.map(lease => [lease.id, lease.status]), [[issued.lease.id, 'offered']]);
 });
 
-const testRedis = (name, fn) => test(name, { skip: !process.env.REDIS_URL }, fn);
+const testRedis = (name, fn) => test(name, { skip: !process.env.REDIS_URL, timeout: 120_000 }, fn);
 const small = served({ scene: 'district', bounds_m: [-30, -30, 30, 30], walkSpawn: [-12, 0, 0], collisionPolygons: [], stores: [], buildings: [],
   communityLocations: [{ id: 'a', name: 'Garden', position: [-12, 0, 0] }] });
 async function coordinators(t) {

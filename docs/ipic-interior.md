@@ -18,8 +18,9 @@ or photogrammetry inputs. No external stock model or paid generation was used.
 
 This is a playable **photo-guided reconstruction**, not a survey or a verified
 pixel-perfect match. The 13 m frontage, 34 m interior depth, two 3 m rises and
-sample eight-seat auditorium are authored estimates fitted inside the existing
-mapped footprint. The rooms use a sequential circulation layout to preserve
+the nine-seat auditorium wing are authored estimates fitted inside the existing
+mapped footprint; the wing's size and rake come from cinema viewing guidance,
+not from the photos (see "Auditorium and screen" below). The rooms use a sequential circulation layout to preserve
 the current shared movement contract, which has one support height per XY.
 The actual venue's stacking, room adjacencies, floor heights, hidden spaces,
 seat count and accessibility routes require measured references before a
@@ -34,7 +35,7 @@ public traversal currently uses the escalator slopes. Treads are static.
 | Upper lounge | IMG_9752–9755, 9758 | Sofa, cognac tub chairs, oval table, pendants and script sign |
 | Tuck Room bar | IMG_9756–9757 | Counter, leather stools, shelves and hanging greenery |
 | Cinema corridor | IMG_9759–9763 | Original IMG_9761 floral wall texture, Express hatch, theater doorway |
-| Auditorium | IMG_9765–9767 | Screen, sample recliners, aisle rail and guide lights; layout inferred |
+| Auditorium | IMG_9765–9767 | Screen, recliners and guide lights; the wing's size, rows and rake follow viewing guidance |
 
 Photographic artwork textures retain the source photos' baked light/perspective
 and any visible occlusion. Timber, carpet and marble are procedural material
@@ -117,14 +118,14 @@ Results:
 | Street door to the top of either escalator lane | 1.70 m (the door) | fits; lanes are 1.71 m between glass rails |
 | Lane top to inside the auditorium doorway | 1.60 m (until 2026-10-18, 1.055 m between the planter at −5.65, 25.4 and the sofa's west arm) | fits; the sofa now backs onto the west guardrail |
 | Lane top to either sofa place's approach (its front corner beside the table), other seats occupied | 1.09 m | fits (0.3 m before the sofa moved) |
-| Doorway to each of the 8 recliner approaches (d + 1.4, in front of the footrest), other 9 seats occupied | 0.89 m | the server body fits; the widest accepted body reaches a sit spot within the 3.6 m sit reach for every recliner (1.2–3.09 m away) |
-| Front-row aisle with the back row seated | 0.891 m (footrests to the back row's seated bodies) | below 1.01 m, above the widest posed body (0.80 m); accepted by Val, 2026-10-15 |
-| Turning circles: reception, landing, lounge, auditorium, every seat occupied | 3.05, 1.31, 2.66, 1.48 m radius | fit (0.888 m needed) |
+| Doorway to each of the 9 recliner approaches (1.4 m in front of the seat, in the legroom), other 10 seats occupied | 0.89 m | the server body fits; the widest accepted body reaches a sit spot within the 3.6 m sit reach for every recliner (1.2–3.09 m away) |
+| Legroom in front of a row, with the row in front seated | 0.891 m (footrests to the seated bodies in front) | below 1.01 m, above the widest posed body (0.80 m); accepted by Val, 2026-10-15 |
+| Turning circles: reception, landing, lounge, auditorium, every seat occupied | 3.05, 1.32, 2.69, 4.0 m radius | fit (0.888 m needed) |
 
 The server walks these routes in `server/tests/ipic-routes.test.js`. It covers:
 
 - both lanes, up one and down the other;
-- every recliner, with the other nine seats held by restored sessions;
+- every recliner, with the other ten seats held by restored sessions;
 - exclusive claims, and release on travel out or disconnect;
 - false heights, solid shortcuts, teleports and a "lift" level command;
 - seats through the cinema wall;
@@ -152,10 +153,10 @@ collide; none is on a public route.
    the sofa moved (2026-10-18) the route runs along a = −1.4 and is 1.6 m wide.
 3. ~~**Recliner footrests and base ends had no collision.**~~ Fixed (Val, 2026-10-15): they
    collide as drawn (`ipic-recliner-base`, `ipic-recliner-footrest` in `ipic-plan.js`).
-   Each recliner names a stand spot and approach at d + 1.4, in the aisle in front of the
-   footrest, 0.45 m from it and from the back row's seated bodies. With the back row
-   seated the front-row aisle is 0.891 m: the widest accepted body sits the front row
-   from the side aisles, within the server's sit reach.
+   Each recliner names a stand spot and approach 1.4 m in front of it, in the legroom
+   before the footrest, 0.45 m from it and from the seated bodies in front. With the row
+   in front seated the legroom is 0.891 m: the widest accepted body sits from the side
+   aisles, within the server's sit reach.
 4. ~~**Open sky over the escalator runs.**~~ Fixed: the runs share the ceilings of the
    floors they rise to; a test requires a ceiling above every walkable point. Found by
    the photo review (`docs/ipic-review/photo-review.md`, P1).
@@ -173,21 +174,68 @@ collide; none is on a public route.
 T1–T3 with the photos they are indexed to and lists 18 differences by photo ID, severity
 and owner. P1 (open sky), P3, P4 and P6 (the reception), P5 (sign), P7 (reception view), P8,
 P9, P10 and P11 (the lounge group), P12 (lounge carpet and bar floor), P13 and P14 (the Tuck
-Room's island bar, rack and pothos), P15 and P16 (the auditorium's risers and screen), P17
+Room's island bar, rack and pothos), P15 and P16 (the auditorium's risers and screen, since
+replaced by the 2026-10-19 wing), P17
 (auditorium carpet) and P18 (the walled-in landing) are fixed, and P2 (the mural, kept large in
 its bay) is resolved as Val chose. All 18 are now fixed or resolved.
 
-**Screen** (`IPIC_SCREEN` in `ipic-plan.js`, used by the renderer and the data):
+## Auditorium and screen (Val, 2026-10-19)
 
-- Size and place: 12.1 × 3.6 m (3.36:1), centred 2.45 m above the front-row floor,
-  0.65–4.25 m (P16, 2026-10-18; it was 9.8 × 3.25 m). Films keep their aspect, so the
-  approved 16:9 short is pillarboxed.
-- **Back row.** It sits on the 0.4 m riser (P15; `IPIC_RISER`) and sees the screen above
-  1.44 m over the front-row headrests, so the bottom 22 % is hidden (35 % before the
-  risers): anything burned into the picture belongs in the top 78 %.
-- **Front row.** 2.79 m from the screen: it spans 120–130° across, and the top edge
-  is 47° up.
-- Seated eye: cushion + 0.69 m. Seated avatars in front are not modelled.
+`IPIC_WING`, `IPIC_VIEWING`, `IPIC_AUDITORIUM_ROWS` and `IPIC_SCREEN` in `ipic-plan.js`
+feed the renderer, the server and the data; `preview/tests/ipic-viewing-standards.test.js`
+holds them to the guidance below.
+
+**Why it changed.** The photographed house put its two rows 5.79 m and 2.79 m from a
+12.1 m screen: 92° and 130° of view, where cinema guidance asks for 30–60°. IPIC already
+fills the building's depth, so seat distance had to come from its length. The auditorium is
+now a wing along the building, behind the shops: a −19.5 to 19.5 by d 26 to 34, three
+times the room's 13 m width. The screen is on its north end wall (a −19.35), and the rows
+face it. The wing is a second part of the IPIC room (`addRoomParts` in `store-rooms.js`).
+
+**Guidance used.** These are secondary sources; the SMPTE EG-18 text itself was not
+available.
+
+- **Horizontal angle** `2·atan(W/2D)`. SMPTE EG-18 asks at least 30° from the farthest
+  seat. THX asks at most about 60° in front, about 40° at the ideal seat, and 36° at the
+  back row.
+- **Vertical angle.** The image's top edge is at most 35° above the eye (EG-18).
+- **Sightlines.** Each eye line to the image's bottom edge clears the headrest in front by
+  a C-value of 0.12 m (90–120 mm is "good" to "excellent").
+
+Sources:
+[cinemaview.in](https://cinemaview.in/en/blog/smpte-viewing-standards),
+[frontdesk forum](https://forum.frontdesk.co.in/showthread.php?tid=2377),
+[Valencia seating](https://ca.valenciatheaterseating.com/blogs/home-theater-seating/home-theater-viewing-distance),
+[Design Collaborative](https://designcollaborative.com/optimizing-sightlines-for-every-seat-enhancing-audience-experience-in-venues/),
+[auditorium design notes](https://www.slideshare.net/slideshow/2-auditoriumpptx/257200011).
+
+**Result.** The seated eye is the cushion plus 0.69 m. Seated avatars in front are not
+modelled, only recliner headrests.
+
+| Row | Eye to screen | Floor (from the doorway) | Horizontal, centre (end seats) | Up to the image top | End seats off axis |
+| --- | --- | --- | --- | --- | --- |
+| Back (0) | 12.5 m | 0 | 33.0° (32.3°) | 12.5° | 9.1° |
+| Middle (1) | 9.5 m | −0.507 m | 42.6° (41.1°) | 19.0° | 11.9° |
+| Front (2) | 6.5 m | −0.907 m | 59.3° (55.9°) | 29.5° | 17.1° |
+
+- **Screen.** 7.4 × 3.10 m, 2.39:1 scope, centred along the end wall at d 30, 0.3 m from
+  each long wall. Its bottom edge is 1.8 m over the front row's floor; this is the
+  rake's focal point. Films keep their aspect, so the approved 16:9 short is pillarboxed.
+- **Rows.** There are three, 3.0 m apart, as in the photographed house. Each has three
+  recliners at d 28, 30 and 32, centred on the screen, between 1.35 m aisles along both
+  long walls. Four rows at that pitch would need a 9 m screen to stay within 30–60°, which
+  is wider than the 8 m wing.
+- **Rake.** The back row is level with the doorway, and the rows in front step down
+  0.507 m and 0.400 m. In the aisles each step is a ramp 0.45 m either side of the riser,
+  with treads and glow nosings. Every eye line clears the headrest in front by 0.12 m, so
+  no recliner hides any of the image. `hiddenBottomFraction` is now 0 for every seat; the
+  back row used to lose 22 %.
+- **Entry.** The cinema doorway (a −4.7, d 26) opens onto a rear foyer behind the back row.
+  A cross-aisle along the d-26 wall runs to the side aisle and each row's legroom.
+- **Short of THX.** The back row's 33° meets SMPTE's 30° but not THX's 36°. With a 7.4 m
+  screen, 36° needs the back row within 4.98 m of the front row (a 2.49 m pitch). That
+  leaves less legroom than the widest posed body. The other route is a deeper wing for a
+  wider screen.
 - The player's captions are a WebVTT track, not burned in.
 
 ## Recorded review

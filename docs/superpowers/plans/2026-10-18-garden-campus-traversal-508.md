@@ -147,7 +147,10 @@ highest-ground hack or visual-only platform is allowed (#508 acceptance).
 
 ## Next action
 
-1. Push and open the draft PR.
-2. Slice (b): the two-player browser journey against this protocol.
-3. Gallery, landing and core-lobby finishes (ceilings, lighting).
-4. #510 suite seats through the seat hooks, and #509 admission wired in the candidate.
+Delivered. #537 merged at 2026-10-19T02:29:21Z as `3767d42b` (river-oaks-d8, from head
+`c675ff22`, whose content is `75f8e277` plus main merges). The items above landed elsewhere:
+- slice (b)'s two-player journey (`2c650446`) with the #512 candidate, #525 → `7c10f418`;
+- the gallery and landing finishes with #511, #528 → `4eca5153`;
+- suite seats and #509 admission with #510, #527 → `69699036`.
+
+One UX note stays open: a lift moves one floor per press.

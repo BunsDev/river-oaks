@@ -1,0 +1,30 @@
+.campus-dialog { color: #f5ecdf; background: #171c25; border: 1px solid #c9a16c99; border-radius: 20px; padding: 20px 24px; width: min(720px, calc(100vw - 32px)); max-height: min(86vh, 900px); overflow: auto; font: 15px/1.5 system-ui, sans-serif; box-sizing: border-box; }
+.campus-dialog::backdrop { background: #0008; }
+.campus-dialog h2 { margin: 0 0 6px; font-size: 20px; }
+.campus-dialog h3 { margin: 18px 0 8px; font-size: 15px; letter-spacing: .02em; }
+.campus-label { margin: 0 0 8px; color: #d8c7a8; font-size: 13px; }
+.campus-status { min-height: 1.5em; margin: 0 0 8px; color: #f5ecdf; }
+.campus-hint { flex-basis: 100%; margin: 4px 0 0; color: #c8bfb0; font-size: 13px; }
+.campus-dialog button, .campus-dialog select, .campus-dialog input { min-height: 40px; padding: 8px 12px; border-radius: 10px; font: inherit; }
+.campus-dialog button { margin: 4px 6px 4px 0; border: 1px solid #c9a16c; background: #c9a16c; color: #171c25; cursor: pointer; }
+.campus-dialog button.campus-secondary { background: transparent; color: #f5ecdf; border-color: #ffffff40; }
+.campus-dialog button:focus-visible, .campus-dialog select:focus-visible, .campus-dialog input:focus-visible, .campus-dialog summary:focus-visible { outline: 2px solid #f0d29c; outline-offset: 2px; }
+.campus-dialog select, .campus-dialog input { margin: 4px 6px 4px 0; border: 1px solid #ffffff40; background: #0f131a; color: #f5ecdf; }
+.campus-section { border-top: 1px solid #ffffff1f; }
+.campus-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 8px 0; border-bottom: 1px solid #ffffff12; }
+.campus-row > span { color: #d8cfc1; font-size: 13px; }
+.campus-term { display: inline-flex; flex-wrap: wrap; gap: 0; }
+.campus-dialog details { margin: 6px 0; }
+.campus-dialog summary { cursor: pointer; padding: 8px 0; font-weight: 600; }
+.campus-units { list-style: none; margin: 0; padding: 0; }
+.campus-units li { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 6px 0; border-bottom: 1px solid #ffffff10; }
+.campus-units li > span:not(.campus-chip) { color: #c8bfb0; font-size: 13px; }
+.campus-chip { padding: 2px 8px; border-radius: 999px; font-size: 12px; background: #ffffff1a; }
+.campus-available { background: #3c5a3e; }
+.campus-yours, .campus-guest { background: #c9a16c; color: #171c25; }
+.campus-offered, .campus-requested { background: #4d4a6e; }
+@media (max-width: 520px) {
+  .campus-dialog { padding: 16px; border-radius: 16px; }
+  .campus-dialog button, .campus-dialog select, .campus-dialog input { min-height: 44px; }
+}
+@media (prefers-reduced-motion: reduce) { .campus-dialog * { transition: none !important; } }

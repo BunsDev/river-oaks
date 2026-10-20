@@ -1,0 +1,18 @@
+# AppArmor profile for TypeSafe Place, from the typesafe-place .deb (#372).
+#
+# Ubuntu 23.10 and later stop unprivileged programs from creating user
+# namespaces unless an AppArmor profile allows it. Chromium's sandbox uses one,
+# so this profile allows exactly that for the installed binary and changes
+# nothing else (the program stays unconfined), as Ubuntu's own profiles for
+# Chrome and other Electron apps do. The package's postinst installs it only
+# where the running AppArmor accepts the 4.0 policy ABI.
+
+abi <abi/4.0>,
+include <tunables/global>
+
+profile typesafe-place /usr/lib/typesafe-place/typesafe-place flags=(unconfined) {
+  userns,
+
+  # Site-specific additions and overrides. See local/README for details.
+  include if exists <local/typesafe-place>
+}

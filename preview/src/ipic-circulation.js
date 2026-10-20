@@ -3,18 +3,24 @@
 // Pure plan maths in the room frame (a across the frontage, d inward, metres);
 // nothing here runs in the game loop. See docs/ipic-interior.md.
 import { DOOR_HALF_WIDTH } from './store-rooms.js';
-import { IPIC_INTERIOR } from './ipic-plan.js';
+import { IPIC_INTERIOR, ipicSeatForward } from './ipic-plan.js';
 
 const boxDistance = (a, d, o) => Math.hypot(a - Math.max(o.a0, Math.min(a, o.a1)), d - Math.max(o.d0, Math.min(d, o.d1)));
 
+// The room's extent across the frontage, its auditorium wing included (room.parts).
+const span = room => [Math.min(room.aMin, ...(room.parts ?? []).map(p => p.aMin)), Math.max(room.aMax, ...(room.parts ?? []).map(p => p.aMax))];
+
 // Distance from [a, d] to the nearest wall, door jamb, obstacle or blocker; 0
 // or less is inside something. The street side of the doorway counts as open
-// for the door's width, as the server's room lookup does.
+// for the door's width, as the server's room lookup does. Inside the overlapping
+// parts of the room the walls are the deepest of each part's own, which is never
+// more than the true distance to the union's boundary.
 export function ipicClearance(room, [a, d], blockers = []) {
   if (room?.interior !== IPIC_INTERIOR) throw new Error('An IPIC room plan is required');
   let clear = d < 0 ? DOOR_HALF_WIDTH - Math.abs(a)
     : Math.min(a - room.aMin, room.aMax - a, room.depth - d,
       Math.abs(a) >= DOOR_HALF_WIDTH ? d : Math.hypot(DOOR_HALF_WIDTH - Math.abs(a), d));
+  for (const p of room.parts ?? []) clear = Math.max(clear, Math.min(a - p.aMin, p.aMax - a, d - p.d0, p.d1 - d));
   for (const o of room.obstacles) clear = Math.min(clear, boxDistance(a, d, o));
   for (const blocker of blockers) clear = Math.min(clear, blocker(a, d));
   return clear;
@@ -28,25 +34,25 @@ export const IPIC_SEATED_REACH = Object.freeze({ side: .514, front: .644, back: 
 
 // The plan-view footprint of a seated body, as a rectangle in the seat's own
 // frame: `side` either way, `front` toward the way the seat faces, `back` behind.
-// IPIC seats face +d at yaw 0 and -d at yaw PI.
+// IPIC seats face +d at yaw 0, -d at yaw PI and the auditorium's north screen (-a) at yaw PI/2.
 export function seatedFootprint(seat, { side, front, back }) {
-  const forward = Math.cos(seat.yaw) >= 0 ? 1 : -1;
+  const f = ipicSeatForward(seat), s = [f[1], -f[0]];
   return (a, d) => {
-    const u = a - seat.a, v = (d - seat.d) * forward;
+    const da = a - seat.a, dd = d - seat.d, u = da * s[0] + dd * s[1], v = da * f[0] + dd * f[1];
     return Math.hypot(u - Math.max(-side, Math.min(u, side)), v - Math.max(-back, Math.min(v, front)));
   };
 }
 
 // The point 0.9 m in front of a seat, where the client walks a sitter to
 // (ipicSeatSites' approach).
-export const seatApproach = seat => seat.approach ?? [seat.a, seat.d + (Math.cos(seat.yaw) >= 0 ? .9 : -.9)];
+export const seatApproach = seat => { const f = ipicSeatForward(seat); return seat.approach ?? [seat.a + f[0] * .9, seat.d + f[1] * .9]; };
 
 const MOVES = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
 
 // A grid over the room (plus the doorway) with cached clearance per cell.
 function grid(room, blockers, step) {
   const cache = new Map(), key = (i, j) => `${i},${j}`;
-  const a0 = Math.floor(room.aMin / step) - 1, a1 = Math.ceil(room.aMax / step) + 1;
+  const [aMin, aMax] = span(room), a0 = Math.floor(aMin / step) - 1, a1 = Math.ceil(aMax / step) + 1;
   const d0 = Math.floor(-1.4 / step), d1 = Math.ceil(room.depth / step) + 1;
   return {
     key, cell: ([a, d]) => [Math.round(a / step), Math.round(d / step)], point: (i, j) => [i * step, j * step],
@@ -170,7 +176,8 @@ export function widestRoute(room, from, to, { blockers = [], step = .05, cap = I
 // circle for a long body at a decision point).
 export function largestCircle(room, [d0, d1], { blockers = [], step = .05 } = {}) {
   let best = { clearance: 0, at: null };
-  for (let a = room.aMin; a <= room.aMax; a += step) for (let d = d0; d <= d1; d += step) {
+  const [aMin, aMax] = span(room);
+  for (let a = aMin; a <= aMax; a += step) for (let d = d0; d <= d1; d += step) {
     const c = ipicClearance(room, [a, d], blockers);
     if (c > best.clearance) best = { clearance: c, at: [a, d] };
   }

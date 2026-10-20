@@ -56,3 +56,18 @@ test('opening from code and toggling the summary are both remembered', () => {
   dock.element.open = false; dock.element.runQueuedEvents();
   assert.equal(store.get(key), 'false');
 });
+
+test('the key legend appears only while an activity has its own controls', () => {
+  installDom();
+  let changed;
+  globalThis.MutationObserver = class { constructor(callback) { changed = callback; } observe() {} };
+  const dock = createPlayDock(), shell = dock.element.children[1];
+  const context = shell.children.find(child => child.className === 'play-rail-context');
+  assert.equal(context.hidden, true, 'no legend while choosing an activity');
+  assert.deepEqual(shell.children.map(child => child.className), ['play-rail-tabs', 'visit-tools-content', 'play-rail-context'], 'tabs, the pane and the legend; no title row or stepper');
+  document.body.classList.add('bird-riding'); changed();
+  assert.equal(context.hidden, false);
+  assert.match(context.textContent, /^Bird ride · T control/);
+  document.body.classList.remove('bird-riding'); changed();
+  assert.equal(context.hidden, true, 'the legend leaves with the activity');
+});

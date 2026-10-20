@@ -42,7 +42,9 @@ import { canCullExterior, canCullIpicAuditorium, renderOnly, renderWithoutExteri
 import { sharedRoomSummary } from './shared-population.js';
 import { storeRoomsFor } from './store-rooms.js';
 import { attachDistrictGalleryPlan } from './district-interior-contract.js';
-import { DISTRICT_REVISION_GARDENS, attachGardenCampus, campusDoorSites, campusGroundAt, campusGroundCutout } from './garden-campus-district.js';
+import { DISTRICT_REVISION_GARDENS, attachGardenCampus, campusDoorSites, campusGroundAt, campusGroundCutout, campusSuiteSeatSites } from './garden-campus-district.js';
+import { campusLevelRoom } from './garden-campus-levels.js';
+import { createGardenCampusUI } from './garden-campus-ui.js';
 import { buildFoliage, buildObservedFoliage } from './foliage.js';
 import { castShadowsFromProxies } from './landscape-models.js';
 import { validateVegetation } from './vegetation.js';
@@ -130,9 +132,11 @@ const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matc
 // but leaves material/lighting quality to full-render and WebGL smoke runs.
 // Never enable this profile in a production build.
 const softwareAcceptance = import.meta.env.DEV && import.meta.env.VITE_SHARED_SOFTWARE_RENDERING === '1';
-const renderAudit = import.meta.env.DEV && new URLSearchParams(location.search).get('render-audit') === '1' ? createRenderAudit() : null;
+const renderAudit = (import.meta.env.DEV || import.meta.env.MODE === 'ios-probe') && new URLSearchParams(location.search).get('render-audit') === '1'
+  ? createRenderAudit({ limit: import.meta.env.DEV ? 120000 : 7200 }) : null;
 let exteriorCulling = true; // A development audit can switch it off to compare frames.
 let pendingDrawCensus = null; // A development audit attributes the next frame's draws.
+const leanShadowRestore = new Map(); // Sun-shadow casters a development audit switched off.
 // Inside IPIC's auditorium, facing away from its only partition, nothing outdoors can be seen (#428),
 // nor any other store's interior or people (#431): the frame keeps only IPIC's own.
 function ipicAuditoriumCull() {
@@ -162,7 +166,7 @@ let worldRegionSha256 = null;
 // The default district's revision once loaded (#507): null is the garage; undefined while loading.
 let worldDistrictRevision;
 let landmarkAccountId = null;
-let playerAvatar, characterStudio, officeUI, ipicScreening;
+let playerAvatar, characterStudio, officeUI, ipicScreening, campusUI;
 let multiplayer, remotePlayers, buildLayer, buildControls, seatingControls, seatAndWater;
 let plazaSalon = null, plazaGames = null, plazaDominoes = null, plazaHearts = null, plazaBackgammon = null, cafeGame = 'dominoes', plazaStage = null, plazaBicycle = null, cyclingBoard = null;
 let plazaJenga = null, plazaYacht = null, benchGame = 'jenga';
@@ -457,6 +461,9 @@ function initializeRenderer() {
   visitTools.append($('.player-controls'), cyclingBoard.panel, ...(buildControls ? [buildControls.panel] : []));
   officeUI=createOfficeUI({host,panelHost:visitTools,renderer,getWorld:()=>world,getMultiplayer:()=>multiplayer,walking,
     captureStreet:()=>captureOfficeStreet({scene,camera,pipeline,renderer,architecture:buildingMesh,skyline:officeSkylineOff||softwareAcceptance?null:officeOutlookFor({scale:quality?.stats.scale,coarsePointer:window.matchMedia('(pointer: coarse)').matches,maxCubemapSize:renderer.capabilities.maxCubemapSize,maxTextureSize:renderer.capabilities.maxTextureSize}),lights:storeLights,atmosphere:()=>currentAtmosphere,avatar:playerAvatar,lobby:buildingMesh?.userData.officeArrival,world,getWorld:()=>world,pose:walking?.getPose()})});
+  // The Gardens (#510): the campus Play section, suites and leases, and the workstation desk.
+  campusUI=createGardenCampusUI({host,panelHost:visitTools,getWorld:()=>world,getMultiplayer:()=>multiplayer});
+  playProviders.push(() => campusUI?.playProvider);
   // IPIC screenings (#367): the town's timeline on the existing screen, while the player is inside IPIC.
   // Mounted on the viewport, not the canvas host: walking takes pointer capture on the canvas host.
   ipicScreening??=createIpicScreening({host:host.parentElement??host,THREE,getMultiplayer:()=>multiplayer,getScreen:()=>buildingMesh?.userData.interiors?.userData.screens?.[0]??null,
@@ -506,7 +513,7 @@ function initializeRenderer() {
   }).observe(host);
   updateAtmosphere();
   bindRenderVisibility({ document, setLoop: callback => renderer.setAnimationLoop(callback), render,
-    resetTime: () => { clock.reset(); lastFrame = null; } });
+    resetTime: () => { clock.reset(); lastFrame = null; renderAudit?.discontinuity(); } });
   registerDiagnosticSource('renderer', () => describeRenderer(renderer, { quality: quality?.stats ?? null, pipeline: pipeline?.stats ?? null, reflections: storefrontReflections?.stats ?? null, softwareAcceptance }));
   registerDiagnosticSource('scene', () => describeScene(scene));
   registerDiagnosticSource('game', gameDiagnostics);
@@ -550,7 +557,7 @@ function startMultiplayer() {
     getRegionSha256: () => worldRegionSha256,
     getDistrictRevision: () => worldDistrictRevision,
     onHomeAccess: () => districtUI?.refreshAccess(),
-    onSnapshot: snapshot => { ipicScreening?.onSnapshot(snapshot); if (world) community.applyRemote(snapshot);buildLayer?.sync(snapshot.builds??[]);plazaSalon?.userData.rack?.setTaken(snapshot.cycling?.taken ?? []); },
+    onSnapshot: snapshot => { ipicScreening?.onSnapshot(snapshot);campusUI?.onSnapshot(snapshot); if (world) community.applyRemote(snapshot);buildLayer?.sync(snapshot.builds??[]);plazaSalon?.userData.rack?.setTaken(snapshot.cycling?.taken ?? []); },
     onCorrection: player => { if (world && player) { walking.applyServerPose(player); plazaBicycle?.sync(); } },
     onPlayers: (players, selfId) => {
       host.dataset.multiplayer = players.length ? 'joined' : 'disconnected';
@@ -586,7 +593,7 @@ function startMultiplayer() {
   seatingControls=createSharedSeatingControls({host:document.querySelector('.walking-console'),getTown:()=>multiplayer,
     getPose:()=>walking?.getPose(),getEnvironment:()=>walking?.environment,
     request:message=>multiplayer.command(message),onConfirmed:player=>walking.applyServerPose(player),
-    getBenches:()=>seatAndWater?.benches()??[],isHeld:key=>seatAndWater?.residentHolds(key)??false,isBusy:()=>seatAndWater?.busy()??false});
+    getBenches:()=>[...(seatAndWater?.benches()??[]),...suiteSeatsHere()],isHeld:key=>seatAndWater?.residentHolds(key)??false,isBusy:()=>seatAndWater?.busy()??false});
   host.dataset.multiplayer = 'connecting';
 }
 
@@ -644,6 +651,7 @@ function populateWorld(data) {
     });
   }
   world = data;
+  campusUI?.setWorld(data);
   const creatorRegion=data.provenance?.kind==='creator';
   if(creatorRegion) {
     document.title=`${data.title} — Shared worlds`;
@@ -736,6 +744,18 @@ function canEnterStore(store) {
   if (store?.access !== 'owner') return true;
   return Boolean(multiplayer?.connected && (multiplayer.snapshot?.players.find(player => player.id === multiplayer.identity?.id)?.canBuild
     || multiplayer.homeAccess.some(home => home.storeId === store.id)));
+}
+
+// The desks and meeting chairs of the suite the resident stands in (#510): a campus floor is
+// one room, so the walls, not the room, decide which seats are near enough to offer.
+let suiteSeatCache = null;
+function suiteSeatsHere() {
+  const self = multiplayer?.snapshot?.players.find(player => player.id === multiplayer.identity?.id), pose = walking?.getPose?.();
+  if (!world || !self?.levelId || !pose) return [];
+  const here = campusLevelRoom(world, self.levelId)?.supportAt(pose.position[0], -pose.position[2]);
+  if (here?.access !== 'private-suite') return [];
+  if (suiteSeatCache?.world !== world) suiteSeatCache = { world, seats: campusSuiteSeatSites(world) };
+  return suiteSeatCache.seats.filter(seat => seat.levelId === self.levelId && seat.unitId === here.surfaceId);
 }
 
 function enterStore(store) {
@@ -921,18 +941,23 @@ function followSunShadow() {
 }
 
 function render(now) {
+  renderAudit?.beginFrame();
   noteFrame(now);
-  const auditStart = renderAudit ? performance.now() : 0;
   const drawCensus = pendingDrawCensus; pendingDrawCensus = null; drawCensus?.census.begin();
   clock.update();
   if (lastFrame !== null) quality.sample(now - lastFrame);
   lastFrame = now;
   const delta = Math.min(clock.getDelta(), 0.08);
   const self = multiplayer?.snapshot?.players.find(player => player.id === multiplayer.identity?.id);
+  renderAudit?.phase('setup');
   community?.update(delta, now);
+  renderAudit?.phase('community');
   generatedInteriors?.update(camera.position, now, self?.levelId);
+  renderAudit?.phase('setup'); // phases accumulate: interior streaming counts as setup
   layers.trees?.userData.update?.(camera.position);
+  renderAudit?.phase('trees');
   if (storePeople && interiorsLayer?.visible) storePeople.userData.update(camera, now, community?.state, walking?.getPosition(), community?.speakingId);
+  renderAudit?.phase('residents');
   community?.updateSpeech(delta);
   if (buildingMesh?.userData.updateDoors) {
     const visitor = walking?.active ? walking.getPosition() : null;
@@ -967,6 +992,7 @@ function render(now) {
   photoMode?.update();
   characterStudio?.update();
   storeIntros?.update(now);
+  renderAudit?.phase('interactions');
   remotePlayers?.update(now, camera);
   buildLayer?.update(camera.position);
   updateBuilder();
@@ -974,6 +1000,7 @@ function render(now) {
   plazaBicycle?.update(now);
   followSunShadow();
   treeShadows?.hide(); // Shadow proxies show only while the sun draws its map.
+  renderAudit?.phase('players');
   if (!softwareAcceptance && storefrontReflections && environmentAssets) {
     const ground = terrainHeight(world.terrain, camera.position.x, -camera.position.z);
     if (camera.position.y - ground < 18) reflectionPosition.set(camera.position.x, ground + 2.5, camera.position.z);
@@ -983,7 +1010,9 @@ function render(now) {
     }
     storefrontReflections.update(now, reflectionPosition);
   }
+  renderAudit?.phase('reflections');
   debugTools?.update(now);
+  renderAudit?.phase('debug');
   // llvmpipe draws both browser clients on CPU. Keep simulation and transport
   // updating every frame while capping only acceptance-profile draw work.
   if (!characterStudio?.active && (officeUI?.active || !softwareAcceptance || now - lastSoftwareDraw >= 1000)) {
@@ -1010,6 +1039,7 @@ function render(now) {
         else renderWithoutExterior(worldGroup, interiorsLayer, () => pipeline.render(delta));
       } else pipeline.render(delta);
     }
+    renderAudit?.phase('pipeline');
     photoMode?.afterRender();
     if (pendingCapture) { const capture = pendingCapture; pendingCapture = null; capture(renderer.domElement); }
   }
@@ -1020,7 +1050,7 @@ function render(now) {
     host.dataset.quality = JSON.stringify(quality.stats);
     lastRenderStats=now;
   }
-  renderAudit?.frame(now, performance.now() - auditStart);
+  renderAudit?.frame(now);
   drawCensus?.resolve(drawCensus.census.end());
 }
 
@@ -1178,30 +1208,52 @@ try {
   else if (JSON.parse(localStorage.getItem('river-oaks-debug') ?? '{}').open) void openDebugTools(true);
 } catch { /* storage unavailable */ }
 
-// Explicit development capacity audit camera and timing; absent from production.
-if (import.meta.env.DEV && renderAudit) {
+// Explicit diagnostic timing; normal production builds omit this API.
+// The crowd camera remains development-only.
+if (renderAudit) {
   window.__riverRenderAudit = {
     start: () => renderAudit.start(), stop: () => renderAudit.stop(),
-    exteriorCulling(enabled) { exteriorCulling = Boolean(enabled); },
-    avatarCulling(enabled) { remotePlayers?.setCulling(enabled); },
-    figureCulling(enabled) { remotePlayers?.setFigureCulling(enabled); },
-    shadowDepth(enabled) { remotePlayers?.setShadowDepth(enabled); },
-    // Draws and submitted triangles for one frame, by pass and tagged owner.
-    drawCensus: () => new Promise(resolve => { pendingDrawCensus = { census: createDrawCensus(renderer, camera), resolve }; }),
-    crowdView() {
-      const players = multiplayer?.snapshot?.players ?? [];
-      if (!players.length) throw new Error('Join the shared world before framing its crowd.');
-      const target = new THREE.Vector3();
-      for (const player of players) target.add(new THREE.Vector3(player.position[0], player.position[2] + 1, -player.position[1]));
-      target.divideScalar(players.length);
-      const radius = Math.max(6, ...players.map(player => Math.hypot(player.position[0] - target.x, -player.position[1] - target.z) + 2));
-      const distance = radius / Math.tan(camera.fov * Math.PI / 360) * Math.max(1, 1 / camera.aspect) * 1.3;
-      auditCamera = { target, position: target.clone().add(new THREE.Vector3(0, distance * .55, distance)) };
-    },
-    // A fixed review pose for camera-manifest captures (#364): Three.js world
-    // position and target, and optional FOV. release() hands the camera back.
-    view({ position, target, fov }) { auditCamera = { position: new THREE.Vector3(...position), target: new THREE.Vector3(...target), fov, restoreFov: auditCamera?.restoreFov ?? camera.fov }; },
-    release() { if (auditCamera?.fov) { camera.fov = auditCamera.restoreFov; camera.updateProjectionMatrix(); } auditCamera = null; },
+    // Toggles and camera controls stay development-only: the ios-probe
+    // diagnostic build exposes timing and read-only graphics.
+    ...(import.meta.env.DEV ? {
+      exteriorCulling(enabled) { exteriorCulling = Boolean(enabled); },
+      avatarCulling(enabled) { remotePlayers?.setCulling(enabled); },
+      figureCulling(enabled) { remotePlayers?.setFigureCulling(enabled); },
+      shadowDepth(enabled) { remotePlayers?.setShadowDepth(enabled); },
+      // Sun-shadow casters a lean phone tier could drop outdoors (#285 device A/B): shop
+      // interiors under their roofs, the parked bikes and the bird cams. 'all' restores them.
+      shadowCasters(mode) {
+        if (mode === 'all') {
+          for (const [mesh, cast] of leanShadowRestore) mesh.castShadow = cast;
+          const restored = leanShadowRestore.size; leanShadowRestore.clear(); return restored;
+        }
+        if (mode !== 'lean') throw new Error("shadowCasters takes 'lean' or 'all'");
+        const lean = node => node.name === 'Boutique interiors layer' || node.name === 'Parked bikes' || node.name.endsWith('(bird cam)');
+        scene.traverse(node => {
+          if (lean(node)) node.traverse(mesh => { if (mesh.isMesh && mesh.castShadow && !leanShadowRestore.has(mesh)) { leanShadowRestore.set(mesh, true); mesh.castShadow = false; } });
+        });
+        return leanShadowRestore.size;
+      },
+      occlusionSort(enabled) { pipeline?.setOcclusionSort(enabled); },
+      // GTAO's normal buffer in three's order against kind order, at one instant.
+      occlusionSortEquality: () => pipeline?.compareOcclusionSort() ?? null,
+      // Draws and submitted triangles for one frame, by pass and tagged owner.
+      drawCensus: () => new Promise(resolve => { pendingDrawCensus = { census: createDrawCensus(renderer, camera), resolve }; }),
+      crowdView() {
+        const players = multiplayer?.snapshot?.players ?? [];
+        if (!players.length) throw new Error('Join the shared world before framing its crowd.');
+        const target = new THREE.Vector3();
+        for (const player of players) target.add(new THREE.Vector3(player.position[0], player.position[2] + 1, -player.position[1]));
+        target.divideScalar(players.length);
+        const radius = Math.max(6, ...players.map(player => Math.hypot(player.position[0] - target.x, -player.position[1] - target.z) + 2));
+        const distance = radius / Math.tan(camera.fov * Math.PI / 360) * Math.max(1, 1 / camera.aspect) * 1.3;
+        auditCamera = { target, position: target.clone().add(new THREE.Vector3(0, distance * .55, distance)) };
+      },
+      // A fixed review pose for camera-manifest captures (#364): Three.js world
+      // position and target, and optional FOV. release() hands the camera back.
+      view({ position, target, fov }) { auditCamera = { position: new THREE.Vector3(...position), target: new THREE.Vector3(...target), fov, restoreFov: auditCamera?.restoreFov ?? camera.fov }; },
+      release() { if (auditCamera?.fov) { camera.fov = auditCamera.restoreFov; camera.updateProjectionMatrix(); } auditCamera = null; },
+    } : {}),
     graphics() {
       const gl = renderer.getContext(), info = gl.getExtension('WEBGL_debug_renderer_info');
       return { renderer: info ? gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER),

@@ -22,10 +22,16 @@ test('every destination receives a walk-in room that stays inside its mapped foo
     for (const [a, d] of [[room.aMin, 0.5], [room.aMax, 0.5], [room.aMin, room.depth], [room.aMax, room.depth]]) {
       assert.ok(inside(room.toWorld(a, d), building.ring), `${room.name} corner leaves its building`);
     }
+    // A room's extra parts (IPIC's auditorium wing) stay inside the same building.
+    for (const p of room.parts ?? []) for (const [a, d] of [[p.aMin, p.d0], [p.aMax, p.d0], [p.aMin, p.d1], [p.aMax, p.d1]]) {
+      assert.ok(inside(room.toWorld(a, d), building.ring), `${room.name} part corner ${a}, ${d} leaves its building`);
+    }
     assert.ok(room.width >= 3 && room.depth >= 4.5, `${room.name} is too small`);
     assert.ok(room.people.some(person => person.role === 'staff'), `${room.name} has no staff`);
     assert.ok(room.lights.length >= 4 && room.fixtures.length >= 3);
-    for (const other of rooms) if (other !== room) assert.ok(!rectanglesOverlap(room.footprint, other.footprint, 0.001), `${room.name} overlaps ${other.name}`);
+    for (const other of rooms) if (other !== room) for (const mine of room.footprints ?? [room.footprint]) for (const theirs of other.footprints ?? [other.footprint]) {
+      assert.ok(!rectanglesOverlap(mine, theirs, 0.001), `${room.name} overlaps ${other.name}`);
+    }
     for (const person of room.people) {
       assert.ok(person.a > room.aMin && person.a < room.aMax && person.d > 0 && person.d < room.depth, `${room.name} places ${person.role} outside the room`);
     }
@@ -58,9 +64,12 @@ test('the walking model enters through the doorway, is stopped by the glass, and
 
 test('indexed room lookup matches the full room scan across doors and the district', () => {
   const environment = createWalkingEnvironment(world);
+  // The reference: each room's rectangle with its door throat, or any of its extra parts (IPIC's wing).
+  const inParts = (room, a, d, shrink) => (room.parts ?? []).some(p => a > p.aMin + shrink && a < p.aMax - shrink && d > p.d0 + shrink && d < p.d1 - shrink);
   const fullScan = (east, north, shrink = 0) => {
     for (const room of environment.rooms) {
       const [a, d] = room.toLocal(east, north);
+      if (inParts(room, a, d, shrink)) return room;
       if (a <= room.aMin + shrink || a >= room.aMax - shrink || d >= room.depth - shrink) continue;
       if (d > shrink + 0.02 || d > -1.4 && Math.abs(a) < DOOR_HALF_WIDTH - shrink) return room;
     }
@@ -69,6 +78,10 @@ test('indexed room lookup matches the full room scan across doors and the distri
   const points = [];
   for (const room of environment.rooms) for (const d of [-1.39, -1, -0.02, 0.03, room.depth / 2, room.depth - 0.01])
     for (const a of [room.aMin + 0.01, -DOOR_HALF_WIDTH + 0.01, 0, DOOR_HALF_WIDTH - 0.01, room.aMax - 0.01]) points.push(room.toWorld(a, d));
+  // Edges, corners and the middle of every extra part, just inside and just outside.
+  for (const room of environment.rooms) for (const p of room.parts ?? []) for (const a of [p.aMin - .01, p.aMin + .01, (p.aMin + p.aMax) / 2, p.aMax - .01, p.aMax + .01])
+    for (const d of [p.d0 - .01, p.d0 + .01, (p.d0 + p.d1) / 2, p.d1 - .01, p.d1 + .01]) points.push(room.toWorld(a, d));
+  assert.ok(environment.rooms.some(room => room.parts?.length), 'IPIC brings its auditorium wing as a part');
   const [west, south, east, north] = world.bounds_m;
   for (let i = 0; i < 1000; i++) points.push([west + (east - west) * ((i * 0.61803398875) % 1), south + (north - south) * ((i * 0.41421356237) % 1)]);
   for (const [x, y] of points) for (const shrink of [-2, 0, 0.35]) {
