@@ -7,6 +7,7 @@ public struct ProbePolicy {
     }
     public var diagnosticEntry: URL {
         var components = URLComponents(url: entry, resolvingAgainstBaseURL: false)!
+        components.path = "/ios-probe/"
         components.queryItems = [URLQueryItem(name: "render-audit", value: "1")]
         return components.url!
     }

@@ -36,7 +36,7 @@ final class ProbePhaseEvidenceTests: XCTestCase {
     }
     func testDiagnosticQueryPreservesExactOriginAndRejectsExistingAmbiguity() throws {
         let policy = try ProbePolicy(entry: URL(string: "https://typesafe.place/play")!)
-        XCTAssertEqual(policy.diagnosticEntry.absoluteString, "https://typesafe.place/play?render-audit=1")
+        XCTAssertEqual(policy.diagnosticEntry.absoluteString, "https://typesafe.place/ios-probe/?render-audit=1")
         XCTAssertTrue(policy.allows(policy.diagnosticEntry))
         XCTAssertThrowsError(try ProbePolicy(entry: URL(string: "https://typesafe.place/play?token=private")!))
     }

@@ -216,8 +216,9 @@ in the probe's isolated cache. Both harnesses honor the shared browser lock.
 The ordinary production build omits this API. Build a separate diagnostic artifact:
 
 ```sh
-pnpm exec vite build --config preview/vite.config.js --mode ios-probe --outDir ../.runtime/ios-probe/diagnostic-build
 pnpm run build
+pnpm exec vite build --config preview/vite.config.js --mode ios-probe --outDir ../.runtime/ios-probe/diagnostic-build
+node experiments/ios-probe/package-hosted-diagnostic.mjs
 PLAYWRIGHT_BROWSERS_PATH=.runtime/ios-probe/browsers node experiments/ios-probe/verify-render-audit.mjs
 pnpm run test:experience render-audit
 ```
@@ -241,7 +242,8 @@ explicitly started and after stopping.
 
 The built verification serves generated bundles only inside the existing offline
 loopback fixture, requiring the real scene's assets and residents. It checks normal
-production with the query, diagnostics without it, and enabled timing. Normal
+production with the query, diagnostics without it, enabled timing, and the packaged
+`/ios-probe/` entry with timing. Normal
 production uses `dist/preview/play/index.html` because the build's root index is
 the landing page. Both harnesses honor the browser queue and bound each journey to
 150 seconds. Results are local functional evidence, not physical performance.
@@ -249,7 +251,7 @@ The artifact has not been deployed; hosting/origin/auth integration requires a
 separate concrete review and deployment authorization.
 
 Launch with `--probe-render-phases` to add the native **Phases** button and the
-fixed `render-audit=1` query on the existing HTTPS play origin. This does not enable
+separate `/ios-probe/?render-audit=1` entry on the existing HTTPS play origin. This does not enable
 timing in an ordinary hosted production build: the button reports `unsupported`
 until an explicitly built diagnostic client is hosted. Default launches omit the
 adapter and button. The Browser button continues to open the ordinary play entry.
@@ -270,3 +272,40 @@ adds overhead and cannot pass unprofiled thermal/performance acceptance. The JSO
 contains `phase-capture-start`, `phase-capture`, cancellation or unavailable events.
 The summary reports per-capture phase distributions, elapsed duration and covered
 frame intervals separately from RAF statistics, without claiming GPU completion.
+
+### Prepare the hosted diagnostic entry
+
+The packager adds `/ios-probe/index.html` and new hashed JS/CSS to the ordinary
+build. All generated game chunks stay under `/assets/`, where the existing
+WorkOS/waitlist asset gate applies. Normal `/play/index.html`, the landing page,
+existing assets, middleware, server routes and deployment configuration remain
+unchanged by packaging. Conflicting filenames and destination directory links
+fail before writes; identical files make reruns idempotent.
+
+```sh
+node --test experiments/ios-probe/package-hosted-diagnostic.test.mjs
+node experiments/ios-probe/package-hosted-diagnostic.mjs --config
+```
+
+The second command writes an ignored alternate Vercel configuration at
+`.runtime/ios-probe/vercel-diagnostic.json`. It changes only `buildCommand` to
+build normal production, build diagnostic mode separately, then package the new
+entry. It does not deploy. The normal `vercel.json` and ordinary Git deployment
+remain unchanged. Vercel's `--local-config` option selects this prepared file
+for an explicitly authorized deployment.
+
+Deployment is a full-site operation, even though packaging only adds diagnostic
+files. Before requesting execution, record the source SHA, normal/diagnostic
+hash receipt, tests and independent review. Before execution, refresh the current
+production source/deployment and reconcile any newer main changes with verification;
+never promote an older baseline over unrelated production changes. The intended
+project is `river-oaks` in scope `0xbuns`, retaining `https://typesafe.place` and
+existing authentication/environment/DNS settings. No deployment is authorized by
+this README or by development signing permission.
+
+After authorized deployment, verify the `/ios-probe/` entry, ordinary `/play`,
+signed-out protected-asset refusal and source/hash correlation before installing
+and measuring the phase-enabled native probe. An ordinary deployment removes the
+extra diagnostic entry. Record that cleanup plan; rollback of a previous full
+site deployment can revert concurrent work and requires its own explicit scope.
+Do not describe local fixture tests as hosted authentication or physical evidence.
