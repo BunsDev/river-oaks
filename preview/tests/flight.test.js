@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createFlightState, stepFlight } from '../src/flight.js';
+import { FLIGHT_SPEED, createFlightState, stepFlight } from '../src/flight.js';
 import { thirdPersonPose } from '../src/third-person.js';
 import { createWalkingEnvironment } from '../src/walking.js';
 
@@ -16,6 +16,15 @@ test('flight accelerates, holds altitude, bounds ascent and returns to grounded 
   flight.landing=true;flight.target=0;
   for(let i=0;i<1000&&flight.active;i++)stepFlight(walker,environment,flight,{},1/60);
   assert.equal(flight.active,false);assert.equal(walker.position[1],1.68);
+});
+test('the bubble cruises at 4.5 m/s and, held fast, flies at twice its old 7 m/s',()=>{
+  const open={groundAt:()=>0,isFree:()=>true,canFly:()=>true};
+  assert.equal(FLIGHT_SPEED.fast,2*7);
+  for(const [fast,speed] of [[false,4.5],[true,14]]) {
+    const walker=state(),flight={...createFlightState(),active:true,target:4,altitude:4};
+    for(let i=0;i<300;i++)stepFlight(walker,open,flight,{forward:1,fast},1/60);
+    assert.ok(Math.abs(walker.speed-speed)<.01,`${fast?'fast':'cruising'}: ${walker.speed}`);
+  }
 });
 test('flight cannot leave bounds or descend through a roof',()=>{
   const walker=state(),flight={...createFlightState(),active:true,target:4,altitude:4};

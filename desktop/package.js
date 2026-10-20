@@ -4,7 +4,7 @@ import { flipFuses } from '@electron/fuses';
 import { DESKTOP_FUSES } from './fuses.js';
 import { DESKTOP_FILES, DESKTOP_SHARED_FILES } from './package-files.js';
 import { packagerOptions, packagedBinary } from './package-options.js';
-import { APP_NAME } from './identity.js';
+import { APP_NAME, LINUX_EXECUTABLE } from './identity.js';
 import { cp, mkdir, mkdtemp, readFile, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
@@ -18,7 +18,8 @@ try {
   for (const file of DESKTOP_FILES) await cp(join(root, 'desktop', file), join(stage, 'desktop', file));
   for(const file of DESKTOP_SHARED_FILES){await mkdir(dirname(join(stage,file)),{recursive:true});await cp(join(root,file),join(stage,file));}
   await writeFile(join(stage, 'desktop/world-design-pack.json'), JSON.stringify(await buildWorldDesignPack(root)));
-  await writeFile(join(stage, 'package.json'), JSON.stringify({ name: 'river-oaks', productName: APP_NAME, version: pkg.version, type: 'module', main: 'desktop/main.js' }));
+  // desktopName: Electron gives Linux windows this desktop entry's app ID (Wayland), matching the one the installers write.
+  await writeFile(join(stage, 'package.json'), JSON.stringify({ name: 'river-oaks', productName: APP_NAME, version: pkg.version, type: 'module', main: 'desktop/main.js', desktopName: `${LINUX_EXECUTABLE}.desktop` }));
   const paths = await packager(await packagerOptions({ root, stage, pkg, platform: process.platform, arch: process.arch }));
   // The packaged app launches only the explicitly configured designer executable; its
   // renderer is sandboxed. Turning off the Node entry points stops another local

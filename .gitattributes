@@ -2,3 +2,6 @@
 # installed by scripts/install-project-hooks.mjs (pnpm install runs it); without
 # it, Git falls back to its normal line merge.
 docs/project-management/tasks.json merge=task-register
+
+# Linux package scripts and the AppArmor profile run on Linux; a CRLF checkout would break them.
+desktop/linux/** text eol=lf

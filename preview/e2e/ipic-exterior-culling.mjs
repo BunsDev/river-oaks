@@ -3,7 +3,7 @@
 // on macOS), alice enters IPIC; at each auditorium pose the frame is captured with culling on
 // and off (the DEV render-audit switch), and the two must match pixel for pixel wherever the
 // culling test fired, with fewer draw calls. Poses that can see the partition must not cull.
-// Then alice walks to a front-row recliner and sits, and her own camera is checked the same way.
+// Then alice walks to the middle row's centre recliner and sits, and her own camera is checked the same way.
 // Reduced motion keeps consecutive frames identical; the film is not started.
 import { chromium } from 'playwright';
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -11,16 +11,17 @@ import { startBrowserFixture } from './fixture-server.js';
 import { holdBrowserLock } from '../../scripts/browser-lock.mjs';
 
 const OUT = 'output/playwright/ipic-exterior-culling', FOV = 67, SEAT = 'bench:ipic-recliner-1-1';
-// [eye, target] in the IPIC room frame [a, h, d], h above the street floor.
+// [eye, target] in the IPIC room frame [a, h, d], h above the street floor. The wing's screen is on
+// its north end wall at a -19.35, centred at h 8.44, d 30; seated eyes are 1.22 m over each row's floor.
 const POSES = [
-  { name: 'review-auditorium', eye: [-4.7, 7.65, 27.3], target: [.5, 8.2, 33.7], cull: true },
-  { name: 'front-row-screen', eye: [-.6, 7.22, 31], target: [.3, 8.5, 33.79], cull: true },
-  { name: 'back-centre-screen', eye: [0, 7.8, 27], target: [.3, 8.5, 33.79], cull: true },
-  { name: 'front-row-left-wall', eye: [-2.6, 7.3, 31], target: [-6.2, 7.6, 32], cull: true },
-  { name: 'front-row-right-wall', eye: [3.4, 7.3, 31], target: [6.7, 7.6, 32], cull: true },
-  { name: 'ceiling', eye: [0, 7.6, 30], target: [.3, 10.4, 33] , cull: true },
+  { name: 'review-auditorium', eye: [-4.4, 7.75, 31.4], target: [-19.35, 8.44, 30], cull: true },
+  { name: 'front-row-screen', eye: [-12.85, 6.31, 30], target: [-19.35, 8.44, 30], cull: true },
+  { name: 'back-centre-screen', eye: [-6.85, 7.22, 30], target: [-19.35, 8.44, 30], cull: true },
+  { name: 'front-row-left-wall', eye: [-12.85, 6.41, 28], target: [-13.65, 6.61, 26.1], cull: true },
+  { name: 'front-row-right-wall', eye: [-12.85, 6.41, 32], target: [-13.65, 6.61, 33.9], cull: true },
+  { name: 'ceiling', eye: [-9.85, 7.11, 30], target: [-11.85, 10.4, 30], cull: true },
   { name: 'back-to-doorway', eye: [-4.7, 7.65, 27.3], target: [-4.7, 7.5, 20], cull: false },
-  { name: 'back-row-sideways', eye: [0, 7.6, 30], target: [-6, 7.6, 30], cull: false },
+  { name: 'rear-foyer-sideways', eye: [0, 7.6, 30], target: [6, 7.6, 30], cull: false },
 ];
 const release = await holdBrowserLock('IPIC auditorium exterior culling');
 let fixture, browser;
@@ -95,8 +96,8 @@ try {
   }
   await page.evaluate(() => window.__riverRenderAudit.release());
 
-  // alice's own camera, seated in a front-row recliner (the walk of preview/e2e/ipic-visit.js).
-  for (const [a, d] of [[-1.4, 4.8], [-1.4, 20.7], [-1.4, 24.5], [-4.85, 24.5], [-4.85, 29.65], [-1.6, 29.65]]) {
+  // alice's own camera, seated in the middle row (through the doorway, along the cross-aisle and down the side aisle).
+  for (const [a, d] of [[-1.4, 4.8], [-1.4, 20.7], [-1.4, 24.5], [-4.85, 24.5], [-4.85, 26.7], [-11.25, 26.7], [-11.25, 30]]) {
     const target = world(a, d), deadline = Date.now() + 120000;
     await page.locator('#canvas-host').focus();
     let distance = Infinity;

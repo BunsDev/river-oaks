@@ -8,6 +8,7 @@ import { createInteractions } from './interactions.js';
 import { COMMUNITY_SCENARIOS, createCommunity, interactWithLocal, stepCommunity } from '../preview/src/community.js';
 import { createResidentLife, stepResidentLife } from '../preview/src/resident-life.js';
 import { createWalkingEnvironment, createWalkingState } from '../preview/src/walking.js';
+import { FLIGHT_SPEED } from '../preview/src/flight.js';
 import { grantWish, undoWish, stepWishes, wishFor, refreshWishTrouble } from '../preview/src/wishes.js';
 import { storefrontSpot } from '../preview/src/arrival.js';
 import { placesOf } from '../preview/src/places.js';
@@ -593,7 +594,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     player.poseAt = time;
     player.moveBudget = Math.min(1,player.moveBudget+dt);
     player.liftBudget = Math.min(1,player.liftBudget+dt);
-    const cost = distance(position,player.position) / (message.vehicle ? VEHICLES[message.vehicle].maxSpeed : Math.max(player.altitude,altitude)>0.1 ? 7.2 : 3.4);
+    const cost = distance(position,player.position) / (message.vehicle ? VEHICLES[message.vehicle].maxSpeed : Math.max(player.altitude,altitude)>0.1 ? FLIGHT_SPEED.fast+.2 : 3.4);
     const liftCost = Math.abs(altitude-player.altitude)/3.2;
     if (cost>player.moveBudget+1e-8 || liftCost>player.liftBudget+1e-8) return correction('movement_too_fast');
     const steps = Math.max(1,Math.ceil(distance(position,player.position)/0.15),Math.ceil(Math.abs(altitude-player.altitude)/0.15));

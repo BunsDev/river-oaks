@@ -1,6 +1,6 @@
 // IPIC runtime photo views (#364: T1–T3, the five photo-indexed views): node preview/e2e/ipic-photo-views.mjs
 // The game itself with real materials on this machine's GPU (Metal ANGLE on macOS) and two
-// loopback fixture accounts. alice holds a synthetic IPIC host grant, sits in a front-row
+// loopback fixture accounts. alice holds a synthetic IPIC host grant, sits in the middle row's centre
 // recliner and starts the venue's default film (the approved short, #365); owner stands at the Tuck Room bar. Each IPIC_CAMERAS
 // pose (FOV 67, as preview/e2e/fixtures/ipic.js) is framed through the DEV-only render-audit
 // camera from the page whose player is not the subject (a player's own avatar is hidden in
@@ -14,7 +14,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { startBrowserFixture } from './fixture-server.js';
 import { holdBrowserLock } from '../../scripts/browser-lock.mjs';
-import { IPIC_CAMERAS } from '../src/ipic-plan.js';
+import { IPIC_AUDITORIUM_ROWS, IPIC_CAMERAS, IPIC_SCREEN, IPIC_VIEWING } from '../src/ipic-plan.js';
 
 const OUT = 'docs/design/office-ipic/captures', FOV = 67, VIEWPORT = { width: 1440, height: 900 };
 const IDS = { reception: 'T1-reception', mural: 'T2a-mural', lounge: 'T2b-lounge', bar: 'T2c-bar', auditorium: 'T3-auditorium' };
@@ -71,7 +71,8 @@ try {
   }
   await Promise.all([enter(alice), enter(owner)]);
   await Promise.all([
-    walk(alice, [[-1.4, 4.8], [-1.4, 20.7], [-1.4, 24.5], [-4.85, 24.5], [-4.85, 29.65], [-1.6, 29.65]]),
+    // Through the doorway, along the cross-aisle, down the side aisle and into the middle row's legroom.
+    walk(alice, [[-1.4, 4.8], [-1.4, 20.7], [-1.4, 24.5], [-4.85, 24.5], [-4.85, 26.7], [-11.25, 26.7], [-11.25, 30]]),
     walk(owner, [[1.4, 4.8], [1.4, 20.7], [2.3, 22.2]]),
   ]);
   await alice.locator('#nearby-seat').selectOption(`${SEAT}:0`);
@@ -88,7 +89,7 @@ try {
   const views = [
     ...['auditorium', 'bar', 'lounge', 'reception', 'mural'].map(name => { const c = IPIC_CAMERAS.find(item => item.name === name); return { id: IDS[name], camera: name, eye: c.eye, target: c.target, photo: `assets/ipic/references/${c.photo}`, page: name === 'auditorium' ? 'owner' : 'alice' }; }),
     // alice's own seated eye (cushion + 0.69 m, store-encounters.js) on the screen centre.
-    { id: 'T3-seated', camera: 'recliner-1-1 seated eye', eye: [-.6, 6 + .53 + .69, 31], target: [.3, 6 + 2.5, 33.79], photo: 'assets/ipic/references/IMG_9767.jpg', page: 'alice' },
+    { id: 'T3-seated', camera: 'recliner-1-1 seated eye', eye: [IPIC_AUDITORIUM_ROWS[1].a, 6 + IPIC_AUDITORIUM_ROWS[1].floor + IPIC_VIEWING.seatedEye, 30], target: [IPIC_SCREEN.a, 6 + IPIC_SCREEN.y, IPIC_SCREEN.d], photo: 'assets/ipic/references/IMG_9767.jpg', page: 'alice' },
   ];
   const captures = [];
   for (const view of views) {

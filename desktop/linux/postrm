@@ -1,0 +1,20 @@
+#!/bin/sh
+# postrm for the typesafe-place .deb (desktop/linux/postrm, #372).
+set -e
+
+PROFILE_TARGET=/etc/apparmor.d/typesafe-place
+
+case "$1" in
+  remove|purge)
+    # postinst copied the AppArmor profile, so dpkg does not track it: unload and remove it here.
+    if [ -f "$PROFILE_TARGET" ]; then
+      if command -v apparmor_parser > /dev/null 2>&1 && [ -d /sys/kernel/security/apparmor ]; then
+        apparmor_parser --remove "$PROFILE_TARGET" > /dev/null 2>&1 || true
+      fi
+      rm -f "$PROFILE_TARGET"
+    fi
+    if command -v update-desktop-database > /dev/null 2>&1; then update-desktop-database -q /usr/share/applications || true; fi
+    ;;
+esac
+
+exit 0

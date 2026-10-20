@@ -93,7 +93,8 @@ export function planStoreRooms(world) {
     const fits = (aMin, aMax, depth) => {
       const corners = [[aMin, 0.5], [aMax, 0.5], [aMin, depth], [aMax, depth], [(aMin + aMax) / 2, depth], [(aMin + aMax) / 2, depth / 2]];
       const footprint = [[aMin, 0], [aMax, 0], [aMax, depth], [aMin, depth]].map(([a, d]) => toWorld(a, d));
-      return !overlapsDoor(aMin, aMax) && corners.every(([a, d]) => inside(toWorld(a, d), building.ring)) && !rooms.some(other => rectanglesOverlap(footprint, other.footprint, 0.001));
+      return !overlapsDoor(aMin, aMax) && corners.every(([a, d]) => inside(toWorld(a, d), building.ring))
+        && !rooms.some(other => (other.footprints ?? [other.footprint]).some(part => rectanglesOverlap(footprint, part, 0.001)));
     };
     // Candidate spans: whole facade bays around the door when the frontage is
     // mapped, so party walls land on the existing pier grid.
@@ -147,6 +148,7 @@ export function planStoreRooms(world) {
     ];
     if (isIpicStore(store) && room.depth === 34 && room.width >= 12) configureIpicRoom(room);
     else layoutRoom(room);
+    if (room.parts) addRoomParts(room);
     rooms.push(room);
   });
   return rooms;
@@ -390,19 +392,33 @@ const LAYOUTS = {
   },
 };
 
-// Walking support: rooms are free zones inside otherwise solid footprints.
+// A store room's own rectangle, with the entrance throat 1.4 m out through the doorway.
+function rectangleAccess(room, east, north, shrink) {
+  const [a, d] = room.toLocal(east, north);
+  if (a <= room.aMin + shrink || a >= room.aMax - shrink || d >= room.depth - shrink) return false;
+  return d > shrink + 0.02 || (d > -1.4 && Math.abs(a) < DOOR_HALF_WIDTH - shrink);
+}
+
+// A room may add rectangular parts beyond its main rectangle (IPIC's auditorium wing): local
+// { aMin, aMax, d0, d1 }, each overlapping the main rectangle where they meet so a shrunken test
+// leaves no seam. Containment, the walking access test, footprints and lookup bounds cover the union.
+function addRoomParts(room) {
+  const inPart = ([a, d], shrink) => room.parts.some(p => a > p.aMin + shrink && a < p.aMax - shrink && d > p.d0 + shrink && d < p.d1 - shrink);
+  const main = room.contains;
+  room.contains = (east, north, shrink = 0) => main(east, north, shrink) || inPart(room.toLocal(east, north), shrink);
+  room.containsAccess = (east, north, shrink = 0) => rectangleAccess(room, east, north, shrink) || inPart(room.toLocal(east, north), shrink);
+  room.footprints = [room.footprint, ...room.parts.map(p => [[p.aMin, p.d0], [p.aMax, p.d0], [p.aMax, p.d1], [p.aMin, p.d1]].map(([a, d]) => room.toWorld(a, d)))];
+  const points = room.footprints.flat(), [x0, n0, x1, n1] = room.lookupBounds;
+  room.lookupBounds = [Math.min(x0, ...points.map(p => p[0])), Math.min(n0, ...points.map(p => p[1])), Math.max(x1, ...points.map(p => p[0])), Math.max(n1, ...points.map(p => p[1]))];
+}
+
+// Walking support: rooms are free zones inside otherwise solid footprints. Rooms with their own
+// access test (generated plans, rooms with parts) answer for themselves.
 export function roomAt(rooms, east, north, shrink = 0) {
   for (const room of rooms) {
     const bounds = room.lookupBounds;
     if (shrink >= 0 && bounds && (east < bounds[0] || north < bounds[1] || east > bounds[2] || north > bounds[3])) continue;
-    if (room.generatedPlan) {
-      if (room.containsAccess(east, north, shrink)) return room;
-      continue;
-    }
-    const [a, d] = room.toLocal(east, north);
-    if (a <= room.aMin + shrink || a >= room.aMax - shrink || d >= room.depth - shrink) continue;
-    if (d > shrink + 0.02) return room;
-    if (d > -1.4 && Math.abs(a) < DOOR_HALF_WIDTH - shrink) return room;
+    if (room.containsAccess ? room.containsAccess(east, north, shrink) : rectangleAccess(room, east, north, shrink)) return room;
   }
   return null;
 }

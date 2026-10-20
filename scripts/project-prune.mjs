@@ -79,6 +79,35 @@ export function planRetirement({root,branch,expectedHead,register,pulls,activity
   return {branch,head,taskId:task?.id??null,worktrees:owned.map(w=>w.path),blockers:[...new Set(blockers)],eligible:blockers.length===0};
 }
 
+// Bundle an exact tip under `tag` and restore-test it into `restore`. The bundle
+// holds only what origin's default branch lacks; a tip already on that branch
+// bundles just its own commit. Its prerequisites are commits on that branch, so any
+// clone holding the branch restores it. restore.git borrows them from the common
+// object store through alternates rather than copying the whole history again.
+// Without a default-branch ref the bundle stays self-contained, as before.
+export function archiveTip({root,tag,expectedHead,bundle,restore}) {
+  const ref=defaultBranchRef(root),base=git(root,['rev-parse','--verify','--quiet',`${ref}^{commit}`],true);
+  const onBase=base&&git(root,['merge-base','--is-ancestor',expectedHead,base],true)!==null;
+  const exclude=!base?[]:onBase?git(root,['rev-parse',`${expectedHead}^@`]).split('\n').filter(Boolean):[base];
+  git(root,['bundle','create',bundle,tag,...exclude.map(sha=>`^${sha}`)]);
+  const data=readFileSync(bundle),prerequisites=restoreTest({root,tag,expectedHead,bundle,restore});
+  return {sha256:createHash('sha256').update(data).digest('hex'),prerequisites,...(base?{base:{ref,head:base}}:{})};
+}
+
+// Restore a bundle into a new bare repository and return its prerequisites.
+export function restoreTest({root,tag,expectedHead,bundle,restore}) {
+  const data=readFileSync(bundle),header=data.subarray(0,data.indexOf('\n\n')).toString('utf8').split('\n');
+  const prerequisites=header.filter(line=>line.startsWith('-')).map(line=>line.slice(1).split(' ')[0]);
+  git(root,['init','--bare',restore]);
+  if(prerequisites.length)writeFileSync(join(restore,'objects','info','alternates'),realpathSync(resolve(root,git(root,['rev-parse','--git-common-dir']),'objects'))+'\n');
+  // Unbundle rather than fetch: a fetch skips reading the pack once alternates already
+  // reach the tip, so it would accept a corrupt bundle.
+  if(git(restore,['bundle','unbundle',bundle])!==`${expectedHead} ${tag}`)throw new Error('Archive restoration SHA mismatch');
+  git(restore,['update-ref',tag,expectedHead]);
+  git(restore,['fsck','--full']);
+  return prerequisites;
+}
+
 // Archive an exact tip, restore-test the archive, then remove the checkouts and
 // (optionally) the local ref. `check` re-plans from live evidence and must throw
 // when the plan is no longer eligible; it runs again before every mutation.
@@ -99,11 +128,7 @@ export function archiveAndRemove({root,branch,expectedHead,archiveRoot,prefix='r
     const manifest=join(directory,'manifest.json');
     const record=()=>writeFileSync(manifest,JSON.stringify(receipt,null,2)+'\n',{mode:0o600});record();
     git(root,['update-ref',tag,expectedHead,'0'.repeat(expectedHead.length)]);
-    git(root,['bundle','create',bundle,tag]);
-    receipt.sha256=createHash('sha256').update(readFileSync(bundle)).digest('hex');
-    git(root,['init','--bare',restore]);git(restore,['fetch',bundle,`${tag}:${tag}`]);
-    if(git(restore,['rev-parse',tag])!==expectedHead)throw new Error('Archive restoration SHA mismatch');
-    git(restore,['fsck','--full']);receipt.status='restore-verified';record();
+    Object.assign(receipt,archiveTip({root,tag,expectedHead,bundle,restore}));receipt.status='restore-verified';record();
     const initialPaths=JSON.stringify(plan.worktrees);
     plan=check();
     if(JSON.stringify(plan.worktrees)!==initialPaths)throw new Error('Worktree registrations changed');

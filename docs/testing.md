@@ -119,7 +119,7 @@ continuous collision, target-GPU performance or native Unreal parity.
 - **`preview experience (streets | places)`:** the experience journeys, in two parallel shards.
 - **`preview`:** an aggregate job that fails unless every shard succeeded. This is the check the `main` ruleset requires.
 
-A separate `Desktop` workflow (`.github/workflows/desktop.yml`) packages the Electron shell on Windows, Linux and macOS, checks fuses and asar contents, runs the development desktop e2e and uploads unsigned builds; it is not a required check ([desktop](desktop.md#ci-builds-on-windows-linux-and-macos)). GitHub's default CodeQL setup and the Vercel preview add their own checks. On failure, shards upload screenshots as artifacts named by shard, for example `shared-town-failure-<shard>`, `experience-failure-<shard>` and `security-browser-failure`.
+A separate `Desktop` workflow (`.github/workflows/desktop.yml`) packages the Electron shell on Windows, Linux and macOS, checks fuses and asar contents, runs the development desktop e2e and uploads unsigned builds, then builds the Windows and Linux installers, installs, launches and removes each on a fresh runner, and gathers them with one `SHA256SUMS`; it is not a required check ([desktop](desktop.md#ci-builds-on-windows-linux-and-macos)). Windows signing runs only on a manual dispatch or `v*` tag ([installers](desktop.md#windows-signing)). GitHub's default CodeQL setup and the Vercel preview add their own checks. On failure, shards upload screenshots as artifacts named by shard, for example `shared-town-failure-<shard>`, `experience-failure-<shard>` and `security-browser-failure`.
 
 Known intermittent journeys, all of which have passed on rerun:
 
