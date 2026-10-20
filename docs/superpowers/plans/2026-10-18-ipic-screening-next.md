@@ -74,7 +74,7 @@ not device evidence. Self-review is not independent review.
 | Interrupted loads, offline, background/foreground | #502 | 4b | fixture-browser (#498): stall → Retry plays, offline → network → Retry plays, interrupted load quiet. Journey (emulated; headless Chromium keeps background tabs visible): the page marked hidden, its film paused as Safari pauses hidden media, its JavaScript frozen 8 s (CDP `Page.setWebLifecycleState`), then shown. The film had not moved while away; 254 ms after showing it had seeked, and its first **presented** frame (requestVideoFrameCallback) came 338 ms after showing, 59 ms from the room. Finding: disconnected beside a seat, `shared-seating-ui.js:51` throws every frame before the draw (seen in the 17:00Z #501 capture); the guard is in open PR #489, not duplicated | pass (emulated) | A phone lock and app switch are device rows (Val) |
 | Warm-up plus ten cycles of resources with a film change | #502 | 4b | Integrated soak on #520 `2df7a0a8` (#498 + #499 + #500 `b9d78b86` + #502), 17:15–17:20Z, load 29–53: warm-up plus 10 cycles, each changing the film from the short to the fixture (its own 640×360 texture on screen in 1.1–4.1 s). Startup per cycle: first presented frame 1.8–3.9 s after the trip in began (7.9 s on the cold first cycle). No growth in media elements, audio contexts, intervals, documents, textures or geometries; DOM nodes 5,923 → 5,941, listeners flat. Baseline on main: 11/11 with one film | pass | — |
 | Serving: MIME types and byte ranges on the intended path | #502 | 4b | Production, read-only, 2026-10-18 ~14:45Z: a 1 KB `Range` GET of each file on typesafe.place returned 206 with `accept-ranges: bytes`. Types: `video/mp4`, `video/webm`, `text/vtt; charset=utf-8`, `image/jpeg`. Total sizes match `sources.json`: 13,313,704; 9,289,288; 486; 93,773 | pass (types and ranges) | Val: the cache decision below |
-| Serving: caching | #502 | Val (decision) | The same responses: films and captions are `cache-control: private, no-store` with CDN `MISS`, because `vercel.json`'s non-image `/assets` rule (from #98, written for the gated `.js` and `.css`) also matches `.mp4`, `.webm` and `.vtt`. Every visit re-downloads 9–13 MB per film. The poster is `public, max-age=3600` | finding | Proposal below; production config, so Val decides |
+| Serving: caching | #502 | 4b (Val approved 2026-10-19) | Before: films and captions were `cache-control: private, no-store` with CDN `MISS`, because `vercel.json`'s non-image `/assets` rule (from #98, written for the gated `.js` and `.css`) also matched `.mp4`, `.webm` and `.vtt`; every visit re-downloaded 9–17 MB per film. Applied on `perf/screening-film-cache-20261019`: `/assets/ipic/screening/*.(mp4\|webm\|vtt)` get `public, max-age=3600, stale-while-revalidate=86400` and are excluded from the private rule; `server/tests/hardening-asset-cache.test.js` pins both (fails on main) | applied (pending deploy) | Read the production headers back after the merge |
 | Rollback: retained ids and durations, compatible build | #502 | 4b | Server test on #520: a checkpoint whose timeline and receipts name both films restores playing (the second film resumes) and stopped, and a resent start after the restore applies once. Older client, newer catalog: #499's unknown-film path (unsupported; no other film's frames or text). Unknown id in a checkpoint: fails closed (existing test) | pass | — |
 | Isolated Redis (diff-required for #499's server tests) | #502 | 4b | `REDIS_URL` on a private redis-server (port 16591, scratch dir): screenings transport + screenings tests 17/17, 0 skipped. Full server suite on the same Redis at load 138–154: 911/916, 4 failed (timeout-bound real-socket tests). The files with failures, rerun alone at load 65 (16:31Z): 33/33, 0 skipped | pass (the 4 failures were load) | — |
 | macOS Safari (real) | #502 | Val (device) | — | **unassigned device run** | Val runs it; the steps go in the #502 handoff |
@@ -113,7 +113,7 @@ note for each step. Screen recordings help.
 5. **Production host smoke (only with Val's go).** The Jevica account starts the film in production, and a second
    account sees it play. This is the first signed-in host action on production.
 
-## Proposal for Val: cache the films (not applied)
+## Film cache (Val approved 2026-10-19; applied on `perf/screening-film-cache-20261019`)
 
 - **Candidate.** In `vercel.json`, give `/assets/ipic/screening/*.(mp4|webm|vtt)` the image rule's
   `public, max-age=3600, stale-while-revalidate=86400`, ahead of the `private, no-store` rule. File names are
@@ -124,7 +124,7 @@ note for each step. Screen recordings help.
 - **Risk.** After a future same-name re-encode, a viewer could play cached old bytes for up to an hour. Durations
   are validated from the allowlist, so a mismatch shows as a slightly wrong length, not a crash.
 - **Rollback.** Remove the rule and redeploy the same build.
-- **Needs:** a deployment, which is Val's go. Not part of this milestone's acceptance unless Val says so.
+- **Decision:** Val approved implementing and landing it on 2026-10-19. The rule is scoped to `/assets/ipic/screening/`; the login video and the screening manifest stay `private, no-store`.
 
 ## Release recommendation (2026-10-18, version-bound)
 
