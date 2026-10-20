@@ -2,7 +2,8 @@
 
 Issue [#285](https://github.com/BunsDev/river-oaks/issues/285), under
 [#284](https://github.com/BunsDev/river-oaks/issues/284). Source inspected:
-`3db6a5f0e381d3e9257bff42c63ac785d08e2ba4`, 2026-10-13. This is a working
+`3db6a5f0e381d3e9257bff42c63ac785d08e2ba4`, 2026-10-13; current main re-measured
+2026-10-20 at `27b11eb5` (last section). This is a working
 experiment and proposed decision criteria, not approval of a production host.
 
 ## Hard requirements before choosing
@@ -284,3 +285,36 @@ possible blocking/descheduling, not CPU execution or GPU completion. Overflow
 stops recording; visibility resumes are marked as discontinuities. This local
 artifact has not been deployed or measured on the phone. A matched hosted source
 baseline, origin/auth integration and concurrent GPU evidence remain necessary.
+
+## Current main on the iPhone 16 Pro Max (2026-10-20)
+
+Source: main `27b11eb5` plus this probe, served by the private phone fixture with
+the Gardens campus revision that production uses. Safari, normal decoder path
+(`TextureLoader` for iOS avatars since #436), one synthetic guest, phone on its
+charger and untouched. Dev-server modules, so absolute times are diagnostic.
+Run details and raw records: `docs/superpowers/plans/2026-10-19-ios-fit-285.md`.
+
+- No WebContent termination during load in two runs. Playable at 25.7 s and
+  27.8 s, with assets still streaming. The provisional cold-ready budget is 20 s.
+- Auto reaches its floor (scale 0.6, AO off) within 20 s of playable.
+- Frames: 42–63 ms median for about 30 s, then 81 ms median (12.4 fps; p95 92,
+  p99 97 over 2,090 frames) for the rest of a 3-minute run. The step repeated
+  at the same offset after a reload on a warm phone, so it is not thermal. It
+  may be the display dimming after a minute without a touch; that is unconfirmed.
+- Synchronous render-loop work is 26 ms per frame, of which 18.7 ms is draw
+  submission for about 874 draws (about 21 µs per draw). The rest is interactions
+  4.9 ms and players 2.0 ms.
+- Local attribution of the same 874 draws: 452 are the sun shadow pass. Shop
+  interiors drawn from the street account for 261 draws across both passes;
+  mature trees 108; four parked bikes 44 shadow draws; three bird-cam birds 27.
+
+Status: still **revise**. Both the 30 fps floor and the 20 s cold-ready budget
+fail on the best available phone. The cost measured so far is dominated by draw
+count, and much of that comes from scene choices (what casts sun shadows, which
+interiors draw from outside). None of it points to a WebKit or WebGL blocker
+that another host or engine would avoid, so the shared Three.js client stays
+the primary route, with the custom WKWebView host as fallback. Switch only if a
+mobile tier at or below about 450 draws still misses p95 ≤ 33 ms on this phone,
+or if the A15 floor device misses by more than 2×. GPU time and memory on
+current main still need a USB-connected Instruments capture, and no minimum-device
+run exists yet.
