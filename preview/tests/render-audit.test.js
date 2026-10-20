@@ -40,3 +40,71 @@ test('sample deadline cannot trigger a final gesture before its cooldown, even i
   assert.deepEqual(gestureWait(20.2), { delayMs: 21, finish: true });
   assert.deepEqual(gestureWait(-4), { delayMs: 1, finish: true });
 });
+
+test('phase timing measures consecutive work without reading the clock while inactive', () => {
+  let time = 0, reads = 0;
+  const audit = createRenderAudit({ now: () => { reads++; return time; } });
+  audit.beginFrame(); audit.phase('residents'); audit.frame(0);
+  assert.equal(reads, 0);
+  audit.start();
+  audit.beginFrame(); time = 3; audit.phase('residents'); time = 8; audit.phase('pipeline'); time = 10; audit.frame(100);
+  time = 20; audit.beginFrame(); time = 24; audit.phase('residents'); time = 31; audit.phase('pipeline'); time = 32; audit.frame(116);
+  assert.deepEqual(audit.stop(), { frames: [{ intervalMs: 16, cpuMs: 12, phasesMs: { residents: 4, pipeline: 7, tail: 1 } }], overflow: false });
+  const before = reads;
+  audit.beginFrame(); audit.phase('pipeline'); audit.frame(200);
+  assert.equal(reads, before);
+});
+
+test('phase records reset each frame and run, and overflow remains explicit and bounded', () => {
+  let time = 0;
+  const audit = createRenderAudit({ limit: 1, now: () => ++time });
+  audit.start();
+  for (const at of [0, 16, 32]) { audit.beginFrame(); audit.phase('residents'); audit.frame(at); }
+  const result = audit.stop();
+  assert.equal(result.overflow, true); assert.equal(result.frames.length, 1);
+  audit.start();
+  for (const at of [100, 116]) { audit.beginFrame(); audit.phase('pipeline'); audit.frame(at); }
+  assert.deepEqual(audit.stop(), { frames: [{ intervalMs: 16, cpuMs: 2, phasesMs: { pipeline: 1, tail: 1 } }], overflow: false });
+  assert.deepEqual(result.frames[0].phasesMs, { residents: 1, tail: 1 });
+});
+
+test('phase timing fails explicitly for invalid clock evidence and refuses unbounded capacities', () => {
+  for (const limit of [0, -1, 1.5, Infinity, 120001]) assert.throws(() => createRenderAudit({ limit }));
+  let time = 10;
+  const audit = createRenderAudit({ now: () => time });
+  audit.start(); audit.beginFrame(); time = 9;
+  assert.throws(() => audit.phase('residents'), /clock/);
+  time = NaN;
+  assert.throws(() => audit.beginFrame(), /clock/);
+});
+
+test('overflow stops phase clocks and allocation until an explicit restart', () => {
+  let reads = 0;
+  const audit = createRenderAudit({ limit: 1, now: () => ++reads });
+  audit.start();
+  for (const at of [0, 16, 32]) { audit.beginFrame(); audit.phase('pipeline'); audit.frame(at); }
+  const before = reads;
+  audit.beginFrame(); audit.phase('pipeline'); audit.frame(48);
+  assert.equal(reads, before);
+  assert.equal(audit.stop().overflow, true);
+});
+
+test('visibility discontinuities exclude hidden intervals and are reported, without reactivating a stopped audit', () => {
+  const audit = createRenderAudit();
+  audit.start(); audit.frame(0, 1); audit.frame(16, 2);
+  audit.discontinuity(); audit.frame(9000, 3); audit.frame(9016, 4);
+  assert.deepEqual(audit.stop(), { frames: [{ intervalMs: 16, cpuMs: 2 }, { intervalMs: 16, cpuMs: 4 }], overflow: false, discontinuities: 1 });
+  audit.discontinuity(); audit.frame(9999, 5);
+  audit.start(); audit.frame(10000, 1); audit.frame(10016, 2);
+  assert.deepEqual(audit.stop(), { frames: [{ intervalMs: 16, cpuMs: 2 }], overflow: false });
+});
+
+test('phase names are bounded and repeated work accumulates within its named bucket', () => {
+  let time = 0;
+  const audit = createRenderAudit({ now: () => ++time });
+  audit.start(); audit.beginFrame();
+  assert.throws(() => audit.phase('unbounded-name'), /phase/);
+  audit.frame(0);
+  audit.beginFrame(); audit.phase('residents'); audit.phase('residents'); audit.frame(16);
+  assert.deepEqual(audit.stop().frames[0].phasesMs, { residents: 2, tail: 1 });
+});

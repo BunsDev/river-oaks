@@ -1,10 +1,46 @@
 // Private phone-fixture controls for investigating iOS image decoding. None of
 // these scripts or endpoints is installed in a production build.
 const reportScript = `(() => { const started = performance.now(); for (const delay of [5000, 25000]) setTimeout(() => { const progress = document.querySelector('#viewport')?.dataset.assetProgress; const loading = document.querySelector('#loading'); const gate = document.querySelector('.multiplayer-gate'); let graphics = null; try { graphics = globalThis.__riverRenderAudit?.graphics() ?? null; } catch {} const report = { mode: document.documentElement.dataset.phoneAvatarDecoder === 'html-images' ? 'avatar-html' : document.documentElement.dataset.phoneDecoder === 'html-images' ? 'global-html' : 'normal', elapsedMs: Math.round(performance.now() - started), asset: progress ? JSON.parse(progress) : null, loading: loading ? { shown: !loading.hidden, error: loading.classList.contains('error'), title: loading.querySelector('h2')?.textContent?.slice(0, 80) ?? null, message: loading.querySelector('p')?.textContent?.slice(0, 200) ?? null } : null, gate: gate ? { shown: !gate.hidden, status: document.querySelector('#multiplayer-status')?.textContent?.slice(0, 120) ?? null } : null, graphics: graphics ? { renderer: String(graphics.renderer).slice(0, 120), viewport: graphics.viewport, render: { calls: graphics.render?.calls ?? null }, memory: { textures: graphics.memory?.textures ?? null } } : null }; void fetch('/__phone_readiness', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(report) }).catch(() => {}); }, delay); })();`;
+// Optional ?phone-frame-windows=N (1-60) and ?phone-frame-seconds=S (1-20) take
+// N consecutive S-second windows; each report adds that window's render-phase
+// totals and effective quality, so a long sustained run stays bounded per POST.
+// ?phone-frame-ab=shadow-casters alternates windows between every sun-shadow
+// caster ('all', even windows) and the development audit's lean set ('lean').
 const frameReportScript = `(() => {
   const started = performance.now();
   const mode = document.documentElement.dataset.phoneAvatarDecoder === 'html-images'
     ? 'avatar-html' : document.documentElement.dataset.phoneDecoder === 'html-images' ? 'global-html' : 'normal';
+  const params = new URLSearchParams(location.search);
+  const bounded = (name, fallback, max) => {
+    const value = Number(params.get(name));
+    return Number.isInteger(value) && value >= 1 && value <= max ? value : fallback;
+  };
+  const windows = bounded('phone-frame-windows', 1, 60), seconds = bounded('phone-frame-seconds', 5, 20);
+  const round = value => Math.round(value * 100) / 100;
+  const ab = params.get('phone-frame-ab') === 'shadow-casters';
+  const sample = (audit, index) => {
+    let variant = null;
+    if (ab) try { variant = index % 2 ? 'lean' : 'all'; audit.shadowCasters(variant); } catch { variant = null; }
+    audit.start();
+    setTimeout(() => {
+      const result = audit.stop();
+      const frames = result.frames.slice(0, 1200).map(frame => [round(frame.intervalMs), round(frame.cpuMs)]);
+      const phases = {};
+      for (const frame of result.frames) for (const [name, ms] of Object.entries(frame.phasesMs ?? {})) phases[name] = (phases[name] ?? 0) + ms;
+      for (const name of Object.keys(phases)) phases[name] = round(phases[name]);
+      let graphics = null;
+      try { graphics = audit.graphics?.() ?? null; } catch {}
+      void fetch('/__phone_readiness', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode, elapsedMs: Math.round(performance.now() - started), window: index, ...(variant ? { variant } : {}),
+          sample: { durationMs: seconds * 1000, frames, overflow: result.overflow || result.frames.length > 1200,
+            phases, discontinuities: result.discontinuities ?? 0 },
+          quality: graphics?.quality ? { mode: graphics.quality.mode, scale: graphics.quality.scale, occlusion: graphics.quality.occlusion } : null,
+          render: graphics?.render ? { calls: graphics.render.calls, triangles: graphics.render.triangles } : null }),
+      }).catch(() => {});
+      if (index + 1 < windows) sample(audit, index + 1);
+    }, seconds * 1000);
+  };
   const ready = () => {
     const loading = document.querySelector('#loading');
     const gate = document.querySelector('.multiplayer-gate');
@@ -13,17 +49,7 @@ const frameReportScript = `(() => {
       if (performance.now() - started < 60000) setTimeout(ready, 250);
       return;
     }
-    audit.start();
-    setTimeout(() => {
-      const result = audit.stop();
-      const frames = result.frames.slice(0, 1200).map(frame =>
-        [Math.round(frame.intervalMs * 100) / 100, Math.round(frame.cpuMs * 100) / 100]);
-      void fetch('/__phone_readiness', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode, elapsedMs: Math.round(performance.now() - started),
-          sample: { durationMs: 5000, frames, overflow: result.overflow || result.frames.length > 1200 } }),
-      }).catch(() => {});
-    }, 5000);
+    sample(audit, 0);
   };
   setTimeout(ready, 250);
 })();`;
@@ -69,6 +95,12 @@ export function phoneDecoderProbePlugin() {
               || report.sample.frames.some(frame => !Array.isArray(frame) || frame.length !== 2
                 || frame.some(value => !Number.isFinite(value) || value < 0 || value > 10000))))
               throw new Error('invalid frame sample');
+            const PHASES = ['setup', 'community', 'trees', 'residents', 'interactions', 'players', 'reflections', 'debug', 'pipeline', 'tail'];
+            const phases = report.sample?.phases;
+            if (phases != null && (typeof phases !== 'object' || Object.entries(phases).some(([name, ms]) =>
+              !PHASES.includes(name) || !Number.isFinite(ms) || ms < 0 || ms > 600000))) throw new Error('invalid phases');
+            if (report.window != null && (!Number.isInteger(report.window) || report.window < 0 || report.window > 59)) throw new Error('invalid window');
+            if (report.variant != null && !['all', 'lean'].includes(report.variant)) throw new Error('invalid variant');
             const finite = value => Number.isFinite(value) ? Math.max(0, Math.round(value)) : null;
             const diagnosticEntries = entries => {
               if (!Array.isArray(entries) || entries.length > 4 || entries.some(entry =>
@@ -76,18 +108,23 @@ export function phoneDecoderProbePlugin() {
               return entries.map(entry => ({ at: finite(entry.at), type: String(entry.type ?? '').slice(0, 32),
                 message: entry.message.slice(0, 180) }));
             };
-            reports.push({ mode: report.mode, elapsedMs: finite(report.elapsedMs),
+            reports.push({ mode: report.mode, elapsedMs: finite(report.elapsedMs), ...(report.window != null ? { window: report.window } : {}), ...(report.variant ? { variant: report.variant } : {}),
               asset: report.asset && { loaded: finite(report.asset.loaded), total: finite(report.asset.total), failed: finite(report.asset.failed), done: report.asset.done === true },
               loading: report.loading && { shown: report.loading.shown === true, error: report.loading.error === true, title: String(report.loading.title ?? '').slice(0, 80), message: String(report.loading.message ?? '').slice(0, 200) },
               gate: report.gate && { shown: report.gate.shown === true, status: String(report.gate.status ?? '').slice(0, 120) },
               graphics: report.graphics && { renderer: String(report.graphics.renderer ?? '').slice(0, 120), viewport: report.graphics.viewport?.slice(0, 2).map(finite) ?? null,
                 render: { calls: finite(report.graphics.render?.calls) }, memory: { textures: finite(report.graphics.memory?.textures) } },
               sample: report.sample && { durationMs: finite(report.sample.durationMs), overflow: report.sample.overflow === true,
-                frames: report.sample.frames.map(frame => frame.map(value => Math.round(value * 100) / 100)) },
+                frames: report.sample.frames.map(frame => frame.map(value => Math.round(value * 100) / 100)),
+                ...(phases ? { phases: Object.fromEntries(Object.entries(phases).map(([name, ms]) => [name, Math.round(ms * 100) / 100])) } : {}),
+                ...(report.sample.discontinuities != null ? { discontinuities: finite(report.sample.discontinuities) } : {}) },
+              quality: report.quality && { mode: String(report.quality.mode ?? '').slice(0, 16),
+                scale: Number.isFinite(report.quality.scale) ? Math.round(report.quality.scale * 1000) / 1000 : null, occlusion: report.quality.occlusion === true },
+              render: report.render && { calls: finite(report.render.calls), triangles: finite(report.render.triangles) },
               diagnostics: report.diagnostics && { errors: diagnosticEntries(report.diagnostics.errors),
                 console: diagnosticEntries(report.diagnostics.console),
                 network: diagnosticEntries(report.diagnostics.network) } });
-            if (reports.length > 20) reports.shift();
+            if (reports.length > 80) reports.shift();
             res.writeHead(204).end();
           } catch { res.writeHead(400).end(); }
         });

@@ -1,8 +1,8 @@
 // The second short's capture (#501, "Two Seats, One Screen"). Its output stays outside the repository until
 // Val approves the cut; second-cut.mjs makes the delivery files. Records a third page (the owner fixture,
-// standing in the west aisle, out of shot) on real-GPU headless Chromium (Metal ANGLE) while two
-// synthetic fixture accounts sit side by side in the front row: alice in recliner 1-1 (Maya), bob in recliner 1-0 (Theo).
-// Both are seated from the same spot between the rows, one after the other (the front row's gaps are narrower than a body).
+// standing in the lounge, out of shot) on real-GPU headless Chromium (Metal ANGLE) while two
+// synthetic fixture accounts sit side by side in the middle row: alice in recliner 1-1 (Maya), bob in recliner 1-0 (Theo).
+// Both are seated from the same spot in the row's legroom, one after the other (the gaps between seats are narrower than a body).
 // Shots are framed with the DEV-only render-audit camera, as preview/e2e/ipic-photo-views.mjs does. alice
 // holds a synthetic IPIC host grant and starts the venue's default film for the "dim" shot.
 //   node scripts/ipic-short/second-capture.mjs <worktree> <out-dir>
@@ -18,20 +18,25 @@ const { chromium } = await import(pathToFileURL(join(worktree, 'node_modules/pla
 const { startBrowserFixture } = await load('preview/e2e/fixture-server.js');
 const { holdBrowserLock } = await load('scripts/browser-lock.mjs');
 const { openHudSpace } = await load('preview/e2e/hud-navigation.js');
-const { IPIC_CAMERAS, IPIC_SCREEN } = await load('preview/src/ipic-plan.js');
+const { IPIC_AUDITORIUM_ROWS, IPIC_AUDITORIUM_SEAT_D, IPIC_CAMERAS, IPIC_SCREEN } = await load('preview/src/ipic-plan.js');
 const script = JSON.parse(await readFile(join(worktree, 'scripts/ipic-short/second-short.json'), 'utf8'));
 const IPIC = 'osm-node-8172494964';
 const HIDE = '#ipic-screening,.hardware-acceleration-warning,.visit-tools,#panel-toggle,#people-toggle,#settings-toggle,.commands-toggle,.town-chat-dock,.walking-console,.walking-title,'
   + '.hud-launcher,.multiplayer-roster,.nearby-greetings,.community-dialogue,.asset-progress,.remote-player-labels,.store-intro{visibility:hidden!important}';
-// Room-frame cameras [a, h, d] (h above the street floor; the front row's floor is at 6 m).
-const auditorium = IPIC_CAMERAS.find(item => item.name === 'auditorium');
+// Room-frame cameras [a, h, d] (h above the street floor; the upper floor is at 6 m). The friends sit side by side
+// in the middle row (1-0 and 1-1); the close shots are set in the pair's own frame, [x to their right, h over their
+// row's floor, z towards the screen], so they follow the room plan. Their offsets are the 2026-10-18 framings from
+// the old auditorium, which faced along d; re-probe them in the wing before a new take.
+const auditorium = IPIC_CAMERAS.find(item => item.name === 'auditorium'), row = IPIC_AUDITORIUM_ROWS[1];
+const forward = IPIC_SCREEN.facing.map(v => -v || 0), right = [forward[1], -forward[0] || 0], centre = (IPIC_AUDITORIUM_SEAT_D[0] + IPIC_AUDITORIUM_SEAT_D[1]) / 2;
+const pair = ([x, h, z]) => [row.a + right[0] * x + forward[0] * z, 6 + row.floor + h, centre + right[1] * x + forward[1] * z];
 const CAMERAS = {
   auditorium: { eye: auditorium.eye, target: auditorium.target, fov: 62 },
-  'two-shot': { eye: [-5.0, 7.35, 32.3], target: [-1.6, 7.0, 31.0], fov: 46 },
-  'over-shoulder': { eye: [-1.6, 7.65, 29.4], target: [IPIC_SCREEN.a, 6 + IPIC_SCREEN.y - 0.2, IPIC_SCREEN.d], fov: 58 },
-  // From beside the screen's west end, tilted down, so the back wall's lettering stays out of shot (the 18:51Z take
-  // showed it; framing probe, 2026-10-18).
-  faces: { eye: [-2.1, 7.35, 33.25], target: [-1.6, 6.9, 31.0], fov: 38 },
+  // From the sitters' right: the wing is 8 m deep, so the old two-shot from their left would stand outside its wall.
+  'two-shot': { eye: pair([3.4, 1.35, 1.3]), target: pair([0, 1.0, 0]), fov: 46 },
+  'over-shoulder': { eye: pair([0, 1.65, -1.6]), target: [IPIC_SCREEN.a, 6 + IPIC_SCREEN.y - 0.2, IPIC_SCREEN.d], fov: 58 },
+  // From in front of the pair, tilted down (in the old room this kept the back wall's lettering out of shot).
+  faces: { eye: pair([-0.5, 1.35, 2.25]), target: pair([0, 0.9, 0]), fov: 38 },
 };
 
 await mkdir(outDir, { recursive: true });
@@ -92,7 +97,8 @@ try {
     await page.locator('#nearby-seat').selectOption(`${seat}:0`); await page.locator('#seat-sit').click();
     await page.waitForFunction(id => window.__riverCarriage().pose.sitting?.buildId === id, seat);
   }
-  const entry = [[-1.4, 4.8], [-1.4, 20.7], [-1.4, 24.5], [-4.85, 24.5], [-4.85, 29.65]];
+  // Through the doorway, along the cross-aisle and down the side aisle into the middle row's legroom.
+  const lounge = [[-1.4, 4.8], [-1.4, 20.7], [-1.4, 24.5], [-4.85, 24.5]], entry = [...lounge, [-4.85, 26.7], [-11.25, 26.7]], legroom = [-11.25, 29];
   // Theo wears Rowan, a committed character, chosen in the in-game character picker as any player can; the account,
   // its name and its seat are unchanged. Maya keeps the default guest look (Sable). Val approves both likenesses.
   if (!await theo.locator('.visit-tools').evaluate(node => node.open)) await theo.locator('.visit-tools-toggle').click();
@@ -101,13 +107,11 @@ try {
     return host.dataset.playerReady === 'true' && sharedAppearance(host.dataset.playerAppearance)?.character === id; }, script.characters.Theo.character, { timeout: 60000 });
   if (await theo.locator('.visit-tools').evaluate(node => node.open)) await theo.locator('.visit-tools-toggle').click();
   await Promise.all([enter(maya), enter(theo), enter(camera)]);
-  await Promise.all([walk(maya, [...entry, [-1.6, 29.65]]), walk(theo, entry), walk(camera, [...entry.slice(0, 4), [-4.85, 26.6]])]);
+  // The camera page's own player stays in the lounge, behind the cinema wall and out of every shot.
+  await Promise.all([walk(maya, [...entry, legroom]), walk(theo, entry), walk(camera, lounge)]);
   await sit(maya, 'bench:ipic-recliner-1-1');
-  await walk(theo, [[-1.6, 29.65]]);
+  await walk(theo, [legroom]);
   await sit(theo, 'bench:ipic-recliner-1-0');
-  // The camera page's own player then steps up the west aisle, out of every shot; standing there earlier would block
-  // the friends' way to their seats.
-  await walk(camera, [[-4.85, 28.2]]);
   await camera.waitForFunction(() => (window.__riverMultiplayer().snapshot.players ?? []).filter(p => p.sitting).length >= 2);
   await camera.evaluate(([css]) => { const style = document.createElement('style'); style.textContent = css; document.head.append(style); document.body.classList.add('clear-view'); }, [HIDE]);
   // Each shot's health, sampled in the camera page (shot-health.mjs): the longest wait between two animation frames,

@@ -76,12 +76,19 @@ test('the exterior office lobby masks rising terrain but preserves the street an
 
 test('the clip covers each room footprint and nothing outside it, including the door throat', () => {
   const clip = createRoomGroundClip(rooms);
+  // A room's extra parts (IPIC's auditorium wing) are upper floors, so the ground under them is never seen
+  // from inside and the clip covers only each main rectangle. A part near the ground would need the clip.
+  const inMain = (room, a, d) => a > room.aMin && a < room.aMax && d > 0 && d < room.depth;
+  const inPartOnly = (room, a, d) => !inMain(room, a, d) && (room.parts ?? []).some(p => a > p.aMin && a < p.aMax && d > p.d0 && d < p.d1);
+  for (const room of rooms) for (const p of room.parts ?? []) for (const a of [p.aMin + .1, (p.aMin + p.aMax) / 2, p.aMax - .1]) for (const d of [p.d0 + .1, p.d1 - .1]) {
+    assert.ok(room.floorAt(...room.toWorld(a, d)) - room.floor > 4, `${room.name} part floor at ${a},${d} is an upper floor`);
+  }
   let insideCount = 0, throat = 0;
   for (const room of rooms) for (let k = 0; k < 400; k++) {
     const a = room.aMin - 1 + random() * (room.width + 2), d = -1.5 + random() * (room.depth + 2.5), [east, north] = room.toWorld(a, d);
     // float32 GPU maths cannot resolve a footprint edge to better than ~1 mm.
     if (rooms.some(other => { const [oa, od] = other.toLocal(east, north); return Math.min(Math.abs(oa - other.aMin), Math.abs(oa - other.aMax), Math.abs(od), Math.abs(od - other.depth)) < 1e-3; })) continue;
-    assert.equal(insideRoomFootprint(room, east, north), room.contains(east, north, 0), `${room.name} footprint at ${a.toFixed(2)},${d.toFixed(2)}`);
+    assert.equal(insideRoomFootprint(room, east, north), room.contains(east, north, 0) && !inPartOnly(room, a, d), `${room.name} footprint at ${a.toFixed(2)},${d.toFixed(2)}`);
     const anyRoom = rooms.some(other => insideRoomFootprint(other, east, north));
     assert.equal(shaderDiscards(clip, east, room.floor + 0.05, -north), anyRoom, `${room.name}: shader and footprint disagree at ${a.toFixed(2)},${d.toFixed(2)}`);
     if (anyRoom) insideCount++;

@@ -1,6 +1,6 @@
 async page => {
   const { openHudSpace } = await import('./hud-navigation.js');
-  const { ipicFloor } = await import('../src/ipic-plan.js');
+  const { ipicFloor, IPIC_AUDITORIUM_ROWS, IPIC_AUDITORIUM_SEAT_D } = await import('../src/ipic-plan.js');
   const check = (ok, message) => { if (!ok) throw new Error(message); };
   const errors = [], checks = [];
   page.on('pageerror', error => errors.push(error.message));
@@ -43,10 +43,11 @@ async page => {
     return !document.body.classList.contains('store-introducing') && enter && !enter.hidden; }, null, { timeout: 15000 }).catch(() => {});
   const atDoor = await hud();
   check(/Step outside/.test(atDoor.exit ?? ''), `Step outside is offered in reception: ${JSON.stringify(atDoor)}`);
-  // Between the rows, beside recliners 0-1 and 1-1 (the T3 seat), as the screening journeys stand.
-  for (const p of [[-1.4,4.8],[-1.4,20.7],[-1.4,24.5],[-4.85,24.5],[-4.85,29],[-4.85,29.65],[-1.6,29.65]]) await walk(...p);
-  // The walk ends on the back row's riser (P15), 0.4 m over the front row's floor.
-  const top = await pose(); check(Math.abs(top.ground - plan.floor - ipicFloor(29.65)) < .01, `Shared player reached the back row's riser in the upstairs auditorium: ${top.ground - plan.floor}`);
+  // Through the doorway, along the cross-aisle behind the back row, down the side aisle over the first
+  // riser and into the middle row's legroom, beside recliners 1-0 and 1-1 (the T3 seat).
+  for (const p of [[-1.4,4.8],[-1.4,20.7],[-1.4,24.5],[-4.85,24.5],[-4.85,26.7],[-11.25,26.7],[-11.25,29]]) await walk(...p);
+  // The walk ends on the middle row's floor, a riser below the upper floor.
+  const top = await pose(); check(Math.abs(top.ground - plan.floor - ipicFloor(29, -11.25)) < .01 && top.ground - plan.floor < 5.6, `Shared player reached the middle row's floor in the upstairs auditorium: ${top.ground - plan.floor}`);
   const deep = await hud();
   check(deep.exit === null && deep.inside, `No Step outside in the auditorium: ${JSON.stringify(deep)}`);
   await page.locator('#canvas-host').focus(); await page.keyboard.press('KeyF'); await page.waitForTimeout(1500);
@@ -54,8 +55,8 @@ async page => {
   checks.push('Step outside shows by the door; in the auditorium neither the prompt nor F leaves');
   checks.push('walked from reception up both escalator runs into auditorium');
   // Townspeople visiting IPIC rest in its seats too (#364), so take the first recliner the server grants,
-  // starting with front-row 1-1, where the seat back hid the screen in the T3 review.
-  const ORDER = ['1-1', '1-0', '0-1', '0-0'];
+  // starting with 1-1, the middle row's centre and the T3 seat.
+  const ORDER = ['1-1', '1-0', '2-1', '2-0'];
   // A seat the page already shows as held is disabled; only enabled ones can be chosen.
   const recliners = (await page.locator('#nearby-seat option').evaluateAll(options => options.filter(option => !option.disabled).map(option => option.value)))
     .filter(value => ORDER.some(key => value === `bench:ipic-recliner-${key}:0`)).sort((a, b) => ORDER.indexOf(a.slice(20, 23)) - ORDER.indexOf(b.slice(20, 23)));
@@ -177,12 +178,12 @@ async page => {
   const stoodHud = await hud();
   check(!stoodHud.theater && stoodHud.dock && stoodHud.chat, `Standing brings the HUD back: ${JSON.stringify(stoodHud)}`);
   checks.push('stood with a tap on Stand up at 390 px; the walking camera returned');
-  // Back, arms, base and footrest box each cushion in, so standing puts the sitter in the aisle in
-  // front of the footrest (d + 1.4); the front row then goes round by the left aisle, since the gaps
-  // between its seats are narrower than a body.
-  const [row, column] = recliner.slice(-3).split('-').map(Number), a = [-2.6, -.6, 1.4, 3.4][column], d = [28, 31][row];
-  for (const p of [[a, d + 1.4], ...(row ? [[-4.85, d + 1.4]] : []), [-4.85, 29.65]]) await walk(...p);
-  for (const p of [[-4.85,29.65],[-4.85,24.5],[-1.4,24.5],[-1.4,20.7],[-1.4,4.8],[0,1],[0,-1.8]]) await walk(...p);
+  // Back, arms, base and footrest box each cushion in, so standing puts the sitter in the legroom in
+  // front of the footrest (a - 1.4); the sitter goes out along it to the side aisle, since the gaps
+  // between seats are narrower than a body, then up the aisle and back along the cross-aisle.
+  const [row, column] = recliner.slice(-3).split('-').map(Number), a = IPIC_AUDITORIUM_ROWS[row].a - 1.4, d = IPIC_AUDITORIUM_SEAT_D[column];
+  for (const p of [[a, d], [a, 26.7], [-4.85, 26.7]]) await walk(...p);
+  for (const p of [[-4.85,24.5],[-1.4,24.5],[-1.4,20.7],[-1.4,4.8],[0,1],[0,-1.8]]) await walk(...p);
   check(!(await pose()).roomId, 'Walked back onto the street');
   checks.push('walked downstairs and exited onto street');
   check(!errors.length, errors.join('; '));
