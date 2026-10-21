@@ -14,6 +14,28 @@ async page => {
     return Math.min(...lit) >= 90 && (off.length === 0 || Math.max(...off) <= Math.min(...lit) - 60); };
   const capture = name => page.screenshot({ path: `output/playwright/ipic-screen/${name}.png` });
 
+  // Read the actual output buffer after each fixture draw, including frames while a source is held.
+  // An attachment diagnostic alone does not establish that the previous film's pixels disappeared.
+  const tracePixel = (point, untilBound = false, startFilm = null) => page.evaluate(async ({ point, untilBound, startFilm }) => {
+    const canvas = document.querySelector('canvas'), gl = canvas.getContext('webgl2'), samples = [];
+    const deadline = performance.now() + 20000; let boundFrames = 0;
+    // Register before applying the switch in this same task: even its first rendered frame is sampled.
+    const firstFrame = new Promise(resolve => requestAnimationFrame(resolve));
+    if (untilBound) window.__screenPixelTraceArmed = true;
+    if (startFilm) await window.screenFixture.show(startFilm, { wait: false });
+    let first = true;
+    do {
+      await (first ? firstFrame : new Promise(resolve => requestAnimationFrame(resolve)));
+      first = false;
+      const state = window.screenFixture.inspect(), pixel = new Uint8Array(4);
+      gl.readPixels(point[0], canvas.height - 1 - point[1], 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+      samples.push({ at: performance.now(), state: state.state, mediaId: state.mediaId, generation: state.generation,
+        key: state.screen.key, decoded: state.decoded, pixel: [...pixel.slice(0, 3)] });
+      if (state.screen.key) boundFrames++;
+    } while (performance.now() < deadline && (untilBound ? boundFrames < 3 : samples.length < 8));
+    return samples;
+  }, { point, untilBound, startFilm });
+
   // A stalled load, on a film this page has never fetched (so no cache answers it): the request
   // never completes, and after SCREENING_LOAD.stallMs the viewer gets a truthful Retry.
   const stall = '**/assets/ipic/screening/fixture-v1.*';
@@ -84,6 +106,29 @@ async page => {
   results.sameFilmRestart = { before: switched, after: restarted };
   checks.push('a same-film restart without an observed Stop replaces its texture and reaches the new position');
 
+  // Hold the narrower replacement's response. The old blue edge must vanish while loading and
+  // stay absent when the new film binds; this point becomes a black pillarbox for the red 4:3 film.
+  await fx('show', 'test-edge-16x9');
+  const oldEdge = (await fx('sample')).film.edgeLeft;
+  check(tinted(oldEdge.rendered, [0, 0, 255]), 'the pixel trace starts on the old film’s blue edge');
+  let releaseReplacement;
+  const heldReplacement = new Promise(resolve => { releaseReplacement = resolve; });
+  const replacementRoute = '**/e2e/fixtures/screening/test-edge-4x3.mp4';
+  await page.route(replacementRoute, async route => { await heldReplacement; await route.continue(); });
+  try {
+    const loadingPixels = await tracePixel(oldEdge.at, false, 'test-edge-4x3');
+    check(loadingPixels.length >= 3 && loadingPixels.every(s => s.state === 'loading' && !s.key && !tinted(s.pixel, [0, 0, 255])), `old pixels while loading: ${JSON.stringify(loadingPixels)}`);
+    await page.evaluate(() => { window.__screenPixelTraceArmed = false; });
+    const tracingReplacement = tracePixel(oldEdge.at, true);
+    await page.waitForFunction(() => window.__screenPixelTraceArmed === true);
+    releaseReplacement();
+    const replacementPixels = await tracingReplacement;
+    const boundPixels = replacementPixels.filter(s => s.key);
+    check(boundPixels.length >= 3 && replacementPixels.every(s => !tinted(s.pixel, [0, 0, 255])) && boundPixels.every(s => s.mediaId === 'test-edge-4x3' && s.decoded.join() === '640,480' && dark(s.pixel)), `old pixels after replacement: ${JSON.stringify(replacementPixels)}`);
+    results.switchPixels = { point: oldEdge.at, before: oldEdge.rendered, loading: loadingPixels, replacement: replacementPixels };
+    checks.push('rendered pixel samples show no previous blue edge during the held load or the first three replacement frames');
+  } finally { releaseReplacement(); await page.unroute(replacementRoute); await page.evaluate(() => { delete window.__screenPixelTraceArmed; }); }
+
   // Colour: the screen against the film's own pixels, house lights up and dimmed.
   await fx('show', 'test-edge-16x9');
   results.colour = { lit: await fx('sample'), dimmed: (await fx('pose', 'square', 0.25), await fx('sample')) };
@@ -116,5 +161,5 @@ async page => {
   check(stopped.materialRestored && !stopped.screen.key && stopped.textures === stopped.idleTextures && stopped.screen.counts.created === stopped.screen.counts.disposed, `stop restores the screen exactly: ${JSON.stringify(stopped)}`);
   checks.push(`stop restores the screen material exactly; ${stopped.screen.counts.created} textures created, all disposed`);
   check(!errors.length, errors.join('; '));
-  return { checks, errors, results, profile: 'fixture page: real IPIC interior and screen material, ACES 0.95, store lights; not the game pipeline' };
+  return { checks, errors, results, profile: 'fixture page: real IPIC interior and screen material, production GTAO/bloom/OutputPass, ACES 0.95, fixture store/hemisphere lights; full-world sky lighting is separate' };
 }

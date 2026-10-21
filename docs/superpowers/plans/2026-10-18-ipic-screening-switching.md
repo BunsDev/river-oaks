@@ -217,3 +217,180 @@ final player revision `46772895…` and includes both independent-review fixes. 
 the completed core run and 7/7 media-intake rerun, the code is ready for a draft PR; browser,
 postprocessing/color and same-candidate resource evidence remain pending. Screen process
 18038 remains live and queued behind live PID 3435. No duplicate browser runner started.
+
+### Draft delivered for review — 2026-10-21 00:00Z
+
+Draft PR: https://github.com/BunsDev/river-oaks/pull/571
+Signed head `a95026e487de9500baba534e95d33ff28708c039`, tree
+`0d57d2e44e791409d8cf5a5d98c1a965bd486e1e`. GitHub signature VALID; tree matched
+`git write-tree` exactly before a soft reset adopted the commit without replacing files.
+The staged pre-commit secret guard passed. Vercel created its automatic branch preview;
+no production deployment or merge initiated. Task remains active, not delivered/accepted.
+
+Coordinator update: https://github.com/BunsDev/river-oaks/issues/497#issuecomment-6304535273
+Hosted Verify run `39518470106`, exact head above, queued/running; watcher exec session
+`67222`. Local screen runner remains exec session `49206`, PID 18038, waiting behind
+live browser-lock holder PID 3435. Final preview handle `59038` completed successfully.
+
+Current requirement audit (completion still unproven):
+
+| Requirement | Current candidate evidence | Remaining proof |
+| --- | --- | --- |
+| New film/same-film/epoch replacement, stale play/frame/event work | Focused behavioral regressions, red/green logs, independent review | Matching browser execution |
+| Bounded recovery, retry/fallback, policy distinction | Focused tests including paused resume and genuine decode error after policy refusal | Browser recovery and device rows |
+| Captions and metadata follow accepted film | Loading/seeking caption regression; S2/S3 callers inspected unchanged | Two-browser journey |
+| Dimension changes, full borderless content, orientation and mattes | Existing harness extended to production pipeline; historical receipts retained | Current queued screen run and inspected captures |
+| Color response through postprocessing | Actual production GTAO/bloom/OutputPass now used by fixture | Current direct/rendered pixel samples and human design disposition |
+| Texture/reference release, exact original material restoration | Borrowed-map/material preservation regression passes | Current GPU counts and resource soak |
+| Authority, keyframe repair, cancelled seek workaround preserved | No server/catalog/sync-profile changes; media 11/11 checks | Hosted/two-client integration result |
+| Raw timing and frame progress separated from seek requests | Existing sampler retained; new browser receipt will include samples | Actual current run |
+| Required gates/review/handoff | Core + final preview + focused + intake pass; independent review; draft #571 and #497 update | Hosted and remaining browser evidence |
+
+Next action is to consume those existing live handles, not rerun unchanged broad suites.
+After screen inspection, run the existing two-browser and ten-cycle resource harnesses on
+this candidate. Physical Safari/iOS/other GPU and human/production evidence remain named
+open rows under #502; no closure or production acceptance inferred.
+
+### Live verification observation — 2026-10-21 00:02Z
+
+Prior turn was progress: exact-tree signed draft #571 and coordinator receipt published.
+Screen session `49206` remains live/queued (PID 18038; holder PID 3435 still live).
+Hosted Verify `39518470106` has completed Python 3.11 and dependency review successfully;
+browser jobs are live and Python 3.13 queued. PR watcher session `67222` terminated because
+the shared GraphQL quota was exhausted; this was an observer failure, not workflow failure.
+Continued observing the same workflow through REST (`gh run watch`, 60-second interval);
+no workflow or local browser process restarted. Core and final preview gates remain passed.
+
+REST workflow watcher is exec session `54420`; local screen remains `49206`.
+At the latest observation, hosted preview job `118956245804` was executing `pnpm test`
+and its IPIC two-browser step was still pending. These are verified waits on live work,
+not failed checks or a reason to restart. Historical raw archive paths from #498 are
+not present on this machine; retain their issue receipts as dated reports, and rely on
+new candidate artifacts for current acceptance.
+
+### Hosted failure triage — 2026-10-21 00:06Z
+
+Candidate Verify `39518470106` campus-traversal job `118956246081` failed:
+`T1 lift to Floor 2: expected garden-campus/l1, the server says null`.
+Log: `.runtime/s1-498/ci-campus-traversal.log`; artifact `12310715372`.
+This journey and its production paths are unmodified by S1. On exact base `a35214f3`,
+Verify `39510636169` was also red: campus job `118930482932` failed the suite's resident
+lift to Floor 2 (30-second timeout, buildingId/levelId null). Its campus-traversal job
+`118930483074` passed, so this is related baseline evidence, not proof that the identical
+traversal failure is deterministic. Baseline log retained as `base-ci-campus.log`.
+
+Active owner: task `campus-readiness-512`, `codex-campus-readiness-512`, independently
+investigating readiness and lift acknowledgement. No edits to those owned files. A targeted
+retry request `gh run rerun 39518470106 --job 118956246081` was refused (`job ... cannot be
+rerun`); no retry actually started. Wait for the existing workflow to finish, then retry
+only its failed job(s) once under repository workflow guidance. Keep the failed receipt.
+Both hosted Python versions and dependency review passed; screening step still pending.
+
+### Hosted outcome and remaining local evidence — 2026-10-21
+
+Verify `39518470106` attempt 2 passed all jobs including aggregate `preview` after
+one actual failed-job retry. The first failed campus receipt remains above. Hosted
+preview checks at signed head `a95026e487de9500baba534e95d33ff28708c039` passed the IPIC two-browser journey:
+19 checks, 46 rendered attachment-state samples without stale attachment, both approved
+films, second-film WebM audio decoding (39389 bytes), captions/transcript, late join
+20 ms timeline convergence and 0 ms paused spread. Emulated foreground recovery measured
+a presented frame 152 ms from room time, 349 ms after showing. Timeline samples and
+attachment-state checks are not pixel or physical-device proof. Host loss paused both
+clients without promotion; exit released the panel/video. Log: `ci-preview-passed.log`.
+No redundant local two-browser run is needed for unchanged runtime source.
+
+Local screen session `49206` remains queued. Ten-cycle resource soak session `44817`
+is separately queued using `node preview/e2e/ipic-screening-soak-runner.mjs 10`.
+The uncommitted screen harness now traces the old blue-edge pixel through a held
+replacement load and its first three bound frames. It arms the first sample before
+applying the switch in the same browser task and arms replacement tracing before
+releasing the response. Independent reviewer approved harness SHA-256
+`e20017ca6136977f20316e77d8170d48a0471c3ee89f17a678b03c6e08fe7b54`.
+This test has not executed yet; claims remain scoped to its sampled pixel/windows.
+Runtime source still matches the reviewed, signed commit. `candidate.json` preserves
+the committed hashes and separately identifies the pending evidence harness.
+
+### Actual screen receipt — 2026-10-21 01:10:46Z
+
+`node preview/e2e/ipic-screen-runner.mjs` exited 0, session `49206` terminal.
+Receipt `output/playwright/ipic-screen/receipt.json`: 10 reported rows, zero page errors;
+autoplay sound was allowed, so the policy-refusal row is explicitly unexercised here.
+Browser 156.0.8078.4; ANGLE Metal Apple M5 Max. Runtime matches signed a95026e4;
+executed harness SHA-256 e20017ca6136977f20316e77d8170d48a0471c3ee89f17a678b03c6e08fe7b54.
+The receipt records dirty harness/ledger accurately.
+
+Inspected square captures for 16:9, 4:3 and 2.39:1, seated 4:1 and approved short:
+all film edges retained, white marker left of black, expected pillarbox/letterbox and
+scope fill. The 4:1 capture's fixture-only status overlay still says error from the
+initial offline show because retry does not update that overlay; binding/pixel results
+prove retry rendered the film. This is not the production controls or a current error.
+
+Targeted ghost sample at [296,450]: old blue [0,2,228] became idle material [108,116,155]
+in all 8 loading frames (generation16, no binding), then black [0,0,0] in the first
+3 replacement frames (640x480, generation16). Evidence covers this sampled pixel and
+transition, not every pixel or device. Same-film restart and interrupted load passed.
+Stop restored the exact original material; 13 created film textures all disposed,
+resident count returned to idle. Ten-cycle full-world resource soak is still pending.
+
+Direct/rendered color: gray [128,128,128] -> [140,140,138], white [255,255,255] ->
+[227,227,227], black [0,0,0] -> [0,0,0], blue edge [0,15,255] -> [0,2,228]
+(top edge [0,0,215]). Lit and 0.25-house-light samples matched exactly. Thus color
+is transformed by the configured material/postprocessing path; do not claim original
+color accuracy. Fixture uses production GTAO/bloom/OutputPass and ACES exposure0.95,
+but not full-world sky lighting. Raw receipt profile mistakenly retained the old
+“not the game pipeline” description; corrected only the returned profile text after
+execution. Raw receipt preserved, correction/hashes in `screen-provenance.json`.
+
+Raw frame samples remain in receipt.results.frames: presented count9->51, media time
+2292->4042ms, currentTime2.271683->4.058521s, measured drift -79..-44ms over 8 samples.
+These observed frames are separate from the requested initial 2000ms seek. No sync
+retuning, media/keyframe changes, or revival of the cancelled workaround.
+
+Independent evidence review `/root/review_s1`: receipt/ledger/provenance agree; no
+misleading acceptance claim or new blocker. Receipt SHA-256
+`2e872c18b2e6a3aa38e9ddcaecb2a141b6553fb2555dbec99a3ab3ca50ecbb1e`.
+Reviewer inspected structured evidence; image inspection above was by session owner.
+
+### Resource soak and engineering handoff audit — 2026-10-21
+
+`node preview/e2e/ipic-screening-soak-runner.mjs 10` exited 0, session44817 terminal.
+Receipt `output/playwright/ipic/screening-soak.json`, SHA-256
+`2ea589466607d7ae0ad60be877af12422eced6f29df6a2e6dfef64928c09d364`.
+Runtime remained signed a95026e4; runner/source hashes in `soak-provenance.json`.
+Chromium156.0.8078.4, SwiftShader, 196808ms, load averages16.5/16.3/17.8.
+Seven checks passed: warm-up plus ten entry/exit cycles, film replacement each cycle,
+11/11 late joins, caption toggle, narrow 320/390px controls/focus, viewer-only Stop watching.
+
+After all 11 exits: zero screening videos, tracked/loaded/playing media and audio
+contexts. Textures49, geometries279, listeners889, documents4, intervals6 and timeouts0
+stayed flat. DOM nodes6088->6089 (range6088..6096), no steady growth. One unrelated
+media element remains in DOM throughout; do not claim the whole document has no media.
+
+Timeline convergence was2..3ms after sampling began, worst currentTime spread12..89ms.
+Presented spread2..59ms with83..87ms uncertainty and2..48ms pairing gap. Viewer pace
+8.9..13.4fps, media/wall1.00..1.02; host9.2..12.8fps. These are software-rendered
+frame measurements, not native device smoothness. Raw per-cycle timeline/drift/rate
+samples and frame-progress summaries are retained in the receipt. Startup separate:
+non-warm-up first-frame1462..2854ms, playing1525..2881ms; warm-up first-frame3089ms
+and playing9820ms (trip9817ms). Do not equate convergence with startup or requested seeks.
+
+Completion audit of this engineering request: source-generation/retry/fallback/teardown
+behavior has focused regressions and review; same-film, replacement, captions and
+authority have current browser evidence; aspect/mattes/orientation/pixels/color were
+measured and captures inspected; exact restoration/shared ownership has unit plus
+actual-screen and soak evidence. Core/final-preview/focused/media/intake gates passed;
+hosted Verify39518470106 attempt2 and19-check journey passed at a95026e4. No unchanged
+broad suites rerun for this evidence-only follow-up. Remaining delivery: commit reviewed
+harness and evidence, update PR and #497 with exact final revision and signatures.
+
+Acceptance remains OPEN for physical Safari/iPhone, other GPUs, listening/headphones/
+speakers/voice-chat mix, human color and VoiceOver, full-world lighting comparison, and
+signed-in production host smoke (Val/#502). This branch is neither merged nor production
+accepted. Existing catalog/media bytes, server authority, keyframe repair and cancelled
+seek workaround decision are preserved. No shared S2/S3 UI/control change.
+
+Final structured-evidence review: `/root/review_s1`, 2026-10-21, read-only.
+Independently recalculated soak ranges/counters and confirmed receipt hash,11/11
+late joins,7 checks, flat resource counts and scoped caveats. No remaining blocker
+for engineering evidence handoff; no merge/production acceptance asserted.
+Owner/handoff signature: `codex:S1-resume-20261020`.
