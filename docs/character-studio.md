@@ -123,6 +123,25 @@ and a stale failed load cannot drop a newer selection. The town renderer pauses
 drawing behind the Studio while authoritative world/network updates continue.
 The Studio editor stages local edits and offers private Save draft and Wear in town actions. Server publication and selection replicate validated definitions; the integrated client applies their owned materials to local and peer rigs. The two-account save/wear journey and actual peer material checks pass locally; the complete visual, device and human acceptance matrix remains open.
 
+### Graphics tiers are viewer-local (#443)
+A character's identity is its published definition and nothing else. Graphics
+quality (Auto, Sharpest, Smoothest) is a per-viewer, per-device choice kept in
+local storage. It changes how a viewer renders, never what the server selects or
+replicates. No command, draft or snapshot carries quality, tier, LOD, scale or
+occlusion, and the strict validator refuses such fields in a definition. A
+viewer-local material tier (such as #517's `low`/`standard`/`high`) must follow
+the same rule: derive it from the viewer's graphics state, keep the definition
+and its pinned assets unchanged, and never send it.
+
+`preview/e2e/character-studio-tiers.js` (shared `required` mode) proves this on
+desktop Chromium: a Sharpest owner and a Smoothest peer each publish a look and
+render the other's exact authoritative definition and outfit materials; cycling
+the peer through every tier sends no selection and leaves both selection
+versions unchanged; tier, LOD, asset URL, asset swap and foreign-owner drafts are
+refused over HTTP while an untampered control save succeeds; a socket selection
+with a `quality` field is refused while the untampered command is accepted; and
+the peer's tier survives reconnect with identity intact.
+
 ## Components and delivery order
 1. #440: strict baseline contract, migration and actual human rig fixtures;
    measure and inspect rendered baseline, then review this decision in a PR.
