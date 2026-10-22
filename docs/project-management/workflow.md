@@ -317,8 +317,9 @@ them: remote deletion still needs explicit approval, and a branch whose local
 copy is still present stays listed for review. `pnpm run land <pr>
 --delete-remote-branch` deletes only the landed pull request's source branch,
 only after the merge commit is confirmed on the default branch, and is off by
-default. Turning it on by default, or enabling GitHub's delete-branch-on-merge
-setting, is a maintainer decision.
+default. GitHub's delete-branch-on-merge setting is on for this repository, so
+the branch is usually gone already; the lander reports that and still succeeds.
+Turning the flag on by default is a maintainer decision.
 
 `pnpm run project:archives` indexes `~/worktree-backups/river-oaks/` (or
 `--archive-root`): for each `manifest.json` it checks the bundle's SHA-256, that
