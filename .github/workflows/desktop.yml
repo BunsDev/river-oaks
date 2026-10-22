@@ -110,7 +110,7 @@ jobs:
       # the e2e's minimize check fails; Openbox gives the window real state.
       - name: Window manager for the Xvfb session
         if: ${{ !cancelled() && runner.os == 'Linux' }}
-        run: sudo apt-get install -y --no-install-recommends openbox
+        run: sudo apt-get update -q && sudo apt-get install -y --no-install-recommends openbox
       # The runner image pipes core dumps to systemd-coredump. The e2e crashes the
       # game renderer on purpose, and the kernel keeps that renderer, with its IPC
       # channel, alive until the collector has read the whole core: about five
