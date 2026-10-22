@@ -1,0 +1,60 @@
+{
+  "createdAt": "2026-10-19T10:40:15.524Z",
+  "results": [
+    {
+      "name": "garden-campus-office",
+      "status": "passed",
+      "seconds": 136.51,
+      "result": {
+        "checks": [
+          "The Gardens appear in Play when the town serves the campus",
+          "The desk stays closed away from a workstation",
+          "The directory lists all 43 suites by tower and floor",
+          "Lease terms say no charge, owner-managed",
+          "No price or payment appears anywhere",
+          "A request is shown as asked, not admitted",
+          "Walking keys inside the dialog do not move the resident",
+          "The dialog fits a phone width without horizontal overflow",
+          "Dialog actions keep touch-sized targets on a phone",
+          "Escape closes the dialog and returns focus to the world",
+          "The operator offers the requested dates",
+          "The accepted lease makes T1-201 the resident’s suite",
+          "The answered request is closed: only the lease remains",
+          "The lease explains how to reach the suite",
+          "A public workstation opens the resident’s own empty desk",
+          "Work saves with the server’s acknowledgement",
+          "Standing up removes the desk action",
+          "Standing up closes the desk route",
+          "Reloading and returning to a workstation recovers the saved work",
+          "The neighbour’s workstation opens their own empty desk",
+          "Another account’s private work never reaches the neighbour’s page"
+        ],
+        "limits": [
+          "Suite entry upstairs needs #508 levels; this journey proves the lease and public-workstation private work."
+        ]
+      }
+    },
+    {
+      "name": "garden-campus-suite",
+      "status": "passed",
+      "seconds": 178.873,
+      "result": {
+        "checks": [
+          "T1-201 is the resident’s suite",
+          "The lift takes the resident to Floor 2",
+          "The suite door lets its tenant in (at [9.25,50.54])",
+          "Only this suite’s seats are offered inside it",
+          "Seated at the suite desk, the resident is offered their desk",
+          "Private work saves at the suite desk with the server’s acknowledgement",
+          "The suite door keeps the stranger in the gallery (at [14.50,51.05])",
+          "The tenant’s private work never reaches the stranger’s page",
+          "Losing the lease walks the resident out to the gallery side of the door (at [15.10, 51.00])",
+          "The desk action is gone with the lease"
+        ],
+        "limits": [
+          "One suite on Floor 2; the other 42 suites share the code path and the server tests."
+        ]
+      }
+    }
+  ]
+}

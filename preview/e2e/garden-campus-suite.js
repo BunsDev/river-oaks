@@ -12,7 +12,10 @@ async page => {
  const desk = campusUnitSeats(UNIT).find(seat => seat.kind === 'desk' && seat.workstation);
  await page.emulateMedia({ reducedMotion: 'reduce' });
  const ready = tab => tab.waitForFunction(() => document.querySelector('#canvas-host')?.dataset.playerReady === 'true', null, { timeout: 180000 });
- const joined = tab => tab.waitForFunction(() => { const m = window.__riverMultiplayer?.();return m?.connected && m.snapshot?.players?.some(p => p.id === m.selfId); }, null, { timeout: 120000 });
+ const { createCampusStartupReadiness, waitForCampusLift } = await import('./garden-campus-readiness.js');
+ const startup = createCampusStartupReadiness();startup.track(page);
+ const liftPosition = campusToSource(campusLevels()[0].portals.find(portal => portal.id === 'T1-F1/lift-up').position);
+ const joined = tab => startup.joined(tab);
  const self = tab => tab.evaluate(() => { const m = window.__riverMultiplayer();return m.snapshot?.players.find(p => p.id === m.selfId) ?? null; });
  const hud = tab => tab.locator('#walking-hud').evaluate(n => JSON.parse(n.dataset.position));
  const where = async tab => { const [x, , z] = await hud(tab);return sourceToCampus([x, -z]); };
@@ -56,7 +59,7 @@ async page => {
    try { await tab.waitForFunction(() => document.querySelector('#walking-hud')?.dataset.inside === 'campus:T1-F1-hall', null, { timeout: 10000 });return; } catch (error) { if (attempt === 2) throw error; }
   } });
   await walk(tab, [[18, 57.5], [12.4, 56.3]], `${who} to the T1 lift`);
-  await step(tab, `${who} lift prompt`, () => tab.waitForFunction(() => /Take the lift up/.test(document.querySelector('#walking-enter')?.textContent ?? ''), null, { timeout: 30000 }));
+  await step(tab, `${who} lift prompt`, () => waitForCampusLift(tab, liftPosition));
   await tab.locator('#canvas-host').focus();await tab.keyboard.press('KeyF');
   await step(tab, `${who} lift to Floor 2`, () => tab.waitForFunction(level => { const m = window.__riverMultiplayer();return m.snapshot?.players.find(p => p.id === m.selfId)?.levelId === level; }, L1, { timeout: 30000 }));
   await step(tab, `${who} Floor 2 HUD`, () => tab.waitForFunction(level => document.querySelector('#walking-hud')?.dataset.inside === `campus-level:${level}`, L1, { timeout: 15000 }));
@@ -70,7 +73,7 @@ async page => {
  await page.locator('#campus-dialog .campus-units li', { hasText: 'T1-201' }).getByRole('button', { name: 'Ask for this suite' }).click();
  await page.waitForFunction(() => /Asked for suite T1-201/.test(document.querySelector('#campus-dialog .campus-status')?.textContent ?? ''));
  const operatorContext = await browser.newContext({ viewport: { width: 1280, height: 900 } });await operatorContext.addCookies([{ name: 'fixture_session', value: 'bob', url: origin }]);
- const operator = await operatorContext.newPage();operator.setDefaultTimeout(60000);
+ const operator = await operatorContext.newPage();operator.setDefaultTimeout(60000);startup.track(operator);
  await operator.goto(`${origin}/?motion-debug=1`, { waitUntil: 'commit' });await ready(operator);await joined(operator);
  await click(operator, '#campus-panel button', 'Suites and leases');
  await operator.locator('#campus-dialog .campus-row', { hasText: 'T1-201' }).getByRole('button', { name: 'Offer these dates' }).click();
@@ -108,7 +111,7 @@ async page => {
 
  // A stranger on Floor 2 cannot pass the same door.
  const strangerContext = await browser.newContext({ viewport: { width: 1280, height: 900 } });await strangerContext.addCookies([{ name: 'fixture_session', value: 'alice', url: origin }]);
- const stranger = await strangerContext.newPage();stranger.setDefaultTimeout(60000);
+ const stranger = await strangerContext.newPage();stranger.setDefaultTimeout(60000);startup.track(stranger);
  await stranger.goto(`${origin}/?motion-debug=1`, { waitUntil: 'commit' });await ready(stranger);
  await toFloor2(stranger, 'stranger');
  await walk(stranger, [[12.4, 57.5], [16, 57.5], [16, door[1]]], 'T1-201’s door (stranger)');

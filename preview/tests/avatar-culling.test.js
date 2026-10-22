@@ -6,6 +6,7 @@ import { loadResidentAvatar } from '../src/avatars.js';
 import { cullAvatarMeshes, figureHeight, figureInView, FIGURE_SPHERE, SHADOW_DROP } from '../src/avatar-culling.js';
 import { createPlayerCostume } from '../src/player-costume.js';
 import { SHARED_APPEARANCES } from '../src/shared-appearances.js';
+import { characterFidelityContract } from '../src/character-fidelity-contract.js';
 import { loadCharacterRig } from './helpers/character-rig.js';
 
 const GESTURES = ['acknowledge', 'amazed', 'bow', 'dance', 'enchanted', 'greet', 'handshake', 'perform', 'startled', 'water', 'wave'];
@@ -58,7 +59,8 @@ for (const look of SHARED_APPEARANCES) test(`${look.id}: the figure sphere conta
   const outfit = look.costume === 'jevica' ? createPlayerCostume(avatar, 'jevica') : null;
   try {
     const height = figureHeight(avatar), meshes = cullAvatarMeshes(avatar.object, height);
-    assert.ok(Math.abs(height - (look.rig === 'jevica' || look.id === 'jevica' ? 1.685 : 1.78)) < 1e-9, `${look.id}: standing height ${height}`);
+    const expectedHeight = characterFidelityContract(rig)?.targetHeightM ?? (look.rig === 'jevica' || look.id === 'jevica' ? 1.685 : 1.78);
+    assert.ok(Math.abs(height - expectedHeight) < 1e-9, `${look.id}: standing height ${height}`);
     assert.ok(meshes.length >= 4, `${look.id}: body, hair and garment skins are culled (${meshes.length})`);
     assert.ok(meshes.every(mesh => mesh.frustumCulled && mesh.boundingSphere.radius > 0));
     assert.deepEqual(cullAvatarMeshes(avatar.object, height), [], 'a second pass changes nothing');
