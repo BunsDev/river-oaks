@@ -1,3 +1,4 @@
+import {verifyBakeProvenance} from '../../scripts/lib/bake-provenance.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
@@ -10,7 +11,7 @@ test('the seated corrective retains its source provenance and bounded finite dat
   const root = new URL('../../', import.meta.url);
   const receipt = JSON.parse(await readFile(new URL('preview/src/skirt-seat-morph-receipt.json', root), 'utf8'));
   const hash = bytes => createHash('sha256').update(bytes).digest('hex');
-  for (const [path, expected] of Object.entries(receipt.inputs)) assert.equal(hash(await readFile(new URL(path, root))), expected, `Rebake after reviewing changed input: ${path}`);
+  await verifyBakeProvenance({root, bake: 'skirt-seat', receipt});
   assert.equal(hash(await readFile(new URL('preview/src/skirt-seat-morph-data.js', root))), receipt.outputSha256);
   assert(SKIRT_SEAT_MORPH.positionDelta.every(value => Number.isFinite(value) && Math.abs(value) < .25));
   assert(SKIRT_SEAT_MORPH.normalDelta.every(value => Number.isFinite(value) && Math.abs(value) <= 2));
@@ -47,7 +48,7 @@ test('Vesper garment and trim preserve the pinned source receipt and valid joint
   const {VESPER_SKIRT_MORPH, VESPER_TRIM_MORPH} = await import('../src/vesper-skirt-morph-data.js');
   const receipt = JSON.parse(await readFile(new URL('preview/src/vesper-skirt-morph-receipt.json', root), 'utf8'));
   const hash = bytes => createHash('sha256').update(bytes).digest('hex');
-  for (const [path, expected] of Object.entries(receipt.inputs)) assert.equal(hash(await readFile(new URL(path, root))), expected, path);
+  await verifyBakeProvenance({root, bake: 'vesper-skirt', receipt});
   assert.equal(hash(await readFile(new URL('preview/src/vesper-skirt-morph-data.js', root))), receipt.outputSha256);
   for (const data of [VESPER_SKIRT_MORPH, VESPER_TRIM_MORPH]) {
     assert(data.positionDelta.every(value => Number.isFinite(value) && Math.abs(value) < .25));
