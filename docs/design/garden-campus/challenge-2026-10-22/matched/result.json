@@ -1,0 +1,561 @@
+{
+  "status": "passed",
+  "hours": {
+    "day": 15
+  },
+  "cameras": [
+    {
+      "id": "02-street-under-b12",
+      "name": "Ground cross-route P2 below the Grove-Commons skywalk",
+      "position": [
+        32,
+        74.5,
+        1.7
+      ],
+      "target": [
+        16,
+        89,
+        12
+      ],
+      "fov": 77,
+      "scene": {
+        "position": [
+          -2688.2519010851665,
+          19.95939189446673,
+          1293.5010148118047
+        ],
+        "target": [
+          -2704.0891376402033,
+          30.25939189446673,
+          1278.8234149296777
+        ],
+        "fov": 77
+      }
+    },
+    {
+      "id": "05-office-terrace-outlook",
+      "name": "From the existing office roof edge nearest the campus (approximate), looking north",
+      "position": [
+        10,
+        -16,
+        34.7
+      ],
+      "target": [
+        15,
+        100,
+        16
+      ],
+      "fov": 60,
+      "scene": {
+        "position": [
+          -2711.2601854599548,
+          52.959391894466734,
+          1383.7499419529563
+        ],
+        "target": [
+          -2704.9663550867344,
+          34.25939189446673,
+          1267.8129431163761
+        ],
+        "fov": 60
+      }
+    },
+    {
+      "id": "11-east-long-side",
+      "name": "East long side, high oblique across the promenade",
+      "position": [
+        95,
+        62,
+        42
+      ],
+      "target": [
+        15,
+        100,
+        13
+      ],
+      "fov": 50,
+      "scene": {
+        "position": [
+          -2625.3952767656497,
+          60.25939189446673,
+          1306.7030896167405
+        ],
+        "target": [
+          -2704.9663550867344,
+          31.25939189446673,
+          1267.8129431163761
+        ],
+        "fov": 50
+      }
+    },
+    {
+      "id": "12-west-long-side",
+      "name": "West long side over the IPIC roof, green walls and roof beds",
+      "position": [
+        -48,
+        112,
+        34
+      ],
+      "target": [
+        14,
+        104,
+        15
+      ],
+      "fov": 52,
+      "scene": {
+        "position": [
+          -2767.8285576025687,
+          52.25939189446673,
+          1255.110837194198
+        ],
+        "target": [
+          -2705.9216672817106,
+          33.25939189446673,
+          1263.802035661681
+        ],
+        "fov": 52
+      }
+    },
+    {
+      "id": "14-street-under-b23",
+      "name": "Ground under the Commons-Atelier skywalk on P5",
+      "position": [
+        27,
+        121.5,
+        1.7
+      ],
+      "target": [
+        12,
+        124.5,
+        11
+      ],
+      "fov": 72,
+      "scene": {
+        "position": [
+          -2692.7272394589036,
+          19.95939189446673,
+          1246.4481578694197
+        ],
+        "target": [
+          -2707.692836763726,
+          29.25939189446673,
+          1243.2809986833513
+        ],
+        "fov": 72
+      }
+    }
+  ],
+  "reports": [
+    {
+      "name": "garage-day-02-street-under-b12",
+      "revision": "garage",
+      "hour": 15,
+      "label": "day",
+      "camera": "02-street-under-b12",
+      "pose": {
+        "position": [
+          -2688.2519010851665,
+          19.95939189446673,
+          1293.5010148118047
+        ],
+        "target": [
+          -2704.0891376402033,
+          30.25939189446673,
+          1278.8234149296777
+        ],
+        "fov": 77
+      },
+      "glow": null,
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+      "samples": 23,
+      "overflow": false,
+      "frameP50": 16.7,
+      "frameP95": 16.7,
+      "cpuP50": 8,
+      "calls": 1041,
+      "triangles": 3534588,
+      "memory": {
+        "geometries": 541,
+        "textures": 175
+      },
+      "programs": 141,
+      "links": 144,
+      "scale": 0.75,
+      "hostLoad": [
+        22.6,
+        22.4,
+        19.9
+      ]
+    },
+    {
+      "name": "garage-day-05-office-terrace-outlook",
+      "revision": "garage",
+      "hour": 15,
+      "label": "day",
+      "camera": "05-office-terrace-outlook",
+      "pose": {
+        "position": [
+          -2711.2601854599548,
+          52.959391894466734,
+          1383.7499419529563
+        ],
+        "target": [
+          -2704.9663550867344,
+          34.25939189446673,
+          1267.8129431163761
+        ],
+        "fov": 60
+      },
+      "glow": null,
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+      "samples": 23,
+      "overflow": false,
+      "frameP50": 16.7,
+      "frameP95": 16.8,
+      "cpuP50": 8.1,
+      "calls": 1021,
+      "triangles": 3234080,
+      "memory": {
+        "geometries": 545,
+        "textures": 175
+      },
+      "programs": 142,
+      "links": 145,
+      "scale": 0.75,
+      "hostLoad": [
+        23.6,
+        22.6,
+        20
+      ]
+    },
+    {
+      "name": "garage-day-11-east-long-side",
+      "revision": "garage",
+      "hour": 15,
+      "label": "day",
+      "camera": "11-east-long-side",
+      "pose": {
+        "position": [
+          -2625.3952767656497,
+          60.25939189446673,
+          1306.7030896167405
+        ],
+        "target": [
+          -2704.9663550867344,
+          31.25939189446673,
+          1267.8129431163761
+        ],
+        "fov": 50
+      },
+      "glow": null,
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+      "samples": 23,
+      "overflow": false,
+      "frameP50": 16.7,
+      "frameP95": 16.7,
+      "cpuP50": 8.4,
+      "calls": 1161,
+      "triangles": 3801649,
+      "memory": {
+        "geometries": 545,
+        "textures": 175
+      },
+      "programs": 142,
+      "links": 145,
+      "scale": 0.75,
+      "hostLoad": [
+        23.6,
+        22.6,
+        20
+      ]
+    },
+    {
+      "name": "garage-day-12-west-long-side",
+      "revision": "garage",
+      "hour": 15,
+      "label": "day",
+      "camera": "12-west-long-side",
+      "pose": {
+        "position": [
+          -2767.8285576025687,
+          52.25939189446673,
+          1255.110837194198
+        ],
+        "target": [
+          -2705.9216672817106,
+          33.25939189446673,
+          1263.802035661681
+        ],
+        "fov": 52
+      },
+      "glow": null,
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+      "samples": 23,
+      "overflow": false,
+      "frameP50": 16.7,
+      "frameP95": 16.7,
+      "cpuP50": 6.5,
+      "calls": 563,
+      "triangles": 2441637,
+      "memory": {
+        "geometries": 546,
+        "textures": 181
+      },
+      "programs": 142,
+      "links": 145,
+      "scale": 0.75,
+      "hostLoad": [
+        23.6,
+        22.6,
+        20
+      ]
+    },
+    {
+      "name": "garage-day-14-street-under-b23",
+      "revision": "garage",
+      "hour": 15,
+      "label": "day",
+      "camera": "14-street-under-b23",
+      "pose": {
+        "position": [
+          -2692.7272394589036,
+          19.95939189446673,
+          1246.4481578694197
+        ],
+        "target": [
+          -2707.692836763726,
+          29.25939189446673,
+          1243.2809986833513
+        ],
+        "fov": 72
+      },
+      "glow": null,
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+      "samples": 23,
+      "overflow": false,
+      "frameP50": 16.7,
+      "frameP95": 16.7,
+      "cpuP50": 8,
+      "calls": 1076,
+      "triangles": 3756403,
+      "memory": {
+        "geometries": 546,
+        "textures": 181
+      },
+      "programs": 142,
+      "links": 145,
+      "scale": 0.75,
+      "hostLoad": [
+        23.6,
+        22.6,
+        20
+      ]
+    },
+    {
+      "name": "gardens-day-02-street-under-b12",
+      "revision": "gardens",
+      "hour": 15,
+      "label": "day",
+      "camera": "02-street-under-b12",
+      "pose": {
+        "position": [
+          -2688.2519010851665,
+          19.95939189446673,
+          1293.5010148118047
+        ],
+        "target": [
+          -2704.0891376402033,
+          30.25939189446673,
+          1278.8234149296777
+        ],
+        "fov": 77
+      },
+      "glow": 0.8,
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+      "samples": 23,
+      "overflow": false,
+      "frameP50": 16.7,
+      "frameP95": 16.7,
+      "cpuP50": 8.7,
+      "calls": 1164,
+      "triangles": 4211530,
+      "memory": {
+        "geometries": 558,
+        "textures": 181
+      },
+      "programs": 145,
+      "links": 148,
+      "scale": 0.75,
+      "hostLoad": [
+        24.9,
+        22.9,
+        20.2
+      ]
+    },
+    {
+      "name": "gardens-day-05-office-terrace-outlook",
+      "revision": "gardens",
+      "hour": 15,
+      "label": "day",
+      "camera": "05-office-terrace-outlook",
+      "pose": {
+        "position": [
+          -2711.2601854599548,
+          52.959391894466734,
+          1383.7499419529563
+        ],
+        "target": [
+          -2704.9663550867344,
+          34.25939189446673,
+          1267.8129431163761
+        ],
+        "fov": 60
+      },
+      "glow": 0.8,
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+      "samples": 23,
+      "overflow": false,
+      "frameP50": 16.7,
+      "frameP95": 16.7,
+      "cpuP50": 8.3,
+      "calls": 1091,
+      "triangles": 3482230,
+      "memory": {
+        "geometries": 560,
+        "textures": 181
+      },
+      "programs": 146,
+      "links": 149,
+      "scale": 0.75,
+      "hostLoad": [
+        24.9,
+        22.9,
+        20.2
+      ]
+    },
+    {
+      "name": "gardens-day-11-east-long-side",
+      "revision": "gardens",
+      "hour": 15,
+      "label": "day",
+      "camera": "11-east-long-side",
+      "pose": {
+        "position": [
+          -2625.3952767656497,
+          60.25939189446673,
+          1306.7030896167405
+        ],
+        "target": [
+          -2704.9663550867344,
+          31.25939189446673,
+          1267.8129431163761
+        ],
+        "fov": 50
+      },
+      "glow": 0.8,
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+      "samples": 23,
+      "overflow": false,
+      "frameP50": 16.7,
+      "frameP95": 16.7,
+      "cpuP50": 9,
+      "calls": 1219,
+      "triangles": 3990611,
+      "memory": {
+        "geometries": 560,
+        "textures": 181
+      },
+      "programs": 146,
+      "links": 149,
+      "scale": 0.75,
+      "hostLoad": [
+        24.9,
+        22.9,
+        20.2
+      ]
+    },
+    {
+      "name": "gardens-day-12-west-long-side",
+      "revision": "gardens",
+      "hour": 15,
+      "label": "day",
+      "camera": "12-west-long-side",
+      "pose": {
+        "position": [
+          -2767.8285576025687,
+          52.25939189446673,
+          1255.110837194198
+        ],
+        "target": [
+          -2705.9216672817106,
+          33.25939189446673,
+          1263.802035661681
+        ],
+        "fov": 52
+      },
+      "glow": 0.8,
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+      "samples": 23,
+      "overflow": false,
+      "frameP50": 16.7,
+      "frameP95": 16.7,
+      "cpuP50": 6.8,
+      "calls": 627,
+      "triangles": 2795139,
+      "memory": {
+        "geometries": 560,
+        "textures": 181
+      },
+      "programs": 146,
+      "links": 149,
+      "scale": 0.75,
+      "hostLoad": [
+        24.9,
+        22.9,
+        20.2
+      ]
+    },
+    {
+      "name": "gardens-day-14-street-under-b23",
+      "revision": "gardens",
+      "hour": 15,
+      "label": "day",
+      "camera": "14-street-under-b23",
+      "pose": {
+        "position": [
+          -2692.7272394589036,
+          19.95939189446673,
+          1246.4481578694197
+        ],
+        "target": [
+          -2707.692836763726,
+          29.25939189446673,
+          1243.2809986833513
+        ],
+        "fov": 72
+      },
+      "glow": 0.8,
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+      "samples": 23,
+      "overflow": false,
+      "frameP50": 16.7,
+      "frameP95": 16.8,
+      "cpuP50": 8.8,
+      "calls": 1192,
+      "triangles": 4459741,
+      "memory": {
+        "geometries": 560,
+        "textures": 181
+      },
+      "programs": 146,
+      "links": 149,
+      "scale": 0.75,
+      "hostLoad": [
+        24.9,
+        22.9,
+        20.2
+      ]
+    }
+  ],
+  "limits": "Local loopback fixture, Smoothest preset, 1280x800 at DPR 1, interface hidden; residents move between views; frame times are this host under its recorded load (vsync on), not a device budget."
+}
