@@ -88,8 +88,13 @@ test('observed numbers cannot drift from the live plan modules', () => {
   flights.places.find(place => place.id === 'ipic').flights[1].base = 2.5;
   assert.match(validateLayoutContract(flights, { live }).join('\n'), /flight 1 differs from IPIC_FLIGHTS/);
   const seat = clone(packet.layout);
-  seat.places.find(place => place.id === 'ipic').anchors.find(a => a.id === 'recliner-1-3').seatId = 'bench:ipic-recliner-9-9:0';
+  seat.places.find(place => place.id === 'ipic').anchors.find(a => a.id === 'recliner-2-1').seatId = 'bench:ipic-recliner-9-9:0';
   assert.match(validateLayoutContract(seat, { live }).join('\n'), /unknown seat bench:ipic-recliner-9-9:0/);
+  const wing = clone(packet.layout);
+  wing.places.find(place => place.id === 'ipic').bounds.wing.aMin = -6.5;
+  assert.match(validateLayoutContract(wing, { live }).join('\n'), /wing differs from the live room/);
+  delete wing.places.find(place => place.id === 'ipic').bounds.wing;
+  assert.match(validateLayoutContract(wing, { live }).join('\n'), /wing differs from the live room/);
   const envelope = clone(packet.layout); envelope.avatarEnvelope.turningRadius = 0.5;
   assert.match(validateLayoutContract(envelope, { live }).join('\n'), /turningRadius 0.5 differs/);
 });

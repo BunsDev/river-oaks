@@ -19,3 +19,16 @@ test('public binaries are browser-cacheable; game code, data and manifests are n
     assert.equal(cacheFor(path), 'private, no-store', path);
   assert.equal(config.headers.find(rule => rule.source === '/data/(.*)').headers.find(header => header.key === 'Cache-Control').value, 'private, no-store');
 });
+
+// The screening films and captions (#502, Val 2026-10-19) are public and ungated, 9–17 MB each: cached for an hour
+// like the other binaries, so a return visit does not download a film again. Their names are not content hashes, so
+// the cache stays short (a same-name re-encode reaches every viewer within the hour). Only that folder: other media
+// under /assets and the screening manifest stay uncached.
+test('screening films and captions are cacheable; nothing else under /assets changes', () => {
+  for (const path of ['/assets/ipic/screening/ipic-two-seats-v1.webm', '/assets/ipic/screening/ipic-two-seats-v1.mp4',
+    '/assets/ipic/screening/ipic-original-v1.en.vtt', '/assets/ipic/screening/fixture-v1.mp4', '/assets/ipic/screening/ipic-two-seats-v1-poster.jpg'])
+    assert.equal(cacheFor(path), 'public, max-age=3600, stale-while-revalidate=86400', path);
+  for (const path of ['/assets/ipic/screening/sources.json', '/assets/login/jev-jevica-modest-standing.mp4', '/assets/ipic/screening/nested/film.mp4',
+    '/assets/ipic/screening/film.mp4.js', '/assets/main-abc123.js'])
+    assert.equal(cacheFor(path), 'private, no-store', path);
+});

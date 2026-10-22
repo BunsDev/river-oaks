@@ -193,9 +193,7 @@ Mobile and target-GPU budgets are unmeasured.
 
 ## Next action
 
-Draft PR #528 is open on `feat/garden-campus-shells-507-20261018`. Next:
-
-1. Review and hosted checks.
-2. #512 integrates this pass with #508's circulation and #510's fit-out, then takes the
-   occupied-suite views and occupied-route checks.
-3. Merge stays a separate release action.
+Delivered. #528 merged at 2026-10-19T03:45:20Z as `4eca5153` (river-oaks-b5, from head
+`c358c573`, 16/16 hosted). The #512 candidate integrated it, with the occupied-suite views
+and route checks (#525 → `7c10f418`). The local worktree is retired, with `.runtime`,
+`output/playwright` and `data/generated` archived.

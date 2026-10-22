@@ -10,12 +10,15 @@ Read the scoped AGENTS.md in the subsystem you change.
 1. Run `git status --short` and `git worktree list`. Preserve existing edits and
    other agents' work. Use an external sibling worktree when ownership overlaps;
    never copy `.env`, private `.runtime` state, or credentials into it.
-2. Reconcile [the task register](docs/project-management/tasks.json) using
+2. Reconcile the live task register using
    [the lifecycle workflow](docs/project-management/workflow.md). Claim the exact
    task/branch, record your session owner and next action, and reuse an owned
    checkout before creating another. Expired or missing ownership is not discard
-   permission. Claim and release in the primary checkout's live `tasks.json`.
-   From a worktree, check it with `project:check --tasks <primary>/docs/project-management/tasks.json`.
+   permission. The live register is one file in the common Git directory, shared
+   by every worktree: change it with `pnpm run register patch <id> --json '{...}'`
+   (`show <id>` reads it, `path` prints it). `project:check` reads it from any
+   worktree. Never edit `docs/project-management/tasks.json`, a snapshot that only
+   register sweeps commit; feature PRs must not change it.
 3. Read the owning module, its callers, tests, and linked subsystem docs before
    editing. Keep patches small; do not reformat large unrelated files.
 4. Run `pnpm run agent:doctor` after installing dependencies. Use

@@ -1,0 +1,25 @@
+#!/bin/sh
+# postinst for the typesafe-place .deb (desktop/linux/postinst, #372).
+set -e
+
+PROFILE_SOURCE=/usr/share/typesafe-place/apparmor-profile
+PROFILE_TARGET=/etc/apparmor.d/typesafe-place
+
+if [ "$1" = configure ]; then
+  # Allow Chromium's user-namespace sandbox where AppArmor restricts unprivileged
+  # user namespaces (Ubuntu 23.10+). The profile needs the 4.0 policy ABI, so it
+  # is installed only where the parser accepts it; older AppArmor releases do
+  # not restrict namespaces and need no profile. chrome-sandbox (setuid root)
+  # remains the sandbox wherever user namespaces are unavailable.
+  if command -v apparmor_parser > /dev/null 2>&1 && apparmor_parser --skip-kernel-load --debug "$PROFILE_SOURCE" > /dev/null 2>&1; then
+    cp -f "$PROFILE_SOURCE" "$PROFILE_TARGET"
+    # Loading needs a running AppArmor and is meaningless in a chroot (image builds).
+    if ! { [ -x /usr/bin/ischroot ] && /usr/bin/ischroot; } && [ -d /sys/kernel/security/apparmor ]; then
+      apparmor_parser --replace --write-cache --skip-read-cache "$PROFILE_TARGET" || echo "typesafe-place: could not load $PROFILE_TARGET; it loads at the next boot" >&2
+    fi
+  fi
+  if command -v update-desktop-database > /dev/null 2>&1; then update-desktop-database -q /usr/share/applications || true; fi
+  if command -v gtk-update-icon-cache > /dev/null 2>&1; then gtk-update-icon-cache -q -t -f /usr/share/icons/hicolor || true; fi
+fi
+
+exit 0

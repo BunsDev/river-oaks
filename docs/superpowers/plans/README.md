@@ -4,73 +4,146 @@
 
 Each plan is a task ledger. Status comes from the task register, where the primary checkout's live copy can be newer than the committed one. Plans from before the register are listed as historical: their own text is the record of what was delivered.
 
-## Active and blocked (30)
+## Active and blocked (15)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
 | [2026-10-18-turning](2026-10-18-turning.md)<br>Focused turning implementation and evidence | `turning-20261018-cody` | active | — | 2026-10-18 |
-| [2026-10-18-plaza-fullscreen-polish](2026-10-18-plaza-fullscreen-polish.md)<br>Full-screen plaza games polish | `plaza-fullscreen-polish-20261018` | active | #521 | 2026-10-18 |
-| [2026-10-18-human-only-characters](2026-10-18-human-only-characters.md)<br>Human-only characters | `human-only-characters-20261018` | active | #496 | 2026-10-18 |
-| [2026-10-18-garden-campus-leases-509](2026-10-18-garden-campus-leases-509.md)<br>Garden campus leases #509: owner-managed tenancy, grants and persistence | `garden-campus-leases-509` | active | #522 | 2026-10-18 |
-| [2026-10-15-wine-pong-dynamic-throw-review](2026-10-15-wine-pong-dynamic-throw-review.md)<br>Wine pong: position-aware throws and readable table play | `wine-pong-dynamic-throw-20261015` | active | #448 | 2026-10-15 |
-| [2026-10-15-studio-safe-edits](2026-10-15-studio-safe-edits.md)<br>World Studio safe edits (#414, parent #413) | `studio-safe-edits-414` | queued | #427 | 2026-10-15 |
-| [2026-10-15-studio-prompt-stdin](2026-10-15-studio-prompt-stdin.md)<br>Studio prompts on stdin (#370 finding), 2026-10-15 | `studio-prompt-stdin` | active | — | 2026-10-15 |
-| [2026-10-15-studio-pilot-acceptance](2026-10-15-studio-pilot-acceptance.md)<br>Garden Office pilot acceptance (#417, parent #413) | `studio-acceptance-417` | active | — | 2026-10-15 |
-| [2026-10-15-release-0.2.1](2026-10-15-release-0.2.1.md)<br>Release 0.2.1: signed and notarized macOS build | `release-0-2-1-published` | active | — | 2026-10-16 |
-| [2026-10-15-procedural-phone-gpu-fixture](2026-10-15-procedural-phone-gpu-fixture.md)<br>Procedural gallery phone GPU fixture | `procedural-phone-gpu-fixture` | active | #393 | 2026-10-15 |
-| [2026-10-15-plaza-game-layout](2026-10-15-plaza-game-layout.md)<br>Expandable plaza game layout | `plaza-game-layout-20261015` | active | #468 | 2026-10-16 |
-| [2026-10-15-office-world-lifecycle-reliability](2026-10-15-office-world-lifecycle-reliability.md)<br>Office world lifecycle reliability | `office-world-lifecycle-reliability` | active | — | 2026-10-15 |
-| [2026-10-15-office-skyline-prototype](2026-10-15-office-skyline-prototype.md)<br>Penthouse skyline prototype (#363 views, kit guide P26) | `office-skyline-prototype` | active | #408 | 2026-10-15 |
-| [2026-10-15-office-computer-reliability](2026-10-15-office-computer-reliability.md)<br>Office computer reliability | `office-computer-reliability` | active | #394 | 2026-10-15 |
-| [2026-10-15-ios-avatar-image-decoder-default](2026-10-15-ios-avatar-image-decoder-default.md)<br>iOS resident avatar image decoder default | `safari-gltf-decoder-investigation` | active | — | 2026-10-15 |
-| [2026-10-15-green-roofs](2026-10-15-green-roofs.md)<br>Green roof scenery execution ledger | `green-roofs-20261015` | active | #449 | 2026-10-15 |
-| [2026-10-15-garden-office-pilot](2026-10-15-garden-office-pilot.md)<br>Garden Office realism pilot (#416, parent #413) | `garden-office-416` | blocked | #439 | 2026-10-16 |
-| [2026-10-15-desktop-e2e-walk-game-time](2026-10-15-desktop-e2e-walk-game-time.md)<br>Desktop e2e: the W walk over game time, 2026-10-15 | `desktop-e2e-walk-game-time` | active | — | 2026-10-15 |
-| [2026-10-15-character-studio](2026-10-15-character-studio.md)<br>Character Studio #440–#444 execution ledger | `cancelled-feat-character-studio-20261013` | active | #462 | 2026-10-15 |
-| [2026-10-15-character-studio](2026-10-15-character-studio.md)<br>Character Studio #440–#444 execution ledger | `character-studio-contract-20261015` | active | #457 | 2026-10-15 |
-| [2026-10-15-character-studio](2026-10-15-character-studio.md)<br>Character Studio #440–#444 execution ledger | `character-studio-editor-20261015` | active | #461 | 2026-10-15 |
-| [2026-10-15-character-studio-persistence](2026-10-15-character-studio-persistence.md)<br>Character Studio persistence (#443) | `character-studio-persistence-20261015` | active | #464 | 2026-10-18 |
+| [2026-10-18-play-rail-menu](2026-10-18-play-rail-menu.md)<br>Play rail as a game menu; preferences in Settings | `play-rail-menu-evidence-20261019` | active | #549 | 2026-10-19 |
+| [2026-10-18-penthouse-only](2026-10-18-penthouse-only.md)<br>Penthouse-only office implementation and evidence | `penthouse-only-20261018-cody` | active | — | 2026-10-18 |
+| [2026-10-18-ipic-screening-next](2026-10-18-ipic-screening-next.md)<br>IPIC screening, next milestone: choose a film, watch together, return to the world (#497) | `ipic-journey-approved-film-502` | active | #556 | 2026-10-19 |
+| [2026-10-18-character-studio-creation-441](2026-10-18-character-studio-creation-441.md)<br>Character Studio #441: guided creation flow | `novice-trial-441-20261018` | active | — | 2026-10-18 |
+| [2026-10-15-studio-pilot-acceptance](2026-10-15-studio-pilot-acceptance.md)<br>Garden Office pilot acceptance (#417, parent #413) | `studio-acceptance-417-refresh-20261015` | blocked | — | 2026-10-18 |
+| [2026-10-15-screening-seek-lead](2026-10-15-screening-seek-lead.md)<br>Screening player: seek freezes under heavy load (parked) | `screening-seek-lead` | queued | — | 2026-10-18 |
+| [2026-10-15-character-studio](2026-10-15-character-studio.md)<br>Character Studio #440–#444 execution ledger | `cancelled-feat-character-studio-20261013` | active | #462 | 2026-10-16 |
+| [2026-10-15-character-studio](2026-10-15-character-studio.md)<br>Character Studio #440–#444 execution ledger | `character-studio-editor-20261015` | active | #461 | 2026-10-16 |
+| [2026-10-15-character-studio-persistence](2026-10-15-character-studio-persistence.md)<br>Character Studio persistence (#443) | `character-studio-persistence-20261015` | blocked | #464 | 2026-10-18 |
 | [2026-10-14-shared-dominoes](2026-10-14-shared-dominoes.md)<br>Shared Dominoes Implementation Plan (PR 1: the town holds the round) | `shared-dominoes-sheet` | active | — | 2026-10-14 |
-| [2026-10-14-release-0.2.0-readiness](2026-10-14-release-0.2.0-readiness.md)<br>TypeSafe Place 0.2.0 release readiness | `release-0-2-0-published` | active | — | 2026-10-15 |
-| [2026-10-14-procedural-gpu-acceptance](2026-10-14-procedural-gpu-acceptance.md)<br>Procedural interiors: physical GPU acceptance plan | `procedural-gpu-acceptance` | queued | — | 2026-10-15 |
+| [2026-10-14-procedural-gpu-acceptance](2026-10-14-procedural-gpu-acceptance.md)<br>Procedural interiors: physical GPU acceptance plan | `procedural-gpu-acceptance` | active | — | 2026-10-15 |
 | [2026-10-14-gallery-vertical-route](2026-10-14-gallery-vertical-route.md)<br>Gallery vertical-route visual integration | `procedural-gallery-vertical-route` | queued | — | 2026-10-14 |
-| [2026-10-14-desktop-package-matrix](2026-10-14-desktop-package-matrix.md)<br>Desktop packaging build matrix (#371), 2026-10-14 | `desktop-package-matrix` | active | #377 | 2026-10-15 |
 | [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `shared-voice-acceptance` | queued | — | 2026-10-15 |
 | [2026-10-13-procedural-interiors-implementation](2026-10-13-procedural-interiors-implementation.md)<br>Procedural interiors implementation ledger | `procedural-interior-human-acceptance` | queued | — | 2026-10-15 |
-| [2026-10-13-local-branch-worktree-prune](2026-10-13-local-branch-worktree-prune.md)<br>Local branch and worktree pruning, 2026-10-13 | `register-sweep-20261015` | active | — | 2026-10-15 |
 
-## Delivered, awaiting local retirement (3)
+## Delivered, awaiting local retirement (11)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
-| [2026-10-15-release-0.2.1](2026-10-15-release-0.2.1.md)<br>Release 0.2.1: signed and notarized macOS build | `release-0-2-1-signed` | delivered | #467 | 2026-10-16 |
-| [2026-10-14-desktop-platform-identity](2026-10-14-desktop-platform-identity.md)<br>Desktop cross-platform identity (#370) | `desktop-platform-identity` | delivered | #379 | 2026-10-14 |
+| [2026-10-19-live-register](2026-10-19-live-register.md)<br>Live task register in the common Git directory | `live-register-20261019` | delivered | #548 | 2026-10-19 |
+| [2026-10-18-right-rail-polish](2026-10-18-right-rail-polish.md)<br>Right rail polish | `right-rail-polish-20261018` | delivered | #543 | 2026-10-19 |
+| [2026-10-18-play-rail-menu](2026-10-18-play-rail-menu.md)<br>Play rail as a game menu; preferences in Settings | `play-rail-menu-20261018` | delivered | #503 | 2026-10-19 |
+| [2026-10-18-human-only-characters](2026-10-18-human-only-characters.md)<br>Human-only characters | `human-only-characters-20261018` | delivered | #496 | 2026-10-18 |
+| [2026-10-15-studio-pilot-acceptance](2026-10-15-studio-pilot-acceptance.md)<br>Garden Office pilot acceptance (#417, parent #413) | `studio-acceptance-417-20261018` | delivered | #493 | 2026-10-18 |
+| [2026-10-15-penthouse-lighting](2026-10-15-penthouse-lighting.md)<br>Penthouse graybox lighting pass (noon and dusk, no glass glints) | `penthouse-lighting-20261015` | delivered | #473 | 2026-10-18 |
+| [2026-10-15-office-world-lifecycle-reliability](2026-10-15-office-world-lifecycle-reliability.md)<br>Office world lifecycle reliability | `office-world-lifecycle-reliability` | delivered | #410 | 2026-10-15 |
+| [2026-10-15-office-computer-reliability](2026-10-15-office-computer-reliability.md)<br>Office computer reliability | `office-computer-reliability` | delivered | #394 | 2026-10-15 |
+| [2026-10-15-ios-avatar-image-decoder-default](2026-10-15-ios-avatar-image-decoder-default.md)<br>iOS resident avatar image decoder default | `safari-gltf-decoder-investigation` | delivered | #436 | 2026-10-15 |
+| [2026-10-15-garden-office-pilot](2026-10-15-garden-office-pilot.md)<br>Garden Office realism pilot (#416, parent #413) | `garden-office-416` | delivered | #471 | 2026-10-16 |
 | [2026-10-11-pending-integration](2026-10-11-pending-integration.md)<br>Pending delivery integration | `primary-reconciliation` | delivered | — | 2026-10-11 |
 
-## Retired (134)
+## Retired (217)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
+| [2026-10-19-gitleaks-asset-digests](2026-10-19-gitleaks-asset-digests.md)<br>History secret scan: allow SHA-256 digests in character source manifests | `gitleaks-asset-digests-20261019` | retired | #546 | 2026-10-19 |
+| [2026-10-18-throw-mechanics-darts-pong](2026-10-18-throw-mechanics-darts-pong.md)<br>Darts release and acceleration, and wine pong repositioning | `throw-mechanics-darts-pong-20261018` | retired | #535 | 2026-10-18 |
+| [2026-10-18-throw-followups](2026-10-18-throw-followups.md)<br>Throw follow-ups: shuffleboard and axes, sounds, a dart flight | `throw-followups-20261018` | retired | #542 | 2026-10-19 |
+| [2026-10-18-plaza-fullscreen-polish](2026-10-18-plaza-fullscreen-polish.md)<br>Full-screen plaza games polish | `plaza-fullscreen-polish-20261018` | retired | #521 | 2026-10-18 |
+| [2026-10-18-office-computer-embed](2026-10-18-office-computer-embed.md)<br>#486 Office desk: Tasks and Computer (Place side) | `office-computer-embed-486` | retired | #524 | 2026-10-18 |
+| [2026-10-18-office-computer-embed](2026-10-18-office-computer-embed.md)<br>#486 Office desk: Tasks and Computer (Place side) | `office-computer-embed-audit-486` | retired | #526 | 2026-10-18 |
+| [2026-10-18-office-computer-embed](2026-10-18-office-computer-embed.md)<br>#486 Office desk: Tasks and Computer (Place side) | `office-computer-embed-webkit-486` | retired | #530 | 2026-10-18 |
+| [2026-10-18-ipic-tuck-room-photo](2026-10-18-ipic-tuck-room-photo.md)<br>IPIC Tuck Room from IMG_9756–9757 (photo review P13, P14) | `ipic-tuck-room-photo` | retired | #488 | 2026-10-18 |
+| [2026-10-18-ipic-second-short](2026-10-18-ipic-second-short.md)<br>IPIC screening: a second approved short with dialogue and music (#501) | `ipic-screening-second-short-501` | retired | #516 | 2026-10-19 |
+| [2026-10-18-ipic-second-short](2026-10-18-ipic-second-short.md)<br>IPIC screening: a second approved short with dialogue and music (#501) | `ipic-screening-second-short-register-501` | retired | #547 | 2026-10-19 |
+| [2026-10-18-ipic-screening-viewing](2026-10-18-ipic-screening-viewing.md)<br>IPIC screening: screen-focused viewing, Join screening and truthful sound (#500) | `ipic-screening-viewing-500` | retired | #515 | 2026-10-18 |
+| [2026-10-18-ipic-screening-switching](2026-10-18-ipic-screening-switching.md)<br>IPIC screening: film switching, mattes and source recovery (#498) | `ipic-screening-switching-498` | retired | #513 | 2026-10-18 |
+| [2026-10-18-ipic-screening-next](2026-10-18-ipic-screening-next.md)<br>IPIC screening, next milestone: choose a film, watch together, return to the world (#497) | `ipic-screening-acceptance-502` | retired | #520 | 2026-10-19 |
+| [2026-10-18-ipic-screening-next](2026-10-18-ipic-screening-next.md)<br>IPIC screening, next milestone: choose a film, watch together, return to the world (#497) | `ipic-screening-ledgers-delivered-497` | retired | #550 | 2026-10-19 |
+| [2026-10-18-ipic-screening-hosted-ci](2026-10-18-ipic-screening-hosted-ci.md)<br>Hosted CI runs the IPIC screening journey | `ipic-screening-hosted-ci` | retired | #480 | 2026-10-18 |
+| [2026-10-18-ipic-screening-chooser](2026-10-18-ipic-screening-chooser.md)<br>IPIC screening: an approved-film chooser for the host (#499) | `ipic-screening-chooser-499` | retired | #514 | 2026-10-18 |
+| [2026-10-18-ipic-reception-photo](2026-10-18-ipic-reception-photo.md)<br>IPIC reception from IMG_9738 (photo review P3, P4, P6) | `ipic-reception-photo` | retired | #482 | 2026-10-18 |
+| [2026-10-18-ipic-mural-bay](2026-10-18-ipic-mural-bay.md)<br>IPIC: the walled-in mural landing (photo review P18, P2) | `ipic-mural-bay` | retired | #481 | 2026-10-18 |
+| [2026-10-18-ipic-lounge-photo](2026-10-18-ipic-lounge-photo.md)<br>IPIC lounge from IMG_9752–9758 (photo review P8, P10, P11, P12) | `ipic-lounge-photo` | retired | #485 | 2026-10-18 |
+| [2026-10-18-ipic-auditorium-photo](2026-10-18-ipic-auditorium-photo.md)<br>IPIC auditorium from IMG_9767 (photo review P15, P16) | `ipic-auditorium-photo` | retired | #490 | 2026-10-18 |
+| [2026-10-18-garden-campus-traversal-views-508b](2026-10-18-garden-campus-traversal-views-508b.md)<br>Garden Offices #508 slice (b): two-player traversal journey and matched circulation views | `garden-campus-traversal-views-508b` | retired | #525 | 2026-10-19 |
+| [2026-10-18-garden-campus-traversal-508](2026-10-18-garden-campus-traversal-508.md)<br>#508 Garden campus: authoritative public traversal | `garden-campus-traversal-508` | retired | #537 | 2026-10-19 |
+| [2026-10-18-garden-campus-shells-507](2026-10-18-garden-campus-shells-507.md)<br>Garden Offices #507: the campus replaces the garage, behind a district revision | `garden-campus-shells-507` | retired | #523 | 2026-10-19 |
+| [2026-10-18-garden-campus-leases-509](2026-10-18-garden-campus-leases-509.md)<br>Garden campus leases #509: owner-managed tenancy, grants and persistence | `garden-campus-leases-509` | retired | #522 | 2026-10-19 |
+| [2026-10-18-garden-campus-journey-510](2026-10-18-garden-campus-journey-510.md)<br>Garden Offices #510: rentable suites, useful shared spaces and the private-desk journey | `garden-campus-journey-510` | retired | #527 | 2026-10-19 |
+| [2026-10-18-garden-campus-finish-511](2026-10-18-garden-campus-finish-511.md)<br>Garden Offices #511: finish, planting, lighting and bounded rendering | `garden-campus-finish-511` | retired | #528 | 2026-10-19 |
+| [2026-10-18-garden-campus-contract](2026-10-18-garden-campus-contract.md)<br>#506 Garden campus: measured campus, floor and connection contract | `garden-campus-contract-506` | retired | #519 | 2026-10-18 |
+| [2026-10-18-garden-campus-acceptance-512](2026-10-18-garden-campus-acceptance-512.md)<br>Garden Offices #512: migration, two-player use, recovery and release readiness | `garden-campus-acceptance-512` | retired | #525 | 2026-10-19 |
+| [2026-10-18-garden-campus-acceptance-512](2026-10-18-garden-campus-acceptance-512.md)<br>Garden Offices #512: migration, two-player use, recovery and release readiness | `garden-campus-rollback-levels-20261019` | retired | #551 | 2026-10-19 |
+| [2026-10-18-garden-campus-505](2026-10-18-garden-campus-505.md)<br>Garden Offices campus delivery tracker (#505) | `garden-campus-tracker-505` | retired | #552 | 2026-10-19 |
+| [2026-10-18-creator-street-ground](2026-10-18-creator-street-ground.md)<br>#491: walk across creator-region streets (2026-10-18) | `creator-street-ground-491` | retired | #495 | 2026-10-18 |
+| [2026-10-18-character-studio-creation-441](2026-10-18-character-studio-creation-441.md)<br>Character Studio #441: guided creation flow | `character-studio-creation-441-20261018` | retired | #484 | 2026-10-18 |
+| [2026-10-18-avatar-crowd-cost-442](2026-10-18-avatar-crowd-cost-442.md)<br>Avatar crowd cost (#442) | `avatar-crowd-cost-442-20261018` | retired | #529 | 2026-10-18 |
+| [2026-10-18-avatar-crowd-cost-442](2026-10-18-avatar-crowd-cost-442.md)<br>Avatar crowd cost (#442) | `figure-culling-442-20261018` | retired | #534 | 2026-10-18 |
+| [2026-10-18-avatar-crowd-cost-442](2026-10-18-avatar-crowd-cost-442.md)<br>Avatar crowd cost (#442) | `shadow-depth-442-20261018` | retired | #538 | 2026-10-19 |
+| [2026-10-18-avatar-crowd-cost-442](2026-10-18-avatar-crowd-cost-442.md)<br>Avatar crowd cost (#442) | `character-provenance-442-20261018` | retired | #539 | 2026-10-18 |
+| [2026-10-18-avatar-crowd-cost-442](2026-10-18-avatar-crowd-cost-442.md)<br>Avatar crowd cost (#442) | `occlusion-sort-442-20261018` | retired | #544 | 2026-10-19 |
+| [2026-10-16-studio-template-acceptance](2026-10-16-studio-template-acceptance.md)<br>#418 acceptance: soak and late/missing textures for every template (2026-10-16) | `studio-template-acceptance-418` | retired | #478 | 2026-10-16 |
+| [2026-10-16-office-penthouse-art](2026-10-16-office-penthouse-art.md)<br>#362: Jevica's penthouse asset package (original art, exports, reviews) | `office-penthouse-art-362` | retired | #479 | 2026-10-18 |
+| [2026-10-16-ipic-short-keyframes](2026-10-16-ipic-short-keyframes.md)<br>IPIC short: a keyframe every second | `ipic-short-keyframes` | retired | #472 | 2026-10-16 |
+| [2026-10-15-wine-pong-dynamic-throw-review](2026-10-15-wine-pong-dynamic-throw-review.md)<br>Wine pong: position-aware throws and readable table play | `wine-pong-dynamic-throw-20261015` | retired | #448 | 2026-10-18 |
+| [2026-10-15-waitlist-clarity](2026-10-15-waitlist-clarity.md)<br>Waitlist clarity and referral decay | `waitlist-clarity` | retired | #451 | 2026-10-15 |
+| [2026-10-15-studio-safe-edits](2026-10-15-studio-safe-edits.md)<br>World Studio safe edits (#414, parent #413) | `studio-safe-edits-414` | retired | #427 | 2026-10-15 |
+| [2026-10-15-studio-prompt-stdin](2026-10-15-studio-prompt-stdin.md)<br>Studio prompts on stdin (#370 finding), 2026-10-15 | `studio-prompt-stdin` | retired | #391 | 2026-10-15 |
+| [2026-10-15-studio-pilot-acceptance](2026-10-15-studio-pilot-acceptance.md)<br>Garden Office pilot acceptance (#417, parent #413) | `studio-acceptance-417` | retired | #452 | 2026-10-15 |
+| [2026-10-15-studio-house-template](2026-10-15-studio-house-template.md)<br>#418 slice 1: Courtyard House on the Garden Office baseline (2026-10-15) | `studio-house-template-418` | retired | #466 | 2026-10-16 |
+| [2026-10-15-studio-cafe-template](2026-10-15-studio-cafe-template.md)<br>#418 slice 3: Corner Café on the Garden Office baseline (2026-10-15) | `studio-cafe-template-418` | retired | #476 | 2026-10-16 |
+| [2026-10-15-studio-boutique-template](2026-10-15-studio-boutique-template.md)<br>#418 slice 2: Atelier Boutique on the Garden Office baseline (2026-10-15) | `studio-boutique-template-418` | retired | #474 | 2026-10-16 |
+| [2026-10-15-release-0.2.1](2026-10-15-release-0.2.1.md)<br>Release 0.2.1: signed and notarized macOS build | `release-0-2-1-signed` | retired | #467 | 2026-10-16 |
+| [2026-10-15-release-0.2.1](2026-10-15-release-0.2.1.md)<br>Release 0.2.1: signed and notarized macOS build | `release-0-2-1-published` | retired | #470 | 2026-10-16 |
+| [2026-10-15-procedural-phone-gpu-fixture](2026-10-15-procedural-phone-gpu-fixture.md)<br>Procedural gallery phone GPU fixture | `procedural-phone-gpu-fixture` | retired | #393 | 2026-10-15 |
 | [2026-10-15-procedural-gpu-matrix-harness](2026-10-15-procedural-gpu-matrix-harness.md)<br>Procedural GPU matrix harness | `procedural-gpu-matrix-harness` | retired | #389 | 2026-10-15 |
+| [2026-10-15-plaza-game-layout](2026-10-15-plaza-game-layout.md)<br>Expandable plaza game layout | `plaza-game-layout-20261015` | retired | #468 | 2026-10-18 |
+| [2026-10-15-office-walkable-stairs](2026-10-15-office-walkable-stairs.md)<br>Office: walk the penthouse stair | `office-walkable-stairs` | retired | #434 | 2026-10-15 |
+| [2026-10-15-office-views](2026-10-15-office-views.md)<br>#363 slice 2: bounded local office views | `office-views-363` | retired | #404 | 2026-10-15 |
+| [2026-10-15-office-skyline-prototype](2026-10-15-office-skyline-prototype.md)<br>Penthouse skyline prototype (#363 views, kit guide P26) | `office-skyline-prototype` | retired | #408 | 2026-10-15 |
+| [2026-10-15-office-skyline-memory](2026-10-15-office-skyline-memory.md)<br>Penthouse skyline: resident memory for phones (#363) | `office-skyline-memory` | retired | #433 | 2026-10-15 |
+| [2026-10-15-office-seat-claims](2026-10-15-office-seat-claims.md)<br>#363 slice 1: penthouse seat claims and occupied-body clearance | `office-seat-claims-363` | retired | #400 | 2026-10-15 |
 | [2026-10-15-office-penthouse-traversal](2026-10-15-office-penthouse-traversal.md)<br>Office #361: versioned multilevel office traversal and safe visit migration (2026-10-15) | `office-penthouse-traversal-361` | retired | #397 | 2026-10-15 |
 | [2026-10-15-office-penthouse-traversal](2026-10-15-office-penthouse-traversal.md)<br>Office #361: versioned multilevel office traversal and safe visit migration (2026-10-15) | `office-penthouse-layout-361a` | retired | #396 | 2026-10-15 |
+| [2026-10-15-office-penthouse-glazing](2026-10-15-office-penthouse-glazing.md)<br>Penthouse graybox: glazed curtain wall | `office-penthouse-glazing` | retired | #405 | 2026-10-15 |
+| [2026-10-15-office-outlook-phones](2026-10-15-office-outlook-phones.md)<br>Office outlook: the snapshot on phones | `office-outlook-phones` | retired | #450 | 2026-10-15 |
+| [2026-10-15-office-outlook-cost](2026-10-15-office-outlook-cost.md)<br>Live office outlook cost (#449): first-entry compile and per-frame host uploads | `office-outlook-cost-20261015` | retired | #477 | 2026-10-18 |
+| [2026-10-15-office-kit-fit](2026-10-15-office-kit-fit.md)<br>#362: read-only desk fit check for the supplied kit | `office-kit-fit-362` | retired | #403 | 2026-10-15 |
 | [2026-10-15-office-ipic-perf](2026-10-15-office-ipic-perf.md)<br>#368 slice: Office + IPIC performance profile on this Mac (2026-10-15) | `office-ipic-perf-368` | retired | #428 | 2026-10-15 |
+| [2026-10-15-office-ipic-journey](2026-10-15-office-ipic-journey.md)<br>#368 slice 2: two-account office + IPIC journey and rollback evidence | `office-ipic-journey-368` | retired | #406 | 2026-10-15 |
+| [2026-10-15-office-ipic-journey](2026-10-15-office-ipic-journey.md)<br>#368 slice 2: two-account office + IPIC journey and rollback evidence | `office-ipic-lead-ledger` | retired | #463 | 2026-10-15 |
 | [2026-10-15-office-ipic-contract-decisions](2026-10-15-office-ipic-contract-decisions.md)<br>Office + IPIC #360: record Val's decisions in the layout contract (2026-10-15) | `office-ipic-contract-decisions` | retired | #388 | 2026-10-15 |
+| [2026-10-15-office-fallback-lift-glass](2026-10-15-office-fallback-lift-glass.md)<br>Office: fallback scene lift behind the penthouse glass | `office-fallback-lift-glass` | retired | #426 | 2026-10-15 |
+| [2026-10-15-office-desk-footprints](2026-10-15-office-desk-footprints.md)<br>#362 R19: the kit's measured desk footprints | `office-desk-footprints-362` | retired | #430 | 2026-10-15 |
 | [2026-10-15-office-computer-db-mvp](2026-10-15-office-computer-db-mvp.md)<br>Office computer database MVP | `office-computer-db-mvp` | retired | #390 | 2026-10-15 |
+| [2026-10-15-office-building-raise](2026-10-15-office-building-raise.md)<br>Office: raise the penthouse tower to 33 m | `office-building-raise` | retired | #432 | 2026-10-15 |
+| [2026-10-15-landing-never-body-blocked](2026-10-15-landing-never-body-blocked.md)<br>No barricades: a body on a landing never keeps a visitor off a floor | `landing-never-body-blocked` | retired | #445 | 2026-10-15 |
+| [2026-10-15-landing-enter-for-approved](2026-10-15-landing-enter-for-approved.md)<br>Landing page: "Enter River Oaks" for residents who already have access | `landing-enter-for-approved` | retired | #437 | 2026-10-15 |
+| [2026-10-15-ipic-theater-ux](2026-10-15-ipic-theater-ux.md)<br>IPIC theater: Step outside only near the door, a quieter seated mode, house lights | `ipic-theater-ux` | retired | #453 | 2026-10-15 |
+| [2026-10-15-ipic-screening-soak](2026-10-15-ipic-screening-soak.md)<br>#368 slice 1: IPIC screening catalog profile and ten-cycle soak | `ipic-screening-soak-368` | retired | #407 | 2026-10-15 |
 | [2026-10-15-ipic-screening-replay](2026-10-15-ipic-screening-replay.md)<br>#368 slice: stale and replayed playback in the two-browser screening journey (2026-10-15) | `ipic-screening-replay-368` | retired | #422 | 2026-10-15 |
 | [2026-10-15-ipic-screening-playback](2026-10-15-ipic-screening-playback.md)<br>IPIC #367: synchronized client playback, accessible controls and media recovery (2026-10-15) | `ipic-screening-playback-367` | retired | #398 | 2026-10-15 |
 | [2026-10-15-ipic-screening-authority](2026-10-15-ipic-screening-authority.md)<br>IPIC #366: authoritative screening timeline and host controls (2026-10-15) | `ipic-screening-authority-366` | retired | #395 | 2026-10-15 |
 | [2026-10-15-ipic-route-evidence](2026-10-15-ipic-route-evidence.md)<br>IPIC #364: routes, seats, collision agreement, screen data and exports (2026-10-15) | `ipic-route-evidence-364` | retired | #402 | 2026-10-15 |
 | [2026-10-15-ipic-route-evidence](2026-10-15-ipic-route-evidence.md)<br>IPIC #364: routes, seats, collision agreement, screen data and exports (2026-10-15) | `ipic-sofa-stand` | retired | #419 | 2026-10-15 |
+| [2026-10-15-ipic-recliner-view](2026-10-15-ipic-recliner-view.md)<br>#368 T3 finding: a seated IPIC viewer sees the recliner, not the screen | `ipic-recliner-view-368` | retired | #424 | 2026-10-15 |
+| [2026-10-15-ipic-photo-materials](2026-10-15-ipic-photo-materials.md)<br>IPIC: finishes and the reception view from the photos | `ipic-photo-materials` | retired | #469 | 2026-10-16 |
+| [2026-10-15-ipic-passage-recliner-colliders](2026-10-15-ipic-passage-recliner-colliders.md)<br>IPIC: the lounge passage, recliner colliders, a closed atrium, and the photo review | `ipic-passage-recliner-colliders` | retired | #465 | 2026-10-16 |
+| [2026-10-15-ipic-original-short](2026-10-15-ipic-original-short.md)<br>#365: the approved original short | `ipic-original-short-365` | retired | #429 | 2026-10-15 |
 | [2026-10-15-ipic-exterior-culling](2026-10-15-ipic-exterior-culling.md)<br>IPIC auditorium: stop drawing the district while viewers face the screen (2026-10-15) | `ipic-exterior-culling` | retired | #431 | 2026-10-15 |
 | [2026-10-15-ipic-auditorium-interiors](2026-10-15-ipic-auditorium-interiors.md)<br>IPIC auditorium, round 2: draw only IPIC (2026-10-15) | `ipic-auditorium-interiors` | retired | #435 | 2026-10-15 |
+| [2026-10-15-greetings-face-to-greet](2026-10-15-greetings-face-to-greet.md)<br>Say hello: semi-transparent, and opened on purpose when you face someone | `greetings-face-to-greet` | retired | #446 | 2026-10-15 |
 | [2026-10-15-greetings-dock-overlap](2026-10-15-greetings-dock-overlap.md)<br>Phone HUD: the greetings card covered Play & rides (2026-10-15) | `greetings-dock-overlap` | retired | #425 | 2026-10-15 |
+| [2026-10-15-green-roofs](2026-10-15-green-roofs.md)<br>Green roof scenery execution ledger | `green-roofs-20261015` | retired | #449 | 2026-10-15 |
+| [2026-10-15-desktop-e2e-walk-game-time](2026-10-15-desktop-e2e-walk-game-time.md)<br>Desktop e2e: the W walk over game time, 2026-10-15 | `desktop-e2e-walk-game-time` | retired | #392 | 2026-10-15 |
 | [2026-10-15-connection-continuity](2026-10-15-connection-continuity.md)<br>Players stay connected (2026-10-15) | `connection-continuity` | retired | #447 | 2026-10-15 |
+| [2026-10-15-character-studio](2026-10-15-character-studio.md)<br>Character Studio #440–#444 execution ledger | `character-studio-contract-20261015` | retired | #457 | 2026-10-18 |
+| [2026-10-15-character-studio](2026-10-15-character-studio.md)<br>Character Studio #440–#444 execution ledger | `character-rig-pin-guard-440` | retired | #483 | 2026-10-18 |
 | [2026-10-15-bar-games](2026-10-15-bar-games.md)<br>Bar games: shared darts in the IPIC Tuck Room and an unbranded axe-and-darts room (2026-10-15) | `ipic-tuck-room-darts` | retired | #412 | 2026-10-15 |
 | [2026-10-15-bar-games](2026-10-15-bar-games.md)<br>Bar games: shared darts in the IPIC Tuck Room and an unbranded axe-and-darts room (2026-10-15) | `axe-darts-room` | retired | #415 | 2026-10-15 |
 | [2026-10-14-shared-dominoes](2026-10-14-shared-dominoes.md)<br>Shared Dominoes Implementation Plan (PR 1: the town holds the round) | `shared-dominoes-server` | retired | #374 | 2026-10-14 |
 | [2026-10-14-release-0.2.0-readiness](2026-10-14-release-0.2.0-readiness.md)<br>TypeSafe Place 0.2.0 release readiness | `release-0-2-0-readiness` | retired | #376 | 2026-10-15 |
 | [2026-10-14-release-0.2.0-readiness](2026-10-14-release-0.2.0-readiness.md)<br>TypeSafe Place 0.2.0 release readiness | `register-sweep-20261015-1b2` | retired | #455 | 2026-10-15 |
+| [2026-10-14-release-0.2.0-readiness](2026-10-14-release-0.2.0-readiness.md)<br>TypeSafe Place 0.2.0 release readiness | `release-0-2-0-published` | retired | #456 | 2026-10-15 |
 | [2026-10-14-procedural-private-upper-revocation](2026-10-14-procedural-private-upper-revocation.md)<br>Generated private home upper-level access | `procedural-private-upper-revocation` | retired | #352 | 2026-10-14 |
 | [2026-10-14-procedural-pilot-frame-performance](2026-10-14-procedural-pilot-frame-performance.md)<br>Procedural gallery pilot frame performance | `procedural-pilot-frame-performance` | retired | #351 | 2026-10-14 |
 | [2026-10-14-procedural-landing-follow-through](2026-10-14-procedural-landing-follow-through.md)<br>Procedural stack follow-through | `procedural-landing-follow-through` | retired | #386 | 2026-10-15 |
@@ -86,6 +159,8 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-14-office-ipic-engineering-baseline](2026-10-14-office-ipic-engineering-baseline.md)<br>Office + IPIC #360, engineering half: baseline and executable layout contract | `office-ipic-engineering-baseline` | retired | #381 | 2026-10-15 |
 | [2026-10-14-office-ipic-baseline](2026-10-14-office-ipic-baseline.md)<br>Office + IPIC #360, design-side baseline packet (2026-10-14) | `office-ipic-baseline-360` | retired | #380 | 2026-10-15 |
 | [2026-10-14-level-aware-interior-streaming](2026-10-14-level-aware-interior-streaming.md)<br>Level-aware generated interior streaming | `procedural-level-aware-streaming` | retired | #350 | 2026-10-14 |
+| [2026-10-14-desktop-platform-identity](2026-10-14-desktop-platform-identity.md)<br>Desktop cross-platform identity (#370) | `desktop-platform-identity` | retired | #379 | 2026-10-15 |
+| [2026-10-14-desktop-package-matrix](2026-10-14-desktop-package-matrix.md)<br>Desktop packaging build matrix (#371), 2026-10-14 | `desktop-package-matrix` | retired | #377 | 2026-10-15 |
 | [2026-10-13-studio-spaces](2026-10-13-studio-spaces.md)<br>Furnished Studio spaces implementation plan | `studio-furnished-spaces` | retired | #316 | 2026-10-13 |
 | [2026-10-13-store-intro-cut-timing](2026-10-13-store-intro-cut-timing.md)<br>Sample the store intro's camera cut instead of timing it — 2026-10-13 | `store-intro-cut-timing` | retired | #301 | 2026-10-13 |
 | [2026-10-13-store-intro-claim-race](2026-10-13-store-intro-claim-race.md)<br>Wait for the store intro before the walking HUD in spatial-circulation — 2026-10-13 | `store-intro-claim-race` | retired | #296 | 2026-10-13 |
@@ -127,6 +202,7 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-13-minimap-flicker](2026-10-13-minimap-flicker.md)<br>Stop the flicker, and take the minimap out of its scrolling sheet — 2026-10-13 | `minimap-flicker` | retired | #297 | 2026-10-13 |
 | [2026-10-13-local-branch-worktree-prune](2026-10-13-local-branch-worktree-prune.md)<br>Local branch and worktree pruning, 2026-10-13 | `local-prune-20261013` | retired | #375 | 2026-10-14 |
 | [2026-10-13-local-branch-worktree-prune](2026-10-13-local-branch-worktree-prune.md)<br>Local branch and worktree pruning, 2026-10-13 | `register-sweep-20261014` | retired | #378 | 2026-10-14 |
+| [2026-10-13-local-branch-worktree-prune](2026-10-13-local-branch-worktree-prune.md)<br>Local branch and worktree pruning, 2026-10-13 | `register-sweep-20261015` | retired | #387 | 2026-10-15 |
 | [2026-10-13-ipic-photo-interior](2026-10-13-ipic-photo-interior.md)<br>IPIC Photo Interior Implementation Plan | `ipic-photo-interior` | retired | #343 | 2026-10-14 |
 | [2026-10-13-ipic-photo-interior](2026-10-13-ipic-photo-interior.md)<br>IPIC Photo Interior Implementation Plan | `ipic-pr-343` | retired | #343 | 2026-10-13 |
 | [2026-10-13-email-access-join-recurrence](2026-10-13-email-access-join-recurrence.md)<br>Email access: give CI's cold first render its own join allowance — 2026-10-13 | `email-access-join-recurrence` | retired | #308 | 2026-10-13 |
@@ -186,69 +262,14 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-11-delivered-source-retirement](2026-10-11-delivered-source-retirement.md)<br>Delivered source reconciliation | `reconcile-delivered-sources` | retired | — | 2026-10-11 |
 | [2026-10-11-ci-parallel-preview](2026-10-11-ci-parallel-preview.md)<br>Parallel preview check | `ci-parallel-preview` | retired | #252 | 2026-10-11 |
 
-## Historical, not in the register (129)
+## Historical, not in the register (74)
 
 | Plan | PRs mentioned |
 | --- | --- |
-| [2026-10-19-gitleaks-asset-digests](2026-10-19-gitleaks-asset-digests.md)<br>History secret scan: allow SHA-256 digests in character source manifests | #517, #545, #537 |
-| [2026-10-18-throw-mechanics-darts-pong](2026-10-18-throw-mechanics-darts-pong.md)<br>Darts release and acceleration, and wine pong repositioning | — |
-| [2026-10-18-throw-followups](2026-10-18-throw-followups.md)<br>Throw follow-ups: shuffleboard and axes, sounds, a dart flight | #535, #519, #515 |
-| [2026-10-18-right-rail-polish](2026-10-18-right-rail-polish.md)<br>Right rail polish | #503 |
-| [2026-10-18-play-rail-menu](2026-10-18-play-rail-menu.md)<br>Play rail as a game menu; preferences in Settings | #484, #503, #528 |
-| [2026-10-18-penthouse-only](2026-10-18-penthouse-only.md)<br>Penthouse-only office implementation and evidence | — |
-| [2026-10-18-office-computer-embed](2026-10-18-office-computer-embed.md)<br>#486 Office desk: Tasks and Computer (Place side) | #486, #487, #33 |
-| [2026-10-18-ipic-tuck-room-photo](2026-10-18-ipic-tuck-room-photo.md)<br>IPIC Tuck Room from IMG_9756–9757 (photo review P13, P14) | — |
-| [2026-10-18-ipic-second-short](2026-10-18-ipic-second-short.md)<br>IPIC screening: a second approved short with dialogue and music (#501) | #501, #497, #365 |
-| [2026-10-18-ipic-screening-viewing](2026-10-18-ipic-screening-viewing.md)<br>IPIC screening: screen-focused viewing, Join screening and truthful sound (#500) | #500, #497, #499 |
-| [2026-10-18-ipic-screening-switching](2026-10-18-ipic-screening-switching.md)<br>IPIC screening: film switching, mattes and source recovery (#498) | #498, #497, #359 |
-| [2026-10-18-ipic-screening-next](2026-10-18-ipic-screening-next.md)<br>IPIC screening, next milestone: choose a film, watch together, return to the world (#497) | #497, #498, #502 |
-| [2026-10-18-ipic-screening-hosted-ci](2026-10-18-ipic-screening-hosted-ci.md)<br>Hosted CI runs the IPIC screening journey | — |
-| [2026-10-18-ipic-screening-chooser](2026-10-18-ipic-screening-chooser.md)<br>IPIC screening: an approved-film chooser for the host (#499) | #499, #497, #498 |
-| [2026-10-18-ipic-reception-photo](2026-10-18-ipic-reception-photo.md)<br>IPIC reception from IMG_9738 (photo review P3, P4, P6) | — |
-| [2026-10-18-ipic-mural-bay](2026-10-18-ipic-mural-bay.md)<br>IPIC: the walled-in mural landing (photo review P18, P2) | — |
-| [2026-10-18-ipic-lounge-photo](2026-10-18-ipic-lounge-photo.md)<br>IPIC lounge from IMG_9752–9758 (photo review P8, P10, P11, P12) | #469 |
-| [2026-10-18-ipic-auditorium-photo](2026-10-18-ipic-auditorium-photo.md)<br>IPIC auditorium from IMG_9767 (photo review P15, P16) | — |
-| [2026-10-18-garden-campus-traversal-508](2026-10-18-garden-campus-traversal-508.md)<br>#508 Garden campus: authoritative public traversal | #508, #506, #507 |
-| [2026-10-18-garden-campus-shells-507](2026-10-18-garden-campus-shells-507.md)<br>Garden Offices #507: the campus replaces the garage, behind a district revision | #507, #505, #506 |
-| [2026-10-18-garden-campus-finish-511](2026-10-18-garden-campus-finish-511.md)<br>Garden Offices #511: finish, planting, lighting and bounded rendering | #511, #505, #507 |
-| [2026-10-18-garden-campus-contract](2026-10-18-garden-campus-contract.md)<br>#506 Garden campus: measured campus, floor and connection contract | #506, #505, #507 |
-| [2026-10-18-creator-street-ground](2026-10-18-creator-street-ground.md)<br>#491: walk across creator-region streets (2026-10-18) | #491, #420, #108 |
-| [2026-10-18-character-studio-creation-441](2026-10-18-character-studio-creation-441.md)<br>Character Studio #441: guided creation flow | #441, #464, #461 |
-| [2026-10-18-avatar-crowd-cost-442](2026-10-18-avatar-crowd-cost-442.md)<br>Avatar crowd cost (#442) | #442, #504, #462 |
-| [2026-10-16-studio-template-acceptance](2026-10-16-studio-template-acceptance.md)<br>#418 acceptance: soak and late/missing textures for every template (2026-10-16) | #418, #417, #466 |
-| [2026-10-16-office-penthouse-art](2026-10-16-office-penthouse-art.md)<br>#362: Jevica's penthouse asset package (original art, exports, reviews) | #362, #473, #359 |
-| [2026-10-16-ipic-short-keyframes](2026-10-16-ipic-short-keyframes.md)<br>IPIC short: a keyframe every second | #365, #368, #447 |
-| [2026-10-15-waitlist-clarity](2026-10-15-waitlist-clarity.md)<br>Waitlist clarity and referral decay | — |
 | [2026-10-15-voice-continuity](2026-10-15-voice-continuity.md)<br>Voice survives the socket hand-over (2026-10-15) | #447 |
 | [2026-10-15-username-minimum-letters](2026-10-15-username-minimum-letters.md)<br>Usernames need at least 4 letters (2026-10-15) | #451 |
-| [2026-10-15-studio-house-template](2026-10-15-studio-house-template.md)<br>#418 slice 1: Courtyard House on the Garden Office baseline (2026-10-15) | #418, #413, #416 |
-| [2026-10-15-studio-cafe-template](2026-10-15-studio-cafe-template.md)<br>#418 slice 3: Corner Café on the Garden Office baseline (2026-10-15) | #418, #474, #466 |
-| [2026-10-15-studio-boutique-template](2026-10-15-studio-boutique-template.md)<br>#418 slice 2: Atelier Boutique on the Garden Office baseline (2026-10-15) | #418, #466, #459 |
-| [2026-10-15-screening-seek-lead](2026-10-15-screening-seek-lead.md)<br>Screening player: seek freezes under heavy load (parked) | #368 |
 | [2026-10-15-safari-gltf-decoder-investigation](2026-10-15-safari-gltf-decoder-investigation.md)<br>Physical Safari glTF decoder investigation | #409, #401, #309 |
-| [2026-10-15-penthouse-lighting](2026-10-15-penthouse-lighting.md)<br>Penthouse graybox lighting pass (noon and dusk, no glass glints) | #362 |
-| [2026-10-15-office-walkable-stairs](2026-10-15-office-walkable-stairs.md)<br>Office: walk the penthouse stair | #360, #430 |
-| [2026-10-15-office-views](2026-10-15-office-views.md)<br>#363 slice 2: bounded local office views | #363, #400 |
-| [2026-10-15-office-skyline-memory](2026-10-15-office-skyline-memory.md)<br>Penthouse skyline: resident memory for phones (#363) | #363, #408 |
-| [2026-10-15-office-seat-claims](2026-10-15-office-seat-claims.md)<br>#363 slice 1: penthouse seat claims and occupied-body clearance | #363, #361, #362 |
-| [2026-10-15-office-penthouse-glazing](2026-10-15-office-penthouse-glazing.md)<br>Penthouse graybox: glazed curtain wall | #363, #362, #351 |
-| [2026-10-15-office-outlook-phones](2026-10-15-office-outlook-phones.md)<br>Office outlook: the snapshot on phones | #449, #433, #408 |
-| [2026-10-15-office-outlook-cost](2026-10-15-office-outlook-cost.md)<br>Live office outlook cost (#449): first-entry compile and per-frame host uploads | #449, #473, #448 |
 | [2026-10-15-office-lift-ride-level](2026-10-15-office-lift-ride-level.md)<br>Office lift ride: the body stays on the car floor (2026-10-15) | #449, #450 |
-| [2026-10-15-office-kit-fit](2026-10-15-office-kit-fit.md)<br>#362: read-only desk fit check for the supplied kit | #362, #400, #363 |
-| [2026-10-15-office-ipic-journey](2026-10-15-office-ipic-journey.md)<br>#368 slice 2: two-account office + IPIC journey and rollback evidence | #368, #400, #361 |
-| [2026-10-15-office-fallback-lift-glass](2026-10-15-office-fallback-lift-glass.md)<br>Office: fallback scene lift behind the penthouse glass | #405, #408, #400 |
-| [2026-10-15-office-desk-footprints](2026-10-15-office-desk-footprints.md)<br>#362 R19: the kit's measured desk footprints | #362, #403, #400 |
-| [2026-10-15-office-building-raise](2026-10-15-office-building-raise.md)<br>Office: raise the penthouse tower to 33 m | #432, #363 |
-| [2026-10-15-landing-never-body-blocked](2026-10-15-landing-never-body-blocked.md)<br>No barricades: a body on a landing never keeps a visitor off a floor | #400, #403 |
-| [2026-10-15-landing-enter-for-approved](2026-10-15-landing-enter-for-approved.md)<br>Landing page: "Enter River Oaks" for residents who already have access | — |
-| [2026-10-15-ipic-theater-ux](2026-10-15-ipic-theater-ux.md)<br>IPIC theater: Step outside only near the door, a quieter seated mode, house lights | #446 |
-| [2026-10-15-ipic-screening-soak](2026-10-15-ipic-screening-soak.md)<br>#368 slice 1: IPIC screening catalog profile and ten-cycle soak | #368, #367, #365 |
-| [2026-10-15-ipic-recliner-view](2026-10-15-ipic-recliner-view.md)<br>#368 T3 finding: a seated IPIC viewer sees the recliner, not the screen | #368, #359, #422 |
-| [2026-10-15-ipic-photo-materials](2026-10-15-ipic-photo-materials.md)<br>IPIC: finishes and the reception view from the photos | #359 |
-| [2026-10-15-ipic-passage-recliner-colliders](2026-10-15-ipic-passage-recliner-colliders.md)<br>IPIC: the lounge passage, recliner colliders, a closed atrium, and the photo review | #364, #359 |
-| [2026-10-15-ipic-original-short](2026-10-15-ipic-original-short.md)<br>#365: the approved original short | #365, #406, #429 |
-| [2026-10-15-greetings-face-to-greet](2026-10-15-greetings-face-to-greet.md)<br>Say hello: semi-transparent, and opened on purpose when you face someone | #441 |
 | [2026-10-13-stage-voice-carry](2026-10-13-stage-voice-carry.md)<br>A stage performer is heard across the plaza — 2026-10-13 | #311 |
 | [2026-10-13-procedural-multilevel-interiors](2026-10-13-procedural-multilevel-interiors.md)<br>Building-anchored procedural interiors and levels | — |
 | [2026-10-13-plaza-table-lessons](2026-10-13-plaza-table-lessons.md)<br>Guided first games at the plaza tables — 2026-10-13 | — |

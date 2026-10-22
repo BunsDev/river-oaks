@@ -29,6 +29,7 @@
     "desktop:start": "electron .",
     "desktop:package": "node desktop/package.js",
     "desktop:package:check": "node desktop/package-check.js",
+    "desktop:installers": "node desktop/installers.js",
     "desktop:sign": "node desktop/sign.js",
     "test:desktop": "node --test desktop/tests/*.test.js",
     "test:desktop:e2e": "node desktop/e2e.js",
@@ -60,6 +61,7 @@
     "predesktop:start": "node scripts/enforce-pnpm.mjs",
     "predesktop:package": "node scripts/enforce-pnpm.mjs",
     "predesktop:package:check": "node scripts/enforce-pnpm.mjs",
+    "predesktop:installers": "node scripts/enforce-pnpm.mjs",
     "predesktop:sign": "node scripts/enforce-pnpm.mjs",
     "pretest:desktop": "node scripts/enforce-pnpm.mjs",
     "pretest:desktop:e2e": "node scripts/enforce-pnpm.mjs",
@@ -83,7 +85,9 @@
     "project:inventory": "node scripts/project-inventory.mjs",
     "preproject:inventory": "node scripts/enforce-pnpm.mjs",
     "project:archives": "node scripts/project-archives.mjs",
+    "register": "node scripts/task-register.mjs",
     "preproject:archives": "node scripts/enforce-pnpm.mjs",
+    "preregister": "node scripts/enforce-pnpm.mjs",
     "land": "node scripts/land-pr.mjs",
     "preland": "node scripts/enforce-pnpm.mjs"
   },
@@ -102,6 +106,7 @@
     "@electron/osx-sign": "2.7.0",
     "@electron/packager": "20.3.0",
     "electron": "44.7.0",
+    "electron-winstaller": "5.4.4",
     "playwright": "1.64.0",
     "vite": "8.3.4"
   },

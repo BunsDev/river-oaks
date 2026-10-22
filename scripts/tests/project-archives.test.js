@@ -9,6 +9,7 @@ import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { indexArchives, archiveRecords, expandHome, isProblem } from '../project-archives.mjs';
+import { archiveTip } from '../project-prune.mjs';
 
 function fixture(t) {
   const base=mkdtempSync(join(tmpdir(),'river-archives-'));
@@ -60,6 +61,19 @@ test('verifies bundles and restores, links tasks, and tolerates superseded parti
   assert.equal(report.summary.problems,1);
   assert.deepEqual(report.missingArchives,[{taskId:'old-shape',ref:'legacy',manifest:join(f.base,'missing','manifest.json')}]);
   assert.equal(tampered.endsWith('manifest.json'),true);
+});
+
+test('an archive built on the default branch verifies through the common object store',t=>{
+  const f=fixture(t);f.git(f.root,'update-ref','refs/remotes/origin/main',f.head);
+  writeFileSync(join(f.root,'file'),'branch work');f.git(f.root,'commit','-am','branch work');const tip=f.git(f.root,'rev-parse','HEAD');
+  const directory=join(f.archiveRoot,'retirement-incremental');mkdirSync(directory);
+  const tag='refs/tags/archive/worktree-prune/incremental';f.git(f.root,'update-ref',tag,tip);
+  const bundle=join(directory,'history.bundle');
+  const archive=archiveTip({root:f.root,tag,expectedHead:tip,bundle,restore:join(directory,'restore.git')});
+  assert.deepEqual(archive.prerequisites,[f.head]);
+  writeFileSync(join(directory,'manifest.json'),JSON.stringify({branch:'feature',head:tip,tag,bundle,status:'retired',createdAt:new Date().toISOString(),...archive}));
+  const entry=indexArchives({archiveRoot:f.archiveRoot,register:{tasks:[]},root:f.root,fsck:true}).entries[0];
+  assert.deepEqual(entry.flags,['no-task']);assert.equal(isProblem(entry),false);
 });
 
 test('a restore repository whose tag no longer matches the manifest head is a problem',t=>{

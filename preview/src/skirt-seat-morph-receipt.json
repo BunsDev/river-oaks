@@ -4,7 +4,7 @@
   "scope": "Offline symmetric seated fit; front garment samples against upper thighs only. Runtime/other-pose and rendered acceptance are separate.",
   "command": "node scripts/bake-skirt-seat-morph.mjs --check",
   "inputs": {
-    "pnpm-lock.yaml": "ba688f3b800f2cbdc5f1d6acec471d4622f7815d681edc7a74087749f4e21a31",
+    "pnpm-lock.yaml": "5d692799fe250187d9c677f841cdee9e87eb6877223972d82f8275ab68021058",
     "preview/public/assets/characters/jevica.glb": "722b96e2fd77b36c85ec01c1594a35e3f3f39b5ec76dfc3c9a351ef1eb4f117a",
     "preview/public/assets/characters/jevica.sources.json": "104ce65388e02ad9e08730334083f297269faf74341b0685ed6eac36bfb9e1a3",
     "preview/src/avatars.js": "0e069678d6a1fd1956abf6589a3a2a3fb4f068a1123dbb8a47304be70a7e3d31",

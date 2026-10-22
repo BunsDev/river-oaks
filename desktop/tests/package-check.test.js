@@ -4,32 +4,11 @@ import { mkdtemp, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { FuseState, FuseV1Options, FuseVersion } from '@electron/fuses';
+import { executable, writeAsar, wireFor } from './fixtures/synthetic-build.js';
 import { DESKTOP_FUSES } from '../fuses.js';
 import { DESKTOP_FILES, DESKTOP_SHARED_FILES } from '../package-files.js';
-import { expectedAsarFiles, fuseDrift, listAsar, packagedPaths } from '../package-check.js';
+import { binaryFormat, expectedAsarFiles, fuseDrift, listAsar, packagedPaths, readAsarFile } from '../package-check.js';
 import { packagedBinary } from '../package-options.js';
-
-// Builds an asar the way @electron/asar frames it: a size pickle, then a header
-// pickle holding the JSON directory, then the file contents.
-async function writeAsar(path, header, contents = '') {
-  const json = Buffer.from(JSON.stringify(header));
-  const padded = Buffer.alloc(Math.ceil(json.length / 4) * 4);
-  json.copy(padded);
-  const headerPickle = Buffer.alloc(8 + padded.length);
-  headerPickle.writeUInt32LE(4 + padded.length, 0);
-  headerPickle.writeUInt32LE(json.length, 4);
-  padded.copy(headerPickle, 8);
-  const sizePickle = Buffer.alloc(8);
-  sizePickle.writeUInt32LE(4, 0);
-  sizePickle.writeUInt32LE(headerPickle.length, 4);
-  await writeFile(path, Buffer.concat([sizePickle, headerPickle, Buffer.from(contents)]));
-}
-
-function wireFor(config) {
-  const wire = { version: config.version };
-  for (const fuse of Object.values(FuseV1Options).filter(value => typeof value === 'number')) wire[fuse] = config[fuse] ? FuseState.ENABLE : FuseState.DISABLE;
-  return wire;
-}
 
 test('the asar listing walks nested directories from the archive header alone', async t => {
   const dir = await mkdtemp(join(tmpdir(), 'river-oaks-asar-'));
@@ -81,4 +60,31 @@ test('the packaged paths follow desktop/package.js on each platform', () => {
   const linux = posix(packagedPaths('/r', 'linux', 'x64'));
   assert.equal(linux.binary, '/r/dist/desktop/TypeSafe Place-linux-x64/typesafe-place');
   assert.equal(linux.asar, '/r/dist/desktop/TypeSafe Place-linux-x64/resources/app.asar');
+});
+
+test('a file is read from the asar at the offset its header records', async t => {
+  const dir = await mkdtemp(join(tmpdir(), 'river-oaks-asar-'));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const asar = join(dir, 'app.asar');
+  await writeAsar(asar, { files: { 'package.json': { size: 15, offset: '3' }, desktop: { files: { 'main.js': { size: 3, offset: '0' } } } } }, 'abc{"version":"1"}');
+  assert.equal((await readAsarFile(asar, 'package.json')).toString(), '{"version":"1"}');
+  assert.equal((await readAsarFile(asar, 'desktop/main.js')).toString(), 'abc');
+  await assert.rejects(readAsarFile(asar, 'desktop'), /has no file desktop/);
+  await assert.rejects(readAsarFile(asar, 'missing.js'), /has no file missing\.js/);
+});
+
+test('the binary header names its format and machine', async t => {
+  const dir = await mkdtemp(join(tmpdir(), 'river-oaks-binary-'));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const cases = [[{ format: 'pe', arch: 'x64' }, { format: 'pe', arch: 'x64' }], [{ format: 'pe', arch: 'arm64' }, { format: 'pe', arch: 'arm64' }],
+    [{ format: 'elf', arch: 'x64' }, { format: 'elf', arch: 'x64' }], [{ format: 'elf', arch: 'arm64' }, { format: 'elf', arch: 'arm64' }],
+    [{ format: 'script' }, { format: 'unknown', arch: 'unknown' }]];
+  for (const [index, [input, expected]] of cases.entries()) {
+    await writeFile(join(dir, `${index}`), executable(input));
+    assert.deepEqual(await binaryFormat(join(dir, `${index}`)), expected, JSON.stringify(input));
+  }
+  const macho = Buffer.alloc(32);
+  macho.writeUInt32LE(0xfeedfacf, 0); macho.writeUInt32LE(0x0100000c, 4);
+  await writeFile(join(dir, 'macho'), macho);
+  assert.deepEqual(await binaryFormat(join(dir, 'macho')), { format: 'macho', arch: 'arm64' });
 });
