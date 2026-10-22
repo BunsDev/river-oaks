@@ -147,3 +147,19 @@ test('an unregistered branch is an orphan gap; expired leases and pending retire
   assert.equal(isOrphanGap('Expired ownership lease: x; do not take over without reconciliation'),false);
   assert.equal(isOrphanGap('Pending local retirement: x (b); run project:prune and reconcile blockers'),false);
 });
+
+test('records whose restoration archive is gone from disk are a gap',t=>{
+  const f=orphanFixture(t);
+  const kept=join(f.base,'kept-manifest.json');writeFileSync(kept,'{}');
+  const now=new Date().toISOString(),task=(id,archive)=>({id,title:id,status:'retired',branches:[],owner:null,updatedAt:now,nextAction:'x',evidence:[{}],archive});
+  const register={schemaVersion:1,tasks:[
+    {id:'primary',title:'p',status:'delivered',branches:['main'],owner:null,updatedAt:now,nextAction:'x',evidence:[{}]},
+    task('kept',{old:{manifest:kept}}),
+    task('lost',{old:{manifest:join(f.base,'gone/manifest.json'),bundle:join(f.base,'gone/history.bundle')}}),
+    task('lost-flat',{manifest:'~/river-oaks-test-no-such-archive/manifest.json'}),
+    task('in-repo',{manifest:'docs/project-management/retirement.json',ref:'refs/tags/v1'}),
+  ]};
+  const gaps=reconcile(inspectGit(f.root),register,null).gaps.filter(g=>g.includes('restoration archive'));
+  assert.deepEqual(gaps,['2 task(s) point at restoration archives missing from this machine (lost, lost-flat); run project:archives before any restore, retirement or cancellation decision'],gaps.join('\n'));
+  assert.ok(!isOrphanGap(gaps[0]),'a missing archive fails the check even with --allow-orphans');
+});
