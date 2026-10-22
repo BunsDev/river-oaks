@@ -1,0 +1,593 @@
+{
+  "createdAt": "2026-10-22T18:31:16.460Z",
+  "status": "passed",
+  "modes": [
+    "required"
+  ],
+  "rendering": "Full rendering",
+  "scope": "Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.",
+  "results": [
+    {
+      "name": "access-gate",
+      "status": "passed",
+      "seconds": 17.216,
+      "result": {
+        "passed": true,
+        "checks": [
+          "Anonymous players can sign in with email",
+          "Signed out, the steps show that signing in is how you join the waitlist",
+          "The invitation code is explained and needs a sign-in first",
+          "Anonymous players see only supported sign-in methods",
+          "Anonymous players cannot start either play mode",
+          "The first paint is the sign-in gate colour, not a white page",
+          "A returning visitor opens on a splash in their own theme ({\"returning\":true,\"theme\":\"light\",\"background\":\"rgb(233, 236, 229)\"})",
+          "The splash hides the sign-in art and card but keeps the access status readable",
+          "When sign-in is needed the gate appears and the visit is forgotten",
+          "Waiting players are told they are signed in and their place is saved since the day they joined (You’re signed in, and your place on the waitlist is saved since October 15.)",
+          "A waiting card says what happens next: no need to sign in again, and the page opens itself",
+          "The steps show signing in done and waiting for approval current",
+          "Waiting players read what an invitation code does and how long it lasts",
+          "Waiting players see their username; email sign-ins get a generated one",
+          "The kept name reads as saved",
+          "A changed name asks to be saved",
+          "A name someone already holds is refused with a clear reason",
+          "Saving returns the button to Saved",
+          "Waiting players save their own username with CSRF protection",
+          "Suggest another offers a generated name",
+          "Pending players can redeem an invitation",
+          "Signed-in pending players cannot start either play mode",
+          "Pending players can sign out",
+          "A failed re-check drops the waiting title, steps, card and username form",
+          "A refused request shows its own title, without the steps, the kicker or the code field",
+          "A refused request shows no waiting card",
+          "Entering the district remembers the visit for a quiet next load",
+          "Waitlist review closes Settings before taking focus",
+          "Waitlist review opens with keyboard focus in its dialog",
+          "Approvers can review pending and decided accounts",
+          "Clicking inside approvals keeps it open",
+          "Dragging from approvals onto the backdrop keeps it open",
+          "Clicking outside approvals closes it",
+          "Outside dismissal restores Account settings",
+          "Outside dismissal restores focus and releases the game",
+          "User IDs are hidden from the waitlist by default",
+          "Approvers can reveal a user ID",
+          "Approvers can hide the user ID again",
+          "Approvers can copy a hidden user ID",
+          "Copying does not reveal the user ID",
+          "Approvers can revoke a prior approval with CSRF protection",
+          "Approvers see each username; an approved one is fixed",
+          "Approvers rename a waiting resident with CSRF protection",
+          "Revoking an approval sends no username",
+          "Approvers can reconsider a declined request with an edited username",
+          "Closing waitlist review restores Account settings",
+          "Outside dismissal stays closed after a late response and returns focus to the game controls",
+          "Escape still dismisses approvals",
+          "Clicking inside Settings keeps it open",
+          "Clicking outside Settings closes its native dialog",
+          "Closing Settings from its backdrop restores launcher focus"
+        ]
+      }
+    },
+    {
+      "name": "connection-required",
+      "status": "passed",
+      "seconds": 7.025,
+      "result": {
+        "checks": [
+          "Legacy solo preferences cannot unlock an offline game",
+          "An unavailable town never creates a private session",
+          "Offline keyboard input cannot move the player",
+          "There is no alternate play-mode control",
+          "Connection recovery unlocks the authenticated town",
+          "The recovered player belongs to the server snapshot",
+          "Device landmarks do not become account landmarks",
+          "Movement resumes after a successful authenticated connection"
+        ]
+      }
+    },
+    {
+      "name": "multiplayer",
+      "status": "passed",
+      "seconds": 85.093,
+      "result": {
+        "passed": true,
+        "checks": [
+          "Shared appearance picker is available",
+          "Unsynchronized carriage and Force controls remain hidden in shared play after assets load",
+          "Shared diagnostics and town exclude the private coachman",
+          "Force shortcut cannot bypass shared-mode gating",
+          "Two accounts share the roster and rendered avatars",
+          "A peer sees the selected avatar",
+          "Quick person-then-form choices settle without a cooldown error",
+          "A peer sees the shared human character",
+          "Alice fixture retains server-issued wish permission after reconnect",
+          "A shared resident is reachable after a bounded retry",
+          "Confirmed grant moves keyboard focus to undo",
+          "Second player sees server-owned dragon wish",
+          "Egg hatches into a visible dragon",
+          "The same wish disrupts town residents for both players",
+          "Confirmed undo restores keyboard focus",
+          "Invisible resident keeps visible clothing in shared play",
+          "Reload rejoins the existing town and keeps its active wishes",
+          "Walking is validated and visible to the other player",
+          "Shared town has no mobile horizontal overflow",
+          "Sign-out revokes play and returns to the sign-in gate",
+          "No uncaught errors: "
+        ],
+        "errors": [],
+        "scope": "Two real browsers, test-only authenticated identities, real shared server; not live WorkOS or production hosting acceptance."
+      }
+    },
+    {
+      "name": "indoor-npcs",
+      "status": "passed",
+      "seconds": 12.106,
+      "result": {
+        "passed": true,
+        "checks": [
+          "The retired local street-model loader is absent",
+          "The NPC directory contains only building residents",
+          "Rendered NPC identities belong to buildings",
+          "Outdoor players have no nearby NPC interactions",
+          "Building NPCs remain visible and conversational inside their room",
+          "Jevica retains her companion, chauffeur, and vehicles in multiplayer",
+          "A real player is still rendered as a remote avatar",
+          "No browser errors: "
+        ]
+      }
+    },
+    {
+      "name": "multiplayer-exclusivity",
+      "status": "passed",
+      "seconds": 14.692,
+      "result": {
+        "passed": true,
+        "guest": {
+          "appearance": "sable-human",
+          "jevicaHidden": true,
+          "flightHidden": true,
+          "garageHidden": true,
+          "companionHidden": true,
+          "carVisible": false,
+          "jevVisible": false
+        },
+        "privileged": {
+          "appearance": "jevica",
+          "jevicaVisible": true,
+          "garageVisible": true,
+          "companionVisible": true,
+          "carVisible": true,
+          "jevVisible": true
+        }
+      }
+    },
+    {
+      "name": "vehicle-exit",
+      "status": "passed",
+      "seconds": 6.07,
+      "result": {
+        "checks": [
+          "Jevica boards a vehicle accepted by the shared town",
+          "The initial parked vehicle supports a scenic drive: {\"riding\":true,\"chauffeur\":{\"active\":true,\"paused\":false,\"label\":\"Connecting to Jev…\",\"source\":null,\"remaining\":27},\"placement\":{\"position\":[-2768.3956419313604,18.462294390991243,1295.0133343366692],\"yaw\":1.5542610866111075,\"pitch\":-0.015001887053174272,\"roll\":-0.0020945138733826337,\"distance\":0,\"scale\":1,\"team\":false,\"vehicle\":\"rolls\",\"terrainError\":0.0029902968317507828,\"speed\":0,\"steering\":0,\"wheelOffsets\":[-0.0015592997989273272,0.000873349023500225,0.000590662636000161,-0.0007119591905535572]},\"princeVisible\":true,\"companion\":{\"enabled\":false,\"mode\":\"seat\",\"stance\":\"seat\",\"source\":null,\"label\":\"Ready to drive\",\"reason\":null,\"decisions\":0,\"carrying\":false,\"position\":null},\"status\":\"Ride with Jev, or give directions with W/S and A/D.\"}",
+          "Jev smart driving receives a valid decision",
+          "Paused smart drive holds the vehicle",
+          "A quick manual direction immediately cancels autopilot",
+          "Brake and park stops the vehicle",
+          "Shared corrections preserve the exit point: {\"exit\":[-2765.4280261975086,20.15096645381293,1296.9964591599035],\"position\":[-2765.4280261975086,20.15096645381293,1296.9964591599035],\"corrections\":[]}",
+          "The shared town confirms the same grounded exit",
+          "Jevica remains visible after stepping out",
+          "Stepping out produces no rejected pose"
+        ]
+      }
+    },
+    {
+      "name": "multiplayer-gate",
+      "status": "passed",
+      "seconds": 27.172,
+      "result": {
+        "passed": true,
+        "checks": [
+          "Disconnected game is locked",
+          "Disconnect focuses the recovery dialog title",
+          "Authenticated recovery hides the sign-in link",
+          "Forward Tab reaches the first available recovery action",
+          "Shift+Tab reaches sign-out without entering the inert game",
+          "Tab wraps to the first recovery action",
+          "Successful retry restores movement focus",
+          "Mobile recovery dialog fits the viewport",
+          "Signed-out gate starts with accessible title focus",
+          "GitHub sign-in link is reachable by keyboard",
+          "Email sign-in field is reachable by keyboard",
+          "Email code button is reachable by keyboard",
+          "Anonymous gate exposes only supported sign-in methods"
+        ],
+        "errors": []
+      }
+    },
+    {
+      "name": "resident-names",
+      "status": "passed",
+      "seconds": 142.135,
+      "result": {
+        "checks": [
+          "A resident is shown by their GitHub username",
+          "The admin account is Jevica",
+          "A non-admin session claiming Jevica is not shown as Jevica",
+          "Every viewer, including the impostor, sees the same name",
+          "The impostor’s own character panel does not call them Jevica",
+          "The roster names the impostor by their safe name",
+          "The roster names the admin Jevica",
+          "Roster buttons are labelled with the safe name (View profile for Visitor #impostor | Add Visitor #impostor as a contact | Report disruption by Visitor #impostor | Mute voice from Visitor #impostor)",
+          "Nameplates show the impostor safely and the admin as Jevica",
+          "Chat shows the impostor safely and the admin as Jevica ({\"impostor\":\"Visitor #impostor\",\"user_01M40Y914S1H4EJCEHH91DKTAY\":\"Jevica\"})",
+          "The impostor’s profile card does not call them Jevica",
+          "The contact list shows the impostor’s safe name ({\"status\":\"Invitation sent to Visitor #impostor.\",\"rows\":[\"Visitor #impostor\"]})",
+          "The map’s live player list shows the impostor safely",
+          "Alice’s view: nothing but the owner reads as Jevica ([])",
+          "The admin is still shown as Jevica on the roster, nameplate and chat",
+          "The impostor’s own view: nothing but the owner reads as Jevica ([])",
+          "The admin’s view: nothing but the owner reads as Jevica ([])",
+          "A lookalike spelling of Jevica is not shown as Jevica",
+          "Alice’s view with the lookalike: nothing but the owner reads as Jevica ([])",
+          "The lookalike’s own view: nothing but the owner reads as Jevica ([])",
+          "Different accounts receive distinct fallback names",
+          "A Resident session receives its own unique fallback",
+          "The automatic fallback survives reconnecting",
+          "No page errors: "
+        ]
+      }
+    },
+    {
+      "name": "sit-and-water",
+      "status": "passed",
+      "seconds": 22.51,
+      "result": {
+        "checks": [
+          "The town lists storefront benches as seats",
+          "Arrived beside bench:osm-node-8172494989:0",
+          "Contextual Sit seats Alice on a free storefront bench",
+          "Beside a bench, the seats panel lists it and Z offers to sit",
+          "Contextual Sit sits on a place on that bench",
+          "The HUD says the player is sitting",
+          "The town records the seat, through the shared seating model",
+          "Arrived beside bench:osm-node-8172494989:1",
+          "Another player sees them seated on that place",
+          "and facing the way the bench faces",
+          "Bob can still sit beside her",
+          "A held place is never offered; Bob takes the one beside it",
+          "Standing up is the single primary contextual action while seated",
+          "Contextual Stand stands up, for everyone",
+          "Bob stands up too",
+          "Arrived beside planter:osm-node-8172494989:0",
+          "Beside a planter, the Z prompt offers to water it",
+          "Arrived beside planter:osm-node-8172494989:1",
+          "Another player sees them turn to the planter and pour from a watering can ({\"seen\":5.298855505752062,\"toward\":-0.7853981633975945})",
+          "The watering animation ends by itself",
+          "No outdoor NPCs are rendered on multiplayer benches",
+          "No page errors: "
+        ]
+      }
+    },
+    {
+      "name": "greetings",
+      "status": "passed",
+      "seconds": 27.864,
+      "result": {
+        "checks": [
+          "No greeting card or prompt until someone is faced",
+          "Facing bob offers Say hello to bob, still without the menu",
+          "E opens the menu for the person faced",
+          "Invitation leaves both avatars at rest until accepted",
+          "Keyboard focus moves from Accept to Stop after confirmation",
+          "Keyboard acceptance starts a visible shared handshake",
+          "Local avatar turns toward their partner",
+          "Both dancers use the same server phase",
+          "Greeting controls fit a phone viewport",
+          "Either participant can stop from mobile controls",
+          "Declining clears the invitation on both clients",
+          "Walking away cancels both dancers through the actual movement transport",
+          "No browser errors: "
+        ],
+        "errors": [],
+        "scope": "Two authenticated local fixture accounts; keyboard acceptance and phone viewport; no human accessibility or art-quality acceptance."
+      }
+    },
+    {
+      "name": "character-studio-shared",
+      "status": "passed",
+      "seconds": 47.291,
+      "result": {
+        "passed": true,
+        "checks": [
+          "Known authored Sable baseline includes real outfit and hair materials before customization",
+          "Appearance mismatch uses a valid owned published definition for a different appearance",
+          "Save keeps the customized draft private",
+          "Local loaded outfit materials use rose",
+          "Peer loaded outfit materials use rose",
+          "Wear publishes and equips the owner revision",
+          "The delayed account operation is still pending on reopen",
+          "A delayed save preserves the retained visible edit across reopening",
+          "Reopening during a delayed save refreshes selection after the save settles",
+          "Local loaded outfit materials use rose",
+          "Peer loaded outfit materials use rose",
+          "Rewear after a delayed save reuses the published look",
+          "The delayed account operation is still pending on reopen",
+          "A delayed read does not replace the retained local edit",
+          "Reopening during a delayed read refreshes selection after the old read settles",
+          "Local loaded outfit materials use rose",
+          "Peer loaded outfit materials use rose",
+          "Rewear after a delayed read reuses the published look",
+          "Reopening after a legacy character change retains the saved local look",
+          "Reopening refreshes the worn selection so the retained look can be worn again",
+          "Reopening does not falsely report the retained look as currently worn",
+          "Local loaded outfit materials use rose",
+          "Peer loaded outfit materials use rose",
+          "Wearing the retained look again reuses its immutable publication",
+          "Reconnect opens the canonical equipped customization",
+          "Local loaded outfit materials use midnight",
+          "Peer loaded outfit materials use midnight",
+          "Editing and wearing appends an immutable revision",
+          "missing: fault reached the actual peer snapshot transport",
+          "missing: actual outfit materials restore authored colors",
+          "missing: fallback restores consistent authored outfit and hair",
+          "missing: peer delivery fault cannot mutate the authoritative selection",
+          "Peer loaded outfit materials use midnight",
+          "missing: canonical revision recovers on the existing connection",
+          "unpublished: fault reached the actual peer snapshot transport",
+          "unpublished: actual outfit materials restore authored colors",
+          "unpublished: fallback restores consistent authored outfit and hair",
+          "unpublished: peer delivery fault cannot mutate the authoritative selection",
+          "Peer loaded outfit materials use midnight",
+          "unpublished: canonical revision recovers on the existing connection",
+          "stale-catalog: fault reached the actual peer snapshot transport",
+          "stale-catalog: actual outfit materials restore authored colors",
+          "stale-catalog: fallback restores consistent authored outfit and hair",
+          "stale-catalog: peer delivery fault cannot mutate the authoritative selection",
+          "Peer loaded outfit materials use midnight",
+          "stale-catalog: canonical revision recovers on the existing connection",
+          "corrupt-asset: fault reached the actual peer snapshot transport",
+          "corrupt-asset: actual outfit materials restore authored colors",
+          "corrupt-asset: fallback restores consistent authored outfit and hair",
+          "corrupt-asset: peer delivery fault cannot mutate the authoritative selection",
+          "Peer loaded outfit materials use midnight",
+          "corrupt-asset: canonical revision recovers on the existing connection",
+          "foreign-owner: fault reached the actual peer snapshot transport",
+          "foreign-owner: actual outfit materials restore authored colors",
+          "foreign-owner: fallback restores consistent authored outfit and hair",
+          "foreign-owner: peer delivery fault cannot mutate the authoritative selection",
+          "Peer loaded outfit materials use midnight",
+          "foreign-owner: canonical revision recovers on the existing connection",
+          "unsupported-palette: fault reached the actual peer snapshot transport",
+          "unsupported-palette: actual outfit materials restore authored colors",
+          "unsupported-palette: fallback restores consistent authored outfit and hair",
+          "unsupported-palette: peer delivery fault cannot mutate the authoritative selection",
+          "Peer loaded outfit materials use midnight",
+          "unsupported-palette: canonical revision recovers on the existing connection",
+          "mismatched-appearance: fault reached the actual peer snapshot transport",
+          "mismatched-appearance: actual outfit materials restore authored colors",
+          "mismatched-appearance: fallback restores consistent authored outfit and hair",
+          "mismatched-appearance: peer delivery fault cannot mutate the authoritative selection",
+          "Peer loaded outfit materials use midnight",
+          "mismatched-appearance: canonical revision recovers on the existing connection",
+          "Reopening an uncertain save retains the local edit and retry action",
+          "Reopening cannot discard an uncertain save",
+          "A lost save response retries without duplicating the mutation",
+          "Concurrent save conflict retains the visible local edit",
+          "Conflict preserves the other editor’s saved draft",
+          "Checking the account does not discard local edits",
+          "Loading the saved draft is an explicit choice",
+          "Wearing a different base keeps Studio open through local avatar replacement",
+          "The peer fixture actually refused the selected rig asset",
+          "A first-load asset failure recovers the canonical peer revision without reconnecting",
+          "No runtime errors: "
+        ],
+        "scope": "Real two-account HTTP/WebSocket/browser flow; automated rendering only, no human accessibility or physical device acceptance"
+      }
+    },
+    {
+      "name": "character-studio-tiers",
+      "status": "passed",
+      "seconds": 24.866,
+      "result": {
+        "passed": true,
+        "checks": [
+          "Owner viewer renders at the Sharpest tier: full scale with ambient occlusion",
+          "Peer viewer renders at the Smoothest tier: three-quarter scale without ambient occlusion",
+          "Owner publishes and wears a customized revision from the Sharpest tier",
+          "Smoothest peer renders the exact authoritative owner revision",
+          "Peer publishes its own revision from the Smoothest tier",
+          "Sharpest owner renders the exact authoritative peer revision",
+          "Each viewer loads the other player’s published outfit materials at its own tier",
+          "Owner and Smoothest peer resolve identical material identity for the owner’s look",
+          "auto: peer keeps the same owner identity and materials",
+          "sharp: peer keeps the same owner identity and materials",
+          "smooth: peer keeps the same owner identity and materials",
+          "auto: peer keeps the same owner identity and materials",
+          "smooth: peer keeps the same owner identity and materials",
+          "Changing graphics tier sends no appearance, character or movement selection",
+          "No client message carries graphics quality, tier, scale or occlusion",
+          "Tier changes leave both authoritative selection versions unchanged",
+          "Authoritative snapshots carry no viewer graphics state",
+          "topLevelTier: tampered draft is refused with a client error (400)",
+          "definitionTier: tampered draft is refused with a client error (400)",
+          "lodParameter: tampered draft is refused with a client error (400)",
+          "assetUrl: tampered draft is refused with a client error (400)",
+          "assetSwap: tampered draft is refused with a client error (400)",
+          "foreignOwner: tampered draft is refused with a client error (400)",
+          "Control: the same untampered save succeeds once from the unchanged version",
+          "Refused drafts leave the owner’s draft and published revision unchanged",
+          "Foreign-owner draft cannot touch the other account",
+          "quality: tampered socket selection is refused (invalid_character_selection)",
+          "foreign-revision: tampered socket selection is refused (character_revision_missing)",
+          "Refused socket selections keep the owner’s worn revision",
+          "Control: the same socket path accepts the untampered selection",
+          "Peer still renders the canonical owner revision after refused tampering",
+          "Peer’s graphics tier persists locally across reconnect",
+          "Reconnected Smoothest peer renders the same owner revision",
+          "Sharpest owner re-resolves the reconnected peer’s revision",
+          "No runtime errors: "
+        ],
+        "measurements": {
+          "aliceSharp": {
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 60,
+              "tailShedding": false
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            }
+          },
+          "bobSmooth": {
+            "quality": {
+              "mode": "smooth",
+              "scale": 0.75,
+              "occlusion": false,
+              "fps": 19,
+              "tailShedding": false
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": false,
+              "bloom": true,
+              "renderScale": 0.75,
+              "aoScale": 1,
+              "transmissionScale": 1
+            }
+          },
+          "cycle": [
+            {
+              "mode": "auto",
+              "quality": {
+                "mode": "auto",
+                "scale": 1,
+                "occlusion": true,
+                "fps": 60,
+                "tailShedding": false
+              },
+              "pipeline": {
+                "samples": 4,
+                "ao": true,
+                "bloom": true,
+                "renderScale": 1,
+                "aoScale": 1,
+                "transmissionScale": 1
+              }
+            },
+            {
+              "mode": "sharp",
+              "quality": {
+                "mode": "sharp",
+                "scale": 1,
+                "occlusion": true,
+                "fps": 53,
+                "tailShedding": false
+              },
+              "pipeline": {
+                "samples": 4,
+                "ao": true,
+                "bloom": true,
+                "renderScale": 1,
+                "aoScale": 1,
+                "transmissionScale": 1
+              }
+            },
+            {
+              "mode": "smooth",
+              "quality": {
+                "mode": "smooth",
+                "scale": 0.75,
+                "occlusion": false,
+                "fps": 58,
+                "tailShedding": false
+              },
+              "pipeline": {
+                "samples": 4,
+                "ao": false,
+                "bloom": true,
+                "renderScale": 0.75,
+                "aoScale": 1,
+                "transmissionScale": 1
+              }
+            },
+            {
+              "mode": "auto",
+              "quality": {
+                "mode": "auto",
+                "scale": 1,
+                "occlusion": true,
+                "fps": 52,
+                "tailShedding": false
+              },
+              "pipeline": {
+                "samples": 4,
+                "ao": true,
+                "bloom": true,
+                "renderScale": 1,
+                "aoScale": 1,
+                "transmissionScale": 1
+              }
+            },
+            {
+              "mode": "smooth",
+              "quality": {
+                "mode": "smooth",
+                "scale": 0.75,
+                "occlusion": false,
+                "fps": 56,
+                "tailShedding": false
+              },
+              "pipeline": {
+                "samples": 4,
+                "ao": false,
+                "bloom": true,
+                "renderScale": 0.75,
+                "aoScale": 1,
+                "transmissionScale": 1
+              }
+            }
+          ],
+          "tamperedStatuses": {
+            "topLevelTier": 400,
+            "definitionTier": 400,
+            "lodParameter": 400,
+            "assetUrl": 400,
+            "assetSwap": 400,
+            "foreignOwner": 400,
+            "control": 200
+          },
+          "injectedResults": {
+            "quality": {
+              "ok": false,
+              "error": "invalid_character_selection"
+            },
+            "foreign-revision": {
+              "ok": false,
+              "error": "character_revision_missing"
+            },
+            "control": {
+              "ok": true,
+              "error": null
+            }
+          },
+          "bobAfterReload": {
+            "mode": "smooth",
+            "scale": 0.75,
+            "occlusion": false,
+            "fps": 3,
+            "tailShedding": false
+          }
+        },
+        "scope": "Real two-account HTTP/WebSocket/browser flow on desktop Chromium; graphics tiers on main are render scale and ambient occlusion. #517 realistic material tiers, physical devices and human acceptance are not covered."
+      }
+    }
+  ],
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)"
+}
