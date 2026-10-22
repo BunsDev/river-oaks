@@ -1,3 +1,4 @@
+import {verifyBakeProvenance} from '../../scripts/lib/bake-provenance.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
@@ -8,7 +9,7 @@ import {LYRA_DRAPES,createDrapeGeometry} from '../src/drape-geometry.js';
 test('Lyra layered corrective retains provenance, finite data and bounded topology',async()=>{
   const root=new URL('../../',import.meta.url),receipt=JSON.parse(await readFile(new URL('preview/src/lyra-drape-morph-receipt.json',root),'utf8'));
   const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
-  for(const [path,expected]of Object.entries(receipt.inputs))assert.equal(hash(await readFile(new URL(path,root))),expected,path);
+  await verifyBakeProvenance({root, bake: 'lyra-drape', receipt});
   assert.equal(hash(await readFile(new URL('preview/src/lyra-drape-morph-data.js',root))),receipt.outputSha256);
   assert.equal(LYRA_DRAPE_MORPHS.length,2);
   for(const [i,data]of LYRA_DRAPE_MORPHS.entries()){
