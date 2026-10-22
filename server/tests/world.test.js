@@ -137,6 +137,17 @@ test('retired movement cannot bypass human walking limits',()=>{
   assert.equal(world.command('guest',{type:'pose',position:[start[0],start[1]+4,start[2]],yaw:0,altitude:0}).error,'movement_too_fast');
 });
 
+test("Jevica's fast walk is twice everyone else's, and the server holds both limits",()=>{
+  let time=1000;const world=createSharedWorld(data,{now:()=>time}),jevica='user_01M402HKJYDTH1QJM5NAQDZ4HH';
+  const guest=world.join({userId:'guest',name:'Guest'}).player.position,owner=world.join({userId:jevica,name:'Jevica'}).player.position;
+  time+=1000;
+  const step=(id,[east,north,up],metres)=>world.command(id,{type:'pose',position:[east,north+metres,up],yaw:0,altitude:0});
+  assert.equal(step('guest',guest,3.3).ok,true,'a brisk walk within one second');
+  assert.equal(step(jevica,owner,6.5).ok,true,'Jevica covers twice the distance');
+  time+=1000;
+  assert.equal(step(jevica,world.snapshot().players.find(p=>p.id===jevica).position,6.9).error,'movement_too_fast','but not more');
+});
+
 test('only authenticated Jevica admin accounts may build and grant shared wishes',()=>{
   const world=createWorld(data);
   const admin=JEVICA_ADMIN_USER_IDS[0],guest='guest';
