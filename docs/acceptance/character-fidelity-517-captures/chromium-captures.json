@@ -1,0 +1,29 @@
+{
+  "scope": "Final fixed-stature Chromium fidelity journey; fixture identities, Studio and world peer. Captured source manifest f1f07b69267e7d47e264e4f476a04c30f65ce5cce5f619cfc826d4dac1a4472b. PNG bytes copied unchanged.",
+  "files": [
+    {
+      "path": "docs/acceptance/character-fidelity-517-captures/character-fidelity-imani-studio.png",
+      "source": "output/playwright/character-fidelity-imani-studio.png",
+      "sha256": "d8eea998fadd262ca091123dfcc75ffe2176ec08ed924389562e77a831e1dbcb",
+      "bytes": 216932
+    },
+    {
+      "path": "docs/acceptance/character-fidelity-517-captures/character-fidelity-imani-world-peer.png",
+      "source": "output/playwright/character-fidelity-imani-world-peer.png",
+      "sha256": "e9e75cb2afa4f71a9e31c722596f6269ceff352f5a1696203802d166cb21e7c3",
+      "bytes": 1823749
+    },
+    {
+      "path": "docs/acceptance/character-fidelity-517-captures/character-fidelity-morgan-studio.png",
+      "source": "output/playwright/character-fidelity-morgan-studio.png",
+      "sha256": "89787d332dcb48b836ebb843ffae0905c9ad0ec684e263be47f54a53536e447b",
+      "bytes": 241061
+    },
+    {
+      "path": "docs/acceptance/character-fidelity-517-captures/character-fidelity-morgan-world-peer.png",
+      "source": "output/playwright/character-fidelity-morgan-world-peer.png",
+      "sha256": "2a0575059849e095efcaa9d6d05af08ed07dbb872693f099d1ee16788fe15f45",
+      "bytes": 1658724
+    }
+  ]
+}

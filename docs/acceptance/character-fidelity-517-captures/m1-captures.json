@@ -1,0 +1,168 @@
+{
+  "report": "data/reports/character-fidelity-m1-final-517.json",
+  "revision": "225acfc9eaebf67627db7337feacac130b241ad8",
+  "provenanceSha256": "f1f07b69267e7d47e264e4f476a04c30f65ce5cce5f619cfc826d4dac1a4472b",
+  "scope": "All8 original appearance PNGs copied unchanged from the final successful M1 reproduction.",
+  "files": [
+    {
+      "path": "docs/acceptance/character-fidelity-517-captures/m1-jevica-full.png",
+      "case": "jevica",
+      "view": "full",
+      "sha256": "4bd8967364884fce7e7d6c9d002188afae969647b301045eed58de3bd51d3435",
+      "bytes": 1255628,
+      "camera": {
+        "position": [
+          0,
+          1.08,
+          3.8
+        ],
+        "fov": 30,
+        "direction": [
+          0,
+          -0.04731536845680366,
+          -0.9988800007547438
+        ]
+      }
+    },
+    {
+      "path": "docs/acceptance/character-fidelity-517-captures/m1-jevica-closeUp.png",
+      "case": "jevica",
+      "view": "closeUp",
+      "sha256": "03f909d3581d6007341ab622aa9b6e8a0f19fc6ce77b20f373283154b82f9425",
+      "bytes": 2319056,
+      "camera": {
+        "position": [
+          0,
+          1.55230480094145,
+          1.0717678173748182
+        ],
+        "fov": 24,
+        "direction": [
+          0,
+          -0.014998312784712147,
+          -0.9998875189808162
+        ]
+      }
+    },
+    {
+      "path": "docs/acceptance/character-fidelity-517-captures/m1-sable-human-full.png",
+      "case": "sable-human",
+      "view": "full",
+      "sha256": "a18b9c1ef2ceaa4fd5a2776df20ff36965bdcfa42448746c988065be1fb99a15",
+      "bytes": 908797,
+      "camera": {
+        "position": [
+          0,
+          1.08,
+          3.8
+        ],
+        "fov": 30,
+        "direction": [
+          0,
+          -0.04731536845680366,
+          -0.9988800007547438
+        ]
+      }
+    },
+    {
+      "path": "docs/acceptance/character-fidelity-517-captures/m1-sable-human-closeUp.png",
+      "case": "sable-human",
+      "view": "closeUp",
+      "sha256": "1e7cdab971748ca5ec541cbe3f0b5795d5e00d63ffbc529d5976f3c56f51d54d",
+      "bytes": 2035080,
+      "camera": {
+        "position": [
+          0,
+          1.55230480094145,
+          1.0717678173748182
+        ],
+        "fov": 24,
+        "direction": [
+          0,
+          -0.014998312784712147,
+          -0.9998875189808162
+        ]
+      }
+    },
+    {
+      "path": "docs/acceptance/character-fidelity-517-captures/m1-man-tailored-full.png",
+      "case": "man-tailored",
+      "view": "full",
+      "sha256": "f35532bf23418360988b137c8cb81ca3ceaad72da92c0ee48868c69d9e52f337",
+      "bytes": 729745,
+      "camera": {
+        "position": [
+          0,
+          1.08,
+          3.8
+        ],
+        "fov": 30,
+        "direction": [
+          0,
+          -0.04731536845680366,
+          -0.9988800007547438
+        ]
+      }
+    },
+    {
+      "path": "docs/acceptance/character-fidelity-517-captures/m1-man-tailored-closeUp.png",
+      "case": "man-tailored",
+      "view": "closeUp",
+      "sha256": "a566f5ef77d637d4accfc1d08532c56dd3404e028ca90a55193c50c68caa1d58",
+      "bytes": 1471120,
+      "camera": {
+        "position": [
+          0,
+          1.6586582839652027,
+          1.0822603229389787
+        ],
+        "fov": 24,
+        "direction": [
+          0,
+          -0.014998312784712147,
+          -0.9998875189808162
+        ]
+      }
+    },
+    {
+      "path": "docs/acceptance/character-fidelity-517-captures/m1-rowan-human-full.png",
+      "case": "rowan-human",
+      "view": "full",
+      "sha256": "5031b520dc174eb6b00ca255bdbafd8c497eff7c9874289d60ee871bbd6aa19d",
+      "bytes": 644270,
+      "camera": {
+        "position": [
+          0,
+          1.08,
+          3.8
+        ],
+        "fov": 30,
+        "direction": [
+          0,
+          -0.04731536845680366,
+          -0.9988800007547438
+        ]
+      }
+    },
+    {
+      "path": "docs/acceptance/character-fidelity-517-captures/m1-rowan-human-closeUp.png",
+      "case": "rowan-human",
+      "view": "closeUp",
+      "sha256": "b740181982876a83f53de1bec1a031c60081334849e417d970b8e19c35dd472e",
+      "bytes": 1454493,
+      "camera": {
+        "position": [
+          0,
+          1.657289966206234,
+          1.0747607654314149
+        ],
+        "fov": 24,
+        "direction": [
+          0,
+          -0.014998312784712146,
+          -0.9998875189808162
+        ]
+      }
+    }
+  ]
+}
