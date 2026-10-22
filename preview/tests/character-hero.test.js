@@ -22,3 +22,32 @@ test('foreign owner fails before loading and failed preparation releases the loa
   await assert.rejects(createCharacterHero({definition:definition(),ownerId:'fixture',load:async()=>({object:new THREE.Group(),update(){throw new Error('pose failed');},dispose:()=>disposed++})}),/pose failed/);
   assert.equal(disposed,1);
 });
+
+test('hero teardown releases renderer transmission targets before disposing materials', async () => {
+  const object = new THREE.Group(), material = new THREE.MeshPhysicalMaterial({transmission: .35});
+  object.add(new THREE.Mesh(new THREE.BoxGeometry(), material));
+  const target = new THREE.WebGLRenderTarget(4, 4); let released = 0;
+  target.addEventListener('dispose', () => released++);
+  const renderer = {properties: {get: () => ({uniforms: {transmissionSamplerMap: {value: target.texture}}})}};
+  const hero = await createCharacterHero({definition: definition(), ownerId: 'fixture', load: async () => ({object, update() {}, dispose() {assert.equal(released, 1);}})});
+  hero.dispose(renderer); hero.dispose(renderer);
+  assert.equal(released, 1);
+});
+
+test('an explicit realism tier reaches the hero rig and is removed before avatar disposal', async () => {
+  const original = new THREE.MeshPhysicalMaterial({name:'young_asian_female'}), material = original.clone();
+  const model = new THREE.Group(); model.add(new THREE.Mesh(new THREE.BoxGeometry(), material));
+  const rig = {model, materials:new Map([[original, material]])};
+  const hero = await createCharacterHero({definition:definition(), ownerId:'fixture', realism:'high',
+    loadRealismTextures:async () => ({roughness:new THREE.Texture()}),
+    load:async () => ({object:model, rig, update(){}, dispose(){assert.ok(material.normalMap === null, 'tier removed first');}})});
+  assert.equal(hero.realismReport?.skin, 1);
+  assert.ok(material.normalMap);
+  hero.dispose();
+});
+
+test('hero preserves material fallback when optional roughness loading fails',async()=>{
+ const original=new THREE.MeshPhysicalMaterial({name:'young_asian_female'}),material=original.clone(),model=new THREE.Group();model.add(new THREE.Mesh(new THREE.BoxGeometry(),material));
+ const hero=await createCharacterHero({definition:definition(),ownerId:'fixture',realism:'high',loadRealismTextures:async()=>{throw new Error('roughness unavailable');},load:async()=>({object:model,rig:{model,materials:new Map([[original,material]])},update(){},dispose(){assert.equal(material.normalMap,null);}})});
+ assert.equal(hero.realismReport.tier,'standard');assert.equal(hero.realismReport.fallback,'roughness_unavailable');hero.dispose();
+});

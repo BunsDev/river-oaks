@@ -33,7 +33,13 @@ async page => {
  await page.locator('#office-lobby').evaluate(button=>button.click());
  await page.locator('#play-tab-office:not([hidden])').waitFor({timeout:30000});
  await page.locator('#play-tab-office').click();
- const office=await page.locator('.play-rail-pane .office-panel').evaluate(panel=>{
+ const hiddenOfficeCards=await page.locator('.play-rail-pane:not([hidden]) .office-panel[hidden]').evaluateAll(cards=>cards.map(card=>({id:card.id,display:getComputedStyle(card).display,visible:card.checkVisibility()})));
+ console.log('Hidden office card diagnostics',JSON.stringify(hiddenOfficeCards));
+ check(hiddenOfficeCards.length>0&&hiddenOfficeCards.every(card=>!card.visible),'Office cards excluded from this world stay visually hidden');
+ const officePanel=page.locator('.play-rail-pane:not([hidden]) .office-panel:visible');
+ await officePanel.waitFor({state:'visible',timeout:30000});
+ check(await officePanel.count()===1,'The active office tab shows one visible office card');
+ const office=await officePanel.evaluate(panel=>{
   const card=panel.getBoundingClientRect(),text=panel.querySelector('h3').getBoundingClientRect();
   return {inset:text.left-card.left,buttons:[...panel.querySelectorAll(':scope > button:not([hidden])')].map(button=>button.getBoundingClientRect().height),
    picker:Boolean(panel.querySelector('.office-management select:disabled')),empty:panel.querySelector('.office-empty')?.textContent??null};

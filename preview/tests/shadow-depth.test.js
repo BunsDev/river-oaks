@@ -44,15 +44,17 @@ test('on every exposed look, a depth material is only ever drawn for one kind of
     const source = await loadCharacterRig(look.rig), avatar = instantiateAvatar(source, { targetHeight: source.height, id: `remote-depth-${look.id}` });
     const root = new THREE.Group(); root.add(avatar.model); createRomanceLook(avatar, root, look);
     const assigned = assignShadowDepth(root);
-    assert.ok(assigned.length >= 10, `${look.id}: ${assigned.length} casters share kind depth materials`);
+    assert.ok(assigned.length > 0, `${look.id}: ${assigned.length} casters share kind depth materials`);
     for (const mesh of assigned) {
       const signature = programSignature(mesh, mesh.geometry), previous = kinds.get(mesh.customDepthMaterial);
       assert.ok(previous === undefined || previous === signature, `${look.id}: ${mesh.name} reuses a depth material across kinds`);
       kinds.set(mesh.customDepthMaterial, signature);
     }
     root.traverse(mesh => {
-      if (mesh.isMesh && mesh.castShadow && !(Array.isArray(mesh.material) ? mesh.material : [mesh.material]).every(material => !(material.alphaTest > 0)))
+      if (!mesh.isMesh || !mesh.castShadow) return;
+      if (!(Array.isArray(mesh.material) ? mesh.material : [mesh.material]).every(material => !(material.alphaTest > 0)))
         assert.equal(mesh.customDepthMaterial, undefined, `${look.id}: ${mesh.name} keeps its cutout shadow`);
+      else assert.ok(assigned.includes(mesh), `${look.id}: ${mesh.name} receives its kind's depth material`);
     });
     avatar.dispose();
   }
