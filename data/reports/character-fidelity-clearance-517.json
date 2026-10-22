@@ -1,0 +1,38 @@
+{
+  "scope": "All13 current human looks fit unchanged campus bounds. Only the2new realistic fixtures are accepted against directional IPIC bounds; no full-catalog IPIC acceptance.",
+  "revision": "225acfc9eaebf67627db7337feacac130b241ad8",
+  "provenanceSha256": "f1f07b69267e7d47e264e4f476a04c30f65ce5cce5f619cfc826d4dac1a4472b",
+  "measurement": "docs/design/garden-campus/avatar-envelope.json",
+  "regressionSha256": "9a5fcd3905ec6863615cb2478d62c92fdebb0e7c7e95b649b5c093a07088ff12",
+  "newFixturesPassed": [
+    "morgan-human",
+    "imani-human"
+  ],
+  "ipicLimitsM": {
+    "left": 0.514,
+    "right": 0.514,
+    "front": 0.644,
+    "back": 1.155
+  },
+  "newlyObservedFailuresInExistingLooks": [
+    {
+      "appearanceId": "lyra-human",
+      "direction": "front",
+      "measuredM": 0.67393,
+      "limitM": 0.644
+    },
+    {
+      "appearanceId": "forest-aristocrat",
+      "direction": "front",
+      "measuredM": 0.659066,
+      "limitM": 0.644
+    },
+    {
+      "appearanceId": "forest-aristocrat-feminine",
+      "direction": "front",
+      "measuredM": 0.67335,
+      "limitM": 0.644
+    }
+  ],
+  "limitations": "Standing and settled seated poses, not a continuous motion sweep. Unchanged legacy geometry/morph bytes do not establish when these failures began."
+}

@@ -1,0 +1,46 @@
+{
+  "pullRequest": "https://github.com/BunsDev/river-oaks/pull/545",
+  "draft": true,
+  "implementationHead": "00a74a7c8f38c424d6baa4d2f85be4e2149e76b5",
+  "runtimeManifestSha256": "f1f07b69267e7d47e264e4f476a04c30f65ce5cce5f619cfc826d4dac1a4472b",
+  "core": "passed",
+  "full": "passed",
+  "verificationInputCount": 53,
+  "handoffs": [
+    {
+      "issue": 517,
+      "id": 6257106326,
+      "url": "https://github.com/BunsDev/river-oaks/issues/517#issuecomment-6257106326",
+      "createdAt": "2026-10-19T00:30:20Z",
+      "bodySha256": "7cda46fd9abbfe9261d53a2c9b0f80f60001e40605d929e5727931011efc78d5"
+    },
+    {
+      "issue": 441,
+      "id": 6257106505,
+      "url": "https://github.com/BunsDev/river-oaks/issues/441#issuecomment-6257106505",
+      "createdAt": "2026-10-19T00:30:21Z",
+      "bodySha256": "91372df3d1736e6aa998f2f267fc9a724d43dde7ff6910bb697b36088cf51a5f"
+    },
+    {
+      "issue": 442,
+      "id": 6257106716,
+      "url": "https://github.com/BunsDev/river-oaks/issues/442#issuecomment-6257106716",
+      "createdAt": "2026-10-19T00:30:22Z",
+      "bodySha256": "498cdbdb60fa0283deaba5d705306101d4008f3f854cfd7517e3e3a9e0a5d0ca"
+    },
+    {
+      "issue": 444,
+      "id": 6257106892,
+      "url": "https://github.com/BunsDev/river-oaks/issues/444#issuecomment-6257106892",
+      "createdAt": "2026-10-19T00:30:23Z",
+      "bodySha256": "88f25f3ccf91130caef0d44b391686eac84459603c839bab203ab2dbe2a3bf9d"
+    }
+  ],
+  "status": "Draft review; goal acceptance remains open",
+  "remaining": [
+    "No supported mobile target/device budget",
+    "No AAA/native/live-auth/human accessibility acceptance",
+    "3 newly observed existing-look IPIC front-bound failures",
+    "Hosted CI and up-to-date-main landing gate"
+  ]
+}

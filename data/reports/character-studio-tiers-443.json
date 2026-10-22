@@ -1,0 +1,216 @@
+{
+  "createdAt": "2026-10-22T18:24:41.818Z",
+  "status": "passed",
+  "modes": [
+    "required"
+  ],
+  "rendering": "Full rendering",
+  "scope": "Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.",
+  "results": [
+    {
+      "name": "character-studio-tiers",
+      "status": "passed",
+      "seconds": 59.231,
+      "result": {
+        "passed": true,
+        "checks": [
+          "Owner viewer renders at the Sharpest tier: full scale with ambient occlusion",
+          "Peer viewer renders at the Smoothest tier: three-quarter scale without ambient occlusion",
+          "Owner publishes and wears a customized revision from the Sharpest tier",
+          "Smoothest peer renders the exact authoritative owner revision",
+          "Peer publishes its own revision from the Smoothest tier",
+          "Sharpest owner renders the exact authoritative peer revision",
+          "Each viewer loads the other player’s published outfit materials at its own tier",
+          "Owner and Smoothest peer resolve identical material identity for the owner’s look",
+          "auto: peer keeps the same owner identity and materials",
+          "sharp: peer keeps the same owner identity and materials",
+          "smooth: peer keeps the same owner identity and materials",
+          "auto: peer keeps the same owner identity and materials",
+          "smooth: peer keeps the same owner identity and materials",
+          "Changing graphics tier sends no appearance, character or movement selection",
+          "No client message carries graphics quality, tier, scale or occlusion",
+          "Tier changes leave both authoritative selection versions unchanged",
+          "Authoritative snapshots carry no viewer graphics state",
+          "topLevelTier: tampered draft is refused with a client error (400)",
+          "definitionTier: tampered draft is refused with a client error (400)",
+          "lodParameter: tampered draft is refused with a client error (400)",
+          "assetUrl: tampered draft is refused with a client error (400)",
+          "assetSwap: tampered draft is refused with a client error (400)",
+          "foreignOwner: tampered draft is refused with a client error (400)",
+          "Control: the same untampered save succeeds once from the unchanged version",
+          "Refused drafts leave the owner’s draft and published revision unchanged",
+          "Foreign-owner draft cannot touch the other account",
+          "quality: tampered socket selection is refused (invalid_character_selection)",
+          "foreign-revision: tampered socket selection is refused (character_revision_missing)",
+          "Refused socket selections keep the owner’s worn revision",
+          "Control: the same socket path accepts the untampered selection",
+          "Peer still renders the canonical owner revision after refused tampering",
+          "Peer’s graphics tier persists locally across reconnect",
+          "Reconnected Smoothest peer renders the same owner revision",
+          "Sharpest owner re-resolves the reconnected peer’s revision",
+          "No runtime errors: "
+        ],
+        "measurements": {
+          "aliceSharp": {
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 52,
+              "tailShedding": false
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            }
+          },
+          "bobSmooth": {
+            "quality": {
+              "mode": "smooth",
+              "scale": 0.75,
+              "occlusion": false,
+              "fps": 30,
+              "tailShedding": false
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": false,
+              "bloom": true,
+              "renderScale": 0.75,
+              "aoScale": 1,
+              "transmissionScale": 1
+            }
+          },
+          "cycle": [
+            {
+              "mode": "auto",
+              "quality": {
+                "mode": "auto",
+                "scale": 1,
+                "occlusion": true,
+                "fps": 35,
+                "tailShedding": false
+              },
+              "pipeline": {
+                "samples": 4,
+                "ao": true,
+                "bloom": true,
+                "renderScale": 1,
+                "aoScale": 1,
+                "transmissionScale": 1
+              }
+            },
+            {
+              "mode": "sharp",
+              "quality": {
+                "mode": "sharp",
+                "scale": 1,
+                "occlusion": true,
+                "fps": 35,
+                "tailShedding": false
+              },
+              "pipeline": {
+                "samples": 4,
+                "ao": true,
+                "bloom": true,
+                "renderScale": 1,
+                "aoScale": 1,
+                "transmissionScale": 1
+              }
+            },
+            {
+              "mode": "smooth",
+              "quality": {
+                "mode": "smooth",
+                "scale": 0.75,
+                "occlusion": false,
+                "fps": 40,
+                "tailShedding": false
+              },
+              "pipeline": {
+                "samples": 4,
+                "ao": false,
+                "bloom": true,
+                "renderScale": 0.75,
+                "aoScale": 1,
+                "transmissionScale": 1
+              }
+            },
+            {
+              "mode": "auto",
+              "quality": {
+                "mode": "auto",
+                "scale": 1,
+                "occlusion": true,
+                "fps": 33,
+                "tailShedding": false
+              },
+              "pipeline": {
+                "samples": 4,
+                "ao": true,
+                "bloom": true,
+                "renderScale": 1,
+                "aoScale": 1,
+                "transmissionScale": 1
+              }
+            },
+            {
+              "mode": "smooth",
+              "quality": {
+                "mode": "smooth",
+                "scale": 0.75,
+                "occlusion": false,
+                "fps": 37,
+                "tailShedding": false
+              },
+              "pipeline": {
+                "samples": 4,
+                "ao": false,
+                "bloom": true,
+                "renderScale": 0.75,
+                "aoScale": 1,
+                "transmissionScale": 1
+              }
+            }
+          ],
+          "tamperedStatuses": {
+            "topLevelTier": 400,
+            "definitionTier": 400,
+            "lodParameter": 400,
+            "assetUrl": 400,
+            "assetSwap": 400,
+            "foreignOwner": 400,
+            "control": 200
+          },
+          "injectedResults": {
+            "quality": {
+              "ok": false,
+              "error": "invalid_character_selection"
+            },
+            "foreign-revision": {
+              "ok": false,
+              "error": "character_revision_missing"
+            },
+            "control": {
+              "ok": true,
+              "error": null
+            }
+          },
+          "bobAfterReload": {
+            "mode": "smooth",
+            "scale": 0.75,
+            "occlusion": false,
+            "fps": 1,
+            "tailShedding": false
+          }
+        },
+        "scope": "Real two-account HTTP/WebSocket/browser flow on desktop Chromium; graphics tiers on main are render scale and ambient occlusion. #517 realistic material tiers, physical devices and human acceptance are not covered."
+      }
+    }
+  ],
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)"
+}
