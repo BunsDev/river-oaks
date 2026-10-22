@@ -1,0 +1,1639 @@
+# Character fidelity (#517): realistic humans in the live renderer
+
+Task `character-fidelity-517-20261018`, branch `feat/character-fidelity-517-20261018`,
+worktree `../river-oaks-character-fidelity-517`, owner `codex:character-fidelity-517-20261018`.
+Val explicitly transferred the existing dirty checkout from
+`claude:river-oaks (015e1f43)` to this session. Initially claimed
+2026-10-18T19:33Z on main `f897c1d6`.
+
+## Current review candidate
+
+Signed source `d11a6ee4ce794bc3f5f061bd48d5af8ce9a7cff9` integrates main
+`7c10f418b0ea519bc0d2b84bb65869e3c7cdae0e`. All 1,330 tested runtime/test Git
+blobs and 142 changed inputs match runtime manifest
+`3e04a4ae0af73d8e452f02024685108ef2d3808cc5822461ec878400b2e0f608`.
+The later proof commits change metadata only. Check
+[PR #545](https://github.com/BunsDev/river-oaks/pull/545) and the primary live task
+register for the exact final head and hosted/current-main verdict.
+
+Candidate M passed core's eleven tasks and full's 18 tasks, including 16 world
+journeys, 24 shared journeys across five fixture modes with full rendering, and
+18 IPIC checks. The focused office/suite journeys passed 21/10 checks; ten
+readiness regressions passed. One existing preview negative control remains
+skipped; offline verification returned its expected exit 2. Actual execution
+receipts retain their precommit dirty-tree revision; signed-source binding does
+not relabel that execution as a clean commit run.
+
+Desktop timing reproduction remains unmet (18/48 comparisons within 20%). Phone
+agreement is 22/24 within-run pairs and 46/48 cross-run comparisons; nine frame
+and eleven CPU reference ceilings were exceeded. Original limits and failures
+are retained. #441 P4/P5 trials are waived, not passed. Three existing-look IPIC
+clearance findings and whole-town/thermal, AAA, native Unreal, live-auth and human
+accessibility acceptance remain explicit gaps. Retain the checkout; this review
+candidate does not authorize landing or retirement.
+
+## Initial candidate (historical)
+
+HEAD `225acfc9eaebf67627db7337feacac130b241ad8` plus the recorded dirty patch;
+runtime/asset manifest `f1f07b69267e7d47e264e4f476a04c30f65ce5cce5f619cfc826d4dac1a4472b`.
+M1 reproduction, all eight fixture/tier cases, native expression captures,
+rendered tier transitions, lifecycle checks, strict hero golden, Chromium and
+desktop WebKit journeys pass. Selected focused tests:54; clearance:16;
+full-catalog culling pose sweep:13; build-input Python:2, all without skips.
+The test-only culling height correction follows the fixed bundle contract;
+production culling bounds and thresholds remain unchanged.
+
+Required core and full pass all 11/18 tasks. The final check confirms all 53
+changed code/test/asset/config inputs and the complete runtime manifest stayed
+unchanged. Full includes 13 experience journeys, 24 shared journeys across all
+five modes, and 16 IPIC screening checks. One existing preview negative test is
+skipped; offline demo verification returns its expected blocked-domain exit 2.
+
+All 28 review PNGs and the independent crowd script match their recorded hashes.
+See [the reviewable evidence](../../acceptance/character-fidelity-517.md).
+Signed implementation `00a74a7c8f38c424d6baa4d2f85be4e2149e76b5` is pushed.
+[Draft PR #545](https://github.com/BunsDev/river-oaks/pull/545) is open, with
+handoffs posted to #517/#441/#442/#444. Final metadata receipt commit is next.
+Supported mobile/device budgets, native, live-auth and human acceptance remain
+gaps. Val's #441 P4/P5 waiver remains a waiver. No AAA or full-goal completion
+claim. The worktree stays active.
+
+## Objective
+
+Put a believable, expressive, legally clean realistic human in the existing
+Three.js 0.186.1 / Vite renderer. Add compatible human body and wardrobe
+variants, quality tiers measured on named targets, and an executable contract
+that #441 (Studio realistic controls) and #442 (asset compatibility) can build
+on. Human-only per the 2026-10-18 override in #517. No engine rewrite, no paid
+generation, no restricted asset.
+
+## Acceptance (from #517, human-only reading)
+
+| # | Criterion | Status |
+| --- | --- | --- |
+| A1 | Current-code architecture and vendor decision matrix with verified licences, costs and alternatives | documented in PR536 vendor matrix and local fixture decision; architecture snapshot below |
+| A2 | Real runtime close-up and crowd captures with reproducible camera, light and animation settings and device-tier metrics | desktop Chromium close-up/crowd captures and metrics recorded; physical target budgets unproven |
+| A3 | Human body and wardrobe fixtures with explicit supported/unsupported rig, material and wardrobe capabilities; identity stable across tiers | two fixed CC0 body/wardrobe bundles, explicit capability contract, tier identity/lifecycle verified |
+| A4 | Integration contract and evidence handed to #441/#442/#444; no engine rewrite | executable contract and local consumer proof ready; PR and issue handoff pending final gates |
+
+## Baseline facts (main `f897c1d6`, inspected 2026-10-18)
+
+Pipeline. Every playable human is an MPFB 2.0.17 export from CC0 MakeHuman
+assets (`scripts/build_characters.py`, run inside Blender). Receipts:
+`preview/public/assets/characters/sources.json`, `jevica.sources.json`. Pins:
+`preview/src/character-assets.js` (jevica, man-casual, man-tailored). The
+playable catalog (`shared-appearances.js`) maps 11 appearances onto those three
+rigs. Sable, Vesper, Lyra and feminine Silvan use the jevica rig. Aurel, Kai
+and masculine Silvan use man-casual. Rowan uses man-tailored.
+`romance-look.js` recolours imported materials per character.
+
+Sources and licence. The primary checkout caches the sources in ignored
+`data/raw/characters` (1.2 GB): MPFB source, CC0 system assets, faceunits01,
+visemes02, facial candidates and Jevica references. MPFB's LICENSE.md section D
+says output (exports, generated graphical data, renderings) carries no
+restriction. MPFB code is GPLv3, so do not vendor it into the repository.
+
+What the shipped rigs contain (parsed from the GLB JSON):
+
+| Rig | Bytes | Body tris | Skin textures | Eyes | Hair | Joints | Morphs |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| jevica | 5.78 MB | 88,912 (subdivision 1) | 2048² base colour only; no normal or roughness map; KHR specular 0.52, roughness 0.62 | high-poly, one BLEND 512² texture, roughness 0.18 | long01 BLEND 1024² | 53 (game-engine rig, no face bones) | 2 (blinks); the speech variant adds 15 visemes |
+| man-casual | 2.02 MB | MPFB base | 2048² base colour only | low-poly, OPAQUE 512² | short01 BLEND 1024² | 53 | 2 |
+
+The MakeHuman CC0 skins ship only a 2048² diffuse. Their `.mhmat` asks for SSS
+(R 5, G 2.5, B 1) and bump. MPFB ships CC0 region masks (`mpfb_face`, `lips`,
+`eyelids`, `ears`, `fingernails` and others) and procedural node trees
+(`enhanced_skin`, `procedural_eyes`). `instantiateAvatar` converts every BLEND
+material to an alpha test of 0.4, double-sided, and sets `envMapIntensity 0.8`.
+The character path uses no KTX2, meshopt or Draco loader.
+
+Measurement and capture already on main: `character-hero.js` (preset
+`garden-front-v1`), `character-portrait.js` (native 4K, MSAA 4, ACES),
+`scripts/character-hero-goldens.mjs` with
+`preview/audit/character-image-comparison.js` (environment pinning), and
+`render-quality.js` (quality modes, render-scale governor). Crowd timing
+belongs to #529/#534 (`preview/audit/rendered-multiplayer.js`, `metrics.js`,
+`draw-census.js`). Use them; do not edit them.
+
+Unreal: `docs/unreal.md` records a GIS blockout on UE 5.8.2 with no character
+fidelity work. It is not an integration path for the browser client.
+
+## Decisions and assumptions pending Val
+
+Asked once on 2026-10-18. Work continues on these defaults until Val answers:
+
+1. Target iPhone model(s) and iOS version. Default: none named, so no
+   physical-phone claim; macOS M3 Max (Chrome via Metal ANGLE; Safari) is
+   measured.
+2. Spend ceiling. Default: $0, CC0 or permissive licences only.
+3. Jevica. Default: her shipped canonical look stays byte-identical. The first
+   realistic fixture is built as a new pinned rig and does not replace
+   `jevica.glb`.
+
+## Milestones
+
+| | Exit | State |
+| --- | --- | --- |
+| M0 | Claim, worktree, ledger, baseline facts | done 2026-10-18T19:50Z |
+| M1 | Reproducible capture and measurement harness; two runs agree | captures/lifecycle verified; controlled timing open |
+| M2 | One realistic CC0 fixture in the live renderer, matched against M1 | two fixtures built; visual acceptance in progress |
+| M3 | Bounded alternatives matrix from M2's measured gaps | PR536 input; route reconciliation pending |
+| M4 | Variants, expressions and capability table | two fixed bundles and expressions verified |
+| M5 | Measured tiers through `render-quality.js`; identity across tiers | lifecycle passed; identity-preserving low tier pending |
+| M6 | Contract, shared validator and handoff to #441/#442/#444 | executable contract and Redis checks pass; handoff pending |
+| M7 | Adversarial cases and device numbers | |
+
+## Files owned
+
+This ledger. New: `preview/src/character-fidelity-metrics.js`,
+`preview/e2e/fixtures/character-fidelity.{html,js}`,
+`scripts/character-fidelity-baseline.mjs`,
+`preview/tests/character-fidelity-metrics.test.js`. Later:
+`scripts/build_characters.py` (realistic build options only), new pins in
+`preview/src/character-assets.js`, and a new fixture with its receipt under
+`preview/public/assets/characters/`.
+
+## Log
+
+- 2026-10-18T19:33Z: claimed in the live register. No prior #517 claim existed
+  in the register, worktrees, open PRs or Codex rollouts (Codex thread
+  `01a15001` proposed the goal at 19:12Z and has been idle since). Worktree
+  created at `f897c1d6`. `pnpm install --frozen-lockfile` used a private store.
+  `agent:doctor` passed apart from the Python environment, which
+  `uv sync --locked` fixed in the worktree's own `.venv`.
+
+## M1 results: baseline harness (2026-10-18)
+
+Harness: `scripts/character-fidelity-baseline.mjs` driving
+`preview/e2e/fixtures/character-fidelity.{html,js}`, with census helpers in
+`preview/src/character-fidelity-metrics.js`. Headless Chromium 156.0.8078.4
+(Playwright 1248), ANGLE Metal on an Apple M3 Max, 1920×1080 at DPR 1, vsync
+off. Captures are native 3840×2160 MSAA 4 through `character-portrait.js`, in
+the `garden-front-v1` (full) and new `face-closeup-v1` (head bone framed)
+presets. Revision `f897c1d6`, clean tree. Receipts:
+`data/reports/character-fidelity-m1-a.json` and `-b.json` (PNGs stay in the
+worktree's `.runtime/character-fidelity/m1-baseline-{a,b}/`).
+
+Run A (load average 48 on 16 cores):
+
+| Look (rig) | Triangles | Draws | Textures | Cold load | GPU p50 ×1 / ×8 / ×24 | CPU p95 ×1 / ×8 / ×24 | Residue after 10 cycles |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| jevica (jevica) | 126,856 | 13 | 52.1 MiB | 584.5 ms | 3.038 / 4.567 / 7.285 ms | 4.5 / 27.05 / 82.7 ms | 10 textures |
+| sable-human (jevica) | 115,916 | 20 | 25.6 MiB | 317 ms | 0.968 / 2.353 / 3.926 ms | 3.8 / 6 / 8 ms | 0 textures |
+| man-tailored (man-casual) | 38,346 | 24 | 28.0 MiB | 162 ms | 1.321 / 1.6 / 2.405 ms | 3.05 / 3.75 / 9.95 ms | 0 textures |
+| rowan-human (man-tailored) | 42,202 | 19 | 28.0 MiB | 118 ms | 0.869 / 1.446 / 2.459 ms | 3.65 / 4.4 / 7.85 ms | 0 textures |
+
+First frame after load (shader compile included): jevica 316.5 ms, Sable 170 ms,
+Aurel 169.5 ms, Rowan 129 ms. Census counts the figure only: the main pass,
+with no shadow pass. Texture bytes are estimated GPU bytes (RGBA, mip chain),
+not download size.
+
+Reproduction (run B `--against` run A): census identical for all four looks;
+all eight native 4K captures byte-identical. **Timing did not reproduce.** Load
+rose to 68–99 during run B, and GPU p50 moved by up to 7.7× (Jevica ×1:
+3.0 → 23.5 ms) while rAF intervals for the CPU-bound crowds stayed within 3%.
+GPU timer queries on this shared machine pick up other sessions' GPU work. The
+timing columns above are provisional; budgets in M5 must come from a run at
+low load (load average below 16) or from interleaved A/B runs in one session,
+never from these absolute numbers.
+
+## M3 inputs: licence research (2026-10-18, read-only, primary sources)
+
+Collected early by a read-only research agent; the decision waits for M2's
+measured gaps. The deciding question is whether a GLB that every player's
+browser downloads (and can extract) is allowed.
+
+| Source | Licence | Downloadable GLB in a web game | Cost / account | Format and face rig | Confidence |
+| --- | --- | --- | --- | --- | --- |
+| MakeHuman / MPFB 2 (current pipeline) | Assets CC0; MPFB code GPLv3 (not vendored); LICENSE.md §D: no claim over exports | Yes (CC0 packs). Some packs are CC-BY (Hair 02/03, Dress/Shirts/Pants 02/03) and need attribution | Free, no account | Blender export; Faceunits 01 (CC0, 54 ARKit-style keys), Visemes 01/02 (CC0) | High |
+| Microsoft Rocketbox | MIT (relicensed 12/2020; repo archived 2022) | Yes, with the MIT notice | Free, no account | FBX only (convert); LODs 10k/5k/2.5k/500 tris, 2K maps, 28 facial bones, ARKit-compatible blendshapes (2022) | High |
+| Lee Perry-Smith head (three.js examples) | CC BY 3.0 | Yes, with attribution | Free | Head only: no rig, body or hair. A skin-shader test object, not a player | High |
+| Epic MetaHuman | Unreal Engine EULA (UE 5.6+); FAQ allows use in other engines | **Unresolved**: EULA §4 requires Licensed Technology "only as an inseparable part of the Product"; an extractable GLB is not ruled on | Free under $1M revenue; Epic account and UE 5.6+ required | No glTF/FBX export; 669 blendshapes + 713 joints driven by RigLogic; iOS texture cap 2048 | FAQ High; EULA text Medium (third-party copy, official page 403) |
+| Reallusion CC4/5, ActorCore, Headshot | Content EULA §6.3 and Software EULA §5 | **No**: models "must be contained in proprietary formats"; bans use in "any character generation system" | Paid | FBX/OBJ/USD; 52 ARKit + 11 tongue | High |
+| Human Generator (HumGen3D) | Asset licence | No ("cannot be extracted and re-used") | Paid ($68/$128) | Blender add-on | High |
+| MB-Lab | AGPL-3 for generated models | Only if every shipped model is AGPL-3 | Free | Blender add-on | High |
+| Mixamo | Adobe terms + FAQ | Probably not (raw-file ban, community FAQ only) | Free, Adobe ID | Not verified | Medium/Low |
+| Ready Player Me | n/a | Service offline since 2026-01-31 (press reports; domain did not resolve) | n/a | n/a | Medium |
+
+Early reading: only CC0/MIT/CC-BY sources clearly permit the shipped form.
+That keeps MPFB as the base and makes Rocketbox the only realistic,
+permissively licensed comparison set with facial blendshapes. MetaHuman needs a
+written answer from Epic before any use; Reallusion and Human Generator are
+excluded by their own terms (and the character-generation ban conflicts with
+Character Studio). Unverified: Reallusion and Unreal seat prices, a
+Headshot-specific licence, Mixamo formats.
+
+## Defects found by the harness
+
+- **Jevica portrait leak (real, lifecycle).** Each `createCharacterHero`
+  cycle for `jevica` leaves one GPU texture (10 cycles leave 10; the other
+  looks leave none). Cause: the crown crystals use `transmission: .35`, and
+  Three r186 caches a transmission render target per camera id inside each
+  scene's render state (`WebGLRenderer.js` ~2012; viewport-sized, 4× MSAA,
+  half-float, mipmapped). Nothing disposes it when a hero scene and camera go
+  away, so each Jevica Studio portrait at 3840×2160 strands on the order of a
+  hundred MB of GPU memory. The game's persistent camera is unaffected.
+- **Jevica per-frame cost.** About 3.3 ms of CPU per instance (8 instances:
+  26 ms; 24 instances: 80 ms), against about 0.3 ms per Sable. The
+  transmission pre-pass re-renders opaque objects and the drape updates per
+  frame. Only Jevica's account wears this look, so a crowd of them is not a
+  real scenario, but her single-instance cost is.
+- **Male rigs lack brows and lashes.** man-casual and man-tailored have no
+  eyebrow or eyelash meshes, 172-triangle low-poly eyes, and a 15.8k-triangle
+  body (jevica: 88.9k).
+- **Flat hair on looks that recolour hair.** `romance-look.js` replaces the
+  hair map with an opaque procedural stripe texture (alpha 255) for Sable,
+  Vesper, Lyra and forest Silvan, so the cards render as solid banded sheets.
+- **Red irises.** MakeHuman's `brown_eye.png` iris is hue ~9°, saturation
+  0.97. That is red, not brown.
+- **No cornea.** The cornea maps to a transparent disc in the eye texture. The
+  rig import's alpha test discards it, and with it every eye highlight.
+
+## Next
+
+M1: build the harness (close-up and full-body presets, scene census, texture
+bytes, load time, frame-interval p50/p95 with vsync off, 10-cycle
+load/dispose), then run it twice on the shipped jevica and man-casual looks.
+
+## Ownership handoff and M1 correction (2026-10-18)
+
+Val explicitly transferred #517 from `claude:river-oaks (015e1f43)` to
+`codex:character-fidelity-517-20261018` in chat. Existing checkout and all
+untracked implementation preserved. Supporting draft PR #536 at a790766c
+remains the licensing/integration input; no implementation PR exists yet.
+
+The earlier statement "clean tree" is incorrect: the harness was untracked.
+Earlier reports remain historical observations, not lifecycle acceptance.
+The transmission root-cause statement above was premature before a controlled
+cleanup comparison. The renderer source supports the hypothesis; browser
+verification below distinguishes reproduction from proof of the fix.
+
+New evidence module hashes executable source and public assets, including
+untracked files, and refuses resource growth or missing measurements. A run
+also checks for changed inputs at completion. Focused tests: 11 passed via
+`node --test scripts/tests/character-fidelity-evidence.test.js preview/tests/transmission-targets.test.js preview/tests/character-fidelity-metrics.test.js`.
+
+Negative browser control:
+`node scripts/character-fidelity-baseline.mjs --appearances jevica --repeats 0 --out .runtime/character-fidelity/m1-gate-negative`
+failed as required: textures 14 -> 24 after 10 cycles. Captures and full input
+manifest are in that directory's report.json. This is a real retained GPU
+resource regression, not just a synthetic delta test.
+
+Hero teardown now accepts the renderer and releases transmission targets before
+material disposal. The focused hero regression failed before this wiring and
+then passed (5 hero/transmission tests). Controlled browser comparison is queued
+through the shared browser lock; production portrait cleanup and multi-camera
+coverage still need completion. Transmission remains enabled at .35.
+
+Remaining delivery: finish M1 provenance/lifecycle acceptance and repeat captures;
+verify and integrate inherited realism layer; new pinned human fixture with
+brows/lashes/expressions; matched off/high portrait/world visuals; variants,
+quality-system integration, persistence and executable capability contract;
+core/full/browser gates; signed commits and draft PR/issue handoff. No device,
+native, human, AAA-quality, merge or deployment claim. #441 P4/P5 novice trials
+remain waived, not passed. Do not re-request physical-device targets.
+
+Production `portraitPixels` now releases the current camera's transmission target
+in its finally block, including readback failure. Its focused regression failed
+before the fix. 13 focused evidence/hero/portrait/transmission tests now pass;
+the inherited realism module's 6 tests also pass (runtime integration unproven).
+
+`m1-cleanup-probe` observed zero geometries/textures/programs growth and both
+Jevica views byte-identical to `m1-gate-negative`. Its report correctly FAILED
+because source changed while it waited in the browser queue. Do not label that
+receipt accepted. Fresh four-appearance comparison `m1-verified-a` is running
+with source frozen against `m1-baseline-a` (exec session 69577). Core verification
+is live in exec session 88492, log `.runtime/character-fidelity/core-m1.log`.
+Poll those exact handles before deciding whether to rerun.
+
+Next M1 gaps: repeat stable run, exercise actual 4K multi-camera portrait cycles
+(the existing cycles method renders the viewport), and represent omitted timing
+as unmeasured rather than an empty comparison passing vacuously. Capture
+provenance is checked both after queue acquisition and at end. No timing samples
+are requested during the current contended-host lifecycle probe.
+
+## Remaining implementation sequence after the ownership handoff
+
+Use the existing checkout and execute serially; no competing implementation.
+The source freeze for `m1-verified-a` takes precedence over starting these edits.
+
+1. **Close M1 evidence gaps.** In `character-fidelity-baseline.mjs`, record
+   absent timing comparisons as unmeasured. Extend the fixture's repeated
+   lifecycle check to actual `portraitPixels` calls through both fixed cameras,
+   with cleanup in a finally block. Keep the viewport test as a separate scope.
+   Reproduce twice, compare all eight original captures, and retain source
+   manifests. A performance claim requires measured samples, not an empty array.
+2. **Make the inherited realism layer reversible.** Before integrating it,
+   add behavioral tests for high -> standard -> off -> high transitions,
+   geometry/material restoration, transformed/skinned corneas, and texture
+   ownership. Current `splitCornea` replaces geometry without restoring it;
+   `applyCharacterRealism.dispose` removes added objects but does not restore
+   modified material properties. Global texture maps also need a bounded
+   ownership decision. These are concrete integration risks, not yet verified
+   failures. Tests must expose each failure before the correction.
+3. **Build separate realistic human assets.** Add a dedicated generator using
+   the existing `build_characters.py`/`build_facial_candidates.py` conventions.
+   Resolve cached CC0 sources explicitly without copying private runtime state.
+   Include fitted brows/lashes, high-poly eyes, and tested facial targets. Start
+   with one clothed human; then add a second body and wardrobe fixture. Preserve
+   all existing GLB bytes and pins, especially Jevica. Receipts must name/hash
+   every source and output, including build settings. Do not overwrite the
+   existing `sources.json` with a subset of profiles.
+4. **Integrate the asset and capability contract.** Add distinct immutable pins
+   in `character-assets.js`, explicit supported capabilities in a DOM-free
+   module, and canonical definitions through the shared validator. Inspect
+   `shared-appearances.js`, customization and server character-store callers
+   before choosing the smallest compatible catalog extension. Test invalid
+   pins, unknown tiers/capabilities, unauthorized owners, stored reload and
+   legacy definitions. Keep unsupported body editing, arbitrary clothing and
+   face controls explicitly unavailable.
+5. **Runtime and quality.** Apply realism after the authored look/material
+   customization, with teardown owned by the avatar instance. Route tier
+   selection through `render-quality.js`; test fallback on missing resources
+   and repeated changes without identity or resource drift. Preserve the
+   canonical Jevica path. Inspect resident-face baking and speech/eye bindings
+   so expressive targets survive only where intended. Do not duplicate crowd
+   or Studio polish owners' code.
+6. **Measured acceptance.** Capture off/high with the same camera, light, pose
+   and animation, then inspect close-up, portrait and world views. Exercise
+   body/wardrobe variants, expressions, reload, missing assets, quality changes,
+   and repeated teardown. Separate contended desktop timing from supported
+   budgets. Reuse existing crowd measurement code. Physical/mobile and native
+   gaps remain explicit; novice P4/P5 trials remain waived.
+7. **Delivery.** Run focused regressions, relevant Studio/world browser
+   acceptance, asset audit/goldens, core and full prerequisites/gates. Record
+   exact source hashes and revisions. Then signed commits, feature-branch push,
+   draft PR and issue handoff; no merge/deploy/retirement. Supporting PR #536
+   supplies the source matrix and must be reconciled with actual fixture gaps.
+
+Independent source review during the M1 queue confirmed that
+`instantiateAvatar` clones materials, `bakeResidentFace` strips only its named
+face-shape targets, and the shared validator recomputes exact canonical v1/v2
+assets. Existing fixture loading alone cannot prove publishability.
+
+## Verified M1 and measured M2 material increment
+
+- `m1-verified-a` passed with input manifest SHA256
+  `c4b7e671fd26e5ae8590facea066ec35b30ad3821a127fb052ce2cc6cd5a5551`:
+  original four census results and eight native4K PNGs byte-identical; all
+  viewport resource deltas zero. This is a dirty-tree manifest, not clean HEAD.
+- `m1-portrait-verified-a` passed with input manifest SHA256
+  `d05f5442bd2af28bf7015c8533c654b2e8ae3d88ec3fbeeb5ee35b2315d52069`:
+  all four appearances completed 10 actual native4K cycles through two cameras
+  with zero geometry/texture/program growth. Capture/census reproduction passed.
+  Timing is explicitly null (unmeasured); omitted comparisons no longer pass.
+- Core exec88492 is terminal FAILED: agent-tests passed; preview-tests exceeded
+  600 seconds and received SIGKILL/ETIMEDOUT. Server/build/Python/later checks did
+  not run. Receipt `.runtime/agent/core.json`, log `core-m1.log`. Host load peaked
+  around160; this is not a passing core receipt or proof of a code defect.
+- Inherited realism defects reproduced and corrected: teardown now restores
+  original materials/geometry; corneas retain local transforms; generated
+  iris/strand maps are per-effect owned and disposed. Bounded shared pore and
+  roughness maps remain cached. A shipped-name regression caught prefixed GLB
+  nodes bypassing eyes/lashes; corrected matching now upgrades Sable's cornea,
+  lashes, brows, hair and skin. Focused integration set:21 passed before the
+  name regression; all9 realism tests passed after that fix.
+- `m2-material-probe-b` passed off/high viewport and two-camera4K lifecycle on
+  Sable and Aurel. Sable high reports skin1/cornea1/hair1/brows1/lashes1;
+  Aurel reports missing cornea and no brows/lashes, accurately exposing its
+  current asset limits. Visual inspection: brown iris and small eye highlights
+  now present on Sable; coarse hair silhouette and limited eye detail remain.
+  No first-fixture or AAA acceptance from this material-only probe.
+
+`scripts/build_realistic_humans.py` now exports two separate ~9MiB human rigs
+from cached CC0 source assets: `man-realistic-casual` and
+`woman-realistic-tailored`. Existing GLBs/pins untouched. Blender single-thread
+build ran through the shared heavy-work queue. Ruff formatting/check passed;
+the final build in `.runtime/character-fidelity/verified-humans` used that exact
+formatted generator. Receipt captures asset/target inputs, complete tool-data
+hash manifest and script SHA. Body subdivision1, high-poly eyes, fitted
+brows/lashes, 2blinks,15visemes and3expressions are declared by the build;
+exported-byte tests and rendered acceptance must prove them.
+
+Morgan and Imani are new authored catalog entries for these fixtures. Existing
+v1/v2 shared validator and fixed-bundle customization rules remain authoritative;
+no arbitrary body, clothing, URL or morph publication is enabled. Compatibility
+rig requirements now derive from the complete pin list. Live exec25037 runs
+focused actual-asset/definition checks then off/high captures/lifecycle at
+`m2-fixtures-a`. After it is terminal, continue runtime expressions and quality
+integration plus executable capability/persistence/world/Studio acceptance.
+
+## Runtime contract, expressions and neutral-export correction
+
+New executable modules: `character-fidelity-contract.js` (DOM-free fixed-bundle
+capabilities), `character-fidelity-runtime.js` (async fenced tier ownership),
+`character-quality.js` (existing governor publication), and
+`character-expressions.js` (bounded transient poses). `loadResidentAvatar` now
+owns the layer/subscription only for the new realistic rigs by default; explicit
+diagnostic tiers remain available. Hero creation suppresses the avatar's default
+layer and applies the selected layer once. Existing canonical rigs default off.
+No crowd culling/remote-player or Studio polish implementation was duplicated.
+
+The initial two fixtures had neutral body weights but accessory morph weights
+all1, left by the existing Blender modifier-preservation helper. The new
+actual-asset regression failed on brows/hair. The new generator now zeros every
+mesh's exported key values after preparing its targets. Rebuilt at
+`verified-humans-v2`, repinned both new files and retained the old probe receipts.
+`m2-fixtures-a` therefore records a superseded candidate, not final acceptance.
+The neutral-export/expression tests now pass on actual instantiated geometry.
+Smile and brow raise don't change blink or speech influences.
+
+Focused run after the rebuild:13 passed,1 Redis skip. This includes exported
+bytes/pins/neutral weights, actual expression bindings, canonical capability
+validation, late-response/dispose fences, missing-map fallback, hero integration,
+and in-memory save/publish/equip/reload/isolation. The Redis skip remains a gap.
+Separately,15 graphics-control/quality/contract tests passed before these final
+asset bytes (these tests are not asset-sensitive).
+
+`m2-neutral-quality-a` PASSED with input SHA256
+`2c443ab404a33fa48e61cd4502b387195a71a661d665f43fa1fc930254f951d0`:
+2 bodies x off/standard/high;4 native4K views per case (full,close-up,smile,
+browRaise); all viewport and two-camera portrait deltas zero. Both actual avatar
+controllers completed5 repeated graphics-control transition cycles with zero
+resource growth and unchanged rig IDs. Governor40ms samples are synthetic
+transition inputs, not performance data. Visually inspected Morgan's smile:
+accessory misfit is corrected; the expression is visible and skin/eyes retain
+the neutral character. Hair remains card-based.
+
+ENOSPC prevented the first attempt to create the output directory before any
+browser fixture started. Removed only this checkout's ignored regenerable `dist`
+and `node_modules/.vite`, preserving all source, assets, receipts and captures.
+The rerun above passed; disk free space subsequently rose to1.8GiB. Final build
+verification must regenerate `dist`.
+
+Current browser delivery check: exec42859 runs
+`RIVER_OAKS_E2E_REPORT=character-fidelity-experience-517.json pnpm run test:experience character-fidelity character-studio`,
+log `.runtime/character-fidelity/experience-517.log`. The new journey tests actual
+Studio selection, publication/equip, a shared receiving peer, reload and world
+captures for both fixtures. Poll this exact live handle; don't restart it.
+
+Next correctness gap found during contract review: the governor's lowest tier
+currently selects diagnostic `off`, restoring the original red iris texture.
+Separate an identity-preserving `low` material tier from diagnostic `off` before
+claiming identity across quality settings. Keep off/high diagnostic comparisons.
+Then rerun tier lifecycle/captures, collect interleaved descriptive timings,
+Redis/browser/shared/asset/golden/core/full gates and complete signed draft-PR
+handoff. Remaining quality, device/native and human gaps stay explicit. No commit,
+push, PR creation, merge or retirement has occurred in this ownership run yet.
+
+
+The new `character-fidelity` Studio/shared-world browser journey PASSED on the
+neutral-export candidate: both fixtures selected in Studio, private draft saved,
+published/equipped with exact pins, loaded by the receiving peer, and retained
+after page reload. Studio/world screenshots are under `output/playwright/` with
+`character-fidelity-{morgan,imani}-*` names. Existing `character-studio` journey
+is still live in exec42859; no runtime changes while that page run is active.
+
+Isolated Redis8.10.2 is live at `redis://127.0.0.1:51195/0`, process12285,
+exec58311. It binds loopback, disables persistence, and is solely this task's
+local test service. `REDIS_URL=redis://127.0.0.1:51195/0 node --test server/tests/character-fidelity-store.test.js`
+PASSED:2 tests,0 skips, including separate Redis writer/reader clients.
+Log `redis-fidelity-store.log`. Retain this instance for the required full gate;
+revalidate its exact handle/port before reuse, then shut down this instance at
+handoff once verification is terminal.
+
+Low-tier regressions have been added and intentionally fail against current
+code (`low-tier-red.log`): floor mapping and contract still say off, and low
+material application is unavailable. After exec42859 is terminal, add low that
+retains iris/cornea/hair coverage while omitting pore/scatter cost; update the
+contract, governor mapping and quality fixture. Diagnostic off stays explicit.
+No committed change is claimed while these regressions are red.
+
+## Low tier and verification checkpoint
+
+Exec42859 is terminal PASSED: new `character-fidelity` journey9 checks in141s;
+existing `character-studio` journey43 checks in167s. Report
+`data/reports/character-fidelity-experience-517.json`. This run preceded the
+additive low tier below; final full/targeted checks must cover the final state.
+
+Low is now a production tier retaining the natural iris/cornea/strand corrections
+while omitting pore normals and diffuse wrap. The graphics floor maps to low;
+`off` is diagnostic only. The capability contract exposes low/standard/high and
+lists off separately. All3 low-tier regressions failed before this correction.
+`focused-final-low.log`:51 passed,0 failed,0 skipped, covering the fidelity,
+expression, actual-asset, hero/portrait, evidence and graphics-control modules.
+
+Live exec63677 runs the final low/standard/high fixture matrix with expressions,
+quality lifecycle,2 timing repeats,120 samples and crowds1/8/24:
+`m5-tiers-timing-a`, console log `m5-tiers-timing-a.log`. Early Morgan low and
+standard cases have zero reported residue; the run is not terminal yet. Preserve
+the source freeze through this run. Host load remains heavily contended, so its
+timing samples remain descriptive even if all other checks pass.
+
+Live exec26550 queues `REDIS_URL=redis://127.0.0.1:51195/0 node scripts/browser-lock.mjs 'Core verification character fidelity 517' -- pnpm run verify`,
+log `core-final-low.log`. It will acquire the shared heavy-work lock after the
+measurement. Redis is still live in exec58311 and answered PONG. Poll these
+existing handles; no restarts based on observation timeouts.
+
+Still required: inspect final tier views and timing results; final relevant
+browser/shared/asset-audit/golden checks; a successful core profile and the full
+profile with this isolated Redis and browser prerequisites; exact final evidence
+receipts; signed verified commits, feature push, draft PR and issue handoff to
+#441/#442/#444. No merge/deploy/retirement. No performance-budget, physical-device,
+native, human or AAA-quality acceptance claim. The whole #517 objective remains
+active and unproven until the remaining implementation/acceptance audit passes.
+
+
+### Independent review corrections (2026-10-18)
+
+Read-only reviewer found five required corrections. Added three behavioral
+regressions; all failed before patch, all pass after: missing roughness preserves
+low rather than enabling standard cost; portrait hero shares controller fallback;
+quality subscription starts before map loading and awaits the newest request.
+`review-fallback-red.log`:3 failures; `review-fallback-green.log`:10 passed,0 skipped.
+
+Cold-load and crowd timing scene cleanup now releases transmission targets before
+materials, including error paths. A repeated load/crowd lifecycle probe is added
+behind `--timing-cycles`; real-browser result pending. The contract distinguishes
+15 exported visemes from integrated speech (`speechRuntime:false`); no new donor
+files exist and no paid speech service is used.
+
+Receipt generator now follows sibling mhclo/material/texture dependencies, hashes
+imported generator modules, MPFB executable code/data and Blender binary. Two
+synthetic cache/path-boundary tests pass; actual receipt regression is red until
+the rebuild. Existing-cache build exec8978 writes isolated `verified-humans-v3`.
+Ruff check passed before this exact build.
+
+Deliberately stopped own full retry exec1657 and queued baseline exec82612 to
+apply required review fixes. Full receipt shows dependency audit and agent tests
+passed; preview tests ABORT_ERR at544s, remaining checks not_run. Queued baseline
+terminated143. Neither is final proof. Preserved logs/reports and other sessions.
+Branch fast-forwarded without commit to main59abec7790ffb165ff41b712e51fa7eb0fb4534e
+after verifying no upstream overlap in edited runtime modules; local edits retained.
+
+
+### Final source freeze and queued verification
+
+Independent reviewer rechecked all five corrections and found no further required
+source fix. Source-level review is not a substitute for the pending browser gates.
+
+Receipt v3 was cancelled after source inspection caught an accidental duplicate
+low-poly eye insertion during provenance editing; it was never copied or pinned.
+Added exported-byte regression forbidding low-poly eyes. Corrected v4 build
+(exec3421) completed from the cached source with unchanged pinned GLB bytes:
+Morgan bce971f3e523419b9ee1ceaccf9a8044152dc1647dd2148c458e40aad0da4305;
+Imani d341bf3a344bfd8d091ea226482d9bd51ad18732fe361e5860537052e767cdc1.
+Copied only those outputs and the corrected receipt. It includes93 asset inputs,
+4 generator inputs,2384 MPFB code/data inputs and Blender binary hash.
+`receipt-assets-final.log`:8 passed,0 failed,0 skipped (actual GLBs + audit tests).
+`asset-audit-final.log`:CLI audit passed all5 pinned rigs.
+`focused-review-final.log`:55 passed,0 failed,0 skipped; build-input pytest2passed.
+
+Source freeze active for these existing exact jobs; do not restart them on
+observation timeouts or edit executable inputs while measurements are live:
+- exec67552:original4 appearances + repeated timing-scene lifecycle, against
+  m1-portrait-verified-a, repeats0; output m1-final-review.
+- exec47858:low/standard/high2fixtures + expressions + rendered tier comparison,
+  quality lifecycle,2 timing repeats120samples,crowds1/8/24,against prior M5;
+  output m5-final-review.
+- exec80279:matched diagnostic-off2fixtures,expressions,lifecycle,repeats0;
+  output m2-final-off. This shares executable manifest with the high run.
+- exec93412:strict hero goldens --check against reviewed reference.
+- exec67848:character-fidelity + character-studio browser journeys. The supplied
+  report env name was ignored by existing runner; collect its actual
+  data/reports/experience.json into the task-specific report before full overwrites.
+- exec63330:runs exact core then full profile sequentially with isolatedRedis51195;
+  logs core-final-review.log/full-final-review.log,explicit exit file.
+
+`project:check --tasks <primary>/docs/project-management/tasks.json` reports
+unrelated pre-existing missing worktree records across the shared register.
+Preserve those records; this task's owned checkout exists and is active.
+
+Visual inspection of prior neutral-v2 closeups confirms brown irises, visible
+brows/lashes,skin variation and specular response. Hair silhouettes remain coarse,
+cloth textures visibly blurred,and fine eye detail is limited. These are known
+quality gaps,not AAA acceptance. Current final captures still require inspection.
+
+
+Final M1 exec67552 passed: source manifest 86e3c93b40d87352d14b1baabdc309e041e2fd90a4e81077c96e33d662929ac5,
+revision59abec7790ffb165ff41b712e51fa7eb0fb4534e,dirty-tree evidence includes all executable/public inputs.
+All8 original PNGs byte-identical and4 census checks reproduce prior verified M1.
+Each of4appearances has0geometry/texture/program growth in viewport10cycles,
+native4K two-camera10cycles,and3repeated cold-load+crowds1/8/24cycles.
+Copied accepted report unchanged to data/reports/character-fidelity-m1-final-517.json.
+No timing measurements were requested in this repeats0run.
+
+
+Repository-wide Ruff found one inherited long dictionary line in the new
+roughness-map generator. Formatted that line only; ruff check and format now pass.
+No renderer or asset behavior changed. M1 proof above identifies its exact earlier
+manifest; it precedes this formatting-only generator change. Cancelled only own
+queued tier/off measurement processes8502/13078 before editing to avoid invalid
+queued provenance. New unified off/low/standard/high run exec27503 at
+m5-final-source captures matched off/high in one source manifest and includes
+expressions,real rendered transitions,quality lifecycle and2timing repeats.
+Core/golden/Studio jobs remain queued; their sources are read at execution or
+exclude this unrelated offline generator. No timeout/threshold change.
+
+
+Strict native4K hero check exec93412 passed the reviewed Sable reference, without
+recording/replacing reference images or changing tolerances. Copied its report
+to data/reports/character-fidelity-goldens-517.json. Exact command:
+node scripts/character-hero-goldens.mjs --check preview/e2e/goldens/character-hero.
+Core started22:10:07Z at59abec77; agent-tests currently live.
+
+Existing Playwright WebKit binary is installed; queued an additional no-download
+character-fidelity journey with RIVER_OAKS_EXPERIENCE_BROWSER=webkit and the
+correct RIVER_OAKS_E2E_REPORT=character-fidelity-webkit-517.json. This would prove
+only desktop WebKit's engine with fixture identities, not Safari/iOS hardware.
+
+
+Fresh final store regression:
+REDIS_URL=redis://127.0.0.1:51195/0 node --test server/tests/character-fidelity-store.test.js
+passed2,failed0,skipped0 in store-final-review.log. It checks canonical pinned
+publication and owner isolation with both memory and separate Redis clients.
+Core agent suite125passed0failed0skipped;preview remains live. Remaining
+preview workers are existing CPU-heavy coat/drape/fragrance/screening tests;
+no configured timeout or threshold was changed.
+
+
+### Broad-gate integration corrections
+
+Core exec63330 exposed real patch-related integration failures after125tooling
+tests passed: cloth-bake receipts pin old avatars.js SHA,and campus envelope
+receipt covers11looks instead of13. Also saw the unchanged penthouse idle-slice
+40ms assertion fail under contention. No threshold changed. Stopped own outer
+core/full group8809 and queued Chromium8504/M5 39034/WebKit31594 before source
+receipt mutation; exec63330/67848/27503/58552 terminal143, full not started.
+All earlier accepted reports remain retained at their exact source state.
+
+Claimed integration-only generated receipts in this isolated checkout (other
+turning/Studio checkouts untouched). Exec1087 queues existing5cloth producers
+with --write then --check,requires all generated morph-data bytes unchanged,
+runs selected provenance/idle regression,and remeasures campus bounds.
+Log receipt-refresh-final.log. Prior campus report copied unchanged to
+data/reports/character-fidelity-campus-envelope-before-517.json.
+
+Inspection found the existing campus producer passed seconds into the avatar's
+millisecond clock and ignored morphs in seated bounds. Corrected those two
+measurement operations,added source/asset provenance and self-hash,and will
+refresh the receipt only after the actual13-look measurement succeeds. Existing
+CAMPUS_BODY thresholds stay unchanged. No new world/collision behavior.
+
+
+Independent review found a further consumer proof gap: IPIC uses directional
+seated reach (side.514/front.644/back1.155m),which a campus radial bound cannot
+prove. New character-fidelity-clearance.test.js is red on the missing new looks.
+The same pending13-look producer now records seated left/right/front/back,
+measures visible,morph-aware standing and seated vertices,and rounds outward
+to1micrometre so rounding cannot hide a violation. It keeps the same campus
+and IPIC thresholds. Original IPIC22-look evidence remains untouched.
+
+Read-only inventory confirms exactly5existing receipts hash avatars.js,and no
+other input in those receipts differs. integration-receipts-red.log has exactly
+3selected failures (coat/lyra provenance + stale campus catalog),0skips.
+Queued producer's selected provenance checks precede actual envelope capture;
+the unrelated idle-slice reproduction runs last,so it cannot suppress useful
+measurement evidence if the host-sensitive40ms assertion fails again.
+
+
+Additional failure/recovery regression: after a transient optional-map failure,
+requesting the same low/standard tier used to return its fallback forever. The
+early-return now excludes fallback reports,allowing a same-tier retry to recover
+without an identity/quality switch. fallback-recovery-red.log failed before;
+fallback-recovery-green.log has6passed0failed0skips for all runtime scenarios.
+Default successful-map and legacy off paths are unchanged. This correction was
+made while all own measurements were cancelled and the receipt refresh queued.
+
+
+Fast-forwarded feature branch59abec77 ->225acfc9eaebf67627db7337feacac130b241ad8
+without creating a commit,retaining all dirty task changes. Main's32changed paths
+include the existing #442crowd and IPIC consumer work. Static dependency walk
+of the5bake producers found65local dependencies and0upstream intersections;
+none of their pinned data/tool inputs changed. No fidelity/campus measurement
+was running (bake refresh only),so the upcoming campus provenance will identify
+this integrated state. This reuses the crowd work rather than duplicating it.
+Core/full and final rendering still must run against the integrated candidate.
+
+
+Exec1087 completed0. All5existing producer --write/--check pairs reproduced
+unchanged morph data; only5receipt avatar-source hashes changed. Selected
+coat/Lyra provenance2tests passed,0skipped. Unchanged idle-slice test passed
+isolated1/1,0skipped; broad gate still requires rerun.
+
+Fresh actual13-look receipt copied unchanged after successful measurement at
+225acfc9+dirty manifest3a05312c0f8c685722044b922fb00d103ff3bc2b3c15375b2ba329b384b57c63.
+All13fit campus; both new fixtures fit IPIC side.514/front.644/back1.155m.
+Morgan seated left.270710,right.513297,front.614232,back.150984m;
+Imani left.238424,right.439987,front.586544,back.120508m.
+Corrected measurement newly observes existing forward-bound failures: Lyra
+.673930,Silvan masculine.659066,feminine.673350m vs.644m. Keep these explicit
+in data/reports/character-fidelity-clearance-517.json and #444 handoff. No
+threshold/legacy wardrobe/runtime change and no full-catalog IPIC acceptance.
+Unchanged morph/geometry bytes do not prove when those failures began.
+
+Reviewer agrees #517's directional regression should guard its exact two new
+rigs while requiring full current-catalog campus coverage. It first failed on
+the old11-look receipt; exec90155 now tests the refreshed report plus full
+garden contract. Prior failed all-catalog validation and original receipt are
+preserved as observations,not relabelled passes. Updated brief describes the
+actual refreshed method/values and links both historical and current evidence.
+
+
+Integrated focused set:67passed,0failed,0skipped (focused-integrated-final.log).
+Clearance plus garden contract:16passed,0failed,0skipped (clearance-green.log).
+No further executable inputs should change while the aggregate gates are live.
+
+Exec91292 now owns the sequential core/full run in
+.runtime/character-fidelity/run-integrated-profiles.sh,using isolatedRedis51195.
+Exact required commands remain pnpm run verify and pnpm run verify full under
+the shared browser/heavy-work lock. Logs core-final-integrated.log and
+full-final-integrated.log. These are queued behind other sessions,not passes.
+On terminal completion the script copies each actual profile receipt into
+data/reports/character-fidelity-{core,full}-517.json and writes explicit exits.
+
+Pre-run snapshot profile-inputs.json binds HEAD225acfc9,the complete runtime
+manifest3a05312c0f8c685722044b922fb00d103ff3bc2b3c15375b2ba329b384b57c63,
+and49changed code/test/asset hashes (including new test files outside the render
+manifest). The final step rejects any changed input or HEAD. Docs/reports/live
+registry remain outside this executable freeze. Runtime measurement self-hash
+remains in the copied campus receipt. Only exec91292 and isolatedRedis58311
+remain live for this task; all prior verification/browser jobs are terminal.
+
+After core/full terminal:inspect actual failures and all skips,then final
+M1 reproduction + off/low/standard/high2fixture rendered matrix (including
+quality-reference pixels/quality lifecycle/expressions,cold load/crowds),strict
+hero reference,Chromium fidelity+Studio,desktopWebKit fixture journey,and
+required/development-world shared coverage if the full profile did not establish
+it. Preserve final real PNGs and exact reports for GitHub review. Then signed
+verified commits,feature push,draftPR and issue handoff #517/#441/#442/#444.
+No merge/deploy/retirement,and no completed goal or physical/AAA budget claim.
+
+
+Final real-render jobs were queued while core remains ahead in the shared lock.
+They will run before the script's subsequent full gate (which queues only after
+core returns),allowing material failures to be found before another broad run.
+All use the same frozen runtime manifest3a05312c...; no source mutation is planned.
+- exec33613:M5off/low/standard/high2fixtures,expressions,quality-reference pixel
+  checks and lifecycle,2timing repeats120samples,crowds1/8/24; m5-integrated-final.
+- exec73132:M1original4,repeats0,timing-scene lifecycle,against m1-final-review;
+  m1-integrated-final.
+- exec51694:strictgoldens --check;golden-integrated-final.log.
+- exec47041:Chromiumcharacter-fidelity+character-studio with correct
+  RIVER_OAKS_E2E_REPORT=character-fidelity-experience-final-517.json.
+- exec18270:desktopWebKit character-fidelity,correct task-specific report
+  character-fidelity-webkit-517.json. Installed binary only,no download.
+
+These jobs are not passes. Core/full exec91292 and isolatedRedis58311 remain
+live too. Queue order between the independent render jobs follows actual lock
+acquisition,not tool launch order. A source failure requires diagnosis; a mere
+observation timeout never licenses a duplicate run.
+
+
+### Actual caller-index stature regression
+
+Final caller audit found player-avatar and remote-players pass indexOf(newrig)=-1,
+while hero clamps0. Existing indexed height formula shortened new world bodies
+by2.5cm and varied the same bundle's crowd stature. Added an actual exported-GLB
+regression using the existing texture-free structural helper,indices[-1,0,1,4,8].
+It failed on Morgan index-1 (stature-red.log),then passed both rig/contract
+checks after fixed targetHeightM1.78/1.66 is exposed by the immutable contract
+and preferred by loadResidentAvatar (stature-green.log:2pass,0skip).
+No legacy NPC height formula or canonical asset bytes changed.
+
+Stopped ONLY own queued groups57322/8485/8486/8487/8488/8489 before source edits.
+Exec91292/33613/73132/51694/47041/18270 all terminal143; no integrated core/full
+or new render job had started. Their old input snapshot is not current proof.
+Redis exec58311/port51195 remains live and isolated.
+
+The source hash change requires actual5cloth producer/check refresh again,even
+though those old-rig paths are unchanged. Reuse exact scripted checks and require
+generated morph bytes identical; no receipt stamping without execution. New
+refresh writes campus-stature-final.json so the first13-look measurement remains
+retained separately. After final receipt copy,rerun focused,aggregate and actual
+render acceptance. Never restart an active job due to observation timeout.
+
+
+### Fixed-stature final verification queue
+
+Fresh selected focused source/asset/runtime/evidence set:54passed,0failed,
+0skipped (`focused-stature-final.log`,exec76077 exit0). This is the selected
+54-test set,not the prior67-test selection or an aggregate gate.
+
+Actual5producer/check and13look refresh remains exec31656,queued behind
+other browser sessions; do not stamp receipts or bypass lock. Finalrender
+jobs queue behind it using wrappers so provenance is captured after lock
+acquisition:M5exec48232,m1exec55253,goldenexec85059,Chromiumexec35037,
+WebKitexec92313. Logs use `*-stature-final.log`; outputs `m5-stature-final`,
+`m1-stature-final`. No source edits planned. Redis51195 PONG verified23:00Z.
+No implementation PR exists on latest REST read. Primary live task and own
+branch registry heartbeat updated only in own task block.
+
+
+Receipt refresh exec31656 terminal0:all5cloth producers/checks really ran;
+all5generated morph-data files remain byte-identical toHEAD. Provenance
+regressions2passed0skip,isolatedidle1passed0skip. Actual13look measurement
+copied unchanged from campus-stature-final.json; all13dimensions exactly
+equal prior13look observation,with current runtime manifest
+f1f07b69267e7d47e264e4f476a04c30f65ce5cce5f619cfc826d4dac1a4472b.
+Clearance report links this provenance; scoped regression exec21104 running.
+
+Final stricthero --check reports1native4Kcompare passed (exec85059 awaiting
+terminal collection),output23-05-36.056Z. Chromium now running,other final
+renders remain queued. Aggregate core/full exec14591 now queued sequentially
+via unchanged run-integrated-profiles.sh,isolatedRedis51195; before snapshot
+regenerated after finalsource receipts and actualcampuscopy. No aggregatepass
+claim. Earlier cancelled logs are historical; newrun writes the same designated
+final-integrated logpaths and actual task-specific receipts on terminalexit.
+
+Freshclearance exec21104 terminal0:16passed0failed0skip. Strictgolden
+exec85059 terminal0:1native4KSablecompare,allpixelmetrics0. Actualreport
+copied unchanged to data/reports/character-fidelity-goldens-517.json.
+Aggregateprechecksnapshot is currentHEAD225acfc9 +manifestf1f07b69...,
+50changedcode/test/assetfiles. Finalrenders/core/full remain running/queued.
+
+Chromiumexec35037 terminal0:character-fidelity9checks and existingStudio43
+checks passed; actualreport data/reports/character-fidelity-experience-final-517.json.
+PNGbytes copied unchanged before WebKit can overwrite outputpaths to
+docs/acceptance/character-fidelity-517-captures/(4Studio/peerimages),with
+SHA256indexchromium-captures.json. Visually inspected all4:bothworldrigs
+load; worldviews are frombehind (identity/loading evidence,notfacequality).
+Studio shows coarsehairsilhouettes,Imanihairstrongsilverhighlights,limited
+clothdetail. Finalnative4Kcloseups/tiertransition matrix stillpending.
+WebKitnowrunning; M5,M1,core/fullqueued.
+
+
+M5exec48232 terminal0:8tier/fixturecases,10viewport+10twocameraportrait
+cycles each,quality5triplets each,allresource deltas0. Switchedhigh/std
+vsfreshsame-tier nativeportrait maxchannel0 forbothfixtures. Expression
+smile/browraise actualPNGs inspected alongside full/off/highcloseups;12native
+PNGs copiedunchanged withSHA256/camera index into acceptance capturesfolder.
+Rawreceipt copiedunchanged to data/reports/character-fidelity-tiers-517.json.
+AppleM3Max16CPU,Darwin25.6arm64,Chromium156ANGLEMetal. Tworepeats120frames
+and30GPUqueries percase/crowd1/8/24. Pairedp50frame/GPU agreement39/48 within
+20pct; descriptiveonly,notbudget. Disabledvsync/limit isolatedscene nottownFPS.
+
+WebKitexec92313 terminal0:9fidelitychecks. Rawreport's inheritedscope string
+saysChromium; actualenv/runnerselection WebKit documented explicitly.
+NoSafari/iOS/physical acceptance claim.
+
+M1exec55253 terminal0 atcurrentf1manifest:8originalPNGs identicalbytes,
+4censusmatched,allviewport10/portrait10/timingloadcrowd3resource deltas0.
+Rawreport replaces selected data/reports/character-fidelity-m1-final-517.json,
+previousreport preserved in.runtime/m1-final-review. No timingrepeats requested
+for deterministicrerun; timingagreement unmeasured.
+Coreexec14591 nowrunning; fullqueuesafterterminalcore. Noaggregatepassyet.
+
+
+### New culling fixture exposed a stale height assertion
+
+Core tooling125passed0skip,then preview reportedImani failure. Targeted
+`node --test --test-name-pattern='imani-human: the figure sphere' preview/tests/avatar-culling.test.js`
+failed on its firstheightassertion (culling-stature-red.log),beforevertex
+measurement:expectedlegacy1.78,actualdeclared1.66. No proven vertexoverflow.
+StoppedONLYownaggregategroup30348(exec14591 terminal143),nootherjobs.
+Preserved core-before-culling-contract.log/json. No aggregatepass/no fullrun.
+
+Smalltest-onlyintegration fix:expectedheight nowprefers immutablebundlecontract;
+legacyassertion and unchanged.97radius-containment threshold remain. No culling
+production/geometry/limits change. Full13lookposesweep exec12645 running.
+Currentrenderinputmanifest excludes preview/tests and remainsf1f07b69; actual
+M1/M5/browser/golden proofs stay source matched. Aggregatechangedtestmanifest
+must regenerate with51changedfiles. Primary/branchownfiles claim includes
+avatar-culling.test.js. Re-runrequiredcore/full after sweep terminalgreen.
+
+
+Exec12645 terminal0:full13lookcullingpose sweep13passed0skip; Morganworst
+.751,Imani.746 ofunchangedradius (threshold.97). Independentreview found
+no requiredissue,testcorrectlyusesfixedfixtureheight,and verified all16
+savedPNGhashes/sizes/nativehashes vsreports. Evidenceclaims including39/48
+timingagreement,WebKitqualification andpendinggates matchedrawreports.
+Noedits/heavytests byreviewer.
+
+Newsequentialrequiredcore/full exec88467 queuedbehindother sessions under
+sharedlock. Currentprechecksnapshot51changedcode/test/assetfiles,HEAD225acfc9
+andunchangedruntimef1f07b69. Nootherownbrowser/renderjob remains active.
+Redis51195 remains isolated for requiredgates. Neverrestartdueobservation
+timeout. Noaggregatepassyet,and no signedcommit/PRuntilverification.
+
+Additionalcrowdartifactgap identified:timing harness renderedcrowds butdid
+not savecrowdPNGs. Independentcapture scriptdocs/acceptance/character-fidelity-517-captures/capture-crowds.mjs
+usesexistingfixtureframes(8/24,high,reducedmotion),immediatePNGreadbackbefore
+disposal,and recordsits ownSHA256 alongsideunchangedruntimef1manifest. Its
+encoding affectsCPU timing,so no timingclaim fromthisrun. Exec69016 queued
+behindcurrentcore andotherqueuedbrowserwork. Thisdocsartifact isexplicitly
+self-hashed,outside aggregate's51code/test/assetinputs; no runtimepatch.
+CorehasnowpassedImaniheightandposeboundcaseintheactualbroadsuite.
+
+
+### Secret gate: exact public tool digests
+
+Core completed125tooling,3653preview(1skip),923server,76desktop,build,Ruff
+452files,143Python tests andexpectedblockedoffline verification,thenfailed
+secret scan5generic-api-key findings. Onlyskip:Vinceglassnegative-test
+approachalreadyobstructed; notglassproof. Preserved rawcore receipt/report.
+Redactedscanner metadata only showed5toolInputs values inrealistic-humans
+receipt,all SHA256 digests ofMPFBfiles with"keys"inthefilename. Independently
+hashed eachcachedfile; all5match exactreceipt. Neverreadcredentialvalues.
+
+StoppedONLYownqueuedfullgroup77542(exec88467 terminal143) beforeguard/test
+edit. Newexceptionextendsgeneric-api-keywithAND exactreceiptpath plus5exact
+anchoreddigests,notallSHAvalues,notpath-only,notruledisable. Officialconfig
+[documents AND criteria and inherited rule attributes](https://github.com/gitleaks/gitleaks#configuration).
+Qualifiedred:1failure(knownhashreceipt),1pass(otherkeyblocked). Greenall17
+secretguardtests0skip; confirms samehashesoutsidepath blocked,othergeneric
+valuesinreceipt blocked. Worktree --allscanner19018 terminal0,198.99MB,
+no leaks found. Rufftargetcheck/formatpass. No source/assetreceiptmutation;
+renderingmanifest remainsf1f07b69. Aggregateinputsnapshot mustregenerate
+with53changedcode/test/asset/configfiles. Independentreviewrequested.
+
+Independentreview foundno requiredissue inexactdigest/pathallowlist; real
+worktreescanner alreadyterminal0 and all17guardtests pass0skip. Required
+core/full nowexec41419,queued,snapshot53changedfiles+runtimef1manifest.
+
+Crowd captureexec69016 terminal1:helper attemptedprototypehook butrenderer
+usesinstance render; PNGundefined causedsplitfailure,notruntimefailure.
+Preservedrawfailedreportin.runtime/crowd-capture-failed-prototype.json.
+Correctedindependentartifacthelper toPlaywrightcanvas.screenshot afterexisting
+fixtureframes. Exec58383 nowqueued. Two readinessframesnotbenchmark; camera
+metadata links hashedfixturecrowdStage(count>1). No production/harnesssource
+mutation and no renderproof invalidation. Keepthese failures distinctfrom
+productacceptance,andinspectactualcrowdPNGs beforepassclaim.
+
+
+### Required core passed
+
+Exec41419 sequentialdriver recorded core_exit=0. Actualrequired
+`REDIS_URL=redis://127.0.0.1:51195/0 pnpm run verify` passed; rawreceipt
+copydata/reports/character-fidelity-core-517.json statuspassed,all11tasks
+passed. Console125tooling;3653/3654previewwith1documentedVinceglassnegative
+skip;923server0skip;76desktop0skip;buildsuccess;Ruffcheck/format;Python
+145tests(after2newguardtests);offlinedemoanditsrequiredverifyexit2(domain
+blockedexpectedbyprofile);worktree199.22MBno leaks. Fullstillqueued,notpass.
+Rendering/sourceinputsf1manifestand53changedinputsnapshot remainunchanged.
+SeparatecrowdPNGexec58383 queuedaheadoffullbehindotherbrowserwork.
+No commit/PRyet.
+
+
+Crowdexec58383 terminal0,rawreportdata/reports/character-fidelity-crowds-517.json
+statuspassed,unchangedruntimef1manifest,selfscript541a495e0cc76eef0109a2a82fffa3b739b5f43b85d53045452c51ebb6ac51c9.
+All4real8/24Morgan/ImaniPNGs inspected:figures/shadows/renderedgridvisible,
+no blankcaptures. Script uses Playwrightcanvas.screenshotafterexistingfixture
+render,2readinessframes,no timingclaim,townocclusionexplicitlyoutside scope.
+Total28savedreviewPNGfiles:12nativefixtures,4Studio/peer,8M1,4crowds.
+Fullgate nowrunning preview;no fullpassyet.
+
+Fullprofile dependency audit,repeatcoretasks,worktree/historysecrets,security
+browser,andreflections passed. All13experiencejourneyspassed; exactrawreport
+copiedunchanged todata/reports/character-fidelity-full-experience-517.json
+beforelaterfulltasks. Sharedfull-rendering5modesnowrunning,IPICscreeningstill
+notrun. Fullaggregate remainspending. Independentevidencereview verifiedall28
+PNGhashes/sizes,crowdhelperhash+runtimeprovenance,andfailed14to24negative
+control,norequiredissues. Noedits/heavytests byreviewer.
+
+All24sharedjourneys passed acrossdevelopment,development-world,development-
+publish,required,andcreator;rawreportstatuspassed copiedunchangedto
+data/reports/character-fidelity-full-shared-517.json. Character-studio-worlds
+andcharacter-studio-shared included. FinalfulltaskIPICscreeningnowrunning;
+noaggregatepassclaimuntilterminaland53fileinputfreezecheck.
+
+
+### Required full passed; delivery preparation
+
+Sequentialdriver41419 terminal0:core_exit0,full_exit0,input_exit0. Required
+`REDIS_URL=redis://127.0.0.1:51195/0 pnpm run verify full` passedall18tasks.
+Fullincludesdependency audit,125tooling,3653preview+1Vincenegativetestskip,
+923mandatoryRedisserver,76desktop,build,Ruffcheck/format452files,145Python,
+syntheticdemoandexpectedverifyexit2,worktree/historysecretchecks,security
+browser,reflections,13experience,24sharedall5modes,and16IPICchecks. Rawfull
+receiptcopiedbydriverunchanged;IPICrawreportand53fileverificationinputmanifest
+nowcopiedunchangedtodata/reports/character-fidelity-{ipic-screening,verification-inputs}-517.json.
+FinalunchangedinputcheckpassedatHEAD225acfc9+runtimef1manifest;53changed
+code/test/asset/configfiles unchanged. Source/artifacts reviewandfirstsigned
+commit/push/draftPRnext. Existingdevice/mobilebudget/native/liveauth/human
+gaps,and3newlyobservedexistingIPICfrontfailures,remainexplicit. Goalnotclaimed
+complete;worktreekept.
+
+Finalproject:check againstprimarylive register exits1 for41repository-wide
+gaps(missing/orphanedothercheckouts etc). Own517branch/worktree recognized,
+activeclaimvalid; noownownershipgap. No cleanup ofother sessions. Exactsource
+andall28artifacthashes verified; genericexperience/sharedreports restoredtoHEAD
+after savingactualtask-specific fullreports. Deliverypreparation isauthorized.
+
+Firstcommit attempt blockedbyinstalledprecommit scanner5digest findings;
+no commitcreated. Directworktree-config stagedscan returned0findings. Owning
+seam:sharedhook deliberatelyusesinstalledchecker/configcopies incommonGit
+river-oaks-hooks; itsconfigurationwasstale. Confirmedall6installedguard/driver
+executablesbyte-identicaltotheverifiedcurrent sources(includingrenderedNode
+path),thenusednormal `sh scripts/install-hooks.sh` torefreshmanagedcopies.
+Refguardretained;nohooks override/bypass,noprimarysource edits. Onlyconfig
+refreshneeded. Source53inputs remainunchanged;retry ordinarysignedcommit
+withinstalledprecommitguard active.
+
+
+### Signed delivery and issue handoff
+
+Implementationcommit00a74a7c8f38c424d6baa4d2f85be4e2149e76b5 signedand
+verifiedwithGitSSHsigning; prohibitedattributioncheckempty. All53committed
+blobs matchpassedverificationinputs,andcommittedruntimehashisf1f07b69... .
+Featurepushsucceeded;RESTcreateddraftPR545atthat exacthead.
+
+- #517: https://github.com/BunsDev/river-oaks/issues/517#issuecomment-6257106326 (comment 6257106326)
+- #441: https://github.com/BunsDev/river-oaks/issues/441#issuecomment-6257106505 (comment 6257106505)
+- #442: https://github.com/BunsDev/river-oaks/issues/442#issuecomment-6257106716 (comment 6257106716)
+- #444: https://github.com/BunsDev/river-oaks/issues/444#issuecomment-6257106892 (comment 6257106892)
+
+GitHub reportedmergeable_state dirty against origin/main5ce4e76(65commits
+aheadoftestedbase). Read-onlymerge-treewithnormalcustomregisterdriver
+mergedcleanly; portabledriver-disabled simulationconfirmedonlyconflictwas
+docs/project-management/tasks.json. RemovedONLYbranchclaimmirror byrestoring
+thatfiletobase225acfc9;primaryliveclaim remainsauthoritativeandnowrecords
+PR545/all4handoffURLs. No upstreamproductioncode imported,no runtime/test/
+asset changes,andall53passedinputhashesremainmatched. This removesregistry
+churnfromeffectivePRdiffandkeepsotherprimaryliveentries untouched.
+
+The signed metadata receipt is committed and pushed as `016bafa0`. The
+portable merge simulation, with the local task-register driver disabled, passes
+against main `5ce4e767`; GitHub confirms PR #545 is open, draft and mergeable at
+that head, with state `behind`. No runtime or verification inputs changed.
+The final pushed head and hosted check status are maintained in the primary live
+task register and PR. At this audit, 14 hosted checks and Vercel remain pending.
+
+Local implementation delivery is ready for review. Full goal acceptance remains
+open: no supported mobile/device budget, native/live-auth/human accessibility
+proof, or all-catalog IPIC clearance claim. The three newly observed existing-look
+front-bound findings remain explicit; #441 P4/P5 novice trials remain waived.
+Hosted CI and an up-to-date branch are separate landing gates. No merge, deploy
+or retirement is authorized, and the checkout is retained.
+
+
+### Final-head CI reconciliation
+
+Run `39181541217` at signed head `335224c2` completed with one failing job:
+`preview checks`, followed by the failing aggregate `preview`. The new upstream
+shadow test required at least ten casters for every appearance. A local run of
+`node --test preview/tests/shadow-depth.test.js` on the combined source reproduced
+Morgan's nine-caster assertion failure. This is a test count assumption, not
+evidence that a caster lacks its required depth material. The corrected test
+requires a nonempty assignment and checks every eligible caster individually;
+kind isolation and cutout behavior remain enforced. No production shadow code
+was changed.
+
+Refreshing the feature branch from main `2b4e4926` produced only `.gitleaks.toml`
+and appended secret-test conflicts. Retained upstream PR #546's manifest digest
+policy and both sets of behavioral regressions. No primary tracked source or
+other session's checkout was edited. Focused/core/full verification and renewed
+render evidence are pending; older receipts remain historical at their exact
+source manifests. A paired iPhone 16 Pro Max is available, but its measurement
+path and Web Inspector prerequisite remain unverified.
+
+The reconciled core gate passed at 02:20:24 UTC on the uncommitted merge of
+`335224c2` and main `2b4e4926`. The full gate is live under the shared browser
+lock; no full pass is claimed yet. Old smoke helpers completed as smoke only.
+
+The phone-helper review found and corrected two evidence/serving boundaries
+before any physical launch: client-reported success now requires the complete
+server-validated 48-case timing matrix, lifecycle and capture set; run-specific
+URL/receipt IDs fence stale tabs. Seven behavioral regressions failed against
+the former acceptance path and pass with the validator. Vite now permits only
+fixture/dependency directories, preserves every installed default denial, and
+also denies `.runtime`. The final HTTP smoke has private-file, synthetic-key,
+stale-page/packet and premature-success negative controls. The independent
+reviewer found no remaining required source issue; the actual smoke and physical
+run remain pending. Device inventory confirms a booted paired iPhone 16 Pro Max,
+iOS 27.0.1, with developer services enabled. No Inspector setting was changed.
+
+The explicit goal requires honest separation of web, native, physical and human
+evidence; it does not authorize an engine rewrite or invent a new native/human
+acceptance gate. The remaining named-mobile measurement and baseline-derived
+budget evidence is being pursued on the available phone. The novice waiver is
+unchanged. No AAA claim or total GPU-residency measurement is inferred from
+fixture PNGs or estimated texture storage.
+
+Full reconciliation attempt stopped at production build with ENOSPC while
+copying `ez-oak-low.glb`. The exact failed receipt is retained as
+`data/reports/character-fidelity-main-full-failed-disk-517.json`; remaining tasks
+were not run. An immediate filesystem check found 2.2 GiB available, versus
+191 MiB of this checkout's public inputs and 138 MiB partial build output. No
+source, evidence, other worktree or cache was deleted. Retrying the ordinary
+build and full profile is justified by the recovered capacity; inputs still
+match manifest `426886a8...` with 78 changed source/test/config inputs.
+
+Final phone HTTP smoke passed at exact helper SHA
+`e5a7198c1ffef961c5e881cff682f7e30fa2cdbee0c954f5a585fc94837d9c00`: private
+root file and synthetic key both 403, stale packet/premature success both 400,
+stale page 403, full smoke readiness, and unchanged runtime inputs. Physical
+measurement is now queued after the renewed desktop render suite; no physical
+pass is claimed from this smoke receipt.
+
+Renewed M1 and tier suites passed under runtime manifest `426886a8...`: eight
+original PNGs and all32 new tier/expression PNGs byte-identical, censuses match,
+and lifecycle checks pass. Chromium fidelity9 + Studio43, desktop WebKit9, and
+one strict native4K golden comparison passed after disk recovery. Raw renewed
+receipts are `character-fidelity-main-{m1,tiers,chromium,webkit,goldens}-517.json`.
+
+The first actual physical launch was rejected by CoreDevice as `Locked`, before
+Safari loaded a page: zero receipt records and no accepted mobile measurement.
+The sanitized blocker is `data/reports/character-fidelity-iphone-blocked-517.json`;
+ignored raw launch/report files retain the precise failure. Val was asked to
+unlock the already identified paired phone and keep it awake for the bounded
+run. This is an unlock prerequisite, not another target request or novice trial.
+The ordinary build retry passed; full verification is running independently.
+No source, receipts, caches or other worktrees were deleted for space.
+
+
+### Disk-recovered full verification and crowd cleanup
+
+The ordinary build and `REDIS_URL=<owned loopback Redis> pnpm run verify full`
+retry completed with exit 0. All 18 tasks passed: 125 tooling, 3,676 preview
+passes plus one documented skip, 957 server, 76 desktop and 149 Python tests;
+Ruff checked 459 files. Browser coverage passed 13 experience journeys, 24 shared
+journeys across five modes and 18 IPIC screening checks. The existing preview
+negative-approach skip supplies no glazing proof. Offline domain-policy exit 2
+is expected. Raw task-specific receipts are `character-fidelity-main-full-517`,
+`main-full-experience`, `main-full-shared`, and `main-ipic-screening` in
+`data/reports/`. The recorded 78 code/test/config inputs and runtime manifest
+`426886a8e79e3acf652a29e4985ad07ec287479e500cf6c01c41f77155c81895`
+remained unchanged after completion. The failed disk receipt remains historical.
+
+The focused new-human high-tier crowd check also exited 0:
+`node scripts/character-fidelity-baseline.mjs --appearances morgan-human,imani-human --realism high --repeats 0 --timing-cycles --against .runtime/character-fidelity/main-reconcile/tiers --out .runtime/character-fidelity/main-reconcile/crowd-lifecycle`.
+Both fixtures repeated three cold-load/1/8/24 crowd scenes, ten viewport cycles
+and ten native two-camera portrait cycles with zero reported geometry, texture
+or program deltas. Their four native captures stayed byte-identical and both
+censuses matched. Receipt: `character-fidelity-main-crowd-lifecycle-517.json`.
+
+Val confirmed disk space was freed and the paired phone was unlocked. The new
+bounded physical run is queued under the shared browser lock; it contributes no
+mobile pass until the complete server-validated receipt finishes. No cleanup
+was performed by this session.
+
+
+### Physical Safari completion and delivery candidate
+
+After Val's unlock readiness, `node docs/acceptance/character-fidelity-517-captures/capture-phone.mjs --device <paired-id>` exited 0. Paired Mobile Safari on iPhone 16 Pro Max / iOS27.0.1 returned all 67 records: hello/environment, two first loads, 48 timing cases, eight viewport lifecycle results, two portrait lifecycle results, four capture sets and completion. Every server-validated completeness condition passed. All 80 viewport and six native two-camera portrait cycles reported zero geometry/texture/program growth. All twelve 3840×2160 native PNG bytes and hashes match the reviewed public copies. Runtime inputs stayed unchanged at426886a8; helper e5a7198c and gate3a6e0cbb match the independently reviewed HTTP smoke.
+
+All24 paired p50 comparisons agree within the existing20% band. High-tier p95 at8 avatars was22ms Morgan/22–23ms Imani; at24 it was50–52ms/50–51ms. At1 both were17ms with unchanged vsync. The first local Wi-Fi load and subsequent first render were2024+5277ms Morgan and1905+1377ms Imani; these are single first-page samples, not Internet distributions. GPU timers were unavailable; texture bytes remain estimates. The measured reference budget for each case is ceil(max(two p95 samples)), with no added headroom or loosened tolerance. No whole-town, thermal/soak or production SLA claim follows.
+
+Sanitized physical evidence and derived references: `data/reports/character-fidelity-iphone-517.json` and `character-fidelity-iphone-budgets-517.json`. Twelve reviewed native captures have `iphone-` filenames in the acceptance capture directory. Raw launch receipts/device identifiers/private URLs remain ignored; the published report retains the raw-report hash. The earlier Locked0 attempt remains historical. The phone fixture closed normally and the owned loopback Redis51195 shut down after terminal local gates. No foreign process, cache or checkout was stopped or removed.
+
+The attachment's implementation, measured fixtures/tiers, executable Studio/world contract and required local/core/full/browser/physical verification now have evidence. Signed delivery and final hosted head are recorded in draftPR545 and the primary live register; verification identity remains the exact78-input manifest rather than an invented clean pre-run revision. Next action is maintainer review and the separate hosted/up-to-date-main landing gate. Retain the worktree; no merge, deployment, issue closure, novice trial or retirement is authorized. Existing three IPIC forward-clearance findings and visual/native/live-auth/human scope limits remain explicit.
+
+### Goal 2: adversarial review and current-main candidate
+
+Continue the existing owner/check-out under attachment `5ddb0aaf`. Objective:
+independently review the full human fidelity patch, reconcile current main,
+reproduce required findings, verify the resulting source, and deliver a signed,
+pushed, exact-head-green review candidate. Landing remains unauthorized.
+
+Live recovery found clean local67c44177 and remote132e11b9, a GitHub-verified
+main update with parents67c44177/4eca5153. Preserved that update by fast-forward.
+The uncommitted integration of main5f3f5dc2 is clean: development invitation
+changes in server/offices.js, server/town.js, server/world.js, their regression,
+and docs/multiplayer.md. Earlier incoming main changes also include the campus
+finish and throw follow-ups. No foreign checkout or dirty primary source was
+modified; the primary live task remains authoritative and its lease is renewed.
+
+Independent `review_goal2` is reviewing actual code, capability/evidence claims
+and renders. Required findings must be reproduced before production edits;
+optional follow-ups remain separate. Current-main core/full, affected desktop
+render/strict golden/Studio/world evidence, exact input binding, signed delivery
+and hosted checks are pending. Prior receipts remain historical. The standalone
+phone fixture and its known direct runtime modules/assets/package locks are
+unchanged from67c44177; transitive dependency evidence will determine whether its
+physical baseline can be retained or requires renewal. No new device target or
+novice trial is requested.
+
+Owned files remain the registered fidelity source/tests, acceptance docs,
+reports and this ledger. Verification will use isolated loopback Redis, the
+shared browser queue and existing harnesses. Keep failed receipts, skips and
+scope boundaries explicit. Next: finish review/reproduction and run the new
+candidate gates; do not merge, deploy, publish, close issues or retire worktrees.
+
+
+Independent review reproduced one required P2: after applying high, pending low
+then reaffirmed high could finish as low. The cached-tier fast path returned
+before generation advanced, so it failed to fence the older load. Four new
+real-material regressions (return to high/standard/low/off) failed on the original
+source:6pass/4fail,exit1. Moving generation advancement before that fast path
+passed13runtime/lifecycle/quality checks,exit0. The independent reviewer reran
+13/13 and the original same-turn probe, confirming high and its normal map are
+retained. No other required finding remains. Review receipt:
+`data/reports/character-fidelity-review-517.json`.
+
+The resulting source is frozen at runtime
+`c0f5b8de9f6bad47a018c7a21e2446f647167b9be16e5a1aca5d63eab60ff036`,
+with48changed code/test/config inputs since67c44177 and parents132e11b9/main5f3f5dc2.
+The fix changes a module reachable by the phone fixture, so a fresh physical run
+was started successfully on the existing paired phone. The prior phone receipt
+is preserved as historical; no device pass is inferred from it for the new source.
+Owned Redis59317 is running; full doctor prerequisites passed. Core/render/full
+are queued normally behind physical collection. No existing golden, timing band
+or baseline ceiling was loosened.
+
+
+Renewed phone run exited0 at unchanged c0f5b8de:67records,48cases,80viewport
+and6native two-camera portrait cycles,allresource deltas zero,12native PNGs.
+All12 are byte-identical to the prior tracked phone captures. New raw originals
+remain ignored; the reviewed receipt reuses identical public image paths and
+retains the raw-report hash. Fresh device metadata confirms iPhone17,2 /
+iPhone16ProMax / iOS27.0.1. The phone helper closed normally.
+
+Performance stability remains explicitly unproven:22/24within-run and46/48
+cross-run p50 pairs agree within the unchanged20%band. Morganoffx8 is19→23ms;
+Imanilowx24 is46→68ms. Cause is not isolated. Original ceilings were preserved:
+9/24frame-p95 and11/24CPU-p95 cases exceeded initial references. The new report
+separates observed maxima from unchanged ceilings; no threshold was relaxed.
+High8p95 is22–23ms;high24 is49–56ms. No whole-town,stable-device-budget,thermal,
+totalGPU-residency or exact rapid-event-sequence acceptance follows from this
+collection pass. Public reviewed phone/input/comparison reports have the
+`character-fidelity-review-` prefix; earlier receipts remain historical.
+
+Core/render/full driver1398 remains live, queued behind foreign browser PID76014.
+No process or queue fence was bypassed. Delivery readiness remains pending those
+gates, exact committed-input binding and final hosted checks.
+
+
+Renewed core passed at unchanged c0f5b8de:125tooling,3702preview passes plus
+one existing documented negative-approach skip,969server/Redis with0skips,
+76desktop and149Python tests. Build,Ruff,offline fixture and secret guard passed;
+expected blocked-domain exit2 and66Python warnings are retained. Receipt:
+`data/reports/character-fidelity-review-core-517.json`. Render reproduction is
+now running, followed by full. Final commit/push/hosted readiness remains pending.
+
+
+The reviewed render gate exited0: M1 eight and new tiers32native PNGs are
+byte-identical;4+8censuses match. All viewport/portrait/quality-transition and
+three repeated high-tier cold-load/1/8/24 crowd cycle deltas are zero. Chromium
+fidelity9+Studio43,desktopWebKit9,and1strictnative4K golden comparison passed,
+with0pixel differences. Reviewed raw receipts use `character-fidelity-review-`.
+Desktop timing reproduction remains unmet:14/48frame/GPU p50 comparisons agree
+within20%,host one-minute load around28–32. These are descriptive timings, not
+a stable performance budget. Full is queued normally behind liveIPIC PID95827;
+no pass is inferred from the earlier full receipt.
+
+
+Main advanced to6b93031b (PR503Play rail menu) during the first full profile.
+These UI/world and journey changes require new candidate verification. Sent
+SIGTERM only to the owned full agent13358; its abort handler stopped its own
+test process group and coordinator1398 exited1. Partial receipt/log are retained
+as superseded, not a source-failure claim (`character-fidelity-review-superseded-full-517.json`).
+No foreign process was interrupted. Saved11dirty tracked files, aborted only
+the uncommitted5f3 integration, and merged6b without conflicts; all own source
+fixes and docs survived byte-for-byte. Earlier core/render receipts remain in
+ignored `goal2/superseded-receipts/`; raw captures remain in their original runs.
+
+The refreshed candidate is frozen at
+`daa4e800222e690a1110a47760ecf9aaf5c094d2a1f8a18b1f1e3d739528684a`
+with80changed code/test/config inputs since67c44177, HEAD132e11b9 and integrated
+main6b93031b. Runtime+Playrail focused12/12passed. Driver42139 reruns core,
+render/Studio/WebKit/strictgolden, then full under the normal queue.
+
+Rebuilt the actual phone graph and compared all113tested module/asset/helper/lock
+inputs: every byte and the complete71-module/38-asset set are identical to the
+c0 physical fixture. Applicability receipt:
+`data/reports/character-fidelity-review-phone-applicability-517.json`. The c0 phone
+revision, raw receipt and timing limits remain historical and unchanged. This
+proves identical isolated workload inputs, not new phone world/HUD acceptance;
+no extra device run or request is justified by this unrelated UI integration.
+
+
+Main advanced again to36f22b12 (PR544 GTAO override sort), affecting the actual
+world render pipeline. Stopped only owned core agent82762; coordinator42139
+exited1 and its partial receipt is preserved in goal2b/superseded-core.json.
+This was intentional supersession, not a source-failure claim. Backed up all6
+dirty tracked files, cleanly re-integrated36, and verified every dirty file
+survived byte-for-byte. New frozen runtime
+`6e2565ac0e8916aad1f8fc53182c936ba3f58b5dd652778787174713f59e84bb`
+has88changed code/test/config inputs. Runtime/occlusion/pipeline26/26passed,
+zero skips. Rebuilt phone graph still has exactly113identical tested inputs;
+physical applicability updated without altering the historical c0 receipt.
+The goal2c coordinator renews core/render/full; final signed delivery and hosted
+checks remain pending. Independent selective integration review requested.
+
+
+Core passed at unchanged6e2565ac:125tooling,3709preview+1existing skip,
+969server/Redis(no skips),76desktop,149Python(66warnings);build,Ruff464files,
+offline expected exit2 and secret guard passed. Current review-core receipt
+now records the actual fresh run. Goal2c rendering is live; full and signed
+delivery/exact-head hosted checks remain pending. Selective GTAO independent
+review found no required defect;34focused checks passed,zero skips; all113
+phone-tested inputs independently confirmed identical.
+
+
+Current-runtime render gate passed at6e2565ac:8M1+32new PNG byte matches,
+4+8censuses,zero viewport/portrait/quality and repeated high-tier cold-load/
+1/8/24 crowd lifecycle deltas. Chromium9+Studio43,WebKit9 and strictnative4K1
+passed with0pixel differences. Inspected fresh Morgan world-peer and Imani
+Studio captures. Actual strict golden receipt copied from05:03:07.625Z run.
+Desktop timing reproduction remains unmet:14/48frame/GPU comparisons within
+unchanged20%band;timing sample1minload21.98–30.54. Full profile now live under
+coordinator71119; final signed input binding/push/hosted proof pending.
+
+
+Main advanced to b76ab77c/PR516 screening intake. Its9offline CLI/test/config
+inputs require renewed tooling/Python and core/full proof. Stopped only owned
+full agent28143;coordinator71119 exited1;raw receipt and public supersession
+wrapper retained. Core/render,13world journeys and completed shared journeys
+remain historical6e evidence; the partial full run is not a full pass. Backed
+up7dirty tracked files, cleanly remergedb76, and verified all dirty bytes intact.
+New runtime `0a587e5f6194330ef82670f95ae5c30301813c80b63d797eef2a6777c6ffb19b`
+contains97changed inputs. Coordinator61244/goal2d renews core thenfull.
+Independent intake review found no required runtime issue;4pure probe groups
+passed without production/paid calls. Exact full-file comparison found only
+9offline tooling changes;all prior88changed inputs and1277other prior runtime
+inputs are identical. Render applicability receipt preserves original6e
+receipts;phone graph still has113identicalC0inputs. No renderer/device rerun
+is represented or needed for these unchanged workloads;performance limits stay.
+
+
+Core passed at unchanged0a587e5f/97inputs:131tooling,3709preview+1existing
+skip,969server/Redis(0skips),76desktop,149Python(66warnings);build,Ruff467files,
+offline expected exit2 and secrets passed. Driver61244 started the renewed full
+profile at05:35:42.582Z on the same frozen inputs. Source binding/signing/push
+and exact-head hosted checks remain pending; no final readiness claimed.
+
+
+Goal2d coordinator61244 exited0. Core/full passed at unchanged0a587e5f/97inputs:
+full18tasks,13world,24shared across5full-renderer modes,18IPIC checks. Strict local
+audit verified all receipts/hashes and completed profiles; final input check passed.
+Main has advanced to28f8e9b2 through PR527campus,547second-short registration,543rail
+polish (48files,includingruntime/server/shared/CI/agent catalog). This0a evidence
+is a verified historical candidate, not proof of those new inputs. Preserve a signed
+source freeze, then integrate latest main and renew affected gates/evidence before
+final push/hosted verdict. No merge/deployment/closure/retirement authorized.
+
+
+Signed and normally pushed source checkpoint `54b5cd62daddb2abf0f8cc1d9e0b6427698da6da` after
+localgate completion. ED25519 signature good;prohibited attribution check empty.
+All1299combined runtime/test Git blobs (97changed) match tested0a manifest before
+and after commit. PR545draft body now exposes this concrete checkpoint and current
+main gap. Source-binding receipt records exactcommit/manifest;generic generated
+experience/shared files restored only after task-specific copies.
+
+Clean no-commit integration of28f8e9b2 succeeded over54b5cd62. Frozen runtime
+`11352ec42c6e37fe0a66a6c98139022f5ed442d0a7304e5795e18d2bf5fa37c6`
+has131changed inputs. Independent46/46focused checks found0required defects.
+Phone graph71modules/113inputs identical. Newworld/UI/fixture source invalidates
+the old only-offline desktop applicability proof;goal2e driver90050 renews core,
+all baseline/tier/crowd/strictgolden/ChromiumStudio+rail/WebKit,thenfull. Fullworld
+profile now15journeys,CIgainscampusjob. No physical rerun claimed or needed for
+unchanged isolated phone inputs;all performance limits stay explicit.
+
+
+Goal2e core failed in new upstream integration: intake negative test iterated every
+registered film and rejected validnew ipic-two-seats-v1 (engineering-candidate
+vsdraft). Driver90050 terminal1,rawcore/log preserved;all later tasks notrun.
+Read owningtest/intake/registry/docs;independentrepro5pass/1fail/0skip. Smalltest-only
+repair explicitly selects originalsilent+fixture IDs and assertsboth exist,retaining
+allfile/audio/caption/record checks. No production/media/approval changes. Focused
+6/6 and independent19/19intake+contract+media passed,0skips. Addedtestpath to
+ownfiles. Newruntime `eb50b85d64fddedec9f358c9204f96ddf13d8b49fb56759272de4e3f9246b2aa`
+retains131changed paths;goal2f renews core/render/rail/Studio/WebKit/golden/full.
+Oldrawfailure and red/green receipt retained;phone113inputs stillidentical.
+
+Goal2f coordinator handle47764 is live;goal2e90050 is terminal1.
+
+
+Goal2f currentcore passed at unchangedeb50/131inputs:131tooling,3727preview
+plus1existing skip,978server,76desktop,149Python/66warnings;build,Ruff469files,
+offline expected exit2,secrets passed. Driver47764 now renews renders including
+Chromiumrailpolish thenfull15world. The acceptance section was rewritten around
+currentproof and historical54b5/C0 boundaries;no finalhosted/readiness claim.
+
+
+Rail selector-only attempt failed:campus hidden card rendered display:grid/visibletrue.
+Focused browser assertion reproduced runtimehidden-state defect;scoped railoffice
+[hidden] display:none restored controller state;focused journey passed25checks.
+Static reviewer corrected earlier selector-only assessment and confirmed CSSrootcause.
+Raw red/failed-attempt/green retainedgoal2f;no threshold/assertion weakened.
+Main advanced7c10f418 (#525campus traversal/Redis epochmigration). Preserved13dirty
+trackedfiles,cleanlyreintegrated latestmain,verified all bytesrestored. FrozenG
+`4ee88f688473ae7e12dcae6683df8d30c1a409d9e693f35a9697c6020e00c3d5` has140changedinputs. Phonegraph71modules/113inputs identical.
+Gcore handle4952 running;browser/golden/full16world pending. NativeF retention
+requires explicit workload proof,not fresh timing measurements or restamping.
+
+
+G core4952 terminal0 on frozen4ee88f68:131tooling,3730preview+1existing
+skip,984server0skip,76desktop,149Python66warnings;11tasks passed inclbuild,
+Ruff472files,offlineexpected2,secrets. Driver18859 nowChromiumfidelity/Studio/rail,
+thenWebKit/strictgolden/full16world. Independent applicabilityaudit verifies
+13pathdelta,all3actualFreceipt hashes,113phone inputs and142module memoryfixture
+current/actualF overlay byteidentity. Reviewerrequiredrailmetadata provenance
+clarification applied:eb50 explicitly failing source,focusedgreen fullmanifest
+notfrozen at execution;renewedG rail supplies currentcandidate proof.
+
+
+G Chromium9fidelity+43Studio+25rail passed;WebKit9passed;strictnative4K
+goldenpassed. Inputbefore/after unchanged4ee88f68;renderapplicability hashes3fresh
+receipts and3actualF native receipts with explicitworkloadproof. Railreceipt now
+binds green currentcandidate to frozenG Chromiumreceipt (historicalfocusedgreen
+manifest gap remains explicitlyrecorded). Driver18859 nowfull18tasks/16world.
+
+
+G full18859 terminal1 at2026-10-19 07:19:30.823454+00:00:15worldjourneys passed,then campus-suite
+stranger hall-door wait30s failed with alice faroutsidecampus(-2765/-1295).
+Shared/IPICnotrun. Failedfull/experience/journey retainedgoal2g;no retry or
+thresholdchange. Investigate actualnavigation/input/runtime beforetargetedfix.
+Gcore/renderpassed remainsactualfrozen4ee proof;nofinalcandidateclaimed.
+
+Independent authoritativeprobe confirmsfailedalice coordinates areexactinitial
+spawn (campus[-45.04784,72.07713]),notrunaway movement;hall-arrival command succeeds
+fromthatspawn. Arrivalcode doesnotrejectotherplayeroccupancy. Originalfailure
+lacksstatus/notice/WSreply,so noprovenruntimecause. Privatebounded diagnostic
+40793 runsunchangedjourneywithtravelrequest/reply+HTTPstatus+allpage-state capture,
+not a retry forgreen or threshold change.
+
+
+Servertrace53176terminal1 confirmedAlice aliveheartbeat07:32:48.422,missingpong
+then terminate07:33:18.423. Browsertravel07:33:25.052 neverreachedserver;close1006
+delivered07:33:25.444,reconnect26.299. Fourposesbeforetermination,135after,
+notallafter. Cachedjoined() acceptedinitialsnapshot afterheavythirdpage load.
+Readiness-onlyjourneyrepair requires same-host serverTimeMs >= postreadyNode
+checkpoint;deadline120s,allbusinessassertions,heartbeat30s,commandfences unchanged.
+Independentcause/patchreview and6predicatechecks passed. Publicsuite-regression
+receipt embedsfailedprofile/journey+tracehashes;heavyloading/performancegap remains.
+FrozenH `85d264d4d3c39b23943577e5fcb261631650df7c1a9d093c04e49087e5f594c4` has140changedinputs. NativeF/phoneC0 apply
+through14pathdelta/142byteidenticalmemoryfixture/113inputs. HdiffersG onlysuite
+body;Gbrowser/golden selectedworkloads unchanged,all6renderreceipts retainedwith
+originalmanifests/times. Focused94347live;Hcore/full27020queuednormalbrowserlock
+and requirefocusedpass beforestarting. No sourcecommit/push/readiness yet.
+
+Focused94347 terminal0:all10suitechecks passed,includingstrangerheldgallery14.50,
+privateworknotdisclosed,andrevocationwalkout15.10/deskremoved. Hdriver27020
+acceptedfocusedpassguard,checked85d264d4/140inputs,andstartedfreshcore;then
+required full18tasks/16world. Gfailedprofileandthreeprogressivelyinstrumented
+reproductions remainretained;noheartbeatpolicy/performanceclaimchanged.
+
+
+Hcore11tasks passed at85d264d4/140inputs:131tooling,3730preview+1existing
+Vince negativecontrolskip,984server0skip,76desktop,149Python66warnings;build,
+Ruff472files,offlineexpected2,secrets passed. Driver27020 thenstartedHfull
+18tasks/16world on unchangedinputs. Stagedindex1328combinedGitblobs/140changed
+matchHmanifest;notyetcommitted. IndependentHscopeauditverified1306runtime
+paths/140changedinputs/130receipt-inputhashlinks withnorequiredcorrections.
+
+Read-only project:check --tasks primary returned1 for41global lifecycle gaps
+(otherexpiredleases,missingpaths,retirementbacklog). Noown#517gap;activeowner/
+branch matched,preserve-dirty disposition correct. Rawglobalinventory retained
+goal2h/project-check.log,summaryJSON;foreignrecords untouched. Notclaimedgreen.
+
+Intake regressionreceipt provenanceclarified beforefinalbinding:11352manifest
+explicitly failingRuntimeManifestSha256;currentfixedsource hashandactualHcore
+receipt hashseparate. Originalfailedprofile/rawtimestamps unchanged.
+
+
+H27020 terminal1 at2026-10-19T08:07:34.985108+00:00:
+15worldpassed;finalsuite stranger hallarrivalstatus30sfailed again atinitialspawn
+afterfreshsnapshot checkpointlogged. Focused10green isinsufficient toclaimrepair
+underfullworkload. Hfailedfull/journey/sourceattempt preserved;shared/IPICnotrun.
+Do notinvoke finish-local orsign/push. Investigateactualroundtrip/heartbeat
+response behavior;freshpublicationprecondition alone notsufficient.
+
+
+H diagnostic50136 terminal0:all10checks passed;stranger socket1006/reconnect
+during scene load before fresh checkpoint. Not full-workload repair proof.
+Independent reviewer found private trace collector discarded partial stdout lines;
+positive heartbeat evidence stands,absence of travel alone is inconclusive.
+Next bounded diagnostic fixes collection and correlates one read-only command,
+ping callbacks/pong and Vite both-leg buffers. No new sourcebehavior change.
+
+Correction to prior servertrace53176 narrative:positive missed-pong termination
+and delayed client close are confirmed;the statement that travel never reached
+server was too strong because chunk splitting could drop records. Publicreceipt/
+acceptance corrected;raw traces untouched. Private collector now uses readline.
+
+Private full-world diagnostic42251 began with two helper-resolution errors
+(contextual-first-visit/store-intro importsrelative to private runner). Corrected
+private symlink for remaining journeys;preserve those errors. This run is diagnostic
+only,not faithful successful16journey/fullgate evidence. No production/sourcechange.
+
+Correlated read-only diagnostic62456 terminal0/all10suitechecks. Corrected
+collector has505records/0parseerrors;Aliceconn3 ping send+localcallback08:15:20.068,
+no recordedpong,positive termination08:15:50.071;clientclose57.651/rejoin58.349;
+conn4inventory admin_onlyack58.687/travelack58.707. Server recordedbuffers0;
+proxy maxima68KB do not ruleout downstreamkernel/browserqueues. Original
+instrumentation lacksendpointcorrelation andtimestampedlag,explicitlimitations
+retained in publicreceipt. Longerdiagnostic42251 nowlive withbothcorrections.
+No new productionfix,sourcecommit,push or full-gate success claimed.
+
+Independent actual-H-helper regression exit1 onintendedack barrierassertion.
+Loopback transportpositivecontrol passed;postcheckpointapplicationack withheld,
+freshsnapshot08:24:28.685,actualjoined returned28.688 while1requestpending/0newacks.
+Private reviewer-readiness-red files/publicreceipt retainhashes andVM/transport
+scope. This proveslogicalpreconditionweakness,notfullmissedpongcause.
+
+Private startup-barrier prototype only:6loopback cases +independentPlaywright
+error-prefix case pass. Reviewer reproduced prefixerror red;fixedknownclient
+transportexceptions insidepage.evaluate,not broadNodeerror matching. Rawredlog
+retained;genericreviewerJSON overwritten by its testproducer ongreen,not cited
+asred. Summaryhashesgoal2i/prototype-review-summary.json. No actualHruntime edits.
+Independentreview finds nofurtherrequired prototypeissue withinrotation-disabled
+campusfixture;realPlaywrightframeordering/fullworkload remainunverified.
+
+Long diagnostic42251 terminal1(twoearlyprivatehelperimporterrors retained),
+suite10passed. Haftermanifest verified85d264d4/140unchanged. Correctedtrace507
+records/0parseerrors/noappseqgaps;AliceTCPtuplemapsproxy3↔conn3. Firstpong
+27.689s after immediatepingwrite,second7.370s;timestamped20s+5–6sstalls.
+AfterHfreshcheck snapshotwas12.335sold;readonlyprobe235ms,thenoriginaltravel
+acknowledged. No termination inthisrun,notexactHfullfailurecauseproof andnot
+fullgate. Summary/rawhashesgoal2i/full-diagnostic-summary.json/publicreceipt.
+Demonstratedreadiness weakness supports reviewedboundedstartupack proposal;
+production heartbeat/backpressure defect stillunproven,policiesunchanged.
+
+Installed fixture-onlyackbarrier afterindependentlogicalred/causallimitsaudit.
+New garden-campus-readiness helper +7loopbacktests;all3pagestrackbeforegoto,
+allbusinessassertions unchanged. Tracked7/7unit0skip independentlyrepeated;
+focused actualrunner54151 terminal0/all10checks;startupacks3pages succeed.
+FrozenJ `602547082edf9640c27c2fe098217586a3d2d6f0237983d95ff2318e547d998e` /142changed/1307runtimefiles;
+indexbind84136 terminal0 matches1330combinedGitblobs(notcommitted).
+Jphone113inputs identical;native15pathdelta/142-modulememoryfixturecodeidentical;
+render2pathdelta retainsactual6F/Greceipts,never restampsmeasurementtimes.
+Fresh core/full coordinator90875live;Redis59317positivePONG/owned retained.
+Hfailures anddiagnostic42251terminal1 labels remainexplicit. No commit/push.
+
+IndependentJproofaudit verifies1307runtimehashes/155receipt-inputSHA links/
+1330combinedindexblobs/142changedinputs,0mismatches. RetainedactualF/G/C0hashes
+unchanged;delta15/2 andnewhelpernonselection verified. Correctedolderaudit
+pointer tohistoricalEvidenceAuditG. Olderprivategoal2PRtemplate/goal2hdelivery
+helpersremainstale;rewriteforfinalJbeforepublication,neverpublishold0a text.
+Current core/full90875stilllive;nofinalsourcebinding/hosted claim.
+
+Jcore90875 stage terminal0:11tasks passed atfrozen60254708/142inputs,
+131tooling,3737preview+1existingVince skip,984server0skip,76desktop,149Python
+66warnings;build,Ruff472files,offlineexpected2,secrets passed. Inputaftercore
+unchanged;coordinator nowfull18tasks/16world. Actualcorepublicreceiptupdated;
+intakeproofnowJcore withimmutablehistoricalHcopyretained,avoidingmutablehashlink.
+No sourcecommit,push,hosted orfullpass yet.
+
+Prepared J guarded local/source proof andPR/fourhandoff payload generators;
+no modes/generators/posts/commits executed. Independentreview found/fixed stale
+phase-labels andCIstatuspagination completeness;re-review no requiredfindings.
+A→metadata-onlyB binding design preserves54b5/dirtyexecutionmetadata and
+commit-qualifiedhistoricalinputreceipt hashes. CIreader actualcheckpoint smoke
+check terminal0:old54b5 has17greenchecks but91behindmain,readyfalse—NOTJproof.
+Read-only projectcheck7779 terminal1 at08:57:45UTC:59global lifecyclegaps,
+0own517gaps,30worktrees/43branches. Foreignstate preserved. Refreshatfinal
+handoff after push;do not claimglobalcoordinationgate passed.
+
+
+### J full terminal failure, renewed investigation
+
+The actual J full run finished 2026-10-19T09:08:59Z with exit 1. Core passed 11 tasks, but world acceptance failed at `garden-campus-suite`: resident lift to Floor 2 timed out after the resident/operator startup acknowledgements passed. Shared/IPIC checks were not reached. Raw `goal2j/full.log`, `full-profile.json` and `driver-result.json` are retained. The startup barrier does not prove later travel reliability. Next: correlate KeyF delivery, action eligibility, outgoing travel, server response and current authoritative state before changing code or rerunning verification. No signed current candidate or hosted readiness is claimed.
+
+
+### Authoritative lift readiness, candidate L
+
+K instrumented16-world diagnostic passed (suite10checks), butdidnotreproduceJcause. Controlledactualbrowser pose-publicationdelay thenreproducedearlyF/out-of-reachrefusal/original30stimeout. Thisisapplicationpublicationfaultinjection,notTCPdelay. Originalredsource/receipts retained. Same-independent5000msreleasepairedprobe46674isrunning.
+
+Extractedoldlabelpredicateforbehavioralred:7pass/2fail. Addedauthoritativesource-levelreach+usableprompt inoriginal30spromptwait;singleF/arrival/businessassertions unchanged.9/9passed,independentlyrepeated;3pathreview0requiredfindings. FrozenLruntime748501264732cac774f6139c1a5b5f47372fb6c1db148b52742034f54fd3d993/142changed/1330indexblobs match. Renewedphone113/native142-module/generated-byteproof/browserGapplicabilitypassed. Freshfocused/core/full/signeddelivery/hosted remainrequired;doNOTrunJdeliveryhelpersagainstL.
+
+
+L core passed all11tasks at2026-10-19T09:50:15.061Z:131tooling/3739preview+1existingVince negative-controlskip/984serverRedis0skip/76desktop/149Python66warnings. Build/Ruff472/offlineexpected2/secrets passed. FrozenL74850126/142inputs unchangedbefore/aftercore. Actualfocused10passedincludingstartupreconnect. Samejob20786nowFULL;no currentfull/signed/hosted claim. IntakecurrentcoreproofrenewedactualL;Jcorehistoricalhashretainedimmutable.
+
+
+### L full terminal failure and monitoring correction
+
+ActualLfull finished2026-10-19T10:15:30.357Z with exit1. Fifteenof16worldjourneys passed,including garden-campus-suite/all10checks. Garden-campus-office failed at intoHall firstarrival-statuswait(line24),guestcallafterready(line128);shared/IPICnotrun. Experience runtime1162836ms isbelow1200000msbudget;thiswasajourneyassertiontimeout,notprofiledeadline. Originalprofile/world/log/driverreceipts preserved. Parentprogressupdatesincorrectlysaidcampusofficepassedbecausetailmissedearlierfailurewhile runnercontinued;thiscorrectsthatrecord. OfficecurrentlywaitsonlycanvasplayerReadybeforeguesttravel anditsarrival-statuserror doesnotemitcollectedtraveltrace. Next:boundedcorrelatedoffice/admission-readinessdiagnostic;reuseexistingfixturecontractonlyif demonstrated. NoactualLofficecause,fullpass,signedsourceorhostedreadinessclaimed.
+
+
+### Office admission diagnostic controls
+
+Initial goal2m probe terminal0/prefix-completed with events=[]: its literal ticket route glob omitted the URL query string and did not inject the proposed fault. Original script/input/result/log preserved in goal2m/v1-uninjected, with explicit uninjected-positive-control-only classification. V2 matches ticket pathname and POST, labels the fault as request/admission delay, and requires positive hold/avatar-ready/independent release events. Baseline34874 is running through the browser lock; no production or journey source change and no exact L cause claim.
+
+
+V2 admission diagnostic terminal0/prefix-completed but classification=inconclusive: positive ticket hold and avatar-ready controls occurred; guest pre-action connected=false, then original locator click dispatched12.57s later, after independent2s release, and authoritative travel succeeded. Raw v2 input/script/result/log hashes preserved; no repair claimed. V3 baseline41278 uses an independently timed20s hold, identical for planned baseline/candidate, with original actions/deadlines/auth unchanged and red additionally requiring post-click timestamp before release. Private before-first-socket real-loopback test passed10/10,zero skips; demonstrates helper startup ordering only,not office wiring or exact L failure cause.
+
+
+### M office admission precondition, verification pending
+
+The controlled v3 baseline failed on the original guest arrival. With the ticket POST held, avatar readiness preceded admission; the original click returned a local reconnect refusal before the independent 20-second release. Admission recovered, but the original 30-second status wait failed with Alice still at spawn. The office regression receipt retains positive control timestamps and raw hashes. The exact historical L cause remains unproven.
+
+The office fixture now tracks three pages before navigation and awaits the existing correlated read-only startup helper after all four avatar-ready waits, including owner reload. The avatar wait remains 120 seconds, followed by a separate 120-second startup budget. No arrival replay, authentication, arrival-deadline or business-assertion change was added; the existing door-entry retry loop is unchanged. The added before-first-socket test brings the focused suite to ten passes, zero skips, independently repeated.
+
+Frozen M runtime `3e04a4ae0af73d8e452f02024685108ef2d3808cc5822461ec878400b2e0f608` binds 142 changed inputs and 1,330 staged Git blobs. Phone applicability verifies all 113 inputs; native applicability verifies the 142-module generated workload, and selected G render workloads remain unchanged. At this checkpoint, paired candidate76849, stock office/suite, core/full, signed delivery and hosted verification were pending; subsequent results follow below.
+
+
+M pairedv3candidate76849 terminal0/controlled-admission-prefix-passed. Sameprobehash567aaa andsameindependent20srelease;candidateack at6029173 thenonearrivalrequest2 acceptedat6029212,afterrelease6028841. Baselineoriginalclick locallyrefused7827msbeforerelease andoriginal30sarrivalfailedafteradmissionrecovered. Strictpaired-audit validatespositivecontrols/sourceMhash/currentprobehash/serverack. Existingdoor-entrycooldownretryloop isseparateandunchanged. ExacthistoricalLcause remainsunproven. FreshMstockoffice21/suite10→core11→full18/16world/shared/IPICqueued;no candidatecommit/push yet.
+
+
+Mcoordinator83415 live:stockoffice21passed includingneighbourprivateworkisolation;suite10running beforecore/full. Independentreviewverifiedpairedordering/samescripthash,1307runtime/1330index/142changed/113phoneinputs andcomplete16native/3browserdeltas. Parent159explicitfileSHA linkspassed afterrenewingchangedreadinesstesthashin currentstartupsourceproof;pre-renewalauditretainedprivate. Mdeliveryhelpers preparedsyntax-only with mandatoryactualfull/local-auditguards;notexecuted.
+
+
+M stock acceptance passed: office21 checks and suite10, including private-work isolation, stranger exclusion and lease-revocation walkout. The actual combined receipt is character-fidelity-review-campus-focused-517.json. Coordinator83415 confirmed unchanged inputs and began fresh core at2026-10-19T10:40:15Z; full follows only on core success. Read-only project check at10:39:04Z returned1 for59 global lifecycle gaps,0 own517 gaps,30worktrees/43branches. Foreign records preserved; refresh before final handoff. M guarded delivery helpers were independently re-reviewed after two metadata corrections; no required findings remain and no helper modes/commits/push/posts were executed.
+
+
+M core passed all eleven tasks at 2026-10-19T10:45:07.904Z: 131 tooling; 3,740 preview passes plus the existing Vince skip; 984 server/Redis with zero skips; 76 desktop; 149 Python with 66 warnings. Build, Ruff472, expected offline exit2 and secret scanning passed. Frozen3e04a4ae/142 inputs unchanged after core. Coordinator83415 is now running full18/16world/shared/IPIC. Actual core-counts/input/profile evidence retained; no full/signed/hosted success inferred. Current preservation audit independently compares all38 assets with67c44177, race source/regressions with54b5, secret policy withmain7c10 and the per-caster shadow coverage with signed54b5/current preview pass.
+
+
+The fresh M requirement audit (goal2m/completion-audit-interim.json) covers all ten original review/integration/verification/delivery/boundary groups. It explicitly remains incomplete: full83415 is live; signed source, normal push, current PR/four handoffs and exact-head hosted/current-main proof are not achieved. M metadata/delivery helpers remain guarded and unexecuted. All source diffs and staged diffs pass whitespace checks.
+
+
+M full-run milestone at 2026-10-19T11:02:21.755Z: campus office passed all21 checks, including guest hall arrival and private-work isolation. Fourteen of16 world journeys passed with no logged/structured failure. Campus traversal/suite, shared and IPIC remain; full-profile success is not yet established. The immutable office-full-milestone.json preserves this completed journey independently of the live generic report.
+
+
+M full-world acceptance passed all16 journeys at 2026-10-19T11:08:29.676Z (experience duration 1093157ms; original1200000ms limit unchanged). Campus office21 and suite10 checks passed in this actual full run. Stranger startup experienced socket loss and recovered with only the read-only probe before original travel; no stable initial-rendering or historical-cause claim is inferred. Coordinator83415 now runs shared acceptance; IPIC remains next. Full-profile/signed/hosted success is still unproven.
+
+
+M required local gates verified at 2026-10-19T11:29:27.475098+00:00:core11/full18,16world,24shared/5fixturemodes/fullrendering,18IPIC.
+All frozen3e04a4ae/142inputs unchanged before/after;1330stagedGitblobs match.
+OriginalG/H/J/Lfailures retained;no timingthreshold/golden/heartbeat/securityweakening.
+Signedsource andexactfinalhead hosted verification remain required.
+
+
+Signed source `d11a6ee4ce794bc3f5f061bd48d5af8ce9a7cff9` verified at2026-10-19T11:31:50.891434+00:00.
+All1330HEADruntime/testGitblobs matchM3e04a4ae/142inputs;signaturevalid and
+authorprovenancepresent. Actualexecutions keep54b5/dirtymerge revision. This
+proofupdate ismetadata only;rebind finalHEAD before normalfeaturepush. Exact
+finalhead hosted verdict/dependenthandoffs are externalonPR545/primarylive task.
+No merge/manualdeploy/publish/closure/threadresolution/retirement authorized.
