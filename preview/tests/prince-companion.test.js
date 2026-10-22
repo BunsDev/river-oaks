@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {COMPANION_STANCES,companionSlot,companionStanceEligible,createCompanionBody,createCompanionBrain,freeSpotNear,localStance,playerHeading,stepCompanion} from '../src/prince-companion.js';
+import {WALK_SPEED} from '../src/walking.js';
 
 const open={isFree:()=>true,groundAt:()=>0};
 const walk=(body,target,env,seconds,options)=>{for(let t=0;t<seconds;t+=1/60)stepCompanion(body,target,env,1/60,options);return body;};
@@ -197,6 +198,15 @@ test('Jev keeps up with her brisk walking pace without entering her personal spa
  for(let frame=0;frame<1200;frame++){player=[0,frame/60*3.2];const target=companionSlot(player,0,'beside',open.isFree).point;stepCompanion(body,target,open,1/60,{player,playerSpeed:3.2});if(frame>180)worst=Math.max(worst,Math.hypot(body.position[0]-player[0],body.position[1]-player[1]));}
  assert.ok(worst<1.3,`stays beside her at a brisk pace: ${worst}`);
  const before=[...body.position];stepCompanion(body,null,open,1/60,{player,playerSpeed:0});assert.ok(Math.hypot(body.position[0]-before[0],body.position[1]-before[1])<.07);
+});
+
+test("Jev keeps pace with Jevica's fast walk, twice anyone else's",()=>{
+ const body=createCompanionBody([.86,-1]);let player=[0,0],worst=0;
+ for(let frame=0;frame<1200;frame++){player=[0,frame/60*WALK_SPEED.jevicaFast];const target=companionSlot(player,0,'beside',open.isFree).point;stepCompanion(body,target,open,1/60,{player,playerSpeed:WALK_SPEED.jevicaFast});if(frame>180)worst=Math.max(worst,Math.hypot(body.position[0]-player[0],body.position[1]-player[1]));}
+ assert.ok(worst<1.3,`stays beside her at her fast walk: ${worst}`);
+ // Even a wrong speed reading cannot send him past her fastest walk.
+ const runaway=createCompanionBody([0,0]);walk(runaway,[0,500],open,3,{playerSpeed:50});
+ assert.ok(runaway.speed<=WALK_SPEED.jevicaFast+.66,`bounded: ${runaway.speed}`);
 });
 
 test('protective positioning chooses the street-facing side without controlling Jevica',async()=>{
