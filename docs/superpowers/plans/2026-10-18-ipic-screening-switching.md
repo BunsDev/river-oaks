@@ -394,3 +394,140 @@ Independently recalculated soak ranges/counters and confirmed receipt hash,11/11
 late joins,7 checks, flat resource counts and scoped caveats. No remaining blocker
 for engineering evidence handoff; no merge/production acceptance asserted.
 Owner/handoff signature: `codex:S1-resume-20261020`.
+
+### Closure readiness resumed — 2026-10-22
+
+Owner `codex:S1-closure-20261022`; clean existing checkout reused after the recorded handoff and ListAgents inspection (no previous owner listed). No merge/deploy authorized. Independent read-only reviewer `/root/review_571` is reviewing the player, fixture and screening tests at `6035a9e4`.
+
+Fresh evidence: all 20 hosted checks at `6035a9e4` succeeded, including `preview`. Fetched main is now `f850abfa` (lander deletion fix #570), so the branch needs an update and new exact-head checks before merge-ready. Local focused command `node --test preview/tests/ipic-screening*.test.js preview/tests/screening*.test.js` passed 74/74 with no skips. `node scripts/make-screening-fixture.mjs --check` matched 11 files / 3 films. Logs: `.runtime/s1-498-closure/`.
+
+Remaining: independent review disposition; full-world direct-video pixel comparison (the existing fixture explicitly uses fixture lights); all requested browser/core checks; update from main; acceptance-box evidence map; one consolidated evidence comment and ready-for-review PR state once supported. Physical devices and human color sign-off stay Decisions for Val / #502. No original media, IDs, durations, server authority or global tone mapping will change.
+
+#### Acceptance-box reconciliation (engineering vs acceptance)
+
+| #498 box (body order) | Evidence and disposition |
+| --- | --- |
+| 1. Replacement/restart/late callbacks | #513 initial generation fencing; #571 same-film restart and play/event/frame/cue fences. Initial focused 74/74; post-lighting five suites 66/66 with no skips. Independent player review found no actionable defect. |
+| 2. Texture and decoder lifecycle | #513 exact borrowed-material restoration; #571 post-fix Metal run restored the material and disposed 13/13 textures; #520 integrated warm-up plus ten-cycle evidence. Fixed-lighting probe resources are cleaned up. Physical-device resource cycles remain #502. |
+| 3. Independent mattes/aspect/edges | #513 screen fitting; #571 post-fix real-composer Metal checks passed 16:9, 4:3, 2.39:1 and 4:1 with independent black mattes. Geometry unchanged. |
+| 4. Real-renderer direct-video comparison | #571 full-world paired captures exposed double lighting. Fixed-exposure GPU regression failed before and passed after the screen-only emissive correction. Corrected noon/dusk/dawn captures retain all 35 paired samples per hour and nine images; orientation/full content/mattes inspected. Global rendering policy unchanged. Human color approval remains #502 Screen quality, Val. |
+| 5. Bounded source fallback/Retry | #513 bounded attempts; #571 gesture gate preserved through fallback. Focused tests and post-fix real-decoder invalid WebM to MP4 fallback passed. Physical Safari/iOS codec behavior remains #502 Replacement/failure. |
+| 6. Failure reasons/deadline/local isolation | #513 local failure reasons; #571 terminal/resume deadlines and stale rejection fences. Unit and actual stall/retry checks pass. Chromium allowed autoplay, so refusal is unit evidence only; physical gesture/autoplay is #502 Replacement/failure. |
+| 7. Metadata/cues/current frames | #513 metadata binding, #571 cue/event fences and held-response pixels, #520 integrated film changes. Post-fix two-browser run passed 19 checks: second film owns its texture/captions/transcript; no stale image in 59 replacement frames. |
+| 8. Authority/synchronization unchanged | No server/catalog/media changes. #513/#520 integration plus #571 post-fix two-browser permission/revision/idempotency and host-loss checks pass. Core passes: preview 3717, server 732, tooling 173, desktop 115, Python 145; exclusions recorded below. |
+| 9. Unit/browser/captures/resources/raw timings | #513/#520 historical receipts plus #571 fresh focused/core/Metal/full-world/two-browser evidence retained with hashes. Presented frames advance 8 to 51; two-browser convergence 8 ms and paused spread 0 ms. Additional GPUs, physical devices, listening and human accessibility remain #502. |
+
+Independent reviewer `/root/review_571` passed 52/52 player/screen/UI tests at `6035a9e4` with no actionable defect. Later capture-harness findings were fixed with isolated red/green regressions; the screen-only lighting fix received independent source review and 14/14 screen/capture tests. GPU red/green and corrected full-world captures then passed separately. Review does not establish physical devices or human approval.
+
+#### Decisions for Val
+
+- #502 Screen quality: approve/revise the measured screen color and black levels after the full-world captures are available; no global tone-mapping change proposed.
+- #502 Replacement/failure: physical macOS Safari/iPhone Safari decode, fallback and gesture/autoplay; #502 Presented video/Serving-performance: named additional GPUs.
+- Separately authorize landing #571 after exact-head CI and review readiness.
+
+#### Live execution checkpoint — 2026-10-22 18:50Z
+
+New test-only files: `preview/e2e/ipic-screen-colour-runner.mjs`, `ipic-screen-colour-capture.js`, and `preview/tests/ipic-screen-colour-capture.test.js`. The full-world runner selects the allowlisted fixture through host UI, pauses it, and captures paired direct-video/world pixels at noon/dusk/midnight. It injects read-only capture instrumentation through the local test route; production source and rendering policy remain unchanged. Raw output is planned under `output/playwright/ipic-screen-colour/`; it has not executed yet.
+
+Independent review found two problems in the first harness draft: extra direct composer render bypassed production culling, and sky-light load failure could pass. The updated harness captures through production `pendingCapture` after normal draw and requires loaded environment, normal mode, enabled AO/bloom, paused/nonseeking video. Seven behavioral capture tests pass. Initial test run failed because the helper did not yet exist; this is scaffold red/green, not a reproduced runtime failure receipt. Browser execution remains required to validate the harness.
+
+Live exec handles: screen `84950`, full-world colour `18754`, two-browser `1483`, core `55752`. Original colour handle `89981` was intentionally terminated while still queued to replace the reviewed harness, not because observation timed out. Browser runs queue behind another live job (PID 37219 verified live); lock respected. Core is running with checkout venv/Python3.12 fallback selected. Poll these same handles before any restart. Logs are in `.runtime/s1-498-closure/`.
+
+#### Current-main update and core result — 2026-10-22 18:52Z
+
+Core completed successfully at 18:49:56Z on `6035a9e4` with uncommitted harness/docs: `PATH="$PWD/.venv/bin:/opt/homebrew/opt/python@3.12/libexec/bin:$PATH" pnpm run verify`. Tooling 168/168; preview 3709 passed / 1 existing skip; server 732 passed / 212 Redis skips; desktop 115 passed / 3 Windows skips; build, Python145, offline fixture (expected blocked domain result), secrets passed. Saved receipt `.runtime/s1-498-closure/core-6035a9e4.json`. Helper tests were added after preview suite discovery, so their separate 7/7 result is the relevant evidence.
+
+GitHub update-branch with expected old SHA created verified signed commit
+`ba7647614165a4a4bdfb9276d29e8b85b7f8af37`; local checkout fast-forwarded to it.
+It contains current fetched main `f850abfa`. Its only delta from previous head is
+#570's lander/workflow change: no preview source/test/browser differences. Focused
+base-update + new capture helper check: 27/27 passed, zero skips. Hosted checks
+are running on this new exact head; no PR merge or deployment requested.
+
+Capture review follow-up approved pendingCapture/readiness fixes (7/7 independently). The runner now selects the existing Sharpest preset to hold AO/full resolution and records source hashes and dirty paths. Queued colour process18754 was deliberately replaced for that profile/provenance change; current colour handle is `97881`. Other live handles unchanged: screen84950 and two-browser1483. Core55752 finished0. Browser lock remains held by live PID37219; no bypass or duplicate run.
+
+Next: consume those three existing browser handles, inspect all raw color captures, fix any evidenced harness failures, preserve receipts, finish consolidated evidence and #498 box reconciliation, publish verified harness/docs and await exact-final-head CI before marking #571 ready. Physical device/human decisions remain with Val/#502.
+
+Capture regression sensitivity checked after review: isolated helper mutations in `.runtime/s1-498-closure/` reintroduced each reviewed defect separately. Immediate readback (bypassing the scheduled normal draw) fails exactly the draw-order test; removing the environment gate fails exactly the missing-environment test (each 6 passed / 1 failed). The actual corrected helper passes7/7. These are explicit counterfactual regression checks, not historical browser reproductions. Raw red and green logs retained as `colour-direct-draw-red.log`, `colour-missing-environment-red.log`, and `colour-reviewed-green.log`.
+
+#### Hosted audit repair — 2026-10-22 18:54Z
+
+Hosted run39834908805 Python3.13 failed on `opentelemetry-api1.45.0`, CVE-2026-114603 (fix1.45.1); Python3.11 was cancelled by fail-fast. Raw job log: `.runtime/s1-498-closure/ci-python313.log`. This is an actual merge gate, not a screening regression or a flaky-job retry. Registry inspection found campus507 preparing the same narrow patch in its branch and the dependency task handling broader upgrades. Only this owned screening branch was edited.
+
+`uv lock --upgrade-package opentelemetry-api==1.45.1` changed that package block and resolver revision3→5. Independent reviewer compared parsed locks:50 packages both sides, no other version or dependency relationship changes. Exact CI audit: `uv export --frozen --all-extras --no-hashes --no-dev --no-emit-project --format requirements-txt --output-file .runtime/s1-498-closure/requirements-audit.txt` then `uvx pip-audit==2.10.1 --no-deps --disable-pip -r .runtime/s1-498-closure/requirements-audit.txt` passed with no known vulnerabilities. `pnpm run verify python` passed including145 Python tests, lint/format/offline fixture. No optional media/model packs downloaded.
+
+Published verified GitHub-signed commit `9249aa041db5b0cb314f5b8eca53354215eddf7a`, tree `9f141d7f8b9509dfc916c3a650481236cd9a0195`. Pre-commit secret guard passed; fetched tree matched staged tree before adopting via soft reset. No uncommitted harness/docs were included in this dependency-only commit. Evidence increment: https://github.com/BunsDev/river-oaks/pull/571#issuecomment-6348755612 Hosted checks on new head are queued. The earlier run cannot prove this head.
+
+Live browser handles remain screen84950, colour97881, two-browser1483; polled live, queued behind PID37219 verified alive at18:54Z. No duplicate runs. Goal still active: consume actual browser output; inspect captured pixel pairs; publish harness and final evidence map; wait all final-head checks and mark review-ready. No merge, production deployment, issue closure or physical/human acceptance claimed.
+
+#### Hosted screening proof — 2026-10-22 19:16Z
+
+At signed head9249aa04, Verify39835413494 preview-checks job120022305186 passed, including `xvfb-run -a pnpm run test:screening`:19 checks, convergence18ms after sample start, paused spread0ms, no stale frame across52 rendered switch frames, second approved film's own texture/captions/transcript and40682 decoded audio bytes, foreground first presented frame65ms from room/394ms after showing. Audio bytes are decoding evidence, not listening. Raw job log `ci-preview.log` retained under `.runtime/s1-498-closure/`; current hosted proof is distinct from pending local runs. Both Python3.11/3.13 jobs passed with the audit fix.
+
+Campus job120022304859 cancelled after the20-minute job limit, last output being suite-desk save. Its raw log `ci-campus.log` is preserved. No screening failure in that log. A single-job retry request was refused (`job ... cannot be rerun`) while the overall run remains active with worlds-and-creator. No retry execution yet; when the run is terminal, request failed-job rerun once as workflow permits. Do not weaken timeouts or change unrelated campus implementation to hide this result.
+
+Local screen84950, colour97881 and two-browser1483 remain confirmed-live queued processes behind PID37219, whose full verification progressed from experience (passed) to shared (running). No local capture proof yet.
+
+#### Campus retry started — 2026-10-22 19:17Z
+
+Verify39835413494 attempt1 is terminal: all substantive jobs passed except campus, which cancelled at its20-minute limit; aggregate `preview` consequently failed. `gh run rerun 39835413494 --failed` succeeded after terminal state. Attempt2 now runs campus at the same9249aa04 head. This is the one permitted retry; if it fails again, diagnose the evidence rather than repeatedly rerunning. Prior unsuccessful request did not launch a retry. Browser handles84950/97881/1483 remain live queued.
+
+#### Current head green — 2026-10-22 19:26Z
+
+Verify39835413494 attempt2 completed successfully. Campus passed on the one retry; all20 PR status entries are SUCCESS, including aggregate `preview` and CodeQL. Exact head `9249aa041db5b0cb314f5b8eca53354215eddf7a`, base `f850abfac7e8e95ed19448138dd9d66ac9aa6b75`, mergeStateStatus CLEAN, still draft. Fresh fetch + merge-base confirms current main is an ancestor. Raw rollup saved as `.runtime/s1-498-closure/ci-9249aa04.json`. This proves current published head only; future harness/evidence commit still requires its own hosted checks.
+
+Remaining finish line: actual full-world comparison (queued colour97881), requested local screen84950/two-browser1483 results, publication of reviewed harness and ledger, final checklist evidence map and review-ready PR state. No physical/human acceptance or merge/deploy authorization inferred from green CI.
+#### Fresh actual-screen result — 2026-10-22 19:32Z
+
+`node preview/e2e/ipic-screen-runner.mjs` (handle84950) completed exit0 at head9249aa04 on ANGLE Metal/Apple M5 Max. Real-decoder stall/Retry, 16:9/4:3/2.39:1/4:1 aspect/mattes, offline/Retry, WebM-invalid→MP4 fallback, interrupted load, same-film restart, and held-response pixel trace passed. Presented frames advanced7→51; Stop restored the material exactly and disposed all13 created textures. Autoplay with sound was permitted, so refusal was not exercised by this browser and remains covered by unit tests/device rows separately.
+
+Inspected the fresh16:9,4:3,2.39:1 square captures and4:1 seated capture: full colored bounds, orientation and mattes agree with samples. The4:1 screenshot retains the fixture status overlay's earlier `error` label after successful Retry; this label is not the current player state, and is an existing harness-display limitation rather than runtime acceptance evidence. Fixture lights at1 and0.25 produce identical sampled grey128→140/140/138, white255→227/227/227 and black0→0. These remain fixture-light measurements, not the still-pending full-world capture or human color approval.
+
+Fresh raw receipt/captures preserved at `.runtime/s1-498-closure/screen-9249aa04/` as well as `output/playwright/ipic-screen/`. The original external lock holder and human-Studio baseline finished; queue now advances behind live PR504 full verification PID1704. Remaining local handles: two-browser1483 and full-world colour97881. Do not restart them.
+
+### Main refresh after #573 — 2026-10-22
+
+Main advanced to `3bae89fb` while the remaining browser sessions were queued. GitHub expected-head update from `9249aa041db5b0cb314f5b8eca53354215eddf7a` produced `210cfbbce3e2fd579e56c1f447411aa86ded57cf`, adopted with `git merge --ff-only`; `git merge-base --is-ancestor origin/main HEAD` passed. The incoming changes add character-tier browser coverage and reports; screening runtime, the pending color harness, and `uv.lock` are unchanged. The prior all-green CI receipt belongs to `9249aa04`; checks for the new head must finish before readiness. Local two-browser session `1483` and full-world color session `97881` remain live in the shared browser queue.
+
+### Local two-browser completion — 2026-10-22
+
+`pnpm run test:screening` (session `1483`) completed with exit 0 at head `210cfbbce3e2fd579e56c1f447411aa86ded57cf`: all 19 checks passed in Chromium 156.0.8078.4, with no reported errors. Convergence below 500 ms occurred at the first sample (11 ms), paused spread was 0 ms, and the fixture replacement showed no stale frame in 51 rendered frames. The second approved film supplied its own 1280×720 texture, captions, transcript and decoded audio (101156 bytes). The emulated hidden/frozen return presented a frame 63 ms from room time, 460 ms after showing. Host loss paused the room without promotion; leaving released the local player. Raw JSON and five fresh panel/chooser images are preserved with SHA-256 hashes in `.runtime/s1-498-closure/two-browser-210cfbbc/`; older soak files were excluded. This is local automated browser evidence, not physical device, listening or human accessibility acceptance. Full-world color session `97881` remains queued behind Campus 507 publication verification.
+
+### Full-world capture exposed follow-up work — 2026-10-22
+
+Color capture session `97881` exited 0 at `210cfbbc`, using normal world rendering, loaded environment and Sharpest AO/bloom on Apple M5 Max Metal. Raw receipt and nine images are preserved in `.runtime/s1-498-closure/colour-before-210cfbbc/` with hashes. Inspection found the requested hour 0 was clamped by the UI to 7; the original midnight label is invalid and must be corrected. The same paused video frame at 2.070319 s differs under noon and dusk lighting: cyan (0,255,255) became (199,241,240) at noon and (178,235,232) at dusk; black became (10,9,9) and (5,4,3), white became (241,240,240) and (235,234,233). Orientation, frame numeral and fitted aspect are intact. The video is bound as both surface and emissive map; independent review is assessing the double-lighting requirement before any readiness claim. Renderer tone mapping remains unchanged. Capture success is not color acceptance.
+
+### Lighting regression and CI checkpoint — 2026-10-22
+
+Independent review confirmed that the borrowed Standard material adds diffuse/specular lighting to the video emission. The proposed screen-local correction replaces outgoing light with the masked total emissive radiance; it preserves renderer tone mapping and borrowed-material restoration. A fixed-exposure GPU regression varies direct and environment lighting on the same paused frame. Session `40205` is queued before applying the correction, preserving a real red baseline. The reviewer accepted its owned PMREM target and guaranteed cleanup; GPU resource-baseline verification remains pending.
+
+The hour-clamping capture defect has a red/green helper regression (8/8 green); the next full-world run requests and asserts noon (12), dusk (19), and dawn (7). Previous hour-0 artifacts remain preserved with their invalid midnight label explicitly recorded above. Hosted Verify run `39845072342` attempt 2 passed at exact head `210cfbbce3e2fd579e56c1f447411aa86ded57cf`, including aggregate `preview`; this does not cover the uncommitted harness or pending shader correction.
+
+### Double-lighting reproduced and corrected — 2026-10-22 21:30Z
+
+The fixed-exposure GPU regression (session `40205`) failed on the unchanged production shader at `210cfbbc`: the same direct grey pixel remained (128,128,128), while its screen sample changed from (134,134,134) to (247,247,246) under added direct/environment lighting. Failure receipt, captures and hashes are preserved in `.runtime/s1-498-closure/lighting-red-210cfbbc/`; the full log is `lighting-red.log`. This isolates added surface lighting from time-of-day exposure changes.
+
+The screen-only shader now assigns masked `totalEmissiveRadiance` to outgoing light, with a new program cache suffix. The existing matte fit, borrowed properties, material restoration, global exposure/tone mapping, geometry and server authority remain unchanged. Five focused suites (player, screen binding, UI, media and capture helper) pass 66/66 with zero skips; fixture integrity and diff whitespace checks pass. Independent production-diff review is running. GPU green session `82193`, corrected full-world capture `40768`, and fresh core `1749` are live; none is yet a pass.
+
+Independent reviewer approved the production lighting diff at source-review level and verified the saved GPU red receipt. Their independent screen-binding/capture run passed 14/14 and diff whitespace checks passed. Review confirms global tone mapping, fog and postprocessing remain unchanged and borrowed-material restoration is intact; it explicitly excludes pending GPU green and corrected full-world capture acceptance. The requested two-browser screening journey is also rerunning after the shader correction.
+
+### Core after lighting correction — 2026-10-22 21:35Z
+
+`PATH="$PWD/.venv/bin:/opt/homebrew/opt/python@3.12/libexec/bin:$PATH" pnpm run verify` exited 0 after the shader correction: tooling 173/173, preview 3717 passed/1 existing skip, server 732 passed/212 Redis skips, desktop 115 passed/3 Windows skips, Python 145 passed, build/lint/format/demo/secret checks passed. The demo verifier returned its expected blocked exit 2. Receipt `core-lighting-210cfbbc.json`, full log `core-lighting.log`, and source hashes `core-lighting-source-sha256.txt` are preserved under `.runtime/s1-498-closure/`. This dirty-worktree core receipt does not establish Redis, GPU/browser, native, human or production acceptance. GPU `82193`, full-world `40768` and two-browser `29647` remain live queued; core `1749` is terminal and must not be polled again.
+
+### GPU red/green and full-world comparison — 2026-10-22 22:28Z
+
+GPU session `82193` exited 0 on Chromium 156.0.8078.4 / Apple M5 Max Metal. At fixed exposure 0.95, the same decoded grey (128,128,128) now renders (134,134,134) under both low and high direct/environment lighting; white is (225,225,225) and black (0,0,0) under both. The unchanged shader had rendered that grey as (134,134,134) versus (247,247,246), so the GPU regression is red then green. Existing aspect/matte, source fallback, held-response stale-pixel, restart and playback checks pass; presented frames advance 8 to 51, Stop restores the material exactly, and all 13 film textures are disposed. No browser errors. Autoplay was allowed, so refusal remains unit/device evidence. Raw successful artifacts are preserved with hashes in `lighting-green-210cfbbc/`, excluding the stale failure image.
+
+Full-world session `40768` exited 0 with normal production rendering, loaded environment and Sharpest AO/bloom. All captures hold the same paused frame at 2.073963 seconds and assert actual hours 12, 19 and 7. Noon exposure is 0.95, dusk/dawn 0.836. At the first sampled row, noon black is (0,0,0), cyan (148,225,224), blue (0,0,225), red (247,4,19), white (225,225,225); dusk/dawn black is (0,0,0), cyan (135,221,219), blue (0,0,219), red (239,0,15), white (220,220,220). Direct pixels and all 35 paired samples per hour remain in the receipt. Direct and three world images were inspected: same numeral/orientation, full content and independent black mattes. Global tone mapping/exposure/postprocessing are preserved, so direct RGB equality is not claimed. Human color/black-level approval remains #502 Screen quality. Fresh receipt plus nine images are preserved with hashes in `colour-after-210cfbbc/`, excluding obsolete hour-0 files. Both artifact directories are under `.runtime/s1-498-closure/`.
+
+GPU `82193` and color `40768` are terminal success; do not poll them again. Two-browser `29647` remains live. Next: consume it, reconcile final checklist, publish verified changes and exact evidence, refresh main and pass final-head hosted checks before marking #571 ready. No merge or deployment authorized.
+
+
+### Final local evidence reconciliation — 2026-10-22 22:32Z
+
+The final post-fix `pnpm run test:screening` receipt reports passed with 19 checks and no errors: convergence 8 ms, paused spread 0 ms, no stale image in 59 replacement frames, second approved film metadata/captions/transcript and 41112 decoded audio bytes. Emulated foreground recovery presented a frame 44 ms from the room and 353 ms after showing. Host loss paused at 9.965 seconds without promotion. Receipt plus five fresh screenshots and SHA-256 manifest are retained in `.runtime/s1-498-closure/two-browser-lighting-210cfbbc/`; old soak screenshots are excluded. The process handle has expired; the terminal passed receipt and final log are the retained result. Audio decoding is not listening and CDP background emulation is not physical-device acceptance.
+
+All fresh local receipts above describe `210cfbbc` plus the reviewed source patch, whose hashes are recorded in core/full-world evidence. Current main additionally contains character-fidelity #545 and Python dependencies #553. Publish this verified patch, integrate current main, and establish exact-final-head hosted checks before ready status. No merge/deploy/issue closure is authorized.
+
+Remaining #502 rows for Val and the acceptance reviewers: physical macOS Safari/iPhone core journey, codec/fallback/autoplay and foreground recovery; presented-frame timing on additional declared GPUs; screen color/black-level approval; actual listening, local lip-sync and correction audibility; touch, screen reader, keyboard/focus and reduced-motion human review; physical-device warm-up plus ten resource cycles, serving/performance and compatible release/rollback smoke. Existing local fixtures, width emulation and decoded audio are scoped engineering evidence only.

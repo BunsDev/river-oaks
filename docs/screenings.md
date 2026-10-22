@@ -185,6 +185,7 @@ second interior or renderer is built.
   fitted at the film's aspect.
   - **Mattes.** The screen's own shader draws black mattes outside the film, so a film needs no baked border
     and its edge pixels never smear.
+  - **Lighting.** While a film is bound, its masked emissive signal replaces surface diffuse/specular lighting, so scene lights do not illuminate the film a second time. Global tone mapping, exposure, fog and postprocessing remain in effect; rendered pixels are not expected to equal direct-video RGB values. The actual-screen runner compares a fixed paused frame under low/high direct and environment lighting at constant exposure. `node preview/e2e/ipic-screen-colour-runner.mjs` captures paired direct/world samples through normal full-world rendering at noon, dusk and dawn; human color approval remains #502.
   - **What shows.** The film appears only once the current source has a decoded frame. While a replacement
     loads, after a Stop and after a failure, the screen is its idle self.
   - **Restore.** Every borrowed material property is restored exactly, and one film texture is resident at

@@ -134,6 +134,18 @@ async page => {
   results.colour = { lit: await fx('sample'), dimmed: (await fx('pose', 'square', 0.25), await fx('sample')) };
   await fx('pose', 'square', 1);
 
+  // Hold exposure and decoded frame fixed while direct and environment lighting change.
+  try {
+    const probeLow = await fx('lightingProbe', 0), low = await fx('sample');
+    const probeHigh = await fx('lightingProbe', 4), high = await fx('sample');
+    results.lightingIsolation = { probeLow, probeHigh, low, high };
+    check(probeLow.exposure === probeHigh.exposure && probeHigh.environment, 'lighting comparison holds exposure fixed and supplies environment lighting');
+    for (const name of ['grey', 'white', 'black']) {
+      check(low.film[name].direct.join() === high.film[name].direct.join(), `same decoded ${name} pixels under both lights`);
+      check(low.film[name].rendered.every((v, i) => Math.abs(v - high.film[name].rendered[i]) <= 2), `film ${name} ignores added surface lighting: ${JSON.stringify({ low: low.film[name], high: high.film[name] })}`);
+    }
+  } finally { await fx('lightingProbe', null); }
+
   // Real playback of the approved short, muted: presented frames advance (requestVideoFrameCallback).
   const playing = await fx('show', 'ipic-original-v1', { status: 'playing', at: 2000 });
   check(playing.screen.key && playing.decoded.join() === '1280,720', `the short is on the screen: ${JSON.stringify(playing)}`);

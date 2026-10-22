@@ -29,7 +29,9 @@ const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(67, innerW
 const pipeline = createRenderPipeline(renderer, scene, camera);
 pipeline.resize(innerWidth, innerHeight, 1);
 const model = buildIpicInterior(room, { local: true }); scene.add(model);
-scene.add(new THREE.HemisphereLight('#eee0c4', '#66584a', 0.6));
+const hemisphere = new THREE.HemisphereLight('#eee0c4', '#66584a', 0.6); scene.add(hemisphere);
+const probeLight = new THREE.DirectionalLight('#ffffff', 0); scene.add(probeLight, probeLight.target);
+let probeEnvironment, probeEnvironmentTarget;
 const lights = Array.from({ length: 8 }, () => { const light = new THREE.PointLight('#ffd9ae', 0, 10, 2); scene.add(light); return light; });
 await model.userData.ready;
 const screen = { material: model.userData.screen, aspect: model.userData.screenAspect };
@@ -121,6 +123,21 @@ window.screenFixture = {
   unmute() { video.muted = false; },
   unlock() { return player.unlock(); },
   async pose(name, level = 1) { current = name; houseLights = level; await nextFrames(3); },
+  async lightingProbe(level) {
+    if (!probeEnvironment && level !== null) {
+      const faces = Array.from({ length: 6 }, () => { const canvas = document.createElement('canvas'); canvas.width = canvas.height = 16; const ctx = canvas.getContext('2d'); ctx.fillStyle = '#fff0d8'; ctx.fillRect(0, 0, 16, 16); return canvas; });
+      const cube = new THREE.CubeTexture(faces); cube.colorSpace = THREE.SRGBColorSpace; cube.needsUpdate = true;
+      const pmrem = new THREE.PMREMGenerator(renderer);
+      try { probeEnvironmentTarget = pmrem.fromCubemap(cube); probeEnvironment = probeEnvironmentTarget.texture; }
+      finally { cube.dispose(); pmrem.dispose(); }
+    }
+    hemisphere.intensity = level === null ? 0.6 : level;
+    probeLight.position.copy(camera.position); probeLight.target.position.copy(p(centre)); probeLight.intensity = level === null ? 0 : 4 * level;
+    scene.environment = level === null ? null : probeEnvironment; scene.environmentIntensity = level === null ? 1 : level;
+    if (level === null) { probeEnvironmentTarget?.dispose(); probeEnvironmentTarget = probeEnvironment = null; }
+    await nextFrames(5);
+    return { exposure: renderer.toneMappingExposure, level, environment: Boolean(scene.environment) };
+  },
   // Rendered and direct-video colour at film points, plus the mattes just outside the film and midway.
   async sample(points = {}) {
     await nextFrames(2);
