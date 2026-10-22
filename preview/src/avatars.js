@@ -1,3 +1,6 @@
+import {isRealisticHumanRig, characterFidelityContract} from './character-fidelity-contract.js';
+import {createCharacterFidelity, followCharacterQuality} from './character-fidelity-runtime.js';
+import {createCharacterExpressions} from './character-expressions.js';
 import { createArmContacts } from './arm-contact.js';
 import { applyHandshakeContact } from './handshake-contact.js';
 import { shareAvatarSkeletons } from './avatar-skeletons.js';
@@ -138,9 +141,9 @@ export function instantiateAvatar(source, { targetHeight, id, armSpread, face })
 }
 
 // faceRecipe: undefined picks residentFaceFor(id); {} keeps the rig's authored face.
-export async function loadResidentAvatar(index, id, profileOverride, { folk = true, appearanceId = profileOverride, faceRecipe } = {}) {
+export async function loadResidentAvatar(index, id, profileOverride, { folk = true, appearanceId = profileOverride, faceRecipe, realism } = {}) {
   const profile = profileOverride ?? avatarProfile(index), source = await template(profile);
-  const targetHeight = profile === 'jevica' ? 1.685 : profile === 'prince-jev' ? 1.74 : profile.startsWith('woman') ? 1.66+(index%3)*0.025 : 1.78+(index%3)*0.025;
+  const targetHeight = characterFidelityContract(profile)?.targetHeightM ?? (profile === 'jevica' ? 1.685 : profile === 'prince-jev' ? 1.74 : profile.startsWith('woman') ? 1.66+(index%3)*0.025 : 1.78+(index%3)*0.025);
   const avatar = instantiateAvatar(source, { targetHeight, id, armSpread:profile==='jevica'?0.32:undefined, face:faceRecipe??(folk&&id!=='player'?residentFaceFor(id):undefined) });
   const { model, bones, rest } = avatar;
   if(id !== 'player' && folk) {
@@ -165,9 +168,20 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
   const conversationBody=createConversationBody(avatar);
   const face=createFacialMotion(model,{seed:id??index,reducedMotion:noMotion});
   const upperBody=createUpperBodyGait(avatar,root,{reducedMotion:noMotion,armSwing:profile==='jevica'?.34:.42,abduct:profile==='jevica'?.07:0});
+  const expressions=createCharacterExpressions(model,characterFidelityContract(profile));
+  let fidelity=null,unsubscribeQuality=null;
+  if((isRealisticHumanRig(profile)&&realism!=='off')||(realism&&realism!=='off')){
+    fidelity=createCharacterFidelity(avatar);
+    try{
+      if(realism===undefined)unsubscribeQuality=await followCharacterQuality(fidelity);else await fidelity.setTier(realism);
+    }catch(error){fidelity.dispose();expressions.dispose();upperBody.dispose();look?.dispose();avatar.dispose();throw error;}
+  }
   let previousTime=null,walkingSpeed=0;
   return {
-    object:root, profile, rig:avatar,
+    object:root, profile, rig:avatar, expressions,
+    get realismReport(){return fidelity?.report??{tier:'off'};},
+    setExpression:(name,weight)=>expressions.set(name,weight),
+    setRealismTier:tier=>fidelity?.setTier(tier),
     // The visibility owner explicitly suspends the clock, even for brief culls.
     suspend() {previousTime=null;gestures.suspend();},
     get carrying() {return kit.visible;},
@@ -301,6 +315,6 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
         can.getObjectByName('Watering stream').scale.y=noMotion?1:.85+Math.sin(t*17)*.15;
       }
     },
-    dispose() { upperBody.dispose(); look?.dispose(); avatar.dispose(); },
+    dispose() { unsubscribeQuality?.(); fidelity?.dispose(); expressions.dispose(); upperBody.dispose(); look?.dispose(); avatar.dispose(); },
   };
 }

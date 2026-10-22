@@ -1,3 +1,4 @@
+import {verifyBakeProvenance} from '../../scripts/lib/bake-provenance.mjs';
 import test from 'node:test';
 import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
@@ -98,7 +99,7 @@ for(const [appearanceId,profile,bodyName,height]of [
 test('Silvan packed corrections retain provenance and bounded per-rig data',async()=>{
   const root=new URL('../../',import.meta.url),receipt=JSON.parse(await readFile(new URL('preview/src/silvan-drape-morph-receipt.json',root),'utf8'));
   const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
-  for(const [path,expected]of Object.entries(receipt.inputs))assert.equal(hash(await readFile(new URL(path,root))),expected,path);
+  await verifyBakeProvenance({root, bake: 'silvan-drape', receipt});
   const bytes=await readFile(new URL('preview/src/silvan-drape-morph-data.js',root));
   assert.equal(hash(bytes),receipt.outputSha256);assert(bytes.length<1_500_000,'packed source exceeds 1.5 MB');
   assert.deepEqual(Object.keys(SILVAN_DRAPE_MORPHS),['masculine','feminine']);

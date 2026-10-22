@@ -15,7 +15,10 @@ const canonical=path=>existsSync(path)?realpathSync(path):resolve(path);
 const inside=(path,parent)=>{const r=relative(canonical(parent),canonical(path));return !r||(!r.startsWith('../')&&r!=='..'&&!isAbsolute(r));};
 const quote=value=>"'"+value.replaceAll("'","'\\''")+"'";
 const snapshotScript=new URL('./project-worktree-snapshot.py',import.meta.url).pathname;
-const snapshot=(mode,path,...args)=>JSON.parse(run('python3',[snapshotScript,mode,'--root',path,...args],path));
+// The repository's locked interpreter (uv sync), not whatever python3 is first on PATH:
+// macOS ships 3.9, and the snapshot needs 3.11+. CI's tooling job has no .venv.
+export const pythonFor=root=>{const locked=join(root,'.venv/bin/python');return existsSync(locked)?locked:'python3';};
+const snapshot=(mode,path,...args)=>JSON.parse(run(pythonFor(new URL('..',import.meta.url).pathname),[snapshotScript,mode,'--root',path,...args],path));
 const worktrees=root=>git(root,['worktree','list','--porcelain','-z']).split('\0\0').filter(Boolean).map((block,index)=>{
   const fields=Object.fromEntries(block.split('\0').filter(Boolean).map(line=>{const i=line.indexOf(' ');return i<0?[line,true]:[line.slice(0,i),line.slice(i+1)];}));
   return {path:fields.worktree,head:fields.HEAD,branch:fields.branch?.replace(/^refs\/heads\//,''),locked:Boolean(fields.locked),primary:index===0};

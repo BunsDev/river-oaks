@@ -17,6 +17,18 @@ export const CHARACTER_ASSETS = Object.freeze({
     "sha256": "ae3834fbc9d96c3588f330a80280a2dfd5d69830ad18ca2f51d5e1003f7e042f",
     "bytes": 1848936,
     "receipt": "/assets/characters/sources.json"
+  },
+  "man-realistic-casual": {
+    "id": "man-realistic-casual",
+    "sha256": "bce971f3e523419b9ee1ceaccf9a8044152dc1647dd2148c458e40aad0da4305",
+    "bytes": 9395508,
+    "receipt": "/assets/characters/realistic-humans.sources.json"
+  },
+  "woman-realistic-tailored": {
+    "id": "woman-realistic-tailored",
+    "sha256": "d341bf3a344bfd8d091ea226482d9bd51ad18732fe361e5860537052e767cdc1",
+    "bytes": 9447632,
+    "receipt": "/assets/characters/realistic-humans.sources.json"
   }
 });
 

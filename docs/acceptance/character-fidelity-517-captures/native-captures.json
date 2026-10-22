@@ -1,0 +1,248 @@
+{
+  "report": "data/reports/character-fidelity-tiers-517.json",
+  "revision": "225acfc9eaebf67627db7337feacac130b241ad8",
+  "provenanceSha256": "f1f07b69267e7d47e264e4f476a04c30f65ce5cce5f619cfc826d4dac1a4472b",
+  "scope": "Selected native3840x2160 PNGs copied byte-for-byte from actual successful run. No resizing, retouching or compositing.",
+  "files": [
+    {
+      "path": "docs/acceptance/character-fidelity-517-captures/morgan-human-closeUp.png",
+      "sha256": "dce7402993267d4a2117a732476bb5b6d551fa889f6a6b9e88fd2f701b65944a",
+      "bytes": 1935163,
+      "case": "morgan-human",
+      "view": "closeUp",
+      "camera": {
+        "position": [
+          0,
+          1.6361293309692055,
+          1.0815364957514584
+        ],
+        "fov": 24,
+        "direction": [
+          0,
+          -0.014998312784712147,
+          -0.9998875189808162
+        ]
+      }
+    },
+    {
+      "path": "docs/acceptance/character-fidelity-517-captures/morgan-human.low-closeUp.png",
+      "sha256": "bc97ebb3b1c53484e1b3be8a3d7cd5d24c2551e73256af77475fba57ed20a1b3",
+      "bytes": 1978906,
+      "case": "morgan-human.low",
+      "view": "closeUp",
+      "camera": {
+        "position": [
+          0,
+          1.6361293309692055,
+          1.0815364957514584
+        ],
+        "fov": 24,
+        "direction": [
+          0,
+          -0.014998312784712147,
+          -0.9998875189808162
+        ]
+      }
+    },
+    {
+      "path": "docs/acceptance/character-fidelity-517-captures/morgan-human.high-closeUp.png",
+      "sha256": "6573a8a976905ef039ee7d252a62117e987238d478bb37980ec7271a06b60d9b",
+      "bytes": 2609646,
+      "case": "morgan-human.high",
+      "view": "closeUp",
+      "camera": {
+        "position": [
+          0,
+          1.6361293309692055,
+          1.0815364957514584
+        ],
+        "fov": 24,
+        "direction": [
+          0,
+          -0.014998312784712147,
+          -0.9998875189808162
+        ]
+      }
+    },
+    {
+      "path": "docs/acceptance/character-fidelity-517-captures/morgan-human.high-full.png",
+      "sha256": "a66827a89d4130a14d84997db678788f6c6ea284b543b15b28558cc2b015d7e9",
+      "bytes": 1217639,
+      "case": "morgan-human.high",
+      "view": "full",
+      "camera": {
+        "position": [
+          0,
+          1.08,
+          3.8
+        ],
+        "fov": 30,
+        "direction": [
+          0,
+          -0.04731536845680366,
+          -0.9988800007547438
+        ]
+      }
+    },
+    {
+      "path": "docs/acceptance/character-fidelity-517-captures/morgan-human.high-expression-smile.png",
+      "sha256": "63faa41294d4f261a828461d246b65c030b44b1787dcffbf5f02b2f815c659e0",
+      "bytes": 2613224,
+      "case": "morgan-human.high",
+      "view": "expression-smile",
+      "camera": {
+        "position": [
+          0,
+          1.6361293309692055,
+          1.0815364957514584
+        ],
+        "fov": 24,
+        "direction": [
+          0,
+          -0.014998312784712147,
+          -0.9998875189808162
+        ]
+      }
+    },
+    {
+      "path": "docs/acceptance/character-fidelity-517-captures/morgan-human.high-expression-browRaise.png",
+      "sha256": "47545251dc61e0e95cb72e58c07c0d3bf5aab3e28bb56f85e2e33bb9ecbe846d",
+      "bytes": 2611039,
+      "case": "morgan-human.high",
+      "view": "expression-browRaise",
+      "camera": {
+        "position": [
+          0,
+          1.6361293309692055,
+          1.0815364957514584
+        ],
+        "fov": 24,
+        "direction": [
+          0,
+          -0.014998312784712147,
+          -0.9998875189808162
+        ]
+      }
+    },
+    {
+      "path": "docs/acceptance/character-fidelity-517-captures/imani-human-closeUp.png",
+      "sha256": "64d483e4ae3bb1f60b87560e7803b0e4409aa1a02b4bd309384c11bbd1af47d2",
+      "bytes": 2360876,
+      "case": "imani-human",
+      "view": "closeUp",
+      "camera": {
+        "position": [
+          0,
+          1.538028476996393,
+          1.0788576693458818
+        ],
+        "fov": 24,
+        "direction": [
+          0,
+          -0.014998312784712147,
+          -0.9998875189808162
+        ]
+      }
+    },
+    {
+      "path": "docs/acceptance/character-fidelity-517-captures/imani-human.low-closeUp.png",
+      "sha256": "1d7da1389d3f349fda6546fa408aa0b2bd6dc25214d81b68bf3e79d2e9334cbe",
+      "bytes": 2439021,
+      "case": "imani-human.low",
+      "view": "closeUp",
+      "camera": {
+        "position": [
+          0,
+          1.538028476996393,
+          1.0788576693458818
+        ],
+        "fov": 24,
+        "direction": [
+          0,
+          -0.014998312784712147,
+          -0.9998875189808162
+        ]
+      }
+    },
+    {
+      "path": "docs/acceptance/character-fidelity-517-captures/imani-human.high-closeUp.png",
+      "sha256": "24e717ed4f9a3047e275e65a2c60eef011bb1d906a839064a707610bf60f308f",
+      "bytes": 2849440,
+      "case": "imani-human.high",
+      "view": "closeUp",
+      "camera": {
+        "position": [
+          0,
+          1.538028476996393,
+          1.0788576693458818
+        ],
+        "fov": 24,
+        "direction": [
+          0,
+          -0.014998312784712147,
+          -0.9998875189808162
+        ]
+      }
+    },
+    {
+      "path": "docs/acceptance/character-fidelity-517-captures/imani-human.high-full.png",
+      "sha256": "618e5fea0a26f6cd0edb9558d1aec54156b046d920a27d32f3b08e2c5bc93e34",
+      "bytes": 1141281,
+      "case": "imani-human.high",
+      "view": "full",
+      "camera": {
+        "position": [
+          0,
+          1.08,
+          3.8
+        ],
+        "fov": 30,
+        "direction": [
+          0,
+          -0.04731536845680366,
+          -0.9988800007547438
+        ]
+      }
+    },
+    {
+      "path": "docs/acceptance/character-fidelity-517-captures/imani-human.high-expression-smile.png",
+      "sha256": "5fff0449a2b49dbcc688a7b9d0e76e92d36a1ef1b869025a516855b2cfffc3ee",
+      "bytes": 2856465,
+      "case": "imani-human.high",
+      "view": "expression-smile",
+      "camera": {
+        "position": [
+          0,
+          1.538028476996393,
+          1.0788576693458818
+        ],
+        "fov": 24,
+        "direction": [
+          0,
+          -0.014998312784712147,
+          -0.9998875189808162
+        ]
+      }
+    },
+    {
+      "path": "docs/acceptance/character-fidelity-517-captures/imani-human.high-expression-browRaise.png",
+      "sha256": "c25688489ec2f6d9ecdcde99ac75387491f59edcc6d218c7aac0e8a579bed482",
+      "bytes": 2848981,
+      "case": "imani-human.high",
+      "view": "expression-browRaise",
+      "camera": {
+        "position": [
+          0,
+          1.538028476996393,
+          1.0788576693458818
+        ],
+        "fov": 24,
+        "direction": [
+          0,
+          -0.014998312784712147,
+          -0.9998875189808162
+        ]
+      }
+    }
+  ]
+}
