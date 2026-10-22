@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { createQueue, land } from '../land-pr.mjs';
+import { createQueue, gitHubApi, land } from '../land-pr.mjs';
 
 const scratch = t => { const dir = mkdtempSync(join(tmpdir(), 'river-land-')); t.after(() => rmSync(dir, { recursive: true, force: true })); return dir; };
 const queueAt = (dir, pid, alive = () => true) => createQueue({ file: join(dir, 'queue.json'), lock: join(dir, 'queue.lock'), pid, host: 'here', alive });
@@ -14,7 +14,7 @@ const instant = () => Promise.resolve();
 
 // A pull request that moves as the lander acts on it. `runs` maps a head to the
 // Verify conclusions of its attempts; `onGuard` decides what the guard does.
-function fakeGitHub({ mergeable = 'clean', head = 'a', runs = {}, onGuard, onDefault = true } = {}) {
+function fakeGitHub({ mergeable = 'clean', head = 'a', runs = {}, onGuard, onDefault = true, branchGone = false } = {}) {
   const pull = { state: 'open', merged: false, mergeable_state: mergeable, head, ref: 'feat/thing', merge_commit_sha: null };
   const calls = { pull: 0, updateBranch: [], rerun: [], guard: 0, deleted: [] };
   const attempt = {};
@@ -22,7 +22,7 @@ function fakeGitHub({ mergeable = 'clean', head = 'a', runs = {}, onGuard, onDef
   const github = {
     async pull() { calls.pull++; return { ...pull }; },
     async mergedOnDefault() { return onDefault; },
-    async deleteBranch(ref) { calls.deleted.push(ref); },
+    async deleteBranch(ref) { calls.deleted.push(ref); return !branchGone; },
     async updateBranch(_, expected) { calls.updateBranch.push(expected); pull.head = `updated-${++heads}`; pull.mergeable_state = 'clean'; },
     async verifyRun(sha) {
       const results = runs[sha] ?? ['success'], index = attempt[sha] ?? 0;
@@ -145,6 +145,60 @@ test('a pull request found already merged is still eligible for the opt-in delet
   fake.pull.merged = true; fake.pull.state = 'closed'; fake.pull.merge_commit_sha = 'earlier';
   const result = await land({ pr: 7, github: fake.github, guard: fake.guard, queue, sleep: instant, deleteRemoteBranch: true });
   assert.deepEqual([result.merge, result.deletedBranch, fake.calls.guard], ['earlier', 'feat/thing', 0]);
+});
+
+// A repository that deletes head branches on merge has removed the branch
+// before the lander asks; the landing still succeeds.
+test('a branch GitHub already deleted on merge is reported, not an error', async t => {
+  const queue = queueAt(scratch(t), 1), fake = fakeGitHub({ branchGone: true });
+  const lines = [];
+  const result = await land({ pr: 7, github: fake.github, guard: fake.guard, queue, sleep: instant, deleteRemoteBranch: true, log: line => lines.push(line) });
+  assert.deepEqual([result.status, result.merge, result.deletedBranch], ['merged', 'merge-of-a', null]);
+  assert.ok(lines.some(line => line.includes('GitHub had already deleted feat/thing')));
+});
+
+// The real client over a fake gh: each request is answered from `routes` by its
+// "<method> <path>", and anything else fails the way gh does on a 404.
+function fakeGh(routes) {
+  const requests = [];
+  const run = (command, args) => {
+    if (command === 'git') return 'git@github.com:BunsDev/river-oaks.git\n';
+    const path = args.at(-1), method = args.includes('-X') ? args[args.indexOf('-X') + 1] : 'GET', key = `${method} ${path}`;
+    requests.push(key);
+    const answer = routes[key];
+    if (answer === undefined) throw new Error(`Command failed: gh api ${path}\ngh: Not Found (HTTP 404)`);
+    if (answer instanceof Error) throw answer;
+    return answer === null ? '' : JSON.stringify(answer);
+  };
+  return { github: gitHubApi('.', run), requests };
+}
+
+test('the default-branch lookup reads the repository, not a 404ing path with a trailing slash', async () => {
+  const { github, requests } = fakeGh({ 'GET repos/BunsDev/river-oaks': { default_branch: 'main' }, 'GET repos/BunsDev/river-oaks/compare/main...m1': { status: 'behind' } });
+  assert.equal(await github.mergedOnDefault('m1'), true);
+  assert.deepEqual(requests, ['GET repos/BunsDev/river-oaks', 'GET repos/BunsDev/river-oaks/compare/main...m1']);
+});
+
+test('deleting a branch that is already gone returns false, even beside a longer name', async () => {
+  const { github, requests } = fakeGh({
+    'DELETE repos/BunsDev/river-oaks/git/refs/heads/feat/thing': new Error('gh: Reference does not exist (HTTP 422)'),
+    'GET repos/BunsDev/river-oaks/git/matching-refs/heads/feat/thing': [{ ref: 'refs/heads/feat/thing-2' }],
+  });
+  assert.equal(await github.deleteBranch('feat/thing'), false);
+  assert.equal(requests.length, 2);
+});
+
+test('a delete that fails while the branch still exists is an error', async () => {
+  const { github } = fakeGh({
+    'DELETE repos/BunsDev/river-oaks/git/refs/heads/feat/thing': new Error('gh: Resource not accessible by integration (HTTP 403)'),
+    'GET repos/BunsDev/river-oaks/git/matching-refs/heads/feat/thing': [{ ref: 'refs/heads/feat/thing' }],
+  });
+  await assert.rejects(github.deleteBranch('feat/thing'), /HTTP 403/);
+});
+
+test('a successful delete returns true', async () => {
+  const { github } = fakeGh({ 'DELETE repos/BunsDev/river-oaks/git/refs/heads/feat/thing': null });
+  assert.equal(await github.deleteBranch('feat/thing'), true);
 });
 
 // Checkouts update at different times, so the lander from #272 (which keys
