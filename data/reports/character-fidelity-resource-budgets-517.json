@@ -1,0 +1,72 @@
+{
+  "status": "measured-reference",
+  "createdAt": "2026-10-19T02:55:11.939578+00:00",
+  "sourceReceipt": "data/reports/character-fidelity-main-tiers-517.json",
+  "sourceReceiptSha256": "f14d7847658f48b6cf3ef30476228f4c13d4d9701b8e9dcb6cefbf87aa217937",
+  "runtimeManifestSha256": "426886a8e79e3acf652a29e4985ad07ec287479e500cf6c01c41f77155c81895",
+  "derivation": "Exact per-figure scene-census ceilings from two source revisions with byte-identical native captures. Existing --against acceptance requires equal census at unchanged asset/version; no headroom or timing threshold was invented.",
+  "units": {
+    "triangles": "Triangles in the figure scene graph",
+    "drawCalls": "Scene-census estimate, not aggregated renderer/shadow pass calls",
+    "textureBytes": "Estimated active texture storage, not total GPU residency"
+  },
+  "bundles": [
+    {
+      "appearanceId": "morgan-human",
+      "rig": "man-realistic-casual",
+      "assetBytes": 9395508,
+      "assetSha256": "bce971f3e523419b9ee1ceaccf9a8044152dc1647dd2148c458e40aad0da4305",
+      "ceilingsByTier": {
+        "off": {
+          "triangles": 84550,
+          "drawCalls": 9,
+          "textureBytes": 65710759
+        },
+        "low": {
+          "triangles": 84550,
+          "drawCalls": 10,
+          "textureBytes": 67108860
+        },
+        "standard": {
+          "triangles": 84550,
+          "drawCalls": 10,
+          "textureBytes": 67458385
+        },
+        "high": {
+          "triangles": 84550,
+          "drawCalls": 10,
+          "textureBytes": 67458385
+        }
+      }
+    },
+    {
+      "appearanceId": "imani-human",
+      "rig": "woman-realistic-tailored",
+      "assetBytes": 9447632,
+      "assetSha256": "d341bf3a344bfd8d091ea226482d9bd51ad18732fe361e5860537052e767cdc1",
+      "ceilingsByTier": {
+        "off": {
+          "triangles": 88544,
+          "drawCalls": 9,
+          "textureBytes": 60118354
+        },
+        "low": {
+          "triangles": 88544,
+          "drawCalls": 10,
+          "textureBytes": 61516455
+        },
+        "standard": {
+          "triangles": 88544,
+          "drawCalls": 10,
+          "textureBytes": 61865980
+        },
+        "high": {
+          "triangles": 88544,
+          "drawCalls": 10,
+          "textureBytes": 61865980
+        }
+      }
+    }
+  ],
+  "remaining": "These scene-census ceilings are not total GPU residency. Physical iPhone fixture timing and per-case measured reference ceilings are recorded separately in character-fidelity-iphone-517.json and character-fidelity-iphone-budgets-517.json; neither establishes whole-town performance."
+}

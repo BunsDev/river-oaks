@@ -1,3 +1,5 @@
+import {publishCharacterQuality} from './character-quality.js';
+
 // Graphics quality. The canvas always keeps native size; only the composer's
 // internal buffers scale, so text, HUD and the page stay sharp while the scene
 // renders fewer pixels on a busy GPU.
@@ -112,7 +114,7 @@ export function createQualityControl({ apply, storage: given, tailShedding = fal
   }
   function publish() {
     const { scale, occlusion } = effective();
-    if (scale !== lastScale || occlusion !== lastOcclusion) { lastScale = scale; lastOcclusion = occlusion; apply({ mode, scale, occlusion }); }
+    if (scale !== lastScale || occlusion !== lastOcclusion) { lastScale = scale; lastOcclusion = occlusion; publishCharacterQuality({ mode, scale, occlusion }); apply({ mode, scale, occlusion }); }
     readout.textContent = `${Math.round(scale * 100)}% · ${fps ? `${fps} fps` : '…'}`;
   }
   function select(next, persist = false) {

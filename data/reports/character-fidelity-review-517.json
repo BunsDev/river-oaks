@@ -1,0 +1,306 @@
+{
+  "schemaVersion": 1,
+  "status": "reviewed-local-candidate-and-signed-source-verified;hosted-verdict-external",
+  "reviewedAt": "2026-10-19T04:10:27.262106+00:00",
+  "revision": "54b5cd62daddb2abf0f8cc1d9e0b6427698da6da",
+  "integratedMain": "7c10f418b0ea519bc0d2b84bb65869e3c7cdae0e",
+  "runtimeManifestSha256": "3e04a4ae0af73d8e452f02024685108ef2d3808cc5822461ec878400b2e0f608",
+  "independentReview": {
+    "scope": "Actual human fidelity diff, focused regressions, original asset preservation, rendered captures, contract/persistence call paths, provenance and physical budget derivation",
+    "focusedTests": 54,
+    "skips": 0,
+    "requiredFindings": 1,
+    "remainingRequiredFindings": 0,
+    "verificationOfFix": "Independent13/13 focused tests; original same-turn high/low/high probe now retains high and its normal map."
+  },
+  "finding": {
+    "severity": "P2",
+    "file": "preview/src/character-fidelity-runtime.js",
+    "trigger": "Applied high, request low with asynchronous textures, then reaffirm high before low resolves. The cached high fast path did not advance generation; low subsequently overwrote it.",
+    "fix": "Advance generation after disposed/validity guards but before the cached applied-tier return.",
+    "behavioralRegressions": [
+      "high",
+      "standard",
+      "low",
+      "off"
+    ],
+    "red": {
+      "exitCode": 1,
+      "passed": 6,
+      "failed": 4,
+      "logSha256": "4a5cb8e736332ffed400759a18f6a6b1165e94fe59543e7c346c0dac552c0779"
+    },
+    "green": {
+      "exitCode": 0,
+      "passed": 13,
+      "failed": 0,
+      "logSha256": "3e326a22282693f6246a02c39b487bfd650ca69443bc04382e166981526cd094"
+    }
+  },
+  "limits": [
+    "Independent review is code/evidence review, not merge authorization.",
+    "M local gates and signed source binding are verified; actual F/G/C0 measurements retain their original provenance through applicability proofs. G/H/J/L failures, exact-H/J/L-causes uncertainty, heavy initial-load and performance reproduction gaps remain explicit. Final-head hosted verdict is external on PR545/live task.",
+    "Original three IPIC forward-clearance findings and native/live-auth/human/AAA/whole-town/thermal limits remain explicit.",
+    "P4/P5 novice trials remain waived, not passed."
+  ],
+  "renewedPhysicalAudit": {
+    "status": "evidence internally verified,performance reproduction not met",
+    "records": 67,
+    "timingCases": 48,
+    "inputHashesVerified": 113,
+    "byteIdenticalNativeCaptures": 12,
+    "withinRunP50Agreement": "22/24",
+    "crossRunP50Agreement": "46/48",
+    "frameP95ReferenceExceedanceCases": 9,
+    "cpuP95ReferenceExceedanceCases": 11,
+    "originalCeilingsPreserved": 48,
+    "privateIdentifiersFound": 0,
+    "assessment": "No demonstrated source correctness blocker from timing alone. Off-tier workloads bypass the changed controller and also slowed; this run does not isolate cause. Retain explicit performance acceptance limits; do not rerun until green or raise ceilings."
+  },
+  "candidateVerification": {
+    "runtimeManifestSha256": "3e04a4ae0af73d8e452f02024685108ef2d3808cc5822461ec878400b2e0f608",
+    "changedCodeTestConfigInputs": 142,
+    "focusedReadinessRegression": "10/10passed0skip;independentlyrepeated",
+    "officePaired": "Controlledsame20sholdred/greenverified;candidateinventoryackthenoneserver-acceptedarrival;notexactLcause",
+    "focusedWorld": "Actual stock office21/suite10checks and10unitregressions passed;pairedcontrolledadmissionandpublicationfaultproofs retained",
+    "core": "Mpassed11tasks:131tooling/3740preview+1existingVince skip/984server0skip/76desktop/149Python66warnings;build/Ruff472/offlineexpected2/secrets passed",
+    "full": "Mpassed18tasks;16worldjourneys,24sharedjourneys across5fixturemodeswithfullrendering,18IPICchecks",
+    "render": "Mphone113/native142-module/generatedbytes andGselectedbrowser/goldenapplicabilityverified;originalreceiptsunchanged",
+    "committedInputBinding": "Signed d11a6ee4ce794bc3f5f061bd48d5af8ce9a7cff9:1330runtime/testGitblobs/142changedinputs matchMmanifest",
+    "hostedExactHead": "Authoritative final-head verdict is onPR545 checks andprimarylive register;this receipt attests testedsource binding"
+  },
+  "historicalReviewSnapshot": {
+    "revision": "132e11b9829635f5d305a68f9fc70d40c96d9d6a",
+    "integratedMain": "5f3f5dc2d3fb3525a3e2c3f7ba55ff140b9aedb0",
+    "runtimeManifestSha256": "c0f5b8de9f6bad47a018c7a21e2446f647167b9be16e5a1aca5d63eab60ff036"
+  },
+  "integrationReviews": [
+    {
+      "main": "6b93031b42cace3addb30c9fe6c665741f0897aa",
+      "scope": "Play rail/Studio/persistence integration",
+      "requiredFindings": 0,
+      "focusedPassed": 14,
+      "skips": 0,
+      "phoneInputsUnchanged": 113
+    },
+    {
+      "main": "36f22b120509186ea67432601eda6f540a708238",
+      "scope": "GTAO override sort, renderer-state restoration, fidelity/Studio/persistence integration",
+      "requiredFindings": 0,
+      "focusedPassed": 34,
+      "skips": 0,
+      "phoneModulesUnchanged": 71,
+      "phoneInputsUnchanged": 113,
+      "limitation": "Upstream documents small exact-depth AO seam differences. World/render journey renewal is required; unit tests do not establish visual equality."
+    },
+    {
+      "main": "b76ab77cf716e5f4ddb24e54bce771412de0e1f0",
+      "scope": "Nine offline screening CLI/test/config inputs; no preview/server/shared/assets/package/lock/agent-catalog/CI changes",
+      "requiredFindings": 0,
+      "pureProbeGroupsPassed": 4,
+      "phoneInputsUnchanged": 113,
+      "renderWorkloadInputsUnchanged": true,
+      "coverage": "Core/full renew for new tooling/Python inputs; historical6e render andC0phone evidence retained only through applicability proofs."
+    },
+    {
+      "main": "28f8e9b2e63905fdb469849b6e88bf1debc77619",
+      "scope": "Campus/rail/media integration including server/shared authority,player controls,fixture and agent/CI catalogs",
+      "requiredFindings": 1,
+      "focusedPassed": 46,
+      "skips": 0,
+      "phoneModulesUnchanged": 71,
+      "phoneInputsUnchanged": 113,
+      "coverage": "Renewcore/render/Studio/rail/WebKit/golden/full;full world set15;oldoffline-only scopeproof notextended.",
+      "remainingRequiredFindings": 0,
+      "finding": "Integration tooling negative-test loop incorrectly included the new valid dialogue/music film;test-only explicit two-ID scope correction independently19/19verified."
+    },
+    {
+      "main": "7c10f418b0ea519bc0d2b84bb65869e3c7cdae0e",
+      "scope": "Campus traversal/epoch Redis migration plus reproduced rail hidden-card CSS defect",
+      "requiredFindings": 1,
+      "remainingRequiredFindings": 0,
+      "finding": "Rail grid CSS overrode hidden office cards;browserredprovedcomputedgrid+visibletrue;scoped hiddenrulegreen;independentreviewconfirmedrootcause",
+      "coverage": "G core,Chromiumfidelity+Studio+rail,WebKit,golden,full16world renewing;isolatednative/phone require applicability proof"
+    },
+    {
+      "main": "7c10f418b0ea519bc0d2b84bb65869e3c7cdae0e",
+      "scope": "HistoricalH snapshot-only startup attempt;subsequentfullfailed",
+      "requiredFindings": 1,
+      "remainingRequiredFindings": 0,
+      "finding": "Fresh-publication predicate semantics reviewed andfocused10passed,butHfullrepeatedsamearrivalfailure;not a completedfull-workloadrepair.",
+      "coverage": "HistoricalHcorepassed/fullfailed15world/sharedIPICnotrun;rawattemptretained",
+      "remainingRequiredInvestigations": 1
+    },
+    {
+      "main": "7c10f418b0ea519bc0d2b84bb65869e3c7cdae0e",
+      "scope": "Fixture-only startup acknowledgement barrier;no productionpolicy change",
+      "requiredFindings": 1,
+      "remainingRequiredFindings": 0,
+      "focusedPassed": 7,
+      "skips": 0,
+      "independentReview": "Actual3pathpatch reviewed;all3pagestrackbeforegoto;remainingbusinessassertions byteidentical. Playwrighterrorprefix gap reproduced/red andcorrected;newdeadlinecase useslateack ordering.",
+      "actualFocusedSuiteChecks": 10,
+      "coverage": "Jcorepassed11;Jfullfailedafter15worldjourneys atresidentlift;actualF/G/C0 retainedonlythroughexactapplicabilityproof",
+      "limits": "DoesnotproveexactHfullcause orstableheavyinitialrendering;no broaderrotation/recoverycontract claim."
+    },
+    {
+      "main": "7c10f418b0ea519bc0d2b84bb65869e3c7cdae0e",
+      "runtimeManifestSha256": "748501264732cac774f6139c1a5b5f47372fb6c1db148b52742034f54fd3d993",
+      "scope": "Ground-floorcampusfixture authoritativeportal-readinessprecondition",
+      "requiredFindings": 1,
+      "remainingRequiredFindings": 0,
+      "focusedPassed": 9,
+      "skips": 0,
+      "finding": "Controlledpose-publicationdelay sendsoriginalF beforeauthorityreach,resultlevel_portal_out_of_reach thenoriginal30stimeout. Waitauthoritativeselfinreach beforeoneoriginalF;promptdeadlineunchanged. HistoricalJcause remainsunclassified.",
+      "coverage": "FreshLfocused/core/fullrequired;pairedfaultprobe running"
+    },
+    {
+      "main": "7c10f418b0ea519bc0d2b84bb65869e3c7cdae0e",
+      "runtimeManifestSha256": "3e04a4ae0af73d8e452f02024685108ef2d3808cc5822461ec878400b2e0f608",
+      "scope": "Officefixtureinitialadmissionprecondition;existingreadonlystartuphelperreused",
+      "requiredFindings": 1,
+      "remainingRequiredFindings": 0,
+      "focusedPassed": 10,
+      "skips": 0,
+      "independentReview": "Actual2filepatch/controlorderingreviewed;10trackedtestsindependentlypassed",
+      "finding": "Controlledinitialticketrequestdelayleavesavatarreadybutdisconnected;singleoriginalarrivalreturnsReconnectthen30sassertionfailsafteradmissionrecovers. ExactLcauseunclassified.",
+      "coverage": "Mcore/full andsigned1330blob sourcebinding verified;F/G/C0 retained byexactproof;finalheadhostedverdict external onPR545/live task."
+    }
+  ],
+  "finalConsistencyAudit": {
+    "requiredFindings": 1,
+    "remainingRequiredFindings": 0,
+    "correction": "Narrowed stale pending-status sentence to full/signed-input/hosted scope; core and render receipts already prove their passes.",
+    "verified": "Current render manifests/capture counts, desktop timing arithmetic, physical/reference/applicability hashlinks, historical phone source and local documentation links.",
+    "historical": true,
+    "scope": "Historical checkpoint consistency audit;G proof is in historicalEvidenceAuditG, J proof in currentEvidenceAudit and candidateVerification."
+  },
+  "currentEvidenceAudit": {
+    "status": "independent-input-applicability-plus-local-gates-and-signed-source-verified;hosted-verdict-external",
+    "runtimeManifestSha256": "3e04a4ae0af73d8e452f02024685108ef2d3808cc5822461ec878400b2e0f608",
+    "boundIndexInputs": 1330,
+    "changedInputsMatched": 142,
+    "runtimeFilesMatched": 1307,
+    "sourceReview": "Independent2filepatchandpairedproofauditclear;1307runtime/1330index/142changed/113phoneverified;tracked10testsindependentlypassed",
+    "scope": "M input/applicability audit and completed local profiles, followed by actual signed HEAD verification; exact final-head hosted verdict is external.",
+    "checkedAt": "2026-10-19T10:38:02.753407+00:00",
+    "explicitReceiptLinksVerified": 174,
+    "receiptAudit": "Parent current-M audit verified174 explicit file/SHA links after actual core/full metadata renewal; this is distinct from the earlier independent source/input review and is not hosted proof.",
+    "preservationAudit": {
+      "file": ".runtime/character-fidelity/goal2m/preservation-audit.json",
+      "sha256": "ec3f67fff1597201387153bf121f22b48b6361d7bc47d6ad5c4bed854dfc5ea6"
+    },
+    "coreCountsReceipt": {
+      "file": ".runtime/character-fidelity/goal2m/core-counts.json",
+      "sha256": "ce95f2d692040cacf30b7cbba57a6ce0b1dac0126963b56607e700a31c9d3a41"
+    },
+    "localGatesVerifiedAt": "2026-10-19T11:29:27.475098+00:00",
+    "assessment": "Independent input/receipt/index audit retains its recorded checkedAt. Subsequent M core/full and all1330 signed HEAD blobs were verified; no receipt revision or measurement timestamp is restamped."
+  },
+  "verifiedCheckpoint": {
+    "commit": "54b5cd62daddb2abf0f8cc1d9e0b6427698da6da",
+    "runtimeManifestSha256": "0a587e5f6194330ef82670f95ae5c30301813c80b63d797eef2a6777c6ffb19b",
+    "boundInputs": 1299,
+    "changedInputs": 97,
+    "localProfiles": "core/full passed;13world,24shared,18IPIC",
+    "delivered": "signed normal push;PR545 draft updated;not finalcurrentmain"
+  },
+  "historicalEvidenceAuditG": {
+    "status": "independently-verified-applicability;current-gates-pending",
+    "runtimeManifestSha256": "4ee88f688473ae7e12dcae6683df8d30c1a409d9e693f35a9697c6020e00c3d5",
+    "changedBroadRuntimeInputs": 13,
+    "memoryFixtureModules": 142,
+    "generatedFixtureBytesIdentical": true,
+    "nativeReceiptsHashVerified": 3,
+    "phoneInputHashesVerified": 113,
+    "focusedRailChecks": 25,
+    "requiredMetadataFinding": "Resolved:eb50 explicitly failing source;focusedgreen completebroadmanifest gap retained;renewedG rail25checks nowbound to frozen4ee88f68 Chromiumreceipt",
+    "remainingRequiredFindings": 0
+  },
+  "historicalEvidenceAuditH": {
+    "status": "independently-verified-H-input-and-applicability-proof;profiles-running",
+    "runtimeManifestSha256": "85d264d4d3c39b23943577e5fcb261631650df7c1a9d093c04e49087e5f594c4",
+    "nativeBroadDeltaFromF": 14,
+    "onlyChangedRuntimePathFromG": "preview/e2e/garden-campus-suite.js",
+    "focusedSuiteChecks": 10,
+    "candidateEvidenceUpdatedAt": "2026-10-19T07:41:57.722305+00:00",
+    "checkedAt": "2026-10-19T07:43:35.570044+00:00",
+    "runtimeFilesMatched": 1306,
+    "changedInputsMatched": 140,
+    "receiptInputHashLinksVerified": 130,
+    "remainingRequiredCorrections": 0,
+    "assessment": "Independenthash/scopeaudit confirms actualF native andGbrowser/golden receipt retention and113unchangedphoneinputs;no restamping. Hcore/full,signedcommit and exacthosted remain pending."
+  },
+  "historicalJAttempt": {
+    "file": ".runtime/character-fidelity/goal2l/historical-J/character-fidelity-review-517.json",
+    "sha256": "3dd5819f0174b8a82b678566f0a15a76940aae683e2b5de90337c623b6fcb8c5"
+  },
+  "historicalFullFailureJ": {
+    "finishedAt": "2026-10-19T09:08:59.025019+00:00",
+    "step": "resident lift to Floor 2",
+    "worldPassed": 15,
+    "worldTotal": 16,
+    "startupAcknowledgementPassed": true,
+    "interpretation": "Startup readiness is not later-action acceptance. Actual lift-command outcome was not recorded in J. Earlier private tracer omitted interiorLevel;new bounded diagnostic includes it.",
+    "raw": [
+      {
+        "file": ".runtime/character-fidelity/goal2j/full.log",
+        "sha256": "8e4bd8697454853f8872ed593ab17f5a696926cb6dc390ee4b06df6e101e5580"
+      },
+      {
+        "file": ".runtime/character-fidelity/goal2j/full-profile.json",
+        "sha256": "8ed9ae3e52c6f57eb4259854255a3837c9bd03ab29230a4e49c08675ab588bca"
+      },
+      {
+        "file": ".runtime/character-fidelity/goal2j/full-experience.json",
+        "sha256": "1e8aec989d848ef76c5d91fea7433ba3b6c96eb5ed033b2231e1679209d1374d"
+      },
+      {
+        "file": ".runtime/character-fidelity/goal2j/driver-result.json",
+        "sha256": "c7cf15495bf5839fd7101763cc2a5496d6bbfee1f21c18edd1171338c222d971"
+      }
+    ]
+  },
+  "historicalLReview": {
+    "file": ".runtime/character-fidelity/goal2m/historical-L/character-fidelity-review-517.json",
+    "sha256": "87c2266545881cf71c97d1200fc58f3f9620061eecb27f9d05b03c57d7c6894a"
+  },
+  "historicalFullFailureL": {
+    "runtimeManifestSha256": "748501264732cac774f6139c1a5b5f47372fb6c1db148b52742034f54fd3d993",
+    "finishedAt": "2026-10-19T10:15:30.416986+00:00",
+    "worldPassed": 15,
+    "worldTotal": 16,
+    "journey": "garden-campus-office",
+    "step": "guest hall arrival status;intoHall line24/caller128",
+    "suiteChecksPassed": 10,
+    "sharedIPIC": "not_run",
+    "raw": [
+      {
+        "file": ".runtime/character-fidelity/goal2l/full.log",
+        "sha256": "ed75a629bbf1e046bedafdf26c567713c0ebbaa3e7dac93e15a2a1b0624ea62f"
+      },
+      {
+        "file": ".runtime/character-fidelity/goal2l/full-profile.json",
+        "sha256": "fe28828bd72b60d893a67d3ecc3a011c254b36ce49754190805db470cd303f98"
+      },
+      {
+        "file": ".runtime/character-fidelity/goal2l/full-experience.json",
+        "sha256": "e14a1ed118cc1b2fa19f5a1ef0decdefc5156b54f2ca7c6266e143c641032fd8"
+      },
+      {
+        "file": ".runtime/character-fidelity/goal2l/driver-result.json",
+        "sha256": "b11cfa61b42c4c4ab699f0daf15eb4abdf2a684bb5e4076bbce2f51d161c2c8f"
+      }
+    ],
+    "scope": "ActualLfullfailedofficevisitorarrival;Lsuitepassed all10. No actual officevisitortransport/selfstate was emitted on this earlyfailure;rootcausenotyetproved. Previousprogressclaimofficepassedwasincorrectbecause runnercontinuesafterfailures."
+  },
+  "officeRegressionReceipt": {
+    "file": "data/reports/character-fidelity-review-office-regression-517.json",
+    "sha256": "3618368429e4cfc9531fec3e8e8472346ab69b948a9487bd3c884d6dc001dec4"
+  },
+  "stockFocusedReceipt": {
+    "file": "data/reports/character-fidelity-review-campus-focused-517.json",
+    "sha256": "2df101c69cdfaf72ea7e2967f6cc9f0527216f19c95d85bbb92f991064298a46"
+  },
+  "verifiedSourceCommit": "d11a6ee4ce794bc3f5f061bd48d5af8ce9a7cff9"
+}

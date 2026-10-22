@@ -7,6 +7,8 @@ async page => {
  const checks=[],check=(ok,label)=>{if(!ok)throw new Error(label);checks.push(label);console.log(label);};
  await page.emulateMedia({reducedMotion:'reduce'});
  const ready=async tab=>tab.waitForFunction(()=>document.querySelector('#canvas-host')?.dataset.playerReady==='true',null,{timeout:120000});
+ const {createCampusStartupReadiness}=await import('./garden-campus-readiness.js');
+ const startup=createCampusStartupReadiness();startup.track(page);
  const title=tab=>tab.locator('.walking-title strong').textContent();
  const click=async(tab,selector,text)=>{const target=text?tab.locator(selector,{hasText:text}).first():tab.locator(selector).first();await target.waitFor({state:'attached'});await target.evaluate(n=>n.click());};
  // Inside means the HUD's room marker, not the title: the street title at the door also names Grove Offices.
@@ -51,7 +53,7 @@ async page => {
   await tab.locator('#walking-play').evaluate(n=>n.click());
   await tab.locator('#office-desk').waitFor({state:'visible'});await tab.locator('#desk-loading').waitFor({state:'hidden'});
  };
- await page.goto('http://127.0.0.1:5173/?motion-debug=1',{waitUntil:'commit'});await ready(page);
+ await page.goto('http://127.0.0.1:5173/?motion-debug=1',{waitUntil:'commit'});await ready(page);await startup.joined(page);
  const origin=new URL(page.url()).origin;
  check(await page.locator('#campus-panel').evaluate(n=>!n.hidden),'The Gardens appear in Play when the town serves the campus');
  const deskRead=tab=>tab.evaluate(async origin=>{const session=await (await fetch(`${origin}/auth/session`)).json();
@@ -83,8 +85,8 @@ async page => {
  // The operator (bob fixture) offers the requested dates; the resident accepts.
  const browser=page.context().browser();
  const operatorContext=await browser.newContext({viewport:{width:1280,height:900}});await operatorContext.addCookies([{name:'fixture_session',value:'bob',url:origin}]);
- const operator=await operatorContext.newPage();operator.setDefaultTimeout(60000);
- await operator.goto(`${origin}/?motion-debug=1`,{waitUntil:'commit'});await ready(operator);
+ const operator=await operatorContext.newPage();operator.setDefaultTimeout(60000);startup.track(operator);
+ await operator.goto(`${origin}/?motion-debug=1`,{waitUntil:'commit'});await ready(operator);await startup.joined(operator);
  await click(operator,'#campus-panel button','Suites and leases');
  await operator.locator('#campus-dialog .campus-section',{hasText:'Manage the campus'}).waitFor();
  await operator.locator('#campus-dialog .campus-row',{hasText:'T1-201'}).getByRole('button',{name:'Offer these dates'}).click();
@@ -115,7 +117,7 @@ async page => {
  await page.waitForFunction(()=>document.querySelector('.walking-title strong')?.textContent!=='Seated',null,{timeout:30000});
  check(await page.locator('#walking-play').evaluate(n=>n.hidden||!/Use this desk/.test(n.textContent)),'Standing up removes the desk action');
  check(await deskRead(page)===403,'Standing up closes the desk route');
- await page.reload({waitUntil:'commit'});await ready(page);
+ await page.reload({waitUntil:'commit'});await ready(page);await startup.joined(page);
  await inside(page);
  await sitAndOpenDesk(page);
  check(await page.locator('#desk-title').inputValue()==='Atelier launch plan','Reloading and returning to a workstation recovers the saved work');
@@ -123,8 +125,8 @@ async page => {
 
  // A second resident at the next chair has only their own desk.
  const guestContext=await browser.newContext({viewport:{width:1280,height:900}});await guestContext.addCookies([{name:'fixture_session',value:'alice',url:origin}]);
- const guest=await guestContext.newPage();guest.setDefaultTimeout(60000);watchTravel(guest);
- await guest.goto(`${origin}/?motion-debug=1`,{waitUntil:'commit'});await ready(guest);
+ const guest=await guestContext.newPage();guest.setDefaultTimeout(60000);watchTravel(guest);startup.track(guest);
+ await guest.goto(`${origin}/?motion-debug=1`,{waitUntil:'commit'});await ready(guest);await startup.joined(guest);
  await intoHall(guest);
  await sitAndOpenDesk(guest,{step:true});
  check(await guest.locator('#desk-start').isVisible(),'The neighbour’s workstation opens their own empty desk');
