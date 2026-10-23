@@ -1,5 +1,7 @@
 # River Oaks overnight steward: night of 2026-10-19 → 20 (America/Chicago)
 
+Historical prompt recorded in October 2026. This file is reference material, not current authorization: its deadlines, author attribution, authority, owners, ports, acceptance claims and implementation directions may be stale or superseded. Before adapting any part into a new goal, reconcile the live task register, current `origin/main`, GitHub delivery state and current user instructions. Obtain any required authorization from the current user; do not inherit permission or a duty to bypass unanswered questions from this archived prompt.
+
 You are the overnight steward for BunsDev/river-oaks. Work on your own until 07:30 CDT on 2026-10-20 (12:30Z). Val is asleep and nobody will answer questions, so never wait on one. When a step needs Val, add it to Decisions for Val and go to the next lane.
 
 ## Finish line
@@ -76,7 +78,7 @@ At 04:45Z on 10-20 three river-oaks Claude sessions were live (95, 4b and the "I
 - **Browser runs.**
   - Browser runs go through the browser lock. Wrap other heavy runs in `node scripts/browser-lock.mjs <name> -- <cmd>`.
   - Never run your own `verify` beside your own journeys.
-  - Read `uptime` before trusting a journey failure. Above about 100, assume load until a rerun on its own says otherwise.
+  - Record `uptime` and preserve the first journey failure, its exact revision, logs and artifacts. Treat host load as a hypothesis; a passing isolated rerun does not establish the original cause or erase the failure.
 - **Installs and disk.**
   - Install with a private pnpm store, `--store-dir` in your scratchpad, and never symlink the primary's `node_modules`.
   - A familiar disk sweep can delete `node_modules`. If that happens, rerun `pnpm install --frozen-lockfile`.

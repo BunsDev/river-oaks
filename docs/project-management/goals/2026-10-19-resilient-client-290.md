@@ -1,5 +1,7 @@
 # Goal: a resilient play client. Survive graphics loss, backgrounding and network changes without a reload (#290 web side, plus the #288 touch-hold subset)
 
+Historical prompt recorded in October 2026. This file is reference material, not current authorization: its deadlines, author attribution, authority, owners, ports, acceptance claims and implementation directions may be stale or superseded. Before adapting any part into a new goal, reconcile the live task register, current `origin/main`, GitHub delivery state and current user instructions. Obtain any required authorization from the current user; do not inherit permission or a duty to bypass unanswered questions from this archived prompt.
+
 Work on your own for up to about 10 hours, or until the finish line is met. When something needs Val, record it under Decisions for Val and keep going. Never wait for an answer.
 
 ## Why this, and why now
@@ -67,7 +69,7 @@ Optional replacement for the first NOT bullet:
 - Before claiming, run `ListAgents` and read the live register's owners and leases. Grep `~/.codex/sessions/2026/10/*` for `#290`, `#288`, `webglcontext` and your branch. Leave anything with a live owner alone.
 - Before each commit, read your register owner again. If it changed, stop and leave a handoff note.
 - Run `verify` and builds under `nice -n 19`. Browser journeys go through the browser lock, and never alongside your own `verify`.
-- Read `uptime` before trusting any journey failure. Above about 100, assume load until a rerun on its own says otherwise.
+- Record `uptime` and preserve the first journey failure, its exact revision, logs and artifacts. Treat host load as a hypothesis; a passing isolated rerun does not establish the original cause or erase the failure.
 - Install with a private pnpm `--store-dir` in your scratchpad. If a familiar disk sweep deletes `node_modules`, rerun `pnpm install --frozen-lockfile`.
 - Use your own ports, never 5173, 5180, 5196 or 5198. Run watchers from a worktree you own.
 - Run at most two subagents at once, each in a sibling worktree you created and registered.

@@ -1,9 +1,6 @@
 # Goal prompts
 
-Long-running prompts for an agent session (`/goal`), one per file. Each one records the
-project's state at the time it was written: its snapshot sections (main health, owners, ports,
-counts) go stale within hours. A session that runs one checks every snapshot claim against the
-live register, `origin/main` and GitHub before acting on it, and the prompt tells it how.
+Historical long-running prompts for an agent session (`/goal`), one per file. Each records the project's state when written; deadlines, authority, attribution, implementation directions and snapshot claims may be stale or superseded. These files do not authorize new work. Before adapting a prompt, reconcile the live register, current `origin/main`, GitHub and current user instructions, and obtain any required authorization.
 
 | Prompt | Written | Lane |
 | --- | --- | --- |
