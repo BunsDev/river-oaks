@@ -51,6 +51,19 @@ Two Codex sessions hold related, uncommitted work: `neighborhood-584-586` (kit, 
 - [x] Core gate on the polish: agent 204, preview 3,853 passed (1 skip), server 763 (215 Redis skips), desktop 115 (3 skips), build, Python 149, secrets all passed.
 - [ ] `pnpm run verify full` with isolated Redis.
 
+## Session 2 (2026-10-23, `claude:river-oaks-3d-d7424aaf`)
+
+Handoff recorded in the register at 18:50Z: the previous owner was idle since 15:15Z with no live session or process. Its `verify full` on `39fa912e` failed at the `shared` stage (SIGKILL, `ABORT_ERR`). Every other stage passed, including the Redis-backed server suite and the experience journeys.
+
+- [x] Merged `origin/main` (`f4aa1670`, 87 commits). Conflicts: `docs/world-expansion.md` (main's Phase 1 text kept, destination section appended), `preview/audit/world-expansion-baseline.js` (main's lock, warm-up and three samples kept, revision/view/profile selection reapplied), `preview/src/main.js` (both imports), `server/world.js` (the Lantern Walk snapshot, prune and checkpoint added next to main's world policy and crime state).
+- [x] Merged-tree focused suites (destination, city kit, Commons, manifest, Lantern Walk): 85 passed, 2 skipped (Redis), 0 failed.
+- [x] Destination polish, from an in-game review: kit lawns used the untinted grass maps, which read as bare gravel. They now use a turf tint at low texture contrast, as the green roofs do. The kit gains `furniture/market-stall`, and the Bayou Green gains the four-stall Bayou Market, a planted south lawn with a row of shade trees, and planters. Crossing the promenade now names Bayou Market Commons in the walking notice, and crossing back names River Oaks District. Plan: 125 pieces, 62 solids, 15 materials, 95,736 triangles, 57 meshes, connectivity 1.0, locks regenerated (`916c9e6d9525166b`).
+- [x] Regressions: `preview/tests/lantern-walk-client.test.js` (arrival and return notices; fails on the previous client) and a stall/turf test in `preview/tests/bayou-market-commons.test.js` (solid stalls, reachable fronts, distinct names, green lawn tint).
+- [ ] Core gate on the merged and polished tree.
+- [ ] In-game pedestrian captures of the polish.
+- [ ] Two-player journey `east-garden-commons` on the merged tree.
+- [ ] `pnpm run verify full` with isolated Redis.
+
 ## Gaps and next step
 
 Human visual approval, physical-device performance and hosted multiplayer are outside automated evidence. The reachable-area target (3–5×) is unchanged by this slice. Draft PR #611. Next step: review the storefront/blade polish screenshots, run the core gate, commit, then `verify full` with isolated Redis and update the PR.

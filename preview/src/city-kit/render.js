@@ -18,7 +18,10 @@ const canvas2d = (width, height) => headless ? null : Object.assign(document.cre
 // Render-only slots that no recipe names.
 const RENDER_MATERIALS = {
   // A dim, warm shop interior seen through storefront glass.
-  'shop-interior': { color: '#1d1712', roughness: .95, emissive: '#b5703c', emissiveIntensity: .22 },
+  'shop-interior': { color: '#2a2018', roughness: .95, emissive: '#c07a40', emissiveIntensity: .38 },
+  // Market stall produce; peaches and lemons reuse the apricot canvas and brass.
+  'produce-red': { color: '#a8382c', roughness: .55 },
+  'produce-green': { color: '#5d8a3a', roughness: .7 },
 };
 
 function createMaterials() {
@@ -28,9 +31,10 @@ function createMaterials() {
     const spec = KIT_MATERIALS[name] ?? RENDER_MATERIALS[name] ?? { color: '#888888' };
     let material;
     if (spec.surface === 'district-paver') material = paverSurface();
-    else if (spec.surface) material = physicalSurface(spec.surface, { tileSize: spec.tile ?? 4, instanced: false, variation: .08, color: new THREE.Color(spec.color ?? '#ffffff') });
+    else if (spec.surface) material = physicalSurface(spec.surface, { tileSize: spec.tile ?? 4, instanced: false, variation: .08, color: new THREE.Color(spec.color ?? '#ffffff'),
+      ...(spec.textureContrast ? { textureContrast: spec.textureContrast, normalScale: new THREE.Vector2(.3, .3) } : {}) });
     else if (spec.reflective) material = new THREE.MeshPhysicalMaterial({ color: spec.color, roughness: spec.roughness, metalness: spec.metalness, envMapIntensity: 1.6, clearcoat: .6, clearcoatRoughness: .08 });
-    else if (spec.glass) material = new THREE.MeshPhysicalMaterial({ color: spec.color, roughness: spec.roughness, metalness: spec.metalness, transparent: true, opacity: .42, envMapIntensity: 1.5, clearcoat: .6, clearcoatRoughness: .06, depthWrite: false });
+    else if (spec.glass) material = new THREE.MeshPhysicalMaterial({ color: spec.color, roughness: spec.roughness, metalness: spec.metalness, transparent: true, opacity: .26, envMapIntensity: .7, clearcoat: .6, clearcoatRoughness: .06, depthWrite: false });
     else material = new THREE.MeshStandardMaterial({ color: spec.color, roughness: spec.roughness ?? .8, metalness: spec.metalness ?? 0,
       ...(spec.emissive ? { emissive: new THREE.Color(spec.emissive), emissiveIntensity: spec.emissiveIntensity ?? 1 } : {}) });
     material.name = `city-kit/${name}`;
@@ -286,6 +290,36 @@ function renderFurniture(piece, batch, m, groundAt) {
   }
 }
 
+// A market stall faces −v (its counter side), like a bench. Everything merges into
+// the shared batch; the stall's name joins the sign atlas on a board above the roof.
+function renderMarketStall(piece, batch, m, groundAt, signs) {
+  const [x, y] = piece.at, g = groundAt(x, y), yaw = piece.yaw ?? 0, canvas = m(piece.awning ?? 'canvas-teal');
+  const local = (u, v) => [x + Math.cos(yaw) * u - Math.sin(yaw) * v, y + Math.sin(yaw) * u + Math.cos(yaw) * v];
+  const part = (material, u, v, up, along, height, across, pitch = 0) => { const [px, py] = local(u, v); batch.box(material, px, up, py, along, height, across, yaw, pitch); };
+  // Counter and back table, with crates of produce on both.
+  part(m('wood-bench'), 0, -.78, g + .47, 3.3, .94, .6); part(m('trim-ivory'), 0, -.8, g + .96, 3.42, .05, .72);
+  part(m('wood-bench'), 0, .78, g + .4, 3.2, .8, .5);
+  const produce = [m('produce-red'), m('canvas-apricot'), m('produce-green'), m('metal-brass'), m('produce-red')];
+  produce.forEach((material, i) => {
+    const u = -1.32 + i * .66;
+    part(m('wood-bench'), u, -.8, g + 1.04, .56, .12, .5); part(material, u, -.8, g + 1.13, .48, .08, .42);
+    part(m('wood-bench'), u, .78, g + .86, .56, .12, .44); part(produce[(i + 2) % produce.length], u, .78, g + .95, .48, .08, .36);
+  });
+  // Posts and a striped canvas roof falling toward the customer, with a valance.
+  for (const [u, v] of [[-1.72, -1.12], [1.72, -1.12], [-1.72, 1.12], [1.72, 1.12]]) part(m('metal-bronze'), u, v, g + 1.3, .07, 2.6, .07);
+  for (let i = 0; i < 6; i++) {
+    const u = -1.5 + i * .6, stripe = i % 2 ? m('trim-ivory') : canvas;
+    part(stripe, u, 0, g + 2.66, .6, .04, 2.75, -.14);
+    part(stripe, u, -1.37, g + 2.32, .6, .26, .03);
+  }
+  if (piece.sign) {
+    // The lettering sits just proud of the board's customer face.
+    const [bx, by] = local(0, -1.21);
+    part(m('metal-bronze'), 0, -1.17, g + 3.05, 2.9, .44, .05);
+    signs.push({ name: piece.sign, width: 2.76, height: .34, east: bx, up: g + 3.05, north: by, yaw });
+  }
+}
+
 // The post and cap merge into the shared batch; only the glass and halo switch.
 function renderLantern(piece, m, groundAt, batch) {
   const [x, y] = piece.at, g = groundAt(x, y), group = new THREE.Group(); group.name = piece.id;
@@ -427,6 +461,7 @@ export function buildCityKit(plan, { groundAt, ground }) {
       trees.push({ position: [x, groundAt(x, y), -y], height: piece.height, radius: piece.radius, yaw: piece.yaw });
     }
     else if (piece.piece === 'furniture/lantern') lanterns.set(piece.id, renderLantern(piece, m, groundAt, flat));
+    else if (piece.piece === 'furniture/market-stall') renderMarketStall(piece, flat, m, groundAt, signs);
     else if (piece.piece === 'landmark/water-tower') { const tower = renderWaterTower(piece, m, ground, flat); group.add(tower); group.userData.tower = tower; }
     else if (piece.piece.startsWith('furniture/') || piece.piece === 'street/crossing-table' || piece.piece === 'street/crosswalk') renderFurniture(piece, flat, m, groundAt);
   }

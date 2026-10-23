@@ -61,6 +61,12 @@
           13,
           113,
           30
+        ],
+        [
+          64,
+          -31,
+          81,
+          -19
         ]
       ],
       "hedges": [
@@ -89,6 +95,12 @@
           "from": 52,
           "to": 112,
           "spacing": 10
+        },
+        {
+          "y": -25,
+          "from": 67,
+          "to": 79,
+          "spacing": 6
         }
       ]
     }
@@ -351,6 +363,66 @@
       "at": [
         53,
         9
+      ]
+    },
+    {
+      "id": "market-stall-0",
+      "piece": "furniture/market-stall",
+      "at": [
+        64,
+        26
+      ],
+      "sign": "Gulf Coast Shrimp",
+      "awning": "canvas-teal"
+    },
+    {
+      "id": "market-stall-1",
+      "piece": "furniture/market-stall",
+      "at": [
+        69.5,
+        26
+      ],
+      "sign": "Pecan Pralines",
+      "awning": "canvas-rose"
+    },
+    {
+      "id": "market-stall-2",
+      "piece": "furniture/market-stall",
+      "at": [
+        75,
+        26
+      ],
+      "sign": "Bluebonnet Blooms",
+      "awning": "canvas-apricot"
+    },
+    {
+      "id": "market-stall-3",
+      "piece": "furniture/market-stall",
+      "at": [
+        80.5,
+        26
+      ],
+      "sign": "Rio Grande Citrus",
+      "awning": "canvas-teal"
+    },
+    {
+      "id": "market-planter-w",
+      "piece": "landscape/planter",
+      "rect": [
+        58.6,
+        25.4,
+        61,
+        26.6
+      ]
+    },
+    {
+      "id": "market-planter-e",
+      "piece": "landscape/planter",
+      "rect": [
+        83.4,
+        25.4,
+        85.6,
+        26.6
       ]
     },
     {
