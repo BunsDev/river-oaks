@@ -299,6 +299,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     get appearance(){return appearance;},
     get definition(){return structuredClone(selectedDefinition);},
     get materials(){return colors?.inspect()??[];},
+    get realism(){return avatar?.realismReport??null;},
     get movement(){return movement;},
     // The loaded avatar, for a studio portrait of the given appearance only.
     portraitSubject(id){return avatar&&loadedAppearance===id&&id===appearance?avatar.object:null;},
