@@ -228,6 +228,8 @@ body.theater-seated .greeting-prompt { visibility: hidden; }
 .world-rules-clock { font-variant-numeric: tabular-nums; font-weight: 600; }
 .world-rules-change:empty, .world-rules-result:empty { display: none; }
 .world-rules-owner { display: grid; gap: 8px; margin-top: 8px; }
+/* The display above would otherwise override the hidden attribute: non-owners see no controls. */
+.multiplayer-world-rules[hidden], .world-rules-owner[hidden] { display: none; }
 .world-rules-owner fieldset { display: flex; flex-wrap: wrap; gap: 6px 12px; margin: 0; padding: 8px; border: 1px solid var(--line); border-radius: 8px; }
 .world-rules-owner legend { padding: 0 4px; font-weight: 600; }
 .world-rules-owner label { display: inline-flex; align-items: center; gap: 4px; min-height: 32px; }
