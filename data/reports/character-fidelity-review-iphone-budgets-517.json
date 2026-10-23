@@ -1,0 +1,1574 @@
+{
+  "schemaVersion": 1,
+  "status": "measured-comparison",
+  "device": {
+    "name": "iPhone 16 Pro Max",
+    "productType": "iPhone17,2",
+    "osVersion": "27.0.1",
+    "browser": "Paired physical Mobile Safari; user agent retained in hello record"
+  },
+  "runtimeManifestSha256": "c0f5b8de9f6bad47a018c7a21e2446f647167b9be16e5a1aca5d63eab60ff036",
+  "sourceReceipt": "data/reports/character-fidelity-review-iphone-517.json",
+  "sourceReceiptSha256": "b91bbd59d09ec4e34cc3c83feb0150b2e3028054491c3c031f2cc383ec4a2000",
+  "derivation": "The frame/CPU p95 reference ceilings are preserved unchanged from the original physical baseline, which used ceil(max(two p95 samples)). New observed ceilings and every exceedance are reported separately; no threshold was loosened or original receipt overwritten. Within-run and corresponding-repeat cross-run frame p50 comparisons use the unchanged20% band. These references are isolated-fixture observations, not a production SLA or thermal stability proof.",
+  "method": "Paired physical iPhone Safari launch; existing standalone fidelity fixture. Fixed 1920x1080 DPR1 drawing buffer scaled to device CSS width; native 4K portrait readback. Two alternated repeats, 120 intervals and 30 warmup frames per case. No vsync modification, town, live auth or human acceptance. GPU timer may be unavailable; texture bytes are estimates, not total GPU memory.",
+  "limits": "Single physical phone, local Wi-Fi source, fixed 1920x1080 DPR1 isolated fixture. Vsync unchanged; p50 is display-paced at small populations. GPU timer unavailable; scene texture bytes estimate active storage, not total GPU residency. Neither whole-town acceptance nor thermal/soak stability is established.",
+  "loading": [
+    {
+      "id": "morgan-human",
+      "cache": "First appearance load in this page; prior appearance may share material caches",
+      "result": {
+        "loadMs": 300,
+        "firstFrameMs": 678,
+        "assets": [
+          {
+            "path": "/assets/characters/man-realistic-casual.glb",
+            "transferBytes": 300,
+            "decodedBytes": 0,
+            "durationMs": 38
+          }
+        ]
+      }
+    },
+    {
+      "id": "imani-human",
+      "cache": "First appearance load in this page; prior appearance may share material caches",
+      "result": {
+        "loadMs": 283,
+        "firstFrameMs": 671,
+        "assets": [
+          {
+            "path": "/assets/characters/man-realistic-casual.glb",
+            "transferBytes": 300,
+            "decodedBytes": 0,
+            "durationMs": 38
+          },
+          {
+            "path": "/assets/characters/woman-realistic-tailored.glb",
+            "transferBytes": 300,
+            "decodedBytes": 0,
+            "durationMs": 24
+          }
+        ]
+      }
+    }
+  ],
+  "cases": [
+    {
+      "id": "morgan-human",
+      "realism": "off",
+      "count": 1,
+      "frameP50Ms": [
+        17,
+        17
+      ],
+      "frameP95Ms": [
+        17,
+        20
+      ],
+      "cpuP95Ms": [
+        5,
+        10
+      ],
+      "pairedP50Ratio": 1,
+      "pairedP50Within20Percent": true,
+      "frameP95ReferenceCeilingMs": 17,
+      "cpuP95ReferenceCeilingMs": 5,
+      "sceneCensus": {
+        "drawCalls": 10,
+        "triangles": 84552,
+        "skeletons": 2,
+        "textureBytes": 65710759
+      },
+      "observedFrameP95CeilingMs": 20,
+      "observedCpuP95CeilingMs": 10,
+      "frameP95ReferenceExceeded": true,
+      "cpuP95ReferenceExceeded": true,
+      "priorFrameP50Ms": [
+        17,
+        17
+      ],
+      "priorFrameP95Ms": [
+        17,
+        17
+      ],
+      "crossRunP50Comparisons": [
+        {
+          "repeat": 0,
+          "earlier": 17,
+          "current": 17,
+          "ratio": 1,
+          "withinUnchanged20Percent": true
+        },
+        {
+          "repeat": 1,
+          "earlier": 17,
+          "current": 17,
+          "ratio": 1,
+          "withinUnchanged20Percent": true
+        }
+      ],
+      "sceneCensusMatchesInitialReference": true
+    },
+    {
+      "id": "morgan-human",
+      "realism": "off",
+      "count": 8,
+      "frameP50Ms": [
+        19,
+        23
+      ],
+      "frameP95Ms": [
+        21,
+        29
+      ],
+      "cpuP95Ms": [
+        11,
+        16
+      ],
+      "pairedP50Ratio": 1.211,
+      "pairedP50Within20Percent": false,
+      "frameP95ReferenceCeilingMs": 22,
+      "cpuP95ReferenceCeilingMs": 11,
+      "sceneCensus": {
+        "drawCalls": 73,
+        "triangles": 676402,
+        "skeletons": 16,
+        "textureBytes": 65710759
+      },
+      "observedFrameP95CeilingMs": 29,
+      "observedCpuP95CeilingMs": 16,
+      "frameP95ReferenceExceeded": true,
+      "cpuP95ReferenceExceeded": true,
+      "priorFrameP50Ms": [
+        19,
+        19
+      ],
+      "priorFrameP95Ms": [
+        22,
+        22
+      ],
+      "crossRunP50Comparisons": [
+        {
+          "repeat": 0,
+          "earlier": 19,
+          "current": 19,
+          "ratio": 1,
+          "withinUnchanged20Percent": true
+        },
+        {
+          "repeat": 1,
+          "earlier": 19,
+          "current": 23,
+          "ratio": 1.2105263157894737,
+          "withinUnchanged20Percent": false
+        }
+      ],
+      "sceneCensusMatchesInitialReference": true
+    },
+    {
+      "id": "morgan-human",
+      "realism": "off",
+      "count": 24,
+      "frameP50Ms": [
+        44,
+        47
+      ],
+      "frameP95Ms": [
+        48,
+        52
+      ],
+      "cpuP95Ms": [
+        30,
+        35
+      ],
+      "pairedP50Ratio": 1.068,
+      "pairedP50Within20Percent": true,
+      "frameP95ReferenceCeilingMs": 54,
+      "cpuP95ReferenceCeilingMs": 36,
+      "sceneCensus": {
+        "drawCalls": 217,
+        "triangles": 2029202,
+        "skeletons": 48,
+        "textureBytes": 65710759
+      },
+      "observedFrameP95CeilingMs": 52,
+      "observedCpuP95CeilingMs": 35,
+      "frameP95ReferenceExceeded": false,
+      "cpuP95ReferenceExceeded": false,
+      "priorFrameP50Ms": [
+        43,
+        48
+      ],
+      "priorFrameP95Ms": [
+        46,
+        54
+      ],
+      "crossRunP50Comparisons": [
+        {
+          "repeat": 0,
+          "earlier": 43,
+          "current": 44,
+          "ratio": 1.0232558139534884,
+          "withinUnchanged20Percent": true
+        },
+        {
+          "repeat": 1,
+          "earlier": 48,
+          "current": 47,
+          "ratio": 0.9791666666666666,
+          "withinUnchanged20Percent": true
+        }
+      ],
+      "sceneCensusMatchesInitialReference": true
+    },
+    {
+      "id": "morgan-human",
+      "realism": "low",
+      "count": 1,
+      "frameP50Ms": [
+        17,
+        17
+      ],
+      "frameP95Ms": [
+        17,
+        17
+      ],
+      "cpuP95Ms": [
+        5,
+        5
+      ],
+      "pairedP50Ratio": 1,
+      "pairedP50Within20Percent": true,
+      "frameP95ReferenceCeilingMs": 17,
+      "cpuP95ReferenceCeilingMs": 6,
+      "sceneCensus": {
+        "drawCalls": 11,
+        "triangles": 84552,
+        "skeletons": 2,
+        "textureBytes": 67108860
+      },
+      "observedFrameP95CeilingMs": 17,
+      "observedCpuP95CeilingMs": 5,
+      "frameP95ReferenceExceeded": false,
+      "cpuP95ReferenceExceeded": false,
+      "priorFrameP50Ms": [
+        17,
+        17
+      ],
+      "priorFrameP95Ms": [
+        17,
+        17
+      ],
+      "crossRunP50Comparisons": [
+        {
+          "repeat": 0,
+          "earlier": 17,
+          "current": 17,
+          "ratio": 1,
+          "withinUnchanged20Percent": true
+        },
+        {
+          "repeat": 1,
+          "earlier": 17,
+          "current": 17,
+          "ratio": 1,
+          "withinUnchanged20Percent": true
+        }
+      ],
+      "sceneCensusMatchesInitialReference": true
+    },
+    {
+      "id": "morgan-human",
+      "realism": "low",
+      "count": 8,
+      "frameP50Ms": [
+        19,
+        20
+      ],
+      "frameP95Ms": [
+        22,
+        22
+      ],
+      "cpuP95Ms": [
+        11,
+        11
+      ],
+      "pairedP50Ratio": 1.053,
+      "pairedP50Within20Percent": true,
+      "frameP95ReferenceCeilingMs": 22,
+      "cpuP95ReferenceCeilingMs": 11,
+      "sceneCensus": {
+        "drawCalls": 81,
+        "triangles": 676402,
+        "skeletons": 16,
+        "textureBytes": 76895567
+      },
+      "observedFrameP95CeilingMs": 22,
+      "observedCpuP95CeilingMs": 11,
+      "frameP95ReferenceExceeded": false,
+      "cpuP95ReferenceExceeded": false,
+      "priorFrameP50Ms": [
+        19,
+        20
+      ],
+      "priorFrameP95Ms": [
+        22,
+        22
+      ],
+      "crossRunP50Comparisons": [
+        {
+          "repeat": 0,
+          "earlier": 19,
+          "current": 19,
+          "ratio": 1,
+          "withinUnchanged20Percent": true
+        },
+        {
+          "repeat": 1,
+          "earlier": 20,
+          "current": 20,
+          "ratio": 1,
+          "withinUnchanged20Percent": true
+        }
+      ],
+      "sceneCensusMatchesInitialReference": true
+    },
+    {
+      "id": "morgan-human",
+      "realism": "low",
+      "count": 24,
+      "frameP50Ms": [
+        45,
+        49
+      ],
+      "frameP95Ms": [
+        50,
+        65
+      ],
+      "cpuP95Ms": [
+        31,
+        45
+      ],
+      "pairedP50Ratio": 1.089,
+      "pairedP50Within20Percent": true,
+      "frameP95ReferenceCeilingMs": 54,
+      "cpuP95ReferenceCeilingMs": 36,
+      "sceneCensus": {
+        "drawCalls": 241,
+        "triangles": 2029202,
+        "skeletons": 48,
+        "textureBytes": 99265183
+      },
+      "observedFrameP95CeilingMs": 65,
+      "observedCpuP95CeilingMs": 45,
+      "frameP95ReferenceExceeded": true,
+      "cpuP95ReferenceExceeded": true,
+      "priorFrameP50Ms": [
+        44,
+        48
+      ],
+      "priorFrameP95Ms": [
+        49,
+        54
+      ],
+      "crossRunP50Comparisons": [
+        {
+          "repeat": 0,
+          "earlier": 44,
+          "current": 45,
+          "ratio": 1.0227272727272727,
+          "withinUnchanged20Percent": true
+        },
+        {
+          "repeat": 1,
+          "earlier": 48,
+          "current": 49,
+          "ratio": 1.0208333333333333,
+          "withinUnchanged20Percent": true
+        }
+      ],
+      "sceneCensusMatchesInitialReference": true
+    },
+    {
+      "id": "morgan-human",
+      "realism": "standard",
+      "count": 1,
+      "frameP50Ms": [
+        17,
+        17
+      ],
+      "frameP95Ms": [
+        17,
+        17
+      ],
+      "cpuP95Ms": [
+        5,
+        5
+      ],
+      "pairedP50Ratio": 1,
+      "pairedP50Within20Percent": true,
+      "frameP95ReferenceCeilingMs": 17,
+      "cpuP95ReferenceCeilingMs": 5,
+      "sceneCensus": {
+        "drawCalls": 11,
+        "triangles": 84552,
+        "skeletons": 2,
+        "textureBytes": 67458385
+      },
+      "observedFrameP95CeilingMs": 17,
+      "observedCpuP95CeilingMs": 5,
+      "frameP95ReferenceExceeded": false,
+      "cpuP95ReferenceExceeded": false,
+      "priorFrameP50Ms": [
+        17,
+        17
+      ],
+      "priorFrameP95Ms": [
+        17,
+        17
+      ],
+      "crossRunP50Comparisons": [
+        {
+          "repeat": 0,
+          "earlier": 17,
+          "current": 17,
+          "ratio": 1,
+          "withinUnchanged20Percent": true
+        },
+        {
+          "repeat": 1,
+          "earlier": 17,
+          "current": 17,
+          "ratio": 1,
+          "withinUnchanged20Percent": true
+        }
+      ],
+      "sceneCensusMatchesInitialReference": true
+    },
+    {
+      "id": "morgan-human",
+      "realism": "standard",
+      "count": 8,
+      "frameP50Ms": [
+        19,
+        20
+      ],
+      "frameP95Ms": [
+        21,
+        24
+      ],
+      "cpuP95Ms": [
+        11,
+        12
+      ],
+      "pairedP50Ratio": 1.053,
+      "pairedP50Within20Percent": true,
+      "frameP95ReferenceCeilingMs": 22,
+      "cpuP95ReferenceCeilingMs": 11,
+      "sceneCensus": {
+        "drawCalls": 81,
+        "triangles": 676402,
+        "skeletons": 16,
+        "textureBytes": 77245092
+      },
+      "observedFrameP95CeilingMs": 24,
+      "observedCpuP95CeilingMs": 12,
+      "frameP95ReferenceExceeded": true,
+      "cpuP95ReferenceExceeded": true,
+      "priorFrameP50Ms": [
+        19,
+        20
+      ],
+      "priorFrameP95Ms": [
+        22,
+        22
+      ],
+      "crossRunP50Comparisons": [
+        {
+          "repeat": 0,
+          "earlier": 19,
+          "current": 19,
+          "ratio": 1,
+          "withinUnchanged20Percent": true
+        },
+        {
+          "repeat": 1,
+          "earlier": 20,
+          "current": 20,
+          "ratio": 1,
+          "withinUnchanged20Percent": true
+        }
+      ],
+      "sceneCensusMatchesInitialReference": true
+    },
+    {
+      "id": "morgan-human",
+      "realism": "standard",
+      "count": 24,
+      "frameP50Ms": [
+        46,
+        50
+      ],
+      "frameP95Ms": [
+        51,
+        53
+      ],
+      "cpuP95Ms": [
+        32,
+        36
+      ],
+      "pairedP50Ratio": 1.087,
+      "pairedP50Within20Percent": true,
+      "frameP95ReferenceCeilingMs": 53,
+      "cpuP95ReferenceCeilingMs": 35,
+      "sceneCensus": {
+        "drawCalls": 241,
+        "triangles": 2029202,
+        "skeletons": 48,
+        "textureBytes": 99614708
+      },
+      "observedFrameP95CeilingMs": 53,
+      "observedCpuP95CeilingMs": 36,
+      "frameP95ReferenceExceeded": false,
+      "cpuP95ReferenceExceeded": true,
+      "priorFrameP50Ms": [
+        47,
+        48
+      ],
+      "priorFrameP95Ms": [
+        51,
+        53
+      ],
+      "crossRunP50Comparisons": [
+        {
+          "repeat": 0,
+          "earlier": 47,
+          "current": 46,
+          "ratio": 0.9787234042553191,
+          "withinUnchanged20Percent": true
+        },
+        {
+          "repeat": 1,
+          "earlier": 48,
+          "current": 50,
+          "ratio": 1.0416666666666667,
+          "withinUnchanged20Percent": true
+        }
+      ],
+      "sceneCensusMatchesInitialReference": true
+    },
+    {
+      "id": "morgan-human",
+      "realism": "high",
+      "count": 1,
+      "frameP50Ms": [
+        17,
+        17
+      ],
+      "frameP95Ms": [
+        17,
+        17
+      ],
+      "cpuP95Ms": [
+        5,
+        5
+      ],
+      "pairedP50Ratio": 1,
+      "pairedP50Within20Percent": true,
+      "frameP95ReferenceCeilingMs": 17,
+      "cpuP95ReferenceCeilingMs": 5,
+      "sceneCensus": {
+        "drawCalls": 11,
+        "triangles": 84552,
+        "skeletons": 2,
+        "textureBytes": 67458385
+      },
+      "observedFrameP95CeilingMs": 17,
+      "observedCpuP95CeilingMs": 5,
+      "frameP95ReferenceExceeded": false,
+      "cpuP95ReferenceExceeded": false,
+      "priorFrameP50Ms": [
+        17,
+        17
+      ],
+      "priorFrameP95Ms": [
+        17,
+        17
+      ],
+      "crossRunP50Comparisons": [
+        {
+          "repeat": 0,
+          "earlier": 17,
+          "current": 17,
+          "ratio": 1,
+          "withinUnchanged20Percent": true
+        },
+        {
+          "repeat": 1,
+          "earlier": 17,
+          "current": 17,
+          "ratio": 1,
+          "withinUnchanged20Percent": true
+        }
+      ],
+      "sceneCensusMatchesInitialReference": true
+    },
+    {
+      "id": "morgan-human",
+      "realism": "high",
+      "count": 8,
+      "frameP50Ms": [
+        20,
+        20
+      ],
+      "frameP95Ms": [
+        22,
+        22
+      ],
+      "cpuP95Ms": [
+        11,
+        11
+      ],
+      "pairedP50Ratio": 1,
+      "pairedP50Within20Percent": true,
+      "frameP95ReferenceCeilingMs": 22,
+      "cpuP95ReferenceCeilingMs": 11,
+      "sceneCensus": {
+        "drawCalls": 81,
+        "triangles": 676402,
+        "skeletons": 16,
+        "textureBytes": 77245092
+      },
+      "observedFrameP95CeilingMs": 22,
+      "observedCpuP95CeilingMs": 11,
+      "frameP95ReferenceExceeded": false,
+      "cpuP95ReferenceExceeded": false,
+      "priorFrameP50Ms": [
+        20,
+        20
+      ],
+      "priorFrameP95Ms": [
+        22,
+        22
+      ],
+      "crossRunP50Comparisons": [
+        {
+          "repeat": 0,
+          "earlier": 20,
+          "current": 20,
+          "ratio": 1,
+          "withinUnchanged20Percent": true
+        },
+        {
+          "repeat": 1,
+          "earlier": 20,
+          "current": 20,
+          "ratio": 1,
+          "withinUnchanged20Percent": true
+        }
+      ],
+      "sceneCensusMatchesInitialReference": true
+    },
+    {
+      "id": "morgan-human",
+      "realism": "high",
+      "count": 24,
+      "frameP50Ms": [
+        46,
+        51
+      ],
+      "frameP95Ms": [
+        49,
+        56
+      ],
+      "cpuP95Ms": [
+        32,
+        38
+      ],
+      "pairedP50Ratio": 1.109,
+      "pairedP50Within20Percent": true,
+      "frameP95ReferenceCeilingMs": 52,
+      "cpuP95ReferenceCeilingMs": 35,
+      "sceneCensus": {
+        "drawCalls": 241,
+        "triangles": 2029202,
+        "skeletons": 48,
+        "textureBytes": 99614708
+      },
+      "observedFrameP95CeilingMs": 56,
+      "observedCpuP95CeilingMs": 38,
+      "frameP95ReferenceExceeded": true,
+      "cpuP95ReferenceExceeded": true,
+      "priorFrameP50Ms": [
+        46,
+        48
+      ],
+      "priorFrameP95Ms": [
+        50,
+        52
+      ],
+      "crossRunP50Comparisons": [
+        {
+          "repeat": 0,
+          "earlier": 46,
+          "current": 46,
+          "ratio": 1,
+          "withinUnchanged20Percent": true
+        },
+        {
+          "repeat": 1,
+          "earlier": 48,
+          "current": 51,
+          "ratio": 1.0625,
+          "withinUnchanged20Percent": true
+        }
+      ],
+      "sceneCensusMatchesInitialReference": true
+    },
+    {
+      "id": "imani-human",
+      "realism": "off",
+      "count": 1,
+      "frameP50Ms": [
+        17,
+        17
+      ],
+      "frameP95Ms": [
+        17,
+        17
+      ],
+      "cpuP95Ms": [
+        5,
+        5
+      ],
+      "pairedP50Ratio": 1,
+      "pairedP50Within20Percent": true,
+      "frameP95ReferenceCeilingMs": 17,
+      "cpuP95ReferenceCeilingMs": 5,
+      "sceneCensus": {
+        "drawCalls": 10,
+        "triangles": 88546,
+        "skeletons": 2,
+        "textureBytes": 60118354
+      },
+      "observedFrameP95CeilingMs": 17,
+      "observedCpuP95CeilingMs": 5,
+      "frameP95ReferenceExceeded": false,
+      "cpuP95ReferenceExceeded": false,
+      "priorFrameP50Ms": [
+        17,
+        17
+      ],
+      "priorFrameP95Ms": [
+        17,
+        17
+      ],
+      "crossRunP50Comparisons": [
+        {
+          "repeat": 0,
+          "earlier": 17,
+          "current": 17,
+          "ratio": 1,
+          "withinUnchanged20Percent": true
+        },
+        {
+          "repeat": 1,
+          "earlier": 17,
+          "current": 17,
+          "ratio": 1,
+          "withinUnchanged20Percent": true
+        }
+      ],
+      "sceneCensusMatchesInitialReference": true
+    },
+    {
+      "id": "imani-human",
+      "realism": "off",
+      "count": 8,
+      "frameP50Ms": [
+        19,
+        19
+      ],
+      "frameP95Ms": [
+        22,
+        22
+      ],
+      "cpuP95Ms": [
+        10,
+        11
+      ],
+      "pairedP50Ratio": 1,
+      "pairedP50Within20Percent": true,
+      "frameP95ReferenceCeilingMs": 22,
+      "cpuP95ReferenceCeilingMs": 11,
+      "sceneCensus": {
+        "drawCalls": 73,
+        "triangles": 708354,
+        "skeletons": 16,
+        "textureBytes": 60118354
+      },
+      "observedFrameP95CeilingMs": 22,
+      "observedCpuP95CeilingMs": 11,
+      "frameP95ReferenceExceeded": false,
+      "cpuP95ReferenceExceeded": false,
+      "priorFrameP50Ms": [
+        19,
+        19
+      ],
+      "priorFrameP95Ms": [
+        22,
+        22
+      ],
+      "crossRunP50Comparisons": [
+        {
+          "repeat": 0,
+          "earlier": 19,
+          "current": 19,
+          "ratio": 1,
+          "withinUnchanged20Percent": true
+        },
+        {
+          "repeat": 1,
+          "earlier": 19,
+          "current": 19,
+          "ratio": 1,
+          "withinUnchanged20Percent": true
+        }
+      ],
+      "sceneCensusMatchesInitialReference": true
+    },
+    {
+      "id": "imani-human",
+      "realism": "off",
+      "count": 24,
+      "frameP50Ms": [
+        44,
+        48
+      ],
+      "frameP95Ms": [
+        47,
+        52
+      ],
+      "cpuP95Ms": [
+        32,
+        35
+      ],
+      "pairedP50Ratio": 1.091,
+      "pairedP50Within20Percent": true,
+      "frameP95ReferenceCeilingMs": 50,
+      "cpuP95ReferenceCeilingMs": 32,
+      "sceneCensus": {
+        "drawCalls": 217,
+        "triangles": 2125058,
+        "skeletons": 48,
+        "textureBytes": 60118354
+      },
+      "observedFrameP95CeilingMs": 52,
+      "observedCpuP95CeilingMs": 35,
+      "frameP95ReferenceExceeded": true,
+      "cpuP95ReferenceExceeded": true,
+      "priorFrameP50Ms": [
+        46,
+        46
+      ],
+      "priorFrameP95Ms": [
+        48,
+        50
+      ],
+      "crossRunP50Comparisons": [
+        {
+          "repeat": 0,
+          "earlier": 46,
+          "current": 44,
+          "ratio": 0.9565217391304348,
+          "withinUnchanged20Percent": true
+        },
+        {
+          "repeat": 1,
+          "earlier": 46,
+          "current": 48,
+          "ratio": 1.0434782608695652,
+          "withinUnchanged20Percent": true
+        }
+      ],
+      "sceneCensusMatchesInitialReference": true
+    },
+    {
+      "id": "imani-human",
+      "realism": "low",
+      "count": 1,
+      "frameP50Ms": [
+        17,
+        17
+      ],
+      "frameP95Ms": [
+        17,
+        17
+      ],
+      "cpuP95Ms": [
+        5,
+        5
+      ],
+      "pairedP50Ratio": 1,
+      "pairedP50Within20Percent": true,
+      "frameP95ReferenceCeilingMs": 17,
+      "cpuP95ReferenceCeilingMs": 5,
+      "sceneCensus": {
+        "drawCalls": 11,
+        "triangles": 88546,
+        "skeletons": 2,
+        "textureBytes": 61516455
+      },
+      "observedFrameP95CeilingMs": 17,
+      "observedCpuP95CeilingMs": 5,
+      "frameP95ReferenceExceeded": false,
+      "cpuP95ReferenceExceeded": false,
+      "priorFrameP50Ms": [
+        17,
+        17
+      ],
+      "priorFrameP95Ms": [
+        17,
+        17
+      ],
+      "crossRunP50Comparisons": [
+        {
+          "repeat": 0,
+          "earlier": 17,
+          "current": 17,
+          "ratio": 1,
+          "withinUnchanged20Percent": true
+        },
+        {
+          "repeat": 1,
+          "earlier": 17,
+          "current": 17,
+          "ratio": 1,
+          "withinUnchanged20Percent": true
+        }
+      ],
+      "sceneCensusMatchesInitialReference": true
+    },
+    {
+      "id": "imani-human",
+      "realism": "low",
+      "count": 8,
+      "frameP50Ms": [
+        20,
+        21
+      ],
+      "frameP95Ms": [
+        22,
+        61
+      ],
+      "cpuP95Ms": [
+        11,
+        19
+      ],
+      "pairedP50Ratio": 1.05,
+      "pairedP50Within20Percent": true,
+      "frameP95ReferenceCeilingMs": 23,
+      "cpuP95ReferenceCeilingMs": 11,
+      "sceneCensus": {
+        "drawCalls": 81,
+        "triangles": 708354,
+        "skeletons": 16,
+        "textureBytes": 71303162
+      },
+      "observedFrameP95CeilingMs": 61,
+      "observedCpuP95CeilingMs": 19,
+      "frameP95ReferenceExceeded": true,
+      "cpuP95ReferenceExceeded": true,
+      "priorFrameP50Ms": [
+        19,
+        20
+      ],
+      "priorFrameP95Ms": [
+        21,
+        23
+      ],
+      "crossRunP50Comparisons": [
+        {
+          "repeat": 0,
+          "earlier": 19,
+          "current": 20,
+          "ratio": 1.0526315789473684,
+          "withinUnchanged20Percent": true
+        },
+        {
+          "repeat": 1,
+          "earlier": 20,
+          "current": 21,
+          "ratio": 1.05,
+          "withinUnchanged20Percent": true
+        }
+      ],
+      "sceneCensusMatchesInitialReference": true
+    },
+    {
+      "id": "imani-human",
+      "realism": "low",
+      "count": 24,
+      "frameP50Ms": [
+        46,
+        68
+      ],
+      "frameP95Ms": [
+        51,
+        86
+      ],
+      "cpuP95Ms": [
+        32,
+        67
+      ],
+      "pairedP50Ratio": 1.478,
+      "pairedP50Within20Percent": false,
+      "frameP95ReferenceCeilingMs": 55,
+      "cpuP95ReferenceCeilingMs": 38,
+      "sceneCensus": {
+        "drawCalls": 241,
+        "triangles": 2125058,
+        "skeletons": 48,
+        "textureBytes": 93672778
+      },
+      "observedFrameP95CeilingMs": 86,
+      "observedCpuP95CeilingMs": 67,
+      "frameP95ReferenceExceeded": true,
+      "cpuP95ReferenceExceeded": true,
+      "priorFrameP50Ms": [
+        46,
+        49
+      ],
+      "priorFrameP95Ms": [
+        49,
+        55
+      ],
+      "crossRunP50Comparisons": [
+        {
+          "repeat": 0,
+          "earlier": 46,
+          "current": 46,
+          "ratio": 1,
+          "withinUnchanged20Percent": true
+        },
+        {
+          "repeat": 1,
+          "earlier": 49,
+          "current": 68,
+          "ratio": 1.3877551020408163,
+          "withinUnchanged20Percent": false
+        }
+      ],
+      "sceneCensusMatchesInitialReference": true
+    },
+    {
+      "id": "imani-human",
+      "realism": "standard",
+      "count": 1,
+      "frameP50Ms": [
+        17,
+        17
+      ],
+      "frameP95Ms": [
+        17,
+        17
+      ],
+      "cpuP95Ms": [
+        5,
+        5
+      ],
+      "pairedP50Ratio": 1,
+      "pairedP50Within20Percent": true,
+      "frameP95ReferenceCeilingMs": 17,
+      "cpuP95ReferenceCeilingMs": 6,
+      "sceneCensus": {
+        "drawCalls": 11,
+        "triangles": 88546,
+        "skeletons": 2,
+        "textureBytes": 61865980
+      },
+      "observedFrameP95CeilingMs": 17,
+      "observedCpuP95CeilingMs": 5,
+      "frameP95ReferenceExceeded": false,
+      "cpuP95ReferenceExceeded": false,
+      "priorFrameP50Ms": [
+        17,
+        17
+      ],
+      "priorFrameP95Ms": [
+        17,
+        17
+      ],
+      "crossRunP50Comparisons": [
+        {
+          "repeat": 0,
+          "earlier": 17,
+          "current": 17,
+          "ratio": 1,
+          "withinUnchanged20Percent": true
+        },
+        {
+          "repeat": 1,
+          "earlier": 17,
+          "current": 17,
+          "ratio": 1,
+          "withinUnchanged20Percent": true
+        }
+      ],
+      "sceneCensusMatchesInitialReference": true
+    },
+    {
+      "id": "imani-human",
+      "realism": "standard",
+      "count": 8,
+      "frameP50Ms": [
+        20,
+        20
+      ],
+      "frameP95Ms": [
+        23,
+        22
+      ],
+      "cpuP95Ms": [
+        12,
+        11
+      ],
+      "pairedP50Ratio": 1,
+      "pairedP50Within20Percent": true,
+      "frameP95ReferenceCeilingMs": 22,
+      "cpuP95ReferenceCeilingMs": 11,
+      "sceneCensus": {
+        "drawCalls": 81,
+        "triangles": 708354,
+        "skeletons": 16,
+        "textureBytes": 71652687
+      },
+      "observedFrameP95CeilingMs": 23,
+      "observedCpuP95CeilingMs": 12,
+      "frameP95ReferenceExceeded": true,
+      "cpuP95ReferenceExceeded": true,
+      "priorFrameP50Ms": [
+        20,
+        20
+      ],
+      "priorFrameP95Ms": [
+        21,
+        22
+      ],
+      "crossRunP50Comparisons": [
+        {
+          "repeat": 0,
+          "earlier": 20,
+          "current": 20,
+          "ratio": 1,
+          "withinUnchanged20Percent": true
+        },
+        {
+          "repeat": 1,
+          "earlier": 20,
+          "current": 20,
+          "ratio": 1,
+          "withinUnchanged20Percent": true
+        }
+      ],
+      "sceneCensusMatchesInitialReference": true
+    },
+    {
+      "id": "imani-human",
+      "realism": "standard",
+      "count": 24,
+      "frameP50Ms": [
+        47,
+        47
+      ],
+      "frameP95Ms": [
+        49,
+        49
+      ],
+      "cpuP95Ms": [
+        33,
+        33
+      ],
+      "pairedP50Ratio": 1,
+      "pairedP50Within20Percent": true,
+      "frameP95ReferenceCeilingMs": 50,
+      "cpuP95ReferenceCeilingMs": 33,
+      "sceneCensus": {
+        "drawCalls": 241,
+        "triangles": 2125058,
+        "skeletons": 48,
+        "textureBytes": 94022303
+      },
+      "observedFrameP95CeilingMs": 49,
+      "observedCpuP95CeilingMs": 33,
+      "frameP95ReferenceExceeded": false,
+      "cpuP95ReferenceExceeded": false,
+      "priorFrameP50Ms": [
+        47,
+        47
+      ],
+      "priorFrameP95Ms": [
+        50,
+        50
+      ],
+      "crossRunP50Comparisons": [
+        {
+          "repeat": 0,
+          "earlier": 47,
+          "current": 47,
+          "ratio": 1,
+          "withinUnchanged20Percent": true
+        },
+        {
+          "repeat": 1,
+          "earlier": 47,
+          "current": 47,
+          "ratio": 1,
+          "withinUnchanged20Percent": true
+        }
+      ],
+      "sceneCensusMatchesInitialReference": true
+    },
+    {
+      "id": "imani-human",
+      "realism": "high",
+      "count": 1,
+      "frameP50Ms": [
+        17,
+        17
+      ],
+      "frameP95Ms": [
+        17,
+        17
+      ],
+      "cpuP95Ms": [
+        6,
+        5
+      ],
+      "pairedP50Ratio": 1,
+      "pairedP50Within20Percent": true,
+      "frameP95ReferenceCeilingMs": 17,
+      "cpuP95ReferenceCeilingMs": 5,
+      "sceneCensus": {
+        "drawCalls": 11,
+        "triangles": 88546,
+        "skeletons": 2,
+        "textureBytes": 61865980
+      },
+      "observedFrameP95CeilingMs": 17,
+      "observedCpuP95CeilingMs": 6,
+      "frameP95ReferenceExceeded": false,
+      "cpuP95ReferenceExceeded": true,
+      "priorFrameP50Ms": [
+        17,
+        17
+      ],
+      "priorFrameP95Ms": [
+        17,
+        17
+      ],
+      "crossRunP50Comparisons": [
+        {
+          "repeat": 0,
+          "earlier": 17,
+          "current": 17,
+          "ratio": 1,
+          "withinUnchanged20Percent": true
+        },
+        {
+          "repeat": 1,
+          "earlier": 17,
+          "current": 17,
+          "ratio": 1,
+          "withinUnchanged20Percent": true
+        }
+      ],
+      "sceneCensusMatchesInitialReference": true
+    },
+    {
+      "id": "imani-human",
+      "realism": "high",
+      "count": 8,
+      "frameP50Ms": [
+        20,
+        20
+      ],
+      "frameP95Ms": [
+        23,
+        22
+      ],
+      "cpuP95Ms": [
+        11,
+        11
+      ],
+      "pairedP50Ratio": 1,
+      "pairedP50Within20Percent": true,
+      "frameP95ReferenceCeilingMs": 23,
+      "cpuP95ReferenceCeilingMs": 11,
+      "sceneCensus": {
+        "drawCalls": 81,
+        "triangles": 708354,
+        "skeletons": 16,
+        "textureBytes": 71652687
+      },
+      "observedFrameP95CeilingMs": 23,
+      "observedCpuP95CeilingMs": 11,
+      "frameP95ReferenceExceeded": false,
+      "cpuP95ReferenceExceeded": false,
+      "priorFrameP50Ms": [
+        20,
+        20
+      ],
+      "priorFrameP95Ms": [
+        22,
+        23
+      ],
+      "crossRunP50Comparisons": [
+        {
+          "repeat": 0,
+          "earlier": 20,
+          "current": 20,
+          "ratio": 1,
+          "withinUnchanged20Percent": true
+        },
+        {
+          "repeat": 1,
+          "earlier": 20,
+          "current": 20,
+          "ratio": 1,
+          "withinUnchanged20Percent": true
+        }
+      ],
+      "sceneCensusMatchesInitialReference": true
+    },
+    {
+      "id": "imani-human",
+      "realism": "high",
+      "count": 24,
+      "frameP50Ms": [
+        48,
+        47
+      ],
+      "frameP95Ms": [
+        51,
+        50
+      ],
+      "cpuP95Ms": [
+        33,
+        33
+      ],
+      "pairedP50Ratio": 0.979,
+      "pairedP50Within20Percent": true,
+      "frameP95ReferenceCeilingMs": 51,
+      "cpuP95ReferenceCeilingMs": 33,
+      "sceneCensus": {
+        "drawCalls": 241,
+        "triangles": 2125058,
+        "skeletons": 48,
+        "textureBytes": 94022303
+      },
+      "observedFrameP95CeilingMs": 51,
+      "observedCpuP95CeilingMs": 33,
+      "frameP95ReferenceExceeded": false,
+      "cpuP95ReferenceExceeded": false,
+      "priorFrameP50Ms": [
+        47,
+        47
+      ],
+      "priorFrameP95Ms": [
+        51,
+        50
+      ],
+      "crossRunP50Comparisons": [
+        {
+          "repeat": 0,
+          "earlier": 47,
+          "current": 48,
+          "ratio": 1.0212765957446808,
+          "withinUnchanged20Percent": true
+        },
+        {
+          "repeat": 1,
+          "earlier": 47,
+          "current": 47,
+          "ratio": 1,
+          "withinUnchanged20Percent": true
+        }
+      ],
+      "sceneCensusMatchesInitialReference": true
+    }
+  ],
+  "captures": [
+    {
+      "id": "morgan-human",
+      "realism": "off",
+      "view": "full",
+      "file": "docs/acceptance/character-fidelity-517-captures/iphone-morgan-human.off-full.png",
+      "bytes": 1132003,
+      "sha256": "f4fb9fafc53d61c374147bd6acbbdf3d266d632967c98e8c70cdaac8a6a2021c",
+      "width": 3840,
+      "height": 2160,
+      "rawCaptureFile": "morgan-human.off-full.png",
+      "byteIdenticalToPriorPhysicalCapture": true
+    },
+    {
+      "id": "morgan-human",
+      "realism": "off",
+      "view": "closeUp",
+      "file": "docs/acceptance/character-fidelity-517-captures/iphone-morgan-human.off-closeUp.png",
+      "bytes": 1764404,
+      "sha256": "78cd4023d8600206b861543ef069555bc6e37c5946b9000a62a053881aec6028",
+      "width": 3840,
+      "height": 2160,
+      "rawCaptureFile": "morgan-human.off-closeUp.png",
+      "byteIdenticalToPriorPhysicalCapture": true
+    },
+    {
+      "id": "morgan-human",
+      "realism": "high",
+      "view": "full",
+      "file": "docs/acceptance/character-fidelity-517-captures/iphone-morgan-human.high-full.png",
+      "bytes": 1138949,
+      "sha256": "b4e94ba0a7e1bfeb9bfb18ba2919b83e0e608beacdf136bb87410032c664d1ff",
+      "width": 3840,
+      "height": 2160,
+      "rawCaptureFile": "morgan-human.high-full.png",
+      "byteIdenticalToPriorPhysicalCapture": true
+    },
+    {
+      "id": "morgan-human",
+      "realism": "high",
+      "view": "closeUp",
+      "file": "docs/acceptance/character-fidelity-517-captures/iphone-morgan-human.high-closeUp.png",
+      "bytes": 2370982,
+      "sha256": "da401c560e0bc406b139d4443a45d6ca70e181afae4b77e6e9c8ca97b08e1773",
+      "width": 3840,
+      "height": 2160,
+      "rawCaptureFile": "morgan-human.high-closeUp.png",
+      "byteIdenticalToPriorPhysicalCapture": true
+    },
+    {
+      "id": "morgan-human",
+      "realism": "high",
+      "view": "expression-smile",
+      "file": "docs/acceptance/character-fidelity-517-captures/iphone-morgan-human.high-expression-smile.png",
+      "bytes": 2369065,
+      "sha256": "b359dcfb10bfb08ddaa78f57d9109341b5787001d5c9162b238b335bb76de384",
+      "width": 3840,
+      "height": 2160,
+      "rawCaptureFile": "morgan-human.high-expression-smile.png",
+      "byteIdenticalToPriorPhysicalCapture": true
+    },
+    {
+      "id": "morgan-human",
+      "realism": "high",
+      "view": "expression-browRaise",
+      "file": "docs/acceptance/character-fidelity-517-captures/iphone-morgan-human.high-expression-browRaise.png",
+      "bytes": 2373792,
+      "sha256": "fa9de9029dc51ded4dc10cb184592f9289700c33805afd41fd240651a769e1a8",
+      "width": 3840,
+      "height": 2160,
+      "rawCaptureFile": "morgan-human.high-expression-browRaise.png",
+      "byteIdenticalToPriorPhysicalCapture": true
+    },
+    {
+      "id": "imani-human",
+      "realism": "off",
+      "view": "full",
+      "file": "docs/acceptance/character-fidelity-517-captures/iphone-imani-human.off-full.png",
+      "bytes": 1030415,
+      "sha256": "0895f4ccb4ae3585e5a7860b6605c295f1d141960828bad380ea8d86fcd84bb5",
+      "width": 3840,
+      "height": 2160,
+      "rawCaptureFile": "imani-human.off-full.png",
+      "byteIdenticalToPriorPhysicalCapture": true
+    },
+    {
+      "id": "imani-human",
+      "realism": "off",
+      "view": "closeUp",
+      "file": "docs/acceptance/character-fidelity-517-captures/iphone-imani-human.off-closeUp.png",
+      "bytes": 2179367,
+      "sha256": "a0cc3c787c879115ddacfae593a8addaaf375e7a38020449256da6c0aae19e71",
+      "width": 3840,
+      "height": 2160,
+      "rawCaptureFile": "imani-human.off-closeUp.png",
+      "byteIdenticalToPriorPhysicalCapture": true
+    },
+    {
+      "id": "imani-human",
+      "realism": "high",
+      "view": "full",
+      "file": "docs/acceptance/character-fidelity-517-captures/iphone-imani-human.high-full.png",
+      "bytes": 1090355,
+      "sha256": "d1fb52dee91ce69886f49d0fc0bbcc64ee1f70f9ab0a58afdae6260c8c5c7559",
+      "width": 3840,
+      "height": 2160,
+      "rawCaptureFile": "imani-human.high-full.png",
+      "byteIdenticalToPriorPhysicalCapture": true
+    },
+    {
+      "id": "imani-human",
+      "realism": "high",
+      "view": "closeUp",
+      "file": "docs/acceptance/character-fidelity-517-captures/iphone-imani-human.high-closeUp.png",
+      "bytes": 2641220,
+      "sha256": "c1546e530a21d0544580c54d90c58bdd994b99e5890bf42bc45bb596c738d7a9",
+      "width": 3840,
+      "height": 2160,
+      "rawCaptureFile": "imani-human.high-closeUp.png",
+      "byteIdenticalToPriorPhysicalCapture": true
+    },
+    {
+      "id": "imani-human",
+      "realism": "high",
+      "view": "expression-smile",
+      "file": "docs/acceptance/character-fidelity-517-captures/iphone-imani-human.high-expression-smile.png",
+      "bytes": 2644371,
+      "sha256": "324b9bab37fa6a11cc396569204dcfd298d13757edb5df2d23241135deb67add",
+      "width": 3840,
+      "height": 2160,
+      "rawCaptureFile": "imani-human.high-expression-smile.png",
+      "byteIdenticalToPriorPhysicalCapture": true
+    },
+    {
+      "id": "imani-human",
+      "realism": "high",
+      "view": "expression-browRaise",
+      "file": "docs/acceptance/character-fidelity-517-captures/iphone-imani-human.high-expression-browRaise.png",
+      "bytes": 2641058,
+      "sha256": "ce51424ae7f4b372384f57347c5e224cffeac2e315cba71ecdeb977c39c8b6ad",
+      "width": 3840,
+      "height": 2160,
+      "rawCaptureFile": "imani-human.high-expression-browRaise.png",
+      "byteIdenticalToPriorPhysicalCapture": true
+    }
+  ],
+  "originalReference": {
+    "file": "data/reports/character-fidelity-iphone-budgets-517.json",
+    "sha256": "30aec963382c1e093d3d453af04b28b97558530e47214d84f0bfe47f32455fe5"
+  },
+  "comparisonSummary": {
+    "withinRunP50Agreement": 22,
+    "withinRunPairs": 24,
+    "crossRunP50Agreement": 46,
+    "crossRunPairs": 48,
+    "frameP95ReferenceExceedances": 9,
+    "cpuP95ReferenceExceedances": 11,
+    "sceneCensusMatches": 24
+  },
+  "captureReproduction": {
+    "images": 12,
+    "allByteIdentical": true,
+    "priorReceipt": "data/reports/character-fidelity-iphone-517.json",
+    "method": "New raw phone captures matched all recorded hashes and the prior tracked PNG bytes. Reuse those identical public PNGs; preserve all newly captured originals under the ignored run directory."
+  },
+  "acceptance": {
+    "collection": "passed: all48timing cases and completeness checks",
+    "lifecycle": "passed:80viewport and6native portrait cycles,zero reported growth",
+    "captures": "passed:12new native PNGs byte-identical to prior captures",
+    "timingBaselineReproduction": "not met:22/24within-run and46/48cross-run p50 comparisons within20%;9frame/11CPU p95 reference exceedances",
+    "scope": "No stable-device-budget,whole-town,totalGPU-residency,thermal/soak,native or human acceptance claimed."
+  }
+}

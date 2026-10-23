@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "status": "unaffected-render-workloads-retained;world-journey-renewal-required",
+  "checkedAt": "2026-10-19T10:32:01.713Z",
+  "candidateRevision": "54b5cd62daddb2abf0f8cc1d9e0b6427698da6da",
+  "integratedMain": "7c10f418b0ea519bc0d2b84bb65869e3c7cdae0e",
+  "candidateRuntimeManifestSha256": "3e04a4ae0af73d8e452f02024685108ef2d3808cc5822461ec878400b2e0f608",
+  "testedNativeRuntimeManifestSha256": "eb50b85d64fddedec9f358c9204f96ddf13d8b49fb56759272de4e3f9246b2aa",
+  "testedBrowserRuntimeManifestSha256": "4ee88f688473ae7e12dcae6683df8d30c1a409d9e693f35a9697c6020e00c3d5",
+  "nativeApplicabilityReceipt": {
+    "file": "data/reports/character-fidelity-review-native-applicability-517.json",
+    "sha256": "ae7411bc3de72ff6ee53f8f0a180c19299cc58a3aa9c2ce0a89556657a44613e"
+  },
+  "retainedReceipts": [
+    {
+      "file": "data/reports/character-fidelity-review-m1-517.json",
+      "sha256": "78d749110f2f5ef852dfc024b3d3e7a583054869d121892177e52d7e30a4bc93",
+      "actualRuntimeManifestSha256": "eb50b85d64fddedec9f358c9204f96ddf13d8b49fb56759272de4e3f9246b2aa"
+    },
+    {
+      "file": "data/reports/character-fidelity-review-tiers-517.json",
+      "sha256": "07c6c84412f919e5e7e99ec3476467a255be27ad1f666d9c0db3f53c46d8225a",
+      "actualRuntimeManifestSha256": "eb50b85d64fddedec9f358c9204f96ddf13d8b49fb56759272de4e3f9246b2aa"
+    },
+    {
+      "file": "data/reports/character-fidelity-review-crowd-lifecycle-517.json",
+      "sha256": "47ae5dd845c07b8ec02eee84d18040919af56b50f8b92d16db29e9d1e83f55b9",
+      "actualRuntimeManifestSha256": "eb50b85d64fddedec9f358c9204f96ddf13d8b49fb56759272de4e3f9246b2aa"
+    },
+    {
+      "file": "data/reports/character-fidelity-review-chromium-517.json",
+      "sha256": "99272f56d3af9e192b70bec49b782fc1fab5b5899eab849c5d674b232a14784e",
+      "actualRuntimeManifestSha256": "4ee88f688473ae7e12dcae6683df8d30c1a409d9e693f35a9697c6020e00c3d5"
+    },
+    {
+      "file": "data/reports/character-fidelity-review-webkit-517.json",
+      "sha256": "12afea8e364c53090cd98186333e4d9ab46fe2051be2b09a190eadd26dc6c6b9",
+      "actualRuntimeManifestSha256": "4ee88f688473ae7e12dcae6683df8d30c1a409d9e693f35a9697c6020e00c3d5"
+    },
+    {
+      "file": "data/reports/character-fidelity-review-goldens-517.json",
+      "sha256": "5c1c58118f30091d2721826398a9f1000b2e8c92deb6b92f20ff4719331075d5",
+      "actualRuntimeManifestSha256": "4ee88f688473ae7e12dcae6683df8d30c1a409d9e693f35a9697c6020e00c3d5"
+    }
+  ],
+  "renewedReceipts": [],
+  "completeRuntimeDeltaFromBrowserExecution": [
+    "preview/e2e/garden-campus-office.js",
+    "preview/e2e/garden-campus-readiness.js",
+    "preview/e2e/garden-campus-suite.js"
+  ],
+  "method": "Compared every G/M runtime path/hash. Only the office and suite journeys and their fixture-only startup helper differ; the helper is not a selectable async journey, and both journeys remain selectable. The three explicitly selected Chromium/WebKit journeys, runner, fixture, clients/assets and strict golden sources are byteidentical and do not execute the office/suite or import their helper. Retain actual G browser/golden and actual F native receipts with original execution manifests/timestamps. M core/full and changed office/suite renewal remain separate required gates.",
+  "limits": "No failed G/H full run is converted into a pass. No current M full success, stable rendering, performance reproduction or new physical acceptance is inferred."
+}

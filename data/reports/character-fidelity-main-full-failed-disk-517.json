@@ -1,0 +1,236 @@
+{
+  "schemaVersion": 1,
+  "profile": "full",
+  "startedAt": "2026-10-19T02:21:40.450Z",
+  "status": "failed",
+  "revision": "335224c2e00efdaee49dad70d652d715e0efa38f",
+  "dirty": true,
+  "scope": "Selected repository checks only; not production, live auth, native Unreal, human accessibility, or target GPU acceptance.",
+  "results": [
+    {
+      "id": "dependency-audit",
+      "command": [
+        "pnpm",
+        "audit",
+        "--audit-level=moderate"
+      ],
+      "status": "passed",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "signal": null,
+      "durationMs": 447
+    },
+    {
+      "id": "agent-tests",
+      "command": [
+        "pnpm",
+        "run",
+        "test:agent"
+      ],
+      "status": "passed",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "signal": null,
+      "durationMs": 32978
+    },
+    {
+      "id": "preview-tests",
+      "command": [
+        "pnpm",
+        "test"
+      ],
+      "status": "passed",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "signal": null,
+      "durationMs": 209936
+    },
+    {
+      "id": "server-redis-tests",
+      "command": [
+        "pnpm",
+        "run",
+        "test:server"
+      ],
+      "status": "passed",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "signal": null,
+      "durationMs": 51474
+    },
+    {
+      "id": "desktop-tests",
+      "command": [
+        "pnpm",
+        "run",
+        "test:desktop"
+      ],
+      "status": "passed",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "signal": null,
+      "durationMs": 16979
+    },
+    {
+      "id": "build",
+      "command": [
+        "pnpm",
+        "run",
+        "build"
+      ],
+      "status": "failed",
+      "exitCode": 1,
+      "expectedExit": 0,
+      "signal": null,
+      "durationMs": 11371
+    },
+    {
+      "id": "python-lint",
+      "command": [
+        "uv",
+        "run",
+        "--locked",
+        "ruff",
+        "check",
+        "."
+      ],
+      "status": "not_run"
+    },
+    {
+      "id": "python-format",
+      "command": [
+        "uv",
+        "run",
+        "--locked",
+        "ruff",
+        "format",
+        "--check",
+        "."
+      ],
+      "status": "not_run"
+    },
+    {
+      "id": "python-tests",
+      "command": [
+        "uv",
+        "run",
+        "--locked",
+        "pytest",
+        "-q"
+      ],
+      "status": "not_run"
+    },
+    {
+      "id": "demo",
+      "command": [
+        "uv",
+        "run",
+        "--locked",
+        "river-oaks",
+        "demo"
+      ],
+      "status": "not_run"
+    },
+    {
+      "id": "demo-verify",
+      "command": [
+        "uv",
+        "run",
+        "--locked",
+        "river-oaks",
+        "verify",
+        "--config",
+        "data/generated/demo/config.json",
+        "--raw",
+        "data/generated/demo",
+        "--world",
+        "data/generated/demo/world.json",
+        "--output",
+        "data/generated/demo/report.json"
+      ],
+      "status": "not_run"
+    },
+    {
+      "id": "secrets",
+      "command": [
+        "uv",
+        "run",
+        "--locked",
+        "python",
+        "scripts/check_secrets.py",
+        "--all"
+      ],
+      "status": "not_run"
+    },
+    {
+      "id": "secret-history",
+      "command": [
+        "gitleaks",
+        "git",
+        "--log-opts=--all",
+        "--redact",
+        "--no-banner",
+        "--ignore-gitleaks-allow"
+      ],
+      "status": "not_run"
+    },
+    {
+      "id": "security-browser",
+      "command": [
+        "pnpm",
+        "run",
+        "test:security:e2e"
+      ],
+      "status": "not_run"
+    },
+    {
+      "id": "reflections",
+      "command": [
+        "pnpm",
+        "run",
+        "test:reflections:webgl"
+      ],
+      "status": "not_run"
+    },
+    {
+      "id": "experience",
+      "command": [
+        "pnpm",
+        "run",
+        "test:experience",
+        "player-lifecycle",
+        "multiplayer-lifecycle",
+        "contextual-first-visit",
+        "store-intro",
+        "photo-mode",
+        "rail-navigation",
+        "places-guide",
+        "world-studio",
+        "spatial-circulation",
+        "spatial-streets",
+        "office-desk",
+        "office-visit",
+        "office-computer-embed"
+      ],
+      "status": "not_run"
+    },
+    {
+      "id": "shared",
+      "command": [
+        "pnpm",
+        "run",
+        "test:shared"
+      ],
+      "status": "not_run"
+    },
+    {
+      "id": "ipic-screening",
+      "command": [
+        "node",
+        "preview/e2e/ipic-screening-runner.mjs"
+      ],
+      "status": "not_run"
+    }
+  ],
+  "finishedAt": "2026-10-19T02:27:03.788Z"
+}

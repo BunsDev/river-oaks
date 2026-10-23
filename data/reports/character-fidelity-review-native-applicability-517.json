@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "status": "identical-isolated-native-workload",
+  "checkedAt": "2026-10-19T10:32:01.647Z",
+  "candidateRuntimeManifestSha256": "3e04a4ae0af73d8e452f02024685108ef2d3808cc5822461ec878400b2e0f608",
+  "testedNativeRuntimeManifestSha256": "eb50b85d64fddedec9f358c9204f96ddf13d8b49fb56759272de4e3f9246b2aa",
+  "integratedMain": "7c10f418b0ea519bc0d2b84bb65869e3c7cdae0e",
+  "completeBroadRuntimeDelta": [
+    "config/agent-workflow.json",
+    "preview/e2e/experience-runner.js",
+    "preview/e2e/garden-campus-circulation-views.mjs",
+    "preview/e2e/garden-campus-office.js",
+    "preview/e2e/garden-campus-readiness.js",
+    "preview/e2e/garden-campus-suite.js",
+    "preview/e2e/garden-campus-traversal.js",
+    "preview/e2e/garden-campus-views.mjs",
+    "preview/e2e/play-rail-polish.js",
+    "preview/src/garden-campus-district.js",
+    "preview/src/play-rail-menu.css",
+    "server/district-gardens-checkpoint-migration.js",
+    "server/redis-backend.js",
+    "server/redis-room.js",
+    "server/tests/district-gardens-checkpoint-migration.test.js",
+    "server/world-gateway.js"
+  ],
+  "memoryFixtureModules": 142,
+  "changedReachableMemoryFixtureInputs": [
+    "preview/src/garden-campus-district.js"
+  ],
+  "generatedMemoryFixtureSha256": "b30cf6a41b9b6e3a0f571108782f1dd219d2b5889d781a878b3b959a11c1b8ea",
+  "overlayGeneratedMemoryFixtureSha256": "b30cf6a41b9b6e3a0f571108782f1dd219d2b5889d781a878b3b959a11c1b8ea",
+  "clientInputCount": 113,
+  "clientModuleCount": 71,
+  "unchangedHarness": [
+    "scripts/character-fidelity-baseline.mjs",
+    "scripts/character-fidelity-evidence.mjs",
+    "preview/e2e/fixture-server.js",
+    "server/tests/browser-fixture.js"
+  ],
+  "retainedReceipts": [
+    {
+      "file": "data/reports/character-fidelity-review-m1-517.json",
+      "sha256": "78d749110f2f5ef852dfc024b3d3e7a583054869d121892177e52d7e30a4bc93",
+      "actualRuntimeManifestSha256": "eb50b85d64fddedec9f358c9204f96ddf13d8b49fb56759272de4e3f9246b2aa"
+    },
+    {
+      "file": "data/reports/character-fidelity-review-tiers-517.json",
+      "sha256": "07c6c84412f919e5e7e99ec3476467a255be27ad1f666d9c0db3f53c46d8225a",
+      "actualRuntimeManifestSha256": "eb50b85d64fddedec9f358c9204f96ddf13d8b49fb56759272de4e3f9246b2aa"
+    },
+    {
+      "file": "data/reports/character-fidelity-review-crowd-lifecycle-517.json",
+      "sha256": "47ae5dd845c07b8ec02eee84d18040919af56b50f8b92d16db29e9d1e83f55b9",
+      "actualRuntimeManifestSha256": "eb50b85d64fddedec9f358c9204f96ddf13d8b49fb56759272de4e3f9246b2aa"
+    }
+  ],
+  "method": "Compared every broad runtime path/hash with actualF; rebuilt actual native client graph through phone applicability; all113client/asset/helper/dependency inputs identical. Built memory server fixture twice with Rolldown, overlaying the actualF changed campus module: generated execution bytes identical, unused pure epoch export eliminated. Other new Redis paths unreachable, rail CSS/E2E and catalog/journey changes unimported by isolated native harness. Original native receipts/manifests/timings remain unchanged.",
+  "limits": "Applies only to isolated native workload. Does not retain world/HUD/Studio/browser acceptance. No new timing or whole-town/phone claim;desktop18/48 and phone timing reproduction remain unmet."
+}

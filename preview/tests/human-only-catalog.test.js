@@ -4,7 +4,7 @@ import {SHARED_APPEARANCES,FORMS,MOVEMENTS,sharedAppearance} from '../src/shared
 import {migrateCharacterAppearance,validateCharacterDefinition} from '../src/character-definition.js';
 test('every supported appearance and movement is human',()=>{
  assert.deepEqual(FORMS,['human']);assert.deepEqual(MOVEMENTS,['upright']);
- assert.equal(SHARED_APPEARANCES.length,11);
+ assert.equal(SHARED_APPEARANCES.length,13);
  for(const look of SHARED_APPEARANCES){assert.equal(look.form,'human');assert.equal(look.kind,'human');}
 });
 test('retired saved forms resolve to the same human character and style',()=>{

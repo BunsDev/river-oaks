@@ -1,0 +1,26 @@
+{
+  "id": "skin-roughness",
+  "path": "/assets/characters/realism/skin-roughness.webp",
+  "generator": "scripts/build_character_realism_maps.py (Pillow)",
+  "source": "MPFB 2.0.17 CC0 assets: region masks and enhanced-skin defaults",
+  "license": "CC0-1.0",
+  "size": [
+    512,
+    512
+  ],
+  "channels": "roughness in R, G and B (Three.js samples G)",
+  "values": {
+    "body": 0.44999998807907104,
+    "lips": 0.3499999940395355,
+    "fingernails": 0.25,
+    "toenails": 0.25
+  },
+  "inputs": {
+    "settings/enhanced_settings.default.json": "4d7df035a57047af366a84cfb689625831eee5b3a25320469df65f5e4d3dfb8d",
+    "textures/mpfb_lips.jpg": "572630c2b4bb061dfd3b5bb75228615527442296b0db40feffffb0d439e8c203",
+    "textures/mpfb_fingernails.jpg": "0828222964a14c14a46e72445f549a2124de06f072daab71e5a6716324c37362",
+    "textures/mpfb_toenails.jpg": "029404d4efadbfd84cf7a9c9d9b1d93c6ba9b806a85897d52474a6f8edc803a4"
+  },
+  "bytes": 942,
+  "sha256": "2da8fb586a5ae921ac3b7bc5792d6021e179f9b0492e3f80479daf1474eb4adc"
+}

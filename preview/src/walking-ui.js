@@ -1,11 +1,11 @@
 import { personPosition, personEyeHeight, personDistance } from './person-position.js';
-import { createFlightState, beginFlight, stepFlight } from './flight.js';
+import { createFlightState, beginFlight, stepFlight, recordFlightPose, acknowledgeFlightPose } from './flight.js';
 import { thirdPersonPose, createCameraBoom, pitchAfterSeatChange, seatedEyeView } from './third-person.js';
 import { nearRoomExit } from './room-exit.js';
 import { createPointerGesture } from './pointer-gesture.js';
 import { withinTalkingReach } from './people-picking.js';
 import { nearbyPeople } from './nearby-people.js';
-import { createWalkingEnvironment, createWalkingState, stepWalking } from './walking.js';
+import { WALK_SPEED, createWalkingEnvironment, createWalkingState, stepWalking } from './walking.js';
 import { ENCOUNTER_FAR, clearConversationLine, encounterPosition, indoorEncounterPosition } from './encounter.js';
 import { sharedRoomSummary } from './shared-population.js';
 import { isGameplayKey } from './keyboard-input.js';
@@ -83,7 +83,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   const placedObjects = [];
   let transport = null, sitting = null, performing = false, seatedGround = 0, doorwayPending = false;
   let flight = createFlightState();
-  let flightAllowed=false;
+  let flightAllowed=false,fastWalkSpeed=WALK_SPEED.fast;
   let thirdPerson = true, bodyVisible = true;
   let active = false, environment, walkingWorld = null, stores = [], state, nearest = null, lastPaint = 0, pathLabel = 'public district paths';
   const drag = createPointerGesture();
@@ -261,8 +261,8 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     button.addEventListener('click', event => { if (event.detail === 0 && active && !dialogueOpen()) {  transport?.takeOver?.(); keys.add(button.dataset.walkKey); setTimeout(release, 180); } });
   });
   return {
-    setTraversal({canFly=false,kind=null}={}) {
-      flightAllowed=Boolean(canFly);
+    setTraversal({canFly=false,kind=null,fastWalk=WALK_SPEED.fast}={}) {
+      flightAllowed=Boolean(canFly);fastWalkSpeed=fastWalk;
       sprintButton.hidden=true;
       hud.querySelector('.walking-help').innerHTML=`WASD to move · Drag to look · Shift to walk briskly<br>Arrow keys to turn · E to talk · F uses stairs or doors · Shift+F goes down · Z to sit or water<br>Y joins voice · M mutes<br>${flightAllowed?'B to fly · Space to rise · C to lower · ':''}Escape closes conversations`;
     },
@@ -305,8 +305,13 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       if (player.altitude > 0) Object.assign(flight, { active: true, altitude: player.altitude, target: player.altitude });
       place();
     },
+    recordSubmittedPose(pose) {
+      const current=flight,receipt=recordFlightPose(current,pose);
+      return player=>{if(current===flight)acknowledgeFlightPose(current,player,receipt);};
+    },
     syncAuthoritativePose(player) {
       if(!player)return;
+      acknowledgeFlightPose(flight,player);
       const level=interiorLevelFor(walkingWorld,player.levelId)?.level;
       if((player.sitting?.buildId??null)!==(sitting?.buildId??null) || player.sitting?.slot!==sitting?.slot
         || environment?.levelId!==(level?.index>0?level.id:null))this.applyServerPose(player);
@@ -373,7 +378,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       const held = pressed('KeyM');
       if (held !== voiceHeld) { voiceHeld = held; getVoice()?.setTransmit(held); }
       else {
-        const input={forward:Number(pressed('KeyW','ArrowUp'))-Number(pressed('KeyS','ArrowDown')),strafe:Number(pressed('KeyD'))-Number(pressed('KeyA')),turn:Number(pressed('ArrowLeft'))-Number(pressed('ArrowRight')),fast:pressed('ShiftLeft','ShiftRight'),lift:Number(pressed('Space'))-Number(pressed('KeyC'))};
+        const input={forward:Number(pressed('KeyW','ArrowUp'))-Number(pressed('KeyS','ArrowDown')),strafe:Number(pressed('KeyD'))-Number(pressed('KeyA')),turn:Number(pressed('ArrowLeft'))-Number(pressed('ArrowRight')),fast:pressed('ShiftLeft','ShiftRight'),fastSpeed:fastWalkSpeed,lift:Number(pressed('Space'))-Number(pressed('KeyC'))};
         if(sitting||performing) {
           state.yaw+=input.turn*1.8*delta;state.speed=0;state.velocity=[0,0];
         } else if(transport) {
