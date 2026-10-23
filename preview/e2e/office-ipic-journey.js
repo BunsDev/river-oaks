@@ -83,7 +83,8 @@ async (owner, resident) => {
   check(refused.error === 'office_permission_required', `a direct entry command is refused: ${JSON.stringify(refused)}`);
   await goToLobby(owner);
   if (!await owner.locator('.visit-tools').evaluate(dock => dock.open)) await owner.locator('.visit-tools-toggle').click();
-  // Entry is by Jevica's invitation only (2b5062b6): A picks B in the guest list and invites.
+  // Entry is by Jevica's invitation only (2b5062b6): A picks B in the Office pane's guest list and invites.
+  await owner.locator('#play-tab-office').click();
   const invite = owner.locator('#office-management button').filter({ hasText: 'Invite resident' });
   await invite.waitFor({ timeout: 20000 });
   await owner.locator('#office-management select').selectOption({ label: 'bob' });

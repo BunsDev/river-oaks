@@ -950,6 +950,7 @@ Run under one browser-lock hold, 08:36–08:46Z, load 8–14.
 | `studio-pilot-soak` (1 + 10) | passed: every post-warm-up office cycle 688 calls, 53,076 triangles, 35 geometries, 27 materials, 159 listeners, 0 live workers, 0 pending timeouts/loads; heap 15.4–16.0 MiB; Metal 70–83 MiB | same |
 | `studio-pilot-a11y` | passed, 25 checks, including #579's focus checks; 33 Tab stops show focus; 320/390 px no overflow | same |
 | `studio-template-journey` office / house / boutique / café | passed, 13 checks each | `studio-417-1cb79549-template-{office,house,boutique,cafe}.json` |
+| `node desktop/studio-e2e.js` (development Electron, after the #372 `desktop/main.js` change) | passed, 11/11, 12:40Z, same app code | `studio-417-1cb79549-desktop.json` |
 
 ### #359 non-regression (same main)
 
@@ -958,14 +959,18 @@ Run under one browser-lock hold, 08:36–08:46Z, load 8–14.
 | `office-visit` | passed, 12 checks | `studio-417-1cb79549-office359.json` |
 | `office-desk` | passed, 18 checks | same |
 | `office-computer-embed` | passed, 61 checks | same |
-| `office-ipic-journey-runner.mjs` | original harness: failed (stale, below); ported harness: run pending in the browser queue | `studio-417-1cb79549-ipic.json` when it runs |
+| `office-ipic-journey-runner.mjs` | passed, 30 checks, 109 s (ported harness, below): refusal, invitation, arrival, private My tasks, one chair for two clients, floors/library/terrace, late IPIC join within 500 ms, both back in town | `studio-417-1cb79549-ipic.json` |
 
 The first IPIC run failed at its first step: it waits for "Request a visit"
 (`#office-request-send`). On 2026-10-18, `2b5062b6` ("restrict offices to Jevica") replaced visit requests with
 Jevica's invitation and updated `office-visit.js`, but not this journey. The journey has been stale since then;
 the product behaved as designed (the resident's dialog says "An invitation from Jevica is required to enter."). This
 branch ports the journey the same way `office-visit.js` was ported: A picks bob in the Offices panel's guest list
-and clicks Invite resident. No app code changes.
+and clicks Invite resident. A second run failed because that control sits in the play dock's Office pane, which
+was not selected (the same tab change `ec9f99ac` handled in the other office journeys); the journey now selects
+`#play-tab-office` first. The third run passed. The IPIC journey runs only locally (it is not in CI), which is why
+the drift went unnoticed: `2026-10-18-play-rail-menu.md` already recorded it failing on `153471bc`. No app code
+changes.
 
 ### Gates
 
