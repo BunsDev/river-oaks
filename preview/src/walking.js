@@ -122,6 +122,24 @@ export function createWalkingEnvironment(world, placedObjects = [], levelId = nu
     if(propAt(x,altitude,z,flightRadius) || placedObjects.some(object=>object.contains(x,altitude,z,flightRadius)))return false;
     return !roofs.some(roof=>altitude<=roof.top && x>roof.minX && x<roof.maxX && z>roof.minZ && z<roof.maxZ && overlaps(x,z,roof.ring,flightRadius));
   };
+  // Outward horizontal contact normal for flight sliding on mapped roof walls.
+  // Use the current position for the tangent: a normal at the attempted point
+  // can turn the slide inward around the rounded clearance at a convex corner.
+  // The controller still validates the whole proposed slide with canFly.
+  const flightWallNormal=(x,altitude,z,fromX=x,fromZ=z)=>{
+    let nearest=null,best=Infinity;
+    for(const roof of roofs) {
+      if(altitude>roof.top||x<roof.minX||x>roof.maxX||z<roof.minZ||z>roof.maxZ||!overlaps(x,z,roof.ring,flightRadius))continue;
+      const inside=overlaps(fromX,fromZ,roof.ring,0);
+      for(let i=0;i<roof.ring.length;i++) {
+        const a=roof.ring[i],b=roof.ring[(i+1)%roof.ring.length],dx=b[0]-a[0],dz=b[1]-a[1];
+        const t=clamp(((fromX-a[0])*dx+(fromZ-a[1])*dz)/(dx*dx+dz*dz||1),0,1);
+        const nx=fromX-a[0]-dx*t,nz=fromZ-a[1]-dz*t,distance=Math.hypot(nx,nz);
+        if(distance>1e-8&&distance<best){best=distance;const sign=inside?-1:1;nearest=[sign*nx/distance,sign*nz/distance];}
+      }
+    }
+    return nearest;
+  };
   const hasSightLine=(from,to)=>{
     const room=roomFor(from[0],-from[1],0),targetRoom=roomFor(to[0],-to[1],0);
     if((room?.storeId??null)!==(targetRoom?.storeId??null))return false;
@@ -133,7 +151,7 @@ export function createWalkingEnvironment(world, placedObjects = [], levelId = nu
     }
     return true;
   };
-  return { levelId, groundAt, isFree, isAreaFree, canFly, flightCeiling, hasSightLine, roomAt: (x, z) => roomFor(x, z, 0), rooms, bounds: [west, -north, east, -south], spawn: world.walkSpawn ?? [(west + east) / 2, (south + north) / 2, 0] };
+  return { levelId, groundAt, isFree, isAreaFree, canFly, flightWallNormal, flightCeiling, hasSightLine, roomAt: (x, z) => roomFor(x, z, 0), rooms, bounds: [west, -north, east, -south], spawn: world.walkSpawn ?? [(west + east) / 2, (south + north) / 2, 0] };
 }
 
 export function createWalkingState(environment, position = environment.spawn, yaw = 0) {
