@@ -288,7 +288,7 @@ jobs:
     strategy:
       matrix:
         # Pull requests check the newest supported Python; main and the weekly run check both.
-        python: ${{ github.event_name == 'pull_request' && fromJSON('["3.13"]') || fromJSON('["3.11", "3.13"]') }}
+        python: ["3.11", "3.13"]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

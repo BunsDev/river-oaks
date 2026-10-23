@@ -18,7 +18,7 @@ Task: `faster-pr-checks`. Owner: `claude:world-expansion-20261022-1950`. Worktre
 
 1. `concurrency` with `cancel-in-progress` for pull request runs in Verify and Desktop. `main`, tags, the schedule and manual runs are never cancelled.
 2. `preview unit` job (audit, tooling, unit tests) beside `preview checks` (server, desktop, build, security, reflections, screening). The `preview` aggregate needs both.
-3. Python 3.13 only on pull requests; 3.11 and 3.13 elsewhere.
+3. Python matrix unchanged. Running 3.13 only on PRs was tried and reverted: the `main` ruleset requires `verify (3.11)`, so the merge guard refused #607 as blocked.
 4. Desktop `scope` job: the full matrix and installers run only for PRs that change `desktop/` or the workflow. Other PRs run the Linux leg.
 5. `docs/testing.md` updated.
 
@@ -32,6 +32,8 @@ Not changed: the CodeQL languages are a repository security setting, recommended
   - `preview checks`: 7.1 minutes, down from 16.5.
   - The long pole was runner queueing: the campus shard started at 10.6 minutes and ran 8.9.
 - `preview checks` failed once in the known-intermittent email-access browser test: "Your invitations" never became visible. The test starts its own fixture server and doesn't depend on the unit job. The failed jobs were rerun.
+
+- macOS desktop e2e flaked twice on #607 with two different failures (render loop at `desktop/e2e.js:241`, then the Graphics tab click at `preview/e2e/hud-navigation.js:8`). The job passed on rerun and on `main`. With the scope job, PRs that don't touch desktop skip macOS.
 
 ## Next
 

@@ -113,7 +113,7 @@ continuous collision, target-GPU performance or native Unreal parity.
 `.github/workflows/verify.yml` runs on every PR and push to `main`, on Mondays at 08:23 UTC, and on manual dispatch. A newer push to the same PR, including the lander's update from `main`, cancels the older run in both workflows; runs on `main`, tags, the schedule and manual dispatch are never cancelled.
 
 - **`dependency-review`:** PRs only.
-- **`verify`:** Python 3.13 on PRs, and a 3.11 and 3.13 matrix on `main`, the schedule and manual runs: locked `uv sync`, Ruff, pytest, pip-audit of the locked runtime, the secret scan, and the offline demo (whose exit 2 is expected).
+- **`verify`:** Python 3.11 and 3.13. Both are required by the `main` ruleset, so pull requests run both: locked `uv sync`, Ruff, pytest, pip-audit of the locked runtime, the secret scan, and the offline demo (whose exit 2 is expected).
 - **`preview unit`:** pnpm audit, tooling and the preview unit tests.
 - **`preview checks`:** server (with a Redis service) and desktop tests, the build, the security browser e2e, WebGL reflections and the IPIC screening journey. It runs beside `preview unit`, so neither waits for the other.
 - **`preview shared (required | development | worlds-and-creator)`:** the shared-town journeys, in three parallel shards.
