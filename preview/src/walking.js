@@ -151,7 +151,8 @@ export function createWalkingEnvironment(world, placedObjects = [], levelId = nu
     }
     return true;
   };
-  return { levelId, groundAt, isFree, isAreaFree, canFly, flightWallNormal, flightCeiling, hasSightLine, roomAt: (x, z) => roomFor(x, z, 0), rooms, bounds: [west, -north, east, -south], spawn: world.walkSpawn ?? [(west + east) / 2, (south + north) / 2, 0] };
+  // Durable creations stay on geography retained by the blockout rollback.
+  return { buildBounds: world.eastGardenCommons?.districtBounds, levelId, groundAt, isFree, isAreaFree, canFly, flightWallNormal, flightCeiling, hasSightLine, roomAt: (x, z) => roomFor(x, z, 0), rooms, bounds: [west, -north, east, -south], spawn: world.walkSpawn ?? [(west + east) / 2, (south + north) / 2, 0] };
 }
 
 export function createWalkingState(environment, position = environment.spawn, yaw = 0) {
