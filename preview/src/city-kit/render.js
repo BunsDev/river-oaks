@@ -18,7 +18,7 @@ const canvas2d = (width, height) => headless ? null : Object.assign(document.cre
 // Render-only slots that no recipe names.
 const RENDER_MATERIALS = {
   // A dim, warm shop interior seen through storefront glass.
-  'shop-interior': { color: '#2a2018', roughness: .95, emissive: '#c07a40', emissiveIntensity: .38 },
+  'shop-interior': { color: '#15100c', roughness: .95, emissive: '#8a5228', emissiveIntensity: .16 },
   // Market stall produce; peaches and lemons reuse the apricot canvas and brass.
   'produce-red': { color: '#a8382c', roughness: .55 },
   'produce-green': { color: '#5d8a3a', roughness: .7 },
