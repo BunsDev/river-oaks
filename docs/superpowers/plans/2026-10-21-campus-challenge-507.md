@@ -146,13 +146,15 @@ Recorded owner thread 01a15b91-4fd2-7e20-9b2d-8bbc7cf341ef hands off task campus
 
 ## Decisions for Val
 Visual review remains a human decision. Record reviewer, date, candidate revision and any rejected pose here; do not treat automated passes as sign-off.
-- [ ] Inspect camera 11 east: exactly 6/7/6 occupied floor bands, center tower taller, parapets/headhouses/foliage within intended silhouette.
-- [ ] Inspect camera 12 west: retained IPIC roof/wall and surrounding building/road identities; account for foreground occlusion.
-- [ ] Inspect cameras 02 and 14 under B12/B23: bridge anchors meet facades, usable ground plane, no dangling supports or invented east road. Use authoritative walking tests for movement proof.
-- [ ] Inspect both aimed actual-office terrace captures: skyline/parapet/foliage legibility from the admitted walking position; far towers naturally occlude and this pose cannot count all storeys.
-- [ ] Compare matched plan/aerial/street/outlook context against #506 and the recorded source revision; dimensional claims require contract tests.
-- [ ] Accept or request further investigation of the finite resource receipt: geometries 560→570→570→570; textures 181→191→191→191; initial +10/+10 is unattributed, not zero-retention proof.
+- [x] Inspect camera 11 east: exactly 6/7/6 occupied floor bands, center tower taller, parapets/headhouses/foliage within intended silhouette.
+- [x] Inspect camera 12 west: retained IPIC roof/wall and surrounding building/road identities; account for foreground occlusion.
+- [x] Inspect cameras 02 and 14 under B12/B23: bridge anchors meet facades, usable ground plane, no dangling supports or invented east road. Use authoritative walking tests for movement proof.
+- [x] Inspect both aimed actual-office terrace captures: skyline/parapet/foliage legibility from the admitted walking position; far towers naturally occlude and this pose cannot count all storeys.
+- [x] Compare matched plan/aerial/street/outlook context against #506 and the recorded source revision; dimensional claims require contract tests.
+- [x] Accept or request further investigation of the finite resource receipt: geometries 560→570→570→570; textures 181→191→191→191; initial +10/+10 is unattributed, not zero-retention proof.
 - [ ] Accept the entry-evidence boundary: E1/E2/E3 are authored seams, not surveyed historical doors. No production/device/accessibility sign-off is implied.
+
+**Recorded decision.** Reviewer: Val (repository owner). Date: 2026-10-23. Candidate: packet `docs/design/garden-campus/challenge-2026-10-22/` at `24f41d4b`/`91da966b`. Val answered "Accepted" in a Claude Code session (claude:river-oaks-0d) when asked whether the packet views 11/12/02/14, the aerial, the aimed office outlook and the resource receipt (including the unattributed +10 first-reload step) were reviewed. No pose was rejected. The entry-evidence box was not put to Val and stays open. The acceptance covers the recorded captures only: the update-main merge `e4ac6240` brings in main's #580/#581 campus runtime changes, which these images predate.
 
 ## Acceptance evidence map for publication
 These rows map all six #507 acceptance boxes without declaring unproven human or production acceptance. #523 merged as `5bb321ba07d1034fee214d089ac6146e5f55d514`; that merge is verified via GitHub. The user's production statement is context, not a fresh deployment inspection by this audit.
@@ -233,3 +235,9 @@ Claimed the exact test file after register overlap inspection found no active ma
 Hosted Verify run 39875268188 is still live, with campus and campus-traversal passed. The gh GraphQL quota was exhausted; use connector workflow REST tools rather than retrying login or GraphQL. Preserve each live handle and any terminal failure; no repeated full retry was launched before this diagnosed test correction.
 
 Corrected isolated connection-rotation matrix completed: 6 passed, 0 failed, 0 skipped, 36.8 seconds; `followup-20261022/rotation-corrected.log`. The helper terminated its owned Redis in finally. `git diff --check` passes. Publish the three-line test synchronization and ledger evidence, then verify the new exact head.
+
+## Val go-ahead and update from main — 2026-10-23
+- Codex's lease expired 02:00Z. Val gave this session (claude:river-oaks-0d:4d6ac6) the go-ahead to update #575; register owner updated with that reason. Codex's audit credit and history are preserved.
+- Archived the generated `data/reports/{experience,shared-experience}.json` from the 91da966b full run into `.runtime/campus-challenge/update-main-20261023/` and restored the tracked files.
+- Signed merge `e4ac6240` of origin/main `1cb79549`, clean; its tree equals the earlier local probe `d1a5b48b`, where focused campus suites gave 58 tests, 56 passed, 2 Redis skips, 0 failed.
+- 91da966b results (core 11/11, full 18/18 with isolated Redis, hosted Verify 39876706972 attempt 2 all green) apply to that head only. Next: exact-head core, full and hosted at the pushed head, then one evidence comment.
