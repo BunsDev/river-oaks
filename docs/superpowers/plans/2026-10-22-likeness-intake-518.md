@@ -66,4 +66,12 @@ The user subsequently authorized frequent commit, push and merge to main. Full v
 
 Results: tooling 201/201, preview 3755 passed with one existing skip, server with isolated Redis 1026/1026 and zero skips, desktop 115 passed with three Windows PowerShell skips, Python 149 passed (66 warnings); dependency audit, build, lint, format, demo, expected demo refusal, secret scans, security browser, reflections, all 16 experience journeys, shared browser suite and IPIC screening passed. Preview glazing and Windows-only skips are excluded from acceptance. Local browser evidence does not establish physical-device, production, real-user likeness, legal or moderation acceptance. Original timing and queue failures remain preserved.
 
-All 12 hosted checks passed on b047a7ad. Next: update the existing evidence comments, ready and land PR590 then PR591 then PR592 targeting main through `pnpm run land` and the installed guard; record exact reviewed heads and merge evidence. No merge has yet been claimed.
+All 12 hosted checks passed on b047a7ad and on the subsequent ledger-only head 121bb6ea. Guarded delivery then proceeded serially as recorded below.
+
+## Guarded delivery checkpoint
+
+PR [#590](https://github.com/BunsDev/river-oaks/pull/590) merged through the guard as `70e1365f65bc7879052fe58006081b5a2bbf882a`, reviewed head `57ac5ff7833a8cf48afea179e8e1234dfb6c203a`, tree `cd788437c8ffca9252217aebe3429c9d1c9001e4`; GitHub verified the merge signature. Its existing evidence comment records delivery.
+
+PR [#591](https://github.com/BunsDev/river-oaks/pull/591) merged through the guard at 2026-10-23T10:19:24Z as `f21c9c8698e4697b3e9e0579e106f7387fe57354`, reviewed head `d41daf42598eda6bc5de6cdcbd6ceaed7b9004c0`, tree `7a33878099552703319b9232bc42178b843ed101`; GitHub verified the merge signature. Landing session 89333 exited successfully after updating from main and waiting for hosted verification.
+
+Remaining delivery: retarget PR592 to main, push this evidence update, land through the same guard, and record final exact-head checks and merge proof in its existing evidence comment and the live task register. Implementation and local verification are complete; the final merge remains pending. No deployment, real likeness data or provider calls occurred.
