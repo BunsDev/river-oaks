@@ -20,7 +20,7 @@ Protect reference images, derived meshes/textures, consent receipts, account own
 
 ## Consent, age, impersonation and rights
 
-Proposed pilot policy, pending Val and qualified privacy/legal review: adults 18+ only, self-likeness only, no third-party or celebrity likeness, no deceptive impersonation and no minors even with guardian permission. Do not infer age or identity from a face model. Define a proportionate age/authority verification method before collecting anything; do not add identity-document collection to this prototype.
+Adopted pilot policy (approved by Val, 2026-10-23); qualified privacy/legal review remains required evidence before any pilot: adults 18+ only, self-likeness only, no third-party or celebrity likeness, no deceptive impersonation and no minors even with guardian permission. Do not infer age or identity from a face model. Define a proportionate age/authority verification method before collecting anything; do not add identity-document collection to this prototype.
 
 Consent must be affirmative, separate from account terms, versioned and revocable, with separate choices for processing references and displaying an approved derivative. Explain purpose, processing location, reviewer/provider access, retention periods, deletion limits and how to revoke. No training, advertising, face identification or authentication use. Refusal leaves ordinary Studio use available. Changed purpose or provider requires renewed consent. Capture the policy version, scope and timestamp privately; do not put legal names or consent records in avatar definitions.
 
@@ -30,7 +30,7 @@ The submitter must hold rights to the reference, depiction, clothing, textures a
 
 The fixture prototype uses bounded process-private memory, no disk/object-store uploads, no Redis, no backups and no telemetry carrying content. Synthetic buffers are copied on admission, released on rejection/deletion/revocation and expire after one hour. A bounded owner-private audit (32 receipts per owner, 128 owners) records only action, actor (owner, reviewer or system), time and record ID: no bytes, digests, signatures or consent details. It keeps deletion, revocation, rejection and expiry receipts after the record is gone. Process restart loses all prototype records, receipts and keys. This is deliberately unsuitable for real-user durability or deletion guarantees; releasing a JavaScript buffer is not certified memory erasure.
 
-Proposed real pilot targets require explicit approval and implementation: encrypted private object storage with least-privilege service identities, regional placement, no public bucket/CDN, authenticated owner access and separately audited reviewer access. Originals expire within 24 hours of processing and rejected/pending derivatives within seven days. Approved derivatives remain only while consent is active. Revocation immediately denies new reads/publication, cancels jobs, invalidates signatures/allowlist entries and switches active selections to an authored fallback; online copies purge within 24 hours and backup copies within 30 days. Tombstones must survive restore to prevent resurrection. Keep minimal non-content deletion/audit receipts for 90 days, then expire them unless a documented legal obligation requires otherwise. These are proposed service targets, not implemented claims or legal retention advice.
+Adopted real pilot targets (approved by Val, 2026-10-23) still require implementation and proof: encrypted private object storage with least-privilege service identities, regional placement, no public bucket/CDN, authenticated owner access and separately audited reviewer access. Originals expire within 24 hours of processing and rejected/pending derivatives within seven days. Approved derivatives remain only while consent is active. Revocation immediately denies new reads/publication, cancels jobs, invalidates signatures/allowlist entries and switches active selections to an authored fallback; online copies purge within 24 hours and backup copies within 30 days. Tombstones must survive restore to prevent resurrection. Keep minimal non-content deletion/audit receipts for 90 days, then expire them unless a documented legal obligation requires otherwise. These are adopted service targets, not implemented claims or legal retention advice.
 
 A future deletion inventory must cover originals, derivatives, thumbnails, queues, temporary files, provider copies, object versions, CDN caches, analytics, logs and backups. Verify deletion with receipts, restore tests and provider confirmation. Explain that screenshots or copies already made by other players cannot be remotely recalled. Never promise retroactive secrecy after publication.
 
@@ -58,7 +58,9 @@ The proposed bounds are 64 KiB per GLB, 64 live records per process and four per
 
 ## Decisions for Val
 
-| Decision | Proposed position | Evidence needed to unblock a real-user pilot |
+Val approved every position below as adopted policy on 2026-10-23. Approval settles the policy; it is not evidence. Each row's evidence column remains required before any pilot.
+
+| Decision | Adopted position (approved 2026-10-23) | Evidence needed to unblock a real-user pilot |
 | --- | --- | --- |
 | Scope and launch authority | Adults, self-likeness, limited invited cohort; optional feature | Explicit written go decision naming cohort, regions, accountable privacy/security/product owners and separate deployment authorization. |
 | Consent and legal basis | Separate processing/display consent; no training or recognition | Approved jurisdiction-specific privacy notice, rights workflow, age/authority checks and withdrawal experience reviewed by qualified counsel. |

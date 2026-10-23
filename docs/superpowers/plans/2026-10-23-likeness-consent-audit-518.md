@@ -35,4 +35,6 @@ Owned files: `server/character-likeness-quarantine.js`, `server/tests/character-
 - Real-user pilot remains **NO-GO**; the Decisions for Val table is unchanged. The consent attestation is a test shape, not age, identity or legal verification.
 - The audit is process-local and in memory. It is not a durable 90-day receipt store.
 - 2026-10-23: the user authorized push and a PR (no merge), and approved the rollout gate as NO-GO. The ruling is recorded in the decision package. Commits are unsigned because no signing key is configured in this checkout.
-- Next: hosted checks on the PR, review, then a guarded merge if separately authorized.
+- PR #615 head 031d7ac3: all hosted checks passed on run 40009721006 attempt 2. The first Commons failure (`alice return: stalled`, the same signature as #592) is preserved in `hosted-615-commons-first.log`.
+- 2026-10-23: Val approved every Decisions row as adopted policy, now recorded in the decision package. The evidence columns remain required and the pilot stays NO-GO. Val authorized a guarded merge of #615.
+- Next: `pnpm run land 615`, then record the merge evidence in the register.
