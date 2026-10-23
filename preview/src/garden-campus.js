@@ -36,9 +36,12 @@ const ROOM = { floor: 0.006, path: 0.012 };
 // dusk (atmosphere.js `twilight`) the glow comes up to full, so lit floors read through the
 // glazing without adding a light to the scene.
 export const CAMPUS_GLOW = Object.freeze({ day: 0.8, dusk: 2.4 });
-// TypeSafe pink (office-penthouse-furnishings.js TYPESAFE_PINK), an accent only: a thin inlay
-// under each entrance canopy's bronze edge. Not imported, so the office visit stays its own chunk.
+// TypeSafe pink (office-penthouse-furnishings.js TYPESAFE_PINK): a thin inlay under each entrance
+// canopy's bronze edge. Not imported, so the office visit stays its own chunk.
 const ACCENT = '#f486a1';
+// The glazing is a whisper of TypeSafe pink, lifted almost to white and clear to see into: the
+// towers read pink against the district's stone and bronze, and the floors behind show through.
+const GLASS_TINT = '#fbe4eb', GUARD_TINT = '#fdf1f5';
 
 /** The campus shells as a Three.js group with dispose(); null without the campus. */
 export function buildGardenCampus(world) {
@@ -53,8 +56,10 @@ export function buildGardenCampus(world) {
     core: new THREE.MeshStandardMaterial({ name: 'campus:core', color: '#b9ab94', roughness: 0.7 }),
     bronze: new THREE.MeshStandardMaterial({ name: 'campus:bronze', color: '#8a6a45', metalness: 0.75, roughness: 0.34 }),
     timber: new THREE.MeshStandardMaterial({ name: 'campus:timber', color: '#8c7660', roughness: 0.78 }),
-    glass: new THREE.MeshPhysicalMaterial({ name: 'campus:glass', color: '#a9c6c0', metalness: 0.1, roughness: 0.06, transparent: true, opacity: 0.34, depthWrite: false, side: THREE.DoubleSide }),
-    guard: new THREE.MeshPhysicalMaterial({ name: 'campus:guard-glass', color: '#cfe0dc', roughness: 0.05, transparent: true, opacity: 0.22, depthWrite: false, side: THREE.DoubleSide }),
+    // Emerald-cut panes (applyEmeraldCut below), with a clear lacquer and a faint iridescence.
+    glass: applyEmeraldCut(new THREE.MeshPhysicalMaterial({ name: 'campus:glass', color: GLASS_TINT, metalness: 0.1, roughness: 0.04, ior: 1.52, specularIntensity: 1,
+      clearcoat: 1, clearcoatRoughness: 0.03, iridescence: 0.3, iridescenceIOR: 1.35, transparent: true, opacity: 0.28, depthWrite: false, side: THREE.DoubleSide })),
+    guard: new THREE.MeshPhysicalMaterial({ name: 'campus:guard-glass', color: GUARD_TINT, roughness: 0.05, transparent: true, opacity: 0.16, depthWrite: false, side: THREE.DoubleSide }),
     // The planted platform and the paths share the district's own grass and paver programs.
     lawn: physicalSurface('grass', { tileSize: 14, variation: 0.6, color: '#a9bb8c', roughness: 1 }),
     paving: paverSurface({ polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }),
@@ -73,7 +78,8 @@ export function buildGardenCampus(world) {
   materials.partition.userData.nearCameraSolid = materials.door.userData.nearCameraSolid = true;
   const batches = new Map(Object.keys(materials).filter(key => !['lawn', 'paving'].includes(key)).map(key => [key, []]));
   // A box spanning [u0, u1] x [v0, v1] x [z0, z1] in campus metres.
-  const box = (finish, u0, v0, u1, v1, za, zb) => { if (u1 - u0 > 1e-6 && v1 - v0 > 1e-6 && zb - za > 1e-6) batches.get(finish).push([u0, v0, u1, v1, za, zb]); };
+  // Glass also carries its facade's mullion origin, so each emerald pane fills exactly one bay.
+  const box = (finish, u0, v0, u1, v1, za, zb, origin) => { if (u1 - u0 > 1e-6 && v1 - v0 > 1e-6 && zb - za > 1e-6) batches.get(finish).push([u0, v0, u1, v1, za, zb, origin]); };
 
   const levels = campusLevels(CAMPUS), walls = greenWalls(CAMPUS), slab = CAMPUS.bridges[0].slab;
   // Openings in each facade at each floor, from the contract: skywalk portals, terrace doors and lobby entrances.
@@ -101,7 +107,7 @@ export function buildGardenCampus(world) {
       for (const wall of walls.filter(item => item.floor === floor.id)) cuts.push({ side: wall.side, span: [...wall.span], solid: true });
       const facade = (side, lo, hi, fixed, horizontal, edge) => {
         const sideCuts = cuts.filter(cut => cut.side === side), out = Math.sign(edge - fixed);
-        const at = (a, b, c, d, za, zb) => horizontal ? box('glass', a, c, b, d, za, zb) : box('glass', c, a, d, b, za, zb);
+        const at = (a, b, c, d, za, zb) => horizontal ? box('glass', a, c, b, d, za, zb, lo) : box('glass', c, a, d, b, za, zb, lo);
         // Full-height glass where uncut; above an opening, a transom from its head to the slab.
         for (const [a, b] of runs(lo, hi, sideCuts.map(cut => cut.span))) at(a, b, fixed - GLASS_THICKNESS / 2, fixed + GLASS_THICKNESS / 2, floor.z0, glassTop);
         for (const cut of sideCuts.filter(item => !item.solid)) at(cut.span[0], cut.span[1], fixed - GLASS_THICKNESS / 2, fixed + GLASS_THICKNESS / 2, floor.z0 + cut.height, glassTop);
@@ -243,6 +249,11 @@ export function buildGardenCampus(world) {
   }
 
   const unit = new THREE.BoxGeometry(1, 1, 1), dummy = new THREE.Object3D(), meshes = [];
+  // One pane per bay between mullions, so the emerald cut is drawn once per bay at its true size.
+  batches.set('glass', batches.get('glass').flatMap(([u0, v0, u1, v1, za, zb, origin]) => {
+    const alongU = u1 - u0 >= v1 - v0, edges = emeraldBays(alongU ? u0 : v0, alongU ? u1 : v1, origin);
+    return edges.slice(1).map((end, i) => alongU ? [edges[i], v0, end, v1, za, zb] : [u0, edges[i], u1, end, za, zb]);
+  }));
   for (const [finish, parts] of batches) {
     if (!parts.length) continue;
     const mesh = new THREE.InstancedMesh(unit, materials[finish], parts.length);mesh.name = `campus:${finish}`;
@@ -289,4 +300,128 @@ function pathGeometry(paths, z) {
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(position, 3));geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
   geometry.setIndex(index);geometry.computeVertexNormals();
   return geometry;
+}
+
+// Emerald-cut glazing. Each bay between mullions is one pane cut like an emerald: an octagon (a
+// rectangle with chamfered corners) held in a slim bronze collet that also fills the cut corners,
+// with a polished champagne lip, then four graduated steps (each narrower and flatter than the
+// last) to a calm table. The cut is drawn per pixel from the pane's own size in metres (its
+// instance scale), so it stays exact at any bay size and distance, at no extra draw call,
+// triangle or texture. Its light is warm and quiet: facets take a whisper of champagne or blush
+// by the way they face, their edges catch a soft Fresnel glow, and the table holds a low warmth.
+export const EMERALD = Object.freeze({ chamfer: 0.16, maxChamfer: 0.24, bezel: 0.035, lip: 0.005,
+  // Step boundaries by depth from the outline (metres) and each step's tilt (radians).
+  steps: Object.freeze([0.10, 0.15, 0.19, 0.22]), tilts: Object.freeze([0.58, 0.42, 0.27, 0.13]), edgeLine: 0.0045,
+  bronze: '#8a6a45', bronzeMetalness: 0.75, bronzeRoughness: 0.32,
+  champagne: '#f3e4c6', blush: '#f7d3dc', fire: 0.14, glow: 0.16, warmth: 0.07 });
+const emeraldChamfer = (w, h) => Math.min(EMERALD.maxChamfer, EMERALD.chamfer * Math.min(w, h));
+
+/** The emerald outline at an inset: eight corners, counter-clockwise, in a w x h pane centred at 0. */
+export function emeraldOutline(w, h, inset = 0) {
+  const c = emeraldChamfer(w, h), hw = w / 2 - inset, hh = h / 2 - inset, k = Math.max(0.004, c - inset * (Math.SQRT2 - 1));
+  return [[-hw + k, -hh], [hw - k, -hh], [hw, -hh + k], [hw, hh - k], [hw - k, hh], [-hw + k, hh], [-hw, hh - k], [-hw, -hh + k]];
+}
+
+/** What the shader draws at a point (metres from the pane centre): bronze, the lip, a step facet, or the table. */
+export function emeraldAt([x, y], w, h) {
+  const c = emeraldChamfer(w, h), qx = Math.abs(x), qy = Math.abs(y);
+  const depth = -Math.max(qx - w / 2, qy - h / 2, (qx + qy - (w / 2 + h / 2 - c)) / Math.SQRT2);
+  if (depth < EMERALD.bezel) return { part: 'bronze', depth };
+  if (depth < EMERALD.bezel + EMERALD.lip) return { part: 'lip', depth };
+  const step = EMERALD.steps.findIndex(limit => depth < limit);
+  return step < 0 ? { part: 'table', depth } : { part: 'facet', step, depth };
+}
+
+/** Bay edges along [a, b]: the facade's mullion module from origin, or equal bays near 1.5 m. */
+export function emeraldBays(a, b, origin, step = MULLION_STEP) {
+  if (origin === undefined) {
+    const n = Math.max(1, Math.round((b - a) / step));
+    return Array.from({ length: n + 1 }, (_, i) => a + (b - a) * i / n);
+  }
+  const edges = [a];
+  for (let p = origin + step; p < b - 0.2; p += step) if (p > a + 0.2) edges.push(p);
+  return [...edges, b];
+}
+
+/** Teach an instanced unit-box glass material the emerald cut. Returns the material. */
+export function applyEmeraldCut(material) {
+  const colours = { emeraldBronze: EMERALD.bronze, emeraldChampagne: EMERALD.champagne, emeraldBlush: EMERALD.blush };
+  const f = value => value.toFixed(4), steps = EMERALD.steps, tilts = EMERALD.tilts;
+  // Nested ternaries over the step list: the ring index from 0 at the girdle, and each ring's tilt.
+  const byStep = values => steps.map((limit, i) => `paneDepth < ${f(limit)} ? ${values(i)} : `).join('') + '0.0';
+  material.customProgramCacheKey = () => 'campus-emerald-cut-v3';
+  material.onBeforeCompile = shader => {
+    for (const [name, value] of Object.entries(colours)) shader.uniforms[name] = { value: new THREE.Color(value) };
+    const anchors = ['#include <common>', '#include <begin_vertex>'];
+    if (!anchors.every(anchor => shader.vertexShader.includes(anchor))) throw new Error('Emerald cut: vertex anchors missing');
+    shader.vertexShader = shader.vertexShader.replace('#include <common>', `#include <common>
+varying vec2 vPane; varying vec2 vPaneSize; varying vec3 vPaneAlong; varying vec3 vPaneUp;`).replace('#include <begin_vertex>', `#include <begin_vertex>
+#ifdef USE_INSTANCING
+  vec3 paneScale = vec3(length(instanceMatrix[0].xyz), length(instanceMatrix[1].xyz), length(instanceMatrix[2].xyz));
+#else
+  vec3 paneScale = vec3(1.0);
+#endif
+  bool paneAlongX = paneScale.x >= paneScale.z;
+  vPane = vec2(paneAlongX ? position.x * paneScale.x : position.z * paneScale.z, position.y * paneScale.y);
+  vPaneSize = vec2(paneAlongX ? paneScale.x : paneScale.z, paneScale.y);
+  mat4 paneToView = modelViewMatrix;
+#ifdef USE_INSTANCING
+  paneToView = modelViewMatrix * instanceMatrix;
+#endif
+  vPaneAlong = normalize((paneToView * vec4(paneAlongX ? vec3(1.0, 0.0, 0.0) : vec3(0.0, 0.0, 1.0), 0.0)).xyz);
+  vPaneUp = normalize((paneToView * vec4(0.0, 1.0, 0.0, 0.0)).xyz);`);
+    const fragmentAnchors = ['#include <common>', '#include <color_fragment>', '#include <metalnessmap_fragment>', '#include <roughnessmap_fragment>', '#include <normal_fragment_maps>', '#include <emissivemap_fragment>'];
+    if (!fragmentAnchors.every(anchor => shader.fragmentShader.includes(anchor))) throw new Error('Emerald cut: fragment anchors missing');
+    const bezel = f(EMERALD.bezel), lipEnd = f(EMERALD.bezel + EMERALD.lip), edge = f(EMERALD.edgeLine);
+    shader.fragmentShader = shader.fragmentShader.replace('#include <common>', `#include <common>
+varying vec2 vPane; varying vec2 vPaneSize; varying vec3 vPaneAlong; varying vec3 vPaneUp;
+uniform vec3 emeraldBronze; uniform vec3 emeraldChampagne; uniform vec3 emeraldBlush;
+// Depth inside the emerald outline (negative outside it) and the outline's outward direction there.
+float emeraldDepth(vec2 p, vec2 size, out vec2 outward) {
+  vec2 q = abs(p), halfSize = 0.5 * size;
+  float c = min(${f(EMERALD.maxChamfer)}, ${f(EMERALD.chamfer)} * min(size.x, size.y));
+  float dx = q.x - halfSize.x, dy = q.y - halfSize.y, dc = (q.x + q.y - (halfSize.x + halfSize.y - c)) * 0.70710678;
+  vec2 s = vec2(p.x < 0.0 ? -1.0 : 1.0, p.y < 0.0 ? -1.0 : 1.0);
+  float d = dx; outward = vec2(s.x, 0.0);
+  if (dy > d) { d = dy; outward = vec2(0.0, s.y); }
+  if (dc > d) { d = dc; outward = s * 0.70710678; }
+  return -d;
+}`).replace('#include <color_fragment>', `#include <color_fragment>
+  vec2 paneOutward; float paneDepth = emeraldDepth(vPane, vPaneSize, paneOutward);
+  // Edges are sized by their width on screen, so they stay crisp near and never shimmer far away.
+  float paneAA = max(fwidth(paneDepth), 0.0005);
+  // The collet: bronze to the bezel line, then a fine polished champagne lip.
+  float paneMetal = 1.0 - smoothstep(${bezel} - paneAA, ${bezel} + paneAA, paneDepth);
+  float paneLip = smoothstep(${bezel} - paneAA, ${bezel} + paneAA, paneDepth) * (1.0 - smoothstep(${lipEnd} - paneAA, ${lipEnd} + paneAA, paneDepth));
+  float paneRing = ${byStep(i => f(steps.length - i))};
+  float paneFacet = step(0.5, paneRing);
+  // Each facet edge is a hairline of light, fading out once it would be thinner than a pixel.
+  float paneLine = 0.0;
+${steps.map(limit => `  paneLine = max(paneLine, 1.0 - smoothstep(${edge} * 0.5, ${edge} + paneAA, abs(paneDepth - ${f(limit)})));`).join('\n')}
+  paneLine *= 1.0 - smoothstep(${edge}, ${edge} * 4.0, paneAA);
+  // Fire, kept warm: facets facing up and sideways lean champagne, those facing down lean blush.
+  vec3 paneFire = mix(emeraldBlush, emeraldChampagne, 0.5 + 0.5 * clamp(paneOutward.y + 0.35 * abs(paneOutward.x), -1.0, 1.0));
+  diffuseColor.rgb = mix(diffuseColor.rgb, paneFire, ${f(EMERALD.fire)} * paneFacet * paneRing / ${f(steps.length)});
+  // The table holds a low warmth, brightest near the floor, as lamplight would.
+  float paneLow = 1.0 - smoothstep(-0.5 * vPaneSize.y, 0.15 * vPaneSize.y, vPane.y);
+  diffuseColor.rgb = mix(diffuseColor.rgb, emeraldChampagne, ${f(EMERALD.warmth)} * paneLow * (1.0 - paneFacet));
+  diffuseColor.rgb = mix(diffuseColor.rgb, emeraldChampagne, 0.32 * paneLine);
+  diffuseColor.a = min(1.0, diffuseColor.a + 0.035 * paneRing + 0.22 * paneLine);
+  diffuseColor.rgb = mix(diffuseColor.rgb, emeraldChampagne, paneLip);
+  diffuseColor.a = mix(diffuseColor.a, 1.0, paneLip);
+  diffuseColor.rgb = mix(diffuseColor.rgb, emeraldBronze, paneMetal);
+  diffuseColor.a = mix(diffuseColor.a, 1.0, paneMetal);`).replace('#include <metalnessmap_fragment>', `#include <metalnessmap_fragment>
+  metalnessFactor = mix(metalnessFactor, ${EMERALD.bronzeMetalness.toFixed(3)}, max(paneMetal, paneLip));`).replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
+  roughnessFactor = mix(roughnessFactor, ${EMERALD.bronzeRoughness.toFixed(3)}, paneMetal);
+  roughnessFactor = mix(roughnessFactor, 0.12, paneLip);`).replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+  // Step facets fall toward the outline, each a little flatter than the one outside it.
+  float paneTilt = ${byStep(i => f(tilts[i]))};
+  paneTilt *= 1.0 - max(paneMetal, paneLip);
+  vec3 paneSide = normalize(paneOutward.x * vPaneAlong + paneOutward.y * vPaneUp);
+  normal = normalize(normal * cos(paneTilt) + paneSide * sin(paneTilt));`).replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+  // Edge light: facets glow softly at grazing angles, as cut glass does when you walk past it.
+  float paneFresnel = pow(1.0 - abs(dot(normal, normalize(vViewPosition))), 3.0);
+  totalEmissiveRadiance += emeraldChampagne * ${f(EMERALD.glow)} * paneFresnel * paneFacet * (1.0 - paneMetal);`);
+  };
+  return material;
 }
