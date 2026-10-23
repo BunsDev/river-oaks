@@ -17,7 +17,7 @@ import { createRideFlush } from './ride-flush.js';
 
 const LEASE_MS=5000, REPLY_MS=15000, REQUEST_MS=7000, TICK_MS=200;
 // The lease token's generation (see createRedisRoom): plain rooms write it, selection-aware rooms one more.
-export const WRITER_GENERATION=15;
+export const WRITER_GENERATION=17;
 // A player whose socket left (or whose edge stopped reporting) keeps their place, seat and
 // hosting this long, so a reconnect on a slow network resumes instead of starting over.
 export const LEAVE_GRACE_MS=30_000;
@@ -147,7 +147,7 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
   // the generation was the checkpoint version, one more for selection-aware rooms, which
   // additionally require durable envelope v3 intents: so v13 and v14 writers both write v13
   // checkpoints. Checkpoint v14 (world rules, #596) must fence both, so its writers are v15 and
-  // v16. Raise WRITER_GENERATION by two with every checkpoint version an older writer cannot read.
+  // v16; checkpoint v15 (crime, #597) writers are v17 and v18. Raise WRITER_GENERATION by two with every checkpoint version an older writer cannot read.
   const token=`v${characters?WRITER_GENERATION+1:WRITER_GENERATION}:${randomUUID()}`;
   // The default district's revision and the operator's switch epoch (#512): a town committed
   // at a newer epoch, or at this epoch under another revision, is never coordinated here.

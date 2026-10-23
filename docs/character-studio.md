@@ -142,6 +142,13 @@ refused over HTTP while an untampered control save succeeds; a socket selection
 with a `quality` field is refused while the untampered command is accepted; and
 the peer's tier survives reconnect with identity intact.
 
+With #517's realistic looks, the same journey wears Morgan and Imani: each viewer
+applies the material tier its own graphics choice implies (Sharpest `high`,
+Smoothest `standard`) to the other's exact revision, and re-tiering sends nothing.
+Peer transport faults on the realistic definition fall back to its authored base
+at the viewer's own tier and recover the exact revision on the same connection.
+`RIVER_OAKS_SHARED_BROWSER=webkit` runs the shared journeys in Playwright WebKit.
+
 ## Components and delivery order
 1. #440: strict baseline contract, migration and actual human rig fixtures;
    measure and inspect rendered baseline, then review this decision in a PR.
