@@ -1,0 +1,151 @@
+{
+  "status": "passed",
+  "issue": 443,
+  "revision": "1f4aa36d5bb980af2b06d1eca251af3e47a11877",
+  "dirty": true,
+  "dirtyScope": "uncommitted #443 diagnostics (remote/self realismReport readouts), journey and runner edits; no asset or renderer source change",
+  "command": "node scripts/character-fidelity-baseline.mjs --appearances morgan-human,imani-human --realism off,low,standard,high --expressions --quality-cycles --repeats 0 --out .runtime/character-fidelity/census-1f4aa36d",
+  "ceilings": "data/reports/character-fidelity-resource-budgets-517.json",
+  "ceilingsSha256": "b18ca89888e607ce15d850c4c14ec490de761bd7a6e6a05c43a1efcf526f6956",
+  "startedAt": "2026-10-22T20:53:26.235Z",
+  "finishedAt": "2026-10-22T22:23:24.902Z",
+  "browser": {
+    "version": "156.0.8078.4"
+  },
+  "loadavgEnd": [
+    13.86,
+    22.25,
+    22.45
+  ],
+  "scope": "Exact per-figure scene census only. --repeats 0 takes no timing, so this establishes no frame-time, crowd or GPU-memory budget.",
+  "results": [
+    {
+      "appearanceId": "morgan-human",
+      "tier": "off",
+      "measured": {
+        "triangles": 84550,
+        "drawCalls": 9,
+        "textureBytes": 65710759
+      },
+      "ceiling": {
+        "triangles": 84550,
+        "drawCalls": 9,
+        "textureBytes": 65710759
+      },
+      "equal": true,
+      "residue": null
+    },
+    {
+      "appearanceId": "morgan-human",
+      "tier": "low",
+      "measured": {
+        "triangles": 84550,
+        "drawCalls": 10,
+        "textureBytes": 67108860
+      },
+      "ceiling": {
+        "triangles": 84550,
+        "drawCalls": 10,
+        "textureBytes": 67108860
+      },
+      "equal": true,
+      "residue": null
+    },
+    {
+      "appearanceId": "morgan-human",
+      "tier": "standard",
+      "measured": {
+        "triangles": 84550,
+        "drawCalls": 10,
+        "textureBytes": 67458385
+      },
+      "ceiling": {
+        "triangles": 84550,
+        "drawCalls": 10,
+        "textureBytes": 67458385
+      },
+      "equal": true,
+      "residue": null
+    },
+    {
+      "appearanceId": "morgan-human",
+      "tier": "high",
+      "measured": {
+        "triangles": 84550,
+        "drawCalls": 10,
+        "textureBytes": 67458385
+      },
+      "ceiling": {
+        "triangles": 84550,
+        "drawCalls": 10,
+        "textureBytes": 67458385
+      },
+      "equal": true,
+      "residue": null
+    },
+    {
+      "appearanceId": "imani-human",
+      "tier": "off",
+      "measured": {
+        "triangles": 88544,
+        "drawCalls": 9,
+        "textureBytes": 60118354
+      },
+      "ceiling": {
+        "triangles": 88544,
+        "drawCalls": 9,
+        "textureBytes": 60118354
+      },
+      "equal": true,
+      "residue": null
+    },
+    {
+      "appearanceId": "imani-human",
+      "tier": "low",
+      "measured": {
+        "triangles": 88544,
+        "drawCalls": 10,
+        "textureBytes": 61516455
+      },
+      "ceiling": {
+        "triangles": 88544,
+        "drawCalls": 10,
+        "textureBytes": 61516455
+      },
+      "equal": true,
+      "residue": null
+    },
+    {
+      "appearanceId": "imani-human",
+      "tier": "standard",
+      "measured": {
+        "triangles": 88544,
+        "drawCalls": 10,
+        "textureBytes": 61865980
+      },
+      "ceiling": {
+        "triangles": 88544,
+        "drawCalls": 10,
+        "textureBytes": 61865980
+      },
+      "equal": true,
+      "residue": null
+    },
+    {
+      "appearanceId": "imani-human",
+      "tier": "high",
+      "measured": {
+        "triangles": 88544,
+        "drawCalls": 10,
+        "textureBytes": 61865980
+      },
+      "ceiling": {
+        "triangles": 88544,
+        "drawCalls": 10,
+        "textureBytes": 61865980
+      },
+      "equal": true,
+      "residue": null
+    }
+  ]
+}

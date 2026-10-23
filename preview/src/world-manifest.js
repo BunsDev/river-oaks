@@ -1,7 +1,7 @@
 // Location coordinates are metres east/north/up relative to the existing GIS origin.
 // Registration describes content; it never grants movement or changes world-room authority.
 const idPattern = /^[a-z][a-z0-9-]{0,63}$/;
-const vector = (value, length) => Array.isArray(value) && value.length === length && value.every(Number.isFinite);
+const vector = (value, length) => Array.isArray(value) && value.length === length && Array.from(value).every(Number.isFinite);
 const check = (condition, message) => { if (!condition) throw new Error(`Invalid world manifest: ${message}`); };
 const contains = (bounds, point) => point[0] >= bounds[0] && point[0] <= bounds[2] && point[1] >= bounds[1] && point[1] <= bounds[3];
 
@@ -50,9 +50,13 @@ export function validateWorldManifest(input) {
     }
     check(Array.isArray(location.adjacent) && new Set(location.adjacent).size === location.adjacent.length, 'invalid adjacency');
     const bounds = locationWorldBounds(location);
-    check(Number.isFinite((bounds[2] - bounds[0]) * (bounds[3] - bounds[1])), 'area overflow');
+    check(bounds[0] < bounds[2] && bounds[1] < bounds[3], 'transformed bounds lose precision');
+    const area = (bounds[2] - bounds[0]) * (bounds[3] - bounds[1]);
+    check(Number.isFinite(area), 'area overflow');
+    check(area > 0, 'bounds area underflow');
   }
   check(ids.has(input.default_location), 'missing default location');
+  check(input.locations.find(location => location.id === input.default_location).status === 'authored', 'default location must be authored');
   for (const location of input.locations) {
     for (const neighbor of location.adjacent) {
       check(neighbor !== location.id && ids.has(neighbor), 'unknown or self adjacency');
@@ -78,6 +82,7 @@ export function validateDistrictLocation(manifest, district) {
   const validated = validateWorldManifest(manifest);
   const location = validated.locations.find(item => item.id === 'river-oaks-district');
   check(location?.status === 'authored' && location.translation_m.every(value => value === 0), 'District must retain its identity transform');
+  check(location.content_revision === 'district-v1', 'unsupported District content revision');
   check(district?.schema_version === 1 && district.scene === 'district', 'unsupported District data');
   check(JSON.stringify(district.origin) === JSON.stringify(validated.origin) && district.crs === validated.crs, 'District origin mismatch');
   check(JSON.stringify(district.bounds_m) === JSON.stringify(location.bounds_m), 'District bounds mismatch');

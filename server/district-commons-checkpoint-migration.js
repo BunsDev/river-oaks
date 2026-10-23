@@ -3,6 +3,7 @@ import { createSharedWorld } from './world.js';
 import { recoverDistrictGardensCheckpoint } from './district-gardens-checkpoint-migration.js';
 import { attachEastGardenCommons, detachEastGardenCommons } from '../preview/src/east-garden-commons-world.js';
 import { createWalkingEnvironment } from '../preview/src/walking.js';
+import { objectCollider } from '../preview/src/creator-object.js';
 import { DEFAULT_WORLD_ID } from '../preview/src/world-contract.js';
 const digest = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const rejected = () => ({ok:false,error:'invalid_checkpoint'});
@@ -29,8 +30,10 @@ export function recoverDistrictCommonsCheckpoint({worldData,checkpoint,worldId=D
     const {checksum:_checksum,...envelope}=source.checkpoint();
     const moved=[];
     if(!forward){
-      const environment=createWalkingEnvironment(worldData);
-      const outside=player=>player.position[0]>worldData.bounds_m[2]-.35;
+      const environment=createWalkingEnvironment(worldData,envelope.payload.builds.map(objectCollider).filter(Boolean));
+      const outside=player=>player.position[0]>worldData.bounds_m[2]-.35
+        || player.altitude>.1 && !environment.canFly(player.position[0],
+          environment.groundAt(player.position[0],-player.position[1])+player.altitude,-player.position[1]);
       const placed=envelope.payload.players.filter(p=>!outside(p)).map(p=>p.position);
       for(const player of envelope.payload.players.filter(outside)){
         let destination=null;
