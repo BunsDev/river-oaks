@@ -41,8 +41,11 @@ async page => {
       return values.filter(value => { const again = seen.includes(value); seen.push(value); return again; }).length;
     };
     console.log(JSON.stringify(states));
-    for (const field of ['theme', 'splash', 'gate', 'background', 'studio', 'studioShown', 'character'])
+    for (const field of ['theme', 'gate', 'background', 'studio', 'studioShown', 'character'])
       check(flips(field) === 0, `Signing in never flips ${field} back to an earlier value (${JSON.stringify(states.map(state => [state.t, state[field]]))})`);
+    // The splash is a phase: it may cover the game's load once, then ends for good.
+    const splashes = states.filter((state, i) => state.splash && !states[i - 1]?.splash).length;
+    check(splashes <= 1 && !states.at(-1).splash, `The splash covers sign-in at most once and ends (${JSON.stringify(states.map(state => [state.t, state.splash]))})`);
     return { checks, states };
   } finally { await context.close(); }
 }

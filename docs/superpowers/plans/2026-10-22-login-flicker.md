@@ -22,7 +22,7 @@ Task: `login-flicker`. Owner: `claude:world-expansion-20261022-1950`. Worktree: 
 - `characterStudioShown` (`character-studio-state.js`): development shows the studio unless `VITE_CHARACTER_STUDIO=false`; builds still need `true`. `devTownEnv` (`server/vite-town.js`): the development town takes Studio saves unless `RIVER_OAKS_CHARACTER_STUDIO` is set. `.env.example` and `docs/character-studio.md` are updated.
 - Tests:
   - `access-gate` journey: a GitHub redirect returns to the themed splash, the mark is consumed, and the splash covers the game load.
-  - New `login-flicker` journey: records every frame from first paint and fails if any visible state returns to an earlier value.
+  - New `login-flicker` journey: records every frame from first paint. It fails if the theme, gate, background, studio button or selected character returns to an earlier value, or if the splash shows more than once or never ends.
   - Unit tests for both development defaults.
 
 ## Checks
@@ -53,3 +53,11 @@ The first proof script used a bare `git stash pop`. The stash list is shared by 
 1. Finish the probe and the unfixed proof, and fix the studio visibility flip.
 2. Rerun the focused checks and the probe.
 3. Make a signed commit, open the PR, and land it with `pnpm run land` (merge authorized by the user).
+
+## Hosted CI, first run (451d1429)
+
+The new `preview experience (access)` shard ran both journeys. `access-gate` passed. `login-flicker` failed only on its own splash rule: splash off (0.19 s), on (0.36 s), off (2.1 s, game shown). That is the designed sequence for a fresh browser: the gate's access check, then the themed splash while the game loads, then the game. The rule was corrected to "the splash shows at most once and ends". The other fields kept the never-return rule.
+
+The CI timeline from that run, evaluated for every field (the probe logs it before checking): theme, gate, background, studio button, studio visibility and character each show zero returns. The studio button went absent (0.19 s) → disabled (2.1 s) → enabled (9.6 s). The character panel stayed hidden until the walk had a pose (7.3 s), then showed once. The splash ran as one phase (0.36–2.1 s) and ended. This confirms both studio fixes on hosted Chromium (Mesa).
+
+Follow-up, not in this change: while the Character tab is hidden before the walk has a pose, the open Play & rides dock selects the Rides tab (2.1–7.3 s), then moves to Character. That is one switch, not a flip back. Whether it is visible depends on the loading overlay. A fix would keep the dock hidden, or its selection unchanged, until the first pose.
