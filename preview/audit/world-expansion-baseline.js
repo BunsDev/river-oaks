@@ -13,16 +13,23 @@ import { startBrowserFixture } from '../e2e/fixture-server.js';
 import { distribution } from './metrics.js';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
-const output = join(root, '.runtime/world-expansion', `baseline-${new Date().toISOString().replaceAll(':', '-')}`);
+// Defaults reproduce the #580 Gardens baseline. RIVER_OAKS_BASELINE_REVISION and
+// RIVER_OAKS_BASELINE_VIEW=market-street measure the Commons destination (#586)
+// against it; RIVER_OAKS_BASELINE_PROFILES=desktop limits the viewports.
+const revision = process.env.RIVER_OAKS_BASELINE_REVISION ?? 'river-oaks-gardens-3', view = process.env.RIVER_OAKS_BASELINE_VIEW ?? 'spawn';
+const profileNames = (process.env.RIVER_OAKS_BASELINE_PROFILES ?? 'desktop,phone-viewport').split(',');
+const output = join(root, '.runtime/world-expansion', `baseline-${revision === 'river-oaks-gardens-3' && view === 'spawn' ? '' : `${revision}-${view}-`}${new Date().toISOString().replaceAll(':', '-')}`);
 const files = ['preview/public/data/district.json', 'preview/public/data/world-manifest.json',
   'preview/src/world-manifest.js', 'preview/src/district-interior-contract.js', 'preview/src/garden-campus-district.js',
-  'preview/src/main.js', 'preview/src/render-audit.js', 'preview/audit/world-expansion-baseline.js', 'pnpm-lock.yaml'];
+  'preview/src/main.js', 'preview/src/render-audit.js', 'preview/audit/world-expansion-baseline.js', 'pnpm-lock.yaml',
+  'shared/commons-destination.js', 'config/destinations/bayou-market-commons.json', 'preview/src/city-kit/render.js'];
 const report = {
   status: 'running', startedAt: new Date().toISOString(),
   head: execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim(),
   sourceSha256: Object.fromEntries(await Promise.all(files.map(async file => [file, createHash('sha256').update(await readFile(join(root, file))).digest('hex')]))),
   machine: { platform: platform(), arch: arch(), cpu: cpus()[0]?.model, logicalCpus: cpus().length, loadAverage: loadavg() },
-  scope: 'Local Chromium development build, Gardens revision, fixture accounts and in-memory loopback authority. Phone-sized viewport uses the same desktop GPU, not physical mobile hardware. Resource bytes include Vite development modules, not a production initial-download budget. Two-player samples render two full browser clients concurrently on this host. GPU memory bytes, live auth, hosted performance and human accessibility are not measured.',
+  revision, view,
+  scope: 'Local Chromium development build, selected revision and view, fixture accounts and in-memory loopback authority. Phone-sized viewport uses the same desktop GPU, not physical mobile hardware. Resource bytes include Vite development modules, not a production initial-download budget. Two-player samples render two full browser clients concurrently on this host. GPU memory bytes, live auth, hosted performance and human accessibility are not measured.',
   quality: 'sharp', reducedMotion: 'reduce', sampleDurationMs: 10000, profiles: [],
 };
 let browser, fixture;
@@ -35,13 +42,20 @@ try {
   const district = JSON.parse(await readFile(join(root, 'preview/public/data/district.json')));
   const [x, north, height] = district.walkSpawn;
   report.camera = { position: [x, height + 2.4, -north + 5], target: [x, height + 1.4, -north - 12], fov: 55 };
+  if (view === 'market-street') {
+    // Walking eye height on Market Street, looking east toward the Bayou Lantern.
+    const { loadDistrictData } = await import('../../server/district-data.js');
+    const layout = (await loadDistrictData({ districtRevision: revision })).eastGardenCommons;
+    assert.ok(layout?.destination, `${revision} has no Commons destination`);
+    report.camera = { position: [layout.edge + 6, layout.ground + 1.68, 1335], target: [layout.edge + 60, layout.ground + 4, 1335], fov: 55 };
+  }
   for (const profile of [
     { name: 'desktop', viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 },
     { name: 'phone-viewport', viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 },
-  ]) {
+  ].filter(profile => profileNames.includes(profile.name))) {
     const row = { ...profile, status: 'running', samples: [], errors: [] };
     report.profiles.push(row); await flush();
-    fixture = await startBrowserFixture({ env: { RIVER_OAKS_DISTRICT_REVISION: 'river-oaks-gardens-3' } });
+    fixture = await startBrowserFixture({ env: { RIVER_OAKS_DISTRICT_REVISION: revision } });
     const contexts = [];
     async function joinPlayer(identity) {
       const context = await browser.newContext({ viewport: profile.viewport, deviceScaleFactor: profile.deviceScaleFactor, reducedMotion: 'reduce' });

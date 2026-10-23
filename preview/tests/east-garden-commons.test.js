@@ -59,9 +59,11 @@ test('ramp meets original edge ground and contains no controller-sized step',()=
 });
 
 test('blockout has named route surfaces, reusable primitives and disposes owned resources',()=>{
-  const group=buildEastGardenCommons(layout),geometry=new Set(),materials=new Set();
+  // The approved blockout without its composed destination (see bayou-market-commons tests).
+  const extra=layout.destination.solids.length,blockout={...layout,destination:undefined,surfaces:layout.surfaces.slice(0,2),solids:layout.solids.slice(0,layout.solids.length-extra)};
+  const group=buildEastGardenCommons(blockout),geometry=new Set(),materials=new Set();
   group.traverse(mesh=>{if(mesh.isMesh){geometry.add(mesh.geometry);materials.add(mesh.material);assert.ok(mesh.name.startsWith('east-garden-commons/'));}});
-  for(const surface of layout.surfaces)assert.ok(group.getObjectByName(surface.id));
+  for(const surface of blockout.surfaces)assert.ok(group.getObjectByName(surface.id));
   assert.ok(group.getObjectByName(`${layout.pavilion.id}/roof`));
   let geometryDisposals=0,materialDisposals=0;
   for(const item of geometry)item.addEventListener('dispose',()=>geometryDisposals++);
