@@ -60,6 +60,7 @@ export function buildEastGardenCommons(layout) {
     for(const solid of baseSolids)addBox(solid.id,solid.rect,layout.ground,solid.height,solid.kind);
     addBox(`${layout.pavilion.id}/roof`,layout.pavilion.rect,layout.ground+layout.pavilion.clearHeight,layout.pavilion.roofThickness,'canopy');
   }
+  group.userData.ready = kit?.userData.ready ?? Promise.resolve();
   let disposed=false;
   group.userData.dispose=()=>{if(disposed)return;disposed=true;kit?.userData.dispose();for(const geometry of geometries)geometry.dispose();for(const material of Object.values(materials))material.dispose();group.clear();};
   group.userData.update=position=>kit?.userData.update(position);

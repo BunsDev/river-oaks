@@ -1,0 +1,492 @@
+{
+  "scope": "Automated source/headless evidence only; browser, full, hosted, visual and human acceptance remain pending.",
+  "regeneration": {
+    "createdAt": "2026-10-23T23:23:48.561Z",
+    "revision": "c2598c65d2566816b967596661ca924972d43f44",
+    "source": {
+      "head": "c2598c65d2566816b967596661ca924972d43f44",
+      "manifest": {
+        "config/neighborhoods/garden-blocks.json": "e4a139ef305c23427c5a61052d2d02ac0a3c8eb1b3074875f61e5d26f6ca47ff",
+        "config/neighborhoods/garden-court.json": "f2d709279de2b3357303a82aca638ae0424deed9a0d1cb4d3d295bfc53fd7f68",
+        "config/neighborhoods/garden-market.json": "52fe34d402359f91f2545068bf23f990bf622136c9a1a0bb457d4fd2a6aacce7",
+        "config/neighborhoods/kit-snapshot.json": "fa97d08b8c1f025c0f9805920605f80bb62970acd31f38b76b72b4b37c036a8e",
+        "package.json": "e337c2754fc40b12d9d2317a0dd75cb07c81d3df6f8ac2d1aaaff9daea30a3c9",
+        "pnpm-lock.yaml": "333868e510b7156f9f3e954fc785d6bcb23b835ade47e7c0e89c7f77d6e29758",
+        "preview/e2e/experience-runner.js": "a8246caa49336cebe1cc9a797ce4776dd63d5a52727db8d81b57077fff5e5576",
+        "preview/e2e/fixtures/neighborhood-review.js": "c8d48756e5d22a239b6c93d7bc1379bd3d1193c7e28e1024d91e22c0e870d9a6",
+        "preview/e2e/neighborhood-authoring.js": "30cf69985ff6930074516af0a0335e2ce1eeecf5abf60f501b343b55806c674f",
+        "preview/e2e/neighborhood-review.js": "8fcdea8f3a02a99cd5a8d792c534f179565afeecbb0ba6d2cc764cdff746f26d",
+        "preview/e2e/world-gate-587.js": "17e499afb7b9372e7c1bee4db0d50009672d2fe6641200345cbec546e370d801",
+        "preview/e2e/world-streaming.js": "b3ba061e4835d032112c8eebdb549d75415142284c16c6a274c56cd09961aeae",
+        "preview/public/data/starter-districts/garden-neighborhood.json": "2b8bc96d3de77c796bdccea9ac02ec4b72ce367818f20665fcae10c8e0b52406",
+        "preview/public/data/starter-districts/market-street.json": "aba9baab15f305cad560b854b0102b0bacef56b5b191ba1b533b42de141bc4b0",
+        "preview/src/city-kit/render.js": "0dd1b121548b7706a87f247899d157d732a1f4fc3ac9995fc5f45b643d3ee005",
+        "preview/src/commons-stream.js": "d1e03454af7cbe2be8c7f8fdd83abddb160c91fcc1138d92b7773a9e46824305",
+        "preview/src/east-garden-commons.js": "d139ab5fae0db1e7a40c274bbe4e719bb4b9557b3e96a15af094638e7ba5644b",
+        "preview/src/geometry.js": "8d75ea5db05da9c9a26b0d221b9aab1c4450dc92271ca5e1f8ee6e8b2e19f9b4",
+        "preview/src/lantern-walk.js": "0bd56e544c28ea224a5126f3f03b15777c145ed4f9874f082268939f9b29b723",
+        "preview/src/main.js": "3015180dc1c7805ca96503b838b184dd546f6289b899c4fbde25820b29db4bd1",
+        "preview/src/plaza-bicycle.js": "d15506a14e85a7f8a5d0bc2fed0a1880e5e4f3364f57230ae4bed4d113e37245",
+        "preview/src/spatial-chunk-stream.js": "34de01c0a97396e73d45e802566f86dd14cb66e243ab85d3a7a713adad901745",
+        "preview/src/street-profile.js": "c41cf8a0341e9c103ee0b3b5f249f657c9edf13588e0fe4111b3499812ecbe15",
+        "preview/src/streetscape-kit.js": "01898619f4b50aeab7fd73328b708fe60be2777229743d34cc5c7f3f323e5b30",
+        "preview/src/studio/document.js": "f58c6289acace7cc954e9163e03823c760ddf159106a605380719aab3335a680",
+        "preview/src/studio/main.js": "79148fe40b3d1e3526292dda0174c53efb28b492059984463be18c9ca08fe4ae",
+        "preview/src/studio/neighborhood-panel.js": "f90cd07da318eece822b00c94af4996cba324c828d22e98d56c0463f2cded81a",
+        "preview/src/studio/neighborhood-session.js": "3f55ed58ff950fb53057e1a09dbbbbb512b936850e196bb76f3595f02a62325c",
+        "preview/src/studio/neighborhood-worker.js": "54362a2afef2e50d2c1a3cc029fe7114a13f643bd9a8d6b1ff261b8e18a00aef",
+        "preview/src/studio/scene.js": "69979ce6247f7b5957dda6cef1ba00683ecfb41e685d0329a4ff3bd8e482e429",
+        "preview/src/studio/viewport.js": "81c9167a441cef2111287b4159d06bd99a92a9f3c2253685e2f1b45a7f9c21a6",
+        "preview/src/walking-ui.js": "46b1101277a2e01607a2674efaaa4fc70fb1097c3b73a04f1c27f9d2607c01fb",
+        "preview/src/walking.js": "1196b1f0fbe29e226f10fab6597f01ede86c43a1131b540a4ac4f698655d798b",
+        "preview/src/world-location-label.js": "bb724d7adfc77b244b2dd2267c95aaa6a53a5ac7cf37f639ce73bdb281312d82",
+        "preview/src/world-surface.js": "4a134a413f2cbd7c783e43466a02ff9e53abf64338975af1a36e06608128a9eb",
+        "preview/tests/commons-ride-guard.test.js": "72f3701b2a7ed123f78091da052c1ca9eff58c21a7055654001f447d9cb5a2cf",
+        "preview/tests/commons-stream.test.js": "c928f88b39828d99757a9849c53a6ed99940fa9cde849030cc6b95cf98c91fec",
+        "preview/tests/continuous-walk-582.test.js": "7962852052325f774d2e7499b3b879ccb8e26d79b341ec70813c615022ecb341",
+        "preview/tests/landscape-disposal.test.js": "50ae2d2e8777142e4dc691acbd79a65ebfa71740d7fdcb64e0b39bd324afe998",
+        "preview/tests/lantern-remount.test.js": "839dfe5fa3f850ea538e110bdf6f5fb502f5708b55ac5d76172d49720d81e870",
+        "preview/tests/lantern-walk-client.test.js": "14097bfc42d6b861e9dc311f4bebf8bc49b77da34c66ca2abe18b343dbb66dea",
+        "preview/tests/spatial-chunk-stream.test.js": "e3e7eebf02284c130cbb162fbbea17f7eaf8352979dd400ba5773dc3256f2168",
+        "preview/tests/streetscape-kit.test.js": "f461c1223313bc4a7bd0dbc406576d3448527b653bd0b7895115fd0441ccb248",
+        "preview/tests/studio-neighborhood-architecture.test.js": "758d52f1a97c932c550063c8c39180b6fa47a2acb4f380bb6239c85dec3ed3fc",
+        "preview/tests/studio-neighborhood.test.js": "1538dcb300b36dfe4f72d22d161b0c30f884c55cd5ebd1115fec4e872e7f6754",
+        "preview/tests/world-location-label.test.js": "e185c3b423ba932792dd3bb5372387ab4bcc45effe8a6695c21d91b5def03bff",
+        "scripts/neighborhood-measure.mjs": "700cc366595c52a3602901e8e797cb47c0398c31e381872738b8eae0c6001d60",
+        "scripts/neighborhood-review.mjs": "a88e0b0723e9fa4f7ffdcfa9d5f6fed8c9747c7d60204b6542dd9de20bc5d8e4",
+        "scripts/neighborhood-source.mjs": "1a8cdc807ec66803a5f93694341fe869e35fb85138c8e6ac9bf418a6d76494da",
+        "scripts/neighborhood.mjs": "fe32c5af7d2c9f22a1bb279b14da8b3a1aa0142db74b867e50002b2182021fbb",
+        "scripts/tests/neighborhood-architecture.test.js": "0de65370a2943c8b722c8d6c03014f68e63104b33fc15ec8ff051ef96525c5b6",
+        "scripts/tests/neighborhood-cli.test.js": "a775abab1be00215985de70c241c136b6538e8514ede8df249d10521aad06663",
+        "scripts/tests/neighborhood-hash.test.js": "094b2ede6a169daabec091f7edd5067bfcfe292dc815fc661b598acd5d860637",
+        "scripts/tests/neighborhood-reference.test.js": "fe1e24b46a5bc7bc39f11aadd21842556b7fdc5eab6a2d45bfcc07ddc1f92bcd",
+        "scripts/tests/neighborhood.test.js": "bee8190a69106466d293e1f01fbb6ea6b950c7373a2dd7c755f38858affc0c9b",
+        "shared/neighborhood/architecture.js": "ac816a29cc9fe98f319cf795efbe21ea5a0eaf689885dce1050c90057a364ea1",
+        "shared/neighborhood/format.js": "385527aec95ade0c57c10615800b920e069c7614903cf18db0daa3ed4b00b1d8",
+        "shared/neighborhood/generate.js": "842eb0ddf63749092b258388609afa6d8025c77fd503526aeebcb81964e10720",
+        "shared/neighborhood/polygon.js": "e78b873e8d2668f27b4b1cf99cb25c25b8f34f90b08f569f709263f6263ff1c1",
+        "shared/neighborhood/preserve.js": "5bf78b5ef2961cb9e0293385c4fa122a6745016c487269b2ed368ece92fa50d3",
+        "shared/neighborhood/preview.js": "9998f15939152cb8e2d30c1e4716ce365f7cbf93dab57b25b88b6cf3c6e10eb6",
+        "shared/neighborhood/reference.js": "2780365076d0de2ca257da73ea5c8df7f125f19f652c927a94e4b5073b6dafbe",
+        "shared/neighborhood/sha256.js": "2bffb05dbdc2ba15a2473146ad18976964db04749a8fa60b8325bdcc2545ee1a",
+        "shared/neighborhood/validate.js": "f5c5b666b7fd3c154684a141ea569006526f2a68ed809a7c6ec4e56d7334471a",
+        "shared/streetscape-kit.js": "f7d6730d114e375a4b27fcf08073388362b6ebffc5bb74b0a8116638a4c0bd6f"
+      },
+      "sha256": "8ca584f6834bb88384c45128375bd42aae15626dc43e2f86e11988239996f05d",
+      "scope": "Base commit plus changed/untracked JS and JSON runtime/test/harness files, lockfile and named movement/manual-reference inputs. Environment and private runtime state excluded."
+    },
+    "finalSource": {
+      "head": "c2598c65d2566816b967596661ca924972d43f44",
+      "manifest": {
+        "config/neighborhoods/garden-blocks.json": "e4a139ef305c23427c5a61052d2d02ac0a3c8eb1b3074875f61e5d26f6ca47ff",
+        "config/neighborhoods/garden-court.json": "f2d709279de2b3357303a82aca638ae0424deed9a0d1cb4d3d295bfc53fd7f68",
+        "config/neighborhoods/garden-market.json": "52fe34d402359f91f2545068bf23f990bf622136c9a1a0bb457d4fd2a6aacce7",
+        "config/neighborhoods/kit-snapshot.json": "fa97d08b8c1f025c0f9805920605f80bb62970acd31f38b76b72b4b37c036a8e",
+        "package.json": "e337c2754fc40b12d9d2317a0dd75cb07c81d3df6f8ac2d1aaaff9daea30a3c9",
+        "pnpm-lock.yaml": "333868e510b7156f9f3e954fc785d6bcb23b835ade47e7c0e89c7f77d6e29758",
+        "preview/e2e/experience-runner.js": "a8246caa49336cebe1cc9a797ce4776dd63d5a52727db8d81b57077fff5e5576",
+        "preview/e2e/fixtures/neighborhood-review.js": "c8d48756e5d22a239b6c93d7bc1379bd3d1193c7e28e1024d91e22c0e870d9a6",
+        "preview/e2e/neighborhood-authoring.js": "30cf69985ff6930074516af0a0335e2ce1eeecf5abf60f501b343b55806c674f",
+        "preview/e2e/neighborhood-review.js": "8fcdea8f3a02a99cd5a8d792c534f179565afeecbb0ba6d2cc764cdff746f26d",
+        "preview/e2e/world-gate-587.js": "17e499afb7b9372e7c1bee4db0d50009672d2fe6641200345cbec546e370d801",
+        "preview/e2e/world-streaming.js": "b3ba061e4835d032112c8eebdb549d75415142284c16c6a274c56cd09961aeae",
+        "preview/public/data/starter-districts/garden-neighborhood.json": "2b8bc96d3de77c796bdccea9ac02ec4b72ce367818f20665fcae10c8e0b52406",
+        "preview/public/data/starter-districts/market-street.json": "aba9baab15f305cad560b854b0102b0bacef56b5b191ba1b533b42de141bc4b0",
+        "preview/src/city-kit/render.js": "0dd1b121548b7706a87f247899d157d732a1f4fc3ac9995fc5f45b643d3ee005",
+        "preview/src/commons-stream.js": "d1e03454af7cbe2be8c7f8fdd83abddb160c91fcc1138d92b7773a9e46824305",
+        "preview/src/east-garden-commons.js": "d139ab5fae0db1e7a40c274bbe4e719bb4b9557b3e96a15af094638e7ba5644b",
+        "preview/src/geometry.js": "8d75ea5db05da9c9a26b0d221b9aab1c4450dc92271ca5e1f8ee6e8b2e19f9b4",
+        "preview/src/lantern-walk.js": "0bd56e544c28ea224a5126f3f03b15777c145ed4f9874f082268939f9b29b723",
+        "preview/src/main.js": "3015180dc1c7805ca96503b838b184dd546f6289b899c4fbde25820b29db4bd1",
+        "preview/src/plaza-bicycle.js": "d15506a14e85a7f8a5d0bc2fed0a1880e5e4f3364f57230ae4bed4d113e37245",
+        "preview/src/spatial-chunk-stream.js": "34de01c0a97396e73d45e802566f86dd14cb66e243ab85d3a7a713adad901745",
+        "preview/src/street-profile.js": "c41cf8a0341e9c103ee0b3b5f249f657c9edf13588e0fe4111b3499812ecbe15",
+        "preview/src/streetscape-kit.js": "01898619f4b50aeab7fd73328b708fe60be2777229743d34cc5c7f3f323e5b30",
+        "preview/src/studio/document.js": "f58c6289acace7cc954e9163e03823c760ddf159106a605380719aab3335a680",
+        "preview/src/studio/main.js": "79148fe40b3d1e3526292dda0174c53efb28b492059984463be18c9ca08fe4ae",
+        "preview/src/studio/neighborhood-panel.js": "f90cd07da318eece822b00c94af4996cba324c828d22e98d56c0463f2cded81a",
+        "preview/src/studio/neighborhood-session.js": "3f55ed58ff950fb53057e1a09dbbbbb512b936850e196bb76f3595f02a62325c",
+        "preview/src/studio/neighborhood-worker.js": "54362a2afef2e50d2c1a3cc029fe7114a13f643bd9a8d6b1ff261b8e18a00aef",
+        "preview/src/studio/scene.js": "69979ce6247f7b5957dda6cef1ba00683ecfb41e685d0329a4ff3bd8e482e429",
+        "preview/src/studio/viewport.js": "81c9167a441cef2111287b4159d06bd99a92a9f3c2253685e2f1b45a7f9c21a6",
+        "preview/src/walking-ui.js": "46b1101277a2e01607a2674efaaa4fc70fb1097c3b73a04f1c27f9d2607c01fb",
+        "preview/src/walking.js": "1196b1f0fbe29e226f10fab6597f01ede86c43a1131b540a4ac4f698655d798b",
+        "preview/src/world-location-label.js": "bb724d7adfc77b244b2dd2267c95aaa6a53a5ac7cf37f639ce73bdb281312d82",
+        "preview/src/world-surface.js": "4a134a413f2cbd7c783e43466a02ff9e53abf64338975af1a36e06608128a9eb",
+        "preview/tests/commons-ride-guard.test.js": "72f3701b2a7ed123f78091da052c1ca9eff58c21a7055654001f447d9cb5a2cf",
+        "preview/tests/commons-stream.test.js": "c928f88b39828d99757a9849c53a6ed99940fa9cde849030cc6b95cf98c91fec",
+        "preview/tests/continuous-walk-582.test.js": "7962852052325f774d2e7499b3b879ccb8e26d79b341ec70813c615022ecb341",
+        "preview/tests/landscape-disposal.test.js": "50ae2d2e8777142e4dc691acbd79a65ebfa71740d7fdcb64e0b39bd324afe998",
+        "preview/tests/lantern-remount.test.js": "839dfe5fa3f850ea538e110bdf6f5fb502f5708b55ac5d76172d49720d81e870",
+        "preview/tests/lantern-walk-client.test.js": "14097bfc42d6b861e9dc311f4bebf8bc49b77da34c66ca2abe18b343dbb66dea",
+        "preview/tests/spatial-chunk-stream.test.js": "e3e7eebf02284c130cbb162fbbea17f7eaf8352979dd400ba5773dc3256f2168",
+        "preview/tests/streetscape-kit.test.js": "f461c1223313bc4a7bd0dbc406576d3448527b653bd0b7895115fd0441ccb248",
+        "preview/tests/studio-neighborhood-architecture.test.js": "758d52f1a97c932c550063c8c39180b6fa47a2acb4f380bb6239c85dec3ed3fc",
+        "preview/tests/studio-neighborhood.test.js": "1538dcb300b36dfe4f72d22d161b0c30f884c55cd5ebd1115fec4e872e7f6754",
+        "preview/tests/world-location-label.test.js": "e185c3b423ba932792dd3bb5372387ab4bcc45effe8a6695c21d91b5def03bff",
+        "scripts/neighborhood-measure.mjs": "700cc366595c52a3602901e8e797cb47c0398c31e381872738b8eae0c6001d60",
+        "scripts/neighborhood-review.mjs": "a88e0b0723e9fa4f7ffdcfa9d5f6fed8c9747c7d60204b6542dd9de20bc5d8e4",
+        "scripts/neighborhood-source.mjs": "1a8cdc807ec66803a5f93694341fe869e35fb85138c8e6ac9bf418a6d76494da",
+        "scripts/neighborhood.mjs": "fe32c5af7d2c9f22a1bb279b14da8b3a1aa0142db74b867e50002b2182021fbb",
+        "scripts/tests/neighborhood-architecture.test.js": "0de65370a2943c8b722c8d6c03014f68e63104b33fc15ec8ff051ef96525c5b6",
+        "scripts/tests/neighborhood-cli.test.js": "a775abab1be00215985de70c241c136b6538e8514ede8df249d10521aad06663",
+        "scripts/tests/neighborhood-hash.test.js": "094b2ede6a169daabec091f7edd5067bfcfe292dc815fc661b598acd5d860637",
+        "scripts/tests/neighborhood-reference.test.js": "fe1e24b46a5bc7bc39f11aadd21842556b7fdc5eab6a2d45bfcc07ddc1f92bcd",
+        "scripts/tests/neighborhood.test.js": "bee8190a69106466d293e1f01fbb6ea6b950c7373a2dd7c755f38858affc0c9b",
+        "shared/neighborhood/architecture.js": "ac816a29cc9fe98f319cf795efbe21ea5a0eaf689885dce1050c90057a364ea1",
+        "shared/neighborhood/format.js": "385527aec95ade0c57c10615800b920e069c7614903cf18db0daa3ed4b00b1d8",
+        "shared/neighborhood/generate.js": "842eb0ddf63749092b258388609afa6d8025c77fd503526aeebcb81964e10720",
+        "shared/neighborhood/polygon.js": "e78b873e8d2668f27b4b1cf99cb25c25b8f34f90b08f569f709263f6263ff1c1",
+        "shared/neighborhood/preserve.js": "5bf78b5ef2961cb9e0293385c4fa122a6745016c487269b2ed368ece92fa50d3",
+        "shared/neighborhood/preview.js": "9998f15939152cb8e2d30c1e4716ce365f7cbf93dab57b25b88b6cf3c6e10eb6",
+        "shared/neighborhood/reference.js": "2780365076d0de2ca257da73ea5c8df7f125f19f652c927a94e4b5073b6dafbe",
+        "shared/neighborhood/sha256.js": "2bffb05dbdc2ba15a2473146ad18976964db04749a8fa60b8325bdcc2545ee1a",
+        "shared/neighborhood/validate.js": "f5c5b666b7fd3c154684a141ea569006526f2a68ed809a7c6ec4e56d7334471a",
+        "shared/streetscape-kit.js": "f7d6730d114e375a4b27fcf08073388362b6ebffc5bb74b0a8116638a4c0bd6f"
+      },
+      "sha256": "8ca584f6834bb88384c45128375bd42aae15626dc43e2f86e11988239996f05d",
+      "scope": "Base commit plus changed/untracked JS and JSON runtime/test/harness files, lockfile and named movement/manual-reference inputs. Environment and private runtime state excluded."
+    },
+    "preservation": [
+      {
+        "id": "garden-market",
+        "distinctBuildingLayouts": 7,
+        "sequentialSeeds": 6,
+        "artifactHashes": [
+          "6b575ca6321d19d388b716240b4d1fc9082ab811c2939f4d3ac1b453b1016dd8",
+          "b51adb4e6cbe6c783ef664d846956cdbe6481c5f478c2c532d7afdde277e2757",
+          "70133dee494ee8650ef4f821092dda458b1d1aee6f246dd5fbf80ffe657cc811",
+          "e40982f9ffee74015326746e8cb546862bc157694233ddc0ba14d42072f483de",
+          "65416806f7a3ffafe668bcec3ad0e740a614ae4076f6f06436cf996cae57835d",
+          "a53e92fc677a2748dd0d6e6820f222e716c343934bce40e59b51780eb2e71069"
+        ],
+        "kept": "h-middle-cross-0-0",
+        "deleted": "h-west-south-1-1",
+        "checks": [
+          "geometry",
+          "kit binding",
+          "approval",
+          "deletion tombstone",
+          "tree addition",
+          "place addition",
+          "road name",
+          "spawn",
+          "terrain",
+          "export/reopen"
+        ]
+      },
+      {
+        "id": "garden-court",
+        "distinctBuildingLayouts": 7,
+        "sequentialSeeds": 6,
+        "artifactHashes": [
+          "b19a508f7d6123636292cccbd792b9afb62361bb05c5e09ec3ece58fd6c95559",
+          "be8099f6b5467210e6c5be117fb58ddcd98bef1fe1537516df7fa4a6aae39f1a",
+          "df06bb3a4abe05d222cf1856ebfe994d0406190e2e8d294d361f55ece1af8893",
+          "7df319107daa1f19fe9843fb503631bcb1091f412ba9ebbbbe878894bf4cec04",
+          "62a266aa6d9d0765d1a30597aae7b75afbe5add74e74f3dd460a5a9c5eaff487",
+          "6e44704343d5f5699685ae4555695ea338629d380054269081949207954bdb59"
+        ],
+        "kept": "h-middle-south-0-0",
+        "deleted": "h-west-south-0-1",
+        "checks": [
+          "geometry",
+          "kit binding",
+          "approval",
+          "deletion tombstone",
+          "tree addition",
+          "place addition",
+          "road name",
+          "spawn",
+          "terrain",
+          "export/reopen"
+        ]
+      }
+    ],
+    "failures": []
+  },
+  "reachability": [
+    {
+      "defaultRevision": {
+        "revision": null,
+        "worldSha256": "5fc38cbe54099258f54a199f314eb0f6910a0488dff6efe6d692037b73e38b80",
+        "cellM": 1,
+        "gridCells": 74205,
+        "reachableSamples": 40159,
+        "sampledAreaM2": 40159,
+        "spawn": [
+          -2765.321977373157,
+          -1295.064162750871
+        ],
+        "seconds": 0.2028076249999999
+      },
+      "original": {
+        "revision": "river-oaks-gardens-3",
+        "worldSha256": "df44715b918971e92630d480c200a048b3cd8b371e69625d08edb2a7a96eaf6b",
+        "cellM": 1,
+        "gridCells": 74205,
+        "reachableSamples": 46549,
+        "sampledAreaM2": 46549,
+        "spawn": [
+          -2765.321977373157,
+          -1295.064162750871
+        ],
+        "seconds": 0.23647512500000017
+      },
+      "commons": {
+        "revision": "east-garden-commons-market-1",
+        "worldSha256": "d5f1179d93732630368c9b1ff7419931e72816f815b8db048c23eadff4346315",
+        "cellM": 1,
+        "gridCells": 108252,
+        "reachableSamples": 52130,
+        "sampledAreaM2": 52130,
+        "spawn": [
+          -2765.321977373157,
+          -1295.064162750871
+        ],
+        "seconds": 0.42497295900000015
+      },
+      "addedSampledAreaM2": 5581,
+      "ratio": 1.1198951642355368
+    },
+    {
+      "defaultRevision": {
+        "revision": null,
+        "worldSha256": "5fc38cbe54099258f54a199f314eb0f6910a0488dff6efe6d692037b73e38b80",
+        "cellM": 0.5,
+        "gridCells": 296238,
+        "reachableSamples": 160332,
+        "sampledAreaM2": 40083,
+        "spawn": [
+          -2765.321977373157,
+          -1295.064162750871
+        ],
+        "seconds": 0.4710039580000002
+      },
+      "original": {
+        "revision": "river-oaks-gardens-3",
+        "worldSha256": "df44715b918971e92630d480c200a048b3cd8b371e69625d08edb2a7a96eaf6b",
+        "cellM": 0.5,
+        "gridCells": 296238,
+        "reachableSamples": 185911,
+        "sampledAreaM2": 46477.75,
+        "spawn": [
+          -2765.321977373157,
+          -1295.064162750871
+        ],
+        "seconds": 0.590256709
+      },
+      "commons": {
+        "revision": "east-garden-commons-market-1",
+        "worldSha256": "d5f1179d93732630368c9b1ff7419931e72816f815b8db048c23eadff4346315",
+        "cellM": 0.5,
+        "gridCells": 432426,
+        "reachableSamples": 208123,
+        "sampledAreaM2": 52030.75,
+        "spawn": [
+          -2765.321977373157,
+          -1295.064162750871
+        ],
+        "seconds": 0.9588235000000004
+      },
+      "addedSampledAreaM2": 5553,
+      "ratio": 1.1194765237129594
+    }
+  ],
+  "reachabilityScope": "Approximate ground-level area from connected sampled cell centres using authoritative collision/height queries. Samples have finite resolution; the full area of boundary cells is not proven clear, narrow routes may be missed, and source/rendered differences remain unmeasured. No upper-floor, flight, dynamic-object, physical accessibility or browser traversal acceptance. This does not establish the 3\u20135x playable-area target.",
+  "verification": {
+    "focusedIntegration": {
+      "passed": 32,
+      "skipped": 0
+    },
+    "authoringJavaScript": {
+      "passed": 58,
+      "skipped": 0
+    },
+    "authoringPython": {
+      "passed": 14
+    },
+    "redisCommonsLantern": {
+      "passed": 9,
+      "skipped": 0
+    },
+    "core": {
+      "schemaVersion": 1,
+      "profile": "core",
+      "startedAt": "2026-10-23T23:16:36.237Z",
+      "status": "passed",
+      "revision": "c2598c65d2566816b967596661ca924972d43f44",
+      "dirty": true,
+      "scope": "Selected repository checks only; not production, live auth, native Unreal, human accessibility, or target GPU acceptance.",
+      "results": [
+        {
+          "id": "agent-tests",
+          "command": [
+            "pnpm",
+            "run",
+            "test:agent"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "expectedExit": 0,
+          "signal": null,
+          "durationMs": 40856
+        },
+        {
+          "id": "preview-tests",
+          "command": [
+            "pnpm",
+            "test"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "expectedExit": 0,
+          "signal": null,
+          "durationMs": 301326
+        },
+        {
+          "id": "server-tests",
+          "command": [
+            "pnpm",
+            "run",
+            "test:server"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "expectedExit": 0,
+          "signal": null,
+          "durationMs": 39733
+        },
+        {
+          "id": "desktop-tests",
+          "command": [
+            "pnpm",
+            "run",
+            "test:desktop"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "expectedExit": 0,
+          "signal": null,
+          "durationMs": 12809
+        },
+        {
+          "id": "build",
+          "command": [
+            "pnpm",
+            "run",
+            "build"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "expectedExit": 0,
+          "signal": null,
+          "durationMs": 1830
+        },
+        {
+          "id": "python-lint",
+          "command": [
+            "uv",
+            "run",
+            "--locked",
+            "ruff",
+            "check",
+            "."
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "expectedExit": 0,
+          "signal": null,
+          "durationMs": 101
+        },
+        {
+          "id": "python-format",
+          "command": [
+            "uv",
+            "run",
+            "--locked",
+            "ruff",
+            "format",
+            "--check",
+            "."
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "expectedExit": 0,
+          "signal": null,
+          "durationMs": 47
+        },
+        {
+          "id": "python-tests",
+          "command": [
+            "uv",
+            "run",
+            "--locked",
+            "pytest",
+            "-q"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "expectedExit": 0,
+          "signal": null,
+          "durationMs": 7516
+        },
+        {
+          "id": "demo",
+          "command": [
+            "uv",
+            "run",
+            "--locked",
+            "river-oaks",
+            "demo"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "expectedExit": 0,
+          "signal": null,
+          "durationMs": 470
+        },
+        {
+          "id": "demo-verify",
+          "command": [
+            "uv",
+            "run",
+            "--locked",
+            "river-oaks",
+            "verify",
+            "--config",
+            "data/generated/demo/config.json",
+            "--raw",
+            "data/generated/demo",
+            "--world",
+            "data/generated/demo/world.json",
+            "--output",
+            "data/generated/demo/report.json"
+          ],
+          "status": "passed",
+          "exitCode": 2,
+          "expectedExit": 2,
+          "signal": null,
+          "durationMs": 550
+        },
+        {
+          "id": "secrets",
+          "command": [
+            "uv",
+            "run",
+            "--locked",
+            "python",
+            "scripts/check_secrets.py",
+            "--all"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "expectedExit": 0,
+          "signal": null,
+          "durationMs": 17391
+        }
+      ],
+      "finishedAt": "2026-10-23T23:23:38.939Z"
+    }
+  }
+}

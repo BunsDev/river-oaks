@@ -1,8 +1,9 @@
 import { COMMONS_REVISION } from '../../shared/east-garden-commons-layout.js';
 import { attachEastGardenCommons } from './east-garden-commons-world.js';
-import { buildEastGardenCommons } from './east-garden-commons.js';
 import { createLanternWalkClient } from './lantern-walk.js';
 import { rivalFigures } from './crime-ui.js';
+import { createCommonsStream } from './commons-stream.js';
+import './spatial-stream.css';
 import { createCharacterStudio } from './character-studio.js';
 import { characterStudioShown } from './character-studio-state.js';
 import { createOfficeUI } from './office-ui.js';
@@ -165,13 +166,14 @@ let auditCamera = null;
 let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, storePeople, interiorsLayer, generatedInteriors;
 // East Garden Commons and its assembled destination, when the revision composes them.
 let commonsScene = null;
-const lanternWalk = createLanternWalkClient({ getLayout: () => world?.eastGardenCommons ?? null, getPose: () => walking?.getPose(), getScene: () => commonsScene,
+const lanternWalk = createLanternWalkClient({ announceArrival: false, getLayout: () => world?.eastGardenCommons ?? null, getPose: () => walking?.getPose(), getScene: () => commonsScene,
   getSnapshot: () => multiplayer?.snapshot?.lanternWalk ?? null,
   send: message => multiplayer?.command(message) ?? Promise.resolve({ ok: false, message: 'Connect to the town to light the lanterns together.' }) });
 let districtUI, environmentAssets = null, storefrontReflections = null, roomGroundClip = null;
 let currentAtmosphere = null; // the time-of-day light updateAtmosphere last applied; an office visit reads it
 let placesUI = null, landmarks = null;
 let pendingSharedPlace = null, sharedPlaceInFlight = false;
+let commonsStream = null, commonsStreamStatus = null;
 let worldPortal = null;
 let worldRegionSha256 = null;
 // The default district's revision once loaded (#507): null is the garage; undefined while loading.
@@ -297,6 +299,14 @@ function initializeRenderer() {
     onHalt: () => walking.halt(), onResume: () => walking.update(0, performance.now()),
   });
   walking.addObstacle({contains:(...args)=>buildLayer?.colliders.some(collider=>collider.contains(...args))??false});
+  // Presentation readiness gates only this player's own steps, never shared occupancy queries.
+  walking.addStepGuard((from, to) => commonsStream?.allowsStep(from, to) ?? true);
+  commonsStreamStatus = document.createElement('p');
+  commonsStreamStatus.className = 'spatial-stream-status';
+  commonsStreamStatus.setAttribute('role', 'status');
+  commonsStreamStatus.setAttribute('aria-live', 'polite');
+  commonsStreamStatus.hidden = true;
+  host.append(commonsStreamStatus);
   // Before the player panel, so G reaches the rack first and the owner's ride button only when no bike is in play.
   cyclingBoard = createCyclingLeaderboard();
   plazaBicycle = createPlazaBicycle({ scene, host, walking, getMultiplayer: () => multiplayer, getLocals: () => community.state?.locals, getMiles: () => cyclingBoard?.mine() ?? null, reducedMotion });
@@ -644,6 +654,7 @@ function populateWorld(data) {
   officeUI?.reset();
   storeIntros?.reset();
   walking?.exit();
+  commonsStream?.dispose(); commonsStream = null;
   generatedInteriors?.dispose(); generatedInteriors = null;
   storefrontReflections?.dispose(); storefrontReflections = null;
   if (worldGroup) {
@@ -653,7 +664,6 @@ function populateWorld(data) {
     worldGroup.remove(interiorsLayer);
     ipicScreening?.dispose(); storePeople?.userData.dispose?.(); storePeople = null; interiorsLayer = null;
     plazaSalon?.userData.rack?.dispose();
-    if(commonsScene){commonsScene.removeFromParent();commonsScene.userData.dispose();commonsScene=null;}
     worldGroup.traverse((item) => {
       item.userData.cancelLandscapeLoad?.();
       item.userData.texture?.dispose();
@@ -705,7 +715,8 @@ function populateWorld(data) {
   worldGroup.add(seeThroughNearCameraIn(buildDistrictDetail(data)));
   worldGroup.add(sidewalks);
   worldGroup.add(furniture);
-  if(data.eastGardenCommons){commonsScene=buildEastGardenCommons(data.eastGardenCommons);worldGroup.add(commonsScene);}
+  if (data.eastGardenCommons) commonsStream = createCommonsStream({ world: data, parent: worldGroup, onScene: scene => { commonsScene = scene; },
+    onStatus(text) { commonsStreamStatus.textContent = text; commonsStreamStatus.hidden = !text; } });
   // The Dior-Toulouse plaza furnished as an open-air salon (plaza-salon-plan.js).
   plazaSalon = buildPlazaSalon(data);
   plazaStage?.setWorld(data);
@@ -867,6 +878,7 @@ async function loadWorld() {
   $('#reload').disabled = true;
   $('#loading').hidden = false;
   $('#loading').classList.remove('error');
+  $('.loading-retry').hidden = true;
   $('#loading h2').textContent = 'Building the view';
   $('#loading p').textContent = 'Opening the boutiques and gardens…';
   try {
@@ -919,6 +931,9 @@ async function loadWorld() {
     } else if(new URLSearchParams(location.search).has('place')) placesUI?.say('That shared place is no longer available in this world.','error');
   } catch (error) {
     showError(`${error.message}. Use reload to try loading the district again.`);
+    // The panel reload is hidden while walking, so the error offers its own.
+    $('.loading-retry').hidden = false;
+    $('.loading-retry').focus({ preventScroll: true });
   } finally {
     loading = false;
     $('#reload').disabled = false;
@@ -967,6 +982,8 @@ function render(now) {
   renderAudit?.phase('setup');
   community?.update(delta, now);
   renderAudit?.phase('community');
+  const streamPosition = walking?.getPosition() ?? self?.position;
+  commonsStream?.update([...(streamPosition ? [streamPosition] : []), [camera.position.x, -camera.position.z]], camera);
   generatedInteriors?.update(camera.position, now, self?.levelId);
   renderAudit?.phase('setup'); // phases accumulate: interior streaming counts as setup
   layers.trees?.userData.update?.(camera.position);
@@ -1080,6 +1097,7 @@ $('#sun-hour').addEventListener('input', updateAtmosphere);
 $('#weather').addEventListener('change', updateAtmosphere);
 document.addEventListener('appearancechange', updateAtmosphere);
 $('#reload').addEventListener('click', loadWorld);
+$('.loading-retry').addEventListener('click', loadWorld);
 function visibleInScene(object) {
   for (let ancestor = object; ancestor; ancestor = ancestor.parent) if (!ancestor.visible) return false;
   return true;
@@ -1194,6 +1212,27 @@ document.addEventListener('keydown', event => {
 });
 window.addEventListener('river-oaks:debug', event => void openDebugTools(event.detail?.open));
 window.__riverDebug = () => debugTools;
+if (import.meta.env.DEV) window.__riverTravelView = () => ({ camera: camera.position.toArray(), direction: camera.getWorldDirection(new THREE.Vector3()).toArray() });
+if (import.meta.env.DEV) window.__riverSpatialStream = () => {
+  let objects = 0; worldGroup?.traverse(() => objects++);
+  const inventory = object => {
+    let objects = 0, meshes = 0;
+    const geometries = new Set(), textures = new Set(), buffers = new Set();
+    object.traverse(item => {
+      objects++; if (item.isMesh) meshes++;
+      if (item.geometry) {
+        geometries.add(item.geometry);
+        for (const attribute of [...Object.values(item.geometry.attributes), item.geometry.index].filter(Boolean)) buffers.add(attribute.array.buffer);
+      }
+      for (const material of [item.material].flat().filter(Boolean)) for (const value of Object.values(material)) if (value?.isTexture) textures.add(value);
+    });
+    return { name: object.name || object.type, id: object.uuid, objects, meshes, geometries: geometries.size, textures: textures.size,
+      geometryBytes: [...buffers].reduce((sum, buffer) => sum + buffer.byteLength, 0) };
+  };
+  return { ...commonsStream?.debug(), objects, inventory: { district: (worldGroup?.children ?? []).map(inventory), other: scene.children.filter(item => item !== worldGroup).map(inventory) }, district: { world: worldGroup?.uuid, ground: layers.ground?.uuid, buildings: buildingMesh?.uuid }, camera: camera.position.toArray(),
+    direction: camera.getWorldDirection(new THREE.Vector3()).toArray(),
+    renderer: { ...renderer.info.memory }, calls: renderer.info.render.calls };
+};
 if (import.meta.env.DEV) window.__riverGeneratedInteriors = () => generatedInteriors?.debug() ?? [];
 if (import.meta.env.DEV) window.__riverExteriorCull = () => {
   const self = multiplayer?.snapshot?.players.find(player => player.id === multiplayer.identity?.id);

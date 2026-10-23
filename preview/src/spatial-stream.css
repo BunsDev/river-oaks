@@ -1,0 +1,17 @@
+.spatial-stream-status {
+  position: absolute;
+  top: 4.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: min(32rem, calc(100% - 2rem));
+  margin: 0;
+  padding: .65rem 1rem;
+  border-radius: .6rem;
+  background: rgb(20 35 35 / 94%);
+  color: #fff;
+  font: 500 .9rem/1.4 system-ui, sans-serif;
+  text-align: center;
+  pointer-events: none;
+  z-index: 5;
+}
+.spatial-stream-status[hidden] { display: none; }
