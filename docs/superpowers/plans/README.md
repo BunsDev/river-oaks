@@ -267,12 +267,13 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-11-delivered-source-retirement](2026-10-11-delivered-source-retirement.md)<br>Delivered source reconciliation | `reconcile-delivered-sources` | retired | — | 2026-10-11 |
 | [2026-10-11-ci-parallel-preview](2026-10-11-ci-parallel-preview.md)<br>Parallel preview check | `ci-parallel-preview` | retired | #252 | 2026-10-11 |
 
-## Historical, not in the register (103)
+## Historical, not in the register (104)
 
 | Plan | PRs mentioned |
 | --- | --- |
 | [2026-10-23-phase1-review](2026-10-23-phase1-review.md)<br>Phase 1 review against #580 and #581 | #580, #581, #594 |
 | [2026-10-23-neighborhood-regeneration-review](2026-10-23-neighborhood-regeneration-review.md)<br>Neighborhood regeneration review | — |
+| [2026-10-23-mvp-regression](2026-10-23-mvp-regression.md)<br>Current-main world expansion MVP regression | #611, #587, #583 |
 | [2026-10-23-integrated-expansion-mvp](2026-10-23-integrated-expansion-mvp.md)<br>Integrated world-expansion MVP (#582–#587) | #582, #587, #611 |
 | [2026-10-23-faster-pr-checks](2026-10-23-faster-pr-checks.md)<br>Faster pull request checks | #607, #594 |
 | [2026-10-23-destination-slice-584-586](2026-10-23-destination-slice-584-586.md)<br>Destination slice: city kit, assembly and Bayou Market Commons (#584, #585, #586) | #584, #585, #586 |

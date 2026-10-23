@@ -136,3 +136,13 @@ The signed commit and draft PR checkpoint contains the combined implementation, 
 Signed commit 79e6dfbfb7df5a353ae6b88080a44c2b5454ec6e was pushed and GitHub reports its signature valid. Draft PR #623 is open. Hosted run 40039600927 failed Python 3.13 with two neighborhood CLI round-trip failures: the Python job had not installed the Node dependency `three`; Python 3.11 was cancelled by the matrix. Raw log is retained at `.runtime/integration/pr623-python313.log`.
 
 Added the repository's existing SHA-pinned pnpm and Node 24 setup actions plus frozen dependency installation before pytest in the Python job. Installation skips lifecycle scripts because this lane does not need desktop binaries. The actual adapter/Node round-trip tests pass locally (14/14), and the workflow parses with dependency installation preceding pytest. Runtime source is unchanged by this CI-only correction, so the running full verification and queued journey are preserved; hosted checks must run on the new commit.
+
+## Queue timeout and main reconciliation
+
+The first local full run completed its non-browser stages, then failed `security-browser` after 600,015 ms (`SIGKILL`, `ETIMEDOUT`) while still waiting behind seven runs; browser tests never started and later browser stages are `not_run`. Preserve `.runtime/integration/final-full-001-failed.json` and its full log. The standalone Commons journey remains queued in its original position.
+
+Main advanced to 132a75a2, including the already adopted dependency versions and ad488574's verification-runner change that excludes browser queue wait from task deadlines. Merged that main snapshot without altering the running standalone journey; all thirteen runner tests pass. A new full run will use the corrected deadline handling rather than increasing a test timeout or bypassing the queue.
+
+Hosted Python 3.11 and 3.13 passed after the prerequisite correction. The places shard then failed only `contextual-first-visit`: the touch Talk press received the authoritative `travel_cooldown` response; subsequent office journeys passed. Its first-failure log is retained. The journey already handles immediate entry/exit cooldowns, but required the immediately following Talk to succeed. Updated it to accept only the named cooldown refusal with visible explanatory copy, wait for that notice to clear, retry once, and still require the actual conversation. Syntax validation passes; behavioral confirmation awaits the full and hosted journeys. No server cooldown or permission rule changed.
+
+The first workflow-parser check found no local PyYAML module; the standard-library Ruby YAML parser subsequently validated the workflow and dependency-install ordering. The Python adapter test still passes all fourteen cases.
