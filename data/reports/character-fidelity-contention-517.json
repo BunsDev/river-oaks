@@ -1,0 +1,546 @@
+{
+  "kind": "character-fidelity-contention",
+  "revision": "825854af3e2f6f509041a4fc007ea3d647211341",
+  "method": "One Chromium session (cross-origin isolated, vsync off, Metal ANGLE) samples morgan-human high at x1/x8/x24, 120 frames each; a second browser alternately runs a fullscreen WebGL2 shader load (ABBA over rounds). host = conditions sampled before each sample.",
+  "script": "docs/acceptance/character-fidelity-517-captures/contention.mjs",
+  "id": "morgan-human",
+  "realism": "high",
+  "counts": [
+    1,
+    8,
+    24
+  ],
+  "rounds": 4,
+  "isolated": true,
+  "samples": [
+    {
+      "round": 0,
+      "contended": false,
+      "count": 1,
+      "host": {
+        "at": "2026-10-23T04:06:19.927Z",
+        "loadavg": [
+          13.64,
+          13.45,
+          14.32
+        ],
+        "gpuUtilization": 57,
+        "foreignBrowsers": 24
+      },
+      "frameP50": 0.29,
+      "cpuP50": 0.2,
+      "gpuP50": 0.426,
+      "render": {
+        "calls": 20,
+        "triangles": 168122
+      }
+    },
+    {
+      "round": 0,
+      "contended": false,
+      "count": 8,
+      "host": {
+        "at": "2026-10-23T04:06:20.503Z",
+        "loadavg": [
+          13.64,
+          13.45,
+          14.32
+        ],
+        "gpuUtilization": 70,
+        "foreignBrowsers": 24
+      },
+      "frameP50": 1.99,
+      "cpuP50": 1.795,
+      "gpuP50": 0.943,
+      "render": {
+        "calls": 153,
+        "triangles": 1344962
+      }
+    },
+    {
+      "round": 0,
+      "contended": false,
+      "count": 24,
+      "host": {
+        "at": "2026-10-23T04:06:21.278Z",
+        "loadavg": [
+          13.64,
+          13.45,
+          14.32
+        ],
+        "gpuUtilization": 67,
+        "foreignBrowsers": 24
+      },
+      "frameP50": 5.315,
+      "cpuP50": 5.11,
+      "gpuP50": 1.855,
+      "render": {
+        "calls": 457,
+        "triangles": 4034882
+      }
+    },
+    {
+      "round": 0,
+      "contended": true,
+      "count": 1,
+      "host": {
+        "at": "2026-10-23T04:06:24.709Z",
+        "loadavg": [
+          12.95,
+          13.31,
+          14.27
+        ],
+        "gpuUtilization": 74,
+        "foreignBrowsers": 25
+      },
+      "frameP50": 0.255,
+      "cpuP50": 0.185,
+      "gpuP50": 1.816,
+      "render": {
+        "calls": 20,
+        "triangles": 168122
+      }
+    },
+    {
+      "round": 0,
+      "contended": true,
+      "count": 8,
+      "host": {
+        "at": "2026-10-23T04:06:25.313Z",
+        "loadavg": [
+          12.95,
+          13.31,
+          14.27
+        ],
+        "gpuUtilization": 69,
+        "foreignBrowsers": 25
+      },
+      "frameP50": 2.565,
+      "cpuP50": 2.53,
+      "gpuP50": 2.711,
+      "render": {
+        "calls": 153,
+        "triangles": 1344962
+      }
+    },
+    {
+      "round": 0,
+      "contended": true,
+      "count": 24,
+      "host": {
+        "at": "2026-10-23T04:06:26.210Z",
+        "loadavg": [
+          12.95,
+          13.31,
+          14.27
+        ],
+        "gpuUtilization": 52,
+        "foreignBrowsers": 25
+      },
+      "frameP50": 5.285,
+      "cpuP50": 5.07,
+      "gpuP50": 2.865,
+      "render": {
+        "calls": 457,
+        "triangles": 4034882
+      }
+    },
+    {
+      "round": 1,
+      "contended": true,
+      "count": 1,
+      "host": {
+        "at": "2026-10-23T04:06:29.801Z",
+        "loadavg": [
+          12.63,
+          13.24,
+          14.24
+        ],
+        "gpuUtilization": 76,
+        "foreignBrowsers": 25
+      },
+      "frameP50": 0.225,
+      "cpuP50": 0.17,
+      "gpuP50": 1.416,
+      "render": {
+        "calls": 20,
+        "triangles": 168122
+      }
+    },
+    {
+      "round": 1,
+      "contended": true,
+      "count": 8,
+      "host": {
+        "at": "2026-10-23T04:06:30.409Z",
+        "loadavg": [
+          12.63,
+          13.24,
+          14.24
+        ],
+        "gpuUtilization": 72,
+        "foreignBrowsers": 25
+      },
+      "frameP50": 2.685,
+      "cpuP50": 2.32,
+      "gpuP50": 2.101,
+      "render": {
+        "calls": 153,
+        "triangles": 1344962
+      }
+    },
+    {
+      "round": 1,
+      "contended": true,
+      "count": 24,
+      "host": {
+        "at": "2026-10-23T04:06:31.305Z",
+        "loadavg": [
+          12.63,
+          13.24,
+          14.24
+        ],
+        "gpuUtilization": 84,
+        "foreignBrowsers": 25
+      },
+      "frameP50": 5.84,
+      "cpuP50": 5.655,
+      "gpuP50": 2.674,
+      "render": {
+        "calls": 457,
+        "triangles": 4034882
+      }
+    },
+    {
+      "round": 1,
+      "contended": false,
+      "count": 1,
+      "host": {
+        "at": "2026-10-23T04:06:36.259Z",
+        "loadavg": [
+          15.3,
+          13.78,
+          14.42
+        ],
+        "gpuUtilization": 70,
+        "foreignBrowsers": 27
+      },
+      "frameP50": 0.335,
+      "cpuP50": 0.25,
+      "gpuP50": 0.51,
+      "render": {
+        "calls": 20,
+        "triangles": 168122
+      }
+    },
+    {
+      "round": 1,
+      "contended": false,
+      "count": 8,
+      "host": {
+        "at": "2026-10-23T04:06:36.874Z",
+        "loadavg": [
+          15.3,
+          13.78,
+          14.42
+        ],
+        "gpuUtilization": 61,
+        "foreignBrowsers": 27
+      },
+      "frameP50": 2.105,
+      "cpuP50": 1.97,
+      "gpuP50": 0.849,
+      "render": {
+        "calls": 153,
+        "triangles": 1344962
+      }
+    },
+    {
+      "round": 1,
+      "contended": false,
+      "count": 24,
+      "host": {
+        "at": "2026-10-23T04:06:37.774Z",
+        "loadavg": [
+          15.3,
+          13.78,
+          14.42
+        ],
+        "gpuUtilization": 64,
+        "foreignBrowsers": 27
+      },
+      "frameP50": 6.39,
+      "cpuP50": 6.2,
+      "gpuP50": 1.618,
+      "render": {
+        "calls": 457,
+        "triangles": 4034882
+      }
+    },
+    {
+      "round": 2,
+      "contended": false,
+      "count": 1,
+      "host": {
+        "at": "2026-10-23T04:06:40.152Z",
+        "loadavg": [
+          15.92,
+          13.93,
+          14.47
+        ],
+        "gpuUtilization": 62,
+        "foreignBrowsers": 27
+      },
+      "frameP50": 0.3,
+      "cpuP50": 0.215,
+      "gpuP50": 0.405,
+      "render": {
+        "calls": 20,
+        "triangles": 168122
+      }
+    },
+    {
+      "round": 2,
+      "contended": false,
+      "count": 8,
+      "host": {
+        "at": "2026-10-23T04:06:40.768Z",
+        "loadavg": [
+          15.92,
+          13.93,
+          14.47
+        ],
+        "gpuUtilization": 62,
+        "foreignBrowsers": 27
+      },
+      "frameP50": 1.735,
+      "cpuP50": 1.595,
+      "gpuP50": 0.768,
+      "render": {
+        "calls": 153,
+        "triangles": 1344962
+      }
+    },
+    {
+      "round": 2,
+      "contended": false,
+      "count": 24,
+      "host": {
+        "at": "2026-10-23T04:06:41.556Z",
+        "loadavg": [
+          15.92,
+          13.93,
+          14.47
+        ],
+        "gpuUtilization": 69,
+        "foreignBrowsers": 27
+      },
+      "frameP50": 5.445,
+      "cpuP50": 5.225,
+      "gpuP50": 1.877,
+      "render": {
+        "calls": 457,
+        "triangles": 4034882
+      }
+    },
+    {
+      "round": 2,
+      "contended": true,
+      "count": 1,
+      "host": {
+        "at": "2026-10-23T04:06:44.887Z",
+        "loadavg": [
+          15.12,
+          13.8,
+          14.42
+        ],
+        "gpuUtilization": 71,
+        "foreignBrowsers": 28
+      },
+      "frameP50": 0.29,
+      "cpuP50": 0.195,
+      "gpuP50": 1.313,
+      "render": {
+        "calls": 20,
+        "triangles": 168122
+      }
+    },
+    {
+      "round": 2,
+      "contended": true,
+      "count": 8,
+      "host": {
+        "at": "2026-10-23T04:06:45.554Z",
+        "loadavg": [
+          15.12,
+          13.8,
+          14.42
+        ],
+        "gpuUtilization": 77,
+        "foreignBrowsers": 28
+      },
+      "frameP50": 2.42,
+      "cpuP50": 2.255,
+      "gpuP50": 2.048,
+      "render": {
+        "calls": 153,
+        "triangles": 1344962
+      }
+    },
+    {
+      "round": 2,
+      "contended": true,
+      "count": 24,
+      "host": {
+        "at": "2026-10-23T04:06:46.560Z",
+        "loadavg": [
+          15.12,
+          13.8,
+          14.42
+        ],
+        "gpuUtilization": 78,
+        "foreignBrowsers": 28
+      },
+      "frameP50": 6.145,
+      "cpuP50": 5.95,
+      "gpuP50": 2.761,
+      "render": {
+        "calls": 457,
+        "triangles": 4034882
+      }
+    },
+    {
+      "round": 3,
+      "contended": true,
+      "count": 1,
+      "host": {
+        "at": "2026-10-23T04:06:53.521Z",
+        "loadavg": [
+          14.55,
+          13.7,
+          14.38
+        ],
+        "gpuUtilization": 84,
+        "foreignBrowsers": 30
+      },
+      "frameP50": 0.26,
+      "cpuP50": 0.18,
+      "gpuP50": 1.244,
+      "render": {
+        "calls": 20,
+        "triangles": 168122
+      }
+    },
+    {
+      "round": 3,
+      "contended": true,
+      "count": 8,
+      "host": {
+        "at": "2026-10-23T04:06:54.135Z",
+        "loadavg": [
+          14.55,
+          13.7,
+          14.38
+        ],
+        "gpuUtilization": 82,
+        "foreignBrowsers": 30
+      },
+      "frameP50": 2.43,
+      "cpuP50": 2.16,
+      "gpuP50": 2.346,
+      "render": {
+        "calls": 153,
+        "triangles": 1344962
+      }
+    },
+    {
+      "round": 3,
+      "contended": true,
+      "count": 24,
+      "host": {
+        "at": "2026-10-23T04:06:55.041Z",
+        "loadavg": [
+          14.59,
+          13.73,
+          14.39
+        ],
+        "gpuUtilization": 77,
+        "foreignBrowsers": 30
+      },
+      "frameP50": 5.99,
+      "cpuP50": 5.795,
+      "gpuP50": 2.445,
+      "render": {
+        "calls": 457,
+        "triangles": 4034882
+      }
+    },
+    {
+      "round": 3,
+      "contended": false,
+      "count": 1,
+      "host": {
+        "at": "2026-10-23T04:06:59.937Z",
+        "loadavg": [
+          14.54,
+          13.73,
+          14.38
+        ],
+        "gpuUtilization": 80,
+        "foreignBrowsers": 29
+      },
+      "frameP50": 0.3,
+      "cpuP50": 0.235,
+      "gpuP50": 0.455,
+      "render": {
+        "calls": 20,
+        "triangles": 168122
+      }
+    },
+    {
+      "round": 3,
+      "contended": false,
+      "count": 8,
+      "host": {
+        "at": "2026-10-23T04:07:00.531Z",
+        "loadavg": [
+          14.54,
+          13.73,
+          14.38
+        ],
+        "gpuUtilization": 64,
+        "foreignBrowsers": 29
+      },
+      "frameP50": 2.105,
+      "cpuP50": 1.96,
+      "gpuP50": 0.731,
+      "render": {
+        "calls": 153,
+        "triangles": 1344962
+      }
+    },
+    {
+      "round": 3,
+      "contended": false,
+      "count": 24,
+      "host": {
+        "at": "2026-10-23T04:07:01.400Z",
+        "loadavg": [
+          14.54,
+          13.73,
+          14.38
+        ],
+        "gpuUtilization": 63,
+        "foreignBrowsers": 29
+      },
+      "frameP50": 6.055,
+      "cpuP50": 5.875,
+      "gpuP50": 1.628,
+      "render": {
+        "calls": 457,
+        "triangles": 4034882
+      }
+    }
+  ],
+  "note": "Produced at revision 825854af by an identical copy of this script run from .runtime/timing-517 (paths differ only)."
+}
