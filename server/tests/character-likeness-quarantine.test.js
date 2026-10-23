@@ -83,3 +83,28 @@ test('caller mutation cannot replace quarantined bytes and rejected bytes never 
   assert.equal(intake.resolve('fixture-alice',intake.publish('fixture-alice',record.id)).kind,'fixture');
   await assert.rejects(intake.submit('fixture-alice',Buffer.alloc(40)), /GLB/);
 });
+
+test('synthetic GLB declares WebP without fallback and supplies bounded texture coordinates', () => {
+  const bytes=makeLikenessFixture(),length=bytes.readUInt32LE(12);
+  const gltf=JSON.parse(bytes.subarray(20,20+length));
+  assert.deepEqual(gltf.extensionsUsed,['EXT_texture_webp']);
+  assert.deepEqual(gltf.extensionsRequired,['EXT_texture_webp']);
+  assert.deepEqual(gltf.textures,[{extensions:{EXT_texture_webp:{source:0}}}]);
+  const primitive=gltf.meshes[0].primitives[0];
+  const position=gltf.accessors[primitive.attributes.POSITION];
+  assert.deepEqual(position.min,[0,0,0]);
+  assert.deepEqual(position.max,[1,1.5,0]);
+  const uv=gltf.accessors[primitive.attributes.TEXCOORD_0];
+  assert.equal(uv.count,3);
+  assert.equal(uv.type,'VEC2');
+  const view=gltf.bufferViews[uv.bufferView],binary=bytes.subarray(28+length);
+  assert.deepEqual(Array.from({length:6},(_,i)=>binary.readFloatLE(view.byteOffset+i*4)),[0,0,1,0,0,1]);
+});
+
+for(const [name,edit] of [
+  ['undeclared WebP',g=>{delete g.extensionsRequired;}],
+  ['unapproved extension',g=>{g.extensionsUsed.push('KHR_techniques_webgl');}],
+  ['missing UVs',g=>{delete g.meshes[0].primitives[0].attributes.TEXCOORD_0;}],
+])test(`fixture rejects ${name}`,()=>{
+  assert.throws(()=>inspectLikenessFixture(changed(edit)),/extension|texture coordinates/);
+});
