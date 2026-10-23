@@ -1,0 +1,72 @@
+{
+  "head": "6ff47ba13762de25180b8e4b073b01662d7f9505",
+  "bundle": ".runtime/world-expansion/baseline-580-2026-10-23T00-54-32.160Z",
+  "patchAppliesToRecordedBase": true,
+  "patchedFiles": [
+    "preview/e2e/experience-runner.js",
+    "preview/src/district-interior-contract.js",
+    "preview/src/garden-campus-district.js",
+    "preview/src/main.js",
+    "preview/src/navigation.js",
+    "preview/src/plaza-salon-plan.js",
+    "preview/src/walking.js",
+    "preview/src/world-surface.js",
+    "server/district-data.js",
+    "server/redis-room.js"
+  ],
+  "untrackedFileCount": 18,
+  "recordedHashes": [
+    {
+      "path": "preview/public/data/district.json",
+      "sha256": "c5662c26185ff0c6caa2fccfb9ef9839bb7e56706635dcf6d6aed68bffd50326",
+      "matches": true
+    },
+    {
+      "path": "preview/public/data/world-manifest.json",
+      "sha256": "ebbf8ff48e2e58bd7c822742626723d29aa050ba70745051438d85bf17e22b4c",
+      "matches": true
+    },
+    {
+      "path": "preview/src/world-manifest.js",
+      "sha256": "b9fee74446a0376939e4add8e1ec08a069097d2a94d5dc8ac4b76e0c33dac071",
+      "matches": true
+    },
+    {
+      "path": "preview/src/district-interior-contract.js",
+      "sha256": "4c6dfcfa30c7c0f724db7e78a055970d4c0c1a6bb03f4b41967da78590e78a88",
+      "matches": true
+    },
+    {
+      "path": "preview/src/garden-campus-district.js",
+      "sha256": "0cd1e07111fefaf7ad4b25598ad7eea263dd1100a62ef8d38efbd137d359bf4f",
+      "matches": true
+    },
+    {
+      "path": "preview/src/main.js",
+      "sha256": "c8a76938e9d324accd880e221a98d781e71100cc16de11cdbb3f74807561a2d8",
+      "matches": true
+    },
+    {
+      "path": "preview/src/render-audit.js",
+      "sha256": "7bd34d0538d6d0b52c00a1d184b05917050547ea1ada609614ffcaeadc819ff9",
+      "matches": true
+    },
+    {
+      "path": "preview/audit/baseline-580-browser.js",
+      "sha256": "25422e91d43d88cdeba2cff30b8f2a9c00b58601adb46d486452549259921c33",
+      "matches": true
+    },
+    {
+      "path": "pnpm-lock.yaml",
+      "sha256": "a3a5dc5fa080393e9656a9adc6c1b604eff4f28b8e65f5f905fee22e55b90c00",
+      "matches": true
+    }
+  ],
+  "scope": "Public source patch replay in a temporary directory and exact recorded file hashes; no browser rerun, host reproducibility or production acceptance.",
+  "historicalSnapshotFingerprint": {
+    "actual": "3c754a8a28f9564532e53318d643527281b3dc669d1b364484998f074d53d4c3",
+    "expected": "3c754a8a28f9564532e53318d643527281b3dc669d1b364484998f074d53d4c3",
+    "matches": true,
+    "algorithm": "Recorded harness algorithm: patch followed by sorted untracked name/content; HEAD separately verified. Current harness additionally includes HEAD."
+  }
+}
