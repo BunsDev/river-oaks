@@ -18,7 +18,7 @@ const canvas2d = (width, height) => headless ? null : Object.assign(document.cre
 // Render-only slots that no recipe names.
 const RENDER_MATERIALS = {
   // A dim, warm shop interior seen through storefront glass.
-  'shop-interior': { color: '#4a3a2e', roughness: .9, emissive: '#d9925a', emissiveIntensity: .45 },
+  'shop-interior': { color: '#1d1712', roughness: .95, emissive: '#b5703c', emissiveIntensity: .22 },
 };
 
 function createMaterials() {
@@ -203,6 +203,9 @@ function renderShell(piece, batch, detail, m, ground, signs) {
       put(detail, glass, mid, -recess + .05, ground + 1.95, width, 2.9, .03);
       // A warm interior just behind the glass, in front of the core wall.
       put(detail, m('shop-interior'), mid, -recess + .015, ground + 1.95, width, 2.9, .01);
+      // Display shelves and pendant lights read as a furnished shop through the glass.
+      for (const level of [1.05, 1.85]) put(detail, m('metal-brass'), mid, -recess + .03, ground + level, width * .78, .1, .01);
+      for (let k = 0, lights = Math.max(1, Math.floor(width / 1.8)); k < lights; k++) put(detail, m('lamp-glow'), u0 + width * (k + .5) / lights, -recess + .03, ground + 3.0, .32, .14, .01);
       for (const t of [.33, .66]) put(detail, bronze, u0 + width * t, -recess + .08, ground + 1.95, .05, 2.9, .06);
       put(detail, bronze, mid, -recess + .08, ground + 2.75, width, .05, .06);
       if (i === Math.floor(bays / 2)) put(detail, bronze, mid, -recess + .09, ground + 1.2, 1.0, 2.35, .05);
@@ -216,12 +219,17 @@ function renderShell(piece, batch, detail, m, ground, signs) {
         put(detail, m(piece.awning), mid, 1.38, ground + 2.92, width + .2, .28, .04);
       }
     }
-    // One sign per shop on its primary face; a blade sign for garden-court.
+    // One sign per shop on its primary face; garden-court adds a lettered blade.
     if (piece.sign && face === piece.faces?.[0]) {
       const width = Math.min(f.length - 1, 7), [x, y] = at(f.length / 2, .09);
       // Above a canopy (3.6 m) and within the 3.6–4.3 m sign band.
       signs.push({ name: piece.sign, width, height: Math.min(.6, width / 8), east: x, up: ground + 3.98, north: y, yaw });
-      if (style.signage === 'blade') { const [bx, by] = at(.8, .55); detail.box(accent, bx, ground + 3.3, by, .05, .7, .9, yaw + Math.PI / 2); }
+      if (style.signage === 'blade') {
+        // A plate on a bracket, standing out from the facade, lettered top to bottom on both faces.
+        put(detail, bronze, .8, .3, ground + 4.3, .05, .05, .6);
+        put(detail, accent, .8, .4, ground + 2.95, .06, 2.6, .44);
+        for (const side of [1, -1]) { const [bx, by] = at(.8 + side * .035, .4); signs.push({ name: piece.sign, width: 2.4, height: .3, east: bx, up: ground + 2.95, north: by, yaw: yaw + side * Math.PI / 2, roll: side * Math.PI / 2 }); }
+      }
     }
   }
   if (roofKind === 'sawtooth') {
@@ -432,7 +440,11 @@ export function buildCityKit(plan, { groundAt, ground }) {
   // Shop signs share one atlas texture and one material.
   const atlas = signAtlas(signs.map(sign => sign.name)), signMaterial = new THREE.MeshStandardMaterial({ map: atlas.texture, color: atlas.texture ? '#ffffff' : '#1f454a', roughness: .55 }); signMaterial.name = 'city-kit/signs';
   const signBatch = createBatch();
-  for (const sign of signs) signBatch.mesh(signMaterial, signQuad(atlas, sign.name, sign.width, sign.height), sign.east, sign.up, sign.north, sign.yaw);
+  for (const sign of signs) {
+    const quad = signQuad(atlas, sign.name, sign.width, sign.height);
+    if (sign.roll) quad.rotateZ(sign.roll);
+    signBatch.mesh(signMaterial, quad, sign.east, sign.up, sign.north, sign.yaw);
+  }
   geometries.push(...signBatch.build(group, 'shop signs', { shadows: false }));
   for (const lantern of lanterns.values()) group.add(lantern);
   // Tree and planting models stream from /assets; headless builds count placements only.
