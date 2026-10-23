@@ -1,5 +1,7 @@
 import { createTownChatDock, bindTownChatComposer } from './town-chat.js';
 import { createGreetingsUI } from './greetings-ui.js';
+import { createWorldPolicyUI } from './world-policy-ui.js';
+import { createCrimeUI } from './crime-ui.js';
 import { validTownSnapshot } from './town-snapshot.js';
 import './multiplayer.css';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, worldIdFromSearch } from './world-contract.js';
@@ -120,6 +122,8 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
   panel.append(logout);
   const chatDock = createTownChatDock(chatSection);
   const greetings=createGreetingsUI({host:document.querySelector('#viewport'),getTown:()=>({connected,selfId,snapshot:latestSnapshot}),getEnvironment,request:command,getPose});
+  const worldRules=createWorldPolicyUI({panel,getTown:()=>({connected,selfId}),getEnvironment,command});
+  const crimeHud=createCrimeUI({host:document.querySelector('#viewport'),getTown:()=>({connected,selfId,snapshot:latestSnapshot}),getEnvironment,request:command});
   let activeGreeting=null;
   const latestPlayers=new Map();
   // Shared voice. Its requests go straight to fetch rather than api(): api()
@@ -283,7 +287,7 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
     const self=data.players.find(player=>player.id===selfId);
     if(self?.interaction?.id&&self.interaction.id!==activeGreeting)onCorrection(self);
     activeGreeting=self?.interaction?.id??null;
-    onSnapshot(data);onPlayers(data.players,selfId);displayPlayers(data.players);displayChat(data.chat??[]);
+    onSnapshot(data);onPlayers(data.players,selfId);displayPlayers(data.players);displayChat(data.chat??[]);worldRules.sync(data);crimeHud.sync();
     voice.setAvailable(Boolean(data.voice?.available),self?.voice?.space??null);voice.sync(data.players,selfId);
     chatInput.disabled=chatSend.disabled=false;gestureButtons.forEach(button=>button.disabled=false);
   }
@@ -324,7 +328,7 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
   function lost(ws,code,reason){
     if(socket!==ws)return;
     if(rotation){const {ws:replacement,queued}=rotation;rotation=null;try{replacement?.close();}catch{ /* never opened */ }for(const item of queued)item.resolve({ok:false,message:'Reconnect before taking an action.'});}
-    socket=null;previousSocket=null;connected=false;connecting=false;latestSnapshot=null;homeAccess=[];onHomeAccess(homeAccess);social.refreshHomeAccess();chatInput.disabled=chatSend.disabled=true;gestureButtons.forEach(button=>button.disabled=true);clearPending();onPlayers([],selfId);
+    socket=null;previousSocket=null;connected=false;connecting=false;latestSnapshot=null;worldRules.sync(null);crimeHud.sync();homeAccess=[];onHomeAccess(homeAccess);social.refreshHomeAccess();chatInput.disabled=chatSend.disabled=true;gestureButtons.forEach(button=>button.disabled=true);clearPending();onPlayers([],selfId);
     const notice=closeNotice(code,reason);
     // Voice leases die with the connection; a non-terminal close rejoins voice with the town.
     voice.onConnectionLost(notice.terminal);
@@ -409,7 +413,7 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
     },
     officeDeskRequest:(action,data={})=>api(`/api/office-desk/${action}?world=${encodeURIComponent(worldId)}`,{signal:AbortSignal.timeout(15000),method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}),
     update(now){
-      greetings.update(now);
+      greetings.update(now);crimeHud.update(now);
       if(!connected||socket?.readyState!==WebSocket.OPEN)return;
       if(!traveling&&now-lastPose>=200){
         lastPose=now;const pose=getPose();
@@ -436,7 +440,7 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
       const current=socket;socket=null;connected=connecting=traveling=false;latestSnapshot=null;homeAccess=[];
       current?.close();clearPending();onPlayers([],selfId);onHomeAccess(homeAccess);
       identity=null;csrfToken=null;rows.clear();latestPlayers.clear();chatRows.clear();
-      social.dispose();groups?.dispose();workplace?.dispose();greetings.dispose();chatDock.dispose();gate.remove();panel.remove();document.querySelector('.app-shell')?.removeAttribute('inert');
+      social.dispose();groups?.dispose();workplace?.dispose();greetings.dispose();worldRules.dispose();crimeHud.dispose();chatDock.dispose();gate.remove();panel.remove();document.querySelector('.app-shell')?.removeAttribute('inert');
     },
   };
 }

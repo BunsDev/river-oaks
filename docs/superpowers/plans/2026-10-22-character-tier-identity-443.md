@@ -56,14 +56,61 @@ behavioral regression that keeps it true when #545's tiers land.
   all 12 journeys passed, including character-studio-shared (81 checks) and
   character-studio-tiers (35 checks). Report: `data/reports/shared-required-tiers-443.json`.
 
+## Delivery of increment 1
+#573 merged as `3bae89fb` (reviewed head `959bb6c5`, tree `b90f40b7`), carrying
+the `opentelemetry-api` 1.45.1 audit fix. #545 (#517 realistic tiers) merged as
+`1f4aa36d` (reviewed head `e26739cf`, tree `18d8b0ac`) at Val's direction.
+
+## Increment 2: realistic tiers, fault recovery, WebKit, census
+Task `realistic-tier-identity-443-20261022`, branch
+`feat/realistic-tier-identity-443-20261022`, base `1f4aa36d`.
+
+Changes:
+- `remote-players.js` stats gain `realism` (the avatar's `realismReport`);
+  `player-avatar.js` gains a `realism` getter and `__riverMultiplayer()` exposes
+  `selfRealism`. Read-only diagnostics.
+- `character-studio-tiers.js`: Alice wears realistic Morgan, Bob realistic Imani
+  (authored colors; realistic looks have no color choices). Each viewer applies
+  its own tier to the other's exact revision (Sharpest `high`, Smoothest
+  `standard`); re-tiering the peer sends nothing and changes no selection. Peer
+  transport faults (missing, stale-catalog, corrupt-asset, foreign-owner) on
+  Morgan fall back to the authored base (revision 0) at the peer's `standard`
+  tier with skin/cornea/hair upgraded, and recover the exact revision on the same
+  connection. The fallback is visually identical to the published look because
+  these looks cannot be customized; the checks prove fail-closed validation.
+- `shared-runner.js`: `RIVER_OAKS_SHARED_BROWSER=webkit` runs in Playwright
+  WebKit; the report records `browser`.
+
+Results (all on `1f4aa36d` + this diff, Apple M5 Max, shared host):
+- Chromium `character-studio-tiers`: 64 checks passed
+  (`data/reports/character-studio-tiers-realistic-443.json`).
+- Chromium `pnpm run test:shared required`: 12/12 journeys, character-studio-shared 81,
+  character-studio-tiers 64 (`data/reports/shared-required-realistic-443.json`).
+- WebKit (`RIVER_OAKS_SHARED_BROWSER=webkit`, Apple GPU) `character-studio-tiers`:
+  64 checks passed (`data/reports/webkit-character-studio-tiers-443.json`).
+- WebKit `character-studio-shared`: 81 checks passed (`data/reports/webkit-character-studio-shared-443.json`).
+- #517 census (`node scripts/character-fidelity-baseline.mjs --appearances
+  morgan-human,imani-human --realism off,low,standard,high --expressions
+  --quality-cycles --repeats 0`): all 8 appearance/tier pairs exactly equal to
+  `character-fidelity-resource-budgets-517.json` in triangles, draw calls and
+  texture bytes, zero GPU residue (`data/reports/character-fidelity-census-443.json`).
+- Core gate: every task passed when run individually (agent 177, server 988 with
+  Redis zero skips, desktop 115 + 3 Windows-only skips, build, ruff lint/format,
+  pytest, demo, demo-verify at its expected exit 2, secrets). `pnpm test` passed
+  3752/3754 + 1 skip; the one failure is the office-penthouse "short idle slices"
+  timing test under load average ~45, which passed 3/3 in isolation after.
+- Screenshots inspected: realistic standard-peer, high-owner and corrupt-asset
+  fallback frames (local `output/playwright/`, not committed).
+
 ## Gaps
-- #517 realistic material tiers are not on main; once #545 lands, run this
-  journey with a realistic appearance at `low` vs `high` to close the realistic
-  half of the criterion.
-- Desktop Chromium only; no WebKit, physical device, hosted WorkOS or human
-  acceptance.
-- Remaining #443 acceptance outside this slice: realistic LOD streaming,
-  crowd/device performance, human accessibility and novice usability.
+- Frame-time and crowd budgets: #517 records none for desktop and says a shared
+  host cannot establish one. Measuring them needs an idle Mac (no other sessions)
+  or the paired physical iPhone 16 Pro Max / iOS 27.0.1 Safari per
+  `docs/acceptance/character-fidelity-517.md`; Val must run or schedule that.
+- `low` tier is reached only by Auto under sustained load; covered by #517 unit
+  tests, not by this journey.
+- Hosted WorkOS, physical iOS/macOS device touch/VoiceOver, five novice sessions
+  and human accessibility review need Val (see register `character-studio-persistence-20261015`).
 
 ## Next step
 See handoff in the task register `nextAction`.

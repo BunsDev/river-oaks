@@ -100,6 +100,29 @@ test('startup retries only the read-only exchange after normal connection recove
   } finally { await f.close(); }
 });
 
+test('startup restarts admission when the socket changes before the probe is sent', async () => {
+  let count = 0, first, replaced = false;
+  const f = await fixture((message, wire) => { count++; reply(wire, message); });
+  const startup = createStartupReadiness({ timeoutMs: 2000, log: record => f.logs.push(record) }); startup.track(f.page);
+  const evaluate = f.page.evaluate;
+  f.page.evaluate = async (fn, argument) => {
+    // Schedule the real transport replacement at the browser evaluation seam.
+    if (!replaced && fn.toString().includes('await window.__riverMultiplayerCommand')) {
+      replaced = true;
+      const closed = once(first.socket, 'close'); first.peer.terminate(); await closed;
+      await f.connect();
+      await f.page.waitForFunction(() => Boolean(window.__riverMultiplayer().snapshot), null, { timeout: 1000 });
+    }
+    return evaluate(fn, argument);
+  };
+  try {
+    first = await f.connect(); await startup.joined(f.page);
+    assert.equal(count, 2, 'a replacement socket must pass a fresh admission and probe checkpoint');
+    assert.equal(f.logs.some(record => record.event === 'probe-socket-changed'), true);
+    assert.equal(f.logs.at(-1).event, 'ready'); assert.equal(f.logs.at(-1).generation, 2);
+  } finally { await f.close(); }
+});
+
 test('unexpected server permission errors fail immediately rather than retrying', async () => {
   let count = 0;
   const f = await fixture((message, wire) => { count++; reply(wire, message, { ok: false, error: 'invalid_character_operation' }); });

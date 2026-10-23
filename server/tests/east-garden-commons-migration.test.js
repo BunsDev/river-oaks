@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 import { loadDistrictData } from '../district-data.js';
 import { createSharedWorld } from '../world.js';
 import { recoverDistrictCommonsCheckpoint } from '../district-commons-checkpoint-migration.js';
-import { detachEastGardenCommons } from '../../preview/src/east-garden-commons-world.js';
+import { createWalkingEnvironment } from '../../preview/src/walking.js';
+import { objectCollider } from '../../preview/src/creator-object.js';
+import { attachEastGardenCommons, detachEastGardenCommons } from '../../preview/src/east-garden-commons-world.js';
 import { COMMONS_REVISION } from '../../shared/east-garden-commons-layout.js';
 import { configuredDistrictRevision, districtRevisionOf, DISTRICT_REVISION_GARDENS } from '../../preview/src/garden-campus-district.js';
 const gardens=await loadDistrictData({districtRevision:DISTRICT_REVISION_GARDENS});
@@ -65,4 +67,92 @@ test('Redis fences Commons rollout and rollback by epoch and preserves durable s
   assert.ok((await rollback.read()).snapshot.players[0].position[0]<gardens.bounds_m[2]);
   await rollback.close();
   await assert.rejects(join(create(commons,2),'stale-commons'),/Invalid durable town district/);
+});
+
+test('rollback relocates a flyer inside the walking margin but outside District flight clearance', () => {
+  let time = 100000;
+  const id = 'user_01M402HKJYDTH1QJM5NAQDZ4HH';
+  const source = createSharedWorld(commons, { now: () => time });
+  assert.equal(source.join({ userId: id, name: 'Owner' }).ok, true);
+  const command = message => { time += 2000; return source.command(id, message); };
+  const position = [commons.eastGardenCommons.edge - .5, -1335];
+  assert.equal(command({ type: 'travel', position }).ok, true);
+  const player = source.snapshot().players[0];
+  assert.equal(command({ type: 'pose', position: player.position, yaw: 0, altitude: 1 }).ok, true);
+  const checkpoint = source.checkpoint();
+  assert.equal(createSharedWorld(commons, { now: () => time }).restore(checkpoint).ok, true);
+  const migrated = recoverDistrictCommonsCheckpoint({ worldData: gardens, checkpoint, now: () => time });
+  assert.equal(migrated.ok, true);
+  assert.deepEqual(migrated.moved, [id]);
+  const restored = createSharedWorld(gardens, { now: () => time });
+  assert.equal(restored.restore(migrated.checkpoint).ok, true);
+  assert.equal(restored.snapshot().players[0].altitude, 0);
+  assert.deepEqual(source.checkpoint(), checkpoint);
+});
+
+test('temporary Commons blockout refuses durable creations until relocation is supported', () => {
+  let time = 100000;
+  const source = createSharedWorld(commons, { now: () => time, isAdmin: () => true });
+  source.join({ userId: 'admin', name: 'Admin' });
+  time += 2000;
+  const east = commons.eastGardenCommons.edge;
+  assert.equal(source.command('admin', { type: 'travel', position: [east + 80, -1335] }).ok, true);
+  time += 2000;
+  const result = source.command('admin', { type: 'build', action: 'place', kind: 'seat', finish: 'rose', position: [east + 83, -1335], yaw: 0 });
+  assert.equal(result.ok, false);
+  assert.equal(result.error, 'blocked_build_site');
+  const rollback = recoverDistrictCommonsCheckpoint({ worldData: gardens, checkpoint: source.checkpoint(), now: () => time, isAdmin: () => true });
+  assert.equal(rollback.ok, true);
+});
+
+test('original District creations remain available and survive rollback exactly', () => {
+  let time = 100000;
+  const options = { now: () => time, isAdmin: () => true };
+  const source = createSharedWorld(commons, options);
+  source.join({ userId: 'admin', name: 'Admin' });
+  const [west, south] = gardens.bounds_m;
+  time += 2000;
+  assert.equal(source.command('admin', { type: 'travel', position: [west + 5, south + 2] }).ok, true);
+  time += 2000;
+  const result = source.command('admin', { type: 'build', action: 'place', kind: 'seat', finish: 'rose', position: [west + 2, south + 2], yaw: 0 });
+  assert.equal(result.ok, true);
+  const migrated = recoverDistrictCommonsCheckpoint({ worldData: gardens, checkpoint: source.checkpoint(), ...options });
+  assert.equal(migrated.ok, true);
+  assert.deepEqual(migrated.checkpoint.payload.builds, [result.item]);
+});
+
+test('rollback avoids existing District creation colliders and preserves creations', () => {
+  let time = 100000;
+  const options = { now: () => time, isAdmin: () => true };
+  // Actual gateway roads prohibit creation placement. This controlled fixture
+  // removes roads to exercise an occupied first relocation candidate.
+  const fixtureGardens = { ...gardens, roads: [] };
+  const fixtureCommons = attachEastGardenCommons(fixtureGardens);
+  const source = createSharedWorld(fixtureCommons, options);
+  const edge = fixtureGardens.bounds_m[2];
+  const command = message => {
+    time += 2000;
+    const result = source.command('admin', message);
+    assert.equal(result.ok, true, JSON.stringify(result));
+    return result;
+  };
+  assert.equal(source.join({ userId: 'admin', name: 'Admin' }).ok, true);
+  command({ type: 'travel', position: [edge - 1.1, -1332.5] });
+  const assembly = { name: 'Gateway obstacle', parts: [{ shape: 'box', size: [1, 2, 1],
+    position: [0, 1, 0], rotation: [0, 0, 0], color: '#b97986', material: 'metal' }] };
+  const block = command({ type: 'build', action: 'place', kind: 'object', finish: 'rose',
+    assembly, position: [edge - 1.1, -1335], yaw: 0 }).item;
+  command({ type: 'travel', position: [edge + 80, -1335] });
+  const environment = createWalkingEnvironment(fixtureGardens, [objectCollider(block)]);
+  assert.equal(environment.isFree(edge - 1, 1335), false);
+  const checkpoint = source.checkpoint();
+  const result = recoverDistrictCommonsCheckpoint({ worldData: fixtureGardens, checkpoint, ...options });
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.moved, ['admin']);
+  const destination = result.checkpoint.payload.players[0].position;
+  assert.equal(environment.isFree(destination[0], -destination[1]), true);
+  assert.notEqual(destination[0], edge - 1);
+  assert.deepEqual(result.checkpoint.payload.builds, [block]);
+  assert.deepEqual(source.checkpoint(), checkpoint);
+  assert.equal(createSharedWorld(fixtureGardens, options).restore(result.checkpoint).ok, true);
 });

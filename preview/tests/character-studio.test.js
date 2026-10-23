@@ -54,3 +54,13 @@ test('Surprise me and Remix always stage a different validated look',()=>{
   draft.change({appearanceId:'kai-noir'});
   for(let i=0;i<6;i++){draft.remix(()=>i/6);assert.match(draft.value.appearanceId,/kai|man-workwear/);assert.equal(draft.value.palette,'authored');}
 });
+
+test('development always shows the studio; builds still need the release flag', async () => {
+  const { characterStudioShown } = await import('../src/character-studio-state.js');
+  assert.equal(characterStudioShown({ DEV: true }), true);
+  assert.equal(characterStudioShown({ DEV: true, VITE_CHARACTER_STUDIO: '' }), true);
+  assert.equal(characterStudioShown({ DEV: true, VITE_CHARACTER_STUDIO: 'false' }), false, 'a journey can still turn it off');
+  assert.equal(characterStudioShown({ DEV: false }), false);
+  assert.equal(characterStudioShown({ DEV: false, VITE_CHARACTER_STUDIO: 'yes' }), false);
+  assert.equal(characterStudioShown({ DEV: false, VITE_CHARACTER_STUDIO: 'true' }), true);
+});
