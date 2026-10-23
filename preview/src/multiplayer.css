@@ -235,6 +235,7 @@ body.theater-seated .greeting-prompt { visibility: hidden; }
 .world-rules-owner label { display: inline-flex; align-items: center; gap: 4px; min-height: 32px; }
 .world-rules-owner input[type=time], .world-rules-owner select { padding: 6px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); font: inherit; }
 .multiplayer-roster .world-rules-emergency { min-height: 44px; font-weight: 700; color: #fff; background: #a3242f; border: 2px solid #6e1019; border-radius: 10px; }
-:root[data-theme] .multiplayer-roster .world-rules-emergency { color: #fff; background: #a3242f; border-color: #6e1019; }
+/* The themed roster buttons are 36 px; the stop control keeps a full 44 px touch target. */
+:root[data-theme] .multiplayer-roster .world-rules-emergency { min-height: 44px; width: 100%; font-size: 13px; font-weight: 700; white-space: normal; color: #fff; background: #a3242f; border-color: #6e1019; }
 :root[data-theme] .multiplayer-roster .world-rules-emergency:hover:not(:disabled) { background: #861b25; border-color: #4f0b12; }
 .multiplayer-roster .world-rules-emergency:focus-visible { outline: 3px solid var(--accent, #934969); outline-offset: 2px; }
