@@ -62,9 +62,31 @@ receipts. Older checkpoints restore with no crime. An untouched section is accep
 version; anything else is refused there. Region migration keeps wanted levels and receipts and
 starts rivals fresh. Redis writers are `v17:`/`v18:`.
 
+## What players see
+
+- **Rivals** are drawn with the remote-player renderer from `crime.targets`, with a name label.
+  When hit they flinch (`stagger`); while down they are bowed over, winded (`down`), labelled
+  "· down". The attacker's `shove` is an arm-forward strike. `crime-poses.js` maps these to existing
+  gesture poses (`throw-release`, `startled`, `bow`), so no new animation, asset or audio is added
+  and the garment bakes, which hash `resident-gestures.js`, stay valid. Non-graphic; reduced motion
+  keeps the rest pose, and the HUD text carries the meaning.
+- **The crime HUD** (`preview/src/crime-ui.js`) appears near a rival or while you are wanted. It
+  shows the rival's name, a labelled health progress bar, whether they are down, the risk where you
+  stand, and wanted stars with a spoken label ("Wanted level: 2 of 5 stars"). In an active danger
+  zone it offers **Shove … (T)**. Anywhere else it says "Peaceful here. Nobody can be harmed." and
+  offers nothing.
+- A hit is confirmed only from the town's reply ("Hit landed. Westcreek rival has 75 health left.
+  Wanted level 1 of 5."), announced politely. Refusals use the town's own message. Health on screen
+  always comes from the latest snapshot; nothing is predicted. A lost reply is retried once with
+  the same attack ID.
+
 ## Tests
 
 `server/tests/crime.test.js` covers rules, refusals without mutation, forgery and fuzz, reach, a
 real wall, cooldown, recovery, star clamp and decay, and checkpoints.
 `server/tests/crime-transport.test.js` covers two clients on two gateways, retries, a reconnect and
-writer replacement. The HUD and animation are the next slice.
+writer replacement. `preview/tests/crime-ui.test.js` covers the HUD's copy, reach and poses, and
+`preview/tests/town-snapshot.test.js` the snapshot validation. The development-shard journey
+`crime-shared` runs two browsers. The owner enables danger, the visitor shoves with T, a mutation
+trace proves the health bar only ever shows the town's value, the owner's browser sees the same
+hit and star, and after emergency off there is no shove and T changes nothing.
