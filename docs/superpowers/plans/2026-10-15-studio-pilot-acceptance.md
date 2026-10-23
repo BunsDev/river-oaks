@@ -1065,7 +1065,17 @@ which this branch carries. Until #613 or this branch lands, main's IPIC journey 
 
 ### Gates
 
-@@GATES@@
+- `pnpm run verify` (core), clean tree at `e1c458d2` (this branch before this ledger edit; app code = `f4aa1670`),
+  22:04–22:14Z, under the browser lock: passed. Agent 204/204; preview 3,877 passed, 1 skipped; server 824 passed,
+  218 skipped (Redis and other env-gated tests); desktop 115, 3 skipped; build, Python (149), demo and secrets.
+  Receipt `.runtime/agent/core.json` (revision `e1c458d2`, `dirty: false`).
+- The first run at 21:47Z failed 4 of 204 agent-tooling tests (`project-worktree-snapshot.py archive`:
+  `extractall() got an unexpected keyword argument 'filter'`). This session's `python3` was macOS's
+  `/usr/bin/python3` 3.9.6; the repository needs Python ≥ 3.11. With uv's CPython 3.13 first on `PATH` the
+  same tree passed. No check was changed. `pnpm run agent:doctor` reports the Python environment as passing in
+  that state, because it checks uv's environment rather than the `python3` the tooling tests run: a doctor gap,
+  not fixed here.
+- Not run: isolated Redis/full, physical devices, VoiceOver, packaged Electron. None of this is human review.
 
 ### Decisions for Val
 
