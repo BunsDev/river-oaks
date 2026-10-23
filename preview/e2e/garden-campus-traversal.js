@@ -107,7 +107,7 @@ async page => {
  // Up T1's lift to Floor 4, one floor per press.
  await enterHall(page, 'campus:T1-F1-hall');
  await walk(page, [[18, spurV('T1')], [12.4, portal('T1-F1/lift-up')[1]]], 'T1 lift');
- await waitForCampusLift(page, portal('T1-F1/lift-up'));
+ await waitForCampusLift(page, campusToSource(portal('T1-F1/lift-up')));
  for (const index of [1, 2, 3]) { await take(page, { label: `T1 lift to Floor ${index + 1}`, to: L(index) });await onLevel(page, index, `T1 lift, Floor ${index + 1}`); }
  const landing = (await self(page)).position;
 
@@ -118,7 +118,7 @@ async page => {
  await guest.goto(`${origin}/?motion-debug=1`, { waitUntil: 'commit' });await ready(guest);
  await enterHall(guest, 'campus:T1-F1-hall');
  await walk(guest, [[18, spurV('T1')], [12.4, portal('T1-F1/lift-up')[1]]], 'T1 lift (phone)');
- await waitForCampusLift(guest, portal('T1-F1/lift-up'));
+ await waitForCampusLift(guest, campusToSource(portal('T1-F1/lift-up')));
  for (const index of [1, 2, 3]) await take(guest, { touch: true, label: `phone lift to Floor ${index + 1}`, to: L(index) });
  await onLevel(guest, 3, 'phone on Floor 4');
  const beside = (await self(guest)).position;
