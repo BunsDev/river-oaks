@@ -1,3 +1,4 @@
+import { commonsGroundAt } from '../../shared/east-garden-commons-layout.js';
 import { terrainHeight } from './geometry.js';
 import { campusGroundAt } from './garden-campus-district.js';
 import { Matrix4, Vector3 } from 'three';
@@ -53,6 +54,8 @@ export function groundSurfaceTriangles(world,x,z,radius) {
 }
 
 export function groundSurfaceHeight(world,x,z) {
+  const commons=commonsGroundAt(world.eastGardenCommons,x,-z);
+  if(commons!==null)return commons;
   // The Gardens' platform (garden-campus-district.js) is one height for client and server,
   // above or below the terrain mesh it covers; no skywalk or upper floor is ever ground.
   const campus=campusGroundAt(world,x,-z);
