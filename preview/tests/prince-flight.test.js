@@ -28,7 +28,9 @@ test('Jev keeps the same place beside the bubble at its fast speed as at the old
   assert.ok(Math.abs(state.velocity[2]-speed)<.05,`flies at the bubble's ${speed} m/s: ${state.velocity[2]}`);
  }
  assert.ok(Math.abs(behind[7])<2,`beside the bubble at 7 m/s: ${behind[7].toFixed(2)} m behind`);
- assert.ok(Math.abs(behind[FLIGHT_SPEED.fast]-behind[7])<.2,`and at its fast speed: ${behind[FLIGHT_SPEED.fast].toFixed(2)} m behind`);
+ // She steers to the slot sampled before the bubble's step, so she settles one 60 Hz frame of its extra travel closer.
+ const frame=(FLIGHT_SPEED.fast-7)/60;
+ assert.ok(Math.abs(behind[7]-behind[FLIGHT_SPEED.fast]-frame)<.05,`and at its fast speed: ${behind[FLIGHT_SPEED.fast].toFixed(2)} m behind`);
  // Slower than 7 m/s the slot is unchanged: 0.35 s of the bubble's travel ahead.
  assert.deepEqual(flightSlot({position:[0,5.18,0],velocity:[0,4.5]},0),flightSlot({position:[0,5.18,4.5*.35]},0));
 });

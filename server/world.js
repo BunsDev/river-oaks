@@ -35,6 +35,8 @@ import { isJevicaAdmin } from './admin.js';
 import { accountName } from '../preview/src/resident-names.js';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, validateWorldId } from '../preview/src/world-contract.js';
 import { checkpointFailureReason } from './recovery-diagnostics.js';
+import { CRIME_RULES, createCrime } from './crime.js';
+import { advanceClock, clockMinute, dangerActive, defaultWorldPolicy, evaluateViolence, proposePolicy, validateWorldPolicy } from '../preview/src/world-policy.js';
 import { campusInteriorPlan, isCampusLevelId } from '../preview/src/garden-campus-levels.js';
 
 const CYCLE_GRACE_MS = 1500;
@@ -45,19 +47,21 @@ const MAX_APPEARANCES = 4096, MAX_BUILDS = 192, MAX_BUILDS_PER_USER = 24;
 const MAX_DESIGNS = 4096;
 const MAX_HOME_GUESTS = 16;
 const GESTURES = ['wave','bow'];
-// Watering is a gesture the server starts for a planter in reach; a player
-// cannot request it as a bare gesture.
-const SHOWN_GESTURES = [...GESTURES,'water'];
+// Watering is a gesture the server starts for a planter in reach, and a shove one it
+// starts for a landed attack (crime.js); a player cannot request either as a bare gesture.
+const SHOWN_GESTURES = [...GESTURES,'water','shove'];
 // The plaza's music stage (plaza-salon-plan.js): one performer at a time stands at
 // its centre, on the timber top, behind the microphone and facing the salon.
 const STAGE_TOP = 0.22, STAGE_REACH = 1.6;
+// Owner changes to the world rules (#596), beyond the ordinary command budget. Emergency off is exempt.
+const WORLD_POLICY_COOLDOWN_MS = 1000;
 const distance = (a,b) => Math.hypot(a[0]-b[0],a[1]-b[1]);
 const copy = value => structuredClone(value);
 const fields = (message, allowed) => Object.keys(message).every(key => allowed.includes(key));
 const textId = value => typeof value === 'string' && value.length > 0 && value.length <= 160;
 const reject = (error, message = error) => ({ok:false,error,message});
 
-const CHECKPOINT_VERSION = 13, MAX_CHECKPOINT_BYTES = 8 * 1024 * 1024;
+const CHECKPOINT_VERSION = 15, MAX_CHECKPOINT_BYTES = 8 * 1024 * 1024;
 const LIFE_FIELDS = ['elapsed','storm','revision','packet','cursor','paused','stats'];
 const digest = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const nonnegative = value => Number.isFinite(value) && value >= 0;
@@ -116,6 +120,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   };
   const state = createCommunity(worldData, environment.rooms, {carriage:false,sharedPopulation});
   let life = createResidentLife(worldData, state), revision = 0, elapsed = 0;
+  // The world's clock and violence rule (world-policy.js): server-owned, checkpointed, peaceful by default.
+  let worldPolicy = defaultWorldPolicy(), worldPolicyAt = -Infinity;
   // Shared with the builder preview, so its verdict matches the town's.
   const residentBlocked=blocksResident;
   const localById = new Map(state.locals.map(local => [local.id,local]));
@@ -175,7 +181,22 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   const screenings=createScreenings({players,grants:screeningHosts,changed:()=>revision++,
     inVenue:(player,venueId)=>!player.levelId && !offices.has(player.id)
       && environment.roomAt(player.position[0],-player.position[1])?.interior===SCREENING_VENUES[venueId]?.interior});
-  const publicPlayer = player => ({office:offices.publicVisit(player.id),...(campusWorkstation(player)?{campusWorkstation:true}:{}),interaction:interactions.publicFor(player),id:player.id,name:accountName(player.id,player.name),appearance:player.appearance,...(characterByUser.has(player.id)?{character:copy(characterByUser.get(player.id))}:{}),movement:movementOf(player),gesture:interactions.publicFor(player)?.kind??(player.gestureUntil>now()?player.gesture:null)??(player.performing?'perform':null),performing:Boolean(player.performing),canBuild:Boolean(isAdmin(player.id)),canGrantWishes:Boolean(isAdmin(player.id)),vehicle:player.vehicle??null,sitting:publicSeat(player),position:[...player.position],yaw:player.yaw,altitude:player.altitude,buildingId:player.buildingId??null,levelId:player.levelId??null,voice:{space:voiceSpaceOf(player.id),id:voiceIdentities.get(player.id)??null}});
+  // The first criminal action (#597): melee on authored rivals, decided by the world rule.
+  const crime=createCrime({worldId,players,now,changed:()=>revision++,isResident:id=>localById.has(id),
+    groundAt:(east,north)=>environment.groundAt(east,-north),
+    decide:(attacker,target,targetType)=>evaluateViolence({worldId,policy:worldPolicy,
+      attacker:{type:'player',...placeOf(attacker,attacker.levelId??null,attacker.buildingId || offices.has(attacker.id))},
+      target:{type:targetType,...(targetType==='player'?placeOf(target,target.levelId??null,target.buildingId || offices.has(target.id)):placeOf(target,null,false))}}),
+    reachable:meleeReach});
+  // Arm's reach on one floor, in one room, with a clear line at chest height: walls and doors block.
+  function meleeReach(attacker,target) {
+    if((attacker.levelId??null)!==null)return false;
+    const [ax,an,ah]=attacker.position,[tx,tn,th]=target.position;
+    if(Math.hypot(ax-tx,an-tn)>CRIME_RULES.meleeReach || Math.abs(ah-th)>CRIME_RULES.meleeHeight)return false;
+    if((environment.roomAt(ax,-an)?.storeId??null)!==(environment.roomAt(tx,-tn)?.storeId??null))return false;
+    return environment.hasSightLine([ax,an,ah+1.2],[tx,tn,th+1.2]);
+  }
+  const publicPlayer = player => ({office:offices.publicVisit(player.id),...(campusWorkstation(player)?{campusWorkstation:true}:{}),interaction:interactions.publicFor(player),id:player.id,name:accountName(player.id,player.name),appearance:player.appearance,...(characterByUser.has(player.id)?{character:copy(characterByUser.get(player.id))}:{}),movement:movementOf(player),gesture:interactions.publicFor(player)?.kind??(player.gestureUntil>now()?player.gesture:null)??(player.performing?'perform':null),performing:Boolean(player.performing),canBuild:Boolean(isAdmin(player.id)),canGrantWishes:Boolean(isAdmin(player.id)),canSetWorldPolicy:Boolean(isAdmin(player.id)),vehicle:player.vehicle??null,sitting:publicSeat(player),position:[...player.position],yaw:player.yaw,altitude:player.altitude,buildingId:player.buildingId??null,levelId:player.levelId??null,voice:{space:voiceSpaceOf(player.id),id:voiceIdentities.get(player.id)??null}});
   // Seats are Jevica's garden seats and lounge chairs, and the two places on
   // every storefront bench ('bench:<store>', slots 0 and 1).
   const benches=benchSeats(worldData);
@@ -780,6 +801,56 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     revision++;
     return {ok:true,player:publicPlayer(player)};
   }
+  function spend(ledger,time) {
+    ledger.tokens=Math.min(12,ledger.tokens+Math.max(0,time-ledger.tokenAt)/500);
+    ledger.tokenAt=time;
+    if (ledger.tokens<1) return false;
+    ledger.tokens--;return true;
+  }
+  const publicWorldPolicy=()=>({...copy(worldPolicy),minute:clockMinute(worldPolicy.clock),active:dangerActive(worldPolicy)});
+  // World rules (#596). Only Jevica's accounts change them, whatever the client claims; the
+  // clock, positions and identity are the server's own. An update names the revision it was
+  // made against, so two owner sessions cannot overwrite each other unseen. Emergency off
+  // needs no revision, budget or cooldown: it lands before any command queued after it.
+  function worldPolicyCommand(userId,message,ledger,time) {
+    if(!isAdmin(userId))return reject('world_policy_owner_only','Only Jevica can change the world rules.');
+    if(message.action==='emergencyOff') {
+      if(!fields(message,['type','action']))return reject('invalid_world_policy');
+      if(worldPolicy.violence.mode!=='off' || worldPolicy.violence.pvp) {
+        const next=worldPolicy.revision+1;
+        worldPolicy={...worldPolicy,revision:next,violence:{...worldPolicy.violence,mode:'off',pvp:false},lastChange:{kind:'emergency_off',revision:next,at:time}};
+        revision++;
+      }
+      return {ok:true,worldPolicy:publicWorldPolicy()};
+    }
+    if(message.action!=='update' || !fields(message,['type','action','expectedRevision','changes']) || !Number.isSafeInteger(message.expectedRevision))
+      return reject('invalid_world_policy');
+    if(!spend(ledger,time))return reject('rate_limited');
+    if(message.expectedRevision!==worldPolicy.revision)
+      return {...reject('world_policy_conflict','The world rules changed. Review the current rules and try again.'),worldPolicy:publicWorldPolicy()};
+    if(time-worldPolicyAt<WORLD_POLICY_COOLDOWN_MS)return reject('world_policy_cooldown','Wait a moment before changing the world rules again.');
+    const proposed=proposePolicy(worldPolicy,message.changes,worldId);
+    if(!proposed)return reject('invalid_world_policy','Those world rules are not valid.');
+    const next=worldPolicy.revision+1;
+    worldPolicy={...proposed,revision:next,lastChange:{kind:'update',revision:next,at:time}};
+    worldPolicyAt=time;revision++;
+    return {ok:true,worldPolicy:publicWorldPolicy()};
+  }
+  // Where a player or resident stands, as the rule reads it: never as a client reports it.
+  function placeOf(entity,levelId,indoors) {
+    const [east,north,height]=entity.position;
+    return {position:[east,north,height],levelId,indoors:Boolean(indoors || levelId===null && environment.roomAt(east,-north))};
+  }
+  /** The synchronous violence decision for attacks (#597): server positions, server clock, the current rule. */
+  function violenceFor(attackerId,target) {
+    const attacker=players.get(attackerId);
+    if(!attacker)return {allowed:false,reason:'invalid_attacker'};
+    const victim=target?.type==='player'?players.get(target.id):target?.type==='resident'?localById.get(target.id):null;
+    if(!victim || target.type==='player' && target.id===attackerId)return {allowed:false,reason:'invalid_target'};
+    return evaluateViolence({worldId,policy:worldPolicy,
+      attacker:{type:'player',...placeOf(attacker,attacker.levelId??null,attacker.buildingId || offices.has(attacker.id))},
+      target:{type:target.type,...(target.type==='player'?placeOf(victim,victim.levelId??null,victim.buildingId || offices.has(victim.id)):placeOf(victim,null,victim.indoor))}});
+  }
   function command(userId, message, {sessionId=null,characterDefinition=null,prepareSelection=false}={}) {
     const player=players.get(userId);
     if (!player) return reject('not_joined');
@@ -787,21 +858,29 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if(prepareSelection&&!['appearance','character','movement'].includes(message.type))return reject('invalid_command');
     const ledger=ledgers.get(userId),time=now();
     ledger.seen=time;
+    // The owner's world rules apply wherever she stands, an office or upper floor included.
+    if(message.type==='worldPolicy')return worldPolicyCommand(userId,message,ledger,time);
     if(offices.has(userId) && !['office','chat'].includes(message.type))return reject('leave_office_first');
     if(message.type==='office' && message.action==='move')return offices.command(player,message,time);
     if (message.type==='pose') return pose(player,message,time);
     // Voice is negotiated over HTTP from the transport's authority; it is never a game command.
     if (message.type==='voice') return reject('invalid_command');
-    ledger.tokens=Math.min(12,ledger.tokens+Math.max(0,time-ledger.tokenAt)/500);
-    ledger.tokenAt=time;
-    if (ledger.tokens<1) return reject('rate_limited');
-    ledger.tokens--;
+    if (!spend(ledger,time)) return reject('rate_limited');
     interactions.prune();
     if(message.type==='campus')return campus.command(player,message,time);
     if(message.type==='interiorLevel')return changeInteriorLevel(player,message,time);
     if(interiorLevels.get(player.levelId)?.level.index>0
       && !['chat','interaction','gesture','appearance','character','movement'].includes(message.type)
       && !(isCampusLevelId(player.levelId) && ['campus','sit','stand'].includes(message.type)))return reject('return_to_ground_level');
+    if(message.type==='attack') {
+      // Identity is this session's; the target, damage, health and stars are the town's.
+      const reply=crime.attack(player,message,time);
+      if(reply.ok && !reply.replayed) {
+        interactions.cancel(player.id);focus.delete(player.id);
+        player.gesture='shove';player.gestureUntil=time+CRIME_RULES.strikeMs;
+      }
+      return reply.ok?{...reply,player:publicPlayer(player)}:reply;
+    }
     if(message.type==='stage') {
       if(!fields(message,['type','action']) || !['take','leave'].includes(message.action))return reject('invalid_stage');
       return message.action==='take'?takeStage(player,time):leaveStage(player,time);
@@ -1031,6 +1110,10 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       stepCommunity(state,dt);
       stepResidentLife(life,dt,{takenSeats:new Set([...players.values()].filter(player=>player.sitting).map(player=>`${player.sitting.buildId}:${player.sitting.slot}`))});
     }
+    // Residents keep their afternoon routine (hour 15) whatever the shared clock reads: their
+    // night pause is a separate decision from the danger window (docs/world-policy.md).
+    worldPolicy.clock=advanceClock(worldPolicy.clock,duration);
+    crime.step(time);
     elapsed+=duration;
     revision++;
   }
@@ -1038,7 +1121,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     const social=interactions.snapshot();
     const community={};
     for (const key of ['status','running','elapsed','target','supported','unmet','supplies','helpBudget','jobs','events','scenarioKey','generation','result','storm','resupplied']) community[key]=copy(state[key]);
-    return {type:'snapshot',interactions:social,worldId,protocolVersion:WORLD_PROTOCOL_VERSION,revision,elapsed,screenings:screenings.snapshot(),cycling:{taken:takenSlots()},tables:[...tableGames.snapshot(),...cafeGames.snapshot()],darts:dartsGames.snapshot(),axes:axeGames.snapshot(),...(campus.enabled?{campus:campus.snapshot()}:{}),players:[...players.values()].map(publicPlayer),
+    return {type:'snapshot',interactions:social,worldId,protocolVersion:WORLD_PROTOCOL_VERSION,revision,elapsed,worldPolicy:publicWorldPolicy(),crime:crime.snapshot(now()),screenings:screenings.snapshot(),cycling:{taken:takenSlots()},tables:[...tableGames.snapshot(),...cafeGames.snapshot()],darts:dartsGames.snapshot(),axes:axeGames.snapshot(),...(campus.enabled?{campus:campus.snapshot()}:{}),players:[...players.values()].map(publicPlayer),
       chat:copy(chat).map(entry=>({...entry,authorName:accountName(entry.authorId,entry.authorName)})),
       builds:copy([...builds.values()]).map(item=>({...item,ownerName:accountName(item.ownerId,item.ownerName)})),wishes:copy(state.wishes),community,
       locals:state.locals.map(local=>({id:local.id,name:local.name,position:[...local.position],indoor:!!local.indoor,storeId:local.storeId??null,
@@ -1053,7 +1136,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if (life?.planning) throw new Error('Cannot checkpoint an unfinished route search');
     interactions.prune();
     tableGames.prune();cafeGames.prune();dartsGames.prune();axeGames.prune();screenings.prune(now());
-    const payload=JSON.parse(checkpointJSON({offices:offices.checkpoint(),campus:campus.checkpoint(),tableGames:tableGames.checkpoint(),cafeGames:cafeGames.checkpoint(),dartsGames:dartsGames.checkpoint(),axeGames:axeGames.checkpoint(),screenings:screenings.checkpoint(now()),revision,elapsed,state,interactions:interactions.snapshot(),players:[...players.values()].map(player=>{
+    const payload=JSON.parse(checkpointJSON({offices:offices.checkpoint(),campus:campus.checkpoint(),tableGames:tableGames.checkpoint(),cafeGames:cafeGames.checkpoint(),dartsGames:dartsGames.checkpoint(),axeGames:axeGames.checkpoint(),screenings:screenings.checkpoint(now()),worldPolicy,crime:crime.checkpoint(),revision,elapsed,state,interactions:interactions.snapshot(),players:[...players.values()].map(player=>{
       if(!player.performing)return player;
       const {performing,...rest}=player;
       return {...rest,position:stageStepDown(player)??performing.from};
@@ -1074,7 +1157,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
         ? {version:saved.version,worldFingerprint:saved.worldFingerprint,payload:saved.payload}
         : {version:saved.version,worldId:saved.worldId,worldFingerprint:saved.worldFingerprint,payload:saved.payload};
       if (!record(saved) || !fields(saved,legacy?['version','worldFingerprint','payload','checksum']:['version','worldId','worldFingerprint','payload','checksum'])
-        || !(legacy || [2,3,4,5,6,7,8,9,10,11,12,CHECKPOINT_VERSION].includes(saved.version) && saved.worldId===worldId)
+        || !(legacy || [2,3,4,5,6,7,8,9,10,11,12,13,14,CHECKPOINT_VERSION].includes(saved.version) && saved.worldId===worldId)
         || saved.worldFingerprint!==worldFingerprint || saved.checksum!==digest(envelope)) throw new Error('Invalid envelope');
       let recovered=decodeCheckpoint(JSON.stringify(saved.payload));
       if (sharedPopulation && recovered.state?.locals?.length!==residentIdentities.length) {
@@ -1205,6 +1288,14 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       // Checkpoint v9 adds screenings; older ones restore with a fresh, stopped timeline.
       if((saved.version<9)!==(recovered.screenings===undefined))throw new Error('Invalid screening version');
       const nextScreenings=saved.version>=9?screenings.validate(recovered.screenings,now()):screenings.blank();
+      // v14 world rules (#596). Older towns had none: they restore peaceful, everything else kept.
+      // As with the campus section, untouched rules (revision 0) are the same as none; rules an
+      // owner changed cannot ride in an older version, which an older writer would drop.
+      if(saved.version>=14 && recovered.worldPolicy===undefined)throw new Error('Missing world policy');
+      const nextWorldPolicy=recovered.worldPolicy===undefined?defaultWorldPolicy():validateWorldPolicy(recovered.worldPolicy,worldId);
+      if(!nextWorldPolicy || saved.version<14 && nextWorldPolicy.revision!==0)throw new Error('Invalid world policy');
+      // v15 crime state (#597): rivals' health, wanted stars and private receipts. None before.
+      const nextCrime=crime.validate(recovered.crime,saved.version);
       const recoveredEnvironment=createWalkingEnvironment(worldData,[...nextBuilds.values()].map(objectCollider).filter(Boolean));
       const recoveredUpperEnvironments=new Map();
       const recoveredEnvironmentFor=levelId=>{
@@ -1354,6 +1445,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       screenings.load(nextScreenings);
       interactions.restore(nextInteractions);
       life=nextLife;revision=recovered.revision;elapsed=recovered.elapsed;voiceIdentities.clear();
+      worldPolicy=nextWorldPolicy;worldPolicyAt=-Infinity;crime.load(nextCrime);
       return {ok:true};
     } catch (error) {
       onFailure?.(checkpointFailureReason(error));
@@ -1363,6 +1455,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   // Trusted process/admin hook; deliberately absent from the command protocol.
   function reset() {
     interactions.clear();
+    crime.clear();
     tableGames.clear();
     cafeGames.clear();
     dartsGames.clear();
@@ -1394,6 +1487,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   const resolvePlace = placeId => placesOf(worldData).find(place=>place.id===placeId)??null;
   const listPlaces = () => placesOf(worldData);
   return {worldId,join,rename,leave,command,step,snapshot,checkpoint,restore,reset,
+    // World rules (#596): the public rule and the one violence decision for #597's attacks.
+    worldPolicy:publicWorldPolicy,violenceFor,
     // Frames carry the clock that anchors screenings (screenings.js), stamped by the transport.
     serverTime:()=>now(),districtRevision:districtRevisionOf(worldData),campusWorkstation:userId=>campusWorkstation(players.get(userId)),officeVisit:offices.publicVisit,endOfficeVisit:offices.leave,
     // The synchronous suite decision for #508 entry and #510 desk access (campus-leases.js).
@@ -1413,6 +1508,10 @@ export function migrateWorldCheckpoint({fromData,toData,checkpoint,worldId=DEFAU
   payload.revision=previous.revision+1;
   for(const field of ['ledgers','chat','appearances','characters','movements','builds','inventory'])payload[field]=copy(previous[field]??[]);
   payload.campus=copy(previous.campus);
+  // The world rules belong to the world, not its geography: the same world keeps the same zones.
+  payload.worldPolicy=copy(previous.worldPolicy);
+  // Wanted levels follow accounts; rivals stand in authored places, so they start fresh.
+  payload.crime={...copy(previous.crime),rivals:[]};
   // A creator region compiled before #491 walked on bare terrain; its revision compiles the
   // street datum (STREET.walkSurfaceOffset). Creations standing on that datum, outdoors or in
   // a built-in room, move with it. Those on a generated level keep its floor.
