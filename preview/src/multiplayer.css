@@ -239,3 +239,29 @@ body.theater-seated .greeting-prompt { visibility: hidden; }
 :root[data-theme] .multiplayer-roster .world-rules-emergency { min-height: 44px; width: 100%; font-size: 13px; font-weight: 700; white-space: normal; color: #fff; background: #a3242f; border-color: #6e1019; }
 :root[data-theme] .multiplayer-roster .world-rules-emergency:hover:not(:disabled) { background: #861b25; border-color: #4f0b12; }
 .multiplayer-roster .world-rules-emergency:focus-visible { outline: 3px solid var(--accent, #934969); outline-offset: 2px; }
+
+/* Crime HUD (#597): compact, beside the greetings card; only the town's numbers. */
+.crime-hud {
+  position: absolute; z-index: 14; top: 76px; left: 20px; width: min(260px, calc(100% - 40px)); box-sizing: border-box;
+  padding: 10px 12px; border: 1px solid var(--line); border-radius: 14px;
+  background: color-mix(in srgb, var(--panel) 74%, transparent); color: var(--ink); box-shadow: 0 6px 20px #0002;
+  -webkit-backdrop-filter: var(--hud-filter, none); backdrop-filter: var(--hud-filter, none);
+  font: inherit; font-size: 12px; line-height: 1.4; pointer-events: auto;
+}
+.crime-hud[hidden], .crime-hud [hidden] { display: none; }
+.crime-hud p { margin: 4px 0; }
+.crime-hud p:empty { display: none; }
+.crime-wanted { font-size: 18px; letter-spacing: 2px; color: #b8860b; }
+.crime-rival strong { display: block; font-size: 14px; }
+.crime-health { height: 8px; margin: 6px 0; border-radius: 4px; background: color-mix(in srgb, var(--ink) 14%, transparent); overflow: hidden; }
+.crime-health span { display: block; height: 100%; background: var(--accent, #934969); transition: width .25s ease; }
+.crime-attack {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 44px; margin-top: 4px; padding: 8px 10px;
+  border: 1px solid var(--line); border-radius: 9px; background: var(--accent-soft); color: var(--ink); font: inherit; font-weight: 600; cursor: pointer;
+}
+.crime-attack:disabled { opacity: .5; cursor: not-allowed; }
+.crime-attack:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.crime-attack kbd { display: inline-grid; place-items: center; min-width: 24px; height: 24px; border: 1px solid var(--line); border-radius: 6px; font: inherit; font-size: 12px; }
+@media (prefers-reduced-motion: reduce) { .crime-health span { transition: none; } }
+@media (max-width: 600px) { .crime-hud { top: 56px; left: 12px; } }
+@media (max-width: 700px) and (min-height: 501px) { .crime-hud { top: 240px; } }

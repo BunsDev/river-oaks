@@ -35,6 +35,7 @@ import { isJevicaAdmin } from './admin.js';
 import { accountName } from '../preview/src/resident-names.js';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, validateWorldId } from '../preview/src/world-contract.js';
 import { checkpointFailureReason } from './recovery-diagnostics.js';
+import { CRIME_RULES, createCrime } from './crime.js';
 import { advanceClock, clockMinute, dangerActive, defaultWorldPolicy, evaluateViolence, proposePolicy, validateWorldPolicy } from '../preview/src/world-policy.js';
 import { campusInteriorPlan, isCampusLevelId } from '../preview/src/garden-campus-levels.js';
 
@@ -46,9 +47,9 @@ const MAX_APPEARANCES = 4096, MAX_BUILDS = 192, MAX_BUILDS_PER_USER = 24;
 const MAX_DESIGNS = 4096;
 const MAX_HOME_GUESTS = 16;
 const GESTURES = ['wave','bow'];
-// Watering is a gesture the server starts for a planter in reach; a player
-// cannot request it as a bare gesture.
-const SHOWN_GESTURES = [...GESTURES,'water'];
+// Watering is a gesture the server starts for a planter in reach, and a shove one it
+// starts for a landed attack (crime.js); a player cannot request either as a bare gesture.
+const SHOWN_GESTURES = [...GESTURES,'water','shove'];
 // The plaza's music stage (plaza-salon-plan.js): one performer at a time stands at
 // its centre, on the timber top, behind the microphone and facing the salon.
 const STAGE_TOP = 0.22, STAGE_REACH = 1.6;
@@ -60,7 +61,7 @@ const fields = (message, allowed) => Object.keys(message).every(key => allowed.i
 const textId = value => typeof value === 'string' && value.length > 0 && value.length <= 160;
 const reject = (error, message = error) => ({ok:false,error,message});
 
-const CHECKPOINT_VERSION = 14, MAX_CHECKPOINT_BYTES = 8 * 1024 * 1024;
+const CHECKPOINT_VERSION = 15, MAX_CHECKPOINT_BYTES = 8 * 1024 * 1024;
 const LIFE_FIELDS = ['elapsed','storm','revision','packet','cursor','paused','stats'];
 const digest = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const nonnegative = value => Number.isFinite(value) && value >= 0;
@@ -180,6 +181,21 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   const screenings=createScreenings({players,grants:screeningHosts,changed:()=>revision++,
     inVenue:(player,venueId)=>!player.levelId && !offices.has(player.id)
       && environment.roomAt(player.position[0],-player.position[1])?.interior===SCREENING_VENUES[venueId]?.interior});
+  // The first criminal action (#597): melee on authored rivals, decided by the world rule.
+  const crime=createCrime({worldId,players,now,changed:()=>revision++,isResident:id=>localById.has(id),
+    groundAt:(east,north)=>environment.groundAt(east,-north),
+    decide:(attacker,target,targetType)=>evaluateViolence({worldId,policy:worldPolicy,
+      attacker:{type:'player',...placeOf(attacker,attacker.levelId??null,attacker.buildingId || offices.has(attacker.id))},
+      target:{type:targetType,...(targetType==='player'?placeOf(target,target.levelId??null,target.buildingId || offices.has(target.id)):placeOf(target,null,false))}}),
+    reachable:meleeReach});
+  // Arm's reach on one floor, in one room, with a clear line at chest height: walls and doors block.
+  function meleeReach(attacker,target) {
+    if((attacker.levelId??null)!==null)return false;
+    const [ax,an,ah]=attacker.position,[tx,tn,th]=target.position;
+    if(Math.hypot(ax-tx,an-tn)>CRIME_RULES.meleeReach || Math.abs(ah-th)>CRIME_RULES.meleeHeight)return false;
+    if((environment.roomAt(ax,-an)?.storeId??null)!==(environment.roomAt(tx,-tn)?.storeId??null))return false;
+    return environment.hasSightLine([ax,an,ah+1.2],[tx,tn,th+1.2]);
+  }
   const publicPlayer = player => ({office:offices.publicVisit(player.id),...(campusWorkstation(player)?{campusWorkstation:true}:{}),interaction:interactions.publicFor(player),id:player.id,name:accountName(player.id,player.name),appearance:player.appearance,...(characterByUser.has(player.id)?{character:copy(characterByUser.get(player.id))}:{}),movement:movementOf(player),gesture:interactions.publicFor(player)?.kind??(player.gestureUntil>now()?player.gesture:null)??(player.performing?'perform':null),performing:Boolean(player.performing),canBuild:Boolean(isAdmin(player.id)),canGrantWishes:Boolean(isAdmin(player.id)),canSetWorldPolicy:Boolean(isAdmin(player.id)),vehicle:player.vehicle??null,sitting:publicSeat(player),position:[...player.position],yaw:player.yaw,altitude:player.altitude,buildingId:player.buildingId??null,levelId:player.levelId??null,voice:{space:voiceSpaceOf(player.id),id:voiceIdentities.get(player.id)??null}});
   // Seats are Jevica's garden seats and lounge chairs, and the two places on
   // every storefront bench ('bench:<store>', slots 0 and 1).
@@ -856,6 +872,15 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if(interiorLevels.get(player.levelId)?.level.index>0
       && !['chat','interaction','gesture','appearance','character','movement'].includes(message.type)
       && !(isCampusLevelId(player.levelId) && ['campus','sit','stand'].includes(message.type)))return reject('return_to_ground_level');
+    if(message.type==='attack') {
+      // Identity is this session's; the target, damage, health and stars are the town's.
+      const reply=crime.attack(player,message,time);
+      if(reply.ok && !reply.replayed) {
+        interactions.cancel(player.id);focus.delete(player.id);
+        player.gesture='shove';player.gestureUntil=time+CRIME_RULES.strikeMs;
+      }
+      return reply.ok?{...reply,player:publicPlayer(player)}:reply;
+    }
     if(message.type==='stage') {
       if(!fields(message,['type','action']) || !['take','leave'].includes(message.action))return reject('invalid_stage');
       return message.action==='take'?takeStage(player,time):leaveStage(player,time);
@@ -1088,6 +1113,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     // Residents keep their afternoon routine (hour 15) whatever the shared clock reads: their
     // night pause is a separate decision from the danger window (docs/world-policy.md).
     worldPolicy.clock=advanceClock(worldPolicy.clock,duration);
+    crime.step(time);
     elapsed+=duration;
     revision++;
   }
@@ -1095,7 +1121,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     const social=interactions.snapshot();
     const community={};
     for (const key of ['status','running','elapsed','target','supported','unmet','supplies','helpBudget','jobs','events','scenarioKey','generation','result','storm','resupplied']) community[key]=copy(state[key]);
-    return {type:'snapshot',interactions:social,worldId,protocolVersion:WORLD_PROTOCOL_VERSION,revision,elapsed,worldPolicy:publicWorldPolicy(),screenings:screenings.snapshot(),cycling:{taken:takenSlots()},tables:[...tableGames.snapshot(),...cafeGames.snapshot()],darts:dartsGames.snapshot(),axes:axeGames.snapshot(),...(campus.enabled?{campus:campus.snapshot()}:{}),players:[...players.values()].map(publicPlayer),
+    return {type:'snapshot',interactions:social,worldId,protocolVersion:WORLD_PROTOCOL_VERSION,revision,elapsed,worldPolicy:publicWorldPolicy(),crime:crime.snapshot(now()),screenings:screenings.snapshot(),cycling:{taken:takenSlots()},tables:[...tableGames.snapshot(),...cafeGames.snapshot()],darts:dartsGames.snapshot(),axes:axeGames.snapshot(),...(campus.enabled?{campus:campus.snapshot()}:{}),players:[...players.values()].map(publicPlayer),
       chat:copy(chat).map(entry=>({...entry,authorName:accountName(entry.authorId,entry.authorName)})),
       builds:copy([...builds.values()]).map(item=>({...item,ownerName:accountName(item.ownerId,item.ownerName)})),wishes:copy(state.wishes),community,
       locals:state.locals.map(local=>({id:local.id,name:local.name,position:[...local.position],indoor:!!local.indoor,storeId:local.storeId??null,
@@ -1110,7 +1136,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if (life?.planning) throw new Error('Cannot checkpoint an unfinished route search');
     interactions.prune();
     tableGames.prune();cafeGames.prune();dartsGames.prune();axeGames.prune();screenings.prune(now());
-    const payload=JSON.parse(checkpointJSON({offices:offices.checkpoint(),campus:campus.checkpoint(),tableGames:tableGames.checkpoint(),cafeGames:cafeGames.checkpoint(),dartsGames:dartsGames.checkpoint(),axeGames:axeGames.checkpoint(),screenings:screenings.checkpoint(now()),worldPolicy,revision,elapsed,state,interactions:interactions.snapshot(),players:[...players.values()].map(player=>{
+    const payload=JSON.parse(checkpointJSON({offices:offices.checkpoint(),campus:campus.checkpoint(),tableGames:tableGames.checkpoint(),cafeGames:cafeGames.checkpoint(),dartsGames:dartsGames.checkpoint(),axeGames:axeGames.checkpoint(),screenings:screenings.checkpoint(now()),worldPolicy,crime:crime.checkpoint(),revision,elapsed,state,interactions:interactions.snapshot(),players:[...players.values()].map(player=>{
       if(!player.performing)return player;
       const {performing,...rest}=player;
       return {...rest,position:stageStepDown(player)??performing.from};
@@ -1131,7 +1157,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
         ? {version:saved.version,worldFingerprint:saved.worldFingerprint,payload:saved.payload}
         : {version:saved.version,worldId:saved.worldId,worldFingerprint:saved.worldFingerprint,payload:saved.payload};
       if (!record(saved) || !fields(saved,legacy?['version','worldFingerprint','payload','checksum']:['version','worldId','worldFingerprint','payload','checksum'])
-        || !(legacy || [2,3,4,5,6,7,8,9,10,11,12,13,CHECKPOINT_VERSION].includes(saved.version) && saved.worldId===worldId)
+        || !(legacy || [2,3,4,5,6,7,8,9,10,11,12,13,14,CHECKPOINT_VERSION].includes(saved.version) && saved.worldId===worldId)
         || saved.worldFingerprint!==worldFingerprint || saved.checksum!==digest(envelope)) throw new Error('Invalid envelope');
       let recovered=decodeCheckpoint(JSON.stringify(saved.payload));
       if (sharedPopulation && recovered.state?.locals?.length!==residentIdentities.length) {
@@ -1268,6 +1294,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       if(saved.version>=14 && recovered.worldPolicy===undefined)throw new Error('Missing world policy');
       const nextWorldPolicy=recovered.worldPolicy===undefined?defaultWorldPolicy():validateWorldPolicy(recovered.worldPolicy,worldId);
       if(!nextWorldPolicy || saved.version<14 && nextWorldPolicy.revision!==0)throw new Error('Invalid world policy');
+      // v15 crime state (#597): rivals' health, wanted stars and private receipts. None before.
+      const nextCrime=crime.validate(recovered.crime,saved.version);
       const recoveredEnvironment=createWalkingEnvironment(worldData,[...nextBuilds.values()].map(objectCollider).filter(Boolean));
       const recoveredUpperEnvironments=new Map();
       const recoveredEnvironmentFor=levelId=>{
@@ -1417,7 +1445,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       screenings.load(nextScreenings);
       interactions.restore(nextInteractions);
       life=nextLife;revision=recovered.revision;elapsed=recovered.elapsed;voiceIdentities.clear();
-      worldPolicy=nextWorldPolicy;worldPolicyAt=-Infinity;
+      worldPolicy=nextWorldPolicy;worldPolicyAt=-Infinity;crime.load(nextCrime);
       return {ok:true};
     } catch (error) {
       onFailure?.(checkpointFailureReason(error));
@@ -1427,6 +1455,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   // Trusted process/admin hook; deliberately absent from the command protocol.
   function reset() {
     interactions.clear();
+    crime.clear();
     tableGames.clear();
     cafeGames.clear();
     dartsGames.clear();
@@ -1481,6 +1510,8 @@ export function migrateWorldCheckpoint({fromData,toData,checkpoint,worldId=DEFAU
   payload.campus=copy(previous.campus);
   // The world rules belong to the world, not its geography: the same world keeps the same zones.
   payload.worldPolicy=copy(previous.worldPolicy);
+  // Wanted levels follow accounts; rivals stand in authored places, so they start fresh.
+  payload.crime={...copy(previous.crime),rivals:[]};
   // A creator region compiled before #491 walked on bare terrain; its revision compiles the
   // street datum (STREET.walkSurfaceOffset). Creations standing on that datum, outdoors or in
   // a built-in room, move with it. Those on a generated level keep its floor.

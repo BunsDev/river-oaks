@@ -1,3 +1,4 @@
+import { poseFor } from './crime-poses.js';
 import { selectedCharacterFor } from './character-selection-view.js';
 import { createCharacterMaterials } from './character-studio-materials.js';
 import { migrateCharacterAppearance, characterAppearanceFor } from './character-definition.js';
@@ -356,7 +357,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
         if(!seated&&focus.facing!==null&&!sharedInteraction)holder.rotation.y=focus.facing;
         if(sharedInteraction&&!presentation&&!seated&&!pose.flying)holder.rotation.y=turnToward(holder.rotation.y,sharedInteraction.heading,previous===null?1:dt);
         const throwing = !seated && !pose.flying && now - throwStart < 850;
-        avatar.update(now, now < castUntil ? 'amazed' : throwing ? (now - throwStart < 180 ? 'throw-windup' : 'throw-release') : watering ? 'water' : !pose.flying&&!pose.riding ? (sharedGesture??'continue') : 'continue', false, {speed:pose.flying||seated?0:pose.speed,flightSpeed:pose.flying?pose.speed:0,distance:pose.distance,platform:pose.platform,flying:pose.flying,riding:seated,ridingKind:pose.sitting?'seat':pose.riding?.kind,seatToFloor:pose.sitting?.height??pose.riding?.seatToFloor,vehicle:form,handshakeTarget:sharedInteraction?.kind==='handshake'?sharedInteraction.target:undefined,gestureTime:sharedInteraction?sharedInteraction.elapsed+Math.max(0,now-interactionAt)/1000:undefined}, pose.groundAt, focus.target, {conversing:focus.mode==='conversation'});outfit.update(pose.flying,now,seated);
+        avatar.update(now, now < castUntil ? 'amazed' : throwing ? (now - throwStart < 180 ? 'throw-windup' : 'throw-release') : watering ? 'water' : !pose.flying&&!pose.riding ? (poseFor(sharedGesture)??'continue') : 'continue', false, {speed:pose.flying||seated?0:pose.speed,flightSpeed:pose.flying?pose.speed:0,distance:pose.distance,platform:pose.platform,flying:pose.flying,riding:seated,ridingKind:pose.sitting?'seat':pose.riding?.kind,seatToFloor:pose.sitting?.height??pose.riding?.seatToFloor,vehicle:form,handshakeTarget:sharedInteraction?.kind==='handshake'?sharedInteraction.target:undefined,gestureTime:sharedInteraction?sharedInteraction.elapsed+Math.max(0,now-interactionAt)/1000:undefined}, pose.groundAt, focus.target, {conversing:focus.mode==='conversation'});outfit.update(pose.flying,now,seated);
         outfit.updateOptics(camera,viewportHeight);
         if(portraitWanted&&getPortrait){
           const id=portraitWanted;portraitWanted=null;

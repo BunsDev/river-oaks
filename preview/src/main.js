@@ -1,6 +1,7 @@
 import { COMMONS_REVISION } from '../../shared/east-garden-commons-layout.js';
 import { attachEastGardenCommons } from './east-garden-commons-world.js';
 import { buildEastGardenCommons } from './east-garden-commons.js';
+import { rivalFigures } from './crime-ui.js';
 import { createCharacterStudio } from './character-studio.js';
 import { characterStudioShown } from './character-studio-state.js';
 import { createOfficeUI } from './office-ui.js';
@@ -565,7 +566,8 @@ function startMultiplayer() {
     onCorrection: player => { if (world && player) { walking.applyServerPose(player); plazaBicycle?.sync(); } },
     onPlayers: (players, selfId) => {
       host.dataset.multiplayer = players.length ? 'joined' : 'disconnected';
-      remotePlayers.sync(players.filter(p=>!p.office), selfId);
+      // Authored rivals (#597) draw like players, from the town's crime state only.
+      remotePlayers.sync([...players.filter(p=>!p.office),...(players.length?rivalFigures(multiplayer?.snapshot?.crime):[])], selfId);
       officeUI?.sync(players,selfId);
       placesUI?.setPlayers(players, selfId);
       if (!players.length) buildLayer?.sync([]);

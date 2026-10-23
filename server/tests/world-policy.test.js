@@ -132,7 +132,7 @@ test('v14 checkpoints keep the rules; v13 towns restore peaceful with everything
   f.update(OWNER, { violence: { mode: 'scheduled', zones: ['south-service-lane'], pvp: true }, clock: { minute: 300, rate: 5 } });
   f.send(VISITOR, { type: 'chat', text: 'still here' });
   const saved = f.world.checkpoint();
-  assert.equal(saved.version, 14);
+  assert.equal(saved.version, 15);
   const back = town({ restore: saved });
   assert.deepEqual(back.world.worldPolicy(), f.world.worldPolicy());
   // A v13 town, as an older writer committed it: no rules at all.
