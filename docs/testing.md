@@ -110,16 +110,17 @@ continuous collision, target-GPU performance or native Unreal parity.
 
 ## Hosted CI
 
-`.github/workflows/verify.yml` runs on every PR and push to `main`, on Mondays at 08:23 UTC, and on manual dispatch:
+`.github/workflows/verify.yml` runs on every PR and push to `main`, on Mondays at 08:23 UTC, and on manual dispatch. A newer push to the same PR, including the lander's update from `main`, cancels the older run in both workflows; runs on `main`, tags, the schedule and manual dispatch are never cancelled.
 
 - **`dependency-review`:** PRs only.
-- **`verify`:** a Python 3.11 and 3.13 matrix: locked `uv sync`, Ruff, pytest, pip-audit of the locked runtime, the secret scan, and the offline demo (whose exit 2 is expected).
-- **`preview checks`:** pnpm audit, tooling, unit, server (with a Redis service) and desktop tests, the build, the security browser e2e and WebGL reflections.
+- **`verify`:** Python 3.13 on PRs, and a 3.11 and 3.13 matrix on `main`, the schedule and manual runs: locked `uv sync`, Ruff, pytest, pip-audit of the locked runtime, the secret scan, and the offline demo (whose exit 2 is expected).
+- **`preview unit`:** pnpm audit, tooling and the preview unit tests.
+- **`preview checks`:** server (with a Redis service) and desktop tests, the build, the security browser e2e, WebGL reflections and the IPIC screening journey. It runs beside `preview unit`, so neither waits for the other.
 - **`preview shared (required | development | worlds-and-creator)`:** the shared-town journeys, in three parallel shards.
 - **`preview experience (streets | places)`:** the experience journeys, in two parallel shards.
 - **`preview`:** an aggregate job that fails unless every shard succeeded. This is the check the `main` ruleset requires.
 
-A separate `Desktop` workflow (`.github/workflows/desktop.yml`) packages the Electron shell on Windows, Linux and macOS, checks fuses and asar contents, runs the development desktop e2e and uploads unsigned builds, then builds the Windows and Linux installers, installs, launches and removes each on a fresh runner, and gathers them with one `SHA256SUMS`; it is not a required check ([desktop](desktop.md#ci-builds-on-windows-linux-and-macos)). Windows signing runs only on a manual dispatch or `v*` tag ([installers](desktop.md#windows-signing)). GitHub's default CodeQL setup and the Vercel preview add their own checks. On failure, shards upload screenshots as artifacts named by shard, for example `shared-town-failure-<shard>`, `experience-failure-<shard>` and `security-browser-failure`.
+A separate `Desktop` workflow (`.github/workflows/desktop.yml`) packages the Electron shell on Windows, Linux and macOS (on a PR, only when it changes `desktop/` or the workflow; other PRs that reach it through `shared/`, `package.json` or the lockfile run the Linux leg and skip the installers), checks fuses and asar contents, runs the development desktop e2e and uploads unsigned builds, then builds the Windows and Linux installers, installs, launches and removes each on a fresh runner, and gathers them with one `SHA256SUMS`; it is not a required check ([desktop](desktop.md#ci-builds-on-windows-linux-and-macos)). Windows signing runs only on a manual dispatch or `v*` tag ([installers](desktop.md#windows-signing)). GitHub's default CodeQL setup and the Vercel preview add their own checks. On failure, shards upload screenshots as artifacts named by shard, for example `shared-town-failure-<shard>`, `experience-failure-<shard>` and `security-browser-failure`.
 
 Known intermittent journeys, all of which have passed on rerun:
 
