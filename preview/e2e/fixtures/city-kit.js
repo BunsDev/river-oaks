@@ -34,7 +34,7 @@ const views = {
   overview: [[cx - 70, 70, -(s - 40)], [cx, 0, -cy]],
   street: [[sx + 2, 1.68, -(sy - 1.5)], [sx + 40, 3, -(sy + .5)]],
   frontage: [[sx + 18, 1.68, -(sy - 2.5)], [sx + 24, 4, -(sy + 9)]],
-  ...(id === 'bayou-market-commons' ? { landmark: [[60, 1.68, -(-6)], [106, 14, 0]], court: [[24, 1.68, -(-4)], [24, 3, -(-16)]], plaza: [[50, 1.68, -(-2)], [93, 3, -20]] } : {}),
+  ...(id === 'bayou-market-commons' ? { landmark: [[60, 1.68, -(-6)], [106, 14, 0]], court: [[24, 1.68, -(-4)], [24, 3, -(-16)]], blades: [[6, 1.68, -(-4.2)], [30, 3.2, -(-7.6)]], plaza: [[50, 1.68, -(-2)], [93, 3, -20]] } : {}),
   ...(id === 'nineteenth-and-yale' ? { intersection: [[44, 1.68, -61], [62, 3, -66]], court: [[58, 1.68, -24], [70, 4, -25.5]] } : {}),
 };
 function render(view = params.get('view') ?? 'overview') {

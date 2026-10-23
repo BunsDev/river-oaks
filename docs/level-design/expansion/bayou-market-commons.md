@@ -21,7 +21,7 @@ Site-local metres are measured from the District's east edge at the promenade ce
 | Bayou Lantern | x 106 on the street axis | A 27 m water tower with a ★ BAYOU MARKET ★ band. It terminates the view down Market Street from the District, and players can walk between its legs. |
 | Edges | east, north, south | A railing above a bayou with trees on the far bank, and visual-only context buildings. Walking stops at the hedges and the railing. |
 
-The plan has 112 pieces, 19 building shells, 53 solids and 14 materials, at about 92,692 authored triangles. The client renders it with 49 meshes before trees and planting.
+The plan has 112 pieces, 19 building shells, 53 solids and 14 materials, at about 92,692 authored triangles. The client renders it with 53 meshes before trees and planting.
 
 ## Gathering and activities
 
