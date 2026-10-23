@@ -18,7 +18,7 @@ Two Codex sessions hold related, uncommitted work: `neighborhood-584-586` (kit, 
 - Tests and e2e: `preview/tests/city-kit.test.js`, `preview/tests/bayou-market-commons.test.js`, `server/tests/lantern-walk.test.js`, `preview/e2e/city-kit-review.js`, `preview/e2e/fixtures/city-kit.*`, and the Lantern Walk phase in `preview/e2e/east-garden-commons.js`.
 - Docs: `docs/city-kit.md`, `docs/level-design/expansion/bayou-market-commons.md`, and updates to world expansion, blockout, garden-campus and architecture.
 
-## Results (this worktree, before commit)
+## Results
 
 - [x] Kit catalog: 29 pieces in 7 families, 3 styles, 25 material slots, plus conventions for scale, naming, collision, LOD, licensing and budgets.
 - [x] Assembler: per-ID seeded streams, overrides and additions by stable ID, orphan reporting, canonical hash, provenance, a solid-in-walkable guard, north/south streets, east/west fronts, intersections, unsigned overflow shops.
@@ -27,8 +27,12 @@ Two Codex sessions hold related, uncommitted work: `neighborhood-584-586` (kit, 
 - [x] Lantern Walk: server authority, snapshot, checkpoint and validation, and rollback removal. Client: Z interaction, status chip, scene lighting.
 - [x] Focused tests: `node --test preview/tests/city-kit.test.js preview/tests/bayou-market-commons.test.js server/tests/lantern-walk.test.js` gave 21 passed, 0 failed, 0 skipped.
 - [x] Existing suites, run unsharded: preview had 3,850 passed, 2 failed, 1 skipped before the stale literal fix. The 2 failures came from the old revision literal in `baseline-580-route.test.js`, which now passes 2/2. Server had 763 passed, 0 failed, 215 skipped (Redis-backed tests without `REDIS_URL`).
-- [ ] `pnpm run verify` (core): running.
-- [ ] Pedestrian-scale screenshots of both recipes and a second seed (`city-kit-review`): queued on the shared browser lock.
+- [x] `pnpm run verify` (core) at `41eff316`: agent 204, preview 3,852 (1 skip), server 763 (215 Redis skips), desktop 115 (3 skips), build, Python 149, secrets all passed.
+- [x] Redis-backed server suite at `41eff316`: `REDIS_URL=<disposable local redis-server, no persistence> pnpm run test:server` gave 1,020 passed, 0 failed, 0 skipped.
+- [x] First screenshot review at `41eff316` (`.runtime/city-kit/review-2026-10-23T11-12-45-914Z/`) found defects, now fixed: draped paving and lawns were wound downward and culled, so every street view showed the stretched site plinth; box faces carried unit UVs, stretching one brick or stone tile across a wall; shell roofs showed wall material; storefront glazing read as flat pale panels. Fixes in `preview/src/city-kit/render.js` (upward winding, metric world-projected box UVs, roof membrane, dim warm shop interior) with a regression in `preview/tests/city-kit.test.js` that fails on the old renderer (lane-brick facing −1.00).
+- [x] Core gate after the fixes: agent 204, preview 3,853 passed (1 skip), server 763 (215 Redis skips), desktop 115 (3 skips), build, Python 149, secrets all passed.
+- [ ] Pedestrian-scale screenshots after the fixes: to rerun.
+- Invalid runs, not evidence: the first two-player journey and the first three perf runs (11:13–11:16Z) overlapped renderer edits in this worktree; Vite reloaded the owner page mid-journey (`window.__riverMultiplayer is not a function`) and the Gardens perf run lost its timing samples. All rerun after the commit.
 - [ ] Two-player journey with the Lantern Walk (`test:experience east-garden-commons`): queued on the shared browser lock.
 - [ ] `pnpm run verify full` with isolated Redis.
 

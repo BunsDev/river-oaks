@@ -166,3 +166,30 @@ test('the renderer batches by material, culls detail by distance and disposes ev
   kit.userData.dispose(); kit.userData.dispose();
   assert.equal(disposedGeometries, geometries.size); assert.equal(disposedMaterials, materials.size); assert.equal(kit.children.length, 0);
 });
+
+test('ground faces the sky and textured surfaces carry metric UVs', async () => {
+  const THREE = await import('three');
+  const plan = assembleNeighborhood(commons), kit = buildCityKit(plan, { groundAt: () => 0, ground: 0 });
+  const meshes = []; kit.traverse(item => { if (item.isMesh) meshes.push(item); });
+  const byMaterial = name => meshes.filter(mesh => mesh.material.name === `city-kit/${name}`);
+  const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3(), normal = new THREE.Vector3();
+  // Draped paving and lawn would be culled from above if wound downward; box tops and bottoms cancel.
+  for (const name of ['lane-brick', 'paver-sidewalk', 'plaza-stone', 'lawn:overlay']) {
+    let up = 0, area = 0;
+    for (const mesh of byMaterial(name)) {
+      const position = mesh.geometry.attributes.position;
+      for (let i = 0; i < position.count; i += 3) {
+        a.fromBufferAttribute(position, i); b.fromBufferAttribute(position, i + 1); c.fromBufferAttribute(position, i + 2);
+        normal.crossVectors(b.clone().sub(a), c.clone().sub(a));
+        if (Math.abs(normal.y) > .9 * normal.length()) { up += normal.y / 2; area += normal.length() / 2; }
+      }
+    }
+    assert.ok(area > 0 && up / area > .5, `${name} faces up (${(up / area).toFixed(2)})`);
+  }
+  // Brick, stucco and granite repeat by the metre rather than stretching one tile across a wall.
+  for (const name of ['brick-rose', 'brick-umber', 'stucco-ivory', 'curb-granite']) {
+    const spans = byMaterial(name).map(mesh => { const uv = mesh.geometry.attributes.uv; let min = Infinity, max = -Infinity; for (let i = 0; i < uv.count; i++) { min = Math.min(min, uv.getX(i)); max = Math.max(max, uv.getX(i)); } return max - min; });
+    assert.ok(spans.length && Math.max(...spans) > 10, `${name} UV span ${Math.max(...spans)}`);
+  }
+  kit.userData.dispose();
+});

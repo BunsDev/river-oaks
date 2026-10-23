@@ -15,11 +15,17 @@ const unit = new THREE.BoxGeometry(1, 1, 1);
 const headless = typeof document === 'undefined';
 const canvas2d = (width, height) => headless ? null : Object.assign(document.createElement('canvas'), { width, height });
 
+// Render-only slots that no recipe names.
+const RENDER_MATERIALS = {
+  // A dim, warm shop interior seen through storefront glass.
+  'shop-interior': { color: '#4a3a2e', roughness: .9, emissive: '#d9925a', emissiveIntensity: .45 },
+};
+
 function createMaterials() {
   const made = new Map();
   const get = name => {
     if (made.has(name)) return made.get(name);
-    const spec = KIT_MATERIALS[name] ?? { color: '#888888' };
+    const spec = KIT_MATERIALS[name] ?? RENDER_MATERIALS[name] ?? { color: '#888888' };
     let material;
     if (spec.surface === 'district-paver') material = paverSurface();
     else if (spec.surface) material = physicalSurface(spec.surface, { tileSize: spec.tile ?? 4, instanced: false, variation: .08, color: new THREE.Color(spec.color ?? '#ffffff') });
@@ -34,6 +40,21 @@ function createMaterials() {
   return { get, made };
 }
 
+// Surface materials expect UVs in metres (materials.js). A box face takes the two
+// world axes in its plane, vertical as v, so courses stay level and joints line
+// up across neighbouring boxes.
+function metricUv(geometry) {
+  const position = geometry.attributes.position, normal = geometry.attributes.normal, uv = geometry.attributes.uv;
+  for (let i = 0; i < position.count; i++) {
+    const x = position.getX(i), y = position.getY(i), z = position.getZ(i);
+    const nx = Math.abs(normal.getX(i)), ny = Math.abs(normal.getY(i)), nz = Math.abs(normal.getZ(i));
+    if (ny >= nx && ny >= nz) uv.setXY(i, x, z);
+    else if (nx >= nz) uv.setXY(i, z, y);
+    else uv.setXY(i, x, y);
+  }
+  uv.needsUpdate = true;
+}
+
 // Accumulates transformed geometry per material, then merges.
 function createBatch() {
   const parts = new Map(), matrix = new THREE.Matrix4(), quaternion = new THREE.Quaternion(), euler = new THREE.Euler();
@@ -43,7 +64,7 @@ function createBatch() {
     const geometry = unit.clone();
     euler.set(pitch, yaw, 0, 'YXZ'); quaternion.setFromEuler(euler);
     matrix.compose(new THREE.Vector3(east, up, -north), quaternion, new THREE.Vector3(sizeAlong, height, sizeAcross));
-    geometry.applyMatrix4(matrix); add(material, geometry);
+    geometry.applyMatrix4(matrix); metricUv(geometry); add(material, geometry);
   };
   const mesh = (material, geometry, east, up, north, yaw = 0, scale = [1, 1, 1]) => {
     const copy = geometry.clone(); euler.set(0, yaw, 0); quaternion.setFromEuler(euler);
@@ -111,7 +132,7 @@ function drape(rect, groundAt, lift, step = 2) {
   for (let j = 0; j <= rows; j++) for (let i = 0; i <= columns; i++) {
     const x = w + (e - w) * i / columns, y = s + (n - s) * j / rows;
     positions.push(x, groundAt(x, y) + lift, -y); uvs.push(x, y);
-    if (i < columns && j < rows) { const a = j * (columns + 1) + i, b = a + 1, c = a + columns + 1; indices.push(a, c, b, b, c, c + 1); }
+    if (i < columns && j < rows) { const a = j * (columns + 1) + i, b = a + 1, c = a + columns + 1; indices.push(a, b, c, b, c + 1, c); }
   }
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
@@ -132,6 +153,8 @@ function renderShell(piece, batch, detail, m, ground, signs) {
   solid(core, bottom, groundTop, wall);
   if (piece.storeys > 1) solid(upper, groundTop, top, wall);
   else solid(cut(.02), groundTop - .02, top, wall);
+  // Roof membrane inside the parapet.
+  solid([w + .24, s + .24, e - .24, n - .24], top - .02, top + .04, m('roof-membrane'));
   // Floor plate between storefront and upper facade, and the loggia soffit.
   solid([w, s, e, n], groundTop - .02, groundTop + .28, trim);
   const roofKind = piece.roof;
@@ -179,7 +202,7 @@ function renderShell(piece, batch, detail, m, ground, signs) {
       put(detail, trim, mid, -recess + .08, ground + .25, width, .5, .12);
       put(detail, glass, mid, -recess + .05, ground + 1.95, width, 2.9, .03);
       // A warm interior just behind the glass, in front of the core wall.
-      put(detail, m('lamp-glow'), mid, -recess + .015, ground + 1.95, width, 2.9, .01);
+      put(detail, m('shop-interior'), mid, -recess + .015, ground + 1.95, width, 2.9, .01);
       for (const t of [.33, .66]) put(detail, bronze, u0 + width * t, -recess + .08, ground + 1.95, .05, 2.9, .06);
       put(detail, bronze, mid, -recess + .08, ground + 2.75, width, .05, .06);
       if (i === Math.floor(bays / 2)) put(detail, bronze, mid, -recess + .09, ground + 1.2, 1.0, 2.35, .05);
