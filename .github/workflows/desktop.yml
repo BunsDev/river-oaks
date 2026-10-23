@@ -35,16 +35,52 @@ permissions:
 defaults:
   run:
     shell: bash
+# A newer push to the same pull request supersedes the older run; main, tags and
+# manual runs are never cancelled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
+  # Pull requests that change desktop/ get every platform and the installers. Ones
+  # that only reach this workflow through shared/, package.json or the lockfile
+  # get the Linux leg; main, tags and manual runs always get everything.
+  scope:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      platforms: ${{ steps.scope.outputs.platforms }}
+      installers: ${{ steps.scope.outputs.installers }}
+    steps:
+      - id: scope
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          full=true
+          if [ "$EVENT" = pull_request ]; then
+            files=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR/files" --paginate --jq '.[].filename')
+            grep -qE '^(desktop/|\.github/workflows/desktop\.yml$)' <<< "$files" || full=false
+          fi
+          if [ "$full" = true ]; then
+            echo 'platforms=["windows-latest","ubuntu-latest","macos-latest"]' >> "$GITHUB_OUTPUT"
+          else
+            echo 'platforms=["ubuntu-latest"]' >> "$GITHUB_OUTPUT"
+          fi
+          echo "installers=$full" >> "$GITHUB_OUTPUT"
   desktop:
     name: desktop (${{ matrix.os }})
+    needs: scope
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
     strategy:
       # Every platform reports, so one failing leg doesn't hide another.
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        os: ${{ fromJSON(needs.scope.outputs.platforms) }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -199,8 +235,8 @@ jobs:
   # launch it once offline, remove it and confirm nothing is left.
   installers-windows:
     name: installers (windows-latest)
-    needs: desktop
-    if: ${{ !cancelled() }}
+    needs: [scope, desktop]
+    if: ${{ !cancelled() && needs.scope.outputs.installers == 'true' }}
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -233,8 +269,8 @@ jobs:
   # the case the .deb's profile and setuid chrome-sandbox exist for.
   installers-linux:
     name: installers (ubuntu-24.04)
-    needs: desktop
-    if: ${{ !cancelled() }}
+    needs: [scope, desktop]
+    if: ${{ !cancelled() && needs.scope.outputs.installers == 'true' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
