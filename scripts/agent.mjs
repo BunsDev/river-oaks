@@ -2,6 +2,7 @@ import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { holdBrowserLock } from './browser-lock.mjs';
 
 const repository = fileURLToPath(new URL('../', import.meta.url));
 const readConfig = () => JSON.parse(readFileSync(join(repository, 'config/agent-workflow.json'), 'utf8'));
@@ -71,15 +72,30 @@ export async function runProfile(profile, tasks, { root = repository, receipt, e
       stopped = true;
     } else {
       if (!quiet) console.log(`\n[${task.id}] ${task.command.join(' ')}`);
-      result.status = 'running';
+      result.status = task.browser ? 'queued' : 'running';
       save(receipt, report);
-      const start = Date.now();
-      const child = await execute(task, { root, env, quiet, signal });
+      const childEnv = { ...env }, queuedAt = Date.now();
+      let start, child, release = () => {};
+      try {
+        if (task.browser) {
+          release = await holdBrowserLock(task.id, { env: childEnv, signal, ...(quiet ? { log: () => {} } : {}) });
+          result.queueDurationMs = Date.now() - queuedAt;
+        }
+        result.status = 'running';
+        save(receipt, report);
+        start = Date.now();
+        child = await execute(task, { root, env: childEnv, quiet, signal });
+      } catch (error) {
+        if (task.browser && start === undefined) result.queueDurationMs = Date.now() - queuedAt;
+        child = { status: null, error: signal?.aborted ? { code: 'ABORT_ERR' } : error };
+      } finally {
+        release();
+      }
       Object.assign(result, {
         status: child.error?.code === 'ENOENT' ? 'blocked'
           : !child.error && !child.signal && child.status === (task.expectedExit ?? 0) ? 'passed' : 'failed',
         exitCode: child.status, expectedExit: task.expectedExit ?? 0,
-        signal: child.signal, error: child.error?.code, durationMs: Date.now() - start,
+        signal: child.signal, error: child.error?.code, durationMs: start === undefined ? 0 : Date.now() - start,
       });
       stopped = result.status !== 'passed';
     }
