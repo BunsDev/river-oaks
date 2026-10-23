@@ -1,0 +1,19 @@
+{
+  "origin": [
+    -95.425,
+    29.755
+  ],
+  "crs": "EPSG:32615",
+  "spawnEastNorthUp": [
+    -2765.321977373157,
+    -1295.064162750871,
+    18.183264532037697
+  ],
+  "spawnLongitudeLatitude": [
+    -95.45329114317046,
+    29.742795708084607
+  ],
+  "horizontalRoundTripErrorM": 9.173495407575455e-10,
+  "terrainVerticalDatum": "NAVD88",
+  "scope": "Existing source projection and datum metadata only; no independent survey or vertical datum conversion."
+}
