@@ -104,3 +104,36 @@ This documentation increment will be published as a verified draft while the alr
 A final comparison of all five original readiness files found the testing guide still unpublished. All four code files in the preserved staged source are byte-identical to #605's candidate; only `docs/testing.md`'s Campus fixture readiness section remained to publish. This documentation increment ports that section to #606, reflows prose to logical paragraphs, retains the existing shell commands and unchanged 120-second/30-second/1.3 m contracts, and replaces the unpublished old-ledger reference with the immutable #605 candidate ledger. No source runtime, test, historical report or staged source checkout was changed.
 
 `docs/testing.md` has other active section owners. This isolated branch appends only the missing campus section; preserve their sections and handle later merge overlap explicitly. Validation covers whitespace, balanced code fences, referenced local files and command syntax. The existing queued core retry will observe this signed documentation head when it starts; fresh hosted checks are required for this new head. #605's verified `f00e7987` and its three-run hosted evidence remain unchanged.
+
+## Verified delivery and handoff — 2026-10-23
+
+The earlier queue, draft and unpublished observations above are historical. All three coordinator increments landed through the installed guard, and their merges were verified as ancestors of fetched `origin/main` at `4113fbda560fb30aa3993f75ac301dbdcf5798a2`:
+
+| PR | Reviewed integration head | Verified merge | Hosted evidence |
+| --- | --- | --- | --- |
+| #606 tracker and readiness guide | `65705784bbddd223d21c0f66660cddaf8f2c48c2` | `2bc1f200648e340380f800f99b33ce108059d884` | Verify `39940468998`, attempt 2 passed; first Playwright-install cancellation retained |
+| #605 socket-replacement readiness | `cfc0f159014150be59bb7dda8322130fa2ac66a4` | `d9d8fff3bb894b28fc215b0e1ba40ff947e75166` | Verify `39946197482`, all 14 jobs passed |
+| #593 traversal/lifecycle and lift-coordinate fence | `9a2f951939f19935f08b4e588b66c2095c569011` | `4113fbda560fb30aa3993f75ac301dbdcf5798a2` | Verify `39962449091`, final 15-job view passed after one guarded failed-job rerun |
+
+#593's corrected source candidate `94e0756e2d7ae572639bd4f9ada600c87ab3ba52` passed clean core (11 phases), focused lifecycle (17 checks), traversal (31 checks), all 14 hosted jobs and clean isolated-Redis full (18 phases, 12:57:24–13:33:26 UTC). Full counted agent 201 passed/0 skipped, preview 3828 passed/1 skipped, Redis/server 1016 passed/0 skipped and desktop 115 passed/3 skipped; all 16 experience and 25 shared journeys and IPIC passed. Owned Redis stopped. Generated reports were preserved byte-for-byte with hashes and only those report paths restored; the checkout was clean. The integration head additionally passed all 12 loopback readiness regressions with zero skips, preserving #605's socket case and #593's coordinate/reach case together. These local receipts remain scoped to their tested source head; fresh hosted integration is separate evidence.
+
+The first integration places job `120443582070` failed the unchanged Computer fixture's account-change Continue click after its frame/button detached. Artifact `12506420868` has SHA-256 `dfb3a2796b31f40431c1534e6af4a97df6ca260450db6b87a573bd3abafcdcfb`; the raw run/jobs, log, report and owner-page screenshot remain under the traversal checkout's `.runtime/campus-508/current-main-gates/integration-9a2f9519-first/`. The guard's single rerun passed without source, deadline or authentication changes. That pass does not identify or repair the first failure's cause. The earlier `2cc78e30` full lift failure and `8b2ce34b` coordinate timeout also remain preserved.
+
+Independent PR #575 remains green and ready for review at `9cb20c3f3093b47311214b84c004b33d1a4d8e6c`: matching clean core and full attempt 2 passed, as did hosted Verify `39901358594`. Full passed all 18 phases at 11:54:56 UTC, including 1015 Redis/server tests with zero skips, 16 experience and 25 shared journeys and IPIC. Its first unchanged idle-slice failure remains retained. Its existing owner still owns report preservation, review findings and guarded latest-main integration; this coordinator did not edit or land that checkout.
+
+### Decisions for Val and issue recommendations
+
+| Issue | Recommendation | Owner and next action |
+| --- | --- | --- |
+| #506 | Remain closed | Coordinator retains the delivered contract baseline and rechecks compatibility if a later layout change is proposed. |
+| #507 | Keep open | Existing challenge owner reconciles the review findings and latest-main integration; Val records current-runtime visual/resource applicability and the authored-entry boundary. |
+| #508 | Recommend close with the approved transfer; no closure performed | Val decides closure separately; the physical/rendered criteria remain explicitly unchecked in #505. |
+| #509 | Remain closed for owner-issued, non-charging tenancy | Val decides the separately documented commercial mode before payment integration or collection. |
+| #510 | Keep open | Val supplies the public-control/accessibility/device checklist and assigns the remaining Computer fixture account-change investigation; real Computer evidence stays with #486/#487. |
+| #511 | Keep open | Val assigns the bounded canopy flight-clearance regression/fix and adopts current-view/device/GPU budgets; the read-only predicate probes are not rendered or full-command acceptance. |
+| #512 | Keep open | Val records human/device/GPU acceptance and assigns built-client/no-HMR revision-recovery evidence. |
+| #505 | Keep open | Val resolves the named human, device, commercial and Computer decisions; the coordinator's evidence reconciliation does not establish those acceptance results. |
+
+Physical iPhone/Android/iPad touch, reduced-motion arrival/exit, rendered route/soles/cabin/stair contact, every public control, human accessibility, target GPU budgets, current-runtime visual acceptance and production remain unverified. Real Computer build, approved staged origin/account persistence/privacy remain separate under #486/#487; the campus claim remains Tasks-only. Leases are owner-issued and non-charging. Lifts move one floor per press; a floor picker still needs a separate decision. No WorkOS, waitlist, CSRF or server refusal was relaxed. No deployment, environment/revision/epoch/operator change, paid call, issue closure or worktree retirement was performed.
+
+This final checkpoint owns only the three task ledgers. Verify the documentation increment with core and fresh hosted checks, then publish and land through the guard. The live register and issue/PR bodies carry the exact delivery receipts and final checkpoint PR. Preserve all source checkouts and raw evidence; cleanup remains separate.
