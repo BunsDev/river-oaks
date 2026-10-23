@@ -93,3 +93,14 @@ A new core run is now active, log `.runtime/campus-508/core-after-timing-probe.l
 ## Incremental delivery decision
 
 Publish the independently reviewed server-test and acceptance-ledger increment as a draft PR while local browser validation waits behind the live queue. The 62/62 focused suite verifies this increment; the unrelated first core timing failure remains disclosed and the retry remains active. The `multiplayer-lifecycle.js` late-reply edit is still uncommitted and is not part of that first PR head. Add it only after its focused browser check runs. This overlaps hosted campus validation with the local queue without claiming completion or relaxing any final gate.
+
+
+## Candidate for final-head verification
+
+The core retry passed all 11 phases (`core-retry-passed.json`, `core-after-timing-probe.log`); preview 3,755 passed/1 skipped and server 736 passed/213 Redis-dependent skips. The offline demo verification's expected exit 2 is the repository's synthetic-fixture contract, not production acceptance. The first timing failure is retained separately.
+
+Draft [PR #593](https://github.com/BunsDev/river-oaks/pull/593) first published signed head `f13e47bf15b6b70f00d012415c159193510ef486`; the [single increment comment](https://github.com/BunsDev/river-oaks/issues/508#issuecomment-6355742072) carries changing verification status. Hosted Verify run `39888322800` has started campus-traversal for that first head; it must run again for the final candidate.
+
+With syntax and core verification now passing, include the test-only late-reply change in the next signed draft candidate so final core/full receipts can name its actual Git head. This supersedes the earlier plan to wait for local browser execution before committing that test. Browser execution is still pending, and this commit is not a claim that the late-reply regression has passed. Final-head gates and hosted evidence remain mandatory before review-ready status. Results will be recorded in the existing issue comment, PR description and live register, keyed to the exact head, rather than creating a documentation-only head after the final checks.
+
+Next: preserve the existing lifecycle process and queue position; run `pnpm run verify` on the candidate and `pnpm run verify full` with isolated Redis at 16385, serialized through the shared browser lock. On a failure, preserve its first receipt and investigate the owning seam; do not weaken assertions. Only after all required final-head evidence passes, update the evidence comment/PR and mark the draft review-ready. Physical-device results and lift UX remain Decisions for Val.
