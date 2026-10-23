@@ -17,17 +17,19 @@ Site-local metres are measured from the District's east edge at the promenade ce
 | Market Row | north frontage | Five brick shops with canopies, awnings and cornices: Teal Door Books (pinned to three storeys by override), Paletas Lucero, Bayou Bloom Florist, Lantern Lane Coffee and Little Kiln Ceramics. Lower rear buildings close the block. |
 | Garden Court | south frontage | Ivory stucco loggias and a 12 × 10 m court: cafe sets, planters and the court lantern |
 | Crossing | x 44–47 | A flush crossing table and bollards where the street meets the green |
-| Bayou Green | the approved 70 × 80 m plaza | Lawns, two rows of shade trees, hedged north and south edges, a market terrace with cafe sets, benches facing the lawn, the pavilion with the shared chess table, the rain garden |
+| Bayou Green | the approved 70 × 80 m plaza | Two mown lawns, a planted south lawn with its own row of shade trees, two edge rows of shade trees, hedged north and south edges, a market terrace with cafe sets, benches facing the lawn, the pavilion with the shared chess table, the rain garden |
+| Bayou Market | x 62–82 along the green's north side | Four striped market stalls facing the lawn: Gulf Coast Shrimp, Pecan Pralines, Bluebonnet Blooms and Rio Grande Citrus. Each has a counter, crates of produce and a lettered board. Planters close both ends. |
 | Bayou Lantern | x 106 on the street axis | A 27 m water tower with a ★ BAYOU MARKET ★ band. It terminates the view down Market Street from the District, and players can walk between its legs. |
 | Edges | east, north, south | A railing above a bayou with trees on the far bank, and visual-only context buildings. Walking stops at the hedges and the railing. |
 
-The plan has 112 pieces, 19 building shells, 53 solids and 14 materials, at about 92,692 authored triangles. The client renders it with 53 meshes before trees and planting.
+The plan has 125 pieces, 19 building shells, 62 solids and 15 materials, at about 95,736 authored triangles. The client renders it with 57 meshes before trees and planting. Lawns use the District grass maps under a turf tint at low texture contrast, as on the green roofs; untinted, the maps read as bare gravel.
 
 ## Gathering and activities
 
 - **Pavilion chess:** the existing authoritative two-player table (`chess-commons`), unchanged.
 - **Lantern Walk:** this destination's own shared activity (`server/lantern-walk.js`, `preview/src/lantern-walk.js`). Five lanterns stand at the gateway, in the court, on the terrace, beside the rain garden and under the tower. Any player on foot within 2.4 m of an unlit lantern presses Z to light it, and the server checks reach on every request. When all five are lit, the tower beacon lights for everyone. The round's time and lamplighters are announced, and the best team time is kept as a reason to return. A finished round stays lit for 90 seconds. An unfinished round goes dark after five quiet minutes. Rounds persist through server checkpoints. Rolling the town back to Gardens leaves the activity behind.
-- **Places to linger:** benches on the green, cafe sets on the terrace and in the court, and the shade of the pavilion and the tower.
+- **Places to linger:** benches on the green, cafe sets on the terrace and in the court, the market stalls, and the shade of the pavilion, the south lawn's trees and the tower.
+- **Arrival:** crossing the promenade announces Bayou Market Commons in the walking notice, and crossing back announces River Oaks District.
 
 ## Movement and authority
 

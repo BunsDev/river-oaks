@@ -120,3 +120,23 @@ test('the composed scene builds within budget and releases what it owns', () => 
   group.userData.dispose(); group.userData.dispose();
   assert.equal(disposed, geometries.size); assert.equal(group.children.length, 0);
 });
+
+test('the Bayou Market stalls line the green, block bodies and leave room to browse in front', async () => {
+  const stalls = plan.pieces.filter(piece => piece.piece === 'furniture/market-stall');
+  assert.equal(stalls.length, 4);
+  assert.equal(new Set(stalls.map(stall => stall.sign)).size, 4, 'each stall has its own name');
+  const reach = reachable();
+  for (const stall of stalls) {
+    assert.ok(plan.solids.some(solid => solid.id === stall.id), `${stall.id} is solid`);
+    assert.equal(free(...stall.at), false, `${stall.id} blocks bodies`);
+    // The counter faces the lawn (south); a shopper stands in front of it.
+    assert.ok(reach.has([stall.at[0], stall.at[1] - 2]), `${stall.id} front is reachable`);
+  }
+  // Mown turf, not the bare gravel of the untinted grass maps.
+  const { buildCityKit } = await import('../src/city-kit/render.js');
+  const kit = buildCityKit(plan, { groundAt: () => 0, ground: 0 }), lawns = [];
+  kit.traverse(item => { if (item.isMesh && item.material.name.startsWith('city-kit/lawn')) lawns.push(item.material); });
+  assert.ok(lawns.length);
+  for (const lawn of lawns) assert.ok(lawn.color.g > lawn.color.r * 1.1 && lawn.color.g > lawn.color.b * 1.2, `lawn tint ${lawn.color.getHexString()}`);
+  kit.userData.dispose();
+});

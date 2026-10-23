@@ -25,7 +25,9 @@ export const KIT_MATERIALS = Object.freeze({
   'lane-brick': { surface: 'brick', color: '#8f7f78', tile: 2.4 },
   'curb-granite': { surface: 'stone', color: '#b9b4aa', tile: 1.5 },
   'plaza-stone': { surface: 'pavement', color: '#d8d0c0', tile: 3 },
-  lawn: { surface: 'grass', tile: 4 },
+  // The grass PBR is a sparse, gravelly ground; a turf tint at low texture contrast
+  // reads as mown lawn, as on the District's green roofs.
+  lawn: { surface: 'grass', color: '#a3c286', tile: 1.8, textureContrast: .35 },
   soil: { color: '#2d281f', roughness: 1 },
   'brick-rose': { surface: 'brick', color: '#c98e88', tile: 2.2 },
   'brick-umber': { surface: 'brick', color: '#a9826e', tile: 2.2 },
@@ -40,7 +42,8 @@ export const KIT_MATERIALS = Object.freeze({
   'canvas-rose': { color: '#c98e92', roughness: .9 },
   'canvas-teal': { color: '#3f8c88', roughness: .9 },
   'canvas-apricot': { color: '#ddad81', roughness: .9 },
-  glass: { color: '#81b7b0', roughness: .08, metalness: .25, glass: true },
+  // Storefront glass stays dark and thin so the lit shop behind it reads, not the sky.
+  glass: { color: '#4a6f6b', roughness: .08, metalness: .1, glass: true },
   // Upper-storey and context glazing reflect the sky instead of showing the wall behind.
   'glass-dark': { color: '#2e5157', roughness: .07, metalness: .35, reflective: true },
   'roof-membrane': { color: '#6b6d6a', roughness: .95 },
@@ -99,6 +102,9 @@ export const KIT_PIECES = Object.freeze({
   'furniture/bike-rack': { family: 'furniture', collision: 'solid', footprint: [1.8, .3], height: .8, triangles: 120 },
   'furniture/lantern': { family: 'furniture', collision: 'solid', footprint: [.5, .5], height: 2.1, triangles: 160 },
   'furniture/cafe-set': { family: 'furniture', collision: 'solid', footprint: [1.6, 1.6], height: .76, triangles: 220 },
+  // A market stall: counter, produce crates, striped canvas roof and a lettered
+  // board. Its front (counter side) faces yaw's −v, like a bench's seat.
+  'furniture/market-stall': { family: 'furniture', collision: 'solid', footprint: [3.6, 2.4], height: 2.8, triangles: 700 },
   'landmark/water-tower': { family: 'landmark', collision: 'solid', footprint: [7, 7], height: 27, triangles: 3200 },
   // Edges: a planted hedge stops walking; a bayou and context massing give the
   // boundary a reason and a skyline. Context massing is visual only, never ground.

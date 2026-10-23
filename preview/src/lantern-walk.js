@@ -8,7 +8,7 @@ const clock = seconds => `${Math.floor(seconds / 60)}:${String(Math.floor(second
 const names = list => list.length <= 2 ? list.join(' & ') : `${list.slice(0, -1).join(', ')} & ${list.at(-1)}`;
 
 export function createLanternWalkClient({ getLayout, getPose, getSnapshot, send, getScene, now = Date.now }) {
-  let busy = false, shownKey = null, status = null, announced = null;
+  let busy = false, shownKey = null, status = null, announced = null, wasInside = null;
   const lanterns = () => getLayout()?.destination?.lanterns ?? [];
   const inCommons = pose => { const layout = getLayout(); return Boolean(layout && pose && pose.position[0] > layout.edge); };
   const onFoot = pose => pose && !pose.sitting && !pose.riding && (pose.altitude ?? 0) <= .1;
@@ -62,8 +62,14 @@ export function createLanternWalkClient({ getLayout, getPose, getSnapshot, send,
       announced = state.round.completedAt;
       notice(`The Bayou Lantern is lit! ${clock(state.round.seconds)} · ${names(state.round.lamplighters)}`);
     }
-    const element = chip(), pose = getPose?.();
-    element.hidden = !inCommons(pose);
+    const element = chip(), pose = getPose?.(), inside = inCommons(pose);
+    // Crossing the promenade names the place you arrive in, both ways.
+    if (pose && inside !== wasInside) {
+      if (inside) notice('Bayou Market Commons · Market Street, the Bayou Green and the Bayou Lantern');
+      else if (wasInside) notice('Back in River Oaks District');
+      wasInside = inside;
+    }
+    element.hidden = !inside;
     if (element.hidden) return;
     const count = lit.size, total = state.lanterns.length, elapsed = state.round && !complete ? (now() - state.round.startedAt) / 1000 : null;
     const best = state.best ? ` · Best ${clock(state.best.seconds)} (${names(state.best.lamplighters)})` : '';
