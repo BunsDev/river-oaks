@@ -1,3 +1,4 @@
+import {releaseTransmissionTargets} from './transmission-targets.js';
 import { WebGLRenderTarget, HalfFloatType, PCFSoftShadowMap } from 'three';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
@@ -23,7 +24,7 @@ export function portraitPixels({renderer,scene,camera}){
     if(gl.isContextLost())throw new Error('Graphics context was lost during capture.');
     return {width,height,pixels};
   }finally{
-    renderer.setRenderTarget(previous);Object.assign(renderer.shadowMap,shadows);camera.aspect=aspect;camera.updateProjectionMatrix();linear.dispose();target.dispose();output.dispose();
+    renderer.setRenderTarget(previous);Object.assign(renderer.shadowMap,shadows);camera.aspect=aspect;camera.updateProjectionMatrix();linear.dispose();target.dispose();output.dispose();releaseTransmissionTargets(renderer,scene);
   }
 }
 export function flipPortraitRows(pixels,width,height){

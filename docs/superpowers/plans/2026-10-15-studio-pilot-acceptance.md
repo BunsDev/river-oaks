@@ -862,3 +862,60 @@ Pre-commit runs, mutated-loader runs and captures stay local under `.runtime/acc
 | Physical iOS | #289 | Not started here |
 
 #417 stays open until Val's review is recorded.
+
+## Review readiness (2026-10-22)
+
+Task `studio-review-417-20261022`, branch `test/studio-review-417-20261022`, from origin/main
+`f850abfa`. `git log 153471bc..origin/main -- preview/src/studio preview/src/materials.js` is
+empty, so main's Studio still equals the #493 candidate and the pilot journeys did not need a re-run.
+
+### What the checklist exposed (probe on unmodified main)
+
+A temporary probe (not committed) recorded focus, live-region text and focus rings for each
+checklist flow in a detached checkout of `f850abfa`:
+
+| Flow | Unmodified main |
+| --- | --- |
+| Enter on a scene object | focus fell to `body`: every render replaced the list's buttons |
+| Commit a field (Enter or Tab) | focus fell to `body`: the form was rebuilt and its fields disabled during the check |
+| Refused edit | footer said only "Clear the route to meeting room at 3, 1 m; move or resize the obstructing furnishing."; "Edit rejected." and the Select buttons sit in a panel that isn't announced |
+| Save, stale-tab notice, stale-save refusal, reopen | announced in the footer status region |
+| Walk enter and Escape | announced; focus on the 3D viewport throughout |
+| Focus rings | all 43 Tab stops show one |
+
+### Fix (`preview/src/studio/main.js`)
+
+- The scene list and inspector form are rebuilt only when their shape changes (objects, or the
+  selected object's fields); otherwise they update in place.
+- While an edit is checked, text and number fields are read-only instead of disabled, so Tab can
+  still reach them. Selects stay disabled.
+- A control that is disabled or rebuilt while focused gets focus back after the event; Undo and Redo
+  hand focus to each other when history runs out. A deliberate move elsewhere is not overridden.
+- A refused edit announces "Edit not applied; your draft is unchanged.", then the finding, then
+  "Nearby:" and the furnishings' names.
+
+### Regressions
+
+- `studio-pilot-a11y.js`: focus stays on the selected scene object; Tab after an edit reaches the
+  next field; Enter keeps focus in the field; Undo/Redo hand focus across; every Tab stop shows focus.
+  On unmodified main it fails at the first: "focus stays on the selected scene object (BODY)".
+- `studio-pilot-journey.js`: the status region announces the refusal and names Waiting Sofa. On
+  unmodified main it fails with the old message verbatim.
+
+### Not automatable (left for Val's review)
+
+- Saving twice writes identical text; whether VoiceOver repeats it needs a human.
+- Whether the announcements read well in VoiceOver at all; automated checks read the DOM only.
+- Touch, uncoached use and exit wayfinding.
+
+### Results on this branch (app code = main `f850abfa` + this `main.js` change)
+
+- `pnpm run test:experience studio-pilot-a11y studio-pilot-journey`: 25 and 15 checks, both passed
+  (receipt `data/reports/studio-review-417-a11y.json`, ANGLE Metal, 1440 × 1000).
+- `world-studio` and `studio-pilot-soak` (1 + 10 cycles) passed on the same app code.
+- `node desktop/studio-e2e.js`: development Electron 11/11.
+- `node --test preview/tests/studio-*.test.js`: 131/131.
+- `pnpm run verify` (core): agent 173, preview 3,699 (1 skipped), server 732 (212 Redis skips),
+  desktop 115 (3 skipped), build, Python, secrets. This shell's `python3` is macOS 3.9, so the run
+  put the locked `.venv/bin` first on PATH; #576 makes the runner do that itself.
+- Not run: isolated Redis/full, physical devices, VoiceOver. None of these results is human review.

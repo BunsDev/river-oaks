@@ -157,7 +157,8 @@ start, delivery and handoff. `pnpm run --silent project:status --github` compare
 local branches/worktrees with the task register and live PRs without changing them.
 `project:check` exits nonzero for reconciliation gaps, not application test failures;
 orphan checkouts (no task, or a task whose recorded worktree is gone) are gaps too, and
-`--allow-orphans` downgrades only those to warnings. `pnpm run project:inventory`
+`--allow-orphans` downgrades only those to warnings. Records whose restoration archive
+(manifest or bundle) is missing from this machine are a gap that `--allow-orphans` does not waive. `pnpm run project:inventory`
 classifies every local branch and worktree (`--remote` adds a report-only list of
 merged remote branches), and `pnpm run project:archives` verifies the restore
 archives under `~/worktree-backups/river-oaks/`. Both are read-only.

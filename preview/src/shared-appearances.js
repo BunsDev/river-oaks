@@ -18,6 +18,8 @@ export const CHARACTERS = [
   {id:'lyra',name:'Lyra',title:'Velvet muse',species:'Human',accent:'#986879',variants:[{id:'signature',label:'Mauve velvet'}]},
   {id:'kai',name:'Kai',title:'Starlight maker',species:'Human',accent:'#c2aa80',variants:[{id:'formal',label:'Celestial formal',short:'Formal'},{id:'explorer',label:'Explorer casual',short:'Explorer'},{id:'noir',label:'Starlit noir',short:'Noir'}]},
   {id:'silvan',name:'Silvan',title:'Forest aristocrat',species:'Human',accent:'#6f7748',variants:[{id:'masculine',label:'Masculine',short:'Masculine'},{id:'feminine',label:'Feminine',short:'Feminine'}]},
+  {id:'morgan',name:'Morgan',title:'Neighborhood photographer',species:'Human',accent:'#7c826d',variants:[{id:'casual',label:'City casual'}]},
+  {id:'imani',name:'Imani',title:'Gallery curator',species:'Human',accent:'#8b6658',variants:[{id:'tailored',label:'City tailoring'}]},
 ];
 const characterById=new Map(CHARACTERS.map(character=>[character.id,character]));
 
@@ -46,6 +48,8 @@ export const SHARED_APPEARANCES = [
   entry({id:'kai-noir',character:'kai',variant:'noir',form:'human',rig:'man-casual',kind:'human',reference:'/assets/characters/references/kai-three-celestial-styles.png',portraitStyle:'collage',portraitLeft:'-234px',description:'Starlit noir Kai wears a long black coat, layered dark tailoring, glinting gold constellations and crescent motifs, a star pendant, and sleek black boots.'}),
   entry({id:'forest-aristocrat',character:'silvan',variant:'masculine',form:'human',rig:'man-casual',kind:'human',reference:'/assets/characters/references/forest-aristocrat-masculine.png',portraitLeft:'-200px',description:'A woodland noble come to town: an antler-twig crown woven with leaves and white blossoms, long vine-laced hair, an open ivory tunic over an olive panel, a gold-leaf sash with hanging leaf chains, vine-wrapped bracers, and tall vine-bound boots.'}),
   entry({id:'forest-aristocrat-feminine',character:'silvan',variant:'feminine',form:'human',rig:'jevica',kind:'human',reference:'/assets/characters/references/forest-aristocrat-feminine.png',portraitLeft:'-200px',description:'The feminine forest aristocrat: an antler-twig crown with leaves and white blossoms, long waves threaded with vines, a draped ivory wrap over an olive panel, a gold-leaf sash and chains, vines climbing bare arms, and tall vine-bound block-heel boots.'}),
+  entry({id:'morgan-human',character:'morgan',variant:'casual',form:'human',rig:'man-realistic-casual',kind:'human',description:'Morgan wears an authored casual suit and short hair, with a realistic human face and expressive game rig.'}),
+  entry({id:'imani-human',character:'imani',variant:'tailored',form:'human',rig:'woman-realistic-tailored',kind:'human',description:'Imani wears an authored tailored suit and bob haircut, with a realistic human face and expressive game rig.'}),
 ];
 
 // Read compatibility only: retired saved identities retain their human character/style.

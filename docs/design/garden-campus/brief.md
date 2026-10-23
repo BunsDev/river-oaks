@@ -40,13 +40,13 @@ The existing office roof is 51.28383 m absolute. T2's cap (50.35939 m) stays 0.9
   - 43 suites, 3,279.7 m² net, computed from real geometry: plate minus core, spur, spine and terrace passage.
   - Each suite has at least a 3 m short side, a 1.7 m door onto public circulation, and a desk anchor with 1.27 m seated clearance.
   - Top-tier east strips (1.5 m) are recorded as service residual, never as suites. Commercial terms are unset (#509).
-- **Body clearance.** Clearances use `AVATAR_ENVELOPE` (0.505 / 0.888 / 2.45 / 1.27 m). On 2026-10-18 the 11 current human appearances were remeasured ([avatar-envelope.json](avatar-envelope.json)):
-  - widest body 1.01 m (Jevica);
-  - tallest 2.45 m (forest aristocrat);
-  - widest turning 0.561 m (Lyra);
-  - widest seated reach 0.932 m (forest aristocrat, feminine).
+- **Body clearance.** Clearances retain `AVATAR_ENVELOPE` (0.505 / 0.888 / 2.45 / 1.27 m). The #517 refresh measures all 13 current human appearances ([avatar-envelope.json](avatar-envelope.json)), using visible morph-aware vertices and the millisecond animation clock:
+  - widest standing body 0.752686 m (Kai explorer);
+  - tallest standing body 2.016064 m (forest aristocrat);
+  - widest standing turning radius 0.510034 m (Kai explorer);
+  - widest settled seated radius 0.845295 m (Lyra).
 
-  The constants bound all of them; body width and height are exact.
+  The unchanged constants bound all 13. These are standing and settled seated poses, not continuous motion acceptance. The [prior 11-look receipt](../../../data/reports/character-fidelity-campus-envelope-before-517.json) is preserved. Directional IPIC acceptance is separate: both new fixtures fit, while three existing looks exceed its old forward bound ([findings](../../../data/reports/character-fidelity-clearance-517.json)).
 - **Finishes (#511, layout 3.2).**
   - 67 solid obstacles in `layout.furnishings` (`{id, kind, levelId, rect}`), each placed on its own level by `campusLevels`:
     - 26 planters along terrace guards and on roofs;

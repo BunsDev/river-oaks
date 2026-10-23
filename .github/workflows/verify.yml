@@ -178,7 +178,8 @@ jobs:
   preview-experience:
     name: preview experience (${{ matrix.shard.id }})
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # Places includes the full office/Computer lifecycle suite; leave time for setup and cleanup.
+    timeout-minutes: ${{ matrix.shard.id == 'places' && 30 || 20 }}
     strategy:
       fail-fast: false
       matrix:

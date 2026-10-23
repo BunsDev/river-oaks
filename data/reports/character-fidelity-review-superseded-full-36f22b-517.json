@@ -1,0 +1,289 @@
+{
+  "schemaVersion": 1,
+  "status": "intentionally-superseded",
+  "reason": "Main advanced to b76ab77c with new screening tooling/test inputs. Stopped only owned full agent28143; coordinator71119 exited1. This is not a demonstrated source failure.",
+  "supersededRuntime": "6e2565ac0e8916aad1f8fc53182c936ba3f58b5dd652778787174713f59e84bb",
+  "supersededMain": "36f22b120509186ea67432601eda6f540a708238",
+  "receiptSha256": "7875cb56b9c98e52de710699aea293c0b670d0e939040e3b059e3202a7aacb8e",
+  "receipt": {
+    "schemaVersion": 1,
+    "profile": "full",
+    "startedAt": "2026-10-19T05:03:11.053Z",
+    "status": "failed",
+    "revision": "132e11b9829635f5d305a68f9fc70d40c96d9d6a",
+    "dirty": true,
+    "scope": "Selected repository checks only; not production, live auth, native Unreal, human accessibility, or target GPU acceptance.",
+    "results": [
+      {
+        "id": "dependency-audit",
+        "command": [
+          "pnpm",
+          "audit",
+          "--audit-level=moderate"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 505
+      },
+      {
+        "id": "agent-tests",
+        "command": [
+          "pnpm",
+          "run",
+          "test:agent"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 14690
+      },
+      {
+        "id": "preview-tests",
+        "command": [
+          "pnpm",
+          "test"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 192103
+      },
+      {
+        "id": "server-redis-tests",
+        "command": [
+          "pnpm",
+          "run",
+          "test:server"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 84786
+      },
+      {
+        "id": "desktop-tests",
+        "command": [
+          "pnpm",
+          "run",
+          "test:desktop"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 5082
+      },
+      {
+        "id": "build",
+        "command": [
+          "pnpm",
+          "run",
+          "build"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 2869
+      },
+      {
+        "id": "python-lint",
+        "command": [
+          "uv",
+          "run",
+          "--locked",
+          "ruff",
+          "check",
+          "."
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 219
+      },
+      {
+        "id": "python-format",
+        "command": [
+          "uv",
+          "run",
+          "--locked",
+          "ruff",
+          "format",
+          "--check",
+          "."
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 38
+      },
+      {
+        "id": "python-tests",
+        "command": [
+          "uv",
+          "run",
+          "--locked",
+          "pytest",
+          "-q"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 5039
+      },
+      {
+        "id": "demo",
+        "command": [
+          "uv",
+          "run",
+          "--locked",
+          "river-oaks",
+          "demo"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 242
+      },
+      {
+        "id": "demo-verify",
+        "command": [
+          "uv",
+          "run",
+          "--locked",
+          "river-oaks",
+          "verify",
+          "--config",
+          "data/generated/demo/config.json",
+          "--raw",
+          "data/generated/demo",
+          "--world",
+          "data/generated/demo/world.json",
+          "--output",
+          "data/generated/demo/report.json"
+        ],
+        "status": "passed",
+        "exitCode": 2,
+        "expectedExit": 2,
+        "signal": null,
+        "durationMs": 236
+      },
+      {
+        "id": "secrets",
+        "command": [
+          "uv",
+          "run",
+          "--locked",
+          "python",
+          "scripts/check_secrets.py",
+          "--all"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 22187
+      },
+      {
+        "id": "secret-history",
+        "command": [
+          "gitleaks",
+          "git",
+          "--log-opts=--all",
+          "--redact",
+          "--no-banner",
+          "--ignore-gitleaks-allow"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 4620
+      },
+      {
+        "id": "security-browser",
+        "command": [
+          "pnpm",
+          "run",
+          "test:security:e2e"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 17541
+      },
+      {
+        "id": "reflections",
+        "command": [
+          "pnpm",
+          "run",
+          "test:reflections:webgl"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 2504
+      },
+      {
+        "id": "experience",
+        "command": [
+          "pnpm",
+          "run",
+          "test:experience",
+          "player-lifecycle",
+          "multiplayer-lifecycle",
+          "contextual-first-visit",
+          "store-intro",
+          "photo-mode",
+          "rail-navigation",
+          "places-guide",
+          "world-studio",
+          "spatial-circulation",
+          "spatial-streets",
+          "office-desk",
+          "office-visit",
+          "office-computer-embed"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 613091
+      },
+      {
+        "id": "shared",
+        "command": [
+          "pnpm",
+          "run",
+          "test:shared"
+        ],
+        "status": "failed",
+        "exitCode": null,
+        "expectedExit": 0,
+        "signal": "SIGKILL",
+        "error": "ABORT_ERR",
+        "durationMs": 569441
+      },
+      {
+        "id": "ipic-screening",
+        "command": [
+          "node",
+          "preview/e2e/ipic-screening-runner.mjs"
+        ],
+        "status": "not_run"
+      }
+    ],
+    "finishedAt": "2026-10-19T05:28:46.292Z"
+  }
+}
