@@ -1,3 +1,6 @@
+import { COMMONS_REVISION } from '../../shared/east-garden-commons-layout.js';
+import { attachEastGardenCommons } from './east-garden-commons-world.js';
+import { buildEastGardenCommons } from './east-garden-commons.js';
 import { createCharacterStudio } from './character-studio.js';
 import { characterStudioShown } from './character-studio-state.js';
 import { createOfficeUI } from './office-ui.js';
@@ -642,6 +645,8 @@ function populateWorld(data) {
     worldGroup.remove(interiorsLayer);
     ipicScreening?.dispose(); storePeople?.userData.dispose?.(); storePeople = null; interiorsLayer = null;
     plazaSalon?.userData.rack?.dispose();
+    const commons=worldGroup.getObjectByName('East Garden Commons blockout');
+    if(commons){commons.removeFromParent();commons.userData.dispose();}
     worldGroup.traverse((item) => {
       item.userData.cancelLandscapeLoad?.();
       item.userData.texture?.dispose();
@@ -668,7 +673,7 @@ function populateWorld(data) {
   worldGroup = new THREE.Group();
   // Facades, arcade rails and neon dissolve near the camera, like trees, so a take-off beside the shops never fills the view.
   buildingMesh = seeThroughNearCameraIn(buildDistrictBuildings(data));
-  const ground=buildGround(data),roads=buildRoads(data);
+  const ground=buildGround(data.eastGardenCommons?{...data,bounds_m:data.eastGardenCommons.districtBounds}:data),roads=buildRoads(data);
   const streetEnvironment=createWalkingEnvironment(data);
   // The Gardens' platform is campus space: no street sidewalk, bench or fountain is generated on it.
   const streetSpace=(x,z)=>streetEnvironment.isFree(x,z)&&!streetEnvironment.roomAt(x,z)&&campusGroundAt(data,x,-z)===null;
@@ -693,6 +698,7 @@ function populateWorld(data) {
   worldGroup.add(seeThroughNearCameraIn(buildDistrictDetail(data)));
   worldGroup.add(sidewalks);
   worldGroup.add(furniture);
+  if(data.eastGardenCommons)worldGroup.add(buildEastGardenCommons(data.eastGardenCommons));
   // The Dior-Toulouse plaza furnished as an open-air salon (plaza-salon-plan.js).
   plazaSalon = buildPlazaSalon(data);
   plazaStage?.setWorld(data);
@@ -862,7 +868,7 @@ async function loadWorld() {
       :await jsonResponse(`/api/world-data?world=${encodeURIComponent(worldId)}`);
     worldRegionSha256=manifest.regionSha256??null;
     const districtRevision=manifest.districtRevision??null;
-    if(districtRevision!==null && districtRevision!==DISTRICT_REVISION_GARDENS)throw new Error('This district revision is not supported by this client');
+    if(districtRevision!==null && ![DISTRICT_REVISION_GARDENS,COMMONS_REVISION].includes(districtRevision))throw new Error('This district revision is not supported by this client');
     let data;
     if(manifest.template==='region-v1')data=manifest.world;
     else if(manifest.template==='river-oaks') {
@@ -872,7 +878,8 @@ async function loadWorld() {
       ]);
       district.vegetation=validateVegetation(district,vegetation);
       data=attachDistrictGalleryPlan(district,approved);
-      if(districtRevision===DISTRICT_REVISION_GARDENS)data=attachGardenCampus(data);
+      if([DISTRICT_REVISION_GARDENS,COMMONS_REVISION].includes(districtRevision))data=attachGardenCampus(data);
+      if(districtRevision===COMMONS_REVISION)data=attachEastGardenCommons(data);
     } else throw new Error('This region format is not supported by this client');
     worldDistrictRevision=districtRevision;
     if (data.schema_version !== 1 || data.scene !== 'district' || !Array.isArray(data.bounds_m) || !['roads', 'stores', 'buildings', 'trees'].every(key => Array.isArray(data[key]))) throw new Error('The district data does not match the supported schema.');

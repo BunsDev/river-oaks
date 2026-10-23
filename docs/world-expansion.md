@@ -1,0 +1,71 @@
+# Continuous world expansion
+
+The expansion preserves the authored District, Gardens revision, gallery and interiors. The initial work follows issues #580 and #581; traversal, streaming and the inhabited destination remain subsequent implementation requirements. The progress ledger is [world expansion](superpowers/plans/2026-10-22-world-expansion.md).
+
+## Spatial contract
+
+`preview/public/data/world-manifest.json` describes locations within a continuous coordinate frame. Location IDs are distinct from multiplayer room IDs: registering a location does not create a room or authorize movement. Version 1 supports translation only; it deliberately retains metre scale and the existing east/north/up axes. Rendering uses east/up/negative-north, while server poses retain east/north/up. The projection is EPSG:32615 relative to longitude −95.425, latitude 29.755, matching the existing District derivative.
+
+Each location has an immutable identity, local rectangular bounds, translation, content revision, entry IDs and positions, content status and reciprocal adjacency. Adjacency requires a shared edge of positive length; corners and gaps are insufficient. Positive-area overlap is rejected, including overlap introduced by translation. Shared boundary coordinates are permitted; future traversal must retain the current location until the server accepts a crossing to avoid ambiguity on the edge. The manifest is a content description, not a collision or walkability representation.
+
+The District retains its exact existing bounds and identity transform. Entity IDs remain unchanged. The compatibility function validates the original frame and returns the same District object, preserving subsequent gallery and Gardens overlays. The shared gallery attachment invokes it in both browser and server District loading paths before applying approved geometry. It validates registration without granting movement into reserved locations. Commons composition additionally checks its authored revision, exact bounds, identity transform and gateway elevation against the shared manifest.
+
+## Candidate destination and measurement boundary
+
+The original east-side reservation now contains the authored `east-garden-commons` location and three remaining empty rectangles: `east-garden-reserve`, `east-garden-reserve-north` and `east-garden-reserve-south`. They partition the original envelope without overlap or total-area growth. The Commons registration bounds include its promenade and plaza envelope; only the shared movement contract grants access to actual surfaces within it. The remaining locations are `reserved`, with no entries or playable content. This authored fictional expansion is not a claim about actual Houston land use or approval to alter mapped District geometry.
+
+The District bounds span 253.944040393926 metres east/west and 290.4306195230893 metres north/south: 73,753.12497580437 m². The original east reservation adds twice that rectangular area; its authored and reserved partitions retain that total. Combined bounds total three times the original bounds area. Buildings, restricted surfaces and disconnected geometry mean these values cannot establish playable area. The 3–5× expansion target applies to measured reachable playable area and remains unverified.
+
+## Existing implementation seams
+
+The browser `loadWorld` in `preview/src/main.js` selects the default District or a separate `region-v1` world, then attaches vegetation, the approved gallery and the server-selected Gardens revision. `server/district-data.js` constructs the server District. `server/world.js` enforces the current bounds and movement environment. Both paths now support the opt-in `east-garden-commons-blockout-1` revision, which composes Commons after Gardens and announces it through existing HTTP/socket revision synchronization. Default revisions are preserved. Existing separate creator worlds are not seamless neighboring locations.
+
+## Acceptance still required
+
+Record a fixed revision, camera, quality tier, browser/device and repeatable route for desktop and mobile baseline measurements. Capture initial resource transfer, frame-time distribution, renderer resources, join/reconnect timings and matched District screenshots. Establish performance budgets from those measurements before claiming a gate. Do not substitute local fixture performance for physical-device or hosted evidence.
+
+The eventual journey starts at the existing District arrival, walks through an authored accessible connection, reaches the new landmark and plaza, completes a shared activity with a second player, and returns. Repeat across a reconnect and content load failure; validate server collision, stable identity and bounded resource cleanup. Human keyboard/screen-reader review and visual approval remain separate from automated checks.
+
+## Reproducible baseline tools
+
+Run `node preview/audit/world-expansion-footprint.js` for the source footprint and current resident-navigation inventory. It writes `.runtime/world-expansion/footprint.json` with a District input hash. On this revision the bounded resident grid is 254 × 291 = 73,914 cells against an 80,000-cell ceiling. The site polygon covers 57494.336102785775 m²; it still includes buildings and does not represent reachable area. All three eastern footway endpoints within ten metres of the bounds are unavailable to the resident planner. The site-ring restriction and collision contract must be reconciled explicitly for an authored connection.
+
+Run `node preview/audit/world-expansion-baseline.js` for fixed-camera local Chromium measurements of the Gardens revision. It acquires the shared browser lock, uses the existing authenticated fixture, checks asset completion, records one-/two-player frame and CPU-submission distributions, renderer resource counts, development resource transfer, join readiness and socket reconnect, then captures screenshots. Reports and images go to a fresh timestamped `.runtime/world-expansion/baseline-<timestamp>/` directory. Desktop and phone-sized viewports share the host GPU. The report records source hashes, hardware, load average, browser, quality, camera and scope limits. A completed report is still only a local fixture baseline, not target mobile or production acceptance.
+
+## Initial local evidence and provisional budgets
+
+The corrected baseline at `.runtime/world-expansion/baseline-2026-10-22T23-58-40.583Z/report.json` passed all four samples with zero asset failures or page errors. Hardware: Apple M5 Max, 18 logical CPUs, Chromium using ANGLE Metal, Sharp quality, reduced motion. Ten-second measurement windows ran while host load averages were approximately 19–21; this is not an idle-host capacity measurement. Two-player samples run two full renderers on this machine.
+
+| Viewport | Players/renderers | Frame p95 | CPU submission p95 | Renderer geometries/textures |
+| --- | --- | --- | --- | --- |
+| 1440 × 1000, DPR 1 | 1 | 16.7 ms | 14.7 ms | 530 / 162 |
+| 1440 × 1000, DPR 1 | 2 | 50.0 ms | 15.5 ms | 546 / 166 |
+| 390 × 844, DPR 2 | 1 | 16.7 ms | 11.4 ms | 523 / 149 |
+| 390 × 844, DPR 2 | 2 | 33.4 ms | 13.2 ms | 539 / 153 |
+
+Desktop first-player readiness was 4.42 s; phone-sized readiness was 4.07 s. Socket reconnect was 1.35 s and 1.11 s, with zero stationary position drift in both profiles. Initial recorded resource transfer was approximately 73.60 MB for 491 resources, including unbundled development modules. JavaScript heap counters were coarse Chromium observations; renderer counts are not GPU memory bytes. The first attempt is preserved at `.runtime/world-expansion/baseline/report.json`: desktop samples passed, then the second profile failed because it inherited retained players from the first fixture. Giving each profile a fresh fixture corrected the harness; the original failed result is not relabelled.
+
+Provisional engineering regression budgets for the expansion: no more than 10% increase in matched warmed frame p95 or CPU-submission p95, no more than 10% increase in District-only cold-load transferred bytes in a production-build comparison, and reconnect no more than 20% slower than matched baseline with no position drift beyond 0.5 m. Compare medians of three 30-second samples on the same device, browser, quality, camera and player workload; the initial ten-second loaded-host samples above are exploratory and cannot decide these gates. For twenty travel loops, require no duplicate chunk IDs/events, no active handles after eviction, and stable renderer resource counts after returning and settling; document any retained shared cache separately. Physical mobile frame-time, memory and thermal limits remain undecided until target-device measurements exist. These are proposed engineering budgets, not a release-quality acceptance claim.
+
+The [East Garden Commons proposal](level-design/expansion/destination-proposal.md) was explicitly approved by the user. Its first shared geometry/collision implementation is recorded in the [blockout report](level-design/expansion/blockout-builder.md); selected-revision scene loading and authoritative chair/chess integration are implemented; browser traversal remains pending.
+
+## Sampled ground reachability
+
+`node preview/audit/world-expansion-footprint.js --reachable` adds a bounded flood-fill estimate from the actual walking spawn. It uses the authoritative ground-level collision/height queries, cardinal grid edges sampled at no more than 10 cm, and the walking controller's 0.4 m step threshold. It samples two grid resolutions and limits each run to one million cells. `.runtime/world-expansion/footprint.json` records complete composed-world hashes, grid sizes, spawn, area estimates and durations.
+
+| Grid spacing | Gardens connected sample area | Commons connected sample area | Added sample area | Ratio |
+| --- | ---: | ---: | ---: | ---: |
+| 1 m | 46,549 m² | 51,969 m² | 5,420 m² | 1.1164× |
+| 0.5 m | 46,477.75 m² | 51,962 m² | 5,484.25 m² | 1.1180× |
+
+The same run samples the default garage revision (no `RIVER_OAKS_DISTRICT_REVISION`): 40,159 m² at 1 m and 40,083 m² at 0.5 m. An independent 0.5 m flood fill over `createWalkingEnvironment(district.json)` measured 40,133 m², within 0.2%.
+
+These are discretized ground-level estimates, not exact polygon or accessibility measurements. Boundary cells may contain blocked subareas and narrow routes may fall between samples. Upper floors, flying, travel commands and disconnected islands do not contribute; rendered-ground and dynamic-object behavior require separate evidence. The first destination adds roughly 12% in these samples, leaving the broader 3–5× playable-area target open. Registering the authored Commons preserved both complete world fingerprints and both area samples exactly.
+
+## Target area and layout capacity
+
+The expansion target is measured reachable ground, using the Gardens revision as the baseline because it is the approved, larger District revision (production selects it through `RIVER_OAKS_DISTRICT_REVISION`, which this work did not inspect): 46,477.75 m² at 0.5 m. Three to five times that is 139,433–232,389 m² of total reachable ground, i.e. 92,955–185,911 m² added. Against the unchanged garage default (40,083 m²) the same multiples are 120,249–200,415 m².
+
+Geographic layout: the District keeps its identity frame. All expansion is east of its east edge (east −2666.34), across the same north/south span (north −1457.61 to −1167.18), so every new location shares the District's projection, origin and axes with a zero translation. The first authored slice, `east-garden-commons`, is a 115 × 80 m band centred on north −1335 that meets the District edge at the `district-promenade` entry. The three reserved rectangles tile the rest of the original east envelope (see the manifest and the [proposal map](level-design/expansion/destination-proposal.svg)).
+
+The District's measured walkable density is 46,477.75 / 73,753.12 = 63%. Commons reaches 60% of its bounds. `--reachable` writes `expansionCapacity` to the footprint report: at District density the remaining reserved bounds (138,306 m²) project to 139,120 m² total, 2.99× the baseline. That is just under the 3× floor, and 5× would need about 286,310 m² of reserved bounds, roughly twice what is reserved now. Reaching the target therefore requires one of: denser walkable layouts than the mapped District, or additional adjacent reservations (north/south of the east envelope, or beyond its east edge). Choosing that land is a Phase 2 layout decision; the manifest already supports adding reserved locations without touching the District entry. This projection is a sizing check, not measured area.
