@@ -4,7 +4,7 @@ import { execFileSync } from 'node:child_process';
 import { chmodSync, existsSync, linkSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { cancelDetached, cancelStale, planCancellation, planDetachedCancellation, resumeCancellation } from '../project-prune-cancel.mjs';
+import { cancelDetached, cancelStale, planCancellation, planDetachedCancellation, pythonFor, resumeCancellation } from '../project-prune-cancel.mjs';
 
 function fixture(t){
   const base=mkdtempSync(join(tmpdir(),'river-cancel-'));t.after(()=>rmSync(base,{recursive:true,force:true}));
@@ -102,4 +102,11 @@ test('old detached comparison worktree is archived and removed without touching 
   assert.equal(result.status,'cancelled-local');assert.equal(existsSync(detached),false);
   assert.equal(f.git('rev-parse','feature'),f.head);
   assert.ok(existsSync(result.localFiles.archive));
+});
+
+test('worktree snapshots run on the repository locked interpreter when it exists',t=>{
+  const root=mkdtempSync(join(tmpdir(),'river-oaks-python-'));t.after(()=>rmSync(root,{recursive:true,force:true}));
+  assert.equal(pythonFor(root),'python3','without uv sync it falls back to python3 on PATH');
+  mkdirSync(join(root,'.venv/bin'),{recursive:true});writeFileSync(join(root,'.venv/bin/python'),'');
+  assert.equal(pythonFor(root),join(root,'.venv/bin/python'),'never a PATH python3 older than the lock');
 });

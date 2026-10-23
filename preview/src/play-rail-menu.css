@@ -51,6 +51,7 @@
    for both labels on one line; the elevator is the main one once you are at the
    lobby), then who you have invited. */
 .play-rail-pane .office-panel { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; border-top: 0; }
+.play-rail-pane .office-panel[hidden] { display: none; }
 .play-rail-pane .office-panel > p:empty, .play-rail-pane .office-panel > [hidden] { display: none; }
 .play-rail-pane .office-panel #office-enter:not(:disabled) { border-color: transparent; background: var(--hud-action); color: var(--hud-on-action); }
 .play-rail-pane .office-management:not(:empty) { display: grid; gap: 8px; padding-top: 10px; border-top: 1px solid var(--hud-hairline); }

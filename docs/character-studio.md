@@ -123,6 +123,25 @@ and a stale failed load cannot drop a newer selection. The town renderer pauses
 drawing behind the Studio while authoritative world/network updates continue.
 The Studio editor stages local edits and offers private Save draft and Wear in town actions. Server publication and selection replicate validated definitions; the integrated client applies their owned materials to local and peer rigs. The two-account save/wear journey and actual peer material checks pass locally; the complete visual, device and human acceptance matrix remains open.
 
+### Graphics tiers are viewer-local (#443)
+A character's identity is its published definition and nothing else. Graphics
+quality (Auto, Sharpest, Smoothest) is a per-viewer, per-device choice kept in
+local storage. It changes how a viewer renders, never what the server selects or
+replicates. No command, draft or snapshot carries quality, tier, LOD, scale or
+occlusion, and the strict validator refuses such fields in a definition. A
+viewer-local material tier (such as #517's `low`/`standard`/`high`) must follow
+the same rule: derive it from the viewer's graphics state, keep the definition
+and its pinned assets unchanged, and never send it.
+
+`preview/e2e/character-studio-tiers.js` (shared `required` mode) proves this on
+desktop Chromium: a Sharpest owner and a Smoothest peer each publish a look and
+render the other's exact authoritative definition and outfit materials; cycling
+the peer through every tier sends no selection and leaves both selection
+versions unchanged; tier, LOD, asset URL, asset swap and foreign-owner drafts are
+refused over HTTP while an untampered control save succeeds; a socket selection
+with a `quality` field is refused while the untampered command is accepted; and
+the peer's tier survives reconnect with identity intact.
+
 ## Components and delivery order
 1. #440: strict baseline contract, migration and actual human rig fixtures;
    measure and inspect rendered baseline, then review this decision in a PR.
@@ -413,6 +432,62 @@ garment, hair or texture asset is loaded for these looks.
 This covers the shipped catalog's assets and their licenses. It doesn't cover
 npm dependency licenses (three.js and others), which are pinned in
 `pnpm-lock.yaml` and reviewed by the dependency-review check, not here.
+
+### Reproducing garment receipts
+
+The five offline garment receipts use schema version 2. They pin the shipped
+rig and license records, the authored generator/pose/geometry sources (including
+the audited local avatar import closure), and the generated output. The required
+input lists live in `scripts/lib/bake-provenance.mjs`; a receipt cannot silently
+drop an input or select an arbitrary file to read.
+
+The bake toolchain is the checkout's installed Three.js package, including its
+loaders and utilities. The receipt records its exact version and a SHA-256 of
+sorted package-relative file names and content digests. It covers the published
+package tree; root `node_modules` and macOS `.DS_Store` metadata are excluded.
+pnpm's package-root symlink is supported, but internal package symlinks and
+nested installations that shadow the audited package are refused. The installed
+version must equal the exact `package.json` declaration. New Three.js runtime,
+optional or peer dependencies require a fresh audit before rebaking.
+
+An unrelated Electron, Playwright, server-library or lockfile change therefore
+does not require garment regeneration. A Three.js implementation change, even
+at the same version, does. This is a generation-input check, not a replacement
+for frozen dependency installs, dependency review, package audits or rendered
+acceptance. Node built-ins come from the repository's supported Node runtime;
+receipts do not pin a machine path, timestamp or Node patch version.
+
+From the repository root, install with `pnpm install --frozen-lockfile`, then
+serialize the existing generators through the local heavy-work queue:
+
+```sh
+node scripts/browser-lock.mjs 'garment bake verification' -- sh -eu -c '
+  for bake in bake-skirt-seat-morph bake-vesper-skirt bake-lyra-drapes bake-silvan-drapes bake-coat-tails
+  do
+    node "scripts/$bake.mjs" --check
+  done
+'
+```
+
+`--check` recomputes the fit and receipt without writing. After an intentional
+input change, review the source/import and package audit, preserve the old output
+hashes, and use `--write` instead. Each generator overwrites its own data/receipt
+pair; the sequence stops on failure and is not an atomic multi-file transaction.
+Inspect partial changes before resuming. Never repair a digest by hand. Follow
+regeneration with `--check` and the garment regression suites. The existing
+finite-data, weight, topology, contact and deformation assertions still apply.
+
+Old version-1 receipts are rejected by the new verifier. Migrate by running the
+real generators, not by changing a version field. For a provenance-only migration,
+all five generated morph-data files must remain byte-identical. To roll back,
+revert the helper/caller changes and their receipts together; runtime garment data
+and user state need no migration.
+
+When integrating another character change such as #545, preserve its authored
+source changes and regenerate receipts on the combined tree. Do not choose one
+side's hashes to resolve a receipt conflict. Generated corrections are checked as
+outputs, not treated as authored bake recipes. Any newly imported module/package
+must be reviewed into the explicit input audit.
 
 ## Runtime pose diagnostics (#442, incomplete acceptance)
 
@@ -1019,8 +1094,9 @@ seated correctives. The original standing recipe, materials, texture and beast
 visibility remain intact. Both layers have 925 vertices and 1,728 triangles; the
 combined increase is 2,304 triangles, with the existing 19 accessory draw cap.
 Runtime changes only two GPU morph influences per layer. Offline fitting is
-reproduced by `node scripts/bake-lyra-drapes.mjs --check`; the receipt pins 13 inputs
-and the generated output. No runtime raycasts or geometry edits are introduced.
+reproduced by `node scripts/bake-lyra-drapes.mjs --check`; the receipt pins the
+authored inputs, Three.js implementation and generated output. No runtime
+raycasts or geometry edits are introduced.
 
 Real-rig tests cover both upright forms, all 37 waistband vertices per layer,
 rear coverage, sampled moving walk/run phases, transformed/asymmetric bends and
@@ -1043,7 +1119,8 @@ hip; the feminine waist rises 2 cm to clear the fitted linen hip. All 37 top
 vertices per panel stay pinned to the pelvis. Materials, ownership and standing restoration are retained.
 
 `node scripts/bake-silvan-drapes.mjs --check` reproduces both rig-specific bakes;
-the adjacent receipt pins 18 inputs including both rig/license sources. The packed
+the adjacent receipt pins the authored inputs including both rig/license sources
+and the Three.js implementation. The packed
 module stores lossless little-endian Float32 data and retains source-position and
 source-weight validation. Runtime uses existing GPU morph influences, with no
 per-frame fitting or collision queries. Gold details inherit interpolated cloth

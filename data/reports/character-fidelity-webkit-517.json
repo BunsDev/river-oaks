@@ -1,0 +1,25 @@
+{
+  "createdAt": "2026-10-18T23:10:24.205Z",
+  "results": [
+    {
+      "name": "character-fidelity",
+      "status": "passed",
+      "seconds": 50.66,
+      "result": {
+        "passed": true,
+        "checks": [
+          "morgan-human: unsupported color controls stay unavailable",
+          "morgan-human: publication preserves the exact approved asset pin",
+          "morgan-human: selected identity survives reload",
+          "morgan-human: authoritative local and peer render paths loaded",
+          "imani-human: unsupported color controls stay unavailable",
+          "imani-human: publication preserves the exact approved asset pin",
+          "imani-human: selected identity survives reload",
+          "imani-human: authoritative local and peer render paths loaded",
+          "No page errors: "
+        ],
+        "scope": "Local Chromium fixture identities, Studio publication, shared peer and reload; not live auth, native, physical-device or human acceptance"
+      }
+    }
+  ]
+}

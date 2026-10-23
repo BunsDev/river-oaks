@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "status": "reproduced-and-corrected-runtime-visibility-regression",
+  "recordedAt": "2026-10-19T06:45:07.500309+00:00",
+  "logSha256": "9ee585d6b14bb05f4926f05d455276a860657b8ab1e8458ec2c0dc31f02ca6cf",
+  "failure": "Rail display:grid overrides UA [hidden] behavior,rendering campus card in garage world;selector-only attempt also failed.",
+  "earlierJourneys": "Current fidelity9 and Studio43 passed before rail failed.",
+  "correction": "Scoped office-panel[hidden] display:none restores controller state;browser regression requires hidden card exists and is not visible,then exactlyone active card;all original layout assertions retained.",
+  "independentReview": "Confirmed CSS root cause and scoped correction;static selector-only review did not prove browser behavior.",
+  "green": {
+    "createdAt": "2026-10-19T06:44:43.189Z",
+    "results": [
+      {
+        "name": "play-rail-polish",
+        "status": "passed",
+        "seconds": 12.866,
+        "result": {
+          "checks": [
+            "The rail has no title row: each card names its activity",
+            "No key legend while choosing an activity",
+            "Driving controls stay out of the way until a ride",
+            "dark character: nothing spills sideways",
+            "dark rides: nothing spills sideways",
+            "dark photo: nothing spills sideways",
+            "dark cycling: nothing spills sideways",
+            "dark birds: nothing spills sideways",
+            "dark guide: nothing spills sideways",
+            "dark office: nothing spills sideways",
+            "The Cycling tab shows its board open",
+            "The board closes (and stops refreshing) when another tab shows",
+            "light character: nothing spills sideways",
+            "light rides: nothing spills sideways",
+            "light photo: nothing spills sideways",
+            "light cycling: nothing spills sideways",
+            "light birds: nothing spills sideways",
+            "light guide: nothing spills sideways",
+            "light office: nothing spills sideways",
+            "Office cards excluded from this world stay visually hidden",
+            "The active office tab shows one visible office card",
+            "The office card has an inset (12 px)",
+            "Office actions fit on one line each (36, 36 px)",
+            "With nobody to invite, the card says so instead of a disabled picker",
+            "Captured character, rides, photo, cycling, birds, guide, office"
+          ]
+        }
+      }
+    ]
+  },
+  "logs": [
+    {
+      "file": ".runtime/character-fidelity/goal2f/rail-green.log",
+      "sha256": "6ce4426251996822c2d60529d68d5c788e30faf11f7bd032a2a5e1c50fc25afb"
+    },
+    {
+      "file": ".runtime/character-fidelity/goal2f/rail-hidden-red.log",
+      "sha256": "9346c9eb85c0adc71d4c8f5c63b8f6ab2ee353ee664ac085326caface33d357c"
+    },
+    {
+      "file": ".runtime/character-fidelity/goal2f/rail-hidden-green.log",
+      "sha256": "cc01d5b780aa1d3640e481b74ebb1d64abd072244ebf5da82ff10cb1aedb5209"
+    }
+  ],
+  "failingRuntimeManifestSha256": "eb50b85d64fddedec9f358c9204f96ddf13d8b49fb56759272de4e3f9246b2aa",
+  "focusedGreenSource": {
+    "method": "The focused green preceded the latestmain integration. Its complete broad manifest was not independently frozen at execution;do not attribute green to failingeb50. Preserved written CSS/journey bytes identify correction;the renewedG journey below supplies frozen currentcandidate proof.",
+    "preservedInputs": [
+      {
+        "path": "preview/e2e/play-rail-polish.js",
+        "sha256": "977fb5e8d86c7e687da29c708bdc5af78cfcf6f76bbc28cd62d7a80a87e06172"
+      },
+      {
+        "path": "preview/src/play-rail-menu.css",
+        "sha256": "797c255be0f79df21d710d43ea1f251b1b27ffa3682df9928c1803320cf713f9"
+      }
+    ],
+    "currentCandidateRuntimeManifestSha256": "4ee88f688473ae7e12dcae6683df8d30c1a409d9e693f35a9697c6020e00c3d5",
+    "currentCandidateJourney": {
+      "status": "passed",
+      "checks": 25,
+      "runtimeManifestSha256": "4ee88f688473ae7e12dcae6683df8d30c1a409d9e693f35a9697c6020e00c3d5",
+      "receipt": {
+        "file": "data/reports/character-fidelity-review-chromium-517.json",
+        "sha256": "99272f56d3af9e192b70bec49b782fc1fab5b5899eab849c5d674b232a14784e"
+      },
+      "method": "Executed after and before matching frozenG input checks;journey is one of3passed Chromium journeys."
+    }
+  },
+  "candidateRenderedCaptures": [
+    {
+      "file": "docs/acceptance/character-fidelity-517-captures/review-rail-dark-office-lobby.png",
+      "sha256": "fbe5331f4d2c2d9f61095ca9bb59fb9167a33862fd86aeb77507cf93d83007b1",
+      "runtimeManifestSha256": "4ee88f688473ae7e12dcae6683df8d30c1a409d9e693f35a9697c6020e00c3d5"
+    },
+    {
+      "file": "docs/acceptance/character-fidelity-517-captures/review-rail-light-office-lobby.png",
+      "sha256": "fd4c7a05ee028e3d1cea7f99e3ebf8249472be497b55af87359ef29a1052b86b",
+      "runtimeManifestSha256": "4ee88f688473ae7e12dcae6683df8d30c1a409d9e693f35a9697c6020e00c3d5"
+    }
+  ],
+  "renderReview": "Inspected both actualG light/dark lobby captures:oneJevica card,full-widthactions and readableempty-invite text,noexcludedcampuscard. Limitedvisualreview of this capturedstate,not humanaccessibility/wholeworldacceptance.",
+  "independentVisualReview": "BothactualGcaptures inspected;2PNGhashes,2preservedsourcehashes and currentChromiumreceipt25checks verified;no remainingrequiredprovenancecorrection. Capturedstate only,nohumanaccessibility/allworldacceptance."
+}

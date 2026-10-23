@@ -4,8 +4,13 @@ import { storeRoomsFor, interiorLevelRoomsFor, roomAt, roomBlocked } from './sto
 import { roomBlocksConversation } from './conversation-sight.js';
 import { plazaSalonFootprints } from './plaza-salon-plan.js';
 import { campusFlightVolumes } from './garden-campus-district.js';
+import { isJevicaAccount } from './jevica-accounts.js';
 
 const RADIUS = 0.35, EYE_HEIGHT = 1.68;
+// Walking speeds in m/s: normal, and held fast (Shift). Jevica's fast walk is twice
+// everyone else's (Val, 2026-10-22). The server's walking budget reads the same values.
+export const WALK_SPEED = Object.freeze({ normal: 1.65, fast: 3.2, jevicaFast: 6.4 });
+export const fastWalkFor = userId => isJevicaAccount(userId) ? WALK_SPEED.jevicaFast : WALK_SPEED.fast;
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 
 function distanceToSegment(x, z, a, b) {
@@ -154,7 +159,7 @@ export function stepWalking(state, environment, input, delta) {
   if (!Number.isFinite(delta) || delta <= 0) return state;
   const duration = Math.min(delta, 0.08), steps = Math.ceil(duration * 120), dt = duration / steps;
   const forward = clamp(input.forward ?? 0, -1, 1), strafe = clamp(input.strafe ?? 0, -1, 1), norm = Math.max(1, Math.hypot(forward, strafe));
-  const speed=input.fast?3.2:1.65;
+  const speed = input.fast ? (input.fastSpeed ?? WALK_SPEED.fast) : WALK_SPEED.normal;
   for (let i = 0; i < steps; i++) {
     state.yaw += clamp(input.turn ?? 0, -1, 1) * 1.6 * dt;
     const vx = (-Math.sin(state.yaw) * forward + Math.cos(state.yaw) * strafe) * speed / norm;

@@ -1,6 +1,7 @@
 // Prince Jev's companion walk. Jev (the decision bridge) chooses how he
 // accompanies Jevica; this module owns geometry, clearance and locomotion so a
 // model reply can never place him inside a wall, a carriage or another person.
+import { WALK_SPEED } from './walking.js';
 
 export const COMPANION_STANCES = {
   beside: { label: 'Walk beside Jevica', forward: -0.12, side: 0.86 },
@@ -74,7 +75,9 @@ export function stepCompanion(body, target, environment, delta, { player = null,
     if (gap > 0.1) {
       direction = Math.atan2(dx, dz);
       // Match her pace, close gaps quickly, and settle without overshooting.
-      desired = clamp(playerSpeed + (gap - 0.1) * 1.9, 0, Math.min(4.2,Math.max(2.4,playerSpeed+.65,gap>5?3.4:0)));
+      // The ceiling rises with her pace, so he can always keep up, up to Jevica's fast walk.
+      const pace = clamp(playerSpeed, 0, WALK_SPEED.jevicaFast);
+      desired = clamp(playerSpeed + (gap - 0.1) * 1.9, 0, Math.min(Math.max(4.2, pace + .65), Math.max(2.4, pace + .65, gap > 5 ? 3.4 : 0)));
       desired = Math.min(desired, gap / dt);
     }
   }

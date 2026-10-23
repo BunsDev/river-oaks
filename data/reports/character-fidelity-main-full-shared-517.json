@@ -1,0 +1,813 @@
+{
+  "createdAt": "2026-10-19T03:01:56.128Z",
+  "status": "passed",
+  "modes": [
+    "development",
+    "development-world",
+    "development-publish",
+    "required",
+    "creator"
+  ],
+  "rendering": "Full rendering",
+  "scope": "Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.",
+  "results": [
+    {
+      "name": "multiplayer-dev",
+      "status": "passed",
+      "seconds": 120.127,
+      "result": {
+        "checks": [
+          "each browser is its own development player",
+          "both players share one town",
+          "no sign-in gate blocks development",
+          "Players start with an appearance picker and a default look",
+          "Sable selection reaches the other browser and its rendered remote avatar",
+          "The production shared player has both fitted Silvan arm vines",
+          "New town chat rows are announced after initial history loads",
+          "A shared wave reaches the peer and visibly raises the remote avatar arm",
+          "A sent town message appears once for both players",
+          "Chat history returns once after reconnect",
+          "A reply reaches the reconnected player through the live chat UI",
+          "A pending contact cannot see the sender's online world",
+          "An accepted contact can join the sender's current world",
+          "Current world exposes named meeting places",
+          "A resident can publish a profile that someone in the same world can inspect",
+          "A contact invitation offers a validated link to the sender's world",
+          "A named-place invitation offers a link to that place in the sender's world",
+          "Private messages stay out of town chat",
+          "Accepted contacts and private history survive a browser reconnect",
+          "Shared play exposes player-owned building",
+          "A guest cannot access the shared builder",
+          "A guest cannot access wish granting",
+          "shared play hides the retired invasion",
+          "players arrive on separate spots (1.60 m apart)",
+          "a shared teleport lands beside Jo Malone London in both browsers' snapshots",
+          "A different account cannot see a private landmark",
+          "An account landmark survives reload without device storage",
+          "a landmark teleport is a server-checked position travel the other browser sees",
+          "Builder mode can be switched on",
+          "Builder preview uses the selected one-metre grid",
+          "Builder preview uses the selected half-metre grid",
+          "The preview appears where the pointer meets the ground",
+          "An open spot is marked ready (Ready to place.)",
+          "A click places the creation exactly where the preview stood",
+          "A guest cannot access saved building designs",
+          "The owner places a fresh copy from a saved design",
+          "Deleting a saved design leaves its placed copy intact",
+          "The preview turns red on the spot just taken (Keep clear of the road.)",
+          "R turns the preview",
+          "Escape leaves builder mode and removes the preview",
+          "Escape in builder mode leaves the dock open",
+          "Shared mobile play starts with a compact dock",
+          "Shared mobile play hides private companion and vehicle actions",
+          "Shared mobile play hides local-only scenarios",
+          "Shared mobile controls stay within the viewport",
+          "No browser page errors"
+        ],
+        "a": {
+          "self": "dev-4bbc81d557fb",
+          "players": [
+            "dev-4bbc81d557fb",
+            "dev-ddaaf21dda59"
+          ],
+          "gate": true,
+          "appearance": "sable-human",
+          "appearancePicker": true,
+          "invasion": true,
+          "roster": "2 players in town"
+        },
+        "b": {
+          "self": "dev-ddaaf21dda59",
+          "players": [
+            "dev-4bbc81d557fb",
+            "dev-ddaaf21dda59"
+          ],
+          "gate": true,
+          "appearance": "sable-human",
+          "appearancePicker": true,
+          "invasion": true,
+          "roster": "2 players in town"
+        },
+        "errors": []
+      }
+    },
+    {
+      "name": "groups",
+      "status": "passed",
+      "seconds": 65.289,
+      "result": {
+        "checks": [
+          "An accepted contact appears in the group invitation picker",
+          "Group messages stay out of public town chat",
+          "Group membership and conversation survive reconnect"
+        ]
+      }
+    },
+    {
+      "name": "world-events",
+      "status": "passed",
+      "seconds": 11.893,
+      "result": {
+        "checks": [
+          "Unreleased Events has no browsing or hosting surface",
+          "Commands does not advertise Events",
+          "Neither initial load nor reconnect requests the Events service"
+        ]
+      }
+    },
+    {
+      "name": "rail-shared",
+      "status": "passed",
+      "seconds": 7.172,
+      "result": {
+        "checks": [
+          "Chat command opens the town dock and focuses its composer",
+          "Nearby residents and meeting actions precede town tools",
+          "Town chat lives independently of the People panel",
+          "Typing town chat retains keyboard ownership",
+          "Commands reflect the server-confirmed building permission",
+          "Shared-play commands omit retired force controls",
+          "Shared character command focuses a visible choice without retired abilities",
+          "Shared commands omit the unreleased Events surface",
+          "Shared map command expands the atlas and focuses its live map",
+          "No shared navigation page errors: "
+        ],
+        "canBuild": false,
+        "errors": []
+      }
+    },
+    {
+      "name": "shared-seating",
+      "status": "passed",
+      "seconds": 51.25,
+      "result": {
+        "passed": true,
+        "checks": [
+          "The fresh loopback owner has building and wish permissions",
+          "Shared play provides accessible furniture seating controls",
+          "Seating controls have an accessible name",
+          "The fixture owner can place a garden seat on open ground (Ready to place.)",
+          "Seated poses use the furniture base height on sloping terrain",
+          "The local pose is seated only after server confirmation",
+          "Walking input cannot move a seated player",
+          "Looking around leaves the body facing the seat front",
+          "Occupied slots cannot be chosen in the guest UI",
+          "A guest uses the second slot without acquiring admin powers",
+          "The other browser renders the confirmed remote seated pose",
+          "Seated visitors visibly wave to the other browser without moving their seat",
+          "Occupied furniture cannot be removed by its admin builder",
+          "The same account recovers its seat on socket reconnect within the grace period",
+          "The stand control is available at a phone-sized viewport",
+          "The seats panel offers no second Stand up control while seated",
+          "Keyboard standing reaches a clear ground position",
+          "No browser exceptions"
+        ],
+        "errors": [],
+        "readiness": [
+          {
+            "role": "owner",
+            "elapsedMs": 5983
+          },
+          {
+            "role": "guest",
+            "elapsedMs": 19002
+          }
+        ]
+      }
+    },
+    {
+      "name": "world-boundary",
+      "status": "passed",
+      "seconds": 25.37,
+      "result": {
+        "passed": true,
+        "checks": [
+          "An alternate world joins with its own versioned snapshot",
+          "Jevica retains building permission in the alternate world",
+          "An unqualified link still joins the original River Oaks world",
+          "An unknown world cannot join this server",
+          "A missing world shows a clear connection gate",
+          "No browser errors: "
+        ],
+        "errors": []
+      }
+    },
+    {
+      "name": "world-map",
+      "status": "passed",
+      "seconds": 58.676,
+      "result": {
+        "passed": true,
+        "checks": [
+          "The map draws the active world roads and buildings",
+          "Named destinations and the live player position appear on the map",
+          "Selecting a map marker previews it before travel",
+          "Go here uses the shared server travel path",
+          "A saved landmark appears in its world map",
+          "Keyboard arrows choose an arbitrary destination",
+          "A selected map point shares its world and position",
+          "The active world contains a broad blocked building footprint",
+          "A building click remains an arbitrary point, not a storefront shortcut",
+          "The server refuses an indoor map destination",
+          "A player in the same world appears as a live map marker",
+          "The keyboard-accessible player list offers server-checked meeting without sharing another player position",
+          "Meet nearby arrives beside Bob rather than on top of him",
+          "A departed selected player leaves the map and clears the meeting action",
+          "Another world omits map landmarks saved in the configured alternate world",
+          "No browser errors: "
+        ],
+        "errors": []
+      }
+    },
+    {
+      "name": "character-studio-worlds",
+      "status": "passed",
+      "seconds": 118.501,
+      "result": {
+        "passed": true,
+        "checks": [
+          "Fixture owner starts with building permission",
+          "Ordinary resident saves a customized draft",
+          "Server publishes an owned customized revision",
+          "Initial wear: identity and ordinary building permission are preserved",
+          "Initial wear: authoritative selected revision is unchanged",
+          "Rendered baseline includes customized hair",
+          "river-oaks: identity and ordinary building permission are preserved",
+          "river-oaks: authoritative selected revision is unchanged",
+          "Original world peer observes departure from snapshot and rendered residents",
+          "river-oaks: actual outfit and hair survive world transition",
+          "garden-2: identity and ordinary building permission are preserved",
+          "garden-2: authoritative selected revision is unchanged",
+          "garden-2: actual outfit and hair survive world transition",
+          "Returning resident is visible to the original world peer with the canonical revision",
+          "Failed world admission leaves the application gated",
+          "Failed admission does not create a private playable world",
+          "Blocked movement compares an initialized controller position",
+          "Held movement cannot change the controller position while admission is unavailable",
+          "Failed admission cannot overwrite the saved look",
+          "Admission recovery: identity and ordinary building permission are preserved",
+          "Admission recovery: authoritative selected revision is unchanged",
+          "Successful admission unlocks the town",
+          "Recovery restores the actual customized outfit and hair",
+          "Recovered player has an initialized movement position",
+          "Movement resumes after recovered admission",
+          "Reopened Studio retains the saved look after travel and retry",
+          "No browser errors: "
+        ],
+        "errors": []
+      }
+    },
+    {
+      "name": "world-publish",
+      "status": "passed",
+      "seconds": 79.879,
+      "result": {
+        "passed": true,
+        "checks": [
+          "The editor provides a publishable region draft",
+          "Buildings and the assigned parcel survive in the local draft",
+          "Jevica publishes from the world directory",
+          "The directory gives the new world a shareable URL",
+          "A published world place link keeps its world and shared play mode",
+          "The saved draft is available after navigating to the published world",
+          "The editor submits terrain, roads, buildings, trees, and places to the shared world",
+          "The published region retains its named parcel and Jevica account ownership",
+          "The map renders the published region roads, buildings, and named place",
+          "The live world map shows the parcel boundary and its account ownership",
+          "Parcel selection shows its area and cannot teleport through its building",
+          "The parcel boundary is visible and selected: {\"width\":84.95919799804688,\"height\":78.38700103759766,\"stroke\":\"rgb(255, 240, 200)\",\"selected\":true}",
+          "The region package publishes a walk-in venue and Jevica-only home",
+          "Both creator interiors appear in the world directory",
+          "Jevica can enter the creator venue in the shared world",
+          "Jevica can leave the creator venue",
+          "The directory filters to homes",
+          "Jevica can enter the furnished home",
+          "The home builder finds a clear floor spot (Ready to place.)",
+          "Jevica places a shared side table inside her home",
+          "Jevica saves a version-bound revision draft on the server",
+          "Saving a draft leaves the live geography unchanged",
+          "The published world renders its own venue and home without River Oaks stores",
+          "Jevica can build in her new world",
+          "The published world has a shareable URL",
+          "The directory recovers after a temporary failure",
+          "A copied place link brings another resident into the same published world near its named place",
+          "A guest has no publishing form",
+          "A guest cannot open a region revision draft",
+          "The server refuses a guest revision draft request",
+          "The server keeps published version history private to Jevica",
+          "A guest can visit but cannot build",
+          "The guest sees Jevica’s home furnishing in shared state",
+          "The directory disables private home entry for uninvited guests",
+          "A guest sees that home entry requires an invitation",
+          "The doorway also blocks guest entry",
+          "The guest remains outside",
+          "Jevica invites an accepted contact into a specific private home from the People panel",
+          "Invited visitors can enter the home without building permission",
+          "Jevica can revoke home access after removing the visitor from contacts",
+          "Revocation moves the guest outside and blocks reentry",
+          "The new world has shared presence",
+          "The world directory shows current visitors without exposing their identities",
+          "Applying a saved draft updates the published region",
+          "The map follows the applied region revision",
+          "The client reconnects to the applied region",
+          "Jevica loads a retained published version into the private editor",
+          "A restored version must be saved before it can be applied",
+          "Saving and applying the retained version restores the live region",
+          "The client reconnects to the restored region",
+          "A landmark link includes its origin world and server-saved position",
+          "The account directory routes a saved landmark to its original world",
+          "Go opens the saved world and arrives at its landmark",
+          "No browser errors: "
+        ],
+        "errors": []
+      }
+    },
+    {
+      "name": "creator-generated-levels",
+      "status": "passed",
+      "seconds": 45.973,
+      "result": {
+        "passed": true,
+        "checks": [
+          "Studio export includes stable authored furnishing slots",
+          "Published authority compiles the exported overrides and level seed exactly",
+          "Published plan carries its approval digest",
+          "Both clients load the same approved plan",
+          "A guest cannot publish a generated region",
+          "Keyboard traversal reaches the published upper floor and replicates to the second client",
+          "Reconnect restores the upper controller floor rather than street elevation",
+          "The published route returns through ground level to the street",
+          "No browser errors: "
+        ],
+        "approvedSha256": "1a5fe908ad4a6004a5b6d56fd6110ca6079cedf5d8fc8322b9b9088b89d021ff",
+        "worldId": "studio-published",
+        "scope": "Local Studio export, real publication UI and two authenticated development clients; no hosted or live identity acceptance."
+      }
+    },
+    {
+      "name": "creator-four-levels",
+      "status": "passed",
+      "seconds": 38.379,
+      "result": {
+        "passed": true,
+        "checks": [
+          "The published server plan has four ordered levels",
+          "The published plan carries an approval digest",
+          "Both clients load the same approved four-level plan",
+          "Level 1 is a floor, not flight altitude",
+          "Level 2 is a floor, not flight altitude",
+          "Level 3 is a floor, not flight altitude",
+          "Reduced-motion reload restores the top floor height",
+          "Level 3 exposes descent",
+          "Level 2 exposes descent",
+          "Level 1 exposes descent",
+          "No browser errors: "
+        ],
+        "levels": [
+          "moon-pavilion/l0",
+          "moon-pavilion/l1",
+          "moon-pavilion/l2",
+          "moon-pavilion/l3"
+        ],
+        "approvedSha256": "1d2c23406400f112fd4d40b9ada097d1ab6b2b45e7a7040b4a9e7db1f95b6d02",
+        "scope": "Four-level publication and two local authenticated clients, keyboard traversal, stream readiness, reconnect and reduced motion; no hosted or human visual acceptance."
+      }
+    },
+    {
+      "name": "creator-street-crossing",
+      "status": "passed",
+      "seconds": 42.781,
+      "result": {
+        "passed": true,
+        "checks": [
+          "The owner publishes the street fixture: {\"status\":201,\"body\":{\"world\":{\"id\":\"street-walk\",\"title\":\"Street Walk\",\"description\":\"\",\"template\":\"region-v1\",\"ownerId\":\"dev-8c60d652c0de\",\"createdAt\":1792379557545,\"regionSha256\":\"309191d4d6a35405bbdf67918bcbf1bb191b574edc8bd86d36b1885444d9c173\"}}}",
+          "The visitor starts south of Harbour Street: [0,-40,0.2]",
+          "The server keeps the visitor on the far side of the street: [1.3269841140258488e-15,-14.783599934809523,0.2]",
+          "The server keeps the visitor back on the near side: [0.000001259712301091624,-36.20265963467021,0.2]",
+          "No page errors: "
+        ],
+        "positions": {
+          "start": [
+            0,
+            -40,
+            0.2
+          ],
+          "across": [
+            1.3269841140258488e-15,
+            -14.783599934809523,
+            0.2
+          ],
+          "back": [
+            0.000001259712301091624,
+            -36.20265963467021,
+            0.2
+          ]
+        }
+      }
+    },
+    {
+      "name": "access-gate",
+      "status": "passed",
+      "seconds": 17.593,
+      "result": {
+        "passed": true,
+        "checks": [
+          "Anonymous players can sign in with email",
+          "Signed out, the steps show that signing in is how you join the waitlist",
+          "The invitation code is explained and needs a sign-in first",
+          "Anonymous players see only supported sign-in methods",
+          "Anonymous players cannot start either play mode",
+          "The first paint is the sign-in gate colour, not a white page",
+          "A returning visitor opens on a splash in their own theme ({\"returning\":true,\"theme\":\"light\",\"background\":\"rgb(233, 236, 229)\"})",
+          "The splash hides the sign-in art and card but keeps the access status readable",
+          "When sign-in is needed the gate appears and the visit is forgotten",
+          "Waiting players are told they are signed in and their place is saved since the day they joined (You’re signed in, and your place on the waitlist is saved since October 15.)",
+          "A waiting card says what happens next: no need to sign in again, and the page opens itself",
+          "The steps show signing in done and waiting for approval current",
+          "Waiting players read what an invitation code does and how long it lasts",
+          "Waiting players see their username; email sign-ins get a generated one",
+          "The kept name reads as saved",
+          "A changed name asks to be saved",
+          "A name someone already holds is refused with a clear reason",
+          "Saving returns the button to Saved",
+          "Waiting players save their own username with CSRF protection",
+          "Suggest another offers a generated name",
+          "Pending players can redeem an invitation",
+          "Signed-in pending players cannot start either play mode",
+          "Pending players can sign out",
+          "A failed re-check drops the waiting title, steps, card and username form",
+          "A refused request shows its own title, without the steps, the kicker or the code field",
+          "A refused request shows no waiting card",
+          "Entering the district remembers the visit for a quiet next load",
+          "Waitlist review closes Settings before taking focus",
+          "Waitlist review opens with keyboard focus in its dialog",
+          "Approvers can review pending and decided accounts",
+          "Clicking inside approvals keeps it open",
+          "Dragging from approvals onto the backdrop keeps it open",
+          "Clicking outside approvals closes it",
+          "Outside dismissal restores Account settings",
+          "Outside dismissal restores focus and releases the game",
+          "User IDs are hidden from the waitlist by default",
+          "Approvers can reveal a user ID",
+          "Approvers can hide the user ID again",
+          "Approvers can copy a hidden user ID",
+          "Copying does not reveal the user ID",
+          "Approvers can revoke a prior approval with CSRF protection",
+          "Approvers see each username; an approved one is fixed",
+          "Approvers rename a waiting resident with CSRF protection",
+          "Revoking an approval sends no username",
+          "Approvers can reconsider a declined request with an edited username",
+          "Closing waitlist review restores Account settings",
+          "Outside dismissal stays closed after a late response and returns focus to the game controls",
+          "Escape still dismisses approvals",
+          "Clicking inside Settings keeps it open",
+          "Clicking outside Settings closes its native dialog",
+          "Closing Settings from its backdrop restores launcher focus"
+        ]
+      }
+    },
+    {
+      "name": "connection-required",
+      "status": "passed",
+      "seconds": 6.879,
+      "result": {
+        "checks": [
+          "Legacy solo preferences cannot unlock an offline game",
+          "An unavailable town never creates a private session",
+          "Offline keyboard input cannot move the player",
+          "There is no alternate play-mode control",
+          "Connection recovery unlocks the authenticated town",
+          "The recovered player belongs to the server snapshot",
+          "Device landmarks do not become account landmarks",
+          "Movement resumes after a successful authenticated connection"
+        ]
+      }
+    },
+    {
+      "name": "multiplayer",
+      "status": "passed",
+      "seconds": 101.097,
+      "result": {
+        "passed": true,
+        "checks": [
+          "Shared appearance picker is available",
+          "Unsynchronized carriage and Force controls remain hidden in shared play after assets load",
+          "Shared diagnostics and town exclude the private coachman",
+          "Force shortcut cannot bypass shared-mode gating",
+          "Two accounts share the roster and rendered avatars",
+          "A peer sees the selected avatar",
+          "Quick person-then-form choices settle without a cooldown error",
+          "A peer sees the shared human character",
+          "Alice fixture retains server-issued wish permission after reconnect",
+          "A shared resident is reachable after a bounded retry",
+          "Confirmed grant moves keyboard focus to undo",
+          "Second player sees server-owned dragon wish",
+          "Egg hatches into a visible dragon",
+          "The same wish disrupts town residents for both players",
+          "Confirmed undo restores keyboard focus",
+          "Invisible resident keeps visible clothing in shared play",
+          "Reload rejoins the existing town and keeps its active wishes",
+          "Walking is validated and visible to the other player",
+          "Shared town has no mobile horizontal overflow",
+          "Sign-out revokes play and returns to the sign-in gate",
+          "No uncaught errors: "
+        ],
+        "errors": [],
+        "scope": "Two real browsers, test-only authenticated identities, real shared server; not live WorkOS or production hosting acceptance."
+      }
+    },
+    {
+      "name": "indoor-npcs",
+      "status": "passed",
+      "seconds": 21.048,
+      "result": {
+        "passed": true,
+        "checks": [
+          "The retired local street-model loader is absent",
+          "The NPC directory contains only building residents",
+          "Rendered NPC identities belong to buildings",
+          "Outdoor players have no nearby NPC interactions",
+          "Building NPCs remain visible and conversational inside their room",
+          "Jevica retains her companion, chauffeur, and vehicles in multiplayer",
+          "A real player is still rendered as a remote avatar",
+          "No browser errors: "
+        ]
+      }
+    },
+    {
+      "name": "multiplayer-exclusivity",
+      "status": "passed",
+      "seconds": 38.734,
+      "result": {
+        "passed": true,
+        "guest": {
+          "appearance": "sable-human",
+          "jevicaHidden": true,
+          "flightHidden": true,
+          "garageHidden": true,
+          "companionHidden": true,
+          "carVisible": false,
+          "jevVisible": false
+        },
+        "privileged": {
+          "appearance": "jevica",
+          "jevicaVisible": true,
+          "garageVisible": true,
+          "companionVisible": true,
+          "carVisible": true,
+          "jevVisible": true
+        }
+      }
+    },
+    {
+      "name": "vehicle-exit",
+      "status": "passed",
+      "seconds": 8.806,
+      "result": {
+        "checks": [
+          "Jevica boards a vehicle accepted by the shared town",
+          "The initial parked vehicle supports a scenic drive: {\"riding\":true,\"chauffeur\":{\"active\":true,\"paused\":false,\"label\":\"Connecting to Jev…\",\"source\":null,\"remaining\":27},\"placement\":{\"position\":[-2768.3956419313604,18.462294390991243,1295.0133343366692],\"yaw\":1.5542610866111075,\"pitch\":-0.015001887053174272,\"roll\":-0.0020945138733826337,\"distance\":0,\"scale\":1,\"team\":false,\"vehicle\":\"rolls\",\"terrainError\":0.0029902968317507828,\"speed\":0,\"steering\":0,\"wheelOffsets\":[-0.0015592997989273272,0.000873349023500225,0.000590662636000161,-0.0007119591905535572]},\"princeVisible\":true,\"companion\":{\"enabled\":false,\"mode\":\"seat\",\"stance\":\"seat\",\"source\":null,\"label\":\"Ready to drive\",\"reason\":null,\"decisions\":0,\"carrying\":false,\"position\":null},\"status\":\"Ride with Jev, or give directions with W/S and A/D.\"}",
+          "Jev smart driving receives a valid decision",
+          "Paused smart drive holds the vehicle",
+          "A quick manual direction immediately cancels autopilot",
+          "Brake and park stops the vehicle",
+          "Shared corrections preserve the exit point: {\"exit\":[-2765.430997863075,20.151621748451074,1297.1761599059896],\"position\":[-2765.430997863075,20.151621748451074,1297.1761599059896],\"corrections\":[]}",
+          "The shared town confirms the same grounded exit",
+          "Jevica remains visible after stepping out",
+          "Stepping out produces no rejected pose"
+        ]
+      }
+    },
+    {
+      "name": "multiplayer-gate",
+      "status": "passed",
+      "seconds": 35.281,
+      "result": {
+        "passed": true,
+        "checks": [
+          "Disconnected game is locked",
+          "Disconnect focuses the recovery dialog title",
+          "Authenticated recovery hides the sign-in link",
+          "Forward Tab reaches the first available recovery action",
+          "Shift+Tab reaches sign-out without entering the inert game",
+          "Tab wraps to the first recovery action",
+          "Successful retry restores movement focus",
+          "Mobile recovery dialog fits the viewport",
+          "Signed-out gate starts with accessible title focus",
+          "GitHub sign-in link is reachable by keyboard",
+          "Email sign-in field is reachable by keyboard",
+          "Email code button is reachable by keyboard",
+          "Anonymous gate exposes only supported sign-in methods"
+        ],
+        "errors": []
+      }
+    },
+    {
+      "name": "resident-names",
+      "status": "passed",
+      "seconds": 186.411,
+      "result": {
+        "checks": [
+          "A resident is shown by their GitHub username",
+          "The admin account is Jevica",
+          "A non-admin session claiming Jevica is not shown as Jevica",
+          "Every viewer, including the impostor, sees the same name",
+          "The impostor’s own character panel does not call them Jevica",
+          "The roster names the impostor by their safe name",
+          "The roster names the admin Jevica",
+          "Roster buttons are labelled with the safe name (View profile for Visitor #impostor | Add Visitor #impostor as a contact | Report disruption by Visitor #impostor | Mute voice from Visitor #impostor)",
+          "Nameplates show the impostor safely and the admin as Jevica",
+          "Chat shows the impostor safely and the admin as Jevica ({\"impostor\":\"Visitor #impostor\",\"user_01M40Y914S1H4EJCEHH91DKTAY\":\"Jevica\"})",
+          "The impostor’s profile card does not call them Jevica",
+          "The contact list shows the impostor’s safe name ({\"status\":\"Invitation sent to Visitor #impostor.\",\"rows\":[\"Visitor #impostor\"]})",
+          "The map’s live player list shows the impostor safely",
+          "Alice’s view: nothing but the owner reads as Jevica ([])",
+          "The admin is still shown as Jevica on the roster, nameplate and chat",
+          "The impostor’s own view: nothing but the owner reads as Jevica ([])",
+          "The admin’s view: nothing but the owner reads as Jevica ([])",
+          "A lookalike spelling of Jevica is not shown as Jevica",
+          "Alice’s view with the lookalike: nothing but the owner reads as Jevica ([])",
+          "The lookalike’s own view: nothing but the owner reads as Jevica ([])",
+          "Different accounts receive distinct fallback names",
+          "A Resident session receives its own unique fallback",
+          "The automatic fallback survives reconnecting",
+          "No page errors: "
+        ]
+      }
+    },
+    {
+      "name": "sit-and-water",
+      "status": "passed",
+      "seconds": 29.377,
+      "result": {
+        "checks": [
+          "The town lists storefront benches as seats",
+          "Arrived beside bench:osm-node-8172494989:0",
+          "Contextual Sit seats Alice on a free storefront bench",
+          "Beside a bench, the seats panel lists it and Z offers to sit",
+          "Contextual Sit sits on a place on that bench",
+          "The HUD says the player is sitting",
+          "The town records the seat, through the shared seating model",
+          "Arrived beside bench:osm-node-8172494989:1",
+          "Another player sees them seated on that place",
+          "and facing the way the bench faces",
+          "Bob can still sit beside her",
+          "A held place is never offered; Bob takes the one beside it",
+          "Standing up is the single primary contextual action while seated",
+          "Contextual Stand stands up, for everyone",
+          "Bob stands up too",
+          "Arrived beside planter:osm-node-8172494989:0",
+          "Beside a planter, the Z prompt offers to water it",
+          "Arrived beside planter:osm-node-8172494989:1",
+          "Another player sees them turn to the planter and pour from a watering can ({\"seen\":5.359574973146692,\"toward\":-0.7853981633975945})",
+          "The watering animation ends by itself",
+          "No outdoor NPCs are rendered on multiplayer benches",
+          "No page errors: "
+        ]
+      }
+    },
+    {
+      "name": "greetings",
+      "status": "passed",
+      "seconds": 48.383,
+      "result": {
+        "checks": [
+          "No greeting card or prompt until someone is faced",
+          "Facing bob offers Say hello to bob, still without the menu",
+          "E opens the menu for the person faced",
+          "Invitation leaves both avatars at rest until accepted",
+          "Keyboard focus moves from Accept to Stop after confirmation",
+          "Keyboard acceptance starts a visible shared handshake",
+          "Local avatar turns toward their partner",
+          "Both dancers use the same server phase",
+          "Greeting controls fit a phone viewport",
+          "Either participant can stop from mobile controls",
+          "Declining clears the invitation on both clients",
+          "Walking away cancels both dancers through the actual movement transport",
+          "No browser errors: "
+        ],
+        "errors": [],
+        "scope": "Two authenticated local fixture accounts; keyboard acceptance and phone viewport; no human accessibility or art-quality acceptance."
+      }
+    },
+    {
+      "name": "character-studio-shared",
+      "status": "passed",
+      "seconds": 74.099,
+      "result": {
+        "passed": true,
+        "checks": [
+          "Known authored Sable baseline includes real outfit and hair materials before customization",
+          "Appearance mismatch uses a valid owned published definition for a different appearance",
+          "Save keeps the customized draft private",
+          "Local loaded outfit materials use rose",
+          "Peer loaded outfit materials use rose",
+          "Wear publishes and equips the owner revision",
+          "The delayed account operation is still pending on reopen",
+          "A delayed save preserves the retained visible edit across reopening",
+          "Reopening during a delayed save refreshes selection after the save settles",
+          "Local loaded outfit materials use rose",
+          "Peer loaded outfit materials use rose",
+          "Rewear after a delayed save reuses the published look",
+          "The delayed account operation is still pending on reopen",
+          "A delayed read does not replace the retained local edit",
+          "Reopening during a delayed read refreshes selection after the old read settles",
+          "Local loaded outfit materials use rose",
+          "Peer loaded outfit materials use rose",
+          "Rewear after a delayed read reuses the published look",
+          "Reopening after a legacy character change retains the saved local look",
+          "Reopening refreshes the worn selection so the retained look can be worn again",
+          "Reopening does not falsely report the retained look as currently worn",
+          "Local loaded outfit materials use rose",
+          "Peer loaded outfit materials use rose",
+          "Wearing the retained look again reuses its immutable publication",
+          "Reconnect opens the canonical equipped customization",
+          "Local loaded outfit materials use midnight",
+          "Peer loaded outfit materials use midnight",
+          "Editing and wearing appends an immutable revision",
+          "missing: fault reached the actual peer snapshot transport",
+          "missing: actual outfit materials restore authored colors",
+          "missing: fallback restores consistent authored outfit and hair",
+          "missing: peer delivery fault cannot mutate the authoritative selection",
+          "Peer loaded outfit materials use midnight",
+          "missing: canonical revision recovers on the existing connection",
+          "unpublished: fault reached the actual peer snapshot transport",
+          "unpublished: actual outfit materials restore authored colors",
+          "unpublished: fallback restores consistent authored outfit and hair",
+          "unpublished: peer delivery fault cannot mutate the authoritative selection",
+          "Peer loaded outfit materials use midnight",
+          "unpublished: canonical revision recovers on the existing connection",
+          "stale-catalog: fault reached the actual peer snapshot transport",
+          "stale-catalog: actual outfit materials restore authored colors",
+          "stale-catalog: fallback restores consistent authored outfit and hair",
+          "stale-catalog: peer delivery fault cannot mutate the authoritative selection",
+          "Peer loaded outfit materials use midnight",
+          "stale-catalog: canonical revision recovers on the existing connection",
+          "corrupt-asset: fault reached the actual peer snapshot transport",
+          "corrupt-asset: actual outfit materials restore authored colors",
+          "corrupt-asset: fallback restores consistent authored outfit and hair",
+          "corrupt-asset: peer delivery fault cannot mutate the authoritative selection",
+          "Peer loaded outfit materials use midnight",
+          "corrupt-asset: canonical revision recovers on the existing connection",
+          "foreign-owner: fault reached the actual peer snapshot transport",
+          "foreign-owner: actual outfit materials restore authored colors",
+          "foreign-owner: fallback restores consistent authored outfit and hair",
+          "foreign-owner: peer delivery fault cannot mutate the authoritative selection",
+          "Peer loaded outfit materials use midnight",
+          "foreign-owner: canonical revision recovers on the existing connection",
+          "unsupported-palette: fault reached the actual peer snapshot transport",
+          "unsupported-palette: actual outfit materials restore authored colors",
+          "unsupported-palette: fallback restores consistent authored outfit and hair",
+          "unsupported-palette: peer delivery fault cannot mutate the authoritative selection",
+          "Peer loaded outfit materials use midnight",
+          "unsupported-palette: canonical revision recovers on the existing connection",
+          "mismatched-appearance: fault reached the actual peer snapshot transport",
+          "mismatched-appearance: actual outfit materials restore authored colors",
+          "mismatched-appearance: fallback restores consistent authored outfit and hair",
+          "mismatched-appearance: peer delivery fault cannot mutate the authoritative selection",
+          "Peer loaded outfit materials use midnight",
+          "mismatched-appearance: canonical revision recovers on the existing connection",
+          "Reopening an uncertain save retains the local edit and retry action",
+          "Reopening cannot discard an uncertain save",
+          "A lost save response retries without duplicating the mutation",
+          "Concurrent save conflict retains the visible local edit",
+          "Conflict preserves the other editor’s saved draft",
+          "Checking the account does not discard local edits",
+          "Loading the saved draft is an explicit choice",
+          "Wearing a different base keeps Studio open through local avatar replacement",
+          "The peer fixture actually refused the selected rig asset",
+          "A first-load asset failure recovers the canonical peer revision without reconnecting",
+          "No runtime errors: "
+        ],
+        "scope": "Real two-account HTTP/WebSocket/browser flow; automated rendering only, no human accessibility or physical device acceptance"
+      }
+    },
+    {
+      "name": "creator-objects",
+      "status": "passed",
+      "seconds": 47.834,
+      "result": {
+        "checks": [
+          "Jevica can edit a named primitive assembly",
+          "Parts form one editable design",
+          "Creator travels through the authoritative room",
+          "The complete assembly has a valid placement (Ready to place.)",
+          "Authority confirms the full assembly and its material",
+          "A second browser renders the actual physical glass surface",
+          "Guests cannot remove the creator’s object",
+          "The full assembly is available as a saved design",
+          "The edited assembly has a valid placement (Ready to place.)",
+          "Jevica edits confirmed parts through the builder controls",
+          "Live edits release the previous material",
+          "Removal reaches the other browser and releases its object",
+          "Saved copy placement rejected: Town updated.",
+          "The saved copy has a valid placement (Keep clear of the road.)",
+          "Saved copies preserve the original parts rather than later edits",
+          "A reconnecting guest receives the complete saved assembly",
+          "No page errors: "
+        ]
+      }
+    }
+  ],
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)"
+}
