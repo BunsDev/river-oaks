@@ -2,10 +2,12 @@ import test from 'node:test';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { runProfile, selectTasks } from '../agent.mjs';
+import { holdBrowserLock } from '../browser-lock.mjs';
+import { createQueue } from '../local-queue.mjs';
 
 const task = (id, code, extra = {}) => ({ id, command: [process.execPath, '-e', code], ...extra });
 function fixture(t) {
@@ -48,6 +50,53 @@ test('a timed out process fails rather than hanging verification', async t => {
   const result = await runProfile('fixture', [task('hang', 'setInterval(() => {}, 1000)', { timeoutMs: 100 })], fixture(t));
   assert.equal(result.status, 'failed');
   assert.equal(result.results[0].error, 'ETIMEDOUT');
+});
+
+function browserFixture(t) {
+  const options = fixture(t);
+  const env = { ...process.env, CI: '', RIVER_OAKS_BROWSER_LOCK: '', RIVER_OAKS_BROWSER_LOCK_HELD: '',
+    RIVER_OAKS_BROWSER_LOCK_DIR: options.root, RIVER_OAKS_BROWSER_LOCK_POLL: '20' };
+  const queue = createQueue({ file: join(options.root, 'river-oaks-browser-runs.json'), lock: join(options.root, 'river-oaks-browser-runs.lock') });
+  return { ...options, env, queue };
+}
+
+test('browser queue admission does not consume the command execution timeout', async t => {
+  const options = browserFixture(t), marker = join(options.root, 'started');
+  const release = await holdBrowserLock('other session', { env: { ...options.env }, log: () => {} });
+  t.after(release);
+  const wrapper = fileURLToPath(new URL('../browser-lock.mjs', import.meta.url));
+  const pending = runProfile('fixture', [{ id: 'browser', browser: true, timeoutMs: 300,
+    command: [process.execPath, wrapper, 'nested browser', '--', process.execPath, '-e', 'require("fs").writeFileSync(process.argv[1], "started")', marker] }], options);
+  await new Promise(resolve => setTimeout(resolve, 600));
+  assert.equal(existsSync(marker), false, 'the queued command must not launch before admission');
+  release();
+  const result = await pending;
+  assert.equal(result.status, 'passed');
+  assert.equal(existsSync(marker), true);
+  assert.ok(result.results[0].queueDurationMs >= 500);
+  assert.equal(options.env.RIVER_OAKS_BROWSER_LOCK_HELD, '', 'a released task must not leak a nesting token into later tasks');
+  assert.deepEqual(options.queue.list(), []);
+});
+
+test('a browser command still times out after admission and releases its queue claim', async t => {
+  const options = browserFixture(t);
+  const result = await runProfile('fixture', [task('browser hang', 'setInterval(() => {}, 1000)', { browser: true, timeoutMs: 100 })], options);
+  assert.equal(result.results[0].error, 'ETIMEDOUT');
+  assert.deepEqual(options.queue.list(), []);
+});
+
+test('interrupting browser admission never starts the command or leaves a queue claim', async t => {
+  const options = browserFixture(t), controller = new AbortController(), marker = join(options.root, 'started');
+  const release = await holdBrowserLock('other session', { env: { ...options.env }, log: () => {} });
+  t.after(release);
+  const pending = runProfile('fixture', [task('queued', `require('fs').writeFileSync(${JSON.stringify(marker)}, 'started')`, { browser: true }), task('later', 'process.exit(0)')], { ...options, signal: controller.signal });
+  await new Promise(resolve => setTimeout(resolve, 100));
+  controller.abort();
+  const result = await pending;
+  assert.equal(result.results[0].error, 'ABORT_ERR');
+  assert.equal(result.results[1].status, 'not_run');
+  assert.equal(existsSync(marker), false);
+  assert.equal(options.queue.list().length, 1, 'only the other session retains its claim');
 });
 
 test('catalog profiles resolve and pnpm commands refer to real scripts', () => {
