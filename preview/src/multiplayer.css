@@ -123,7 +123,7 @@
 .multiplayer-roster > strong { font-size: 13px; font-weight: 600; letter-spacing: -.015em; }
 .multiplayer-roster .multiplayer-person { gap: 8px; margin-top: 6px; font-size: 12px; }
 .multiplayer-roster .multiplayer-person-name { color: var(--muted); }
-.multiplayer-roster > :is(.multiplayer-chat, .multiplayer-social, .multiplayer-groups, .multiplayer-gestures) {
+.multiplayer-roster > :is(.multiplayer-chat, .multiplayer-social, .multiplayer-groups, .multiplayer-gestures, .multiplayer-world-rules) {
   margin: 12px 0 0;
   padding-top: 12px;
   border-top: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
@@ -221,3 +221,18 @@
 @media (max-width: 700px) and (min-height: 501px) { .nearby-greetings, .greeting-prompt { top: 184px; } }
 @media (max-width: 900px) { body:has(.visit-tools[open]) .greeting-prompt { visibility: hidden; } }
 body.theater-seated .greeting-prompt { visibility: hidden; }
+
+/* World rules (#596): status for everyone, restrained owner controls, one prominent stop. */
+.multiplayer-world-rules { font-size: 12px; }
+.multiplayer-world-rules p { margin: 0 0 6px; }
+.world-rules-clock { font-variant-numeric: tabular-nums; font-weight: 600; }
+.world-rules-change:empty, .world-rules-result:empty { display: none; }
+.world-rules-owner { display: grid; gap: 8px; margin-top: 8px; }
+.world-rules-owner fieldset { display: flex; flex-wrap: wrap; gap: 6px 12px; margin: 0; padding: 8px; border: 1px solid var(--line); border-radius: 8px; }
+.world-rules-owner legend { padding: 0 4px; font-weight: 600; }
+.world-rules-owner label { display: inline-flex; align-items: center; gap: 4px; min-height: 32px; }
+.world-rules-owner input[type=time], .world-rules-owner select { padding: 6px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); font: inherit; }
+.multiplayer-roster .world-rules-emergency { min-height: 44px; font-weight: 700; color: #fff; background: #a3242f; border: 2px solid #6e1019; border-radius: 10px; }
+:root[data-theme] .multiplayer-roster .world-rules-emergency { color: #fff; background: #a3242f; border-color: #6e1019; }
+:root[data-theme] .multiplayer-roster .world-rules-emergency:hover:not(:disabled) { background: #861b25; border-color: #4f0b12; }
+.multiplayer-roster .world-rules-emergency:focus-visible { outline: 3px solid var(--accent, #934969); outline-offset: 2px; }

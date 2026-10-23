@@ -31,3 +31,15 @@ test('level occupancy is explicit and paired in protocol snapshots', () => {
     assert.equal(validTownSnapshot(invalid), false);
   }
 });
+
+test('world rules are optional for older towns but exact when present (#596)', async () => {
+  const { defaultWorldPolicy } = await import('../src/world-policy.js');
+  const rules = (change = {}) => ({ ...defaultWorldPolicy(), minute: 720, active: false, ...change });
+  assert.equal(validTownSnapshot({ ...snapshot(), worldPolicy: rules() }), true);
+  const forced = { ...defaultWorldPolicy(), violence: { ...defaultWorldPolicy().violence, mode: 'forced', zones: ['westcreek-lane'] } };
+  assert.equal(validTownSnapshot({ ...snapshot(), worldPolicy: { ...forced, minute: 720, active: true } }), true);
+  for (const worldPolicy of [null, [], rules({ minute: 721 }), rules({ active: true }), { ...forced, minute: 720, active: false },
+    rules({ violence: { ...defaultWorldPolicy().violence, mode: 'riot' } }), rules({ extra: 1 }), rules({ violence: { ...defaultWorldPolicy().violence, zones: ['plaza'] } })])
+    assert.equal(validTownSnapshot({ ...snapshot(), worldPolicy }), false, JSON.stringify(worldPolicy));
+  assert.equal(validTownSnapshot({ ...snapshot(), worldId: 'garden-2', worldPolicy: { ...forced, minute: 720, active: true } }), false, 'zones are checked against the snapshot world');
+});
