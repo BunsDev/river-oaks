@@ -1,3 +1,5 @@
+import worldManifest from '../public/data/world-manifest.json' with { type: 'json' };
+import { validateDistrictLocation } from './world-manifest.js';
 import { generateBuildingInteriorPlan } from './building-interiors-plan.js';
 import { planStoreRooms } from './store-rooms.js';
 
@@ -8,6 +10,7 @@ const GALLERY_BUILDING_ID = 'osm-way-625333006';
 
 /** Attach one reviewed plan revision to the original district without changing the fixture file. */
 export function attachDistrictGalleryPlan(world, approved) {
+  validateDistrictLocation(worldManifest, world);
   const store = world?.stores?.find(item => item.id === GALLERY_STORE_ID);
   const building = world?.buildings?.find(item => item.id === GALLERY_BUILDING_ID);
   const levelCount = approved?.levels?.length;
