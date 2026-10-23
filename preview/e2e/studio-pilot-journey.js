@@ -38,6 +38,8 @@ async page => {
   await property(page, 'East (m)', 2);
   await page.locator('#studio-findings').filter({ hasText: 'Edit rejected.' }).waitFor();
   check((await page.locator('#studio-findings').textContent()).includes('meeting room'), 'blocking the meeting room is refused with a finding');
+  const refusal = await status(page);
+  check(/^Edit not applied; your draft is unchanged\. Clear the route to meeting room .* Nearby: .*Waiting Sofa/.test(refusal), `the status region announces the refusal and the furnishings to move (${refusal})`);
   check(await page.getByLabel('East (m)', { exact: true }).inputValue() === '5', 'the refused move leaves the sofa where it was');
   await property(page, 'North (m)', -4.6);
   await page.locator('#studio-assessment-status').filter({ hasText: 'Required routes passed' }).waitFor();
