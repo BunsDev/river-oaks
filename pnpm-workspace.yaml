@@ -4,6 +4,6 @@ enablePrePostScripts: true
 onlyBuiltDependencies:
   - electron
   - esbuild
-# GHSA-mrhx-c7xc-m3w5: the CLI config package pins the affected Zod release.
 overrides:
-  '@vercel/cli-config@0.3.1>zod': 4.6.6
+  # GHSA-mrhx-c7xc-m3w5: @vercel/cli-config pins zod 4.1.11 exactly, even in its latest release.
+  zod: 4.6.7

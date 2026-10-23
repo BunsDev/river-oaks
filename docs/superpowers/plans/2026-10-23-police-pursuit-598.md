@@ -278,3 +278,39 @@ Original85190 is terminal exit1: core passed all11 phases on79dcbf1; full failed
 Prepared the Electron patch in an isolated ignored project while the old pipeline ran, then applied it only after terminal status. Manifest/lockfile diff changes only Electron44.8.0→44.9.1; no transitive package versions changed. `pnpm install --frozen-lockfile` passes; `pnpm audit --audit-level=moderate` reports no known vulnerabilities; `REDIS_URL=redis://127.0.0.1:16498 pnpm run agent:doctor full` passes every prerequisite. `pnpm run test:desktop` passes115 with3 existing Windows PowerShell skips, zero failures (`/tmp/police598-electron-desktop.txt`). No native packaging, signing, Windows execution or production acceptance is implied.
 
 The patched dependency tree still requires full-profile verification. Prepared `.runtime/police598/run-full-v5.mjs` to run the exact full profile (a superset of core checks) and the final32-player CPU/wall comparison under the ordinary shared lock, preserving v4 receipts. This is a justified new run after an observed audit failure and patch, not a restart caused by waiting. Preserve all failure evidence and owned Redis.
+
+## Current-main integration before patched full run
+
+Resumed from the latest attachment and actual terminal original pipeline: core-v4 passed all11 phases, full-v4 stopped at the Electron advisory. The existing signed Electron patch ebf17107 and queued replacement process2027 were already present; no duplicate verification was started. PR621 is open at ebf17107. GitHub REST showed mergeable_state dirty and the current main ref98ac7d7b, while the PR metadata base SHA lagged behind. A read-only merge-tree established exactly two dependency conflicts.
+
+Preserved the generated shared report in `.runtime/police598/pre-main-integration-shared-experience.json` before restoring its tracked base. Merged98ac7d7b with `--no-commit`; resolved only pnpm-workspace.yaml and pnpm-lock.yaml by retaining current main's already-delivered Zod4.6.7 policy and lockfile. Electron44.9.1 and the police preview-concurrency setting are retained. Runtime police source did not conflict. Main's agent-runner browser-queue fix is included through normal merge.
+
+`pnpm install --frozen-lockfile` passes; `pnpm audit --audit-level=moderate` reports no known vulnerabilities. Doctor without REDIS_URL initially reported that missing prerequisite truthfully; the explicit owned-loopback Redis doctor passes all checks. Focused police/world/UI/snapshot suite passes37/37, zero skips (`/tmp/police598-main-integration-focused.txt`). Agent-runner tests are recorded in `/tmp/police598-main-integration-agent.txt`. Diff check passes.
+
+The merge is intentionally uncommitted pending final integrated broad verification. Existing queue process2027 (`/tmp/police598-final-v5.txt`) remains live before source-hash capture; it will inspect this integrated working tree when it acquires the shared lock. Preserve that exact pipeline and Redis40681/16498. After actual full/performance results, commit the verified merge, push, inspect required checks and complete protected delivery. Earlier core-v4 evidence retains79dcbf1 scope. No merge to main or deployment is claimed.
+
+## Integrated-source wait, first checkpoint
+
+Previous goal turn made progress by resolving current-main dependency conflicts and passing37 focused checks plus13 agent-runner regressions. This continuation reread the current attachment and polled the original replacement pipeline2027 repeatedly, including observation-only session66541. It remains live behind confirmed live mvp-full-dependencies23411; full-v5 and performance-final receipts remain absent. Redis40681 is live. The pending merge and source are preserved, with diff check passing; no verification was duplicated.
+
+Rechecked overlapping task crime-police-598 and open GitHub PRs: its separate checkout is clean at a local unsigned/unpushed commit2e8c0443 and requests its owner's go-ahead before push. PR621 is the only open police PR. Preserve that other owner's work; our integration does not adopt, discard or supersede its local material. This removes uncertainty about a competing open integration PR without claiming ownership transfer.
+
+This is the first wait-only checkpoint after current-main integration. Continue observing2027 and `/tmp/police598-final-v5.txt`; act on actual full/performance results, then commit/push verified integration and satisfy hosted gates before protected landing. Completion remains unproven.
+
+## Verified integration commit for parallel hosted checks
+
+The explicit integration handoff above resolved the initially unexplained staged merge. Independently checked that every staged incoming-main path exactly matches98ac7d7b, including the dependency resolutions; no additional source edits were present. Confirmed installed Zod4.6.7, passing audit,37 focused checks and13 runner checks, and a clean staged diff check. The maintainer's commit/push/merge instruction authorizes completing this reviewed integration commit so hosted CI can run against current main while the same local full pipeline waits. Final core/full/performance and protected checks remain required before merging the PR; no acceptance gate is waived.
+
+The queued full-v5 hash guard now inventories all runtime/test/package changes relative to the original f4aa1670 base, including inherited runner changes, across commit creation. The existing process2027 remains queued; it has not captured source hashes or started tests yet. Preserve its identity and the owned Redis.
+
+## Integrated-source wait, second checkpoint
+
+Previous goal turn was a verified wait after the main integration. Reread the attachment, polled the existing observation session66541 to its normal exit0, then independently checked the same pipeline2027, predecessor23411 and Redis40681 before and after a40-second observation interval. All remain live; the full/performance pipeline is still queued and has produced no final receipts. Diff check passes. No source changes, duplicated verification, queue bypass or delivery claim occurred.
+
+This is the second consecutive wait-only checkpoint after integration. Continue observing2027 and its existing log. If this same external-resource impasse persists for a third consecutive goal turn without an available safe action, apply the blocked audit while preserving the pending merge, pipeline, owned Redis and evidence.
+
+## Integrated-source blocked audit, third checkpoint
+
+Previous goal turn was a verified wait. Reread the attachment and independently confirmed the same queued pipeline2027, preceding holder23411 and owned Redis40681 remain live. Full-v5/performance-final receipts are absent; the pipeline still waits behind five browser runs. Diff check passes. The same exclusive-browser dependency has persisted for three consecutive wait-only goal turns after the current-main integration.
+
+All currently independent implementation, conflict reconciliation, focused checks, prerequisite validation and overlap inventory are finished. Required integrated broad verification and performance block committing/pushing this pending merge and protected landing. Do not duplicate the job, bypass the holder, fabricate passing scope or discard the uncommitted integration. Mark the goal blocked on external browser-queue progress and preserve process2027, Redis40681/16498, pending merge and evidence. Resume by inspecting `/tmp/police598-final-v5.txt`, actual full-v5/performance-final receipts and source hashes, fix failures, commit/push verified integration, then satisfy hosted gates and finish protected delivery. No merge to main or deployment has occurred.
