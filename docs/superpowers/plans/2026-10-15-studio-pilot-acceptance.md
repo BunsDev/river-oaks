@@ -1082,6 +1082,7 @@ which this branch carries. Until #613 or this branch lands, main's IPIC journey 
   tree, 23:53–00:00Z: `node desktop/studio-e2e.js` on Electron 44.9.1 passed 11/11 (`studio-417-98ac7d7b-desktop.json`),
   and `pnpm run verify` (core) passed: agent 207/207, preview 3,877 (1 skipped), server 824 (218 skipped), desktop
   115 (3 skipped), build, Python, secrets. The browser Studio and office results above stand: nothing they load changed.
+- Not run: isolated Redis/full, physical devices, VoiceOver, packaged Electron. None of this is human review.
 
 ### Decisions for Val
 
