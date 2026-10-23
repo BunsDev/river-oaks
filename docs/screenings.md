@@ -96,7 +96,7 @@ effect on the next deployment, only on Val's go; #359 records whether it has bee
 - **The film ends.** It stops at its duration with status `ended`.
 - **Restore.** A checkpoint restored within 15 s of being saved keeps playing, as in a lease handoff between gateways. An older one pauses at its saved position, so an outage never jumps the film forward.
 - **Reset.** A trusted reset, or a region migration, opens a new epoch and stops every venue. Commands from the old epoch are stale.
-- **Versions.** Checkpoint version 9 adds screenings; version 10 adds office layout/floor state; version 11 adds office seat claims, version 12 selected character revisions and version 13 garden campus leases; the current Redis writer generation is `v13:` (`v14:` with the character store). Pre-v9 checkpoints restore with a stopped timeline.
+- **Versions.** Checkpoint version 9 adds screenings; version 10 adds office layout/floor state; version 11 adds office seat claims, version 12 selected character revisions, version 13 garden campus leases and version 14 world rules; the current Redis writer generation is `v15:` (`v16:` with the character store). Pre-v9 checkpoints restore with a stopped timeline.
 
 ### Turning it off
 

@@ -5,7 +5,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
-import { chromium } from 'playwright';
+import { chromium, webkit } from 'playwright';
 import { holdBrowserLock } from '../../scripts/browser-lock.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
@@ -87,7 +87,9 @@ const releaseBrowserLock = await holdBrowserLock('shared town journeys', { signa
 try {
   await mkdir(join(root, 'output/playwright'), { recursive: true });
   await writeFile(join(root, 'data/reports', process.env.RIVER_OAKS_SHARED_REPORT ?? 'shared-experience.json'), JSON.stringify(report, null, 2) + '\n');
-  browser = await chromium.launch({
+  // RIVER_OAKS_SHARED_BROWSER=webkit runs the journeys in Playwright's WebKit (Safari's engine on this desktop, not iOS).
+  report.browser = process.env.RIVER_OAKS_SHARED_BROWSER === 'webkit' ? 'webkit' : 'chromium';
+  browser = report.browser === 'webkit' ? await webkit.launch({ headless: true, handleSIGINT: false, handleSIGTERM: false, handleSIGHUP: false }) : await chromium.launch({
     headless: !softwareRendering, handleSIGINT: false, handleSIGTERM: false, handleSIGHUP: false,
     args: softwareRendering ? ['--use-gl=angle', '--use-angle=gl', '--ignore-gpu-blocklist'] : process.platform === 'darwin' ? ['--use-angle=metal'] : [],
   });
@@ -101,7 +103,7 @@ try {
     return renderer;
   });
   await probe.close();
-  console.log(`Shared renderer: ${report.renderer}; ${report.rendering}`);
+  console.log(`Shared renderer (${report.browser}): ${report.renderer}; ${report.rendering}`);
   for (const mode of modes.length ? modes : supportedModes) {
     interruption.signal.throwIfAborted();
     const used = new Set();
@@ -109,13 +111,13 @@ try {
     const town = await freePort(used);
     const ports = { web, town };
     await start(mode, ports);
-    const names=mode==='development'?(selectedJourney==='creation-tools'?['creation-tools']:['multiplayer-dev','groups','world-events','rail-shared','shared-seating']):mode==='development-world'?['world-boundary','world-map','character-studio-worlds']:mode==='development-publish'?['world-publish','creator-generated-levels','creator-four-levels','creator-street-crossing']:mode==='creator'?['creator-objects']:[...(selectedJourney==='storefront-threshold'?['storefront-threshold']:[]),...(selectedJourney==='generated-gallery-shared'?['generated-gallery-shared']:[]),'access-gate','connection-required','multiplayer','indoor-npcs','multiplayer-exclusivity','vehicle-exit','multiplayer-gate','resident-names','sit-and-water','greetings','character-studio-shared','character-studio-tiers'];
+    const names=mode==='development'?(selectedJourney==='creation-tools'?['creation-tools']:['multiplayer-dev','groups','world-events','rail-shared','shared-seating','world-rules-shared']):mode==='development-world'?['world-boundary','world-map','character-studio-worlds']:mode==='development-publish'?['world-publish','creator-generated-levels','creator-four-levels','creator-street-crossing']:mode==='creator'?['creator-objects']:[...(selectedJourney==='storefront-threshold'?['storefront-threshold']:[]),...(selectedJourney==='generated-gallery-shared'?['generated-gallery-shared']:[]),'access-gate','connection-required','multiplayer','indoor-npcs','multiplayer-exclusivity','vehicle-exit','multiplayer-gate','resident-names','sit-and-water','greetings','character-studio-shared','character-studio-tiers'];
     for (const name of names) {
       if (selectedJourney && name !== selectedJourney) continue;
       interruption.signal.throwIfAborted();
       // These journeys require their initial town layout or a fresh development owner.
       // Closing browser contexts does not reset simulation, ledgers or creations.
-      if (['shared-seating', 'vehicle-exit', 'greetings', 'character-studio-shared', 'character-studio-tiers', 'character-studio-worlds', 'creator-generated-levels', 'creator-four-levels','creator-street-crossing'].includes(name) && !selectedJourney) { await stop(); await start(mode, ports); }
+      if (['shared-seating', 'world-rules-shared', 'vehicle-exit', 'greetings', 'character-studio-shared', 'character-studio-tiers', 'character-studio-worlds', 'creator-generated-levels', 'creator-four-levels','creator-street-crossing'].includes(name) && !selectedJourney) { await stop(); await start(mode, ports); }
       const context = await browser.newContext(), page = await context.newPage(), started = Date.now();
       page.setDefaultTimeout(60000);
       const pageErrors = [];

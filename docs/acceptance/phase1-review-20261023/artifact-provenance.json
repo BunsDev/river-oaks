@@ -1,0 +1,71 @@
+[
+  {
+    "file": "mac-baseline.json",
+    "source": ".runtime/world-expansion/baseline-2026-10-23T05-38-23.172Z/report.json",
+    "sha256": "ba9c878b3d8abb1a2a05de76489046b74bc38377a11eef594ee8c501a717da10"
+  },
+  {
+    "file": "historical-mac-baseline.json",
+    "source": ".runtime/world-manifest/historical-baseline-580/report.json",
+    "sha256": "88cf3558f2c1f8f81f2018df080a45ab5f9f295906a15e410b3cd24eb20ea28e"
+  },
+  {
+    "file": "comparison.json",
+    "source": ".runtime/world-manifest/mac-baseline-comparison.json",
+    "sha256": "f3b4d7a29948bbaf4f99bebd42506830c6d2fa6636139370dcf362c55cef0cbf"
+  },
+  {
+    "file": "reviewed-source-hashes.json",
+    "source": ".runtime/world-manifest/phase1-source-hashes-c2cac2d3.json",
+    "sha256": "f95abef74bdab630f73a42910c8e2ca38b5c14e75918758829bfacbffbe165a9"
+  },
+  {
+    "file": "reachable-area.json",
+    "source": ".runtime/world-manifest/phase1-footprint-integrated-main.json",
+    "sha256": "53b8d34d973e51b12739539612642c14c6d7851d11e6faec0a568498ca233ea8"
+  },
+  {
+    "file": "coordinate-audit.json",
+    "source": ".runtime/world-manifest/phase1-coordinate-audit.json",
+    "sha256": "a5649b3047d60c07b39ed6d07744507531e092f195b3c8f66c12344f7d7726b0"
+  },
+  {
+    "file": "current-desktop-1-players-3.png",
+    "source": ".runtime/world-expansion/baseline-2026-10-23T05-38-23.172Z/desktop-1-players-3.png",
+    "sha256": "d3832210c4e8f7ecfdea5d645fc21d4b755e8874aef61dc4b0ac55203179f3f3"
+  },
+  {
+    "file": "current-phone-viewport-2-players-3.png",
+    "source": ".runtime/world-expansion/baseline-2026-10-23T05-38-23.172Z/phone-viewport-2-players-3.png",
+    "sha256": "c3255314517ce5a87cb84174f40903edce1d780b10ce4facd9a8267bc846059b"
+  },
+  {
+    "file": "historical-desktop-1-players-3.png",
+    "source": ".runtime/world-manifest/historical-baseline-580/desktop-1-players-3.png",
+    "sha256": "71879c565c4ea5ce3bd48b73c3ac33c92a35f6f6bde9f84547ad3d6ca74b3f45"
+  },
+  {
+    "file": "historical-phone-viewport-2-players-3.png",
+    "source": ".runtime/world-manifest/historical-baseline-580/phone-viewport-2-players-3.png",
+    "sha256": "0489cec0b4a2b8cf00a7216e5a06fe7272dbf13d516f9df246661b13443fe769"
+  },
+  {
+    "file": "local-full.json",
+    "source": ".runtime/world-manifest/phase1-full-resumed.json",
+    "sha256": "5411ef349cac679ce7cc6e6423e739a99f5386eb89dfc3e868eee6ebc2dcf303"
+  },
+  {
+    "file": "journey-summary.json",
+    "derivedFrom": [
+      {
+        "source": ".runtime/world-manifest/phase1-experience-final.json",
+        "sha256": "ff7fdd53fe2be0123de9dc1f37f16b5827bea771fd85064359de8f8aac920073"
+      },
+      {
+        "source": ".runtime/world-manifest/phase1-shared-final.json",
+        "sha256": "9b08a146f567dc752be91926c79239778e54ea9ae2dec6e20522f851459a2289"
+      }
+    ],
+    "sha256": "b81638b9fc0713054eab144e0403bebeaa537408072b080b0ad4c83de4f197d5"
+  }
+]
