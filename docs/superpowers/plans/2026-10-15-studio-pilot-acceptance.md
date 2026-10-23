@@ -1075,7 +1075,13 @@ which this branch carries. Until #613 or this branch lands, main's IPIC journey 
   same tree passed. No check was changed. `pnpm run agent:doctor` reports the Python environment as passing in
   that state, because it checks uv's environment rather than the `python3` the tooling tests run: a doctor gap,
   not fixed here.
-- Not run: isolated Redis/full, physical devices, VoiceOver, packaged Electron. None of this is human review.
+- **Main moved to `98ac7d7b` while #617 was in CI** (#619: zod override 4.6.7 for GHSA-mrhx-c7xc-m3w5, Electron
+  44.8.0 → 44.9.1, verify-runner tooling; no `preview/src` or `desktop/` source change). #617's first hosted run
+  failed only `pnpm audit` (that advisory) and `preview experience (commons)` (a 10 s `waitForFunction` timeout in
+  `east-garden-commons`, which passed on its one rerun). Main was merged into this branch (`3686f2b3`); on that clean
+  tree, 23:53–00:00Z: `node desktop/studio-e2e.js` on Electron 44.9.1 passed 11/11 (`studio-417-98ac7d7b-desktop.json`),
+  and `pnpm run verify` (core) passed: agent 207/207, preview 3,877 (1 skipped), server 824 (218 skipped), desktop
+  115 (3 skipped), build, Python, secrets. The browser Studio and office results above stand: nothing they load changed.
 
 ### Decisions for Val
 
