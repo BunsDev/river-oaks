@@ -1,6 +1,6 @@
 # Likeness intake #518 implementation ledger
 
-**Goal:** Deliver the decision package, fixture-only quarantine, and adversarial/production-gate proof in three PR increments; no merge, deployment, real data or provider calls.
+**Goal:** Deliver the decision package, fixture-only quarantine, and adversarial/production-gate proof in three PR increments, followed by user-authorized guarded merges; no deployment, real data or provider calls.
 
 **Architecture:** A server-only in-memory harness admits only a deterministic synthetic GLB digest. Strict envelope validation reuses character-assets-audit and character-compatibility; moderation, generation fencing and signed allowlisted revisions control release. Existing routes and shared identity stay unchanged.
 
@@ -14,9 +14,9 @@ Owned files: `docs/character-likeness-intake.md`, this ledger, new `server/chara
 
 ## Increments and checks
 
-- [ ] 1. Decision package: threat model, consent/age/rights, storage lifecycle, moderation, public vendor terms and Decisions for Val. Review exact Markdown and links, run baseline focused checks and core gate, signed commit, push, open docs PR and one evidence comment.
-- [ ] 2. Quarantine plus tests: deterministic synthetic fixture builder; strict bounded GLB validator; server factory with owner operations, reviewer capability and signed allowlist. Test admission and byte/size/polygon/texture/bone/URL/script/shader/scene rejection before implementation, then focused and core checks. Signed commit, push, separate stacked PR and one evidence comment.
-- [ ] 3. Adversarial plus gate: foreign owner, revoke/delete during async validation, duplicate publication, tampered signature, missing-asset fallback and existing public identity/peer boundary tests. Explicit default-off and production refusal tests. Focused, core, then full with isolated Redis under shared browser lock. Signed commit, push, separate stacked PR and one evidence comment.
+- [x] 1. Decision package: threat model, consent/age/rights, storage lifecycle, moderation, public vendor terms and Decisions for Val. Review exact Markdown and links, run baseline focused checks and core gate, signed commit, push, open docs PR and one evidence comment.
+- [x] 2. Quarantine plus tests: deterministic synthetic fixture builder; strict bounded GLB validator; server factory with owner operations, reviewer capability and signed allowlist. Test admission and byte/size/polygon/texture/bone/URL/script/shader/scene rejection before implementation, then focused and core checks. Signed commit, push, separate stacked PR and one evidence comment.
+- [x] 3. Adversarial plus gate: foreign owner, revoke/delete during async validation, duplicate publication, tampered signature, missing-asset fallback and existing public identity/peer boundary tests. Explicit default-off and production refusal tests. Focused, core, then full with isolated Redis under shared browser lock. Signed commit, push, separate stacked PR and one evidence comment.
 
 The prototype uses no real likeness assets, routes or providers. Public terms browsing is documentation research only. No skip counts as evidence. Full local checks do not prove hosted, physical-device, moderation or legal acceptance.
 
@@ -52,10 +52,18 @@ Conformance audit while the verification queue remains live: the synthetic WebP 
 Follow-up review completed on the conformance correction: no concrete findings; reviewer independently repeated all 37 focused tests with zero failures/skips. The exact-digest boundary and shader/script rejection remain intact.
 
 
-## Current handoff: full gate blocked
+## Historical handoff: full gate blocked
 
 Local core passed on clean combined candidate `30107d94b68cbde199d51b1d10bac467952d43e9` with a local Node `--test-concurrency=2` launcher; source and assertions were unchanged. The original two office timing failures are preserved. Full verification remains blocked before profile execution: four normal shared-queue attempts failed in queue metadata locking (the fourth with ENOENT removing the lock). Logs are preserved in `.runtime/likeness-518/full-bounded*.log`. No full pass is claimed. Restoring stable shared-queue operation is the next prerequisite; the lock was never bypassed. See the existing evidence comment for counts and exclusions.
 
 Core receipt `core-bounded.json` records all 11 stages passed: tooling 201, preview 3,755 (one skip), server 771 (213 skips without Redis), desktop 115 (three Windows PowerShell skips), Python 149. These skips provide no acceptance evidence. Hosted checks previously passed on each recorded signed PR head; they do not replace local full. Final implementation head remains `30107d94b68cbde199d51b1d10bac467952d43e9`; this follow-up updates only evidence.
 
 All three draft PRs and their single evidence comments exist. Implementation and focused review are complete; the increment checkboxes remain open because the promised full gate is unproven. Next action: restore stable shared-queue operation, start owned isolated Redis, rerun full through the normal queue with the bounded Node launcher, inspect receipts and skips, and update this ledger and the existing comments. No merge, deployment, real data or provider calls occurred.
+
+## Current delivery: full gate passed; guarded merges pending
+
+The user subsequently authorized frequent commit, push and merge to main. Full verification passed all 18 stages on clean `b047a7ad124aa34785ccfb0e426fdc9142691e87`, from 2026-10-23T06:29:49.058Z to 07:09:04.311Z. Command: `PATH="$PWD/.runtime/likeness-518/bounded-bin:$PATH" REDIS_URL=redis://127.0.0.1:16418 RIVER_OAKS_BROWSER_LOCK_POLL=31000 node scripts/browser-lock.mjs likeness-518-full-resume -- pnpm run verify full`. The local launcher limits Node test workers to two without changing source or assertions. Receipt/log: `.runtime/likeness-518/full-resume.{json,log}`; generated experience/shared reports preserved alongside them. The normal shared queue was honored; after the session handle disappeared, the original PID78332 was monitored without duplication until completion.
+
+Results: tooling 201/201, preview 3755 passed with one existing skip, server with isolated Redis 1026/1026 and zero skips, desktop 115 passed with three Windows PowerShell skips, Python 149 passed (66 warnings); dependency audit, build, lint, format, demo, expected demo refusal, secret scans, security browser, reflections, all 16 experience journeys, shared browser suite and IPIC screening passed. Preview glazing and Windows-only skips are excluded from acceptance. Local browser evidence does not establish physical-device, production, real-user likeness, legal or moderation acceptance. Original timing and queue failures remain preserved.
+
+All 12 hosted checks passed on b047a7ad. Next: update the existing evidence comments, ready and land PR590 then PR591 then PR592 targeting main through `pnpm run land` and the installed guard; record exact reviewed heads and merge evidence. No merge has yet been claimed.
