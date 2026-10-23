@@ -198,3 +198,26 @@ The first-visit journey repeats destination search, arrival, entry, conversation
 photo and walking at desktop and touch-enabled 390×844; it also exercises a real
 Chromium touch press/release. This is automated interaction evidence, not human
 keyboard/VoiceOver or physical-device acceptance.
+
+## Campus fixture readiness
+
+The campus office and suite journeys distinguish a rendered avatar from an admitted, responsive town connection. `preview/e2e/garden-campus-readiness.js` tracks each fixture page before navigation and waits for a self snapshot plus a correlated read-only inventory response on the current socket. A permitted `admin_only` refusal also proves that the application processed that read-only request; it grants no permission. Recovery may repeat that probe, but consumes the original 120-second startup deadline. It does not replay travel, lease, desk or lift commands, and does not establish future connection health.
+
+The suite's first lift also waits for the published ground-level pose within the server's unchanged 1.3 m portal reach and a visible, enabled lift prompt. It then presses F once and checks the authoritative destination. The helper is specifically for the ground-to-first-upper-level transition, not a general upper-floor traversal helper. The existing 30-second prompt and destination waits remain separate and unchanged.
+
+Focused readiness cases run with:
+
+```sh
+node --test preview/tests/garden-campus-readiness.test.js
+```
+
+They use real loopback frames with a small page facade to cover correlation, stale sockets, reconnect, deadline exhaustion and delayed pose publication. They do not render the district or prove authentication/heartbeat behavior. Run the real fixture journeys separately:
+
+```sh
+RIVER_OAKS_E2E_REPORT=campus-readiness-candidate.json \
+  pnpm run test:experience garden-campus-office garden-campus-suite
+RIVER_OAKS_E2E_REPORT=campus-readiness-traversal.json \
+  pnpm run test:experience garden-campus-traversal
+```
+
+The existing runner owns the browser lock and temporary services. Preserve named failure reports; do not repeatedly rerun to manufacture a pass. Use the Linux Mesa/Xvfb settings in `docs/agent-workflow.md` for Linux evidence. macOS results do not certify Linux, physical phones, human accessibility or production acceptance. The original extraction source was PR #545 at `aea288ec22d11bff12ea75d50c85e73d3ebf5220`. The remaining socket-replacement correction and causal limits are recorded in [PR #605](https://github.com/BunsDev/river-oaks/pull/605) and [its candidate ledger](https://github.com/BunsDev/river-oaks/blob/f00e7987f1a45d4d0ba64f9dece0e0db8a2a14ad/docs/superpowers/plans/2026-10-23-campus-readiness-socket-512.md). Use a candidate containing that correction when validating the complete replacement-socket contract.
