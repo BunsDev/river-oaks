@@ -1,0 +1,419 @@
+{
+  "sourceHead": "c2cac2d30247238adbfcf4323a7f328813033427",
+  "applicationSourceStable": true,
+  "experience": [
+    {
+      "name": "player-lifecycle",
+      "status": "passed",
+      "seconds": 8.94
+    },
+    {
+      "name": "multiplayer-lifecycle",
+      "status": "passed",
+      "seconds": 3.579
+    },
+    {
+      "name": "contextual-first-visit",
+      "status": "passed",
+      "seconds": 35.708
+    },
+    {
+      "name": "store-intro",
+      "status": "passed",
+      "seconds": 38.223
+    },
+    {
+      "name": "photo-mode",
+      "status": "passed",
+      "seconds": 12.517
+    },
+    {
+      "name": "rail-navigation",
+      "status": "passed",
+      "seconds": 24.225
+    },
+    {
+      "name": "places-guide",
+      "status": "passed",
+      "seconds": 13.941
+    },
+    {
+      "name": "world-studio",
+      "status": "passed",
+      "seconds": 25.203
+    },
+    {
+      "name": "spatial-circulation",
+      "status": "passed",
+      "seconds": 75.606
+    },
+    {
+      "name": "spatial-streets",
+      "status": "passed",
+      "seconds": 197.898
+    },
+    {
+      "name": "office-desk",
+      "status": "passed",
+      "seconds": 19.43
+    },
+    {
+      "name": "office-visit",
+      "status": "passed",
+      "seconds": 54.585
+    },
+    {
+      "name": "office-computer-embed",
+      "status": "passed",
+      "seconds": 79.971
+    },
+    {
+      "name": "garden-campus-office",
+      "status": "passed",
+      "seconds": 102.844
+    },
+    {
+      "name": "garden-campus-traversal",
+      "status": "passed",
+      "seconds": 147.127
+    },
+    {
+      "name": "garden-campus-suite",
+      "status": "passed",
+      "seconds": 141.611
+    },
+    {
+      "name": "east-garden-commons",
+      "status": "passed",
+      "seconds": 162.145
+    }
+  ],
+  "shared": [
+    {
+      "name": "multiplayer-dev",
+      "status": "passed",
+      "seconds": 81.087
+    },
+    {
+      "name": "groups",
+      "status": "passed",
+      "seconds": 45.38
+    },
+    {
+      "name": "world-events",
+      "status": "passed",
+      "seconds": 7.52
+    },
+    {
+      "name": "rail-shared",
+      "status": "passed",
+      "seconds": 5.347
+    },
+    {
+      "name": "shared-seating",
+      "status": "passed",
+      "seconds": 33.753
+    },
+    {
+      "name": "world-boundary",
+      "status": "passed",
+      "seconds": 8.994
+    },
+    {
+      "name": "world-map",
+      "status": "passed",
+      "seconds": 48.568
+    },
+    {
+      "name": "character-studio-worlds",
+      "status": "passed",
+      "seconds": 63.92
+    },
+    {
+      "name": "world-publish",
+      "status": "passed",
+      "seconds": 57.421
+    },
+    {
+      "name": "creator-generated-levels",
+      "status": "passed",
+      "seconds": 25.793
+    },
+    {
+      "name": "creator-four-levels",
+      "status": "passed",
+      "seconds": 30.751
+    },
+    {
+      "name": "creator-street-crossing",
+      "status": "passed",
+      "seconds": 40.371
+    },
+    {
+      "name": "access-gate",
+      "status": "passed",
+      "seconds": 17.024
+    },
+    {
+      "name": "connection-required",
+      "status": "passed",
+      "seconds": 5.377
+    },
+    {
+      "name": "multiplayer",
+      "status": "passed",
+      "seconds": 59.755
+    },
+    {
+      "name": "indoor-npcs",
+      "status": "passed",
+      "seconds": 11.204
+    },
+    {
+      "name": "multiplayer-exclusivity",
+      "status": "passed",
+      "seconds": 14.773
+    },
+    {
+      "name": "vehicle-exit",
+      "status": "passed",
+      "seconds": 6.015
+    },
+    {
+      "name": "multiplayer-gate",
+      "status": "passed",
+      "seconds": 14.895
+    },
+    {
+      "name": "resident-names",
+      "status": "passed",
+      "seconds": 132.445
+    },
+    {
+      "name": "sit-and-water",
+      "status": "passed",
+      "seconds": 20.259
+    },
+    {
+      "name": "greetings",
+      "status": "passed",
+      "seconds": 25.362
+    },
+    {
+      "name": "character-studio-shared",
+      "status": "passed",
+      "seconds": 45.379
+    },
+    {
+      "name": "character-studio-tiers",
+      "status": "passed",
+      "seconds": 25.404
+    },
+    {
+      "name": "creator-objects",
+      "status": "passed",
+      "seconds": 27.618
+    }
+  ],
+  "commons": {
+    "name": "east-garden-commons",
+    "status": "passed",
+    "seconds": 162.145,
+    "result": {
+      "checks": [
+        "Both players start in the original District",
+        "Existing walking routes connect both arrivals to the eastern gateway",
+        "Two real clients reached the Commons by keyboard walking",
+        "Both clients completed the shared Commons chess game through the normal board UI",
+        "Reconnect keeps identity and Commons position",
+        "Round trip preserved both documents without reload",
+        "No page errors: "
+      ],
+      "routes": [
+        {
+          "label": "owner approach",
+          "seconds": 19.287,
+          "start": [
+            -2765.321977373157,
+            -1295.064162750871,
+            18.383521112135007
+          ],
+          "end": [
+            -2685.4372066909737,
+            -1333.8675151322695,
+            18.25939189446673
+          ],
+          "sampleCount": 42
+        },
+        {
+          "label": "alice approach",
+          "seconds": 33.67,
+          "start": [
+            -2763.721977373157,
+            -1295.064162750871,
+            18.378039304479465
+          ],
+          "end": [
+            -2685.565876239728,
+            -1333.8174916421515,
+            18.25939189446673
+          ],
+          "sampleCount": 81
+        },
+        {
+          "label": "owner outward",
+          "seconds": 16.099,
+          "start": [
+            -2685.0911393035212,
+            -1333.9894069470506,
+            18.25939189446673
+          ],
+          "end": [
+            -2586.9137620953675,
+            -1334.0251765079176,
+            18.37222868285045
+          ],
+          "sampleCount": 34
+        },
+        {
+          "label": "alice outward",
+          "seconds": 31.907,
+          "start": [
+            -2685.565876239728,
+            -1333.8174916421515,
+            18.25939189446673
+          ],
+          "end": [
+            -2586.753422173079,
+            -1336.014178376003,
+            18.37222868285045
+          ],
+          "sampleCount": 71
+        },
+        {
+          "label": "owner table",
+          "seconds": 4.556,
+          "start": [
+            -2586.2116933735847,
+            -1334.0163681549602,
+            18.37222868285045
+          ],
+          "end": [
+            -2571.699901466137,
+            -1315.244737490483,
+            18.37222868285045
+          ],
+          "sampleCount": 10
+        },
+        {
+          "label": "alice table",
+          "seconds": 8.617,
+          "start": [
+            -2586.753422173079,
+            -1336.014178376003,
+            18.37222868285045
+          ],
+          "end": [
+            -2575.039879507295,
+            -1315.3811740392669,
+            18.37222868285045
+          ],
+          "sampleCount": 21
+        },
+        {
+          "label": "owner plaza",
+          "seconds": 4.569,
+          "start": [
+            -2572.476078522973,
+            -1316.65,
+            18.37222868285045
+          ],
+          "end": [
+            -2585.8456178321144,
+            -1333.662582651834,
+            18.37222868285045
+          ],
+          "sampleCount": 10
+        },
+        {
+          "label": "alice plaza",
+          "seconds": 9.392,
+          "start": [
+            -2574.196078522973,
+            -1313.35,
+            18.37222868285045
+          ],
+          "end": [
+            -2586.0122548531617,
+            -1335.6924782710914,
+            18.37222868285045
+          ],
+          "sampleCount": 24
+        },
+        {
+          "label": "owner return",
+          "seconds": 16.216,
+          "start": [
+            -2586.189882758639,
+            -1333.922955932414,
+            18.37222868285045
+          ],
+          "end": [
+            -2684.7896785531984,
+            -1334.0265337457315,
+            18.25939189446673
+          ],
+          "sampleCount": 34
+        },
+        {
+          "label": "alice return",
+          "seconds": 32.064,
+          "start": [
+            -2586.2886211168134,
+            -1335.9751861148143,
+            18.37222868285045
+          ],
+          "end": [
+            -2684.6843366866437,
+            -1335.0285879132248,
+            18.25939189446673
+          ],
+          "sampleCount": 66
+        },
+        {
+          "label": "owner home",
+          "seconds": 18.672,
+          "start": [
+            -2685.2523906776028,
+            -1334.0006120560674,
+            18.25939189446673
+          ],
+          "end": [
+            -2764.9687625960473,
+            -1295.3286572987147,
+            18.383742887664027
+          ],
+          "sampleCount": 43
+        },
+        {
+          "label": "alice home",
+          "seconds": 35.667,
+          "start": [
+            -2684.6843366866437,
+            -1335.0285879132248,
+            18.25939189446673
+          ],
+          "end": [
+            -2763.456088598761,
+            -1295.2153415629568,
+            18.378232059012095
+          ],
+          "sampleCount": 87
+        }
+      ],
+      "reconnectMs": 814,
+      "scope": "Two rendered fixture clients, normal keyboard walking from original District arrivals; shared chess activity; no physical-device or production acceptance"
+    }
+  },
+  "scope": "Local fixture browser journeys on this Mac; no physical iPhone, production account, production deployment or human accessibility acceptance."
+}

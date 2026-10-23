@@ -1,0 +1,1244 @@
+{
+  "kind": "character-fidelity-iphone-rerun",
+  "revision": "d6daede3389463306d6cb90a12d33157be043ca8",
+  "startedAt": "2026-10-23T04:33:51.481Z",
+  "finishedAt": "2026-10-23T04:42:03.012Z",
+  "status": "failed",
+  "error": "Physical receipt deadline reached",
+  "device": "iPhone 16 Pro Max (iPhone17,2), paired, Mobile Safari",
+  "rawReportSha256": "7a0de0c08f2d8fa72e314d56a1466330ec7625121309165b3901e532f8558ed3",
+  "inputsUnchanged": true,
+  "recordsReceived": 54,
+  "recordsExpected": 67,
+  "note": "All 48 frame records arrived; the run hit the script 480 s deadline before lifecycle and capture records, so this is timing evidence only. Raw report (contains LAN origin) retained locally, not committed. Comparison uses the unchanged 20% band and the unchanged reference ceilings from character-fidelity-review-iphone-budgets-517.json.",
+  "comparisonAgainst": "data/reports/character-fidelity-review-iphone-517.json",
+  "comparison": [
+    "morgan-human off x1 p50 17,17 prior 17,17 within true cross true,true p95 17/17 cpu95 6/5!",
+    "morgan-human off x8 p50 21,20 prior 19,23 within true cross true,true p95 25/22! cpu95 13/11!",
+    "morgan-human off x24 p50 49,52 prior 44,47 within true cross true,true p95 57/54! cpu95 39/36!",
+    "morgan-human low x1 p50 17,17 prior 17,17 within true cross true,true p95 17/17 cpu95 5/6",
+    "morgan-human low x8 p50 20,20 prior 19,20 within true cross true,true p95 23/22! cpu95 11/11",
+    "morgan-human low x24 p50 48,54 prior 45,49 within true cross true,true p95 58/54! cpu95 40/36!",
+    "morgan-human standard x1 p50 17,17 prior 17,17 within true cross true,true p95 17/17 cpu95 6/5!",
+    "morgan-human standard x8 p50 20,20 prior 19,20 within true cross true,true p95 23/22! cpu95 11/11",
+    "morgan-human standard x24 p50 48,56 prior 46,50 within true cross true,true p95 63/53! cpu95 44/35!",
+    "morgan-human high x1 p50 17,17 prior 17,17 within true cross true,true p95 18/17! cpu95 9/5!",
+    "morgan-human high x8 p50 20,20 prior 20,20 within true cross true,true p95 23/22! cpu95 12/11!",
+    "morgan-human high x24 p50 65,54 prior 46,51 within true cross false,true p95 130/52! cpu95 75/35!",
+    "imani-human off x1 p50 17,17 prior 17,17 within true cross true,true p95 17/17 cpu95 5/5",
+    "imani-human off x8 p50 20,20 prior 19,19 within true cross true,true p95 23/22! cpu95 11/11",
+    "imani-human off x24 p50 49,53 prior 44,48 within true cross true,true p95 62/50! cpu95 40/32!",
+    "imani-human low x1 p50 17,17 prior 17,17 within true cross true,true p95 17/17 cpu95 5/5",
+    "imani-human low x8 p50 20,20 prior 20,21 within true cross true,true p95 23/23 cpu95 12/11!",
+    "imani-human low x24 p50 50,55 prior 46,68 within true cross true,true p95 62/55! cpu95 44/38!",
+    "imani-human standard x1 p50 17,17 prior 17,17 within true cross true,true p95 17/17 cpu95 5/6",
+    "imani-human standard x8 p50 20,20 prior 20,20 within true cross true,true p95 24/22! cpu95 12/11!",
+    "imani-human standard x24 p50 53,55 prior 47,47 within true cross true,true p95 66/50! cpu95 46/33!",
+    "imani-human high x1 p50 17,17 prior 17,17 within true cross true,true p95 17/17 cpu95 7/5!",
+    "imani-human high x8 p50 34,20 prior 20,20 within false cross false,true p95 42/23! cpu95 26/11!",
+    "imani-human high x24 p50 55,50 prior 48,47 within true cross true,true p95 83/51! cpu95 59/33!",
+    "{\"withinRun\":\"23/24\",\"crossRun\":\"46/48\",\"frameP95ReferenceExceedances\":16,\"cpuP95ReferenceExceedances\":17}"
+  ],
+  "frames": [
+    {
+      "id": "morgan-human",
+      "realism": "off",
+      "repeat": 0,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 14,
+        "p50": 17,
+        "p95": 17,
+        "max": 19,
+        "mean": 16.667
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 1,
+        "p50": 2,
+        "p95": 6,
+        "max": 7,
+        "mean": 3
+      },
+      "render": {
+        "calls": 19,
+        "triangles": 169102
+      }
+    },
+    {
+      "id": "morgan-human",
+      "realism": "off",
+      "repeat": 0,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 18,
+        "p50": 21,
+        "p95": 25,
+        "max": 40,
+        "mean": 21.325
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 9,
+        "p50": 10,
+        "p95": 13,
+        "max": 14,
+        "mean": 10.608
+      },
+      "render": {
+        "calls": 145,
+        "triangles": 1352802
+      }
+    },
+    {
+      "id": "morgan-human",
+      "realism": "off",
+      "repeat": 0,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 44,
+        "p50": 49,
+        "p95": 55,
+        "max": 63,
+        "mean": 49.667
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 30,
+        "p50": 32,
+        "p95": 38,
+        "max": 40,
+        "mean": 33.05
+      },
+      "render": {
+        "calls": 433,
+        "triangles": 4058402
+      }
+    },
+    {
+      "id": "morgan-human",
+      "realism": "low",
+      "repeat": 0,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 16,
+        "p50": 17,
+        "p95": 17,
+        "max": 17,
+        "mean": 16.667
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 2,
+        "p50": 3,
+        "p95": 5,
+        "max": 6,
+        "mean": 3.267
+      },
+      "render": {
+        "calls": 20,
+        "triangles": 168122
+      }
+    },
+    {
+      "id": "morgan-human",
+      "realism": "low",
+      "repeat": 0,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 17,
+        "p50": 20,
+        "p95": 23,
+        "max": 24,
+        "mean": 20.217
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 9,
+        "p50": 10,
+        "p95": 11,
+        "max": 13,
+        "mean": 10.2
+      },
+      "render": {
+        "calls": 153,
+        "triangles": 1344962
+      }
+    },
+    {
+      "id": "morgan-human",
+      "realism": "low",
+      "repeat": 0,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 45,
+        "p50": 48,
+        "p95": 52,
+        "max": 54,
+        "mean": 47.792
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 30,
+        "p50": 32,
+        "p95": 34,
+        "max": 36,
+        "mean": 31.867
+      },
+      "render": {
+        "calls": 457,
+        "triangles": 4034882
+      }
+    },
+    {
+      "id": "morgan-human",
+      "realism": "standard",
+      "repeat": 0,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 16,
+        "p50": 17,
+        "p95": 17,
+        "max": 17,
+        "mean": 16.667
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 1,
+        "p50": 3,
+        "p95": 5,
+        "max": 6,
+        "mean": 3.283
+      },
+      "render": {
+        "calls": 20,
+        "triangles": 168122
+      }
+    },
+    {
+      "id": "morgan-human",
+      "realism": "standard",
+      "repeat": 0,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 18,
+        "p50": 20,
+        "p95": 22,
+        "max": 23,
+        "mean": 20.067
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 9,
+        "p50": 10,
+        "p95": 11,
+        "max": 12,
+        "mean": 9.992
+      },
+      "render": {
+        "calls": 153,
+        "triangles": 1344962
+      }
+    },
+    {
+      "id": "morgan-human",
+      "realism": "standard",
+      "repeat": 0,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 45,
+        "p50": 48,
+        "p95": 52,
+        "max": 58,
+        "mean": 48.575
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 30,
+        "p50": 32,
+        "p95": 34,
+        "max": 39,
+        "mean": 32.258
+      },
+      "render": {
+        "calls": 457,
+        "triangles": 4034882
+      }
+    },
+    {
+      "id": "morgan-human",
+      "realism": "high",
+      "repeat": 0,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 16,
+        "p50": 17,
+        "p95": 17,
+        "max": 17,
+        "mean": 16.667
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 1,
+        "p50": 3,
+        "p95": 5,
+        "max": 6,
+        "mean": 3.217
+      },
+      "render": {
+        "calls": 20,
+        "triangles": 168122
+      }
+    },
+    {
+      "id": "morgan-human",
+      "realism": "high",
+      "repeat": 0,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 18,
+        "p50": 20,
+        "p95": 23,
+        "max": 24,
+        "mean": 20.467
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 9,
+        "p50": 10,
+        "p95": 12,
+        "max": 14,
+        "mean": 10.267
+      },
+      "render": {
+        "calls": 153,
+        "triangles": 1344962
+      }
+    },
+    {
+      "id": "morgan-human",
+      "realism": "high",
+      "repeat": 0,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 46,
+        "p50": 65,
+        "p95": 130,
+        "max": 324,
+        "mean": 75.233
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 31,
+        "p50": 44,
+        "p95": 75,
+        "max": 90,
+        "mean": 49.008
+      },
+      "render": {
+        "calls": 457,
+        "triangles": 4034882
+      }
+    },
+    {
+      "id": "imani-human",
+      "realism": "off",
+      "repeat": 0,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 16,
+        "p50": 17,
+        "p95": 17,
+        "max": 17,
+        "mean": 16.667
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 1,
+        "p50": 3,
+        "p95": 5,
+        "max": 8,
+        "mean": 3.242
+      },
+      "render": {
+        "calls": 19,
+        "triangles": 177090
+      }
+    },
+    {
+      "id": "imani-human",
+      "realism": "off",
+      "repeat": 0,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 18,
+        "p50": 20,
+        "p95": 23,
+        "max": 25,
+        "mean": 20.4
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 9,
+        "p50": 10,
+        "p95": 11,
+        "max": 13,
+        "mean": 10.1
+      },
+      "render": {
+        "calls": 145,
+        "triangles": 1416706
+      }
+    },
+    {
+      "id": "imani-human",
+      "realism": "off",
+      "repeat": 0,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 45,
+        "p50": 49,
+        "p95": 54,
+        "max": 59,
+        "mean": 49.108
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 30,
+        "p50": 32,
+        "p95": 36,
+        "max": 41,
+        "mean": 32.85
+      },
+      "render": {
+        "calls": 433,
+        "triangles": 4250114
+      }
+    },
+    {
+      "id": "imani-human",
+      "realism": "low",
+      "repeat": 0,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 16,
+        "p50": 17,
+        "p95": 17,
+        "max": 17,
+        "mean": 16.667
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 1,
+        "p50": 3,
+        "p95": 5,
+        "max": 5,
+        "mean": 3.2
+      },
+      "render": {
+        "calls": 20,
+        "triangles": 176110
+      }
+    },
+    {
+      "id": "imani-human",
+      "realism": "low",
+      "repeat": 0,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 18,
+        "p50": 20,
+        "p95": 23,
+        "max": 25,
+        "mean": 20.533
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 9,
+        "p50": 10,
+        "p95": 11,
+        "max": 12,
+        "mean": 10.092
+      },
+      "render": {
+        "calls": 153,
+        "triangles": 1408866
+      }
+    },
+    {
+      "id": "imani-human",
+      "realism": "low",
+      "repeat": 0,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 44,
+        "p50": 50,
+        "p95": 56,
+        "max": 62,
+        "mean": 50.292
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 31,
+        "p50": 34,
+        "p95": 37,
+        "max": 40,
+        "mean": 34.017
+      },
+      "render": {
+        "calls": 457,
+        "triangles": 4226594
+      }
+    },
+    {
+      "id": "imani-human",
+      "realism": "standard",
+      "repeat": 0,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 16,
+        "p50": 17,
+        "p95": 17,
+        "max": 17,
+        "mean": 16.675
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 1,
+        "p50": 3,
+        "p95": 5,
+        "max": 6,
+        "mean": 3.233
+      },
+      "render": {
+        "calls": 20,
+        "triangles": 176110
+      }
+    },
+    {
+      "id": "imani-human",
+      "realism": "standard",
+      "repeat": 0,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 18,
+        "p50": 20,
+        "p95": 23,
+        "max": 26,
+        "mean": 20.525
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 9,
+        "p50": 10,
+        "p95": 12,
+        "max": 15,
+        "mean": 10.225
+      },
+      "render": {
+        "calls": 153,
+        "triangles": 1408866
+      }
+    },
+    {
+      "id": "imani-human",
+      "realism": "standard",
+      "repeat": 0,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 48,
+        "p50": 53,
+        "p95": 66,
+        "max": 69,
+        "mean": 54.492
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 32,
+        "p50": 36,
+        "p95": 46,
+        "max": 48,
+        "mean": 36.825
+      },
+      "render": {
+        "calls": 457,
+        "triangles": 4226594
+      }
+    },
+    {
+      "id": "imani-human",
+      "realism": "high",
+      "repeat": 0,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 15,
+        "p50": 17,
+        "p95": 17,
+        "max": 17,
+        "mean": 16.667
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 1,
+        "p50": 2,
+        "p95": 7,
+        "max": 8,
+        "mean": 3.3
+      },
+      "render": {
+        "calls": 20,
+        "triangles": 176110
+      }
+    },
+    {
+      "id": "imani-human",
+      "realism": "high",
+      "repeat": 0,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 22,
+        "p50": 34,
+        "p95": 42,
+        "max": 44,
+        "mean": 33.617
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 14,
+        "p50": 21,
+        "p95": 26,
+        "max": 31,
+        "mean": 20.45
+      },
+      "render": {
+        "calls": 153,
+        "triangles": 1408866
+      }
+    },
+    {
+      "id": "imani-human",
+      "realism": "high",
+      "repeat": 0,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 48,
+        "p50": 55,
+        "p95": 83,
+        "max": 93,
+        "mean": 61.692
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 33,
+        "p50": 37,
+        "p95": 59,
+        "max": 71,
+        "mean": 43.008
+      },
+      "render": {
+        "calls": 457,
+        "triangles": 4226594
+      }
+    },
+    {
+      "id": "imani-human",
+      "realism": "high",
+      "repeat": 1,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 16,
+        "p50": 17,
+        "p95": 17,
+        "max": 17,
+        "mean": 16.667
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 2,
+        "p50": 3,
+        "p95": 5,
+        "max": 6,
+        "mean": 3.308
+      },
+      "render": {
+        "calls": 20,
+        "triangles": 176110
+      }
+    },
+    {
+      "id": "imani-human",
+      "realism": "high",
+      "repeat": 1,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 18,
+        "p50": 20,
+        "p95": 24,
+        "max": 25,
+        "mean": 20.808
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 9,
+        "p50": 10,
+        "p95": 12,
+        "max": 15,
+        "mean": 10.458
+      },
+      "render": {
+        "calls": 153,
+        "triangles": 1408866
+      }
+    },
+    {
+      "id": "imani-human",
+      "realism": "high",
+      "repeat": 1,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 46,
+        "p50": 50,
+        "p95": 53,
+        "max": 55,
+        "mean": 49.725
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 30,
+        "p50": 33,
+        "p95": 35,
+        "max": 40,
+        "mean": 33.3
+      },
+      "render": {
+        "calls": 457,
+        "triangles": 4226594
+      }
+    },
+    {
+      "id": "imani-human",
+      "realism": "standard",
+      "repeat": 1,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 16,
+        "p50": 17,
+        "p95": 17,
+        "max": 17,
+        "mean": 16.675
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 2,
+        "p50": 3,
+        "p95": 5,
+        "max": 6,
+        "mean": 3.417
+      },
+      "render": {
+        "calls": 20,
+        "triangles": 176110
+      }
+    },
+    {
+      "id": "imani-human",
+      "realism": "standard",
+      "repeat": 1,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 18,
+        "p50": 20,
+        "p95": 24,
+        "max": 30,
+        "mean": 20.708
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 9,
+        "p50": 10,
+        "p95": 12,
+        "max": 15,
+        "mean": 10.333
+      },
+      "render": {
+        "calls": 153,
+        "triangles": 1408866
+      }
+    },
+    {
+      "id": "imani-human",
+      "realism": "standard",
+      "repeat": 1,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 47,
+        "p50": 55,
+        "p95": 61,
+        "max": 64,
+        "mean": 54.742
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 31,
+        "p50": 37,
+        "p95": 42,
+        "max": 44,
+        "mean": 37.133
+      },
+      "render": {
+        "calls": 457,
+        "triangles": 4226594
+      }
+    },
+    {
+      "id": "imani-human",
+      "realism": "low",
+      "repeat": 1,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 16,
+        "p50": 17,
+        "p95": 17,
+        "max": 17,
+        "mean": 16.667
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 1,
+        "p50": 3,
+        "p95": 5,
+        "max": 6,
+        "mean": 3.192
+      },
+      "render": {
+        "calls": 20,
+        "triangles": 176110
+      }
+    },
+    {
+      "id": "imani-human",
+      "realism": "low",
+      "repeat": 1,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 17,
+        "p50": 20,
+        "p95": 22,
+        "max": 24,
+        "mean": 20.1
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 9,
+        "p50": 10,
+        "p95": 12,
+        "max": 12,
+        "mean": 10.058
+      },
+      "render": {
+        "calls": 153,
+        "triangles": 1408866
+      }
+    },
+    {
+      "id": "imani-human",
+      "realism": "low",
+      "repeat": 1,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 45,
+        "p50": 55,
+        "p95": 62,
+        "max": 66,
+        "mean": 54.5
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 30,
+        "p50": 38,
+        "p95": 44,
+        "max": 46,
+        "mean": 36.792
+      },
+      "render": {
+        "calls": 457,
+        "triangles": 4226594
+      }
+    },
+    {
+      "id": "imani-human",
+      "realism": "off",
+      "repeat": 1,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 16,
+        "p50": 17,
+        "p95": 17,
+        "max": 17,
+        "mean": 16.667
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 1,
+        "p50": 3,
+        "p95": 5,
+        "max": 6,
+        "mean": 3.375
+      },
+      "render": {
+        "calls": 19,
+        "triangles": 177090
+      }
+    },
+    {
+      "id": "imani-human",
+      "realism": "off",
+      "repeat": 1,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 18,
+        "p50": 20,
+        "p95": 23,
+        "max": 25,
+        "mean": 20.592
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 9,
+        "p50": 10,
+        "p95": 11,
+        "max": 13,
+        "mean": 10.125
+      },
+      "render": {
+        "calls": 145,
+        "triangles": 1416706
+      }
+    },
+    {
+      "id": "imani-human",
+      "realism": "off",
+      "repeat": 1,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 46,
+        "p50": 53,
+        "p95": 62,
+        "max": 66,
+        "mean": 53.508
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 31,
+        "p50": 36,
+        "p95": 40,
+        "max": 43,
+        "mean": 36.258
+      },
+      "render": {
+        "calls": 433,
+        "triangles": 4250114
+      }
+    },
+    {
+      "id": "morgan-human",
+      "realism": "high",
+      "repeat": 1,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 12,
+        "p50": 17,
+        "p95": 18,
+        "max": 21,
+        "mean": 16.667
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 1,
+        "p50": 4,
+        "p95": 9,
+        "max": 11,
+        "mean": 4.192
+      },
+      "render": {
+        "calls": 20,
+        "triangles": 168122
+      }
+    },
+    {
+      "id": "morgan-human",
+      "realism": "high",
+      "repeat": 1,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 17,
+        "p50": 20,
+        "p95": 22,
+        "max": 24,
+        "mean": 20.017
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 9,
+        "p50": 10,
+        "p95": 11,
+        "max": 13,
+        "mean": 10.217
+      },
+      "render": {
+        "calls": 153,
+        "triangles": 1344962
+      }
+    },
+    {
+      "id": "morgan-human",
+      "realism": "high",
+      "repeat": 1,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 44,
+        "p50": 54,
+        "p95": 63,
+        "max": 189,
+        "mean": 55.267
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 30,
+        "p50": 37,
+        "p95": 41,
+        "max": 43,
+        "mean": 36.183
+      },
+      "render": {
+        "calls": 457,
+        "triangles": 4034882
+      }
+    },
+    {
+      "id": "morgan-human",
+      "realism": "standard",
+      "repeat": 1,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 16,
+        "p50": 17,
+        "p95": 17,
+        "max": 17,
+        "mean": 16.675
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 2,
+        "p50": 3,
+        "p95": 6,
+        "max": 6,
+        "mean": 3.4
+      },
+      "render": {
+        "calls": 20,
+        "triangles": 168122
+      }
+    },
+    {
+      "id": "morgan-human",
+      "realism": "standard",
+      "repeat": 1,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 18,
+        "p50": 20,
+        "p95": 23,
+        "max": 27,
+        "mean": 20.192
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 9,
+        "p50": 10,
+        "p95": 11,
+        "max": 15,
+        "mean": 10.217
+      },
+      "render": {
+        "calls": 153,
+        "triangles": 1344962
+      }
+    },
+    {
+      "id": "morgan-human",
+      "realism": "standard",
+      "repeat": 1,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 46,
+        "p50": 56,
+        "p95": 63,
+        "max": 65,
+        "mean": 55.158
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 31,
+        "p50": 38,
+        "p95": 44,
+        "max": 46,
+        "mean": 37.525
+      },
+      "render": {
+        "calls": 457,
+        "triangles": 4034882
+      }
+    },
+    {
+      "id": "morgan-human",
+      "realism": "low",
+      "repeat": 1,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 16,
+        "p50": 17,
+        "p95": 17,
+        "max": 17,
+        "mean": 16.667
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 1,
+        "p50": 3,
+        "p95": 5,
+        "max": 6,
+        "mean": 3.442
+      },
+      "render": {
+        "calls": 20,
+        "triangles": 168122
+      }
+    },
+    {
+      "id": "morgan-human",
+      "realism": "low",
+      "repeat": 1,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 18,
+        "p50": 20,
+        "p95": 23,
+        "max": 24,
+        "mean": 20.175
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 9,
+        "p50": 10,
+        "p95": 11,
+        "max": 13,
+        "mean": 10.192
+      },
+      "render": {
+        "calls": 153,
+        "triangles": 1344962
+      }
+    },
+    {
+      "id": "morgan-human",
+      "realism": "low",
+      "repeat": 1,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 45,
+        "p50": 54,
+        "p95": 58,
+        "max": 61,
+        "mean": 52.8
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 30,
+        "p50": 37,
+        "p95": 40,
+        "max": 43,
+        "mean": 36.075
+      },
+      "render": {
+        "calls": 457,
+        "triangles": 4034882
+      }
+    },
+    {
+      "id": "morgan-human",
+      "realism": "off",
+      "repeat": 1,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 16,
+        "p50": 17,
+        "p95": 17,
+        "max": 17,
+        "mean": 16.667
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 1,
+        "p50": 3,
+        "p95": 6,
+        "max": 7,
+        "mean": 3.408
+      },
+      "render": {
+        "calls": 19,
+        "triangles": 169102
+      }
+    },
+    {
+      "id": "morgan-human",
+      "realism": "off",
+      "repeat": 1,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 17,
+        "p50": 20,
+        "p95": 22,
+        "max": 24,
+        "mean": 19.775
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 9,
+        "p50": 10,
+        "p95": 11,
+        "max": 12,
+        "mean": 9.8
+      },
+      "render": {
+        "calls": 145,
+        "triangles": 1352802
+      }
+    },
+    {
+      "id": "morgan-human",
+      "realism": "off",
+      "repeat": 1,
+      "frameIntervalMs": {
+        "count": 120,
+        "min": 45,
+        "p50": 52,
+        "p95": 57,
+        "max": 61,
+        "mean": 51.508
+      },
+      "cpuMs": {
+        "count": 120,
+        "min": 31,
+        "p50": 36,
+        "p95": 39,
+        "max": 40,
+        "mean": 35.258
+      },
+      "render": {
+        "calls": 433,
+        "triangles": 4058402
+      }
+    }
+  ]
+}

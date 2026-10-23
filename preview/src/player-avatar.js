@@ -28,7 +28,8 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     return owner&&crewLocal&&!current?[...locals,crewLocal]:locals;
   };
   const carriage=createParkedCarriage({scene,walking,getWorld,getLocals:crewLocals,getConversation,requestExit:requestVehicleExit,requestChauffeur,reducedMotion});
-  const panel = document.createElement('section');panel.className = 'player-controls';panel.setAttribute('aria-label', 'Your character');
+  // Hidden until the walk has a pose (update() below): shown first, it flashed for a frame at sign-in.
+  const panel = document.createElement('section');panel.className = 'player-controls';panel.hidden = true;panel.setAttribute('aria-label', 'Your character');
   panel.innerHTML = `<header class="player-identity">
     <div class="player-portrait"><img src="/assets/characters/jevica-portrait.png" alt="" width="72" height="88" ${owner?'':'hidden'}><span class="player-monogram" ${owner?'hidden':''} aria-hidden="true">${owner?'J':'S'}</span></div>
     <div><div class="player-controls-title">Your character</div><h2 id="player-name">${owner?'Jevica':'Sable'}</h2><span id="player-role">${owner?'Rose enchantress':'City storyteller'}</span></div>
