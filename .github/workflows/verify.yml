@@ -195,6 +195,8 @@ jobs:
             journeys: garden-campus-office garden-campus-suite
           - id: campus-traversal
             journeys: garden-campus-traversal
+          - id: commons
+            journeys: east-garden-commons
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

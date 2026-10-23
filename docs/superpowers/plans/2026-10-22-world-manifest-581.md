@@ -2,6 +2,10 @@
 
 ## Current status
 
+Delivery was subsequently authorized and the signed manifest checkpoint is `e8588a20871ba9c8fef2bd9f4402a41c2a772cdc`. The expanded user request is now tracked in [the Phase 1 review](2026-10-23-phase1-review.md), which integrates the published Commons work in this separate checkout. The local-only completion below is historical evidence for the standalone manifest, not acceptance of combined Phase 1.
+
+## Standalone implementation checkpoint before delivery authorization
+
 The requested manifest implementation and local verification are complete in `feat/world-manifest-581-20261022`. Changes remain uncommitted in `/Users/buns/Documents/GitHub/BunsDev/river-oaks-world-manifest-581`; the other owner's expansion checkout is preserved. All 49 focused checks passed. Core passed all 11 phases; the final full gate passed all 18 phases, including 993 Redis tests with zero skips, 16 experience journeys, 25 shared journeys across five fixture modes, and 19 screening checks. Reviewed source/test hashes match `.runtime/world-manifest/source-hashes-reviewed.json`.
 
 Final receipts are `.runtime/world-manifest/core-final.json`, `full-final.json`, `focused-stable-ids.log`, and the retained reports/screenshots in the same evidence directory. The original full attempt's queue timeout remains in `full-first.json`; it is not relabelled as passed. Generated tracked experience/shared reports were retained there before restoring their historical repository versions. Full session 48215 exited 0 and released its browser lock; task-owned Redis session 29505 / PID 55319 exited cleanly after verification. No verification process remains pending.

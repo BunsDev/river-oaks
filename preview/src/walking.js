@@ -1,3 +1,4 @@
+import { commonsAllows, insideRect } from '../../shared/east-garden-commons-layout.js';
 import { terrainHeight } from './geometry.js';
 import { groundSurfaceHeight } from './world-surface.js';
 import { storeRoomsFor, interiorLevelRoomsFor, roomAt, roomBlocked } from './store-rooms.js';
@@ -84,6 +85,7 @@ export function createWalkingEnvironment(world, placedObjects = [], levelId = nu
   const propAt = (x, y, z, radius, halfHeight = 0) => propBox && x > propBox.minX && x < propBox.maxX && z > propBox.minZ && z < propBox.maxZ
     && props.some(p => (x - p.x) ** 2 + (z - p.z) ** 2 < (p.radius + radius) ** 2 && y - halfHeight < groundAt(p.x, p.z) + p.height);
   const baseIsFree = (x, z) => {
+    if(!commonsAllows(world.eastGardenCommons,x,-z,RADIUS))return false;
     if (x < west + RADIUS || x > east - RADIUS || z < -north + RADIUS || z > -south - RADIUS) return false;
     const room = roomFor(x, z, RADIUS);
     if (levelId !== null) return Boolean(room && !roomBlocked(room, x, -z, RADIUS));
@@ -94,6 +96,7 @@ export function createWalkingEnvironment(world, placedObjects = [], levelId = nu
   // samples, disk/polygon intersection also catches obstacles inside the disk.
   const isAreaFree=(x,z,radius)=>{
     const margin=radius+RADIUS;
+    if(!commonsAllows(world.eastGardenCommons,x,-z,margin))return false;
     if(x<west+margin||x>east-margin||z<-north+margin||z>-south-margin)return false;
     const room=roomFor(x,z,margin);
     if(levelId!==null)return Boolean(room&&!roomBlocked(room,x,-z,margin));
@@ -109,7 +112,11 @@ export function createWalkingEnvironment(world, placedObjects = [], levelId = nu
     const y=groundAt(x,z)+.9;
     return !propAt(x,y,z,RADIUS,.9) && !placedObjects.some(object=>object.contains(x,y,z,RADIUS,.9));
   };
+  const commons=world.eastGardenCommons;
+  const commonsFlight=commons?[...commons.solids,{rect:commons.pavilion.rect,height:commons.pavilion.clearHeight+commons.pavilion.roofThickness}]:[];
   const canFly = (x, altitude, z) => {
+    if(!commonsAllows(commons,x,-z,flightRadius))return false;
+    if(commonsFlight.some(solid=>insideRect(solid.rect,x,-z,-flightRadius)&&altitude<=commons.ground+solid.height+3.1))return false;
     if(levelId!==null)return false;
     if(x<west+flightRadius || x>east-flightRadius || z<-north+flightRadius || z>-south-flightRadius) return false;
     if(propAt(x,altitude,z,flightRadius) || placedObjects.some(object=>object.contains(x,altitude,z,flightRadius)))return false;
@@ -126,7 +133,8 @@ export function createWalkingEnvironment(world, placedObjects = [], levelId = nu
     }
     return true;
   };
-  return { levelId, groundAt, isFree, isAreaFree, canFly, flightCeiling, hasSightLine, roomAt: (x, z) => roomFor(x, z, 0), rooms, bounds: [west, -north, east, -south], spawn: world.walkSpawn ?? [(west + east) / 2, (south + north) / 2, 0] };
+  // Durable creations stay on geography retained by the blockout rollback.
+  return { buildBounds: world.eastGardenCommons?.districtBounds, levelId, groundAt, isFree, isAreaFree, canFly, flightCeiling, hasSightLine, roomAt: (x, z) => roomFor(x, z, 0), rooms, bounds: [west, -north, east, -south], spawn: world.walkSpawn ?? [(west + east) / 2, (south + north) / 2, 0] };
 }
 
 export function createWalkingState(environment, position = environment.spawn, yaw = 0) {

@@ -187,3 +187,16 @@ test('location and entry identities survive registry reordering', () => {
   const district = read('district');
   assert.equal(validateDistrictLocation(validated, district), district);
 });
+
+test('authored Commons partitions the original reservation without overlaps or total-area growth', () => {
+  const value=validateWorldManifest(read('world-manifest')), district=value.locations.find(location=>location.id==='river-oaks-district');
+  const commons=value.locations.find(location=>location.id==='east-garden-commons');
+  assert.equal(commons.status,'authored');
+  assert.equal(commons.content_revision,'east-garden-commons-blockout-1');
+  assert.equal(commons.entries[0].position_m[0],district.bounds_m[2]);
+  assert.equal(commons.entries[0].position_m[1],-1335);
+  const area=location=>{const [w,s,e,n]=locationWorldBounds(location);return (e-w)*(n-s);};
+  assert.ok(Math.abs(value.locations.reduce((sum,location)=>sum+area(location),0)-area(district)*3)<1e-8);
+  assert.equal(value.locations.filter(location=>location.status==='reserved').length,3);
+  assert.ok(value.locations.filter(location=>location.status==='reserved').every(location=>location.entries.length===0));
+});

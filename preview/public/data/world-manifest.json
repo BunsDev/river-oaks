@@ -35,16 +35,50 @@
         }
       ],
       "adjacent": [
-        "east-garden-reserve"
+        "east-garden-commons",
+        "east-garden-reserve-north",
+        "east-garden-reserve-south"
+      ]
+    },
+    {
+      "id": "east-garden-commons",
+      "status": "authored",
+      "bounds_m": [
+        -2666.336078522973,
+        -1375,
+        -2551.336078522973,
+        -1295
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "content_revision": "east-garden-commons-blockout-1",
+      "entries": [
+        {
+          "id": "district-promenade",
+          "position_m": [
+            -2666.336078522973,
+            -1335,
+            18.37222868285045
+          ]
+        }
+      ],
+      "adjacent": [
+        "river-oaks-district",
+        "east-garden-reserve",
+        "east-garden-reserve-north",
+        "east-garden-reserve-south"
       ]
     },
     {
       "id": "east-garden-reserve",
       "status": "reserved",
       "bounds_m": [
-        -2666.336078522973,
+        -2551.336078522973,
         -1457.6085898216527,
-        -2412.392038129047,
+        -2158.4479977351207,
         -1167.1779702985634
       ],
       "translation_m": [
@@ -52,10 +86,56 @@
         0,
         0
       ],
-      "content_revision": "empty-v1",
+      "content_revision": "empty-v2",
       "entries": [],
       "adjacent": [
-        "river-oaks-district"
+        "east-garden-commons",
+        "east-garden-reserve-north",
+        "east-garden-reserve-south"
+      ]
+    },
+    {
+      "id": "east-garden-reserve-north",
+      "status": "reserved",
+      "bounds_m": [
+        -2666.336078522973,
+        -1295,
+        -2551.336078522973,
+        -1167.1779702985634
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "content_revision": "empty-v2",
+      "entries": [],
+      "adjacent": [
+        "river-oaks-district",
+        "east-garden-commons",
+        "east-garden-reserve"
+      ]
+    },
+    {
+      "id": "east-garden-reserve-south",
+      "status": "reserved",
+      "bounds_m": [
+        -2666.336078522973,
+        -1457.6085898216527,
+        -2551.336078522973,
+        -1375
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "content_revision": "empty-v2",
+      "entries": [],
+      "adjacent": [
+        "river-oaks-district",
+        "east-garden-commons",
+        "east-garden-reserve"
       ]
     }
   ]
