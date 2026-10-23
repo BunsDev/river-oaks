@@ -67,6 +67,8 @@ const reportSession = () => ({ signedIn: Boolean(session?.authenticated), csrfTo
 window.addEventListener('river-oaks:report-problem', () => { void import('./debug-report-ui.js').then(({ openReportDialog }) => openReportDialog({ getSession: reportSession, dismissOnOutsideClick })); });
 const reportProblem = () => window.dispatchEvent(new CustomEvent('river-oaks:report-problem'));
 for (const id of ['#access-report', '#access-gate-report']) $(id).addEventListener('click', reportProblem);
+// A sign-in redirect returns to this tab: open it on the splash, not the sign-in art (first-paint.js).
+$('.access-github').addEventListener('click', () => { try { sessionStorage.setItem('river-oaks-signing-in', '1'); } catch { /* Storage may be disabled. */ } });
 $('#access-reports').addEventListener('click', () => { void import('./debug-report-ui.js').then(({ openReportInbox }) => openReportInbox({ dismissOnOutsideClick })); });
 
 async function api(path, options = {}) {
@@ -137,6 +139,9 @@ async function checkAccess() {
       // The game's stylesheets arrive with main.js. The page is laid out underneath, but the
       // gate stays over it until main.js starts, so the district never shows as unstyled HTML.
       message.textContent = 'Opening the district…';
+      // A quiet splash in the visitor's theme covers the game's load, so signing in on this
+      // page never shows the dark sign-in card and then the game flash in turn.
+      document.documentElement.dataset.returning = '';
       try { localStorage.setItem('river-oaks-entered', '1'); } catch { /* Storage may be disabled. */ }
       document.addEventListener('river-oaks:styled', () => { gate.hidden = true; endSplash(); }, { once: true });
       document.body.classList.add('access-granted');
