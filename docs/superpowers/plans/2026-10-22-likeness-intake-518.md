@@ -1,6 +1,6 @@
 # Likeness intake #518 implementation ledger
 
-**Goal:** Deliver the decision package, fixture-only quarantine, and adversarial/production-gate proof in three PR increments; no merge, deployment, real data or provider calls.
+**Goal:** Deliver the decision package, fixture-only quarantine, and adversarial/production-gate proof in three PR increments, followed by user-authorized guarded merges; no deployment, real data or provider calls.
 
 **Architecture:** A server-only in-memory harness admits only a deterministic synthetic GLB digest. Strict envelope validation reuses character-assets-audit and character-compatibility; moderation, generation fencing and signed allowlisted revisions control release. Existing routes and shared identity stay unchanged.
 
@@ -14,9 +14,9 @@ Owned files: `docs/character-likeness-intake.md`, this ledger, new `server/chara
 
 ## Increments and checks
 
-- [ ] 1. Decision package: threat model, consent/age/rights, storage lifecycle, moderation, public vendor terms and Decisions for Val. Review exact Markdown and links, run baseline focused checks and core gate, signed commit, push, open docs PR and one evidence comment.
-- [ ] 2. Quarantine plus tests: deterministic synthetic fixture builder; strict bounded GLB validator; server factory with owner operations, reviewer capability and signed allowlist. Test admission and byte/size/polygon/texture/bone/URL/script/shader/scene rejection before implementation, then focused and core checks. Signed commit, push, separate stacked PR and one evidence comment.
-- [ ] 3. Adversarial plus gate: foreign owner, revoke/delete during async validation, duplicate publication, tampered signature, missing-asset fallback and existing public identity/peer boundary tests. Explicit default-off and production refusal tests. Focused, core, then full with isolated Redis under shared browser lock. Signed commit, push, separate stacked PR and one evidence comment.
+- [x] 1. Decision package: threat model, consent/age/rights, storage lifecycle, moderation, public vendor terms and Decisions for Val. Review exact Markdown and links, run baseline focused checks and core gate, signed commit, push, open docs PR and one evidence comment.
+- [x] 2. Quarantine plus tests: deterministic synthetic fixture builder; strict bounded GLB validator; server factory with owner operations, reviewer capability and signed allowlist. Test admission and byte/size/polygon/texture/bone/URL/script/shader/scene rejection before implementation, then focused and core checks. Signed commit, push, separate stacked PR and one evidence comment.
+- [x] 3. Adversarial plus gate: foreign owner, revoke/delete during async validation, duplicate publication, tampered signature, missing-asset fallback and existing public identity/peer boundary tests. Explicit default-off and production refusal tests. Focused, core, then full with isolated Redis under shared browser lock. Signed commit, push, separate stacked PR and one evidence comment.
 
 The prototype uses no real likeness assets, routes or providers. Public terms browsing is documentation research only. No skip counts as evidence. Full local checks do not prove hosted, physical-device, moderation or legal acceptance.
 
@@ -37,3 +37,41 @@ Ruling: execute the supplied three-increment brief directly and record unresolve
 Implementation checkpoint: 17 quarantine checks passed, then 32 focused/adversarial checks passed. An additional idle-expiry test failed because expiry was only swept on access; added an unref'd per-record expiry timer, cleared on erase. Final focused checkpoint: 33 passed, zero skips (`.runtime/likeness-518/focused-expiry.log`). Initial missing-module and idle-expiry failures retained. Independent read-only review requested through the code-review skill; findings pending. No commits, PRs or evidence comments yet.
 
 Independent review completed: no blocking findings; reviewer independently ran both new suites, 33 passed with no skips. Docs increment is eligible for a draft PR based on the passing baseline checks and document review; core/full remain pending and will be reported as such. Ruling: draft delivery may precede the broad gate because it does not claim acceptance; no merge is authorized.
+
+Delivery checkpoint: docs signed commit `1c76017f44f91fb4bff30b42348b9f707b1e0d41` pushed and draft PR [#590](https://github.com/BunsDev/river-oaks/pull/590) opened. GraphQL PR creation hit quota exhaustion; REST creation succeeded. Quarantine signed commit `9431752c` created; its push/PR is in progress. Final adversarial suite includes proactive idle expiry (33 total focused tests). No merge or deployment performed. Core/full and one evidence comment per increment remain pending.
+
+Verification checkpoint: first core run failed in unchanged `preview/tests/office-penthouse-furnishings.test.js:200`, idle-slice duration 51.5 ms against its existing <40 ms assertion. Tooling passed; preview 3,754 passed, one failed, one skipped; all later core stages were not run. Preserved receipt/log: `.runtime/likeness-518/core-first.{json,log}`. Unchanged focused rerun of the complete office suite passed 15/15 (`office-timing-isolated.log`), consistent with load sensitivity but not proof of root cause. No threshold or source change made. A fresh core followed by full is queued through the documented outer browser lock; the sequence stops on any failure and preserves both receipts. Isolated Redis is owned session 71255, PID 49846, port 16418. Full doctor passed with that service; stop it only after final verification.
+
+Draft PRs: [#590](https://github.com/BunsDev/river-oaks/pull/590) docs, [#591](https://github.com/BunsDev/river-oaks/pull/591) quarantine, [#592](https://github.com/BunsDev/river-oaks/pull/592) adversarial/gate. All three commit signatures verified by GitHub. The working implementation is complete for review, but broad acceptance and final evidence comments remain open. Goal remains active.
+
+One evidence comment per increment published; update these in place after gates finish: PR590 comment `6355689375`, PR591 comment `6355689561`, PR592 comment `6355689782`. PR bodies now disclose the first failure and pending serialized retry. Live verification wrapper session `36157` initially queued behind 13 runs; log `.runtime/likeness-518/verification-queue.log`. It runs core then full only if core succeeds and retains `core-serialized`/`full-serialized` logs and receipts. Do not duplicate or bypass the queue.
+
+
+Conformance audit while the verification queue remains live: the synthetic WebP reports 1×1 dimensions through macOS `sips`, but the GLB lacked the required WebP extension declaration, UVs and POSITION min/max. Khronos requires `EXT_texture_webp` in both used and required declarations when there is no PNG/JPEG fallback. Added the exact extension mapping, UV accessor and position bounds; validator admits only this named extension. New conformance regressions first failed, then the full focused suite passed 37/37 with zero skips (`glb-conformance-red.log`, `glb-conformance-green.log`). This is fixture-format correction, not rendering or arbitrary-upload acceptance. The existing queued core/full wrapper will run the corrected candidate; no duplicate gate started. Independent follow-up review requested.
+
+Follow-up review completed on the conformance correction: no concrete findings; reviewer independently repeated all 37 focused tests with zero failures/skips. The exact-digest boundary and shader/script rejection remain intact.
+
+
+## Historical handoff: full gate blocked
+
+Local core passed on clean combined candidate `30107d94b68cbde199d51b1d10bac467952d43e9` with a local Node `--test-concurrency=2` launcher; source and assertions were unchanged. The original two office timing failures are preserved. Full verification remains blocked before profile execution: four normal shared-queue attempts failed in queue metadata locking (the fourth with ENOENT removing the lock). Logs are preserved in `.runtime/likeness-518/full-bounded*.log`. No full pass is claimed. Restoring stable shared-queue operation is the next prerequisite; the lock was never bypassed. See the existing evidence comment for counts and exclusions.
+
+Core receipt `core-bounded.json` records all 11 stages passed: tooling 201, preview 3,755 (one skip), server 771 (213 skips without Redis), desktop 115 (three Windows PowerShell skips), Python 149. These skips provide no acceptance evidence. Hosted checks previously passed on each recorded signed PR head; they do not replace local full. Final implementation head remains `30107d94b68cbde199d51b1d10bac467952d43e9`; this follow-up updates only evidence.
+
+All three draft PRs and their single evidence comments exist. Implementation and focused review are complete; the increment checkboxes remain open because the promised full gate is unproven. Next action: restore stable shared-queue operation, start owned isolated Redis, rerun full through the normal queue with the bounded Node launcher, inspect receipts and skips, and update this ledger and the existing comments. No merge, deployment, real data or provider calls occurred.
+
+## Current delivery: full gate passed; guarded merges pending
+
+The user subsequently authorized frequent commit, push and merge to main. Full verification passed all 18 stages on clean `b047a7ad124aa34785ccfb0e426fdc9142691e87`, from 2026-10-23T06:29:49.058Z to 07:09:04.311Z. Command: `PATH="$PWD/.runtime/likeness-518/bounded-bin:$PATH" REDIS_URL=redis://127.0.0.1:16418 RIVER_OAKS_BROWSER_LOCK_POLL=31000 node scripts/browser-lock.mjs likeness-518-full-resume -- pnpm run verify full`. The local launcher limits Node test workers to two without changing source or assertions. Receipt/log: `.runtime/likeness-518/full-resume.{json,log}`; generated experience/shared reports preserved alongside them. The normal shared queue was honored; after the session handle disappeared, the original PID78332 was monitored without duplication until completion.
+
+Results: tooling 201/201, preview 3755 passed with one existing skip, server with isolated Redis 1026/1026 and zero skips, desktop 115 passed with three Windows PowerShell skips, Python 149 passed (66 warnings); dependency audit, build, lint, format, demo, expected demo refusal, secret scans, security browser, reflections, all 16 experience journeys, shared browser suite and IPIC screening passed. Preview glazing and Windows-only skips are excluded from acceptance. Local browser evidence does not establish physical-device, production, real-user likeness, legal or moderation acceptance. Original timing and queue failures remain preserved.
+
+All 12 hosted checks passed on b047a7ad and on the subsequent ledger-only head 121bb6ea. Guarded delivery then proceeded serially as recorded below.
+
+## Guarded delivery checkpoint
+
+PR [#590](https://github.com/BunsDev/river-oaks/pull/590) merged through the guard as `70e1365f65bc7879052fe58006081b5a2bbf882a`, reviewed head `57ac5ff7833a8cf48afea179e8e1234dfb6c203a`, tree `cd788437c8ffca9252217aebe3429c9d1c9001e4`; GitHub verified the merge signature. Its existing evidence comment records delivery.
+
+PR [#591](https://github.com/BunsDev/river-oaks/pull/591) merged through the guard at 2026-10-23T10:19:24Z as `f21c9c8698e4697b3e9e0579e106f7387fe57354`, reviewed head `d41daf42598eda6bc5de6cdcbd6ceaed7b9004c0`, tree `7a33878099552703319b9232bc42178b843ed101`; GitHub verified the merge signature. Landing session 89333 exited successfully after updating from main and waiting for hosted verification.
+
+Remaining delivery: retarget PR592 to main, push this evidence update, land through the same guard, and record final exact-head checks and merge proof in its existing evidence comment and the live task register. Implementation and local verification are complete; the final merge remains pending. No deployment, real likeness data or provider calls occurred.

@@ -20,21 +20,23 @@ export function makeLikenessFixture() {
   const indices = view(Buffer.from([0,1,2]));
   const binds = view(floats(names.flatMap(()=>[1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1])));
   // Embedded constant 1x1 WebP, no source image or person.
+  const uv = view(floats([0,0, 1,0, 0,1]));
   const texture = view(Buffer.from('UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEADsD+JaQAA3AAAAAA','base64'));
   const gltf = {
-    asset: {version:'2.0'}, scene:0, scenes:[{nodes:[0]}],
+    asset: {version:'2.0'}, extensionsUsed:['EXT_texture_webp'], extensionsRequired:['EXT_texture_webp'], scene:0, scenes:[{nodes:[0]}],
     nodes:[...names.map((name,i)=>({name,...(i===0?{children:Array.from({length:names.length},(_,j)=>j+1)}:{})})),{mesh:0,skin:0}],
     skins:[{joints:names.map((_,i)=>i),inverseBindMatrices:4}],
-    meshes:[{primitives:[{attributes:{POSITION:0,JOINTS_0:1,WEIGHTS_0:2},indices:3,material:0}]}],
+    meshes:[{primitives:[{attributes:{POSITION:0,JOINTS_0:1,WEIGHTS_0:2,TEXCOORD_0:5},indices:3,material:0}]}],
     materials:[{pbrMetallicRoughness:{baseColorTexture:{index:0}}}],
-    images:[{bufferView:texture,mimeType:'image/webp'}], textures:[{source:0}],
+    images:[{bufferView:texture,mimeType:'image/webp'}], textures:[{extensions:{EXT_texture_webp:{source:0}}}],
     buffers:[{byteLength:offset}], bufferViews,
     accessors:[
-      {bufferView:positions,componentType:5126,count:3,type:'VEC3'},
+      {bufferView:positions,componentType:5126,count:3,type:'VEC3',min:[0,0,0],max:[1,1.5,0]},
       {bufferView:joints,componentType:5121,count:3,type:'VEC4'},
       {bufferView:weights,componentType:5126,count:3,type:'VEC4'},
       {bufferView:indices,componentType:5121,count:3,type:'SCALAR'},
       {bufferView:binds,componentType:5126,count:53,type:'MAT4'},
+      {bufferView:uv,componentType:5126,count:3,type:'VEC2'},
     ],
   };
   const json=Buffer.from(JSON.stringify(gltf)),padded=Buffer.alloc(Math.ceil(json.length/4)*4,32);
