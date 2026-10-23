@@ -142,6 +142,13 @@ refused over HTTP while an untampered control save succeeds; a socket selection
 with a `quality` field is refused while the untampered command is accepted; and
 the peer's tier survives reconnect with identity intact.
 
+With #517's realistic looks, the same journey wears Morgan and Imani: each viewer
+applies the material tier its own graphics choice implies (Sharpest `high`,
+Smoothest `standard`) to the other's exact revision, and re-tiering sends nothing.
+Peer transport faults on the realistic definition fall back to its authored base
+at the viewer's own tier and recover the exact revision on the same connection.
+`RIVER_OAKS_SHARED_BROWSER=webkit` runs the shared journeys in Playwright WebKit.
+
 ## Components and delivery order
 1. #440: strict baseline contract, migration and actual human rig fixtures;
    measure and inspect rendered baseline, then review this decision in a PR.
@@ -776,6 +783,9 @@ The server enables new Studio mutations and custom equips only when
 `RIVER_OAKS_CHARACTER_STUDIO=1`. The browser exposes the editor only when
 `VITE_CHARACTER_STUDIO=true`; changing this build-time value requires a new client
 build. Missing, false or unrecognized values leave the respective feature off.
+Development (`pnpm run dev`) is the exception: the editor always shows unless
+`VITE_CHARACTER_STUDIO=false`, and the development town takes saves unless
+`RIVER_OAKS_CHARACTER_STUDIO` is set (`0` pauses it). Builds and deployments are unchanged.
 Fixture opt-ins are test configuration, never authentication exceptions.
 
 Pause new server writes first if a release must be stopped. Previously selected

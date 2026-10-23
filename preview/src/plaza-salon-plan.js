@@ -55,6 +55,10 @@ export function plazaSalonPlan(world) {
   if (world?.scene !== 'district' || !world.stores?.some(store => store.id === DIOR)) return null;
   const round = { id: 'round', x: -2797.0, north: -1299.2, radius: 0.8 };
   const chess = [{ id: 'chess-west', x: -2793.0, north: -1301.4 }, { id: 'chess-east', x: -2786.4, north: -1300.4 }];
+  if(world.eastGardenCommons){
+    const {rect,tableId}=world.eastGardenCommons.activity;
+    chess.push({id:tableId,x:(rect[0]+rect[2])/2,north:(rect[1]+rect[3])/2});
+  }
   // A walnut backgammon table in the open square between the grove's middle trunks.
   const backgammon = { id: 'backgammon', x: -2789.6, north: -1297.4 };
   // A long linen-topped table for wine pong, east–west between the café and the north
@@ -145,7 +149,7 @@ export function plazaSalonSeats(world) {
       approach: along([x, north], facing, 0.62) });
   });
   for (const chair of plan.chairs) seats.push({ buildId: `bench:plaza-salon-${chair.id}`, slot: 0, kind: 'bench',
-    title: chair.id.startsWith('chess') ? 'Chess table' : chair.id.startsWith('backgammon') ? 'Backgammon table' : chair.id.startsWith('grove') ? 'Grove table' : 'Café armchair', x: chair.x, north: chair.north, heading: chair.heading, height: 0.48,
+    title: chair.id.startsWith('chess-commons') ? 'Commons game table' : chair.id.startsWith('chess') ? 'Chess table' : chair.id.startsWith('backgammon') ? 'Backgammon table' : chair.id.startsWith('grove') ? 'Grove table' : 'Café armchair', x: chair.x, north: chair.north, heading: chair.heading, height: 0.48,
     // Chairs face their table, so people step in from behind.
     approach: along([chair.x, chair.north], chair.heading, -0.82) });
   // Residents resting at Dior may take a plaza seat (resident-life groups seats by store).
@@ -184,7 +188,7 @@ export function chessCell(square, whiteChair = 0) {
 export const chessCellOffset = ({ i, j }) => [(i - 3.5) * CHESS_CELL_M, (3.5 - j) * CHESS_CELL_M];
 // The chess table and chair behind a plaza seat ('bench:plaza-salon-chess-west-1'), or null.
 export function chessSeat(buildId) {
-  const match = /^bench:plaza-salon-(chess-(?:west|east))-([01])$/.exec(buildId ?? '');
+  const match = /^bench:plaza-salon-(chess-(?:west|east|commons))-([01])$/.exec(buildId ?? '');
   return match ? { tableId: match[1], chair: Number(match[2]) } : null;
 }
 // A cell's centre as [east, north]. The slab turns a quarter (Three.js yaw π/2),

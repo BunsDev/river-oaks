@@ -865,13 +865,13 @@ test('checkpoint diagnostics preserve rejection and report only fixed validation
   assert.doesNotMatch(JSON.stringify(reasons),/private-/);
 });
 
-test('a flying bubble may cover twice its old 7 m/s, and no more', () => {
+test('a flying bubble may cover its 21 m/s fast speed (1.5x the old 14), and no more', () => {
   let time = 1000;
   const world = createSharedWorld(data, { now: () => time }), owner = 'user_01M40Y914S1H4EJCEHH91DKTAY';
   world.join({ userId: owner, name: 'Jevica' });
   const [east, north, ground] = world.snapshot().players[0].position, pose = (n, altitude) => world.command(owner, { type: 'pose', position: [east, n, ground], yaw: 0, altitude });
   time += 1000; assert.equal(pose(north, 3).ok, true, 'takes off');
-  time += 1000; assert.equal(pose(north + 14, 3).ok, true, 'a second at the bubble\'s fast speed');
+  time += 1000; assert.equal(pose(north + 21, 3).ok, true, 'a second at the bubble\'s fast speed');
   time += 1000; assert.equal(pose(north - .7, 3).error, 'movement_too_fast', 'faster than the bubble flies');
-  assert.equal(pose(north + 7, 3).ok, true, 'the refused pose moved nothing');
+  assert.equal(pose(north + 14, 3).ok, true, 'the refused pose moved nothing');
 });

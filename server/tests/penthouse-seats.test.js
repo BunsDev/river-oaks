@@ -170,7 +170,7 @@ test('checkpoints keep each claim at the plan\'s exact pose; older checkpoints c
   assert.equal(f.sit(owner, 'desk-a1-chair').ok, true);
   assert.equal(f.sit('guest', 'desk-a2-chair').ok, true);
   const saved = f.world.checkpoint();
-  assert.equal(saved.version, 13);
+  assert.equal(saved.version, 15);
   const restored = setup({ restore: saved });
   assert.deepEqual([restored.visit(owner).seat, restored.visit(owner).position], [{ id: 'desk-a1-chair' }, seat('desk-a1-chair').position]);
   assert.deepEqual(restored.visit('guest').seat, { id: 'desk-a2-chair' });
