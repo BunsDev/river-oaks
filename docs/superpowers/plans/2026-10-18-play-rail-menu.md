@@ -123,13 +123,24 @@ Fix: `salon-guide` selects `#play-tab-guide` before the entry. `game-hud` expect
 - `salon-guide` passes both dock steps. It still fails main's 390 px check ("How to play is a 36 px medallion"): #521 gave `.salon-guide-open` a 44 px minimum touch target. That is main's, not this PR's.
 - A throwaway copy with only that check skipped passed 21 checks, both guide entries included, and was deleted.
 
+Which edited journeys does hosted CI actually run? The shared shards (`shared-runner.js` modes `development`, `required`, `development-publish`, `creator`) run `multiplayer-dev`, `rail-shared`, `shared-seating`, `multiplayer-exclusivity`, `vehicle-exit`, `world-publish` and `creator-objects`. `cycling-leaderboard` and the carriage variants are in the local experience suite only. Run at `8bac1f81`:
+
+| Journey | `8bac1f81` | main `5f3f5dc2` |
+| --- | --- | --- |
+| `cycling-leaderboard` | passed (8) | — |
+| `carriage-companion`, `carriage-driver` | passed (10 each) | — |
+| `carriage` | passed (21) | — |
+| `carriage-mobile` | touch pad never drives the carriage (10 s wait, line 19) | same step (line 18) |
+| `movement-review` | companion never switches to walking (60 s wait, line 27) | same step |
+
+The last two were broken on main before this PR, so their edited steps (`#play-tab-rides`, `#play-tab-character`, closing the menu with `.visit-tools-toggle`) have not run to completion anywhere.
+
+**Merged** by `pnpm run land 503` as `6b93031b` on 2026-10-19 at 04:29Z, through the merge guard (`CLEAN`, after one GraphQL rate-limit retry). The lander had updated the branch with main `5f3f5dc2` to `608e39e2`. All 16 hosted check runs and the Vercel status passed there, and the merge tree equals that head's tree (`357fb216`).
+
 ## Gaps
 
 - `salon-guide`'s 390 px medallion check disagrees with #521's 44 px touch target on main. It needs an owner's decision.
-- `sable` and `ui-improvements` fail on main too.
-- Shared-mode journeys (multiplayer-dev, rail-shared, shared-seating,
-  multiplayer-exclusivity, vehicle-exit, world-publish, creator-objects,
-  cycling-leaderboard, the carriage variants) have edited selectors but have not
-  been run locally. Hosted CI is their gate.
+- `sable`, `ui-improvements`, `carriage-mobile` and `movement-review` fail on main.
+- No human visual or screen-reader pass.
 - A detached baseline worktree, `river-oaks-main-baseline-rail`, holds the `main`
   comparison and should be retired through the project tooling.
