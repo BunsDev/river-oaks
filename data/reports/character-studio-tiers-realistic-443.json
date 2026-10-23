@@ -1,0 +1,423 @@
+{
+  "createdAt": "2026-10-22T20:37:50.372Z",
+  "status": "passed",
+  "modes": [
+    "required"
+  ],
+  "rendering": "Full rendering",
+  "scope": "Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.",
+  "results": [
+    {
+      "name": "character-studio-tiers",
+      "status": "passed",
+      "seconds": 56.925,
+      "result": {
+        "passed": true,
+        "checks": [
+          "Owner viewer renders at the Sharpest tier: full scale with ambient occlusion",
+          "Peer viewer renders at the Smoothest tier: three-quarter scale without ambient occlusion",
+          "Owner publishes and wears a customized revision from the Sharpest tier",
+          "Smoothest peer renders the exact authoritative owner revision",
+          "Peer publishes its own revision from the Smoothest tier",
+          "Sharpest owner renders the exact authoritative peer revision",
+          "Each viewer loads the other player’s published outfit materials at its own tier",
+          "Owner and Smoothest peer resolve identical material identity for the owner’s look",
+          "auto: peer keeps the same owner identity and materials",
+          "sharp: peer keeps the same owner identity and materials",
+          "smooth: peer keeps the same owner identity and materials",
+          "auto: peer keeps the same owner identity and materials",
+          "smooth: peer keeps the same owner identity and materials",
+          "Changing graphics tier sends no appearance, character or movement selection",
+          "No client message carries graphics quality, tier, scale or occlusion",
+          "Tier changes leave both authoritative selection versions unchanged",
+          "Authoritative snapshots carry no viewer graphics state",
+          "topLevelTier: tampered draft is refused with a client error (400)",
+          "definitionTier: tampered draft is refused with a client error (400)",
+          "lodParameter: tampered draft is refused with a client error (400)",
+          "assetUrl: tampered draft is refused with a client error (400)",
+          "assetSwap: tampered draft is refused with a client error (400)",
+          "foreignOwner: tampered draft is refused with a client error (400)",
+          "Control: the same untampered save succeeds once from the unchanged version",
+          "Refused drafts leave the owner’s draft and published revision unchanged",
+          "Foreign-owner draft cannot touch the other account",
+          "quality: tampered socket selection is refused (invalid_character_selection)",
+          "foreign-revision: tampered socket selection is refused (character_revision_missing)",
+          "Refused socket selections keep the owner’s worn revision",
+          "Control: the same socket path accepts the untampered selection",
+          "Peer still renders the canonical owner revision after refused tampering",
+          "Peer’s graphics tier persists locally across reconnect",
+          "Reconnected Smoothest peer renders the same owner revision",
+          "Sharpest owner re-resolves the reconnected peer’s revision",
+          "Owner publishes the realistic Morgan look as a new owned revision",
+          "Peer publishes the realistic Imani look as a new owned revision",
+          "Each viewer renders the other’s exact realistic revision",
+          "Every realistic avatar, own and remote, has its skin, corneas and hair upgraded",
+          "Owner renders its own Morgan at high while the Smoothest peer renders the same revision at standard",
+          "Peer renders its own Imani at standard while the Sharpest owner renders it at high",
+          "sharp: peer re-tiers Morgan to high with the same revision",
+          "smooth: peer re-tiers Morgan to standard with the same revision",
+          "Realistic re-tiering sends no selection and no graphics state",
+          "Realistic re-tiering leaves both authoritative selections unchanged",
+          "The owner’s own tier is unaffected by the peer’s choice",
+          "Owner is wearing the published Morgan revision before peer faults",
+          "missing: fault reached the peer's actual snapshot transport",
+          "missing: authored Morgan fallback keeps the peer's standard tier with realism applied",
+          "missing: peer fault cannot change the owner's authoritative selection",
+          "missing: exact Morgan revision recovers at standard on the same connection",
+          "stale-catalog: fault reached the peer's actual snapshot transport",
+          "stale-catalog: authored Morgan fallback keeps the peer's standard tier with realism applied",
+          "stale-catalog: peer fault cannot change the owner's authoritative selection",
+          "stale-catalog: exact Morgan revision recovers at standard on the same connection",
+          "corrupt-asset: fault reached the peer's actual snapshot transport",
+          "corrupt-asset: authored Morgan fallback keeps the peer's standard tier with realism applied",
+          "corrupt-asset: peer fault cannot change the owner's authoritative selection",
+          "corrupt-asset: exact Morgan revision recovers at standard on the same connection",
+          "foreign-owner: fault reached the peer's actual snapshot transport",
+          "foreign-owner: authored Morgan fallback keeps the peer's standard tier with realism applied",
+          "foreign-owner: peer fault cannot change the owner's authoritative selection",
+          "foreign-owner: exact Morgan revision recovers at standard on the same connection",
+          "Owner’s own tier and view of the peer are untouched by the peer’s transport faults",
+          "No runtime errors: "
+        ],
+        "measurements": {
+          "aliceSharp": {
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 56,
+              "tailShedding": false
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            }
+          },
+          "bobSmooth": {
+            "quality": {
+              "mode": "smooth",
+              "scale": 0.75,
+              "occlusion": false,
+              "fps": 9,
+              "tailShedding": false
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": false,
+              "bloom": true,
+              "renderScale": 0.75,
+              "aoScale": 1,
+              "transmissionScale": 1
+            }
+          },
+          "cycle": [
+            {
+              "mode": "auto",
+              "quality": {
+                "mode": "auto",
+                "scale": 1,
+                "occlusion": true,
+                "fps": 44,
+                "tailShedding": false
+              },
+              "pipeline": {
+                "samples": 4,
+                "ao": true,
+                "bloom": true,
+                "renderScale": 1,
+                "aoScale": 1,
+                "transmissionScale": 1
+              }
+            },
+            {
+              "mode": "sharp",
+              "quality": {
+                "mode": "sharp",
+                "scale": 1,
+                "occlusion": true,
+                "fps": 38,
+                "tailShedding": false
+              },
+              "pipeline": {
+                "samples": 4,
+                "ao": true,
+                "bloom": true,
+                "renderScale": 1,
+                "aoScale": 1,
+                "transmissionScale": 1
+              }
+            },
+            {
+              "mode": "smooth",
+              "quality": {
+                "mode": "smooth",
+                "scale": 0.75,
+                "occlusion": false,
+                "fps": 41,
+                "tailShedding": false
+              },
+              "pipeline": {
+                "samples": 4,
+                "ao": false,
+                "bloom": true,
+                "renderScale": 0.75,
+                "aoScale": 1,
+                "transmissionScale": 1
+              }
+            },
+            {
+              "mode": "auto",
+              "quality": {
+                "mode": "auto",
+                "scale": 1,
+                "occlusion": true,
+                "fps": 40,
+                "tailShedding": false
+              },
+              "pipeline": {
+                "samples": 4,
+                "ao": true,
+                "bloom": true,
+                "renderScale": 1,
+                "aoScale": 1,
+                "transmissionScale": 1
+              }
+            },
+            {
+              "mode": "smooth",
+              "quality": {
+                "mode": "smooth",
+                "scale": 0.75,
+                "occlusion": false,
+                "fps": 43,
+                "tailShedding": false
+              },
+              "pipeline": {
+                "samples": 4,
+                "ao": false,
+                "bloom": true,
+                "renderScale": 0.75,
+                "aoScale": 1,
+                "transmissionScale": 1
+              }
+            }
+          ],
+          "tamperedStatuses": {
+            "topLevelTier": 400,
+            "definitionTier": 400,
+            "lodParameter": 400,
+            "assetUrl": 400,
+            "assetSwap": 400,
+            "foreignOwner": 400,
+            "control": 200
+          },
+          "injectedResults": {
+            "quality": {
+              "ok": false,
+              "error": "invalid_character_selection"
+            },
+            "foreign-revision": {
+              "ok": false,
+              "error": "character_revision_missing"
+            },
+            "control": {
+              "ok": true,
+              "error": null
+            }
+          },
+          "bobAfterReload": {
+            "mode": "smooth",
+            "scale": 0.75,
+            "occlusion": false,
+            "fps": 6,
+            "tailShedding": false
+          },
+          "realism": {
+            "aliceSelf": {
+              "tier": "high",
+              "version": 1,
+              "skin": 1,
+              "cornea": 1,
+              "hair": 1,
+              "brows": 1,
+              "lashes": 1,
+              "unsupported": [],
+              "requestedTier": "high"
+            },
+            "bobSelf": {
+              "tier": "standard",
+              "version": 1,
+              "skin": 1,
+              "cornea": 1,
+              "hair": 1,
+              "brows": 1,
+              "lashes": 1,
+              "unsupported": [],
+              "requestedTier": "standard"
+            },
+            "aliceOnBob": {
+              "tier": "standard",
+              "version": 1,
+              "skin": 1,
+              "cornea": 1,
+              "hair": 1,
+              "brows": 1,
+              "lashes": 1,
+              "unsupported": [],
+              "requestedTier": "standard"
+            },
+            "bobOnAlice": {
+              "tier": "high",
+              "version": 1,
+              "skin": 1,
+              "cornea": 1,
+              "hair": 1,
+              "brows": 1,
+              "lashes": 1,
+              "unsupported": [],
+              "requestedTier": "high"
+            }
+          },
+          "realismCycle": [
+            {
+              "mode": "sharp",
+              "remote": {
+                "tier": "high",
+                "version": 1,
+                "skin": 1,
+                "cornea": 1,
+                "hair": 1,
+                "brows": 1,
+                "lashes": 1,
+                "unsupported": [],
+                "requestedTier": "high"
+              }
+            },
+            {
+              "mode": "smooth",
+              "remote": {
+                "tier": "standard",
+                "version": 1,
+                "skin": 1,
+                "cornea": 1,
+                "hair": 1,
+                "brows": 1,
+                "lashes": 1,
+                "unsupported": [],
+                "requestedTier": "standard"
+              }
+            }
+          ],
+          "realisticFaults": {
+            "missing": {
+              "fallback": {
+                "tier": "standard",
+                "version": 1,
+                "skin": 1,
+                "cornea": 1,
+                "hair": 1,
+                "brows": 1,
+                "lashes": 1,
+                "unsupported": [],
+                "requestedTier": "standard"
+              },
+              "recovered": {
+                "tier": "standard",
+                "version": 1,
+                "skin": 1,
+                "cornea": 1,
+                "hair": 1,
+                "brows": 1,
+                "lashes": 1,
+                "unsupported": [],
+                "requestedTier": "standard"
+              },
+              "snapshots": 1
+            },
+            "stale-catalog": {
+              "fallback": {
+                "tier": "standard",
+                "version": 1,
+                "skin": 1,
+                "cornea": 1,
+                "hair": 1,
+                "brows": 1,
+                "lashes": 1,
+                "unsupported": [],
+                "requestedTier": "standard"
+              },
+              "recovered": {
+                "tier": "standard",
+                "version": 1,
+                "skin": 1,
+                "cornea": 1,
+                "hair": 1,
+                "brows": 1,
+                "lashes": 1,
+                "unsupported": [],
+                "requestedTier": "standard"
+              },
+              "snapshots": 1
+            },
+            "corrupt-asset": {
+              "fallback": {
+                "tier": "standard",
+                "version": 1,
+                "skin": 1,
+                "cornea": 1,
+                "hair": 1,
+                "brows": 1,
+                "lashes": 1,
+                "unsupported": [],
+                "requestedTier": "standard"
+              },
+              "recovered": {
+                "tier": "standard",
+                "version": 1,
+                "skin": 1,
+                "cornea": 1,
+                "hair": 1,
+                "brows": 1,
+                "lashes": 1,
+                "unsupported": [],
+                "requestedTier": "standard"
+              },
+              "snapshots": 3
+            },
+            "foreign-owner": {
+              "fallback": {
+                "tier": "standard",
+                "version": 1,
+                "skin": 1,
+                "cornea": 1,
+                "hair": 1,
+                "brows": 1,
+                "lashes": 1,
+                "unsupported": [],
+                "requestedTier": "standard"
+              },
+              "recovered": {
+                "tier": "standard",
+                "version": 1,
+                "skin": 1,
+                "cornea": 1,
+                "hair": 1,
+                "brows": 1,
+                "lashes": 1,
+                "unsupported": [],
+                "requestedTier": "standard"
+              },
+              "snapshots": 1
+            }
+          }
+        },
+        "scope": "Real two-account HTTP/WebSocket/browser flow on desktop Chromium: render scale/AO tiers and #517 realistic material tiers (high and standard; low is reached only by Auto under sustained load and is covered by unit tests). Physical devices, WebKit and human acceptance are not covered."
+      }
+    }
+  ],
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)"
+}

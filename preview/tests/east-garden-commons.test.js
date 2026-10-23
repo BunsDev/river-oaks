@@ -84,3 +84,12 @@ test('Commons loading rejects a mismatched registered revision or gateway height
     assert.throws(()=>validateCommonsRegistration(changed,layout),/Commons manifest differs/);
   }
 });
+
+// The flight bubble is wider than a walker. A clear route must be continuous,
+// including the overlap on the original District side of the gateway.
+test('flight bubble crosses the entire District promenade seam', () => {
+  const environment = createWalkingEnvironment(world);
+  for (let offset = -4; offset <= 12; offset += .05) {
+    assert.equal(environment.canFly(layout.edge + offset, layout.ground + 10, 1335), true, `east offset ${offset}`);
+  }
+});

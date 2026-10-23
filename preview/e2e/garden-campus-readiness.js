@@ -76,6 +76,12 @@ export function createCampusStartupReadiness({ timeoutMs = 120000, log = record 
         log({ event: 'probe-reconnect', generation: connection.generation, attempts, elapsedMs: Date.now() - started });
         await waitForChange(connection); checkpoint = Date.now(); continue;
       }
+      // Evaluation can send on a replacement socket. Restart admission before
+      // checking correlation against the captured connection's frame records.
+      if (state.current !== connection || connection.socket.isClosed()) {
+        log({ event: 'probe-socket-changed', generation: connection.generation, attempts, elapsedMs: Date.now() - started });
+        checkpoint = Date.now(); continue;
+      }
       const ack = connection.received.get(result.requestId);
       if (!ack || connection.sent.get(result.requestId) < probeStarted) throw new Error('Startup acknowledgement did not match this socket and probe.');
       if (ack.ok !== true && ack.error !== 'admin_only') throw new Error(`Unexpected startup response: ${ack.error ?? 'refused'}`);
