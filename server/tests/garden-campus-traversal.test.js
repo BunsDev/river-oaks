@@ -145,3 +145,50 @@ test('someone on a landing never keeps a resident off a floor; a checkpoint rest
   const restored = again.snapshot().players.find(p => p.id === 'second');
   assert.deepEqual([restored.levelId, restored.buildingId, restored.position], [L(3), 'garden-campus', second.position]);
 });
+
+
+test('a valid lift portal refuses client-supplied destinations without moving the resident', () => {
+  const t = town();
+  t.world.join({ userId: 'visitor', name: 'visitor' });
+  upToFloor4(t, 'visitor');
+  const before = t.player('visitor');
+  for (const forged of [
+    { position: [...source([16, 123]), BASE + 13] },
+    { toLevelId: L(7) },
+    { levelId: L(7) },
+    { buildingId: 'other-tower' },
+    { altitude: 29 },
+  ]) {
+    const result = t.command('visitor', { type: 'interiorLevel', portalId: 'T1-F4/lift-up', ...forged });
+    assert.equal(result.error, 'invalid_level_portal', JSON.stringify(forged));
+    assert.deepEqual(t.player('visitor'), before, 'refusal preserves the authoritative resident');
+  }
+  const valid = t.portal('visitor', 'T1-F4/lift-up');
+  assert.equal(valid.ok, true, valid.error);
+  assert.deepEqual([valid.player.levelId, valid.player.position[2]], [L(4), BASE + 17]);
+});
+
+test('neither bridge admits lateral entry from below or lets an upper visitor walk off its side', () => {
+  const t = town();
+  for (const id of ['walker', 'visitor']) t.world.join({ userId: id, name: id });
+  upToFloor4(t, 'visitor');
+  assert.deepEqual(t.walk('visitor', [[12, 57.5], [16, 57.5]]), { ok: true });
+  for (const v of [76.8, 123]) {
+    assert.equal(t.command('walker', { type: 'travel', position: source([31, v]) }).ok, true);
+    t.advance(1500);
+    assert.deepEqual(t.walk('walker', [[20, v], [18, v]]), { ok: true });
+    const before = t.player('walker'), [x, n] = source([16, v]);
+    for (const extra of [{ levelId: L(3) }, {}]) {
+      const result = t.command('walker', { type: 'pose', position: [x, n, BASE + 13], yaw: 0, altitude: 0, ...extra });
+      assert.equal(result.error, extra.levelId ? 'invalid_level' : 'invalid_ground');
+      assert.deepEqual(t.player('walker'), before, 'lateral deck claim cannot alter street support');
+    }
+    assert.deepEqual(t.walk('visitor', [[16, v]]), { ok: true });
+    const onDeck = t.player('visitor');
+    for (const [u, error] of [[14.7, 'blocked'], [17.3, 'blocked'], [13.8, 'invalid_ground'], [18.2, 'invalid_ground']]) {
+      const result = t.command('visitor', { type: 'pose', position: [...source([u, v]), BASE + 13], yaw: 0, altitude: 0, levelId: L(3) });
+      assert.equal(result.error, error, `bridge at v=${v}, side u=${u}`);
+      assert.deepEqual(t.player('visitor'), onDeck, 'off-edge refusal preserves the valid deck pose');
+    }
+  }
+});
