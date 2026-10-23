@@ -1016,3 +1016,76 @@ pnpm run register patch studio-acceptance-417-refresh-20261015 --unset leaseUnti
 It stays `blocked` (the register has no `cancelled` status, and `retired` needs delivery evidence and an
 archive this work never had), matching other cancelled records such as `cartier-pilot`. The alternative is to
 leave the record as it is; `project:check` will keep reporting it as an orphan.
+
+## Closeout refresh on main `f4aa1670` (2026-10-23)
+
+Task `studio-417-closeout-f4aa1670-20261023`, owner `claude:river-oaks-bc (003d8d)`, branch
+`test/studio-417-closeout-f4aa1670-20261023` in `river-oaks-studio-417-closeout-f4aa1670`, from origin/main
+`f4aa1670` (111 commits after `1cb79549`). The previous closeout task `studio-417-closeout-20261023` (draft #613,
+owner `459dc8`) was left untouched: its lease ended 18:00Z and its session was no longer running, which is not a
+handoff. This branch merges #613's head `c92edb85` explicitly, in its own commit, for the IPIC harness port and
+the section above, so the two PRs can land in either order. No app code changes.
+
+### Does the candidate still equal main?
+
+The checklist (issuecomment-6248646285) names `0d1e69a2`; the 1cb79549 packet (issuecomment-6366480224) moved
+the candidate to main `1cb79549`. Between `1cb79549` and `f4aa1670`, `preview/src/studio/` and `desktop/` are
+unchanged. Of the 48 modules in Studio's import graph (`preview/src/studio/entry.js`, followed through relative
+imports), one changed: `preview/src/walking.js` (a9026592/0313e266) now also returns
+`buildBounds: world.eastGardenCommons?.districtBounds`. Studio's worlds have no `eastGardenCommons`, so the field
+is `undefined` there and nothing in Studio reads it. The other 18 changed client files (login flicker, Character
+Studio, crime, world policy, campus, Commons) are outside Studio's graph. **Studio behavior is the same as on
+`1cb79549`; the review candidate is main `f4aa1670` or later.**
+
+### Results (`f4aa1670`, clean app code; MacBook Pro M3 Max, Chromium ANGLE Metal, 1440 × 1000)
+
+One browser-lock hold, 18:43–18:55Z, load 6.5–22.6 (other sessions' runs queued around it).
+
+| Scenario | Result | Receipt (`data/reports/`) |
+| --- | --- | --- |
+| `studio-pilot-journey` | passed, 15 checks: refusal announced with "Nearby: Waiting Sofa, Meeting Chair 1, Meeting Divider South.", repair, undo/redo, save/reload, stale tab, four destinations and back, exit | `studio-417-f4aa1670-pilot.json` |
+| `studio-pilot-assets` (office) | passed: limestone meeting floor 186 normal → 200 missing/loading → 186 loaded and 186 replaced; 3/3 and 6/6 requests, none pending | same |
+| `studio-pilot-soak` (1 + 10) | passed: every post-warm-up office cycle 688 calls, 53,076 triangles, 35 geometries, 27 materials, 159 listeners, 0 live workers, 0 pending timeouts/loads (identical to `1cb79549`); heap 15.2–16.9 MiB; Metal 71–83 MiB | same |
+| `studio-pilot-a11y` | passed, 25 checks; 320/390 px no overflow, all five primary controls reachable | same |
+| `studio-template-journey` office / house / boutique / café | passed, 13 checks each | `studio-417-f4aa1670-template-{office,house,boutique,cafe}.json` |
+| `node desktop/studio-e2e.js` (development Electron; `desktop/` unchanged since `1cb79549`) | passed, 11/11, 20:38Z, same app code | `studio-417-f4aa1670-desktop.json` |
+
+### #359 non-regression (same main)
+
+| Scenario | Result | Receipt |
+| --- | --- | --- |
+| `office-visit` | passed, 12 checks | `studio-417-f4aa1670-office359.json` |
+| `office-desk` | passed, 18 checks | same |
+| `office-computer-embed` | passed, 61 checks | same |
+| `office-ipic-journey-runner.mjs`, main's harness | failed at its first step, as on `1cb79549`: waits 60 s for "Request a visit" (`#office-request-send`), which `2b5062b6` replaced with Jevica's invitation | `studio-417-f4aa1670-ipic-main-harness.json` |
+| `office-ipic-journey-runner.mjs`, #613's ported harness (HEAD `825f13ef`, app code = `f4aa1670`) | passed, 30 checks, 132 s, 20:36Z: refusal, invitation, arrival, private My tasks, one chair for two clients, floors/library/terrace, late IPIC join (10.2 s, viewers within 4 ms of each other), both back in town, no page errors. Load 48–202 from other sessions' runs | `studio-417-f4aa1670-ipic.json` |
+
+The stale-harness failure is a test defect, not a product regression; it is fixed only by #613's harness port,
+which this branch carries. Until #613 or this branch lands, main's IPIC journey keeps failing at that step.
+
+### Gates
+
+@@GATES@@
+
+### Decisions for Val
+
+1. **Which PR carries the closeout?** This branch contains #613 (merged at `c92edb85`, unchanged) plus the
+   `f4aa1670` run. Land this one and close #613, or land #613 first; this branch then merges cleanly. Either
+   way, only a merge puts the IPIC harness port on main.
+2. **Refresh-task record**: authorize, or decline, the record-only change in "Register: `studio-acceptance-417-refresh-20261015`" above. Rechecked 2026-10-23 19:05Z: still no worktree, no local or `origin` branch, no
+   `archive/*` tag and no `manifest.json` under `~/worktree-backups/river-oaks/` naming it (that directory
+   now exists on this machine, unlike on 2026-10-22).
+3. **Café phone and other-GPU review**, **Café in a creator region** (#489 still draft, mergeability unknown,
+   last updated 2026-10-19) and **touch walking**: unchanged from the `1cb79549` decisions 2–4.
+4. **#413's "#359 not regressed" box** is yours to tick or leave, based on the table above.
+
+#### Other #417 register records (observations; owners' or Val's to change)
+
+- `studio-review-417-20261022` is `active` with a lease that ended 2026-10-23T00:45Z, but its PR #579 merged as
+  `52379be6`. Its owner (or Val) should mark it delivered with that evidence; its worktree is clean.
+- `studio-417-closeout-20261023` (#613) is `active` with a lease that ended 18:00Z. If this branch carries the
+  closeout, it becomes superseded; nothing in its worktree is uncommitted.
+- `unowned-recovery-refs-20261022` still holds `wip/studio-review-417-baseline-20261022` (6 dirty paths); it
+  stays with that task.
+
+None of this is human review. #417 stays open for Val's checklist.
