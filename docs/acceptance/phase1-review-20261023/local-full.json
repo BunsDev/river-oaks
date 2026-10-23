@@ -1,0 +1,288 @@
+{
+  "schemaVersion": 1,
+  "profile": "full",
+  "startedAt": "2026-10-23T05:46:19.044Z",
+  "status": "passed",
+  "revision": "c2cac2d30247238adbfcf4323a7f328813033427",
+  "dirty": false,
+  "scope": "Selected repository checks only; not production, live auth, native Unreal, human accessibility, or target GPU acceptance.",
+  "results": [
+    {
+      "id": "dependency-audit",
+      "command": [
+        "pnpm",
+        "audit",
+        "--audit-level=moderate"
+      ],
+      "status": "passed",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "signal": null,
+      "durationMs": 628
+    },
+    {
+      "id": "agent-tests",
+      "command": [
+        "pnpm",
+        "run",
+        "test:agent"
+      ],
+      "status": "passed",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "signal": null,
+      "durationMs": 35128
+    },
+    {
+      "id": "preview-tests",
+      "command": [
+        "pnpm",
+        "test"
+      ],
+      "status": "passed",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "signal": null,
+      "durationMs": 166741
+    },
+    {
+      "id": "server-redis-tests",
+      "command": [
+        "pnpm",
+        "run",
+        "test:server"
+      ],
+      "status": "passed",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "signal": null,
+      "durationMs": 85390
+    },
+    {
+      "id": "desktop-tests",
+      "command": [
+        "pnpm",
+        "run",
+        "test:desktop"
+      ],
+      "status": "passed",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "signal": null,
+      "durationMs": 12068
+    },
+    {
+      "id": "build",
+      "command": [
+        "pnpm",
+        "run",
+        "build"
+      ],
+      "status": "passed",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "signal": null,
+      "durationMs": 1610
+    },
+    {
+      "id": "python-lint",
+      "command": [
+        "uv",
+        "run",
+        "--locked",
+        "ruff",
+        "check",
+        "."
+      ],
+      "status": "passed",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "signal": null,
+      "durationMs": 146
+    },
+    {
+      "id": "python-format",
+      "command": [
+        "uv",
+        "run",
+        "--locked",
+        "ruff",
+        "format",
+        "--check",
+        "."
+      ],
+      "status": "passed",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "signal": null,
+      "durationMs": 44
+    },
+    {
+      "id": "python-tests",
+      "command": [
+        "uv",
+        "run",
+        "--locked",
+        "pytest",
+        "-q"
+      ],
+      "status": "passed",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "signal": null,
+      "durationMs": 6473
+    },
+    {
+      "id": "demo",
+      "command": [
+        "uv",
+        "run",
+        "--locked",
+        "river-oaks",
+        "demo"
+      ],
+      "status": "passed",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "signal": null,
+      "durationMs": 316
+    },
+    {
+      "id": "demo-verify",
+      "command": [
+        "uv",
+        "run",
+        "--locked",
+        "river-oaks",
+        "verify",
+        "--config",
+        "data/generated/demo/config.json",
+        "--raw",
+        "data/generated/demo",
+        "--world",
+        "data/generated/demo/world.json",
+        "--output",
+        "data/generated/demo/report.json"
+      ],
+      "status": "passed",
+      "exitCode": 2,
+      "expectedExit": 2,
+      "signal": null,
+      "durationMs": 307
+    },
+    {
+      "id": "secrets",
+      "command": [
+        "uv",
+        "run",
+        "--locked",
+        "python",
+        "scripts/check_secrets.py",
+        "--all"
+      ],
+      "status": "passed",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "signal": null,
+      "durationMs": 9302
+    },
+    {
+      "id": "secret-history",
+      "command": [
+        "gitleaks",
+        "git",
+        "--log-opts=--all",
+        "--redact",
+        "--no-banner",
+        "--ignore-gitleaks-allow"
+      ],
+      "status": "passed",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "signal": null,
+      "durationMs": 3529
+    },
+    {
+      "id": "security-browser",
+      "command": [
+        "pnpm",
+        "run",
+        "test:security:e2e"
+      ],
+      "status": "passed",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "signal": null,
+      "durationMs": 17608
+    },
+    {
+      "id": "reflections",
+      "command": [
+        "pnpm",
+        "run",
+        "test:reflections:webgl"
+      ],
+      "status": "passed",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "signal": null,
+      "durationMs": 2455
+    },
+    {
+      "id": "experience",
+      "command": [
+        "pnpm",
+        "run",
+        "test:experience",
+        "player-lifecycle",
+        "multiplayer-lifecycle",
+        "contextual-first-visit",
+        "store-intro",
+        "photo-mode",
+        "rail-navigation",
+        "places-guide",
+        "world-studio",
+        "spatial-circulation",
+        "spatial-streets",
+        "office-desk",
+        "office-visit",
+        "office-computer-embed",
+        "garden-campus-office",
+        "garden-campus-traversal",
+        "garden-campus-suite",
+        "east-garden-commons"
+      ],
+      "status": "passed",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "signal": null,
+      "durationMs": 1161128
+    },
+    {
+      "id": "shared",
+      "command": [
+        "pnpm",
+        "run",
+        "test:shared"
+      ],
+      "status": "passed",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "signal": null,
+      "durationMs": 864515
+    },
+    {
+      "id": "ipic-screening",
+      "command": [
+        "node",
+        "preview/e2e/ipic-screening-runner.mjs"
+      ],
+      "status": "passed",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "signal": null,
+      "durationMs": 93290
+    }
+  ],
+  "finishedAt": "2026-10-23T06:27:19.808Z"
+}

@@ -4,16 +4,20 @@ async page => {
   page.on('pageerror',error=>errors.push(error.message));
   await page.setViewportSize({width:3840,height:2160});await page.emulateMedia({reducedMotion:'no-preference'});
   await page.goto('http://127.0.0.1:5173/');
-  // Tree counts come from the vegetation data the page loads, not a fixed number:
+  // Tree counts use the rendered placement selector, including duplicate removals:
   // the district's trees and planters follow their data, which changes.
-  const trees=(await (await page.request.get('http://127.0.0.1:5173/data/district-vegetation.json')).json()).branch_supports.length;
+  const { treeSupports } = await import('../src/tree-placements.js');
+  const district=await (await page.request.get('http://127.0.0.1:5173/data/district.json')).json();
+  district.vegetation=await (await page.request.get('http://127.0.0.1:5173/data/district-vegetation.json')).json();
+  const trees=treeSupports(district).length;
   await page.waitForFunction(trees=>{const d=document.querySelector('#canvas-host')?.dataset;return d?.playerReady==='true'&&(document.querySelector('#canvas-host')?.dataset.multiplayer==='joined')&&Number(d.storePeopleTotal)>0&&d.storePeopleReady===d.storePeopleTotal&&d.matureTrees===String(trees)&&Number(d.plantedBeds)>0;},trees,{timeout:90000});
   // Measure the full-quality budget: Sharpest pins native resolution and AO,
   // where Auto would trade resolution for frame rate on a busy GPU.
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
   await openHudSpace(page, 'settings-section', 'Graphics');await page.locator('[data-quality=sharp]').click();
   await page.waitForFunction(()=>JSON.parse(document.querySelector('#canvas-host').dataset.quality||'{}').mode==='sharp');
-  await page.locator('#panel-toggle').click();
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(()=>!document.querySelector('#settings-dialog')?.open);
   const measure=async label=>{
     await page.waitForTimeout(1500);
     const result=await page.evaluate(()=>new Promise(resolve=>{

@@ -2,6 +2,10 @@ import { validateCharacterDefinition } from './character-definition.js';
 import { customizedCharacterDefinition, supportsCharacterColors, CHARACTER_PALETTES, CHARACTER_HAIR } from './character-customization.js';
 import { SHARED_APPEARANCES, canUseAppearance, sharedAppearance } from './shared-appearances.js';
 
+// The editor is a release control in builds (only VITE_CHARACTER_STUDIO=true shows it).
+// Development always shows it unless a journey turns it off explicitly with 'false'.
+export const characterStudioShown = ({ DEV = false, VITE_CHARACTER_STUDIO: flag } = {}) => flag === 'true' || (Boolean(DEV) && flag !== 'false');
+
 export function createCharacterDraft({ownerId,definition}){
   const validated=value=>{const result=validateCharacterDefinition(value,{ownerId});if(!result.ok)throw new TypeError(result.error);return result.definition;};
   const original=validated(definition);let history=[original],cursor=0;

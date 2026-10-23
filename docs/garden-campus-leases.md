@@ -212,7 +212,7 @@ migrations re-sign it unchanged.
   fails the whole restore, and the previous committed world stays authoritative.
 - A well-formed lease or request for a suite or contract version this server no
   longer serves ends as `retired`. It is not moved, and it never grants access.
-- The Redis writer generation is `v13:`, or `v14:` for rooms with the character
+- The Redis writer generation was `v13:`, or `v14:` for rooms with the character
   store, which is how production runs. A newer writer fences an older one, and an
   older coordinator refuses a version 13 checkpoint without writing.
 
