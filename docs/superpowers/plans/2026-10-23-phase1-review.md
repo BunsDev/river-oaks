@@ -15,6 +15,7 @@ Checkout: `/Users/buns/Documents/GitHub/BunsDev/river-oaks-world-manifest-581`, 
 - Rollback candidate placement must include existing creation colliders. Compose the destination walking environment with those colliders before choosing positions, preserving the final restore validation.
 - The baseline harness used ten-second samples even though its proposed protocol required medians of three thirty-second samples. Use that protocol, five-second warmup per sample and unique screenshots, and capture provenance after queue acquisition.
 - The new Commons browser journey was selectable but absent from both normal full verification and hosted CI. Add it to the existing experience gate and a separate hosted shard so future regressions cannot silently bypass the required preview aggregate.
+- Document the previously implicit vertical contract: the longitude/latitude origin offsets only projected east/north; District heights retain NAVD88 metadata and translations do not perform datum conversion. A source-frame round trip of the actual arrival falls within the retained OSM source bounding box with sub-micrometre numerical error (`phase1-coordinate-audit.json`); this is not survey proof.
 - No engine, framework, spatial index or generalized migration framework was introduced. The bounded registry and existing composition seams are sufficient for this phase.
 
 ## Acceptance audit
@@ -43,3 +44,9 @@ Current results: core passed all 11 phases with isolated Redis (tooling 201, pre
 ## Remaining acceptance
 
 Physical mobile hardware performance/memory/thermal measurements, matched before/after District visual review, approved target budgets and production-build initial-download comparison remain open. Cross-location resident routing, load/unload failure recovery and repeated travel resource stability belong to Phase 2 and are not implemented by this manifest. The first Commons slice is roughly 12% additional sampled ground; the eventual 3–5× total playable-area objective needs further layout/content work. No production configuration, live account, native runtime or human accessibility acceptance is claimed.
+
+## First hosted Commons failure
+
+Verify run `39891982550`, Commons job `120213638491`, failed at the original two-minute return waypoint deadline on Linux llvmpipe. Both clients completed outward walking, shared chess and reconnect first. The failure pose was moving west at 3.18 m/s, 6.83 m from its target; the report recorded 13 FPS, zero page errors and all 101 assets loaded. The retained report, screenshot and logs are under `.runtime/world-manifest/ci-first-commons/`. Replaying the precise failed pose through the real walking controller reached the target in 2.28 simulated seconds, so no blocked terrain segment was reproduced.
+
+The Commons driver released forward input after every sampling pulse, repeatedly braking and waiting through browser round trips. The already-passing `spatial-streets` driver holds forward input between samples. Apply that same normal-keyboard pattern, releasing on turns, arrival and cleanup, and retain the existing two-minute deadline and authoritative arrival checks. A hosted rerun must validate the correction; this diagnosis does not establish a performance pass. The original failed receipt remains unchanged.
