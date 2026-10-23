@@ -12,7 +12,25 @@ async page => {
     const originalFetch=window.fetch,OriginalSocket=window.WebSocket,pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
     const checks=[],sockets=[];
     const check=(condition,message)=>checks.push({passed:Boolean(condition),message});
-    window.WebSocket=class extends OriginalSocket{constructor(...args){super(...args);if(new URL(args[0],location.href).pathname==='/multiplayer')sockets.push(this);}};
+    let holdNextReply=false,heldRequestId=null,replyHeld,releaseReply;
+    window.WebSocket=class extends OriginalSocket{
+      constructor(...args){super(...args);if(new URL(args[0],location.href).pathname==='/multiplayer')sockets.push(this);}
+      send(raw){
+        const message=JSON.parse(raw);
+        if(holdNextReply&&message.type==='homeAccess'&&message.action==='list'){holdNextReply=false;heldRequestId=message.requestId;}
+        super.send(raw);
+      }
+      addEventListener(type,listener,options){
+        if(type!=='message')return super.addEventListener(type,listener,options);
+        return super.addEventListener(type,event=>{
+          const message=JSON.parse(event.data);
+          if(heldRequestId!==null&&message.type==='result'&&message.requestId===heldRequestId){
+            heldRequestId=null;releaseReply=()=>listener.call(this,event);replyHeld(message);return;
+          }
+          listener.call(this,event);
+        },options);
+      }
+    };
     const create=onSnapshot=>createMultiplayer({getPose:()=>null,onSnapshot,onPlayers(){},onCorrection(){}});
     try{
       for(const stage of ['/auth/session','/api/multiplayer/ticket']){
@@ -47,11 +65,22 @@ async page => {
       check(!settings.open,'connection loss dismisses Settings before making the application inert');
       check(document.activeElement.id==='multiplayer-title','connection gate receives focus after Settings is dismissed');
       await timeout(reconnect,'Controller did not reconnect after settings gate test');
-      const pending=client.command({type:'homeAccess',action:'list'}).then(()=>false,()=>true);
+      // Hold the real successful result at the production client's message callback.
+      // Disposal must fence it even when that callback was already queued.
+      const held=new Promise(resolve=>{replyHeld=resolve;});holdNextReply=true;
+      let confirmed=false,rejected=false;
+      const pending=client.command({type:'homeAccess',action:'list'}).then(()=>{confirmed=true;return false;},()=>{rejected=true;return true;});
+      const late=await timeout(held,'No command result held for disposal');
+      check(late.ok===true,'the held late reply is a successful real transport command result');
       client.dispose();
       const atDisposal=callbacks;
       check(!client.connected&&client.snapshot===null,'connected state and snapshot are cleared synchronously');
+      await Promise.resolve();
+      check(rejected,'disposal rejects the pending command before its held reply is delivered');
+      releaseReply();
       check(await pending,'disposal rejects pending command promises');
+      await Promise.resolve();
+      check(!confirmed&&!client.connected&&client.snapshot===null,'a successful late command reply cannot revive the disposed client or confirm its rejected action');
       check(!(await client.command({type:'gesture',kind:'wave'})).ok,'disposed client refuses new commands');
       await pause(350);
       check(callbacks===atDisposal,'socket close and queued frames cannot publish after disposal');

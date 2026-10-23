@@ -4,6 +4,7 @@ import { EventEmitter, once } from 'node:events';
 import vm from 'node:vm';
 import { WebSocket, WebSocketServer } from 'ws';
 import { createCampusStartupReadiness as createStartupReadiness, waitForCampusLift } from '../e2e/garden-campus-readiness.js';
+import { campusLevels, campusToSource } from '../../shared/garden-campus-layout.js';
 
 // A thin page/Playwright event façade over real loopback frames. No renderer,
 // Vite, authentication or heartbeat coverage is claimed by these tests.
@@ -199,6 +200,24 @@ test('the lift waits for the published authoritative pose before its single acti
     await new Promise(resolve => setTimeout(resolve, 40));
     assert.equal(actions, 0, 'a local lift label cannot authorize an out-of-reach server pose');
     f.setPlayers([{ id: 'alice', position: inside, levelId: null }]);
+    await readiness; assert.equal(actions, 1);
+  } finally { await readiness?.catch(() => {}); await f.close(); }
+});
+
+test('the authored ground lift uses source coordinates and waits for authoritative reach', async () => {
+  const local = campusLevels().flatMap(level => level.portals).find(portal => portal.id === 'T1-F1/lift-up').position;
+  const source = campusToSource(local), f = await fixture(() => {});
+  let readiness, actions = 0;
+  try {
+    f.setPlayers([{ id: 'alice', position: source, levelId: null }]); await f.connect();
+    await f.page.waitForFunction(() => Boolean(window.__riverMultiplayer().snapshot), null, { timeout: 1000 });
+    await assert.rejects(waitForCampusLift(f.page, local, { timeoutMs: 60 }), /Page predicate deadline/);
+    f.setPlayers([{ id: 'alice', position: [source[0] + 1.31, source[1], source[2]], levelId: null }]);
+    await f.page.waitForFunction(east => window.__riverMultiplayer().snapshot.players[0].position[0] === east, source[0] + 1.31, { timeout: 1000 });
+    readiness = waitForCampusLift(f.page, source, { timeoutMs: 1000 }).then(() => { actions++; });
+    await new Promise(resolve => setTimeout(resolve, 40));
+    assert.equal(actions, 0, 'the real portal must still wait for the unchanged 1.3 m server reach');
+    f.setPlayers([{ id: 'alice', position: [source[0] + 1.2, source[1], source[2]], levelId: null }]);
     await readiness; assert.equal(actions, 1);
   } finally { await readiness?.catch(() => {}); await f.close(); }
 });
