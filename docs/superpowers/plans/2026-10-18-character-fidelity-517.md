@@ -84,16 +84,33 @@ controlled result needs a quiet host (see Decisions for Val).
 | Criterion | Evidence | State |
 | --- | --- | --- |
 | A1 Architecture and vendor matrix with verified licences, costs and alternatives | `docs/acceptance/character-fidelity-options.md` (#536 merged here as `8fa25639`, plus #545's fixture decision) | met for the selected CC0 route; no vendor quote, by design |
-| A2 Close-up/crowd captures with reproducible settings and device-tier metrics | `docs/acceptance/character-fidelity-517.md`, `character-fidelity-517-captures/*.json` (byte-identical 4K captures), iPhone budgets receipt, contention receipt above | captures reproducible; desktop timing variance root-caused, not stabilized; phone 46/48 |
+| A2 Close-up/crowd captures with reproducible settings and device-tier metrics | `docs/acceptance/character-fidelity-517.md`, `character-fidelity-517-captures/*.json` (byte-identical 4K captures), iPhone budgets receipt, contention receipt above | captures reproducible; desktop timing variance root-caused, not stabilized; phone 46/48 twice (different cases), ceilings exceeded |
 | A3 Fixtures with explicit capability support; identity stable across tiers | `preview/src/character-fidelity-contract.js`, `character-fidelity-*.test.js` (26/26 on this branch), tier receipts | met (two bundles; `speechRuntime:false`, no geometric LOD) |
 | A4 Contract and evidence handed to #441/#442/#444; no engine rewrite | #545 merged `1f4aa36d`; `docs/character-fidelity.md`; handoff comment on this increment | met by landing; this PR's handoff follows |
+
+### Phone rerun (2026-10-23)
+
+Paired iPhone 16 Pro Max (iPhone17,2), Mobile Safari, `capture-phone.mjs` at `825854af`.
+The run skipped the Mac browser lock, because all measurement happens on the phone.
+Receipt: `data/reports/character-fidelity-iphone-rerun-517.json` (redacted summary; raw
+report kept locally). All 48 frame records arrived. The run then hit the script's 480 s
+deadline before the lifecycle and capture records, so it is timing evidence only.
+
+Against the previous phone receipt, under the unchanged 20% band: 23/24 within-run pairs
+(previously 22/24) and 46/48 cross-run comparisons (previously 46/48). The misses are
+first-repeat high-tier outliers (Morgan high x24 r0 65 vs 46 ms; Imani high x8 r0 34 vs
+20 ms); both second repeats agree. The previous misses were different cases, so they
+are not systematic. The unchanged reference ceilings were exceeded 16 times (frame p95)
+and 17 times (CPU p95), up from 9 and 11. At x24 the phone ran 5–10% slower overall,
+consistent with a warmer device, but this is not isolated. No ceiling was changed. The phone
+still does not agree within the band in every comparison.
 
 ### Decisions for Val
 
 1. A quiet window for a controlled desktop run: pause other sessions' automation
    (including repositories outside this lock, e.g. modex), or name a dedicated runner.
-2. Reconnect and unlock the iPhone 16 Pro Max for a phone rerun. No physical device was
-   paired on 2026-10-22.
+2. Phone rerun done once Val connected the iPhone (below). A complete 67-record pass
+   (lifecycle and captures) needs another unlocked session of about 8 minutes.
 3. Close or keep draft #536. Its commits are carried here unchanged.
 4. The shared browser queue loses entries and times out its 10 s mutex under a dozen
    pollers (seen 2026-10-22: entry removed while running; "queue lock is held").
