@@ -1,0 +1,335 @@
+{
+  "head": "c2cac2d30247238adbfcf4323a7f328813033427",
+  "report": ".runtime/world-expansion/baseline-2026-10-23T05-38-23.172Z/report.json",
+  "sourceStable": true,
+  "reviewedSourceFiles": 33,
+  "historicalHead": "6ff47ba13762de25180b8e4b073b01662d7f9505",
+  "comparisonScope": "Two historical runs on the same Mac; no controlled host-load or thermal equivalence, no causal attribution or accepted performance gate.",
+  "machine": {
+    "platform": "darwin",
+    "arch": "arm64",
+    "cpu": "Apple M5 Max",
+    "logicalCpus": 18,
+    "loadAverage": [
+      17.10791015625,
+      21.7958984375,
+      25.5263671875
+    ]
+  },
+  "browser": "156.0.8078.4",
+  "matching": {
+    "camera": true,
+    "quality": true,
+    "browser": true,
+    "reducedMotion": true
+  },
+  "changedSharedSourceHashes": [
+    "preview/src/world-manifest.js"
+  ],
+  "profiles": [
+    {
+      "name": "desktop",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "deviceScaleFactor": 1,
+      "viewportMatched": true,
+      "medians": [
+        {
+          "players": 1,
+          "frameP95Ms": 16.7,
+          "cpuSubmissionP95Ms": 13.9,
+          "historicalFrameP95Ms": 16.7,
+          "historicalCpuSubmissionP95Ms": 14.3,
+          "frameChangePercent": 0,
+          "cpuChangePercent": -2.7972027972028024
+        },
+        {
+          "players": 2,
+          "frameP95Ms": 50,
+          "cpuSubmissionP95Ms": 17.7,
+          "historicalFrameP95Ms": 33.4,
+          "historicalCpuSubmissionP95Ms": 14.7,
+          "frameChangePercent": 49.70059880239521,
+          "cpuChangePercent": 20.408163265306122
+        }
+      ],
+      "ownerJoinReadyMs": 3428.743583,
+      "ownerAssetReadyMs": 5555.253375,
+      "peerJoinReadyMs": 13252.294125,
+      "reconnectMs": 1213.5432919999876,
+      "reconnectPositionDeltaM": 0,
+      "resources": {
+        "count": 492,
+        "transferBytes": 73705985,
+        "decodedBodyBytes": 73558385
+      },
+      "load1mRange": [
+        13.80029296875,
+        42.3623046875
+      ],
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+      "resourcesBySample": [
+        {
+          "players": 1,
+          "iteration": 1,
+          "calls": 1647,
+          "triangles": 5501608,
+          "memory": {
+            "geometries": 530,
+            "textures": 162
+          },
+          "heap": {
+            "usedJSHeapSize": 364000000,
+            "totalJSHeapSize": 435000000
+          },
+          "frameP95": 16.7,
+          "cpuP95": 10.7
+        },
+        {
+          "players": 1,
+          "iteration": 2,
+          "calls": 1629,
+          "triangles": 5498580,
+          "memory": {
+            "geometries": 530,
+            "textures": 162
+          },
+          "heap": {
+            "usedJSHeapSize": 364000000,
+            "totalJSHeapSize": 435000000
+          },
+          "frameP95": 16.7,
+          "cpuP95": 13.9
+        },
+        {
+          "players": 1,
+          "iteration": 3,
+          "calls": 1629,
+          "triangles": 5498580,
+          "memory": {
+            "geometries": 530,
+            "textures": 162
+          },
+          "heap": {
+            "usedJSHeapSize": 364000000,
+            "totalJSHeapSize": 435000000
+          },
+          "frameP95": 16.7,
+          "cpuP95": 14.2
+        },
+        {
+          "players": 2,
+          "iteration": 1,
+          "calls": 1689,
+          "triangles": 5846328,
+          "memory": {
+            "geometries": 546,
+            "textures": 166
+          },
+          "heap": {
+            "usedJSHeapSize": 364000000,
+            "totalJSHeapSize": 435000000
+          },
+          "frameP95": 33.4,
+          "cpuP95": 16.9
+        },
+        {
+          "players": 2,
+          "iteration": 2,
+          "calls": 1707,
+          "triangles": 5849356,
+          "memory": {
+            "geometries": 546,
+            "textures": 166
+          },
+          "heap": {
+            "usedJSHeapSize": 364000000,
+            "totalJSHeapSize": 435000000
+          },
+          "frameP95": 50,
+          "cpuP95": 17.7
+        },
+        {
+          "players": 2,
+          "iteration": 3,
+          "calls": 1698,
+          "triangles": 5847842,
+          "memory": {
+            "geometries": 546,
+            "textures": 166
+          },
+          "heap": {
+            "usedJSHeapSize": 364000000,
+            "totalJSHeapSize": 435000000
+          },
+          "frameP95": 50,
+          "cpuP95": 18
+        }
+      ]
+    },
+    {
+      "name": "phone-viewport",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "deviceScaleFactor": 2,
+      "viewportMatched": true,
+      "medians": [
+        {
+          "players": 1,
+          "frameP95Ms": 16.8,
+          "cpuSubmissionP95Ms": 10.5,
+          "historicalFrameP95Ms": 16.7,
+          "historicalCpuSubmissionP95Ms": 9.9,
+          "frameChangePercent": 0.5988023952095967,
+          "cpuChangePercent": 6.060606060606055
+        },
+        {
+          "players": 2,
+          "frameP95Ms": 33.4,
+          "cpuSubmissionP95Ms": 12.4,
+          "historicalFrameP95Ms": 33.4,
+          "historicalCpuSubmissionP95Ms": 13.1,
+          "frameChangePercent": 0,
+          "cpuChangePercent": -5.343511450381677
+        }
+      ],
+      "ownerJoinReadyMs": 5431.539665999997,
+      "ownerAssetReadyMs": 8283.897624999983,
+      "peerJoinReadyMs": 4421.509083000012,
+      "reconnectMs": 1268.1392499999492,
+      "reconnectPositionDeltaM": 0,
+      "resources": {
+        "count": 494,
+        "transferBytes": 73706763,
+        "decodedBodyBytes": 73558563
+      },
+      "load1mRange": [
+        16.65869140625,
+        30.27783203125
+      ],
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+      "resourcesBySample": [
+        {
+          "players": 1,
+          "iteration": 1,
+          "calls": 1244,
+          "triangles": 4701176,
+          "memory": {
+            "geometries": 523,
+            "textures": 149
+          },
+          "heap": {
+            "usedJSHeapSize": 435000000,
+            "totalJSHeapSize": 491000000
+          },
+          "frameP95": 16.7,
+          "cpuP95": 11.7
+        },
+        {
+          "players": 1,
+          "iteration": 2,
+          "calls": 1217,
+          "triangles": 4696634,
+          "memory": {
+            "geometries": 523,
+            "textures": 149
+          },
+          "heap": {
+            "usedJSHeapSize": 435000000,
+            "totalJSHeapSize": 491000000
+          },
+          "frameP95": 16.8,
+          "cpuP95": 10.5
+        },
+        {
+          "players": 1,
+          "iteration": 3,
+          "calls": 1217,
+          "triangles": 4696634,
+          "memory": {
+            "geometries": 523,
+            "textures": 149
+          },
+          "heap": {
+            "usedJSHeapSize": 435000000,
+            "totalJSHeapSize": 491000000
+          },
+          "frameP95": 16.8,
+          "cpuP95": 10.4
+        },
+        {
+          "players": 2,
+          "iteration": 1,
+          "calls": 1282,
+          "triangles": 5034252,
+          "memory": {
+            "geometries": 539,
+            "textures": 153
+          },
+          "heap": {
+            "usedJSHeapSize": 435000000,
+            "totalJSHeapSize": 491000000
+          },
+          "frameP95": 33.4,
+          "cpuP95": 14.5
+        },
+        {
+          "players": 2,
+          "iteration": 2,
+          "calls": 1264,
+          "triangles": 5031224,
+          "memory": {
+            "geometries": 539,
+            "textures": 153
+          },
+          "heap": {
+            "usedJSHeapSize": 435000000,
+            "totalJSHeapSize": 491000000
+          },
+          "frameP95": 33.4,
+          "cpuP95": 12
+        },
+        {
+          "players": 2,
+          "iteration": 3,
+          "calls": 1264,
+          "triangles": 5031224,
+          "memory": {
+            "geometries": 539,
+            "textures": 153
+          },
+          "heap": {
+            "usedJSHeapSize": 435000000,
+            "totalJSHeapSize": 491000000
+          },
+          "frameP95": 33.4,
+          "cpuP95": 12.4
+        }
+      ]
+    }
+  ],
+  "sourceComparisonCoverage": {
+    "shared": [
+      "preview/public/data/district.json",
+      "preview/public/data/world-manifest.json",
+      "preview/src/world-manifest.js",
+      "preview/src/district-interior-contract.js",
+      "preview/src/garden-campus-district.js",
+      "preview/src/main.js",
+      "preview/src/render-audit.js",
+      "pnpm-lock.yaml"
+    ],
+    "missingHistorical": [
+      "preview/src/walking.js",
+      "preview/src/world-surface.js",
+      "server/district-data.js",
+      "server/world.js",
+      "shared/east-garden-commons-layout.js",
+      "preview/audit/world-expansion-baseline.js"
+    ]
+  }
+}

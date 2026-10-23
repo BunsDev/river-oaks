@@ -25,7 +25,7 @@ export function createCommonsLayout({ districtBounds, edgeHeights }) {
   solids.push({id:`${COMMONS_ID}/rain-garden`,kind:'planter',rect:rect(centre+15,north-21,18,12),height:.45});
   return {id:COMMONS_ID,revision:COMMONS_REVISION,districtBounds:[...districtBounds],edge,edgeHeights:[...edgeHeights],ground,
     bounds:[districtBounds[0],districtBounds[1],plaza[2]+2,districtBounds[3]],
-    surfaces:[{id:`${COMMONS_ID}/promenade`,rect:[edge-2,north-promenadeWidth/2,centre+2,north+promenadeWidth/2]},
+    surfaces:[{id:`${COMMONS_ID}/promenade`,rect:[edge-3,north-promenadeWidth/2,centre+2,north+promenadeWidth/2]},
       {id:`${COMMONS_ID}/plaza`,rect:plaza}],pavilion,solids,
     routes:[{id:`${COMMONS_ID}/arrival-loop`,width:promenadeWidth,points:[[edge-1,north],[centre,north],[centre+25,north],[centre,north],[edge-1,north]]}],
     activity:{id:`${COMMONS_ID}/table-zone`,tableId:'chess-commons',rect:rect(centre+13,north+20,6,4),capacity:2},
@@ -44,6 +44,7 @@ export function commonsGroundAt(layout, east, northing) {
 
 export function commonsAllows(layout, east, northing, radius=.35) {
   if (!layout) return true;
+  // Three metres of overlap covers the 2.6 m flight diameter as well as walking.
   // Rectangles overlap at joins, so eroding each footprint by the player's radius
   // leaves a continuous corridor without granting the surrounding empty reserve.
   return insideRect(layout.districtBounds,east,northing,radius)

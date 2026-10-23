@@ -63,8 +63,8 @@ test('two coordinators racing for one office seat produce one winner, and the cl
   const winner = claims[0].ok ? 'owner' : 'guest', loser = winner === 'owner' ? 'guest' : 'owner';
 
   const state = JSON.parse(inflateSync(await redis.getBuffer(`${prefix}:state`)).toString());
-  assert.equal(state.checkpoint.version, 13);
-  assert.match(await redis.get(`${prefix}:lease`), /^v13:/);
+  assert.equal(state.checkpoint.version, 15);
+  assert.match(await redis.get(`${prefix}:lease`), /^v17:/);
   await a.close(); await b.close();
   const replacement = create();
   const restored = await seen(replacement, winner);

@@ -283,7 +283,8 @@
         "office-computer-embed",
         "garden-campus-office",
         "garden-campus-traversal",
-        "garden-campus-suite"
+        "garden-campus-suite",
+        "east-garden-commons"
       ],
       "browser": true,
       "timeoutMs": 1200000

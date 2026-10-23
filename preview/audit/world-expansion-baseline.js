@@ -13,6 +13,8 @@ import { startBrowserFixture } from '../e2e/fixture-server.js';
 import { distribution } from './metrics.js';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
+// Capture provenance only after the queue wait, when the measured source is loaded.
+const release = await holdBrowserLock('world expansion baseline');
 // Defaults reproduce the #580 Gardens baseline. RIVER_OAKS_BASELINE_REVISION and
 // RIVER_OAKS_BASELINE_VIEW=market-street measure the Commons destination (#586)
 // against it; RIVER_OAKS_BASELINE_PROFILES=desktop limits the viewports.
@@ -21,7 +23,9 @@ const profileNames = (process.env.RIVER_OAKS_BASELINE_PROFILES ?? 'desktop,phone
 const output = join(root, '.runtime/world-expansion', `baseline-${revision === 'river-oaks-gardens-3' && view === 'spawn' ? '' : `${revision}-${view}-`}${new Date().toISOString().replaceAll(':', '-')}`);
 const files = ['preview/public/data/district.json', 'preview/public/data/world-manifest.json',
   'preview/src/world-manifest.js', 'preview/src/district-interior-contract.js', 'preview/src/garden-campus-district.js',
-  'preview/src/main.js', 'preview/src/render-audit.js', 'preview/audit/world-expansion-baseline.js', 'pnpm-lock.yaml',
+  'preview/src/main.js', 'preview/src/render-audit.js', 'preview/src/walking.js', 'preview/src/world-surface.js',
+  'server/district-data.js', 'server/world.js', 'shared/east-garden-commons-layout.js',
+  'preview/audit/world-expansion-baseline.js', 'pnpm-lock.yaml',
   'shared/commons-destination.js', 'config/destinations/bayou-market-commons.json', 'preview/src/city-kit/render.js'];
 const report = {
   status: 'running', startedAt: new Date().toISOString(),
@@ -30,12 +34,11 @@ const report = {
   machine: { platform: platform(), arch: arch(), cpu: cpus()[0]?.model, logicalCpus: cpus().length, loadAverage: loadavg() },
   revision, view,
   scope: 'Local Chromium development build, selected revision and view, fixture accounts and in-memory loopback authority. Phone-sized viewport uses the same desktop GPU, not physical mobile hardware. Resource bytes include Vite development modules, not a production initial-download budget. Two-player samples render two full browser clients concurrently on this host. GPU memory bytes, live auth, hosted performance and human accessibility are not measured.',
-  quality: 'sharp', reducedMotion: 'reduce', sampleDurationMs: 10000, profiles: [],
+  quality: 'sharp', reducedMotion: 'reduce', sampleDurationMs: 30000, samplesPerWorkload: 3, warmupMs: 5000, profiles: [],
 };
 let browser, fixture;
 await mkdir(output, { recursive: true });
 const flush = () => writeFile(join(output, 'report.json'), JSON.stringify(report, null, 2) + '\n');
-const release = await holdBrowserLock('world expansion baseline');
 try {
   browser = await chromium.launch({ headless: true, args: process.platform === 'darwin' ? ['--use-angle=metal'] : [] });
   report.browser = browser.version();
@@ -97,7 +100,8 @@ try {
         const entries = performance.getEntriesByType('resource');
         return { count: entries.length, transferBytes: entries.reduce((n, e) => n + e.transferSize, 0), decodedBodyBytes: entries.reduce((n, e) => n + e.decodedBodySize, 0) };
       });
-      const sample = async count => {
+      const sample = async (count, iteration) => {
+        await owner.page.waitForTimeout(report.warmupMs);
         const before = await owner.page.evaluate(() => window.__riverRenderAudit.graphics());
         assert.ok(!/SwiftShader|llvmpipe|Software|Microsoft Basic Render/i.test(before.renderer), `Software renderer: ${before.renderer}`);
         await owner.page.evaluate(() => window.__riverRenderAudit.start());
@@ -106,18 +110,23 @@ try {
           players: window.__riverMultiplayer().snapshot.players.length, heap: performance.memory ? { usedJSHeapSize: performance.memory.usedJSHeapSize, totalJSHeapSize: performance.memory.totalJSHeapSize } : null }));
         assert.equal(data.timing.overflow, false); assert.equal(data.timing.discontinuities ?? 0, 0);
         assert.equal(data.players, count); assert.ok(data.graphics.render.calls > 0);
-        const screenshot = `${profile.name}-${count}-players.png`;
+        const screenshot = `${profile.name}-${count}-players-${iteration}.png`;
         await owner.page.screenshot({ path: join(output, screenshot) });
-        row.samples.push({ players: count, before, after: data.graphics, heap: data.heap,
+        row.samples.push({ players: count, iteration, before, after: data.graphics, heap: data.heap,
           frame: distribution(data.timing.frames.map(frame => frame.intervalMs)), cpuSubmission: distribution(data.timing.frames.map(frame => frame.cpuMs)),
           screenshot, loadAverage: loadavg() });
         await flush();
       };
-      await sample(1);
+      for (let iteration = 1; iteration <= report.samplesPerWorkload; iteration++) await sample(1, iteration);
       const peer = await joinPlayer('alice'); row.peerJoinReadyMs = peer.joinReadyMs;
       await owner.page.waitForFunction(() => window.__riverMultiplayer().snapshot.players.length === 2);
       await peer.page.waitForFunction(() => window.__riverMultiplayer().snapshot.players.length === 2);
-      await sample(2);
+      for (let iteration = 1; iteration <= report.samplesPerWorkload; iteration++) await sample(2, iteration);
+      row.medians = [1, 2].map(players => {
+        const samples = row.samples.filter(sample => sample.players === players);
+        return { players, frameP95Ms: distribution(samples.map(sample => sample.frame.p95Ms)).p50Ms,
+          cpuSubmissionP95Ms: distribution(samples.map(sample => sample.cpuSubmission.p95Ms)).p50Ms };
+      });
       const before = await owner.page.evaluate(() => {
         const town = window.__riverMultiplayer();
         return { id: town.selfId, player: town.snapshot.players.find(player => player.id === town.selfId), sockets: window.__expansionSockets.length };

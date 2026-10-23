@@ -26,27 +26,32 @@ async page => {
   };
   const walk=async(tab,points,label)=>{
     const started=Date.now(),start=await self(tab),samples=[];
-    for(const target of points){
+    const releaseKeys=async()=>{await tab.keyboard.up('KeyW');await tab.keyboard.up('ShiftLeft');};
+    try{for(const target of points){
       const deadline=Date.now()+120000;
       for(;;){
         const pose=await tab.evaluate(()=>window.__riverCarriage().pose),dx=target[0]-pose.position[0],dz=-target[1]-pose.position[2],distance=Math.hypot(dx,dz);
-        if(distance<.35)break;
+        if(distance<.35){await releaseKeys();break;}
         if(Date.now()>deadline)throw new Error(`${label}: stalled ${JSON.stringify({target,pose})}`);
         const heading=Math.atan2(-dx,-dz),difference=Math.atan2(Math.sin(heading-pose.yaw),Math.cos(heading-pose.yaw));
         if(Math.abs(difference)>.035){
+          await releaseKeys();
           const box=await tab.locator('#canvas-host').boundingBox(),x=box.x+box.width*.5,y=box.y+box.height*.4;
           const drag=Math.max(-box.width*.35,Math.min(box.width*.35,-difference/.003));
           await tab.mouse.move(x,y);await tab.mouse.down();await tab.mouse.move(x+drag,y,{steps:3});await tab.mouse.up();continue;
         }
         await tab.locator('#canvas-host').focus();
         const fast=distance>2;
-        if(fast)await tab.keyboard.down('ShiftLeft');
+        if(fast)await tab.keyboard.down('ShiftLeft');else await tab.keyboard.up('ShiftLeft');
         await tab.keyboard.down('KeyW');
         await tab.waitForTimeout(Math.min(450,Math.max(30,distance*(fast?110:230))));
-        await tab.keyboard.up('KeyW');if(fast)await tab.keyboard.up('ShiftLeft');
+        // Keep walking during browser round trips, as spatial-streets does.
+        // Pulsing/releasing every sample repeatedly brakes on CPU-rendered CI.
+        // Reassert keydown each pass so a focus correction cannot lose input.
         samples.push((await self(tab)).position);
       }
     }
+    }finally{await releaseKeys();}
     const target=points.at(-1);
     await tab.waitForFunction(target=>{const town=window.__riverMultiplayer(),p=town.snapshot.players.find(p=>p.id===town.selfId);return Math.hypot(p.position[0]-target[0],p.position[1]-target[1])<.6;},target,{timeout:10000});
     routes.push({label,seconds:(Date.now()-started)/1000,start:start.position,end:(await self(tab)).position,samples});console.log(`${label} reached`);
