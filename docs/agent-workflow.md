@@ -91,6 +91,9 @@ required environment. Each task records its command, expected/actual exit,
 duration and status. Remaining tasks are `not_run`. Console output retains
 underlying test counts, skips and diagnostics; receipts do not capture output or
 credential values. On macOS/Linux, timeouts and handled interruptions stop the owned process group.
+
+Browser tasks enter the shared queue before their execution timeout starts. Their receipt status is `queued` while waiting, `queueDurationMs` records admission time, and `durationMs` covers command execution and lock-release overhead. Cancellation while queued removes that task's claim without starting its command; nested browser runners inherit the acquired lock. Command timeouts still apply after admission.
+
 Windows process-tree cleanup has not been verified. A forcibly killed runner may leave `status: running`; that is incomplete,
 never passing. Do not run the same profile concurrently in one worktree because
 the latest receipt replaces the previous one. Receipts include HEAD and dirty
