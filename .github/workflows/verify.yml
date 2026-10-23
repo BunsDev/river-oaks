@@ -195,6 +195,10 @@ jobs:
             journeys: garden-campus-office garden-campus-suite
           - id: campus-traversal
             journeys: garden-campus-traversal
+          # Sign-in settles without flicker: the redirect splash, then every visible
+          # state (theme, gate, Character Studio button, character) moves one way only.
+          - id: access
+            journeys: access-gate login-flicker
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
