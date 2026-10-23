@@ -1,3 +1,5 @@
+import { COMMONS_REVISION } from '../shared/east-garden-commons-layout.js';
+import { attachEastGardenCommons } from '../preview/src/east-garden-commons-world.js';
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { attachDistrictGalleryPlan } from '../preview/src/district-interior-contract.js';
@@ -18,5 +20,6 @@ export async function loadDistrictData({ districtRevision } = {}) {
     throw new Error('District gallery plan digest mismatch');
   }
   const attached = attachDistrictGalleryPlan(world, plan);
-  return districtRevision === DISTRICT_REVISION_GARDENS ? attachGardenCampus(attached) : attached;
+  const campus = [DISTRICT_REVISION_GARDENS,COMMONS_REVISION].includes(districtRevision) ? attachGardenCampus(attached) : attached;
+  return districtRevision === COMMONS_REVISION ? attachEastGardenCommons(campus) : campus;
 }

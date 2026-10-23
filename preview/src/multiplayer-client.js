@@ -350,6 +350,7 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
   };
   window.addEventListener('online',resume,{signal:lifetime.signal});
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')resume();},{signal:lifetime.signal});
+  let flightRequest=null,flightTracking=false;
   function command(message){
     if(stopped||!connected)return Promise.resolve({ok:false,message:'Reconnect before taking an action.'});
     const requestId=String(++sequence);
@@ -410,7 +411,21 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
     update(now){
       greetings.update(now);
       if(!connected||socket?.readyState!==WebSocket.OPEN)return;
-      if(!traveling&&now-lastPose>=200){lastPose=now;const pose=getPose();if(pose&&!pose.office)socket.send(JSON.stringify({type:'pose',position:[pose.position[0],-pose.position[2],pose.ground],yaw:pose.riding?pose.riding.yaw+Math.PI/2:pose.yaw,altitude:pose.altitude,levelId:pose.levelId??null,...(activeGreeting?{interactionId:activeGreeting}:{}),...(pose.riding?{vehicle:pose.riding.kind}:{})}));}
+      if(!traveling&&now-lastPose>=200){
+        lastPose=now;const pose=getPose();
+        if(pose&&!pose.office){
+          const message={type:'pose',position:[pose.position[0],-pose.position[2],pose.ground],yaw:pose.riding?pose.riding.yaw+Math.PI/2:pose.yaw,altitude:pose.altitude,levelId:pose.levelId??null,...(activeGreeting?{interactionId:activeGreeting}:{}),...(pose.riding?{vehicle:pose.riding.kind}:{})};
+          if((pose.flying||flightTracking)&&getWalking()?.recordSubmittedPose){
+            flightTracking=true;
+            if(flightRequest)return;
+            const acknowledge=getWalking().recordSubmittedPose(pose);
+            // Flight turns need explicit acknowledgments, so intermediate corner
+            // endpoints cannot be coalesced away. Keep the normal 200ms cadence.
+            const request=command(message);flightRequest=request;
+            request.then(result=>{if(result.ok&&result.player){acknowledge(result.player);flightTracking=result.player.altitude>0;}}).catch(()=>{}).finally(()=>{if(flightRequest===request)flightRequest=null;});
+          }else socket.send(JSON.stringify(message));
+        }
+      }
       if(now-lastFocus>=10000){lastFocus=now;const dialog=document.querySelector('#community-dialogue');if(dialog&&!dialog.hidden)command({type:'focus',localId:document.querySelector('#community-local')?.value}).catch(()=>{});}
     },
     dispose(){
