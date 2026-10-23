@@ -262,10 +262,11 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-11-delivered-source-retirement](2026-10-11-delivered-source-retirement.md)<br>Delivered source reconciliation | `reconcile-delivered-sources` | retired | — | 2026-10-11 |
 | [2026-10-11-ci-parallel-preview](2026-10-11-ci-parallel-preview.md)<br>Parallel preview check | `ci-parallel-preview` | retired | #252 | 2026-10-11 |
 
-## Historical, not in the register (74)
+## Historical, not in the register (75)
 
 | Plan | PRs mentioned |
 | --- | --- |
+| [2026-10-23-police-pursuit-598](2026-10-23-police-pursuit-598.md)<br>Police pursuit #598 Implementation Plan | #598, #597 |
 | [2026-10-15-voice-continuity](2026-10-15-voice-continuity.md)<br>Voice survives the socket hand-over (2026-10-15) | #447 |
 | [2026-10-15-username-minimum-letters](2026-10-15-username-minimum-letters.md)<br>Usernames need at least 4 letters (2026-10-15) | #451 |
 | [2026-10-15-safari-gltf-decoder-investigation](2026-10-15-safari-gltf-decoder-investigation.md)<br>Physical Safari glTF decoder investigation | #409, #401, #309 |

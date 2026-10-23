@@ -16,6 +16,17 @@ function validCrime(value) {
     && value.wanted.every(entry => Array.isArray(entry) && entry.length === 2 && typeof entry[0] === 'string'
       && Number.isSafeInteger(entry[1]) && entry[1] >= 1 && entry[1] <= MAX_STARS);
 }
+function validPolice(value, players) {
+  if (!value || !Array.isArray(value.eligible) || value.eligible.length>32 || new Set(value.eligible).size!==value.eligible.length
+    || value.eligible.some(id=>!players.some(player=>player.id===id)) || !Array.isArray(value.units) || value.units.length > 6 || !Array.isArray(value.surrendered)
+    || value.surrendered.length > 32 || new Set(value.surrendered).size !== value.surrendered.length
+    || value.surrendered.some(id => !players.some(player => player.id === id))
+    || new Set(value.units.map(unit => unit?.id)).size !== value.units.length) return false;
+  return value.units.every(unit => unit && /^police:[0-5]$/.test(unit.id) && Array.isArray(unit.position)
+    && unit.position.length === 3 && unit.position.every(Number.isFinite) && Number.isFinite(unit.yaw)
+    && ['pursue','search','arrest','return'].includes(unit.state)
+    && (unit.state === 'return' ? unit.targetId === null : typeof unit.targetId === 'string' && unit.targetId.length > 0));
+}
 function validWorldPolicy(value, worldId) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
   const { minute, active, ...rules } = value;
@@ -32,7 +43,8 @@ export function validTownSnapshot(snapshot, previousSelfId = null) {
     || !snapshot.community || typeof snapshot.community !== 'object'
     || !snapshot.wishes || !Array.isArray(snapshot.wishes.events)
     || Object.hasOwn(snapshot, 'worldPolicy') && !validWorldPolicy(snapshot.worldPolicy, snapshot.worldId ?? DEFAULT_WORLD_ID)
-    || Object.hasOwn(snapshot, 'crime') && !validCrime(snapshot.crime)) return false;
+    || Object.hasOwn(snapshot, 'crime') && !validCrime(snapshot.crime)
+    || Object.hasOwn(snapshot, 'police') && !validPolice(snapshot.police, snapshot.players)) return false;
   const community = snapshot.community;
   if (!Object.hasOwn(COMMUNITY_SCENARIOS, community.scenarioKey)
     || typeof community.status !== 'string' || typeof community.running !== 'boolean'
