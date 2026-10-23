@@ -1,4 +1,5 @@
 import { createCharacterStudio } from './character-studio.js';
+import { characterStudioShown } from './character-studio-state.js';
 import { createOfficeUI } from './office-ui.js';
 import { createIpicScreening } from './ipic-screening-ui.js';
 import { IPIC_DARTS, IPIC_INTERIOR, atIpicDartsLine } from './ipic-plan.js';
@@ -299,7 +300,7 @@ function initializeRenderer() {
     },
     requestVehicleExit: position => multiplayer.travel({position:[position[0],-position[2]]}),
     getPortrait: id => portraits.portrait(id) });
-  if(import.meta.env.VITE_CHARACTER_STUDIO==='true'){
+  if(characterStudioShown(import.meta.env)){
     characterStudio = createCharacterStudio({ownerId:document.body.dataset.accountId,
       getDefinition:()=>playerAvatar.definition,
       accountTransport:{read:()=>multiplayer.characterRequest('read'),write:(action,body)=>multiplayer.characterRequest(action,body),
