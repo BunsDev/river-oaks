@@ -301,12 +301,12 @@ testRedis('lost lease cannot publish replies or trim queue; next leader replays 
   assert.equal(await f.redis.llen(`${f.prefix}:queue`),1);
   assert.deepEqual(await f.redis.getBuffer(`${f.prefix}:state`),stateBefore);
   assert.equal((await f.redis.keys(`${f.prefix}:reply:*`)).length,1,'only earlier committed join has a reply');
-  await f.redis.set(`${f.prefix}:lease`,'v13:different-leader','PX',5000);
+  await f.redis.set(`${f.prefix}:lease`,'v15:different-leader','PX',5000);
   release();await delay(250);
   assert.equal(await f.redis.llen(`${f.prefix}:queue`),1,'stale commit cannot trim pending operation');
   assert.deepEqual(await f.redis.getBuffer(`${f.prefix}:state`),stateBefore);
   await stalled.close();
-  assert.equal(await f.redis.get(`${f.prefix}:lease`),'v13:different-leader','close only releases its own lease');
+  assert.equal(await f.redis.get(`${f.prefix}:lease`),'v15:different-leader','close only releases its own lease');
   await f.redis.del(`${f.prefix}:lease`);
   const survivor=f.create();await survivor.tick();
   await request;
@@ -425,7 +425,7 @@ testRedis('an upgraded coordinator takes over an older lease without waiting for
   await room.tick();
   const owner=await f.redis.get(key);
   assert.notEqual(owner,legacy,'a pre-character writer cannot keep renewing the obsolete lease');
-  assert.match(owner,/^v13:/);
+  assert.match(owner,/^v15:/);
   assert.equal((await room.read()).snapshot.worldId,'river-oaks');
 });
 
@@ -442,14 +442,14 @@ testRedis('paired invitations and consent survive coordinator replacement with s
   assert.ok(players.every(p=>p.gesture==='dance'));
   assert.equal(players[0].interaction.elapsed,players[1].interaction.elapsed);
   const state=JSON.parse(inflateSync(await f.redis.getBuffer(`${f.prefix}:state`)).toString());
-  assert.equal(state.checkpoint.version,13);assert.equal(state.checkpoint.payload.interactions[0].status,'active');
+  assert.equal(state.checkpoint.version,14);assert.equal(state.checkpoint.payload.interactions[0].status,'active');
   await replacement.close();const last=f.create();
   assert.equal((await f.command(last,'alice',{type:'interaction',action:'cancel',id:invitation.interaction.id})).ok,true);
   assert.ok((await last.read()).snapshot.players.every(p=>p.gesture===null));
 });
 
 testRedis('an older generation does not steal an active newer coordinator lease',async t=>{
-  const f=await setup(t),room=f.create(),key=`${f.prefix}:lease`,future=`v13:${randomUUID()}`;
+  const f=await setup(t),room=f.create(),key=`${f.prefix}:lease`,future=`v15:${randomUUID()}`;
   await f.redis.set(key,future,'PX',5000);
   await room.tick();
   assert.equal(await f.redis.get(key),future);

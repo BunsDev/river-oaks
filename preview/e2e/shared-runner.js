@@ -109,13 +109,13 @@ try {
     const town = await freePort(used);
     const ports = { web, town };
     await start(mode, ports);
-    const names=mode==='development'?(selectedJourney==='creation-tools'?['creation-tools']:['multiplayer-dev','groups','world-events','rail-shared','shared-seating']):mode==='development-world'?['world-boundary','world-map','character-studio-worlds']:mode==='development-publish'?['world-publish','creator-generated-levels','creator-four-levels','creator-street-crossing']:mode==='creator'?['creator-objects']:[...(selectedJourney==='storefront-threshold'?['storefront-threshold']:[]),...(selectedJourney==='generated-gallery-shared'?['generated-gallery-shared']:[]),'access-gate','connection-required','multiplayer','indoor-npcs','multiplayer-exclusivity','vehicle-exit','multiplayer-gate','resident-names','sit-and-water','greetings','character-studio-shared','character-studio-tiers'];
+    const names=mode==='development'?(selectedJourney==='creation-tools'?['creation-tools']:['multiplayer-dev','groups','world-events','rail-shared','shared-seating','world-rules-shared']):mode==='development-world'?['world-boundary','world-map','character-studio-worlds']:mode==='development-publish'?['world-publish','creator-generated-levels','creator-four-levels','creator-street-crossing']:mode==='creator'?['creator-objects']:[...(selectedJourney==='storefront-threshold'?['storefront-threshold']:[]),...(selectedJourney==='generated-gallery-shared'?['generated-gallery-shared']:[]),'access-gate','connection-required','multiplayer','indoor-npcs','multiplayer-exclusivity','vehicle-exit','multiplayer-gate','resident-names','sit-and-water','greetings','character-studio-shared','character-studio-tiers'];
     for (const name of names) {
       if (selectedJourney && name !== selectedJourney) continue;
       interruption.signal.throwIfAborted();
       // These journeys require their initial town layout or a fresh development owner.
       // Closing browser contexts does not reset simulation, ledgers or creations.
-      if (['shared-seating', 'vehicle-exit', 'greetings', 'character-studio-shared', 'character-studio-tiers', 'character-studio-worlds', 'creator-generated-levels', 'creator-four-levels','creator-street-crossing'].includes(name) && !selectedJourney) { await stop(); await start(mode, ports); }
+      if (['shared-seating', 'world-rules-shared', 'vehicle-exit', 'greetings', 'character-studio-shared', 'character-studio-tiers', 'character-studio-worlds', 'creator-generated-levels', 'creator-four-levels','creator-street-crossing'].includes(name) && !selectedJourney) { await stop(); await start(mode, ports); }
       const context = await browser.newContext(), page = await context.newPage(), started = Date.now();
       page.setDefaultTimeout(60000);
       const pageErrors = [];
