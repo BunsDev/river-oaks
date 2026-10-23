@@ -1,7 +1,7 @@
 // Approved East Garden Commons blockout. Metres east/north/up; original authored
 // geometry, not a survey. Renderer and movement consume these same primitives.
 export const COMMONS_ID = 'east-garden-commons';
-export const COMMONS_REVISION = 'east-garden-commons-blockout-1';
+export const COMMONS_REVISION = 'east-garden-commons-market-1';
 const north = -1335, width = 70, depth = 80, promenadeWidth = 6;
 const rect = (x, y, w, d) => [x-w/2,y-d/2,x+w/2,y+d/2];
 export const insideRect = (r, x, y, margin = 0) => x >= r[0]+margin && x <= r[2]-margin && y >= r[1]+margin && y <= r[3]-margin;

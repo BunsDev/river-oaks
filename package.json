@@ -89,7 +89,9 @@
     "preproject:archives": "node scripts/enforce-pnpm.mjs",
     "preregister": "node scripts/enforce-pnpm.mjs",
     "land": "node scripts/land-pr.mjs",
-    "preland": "node scripts/enforce-pnpm.mjs"
+    "preland": "node scripts/enforce-pnpm.mjs",
+    "destination": "node scripts/destination.mjs",
+    "predestination": "node scripts/enforce-pnpm.mjs"
   },
   "dependencies": {
     "@vercel/functions": "^3.10.1",

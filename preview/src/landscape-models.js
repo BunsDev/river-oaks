@@ -66,9 +66,10 @@ function hideAfterShadow() { this.visible = false; }
 
 // Baked EZ Tree models replace only the visual crowns at existing stems.
 // Terrain, navigation, source vegetation records and all street fixtures stay put.
-export function buildMatureTrees(world) {
+// Authored neighborhoods (city-kit/render.js) pass their own placements.
+export function buildMatureTrees(world, placements=matureTreePlacements(world)) {
   const group=new THREE.Group();group.name='Mature urban shade trees';
-  const placements=matureTreePlacements(world),levels=[],shadowProxies=[];
+  const levels=[],shadowProxies=[];
   group.userData.shadowProxies=shadowProxies;
   let disposed=false;
   group.userData.observedVoxels=world.vegetation?.voxels.length ?? 0;
