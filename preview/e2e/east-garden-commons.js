@@ -31,7 +31,8 @@ async page => {
       const deadline=Date.now()+120000;
       for(;;){
         const pose=await tab.evaluate(()=>window.__riverCarriage().pose),dx=target[0]-pose.position[0],dz=-target[1]-pose.position[2],distance=Math.hypot(dx,dz);
-        if(distance<.35){await releaseKeys();break;}
+        // Stay inside the planner's 0.3 m corner clearance before turning.
+        if(distance<.15){await releaseKeys();break;}
         if(Date.now()>deadline)throw new Error(`${label}: stalled ${JSON.stringify({target,pose})}`);
         const heading=Math.atan2(-dx,-dz),difference=Math.atan2(Math.sin(heading-pose.yaw),Math.cos(heading-pose.yaw));
         if(Math.abs(difference)>.035){

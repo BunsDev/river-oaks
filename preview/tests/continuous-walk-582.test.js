@@ -116,3 +116,23 @@ test('joined clearance never lets a body overhang the physical footprint at eith
     }
   }
 });
+
+
+test('the rendered District approach corner remains walkable when waypoints are reached within 15 cm', () => {
+  const start = [-2714.9170724314704, -1321.6003302338634];
+  const target = [-2714.280118916899, -1322.6085898216527];
+  const roadNavigation = createResidentNavigation(world, { allowRoads: true });
+  assert.equal(roadNavigation.canTravel(start, target), false, 'the captured early turn crosses a solid corner');
+  const route = roadNavigation.route(start, target);
+  assert.ok(route?.length > 1, 'the planner supplies a walkable corner');
+  const state = createWalkingState(environment, [...start, environment.groundAt(start[0], -start[1])]);
+  for (const point of route) {
+    let remaining = 12000;
+    while (Math.hypot(state.position[0] - point[0], state.position[2] + point[1]) >= .15) {
+      assert.ok(--remaining > 0, `corner stalled: ${JSON.stringify(state.position)}`);
+      stepWalking(state, environment, steerWalkingToward(state, point, 1 / 60), 1 / 60);
+      assert.ok(environment.isFree(state.position[0], state.position[2]));
+    }
+  }
+  assert.ok(Math.hypot(state.position[0] - target[0], state.position[2] + target[1]) < .15);
+});
