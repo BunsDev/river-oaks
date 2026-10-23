@@ -43,3 +43,14 @@ test('world rules are optional for older towns but exact when present (#596)', a
     assert.equal(validTownSnapshot({ ...snapshot(), worldPolicy }), false, JSON.stringify(worldPolicy));
   assert.equal(validTownSnapshot({ ...snapshot(), worldId: 'garden-2', worldPolicy: { ...forced, minute: 720, active: true } }), false, 'zones are checked against the snapshot world');
 });
+
+test('crime state is optional for older towns but exact when present (#597)', () => {
+  const rival = (change = {}) => ({ id: 'rival:westcreek', name: 'Westcreek rival', appearance: 'sable-human', position: [-2908, -1320, 17.8], yaw: 0, health: 75, maxHealth: 100, incapacitated: false, staggered: true, ...change });
+  const crime = (change = {}) => ({ targets: [rival()], wanted: [['resident', 2]], ...change });
+  assert.equal(validTownSnapshot({ ...snapshot(), crime: crime() }), true);
+  assert.equal(validTownSnapshot({ ...snapshot(), crime: crime({ targets: [rival({ health: 0, incapacitated: true })], wanted: [] }) }), true);
+  for (const bad of [null, [], {}, crime({ targets: null }), crime({ wanted: [['resident', 6]] }), crime({ wanted: [['resident', 0]] }), crime({ wanted: [['resident', 1.5]] }),
+    crime({ targets: [rival({ health: 101 })] }), crime({ targets: [rival({ health: -1 })] }), crime({ targets: [rival({ incapacitated: true })] }),
+    crime({ targets: [rival({ position: [0, 0] })] }), crime({ targets: [rival({ staggered: 'yes' })] })])
+    assert.equal(validTownSnapshot({ ...snapshot(), crime: bad }), false, JSON.stringify(bad));
+});

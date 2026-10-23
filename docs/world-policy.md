@@ -3,10 +3,10 @@
 Issue [#596](https://github.com/BunsDev/river-oaks/issues/596) makes danger an explicit world rule.
 The town decides it; nothing a browser sends or shows can change it. The rule ships **off**: a
 new or upgraded town is as peaceful as before. The crime work that uses it is
-[#597](https://github.com/BunsDev/river-oaks/issues/597) (attacks, harm and wanted stars),
+[#597](https://github.com/BunsDev/river-oaks/issues/597) (attacks, harm and wanted stars; see [crime](crime.md)),
 [#598](https://github.com/BunsDev/river-oaks/issues/598) (police) and
-[#599](https://github.com/BunsDev/river-oaks/issues/599) (release safety). Until #597 lands, no
-command can harm anyone, so turning the rule on only changes what players are told.
+[#599](https://github.com/BunsDev/river-oaks/issues/599) (release safety). Turning the rule on lets
+players attack the authored rivals in enabled danger zones ([crime](crime.md)); residents are never targets.
 
 ## The rule
 
@@ -75,7 +75,7 @@ version. Region migration keeps the rules.
 
 The Redis **writer generation** is now separate from the checkpoint version. v13 and v14 writers
 both wrote checkpoint v13, so version-14 writers are `v15:` (plain) and `v16:` (with the character
-store) and fence both. Raise `WRITER_GENERATION` in `server/redis-room.js` by two whenever older
+store) and fence both. Crime state (checkpoint 15) moved writers to `v17:`/`v18:`. Raise `WRITER_GENERATION` in `server/redis-room.js` by two whenever older
 writers cannot read a new checkpoint version. The browser protocol stays 3: the snapshot field is
 optional, and `validTownSnapshot` refuses it only when present and malformed.
 

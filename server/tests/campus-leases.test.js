@@ -301,7 +301,7 @@ test('v13 checkpoints restore leases, guests, requests and receipts; replays sur
   const retry = { action: 'grant', ...base(), leaseId: lease.id, expectedVersion: lease.version, peerId: S };
   assert.equal(f.send(A, retry).ok, true);
   const saved = f.world.checkpoint();
-  assert.equal(saved.version, 14);
+  assert.equal(saved.version, 15);
   assert.deepEqual(Object.keys(saved.payload.campus), ['serial', 'leases', 'requests', 'receipts']);
   const next = fixture({ clock: f.state });
   assert.equal(next.world.restore(saved).ok, true);
