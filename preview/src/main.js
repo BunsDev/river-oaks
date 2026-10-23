@@ -1392,7 +1392,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
   window.__riverScreening = () => ipicScreening?.inspect() ?? null;
   // Development-only: send a raw command, as a modified client could, to prove the server refuses it.
   window.__riverMultiplayerCommand = message => multiplayer?.command(message);
-  window.__riverMultiplayer = () => ({ connected: multiplayer?.connected ?? false, selfId: multiplayer?.identity?.id, snapshot: multiplayer?.snapshot, remotes: remotePlayers?.stats(), selfMaterials:playerAvatar?.materials, voice: multiplayer?.voice.debug() ?? null,creations:buildLayer?.stats(),birds:birdCams?.state,builder:buildControls?{...buildControls.builder,ghost:buildLayer?.ghost?{position:buildLayer.ghost.position.toArray(),visible:buildLayer.ghost.visible}:null,hint:document.querySelector('#build-hint')?.textContent,valid:document.querySelector('#build-hint')?.dataset.valid}:null });
+  window.__riverMultiplayer = () => ({ connected: multiplayer?.connected ?? false, selfId: multiplayer?.identity?.id, snapshot: multiplayer?.snapshot, remotes: remotePlayers?.stats(), selfMaterials:playerAvatar?.materials,selfRealism:playerAvatar?.realism??null, voice: multiplayer?.voice.debug() ?? null,creations:buildLayer?.stats(),birds:birdCams?.state,builder:buildControls?{...buildControls.builder,ghost:buildLayer?.ghost?{position:buildLayer.ghost.position.toArray(),visible:buildLayer.ghost.visible}:null,hint:document.querySelector('#build-hint')?.textContent,valid:document.querySelector('#build-hint')?.dataset.valid}:null });
   window.__riverPlayerAttention=()=>{
     const rig=playerAvatar?.rig;if(!rig)return null;
     rig.model.updateWorldMatrix(true,true);

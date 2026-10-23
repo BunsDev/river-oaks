@@ -5,7 +5,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
-import { chromium } from 'playwright';
+import { chromium, webkit } from 'playwright';
 import { holdBrowserLock } from '../../scripts/browser-lock.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
@@ -87,7 +87,9 @@ const releaseBrowserLock = await holdBrowserLock('shared town journeys', { signa
 try {
   await mkdir(join(root, 'output/playwright'), { recursive: true });
   await writeFile(join(root, 'data/reports', process.env.RIVER_OAKS_SHARED_REPORT ?? 'shared-experience.json'), JSON.stringify(report, null, 2) + '\n');
-  browser = await chromium.launch({
+  // RIVER_OAKS_SHARED_BROWSER=webkit runs the journeys in Playwright's WebKit (Safari's engine on this desktop, not iOS).
+  report.browser = process.env.RIVER_OAKS_SHARED_BROWSER === 'webkit' ? 'webkit' : 'chromium';
+  browser = report.browser === 'webkit' ? await webkit.launch({ headless: true, handleSIGINT: false, handleSIGTERM: false, handleSIGHUP: false }) : await chromium.launch({
     headless: !softwareRendering, handleSIGINT: false, handleSIGTERM: false, handleSIGHUP: false,
     args: softwareRendering ? ['--use-gl=angle', '--use-angle=gl', '--ignore-gpu-blocklist'] : process.platform === 'darwin' ? ['--use-angle=metal'] : [],
   });
@@ -101,7 +103,7 @@ try {
     return renderer;
   });
   await probe.close();
-  console.log(`Shared renderer: ${report.renderer}; ${report.rendering}`);
+  console.log(`Shared renderer (${report.browser}): ${report.renderer}; ${report.rendering}`);
   for (const mode of modes.length ? modes : supportedModes) {
     interruption.signal.throwIfAborted();
     const used = new Set();
