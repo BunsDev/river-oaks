@@ -10,6 +10,7 @@ import * as THREE from 'three';
 import { AVATAR_PROFILES, loadResidentAvatar } from './avatars.js';
 import { turnToward } from './gait.js';
 import { VISITOR_FORMS } from './visitor-persona.js';
+import { fastWalkFor } from './walking.js';
 import { APPEARANCE_COOLDOWN_MS, CHARACTERS, appearanceFor, canFlyAs, canUseAppearance, defaultAppearanceFor, isJevicaOwner, sharedAppearance, sharedCharacter } from './shared-appearances.js';
 import './player-avatar.css';
 import { isGameplayKey } from './keyboard-input.js';
@@ -139,7 +140,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     for(const input of variantList.querySelectorAll('input'))input.checked=input.value===current.variant;
     movement=movementFor(appearance);
     flightButton.hidden=!canFlyAs(userId,appearance);
-    walking.setTraversal?.({canFly:canFlyAs(userId,appearance),kind:null});
+    walking.setTraversal?.({canFly:canFlyAs(userId,appearance),kind:null,fastWalk:fastWalkFor(userId)});
     picker.dataset.form=current.form;host.dataset.playerMovement=movement;
 
   };

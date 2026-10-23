@@ -1,3 +1,4 @@
+import {verifyBakeProvenance} from '../../scripts/lib/bake-provenance.mjs';
 import test from 'node:test';
 import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
@@ -47,7 +48,7 @@ for(const id of ['man-workwear','kai-noir','man-tailored'])test(`${id}: coat tai
 test('coat bake retains provenance, finite normalized weights and bounded deformation',async()=>{
   const root=new URL('../../',import.meta.url),receipt=JSON.parse(await readFile(new URL('preview/src/coat-tail-morph-receipt.json',root),'utf8'));
   const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
-  for(const [path,expected]of Object.entries(receipt.inputs))assert.equal(hash(await readFile(new URL(path,root))),expected,path);
+  await verifyBakeProvenance({root, bake: 'coat-tail', receipt});
   const output=await readFile(new URL('preview/src/coat-tail-morph-data.js',root));
   assert.equal(hash(output),receipt.outputSha256);assert(output.length<150_000,'packed coat data exceeds 150 kB');
   assert.deepEqual(Object.keys(COAT_TAIL_MORPHS),['kai','aurel']);

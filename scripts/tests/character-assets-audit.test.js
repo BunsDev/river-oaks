@@ -18,9 +18,10 @@ const changed=(edit)=>{
 };
 
 test('all pinned shipped assets pass receipt, skeleton, geometry and embedded texture audit',async()=>{
-  const report=await auditCharacterAssets({root});assert.equal(report.assets.length,3);
+  const report=await auditCharacterAssets({root});assert.deepEqual(report.assets.map(item=>item.id),Object.keys(CHARACTER_ASSETS));
   for(const item of report.assets){assert.equal(item.license,'CC0-1.0');assert.equal(item.joints,53);assert.ok(item.vertices>15000);assert.ok(item.textures.every(t=>t.width<=2048&&t.height<=2048));assert.ok(item.rgba8TextureBytes>0);}
-  assert.deepEqual(report.assets.map(a=>a.triangles),[108636,27106,35786]);
+  assert.deepEqual(report.assets.filter(item=>['jevica','man-casual','man-tailored'].includes(item.id)).map(a=>a.triangles),[108636,27106,35786]);
+  assert.deepEqual(report.assets.filter(item=>item.id.includes('-realistic-')).map(a=>a.triangles),[84550,88544]);
 });
 test('changed shipped bytes and mismatched or unlicensed source receipts fail closed',()=>{
   const input={bytes:original,asset:CHARACTER_ASSETS.jevica,receipt};

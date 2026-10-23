@@ -43,15 +43,53 @@ async page => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto(`${origin}/studio.html`);await page.waitForSelector('body[data-studio-ready="true"]');
   await open('Garden Office');
+  // Panels are rebuilt on every edit; the control being used must keep focus.
+  const active = () => page.evaluate(() => { const element = document.activeElement;return element?.dataset.item ?? element?.name ?? element?.tagName; });
   await page.locator('[data-item="work-desk-1"]').focus();await page.keyboard.press('Enter');
   check((await page.locator('#studio-selected').textContent()).includes('Work Desk 1'), 'Enter on a scene object selects it');
+  check(await active() === 'work-desk-1', `focus stays on the selected scene object (${await active()})`);
   const east = page.getByLabel('East (m)', { exact: true }), before = await east.inputValue();
   await east.focus();await page.keyboard.press(process.platform === 'darwin' ? 'Meta+A' : 'Control+A');await page.keyboard.type('-5.5');await page.keyboard.press('Tab');
   await page.waitForFunction(() => document.body.dataset.studioBusy !== 'true');
   check(await east.inputValue() === '-5.5', 'a typed position commits without dragging');
+  check(await active() === 'north', `Tab after an edit reaches the next field (${await active()})`);
+  await east.focus();await page.keyboard.press(process.platform === 'darwin' ? 'Meta+A' : 'Control+A');await page.keyboard.type('-5');await page.keyboard.press('Enter');
+  await page.waitForFunction(() => document.body.dataset.studioBusy !== 'true');
+  check(await east.inputValue() === '-5' && await active() === 'east', `Enter commits an edit and keeps focus in its field (${await active()})`);
   // From a non-text control, so Studio's shortcut handles it rather than the field's own undo.
-  await page.locator('[data-item="work-desk-1"]').focus();await page.keyboard.press(process.platform === 'darwin' ? 'Meta+Z' : 'Control+Z');
+  await page.locator('[data-item="work-desk-1"]').focus();
+  for (let step = 0; step < 2; step++) {await page.keyboard.press(process.platform === 'darwin' ? 'Meta+Z' : 'Control+Z');await page.waitForFunction(() => document.body.dataset.studioBusy !== 'true');}
   check(await page.getByLabel('East (m)', { exact: true }).inputValue() === before, 'the undo shortcut restores it');
+  // Redoing then undoing from the buttons until history runs out hands focus across, not to the page.
+  const historyKey = async id => {
+    for (let step = 0; step < 4 && await page.locator(id).isEnabled(); step++) {await page.keyboard.press('Enter');await page.waitForFunction(() => document.body.dataset.studioBusy !== 'true');}
+    // Studio hands focus on after the event that disabled the button.
+    await page.waitForFunction(() => document.activeElement && document.activeElement !== document.body && !document.activeElement.disabled, null, { timeout: 2000 }).catch(() => {});
+    return page.evaluate(() => document.activeElement?.id || document.activeElement?.tagName);
+  };
+  await page.locator('#studio-redo').focus();
+  const afterRedo = await historyKey('#studio-redo');
+  check(afterRedo === 'studio-undo', `focus moves to Undo when Redo runs out (${afterRedo})`);
+  const afterUndo = await historyKey('#studio-undo');
+  check(afterUndo === 'studio-redo', `and to Redo when Undo runs out (${afterUndo})`);
+
+  // Every Tab stop shows a focus indicator. Undo ran out past opening the template, so reopen it.
+  await open('Garden Office');
+  await page.locator('[data-item="work-desk-1"]').focus();
+  const stops = [], unmarked = [];
+  for (let step = 0; step < 200; step++) {
+    await page.keyboard.press('Tab');
+    const stop = await page.evaluate(() => {
+      const element = document.activeElement;if (!element || element === document.body) return null;
+      const style = getComputedStyle(element), parent = element.parentElement && getComputedStyle(element.parentElement);
+      const ring = value => value && value.outlineStyle !== 'none' && parseFloat(value.outlineWidth) > 0;
+      return { name: `${element.tagName.toLowerCase()}#${element.id || element.dataset.item || element.name || element.getAttribute('aria-label') || element.textContent.trim().slice(0, 30)}`,
+        marked: ring(style) || style.boxShadow !== 'none' || Boolean(element.parentElement?.matches('.studio-open, .studio-agent-pill') && ring(parent)) };
+    });
+    if (!stop || stops.includes(stop.name)) break;
+    stops.push(stop.name);if (!stop.marked) unmarked.push(stop.name);
+  }
+  check(stops.length > 20 && !unmarked.length, `every one of ${stops.length} Tab stops shows focus${unmarked.length ? ` (none on ${unmarked.join(', ')})` : ''}`);
 
   await page.getByRole('button', { name: 'Walk through', exact: true }).focus();await page.keyboard.press('Enter');
   await page.waitForSelector('body[data-mode="walk"]');

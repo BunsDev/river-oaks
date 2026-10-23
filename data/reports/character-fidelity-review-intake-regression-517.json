@@ -1,0 +1,200 @@
+{
+  "schemaVersion": 1,
+  "status": "reproduced-and-corrected-test-only",
+  "recordedAt": "2026-10-19T06:24:44.622022+00:00",
+  "coreLogSha256": "39479c3d446b61d6ff7f2ac464dccc317808e34dc4f03de5e6424f114ba6b5b4",
+  "coreReceipt": {
+    "schemaVersion": 1,
+    "profile": "core",
+    "startedAt": "2026-10-19T06:21:48.935Z",
+    "status": "failed",
+    "revision": "54b5cd62daddb2abf0f8cc1d9e0b6427698da6da",
+    "dirty": true,
+    "scope": "Selected repository checks only; not production, live auth, native Unreal, human accessibility, or target GPU acceptance.",
+    "results": [
+      {
+        "id": "agent-tests",
+        "command": [
+          "pnpm",
+          "run",
+          "test:agent"
+        ],
+        "status": "failed",
+        "exitCode": 1,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 26360
+      },
+      {
+        "id": "preview-tests",
+        "command": [
+          "pnpm",
+          "test"
+        ],
+        "status": "not_run"
+      },
+      {
+        "id": "server-tests",
+        "command": [
+          "pnpm",
+          "run",
+          "test:server"
+        ],
+        "status": "not_run"
+      },
+      {
+        "id": "desktop-tests",
+        "command": [
+          "pnpm",
+          "run",
+          "test:desktop"
+        ],
+        "status": "not_run"
+      },
+      {
+        "id": "build",
+        "command": [
+          "pnpm",
+          "run",
+          "build"
+        ],
+        "status": "not_run"
+      },
+      {
+        "id": "python-lint",
+        "command": [
+          "uv",
+          "run",
+          "--locked",
+          "ruff",
+          "check",
+          "."
+        ],
+        "status": "not_run"
+      },
+      {
+        "id": "python-format",
+        "command": [
+          "uv",
+          "run",
+          "--locked",
+          "ruff",
+          "format",
+          "--check",
+          "."
+        ],
+        "status": "not_run"
+      },
+      {
+        "id": "python-tests",
+        "command": [
+          "uv",
+          "run",
+          "--locked",
+          "pytest",
+          "-q"
+        ],
+        "status": "not_run"
+      },
+      {
+        "id": "demo",
+        "command": [
+          "uv",
+          "run",
+          "--locked",
+          "river-oaks",
+          "demo"
+        ],
+        "status": "not_run"
+      },
+      {
+        "id": "demo-verify",
+        "command": [
+          "uv",
+          "run",
+          "--locked",
+          "river-oaks",
+          "verify",
+          "--config",
+          "data/generated/demo/config.json",
+          "--raw",
+          "data/generated/demo",
+          "--world",
+          "data/generated/demo/world.json",
+          "--output",
+          "data/generated/demo/report.json"
+        ],
+        "status": "not_run"
+      },
+      {
+        "id": "secrets",
+        "command": [
+          "uv",
+          "run",
+          "--locked",
+          "python",
+          "scripts/check_secrets.py",
+          "--all"
+        ],
+        "status": "not_run"
+      }
+    ],
+    "finishedAt": "2026-10-19T06:22:15.352Z"
+  },
+  "failure": "Named negative intake regression loops over every catalog film; new valid dialogue/music film returns engineering-candidate, contradicting the old blanket draft assertion.",
+  "requiredCorrection": "Explicitly select and assert presence of the original silent film and fixture covered by the negative test; preserve actual media/audio/provenance checks and production code.",
+  "correction": "Enumerate original silent film and fixture by ID,assert each exists,retain all media/audio/provenance negative checks. No production/media/approval changes.",
+  "focused": {
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "exitCode": 0,
+    "logSha256": "af2b2452341d865bdb4f8205322bb093cba4e49bcbd6456782f4832fd9d8ee96"
+  },
+  "independent": {
+    "red": "5pass/1fail/0skips,ipic-two-seats-v1 engineering-candidate vs draft",
+    "green": "19pass/0fail/0skips across intake,screening contract and media"
+  },
+  "correctedRuntime": "eb50b85d64fddedec9f358c9204f96ddf13d8b49fb56759272de4e3f9246b2aa",
+  "failingRuntimeManifestSha256": "11352ec42c6e37fe0a66a6c98139022f5ed442d0a7304e5795e18d2bf5fa37c6",
+  "historicalFixedSourceH": {
+    "runtimeManifestSha256": "85d264d4d3c39b23943577e5fcb261631650df7c1a9d093c04e49087e5f594c4",
+    "path": "scripts/tests/ipic-short-intake.test.js",
+    "sha256": "45e12a8ba44b1d689f3212f287b1e4da8205960a1ee9f38c3f8d5f60754b0180",
+    "coreReceipt": {
+      "file": ".runtime/character-fidelity/goal2j/historical-h-core.json",
+      "sha256": "b19fc0e0537121663a24414943f59d5b9b41196a3dea90038ea085ab6b743df5"
+    },
+    "method": "Hcore actually passed131tooling tests including intendedintakefixtures. HistoricalfailedEcore/source manifest and focused/independentgreen evidence remainunaltered;the failing manifest doesnotidentify the corrected source."
+  },
+  "historicalFixedSourceJ": {
+    "runtimeManifestSha256": "602547082edf9640c27c2fe098217586a3d2d6f0237983d95ff2318e547d998e",
+    "path": "scripts/tests/ipic-short-intake.test.js",
+    "sha256": "45e12a8ba44b1d689f3212f287b1e4da8205960a1ee9f38c3f8d5f60754b0180",
+    "coreReceipt": {
+      "file": ".runtime/character-fidelity/goal2l/historical-J/character-fidelity-review-core-517.json",
+      "sha256": "749e346e305b88351995f09a32fb37b6c2f10587a7d09ff2ea07b1edf2278d6c"
+    },
+    "method": "Jcore actually passed131tooling tests including intendedintakefixtures;correctedsourcebytes remainidentical. HistoricalHcore proof/rawfailedEprofile and focused/independentgreens retainedwithoutrestamping."
+  },
+  "historicalFixedSourceL": {
+    "runtimeManifestSha256": "748501264732cac774f6139c1a5b5f47372fb6c1db148b52742034f54fd3d993",
+    "path": "scripts/tests/ipic-short-intake.test.js",
+    "sha256": "45e12a8ba44b1d689f3212f287b1e4da8205960a1ee9f38c3f8d5f60754b0180",
+    "coreReceipt": {
+      "file": ".runtime/character-fidelity/goal2m/historical-L/character-fidelity-review-core-517.json",
+      "sha256": "04b63f93089c62a62817edac2ac6456a18aa75542b0fd841e572fd44b9eb8c3f"
+    },
+    "method": "ActualLcorepassed131tooling tests including intendedintakefixtures;fixedtestsourcebytesidentical. HistoricalJ/Hcore/rawEfailure remainimmutable and are notrestamped."
+  },
+  "currentFixedSource": {
+    "runtimeManifestSha256": "3e04a4ae0af73d8e452f02024685108ef2d3808cc5822461ec878400b2e0f608",
+    "path": "scripts/tests/ipic-short-intake.test.js",
+    "sha256": "45e12a8ba44b1d689f3212f287b1e4da8205960a1ee9f38c3f8d5f60754b0180",
+    "coreReceipt": {
+      "file": "data/reports/character-fidelity-review-core-517.json",
+      "sha256": "9d58c4378a591459857a4393f4fb7e5ca17cd236f94a950dc018fa46d5a766f8"
+    },
+    "method": "Actual M core passed131toolingtests;fixedtestbytesunchanged. Historical L/J/H core and original failed E evidence remain immutable."
+  }
+}
