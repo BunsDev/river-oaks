@@ -32,6 +32,24 @@ async page => {
     await returning.getByRole('link', { name: 'Continue with GitHub' }).waitFor({ state: 'visible' });
     check(await returning.evaluate(() => !('returning' in document.documentElement.dataset) && localStorage.getItem('river-oaks-entered') === null), 'When sign-in is needed the gate appears and the visit is forgotten');
   } finally { await returningContext.close(); }
+  // Coming back from a sign-in redirect is a login, not a first visit: the tab opens on the
+  // splash in the visitor's theme, never the dark sign-in art before the district.
+  const redirectContext = await page.context().browser().newContext({ colorScheme: 'light' });
+  try {
+    const redirected = await redirectContext.newPage();
+    let sessions = 0, releaseReturn; const returnHeld = new Promise(resolve => { releaseReturn = resolve; });
+    await redirected.route('**/auth/session', async route => { if (sessions++) await returnHeld; return route.fulfill({ json: { authenticated: false } }); });
+    await redirected.route('**/auth/login?provider=github', route => route.fulfill({ status: 302, headers: { location: `${origin}/` } }));
+    await redirected.goto(origin, { waitUntil: 'commit' });
+    await redirected.getByRole('link', { name: 'Continue with GitHub' }).click();
+    await redirected.waitForFunction(() => 'returning' in document.documentElement.dataset);
+    const back = await redirected.evaluate(() => ({ background: getComputedStyle(document.documentElement).backgroundColor, mark: sessionStorage.getItem('river-oaks-signing-in') }));
+    check(back.background === 'rgb(233, 236, 229)' && back.mark === null && !await redirected.locator('.access-scene').isVisible(),
+      `Returning from a sign-in redirect opens on the themed splash and uses its one-load mark (${JSON.stringify(back)})`);
+    releaseReturn();
+    await redirected.getByRole('link', { name: 'Continue with GitHub' }).waitFor({ state: 'visible' });
+    check(await redirected.evaluate(() => !('returning' in document.documentElement.dataset)), 'A sign-in that did not complete shows the gate again');
+  } finally { await redirectContext.close(); }
   await page.route('**/auth/session', route => route.fulfill({ json: {
     authenticated: true, user: { id: 'pending', name: 'Pending' }, csrfToken: 'fixture-csrf',
   } }));
@@ -127,8 +145,14 @@ async page => {
       decision = { body: route.request().postDataJSON(), csrf: route.request().headers()['x-csrf-token'] };
       return route.fulfill({ json: { userId: decision.body.userId, status: 'rejected' } });
     });
-    await admin.route('**/src/main.js*', route => route.fulfill({ contentType: 'text/javascript', body: "import { setupThemeControls } from './theme.js'; import { setupSidebar, setupSidebarSections } from './sidebar.js'; import { createCommunityPanel } from './community-ui.js'; setupThemeControls(); createCommunityPanel({ host: document.querySelector('.panel-scroll') }); setupSidebarSections({ sidebar: setupSidebar() }); document.querySelector('#loading').hidden = true;" }));
+    let releaseMain; const mainHeld = new Promise(resolve => { releaseMain = resolve; });
+    await admin.route('**/src/main.js*', async route => { await mainHeld; return route.fulfill({ contentType: 'text/javascript', body: "import { setupThemeControls } from './theme.js'; import { setupSidebar, setupSidebarSections } from './sidebar.js'; import { createCommunityPanel } from './community-ui.js'; setupThemeControls(); createCommunityPanel({ host: document.querySelector('.panel-scroll') }); setupSidebarSections({ sidebar: setupSidebar() }); document.querySelector('#loading').hidden = true;" }); });
     await admin.goto(origin, { waitUntil: 'commit' });
+    // While the game loads, a quiet splash in the visitor's theme covers the sign-in card.
+    await admin.locator('#access-message', { hasText: 'Opening the district' }).waitFor();
+    check(await admin.evaluate(() => 'returning' in document.documentElement.dataset) && !await admin.locator('#access-title').isVisible(),
+      'Entering the district shows the themed splash, not the sign-in card, while the game loads');
+    releaseMain();
     // Match the real HUD layout while omitting the world renderer.
     for (const sheet of ['style', 'playground-theme', 'district-theme', 'immersive', 'sidebar', 'visual-finish', 'retro-finish', 'rail-navigation', 'hud-glass', 'game-hud']) {
       await admin.addStyleTag({ url: `${origin}/src/${sheet}.css` });

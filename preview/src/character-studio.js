@@ -9,6 +9,8 @@ import './character-studio.css';
 
 export function createCharacterStudio({ownerId,getDefinition,accountTransport=null,canOpen=()=>true,canStayOpen=canOpen,onOpen=()=>{},reducedMotion=false}){
   const trigger=document.createElement('button');trigger.type='button';trigger.className='character-studio-trigger';trigger.textContent='Open character studio';trigger.setAttribute('aria-haspopup','dialog');
+  // It opens once update() finds the character ready: starting enabled would flash it on, then off, at sign-in.
+  trigger.disabled=true;
   const dialog=document.createElement('dialog');dialog.className='character-studio';dialog.setAttribute('aria-labelledby','character-studio-title');
   dialog.innerHTML=`<header class="cs-header"><div><p class="cs-eyebrow">TypeSafe Place · Atelier</p><h2 id="character-studio-title">Character studio</h2></div><button type="button" data-close aria-label="Close character studio">✕</button></header>
     <div class="cs-workspace"><section class="cs-stage" aria-label="Character preview"><div class="cs-preview"></div><div class="cs-caption"><span data-look></span><span data-comparing hidden>Original</span></div>

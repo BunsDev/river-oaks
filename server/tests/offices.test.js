@@ -64,7 +64,7 @@ test('leaving the world clears visit presence; private office state cannot be fo
 test('checkpoint version fences old writers and retains permissions on geography migration',async()=>{
  const {migrateWorldCheckpoint}=await import('../world.js');
  const {createHash}=await import('node:crypto');const {world,send}=setup();send(owner,'invite',{peerId:'guest'});send('stranger','request');
- const checkpoint=world.checkpoint();assert.equal(checkpoint.version,13);
+ const checkpoint=world.checkpoint();assert.equal(checkpoint.version,15);
  const migrated=migrateWorldCheckpoint({fromData:data,toData:{...data,title:'Updated district'},checkpoint});assert.ok(migrated.ok);
  assert.deepEqual(migrated.checkpoint.payload.offices.grants,checkpoint.payload.offices.grants);assert.deepEqual(migrated.checkpoint.payload.offices.requests,[]);
  const resign=v=>{const {checksum,...envelope}=v;v.checksum=createHash('sha256').update(JSON.stringify(envelope)).digest('hex');};
