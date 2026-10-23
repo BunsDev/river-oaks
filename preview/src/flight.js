@@ -1,7 +1,8 @@
 const clamp = (value, low, high) => Math.max(low, Math.min(high, value));
-// Jevica's bubble, horizontal m/s: cruising, and held fast (Shift). The fast speed doubled from 7 (Val, 2026-10-19);
+// Jevica's bubble, horizontal m/s: cruising, and held fast (Shift). The fast speed doubled from 7 (Val, 2026-10-19),
+// then both rose 1.5x from 4.5 and 14 (Val, 2026-10-22);
 // the server's pose budget (server/world.js) and Jev's flying companion (prince-flight.js) follow it.
-export const FLIGHT_SPEED = Object.freeze({ cruise: 4.5, fast: 14 });
+export const FLIGHT_SPEED = Object.freeze({ cruise: 6.75, fast: 21 });
 export function createFlightState() { return { active:false, altitude:0, target:0, verticalSpeed:0, landing:false }; }
 // Keep every unacknowledged flight endpoint: the server can still be sweeping
 // from any one of them. Receipts use identity, not ambiguous position equality.

@@ -16,7 +16,8 @@ function inside(point,ring) {
 // Small metric grid, queried lazily. It is a simulation route planner, not a
 // survey of pedestrian access. Large neighborhood scenes stay outside this budget.
 export function createResidentNavigation(world,{allowRoads=false,placedObjects=[]}={}) {
-  const bounds=world.bounds_m;
+  // Preserve the District grid budget while the adjacent location gets its own routes.
+  const bounds=world.eastGardenCommons?.districtBounds ?? world.bounds_m;
   if(world.scene!=='district' || !bounds?.every(Number.isFinite)) return null;
   const [west,south,east,north]=bounds, cell=1;
   const width=Math.floor((east-west)/cell)+1,height=Math.floor((north-south)/cell)+1,size=width*height;

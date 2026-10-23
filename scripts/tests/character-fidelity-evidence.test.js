@@ -40,3 +40,39 @@ test('omitted timing is unmeasured, and failed timing comparisons are not hidden
   assert.equal(evidence.timingAgreement([{timing: true, agrees: true}]), true);
   assert.equal(evidence.timingAgreement([{timing: true, agrees: true}, {timing: true, agrees: false}]), false);
 });
+
+test('host conditions read GPU utilization and count only foreign automation browsers', () => {
+  assert.equal(evidence.parseGpuUtilization('"PerformanceStatistics" = {"Tiler Utilization %"=25,"Device Utilization %"=50}'), 50);
+  assert.equal(evidence.parseGpuUtilization('no accelerator'), null);
+  const table = [
+    '  100     1 /Users/x/Library/Caches/ms-playwright/chromium_headless_shell-1248/chrome-mac/chrome-headless-shell',
+    '  101   100 /Users/x/Library/Caches/ms-playwright/chromium_headless_shell-1248/chrome-mac/chrome-headless-shell',
+    '  102   101 /Users/x/Library/Caches/ms-playwright/chromium_headless_shell-1248/chrome-mac/chrome-headless-shell',
+    '  200     1 /Users/x/Library/Caches/ms-playwright/chromium_headless_shell-1248/chrome-mac/chrome-headless-shell',
+    '  300     1 /Applications/Dia.app/Contents/Frameworks/Browser Helper (Renderer).app/Contents/MacOS/Browser Helper (Renderer)',
+  ].join('\n');
+  assert.equal(evidence.foreignBrowserProcesses(table, 100), 1);
+  assert.equal(evidence.foreignBrowserProcesses(table, undefined), 4);
+});
+
+test('a quiet host needs every limited reading present and within its limit', () => {
+  const limits = evidence.parseQuietLimits('gpu=10,load=8,browsers=0');
+  assert.deepEqual(limits, {gpu: 10, load: 8, browsers: 0});
+  assert.throws(() => evidence.parseQuietLimits('gpu=ten'), /Invalid --quiet/);
+  assert.throws(() => evidence.parseQuietLimits('thermal=1'), /Invalid --quiet/);
+  const quiet = {loadavg: [4, 4, 4], gpuUtilization: 5, foreignBrowsers: 0};
+  assert.equal(evidence.isQuiet(quiet, limits), true);
+  assert.equal(evidence.isQuiet({...quiet, gpuUtilization: 38}, limits), false);
+  assert.equal(evidence.isQuiet({...quiet, gpuUtilization: null}, limits), false);
+  assert.equal(evidence.isQuiet({...quiet, loadavg: [11, 4, 4]}, limits), false);
+  assert.equal(evidence.isQuiet({...quiet, foreignBrowsers: 9}, limits), false);
+  assert.equal(evidence.isQuiet(quiet, null), false);
+});
+
+test('controlled agreement counts only quiet pairs and keeps every disagreement visible', () => {
+  const checks = [{check: 'census', passed: true}, {timing: true, agrees: true, controlled: true},
+    {timing: true, agrees: false, controlled: false}, {timing: true, agrees: false, controlled: true}];
+  assert.deepEqual(evidence.controlledAgreement(checks), {pairs: 3, agree: 1, controlledPairs: 2, controlledAgree: 1, controlledAgrees: false});
+  assert.equal(evidence.controlledAgreement([{timing: true, agrees: true}]).controlledAgrees, null);
+  assert.equal(evidence.timingAgreement(checks), false);
+});

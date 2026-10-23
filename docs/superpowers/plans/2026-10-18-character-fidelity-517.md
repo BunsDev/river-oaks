@@ -6,6 +6,124 @@ Val explicitly transferred the existing dirty checkout from
 `claude:river-oaks (015e1f43)` to this session. Initially claimed
 2026-10-18T19:33Z on main `f897c1d6`.
 
+## Timing reproduction protocol (2026-10-22)
+
+Task `character-fidelity-timing-517`, branch `perf/character-fidelity-timing-517-20261022`,
+worktree `../river-oaks-fidelity-timing-517`, owner `claude:river-oaks-89 (285318)`,
+from main `efcb0f42`.
+
+### State on main
+
+#545 merged as `1f4aa36d` on 2026-10-22T20:34Z (task `character-fidelity-517-20261018`,
+delivered), so the contract is on main and no replacement for #545 is needed. On
+main `efcb0f42`: all five bake `--check` producers (coat tails, Lyra drapes, Silvan
+drapes, skirt seat morph, Vesper skirt) report verified, and
+`scripts/tests/ipic-short-intake.test.js` passes 7/7 with 0 skipped (ffmpeg present).
+It keeps both intents: the two named non-second films stay negative, and the
+registered second short `ipic-two-seats-v1` passes intake on its own record.
+
+### Root cause of the desktop variance
+
+The historical receipts show that the comparisons failed in one direction, not at random:
+
+| Run (reference ← current) | Load, 1 min | x24 mean GPU p50 / frame p50 | Within 20% |
+| --- | --- | --- | --- |
+| `main-tiers` (vs m5-stature-final) | 28.6–35.2 | 2.79 / 4.48 ms | 35/48 |
+| `review-tiers` (vs main-tiers) | 7.7–9.8 | 2.20 / 3.57 ms | 18/48 |
+| `m1-b` (vs m1-a, 48–55) | 58.3–98.8 | 9.13 / 26.44 ms | 10/24 |
+
+The 18/48 review run was 0.6–0.8× its reference in nearly every case. Its reference
+had been measured under about three times the load. Two mechanisms:
+
+1. Shared GPU. The harness disables vsync, so each frame interval measures throughput,
+   and the GPU `TIME_ELAPSED` query on this shared Apple GPU includes time lost to
+   other clients. On 2026-10-22 with nothing of ours running, `ioreg` reported 34–50%
+   GPU device utilization from other clients, with 9–14 headless Chromium processes.
+   The browser lock serializes River Oaks browser runs only: the processes traced
+   included the lock holder, another River Oaks shell, and a `modex` desktop test
+   outside the lock. Load average does not capture GPU contention.
+2. Timer quantization. The fixture page was not cross-origin isolated, so Chromium
+   clamps `performance.now()` and rAF timestamps to 0.1 ms (measured: 0.1 ms
+   non-isolated, 0.005 ms isolated). At x1 the frame p50 is 0.2–0.3 ms, so a
+   ratio of 0.667 or 1.5 is a single timer tick.
+
+The phone agrees much better (22/24 within run, 46/48 across runs) because Mobile Safari
+keeps vsync, so frame p50 snaps to the display interval. Its two misses are cases
+that exceed the refresh budget (Morgan off x8, Imani low x24).
+
+Causal check (`docs/acceptance/character-fidelity-517-captures/contention.mjs`,
+receipt `data/reports/character-fidelity-contention-517.json`, revision `825854af`).
+One isolated session sampled Morgan high, with identical draw calls (20/153/457), while
+a second browser's fullscreen shader load was switched off and on over four ABBA rounds.
+Median GPU p50 off → on: x1 0.455 → 1.416 ms (3.1×), x8 0.849 → 2.346 ms (2.8×),
+x24 1.855 → 2.761 ms (1.5×). Every on/off pair moved the same way. CPU-bound frame
+p50 moved +22% at x8 and was flat at x24. Even the off arms ran with 57–84% GPU use
+by other clients and 24–30 foreign automation browsers: the browser lock does not give
+exclusive use of the GPU.
+
+The cause is therefore documented: desktop timing variance comes from shared-GPU
+contention, which no lock in this repository controls, plus 0.1 ms timer quantization.
+No ceiling or band was changed.
+
+### Protocol (commit `825854af`)
+
+`scripts/character-fidelity-baseline.mjs` now cross-origin isolates timing pages
+(5 µs timers; `--no-isolate` keeps the original method) and records host conditions
+beside each sample: load average, `ioreg` GPU device utilization from other clients, and
+foreign automation browsers. `--quiet gpu=15,browsers=0,load=8` waits before each case,
+and a comparison is `controlled` only when both runs were quiet at the same timer
+resolution. `reproduction.timingSummary` reports controlled and uncontrolled agreement
+separately, under the same 20% band.
+
+Controlled runs A/B (`.runtime/timing-517/controlled-{a,b}`) were in progress at commit
+time. No sample has met the gate so far (other clients' GPU use 56–80%). A
+controlled result needs a quiet host (see Decisions for Val).
+
+### #517 acceptance → evidence
+
+| Criterion | Evidence | State |
+| --- | --- | --- |
+| A1 Architecture and vendor matrix with verified licences, costs and alternatives | `docs/acceptance/character-fidelity-options.md` (#536 merged here as `8fa25639`, plus #545's fixture decision) | met for the selected CC0 route; no vendor quote, by design |
+| A2 Close-up/crowd captures with reproducible settings and device-tier metrics | `docs/acceptance/character-fidelity-517.md`, `character-fidelity-517-captures/*.json` (byte-identical 4K captures), iPhone budgets receipt, contention receipt above | captures reproducible; desktop timing variance root-caused, not stabilized; phone 46/48 twice (different cases), ceilings exceeded |
+| A3 Fixtures with explicit capability support; identity stable across tiers | `preview/src/character-fidelity-contract.js`, `character-fidelity-*.test.js` (26/26 on this branch), tier receipts | met (two bundles; `speechRuntime:false`, no geometric LOD) |
+| A4 Contract and evidence handed to #441/#442/#444; no engine rewrite | #545 merged `1f4aa36d`; `docs/character-fidelity.md`; handoff comment on this increment | met by landing; this PR's handoff follows |
+
+### Phone rerun (2026-10-23)
+
+Paired iPhone 16 Pro Max (iPhone17,2), Mobile Safari, `capture-phone.mjs` at `825854af`.
+The run skipped the Mac browser lock, because all measurement happens on the phone.
+Receipt: `data/reports/character-fidelity-iphone-rerun-517.json` (redacted summary; raw
+report kept locally). All 48 frame records arrived. The run then hit the script's 480 s
+deadline before the lifecycle and capture records, so it is timing evidence only.
+
+Against the previous phone receipt, under the unchanged 20% band: 23/24 within-run pairs
+(previously 22/24) and 46/48 cross-run comparisons (previously 46/48). The misses are
+first-repeat high-tier outliers (Morgan high x24 r0 65 vs 46 ms; Imani high x8 r0 34 vs
+20 ms); both second repeats agree. The previous misses were different cases, so they
+are not systematic. The unchanged reference ceilings were exceeded 16 times (frame p95)
+and 17 times (CPU p95), up from 9 and 11. At x24 the phone ran 5–10% slower overall,
+consistent with a warmer device, but this is not isolated. No ceiling was changed. The phone
+still does not agree within the band in every comparison.
+
+### Decisions for Val
+
+1. A quiet window for a controlled desktop run: pause other sessions' automation
+   (including repositories outside this lock, e.g. modex), or name a dedicated runner.
+2. Phone rerun done once Val connected the iPhone (below). A complete 67-record pass
+   (lifecycle and captures) needs another unlocked session of about 8 minutes.
+3. Close or keep draft #536. Its commits are carried here unchanged.
+4. The shared browser queue loses entries and times out its 10 s mutex under a dozen
+   pollers (seen 2026-10-22: entry removed while running; "queue lock is held").
+
+### Verification at `825854af`
+
+Bakes 5/5 `--check` verified; intake 7/7 (0 skipped); focused fidelity 26/26 (0 skipped).
+`pnpm run verify` core: web 3755 pass/0 fail/1 skip; server 733 pass/1 fail/213 skip. The
+failure was a load-induced fixture startup timeout in `server/tests/phone-fixture.test.js`,
+which passed on an isolated rerun (1/1). Core was not re-run green as a whole; verify full,
+journeys and hero goldens were not run (the browser queue was 12 deep). Hosted CI is the
+merge gate.
+
 ## Current review candidate
 
 Signed source `d11a6ee4ce794bc3f5f061bd48d5af8ce9a7cff9` integrates main

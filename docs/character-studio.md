@@ -783,6 +783,9 @@ The server enables new Studio mutations and custom equips only when
 `RIVER_OAKS_CHARACTER_STUDIO=1`. The browser exposes the editor only when
 `VITE_CHARACTER_STUDIO=true`; changing this build-time value requires a new client
 build. Missing, false or unrecognized values leave the respective feature off.
+Development (`pnpm run dev`) is the exception: the editor always shows unless
+`VITE_CHARACTER_STUDIO=false`, and the development town takes saves unless
+`RIVER_OAKS_CHARACTER_STUDIO` is set (`0` pauses it). Builds and deployments are unchanged.
 Fixture opt-ins are test configuration, never authentication exceptions.
 
 Pause new server writes first if a release must be stopped. Previously selected
