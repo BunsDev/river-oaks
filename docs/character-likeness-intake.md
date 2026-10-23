@@ -68,4 +68,6 @@ The proposed bounds are 64 KiB per GLB, 64 live records per process and four per
 | Asset and runtime safety | Signed allowlist; stable authored fallback | Sandboxed scanner/decoder, realistic quality/performance tests, signing-key lifecycle, revocation across sessions and full transport isolation tests. |
 | User acceptance | No pilot inferred from fixture success | Consent/revoke/delete usability and accessibility review, hosted auth/isolation acceptance, physical target-device performance and recovery evidence. |
 
-Until all rows have approved decisions and implemented evidence, the answer is **NO-GO for real-user uploads**. Completing the three fixture-only PR increments is useful prep and does not close these pilot gates or issue #518's broader production acceptance.
+Until all rows have approved decisions and implemented evidence, the answer is **NO-GO for real-user uploads**.
+
+**Rollout gate ruling (approved by Val, 2026-10-23):** this gate is accepted as written. Real-user, likeness or biometric intake, any provider upload and any production enablement stay prohibited until every row above has a separately approved decision and implemented evidence. Fixture success never satisfies a row. Reopening the gate needs a new written go decision; this approval is not one. Completing the three fixture-only PR increments is useful prep and does not close these pilot gates or issue #518's broader production acceptance.

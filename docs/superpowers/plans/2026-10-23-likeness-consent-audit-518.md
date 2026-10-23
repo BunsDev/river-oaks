@@ -34,4 +34,5 @@ Owned files: `server/character-likeness-quarantine.js`, `server/tests/character-
 
 - Real-user pilot remains **NO-GO**; the Decisions for Val table is unchanged. The consent attestation is a test shape, not age, identity or legal verification.
 - The audit is process-local and in memory. It is not a durable 90-day receipt store.
-- Next: push the branch and open a PR once authorized in this session. Request Val's explicit decision on the rollout gate (issue acceptance item 4).
+- 2026-10-23: the user authorized push and a PR (no merge), and approved the rollout gate as NO-GO. The ruling is recorded in the decision package. Commits are unsigned because no signing key is configured in this checkout.
+- Next: hosted checks on the PR, review, then a guarded merge if separately authorized.
