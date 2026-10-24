@@ -1,0 +1,10 @@
+{
+  "status": "failed",
+  "loadAverage": [
+    18.7,
+    15.4,
+    11.3
+  ],
+  "durationMs": 90708,
+  "error": "locator.click: Timeout 60000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#office-request-send')\u001b[22m\n\n    at eval (<anonymous>:84:50)\n    at async file:///Users/buns/Documents/GitHub/BunsDev/river-oaks-studio-417-closeout-f4aa1670/preview/e2e/office-ipic-journey-runner.mjs:26:20"
+}

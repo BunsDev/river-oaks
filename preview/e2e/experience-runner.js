@@ -35,14 +35,14 @@ try {
   for (const name of names.length ? names : suite) {
     // The voice journey runs the real voice routes and reconciler over a fake LiveKit.
     const fixtureEnv={
-      'voice-shared':{RIVER_OAKS_VOICE_FIXTURE:'1'},'voice-live':{RIVER_OAKS_VOICE_FIXTURE:'live'},
+      'voice-shared':{RIVER_OAKS_VOICE_FIXTURE:'1'},'background-input':{RIVER_OAKS_VOICE_FIXTURE:'1'},'voice-live':{RIVER_OAKS_VOICE_FIXTURE:'live'},
       'character-studio-disabled':{RIVER_OAKS_CHARACTER_STUDIO:'0',VITE_CHARACTER_STUDIO:'false'},
       'character-studio-paused':{RIVER_OAKS_CHARACTER_STUDIO:'0',VITE_CHARACTER_STUDIO:'true'},
       // The Gardens campus revision (#507) with the bob fixture as the campus operator (#509).
       'garden-campus-office':{RIVER_OAKS_DISTRICT_REVISION:'river-oaks-gardens-3',RIVER_OAKS_CAMPUS_OPERATOR_IDS:'bob'},
       // The Gardens campus revision (#507) for its public traversal (#508).
       'garden-campus-traversal':{RIVER_OAKS_DISTRICT_REVISION:'river-oaks-gardens-3'},
-      'east-garden-commons':{RIVER_OAKS_DISTRICT_REVISION:'east-garden-commons-blockout-1'},
+      'east-garden-commons':{RIVER_OAKS_DISTRICT_REVISION:'east-garden-commons-market-1'},
       'garden-campus-suite':{RIVER_OAKS_DISTRICT_REVISION:'river-oaks-gardens-3',RIVER_OAKS_CAMPUS_OPERATOR_IDS:'bob'},
     }[name]??{};
     // The Computer embed journey frames a separate-origin child fixture (#486); other journeys get no Computer origin.

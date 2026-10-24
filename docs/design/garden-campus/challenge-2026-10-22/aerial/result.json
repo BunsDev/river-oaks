@@ -1,0 +1,121 @@
+{
+  "status": "passed",
+  "hours": {
+    "day": 15
+  },
+  "cameras": [
+    {
+      "id": "01-southeast-aerial",
+      "name": "Whole campus, three crowns and two skywalks",
+      "position": [
+        125,
+        -90,
+        155
+      ],
+      "target": [
+        12,
+        93,
+        12
+      ],
+      "fov": 42,
+      "scene": {
+        "position": [
+          -2597.0929154806963,
+          173.25939189446672,
+          1459.0283217540853
+        ],
+        "target": [
+          -2708.044263131724,
+          30.25939189446673,
+          1274.7790382970777
+        ],
+        "fov": 42
+      }
+    }
+  ],
+  "reports": [
+    {
+      "name": "garage-day-01-southeast-aerial",
+      "revision": "garage",
+      "hour": 15,
+      "label": "day",
+      "camera": "01-southeast-aerial",
+      "pose": {
+        "position": [
+          -2597.0929154806963,
+          173.25939189446672,
+          1459.0283217540853
+        ],
+        "target": [
+          -2708.044263131724,
+          30.25939189446673,
+          1274.7790382970777
+        ],
+        "fov": 42
+      },
+      "glow": null,
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+      "samples": 23,
+      "overflow": false,
+      "frameP50": 16.7,
+      "frameP95": 16.7,
+      "cpuP50": 12.1,
+      "calls": 1354,
+      "triangles": 4021972,
+      "memory": {
+        "geometries": 571,
+        "textures": 199
+      },
+      "programs": 142,
+      "links": 145,
+      "scale": 0.75,
+      "hostLoad": [
+        22,
+        29.6,
+        28.3
+      ]
+    },
+    {
+      "name": "gardens-day-01-southeast-aerial",
+      "revision": "gardens",
+      "hour": 15,
+      "label": "day",
+      "camera": "01-southeast-aerial",
+      "pose": {
+        "position": [
+          -2597.0929154806963,
+          173.25939189446672,
+          1459.0283217540853
+        ],
+        "target": [
+          -2708.044263131724,
+          30.25939189446673,
+          1274.7790382970777
+        ],
+        "fov": 42
+      },
+      "glow": 0.8,
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+      "samples": 23,
+      "overflow": false,
+      "frameP50": 16.7,
+      "frameP95": 16.7,
+      "cpuP50": 10.9,
+      "calls": 1402,
+      "triangles": 4170634,
+      "memory": {
+        "geometries": 584,
+        "textures": 199
+      },
+      "programs": 147,
+      "links": 150,
+      "scale": 0.75,
+      "hostLoad": [
+        20.9,
+        29.1,
+        28.1
+      ]
+    }
+  ],
+  "limits": "Local loopback fixture, Smoothest preset, 1280x800 at DPR 1, interface hidden; residents move between views; frame times are this host under its recorded load (vsync on), not a device budget."
+}

@@ -8,6 +8,7 @@
 | Native world and contracts | `unreal/Source/RiverOaks/`, `unreal/Config/`, `unreal/Content/Python/` | native automation; [Unreal](unreal.md), [engine acceptance](engine-acceptance.md) |
 | Desktop lifecycle, packaging, IPC | `desktop/` | `desktop/tests/`, `desktop/e2e.js`; [desktop](desktop.md) |
 | Public landing page | `landing-page/`, `scripts/build_landing_page.js` | `pnpm run build`; [landing page](../landing-page/README.md) |
+| Neighborhood kit, assembly and destinations | `shared/city-kit/`, `config/destinations/`, `scripts/destination.mjs`, `preview/src/city-kit/`, `shared/commons-destination.js`, `server/lantern-walk.js` | `preview/tests/city-kit.test.js`, `preview/tests/bayou-market-commons.test.js`, `server/tests/lantern-walk.test.js`; [city kit](city-kit.md), [Bayou Market Commons](level-design/expansion/bayou-market-commons.md) |
 | Tooling, checks and agent workflow | `scripts/agent.mjs`, `config/agent-workflow.json`, `.github/workflows/verify.yml` | `pnpm run test:agent`; [workflow](agent-workflow.md) |
 | Task register and safe retirement | `docs/project-management/`, `scripts/project-status.mjs`, `project-prune.mjs`, `project-ref-guard.mjs`, `merge-task-register.mjs`, `install-project-hooks.mjs`, `plans-index.mjs`, `.githooks/`, `.gitattributes`, `.agents/skills/` | `scripts/tests/` under `pnpm run test:agent`; [project workflow](project-management/workflow.md), plans index (`docs/superpowers/plans/README.md`) |
 
@@ -68,8 +69,4 @@ a passing web build cannot establish native acceptance.
 - `docs/superpowers/plans/` holds task ledgers. Start from the generated
   plans index (`docs/superpowers/plans/README.md`) (`pnpm run plans:index`), which shows
   each plan's register status. Do not assume a checked box proves live delivery.
-- `docs/project-management/tasks.json` is coordination state, not an ordinary
-  input. The primary checkout's uncommitted copy is the live register, and claims,
-  releases and `project:prune` use it. Branches commit their own entries, and
-  register sweep PRs bring live-only records to `main`. See the
-  [project workflow](project-management/workflow.md).
+- The live task register is `river-oaks-tasks.json` in the common Git directory, shared by all worktrees; locate it with `pnpm run --silent register path` and use the register CLI for claims, releases and evidence. `docs/project-management/tasks.json` is a committed snapshot refreshed only by register sweeps; feature PRs must not edit it. See the [project workflow](project-management/workflow.md).

@@ -1,9 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { chmodSync, existsSync, linkSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { cancelDetached, cancelStale, planCancellation, planDetachedCancellation, pythonFor, resumeCancellation } from '../project-prune-cancel.mjs';
 
 function fixture(t){
@@ -109,4 +110,18 @@ test('worktree snapshots run on the repository locked interpreter when it exists
   assert.equal(pythonFor(root),'python3','without uv sync it falls back to python3 on PATH');
   mkdirSync(join(root,'.venv/bin'),{recursive:true});writeFileSync(join(root,'.venv/bin/python'),'');
   assert.equal(pythonFor(root),join(root,'.venv/bin/python'),'never a PATH python3 older than the lock');
+});
+
+test('the --cancel-stale command reaches its plan instead of deadlocking on its own import',t=>{
+  const base=mkdtempSync(join(tmpdir(),'river-cancel-cli-'));t.after(()=>rmSync(base,{recursive:true,force:true}));
+  const origin=join(base,'origin.git'),root=join(base,'repo');mkdirSync(root);
+  const git=(...args)=>execFileSync('git',args,{cwd:root,encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim();
+  git('init','--bare','-b','main',origin);git('init','-b','main');git('config','user.name','Fixture');git('config','user.email','fixture@example.invalid');
+  writeFileSync(join(root,'file'),'base');git('add','.');git('commit','-m','base');git('remote','add','origin',origin);git('push','-q','origin','main');
+  git('branch','feature');
+  const cli=fileURLToPath(new URL('../project-prune.mjs',import.meta.url));
+  const result=spawnSync(process.execPath,[cli,'--cancel-stale','--branch','feature','--expected-head',git('rev-parse','feature')],{cwd:root,encoding:'utf8',timeout:30_000});
+  // Past the fetch and the cancel module's import, the plan asks for GitHub evidence, which a local origin cannot give.
+  assert.equal(result.status,2,result.stderr);
+  assert.match(result.stderr,/^project-prune: GitHub evidence requires a github\.com origin$/m);
 });
