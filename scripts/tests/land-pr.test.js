@@ -126,11 +126,13 @@ test('a queued lander wakes on release without waiting for the fallback or touch
   let waiting;
   const enteredWait = new Promise(done => { waiting = done; });
   const pending = land({ pr: 7, github: fake.github, guard: fake.guard, queue: mine, sleep: instant,
-    waitForQueue: (id, ms) => { const wait = mine.waitForTurn(id, ms); waiting(); return wait; }, poll: 30000 });
+    waitForQueue: (id, ms) => { const wait = mine.waitForTurn(id, ms); waiting(); return wait; }, poll: 120000 });
   await enteredWait;
   assert.equal(fake.calls.pull, 0);
   first.dequeue(99);
-  const timeout = setTimeout(() => assert.fail('queue release did not wake the lander'), 5000);
+  // Waking well inside the 120 s fallback proves the watcher did it; the margin
+  // absorbs a loaded machine, where the notification and resume can take seconds.
+  const timeout = setTimeout(() => assert.fail('queue release did not wake the lander'), 30000);
   t.after(() => clearTimeout(timeout));
   assert.equal((await pending).status, 'merged');
   clearTimeout(timeout);

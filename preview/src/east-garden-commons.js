@@ -32,7 +32,7 @@ export function buildEastGardenCommons(layout) {
   for (const surface of baseSurfaces) {
     const [west,south,east,north]=surface.rect,positions=[],indices=[];
     const start=Math.max(west,layout.edge),end=surface===layout.surfaces[0]?(destination?layout.edge+3:layout.surfaces[1].rect[0]):east;
-    const xs=surface===layout.surfaces[0]?[...Array.from({length:21},(_,i)=>start+i*.5),end]:[start,end];
+    const xs=surface===layout.surfaces[0]?[...Array.from({length:21},(_,i)=>start+i*.5).filter(x=>x<end),end]:[start,end];
     const ys=surface===layout.surfaces[0]?Array.from({length:13},(_,i)=>south+(north-south)*i/12):[south,north];
     const columns=xs.length-1,rows=ys.length-1;
     for(let y=0;y<=rows;y++)for(let x=0;x<=columns;x++) {
@@ -60,6 +60,7 @@ export function buildEastGardenCommons(layout) {
     for(const solid of baseSolids)addBox(solid.id,solid.rect,layout.ground,solid.height,solid.kind);
     addBox(`${layout.pavilion.id}/roof`,layout.pavilion.rect,layout.ground+layout.pavilion.clearHeight,layout.pavilion.roofThickness,'canopy');
   }
+  group.userData.ready = kit?.userData.ready ?? Promise.resolve();
   let disposed=false;
   group.userData.dispose=()=>{if(disposed)return;disposed=true;kit?.userData.dispose();for(const geometry of geometries)geometry.dispose();for(const material of Object.values(materials))material.dispose();group.clear();};
   group.userData.update=position=>kit?.userData.update(position);
