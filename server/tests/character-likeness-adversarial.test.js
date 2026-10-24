@@ -1,16 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { createLikenessQuarantine } from '../character-likeness-quarantine.js';
+import { createLikenessQuarantine, LIKENESS_CONSENT_POLICY } from '../character-likeness-quarantine.js';
 import { makeLikenessFixture } from '../character-likeness-fixture.js';
 import { createSharedWorld } from '../world.js';
 import { characterDefinitionFor, validateCharacterDefinition } from '../../preview/src/character-definition.js';
 import { createMemoryCharacterStore } from '../character-store.js';
 
 const options={enabled:true,environment:{NODE_ENV:'test'}};
+const consent={policy:LIKENESS_CONSENT_POLICY,adult:true,selfLikeness:true,processing:true,display:true};
 const make=()=>createLikenessQuarantine(options);
 async function published(harness=make()) {
-  const record=await harness.intake.submit('fixture-alice',makeLikenessFixture());
+  const record=await harness.intake.submit('fixture-alice',makeLikenessFixture(),consent);
   harness.reviewer.approve('fixture-alice',record.id);
   return {...harness,id:record.id,revision:harness.intake.publish('fixture-alice',record.id)};
 }
@@ -28,7 +29,7 @@ test('foreign owners cannot read, delete, revoke, moderate, publish or resolve a
 
 for(const operation of ['delete','revoke'])test(`${operation} during validation defeats late quarantine completion`,async()=>{
   const {intake,reviewer}=make();
-  const pending=intake.submit('fixture-alice',makeLikenessFixture());
+  const pending=intake.submit('fixture-alice',makeLikenessFixture(),consent);
   const [{id,state}]=intake.list('fixture-alice');
   assert.equal(state,'validating');
   intake[operation]('fixture-alice',id);
@@ -75,15 +76,17 @@ test('expiry invalidates an approved or published record before it can release b
   assert.deepEqual(h.intake.list('fixture-alice'),[]);
 });
 
-test('retained tombstones bound process memory and cannot be recycled through deletion',async()=>{
-  const {intake}=make();
-  for(let i=0;i<64;i++) {const r=await intake.submit('fixture-alice',makeLikenessFixture());intake.delete('fixture-alice',r.id);}
-  await assert.rejects(intake.submit('fixture-alice',makeLikenessFixture()),{code:'likeness_capacity'});
+test('deleted records release memory and their ids cannot be recycled or resolved',async()=>{
+  const {intake,reviewer}=make();const ids=[];
+  for(let i=0;i<64;i++) {const r=await intake.submit('fixture-alice',makeLikenessFixture(),consent);ids.push(r.id);intake.delete('fixture-alice',r.id);}
+  assert.equal(new Set(ids).size,64);
+  for(const id of ids)assert.throws(()=>reviewer.approve('fixture-alice',id),{code:'likeness_unavailable'});
+  assert.equal((await intake.submit('fixture-alice',makeLikenessFixture(),consent)).state,'quarantined');
 });
 
 test('default off never admits a fixture or allows moderation',async()=>{
   const {intake,reviewer}=createLikenessQuarantine();
-  await assert.rejects(intake.submit('fixture-alice',makeLikenessFixture()),{code:'likeness_disabled'});
+  await assert.rejects(intake.submit('fixture-alice',makeLikenessFixture(),consent),{code:'likeness_disabled'});
   assert.throws(()=>reviewer.approve('fixture-alice','missing'),{code:'likeness_disabled'});
   assert.equal(intake.resolve('fixture-alice',{}).kind,'fallback');
 });
