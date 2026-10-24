@@ -26,6 +26,8 @@ async page => {
         this.addEventListener('message',event=>{try{const data=JSON.parse(event.data),reply=data.result??data;if(reply?.ok!==false&&!data.correction)return;
           window.__heightsRefusals.push({t:Math.round(performance.now()),error:reply?.error??null,at:(data.correction??reply?.correction)?.position??null});window.__heightsRefusals.splice(0,window.__heightsRefusals.length-12);}catch{/* not JSON */}});}};
     });
+    // DIAGNOSTIC BRANCH ONLY: three.js announces each Scene to its devtools hook.
+    await tab.addInitScript(()=>{window.__diagScenes=[];window.__THREE_DEVTOOLS__=new EventTarget();window.__THREE_DEVTOOLS__.addEventListener('observe',event=>{if(event.detail?.isScene)window.__diagScenes.push(event.detail);});});
     await tab.goto(`${origin}/?motion-debug=1`);
     await tab.waitForFunction(revision=>window.__riverMultiplayer?.().connected
       && window.__riverMultiplayer().snapshot?.districtRevision===revision
@@ -83,6 +85,8 @@ async page => {
     const at=([x,y])=>[edge+x,-1335+y];
     check(starts.every(p=>p.position[0]<edge),'Both players start in the original District');
     check(await page.evaluate(()=>window.__riverBayouHeights?.()?.revision)==='bayou-heights-1','The client composed Bayou Heights for the served revision');
+    console.log('PROBE scenes',JSON.stringify(await page.evaluate(()=>window.__diagScenes.map(scene=>({children:scene.children.length,heights:Boolean(scene.getObjectByName('Bayou Heights'))})))));
+    check(await page.evaluate(()=>Boolean(window.__diagScenes.find(scene=>scene.getObjectByName('Bayou Heights'))?.getObjectByName('Bayou Heights').parent)),'DIAGNOSTIC: the probe can reach the world group');
     // Pedestrian captures at walking eye height, with the scene's draw statistics.
     const views=[],capture=async(tab,name)=>{await tab.waitForTimeout(600);await tab.screenshot({path:`output/playwright/heights-${name}.png`});
       views.push({name,pose:(await self(tab)).position,scene:await tab.evaluate(()=>window.__riverBayouHeights?.().scene??null)});};
@@ -153,7 +157,7 @@ async page => {
       const rows=await tab.evaluate(async()=>{
         const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms)),host=document.querySelector('#canvas-host');
         let frames=0;const tick=()=>{frames++;requestAnimationFrame(tick);};requestAnimationFrame(tick);
-        const heights=window.__riverBayouHeights().scene,world=heights.parent;let root=world;while(root.parent)root=root.parent;
+        const root=window.__diagScenes.find(scene=>scene.getObjectByName('Bayou Heights')),heights=root.getObjectByName('Bayou Heights'),world=heights.parent;
         const tris=group=>{let total=0;group.traverseVisible(mesh=>{if(mesh.isMesh){const g=mesh.geometry;total+=(g.index?.count??g.attributes.position?.count??0)/3*(mesh.isInstancedMesh?mesh.count:1);}});return Math.round(total);};
         const measure=async()=>{await sleep(1500);const f0=frames,t0=performance.now(),p0=window.__riverCarriage().pose.position;await sleep(5000);
           const stats=JSON.parse(host.dataset.renderStats||'{}'),p1=window.__riverCarriage().pose.position;
