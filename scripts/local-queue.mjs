@@ -1,15 +1,16 @@
 // A first-come queue shared by every session and worktree on this machine: a JSON
 // file in the common Git directory, changed only under a short lock. Landing
 // (land-pr.mjs) and local browser runs (browser-lock.mjs) take turns through it.
-import { mkdirSync, readFileSync, renameSync, rmdirSync, statSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, renameSync, rmdirSync, statSync, watch, writeFileSync } from 'node:fs';
 import { hostname } from 'node:os';
+import { basename, dirname } from 'node:path';
 
 const isAlive = pid => { try { process.kill(pid, 0); return true; } catch (error) { return error.code === 'EPERM'; } };
 const pause = ms => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 // Landing queues written before 2026-10-12 keyed entries by "pr".
 const key = entry => entry.id ?? entry.pr;
 
-export function createQueue({ file, lock, pid = process.pid, host = hostname(), alive = isAlive, now = () => new Date().toISOString() }) {
+export function createQueue({ file, lock, pid = process.pid, host = hostname(), alive = isAlive, now = () => new Date().toISOString(), watchDirectory = watch }) {
   const withLock = action => {
     for (let tries = 0; ; tries++) {
       try { mkdirSync(lock); break; } catch (error) {
@@ -27,7 +28,7 @@ export function createQueue({ file, lock, pid = process.pid, host = hostname(), 
   // An entry whose process has died would block everyone behind it.
   const live = entries => entries.filter(entry => entry.host !== host || alive(entry.pid));
   const mine = (entry, id) => key(entry) === id && entry.pid === pid && entry.host === host;
-  return {
+  const queue = {
     enqueue(id, owner = `pid ${pid}`) {
       withLock(() => {
         const entries = live(read()), queued = entries.find(entry => key(entry) === id);
@@ -41,5 +42,28 @@ export function createQueue({ file, lock, pid = process.pid, host = hostname(), 
     position(id) { return withLock(() => { const entries = live(read()); write(entries); return entries.findIndex(entry => mine(entry, id)); }); },
     dequeue(id) { withLock(() => write(live(read()).filter(entry => !mine(entry, id)))); },
     list() { return withLock(() => live(read()).map(entry => ({ ...entry, id: key(entry) }))); },
+    // Watch the directory because writes replace the queue file atomically.
+    // Notifications only prompt a fresh ownership/position check; they never
+    // grant a turn. The timer still handles missing events and dead processes.
+    waitForTurn(id, timeoutMs) {
+      return new Promise((resolve, reject) => {
+        let watcher;
+        const finish = error => { clearTimeout(timer); watcher?.close(); error ? reject(error) : resolve(); };
+        const check = (expired = false) => {
+          try {
+            const position = queue.list().findIndex(entry => mine(entry, id));
+            if (position < 0) finish(new Error(`${id} is no longer queued by this session.`));
+            else if (position === 0 || expired) finish();
+          } catch (error) { finish(error); }
+        };
+        const timer = setTimeout(() => check(true), timeoutMs);
+        try {
+          watcher = watchDirectory(dirname(file), (_event, name) => { if (name === null || String(name) === basename(file)) check(); });
+          watcher.on('error', () => watcher.close()); // Keep the timer fallback.
+        } catch { /* Watching is an optimization; retain the bounded timer. */ }
+        check(); // Close the release-before-watch race without rewriting the file.
+      });
+    },
   };
+  return queue;
 }
