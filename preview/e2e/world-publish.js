@@ -7,6 +7,7 @@ async page=>{
   await page.waitForFunction(()=>window.__riverMultiplayer?.().connected&&document.querySelector('#canvas-host')?.dataset.playerReady==='true');
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
   await openHudSpace(page, 'explore-section');
+  await page.locator('.world-portal-publish').waitFor({state:'visible'});if(!await page.locator('.world-portal-publish').evaluate(node=>node.open))await page.locator('.world-portal-publish > summary').click();
   await page.locator('.world-portal-form').waitFor({state:'visible'});
   await page.locator('.world-portal-form input[name=title]').fill('Moon Garden');
   await page.locator('.world-portal-form input[name=id]').fill('moon-garden');
@@ -72,6 +73,7 @@ async page=>{
   await page.waitForFunction(()=>document.querySelector('.walking-title span')?.textContent==='Moon Garden');
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
   await openHudSpace(page, 'explore-section');
+  await page.locator('.world-portal-publish').waitFor({state:'visible'});if(!await page.locator('.world-portal-publish').evaluate(node=>node.open))await page.locator('.world-portal-publish > summary').click();
   await page.locator('.world-portal-design').waitFor({state:'visible'});
   await page.evaluate(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async text=>{window.__copiedWorldPlace=text;}}}));
   await page.locator('#places-open').click();

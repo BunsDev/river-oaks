@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { loadDistrictData } from '../../server/district-data.js';
 import {
   CAMPUS_BUILDING_KIND, DISTRICT_REVISION_GARAGE, DISTRICT_REVISION_GARDENS, attachGardenCampus, campusCollisionRects, campusGroundAt, detachGardenCampus,
-  campusGroundCutout, configuredDistrictRevision, districtRevisionOf, isCampusRoom, planCampusRooms,
+  campusGroundCutout, campusDoorSites, configuredDistrictRevision, districtRevisionOf, isCampusRoom, planCampusRooms,
 } from '../src/garden-campus-district.js';
 import { buildGardenCampus } from '../src/garden-campus.js';
 import { createWalkingEnvironment } from '../src/walking.js';
@@ -20,6 +20,28 @@ const campus = attachGardenCampus(garage);
 const BASE = CAMPUS.frame.baseAltitude;
 // Campus [u, v] to the walking model's [x, z].
 const xz = ([u, v]) => { const [east, north] = campusToSource([u, v]);return [east, -north]; };
+
+test('repeated revision rebuilds remove campus destinations and support on disable without accumulating geometry', () => {
+  let world = garage;
+  const original = JSON.stringify(world);
+  const [east, north] = campusToSource([16, 76.8]);
+  for (let cycle = 0; cycle < 5; cycle++) {
+    world = attachGardenCampus(world);
+    const doors = campusDoorSites(world);
+    assert.equal(doors.length, 4);
+    assert.equal(new Set(doors.map(door => door.id)).size, 4);
+    assert.equal(world.buildings.filter(building => building.kind === CAMPUS_BUILDING_KIND).length, 5);
+    assert.equal(campusGroundAt(world, east, north), BASE);
+    // Populate the room caches before disabling; stale destinations must not survive.
+    assert.equal(storeRoomsFor(world).filter(isCampusRoom).length, 4);
+    world = detachGardenCampus(world);
+    assert.deepEqual(campusDoorSites(world), []);
+    assert.equal(storeRoomsFor(world).filter(isCampusRoom).length, 0);
+    assert.equal(campusGroundAt(world, east, north), null);
+    assert.equal(buildGardenCampus(world), null);
+    assert.equal(JSON.stringify(world), original, 'all source buildings, roads and collision rings restored');
+  }
+});
 
 test('the district revision defaults to the garage; only the exact campus id selects the Gardens', () => {
   const ignored = [];
