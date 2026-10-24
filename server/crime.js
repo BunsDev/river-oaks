@@ -162,7 +162,8 @@ export function createCrime({ worldId, groundAt, now, changed, decide, reachable
   }
   const clear = () => load(blank());
 
-  return { attack, step, snapshot, checkpoint, validate, load, clear, starsOf, rivals };
+  return { attack, step, snapshot, checkpoint, validate, load, clear, starsOf, rivals,
+    arrest(userId) { if(wanted.delete(userId))changed(); } };
 }
 
 /** Plain words for every refusal the world rule can give. */

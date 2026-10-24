@@ -267,10 +267,11 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-11-delivered-source-retirement](2026-10-11-delivered-source-retirement.md)<br>Delivered source reconciliation | `reconcile-delivered-sources` | retired | — | 2026-10-11 |
 | [2026-10-11-ci-parallel-preview](2026-10-11-ci-parallel-preview.md)<br>Parallel preview check | `ci-parallel-preview` | retired | #252 | 2026-10-11 |
 
-## Historical, not in the register (89)
+## Historical, not in the register (90)
 
 | Plan | PRs mentioned |
 | --- | --- |
+| [2026-10-23-police-pursuit-598](2026-10-23-police-pursuit-598.md)<br>Police pursuit #598 Implementation Plan | #598, #597 |
 | [2026-10-23-destination-slice-584-586](2026-10-23-destination-slice-584-586.md)<br>Destination slice: city kit, assembly and Bayou Market Commons (#584, #585, #586) | #584, #585, #586 |
 | [2026-10-22-world-expansion](2026-10-22-world-expansion.md)<br>World expansion execution ledger | #580, #588, #581 |
 | [2026-10-22-login-flicker](2026-10-22-login-flicker.md)<br>Login flicker and Character Studio in development | — |
