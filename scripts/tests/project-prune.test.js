@@ -211,3 +211,50 @@ test('an exact-tip source alias can retire while the task retains its other bran
  f.git('branch','source-alias',f.head);
  assert.ok(planRetirement({...options(f),branch:'source-alias',register:{tasks:[task]}}).blockers.includes('previously-retired-ref-reappeared'));
 });
+
+// The lander updates the branch on GitHub before merging, so the local branch can
+// stop at an ancestor of the merged head: main moves on (U), update-branch merges it
+// into the local tip F (P, the merged head), and the pull request merges P (M).
+function behindMergedHead(t) {
+ const f=fixture(t);
+ writeFileSync(join(f.root,'other'),'main moved on');f.git('add','other');f.git('commit','-m','unrelated');
+ const before=f.git('rev-parse','main'),tree=f.git('rev-parse','main^{tree}');
+ const updated=f.git('commit-tree',tree,'-p',f.head,'-p',before,'-m','update branch');
+ const merge=f.git('commit-tree',tree,'-p',before,'-p',updated,'-m','merge pull request');
+ f.git('update-ref','refs/heads/main',merge);f.git('update-ref','refs/remotes/origin/main',merge);
+ Object.assign(f.pulls[0],{merge_commit_sha:merge,head:{ref:'feature',sha:updated}});
+ return {...f,before,updated,merge};
+}
+test('a local tip behind the exact merged head on the same branch can retire',t=>{
+ const f=behindMergedHead(t);
+ assert.notEqual(f.git('rev-parse',`${f.head}^{tree}`),f.git('rev-parse',`${f.merge}^{tree}`));
+ assert.deepEqual(planRetirement(options(f)).blockers,[]);
+ const result=retire({...options(f),loadEvidence:()=>({register:f.register,pulls:f.pulls,activity:f.activity})});
+ assert.equal(result.status,'retired');assert.throws(()=>f.git('rev-parse','--verify','refs/heads/feature'));
+ assert.equal(f.git('rev-parse',result.tag),f.head);
+ assert.deepEqual(result.prerequisites,[f.git('rev-parse',`${f.head}^`)]);
+});
+test('a tip behind the merged head still needs that head on main, the same branch, a matching tree and its own release',t=>{
+ const f=behindMergedHead(t);const run=()=>planRetirement(options(f)).blockers;
+ const mergeAs=sha=>{f.git('update-ref','refs/remotes/origin/main',sha);f.pulls[0].merge_commit_sha=sha;};
+ f.pulls[0].head.ref='other';assert.ok(run().includes('exact-merged-pr-required'));f.pulls[0].head.ref='feature';
+ f.task.retirement.head=f.updated;assert.ok(run().includes('session-release-missing-or-stale'));f.task.retirement.head=f.head;
+ mergeAs(f.before);assert.ok(run().includes('exact-merged-pr-required'),'merged head not on the default branch');
+ const other=f.git('commit-tree',f.git('rev-parse',`${f.head}^^{tree}`),'-p',f.before,'-p',f.updated,'-m','merge with other tree');
+ mergeAs(other);assert.ok(run().includes('aggregate-tree-review-required'));
+ mergeAs(f.merge);
+ const offMain=f.git('commit-tree',f.git('rev-parse',`${f.merge}^{tree}`),'-p',f.before,'-p',f.updated,'-m','merge not on main');
+ f.pulls[0].merge_commit_sha=offMain;assert.ok(run().includes('merge-not-on-default'));
+ mergeAs(f.merge);assert.deepEqual(run(),[]);
+});
+test('a tip already on main before the merge carried none of the pull request',t=>{
+ const f=behindMergedHead(t),old=f.git('rev-parse',`${f.head}^`);
+ f.git('-C',f.checkout,'reset','--hard',old);f.task.retirement.head=old;
+ assert.ok(planRetirement({...options(f),expectedHead:old}).blockers.includes('exact-merged-pr-required'));
+});
+test('a local commit the merged head lacks is not behind it',t=>{
+ const f=behindMergedHead(t);
+ writeFileSync(join(f.checkout,'file'),'undelivered');f.git('-C',f.checkout,'commit','-am','local only');
+ const tip=f.git('rev-parse','feature');f.task.retirement.head=tip;
+ assert.ok(planRetirement({...options(f),expectedHead:tip}).blockers.includes('exact-merged-pr-required'));
+});

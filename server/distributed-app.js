@@ -418,10 +418,14 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
             ['Invalid durable town presence', 'presence_invalid'],
             ['Invalid durable town roster', 'roster_invalid'],
             ['No committed town', 'snapshot_missing'],
+            // An older deployment overlapping a district rollout or rollback (docs/garden-campus.md):
+            // expected while it drains, and distinct from an outage for operators.
+            ['Invalid durable town district', 'district_superseded'],
           ]);
           console.warn(JSON.stringify({ event: 'town_admission_failed', stage: admissionStage,
             reason: reasons.get(error?.message) ?? 'unavailable',
-            ...(error?.message === 'Invalid durable town checkpoint' ? { checkpoint: safeCheckpointReason(error.checkpointReason) } : {}) }));
+            ...(error?.message === 'Invalid durable town checkpoint' ? { checkpoint: safeCheckpointReason(error.checkpointReason) } : {}),
+            ...(error?.message === 'Invalid durable town district' && ['newer_district_epoch', 'district_epoch_unchanged'].includes(error.checkpointReason) ? { district: error.checkpointReason } : {}) }));
           ws.close(1013, 'Town temporarily unavailable.'); return false;
         });
         let queue = ready, waitingPose = null;
