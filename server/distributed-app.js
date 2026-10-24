@@ -50,6 +50,12 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
   if (!waitlist) throw new Error('Waitlist is required');
   const worldId = validateWorldId(room.worldId ?? DEFAULT_WORLD_ID);
   const matchesWorld = url => (url.searchParams.get('world') ?? (worldId === DEFAULT_WORLD_ID ? DEFAULT_WORLD_ID : null)) === worldId;
+  // The committed snapshot names the lowest protocol that can draw this world. With approved
+  // spaces off, a world created at the base protocol cannot gain a feature that needs a newer
+  // one, so tickets and joins skip reading the room's view (#420). Otherwise an unreadable view
+  // falls back to the world data the room was created from.
+  const fixedProtocol = worldProtocol === WORLD_PROTOCOL_VERSION && !worldCatalog?.approvedSpacesEnabled;
+  const roomProtocol = async () => fixedProtocol ? worldProtocol : (await room.read().catch(() => null))?.snapshot?.protocolVersion ?? worldProtocol;
   const connections = new Map(), moderatorIds = new Set(moderators);
   const localAccess = createRateLimiter(1000, 60_000), localFrames = createRateLimiter(40, 1000);
   let stopped = false, ticking = false;
@@ -213,11 +219,9 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
         const identity = await authorized(req, res); if (!identity) return;
         if (!matchesWorld(url)) return json(res, 404, { error: 'World not found.' });
         const ticket = await security.issueTicket(identity, worldId);
-        // The committed snapshot names the lowest protocol that can draw this world.
-        // Before the room's first commit, or when its view cannot be read, the world data
-        // it was created from decides; the socket rechecks before it joins. The issued
-        // ticket is always returned, never left behind a failed read.
-        const protocolVersion = ticket ? (await room.read().catch(() => null))?.snapshot?.protocolVersion ?? worldProtocol : worldProtocol;
+        // The socket rechecks the protocol before it joins. The issued ticket is always
+        // returned, never left behind a failed read.
+        const protocolVersion = ticket ? await roomProtocol() : worldProtocol;
         return ticket ? json(res, 200, { ticket, worldId, protocolVersion, moderator: moderatorIds.has(identity.userId) })
           : json(res, 429, { error: 'Please wait before reconnecting.' });
       }
@@ -381,8 +385,7 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
         const ready = (async () => {
           // A world with newer features (world-contract.js) refuses an older client before
           // it joins; the page offers Refresh instead of drawing a world it cannot render.
-          // An unreadable view falls back to the world data; admission then fails as before.
-          const required = (await room.read().catch(() => null))?.snapshot?.protocolVersion ?? worldProtocol;
+          const required = await roomProtocol();
           if (!acceptsWorldProtocol(protocol, required)) { ws.close(4000, 'World version changed'); return false; }
           const result = await room.request({ type: 'join', identity, connectionId });
           if (!result.ok) { ws.close(1013, 'The town cannot accept this connection.'); return false; }
