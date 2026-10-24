@@ -7,6 +7,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { WebSocket } from 'ws';
 import { createTown } from '../town.js';
+import { WORLD_PROTOCOL_VERSION, ticketProtocol } from '../../preview/src/world-contract.js';
 
 // #420 through the real local service boundary: HTTP publication and drafts, the
 // WebSocket town, two fixture clients and the protocol gate. Loopback fixture
@@ -39,10 +40,12 @@ async function startTown(t, { approvedSpaces = true } = {}) {
     'X-CSRF-Token': account.identity.csrfToken, 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
   const worldData = async (account, id) => (await (await fetch(origin + `/api/world-data?world=${id}`, { headers: { Cookie: account.cookie } })).json());
   // Open one town socket; resolves with the socket and its first snapshot, or the refusal.
-  const open = async (account, worldId, protocol) => {
+  // `protocol` is a number, or a function of the ticket response as a page decides it.
+  const open = async (account, worldId, requested) => {
     const ticketResponse = await post(account, `/api/multiplayer/ticket?world=${worldId}`);
     assert.equal(ticketResponse.status, 200);
     const access = await ticketResponse.json();
+    const protocol = typeof requested === 'function' ? requested(access) : requested;
     const socket = new WebSocket(`${origin.replace('http:', 'ws:')}/multiplayer?world=${worldId}&protocol=${protocol}&ticket=${access.ticket}`,
       { headers: { Origin: origin, Cookie: account.cookie } });
     sockets.push(socket);
@@ -54,7 +57,7 @@ async function startTown(t, { approvedSpaces = true } = {}) {
       socket.once('error', error => resolve({ refused: Number(/\d{3}/.exec(error.message)?.[0]) }));
       poll = setInterval(() => { if (snapshots.length) resolve({ snapshot: snapshots[0] }); }, 5);
     }).finally(() => clearInterval(poll));
-    return { socket, access, snapshots, ...first, latest: () => snapshots.at(-1) };
+    return { socket, access, protocol, snapshots, ...first, latest: () => snapshots.at(-1) };
   };
   const command = (socket, requestId, body) => new Promise((resolve, reject) => {
     const receive = raw => { const value = JSON.parse(raw); if (value.type === 'result' && value.requestId === requestId) { socket.off('message', receive); resolve(value); } };
@@ -62,6 +65,8 @@ async function startTown(t, { approvedSpaces = true } = {}) {
   });
   return { town, origin, session, post, worldData, open, command };
 }
+// The protocol the page asks for on its socket (multiplayer-client.js).
+const asTicketSays = access => ticketProtocol(access.protocolVersion);
 
 // Walk a straight line in small, timed poses, as a client does.
 async function walk(command, socket, label, from, to, step = 0.3) {
@@ -266,9 +271,27 @@ test('with RIVER_OAKS_APPROVED_SPACES unset, the town refuses approved spaces an
   assert.equal(saved.status, 400);
   assert.equal((await saved.json()).error, 'invalid_draft');
   for (const worldId of ['harbour-cafe', 'river-oaks']) {
-    const joined = await open(guest, worldId, 3);
+    const joined = await open(guest, worldId, asTicketSays);
     assert.equal(joined.access.protocolVersion, 3, worldId);
+    assert.equal(joined.protocol, 3, `${worldId}: the page offers 3`);
     assert.equal(joined.snapshot.protocolVersion, 3, worldId);
     joined.socket.close(); await wait(50);
   }
+});
+
+test('a page asks for the protocol its ticket reports: 3 for a protocol-3 world, 4 for the Café', async t => {
+  const { origin, post, session, open } = await startTown(t);
+  const owner = await session(), guest = await session();
+  assert.equal((await (await fetch(origin + '/api/worlds')).json()).approvedSpaces, true);
+  assert.equal((await post(owner, '/api/worlds', { id: 'harbour-cafe', title: 'Harbour Café', region: pilot })).status, 201);
+  const district = await open(guest, 'river-oaks', asTicketSays);
+  assert.equal(district.access.protocolVersion, 3);
+  assert.equal(district.protocol, 3, 'a protocol-3 world is offered 3, which a server requiring exactly 3 accepts');
+  assert.equal(String(district.protocol), String(WORLD_PROTOCOL_VERSION));
+  assert.equal(district.snapshot.protocolVersion, 3);
+  district.socket.close(); await wait(50);
+  const cafe = await open(guest, 'harbour-cafe', asTicketSays);
+  assert.equal(cafe.access.protocolVersion, 4);
+  assert.equal(cafe.protocol, 4);
+  assert.equal(cafe.snapshot.protocolVersion, 4);
 });

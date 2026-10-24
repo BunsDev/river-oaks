@@ -742,7 +742,10 @@ unversioned clients must refresh
 before joining. A world that places an approved furnished space
 ([creator regions](creator-regions.md#approved-furnished-spaces)) asks for protocol 4
 in its ticket and snapshot and refuses an older client with 426 or 4000, so that client
-sees **Refresh** there while every other world still accepts protocol 3.
+sees **Refresh** there while every other world still accepts protocol 3. The browser
+asks for the protocol its ticket reports, so it offers 3 to a protocol-3 world and to a
+server that requires exactly 3. A server accepts any protocol from the world's own up to
+the newest it knows.
 This prevents older renderers from applying snapshots with unknown geometry.
 
 Placed creations and storefront benches are interactive; other built-in shop

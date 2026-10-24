@@ -7,7 +7,7 @@ import { CURRENT_SPACE_ASSETS } from '../src/approved-space-plan.js';
 import { buildApprovedSpaceInterior } from '../src/approved-space-interior.js';
 import { storeRoomsFor } from '../src/store-rooms.js';
 import { canCullExterior } from '../src/interior-exterior-culling.js';
-import { worldProtocolVersion, supportsWorldProtocol, acceptsWorldProtocol } from '../src/world-contract.js';
+import { worldProtocolVersion, supportsWorldProtocol, acceptsWorldProtocol, ticketProtocol } from '../src/world-contract.js';
 import { compileRegionPackage } from '../../server/region-package.js';
 
 // #420: the client side of an approved furnished space.
@@ -90,4 +90,14 @@ test('the street stays drawn from inside an approved space, which is glazed on m
   const inside = room.toWorld(0, 6);
   const camera = { position: { x: inside[0], y: room.floor + 1.68, z: -inside[1] } };
   assert.equal(canCullExterior(camera, room), false);
+});
+
+test('a page asks for the protocol its ticket reports, and only one it can draw', () => {
+  assert.equal(ticketProtocol(3), 3);
+  assert.equal(ticketProtocol(4), 4);
+  assert.equal(ticketProtocol(undefined), 3, 'a server that names no protocol speaks 3');
+  for (const unsupported of [2, 5, '4', 4.5]) assert.equal(ticketProtocol(unsupported), null, `${unsupported}: the page offers Refresh`);
+  // What the page offers is what the server accepts for that world.
+  assert.equal(acceptsWorldProtocol(String(ticketProtocol(3)), 3), true);
+  assert.equal(acceptsWorldProtocol(String(ticketProtocol(4)), 4), true);
 });

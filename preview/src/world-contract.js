@@ -9,6 +9,15 @@ export const worldProtocolVersion = world => (world?.buildingInteriors ?? [])
   .some(plan => plan?.kind === 'approved-space') ? 4 : WORLD_PROTOCOL_VERSION;
 export const supportsWorldProtocol = version => Number.isInteger(version)
   && version >= WORLD_PROTOCOL_VERSION && version <= MAX_WORLD_PROTOCOL_VERSION;
+/**
+ * The protocol a client asks for on its socket: the one its ticket reports, when this client
+ * can draw it; otherwise null and the page offers Refresh. A server that names none speaks
+ * protocol 3, and a server that requires exactly 3 is only ever offered 3 by a protocol-3 ticket.
+ */
+export const ticketProtocol = reported => {
+  const version = reported ?? WORLD_PROTOCOL_VERSION;
+  return supportsWorldProtocol(version) ? version : null;
+};
 /** Whether a client speaking `offered` may join a world that asks for `required`. */
 export const acceptsWorldProtocol = (offered, required) => typeof offered === 'string' && /^\d{1,3}$/.test(offered)
   && Number(offered) >= required && Number(offered) <= MAX_WORLD_PROTOCOL_VERSION;
