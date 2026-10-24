@@ -1,27 +1,66 @@
+/* Worlds in the District map: a calm directory first, owner tools folded below it.
+   Colours come from the HUD tokens (hud-glass.css), so light and dark themes both hold. */
 .world-portal{padding:1rem 0 1.2rem;border-bottom:1px solid color-mix(in srgb,currentColor 18%,transparent)}
-.world-portal h3{font-size:1rem;font-weight:600;line-height:1.3;margin:0 0 .3rem}
+.world-portal h3{font-size:1rem;font-weight:650;line-height:1.3;margin:0 0 .3rem}
 .world-portal h4{font-size:.9rem;font-weight:600;line-height:1.3;margin:0 0 .6rem}
-.world-portal-status{min-height:1.3em;margin:.5rem 0;color:var(--muted,#5a645b)}
-.world-portal-list{list-style:none;padding:0;margin:.4rem 0 .8rem;display:grid;gap:.4rem}
-.world-portal-list li{display:flex;justify-content:space-between;align-items:baseline;gap:.8rem}
-.world-portal-list a{color:inherit;text-decoration:underline;text-underline-offset:3px}
-.world-portal-list button,.world-portal-revision button{min-height:2.3rem;padding:.45rem .65rem;border:1px solid var(--accent,#934969);border-radius:.45rem;background:transparent;color:var(--accent,#934969);font:inherit;font-size:.78rem;cursor:pointer}
-.world-portal-list button:focus-visible,.world-portal-revision button:focus-visible{outline:2px solid var(--accent,#934969);outline-offset:2px}
-.world-portal-revision{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;padding:.7rem;border:1px solid var(--line,#aeb8ad);border-radius:.6rem;margin:.5rem 0}
+.world-portal>.quiet-note{margin:0 0 .75rem;color:var(--hud-muted,var(--muted,#5a645b));font-size:.8rem;line-height:1.45}
+/* "1 world to visit": a caption over the list, not a heading. */
+.world-portal-status{min-height:1.2em;margin:0 0 .4rem;color:var(--hud-muted,var(--muted,#5a645b));font-size:.72rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+
+/* Each world is one row: its name, then where it stands. The current world is marked. */
+.world-portal-list{list-style:none;padding:0;margin:0 0 .9rem;display:grid;gap:.35rem}
+.world-portal-list li{position:relative;display:flex;align-items:center;gap:.6rem;padding:.6rem .7rem;border:1px solid var(--hud-hairline,var(--line,#aeb8ad));border-radius:var(--hud-control-radius,9px);background:var(--hud-tile,transparent);transition:background .15s ease}
+.world-portal-list li:hover{background:var(--hud-tile-hover,var(--hud-tile,transparent))}
+.world-portal-list li[data-current=true]{border-color:color-mix(in srgb,var(--hud-action,var(--accent,#934969)) 55%,transparent);background:color-mix(in srgb,var(--hud-action,var(--accent,#934969)) 12%,transparent)}
+.world-portal-world{display:grid;gap:.15rem;min-width:0;flex:1}
+.world-portal-list a{color:inherit;font-size:.92rem;font-weight:650;line-height:1.3;text-decoration:none;overflow-wrap:anywhere}
+/* The whole row opens the world; the edit button stays above it. */
+.world-portal-list a::after{content:'';position:absolute;inset:0;border-radius:inherit}
+.world-portal-list a:hover{text-decoration:underline;text-underline-offset:3px}
+.world-portal-list small{color:var(--hud-muted,var(--muted,#5a645b));font-size:.75rem;line-height:1.35}
+.world-portal-list li[data-current=true] small{color:inherit}
+.world-portal-list a:focus-visible{outline:none}
+.world-portal-list li:has(a:focus-visible){outline:2px solid var(--hud-focus,var(--accent,#934969));outline-offset:2px}
+.world-portal-list button{position:relative;z-index:1;flex:none}
+
+/* Shared button shapes: secondary (outline) by default, one primary per form. */
+.world-portal-list button,.world-portal-revision button,.world-portal-form button{min-height:2.5rem;padding:.5rem .8rem;border:1px solid var(--hud-hairline,var(--line,#aeb8ad));border-radius:var(--hud-control-radius,9px);background:var(--hud-raised,transparent);color:inherit;font:inherit;font-size:.8rem;font-weight:600;cursor:pointer}
+.world-portal-list button:hover,.world-portal-revision button:hover:not(:disabled),.world-portal-form button:hover:not(:disabled){background:var(--hud-tile-hover,transparent)}
+.world-portal :is(button,summary,input,textarea,select,a):focus-visible{outline:2px solid var(--hud-focus,var(--accent,#934969));outline-offset:2px}
+.world-portal :is(button):disabled{opacity:.55;cursor:wait}
+
+.world-portal-revision{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;padding:.8rem;border:1px solid var(--hud-hairline,var(--line,#aeb8ad));border-radius:var(--hud-tile-radius,12px);background:var(--hud-tile,transparent);margin:0 0 .9rem}
 .world-portal-revision[hidden]{display:none}
 .world-portal-revision h4,.world-portal-revision p{flex-basis:100%;margin:0}
-.world-portal-revision p{font-size:.8rem;line-height:1.4}
+.world-portal-revision p{font-size:.8rem;line-height:1.45;color:var(--hud-muted,var(--muted,#5a645b))}
 .world-portal-revision label{display:flex;align-items:center;gap:.4rem;font-size:.8rem}
 .world-portal-revision label[hidden],.world-portal-revision button[hidden]{display:none}
-.world-portal-revision select{max-width:12rem;padding:.4rem;border:1px solid var(--line,#aeb8ad);border-radius:.4rem;background:var(--surface,#fff);color:inherit;font:inherit}
-.world-portal-example{color:var(--accent,#934969);font-size:.8rem;text-decoration:underline;text-underline-offset:3px}
-.world-portal-list small{color:var(--muted,#5a645b);text-align:right}
-.world-portal-form{display:grid;gap:.65rem;padding:.8rem;border:1px solid var(--line,#aeb8ad);border-radius:.6rem}
+.world-portal-revision select{max-width:12rem;padding:.45rem;border:1px solid var(--hud-hairline,var(--line,#aeb8ad));border-radius:var(--hud-control-radius,9px);background:var(--hud-raised,var(--surface,#fff));color:inherit;font:inherit}
+
+/* Publishing, folded: one summary row that opens the form. */
+.world-portal-publish{border:1px solid var(--hud-hairline,var(--line,#aeb8ad));border-radius:var(--hud-tile-radius,12px);background:var(--hud-tile,transparent)}
+.world-portal-publish[hidden]{display:none}
+.world-portal-publish>summary{display:flex;align-items:center;justify-content:space-between;gap:.5rem;min-height:2.75rem;padding:0 .8rem;border-radius:inherit;font-size:.88rem;font-weight:650;cursor:pointer;list-style:none}
+.world-portal-publish>summary::-webkit-details-marker{display:none}
+.world-portal-publish>summary::after{content:'+';font-size:1.1rem;font-weight:500;line-height:1;color:var(--hud-muted,var(--muted,#5a645b))}
+.world-portal-publish[open]>summary::after{content:'–'}
+.world-portal-publish[open]>summary{border-bottom:1px solid var(--hud-hairline,var(--line,#aeb8ad));border-radius:var(--hud-tile-radius,12px) var(--hud-tile-radius,12px) 0 0}
+
+.world-portal-form{display:grid;gap:.8rem;padding:.8rem}
 .world-portal-form[hidden]{display:none}
-.world-portal-form label{display:grid;gap:.25rem;font-size:.85rem}
-.world-portal-form input,.world-portal-form textarea{font:inherit;min-width:0;padding:.5rem;border:1px solid var(--line,#aeb8ad);border-radius:.35rem;background:var(--panel,var(--paper,#fff));color:inherit}
-.world-portal-form button{justify-self:start;min-height:2.5rem;padding:.55rem .9rem;border:1px solid var(--accent,#934969);border-radius:.5rem;background:var(--accent,#934969);color:var(--on-accent,#fff);font:inherit;font-weight:600;cursor:pointer}
-.world-portal-form button:focus-visible,.world-portal-list a:focus-visible{outline:2px solid var(--accent,#934969);outline-offset:2px}
-.world-portal-form button:disabled{opacity:.6;cursor:wait}
-.world-portal-form .world-portal-design{background:transparent;color:var(--accent,#934969)}
-.world-portal-region-source{margin:-.3rem 0 0;color:var(--muted,#5a645b);font-size:.78rem;line-height:1.45}
+.world-portal-form label{display:grid;gap:.3rem;font-size:.78rem;font-weight:600}
+.world-portal-form input,.world-portal-form textarea{font:inherit;font-size:.88rem;font-weight:400;min-width:0;padding:.55rem .6rem;border:1px solid var(--hud-hairline,var(--line,#aeb8ad));border-radius:var(--hud-control-radius,9px);background:var(--hud-raised,var(--panel,#fff));color:inherit}
+.world-portal-form textarea{resize:vertical;min-height:3.6rem}
+.world-portal-form input::placeholder,.world-portal-form textarea::placeholder{color:var(--hud-muted,var(--muted,#5a645b));opacity:.75}
+.world-portal-hint{color:var(--hud-muted,var(--muted,#5a645b));font-size:.72rem;font-weight:400;line-height:1.4}
+/* The file picker matches the other controls instead of the browser default. */
+.world-portal-form input[type=file]{padding:.35rem;font-size:.78rem;color:var(--hud-muted,var(--muted,#5a645b))}
+.world-portal-form input[type=file]::file-selector-button{margin-right:.6rem;min-height:2rem;padding:.35rem .7rem;border:1px solid var(--hud-hairline,var(--line,#aeb8ad));border-radius:calc(var(--hud-control-radius,9px) - 2px);background:var(--hud-tile-hover,transparent);color:inherit;font:inherit;font-weight:600;cursor:pointer}
+.world-portal-region-tools{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem .9rem}
+.world-portal-example{color:inherit;font-size:.78rem;text-decoration:underline;text-decoration-color:color-mix(in srgb,currentColor 40%,transparent);text-underline-offset:3px}
+.world-portal-region-source{margin:-.35rem 0 0;color:var(--hud-muted,var(--muted,#5a645b));font-size:.75rem;line-height:1.45}
+.world-portal-region-source:empty{display:none}
+.world-portal-actions{display:flex;justify-content:flex-end;padding-top:.2rem;border-top:1px solid var(--hud-hairline,var(--line,#aeb8ad))}
+.world-portal-form .world-portal-actions button{margin-top:.6rem;padding-inline:1.1rem;border-color:transparent;background:var(--hud-action,var(--accent,#934969));color:var(--hud-on-action,var(--on-accent,#fff))}
+.world-portal-form .world-portal-actions button:hover:not(:disabled){background:color-mix(in srgb,var(--hud-action,var(--accent,#934969)) 88%,black)}
+@media (prefers-reduced-motion:reduce){.world-portal-list li{transition:none}}

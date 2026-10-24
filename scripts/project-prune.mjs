@@ -8,6 +8,9 @@ import { createHash, randomUUID } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 import { loadPulls, validateTasks } from './project-status.mjs';
 import { ensureLiveRegister, withRegisterLock } from './task-register.mjs';
+// Static: project-prune-cancel.mjs imports archiveTip back from here, and a dynamic
+// import of it from this module's top-level await deadlocks (Node exits 13).
+import * as cancel from './project-prune-cancel.mjs';
 
 export function git(root,args,optional=false) {
   try { return execFileSync('git',args,{cwd:root,encoding:'utf8',maxBuffer:32*1024*1024,stdio:['ignore','pipe','pipe'],env:{...process.env,GIT_TERMINAL_PROMPT:'0'}}).trimEnd(); }
@@ -225,7 +228,6 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).hr
     let report;
     if(cancelStale){
       // Explicitly authorized cancellation of untouched local work; see project-prune-cancel.mjs.
-      const cancel=await import('./project-prune-cancel.mjs');
       if(values['--detached-path']){const detached={...options,path:values['--detached-path']};report=apply?cancel.cancelDetached(detached):cancel.planDetachedCancellation({...detached,...loadEvidence()});}
       else if(values['--resume-manifest'])report=cancel.resumeCancellation({...options,manifestPath:values['--resume-manifest']});
       else report=apply?cancel.cancelStale(options):cancel.planCancellation({...options,...loadEvidence()});
