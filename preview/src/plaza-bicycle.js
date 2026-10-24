@@ -56,7 +56,9 @@ export function createPlazaBicycle({ scene, host, walking, getMultiplayer, getLo
     model.wheels.forEach((wheel, i) => { wheel.position.fromArray(model.spec.wheels[i]).addScaledVector(up, placement.wheelOffsets?.[i] ?? 0); wheel.rotation.set(0, i < model.spec.steeredWheels ? placement.steering ?? 0 : 0, placement.distance / model.spec.wheels[i][1], 'YXZ'); });
     model.updateSteering(placement.steering ?? 0); model.object.updateMatrixWorld(true);
   };
+  // The rider's local step guards (e.g. destination presentation readiness) apply to the bike as to walking.
   const canOccupy = next => bicycleCanOccupy(next, env())
+    && (walking.allowsStep?.([placement.position[0], -placement.position[2]], [next.position[0], -next.position[2]]) ?? true)
     && !(getLocals() ?? []).some(p => !p.indoor && carriageContains(next, p.position[0], next.position[1] + 1, -p.position[1], .5));
   const ride = {
     get pose() {
