@@ -12,7 +12,7 @@ export function createCharacterPreview({host,ownerId,reducedMotion=false,onStatu
   const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});
   renderer.setPixelRatio(Math.min(window.devicePixelRatio,1.5));renderer.outputColorSpace=THREE.SRGBColorSpace;
   renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;
-  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;
   renderer.domElement.setAttribute('aria-label','Live character preview');renderer.domElement.setAttribute('role','img');host.append(renderer.domElement);
   const scene=new THREE.Scene();scene.background=new THREE.Color('#cbd8d1');
   const camera=new THREE.PerspectiveCamera(30,1,.05,30);
