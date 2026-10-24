@@ -535,3 +535,29 @@ Not run here: browser journeys (`creator-approved-cafe` needs a fresh
    deploying are not granted by the pilot.
 2. **Optional:** `pnpm run verify full` (Redis, audit, history scan and every browser
    journey) on an unloaded machine.
+
+## CI coverage: the Café journey runs on request (2026-10-24)
+
+#489 landed dark as `e17fd94d`. After the merge, `creator-approved-cafe` failed hosted `preview shared (worlds-and-creator)` in 4 of 4 runs on the merged code:
+- main's push run 40112068549;
+- both attempts on #635;
+- #639's updated head, run 40114160932.
+
+The same tree had passed on #489's own heads 3 times.
+
+Each failure stops the same way: "Café route did not reach [0,-14.5]" (the door + 1.4 m). The walker stands at about z 15.1–17.5, keeps walking toward the door at 1.65 m/s and makes no net progress, with `levelId` still null. The server is refusing the move, or failing to put the walker on the Café floor, as the walker crosses the door.
+
+On main 15.1 is past the door plane, so this isn't the door frame's width. Approaching nearly centred (x 0.06–0.08) still failed. #639's elbow acceptance doesn't fix it either.
+
+`preview/e2e/shared-runner.js` now runs this journey only when it's selected, as `storefront-threshold` and `generated-gallery-shared` already are:
+
+`RIVER_OAKS_SHARED_JOURNEY=creator-approved-cafe pnpm run test:shared development-publish`
+
+This keeps main's required `preview` check from failing on a dark feature.
+
+**Before activation (RIVER_OAKS_APPROVED_SPACES=1 anywhere shared):**
+- reproduce with the refusal capture that #639 added to `east-garden-commons.js`;
+- fix the door or level entry so that it's reliable under CPU acceptance rendering;
+- return the journey to the `development-publish` list.
+
+Activation was already Val's separate decision.
