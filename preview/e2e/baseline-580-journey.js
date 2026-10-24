@@ -2,7 +2,7 @@ async page => {
   const { loadDistrictData } = await import('../../server/district-data.js');
   const { createResidentNavigation } = await import('../src/navigation.js');
   const { arrivalPedestrianRoute } = await import('../audit/baseline-580-route.js');
-  const revision='east-garden-commons-blockout-1',world=await loadDistrictData({districtRevision:revision});
+  const revision='east-garden-commons-market-1',world=await loadDistrictData({districtRevision:revision});
   const { plazaSalonSeats } = await import('../src/plaza-salon-plan.js');
   const nav=createResidentNavigation(world),checks=[],routes=[],origin='http://127.0.0.1:5173';
   const check=(ok,label)=>{if(!ok)throw new Error(label);checks.push(label);console.log(label);};
