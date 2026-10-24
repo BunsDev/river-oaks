@@ -68,8 +68,4 @@ a passing web build cannot establish native acceptance.
 - `docs/superpowers/plans/` holds task ledgers. Start from the generated
   plans index (`docs/superpowers/plans/README.md`) (`pnpm run plans:index`), which shows
   each plan's register status. Do not assume a checked box proves live delivery.
-- `docs/project-management/tasks.json` is coordination state, not an ordinary
-  input. The primary checkout's uncommitted copy is the live register, and claims,
-  releases and `project:prune` use it. Branches commit their own entries, and
-  register sweep PRs bring live-only records to `main`. See the
-  [project workflow](project-management/workflow.md).
+- The live task register is `river-oaks-tasks.json` in the common Git directory, shared by all worktrees; locate it with `pnpm run --silent register path` and use the register CLI for claims, releases and evidence. `docs/project-management/tasks.json` is a committed snapshot refreshed only by register sweeps; feature PRs must not edit it. See the [project workflow](project-management/workflow.md).

@@ -164,6 +164,16 @@ test('losing the owned queue entry during a wait fails closed', async t => {
   await assert.rejects(pending, /no longer queued/);
 });
 
+test('a lost queue entry is rejected at the fallback even when notifications are unavailable', async t => {
+  const dir = scratch(t), first = queueAt(dir, 2);
+  const mine = createQueue({ file: join(dir, 'queue.json'), lock: join(dir, 'queue.lock'), pid: 1, host: 'here', alive: () => true,
+    watchDirectory: () => { throw new Error('watch unavailable'); } });
+  first.enqueue(99); mine.enqueue(7);
+  const pending = mine.waitForTurn(7, 10);
+  mine.dequeue(7);
+  await assert.rejects(pending, /no longer queued/);
+});
+
 test('a missing entry after the timer fallback cannot reach GitHub or the merge guard', async t => {
   const dir = scratch(t), first = queueAt(dir, 2), mine = queueAt(dir, 1), fake = fakeGitHub();
   first.enqueue(99);
