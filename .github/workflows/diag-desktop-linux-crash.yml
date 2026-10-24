@@ -1,0 +1,27 @@
+name: Diag Linux renderer core dumps (#370)
+# Diagnostic branch only, never merged.
+on:
+  push:
+    branches: ['diag/desktop-linux-crash-370-*']
+permissions:
+  contents: read
+jobs:
+  probe:
+    name: coredump probe (ubuntu-24.04)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+      - name: Core handling on this image
+        run: |
+          systemctl --version | head -1
+          grep -vE '^\s*(#|$)' /etc/systemd/coredump.conf /etc/systemd/coredump.conf.d/* 2>/dev/null || echo 'coredump.conf: defaults'
+          ulimit -c
+          free -m
+      - name: Probe
+        run: node .github/diag/coredump-probe.mjs
