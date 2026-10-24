@@ -193,15 +193,20 @@ test('the shells draw 6/7/6 occupied floors, open every skywalk portal and dispo
   const group = buildGardenCampus(campus), counts = group.userData.counts;
   // One floor finish per occupied storey plus the café's: 6 + 7 + 6 + 1.
   assert.equal(counts.interior, 20);
+  // Every instance's true bounds, whether a unit box or an emerald pane built at its bay's size.
   const boxes = finish => {
-    const mesh = group.children.find(child => child.name === `campus:${finish}`), matrix = new THREE.Matrix4(), out = [];
-    for (let i = 0; i < mesh.count; i++) {
-      mesh.getMatrixAt(i, matrix);const p = new THREE.Vector3(), q = new THREE.Quaternion(), s = new THREE.Vector3();matrix.decompose(p, q, s);
-      out.push({ u0: p.x - s.x / 2, u1: p.x + s.x / 2, z0: p.y - s.y / 2, z1: p.y + s.y / 2, v0: -p.z - s.z / 2, v1: -p.z + s.z / 2 });
+    const matrix = new THREE.Matrix4(), out = [];
+    for (const mesh of group.children.filter(child => child.name === `campus:${finish}`)) {
+      mesh.geometry.computeBoundingBox();
+      for (let i = 0; i < mesh.count; i++) {
+        mesh.getMatrixAt(i, matrix);const b = mesh.geometry.boundingBox.clone().applyMatrix4(matrix);
+        out.push({ u0: b.min.x, u1: b.max.x, z0: b.min.y, z1: b.max.y, v0: -b.max.z, v1: -b.min.z });
+      }
     }
     return out;
   };
   const glass = boxes('glass'), bronze = boxes('bronze');
+  assert.equal(glass.length, counts.glass, 'one emerald pane per bay');
   for (const portal of CAMPUS.bridges.flatMap(bridge => bridge.portals)) {
     const [pu0, pu1] = portal.opening, v = portal.position[1], z = portal.position[2];
     const blocking = [...glass, ...bronze].filter(b => b.u0 < pu1 - 1e-6 && b.u1 > pu0 + 1e-6 && b.v0 < v + 0.3 && b.v1 > v - 0.3 && b.z0 < z + portal.clearHeight - 1e-6 && b.z1 > z + 1e-6);

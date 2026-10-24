@@ -18,10 +18,10 @@ test('flight accelerates, holds altitude, bounds ascent and returns to grounded 
   for(let i=0;i<1000&&flight.active;i++)stepFlight(walker,environment,flight,{},1/60);
   assert.equal(flight.active,false);assert.equal(walker.position[1],1.68);
 });
-test('the bubble cruises at 4.5 m/s and, held fast, flies at twice its old 7 m/s',()=>{
+test('the bubble flies 1.5x its old 4.5 m/s cruise and 14 m/s fast speed',()=>{
   const open={groundAt:()=>0,isFree:()=>true,canFly:()=>true};
-  assert.equal(FLIGHT_SPEED.fast,2*7);
-  for(const [fast,speed] of [[false,4.5],[true,14]]) {
+  assert.equal(FLIGHT_SPEED.cruise,1.5*4.5);assert.equal(FLIGHT_SPEED.fast,1.5*14);
+  for(const [fast,speed] of [[false,6.75],[true,21]]) {
     const walker=state(),flight={...createFlightState(),active:true,target:4,altitude:4};
     for(let i=0;i<300;i++)stepFlight(walker,open,flight,{forward:1,fast},1/60);
     assert.ok(Math.abs(walker.speed-speed)<.01,`${fast?'fast':'cruising'}: ${walker.speed}`);

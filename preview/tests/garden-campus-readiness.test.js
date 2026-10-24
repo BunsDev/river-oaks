@@ -4,6 +4,7 @@ import { EventEmitter, once } from 'node:events';
 import vm from 'node:vm';
 import { WebSocket, WebSocketServer } from 'ws';
 import { createCampusStartupReadiness as createStartupReadiness, waitForCampusLift } from '../e2e/garden-campus-readiness.js';
+import { campusLevels, campusToSource } from '../../shared/garden-campus-layout.js';
 
 // A thin page/Playwright event façade over real loopback frames. No renderer,
 // Vite, authentication or heartbeat coverage is claimed by these tests.
@@ -99,6 +100,29 @@ test('startup retries only the read-only exchange after normal connection recove
   } finally { await f.close(); }
 });
 
+test('startup restarts admission when the socket changes before the probe is sent', async () => {
+  let count = 0, first, replaced = false;
+  const f = await fixture((message, wire) => { count++; reply(wire, message); });
+  const startup = createStartupReadiness({ timeoutMs: 2000, log: record => f.logs.push(record) }); startup.track(f.page);
+  const evaluate = f.page.evaluate;
+  f.page.evaluate = async (fn, argument) => {
+    // Schedule the real transport replacement at the browser evaluation seam.
+    if (!replaced && fn.toString().includes('await window.__riverMultiplayerCommand')) {
+      replaced = true;
+      const closed = once(first.socket, 'close'); first.peer.terminate(); await closed;
+      await f.connect();
+      await f.page.waitForFunction(() => Boolean(window.__riverMultiplayer().snapshot), null, { timeout: 1000 });
+    }
+    return evaluate(fn, argument);
+  };
+  try {
+    first = await f.connect(); await startup.joined(f.page);
+    assert.equal(count, 2, 'a replacement socket must pass a fresh admission and probe checkpoint');
+    assert.equal(f.logs.some(record => record.event === 'probe-socket-changed'), true);
+    assert.equal(f.logs.at(-1).event, 'ready'); assert.equal(f.logs.at(-1).generation, 2);
+  } finally { await f.close(); }
+});
+
 test('unexpected server permission errors fail immediately rather than retrying', async () => {
   let count = 0;
   const f = await fixture((message, wire) => { count++; reply(wire, message, { ok: false, error: 'invalid_character_operation' }); });
@@ -176,6 +200,24 @@ test('the lift waits for the published authoritative pose before its single acti
     await new Promise(resolve => setTimeout(resolve, 40));
     assert.equal(actions, 0, 'a local lift label cannot authorize an out-of-reach server pose');
     f.setPlayers([{ id: 'alice', position: inside, levelId: null }]);
+    await readiness; assert.equal(actions, 1);
+  } finally { await readiness?.catch(() => {}); await f.close(); }
+});
+
+test('the authored ground lift uses source coordinates and waits for authoritative reach', async () => {
+  const local = campusLevels().flatMap(level => level.portals).find(portal => portal.id === 'T1-F1/lift-up').position;
+  const source = campusToSource(local), f = await fixture(() => {});
+  let readiness, actions = 0;
+  try {
+    f.setPlayers([{ id: 'alice', position: source, levelId: null }]); await f.connect();
+    await f.page.waitForFunction(() => Boolean(window.__riverMultiplayer().snapshot), null, { timeout: 1000 });
+    await assert.rejects(waitForCampusLift(f.page, local, { timeoutMs: 60 }), /Page predicate deadline/);
+    f.setPlayers([{ id: 'alice', position: [source[0] + 1.31, source[1], source[2]], levelId: null }]);
+    await f.page.waitForFunction(east => window.__riverMultiplayer().snapshot.players[0].position[0] === east, source[0] + 1.31, { timeout: 1000 });
+    readiness = waitForCampusLift(f.page, source, { timeoutMs: 1000 }).then(() => { actions++; });
+    await new Promise(resolve => setTimeout(resolve, 40));
+    assert.equal(actions, 0, 'the real portal must still wait for the unchanged 1.3 m server reach');
+    f.setPlayers([{ id: 'alice', position: [source[0] + 1.2, source[1], source[2]], levelId: null }]);
     await readiness; assert.equal(actions, 1);
   } finally { await readiness?.catch(() => {}); await f.close(); }
 });

@@ -1,7 +1,10 @@
 import { COMMONS_REVISION } from '../../shared/east-garden-commons-layout.js';
 import { attachEastGardenCommons } from './east-garden-commons-world.js';
 import { buildEastGardenCommons } from './east-garden-commons.js';
+import { rivalFigures, policeFigures } from './crime-ui.js';
+import { createLanternWalkClient } from './lantern-walk.js';
 import { createCharacterStudio } from './character-studio.js';
+import { characterStudioShown } from './character-studio-state.js';
 import { createOfficeUI } from './office-ui.js';
 import { createIpicScreening } from './ipic-screening-ui.js';
 import { IPIC_DARTS, IPIC_INTERIOR, atIpicDartsLine } from './ipic-plan.js';
@@ -160,6 +163,11 @@ const aoTailShedding = new URLSearchParams(location.search).get('aotail') === 'o
 const officeSkylineOff = import.meta.env.DEV && new URLSearchParams(location.search).get('office-skyline') === 'off';
 let auditCamera = null;
 let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, storePeople, interiorsLayer, generatedInteriors;
+// East Garden Commons and its assembled destination, when the revision composes them.
+let commonsScene = null;
+const lanternWalk = createLanternWalkClient({ getLayout: () => world?.eastGardenCommons ?? null, getPose: () => walking?.getPose(), getScene: () => commonsScene,
+  getSnapshot: () => multiplayer?.snapshot?.lanternWalk ?? null,
+  send: message => multiplayer?.command(message) ?? Promise.resolve({ ok: false, message: 'Connect to the town to light the lanterns together.' }) });
 let districtUI, environmentAssets = null, storefrontReflections = null, roomGroundClip = null;
 let currentAtmosphere = null; // the time-of-day light updateAtmosphere last applied; an office visit reads it
 let placesUI = null, landmarks = null;
@@ -283,7 +291,7 @@ function initializeRenderer() {
       const result = await multiplayer.command({ type: 'interiorLevel', portalId: portal.id });
       if (result.ok && result.player) walking.applyServerPose(result.player);
       return result;
-    }, canEnterStore, getInteraction: () => seatAndWater?.interaction() ?? plazaBicycle?.prompt() ?? null, getPlay: playAction, getVoice: () => multiplayer?.voice ?? null });
+    }, canEnterStore, getInteraction: () => seatAndWater?.interaction() ?? plazaBicycle?.prompt() ?? lanternWalk.interaction() ?? null, getPlay: playAction, getVoice: () => multiplayer?.voice ?? null });
   storeIntros = createStoreIntros({ camera, host,
     claim: storeId => multiplayer.claimStoreIntro(storeId),
     onHalt: () => walking.halt(), onResume: () => walking.update(0, performance.now()),
@@ -302,7 +310,7 @@ function initializeRenderer() {
     },
     requestVehicleExit: position => multiplayer.travel({position:[position[0],-position[2]]}),
     getPortrait: id => portraits.portrait(id) });
-  if(import.meta.env.VITE_CHARACTER_STUDIO==='true'){
+  if(characterStudioShown(import.meta.env)){
     characterStudio = createCharacterStudio({ownerId:document.body.dataset.accountId,
       getDefinition:()=>playerAvatar.definition,
       accountTransport:{read:()=>multiplayer.characterRequest('read'),write:(action,body)=>multiplayer.characterRequest(action,body),
@@ -499,7 +507,7 @@ function initializeRenderer() {
   sun.castShadow = true;
   const shadowResolution=Math.min(4096,renderer.capabilities.maxTextureSize);
   sun.shadow.mapSize.set(shadowResolution,shadowResolution);
-  treeShadows = castShadowsFromProxies(sun, () => layers.trees?.userData.shadowProxies ?? []);
+  treeShadows = castShadowsFromProxies(sun, () => [...(layers.trees?.userData.shadowProxies ?? []), ...(commonsScene?.userData.shadowProxies ?? [])]);
   sun.shadow.bias = -0.00002;
   sun.shadow.normalBias = 0.018;
   sun.shadow.camera.near = 10;
@@ -564,7 +572,8 @@ function startMultiplayer() {
     onCorrection: player => { if (world && player) { walking.applyServerPose(player); plazaBicycle?.sync(); } },
     onPlayers: (players, selfId) => {
       host.dataset.multiplayer = players.length ? 'joined' : 'disconnected';
-      remotePlayers.sync(players.filter(p=>!p.office), selfId);
+      // Authored rivals (#597) draw like players, from the town's crime state only.
+      remotePlayers.sync([...players.filter(p=>!p.office),...(players.length?[...rivalFigures(multiplayer?.snapshot?.crime),...policeFigures(multiplayer?.snapshot?.police)]:[])], selfId);
       officeUI?.sync(players,selfId);
       placesUI?.setPlayers(players, selfId);
       if (!players.length) buildLayer?.sync([]);
@@ -644,8 +653,7 @@ function populateWorld(data) {
     worldGroup.remove(interiorsLayer);
     ipicScreening?.dispose(); storePeople?.userData.dispose?.(); storePeople = null; interiorsLayer = null;
     plazaSalon?.userData.rack?.dispose();
-    const commons=worldGroup.getObjectByName('East Garden Commons blockout');
-    if(commons){commons.removeFromParent();commons.userData.dispose();}
+    if(commonsScene){commonsScene.removeFromParent();commonsScene.userData.dispose();commonsScene=null;}
     worldGroup.traverse((item) => {
       item.userData.cancelLandscapeLoad?.();
       item.userData.texture?.dispose();
@@ -697,7 +705,7 @@ function populateWorld(data) {
   worldGroup.add(seeThroughNearCameraIn(buildDistrictDetail(data)));
   worldGroup.add(sidewalks);
   worldGroup.add(furniture);
-  if(data.eastGardenCommons)worldGroup.add(buildEastGardenCommons(data.eastGardenCommons));
+  if(data.eastGardenCommons){commonsScene=buildEastGardenCommons(data.eastGardenCommons);worldGroup.add(commonsScene);}
   // The Dior-Toulouse plaza furnished as an open-air salon (plaza-salon-plan.js).
   plazaSalon = buildPlazaSalon(data);
   plazaStage?.setWorld(data);
@@ -962,6 +970,8 @@ function render(now) {
   generatedInteriors?.update(camera.position, now, self?.levelId);
   renderAudit?.phase('setup'); // phases accumulate: interior streaming counts as setup
   layers.trees?.userData.update?.(camera.position);
+  commonsScene?.userData.update?.(camera.position);
+  lanternWalk.update();
   renderAudit?.phase('trees');
   if (storePeople && interiorsLayer?.visible) storePeople.userData.update(camera, now, community?.state, walking?.getPosition(), community?.speakingId);
   renderAudit?.phase('residents');
@@ -1311,6 +1321,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
     steadyOn: point => venueDarts.steadyOn(point), open: () => venueDarts.open() } : null;
   window.__riverIpicDarts = () => ipicDarts ? { ...ipicDarts.debug(), board: buildingMesh?.userData.interiors?.userData.dartboards?.[0]?.count() ?? null,
     steadyAt: release => ipicDarts.steadyAt(release), steadyOn: point => ipicDarts.steadyOn(point), open: () => ipicDarts.open() } : null;
+  window.__riverLanternWalk = () => ({ ...lanternWalk.debug(), scene: commonsScene?.userData.stats?.() ?? null });
   window.__riverPlazaDarts = () => plazaDarts ? { ...plazaDarts.debug(), board: plazaSalon?.userData.darts?.count() ?? null,
     steadyAt: release => plazaDarts.steadyAt(release), steadyOn: point => plazaDarts.steadyOn(point), landingFor: (release, dart) => plazaDarts.landingFor(release, dart), reset: seed => plazaDarts.reset(seed),
     // Walk to the throwing line and face the board.
@@ -1384,14 +1395,14 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
       }
       return { ok: false };
     },
-    face(x, north) { walking?.lookAt([x, north, groundSurfaceHeight(world, x, -north)], 0.9); },
+    face(x, north, eyeHeight=0.9) { walking?.lookAt([x, north, groundSurfaceHeight(world, x, -north)], eyeHeight); },
     goTo(x, north) { return goToPlace({ kind: 'landmark', name: 'Spot', position: [x, north] }); },
   } : null;
   window.__riverVoice = () => multiplayer?.voice.debug() ?? null;
   window.__riverScreening = () => ipicScreening?.inspect() ?? null;
   // Development-only: send a raw command, as a modified client could, to prove the server refuses it.
   window.__riverMultiplayerCommand = message => multiplayer?.command(message);
-  window.__riverMultiplayer = () => ({ connected: multiplayer?.connected ?? false, selfId: multiplayer?.identity?.id, snapshot: multiplayer?.snapshot, remotes: remotePlayers?.stats(), selfMaterials:playerAvatar?.materials, voice: multiplayer?.voice.debug() ?? null,creations:buildLayer?.stats(),birds:birdCams?.state,builder:buildControls?{...buildControls.builder,ghost:buildLayer?.ghost?{position:buildLayer.ghost.position.toArray(),visible:buildLayer.ghost.visible}:null,hint:document.querySelector('#build-hint')?.textContent,valid:document.querySelector('#build-hint')?.dataset.valid}:null });
+  window.__riverMultiplayer = () => ({ connected: multiplayer?.connected ?? false, selfId: multiplayer?.identity?.id, snapshot: multiplayer?.snapshot, remotes: remotePlayers?.stats(), selfMaterials:playerAvatar?.materials,selfRealism:playerAvatar?.realism??null, voice: multiplayer?.voice.debug() ?? null,creations:buildLayer?.stats(),birds:birdCams?.state,builder:buildControls?{...buildControls.builder,ghost:buildLayer?.ghost?{position:buildLayer.ghost.position.toArray(),visible:buildLayer.ghost.visible}:null,hint:document.querySelector('#build-hint')?.textContent,valid:document.querySelector('#build-hint')?.dataset.valid}:null });
   window.__riverPlayerAttention=()=>{
     const rig=playerAvatar?.rig;if(!rig)return null;
     rig.model.updateWorldMatrix(true,true);
@@ -1407,7 +1418,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
     return {id,speaking:Boolean(id&&community?.speakingId===id),nod:station?.conversation.pose,face:station?.face.pose,mouth:rig?.speechPose,eyes:rig?.eyes.pose,head:head?.quaternion.toArray()};
   };
   window.__riverCreatorObjects=()=>({resources:buildLayer?.stats(),rendered:(buildLayer?.object.children??[]).filter(entry=>entry.userData.build).map(entry=>({id:entry.userData.build.id,parts:entry.children.filter(child=>child.isMesh).map(child=>({color:child.material.color.getHexString(),transmission:child.material.transmission??0,position:child.position.toArray(),size:child.scale.toArray()}))}))});
-  window.__riverCarriage = () => ({camera:{view:walking?.cameraView,position:camera.position.toArray()},vehicle:playerAvatar?.carriage.kind,chauffeur:playerAvatar?.carriage.chauffeur,companion:playerAvatar?.carriage.prince.companion,princePosition:playerAvatar?.carriage.prince.object.position.toArray(),princeVisible:playerAvatar?.carriage.prince.object.visible,wingsVisible:playerAvatar?.carriage.prince.object.getObjectByName('Jev’s angel wings')?.visible,placement:playerAvatar?.carriage.placement,unicorns:playerAvatar?.carriage.unicorns,spinners:playerAvatar?.carriage.spinners?.map(spinner=>({rotation:spinner.rotation.z})),visible:playerAvatar?.carriage.object.visible,riding:playerAvatar?.carriage.riding,tyreClearances:playerAvatar?.carriage.tyreClearances,pose:walking.getPose(),rider:playerAvatar?.object.position.toArray(),riderYaw:playerAvatar?.object.rotation.y});
+  window.__riverCarriage = () => ({camera:{view:walking?.cameraView,position:camera.position.toArray(),verticalFovDegrees:camera.fov,aspect:camera.aspect,near:camera.near,far:camera.far},vehicle:playerAvatar?.carriage.kind,chauffeur:playerAvatar?.carriage.chauffeur,companion:playerAvatar?.carriage.prince.companion,princePosition:playerAvatar?.carriage.prince.object.position.toArray(),princeVisible:playerAvatar?.carriage.prince.object.visible,wingsVisible:playerAvatar?.carriage.prince.object.getObjectByName('Jev’s angel wings')?.visible,placement:playerAvatar?.carriage.placement,unicorns:playerAvatar?.carriage.unicorns,spinners:playerAvatar?.carriage.spinners?.map(spinner=>({rotation:spinner.rotation.z})),visible:playerAvatar?.carriage.object.visible,riding:playerAvatar?.carriage.riding,tyreClearances:playerAvatar?.carriage.tyreClearances,pose:walking.getPose(),rider:playerAvatar?.object.position.toArray(),riderYaw:playerAvatar?.object.rotation.y});
   window.__riverPeople = (bone = 'head') => [...[playerAvatar?.carriage.driver].filter(p=>p?.userData.avatar).map(person => ({id:person.userData.localId,holder:person})), ...(storePeople?.userData.figures ?? [])]
     .filter(person => person.id&&(community.state?.locals ?? []).some(local=>local.id===person.id)).map(person => {
       person.holder.updateWorldMatrix(true,true);

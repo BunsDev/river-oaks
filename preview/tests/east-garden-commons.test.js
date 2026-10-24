@@ -59,9 +59,11 @@ test('ramp meets original edge ground and contains no controller-sized step',()=
 });
 
 test('blockout has named route surfaces, reusable primitives and disposes owned resources',()=>{
-  const group=buildEastGardenCommons(layout),geometry=new Set(),materials=new Set();
+  // The approved blockout without its composed destination (see bayou-market-commons tests).
+  const extra=layout.destination.solids.length,blockout={...layout,destination:undefined,surfaces:layout.surfaces.slice(0,2),solids:layout.solids.slice(0,layout.solids.length-extra)};
+  const group=buildEastGardenCommons(blockout),geometry=new Set(),materials=new Set();
   group.traverse(mesh=>{if(mesh.isMesh){geometry.add(mesh.geometry);materials.add(mesh.material);assert.ok(mesh.name.startsWith('east-garden-commons/'));}});
-  for(const surface of layout.surfaces)assert.ok(group.getObjectByName(surface.id));
+  for(const surface of blockout.surfaces)assert.ok(group.getObjectByName(surface.id));
   assert.ok(group.getObjectByName(`${layout.pavilion.id}/roof`));
   let geometryDisposals=0,materialDisposals=0;
   for(const item of geometry)item.addEventListener('dispose',()=>geometryDisposals++);
@@ -82,5 +84,14 @@ test('Commons loading rejects a mismatched registered revision or gateway height
   for(const mutate of [location=>{location.content_revision='other-v1';},location=>{location.entries[0].position_m[2]+=1;}]) {
     const changed=structuredClone(manifest);mutate(changed.locations.find(location=>location.id===layout.id));
     assert.throws(()=>validateCommonsRegistration(changed,layout),/Commons manifest differs/);
+  }
+});
+
+// The flight bubble is wider than a walker. A clear route must be continuous,
+// including the overlap on the original District side of the gateway.
+test('flight bubble crosses the entire District promenade seam', () => {
+  const environment = createWalkingEnvironment(world);
+  for (let offset = -4; offset <= 12; offset += .05) {
+    assert.equal(environment.canFly(layout.edge + offset, layout.ground + 10, 1335), true, `east offset ${offset}`);
   }
 });

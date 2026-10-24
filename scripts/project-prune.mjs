@@ -120,7 +120,8 @@ export function archiveAndRemove({root,branch,expectedHead,archiveRoot,prefix='r
     let plan=check();
     mkdirSync(archiveRoot,{recursive:true,mode:0o700});
     const archiveBase=realpathSync(archiveRoot);
-    if(worktrees(root).some(w=>within(archiveBase,realpathSync(w.path))))throw new Error('Archive must be outside all worktrees');
+    // within canonicalizes existing parents even for a missing registration.
+    if(worktrees(root).some(w=>within(archiveBase,w.path)))throw new Error('Archive must be outside all worktrees');
     const directory=mkdtempSync(join(archiveBase,prefix));
     const tag=`refs/tags/archive/worktree-prune/${randomUUID()}`;
     const bundle=join(directory,'history.bundle'),restore=join(directory,'restore.git');
