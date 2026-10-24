@@ -19,6 +19,7 @@ import { resolveSeat, seatYaw, SEAT_REACH } from '../preview/src/shared-seating.
 import { WATER_REACH, WATER_MS, benchSeats, boutiquePlanters, buildPlanters, headingTo, lanePlanters, resolveBenchSeat } from '../preview/src/world-interactions.js';
 import { plazaSalonRack } from '../preview/src/plaza-salon-plan.js';
 import { objectCollider, blocksPlayer, blocksResident } from '../preview/src/creator-object.js';
+import { verifyApprovedSpaceRoutes } from '../preview/src/approved-space-plan.js';
 import { cafeSeat, plazaSalonPlan } from '../preview/src/plaza-salon-plan.js';
 import { createCafeGames } from './cafe-games.js';
 import { createDartsGames } from './darts-games.js';
@@ -34,7 +35,7 @@ import { createScreenings } from './screenings.js';
 import { SCREENING_VENUES } from '../preview/src/screening-contract.js';
 import { isJevicaAdmin } from './admin.js';
 import { accountName } from '../preview/src/resident-names.js';
-import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, validateWorldId } from '../preview/src/world-contract.js';
+import { DEFAULT_WORLD_ID, validateWorldId, worldProtocolVersion } from '../preview/src/world-contract.js';
 import { checkpointFailureReason } from './recovery-diagnostics.js';
 import { CRIME_RULES, CRIME_TARGETS, createCrime } from './crime.js';
 import { createPolice } from './police.js';
@@ -130,6 +131,15 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   const residentBlocked=blocksResident;
   const localById = new Map(state.locals.map(local => [local.id,local]));
   const worldFingerprint = digest(worldData);
+  // The lowest client protocol that can draw this world (world-contract.js).
+  const protocolVersion = worldProtocolVersion(worldData);
+  // Approved furnished spaces (#420) keep their reviewed routes walkable with creations in place.
+  const approvedSpacePlans=(worldData.buildingInteriors??[]).filter(plan=>plan.kind==='approved-space');
+  const approvedSpaceRoutesBlocked=(objects=[...builds.values()].filter(item=>item.kind==='object'))=>{
+    if(!approvedSpacePlans.length)return false;
+    const trial=createWalkingEnvironment(worldData,objects.map(objectCollider).filter(Boolean));
+    return approvedSpacePlans.some(plan=>verifyApprovedSpaceRoutes(plan,trial,{roads:worldData.roads}).status!=='passed');
+  };
   const residentIdentities = state.locals.map(({id,name,indoor,storeId})=>({id,name,indoor,storeId}));
   const roads=buildRoads(worldData);
   // The same rule the browser's builder mode previews (shared-build.js).
@@ -643,19 +653,38 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     player.poseAt = time;
     player.moveBudget = Math.min(1,player.moveBudget+dt);
     player.liftBudget = Math.min(1,player.liftBudget+dt);
-    const cost = distance(position,player.position) / (message.vehicle ? VEHICLES[message.vehicle].maxSpeed : Math.max(player.altitude,altitude)>0.1 ? FLIGHT_SPEED.fast+.2 : fastWalkFor(player.id)+.2);
+    const speed = message.vehicle ? VEHICLES[message.vehicle].maxSpeed : Math.max(player.altitude,altitude)>0.1 ? FLIGHT_SPEED.fast+.2 : fastWalkFor(player.id)+.2;
+    let cost = distance(position,player.position) / speed;
     const liftCost = Math.abs(altitude-player.altitude)/3.2;
     if (cost>player.moveBudget+1e-8 || liftCost>player.liftBudget+1e-8) return correction('movement_too_fast');
-    const steps = Math.max(1,Math.ceil(distance(position,player.position)/0.15),Math.ceil(Math.abs(altitude-player.altitude)/0.15));
-    for (let i=1;i<=steps;i++) {
-      const t=i/steps, x=player.position[0]+(position[0]-player.position[0])*t, north=player.position[1]+(position[1]-player.position[1])*t;
-      const height=player.altitude+(altitude-player.altitude)*t;
-      const privateRoom=height<=0.1 && restrictedRoomAt(x,north);
-      if (privateRoom && !canEnterHome(player.id,privateRoom.storeId)) return correction('private_home');
-      if (height>0.1 ? !movementEnvironment.canFly(x,movementEnvironment.groundAt(x,-north)+height,-north) : !movementEnvironment.isFree(x,-north)) return correction('blocked');
-      const suite=campusLevel && movementEnvironment.roomAt(x,-north)?.supportAt?.(x,north);
-      if (suite?.access==='private-suite' && !admits(player.id,suite.surfaceId)) return correction('private_suite');
+    // Every 0.15 m of a path, each point as [east, north, altitude], must be open to this player.
+    const refusal = points => {
+      for (let leg=1;leg<points.length;leg++) {
+        const from=points[leg-1],to=points[leg],steps=Math.max(1,Math.ceil(distance(to,from)/0.15),Math.ceil(Math.abs(to[2]-from[2])/0.15));
+        for (let i=1;i<=steps;i++) {
+          const t=i/steps, x=from[0]+(to[0]-from[0])*t, north=from[1]+(to[1]-from[1])*t, height=from[2]+(to[2]-from[2])*t;
+          const privateRoom=height<=0.1 && restrictedRoomAt(x,north);
+          if (privateRoom && !canEnterHome(player.id,privateRoom.storeId)) return 'private_home';
+          if (height>0.1 ? !movementEnvironment.canFly(x,movementEnvironment.groundAt(x,-north)+height,-north) : !movementEnvironment.isFree(x,-north)) return 'blocked';
+          const suite=campusLevel && movementEnvironment.roomAt(x,-north)?.supportAt?.(x,north);
+          if (suite?.access==='private-suite' && !admits(player.id,suite.surfaceId)) return 'private_suite';
+        }
+      }
+      return null;
+    };
+    const start=[player.position[0],player.position[1],player.altitude],end=[position[0],position[1],altitude];
+    let refused=refusal([start,end]);
+    // A walker slides along a wall one axis at a time, so its path round a convex corner is
+    // an elbow, and the chord between two poses can clip the corner it walked round. On foot,
+    // accept a clear elbow instead and charge for its length; solids and access still refuse.
+    if (refused==='blocked' && !message.vehicle && Math.max(player.altitude,altitude)<=0.1) {
+      for (const corner of [[position[0],player.position[1],0],[player.position[0],position[1],0]]) {
+        if (refusal([start,corner,end])) continue;
+        cost=(distance(corner,player.position)+distance(position,corner))/speed;refused=null;break;
+      }
+      if (!refused && cost>player.moveBudget+1e-8) return correction('movement_too_fast');
     }
+    if (refused) return correction(refused);
     if(distance(position,player.position)>.015 || altitude>.1 || message.vehicle)interactions.cancel(player.id);
     player.moveBudget -= cost;
     player.liftBudget -= liftCost;
@@ -1074,6 +1103,9 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       const collider=objectCollider({...definition,position:message.position,ground,yaw});
       if([...players.values(),...police.snapshot().units.map(unit=>({...unit,altitude:0,levelId:null}))].some(other=>blocksPlayer(collider,other)))return reject('blocked_build_site',BUILD_REASONS.player);
       if(state.locals.some(local=>residentBlocked(collider,local)))return reject('blocked_build_site',BUILD_REASONS.resident);
+      if(definition.assembly && approvedSpaceRoutesBlocked([...[...builds.values()].filter(item=>item.kind==='object'&&item.id!==previous?.id),
+        {...definition,kind:'object',position:message.position,ground,yaw}]))
+        return reject('blocked_build_site','Keep the routes into and around the approved space clear.');
       const item=placing
         ? {id:`build-${revision+1}`,ownerId:userId,ownerName:player.name,kind:kind.id,finish:finish.id,position:[...message.position],ground,yaw,createdAt:time,...(definition.assembly?{assembly:copy(definition.assembly)}:{})}
         : {...previous,...(definition.assembly?{assembly:copy(definition.assembly)}:{}),position:[...message.position],ground,yaw};
@@ -1158,7 +1190,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     const social=interactions.snapshot();
     const community={};
     for (const key of ['status','running','elapsed','target','supported','unmet','supplies','helpBudget','jobs','events','scenarioKey','generation','result','storm','resupplied']) community[key]=copy(state[key]);
-    return {type:'snapshot',interactions:social,worldId,protocolVersion:WORLD_PROTOCOL_VERSION,revision,elapsed,worldPolicy:publicWorldPolicy(),crime:crime.snapshot(now()),police:police.snapshot(),screenings:screenings.snapshot(),cycling:{taken:takenSlots()},tables:[...tableGames.snapshot(),...cafeGames.snapshot()],darts:dartsGames.snapshot(),axes:axeGames.snapshot(),...(lanternWalk.enabled?{lanternWalk:lanternWalk.snapshot()}:{}),...(campus.enabled?{campus:campus.snapshot()}:{}),players:[...players.values()].map(publicPlayer),
+    return {type:'snapshot',interactions:social,worldId,protocolVersion,revision,elapsed,worldPolicy:publicWorldPolicy(),crime:crime.snapshot(now()),police:police.snapshot(),screenings:screenings.snapshot(),cycling:{taken:takenSlots()},tables:[...tableGames.snapshot(),...cafeGames.snapshot()],darts:dartsGames.snapshot(),axes:axeGames.snapshot(),...(lanternWalk.enabled?{lanternWalk:lanternWalk.snapshot()}:{}),...(campus.enabled?{campus:campus.snapshot()}:{}),players:[...players.values()].map(publicPlayer),
       chat:copy(chat).map(entry=>({...entry,authorName:accountName(entry.authorId,entry.authorName)})),
       builds:copy([...builds.values()]).map(item=>({...item,ownerName:accountName(item.ownerId,item.ownerName)})),wishes:copy(state.wishes),community,
       locals:state.locals.map(local=>({id:local.id,name:local.name,position:[...local.position],indoor:!!local.indoor,storeId:local.storeId??null,
@@ -1535,7 +1567,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   }
   const resolvePlace = placeId => placesOf(worldData).find(place=>place.id===placeId)??null;
   const listPlaces = () => placesOf(worldData);
-  return {worldId,join,rename,leave,command,step,snapshot,checkpoint,restore,reset,
+  return {worldId,protocolVersion,approvedSpaceRoutesBlocked:()=>approvedSpaceRoutesBlocked(),join,rename,leave,command,step,snapshot,checkpoint,restore,reset,
     // World rules (#596): the public rule and the one violence decision for #597's attacks.
     worldPolicy:publicWorldPolicy,violenceFor,
     // Frames carry the clock that anchors screenings (screenings.js), stamped by the transport.

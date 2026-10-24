@@ -4,7 +4,7 @@ import { createWorldPolicyUI } from './world-policy-ui.js';
 import { createCrimeUI } from './crime-ui.js';
 import { validTownSnapshot } from './town-snapshot.js';
 import './multiplayer.css';
-import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, worldIdFromSearch } from './world-contract.js';
+import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, supportsWorldProtocol, ticketProtocol, worldIdFromSearch } from './world-contract.js';
 import { createSocialUI } from './social-ui.js';
 import { createGroupsUI } from './groups-ui.js';
 import { createWorkplaceUI } from './workplace-ui.js';
@@ -210,11 +210,13 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
     if(!session.authenticated){identity=null;return 'signed-out';}
     identity=session.user;csrfToken=session.csrfToken;
     const access=await api(`/api/multiplayer/ticket?world=${encodeURIComponent(worldId)}`,{method:'POST'});if(stopped)return null;moderator=access.moderator;
-    if((access.worldId??DEFAULT_WORLD_ID)!==worldId || (access.protocolVersion??WORLD_PROTOCOL_VERSION)!==WORLD_PROTOCOL_VERSION){
+    // Ask for the protocol this world's ticket names, so an older server or world keeps protocol 3.
+    const protocol=ticketProtocol(access.protocolVersion);
+    if((access.worldId??DEFAULT_WORLD_ID)!==worldId || protocol===null){
       const error=new Error(IMPROVED.status);error.status=426;throw error;
     }
     const url=new URL('/multiplayer',location.href);url.protocol=location.protocol==='https:'?'wss:':'ws:';url.searchParams.set('ticket',access.ticket);
-    url.searchParams.set('world',worldId);url.searchParams.set('protocol',String(WORLD_PROTOCOL_VERSION));
+    url.searchParams.set('world',worldId);url.searchParams.set('protocol',String(protocol));
     // A fresh socket for a hand-over names the connection it continues, so voice can follow.
     if(typeof continues==='string'&&continues)url.searchParams.set('continues',continues);
     return url;
@@ -271,7 +273,7 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
   }
   function receive(ws,data,deadline){
     if(!validTownSnapshot(data,selfId)){notice.textContent='A town update could not be read.';ws.close(4002,'Invalid town snapshot');return;}
-    if((data.worldId??DEFAULT_WORLD_ID)!==worldId || (data.protocolVersion??WORLD_PROTOCOL_VERSION)!==WORLD_PROTOCOL_VERSION){ws.close(4000,'World version changed');return;}
+    if((data.worldId??DEFAULT_WORLD_ID)!==worldId || !supportsWorldProtocol(data.protocolVersion??WORLD_PROTOCOL_VERSION)){ws.close(4000,'World version changed');return;}
     if(getRegionSha256() && data.regionSha256 && data.regionSha256!==getRegionSha256()){reloadRegion();return;}
     // The default district's revision (#507): the town and this page must draw the same campus or garage.
     const loadedDistrict=getDistrictRevision();
@@ -347,8 +349,14 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
     const ws=socket;lost(ws,4901,'No town updates.');try{ws.close(4901,'No town updates.');}catch{ /* already closing */ }
   },1000);
   // Back online, or back in view: retry now instead of waiting out the backoff.
-  const resume=()=>{
+  const resume=({fresh=false}={})=>{
     staleness.resume(performance.now());
+    if(fresh&&!stopped&&!halted&&socket){
+      // A bfcache page may hold buffered snapshots from before suspension.
+      // Re-admit through the existing session/ticket path and fence the old socket.
+      const previous=socket;lost(previous,4902,'Resuming this page.');
+      try{previous.close(1000,'Resuming this page.');}catch{ /* already closed */ }
+    }
     if(stopped||connected||connecting||halted||!retryTimer)return;
     clearTimeout(retryTimer);retryTimer=null;connect();
   };
@@ -390,6 +398,7 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
   logout.addEventListener('click',signOut);gateLogout.addEventListener('click',signOut);
   connect();
   return {
+    resume,
     characterRequest(action,body){
       const routes={read:['/api/character','GET'],draft:['/api/character/draft','PUT'],publish:['/api/character/publish','POST'],rollback:['/api/character/rollback','POST']};
       const route=routes[action];if(!route)return Promise.reject(new TypeError('Unknown character action'));

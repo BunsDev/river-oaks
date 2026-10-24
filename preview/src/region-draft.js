@@ -1,4 +1,5 @@
 import { validBuildingInteriorGeneration } from './building-interiors-plan.js';
+import { validApprovedSpaceDeclaration } from './approved-spaces.js';
 
 // A local editing model for schema v1 creator regions. The server remains the
 // publication authority; these helpers keep map interaction and drafts bounded.
@@ -11,11 +12,13 @@ const slug = value => typeof value === 'string' && value.length <= 48 && /^[a-z0
 const label = value => typeof value === 'string' && value === value.trim() && [...value].length > 0 && [...value].length <= 64
   && !/[\x00-\x1f\x7f\u202a-\u202e\u2066-\u2069]/u.test(value);
 const between = (value, min, max) => Number.isFinite(value) && value >= min && value <= max;
-const interior = value => keys(value, ['name', 'category', 'entrance', 'access', 'generation']) && label(value.name)
+const interior = value => keys(value, ['name', 'category', 'entrance', 'access', 'generation', 'space']) && label(value.name)
   && ['clothes', 'art', 'restaurant', 'wellness', 'home'].includes(value.category)
   && ['south', 'east', 'north', 'west'].includes(value.entrance)
   && (value.access === undefined || value.category === 'home' && ['public', 'owner'].includes(value.access))
-  && (value.generation === undefined || validBuildingInteriorGeneration(value.generation));
+  && (value.generation === undefined || validBuildingInteriorGeneration(value.generation))
+  // An approved furnished space (#420) is a reference the server resolves, never inline geometry.
+  && (value.space === undefined || value.generation === undefined && validApprovedSpaceDeclaration(value.space));
 
 export function blankRegion() {
   return {

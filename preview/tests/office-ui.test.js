@@ -28,19 +28,19 @@ function setup(t,{access='owner',sceneError=false,listPending=null,leavePending=
  }
  const original={document:globalThis.document,window:globalThis.window,matchMedia:globalThis.matchMedia};
  const root=new Element('body'),host=new Element('div'),panelHost=new Element('div');root.append(host,panelHost);
- globalThis.document={body:root,createElement:tag=>new Element(tag),addEventListener(){},hidden:false};globalThis.window={addEventListener(){}};globalThis.matchMedia=()=>({matches:false});
+ globalThis.document=Object.assign(new EventTarget(),{body:root,createElement:tag=>new Element(tag),hidden:false});globalThis.window=new EventTarget();globalThis.matchMedia=()=>({matches:false});
 
  const player={id:'owner',name:'Jevica',position:[...officesFor(data)[0].entrance,0],office:null};
- const calls=[],voiceCalls=[],scenes=[],prepared=[],renders=[];let pending=null,disposed=0;
+ const calls=[],voiceCalls=[],scenes=[],prepared=[],renders=[],graphics=[];let pending=null,disposed=0;
  const mp={connected:true,identity:{id:'owner'},snapshot:{players:[player]},voice:{state:{available:true,status:'joined',mic:'off',pushToTalk:false},toggleJoin(){voiceCalls.push('join');},toggleMic(){voiceCalls.push('mic');},setTransmit(v){voiceCalls.push(v);}},async command(m){calls.push(m);if(m.action==='list'){if(listPending)await listPending;return {ok:true,offices:[{...officesFor(data)[0],access,requested:false,guests:[],requests:[]}]};}if(m.action==='enter'){if(pending)return pending;player.office=layout?{id:m.officeId,layout,levelId:'jevica-office/l0',elevation:0,position:startAt??officeLayout(layout).spawn.position,yaw:0}:{id:m.officeId,position:[0,1.25],yaw:0};}
  if(m.action==='transition'){if(transitionPending)await transitionPending;const moved=officeTransition(officeLayout(player.office.layout),player.office,m.portalId);if(!moved.ok)return moved;player.office={...player.office,levelId:moved.levelId,position:moved.position,elevation:moved.elevation};return {ok:true,office:player.office};}
  if(m.action==='sit'){if(seatPending)await seatPending;const seat=officeSeat(officeLayout(player.office?.layout),m.seatId);if(!player.office||!seat)return {ok:false,error:'invalid_office_seat'};player.office={...player.office,position:[...seat.position],yaw:seat.facing,seat:{id:seat.id}};return {ok:true,office:player.office};}
  if(m.action==='stand'){const seat=officeSeat(officeLayout(player.office.layout),player.office.seat?.id);if(!seat)return {ok:false,error:'office_not_seated'};const {seat:_,...standing}=player.office;player.office={...standing,position:[...seat.stand]};return {ok:true,office:player.office};}if(m.action==='leave'){if(leavePending)await leavePending;player.office=null;}return {ok:true};}};
  if(workspaces)mp.officeDeskRequest=async(action,data)=>{calls.push({api:action,...data});if(action==='workspace/provision')return {ok:true,workspace:workspaces[0]};if(action==='workspace/list')return {ok:true,workspaces};if(action==='workspace/accept'){workspaces.find(w=>w.id===data.workspaceId).role='accepted';return {ok:true};}return {ok:true};};
  const walking={halt(){},getPosition:()=>player.position,getPose:()=>({altitude:0}),riding:false};
- const ui=createOfficeUI({host,panelHost,renderer:{},getWorld:()=>data,getMultiplayer:()=>mp,walking,captureStreet,createScene(options){scenes.push(options);if(sceneError)throw new Error('GPU unavailable');return {prepare:now=>prepared.push(now),render:(...args)=>{renders.push(args);return {phase:renderPhase,done:renderPhase==='office'};},skip(){},dispose(){disposed++;}};}});
+ const ui=createOfficeUI({host,panelHost,renderer:{},getWorld:()=>data,getMultiplayer:()=>mp,walking,captureStreet,createScene(options){scenes.push(options);if(sceneError)throw new Error('GPU unavailable');return {prepare:now=>prepared.push(now),render:(...args)=>{renders.push(args);return {phase:renderPhase,done:renderPhase==='office'};},skip(){},dispose(){disposed++;},releaseGraphics(){graphics.push('release');},restoreGraphics(){graphics.push('restore');}};}});
  t.after(()=>{ui.dispose();Object.assign(globalThis,original);});
- return {ui,mp,player,calls,voiceCalls,scenes,prepared,renders,host,setAccess:v=>{access=v;},setPhase:v=>{renderPhase=v;},find:id=>root.find(id),pending:p=>{pending=p;},get disposed(){return disposed;}};
+ return {ui,mp,player,calls,voiceCalls,scenes,prepared,renders,graphics,host,setAccess:v=>{access=v;},setPhase:v=>{renderPhase=v;},find:id=>root.find(id),pending:p=>{pending=p;},get disposed(){return disposed;}};
 }
 test('entry captures the street before acknowledgement and reset releases presentation once',async t=>{
  let captured=0;const street={camera:'original street pose'},f=setup(t,{captureStreet:()=>{captured++;return street;}});
@@ -50,6 +50,12 @@ test('entry captures the street before acknowledgement and reset releases presen
  assert.equal(captured,1);assert.equal(f.scenes[0].street,street);
  f.ui.prepare(6200);assert.deepEqual(f.prepared,[6200]);f.ui.reset();f.ui.reset();f.ui.prepare(6300);
  assert.equal(f.disposed,1);assert.equal(f.ui.active,false);assert.deepEqual(f.prepared,[6200]);assert.equal(document.activeElement,f.host);
+});
+test('graphics recovery reaches only an open office view',async t=>{
+ const f=setup(t);f.ui.releaseGraphics();f.ui.restoreGraphics();assert.deepEqual(f.graphics,[]);
+ f.ui.update(6000,.016);await tick();f.find('office-enter').emit('click');await tick();assert.equal(f.ui.active,true);
+ f.ui.releaseGraphics();f.ui.restoreGraphics();assert.deepEqual(f.graphics,['release','restore']);
+ f.ui.reset();f.ui.restoreGraphics();assert.deepEqual(f.graphics,['release','restore']);
 });
 test('uninvited visitors see invitation requirements and cannot provision an office',async t=>{
  const f=setup(t,{access:null});f.ui.update(6000,.016);await tick();
@@ -327,4 +333,18 @@ test('choosing a view with the pointer returns keys to the office; the touch pad
  // Chrome may close a modal dialog on a second Escape without a cancel event: treat it as leaving.
  dialog.open=false;dialog.emit('close');await tick();await tick();
  assert.ok(f.calls.some(c=>c.action==='leave'),'an unexpected close leaves the office');assert.equal(f.ui.active,false);
+});
+
+test('backgrounding releases office movement, look drag and push-to-talk without waiting for a render', async t => {
+  const f = setup(t); await tick(); f.find('office-enter').emit('click'); await tick(); f.ui.update(6000, .016);
+  const dialog = f.find('office-visit'); f.mp.voice.state.pushToTalk = true;
+  dialog.emit('keydown', { code: 'KeyW' }); dialog.emit('keydown', { code: 'KeyM' });
+  dialog.emit('pointerdown', { pointerId: 4, clientX: 20 });
+  const before = structuredClone(f.ui.pose);
+  window.dispatchEvent(new Event('pagehide'));
+  assert.equal(f.voiceCalls.at(-1), false, 'pagehide mutes transmit before any frame');
+  dialog.emit('keydown', { code: 'KeyW', repeat: true }); dialog.emit('keydown', { code: 'KeyM', repeat: true });
+  assert.equal(f.voiceCalls.at(-1), false, 'a stale repeated key cannot restart transmit');
+  dialog.emit('pointermove', { pointerId: 4, clientX: 120 }); f.ui.update(6300, .1);
+  assert.deepEqual(f.ui.pose.position, before.position); assert.equal(f.ui.pose.yaw, before.yaw);
 });

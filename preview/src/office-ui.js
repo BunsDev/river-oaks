@@ -1,3 +1,4 @@
+import { bindPageLifecycle } from './background-lifecycle.js';
 import { createOfficeDeskUI } from './office-desk-ui.js';
 import { officesFor, OFFICE_SPEED, OFFICE_SPAWN } from './office-contract.js';
 import {
@@ -179,7 +180,7 @@ export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,
   // and the visit consistent: reopen it and leave properly.
   dialog.addEventListener('close',()=>{if(!view||closing)return;dialog.showModal();void leaveOffice();},{signal});
   const typing=e=>e.target.closest('input,select,textarea,button');
-  dialog.addEventListener('keydown',e=>{if(desk?.active||typing(e)||e.metaKey||e.ctrlKey||e.altKey)return;if(e.code==='KeyE'&&!e.repeat){e.preventDefault();openDesk();return;}if(e.code==='KeyQ'&&!e.repeat){e.preventDefault();void changeLevel();return;}if(e.code==='KeyZ'&&!e.repeat){e.preventDefault();void toggleSeat();return;}if(e.code==='KeyV'&&!e.repeat){e.preventDefault();cycleView();return;}if(e.code==='KeyY'&&!e.repeat){e.preventDefault();void mp()?.voice?.toggleJoin();}if(e.code==='KeyM'){e.preventDefault();const v=mp()?.voice;if(v?.state.pushToTalk)v.setTransmit(true);else if(!e.repeat)void v?.toggleMic();}if(['KeyW','KeyA','KeyS','KeyD','ArrowLeft','ArrowRight'].includes(e.code)){e.preventDefault();if(viewId)setView(null);keys.add(e.code);}},{signal});
+  dialog.addEventListener('keydown',e=>{if(desk?.active||typing(e)||e.metaKey||e.ctrlKey||e.altKey||e.repeat)return;if(e.code==='KeyE'&&!e.repeat){e.preventDefault();openDesk();return;}if(e.code==='KeyQ'&&!e.repeat){e.preventDefault();void changeLevel();return;}if(e.code==='KeyZ'&&!e.repeat){e.preventDefault();void toggleSeat();return;}if(e.code==='KeyV'&&!e.repeat){e.preventDefault();cycleView();return;}if(e.code==='KeyY'&&!e.repeat){e.preventDefault();void mp()?.voice?.toggleJoin();}if(e.code==='KeyM'){e.preventDefault();const v=mp()?.voice;if(v?.state.pushToTalk)v.setTransmit(true);else if(!e.repeat)void v?.toggleMic();}if(['KeyW','KeyA','KeyS','KeyD','ArrowLeft','ArrowRight'].includes(e.code)){e.preventDefault();if(viewId)setView(null);keys.add(e.code);}},{signal});
   dialog.addEventListener('keyup',e=>{keys.delete(e.code);if(e.code==='KeyM')mp()?.voice?.setTransmit(false);},{signal});
   let drag=null;
   dialog.addEventListener('pointerdown',e=>{if(e.target!==dialog||phase!=='office'||desk?.active||viewId)return;dialog.focus();drag={id:e.pointerId,x:e.clientX};dialog.setPointerCapture(e.pointerId);},{signal});
@@ -189,14 +190,15 @@ export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,
     const b=button(text,null,()=>{});b.dataset.officeKey=key;pad.append(b);
     b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);if(viewId)setView(null);keys.add(key);},{signal});
     for(const event of ['pointerup','pointercancel','lostpointercapture','blur'])b.addEventListener(event,()=>keys.delete(key),{signal});
-    b.addEventListener('keydown',e=>{if(['Enter','Space'].includes(e.code)){e.preventDefault();if(viewId)setView(null);keys.add(key);}},{signal});b.addEventListener('keyup',()=>keys.delete(key),{signal});
+    b.addEventListener('keydown',e=>{if(!e.repeat&&['Enter','Space'].includes(e.code)){e.preventDefault();if(viewId)setView(null);keys.add(key);}},{signal});b.addEventListener('keyup',()=>keys.delete(key),{signal});
   }
-  window.addEventListener('blur',()=>keys.clear(),{signal});document.addEventListener('visibilitychange',()=>{if(document.hidden)keys.clear();},{signal});
+  bindPageLifecycle({ signal, release() { keys.clear(); drag = null; mp()?.voice?.setTransmit(false); } });
   host.addEventListener('keydown',e=>{if(e.code==='KeyF'&&!e.repeat&&!e.metaKey&&!e.ctrlKey&&!e.altKey&&near()&&!view&&!e.target.closest('input,textarea,select,button')){e.preventDefault();e.stopImmediatePropagation();void enterOffice();}},{capture:true,signal});
   return {
     get pose(){const floor=view?elevation():0;return view?{position:[position[0],(seatId?OFFICE_SEATED_EYE_HEIGHT:OFFICE_EYE_HEIGHT)+floor,-position[1]],ground:floor,altitude:0,yaw,office:true}:null;},
     get active(){return Boolean(view);},get entering(){return busy;},
     prepare(now){view?.prepare?.(now);},
+    releaseGraphics(){view?.releaseGraphics?.();},restoreGraphics(){view?.restoreGraphics?.();},
     reset(){if(entryAttempt)cancelEntry();if(view)close();},
     sync(players,selfId){
       if(desk&&deskAccount!==mp()?.identity?.id){desk.reset();deskAccount=mp()?.identity?.id;}

@@ -71,6 +71,7 @@ export async function createRedisBackend(env = process.env) {
       ...(env.VERCEL === '1' ? { address: vercelClientAddress } : {}),
       characterMetricsEnabled:env.RIVER_OAKS_CHARACTER_STUDIO_METRICS==='1',
       characterStudioEnabled: env.RIVER_OAKS_CHARACTER_STUDIO === '1',
+      approvedSpacesEnabled: env.RIVER_OAKS_APPROVED_SPACES === '1',
       workplaceEnabled: env.RIVER_OAKS_WORKPLACE === '1',
       // Venue hosts are explicit grants; none configured means no one can control a screening.
       // Jevica's office layout; unset or unknown keeps the legacy room (the default and the rollback).
