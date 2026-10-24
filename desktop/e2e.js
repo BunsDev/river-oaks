@@ -73,6 +73,7 @@ try {
   // From the next load on (the reload below, crash recovery), a failure report
   // records what closed each dialog and every town state change since that load.
   await page.addInitScript(() => {
+    if (window !== window.top) return; // Frames such as the office computer have no game.
     const trail = window.__desktopTrail = [];
     const note = (type, detail) => trail.push({ t: Math.round(performance.now()), type, ...detail });
     const close = HTMLDialogElement.prototype.close;
@@ -80,9 +81,10 @@ try {
       note('dialog close', { id: this.id, from: new Error().stack.split('\n').slice(2, 6).map(line => line.trim()).join(' | ') });
       return close.apply(this, args);
     };
+    const until = performance.now() + 120000;
     const watch = () => {
       const host = document.querySelector('#canvas-host');
-      if (!host) { setTimeout(watch, 50); return; }
+      if (!host) { if (performance.now() < until) setTimeout(watch, 50); return; }
       let state;
       const changed = () => { if (host.dataset.multiplayer !== state) note('town', { state: state = host.dataset.multiplayer }); };
       changed(); new MutationObserver(changed).observe(host, { attributes: true, attributeFilter: ['data-multiplayer'] });
@@ -257,11 +259,17 @@ try {
   await page.locator('#settings-dialog .settings-header button').click();
   // Selecting Auto restarts it at full resolution with AO, and it decides once
   // per 45 frames: on a 10 fps runner it needs about 27 s to reach its floor and
-  // drop AO. Measure the loop at the setting Auto chose, not during that descent.
+  // drop AO. Measure the loop once Auto has stopped stepping down (two decision
+  // windows without a change), not during that descent. Auto can still step up
+  // later, but only on fast frames.
   const settling = performance.now();
   await page.waitForFunction(() => {
     const quality = JSON.parse(document.querySelector('#canvas-host').dataset.quality || '{}');
     return quality.mode === 'auto' && quality.steadyWindows >= 2;
+  }).catch(async error => {
+    // Below 4 fps every frame is discarded as a hitch, so Auto never decides.
+    const quality = await page.locator('#canvas-host').getAttribute('data-quality').catch(() => null);
+    throw new Error(`Auto did not settle within the timeout (quality ${quality}): ${error.message}`);
   });
   const settledMs = Math.round(performance.now() - settling);
   report.performance = await page.evaluate(async () => {
