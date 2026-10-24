@@ -1,3 +1,4 @@
+import { fitCharacterBodice } from './character-bodice-fit.js';
 import * as THREE from 'three';
 import { createReferenceStyle } from './reference-archetypes.js';
 
@@ -96,6 +97,7 @@ export function createRomanceLook(avatar,root,appearance) {
   const ball=(parent,material,position,scale)=>add(parent,new THREE.SphereGeometry(1,20,14),material,position,scale);
   const head=avatar.model.getObjectByName('head');
   if(!head){group.removeFromParent();return NONE;}
+  const bodiceFit=character==='jevica'?null:fitCharacterBodice(avatar.model);
   const reference=createReferenceStyle(avatar,appearance);
   // Small, physically shaded accessories keep the human archetypes recognizable
   // at conversational distance without replacing their detailed source faces.
@@ -105,5 +107,5 @@ export function createRomanceLook(avatar,root,appearance) {
     const trim=mat(style.trim,{metalness:.65,roughness:.28});
     for(const side of [-1,1])ball(earrings,trim,[side*.087,.035,.018],[.005,.012,.005]);
   }
-  return {update(){reference.update?.();},dispose(){reference.dispose();earrings?.removeFromParent();group.removeFromParent();for(const geometry of resources)geometry.dispose();for(const material of materials)material.dispose();}};
+  return {update(){reference.update?.();},dispose(){bodiceFit?.dispose();reference.dispose();earrings?.removeFromParent();group.removeFromParent();for(const geometry of resources)geometry.dispose();for(const material of materials)material.dispose();}};
 }

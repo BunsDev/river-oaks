@@ -347,8 +347,14 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
     const ws=socket;lost(ws,4901,'No town updates.');try{ws.close(4901,'No town updates.');}catch{ /* already closing */ }
   },1000);
   // Back online, or back in view: retry now instead of waiting out the backoff.
-  const resume=()=>{
+  const resume=({fresh=false}={})=>{
     staleness.resume(performance.now());
+    if(fresh&&!stopped&&!halted&&socket){
+      // A bfcache page may hold buffered snapshots from before suspension.
+      // Re-admit through the existing session/ticket path and fence the old socket.
+      const previous=socket;lost(previous,4902,'Resuming this page.');
+      try{previous.close(1000,'Resuming this page.');}catch{ /* already closed */ }
+    }
     if(stopped||connected||connecting||halted||!retryTimer)return;
     clearTimeout(retryTimer);retryTimer=null;connect();
   };
@@ -390,6 +396,7 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
   logout.addEventListener('click',signOut);gateLogout.addEventListener('click',signOut);
   connect();
   return {
+    resume,
     characterRequest(action,body){
       const routes={read:['/api/character','GET'],draft:['/api/character/draft','PUT'],publish:['/api/character/publish','POST'],rollback:['/api/character/rollback','POST']};
       const route=routes[action];if(!route)return Promise.reject(new TypeError('Unknown character action'));

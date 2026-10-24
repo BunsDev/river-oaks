@@ -33,7 +33,7 @@ export function stepFlight(state, environment, flight, input, delta) {
   if((flight.submitted?.length??0)>=8){state.velocity=[0,0];state.speed=0;return;}
   const dt=Math.min(delta,0.08);
   const limit=environment.flightCeiling??32;
-  if(!flight.landing) flight.target=clamp(flight.target+(input.lift ?? 0)*4*dt,1,limit);
+  if(!flight.landing && input.lift) flight.target=clamp(flight.target+input.lift*4*dt,1,limit);
   const difference=flight.target-flight.altitude, desired=Math.sign(difference)*Math.min(3,Math.sqrt(6*Math.abs(difference)));
   flight.verticalSpeed+=clamp(desired-flight.verticalSpeed,-3*dt,3*dt);
   const oldAltitude=flight.altitude;
