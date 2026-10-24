@@ -86,6 +86,19 @@ pnpm run land --status                # who is queued
 The queue only orders sessions that use it. Landing still needs the same merge
 authorization as any other merge.
 
+**Unsigned commits.** The merge guard refuses any unverified commit, and most
+sessions here cannot sign locally. Before landing, run `pnpm run sign-branch
+<branch>`: it lists the unverified commits and the rebuild it would make. With
+`--apply` it rebuilds the branch's own changes on current `main` as one commit
+through GitHub's `createCommitOnBranch` (which GitHub signs) on a temporary branch,
+checks that the new tree equals `main` merged with the old head, that `main` is its
+only parent and that GitHub verified it, then moves the branch with
+`--force-with-lease` on the exact old head. The old head is kept at
+`refs/sign-branch-backup/<branch>/<sha>` in the local repository, and the temporary
+branch is always deleted. It refuses conflicts with `main` and anything other than
+regular-file changes (executable bits, symlinks, submodules). The branch's commits
+become one, so use it for your own branches, not someone else's history.
+
 **Waiting on GitHub.** Every session on this machine shares one account's API
 quota, and it ran out several times on 2026-10-23, stalling landing and signing. Do
 not poll with `gh pr view`/`gh pr checks` loops or `gh pr checks --watch`: they
@@ -214,7 +227,8 @@ Evaluate candidates at session start, immediately after each verified merge and 
 | Exact delivered head, fresh owner release and session review, no activity, all guard checks satisfied | Dry-run and apply guarded local retirement from outside the target. |
 | Delivered, but local evidence or ignored material remains | Preserve required material in a restricted external recovery archive, verify hashes and restoration, identify regenerable caches explicitly, then reassess the guard. Do not delete unknown ignored files. |
 | Active owner/session/process, dirty work, open PR, unfinished operation or uncertain ownership | Preserve. Ask the owner for a handoff/release when needed; record who must act and what evidence would unblock retirement. An expired claim is not a release. |
-| Squash/rebase/supersession or a local tip differing from the merged PR head | Account for the complete aggregate difference and preserve the exact tip. Keep blocked until supported tooling accepts the evidence; never move a ref solely to manufacture eligibility. |
+| Local tip a strict ancestor of the merged head of a pull request from the same branch, with that head on the default branch | The lander's update-branch case: release the local tip and run the guarded retirement as for an exact head. |
+| Squash/rebase/supersession or any other local tip differing from the merged PR head | Account for the complete aggregate difference and preserve the exact tip. Keep blocked until supported tooling accepts the evidence; never move a ref solely to manufacture eligibility. |
 | Old branch, missing upstream/checkout, missing archive or expired lease | Investigate and name the missing evidence. None proves redundancy or abandonment. |
 | Distinct unfinished work | Preserve unless explicit cancellation authority covers that exact work. A cleanup request does not authorize cancellation. |
 
@@ -294,9 +308,18 @@ owner actually checked running agent sessions; an expired lease or no process CW
 is not sufficient. These are coordination attestations, not authenticated locks.
 
 The command requires the exact merged PR head, its merge on the fetched default
-branch, and identical candidate/merge trees. A source branch alias is accepted only
-when its full tip SHA exactly matches that merged PR head. Other squash/rebase/supersession cases
-remain blocked for aggregate review. It refuses:
+branch, and identical merged-head/merge trees. A source branch alias is accepted only
+when its full tip SHA exactly matches that merged PR head. The lander updates a
+branch on GitHub before merging, so a local branch can stop short of its merged
+head. Such a tip is accepted only when all of these hold:
+
+- it is a strict ancestor of the merged head;
+- the pull request's head branch has the same name as the local branch;
+- the merged head is on the default branch;
+- the tip was not already on it before the merge (the merge's first parent).
+
+The release still names the local tip. Other squash/rebase/supersession cases remain
+blocked for aggregate review. It refuses:
 
 - dirty, untracked or ignored material;
 - index flags (assume-unchanged or skip-worktree) and submodules;

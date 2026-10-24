@@ -59,3 +59,13 @@ test('summary table cells escape backslashes and pipes and stay on one line', ()
   assert.match(text, /\| Browser \| Weird \\\\\\\| Browser\\\\ \|/);
   assert.match(text, /\| Platform \| line break \|/);
 });
+
+test('graphics cycle diagnostics retain timing and outcomes with a bounded history', async () => {
+  const { createGraphicsCycleLog } = await import('../src/debug-report.js');
+  const log = createGraphicsCycleLog(2);
+  log.lost(10); log.restored(20); log.outcome('restored');
+  log.lost(30); log.outcome('timeout'); log.restored(60);
+  assert.deepEqual(log.cycles, [{ lostAt: 10, restoredAt: 20, outcome: 'restored' }, { lostAt: 30, restoredAt: 60, outcome: 'timeout' }]);
+  log.lost(70); log.outcome('loop'); assert.equal(log.cycles.length, 2); assert.equal(log.cycles[0].lostAt, 30);
+  const copy = log.cycles; copy[0].outcome = 'mutated'; assert.equal(log.cycles[0].outcome, 'timeout');
+});

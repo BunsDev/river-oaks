@@ -1106,3 +1106,108 @@ which this branch carries. Until #613 or this branch lands, main's IPIC journey 
   stays with that task.
 
 None of this is human review. #417 stays open for Val's checklist.
+
+## Closeout on main `2cbc4dc4` (2026-10-24)
+
+Task `studio-417-closeout-2cbc4dc4-20261024`, owner `claude:river-oaks-bb (5a2038)`, branch
+`test/studio-417-closeout-2cbc4dc4-20261024` in `river-oaks-studio-417-closeout-2cbc4dc4`, from origin/main
+`2cbc4dc4` (51 commits after `f4aa1670`; it contains #617 `c005074d`, so main now carries #613's IPIC harness
+port). Goal: re-run #417's scenarios and #359's office journeys on one main, refresh Val's review packet, and
+reconcile the register records. No app or harness code changes.
+
+### Does the candidate still equal main?
+
+The checklist itself (issuecomment-6248646285) still names `0d1e69a2` (app code = main `dd9b61ee`), which is not
+main: #579's focus and announcement changes came after it, as recorded on `1cb79549`. The packets since then moved
+the candidate to main, and the `f4aa1670` packet (issuecomment-6375807052) named main `f4aa1670` or later. That
+candidate still equals main. Between `f4aa1670` and
+`2cbc4dc4`, `preview/src/studio/` and `desktop/` are unchanged. Studio's import graph (`preview/src/studio/entry.js`
+followed through relative imports: 48 modules plus `studio.css`) is the same set on both revisions, and one file in
+it changed: `shared/east-garden-commons-layout.js` (`cc41ea37`, #584–#586), where only `COMMONS_REVISION` changed
+(`east-garden-commons-blockout-1` → `east-garden-commons-market-1`). Studio reaches that module only through
+`walking.js`, which imports `commonsAllows` and `insideRect`; neither changed. Electron is 44.9.1, as in the
+`98ac7d7b` desktop run. **Studio behavior equals `f4aa1670`; the review candidate is main `2cbc4dc4` or later.**
+
+The game side did change, which is what the #359 re-run is for: #611 (Bayou Market Commons and the city kit),
+#621 (police pursuit), #615 (likeness consent) and #618/#619 changed `preview/src/main.js`, `crime-ui.js`,
+`town-snapshot.js`, `multiplayer.css` and `server/world.js`, `redis-room.js`, `crime.js`, `police.js` among others.
+
+### Results (`2cbc4dc4`, clean app code; MacBook Pro M3 Max, Chromium 156 ANGLE Metal, 1440 × 1000)
+
+One browser-lock hold, 05:47–05:59Z, clean tree at `2cbc4dc4` when it started, load 8.5–20. Each row was compared
+with the `f4aa1670` receipt field by field.
+
+| Scenario | Result | Receipt (`data/reports/`) |
+| --- | --- | --- |
+| `studio-pilot-journey` | passed, 15 checks, text identical to `f4aa1670`: refusal announced with "Nearby: Waiting Sofa, Meeting Chair 1, Meeting Divider South.", repair, undo/redo, save/reload, stale tab, four destinations and back, exit | `studio-417-2cbc4dc4-pilot.json` |
+| `studio-pilot-assets` (office) | passed: limestone meeting floor 186 normal → 200 missing/loading → 186 loaded and 186 replaced; 3/3 and 6/6 requests, none pending | same |
+| `studio-pilot-soak` (1 + 10) | passed: every renderer, listener, node, canvas, worker and timer count identical to `f4aa1670` in both phases (office 688 calls, 53,076 triangles, 35 geometries, 27 materials, 159 listeners, 0 live workers, 0 pending timeouts or loads); heap 15.0–15.9 MiB office, 16.4–17.8 after replacement; Metal 73–82 MiB office | same |
+| `studio-pilot-a11y` | passed, 25 checks, text identical; 320/390 px no overflow, all five primary controls reachable | same |
+| `studio-template-journey` office / house / boutique / café | passed, 13 checks each, text identical to `f4aa1670`; café refuses the terrace block and keeps Terrace Planter West in place | `studio-417-2cbc4dc4-template-{office,house,boutique,cafe}.json` |
+
+### #359 non-regression (same main)
+
+| Scenario | Result | Receipt |
+| --- | --- | --- |
+| `office-visit` | passed, 12 checks, text identical | `studio-417-2cbc4dc4-office359.json` |
+| `office-desk` | passed, 18 checks, text identical | same |
+| `office-computer-embed` | passed, 61 checks; the text differs from `f4aa1670` only in fixture ports and measured removal times (70–173 ms, world rebuild 2.7 s) | same |
+| `office-ipic-journey-runner.mjs`, **main's own harness** (identical to #613's port, `c92edb85`) | passed, 30 checks, 131 s: refusal (`office_permission_required`), invitation, arrival, private My tasks, one chair for two clients, floors/library/terrace, late IPIC join (14.8 s; viewers within 4 ms), both back in town, no page errors. Text differs only in walked coordinates, a request id and the join time | `studio-417-2cbc4dc4-ipic.json` |
+
+With #617 merged, main's IPIC journey passes as committed; the stale-harness failure recorded on `1cb79549` and
+`f4aa1670` is gone. The three office journeys ran in the experience runner on ANGLE Metal; the IPIC runner forces
+SwiftShader and plays fixture media. Loopback fixture identities throughout, so none of this is visual, device or
+production evidence.
+
+### Gates
+
+- `node desktop/studio-e2e.js` (development Electron 44.9.1; `desktop/` unchanged since `1cb79549`): passed, 11/11,
+  06:39Z, same app code (`studio-417-2cbc4dc4-desktop.json`).
+- `pnpm run verify` (core), revision `2cbc4dc4`, 06:39–06:49Z, under the browser lock, with uv's CPython 3.13 first
+  on `PATH`: passed, all 11 tasks. Agent 218/218; preview 3,902 passed, 1 skipped; server 867 passed, 219 skipped
+  (Redis and other env-gated tests); desktop 115, 3 skipped; build, Python lint/format/tests (156), demo and its
+  verifier, and secrets. Receipt `.runtime/agent/core.json` (`dirty: true`: only this ledger edit and the
+  untracked `data/reports/studio-417-2cbc4dc4-*.json` receipts; no source change). Load 27–37 from other sessions;
+  the penthouse idle-slice test passed.
+- The gate waited 40 minutes in the browser-lock queue behind another session's `perf ABBA (release-readiness)` run.
+- Not run: isolated Redis/full, physical devices, VoiceOver, packaged Electron. None of this is human review.
+
+### Decisions for Val
+
+The `f4aa1670` decisions 1 (which PR carries the closeout) and 2 (refresh-task record) are settled: #617 landed
+on 2026-10-24 and the record-only cancellation was applied at 01:54Z. Remaining:
+
+1. **Refresh-task status** (`studio-acceptance-417-refresh-20261015`). Your cancellation is recorded (`cancellation`,
+   `cancelledBranches`, `owner: null`, `branches: []`), but the record is still `blocked`, so `project:check` keeps
+   reporting "no local branch; locate remote/session before changing status" (`project-status.mjs` exempts only
+   `queued` and `retired`). 16 other cancellation records, such as `screening-seek-lead` and `penthouse-dev-preview`,
+   are `queued` with `branches: []`. `cartier-pilot` is the only other `blocked` one, and it is waiting for archive
+   access. Proposed one-field patch, not applied:
+   `pnpm run register patch studio-acceptance-417-refresh-20261015 --json '{"status":"queued"}'`. Rechecked
+   2026-10-24 05:48Z: still no worktree, no local or `origin` branch, no tag, no manifest naming it, so `project:cancel`
+   has nothing to act on.
+2. **Café phone and other-GPU review**, **Café in a creator region** (#489: still draft, now `CONFLICTING` with main,
+   last updated 2026-10-19) and **touch walking**: unchanged.
+3. **#413's "#359 not regressed" box**: yours to tick or leave, from the table above.
+4. **Landing this branch's PR** (ledger and receipts only): needs your merge authorization.
+
+#### Other #417 register records (observations; owners' or Val's to change)
+
+- **#613 is merged on GitHub, not closed.** GitHub marked it merged at 2026-10-24T02:42:35Z when its head `c92edb85`
+  reached main through #617. `studio-417-closeout-20261023` records `pr: 617` and says #613 was "closed as
+  superseded". `project:inventory` finds #613 as the exact merged PR for that branch, so recording `pr: 613` with
+  evidence for head `c92edb85` would meet the exact-head rule for its retirement.
+- **Delivered #417 checkouts still on disk** (`river-oaks-studio-417-closeout` at `c92edb85`,
+  `river-oaks-studio-417-closeout-f4aa1670` at `1e0a49d2`, `river-oaks-studio-review-417` at `bbf642ef`). Each is clean and
+  its tip is an ancestor of main. `project:inventory` blocks all three on a missing session release and on ignored
+  data (`node_modules` and the like), and all three on `exact-merged-pr-required`: the first because its task records
+  #617 rather than #613, the other two because their PRs merged later heads (#617 at `5b5a4388`, after the lander's
+  update from main; #579 at `71cca92a`). Pruning is not authorized for this task.
+- **`studio-acceptance-417-20261018` (#493, delivered).** Its worktree `river-oaks-studio-acceptance-417-20261018` and
+  local branch are gone, and no `manifest.json` under `~/worktree-backups/river-oaks/` names it. Its Git content is on
+  main: `2c3f46d0` is an ancestor. Its `nextAction` said the worktree held local evidence (captures, pair sheets, logs,
+  design review, core receipt) to archive before retirement. This session found no archive of it, which doesn't prove
+  the evidence is lost; whoever removed the checkout should say where it went. `project:check` reports the missing path.
+- `backup/studio-417-closeout-f4aa1670-presign` (`studio-417-closeout-presign-backup-20261023`, queued) and
+  `wip/studio-review-417-baseline-20261022` (`unowned-recovery-refs-20261022`, dirty) are unchanged and stay with
+  their tasks.

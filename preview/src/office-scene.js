@@ -9,6 +9,7 @@ import { createOfficeWorldScene } from './office-world-scene.js';
 import { officePeerVisible } from './office-world-presentation.js';
 import { buildOfficeGeometry } from './office-penthouse-graybox.js';
 import { OFFICE_EYE_HEIGHT, OFFICE_LAYOUT_LEGACY, OFFICE_SEATED_EYE_HEIGHT, officeElevationAt, officeLayout, officeLevelElevation, officeSeatedPose, officeView } from './office-layouts.js';
+import { releaseSceneGraphics } from './graphics-resources.js';
 
 // Keep the eye clear when residents share the arrival point or pass each other.
 export const officePlayerVisible=officePeerVisible;
@@ -20,9 +21,14 @@ export function createOfficeScene({renderer,host,self,players,reducedMotion=fals
   const camera=new THREE.PerspectiveCamera(62,1,.05,100);
   let target,office,lift,actors,disposed=false;
   const dispose=()=>{if(disposed)return;disposed=true;actors?.dispose();office?.dispose();lift?.dispose();target?.dispose();scene.clear();};
+  // The room lighting is drawn once into a PMREM target; a lost context keeps none
+  // of its pixels, so graphics recovery redraws it (main.js rebuild).
+  const relight=()=>{
+    const pmrem=new THREE.PMREMGenerator(renderer),environment=new RoomEnvironment();
+    try{const next=pmrem.fromScene(environment);target?.dispose();target=next;scene.environment=target.texture;scene.environmentIntensity=.65;}finally{environment.dispose();pmrem.dispose();}
+  };
   try{
-  const pmrem=new THREE.PMREMGenerator(renderer),environment=new RoomEnvironment();
-  try{target=pmrem.fromScene(environment);scene.environment=target.texture;scene.environmentIntensity=.65;}finally{environment.dispose();pmrem.dispose();}
+  relight();
   scene.add(new THREE.HemisphereLight('#fff5e6','#647386',1.6));
   const light=new THREE.DirectionalLight('#fff1de',2.5);light.position.set(2,6,2);scene.add(light);
   const layout=officeLayout(self.office?.layout??OFFICE_LAYOUT_LEGACY)??{id:self.office.layout};
@@ -69,6 +75,9 @@ export function createOfficeScene({renderer,host,self,players,reducedMotion=fals
   // Prime async appearance loads before the first frame.
   actors.sync(players.filter(p=>p.office?.id===self.office.id).map(p=>({...p,position:[...(p.id===self.id&&!reducedMotion?elevatorFrame(0).position:p.office.position),0],yaw:p.id===self.id&&!reducedMotion?0:p.office.yaw,altitude:0,vehicle:null,sitting:null,interaction:null})),null);
   return {render,skip(){skipped=true;},get position(){return lastPosition;},
+    // This scene is not the street's: release its resources from the lost context's caches too.
+    releaseGraphics(){if(disposed)return;releaseSceneGraphics(scene);target?.dispose();target=null;scene.environment=null;},
+    restoreGraphics(){if(!disposed)relight();},
     inspect({bounds=false}={}){return {camera:{position:camera.position.toArray(),quaternion:camera.quaternion.toArray(),verticalFov:camera.fov},actors:actors.stats(),...(bounds?{bounds:actors.bounds()}:{}),duration:ARRIVAL.duration,dimensions:lift.dimensions};},
     dispose};
   }catch(error){dispose();throw error;}

@@ -1,6 +1,6 @@
 import { terrainHeight } from './geometry.js';
 import { clearStandingStations } from './store-clearance.js';
-import { approvedGroundRoom, approvedLevelRoom } from './approved-interior-room.js';
+import { approvedGroundRoom, approvedLevelRoom, approvedSpaceRoom } from './approved-interior-room.js';
 import { isIpicStore, configureIpicRoom } from './ipic-plan.js';
 import { planVenueRooms } from './venue-rooms.js';
 import { planCampusRooms } from './garden-campus-district.js';
@@ -45,7 +45,8 @@ export function storeRoomsFor(world) {
         const storeId = plan.levels?.[0]?.portals?.find(portal => portal.kind === 'entrance')?.id?.split('/portal/')[1];
         const index = rooms.findIndex(room => room.storeId === storeId && room.buildingId === plan.buildingId);
         if (index < 0) throw new Error('Approved interior has no mapped entrance');
-        rooms[index] = approvedGroundRoom(plan, rooms[index]);
+        // Generated plans carry no kind; any other kind must be one this client implements.
+        rooms[index] = plan.kind === undefined ? approvedGroundRoom(plan, rooms[index]) : approvedSpaceRoom(plan, rooms[index]);
       }
     }
     // Code-only venues (venue-rooms.js) after every tenant: not in the world data.
