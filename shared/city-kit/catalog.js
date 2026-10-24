@@ -50,6 +50,17 @@ export const KIT_MATERIALS = Object.freeze({
   'wood-bench': { color: '#8a6143', roughness: .7 },
   'lamp-glow': { color: '#fff2cf', emissive: '#ffd99a', emissiveIntensity: 1.6 },
   'lantern-glass': { color: '#f6e7c4', roughness: .2, emissive: '#ffbf66', emissiveIntensity: 0, lantern: true },
+  // Luxury palette, matched to the District's street vocabulary (street-furniture.js,
+  // retro-palette.js): charcoal granite setts, porcelain banding, honed limestone and
+  // travertine, black steel, satin bronze, and the District's deep-teal lamp metal.
+  'granite-sett': { surface: 'pavement', color: '#70726f', tile: 1.8, textureContrast: .7 },
+  porcelain: { color: '#f5eee0', roughness: .55 },
+  limestone: { surface: 'stone', color: '#f3eadb', tile: 3.2, textureContrast: .26 },
+  travertine: { surface: 'stone', color: '#eadabf', tile: 2.4, textureContrast: .38 },
+  'steel-black': { color: '#1b1d1f', roughness: .36, metalness: .7 },
+  'bronze-satin': { color: '#7a6040', roughness: .3, metalness: .85 },
+  'lamp-teal': { color: '#1f454a', roughness: .5, metalness: .65 },
+  'opal-glow': { color: '#c9fff0', emissive: '#c9fff0', emissiveIntensity: 2.2, roughness: .4 },
 });
 
 // Architectural styles choose materials and preferred variants. Distinction comes
@@ -64,6 +75,19 @@ export const KIT_STYLES = Object.freeze({
     wall: ['stucco-ivory'], trim: 'trim-mint', accent: 'metal-brass',
     storefronts: ['loggia', 'recessed', 'loggia'], awnings: ['canvas-rose'],
     windows: 'tall', roofs: ['stepped', 'parapet'], setback: 0, signage: 'blade',
+  },
+  // Modern luxury retail: honed limestone, full-height gallery glazing in black steel,
+  // cantilevered bronze canopies with downlights, finned ribbon windows, brass letters.
+  'luxe-modern': {
+    wall: ['limestone'], trim: 'steel-black', accent: 'bronze-satin',
+    storefronts: ['gallery'], awnings: ['canvas-teal'],
+    windows: 'ribbon', roofs: ['reveal'], setback: 0, signage: 'letters', signPalette: 'noir',
+  },
+  // The court in warm travertine and bronze: deep loggias and gallery fronts.
+  'luxe-court': {
+    wall: ['travertine'], trim: 'bronze-satin', accent: 'metal-brass',
+    storefronts: ['loggia', 'gallery', 'loggia'], awnings: ['canvas-rose'],
+    windows: 'tall', roofs: ['reveal', 'stepped'], setback: 0, signage: 'blade', signPalette: 'noir',
   },
   'heights-row': {
     wall: ['stucco-apricot', 'brick-umber'], trim: 'trim-deep-teal', accent: 'metal-bronze',
@@ -84,14 +108,19 @@ export const KIT_PIECES = Object.freeze({
   // across each lane, and sidewalk corners (street/sidewalk).
   'street/intersection': { family: 'street', collision: 'none', material: 'lane-brick', triangles: 40 },
   'street/crosswalk': { family: 'street', collision: 'none', material: 'lane-brick', triangles: 160 },
+  // Flush inlays in a shared lane: porcelain cross bands and black-steel channel drains.
+  'street/band': { family: 'street', collision: 'none', material: 'porcelain', triangles: 8 },
+  'street/channel': { family: 'street', collision: 'none', material: 'steel-black', triangles: 8 },
   'street/court': { family: 'street', collision: 'surface', material: 'plaza-stone', triangles: 200 },
   'building/shell': { family: 'building', collision: 'shell', triangles: 2400 },
-  'facade/storefront': { family: 'facade', collision: 'none', variants: ['canopy', 'awning', 'recessed', 'loggia'], triangles: 420 },
-  'facade/upper-window': { family: 'facade', collision: 'none', variants: ['arched', 'tall', 'paired'], triangles: 160 },
+  'facade/storefront': { family: 'facade', collision: 'none', variants: ['canopy', 'awning', 'recessed', 'loggia', 'gallery'], triangles: 420 },
+  'facade/upper-window': { family: 'facade', collision: 'none', variants: ['arched', 'tall', 'paired', 'ribbon'], triangles: 160 },
   'roof/parapet': { family: 'roof', collision: 'none', triangles: 96 },
   'roof/cornice': { family: 'roof', collision: 'none', triangles: 120 },
   'roof/stepped': { family: 'roof', collision: 'none', triangles: 144 },
   'roof/sawtooth': { family: 'roof', collision: 'none', triangles: 220 },
+  // A thin black-steel coping over a shadow reveal: no cornice.
+  'roof/reveal': { family: 'roof', collision: 'none', triangles: 72 },
   'landscape/street-tree': { family: 'landscape', collision: 'solid', footprint: [.6, .6], height: 2.5, triangles: 0 },
   'landscape/tree-pit': { family: 'landscape', collision: 'none', triangles: 40 },
   'landscape/planter': { family: 'landscape', collision: 'solid', height: .5, triangles: 60 },
