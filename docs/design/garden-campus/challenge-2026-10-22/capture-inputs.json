@@ -1,0 +1,21 @@
+{
+  "candidate": "6ab4260de51ed51ec59b6a39d79978aad78a2b6a",
+  "trees": {
+    "preview/src": "f316ebe4d82422e6b0c4ef0fb9ea3482a9ff23f3",
+    "preview/public": "b441ef1908ec12d22e00071da8e4ab87966ebe30",
+    "shared": "4dd4fa5aa5c66c6a2a0c21bfbc326d188abf1a08",
+    "server": "c47887674b3a9cd5e09ad9fd048f4d336689edc9"
+  },
+  "sources": {
+    "preview/src/main.js": "927b703036842ad5c964a63ab41016c9ea7bbf5e6d4b2f07d63927061a83ba22",
+    "preview/src/district.js": "f8973e7164d57019f9b7c05919529bd310b743ae40f0f28118636e3fff4fbe95",
+    "preview/src/garden-campus.js": "1dd6872fa6a399cf3c323a4048026b8b687b5e3959f4c274e7fa7a1e090248ce",
+    "preview/src/garden-campus-finish.js": "5ff5755d219b7a10ecf37c8e4871a2036ee6bfedeab2eec42f9ac5cd6b5f466b",
+    "preview/src/garden-campus-planting.js": "6436d15ae5f068ff23515df0ae5b69ba3fa98df08651c7f0ff1badd4333c55c9",
+    "preview/src/garden-campus-district.js": "eccf8b4376a102d9604d9dc93e6e389b995b959835571a7dc91d8ae034c87fbf",
+    "shared/garden-campus-layout.js": "21717145b78380c55448b2f28b2f73fd49cf70825133c96d015d95dfeff93dc3",
+    "preview/e2e/garden-campus-render-common.mjs": "36b88fabd161e8660a34be24e0d077c1ecbe60a3bef51205a629597c39df6902",
+    "preview/e2e/garden-campus-render-resources.mjs": "1d1c7795c5d1ee5324f5293702f0a05c41c592012286e7081b0933d0be527282",
+    "preview/e2e/garden-campus-render-views.mjs": "f5a82e38c53d09002bd9431a4409925897a54e8f312add2cef7100c6b9d747ef"
+  }
+}

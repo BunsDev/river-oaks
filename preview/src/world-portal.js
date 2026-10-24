@@ -18,16 +18,22 @@ export function createWorldPortal({host,getCanPublish=()=>false,creationToolsEna
   const status=element('p','Loading worlds…','world-portal-status');status.setAttribute('role','status');
   const list=element('ul',null,'world-portal-list');
   const form=element('form',null,'world-portal-form');form.hidden=true;
-  const createTitle=element('h4','Publish a world');
+  // Publishing is an owner task, folded away so the directory leads (closed until opened).
+  const publishBox=element('details',null,'world-portal-publish');publishBox.hidden=true;
+  const publishSummary=element('summary','Publish a world');
   const titleLabel=element('label','World name');const title=element('input');title.name='title';title.maxLength=64;title.required=true;titleLabel.append(title);
-  const idLabel=element('label','World ID');const id=element('input');id.name='id';id.maxLength=48;id.pattern='[a-z0-9]+(-[a-z0-9]+)*';id.placeholder='moon-garden';id.required=true;idLabel.append(id);
+  const idLabel=element('label','World ID');const id=element('input');id.name='id';id.maxLength=48;id.pattern='[a-z0-9]+(-[a-z0-9]+)*';id.placeholder='moon-garden';id.required=true;
+  const idHint=element('span','Lowercase letters, numbers and dashes. It becomes the link.','world-portal-hint');idHint.id='world-portal-id-hint';id.setAttribute('aria-describedby',idHint.id);idLabel.append(id,idHint);
   const descriptionLabel=element('label','Description');const description=element('textarea');description.name='description';description.maxLength=280;description.rows=2;descriptionLabel.append(description);
   const regionLabel=element('label','Region package (optional)');const region=element('input');region.name='region';region.type='file';region.accept='.json,application/json';regionLabel.append(region);
-  const example=element('a','Download a sample region package','world-portal-example');example.href='/data/sample-region.json';example.download='sample-region.json';
+  const example=element('a','Download a sample package','world-portal-example');example.href='/data/sample-region.json';example.download='sample-region.json';
   const design=element('button','Design a region','world-portal-design');design.type='button';
   const regionSource=element('p','','world-portal-region-source');regionSource.setAttribute('role','status');
   const publish=element('button','Publish world');publish.type='submit';
-  form.append(createTitle,titleLabel,idLabel,descriptionLabel,regionLabel,example,design,regionSource,publish);
+  const regionTools=element('div',null,'world-portal-region-tools');regionTools.append(design,example);
+  const actions=element('div',null,'world-portal-actions');actions.append(publish);
+  form.append(titleLabel,idLabel,descriptionLabel,regionLabel,regionTools,regionSource,actions);
+  publishBox.append(publishSummary,form);
   const revisionPanel=element('section',null,'world-portal-revision');revisionPanel.hidden=true;
   const revisionTitle=element('h4'),revisionNote=element('p','Save the draft before applying it. Applying disconnects visitors so they can reload the revised region; active NPC wishes reset. Existing creations must fit the new layout.');
   const revisionStatus=element('p',null,'world-portal-revision-status');revisionStatus.setAttribute('role','status');
@@ -38,7 +44,7 @@ export function createWorldPortal({host,getCanPublish=()=>false,creationToolsEna
   const versionSelect=element('select');versionSelect.setAttribute('aria-label','Previous published version');versionLabel.append(versionSelect);
   const restoreVersion=element('button','Load version into editor');restoreVersion.type='button';restoreVersion.hidden=true;
   revisionPanel.append(revisionTitle,revisionNote,revisionStatus,saveRevision,applyRevision,discardRevision,versionLabel,restoreVersion);
-  section.append(heading,intro,status,list);if(creationToolsEnabled)section.append(revisionPanel,form);host.prepend(section);
+  section.append(heading,intro,status,list);if(creationToolsEnabled)section.append(revisionPanel,publishBox);host.prepend(section);
   let worlds=[],loaded=false,loading=null,lastAttempt=0,lastLoaded=0;
   let useDraft=false,revisionTarget=null;
   let editor=null,editorLoading=null;
@@ -174,9 +180,10 @@ export function createWorldPortal({host,getCanPublish=()=>false,creationToolsEna
     list.replaceChildren();
     for(const world of worlds) {
       const row=element('li');const link=element('a',world.title);link.href=worldVisitUrl(world.id);
-      const visitors=Number.isSafeInteger(world.visitors)&&world.visitors>=0?world.visitors:0;
-      const detail=element('small',`${world.id===currentId()?'Here now':world.description||'Shared world'} · ${visitors} ${visitors===1?'visitor':'visitors'} online`);
-      row.append(link,detail);
+      const visitors=Number.isSafeInteger(world.visitors)&&world.visitors>=0?world.visitors:0,here=world.id===currentId();
+      if(here){row.dataset.current='true';link.setAttribute('aria-current','page');}
+      const detail=element('small',`${here?'Here now':world.description||'Shared world'} · ${visitors} ${visitors===1?'visitor':'visitors'} online`);
+      const text=element('div',null,'world-portal-world');text.append(link,detail);row.append(text);
       if(canPublish() && world.template==='region-v1') {
         const edit=element('button','Edit draft');edit.type='button';edit.setAttribute('aria-label',`Edit revision draft for ${world.title}`);
         edit.addEventListener('click',()=>editRevision(world));row.append(edit);
@@ -188,7 +195,7 @@ export function createWorldPortal({host,getCanPublish=()=>false,creationToolsEna
       document.title=`${current.title} — ${current.template==='region-v1'?'Shared worlds':'River Oaks'}`;
       const view=document.querySelector('#view-name');if(view)view.textContent=current.title;
     }
-    form.hidden=!canPublish();
+    form.hidden=!canPublish();publishBox.hidden=form.hidden;
   };
   function load() {
     if(loading)return loading;

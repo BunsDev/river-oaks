@@ -1,0 +1,764 @@
+{
+  "sourceFiles": [
+    "preview/src/character-studio.js",
+    "preview/src/character-studio.css",
+    "preview/src/character-studio-preview.js",
+    "preview/src/romance-look.js",
+    "preview/src/character-bodice-fit.js"
+  ],
+  "sourceDigest": "c2a4bd06c75a775da4033fd550f291eaf3acc42b1c5ee214a45b1b57d4509ea6",
+  "revision": "1c9c36c15bf189a33bf3d8bf9296d79ca7393dad",
+  "label": "final",
+  "platform": "darwin 25.6.0 arm64",
+  "createdAt": "2026-10-18T14:03:14.417Z",
+  "scope": "Automated local browsers. Phone viewport is emulation on this Mac, not iOS hardware. RAF intervals are responsiveness, not GPU execution time. Renderer resources are counts, not GPU bytes.",
+  "results": [
+    {
+      "name": "chromium-desktop",
+      "options": {
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "deviceScaleFactor": 1
+      },
+      "observations": [
+        {
+          "character": "sable",
+          "rafMs": {
+            "p50": 16.69999999999891,
+            "p95": 16.700000000000728,
+            "max": 16.80000000000109,
+            "samples": 180
+          },
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+          "canvas": {
+            "width": 707,
+            "height": 539,
+            "cssWidth": 707,
+            "cssHeight": 539
+          },
+          "viewport": [
+            1440,
+            900,
+            1
+          ],
+          "modal": {
+            "width": 1414,
+            "scrollWidth": 1414
+          },
+          "workspace": {
+            "width": 1414,
+            "height": 718,
+            "scrollWidth": 1414,
+            "scrollHeight": 718
+          },
+          "controls": {
+            "width": 707,
+            "height": 718,
+            "scrollWidth": 707,
+            "scrollHeight": 718
+          },
+          "previewToolsOverlap": false,
+          "touchTargets": [
+            {
+              "label": "Ivory",
+              "width": 36,
+              "height": 36
+            },
+            {
+              "label": "Rose silk",
+              "width": 36,
+              "height": 36
+            },
+            {
+              "label": "Lagoon",
+              "width": 36,
+              "height": 36
+            },
+            {
+              "label": "Midnight",
+              "width": 36,
+              "height": 36
+            },
+            {
+              "label": "Botanical",
+              "width": 36,
+              "height": 36
+            },
+            {
+              "label": "Ash blonde",
+              "width": 36,
+              "height": 36
+            },
+            {
+              "label": "Espresso",
+              "width": 36,
+              "height": 36
+            },
+            {
+              "label": "Copper",
+              "width": 36,
+              "height": 36
+            },
+            {
+              "label": "Silver",
+              "width": 36,
+              "height": 36
+            }
+          ],
+          "jsHeapBytes": 364000000,
+          "worldResources": "{\"calls\":1613,\"triangles\":5408016,\"geometries\":526,\"textures\":164}",
+          "resources": {
+            "count": 250,
+            "transferBytes": 18829933,
+            "decodedBytes": 18754933
+          }
+        },
+        {
+          "character": "jevica",
+          "rafMs": {
+            "p50": 16.700000000000728,
+            "p95": 16.799999999999272,
+            "max": 16.80000000000291,
+            "samples": 180
+          },
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+          "canvas": {
+            "width": 707,
+            "height": 539,
+            "cssWidth": 707,
+            "cssHeight": 539
+          },
+          "viewport": [
+            1440,
+            900,
+            1
+          ],
+          "modal": {
+            "width": 1414,
+            "scrollWidth": 1414
+          },
+          "workspace": {
+            "width": 1414,
+            "height": 718,
+            "scrollWidth": 1414,
+            "scrollHeight": 718
+          },
+          "controls": {
+            "width": 707,
+            "height": 718,
+            "scrollWidth": 707,
+            "scrollHeight": 718
+          },
+          "previewToolsOverlap": false,
+          "touchTargets": [],
+          "jsHeapBytes": 364000000,
+          "worldResources": "{\"calls\":1613,\"triangles\":5408016,\"geometries\":526,\"textures\":164}",
+          "resources": {
+            "count": 250,
+            "transferBytes": 18829933,
+            "decodedBytes": 18754933
+          }
+        },
+        {
+          "character": "silvan",
+          "rafMs": {
+            "p50": 16.700000000000728,
+            "p95": 16.799999999999272,
+            "max": 16.799999999999272,
+            "samples": 180
+          },
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+          "canvas": {
+            "width": 707,
+            "height": 539,
+            "cssWidth": 707,
+            "cssHeight": 539
+          },
+          "viewport": [
+            1440,
+            900,
+            1
+          ],
+          "modal": {
+            "width": 1414,
+            "scrollWidth": 1414
+          },
+          "workspace": {
+            "width": 1414,
+            "height": 718,
+            "scrollWidth": 1414,
+            "scrollHeight": 718
+          },
+          "controls": {
+            "width": 707,
+            "height": 718,
+            "scrollWidth": 707,
+            "scrollHeight": 718
+          },
+          "previewToolsOverlap": false,
+          "touchTargets": [],
+          "jsHeapBytes": 364000000,
+          "worldResources": "{\"calls\":1613,\"triangles\":5408016,\"geometries\":526,\"textures\":164}",
+          "resources": {
+            "count": 250,
+            "transferBytes": 18829933,
+            "decodedBytes": 18754933
+          }
+        }
+      ],
+      "errors": [],
+      "browserVersion": "156.0.8078.4",
+      "readyMs": 6534,
+      "studioReadyMs": 3404,
+      "availableCharacters": [
+        "jevica",
+        "sable",
+        "rowan",
+        "vesper",
+        "aurel",
+        "lyra",
+        "kai",
+        "silvan"
+      ],
+      "controlChecks": [
+        "Native controls provide 44 px targets: [{\"name\":\"framing\",\"width\":213,\"height\":44},{\"name\":\"lighting\",\"width\":213,\"height\":44},{\"name\":\"pose\",\"width\":213,\"height\":44},{\"name\":\"cs-yaw\",\"width\":532.296875,\"height\":44},{\"name\":\"cs-favorites\",\"width\":325.5,\"height\":44}]",
+        "Preview remains clear of the view controls",
+        "Rotation retains native keyboard adjustment",
+        "Framing selection remains operable",
+        "Studio fits horizontally at 1440x900",
+        "Closing restores entry focus"
+      ],
+      "lifecycle": [
+        {
+          "cycle": 1,
+          "lostPreviewContexts": 1,
+          "remainingPreviewCanvases": 0
+        },
+        {
+          "cycle": 2,
+          "lostPreviewContexts": 2,
+          "remainingPreviewCanvases": 0
+        },
+        {
+          "cycle": 3,
+          "lostPreviewContexts": 3,
+          "remainingPreviewCanvases": 0
+        },
+        {
+          "cycle": 4,
+          "lostPreviewContexts": 4,
+          "remainingPreviewCanvases": 0
+        },
+        {
+          "cycle": 5,
+          "lostPreviewContexts": 5,
+          "remainingPreviewCanvases": 0
+        }
+      ],
+      "status": "observed"
+    },
+    {
+      "name": "webkit-desktop",
+      "options": {
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "deviceScaleFactor": 1
+      },
+      "observations": [
+        {
+          "character": "sable",
+          "rafMs": {
+            "p50": 17,
+            "p95": 21,
+            "max": 28,
+            "samples": 180
+          },
+          "renderer": "Apple GPU",
+          "canvas": {
+            "width": 707,
+            "height": 539,
+            "cssWidth": 707,
+            "cssHeight": 539
+          },
+          "viewport": [
+            1440,
+            900,
+            1
+          ],
+          "modal": {
+            "width": 1414,
+            "scrollWidth": 1414
+          },
+          "workspace": {
+            "width": 1414,
+            "height": 718,
+            "scrollWidth": 1414,
+            "scrollHeight": 718
+          },
+          "controls": {
+            "width": 707,
+            "height": 718,
+            "scrollWidth": 707,
+            "scrollHeight": 718
+          },
+          "previewToolsOverlap": false,
+          "touchTargets": [
+            {
+              "label": "Ivory",
+              "width": 36,
+              "height": 36
+            },
+            {
+              "label": "Rose silk",
+              "width": 36,
+              "height": 36
+            },
+            {
+              "label": "Lagoon",
+              "width": 36,
+              "height": 36
+            },
+            {
+              "label": "Midnight",
+              "width": 36,
+              "height": 36
+            },
+            {
+              "label": "Botanical",
+              "width": 36,
+              "height": 36
+            },
+            {
+              "label": "Ash blonde",
+              "width": 36,
+              "height": 36
+            },
+            {
+              "label": "Espresso",
+              "width": 36,
+              "height": 36
+            },
+            {
+              "label": "Copper",
+              "width": 36,
+              "height": 36
+            },
+            {
+              "label": "Silver",
+              "width": 36,
+              "height": 36
+            }
+          ],
+          "jsHeapBytes": null,
+          "worldResources": "{\"calls\":1363,\"triangles\":3937610,\"geometries\":461,\"textures\":114}",
+          "resources": {
+            "count": 250,
+            "transferBytes": 18797985,
+            "decodedBytes": 18722974
+          }
+        },
+        {
+          "character": "jevica",
+          "rafMs": {
+            "p50": 17,
+            "p95": 21,
+            "max": 30,
+            "samples": 180
+          },
+          "renderer": "Apple GPU",
+          "canvas": {
+            "width": 707,
+            "height": 539,
+            "cssWidth": 707,
+            "cssHeight": 539
+          },
+          "viewport": [
+            1440,
+            900,
+            1
+          ],
+          "modal": {
+            "width": 1414,
+            "scrollWidth": 1414
+          },
+          "workspace": {
+            "width": 1414,
+            "height": 718,
+            "scrollWidth": 1414,
+            "scrollHeight": 718
+          },
+          "controls": {
+            "width": 707,
+            "height": 718,
+            "scrollWidth": 707,
+            "scrollHeight": 718
+          },
+          "previewToolsOverlap": false,
+          "touchTargets": [],
+          "jsHeapBytes": null,
+          "worldResources": "{\"calls\":1363,\"triangles\":3937610,\"geometries\":461,\"textures\":114}",
+          "resources": {
+            "count": 250,
+            "transferBytes": 18797985,
+            "decodedBytes": 18722974
+          }
+        },
+        {
+          "character": "silvan",
+          "rafMs": {
+            "p50": 17,
+            "p95": 20,
+            "max": 26,
+            "samples": 180
+          },
+          "renderer": "Apple GPU",
+          "canvas": {
+            "width": 707,
+            "height": 539,
+            "cssWidth": 707,
+            "cssHeight": 539
+          },
+          "viewport": [
+            1440,
+            900,
+            1
+          ],
+          "modal": {
+            "width": 1414,
+            "scrollWidth": 1414
+          },
+          "workspace": {
+            "width": 1414,
+            "height": 718,
+            "scrollWidth": 1414,
+            "scrollHeight": 718
+          },
+          "controls": {
+            "width": 707,
+            "height": 718,
+            "scrollWidth": 707,
+            "scrollHeight": 718
+          },
+          "previewToolsOverlap": false,
+          "touchTargets": [],
+          "jsHeapBytes": null,
+          "worldResources": "{\"calls\":1363,\"triangles\":3937610,\"geometries\":461,\"textures\":114}",
+          "resources": {
+            "count": 250,
+            "transferBytes": 18797985,
+            "decodedBytes": 18722974
+          }
+        }
+      ],
+      "errors": [],
+      "browserVersion": "27.2",
+      "readyMs": 7295,
+      "studioReadyMs": 1413,
+      "availableCharacters": [
+        "jevica",
+        "sable",
+        "rowan",
+        "vesper",
+        "aurel",
+        "lyra",
+        "kai",
+        "silvan"
+      ],
+      "controlChecks": [
+        "Native controls provide 44 px targets: [{\"name\":\"framing\",\"width\":213,\"height\":44},{\"name\":\"lighting\",\"width\":213,\"height\":44},{\"name\":\"pose\",\"width\":213,\"height\":44},{\"name\":\"cs-yaw\",\"width\":532.296875,\"height\":44},{\"name\":\"cs-favorites\",\"width\":325.5,\"height\":44}]",
+        "Preview remains clear of the view controls",
+        "Rotation retains native keyboard adjustment",
+        "Framing selection remains operable",
+        "Studio fits horizontally at 1440x900",
+        "Closing restores entry focus"
+      ],
+      "lifecycle": [
+        {
+          "cycle": 1,
+          "lostPreviewContexts": 1,
+          "remainingPreviewCanvases": 0
+        },
+        {
+          "cycle": 2,
+          "lostPreviewContexts": 2,
+          "remainingPreviewCanvases": 0
+        },
+        {
+          "cycle": 3,
+          "lostPreviewContexts": 3,
+          "remainingPreviewCanvases": 0
+        },
+        {
+          "cycle": 4,
+          "lostPreviewContexts": 4,
+          "remainingPreviewCanvases": 0
+        },
+        {
+          "cycle": 5,
+          "lostPreviewContexts": 5,
+          "remainingPreviewCanvases": 0
+        }
+      ],
+      "status": "observed"
+    },
+    {
+      "name": "webkit-phone",
+      "options": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "deviceScaleFactor": 3,
+        "isMobile": true,
+        "hasTouch": true
+      },
+      "observations": [
+        {
+          "character": "sable",
+          "rafMs": {
+            "p50": 17,
+            "p95": 21,
+            "max": 34,
+            "samples": 180
+          },
+          "renderer": "Apple GPU",
+          "canvas": {
+            "width": 585,
+            "height": 300,
+            "cssWidth": 390,
+            "cssHeight": 201
+          },
+          "viewport": [
+            390,
+            844,
+            3
+          ],
+          "modal": {
+            "width": 390,
+            "scrollWidth": 390
+          },
+          "workspace": {
+            "width": 390,
+            "height": 652,
+            "scrollWidth": 390,
+            "scrollHeight": 1575
+          },
+          "controls": {
+            "width": 390,
+            "height": 1238,
+            "scrollWidth": 390,
+            "scrollHeight": 1238
+          },
+          "previewToolsOverlap": false,
+          "touchTargets": [
+            {
+              "label": "Ivory",
+              "width": 36,
+              "height": 36
+            },
+            {
+              "label": "Rose silk",
+              "width": 36,
+              "height": 36
+            },
+            {
+              "label": "Lagoon",
+              "width": 36,
+              "height": 36
+            },
+            {
+              "label": "Midnight",
+              "width": 36,
+              "height": 36
+            },
+            {
+              "label": "Botanical",
+              "width": 36,
+              "height": 36
+            },
+            {
+              "label": "Ash blonde",
+              "width": 36,
+              "height": 36
+            },
+            {
+              "label": "Espresso",
+              "width": 36,
+              "height": 36
+            },
+            {
+              "label": "Copper",
+              "width": 36,
+              "height": 36
+            },
+            {
+              "label": "Silver",
+              "width": 36,
+              "height": 36
+            }
+          ],
+          "jsHeapBytes": null,
+          "worldResources": "{\"calls\":1047,\"triangles\":3603934,\"geometries\":504,\"textures\":128}",
+          "resources": {
+            "count": 250,
+            "transferBytes": 18822563,
+            "decodedBytes": 18747552
+          }
+        },
+        {
+          "character": "jevica",
+          "rafMs": {
+            "p50": 18,
+            "p95": 23,
+            "max": 36,
+            "samples": 180
+          },
+          "renderer": "Apple GPU",
+          "canvas": {
+            "width": 585,
+            "height": 300,
+            "cssWidth": 390,
+            "cssHeight": 201
+          },
+          "viewport": [
+            390,
+            844,
+            3
+          ],
+          "modal": {
+            "width": 390,
+            "scrollWidth": 390
+          },
+          "workspace": {
+            "width": 390,
+            "height": 652,
+            "scrollWidth": 390,
+            "scrollHeight": 1343
+          },
+          "controls": {
+            "width": 390,
+            "height": 1005,
+            "scrollWidth": 390,
+            "scrollHeight": 1005
+          },
+          "previewToolsOverlap": false,
+          "touchTargets": [],
+          "jsHeapBytes": null,
+          "worldResources": "{\"calls\":1047,\"triangles\":3603934,\"geometries\":504,\"textures\":128}",
+          "resources": {
+            "count": 250,
+            "transferBytes": 18822563,
+            "decodedBytes": 18747552
+          }
+        },
+        {
+          "character": "silvan",
+          "rafMs": {
+            "p50": 17,
+            "p95": 18,
+            "max": 32,
+            "samples": 180
+          },
+          "renderer": "Apple GPU",
+          "canvas": {
+            "width": 585,
+            "height": 300,
+            "cssWidth": 390,
+            "cssHeight": 201
+          },
+          "viewport": [
+            390,
+            844,
+            3
+          ],
+          "modal": {
+            "width": 390,
+            "scrollWidth": 390
+          },
+          "workspace": {
+            "width": 390,
+            "height": 652,
+            "scrollWidth": 390,
+            "scrollHeight": 1520
+          },
+          "controls": {
+            "width": 390,
+            "height": 1183,
+            "scrollWidth": 390,
+            "scrollHeight": 1183
+          },
+          "previewToolsOverlap": false,
+          "touchTargets": [],
+          "jsHeapBytes": null,
+          "worldResources": "{\"calls\":1047,\"triangles\":3603934,\"geometries\":504,\"textures\":128}",
+          "resources": {
+            "count": 250,
+            "transferBytes": 18822563,
+            "decodedBytes": 18747552
+          }
+        }
+      ],
+      "errors": [],
+      "browserVersion": "27.2",
+      "readyMs": 5197,
+      "studioReadyMs": 2430,
+      "availableCharacters": [
+        "jevica",
+        "sable",
+        "rowan",
+        "vesper",
+        "aurel",
+        "lyra",
+        "kai",
+        "silvan"
+      ],
+      "visibleDrawsPerSecond": 5664,
+      "previewOffscreen": true,
+      "hiddenDrawsPerSecond": 0,
+      "resumedDrawsPerSecond": 5760,
+      "controlChecks": [
+        "Native controls provide 44 px targets: [{\"name\":\"framing\",\"width\":118,\"height\":44},{\"name\":\"lighting\",\"width\":118,\"height\":44},{\"name\":\"pose\",\"width\":118,\"height\":44},{\"name\":\"cs-yaw\",\"width\":284.53125,\"height\":44},{\"name\":\"cs-favorites\",\"width\":358,\"height\":44}]",
+        "Preview remains clear of the view controls",
+        "Rotation retains native keyboard adjustment",
+        "Rotation responds to a touch in its control area",
+        "Framing selection remains operable",
+        "Studio fits horizontally at 390x844",
+        "Studio fits horizontally at 844x390",
+        "Studio fits horizontally at 320x700",
+        "Closing restores entry focus"
+      ],
+      "lifecycle": [
+        {
+          "cycle": 1,
+          "lostPreviewContexts": 1,
+          "remainingPreviewCanvases": 0
+        },
+        {
+          "cycle": 2,
+          "lostPreviewContexts": 2,
+          "remainingPreviewCanvases": 0
+        },
+        {
+          "cycle": 3,
+          "lostPreviewContexts": 3,
+          "remainingPreviewCanvases": 0
+        },
+        {
+          "cycle": 4,
+          "lostPreviewContexts": 4,
+          "remainingPreviewCanvases": 0
+        },
+        {
+          "cycle": 5,
+          "lostPreviewContexts": 5,
+          "remainingPreviewCanvases": 0
+        }
+      ],
+      "status": "observed"
+    }
+  ]
+}
