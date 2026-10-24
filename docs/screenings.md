@@ -145,7 +145,7 @@ second interior or renderer is built.
   - **Encodings.** Each encoding the browser may decode is tried once per attempt, WebM then MP4. Retry starts a
     new attempt.
   - **Failure reasons.** The status says why: autoplay (Play film), decode, network (the other encoding is not
-    tried), stalled (no progress for 30 s while loading, buffering or ready but waiting to play), or playback. An aborted load is the
+    tried), stalled (no progress for 30 s while loading or buffering, or while a play request is unanswered), or playback. An aborted load is the
     player's own doing and is not a failure. A shared Stop releases the decoder.
   - **Diagnostics.** `window.__riverScreening()` reports the source that decoded, every attempt, the drift
     measured before correction (`measuredDriftMs`), and the last presented frame from requestVideoFrameCallback

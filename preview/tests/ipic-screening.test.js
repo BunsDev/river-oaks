@@ -485,6 +485,30 @@ test('a decoder failure after policy denial may fall back but still requires a g
   assert.equal(f.player.stats().state, 'playing');
 });
 
+test('a resume keeps the paused film on the screen while its play() is pending', async () => {
+  let resolve;
+  const f = setup({ media: fakeMedia({ play: () => new Promise(r => { resolve = r; }) }), offset: 51_000 });
+  f.player.apply(filmView(ORIGINAL, { status: 'paused', positionMs: 1000 }));
+  f.media.readyState = 4; f.media.emit('canplay'); f.player.tick();
+  assert.equal(f.player.stats().state, 'paused');
+  f.player.apply(filmView(ORIGINAL, { status: 'playing', revision: 2, anchorServerTimeMs: 101_000 }));
+  f.player.tick(); f.local.now += 200; f.player.tick();
+  assert.equal(f.media.calls.play, 1);
+  assert.equal(f.player.stats().state, 'paused', 'a pending resume must not unbind the film from the screen');
+  resolve(); await tick();
+  assert.equal(f.player.stats().state, 'playing');
+});
+
+test('a slow first load that keeps progressing is not called stalled because its play() is pending', async () => {
+  const { SCREENING_LOAD } = await import('../src/ipic-screening.js');
+  const f = setup({ media: fakeMedia({ play: () => new Promise(() => {}) }), offset: 51_000 });
+  f.player.apply(filmView(ORIGINAL)); f.media.readyState = 0; f.player.tick();
+  for (let i = 0; i < 4; i++) { f.local.now += SCREENING_LOAD.stallMs / 2; f.media.emit('progress'); f.player.tick(); }
+  assert.equal(f.player.stats().state, 'loading');
+  f.local.now += SCREENING_LOAD.stallMs + 1; f.player.tick();
+  assert.deepEqual([f.player.stats().state, f.player.stats().failure], ['error', 'stalled']);
+});
+
 test('a hung resume of decoded paused media reaches the same finite recovery deadline', () => {
   const f = setup({ media: fakeMedia({ play: () => new Promise(() => {}) }), offset: 51_000 });
   f.player.apply(filmView(ORIGINAL, { status: 'paused', positionMs: 1000 }));

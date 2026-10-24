@@ -66,7 +66,7 @@ export function createServerClock({ now = () => performance.now() } = {}) {
 // catalog is SCREENING_MEDIA; only test pages pass their own (preview/e2e/fixtures/ipic-screen.js).
 export function createScreeningPlayer({ media: element, clock, onChange = () => {}, now = () => performance.now(), catalog = SCREENING_MEDIA }) {
   let shared = null, mediaId = null, state = 'idle', generation = 0, playing = null, rate = 1, drift = 0, measured = 0, captions = false;
-  let attempt = null, failure = null, presented = null, frameRequest = 0, progressAt = now();
+  let attempt = null, failure = null, presented = null, frameRequest = 0, progressAt = now(), playAt = 0;
   const set = next => { if (state !== next) { state = next; progressAt = now(); onChange(stats()); } };
   const decoded = () => { if (['loading', 'autoplay'].includes(attempt?.current?.result)) attempt.current.result = 'decoded'; };
   const listeners = {
@@ -136,8 +136,9 @@ export function createScreeningPlayer({ media: element, clock, onChange = () => 
     set('idle');
   }
   function play() {
-    // A pending resume or foreground recovery needs the same deadline as initial playback.
-    if (!['loading', 'buffering'].includes(state)) set('loading');
+    // A pending resume or foreground recovery gets the same deadline as initial playback, but keeps
+    // its state: the paused frame stays on the screen until play() answers.
+    playAt = now();
     const token = generation;
     // Call play() now, not in a later task, so dispose() can never be followed by a start.
     let started;
@@ -175,8 +176,10 @@ export function createScreeningPlayer({ media: element, clock, onChange = () => 
       if (!shared.mediaId && state !== 'idle') unload();
     },
     tick() {
-      // A load or buffer without progress for too long is reported, with Retry, not left spinning.
-      if ((['loading', 'buffering'].includes(state) || state === 'ready' && shared?.status === 'playing') && now() - progressAt > SCREENING_LOAD.stallMs) fail('stalled');
+      // A load or buffer without progress, or a play() unanswered without progress, for too long is
+      // reported, with Retry, not left spinning.
+      const quiet = now() - progressAt > SCREENING_LOAD.stallMs;
+      if ((['loading', 'buffering'].includes(state) && quiet) || (playing && quiet && now() - playAt > SCREENING_LOAD.stallMs)) fail('stalled');
       if (!shared?.mediaId || ['disposed', 'unsupported', 'error', 'blocked', 'idle'].includes(state) && !(state === 'idle' && shared?.mediaId)) {
         if (shared?.status !== 'playing' && !element.paused) element.pause();
         return;
