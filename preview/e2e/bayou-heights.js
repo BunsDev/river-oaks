@@ -148,6 +148,35 @@ async page => {
     const reconnectMs=Date.now()-reconnectStart;
     await Promise.all([walk(page,[at([201,1.5]),at([300,1.5])],'owner nineteenth'),walk(peer,[at([209,-1.5]),at([300,-1.5])],'alice nineteenth')]);
     await capture(page,'nineteenth-and-yale');
+    // DIAGNOSTIC BRANCH ONLY: loop rate and draw stats with each top-level group hidden in turn.
+    const probe=async(tab,label)=>{
+      const rows=await tab.evaluate(async()=>{
+        const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms)),host=document.querySelector('#canvas-host');
+        let frames=0;const tick=()=>{frames++;requestAnimationFrame(tick);};requestAnimationFrame(tick);
+        const heights=window.__riverBayouHeights().scene,world=heights.parent;let root=world;while(root.parent)root=root.parent;
+        const tris=group=>{let total=0;group.traverseVisible(mesh=>{if(mesh.isMesh){const g=mesh.geometry;total+=(g.index?.count??g.attributes.position?.count??0)/3*(mesh.isInstancedMesh?mesh.count:1);}});return Math.round(total);};
+        const measure=async()=>{await sleep(1500);const f0=frames,t0=performance.now(),p0=window.__riverCarriage().pose.position;await sleep(5000);
+          const stats=JSON.parse(host.dataset.renderStats||'{}'),p1=window.__riverCarriage().pose.position;
+          return {loopHz:+((frames-f0)/((performance.now()-t0)/1000)).toFixed(2),calls:stats.calls,triangles:stats.triangles,moved:+Math.hypot(p1[0]-p0[0],p1[2]-p0[2]).toFixed(2)};};
+        const landscape=heights.children.find(part=>part.name==='bayou-heights/landscape');
+        const groups=[...root.children.filter(child=>child!==world).map(child=>['root',child]),...world.children.map(child=>['world',child]),
+          ...heights.children.map(child=>['heights',child]),...(landscape?landscape.children.map(child=>['landscape',child]):[])];
+        const out=[{label:'all',quality:host.dataset.quality,...await measure()}];
+        for(const [where,group] of groups){
+          const name=`${where}:${group.name||group.type}#${group.children.length}`,count=tris(group);
+          if(!group.visible||count<40000){out.push({label:name,visible:group.visible,tris:count,skipped:true});continue;}
+          group.visible=false;
+          try{const row=await measure();out.push({label:name,tris:count,...row,heldHidden:!group.visible});}finally{group.visible=true;}
+        }
+        return out;
+      });
+      for(const row of rows)console.log(`PROBE ${label} ${JSON.stringify(row)}`);
+    };
+    await probe(page,'owner east x300');
+    await Promise.all([walk(page,[at([297,1.5])],'owner turn west'),walk(peer,[at([297,-1.5])],'alice turn west')]);
+    await probe(page,'owner west x297');
+    await probe(peer,'alice west x297');
+    throw new Error('diagnostic probe complete');
 
     // Home: back over the footbridge and the Commons to the District.
     await Promise.all([walk(page,[at([165,1.5]),at([100,1.5]),at([-2,1.5])],'owner home'),walk(peer,[at([165,-1.5]),at([100,-1.5]),at([-2,-1.5])],'alice home')]);
