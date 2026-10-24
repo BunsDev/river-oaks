@@ -264,7 +264,8 @@ function fakeGh(routes) {
     const answer = routes[key];
     if (answer === undefined) throw new Error(`Command failed: gh api ${path}\ngh: Not Found (HTTP 404)`);
     if (answer instanceof Error) throw answer;
-    return answer === null ? '' : JSON.stringify(answer);
+    const body = answer === null ? '' : JSON.stringify(answer);
+    return args.includes('-i') ? `HTTP/2.0 200 OK\nEtag: "e-${key}"\n\n${body}` : body;
   };
   return { github: gitHubApi('.', run), requests };
 }

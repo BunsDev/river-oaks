@@ -91,6 +91,8 @@
     "land": "node scripts/land-pr.mjs",
     "presign-branch": "node scripts/enforce-pnpm.mjs",
     "sign-branch": "node scripts/sign-branch.mjs",
+    "prepr:wait": "node scripts/enforce-pnpm.mjs",
+    "pr:wait": "node scripts/pr-wait.mjs",
     "preland": "node scripts/enforce-pnpm.mjs",
     "destination": "node scripts/destination.mjs",
     "predestination": "node scripts/enforce-pnpm.mjs"
