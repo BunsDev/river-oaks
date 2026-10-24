@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { makeLikenessFixture } from '../character-likeness-fixture.js';
 import { inspectLikenessFixture } from '../character-likeness-validation.js';
-import { createLikenessQuarantine } from '../character-likeness-quarantine.js';
+import { createLikenessQuarantine, LIKENESS_CONSENT_POLICY } from '../character-likeness-quarantine.js';
 
 function changed(edit) {
   const original = makeLikenessFixture();
@@ -24,6 +24,7 @@ function changed(edit) {
   return bytes;
 }
 const options = { enabled: true, environment: { NODE_ENV: 'test' } };
+const consent = { policy: LIKENESS_CONSENT_POLICY, adult: true, selfLikeness: true, processing: true, display: true };
 
 test('synthetic geometry passes the reused skeleton and embedded texture audit', () => {
   const report = inspectLikenessFixture(makeLikenessFixture());
@@ -60,7 +61,7 @@ test('size, malformed bytes and valid-but-unallowlisted geometry are refused', (
 
 test('owner cannot publish before separate moderation; only signed allowlisted revision leaves', async () => {
   const { intake, reviewer } = createLikenessQuarantine(options);
-  const record = await intake.submit('fixture-alice', makeLikenessFixture());
+  const record = await intake.submit('fixture-alice', makeLikenessFixture(), consent);
   assert.equal(record.state, 'quarantined');
   assert.equal('bytes' in record, false);
   assert.throws(() => intake.publish('fixture-alice', record.id), /not_approved/);
@@ -76,12 +77,12 @@ test('owner cannot publish before separate moderation; only signed allowlisted r
 test('caller mutation cannot replace quarantined bytes and rejected bytes never become records', async () => {
   const { intake, reviewer } = createLikenessQuarantine(options);
   const bytes=makeLikenessFixture();
-  const pending=intake.submit('fixture-alice',bytes);
+  const pending=intake.submit('fixture-alice',bytes,consent);
   bytes.fill(0);
   const record=await pending;
   reviewer.approve('fixture-alice',record.id);
   assert.equal(intake.resolve('fixture-alice',intake.publish('fixture-alice',record.id)).kind,'fixture');
-  await assert.rejects(intake.submit('fixture-alice',Buffer.alloc(40)), /GLB/);
+  await assert.rejects(intake.submit('fixture-alice',Buffer.alloc(40),consent), /GLB/);
 });
 
 test('synthetic GLB declares WebP without fallback and supplies bounded texture coordinates', () => {

@@ -8,6 +8,12 @@ test('baseline options default to the Phase 1 protocol', () => {
     { seconds: 30, samples: 5, vsync: 'off', profiles: ['desktop'], cpuProfile: 'on', label: 'main-a1' });
 });
 
+test('the profile environment variable sets the default and --profiles overrides it', () => {
+  assert.deepEqual(baselineOptions([], { RIVER_OAKS_BASELINE_PROFILES: 'desktop' }).profiles, ['desktop']);
+  assert.deepEqual(baselineOptions(['--profiles=phone-viewport'], { RIVER_OAKS_BASELINE_PROFILES: 'desktop' }).profiles, ['phone-viewport']);
+  assert.throws(() => baselineOptions([], { RIVER_OAKS_BASELINE_PROFILES: 'tablet' }), /Use seconds/);
+});
+
 test('baseline options reject unknown, duplicate and out-of-range values', () => {
   for (const args of [['--vsync=maybe'], ['--samples=0'], ['--seconds=4'], ['--profiles=tablet'], ['--label=Bad Label'], ['--seconds=30', '--seconds=31'], ['--fps=60']])
     assert.throws(() => baselineOptions(args), /Invalid or duplicate option|Use seconds/, args.join(' '));

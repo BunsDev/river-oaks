@@ -1,0 +1,181 @@
+{
+  "generated_by": "scripts/audit_district_heights.py",
+  "generated_at": "2026-10-23T21:01:20.719265+00:00",
+  "scope": "Roof height above same-survey ground; does not change district.json. The 2018 flight predates any later construction.",
+  "district_sha256": "c5662c26185ff0c6caa2fccfb9ef9839bb7e56706635dcf6d6aed68bffd50326",
+  "lidar_source_id": "usgs-ept-TX_Coastal_B1_2018",
+  "lidar_acquisition_window": [
+    "2018-01-12",
+    "2018-03-22"
+  ],
+  "lidar_points_sha256": "42133c62a3c1b687bb43d829f444c452e361378a43f67a737445ca428b313a34",
+  "method": "95th percentile of class-6 returns inside the footprint inset 1.5 m, above the median class-2 return 2-12 m outside it",
+  "status": "passed",
+  "tolerance_m": 3.0,
+  "buildings": [
+    {
+      "id": "osm-way-625330785",
+      "authored_m": 33.0,
+      "measured_m": 25.26,
+      "height_source": "authored 5 m above the photographed 28 m to fit the penthouse office (#363)",
+      "authored_minus_measured_m": 7.74,
+      "status": "authored-override"
+    },
+    {
+      "id": "osm-way-625330790",
+      "authored_m": 20,
+      "measured_m": 21.17,
+      "height_source": "estimated from tagged/default levels",
+      "authored_minus_measured_m": -1.17,
+      "status": "within-tolerance"
+    },
+    {
+      "id": "osm-way-625330792",
+      "authored_m": 14.5,
+      "measured_m": 11.93,
+      "height_source": "street-level reference photographs (2024-2025), estimated",
+      "authored_minus_measured_m": 2.57,
+      "status": "within-tolerance"
+    },
+    {
+      "id": "osm-way-625330798",
+      "authored_m": 18.5,
+      "measured_m": 16.98,
+      "height_source": "street-level reference photographs (2024-2025), estimated",
+      "authored_minus_measured_m": 1.52,
+      "status": "within-tolerance"
+    },
+    {
+      "id": "osm-way-625333006",
+      "authored_m": 9.2,
+      "measured_m": 8.02,
+      "height_source": "street-level reference photographs (2024-2025), estimated",
+      "authored_minus_measured_m": 1.18,
+      "status": "within-tolerance"
+    },
+    {
+      "id": "osm-way-625333008",
+      "authored_m": 13.5,
+      "measured_m": 11.41,
+      "height_source": "street-level reference photographs (2024-2025), estimated",
+      "authored_minus_measured_m": 2.09,
+      "status": "within-tolerance"
+    },
+    {
+      "id": "osm-way-625333009",
+      "authored_m": 10.6,
+      "measured_m": 11.21,
+      "height_source": "street-level reference photographs (2024-2025), estimated",
+      "authored_minus_measured_m": -0.61,
+      "status": "within-tolerance"
+    },
+    {
+      "id": "osm-way-878472795",
+      "authored_m": 23.5,
+      "measured_m": 22.31,
+      "height_source": "street-level reference photographs (2024-2025), estimated",
+      "authored_minus_measured_m": 1.19,
+      "status": "within-tolerance"
+    },
+    {
+      "id": "osm-way-878472797",
+      "authored_m": 23.5,
+      "measured_m": 22.04,
+      "height_source": "street-level reference photographs (2024-2025), estimated",
+      "authored_minus_measured_m": 1.46,
+      "status": "within-tolerance"
+    }
+  ],
+  "measurements": [
+    {
+      "id": "osm-way-625330785",
+      "footprint_m2": 3196.7,
+      "roof_returns": 29444,
+      "ground_returns": 22890,
+      "ground_z_m": 18.03,
+      "height_m": 25.26,
+      "median_m": 23.9,
+      "returns_per_m2": 9.21
+    },
+    {
+      "id": "osm-way-625330790",
+      "footprint_m2": 6839.0,
+      "roof_returns": 65221,
+      "ground_returns": 17290,
+      "ground_z_m": 18.05,
+      "height_m": 21.17,
+      "median_m": 19.65,
+      "returns_per_m2": 9.54
+    },
+    {
+      "id": "osm-way-625330792",
+      "footprint_m2": 2071.6,
+      "roof_returns": 25488,
+      "ground_returns": 16516,
+      "ground_z_m": 18.05,
+      "height_m": 11.93,
+      "median_m": 9.8,
+      "returns_per_m2": 12.3
+    },
+    {
+      "id": "osm-way-625330798",
+      "footprint_m2": 3521.6,
+      "roof_returns": 32522,
+      "ground_returns": 18166,
+      "ground_z_m": 18.06,
+      "height_m": 16.98,
+      "median_m": 16.79,
+      "returns_per_m2": 9.24
+    },
+    {
+      "id": "osm-way-625333006",
+      "footprint_m2": 1972.7,
+      "roof_returns": 18063,
+      "ground_returns": 21251,
+      "ground_z_m": 18.04,
+      "height_m": 8.02,
+      "median_m": 7.13,
+      "returns_per_m2": 9.16
+    },
+    {
+      "id": "osm-way-625333008",
+      "footprint_m2": 1460.3,
+      "roof_returns": 13119,
+      "ground_returns": 17797,
+      "ground_z_m": 18.07,
+      "height_m": 11.41,
+      "median_m": 6.71,
+      "returns_per_m2": 8.98
+    },
+    {
+      "id": "osm-way-625333009",
+      "footprint_m2": 529.7,
+      "roof_returns": 4288,
+      "ground_returns": 11424,
+      "ground_z_m": 18.1,
+      "height_m": 11.21,
+      "median_m": 10.88,
+      "returns_per_m2": 8.1
+    },
+    {
+      "id": "osm-way-878472795",
+      "footprint_m2": 9508.8,
+      "roof_returns": 104192,
+      "ground_returns": 40739,
+      "ground_z_m": 17.97,
+      "height_m": 22.31,
+      "median_m": 20.22,
+      "returns_per_m2": 10.96
+    },
+    {
+      "id": "osm-way-878472797",
+      "footprint_m2": 5812.4,
+      "roof_returns": 60364,
+      "ground_returns": 31798,
+      "ground_z_m": 17.92,
+      "height_m": 22.04,
+      "median_m": 20.26,
+      "returns_per_m2": 10.39
+    }
+  ]
+}

@@ -2,8 +2,9 @@ import { distribution } from './metrics.js';
 
 // Options for world-expansion-baseline.js. Defaults reproduce the Phase 1
 // protocol (three 30-second samples per workload, display vsync, both profiles).
-export function baselineOptions(args) {
-  const result = { seconds: 30, samples: 3, vsync: 'on', profiles: ['desktop', 'phone-viewport'], cpuProfile: 'off', label: '' };
+// RIVER_OAKS_BASELINE_PROFILES sets the default profiles; --profiles overrides it.
+export function baselineOptions(args, env = {}) {
+  const result = { seconds: 30, samples: 3, vsync: 'on', profiles: (env.RIVER_OAKS_BASELINE_PROFILES ?? 'desktop,phone-viewport').split(','), cpuProfile: 'off', label: '' };
   const seen = new Set();
   for (const arg of args) {
     const match = /^--(seconds|samples|vsync|profiles|cpu-profile|label)=(.+)$/.exec(arg);
