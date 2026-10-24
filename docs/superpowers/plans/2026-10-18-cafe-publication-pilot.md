@@ -461,9 +461,77 @@ by store travel.
 | `REDIS_URL=<disposable> node --test` approved-space-redis, world-catalog, redis-room, world-gateway, office-world-lifecycle, world-invite-gateway, distributed-app, approved-space region/transport, creator-street-ground | 64/64, 0 skipped |
 | Hosted CI, Verify run 39124258482 on `6aff87f5` (draft #489) | all checks passed, including aggregate `preview`. `preview shared (worlds-and-creator)` passed `creator-street-crossing` and `creator-approved-cafe` with the other world and creator journeys, on Mesa llvmpipe CPU acceptance rendering. |
 
+## Dark landing: update from `main`, flag and protocol rule (2026-10-24)
+
+Val asked for every open PR to be merged or closed. #489 is prepared to land **dark**:
+nothing changes in production unless the service sets the new flag. Activating approved
+spaces and deploying protocol 4 stay separate decisions.
+
+**Update from `main` (`641655d2`), merge `a8a47e6d`.** Seven conflicts, each resolved by
+reading both sides:
+
+| File | Resolution |
+| --- | --- |
+| `preview/e2e/shared-runner.js` (journeys) | `main`'s lists (world rules, crime, Character Studio), plus `creator-approved-cafe` in `development-publish` |
+| `preview/e2e/shared-runner.js` (restarts) | `main`'s list plus `creator-approved-cafe` |
+| `server/distributed-app.js` (signature) | `main`'s (`characters`, `characterStudioEnabled`, `characterMetrics`; `officeWorkspaces` removed by #496) plus `protocolVersion: worldProtocol` |
+| `server/world-gateway.js` | `main`'s call plus `protocolVersion:worldProtocolVersion(data)` |
+| `server/redis-room.js` | `main`'s version-3 checkpoint (pending character selections, `district`) with `'revocations'` added to `revisionKeys`. The commit script reads sources as `ARGV[14]` and replies as `ARGV[14+i]`, matching the call. |
+| `server/world.js` (snapshot) | `main`'s fields (`worldPolicy`, `crime`, `police`, `lanternWalk`, `campus`) with the per-world `protocolVersion` variable. `main`'s line verbatim would throw, because the merged import no longer brings `WORLD_PROTOCOL_VERSION`. |
+| `server/world.js` (return) | the branch's `protocolVersion` and `approvedSpaceRoutesBlocked`, plus `main`'s `worldPolicy` and `violenceFor` |
+
+**Gate.** `RIVER_OAKS_APPROVED_SPACES=1` turns approved spaces on, following the
+`RIVER_OAKS_WORKPLACE` pattern (`town.js` reads it; `redis-backend.js` passes
+`approvedSpacesEnabled` to the gateway). Off, the default, both catalogs serve an empty
+registry (`APPROVED_SPACES_OFF`):
+
+- publishing the Café fails `approved_space_unknown`;
+- a revision draft that keeps it fails `invalid_draft`;
+- a candidate compiled where the flag is on fails `approved_space_assets` where it is off.
+
+`GET /api/worlds` carries `approvedSpaces: true` only when the catalog can place one, so
+the default response is unchanged. The portal reads the directory before it opens the
+region editor, and the editor offers **Furnished layout** only then. No server-handed flag
+reached the portal before this: `creationToolsEnabled` is the build-time
+`VITE_CREATION_TOOLS`. The shared runner turns the flag on for `development-publish`, and
+the pilot's tests turn it on too.
+
+**Protocol rule.** The page used to send `protocol=4` to every world. `main`'s servers
+require exactly 3, so `main`'s own town refused that page with 426 (scratch probe against
+`git archive origin/main`). Now:
+
+- the page sends what its ticket reports (`ticketProtocol` in `world-contract.js`), when
+  it can draw that protocol;
+- with the flag off, every ticket and snapshot says 3 and the page sends 3;
+- only a world that places an approved space reports 4.
+
+The servers' accepted range (the world's protocol up to 4) is unchanged.
+
+**Ticket route.** The distributed ticket route now catches a failed `room.read()` and
+falls back to the world data's protocol, as the socket path does. Before, it answered 503
+with the issued ticket orphaned.
+
+**Focused checks** (behavioural; each regression failed on the old source first):
+
+| Check | Result |
+| --- | --- |
+| Town with the flag unset refuses the Café | before: publish 201; after: 409 `approved_space_unknown` |
+| Redis gateway with the default setting refuses the Café | before: 201; after: 409 |
+| Memory catalog with the flag off: publish, draft, activation | before: no off policy (missing export); after: passes |
+| Page asks for its ticket's protocol | `origin/main` town: the old rule sent 4 and got 426; the new rule sends 3 and joins. Tests: before, missing export; after, 3 for a protocol-3 world and 4 for the Café |
+| Ticket when `room.read()` rejects | before: 503, ticket orphaned; after: 200 with that ticket |
+| Pilot plus focused server files, disposable Redis (`app`, `approved-space-*`, `creator-transport`, `distributed-app`, `redis-room`, `region-package`, `town-worlds`, `world-catalog`, `world-contract`, `world-gateway`, `world-invite-gateway`, `hardening-room-isolation`, `hardening-router-admission`, `office-world-lifecycle`, `connection-rotation`, `vercel-routing`, `character-room`, two checkpoint migrations) | 149/149, 0 skipped |
+| Preview unit tests (`node --test preview/tests/*.test.js`) | 3,908/3,909, 0 failed, 1 skipped (load average about 45) |
+
+Not run here: browser journeys (`creator-approved-cafe` needs a fresh
+`development-publish` run, since the editor now waits for the directory flag),
+`pnpm run verify`, hosted CI, any production check.
+
 ## Next step
 
-1. **If Val decides to land #489:** update it from `main` again if needed, then
-   `pnpm run land 489`. Merging and deploying are not granted by the pilot.
+1. **If Val decides to land #489:** run the core gate and update the PR from `main` again
+   if needed, then `pnpm run land 489`. Landing leaves approved spaces off; turning
+   `RIVER_OAKS_APPROVED_SPACES` on in production is a separate decision. Merging and
+   deploying are not granted by the pilot.
 2. **Optional:** `pnpm run verify full` (Redis, audit, history scan and every browser
    journey) on an unloaded machine.
