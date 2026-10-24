@@ -82,6 +82,26 @@ reapplying authored material customization. Avatar disposal performs this order
 for its owned layer. Portrait capture releases renderer-owned transmission
 targets after each camera, including failed readback.
 
+### Named defaults (#517 trial)
+
+The owner's Jevica and the guest's Sable keep their authored face, eyes, hair
+style, outfit and palette. `preview/src/default-appearance-realism.js` lists the
+parts of the material layer each one takes, and `loadResidentAvatar` and
+`createCharacterHero` apply only those parts at the viewer's quality tier. Both
+take the regional skin roughness map at every tier. They never take a corneal
+shell, iris recolor, skin-wrap or sheen. The trial left out the other parts too:
+uniform pore normals pebbled the lips and made the neck look like stucco, card
+coverage more than doubled the brow and lash footprint, and strand recolor turned
+Sable's beige hair cream-green. See the [trial evidence](acceptance/default-appearance-517.md).
+Other looks on the same rig keep their imported materials. Set
+`DEFAULT_APPEARANCE_REALISM.enabled` to `false` to return both to imported
+materials; nothing reaches the server or the saved character.
+
+`applyCharacterRealism(rig, {components})` and `createCharacterFidelity(rig,
+{components})` accept any subset of `REALISM_COMPONENTS`. Omitting `roughness`
+skips the roughness-map request. Morgan and Imani pass no list and keep every
+component.
+
 ## Reproduce the evidence
 
 ```sh
@@ -104,6 +124,19 @@ available, and crowd samples. Keep load averages with those results. A shared
 host with competing CPU/GPU work doesn't establish a device budget. Source and
 asset inputs must remain unchanged during the run; each receipt contains their
 SHA256 manifest, including untracked inputs.
+`--seconds 30` times each crowd for 30 s after warmup instead of a frame count.
+Timing pages are cross-origin isolated by the fixture server
+(`server/tests/isolated-fixture.js`, `?isolate=1`). Fulfilling the document from
+the test would leave it outside loopback's address space, and Chromium would then
+block Vite's WebSocket.
+
+For the named defaults, `node scripts/default-appearance-trial.mjs` captures each
+realism component alone, the trial set at every tier and the full preset (evidence
+only) under daylight, dusk and interior light, plus a no-MSAA pair. It compares
+each case with realism off under the same light: whole-image error, and per
+region (hair, brows and lashes, skin) the covered area, its overlap with off and
+the CIE76 shift of its mean colour. Regions are found by rendering again without
+their meshes.
 
 The [measured resource ceilings](../data/reports/character-fidelity-resource-budgets-517.json)
 are exact scene-census references for these pinned asset versions. They do not

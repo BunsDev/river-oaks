@@ -63,3 +63,15 @@ for (const appliedTier of ['high','standard','low','off']) {
   control.dispose();roughness.dispose();
  });
 }
+
+test('a component list reaches every tier and skips the roughness load when roughness is omitted',async()=>{
+ const avatar=rig();let loads=0;
+ const control=runtime.createCharacterFidelity(avatar,{components:['pores','coverage'],loadTextures:async()=>{loads++;return {roughness:new THREE.Texture()};}});
+ for(const tier of ['high','standard','low']){
+  await control.setTier(tier);
+  assert.equal(control.report.tier,tier);assert.deepEqual(control.report.components,['pores','coverage']);assert.equal(control.report.fallback,undefined);
+  assert.equal(avatar.material.roughnessMap,null);
+ }
+ assert.equal(loads,0);assert.ok(avatar.model.children.length===1);
+ control.dispose();assert.equal(avatar.material.normalMap,null);
+});
