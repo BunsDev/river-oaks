@@ -22,6 +22,7 @@ import { objectCollider, blocksPlayer, blocksResident } from '../preview/src/cre
 import { cafeSeat, plazaSalonPlan } from '../preview/src/plaza-salon-plan.js';
 import { createCafeGames } from './cafe-games.js';
 import { createDartsGames } from './darts-games.js';
+import { createLanternWalk } from './lantern-walk.js';
 import { IPIC_DARTS, atIpicDartsLine } from '../preview/src/ipic-plan.js';
 import { createAxeGames } from './axe-games.js';
 import { AXE_LANES, AXE_ROOM_DARTS, AXE_ROOM_INTERIOR, atAxeLane, atAxeRoomDarts } from '../preview/src/axe-room-plan.js';
@@ -35,8 +36,10 @@ import { isJevicaAdmin } from './admin.js';
 import { accountName } from '../preview/src/resident-names.js';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, validateWorldId } from '../preview/src/world-contract.js';
 import { checkpointFailureReason } from './recovery-diagnostics.js';
-import { CRIME_RULES, createCrime } from './crime.js';
-import { advanceClock, clockMinute, dangerActive, defaultWorldPolicy, evaluateViolence, proposePolicy, validateWorldPolicy } from '../preview/src/world-policy.js';
+import { CRIME_RULES, CRIME_TARGETS, createCrime } from './crime.js';
+import { createPolice } from './police.js';
+import { createResidentNavigation } from '../preview/src/navigation.js';
+import { advanceClock, clockMinute, dangerActive, defaultWorldPolicy, evaluateViolence, proposePolicy, riskAt, validateWorldPolicy } from '../preview/src/world-policy.js';
 import { campusInteriorPlan, isCampusLevelId } from '../preview/src/garden-campus-levels.js';
 
 const CYCLE_GRACE_MS = 1500;
@@ -61,7 +64,7 @@ const fields = (message, allowed) => Object.keys(message).every(key => allowed.i
 const textId = value => typeof value === 'string' && value.length > 0 && value.length <= 160;
 const reject = (error, message = error) => ({ok:false,error,message});
 
-const CHECKPOINT_VERSION = 15, MAX_CHECKPOINT_BYTES = 8 * 1024 * 1024;
+const CHECKPOINT_VERSION = 16, MAX_CHECKPOINT_BYTES = 8 * 1024 * 1024;
 const LIFE_FIELDS = ['elapsed','storm','revision','packet','cursor','paused','stats'];
 const digest = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const nonnegative = value => Number.isFinite(value) && value >= 0;
@@ -117,6 +120,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if(key===colliderKey)return;
     colliderKey=key;colliders.splice(0,colliders.length,...objects.map(objectCollider));
     navigation?.setPlacedObjects(colliders);
+    policeNavigation?.setPlacedObjects(colliders);
   };
   const state = createCommunity(worldData, environment.rooms, {carriage:false,sharedPopulation});
   let life = createResidentLife(worldData, state), revision = 0, elapsed = 0;
@@ -177,6 +181,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     atLane:player=>onFootIn(player,axeRoom) ? atAxeLane(roomPoint(axeRoom,player)) : null,
     // The thrower's real distance to the target decides the axe's rotation (axe-rules.js).
     distanceTo:(player,laneId)=>{const lane=AXE_LANES.find(item=>item.id===laneId);return axeRoom&&lane?lane.target-roomPoint(axeRoom,player)[1]:NaN;}});
+  // Bayou Market Commons' Lantern Walk (lantern-walk.js): lanterns come from the composed destination.
+  const lanternWalk=createLanternWalk({lanterns:worldData.eastGardenCommons?.destination?.lanterns??[],changed:()=>revision++,now});
   // Venue screenings (screenings.js): the server decides who is in the venue and who may host.
   const screenings=createScreenings({players,grants:screeningHosts,changed:()=>revision++,
     inVenue:(player,venueId)=>!player.levelId && !offices.has(player.id)
@@ -188,6 +194,26 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       attacker:{type:'player',...placeOf(attacker,attacker.levelId??null,attacker.buildingId || offices.has(attacker.id))},
       target:{type:targetType,...(targetType==='player'?placeOf(target,target.levelId??null,target.buildingId || offices.has(target.id)):placeOf(target,null,false))}}),
     reachable:meleeReach});
+  // The resident site ring excludes part of the public danger lanes. Police use
+  // the same bounded grid and physical collision, across the full walking area.
+  const policeWorldData={...worldData,site_ring:null};
+  const policeNavigation=createResidentNavigation(policeWorldData,{allowRoads:true,placedObjects:colliders});
+  const police=createPolice({players,starsOf:crime.starsOf,changed:()=>revision++,navigation:policeNavigation,
+    posts:(CRIME_TARGETS[worldId]??[]).flatMap(target=>[4].map(offset=>{
+      const east=target.position[0]+offset,north=target.position[1];
+      return [east,north,environment.groundAt(east,-north)];
+    })),
+    eligible:player=>!player.levelId && !player.vehicle && !player.sitting && !player.performing && player.altitude<=.1
+      && !offices.has(player.id) && riskAt(worldId,worldPolicy,placeOf(player,null,false)).level==='danger',
+    sight:(a,b)=>environment.hasSightLine([a[0],a[1],a[2]+1.2],[b[0],b[1],b[2]+1.2]),
+    arrest:player=>{
+      interactions.cancel(player.id);focus.delete(player.id);releaseBike(player);
+      const spawn=createWalkingState(environment).position,[east,north]=arrivalSpot(spawn[0],-spawn[2]);
+      Object.assign(player,{position:[east,north,environment.groundAt(east,-north)],yaw:0,altitude:0,buildingId:null,levelId:null,
+        vehicle:null,sitting:null,performing:null,gesture:null,gestureUntil:0,poseAt:now(),moveBudget:.1,liftBudget:.1});
+      if(Object.hasOwn(player,'health'))player.health=CRIME_RULES.maxHealth;
+      crime.arrest(player.id);revision++;
+    }});
   // Arm's reach on one floor, in one room, with a clear line at chest height: walls and doors block.
   function meleeReach(attacker,target) {
     if((attacker.levelId??null)!==null)return false;
@@ -196,7 +222,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if((environment.roomAt(ax,-an)?.storeId??null)!==(environment.roomAt(tx,-tn)?.storeId??null))return false;
     return environment.hasSightLine([ax,an,ah+1.2],[tx,tn,th+1.2]);
   }
-  const publicPlayer = player => ({office:offices.publicVisit(player.id),...(campusWorkstation(player)?{campusWorkstation:true}:{}),interaction:interactions.publicFor(player),id:player.id,name:accountName(player.id,player.name),appearance:player.appearance,...(characterByUser.has(player.id)?{character:copy(characterByUser.get(player.id))}:{}),movement:movementOf(player),gesture:interactions.publicFor(player)?.kind??(player.gestureUntil>now()?player.gesture:null)??(player.performing?'perform':null),performing:Boolean(player.performing),canBuild:Boolean(isAdmin(player.id)),canGrantWishes:Boolean(isAdmin(player.id)),canSetWorldPolicy:Boolean(isAdmin(player.id)),vehicle:player.vehicle??null,sitting:publicSeat(player),position:[...player.position],yaw:player.yaw,altitude:player.altitude,buildingId:player.buildingId??null,levelId:player.levelId??null,voice:{space:voiceSpaceOf(player.id),id:voiceIdentities.get(player.id)??null}});
+  const publicPlayer = player => ({...(Object.hasOwn(player,'health')?{health:player.health}:{}),office:offices.publicVisit(player.id),...(campusWorkstation(player)?{campusWorkstation:true}:{}),interaction:interactions.publicFor(player),id:player.id,name:accountName(player.id,player.name),appearance:player.appearance,...(characterByUser.has(player.id)?{character:copy(characterByUser.get(player.id))}:{}),movement:movementOf(player),gesture:interactions.publicFor(player)?.kind??(player.gestureUntil>now()?player.gesture:null)??(player.performing?'perform':null),performing:Boolean(player.performing),canBuild:Boolean(isAdmin(player.id)),canGrantWishes:Boolean(isAdmin(player.id)),canSetWorldPolicy:Boolean(isAdmin(player.id)),vehicle:player.vehicle??null,sitting:publicSeat(player),position:[...player.position],yaw:player.yaw,altitude:player.altitude,buildingId:player.buildingId??null,levelId:player.levelId??null,voice:{space:voiceSpaceOf(player.id),id:voiceIdentities.get(player.id)??null}});
   // Seats are Jevica's garden seats and lounge chairs, and the two places on
   // every storefront bench ('bench:<store>', slots 0 and 1).
   const benches=benchSeats(worldData);
@@ -530,6 +556,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     releaseBike(leaving);
     players.delete(userId);
     screenings.prune(now());
+    police.step(now(),0);
     interactions.cancel(userId);
     focus.delete(userId);
     voiceIdentities.delete(userId);
@@ -580,6 +607,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   };
   function pose(player, message, time) {
     const correction = error => ({...reject(error),correction:publicPlayer(player),player:publicPlayer(player)});
+    if(police.held(player.id))return correction('surrendered');
     const {position,yaw,altitude} = message;
     if (!fields(message,['type','position','yaw','altitude','levelId','vehicle','interactionId']) || (message.vehicle != null && !vehicleKind(message.vehicle))
       || !Array.isArray(position) || position.length !== 3 || !position.every(Number.isFinite)
@@ -821,6 +849,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
         worldPolicy={...worldPolicy,revision:next,violence:{...worldPolicy.violence,mode:'off',pvp:false},lastChange:{kind:'emergency_off',revision:next,at:time}};
         revision++;
       }
+      police.step(time,0);
       return {ok:true,worldPolicy:publicWorldPolicy()};
     }
     if(message.action!=='update' || !fields(message,['type','action','expectedRevision','changes']) || !Number.isSafeInteger(message.expectedRevision))
@@ -833,7 +862,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if(!proposed)return reject('invalid_world_policy','Those world rules are not valid.');
     const next=worldPolicy.revision+1;
     worldPolicy={...proposed,revision:next,lastChange:{kind:'update',revision:next,at:time}};
-    worldPolicyAt=time;revision++;
+    worldPolicyAt=time;revision++;police.step(time,0);
     return {ok:true,worldPolicy:publicWorldPolicy()};
   }
   // Where a player or resident stands, as the rule reads it: never as a client reports it.
@@ -862,6 +891,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if(message.type==='worldPolicy')return worldPolicyCommand(userId,message,ledger,time);
     if(offices.has(userId) && !['office','chat'].includes(message.type))return reject('leave_office_first');
     if(message.type==='office' && message.action==='move')return offices.command(player,message,time);
+    if(message.type==='surrender'){if(!spend(ledger,time))return reject('rate_limited');return police.surrender(userId,message);}
+    if(police.held(userId) && !['chat','pose'].includes(message.type))return reject('surrendered','Resume moving before doing that.');
     if (message.type==='pose') return pose(player,message,time);
     // Voice is negotiated over HTTP from the transport's authority; it is never a game command.
     if (message.type==='voice') return reject('invalid_command');
@@ -891,6 +922,11 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     }
     if(message.type==='darts' || message.type==='axes') {
       const reply=(message.type==='darts'?dartsGames:axeGames).command(player,message,time);
+      return reply.ok?{...reply,player:publicPlayer(player)}:reply;
+    }
+    if(message.type==='lanterns') {
+      if(!lanternWalk.enabled)return reject('invalid_command');
+      const reply=lanternWalk.command(player,message);
       return reply.ok?{...reply,player:publicPlayer(player)}:reply;
     }
     if(message.type==='screening')return screenings.command(player,message,time,{sessionId});
@@ -1033,10 +1069,10 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       if(placing&&(builds.size>=MAX_BUILDS || [...builds.values()].filter(item=>item.ownerId===userId).length>=MAX_BUILDS_PER_USER))return reject('build_limit');
       const ground=buildSite(message.position,kind,builds,previous?.id);
       if(ground===null)return reject('blocked_build_site','Find open, level ground away from roads and other creations.');
-      if([...players.values()].some(other=>distance(other.position,message.position)<kind.radius+BUILD_PLAYER_GAP))return reject('blocked_build_site',BUILD_REASONS.player);
+      if([...players.values(),...police.snapshot().units].some(other=>distance(other.position,message.position)<kind.radius+BUILD_PLAYER_GAP))return reject('blocked_build_site',BUILD_REASONS.player);
       const yaw=buildYaw(message.yaw);
       const collider=objectCollider({...definition,position:message.position,ground,yaw});
-      if([...players.values()].some(other=>blocksPlayer(collider,other)))return reject('blocked_build_site',BUILD_REASONS.player);
+      if([...players.values(),...police.snapshot().units.map(unit=>({...unit,altitude:0,levelId:null}))].some(other=>blocksPlayer(collider,other)))return reject('blocked_build_site',BUILD_REASONS.player);
       if(state.locals.some(local=>residentBlocked(collider,local)))return reject('blocked_build_site',BUILD_REASONS.resident);
       const item=placing
         ? {id:`build-${revision+1}`,ownerId:userId,ownerName:player.name,kind:kind.id,finish:finish.id,position:[...message.position],ground,yaw,createdAt:time,...(definition.assembly?{assembly:copy(definition.assembly)}:{})}
@@ -1097,7 +1133,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if (!Number.isFinite(delta) || delta<=0) return;
     const duration=Math.min(delta,0.25),time=now();
     clearExpiredLedgers(time);
-    tableGames.prune();cafeGames.prune();dartsGames.prune();axeGames.prune();screenings.prune(time);campus.prune(time);
+    tableGames.prune();cafeGames.prune();dartsGames.prune();axeGames.prune();lanternWalk.prune(time);screenings.prune(time);campus.prune(time);
     for (const [id,hold] of focus) if (hold.until<=time || !reachable(players.get(id),localById.get(hold.localId))) focus.delete(id);
     const held=new Set([...focus.values()].map(hold=>hold.localId));
     for (const local of state.locals) {
@@ -1114,6 +1150,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     // night pause is a separate decision from the danger window (docs/world-policy.md).
     worldPolicy.clock=advanceClock(worldPolicy.clock,duration);
     crime.step(time);
+    police.step(time,duration);
     elapsed+=duration;
     revision++;
   }
@@ -1121,7 +1158,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     const social=interactions.snapshot();
     const community={};
     for (const key of ['status','running','elapsed','target','supported','unmet','supplies','helpBudget','jobs','events','scenarioKey','generation','result','storm','resupplied']) community[key]=copy(state[key]);
-    return {type:'snapshot',interactions:social,worldId,protocolVersion:WORLD_PROTOCOL_VERSION,revision,elapsed,worldPolicy:publicWorldPolicy(),crime:crime.snapshot(now()),screenings:screenings.snapshot(),cycling:{taken:takenSlots()},tables:[...tableGames.snapshot(),...cafeGames.snapshot()],darts:dartsGames.snapshot(),axes:axeGames.snapshot(),...(campus.enabled?{campus:campus.snapshot()}:{}),players:[...players.values()].map(publicPlayer),
+    return {type:'snapshot',interactions:social,worldId,protocolVersion:WORLD_PROTOCOL_VERSION,revision,elapsed,worldPolicy:publicWorldPolicy(),crime:crime.snapshot(now()),police:police.snapshot(),screenings:screenings.snapshot(),cycling:{taken:takenSlots()},tables:[...tableGames.snapshot(),...cafeGames.snapshot()],darts:dartsGames.snapshot(),axes:axeGames.snapshot(),...(lanternWalk.enabled?{lanternWalk:lanternWalk.snapshot()}:{}),...(campus.enabled?{campus:campus.snapshot()}:{}),players:[...players.values()].map(publicPlayer),
       chat:copy(chat).map(entry=>({...entry,authorName:accountName(entry.authorId,entry.authorName)})),
       builds:copy([...builds.values()]).map(item=>({...item,ownerName:accountName(item.ownerId,item.ownerName)})),wishes:copy(state.wishes),community,
       locals:state.locals.map(local=>({id:local.id,name:local.name,position:[...local.position],indoor:!!local.indoor,storeId:local.storeId??null,
@@ -1135,8 +1172,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   function checkpoint() {
     if (life?.planning) throw new Error('Cannot checkpoint an unfinished route search');
     interactions.prune();
-    tableGames.prune();cafeGames.prune();dartsGames.prune();axeGames.prune();screenings.prune(now());
-    const payload=JSON.parse(checkpointJSON({offices:offices.checkpoint(),campus:campus.checkpoint(),tableGames:tableGames.checkpoint(),cafeGames:cafeGames.checkpoint(),dartsGames:dartsGames.checkpoint(),axeGames:axeGames.checkpoint(),screenings:screenings.checkpoint(now()),worldPolicy,crime:crime.checkpoint(),revision,elapsed,state,interactions:interactions.snapshot(),players:[...players.values()].map(player=>{
+    tableGames.prune();cafeGames.prune();dartsGames.prune();axeGames.prune();lanternWalk.prune(now());screenings.prune(now());
+    const payload=JSON.parse(checkpointJSON({offices:offices.checkpoint(),campus:campus.checkpoint(),tableGames:tableGames.checkpoint(),cafeGames:cafeGames.checkpoint(),dartsGames:dartsGames.checkpoint(),axeGames:axeGames.checkpoint(),...(lanternWalk.enabled?{lanternWalk:lanternWalk.checkpoint()}:{}),screenings:screenings.checkpoint(now()),worldPolicy,crime:crime.checkpoint(),police:police.checkpoint(),revision,elapsed,state,interactions:interactions.snapshot(),players:[...players.values()].map(player=>{
       if(!player.performing)return player;
       const {performing,...rest}=player;
       return {...rest,position:stageStepDown(player)??performing.from};
@@ -1157,7 +1194,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
         ? {version:saved.version,worldFingerprint:saved.worldFingerprint,payload:saved.payload}
         : {version:saved.version,worldId:saved.worldId,worldFingerprint:saved.worldFingerprint,payload:saved.payload};
       if (!record(saved) || !fields(saved,legacy?['version','worldFingerprint','payload','checksum']:['version','worldId','worldFingerprint','payload','checksum'])
-        || !(legacy || [2,3,4,5,6,7,8,9,10,11,12,13,14,CHECKPOINT_VERSION].includes(saved.version) && saved.worldId===worldId)
+        || !(legacy || [2,3,4,5,6,7,8,9,10,11,12,13,14,15,CHECKPOINT_VERSION].includes(saved.version) && saved.worldId===worldId)
         || saved.worldFingerprint!==worldFingerprint || saved.checksum!==digest(envelope)) throw new Error('Invalid envelope');
       let recovered=decodeCheckpoint(JSON.stringify(saved.payload));
       if (sharedPopulation && recovered.state?.locals?.length!==residentIdentities.length) {
@@ -1264,6 +1301,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
         && typeof player.name==='string' && player.name.length<=80 && (player.appearance===undefined || Boolean(sharedAppearance(player.appearance)))
         && (player.sitting==null || saved.version>=3 && record(player.sitting) && fields(player.sitting,['buildId','slot'])
           && textId(player.sitting.buildId) && Number.isInteger(player.sitting.slot))
+        && (player.health===undefined || Number.isSafeInteger(player.health) && player.health>=0 && player.health<=CRIME_RULES.maxHealth)
         && point(player.position,3) && Number.isFinite(player.yaw)
         && ((player.levelId??null)===null && (player.buildingId??null)===null
           || interiorLevels.get(player.levelId)?.plan.buildingId===player.buildingId)
@@ -1285,6 +1323,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       // Darts lines are optional in the payload: older checkpoints restore with none.
       const nextDarts=dartsGames.validate(recovered.dartsGames??[]);
       const nextAxes=axeGames.validate(recovered.axeGames??[]);
+      // Only a world with the Commons destination has lanterns; older checkpoints restore dark.
+      const nextLanterns=lanternWalk.validate(recovered.lanternWalk);
       // Checkpoint v9 adds screenings; older ones restore with a fresh, stopped timeline.
       if((saved.version<9)!==(recovered.screenings===undefined))throw new Error('Invalid screening version');
       const nextScreenings=saved.version>=9?screenings.validate(recovered.screenings,now()):screenings.blank();
@@ -1296,6 +1336,13 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       if(!nextWorldPolicy || saved.version<14 && nextWorldPolicy.revision!==0)throw new Error('Invalid world policy');
       // v15 crime state (#597): rivals' health, wanted stars and private receipts. None before.
       const nextCrime=crime.validate(recovered.crime,saved.version);
+      const blankPolice={units:[],surrendered:[],cursor:0};
+      if(saved.version>=16 && recovered.police===undefined)throw new Error('Missing police state');
+      if(saved.version<16 && recovered.police && (recovered.police.units?.length || recovered.police.surrendered?.length || recovered.police.cursor))throw new Error('Invalid police version');
+      const policeSaved=saved.version>=16?recovered.police:recovered.police??blankPolice;
+      const restoredPoliceNavigation=policeSaved?.units?.length
+        ? createResidentNavigation(policeWorldData,{allowRoads:true,placedObjects:[...nextBuilds.values()].map(objectCollider).filter(Boolean)}) : policeNavigation;
+      const nextPolice=police.validate(policeSaved,new Set(nextPlayers.keys()),restoredPoliceNavigation);
       const recoveredEnvironment=createWalkingEnvironment(worldData,[...nextBuilds.values()].map(objectCollider).filter(Boolean));
       const recoveredUpperEnvironments=new Map();
       const recoveredEnvironmentFor=levelId=>{
@@ -1442,10 +1489,11 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       cafeGames.load(nextCafe);
       dartsGames.load(nextDarts);
       axeGames.load(nextAxes);
+      lanternWalk.load(nextLanterns);
       screenings.load(nextScreenings);
       interactions.restore(nextInteractions);
       life=nextLife;revision=recovered.revision;elapsed=recovered.elapsed;voiceIdentities.clear();
-      worldPolicy=nextWorldPolicy;worldPolicyAt=-Infinity;crime.load(nextCrime);
+      worldPolicy=nextWorldPolicy;worldPolicyAt=-Infinity;crime.load(nextCrime);police.load(nextPolice);policeNavigation?.setPlacedObjects(colliders);
       return {ok:true};
     } catch (error) {
       onFailure?.(checkpointFailureReason(error));
@@ -1455,11 +1503,12 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   // Trusted process/admin hook; deliberately absent from the command protocol.
   function reset() {
     interactions.clear();
-    crime.clear();
+    crime.clear();police.clear();
     tableGames.clear();
     cafeGames.clear();
     dartsGames.clear();
     axeGames.clear();
+    lanternWalk.clear();
     screenings.reset();
     const fresh=createCommunity(worldData,environment.rooms,{carriage:false,sharedPopulation});
     fresh.generation=state.generation+1;
@@ -1512,6 +1561,7 @@ export function migrateWorldCheckpoint({fromData,toData,checkpoint,worldId=DEFAU
   payload.worldPolicy=copy(previous.worldPolicy);
   // Wanted levels follow accounts; rivals stand in authored places, so they start fresh.
   payload.crime={...copy(previous.crime),rivals:[]};
+  payload.police={units:[],surrendered:[],cursor:0};
   // A creator region compiled before #491 walked on bare terrain; its revision compiles the
   // street datum (STREET.walkSurfaceOffset). Creations standing on that datum, outdoors or in
   // a built-in room, move with it. Those on a generated level keep its floor.

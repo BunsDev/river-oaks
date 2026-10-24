@@ -9,6 +9,7 @@ The pipeline downloads a bounded subset of public road and parcel geometry. It r
 | Ground elevation | [USGS 3DEP elevation service](https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer) | Houston 2024 catalog raster, NAVD88; observed DEM acquired |
 | Historical canopy footprint | [H-GAC Urban Forestry CIR layer 3](https://gis.h-gac.com/arcgis/rest/services/UrbanForestry/UrbanForestry_CIR_UA/MapServer/3) | Service labeled 2016; acquired footprint, no stems/heights/species |
 | District vegetation heights | [USGS 2018 Coastal LiDAR EPT](https://usgs-lidar-public.s3.amazonaws.com/TX_Coastal_B1_2018/ept.json) | District returns extracted and rendered; stems/species unverified. See [evidence](vegetation.md). |
+| District building heights | Same USGS 2018 LiDAR subset | Audit only: `scripts/audit_district_heights.py` compares each authored height with the class-6 roof p95 above nearby class-2 ground and writes `data/reports/district-heights.json`; it never changes `district.json`. Heights whose source starts with "authored" are reported as design overrides. Exit 0 passed, 1 a gap above 3 m, 2 blocked. |
 
 No Google Earth imagery is downloaded or redistributed. Regional land-cover forest classes cannot establish individual live-oak placement. The catalog does not imply that missing datasets have been licensed or acquired.
 

@@ -1,5 +1,7 @@
 # East Garden Commons blockout
 
+> Historical report for `east-garden-commons-blockout-1`. The current revision is `east-garden-commons-market-1`, which keeps every blockout element and ID and composes [Bayou Market Commons](bayou-market-commons.md) around them. The evidence below belongs to the blockout revision.
+
 The user explicitly approved East Garden Commons through native input: “Approve East Garden Commons”. This authorizes the proposed 70 × 80 m plaza, promenade, pavilion, seating and shared table activity. The larger world-expansion objective remains active. This report covers the first source blockout and shared movement contract, not an integrated playable release.
 
 ## Artifact and spatial contract

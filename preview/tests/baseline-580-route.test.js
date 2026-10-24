@@ -7,7 +7,7 @@ import { createWalkingEnvironment,createWalkingState,steerWalkingToward,stepWalk
 import { arrivalPedestrianRoute } from '../audit/baseline-580-route.js';
 
 test('both real arrivals physically exit roadway and reach the gateway through normal pedestrian routes',async()=>{
-  const world=await loadDistrictData({districtRevision:'east-garden-commons-blockout-1'}),nav=createResidentNavigation(world),env=createWalkingEnvironment(world);
+  const world=await loadDistrictData({districtRevision:'east-garden-commons-market-1'}),nav=createResidentNavigation(world),env=createWalkingEnvironment(world);
   const town=createSharedWorld(world);town.join({userId:'owner',name:'Owner'});town.join({userId:'alice',name:'Alice'});
   for(const player of town.snapshot().players) {
     const start=player.position.slice(0,2),gate=[-2685,-1334],route=arrivalPedestrianRoute(nav,start,gate);
@@ -29,6 +29,6 @@ test('both real arrivals physically exit roadway and reach the gateway through n
 });
 
 test('arrival route refuses inaccessible reserved land rather than granting roadway access',async()=>{
-  const world=await loadDistrictData({districtRevision:'east-garden-commons-blockout-1'}),nav=createResidentNavigation(world);
+  const world=await loadDistrictData({districtRevision:'east-garden-commons-market-1'}),nav=createResidentNavigation(world);
   assert.equal(arrivalPedestrianRoute(nav,world.walkSpawn.slice(0,2),[world.eastGardenCommons.edge+20,-1280]),null);
 });

@@ -54,3 +54,13 @@ test('crime state is optional for older towns but exact when present (#597)', ()
     crime({ targets: [rival({ position: [0, 0] })] }), crime({ targets: [rival({ staggered: 'yes' })] })])
     assert.equal(validTownSnapshot({ ...snapshot(), crime: bad }), false, JSON.stringify(bad));
 });
+
+test('police snapshots reject malformed units, over-cap responses and inconsistent capture state', () => {
+  const unit = { id: 'police:0', position: [1, 2, 0], yaw: 0, state: 'pursue', targetId: 'resident' };
+  const police = { units: [unit], surrendered: ['resident'], eligible:['resident'] };
+  assert.equal(validTownSnapshot({ ...snapshot(), police }), true);
+  for (const bad of [null, {}, { ...police, units: [...Array(7)].map((_, i) => ({ ...unit, id: `police:${i}` })) },
+    { ...police, units: [unit, unit] }, { ...police, surrendered: ['unknown'] },
+    ...[{ position: [1, 2, NaN] }, { state: 'teleport' }, { targetId: null }, { state: 'return' }].map(change => ({ ...police, units: [{ ...unit, ...change }] }))])
+    assert.equal(validTownSnapshot({ ...snapshot(), police: bad }), false, JSON.stringify(bad));
+});

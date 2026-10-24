@@ -74,6 +74,7 @@ pnpm run land --status                # who is queued
 
 - **The queue:** the queue and its lock live in the common Git directory, so every
   worktree shares them. An entry whose process has died is dropped.
+- **Waiting for a turn:** directory notifications wake a waiting lander when the queue changes. Every wake rechecks the owned entry and position under the existing lock. The 30-second timer remains a fallback for missing notifications, unavailable watchers and dead processes; hosted-check polling is unchanged.
 - **On its turn:** the lander updates the branch from `main` with GitHub's
   update-branch, whose commits are verified, and waits for Verify. If Verify fails
   it reruns the failed jobs once; if they fail again, it stops. Then it hands the
@@ -84,6 +85,27 @@ pnpm run land --status                # who is queued
 
 The queue only orders sessions that use it. Landing still needs the same merge
 authorization as any other merge.
+
+**Waiting on GitHub.** Every session on this machine shares one account's API
+quota, and it ran out several times on 2026-10-23, stalling landing and signing. Do
+not poll with `gh pr view`/`gh pr checks` loops or `gh pr checks --watch`: they
+spend GraphQL points on every turn (`gh pr checks` costs 2). Use
+`pnpm run pr:wait <pr>` (until merged) or `pnpm run pr:wait <pr> --until checks`
+(until every check on the current head finishes; exit 1 if one failed). It polls
+REST with the previous ETag, so an unchanged answer is a free 304, and it waits for
+the quota reset when fewer than 200 requests remain. The lander polls the same way.
+
+### Delivery cadence
+
+Reduce idle time around the existing checks before adding more orchestration. The [eight-PR timing audit](../superpowers/plans/2026-10-23-delivery-lifecycle.md#timing-baseline) found a median 25.3-minute Verify span, including reruns, and 32 seconds from its last job completing to merge. Shortening the lander's 30-second polling interval cannot remove that CI work. These measurements describe their recorded revisions, not a permanent performance guarantee.
+
+1. Before editing, identify the required local profiles, focused regressions and hosted checks from the changed scope, task instructions and current ruleset. Record the exact commands and why they are needed. Keep required coverage; a narrow pass cannot replace a broader gate. Full/Redis/browser verification remains required when the task or changed seam requires it; do not run another identical gate merely to restate an unchanged result.
+2. Pass all required precommit verification and review before making a signed commit. Then publish an authorized draft increment promptly. Only checks that the task and repository permit after commit may overlap hosted validation; label those pending in the PR. This cadence never overrides a stronger precommit gate or claims readiness before required checks pass. Respect the local heavy-command/browser queue; overlapping hosted CI does not authorize competing local browser runs.
+3. Associate every receipt with its actual source head and dirty state. Preserve first failures. Do not amend a verified source head solely to add passing timestamps: update the live register and PR evidence, then include any required final ledger checkpoint as an explicitly verified documentation increment. A main integration creates a new head and requires fresh hosted checks; earlier local evidence keeps its original scope.
+4. As soon as required local checks and review pass and existing authorization covers merge, mark the PR ready and run `pnpm run land <pr> --owner <session>`. Do not wait for another routine confirmation or for cleanup. Use one lander per PR. Poll its existing handle/process and inspect hosted jobs until it exits; an observation timeout does not justify a duplicate lander or verification run. Resolve concrete failures in scope and retain the first failing receipt.
+5. Confirm the actual PR merge and its ancestry on freshly fetched main before marking delivered. Record reviewed head, merge SHA, required check results and remaining acceptance limits. Then run the retirement rule below outside the landing queue. A green head, a successful lander invocation and a deployment status are separate evidence; none replaces actual merge confirmation.
+
+For timing comparisons record local check start/end, landing enqueue/turn, each main update, hosted run/attempt and per-job start/end, final required-check completion, merge confirmation and, separately, deployment availability. Name missing timestamps instead of deriving queue time from PR age or commit dates. Compare equivalent coverage and separate workflow changes, runner contention and reruns; modeled overlap savings are not an observed before/after improvement.
 
 ## Local browser runs take turns
 
@@ -182,6 +204,31 @@ ancestry. A failed safety check is a skip requiring reconciliation.
 Remote branch deletion and discarding distinct unfinished work need explicit scope
 approval. Local cleanup does not imply either. Preserve archive tags, bundles,
 evidence and the restoration manifest; do not prune them as part of the same round.
+
+### Proactive retirement rule
+
+Evaluate candidates at session start, immediately after each verified merge and before handoff. This is an agent lifecycle obligation, not an unattended deletion scheduler or new cleanup authority. When local retirement is authorized, finish every eligible candidate in the same session after delivery evidence is secured. Never hold the landing queue while archiving or pruning. Preserve blocked work and continue with independent candidates; report each blocker, responsible owner and exact next action.
+
+| Current evidence | Required action |
+| --- | --- |
+| Exact delivered head, fresh owner release and session review, no activity, all guard checks satisfied | Dry-run and apply guarded local retirement from outside the target. |
+| Delivered, but local evidence or ignored material remains | Preserve required material in a restricted external recovery archive, verify hashes and restoration, identify regenerable caches explicitly, then reassess the guard. Do not delete unknown ignored files. |
+| Active owner/session/process, dirty work, open PR, unfinished operation or uncertain ownership | Preserve. Ask the owner for a handoff/release when needed; record who must act and what evidence would unblock retirement. An expired claim is not a release. |
+| Squash/rebase/supersession or a local tip differing from the merged PR head | Account for the complete aggregate difference and preserve the exact tip. Keep blocked until supported tooling accepts the evidence; never move a ref solely to manufacture eligibility. |
+| Old branch, missing upstream/checkout, missing archive or expired lease | Investigate and name the missing evidence. None proves redundancy or abandonment. |
+| Distinct unfinished work | Preserve unless explicit cancellation authority covers that exact work. A cleanup request does not authorize cancellation. |
+
+For each proposed removal, record branch/full SHA, worktree, task, reviewed PR head, merge SHA, fresh ancestry/tree evidence, running-session review, process activity and tracked/untracked/ignored inventory. The owning session must release its task and record the exact-head retirement attestation described below; another session cannot invent that release. A missing CWD match is not proof of inactivity.
+
+Use the existing commands; placeholders below must be replaced with the inspected candidate. `project:inventory` classifies evidence but does not replace the prune guard. Run `--apply` only after reviewing that candidate's successful dry run and satisfying its authority, activity and recovery requirements:
+
+```sh
+pnpm run project:inventory --json --output /tmp/river-oaks-retirement-inventory.json
+pnpm run project:prune --branch <branch> --expected-head <full-sha>
+pnpm run project:prune --branch <branch> --expected-head <full-sha> --apply
+```
+
+After apply, verify the local ref and worktree registration are absent, the external manifest records successful restoration/removal and the register records the correct retired branches. Recount fresh state because other sessions may create work concurrently. For each retained row, keep its owner (or explicitly unknown owner), blocker and concrete next action in the task ledger or an identified inventory receipt. Mark delivered only with merge proof and retired only with removal and recovery proof. Leave remote refs and recovery archives untouched unless separately authorized.
 
 When the maintainer explicitly authorizes cancellation of local work untouched for
 a stated duration, `project:prune --cancel-stale --branch <branch> --expected-head
