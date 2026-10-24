@@ -15,7 +15,7 @@ test('only a process the kernel is dumping counts', () => {
 test('a renderer seen dumping core is ended with SIGKILL, so render-process-gone and the recovery need not wait for the collector', async () => {
   // A real process stands in for the crashed renderer; only its /proc status is synthetic.
   const child = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], { stdio: 'ignore' });
-  const exited = new Promise(resolve => child.once('exit', (code, signal) => resolve(signal)));
+  const exited = new Promise(resolve => child.once('exit', (code, signal) => resolve({ code, signal })));
   const ended = [];
   let dumping = false;
   const stop = watchCoreDumps({ pid: () => child.pid, readStatus: async id => (assert.equal(id, child.pid), status(dumping ? 1 : 0)), onEnd: id => ended.push(id), intervalMs: 10 });
@@ -24,7 +24,10 @@ test('a renderer seen dumping core is ended with SIGKILL, so render-process-gone
     assert.equal(child.exitCode, null, 'a healthy renderer is left alone');
     assert.deepEqual(ended, []);
     dumping = true;
-    assert.equal(await exited, 'SIGKILL');
+    const { code, signal } = await exited;
+    // Windows has no signals: process.kill ends the process and Node reports an exit code.
+    if (process.platform === 'win32') assert.notEqual(code, null, 'the process was ended');
+    else assert.equal(signal, 'SIGKILL');
     assert.deepEqual(ended, [child.pid]);
   } finally { stop(); child.kill('SIGKILL'); }
 });
