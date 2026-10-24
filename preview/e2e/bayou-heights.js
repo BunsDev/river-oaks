@@ -38,6 +38,23 @@ async page => {
     if(await tab.locator('#panel-toggle').getAttribute('aria-expanded')==='true')await tab.locator('#panel-toggle').click();
     if(await tab.locator('.visit-tools').evaluate(node=>node.open))await tab.locator('.visit-tools-toggle').click();
   };
+  const turn=async(tab,difference)=>{
+    const box=await tab.locator('#canvas-host').boundingBox(),x=box.x+box.width*.5,y=box.y+box.height*.4;
+    const drag=Math.max(-box.width*.35,Math.min(box.width*.35,-difference/.003));
+    await tab.mouse.move(x,y);await tab.mouse.down();await tab.mouse.move(x+drag,y,{steps:3});await tab.mouse.up();
+  };
+  // Turns a standing walker without moving it.
+  const EAST=-Math.PI/2;
+  const face=async(tab,heading,label)=>{
+    const deadline=Date.now()+120000;
+    for(;;){
+      const {yaw}=await tab.evaluate(()=>window.__riverCarriage().pose),difference=Math.atan2(Math.sin(heading-yaw),Math.cos(heading-yaw));
+      if(Math.abs(difference)<=.035)break;
+      if(Date.now()>deadline)throw new Error(`${label}: stalled ${JSON.stringify({heading,yaw})}`);
+      await turn(tab,difference);
+    }
+    console.log(`${label} reached`);
+  };
   const walk=async(tab,points,label)=>{
     const started=Date.now(),start=await self(tab),samples=[];
     const releaseKeys=async()=>{await tab.keyboard.up('KeyW');await tab.keyboard.up('ShiftLeft');};
@@ -49,12 +66,7 @@ async page => {
         if(distance<.15){await releaseKeys();break;}
         if(Date.now()>deadline)throw new Error(`${label}: stalled ${JSON.stringify({target,pose,refusals:await tab.evaluate(()=>window.__heightsRefusals)})}`);
         const heading=Math.atan2(-dx,-dz),difference=Math.atan2(Math.sin(heading-pose.yaw),Math.cos(heading-pose.yaw));
-        if(Math.abs(difference)>.035){
-          await releaseKeys();
-          const box=await tab.locator('#canvas-host').boundingBox(),x=box.x+box.width*.5,y=box.y+box.height*.4;
-          const drag=Math.max(-box.width*.35,Math.min(box.width*.35,-difference/.003));
-          await tab.mouse.move(x,y);await tab.mouse.down();await tab.mouse.move(x+drag,y,{steps:3});await tab.mouse.up();continue;
-        }
+        if(Math.abs(difference)>.035){await releaseKeys();await turn(tab,difference);continue;}
         // A lifecycle release clears runtime input; repeat keydown cannot resume it.
         if(pose.speed<.05)await releaseKeys();
         await tab.locator('#canvas-host').focus();
@@ -152,17 +164,18 @@ async page => {
     const after=await self(page),drift=Math.hypot(...after.position.map((v,i)=>v-before.position[i]));
     check(after.id===before.id&&drift<.5,'Reconnect keeps identity and Heights position');
     const reconnectMs=Date.now()-reconnectStart;
-    await Promise.all([walk(page,[at([201,1.5]),at([300,1.5])],'owner nineteenth'),walk(peer,[at([209,-1.5]),at([300,-1.5])],'alice nineteenth')]);
+    // Facing west from deep in Heights a client draws the District, the Commons and Heights at
+    // once, about seven million triangles a second on the CPU. In CI both clients render on one
+    // four-core runner, and one such view held still slows the other client's walk to a fifth of
+    // walking speed (see the ledger, docs/superpowers/plans/2026-10-24-next-district-586.md).
+    // A walker that overshoots its waypoint turns back west, so whoever waits faces east, the lighter view.
+    await Promise.all([walk(page,[at([201,1.5]),at([300,1.5])],'owner nineteenth').then(()=>face(page,EAST,'owner faces east')),
+      walk(peer,[at([209,-1.5]),at([300,-1.5])],'alice nineteenth').then(()=>face(peer,EAST,'alice faces east'))]);
     await capture(page,'nineteenth-and-yale');
 
-    // Home: back over the footbridge and the Commons to the District, one player at a time.
-    // Facing west from here a client draws the District, the Commons and Heights at once. Two
-    // CPU-rendered clients doing so together saturate the four-core CI runner: the hosted shard
-    // walked at 11-14 % of walking speed in one run and about 50 % in another (see the ledger,
-    // docs/superpowers/plans/2026-10-24-next-district-586.md). So the one who waits faces east, the lighter view.
-    await walk(page,[at([301,1.5])],'owner faces east');
+    // Home: back over the footbridge and the Commons to the District, one player at a time, for the same reason.
     await walk(peer,[at([165,-1.5]),at([100,-1.5]),at([-2,-1.5])],'alice home');
-    await walk(peer,[at([-1,-1.5])],'alice faces east');
+    await face(peer,EAST,'alice faces east at home');
     await walk(page,[at([165,1.5]),at([100,1.5]),at([-2,1.5])],'owner home');
     check((await self(page)).position[0]<edge&&(await self(peer)).position[0]<edge,'Both players walked back to the original District');
     check(await page.evaluate(()=>{const notices=window.__heightsNotices,heights=notices.indexOf('Entering Bayou Heights');
