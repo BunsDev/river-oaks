@@ -39,6 +39,14 @@ const LEASE_ENDINGS = {
   offer_expired: d => `This offer lapsed unanswered on ${d}.`,
   retired: d => `This lease ended on ${d}: the campus no longer offers this suite.`,
 };
+// The same endings told to the operator whose own offer or extension they overtook.
+const OPERATOR_ENDINGS = {
+  ...LEASE_ENDINGS,
+  revoked: d => `The lease ended on ${d}: a campus operator ended it.`,
+  released: d => `The lease ended on ${d}: the tenant gave the suite up.`,
+  declined: d => `The resident declined this offer on ${d}.`,
+  withdrawn: d => `A campus operator withdrew this offer on ${d}.`,
+};
 const REQUEST_ENDINGS = {
   cancelled: d => `You withdrew your request on ${d}.`,
   declined: d => `The campus operator declined your request on ${d}.`,
@@ -67,7 +75,8 @@ const STILL = { request: item => ['pending', 'offered'].includes(item.status), a
 export function campusReplayChange(action, result) {
   const holds = STILL[action], item = result?.lease ?? result?.request;
   if (!result?.replayed || !holds || !item || holds(item)) return null;
-  if (result.lease) return (LEASE_ENDINGS[item.endedReason] ?? (d => `This lease ended on ${d}.`))(day(item.endedAt));
+  const endings = action === 'issue' || action === 'renew' ? OPERATOR_ENDINGS : LEASE_ENDINGS;
+  if (result.lease) return (endings[item.endedReason] ?? (d => `This lease ended on ${d}.`))(day(item.endedAt));
   return (REQUEST_ENDINGS[item.status] ?? (d => `Your request closed on ${d}.`))(day(item.closedAt));
 }
 

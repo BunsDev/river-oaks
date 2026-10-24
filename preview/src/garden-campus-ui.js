@@ -10,7 +10,9 @@
 // the server's reason. The server keeps no record of a former guest, so the page reports
 // guest access that vanished between two of its own lists. While the page holds suite access,
 // a change in the town's leased suites lists again once, so someone walked out of a suite by
-// an expiry, revocation or removal is told why.
+// an expiry or revocation is told why. A guest the tenant removes leaves the leased suites
+// unchanged, so that page learns it at its next list. Everything here belongs to one account
+// in one world: another sign-in on the page starts from nothing.
 import { createOfficeDeskUI } from './office-desk-ui.js';
 import { CAMPUS_OUTCOMES_SHOWN, campusDefaultTerm, campusDirectory, campusLostGuestAccess, campusReplayChange, createCampusCommands } from './garden-campus-model.js';
 import './garden-campus.css';
@@ -45,8 +47,11 @@ export function createGardenCampusUI({ host, panelHost, getWorld, getMultiplayer
   let commands = null, worldId = null, last = null, serverNow = Date.now(), listedAt = Date.now(), busy = false, lastAnswer = null, sent = [];
   // Suites this page may enter, guest leases it left on purpose, endings only it knows, and
   // a fence so an older list never renders over a newer one.
-  let entitled = new Set(), notices = [], listSeq = 0, listing = null, learned = false;
+  let entitled = new Set(), notices = [], listSeq = 0, listing = null, learned = false, owed = false, account = null;
   const left = new Set();
+  const whoami = () => `${mp()?.identity?.id ?? ''}@${mp()?.snapshot?.worldId ?? 'river-oaks'}`;
+  const forget = () => { lastAnswer = null;entitled = new Set();notices = [];left.clear();learned = false;owed = false;last = null;retry.hidden = true;setCampusSuiteGate(null);
+    body.replaceChildren();status.textContent = '';if (dialog.open) dialog.close(); };
   // The server's clock now, from its last answer: dates the dialog proposes stay valid however long it stays open.
   const serverClock = () => serverNow + (Date.now() - listedAt);
   const ensureCommands = () => {
@@ -56,10 +61,14 @@ export function createGardenCampusUI({ host, panelHost, getWorld, getMultiplayer
   };
   const residents = () => (mp()?.snapshot?.players ?? []).filter(player => player.id !== mp()?.identity?.id).map(player => ({ id: player.id, name: player.name }));
   async function refresh({ announce = false } = {}) {
-    const seq = ++listSeq;
+    const seq = ++listSeq, asked = whoami();if (announce) owed = true;
     const answer = await ensureCommands().list().catch(error => ({ ok: false, message: error.message }));
-    if (seq !== listSeq) return true; // a newer list answers for this one
+    // A newer list answers for this one, and owes its announcement; an answer for an account
+    // that has since signed out is nobody's.
+    if (seq !== listSeq || asked !== whoami()) return true;
     if (!answer?.ok) { status.textContent = answer?.message ?? 'The campus directory is unavailable.';return false; }
+    if (account !== asked) { if (account !== null) forget();account = asked; }
+    const announcing = owed;owed = false;
     const before = lastAnswer, had = entitled;
     serverNow = answer.serverTimeMs ?? Date.now();listedAt = Date.now();lastAnswer = answer.campus;
     const lost = campusLostGuestAccess(before, answer.campus, { left, at: serverNow });
@@ -68,7 +77,7 @@ export function createGardenCampusUI({ host, panelHost, getWorld, getMultiplayer
     const view = campusDirectory(answer.campus, { now: serverNow, notices });render(view);
     // The page predicts suite doors from this resident's own access; the server still decides every step (#508).
     entitled = new Set((answer.campus.access ?? []).map(entry => entry.unitId));setCampusSuiteGate(unitId => entitled.has(unitId));
-    if (announce) {
+    if (announcing) {
       // Access this page held and lost since its last list: the guest notice, or the lease's own ending.
       const gone = [...had].filter(unitId => !entitled.has(unitId) && !lost.some(item => item.unitId === unitId));
       const lines = [...lost, ...gone.map(unitId => view.outcomes.find(item => item.unitId === unitId && item.kind === 'lease')
@@ -217,6 +226,9 @@ export function createGardenCampusUI({ host, panelHost, getWorld, getMultiplayer
     playProvider,
     setWorld(world) { panel.hidden = !world?.gardenCampus;if (!world?.gardenCampus && dialog.open) dialog.close(); },
     onSnapshot(snapshot) {
+      // Another account or world on this page: drop the former one's suites before anything else.
+      const who = whoami();
+      if (account !== null && who !== account) { forget();listSeq++;account = who; }
       // Another resident's lease changes what is available: an open directory lists again.
       // So does any change while this page holds suite access: an expiry or revocation shows here.
       const leased = JSON.stringify(snapshot?.campus?.leased ?? null);

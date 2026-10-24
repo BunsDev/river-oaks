@@ -245,7 +245,12 @@ was answered with an offer is left out, because the offer's own row continues it
   learned at the next list.
 - **Retries.** A replayed retry answers with the record as it is now. If that record no
   longer shows what the action did (an accepted lease since ended, a request since
-  declined), the dialog says what happened instead of reporting success.
+  declined), the dialog says what happened instead of reporting success. An operator's
+  replayed offer or extension is told in the operator's terms ("the tenant gave the suite
+  up").
+- **One account at a time.** The page keeps these lists for the account and world that
+  asked. When another account signs in on the page (or the world changes), it drops them,
+  closes an open dialog, and stops predicting suite doors until its own first list.
 
 ## Limits of this delivery
 

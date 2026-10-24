@@ -212,11 +212,12 @@ test('with the dialog closed, a tenant whose lease the operator ends is told why
   t.ui.dispose();
 });
 
-test('a guest whose access disappears is told in the panel and the dialog; leaving on purpose is not news', async () => {
+test('a guest whose host’s lease ends is told in the panel and the dialog; leaving on purpose is not news', async () => {
   const guest = lease('T1-201', { status: 'active', role: 'guest', tenantName: 'Alice' }), other = lease('T1-202', { status: 'active', role: 'guest', tenantName: 'Bo' });
-  const afterRemoval = answer({ leased: ['T1-201', 'T1-202'], leases: [other], access: [['T1-202', 'guest']] });
+  // Alice's lease ends: the server clears its guests and T1-201 leaves the town's leased suites.
+  const afterEnd = answer({ leased: ['T1-202'], leases: [other], access: [['T1-202', 'guest']] });
   const t = scripted([answer({ leased: ['T1-201', 'T1-202'], leases: [guest, other], access: [['T1-201', 'guest'], ['T1-202', 'guest']] }),
-    afterRemoval, afterRemoval, answer({ leased: ['T1-201', 'T1-202'], leases: [], access: [] })]);
+    afterEnd, afterEnd, answer({ leased: ['T1-202'], leases: [], access: [] })]);
   t.ui.onSnapshot({ campus: { leased: ['T1-F2-W-S', 'T1-F2-W-N'] }, players: [] });await settle();
   await t.open();t.dialog().close();
   t.ui.onSnapshot({ campus: { leased: ['T1-F2-W-N'] }, players: [] });await settle();
@@ -228,6 +229,52 @@ test('a guest whose access disappears is told in the panel and the dialog; leavi
   assert.equal(t.status(), 'You left this suite.');
   assert.deepEqual(t.endings(), ['Suite T1-201: Your guest access ended: Alice removed you, or the lease ended.']);
   assert.equal(t.notices.length, 1, 'no notice for leaving on purpose');
+  t.ui.dispose();
+});
+
+test('a guest the tenant removes learns it at the page’s next list, since the town’s leased suites do not change', async () => {
+  const guest = lease('T1-201', { status: 'active', role: 'guest', tenantName: 'Alice' });
+  const t = scripted([answer({ leased: ['T1-201'], leases: [guest], access: [['T1-201', 'guest']] }), answer({ leased: ['T1-201'], leases: [], access: [] })]);
+  t.ui.onSnapshot({ campus: { leased: ['T1-F2-W-S'] }, players: [] });await settle();
+  await t.open();t.dialog().close();
+  const lists = t.lists();
+  t.ui.onSnapshot({ campus: { leased: ['T1-F2-W-S'] }, players: [{ id: 'resident' }] });await settle();
+  assert.equal(t.lists(), lists, 'an unchanged town sends no list');
+  await t.open();
+  assert.deepEqual(t.endings(), ['Suite T1-201: Your guest access ended: Alice removed you, or the lease ended.']);
+  t.ui.dispose();
+});
+
+test('another account signing in on the page never sees or hears the former account’s suites', async () => {
+  const guest = lease('T1-201', { status: 'active', role: 'guest', tenantName: 'Alice' });
+  const t = scripted([answer({ leased: ['T1-201'], leases: [guest], access: [['T1-201', 'guest']] }), answer({ leased: ['T1-201'] })]);
+  t.ui.onSnapshot({ campus: { leased: ['T1-F2-W-S'] }, players: [] });await settle();
+  await t.open();
+  assert.match(t.text(t.dialog()), /Guest of Alice/);
+  // The resident signs out with the dialog open and a visitor signs in on the same page.
+  t.client.identity = { id: 'visitor' };
+  t.ui.onSnapshot({ campus: { leased: ['T1-F2-W-S'] }, players: [{ id: 'visitor' }] });await settle();
+  assert.equal(t.dialog().open, false, 'the former account’s dialog closes');
+  assert.doesNotMatch(t.text(t.dialog()), /Alice/, 'and keeps none of its rows');
+  const lists = t.lists();
+  t.ui.onSnapshot({ campus: { leased: [] }, players: [{ id: 'visitor' }] });await settle();
+  assert.equal(t.lists(), lists, 'the visitor holds no access, so the town’s changes send no list');
+  assert.deepEqual(t.notices, [], 'nothing is announced to the visitor');
+  await t.open();
+  assert.deepEqual(t.endings(), [], 'the visitor sees no ending of the former account’s');
+  assert.doesNotMatch(t.text(t.dialog()), /Alice|guest access/);
+  t.ui.dispose();
+});
+
+test('a background list overtaken by a newer one still says what was lost', async () => {
+  const active = lease('T1-201', { status: 'active', role: 'tenant' });
+  const t = scripted([answer({ leased: ['T1-201'], leases: [active], access: [['T1-201', 'tenant']] }),
+    answer({ leases: [{ ...active, status: 'ended', endedAt: NOW, endedReason: 'revoked', version: 2 }] })]);
+  t.ui.onSnapshot({ campus: { leased: ['T1-F2-W-S'] }, players: [] });await settle();
+  await t.open();t.dialog().close();
+  // The town changes and, before that list answers, the resident opens the dialog.
+  t.ui.onSnapshot({ campus: { leased: [] }, players: [] });await t.open();
+  assert.equal(t.status(), 'Suite T1-201: The lease ended on 2026-10-24: the campus operator ended it.');
   t.ui.dispose();
 });
 

@@ -187,3 +187,14 @@ test('a replayed request since declined, through the real server, says so; a rep
   assert.equal(campusReplayChange('request', { ...replay, replayed: false }), null, 'only replays are checked');
   assert.equal(campusReplayChange('request', { ok: true, replayed: true, request: null }), null, 'a record the server no longer keeps cannot be judged');
 });
+
+test('a replayed operator action says what the tenant or the campus did, not what the operator did', () => {
+  const ended = (endedReason, status = 'ended') => ({ ok: true, replayed: true, lease: { status, endedReason, endedAt: Date.UTC(2026, 9, 24) } });
+  assert.equal(campusReplayChange('renew', ended('released')), 'The lease ended on 2026-10-24: the tenant gave the suite up.');
+  assert.equal(campusReplayChange('issue', ended('declined')), 'The resident declined this offer on 2026-10-24.');
+  assert.equal(campusReplayChange('issue', ended('offer_expired')), 'This offer lapsed unanswered on 2026-10-24.');
+  assert.equal(campusReplayChange('renew', ended('revoked')), 'The lease ended on 2026-10-24: a campus operator ended it.');
+  assert.equal(campusReplayChange('renew', ended('expired')), 'The lease ended on 2026-10-24: its term ran out.');
+  // The tenant's own actions keep the tenant's wording.
+  assert.equal(campusReplayChange('accept', ended('released')), 'The lease ended on 2026-10-24: you gave the suite up.');
+});
