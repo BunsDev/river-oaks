@@ -55,8 +55,12 @@ export const KIT_MATERIALS = Object.freeze({
   // travertine, black steel, satin bronze, and the District's deep-teal lamp metal.
   'granite-sett': { surface: 'pavement', color: '#70726f', tile: 1.8, textureContrast: .7 },
   porcelain: { color: '#f5eee0', roughness: .55 },
-  limestone: { surface: 'stone', color: '#f3eadb', tile: 3.2, textureContrast: .26 },
-  travertine: { surface: 'stone', color: '#eadabf', tile: 2.4, textureContrast: .38 },
+  // Honed ashlar: the running-bond pavement map at large-format scale reads as fine
+  // stone coursing, without the weathered sandstone's mottling.
+  limestone: { surface: 'pavement', color: '#f4efe6', tile: 5, textureContrast: .32 },
+  travertine: { surface: 'pavement', color: '#ecdfca', tile: 4, textureContrast: .42 },
+  // Warm limestone inlay bands in the granite lane.
+  'inlay-limestone': { color: '#b9b0a2', roughness: .5 },
   'steel-black': { color: '#1b1d1f', roughness: .36, metalness: .7 },
   'bronze-satin': { color: '#7a6040', roughness: .3, metalness: .85 },
   'lamp-teal': { color: '#1f454a', roughness: .5, metalness: .65 },
@@ -109,7 +113,7 @@ export const KIT_PIECES = Object.freeze({
   'street/intersection': { family: 'street', collision: 'none', material: 'lane-brick', triangles: 40 },
   'street/crosswalk': { family: 'street', collision: 'none', material: 'lane-brick', triangles: 160 },
   // Flush inlays in a shared lane: porcelain cross bands and black-steel channel drains.
-  'street/band': { family: 'street', collision: 'none', material: 'porcelain', triangles: 8 },
+  'street/band': { family: 'street', collision: 'none', material: 'inlay-limestone', triangles: 16 },
   'street/channel': { family: 'street', collision: 'none', material: 'steel-black', triangles: 8 },
   'street/court': { family: 'street', collision: 'surface', material: 'plaza-stone', triangles: 200 },
   'building/shell': { family: 'building', collision: 'shell', triangles: 2400 },

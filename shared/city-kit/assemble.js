@@ -201,7 +201,8 @@ function assembleStreet(recipe, street, seed, pieces, walks) {
   pieces.push({ id: `${base}/lane`, piece: 'street/shared-lane', rect: [xa, mm(y - half), xb, mm(y + half)], ...(street.paving ? { material: street.paving } : {}) });
   // Porcelain cross bands inlaid in the lane, and flush channel drains inside each curb.
   if (street.bands) for (let x = xa + street.bands.offset, index = 0; x <= xb - .5; x += street.bands.spacing)
-    pieces.push({ id: `${base}/band-${index++}`, piece: 'street/band', rect: [mm(x - .25), mm(y - half + .3), mm(x + .25), mm(y + half - .3)] });
+    // A pair of slim inlays, 0.12 m wide and 0.3 m apart, reads as a laid detail, not a road marking.
+    for (const offset of [-.21, .21]) pieces.push({ id: `${base}/band-${index++}`, piece: 'street/band', rect: [mm(x + offset - .06), mm(y - half + .3), mm(x + offset + .06), mm(y + half - .3)] });
   if (street.drains) for (const [side, sign] of [['n', 1], ['s', -1]])
     pieces.push({ id: `${base}/drain-${side}`, piece: 'street/channel', rect: sign > 0 ? [xa, mm(y + half - .3), xb, mm(y + half - .12)] : [xa, mm(y - half + .12), xb, mm(y - half + .3)] });
   pieces.push({ id: `${base}/sidewalk-n`, piece: 'street/sidewalk', rect: [xa, mm(y + half), xb, mm(y + outer)] });

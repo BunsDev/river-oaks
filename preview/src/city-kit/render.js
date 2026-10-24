@@ -20,6 +20,8 @@ const canvas2d = (width, height) => headless ? null : Object.assign(document.cre
 const RENDER_MATERIALS = {
   // A dim, warm shop interior seen through storefront glass.
   'shop-interior': { color: '#15100c', roughness: .95, emissive: '#8a5228', emissiveIntensity: .16 },
+  // A lit boutique behind gallery glass: warm ivory walls, brighter than a street shop.
+  'gallery-interior': { color: '#4a3f35', roughness: .9, emissive: '#f2d6ae', emissiveIntensity: .3 },
   // Market stall produce; peaches and lemons reuse the apricot canvas and brass.
   'produce-red': { color: '#a8382c', roughness: .55 },
   'produce-green': { color: '#5d8a3a', roughness: .7 },
@@ -233,10 +235,16 @@ function renderShell(piece, batch, detail, m, ground, signs) {
       if (width < .8) continue;
       put(detail, trim, mid, -recess + .08, ground + .06, width, .12, .12);
       put(detail, glass, mid, -recess + .05, glassMid, width, glassHeight, .03);
-      put(detail, m('shop-interior'), mid, -recess + .015, glassMid, width, glassHeight, .01);
-      for (const level of [.95, 1.75, 2.55]) put(detail, m('metal-brass'), mid, -recess + .03, ground + level, width * .8, .06, .01);
-      for (let k = 0, lights = Math.max(1, Math.floor(width / 1.5)); k < lights; k++) put(detail, m('lamp-glow'), u0 + width * (k + .5) / lights, -recess + .03, ground + 3.35, .26, .1, .01);
-      const panes = Math.max(2, Math.round(width / 1.6));
+      put(detail, m('gallery-interior'), mid, -recess + .015, glassMid, width, glassHeight, .01);
+      const panes = Math.max(2, Math.round(width / 1.6)), pane = width / panes;
+      // Per pane: a lit display niche with two brass shelves, and a pendant above it.
+      for (let k = 0; k < panes; k++) {
+        const centre = u0 + pane * (k + .5);
+        if (i === Math.floor(bays / 2) && k === Math.floor(panes / 2)) continue;
+        for (const level of [1.05, 1.7]) put(detail, m('metal-brass'), centre, -recess + .03, ground + level, pane * .55, .05, .01);
+        put(detail, m('porcelain'), centre, -recess + .03, ground + .45, pane * .6, .7, .01);
+        put(detail, m('lamp-glow'), centre, -recess + .03, ground + 3.3, .22, .09, .01);
+      }
       for (let k = 0; k <= panes; k++) put(detail, trim, u0 + width * k / panes, -recess + .08, glassMid, .05, glassHeight, .08);
       put(detail, trim, mid, -recess + .08, ground + 3.77, width + .05, .07, .08);
       if (i === Math.floor(bays / 2)) { put(detail, accent, mid + .32, -recess + .11, ground + 1.15, .035, 1.6, .05); put(detail, accent, mid - .32, -recess + .11, ground + 1.15, .035, 1.6, .05); }
@@ -252,7 +260,7 @@ function renderShell(piece, batch, detail, m, ground, signs) {
       put(detail, trim, mid, -recess + .08, ground + .25, width, .5, .12);
       put(detail, glass, mid, -recess + .05, ground + 1.95, width, 2.9, .03);
       // A warm interior just behind the glass, in front of the core wall.
-      put(detail, m('shop-interior'), mid, -recess + .015, ground + 1.95, width, 2.9, .01);
+      put(detail, m(style.signPalette === 'noir' ? 'gallery-interior' : 'shop-interior'), mid, -recess + .015, ground + 1.95, width, 2.9, .01);
       // Display shelves and pendant lights read as a furnished shop through the glass.
       for (const level of [1.05, 1.85]) put(detail, m('metal-brass'), mid, -recess + .03, ground + level, width * .78, .1, .01);
       for (let k = 0, lights = Math.max(1, Math.floor(width / 1.8)); k < lights; k++) put(detail, m('lamp-glow'), u0 + width * (k + .5) / lights, -recess + .03, ground + 3.0, .32, .14, .01);
