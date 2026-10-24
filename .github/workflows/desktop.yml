@@ -101,7 +101,8 @@ jobs:
         id: electron
         run: echo "version=$(node -p "require('./package.json').devDependencies.electron")" >> "$GITHUB_OUTPUT"
       - name: Electron download cache
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        id: electron-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/electron-cache
           key: electron-${{ runner.os }}-${{ runner.arch }}-${{ steps.electron.outputs.version }}
@@ -110,10 +111,19 @@ jobs:
       # @electron/get's debug lines record whether the zip came from the cache.
       - name: Package the desktop app (unsigned, host platform and arch)
         if: ${{ !cancelled() }}
+        id: package
         env:
           electron_config_cache: ${{ runner.temp }}/electron-cache
           DEBUG: '@electron/get:*'
         run: pnpm run desktop:package
+      # Saved as soon as packaging has verified the zip, so a later e2e failure
+      # does not leave the next run on this runner without it.
+      - name: Save the Electron download cache
+        if: ${{ !cancelled() && steps.package.outcome == 'success' && steps.electron-cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/electron-cache
+          key: electron-${{ runner.os }}-${{ runner.arch }}-${{ steps.electron.outputs.version }}
       - name: Fuse wire and asar contents match desktop/fuses.js and desktop/package-files.js
         if: ${{ !cancelled() }}
         id: check
@@ -382,7 +392,8 @@ jobs:
         id: electron
         run: echo "version=$(node -p "require('./package.json').devDependencies.electron")" >> "$GITHUB_OUTPUT"
       - name: Electron download cache
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        id: electron-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/electron-cache
           key: electron-${{ runner.os }}-${{ runner.arch }}-${{ steps.electron.outputs.version }}
@@ -390,6 +401,12 @@ jobs:
         env:
           electron_config_cache: ${{ runner.temp }}/electron-cache
           DEBUG: '@electron/get:*'
+      - name: Save the Electron download cache
+        if: ${{ steps.electron-cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/electron-cache
+          key: electron-${{ runner.os }}-${{ runner.arch }}-${{ steps.electron.outputs.version }}
       - run: pnpm run desktop:package:check
       - uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
         with:
