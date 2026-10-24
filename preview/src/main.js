@@ -1,3 +1,10 @@
+import { COMMONS_REVISION } from '../../shared/east-garden-commons-layout.js';
+import { attachEastGardenCommons } from './east-garden-commons-world.js';
+import { buildEastGardenCommons } from './east-garden-commons.js';
+import { rivalFigures, policeFigures } from './crime-ui.js';
+import { createLanternWalkClient } from './lantern-walk.js';
+import { createCharacterStudio } from './character-studio.js';
+import { characterStudioShown } from './character-studio-state.js';
 import { createOfficeUI } from './office-ui.js';
 import { createIpicScreening } from './ipic-screening-ui.js';
 import { IPIC_DARTS, IPIC_INTERIOR, atIpicDartsLine } from './ipic-plan.js';
@@ -20,6 +27,7 @@ import { warnIfSoftwareRendering } from './hardware-acceleration.js';
 import './hardware-acceleration.css';
 import { bindRenderVisibility } from './render-lifecycle.js';
 import { createRenderAudit } from './render-audit.js';
+import { createDrawCensus } from './draw-census.js';
 import { localToScene, terrainHeight } from './geometry.js';
 import { setupThemeControls } from './theme.js';
 import { configureMaterials, physicalSurface, loadEnvironment } from './materials.js';
@@ -40,6 +48,9 @@ import { canCullExterior, canCullIpicAuditorium, renderOnly, renderWithoutExteri
 import { sharedRoomSummary } from './shared-population.js';
 import { storeRoomsFor } from './store-rooms.js';
 import { attachDistrictGalleryPlan } from './district-interior-contract.js';
+import { DISTRICT_REVISION_GARDENS, attachGardenCampus, campusDoorSites, campusGroundAt, campusGroundCutout, campusSuiteSeatSites } from './garden-campus-district.js';
+import { campusLevelRoom } from './garden-campus-levels.js';
+import { createGardenCampusUI } from './garden-campus-ui.js';
 import { buildFoliage, buildObservedFoliage } from './foliage.js';
 import { castShadowsFromProxies } from './landscape-models.js';
 import { validateVegetation } from './vegetation.js';
@@ -49,7 +60,7 @@ import { buildStreetFurniture } from './street-furniture.js';
 import { buildPlazaSalon } from './plaza-salon.js';
 import { createPlazaTableGames, seatAtTable } from './plaza-table-games.js';
 import { createPlazaStage } from './plaza-stage.js';
-import { plazaSalonPlan } from './plaza-salon-plan.js';
+import { plazaSalonPlan, winePongPoint } from './plaza-salon-plan.js';
 import { createPlazaDominoes, seatAtCafe } from './plaza-dominoes.js';
 import { createPlazaHearts } from './plaza-hearts.js';
 import { createPlazaSpades } from './plaza-spades.js';
@@ -101,6 +112,7 @@ import { DEFAULT_WORLD_ID, worldIdFromSearch } from './world-contract.js';
 import './hud-glass.css';
 import './game-hud.css';
 import './settings-dialog.css';
+import './play-rail-menu.css';
 import { createPlazaBicycle } from './plaza-bicycle.js';
 import { createCyclingLeaderboard } from './cycling-leaderboard.js';
 import './cycling-leaderboard.css';
@@ -126,8 +138,11 @@ const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matc
 // but leaves material/lighting quality to full-render and WebGL smoke runs.
 // Never enable this profile in a production build.
 const softwareAcceptance = import.meta.env.DEV && import.meta.env.VITE_SHARED_SOFTWARE_RENDERING === '1';
-const renderAudit = import.meta.env.DEV && new URLSearchParams(location.search).get('render-audit') === '1' ? createRenderAudit() : null;
+const renderAudit = (import.meta.env.DEV || import.meta.env.MODE === 'ios-probe') && new URLSearchParams(location.search).get('render-audit') === '1'
+  ? createRenderAudit({ limit: import.meta.env.DEV ? 120000 : 7200 }) : null;
 let exteriorCulling = true; // A development audit can switch it off to compare frames.
+let pendingDrawCensus = null; // A development audit attributes the next frame's draws.
+const leanShadowRestore = new Map(); // Sun-shadow casters a development audit switched off.
 // Inside IPIC's auditorium, facing away from its only partition, nothing outdoors can be seen (#428),
 // nor any other store's interior or people (#431): the frame keeps only IPIC's own.
 function ipicAuditoriumCull() {
@@ -148,14 +163,21 @@ const aoTailShedding = new URLSearchParams(location.search).get('aotail') === 'o
 const officeSkylineOff = import.meta.env.DEV && new URLSearchParams(location.search).get('office-skyline') === 'off';
 let auditCamera = null;
 let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, storePeople, interiorsLayer, generatedInteriors;
+// East Garden Commons and its assembled destination, when the revision composes them.
+let commonsScene = null;
+const lanternWalk = createLanternWalkClient({ getLayout: () => world?.eastGardenCommons ?? null, getPose: () => walking?.getPose(), getScene: () => commonsScene,
+  getSnapshot: () => multiplayer?.snapshot?.lanternWalk ?? null,
+  send: message => multiplayer?.command(message) ?? Promise.resolve({ ok: false, message: 'Connect to the town to light the lanterns together.' }) });
 let districtUI, environmentAssets = null, storefrontReflections = null, roomGroundClip = null;
 let currentAtmosphere = null; // the time-of-day light updateAtmosphere last applied; an office visit reads it
 let placesUI = null, landmarks = null;
 let pendingSharedPlace = null, sharedPlaceInFlight = false;
 let worldPortal = null;
 let worldRegionSha256 = null;
+// The default district's revision once loaded (#507): null is the garage; undefined while loading.
+let worldDistrictRevision;
 let landmarkAccountId = null;
-let playerAvatar, officeUI, ipicScreening;
+let playerAvatar, characterStudio, officeUI, ipicScreening, campusUI;
 let multiplayer, remotePlayers, buildLayer, buildControls, seatingControls, seatAndWater;
 let plazaSalon = null, plazaGames = null, plazaDominoes = null, plazaHearts = null, plazaBackgammon = null, cafeGame = 'dominoes', plazaStage = null, plazaBicycle = null, cyclingBoard = null;
 let plazaJenga = null, plazaYacht = null, benchGame = 'jenga';
@@ -191,6 +213,7 @@ const sun = new THREE.DirectionalLight('#fff2d8', 2.5);
 const ambient = new THREE.HemisphereLight('#eef4eb', '#73806c', 2.3);
 const clock = new THREE.Timer();
 const sunOffset = new THREE.Vector3();
+const sunDirection = new THREE.Vector3(); // the direction sunlight travels
 const shadowCenter = new THREE.Vector3();
 const reflectionPosition = new THREE.Vector3();
 // A small pool of warm point lights follows the visitor into the nearest boutiques.
@@ -268,7 +291,7 @@ function initializeRenderer() {
       const result = await multiplayer.command({ type: 'interiorLevel', portalId: portal.id });
       if (result.ok && result.player) walking.applyServerPose(result.player);
       return result;
-    }, canEnterStore, getInteraction: () => seatAndWater?.interaction() ?? plazaBicycle?.prompt() ?? null, getPlay: playAction, getVoice: () => multiplayer?.voice ?? null });
+    }, canEnterStore, getInteraction: () => seatAndWater?.interaction() ?? plazaBicycle?.prompt() ?? lanternWalk.interaction() ?? null, getPlay: playAction, getVoice: () => multiplayer?.voice ?? null });
   storeIntros = createStoreIntros({ camera, host,
     claim: storeId => multiplayer.claimStoreIntro(storeId),
     onHalt: () => walking.halt(), onResume: () => walking.update(0, performance.now()),
@@ -287,6 +310,23 @@ function initializeRenderer() {
     },
     requestVehicleExit: position => multiplayer.travel({position:[position[0],-position[2]]}),
     getPortrait: id => portraits.portrait(id) });
+  if(characterStudioShown(import.meta.env)){
+    characterStudio = createCharacterStudio({ownerId:document.body.dataset.accountId,
+      getDefinition:()=>playerAvatar.definition,
+      accountTransport:{read:()=>multiplayer.characterRequest('read'),write:(action,body)=>multiplayer.characterRequest(action,body),
+        select:(command,selection)=>multiplayer.command({...command,selection})},
+      canOpen:()=>Boolean(multiplayer?.connected&&playerAvatar?.ready&&!loading&&!multiplayer?.traveling&&!photoMode?.active&&!officeUI?.active),
+      canStayOpen:()=>Boolean(multiplayer?.connected&&!loading&&!multiplayer?.traveling&&!photoMode?.active&&!officeUI?.active),
+      onOpen:()=>walking.halt(),reducedMotion});
+    document.querySelector('.character-picker').before(characterStudio.trigger);
+  }
+  // Camera perspective is a preference, so it lives in Settings › Controls; V still
+  // switches it in play. The full key list is one button away there too.
+  {
+    const keys=document.createElement('button');keys.type='button';keys.className='settings-commands';keys.textContent='All commands & keys';
+    keys.addEventListener('click',()=>{document.querySelector('#settings-dialog [aria-label="Close settings"]')?.click();document.querySelector('.commands-toggle')?.click();});
+    sidebarSections.addSettings('Controls','How you see the world, and the keys for everything.',[sidebarSections.group('Camera',[$('#player-camera')]),sidebarSections.group('Keys',[keys])],{after:'Graphics'});
+  }
   seatAndWater = createSeatAndWater({ walking, playerAvatar, getLocals: () => community.state?.locals, getMultiplayer: () => multiplayer, isBusy: () => seatingControls?.busy() ?? false });
   // Seated at a plaza chess table, X plays chess, checkers or Connect Four; the table mirrors the game.
   plazaGames = createPlazaTableGames({ getMirror: () => plazaSalon?.userData.chess ?? null, getFourMirror: () => plazaSalon?.userData.connectFour ?? null, getMorrisMirror: () => plazaSalon?.userData.morris ?? null, getSeat: () => seatAtTable(walking?.getPose()),
@@ -359,7 +399,10 @@ function initializeRenderer() {
   };
   const longTable = () => (world && plazaSalonPlan(world)?.winePong) ?? null;
   plazaWinePong = createPlazaWinePong({ getMirror: () => plazaSalon?.userData.winePong ?? null, getTable: longTable,
-    getPose: () => walking?.getPose(), focusWorld: () => host.focus({ preventScroll: true }), reducedMotion, onSwitch: switchLongTable });
+    getPose: () => walking?.getPose(), focusWorld: () => host.focus({ preventScroll: true }),
+    frameTable: table => { if (world && table) walking?.lookAt([table.x, table.north, groundSurfaceHeight(world, table.x, -table.north) + 0.8], 0.9); },
+    onWindup: () => playerAvatar?.throwBall(performance.now()),
+    reducedMotion, onSwitch: switchLongTable });
   plazaShuffleboard = createPlazaShuffleboard({ getMirror: () => plazaSalon?.userData.shuffleboard ?? null, getTable: longTable,
     getPose: () => walking?.getPose(), focusWorld: () => host.focus({ preventScroll: true }), reducedMotion, onSwitch: switchLongTable });
   playProviders.push(() => longTableGames()[longTableGame]);
@@ -398,6 +441,8 @@ function initializeRenderer() {
   const laneOf = position => { const point = position && roomPoint(AXE_ROOM_INTERIOR, position); return point ? atAxeLane(point) : null; };
   axePanel = createAxePanel({ getMirror: id => venueProps()?.axeLanes?.[id] ?? null, focusWorld: () => host.focus({ preventScroll: true }), reducedMotion,
     shared: { ...townShared, laneIds: AXE_LANES.map(lane => lane.id), laneAt: () => laneOf(onFoot()),
+      // Your distance to your lane's target, as the town measures it (axe-rules.js rotation).
+      distance: () => { const position = onFoot(), point = position && roomPoint(AXE_ROOM_INTERIOR, position), lane = AXE_LANES.find(item => item.id === laneOf(position)); return point && lane ? lane.target - point[1] : null; },
       lane: id => multiplayer?.snapshot?.axes?.find(item => item.id === id) ?? null,
       peers: id => snapshotPlayers().filter(player => laneOf(player.position) === id).map(player => ({ id: player.id, name: player.name })) } });
   playProviders.push(() => axePanel);
@@ -427,9 +472,14 @@ function initializeRenderer() {
   visitTools.append($('.player-controls'), cyclingBoard.panel, ...(buildControls ? [buildControls.panel] : []));
   officeUI=createOfficeUI({host,panelHost:visitTools,renderer,getWorld:()=>world,getMultiplayer:()=>multiplayer,walking,
     captureStreet:()=>captureOfficeStreet({scene,camera,pipeline,renderer,architecture:buildingMesh,skyline:officeSkylineOff||softwareAcceptance?null:officeOutlookFor({scale:quality?.stats.scale,coarsePointer:window.matchMedia('(pointer: coarse)').matches,maxCubemapSize:renderer.capabilities.maxCubemapSize,maxTextureSize:renderer.capabilities.maxTextureSize}),lights:storeLights,atmosphere:()=>currentAtmosphere,avatar:playerAvatar,lobby:buildingMesh?.userData.officeArrival,world,getWorld:()=>world,pose:walking?.getPose()})});
+  // The Gardens (#510): the campus Play section, suites and leases, and the workstation desk.
+  campusUI=createGardenCampusUI({host,panelHost:visitTools,getWorld:()=>world,getMultiplayer:()=>multiplayer});
+  playProviders.push(() => campusUI?.playProvider);
   // IPIC screenings (#367): the town's timeline on the existing screen, while the player is inside IPIC.
   // Mounted on the viewport, not the canvas host: walking takes pointer capture on the canvas host.
   ipicScreening??=createIpicScreening({host:host.parentElement??host,THREE,getMultiplayer:()=>multiplayer,getScreen:()=>buildingMesh?.userData.interiors?.userData.screens?.[0]??null,
+    // A recliner that names an eye pitch faces the screen; focus frames the film from that row (#500).
+    getSeat:()=>{const pose=walking?.getPose();return pose?.sitting&&Number.isFinite(pose.sitting.eyePitch)?{eye:pose.position}:null;},input:host,reducedMotion,
     getVenue:()=>{
       const pose=walking?.getPose(),room=pose&&!officeUI?.active?walking?.environment?.roomAt(pose.position[0],pose.position[2]):null;
       if(room?.interior!==IPIC_INTERIOR)return {active:false,auditorium:false};
@@ -457,7 +507,7 @@ function initializeRenderer() {
   sun.castShadow = true;
   const shadowResolution=Math.min(4096,renderer.capabilities.maxTextureSize);
   sun.shadow.mapSize.set(shadowResolution,shadowResolution);
-  treeShadows = castShadowsFromProxies(sun, () => layers.trees?.userData.shadowProxies ?? []);
+  treeShadows = castShadowsFromProxies(sun, () => [...(layers.trees?.userData.shadowProxies ?? []), ...(commonsScene?.userData.shadowProxies ?? [])]);
   sun.shadow.bias = -0.00002;
   sun.shadow.normalBias = 0.018;
   sun.shadow.camera.near = 10;
@@ -474,7 +524,7 @@ function initializeRenderer() {
   }).observe(host);
   updateAtmosphere();
   bindRenderVisibility({ document, setLoop: callback => renderer.setAnimationLoop(callback), render,
-    resetTime: () => { clock.reset(); lastFrame = null; } });
+    resetTime: () => { clock.reset(); lastFrame = null; renderAudit?.discontinuity(); } });
   registerDiagnosticSource('renderer', () => describeRenderer(renderer, { quality: quality?.stats ?? null, pipeline: pipeline?.stats ?? null, reflections: storefrontReflections?.stats ?? null, softwareAcceptance }));
   registerDiagnosticSource('scene', () => describeScene(scene));
   registerDiagnosticSource('game', gameDiagnostics);
@@ -502,7 +552,9 @@ function gameDiagnostics() {
 // The town owns gameplay state from startup through reconnect.
 function startMultiplayer() {
   if (multiplayer) return;
-  remotePlayers = createRemotePlayers(scene, host);
+  // Peers out of view are culled with their shadows, while the sun casts any.
+  remotePlayers = createRemotePlayers(scene, host, { shadowDirection: () => renderer.shadowMap.enabled && sun.castShadow && sun.intensity > 0
+    ? sunDirection.copy(sunOffset).negate().normalize() : null });
   buildLayer ??= createSharedBuildLayer(scene);
   buildControls?.hide();
   multiplayer = createMultiplayer({
@@ -514,12 +566,14 @@ function startMultiplayer() {
     getMeetingPlaces: () => world ? placesOf(world) : [],
     getOwnerHomes: () => world?.stores.filter(store => store.category === 'home' && store.access === 'owner') ?? [],
     getRegionSha256: () => worldRegionSha256,
+    getDistrictRevision: () => worldDistrictRevision,
     onHomeAccess: () => districtUI?.refreshAccess(),
-    onSnapshot: snapshot => { ipicScreening?.onSnapshot(snapshot); if (world) community.applyRemote(snapshot);buildLayer?.sync(snapshot.builds??[]);plazaSalon?.userData.rack?.setTaken(snapshot.cycling?.taken ?? []); },
+    onSnapshot: snapshot => { ipicScreening?.onSnapshot(snapshot);campusUI?.onSnapshot(snapshot); if (world) community.applyRemote(snapshot);buildLayer?.sync(snapshot.builds??[]);plazaSalon?.userData.rack?.setTaken(snapshot.cycling?.taken ?? []); },
     onCorrection: player => { if (world && player) { walking.applyServerPose(player); plazaBicycle?.sync(); } },
     onPlayers: (players, selfId) => {
       host.dataset.multiplayer = players.length ? 'joined' : 'disconnected';
-      remotePlayers.sync(players.filter(p=>!p.office), selfId);
+      // Authored rivals (#597) draw like players, from the town's crime state only.
+      remotePlayers.sync([...players.filter(p=>!p.office),...(players.length?[...rivalFigures(multiplayer?.snapshot?.crime),...policeFigures(multiplayer?.snapshot?.police)]:[])], selfId);
       officeUI?.sync(players,selfId);
       placesUI?.setPlayers(players, selfId);
       if (!players.length) buildLayer?.sync([]);
@@ -551,7 +605,7 @@ function startMultiplayer() {
   seatingControls=createSharedSeatingControls({host:document.querySelector('.walking-console'),getTown:()=>multiplayer,
     getPose:()=>walking?.getPose(),getEnvironment:()=>walking?.environment,
     request:message=>multiplayer.command(message),onConfirmed:player=>walking.applyServerPose(player),
-    getBenches:()=>seatAndWater?.benches()??[],isHeld:key=>seatAndWater?.residentHolds(key)??false,isBusy:()=>seatAndWater?.busy()??false});
+    getBenches:()=>[...(seatAndWater?.benches()??[]),...suiteSeatsHere()],isHeld:key=>seatAndWater?.residentHolds(key)??false,isBusy:()=>seatAndWater?.busy()??false});
   host.dataset.multiplayer = 'connecting';
 }
 
@@ -599,6 +653,7 @@ function populateWorld(data) {
     worldGroup.remove(interiorsLayer);
     ipicScreening?.dispose(); storePeople?.userData.dispose?.(); storePeople = null; interiorsLayer = null;
     plazaSalon?.userData.rack?.dispose();
+    if(commonsScene){commonsScene.removeFromParent();commonsScene.userData.dispose();commonsScene=null;}
     worldGroup.traverse((item) => {
       item.userData.cancelLandscapeLoad?.();
       item.userData.texture?.dispose();
@@ -609,6 +664,7 @@ function populateWorld(data) {
     });
   }
   world = data;
+  campusUI?.setWorld(data);
   const creatorRegion=data.provenance?.kind==='creator';
   if(creatorRegion) {
     document.title=`${data.title} — Shared worlds`;
@@ -624,14 +680,15 @@ function populateWorld(data) {
   worldGroup = new THREE.Group();
   // Facades, arcade rails and neon dissolve near the camera, like trees, so a take-off beside the shops never fills the view.
   buildingMesh = seeThroughNearCameraIn(buildDistrictBuildings(data));
-  const ground=buildGround(data),roads=buildRoads(data);
+  const ground=buildGround(data.eastGardenCommons?{...data,bounds_m:data.eastGardenCommons.districtBounds}:data),roads=buildRoads(data);
   const streetEnvironment=createWalkingEnvironment(data);
-  const streetSpace=(x,z)=>streetEnvironment.isFree(x,z)&&!streetEnvironment.roomAt(x,z);
+  // The Gardens' platform is campus space: no street sidewalk, bench or fountain is generated on it.
+  const streetSpace=(x,z)=>streetEnvironment.isFree(x,z)&&!streetEnvironment.roomAt(x,z)&&campusGroundAt(data,x,-z)===null;
   const sidewalks=buildDesignatedSidewalks(data,streetSpace);
   // Rising terrain must not show through walk-in floors (render only). Roads and
   // sidewalks never rise above a room floor, so only the terrain surface pays for it.
-  const lobbyCutout=officeLobbyGroundCutout(data);
-  roomGroundClip?.dispose();roomGroundClip=createRoomGroundClip(buildingMesh.userData.rooms??[],{persistent:lobbyCutout?[lobbyCutout]:[]});roomGroundClip.apply(ground.children[0]);
+  const lobbyCutout=officeLobbyGroundCutout(data),campusCutout=campusGroundCutout(data);
+  roomGroundClip?.dispose();roomGroundClip=createRoomGroundClip(buildingMesh.userData.rooms??[],{persistent:[lobbyCutout,campusCutout].filter(Boolean)});roomGroundClip.apply(ground.children[0]);
   host.dataset.streetProfile=JSON.stringify(sidewalks.userData.streetProfile);
   const supports=[ground.children[0],roads,...sidewalks.children];
   registerGroundSurfaces(data,supports);
@@ -648,6 +705,7 @@ function populateWorld(data) {
   worldGroup.add(seeThroughNearCameraIn(buildDistrictDetail(data)));
   worldGroup.add(sidewalks);
   worldGroup.add(furniture);
+  if(data.eastGardenCommons){commonsScene=buildEastGardenCommons(data.eastGardenCommons);worldGroup.add(commonsScene);}
   // The Dior-Toulouse plaza furnished as an open-air salon (plaza-salon-plan.js).
   plazaSalon = buildPlazaSalon(data);
   plazaStage?.setWorld(data);
@@ -665,7 +723,7 @@ function populateWorld(data) {
   $('#district-source').hidden = creatorRegion;
   $('#district-directory').hidden = false;
   $('#building-layer-label').textContent = creatorRegion?'Buildings & architecture':'Boutiques & architecture';
-  districtUI.setStores([...data.stores, ...venueDoorSites(data)], 'Dior');
+  districtUI.setStores([...data.stores, ...venueDoorSites(data), ...campusDoorSites(data)], 'Dior');
   $('#view-scale').textContent = creatorRegion?'Explore a creator-built region':'Street level · meet the locals';
   $('#connection').textContent = 'World ready to explore';
   $('#stores-count').textContent = data.stores.length;
@@ -700,6 +758,18 @@ function canEnterStore(store) {
   if (store?.access !== 'owner') return true;
   return Boolean(multiplayer?.connected && (multiplayer.snapshot?.players.find(player => player.id === multiplayer.identity?.id)?.canBuild
     || multiplayer.homeAccess.some(home => home.storeId === store.id)));
+}
+
+// The desks and meeting chairs of the suite the resident stands in (#510): a campus floor is
+// one room, so the walls, not the room, decide which seats are near enough to offer.
+let suiteSeatCache = null;
+function suiteSeatsHere() {
+  const self = multiplayer?.snapshot?.players.find(player => player.id === multiplayer.identity?.id), pose = walking?.getPose?.();
+  if (!world || !self?.levelId || !pose) return [];
+  const here = campusLevelRoom(world, self.levelId)?.supportAt(pose.position[0], -pose.position[2]);
+  if (here?.access !== 'private-suite') return [];
+  if (suiteSeatCache?.world !== world) suiteSeatCache = { world, seats: campusSuiteSeatSites(world) };
+  return suiteSeatCache.seats.filter(seat => seat.levelId === self.levelId && seat.unitId === here.surfaceId);
 }
 
 function enterStore(store) {
@@ -753,6 +823,7 @@ function updateAtmosphere() {
   $('#sun-time').textContent = `${String(Math.floor(hour)).padStart(2, '0')}:${String(Math.round((hour % 1) * 60)).padStart(2, '0')}`;
   const atmosphere = atmosphereFor(hour, weather);
   currentAtmosphere = atmosphere;
+  layers.buildings?.getObjectByName('The Gardens (garden campus)')?.userData.relight?.(atmosphere);
   sunOffset.set(Math.cos(atmosphere.angle) * 4500, Math.max(300, Math.sin(atmosphere.angle) * 5500), 1900);
   sun.position.copy(sun.target.position).add(sunOffset);
   sun.intensity = atmosphere.sunIntensity;
@@ -769,6 +840,16 @@ function updateAtmosphere() {
   }
   storefrontReflections?.invalidate();
   districtUI?.syncAtmosphere();
+}
+
+// Which revision of the default district the town serves (#507). Without an answer the
+// page draws the garage; the first snapshot from a campus town then reloads it once.
+async function defaultWorldManifest() {
+  try {
+    const response = await fetch(`/api/world-data?world=${encodeURIComponent(DEFAULT_WORLD_ID)}`, { cache: 'no-store', signal: AbortSignal.timeout(5000) });
+    const manifest = response.ok ? await response.json() : {};
+    return { template: 'river-oaks', ...(typeof manifest.districtRevision === 'string' ? { districtRevision: manifest.districtRevision } : {}) };
+  } catch { return { template: 'river-oaks' }; }
 }
 
 async function jsonResponse(path) {
@@ -790,9 +871,11 @@ async function loadWorld() {
   $('#loading p').textContent = 'Opening the boutiques and gardens…';
   try {
     const worldId=worldIdFromSearch(location.search);
-    const manifest=worldId===DEFAULT_WORLD_ID?{template:'river-oaks'}
+    const manifest=worldId===DEFAULT_WORLD_ID?await defaultWorldManifest()
       :await jsonResponse(`/api/world-data?world=${encodeURIComponent(worldId)}`);
     worldRegionSha256=manifest.regionSha256??null;
+    const districtRevision=manifest.districtRevision??null;
+    if(districtRevision!==null && ![DISTRICT_REVISION_GARDENS,COMMONS_REVISION].includes(districtRevision))throw new Error('This district revision is not supported by this client');
     let data;
     if(manifest.template==='region-v1')data=manifest.world;
     else if(manifest.template==='river-oaks') {
@@ -802,7 +885,10 @@ async function loadWorld() {
       ]);
       district.vegetation=validateVegetation(district,vegetation);
       data=attachDistrictGalleryPlan(district,approved);
+      if([DISTRICT_REVISION_GARDENS,COMMONS_REVISION].includes(districtRevision))data=attachGardenCampus(data);
+      if(districtRevision===COMMONS_REVISION)data=attachEastGardenCommons(data);
     } else throw new Error('This region format is not supported by this client');
+    worldDistrictRevision=districtRevision;
     if (data.schema_version !== 1 || data.scene !== 'district' || !Array.isArray(data.bounds_m) || !['roads', 'stores', 'buildings', 'trees'].every(key => Array.isArray(data[key]))) throw new Error('The district data does not match the supported schema.');
     populateWorld(data);
     // Reveal a finished street: stone, asphalt and sky first. Trees, people
@@ -870,17 +956,25 @@ function followSunShadow() {
 }
 
 function render(now) {
+  renderAudit?.beginFrame();
   noteFrame(now);
-  const auditStart = renderAudit ? performance.now() : 0;
+  const drawCensus = pendingDrawCensus; pendingDrawCensus = null; drawCensus?.census.begin();
   clock.update();
   if (lastFrame !== null) quality.sample(now - lastFrame);
   lastFrame = now;
   const delta = Math.min(clock.getDelta(), 0.08);
   const self = multiplayer?.snapshot?.players.find(player => player.id === multiplayer.identity?.id);
+  renderAudit?.phase('setup');
   community?.update(delta, now);
+  renderAudit?.phase('community');
   generatedInteriors?.update(camera.position, now, self?.levelId);
+  renderAudit?.phase('setup'); // phases accumulate: interior streaming counts as setup
   layers.trees?.userData.update?.(camera.position);
+  commonsScene?.userData.update?.(camera.position);
+  lanternWalk.update();
+  renderAudit?.phase('trees');
   if (storePeople && interiorsLayer?.visible) storePeople.userData.update(camera, now, community?.state, walking?.getPosition(), community?.speakingId);
+  renderAudit?.phase('residents');
   community?.updateSpeech(delta);
   if (buildingMesh?.userData.updateDoors) {
     const visitor = walking?.active ? walking.getPosition() : null;
@@ -898,7 +992,7 @@ function render(now) {
     canPlay: Boolean(walking?.active && !loading && !multiplayer?.traveling && !photoMode?.active && !birdCams?.riding && !self?.altitude
       && (!introRoom?.generatedPlan || generatedInteriors?.readyFor(introRoom.planId))),
   });
-  if (officeUI?.active || officeUI?.entering || storeIntros?.active || photoMode?.active || birdCams?.riding) walking?.halt();
+  if (characterStudio?.active || officeUI?.active || officeUI?.entering || storeIntros?.active || photoMode?.active || birdCams?.riding) walking?.halt();
   else if (multiplayer?.connected && !multiplayer.traveling) walking?.update(delta, now);
   else walking?.halt();
   plazaGames?.update(); plazaDominoes?.update(); plazaHearts?.update(); plazaSpades?.update(); plazaLiarsDice?.update(); plazaBackgammon?.update(); plazaCribbage?.update(); plazaJenga?.update(); plazaYacht?.update(); plazaWinePong?.update(); plazaShuffleboard?.update(); plazaDarts?.update(); ipicDarts?.update(); venueDarts?.update(); axePanel?.update(); plazaMancala?.update(); plazaGo?.update(); plazaChineseCheckers?.update(); plazaXiangqi?.update(); plazaStage?.update();
@@ -906,13 +1000,16 @@ function render(now) {
   multiplayer?.update(now);
   officeUI?.prepare(now);
   seatingControls?.update(now);
+  ipicScreening?.applyCamera(camera);
   if (auditCamera) {
     camera.position.copy(auditCamera.position); camera.lookAt(auditCamera.target);
     if (auditCamera.fov && camera.fov !== auditCamera.fov) { camera.fov = auditCamera.fov; camera.updateProjectionMatrix(); }
     camera.updateMatrixWorld();
   }
   photoMode?.update();
+  characterStudio?.update();
   storeIntros?.update(now);
+  renderAudit?.phase('interactions');
   remotePlayers?.update(now, camera);
   buildLayer?.update(camera.position);
   updateBuilder();
@@ -920,6 +1017,7 @@ function render(now) {
   plazaBicycle?.update(now);
   followSunShadow();
   treeShadows?.hide(); // Shadow proxies show only while the sun draws its map.
+  renderAudit?.phase('players');
   if (!softwareAcceptance && storefrontReflections && environmentAssets) {
     const ground = terrainHeight(world.terrain, camera.position.x, -camera.position.z);
     if (camera.position.y - ground < 18) reflectionPosition.set(camera.position.x, ground + 2.5, camera.position.z);
@@ -929,10 +1027,12 @@ function render(now) {
     }
     storefrontReflections.update(now, reflectionPosition);
   }
+  renderAudit?.phase('reflections');
   debugTools?.update(now);
+  renderAudit?.phase('debug');
   // llvmpipe draws both browser clients on CPU. Keep simulation and transport
   // updating every frame while capping only acceptance-profile draw work.
-  if (officeUI?.active || !softwareAcceptance || now - lastSoftwareDraw >= 1000) {
+  if (!characterStudio?.active && (officeUI?.active || !softwareAcceptance || now - lastSoftwareDraw >= 1000)) {
     lastSoftwareDraw = now;
     renderer.info.reset();
     const currentRoom = buildingMesh?.userData.generatedRooms?.find(room => room.planId === self?.levelId);
@@ -956,6 +1056,7 @@ function render(now) {
         else renderWithoutExterior(worldGroup, interiorsLayer, () => pipeline.render(delta));
       } else pipeline.render(delta);
     }
+    renderAudit?.phase('pipeline');
     photoMode?.afterRender();
     if (pendingCapture) { const capture = pendingCapture; pendingCapture = null; capture(renderer.domElement); }
   }
@@ -966,7 +1067,8 @@ function render(now) {
     host.dataset.quality = JSON.stringify(quality.stats);
     lastRenderStats=now;
   }
-  renderAudit?.frame(now, performance.now() - auditStart);
+  renderAudit?.frame(now);
+  drawCensus?.resolve(drawCensus.census.end());
 }
 
 document.querySelectorAll('[data-layer]').forEach((input) => input.addEventListener('change', () => {
@@ -1123,25 +1225,52 @@ try {
   else if (JSON.parse(localStorage.getItem('river-oaks-debug') ?? '{}').open) void openDebugTools(true);
 } catch { /* storage unavailable */ }
 
-// Explicit development capacity audit camera and timing; absent from production.
-if (import.meta.env.DEV && renderAudit) {
+// Explicit diagnostic timing; normal production builds omit this API.
+// The crowd camera remains development-only.
+if (renderAudit) {
   window.__riverRenderAudit = {
     start: () => renderAudit.start(), stop: () => renderAudit.stop(),
-    exteriorCulling(enabled) { exteriorCulling = Boolean(enabled); },
-    crowdView() {
-      const players = multiplayer?.snapshot?.players ?? [];
-      if (!players.length) throw new Error('Join the shared world before framing its crowd.');
-      const target = new THREE.Vector3();
-      for (const player of players) target.add(new THREE.Vector3(player.position[0], player.position[2] + 1, -player.position[1]));
-      target.divideScalar(players.length);
-      const radius = Math.max(6, ...players.map(player => Math.hypot(player.position[0] - target.x, -player.position[1] - target.z) + 2));
-      const distance = radius / Math.tan(camera.fov * Math.PI / 360) * Math.max(1, 1 / camera.aspect) * 1.3;
-      auditCamera = { target, position: target.clone().add(new THREE.Vector3(0, distance * .55, distance)) };
-    },
-    // A fixed review pose for camera-manifest captures (#364): Three.js world
-    // position and target, and optional FOV. release() hands the camera back.
-    view({ position, target, fov }) { auditCamera = { position: new THREE.Vector3(...position), target: new THREE.Vector3(...target), fov, restoreFov: auditCamera?.restoreFov ?? camera.fov }; },
-    release() { if (auditCamera?.fov) { camera.fov = auditCamera.restoreFov; camera.updateProjectionMatrix(); } auditCamera = null; },
+    // Toggles and camera controls stay development-only: the ios-probe
+    // diagnostic build exposes timing and read-only graphics.
+    ...(import.meta.env.DEV ? {
+      exteriorCulling(enabled) { exteriorCulling = Boolean(enabled); },
+      avatarCulling(enabled) { remotePlayers?.setCulling(enabled); },
+      figureCulling(enabled) { remotePlayers?.setFigureCulling(enabled); },
+      shadowDepth(enabled) { remotePlayers?.setShadowDepth(enabled); },
+      // Sun-shadow casters a lean phone tier could drop outdoors (#285 device A/B): shop
+      // interiors under their roofs, the parked bikes and the bird cams. 'all' restores them.
+      shadowCasters(mode) {
+        if (mode === 'all') {
+          for (const [mesh, cast] of leanShadowRestore) mesh.castShadow = cast;
+          const restored = leanShadowRestore.size; leanShadowRestore.clear(); return restored;
+        }
+        if (mode !== 'lean') throw new Error("shadowCasters takes 'lean' or 'all'");
+        const lean = node => node.name === 'Boutique interiors layer' || node.name === 'Parked bikes' || node.name.endsWith('(bird cam)');
+        scene.traverse(node => {
+          if (lean(node)) node.traverse(mesh => { if (mesh.isMesh && mesh.castShadow && !leanShadowRestore.has(mesh)) { leanShadowRestore.set(mesh, true); mesh.castShadow = false; } });
+        });
+        return leanShadowRestore.size;
+      },
+      occlusionSort(enabled) { pipeline?.setOcclusionSort(enabled); },
+      // GTAO's normal buffer in three's order against kind order, at one instant.
+      occlusionSortEquality: () => pipeline?.compareOcclusionSort() ?? null,
+      // Draws and submitted triangles for one frame, by pass and tagged owner.
+      drawCensus: () => new Promise(resolve => { pendingDrawCensus = { census: createDrawCensus(renderer, camera), resolve }; }),
+      crowdView() {
+        const players = multiplayer?.snapshot?.players ?? [];
+        if (!players.length) throw new Error('Join the shared world before framing its crowd.');
+        const target = new THREE.Vector3();
+        for (const player of players) target.add(new THREE.Vector3(player.position[0], player.position[2] + 1, -player.position[1]));
+        target.divideScalar(players.length);
+        const radius = Math.max(6, ...players.map(player => Math.hypot(player.position[0] - target.x, -player.position[1] - target.z) + 2));
+        const distance = radius / Math.tan(camera.fov * Math.PI / 360) * Math.max(1, 1 / camera.aspect) * 1.3;
+        auditCamera = { target, position: target.clone().add(new THREE.Vector3(0, distance * .55, distance)) };
+      },
+      // A fixed review pose for camera-manifest captures (#364): Three.js world
+      // position and target, and optional FOV. release() hands the camera back.
+      view({ position, target, fov }) { auditCamera = { position: new THREE.Vector3(...position), target: new THREE.Vector3(...target), fov, restoreFov: auditCamera?.restoreFov ?? camera.fov }; },
+      release() { if (auditCamera?.fov) { camera.fov = auditCamera.restoreFov; camera.updateProjectionMatrix(); } auditCamera = null; },
+    } : {}),
     graphics() {
       const gl = renderer.getContext(), info = gl.getExtension('WEBGL_debug_renderer_info');
       return { renderer: info ? gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER),
@@ -1187,13 +1316,14 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
     mancalaBoard: plazaSalon?.userData.mancala?.visible() ?? null, reset: () => plazaGo.reset() } : null;
   window.__riverPlazaMancala = () => plazaMancala ? { ...plazaMancala.debug(), table: plazaSalon?.userData.mancala?.count() ?? null, reset: () => plazaMancala.reset() } : null;
   window.__riverAxes = () => axePanel ? { ...axePanel.debug(), stuck: Object.fromEntries(AXE_LANES.map(lane => [lane.id, buildingMesh?.userData.interiors?.userData.axeVenue?.axeLanes?.[lane.id]?.count() ?? null])),
-    holdAt: mm => axePanel.holdAt(mm), open: () => axePanel.open() } : null;
+    steadyAt: release => axePanel.steadyAt(release), steadyOn: point => axePanel.steadyOn(point), open: () => axePanel.open() } : null;
   window.__riverVenueDarts = () => venueDarts ? { ...venueDarts.debug(), board: buildingMesh?.userData.interiors?.userData.axeVenue?.venueDarts?.count() ?? null,
-    holdAt: mm => venueDarts.holdAt(mm), open: () => venueDarts.open() } : null;
+    steadyOn: point => venueDarts.steadyOn(point), open: () => venueDarts.open() } : null;
   window.__riverIpicDarts = () => ipicDarts ? { ...ipicDarts.debug(), board: buildingMesh?.userData.interiors?.userData.dartboards?.[0]?.count() ?? null,
-    hold: value => ipicDarts.hold(value), holdAt: mm => ipicDarts.holdAt(mm), open: () => ipicDarts.open() } : null;
+    steadyAt: release => ipicDarts.steadyAt(release), steadyOn: point => ipicDarts.steadyOn(point), open: () => ipicDarts.open() } : null;
+  window.__riverLanternWalk = () => ({ ...lanternWalk.debug(), scene: commonsScene?.userData.stats?.() ?? null });
   window.__riverPlazaDarts = () => plazaDarts ? { ...plazaDarts.debug(), board: plazaSalon?.userData.darts?.count() ?? null,
-    hold: value => plazaDarts.hold(value), holdAt: mm => plazaDarts.holdAt(mm), reset: seed => plazaDarts.reset(seed),
+    steadyAt: release => plazaDarts.steadyAt(release), steadyOn: point => plazaDarts.steadyOn(point), landingFor: (release, dart) => plazaDarts.landingFor(release, dart), reset: seed => plazaDarts.reset(seed),
     // Walk to the throwing line and face the board.
     async goTo() {
       const board = world && plazaSalonPlan(world)?.darts;
@@ -1204,7 +1334,10 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
       return { ok: Boolean(result?.ok) };
     } } : null;
   window.__riverPlazaWinePong = () => plazaWinePong ? { ...plazaWinePong.debug(), table: plazaSalon?.userData.winePong?.glasses() ?? null, ball: plazaSalon?.userData.winePong?.ballVisible() ?? null,
-    hold: value => plazaWinePong.hold(value), deal: seed => plazaWinePong.deal(seed),
+    steadyAt: (aim, power) => plazaWinePong.steadyAt(aim, power), deal: seed => plazaWinePong.deal(seed),
+    reposition: () => plazaWinePong.reposition(), resume: () => plazaWinePong.resume(),
+    // A world point in the table's frame [u along it, v across it], for walking to a stance.
+    pointAt: (u, v) => { const table = world && plazaSalonPlan(world)?.winePong; return table ? winePongPoint(table, [u, v]) : null; },
     // Walk to one end of the table (0 west, 1 east) and face down it.
     async goTo(side) {
       const spot = plazaSalon?.userData.winePong?.stand(side), table = world && plazaSalonPlan(world)?.winePong;
@@ -1217,7 +1350,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
     diceShown: plazaSalon?.userData.yacht?.visible() ?? null, towerShown: plazaSalon?.userData.jenga?.visible() ?? null, deal: seed => plazaYacht.deal(seed) } : null;
   window.__riverPlazaShuffleboard = () => plazaShuffleboard ? { ...plazaShuffleboard.debug(), longTableGame, table: plazaSalon?.userData.shuffleboard?.count() ?? null,
     pucksShown: plazaSalon?.userData.shuffleboard?.visible() ?? null, glassesShown: plazaSalon?.userData.winePong?.visible() ?? null,
-    hold: value => plazaShuffleboard.hold(value), reset: () => plazaShuffleboard.reset() } : null;
+    steadyAt: (aim, power) => plazaShuffleboard.steadyAt(aim, power), reset: () => plazaShuffleboard.reset() } : null;
   window.__riverPlazaJenga = () => plazaJenga ? { ...plazaJenga.debug(), table: plazaSalon?.userData.jenga?.count() ?? null, towerFallen: plazaSalon?.userData.jenga?.fallen() ?? null,
     aim: at => plazaJenga.aim(at), deal: seed => plazaJenga.deal(seed) } : null;
   window.__riverPlazaCribbage = () => plazaCribbage ? { ...plazaCribbage.debug(), walnutGame, pegs: plazaSalon?.userData.cribbage?.pegs() ?? null, board: plazaSalon?.userData.cribbage?.visible() ?? null,
@@ -1262,14 +1395,14 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
       }
       return { ok: false };
     },
-    face(x, north) { walking?.lookAt([x, north, groundSurfaceHeight(world, x, -north)], 0.9); },
+    face(x, north, eyeHeight=0.9) { walking?.lookAt([x, north, groundSurfaceHeight(world, x, -north)], eyeHeight); },
     goTo(x, north) { return goToPlace({ kind: 'landmark', name: 'Spot', position: [x, north] }); },
   } : null;
   window.__riverVoice = () => multiplayer?.voice.debug() ?? null;
   window.__riverScreening = () => ipicScreening?.inspect() ?? null;
   // Development-only: send a raw command, as a modified client could, to prove the server refuses it.
   window.__riverMultiplayerCommand = message => multiplayer?.command(message);
-  window.__riverMultiplayer = () => ({ connected: multiplayer?.connected ?? false, selfId: multiplayer?.identity?.id, snapshot: multiplayer?.snapshot, remotes: remotePlayers?.stats(), voice: multiplayer?.voice.debug() ?? null,creations:buildLayer?.stats(),birds:birdCams?.state,builder:buildControls?{...buildControls.builder,ghost:buildLayer?.ghost?{position:buildLayer.ghost.position.toArray(),visible:buildLayer.ghost.visible}:null,hint:document.querySelector('#build-hint')?.textContent,valid:document.querySelector('#build-hint')?.dataset.valid}:null });
+  window.__riverMultiplayer = () => ({ connected: multiplayer?.connected ?? false, selfId: multiplayer?.identity?.id, snapshot: multiplayer?.snapshot, remotes: remotePlayers?.stats(), selfMaterials:playerAvatar?.materials,selfRealism:playerAvatar?.realism??null, voice: multiplayer?.voice.debug() ?? null,creations:buildLayer?.stats(),birds:birdCams?.state,builder:buildControls?{...buildControls.builder,ghost:buildLayer?.ghost?{position:buildLayer.ghost.position.toArray(),visible:buildLayer.ghost.visible}:null,hint:document.querySelector('#build-hint')?.textContent,valid:document.querySelector('#build-hint')?.dataset.valid}:null });
   window.__riverPlayerAttention=()=>{
     const rig=playerAvatar?.rig;if(!rig)return null;
     rig.model.updateWorldMatrix(true,true);
@@ -1285,7 +1418,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
     return {id,speaking:Boolean(id&&community?.speakingId===id),nod:station?.conversation.pose,face:station?.face.pose,mouth:rig?.speechPose,eyes:rig?.eyes.pose,head:head?.quaternion.toArray()};
   };
   window.__riverCreatorObjects=()=>({resources:buildLayer?.stats(),rendered:(buildLayer?.object.children??[]).filter(entry=>entry.userData.build).map(entry=>({id:entry.userData.build.id,parts:entry.children.filter(child=>child.isMesh).map(child=>({color:child.material.color.getHexString(),transmission:child.material.transmission??0,position:child.position.toArray(),size:child.scale.toArray()}))}))});
-  window.__riverCarriage = () => ({camera:{view:walking?.cameraView,position:camera.position.toArray()},vehicle:playerAvatar?.carriage.kind,chauffeur:playerAvatar?.carriage.chauffeur,companion:playerAvatar?.carriage.prince.companion,princePosition:playerAvatar?.carriage.prince.object.position.toArray(),princeVisible:playerAvatar?.carriage.prince.object.visible,wingsVisible:playerAvatar?.carriage.prince.object.getObjectByName('Jev’s angel wings')?.visible,placement:playerAvatar?.carriage.placement,unicorns:playerAvatar?.carriage.unicorns,spinners:playerAvatar?.carriage.spinners?.map(spinner=>({rotation:spinner.rotation.z})),visible:playerAvatar?.carriage.object.visible,riding:playerAvatar?.carriage.riding,tyreClearances:playerAvatar?.carriage.tyreClearances,pose:walking.getPose(),rider:playerAvatar?.object.position.toArray(),riderYaw:playerAvatar?.object.rotation.y});
+  window.__riverCarriage = () => ({camera:{view:walking?.cameraView,position:camera.position.toArray(),verticalFovDegrees:camera.fov,aspect:camera.aspect,near:camera.near,far:camera.far},vehicle:playerAvatar?.carriage.kind,chauffeur:playerAvatar?.carriage.chauffeur,companion:playerAvatar?.carriage.prince.companion,princePosition:playerAvatar?.carriage.prince.object.position.toArray(),princeVisible:playerAvatar?.carriage.prince.object.visible,wingsVisible:playerAvatar?.carriage.prince.object.getObjectByName('Jev’s angel wings')?.visible,placement:playerAvatar?.carriage.placement,unicorns:playerAvatar?.carriage.unicorns,spinners:playerAvatar?.carriage.spinners?.map(spinner=>({rotation:spinner.rotation.z})),visible:playerAvatar?.carriage.object.visible,riding:playerAvatar?.carriage.riding,tyreClearances:playerAvatar?.carriage.tyreClearances,pose:walking.getPose(),rider:playerAvatar?.object.position.toArray(),riderYaw:playerAvatar?.object.rotation.y});
   window.__riverPeople = (bone = 'head') => [...[playerAvatar?.carriage.driver].filter(p=>p?.userData.avatar).map(person => ({id:person.userData.localId,holder:person})), ...(storePeople?.userData.figures ?? [])]
     .filter(person => person.id&&(community.state?.locals ?? []).some(local=>local.id===person.id)).map(person => {
       person.holder.updateWorldMatrix(true,true);

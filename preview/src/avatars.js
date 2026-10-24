@@ -1,3 +1,6 @@
+import {isRealisticHumanRig, characterFidelityContract} from './character-fidelity-contract.js';
+import {createCharacterFidelity, followCharacterQuality} from './character-fidelity-runtime.js';
+import {createCharacterExpressions} from './character-expressions.js';
 import { createArmContacts } from './arm-contact.js';
 import { applyHandshakeContact } from './handshake-contact.js';
 import { shareAvatarSkeletons } from './avatar-skeletons.js';
@@ -19,7 +22,6 @@ import { relaxResidentArms } from './avatar-stance.js';
 import { createFootPlacement, applyLegIK } from './foot-placement.js';
 import { stabilizeShoeSoles } from './shoe-skinning.js';
 import { createRomanceLook } from './romance-look.js';
-import { createBeastGait } from './beast-gait.js';
 import { sharedAppearance } from './shared-appearances.js';
 
 export const AVATAR_PROFILES = ['woman-casual','man-casual','woman-tailored','man-tailored','woman-daywear','man-workwear'];
@@ -139,9 +141,9 @@ export function instantiateAvatar(source, { targetHeight, id, armSpread, face })
 }
 
 // faceRecipe: undefined picks residentFaceFor(id); {} keeps the rig's authored face.
-export async function loadResidentAvatar(index, id, profileOverride, { folk = true, appearanceId = profileOverride, faceRecipe } = {}) {
+export async function loadResidentAvatar(index, id, profileOverride, { folk = true, appearanceId = profileOverride, faceRecipe, realism } = {}) {
   const profile = profileOverride ?? avatarProfile(index), source = await template(profile);
-  const targetHeight = profile === 'jevica' ? 1.685 : profile === 'prince-jev' ? 1.74 : profile.startsWith('woman') ? 1.66+(index%3)*0.025 : 1.78+(index%3)*0.025;
+  const targetHeight = characterFidelityContract(profile)?.targetHeightM ?? (profile === 'jevica' ? 1.685 : profile === 'prince-jev' ? 1.74 : profile.startsWith('woman') ? 1.66+(index%3)*0.025 : 1.78+(index%3)*0.025);
   const avatar = instantiateAvatar(source, { targetHeight, id, armSpread:profile==='jevica'?0.32:undefined, face:faceRecipe??(folk&&id!=='player'?residentFaceFor(id):undefined) });
   const { model, bones, rest } = avatar;
   if(id !== 'player' && folk) {
@@ -166,20 +168,26 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
   const conversationBody=createConversationBody(avatar);
   const face=createFacialMotion(model,{seed:id??index,reducedMotion:noMotion});
   const upperBody=createUpperBodyGait(avatar,root,{reducedMotion:noMotion,armSwing:profile==='jevica'?.34:.42,abduct:profile==='jevica'?.07:0});
-  // Only a beast form can move like one; locomotion.beast asks for it per frame.
-  const beastGait=look?.beast?createBeastGait(avatar,{reducedMotion:noMotion}):null;
-  const turnRotation=new THREE.Quaternion(),turnForward=new THREE.Vector3();
-  let previousTime=null,walkingSpeed=0,previousHeading=null,turnRate=0;
+  const expressions=createCharacterExpressions(model,characterFidelityContract(profile));
+  let fidelity=null,unsubscribeQuality=null;
+  if((isRealisticHumanRig(profile)&&realism!=='off')||(realism&&realism!=='off')){
+    fidelity=createCharacterFidelity(avatar);
+    try{
+      if(realism===undefined)unsubscribeQuality=await followCharacterQuality(fidelity);else await fidelity.setTier(realism);
+    }catch(error){fidelity.dispose();expressions.dispose();upperBody.dispose();look?.dispose();avatar.dispose();throw error;}
+  }
+  let previousTime=null,walkingSpeed=0;
   return {
-    object:root, profile, rig:avatar,
+    object:root, profile, rig:avatar, expressions,
+    get realismReport(){return fidelity?.report??{tier:'off'};},
+    setExpression:(name,weight)=>expressions.set(name,weight),
+    setRealismTier:tier=>fidelity?.setTier(tier),
     // The visibility owner explicitly suspends the clock, even for brief culls.
     suspend() {previousTime=null;gestures.suspend();},
     get carrying() {return kit.visible;},
     get conversationPose() {return conversation.pose;},
     get facePose() {return face.pose;},
     get feet() {return feet.legs;},
-    get beastForm() {return Boolean(beastGait);},
-    get beastMotion() {return beastGait?.weight??0;},
     update(now, action, speaking, locomotion, groundAt = () => root.getWorldPosition(new THREE.Vector3()).y, lookTarget = null, {conversing=false} = {}) {
       const t=now/1000+index*0.7;
       const elapsed=previousTime===null?0:Math.max(0,(now-previousTime)/1000);
@@ -192,11 +200,9 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
       const conversationPose=conversation.update(elapsed,{attending:(id!=='player'||conversing)&&Boolean(lookTarget)&&action!=='startled',speaking,
         gesturing:walkingSpeed<.1&&!locomotion?.flying&&!locomotion?.riding&&!locomotion?.carrying&&!locomotion?.visitId&&(action==='continue'||action==='greet'||action==='acknowledge')});
       const strength = Math.min(1,walkingSpeed/0.65);
-      const beastWanted=Boolean(locomotion?.beast)&&!locomotion?.flying&&!locomotion?.riding;
-      const beastPose=beastGait?.prepare(dt,{active:beastWanted,speed:walkingSpeed,legs:feet.legs})??{drop:0,stride:1};
       // Let leg reach determine pelvis lowering; a fixed walking drop keeps
       // the supporting knee crouched even directly beneath the body.
-      model.position.y = baseY - 0.004*strength - beastPose.drop;
+      model.position.y = baseY - 0.004*strength;
       for (const bone of bones) {
         bone.quaternion.copy(rest.get(bone));
         if(noMotion && !locomotion?.speed) continue;
@@ -205,9 +211,8 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
         adjustment.setFromAxisAngle(avatar.axes.get(bone)[bone.name.startsWith('lowerarm') ? 'z' : 'x'],angle); bone.quaternion.multiply(adjustment);
         if(bone.name==='head') {adjustment.setFromAxisAngle(avatar.axes.get(bone).z,conversationPose.roll);bone.quaternion.multiply(adjustment);}
       }
-      if(!locomotion?.flying&&!locomotion?.riding)feet.update(dt,beastPose.stride===1?locomotion:{...locomotion,stride:beastPose.stride},groundAt);
+      if(!locomotion?.flying&&!locomotion?.riding)feet.update(dt,locomotion,groundAt);
       upperBody.update(dt,locomotion?.riding?0:walkingSpeed,feet.legs,{flying:locomotion?.flying||locomotion?.riding,carrying:Boolean(locomotion?.visitId||locomotion?.carrying)});
-      beastGait?.apply();
       if(!locomotion?.flying&&!locomotion?.riding)conversationBody.apply(conversationPose);
       for(const bone of bones) {
         const pose=gesture[bone.name];if(!pose)continue;
@@ -299,14 +304,7 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
         model.position.y+=noMotion?0:.022*Math.sin(t*1.15);
       }
       avatar.eyes.update(lookTarget,elapsed);
-      if(look?.beast) {
-        // Turn rate drives the tail's counter-swing; heading is the body's own.
-        turnForward.set(0,0,1).applyQuaternion(root.getWorldQuaternion(turnRotation));
-        const heading=Math.atan2(turnForward.x,turnForward.z);
-        if(previousHeading!==null&&elapsed>0)turnRate+=(Math.atan2(Math.sin(heading-previousHeading),Math.cos(heading-previousHeading))/Math.max(elapsed,1e-3)-turnRate)*(1-Math.exp(-10*dt));
-        previousHeading=heading;
-      }
-      look?.update(now,{reducedMotion:noMotion,blink:face.pose,gaze:avatar.eyes.pose,motion:{beast:beastWanted&&Boolean(beastGait),speed:walkingSpeed,turn:turnRate}});
+      look?.update(now,{reducedMotion:noMotion,blink:face.pose,gaze:avatar.eyes.pose});
       kit.visible=Boolean(locomotion?.visitId && hand);
       if(kit.visible) {root.updateWorldMatrix(true,true);hand.getWorldPosition(kit.position);root.worldToLocal(kit.position);}
       // The can stays upright in the body's frame and tips forward to pour.
@@ -317,6 +315,6 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
         can.getObjectByName('Watering stream').scale.y=noMotion?1:.85+Math.sin(t*17)*.15;
       }
     },
-    dispose() { upperBody.dispose(); look?.dispose(); avatar.dispose(); },
+    dispose() { unsubscribeQuality?.(); fidelity?.dispose(); expressions.dispose(); upperBody.dispose(); look?.dispose(); avatar.dispose(); },
   };
 }

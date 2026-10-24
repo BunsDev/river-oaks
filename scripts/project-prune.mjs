@@ -7,6 +7,7 @@ import { homedir } from 'node:os';
 import { createHash, randomUUID } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 import { loadPulls, validateTasks } from './project-status.mjs';
+import { ensureLiveRegister, withRegisterLock } from './task-register.mjs';
 
 export function git(root,args,optional=false) {
   try { return execFileSync('git',args,{cwd:root,encoding:'utf8',maxBuffer:32*1024*1024,stdio:['ignore','pipe','pipe'],env:{...process.env,GIT_TERMINAL_PROMPT:'0'}}).trimEnd(); }
@@ -78,6 +79,35 @@ export function planRetirement({root,branch,expectedHead,register,pulls,activity
   return {branch,head,taskId:task?.id??null,worktrees:owned.map(w=>w.path),blockers:[...new Set(blockers)],eligible:blockers.length===0};
 }
 
+// Bundle an exact tip under `tag` and restore-test it into `restore`. The bundle
+// holds only what origin's default branch lacks; a tip already on that branch
+// bundles just its own commit. Its prerequisites are commits on that branch, so any
+// clone holding the branch restores it. restore.git borrows them from the common
+// object store through alternates rather than copying the whole history again.
+// Without a default-branch ref the bundle stays self-contained, as before.
+export function archiveTip({root,tag,expectedHead,bundle,restore}) {
+  const ref=defaultBranchRef(root),base=git(root,['rev-parse','--verify','--quiet',`${ref}^{commit}`],true);
+  const onBase=base&&git(root,['merge-base','--is-ancestor',expectedHead,base],true)!==null;
+  const exclude=!base?[]:onBase?git(root,['rev-parse',`${expectedHead}^@`]).split('\n').filter(Boolean):[base];
+  git(root,['bundle','create',bundle,tag,...exclude.map(sha=>`^${sha}`)]);
+  const data=readFileSync(bundle),prerequisites=restoreTest({root,tag,expectedHead,bundle,restore});
+  return {sha256:createHash('sha256').update(data).digest('hex'),prerequisites,...(base?{base:{ref,head:base}}:{})};
+}
+
+// Restore a bundle into a new bare repository and return its prerequisites.
+export function restoreTest({root,tag,expectedHead,bundle,restore}) {
+  const data=readFileSync(bundle),header=data.subarray(0,data.indexOf('\n\n')).toString('utf8').split('\n');
+  const prerequisites=header.filter(line=>line.startsWith('-')).map(line=>line.slice(1).split(' ')[0]);
+  git(root,['init','--bare',restore]);
+  if(prerequisites.length)writeFileSync(join(restore,'objects','info','alternates'),realpathSync(resolve(root,git(root,['rev-parse','--git-common-dir']),'objects'))+'\n');
+  // Unbundle rather than fetch: a fetch skips reading the pack once alternates already
+  // reach the tip, so it would accept a corrupt bundle.
+  if(git(restore,['bundle','unbundle',bundle])!==`${expectedHead} ${tag}`)throw new Error('Archive restoration SHA mismatch');
+  git(restore,['update-ref',tag,expectedHead]);
+  git(restore,['fsck','--full']);
+  return prerequisites;
+}
+
 // Archive an exact tip, restore-test the archive, then remove the checkouts and
 // (optionally) the local ref. `check` re-plans from live evidence and must throw
 // when the plan is no longer eligible; it runs again before every mutation.
@@ -90,7 +120,8 @@ export function archiveAndRemove({root,branch,expectedHead,archiveRoot,prefix='r
     let plan=check();
     mkdirSync(archiveRoot,{recursive:true,mode:0o700});
     const archiveBase=realpathSync(archiveRoot);
-    if(worktrees(root).some(w=>within(archiveBase,realpathSync(w.path))))throw new Error('Archive must be outside all worktrees');
+    // within canonicalizes existing parents even for a missing registration.
+    if(worktrees(root).some(w=>within(archiveBase,w.path)))throw new Error('Archive must be outside all worktrees');
     const directory=mkdtempSync(join(archiveBase,prefix));
     const tag=`refs/tags/archive/worktree-prune/${randomUUID()}`;
     const bundle=join(directory,'history.bundle'),restore=join(directory,'restore.git');
@@ -98,11 +129,7 @@ export function archiveAndRemove({root,branch,expectedHead,archiveRoot,prefix='r
     const manifest=join(directory,'manifest.json');
     const record=()=>writeFileSync(manifest,JSON.stringify(receipt,null,2)+'\n',{mode:0o600});record();
     git(root,['update-ref',tag,expectedHead,'0'.repeat(expectedHead.length)]);
-    git(root,['bundle','create',bundle,tag]);
-    receipt.sha256=createHash('sha256').update(readFileSync(bundle)).digest('hex');
-    git(root,['init','--bare',restore]);git(restore,['fetch',bundle,`${tag}:${tag}`]);
-    if(git(restore,['rev-parse',tag])!==expectedHead)throw new Error('Archive restoration SHA mismatch');
-    git(restore,['fsck','--full']);receipt.status='restore-verified';record();
+    Object.assign(receipt,archiveTip({root,tag,expectedHead,bundle,restore}));receipt.status='restore-verified';record();
     const initialPaths=JSON.stringify(plan.worktrees);
     plan=check();
     if(JSON.stringify(plan.worktrees)!==initialPaths)throw new Error('Worktree registrations changed');
@@ -131,11 +158,14 @@ export function archiveAndRemove({root,branch,expectedHead,archiveRoot,prefix='r
 // Re-read the live register and apply one targeted change under the same
 // "nothing changed meanwhile" rule the retirement used for its evidence.
 export function updateRegister(tasksPath,mutate,manifest) {
-  const before=readFileSync(tasksPath,'utf8'),register=JSON.parse(before);
-  mutate(register);
-  const temp=`${tasksPath}.${randomUUID()}.tmp`;writeFileSync(temp,JSON.stringify(register,null,2)+'\n');
-  if(readFileSync(tasksPath,'utf8')!==before){unlinkSync(temp);throw new Error(`Task register changed; reconcile using ${manifest}`);}
-  renameSync(temp,tasksPath);
+  // The same lock as `pnpm run register`, so a CLI change cannot land between read and rename.
+  withRegisterLock(`${tasksPath}.lock`,()=>{
+    const before=readFileSync(tasksPath,'utf8'),register=JSON.parse(before);
+    mutate(register);
+    const temp=`${tasksPath}.${randomUUID()}.tmp`;writeFileSync(temp,JSON.stringify(register,null,2)+'\n');
+    if(readFileSync(tasksPath,'utf8')!==before){unlinkSync(temp);throw new Error(`Task register changed; reconcile using ${manifest}`);}
+    renameSync(temp,tasksPath);
+  });
 }
 
 export function retire(options) {
@@ -170,8 +200,10 @@ export function parseRetirementArgs(args) {
   return {values,apply,cancelStale,staleHours};
 }
 
+// The live register in the common Git directory, shared by every worktree (see
+// task-register.mjs); any legacy edit to the primary's tracked copy is absorbed first.
 export function primaryRegisterPath(root) {
-  return join(worktrees(root)[0].path,'docs/project-management/tasks.json');
+  return ensureLiveRegister(root);
 }
 
 export function liveEvidence(root,tasksPath) {

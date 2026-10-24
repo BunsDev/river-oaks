@@ -40,7 +40,7 @@ it is not an unattended test fixture.
 | `pnpm run verify python` | Ruff, Python tests, offline synthetic pipeline |
 | `pnpm run verify` | Web + Python + worktree secret guard; default `core` |
 | `pnpm run verify security` | Worktree and full local Git-history secret scan |
-| `pnpm run verify browser` | Build, security browser regressions, WebGL reflection, thirteen experience journeys (player-lifecycle, multiplayer-lifecycle, contextual-first-visit, store-intro, photo-mode, rail-navigation, places-guide, world-studio, spatial-circulation, spatial-streets, office-desk, office-computer-shared, office-visit) and all shared-town journeys |
+| `pnpm run verify browser` | Build, security browser regressions, WebGL reflection, thirteen experience journeys (player-lifecycle, multiplayer-lifecycle, contextual-first-visit, store-intro, photo-mode, rail-navigation, places-guide, world-studio, spatial-circulation, spatial-streets, office-desk, office-visit) and all shared-town journeys |
 | `pnpm run verify full` | Core + mandatory Redis server tests + JavaScript dependency audit + history scan + browser journeys |
 
 `pnpm run agent:doctor full` prints JSON prerequisite diagnostics, exits 2 when
@@ -71,7 +71,7 @@ directly. The `shared` (30 minutes) and `experience` (20 minutes) tasks have lon
 For a changed browser interaction, also run its named journey, for example:
 `pnpm run test:experience hud-and-quality`. Local browser runs from different
 sessions take turns; see [Local browser runs take turns](project-management/workflow.md#local-browser-runs-take-turns). Desktop changes may require
-`pnpm run test:desktop:e2e`. The hosted `Desktop` workflow packages and checks the app on Windows, Linux and macOS and uploads unsigned builds ([desktop](desktop.md#ci-builds-on-windows-linux-and-macos)). Native changes require the build and automation
+`pnpm run test:desktop:e2e`. The hosted `Desktop` workflow packages and checks the app on Windows, Linux and macOS, uploads unsigned builds, and builds and install-tests the Windows and Linux installers ([desktop](desktop.md#ci-builds-on-windows-linux-and-macos), [installers](desktop.md#installers-for-windows-and-linux)). Native changes require the build and automation
 commands in [Unreal setup](unreal.md); source-only hosts can run
 `RiverOaks.Contracts` after a native build. These are not silently included in
 `full`, which covers the listed local runtime checks. The hosted Python-version matrix,
@@ -91,6 +91,9 @@ required environment. Each task records its command, expected/actual exit,
 duration and status. Remaining tasks are `not_run`. Console output retains
 underlying test counts, skips and diagnostics; receipts do not capture output or
 credential values. On macOS/Linux, timeouts and handled interruptions stop the owned process group.
+
+Browser tasks enter the shared queue before their execution timeout starts. Their receipt status is `queued` while waiting, `queueDurationMs` records admission time, and `durationMs` covers command execution and lock-release overhead. Cancellation while queued removes that task's claim without starting its command; nested browser runners inherit the acquired lock. Command timeouts still apply after admission.
+
 Windows process-tree cleanup has not been verified. A forcibly killed runner may leave `status: running`; that is incomplete,
 never passing. Do not run the same profile concurrently in one worktree because
 the latest receipt replaces the previous one. Receipts include HEAD and dirty
@@ -127,7 +130,7 @@ GitHub merge queue. A branch that is behind is rebased (or merged with `main`), 
 its checks rerun before merging. Commits must be signed.
 
 Several agent sessions often work in one repository at once. Each claims its task
-in the primary checkout's live register and works in its own sibling worktree on
+in the live register (`pnpm run register`, a file in the common Git directory) and works in its own sibling worktree on
 its own branch. To merge, run `pnpm run land <pr>` ([landing a pull request](project-management/workflow.md#landing-a-pull-request)).
 It queues the PR with every other session on this machine, updates the branch from
 `main` on its turn, waits for Verify, reruns failed jobs once, and merges through
@@ -157,7 +160,8 @@ start, delivery and handoff. `pnpm run --silent project:status --github` compare
 local branches/worktrees with the task register and live PRs without changing them.
 `project:check` exits nonzero for reconciliation gaps, not application test failures;
 orphan checkouts (no task, or a task whose recorded worktree is gone) are gaps too, and
-`--allow-orphans` downgrades only those to warnings. `pnpm run project:inventory`
+`--allow-orphans` downgrades only those to warnings. Records whose restoration archive
+(manifest or bundle) is missing from this machine are a gap that `--allow-orphans` does not waive. `pnpm run project:inventory`
 classifies every local branch and worktree (`--remote` adds a report-only list of
 merged remote branches), and `pnpm run project:archives` verifies the restore
 archives under `~/worktree-backups/river-oaks/`. Both are read-only.

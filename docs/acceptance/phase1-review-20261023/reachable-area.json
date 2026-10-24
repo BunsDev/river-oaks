@@ -1,0 +1,215 @@
+{
+  "districtSha256": "c5662c26185ff0c6caa2fccfb9ef9839bb7e56706635dcf6d6aed68bffd50326",
+  "districtRevision": "river-oaks-gardens-3",
+  "units": "metres",
+  "bounds": [
+    -2920.280118916899,
+    -1457.6085898216527,
+    -2666.336078522973,
+    -1167.1779702985634
+  ],
+  "widthM": 253.94404039392612,
+  "depthM": 290.43061952308926,
+  "boundsAreaM2": 73753.12497580437,
+  "sitePolygonAreaM2": 57494.336102785775,
+  "residentGrid": {
+    "width": 254,
+    "height": 291,
+    "cells": 73914,
+    "limit": 80000,
+    "created": true
+  },
+  "locations": [
+    {
+      "id": "river-oaks-district",
+      "status": "authored",
+      "worldBounds": [
+        -2920.280118916899,
+        -1457.6085898216527,
+        -2666.336078522973,
+        -1167.1779702985634
+      ],
+      "boundsAreaM2": 73753.12497580437
+    },
+    {
+      "id": "east-garden-commons",
+      "status": "authored",
+      "worldBounds": [
+        -2666.336078522973,
+        -1375,
+        -2551.336078522973,
+        -1295
+      ],
+      "boundsAreaM2": 9200
+    },
+    {
+      "id": "east-garden-reserve",
+      "status": "reserved",
+      "worldBounds": [
+        -2551.336078522973,
+        -1457.6085898216527,
+        -2158.4479977351207,
+        -1167.1779702985634
+      ],
+      "boundsAreaM2": 114106.72870645346
+    },
+    {
+      "id": "east-garden-reserve-north",
+      "status": "reserved",
+      "worldBounds": [
+        -2666.336078522973,
+        -1295,
+        -2551.336078522973,
+        -1167.1779702985634
+      ],
+      "boundsAreaM2": 14699.533415665206
+    },
+    {
+      "id": "east-garden-reserve-south",
+      "status": "reserved",
+      "worldBounds": [
+        -2666.336078522973,
+        -1457.6085898216527,
+        -2551.336078522973,
+        -1375
+      ],
+      "boundsAreaM2": 9499.987829490059
+    }
+  ],
+  "eastFootwayEndpoints": [
+    {
+      "roadId": "osm-way-628618945-0",
+      "point": [
+        -2669.1564111169596,
+        -1340.162532308888
+      ],
+      "residentFree": false,
+      "playerFree": true
+    },
+    {
+      "roadId": "osm-way-628618945-0",
+      "point": [
+        -2669.066352985296,
+        -1335.0588187299763
+      ],
+      "residentFree": false,
+      "playerFree": true
+    },
+    {
+      "roadId": "osm-way-690729797-0",
+      "point": [
+        -2671.3066643941534,
+        -1441.1492283261416
+      ],
+      "residentFree": false,
+      "playerFree": true
+    }
+  ],
+  "scope": "Exact source rectangle/polygon area and current resident-navigation endpoint queries only. Neither polygon area nor collision-free endpoint samples measure connected playable area. No browser ground-triangle registration, dynamic placed objects, timed traversal, physical access or survey evidence.",
+  "groundReachability": [
+    {
+      "defaultRevision": {
+        "revision": null,
+        "worldSha256": "5fc38cbe54099258f54a199f314eb0f6910a0488dff6efe6d692037b73e38b80",
+        "cellM": 1,
+        "gridCells": 74205,
+        "reachableSamples": 40159,
+        "sampledAreaM2": 40159,
+        "spawn": [
+          -2765.321977373157,
+          -1295.064162750871
+        ],
+        "seconds": 0.3818737080000001
+      },
+      "original": {
+        "revision": "river-oaks-gardens-3",
+        "worldSha256": "df44715b918971e92630d480c200a048b3cd8b371e69625d08edb2a7a96eaf6b",
+        "cellM": 1,
+        "gridCells": 74205,
+        "reachableSamples": 46549,
+        "sampledAreaM2": 46549,
+        "spawn": [
+          -2765.321977373157,
+          -1295.064162750871
+        ],
+        "seconds": 0.43211083399999983
+      },
+      "commons": {
+        "revision": "east-garden-commons-blockout-1",
+        "worldSha256": "6e41399dac5d90edcd34ad04b454ca6c325318ec87d9589ade7241b08e020b20",
+        "cellM": 1,
+        "gridCells": 108252,
+        "reachableSamples": 51969,
+        "sampledAreaM2": 51969,
+        "spawn": [
+          -2765.321977373157,
+          -1295.064162750871
+        ],
+        "seconds": 0.8772374579999999
+      },
+      "addedSampledAreaM2": 5420,
+      "ratio": 1.1164364433177942
+    },
+    {
+      "defaultRevision": {
+        "revision": null,
+        "worldSha256": "5fc38cbe54099258f54a199f314eb0f6910a0488dff6efe6d692037b73e38b80",
+        "cellM": 0.5,
+        "gridCells": 296238,
+        "reachableSamples": 160332,
+        "sampledAreaM2": 40083,
+        "spawn": [
+          -2765.321977373157,
+          -1295.064162750871
+        ],
+        "seconds": 0.8794016659999998
+      },
+      "original": {
+        "revision": "river-oaks-gardens-3",
+        "worldSha256": "df44715b918971e92630d480c200a048b3cd8b371e69625d08edb2a7a96eaf6b",
+        "cellM": 0.5,
+        "gridCells": 296238,
+        "reachableSamples": 185911,
+        "sampledAreaM2": 46477.75,
+        "spawn": [
+          -2765.321977373157,
+          -1295.064162750871
+        ],
+        "seconds": 0.8443781659999999
+      },
+      "commons": {
+        "revision": "east-garden-commons-blockout-1",
+        "worldSha256": "6e41399dac5d90edcd34ad04b454ca6c325318ec87d9589ade7241b08e020b20",
+        "cellM": 0.5,
+        "gridCells": 432426,
+        "reachableSamples": 207848,
+        "sampledAreaM2": 51962,
+        "spawn": [
+          -2765.321977373157,
+          -1295.064162750871
+        ],
+        "seconds": 0.9384710829999999
+      },
+      "addedSampledAreaM2": 5484.25,
+      "ratio": 1.1179973212989012
+    }
+  ],
+  "expansionCapacity": {
+    "baselineRevision": "river-oaks-gardens-3",
+    "baselineM2": 46477.75,
+    "targetM2": {
+      "low": 139433.25,
+      "high": 232388.75
+    },
+    "districtDensity": 0.6301800773221149,
+    "reservedBoundsM2": 138306.24995160874,
+    "projectedTotalM2": 139119.84328863653,
+    "projectedRatio": 2.9932568441595504,
+    "reservedBoundsNeededM2": {
+      "low": 138803.57876704074,
+      "high": 286309.82871864946
+    },
+    "scope": "Projection assumes future neighborhoods match the District's measured walkable density; it is a layout sizing check, not measured area."
+  },
+  "reachabilityScope": "Approximate ground-level area from connected sampled cell centres using authoritative collision/height queries. Samples have finite resolution; the full area of boundary cells is not proven clear, narrow routes may be missed, and source/rendered differences remain unmeasured. No upper-floor, flight, dynamic-object, physical accessibility or browser traversal acceptance. This does not establish the 3–5x playable-area target."
+}

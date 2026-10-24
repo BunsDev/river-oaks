@@ -8,6 +8,7 @@ import { execFileSync, spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { createQueue } from './local-queue.mjs';
+import { conditionalGet, nextPollDelay } from './github-rest.mjs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -20,21 +21,28 @@ async function waitFor(check, sleep, poll, limit, what) {
 }
 
 // github: pull, updateBranch, verifyRun, failedJobs, rerunFailed, and for
-// deleteRemoteBranch also mergedOnDefault(sha) and deleteBranch(ref). guard(pr): {code, output}.
-export async function land({ pr, owner, github, guard, queue, log = () => {}, sleep, poll = 30000, attempts = 4, limit = 120, deleteRemoteBranch = false }) {
+// deleteRemoteBranch also mergedOnDefault(sha) and deleteBranch(ref), false if
+// it was already gone. guard(pr): {code, output}.
+export async function land({ pr, owner, github, guard, queue, log = () => {}, sleep, poll = 30000, attempts = 4, limit = 120, deleteRemoteBranch = false, waitForQueue = (id, ms) => queue.waitForTurn(id, ms) }) {
   // Off by default: the source branch is deleted only when asked, and only once
   // the merge commit is confirmed on the default branch. A refusal is not an error.
   const finish = async pull => {
     const result = { status: 'merged', merge: pull.merge_commit_sha, deletedBranch: null };
     if (!deleteRemoteBranch) return result;
     if (!pull.ref || !pull.merge_commit_sha || !(await github.mergedOnDefault(pull.merge_commit_sha))) { log(`#${pr}: merge not confirmed on the default branch; leaving ${pull.ref ?? 'the branch'} in place.`); return result; }
-    await github.deleteBranch(pull.ref);
+    if (!(await github.deleteBranch(pull.ref))) { log(`#${pr}: GitHub had already deleted ${pull.ref}.`); return result; }
     log(`#${pr}: deleted remote branch ${pull.ref}.`);
     return { ...result, deletedBranch: pull.ref };
   };
   queue.enqueue(pr, owner);
   try {
-    for (let ahead; (ahead = queue.position(pr)) > 0;) { log(`#${pr}: ${ahead} ahead in the landing queue; waiting.`); await sleep(poll); }
+    for (;;) {
+      const ahead = queue.position(pr);
+      if (ahead < 0) throw new Error(`#${pr} is no longer queued by this session.`);
+      if (ahead === 0) break;
+      log(`#${pr}: ${ahead} ahead in the landing queue; waiting.`);
+      await waitForQueue(pr, poll);
+    }
     const run = (head, attempt) => waitFor(async () => { const value = await github.verifyRun(head); return value?.status === 'completed' && value.attempt >= attempt && value; }, sleep, poll, limit, `Verify on ${head.slice(0, 7)}`);
     for (let attempt = 0; attempt < attempts; attempt++) {
       const pull = await waitFor(async () => { const value = await github.pull(pr); return (value.merged || value.state !== 'open' || value.mergeable_state !== 'unknown') && value; }, sleep, poll, limit, `GitHub to compute #${pr}'s merge state`);
@@ -65,19 +73,31 @@ export async function land({ pr, owner, github, guard, queue, log = () => {}, sl
   } finally { queue.dequeue(pr); }
 }
 
-function gitHubApi(root) {
-  const remote = execFileSync('git', ['remote', 'get-url', 'origin'], { cwd: root, encoding: 'utf8' }).trim();
+// exec is execFileSync; tests pass a fake gh. An empty path is the repository
+// itself: GitHub answers 404 for "repos/<owner>/<name>/" with the slash.
+// The two polled reads (the pull request and its Verify runs) are conditional, so an
+// unchanged answer costs no quota. onRate sees each response's remaining quota.
+export function gitHubApi(root, exec = execFileSync, { onRate } = {}) {
+  const remote = exec('git', ['remote', 'get-url', 'origin'], { cwd: root, encoding: 'utf8' }).trim();
   const slug = /github\.com[:/]([\w.-]+\/[\w.-]+?)(?:\.git)?$/.exec(remote)?.[1];
   if (!slug) throw new Error('Landing needs a github.com origin.');
-  const api = (path, ...args) => { const text = execFileSync('gh', ['api', ...args, `repos/${slug}/${path}`], { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 }); return text.trim() ? JSON.parse(text) : null; };
+  const poll = conditionalGet({ exec, onRate });
+  const api = (path, ...args) => { const text = exec('gh', ['api', ...args, `repos/${slug}${path && `/${path}`}`], { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 }); return text.trim() ? JSON.parse(text) : null; };
   return {
-    async pull(pr) { const p = api(`pulls/${pr}`); return { state: p.state, merged: p.merged, mergeable_state: p.mergeable_state, head: p.head.sha, ref: p.head.ref, merge_commit_sha: p.merge_commit_sha }; },
+    async pull(pr) { const p = poll(`repos/${slug}/pulls/${pr}`); return { state: p.state, merged: p.merged, mergeable_state: p.mergeable_state, head: p.head.sha, ref: p.head.ref, merge_commit_sha: p.merge_commit_sha }; },
     async updateBranch(pr, head) { api(`pulls/${pr}/update-branch`, '-X', 'PUT', '-f', `expected_head_sha=${head}`); },
     // "identical" or "behind" means the default branch already contains the merge commit.
     async mergedOnDefault(sha) { const base = api('').default_branch; return ['identical', 'behind'].includes(api(`compare/${base}...${sha}`).status); },
-    async deleteBranch(ref) { api(`git/refs/heads/${ref}`, '-X', 'DELETE'); },
+    // False when the branch was already gone: a repository that deletes head
+    // branches on merge has removed it before the lander gets here.
+    async deleteBranch(ref) {
+      try { api(`git/refs/heads/${ref}`, '-X', 'DELETE'); return true; } catch (error) {
+        if (api(`git/matching-refs/heads/${ref}`).some(item => item.ref === `refs/heads/${ref}`)) throw error;
+        return false;
+      }
+    },
     async verifyRun(head) {
-      const run = api(`actions/runs?head_sha=${head}&per_page=20`).workflow_runs.find(item => item.name === 'Verify');
+      const run = poll(`repos/${slug}/actions/runs?head_sha=${head}&per_page=20`).workflow_runs.find(item => item.name === 'Verify');
       return run && { id: run.id, status: run.status, conclusion: run.conclusion, attempt: run.run_attempt };
     },
     async failedJobs(id) { return api(`actions/runs/${id}/jobs?per_page=100`).jobs.filter(job => job.conclusion === 'failure').map(job => job.name); },
@@ -109,8 +129,10 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
       // Fail closed: this tool never merges on its own judgement.
       if (!existsSync(guardPath)) throw new Error(`Merge guard not found at ${guardPath}; set RIVER_OAKS_MERGE_GUARD.`);
       for (const signal of ['SIGINT', 'SIGTERM']) process.once(signal, () => { queue.dequeue(pr); process.exit(130); });
-      const sleep = ms => new Promise(done => setTimeout(done, ms));
-      const result = await land({ pr, owner, github: gitHubApi(process.cwd()), guard: guardRunner(guardPath), queue, sleep, deleteRemoteBranch, log: line => process.stdout.write(`${line}\n`) });
+      // Wait out the quota reset rather than spend the last requests other sessions need.
+      let rate;
+      const sleep = ms => new Promise(done => setTimeout(done, nextPollDelay({ interval: ms, rate })));
+      const result = await land({ pr, owner, github: gitHubApi(process.cwd(), execFileSync, { onRate: value => { rate = value; } }), guard: guardRunner(guardPath), queue, sleep, deleteRemoteBranch, log: line => process.stdout.write(`${line}\n`) });
       process.stdout.write(`#${pr} landed as ${result.merge}.${result.deletedBranch ? ` Remote branch ${result.deletedBranch} deleted.` : ''}\n`);
     } catch (error) { process.stderr.write(`land: ${error.message}\n`); process.exitCode = 1; }
   }

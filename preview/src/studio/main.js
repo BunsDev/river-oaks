@@ -18,12 +18,16 @@ export function startStudio(host) {
     <footer class="studio-footer"><span id="studio-dirty">New draft</span><p id="studio-status" role="status" aria-live="polite">Select an object, or add something to your region.</p><span id="studio-position">East / North · m</span></footer>`;
   const routes=createSpaceAssessmentRunner();
   const $=selector=>host.querySelector(selector),doc=createStudioDocument(undefined,{assessmentRunner:routes.assess});
-  let selected=null,interiorView=null,walking=false,disposed=false,importGeneration=0,viewport,designer,agent;
+  let selected=null,interiorView=null,lastFocus=null,walking=false,disposed=false,importGeneration=0,viewport,designer,agent;
   let renderedRevision = doc.revision, assessingRevision=null, assessmentError=null, editPending=0;
   const say=text=>{$('#studio-status').textContent=text;};
   try { if(doc.restore(localStorage))say('Saved draft reopened.'); } catch(error){say(`${error.message} Export or open a valid Studio file; the saved draft has not been changed.`);}
   const acceptDiscard=()=>!doc.dirty||window.confirm('Discard unsaved changes? Export or save first to keep them.');
-  const reportError=error=>{say(error.message);render();};
+  // A refused edit says so and names the furnishings to move, as the findings panel shows them.
+  const reportError=error=>{
+    const findings=error.assessment?.findings??[],names=[...new Set(findings.flatMap(finding=>finding.objectIds))].map(id=>doc.items.find(item=>item.id===id)?.label).filter(Boolean);
+    say(findings.length?`Edit not applied; your draft is unchanged. ${error.message}${names.length?` Nearby: ${names.join(', ')}.`:''}`:error.message);render();
+  };
   // Only awaited edits hold the busy state; a synchronous action must not re-render
   // panels, which would discard transient UI such as an open interior preview.
   const run=action=>{
@@ -81,30 +85,44 @@ export function startStudio(host) {
     $('#studio-count').textContent=`${items.length} objects`;
     $('#studio-dirty').textContent=doc.dirty?'● Unsaved changes':'○ Draft unchanged';
     $('#studio-undo').disabled=walking||!doc.canUndo;$('#studio-redo').disabled=walking||!doc.canRedo;
-    $('#studio-items').replaceChildren(...items.map(value=>{
-      const button=document.createElement('button');button.type='button';button.dataset.item=value.id;button.setAttribute('aria-pressed',String(value.id===selected));button.disabled=walking;
+    // The list and form are rebuilt only when their shape changes, so the control in use keeps focus.
+    const list=$('#studio-items'),listShape=items.map(value=>`${value.id}:${value.type}`).join('\n');
+    if(list.dataset.shape!==listShape){list.dataset.shape=listShape;list.replaceChildren(...items.map(value=>{
+      const button=document.createElement('button');button.type='button';button.dataset.item=value.id;
       const icon=document.createElement('span');icon.className='studio-object-icon';icon.textContent={building:'▱',tree:'♧',place:'⌖',arrival:'◇',furnishing:'▱',environment:'☀'}[value.type];
-      const label=document.createElement('span');label.textContent=value.label;button.append(icon,label);button.addEventListener('click',()=>select(value.id));return button;
-    }));
+      button.append(icon,document.createElement('span'));button.addEventListener('click',()=>select(value.id));return button;
+    }));}
+    items.forEach((value,index)=>{const button=list.children[index];button.setAttribute('aria-pressed',String(value.id===selected));button.disabled=walking;button.lastChild.textContent=value.label;});
     $('#studio-selected').textContent=item?.label??'Choose an object';$('#studio-kind').textContent=item?.type??'Selection';
-    const form=$('#studio-properties');form.replaceChildren();
-    const definitions=[['label','Name','text'],['east','East (m)','number'],['north','North (m)','number'],['width','Width (m)','number'],['depth','Depth (m)','number'],['height','Height (m)','number'],['radius','Crown radius (m)','number'],['yaw','Yaw (degrees)','number'],['elevation','Elevation (m)','number']];
-    if(item)for(const [key,label,type] of definitions){
-      if(item[key]===undefined||key==='label'&&!['place','furnishing'].includes(item.type))continue;
-      const wrapper=document.createElement('label');wrapper.textContent=label;
-      const input=document.createElement('input');input.type=type;input.name=key;input.value=item[key];input.disabled=walking||editPending>0;
-      if(type==='number')input.step=key==='yaw'?'1':'.1';else input.maxLength=64;
-      input.addEventListener('change',()=>run(async()=>{
-        if(type==='number'&&!input.value.trim())throw Error('Enter a finite number.');
-        await doc.update(item.id,{[key]:type==='number'?Number(input.value):input.value});render();say('Property updated.');
-      }));wrapper.append(input);form.append(wrapper);
+    const form=$('#studio-properties');
+    const definitions=[['label','Name','text'],['east','East (m)','number'],['north','North (m)','number'],['width','Width (m)','number'],['depth','Depth (m)','number'],['height','Height (m)','number'],['radius','Crown radius (m)','number'],['yaw','Yaw (degrees)','number'],['elevation','Elevation (m)','number']]
+      .filter(([key])=>item?.[key]!==undefined&&(key!=='label'||['place','furnishing'].includes(item.type)));
+    const choices=[['kind','Furnishing',SPACE_KINDS],['finish','Finish',SPACE_FINISHES],['lighting','Lighting',SPACE_LIGHTING]].filter(([key])=>item?.[key]!==undefined);
+    const formShape=item?[item.id,...definitions.map(([key])=>key),...choices.map(([key])=>key)].join('\n'):'';
+    if(form.dataset.shape!==formShape){
+      form.dataset.shape=formShape;form.replaceChildren();
+      for(const [key,label,type] of definitions){
+        const wrapper=document.createElement('label');wrapper.textContent=label;
+        const input=document.createElement('input');input.type=type;input.name=key;
+        if(type==='number')input.step=key==='yaw'?'1':'.1';else input.maxLength=64;
+        input.addEventListener('change',()=>run(async()=>{
+          if(type==='number'&&!input.value.trim())throw Error('Enter a finite number.');
+          await doc.update(item.id,{[key]:type==='number'?Number(input.value):input.value});render();say('Property updated.');
+        }));wrapper.append(input);form.append(wrapper);
+      }
+      for(const [key,label,values] of choices){
+        const wrapper=document.createElement('label');wrapper.textContent=label;
+        const input=document.createElement('select');input.name=key;
+        for(const value of values){const option=document.createElement('option');option.value=value;option.textContent=value[0].toUpperCase()+value.slice(1);input.append(option);}
+        input.addEventListener('change',()=>run(async()=>{await doc.update(item.id,{[key]:input.value});render();say('Property updated.');}));wrapper.append(input);form.append(wrapper);
+      }
     }
-    if(item)for(const [key,label,values] of [['kind','Furnishing',SPACE_KINDS],['finish','Finish',SPACE_FINISHES],['lighting','Lighting',SPACE_LIGHTING]]){
-      if(item[key]===undefined)continue;
-      const wrapper=document.createElement('label');wrapper.textContent=label;
-      const input=document.createElement('select');input.name=key;input.disabled=walking||editPending>0;
-      for(const value of values){const option=document.createElement('option');option.value=value;option.textContent=value[0].toUpperCase()+value.slice(1);input.append(option);}input.value=item[key];
-      input.addEventListener('change',()=>run(async()=>{await doc.update(item.id,{[key]:input.value});render();say('Property updated.');}));wrapper.append(input);form.append(wrapper);
+    // A checked edit makes fields read-only rather than disabled, so Tab can still reach them.
+    // A value being typed survives renders that are not the result of an edit.
+    for(const input of form.elements){
+      const value=String(item[input.name]),typing=input===document.activeElement&&input.value!==input.dataset.rendered&&editPending===0;
+      if(!typing&&input.value!==value)input.value=value;input.dataset.rendered=value;
+      if(input.tagName==='SELECT')input.disabled=walking||editPending>0;else{input.disabled=walking;input.readOnly=editPending>0;}
     }
     renderBuildingInteriorPanel($('#studio-building-interior'), { doc, buildingId: item?.type === 'building' ? item.id : null,
       disabled: walking, apply: render, say, run, interiorView,
@@ -119,6 +137,13 @@ export function startStudio(host) {
     $('#studio-frame').disabled=!item||item.type==='environment'||walking;$('#studio-region').disabled=walking;
     for(const button of host.querySelectorAll('[data-add],[data-tool],#studio-new,#studio-templates,#studio-reopen,#studio-import'))button.disabled=walking||editPending>0;
     $('#studio-walk').disabled=editPending>0;
+    // A control that was disabled or rebuilt while focused hands focus back once it is usable.
+    // Deferred: a field commits during Tab's blur, and restoring then would cancel the move.
+    if(lastFocus)setTimeout(()=>{
+      if(disposed||!lastFocus||document.activeElement&&document.activeElement!==document.body&&!document.activeElement.disabled)return;
+      const target=[lastFocus,{'#studio-undo':'#studio-redo','#studio-redo':'#studio-undo'}[lastFocus]].map(key=>key&&host.querySelector(key)).find(element=>element&&!element.disabled&&!element.hidden);
+      target?.focus({preventScroll:true});
+    });
   }
   function render(){if (doc.revision !== renderedRevision) { designer?.changed(); renderedRevision = doc.revision; }
     if(!doc.items.some(item=>item.id===selected))selected=null;
@@ -168,6 +193,14 @@ export function startStudio(host) {
   $('#studio-frame').addEventListener('click',()=>viewport.frameSelection());$('#studio-region').addEventListener('click',()=>viewport.frameRegion());
   $('#studio-walk').addEventListener('click',()=>setWalk(!walking));
   const events=new AbortController();
+  // Remembers the scene object, field or history button in use; a deliberate move elsewhere forgets it.
+  host.addEventListener('focusin',({target})=>{
+    lastFocus=target.dataset.item&&target.closest('#studio-items')?`#studio-items [data-item="${CSS.escape(target.dataset.item)}"]`:
+      target.name&&target.closest('#studio-properties')?`#studio-properties [name="${target.name}"]`:['studio-undo','studio-redo'].includes(target.id)?`#${target.id}`:null;
+  },{signal:events.signal});
+  host.addEventListener('focusout',({target,relatedTarget})=>{
+    if(!relatedTarget)queueMicrotask(()=>{if(target.isConnected&&!target.disabled&&document.activeElement===document.body)lastFocus=null;});
+  },{signal:events.signal});
   window.addEventListener('keydown',event=>{
     if(host.querySelector('dialog[open]')||walking||event.target.closest('input,textarea,select,[contenteditable="true"]'))return;
     if((event.metaKey||event.ctrlKey)&&event.key.toLowerCase()==='s'){event.preventDefault();$('#studio-save').click();}

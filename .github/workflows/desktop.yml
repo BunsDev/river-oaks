@@ -2,12 +2,19 @@ name: Desktop
 # Packages the Electron shell on Windows, Linux and macOS runners, checks the
 # fuse wire and asar contents of each build, runs the development desktop
 # end-to-end suite with the loopback acceptance fixture, and uploads unsigned
-# builds for testers (#371). It never holds secrets: these are PR builds.
+# builds for testers (#371). From the Windows and Linux builds it makes the
+# installers (Squirrel Setup.exe, AppImage, .deb), installs each on a fresh
+# runner, checks the installed copy, launches it once, removes it, and
+# publishes them with one SHA256SUMS (#372). Pull requests hold no secrets and
+# build unsigned; only a manual dispatch or a v* tag can reach the Windows
+# signing job, and it skips with a notice until signing is configured.
 # The required "preview" check in verify.yml is unchanged.
 on:
   workflow_dispatch:
   push:
     branches: [main]
+    # Release tags (#373). Path filters do not apply to tag pushes.
+    tags: ['v*']
     paths:
       - desktop/**
       - shared/**
@@ -28,16 +35,52 @@ permissions:
 defaults:
   run:
     shell: bash
+# A newer push to the same pull request supersedes the older run; main, tags and
+# manual runs are never cancelled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
+  # Pull requests that change desktop/ get every platform and the installers. Ones
+  # that only reach this workflow through shared/, package.json or the lockfile
+  # get the Linux leg; main, tags and manual runs always get everything.
+  scope:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      platforms: ${{ steps.scope.outputs.platforms }}
+      installers: ${{ steps.scope.outputs.installers }}
+    steps:
+      - id: scope
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          full=true
+          if [ "$EVENT" = pull_request ]; then
+            files=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR/files" --paginate --jq '.[].filename')
+            grep -qE '^(desktop/|\.github/workflows/desktop\.yml$)' <<< "$files" || full=false
+          fi
+          if [ "$full" = true ]; then
+            echo 'platforms=["windows-latest","ubuntu-latest","macos-latest"]' >> "$GITHUB_OUTPUT"
+          else
+            echo 'platforms=["ubuntu-latest"]' >> "$GITHUB_OUTPUT"
+          fi
+          echo "installers=$full" >> "$GITHUB_OUTPUT"
   desktop:
     name: desktop (${{ matrix.os }})
+    needs: scope
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
+    timeout-minutes: 45
     strategy:
       # Every platform reports, so one failing leg doesn't hide another.
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        os: ${{ fromJSON(needs.scope.outputs.platforms) }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -60,6 +103,41 @@ jobs:
         if: ${{ !cancelled() }}
         id: check
         run: pnpm run desktop:package:check
+      # desktop/installers.js reruns the same fuse, binary and asar checks and
+      # refuses a build that fails them; macOS keeps its zip (#372 covers Windows and Linux).
+      - name: Build the installers (unsigned)
+        if: ${{ !cancelled() && runner.os != 'macOS' && steps.check.outcome == 'success' }}
+        id: installers
+        run: pnpm run desktop:installers
+      - name: Unsigned installers, SHA256SUMS and build manifest
+        if: ${{ !cancelled() && steps.installers.outcome == 'success' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: installers-${{ runner.os == 'Windows' && 'windows' || 'linux' }}-x64-unsigned
+          retention-days: 14
+          path: dist/installers/
+      # Rehearses Windows signing with a throwaway certificate made here and
+      # trusted only on this runner: Squirrel must sign the app, its DLLs,
+      # Update.exe and Setup.exe through signtool, and every one must verify.
+      # The rehearsal build is never uploaded. Real signing is sign-windows below.
+      - name: Signing rehearsal (ephemeral test certificate, not uploaded)
+        if: ${{ !cancelled() && runner.os == 'Windows' && steps.installers.outcome == 'success' }}
+        shell: pwsh
+        run: |
+          $cert = New-SelfSignedCertificate -Type CodeSigningCert -Subject 'CN=TypeSafe Place CI signing rehearsal (untrusted)' -CertStoreLocation Cert:\CurrentUser\My -KeyExportPolicy NonExportable -NotAfter (Get-Date).AddDays(1)
+          $public = Join-Path $env:RUNNER_TEMP 'rehearsal.cer'
+          Export-Certificate -Cert $cert -FilePath $public | Out-Null
+          Import-Certificate -FilePath $public -CertStoreLocation Cert:\LocalMachine\Root | Out-Null
+          try {
+            $env:RIVER_OAKS_TEST_SIGNING_THUMBPRINT = $cert.Thumbprint
+            node desktop/installers.js --sign test
+            if ($LASTEXITCODE) { exit $LASTEXITCODE }
+            node desktop/installer-acceptance.js --dir dist/installers-test-signed --signatures
+            if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          } finally {
+            Remove-Item -Path "Cert:\LocalMachine\Root\$($cert.Thumbprint)", "Cert:\CurrentUser\My\$($cert.Thumbprint)" -ErrorAction SilentlyContinue
+            Remove-Item -Recurse -Force dist/installers-test-signed -ErrorAction SilentlyContinue
+          }
       # The packaged build has the inspector fuse off, so Playwright drives the
       # development Electron (desktop/e2e.js --dev): its own Vite server, the
       # loopback acceptance identity, an in-process town and an offline bridge.
@@ -68,7 +146,7 @@ jobs:
       # the e2e's minimize check fails; Openbox gives the window real state.
       - name: Window manager for the Xvfb session
         if: ${{ !cancelled() && runner.os == 'Linux' }}
-        run: sudo apt-get install -y --no-install-recommends openbox
+        run: sudo apt-get update -q && sudo apt-get install -y --no-install-recommends openbox
       # The runner image pipes core dumps to systemd-coredump. The e2e crashes the
       # game renderer on purpose, and the kernel keeps that renderer, with its IPC
       # channel, alive until the collector has read the whole core: about five
@@ -151,3 +229,224 @@ jobs:
           path: |
             dist/bundles/*.zip
             dist/bundles/SHA256SUMS
+
+  # Each installer goes onto a fresh runner: install silently, check the
+  # installed copy's fuse wire, asar and every file against the build manifest,
+  # launch it once offline, remove it and confirm nothing is left.
+  installers-windows:
+    name: installers (windows-latest)
+    needs: [scope, desktop]
+    if: ${{ !cancelled() && needs.scope.outputs.installers == 'true' }}
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          cache: pnpm
+      # For the package check and Electron's shortcut reader; the app under test is the installed one.
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: installers-windows-x64-unsigned
+          path: dist/installers
+      - name: Install, check, launch and remove the Setup.exe
+        run: node desktop/installer-acceptance.js --dir dist/installers --report dist/installer-acceptance-windows.json
+      - name: Acceptance report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: installer-acceptance-windows
+          retention-days: 14
+          if-no-files-found: ignore
+          path: dist/installer-acceptance-windows.json
+
+  # ubuntu-24.04 by name: its AppArmor restricts unprivileged user namespaces,
+  # the case the .deb's profile and setuid chrome-sandbox exist for.
+  installers-linux:
+    name: installers (ubuntu-24.04)
+    needs: [scope, desktop]
+    if: ${{ !cancelled() && needs.scope.outputs.installers == 'true' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # What an Ubuntu desktop already has: FUSE 3 for the AppImage, an X server
+      # (Xvfb here) and desktop-file-validate for the entries.
+      - name: Desktop tools
+        run: sudo apt-get update -q && sudo apt-get install -y --no-install-recommends desktop-file-utils fuse3 xvfb xauth
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: installers-linux-x64-unsigned
+          path: dist/installers
+      - name: Install, check, launch (sandboxed) and remove the .deb and AppImage
+        run: node desktop/installer-acceptance.js --dir dist/installers --report dist/installer-acceptance-linux.json
+      - name: Acceptance report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: installer-acceptance-linux
+          retention-days: 14
+          if-no-files-found: ignore
+          path: dist/installer-acceptance-linux.json
+
+  # Windows signing runs only from a manual dispatch or a v* tag, never on a
+  # pull request. Azure Artifact Signing (formerly Trusted Signing) is reached
+  # through OIDC federation, so the repository holds no credential: these are
+  # identifiers in repository variables. Until all are set, this job says so
+  # and sign-windows is skipped. Setup: docs/desktop.md, "Windows signing".
+  signing-config:
+    name: Windows signing configuration
+    if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v') }}
+    runs-on: ubuntu-latest
+    outputs:
+      configured: ${{ steps.config.outputs.configured }}
+    steps:
+      - id: config
+        env:
+          AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          RIVER_OAKS_SIGNING_ENDPOINT: ${{ vars.RIVER_OAKS_SIGNING_ENDPOINT }}
+          RIVER_OAKS_SIGNING_ACCOUNT: ${{ vars.RIVER_OAKS_SIGNING_ACCOUNT }}
+          RIVER_OAKS_SIGNING_PROFILE: ${{ vars.RIVER_OAKS_SIGNING_PROFILE }}
+        # Names only: no value is printed.
+        run: |
+          missing=()
+          for name in AZURE_CLIENT_ID AZURE_TENANT_ID AZURE_SUBSCRIPTION_ID RIVER_OAKS_SIGNING_ENDPOINT RIVER_OAKS_SIGNING_ACCOUNT RIVER_OAKS_SIGNING_PROFILE; do
+            [ -n "${!name}" ] || missing+=("$name")
+          done
+          if [ "${#missing[@]}" -eq 0 ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+            echo "Windows signing is configured; sign-windows signs this run's installer."
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Windows signing skipped::Azure Artifact Signing is not configured (unset repository variables: ${missing[*]}). This run's Windows installer is unsigned. Setup steps: docs/desktop.md, Windows signing."
+            {
+              echo "### Windows signing skipped"
+              echo "Unset repository variables: ${missing[*]}."
+              echo "The Windows installer from this run is unsigned. Setup steps are in docs/desktop.md (Windows signing)."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  sign-windows:
+    name: sign (windows-latest)
+    needs: [desktop, signing-config]
+    if: ${{ !cancelled() && needs.desktop.result == 'success' && needs.signing-config.outputs.configured == 'true' }}
+    runs-on: windows-latest
+    # The OIDC subject is repo:BunsDev/river-oaks:environment:desktop-signing;
+    # the environment's deployment rules decide which refs may sign.
+    environment: desktop-signing
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run desktop:package
+      - run: pnpm run desktop:package:check
+      - uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      # Squirrel signs every PE file it packs (the app, its DLLs, Update.exe)
+      # and Setup.exe with signtool, Artifact Signing's dlib and the Azure CLI
+      # credential azure/login left; timestamped by Microsoft's TSA.
+      - name: Build and sign the installer (Azure Artifact Signing)
+        env:
+          RIVER_OAKS_SIGNING_ENDPOINT: ${{ vars.RIVER_OAKS_SIGNING_ENDPOINT }}
+          RIVER_OAKS_SIGNING_ACCOUNT: ${{ vars.RIVER_OAKS_SIGNING_ACCOUNT }}
+          RIVER_OAKS_SIGNING_PROFILE: ${{ vars.RIVER_OAKS_SIGNING_PROFILE }}
+        run: node desktop/installers.js --sign artifact --out dist/installers-signed
+      - name: signtool verify /pa /v on Setup.exe and every packed binary
+        run: node desktop/installer-acceptance.js --dir dist/installers-signed --signatures --report dist/installer-acceptance-windows-signatures.json
+      - name: Install, check, launch and remove the signed Setup.exe
+        run: node desktop/installer-acceptance.js --dir dist/installers-signed --signed --report dist/installer-acceptance-windows-signed.json
+      - name: Signed installer, SHA256SUMS and build manifest
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: installers-windows-x64-signed
+          retention-days: 30
+          path: dist/installers-signed/
+      - name: Signing reports
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: installer-acceptance-windows-signed
+          retention-days: 30
+          if-no-files-found: ignore
+          path: dist/installer-acceptance-windows-*.json
+
+  # One folder with every installer and one SHA256SUMS over all of them. It
+  # takes the signed Setup.exe when sign-windows ran, the unsigned one otherwise,
+  # and says which in the artifact name.
+  installers:
+    name: installers (SHA256SUMS)
+    needs: [installers-windows, installers-linux, sign-windows]
+    if: ${{ !cancelled() && needs.installers-windows.result == 'success' && needs.installers-linux.result == 'success' && (needs.sign-windows.result == 'success' || needs.sign-windows.result == 'skipped') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: installers-windows-x64-unsigned
+          path: in/windows-unsigned
+      - if: ${{ needs.sign-windows.result == 'success' }}
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: installers-windows-x64-signed
+          path: in/windows-signed
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: installers-linux-x64-unsigned
+          path: in/linux
+      - name: One SHA256SUMS over the Windows and Linux installers
+        id: assemble
+        run: |
+          windows=in/windows-unsigned; suffix=-unsigned
+          if [ -d in/windows-signed ]; then windows=in/windows-signed; suffix=; fi
+          (cd "$windows" && sha256sum -c SHA256SUMS)
+          (cd in/linux && sha256sum -c SHA256SUMS)
+          version=$(node -p "require('./in/linux/build-manifest-linux-x64.json').version")
+          [ "$version" = "$(node -p "require('./$windows/build-manifest-win32-x64.json').version")" ] || { echo "Windows and Linux versions differ" >&2; exit 1; }
+          mkdir out
+          cp "$windows/TypeSafe-Place-$version-windows-x64-Setup.exe" "$windows/TypeSafePlace-$version-full.nupkg" "$windows/RELEASES" \
+            "in/linux/TypeSafe-Place-$version-linux-x64.AppImage" "in/linux/TypeSafe-Place-$version-linux-x64.deb" out/
+          cd out
+          sha256sum -- * > SHA256SUMS
+          sha256sum -c SHA256SUMS
+          cat SHA256SUMS
+          echo "name=TypeSafe-Place-$version-installers$suffix" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Installers ($( [ -n "$suffix" ] && echo 'Windows unsigned' || echo 'Windows signed' ), Linux unsigned)"
+            echo '```'
+            cat SHA256SUMS
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Installers with one SHA256SUMS
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ${{ steps.assemble.outputs.name }}
+          retention-days: 30
+          path: out/

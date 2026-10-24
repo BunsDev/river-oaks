@@ -226,14 +226,21 @@ node preview/e2e/studio-pilot-perf.mjs          # vsync-off frame times, load an
 ```
 
 `STUDIO_TEMPLATE=house` (or `boutique`, `cafe`) runs the soak and the texture check
-against another template. The texture check then measures a textured floor, because stone
-worktops are plain slabs and Garden Office has no textured surface left.
+against another template. The texture check measures a textured floor, because stone
+worktops are plain slabs. Garden Office has no textured surface left, so its case first
+changes the meeting-room floor to limestone. Each case must show the texture (a blocked
+texture reads differently), and once its requests finish the floor must match the normal
+reading within 3 levels.
 
 The soak samples renderer counts from the viewport's `data-render-stats` (the game's
-format plus `programs`) and heap, listeners and DOM nodes from Chromium after a
-forced garbage collection. Persistent by design: the shared PBR texture cache, one
-reflection map, compiled shader programs and up to 80 undo steps. The performance
-profile writes `.runtime/acceptance/perf/receipt.json`.
+format plus `programs`, distinct scene `materials` and the viewport's own `renderTargets`),
+heap, listeners and DOM nodes from Chromium after a forced garbage collection, and
+pending loads: material image requests, live route-assessment workers and pending
+timeouts. Persistent by design: the shared PBR texture cache, one reflection map, the
+shadow map, compiled shader programs and up to 80 undo steps. The performance profile
+writes `.runtime/acceptance/perf/receipt.json`. On macOS the soak and the profile also
+record the GPU process's physical footprint and its Metal share, per sample or phase
+(unified memory, so a trend rather than a per-resource VRAM figure).
 
 ## World Designer
 

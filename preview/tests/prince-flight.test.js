@@ -1,5 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {createPrinceFlight,flightSlot,stepPrinceFlight} from '../src/prince-flight.js';
+import {FLIGHT_SPEED} from '../src/flight.js';
 const environment={groundAt:()=>0,canFly:()=>true,isFree:()=>true,flightCeiling:32};
 test('Jev accelerates smoothly, keeps up with a fast bubble and lands continuously',()=>{
  const state=createPrinceFlight([2.7,0,-.6]);let previous=[...state.position],velocity=[0,0,0];
@@ -13,6 +14,25 @@ test('Jev accelerates smoothly, keeps up with a fast bubble and lands continuous
  const target=[state.position[0],0,state.position[2]+1];
  for(let i=0;i<600&&!state.landed;i++)stepPrinceFlight(state,target,environment,1/60,{landing:true});
  assert.equal(state.landed,true);assert.equal(state.position[1],0);
+});
+test('Jev keeps the same place beside the bubble at its fast speed as at the old 7 m/s',()=>{
+ const behind={};
+ for(const speed of [7,FLIGHT_SPEED.fast]) {
+  const state=createPrinceFlight([2.7,0,-.6]);let velocity=[0,0,0];
+  for(let i=0;i<1800;i++){
+   const pose={position:[0,5.18,i/60*speed],velocity:[0,speed]};
+   stepPrinceFlight(state,flightSlot(pose,0),environment,1/60,{playerSpeed:speed});
+   assert.ok(Math.hypot(...state.velocity.map((v,k)=>v-velocity[k]))<.135,'acceleration stays bounded');
+   velocity=[...state.velocity];behind[speed]=pose.position[2]-state.position[2];
+  }
+  assert.ok(Math.abs(state.velocity[2]-speed)<.05,`flies at the bubble's ${speed} m/s: ${state.velocity[2]}`);
+ }
+ assert.ok(Math.abs(behind[7])<2,`beside the bubble at 7 m/s: ${behind[7].toFixed(2)} m behind`);
+ // She steers to the slot sampled before the bubble's step, so she settles one 60 Hz frame of its extra travel closer.
+ const frame=(FLIGHT_SPEED.fast-7)/60;
+ assert.ok(Math.abs(behind[7]-behind[FLIGHT_SPEED.fast]-frame)<.05,`and at its fast speed: ${behind[FLIGHT_SPEED.fast].toFixed(2)} m behind`);
+ // Slower than 7 m/s the slot is unchanged: 0.35 s of the bubble's travel ahead.
+ assert.deepEqual(flightSlot({position:[0,5.18,0],velocity:[0,4.5]},0),flightSlot({position:[0,5.18,4.5*.35]},0));
 });
 test('flight clearance is swept, blocks walls and never teleports through a roof',()=>{
  const state=createPrinceFlight([0,3,0]);const env={...environment,canFly:(x,y)=>x<1||y>8};

@@ -96,8 +96,12 @@ export function createStudioViewport(host,{onSelect,onTransform,onPosition,onExi
     }
     last=time;renderer.render(scene,camera);
     // Same once-a-second render stats the game publishes, for acceptance runs.
-    if(time-lastStats>1000){lastStats=time;const {render,memory,programs}=renderer.info;
-      host.dataset.renderStats=JSON.stringify({calls:render.calls,triangles:render.triangles,geometries:memory.geometries,textures:memory.textures,programs:programs?.length??null,at:Math.round(time)});}
+    // materials: distinct materials in the current content; renderTargets: the viewport's
+    // own shadow map and reflection target.
+    if(time-lastStats>1000){lastStats=time;const {render,memory,programs}=renderer.info,materials=new Set();
+      content?.group.traverse(object=>{for(const material of [object.material].flat())if(material)materials.add(material);});
+      host.dataset.renderStats=JSON.stringify({calls:render.calls,triangles:render.triangles,geometries:memory.geometries,materials:materials.size,
+        textures:memory.textures,renderTargets:Number(Boolean(sun.shadow.map))+Number(Boolean(reflections)),programs:programs?.length??null,at:Math.round(time)});}
   }
   let lastStats=-Infinity;
   frame=requestAnimationFrame(animate);

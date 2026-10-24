@@ -1,0 +1,107 @@
+# The Gardens: measured campus contract (#506)
+
+The Gardens replaces the parking garage `osm-way-625330790` with three stepped rental office towers, two public Floor 4 skywalks and a planted public ground, inside the garage's own parcel. This brief records what the contract decides and how the next packages consume it. The numbers live in one place, [`shared/garden-campus-layout.js`](../../../shared/garden-campus-layout.js). [`layout-contract.json`](layout-contract.json) and the views ([site plan](views/site-plan.svg), [Floor 4](views/floor-4.svg), [long section](views/section-u16.svg)) are generated from that module.
+
+## What is fixed
+
+| | |
+| --- | --- |
+| Source | garage `osm-way-625330790`, district blob `566d7c52`, commit `153471bc` |
+| Parcel | the garage ring itself: 6,838.982905 m², west edge 181.22 m, 37.72–37.76 m wide, not a rectangle |
+| Frame | u east across the plot, v north along it, z above the garage base 18.25939 m; source origin and axes as pinned; renderer `[east, altitude, -north]` |
+| Towers | T1 Grove Offices 6 floors (tiers 2/2/2), T2 The Commons 7 (3/2/2), T3 Atelier Offices 6 (2/2/2); floors at z 0, 5, 9, 13, 17, 21 (and 25 in T2) |
+| Roofs | decks 25 / 29 / 25; parapets 26 / 30 / 26; roof access headhouses to 28 / 32 / 28; caps 28.1 / 32.1 / 28.1 |
+| Skywalks | B12 23 m and B23 15 m, facade to facade at Floor 4 (z 13); 4 m overall, 3 m clear, 0.35 m slab, 1.25 m guards |
+| Public route | three Floor 4 galleries (u 14.5–17.5), four 3 m landings, three 3 m core spurs and both decks; B12's lane opens onto T2's z 13 terrace (v 90–93), where its guards stop |
+| Ground | P1 promenade and P2–P9; café, pergola and pool; entries E1–E3 joined to their paths by explicit seams |
+| Retained | the IPIC party wall (v 82.54–181.22, 98.68 m) stays closed; no east street |
+
+The existing office roof is 51.28383 m absolute. T2's cap (50.35939 m) stays 0.92 m below it, and the IPIC mass (18.5 m) stays below the campus.
+
+## Decisions made executable
+
+- **Identity and versions.**
+  - Ids: `GARDEN_CAMPUS_ID` is `river-oaks-garden-campus`. Floors are `T1-F1`…; suites are `T1-F2-W-S`, numbered `T1-201`; skywalks are `B12`/`B23`, with portals `B12-from`/`B12-to` and landings `T1-F4-north`….
+  - `GARDEN_CAMPUS_VERSIONS` is `{schema 1, layout '3.2', floors 1, support 1, units 1}`. Layout 3.1 moved the level portals to standing points. 3.2 adopts #511's finishes and stops B12's guards at T2's terrace (below). Both are minor and compatible. Any change to an id, dimension, elevation or connection bumps `layout`; renumbered floors bump `floors`; changed level, surface or transition semantics bump `support`; changed suite identities or boundaries bump `units`.
+  - Persisted positions, leases and level state record these versions. `checkCampusCompatibility` refuses on any major mismatch, and the consumer relocates to the street.
+- **Source versus authored.** `source` holds the garage ring exactly as pinned. Everything else is authored. With a district, the validator re-derives the parcel and refuses a changed ring, base or missing entry lane.
+- **Support.**
+  - Levels are keyed by elevation across the whole campus, as agreed with the #508 owner: `garden-campus/l0`…`l7` at z 0, 5, 9, 13, 17, 21, 25, 29.
+  - `campusSupportAt(levelId, u, v)` returns the surface the occupant stands on, or `null` (off the level, or inside a shaft, guard or planter).
+  - Nothing returns the highest surface at a point. Upper surfaces never enter the district ground lookup (`groundSurfaceHeight` takes the highest triangle), so a street walker under B12 stays on the ground.
+  - B12 crosses T2's z 13 terrace (v 90–93) at the same level. The terrace guard opens for it at v 90 (u 14–18), as the issue specifies, and B12's edge guards stop there (`guardSpan` 70–90), so the lane opens onto one connected terrace whose own guards close its edge. Running them on to the facade (3.1) cut the terrace's west wing, 13.1 m² a body can stand on, off from its door. Below B12 the P2 route keeps 12.65 m. Below B23, T3's z 9 terrace keeps 3.65 m (standing height 2.45 m plus 0.3 m headroom required).
+- **Cores and roof access.**
+  - Each reserved 5 × 6 m core keeps its envelope: a 3 × 2.6 m lift shaft, a 3 × 3.4 m enclosed stair hall, and a 2 × 6 m lobby meeting the 3 m spur.
+  - Stairs are paired level-change portals, as in generated interiors; the lift is the step-free route. `CORE_DECISION` records why: a walked, code-like switchback would need about 5 × 9.4 m. Growing each core 3.4 m north would remove about 28.9 m² of suite per upper floor, about 549 m² across the campus, so it was not adopted.
+  - Roof access emerges through a 3 m headhouse inside each core; the headhouse door opens onto the roof garden.
+  - A level portal's `position` is where a body stands to use it and where it lands: 0.6 m (`CAMPUS_DOOR_SETBACK`, as for suite doors) in front of the shaft door, and outside the headhouse door on the roof (`headhouse.landing`). The faces stay published as `core.lift.door`, `core.stair.door` and `headhouse.door`. The server lands a level change on the paired portal and refuses a landing that is not free (`level_landing_blocked` in `world.js`); at the 3.0 face positions every landing put the body inside a shaft or headhouse.
+- **Public and private.** Ground paths, F1 halls, core lobbies and spurs, every spine, terrace passages, terraces, roofs and both skywalks are public. Suites are private-suite, with one door each onto a public spine. Residual strips are service. Crossing the campus never needs a lease.
+- **Units.**
+  - 43 suites, 3,279.7 m² net, computed from real geometry: plate minus core, spur, spine and terrace passage.
+  - Each suite has at least a 3 m short side, a 1.7 m door onto public circulation, and a desk anchor with 1.27 m seated clearance.
+  - Top-tier east strips (1.5 m) are recorded as service residual, never as suites. Commercial terms are unset (#509).
+- **Body clearance.** Clearances retain `AVATAR_ENVELOPE` (0.505 / 0.888 / 2.45 / 1.27 m). The #517 refresh measures all 13 current human appearances ([avatar-envelope.json](avatar-envelope.json)), using visible morph-aware vertices and the millisecond animation clock:
+  - widest standing body 0.752686 m (Kai explorer);
+  - tallest standing body 2.016064 m (forest aristocrat);
+  - widest standing turning radius 0.510034 m (Kai explorer);
+  - widest settled seated radius 0.845295 m (Lyra).
+
+  The unchanged constants bound all 13. These are standing and settled seated poses, not continuous motion acceptance. The [prior 11-look receipt](../../../data/reports/character-fidelity-campus-envelope-before-517.json) is preserved. Directional IPIC acceptance is separate: both new fixtures fit, while three existing looks exceed its old forward bound ([findings](../../../data/reports/character-fidelity-clearance-517.json)).
+- **Finishes (#511, layout 3.2).**
+  - 67 solid obstacles in `layout.furnishings` (`{id, kind, levelId, rect}`), each placed on its own level by `campusLevels`:
+    - 26 planters along terrace guards and on roofs;
+    - 21 seats (3 m benches);
+    - 9 meeting tables;
+    - 11 ground tree pits, 1.2 m square with the crown above 3.2 m.
+  - Seats and tables are collision until #510 makes them usable. #507 turns the ground tree pits into street collision.
+  - The validator keeps each finish inside one public terrace or roof, or on open ground off every path and seam. It also keeps finishes clear of other obstacles, keep-clear zones, the deck, and the 1.8 m approach in front of each terrace or headhouse door.
+  - From every terrace and roof door, flood checks (0.1 m grid) prove that a body and a 1.8 m route still reach every part, seat and table, and that no area of 0.5 m² or more where a body can stand is cut off.
+- **Openings.** Every entrance, suite door, terrace door and skywalk portal lies on the boundary it joins, its whole width inside the edge the two zones share, so a walker crosses a facade or a suite wall only where an opening is published. A body at every level portal is on public support and clear of every obstacle.
+- **Seams and thresholds.**
+  - Entries are parcel vertices. Each seam follows the boundary vertices to its path, so the 4.6–18 mm gaps are real geometry, not tolerance.
+  - Lane altitudes differ from the base by −0.031 (E1), −0.011 (E2) and +0.059 m (E3). Thresholds over 0.1 m would need a ramp.
+- **Cameras.** `01-southeast-aerial`, `02-street-under-b12`, `03-floor4-bridge-walk`, `04-northwest-high-oblique`, `05-office-terrace-outlook` (approximate: the office roof edge nearest the campus).
+
+## Interface for consumers
+
+All of it is pure data and functions, with no Three.js, DOM or server state.
+
+| Export | Use |
+| --- | --- |
+| `GARDEN_CAMPUS_LAYOUT` | deep-frozen contract: source, frame, context, parcel, towers (levels, cores, terraces, roofs, silhouettes), bridges (with `guardSpan`), ground, entries, seams, cameras, `furnishings`, policy |
+| `campusLevels()` | per level: `surfaces` (id, kind, rect or polygon, access `public`/`private-suite`/`service`), `obstacles` (lift, stair, guard, headhouse, planter, post, seat, table, tree), `keepClear`, `portals` (lift/stairs with `toLevel`/`toPortal`; `position` is the standing point), `openings` (skywalk portals, terrace doors, suite doors, entrances); roofs and terraces carry `reachedBy` |
+| `campusSupportAt(levelId, u, v)` / `campusSurfacesAt(u, v)` | support under a body's centre on its level / what is stacked at a point. An authority also keeps the body clear of the level's obstacles: on a facade line where a guard ends, the centre alone still finds support |
+| `campusRoute(from, to, {publicOnly, walkOnly})` / `campusGraph()` | connection graph over circulation zones |
+| `campusUnitInventory()` | suite id, number, level, net area, door and desk anchor, terms unset |
+| `sourceToCampus`, `campusToSource`, `campusToScene` | frames |
+| `validateGardenCampus(layout, {district, required})` | findings; an accepted layout has none |
+| `checkCampusCompatibility(required)` | version gate for persisted state |
+
+## Migration notes
+
+- The district file is not edited. The garage remains a `parking` building in `district.json` until #507 adds a server-selected content revision that replaces it. The garage should stay the default until that revision is accepted.
+- **Collision today.** The garage ring is in `district.collisionPolygons` exactly (index 1 at `566d7c52`), so the whole parcel blocks walking. #507's campus revision must remove that polygon and add campus collision built from these surfaces and obstacles. It must not shrink a clearance to fit art. A test pins the polygon's presence, so a district change is noticed.
+- The generic interior recipe (`generateBuildingInteriorPlan`) stacks 4.2 m then 3.5 m storeys; the campus is 5 m then 4 m. That recipe must not generate these towers. A test pins the difference.
+- No persisted state exists yet. The first persisted campus positions, leases or level state must record `GARDEN_CAMPUS_VERSIONS` and use `checkCampusCompatibility`.
+
+## Handoff
+
+| Owner | Consumes | Next action |
+| --- | --- | --- |
+| #507 shells, overlay (tracker owner) | towers, floors, cores, bridges, ground, entries, seams, obstacles | `attachGardenCampus(world)`, renderer shells, street rooms, collision, a content revision with the garage as default, fingerprint migration with #512 |
+| #508 public traversal (handed to the #506 owner) | `campusLevels`, `campusSupportAt`, portals, openings, keepClear, `reachedBy` | server-side levels `garden-campus/l<i>` in `world.js`, paired stair/lift portals (1.3 m reach, free landing), continuous bridge walking, above/below two-player proof. `server/tests/garden-campus-support.test.js` is the reference: its fixture authority keeps `world.js`'s walking rules, and the same walks and refusals must pass against the real levels |
+| #509 leases | `campusUnitInventory`, unit ids, door openings, `GARDEN_CAMPUS_VERSIONS.units` | lease records keyed on unit id + layout version; commercial terms stay unset |
+| #510 suite journey | suite door openings (public spine to private suite), desk anchors; terrace and roof `seat`/`table` obstacles by kind | admission through the door seam only; seats become usable through `registerCampusLevelAction` |
+| #511 finishes and rendering | silhouette caps, planting beds, cameras, `layout.furnishings` | draw the published finishes inside their rects; propose further finishes as rects for `validateGardenCampus` and a minor layout bump |
+| #512 acceptance | validator, named cameras, versions | integrated journey and migration checks |
+
+## Reproduce
+
+```sh
+node --test preview/tests/garden-campus-layout.test.js
+node --test server/tests/garden-campus-support.test.js   # authority fixture on the server's district
+node scripts/garden-campus-views.mjs --check     # validator plus published files
+node scripts/garden-campus-views.mjs             # regenerate after a contract change
+```
+
+A 3D review page draws the contract live: `pnpm exec vite --config preview/vite.config.js --port <port>` with `RIVER_OAKS_DEV_TOWN=off`, then open `/e2e/fixtures/garden-campus.html`.

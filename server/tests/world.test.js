@@ -65,11 +65,11 @@ test('only the named account can enter shared play as either Jevica form',()=>{
   const world=createSharedWorld(data);
   assert.equal(world.join({userId:owner,name:'Owner'}).player.appearance,'jevica');
   assert.equal(world.join({userId:'guest',name:'Guest'}).player.appearance,'sable-human');
-  for(const appearance of ['jevica','jevica-beast']) {
+  for(const appearance of ['jevica','jevica']) {
     assert.equal(world.command('guest',{type:'appearance',appearance}).error,'exclusive_appearance');
     assert.equal(world.snapshot().players.find(player=>player.id==='guest').appearance,'sable-human');
   }
-  assert.equal(world.command(owner,{type:'appearance',appearance:'jevica-beast'}).ok,true);
+  assert.equal(world.command(owner,{type:'appearance',appearance:'jevica'}).ok,true);
   assert.equal(world.command('guest',{type:'appearance',appearance:'woman-tailored'}).ok,true);
 });
 
@@ -78,7 +78,7 @@ test('the same WorkOS account has Jevica and vehicle access under its Production
   const world=createSharedWorld(data);
   const joined=world.join({userId:owner,name:'Owner'});
   assert.equal(joined.player.appearance,'jevica');
-  assert.equal(world.command(owner,{type:'appearance',appearance:'jevica-beast'}).ok,true);
+  assert.equal(world.command(owner,{type:'appearance',appearance:'jevica'}).ok,true);
   assert.equal(world.command(owner,{type:'pose',position:joined.player.position,yaw:0,altitude:0,vehicle:'rolls'}).ok,true);
 });
 
@@ -112,10 +112,10 @@ test('only a current Jevica appearance may fly, including across appearance chan
   time+=1000;
   assert.equal(world.command('guest',flying(guestPosition)).error,'flight_not_allowed');
   assert.equal(world.command(owner,flying(ownerPosition)).ok,true);
-  assert.equal(world.command(owner,{type:'appearance',appearance:'kai-noir-beast'}).error,'land_before_appearance');
+  assert.equal(world.command(owner,{type:'appearance',appearance:'kai-noir'}).error,'land_before_appearance');
   time+=1000;
   assert.equal(world.command(owner,{...flying(ownerPosition),altitude:0}).ok,true);
-  assert.equal(world.command(owner,{type:'appearance',appearance:'kai-noir-beast'}).ok,true);
+  assert.equal(world.command(owner,{type:'appearance',appearance:'kai-noir'}).ok,true);
   time+=1000;
   assert.equal(world.command(owner,flying(ownerPosition)).error,'flight_not_allowed');
 });
@@ -130,19 +130,22 @@ test('a pre-rule airborne guest checkpoint lands safely on restore',()=>{
   assert.deepEqual(restored.snapshot().players[0].position,guest.position);
 });
 
-test('beast movement admits a fast ground lope that upright movement cannot forge',()=>{
-  let time=1000;
-  const world=createSharedWorld(data,{now:()=>time});
-  const start=world.join({userId:'guest',name:'Guest'}).player.position;
-  const lope={type:'pose',position:[start[0],start[1]+4,start[2]],yaw:0,altitude:0};
+test('retired movement cannot bypass human walking limits',()=>{
+  let time=1000;const world=createSharedWorld(data,{now:()=>time});
+  const start=world.join({userId:'guest',name:'Guest'}).player.position;time+=1000;
+  assert.equal(world.command('guest',{type:'movement',movement:'beast'}).error,'invalid_movement');
+  assert.equal(world.command('guest',{type:'pose',position:[start[0],start[1]+4,start[2]],yaw:0,altitude:0}).error,'movement_too_fast');
+});
+
+test("Jevica's fast walk is twice everyone else's, and the server holds both limits",()=>{
+  let time=1000;const world=createSharedWorld(data,{now:()=>time}),jevica='user_01M402HKJYDTH1QJM5NAQDZ4HH';
+  const guest=world.join({userId:'guest',name:'Guest'}).player.position,owner=world.join({userId:jevica,name:'Jevica'}).player.position;
   time+=1000;
-  assert.equal(world.command('guest',lope).error,'movement_too_fast');
-  assert.equal(world.command('guest',{type:'appearance',appearance:'man-casual'}).ok,true);
-  assert.equal(world.command('guest',{type:'movement',movement:'beast'}).ok,true);
-  assert.equal(world.command('guest',lope).ok,true);
-  time+=2100;
-  assert.equal(world.command('guest',{type:'appearance',appearance:'rowan-human'}).ok,true);
-  assert.equal(world.command('guest',{type:'pose',position:[start[0],start[1]+8,start[2]],yaw:0,altitude:0}).error,'movement_too_fast');
+  const step=(id,[east,north,up],metres)=>world.command(id,{type:'pose',position:[east,north+metres,up],yaw:0,altitude:0});
+  assert.equal(step('guest',guest,3.3).ok,true,'a brisk walk within one second');
+  assert.equal(step(jevica,owner,6.5).ok,true,'Jevica covers twice the distance');
+  time+=1000;
+  assert.equal(step(jevica,world.snapshot().players.find(p=>p.id===jevica).position,6.9).error,'movement_too_fast','but not more');
 });
 
 test('only authenticated Jevica admin accounts may build and grant shared wishes',()=>{
@@ -213,7 +216,7 @@ test('appearance belongs to the authenticated account and survives departure and
   assert.equal(world.command('a',{type:'appearance',appearance:'woman-tailored'}).ok,true);
   assert.equal(world.snapshot().players.find(player=>player.id==='a').appearance,'woman-tailored');
   assert.equal(world.snapshot().players.find(player=>player.id==='b').appearance,'sable-human');
-  assert.equal(world.command('b',{type:'appearance',appearance:'man-casual',userId:'a'}).error,'invalid_appearance');
+  assert.equal(world.command('b',{type:'appearance',appearance:'rowan-human',userId:'a'}).error,'invalid_appearance');
   assert.equal(world.command('b',{type:'appearance',appearance:'unknown'}).error,'invalid_appearance');
   assert.equal(world.command('a',{type:'appearance',appearance:'man-workwear'}).error,'appearance_cooldown');
   world.leave('a');advance(61000);world.step(0.05);
@@ -257,42 +260,19 @@ test('every character form and style is selectable and durable',()=>{
 test('the retired wolf-eared host becomes his wolf form, live and in an older checkpoint',()=>{
   const {world,now}=setup();
   const chosen=world.command('a',{type:'appearance',appearance:'midnight-host-hybrid'});
-  assert.equal(chosen.ok,true);assert.equal(chosen.player.appearance,'midnight-host-wolf');
+  assert.equal(chosen.ok,true);assert.equal(chosen.player.appearance,'man-tailored');
   const checkpoint=JSON.parse(JSON.stringify(world.checkpoint()));
   for(const player of checkpoint.payload.players)if(player.id==='a')player.appearance='midnight-host-hybrid';
   checkpoint.payload.appearances=checkpoint.payload.appearances.map(([id,appearance])=>[id,id==='a'?'midnight-host-hybrid':appearance]);
   const restored=createSharedWorld(data,{now});
   assert.deepEqual(restored.restore(resign(checkpoint)),{ok:true});
-  assert.equal(restored.snapshot().players.find(player=>player.id==='a').appearance,'midnight-host-wolf');
+  assert.equal(restored.snapshot().players.find(player=>player.id==='a').appearance,'man-tailored');
   assert.doesNotMatch(JSON.stringify(restored.checkpoint().payload),/midnight-host-hybrid/);
   restored.leave('a');
-  assert.equal(restored.join({userId:'a',name:'Alice'}).player.appearance,'midnight-host-wolf');
+  assert.equal(restored.join({userId:'a',name:'Alice'}).player.appearance,'man-tailored');
 });
 
-test('beast movement is an account preference that only shows in a beast form',()=>{
-  const {world,advance,now}=setup(),alice=(town=world)=>town.snapshot().players.find(player=>player.id==='a');
-  assert.equal(alice().movement,'upright');
-  assert.equal(world.command('a',{type:'movement',movement:'beast'}).error,'beast_form_required');
-  assert.equal(world.command('a',{type:'appearance',appearance:'kai-noir-beast'}).ok,true);
-  const moved=world.command('a',{type:'movement',movement:'beast'});
-  assert.equal(moved.ok,true);assert.equal(moved.player.movement,'beast');assert.equal(alice().movement,'beast');
-  assert.equal(world.snapshot().players.find(player=>player.id==='b').movement,'upright','only the owner moves like a beast');
-  for(const movement of ['prowl',1,null,undefined])assert.equal(world.command('a',{type:'movement',movement}).error,'invalid_movement',String(movement));
-  assert.equal(world.command('a',{type:'movement',movement:'beast',userId:'b'}).error,'invalid_movement');
-  advance(2100);assert.equal(world.command('a',{type:'appearance',appearance:'kai-noir'}).ok,true);
-  assert.equal(alice().movement,'upright','a humanoid form walks upright');
-  advance(2100);assert.equal(world.command('a',{type:'appearance',appearance:'kai-explorer-beast'}).ok,true);
-  assert.equal(alice().movement,'beast','the preference returns with a beast form');
-  world.leave('a');advance(61000);world.step(0.05);
-  assert.equal(world.join({userId:'a',name:'Alice'}).player.movement,'beast','it survives leaving town');
-  const restored=createSharedWorld(data,{now});
-  assert.deepEqual(restored.restore(JSON.parse(JSON.stringify(world.checkpoint()))),{ok:true});
-  assert.equal(alice(restored).movement,'beast','it survives checkpoint recovery');
-  assert.equal(restored.command('a',{type:'movement',movement:'upright'}).player.movement,'upright');
-  assert.equal(alice(restored).movement,'upright');
-  const stale=JSON.parse(JSON.stringify(world.checkpoint()));stale.payload.movements=[['a','sideways']];
-  assert.equal(restored.restore(resign(stale)).error,'invalid_checkpoint');
-});
+
 
 test('appearance migration restores a town checkpoint written before player looks existed',()=>{
   const {world,now}=setup(),checkpoint=JSON.parse(JSON.stringify(world.checkpoint()));
@@ -304,7 +284,7 @@ test('appearance migration restores a town checkpoint written before player look
   const restored=createSharedWorld(data,{now});
   assert.deepEqual(restored.restore(checkpoint),{ok:true});
   assert.ok(restored.snapshot().players.every(player=>player.appearance==='sable-human'));
-  assert.equal(restored.command('a',{type:'appearance',appearance:'woman-daywear'}).ok,true);
+  assert.equal(restored.command('a',{type:'appearance',appearance:'lyra-human'}).ok,true);
   assert.deepEqual(restored.snapshot().builds,[]);
 });
 
@@ -883,4 +863,15 @@ test('checkpoint diagnostics preserve rejection and report only fixed validation
   assert.equal(world.restore(hostile,{onFailure:reason=>reasons.push(reason)}).error,'invalid_checkpoint');
   assert.deepEqual(reasons,['invalid_player_position','unknown']);
   assert.doesNotMatch(JSON.stringify(reasons),/private-/);
+});
+
+test('a flying bubble may cover its 21 m/s fast speed (1.5x the old 14), and no more', () => {
+  let time = 1000;
+  const world = createSharedWorld(data, { now: () => time }), owner = 'user_01M40Y914S1H4EJCEHH91DKTAY';
+  world.join({ userId: owner, name: 'Jevica' });
+  const [east, north, ground] = world.snapshot().players[0].position, pose = (n, altitude) => world.command(owner, { type: 'pose', position: [east, n, ground], yaw: 0, altitude });
+  time += 1000; assert.equal(pose(north, 3).ok, true, 'takes off');
+  time += 1000; assert.equal(pose(north + 21, 3).ok, true, 'a second at the bubble\'s fast speed');
+  time += 1000; assert.equal(pose(north - .7, 3).error, 'movement_too_fast', 'faster than the bubble flies');
+  assert.equal(pose(north + 14, 3).ok, true, 'the refused pose moved nothing');
 });

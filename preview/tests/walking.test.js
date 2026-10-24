@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createWalkingEnvironment, createWalkingState, stepWalking } from '../src/walking.js';
+import { WALK_SPEED, createWalkingEnvironment, createWalkingState, fastWalkFor, stepWalking } from '../src/walking.js';
 
 const world = { bounds_m: [-50, -50, 50, 50], buildings: [{ center: [0, 0, 0], size: [10, 10, 8], yaw_deg: 0 }] };
 test('walking stays on the ground and cannot cross a storefront wall', () => {
@@ -47,24 +47,7 @@ test('speed is stable across refresh rates and diagonal input is normalized', ()
   assert.ok(Math.abs(run(60, { forward: 1 }) - run(60, { forward: 1, strafe: 1 })) < 0.001);
 });
 
-test('beast sprint covers ground quickly while keeping turns and walls under control', () => {
-  const open = createWalkingEnvironment({ bounds_m: [-200, -200, 200, 200], buildings: [] });
-  const run = (fps, input) => {
-    const state=createWalkingState(open,[0,0,0]);
-    for(let i=0;i<fps*3;i++)stepWalking(state,open,input,1/fps);
-    return state;
-  };
-  const upright=run(60,{forward:1,fast:true});
-  const wolf=run(60,{forward:1,fast:true,beastKind:'wolf'});
-  assert.ok(Math.hypot(...[wolf.position[0],wolf.position[2]])>Math.hypot(upright.position[0],upright.position[2])+6);
-  assert.ok(wolf.speed>5 && wolf.speed<7);
-  assert.ok(Math.abs(run(30,{forward:1,fast:true,beastKind:'wolf'}).distance-run(120,{forward:1,fast:true,beastKind:'wolf'}).distance)<0.05);
-  const turning=run(60,{forward:1,turn:1,fast:true,beastKind:'wolf'});
-  assert.ok(turning.distance<wolf.distance && turning.distance>wolf.distance*.55,'a sprint eases through a sharp turn');
-  const blocked=createWalkingEnvironment(world),state=createWalkingState(blocked,[0,-8,0]);
-  for(let i=0;i<600;i++)stepWalking(state,blocked,{forward:1,fast:true,beastKind:'wolf'},1/60);
-  assert.ok(state.position[2]>=5.35,'fast beasts cannot cross a storefront wall');
-});
+
 
 test('placed-obstacle checks use one fresh ground height per position query',()=>{
   let reads=0,height=.2;
@@ -96,4 +79,17 @@ test('acceleration builds over several frames instead of peaking on the first on
   assert.ok(peak < 12 && peak > 4, `peak acceleration ${peak.toFixed(2)} m/s² is outside a human walk start`);
   assert.ok(sixty.speed > 1.6 && thirty.speed > 1.6, 'full walking speed is reached within a second');
   assert.ok(Math.abs(sixty.speed - thirty.speed) < 0.01, 'the ramp is the same at 30 and 60 Hz');
+});
+test("Jevica's account walks fast at twice everyone else's pace", () => {
+  assert.equal(fastWalkFor('user_01M402HKJYDTH1QJM5NAQDZ4HH'), 2 * fastWalkFor('guest'));
+  assert.equal(fastWalkFor('user_01M40Y914S1H4EJCEHH91DKTAY'), WALK_SPEED.jevicaFast);
+  const environment = createWalkingEnvironment({ bounds_m: [-200, -200, 200, 200], buildings: [] });
+  const pace = fastSpeed => {
+    const state = createWalkingState(environment, [0, 0, 0]);
+    for (let i = 0; i < 180; i++) stepWalking(state, environment, { forward: 1, fast: true, fastSpeed }, 1 / 60);
+    const before = state.distance;for (let i = 0; i < 60; i++) stepWalking(state, environment, { forward: 1, fast: true, fastSpeed }, 1 / 60);
+    return state.distance - before;
+  };
+  assert.ok(Math.abs(pace(undefined) - WALK_SPEED.fast) < .05, `others: ${pace(undefined)}`);
+  assert.ok(Math.abs(pace(fastWalkFor('user_01M402HKJYDTH1QJM5NAQDZ4HH')) - WALK_SPEED.jevicaFast) < .1, 'Jevica');
 });

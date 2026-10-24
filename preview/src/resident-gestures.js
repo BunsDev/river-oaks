@@ -18,6 +18,8 @@ export function createResidentGestures({reducedMotion=false}={}) {
   // can tipped, and a slow pour that sways the wrist.
   const water={spine_03:[.16,0,0],head:[.22,0,0],upperarm_r:[-.78,0,-.08],lowerarm_r:[0,0,.32],hand_r:[.42,0,0]};
   const handshake={upperarm_r:[-.85,0,-.12],lowerarm_r:[0,0,.35],hand_r:[0,.15,0]};
+  const throwWindup={spine_03:[-.08,0,-.08],upperarm_r:[-.42,0,-.3],lowerarm_r:[0,0,1.2],hand_r:[-.18,0,0]};
+  const throwRelease={spine_03:[.1,0,.12],upperarm_r:[-1.15,0,-.12],lowerarm_r:[0,0,.18],hand_r:[.22,0,0]};
   const dance={spine_03:[0,0,0],head:[0,0,0],upperarm_l:[-.45,0,.2],upperarm_r:[-.45,0,-.2],lowerarm_l:[0,0,.8],lowerarm_r:[0,0,.8]};
   // Performing on the plaza stage: a gentle sway to the beat, chin up, the left
   // hand at the microphone and the right hand opening toward the audience.
@@ -39,7 +41,7 @@ export function createResidentGestures({reducedMotion=false}={}) {
       dance.upperarm_l[0]=-.45+Math.sin(time*2.5)*.18;dance.upperarm_r[0]=-.45-Math.sin(time*2.5)*.18;
       perform.spine_03[2]=Math.sin(time*2.2)*.08;perform.head[2]=-Math.sin(time*2.2)*.05;
       perform.upperarm_r[0]=-.4-Math.max(0,Math.sin(time*1.1))*.35;perform.lowerarm_r[2]=.55+Math.sin(time*2.2)*.1;
-      const target=action==='handshake'?handshake:action==='dance'?dance:action==='perform'?perform:action==='acknowledge'?acknowledgement:action==='startled'?startled:action==='amazed'||action==='enchanted'?surprised:action==='greet'?greeting:action==='wave'?wave:action==='bow'?bow:action==='water'?water:{};
+      const target=action==='throw-windup'?throwWindup:action==='throw-release'?throwRelease:action==='handshake'?handshake:action==='dance'?dance:action==='perform'?perform:action==='acknowledge'?acknowledgement:action==='startled'?startled:action==='amazed'||action==='enchanted'?surprised:action==='greet'?greeting:action==='wave'?wave:action==='bow'?bow:action==='water'?water:{};
       const dt=Number.isFinite(delta)?Math.max(0,Math.min(0.08,delta)):0;
       const frequency=10,decay=Math.exp(-frequency*dt);
       for(const name of joints)for(let axis=0;axis<3;axis++){

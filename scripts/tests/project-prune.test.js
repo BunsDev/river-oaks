@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, writeFileSync, readFileSync, mkdirSync, existsSync, rmSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, readFileSync, mkdirSync, existsSync, rmSync, realpathSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { planRetirement, retire } from '../project-prune.mjs';
+import { archiveTip, planRetirement, restoreTest, retire } from '../project-prune.mjs';
 
 function fixture(t) {
   const base=mkdtempSync(join(tmpdir(),'river-prune-'));
@@ -49,8 +49,61 @@ test('apply restore-tests exact-tip bundle, removes only selected ref and record
  assert.equal(existsSync(f.checkout),false);assert.throws(()=>f.git('rev-parse','--verify','refs/heads/feature'));
  const saved=JSON.parse(readFileSync(f.tasksPath));assert.equal(saved.tasks[0].status,'retired');
  assert.ok(existsSync(result.bundle));assert.equal(f.git('rev-parse',result.tag),f.head);
- const restored=join(f.archiveRoot,'recovery');f.git('init','--bare',restored);f.git('-C',restored,'fetch',result.bundle,`${result.tag}:refs/heads/recovered`);assert.equal(f.git('-C',restored,'rev-parse','recovered'),f.head);
+ // The bundle carries only the squashed branch's own commit and builds on the default branch.
+ assert.deepEqual(result.prerequisites,[f.git('rev-parse',`${f.head}^`)]);assert.deepEqual(result.base,{ref:'refs/remotes/origin/main',head:f.merge});
+ const restored=join(f.archiveRoot,'recovery');f.git('init','--bare',restored);
+ assert.throws(()=>f.git('-C',restored,'fetch',result.bundle,`${result.tag}:refs/heads/recovered`),/prerequisite/);
+ f.git('-C',restored,'fetch',f.root,'refs/remotes/origin/main:refs/heads/main');
+ f.git('-C',restored,'fetch',result.bundle,`${result.tag}:refs/heads/recovered`);assert.equal(f.git('-C',restored,'rev-parse','recovered'),f.head);
  execFileSync('sh',['-c',result.restoreCommand],{cwd:restored,stdio:'pipe'});assert.equal(f.git('-C',restored,'rev-parse','recovered'),f.head);
+});
+test('an unrelated missing registered worktree does not prevent verified retirement',t=>{
+ const f=fixture(t),missing=join(f.root,'..','scratch','missing');
+ f.git('worktree','add','-b','unrelated',missing);const unrelated=f.git('rev-parse','unrelated');
+ rmSync(join(f.root,'..','scratch'),{recursive:true});
+ const result=retire({...options(f),loadEvidence:()=>({register:f.register,pulls:f.pulls,activity:f.activity})});
+ assert.equal(result.status,'retired');assert.equal(existsSync(f.checkout),false);
+ assert.equal(f.git('rev-parse','unrelated'),unrelated);
+ assert.ok(f.git('worktree','list','--porcelain').includes(missing),'unrelated registration is preserved');
+});
+test('archives inside a missing registered worktree remain forbidden',t=>{
+ const f=fixture(t),missing=join(f.root,'..','scratch','missing');
+ f.git('worktree','add','-b','unrelated',missing);rmSync(join(f.root,'..','scratch'),{recursive:true});
+ f.archiveRoot=join(missing,'recovery');
+ assert.throws(()=>retire({...options(f),loadEvidence:()=>({register:f.register,pulls:f.pulls,activity:f.activity})}),/outside all worktrees/);
+ assert.equal(existsSync(f.checkout),true);assert.equal(f.git('rev-parse','feature'),f.head);
+});
+test('a tip already on the default branch archives only its own commit',t=>{
+ const f=fixture(t);f.git('merge','--no-ff','-m','merge feature','feature');f.git('update-ref','refs/remotes/origin/main',f.git('rev-parse','main'));
+ const directory=join(f.archiveRoot,'merged');mkdirSync(directory,{recursive:true});
+ const tag='refs/tags/archive/worktree-prune/merged';f.git('update-ref',tag,f.head);
+ const restore=join(directory,'restore.git');
+ const result=archiveTip({root:f.root,tag,expectedHead:f.head,bundle:join(directory,'history.bundle'),restore});
+ assert.deepEqual(result.prerequisites,[f.git('rev-parse',`${f.head}^`)]);
+ assert.equal(f.git('-C',restore,'rev-parse',tag),f.head);
+ // The tip's commit, its tree and its one changed file; everything else comes through alternates.
+ const counts=Object.fromEntries(f.git('-C',restore,'count-objects','-v').split('\n').map(line=>line.split(': ')));
+ assert.equal(Number(counts.count)+Number(counts['in-pack']),3);
+ assert.equal(readFileSync(join(restore,'objects','info','alternates'),'utf8').trim(),realpathSync(join(f.root,'.git','objects')));
+});
+test('the restore test reads the bundle pack even when alternates already reach the tip',t=>{
+ const f=fixture(t),base=f.git('rev-parse',`${f.head}^`);
+ const directory=join(f.archiveRoot,'corrupt');mkdirSync(directory,{recursive:true});
+ const tag='refs/tags/archive/worktree-prune/corrupt';f.git('update-ref',tag,f.head);
+ const bundle=join(directory,'history.bundle');f.git('bundle','create',bundle,tag,`^${base}`);
+ const data=readFileSync(bundle);data[data.indexOf('\n\n')+2+40]^=0xff;writeFileSync(bundle,data);
+ assert.throws(()=>restoreTest({root:f.root,tag,expectedHead:f.head,bundle,restore:join(directory,'restore.git')}),/bundle failed/);
+});
+test('without a default-branch ref the bundle stays self-contained',t=>{
+ const f=fixture(t);f.git('update-ref','-d','refs/remotes/origin/main');
+ const directory=join(f.archiveRoot,'standalone');mkdirSync(directory,{recursive:true});
+ const tag='refs/tags/archive/worktree-prune/standalone';f.git('update-ref',tag,f.head);
+ const bundle=join(directory,'history.bundle'),restore=join(directory,'restore.git');
+ const result=archiveTip({root:f.root,tag,expectedHead:f.head,bundle,restore});
+ assert.deepEqual(result.prerequisites,[]);assert.equal(result.base,undefined);
+ assert.equal(existsSync(join(restore,'objects','info','alternates')),false);
+ const fresh=join(f.archiveRoot,'fresh');f.git('init','--bare',fresh);f.git('-C',fresh,'fetch',bundle,`${tag}:refs/heads/recovered`);
+ assert.equal(f.git('-C',fresh,'rev-parse','recovered'),f.head);
 });
 test('changed ownership after archive prevents removal',t=>{
  const f=fixture(t);let calls=0;

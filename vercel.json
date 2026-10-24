@@ -26,7 +26,16 @@
       ]
     },
     {
-      "source": "/assets/((?!.*\\.(?:glb|hdr|jpg|jpeg|png|webp|ktx2)$).*)",
+      "source": "/assets/(ipic/screening/[^/]+\\.(?:mp4|webm|vtt))",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600, stale-while-revalidate=86400"
+        }
+      ]
+    },
+    {
+      "source": "/assets/((?!.*\\.(?:glb|hdr|jpg|jpeg|png|webp|ktx2)$)(?!ipic/screening/[^/]+\\.(?:mp4|webm|vtt)$).*)",
       "headers": [
         {
           "key": "Cache-Control",
@@ -82,6 +91,7 @@
     }
   ],
   "rewrites": [
+    { "source": "/api/workos/events", "destination": "/api/server?_river_path=/api/workos/events" },
     { "source": "/api/chauffeur", "destination": "/api/server?_river_path=/api/chauffeur" },
     {
       "source": "/auth/login",
@@ -205,14 +215,6 @@
     { "source": "/api/office-desk/read", "destination": "/api/server?_river_path=/api/office-desk/read" },
     { "source": "/api/office-desk/save", "destination": "/api/server?_river_path=/api/office-desk/save" },
     { "source": "/api/office-desk/remove", "destination": "/api/server?_river_path=/api/office-desk/remove" },
-    { "source": "/api/office-desk/workspace/provision", "destination": "/api/server?_river_path=/api/office-desk/workspace/provision" },
-    { "source": "/api/office-desk/workspace/list", "destination": "/api/server?_river_path=/api/office-desk/workspace/list" },
-    { "source": "/api/office-desk/workspace/invite", "destination": "/api/server?_river_path=/api/office-desk/workspace/invite" },
-    { "source": "/api/office-desk/workspace/accept", "destination": "/api/server?_river_path=/api/office-desk/workspace/accept" },
-    { "source": "/api/office-desk/workspace/revoke", "destination": "/api/server?_river_path=/api/office-desk/workspace/revoke" },
-    { "source": "/api/office-desk/workspace/read", "destination": "/api/server?_river_path=/api/office-desk/workspace/read" },
-    { "source": "/api/office-desk/workspace/save", "destination": "/api/server?_river_path=/api/office-desk/workspace/save" },
-    { "source": "/api/office-desk/workspace/remove", "destination": "/api/server?_river_path=/api/office-desk/workspace/remove" },
     { "source": "/api/workplace/state", "destination": "/api/server?_river_path=/api/workplace/state" },
     { "source": "/api/workplace/companion", "destination": "/api/server?_river_path=/api/workplace/companion" },
     { "source": "/api/workplace/grant", "destination": "/api/server?_river_path=/api/workplace/grant" },
@@ -230,6 +232,10 @@
     { "source": "/api/workplace-sweep", "destination": "/api/server?_river_path=/api/workplace-sweep" },
     { "source": "/api/workplace/presence", "destination": "/api/server?_river_path=/api/workplace/presence" },
     { "source": "/api/workplace/occupancy", "destination": "/api/server?_river_path=/api/workplace/occupancy" },
+    { "source": "/api/character", "destination": "/api/server?_river_path=/api/character" },
+    { "source": "/api/character/draft", "destination": "/api/server?_river_path=/api/character/draft" },
+    { "source": "/api/character/publish", "destination": "/api/server?_river_path=/api/character/publish" },
+    { "source": "/api/character/rollback", "destination": "/api/server?_river_path=/api/character/rollback" },
     { "source": "/api/profile/view", "destination": "/api/server?_river_path=/api/profile/view" },
     { "source": "/api/profile/claim-intro", "destination": "/api/server?_river_path=/api/profile/claim-intro" },
     { "source": "/api/profile/save", "destination": "/api/server?_river_path=/api/profile/save" },

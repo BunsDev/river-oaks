@@ -75,9 +75,9 @@ try {
   await pages.alice.locator('#axe-panel [data-axe-shared="practice"]').click();
   for (const [x, y] of [[0, 0], [120, -60], [-90, 140]]) {
     const before = await pages.alice.evaluate(() => window.__riverAxes().lane?.throws.length ?? 0);
-    await pages.alice.evaluate(mm => window.__riverAxes().holdAt(mm), x); await pages.alice.locator('#axe-panel [data-axe-action="throw"]').click();
-    await pages.alice.evaluate(mm => window.__riverAxes().holdAt(mm), y); await pages.alice.locator('#axe-panel [data-axe-action="throw"]').click();
-    await pages.alice.waitForFunction(n => (window.__riverAxes().lane?.throws.length ?? 0) > n, before);
+    // One release aimed at [x, y] mm from where alice stands, then the town's answer and the flight.
+    await pages.alice.evaluate(point => window.__riverAxes().steadyOn(point), [x, y]); await pages.alice.locator('#axe-panel [data-axe-action="throw"]').click();
+    await pages.alice.waitForFunction(n => { const axes = window.__riverAxes(); return (axes.lane?.throws.length ?? 0) > n && !axes.pending && !axes.flying; }, before);
   }
   await pages.alice.keyboard.press('Escape');
   for (const page of Object.values(pages)) await page.evaluate(() => { document.body.classList.add('clear-view'); const style = document.createElement('style'); style.textContent = '#axe-panel,.darts-panel,.nearby-greetings{visibility:hidden!important}'; document.head.append(style); });

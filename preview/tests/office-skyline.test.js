@@ -327,14 +327,45 @@ test('live skyline draws current district without a cubemap, filters host only d
   const skyline = createOfficeSkyline({ mode: 'live', hostRoot: f.group, renderer, scene: f.scene, eye: new THREE.Vector3(0,f.floorY+1.68,0), floorY:f.floorY, hostBuildingIndex:0,hostBuildingId:'host',hide:[f.stage] });
   assert.equal(skyline.texture, null); assert.equal(skyline.stats.bytes,0);
   const actor = new THREE.Mesh(new THREE.BoxGeometry(1,2,1),new THREE.MeshStandardMaterial());actor.position.set(0,f.floorY+2,0);f.scene.add(actor);f.scene.updateMatrixWorld(true);
-  const draw = () => { assert.equal(actor.visible,true,'live filtering never adopts moving actors');assert.equal(scaleOf(f.mesh,0),0);assert.ok(scaleOf(f.mesh,2)>0);assert.equal(f.mass.visible,false);assert.equal(roof.visible,true);assert.equal(f.stage.visible,true); };
-  skyline.render(draw);assert.ok(scaleOf(f.mesh,0)>0);assert.equal(f.mass.visible,true);
+  const standIns = () => f.group.children.filter(node => node.userData.officeOutlookStandIn);
+  const draw = () => {
+    assert.equal(actor.visible,true,'live filtering never adopts moving actors');
+    const [copy] = standIns();
+    assert.equal(f.mesh.visible,false,'the host mesh is out of the draw');
+    assert.ok(copy?.visible && copy.geometry === f.mesh.geometry && copy.material === f.mesh.material, 'its stand-in draws the same geometry and material');
+    assert.equal(copy.count,2,'without the host instance above the floor');
+    assert.deepEqual([0,1].map(i => scaleOf(copy,i)),[scaleOf(f.mesh,1),scaleOf(f.mesh,2)],'keeping the podium band and the neighbour');
+    assert.equal(f.mass.visible,false);assert.equal(roof.visible,true);assert.equal(f.stage.visible,true);
+  };
+  const versions = () => [f.mesh.instanceMatrix.version, standIns()[0]?.instanceMatrix.version];
+  skyline.render(draw);
+  assert.ok(scaleOf(f.mesh,0)>0 && f.mesh.visible && !standIns()[0].visible && f.mass.visible, 'between draws the district is untouched');
+  const after = versions();
   actor.position.x=50;actor.updateMatrixWorld(true);
-  const dusk = new THREE.Color('#443344');f.scene.background=dusk;skyline.render(()=>{draw();assert.equal(f.scene.background,dusk);});
+  const dusk = new THREE.Color('#443344');f.scene.background=dusk;
+  for (let i = 0; i < 5; i++) skyline.render(()=>{draw();assert.equal(f.scene.background,dusk);});
+  assert.deepEqual(versions(), after, 'no instance data is written again frame after frame');
+  assert.equal(standIns().length,1,'one stand-in per host mesh for the visit');
   assert.throws(()=>skyline.render(()=>{draw();throw new Error('draw failed');}),/draw failed/);
-  assert.ok(scaleOf(f.mesh,0)>0);assert.equal(f.mass.visible,true);assert.equal(f.scene.background,dusk);
+  assert.ok(scaleOf(f.mesh,0)>0);assert.equal(f.mesh.visible,true);assert.equal(standIns()[0].visible,false);assert.equal(f.mass.visible,true);assert.equal(f.scene.background,dusk);
   assert.equal(renderer.renders.length,0,'no six-face renderer submissions');assert.equal(skyline.stats.state,'live');
+  let released = 0; standIns()[0].addEventListener('dispose', () => released++);
   skyline.dispose();skyline.dispose();assert.equal(skyline.render(()=>assert.fail('disposed view draws')),false);
+  assert.equal(standIns().length,0,'leaving removes the stand-ins');assert.equal(released,1,'and frees their instance buffers');
+  assert.equal(f.mesh.visible,true);assert.ok(scaleOf(f.mesh,0)>0);
+});
+
+test('a host mesh whose instances change during the visit gets a fresh stand-in', () => {
+  const f = district(), skyline = createOfficeSkyline({ mode: 'live', hostRoot: f.group, renderer: fakeRenderer(), scene: f.scene, eye: new THREE.Vector3(0,f.floorY+1.68,0), floorY:f.floorY, hostBuildingIndex:0,hostBuildingId:'host',hide:[f.stage] });
+  const standIns = () => f.group.children.filter(node => node.userData.officeOutlookStandIn);
+  skyline.render(() => {}); const first = standIns()[0];
+  const moved = new THREE.Matrix4().makeTranslation(60, f.floorY - 10, 0); f.mesh.setMatrixAt(2, moved); f.mesh.instanceMatrix.needsUpdate = true;
+  skyline.render(() => {
+    const [copy] = standIns(), m = new THREE.Matrix4(); copy.getMatrixAt(1, m);
+    assert.notEqual(copy, first); assert.equal(standIns().length, 1); assert.equal(first.parent, null, 'the old stand-in is released');
+    assert.ok(new THREE.Vector3().setFromMatrixPosition(m).distanceTo(new THREE.Vector3(60, f.floorY - 10, 0)) < 1e-9, 'the new one carries the moved neighbour');
+  });
+  skyline.dispose();
 });
 
 test('live office keeps exterior current, moves the actual viewpoint and restores street presentation', t => {
@@ -356,6 +387,62 @@ test('phones and tablets keep the bounded snapshot outlook; other devices draw t
   assert.deepEqual(officeOutlookFor({ coarsePointer: true, scale: 1, maxCubemapSize: 256 }), { mode: 'snapshot', size: 256 }, 'within the device limits');
   assert.deepEqual(officeOutlookFor({ coarsePointer: false, scale: 1 }), { mode: 'live' }, 'a full-scale fine-pointer device draws the live district');
   assert.deepEqual(officeOutlookFor(), { mode: 'live' });
+});
+
+// First entry (#449): the office's lamps change every lit material's program when it first shows.
+function compiling(s) {
+  const calls = [], pending = [];
+  s.captured.pipeline.compileAsync = (object, camera, target) => {
+    const office = target.getObjectByName('office:office-penthouse-1'), items = []; let lamps = 0;
+    target.traverseVisible(node => { if (node.isPointLight && node.parent === office) lamps++; });
+    object.traverse(node => items.push(node));
+    calls.push({ object, camera, target, shown: office.visible, lamps, items });
+    return new Promise(resolve => pending.push(resolve));
+  };
+  return { calls, finish: () => pending.splice(0).forEach(resolve => resolve()) };
+}
+const tick = () => new Promise(resolve => setImmediate(resolve));
+
+test('entering compiles what the office will draw, with its lamps counted; a skipped arrival holds on the street until ready', async t => {
+  const s = street({ layout: OFFICE_LAYOUT_PENTHOUSE, skyline: { mode: 'live' } }), c = compiling(s), v = visit(t, s);
+  const office = s.scene.getObjectByName('office:office-penthouse-1');
+  v.scene.skip();
+  for (let i = 0; i < 40; i++) v.draw(i * 16);
+  assert.ok(v.phases.every(phase => phase === 'lobby'), `the cut waits on the street: ${[...new Set(v.phases)]}`);
+  assert.equal(office.visible, false); assert.equal(s.districtGroup.visible, true);
+  assert.ok(c.calls.length > 1, 'the work is spread over several frames');
+  for (const call of c.calls) {
+    assert.equal(call.target, s.scene); assert.equal(call.camera, s.captured.camera);
+    assert.ok(call.shown && call.lamps === 5, `each call counts the office's five lamps: ${call.lamps}`);
+  }
+  const items = c.calls.flatMap(call => call.items);
+  assert.ok(items.every(item => item.isMesh && item.material), 'only drawn objects');
+  for (const name of ['ceiling', 'curtain wall panes']) assert.ok(items.some(item => item.name === name), `the office's ${name}`);
+  // Main replaced the graybox desks with furnished meshes; their programs must still be queued.
+  const furniture = [];
+  office.traverse(node => { if (node.isMesh && (node.userData.assets?.length || node.userData.ids?.length)) furniture.push(node); });
+  assert.ok(furniture.length > 0, 'the office has furnished meshes');
+  for (const mesh of furniture) assert.ok(items.some(item => item.material === mesh.material && !!item.isInstancedMesh === !!mesh.isInstancedMesh && item.receiveShadow === mesh.receiveShadow), `furnished program: ${mesh.name}`);
+  const kinds = items.map(item => `${item.material.uuid}|${item.isInstancedMesh}|${item.type}|${item.receiveShadow}|${!!item.instanceColor}|${!!item.geometry?.attributes?.color}`);
+  assert.equal(new Set(kinds).size, kinds.length, 'each material and kind once');
+  assert.equal(office.visible, false, 'hidden again after every call');
+  const progress = v.scene.inspect().precompile;
+  assert.deepEqual({ queued: progress.queued, remaining: progress.remaining, batches: progress.batches }, { queued: items.length, remaining: 0, batches: c.calls.length }, 'the visit reports its progress');
+  c.finish(); await tick();
+  assert.equal(v.scene.inspect().precompile.compiling, 0);
+  v.draw(1000); assert.equal(v.phases.at(-1), 'office'); assert.equal(office.visible, true);
+  const calls = c.calls.length; for (let i = 1; i <= 10; i++) v.draw(1000 + i * 16);
+  assert.equal(c.calls.length, calls, 'nothing more to compile once arrived');
+});
+
+test('a skipped arrival waits at most three seconds for compilation, and a played one never waits', t => {
+  const held = street({ layout: OFFICE_LAYOUT_PENTHOUSE, skyline: { mode: 'live' } }); compiling(held);
+  const v = visit(t, held); v.scene.skip(); v.draw(0); v.draw(2990);
+  assert.equal(v.phases.at(-1), 'lobby'); v.draw(3010); assert.equal(v.phases.at(-1), 'office');
+  const played = street({ layout: OFFICE_LAYOUT_PENTHOUSE, skyline: { mode: 'live' } }); compiling(played);
+  const w = visit(t, played); w.draw(0);
+  for (let i = 1; i <= 1500; i++) w.draw(i * 1000 / 60);
+  assert.equal(w.phases.at(-1), 'office', 'the arrival plays out while programs compile');
 });
 
 test('office lamps follow the street clock during a visit, live and through the phone light pool', t => {

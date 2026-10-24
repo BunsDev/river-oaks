@@ -170,7 +170,7 @@ test('checkpoints keep each claim at the plan\'s exact pose; older checkpoints c
   assert.equal(f.sit(owner, 'desk-a1-chair').ok, true);
   assert.equal(f.sit('guest', 'desk-a2-chair').ok, true);
   const saved = f.world.checkpoint();
-  assert.equal(saved.version, 11);
+  assert.equal(saved.version, 16);
   const restored = setup({ restore: saved });
   assert.deepEqual([restored.visit(owner).seat, restored.visit(owner).position], [{ id: 'desk-a1-chair' }, seat('desk-a1-chair').position]);
   assert.deepEqual(restored.visit('guest').seat, { id: 'desk-a2-chair' });
@@ -197,9 +197,11 @@ test('checkpoints keep each claim at the plan\'s exact pose; older checkpoints c
     const copy = structuredClone(saved); forge(copy);
     assert.equal(createSharedWorld(data, { officeLayout: layout }).restore(resign(copy)).ok, false, String(forge));
   }
-  // Rolling back to the legacy room ends the penthouse visits and their claims with them.
-  const rolledBack = setup({ officeLayout: OFFICE_LAYOUT_LEGACY, restore: saved });
-  assert.equal(rolledBack.visit(owner), null);
+  // A retired room setting cannot displace the penthouse or discard valid seat claims.
+  const retiredSetting = setup({ officeLayout: OFFICE_LAYOUT_LEGACY, restore: saved });
+  assert.equal(retiredSetting.visit(owner).layout, layout);
+  assert.deepEqual(retiredSetting.visit(owner).seat, { id: 'desk-a1-chair' });
+  assert.deepEqual(retiredSetting.visit('guest').seat, { id: 'desk-a2-chair' });
 });
 
 test('a visitor beside the stand point blocks the claim, so standing up is never body-blocked', () => {

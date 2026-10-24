@@ -1,11 +1,17 @@
+import { commonsAllows, insideRect } from '../../shared/east-garden-commons-layout.js';
 import { terrainHeight } from './geometry.js';
 import { groundSurfaceHeight } from './world-surface.js';
 import { storeRoomsFor, interiorLevelRoomsFor, roomAt, roomBlocked } from './store-rooms.js';
 import { roomBlocksConversation } from './conversation-sight.js';
-import { beastTraversal } from './beast-traversal.js';
 import { plazaSalonFootprints } from './plaza-salon-plan.js';
+import { campusFlightVolumes } from './garden-campus-district.js';
+import { isJevicaAccount } from './jevica-accounts.js';
 
 const RADIUS = 0.35, EYE_HEIGHT = 1.68;
+// Walking speeds in m/s: normal, and held fast (Shift). Jevica's fast walk is twice
+// everyone else's (Val, 2026-10-22). The server's walking budget reads the same values.
+export const WALK_SPEED = Object.freeze({ normal: 1.65, fast: 3.2, jevicaFast: 6.4 });
+export const fastWalkFor = userId => isJevicaAccount(userId) ? WALK_SPEED.jevicaFast : WALK_SPEED.fast;
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 
 function distanceToSegment(x, z, a, b) {
@@ -63,6 +69,8 @@ export function createWalkingEnvironment(world, placedObjects = [], levelId = nu
     const ring=building.ring?.map(([x,y])=>[x,-y])??[[-1,-1],[1,-1],[1,1],[-1,1]].map(([x,y])=>[building.center[0]+x*building.size[0]/2*c-y*building.size[1]/2*s,-building.center[1]-x*building.size[0]/2*s-y*building.size[1]/2*c]);
     return {ring,top:(building.center[2]??terrainHeight(world.terrain,building.center[0],building.center[1]))+building.size[2]+3.1};
   });
+  // The campus skywalks are not buildings: they span above the street, so a flight keeps clear of them.
+  for(const volume of campusFlightVolumes(world))roofs.push({ring:volume.ring.map(([x,y])=>[x,-y]),top:volume.top+3.1});
   // Imported collision-only worlds have no roof metadata; retain a finite safe cap.
   if(!roofs.length)for(const ring of polygons)roofs.push({ring,top:Math.max(...ring.map(([x,z])=>terrainHeight(world.terrain,x,-z)))+23.1});
   for(const roof of roofs)Object.assign(roof,{minX:Math.min(...roof.ring.map(p=>p[0]))-flightRadius,maxX:Math.max(...roof.ring.map(p=>p[0]))+flightRadius,minZ:Math.min(...roof.ring.map(p=>p[1]))-flightRadius,maxZ:Math.max(...roof.ring.map(p=>p[1]))+flightRadius});
@@ -77,6 +85,7 @@ export function createWalkingEnvironment(world, placedObjects = [], levelId = nu
   const propAt = (x, y, z, radius, halfHeight = 0) => propBox && x > propBox.minX && x < propBox.maxX && z > propBox.minZ && z < propBox.maxZ
     && props.some(p => (x - p.x) ** 2 + (z - p.z) ** 2 < (p.radius + radius) ** 2 && y - halfHeight < groundAt(p.x, p.z) + p.height);
   const baseIsFree = (x, z) => {
+    if(!commonsAllows(world.eastGardenCommons,x,-z,RADIUS))return false;
     if (x < west + RADIUS || x > east - RADIUS || z < -north + RADIUS || z > -south - RADIUS) return false;
     const room = roomFor(x, z, RADIUS);
     if (levelId !== null) return Boolean(room && !roomBlocked(room, x, -z, RADIUS));
@@ -87,6 +96,7 @@ export function createWalkingEnvironment(world, placedObjects = [], levelId = nu
   // samples, disk/polygon intersection also catches obstacles inside the disk.
   const isAreaFree=(x,z,radius)=>{
     const margin=radius+RADIUS;
+    if(!commonsAllows(world.eastGardenCommons,x,-z,margin))return false;
     if(x<west+margin||x>east-margin||z<-north+margin||z>-south-margin)return false;
     const room=roomFor(x,z,margin);
     if(levelId!==null)return Boolean(room&&!roomBlocked(room,x,-z,margin));
@@ -102,11 +112,33 @@ export function createWalkingEnvironment(world, placedObjects = [], levelId = nu
     const y=groundAt(x,z)+.9;
     return !propAt(x,y,z,RADIUS,.9) && !placedObjects.some(object=>object.contains(x,y,z,RADIUS,.9));
   };
+  const commons=world.eastGardenCommons;
+  const commonsFlight=commons?[...commons.solids,{rect:commons.pavilion.rect,height:commons.pavilion.clearHeight+commons.pavilion.roofThickness}]:[];
   const canFly = (x, altitude, z) => {
+    if(!commonsAllows(commons,x,-z,flightRadius))return false;
+    if(commonsFlight.some(solid=>insideRect(solid.rect,x,-z,-flightRadius)&&altitude<=commons.ground+solid.height+3.1))return false;
     if(levelId!==null)return false;
     if(x<west+flightRadius || x>east-flightRadius || z<-north+flightRadius || z>-south-flightRadius) return false;
     if(propAt(x,altitude,z,flightRadius) || placedObjects.some(object=>object.contains(x,altitude,z,flightRadius)))return false;
     return !roofs.some(roof=>altitude<=roof.top && x>roof.minX && x<roof.maxX && z>roof.minZ && z<roof.maxZ && overlaps(x,z,roof.ring,flightRadius));
+  };
+  // Outward horizontal contact normal for flight sliding on mapped roof walls.
+  // Use the current position for the tangent: a normal at the attempted point
+  // can turn the slide inward around the rounded clearance at a convex corner.
+  // The controller still validates the whole proposed slide with canFly.
+  const flightWallNormal=(x,altitude,z,fromX=x,fromZ=z)=>{
+    let nearest=null,best=Infinity;
+    for(const roof of roofs) {
+      if(altitude>roof.top||x<roof.minX||x>roof.maxX||z<roof.minZ||z>roof.maxZ||!overlaps(x,z,roof.ring,flightRadius))continue;
+      const inside=overlaps(fromX,fromZ,roof.ring,0);
+      for(let i=0;i<roof.ring.length;i++) {
+        const a=roof.ring[i],b=roof.ring[(i+1)%roof.ring.length],dx=b[0]-a[0],dz=b[1]-a[1];
+        const t=clamp(((fromX-a[0])*dx+(fromZ-a[1])*dz)/(dx*dx+dz*dz||1),0,1);
+        const nx=fromX-a[0]-dx*t,nz=fromZ-a[1]-dz*t,distance=Math.hypot(nx,nz);
+        if(distance>1e-8&&distance<best){best=distance;const sign=inside?-1:1;nearest=[sign*nx/distance,sign*nz/distance];}
+      }
+    }
+    return nearest;
   };
   const hasSightLine=(from,to)=>{
     const room=roomFor(from[0],-from[1],0),targetRoom=roomFor(to[0],-to[1],0);
@@ -119,7 +151,8 @@ export function createWalkingEnvironment(world, placedObjects = [], levelId = nu
     }
     return true;
   };
-  return { levelId, groundAt, isFree, isAreaFree, canFly, flightCeiling, hasSightLine, roomAt: (x, z) => roomFor(x, z, 0), rooms, bounds: [west, -north, east, -south], spawn: world.walkSpawn ?? [(west + east) / 2, (south + north) / 2, 0] };
+  // Durable creations stay on geography retained by the blockout rollback.
+  return { buildBounds: world.eastGardenCommons?.districtBounds, levelId, groundAt, isFree, isAreaFree, canFly, flightWallNormal, flightCeiling, hasSightLine, roomAt: (x, z) => roomFor(x, z, 0), rooms, bounds: [west, -north, east, -south], spawn: world.walkSpawn ?? [(west + east) / 2, (south + north) / 2, 0] };
 }
 
 export function createWalkingState(environment, position = environment.spawn, yaw = 0) {
@@ -152,11 +185,9 @@ export function stepWalking(state, environment, input, delta) {
   if (!Number.isFinite(delta) || delta <= 0) return state;
   const duration = Math.min(delta, 0.08), steps = Math.ceil(duration * 120), dt = duration / steps;
   const forward = clamp(input.forward ?? 0, -1, 1), strafe = clamp(input.strafe ?? 0, -1, 1), norm = Math.max(1, Math.hypot(forward, strafe));
-  const beast=beastTraversal(input.beastKind);
-  const turning=Math.abs(clamp(input.turn??0,-1,1));
-  const speed=(beast?(input.fast?beast.sprint:beast.walk):(input.fast?3.2:1.65))*(beast&&input.fast?1-beast.turnSlowdown*turning:1);
+  const speed = input.fast ? (input.fastSpeed ?? WALK_SPEED.fast) : WALK_SPEED.normal;
   for (let i = 0; i < steps; i++) {
-    state.yaw += clamp(input.turn ?? 0, -1, 1) * (beast?.turn??1.6) * dt;
+    state.yaw += clamp(input.turn ?? 0, -1, 1) * 1.6 * dt;
     const vx = (-Math.sin(state.yaw) * forward + Math.cos(state.yaw) * strafe) * speed / norm;
     const vz = (-Math.cos(state.yaw) * forward - Math.sin(state.yaw) * strafe) * speed / norm;
     trackVelocity(state, vx, vz, dt);

@@ -22,8 +22,9 @@ inactivity proof. Missing upstreams and timestamps do not prove redundancy.
 
 For squash/rebase/supersession, require every candidate change to be accounted for
 by the reviewed delivered result. Archive its exact tip under a unique local tag;
-create a self-contained bundle outside all removal targets. Restore all refs into
-a fresh bare repository, compare SHAs, and run `git fsck --full`. Preserve restricted
+create a bundle outside all removal targets. It may leave out commits already on
+origin's default branch. Restore all refs into a fresh bare repository that can reach
+those commits, compare SHAs, and run `git fsck --full`. Preserve restricted
 local evidence archives, verified by hashes, separately from disposable generated
 caches. Do not print secrets, follow dependency symlinks for deletion, or overwrite
 archives. Keep restore commands and checksums in the manifest.

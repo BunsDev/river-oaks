@@ -7,6 +7,8 @@ import { rectanglesOverlap } from './store-rooms.js';
 // Rendering only: fragments of outdoor surfaces inside a room footprint are
 // discarded so the room's own floor shows. Ground queries, room floor height and
 // movement are unchanged. Interiors hidden (layer toggle) turns the clip off.
+// Only each room's main rectangle is clipped: its extra parts (IPIC's auditorium
+// wing) are upper floors, well clear of the ground.
 //
 // The ground covers most of the screen, so the per-fragment cost must stay
 // flat on CPU renderers: a 1 m mask texture names up to four candidate rooms

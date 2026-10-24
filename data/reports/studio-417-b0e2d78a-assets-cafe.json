@@ -1,0 +1,142 @@
+{
+  "createdAt": "2026-10-18T09:50:44.299Z",
+  "results": [
+    {
+      "name": "studio-pilot-assets",
+      "status": "passed",
+      "seconds": 23.143,
+      "result": {
+        "passed": true,
+        "templateId": "cafe",
+        "surface": "terracotta floor",
+        "delayMs": 8000,
+        "results": {
+          "normal": {
+            "surface": 82,
+            "requests": {
+              "started": 6,
+              "finished": 6,
+              "failed": 0,
+              "pending": 0
+            },
+            "stats": {
+              "calls": 453,
+              "triangles": 38332,
+              "geometries": 52,
+              "materials": 23,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 9,
+              "at": 1223
+            }
+          },
+          "missing": {
+            "surface": 112,
+            "requests": {
+              "started": 6,
+              "finished": 0,
+              "failed": 6,
+              "pending": 0
+            },
+            "stats": {
+              "calls": 453,
+              "triangles": 38332,
+              "geometries": 52,
+              "materials": 23,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 9,
+              "at": 1141
+            }
+          },
+          "loading": {
+            "surface": 112,
+            "requests": {
+              "started": 6,
+              "finished": 0,
+              "failed": 0,
+              "pending": 6
+            },
+            "stats": {
+              "calls": 453,
+              "triangles": 38332,
+              "geometries": 52,
+              "materials": 23,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 9,
+              "at": 1124
+            },
+            "secondsAfterOpen": 1.016
+          },
+          "loaded": {
+            "surface": 82,
+            "requests": {
+              "started": 6,
+              "finished": 6,
+              "failed": 0,
+              "pending": 0
+            },
+            "stats": {
+              "calls": 453,
+              "triangles": 38332,
+              "geometries": 52,
+              "materials": 23,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 9,
+              "at": 8240
+            },
+            "settledAfterOpen": 8.214,
+            "readings": [
+              82
+            ]
+          },
+          "replaced": {
+            "surface": 82,
+            "requests": {
+              "started": 6,
+              "finished": 6,
+              "failed": 0,
+              "pending": 0
+            },
+            "stats": {
+              "calls": 700,
+              "triangles": 62136,
+              "geometries": 48,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 8,
+              "at": 10290
+            },
+            "pendingAtReplacement": 6,
+            "pendingAfterReplacement": 6,
+            "stableReplacement": true,
+            "statsBefore": {
+              "calls": 700,
+              "triangles": 62136,
+              "geometries": 48,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 8,
+              "at": 1141
+            },
+            "statsAfter": {
+              "calls": 700,
+              "triangles": 62136,
+              "geometries": 48,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 8,
+              "at": 10290
+            },
+            "replacementItems": 49
+          }
+        }
+      }
+    }
+  ]
+}

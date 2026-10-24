@@ -13,6 +13,10 @@ import { storefrontBenchSpots } from './street-fixtures.js';
 export { storefrontBenchSpots };
 import { storeRoomsFor, interiorLevelRoomsFor, uncoveredBay, coveringRoom } from './store-rooms.js';
 import { venueDoorSites } from './venue-rooms.js';
+import { CAMPUS_BUILDING_KIND, isCampusRoom } from './garden-campus-district.js';
+import { buildGardenCampus } from './garden-campus.js';
+import { buildGardenCampusFitout } from './garden-campus-fitout-render.js';
+import { buildCampusCeilings } from './garden-campus-ceilings.js';
 import { buildStoreInteriors } from './store-interiors.js';
 import { createReferenceFacades, visibleRoofHeight } from './reference-facades.js';
 import { finishKey } from './material-finish.js';
@@ -114,6 +118,8 @@ export function buildDistrictBuildings(world) {
   // Photographed frontages (reference-facades.js) take over the edges they cover.
   const reference = createReferenceFacades(world, { part, pane, plane: pane, glass });
   world.buildings.forEach((building, index) => {
+    // The Gardens draw their own shells from the campus contract (garden-campus.js).
+    if (building.kind === CAMPUS_BUILDING_KIND) return;
     const shape = new THREE.Shape(building.ring.map(([x, y]) => new THREE.Vector2(x, y)));
     const retailHeight=building.kind==='parking'?0:4.25, roofHeight=visibleRoofHeight(world,building);
     // The ground-floor wall is assembled around real openings. Upper massing and
@@ -433,6 +439,14 @@ export function buildDistrictBuildings(world) {
   }
   group.add(reference.group);
   group.add(buildGreenRoofs(world));
+  const campus = buildGardenCampus(world), fitout = buildGardenCampusFitout(world);
+  if (campus) {
+    // Lit ceilings over every campus floor (#508), in the campus root's frame; released with it.
+    const ceilings = buildCampusCeilings(), release = campus.userData.dispose;
+    campus.add(ceilings);campus.userData.dispose = () => { ceilings.userData.dispose();release?.(); };
+    group.add(campus);
+  }
+  if (fitout) group.add(fitout);
   if(officeLobby){
     const arrival=buildOfficeArrival({facade:false}),n=officeLobby.outward;
     arrival.object.position.set(officeLobby.facade[0]-n[0]*ARRIVAL.facadeOffset,officeLobby.floor,-officeLobby.facade[1]+n[1]*ARRIVAL.facadeOffset);
@@ -446,7 +460,7 @@ export function buildDistrictBuildings(world) {
     ...(world.buildingInteriors ?? []).flatMap(plan => plan.levels.filter(level => level.index > 0)
       .flatMap(level => interiorLevelRoomsFor(world, level.id))),
   ];
-  const interiorGroup = buildStoreInteriors(rooms.filter(room => !room.generatedPlan), { atlas: interiors, reflectionMaterials });
+  const interiorGroup = buildStoreInteriors(rooms.filter(room => !room.generatedPlan && !isCampusRoom(room)), { atlas: interiors, reflectionMaterials });
   group.userData.reflectionMaterials = reflectionMaterials;
   const reflective = [];
   for (const root of [group, interiorGroup]) root.traverse(mesh => { if (mesh.material && reflectionMaterials.includes(mesh.material)) reflective.push(mesh); });
@@ -464,6 +478,7 @@ export function buildDistrictBuildings(world) {
   };
   group.add(buildRetailDisplays(displays));
   group.userData.dispose = () => {
+    campus?.userData.dispose();fitout?.userData.dispose();
     const arrival=group.userData.officeArrival;
     if(arrival){arrival.object.removeFromParent();arrival.dispose();}
     interiorGroup.userData.dispose();

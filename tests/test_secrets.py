@@ -63,7 +63,7 @@ def test_typesafe_key_in_arbitrary_config_is_blocked(repo):
 def test_clean_placeholder_passes(repo):
     if not shutil.which("gitleaks"):
         pytest.skip("Install gitleaks to exercise the real scanner")
-    stage(repo, ".env.example", "TYPESAFE_API_KEY=\nJEV_MODEL=jev-1.13.0\n")
+    stage(repo, ".env.example", "TYPESAFE_API_KEY=\nJEV_MODEL=jev-1.14.0\n")
     assert check(repo).returncode == 0
 
 
@@ -218,3 +218,121 @@ def test_project_placeholders_pass(repo, text):
         pytest.skip("Install gitleaks to exercise the real scanner")
     stage(repo, "example.env.txt", text)
     assert check(repo).returncode == 0
+
+
+def test_pinned_mpfb_source_digests_pass_only_in_the_asset_receipt(repo):
+    import json
+
+    if not shutil.which("gitleaks"):
+        pytest.skip("Install gitleaks to exercise the real scanner")
+    name = "preview/public/assets/characters/realistic-humans.sources.json"
+    receipt = json.loads((ROOT / name).read_text())
+    paths = [
+        "entities/material/mhmatkeys.py",
+        "entities/material/mhmatkeytypes.py",
+        "ui/operations/basemeshops/operators/bakeshapekeys.py",
+        "ui/operations/exportops/properties/bake_shapekeys.json",
+        "ui/operations/faceops/operators/loadfaceshapekeys.py",
+    ]
+    text = json.dumps({path: receipt["toolInputs"][path] for path in paths}, indent=2)
+    stage(repo, name, text)
+    assert check(repo).returncode == 0
+
+    # The same digest-shaped findings outside that exact receipt remain blocked.
+    stage(repo, "other-receipt.json", text)
+    assert check(repo).returncode != 0
+
+
+def test_other_key_values_in_the_mpfb_receipt_remain_blocked(repo):
+    if not shutil.which("gitleaks"):
+        pytest.skip("Install gitleaks to exercise the real scanner")
+    stage(
+        repo,
+        "preview/public/assets/characters/realistic-humans.sources.json",
+        "api_key=" + "Ab3Cd4Ef5Gh6Ij7Kl8" + "Mn9Op0Qr1St2Uv3Wx4",
+    )
+    assert check(repo).returncode != 0
+
+
+# Character asset source manifests map upstream files to SHA-256 digests; a path naming
+# "keys" beside a digest trips the default generic-api-key rule. The allowlist admits only
+# a bare 64-hex digest in those manifests. Digest fragments cover all sixteen hex symbols
+# so the value is as random-looking as a real one.
+FAKE_DIGEST = "3a7f09c2e1d84b56" + "b2c9e0f17a64d385" + "5e18d2a9c3f7046b" + "c40b6f8e29d1a375"
+MANIFEST = "preview/public/assets/characters/humans.sources.json"
+
+
+def manifest(value):
+    return '{\n  "files": {\n    "entities/material/mhmatkeys.py": "' + value + '"\n  }\n}\n'
+
+
+def test_source_manifest_digest_passes_staged_and_worktree_scans(repo):
+    if not shutil.which("gitleaks"):
+        pytest.skip("Install gitleaks to exercise the real scanner")
+    import sys
+
+    stage(repo, MANIFEST, manifest(FAKE_DIGEST))
+    assert check(repo).returncode == 0
+    worktree = subprocess.run(
+        [sys.executable, str(ROOT / "scripts/check_secrets.py"), "--all"],
+        cwd=repo,
+        capture_output=True,
+        text=True,
+    )
+    assert worktree.returncode == 0, worktree.stdout + worktree.stderr
+
+
+@pytest.mark.parametrize(
+    ("name", "text"),
+    [
+        # Any other secret shape in a manifest is still reported.
+        (MANIFEST, manifest("Q7mZ2xK9" + "pL4wR8tV" + "n3Bc6Hy1")),
+        # The same digest beside a "keys" path anywhere else is still reported.
+        ("preview/src/hashes.json", manifest(FAKE_DIGEST)),
+    ],
+)
+def test_source_manifest_allowlist_stays_narrow(repo, name, text):
+    if not shutil.which("gitleaks"):
+        pytest.skip("Install gitleaks to exercise the real scanner")
+    stage(repo, name, text)
+    assert check(repo).returncode != 0, name
+
+
+def test_history_scan_admits_source_manifest_digests(repo):
+    if not shutil.which("gitleaks"):
+        pytest.skip("Install gitleaks to exercise the real scanner")
+    shutil.copyfile(ROOT / ".gitleaks.toml", repo / ".gitleaks.toml")
+    stage(repo, MANIFEST, manifest(FAKE_DIGEST))
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "user.name=Test",
+            "-c",
+            "user.email=test@example.invalid",
+            # Independent of the developer's global git: no signing, no global hooks.
+            "-c",
+            "commit.gpgsign=false",
+            "-c",
+            "core.hooksPath=/dev/null",
+            "commit",
+            "-qm",
+            "Synthetic manifest fixture",
+        ],
+        cwd=repo,
+        check=True,
+    )
+    result = subprocess.run(
+        [
+            "gitleaks",
+            "git",
+            "--log-opts=--all",
+            "--redact",
+            "--no-banner",
+            "--ignore-gitleaks-allow",
+        ],
+        cwd=repo,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr

@@ -1,4 +1,6 @@
+import { commonsGroundAt } from '../../shared/east-garden-commons-layout.js';
 import { terrainHeight } from './geometry.js';
+import { campusGroundAt } from './garden-campus-district.js';
 import { Matrix4, Vector3 } from 'three';
 
 const surfaces=new WeakMap(),CELL=2;
@@ -52,6 +54,12 @@ export function groundSurfaceTriangles(world,x,z,radius) {
 }
 
 export function groundSurfaceHeight(world,x,z) {
+  const commons=commonsGroundAt(world.eastGardenCommons,x,-z);
+  if(commons!==null)return commons;
+  // The Gardens' platform (garden-campus-district.js) is one height for client and server,
+  // above or below the terrain mesh it covers; no skywalk or upper floor is ever ground.
+  const campus=campusGroundAt(world,x,-z);
+  if(campus!==null)return campus;
   const index=surfaces.get(world),cellX=Math.floor(x/CELL),cellZ=Math.floor(z/CELL);
   // Heel/toe and surface-normal probes are spatially coherent. Cache only the
   // candidate bucket, never a height: every probe still tests exact triangles.

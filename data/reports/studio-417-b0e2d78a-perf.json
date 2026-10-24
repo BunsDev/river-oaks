@@ -1,0 +1,330 @@
+{
+  "createdAt": "2026-10-18T09:50:44.541Z",
+  "template": "office",
+  "source": "b0e2d78a4e46d819a5203828f42aced441296b63",
+  "dirty": [
+    "?? data/reports/studio-417-b0e2d78a-assets-boutique.json",
+    "?? data/reports/studio-417-b0e2d78a-assets-cafe.json",
+    "?? data/reports/studio-417-b0e2d78a-assets-house.json",
+    "?? data/reports/studio-417-b0e2d78a-scenarios.json"
+  ],
+  "load": {
+    "start": [
+      26.88,
+      36.64,
+      46.25
+    ],
+    "end": [
+      24.78,
+      35.08,
+      45.3
+    ]
+  },
+  "method": "Chromium headless, --use-angle=metal --disable-gpu-vsync --disable-frame-rate-limit, 1440×1000 at DPR 1; rAF intervals, three windows of 180 frames per view",
+  "browser": "156.0.8078.4",
+  "gpuFootprint": {
+    "ready": {
+      "pid": 92175,
+      "footprintMiB": 399.6,
+      "ioAcceleratorMiB": 25.8,
+      "unmappedGraphicsMiB": 291.1
+    },
+    "coldOpen": {
+      "pid": 92175,
+      "footprintMiB": 447.3,
+      "ioAcceleratorMiB": 32.8,
+      "unmappedGraphicsMiB": 310.3,
+      "render": {
+        "calls": 688,
+        "triangles": 53076,
+        "geometries": 35,
+        "materials": 27,
+        "textures": 4,
+        "renderTargets": 2,
+        "programs": 6,
+        "at": 3803
+      }
+    },
+    "other": {
+      "pid": 92175,
+      "footprintMiB": 509.3,
+      "ioAcceleratorMiB": 70.5,
+      "unmappedGraphicsMiB": 314.5,
+      "render": {
+        "calls": 700,
+        "triangles": 62136,
+        "geometries": 48,
+        "materials": 27,
+        "textures": 10,
+        "renderTargets": 2,
+        "programs": 8,
+        "at": 5871
+      }
+    },
+    "warmOpen": {
+      "pid": 92175,
+      "footprintMiB": 509.1,
+      "ioAcceleratorMiB": 73.2,
+      "unmappedGraphicsMiB": 314.5,
+      "render": {
+        "calls": 688,
+        "triangles": 53076,
+        "geometries": 35,
+        "materials": 27,
+        "textures": 10,
+        "renderTargets": 2,
+        "programs": 6,
+        "at": 7912
+      }
+    },
+    "end": {
+      "pid": 92175,
+      "footprintMiB": 522.1,
+      "ioAcceleratorMiB": 83.1,
+      "unmappedGraphicsMiB": 316.2,
+      "render": {
+        "calls": 362,
+        "triangles": 27268,
+        "geometries": 44,
+        "materials": 27,
+        "textures": 10,
+        "renderTargets": 2,
+        "programs": 8,
+        "at": 34949
+      }
+    }
+  },
+  "coldStudioReadyMs": 336,
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+  "transferAtReady": {
+    "requests": 55,
+    "transferBytes": 8622357,
+    "decodedBytes": 8605857
+  },
+  "coldOpen": {
+    "openedMs": 687,
+    "routesPassedMs": 884
+  },
+  "transferAfterOffice": {
+    "requests": 78,
+    "transferBytes": 8630740,
+    "decodedBytes": 15418541
+  },
+  "warmOpen": {
+    "openedMs": 282,
+    "routesPassedMs": 370
+  },
+  "views": {
+    "whole-scene-overhead": {
+      "p50": 1.5,
+      "p95": 5.1,
+      "p99": 6.5,
+      "windows": [
+        {
+          "p50": 1.9,
+          "p95": 4.4
+        },
+        {
+          "p50": 1.5,
+          "p95": 5.1
+        },
+        {
+          "p50": 1.4,
+          "p95": 5.2
+        }
+      ],
+      "render": {
+        "calls": 688,
+        "triangles": 53076,
+        "geometries": 35,
+        "materials": 27,
+        "textures": 10,
+        "renderTargets": 2,
+        "programs": 6,
+        "at": 10916
+      },
+      "heapMiB": 37.77
+    },
+    "CAM-01-entry": {
+      "p50": 1.5,
+      "p95": 3.8,
+      "p99": 5.3,
+      "windows": [
+        {
+          "p50": 1.6,
+          "p95": 3.8
+        },
+        {
+          "p50": 1.5,
+          "p95": 3.7
+        },
+        {
+          "p50": 1.5,
+          "p95": 4.3
+        }
+      ],
+      "render": {
+        "calls": 550,
+        "triangles": 40164,
+        "geometries": 44,
+        "materials": 27,
+        "textures": 10,
+        "renderTargets": 2,
+        "programs": 8,
+        "at": 14921
+      },
+      "heapMiB": 37.77
+    },
+    "CAM-02-reception": {
+      "p50": 1.5,
+      "p95": 4.3,
+      "p99": 5.7,
+      "windows": [
+        {
+          "p50": 1.4,
+          "p95": 4.5
+        },
+        {
+          "p50": 1.5,
+          "p95": 4.1
+        },
+        {
+          "p50": 1.5,
+          "p95": 4.4
+        }
+      ],
+      "render": {
+        "calls": 396,
+        "triangles": 29652,
+        "geometries": 44,
+        "materials": 27,
+        "textures": 10,
+        "renderTargets": 2,
+        "programs": 8,
+        "at": 18924
+      },
+      "heapMiB": 37.77
+    },
+    "CAM-03-work-area": {
+      "p50": 1.5,
+      "p95": 4.1,
+      "p99": 5.8,
+      "windows": [
+        {
+          "p50": 1.5,
+          "p95": 4.5
+        },
+        {
+          "p50": 1.5,
+          "p95": 3.8
+        },
+        {
+          "p50": 1.4,
+          "p95": 3.9
+        }
+      ],
+      "render": {
+        "calls": 418,
+        "triangles": 31716,
+        "geometries": 44,
+        "materials": 27,
+        "textures": 10,
+        "renderTargets": 2,
+        "programs": 8,
+        "at": 22932
+      },
+      "heapMiB": 37.77
+    },
+    "CAM-04-meeting-room": {
+      "p50": 1.5,
+      "p95": 4,
+      "p99": 6.1,
+      "windows": [
+        {
+          "p50": 1.6,
+          "p95": 3.9
+        },
+        {
+          "p50": 1.5,
+          "p95": 4
+        },
+        {
+          "p50": 1.5,
+          "p95": 4
+        }
+      ],
+      "render": {
+        "calls": 407,
+        "triangles": 29896,
+        "geometries": 44,
+        "materials": 27,
+        "textures": 10,
+        "renderTargets": 2,
+        "programs": 8,
+        "at": 26937
+      },
+      "heapMiB": 37.77
+    },
+    "CAM-05-kitchenette": {
+      "p50": 1.5,
+      "p95": 4.6,
+      "p99": 6.3,
+      "windows": [
+        {
+          "p50": 1.5,
+          "p95": 4.3
+        },
+        {
+          "p50": 1.4,
+          "p95": 4.9
+        },
+        {
+          "p50": 1.6,
+          "p95": 4.2
+        }
+      ],
+      "render": {
+        "calls": 416,
+        "triangles": 31164,
+        "geometries": 44,
+        "materials": 27,
+        "textures": 10,
+        "renderTargets": 2,
+        "programs": 8,
+        "at": 30943
+      },
+      "heapMiB": 37.77
+    },
+    "CAM-06-exit": {
+      "p50": 1.5,
+      "p95": 4.2,
+      "p99": 6.2,
+      "windows": [
+        {
+          "p50": 1.4,
+          "p95": 4.2
+        },
+        {
+          "p50": 1.7,
+          "p95": 4.7
+        },
+        {
+          "p50": 1.5,
+          "p95": 4.2
+        }
+      ],
+      "render": {
+        "calls": 362,
+        "triangles": 27268,
+        "geometries": 44,
+        "materials": 27,
+        "textures": 10,
+        "renderTargets": 2,
+        "programs": 8,
+        "at": 34949
+      },
+      "heapMiB": 37.77
+    }
+  },
+  "errors": []
+}

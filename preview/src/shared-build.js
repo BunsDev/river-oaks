@@ -56,6 +56,10 @@ export function buildRoomAt(environment, position) {
 export function checkBuildSite({ environment, roads, position, kind, builds = [], ignoreId = null }) {
   const [east, north] = position, z = -north, ground = environment.groundAt(east, z);
   if (!Number.isFinite(ground)) return { reason: 'ground' };
+  if (environment.buildBounds) {
+    const [west, south, eastEdge, northEdge] = environment.buildBounds, margin = kind.radius + .35;
+    if (east < west + margin || east > eastEdge - margin || north < south + margin || north > northEdge - margin) return { reason: 'blocked' };
+  }
   const room=environment.roomAt(east,z);
   if (room && room.category !== 'home') return { reason: 'indoors' };
   if (room && kind.height>room.height-.1) return { reason:'room' };

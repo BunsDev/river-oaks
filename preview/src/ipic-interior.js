@@ -5,7 +5,7 @@ import { createIpicMaterials, districtSignLayout } from './ipic-materials.js';
 
 // Where the upper lounge's carpet meets the Tuck Room's boards, west of the bar stools (a = 3.4).
 const TUCK_ROOM_EDGE = 2.65;
-import { IPIC_BACK_BAR, IPIC_BAR, IPIC_DARTS, IPIC_ESCALATOR, IPIC_FLIGHTS, IPIC_INTERIOR, IPIC_PLANTERS, IPIC_RISER, IPIC_SCREEN, IPIC_SOFA_ARMS, IPIC_SOFA_D, ipicFloor } from './ipic-plan.js';
+import { IPIC_BACK_BAR, IPIC_BAR, IPIC_DARTS, IPIC_ESCALATOR, IPIC_FLIGHTS, IPIC_INTERIOR, IPIC_PLANTERS, IPIC_AUDITORIUM_RISERS, IPIC_AUDITORIUM_ROWS, IPIC_AUDITORIUM_SEAT_D, IPIC_SCREEN, IPIC_SOFA_ARMS, IPIC_SOFA_D, IPIC_WING, RISER_RAMP, ipicFloor, ipicSeatForward } from './ipic-plan.js';
 import { dartboardPixel } from './dartboard-texture.js';
 
 // Editable metre-scale scene. Local +X=across frontage, -Z=into the venue,
@@ -34,10 +34,10 @@ export function buildIpicInterior(room, options = {}) {
   const matrix = new THREE.Matrix4(), quaternion = new THREE.Quaternion(), euler = new THREE.Euler();
   let zone;
   const section = name => { zone = new THREE.Group(); zone.name = name; root.add(zone); };
-  function part(name, mat, a, y, d, w, h, l, { shape = cube, yaw = 0, pitch = 0, roll = 0 } = {}) {
+  function part(name, mat, a, y, d, w, h, l, { shape = cube, yaw = 0, pitch = 0, roll = 0, order = 'XYZ' } = {}) {
     const key = `${zone.uuid}/${mat.uuid}`;
     if (!batches.has(key)) batches.set(key, { zone, mat, geometries: [] });
-    matrix.compose(new THREE.Vector3(a, y, -d), quaternion.setFromEuler(euler.set(pitch, yaw, roll)), new THREE.Vector3(w, h, l));
+    matrix.compose(new THREE.Vector3(a, y, -d), quaternion.setFromEuler(euler.set(pitch, yaw, roll, order)), new THREE.Vector3(w, h, l));
     // Merged static meshes keep zone-level culling and a bounded draw-call count.
     const g = shape.clone().applyMatrix4(matrix); g.userData.role = name;
     batches.get(key).geometries.push(g);
@@ -94,18 +94,21 @@ export function buildIpicInterior(room, options = {}) {
     box(m.leather, a, y + .42, d, .6, .2, .6, { shape: cylinder });
     box(m.leather, a, y, d, 1, 1, 1, { shape: barrelShell, yaw });
   }
+  // A recliner in its own frame (x to the sitter's right, z forward), turned to face its screen. Turned parts
+  // pitch about their own axis (Euler YXZ), so the back still leans away from the footrest.
   function recliner(seat) {
-    const { a, d } = seat, y = ipicFloor(d);
-    soft(m.black, a, y + .18, d, 1.15, .32, 1.4);
-    soft(m.leather, a, y + .52, d, .83, .25, 1.02);
-    soft(m.leather, a, y + 1.01, d - .47, .88, .95, .24, { pitch: -.13 });
-    soft(m.leather, a, y + 1.43, d - .5, .65, .23, .26);
-    for (const side of [-1, 1]) {
-      soft(m.leather, a + side * .54, y + .68, d, .22, .45, 1.05);
-      box(m.black, a + side * .54, y + .917, d + .3, .12, .018, .12, { shape: cylinder });
+    const y = ipicFloor(seat.d, seat.a), f = ipicSeatForward(seat), s = [f[1], -f[0]], turn = { yaw: seat.yaw, order: 'YXZ' };
+    const put = (draw, mat, x, h, z, w, height, l, more = {}) => draw(mat, seat.a + s[0] * x + f[0] * z, y + h, seat.d + s[1] * x + f[1] * z, w, height, l, { ...turn, ...more });
+    put(soft, m.black, 0, .18, 0, 1.15, .32, 1.4);
+    put(soft, m.leather, 0, .52, 0, .83, .25, 1.02);
+    put(soft, m.leather, 0, 1.01, -.47, .88, .95, .24, { pitch: -.13 });
+    put(soft, m.leather, 0, 1.43, -.5, .65, .23, .26);
+    for (const x of [-.54, .54]) {
+      put(soft, m.leather, x, .68, 0, .22, .45, 1.05);
+      put(box, m.black, x, .917, .3, .12, .018, .12, { shape: cylinder });
     }
-    soft(m.leather, a, y + .37, d + .72, .82, .17, .45, { pitch: -.18 });
-    box(m.timber, a + .76, y + .8, d + .1, .23, .035, .44);
+    put(soft, m.leather, 0, .37, .72, .82, .17, .45, { pitch: -.18 });
+    put(box, m.timber, .76, .8, .1, .23, .035, .44);
   }
 
   // Reception from IMG_9738 (photo review P3, P4, P6; Val, 2026-10-18).
@@ -344,37 +347,55 @@ export function buildIpicInterior(room, options = {}) {
   box(m.black, 5.4, 7.5, 25.86, 1.35, .85, .05);
   box(m.marble, 5.4, 7.06, 25.62, 1.5, .055, .45);
 
-  // Stadium risers as in IMG_9767 (P15): the back row's platform stands IPIC_RISER.rise above the front
-  // row's floor, with steps up just inside the doorway across the room and down the side aisle. Treads rise
-  // 10 cm over the continuous support (ipicFloor), as on the escalators; the aisle's nosings are lit.
+  // The auditorium wing (Val, 2026-10-19; ipic-plan.js IPIC_WING): it runs along the building behind the shops
+  // and faces the screen on its north end wall. The rows step down toward the screen on stadium platforms; across
+  // the seats each riser is a closed face, and in the aisles along both walls the treads stand over the continuous
+  // support (ipicFloor ramps across each riser), their nosings lit, like the escalator flights.
   section('Auditorium');
-  const { rise, up: [u0, u1], down: [w0, w1], wall: [r0, r1] } = IPIC_RISER, steps = Math.round(rise / .1);
-  floor(m.confetti, 26, u0, 6); floor(m.confetti, u1, w0, 6 + rise); floor(m.confetti, w1, 34, 6);
-  // Under the front row the floor starts at the riser; in the aisles the treads are the floor until w1. Seams
-  // overlap by 5 cm inside solid geometry (into the walls, under the treads), so no sunlight leaks through a
-  // flush joint when the district is drawn (#367's exterior-culling check found one at a = r1).
-  box(m.confetti, (r0 + r1) / 2, 6 - .12, (w0 + w1) / 2, r1 - r0 + .1, .24, w1 - w0);
-  ceiling(26, 34, 10.4, m.black);
-  const aisles = [[room.aMin, r0 + .05], [r1 - .05, room.aMax]], lit = [[-5.5, r0], [r1, room.aMax - .15]];
-  for (let k = 0; k < steps; k++) {
-    const upDepth = (u1 - u0) / steps, upTop = 6 + (k + 1) * .1, downDepth = (w1 - w0) / steps, downTop = 6 + rise - k * .1;
-    box(m.confetti, room.center, (6 + upTop) / 2, u0 + (k + .5) * upDepth, room.width, upTop - 6, upDepth);
-    for (const [a0, a1] of aisles) box(m.confetti, (a0 + a1) / 2, (6 + downTop) / 2, w0 + (k + .5) * downDepth, a1 - a0, downTop - 6, downDepth);
-    for (const [a0, a1] of lit) {
-      box(m.glow, (a0 + a1) / 2, upTop + .004, u0 + k * upDepth + .025, a1 - a0, .008, .03);
-      box(m.glow, (a0 + a1) / 2, downTop + .004, w0 + (k + 1) * downDepth - .025, a1 - a0, .008, .03);
+  const W = IPIC_WING, wingD = (W.d0 + W.d1) / 2, wingWidth = W.d1 - W.d0, low = 6 + IPIC_AUDITORIUM_RISERS[0].from - .2;
+  const edges = [W.aMin, ...IPIC_AUDITORIUM_RISERS.map(r => r.a), W.aMax], levels = [IPIC_AUDITORIUM_RISERS[0].from, ...IPIC_AUDITORIUM_RISERS.map(r => r.to)];
+  // Platforms run 5 cm into the walls and, across the seats, overlap 5 cm at each riser, so no flush seam leaks
+  // light. In the aisles they meet the treads over each ramp with a 2 mm overlap, so the only surface under a
+  // body is the one it stands on: the platform, or one tread a step above its ramp.
+  const across = [IPIC_AUDITORIUM_SEAT_D[0] - .65, IPIC_AUDITORIUM_SEAT_D.at(-1) + .65];
+  const aisles = [[W.d0 + .09, across[0]], [across[1], W.d1 - .08]];
+  const bands = [[W.d0 - .05, across[0], RISER_RAMP], [across[0], across[1], 0], [across[1], W.d1 + .05, RISER_RAMP]];
+  levels.forEach((level, i) => {
+    for (const [d0, d1, ramp] of bands) {
+      const overlap = ramp ? .002 : .05, a0 = edges[i] + (i ? ramp : 0) - overlap, a1 = edges[i + 1] - (i < levels.length - 1 ? ramp : 0) + overlap;
+      box(m.confetti, (a0 + a1) / 2, 6 + level - .12, (d0 + d1) / 2, a1 - a0, .24, d1 - d0);
+    }
+  });
+  for (const riser of IPIC_AUDITORIUM_RISERS) {
+    // Treads rise at most 0.1 m above the ramp the server walks, as on the escalators.
+    const rise = riser.to - riser.from, steps = Math.ceil(rise / .1 - 1e-9);
+    box(m.black, riser.a, 6 + riser.from + rise / 2, (across[0] + across[1]) / 2, .04, rise, across[1] - across[0]);
+    const run = 2 * RISER_RAMP / steps, base = 6 + riser.from - .24;
+    for (let k = 0; k < steps; k++) {
+      const a0 = riser.a - RISER_RAMP + k * run, top = 6 + riser.from + rise * (k + 1) / steps;
+      for (const [d0, d1] of aisles) {
+        box(m.confetti, a0 + run / 2 - .001, (base + top) / 2, (d0 + d1) / 2, run + .002, top - base, d1 - d0);
+        box(m.glow, a0 + .015, top + .004, (d0 + d1) / 2, .03, .008, d1 - d0 - .1);
+      }
     }
   }
-  // The riser wall across the seats, under the front row's backs.
-  box(m.black, (r0 + r1) / 2, 6 + rise / 2, w0 + .02, r1 - r0 + .1, rise, .04);
-  for (const a of [room.aMin, room.aMax]) box(m.black, a, 8.2, 30, .18, 4.4, 8);
-  box(m.black, room.center, 8.2, 33.92, room.width, 4.4, .16);
-  panel(m.screen, IPIC_SCREEN.a, 6 + IPIC_SCREEN.y, IPIC_SCREEN.d, IPIC_SCREEN.width, IPIC_SCREEN.height);
+  // The ceiling, and a hidden seal 0.36 m above it, both over the walls' outer faces; the walls rise to the seal.
+  // A single-sided shell casts shadow from its back faces, so the sun's depth at the ceiling's edges is the
+  // ceiling's own underside, and with the district culled a texel of sun leaked in along the back wall
+  // (#428's pixel check). The seal's underside is the depth the sun now meets there.
+  for (const y of [10.4, 10.85]) box(m.black, (W.aMin + W.aMax) / 2, y, (W.d0 - .09 + W.d1) / 2, W.aMax - W.aMin + .18, .18, wingWidth + .09);
+  // Walls: the screen's north end, the south end behind the foyer, the long back wall and, beyond the 13 m room,
+  // the long front wall that continues the cinema partition (drawn above, with the doorway). Under the partition
+  // the floor is the back row's level, so it meets the floor; past the room the front rows sit lower, and the
+  // long front wall reaches down to them.
+  const wallTop = 10.94;
+  box(m.black, W.aMin, (low + wallTop) / 2, wingD, .18, wallTop - low, wingWidth);
+  box(m.black, W.aMax, (low + wallTop) / 2, wingD, .18, wallTop - low, wingWidth);
+  box(m.black, (W.aMin + W.aMax) / 2, (low + wallTop) / 2, W.d1 - .08, W.aMax - W.aMin, wallTop - low, .16);
+  for (const [a0, a1] of [[W.aMin, room.aMin], [room.aMax, W.aMax]]) box(m.black, (a0 + a1) / 2, (low + wallTop) / 2, W.d0, a1 - a0, wallTop - low, .18);
+  // A plane faces +z (-d) unturned; the screen turns to face IPIC_SCREEN.facing.
+  panel(m.screen, IPIC_SCREEN.a, 6 + IPIC_SCREEN.y, IPIC_SCREEN.d, IPIC_SCREEN.width, IPIC_SCREEN.height, Math.atan2(IPIC_SCREEN.facing[0], -IPIC_SCREEN.facing[1]));
   for (const seat of room.ipicSeats.filter(s => s.key.startsWith('recliner'))) recliner(seat);
-  // The aisle handrail follows the steps, 0.92 m over the floor.
-  const railAt = [27, u1, w0, w1, 33];
-  for (let i = 1; i < railAt.length; i++) rod(m.steel, [-5.55, ipicFloor(railAt[i - 1]) + .92, railAt[i - 1]], [-5.55, ipicFloor(railAt[i]) + .92, railAt[i]], .023);
-  for (const d of [27, 29, 31, 33]) rod(m.steel, [-5.55, ipicFloor(d), d], [-5.55, ipicFloor(d) + .92, d], .02);
 
   for (const batch of batches.values()) {
     const flat = batch.geometries.map(g => g.index ? g.toNonIndexed() : g);
@@ -399,6 +420,13 @@ export function buildIpicInterior(room, options = {}) {
   // The screen's own material, so a screening (#367) can show a film on it and restore it.
   root.userData.screen = m.screen;
   root.userData.screenAspect = IPIC_SCREEN.width / IPIC_SCREEN.height;
+  // Where the screen is, in this root's frame, for a camera that frames the film (#500): its centre,
+  // its right and up directions as the seats see it, its size, and the back row's distance from it (the furthest a
+  // focused view steps back).
+  // A seat looks against the screen's facing (a, d), so its right is facing x up in this frame: [-fd, 0, -fa].
+  const [fa, fd] = IPIC_SCREEN.facing;
+  root.userData.screenFrame = { center: [IPIC_SCREEN.a, 6 + IPIC_SCREEN.y, -IPIC_SCREEN.d], right: [-fd || 0, 0, -fa || 0], up: [0, 1, 0], width: IPIC_SCREEN.width, height: IPIC_SCREEN.height,
+    back: IPIC_AUDITORIUM_ROWS[0].distance };
   root.userData.ready = finishes.ready();
   // Loading failure remains observable by callers; attach a handler for callers
   // that only mount the production mesh, to avoid an unhandled rejection.

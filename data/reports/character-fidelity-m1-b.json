@@ -1,0 +1,2169 @@
+{
+  "version": 1,
+  "kind": "character-fidelity-baseline",
+  "status": "passed",
+  "startedAt": "2026-10-18T20:01:18.707Z",
+  "revision": "f897c1d6bfb5ce3829db05e4665b89692139bd05",
+  "dirty": false,
+  "options": {
+    "appearances": [
+      "jevica",
+      "sable-human",
+      "man-tailored",
+      "rowan-human"
+    ],
+    "crowd": [
+      1,
+      8,
+      24
+    ],
+    "repeats": 2,
+    "samples": 240
+  },
+  "machine": {
+    "platform": "darwin",
+    "osRelease": "25.6.0",
+    "architecture": "arm64",
+    "cpus": 16,
+    "cpuModel": "Apple M3 Max"
+  },
+  "method": "Chromium headless, --use-angle=metal --ignore-gpu-blocklist --disable-gpu-vsync --disable-frame-rate-limit, 1920x1080 at DPR 1. Captures: native 3840x2160 MSAA 4 through character-portrait.js with reduced motion. Timing: rAF intervals and update+render CPU per frame, GPU TIME_ELAPSED every 4th frame where exposed; cases alternate order between repeats.",
+  "results": {
+    "jevica": {
+      "definition": {
+        "schemaVersion": 2,
+        "ownerId": "user_01M40Y914S1H4EJCEHH91DKTAY",
+        "revision": 0,
+        "appearanceId": "jevica",
+        "rig": "jevica",
+        "form": "human",
+        "parameters": {},
+        "palette": "authored",
+        "hair": "authored",
+        "outfit": "jevica",
+        "attachments": [],
+        "assets": [
+          {
+            "id": "jevica",
+            "sha256": "722b96e2fd77b36c85ec01c1594a35e3f3f39b5ec76dfc3c9a351ef1eb4f117a",
+            "bytes": 5779116,
+            "receipt": "/assets/characters/jevica.sources.json"
+          }
+        ],
+        "provenance": {
+          "kind": "authored",
+          "catalog": "river-oaks-looks-v2"
+        }
+      },
+      "census": {
+        "meshes": 13,
+        "skinnedMeshes": 7,
+        "drawCalls": 13,
+        "triangles": 126856,
+        "morphTargets": 6,
+        "maxMorphTargets": 2,
+        "alphaTested": 4,
+        "transparent": 0,
+        "doubleSided": 8,
+        "materials": 11,
+        "materialTypes": {
+          "MeshPhysicalMaterial": 11
+        },
+        "geometries": 13,
+        "geometryBytes": 7993512,
+        "skeletons": 2,
+        "bones": 55,
+        "textures": 10,
+        "textureBytes": 54613330,
+        "textureList": [
+          {
+            "slot": "map",
+            "name": "young_lightskinned_female_diffuse3",
+            "width": 2048,
+            "height": 2048,
+            "bytes": 22369621,
+            "compressed": false
+          },
+          {
+            "slot": "map",
+            "name": "",
+            "width": 2048,
+            "height": 512,
+            "bytes": 5592405,
+            "compressed": false
+          },
+          {
+            "slot": "roughnessMap",
+            "name": "",
+            "width": 2048,
+            "height": 512,
+            "bytes": 5592405,
+            "compressed": false
+          },
+          {
+            "slot": "map",
+            "name": "long01_diffuse",
+            "width": 1024,
+            "height": 1024,
+            "bytes": 5592405,
+            "compressed": false
+          },
+          {
+            "slot": "map",
+            "name": "shoes01_diffuse",
+            "width": 1024,
+            "height": 1024,
+            "bytes": 5592405,
+            "compressed": false
+          },
+          {
+            "slot": "normalMap",
+            "name": "shoes01_normal",
+            "width": 1024,
+            "height": 1024,
+            "bytes": 5592405,
+            "compressed": false
+          },
+          {
+            "slot": "map",
+            "name": "eyebrow001",
+            "width": 512,
+            "height": 512,
+            "bytes": 1398101,
+            "compressed": false
+          },
+          {
+            "slot": "map",
+            "name": "eyelashes01",
+            "width": 512,
+            "height": 512,
+            "bytes": 1398101,
+            "compressed": false
+          },
+          {
+            "slot": "map",
+            "name": "brown_eye",
+            "width": 512,
+            "height": 512,
+            "bytes": 1398101,
+            "compressed": false
+          },
+          {
+            "slot": "bumpMap",
+            "name": "",
+            "width": 128,
+            "height": 128,
+            "bytes": 87381,
+            "compressed": false
+          }
+        ]
+      },
+      "views": {
+        "full": {
+          "file": "jevica-full.png",
+          "sha256": "4bd8967364884fce7e7d6c9d002188afae969647b301045eed58de3bd51d3435",
+          "camera": {
+            "position": [
+              0,
+              1.08,
+              3.8
+            ],
+            "fov": 30,
+            "direction": [
+              0,
+              -0.04731536845680366,
+              -0.9988800007547438
+            ]
+          }
+        },
+        "closeUp": {
+          "file": "jevica-closeUp.png",
+          "sha256": "03f909d3581d6007341ab622aa9b6e8a0f19fc6ce77b20f373283154b82f9425",
+          "camera": {
+            "position": [
+              0,
+              1.55230480094145,
+              1.0717678173748182
+            ],
+            "fov": 24,
+            "direction": [
+              0,
+              -0.014998312784712147,
+              -0.9998875189808162
+            ]
+          }
+        }
+      },
+      "cycles": {
+        "count": 10,
+        "before": {
+          "geometries": 5,
+          "textures": 14,
+          "programs": 6
+        },
+        "after": {
+          "geometries": 5,
+          "textures": 24,
+          "programs": 6
+        },
+        "delta": {
+          "geometries": 0,
+          "textures": 10,
+          "programs": 0
+        }
+      },
+      "load": [
+        {
+          "repeat": 0,
+          "loadavg": [
+            68.14,
+            54.65,
+            48.22
+          ],
+          "loadMs": 581,
+          "firstFrameMs": 331,
+          "assets": [
+            {
+              "path": "/assets/characters/jevica.glb",
+              "transferBytes": 5779416,
+              "decodedBytes": 5779116,
+              "durationMs": 100
+            }
+          ]
+        },
+        {
+          "repeat": 1,
+          "loadavg": [
+            81.3,
+            59.85,
+            50.72
+          ],
+          "loadMs": 1131,
+          "firstFrameMs": 675,
+          "assets": [
+            {
+              "path": "/assets/characters/jevica.glb",
+              "transferBytes": 5779416,
+              "decodedBytes": 5779116,
+              "durationMs": 628
+            }
+          ]
+        }
+      ],
+      "frames": [
+        {
+          "repeat": 0,
+          "loadavg": [
+            68.14,
+            54.65,
+            48.22
+          ],
+          "count": 1,
+          "census": {
+            "drawCalls": 14,
+            "triangles": 126858,
+            "skeletons": 2,
+            "textureBytes": 54613330
+          },
+          "frameIntervalMs": {
+            "count": 240,
+            "min": 3.1,
+            "p50": 3.9,
+            "p95": 4.9,
+            "max": 5.3,
+            "mean": 4.05
+          },
+          "cpuMs": {
+            "count": 240,
+            "min": 3.1,
+            "p50": 3.7,
+            "p95": 4.6,
+            "max": 5.1,
+            "mean": 3.854
+          },
+          "gpuMs": {
+            "count": 60,
+            "min": 1.263,
+            "p50": 4.115,
+            "p95": 9.779,
+            "max": 12.715,
+            "mean": 4.513
+          },
+          "gpuDisjoint": false,
+          "render": {
+            "calls": 41,
+            "triangles": 380470
+          }
+        },
+        {
+          "repeat": 0,
+          "loadavg": [
+            68.14,
+            54.65,
+            48.22
+          ],
+          "count": 8,
+          "census": {
+            "drawCalls": 105,
+            "triangles": 1014850,
+            "skeletons": 16,
+            "textureBytes": 133518667
+          },
+          "frameIntervalMs": {
+            "count": 240,
+            "min": 17.5,
+            "p50": 26.9,
+            "p95": 28.4,
+            "max": 42.9,
+            "mean": 26.572
+          },
+          "cpuMs": {
+            "count": 240,
+            "min": 17.3,
+            "p50": 26.7,
+            "p95": 28,
+            "max": 35.9,
+            "mean": 26.373
+          },
+          "gpuMs": {
+            "count": 60,
+            "min": 2.497,
+            "p50": 4.8,
+            "p95": 8.589,
+            "max": 10.044,
+            "mean": 5.28
+          },
+          "gpuDisjoint": false,
+          "render": {
+            "calls": 314,
+            "triangles": 3043732
+          }
+        },
+        {
+          "repeat": 0,
+          "loadavg": [
+            67.62,
+            54.99,
+            48.41
+          ],
+          "count": 24,
+          "census": {
+            "drawCalls": 313,
+            "triangles": 3044546,
+            "skeletons": 48,
+            "textureBytes": 313873723
+          },
+          "frameIntervalMs": {
+            "count": 240,
+            "min": 40.8,
+            "p50": 77.9,
+            "p95": 82.2,
+            "max": 86.6,
+            "mean": 76.894
+          },
+          "cpuMs": {
+            "count": 240,
+            "min": 50.8,
+            "p50": 77.6,
+            "p95": 81.5,
+            "max": 85.9,
+            "mean": 76.658
+          },
+          "gpuMs": {
+            "count": 60,
+            "min": 4.343,
+            "p50": 5.833,
+            "p95": 10.792,
+            "max": 14.043,
+            "mean": 6.501
+          },
+          "gpuDisjoint": false,
+          "render": {
+            "calls": 938,
+            "triangles": 9131188
+          }
+        },
+        {
+          "repeat": 1,
+          "loadavg": [
+            87.52,
+            61.5,
+            51.35
+          ],
+          "count": 1,
+          "census": {
+            "drawCalls": 14,
+            "triangles": 126858,
+            "skeletons": 2,
+            "textureBytes": 54613330
+          },
+          "frameIntervalMs": {
+            "count": 240,
+            "min": 0.5,
+            "p50": 5.5,
+            "p95": 32.8,
+            "max": 49.8,
+            "mean": 12.081
+          },
+          "cpuMs": {
+            "count": 240,
+            "min": 3.1,
+            "p50": 7.8,
+            "p95": 27.5,
+            "max": 48.9,
+            "mean": 11.623
+          },
+          "gpuMs": {
+            "count": 55,
+            "min": 3.079,
+            "p50": 23.475,
+            "p95": 41.211,
+            "max": 47.67,
+            "mean": 21.361
+          },
+          "gpuDisjoint": false,
+          "render": {
+            "calls": 41,
+            "triangles": 380470
+          }
+        },
+        {
+          "repeat": 1,
+          "loadavg": [
+            87.64,
+            61.96,
+            51.57
+          ],
+          "count": 8,
+          "census": {
+            "drawCalls": 105,
+            "triangles": 1014850,
+            "skeletons": 16,
+            "textureBytes": 133518667
+          },
+          "frameIntervalMs": {
+            "count": 240,
+            "min": 17.2,
+            "p50": 26.8,
+            "p95": 28.4,
+            "max": 48,
+            "mean": 26.589
+          },
+          "cpuMs": {
+            "count": 240,
+            "min": 17.4,
+            "p50": 26.5,
+            "p95": 28.3,
+            "max": 36.9,
+            "mean": 26.289
+          },
+          "gpuMs": {
+            "count": 60,
+            "min": 9.654,
+            "p50": 34.541,
+            "p95": 55.323,
+            "max": 60.849,
+            "mean": 35.998
+          },
+          "gpuDisjoint": false,
+          "render": {
+            "calls": 314,
+            "triangles": 3043732
+          }
+        },
+        {
+          "repeat": 1,
+          "loadavg": [
+            98.75,
+            65.18,
+            52.84
+          ],
+          "count": 24,
+          "census": {
+            "drawCalls": 313,
+            "triangles": 3044546,
+            "skeletons": 48,
+            "textureBytes": 313873723
+          },
+          "frameIntervalMs": {
+            "count": 240,
+            "min": 53.7,
+            "p50": 79,
+            "p95": 82.4,
+            "max": 155.3,
+            "mean": 78.989
+          },
+          "cpuMs": {
+            "count": 240,
+            "min": 52.5,
+            "p50": 78.5,
+            "p95": 82.5,
+            "max": 148.8,
+            "mean": 78.567
+          },
+          "gpuMs": {
+            "count": 60,
+            "min": 18.89,
+            "p50": 33.496,
+            "p95": 46.137,
+            "max": 62.867,
+            "mean": 33.95
+          },
+          "gpuDisjoint": false,
+          "render": {
+            "calls": 938,
+            "triangles": 9131188
+          }
+        }
+      ]
+    },
+    "sable-human": {
+      "definition": {
+        "schemaVersion": 2,
+        "ownerId": "fidelity-fixture",
+        "revision": 0,
+        "appearanceId": "sable-human",
+        "rig": "jevica",
+        "form": "human",
+        "parameters": {},
+        "palette": "authored",
+        "hair": "authored",
+        "outfit": "sable-human",
+        "attachments": [],
+        "assets": [
+          {
+            "id": "jevica",
+            "sha256": "722b96e2fd77b36c85ec01c1594a35e3f3f39b5ec76dfc3c9a351ef1eb4f117a",
+            "bytes": 5779116,
+            "receipt": "/assets/characters/jevica.sources.json"
+          }
+        ],
+        "provenance": {
+          "kind": "authored",
+          "catalog": "river-oaks-looks-v2"
+        }
+      },
+      "census": {
+        "meshes": 20,
+        "skinnedMeshes": 7,
+        "drawCalls": 20,
+        "triangles": 115916,
+        "morphTargets": 8,
+        "maxMorphTargets": 2,
+        "alphaTested": 4,
+        "transparent": 0,
+        "doubleSided": 7,
+        "materials": 13,
+        "materialTypes": {
+          "MeshPhysicalMaterial": 12,
+          "MeshStandardMaterial": 1
+        },
+        "geometries": 20,
+        "geometryBytes": 7874424,
+        "skeletons": 2,
+        "bones": 55,
+        "textures": 5,
+        "textureBytes": 26826068,
+        "textureList": [
+          {
+            "slot": "map",
+            "name": "young_lightskinned_female_diffuse3",
+            "width": 2048,
+            "height": 2048,
+            "bytes": 22369621,
+            "compressed": false
+          },
+          {
+            "slot": "map",
+            "name": "eyebrow001",
+            "width": 512,
+            "height": 512,
+            "bytes": 1398101,
+            "compressed": false
+          },
+          {
+            "slot": "map",
+            "name": "eyelashes01",
+            "width": 512,
+            "height": 512,
+            "bytes": 1398101,
+            "compressed": false
+          },
+          {
+            "slot": "map",
+            "name": "brown_eye",
+            "width": 512,
+            "height": 512,
+            "bytes": 1398101,
+            "compressed": false
+          },
+          {
+            "slot": "map",
+            "name": "",
+            "width": 256,
+            "height": 256,
+            "bytes": 262144,
+            "compressed": false
+          }
+        ]
+      },
+      "views": {
+        "full": {
+          "file": "sable-human-full.png",
+          "sha256": "a18b9c1ef2ceaa4fd5a2776df20ff36965bdcfa42448746c988065be1fb99a15",
+          "camera": {
+            "position": [
+              0,
+              1.08,
+              3.8
+            ],
+            "fov": 30,
+            "direction": [
+              0,
+              -0.04731536845680366,
+              -0.9988800007547438
+            ]
+          }
+        },
+        "closeUp": {
+          "file": "sable-human-closeUp.png",
+          "sha256": "1e7cdab971748ca5ec541cbe3f0b5795d5e00d63ffbc529d5976f3c56f51d54d",
+          "camera": {
+            "position": [
+              0,
+              1.55230480094145,
+              1.0717678173748182
+            ],
+            "fov": 24,
+            "direction": [
+              0,
+              -0.014998312784712147,
+              -0.9998875189808162
+            ]
+          }
+        }
+      },
+      "cycles": {
+        "count": 10,
+        "before": {
+          "geometries": 5,
+          "textures": 9,
+          "programs": 7
+        },
+        "after": {
+          "geometries": 5,
+          "textures": 9,
+          "programs": 7
+        },
+        "delta": {
+          "geometries": 0,
+          "textures": 0,
+          "programs": 0
+        }
+      },
+      "load": [
+        {
+          "repeat": 0,
+          "loadavg": [
+            62.82,
+            55.06,
+            48.69
+          ],
+          "loadMs": 188,
+          "firstFrameMs": 172,
+          "assets": [
+            {
+              "path": "/assets/characters/jevica.glb",
+              "transferBytes": 5779416,
+              "decodedBytes": 5779116,
+              "durationMs": 39
+            }
+          ]
+        },
+        {
+          "repeat": 1,
+          "loadavg": [
+            59.81,
+            55.06,
+            48.94
+          ],
+          "loadMs": 485,
+          "firstFrameMs": 157,
+          "assets": [
+            {
+              "path": "/assets/characters/jevica.glb",
+              "transferBytes": 5779416,
+              "decodedBytes": 5779116,
+              "durationMs": 357
+            }
+          ]
+        }
+      ],
+      "frames": [
+        {
+          "repeat": 0,
+          "loadavg": [
+            62.82,
+            55.06,
+            48.69
+          ],
+          "count": 1,
+          "census": {
+            "drawCalls": 21,
+            "triangles": 115918,
+            "skeletons": 2,
+            "textureBytes": 26826068
+          },
+          "frameIntervalMs": {
+            "count": 240,
+            "min": 0,
+            "p50": 0.3,
+            "p95": 1.1,
+            "max": 300.4,
+            "mean": 1.705
+          },
+          "cpuMs": {
+            "count": 240,
+            "min": 0.1,
+            "p50": 0.3,
+            "p95": 0.8,
+            "max": 6.2,
+            "mean": 0.356
+          },
+          "gpuMs": {
+            "count": 60,
+            "min": 0.497,
+            "p50": 1.082,
+            "p95": 5.425,
+            "max": 8.465,
+            "mean": 2.057
+          },
+          "gpuDisjoint": false,
+          "render": {
+            "calls": 41,
+            "triangles": 231834
+          }
+        },
+        {
+          "repeat": 0,
+          "loadavg": [
+            62.82,
+            55.06,
+            48.69
+          ],
+          "count": 8,
+          "census": {
+            "drawCalls": 161,
+            "triangles": 927330,
+            "skeletons": 16,
+            "textureBytes": 26826068
+          },
+          "frameIntervalMs": {
+            "count": 240,
+            "min": 1.5,
+            "p50": 2.9,
+            "p95": 5.6,
+            "max": 10.5,
+            "mean": 3.328
+          },
+          "cpuMs": {
+            "count": 240,
+            "min": 1.4,
+            "p50": 2.7,
+            "p95": 5.3,
+            "max": 10,
+            "mean": 3.125
+          },
+          "gpuMs": {
+            "count": 60,
+            "min": 1.223,
+            "p50": 2.17,
+            "p95": 5.193,
+            "max": 8.65,
+            "mean": 2.754
+          },
+          "gpuDisjoint": false,
+          "render": {
+            "calls": 321,
+            "triangles": 1854658
+          }
+        },
+        {
+          "repeat": 0,
+          "loadavg": [
+            62.82,
+            55.06,
+            48.69
+          ],
+          "count": 24,
+          "census": {
+            "drawCalls": 481,
+            "triangles": 2781986,
+            "skeletons": 48,
+            "textureBytes": 26826068
+          },
+          "frameIntervalMs": {
+            "count": 240,
+            "min": 5.6,
+            "p50": 7.1,
+            "p95": 8,
+            "max": 12.1,
+            "mean": 7.103
+          },
+          "cpuMs": {
+            "count": 240,
+            "min": 5.5,
+            "p50": 6.9,
+            "p95": 7.8,
+            "max": 11.9,
+            "mean": 6.915
+          },
+          "gpuMs": {
+            "count": 60,
+            "min": 2.398,
+            "p50": 4.045,
+            "p95": 6.301,
+            "max": 6.953,
+            "mean": 4.13
+          },
+          "gpuDisjoint": false,
+          "render": {
+            "calls": 961,
+            "triangles": 5563970
+          }
+        },
+        {
+          "repeat": 1,
+          "loadavg": [
+            59.81,
+            55.06,
+            48.94
+          ],
+          "count": 1,
+          "census": {
+            "drawCalls": 21,
+            "triangles": 115918,
+            "skeletons": 2,
+            "textureBytes": 26826068
+          },
+          "frameIntervalMs": {
+            "count": 240,
+            "min": 0.1,
+            "p50": 0.6,
+            "p95": 4.2,
+            "max": 6.2,
+            "mean": 1.225
+          },
+          "cpuMs": {
+            "count": 240,
+            "min": 0.1,
+            "p50": 0.5,
+            "p95": 3.9,
+            "max": 5.8,
+            "mean": 1.11
+          },
+          "gpuMs": {
+            "count": 60,
+            "min": 0.506,
+            "p50": 0.86,
+            "p95": 2.909,
+            "max": 4.724,
+            "mean": 1.293
+          },
+          "gpuDisjoint": false,
+          "render": {
+            "calls": 41,
+            "triangles": 231834
+          }
+        },
+        {
+          "repeat": 1,
+          "loadavg": [
+            59.81,
+            55.06,
+            48.94
+          ],
+          "count": 8,
+          "census": {
+            "drawCalls": 161,
+            "triangles": 927330,
+            "skeletons": 16,
+            "textureBytes": 26826068
+          },
+          "frameIntervalMs": {
+            "count": 240,
+            "min": 1.4,
+            "p50": 2.8,
+            "p95": 6,
+            "max": 9.9,
+            "mean": 3.263
+          },
+          "cpuMs": {
+            "count": 240,
+            "min": 1.5,
+            "p50": 2.6,
+            "p95": 5.7,
+            "max": 9.7,
+            "mean": 3.076
+          },
+          "gpuMs": {
+            "count": 60,
+            "min": 1.17,
+            "p50": 2.754,
+            "p95": 5.183,
+            "max": 6.423,
+            "mean": 2.911
+          },
+          "gpuDisjoint": false,
+          "render": {
+            "calls": 321,
+            "triangles": 1854658
+          }
+        },
+        {
+          "repeat": 1,
+          "loadavg": [
+            73.76,
+            58.03,
+            50.02
+          ],
+          "count": 24,
+          "census": {
+            "drawCalls": 481,
+            "triangles": 2781986,
+            "skeletons": 48,
+            "textureBytes": 26826068
+          },
+          "frameIntervalMs": {
+            "count": 240,
+            "min": 0.4,
+            "p50": 10,
+            "p95": 27.1,
+            "max": 139.9,
+            "mean": 12.122
+          },
+          "cpuMs": {
+            "count": 240,
+            "min": 6.4,
+            "p50": 9.7,
+            "p95": 20,
+            "max": 124.5,
+            "mean": 11.72
+          },
+          "gpuMs": {
+            "count": 60,
+            "min": 2.727,
+            "p50": 9.753,
+            "p95": 20.641,
+            "max": 22.51,
+            "mean": 11.394
+          },
+          "gpuDisjoint": false,
+          "render": {
+            "calls": 961,
+            "triangles": 5563970
+          }
+        }
+      ]
+    },
+    "man-tailored": {
+      "definition": {
+        "schemaVersion": 2,
+        "ownerId": "fidelity-fixture",
+        "revision": 0,
+        "appearanceId": "man-tailored",
+        "rig": "man-casual",
+        "form": "human",
+        "parameters": {},
+        "palette": "authored",
+        "hair": "authored",
+        "outfit": "man-tailored",
+        "attachments": [],
+        "assets": [
+          {
+            "id": "man-casual",
+            "sha256": "e7ac712585ba2d4558092b67ccf30e67d29843a9a81c4ca00384200f69588684",
+            "bytes": 2024532,
+            "receipt": "/assets/characters/sources.json"
+          }
+        ],
+        "provenance": {
+          "kind": "authored",
+          "catalog": "river-oaks-looks-v2"
+        }
+      },
+      "census": {
+        "meshes": 24,
+        "skinnedMeshes": 7,
+        "drawCalls": 24,
+        "triangles": 38346,
+        "morphTargets": 4,
+        "maxMorphTargets": 2,
+        "alphaTested": 1,
+        "transparent": 0,
+        "doubleSided": 6,
+        "materials": 16,
+        "materialTypes": {
+          "MeshPhysicalMaterial": 15,
+          "MeshStandardMaterial": 1
+        },
+        "geometries": 24,
+        "geometryBytes": 2301276,
+        "skeletons": 2,
+        "bones": 55,
+        "textures": 3,
+        "textureBytes": 29360127,
+        "textureList": [
+          {
+            "slot": "map",
+            "name": "young_lightskinned_male_diffuse",
+            "width": 2048,
+            "height": 2048,
+            "bytes": 22369621,
+            "compressed": false
+          },
+          {
+            "slot": "normalMap",
+            "name": "shoes01_normal",
+            "width": 1024,
+            "height": 1024,
+            "bytes": 5592405,
+            "compressed": false
+          },
+          {
+            "slot": "map",
+            "name": "brown_eye",
+            "width": 512,
+            "height": 512,
+            "bytes": 1398101,
+            "compressed": false
+          }
+        ]
+      },
+      "views": {
+        "full": {
+          "file": "man-tailored-full.png",
+          "sha256": "f35532bf23418360988b137c8cb81ca3ceaad72da92c0ee48868c69d9e52f337",
+          "camera": {
+            "position": [
+              0,
+              1.08,
+              3.8
+            ],
+            "fov": 30,
+            "direction": [
+              0,
+              -0.04731536845680366,
+              -0.9988800007547438
+            ]
+          }
+        },
+        "closeUp": {
+          "file": "man-tailored-closeUp.png",
+          "sha256": "a566f5ef77d637d4accfc1d08532c56dd3404e028ca90a55193c50c68caa1d58",
+          "camera": {
+            "position": [
+              0,
+              1.6586582839652027,
+              1.0822603229389787
+            ],
+            "fov": 24,
+            "direction": [
+              0,
+              -0.014998312784712147,
+              -0.9998875189808162
+            ]
+          }
+        }
+      },
+      "cycles": {
+        "count": 10,
+        "before": {
+          "geometries": 1,
+          "textures": 4,
+          "programs": 12
+        },
+        "after": {
+          "geometries": 1,
+          "textures": 4,
+          "programs": 12
+        },
+        "delta": {
+          "geometries": 0,
+          "textures": 0,
+          "programs": 0
+        }
+      },
+      "load": [
+        {
+          "repeat": 0,
+          "loadavg": [
+            61.8,
+            54.97,
+            48.7
+          ],
+          "loadMs": 155,
+          "firstFrameMs": 165,
+          "assets": [
+            {
+              "path": "/assets/characters/man-casual.glb",
+              "transferBytes": 2024832,
+              "decodedBytes": 2024532,
+              "durationMs": 63
+            }
+          ]
+        },
+        {
+          "repeat": 1,
+          "loadavg": [
+            59.18,
+            54.79,
+            48.77
+          ],
+          "loadMs": 182,
+          "firstFrameMs": 189,
+          "assets": [
+            {
+              "path": "/assets/characters/man-casual.glb",
+              "transferBytes": 2024832,
+              "decodedBytes": 2024532,
+              "durationMs": 77
+            }
+          ]
+        }
+      ],
+      "frames": [
+        {
+          "repeat": 0,
+          "loadavg": [
+            61.8,
+            54.97,
+            48.7
+          ],
+          "count": 1,
+          "census": {
+            "drawCalls": 25,
+            "triangles": 38348,
+            "skeletons": 2,
+            "textureBytes": 29360127
+          },
+          "frameIntervalMs": {
+            "count": 240,
+            "min": 0.1,
+            "p50": 0.9,
+            "p95": 6.2,
+            "max": 18.4,
+            "mean": 1.789
+          },
+          "cpuMs": {
+            "count": 240,
+            "min": 0.1,
+            "p50": 0.8,
+            "p95": 5.6,
+            "max": 30,
+            "mean": 1.657
+          },
+          "gpuMs": {
+            "count": 60,
+            "min": 0.363,
+            "p50": 0.885,
+            "p95": 4.774,
+            "max": 7.131,
+            "mean": 1.621
+          },
+          "gpuDisjoint": false,
+          "render": {
+            "calls": 49,
+            "triangles": 76694
+          }
+        },
+        {
+          "repeat": 0,
+          "loadavg": [
+            61.8,
+            54.97,
+            48.7
+          ],
+          "count": 8,
+          "census": {
+            "drawCalls": 193,
+            "triangles": 306770,
+            "skeletons": 16,
+            "textureBytes": 29360127
+          },
+          "frameIntervalMs": {
+            "count": 240,
+            "min": 0.2,
+            "p50": 2.7,
+            "p95": 4.7,
+            "max": 7.8,
+            "mean": 2.836
+          },
+          "cpuMs": {
+            "count": 240,
+            "min": 1.6,
+            "p50": 2.5,
+            "p95": 4.5,
+            "max": 7.6,
+            "mean": 2.668
+          },
+          "gpuMs": {
+            "count": 60,
+            "min": 0.699,
+            "p50": 1.238,
+            "p95": 5.026,
+            "max": 6.876,
+            "mean": 1.987
+          },
+          "gpuDisjoint": false,
+          "render": {
+            "calls": 385,
+            "triangles": 613538
+          }
+        },
+        {
+          "repeat": 0,
+          "loadavg": [
+            61.09,
+            54.94,
+            48.72
+          ],
+          "count": 24,
+          "census": {
+            "drawCalls": 577,
+            "triangles": 920306,
+            "skeletons": 48,
+            "textureBytes": 29360127
+          },
+          "frameIntervalMs": {
+            "count": 240,
+            "min": 7.3,
+            "p50": 9.2,
+            "p95": 10.1,
+            "max": 12.1,
+            "mean": 9.241
+          },
+          "cpuMs": {
+            "count": 240,
+            "min": 7.1,
+            "p50": 9,
+            "p95": 9.9,
+            "max": 12,
+            "mean": 9.05
+          },
+          "gpuMs": {
+            "count": 60,
+            "min": 1.236,
+            "p50": 2.328,
+            "p95": 5.673,
+            "max": 8.045,
+            "mean": 2.854
+          },
+          "gpuDisjoint": false,
+          "render": {
+            "calls": 1153,
+            "triangles": 1840610
+          }
+        },
+        {
+          "repeat": 1,
+          "loadavg": [
+            59.18,
+            54.79,
+            48.77
+          ],
+          "count": 1,
+          "census": {
+            "drawCalls": 25,
+            "triangles": 38348,
+            "skeletons": 2,
+            "textureBytes": 29360127
+          },
+          "frameIntervalMs": {
+            "count": 240,
+            "min": 0,
+            "p50": 0.5,
+            "p95": 5.4,
+            "max": 457.1,
+            "mean": 2.94
+          },
+          "cpuMs": {
+            "count": 240,
+            "min": 0.1,
+            "p50": 0.4,
+            "p95": 4.3,
+            "max": 10.2,
+            "mean": 0.914
+          },
+          "gpuMs": {
+            "count": 60,
+            "min": 0.709,
+            "p50": 2.973,
+            "p95": 9.797,
+            "max": 10.836,
+            "mean": 3.854
+          },
+          "gpuDisjoint": false,
+          "render": {
+            "calls": 49,
+            "triangles": 76694
+          }
+        },
+        {
+          "repeat": 1,
+          "loadavg": [
+            59.18,
+            54.79,
+            48.77
+          ],
+          "count": 8,
+          "census": {
+            "drawCalls": 193,
+            "triangles": 306770,
+            "skeletons": 16,
+            "textureBytes": 29360127
+          },
+          "frameIntervalMs": {
+            "count": 240,
+            "min": 1.8,
+            "p50": 4,
+            "p95": 8.3,
+            "max": 14.1,
+            "mean": 4.605
+          },
+          "cpuMs": {
+            "count": 240,
+            "min": 1.8,
+            "p50": 3.7,
+            "p95": 8.2,
+            "max": 13.8,
+            "mean": 4.37
+          },
+          "gpuMs": {
+            "count": 60,
+            "min": 1.264,
+            "p50": 3.86,
+            "p95": 8.017,
+            "max": 9.897,
+            "mean": 4.268
+          },
+          "gpuDisjoint": false,
+          "render": {
+            "calls": 385,
+            "triangles": 613538
+          }
+        },
+        {
+          "repeat": 1,
+          "loadavg": [
+            58.92,
+            54.81,
+            48.82
+          ],
+          "count": 24,
+          "census": {
+            "drawCalls": 577,
+            "triangles": 920306,
+            "skeletons": 48,
+            "textureBytes": 29360127
+          },
+          "frameIntervalMs": {
+            "count": 240,
+            "min": 0.6,
+            "p50": 11.1,
+            "p95": 12.5,
+            "max": 28.2,
+            "mean": 11.188
+          },
+          "cpuMs": {
+            "count": 240,
+            "min": 8,
+            "p50": 10.9,
+            "p95": 12.2,
+            "max": 17.3,
+            "mean": 10.943
+          },
+          "gpuMs": {
+            "count": 60,
+            "min": 2.779,
+            "p50": 4.803,
+            "p95": 10.045,
+            "max": 16.104,
+            "mean": 5.579
+          },
+          "gpuDisjoint": false,
+          "render": {
+            "calls": 1153,
+            "triangles": 1840610
+          }
+        }
+      ]
+    },
+    "rowan-human": {
+      "definition": {
+        "schemaVersion": 2,
+        "ownerId": "fidelity-fixture",
+        "revision": 0,
+        "appearanceId": "rowan-human",
+        "rig": "man-tailored",
+        "form": "human",
+        "parameters": {},
+        "palette": "authored",
+        "hair": "authored",
+        "outfit": "rowan-human",
+        "attachments": [],
+        "assets": [
+          {
+            "id": "man-tailored",
+            "sha256": "ae3834fbc9d96c3588f330a80280a2dfd5d69830ad18ca2f51d5e1003f7e042f",
+            "bytes": 1848936,
+            "receipt": "/assets/characters/sources.json"
+          }
+        ],
+        "provenance": {
+          "kind": "authored",
+          "catalog": "river-oaks-looks-v2"
+        }
+      },
+      "census": {
+        "meshes": 19,
+        "skinnedMeshes": 5,
+        "drawCalls": 19,
+        "triangles": 42202,
+        "morphTargets": 2,
+        "maxMorphTargets": 2,
+        "alphaTested": 1,
+        "transparent": 0,
+        "doubleSided": 5,
+        "materials": 13,
+        "materialTypes": {
+          "MeshPhysicalMaterial": 13
+        },
+        "geometries": 19,
+        "geometryBytes": 2254888,
+        "skeletons": 2,
+        "bones": 55,
+        "textures": 3,
+        "textureBytes": 29360127,
+        "textureList": [
+          {
+            "slot": "map",
+            "name": "middleage_darkskinned_male_diffuse",
+            "width": 2048,
+            "height": 2048,
+            "bytes": 22369621,
+            "compressed": false
+          },
+          {
+            "slot": "map",
+            "name": "male_elegantsuit01_diffuse",
+            "width": 1024,
+            "height": 1024,
+            "bytes": 5592405,
+            "compressed": false
+          },
+          {
+            "slot": "map",
+            "name": "brown_eye",
+            "width": 512,
+            "height": 512,
+            "bytes": 1398101,
+            "compressed": false
+          }
+        ]
+      },
+      "views": {
+        "full": {
+          "file": "rowan-human-full.png",
+          "sha256": "5031b520dc174eb6b00ca255bdbafd8c497eff7c9874289d60ee871bbd6aa19d",
+          "camera": {
+            "position": [
+              0,
+              1.08,
+              3.8
+            ],
+            "fov": 30,
+            "direction": [
+              0,
+              -0.04731536845680366,
+              -0.9988800007547438
+            ]
+          }
+        },
+        "closeUp": {
+          "file": "rowan-human-closeUp.png",
+          "sha256": "b740181982876a83f53de1bec1a031c60081334849e417d970b8e19c35dd472e",
+          "camera": {
+            "position": [
+              0,
+              1.657289966206234,
+              1.0747607654314149
+            ],
+            "fov": 24,
+            "direction": [
+              0,
+              -0.014998312784712146,
+              -0.9998875189808162
+            ]
+          }
+        }
+      },
+      "cycles": {
+        "count": 10,
+        "before": {
+          "geometries": 0,
+          "textures": 4,
+          "programs": 8
+        },
+        "after": {
+          "geometries": 0,
+          "textures": 4,
+          "programs": 8
+        },
+        "delta": {
+          "geometries": 0,
+          "textures": 0,
+          "programs": 0
+        }
+      },
+      "load": [
+        {
+          "repeat": 0,
+          "loadavg": [
+            61.09,
+            54.94,
+            48.72
+          ],
+          "loadMs": 121,
+          "firstFrameMs": 133,
+          "assets": [
+            {
+              "path": "/assets/characters/man-tailored.glb",
+              "transferBytes": 1849236,
+              "decodedBytes": 1848936,
+              "durationMs": 25
+            }
+          ]
+        },
+        {
+          "repeat": 1,
+          "loadavg": [
+            59.54,
+            54.78,
+            48.74
+          ],
+          "loadMs": 137,
+          "firstFrameMs": 271,
+          "assets": [
+            {
+              "path": "/assets/characters/man-tailored.glb",
+              "transferBytes": 1849236,
+              "decodedBytes": 1848936,
+              "durationMs": 26
+            }
+          ]
+        }
+      ],
+      "frames": [
+        {
+          "repeat": 0,
+          "loadavg": [
+            61.09,
+            54.94,
+            48.72
+          ],
+          "count": 1,
+          "census": {
+            "drawCalls": 20,
+            "triangles": 42204,
+            "skeletons": 2,
+            "textureBytes": 29360127
+          },
+          "frameIntervalMs": {
+            "count": 240,
+            "min": 0,
+            "p50": 0.5,
+            "p95": 5.6,
+            "max": 363.7,
+            "mean": 2.793
+          },
+          "cpuMs": {
+            "count": 240,
+            "min": 0.1,
+            "p50": 0.4,
+            "p95": 5,
+            "max": 9.9,
+            "mean": 1.163
+          },
+          "gpuMs": {
+            "count": 60,
+            "min": 0.415,
+            "p50": 0.992,
+            "p95": 5.649,
+            "max": 6.853,
+            "mean": 1.859
+          },
+          "gpuDisjoint": false,
+          "render": {
+            "calls": 39,
+            "triangles": 84406
+          }
+        },
+        {
+          "repeat": 0,
+          "loadavg": [
+            58.28,
+            54.46,
+            48.59
+          ],
+          "count": 8,
+          "census": {
+            "drawCalls": 153,
+            "triangles": 337618,
+            "skeletons": 16,
+            "textureBytes": 29360127
+          },
+          "frameIntervalMs": {
+            "count": 240,
+            "min": 2.5,
+            "p50": 4.6,
+            "p95": 9.9,
+            "max": 15.3,
+            "mean": 5.495
+          },
+          "cpuMs": {
+            "count": 240,
+            "min": 2.4,
+            "p50": 4.3,
+            "p95": 9.6,
+            "max": 15,
+            "mean": 5.197
+          },
+          "gpuMs": {
+            "count": 60,
+            "min": 1.747,
+            "p50": 6.159,
+            "p95": 10.719,
+            "max": 19.795,
+            "mean": 6.503
+          },
+          "gpuDisjoint": false,
+          "render": {
+            "calls": 305,
+            "triangles": 675234
+          }
+        },
+        {
+          "repeat": 0,
+          "loadavg": [
+            58.28,
+            54.46,
+            48.59
+          ],
+          "count": 24,
+          "census": {
+            "drawCalls": 457,
+            "triangles": 1012850,
+            "skeletons": 48,
+            "textureBytes": 29360127
+          },
+          "frameIntervalMs": {
+            "count": 240,
+            "min": 6.5,
+            "p50": 8.6,
+            "p95": 9.9,
+            "max": 10.8,
+            "mean": 8.598
+          },
+          "cpuMs": {
+            "count": 240,
+            "min": 6,
+            "p50": 8.3,
+            "p95": 9.5,
+            "max": 10.3,
+            "mean": 8.332
+          },
+          "gpuMs": {
+            "count": 60,
+            "min": 2.451,
+            "p50": 6.267,
+            "p95": 12.47,
+            "max": 14.819,
+            "mean": 6.814
+          },
+          "gpuDisjoint": false,
+          "render": {
+            "calls": 913,
+            "triangles": 2025698
+          }
+        },
+        {
+          "repeat": 1,
+          "loadavg": [
+            59.54,
+            54.78,
+            48.74
+          ],
+          "count": 1,
+          "census": {
+            "drawCalls": 20,
+            "triangles": 42204,
+            "skeletons": 2,
+            "textureBytes": 29360127
+          },
+          "frameIntervalMs": {
+            "count": 240,
+            "min": 0,
+            "p50": 0.4,
+            "p95": 2.6,
+            "max": 558.9,
+            "mean": 3.04
+          },
+          "cpuMs": {
+            "count": 240,
+            "min": 0.1,
+            "p50": 0.3,
+            "p95": 2,
+            "max": 11,
+            "mean": 0.583
+          },
+          "gpuMs": {
+            "count": 60,
+            "min": 0.635,
+            "p50": 2.791,
+            "p95": 8.992,
+            "max": 11.491,
+            "mean": 3.584
+          },
+          "gpuDisjoint": false,
+          "render": {
+            "calls": 39,
+            "triangles": 84406
+          }
+        },
+        {
+          "repeat": 1,
+          "loadavg": [
+            59.54,
+            54.78,
+            48.74
+          ],
+          "count": 8,
+          "census": {
+            "drawCalls": 153,
+            "triangles": 337618,
+            "skeletons": 16,
+            "textureBytes": 29360127
+          },
+          "frameIntervalMs": {
+            "count": 240,
+            "min": 1.9,
+            "p50": 4.1,
+            "p95": 10,
+            "max": 14,
+            "mean": 4.966
+          },
+          "cpuMs": {
+            "count": 240,
+            "min": 1.9,
+            "p50": 3.9,
+            "p95": 9.8,
+            "max": 13.8,
+            "mean": 4.694
+          },
+          "gpuMs": {
+            "count": 60,
+            "min": 1.04,
+            "p50": 3.919,
+            "p95": 9.65,
+            "max": 11.226,
+            "mean": 4.698
+          },
+          "gpuDisjoint": false,
+          "render": {
+            "calls": 305,
+            "triangles": 675234
+          }
+        },
+        {
+          "repeat": 1,
+          "loadavg": [
+            59.54,
+            54.78,
+            48.74
+          ],
+          "count": 24,
+          "census": {
+            "drawCalls": 457,
+            "triangles": 1012850,
+            "skeletons": 48,
+            "textureBytes": 29360127
+          },
+          "frameIntervalMs": {
+            "count": 240,
+            "min": 2.6,
+            "p50": 8.6,
+            "p95": 10,
+            "max": 23.5,
+            "mean": 8.627
+          },
+          "cpuMs": {
+            "count": 240,
+            "min": 6.3,
+            "p50": 8.4,
+            "p95": 9.6,
+            "max": 19.6,
+            "mean": 8.376
+          },
+          "gpuMs": {
+            "count": 60,
+            "min": 2.783,
+            "p50": 6.493,
+            "p95": 10.741,
+            "max": 13.074,
+            "mean": 6.775
+          },
+          "gpuDisjoint": false,
+          "render": {
+            "calls": 913,
+            "triangles": 2025698
+          }
+        }
+      ]
+    }
+  },
+  "errors": [],
+  "browser": {
+    "version": "156.0.8078.4"
+  },
+  "environment": {
+    "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+    "gpuVendor": "Google Inc. (Apple)",
+    "webglVersion": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+    "gpuTimer": true,
+    "threeRevision": "186",
+    "pixelRatio": 1,
+    "colorSpace": "srgb",
+    "toneMapping": 4,
+    "exposure": 1.1,
+    "viewport": {
+      "width": 1920,
+      "height": 1080
+    },
+    "presets": {
+      "full": "garden-front-v1",
+      "closeUp": "face-closeup-v1"
+    },
+    "capture": {
+      "width": 3840,
+      "height": 2160,
+      "samples": 4
+    }
+  },
+  "reproduction": {
+    "against": ".runtime/character-fidelity/m1-baseline-a",
+    "earlierRevision": "f897c1d6bfb5ce3829db05e4665b89692139bd05",
+    "tolerance": {
+      "pixels": {
+        "maxChannel": 2,
+        "meanChannel": 0.01,
+        "changedPixelFraction": 0.001
+      },
+      "timingRatio": 0.2
+    },
+    "checks": [
+      {
+        "appearanceId": "jevica",
+        "check": "census",
+        "passed": true
+      },
+      {
+        "appearanceId": "jevica",
+        "check": "pixels:full",
+        "passed": true,
+        "identicalBytes": true
+      },
+      {
+        "appearanceId": "jevica",
+        "check": "pixels:closeUp",
+        "passed": true,
+        "identicalBytes": true
+      },
+      {
+        "appearanceId": "jevica",
+        "check": "timing:frameIntervalMs:x1",
+        "timing": true,
+        "earlier": 4.1,
+        "current": 5.5,
+        "ratio": 1.341,
+        "agrees": false
+      },
+      {
+        "appearanceId": "jevica",
+        "check": "timing:gpuMs:x1",
+        "timing": true,
+        "earlier": 3.065,
+        "current": 23.475,
+        "ratio": 7.659,
+        "agrees": false
+      },
+      {
+        "appearanceId": "jevica",
+        "check": "timing:frameIntervalMs:x8",
+        "timing": true,
+        "earlier": 26.2,
+        "current": 26.9,
+        "ratio": 1.027,
+        "agrees": true
+      },
+      {
+        "appearanceId": "jevica",
+        "check": "timing:gpuMs:x8",
+        "timing": true,
+        "earlier": 4.814,
+        "current": 34.541,
+        "ratio": 7.175,
+        "agrees": false
+      },
+      {
+        "appearanceId": "jevica",
+        "check": "timing:frameIntervalMs:x24",
+        "timing": true,
+        "earlier": 79.7,
+        "current": 79,
+        "ratio": 0.991,
+        "agrees": true
+      },
+      {
+        "appearanceId": "jevica",
+        "check": "timing:gpuMs:x24",
+        "timing": true,
+        "earlier": 7.597,
+        "current": 33.496,
+        "ratio": 4.409,
+        "agrees": false
+      },
+      {
+        "appearanceId": "sable-human",
+        "check": "census",
+        "passed": true
+      },
+      {
+        "appearanceId": "sable-human",
+        "check": "pixels:full",
+        "passed": true,
+        "identicalBytes": true
+      },
+      {
+        "appearanceId": "sable-human",
+        "check": "pixels:closeUp",
+        "passed": true,
+        "identicalBytes": true
+      },
+      {
+        "appearanceId": "sable-human",
+        "check": "timing:frameIntervalMs:x1",
+        "timing": true,
+        "earlier": 0.6,
+        "current": 0.6,
+        "ratio": 1,
+        "agrees": true
+      },
+      {
+        "appearanceId": "sable-human",
+        "check": "timing:gpuMs:x1",
+        "timing": true,
+        "earlier": 1.016,
+        "current": 1.082,
+        "ratio": 1.065,
+        "agrees": true
+      },
+      {
+        "appearanceId": "sable-human",
+        "check": "timing:frameIntervalMs:x8",
+        "timing": true,
+        "earlier": 2.9,
+        "current": 2.9,
+        "ratio": 1,
+        "agrees": true
+      },
+      {
+        "appearanceId": "sable-human",
+        "check": "timing:gpuMs:x8",
+        "timing": true,
+        "earlier": 2.622,
+        "current": 2.754,
+        "ratio": 1.05,
+        "agrees": true
+      },
+      {
+        "appearanceId": "sable-human",
+        "check": "timing:frameIntervalMs:x24",
+        "timing": true,
+        "earlier": 7.2,
+        "current": 10,
+        "ratio": 1.389,
+        "agrees": false
+      },
+      {
+        "appearanceId": "sable-human",
+        "check": "timing:gpuMs:x24",
+        "timing": true,
+        "earlier": 3.956,
+        "current": 9.753,
+        "ratio": 2.465,
+        "agrees": false
+      },
+      {
+        "appearanceId": "man-tailored",
+        "check": "census",
+        "passed": true
+      },
+      {
+        "appearanceId": "man-tailored",
+        "check": "pixels:full",
+        "passed": true,
+        "identicalBytes": true
+      },
+      {
+        "appearanceId": "man-tailored",
+        "check": "pixels:closeUp",
+        "passed": true,
+        "identicalBytes": true
+      },
+      {
+        "appearanceId": "man-tailored",
+        "check": "timing:frameIntervalMs:x1",
+        "timing": true,
+        "earlier": 0.8,
+        "current": 0.9,
+        "ratio": 1.125,
+        "agrees": true
+      },
+      {
+        "appearanceId": "man-tailored",
+        "check": "timing:gpuMs:x1",
+        "timing": true,
+        "earlier": 1.328,
+        "current": 2.973,
+        "ratio": 2.239,
+        "agrees": false
+      },
+      {
+        "appearanceId": "man-tailored",
+        "check": "timing:frameIntervalMs:x8",
+        "timing": true,
+        "earlier": 3.2,
+        "current": 4,
+        "ratio": 1.25,
+        "agrees": false
+      },
+      {
+        "appearanceId": "man-tailored",
+        "check": "timing:gpuMs:x8",
+        "timing": true,
+        "earlier": 1.825,
+        "current": 3.86,
+        "ratio": 2.115,
+        "agrees": false
+      },
+      {
+        "appearanceId": "man-tailored",
+        "check": "timing:frameIntervalMs:x24",
+        "timing": true,
+        "earlier": 9.3,
+        "current": 11.1,
+        "ratio": 1.194,
+        "agrees": true
+      },
+      {
+        "appearanceId": "man-tailored",
+        "check": "timing:gpuMs:x24",
+        "timing": true,
+        "earlier": 2.472,
+        "current": 4.803,
+        "ratio": 1.943,
+        "agrees": false
+      },
+      {
+        "appearanceId": "rowan-human",
+        "check": "census",
+        "passed": true
+      },
+      {
+        "appearanceId": "rowan-human",
+        "check": "pixels:full",
+        "passed": true,
+        "identicalBytes": true
+      },
+      {
+        "appearanceId": "rowan-human",
+        "check": "pixels:closeUp",
+        "passed": true,
+        "identicalBytes": true
+      },
+      {
+        "appearanceId": "rowan-human",
+        "check": "timing:frameIntervalMs:x1",
+        "timing": true,
+        "earlier": 0.5,
+        "current": 0.5,
+        "ratio": 1,
+        "agrees": true
+      },
+      {
+        "appearanceId": "rowan-human",
+        "check": "timing:gpuMs:x1",
+        "timing": true,
+        "earlier": 0.97,
+        "current": 2.791,
+        "ratio": 2.877,
+        "agrees": false
+      },
+      {
+        "appearanceId": "rowan-human",
+        "check": "timing:frameIntervalMs:x8",
+        "timing": true,
+        "earlier": 2.6,
+        "current": 4.6,
+        "ratio": 1.769,
+        "agrees": false
+      },
+      {
+        "appearanceId": "rowan-human",
+        "check": "timing:gpuMs:x8",
+        "timing": true,
+        "earlier": 1.528,
+        "current": 6.159,
+        "ratio": 4.031,
+        "agrees": false
+      },
+      {
+        "appearanceId": "rowan-human",
+        "check": "timing:frameIntervalMs:x24",
+        "timing": true,
+        "earlier": 7.3,
+        "current": 8.6,
+        "ratio": 1.178,
+        "agrees": true
+      },
+      {
+        "appearanceId": "rowan-human",
+        "check": "timing:gpuMs:x24",
+        "timing": true,
+        "earlier": 2.489,
+        "current": 6.493,
+        "ratio": 2.609,
+        "agrees": false
+      }
+    ],
+    "deterministicPassed": true,
+    "timingAgrees": false
+  },
+  "finishedAt": "2026-10-18T20:04:33.544Z",
+  "loadavgEnd": [
+    95.28,
+    68.48,
+    54.56
+  ]
+}

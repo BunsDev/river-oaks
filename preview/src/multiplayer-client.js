@@ -1,5 +1,7 @@
 import { createTownChatDock, bindTownChatComposer } from './town-chat.js';
 import { createGreetingsUI } from './greetings-ui.js';
+import { createWorldPolicyUI } from './world-policy-ui.js';
+import { createCrimeUI } from './crime-ui.js';
 import { validTownSnapshot } from './town-snapshot.js';
 import './multiplayer.css';
 import { DEFAULT_WORLD_ID, MAX_WORLD_PROTOCOL_VERSION, WORLD_PROTOCOL_VERSION, supportsWorldProtocol, worldIdFromSearch } from './world-contract.js';
@@ -16,11 +18,18 @@ import { sharedVoicePreferences } from './voice-preferences.js';
 import { listenerFromPose } from './voice-spatial.js';
 
 const element = (tag,text,className) => { const node=document.createElement(tag);if(text)node.textContent=text;if(className)node.className=className;return node; };
-export function createMultiplayer({ getPose, getEnvironment = () => null, getRegionSha256 = () => null, getMeetingPlaces = () => [], getOwnerHomes = () => [], onSnapshot, onCorrection, onPlayers, onHomeAccess = () => {}, creationToolsEnabled = false, getWalking = () => null, onVoiceChange = () => {} }) {
+export function createMultiplayer({ getPose, getEnvironment = () => null, getRegionSha256 = () => null, getDistrictRevision = () => undefined, getMeetingPlaces = () => [], getOwnerHomes = () => [], onSnapshot, onCorrection, onPlayers, onHomeAccess = () => {}, creationToolsEnabled = false, getWalking = () => null, onVoiceChange = () => {} }) {
   const lifetime=new AbortController();let connectionDeadline=null;
   const reloadRegion=()=>{
     if(window.__riverRegionReloadScheduled)return;
     window.__riverRegionReloadScheduled=true;setTimeout(()=>location.reload(),0);
+  };
+  // Reload once for a changed district revision; a second mismatch means the town and the
+  // page disagree after a fresh load, so stop rather than loop.
+  const districtChanged=(ws,served)=>{
+    let tried=null;try{tried=sessionStorage.getItem('river-oaks-district-reload');}catch{}
+    if(tried!==String(served)){try{sessionStorage.setItem('river-oaks-district-reload',String(served));}catch{}reloadRegion();return;}
+    ws.close(4000,'District revision changed');
   };
   const gate=element('section',null,'multiplayer-gate');gate.setAttribute('role','dialog');gate.setAttribute('aria-modal','true');gate.setAttribute('aria-labelledby','multiplayer-title');
   const orbit=element('span',null,'access-orbit');orbit.setAttribute('aria-hidden','true');
@@ -113,6 +122,8 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
   panel.append(logout);
   const chatDock = createTownChatDock(chatSection);
   const greetings=createGreetingsUI({host:document.querySelector('#viewport'),getTown:()=>({connected,selfId,snapshot:latestSnapshot}),getEnvironment,request:command,getPose});
+  const worldRules=createWorldPolicyUI({panel,getTown:()=>({connected,selfId}),getEnvironment,command});
+  const crimeHud=createCrimeUI({host:document.querySelector('#viewport'),getTown:()=>({connected,selfId,snapshot:latestSnapshot}),getEnvironment,request:command});
   let activeGreeting=null;
   const latestPlayers=new Map();
   // Shared voice. Its requests go straight to fetch rather than api(): api()
@@ -262,6 +273,9 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
     if(!validTownSnapshot(data,selfId)){notice.textContent='A town update could not be read.';ws.close(4002,'Invalid town snapshot');return;}
     if((data.worldId??DEFAULT_WORLD_ID)!==worldId || !supportsWorldProtocol(data.protocolVersion??WORLD_PROTOCOL_VERSION)){ws.close(4000,'World version changed');return;}
     if(getRegionSha256() && data.regionSha256 && data.regionSha256!==getRegionSha256()){reloadRegion();return;}
+    // The default district's revision (#507): the town and this page must draw the same campus or garage.
+    const loadedDistrict=getDistrictRevision();
+    if(worldId===DEFAULT_WORLD_ID && loadedDistrict!==undefined && (data.districtRevision??null)!==loadedDistrict){districtChanged(ws,data.districtRevision??null);return;}
     staleness.heard(performance.now());
     // The server checks every name; checking again here means no
     // surface fed by a snapshot can show anyone but Jevica's accounts as Jevica.
@@ -273,7 +287,7 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
     const self=data.players.find(player=>player.id===selfId);
     if(self?.interaction?.id&&self.interaction.id!==activeGreeting)onCorrection(self);
     activeGreeting=self?.interaction?.id??null;
-    onSnapshot(data);onPlayers(data.players,selfId);displayPlayers(data.players);displayChat(data.chat??[]);
+    onSnapshot(data);onPlayers(data.players,selfId);displayPlayers(data.players);displayChat(data.chat??[]);worldRules.sync(data);crimeHud.sync();
     voice.setAvailable(Boolean(data.voice?.available),self?.voice?.space??null);voice.sync(data.players,selfId);
     chatInput.disabled=chatSend.disabled=false;gestureButtons.forEach(button=>button.disabled=false);
   }
@@ -314,7 +328,7 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
   function lost(ws,code,reason){
     if(socket!==ws)return;
     if(rotation){const {ws:replacement,queued}=rotation;rotation=null;try{replacement?.close();}catch{ /* never opened */ }for(const item of queued)item.resolve({ok:false,message:'Reconnect before taking an action.'});}
-    socket=null;previousSocket=null;connected=false;connecting=false;latestSnapshot=null;homeAccess=[];onHomeAccess(homeAccess);social.refreshHomeAccess();chatInput.disabled=chatSend.disabled=true;gestureButtons.forEach(button=>button.disabled=true);clearPending();onPlayers([],selfId);
+    socket=null;previousSocket=null;connected=false;connecting=false;latestSnapshot=null;worldRules.sync(null);crimeHud.sync();homeAccess=[];onHomeAccess(homeAccess);social.refreshHomeAccess();chatInput.disabled=chatSend.disabled=true;gestureButtons.forEach(button=>button.disabled=true);clearPending();onPlayers([],selfId);
     const notice=closeNotice(code,reason);
     // Voice leases die with the connection; a non-terminal close rejoins voice with the town.
     voice.onConnectionLost(notice.terminal);
@@ -340,6 +354,7 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
   };
   window.addEventListener('online',resume,{signal:lifetime.signal});
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')resume();},{signal:lifetime.signal});
+  let flightRequest=null,flightTracking=false;
   function command(message){
     if(stopped||!connected)return Promise.resolve({ok:false,message:'Reconnect before taking an action.'});
     const requestId=String(++sequence);
@@ -375,6 +390,13 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
   logout.addEventListener('click',signOut);gateLogout.addEventListener('click',signOut);
   connect();
   return {
+    characterRequest(action,body){
+      const routes={read:['/api/character','GET'],draft:['/api/character/draft','PUT'],publish:['/api/character/publish','POST'],rollback:['/api/character/rollback','POST']};
+      const route=routes[action];if(!route)return Promise.reject(new TypeError('Unknown character action'));
+      const [path,method]=route;
+      return api(`${path}?world=${encodeURIComponent(worldId)}`,{method,signal:AbortSignal.timeout(15000),
+        ...(method==='GET'?{cache:'no-store'}:{headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})});
+    },
     claimStoreIntro: storeId => api(`/api/profile/claim-intro?world=${encodeURIComponent(worldId)}`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({storeId})}),
     get connected(){return connected;},get traveling(){return traveling;},get identity(){return identity;},get snapshot(){return latestSnapshot;},get homeAccess(){return homeAccess;},get voice(){return voice;},command,
     landmarkRequest(action,data={}){
@@ -391,9 +413,23 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
     },
     officeDeskRequest:(action,data={})=>api(`/api/office-desk/${action}?world=${encodeURIComponent(worldId)}`,{signal:AbortSignal.timeout(15000),method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}),
     update(now){
-      greetings.update(now);
+      greetings.update(now);crimeHud.update(now);
       if(!connected||socket?.readyState!==WebSocket.OPEN)return;
-      if(!traveling&&now-lastPose>=200){lastPose=now;const pose=getPose();if(pose&&!pose.office)socket.send(JSON.stringify({type:'pose',position:[pose.position[0],-pose.position[2],pose.ground],yaw:pose.riding?pose.riding.yaw+Math.PI/2:pose.yaw,altitude:pose.altitude,levelId:pose.levelId??null,...(activeGreeting?{interactionId:activeGreeting}:{}),...(pose.riding?{vehicle:pose.riding.kind}:{})}));}
+      if(!traveling&&now-lastPose>=200){
+        lastPose=now;const pose=getPose();
+        if(pose&&!pose.office){
+          const message={type:'pose',position:[pose.position[0],-pose.position[2],pose.ground],yaw:pose.riding?pose.riding.yaw+Math.PI/2:pose.yaw,altitude:pose.altitude,levelId:pose.levelId??null,...(activeGreeting?{interactionId:activeGreeting}:{}),...(pose.riding?{vehicle:pose.riding.kind}:{})};
+          if((pose.flying||flightTracking)&&getWalking()?.recordSubmittedPose){
+            flightTracking=true;
+            if(flightRequest)return;
+            const acknowledge=getWalking().recordSubmittedPose(pose);
+            // Flight turns need explicit acknowledgments, so intermediate corner
+            // endpoints cannot be coalesced away. Keep the normal 200ms cadence.
+            const request=command(message);flightRequest=request;
+            request.then(result=>{if(result.ok&&result.player){acknowledge(result.player);flightTracking=result.player.altitude>0;}}).catch(()=>{}).finally(()=>{if(flightRequest===request)flightRequest=null;});
+          }else socket.send(JSON.stringify(message));
+        }
+      }
       if(now-lastFocus>=10000){lastFocus=now;const dialog=document.querySelector('#community-dialogue');if(dialog&&!dialog.hidden)command({type:'focus',localId:document.querySelector('#community-local')?.value}).catch(()=>{});}
     },
     dispose(){
@@ -404,7 +440,7 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
       const current=socket;socket=null;connected=connecting=traveling=false;latestSnapshot=null;homeAccess=[];
       current?.close();clearPending();onPlayers([],selfId);onHomeAccess(homeAccess);
       identity=null;csrfToken=null;rows.clear();latestPlayers.clear();chatRows.clear();
-      social.dispose();groups?.dispose();workplace?.dispose();greetings.dispose();chatDock.dispose();gate.remove();panel.remove();document.querySelector('.app-shell')?.removeAttribute('inert');
+      social.dispose();groups?.dispose();workplace?.dispose();greetings.dispose();worldRules.dispose();crimeHud.dispose();chatDock.dispose();gate.remove();panel.remove();document.querySelector('.app-shell')?.removeAttribute('inert');
     },
   };
 }

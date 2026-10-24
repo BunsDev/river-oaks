@@ -1,8 +1,13 @@
 # Task ownership and retirement
 
-`tasks.json` is the task register. The primary checkout's uncommitted copy is the live
-register; claims, releases and `project:prune` use it, and a branch's copy can be
-stale (see [register sweeps](#register-sweeps)). Dated ledgers under
+The live task register is one JSON file in the common Git directory
+(`.git/river-oaks-tasks.json`, printed by `pnpm run --silent register path`). Every
+worktree shares it, and claims, releases, `project:status` and `project:prune` use it.
+It is changed only under a short lock, and Git never reads or writes it, so a pull,
+a branch switch or a GUI client's stash cannot move it.
+`docs/project-management/tasks.json` is a committed snapshot of it, updated only by
+[register sweeps](#register-sweeps); feature PRs must not change it (Verify fails
+them). Dated ledgers under
 `docs/superpowers/plans/` retain implementation and verification history. GitHub
 is authoritative for PR state; local Git is authoritative for files and refs.
 A register entry records the next action, not a substitute for either source.
@@ -11,9 +16,7 @@ A register entry records the next action, not a substitute for either source.
 
 1. Run `git status --short`, `git worktree list` and
    `pnpm run --silent project:status --github --output .runtime/project-status.json`.
-   It reads the register in the checkout you run it from. From a feature
-   worktree, pass `--tasks <primary>/docs/project-management/tasks.json` to check
-   the live register.
+   It reads the live register from any worktree (`--tasks <file>` reads a file instead).
    Create `.runtime` first when absent. This command reads Git and GitHub; it never
    fetches, checks out, edits tasks, deletes refs, or removes worktrees. Refresh
    `origin` explicitly before delivery or retirement decisions.
@@ -28,8 +31,11 @@ A register entry records the next action, not a substitute for either source.
    prune find a task's PR only through `pr` (a number). Delivered and retired tasks
    need `evidence`, an array of `{pr, reviewedHead, merge, tree, checks}`. Retired
    tasks also need `archive`. `deliveryPr` is informational.
+   Write it with `pnpm run register patch <id> --json '{"status":"active",...}'`
+   (`--create` adds a new task, `--unset leaseUntil` removes a field). The patch
+   merges your fields into the current entry under the register lock, stamps
+   `updatedAt`, and refuses a change that would make the register invalid.
    An active claim is a coordination record, not a lock enforced by the tool.
-   Inspect the diff again before saving because other agents may update the file.
 4. Use `active` only with a named owner and a bounded lease (normally two hours).
    Renew during sustained work. An expired lease requires reconciliation; it never
    authorizes taking another session's changes. Record a handoff before transferring.
@@ -68,6 +74,7 @@ pnpm run land --status                # who is queued
 
 - **The queue:** the queue and its lock live in the common Git directory, so every
   worktree shares them. An entry whose process has died is dropped.
+- **Waiting for a turn:** directory notifications wake a waiting lander when the queue changes. Every wake rechecks the owned entry and position under the existing lock. The 30-second timer remains a fallback for missing notifications, unavailable watchers and dead processes; hosted-check polling is unchanged.
 - **On its turn:** the lander updates the branch from `main` with GitHub's
   update-branch, whose commits are verified, and waits for Verify. If Verify fails
   it reruns the failed jobs once; if they fail again, it stops. Then it hands the
@@ -78,6 +85,27 @@ pnpm run land --status                # who is queued
 
 The queue only orders sessions that use it. Landing still needs the same merge
 authorization as any other merge.
+
+**Waiting on GitHub.** Every session on this machine shares one account's API
+quota, and it ran out several times on 2026-10-23, stalling landing and signing. Do
+not poll with `gh pr view`/`gh pr checks` loops or `gh pr checks --watch`: they
+spend GraphQL points on every turn (`gh pr checks` costs 2). Use
+`pnpm run pr:wait <pr>` (until merged) or `pnpm run pr:wait <pr> --until checks`
+(until every check on the current head finishes; exit 1 if one failed). It polls
+REST with the previous ETag, so an unchanged answer is a free 304, and it waits for
+the quota reset when fewer than 200 requests remain. The lander polls the same way.
+
+### Delivery cadence
+
+Reduce idle time around the existing checks before adding more orchestration. The [eight-PR timing audit](../superpowers/plans/2026-10-23-delivery-lifecycle.md#timing-baseline) found a median 25.3-minute Verify span, including reruns, and 32 seconds from its last job completing to merge. Shortening the lander's 30-second polling interval cannot remove that CI work. These measurements describe their recorded revisions, not a permanent performance guarantee.
+
+1. Before editing, identify the required local profiles, focused regressions and hosted checks from the changed scope, task instructions and current ruleset. Record the exact commands and why they are needed. Keep required coverage; a narrow pass cannot replace a broader gate. Full/Redis/browser verification remains required when the task or changed seam requires it; do not run another identical gate merely to restate an unchanged result.
+2. Pass all required precommit verification and review before making a signed commit. Then publish an authorized draft increment promptly. Only checks that the task and repository permit after commit may overlap hosted validation; label those pending in the PR. This cadence never overrides a stronger precommit gate or claims readiness before required checks pass. Respect the local heavy-command/browser queue; overlapping hosted CI does not authorize competing local browser runs.
+3. Associate every receipt with its actual source head and dirty state. Preserve first failures. Do not amend a verified source head solely to add passing timestamps: update the live register and PR evidence, then include any required final ledger checkpoint as an explicitly verified documentation increment. A main integration creates a new head and requires fresh hosted checks; earlier local evidence keeps its original scope.
+4. As soon as required local checks and review pass and existing authorization covers merge, mark the PR ready and run `pnpm run land <pr> --owner <session>`. Do not wait for another routine confirmation or for cleanup. Use one lander per PR. Poll its existing handle/process and inspect hosted jobs until it exits; an observation timeout does not justify a duplicate lander or verification run. Resolve concrete failures in scope and retain the first failing receipt.
+5. Confirm the actual PR merge and its ancestry on freshly fetched main before marking delivered. Record reviewed head, merge SHA, required check results and remaining acceptance limits. Then run the retirement rule below outside the landing queue. A green head, a successful lander invocation and a deployment status are separate evidence; none replaces actual merge confirmation.
+
+For timing comparisons record local check start/end, landing enqueue/turn, each main update, hosted run/attempt and per-job start/end, final required-check completion, merge confirmation and, separately, deployment availability. Name missing timestamps instead of deriving queue time from PR age or commit dates. Compare equivalent coverage and separate workflow changes, runner contention and reruns; modeled overlap savings are not an observed before/after improvement.
 
 ## Local browser runs take turns
 
@@ -99,25 +127,27 @@ common Git directory (`scripts/browser-lock.mjs`):
 
 ## Register merges and stashes
 
-The primary checkout's `tasks.json` is the live register, an uncommitted edit that
-branches also change. `.gitattributes` routes it through a merge driver that
-`pnpm install` installs with the other shared hooks (`install-project-hooks.mjs`).
-Branch merges, rebases and stash pops then merge the register by task id:
+The live register is not in the working tree, so merges, rebases, pulls and stashes
+never touch it. Older instructions had sessions edit the primary checkout's
+`docs/project-management/tasks.json` directly. Every read of the live register
+(`register`, `project:status`, `project:prune`, `project:inventory`) absorbs such an
+edit by task id, then puts the tracked file back to its committed text, so the
+primary checkout stays clean:
 
 - An entry changed on one side takes that side, including a deletion.
 - An entry changed on both sides takes the newer `updatedAt`.
 - A deletion never discards an edit made on the other side.
 
-Without the driver, for example in a fresh clone before `pnpm install`, Git falls
-back to its line merge.
+The committed snapshot still merges through the same rules: `.gitattributes`
+routes it through a merge driver that `pnpm install` installs with the other shared
+hooks (`install-project-hooks.mjs`). Without the driver, for example in a fresh
+clone before `pnpm install`, Git falls back to its line merge.
 
-A GUI client's pull can stash the live register and leave it stashed. `project:check`
-reports any stash that holds register edits. To recover, merge that stash's
-register into the live one by task id, keeping the newer `updatedAt` and every
-id. Write the result atomically, refusing if the file changed, then drop the stash.
-If the register contains conflict markers, `project:status` fails validation and
-exits 2. Find them with `grep -n '^<<<<<<<' docs/project-management/tasks.json`
-and resolve them the same way.
+A tracked copy with conflict markers is not absorbed; `project:status` names the
+markers and exits 2. Find them with `grep -n '^<<<<<<<' docs/project-management/tasks.json`,
+merge the two sides by task id, and the next read absorbs the result.
+`project:check` still reports any stash that holds register edits; the next read
+absorbs them once they are popped, or merge them in with `register patch`.
 
 ## Daily reconciliation and handoff
 
@@ -159,8 +189,9 @@ Preserve primary/default, dirty, active, open-PR, missing-proof and uncertain wo
 
 Prefer ancestry proof. For squash/rebase/supersession, compare the entire aggregate
 patch against the actual merged commit, including every changed path. Preserve the
-exact original ref in an archive tag and self-contained bundle outside removal
-paths; restore every ref in a new bare repository and run `git fsck --full`.
+exact original ref in an archive tag and a bundle outside removal paths. The bundle
+may leave out commits already on origin's default branch. Restore every ref into a
+new bare repository that can reach those commits, and run `git fsck --full`.
 Keep ignored reports/private local evidence in a restricted archive and verify its
 contents. Do not print credential values or copy private state into another runtime.
 Only explicitly identified regenerable dependencies/caches are disposable.
@@ -173,6 +204,31 @@ ancestry. A failed safety check is a skip requiring reconciliation.
 Remote branch deletion and discarding distinct unfinished work need explicit scope
 approval. Local cleanup does not imply either. Preserve archive tags, bundles,
 evidence and the restoration manifest; do not prune them as part of the same round.
+
+### Proactive retirement rule
+
+Evaluate candidates at session start, immediately after each verified merge and before handoff. This is an agent lifecycle obligation, not an unattended deletion scheduler or new cleanup authority. When local retirement is authorized, finish every eligible candidate in the same session after delivery evidence is secured. Never hold the landing queue while archiving or pruning. Preserve blocked work and continue with independent candidates; report each blocker, responsible owner and exact next action.
+
+| Current evidence | Required action |
+| --- | --- |
+| Exact delivered head, fresh owner release and session review, no activity, all guard checks satisfied | Dry-run and apply guarded local retirement from outside the target. |
+| Delivered, but local evidence or ignored material remains | Preserve required material in a restricted external recovery archive, verify hashes and restoration, identify regenerable caches explicitly, then reassess the guard. Do not delete unknown ignored files. |
+| Active owner/session/process, dirty work, open PR, unfinished operation or uncertain ownership | Preserve. Ask the owner for a handoff/release when needed; record who must act and what evidence would unblock retirement. An expired claim is not a release. |
+| Squash/rebase/supersession or a local tip differing from the merged PR head | Account for the complete aggregate difference and preserve the exact tip. Keep blocked until supported tooling accepts the evidence; never move a ref solely to manufacture eligibility. |
+| Old branch, missing upstream/checkout, missing archive or expired lease | Investigate and name the missing evidence. None proves redundancy or abandonment. |
+| Distinct unfinished work | Preserve unless explicit cancellation authority covers that exact work. A cleanup request does not authorize cancellation. |
+
+For each proposed removal, record branch/full SHA, worktree, task, reviewed PR head, merge SHA, fresh ancestry/tree evidence, running-session review, process activity and tracked/untracked/ignored inventory. The owning session must release its task and record the exact-head retirement attestation described below; another session cannot invent that release. A missing CWD match is not proof of inactivity.
+
+Use the existing commands; placeholders below must be replaced with the inspected candidate. `project:inventory` classifies evidence but does not replace the prune guard. Run `--apply` only after reviewing that candidate's successful dry run and satisfying its authority, activity and recovery requirements:
+
+```sh
+pnpm run project:inventory --json --output /tmp/river-oaks-retirement-inventory.json
+pnpm run project:prune --branch <branch> --expected-head <full-sha>
+pnpm run project:prune --branch <branch> --expected-head <full-sha> --apply
+```
+
+After apply, verify the local ref and worktree registration are absent, the external manifest records successful restoration/removal and the register records the correct retired branches. Recount fresh state because other sessions may create work concurrently. For each retained row, keep its owner (or explicitly unknown owner), blocker and concrete next action in the task ledger or an identified inventory receipt. Mark delivered only with merge proof and retired only with removal and recovery proof. Leave remote refs and recovery archives untouched unless separately authorized.
 
 When the maintainer explicitly authorizes cancellation of local work untouched for
 a stated duration, `project:prune --cancel-stale --branch <branch> --expected-head
@@ -191,7 +247,10 @@ proof or blanket approval to cancel newer work.
 ## Restore
 
 Read the task's `archive` manifest first. Verify its checksum, then fetch the
-recorded tag from the bundle into a **new** recovery branch. Create a separate
+recorded tag from the bundle into a **new** recovery branch, in a checkout that has
+origin's default branch. Since 2026-10-20 a bundle holds only the commits that branch
+lacked; the manifest lists the commits it builds on as `prerequisites`, and an empty
+list means the bundle is self-contained. Create a separate
 worktree from that branch. Restore local evidence from its verified archive after
 inspection; never apply private state to a live service automatically.
 
@@ -225,8 +284,8 @@ GitHub API, so it needs network access and `gh` authentication. Exit 0 means
 eligible (or retired with `--apply`), 1 means a dry run found blockers, and 2 means
 an error, including a blocked `--apply`. Add `--apply` to retire that exact
 local branch and its worktree. There is no bulk, force, remote-delete or age-based
-mode. The command reads the **primary checkout's** task register so stale copies in
-feature worktrees cannot release another owner's work.
+mode. The command reads the **live** task register (the common Git directory), so
+stale snapshot copies in feature worktrees cannot release another owner's work.
 
 Before applying, the task owner must release the delivered task (`owner: null`,
 remove `leaseUntil`) and record `retirement: { head, releasedAt, sessionsReviewedAt }`.
@@ -250,9 +309,15 @@ remain blocked for aggregate review. It refuses:
 evidence such as `.runtime` and `output/playwright` first, then remove the caches. Retain ignored evidence separately first; this tool
 never deletes cache directories or private files to make a checkout removable.
 
-Apply takes a common-Git-directory lock, preserves the exact tip in a unique
-archive tag, creates a self-contained bundle outside all worktrees, fetches it into
-a fresh bare repository, compares the SHA and runs `git fsck --full`. It then
+Apply takes a common-Git-directory lock and preserves the exact tip in a unique
+archive tag. Outside all worktrees, it bundles only the commits that origin's
+default branch lacks. A tip already on that branch gets just its own commit, and
+without a default-branch ref the bundle is self-contained. It restores the bundle
+into a fresh bare repository that borrows the branch's history from the common Git
+directory (`objects/info/alternates`), compares the SHA and runs `git fsck --full`.
+The restore uses `git bundle unbundle`, not `fetch`: once alternates reach the tip,
+a fetch never reads the pack, so it would accept a corrupt bundle. Archives written
+before 2026-10-20 copy the whole history twice, about 0.8 GB each. It then
 rechecks ownership, GitHub, activity, worktree registrations and clean state before
 non-forced removal and expected-SHA ref deletion. The external manifest records
 partial progress as well as success. The primary task register is updated only
@@ -261,9 +326,9 @@ all its recorded branches have been retired.
 
 Backups default to `~/worktree-backups/river-oaks/`; `--archive-root` must point
 outside every checkout. Preserve its manifest, bundle, checksum and restore-tested
-bare repository. A crash may leave `river-oaks-retirement.lock` in the common Git
-directory: inspect its owner activity and external receipts before manually
-reconciling it; the tool never steals a lock.
+bare repository, which reads the common Git directory's objects. A crash may leave
+`river-oaks-retirement.lock` in the common Git directory: inspect its owner activity
+and external receipts before manually reconciling it; the tool never steals a lock.
 
 `pnpm install` (prepare) and `sh scripts/install-hooks.sh` install a shared
 reference-transaction hook alongside the secret guard in the common Git directory.
@@ -286,7 +351,7 @@ owner; `lease-expired` is a flag, not a release), `open-pr`, `detached`,
 `retire-candidate` (delivered at the exact merged head; only the session release
 is missing), `retire-eligible` (`project:prune` would accept it now) or
 `blocked:<reasons>` (the same blockers `project:prune` reports). It reads the
-primary checkout's live register and GitHub (`--no-github` skips that), fetches
+live register and GitHub (`--no-github` skips that), fetches
 without pruning (`--no-fetch` skips that), and changes nothing. `--json` and
 `--output <file>` give the machine-readable report.
 
@@ -299,8 +364,9 @@ them: remote deletion still needs explicit approval, and a branch whose local
 copy is still present stays listed for review. `pnpm run land <pr>
 --delete-remote-branch` deletes only the landed pull request's source branch,
 only after the merge commit is confirmed on the default branch, and is off by
-default. Turning it on by default, or enabling GitHub's delete-branch-on-merge
-setting, is a maintainer decision.
+default. GitHub's delete-branch-on-merge setting is on for this repository, so
+the branch is usually gone already; the lander reports that and still succeeds.
+Turning the flag on by default is a maintainer decision.
 
 `pnpm run project:archives` indexes `~/worktree-backups/river-oaks/` (or
 `--archive-root`): for each `manifest.json` it checks the bundle's SHA-256, that
@@ -320,32 +386,13 @@ the authorization, cutoff and guard rules above apply unchanged.
 
 ## Register sweeps
 
-Branches commit their own register entries, but `project:prune` writes retirement
-records only to the primary's live file. Releases and other sessions' updates also
-land there first. So the live register runs ahead of `main`.
+The committed `docs/project-management/tasks.json` is a snapshot of the live
+register for history and review. It drifts by design. When it should be refreshed,
+open a docs-only register sweep PR from current `main` on a
+`docs/register-sweep-<date>` branch (the only branches Verify lets change it):
 
-When it has drifted, open a docs-only register sweep PR from current `main`, on a
-`docs/register-sweep-<date>` branch:
-
-1. Copy the live entries exactly as written: only your own, or the whole live file
-   when the owners agree. Confirm first that no committed entry is newer than its
-   live counterpart.
-2. Claim the sweep as its own task.
-3. Validate with `project:status`, and merge.
-
-The merge driver keeps later live edits on the next fast-forward of the primary.
-The sweep's own retirement record is live-only until the next sweep.
-Examples: #255, #269, and the docs refresh of 2026-10-12.
-
-```mermaid
-%% diagram: task-lifecycle-and-retirement (placeholder; replace this block with the real diagram)
-flowchart LR
-  pending["Diagram pending: Task lifecycle and safe retirement"]
-```
-<details><summary>Diagram prompt: task-lifecycle-and-retirement</summary>
-
-Draw a flowchart of one task from claim to retirement in the task register. States: queued/active (claimed with owner, branch, leaseUntil) -> blocked (optional) -> delivered (exact PR, reviewed head, merge commit, tree, checks as an evidence array) -> retired. Then the retirement path run by `pnpm run project:prune`: owner releases (owner null, no leaseUntil, retirement {head, releasedAt, sessionsReviewedAt} within 2 h, in the PRIMARY checkout's live tasks.json) -> archive ignored evidence and clear regenerable caches -> dry run (blockers: ownership-not-released, dirty, ignored-data, exact-merged-pr-required, merge-not-on-default, aggregate-tree-review-required, active-process) -> --apply: lock, archive tag, bundle, restore into a fresh bare repo, fsck, non-forced worktree removal, expected-SHA ref deletion through the reference-transaction hook permit -> register updated to retired. Show the side path for superseded branches (blocked for aggregate review, archived but kept) and the register merge driver reconciling live and committed copies by task id.
-
-See [the diagram index](../diagrams.md) for the convention.
-
-</details>
+1. Claim the sweep as its own task in the live register.
+2. Write the snapshot: `pnpm run register snapshot` in the sweep worktree writes the
+   live register to its `docs/project-management/tasks.json`.
+3. Regenerate the plans index (`pnpm run plans:index`), validate with
+   `project:status --tasks docs/project-management/tasks.json`, and merge.

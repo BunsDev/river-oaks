@@ -1,12 +1,11 @@
 import { personPosition, personEyeHeight, personDistance } from './person-position.js';
-import { createFlightState, beginFlight, stepFlight } from './flight.js';
+import { createFlightState, beginFlight, stepFlight, recordFlightPose, acknowledgeFlightPose } from './flight.js';
 import { thirdPersonPose, createCameraBoom, pitchAfterSeatChange, seatedEyeView } from './third-person.js';
 import { nearRoomExit } from './room-exit.js';
 import { createPointerGesture } from './pointer-gesture.js';
 import { withinTalkingReach } from './people-picking.js';
 import { nearbyPeople } from './nearby-people.js';
-import { createWalkingEnvironment, createWalkingState, stepWalking } from './walking.js';
-import { beastTraversal } from './beast-traversal.js';
+import { WALK_SPEED, createWalkingEnvironment, createWalkingState, stepWalking } from './walking.js';
 import { ENCOUNTER_FAR, clearConversationLine, encounterPosition, indoorEncounterPosition } from './encounter.js';
 import { sharedRoomSummary } from './shared-population.js';
 import { isGameplayKey } from './keyboard-input.js';
@@ -14,6 +13,8 @@ import { primaryAction } from './contextual-action.js';
 import { travelRefusal } from './travel-message.js';
 import './walking.css';
 import { venueDoorSites } from './venue-rooms.js';
+import { campusDoorSites } from './garden-campus-district.js';
+import { CAMPUS_BUILDING_ID, CAMPUS_GROUND_LEVEL, campusInteriorPlan, interiorLevelFor } from './garden-campus-levels.js';
 
 export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getLocals, reducedMotion, onEnter, onLeave, onLevelChange, canEnterStore = () => true, getInteraction = () => null, getPlay = () => null, getVoice = () => null }) {
   const $ = (selector) => document.querySelector(selector);
@@ -82,7 +83,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   const placedObjects = [];
   let transport = null, sitting = null, performing = false, seatedGround = 0, doorwayPending = false;
   let flight = createFlightState();
-  let flightAllowed=false,beastKind=null;
+  let flightAllowed=false,fastWalkSpeed=WALK_SPEED.fast;
   let thirdPerson = true, bodyVisible = true;
   let active = false, environment, walkingWorld = null, stores = [], state, nearest = null, lastPaint = 0, pathLabel = 'public district paths';
   const drag = createPointerGesture();
@@ -137,9 +138,19 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   const talk = () => { if (!active) return; nearest = findNearest(); if (nearest) { clear(); onTalk(nearest.id); } };
   // Boutique thresholds: inside a room F steps back to the pavement, at a door F walks in.
   const currentRoom = () => environment?.roomAt?.(state.position[0], state.position[2]) ?? null;
-  const nearbyStairs = (room, direction) => room?.generatedPlan?.portals?.find(portal => portal.kind === 'stairs'
-    && portal.toLevelId === `${room.buildingId}/l${room.generatedPlan.index + (direction === 'down' ? -1 : 1)}`
-    && Math.hypot(portal.position[0] - state.position[0], portal.position[1] + state.position[2]) <= 1.3) ?? null;
+  // A level's portals: a generated plan's, or in a campus tower hall the campus street level's
+  // (#508), where a lift stands beside the stairs at every core.
+  const levelPortals = room => room?.generatedPlan ? { portals: room.generatedPlan.portals ?? [], index: room.generatedPlan.index, buildingId: room.buildingId }
+    : room?.planId === CAMPUS_GROUND_LEVEL ? { portals: campusInteriorPlan(walkingWorld)?.levels[0].portals ?? [], index: 0, buildingId: CAMPUS_BUILDING_ID } : null;
+  const nearbyStairs = (room, direction) => {
+    const level = levelPortals(room);
+    return level?.portals.find(portal => (portal.kind === 'stairs' || level.buildingId === CAMPUS_BUILDING_ID && portal.kind === 'lift')
+      && portal.toLevelId === `${level.buildingId}/l${level.index + (direction === 'down' ? -1 : 1)}`
+      && Math.hypot(portal.position[0] - state.position[0], portal.position[1] + state.position[2]) <= 1.3) ?? null;
+  };
+  const portalLabel = (portal, up) => portal.kind === 'lift'
+    ? up ? 'Take the lift up' : portal.toLevelId.endsWith('/l0') ? 'Take the lift to the ground floor' : 'Take the lift down'
+    : up ? 'Go up one level' : portal.toLevelId.endsWith('/l0') ? 'Go down to ground floor' : 'Go down one level';
   const doorway = () => {
     let result = null, distance = 6;
     for (const store of stores) {
@@ -250,10 +261,10 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     button.addEventListener('click', event => { if (event.detail === 0 && active && !dialogueOpen()) {  transport?.takeOver?.(); keys.add(button.dataset.walkKey); setTimeout(release, 180); } });
   });
   return {
-    setTraversal({canFly=false,kind=null}={}) {
-      flightAllowed=Boolean(canFly);beastKind=beastTraversal(kind)?kind:null;
-      sprintButton.hidden=!beastKind;
-      hud.querySelector('.walking-help').innerHTML=`WASD to move · Drag to look · Shift to ${beastKind?'sprint':'walk briskly'}<br>Arrow keys to turn · E to talk · F uses stairs or doors · Shift+F goes down · Z to sit or water<br>Y joins voice · M mutes<br>${flightAllowed?'B to fly · Space to rise · C to lower · ':''}Escape closes conversations`;
+    setTraversal({canFly=false,kind=null,fastWalk=WALK_SPEED.fast}={}) {
+      flightAllowed=Boolean(canFly);fastWalkSpeed=fastWalk;
+      sprintButton.hidden=true;
+      hud.querySelector('.walking-help').innerHTML=`WASD to move · Drag to look · Shift to walk briskly<br>Arrow keys to turn · E to talk · F uses stairs or doors · Shift+F goes down · Z to sit or water<br>Y joins voice · M mutes<br>${flightAllowed?'B to fly · Space to rise · C to lower · ':''}Escape closes conversations`;
     },
     // The voice row sits under the actions, above the place line.
     mountVoice(element) { more.after(element); },
@@ -282,8 +293,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       transport?.stop();transport=null;
       if (!active || !state || !player) return;
       clear();
-      const level = walkingWorld?.buildingInteriors?.flatMap(plan => plan.levels)
-        .find(item => item.id === player.levelId);
+      const level = interiorLevelFor(walkingWorld, player.levelId)?.level;
       const selectedLevelId = level?.index > 0 ? level.id : null;
       if (environment.levelId !== selectedLevelId) environment = createWalkingEnvironment(walkingWorld, placedObjects, selectedLevelId);
       const before=sitting;
@@ -295,9 +305,14 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       if (player.altitude > 0) Object.assign(flight, { active: true, altitude: player.altitude, target: player.altitude });
       place();
     },
+    recordSubmittedPose(pose) {
+      const current=flight,receipt=recordFlightPose(current,pose);
+      return player=>{if(current===flight)acknowledgeFlightPose(current,player,receipt);};
+    },
     syncAuthoritativePose(player) {
       if(!player)return;
-      const level=walkingWorld?.buildingInteriors?.flatMap(plan=>plan.levels).find(item=>item.id===player.levelId);
+      acknowledgeFlightPose(flight,player);
+      const level=interiorLevelFor(walkingWorld,player.levelId)?.level;
       if((player.sitting?.buildId??null)!==(sitting?.buildId??null) || player.sitting?.slot!==sitting?.slot
         || environment?.levelId!==(level?.index>0?level.id:null))this.applyServerPose(player);
     },
@@ -337,8 +352,8 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       pathLabel = creatorRegion ? 'creator region paths' : 'public district paths';
       walkingWorld = world;
       environment = createWalkingEnvironment(world, placedObjects);
-      // Code-only venues (venue-rooms.js) have doors too: F steps in and out of them.
-      stores = [...(world.stores ?? []), ...venueDoorSites(world)];
+      // Code-only venues (venue-rooms.js) and the Gardens' halls have doors too: F steps in and out of them.
+      stores = [...(world.stores ?? []), ...venueDoorSites(world), ...campusDoorSites(world)];
       flight = createFlightState();
       state = createWalkingState(environment, position);
       if (lookAt) state.yaw = Math.atan2(state.position[0] - lookAt[0], state.position[2] + lookAt[1]);
@@ -363,7 +378,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       const held = pressed('KeyM');
       if (held !== voiceHeld) { voiceHeld = held; getVoice()?.setTransmit(held); }
       else {
-        const input={forward:Number(pressed('KeyW','ArrowUp'))-Number(pressed('KeyS','ArrowDown')),strafe:Number(pressed('KeyD'))-Number(pressed('KeyA')),turn:Number(pressed('ArrowLeft'))-Number(pressed('ArrowRight')),fast:pressed('ShiftLeft','ShiftRight'),lift:Number(pressed('Space'))-Number(pressed('KeyC'))};
+        const input={forward:Number(pressed('KeyW','ArrowUp'))-Number(pressed('KeyS','ArrowDown')),strafe:Number(pressed('KeyD'))-Number(pressed('KeyA')),turn:Number(pressed('ArrowLeft'))-Number(pressed('ArrowRight')),fast:pressed('ShiftLeft','ShiftRight'),fastSpeed:fastWalkSpeed,lift:Number(pressed('Space'))-Number(pressed('KeyC'))};
         if(sitting||performing) {
           state.yaw+=input.turn*1.8*delta;state.speed=0;state.velocity=[0,0];
         } else if(transport) {
@@ -372,7 +387,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
           const ride=transport.pose;state.yaw+=ride.yaw-yaw;
           state.position=[ride.seat[0],ride.seat[1]+.62,ride.seat[2]];
           state.speed=0;state.velocity=[0,0];
-        } else if(flight.active) stepFlight(state,environment,flight,input,delta);else stepWalking(state,environment,{...input,beastKind},delta);
+        } else if(flight.active) stepFlight(state,environment,flight,input,delta);else stepWalking(state,environment,input,delta);
       }
       place(delta);
       if (now - lastPaint < 150) return;
@@ -400,8 +415,8 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       enter.disabled = Boolean(door && !canEnterStore(door));
       const descend = $('#walking-descend');
       descend.hidden = Boolean(sitting||performing||transport)||!up||!down;
-      if (!descend.hidden) setAction(descend, down.toLevelId.endsWith('/l0') ? 'Go down to ground floor' : 'Go down one level', 'Shift+F');
-      if (stairs) setAction(enter, up ? 'Go up one level' : down.toLevelId.endsWith('/l0') ? 'Go down to ground floor' : 'Go down one level', 'F');
+      if (!descend.hidden) setAction(descend, portalLabel(down, false), 'Shift+F');
+      if (stairs) setAction(enter, portalLabel(stairs, Boolean(up)), 'F');
       else if (room) setAction(enter, 'Step outside', 'F');
       else if (door) setAction(enter, canEnterStore(door) ? `Step inside ${door.name}` : `${door.name} · Invitation required`, canEnterStore(door) ? 'F' : null);
       else setAction(enter, '');
@@ -413,6 +428,8 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       const roomSummary=room && sharedRoomSummary(room);
       $('#walking-place').textContent = sitting ? 'Drag to look around · Z stands up' : performing ? 'Drag to look around · X steps down' : transport ? (transport.pose.kind === 'bicycle' ? `${(transport.pose.distance / 1609.344).toFixed(2)} mi cycled this ride · W to pedal · Shift to sprint · G to step off` : 'W/S to ride or reverse · A/D or arrows to steer · G to step out') : flight.active ? `${flight.altitude.toFixed(1)} m above ground · Space to rise · C to lower` : room ? room.theme === 'home'
         ? `Inside ${room.name} · ${roomSummary.label} · ${roomSummary.guests} resident${roomSummary.guests === 1 ? '' : 's'}`
+        // A campus floor names itself ("The Gardens · Floor 4") and has no staff or guests to count (#508).
+        : room.campusLevel ? `Inside ${room.name} · ${roomSummary.label}`
         : `Inside ${room.name}${room.generatedPlan?.index ? ` · Level ${room.generatedPlan.index + 1}` : ''} · ${roomSummary.label} · ${roomSummary.staff} staff, ${roomSummary.guests} guests`
         : nearest ? `${nearest.anchorName} · nearby` : `${state.distance.toFixed(0)} m walked · ${pathLabel}`;
       hud.dataset.eyeHeight = (state.position[1] - environment.groundAt(state.position[0], state.position[2])).toFixed(2);

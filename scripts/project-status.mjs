@@ -2,8 +2,11 @@
 // Read-only reconciliation: recommendations are never deletion authorization.
 import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync, existsSync, realpathSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { join, resolve } from 'node:path';
+import { homedir } from 'node:os';
 import { pathToFileURL } from 'node:url';
+// A static import: the two modules import each other, and a top-level await here would deadlock.
+import { defaultRegisterText } from './task-register.mjs';
 
 const git = (root, args, optional = false) => {
   try { return execFileSync('git', args, { cwd: root, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024, stdio: ['ignore','pipe','pipe'], env: {...process.env,GIT_OPTIONAL_LOCKS:'0',GIT_TERMINAL_PROMPT:'0'} }).trimEnd(); }
@@ -75,6 +78,11 @@ export function validateTasks(register) {
   return errors;
 }
 
+// Manifest and bundle files an archive record names on this machine; repository-relative
+// manifests are checked into the repository and are not archive files.
+const archiveFiles=archive=>!archive||typeof archive!=='object'?[]:Object.entries(archive).flatMap(([key,value])=>
+  ['manifest','bundle'].includes(key)&&typeof value==='string'?(value.startsWith('~/')?[join(homedir(),value.slice(2))]:value.startsWith('/')?[value]:[]):archiveFiles(value));
+
 export function reconcile(snapshot, register, pulls, now=Date.now()) {
   const gaps=[],tasks=register.tasks??[];
   const branches=snapshot.branches.map(branch=>{
@@ -109,6 +117,10 @@ export function reconcile(snapshot, register, pulls, now=Date.now()) {
     if(!['retired','queued'].includes(task.status)&&!task.branches.some(b=>snapshot.branches.some(x=>x.branch===b)))gaps.push(`${task.id}: no local branch; locate remote/session before changing status`);
     if(task.status!=='retired'&&task.worktree&&!existsSync(task.worktree))gaps.push(`${task.id}: recorded worktree path is missing: ${task.worktree}; fix the record or restore the checkout`);
   }
+  // Archives live outside the repository (default ~/worktree-backups). A record whose
+  // manifest or bundle is gone can no longer be restored, so say so before anyone relies on it.
+  const lost=tasks.filter(task=>archiveFiles(task.archive).some(path=>!existsSync(path))).map(task=>task.id);
+  if(lost.length)gaps.push(`${lost.length} task(s) point at restoration archives missing from this machine (${lost.slice(0,5).join(', ')}${lost.length>5?', …':''}); run project:archives before any restore, retirement or cancellation decision`);
   return {schemaVersion:1,generatedAt:new Date(now).toISOString(),scope:'Read-only local Git and optional GitHub evidence. Review recommendations require fresh ownership, ignored-data and archive checks.',...snapshot,githubChecked:pulls!==null,tasks,gaps,branches};
 }
 
@@ -133,7 +145,9 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).hr
     const args=process.argv.slice(2),option=name=>{const i=args.indexOf(name);if(i<0)return null;if(!args[i+1]||args[i+1].startsWith('--'))throw new Error(`Missing value for ${name}`);return args[i+1];};
     const allowed=new Set(['--repo','--tasks','--output','--github','--check','--allow-orphans']);
     for(let i=0;i<args.length;i++){if(!allowed.has(args[i]))throw new Error(`Unknown argument: ${args[i]}`);if(['--repo','--tasks','--output'].includes(args[i]))i++;}
-    const root=resolve(option('--repo')??process.cwd()),text=readFileSync(resolve(root,option('--tasks')??REGISTER),'utf8');
+    // Without --tasks this reads the live register (common Git directory), from any worktree.
+    const root=resolve(option('--repo')??process.cwd()),tasks=option('--tasks');
+    const text=tasks?readFileSync(resolve(root,tasks),'utf8'):defaultRegisterText(root);
     if(/^(<{7}|>{7})( |$)/m.test(text))throw new Error('Task register has conflict markers; merge it by task id (see docs/project-management/workflow.md)');
     const register=JSON.parse(text);
     const errors=validateTasks(register);if(errors.length)throw new Error(errors.join('\n'));

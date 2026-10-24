@@ -1,0 +1,142 @@
+{
+  "createdAt": "2026-10-18T10:43:10.122Z",
+  "results": [
+    {
+      "name": "studio-pilot-assets",
+      "status": "passed",
+      "seconds": 32.668,
+      "result": {
+        "passed": true,
+        "templateId": "boutique",
+        "surface": "limestone sales floor",
+        "delayMs": 8000,
+        "results": {
+          "normal": {
+            "surface": 154,
+            "requests": {
+              "started": 3,
+              "finished": 3,
+              "failed": 0,
+              "pending": 0
+            },
+            "stats": {
+              "calls": 416,
+              "triangles": 33412,
+              "geometries": 49,
+              "materials": 26,
+              "textures": 7,
+              "renderTargets": 2,
+              "programs": 9,
+              "at": 5113
+            }
+          },
+          "missing": {
+            "surface": 184,
+            "requests": {
+              "started": 3,
+              "finished": 0,
+              "failed": 3,
+              "pending": 0
+            },
+            "stats": {
+              "calls": 636,
+              "triangles": 49908,
+              "geometries": 49,
+              "materials": 26,
+              "textures": 7,
+              "renderTargets": 2,
+              "programs": 9,
+              "at": 1884
+            }
+          },
+          "loading": {
+            "surface": 184,
+            "requests": {
+              "started": 3,
+              "finished": 0,
+              "failed": 0,
+              "pending": 3
+            },
+            "stats": {
+              "calls": 636,
+              "triangles": 49908,
+              "geometries": 49,
+              "materials": 26,
+              "textures": 7,
+              "renderTargets": 2,
+              "programs": 9,
+              "at": 1595
+            },
+            "secondsAfterOpen": 1.414
+          },
+          "loaded": {
+            "surface": 154,
+            "requests": {
+              "started": 3,
+              "finished": 3,
+              "failed": 0,
+              "pending": 0
+            },
+            "stats": {
+              "calls": 416,
+              "triangles": 33412,
+              "geometries": 49,
+              "materials": 26,
+              "textures": 7,
+              "renderTargets": 2,
+              "programs": 9,
+              "at": 9728
+            },
+            "settledAfterOpen": 8.286,
+            "readings": [
+              154
+            ]
+          },
+          "replaced": {
+            "surface": 154,
+            "requests": {
+              "started": 6,
+              "finished": 6,
+              "failed": 0,
+              "pending": 0
+            },
+            "stats": {
+              "calls": 366,
+              "triangles": 30448,
+              "geometries": 49,
+              "materials": 26,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 9,
+              "at": 13028
+            },
+            "pendingAtReplacement": 3,
+            "pendingAfterReplacement": 6,
+            "stableReplacement": true,
+            "statsBefore": {
+              "calls": 700,
+              "triangles": 62136,
+              "geometries": 48,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 8,
+              "at": 2862
+            },
+            "statsAfter": {
+              "calls": 700,
+              "triangles": 62136,
+              "geometries": 48,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 8,
+              "at": 12012
+            },
+            "replacementItems": 49
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { IPIC_INTERIOR } from './ipic-plan.js';
+import { IPIC_AUDITORIUM_RISERS, IPIC_INTERIOR, IPIC_WING } from './ipic-plan.js';
 
 const view = new THREE.Frustum();
 const viewProjection = new THREE.Matrix4();
@@ -33,14 +33,16 @@ export function canCullExterior(camera, room) {
 // IPIC is not: the frontage, the gap between the escalator lanes, the Tuck Room
 // window and a sun shadow in the lounge all show the district. So the district is
 // dropped only while the camera is inside the auditorium and that whole plane, to
-// the room's top, is out of view (#428).
+// the room's top, is out of view (#428). The auditorium is the wing along the
+// building (IPIC_WING), enclosed but for that partition; its front rows sit below
+// the partition's foot, so a camera counts as inside from the lowest row's floor.
 export const IPIC_AUDITORIUM = Object.freeze({ back: 26, base: 6 });
 export function canCullIpicAuditorium(camera, room) {
   if (room?.interior !== IPIC_INTERIOR) return false;
   const [a, d] = room.toLocal(camera.position.x, -camera.position.z);
   const bottom = room.floor + IPIC_AUDITORIUM.base, top = room.floor + room.height;
-  if (a <= room.aMin || a >= room.aMax || d <= IPIC_AUDITORIUM.back + 0.05 || d >= room.depth) return false;
-  if (camera.position.y < bottom || camera.position.y > top) return false;
+  if (a <= IPIC_WING.aMin || a >= IPIC_WING.aMax || d <= IPIC_AUDITORIUM.back + 0.05 || d >= IPIC_WING.d1) return false;
+  if (camera.position.y < bottom + IPIC_AUDITORIUM_RISERS[0].from || camera.position.y > top) return false;
   return planeOutOfView(camera, room, IPIC_AUDITORIUM.back, bottom, top);
 }
 

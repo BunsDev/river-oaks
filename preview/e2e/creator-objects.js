@@ -16,7 +16,7 @@ async page=>{
   };
   await join(page,'owner');
   if(!await page.locator('.visit-tools').evaluate(node=>node.open))await page.locator('.visit-tools-toggle').click();
-  await page.locator('#build-kind').selectOption('object');
+  await page.locator('#play-tab-build').click();await page.locator('#build-kind').selectOption('object');
   check(await page.locator('#creator-name').count()===1,'Jevica can edit a named primitive assembly');
   await page.locator('#creator-name').fill('Rose glass sculpture');
   await page.locator('#creator-size-y').fill('0.2');await page.locator('#creator-position-y').fill('0.1');
@@ -28,7 +28,7 @@ async page=>{
   const district=await(await page.request.get(origin+'/data/district.json')).json(),spot=district.communityLocations[5];
   const arrival=await command(page,{type:'travel',position:spot.position.slice(0,2)});
   check(arrival.ok,'Creator travels through the authoritative room');
-  await page.locator('#build-mode').click();
+  await page.locator('#play-tab-build').click();await page.locator('#build-mode').click();
   const canvas=await page.locator('#canvas-host').boundingBox();let aimed=false;
   for(const [x,y]of [[.5,.72],[.42,.74],[.58,.74],[.5,.8],[.35,.7],[.65,.7],[.2,.7],[.25,.8],[.15,.85],[.3,.9],[.1,.72],[.18,.64]]){
     await page.mouse.move(canvas.x+canvas.width*x,canvas.y+canvas.height*y);await page.waitForTimeout(300);
@@ -53,7 +53,7 @@ async page=>{
     check(rendered.parts[1].transmission>.5,'A second browser renders the actual physical glass surface');
     const denied=await command(guest,{type:'build',action:'remove',id:item.id});
     check(denied.error==='admin_only','Guests cannot remove the creator’s object');
-    await page.locator('#build-mode').click();
+    await page.locator('#play-tab-build').click();await page.locator('#build-mode').click();
     await page.locator('#build-list .shared-build-row').filter({hasText:'Rose glass sculpture'}).getByRole('button',{name:'Save design'}).click();
     await page.waitForFunction(()=>[...document.querySelectorAll('#design-list strong')].some(node=>node.textContent.includes('Rose glass sculpture')));
     check(true,'The full assembly is available as a saved design');
@@ -104,7 +104,7 @@ async page=>{
     await guest.reload({waitUntil:'commit'});
     await guest.waitForFunction(id=>window.__riverMultiplayer?.().connected&&window.__riverCreatorObjects?.().rendered.some(item=>item.id===id&&item.parts.length===2),copy.id);
     check(true,'A reconnecting guest receives the complete saved assembly');
-    await page.locator('#build-mode').click();
+    await page.locator('#play-tab-build').click();await page.locator('#build-mode').click();
     await page.locator('#build-list .shared-build-row').filter({hasText:'Rose glass sculpture'}).getByRole('button',{name:'Remove',exact:true}).click();
     await guest.waitForFunction(id=>!window.__riverCreatorObjects().rendered.some(item=>item.id===id),copy.id);
 

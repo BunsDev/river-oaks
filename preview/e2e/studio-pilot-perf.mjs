@@ -4,9 +4,10 @@
 // STUDIO_TEMPLATE=house (or boutique, cafe) profiles another stock template (#418).
 // Measures cold page load, cold and warm template opens, transfer bytes, then three
 // windows of 180 frames for the overhead whole-scene view and each player-height station.
+// On macOS it also reads the GPU process's physical footprint at each phase (see gpuFootprint).
 import { chromium } from 'playwright';
 import { execFileSync } from 'node:child_process';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { loadavg } from 'node:os';
 import { startBrowserFixture } from './fixture-server.js';
 import { holdBrowserLock } from '../../scripts/browser-lock.mjs';
@@ -37,6 +38,22 @@ try {
   fixture = await startBrowserFixture();
   browser = await chromium.launch({ args: ['--use-angle=metal', '--disable-gpu-vsync', '--disable-frame-rate-limit'] });
   receipt.browser = browser.version();
+  // Apple silicon has unified memory: Metal allocations show in the GPU process's footprint,
+  // mostly as IOAccelerator (textures, buffers, render targets). The totals include ANGLE and
+  // driver staging and the canvas's own buffers, so compare phases rather than read one alone.
+  const browserCdp = await browser.newBrowserCDPSession();
+  const gpuFootprint = async label => {
+    if (process.platform !== 'darwin') return null;
+    const gpu = (await browserCdp.send('SystemInfo.getProcessInfo')).processInfo.find(info => info.type === 'GPU');
+    if (!gpu) return null;
+    const file = `${OUT}/gpu-footprint-${label}.json`;
+    execFileSync('footprint', ['-p', String(gpu.id), '--json', file, '-f', 'bytes'], { stdio: 'ignore' });
+    const [entry] = JSON.parse(await readFile(file, 'utf8')).processes, mib = bytes => +(bytes / 1048576).toFixed(1);
+    const category = name => { const value = entry.categories?.[name];return value ? mib(value.dirty + value.swapped) : 0; };
+    return { pid: gpu.id, footprintMiB: mib(entry.footprint), ioAcceleratorMiB: category('IOAccelerator (graphics)'),
+      unmappedGraphicsMiB: category('Owned physical footprint (unmapped) (graphics)') };
+  };
+  receipt.gpuFootprint = {};
   const context = await browser.newContext({ viewport: VIEWPORT, deviceScaleFactor: 1 });
   await context.addInitScript(() => performance.setResourceTimingBufferSize(100000));
   await context.addCookies([{ name: 'fixture_session', value: 'owner', url: fixture.origin }]);
@@ -89,10 +106,14 @@ try {
   receipt.coldStudioReadyMs = Date.now() - coldStart;
   receipt.renderer = await page.evaluate(() => { const gl = document.createElement('canvas').getContext('webgl2'), info = gl.getExtension('WEBGL_debug_renderer_info');return gl.getParameter(info.UNMASKED_RENDERER_WEBGL); });
   receipt.transferAtReady = await transfer();
+  await page.waitForTimeout(1500);receipt.gpuFootprint.ready = await gpuFootprint('ready');
   receipt.coldOpen = await open(NAME);
   receipt.transferAfterOffice = await transfer();
+  await page.waitForTimeout(1500);receipt.gpuFootprint.coldOpen = { ...await gpuFootprint('cold-open'), render: await stats() };
   await open(OTHER);
+  await page.waitForTimeout(1500);receipt.gpuFootprint.other = { ...await gpuFootprint('other'), render: await stats() };
   receipt.warmOpen = await open(NAME);
+  await page.waitForTimeout(1500);receipt.gpuFootprint.warmOpen = { ...await gpuFootprint('warm-open'), render: await stats() };
   receipt.views = {};
   await page.getByRole('button', { name: 'Frame region', exact: true }).click();
   receipt.views['whole-scene-overhead'] = await measure();
@@ -109,10 +130,12 @@ try {
     await page.getByRole('button', { name: 'Return to editor', exact: true }).click();
     await page.waitForSelector('body[data-mode="edit"]');
   }
+  receipt.gpuFootprint.end = { ...await gpuFootprint('end'), render: await stats() };
   receipt.load.end = loadavg().map(value => +value.toFixed(2));
   receipt.errors = errors;
   await writeFile(`${OUT}/receipt.json`, JSON.stringify(receipt, null, 2) + '\n');
   console.log(JSON.stringify({ cold: receipt.coldStudioReadyMs, coldOpen: receipt.coldOpen, warmOpen: receipt.warmOpen, load: receipt.load,
+    gpuFootprint: Object.fromEntries(Object.entries(receipt.gpuFootprint).map(([key, value]) => [key, value && [value.footprintMiB, value.ioAcceleratorMiB, value.unmappedGraphicsMiB]])),
     views: Object.fromEntries(Object.entries(receipt.views).map(([key, view]) => [key, [view.p50, view.p95, view.p99, view.render?.calls, view.render?.triangles]])) }, null, 1));
   if (errors.length) process.exitCode = 1;
 } finally {

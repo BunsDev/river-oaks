@@ -1,7 +1,7 @@
 async (owner, resident) => {
   // #359 integrated journey (#368), fixture-backed: Jevica's owner account (A, with a separate
   // explicit IPIC host grant) and an approved resident (B, bob) on one loopback town with the
-  // penthouse layout. B is denied, requests and is accepted; both arrive (A skips the film, B
+  // penthouse layout. B is denied, then invited by A; both arrive (A skips the film, B
   // with reduced motion); A writes a three-line scene idea in My tasks that B cannot read through
   // the UI, the public snapshot or a direct request; two real clients race for one chair; both
   // use the floors, library and terrace; then they meet at IPIC, A starts the 30 s fixture, B
@@ -73,7 +73,7 @@ async (owner, resident) => {
     await page.locator('#office-lobby').evaluate(button => button.click());
   };
 
-  // 1. Permission: B is refused and asks; A accepts from the Offices panel in the play dock.
+  // 1. Permission: B is refused; A invites B from the Offices panel in the play dock.
   await goToLobby(resident);
   await resident.locator('#office-nearby').waitFor({ state: 'visible' });
   await resident.locator('#canvas-host').focus(); await resident.keyboard.press('KeyF');
@@ -81,17 +81,20 @@ async (owner, resident) => {
   check(await resident.locator('#office-enter').isDisabled(), 'the resident cannot board Jevica\'s office without access');
   const refused = await command(resident, { type: 'office', action: 'enter', officeId: OFFICE });
   check(refused.error === 'office_permission_required', `a direct entry command is refused: ${JSON.stringify(refused)}`);
-  await resident.locator('#office-request-send').click();
   await goToLobby(owner);
   if (!await owner.locator('.visit-tools').evaluate(dock => dock.open)) await owner.locator('.visit-tools-toggle').click();
-  const accept = owner.locator('#office-management button').filter({ hasText: 'Accept' });
-  await accept.waitFor({ timeout: 20000 }); await accept.click();
+  // Entry is by Jevica's invitation only (2b5062b6): A picks B in the Office pane's guest list and invites.
+  await owner.locator('#play-tab-office').click();
+  const invite = owner.locator('#office-management button').filter({ hasText: 'Invite resident' });
+  await invite.waitFor({ timeout: 20000 });
+  await owner.locator('#office-management select').selectOption({ label: 'bob' });
+  await invite.click();
   await resident.waitForFunction(() => document.querySelector('#office-enter')?.disabled === false, null, { timeout: 20000 });
-  check(true, 'Jevica accepted the resident\'s request through the normal controls');
+  check(true, 'Jevica invited the resident through the normal controls');
 
   // 2. Arrival: A rides and skips the film; B arrives with reduced motion.
   await resident.locator('#office-request-dialog').evaluate(dialog => dialog.open && dialog.close());
-  await resident.locator('#office-enter').click();
+  await resident.locator('#play-tab-office').click(); await resident.locator('#office-enter').click();
   await owner.locator('#canvas-host').focus(); await owner.keyboard.press('KeyF');
   await owner.locator('#office-visit[open]').waitFor();
   await owner.locator('#office-skip').click().catch(() => {});

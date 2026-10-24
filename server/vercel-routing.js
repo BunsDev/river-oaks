@@ -1,6 +1,7 @@
 import { isIP } from 'node:net';
 
 const paths = new Set(['/auth/login', '/auth/callback', '/auth/verify', '/auth/desktop/exchange', '/auth/session', '/auth/logout', '/auth/email/start', '/auth/email/verify',
+  '/api/workos/events', '/api/character', '/api/character/draft', '/api/character/publish', '/api/character/rollback',
   '/api/waitlist/invites', '/api/waitlist/invite-issue', '/api/waitlist/invite-update', '/api/waitlist/invite-redeem', '/api/waitlist/username',
   '/api/chauffeur', '/api/multiplayer/ticket', '/api/waitlist/status', '/api/waitlist/requests', '/api/waitlist/decision', '/api/worlds', '/api/world-draft/load', '/api/world-draft/save', '/api/world-draft/discard', '/api/world-draft/apply', '/api/world-data', '/api/moderation/ban',
   '/api/landmarks/list', '/api/landmarks/add', '/api/landmarks/remove',
@@ -8,7 +9,6 @@ const paths = new Set(['/auth/login', '/auth/callback', '/auth/verify', '/auth/d
   '/api/groups/list', '/api/groups/read', '/api/groups/create', '/api/groups/invite', '/api/groups/accept', '/api/groups/decline', '/api/groups/leave', '/api/groups/remove', '/api/groups/send',
   '/api/events/list', '/api/events/create', '/api/events/rsvp', '/api/events/cancel',
   '/api/office-desk/read', '/api/office-desk/save', '/api/office-desk/remove',
-  '/api/office-desk/workspace/provision', '/api/office-desk/workspace/list', '/api/office-desk/workspace/invite', '/api/office-desk/workspace/accept', '/api/office-desk/workspace/revoke', '/api/office-desk/workspace/read', '/api/office-desk/workspace/save', '/api/office-desk/workspace/remove',
   '/api/workplace/state', '/api/workplace/companion', '/api/workplace/grant', '/api/workplace/revoke', '/api/workplace/offer', '/api/workplace/submit', '/api/workplace/pause', '/api/workplace/resume', '/api/workplace/cancel', '/api/workplace/artifact', '/api/workplace/delete', '/api/workplace/ack', '/api/workplace/forget', '/api/workplace/erase', '/api/workplace/presence', '/api/workplace/occupancy', '/api/workplace-sweep',
   '/api/profile/view', '/api/profile/save', '/api/profile/claim-intro', '/api/debug-reports', '/api/debug-reports/get',
   '/api/voice/join', '/api/voice/renew', '/api/voice/leave', '/api/voice-sweep', '/multiplayer']);

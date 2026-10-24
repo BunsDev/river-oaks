@@ -11,49 +11,40 @@ const fail=error=>({ok:false,error,message:error});
 const LIMIT=64;
 const workspaceId=id=>typeof id==='string'&&/^office-[a-f0-9]{64}$/.test(id);
 const LEGACY_LEVEL=officeLayout(OFFICE_LAYOUT_LEGACY).spawn.levelId;
-// RIVER_OAKS_OFFICE_LAYOUT selects Jevica's office layout; anything unknown keeps the legacy room.
+// The penthouse is the sole live office; retired configuration cannot restore the old room.
 export function configuredOfficeLayout(value,{onInvalid=()=>{}}={}){
   if(value===undefined||value===null||value==='')return DEFAULT_OFFICE_LAYOUT;
-  if(officeLayout(value))return value;
+  if(value===DEFAULT_OFFICE_LAYOUT)return value;
   onInvalid(value);return DEFAULT_OFFICE_LAYOUT;
 }
-export function createOffices({worldData,players,isAdmin,environment,changed,cancel,officeLayout:configured=DEFAULT_OFFICE_LAYOUT}) {
+export function createOffices({worldData,players,isAdmin,isGuest=()=>false,environment,changed,cancel,officeLayout:configured=DEFAULT_OFFICE_LAYOUT}) {
   if(!officeLayout(configured))throw new Error('Unknown office layout');
+  configured=configuredOfficeLayout(configured);
   const catalog=officesFor(worldData),grants=new Map(),requests=new Map(),visits=new Map();
-  // The server picks each office's layout: Jevica's office follows the configured layout,
-  // personal workspaces keep the legacy room. A visit records the layout and the level it
-  // was admitted to; a client never names its floor or height.
-  const layoutFor=officeId=>workspaceId(officeId)?OFFICE_LAYOUT_LEGACY:configured;
-  const access=(id,officeId)=>isAdmin(id)?'owner':grants.get(officeId)?.find(g=>g.userId===id)?.kind??null;
+  // The sole office uses the server-selected layout. Clients cannot choose a floor.
+  const layoutFor=()=>configured;
+  // isGuest: the loopback dev town's invitation override; such a visitor is invited, never the owner.
+  const access=(id,officeId)=>isAdmin(id)?'owner':isGuest(id)?'invited':grants.get(officeId)?.find(g=>g.userId===id)?.kind??null;
   const leave=id=>{const visit=visits.get(id),player=players.get(id);if(!visit)return;visits.delete(id);if(player){player.poseAt=visit.at;player.moveBudget=.1;player.liftBudget=.1;}changed();};
   const publicVisit=id=>{const v=visits.get(id);return v?{id:v.id,layout:v.layout,levelId:v.levelId,elevation:officeElevationAt(officeLayout(v.layout),v.levelId,v.position),position:[...v.position],yaw:v.yaw,...(v.seat?{seat:{id:v.seat.id}}:{})}:null;};
   // Other visits in the same office and layout, and the plan seats they hold (#363).
   const companions=(id,visit)=>[...visits].filter(([other,v])=>other!==id&&v.id===visit.id&&v.layout===visit.layout).map(([,v])=>v);
   const occupiedBy=(id,visit)=>companions(id,visit).filter(v=>v.seat).map(v=>officeSeat(officeLayout(v.layout),v.seat.id)).filter(Boolean);
   const away=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
-  function command(player,m,time,workspace=null) {
-    const personal=workspaceId(m.officeId);
-    const office=personal&&catalog[0]?{...catalog[0],id:m.officeId}:catalog.find(o=>o.id===m.officeId);
+  function command(player,m,time) {
+    const office=catalog.find(o=>o.id===m.officeId);
     if(!office)return fail('unknown_office');
-    if(!fields(m,['type','action','officeId',...(['invite','approve','deny','revoke'].includes(m.action)?['peerId']:m.action==='move'?['position','yaw','layout','levelId']:m.action==='transition'?['portalId','layout']:m.action==='sit'?['seatId','layout']:m.action==='stand'?['layout']:[])]))return fail('invalid_office_command');
-    const id=player.id,permission=personal?(workspace?.id===office.id&&['owner','accepted'].includes(workspace.role)?workspace.role:null):access(id,office.id),visit=visits.get(id);
-    if(personal&&!['enter','move','leave','transition'].includes(m.action))return fail('invalid_office_command');
+    if(!fields(m,['type','action','officeId',...(['invite','revoke'].includes(m.action)?['peerId']:m.action==='move'?['position','yaw','layout','levelId']:m.action==='transition'?['portalId','layout']:m.action==='sit'?['seatId','layout']:m.action==='stand'?['layout']:[])]))return fail('invalid_office_command');
+    const id=player.id,permission=access(id,office.id),visit=visits.get(id);
     if(m.action==='list')return {ok:true,offices:catalog.map(o=>({...o,access:access(id,o.id),requested:(requests.get(o.id)??[]).some(r=>r.userId===id),...(isAdmin(id)?{guests:structuredClone(grants.get(o.id)??[]),requests:structuredClone(requests.get(o.id)??[])}:{})}))};
-    if(m.action==='request'){
-      if(permission)return {ok:true};
-      const pending=requests.get(office.id)??[];
-      if(pending.some(r=>r.userId===id))return {ok:true};
-      if(pending.length>=LIMIT)return fail('office_request_limit');
-      requests.set(office.id,[...pending,{userId:id,name:player.name}]);changed();return {ok:true};
-    }
-    if(['invite','approve','deny','revoke'].includes(m.action)){
+    if(['request','approve','deny'].includes(m.action))return fail('invalid_office_command');
+    if(['invite','revoke'].includes(m.action)){
       if(!isAdmin(id))return fail('office_owner_required');
       if(!userId(m.peerId)||isAdmin(m.peerId))return fail('invalid_office_guest');
       const pending=requests.get(office.id)??[],guests=grants.get(office.id)??[];
-      if(['approve','deny'].includes(m.action)&&!pending.some(r=>r.userId===m.peerId))return fail('office_request_missing');
-      if(['invite','approve'].includes(m.action)){
+      if(m.action==='invite'){
         if(guests.length>=LIMIT&&!guests.some(g=>g.userId===m.peerId))return fail('office_guest_limit');
-        grants.set(office.id,[...guests.filter(g=>g.userId!==m.peerId),{userId:m.peerId,name:players.get(m.peerId)?.name??pending.find(r=>r.userId===m.peerId)?.name??m.peerId,kind:m.action==='invite'?'invited':'accepted'}]);
+        grants.set(office.id,[...guests.filter(g=>g.userId!==m.peerId),{userId:m.peerId,name:players.get(m.peerId)?.name??pending.find(r=>r.userId===m.peerId)?.name??m.peerId,kind:'invited'}]);
       }else if(m.action==='revoke'){
         grants.set(office.id,guests.filter(g=>g.userId!==m.peerId));
         if(visits.get(m.peerId)?.id===office.id)leave(m.peerId);
@@ -61,7 +52,7 @@ export function createOffices({worldData,players,isAdmin,environment,changed,can
       requests.set(office.id,pending.filter(r=>r.userId!==m.peerId));changed();return {ok:true};
     }
     if(m.action==='leave'){leave(id);return {ok:true};}
-    if(!permission){if(personal&&visit?.id===office.id)leave(id);return fail('office_permission_required');}
+    if(!permission)return fail('office_permission_required');
     if(m.action==='enter'){
       if(visit)return {ok:true,office:publicVisit(id)};
       if(player.altitude>.1||player.vehicle||player.sitting||Math.hypot(player.position[0]-office.entrance[0],player.position[1]-office.entrance[1])>3)return fail('office_lobby_required');
@@ -175,7 +166,9 @@ export function createOffices({worldData,players,isAdmin,environment,changed,can
     }
     checkMap(saved.visits,nextPlayers.size,(id,v)=>nextPlayers.has(id)&&placed(v)&&(catalog.some(o=>o.id===v.id)||allowWorkspaces&&workspaceId(v.id))&&Number.isFinite(v.yaw)&&Number.isFinite(v.at)&&Number.isFinite(v.budget)&&v.budget>=0&&v.budget<=1&&(allowWorkspaces&&workspaceId(v.id)||isAdmin(id)||g.get(v.id)?.some(p=>p.userId===id)));
     const next=structuredClone(saved);
-    next.visits=next.visits.map(([id,v])=>[id,version>=10?v:{...v,layout:OFFICE_LAYOUT_LEGACY,levelId:LEGACY_LEVEL}]).filter(([,v])=>v.layout===layoutFor(v.id)&&fits(v));
+    next.requests=[];
+    next.grants=next.grants.map(([id,guests])=>[id,guests.filter(g=>g.kind==='invited')]);
+    next.visits=next.visits.filter(([id,v])=>catalog.some(o=>o.id===v.id)&&(isAdmin(id)||next.grants.find(([officeId])=>officeId===v.id)?.[1].some(g=>g.userId===id))).map(([id,v])=>[id,version>=10?v:{...v,layout:OFFICE_LAYOUT_LEGACY,levelId:LEGACY_LEVEL}]).filter(([,v])=>v.layout===layoutFor(v.id)&&fits(v));
     return next;
   }
   function load(saved){for(const [map,entries]of [[grants,saved.grants],[requests,saved.requests],[visits,saved.visits]]){map.clear();for(const [k,v]of entries)map.set(k,v);}}
