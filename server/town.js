@@ -18,7 +18,7 @@ import { createGameServer } from './app.js';
 import { createFileWaitlist } from './waitlist.js';
 import { createMemoryLandmarks } from './landmarks.js';
 import { createWorldLandmarks } from './world-landmarks.js';
-import { createMemoryWorldCatalog } from './world-catalog.js';
+import { APPROVED_SPACES_OFF, createMemoryWorldCatalog } from './world-catalog.js';
 import { createWorldRouter } from './world-router.js';
 import { createMemorySocial } from './social.js';
 import { createMemoryGroups } from './groups.js';
@@ -84,7 +84,8 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
   // Garden campus lease operators are explicit account ids; none configured keeps leasing closed.
   const campusOperators=parseCampusOperators(env.RIVER_OAKS_CAMPUS_OPERATOR_IDS,{onInvalid:()=>console.warn(JSON.stringify({event:'campus_operator_ignored'}))});
   const officeDesk=createMemoryOfficeDesk();
-  const games=new Map(),pending=new Map(),debugReports=createMemoryDebugReports(),catalog=createMemoryWorldCatalog(),social=createMemorySocial(),groups=createMemoryGroups(),profiles=createMemoryProfiles(),events=createMemoryEvents(),workplace=env.RIVER_OAKS_WORKPLACE==='1'?createWorkplace({allowed:async id=>!moderation.isBanned(id)&&await waitlist.isApproved(id)}):null,avatarPreferences=createMemoryAvatarPreferences(),characters=createMemoryCharacterStore(),cyclingMiles=createMemoryCyclingMiles(),presence=createMemoryPresence(),landmarkStores=new Map();
+  // Default off: RIVER_OAKS_APPROVED_SPACES=1 lets regions place approved furnished spaces (#420).
+  const games=new Map(),pending=new Map(),debugReports=createMemoryDebugReports(),catalog=createMemoryWorldCatalog(env.RIVER_OAKS_APPROVED_SPACES==='1'?{}:{approvedSpaces:APPROVED_SPACES_OFF}),social=createMemorySocial(),groups=createMemoryGroups(),profiles=createMemoryProfiles(),events=createMemoryEvents(),workplace=env.RIVER_OAKS_WORKPLACE==='1'?createWorkplace({allowed:async id=>!moderation.isBanned(id)&&await waitlist.isApproved(id)}):null,avatarPreferences=createMemoryAvatarPreferences(),characters=createMemoryCharacterStore(),cyclingMiles=createMemoryCyclingMiles(),presence=createMemoryPresence(),landmarkStores=new Map();
   const landmarkStoreFor=id=>{
     if(!landmarkStores.has(id))landmarkStores.set(id,createMemoryLandmarks());
     return landmarkStores.get(id);

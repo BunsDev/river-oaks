@@ -9,6 +9,7 @@ import { editableRegion } from '../../preview/src/region-draft.js';
 import { APPROVED_SPACES } from '../../preview/src/approved-spaces.js';
 import { approvedSpaceSources, approvedSpacesCurrent, verifyApprovedSpaceRoutes } from '../../preview/src/approved-space-plan.js';
 import { worldProtocolVersion } from '../../preview/src/world-contract.js';
+import { APPROVED_SPACES_OFF, createMemoryWorldCatalog } from '../world-catalog.js';
 
 // #420: one approved Corner Café revision placed in a creator-region building.
 const sha256 = value => createHash('sha256').update(value).digest('hex');
@@ -183,4 +184,23 @@ test('the shared world admits visitors through the Café door onto its approved 
   // The terrace table outside is solid as well.
   const table = plan.space.objects.find(item => item.id === 'terrace-table');
   assert.equal(environment.isFree(table.east, -table.north), false);
+});
+
+test('a catalog with approved spaces off refuses to place, save or activate the Café', async () => {
+  const on = createMemoryWorldCatalog(), off = createMemoryWorldCatalog({ approvedSpaces: APPROVED_SPACES_OFF });
+  assert.equal(on.approvedSpacesEnabled, true);
+  assert.equal(off.approvedSpacesEnabled, false);
+  const plain = region(value => { delete value.buildings[0].interior.space; });
+  assert.deepEqual(await off.publish({ id: 'harbour-cafe', title: 'Harbour Café', region: pilot }, 'owner'),
+    { ok: false, reason: 'approved_space_unknown', detail: 'That space revision has not been approved for placement.' });
+  for (const catalog of [on, off]) assert.equal((await catalog.publish({ id: 'harbour-cafe', title: 'Harbour Café', region: plain }, 'owner')).ok, true);
+  const { regionSha256 } = await off.get('harbour-cafe');
+  const draft = { id: 'harbour-cafe', baseRegionSha256: regionSha256, expectedDraftVersion: 0, region: pilot };
+  assert.deepEqual(await off.saveDraft(draft, 'owner'), { ok: false, reason: 'invalid_draft' });
+  // A candidate compiled where the flag is on is still refused where it is off.
+  assert.equal((await on.saveDraft(draft, 'owner')).ok, true);
+  const candidate = await on.revisionCandidate('harbour-cafe', 1, 'owner');
+  assert.equal(candidate.ok, true);
+  assert.equal(await on.activationReason(candidate), null);
+  assert.equal(await off.activationReason(candidate), 'approved_space_assets');
 });

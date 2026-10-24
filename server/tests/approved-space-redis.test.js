@@ -96,7 +96,7 @@ test('through the Redis gateway, two clients join the Café world and an older c
     return userId ? { userId, name: userId, sessionId: `${userId}-session`, csrfToken: 'test-csrf', expiresAt: Date.now() + 60_000 } : null;
   }, isSessionActive: async () => true, close() {} };
   const security = createRedisSecurity({ redis, prefix });
-  const gateway = createWorldGateway({ redis, namespace, worldData, auth, security, waitlist: approvedWaitlist, origin, moderators: [owner] });
+  const gateway = createWorldGateway({ redis, namespace, worldData, auth, security, waitlist: approvedWaitlist, origin, moderators: [owner], approvedSpacesEnabled: true });
   await new Promise(resolve => gateway.server.listen(0, '127.0.0.1', resolve));
   const base = `http://127.0.0.1:${gateway.server.address().port}`, sockets = [];
   cleanup.push(async () => { for (const socket of sockets) socket.terminate(); await gateway.close(); security.close(); });
@@ -136,4 +136,28 @@ test('through the Redis gateway, two clients join the Café world and an older c
   assert.equal(again.closed, 4000);
   const listed = await (await fetch(base + '/api/worlds')).json();
   assert.equal(listed.worlds.find(world => world.id === 'harbour-cafe').visitors, 2, 'the refused client never joined');
+});
+
+test('a production-default Redis gateway refuses the Café and keeps worlds on protocol 3', options, async t => {
+  const { redis, namespace, prefix, cleanup } = await redisFor(t);
+  const origin = 'https://sim.jev.works';
+  const worldData = JSON.parse(await readFile(new URL('../../preview/public/data/district.json', import.meta.url)));
+  const auth = { handle: async () => false, authenticate: async req => req.headers.cookie === 'test_session=owner'
+    ? { userId: owner, name: 'owner', sessionId: 'owner-session', csrfToken: 'test-csrf', expiresAt: Date.now() + 60_000 } : null,
+  isSessionActive: async () => true, close() {} };
+  const security = createRedisSecurity({ redis, prefix });
+  // As server/redis-backend.js builds it with RIVER_OAKS_APPROVED_SPACES unset.
+  const gateway = createWorldGateway({ redis, namespace, worldData, auth, security, waitlist: approvedWaitlist, origin, moderators: [owner] });
+  await new Promise(resolve => gateway.server.listen(0, '127.0.0.1', resolve));
+  const base = `http://127.0.0.1:${gateway.server.address().port}`;
+  cleanup.push(async () => { await gateway.close(); security.close(); });
+  const post = (path, data = {}) => fetch(base + path, { method: 'POST', headers: { Origin: origin, Cookie: 'test_session=owner', 'X-CSRF-Token': 'test-csrf', 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+  assert.equal(Object.hasOwn(await (await fetch(base + '/api/worlds')).json(), 'approvedSpaces'), false);
+  const refused = await post('/api/worlds', { id: 'harbour-cafe', title: 'Harbour Café', region: pilot });
+  assert.equal(refused.status, 409);
+  assert.equal((await refused.json()).error, 'approved_space_unknown');
+  assert.equal(await redis.hget(`${prefix}:worlds:v1`, 'harbour-cafe'), null, 'nothing is stored');
+  assert.equal((await post('/api/worlds', { id: 'harbour-cafe', title: 'Harbour Café', region: withoutCafe() })).status, 201);
+  const ticket = await (await post('/api/multiplayer/ticket?world=harbour-cafe')).json();
+  assert.equal(ticket.protocolVersion, 3);
 });

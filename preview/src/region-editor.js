@@ -16,7 +16,7 @@ const svgNode = (tag, attributes = {}, text = '') => {
   return node;
 };
 
-export function createRegionEditor({ onChange = () => {}, getOwnerChoices = async () => [] } = {}) {
+export function createRegionEditor({ onChange = () => {}, getOwnerChoices = async () => [], approvedSpacesEnabled = () => false } = {}) {
   const dialog = document.createElement('dialog'); dialog.className = 'region-editor';
   dialog.setAttribute('aria-label', 'Design a region');
   dialog.innerHTML = `<div class="region-editor-shell">
@@ -188,7 +188,8 @@ export function createRegionEditor({ onChange = () => {}, getOwnerChoices = asyn
                 { value: 'west', label: 'West face (rotates with building)' }] });
             // An approved furnished space (#420): the region names a reviewed revision and the
             // server places it at this entrance, checking fit, neighbours and routes on publish.
-            const spaces = APPROVED_SPACES.filter(record => record.placement.buildingKinds.includes(item.kind)
+            // Offered only where the server can place one (RIVER_OAKS_APPROVED_SPACES).
+            const spaces = !approvedSpacesEnabled() ? [] : APPROVED_SPACES.filter(record => record.placement.buildingKinds.includes(item.kind)
               && record.placement.categories.includes(item.interior.category));
             if (spaces.length) {
               field('Furnished layout', item.interior.space ? `${item.interior.space.id}@${item.interior.space.revision}` : '', next => {

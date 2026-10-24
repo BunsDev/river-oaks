@@ -2,9 +2,16 @@ import { DEFAULT_WORLD_ID, validateWorldId } from '../preview/src/world-contract
 import { createHash } from 'node:crypto';
 import { compileRegionPackage, editableRegionFromWorld, MAX_REGION_REQUEST_BYTES } from './region-package.js';
 import { ApprovedSpaceError, approvedSpaceSources, approvedSpacesCurrent } from '../preview/src/approved-space-plan.js';
+import { APPROVED_SPACES } from '../preview/src/approved-spaces.js';
 import { isJevicaAdmin } from './admin.js';
 
 const MAX_PUBLISHED_WORLDS=16;
+// RIVER_OAKS_APPROVED_SPACES=1 lets a creator region place a reviewed furnished space (#420).
+// Off, the default, a catalog serves this empty registry: publishing one fails
+// approved_space_unknown, and a draft or revision that keeps one is refused before activation.
+export const APPROVED_SPACES_OFF=Object.freeze({registry:Object.freeze([])});
+// Whether this catalog can place any reviewed revision; the world directory tells the editor.
+const offersApprovedSpaces=policy=>(policy?.registry??APPROVED_SPACES).length>0;
 // KEYS[3] holds revoked approved-space revisions (#420); ARGV[5..] are the ones placed.
 const PUBLISH=`
   if redis.call('HEXISTS',KEYS[1],ARGV[1]) == 1 then return 0 end
@@ -106,6 +113,7 @@ export function createRedisWorldCatalog({redis,prefix,now=Date.now,approvedSpace
   const retained=async id=>(await redis.lrange(`${prefix}:region-history:${id}`,0,7))
     .map(raw=>retainedVersion(JSON.parse(raw),id,value=>decode(JSON.stringify(value))));
   return {
+    approvedSpacesEnabled:offersApprovedSpaces(policy),
     async get(id) {
       try {validateWorldId(id);} catch {return null;}
       if(id===DEFAULT_WORLD_ID)return {...defaultWorld};
@@ -200,6 +208,7 @@ export function createRedisWorldCatalog({redis,prefix,now=Date.now,approvedSpace
 export function createMemoryWorldCatalog({now=Date.now,approvedSpaces:policy}={}) {
   const worlds=new Map(),regions=new Map(),drafts=new Map(),history=new Map(),revocations=new Set();
   return {
+    approvedSpacesEnabled:offersApprovedSpaces(policy),
     async get(id) {return id===DEFAULT_WORLD_ID?{...defaultWorld}:worlds.get(id)??null;},
     async list() {return [{...defaultWorld},...[...worlds.values()].sort((a,b)=>a.createdAt-b.createdAt || a.id.localeCompare(b.id))];},
     async getRegion(id) {return regions.has(id)?structuredClone(regions.get(id)):null;},

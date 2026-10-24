@@ -161,7 +161,8 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
           : {template:meta?.template??'river-oaks',...(ids[0]===room.worldId&&room.districtRevision?{districtRevision:room.districtRevision}:{})});
       }
       if (path === '/api/worlds' && req.method === 'GET' && worldCatalog) {
-        return json(res, 200, { worlds: await worldDirectory() });
+        // The region editor offers furnished layouts only where this catalog can place them (#420).
+        return json(res, 200, { worlds: await worldDirectory(), ...(worldCatalog.approvedSpacesEnabled ? { approvedSpaces: true } : {}) });
       }
       if (path === '/api/worlds' && req.method === 'POST' && worldCatalog) {
         const identity = await authorized(req, res); if (!identity) return;

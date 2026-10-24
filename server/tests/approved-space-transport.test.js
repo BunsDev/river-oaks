@@ -21,11 +21,13 @@ async function freePort() {
 }
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-async function startTown(t) {
+// The pilot turns approved spaces on; production leaves RIVER_OAKS_APPROVED_SPACES unset.
+async function startTown(t, { approvedSpaces = true } = {}) {
   const port = await freePort(), origin = `http://127.0.0.1:${port}`;
   const temporary = await mkdtemp(join(tmpdir(), 'river-oaks-cafe-420-'));
   const town = await createTown({ origin, env: { RIVER_OAKS_DEV_AUTH: 'local', RIVER_OAKS_ACCEPTANCE_FIXTURE: '1',
-    MODERATION_FILE: join(temporary, 'moderation.json'), WAITLIST_FILE: join(temporary, 'waitlist.json') }, devAuth: 'local', staticRoot: null });
+    MODERATION_FILE: join(temporary, 'moderation.json'), WAITLIST_FILE: join(temporary, 'waitlist.json'),
+    ...(approvedSpaces ? { RIVER_OAKS_APPROVED_SPACES: '1' } : {}) }, devAuth: 'local', staticRoot: null });
   await new Promise(resolve => town.server.listen(port, '127.0.0.1', resolve));
   const sockets = [];
   t.after(async () => { for (const socket of sockets) socket.terminate(); await town.close(); await rm(temporary, { recursive: true, force: true }); });
@@ -247,4 +249,26 @@ test('a failed activation keeps the live world; revision and rollback move occup
   const blocked = await post(owner, '/api/worlds', { id: 'second-cafe', title: 'Second Café', region: pilot });
   assert.equal(blocked.status, 409);
   assert.equal((await blocked.json()).error, 'approved_space_revoked');
+});
+
+test('with RIVER_OAKS_APPROVED_SPACES unset, the town refuses approved spaces and every world stays on protocol 3', async t => {
+  const { origin, post, session, open } = await startTown(t, { approvedSpaces: false });
+  const owner = await session(), guest = await session();
+  const directory = await (await fetch(origin + '/api/worlds')).json();
+  assert.equal(Object.hasOwn(directory, 'approvedSpaces'), false, 'the editor is not offered furnished layouts');
+  const refused = await post(owner, '/api/worlds', { id: 'harbour-cafe', title: 'Harbour Café', region: pilot });
+  assert.equal(refused.status, 409);
+  assert.deepEqual(await refused.json(), { error: 'approved_space_unknown', detail: 'That space revision has not been approved for placement.' });
+  assert.equal((await post(owner, '/api/worlds', { id: 'harbour-cafe', title: 'Harbour Café', region: withoutCafe() })).status, 201);
+  // A revision draft that adds the Café is refused before it can be applied.
+  const editable = await (await post(owner, '/api/world-draft/load', { id: 'harbour-cafe' })).json();
+  const saved = await post(owner, '/api/world-draft/save', { id: 'harbour-cafe', baseRegionSha256: editable.world.regionSha256, expectedDraftVersion: 0, region: pilot });
+  assert.equal(saved.status, 400);
+  assert.equal((await saved.json()).error, 'invalid_draft');
+  for (const worldId of ['harbour-cafe', 'river-oaks']) {
+    const joined = await open(guest, worldId, 3);
+    assert.equal(joined.access.protocolVersion, 3, worldId);
+    assert.equal(joined.snapshot.protocolVersion, 3, worldId);
+    joined.socket.close(); await wait(50);
+  }
 });

@@ -40,7 +40,8 @@ export function createWorldPortal({host,getCanPublish=()=>false,creationToolsEna
   const restoreVersion=element('button','Load version into editor');restoreVersion.type='button';restoreVersion.hidden=true;
   revisionPanel.append(revisionTitle,revisionNote,revisionStatus,saveRevision,applyRevision,discardRevision,versionLabel,restoreVersion);
   section.append(heading,intro,status,list);if(creationToolsEnabled)section.append(revisionPanel,form);host.prepend(section);
-  let worlds=[],loaded=false,loading=null,lastAttempt=0,lastLoaded=0;
+  // approvedSpaces: the server's directory says its catalog can place approved furnished spaces (#420).
+  let worlds=[],approvedSpaces=false,loaded=false,loading=null,lastAttempt=0,lastLoaded=0;
   let useDraft=false,revisionTarget=null;
   let editor=null,editorLoading=null;
   const parcelOwnerChoices=async()=>{
@@ -60,8 +61,9 @@ export function createWorldPortal({host,getCanPublish=()=>false,creationToolsEna
     }catch{/* The owner can still leave a parcel unassigned or assign it to herself. */}
     return choices;
   };
-  const ensureEditor=()=>editor?Promise.resolve(editor):editorLoading??=import('./region-editor.js')
-    .then(({createRegionEditor})=>editor=createRegionEditor({getOwnerChoices:parcelOwnerChoices,onChange:()=>{
+  // The directory is read first so the editor knows whether to offer furnished layouts.
+  const ensureEditor=()=>editor?Promise.resolve(editor):editorLoading??=(loaded?Promise.resolve():load()).then(()=>import('./region-editor.js'))
+    .then(({createRegionEditor})=>editor=createRegionEditor({getOwnerChoices:parcelOwnerChoices,approvedSpacesEnabled:()=>approvedSpaces,onChange:()=>{
       if(revisionTarget){revisionStatus.textContent='Changes on this device are ready to save.';applyRevision.disabled=true;}
       else if(useDraft)regionSource.textContent='Your region draft is ready to publish.';
     }}))
@@ -203,7 +205,7 @@ export function createWorldPortal({host,getCanPublish=()=>false,creationToolsEna
         if(!response.ok || !response.headers.get('content-type')?.includes('application/json'))throw new Error('World directory unavailable.');
         const data=await response.json();
         if(!Array.isArray(data.worlds))throw new Error('World directory unavailable.');
-        worlds=data.worlds;loaded=true;lastLoaded=Date.now();render();status.textContent=`${worlds.length} ${worlds.length===1?'world':'worlds'} to visit`;
+        worlds=data.worlds;approvedSpaces=data.approvedSpaces===true;loaded=true;lastLoaded=Date.now();render();status.textContent=`${worlds.length} ${worlds.length===1?'world':'worlds'} to visit`;
       } catch {status.textContent='World directory unavailable right now.';}
     })().finally(()=>{loading=null;});
     return loading;

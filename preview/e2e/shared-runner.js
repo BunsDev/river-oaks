@@ -62,6 +62,8 @@ async function start(mode, ports) {
   creationToolsEnabled = env.VITE_CREATION_TOOLS === 'true';
   // The creation flag journey keeps world browsing on to check publishing independently.
   env.VITE_WORLD_MAP = process.env.VITE_WORLD_MAP ?? (['development', 'development-world', 'development-publish'].includes(mode) || selectedJourney === 'creation-tools' ? 'true' : 'false');
+  // Approved furnished spaces (#420) are a server flag, default off; the publishing mode's Café journey turns it on.
+  env.RIVER_OAKS_APPROVED_SPACES = process.env.RIVER_OAKS_APPROVED_SPACES ?? (mode === 'development-publish' ? '1' : '0');
   interruption.signal.throwIfAborted();
   child = spawn(process.execPath, args, { cwd: root, env, stdio: ['ignore', 'pipe', 'pipe'] });
   await new Promise((resolve, reject) => {

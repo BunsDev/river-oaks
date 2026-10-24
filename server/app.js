@@ -130,7 +130,8 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
           ? {template:meta.template,regionSha256:meta.regionSha256,world:await worldCatalog.getRegion(meta.id)}
           : {template:meta?.template??'river-oaks',...(ids[0]===world.worldId&&world.districtRevision?{districtRevision:world.districtRevision}:{})});
       }
-      if (pathname==='/api/worlds' && req.method==='GET' && worldCatalog) return json(res,200,{worlds:await worldDirectory()});
+      // The region editor offers furnished layouts only where this catalog can place them (#420).
+      if (pathname==='/api/worlds' && req.method==='GET' && worldCatalog) return json(res,200,{worlds:await worldDirectory(),...(worldCatalog.approvedSpacesEnabled?{approvedSpaces:true}:{})});
       if (pathname==='/api/worlds' && req.method==='POST' && worldCatalog) {
         const identity=await authorized(req,res);if(!identity)return;
         if(!isAdmin(identity.userId))return json(res,403,{error:'Only Jevica can publish a world.'});

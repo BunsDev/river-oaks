@@ -7,7 +7,7 @@ import { createRedisRoom } from './redis-room.js';
 import { createRedisLandmarks } from './landmarks.js';
 import { createWorldLandmarks } from './world-landmarks.js';
 import { createDistributedServer } from './distributed-app.js';
-import { createRedisWorldCatalog } from './world-catalog.js';
+import { APPROVED_SPACES_OFF, createRedisWorldCatalog } from './world-catalog.js';
 import { roomPrefixFor, accountPrefixFor, populationKeyFor } from './world-keys.js';
 import { DEFAULT_WORLD_ID, validateWorldId, worldProtocolVersion } from '../preview/src/world-contract.js';
 import { createWorldRouter } from './world-router.js';
@@ -24,10 +24,11 @@ import { createRedisCyclingMiles } from './cycling-miles.js';
 
 /** Routes a single HTTP origin to persistent world rooms with shared auth. */
 export function createWorldGateway({redis,namespace,worldData,auth,security,waitlist,waitlistAdmins=[],origin,configuredWorldId=DEFAULT_WORLD_ID,
-  characterStudioEnabled=true,characterMetrics=null,characterMetricsEnabled=false,moderators=[],trustedProxyIPs=[],address,isAdmin,handleRequest,workplaceEnabled=false,workplaceSweep=false,workplaceCronSecret=null,assetGateSecret=null,voice=null,voiceCronSecret=null,screeningHosts=[],officeLayout,campusOperators=[],districtEpoch=0,connectionLifetime,rotateNoticeMs}={}) {
+  characterStudioEnabled=true,characterMetrics=null,characterMetricsEnabled=false,moderators=[],trustedProxyIPs=[],address,isAdmin,handleRequest,approvedSpacesEnabled=false,workplaceEnabled=false,workplaceSweep=false,workplaceCronSecret=null,assetGateSecret=null,voice=null,voiceCronSecret=null,screeningHosts=[],officeLayout,campusOperators=[],districtEpoch=0,connectionLifetime,rotateNoticeMs}={}) {
   if (!waitlist) throw new Error('Waitlist is required');
   validateWorldId(configuredWorldId);
-  const prefix=`{${namespace}}`,catalog=createRedisWorldCatalog({redis,prefix}),social=createRedisSocial({redis,prefix}),groups=createRedisGroups({redis,prefix}),profiles=createRedisProfiles({redis,prefix}),events=createRedisEvents({redis,prefix}),debugReports=createRedisDebugReports({redis,prefix}),presence=createRedisPresence({redis,prefix});
+  // Default off: approvedSpacesEnabled (RIVER_OAKS_APPROVED_SPACES=1) lets regions place approved furnished spaces (#420).
+  const prefix=`{${namespace}}`,catalog=createRedisWorldCatalog({redis,prefix,...(approvedSpacesEnabled?{}:{approvedSpaces:APPROVED_SPACES_OFF})}),social=createRedisSocial({redis,prefix}),groups=createRedisGroups({redis,prefix}),profiles=createRedisProfiles({redis,prefix}),events=createRedisEvents({redis,prefix}),debugReports=createRedisDebugReports({redis,prefix}),presence=createRedisPresence({redis,prefix});
   // Default off: RIVER_OAKS_WORKPLACE=1 enables the fixture-only workplace (#214).
   const workplace=workplaceEnabled?createWorkplace({store:createRedisWorkplaceStore({redis,prefix}),
     allowed:async id=>!(await security.isBanned(id))&&await waitlist.isApproved(id),

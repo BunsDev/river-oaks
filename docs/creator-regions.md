@@ -109,6 +109,13 @@ before publication.
 
 ### Approved furnished spaces
 
+Approved spaces are off unless the service sets `RIVER_OAKS_APPROVED_SPACES=1`. Off,
+the catalog has no reviewed revisions: publishing a region that places one fails
+`approved_space_unknown`, a revision draft that keeps one can't be saved or applied,
+and the editor doesn't offer **Furnished layout**. Every world then stays on
+protocol 3. The world directory (`GET /api/worlds`) carries `approvedSpaces: true`
+only when the flag is on, and the editor reads it there.
+
 A restaurant venue can place one reviewed furnished space instead of a built-in or
 generated layout. The pilot offers one: **Corner Café, revision 1**, the World Studio
 template Val accepted on 2026-10-17 (#418). In the region editor, select the building
