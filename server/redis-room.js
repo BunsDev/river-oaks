@@ -69,6 +69,9 @@ const COMMIT=`-- COMMIT_ROOM
     if not oldMeta or not oldRegion or not draft then return 0 end
     local meta=cjson.decode(oldMeta)
     if meta.regionSha256 ~= ARGV[9] or cjson.decode(draft).version ~= tonumber(ARGV[10]) then return 0 end
+    for _,source in ipairs(cjson.decode(ARGV[14])) do
+      if redis.call('SISMEMBER',KEYS[offset+5],source) == 1 then return 0 end
+    end
     redis.call('LPUSH',KEYS[offset+4],cjson.encode({world=meta,region=oldRegion}))
     redis.call('LTRIM',KEYS[offset+4],0,7)
     redis.call('HSET',KEYS[offset+1],ARGV[8],ARGV[11])
@@ -79,7 +82,7 @@ const COMMIT=`-- COMMIT_ROOM
   redis.call('SET',KEYS[3],ARGV[3])
   redis.call('SET',KEYS[5],ARGV[13],'EX',30)
   if tonumber(ARGV[4]) > 0 then redis.call('LTRIM',KEYS[4],ARGV[4],-1) end
-  for i=1,replies do redis.call('SET',KEYS[5+i],ARGV[13+i],'PX',ARGV[6]) end
+  for i=1,replies do redis.call('SET',KEYS[5+i],ARGV[14+i],'PX',ARGV[6]) end
   redis.call('PEXPIRE',KEYS[1],ARGV[5])
   return 1
 `;
@@ -316,14 +319,20 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       if(operation.type==='revise') {
         if(pendingSelections.size)return rejected('world_busy');
         if(!regionCatalog || !isAdmin(operation.actorId) || revisionUpdate)return rejected('admin_only');
-        const candidate=await regionCatalog.revisionCandidate(worldId,operation.expectedDraftVersion);
+        const candidate=await regionCatalog.revisionCandidate(worldId,operation.expectedDraftVersion,operation.actorId);
         if(!candidate.ok)return rejected(candidate.reason);
+        // Approved spaces (#420): revocation, assets and policy are rechecked here and
+        // revocation once more inside the commit, so a revoked revision never goes live.
+        const blocked=await regionCatalog.activationReason?.(candidate);
+        if(blocked)return rejected(blocked);
         let checkpoint;
         try {checkpoint=world.checkpoint();} catch {return rejected('world_busy');}
         const migrated=migrateWorldCheckpoint({fromData:currentData,toData:candidate.worldData,checkpoint,...worldOptions});
         if(!migrated.ok)return rejected(migrated.error);
         const next=createSharedWorld(candidate.worldData,worldOptions);
         if(!next.restore(migrated.checkpoint).ok)return rejected('incompatible_region');
+        // An approved space's routes must stay walkable with the creations carried forward (#420).
+        if(next.approvedSpaceRoutesBlocked())return rejected('approved_space_route');
         if(rides)drained.push(...world.drainRides());
         world=next;currentData=candidate.worldData;currentHash=candidate.world.regionSha256;
         connections.clear();selectionVersions.clear();revisionUpdate=candidate;
@@ -449,14 +458,14 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       ...(characters?{pendingSelections:[...pendingSelections.values()],selectionVersions:[...selectionVersions]}:{}),
       ...(previous?.regionSha256||revisionUpdate?{regionSha256:currentHash}:{}),
       ...(district&&(district.epoch||district.revision)?{district}:{})};
-    const revisionKeys=revisionUpdate?['catalog','region','draft','history'].map(key=>revisionUpdate.keys[key]):[];
+    const revisionKeys=revisionUpdate?['catalog','region','draft','history','revocations'].map(key=>revisionUpdate.keys[key]):[];
     const visitors=[...connections.values()].filter(connection=>connection.leftAt===null).length;
     const committed=await redis.eval(COMMIT,5+replies.length+revisionKeys.length,keys.lease,keys.state,keys.view,keys.queue,keys.population,
       ...replies.map(reply=>reply.key),...revisionKeys,
       token,pack(checkpoint),pack(view),batch.length,LEASE_MS,REPLY_MS,replies.length,
       revisionUpdate?.world.id??'',revisionUpdate?.expectedRegionSha256??'',revisionUpdate?.expectedDraftVersion??0,
       revisionUpdate?JSON.stringify(revisionUpdate.world):'',revisionUpdate?.encoded??'',
-      visitors,
+      visitors,JSON.stringify(revisionUpdate?.sources??[]),
       ...replies.map(reply=>JSON.stringify(reply.result)));
     if(!committed){cached=null;return read();}
     if (districtMigration) console.info(JSON.stringify(districtMigration.kind === 'commons'
