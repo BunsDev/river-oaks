@@ -198,7 +198,29 @@ Evidence for head `b1ded7ab` (draft PR #649), rebased onto main `67203a6a`, unle
   - **First failure.** `alice home: stalled` at x 255 of the Commons frame, walking west toward x 165, with no refusals. The CPU acceptance profile draws once a second (`main.js`), and the walk caps each frame at 0.08 s. Facing west from x 300, the client loop fell to about 1–1.7 Hz: about 20 movement commands per 20 s, against about 90 facing east. Walking efficiency fell from 85–90 % facing east to 11.5 % (alice, 3.2 m/s) and 14 % (owner, 6.4 m/s). At the failure the client drew 1,885 calls and 7.65 M triangles.
   - **Not stream churn.** A replay of the walk through `createHeightsStream`, with byte-sized stand-ins, builds one neighborhood on the walk home.
   - **Draw composition, by calculation (landscape only, 70° wedge).** Facing west from x 280, the view takes in Heights trees (0.54 M triangles), the Commons destination's trees and planting (0.81 M; the kit draws both at every distance), and the District's 199 trees at their low level (1.77 M). Facing west from the Commons at x 80, it is 1.55 M. The rest of the 7.65 M is the District and kits as a whole. In the Commons shard, alice walks west at 40–53 % efficiency.
-  - **Diagnostic in progress.** A heights-only run on the diagnostic branch `diag/heights-west-draw-20261024` (dispatch run 40136920357; never for merge) hides each top-level scene group in turn at the crossroads. Facing east and west, it logs loop rate and draw stats, to find which group costs the westward view.
+- **Diagnostics on `diag/heights-west-draw-20261024`.** These are heights-only `workflow_dispatch` runs of a diagnostic branch, never for merge. The probes reached the scene through three.js's devtools hook.
+  - **Run 40137664965: hiding groups one at a time at the crossroads.**
+    - Facing west, each client drew about 1,950 calls and 7.6 M triangles: the Commons 2.40 M, the District's trees 1.77 M (all 199, at their low level), Heights 0.8 M, and the District's other groups.
+    - Standing still, the loop ran at 10–24 Hz. Hiding any single group changed it little.
+  - **Run 40140188988: render-audit phases for both clients, along Nineteenth Street and 30 m west.**
+    - Frame CPU outside drawing was 6–8 ms. The heaviest phase was `players`, at 5–6.6 ms.
+    - The once-a-second CPU draw took about 600 ms (p95 interval).
+    - Walking west ran at 54 % (owner) and 47 % (alice) of walking speed, which matches the 0.08 s frame clamp across those draws. Heights stream loads took about 50 ms each, with no failures.
+  - **Run 40138801425: the same journey stalled on the eastward walk.** Alice crawled at about 0.4 m/s from x 238, once the owner had arrived first and faced back west.
+  - **Conclusion.** Walking speed falls off a cliff, from about 50 % to 11–14 %, when two CPU-rendered clients draw full westward views together on the four-core runner. Which side of the cliff a run lands on varies by run. Facing east from x 300, the Commons and the District are behind the camera and frustum-culled.
+- **Fix.**
+  - **Planting.** The Commons as Heights presents it draws its planted beds within 60 m, as Heights' own do (`heightsCommonsLayout` → `buildCityKit({ plantingMetres })`). Seen from Heights, that was about 1 M triangles (0.60 M of bed models and 0.38 M procedural). The Commons revision is unchanged (`plantingMetres` defaults to every distance). `cullPlanting` is now the kit's one rule, shared with Heights.
+  - **Walking home.** The journey walks the players home one at a time. Alice goes first while the owner faces east; then the owner, while alice faces east. Waypoints and each 120 s stall deadline are unchanged.
+  - **Journey readiness.** `ready()` now waits for the loading screen to close, as described under the local runs above.
+  - **Candidate on the diagnostic branch, run 40141092066 (same tree, heights shard only): passed.** "Passed bayou-heights" took 9 min 45 s. Both players reached the crossroads by 23:09:15Z. Alice walked the 302 m home in 147 s (2.05 m/s, 64 % of walking speed). The owner, who had waited facing east, took 88 s. The return notices, the release of Heights, and "No page errors" passed.
+  - **Core gate.** `pnpm run verify` passed on the second run:
+    - agent 274/274;
+    - preview 4,107 passed, 1 skipped;
+    - server 894 passed, 227 Redis-only skips;
+    - desktop 115 passed, 3 skipped;
+    - Python 170.
+
+    The first run, at a load average of about 8, failed the known load-sensitive `scripts/tests/land-pr.test.js` "queue release did not wake the lander", which stops the later stages. Alone, the file passed 29/29 at a load average of 10.5.
 - **Local browser runs (Metal, through the shared browser lock).**
   - **Journey.** A local run of the `6f7efdfe` tree failed at its first Heights check, "The client composed Bayou Heights for the served revision". Both clients had connected to `bayou-heights-1`. The console showed two 503 responses, at a load average of about 10. `data/reports/experience.json` was restored afterwards.
   - **Explained by the diagnostic branch.** The first diagnostic dispatch (run 40137423840) failed the same check 13 s after the journey started. Its capture still showed "Building the view". The journey's `ready()` waited for the avatar (`playerReady`), which can be ready before the district is built. Hosted PR runs had passed only because the district finished first (24–43 s). `ready()` now also waits for the loading screen to close, with the same 180 s timeout.

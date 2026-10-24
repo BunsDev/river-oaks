@@ -61,7 +61,7 @@ Their union is the original reserve exactly, so nothing grows or overlaps, and a
 
 ## Streaming
 
-The client streams Heights as its own location (`preview/src/heights-stream.js`, built on the #623 chunk stream), only for `bayou-heights-1`. The Commons streams separately, presented with its bayou opened for the bridge.
+The client streams Heights as its own location (`preview/src/heights-stream.js`, built on the #623 chunk stream), only for `bayou-heights-1`. The Commons streams separately, presented with its bayou opened for the bridge. As Heights presents it, the Commons' planted beds draw within 60 m, as Heights' own do; the Commons revision still draws them at every distance. Seen across the bayou from deep in Heights, the Commons' beds were about a million triangles a frame.
 
 - **Parts.** Heights streams in eight parts:
   - Each of the seven neighborhoods, bounded by its plan site.
@@ -101,12 +101,14 @@ The district epoch still fences writers.
   - a no-island flood fill;
   - the real walking controller from the District to Heights Hall and back;
   - streaming in parts, the ceiling, view priority, the footbridge gate and release in the District;
+  - planting drawn within 60 m in Heights and in the Commons Heights presents;
   - the location label across the footbridge;
   - refusals for water, building land, the reserve and creations;
   - the icehouse game;
   - every migration direction with standing, airborne and seated occupants;
   - Redis epoch fencing, which runs only with `REDIS_URL`.
 - **Browser journey.** `pnpm run test:experience bayou-heights`. Two clients walk from both District arrivals over the bridge, play at the icehouse table, reconnect in Heights and walk home. The journey checks that Heights streams in within its ceiling, with each part within its estimate, before the footbridge, and that walking home releases it.
+  - In CI both clients render on the CPU, on one four-core runner. Facing west from deep in Heights, each draws the District, the Commons and Heights at once. Together, two such views saturated the runner in some hosted runs. So the clients walk home one at a time, and the one waiting faces east. Each waypoint keeps its stall deadline.
 - **Records.** Measurements, captures and results for the exact revision tested are recorded in the [task ledger](../../superpowers/plans/2026-10-24-next-district-586.md).
 
 Human visual approval, physical-device performance, hosted multiplayer, resident routing across locations, browser texture and GPU memory, and native Unreal equivalence remain separate acceptance.
