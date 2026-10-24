@@ -5,6 +5,8 @@ import { createSharedBuildLayer } from '../src/shared-build-layer.js';
 import { BUILD_KINDS, BUILD_FINISHES } from '../src/shared-build.js';
 import { newAssembly } from '../src/creator-object.js';
 import { createWalkingEnvironment } from '../src/walking.js';
+import { WebGLGeometries } from 'three/src/renderers/webgl/WebGLGeometries.js';
+import { releaseSceneGraphics } from '../src/graphics-resources.js';
 
 test('every build catalog choice creates a bounded, grounded 3D object',()=>{
   const scene=new THREE.Scene(),layer=createSharedBuildLayer(scene);
@@ -85,6 +87,37 @@ test('assigned furniture slots lie on the rendered cushion tops at every snapped
         const hit=ray.intersectObject(layer.object,true)[0];assert.ok(hit);
         assert.ok(Math.abs(hit.point.y-build.ground-seat.height)<1e-6,`${kind}/${step}/${slot}: cushion contact ${hit.point.y}`);
       }
+    }
+  }finally{layer.dispose();}
+});
+
+for(const kind of ['removed placement','closed builder ghost'])test(`context loss releases cached GPU owners after a ${kind} without losing reusable CPU data`,()=>{
+  const scene=new THREE.Scene(),layer=createSharedBuildLayer(scene);
+  const spec={id:'build-1',kind:'seat',finish:'rose',position:[4,7],ground:0,yaw:0,ownerId:'alice',ownerName:'Alice',valid:true};
+  let retainedGeometry;
+  try{
+    for(let cycle=0;cycle<4;cycle++){
+      if(kind==='removed placement')layer.sync([spec]);else layer.setGhost(spec);
+      let first;
+      layer.object.traverse(object=>{if(!first&&object.isMesh)first=object;});
+      const geometry=first.geometry,positions=geometry.attributes.position.array,surface=first.material,color=surface.color.getHex();
+      if(retainedGeometry)assert.equal(geometry,retainedGeometry,'restored placements reuse the retained geometry');
+      retainedGeometry=geometry;
+      // Exercise Three's real geometry registration/disposal path for each context generation.
+      const info={memory:{geometries:0}};
+      const gpu=WebGLGeometries({}, {remove(){}},info,{releaseStatesOfGeometry(){}});
+      gpu.get(first,geometry);assert.equal(info.memory.geometries,1);
+      let materialReleases=0;const released=()=>materialReleases++;
+      surface.addEventListener('dispose',released);
+      if(kind==='removed placement')layer.sync([]);else layer.setGhost(null);
+      assert.equal(layer.object.children.length,0,'cached resources are outside the active scene');
+      releaseSceneGraphics(scene);layer.releaseGraphics?.();
+      surface.removeEventListener('dispose',released);
+      assert.equal(info.memory.geometries,0,'context loss must release the removed geometry from its previous GPU owner');
+      assert.equal(geometry._listeners.dispose?.length??0,0,'old context listeners must not accumulate on cached geometry');
+      assert.equal(materialReleases,1,'the retained material releases its previous graphics storage');
+      assert.equal(geometry.attributes.position.array,positions,'CPU geometry remains available for re-upload');
+      assert.equal(surface.color.getHex(),color,'CPU material state remains intact');
     }
   }finally{layer.dispose();}
 });

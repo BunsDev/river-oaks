@@ -155,6 +155,14 @@ export function createWalkingEnvironment(world, placedObjects = [], levelId = nu
   return { buildBounds: world.eastGardenCommons?.districtBounds, levelId, groundAt, isFree, isAreaFree, canFly, flightWallNormal, flightCeiling, hasSightLine, roomAt: (x, z) => roomFor(x, z, 0), rooms, bounds: [west, -north, east, -south], spawn: world.walkSpawn ?? [(west + east) / 2, (south + north) / 2, 0] };
 }
 
+/** One player's step view: guards(from, to) in [east, north] metres veto only this mover's own candidates. */
+export function guardedStepEnvironment(environment, from, guards) {
+  if (!guards.length) return environment;
+  const allowed = (x, z) => guards.every(guard => guard(from, [x, -z]));
+  return { ...environment, isFree: (x, z) => environment.isFree(x, z) && allowed(x, z),
+    canFly: (x, altitude, z) => environment.canFly(x, altitude, z) && allowed(x, z) };
+}
+
 export function createWalkingState(environment, position = environment.spawn, yaw = 0) {
   let [x, north] = position, z = -north;
   if (!environment.isFree(x, z)) {
