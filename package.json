@@ -89,6 +89,8 @@
     "preproject:archives": "node scripts/enforce-pnpm.mjs",
     "preregister": "node scripts/enforce-pnpm.mjs",
     "land": "node scripts/land-pr.mjs",
+    "presign-branch": "node scripts/enforce-pnpm.mjs",
+    "sign-branch": "node scripts/sign-branch.mjs",
     "preland": "node scripts/enforce-pnpm.mjs",
     "destination": "node scripts/destination.mjs",
     "predestination": "node scripts/enforce-pnpm.mjs"
