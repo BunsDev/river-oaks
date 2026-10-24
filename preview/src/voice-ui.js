@@ -38,7 +38,21 @@ export function createVoiceUI({ voice, chatSection, chatDock = null, walking = n
   chatSection?.insertBefore?.(dock, chatSection.querySelector?.('.multiplayer-chat-history') ?? null);
   const rosterButtons = new Map();
   for (const button of [consoleJoin, dockJoin]) button.addEventListener('click', () => void voice.toggleJoin());
-  for (const button of [consoleMic, dockMic]) button.addEventListener('click', () => void voice.toggleMic());
+  // Push to talk by touch or mouse transmits while the button is held and stops when it
+  // lifts or is cancelled; the click that follows a press never turns the microphone on.
+  // Keyboard and switch activation (detail 0) still toggle.
+  for (const button of [consoleMic, dockMic]) {
+    let holding = false;
+    const release = () => { if (!holding) return; holding = false; voice.setTransmit(false); };
+    button.addEventListener('pointerdown', event => {
+      if (!voice.state.pushToTalk || event.button !== 0) return;
+      event.preventDefault(); holding = true;
+      try { button.setPointerCapture?.(event.pointerId); } catch { /* the pointer already lifted */ }
+      voice.setTransmit(true);
+    });
+    for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) button.addEventListener(type, release);
+    button.addEventListener('click', event => { if (voice.state.pushToTalk && event.detail !== 0) return; void voice.toggleMic(); });
+  }
   dockDeafen.addEventListener('click', () => voice.setDeafened(dockDeafen.getAttribute('aria-pressed') !== 'true'));
   dockUnlock.addEventListener('click', () => void voice.unlockAudio());
   let last = null;

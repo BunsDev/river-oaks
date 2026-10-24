@@ -130,3 +130,35 @@ test('the settings pane lists input devices without prompting, and writes push-t
   assert.equal(preferences.get().autoUnmute, true);
   assert.equal(pane.find(node => node.tagName === 'summary').textContent, 'Voice chat');
 });
+
+test('push to talk on touch transmits only while the mic button is held, never after it lifts (#288)', async () => {
+  const { chatSection } = dom();
+  const voice = fakeVoice(baseState({ status: 'joined', pushToTalk: true }));
+  voice.setTransmit = value => voice.calls.push(['transmit', value]);
+  const ui = createVoiceUI({ voice, chatSection });
+  ui.render(voice.state);
+  const press = (pointerId = 7) => ({ button: 0, pointerId, preventDefault() {} });
+  for (const button of [ui.elements.consoleMic, ui.elements.dockMic]) {
+    voice.calls.length = 0;
+    button.events.pointerdown(press());
+    assert.deepEqual(voice.calls, [['transmit', true]], 'pressing starts transmitting');
+    button.events.pointerup({ pointerId: 7 });
+    await button.events.click({ detail: 1, preventDefault() {} });
+    assert.deepEqual(voice.calls, [['transmit', true], ['transmit', false]], 'lifting stops it, and the click that follows never turns the mic on');
+    voice.calls.length = 0;
+    button.events.pointerdown(press()); button.events.pointercancel({ pointerId: 7 }); button.events.lostpointercapture({ pointerId: 7 });
+    assert.deepEqual(voice.calls, [['transmit', true], ['transmit', false]], 'a cancelled hold stops once');
+    voice.calls.length = 0;
+    button.events.pointerdown({ ...press(), button: 2 });
+    assert.deepEqual(voice.calls, [], 'only the main button talks');
+  }
+  // Keyboard and switch activation (detail 0) still toggle, as before.
+  voice.calls.length = 0;
+  await ui.elements.consoleMic.events.click({ detail: 0, preventDefault() {} });
+  assert.deepEqual(voice.calls, ['toggleMic']);
+  // With an open microphone a tap toggles, and a press transmits nothing.
+  voice.state = baseState({ status: 'joined' }); ui.render(voice.state); voice.calls.length = 0;
+  ui.elements.dockMic.events.pointerdown(press(8)); ui.elements.dockMic.events.pointerup({ pointerId: 8 });
+  await ui.elements.dockMic.events.click({ detail: 1, preventDefault() {} });
+  assert.deepEqual(voice.calls, ['toggleMic']);
+});
