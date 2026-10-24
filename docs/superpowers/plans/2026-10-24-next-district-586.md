@@ -193,7 +193,24 @@ Evidence for head `b1ded7ab` (draft PR #649), rebased onto main `67203a6a`, unle
   - **First failure.** `alice nineteenth: stalled` at x 275 of the Commons frame, heading for x 300, still moving east at 3.2 m/s with no refusals. The input trace shows about 1.5 m/s to x 228, then about 0.4 m/s from x 231, where the crossroads neighborhoods stream in. At the failure the client drew 1,975 calls and 7.73 M triangles at 3 fps under llvmpipe (quality scale 0.6). The lane is collision-free.
   - **Cause, by calculation.** At x 275 the landscape draws about 2.2 M tree triangles within 120 m in all directions, plus 1.25 M of planting, which also casts shadows. The ceiling also binds there, and the walk helper's small camera corrections flip neighborhoods at the edge of the view in and out. Each flip can cancel a load or rebuild a neighborhood.
   - **Fix.** Planting draws within 60 m, the trees' middle detail level, which brings it to about 0.01 M triangles at x 275. A neighborhood in view keeps its priority for 5 s, and loaded ones outrank unloaded ones, so a glance does not rebuild anything. Tests cover both. The harness's timeouts are unchanged.
-- **Browser journey and captures.** Pending the hosted shard on the fix and a local run (queued on the browser lock).
+- **Hosted run on `6f7efdfe` (Verify 40135009578).** Every job passed except `preview experience (heights)`, job 120994565995.
+  - **Passed.** The journey crossed the District, the Commons and the footbridge, played the icehouse game, reached the bandstand, reconnected, and walked Nineteenth Street to the crossroads at about 10 fps. Both players were at x 300 by 21:46:13Z.
+  - **First failure.** `alice home: stalled` at x 255 of the Commons frame, walking west toward x 165, with no refusals. The CPU acceptance profile draws once a second (`main.js`), and the walk caps each frame at 0.08 s. Facing west from x 300, the client loop fell to about 1–1.7 Hz: about 20 movement commands per 20 s, against about 90 facing east. Walking efficiency fell from 85–90 % facing east to 11.5 % (alice, 3.2 m/s) and 14 % (owner, 6.4 m/s). At the failure the client drew 1,885 calls and 7.65 M triangles.
+  - **Not stream churn.** A replay of the walk through `createHeightsStream`, with byte-sized stand-ins, builds one neighborhood on the walk home.
+  - **Draw composition, by calculation (landscape only, 70° wedge).** Facing west from x 280, the view takes in Heights trees (0.54 M triangles), the Commons destination's trees and planting (0.81 M; the kit draws both at every distance), and the District's 199 trees at their low level (1.77 M). Facing west from the Commons at x 80, it is 1.55 M. The rest of the 7.65 M is the District and kits as a whole. In the Commons shard, alice walks west at 40–53 % efficiency.
+  - **Diagnostic in progress.** A heights-only run on the diagnostic branch `diag/heights-west-draw-20261024` (dispatch run 40136920357; never for merge) hides each top-level scene group in turn at the crossroads. Facing east and west, it logs loop rate and draw stats, to find which group costs the westward view.
+- **Local browser runs (Metal, through the shared browser lock).**
+  - **Journey.** A local run of the `6f7efdfe` tree failed at its first Heights check, "The client composed Bayou Heights for the served revision". Both clients had connected to `bayou-heights-1`. The console showed two 503 responses, at a load average of about 10. `data/reports/experience.json` was restored afterwards.
+  - **Explained by the diagnostic branch.** The first diagnostic dispatch (run 40137423840) failed the same check 13 s after the journey started. Its capture still showed "Building the view". The journey's `ready()` waited for the avatar (`playerReady`), which can be ready before the district is built. Hosted PR runs had passed only because the district finished first (24–43 s). `ready()` now also waits for the loading screen to close, with the same 180 s timeout.
+  - **Draw calls.** Calls and triangles at fixed views facing north (yaw 0), on main `1fd53fb9` and on the Heights tree (`6f7efdfe`):
+    - gate: 1,260 / 4.59 M on main, 1,258 / 4.63 M on Heights;
+    - Commons market: 877 / 5.46 M on main, 967 / 5.90 M on Heights;
+    - Heights footbridge: 636 / 4.04 M;
+    - Heights green lane: 382 / 2.07 M;
+    - Nineteenth Street: 621 / 2.47 M.
+
+    The District views did not record on either tree.
+- **Browser journey and captures.** Pending the westward fix.
 - **Performance.** Not started. ABBA under the #626 protocol, with thresholds unamended, is support task D (river-oaks-3e). The `#626` decision is recorded only on #643's branch (D11).
 
 ## Gaps and coordination

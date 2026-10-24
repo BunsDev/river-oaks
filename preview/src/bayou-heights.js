@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { KIT_CONVENTIONS } from '../../shared/city-kit/catalog.js';
 import { RETRO } from './retro-palette.js';
-import { buildCityKit, cityKitLandscape, disposeLandscape } from './city-kit/render.js';
+import { buildCityKit, cityKitLandscape, cullPlanting, disposeLandscape } from './city-kit/render.js';
 import { buildMatureTrees, buildPlanterPlanting } from './landscape-models.js';
 
 // Heights street trees, and their sun shadows, draw only within the kit's block-detail
@@ -12,12 +12,9 @@ export const HEIGHTS_TREE_METRES = KIT_CONVENTIONS.lod.detailMetres;
 // Planted beds stand under a metre tall. Beyond the trees' middle detail level they are a
 // few pixels, yet across Heights' 329 beds they are over a million triangles in each pass.
 export const HEIGHTS_PLANTING_METRES = KIT_CONVENTIONS.lod.treeMetres[1];
-// Planting draws in 12 m and 24 m batches (spatial-instances.js, procedural-plants.js);
-// only the fine grass flower stems span all of Heights, and they draw with the planting.
-const BATCH_RADIUS = 30;
 const headless = typeof document === 'undefined';
 const distanceToRect = ([w, s, e, n], east, north) => Math.hypot(Math.max(w - east, 0, east - e), Math.max(s - north, 0, north - n));
-const near = (mesh, position, metres = HEIGHTS_TREE_METRES) => position.distanceTo(mesh.boundingSphere.center) - mesh.boundingSphere.radius < metres;
+const near = (mesh, position) => position.distanceTo(mesh.boundingSphere.center) - mesh.boundingSphere.radius < HEIGHTS_TREE_METRES;
 
 /**
  * One Bayou Heights neighborhood (a plan in layout.heights.plans), streamed as its own
@@ -73,7 +70,7 @@ export function buildHeightsLandscape(layout) {
       if (proxies.has(mesh)) { if (shown) shadowProxies.push(mesh); }
       else if (mesh.visible && !shown) mesh.visible = false;
     }
-    for (const mesh of planting.children) if (mesh.boundingSphere?.radius < BATCH_RADIUS) mesh.visible = drawn.has(ownerOf(mesh)) && near(mesh, position, HEIGHTS_PLANTING_METRES);
+    cullPlanting(planting, position, HEIGHTS_PLANTING_METRES, mesh => drawn.has(ownerOf(mesh)));
   };
   group.userData.shadowProxies = shadowProxies;
   let disposed = false;

@@ -54,7 +54,7 @@ export function buildEastGardenCommons(layout) {
   const baseSolids=destination?layout.solids.slice(0,layout.solids.length-destination.solids.length):layout.solids;
   let kit=null;
   if(destination){
-    kit=buildCityKit({...destination,pieces:[...destination.pieces,...pavilionPieces(layout,baseSolids)]},{groundAt:(east,north)=>commonsGroundAt(layout,Math.max(east,layout.edge+1e-6),north)??layout.ground,ground:layout.ground});
+    kit=buildCityKit({...destination,pieces:[...destination.pieces,...pavilionPieces(layout,baseSolids)]},{groundAt:(east,north)=>commonsGroundAt(layout,Math.max(east,layout.edge+1e-6),north)??layout.ground,ground:layout.ground,plantingMetres:layout.plantingMetres});
     group.add(kit);buildPavilion(layout,group,materials,geometries);
   } else {
     for(const solid of baseSolids)addBox(solid.id,solid.rect,layout.ground,solid.height,solid.kind);

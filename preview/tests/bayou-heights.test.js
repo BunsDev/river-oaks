@@ -13,7 +13,9 @@ import { validateWorldManifest, locationWorldBounds } from '../src/world-manifes
 import { HEIGHTS_RECIPES, HEIGHTS_REVISION, HEIGHTS_TABLE, inBayouHeights } from '../../shared/bayou-heights.js';
 import { assembleNeighborhood, walkableConnectivity } from '../../shared/city-kit/assemble.js';
 import { KIT_CONVENTIONS } from '../../shared/city-kit/catalog.js';
-import { buildCityKit } from '../src/city-kit/render.js';
+import { buildCityKit, cullPlanting } from '../src/city-kit/render.js';
+import { buildEastGardenCommons } from '../src/east-garden-commons.js';
+import { heightsCommonsLayout } from '../src/heights-stream.js';
 import { COMMONS_REVISION } from '../../shared/east-garden-commons-layout.js';
 import manifest from '../public/data/world-manifest.json' with { type: 'json' };
 
@@ -205,4 +207,24 @@ test('Heights street trees, planting and their shadows draw only near the camera
   assert.equal(bed.visible, false, 'nor once its neighborhood is gone');
   assert.equal(stems.visible, true, 'the fine flower stems span Heights and draw with the planting');
   landscape.userData.dispose();
+});
+
+test('the Commons as Heights presents it draws its planted beds within 60 m, as Heights does; the Commons revision at every distance', () => {
+  const kitOf = scene => scene.children.find(child => child.name.startsWith('City kit:'));
+  const presented = buildEastGardenCommons(heightsCommonsLayout(layout)), restored = buildEastGardenCommons(commons.eastGardenCommons);
+  assert.equal(kitOf(presented).userData.plantingMetres, HEIGHTS_PLANTING_METRES);
+  assert.equal(kitOf(restored).userData.plantingMetres, Infinity, 'the Commons revision is unchanged');
+  presented.userData.dispose(); restored.userData.dispose();
+  // Node builds headless, without planting, so stand-in batches take the planting's shape:
+  // twelve- and twenty-four-metre beds, and grass stems spanning the plan.
+  const planting = new THREE.Group(), [east, north] = frame([80, 0]), eye = new THREE.Vector3(east, layout.ground + 1.7, -north);
+  const batch = (x, radius = 8) => { const [e, n] = frame([x, 0]), mesh = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshBasicMaterial());
+    mesh.boundingSphere = new THREE.Sphere(new THREE.Vector3(e, layout.ground, -n), radius); planting.add(mesh); return mesh; };
+  const near = batch(130), far = batch(160), stems = batch(60, 160);
+  cullPlanting(planting, eye, HEIGHTS_PLANTING_METRES);
+  assert.deepEqual([near.visible, far.visible, stems.visible], [true, false, true]);
+  cullPlanting(planting, eye, Infinity);
+  assert.equal(far.visible, true, 'without a limit every bed draws');
+  cullPlanting(planting, eye, Infinity, mesh => mesh !== near);
+  assert.equal(near.visible, false, 'and the caller can withhold a bed');
 });

@@ -4,12 +4,18 @@ import { locationWorldBounds } from './world-manifest.js';
 import { validateHeightsRegistration } from './bayou-heights-world.js';
 import { commonsBaseLayout } from '../../shared/bayou-heights.js';
 import { createSpatialChunkStream } from './spatial-chunk-stream.js';
+import { KIT_CONVENTIONS } from '../../shared/city-kit/catalog.js';
 
 // Loaded only for bayou-heights-1 (main.js), with the composition it needs.
 export { attachBayouHeights } from './bayou-heights-world.js';
 
-/** The Commons as Heights presents it: the restored Commons layout, bayou opened for the footbridge. */
-export const heightsCommonsLayout = layout => ({ ...commonsBaseLayout(layout), destination: layout.destination });
+/**
+ * The Commons as Heights presents it: the restored Commons layout, bayou opened for the
+ * footbridge. Its planted beds draw within 60 m, as Heights' own do (HEIGHTS_PLANTING_METRES):
+ * seen across the bayou, the Commons' beds at every distance are about a million triangles.
+ */
+export const heightsCommonsLayout = layout => ({ ...commonsBaseLayout(layout), destination: layout.destination,
+  plantingMetres: KIT_CONVENTIONS.lod.treeMetres[1] });
 
 // A camera within this distance of a Heights neighborhood that can see it streams it in:
 // from the Commons and the footbridge, looking over the bayou. From the District it stays

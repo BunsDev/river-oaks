@@ -26,9 +26,7 @@ async page => {
         this.addEventListener('message',event=>{try{const data=JSON.parse(event.data),reply=data.result??data;if(reply?.ok!==false&&!data.correction)return;
           window.__heightsRefusals.push({t:Math.round(performance.now()),error:reply?.error??null,at:(data.correction??reply?.correction)?.position??null});window.__heightsRefusals.splice(0,window.__heightsRefusals.length-12);}catch{/* not JSON */}});}};
     });
-    // DIAGNOSTIC BRANCH ONLY: three.js announces each Scene to its devtools hook.
-    await tab.addInitScript(()=>{window.__diagScenes=[];window.__THREE_DEVTOOLS__=new EventTarget();window.__THREE_DEVTOOLS__.addEventListener('observe',event=>{if(event.detail?.isScene)window.__diagScenes.push(event.detail);});});
-    await tab.goto(`${origin}/?motion-debug=1&render-audit=1`);
+    await tab.goto(`${origin}/?motion-debug=1`);
     await tab.waitForFunction(revision=>window.__riverMultiplayer?.().connected
       && window.__riverMultiplayer().snapshot?.districtRevision===revision
       && document.querySelector('#canvas-host')?.dataset.playerReady==='true'
@@ -87,8 +85,6 @@ async page => {
     const at=([x,y])=>[edge+x,-1335+y];
     check(starts.every(p=>p.position[0]<edge),'Both players start in the original District');
     check(await page.evaluate(()=>window.__riverBayouHeights?.()?.revision)==='bayou-heights-1','The client composed Bayou Heights for the served revision');
-    console.log('PROBE scenes',JSON.stringify(await page.evaluate(()=>window.__diagScenes.map(scene=>({children:scene.children.length,heights:Boolean(scene.getObjectByName('Bayou Heights'))})))));
-    check(await page.evaluate(()=>Boolean(window.__diagScenes.find(scene=>scene.getObjectByName('Bayou Heights'))?.getObjectByName('Bayou Heights').parent)),'DIAGNOSTIC: the probe can reach the world group');
     // Pedestrian captures at walking eye height, with the scene's draw statistics.
     const views=[],capture=async(tab,name)=>{await tab.waitForTimeout(600);await tab.screenshot({path:`output/playwright/heights-${name}.png`});
       views.push({name,pose:(await self(tab)).position,scene:await tab.evaluate(()=>window.__riverBayouHeights?.().scene??null)});};
@@ -152,33 +148,18 @@ async page => {
     const after=await self(page),drift=Math.hypot(...after.position.map((v,i)=>v-before.position[i]));
     check(after.id===before.id&&drift<.5,'Reconnect keeps identity and Heights position');
     const reconnectMs=Date.now()-reconnectStart;
-    // DIAGNOSTIC BRANCH ONLY: per-phase frame times (render audit) and stream states, standing and walking.
-    const audit={
-      start:tab=>tab.evaluate(()=>{window.__riverRenderAudit.start();window.__diagStates=[];let last='';
-        const commons=window.__diagScenes.find(scene=>scene.getObjectByName('East Garden Commons'))?.getObjectByName('East Garden Commons');
-        window.__diagTimer=setInterval(()=>{const h=window.__riverBayouHeights()?.stream;
-          const now=JSON.stringify({h:h?.chunks?.map(chunk=>`${chunk.id.split('/')[1]??'shared'}:${chunk.state}`),hp:h?.pending,commons:commons?.children.map(child=>child.name)});
-          if(now!==last){window.__diagStates.push([Math.round(performance.now()),now]);last=now;}},250);}),
-      stop:(tab,label)=>tab.evaluate(label=>{clearInterval(window.__diagTimer);const {frames}=window.__riverRenderAudit.stop();
-        const keys=new Set(frames.flatMap(frame=>Object.keys(frame.phasesMs??{}))),q=(values,f)=>{const sorted=[...values].sort((a,b)=>a-b);return +(sorted[Math.min(sorted.length-1,Math.floor(f*sorted.length))]??0).toFixed(1);};
-        const phases=Object.fromEntries([...keys].map(key=>{const values=frames.map(frame=>frame.phasesMs?.[key]??0);return [key,{mean:+(values.reduce((a,b)=>a+b,0)/Math.max(1,values.length)).toFixed(1),p50:q(values,.5),p95:q(values,.95),max:q(values,1)}];}));
-        const intervals=frames.map(frame=>frame.intervalMs);
-        const h=window.__riverBayouHeights()?.stream;return {label,loads:h?.loads,unloads:h?.unloads,failures:h?.failures,lastLoadMs:h?.lastLoadMs,frames:frames.length,intervalP50:q(intervals,.5),intervalP95:q(intervals,.95),cpuP50:q(frames.map(f=>f.cpuMs),.5),phases,states:window.__diagStates.slice(0,40)};},label),
-    };
-    const report=row=>{const {states,...rest}=row;console.log(`PROBE ${JSON.stringify(rest)}`);for(const [t,state] of states)console.log(`PROBE-STATE ${row.label} ${t} ${state}`);};
-    await Promise.all([audit.start(page),audit.start(peer)]);
-    let legError=null;
-    try{await Promise.all([walk(page,[at([201,1.5]),at([300,1.5])],'owner nineteenth'),walk(peer,[at([209,-1.5]),at([300,-1.5])],'alice nineteenth')]);}catch(error){legError=error;}
-    for(const [tab,label] of [[page,'owner nineteenth east'],[peer,'alice nineteenth east']])report(await audit.stop(tab,label));
-    if(legError)throw legError;
-    await Promise.all([audit.start(page),audit.start(peer)]);
-    try{await Promise.all([walk(page,[at([270,1.5])],'owner west 300-270'),walk(peer,[at([270,-1.5])],'alice west 300-270')]);}catch(error){legError=error;}
-    for(const [tab,label] of [[page,'owner walking west 300-270'],[peer,'alice walking west 300-270']])report(await audit.stop(tab,label));
-    throw legError??new Error('diagnostic probe complete');
+    await Promise.all([walk(page,[at([201,1.5]),at([300,1.5])],'owner nineteenth'),walk(peer,[at([209,-1.5]),at([300,-1.5])],'alice nineteenth')]);
     await capture(page,'nineteenth-and-yale');
 
-    // Home: back over the footbridge and the Commons to the District.
-    await Promise.all([walk(page,[at([165,1.5]),at([100,1.5]),at([-2,1.5])],'owner home'),walk(peer,[at([165,-1.5]),at([100,-1.5]),at([-2,-1.5])],'alice home')]);
+    // Home: back over the footbridge and the Commons to the District, one player at a time.
+    // Facing west from here a client draws the District, the Commons and Heights at once. Two
+    // CPU-rendered clients doing so together saturate the four-core CI runner: the hosted shard
+    // walked at 11-14 % of walking speed in one run and about 50 % in another (see the ledger,
+    // docs/superpowers/plans/2026-10-24-next-district-586.md). So the one who waits faces east, the lighter view.
+    await walk(page,[at([301,1.5])],'owner faces east');
+    await walk(peer,[at([165,-1.5]),at([100,-1.5]),at([-2,-1.5])],'alice home');
+    await walk(peer,[at([-1,-1.5])],'alice faces east');
+    await walk(page,[at([165,1.5]),at([100,1.5]),at([-2,1.5])],'owner home');
     check((await self(page)).position[0]<edge&&(await self(peer)).position[0]<edge,'Both players walked back to the original District');
     check(await page.evaluate(()=>{const notices=window.__heightsNotices,heights=notices.indexOf('Entering Bayou Heights');
       return heights>=0&&notices.indexOf('Entering Bayou Market Commons',heights)>heights&&notices.lastIndexOf('Back in River Oaks District')>heights;}),'Returning names the Commons and then the District');
