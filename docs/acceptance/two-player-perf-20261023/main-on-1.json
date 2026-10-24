@@ -1,0 +1,2496 @@
+{
+  "status": "passed",
+  "startedAt": "2026-10-24T00:43:49.034Z",
+  "head": "98ac7d7b3a5a8db5416d88c69905e13eb205bb84",
+  "sourceSha256": {
+    "preview/public/data/district.json": "c5662c26185ff0c6caa2fccfb9ef9839bb7e56706635dcf6d6aed68bffd50326",
+    "preview/public/data/world-manifest.json": "ebbf8ff48e2e58bd7c822742626723d29aa050ba70745051438d85bf17e22b4c",
+    "preview/src/world-manifest.js": "3cb50663459ad27d9402cce48769cd51c0096c2736263d4222ae241e4bcaea63",
+    "preview/src/district-interior-contract.js": "4c6dfcfa30c7c0f724db7e78a055970d4c0c1a6bb03f4b41967da78590e78a88",
+    "preview/src/garden-campus-district.js": "0cd1e07111fefaf7ad4b25598ad7eea263dd1100a62ef8d38efbd137d359bf4f",
+    "preview/src/main.js": "c98bff830b6af6b836b218188498b31d93e057a223cf7f3c319a1fd12c5cfc86",
+    "preview/src/render-audit.js": "7bd34d0538d6d0b52c00a1d184b05917050547ea1ada609614ffcaeadc819ff9",
+    "preview/src/walking.js": "37b11873f5f67e836b1ca4c2d41b2221250568cd604083a8270501d9d6b08b32",
+    "preview/src/world-surface.js": "4a134a413f2cbd7c783e43466a02ff9e53abf64338975af1a36e06608128a9eb",
+    "server/district-data.js": "f0472155798c7ec675ea04c1c22aab0ac2cc64b214784f6a105f5164fcfb7b74",
+    "server/world.js": "1f98f00ed1b6fc89027023fda0b25b1cf1ef2083e9387dd47b5558d479590e8e",
+    "shared/east-garden-commons-layout.js": "bd68d72892732bba61fa3daec66e706276d406b6bcfc8c171633cac3e2225728",
+    "preview/audit/world-expansion-baseline.js": "301301c182e4c9d2ad96e65d78040db58336821603161579c2c3ff1e36ff01e3",
+    "preview/audit/baseline-options.js": "dbce519723acf20980f15b823208c80e78b2a3be95c99534a25a66465e5bbcc2",
+    "pnpm-lock.yaml": "333868e510b7156f9f3e954fc785d6bcb23b835ade47e7c0e89c7f77d6e29758"
+  },
+  "machine": {
+    "platform": "darwin",
+    "arch": "arm64",
+    "cpu": "Apple M5 Max",
+    "logicalCpus": 18,
+    "loadAverage": [
+      74.35009765625,
+      66.83935546875,
+      49.74609375
+    ]
+  },
+  "scope": "Local Chromium development build, Gardens revision, fixture accounts and in-memory loopback authority. Phone-sized viewport uses the same desktop GPU, not physical mobile hardware. Resource bytes include Vite development modules, not a production initial-download budget. Two-player samples render two full browser clients concurrently on this host. GPU memory bytes, live auth, hosted performance and human accessibility are not measured.",
+  "quality": "sharp",
+  "reducedMotion": "reduce",
+  "sampleDurationMs": 30000,
+  "samplesPerWorkload": 3,
+  "warmupMs": 5000,
+  "vsync": "on",
+  "options": {
+    "seconds": 30,
+    "samples": 3,
+    "vsync": "on",
+    "profiles": [
+      "desktop",
+      "phone-viewport"
+    ],
+    "cpuProfile": "off",
+    "label": "main-on-1"
+  },
+  "profiles": [
+    {
+      "name": "desktop",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "deviceScaleFactor": 1,
+      "status": "passed",
+      "samples": [
+        {
+          "players": 1,
+          "iteration": 1,
+          "before": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              1440,
+              1000
+            ],
+            "buffer": [
+              1440,
+              1000
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 60,
+              "tailShedding": false
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 6883,
+              "calls": 1629,
+              "triangles": 5519268,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 530,
+              "textures": 162
+            }
+          },
+          "after": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              1440,
+              1000
+            ],
+            "buffer": [
+              1440,
+              1000
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 60,
+              "tailShedding": false
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 42883,
+              "calls": 1647,
+              "triangles": 5522296,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 530,
+              "textures": 162
+            }
+          },
+          "heap": {
+            "usedJSHeapSize": 364000000,
+            "totalJSHeapSize": 435000000
+          },
+          "frame": {
+            "count": 1799,
+            "p50Ms": 16.7,
+            "p95Ms": 16.8,
+            "p99Ms": 16.8,
+            "maxMs": 16.8
+          },
+          "cpuSubmission": {
+            "count": 1799,
+            "p50Ms": 9.2,
+            "p95Ms": 11.4,
+            "p99Ms": 12.5,
+            "maxMs": 15.2
+          },
+          "screenshot": "desktop-1-players-1.png",
+          "loadAverage": [
+            39.572265625,
+            58.74609375,
+            47.6484375
+          ],
+          "frameSummary": {
+            "count": 1799,
+            "meanMs": 16.67,
+            "fps": 60,
+            "missedOneRefresh": 0,
+            "missedTwoRefreshes": 0
+          },
+          "phasesMs": {
+            "community": {
+              "p50Ms": 0,
+              "p95Ms": 0.2,
+              "meanMs": 0.03
+            },
+            "debug": {
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "meanMs": 0
+            },
+            "interactions": {
+              "p50Ms": 0.4,
+              "p95Ms": 0.7,
+              "meanMs": 0.44
+            },
+            "pipeline": {
+              "p50Ms": 6.9,
+              "p95Ms": 8.3,
+              "meanMs": 6.97
+            },
+            "players": {
+              "p50Ms": 1.5,
+              "p95Ms": 3.2,
+              "meanMs": 1.79
+            },
+            "reflections": {
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "meanMs": 0
+            },
+            "residents": {
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "meanMs": 0.02
+            },
+            "setup": {
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "meanMs": 0.02
+            },
+            "tail": {
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "meanMs": 0
+            },
+            "trees": {
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "meanMs": 0.02
+            }
+          }
+        },
+        {
+          "players": 1,
+          "iteration": 2,
+          "before": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              1440,
+              1000
+            ],
+            "buffer": [
+              1440,
+              1000
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 60,
+              "tailShedding": false
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 49283,
+              "calls": 1647,
+              "triangles": 5522296,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 530,
+              "textures": 162
+            }
+          },
+          "after": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              1440,
+              1000
+            ],
+            "buffer": [
+              1440,
+              1000
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 60,
+              "tailShedding": false
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 85303,
+              "calls": 1611,
+              "triangles": 5516240,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 530,
+              "textures": 162
+            }
+          },
+          "heap": {
+            "usedJSHeapSize": 364000000,
+            "totalJSHeapSize": 435000000
+          },
+          "frame": {
+            "count": 1800,
+            "p50Ms": 16.7,
+            "p95Ms": 16.7,
+            "p99Ms": 16.8,
+            "maxMs": 16.8
+          },
+          "cpuSubmission": {
+            "count": 1800,
+            "p50Ms": 8.8,
+            "p95Ms": 11,
+            "p99Ms": 11.9,
+            "maxMs": 14.4
+          },
+          "screenshot": "desktop-1-players-2.png",
+          "loadAverage": [
+            24.75830078125,
+            52.939453125,
+            45.9794921875
+          ],
+          "frameSummary": {
+            "count": 1800,
+            "meanMs": 16.67,
+            "fps": 60,
+            "missedOneRefresh": 0,
+            "missedTwoRefreshes": 0
+          },
+          "phasesMs": {
+            "community": {
+              "p50Ms": 0,
+              "p95Ms": 0.2,
+              "meanMs": 0.03
+            },
+            "debug": {
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "meanMs": 0
+            },
+            "interactions": {
+              "p50Ms": 0.4,
+              "p95Ms": 0.7,
+              "meanMs": 0.42
+            },
+            "pipeline": {
+              "p50Ms": 6.6,
+              "p95Ms": 8.1,
+              "meanMs": 6.73
+            },
+            "players": {
+              "p50Ms": 1.4,
+              "p95Ms": 3.1,
+              "meanMs": 1.76
+            },
+            "reflections": {
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "meanMs": 0
+            },
+            "residents": {
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "meanMs": 0.03
+            },
+            "setup": {
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "meanMs": 0.02
+            },
+            "tail": {
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "meanMs": 0
+            },
+            "trees": {
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "meanMs": 0.02
+            }
+          }
+        },
+        {
+          "players": 1,
+          "iteration": 3,
+          "before": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              1440,
+              1000
+            ],
+            "buffer": [
+              1440,
+              1000
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 60,
+              "tailShedding": false
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 91683,
+              "calls": 1629,
+              "triangles": 5519268,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 530,
+              "textures": 162
+            }
+          },
+          "after": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              1440,
+              1000
+            ],
+            "buffer": [
+              1440,
+              1000
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 60,
+              "tailShedding": false
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 127683,
+              "calls": 1629,
+              "triangles": 5519268,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 530,
+              "textures": 162
+            }
+          },
+          "heap": {
+            "usedJSHeapSize": 364000000,
+            "totalJSHeapSize": 435000000
+          },
+          "frame": {
+            "count": 1799,
+            "p50Ms": 16.7,
+            "p95Ms": 16.8,
+            "p99Ms": 16.8,
+            "maxMs": 16.8
+          },
+          "cpuSubmission": {
+            "count": 1799,
+            "p50Ms": 8.7,
+            "p95Ms": 10.9,
+            "p99Ms": 11.7,
+            "maxMs": 13.1
+          },
+          "screenshot": "desktop-1-players-3.png",
+          "loadAverage": [
+            16.1513671875,
+            47.6689453125,
+            44.337890625
+          ],
+          "frameSummary": {
+            "count": 1799,
+            "meanMs": 16.67,
+            "fps": 60,
+            "missedOneRefresh": 0,
+            "missedTwoRefreshes": 0
+          },
+          "phasesMs": {
+            "community": {
+              "p50Ms": 0,
+              "p95Ms": 0.2,
+              "meanMs": 0.03
+            },
+            "debug": {
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "meanMs": 0
+            },
+            "interactions": {
+              "p50Ms": 0.4,
+              "p95Ms": 0.6,
+              "meanMs": 0.41
+            },
+            "pipeline": {
+              "p50Ms": 6.6,
+              "p95Ms": 8,
+              "meanMs": 6.69
+            },
+            "players": {
+              "p50Ms": 1.4,
+              "p95Ms": 3.1,
+              "meanMs": 1.74
+            },
+            "reflections": {
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "meanMs": 0
+            },
+            "residents": {
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "meanMs": 0.02
+            },
+            "setup": {
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "meanMs": 0.02
+            },
+            "tail": {
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "meanMs": 0
+            },
+            "trees": {
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "meanMs": 0.02
+            }
+          }
+        },
+        {
+          "players": 2,
+          "iteration": 1,
+          "before": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              1440,
+              1000
+            ],
+            "buffer": [
+              1440,
+              1000
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 30,
+              "tailShedding": false
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 151043,
+              "calls": 1707,
+              "triangles": 5870044,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 546,
+              "textures": 166
+            }
+          },
+          "after": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              1440,
+              1000
+            ],
+            "buffer": [
+              1440,
+              1000
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 31,
+              "tailShedding": false
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 169423,
+              "calls": 1689,
+              "triangles": 5867016,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 546,
+              "textures": 166
+            }
+          },
+          "heap": {
+            "usedJSHeapSize": 364000000,
+            "totalJSHeapSize": 435000000
+          },
+          "frame": {
+            "count": 917,
+            "p50Ms": 33.3,
+            "p95Ms": 50,
+            "p99Ms": 50.1,
+            "maxMs": 66.7
+          },
+          "cpuSubmission": {
+            "count": 917,
+            "p50Ms": 10.4,
+            "p95Ms": 13.3,
+            "p99Ms": 16.3,
+            "maxMs": 19.5
+          },
+          "screenshot": "desktop-2-players-1.png",
+          "loadAverage": [
+            13.37060546875,
+            42.03515625,
+            42.439453125
+          ],
+          "frameSummary": {
+            "count": 917,
+            "meanMs": 32.75,
+            "fps": 30.53,
+            "missedOneRefresh": 0.8866,
+            "missedTwoRefreshes": 0.0774
+          },
+          "phasesMs": {
+            "community": {
+              "p50Ms": 0,
+              "p95Ms": 0.3,
+              "meanMs": 0.05
+            },
+            "debug": {
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "meanMs": 0
+            },
+            "interactions": {
+              "p50Ms": 0.4,
+              "p95Ms": 0.7,
+              "meanMs": 0.46
+            },
+            "pipeline": {
+              "p50Ms": 7.5,
+              "p95Ms": 9.9,
+              "meanMs": 7.86
+            },
+            "players": {
+              "p50Ms": 1.6,
+              "p95Ms": 3.3,
+              "meanMs": 2.16
+            },
+            "reflections": {
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "meanMs": 0
+            },
+            "residents": {
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "meanMs": 0.02
+            },
+            "setup": {
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "meanMs": 0.02
+            },
+            "tail": {
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "meanMs": 0
+            },
+            "trees": {
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "meanMs": 0.02
+            }
+          },
+          "peer": {
+            "frameSummary": {
+              "count": 915,
+              "meanMs": 32.79,
+              "fps": 30.5,
+              "missedOneRefresh": 0.8525,
+              "missedTwoRefreshes": 0.1148
+            },
+            "cpuSubmission": {
+              "count": 915,
+              "p50Ms": 11.2,
+              "p95Ms": 14.3,
+              "p99Ms": 18,
+              "maxMs": 21.5
+            },
+            "phasesMs": {
+              "community": {
+                "p50Ms": 0,
+                "p95Ms": 0.3,
+                "meanMs": 0.05
+              },
+              "debug": {
+                "p50Ms": 0,
+                "p95Ms": 0,
+                "meanMs": 0
+              },
+              "interactions": {
+                "p50Ms": 0.4,
+                "p95Ms": 0.8,
+                "meanMs": 0.48
+              },
+              "pipeline": {
+                "p50Ms": 8.6,
+                "p95Ms": 11,
+                "meanMs": 8.89
+              },
+              "players": {
+                "p50Ms": 1.5,
+                "p95Ms": 3.2,
+                "meanMs": 2.05
+              },
+              "reflections": {
+                "p50Ms": 0,
+                "p95Ms": 0,
+                "meanMs": 0
+              },
+              "residents": {
+                "p50Ms": 0,
+                "p95Ms": 0.1,
+                "meanMs": 0.03
+              },
+              "setup": {
+                "p50Ms": 0,
+                "p95Ms": 0.1,
+                "meanMs": 0.02
+              },
+              "tail": {
+                "p50Ms": 0,
+                "p95Ms": 0,
+                "meanMs": 0
+              },
+              "trees": {
+                "p50Ms": 0,
+                "p95Ms": 0.1,
+                "meanMs": 0.03
+              }
+            }
+          }
+        },
+        {
+          "players": 2,
+          "iteration": 2,
+          "before": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              1440,
+              1000
+            ],
+            "buffer": [
+              1440,
+              1000
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 30,
+              "tailShedding": false
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 172783,
+              "calls": 1689,
+              "triangles": 5867016,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 546,
+              "textures": 166
+            }
+          },
+          "after": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              1440,
+              1000
+            ],
+            "buffer": [
+              1440,
+              1000
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 31,
+              "tailShedding": false
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 191343,
+              "calls": 1705,
+              "triangles": 5870020,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 546,
+              "textures": 166
+            }
+          },
+          "heap": {
+            "usedJSHeapSize": 364000000,
+            "totalJSHeapSize": 435000000
+          },
+          "frame": {
+            "count": 926,
+            "p50Ms": 33.3,
+            "p95Ms": 33.5,
+            "p99Ms": 50.1,
+            "maxMs": 50.1
+          },
+          "cpuSubmission": {
+            "count": 926,
+            "p50Ms": 10.2,
+            "p95Ms": 12.5,
+            "p99Ms": 13.5,
+            "maxMs": 16
+          },
+          "screenshot": "desktop-2-players-2.png",
+          "loadAverage": [
+            10.54248046875,
+            38.19677734375,
+            41.025390625
+          ],
+          "frameSummary": {
+            "count": 926,
+            "meanMs": 32.41,
+            "fps": 30.85,
+            "missedOneRefresh": 0.8974,
+            "missedTwoRefreshes": 0.0475
+          },
+          "phasesMs": {
+            "community": {
+              "p50Ms": 0,
+              "p95Ms": 0.3,
+              "meanMs": 0.05
+            },
+            "debug": {
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "meanMs": 0
+            },
+            "interactions": {
+              "p50Ms": 0.4,
+              "p95Ms": 0.7,
+              "meanMs": 0.45
+            },
+            "pipeline": {
+              "p50Ms": 7.4,
+              "p95Ms": 9.2,
+              "meanMs": 7.63
+            },
+            "players": {
+              "p50Ms": 1.6,
+              "p95Ms": 3.2,
+              "meanMs": 2.11
+            },
+            "reflections": {
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "meanMs": 0
+            },
+            "residents": {
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "meanMs": 0.03
+            },
+            "setup": {
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "meanMs": 0.02
+            },
+            "tail": {
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "meanMs": 0
+            },
+            "trees": {
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "meanMs": 0.02
+            }
+          },
+          "peer": {
+            "frameSummary": {
+              "count": 923,
+              "meanMs": 32.47,
+              "fps": 30.8,
+              "missedOneRefresh": 0.8288,
+              "missedTwoRefreshes": 0.1192
+            },
+            "cpuSubmission": {
+              "count": 923,
+              "p50Ms": 10.8,
+              "p95Ms": 13.3,
+              "p99Ms": 14.6,
+              "maxMs": 17.5
+            },
+            "phasesMs": {
+              "community": {
+                "p50Ms": 0,
+                "p95Ms": 0.3,
+                "meanMs": 0.05
+              },
+              "debug": {
+                "p50Ms": 0,
+                "p95Ms": 0,
+                "meanMs": 0
+              },
+              "interactions": {
+                "p50Ms": 0.4,
+                "p95Ms": 0.6,
+                "meanMs": 0.4
+              },
+              "pipeline": {
+                "p50Ms": 8.5,
+                "p95Ms": 10.3,
+                "meanMs": 8.6
+              },
+              "players": {
+                "p50Ms": 1.4,
+                "p95Ms": 3,
+                "meanMs": 1.97
+              },
+              "reflections": {
+                "p50Ms": 0,
+                "p95Ms": 0,
+                "meanMs": 0
+              },
+              "residents": {
+                "p50Ms": 0,
+                "p95Ms": 0.1,
+                "meanMs": 0.02
+              },
+              "setup": {
+                "p50Ms": 0,
+                "p95Ms": 0.1,
+                "meanMs": 0.02
+              },
+              "tail": {
+                "p50Ms": 0,
+                "p95Ms": 0,
+                "meanMs": 0
+              },
+              "trees": {
+                "p50Ms": 0,
+                "p95Ms": 0.1,
+                "meanMs": 0.03
+              }
+            }
+          }
+        },
+        {
+          "players": 2,
+          "iteration": 3,
+          "before": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              1440,
+              1000
+            ],
+            "buffer": [
+              1440,
+              1000
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 31,
+              "tailShedding": false
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 194683,
+              "calls": 1689,
+              "triangles": 5867016,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 546,
+              "textures": 166
+            }
+          },
+          "after": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              1440,
+              1000
+            ],
+            "buffer": [
+              1440,
+              1000
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 30,
+              "tailShedding": false
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 212943,
+              "calls": 1725,
+              "triangles": 5873072,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 546,
+              "textures": 166
+            }
+          },
+          "heap": {
+            "usedJSHeapSize": 364000000,
+            "totalJSHeapSize": 435000000
+          },
+          "frame": {
+            "count": 911,
+            "p50Ms": 33.3,
+            "p95Ms": 50,
+            "p99Ms": 50.1,
+            "maxMs": 50.1
+          },
+          "cpuSubmission": {
+            "count": 911,
+            "p50Ms": 10.1,
+            "p95Ms": 12.5,
+            "p99Ms": 13.9,
+            "maxMs": 16.8
+          },
+          "screenshot": "desktop-2-players-3.png",
+          "loadAverage": [
+            9.91357421875,
+            34.98193359375,
+            39.73876953125
+          ],
+          "frameSummary": {
+            "count": 911,
+            "meanMs": 32.97,
+            "fps": 30.33,
+            "missedOneRefresh": 0.9001,
+            "missedTwoRefreshes": 0.0779
+          },
+          "phasesMs": {
+            "community": {
+              "p50Ms": 0,
+              "p95Ms": 0.3,
+              "meanMs": 0.05
+            },
+            "debug": {
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "meanMs": 0
+            },
+            "interactions": {
+              "p50Ms": 0.4,
+              "p95Ms": 0.7,
+              "meanMs": 0.45
+            },
+            "pipeline": {
+              "p50Ms": 7.4,
+              "p95Ms": 9.3,
+              "meanMs": 7.63
+            },
+            "players": {
+              "p50Ms": 1.6,
+              "p95Ms": 3.2,
+              "meanMs": 2.09
+            },
+            "reflections": {
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "meanMs": 0
+            },
+            "residents": {
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "meanMs": 0.03
+            },
+            "setup": {
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "meanMs": 0.02
+            },
+            "tail": {
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "meanMs": 0
+            },
+            "trees": {
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "meanMs": 0.02
+            }
+          },
+          "peer": {
+            "frameSummary": {
+              "count": 909,
+              "meanMs": 32.98,
+              "fps": 30.32,
+              "missedOneRefresh": 0.8141,
+              "missedTwoRefreshes": 0.165
+            },
+            "cpuSubmission": {
+              "count": 909,
+              "p50Ms": 11,
+              "p95Ms": 13.5,
+              "p99Ms": 14.7,
+              "maxMs": 16.4
+            },
+            "phasesMs": {
+              "community": {
+                "p50Ms": 0,
+                "p95Ms": 0.3,
+                "meanMs": 0.05
+              },
+              "debug": {
+                "p50Ms": 0,
+                "p95Ms": 0,
+                "meanMs": 0
+              },
+              "interactions": {
+                "p50Ms": 0.4,
+                "p95Ms": 0.6,
+                "meanMs": 0.4
+              },
+              "pipeline": {
+                "p50Ms": 8.6,
+                "p95Ms": 10.4,
+                "meanMs": 8.7
+              },
+              "players": {
+                "p50Ms": 1.4,
+                "p95Ms": 3,
+                "meanMs": 1.97
+              },
+              "reflections": {
+                "p50Ms": 0,
+                "p95Ms": 0,
+                "meanMs": 0
+              },
+              "residents": {
+                "p50Ms": 0,
+                "p95Ms": 0.1,
+                "meanMs": 0.02
+              },
+              "setup": {
+                "p50Ms": 0,
+                "p95Ms": 0.1,
+                "meanMs": 0.02
+              },
+              "tail": {
+                "p50Ms": 0,
+                "p95Ms": 0,
+                "meanMs": 0
+              },
+              "trees": {
+                "p50Ms": 0,
+                "p95Ms": 0.1,
+                "meanMs": 0.03
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "ownerJoinReadyMs": 4374.083875,
+      "ownerAssetReadyMs": 7095.704166,
+      "assets": {
+        "loaded": 102,
+        "total": 102,
+        "failed": 0,
+        "done": true
+      },
+      "resources": {
+        "count": 498,
+        "transferBytes": 73944384,
+        "decodedBodyBytes": 73794984
+      },
+      "peerJoinReadyMs": 9503.831749999998,
+      "medians": [
+        {
+          "players": 1,
+          "frameP95Ms": 16.8,
+          "cpuSubmissionP95Ms": 11,
+          "frameMeanMs": 16.67,
+          "cpuSubmissionP50Ms": 8.8
+        },
+        {
+          "players": 2,
+          "frameP95Ms": 50,
+          "cpuSubmissionP95Ms": 12.5,
+          "frameMeanMs": 32.75,
+          "cpuSubmissionP50Ms": 10.2
+        }
+      ],
+      "reconnectMs": 1042.8287500000151,
+      "reconnectPositionDeltaM": 0
+    },
+    {
+      "name": "phone-viewport",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "deviceScaleFactor": 2,
+      "status": "passed",
+      "samples": [
+        {
+          "players": 1,
+          "iteration": 1,
+          "before": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              390,
+              844
+            ],
+            "buffer": [
+              780,
+              1688
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 60,
+              "tailShedding": false
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 6743,
+              "calls": 1226,
+              "triangles": 4718836,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 523,
+              "textures": 149
+            }
+          },
+          "after": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              390,
+              844
+            ],
+            "buffer": [
+              780,
+              1688
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 60,
+              "tailShedding": false
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 42763,
+              "calls": 1244,
+              "triangles": 4721864,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 523,
+              "textures": 149
+            }
+          },
+          "heap": {
+            "usedJSHeapSize": 435000000,
+            "totalJSHeapSize": 491000000
+          },
+          "frame": {
+            "count": 1800,
+            "p50Ms": 16.7,
+            "p95Ms": 16.7,
+            "p99Ms": 16.8,
+            "maxMs": 16.8
+          },
+          "cpuSubmission": {
+            "count": 1800,
+            "p50Ms": 7.7,
+            "p95Ms": 9.6,
+            "p99Ms": 10.2,
+            "maxMs": 12
+          },
+          "screenshot": "phone-viewport-1-players-1.png",
+          "loadAverage": [
+            8.38818359375,
+            31.0791015625,
+            38.05615234375
+          ],
+          "frameSummary": {
+            "count": 1800,
+            "meanMs": 16.67,
+            "fps": 60,
+            "missedOneRefresh": 0,
+            "missedTwoRefreshes": 0
+          },
+          "phasesMs": {
+            "community": {
+              "p50Ms": 0,
+              "p95Ms": 0.2,
+              "meanMs": 0.03
+            },
+            "debug": {
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "meanMs": 0
+            },
+            "interactions": {
+              "p50Ms": 0.4,
+              "p95Ms": 0.7,
+              "meanMs": 0.42
+            },
+            "pipeline": {
+              "p50Ms": 5.6,
+              "p95Ms": 6.9,
+              "meanMs": 5.72
+            },
+            "players": {
+              "p50Ms": 1.4,
+              "p95Ms": 2.6,
+              "meanMs": 1.67
+            },
+            "reflections": {
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "meanMs": 0
+            },
+            "residents": {
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "meanMs": 0.02
+            },
+            "setup": {
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "meanMs": 0.02
+            },
+            "tail": {
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "meanMs": 0
+            },
+            "trees": {
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "meanMs": 0.01
+            }
+          }
+        },
+        {
+          "players": 1,
+          "iteration": 2,
+          "before": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              390,
+              844
+            ],
+            "buffer": [
+              780,
+              1688
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 60,
+              "tailShedding": false
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 49023,
+              "calls": 1244,
+              "triangles": 4721864,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 523,
+              "textures": 149
+            }
+          },
+          "after": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              390,
+              844
+            ],
+            "buffer": [
+              780,
+              1688
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 60,
+              "tailShedding": false
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 85023,
+              "calls": 1217,
+              "triangles": 4717322,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 523,
+              "textures": 149
+            }
+          },
+          "heap": {
+            "usedJSHeapSize": 435000000,
+            "totalJSHeapSize": 491000000
+          },
+          "frame": {
+            "count": 1799,
+            "p50Ms": 16.7,
+            "p95Ms": 16.7,
+            "p99Ms": 16.8,
+            "maxMs": 16.8
+          },
+          "cpuSubmission": {
+            "count": 1799,
+            "p50Ms": 7.5,
+            "p95Ms": 9.3,
+            "p99Ms": 10.2,
+            "maxMs": 12.2
+          },
+          "screenshot": "phone-viewport-1-players-2.png",
+          "loadAverage": [
+            7.66552734375,
+            28.396484375,
+            36.796875
+          ],
+          "frameSummary": {
+            "count": 1799,
+            "meanMs": 16.67,
+            "fps": 60,
+            "missedOneRefresh": 0,
+            "missedTwoRefreshes": 0
+          },
+          "phasesMs": {
+            "community": {
+              "p50Ms": 0,
+              "p95Ms": 0.2,
+              "meanMs": 0.03
+            },
+            "debug": {
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "meanMs": 0
+            },
+            "interactions": {
+              "p50Ms": 0.4,
+              "p95Ms": 0.6,
+              "meanMs": 0.39
+            },
+            "pipeline": {
+              "p50Ms": 5.5,
+              "p95Ms": 6.7,
+              "meanMs": 5.6
+            },
+            "players": {
+              "p50Ms": 1.4,
+              "p95Ms": 2.6,
+              "meanMs": 1.62
+            },
+            "reflections": {
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "meanMs": 0
+            },
+            "residents": {
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "meanMs": 0.02
+            },
+            "setup": {
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "meanMs": 0.01
+            },
+            "tail": {
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "meanMs": 0
+            },
+            "trees": {
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "meanMs": 0.01
+            }
+          }
+        },
+        {
+          "players": 1,
+          "iteration": 3,
+          "before": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              390,
+              844
+            ],
+            "buffer": [
+              780,
+              1688
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 60,
+              "tailShedding": false
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 91303,
+              "calls": 1217,
+              "triangles": 4717322,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 523,
+              "textures": 149
+            }
+          },
+          "after": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              390,
+              844
+            ],
+            "buffer": [
+              780,
+              1688
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 60,
+              "tailShedding": false
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 127323,
+              "calls": 1226,
+              "triangles": 4718836,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 523,
+              "textures": 149
+            }
+          },
+          "heap": {
+            "usedJSHeapSize": 435000000,
+            "totalJSHeapSize": 491000000
+          },
+          "frame": {
+            "count": 1800,
+            "p50Ms": 16.7,
+            "p95Ms": 16.7,
+            "p99Ms": 16.8,
+            "maxMs": 16.8
+          },
+          "cpuSubmission": {
+            "count": 1800,
+            "p50Ms": 7.3,
+            "p95Ms": 9.1,
+            "p99Ms": 10,
+            "maxMs": 11.1
+          },
+          "screenshot": "phone-viewport-1-players-3.png",
+          "loadAverage": [
+            7.18017578125,
+            25.98193359375,
+            35.576171875
+          ],
+          "frameSummary": {
+            "count": 1800,
+            "meanMs": 16.67,
+            "fps": 60,
+            "missedOneRefresh": 0,
+            "missedTwoRefreshes": 0
+          },
+          "phasesMs": {
+            "community": {
+              "p50Ms": 0,
+              "p95Ms": 0.2,
+              "meanMs": 0.02
+            },
+            "debug": {
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "meanMs": 0
+            },
+            "interactions": {
+              "p50Ms": 0.4,
+              "p95Ms": 0.6,
+              "meanMs": 0.37
+            },
+            "pipeline": {
+              "p50Ms": 5.4,
+              "p95Ms": 6.6,
+              "meanMs": 5.49
+            },
+            "players": {
+              "p50Ms": 1.4,
+              "p95Ms": 2.5,
+              "meanMs": 1.59
+            },
+            "reflections": {
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "meanMs": 0
+            },
+            "residents": {
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "meanMs": 0.02
+            },
+            "setup": {
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "meanMs": 0.01
+            },
+            "tail": {
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "meanMs": 0
+            },
+            "trees": {
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "meanMs": 0.01
+            }
+          }
+        },
+        {
+          "players": 2,
+          "iteration": 1,
+          "before": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              390,
+              844
+            ],
+            "buffer": [
+              780,
+              1688
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 40,
+              "tailShedding": false
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 141603,
+              "calls": 1264,
+              "triangles": 5051912,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 539,
+              "textures": 153
+            }
+          },
+          "after": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              390,
+              844
+            ],
+            "buffer": [
+              780,
+              1688
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 40,
+              "tailShedding": false
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 165803,
+              "calls": 1282,
+              "triangles": 5054940,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 539,
+              "textures": 153
+            }
+          },
+          "heap": {
+            "usedJSHeapSize": 435000000,
+            "totalJSHeapSize": 491000000
+          },
+          "frame": {
+            "count": 1208,
+            "p50Ms": 16.8,
+            "p95Ms": 33.4,
+            "p99Ms": 33.4,
+            "maxMs": 33.5
+          },
+          "cpuSubmission": {
+            "count": 1208,
+            "p50Ms": 8.5,
+            "p95Ms": 10.5,
+            "p99Ms": 11.3,
+            "maxMs": 13.6
+          },
+          "screenshot": "phone-viewport-2-players-1.png",
+          "loadAverage": [
+            8.58154296875,
+            23.71533203125,
+            34.24560546875
+          ],
+          "frameSummary": {
+            "count": 1208,
+            "meanMs": 24.87,
+            "fps": 40.2,
+            "missedOneRefresh": 0.4925,
+            "missedTwoRefreshes": 0
+          },
+          "phasesMs": {
+            "community": {
+              "p50Ms": 0,
+              "p95Ms": 0.3,
+              "meanMs": 0.04
+            },
+            "debug": {
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "meanMs": 0
+            },
+            "interactions": {
+              "p50Ms": 0.4,
+              "p95Ms": 0.7,
+              "meanMs": 0.45
+            },
+            "pipeline": {
+              "p50Ms": 6.1,
+              "p95Ms": 7.5,
+              "meanMs": 6.23
+            },
+            "players": {
+              "p50Ms": 1.6,
+              "p95Ms": 2.8,
+              "meanMs": 1.89
+            },
+            "reflections": {
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "meanMs": 0
+            },
+            "residents": {
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "meanMs": 0.03
+            },
+            "setup": {
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "meanMs": 0.02
+            },
+            "tail": {
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "meanMs": 0
+            },
+            "trees": {
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "meanMs": 0.01
+            }
+          },
+          "peer": {
+            "frameSummary": {
+              "count": 1204,
+              "meanMs": 24.9,
+              "fps": 40.16,
+              "missedOneRefresh": 0.4942,
+              "missedTwoRefreshes": 0
+            },
+            "cpuSubmission": {
+              "count": 1204,
+              "p50Ms": 9,
+              "p95Ms": 11.1,
+              "p99Ms": 12,
+              "maxMs": 13.2
+            },
+            "phasesMs": {
+              "community": {
+                "p50Ms": 0,
+                "p95Ms": 0.3,
+                "meanMs": 0.04
+              },
+              "debug": {
+                "p50Ms": 0,
+                "p95Ms": 0,
+                "meanMs": 0
+              },
+              "interactions": {
+                "p50Ms": 0.4,
+                "p95Ms": 0.7,
+                "meanMs": 0.42
+              },
+              "pipeline": {
+                "p50Ms": 7,
+                "p95Ms": 8.3,
+                "meanMs": 7.06
+              },
+              "players": {
+                "p50Ms": 1.4,
+                "p95Ms": 2.6,
+                "meanMs": 1.69
+              },
+              "reflections": {
+                "p50Ms": 0,
+                "p95Ms": 0,
+                "meanMs": 0
+              },
+              "residents": {
+                "p50Ms": 0,
+                "p95Ms": 0.1,
+                "meanMs": 0.02
+              },
+              "setup": {
+                "p50Ms": 0,
+                "p95Ms": 0.1,
+                "meanMs": 0.02
+              },
+              "tail": {
+                "p50Ms": 0,
+                "p95Ms": 0,
+                "meanMs": 0
+              },
+              "trees": {
+                "p50Ms": 0,
+                "p95Ms": 0.1,
+                "meanMs": 0.01
+              }
+            }
+          }
+        },
+        {
+          "players": 2,
+          "iteration": 2,
+          "before": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              390,
+              844
+            ],
+            "buffer": [
+              780,
+              1688
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 39,
+              "tailShedding": false
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 170183,
+              "calls": 1282,
+              "triangles": 5054940,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 539,
+              "textures": 153
+            }
+          },
+          "after": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              390,
+              844
+            ],
+            "buffer": [
+              780,
+              1688
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 40,
+              "tailShedding": false
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 194223,
+              "calls": 1282,
+              "triangles": 5054940,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 539,
+              "textures": 153
+            }
+          },
+          "heap": {
+            "usedJSHeapSize": 435000000,
+            "totalJSHeapSize": 491000000
+          },
+          "frame": {
+            "count": 1200,
+            "p50Ms": 16.7,
+            "p95Ms": 49.9,
+            "p99Ms": 50,
+            "maxMs": 50.1
+          },
+          "cpuSubmission": {
+            "count": 1200,
+            "p50Ms": 8.3,
+            "p95Ms": 10.3,
+            "p99Ms": 11.2,
+            "maxMs": 13.1
+          },
+          "screenshot": "phone-viewport-2-players-2.png",
+          "loadAverage": [
+            8.4375,
+            22.0068359375,
+            33.19775390625
+          ],
+          "frameSummary": {
+            "count": 1200,
+            "meanMs": 25.04,
+            "fps": 39.94,
+            "missedOneRefresh": 0.4458,
+            "missedTwoRefreshes": 0.0567
+          },
+          "phasesMs": {
+            "community": {
+              "p50Ms": 0,
+              "p95Ms": 0.3,
+              "meanMs": 0.04
+            },
+            "debug": {
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "meanMs": 0
+            },
+            "interactions": {
+              "p50Ms": 0.4,
+              "p95Ms": 0.6,
+              "meanMs": 0.41
+            },
+            "pipeline": {
+              "p50Ms": 6.1,
+              "p95Ms": 7.4,
+              "meanMs": 6.19
+            },
+            "players": {
+              "p50Ms": 1.5,
+              "p95Ms": 2.7,
+              "meanMs": 1.83
+            },
+            "reflections": {
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "meanMs": 0
+            },
+            "residents": {
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "meanMs": 0.02
+            },
+            "setup": {
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "meanMs": 0.02
+            },
+            "tail": {
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "meanMs": 0
+            },
+            "trees": {
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "meanMs": 0.01
+            }
+          },
+          "peer": {
+            "frameSummary": {
+              "count": 1198,
+              "meanMs": 25.04,
+              "fps": 39.94,
+              "missedOneRefresh": 0.4624,
+              "missedTwoRefreshes": 0.0401
+            },
+            "cpuSubmission": {
+              "count": 1198,
+              "p50Ms": 8.8,
+              "p95Ms": 11.1,
+              "p99Ms": 12.1,
+              "maxMs": 13.5
+            },
+            "phasesMs": {
+              "community": {
+                "p50Ms": 0,
+                "p95Ms": 0.2,
+                "meanMs": 0.04
+              },
+              "debug": {
+                "p50Ms": 0,
+                "p95Ms": 0,
+                "meanMs": 0
+              },
+              "interactions": {
+                "p50Ms": 0.4,
+                "p95Ms": 0.6,
+                "meanMs": 0.39
+              },
+              "pipeline": {
+                "p50Ms": 6.8,
+                "p95Ms": 8.2,
+                "meanMs": 6.89
+              },
+              "players": {
+                "p50Ms": 1.4,
+                "p95Ms": 2.6,
+                "meanMs": 1.69
+              },
+              "reflections": {
+                "p50Ms": 0,
+                "p95Ms": 0,
+                "meanMs": 0
+              },
+              "residents": {
+                "p50Ms": 0,
+                "p95Ms": 0.1,
+                "meanMs": 0.02
+              },
+              "setup": {
+                "p50Ms": 0,
+                "p95Ms": 0.1,
+                "meanMs": 0.02
+              },
+              "tail": {
+                "p50Ms": 0,
+                "p95Ms": 0,
+                "meanMs": 0
+              },
+              "trees": {
+                "p50Ms": 0,
+                "p95Ms": 0.1,
+                "meanMs": 0.01
+              }
+            }
+          }
+        },
+        {
+          "players": 2,
+          "iteration": 3,
+          "before": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              390,
+              844
+            ],
+            "buffer": [
+              780,
+              1688
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 39,
+              "tailShedding": false
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 198603,
+              "calls": 1264,
+              "triangles": 5051912,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 539,
+              "textures": 153
+            }
+          },
+          "after": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              390,
+              844
+            ],
+            "buffer": [
+              780,
+              1688
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 38,
+              "tailShedding": false
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 222343,
+              "calls": 1300,
+              "triangles": 5057968,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 539,
+              "textures": 153
+            }
+          },
+          "heap": {
+            "usedJSHeapSize": 435000000,
+            "totalJSHeapSize": 491000000
+          },
+          "frame": {
+            "count": 1185,
+            "p50Ms": 16.7,
+            "p95Ms": 49.9,
+            "p99Ms": 50,
+            "maxMs": 50.1
+          },
+          "cpuSubmission": {
+            "count": 1185,
+            "p50Ms": 8.3,
+            "p95Ms": 10.4,
+            "p99Ms": 11.3,
+            "maxMs": 12.8
+          },
+          "screenshot": "phone-viewport-2-players-3.png",
+          "loadAverage": [
+            6.86376953125,
+            20.1220703125,
+            32.0595703125
+          ],
+          "frameSummary": {
+            "count": 1185,
+            "meanMs": 25.34,
+            "fps": 39.46,
+            "missedOneRefresh": 0.4574,
+            "missedTwoRefreshes": 0.0633
+          },
+          "phasesMs": {
+            "community": {
+              "p50Ms": 0,
+              "p95Ms": 0.3,
+              "meanMs": 0.04
+            },
+            "debug": {
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "meanMs": 0
+            },
+            "interactions": {
+              "p50Ms": 0.4,
+              "p95Ms": 0.6,
+              "meanMs": 0.4
+            },
+            "pipeline": {
+              "p50Ms": 6.1,
+              "p95Ms": 7.4,
+              "meanMs": 6.18
+            },
+            "players": {
+              "p50Ms": 1.5,
+              "p95Ms": 2.7,
+              "meanMs": 1.83
+            },
+            "reflections": {
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "meanMs": 0
+            },
+            "residents": {
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "meanMs": 0.03
+            },
+            "setup": {
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "meanMs": 0.02
+            },
+            "tail": {
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "meanMs": 0
+            },
+            "trees": {
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "meanMs": 0.01
+            }
+          },
+          "peer": {
+            "frameSummary": {
+              "count": 1182,
+              "meanMs": 25.37,
+              "fps": 39.42,
+              "missedOneRefresh": 0.4662,
+              "missedTwoRefreshes": 0.0558
+            },
+            "cpuSubmission": {
+              "count": 1182,
+              "p50Ms": 8.8,
+              "p95Ms": 11,
+              "p99Ms": 11.9,
+              "maxMs": 14.3
+            },
+            "phasesMs": {
+              "community": {
+                "p50Ms": 0,
+                "p95Ms": 0.3,
+                "meanMs": 0.04
+              },
+              "debug": {
+                "p50Ms": 0,
+                "p95Ms": 0,
+                "meanMs": 0
+              },
+              "interactions": {
+                "p50Ms": 0.3,
+                "p95Ms": 0.6,
+                "meanMs": 0.37
+              },
+              "pipeline": {
+                "p50Ms": 6.8,
+                "p95Ms": 8.1,
+                "meanMs": 6.84
+              },
+              "players": {
+                "p50Ms": 1.4,
+                "p95Ms": 2.6,
+                "meanMs": 1.68
+              },
+              "reflections": {
+                "p50Ms": 0,
+                "p95Ms": 0,
+                "meanMs": 0
+              },
+              "residents": {
+                "p50Ms": 0,
+                "p95Ms": 0.1,
+                "meanMs": 0.03
+              },
+              "setup": {
+                "p50Ms": 0,
+                "p95Ms": 0.1,
+                "meanMs": 0.01
+              },
+              "tail": {
+                "p50Ms": 0,
+                "p95Ms": 0,
+                "meanMs": 0
+              },
+              "trees": {
+                "p50Ms": 0,
+                "p95Ms": 0.1,
+                "meanMs": 0.01
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "ownerJoinReadyMs": 3468.3140420000127,
+      "ownerAssetReadyMs": 5707.105708000017,
+      "assets": {
+        "loaded": 102,
+        "total": 102,
+        "failed": 0,
+        "done": true
+      },
+      "resources": {
+        "count": 498,
+        "transferBytes": 73944384,
+        "decodedBodyBytes": 73794984
+      },
+      "peerJoinReadyMs": 4910.9785000000265,
+      "medians": [
+        {
+          "players": 1,
+          "frameP95Ms": 16.7,
+          "cpuSubmissionP95Ms": 9.3,
+          "frameMeanMs": 16.67,
+          "cpuSubmissionP50Ms": 7.5
+        },
+        {
+          "players": 2,
+          "frameP95Ms": 49.9,
+          "cpuSubmissionP95Ms": 10.4,
+          "frameMeanMs": 25.04,
+          "cpuSubmissionP50Ms": 8.3
+        }
+      ],
+      "reconnectMs": 1094.330874999985,
+      "reconnectPositionDeltaM": 0
+    }
+  ],
+  "browser": "156.0.8078.4",
+  "camera": {
+    "position": [
+      -2765.321977373157,
+      20.583264532037695,
+      1300.064162750871
+    ],
+    "target": [
+      -2765.321977373157,
+      19.583264532037695,
+      1283.064162750871
+    ],
+    "fov": 55
+  },
+  "finishedAt": "2026-10-24T00:51:37.662Z"
+}

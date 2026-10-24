@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { ARRIVAL } from './office-arrival-model.js';
 import { officeLobbyFor } from './office-contract.js';
+import { releaseSceneGraphics } from './graphics-resources.js';
 
 // The penthouse skyline (#363, kit guide P26): once the doors close the district stops
 // drawing, so the terrace and the glass look out at the actual district captured once,
@@ -97,7 +98,14 @@ export function createOfficeSkyline({ mode = 'snapshot', hostRoot = null, render
   const colour = live ? 0 : size * size * 6 * 8, face = live ? 0 : size * size * (8 + 4);
   const stats = { mode, frames: 0, state: 'pending', size: live ? 0 : size, bytes: colour, peakBytes: colour + face, traverseMs: null, submitMs: null, ms: null, newPrograms: null, hiddenInstances: 0, hiddenMeshes: 0 };
   const round = ms => Math.round(ms * 10) / 10;
-  let attempted = false, disposed = false, saved = null;
+  let attempted = false, disposed = false, saved = null, awaitingMainFrame = false;
+  const restoreBackground = () => {
+    if (saved && scene.background === target?.texture) {
+      scene.background = saved.background; scene.backgroundIntensity = saved.intensity; scene.backgroundBlurriness = saved.blurriness;
+      if (saved.rotation) scene.backgroundRotation.copy(saved.rotation);
+    }
+    saved = null;
+  };
   const ringBounds = hostRing?.length > 2 ? hostRing.reduce((b, [x, z]) => [Math.min(b[0], x), Math.max(b[1], x), Math.min(b[2], z), Math.max(b[3], z)], [Infinity, -Infinity, Infinity, -Infinity]) : null;
   const inFootprint = (x, z) => Boolean(ringBounds) && insideRing(hostRing, x, z);
   const excluded = object => { for (let node = object; node && node !== scene; node = node.parent) if (hide.includes(node)) return true; return false; };
@@ -208,11 +216,18 @@ export function createOfficeSkyline({ mode = 'snapshot', hostRoot = null, render
       }
     },
     get stats() { return { ...stats }; },
-    get pending() { return !live && !attempted && !disposed; },
+    get pending() { return !live && !attempted && !disposed && !awaitingMainFrame; },
+    releaseGraphics() {
+      if (disposed) return;
+      restoreBackground(); target?.dispose();
+      if (copyPass) releaseSceneGraphics(copyPass.scene);
+      attempted = false; awaitingMainFrame = true; stats.state = 'pending';
+    },
+    mainFrameRendered() { awaitingMainFrame = false; },
     // Capture once per visit, while the district is still drawn. Returns whether the
     // backdrop is now showing; a second call, or a call after dispose, does nothing.
     capture() {
-      if (live || attempted || disposed) return false;
+      if (live || attempted || disposed || awaitingMainFrame) return false;
       attempted = true;
       const started = now(), instances = hostInstances(), masses = hostMeshes(), zero = new THREE.Matrix4().makeScale(0, 0, 0);
       stats.traverseMs = round(now() - started);
@@ -268,10 +283,7 @@ export function createOfficeSkyline({ mode = 'snapshot', hostRoot = null, render
       if (disposed) return;
       disposed = true;
       // A sky changed while inside (time of day, weather) belongs to the street now.
-      if (saved && scene.background === target?.texture) {
-        scene.background = saved.background; scene.backgroundIntensity = saved.intensity; scene.backgroundBlurriness = saved.blurriness;
-        if (saved.rotation) scene.backgroundRotation.copy(saved.rotation);
-      }
+      restoreBackground();
       target?.dispose(); liveMask?.swaps.forEach(release); liveMask = null;
     },
   };
