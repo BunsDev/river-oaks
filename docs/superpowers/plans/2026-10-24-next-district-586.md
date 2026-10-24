@@ -140,9 +140,39 @@ Evidence for head `b1ded7ab` (draft PR #649), rebased onto main `67203a6a`, unle
 
   The first post-rebase run failed `scripts/tests/land-pr.test.js`, "queue release did not wake the lander", at load about 37. It passed alone (29/29), and the rerun passed. The log is kept in the session scratchpad.
 - **Redis server suite.** `test:server` with `REDIS_URL` on an isolated Redis passed 1,161/1,161 at load about 22. The pre-rebase run at load about 37 failed one test (1,158/1,159): the Commons Redis fence's travel request was rejected. That test passed alone twice. The browser stages of `verify full` were not run as a whole; see Gaps.
-- **Production build.** The Heights recipes and scene are `assets/bayou-heights-*.js`: 30,761 bytes, 8,593 gzipped. The chunk is reached only through `import()` for `bayou-heights-1` and is not modulepreloaded. The District-only matched production transfer comparison is support task D.
+- **Production build.** The Heights recipes and scene are `assets/bayou-heights-*.js`: 30,761 bytes, 8,593 gzipped. The chunk is reached only through `import()` for `bayou-heights-1` and is not modulepreloaded.
+- **Cold transfer for `b1ded7ab`** (support task D, river-oaks-3e). Production builds of base `67203a6a` and head `b1ded7ab` were compared by static analysis of what a District visit downloads:
+  - JS and CSS, gzipped: 1,728.9 → 1,731.5 KiB (+0.15%);
+  - play-page initial JS: +0.50%;
+  - recipe markers appear only in the lazy Heights chunk;
+  - public data: only `world-manifest.json` changed.
+
+  This is within the +10% limit. It has to be re-run on the fixed head, because the chunk split can move.
 - **Lantern Walk chip.** Before the fix, the Commons status chip ("Lantern Walk · 0 of 5 lit") stayed on screen across all of Heights, because the client treated everything east of the District edge as the Commons. `preview/tests/lantern-walk-client.test.js` failed on "Bayou Heights hides the Commons chip" before the fix and passes after it. The journey now checks the chip on both sides of the footbridge.
-- **Browser journey and captures.** Pending; see Next step.
+- **Review and rollback rehearsal for `b1ded7ab`** (support task C, river-oaks-3e). No blocking defects were found. The reviewer adapted #630's harness and ran it through the real Redis gateway, tickets and WebSockets on a disposable loopback Redis, covering:
+  - activation from the Commons;
+  - standing, seated and airborne Heights occupants;
+  - a stale Commons deployment, relaying and refusing alone;
+  - rollback to the Commons;
+  - refusal of the superseded Heights deployment;
+  - re-activation and the chained rollback to Gardens.
+
+  All 30 checks passed. The four migration log lines show `moved` 0, 3, 0 and 3. The reviewer also found:
+  - a missing Heights runbook section, now added to `docs/world-expansion-activation.md`;
+  - a misleading `commonsBounds`, now documented;
+  - an extra Commons-plus-Heights world build on failed restores, which is acceptable at once per migration.
+
+  The harness is adopted as `server/tests/heights-activation-rehearsal.test.js`, minus #630 leftovers. It passes 30/30 here on an isolated Redis and skips without `REDIS_URL`.
+- **First browser failures for `b1ded7ab`.**
+  - **Hosted** `preview experience (heights)`, run 40126391598, job 120968634599: `alice approach: stalled`, about 2.4 m from a District waypoint, while walking at 3.2 m/s with no refusals. The CPU renderer (llvmpipe) reported 1 fps, 1,164 calls and 8.03 M triangles. On main, the Commons journey's District approach took 42 s (owner) and 72 s (alice). On Heights, neither finished within the 300 s deadline, and page-ready took 33 s against 19 s.
+  - District walkability is identical between the Commons and Heights revisions: 0 differences over 295,148 samples at 0.5 m, and the stall segment is free. So the cause is rendering, a real District regression on CPU rendering.
+  - **Local**, Metal at 39 fps: the journey reached Heights, then failed "Crossing the footbridge names Bayou Heights". Its notice observer attached at `DOMContentLoaded`, before the walking HUD creates `#walking-notice`. It now attaches once the player is ready. The capture `output/playwright/experience-bayou-heights-failure.png` shows Heights rendered correctly from the east bank.
+- **District rendering fix.**
+  - **Before:** Heights drew every tree batch of each kit plan within 300 m, including from the District. That is 112–227 street trees in 12 m instanced batches, each a draw call at every distance. The 80 landmark parts were 80 separate shadow-casting meshes. Separately, the scene's shadow-proxy list was copied before the trees loaded, so Heights drew no tree shadows at all, Commons trees included.
+  - **Now:** Heights tree batches and their shadows draw only within the kit's 120 m block-detail distance. The landmarks merge into one mesh per material, plus the clock faces, 10 meshes in all. The shadow list follows the loaded trees.
+  - **Tests:** `preview/tests/bayou-heights.test.js` gains a test with stand-in batches. It checks that far batches and their shadows don't draw, and that near ones and the Commons trees do. The preview suite passes 4,023/4,024 with 1 existing skip.
+  - **Measurement:** see Performance below.
+- **Browser journey and captures.** Pending a rerun on the fixed head; see Next step.
 - **Performance.** Not started. ABBA under the #626 protocol, with thresholds unamended, is support task D (river-oaks-3e). The `#626` decision is recorded only on #643's branch (D11).
 
 ## Gaps and coordination

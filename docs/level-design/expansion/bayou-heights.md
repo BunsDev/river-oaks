@@ -47,7 +47,9 @@ Heights extends the composed Commons layout in place (`shared/bayou-heights.js`)
 - the placed plans;
 - the base revision;
 - the start indices;
-- the footbridge, bandstand, Hall and table.
+- the footbridge, bandstand, Hall and table;
+- `bounds`, the Heights location;
+- `commonsBounds`, the composed layout's bounds before Heights (District and Commons together). It is not the Commons location; that runs from `edge` to the Commons plaza's east side, which is `bounds[0]`.
 
 Creations stay inside the District's build bounds, so Heights refuses durable creations as the Commons does.
 

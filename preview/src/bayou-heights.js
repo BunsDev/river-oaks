@@ -1,5 +1,7 @@
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { commonsBaseLayout } from '../../shared/bayou-heights.js';
+import { KIT_CONVENTIONS } from '../../shared/city-kit/catalog.js';
 import { RETRO } from './retro-palette.js';
 import { buildCityKit } from './city-kit/render.js';
 import { buildEastGardenCommons } from './east-garden-commons.js';
@@ -9,7 +11,12 @@ export { attachBayouHeights, detachBayouHeights } from './bayou-heights-world.js
 // A neighborhood beyond this distance from the camera is not drawn at all; nearer,
 // the kit's own block detail and tree levels apply. The landmarks always draw.
 export const HEIGHTS_VISIBLE_METRES = 300;
+// Heights street trees, and their sun shadows, draw only within the kit's block-detail
+// distance. Each twelve-metre tree batch is a draw call at every distance, and from the
+// District the hundreds beyond it cost CPU-rendered clients most of their frame rate.
+export const HEIGHTS_TREE_METRES = KIT_CONVENTIONS.lod.detailMetres;
 const distanceToRect = ([w, s, e, n], east, north) => Math.hypot(Math.max(w - east, 0, east - e), Math.max(s - north, 0, north - n));
+const near = (mesh, position) => position.distanceTo(mesh.boundingSphere.center) - mesh.boundingSphere.radius < HEIGHTS_TREE_METRES;
 
 /**
  * Bayou Market Commons with the footbridge opening, plus Bayou Heights: its kit
@@ -24,9 +31,13 @@ export function buildBayouHeights(layout) {
   const parts = heights.plans.map(plan => {
     const kit = buildCityKit(plan, { groundAt: () => ground, ground });
     kit.name = `bayou-heights/${plan.id}`; group.add(kit);
-    return { kit, site: plan.site };
+    return { kit, site: plan.site, trees: kit.getObjectByName(`${plan.id} trees`), proxies: new Set() };
   });
   const landmarks = buildLandmarks(layout); group.add(landmarks);
+  // main.js reads this list for every shadow pass. Tree batches, and their shadow
+  // proxies, arrive after loading, so update() rebuilds it: the Commons' proxies and
+  // the near Heights batches'.
+  const shadowProxies = [];
   let disposed = false;
   group.userData.dispose = () => {
     if (disposed) return; disposed = true;
@@ -34,12 +45,21 @@ export function buildBayouHeights(layout) {
   };
   group.userData.update = position => {
     commons.userData.update(position);
+    shadowProxies.length = 0; shadowProxies.push(...commons.userData.shadowProxies);
     for (const part of parts) {
       part.kit.visible = distanceToRect(part.site, position.x, -position.z) < HEIGHTS_VISIBLE_METRES;
-      if (part.kit.visible) part.kit.userData.update(position);
+      if (!part.kit.visible) continue;
+      part.kit.userData.update(position);
+      if (part.proxies.size !== part.kit.userData.shadowProxies.length) part.proxies = new Set(part.kit.userData.shadowProxies);
+      // The kit has just chosen each tree batch's level; far batches are not drawn.
+      for (const mesh of part.trees?.children ?? []) {
+        if (!mesh.boundingSphere) continue;
+        if (part.proxies.has(mesh)) { if (near(mesh, position)) shadowProxies.push(mesh); }
+        else if (mesh.visible && !near(mesh, position)) mesh.visible = false;
+      }
     }
   };
-  group.userData.shadowProxies = [...commons.userData.shadowProxies, ...parts.flatMap(({ kit }) => kit.userData.shadowProxies)];
+  group.userData.shadowProxies = shadowProxies;
   group.userData.setLanterns = (lit, complete) => commons.userData.setLanterns(lit, complete);
   group.userData.lanterns = commons.userData.lanterns;
   group.userData.stats = () => {
@@ -53,9 +73,10 @@ export function buildBayouHeights(layout) {
 
 // The footbridge deck structure under the kit paving, the bayou beneath it, the
 // bandstand on the green and Heights Hall's clock tower, in the Commons materials.
+// They always draw, so the parts merge into one mesh per material (and shadow choice).
 function buildLandmarks(layout) {
   const group = new THREE.Group(); group.name = 'bayou-heights/landmarks';
-  const { heights, ground } = layout, geometries = [], materials = {
+  const { heights, ground } = layout, geometries = [], buckets = new Map(), materials = {
     stone: new THREE.MeshStandardMaterial({ color: RETRO.ivory, roughness: .85 }),
     rail: new THREE.MeshStandardMaterial({ color: RETRO.teal, roughness: .45, metalness: .35 }),
     brass: new THREE.MeshStandardMaterial({ color: RETRO.brass, roughness: .4, metalness: .6 }),
@@ -67,11 +88,11 @@ function buildLandmarks(layout) {
     face: new THREE.MeshStandardMaterial({ color: RETRO.porcelain, roughness: .5, emissive: '#fff1d0', emissiveIntensity: .25 }),
   };
   for (const [name, material] of Object.entries(materials)) material.name = `bayou-heights/${name}`;
-  const add = (name, geometry, material, east, up, north, yaw = 0) => {
-    geometries.push(geometry);
-    const mesh = new THREE.Mesh(geometry, material); mesh.name = `bayou-heights/${name}`;
-    mesh.position.set(east, up, -north); mesh.rotation.y = yaw; mesh.castShadow = true; mesh.receiveShadow = true; group.add(mesh);
-    return mesh;
+  const add = (name, geometry, material, east, up, north, yaw = 0, castShadow = true) => {
+    geometry.rotateY(yaw).translate(east, up, -north);
+    const key = `${material.name}${castShadow ? '' : '/no-shadow'}`;
+    if (!buckets.has(key)) buckets.set(key, { material, castShadow, parts: [], names: [] });
+    buckets.get(key).parts.push(geometry); buckets.get(key).names.push(`bayou-heights/${name}`);
   };
   const box = (name, [w, s, e, n], bottom, top, material) => add(name, new THREE.BoxGeometry(e - w, top - bottom, n - s), material, (w + e) / 2, (bottom + top) / 2, (s + n) / 2);
 
@@ -124,11 +145,16 @@ function buildLandmarks(layout) {
   const towerX = (tw + te) / 2, towerY = (ts + tn) / 2, half = (te - tw) / 2;
   // A circle faces +z (south); each clock turns to face outward.
   for (const [dx, dy, yaw] of [[-1, 0, -Math.PI / 2], [1, 0, Math.PI / 2], [0, -1, 0], [0, 1, Math.PI]]) {
-    const clock = add(`hall-clock-${dx}${dy}`, new THREE.CircleGeometry(1.35, 32), materials.face, towerX + dx * (half + .02), top - 8, towerY + dy * (half + .02), yaw);
-    clock.castShadow = false;
+    add(`hall-clock-${dx}${dy}`, new THREE.CircleGeometry(1.35, 32), materials.face, towerX + dx * (half + .02), top - 8, towerY + dy * (half + .02), yaw, false);
   }
   add('hall-spire', new THREE.ConeGeometry(half * 1.15, 3, 4), materials.roof, towerX, top - 1.5, towerY, Math.PI / 4);
 
+  for (const [key, { material, castShadow, parts, names }] of buckets) {
+    const geometry = mergeGeometries(parts); parts.forEach(part => part.dispose()); geometries.push(geometry);
+    const mesh = new THREE.Mesh(geometry, material); mesh.name = `bayou-heights/landmarks/${key.replace('bayou-heights/', '')}`;
+    mesh.castShadow = castShadow; mesh.receiveShadow = true; mesh.userData.parts = names; group.add(mesh);
+  }
+  group.userData.parts = [...buckets.values()].flatMap(bucket => bucket.names);
   group.userData.dispose = () => { for (const geometry of geometries) geometry.dispose(); for (const material of Object.values(materials)) material.dispose(); group.clear(); };
   return group;
 }

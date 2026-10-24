@@ -22,14 +22,14 @@ async page => {
         // A stalled walk reports the town's latest refusals and corrections, so a CI first failure explains itself.
         this.addEventListener('message',event=>{try{const data=JSON.parse(event.data),reply=data.result??data;if(reply?.ok!==false&&!data.correction)return;
           window.__heightsRefusals.push({t:Math.round(performance.now()),error:reply?.error??null,at:(data.correction??reply?.correction)?.position??null});window.__heightsRefusals.splice(0,window.__heightsRefusals.length-12);}catch{/* not JSON */}});}};
-      window.__heightsNotices=[];
-      document.addEventListener('DOMContentLoaded',()=>{const notice=document.querySelector('#walking-notice');
-        if(notice)new MutationObserver(()=>{if(!notice.hidden&&notice.textContent)window.__heightsNotices.push(notice.textContent);}).observe(notice,{childList:true,characterData:true,subtree:true,attributes:true});});
     });
     await tab.goto(`${origin}/?motion-debug=1`);
     await tab.waitForFunction(revision=>window.__riverMultiplayer?.().connected
       && window.__riverMultiplayer().snapshot?.districtRevision===revision
       && document.querySelector('#canvas-host')?.dataset.playerReady==='true',revision,{timeout:180000});
+    // The walking HUD creates its notice after the world loads, so observe it once the player is ready.
+    await tab.evaluate(()=>{const notice=document.querySelector('#walking-notice');if(!notice)throw new Error('The walking notice is missing');window.__heightsNotices=[];
+      new MutationObserver(()=>{if(!notice.hidden&&notice.textContent)window.__heightsNotices.push(notice.textContent);}).observe(notice,{childList:true,characterData:true,subtree:true,attributes:true});});
     if(await tab.locator('#panel-toggle').getAttribute('aria-expanded')==='true')await tab.locator('#panel-toggle').click();
     if(await tab.locator('.visit-tools').evaluate(node=>node.open))await tab.locator('.visit-tools-toggle').click();
   };
