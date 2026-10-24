@@ -149,8 +149,10 @@ jobs:
         run: sudo apt-get update -q && sudo apt-get install -y --no-install-recommends openbox
       # The runner image pipes core dumps to systemd-coredump, as Ubuntu desktops
       # with it installed do. The e2e's deliberate renderer crash goes through
-      # that pipe, so its unchanged 60 s recovery check covers the main process
-      # ending a renderer that is still writing its core (core-dump-watch.js, #370).
+      # that pipe, so its unchanged 60 s recovery check, and its check that the
+      # renderer was ended rather than waited for, cover the main process ending
+      # a renderer that is still writing its core (core-dump-watch.js, #370).
+      # Playwright runs this renderer without Chromium's sandbox.
       - name: Development desktop end-to-end (loopback acceptance fixture)
         if: ${{ !cancelled() }}
         id: e2e

@@ -14,16 +14,26 @@ export function coreDumping(status) {
 
 // Polls the renderer named by `pid()` while the window lives; returns stop().
 // Each renderer is ended once: after SIGKILL it can still read as dumping for a
-// moment before it exits, and its PID must never be signalled again.
+// moment before it exits, and its PID must never be signalled again. The PID
+// is checked again after the read, because a renderer that exits meanwhile is
+// reaped and its PID can be reused. A status the app may not read (a /proc
+// mounted with hidepid) leaves the watch unable to help; it says so once.
 export function watchCoreDumps({ pid, readStatus = id => readFile(`/proc/${id}/status`, 'utf8'), kill = id => process.kill(id, 'SIGKILL'),
-  onEnd = () => {}, intervalMs = 1000, timers = globalThis } = {}) {
-  let busy = false, ended = 0;
+  onEnd = () => {}, onUnreadable = (id, error) => console.error(`Cannot read /proc/${id}/status (${error.code}); a renderer crash may wait for its core dump`),
+  intervalMs = 1000, timers = globalThis } = {}) {
+  let busy = false, stopped = false, ended = 0, reported = false;
+  const unreadable = (id, error) => {
+    if (error.code !== 'ENOENT' && error.code !== 'ESRCH' && !reported) { reported = true; onUnreadable(id, error); }
+    return null;
+  };
   const timer = timers.setInterval(async () => {
     if (busy) return;
     busy = true;
     try {
       const id = pid();
-      if (!(id > 0) || id === ended || !coreDumping(await readStatus(id).catch(() => null))) return;
+      if (!(id > 0) || id === ended) return;
+      const status = await readStatus(id).catch(error => unreadable(id, error));
+      if (stopped || !coreDumping(status) || pid() !== id) return;
       ended = id;
       try { kill(id); } catch (error) { if (error.code !== 'ESRCH') throw error; return; }
       onEnd(id);
@@ -31,5 +41,5 @@ export function watchCoreDumps({ pid, readStatus = id => readFile(`/proc/${id}/s
     finally { busy = false; }
   }, intervalMs);
   timer.unref?.();
-  return () => timers.clearInterval(timer);
+  return () => { stopped = true; timers.clearInterval(timer); };
 }

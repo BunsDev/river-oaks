@@ -1,7 +1,7 @@
 import { openHudSpace } from '../preview/e2e/hud-navigation.js';
 import { _electron as electron } from 'playwright';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve as resolvePath } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -319,6 +319,12 @@ try {
     return { recovered: false, ...timings };
   });
   report.crashRecovery = crashRecovery;
+  // Where Linux pipes core dumps to a collector, the renderer must be ended
+  // rather than waited for (desktop/core-dump-watch.js, #370).
+  if (process.platform === 'linux') {
+    crashRecovery.corePattern = (await readFile('/proc/sys/kernel/core_pattern', 'utf8').catch(() => '')).trim();
+    if (crashRecovery.corePattern.startsWith('|')) assert.equal(crashRecovery.reason, 'killed', `a renderer writing its core through ${crashRecovery.corePattern.split(' ')[0]} is ended, not waited for`);
+  }
   assert.equal(recovered, true, 'crash recovery rebuilds a playable character');
   check('renderer crash recovers to playable game');
   report.gpu = await app.evaluate(({ app }) => app.getGPUFeatureStatus());
