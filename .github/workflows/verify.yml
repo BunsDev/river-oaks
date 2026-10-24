@@ -62,4 +62,3 @@ jobs:
           path: |
             data/reports/ci-experience.json
             output/playwright/experience-*-failure.png
-  preview:
